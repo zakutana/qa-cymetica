@@ -1,0 +1,52 @@
+{
+  "run_id": "run-20260904T131713Z-7518e8e",
+  "started_at": "2026-09-04T13:17:17+00:00",
+  "finished_at": "2026-09-04T13:17:22+00:00",
+  "git_head": "7518e8e7bbeff70ee58c765c11265d05240a5306",
+  "git_short": "7518e8e",
+  "git_dirty": false,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "platform_fingerprint": "sha256:a5507c9d41612de3e634751b89cd2ce840ad3778510c1862657e6f518c99f037",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "24d67155c73053c258adc969b08e774ed26ad96a2df276a8e2dc0a5027c8fe7f",
+    "/.well-known/agent-card.json": "90d1cf48b1fa516db507f29ed91a2051da05787d548c58042db3b26ae611032b",
+    "/.well-known/agent-skills.json": "41a38971d7d79b8b4638dba285021fc011a7eb1f1062ae3b6707d4210c444ed7",
+    "/.well-known/ai-plugin.json": "1cc1da5cd86dff95476563abc57e25a6aab694f3a1de4d29bc8755420f5ecbd4",
+    "/.well-known/udc.json": "92cd8a5f7ec5a0a859594ef9fbd72cba4914eaab4220377db18adf2ed44611a4",
+    "/openapi.json": "f0cccb1f06ec266d303b1c7ab8e23f4af29a3c43106027595c95c1449fa1b2cf",
+    "/llms.txt": "55c6504805356978292789e818f3c4757874c08787cdcdf0f025560fe2a6858f",
+    "mcp:tools/list:none": "1dc97df17f2d8c63680c2160d44039468c316ac04de2b357d45cafd88228b8dd"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "classifier_version": "unavailable",
+  "selector": "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_names_documented_exist::llms_txt-vs-mcp_json] -q --no-header",
+  "allow_mutate": false,
+  "results": [
+    {
+      "nodeid": "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_names_documented_exist::llms_txt-vs-mcp_json]",
+      "component": "reconciliation",
+      "tier": "SAFE",
+      "surface": "discovery",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "duration_ms": 942,
+      "evidence_ids": [],
+      "reason": null,
+      "failure_repr": "tests\\reconciliation\\test_reconcile.py:83: in test_sources_agree\n    left = snapshot.value(pair.a, extractors[pair.a])\nqa\\sources.py:116: in value\n    return extract(extractor, fetched.body)\nqa\\extractors.py:136: in extract\n    raise ExtractionError(f\"regex_all found no match for {arg!r}\")\nE   qa.extractors.ExtractionError: regex_all found no match for '\\\\[(\\\\w+)\\\\]\\\\(/mcp/v1/tools/\\\\w+\\\\)'\n\nThe above exception was the direct cause of the following exception:\ntests\\reconciliation\\test_reconcile.py:88: in test_sources_agree\n    raise Inconclusive(f\"{claim['id']}: {exc}\") from exc\nE   qa.marks.Inconclusive: mcp_tool_names_documented_exist: regex_all found no match for '\\\\[(\\\\w+)\\\\]\\\\(/mcp/v1/tools/\\\\w+\\\\)'"
+    }
+  ],
+  "totals": {
+    "failed": 1
+  },
+  "ratelimit": {},
+  "fingerprint_after": "sha256:a5507c9d41612de3e634751b89cd2ce840ad3778510c1862657e6f518c99f037",
+  "exit_status": 0
+}

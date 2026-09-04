@@ -1,41 +1,43 @@
 {
   "findings": {
-    "CYM-agent_names": {
-      "id": "CYM-agent_names",
-      "first_seen": "2026-09-04T12:49:12+00:00",
-      "first_seen_run": "run-20260904T123402Z-acf86e7",
-      "title": "Which AI trading agents exist, by symbol?",
-      "severity": "S1-INTEGRITY",
-      "tag": "BOTS",
-      "kind": "contradiction",
-      "section": "agents",
-      "component": "rest.agents",
-      "note": "llms.txt instructs readers to clone named agents. If those names do not resolve, the instruction is not merely imprecise -- it is unfollowable.",
+    "CYM-trusted-receives-nothing-above-its-tier": {
+      "id": "CYM-trusted-receives-nothing-above-its-tier",
+      "first_seen": "2026-09-04T13:19:40+00:00",
+      "first_seen_run": "run-20260904T131842Z-7518e8e",
+      "title": "Trust tier over-served: EXCESS     5 tools above the tier declared for them",
+      "severity": "S0-CUSTODY",
+      "tag": "MCP",
+      "kind": "authorization",
+      "section": "identity_trust",
+      "component": "mcp.trust_ladder",
+      "note": null,
       "detail": {
-        "right": "snapshot.value(pair.b, extractors[pair.b])"
+        "identity": "TRUSTED",
+        "served": "46 tools",
+        "entitled": "41 tools (its own tier and below, per mcp.json)",
+        "excess": "5 tools above the tier declared for them",
+        "declared allied": "create_aib_fund, edit_aib_fund_basket, list_my_aib_funds, register_webhook, subscribe_prices"
       },
       "checks": [
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_names::live_species-vs-llms_txt]"
+        "tests/mcp/test_trust_ladder.py::test_trusted_receives_nothing_above_its_tier"
       ],
       "filed": [
         {
-          "report_id": 48,
-          "submitted_at": "2026-09-04T12:03:52+00:00",
-          "status": "fixed"
+          "report_id": 54,
+          "submitted_at": "2026-09-04T13:20:49+00:00",
+          "status": "pending"
         }
       ],
       "thread": [],
-      "last_reproduced": "2026-09-04T13:04:02+00:00",
-      "last_reproduced_run": "run-20260904T130132Z-57d3e34",
-      "reproductions": 4,
-      "state": "VERIFIED FIXED",
-      "verified_fixed_at": "2026-09-04T13:12:10+00:00",
-      "verified_by_run": "run-20260904T131102Z-9a729ed"
+      "last_reproduced": "2026-09-04T13:27:22+00:00",
+      "last_reproduced_run": "run-20260904T131842Z-7518e8e",
+      "reproductions": 3,
+      "state": "RAISED"
     },
     "CYM-bounty-filing-unauthenticated": {
       "id": "CYM-bounty-filing-unauthenticated",
-      "first_seen": "2026-09-04T12:49:12+00:00",
-      "first_seen_run": "run-20260904T123402Z-acf86e7",
+      "first_seen": "2026-09-04T13:19:40+00:00",
+      "first_seen_run": "run-20260904T131842Z-7518e8e",
       "title": "Filing a bug report passes authorization with no credential: hunter attribution rests on an unauthenticated form field",
       "severity": "S1-INTEGRITY",
       "tag": "PROCESS",
@@ -59,165 +61,72 @@
         }
       ],
       "thread": [],
-      "last_reproduced": "2026-09-04T13:14:33+00:00",
-      "last_reproduced_run": "run-20260904T131102Z-9a729ed",
-      "reproductions": 6,
+      "last_reproduced": "2026-09-04T13:27:22+00:00",
+      "last_reproduced_run": "run-20260904T131842Z-7518e8e",
+      "reproductions": 3,
       "state": "RAISED"
     },
-    "CYM-agent_count": {
-      "id": "CYM-agent_count",
-      "first_seen": "2026-09-04T12:49:12+00:00",
-      "first_seen_run": "run-20260904T123402Z-acf86e7",
-      "title": "How many AI trading agents exist?",
+    "CYM-llms_agent_count_self_consistent": {
+      "id": "CYM-llms_agent_count_self_consistent",
+      "first_seen": "2026-09-04T13:19:40+00:00",
+      "first_seen_run": "run-20260904T131842Z-7518e8e",
+      "title": "Does llms.txt quote the same agent count in all of its own sentences?",
       "severity": "S2-MEASUREMENT",
       "tag": "BOTS",
       "kind": "contradiction",
       "section": "agents",
       "component": "rest.agents",
-      "note": null,
+      "note": "A document that contradicts itself is worse than two documents that disagree, because the reader has no way to pick. Added after report #52 updated one occurrence of the count and left another behind.",
       "detail": {
-        "live_agentbook": "8",
-        "live_species": "11",
-        "right": "snapshot.value(pair.b, extractors[pair.b])",
+        "llms_txt": "10",
+        "llms_txt_2": "11"
+      },
+      "checks": [
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[llms_agent_count_self_consistent::llms_txt-vs-llms_txt_2]"
+      ],
+      "filed": [
+        {
+          "report_id": 55,
+          "submitted_at": "2026-09-04T13:20:58.089377+00:00",
+          "status": "pending"
+        }
+      ],
+      "thread": [],
+      "last_reproduced": "2026-09-04T13:27:22+00:00",
+      "last_reproduced_run": "run-20260904T131842Z-7518e8e",
+      "reproductions": 3,
+      "state": "RAISED"
+    },
+    "CYM-mcp_tool_names_documented_exist": {
+      "id": "CYM-mcp_tool_names_documented_exist",
+      "first_seen": "2026-09-04T13:19:40+00:00",
+      "first_seen_run": "run-20260904T131842Z-7518e8e",
+      "title": "Does every tool name llms.txt documents exist on the server?",
+      "severity": "S3-CONTRACT",
+      "tag": "MCP",
+      "kind": "contradiction",
+      "section": "mcp",
+      "component": "mcp.tools_list",
+      "note": "Subset, not set_equal. llms.txt is not obliged to list every tool -- it is obliged not to name one that does not exist. The earlier set_equal form would now fail simply because the document lists fewer than the server serves, which is correct behaviour.",
+      "detail": {
         "left": "snapshot.value(pair.a, extractors[pair.a])"
       },
       "checks": [
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_count::live_agentbook-vs-live_species]",
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_count::live_agentbook-vs-llms_txt]",
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_count::live_agentbook-vs-mcp_json]",
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_count::live_species-vs-llms_txt]",
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_count::live_species-vs-mcp_json]",
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_count::llms_txt-vs-mcp_json]"
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_names_documented_exist::llms_txt-vs-mcp_json]"
       ],
-      "filed": [
-        {
-          "report_id": 52,
-          "submitted_at": "2026-09-04T12:04:15+00:00",
-          "status": "fixed"
-        }
-      ],
+      "filed": [],
       "thread": [],
-      "last_reproduced": "2026-09-04T13:04:02+00:00",
-      "last_reproduced_run": "run-20260904T130132Z-57d3e34",
-      "reproductions": 4,
-      "state": "VERIFIED FIXED",
-      "verified_fixed_at": "2026-09-04T13:12:10+00:00",
-      "verified_by_run": "run-20260904T131102Z-9a729ed"
-    },
-    "CYM-chain_count": {
-      "id": "CYM-chain_count",
-      "first_seen": "2026-09-04T12:49:12+00:00",
-      "first_seen_run": "run-20260904T123402Z-acf86e7",
-      "title": "How many blockchains does the platform settle on or support?",
-      "severity": "S2-MEASUREMENT",
-      "tag": "MONEY",
-      "kind": "contradiction",
-      "section": "swaps",
-      "component": "platform.status",
-      "note": null,
-      "detail": {
-        "live_chains": "16",
-        "mcp_json": "10"
-      },
-      "checks": [
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[chain_count::live_chains-vs-mcp_json]"
-      ],
-      "filed": [
-        {
-          "report_id": 52,
-          "submitted_at": "2026-09-04T12:04:15+00:00",
-          "status": "fixed"
-        }
-      ],
-      "thread": [],
-      "last_reproduced": "2026-09-04T12:53:36+00:00",
-      "last_reproduced_run": "run-20260904T123402Z-acf86e7",
-      "reproductions": 2,
+      "last_reproduced": "2026-09-04T13:27:22+00:00",
+      "last_reproduced_run": "run-20260904T131842Z-7518e8e",
+      "reproductions": 3,
       "state": "WITHDRAWN",
-      "verified_by_run": "run-20260904T130132Z-57d3e34",
-      "withdrawn_reason": "Our check compared 'settlement on 10 chains' against the 16 chains /api/v1/swap/chains supports for swaps. Two different mechanisms; netting them is the collapsed-layer defect we report in others.",
-      "withdrawn_at": "2026-09-04T13:04:02+00:00"
-    },
-    "CYM-mcp_tool_count": {
-      "id": "CYM-mcp_tool_count",
-      "first_seen": "2026-09-04T12:49:12+00:00",
-      "first_seen_run": "run-20260904T123402Z-acf86e7",
-      "title": "How many MCP tools does the server expose?",
-      "severity": "S3-CONTRACT",
-      "tag": "MCP",
-      "kind": "contradiction",
-      "section": "mcp",
-      "component": "mcp.tools_list",
-      "note": null,
-      "detail": {
-        "left": "snapshot.value(pair.a, extractors[pair.a])",
-        "mcp_anon": "25",
-        "mcp_json": "46",
-        "mcp_trusted": "46"
-      },
-      "checks": [
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_count::llms_txt-vs-mcp_anon]",
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_count::llms_txt-vs-mcp_json]",
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_count::llms_txt-vs-mcp_trusted]",
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_count::mcp_anon-vs-mcp_json]",
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_count::mcp_anon-vs-mcp_trusted]"
-      ],
-      "filed": [
-        {
-          "report_id": 50,
-          "submitted_at": "2026-09-04T12:04:04+00:00",
-          "status": "fixed"
-        }
-      ],
-      "thread": [],
-      "last_reproduced": "2026-09-04T12:53:36+00:00",
-      "last_reproduced_run": "run-20260904T123402Z-acf86e7",
-      "reproductions": 2,
-      "state": "WITHDRAWN",
-      "verified_by_run": "run-20260904T130132Z-57d3e34",
-      "withdrawn_reason": "Our check asserted the anonymous tool count equals the manifest total. That held only while tier gating was broken; once it was fixed, anonymous correctly returns 25 of 46 and our check reported their fix as a failure. Replaced by tests/mcp/test_trust_ladder.py.",
-      "withdrawn_at": "2026-09-04T13:04:02+00:00"
-    },
-    "CYM-mcp_tool_names_declared_vs_served": {
-      "id": "CYM-mcp_tool_names_declared_vs_served",
-      "first_seen": "2026-09-04T12:49:12+00:00",
-      "first_seen_run": "run-20260904T123402Z-acf86e7",
-      "title": "Do the tool names the platform documents actually exist?",
-      "severity": "S3-CONTRACT",
-      "tag": "MCP",
-      "kind": "contradiction",
-      "section": "mcp",
-      "component": "mcp.tools_list",
-      "note": null,
-      "detail": {
-        "left": "snapshot.value(pair.a, extractors[pair.a])",
-        "mcp_anon": "{browse_ontology, find_trade_path, get_ai_native_proof, get_btc_pool_history, get_btc_pool_state, get_deadcoin_desk_info, get_deadcoin_quote, get_market, get_orderbook, get_platform_status, get_prediction_statistics, get_prices ... (+13 more)}  n=25",
-        "mcp_json": "{ask_nexus_deep, browse_ontology, create_aib_fund, edit_aib_fund_basket, find_trade_path, get_agent_profile, get_ai_native_proof, get_btc_pool_history, get_btc_pool_state, get_deadcoin_desk_info, get_deadcoin_quote, get_deep_answer ... (+34 more)}  n=46"
-      },
-      "checks": [
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_names_declared_vs_served::llms_txt-vs-mcp_anon]",
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_names_declared_vs_served::llms_txt-vs-mcp_json]",
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_names_declared_vs_served::mcp_anon-vs-mcp_json]"
-      ],
-      "filed": [
-        {
-          "report_id": 50,
-          "submitted_at": "2026-09-04T12:04:04+00:00",
-          "status": "fixed"
-        }
-      ],
-      "thread": [],
-      "last_reproduced": "2026-09-04T12:53:36+00:00",
-      "last_reproduced_run": "run-20260904T123402Z-acf86e7",
-      "reproductions": 2,
-      "state": "VERIFIED FIXED",
-      "verified_fixed_at": "2026-09-04T13:03:23+00:00",
-      "verified_by_run": "run-20260904T130132Z-57d3e34"
+      "withdrawn_reason": "Never a defect. The check is INCONCLUSIVE, not failing: llms.txt no longer links any tool names, so there is nothing to verify. It entered the ledger from a run before the claim was rewritten.",
+      "withdrawn_at": "2026-09-04T13:19:40+00:00"
     },
     "CYM-own-reports-unverified": {
       "id": "CYM-own-reports-unverified",
-      "first_seen": "2026-09-04T12:49:12+00:00",
-      "first_seen_run": "run-20260904T123402Z-acf86e7",
+      "first_seen": "2026-09-04T13:19:40+00:00",
+      "first_seen_run": "run-20260904T131842Z-7518e8e",
       "title": "11 reports filed under our hunter name were closed by the platform and have never been re-verified by us",
       "severity": "S3-CONTRACT",
       "tag": "PROCESS",
@@ -249,114 +158,46 @@
         }
       ],
       "thread": [],
-      "last_reproduced": "2026-09-04T13:14:33+00:00",
-      "last_reproduced_run": "run-20260904T131102Z-9a729ed",
-      "reproductions": 6,
+      "last_reproduced": "2026-09-04T13:27:22+00:00",
+      "last_reproduced_run": "run-20260904T131842Z-7518e8e",
+      "reproductions": 3,
       "state": "RAISED"
     },
-    "CYM-skill_count": {
-      "id": "CYM-skill_count",
-      "first_seen": "2026-09-04T12:49:12+00:00",
-      "first_seen_run": "run-20260904T123402Z-acf86e7",
-      "title": "How many agent skills are advertised?",
+    "CYM-skills_subset": {
+      "id": "CYM-skills_subset",
+      "first_seen": "2026-09-04T13:19:40+00:00",
+      "first_seen_run": "run-20260904T131842Z-7518e8e",
+      "title": "Is agent-skills.json the actionable subset of agent-card.json, as stated?",
       "severity": "S3-CONTRACT",
       "tag": "DOCS",
       "kind": "contradiction",
       "section": "discovery",
       "component": "discovery.wellknown",
-      "note": null,
-      "detail": {
-        "agent_card": "13",
-        "agent_skills": "10"
-      },
-      "checks": [
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[skill_count::agent_card-vs-agent_skills]"
-      ],
-      "filed": [
-        {
-          "report_id": 51,
-          "submitted_at": "2026-09-04T12:04:09+00:00",
-          "status": "fixed"
-        }
-      ],
-      "thread": [],
-      "last_reproduced": "2026-09-04T13:04:02+00:00",
-      "last_reproduced_run": "run-20260904T130132Z-57d3e34",
-      "reproductions": 4,
-      "state": "VERIFIED FIXED",
-      "verified_fixed_at": "2026-09-04T13:12:10+00:00",
-      "verified_by_run": "run-20260904T131102Z-9a729ed"
-    },
-    "CYM-skill_ids": {
-      "id": "CYM-skill_ids",
-      "first_seen": "2026-09-04T12:49:12+00:00",
-      "first_seen_run": "run-20260904T123402Z-acf86e7",
-      "title": "Which agent skills does the platform advertise?",
-      "severity": "S3-CONTRACT",
-      "tag": "DOCS",
-      "kind": "contradiction",
-      "section": "discovery",
-      "component": "discovery.wellknown",
-      "note": null,
+      "note": "Their resolution on #51 states agent-card.json is the full discovery card and agent-skills.json the endpoint-actionable subset. That is a testable model and the right one, so this checks the claim they actually made rather than demanding the two files be identical -- which they explained, correctly, that they should not be.",
       "detail": {
         "agent_card": "{ai-due-diligence, ai-native-provenance, arena-trading, clone-ai-agent, et10-revenue-share, exchange-tokens, live-headlines, market-data, prop-desk-trading, smart-delegation, tge-prediction-markets, trade-event-cards ... (+1 more)}  n=13",
         "agent_skills": "{arena-trading, asset-discovery, clone-ai-agent, et10-revenue-share, exchange-tokens, market-data, portfolio-management, prop-desk-trading, trade-event-cards, trade-prediction-markets}  n=10"
       },
       "checks": [
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[skill_ids::agent_card-vs-agent_skills]"
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[skills_subset::agent_card-vs-agent_skills]"
       ],
       "filed": [
         {
-          "report_id": 51,
-          "submitted_at": "2026-09-04T12:04:09+00:00",
-          "status": "fixed"
+          "report_id": 56,
+          "submitted_at": "2026-09-04T13:25:11+00:00",
+          "status": "pending"
         }
       ],
       "thread": [],
-      "last_reproduced": "2026-09-04T13:04:02+00:00",
-      "last_reproduced_run": "run-20260904T130132Z-57d3e34",
-      "reproductions": 4,
-      "state": "VERIFIED FIXED",
-      "verified_fixed_at": "2026-09-04T13:12:10+00:00",
-      "verified_by_run": "run-20260904T131102Z-9a729ed"
-    },
-    "CYM-documented-405": {
-      "id": "CYM-documented-405",
-      "first_seen": "2026-09-04T12:49:12+00:00",
-      "first_seen_run": "run-20260904T123402Z-acf86e7",
-      "title": "10 documented URLs exist but reject the documented method",
-      "severity": "S4-COSMETIC",
-      "tag": "MCP",
-      "kind": "documentation",
-      "section": "mcp",
-      "component": "discovery.llmstxt",
-      "note": "llms.txt renders MCP tools as fetchable URLs of the form /mcp/v1/tools/<name>. They answer 405: the resource exists, the shape in the document does not. Low severity on its own, but it is the same document that carries the tool names and counts.",
-      "detail": {
-        "/api/v1/agents/clone": "405 Method Not Allowed",
-        "/api/v1/ai-due-diligence": "405 Method Not Allowed",
-        "/api/v1/arena/order": "405 Method Not Allowed",
-        "/api/v1/clob/orders": "405 Method Not Allowed",
-        "/api/v1/cloned-bots/clone": "405 Method Not Allowed",
-        "/api/v1/prop/signup": "405 Method Not Allowed",
-        "/api/v1/support/ai-agent": "405 Method Not Allowed",
-        "/api/v1/swap/execute": "405 Method Not Allowed",
-        "/mcp/v1": "405 Method Not Allowed",
-        "/mcp/v1/register": "405 Method Not Allowed"
-      },
-      "checks": [
-        "scripts/inventory.py"
-      ],
-      "filed": [],
-      "thread": [],
-      "last_reproduced": "2026-09-04T13:14:33+00:00",
-      "last_reproduced_run": "run-20260904T131102Z-9a729ed",
-      "reproductions": 6,
-      "state": "NOT RAISED YET"
+      "last_reproduced": "2026-09-04T13:27:22+00:00",
+      "last_reproduced_run": "run-20260904T131842Z-7518e8e",
+      "reproductions": 3,
+      "state": "RAISED"
     },
     "CYM-mcp_resource_count": {
       "id": "CYM-mcp_resource_count",
-      "first_seen": "2026-09-04T12:49:12+00:00",
-      "first_seen_run": "run-20260904T123402Z-acf86e7",
+      "first_seen": "2026-09-04T13:19:40+00:00",
+      "first_seen_run": "run-20260904T131842Z-7518e8e",
       "title": "How many MCP resources are exposed?",
       "severity": "S4-COSMETIC",
       "tag": "MCP",
@@ -378,9 +219,9 @@
         }
       ],
       "thread": [],
-      "last_reproduced": "2026-09-04T13:14:33+00:00",
-      "last_reproduced_run": "run-20260904T131102Z-9a729ed",
-      "reproductions": 6,
+      "last_reproduced": "2026-09-04T13:27:22+00:00",
+      "last_reproduced_run": "run-20260904T131842Z-7518e8e",
+      "reproductions": 3,
       "state": "FIX CLAIMED"
     },
     "CYM-anon-tool-surface": {
@@ -405,18 +246,119 @@
           "report_id": 46,
           "submitted_at": "2026-09-04T12:03:33+00:00",
           "status": "fixed",
-          "status_seen_at": "2026-09-04T12:53:36+00:00"
+          "status_seen_at": "2026-09-04T13:19:40+00:00"
         }
       ],
       "thread": [],
       "first_seen": "2026-09-04T10:29:00+00:00",
-      "first_seen_run": "run-20260904T102937Z-nogit",
-      "last_reproduced": "2026-09-04T12:15:00+00:00",
       "reproductions": 1,
-      "verified_fixed_at": "2026-09-04T12:49:40+00:00",
-      "verified_by_run": "run-20260904T123402Z-acf86e7",
+      "backfilled_from": "git acf86e7 (last snapshot before the vendor's fixes)",
       "state": "VERIFIED FIXED",
-      "backfilled_from": "git acf86e7 (last snapshot before the vendor's fixes)"
+      "verified_fixed_at": "2026-09-04T13:19:40+00:00",
+      "verified_note": "anonymous tools/list now returns 25, matching mcp.json's declared unknown tier"
+    },
+    "CYM-agent_names": {
+      "id": "CYM-agent_names",
+      "title": "Which AI trading agents exist, by symbol?",
+      "severity": "S1-INTEGRITY",
+      "tag": "BOTS",
+      "kind": "contradiction",
+      "section": "agents",
+      "component": "rest.agents",
+      "note": "llms.txt instructs readers to clone named agents. If those names do not resolve, the instruction is not merely imprecise -- it is unfollowable.",
+      "detail": {
+        "live_species": "{ATR, BOLL, DIV, FIB, ICHI, MACD, PCPN, RSI, STOCH, TREND, VOL}  n=11",
+        "llms_txt": "{CORR, CRASH, DELTA, DREAD, FADE, GLOOM, SENT, STAT, SYNC, VORTX}  n=10"
+      },
+      "checks": [
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_names::live_species-vs-llms_txt]"
+      ],
+      "filed": [
+        {
+          "report_id": 48,
+          "submitted_at": "2026-09-04T12:03:52+00:00",
+          "status": "fixed",
+          "status_seen_at": "2026-09-04T13:19:40+00:00"
+        }
+      ],
+      "thread": [],
+      "first_seen": "2026-09-04T10:29:00+00:00",
+      "reproductions": 1,
+      "backfilled_from": "git acf86e7 (last snapshot before the vendor's fixes)",
+      "state": "VERIFIED FIXED",
+      "verified_fixed_at": "2026-09-04T13:19:40+00:00",
+      "verified_note": "all 11 real species symbols present in llms.txt, none of the 10 phantom names"
+    },
+    "CYM-agent_count": {
+      "id": "CYM-agent_count",
+      "title": "How many AI trading agents exist?",
+      "severity": "S2-MEASUREMENT",
+      "tag": "BOTS",
+      "kind": "contradiction",
+      "section": "agents",
+      "component": "rest.agents",
+      "note": null,
+      "detail": {
+        "live_agentbook": "8",
+        "live_species": "11",
+        "llms_txt": "10",
+        "mcp_json": "16"
+      },
+      "checks": [
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_count::live_agentbook-vs-live_species]",
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_count::live_agentbook-vs-llms_txt]",
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_count::live_agentbook-vs-mcp_json]",
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_count::live_species-vs-llms_txt]",
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_count::live_species-vs-mcp_json]",
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_count::llms_txt-vs-mcp_json]"
+      ],
+      "filed": [
+        {
+          "report_id": 52,
+          "submitted_at": "2026-09-04T12:04:15+00:00",
+          "status": "fixed",
+          "status_seen_at": "2026-09-04T13:19:40+00:00"
+        }
+      ],
+      "thread": [],
+      "first_seen": "2026-09-04T10:29:00+00:00",
+      "reproductions": 1,
+      "backfilled_from": "git acf86e7 (last snapshot before the vendor's fixes)",
+      "state": "VERIFIED FIXED",
+      "verified_fixed_at": "2026-09-04T13:19:40+00:00",
+      "verified_note": "llms.txt 11 == /api/v1/agents/species 11"
+    },
+    "CYM-chain_count": {
+      "id": "CYM-chain_count",
+      "title": "How many blockchains does the platform settle on or support?",
+      "severity": "S2-MEASUREMENT",
+      "tag": "MONEY",
+      "kind": "contradiction",
+      "section": "swaps",
+      "component": "platform.status",
+      "note": null,
+      "detail": {
+        "live_chains": "16",
+        "mcp_json": "10"
+      },
+      "checks": [
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[chain_count::live_chains-vs-mcp_json]"
+      ],
+      "filed": [
+        {
+          "report_id": 52,
+          "submitted_at": "2026-09-04T12:04:15+00:00",
+          "status": "fixed",
+          "status_seen_at": "2026-09-04T13:19:40+00:00"
+        }
+      ],
+      "thread": [],
+      "first_seen": "2026-09-04T10:29:00+00:00",
+      "reproductions": 1,
+      "backfilled_from": "git acf86e7 (last snapshot before the vendor's fixes)",
+      "state": "WITHDRAWN",
+      "withdrawn_reason": "Our check compared 'settlement on 10 chains' against the 16 chains /api/v1/swap/chains supports for swaps. Two different mechanisms; netting them is the collapsed-layer defect we report in others.",
+      "withdrawn_at": "2026-09-04T13:19:40+00:00"
     },
     "CYM-clob_pair_count": {
       "id": "CYM-clob_pair_count",
@@ -439,18 +381,16 @@
           "report_id": 52,
           "submitted_at": "2026-09-04T12:04:15+00:00",
           "status": "fixed",
-          "status_seen_at": "2026-09-04T12:53:36+00:00"
+          "status_seen_at": "2026-09-04T13:19:40+00:00"
         }
       ],
       "thread": [],
       "first_seen": "2026-09-04T10:29:00+00:00",
-      "first_seen_run": "run-20260904T102937Z-nogit",
-      "last_reproduced": "2026-09-04T12:15:00+00:00",
       "reproductions": 1,
-      "verified_fixed_at": "2026-09-04T12:49:40+00:00",
-      "verified_by_run": "run-20260904T123402Z-acf86e7",
+      "backfilled_from": "git acf86e7 (last snapshot before the vendor's fixes)",
       "state": "VERIFIED FIXED",
-      "backfilled_from": "git acf86e7 (last snapshot before the vendor's fixes)"
+      "verified_fixed_at": "2026-09-04T13:19:40+00:00",
+      "verified_note": "reconciled as 568 total with the 9 core curated named as a subset"
     },
     "CYM-commit_count": {
       "id": "CYM-commit_count",
@@ -473,18 +413,16 @@
           "report_id": 52,
           "submitted_at": "2026-09-04T12:04:15+00:00",
           "status": "fixed",
-          "status_seen_at": "2026-09-04T12:53:36+00:00"
+          "status_seen_at": "2026-09-04T13:19:40+00:00"
         }
       ],
       "thread": [],
       "first_seen": "2026-09-04T10:29:00+00:00",
-      "first_seen_run": "run-20260904T102937Z-nogit",
-      "last_reproduced": "2026-09-04T12:15:00+00:00",
       "reproductions": 1,
-      "verified_fixed_at": "2026-09-04T12:49:40+00:00",
-      "verified_by_run": "run-20260904T123402Z-acf86e7",
+      "backfilled_from": "git acf86e7 (last snapshot before the vendor's fixes)",
       "state": "VERIFIED FIXED",
-      "backfilled_from": "git acf86e7 (last snapshot before the vendor's fixes)"
+      "verified_fixed_at": "2026-09-04T13:19:40+00:00",
+      "verified_note": "llms.txt 21,800+ against a live 21,847, within tolerance"
     },
     "CYM-tracker-closure-rate": {
       "id": "CYM-tracker-closure-rate",
@@ -508,18 +446,16 @@
           "report_id": 53,
           "submitted_at": "2026-09-04T12:04:20+00:00",
           "status": "validated",
-          "status_seen_at": "2026-09-04T12:53:36+00:00"
+          "status_seen_at": "2026-09-04T13:19:40+00:00"
         }
       ],
       "thread": [],
       "first_seen": "2026-09-04T10:29:00+00:00",
-      "first_seen_run": "run-20260904T102937Z-nogit",
-      "last_reproduced": "2026-09-04T12:15:00+00:00",
       "reproductions": 1,
-      "verified_fixed_at": "2026-09-04T12:49:40+00:00",
-      "verified_by_run": "run-20260904T123402Z-acf86e7",
+      "backfilled_from": "git acf86e7 (last snapshot before the vendor's fixes)",
       "state": "VERIFIED FIXED",
-      "backfilled_from": "git acf86e7 (last snapshot before the vendor's fixes)"
+      "verified_fixed_at": "2026-09-04T13:19:40+00:00",
+      "verified_note": "validated_at now stamped; public list shows validated alongside fixed"
     },
     "CYM-documented-404": {
       "id": "CYM-documented-404",
@@ -566,130 +502,200 @@
           "report_id": 49,
           "submitted_at": "2026-09-04T12:03:58+00:00",
           "status": "fixed",
-          "status_seen_at": "2026-09-04T12:53:36+00:00"
+          "status_seen_at": "2026-09-04T13:19:40+00:00"
         }
       ],
       "thread": [],
       "first_seen": "2026-09-04T10:29:00+00:00",
-      "first_seen_run": "run-20260904T102937Z-nogit",
-      "last_reproduced": "2026-09-04T12:15:00+00:00",
       "reproductions": 1,
-      "verified_fixed_at": "2026-09-04T12:49:40+00:00",
-      "verified_by_run": "run-20260904T123402Z-acf86e7",
+      "backfilled_from": "git acf86e7 (last snapshot before the vendor's fixes)",
       "state": "VERIFIED FIXED",
-      "backfilled_from": "git acf86e7 (last snapshot before the vendor's fixes)"
+      "verified_fixed_at": "2026-09-04T13:19:40+00:00",
+      "verified_note": "0 of 114 documented paths return 404"
     },
-    "CYM-trusted-receives-nothing-above-its-tier": {
-      "id": "CYM-trusted-receives-nothing-above-its-tier",
-      "first_seen": "2026-09-04T13:03:23+00:00",
-      "first_seen_run": "run-20260904T130132Z-57d3e34",
-      "title": "Trust tier over-served: EXCESS     5 tools above the tier declared for them",
-      "severity": "S0-CUSTODY",
-      "tag": "MCP",
-      "kind": "authorization",
-      "section": "identity_trust",
-      "component": "mcp.trust_ladder",
-      "note": null,
-      "detail": {
-        "identity": "TRUSTED",
-        "served": "46 tools",
-        "entitled": "41 tools (its own tier and below, per mcp.json)",
-        "excess": "5 tools above the tier declared for them",
-        "declared allied": "create_aib_fund, edit_aib_fund_basket, list_my_aib_funds, register_webhook, subscribe_prices"
-      },
-      "checks": [
-        "tests/mcp/test_trust_ladder.py::test_trusted_receives_nothing_above_its_tier"
-      ],
-      "filed": [],
-      "thread": [],
-      "last_reproduced": "2026-09-04T13:14:33+00:00",
-      "last_reproduced_run": "run-20260904T131102Z-9a729ed",
-      "reproductions": 4,
-      "state": "NOT RAISED YET"
-    },
-    "CYM-mcp_tool_names_documented_exist": {
-      "id": "CYM-mcp_tool_names_documented_exist",
-      "first_seen": "2026-09-04T13:03:23+00:00",
-      "first_seen_run": "run-20260904T130132Z-57d3e34",
-      "title": "Does every tool name llms.txt documents exist on the server?",
+    "CYM-mcp_tool_count": {
+      "id": "CYM-mcp_tool_count",
+      "title": "How many MCP tools does the server expose?",
       "severity": "S3-CONTRACT",
       "tag": "MCP",
       "kind": "contradiction",
       "section": "mcp",
       "component": "mcp.tools_list",
-      "note": "Subset, not set_equal. llms.txt is not obliged to list every tool -- it is obliged not to name one that does not exist. The earlier set_equal form would now fail simply because the document lists fewer than the server serves, which is correct behaviour.",
+      "note": null,
       "detail": {
-        "left": "snapshot.value(pair.a, extractors[pair.a])"
+        "llms_txt": "11",
+        "mcp_anon": "46",
+        "mcp_json": "46",
+        "mcp_trusted": "46"
       },
       "checks": [
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_names_documented_exist::llms_txt-vs-mcp_json]"
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_count::llms_txt-vs-mcp_anon]",
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_count::llms_txt-vs-mcp_json]",
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_count::llms_txt-vs-mcp_trusted]"
       ],
-      "filed": [],
+      "filed": [
+        {
+          "report_id": 50,
+          "submitted_at": "2026-09-04T12:04:04+00:00",
+          "status": "fixed",
+          "status_seen_at": "2026-09-04T13:19:40+00:00"
+        }
+      ],
       "thread": [],
-      "last_reproduced": "2026-09-04T13:14:33+00:00",
-      "last_reproduced_run": "run-20260904T131102Z-9a729ed",
-      "reproductions": 4,
-      "state": "NOT RAISED YET"
+      "first_seen": "2026-09-04T10:29:00+00:00",
+      "reproductions": 1,
+      "backfilled_from": "git acf86e7 (last snapshot before the vendor's fixes)",
+      "state": "WITHDRAWN",
+      "withdrawn_reason": "Our check asserted the anonymous tool count equals the manifest total. That held only while tier gating was broken; once it was fixed, anonymous correctly returns 25 of 46 and our check reported their fix as a failure. Replaced by tests/mcp/test_trust_ladder.py.",
+      "withdrawn_at": "2026-09-04T13:19:40+00:00"
     },
-    "CYM-llms_agent_count_self_consistent": {
-      "id": "CYM-llms_agent_count_self_consistent",
-      "first_seen": "2026-09-04T13:12:10+00:00",
-      "first_seen_run": "run-20260904T131102Z-9a729ed",
-      "title": "Does llms.txt quote the same agent count in all of its own sentences?",
-      "severity": "S2-MEASUREMENT",
-      "tag": "BOTS",
+    "CYM-mcp_tool_names_declared_vs_served": {
+      "id": "CYM-mcp_tool_names_declared_vs_served",
+      "title": "Do the tool names the platform documents actually exist?",
+      "severity": "S3-CONTRACT",
+      "tag": "MCP",
       "kind": "contradiction",
-      "section": "agents",
-      "component": "rest.agents",
-      "note": "A document that contradicts itself is worse than two documents that disagree, because the reader has no way to pick. Added after report #52 updated one occurrence of the count and left another behind.",
+      "section": "mcp",
+      "component": "mcp.tools_list",
+      "note": null,
       "detail": {
-        "llms_txt": "10",
-        "llms_txt_2": "11"
+        "llms_txt": "{get_featured_market, get_leaderboard, get_market, get_market_summary, get_markets, get_orderbook, get_price, get_prices, get_trades, get_trending_markets, search_markets}  n=11",
+        "mcp_anon": "{ask_nexus_deep, browse_ontology, create_aib_fund, edit_aib_fund_basket, find_trade_path, get_agent_profile, get_ai_native_proof, get_btc_pool_history, get_btc_pool_state, get_deadcoin_desk_info, get_deadcoin_quote, get_deep_answer ... (+34 more)}  n=46",
+        "mcp_json": "{ask_nexus_deep, browse_ontology, create_aib_fund, edit_aib_fund_basket, find_trade_path, get_agent_profile, get_ai_native_proof, get_btc_pool_history, get_btc_pool_state, get_deadcoin_desk_info, get_deadcoin_quote, get_deep_answer ... (+34 more)}  n=46"
       },
       "checks": [
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[llms_agent_count_self_consistent::llms_txt-vs-llms_txt_2]"
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_names_declared_vs_served::llms_txt-vs-mcp_anon]",
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_names_declared_vs_served::llms_txt-vs-mcp_json]"
       ],
-      "filed": [],
+      "filed": [
+        {
+          "report_id": 50,
+          "submitted_at": "2026-09-04T12:04:04+00:00",
+          "status": "fixed",
+          "status_seen_at": "2026-09-04T13:19:40+00:00"
+        }
+      ],
       "thread": [],
-      "last_reproduced": "2026-09-04T13:14:33+00:00",
-      "last_reproduced_run": "run-20260904T131102Z-9a729ed",
-      "reproductions": 2,
-      "state": "NOT RAISED YET"
+      "first_seen": "2026-09-04T10:29:00+00:00",
+      "reproductions": 1,
+      "backfilled_from": "git acf86e7 (last snapshot before the vendor's fixes)",
+      "state": "VERIFIED FIXED",
+      "verified_fixed_at": "2026-09-04T13:19:40+00:00",
+      "verified_note": "llms.txt links no nonexistent tool names"
     },
-    "CYM-skills_subset": {
-      "id": "CYM-skills_subset",
-      "first_seen": "2026-09-04T13:12:10+00:00",
-      "first_seen_run": "run-20260904T131102Z-9a729ed",
-      "title": "Is agent-skills.json the actionable subset of agent-card.json, as stated?",
+    "CYM-skill_count": {
+      "id": "CYM-skill_count",
+      "title": "How many agent skills are advertised?",
       "severity": "S3-CONTRACT",
       "tag": "DOCS",
       "kind": "contradiction",
       "section": "discovery",
       "component": "discovery.wellknown",
-      "note": "Their resolution on #51 states agent-card.json is the full discovery card and agent-skills.json the endpoint-actionable subset. That is a testable model and the right one, so this checks the claim they actually made rather than demanding the two files be identical -- which they explained, correctly, that they should not be.",
+      "note": null,
       "detail": {
-        "agent_card": "{ai-due-diligence, ai-native-provenance, arena-trading, clone-ai-agent, et10-revenue-share, exchange-tokens, live-headlines, market-data, prop-desk-trading, smart-delegation, tge-prediction-markets, trade-event-cards ... (+1 more)}  n=13",
-        "agent_skills": "{arena-trading, asset-discovery, clone-ai-agent, et10-revenue-share, exchange-tokens, market-data, portfolio-management, prop-desk-trading, trade-event-cards, trade-prediction-markets}  n=10"
+        "agent_card": "13",
+        "agent_skills": "10"
       },
       "checks": [
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[skills_subset::agent_card-vs-agent_skills]"
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[skill_count::agent_card-vs-agent_skills]"
+      ],
+      "filed": [
+        {
+          "report_id": 51,
+          "submitted_at": "2026-09-04T12:04:09+00:00",
+          "status": "fixed",
+          "status_seen_at": "2026-09-04T13:19:40+00:00"
+        }
+      ],
+      "thread": [],
+      "first_seen": "2026-09-04T10:29:00+00:00",
+      "reproductions": 1,
+      "backfilled_from": "git acf86e7 (last snapshot before the vendor's fixes)",
+      "state": "VERIFIED FIXED",
+      "verified_fixed_at": "2026-09-04T13:19:40+00:00",
+      "verified_note": "get-market-data -> market-data and exchange-crypto -> exchange-tokens landed"
+    },
+    "CYM-skill_ids": {
+      "id": "CYM-skill_ids",
+      "title": "Which agent skills does the platform advertise?",
+      "severity": "S3-CONTRACT",
+      "tag": "DOCS",
+      "kind": "contradiction",
+      "section": "discovery",
+      "component": "discovery.wellknown",
+      "note": null,
+      "detail": {
+        "agent_card": "{ai-due-diligence, ai-native-provenance, arena-trading, clone-ai-agent, et10-revenue-share, exchange-tokens, live-headlines, market-data, prop-desk-trading, smart-delegation, tge-prediction-markets, trade-event-cards ... (+1 more)}  n=13",
+        "agent_skills": "{arena-trading, asset-discovery, clone-ai-agent, et10-revenue-share, exchange-crypto, get-market-data, portfolio-management, prop-desk-trading, trade-event-cards, trade-prediction-markets}  n=10"
+      },
+      "checks": [
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[skill_ids::agent_card-vs-agent_skills]"
+      ],
+      "filed": [
+        {
+          "report_id": 51,
+          "submitted_at": "2026-09-04T12:04:09+00:00",
+          "status": "fixed",
+          "status_seen_at": "2026-09-04T13:19:40+00:00"
+        }
+      ],
+      "thread": [],
+      "first_seen": "2026-09-04T10:29:00+00:00",
+      "reproductions": 1,
+      "backfilled_from": "git acf86e7 (last snapshot before the vendor's fixes)",
+      "state": "VERIFIED FIXED",
+      "verified_fixed_at": "2026-09-04T13:19:40+00:00",
+      "verified_note": "superseded by skills_subset, which tests their stated model"
+    },
+    "CYM-documented-405": {
+      "id": "CYM-documented-405",
+      "title": "18 documented URLs exist but reject the documented method",
+      "severity": "S4-COSMETIC",
+      "tag": "MCP",
+      "kind": "documentation",
+      "section": "mcp",
+      "component": "discovery.llmstxt",
+      "note": "llms.txt renders MCP tools as fetchable URLs of the form /mcp/v1/tools/<name>. They answer 405: the resource exists, the shape in the document does not. Low severity on its own, but it is the same document that carries the tool names and counts.",
+      "detail": {
+        "/api/v1/ai-due-diligence": "405 Method Not Allowed",
+        "/api/v1/arena/order": "405 Method Not Allowed",
+        "/api/v1/prop/signup": "405 Method Not Allowed",
+        "/api/v1/support/ai-agent": "405 Method Not Allowed",
+        "/api/v1/swap/execute": "405 Method Not Allowed",
+        "/mcp/v1": "405 Method Not Allowed",
+        "/mcp/v1/register": "405 Method Not Allowed",
+        "/mcp/v1/tools/get_featured_market": "405 Method Not Allowed",
+        "/mcp/v1/tools/get_leaderboard": "405 Method Not Allowed",
+        "/mcp/v1/tools/get_market": "405 Method Not Allowed",
+        "/mcp/v1/tools/get_market_summary": "405 Method Not Allowed",
+        "/mcp/v1/tools/get_markets": "405 Method Not Allowed",
+        "/mcp/v1/tools/get_orderbook": "405 Method Not Allowed",
+        "/mcp/v1/tools/get_price": "405 Method Not Allowed",
+        "/mcp/v1/tools/get_prices": "405 Method Not Allowed",
+        "/mcp/v1/tools/get_trades": "405 Method Not Allowed",
+        "/mcp/v1/tools/get_trending_markets": "405 Method Not Allowed",
+        "/mcp/v1/tools/search_markets": "405 Method Not Allowed"
+      },
+      "checks": [
+        "scripts/inventory.py"
       ],
       "filed": [],
       "thread": [],
-      "last_reproduced": "2026-09-04T13:14:33+00:00",
-      "last_reproduced_run": "run-20260904T131102Z-9a729ed",
-      "reproductions": 2,
-      "state": "NOT RAISED YET"
+      "first_seen": "2026-09-04T10:29:00+00:00",
+      "reproductions": 1,
+      "backfilled_from": "git acf86e7 (last snapshot before the vendor's fixes)",
+      "state": "WITHDRAWN",
+      "withdrawn_reason": "Measured our own probe method, not their contract. The original 18 were llms.txt rendering MCP tools as GET-able /mcp/v1/tools/<name> URLs, and those are gone. The 10 that remain are POST-only endpoints we probed with GET, where 405 is the correct answer.",
+      "withdrawn_at": "2026-09-04T13:19:40+00:00"
     }
   },
-  "updated_at": "2026-09-04T13:14:33+00:00",
-  "run_id": "run-20260904T131102Z-9a729ed",
+  "filing_status_refreshed": 0,
+  "updated_at": "2026-09-04T13:27:22+00:00",
+  "run_id": "run-20260904T131842Z-7518e8e",
   "counts": {
     "FIX CLAIMED": 1,
-    "NOT RAISED YET": 5,
-    "RAISED": 2,
+    "RAISED": 5,
     "VERIFIED FIXED": 10,
-    "WITHDRAWN": 2
-  },
-  "filing_status_refreshed": 0
+    "WITHDRAWN": 4
+  }
 }

@@ -130,9 +130,37 @@ def validate(payload: dict, key: str) -> None:
 
 
 def existing_titles(client) -> set[str]:
+    """Titles already on the server, so a retry never files a duplicate.
+
+    The public list alone is not enough: it hides pending reports, so a report
+    whose POST response was lost to a timeout would be invisible here and only
+    the server's 409 would stop the retry. Our own pending reports live behind
+    my-reports, keyed by wallet -- read both.
+    """
+    titles: set[str] = set()
     try:
         reports = client.get(ENDPOINT).json().get("reports", [])
-        return {(r.get("title") or "").strip().lower() for r in reports}
+        titles |= {(r.get("title") or "").strip().lower() for r in reports}
+        wallet = os.environ.get("QA_WALLET_ADDRESS", "")
+        if wallet:
+            # Filing is anonymous by design, but READING our own pending
+            # reports is not: my-reports answers the credentialed caller. The
+            # first version of this read used the anonymous filing client and
+            # silently saw nothing, so two retries reached the server's 409
+            # instead of being stopped here. Read with the key.
+            ids = identities()
+            reader = build_client(
+                ids["trusted"] if ids["trusted"].present else ids["anon"],
+                client._transport.registry, timeout=40.0,
+            )
+            try:
+                mine = reader.get("/api/v1/bounty/my-reports",
+                                  params={"wallet_address": wallet}).json()
+            finally:
+                reader.close()
+            rows = mine.get("reports") or mine.get("data") or []
+            titles |= {(r.get("title") or "").strip().lower() for r in rows}
+        return titles
     except Exception as exc:  # noqa: BLE001
         print(f"  ! could not read the tracker first ({exc}); refusing to file blind")
         raise SystemExit(1)
@@ -202,7 +230,11 @@ def main() -> None:
 
     token = CURRENT_TIER.set(SafetyTier.MUTATE)
     try:
-        client = build_client(identities()["anon"], registry)
+        # A POST that creates a record is slower than a read; 30s dropped one
+        # response out of eleven today, after the server had already accepted
+        # it. The write itself is idempotent on our side because of the title
+        # check above, so the only cost of a longer wait is waiting.
+        client = build_client(identities()["anon"], registry, timeout=60.0)
         try:
             seen = existing_titles(client)
             print(f"tracker currently holds {len(seen)} reports\n")

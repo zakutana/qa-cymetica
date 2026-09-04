@@ -39,6 +39,15 @@ WITHDRAWN = {
         "That held only while tier gating was broken; once it was fixed, "
         "anonymous correctly returns 25 of 46 and our check reported their fix "
         "as a failure. Replaced by tests/mcp/test_trust_ladder.py.",
+    "CYM-documented-405":
+        "Measured our own probe method, not their contract. The original 18 were "
+        "llms.txt rendering MCP tools as GET-able /mcp/v1/tools/<name> URLs, and "
+        "those are gone. The 10 that remain are POST-only endpoints we probed "
+        "with GET, where 405 is the correct answer.",
+    "CYM-mcp_tool_names_documented_exist":
+        "Never a defect. The check is INCONCLUSIVE, not failing: llms.txt no "
+        "longer links any tool names, so there is nothing to verify. It entered "
+        "the ledger from a run before the claim was rewritten.",
     "CYM-chain_count":
         "Our check compared 'settlement on 10 chains' against the 16 chains "
         "/api/v1/swap/chains supports for swaps. Two different mechanisms; "
@@ -63,6 +72,15 @@ def latest_run_id() -> str | None:
     return json.loads(runs[-1].read_text(encoding="utf-8")).get("run_id")
 
 
+def executed_nodeids() -> set[str]:
+    """Which checks actually ran in the latest run record."""
+    runs = sorted((STATE / "runs").glob("run-*.json"))
+    if not runs:
+        return set()
+    run = json.loads(runs[-1].read_text(encoding="utf-8"))
+    return {r["nodeid"] for r in run.get("results", [])}
+
+
 def merge() -> dict:
     current = load("findings.json")
     ledger = load_ledger()
@@ -72,6 +90,8 @@ def merge() -> dict:
     run_id = latest_run_id()
     seen_now = {f["id"] for f in current.get("findings", [])}
 
+    # 0. Withdrawals apply unconditionally -- a finding we retracted stays
+    #    retracted even if its check is still producing output.
     # 1. Findings observed in this run: create or refresh the row.
     for finding in current.get("findings", []):
         row = rows.setdefault(finding["id"], {
@@ -104,7 +124,14 @@ def merge() -> dict:
         else:
             row["state"] = finding["state"]
 
-    # 2. Rows absent from this run: the check no longer reproduces.
+    # 2. Rows absent from this run.
+    #
+    #    Absence has two very different causes and conflating them is a defect:
+    #    the check RAN and passed, or the check never ran because the selector
+    #    did not include it. Only the first is a verification. Marking a finding
+    #    fixed because a partial run skipped it would let a targeted re-run
+    #    silently close everything it did not touch.
+    executed = executed_nodeids()
     for finding_id, row in rows.items():
         if finding_id in seen_now:
             continue
@@ -117,6 +144,17 @@ def merge() -> dict:
         if row.get("verified_fixed_at"):
             row["state"] = "VERIFIED FIXED"
             continue
+
+        checks = row.get("checks") or []
+        ran = [c for c in checks if c in executed]
+        if checks and not ran:
+            # The check exists and did not run. State is unchanged and the row
+            # is flagged, because "we did not look" must never read as "we
+            # looked and it was fine".
+            row["not_checked_in_last_run"] = True
+            continue
+        row.pop("not_checked_in_last_run", None)
+
         row["verified_fixed_at"] = now
         row["verified_by_run"] = run_id
         row["state"] = "VERIFIED FIXED"
@@ -142,6 +180,14 @@ def merge() -> dict:
                 entry["status_seen_at"] = now
                 refreshed += 1
     ledger["filing_status_refreshed"] = refreshed
+
+    for finding_id, reason in WITHDRAWN.items():
+        row = rows.get(finding_id)
+        if row is not None:
+            row["state"] = "WITHDRAWN"
+            row["withdrawn_reason"] = reason
+            row["withdrawn_at"] = row.get("withdrawn_at") or now
+            row.pop("verified_fixed_at", None)
 
     ledger["updated_at"] = now
     ledger["run_id"] = run_id

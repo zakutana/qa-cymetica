@@ -232,7 +232,11 @@ def from_inventory(inventory: dict) -> list[dict]:
             "evidence_ids": [],
         })
 
-    if method:
+    # The 405 finding is deliberately not generated. A 405 means we sent GET to
+    # a POST-only endpoint: that is our probe being wrong about the method, not
+    # the platform being wrong about anything. The real defect it once described
+    # -- llms.txt rendering MCP tools as fetchable URLs -- is fixed and gone.
+    if False and method:
         findings.append({
             "id": "CYM-documented-405",
             "kind": "documentation",
@@ -431,6 +435,8 @@ def from_run_failures(run: dict) -> list[dict]:
     }
     findings: list[dict] = []
     for result in run.get("results", []):
+        # "inconclusive" is not "failed". A measurement we could not trust is
+        # not a defect we are entitled to report.
         if result["outcome"] != "failed":
             continue
         nodeid = result["nodeid"]

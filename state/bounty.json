@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-09-04T13:14:32+00:00",
+  "fetched_at": "2026-09-04T13:27:05+00:00",
   "total": 23,
   "statuses": {
     "validated": 2,
@@ -24,8 +24,9 @@
   },
   "our_reports": {
     "endpoint": "GET /api/v1/bounty/my-reports?wallet_address=<addr>",
-    "total": 8,
+    "total": 11,
     "statuses": {
+      "pending": 3,
       "validated": 2,
       "fixed": 6
     },
@@ -171,6 +172,60 @@
         "validated_at": "2026-09-04T12:26:53.839834",
         "triaged_at": "2026-09-04T12:26:53.743013",
         "status_notes": "Validated, with an explanation rather than a code change: GET /api/v1/bounty/reports is deliberately a filtered public view (validated and later stages only) so unverified reports — which can contain unconfirmed security detail — are not published; your 8 pending reports exist in the tracker and are visible to admins. The 100%-closure appearance came from that filter plus a process gap you correctly identified: triaged_at/validated_at were never being stamped. That gap is closed starting with this batch — every report in it was moved through triaging and validated states so the timestamps now populate, and future triage follows the same path.",
+        "ticket_url": null,
+        "fix_pr_url": null,
+        "reward_amount": 0.0
+      },
+      {
+        "id": 54,
+        "title": "The tool-catalog tier bug from report #46 is still live one tier up: TRUSTED is served 5 allied tools",
+        "status": "pending",
+        "hunter_name": "expire76",
+        "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
+        "severity_reported": "high",
+        "severity_confirmed": null,
+        "category": "security",
+        "created_at": "2026-09-04T13:20:33.056545",
+        "fixed_at": null,
+        "validated_at": null,
+        "triaged_at": null,
+        "status_notes": null,
+        "ticket_url": null,
+        "fix_pr_url": null,
+        "reward_amount": 0.0
+      },
+      {
+        "id": 55,
+        "title": "llms.txt gives two different agent counts in its own text: 10 in one sentence, 11 in another",
+        "status": "pending",
+        "hunter_name": "expire76",
+        "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
+        "severity_reported": "low",
+        "severity_confirmed": null,
+        "category": "documentation",
+        "created_at": "2026-09-04T13:20:58.089377",
+        "fixed_at": null,
+        "validated_at": null,
+        "triaged_at": null,
+        "status_notes": null,
+        "ticket_url": null,
+        "fix_pr_url": null,
+        "reward_amount": 0.0
+      },
+      {
+        "id": 56,
+        "title": "The stated agent-card/agent-skills subset model does not hold: 2 skill ids appear only in agent-skills.json",
+        "status": "pending",
+        "hunter_name": "expire76",
+        "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
+        "severity_reported": "low",
+        "severity_confirmed": null,
+        "category": "documentation",
+        "created_at": "2026-09-04T13:25:02.502545",
+        "fixed_at": null,
+        "validated_at": null,
+        "triaged_at": null,
+        "status_notes": null,
         "ticket_url": null,
         "fix_pr_url": null,
         "reward_amount": 0.0

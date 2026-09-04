@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-09-04T13:14:32+00:00",
-  "run_id": "run-20260904T131102Z-9a729ed",
-  "platform_fingerprint": "sha256:79dca1560f1f003c567b63fc439084281edb16e23bbd45b7e7be16e570ab98fc",
+  "generated_at": "2026-09-04T13:27:22+00:00",
+  "run_id": "run-20260904T131842Z-7518e8e",
+  "platform_fingerprint": "sha256:a5507c9d41612de3e634751b89cd2ce840ad3778510c1862657e6f518c99f037",
   "findings": [
     {
       "id": "CYM-trusted-receives-nothing-above-its-tier",
@@ -22,14 +22,20 @@
         "tests/mcp/test_trust_ladder.py::test_trusted_receives_nothing_above_its_tier"
       ],
       "evidence_ids": [],
-      "first_seen_run": "run-20260904T131102Z-9a729ed",
+      "first_seen_run": "run-20260904T131842Z-7518e8e",
       "tag": "MCP",
       "tag_label": "MCP & trust ladder",
       "thread": [],
-      "filed": [],
+      "filed": [
+        {
+          "report_id": 54,
+          "submitted_at": "2026-09-04T13:20:49+00:00",
+          "status": "pending"
+        }
+      ],
       "undelivered": 0,
-      "reported_at": null,
-      "state": "NOT RAISED YET"
+      "reported_at": "2026-09-04T13:20:49+00:00",
+      "state": "RAISED"
     },
     {
       "id": "CYM-bounty-filing-unauthenticated",
@@ -48,7 +54,7 @@
         "scripts/bounty.py::probe_filing_auth"
       ],
       "evidence_ids": [],
-      "first_seen_run": "run-20260904T131102Z-9a729ed",
+      "first_seen_run": "run-20260904T131842Z-7518e8e",
       "tag": "PROCESS",
       "tag_label": "Reporting channel & tracker",
       "thread": [],
@@ -80,14 +86,20 @@
       ],
       "failing_pairs": 1,
       "evidence_ids": [],
-      "first_seen_run": "run-20260904T131102Z-9a729ed",
+      "first_seen_run": "run-20260904T131842Z-7518e8e",
       "tag": "BOTS",
       "tag_label": "Bots, skills & AgentBook",
       "thread": [],
-      "filed": [],
+      "filed": [
+        {
+          "report_id": 55,
+          "submitted_at": "2026-09-04T13:20:58.089377+00:00",
+          "status": "pending"
+        }
+      ],
       "undelivered": 0,
-      "reported_at": null,
-      "state": "NOT RAISED YET"
+      "reported_at": "2026-09-04T13:20:58.089377+00:00",
+      "state": "RAISED"
     },
     {
       "id": "CYM-mcp_tool_names_documented_exist",
@@ -105,7 +117,7 @@
       ],
       "failing_pairs": 1,
       "evidence_ids": [],
-      "first_seen_run": "run-20260904T131102Z-9a729ed",
+      "first_seen_run": "run-20260904T131842Z-7518e8e",
       "tag": "MCP",
       "tag_label": "MCP & trust ladder",
       "thread": [],
@@ -139,7 +151,7 @@
         "scripts/bounty.py"
       ],
       "evidence_ids": [],
-      "first_seen_run": "run-20260904T131102Z-9a729ed",
+      "first_seen_run": "run-20260904T131842Z-7518e8e",
       "tag": "PROCESS",
       "tag_label": "Reporting channel & tracker",
       "thread": [],
@@ -171,58 +183,20 @@
       ],
       "failing_pairs": 1,
       "evidence_ids": [],
-      "first_seen_run": "run-20260904T131102Z-9a729ed",
+      "first_seen_run": "run-20260904T131842Z-7518e8e",
       "tag": "DOCS",
       "tag_label": "Manifests & documentation",
       "thread": [],
-      "filed": [],
-      "undelivered": 0,
-      "reported_at": null,
-      "state": "NOT RAISED YET"
-    },
-    {
-      "id": "CYM-documented-405",
-      "kind": "documentation",
-      "severity": "S4-COSMETIC",
-      "title": "10 documented URLs exist but reject the documented method",
-      "component": "discovery.llmstxt",
-      "section": "mcp",
-      "note": "llms.txt renders MCP tools as fetchable URLs of the form /mcp/v1/tools/<name>. They answer 405: the resource exists, the shape in the document does not. Low severity on its own, but it is the same document that carries the tool names and counts.",
-      "detail": {
-        "/api/v1/agents/clone": "405 Method Not Allowed",
-        "/api/v1/ai-due-diligence": "405 Method Not Allowed",
-        "/api/v1/arena/order": "405 Method Not Allowed",
-        "/api/v1/clob/orders": "405 Method Not Allowed",
-        "/api/v1/cloned-bots/clone": "405 Method Not Allowed",
-        "/api/v1/prop/signup": "405 Method Not Allowed",
-        "/api/v1/support/ai-agent": "405 Method Not Allowed",
-        "/api/v1/swap/execute": "405 Method Not Allowed",
-        "/mcp/v1": "405 Method Not Allowed",
-        "/mcp/v1/register": "405 Method Not Allowed"
-      },
-      "affected_sections": [
-        "agents",
-        "arena",
-        "clob",
-        "identity_trust",
-        "mcp",
-        "prop_desk",
-        "provenance",
-        "support",
-        "swaps"
+      "filed": [
+        {
+          "report_id": 56,
+          "submitted_at": "2026-09-04T13:25:11+00:00",
+          "status": "pending"
+        }
       ],
-      "checks": [
-        "scripts/inventory.py"
-      ],
-      "evidence_ids": [],
-      "first_seen_run": "run-20260904T131102Z-9a729ed",
-      "tag": "MCP",
-      "tag_label": "MCP & trust ladder",
-      "thread": [],
-      "filed": [],
       "undelivered": 0,
-      "reported_at": null,
-      "state": "NOT RAISED YET"
+      "reported_at": "2026-09-04T13:25:11+00:00",
+      "state": "RAISED"
     },
     {
       "id": "CYM-mcp_resource_count",
@@ -240,7 +214,7 @@
       ],
       "failing_pairs": 1,
       "evidence_ids": [],
-      "first_seen_run": "run-20260904T131102Z-9a729ed",
+      "first_seen_run": "run-20260904T131842Z-7518e8e",
       "tag": "MCP",
       "tag_label": "MCP & trust ladder",
       "thread": [],
@@ -261,6 +235,6 @@
     "S1-INTEGRITY": 1,
     "S2-MEASUREMENT": 1,
     "S3-CONTRACT": 3,
-    "S4-COSMETIC": 2
+    "S4-COSMETIC": 1
   }
 }

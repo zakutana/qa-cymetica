@@ -237,6 +237,102 @@ reports:
       CLAIM, not as fixed. It becomes verified only when I re-run the check
       that originally failed, and I report either outcome accurately.
 
+  - key: trusted-tier-over-served
+    findings: [CYM-trusted-receives-nothing-above-its-tier]
+    severity: high
+    category: security
+    url: https://cymetica.com/mcp/v1
+    title: "The tool-catalog tier bug from report #46 is still live one tier up: TRUSTED is served 5 allied tools"
+    expected: >
+      A caller at a given trust tier receives that tier's tools and everything
+      below it, and nothing above.
+    actual: >
+      A TRUSTED-tier key is served all 46 tools. Per mcp.json it is entitled to
+      41 (unknown 25 + recognized 13 + trusted 3). The five declared allied --
+      create_aib_fund, edit_aib_fund_basket, list_my_aib_funds,
+      register_webhook, subscribe_prices -- are served one tier below their
+      declaration.
+    steps:
+      - "POST https://cymetica.com/mcp/v1 tools/list with a TRUSTED X-API-Key -> 46 tools"
+      - "GET /.well-known/mcp.json, group tools by trust_tier -> unknown 25, recognized 13, trusted 3, allied 5"
+      - "Subtract: 46 served, 41 entitled, the 5 allied are the excess"
+    body: >
+      Found by re-running your fix for report #46 one tier ABOVE where it was
+      reported. Your root cause there was a falsy-default on TrustLevel.UNKNOWN
+      (IntEnum 0) in the listing path; the anonymous case is genuinely fixed and
+      verified, but the same listing path still over-serves at TRUSTED.
+      SCOPE, as before: this is the advertised catalog only. Call-time
+      authorization holds -- anonymous tools/call on place_order,
+      create_aib_fund and get_deposit_address all return INSUFFICIENT_TRUST, and
+      that is now a standing check on our side rather than something taken on
+      trust. I have not tested calling an allied tool with the TRUSTED key,
+      because the finding is reachability and the test would create a fund.
+      INVARIANT: assert served_set(tier) is a subset of the union of declared
+      tiers up to and including that tier, for every tier -- not just for
+      anonymous. A fix that only corrects the tier it was reported at is not a
+      fix for the class, which is exactly what this report is.
+
+      CORRECTIONS FROM US, on our own earlier reports:
+      Two checks we filed were wrong and we withdraw them. In report #52 the
+      chain-count item compared "settlement on 10 chains" against the 16 chains
+      /api/v1/swap/chains supports for swaps -- two different mechanisms, and
+      netting them was our error, not your defect. In report #50 the tool-count
+      item asserted the anonymous count should equal the manifest total; that
+      only held while the tier gating was broken, and after your fix our own
+      check was reporting correct behaviour as a failure. Both are retracted.
+
+  - key: llms-self-contradiction
+    findings: [CYM-llms_agent_count_self_consistent]
+    severity: low
+    category: documentation
+    url: https://cymetica.com/llms.txt
+    title: "llms.txt gives two different agent counts in its own text: 10 in one sentence, 11 in another"
+    expected: >
+      A single document quotes one value for one quantity.
+    actual: >
+      llms.txt contains both "CLOB exchange, 10 AI trading agents, on-chain
+      settlement on Base L2" and "Clone any of our 11 AI trading agent species
+      with customizable strategies". The live catalogue has 11.
+    steps:
+      - "GET https://cymetica.com/llms.txt"
+      - "grep for '10 AI trading agents' and 'any of our 11 AI trading agent species' -- both present"
+    body: >
+      Your resolution on report #52 corrected the count and named what each
+      figure measures, which was the right fix. One occurrence was missed. A
+      document that contradicts itself is worse than two documents that
+      disagree, because a reader has no basis to choose between them.
+      INVARIANT: generate the count from /api/v1/agents/species at build time
+      rather than writing it in prose, in every occurrence. This is the second
+      time a hand-maintained constant in llms.txt has drifted.
+
+  - key: skills-subset-model
+    findings: [CYM-skills_subset]
+    severity: low
+    category: documentation
+    url: https://cymetica.com/.well-known/agent-skills.json
+    title: "The stated agent-card/agent-skills subset model does not hold: 2 skill ids appear only in agent-skills.json"
+    expected: >
+      Per your resolution on report #51, agent-card.json is the full discovery
+      card and agent-skills.json the endpoint-actionable subset -- so every id
+      in agent-skills.json should appear in agent-card.json.
+    actual: >
+      asset-discovery and portfolio-management are in agent-skills.json and
+      absent from agent-card.json. The relationship is an overlap, not a subset.
+    steps:
+      - "GET /.well-known/agent-card.json, collect skills[].id -> 13"
+      - "GET /.well-known/agent-skills.json, collect skills[].id -> 10"
+      - "Subtract: asset-discovery and portfolio-management are not in the card"
+    body: >
+      The two renames you made did land -- get-market-data became market-data
+      and exchange-crypto became exchange-tokens in both files, verified. This
+      is only about the model you described alongside them. We changed our own
+      check to test your stated model rather than demanding the files be
+      identical, because your model is the better one; it just does not hold on
+      two ids yet.
+      INVARIANT: generate agent-skills.json from agent-card.json by filtering on
+      "has an endpoint", so the subset relationship is true by construction
+      rather than by maintenance.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: read-only
   verification of the REST API, MCP and machine-readable discovery surfaces. No
