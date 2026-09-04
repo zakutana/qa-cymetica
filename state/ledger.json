@@ -59,9 +59,9 @@
         }
       ],
       "thread": [],
-      "last_reproduced": "2026-09-04T13:12:10+00:00",
+      "last_reproduced": "2026-09-04T13:14:33+00:00",
       "last_reproduced_run": "run-20260904T131102Z-9a729ed",
-      "reproductions": 5,
+      "reproductions": 6,
       "state": "RAISED"
     },
     "CYM-agent_count": {
@@ -249,9 +249,9 @@
         }
       ],
       "thread": [],
-      "last_reproduced": "2026-09-04T13:12:10+00:00",
+      "last_reproduced": "2026-09-04T13:14:33+00:00",
       "last_reproduced_run": "run-20260904T131102Z-9a729ed",
-      "reproductions": 5,
+      "reproductions": 6,
       "state": "RAISED"
     },
     "CYM-skill_count": {
@@ -348,9 +348,9 @@
       ],
       "filed": [],
       "thread": [],
-      "last_reproduced": "2026-09-04T13:12:10+00:00",
+      "last_reproduced": "2026-09-04T13:14:33+00:00",
       "last_reproduced_run": "run-20260904T131102Z-9a729ed",
-      "reproductions": 5,
+      "reproductions": 6,
       "state": "NOT RAISED YET"
     },
     "CYM-mcp_resource_count": {
@@ -378,9 +378,9 @@
         }
       ],
       "thread": [],
-      "last_reproduced": "2026-09-04T13:12:10+00:00",
+      "last_reproduced": "2026-09-04T13:14:33+00:00",
       "last_reproduced_run": "run-20260904T131102Z-9a729ed",
-      "reproductions": 5,
+      "reproductions": 6,
       "state": "FIX CLAIMED"
     },
     "CYM-anon-tool-surface": {
@@ -602,9 +602,9 @@
       ],
       "filed": [],
       "thread": [],
-      "last_reproduced": "2026-09-04T13:12:10+00:00",
+      "last_reproduced": "2026-09-04T13:14:33+00:00",
       "last_reproduced_run": "run-20260904T131102Z-9a729ed",
-      "reproductions": 3,
+      "reproductions": 4,
       "state": "NOT RAISED YET"
     },
     "CYM-mcp_tool_names_documented_exist": {
@@ -626,9 +626,9 @@
       ],
       "filed": [],
       "thread": [],
-      "last_reproduced": "2026-09-04T13:12:10+00:00",
+      "last_reproduced": "2026-09-04T13:14:33+00:00",
       "last_reproduced_run": "run-20260904T131102Z-9a729ed",
-      "reproductions": 3,
+      "reproductions": 4,
       "state": "NOT RAISED YET"
     },
     "CYM-llms_agent_count_self_consistent": {
@@ -651,9 +651,9 @@
       ],
       "filed": [],
       "thread": [],
-      "last_reproduced": "2026-09-04T13:12:10+00:00",
+      "last_reproduced": "2026-09-04T13:14:33+00:00",
       "last_reproduced_run": "run-20260904T131102Z-9a729ed",
-      "reproductions": 1,
+      "reproductions": 2,
       "state": "NOT RAISED YET"
     },
     "CYM-skills_subset": {
@@ -676,13 +676,13 @@
       ],
       "filed": [],
       "thread": [],
-      "last_reproduced": "2026-09-04T13:12:10+00:00",
+      "last_reproduced": "2026-09-04T13:14:33+00:00",
       "last_reproduced_run": "run-20260904T131102Z-9a729ed",
-      "reproductions": 1,
+      "reproductions": 2,
       "state": "NOT RAISED YET"
     }
   },
-  "updated_at": "2026-09-04T13:12:10+00:00",
+  "updated_at": "2026-09-04T13:14:33+00:00",
   "run_id": "run-20260904T131102Z-9a729ed",
   "counts": {
     "FIX CLAIMED": 1,
