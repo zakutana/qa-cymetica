@@ -54,26 +54,30 @@ claims:
       live_species:   'set:$[*].symbol'
 
   # -------------------------------------------------------------------------
-  - id: mcp_tool_count
-    question: "How many MCP tools does the server expose?"
-    component: mcp.tools_list
-    relation: all_equal
-    severity: S3-CONTRACT
-    sources:
-      llms_txt:     'regex_int:cymetica-eventtrader-mcp \((\d+) tools'
-      mcp_json:     'len:$.tools'
-      mcp_anon:     'len:$.tools'
-      mcp_trusted:  'len:$.tools'
+  # WITHDRAWN 2026-09-04, our error. This asserted that the anonymous tool
+  # count equals the manifest TOTAL. That held only while the tier gating was
+  # broken; once the vendor fixed it (report #46), anonymous correctly returns
+  # 25 of 46 and this check reported their fix as a failure. Tier correctness
+  # is now asserted properly in tests/mcp/test_trust_ladder.py, which compares
+  # the served set against the DECLARED tier rather than against the total.
+  #
+  # The llms.txt tool-count claim is also gone: it now says "call tools/list
+  # for your tier's set" instead of naming a number, which is the right answer
+  # and leaves nothing to reconcile.
 
-  - id: mcp_tool_names_declared_vs_served
-    question: "Do the tool names the platform documents actually exist?"
+  - id: mcp_tool_names_documented_exist
+    question: "Does every tool name llms.txt documents exist on the server?"
     component: mcp.tools_list
-    relation: set_equal
+    relation: subset
     severity: S3-CONTRACT
+    note: >
+      Subset, not set_equal. llms.txt is not obliged to list every tool -- it is
+      obliged not to name one that does not exist. The earlier set_equal form
+      would now fail simply because the document lists fewer than the server
+      serves, which is correct behaviour.
     sources:
       llms_txt:  'regex_all:\[(\w+)\]\(/mcp/v1/tools/\w+\)'
       mcp_json:  'set:$.tools[*].name'
-      mcp_anon:  'set:$.tools[*].name'
 
   # The trust-ladder checks are NOT in this table. They are the highest-severity
   # class in the project and they compare a declared tier against a served one,
@@ -100,14 +104,12 @@ claims:
       mcp_json: 'regex_int:CLOB exchange with (\d+) pairs'
 
   # -------------------------------------------------------------------------
-  - id: chain_count
-    question: "How many blockchains does the platform settle on or support?"
-    component: platform.status
-    relation: all_equal
-    severity: S2-MEASUREMENT
-    sources:
-      mcp_json:    'regex_int:on-chain settlement on (\d+) chains'
-      live_chains: 'len:$.chains'
+  # WITHDRAWN 2026-09-04, our error. This compared "on-chain SETTLEMENT on 10
+  # chains" (mcp.json) against the 16 chains /api/v1/swap/chains supports for
+  # SWAPS. Those are two different mechanisms and netting them is exactly the
+  # collapsed-layer defect this project reports in others. There is no
+  # like-for-like live source for the settlement count, so the question is
+  # recorded as unanswerable from outside rather than filed as a contradiction.
 
   # -------------------------------------------------------------------------
   - id: commit_count

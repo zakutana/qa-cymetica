@@ -179,6 +179,7 @@ COMPONENT_TO_SECTION = {
     "mcp.tools_list": "mcp",
     "mcp.protocol": "mcp",
     "mcp.trust_ladder": "identity_trust",
+    "mcp.tools_list": "mcp",
     "rest.clob": "clob",
     "platform.status": "swaps",
     "platform.ai_native_proof": "provenance",
@@ -415,6 +416,66 @@ def from_bounty(bounty: dict) -> list[dict]:
     return findings
 
 
+def from_run_failures(run: dict) -> list[dict]:
+    """Hand-written checks that failed. Not every finding is a source diff.
+
+    The reconciliation table generates its own findings; this picks up the
+    targeted tests -- trust ladder, boundary probes -- whose failure message IS
+    the finding, written to be read rather than assembled.
+    """
+    severity_by_component = {
+        "mcp.trust_ladder": "S0-CUSTODY",
+        "funding.withdraw": "S0-CUSTODY",
+        "funding.deposit": "S0-CUSTODY",
+        "rest.account": "S1-INTEGRITY",
+    }
+    findings: list[dict] = []
+    for result in run.get("results", []):
+        if result["outcome"] != "failed":
+            continue
+        nodeid = result["nodeid"]
+        if "test_sources_agree" in nodeid or "/meta/" in nodeid.replace("\\", "/"):
+            continue
+
+        component = result.get("component", "unknown")
+        name = nodeid.rsplit("::", 1)[-1]
+        detail = _detail_from_failure(result.get("failure_repr", ""))
+        findings.append({
+            "id": f"CYM-{name.replace('test_', '').replace('_', '-')}",
+            "kind": "authorization" if "trust" in component else "check",
+            "severity": severity_by_component.get(component, "S3-CONTRACT"),
+            "title": _title_from_failure(result.get("failure_repr", ""), name),
+            "component": component,
+            "section": _section_for_component(component),
+            "note": None,
+            "detail": detail,
+            "checks": [nodeid],
+            "evidence_ids": result.get("evidence_ids", []),
+        })
+    return findings
+
+
+def _title_from_failure(text: str, fallback: str) -> str:
+    for line in (text or "").splitlines():
+        line = line.strip().lstrip("E").strip()
+        if line.startswith("EXCESS"):
+            return f"Trust tier over-served: {line}"
+    return fallback.replace("_", " ")
+
+
+def _detail_from_failure(text: str) -> dict:
+    out: dict[str, str] = {}
+    for line in (text or "").splitlines():
+        line = line.strip().lstrip("E").strip()
+        for key in ("IDENTITY", "SERVED", "ENTITLED", "EXCESS"):
+            if line.startswith(key):
+                out[key.lower()] = line[len(key):].strip()
+        if line.startswith("declared "):
+            head, _, rest = line.partition(":")
+            out[head.strip()] = rest.strip()
+    return out
+
+
 def build() -> dict:
     run = latest_run()
     inventory = load_inventory()
@@ -423,6 +484,7 @@ def build() -> dict:
 
     if run:
         findings += from_reconciliation(run, load_claims())
+        findings += from_run_failures(run)
     if inventory:
         findings += from_tool_surface(inventory)
         findings += from_inventory(inventory)

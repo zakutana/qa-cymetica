@@ -25,9 +25,9 @@
         }
       ],
       "thread": [],
-      "last_reproduced": "2026-09-04T12:53:36+00:00",
-      "last_reproduced_run": "run-20260904T123402Z-acf86e7",
-      "reproductions": 2,
+      "last_reproduced": "2026-09-04T13:04:02+00:00",
+      "last_reproduced_run": "run-20260904T130132Z-57d3e34",
+      "reproductions": 4,
       "state": "FIX CLAIMED"
     },
     "CYM-bounty-filing-unauthenticated": {
@@ -57,9 +57,9 @@
         }
       ],
       "thread": [],
-      "last_reproduced": "2026-09-04T12:53:36+00:00",
-      "last_reproduced_run": "run-20260904T123402Z-acf86e7",
-      "reproductions": 2,
+      "last_reproduced": "2026-09-04T13:04:02+00:00",
+      "last_reproduced_run": "run-20260904T130132Z-57d3e34",
+      "reproductions": 4,
       "state": "RAISED"
     },
     "CYM-agent_count": {
@@ -95,9 +95,9 @@
         }
       ],
       "thread": [],
-      "last_reproduced": "2026-09-04T12:53:36+00:00",
-      "last_reproduced_run": "run-20260904T123402Z-acf86e7",
-      "reproductions": 2,
+      "last_reproduced": "2026-09-04T13:04:02+00:00",
+      "last_reproduced_run": "run-20260904T130132Z-57d3e34",
+      "reproductions": 4,
       "state": "FIX CLAIMED"
     },
     "CYM-chain_count": {
@@ -129,7 +129,10 @@
       "last_reproduced": "2026-09-04T12:53:36+00:00",
       "last_reproduced_run": "run-20260904T123402Z-acf86e7",
       "reproductions": 2,
-      "state": "FIX CLAIMED"
+      "state": "WITHDRAWN",
+      "verified_by_run": "run-20260904T130132Z-57d3e34",
+      "withdrawn_reason": "Our check compared 'settlement on 10 chains' against the 16 chains /api/v1/swap/chains supports for swaps. Two different mechanisms; netting them is the collapsed-layer defect we report in others.",
+      "withdrawn_at": "2026-09-04T13:04:02+00:00"
     },
     "CYM-mcp_tool_count": {
       "id": "CYM-mcp_tool_count",
@@ -166,7 +169,10 @@
       "last_reproduced": "2026-09-04T12:53:36+00:00",
       "last_reproduced_run": "run-20260904T123402Z-acf86e7",
       "reproductions": 2,
-      "state": "FIX CLAIMED"
+      "state": "WITHDRAWN",
+      "verified_by_run": "run-20260904T130132Z-57d3e34",
+      "withdrawn_reason": "Our check asserted the anonymous tool count equals the manifest total. That held only while tier gating was broken; once it was fixed, anonymous correctly returns 25 of 46 and our check reported their fix as a failure. Replaced by tests/mcp/test_trust_ladder.py.",
+      "withdrawn_at": "2026-09-04T13:04:02+00:00"
     },
     "CYM-mcp_tool_names_declared_vs_served": {
       "id": "CYM-mcp_tool_names_declared_vs_served",
@@ -200,7 +206,9 @@
       "last_reproduced": "2026-09-04T12:53:36+00:00",
       "last_reproduced_run": "run-20260904T123402Z-acf86e7",
       "reproductions": 2,
-      "state": "FIX CLAIMED"
+      "state": "VERIFIED FIXED",
+      "verified_fixed_at": "2026-09-04T13:03:23+00:00",
+      "verified_by_run": "run-20260904T130132Z-57d3e34"
     },
     "CYM-own-reports-unverified": {
       "id": "CYM-own-reports-unverified",
@@ -237,9 +245,9 @@
         }
       ],
       "thread": [],
-      "last_reproduced": "2026-09-04T12:53:36+00:00",
-      "last_reproduced_run": "run-20260904T123402Z-acf86e7",
-      "reproductions": 2,
+      "last_reproduced": "2026-09-04T13:04:02+00:00",
+      "last_reproduced_run": "run-20260904T130132Z-57d3e34",
+      "reproductions": 4,
       "state": "RAISED"
     },
     "CYM-skill_count": {
@@ -268,9 +276,9 @@
         }
       ],
       "thread": [],
-      "last_reproduced": "2026-09-04T12:53:36+00:00",
-      "last_reproduced_run": "run-20260904T123402Z-acf86e7",
-      "reproductions": 2,
+      "last_reproduced": "2026-09-04T13:04:02+00:00",
+      "last_reproduced_run": "run-20260904T130132Z-57d3e34",
+      "reproductions": 4,
       "state": "FIX CLAIMED"
     },
     "CYM-skill_ids": {
@@ -299,9 +307,9 @@
         }
       ],
       "thread": [],
-      "last_reproduced": "2026-09-04T12:53:36+00:00",
-      "last_reproduced_run": "run-20260904T123402Z-acf86e7",
-      "reproductions": 2,
+      "last_reproduced": "2026-09-04T13:04:02+00:00",
+      "last_reproduced_run": "run-20260904T130132Z-57d3e34",
+      "reproductions": 4,
       "state": "FIX CLAIMED"
     },
     "CYM-documented-405": {
@@ -332,9 +340,9 @@
       ],
       "filed": [],
       "thread": [],
-      "last_reproduced": "2026-09-04T12:53:36+00:00",
-      "last_reproduced_run": "run-20260904T123402Z-acf86e7",
-      "reproductions": 2,
+      "last_reproduced": "2026-09-04T13:04:02+00:00",
+      "last_reproduced_run": "run-20260904T130132Z-57d3e34",
+      "reproductions": 4,
       "state": "NOT RAISED YET"
     },
     "CYM-mcp_resource_count": {
@@ -362,9 +370,9 @@
         }
       ],
       "thread": [],
-      "last_reproduced": "2026-09-04T12:53:36+00:00",
-      "last_reproduced_run": "run-20260904T123402Z-acf86e7",
-      "reproductions": 2,
+      "last_reproduced": "2026-09-04T13:04:02+00:00",
+      "last_reproduced_run": "run-20260904T130132Z-57d3e34",
+      "reproductions": 4,
       "state": "FIX CLAIMED"
     },
     "CYM-anon-tool-surface": {
@@ -562,15 +570,68 @@
       "verified_by_run": "run-20260904T123402Z-acf86e7",
       "state": "VERIFIED FIXED",
       "backfilled_from": "git acf86e7 (last snapshot before the vendor's fixes)"
+    },
+    "CYM-trusted-receives-nothing-above-its-tier": {
+      "id": "CYM-trusted-receives-nothing-above-its-tier",
+      "first_seen": "2026-09-04T13:03:23+00:00",
+      "first_seen_run": "run-20260904T130132Z-57d3e34",
+      "title": "Trust tier over-served: EXCESS     5 tools above the tier declared for them",
+      "severity": "S0-CUSTODY",
+      "tag": "MCP",
+      "kind": "authorization",
+      "section": "identity_trust",
+      "component": "mcp.trust_ladder",
+      "note": null,
+      "detail": {
+        "identity": "TRUSTED",
+        "served": "46 tools",
+        "entitled": "41 tools (its own tier and below, per mcp.json)",
+        "excess": "5 tools above the tier declared for them",
+        "declared allied": "create_aib_fund, edit_aib_fund_basket, list_my_aib_funds, register_webhook, subscribe_prices"
+      },
+      "checks": [
+        "tests/mcp/test_trust_ladder.py::test_trusted_receives_nothing_above_its_tier"
+      ],
+      "filed": [],
+      "thread": [],
+      "last_reproduced": "2026-09-04T13:04:02+00:00",
+      "last_reproduced_run": "run-20260904T130132Z-57d3e34",
+      "reproductions": 2,
+      "state": "NOT RAISED YET"
+    },
+    "CYM-mcp_tool_names_documented_exist": {
+      "id": "CYM-mcp_tool_names_documented_exist",
+      "first_seen": "2026-09-04T13:03:23+00:00",
+      "first_seen_run": "run-20260904T130132Z-57d3e34",
+      "title": "Does every tool name llms.txt documents exist on the server?",
+      "severity": "S3-CONTRACT",
+      "tag": "MCP",
+      "kind": "contradiction",
+      "section": "mcp",
+      "component": "mcp.tools_list",
+      "note": "Subset, not set_equal. llms.txt is not obliged to list every tool -- it is obliged not to name one that does not exist. The earlier set_equal form would now fail simply because the document lists fewer than the server serves, which is correct behaviour.",
+      "detail": {
+        "left": "snapshot.value(pair.a, extractors[pair.a])"
+      },
+      "checks": [
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_names_documented_exist::llms_txt-vs-mcp_json]"
+      ],
+      "filed": [],
+      "thread": [],
+      "last_reproduced": "2026-09-04T13:04:02+00:00",
+      "last_reproduced_run": "run-20260904T130132Z-57d3e34",
+      "reproductions": 2,
+      "state": "NOT RAISED YET"
     }
   },
-  "updated_at": "2026-09-04T12:53:36+00:00",
-  "run_id": "run-20260904T123402Z-acf86e7",
+  "updated_at": "2026-09-04T13:04:02+00:00",
+  "run_id": "run-20260904T130132Z-57d3e34",
   "counts": {
-    "FIX CLAIMED": 8,
-    "NOT RAISED YET": 1,
+    "FIX CLAIMED": 5,
+    "NOT RAISED YET": 3,
     "RAISED": 2,
-    "VERIFIED FIXED": 5
+    "VERIFIED FIXED": 6,
+    "WITHDRAWN": 2
   },
-  "filing_status_refreshed": 5
+  "filing_status_refreshed": 0
 }

@@ -293,6 +293,7 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:13.5px; max-wid
 .state.s-fix-claimed { background:var(--warn-bg); color:var(--warn); }
 .state.s-verified-fixed { background:var(--ok-bg); color:var(--ok); }
 .state.s-regressed { background:var(--bad-bg); color:var(--bad); }
+.state.s-withdrawn { background:var(--none-bg); color:var(--text-faint); text-decoration:line-through; }
 .filed { font-family:var(--mono); font-size:11px; color:var(--text-faint); }
 .undelivered {
   font-family:var(--mono); font-size:10px; font-weight:600; padding:2px 6px;
@@ -566,6 +567,7 @@ function finding(f) {
       </span>
     </summary>
     <div class="f-body">
+      ${f.withdrawn_reason ? `<p class="f-note"><b>Withdrawn by us.</b> ${esc(f.withdrawn_reason)}</p>` : ""}
       ${f.note ? `<p class="f-note">${esc(f.note)}</p>` : ""}
       ${rows ? `<h4 class="sec">Measured</h4><div class="kv"><table>${rows}</table></div>` : ""}
       ${thread(f)}

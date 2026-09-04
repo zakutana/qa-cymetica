@@ -1,8 +1,36 @@
 {
-  "generated_at": "2026-09-04T12:41:41+00:00",
-  "run_id": "run-20260904T123402Z-acf86e7",
+  "generated_at": "2026-09-04T13:03:23+00:00",
+  "run_id": "run-20260904T130132Z-57d3e34",
   "platform_fingerprint": "sha256:a5507c9d41612de3e634751b89cd2ce840ad3778510c1862657e6f518c99f037",
   "findings": [
+    {
+      "id": "CYM-trusted-receives-nothing-above-its-tier",
+      "kind": "authorization",
+      "severity": "S0-CUSTODY",
+      "title": "Trust tier over-served: EXCESS     5 tools above the tier declared for them",
+      "component": "mcp.trust_ladder",
+      "section": "identity_trust",
+      "note": null,
+      "detail": {
+        "identity": "TRUSTED",
+        "served": "46 tools",
+        "entitled": "41 tools (its own tier and below, per mcp.json)",
+        "excess": "5 tools above the tier declared for them",
+        "declared allied": "create_aib_fund, edit_aib_fund_basket, list_my_aib_funds, register_webhook, subscribe_prices"
+      },
+      "checks": [
+        "tests/mcp/test_trust_ladder.py::test_trusted_receives_nothing_above_its_tier"
+      ],
+      "evidence_ids": [],
+      "first_seen_run": "run-20260904T130132Z-57d3e34",
+      "tag": "MCP",
+      "tag_label": "MCP & trust ladder",
+      "thread": [],
+      "filed": [],
+      "undelivered": 0,
+      "reported_at": null,
+      "state": "NOT RAISED YET"
+    },
     {
       "id": "CYM-agent_names",
       "kind": "contradiction",
@@ -19,7 +47,7 @@
       ],
       "failing_pairs": 1,
       "evidence_ids": [],
-      "first_seen_run": "run-20260904T123402Z-acf86e7",
+      "first_seen_run": "run-20260904T130132Z-57d3e34",
       "tag": "BOTS",
       "tag_label": "Bots, skills & AgentBook",
       "thread": [],
@@ -51,7 +79,7 @@
         "scripts/bounty.py::probe_filing_auth"
       ],
       "evidence_ids": [],
-      "first_seen_run": "run-20260904T123402Z-acf86e7",
+      "first_seen_run": "run-20260904T130132Z-57d3e34",
       "tag": "PROCESS",
       "tag_label": "Reporting channel & tracker",
       "thread": [],
@@ -90,7 +118,7 @@
       ],
       "failing_pairs": 6,
       "evidence_ids": [],
-      "first_seen_run": "run-20260904T123402Z-acf86e7",
+      "first_seen_run": "run-20260904T130132Z-57d3e34",
       "tag": "BOTS",
       "tag_label": "Bots, skills & AgentBook",
       "thread": [],
@@ -106,109 +134,29 @@
       "state": "FIX CLAIMED"
     },
     {
-      "id": "CYM-chain_count",
+      "id": "CYM-mcp_tool_names_documented_exist",
       "kind": "contradiction",
-      "severity": "S2-MEASUREMENT",
-      "title": "How many blockchains does the platform settle on or support?",
-      "component": "platform.status",
-      "section": "swaps",
+      "severity": "S3-CONTRACT",
+      "title": "Does every tool name llms.txt documents exist on the server?",
+      "component": "mcp.tools_list",
+      "section": "mcp",
       "detail": {
-        "live_chains": "16",
-        "mcp_json": "10"
+        "left": "snapshot.value(pair.a, extractors[pair.a])"
       },
-      "note": null,
+      "note": "Subset, not set_equal. llms.txt is not obliged to list every tool -- it is obliged not to name one that does not exist. The earlier set_equal form would now fail simply because the document lists fewer than the server serves, which is correct behaviour.",
       "checks": [
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[chain_count::live_chains-vs-mcp_json]"
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_names_documented_exist::llms_txt-vs-mcp_json]"
       ],
       "failing_pairs": 1,
       "evidence_ids": [],
-      "first_seen_run": "run-20260904T123402Z-acf86e7",
-      "tag": "MONEY",
-      "tag_label": "Money in and out",
-      "thread": [],
-      "filed": [
-        {
-          "report_id": 52,
-          "submitted_at": "2026-09-04T12:04:15+00:00",
-          "status": "fixed"
-        }
-      ],
-      "undelivered": 0,
-      "reported_at": "2026-09-04T12:04:15+00:00",
-      "state": "FIX CLAIMED"
-    },
-    {
-      "id": "CYM-mcp_tool_count",
-      "kind": "contradiction",
-      "severity": "S3-CONTRACT",
-      "title": "How many MCP tools does the server expose?",
-      "component": "mcp.tools_list",
-      "section": "mcp",
-      "detail": {
-        "left": "snapshot.value(pair.a, extractors[pair.a])",
-        "mcp_anon": "25",
-        "mcp_json": "46",
-        "mcp_trusted": "46"
-      },
-      "note": null,
-      "checks": [
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_count::llms_txt-vs-mcp_anon]",
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_count::llms_txt-vs-mcp_json]",
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_count::llms_txt-vs-mcp_trusted]",
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_count::mcp_anon-vs-mcp_json]",
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_count::mcp_anon-vs-mcp_trusted]"
-      ],
-      "failing_pairs": 5,
-      "evidence_ids": [],
-      "first_seen_run": "run-20260904T123402Z-acf86e7",
+      "first_seen_run": "run-20260904T130132Z-57d3e34",
       "tag": "MCP",
       "tag_label": "MCP & trust ladder",
       "thread": [],
-      "filed": [
-        {
-          "report_id": 50,
-          "submitted_at": "2026-09-04T12:04:04+00:00",
-          "status": "fixed"
-        }
-      ],
+      "filed": [],
       "undelivered": 0,
-      "reported_at": "2026-09-04T12:04:04+00:00",
-      "state": "FIX CLAIMED"
-    },
-    {
-      "id": "CYM-mcp_tool_names_declared_vs_served",
-      "kind": "contradiction",
-      "severity": "S3-CONTRACT",
-      "title": "Do the tool names the platform documents actually exist?",
-      "component": "mcp.tools_list",
-      "section": "mcp",
-      "detail": {
-        "left": "snapshot.value(pair.a, extractors[pair.a])",
-        "mcp_anon": "{browse_ontology, find_trade_path, get_ai_native_proof, get_btc_pool_history, get_btc_pool_state, get_deadcoin_desk_info, get_deadcoin_quote, get_market, get_orderbook, get_platform_status, get_prediction_statistics, get_prices ... (+13 more)}  n=25",
-        "mcp_json": "{ask_nexus_deep, browse_ontology, create_aib_fund, edit_aib_fund_basket, find_trade_path, get_agent_profile, get_ai_native_proof, get_btc_pool_history, get_btc_pool_state, get_deadcoin_desk_info, get_deadcoin_quote, get_deep_answer ... (+34 more)}  n=46"
-      },
-      "note": null,
-      "checks": [
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_names_declared_vs_served::llms_txt-vs-mcp_anon]",
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_names_declared_vs_served::llms_txt-vs-mcp_json]",
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_names_declared_vs_served::mcp_anon-vs-mcp_json]"
-      ],
-      "failing_pairs": 3,
-      "evidence_ids": [],
-      "first_seen_run": "run-20260904T123402Z-acf86e7",
-      "tag": "MCP",
-      "tag_label": "MCP & trust ladder",
-      "thread": [],
-      "filed": [
-        {
-          "report_id": 50,
-          "submitted_at": "2026-09-04T12:04:04+00:00",
-          "status": "fixed"
-        }
-      ],
-      "undelivered": 0,
-      "reported_at": "2026-09-04T12:04:04+00:00",
-      "state": "FIX CLAIMED"
+      "reported_at": null,
+      "state": "NOT RAISED YET"
     },
     {
       "id": "CYM-own-reports-unverified",
@@ -235,7 +183,7 @@
         "scripts/bounty.py"
       ],
       "evidence_ids": [],
-      "first_seen_run": "run-20260904T123402Z-acf86e7",
+      "first_seen_run": "run-20260904T130132Z-57d3e34",
       "tag": "PROCESS",
       "tag_label": "Reporting channel & tracker",
       "thread": [],
@@ -267,7 +215,7 @@
       ],
       "failing_pairs": 1,
       "evidence_ids": [],
-      "first_seen_run": "run-20260904T123402Z-acf86e7",
+      "first_seen_run": "run-20260904T130132Z-57d3e34",
       "tag": "DOCS",
       "tag_label": "Manifests & documentation",
       "thread": [],
@@ -299,7 +247,7 @@
       ],
       "failing_pairs": 1,
       "evidence_ids": [],
-      "first_seen_run": "run-20260904T123402Z-acf86e7",
+      "first_seen_run": "run-20260904T130132Z-57d3e34",
       "tag": "DOCS",
       "tag_label": "Manifests & documentation",
       "thread": [],
@@ -349,7 +297,7 @@
         "scripts/inventory.py"
       ],
       "evidence_ids": [],
-      "first_seen_run": "run-20260904T123402Z-acf86e7",
+      "first_seen_run": "run-20260904T130132Z-57d3e34",
       "tag": "MCP",
       "tag_label": "MCP & trust ladder",
       "thread": [],
@@ -374,7 +322,7 @@
       ],
       "failing_pairs": 1,
       "evidence_ids": [],
-      "first_seen_run": "run-20260904T123402Z-acf86e7",
+      "first_seen_run": "run-20260904T130132Z-57d3e34",
       "tag": "MCP",
       "tag_label": "MCP & trust ladder",
       "thread": [],
@@ -391,10 +339,10 @@
     }
   ],
   "by_severity": {
-    "S0-CUSTODY": 0,
+    "S0-CUSTODY": 1,
     "S1-INTEGRITY": 2,
-    "S2-MEASUREMENT": 2,
-    "S3-CONTRACT": 5,
+    "S2-MEASUREMENT": 1,
+    "S3-CONTRACT": 4,
     "S4-COSMETIC": 2
   }
 }

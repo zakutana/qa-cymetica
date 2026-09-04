@@ -30,6 +30,21 @@ STATE = REPO_ROOT / "state"
 LEDGER = STATE / "ledger.json"
 
 
+# Findings WE withdrew, with the reason. A check that stops failing because we
+# deleted it is not a fix, and crediting the vendor for one would be the same
+# error as refusing to credit a real one -- just pointed the other way.
+WITHDRAWN = {
+    "CYM-mcp_tool_count":
+        "Our check asserted the anonymous tool count equals the manifest total. "
+        "That held only while tier gating was broken; once it was fixed, "
+        "anonymous correctly returns 25 of 46 and our check reported their fix "
+        "as a failure. Replaced by tests/mcp/test_trust_ladder.py.",
+    "CYM-chain_count":
+        "Our check compared 'settlement on 10 chains' against the 16 chains "
+        "/api/v1/swap/chains supports for swaps. Two different mechanisms; "
+        "netting them is the collapsed-layer defect we report in others.",
+}
+
 def load(name: str) -> dict:
     path = STATE / name
     return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
@@ -93,6 +108,12 @@ def merge() -> dict:
     for finding_id, row in rows.items():
         if finding_id in seen_now:
             continue
+        if finding_id in WITHDRAWN:
+            row["state"] = "WITHDRAWN"
+            row["withdrawn_reason"] = WITHDRAWN[finding_id]
+            row["withdrawn_at"] = row.get("withdrawn_at") or now
+            row.pop("verified_fixed_at", None)
+            continue
         if row.get("verified_fixed_at"):
             row["state"] = "VERIFIED FIXED"
             continue
@@ -136,7 +157,8 @@ def as_findings(ledger: dict) -> list[dict]:
     order = ["S0-CUSTODY", "S1-INTEGRITY", "S2-MEASUREMENT", "S3-CONTRACT",
              "S4-COSMETIC"]
     state_rank = {"REGRESSED": 0, "NOT RAISED YET": 1, "RAISED": 2,
-                  "THEY REPLIED": 3, "FIX CLAIMED": 4, "VERIFIED FIXED": 5}
+                  "THEY REPLIED": 3, "FIX CLAIMED": 4, "VERIFIED FIXED": 5,
+                  "WITHDRAWN": 6}
     rows = list(ledger.get("findings", {}).values())
     rows.sort(key=lambda r: (
         state_rank.get(r.get("state"), 9),
