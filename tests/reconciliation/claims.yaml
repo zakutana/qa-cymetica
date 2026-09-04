@@ -15,6 +15,7 @@
 
 sources:
   llms_txt:      {kind: text, url: "/llms.txt"}
+  llms_txt_2:    {kind: text, url: "/llms.txt"}   # same doc, a second statement in it
   mcp_json:      {kind: json, url: "/.well-known/mcp.json"}
   agent_card:    {kind: json, url: "/.well-known/agent-card.json"}
   agent_skills:  {kind: json, url: "/.well-known/agent-skills.json"}
@@ -30,41 +31,50 @@ sources:
 claims:
 
   # -------------------------------------------------------------------------
-  - id: agent_count
-    question: "How many AI trading agents exist?"
+  - id: agent_names
+    question: "Does llms.txt name agent symbols that actually exist?"
+    component: rest.agents
+    relation: subset
+    severity: S1-INTEGRITY
+    note: >
+      Rewritten after report #48. The original compared a parenthesised list
+      that no longer exists in the document -- llms.txt now defers to the live
+      endpoint, which is the right answer. The invariant that still matters is
+      narrower: every agent symbol the document names must resolve. Subset, not
+      equality, because the document is not obliged to name them all.
+    sources:
+      llms_txt:     'regex_all:(MACD|RSI|BOLL|VOL|TREND|STOCH|ICHI|FIB|ATR|DIV|PCPN|DELTA|STAT|CORR|SENT|SYNC|CRASH|DREAD|GLOOM|FADE|VORTX)'
+      live_species: 'set:$[*].symbol'
+
+  - id: llms_agent_count_self_consistent
+    question: "Does llms.txt quote the same agent count in all of its own sentences?"
     component: rest.agents
     relation: all_equal
     severity: S2-MEASUREMENT
-    sources:
-      llms_txt:       'regex_int:any of (\d+) AI trading agents'
-      mcp_json:       'regex_int:(\d+) AI trading agents'
-      live_species:   'len:$'
-      live_agentbook: 'jsonpath:$.data.total'
-
-  - id: agent_names
-    question: "Which AI trading agents exist, by symbol?"
-    component: rest.agents
-    relation: set_equal
-    severity: S1-INTEGRITY
     note: >
-      llms.txt instructs readers to clone named agents. If those names do not
-      resolve, the instruction is not merely imprecise -- it is unfollowable.
+      A document that contradicts itself is worse than two documents that
+      disagree, because the reader has no way to pick. Added after report #52
+      updated one occurrence of the count and left another behind.
     sources:
-      llms_txt:       'regex_set:any of \d+ AI trading agents \(([A-Z, ]+)\)'
-      live_species:   'set:$[*].symbol'
+      llms_txt:   'regex_int:(\d+) AI trading agents,'
+      llms_txt_2: 'regex_int:any of our (\d+) AI trading agent species'
+
+  - id: agent_count
+    question: "How many clonable AI trading agents exist?"
+    component: rest.agents
+    relation: all_equal
+    severity: S2-MEASUREMENT
+    note: >
+      Their resolution on #52 states these count different things: 16 is the
+      strategy enum, 11 the clonable species, 8 those active on AgentBook. That
+      split is legitimate, so this claim is narrowed to the two sources that
+      must agree -- the live species catalogue, and what llms.txt tells a
+      reader they can clone.
+    sources:
+      llms_txt:     'regex_int:any of our (\d+) AI trading agent species'
+      live_species: 'len:$'
 
   # -------------------------------------------------------------------------
-  # WITHDRAWN 2026-09-04, our error. This asserted that the anonymous tool
-  # count equals the manifest TOTAL. That held only while the tier gating was
-  # broken; once the vendor fixed it (report #46), anonymous correctly returns
-  # 25 of 46 and this check reported their fix as a failure. Tier correctness
-  # is now asserted properly in tests/mcp/test_trust_ladder.py, which compares
-  # the served set against the DECLARED tier rather than against the total.
-  #
-  # The llms.txt tool-count claim is also gone: it now says "call tools/list
-  # for your tier's set" instead of naming a number, which is the right answer
-  # and leaves nothing to reconcile.
-
   - id: mcp_tool_names_documented_exist
     question: "Does every tool name llms.txt documents exist on the server?"
     component: mcp.tools_list
@@ -76,22 +86,29 @@ claims:
       would now fail simply because the document lists fewer than the server
       serves, which is correct behaviour.
     sources:
-      llms_txt:  'regex_all:\[(\w+)\]\(/mcp/v1/tools/\w+\)'
-      mcp_json:  'set:$.tools[*].name'
+      llms_txt: 'regex_all:\[(\w+)\]\(/mcp/v1/tools/\w+\)'
+      mcp_json: 'set:$.tools[*].name'
 
-  # The trust-ladder checks are NOT in this table. They are the highest-severity
-  # class in the project and they compare a declared tier against a served one,
-  # which the generic pairwise machinery would flatten into an unreadable
-  # message. See tests/mcp/test_trust_ladder.py.
+  # Tier correctness is NOT in this table. Comparing a served set against a
+  # DECLARED tier has to name which tools and in which direction, which the
+  # generic pairwise machinery would flatten into "two numbers differ".
+  # See tests/mcp/test_trust_ladder.py.
 
-  - id: mcp_resource_count
-    question: "How many MCP resources are exposed?"
-    component: mcp.protocol
-    relation: all_equal
-    severity: S4-COSMETIC
+  # -------------------------------------------------------------------------
+  - id: skills_subset
+    question: "Is agent-skills.json the actionable subset of agent-card.json, as stated?"
+    component: discovery.wellknown
+    relation: subset
+    severity: S3-CONTRACT
+    note: >
+      Their resolution on #51 states agent-card.json is the full discovery card
+      and agent-skills.json the endpoint-actionable subset. That is a testable
+      model and the right one, so this checks the claim they actually made
+      rather than demanding the two files be identical -- which they explained,
+      correctly, that they should not be.
     sources:
-      llms_txt: 'regex_int:cymetica-eventtrader-mcp \(\d+ tools, (\d+) resources'
-      mcp_json: 'len:$.resources'
+      agent_skills: 'set:$.skills[*].id'
+      agent_card:   'set:$.skills[*].id'
 
   # -------------------------------------------------------------------------
   - id: clob_pair_count
@@ -103,15 +120,6 @@ claims:
       llms_txt: 'regex_int:trade on (\d+) CLOB pairs'
       mcp_json: 'regex_int:CLOB exchange with (\d+) pairs'
 
-  # -------------------------------------------------------------------------
-  # WITHDRAWN 2026-09-04, our error. This compared "on-chain SETTLEMENT on 10
-  # chains" (mcp.json) against the 16 chains /api/v1/swap/chains supports for
-  # SWAPS. Those are two different mechanisms and netting them is exactly the
-  # collapsed-layer defect this project reports in others. There is no
-  # like-for-like live source for the settlement count, so the question is
-  # recorded as unanswerable from outside rather than filed as a contradiction.
-
-  # -------------------------------------------------------------------------
   - id: commit_count
     question: "How many commits are in the production codebase?"
     component: platform.ai_native_proof
@@ -121,27 +129,17 @@ claims:
     volatile: true
     note: >
       Commits legitimately accrue, so a small gap is expected and a large one
-      is not. The AI-native claim is the platform's headline marketing figure;
-      a stale number here is a measurement defect, not a cosmetic one.
+      is not. This is the platform's headline marketing figure, so a stale
+      number here is a measurement defect rather than a cosmetic one.
     sources:
       llms_txt:    'regex_int:With ([\d,]+)\+ commits'
       build_stats: 'jsonpath:$.totals.commits'
 
-  # -------------------------------------------------------------------------
-  - id: skill_ids
-    question: "Which agent skills does the platform advertise?"
-    component: discovery.wellknown
-    relation: set_equal
-    severity: S3-CONTRACT
-    sources:
-      agent_card:   'set:$.skills[*].id'
-      agent_skills: 'set:$.skills[*].id'
-
-  - id: skill_count
-    question: "How many agent skills are advertised?"
-    component: discovery.wellknown
+  - id: mcp_resource_count
+    question: "How many MCP resources are exposed?"
+    component: mcp.protocol
     relation: all_equal
-    severity: S3-CONTRACT
+    severity: S4-COSMETIC
     sources:
-      agent_card:   'len:$.skills'
-      agent_skills: 'len:$.skills'
+      llms_txt: 'regex_int:cymetica-eventtrader-mcp \(\d+ tools, (\d+) resources'
+      mcp_json: 'len:$.resources'

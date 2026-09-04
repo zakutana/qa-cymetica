@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-09-04T13:03:23+00:00",
-  "run_id": "run-20260904T130132Z-57d3e34",
-  "platform_fingerprint": "sha256:a5507c9d41612de3e634751b89cd2ce840ad3778510c1862657e6f518c99f037",
+  "generated_at": "2026-09-04T13:12:10+00:00",
+  "run_id": "run-20260904T131102Z-9a729ed",
+  "platform_fingerprint": "sha256:79dca1560f1f003c567b63fc439084281edb16e23bbd45b7e7be16e570ab98fc",
   "findings": [
     {
       "id": "CYM-trusted-receives-nothing-above-its-tier",
@@ -22,7 +22,7 @@
         "tests/mcp/test_trust_ladder.py::test_trusted_receives_nothing_above_its_tier"
       ],
       "evidence_ids": [],
-      "first_seen_run": "run-20260904T130132Z-57d3e34",
+      "first_seen_run": "run-20260904T131102Z-9a729ed",
       "tag": "MCP",
       "tag_label": "MCP & trust ladder",
       "thread": [],
@@ -30,37 +30,6 @@
       "undelivered": 0,
       "reported_at": null,
       "state": "NOT RAISED YET"
-    },
-    {
-      "id": "CYM-agent_names",
-      "kind": "contradiction",
-      "severity": "S1-INTEGRITY",
-      "title": "Which AI trading agents exist, by symbol?",
-      "component": "rest.agents",
-      "section": "agents",
-      "detail": {
-        "right": "snapshot.value(pair.b, extractors[pair.b])"
-      },
-      "note": "llms.txt instructs readers to clone named agents. If those names do not resolve, the instruction is not merely imprecise -- it is unfollowable.",
-      "checks": [
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_names::live_species-vs-llms_txt]"
-      ],
-      "failing_pairs": 1,
-      "evidence_ids": [],
-      "first_seen_run": "run-20260904T130132Z-57d3e34",
-      "tag": "BOTS",
-      "tag_label": "Bots, skills & AgentBook",
-      "thread": [],
-      "filed": [
-        {
-          "report_id": 48,
-          "submitted_at": "2026-09-04T12:03:52+00:00",
-          "status": "fixed"
-        }
-      ],
-      "undelivered": 0,
-      "reported_at": "2026-09-04T12:03:52+00:00",
-      "state": "FIX CLAIMED"
     },
     {
       "id": "CYM-bounty-filing-unauthenticated",
@@ -79,7 +48,7 @@
         "scripts/bounty.py::probe_filing_auth"
       ],
       "evidence_ids": [],
-      "first_seen_run": "run-20260904T130132Z-57d3e34",
+      "first_seen_run": "run-20260904T131102Z-9a729ed",
       "tag": "PROCESS",
       "tag_label": "Reporting channel & tracker",
       "thread": [],
@@ -95,43 +64,30 @@
       "state": "RAISED"
     },
     {
-      "id": "CYM-agent_count",
+      "id": "CYM-llms_agent_count_self_consistent",
       "kind": "contradiction",
       "severity": "S2-MEASUREMENT",
-      "title": "How many AI trading agents exist?",
+      "title": "Does llms.txt quote the same agent count in all of its own sentences?",
       "component": "rest.agents",
       "section": "agents",
       "detail": {
-        "live_agentbook": "8",
-        "live_species": "11",
-        "right": "snapshot.value(pair.b, extractors[pair.b])",
-        "left": "snapshot.value(pair.a, extractors[pair.a])"
+        "llms_txt": "10",
+        "llms_txt_2": "11"
       },
-      "note": null,
+      "note": "A document that contradicts itself is worse than two documents that disagree, because the reader has no way to pick. Added after report #52 updated one occurrence of the count and left another behind.",
       "checks": [
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_count::live_agentbook-vs-live_species]",
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_count::live_agentbook-vs-llms_txt]",
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_count::live_agentbook-vs-mcp_json]",
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_count::live_species-vs-llms_txt]",
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_count::live_species-vs-mcp_json]",
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_count::llms_txt-vs-mcp_json]"
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[llms_agent_count_self_consistent::llms_txt-vs-llms_txt_2]"
       ],
-      "failing_pairs": 6,
+      "failing_pairs": 1,
       "evidence_ids": [],
-      "first_seen_run": "run-20260904T130132Z-57d3e34",
+      "first_seen_run": "run-20260904T131102Z-9a729ed",
       "tag": "BOTS",
       "tag_label": "Bots, skills & AgentBook",
       "thread": [],
-      "filed": [
-        {
-          "report_id": 52,
-          "submitted_at": "2026-09-04T12:04:15+00:00",
-          "status": "fixed"
-        }
-      ],
+      "filed": [],
       "undelivered": 0,
-      "reported_at": "2026-09-04T12:04:15+00:00",
-      "state": "FIX CLAIMED"
+      "reported_at": null,
+      "state": "NOT RAISED YET"
     },
     {
       "id": "CYM-mcp_tool_names_documented_exist",
@@ -149,7 +105,7 @@
       ],
       "failing_pairs": 1,
       "evidence_ids": [],
-      "first_seen_run": "run-20260904T130132Z-57d3e34",
+      "first_seen_run": "run-20260904T131102Z-9a729ed",
       "tag": "MCP",
       "tag_label": "MCP & trust ladder",
       "thread": [],
@@ -183,7 +139,7 @@
         "scripts/bounty.py"
       ],
       "evidence_ids": [],
-      "first_seen_run": "run-20260904T130132Z-57d3e34",
+      "first_seen_run": "run-20260904T131102Z-9a729ed",
       "tag": "PROCESS",
       "tag_label": "Reporting channel & tracker",
       "thread": [],
@@ -199,68 +155,30 @@
       "state": "RAISED"
     },
     {
-      "id": "CYM-skill_count",
+      "id": "CYM-skills_subset",
       "kind": "contradiction",
       "severity": "S3-CONTRACT",
-      "title": "How many agent skills are advertised?",
-      "component": "discovery.wellknown",
-      "section": "discovery",
-      "detail": {
-        "agent_card": "13",
-        "agent_skills": "10"
-      },
-      "note": null,
-      "checks": [
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[skill_count::agent_card-vs-agent_skills]"
-      ],
-      "failing_pairs": 1,
-      "evidence_ids": [],
-      "first_seen_run": "run-20260904T130132Z-57d3e34",
-      "tag": "DOCS",
-      "tag_label": "Manifests & documentation",
-      "thread": [],
-      "filed": [
-        {
-          "report_id": 51,
-          "submitted_at": "2026-09-04T12:04:09+00:00",
-          "status": "fixed"
-        }
-      ],
-      "undelivered": 0,
-      "reported_at": "2026-09-04T12:04:09+00:00",
-      "state": "FIX CLAIMED"
-    },
-    {
-      "id": "CYM-skill_ids",
-      "kind": "contradiction",
-      "severity": "S3-CONTRACT",
-      "title": "Which agent skills does the platform advertise?",
+      "title": "Is agent-skills.json the actionable subset of agent-card.json, as stated?",
       "component": "discovery.wellknown",
       "section": "discovery",
       "detail": {
         "agent_card": "{ai-due-diligence, ai-native-provenance, arena-trading, clone-ai-agent, et10-revenue-share, exchange-tokens, live-headlines, market-data, prop-desk-trading, smart-delegation, tge-prediction-markets, trade-event-cards ... (+1 more)}  n=13",
         "agent_skills": "{arena-trading, asset-discovery, clone-ai-agent, et10-revenue-share, exchange-tokens, market-data, portfolio-management, prop-desk-trading, trade-event-cards, trade-prediction-markets}  n=10"
       },
-      "note": null,
+      "note": "Their resolution on #51 states agent-card.json is the full discovery card and agent-skills.json the endpoint-actionable subset. That is a testable model and the right one, so this checks the claim they actually made rather than demanding the two files be identical -- which they explained, correctly, that they should not be.",
       "checks": [
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[skill_ids::agent_card-vs-agent_skills]"
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[skills_subset::agent_card-vs-agent_skills]"
       ],
       "failing_pairs": 1,
       "evidence_ids": [],
-      "first_seen_run": "run-20260904T130132Z-57d3e34",
+      "first_seen_run": "run-20260904T131102Z-9a729ed",
       "tag": "DOCS",
       "tag_label": "Manifests & documentation",
       "thread": [],
-      "filed": [
-        {
-          "report_id": 51,
-          "submitted_at": "2026-09-04T12:04:09+00:00",
-          "status": "fixed"
-        }
-      ],
+      "filed": [],
       "undelivered": 0,
-      "reported_at": "2026-09-04T12:04:09+00:00",
-      "state": "FIX CLAIMED"
+      "reported_at": null,
+      "state": "NOT RAISED YET"
     },
     {
       "id": "CYM-documented-405",
@@ -297,7 +215,7 @@
         "scripts/inventory.py"
       ],
       "evidence_ids": [],
-      "first_seen_run": "run-20260904T130132Z-57d3e34",
+      "first_seen_run": "run-20260904T131102Z-9a729ed",
       "tag": "MCP",
       "tag_label": "MCP & trust ladder",
       "thread": [],
@@ -322,7 +240,7 @@
       ],
       "failing_pairs": 1,
       "evidence_ids": [],
-      "first_seen_run": "run-20260904T130132Z-57d3e34",
+      "first_seen_run": "run-20260904T131102Z-9a729ed",
       "tag": "MCP",
       "tag_label": "MCP & trust ladder",
       "thread": [],
@@ -340,9 +258,9 @@
   ],
   "by_severity": {
     "S0-CUSTODY": 1,
-    "S1-INTEGRITY": 2,
+    "S1-INTEGRITY": 1,
     "S2-MEASUREMENT": 1,
-    "S3-CONTRACT": 4,
+    "S3-CONTRACT": 3,
     "S4-COSMETIC": 2
   }
 }

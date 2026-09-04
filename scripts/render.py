@@ -69,9 +69,10 @@ def build_payload() -> dict:
     # exactly the records worth keeping.
     from scripts.ledger import as_findings, load_ledger
     ledger = load_ledger()
-    findings = {"findings": as_findings(ledger),
+    rows = [r for r in as_findings(ledger) if r.get("state") != "WITHDRAWN"]
+    findings = {"findings": rows,
                 "by_severity": {}}
-    for f in findings["findings"]:
+    for f in rows:
         if f.get("state") != "VERIFIED FIXED":
             findings["by_severity"][f["severity"]] =                 findings["by_severity"].get(f["severity"], 0) + 1
 

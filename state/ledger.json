@@ -28,7 +28,9 @@
       "last_reproduced": "2026-09-04T13:04:02+00:00",
       "last_reproduced_run": "run-20260904T130132Z-57d3e34",
       "reproductions": 4,
-      "state": "FIX CLAIMED"
+      "state": "VERIFIED FIXED",
+      "verified_fixed_at": "2026-09-04T13:12:10+00:00",
+      "verified_by_run": "run-20260904T131102Z-9a729ed"
     },
     "CYM-bounty-filing-unauthenticated": {
       "id": "CYM-bounty-filing-unauthenticated",
@@ -57,9 +59,9 @@
         }
       ],
       "thread": [],
-      "last_reproduced": "2026-09-04T13:04:02+00:00",
-      "last_reproduced_run": "run-20260904T130132Z-57d3e34",
-      "reproductions": 4,
+      "last_reproduced": "2026-09-04T13:12:10+00:00",
+      "last_reproduced_run": "run-20260904T131102Z-9a729ed",
+      "reproductions": 5,
       "state": "RAISED"
     },
     "CYM-agent_count": {
@@ -98,7 +100,9 @@
       "last_reproduced": "2026-09-04T13:04:02+00:00",
       "last_reproduced_run": "run-20260904T130132Z-57d3e34",
       "reproductions": 4,
-      "state": "FIX CLAIMED"
+      "state": "VERIFIED FIXED",
+      "verified_fixed_at": "2026-09-04T13:12:10+00:00",
+      "verified_by_run": "run-20260904T131102Z-9a729ed"
     },
     "CYM-chain_count": {
       "id": "CYM-chain_count",
@@ -245,9 +249,9 @@
         }
       ],
       "thread": [],
-      "last_reproduced": "2026-09-04T13:04:02+00:00",
-      "last_reproduced_run": "run-20260904T130132Z-57d3e34",
-      "reproductions": 4,
+      "last_reproduced": "2026-09-04T13:12:10+00:00",
+      "last_reproduced_run": "run-20260904T131102Z-9a729ed",
+      "reproductions": 5,
       "state": "RAISED"
     },
     "CYM-skill_count": {
@@ -279,7 +283,9 @@
       "last_reproduced": "2026-09-04T13:04:02+00:00",
       "last_reproduced_run": "run-20260904T130132Z-57d3e34",
       "reproductions": 4,
-      "state": "FIX CLAIMED"
+      "state": "VERIFIED FIXED",
+      "verified_fixed_at": "2026-09-04T13:12:10+00:00",
+      "verified_by_run": "run-20260904T131102Z-9a729ed"
     },
     "CYM-skill_ids": {
       "id": "CYM-skill_ids",
@@ -310,7 +316,9 @@
       "last_reproduced": "2026-09-04T13:04:02+00:00",
       "last_reproduced_run": "run-20260904T130132Z-57d3e34",
       "reproductions": 4,
-      "state": "FIX CLAIMED"
+      "state": "VERIFIED FIXED",
+      "verified_fixed_at": "2026-09-04T13:12:10+00:00",
+      "verified_by_run": "run-20260904T131102Z-9a729ed"
     },
     "CYM-documented-405": {
       "id": "CYM-documented-405",
@@ -340,9 +348,9 @@
       ],
       "filed": [],
       "thread": [],
-      "last_reproduced": "2026-09-04T13:04:02+00:00",
-      "last_reproduced_run": "run-20260904T130132Z-57d3e34",
-      "reproductions": 4,
+      "last_reproduced": "2026-09-04T13:12:10+00:00",
+      "last_reproduced_run": "run-20260904T131102Z-9a729ed",
+      "reproductions": 5,
       "state": "NOT RAISED YET"
     },
     "CYM-mcp_resource_count": {
@@ -370,9 +378,9 @@
         }
       ],
       "thread": [],
-      "last_reproduced": "2026-09-04T13:04:02+00:00",
-      "last_reproduced_run": "run-20260904T130132Z-57d3e34",
-      "reproductions": 4,
+      "last_reproduced": "2026-09-04T13:12:10+00:00",
+      "last_reproduced_run": "run-20260904T131102Z-9a729ed",
+      "reproductions": 5,
       "state": "FIX CLAIMED"
     },
     "CYM-anon-tool-surface": {
@@ -594,9 +602,9 @@
       ],
       "filed": [],
       "thread": [],
-      "last_reproduced": "2026-09-04T13:04:02+00:00",
-      "last_reproduced_run": "run-20260904T130132Z-57d3e34",
-      "reproductions": 2,
+      "last_reproduced": "2026-09-04T13:12:10+00:00",
+      "last_reproduced_run": "run-20260904T131102Z-9a729ed",
+      "reproductions": 3,
       "state": "NOT RAISED YET"
     },
     "CYM-mcp_tool_names_documented_exist": {
@@ -618,19 +626,69 @@
       ],
       "filed": [],
       "thread": [],
-      "last_reproduced": "2026-09-04T13:04:02+00:00",
-      "last_reproduced_run": "run-20260904T130132Z-57d3e34",
-      "reproductions": 2,
+      "last_reproduced": "2026-09-04T13:12:10+00:00",
+      "last_reproduced_run": "run-20260904T131102Z-9a729ed",
+      "reproductions": 3,
+      "state": "NOT RAISED YET"
+    },
+    "CYM-llms_agent_count_self_consistent": {
+      "id": "CYM-llms_agent_count_self_consistent",
+      "first_seen": "2026-09-04T13:12:10+00:00",
+      "first_seen_run": "run-20260904T131102Z-9a729ed",
+      "title": "Does llms.txt quote the same agent count in all of its own sentences?",
+      "severity": "S2-MEASUREMENT",
+      "tag": "BOTS",
+      "kind": "contradiction",
+      "section": "agents",
+      "component": "rest.agents",
+      "note": "A document that contradicts itself is worse than two documents that disagree, because the reader has no way to pick. Added after report #52 updated one occurrence of the count and left another behind.",
+      "detail": {
+        "llms_txt": "10",
+        "llms_txt_2": "11"
+      },
+      "checks": [
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[llms_agent_count_self_consistent::llms_txt-vs-llms_txt_2]"
+      ],
+      "filed": [],
+      "thread": [],
+      "last_reproduced": "2026-09-04T13:12:10+00:00",
+      "last_reproduced_run": "run-20260904T131102Z-9a729ed",
+      "reproductions": 1,
+      "state": "NOT RAISED YET"
+    },
+    "CYM-skills_subset": {
+      "id": "CYM-skills_subset",
+      "first_seen": "2026-09-04T13:12:10+00:00",
+      "first_seen_run": "run-20260904T131102Z-9a729ed",
+      "title": "Is agent-skills.json the actionable subset of agent-card.json, as stated?",
+      "severity": "S3-CONTRACT",
+      "tag": "DOCS",
+      "kind": "contradiction",
+      "section": "discovery",
+      "component": "discovery.wellknown",
+      "note": "Their resolution on #51 states agent-card.json is the full discovery card and agent-skills.json the endpoint-actionable subset. That is a testable model and the right one, so this checks the claim they actually made rather than demanding the two files be identical -- which they explained, correctly, that they should not be.",
+      "detail": {
+        "agent_card": "{ai-due-diligence, ai-native-provenance, arena-trading, clone-ai-agent, et10-revenue-share, exchange-tokens, live-headlines, market-data, prop-desk-trading, smart-delegation, tge-prediction-markets, trade-event-cards ... (+1 more)}  n=13",
+        "agent_skills": "{arena-trading, asset-discovery, clone-ai-agent, et10-revenue-share, exchange-tokens, market-data, portfolio-management, prop-desk-trading, trade-event-cards, trade-prediction-markets}  n=10"
+      },
+      "checks": [
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[skills_subset::agent_card-vs-agent_skills]"
+      ],
+      "filed": [],
+      "thread": [],
+      "last_reproduced": "2026-09-04T13:12:10+00:00",
+      "last_reproduced_run": "run-20260904T131102Z-9a729ed",
+      "reproductions": 1,
       "state": "NOT RAISED YET"
     }
   },
-  "updated_at": "2026-09-04T13:04:02+00:00",
-  "run_id": "run-20260904T130132Z-57d3e34",
+  "updated_at": "2026-09-04T13:12:10+00:00",
+  "run_id": "run-20260904T131102Z-9a729ed",
   "counts": {
-    "FIX CLAIMED": 5,
-    "NOT RAISED YET": 3,
+    "FIX CLAIMED": 1,
+    "NOT RAISED YET": 5,
     "RAISED": 2,
-    "VERIFIED FIXED": 6,
+    "VERIFIED FIXED": 10,
     "WITHDRAWN": 2
   },
   "filing_status_refreshed": 0
