@@ -216,6 +216,15 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:13.5px; max-wid
   background:repeating-linear-gradient(135deg,var(--none-bg) 0 4px,transparent 4px 8px);
   box-shadow:inset 0 0 0 1px var(--none-bg);
 }
+.pct-wrap { display:flex; flex-direction:column; align-items:flex-end; gap:2px; }
+.pct-cap {
+  font-family:var(--mono); font-size:9.5px; color:var(--text-faint);
+  white-space:nowrap; letter-spacing:.02em;
+}
+.chip.untested {
+  color:var(--text-faint); background:transparent;
+  border:1px dashed var(--line); font-weight:600;
+}
 .blurb { font-size:12.6px; color:var(--text-dim); margin:0; line-height:1.5; }
 .stats { display:flex; flex-wrap:wrap; gap:5px; font-family:var(--mono); font-size:11px; }
 .chip {
@@ -434,11 +443,13 @@ function card(s) {
   const bar = ORDER.filter(k => s.verdicts[k]).map(k =>
     `<span class="seg-${k}" style="width:${(s.verdicts[k]/total*100).toFixed(2)}%" title="${k}: ${s.verdicts[k]}"></span>`).join("");
   const pct = s.reachable_pct == null
-    ? `<span class="pct h-none">no GET surface</span>`
-    : `<span class="pct ${h}">${s.reachable_pct}<small>%</small></span>`;
+    ? `<div class="pct-wrap"><span class="pct h-none">not checkable</span>
+       <span class="pct-cap">nothing here answers a simple call</span></div>`
+    : `<div class="pct-wrap"><span class="pct ${h}">${s.reachable_pct}<small>%</small></span>
+       <span class="pct-cap">${s.endpoints_reachable} of ${s.endpoints_probed} answered</span></div>`;
   const checks = s.checks && s.checks.total
-    ? `<span class="chip ${s.checks.failed ? "bad" : "ok"}">${s.checks.failed ? s.checks.failed+" failing / " : ""}${s.checks.total} checks</span>`
-    : `<span class="chip none">no checks yet</span>`;
+    ? `<span class="chip ${s.checks.failed ? "bad" : "ok"}">${s.checks.total} tests written${s.checks.failed ? ", "+s.checks.failed+" failing" : ""}</span>`
+    : `<span class="chip untested">0 tests written</span>`;
   const sev = {};
   s.finding_severities.forEach(v => { sev[v] = (sev[v]||0)+1; });
   const fnd = Object.entries(sev).map(([k,n]) =>
@@ -448,7 +459,7 @@ function card(s) {
     <div class="bar">${bar}</div>
     <p class="blurb">${esc(s.blurb)}</p>
     <div class="stats">
-      <span class="chip">${s.endpoints_documented} addresses</span>
+      <span class="chip">${s.endpoints_documented} addresses published</span>
       ${s.tools_declared ? `<span class="chip">${s.tools_declared} MCP tools</span>` : ""}
       ${s.verdicts.missing ? `<span class="chip bad">${s.verdicts.missing} &times; not there</span>` : ""}
       ${checks}${fnd}

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-04T11:19:28+00:00",
+  "generated_at": "2026-09-04T11:58:10+00:00",
   "run_id": "run-20260904T102937Z-nogit",
   "platform_fingerprint": "sha256:f8d11a6e31145f80868281458a4ea6ec2b4003923292b718139ec5ef53c81d7f",
   "findings": [
@@ -92,7 +92,7 @@
         "scripts/bounty.py::probe_filing_auth"
       ],
       "evidence_ids": [],
-      "state": "REPORTED",
+      "state": "AWAITING_VERIFICATION",
       "first_seen_run": "run-20260904T102937Z-nogit",
       "tag": "PROCESS",
       "tag_label": "Reporting channel & tracker",
@@ -107,6 +107,16 @@
           "file": "outbox/2026-09-04-MSG-0000-opener.md",
           "excerpt": "1. FILING APPEARS TO BE UNAUTHENTICATED\n\nPOST /api/v1/bounty/reports with an empty body returns the same response with\nno credential and with a TRUSTED-tier API key:\n\n  HTTP 422 — {\"detail\":[{\"type\":\"missing\",\"loc\":[\"body\",\"title\"] ...\n\nA validation error, not a permission error, and byte-identical at both\nidentities. Same for /api/v1/bounty/reports/with-screenshots.\n\nSCOPE — what this does not establish: I sent an empty body deliberately, so\nthis shows only that no authorization check runs before validation. It does not\nshow that a fully-populated anonymous POST is accepted. I have not tested that,\nand I will not without your say-so, because the test would create a real record\nin your tracker.\n\n2. HOW IS hunter_name BOUND TO AN IDENTITY?\n\nIf filing needs no credential, then hunter_name looks like a form field a caller\nsets freely. If that is so, anyone can file as any hunter, and reward\nattribution rests on an unauthenticated string. I would rather be wrong about\nthis — please tell me what actually binds a report to a hunter.",
           "excerpt_missing_reason": null
+        },
+        {
+          "msg_id": "REPLY-0001",
+          "direction": "in",
+          "channel": "telegram",
+          "at": "2026-09-04T11:40:00+00:00",
+          "delivered_as": null,
+          "file": "inbox/2026-09-04-REPLY-0001.md",
+          "excerpt": null,
+          "excerpt_missing_reason": "listed on the message but not mapped to a section"
         }
       ],
       "reported_at": "2026-09-04T11:03:27+00:00"
@@ -279,7 +289,7 @@
         "scripts/bounty.py"
       ],
       "evidence_ids": [],
-      "state": "REPORTED",
+      "state": "AWAITING_VERIFICATION",
       "first_seen_run": "run-20260904T102937Z-nogit",
       "tag": "PROCESS",
       "tag_label": "Reporting channel & tracker",
@@ -294,6 +304,16 @@
           "file": "outbox/2026-09-04-MSG-0000-opener.md",
           "excerpt": "3. THE TRACKER SHOWS 15 REPORTS AND ALL 15 READ \"fixed\"\n\nGET /api/v1/bounty/reports returns no open, triaged, disputed or wont_fix item.\nThe schema carries validated_at, triaged_at and severity_confirmed; all three\nare null on all 15 records.\n\nCredit where due: the resolution notes on our own six reports are specific —\nthey name files, line numbers and commit hashes, which is more than most\nvendors provide. The question is not whether work was done. It is that a queue\nwith a 100% closure rate and no populated validation field cannot be used to\nmeasure anything. Is this a filtered view, or does the tracker not retain\nunresolved items?\n\nWHAT I WILL DO WITH YOUR ANSWERS\n\nIf the pipeline round-trips reliably, I will file through the API and poll\nreport status instead of sending prose. To be explicit about how I will treat\nwhat comes back: a status change to \"fixed\" is recorded on my side as\nFIX_CLAIMED, not as fixed. It moves to verified only after I re-run the exact\ncheck that originally failed, against the live build, and it moves back to open\nif that check still fails. I will report either outcome accurately, and I will\nwithdraw any claim of mine the moment it is shown wrong.",
           "excerpt_missing_reason": null
+        },
+        {
+          "msg_id": "REPLY-0001",
+          "direction": "in",
+          "channel": "telegram",
+          "at": "2026-09-04T11:40:00+00:00",
+          "delivered_as": null,
+          "file": "inbox/2026-09-04-REPLY-0001.md",
+          "excerpt": null,
+          "excerpt_missing_reason": "listed on the message but not mapped to a section"
         }
       ],
       "reported_at": "2026-09-04T11:03:27+00:00"
@@ -467,7 +487,7 @@
         "scripts/bounty.py"
       ],
       "evidence_ids": [],
-      "state": "REPORTED",
+      "state": "AWAITING_VERIFICATION",
       "first_seen_run": "run-20260904T102937Z-nogit",
       "tag": "PROCESS",
       "tag_label": "Reporting channel & tracker",
@@ -482,6 +502,16 @@
           "file": "outbox/2026-09-04-MSG-0000-opener.md",
           "excerpt": "4. CONFIRM OUR ATTRIBUTION\n\nReports from us will carry:\n  hunter_name     expire76\n  wallet_address  0xde9CeAaB301A9e47b1bAcd448B3DDbbA85e83398\n\nPlease confirm both are correctly bound on your side, and that the six existing\nexpire76 reports are attributed to that wallet.\n\nWHAT I WILL DO WITH YOUR ANSWERS\n\nIf the pipeline round-trips reliably, I will file through the API and poll\nreport status instead of sending prose. To be explicit about how I will treat\nwhat comes back: a status change to \"fixed\" is recorded on my side as\nFIX_CLAIMED, not as fixed. It moves to verified only after I re-run the exact\ncheck that originally failed, against the live build, and it moves back to open\nif that check still fails. I will report either outcome accurately, and I will\nwithdraw any claim of mine the moment it is shown wrong.",
           "excerpt_missing_reason": null
+        },
+        {
+          "msg_id": "REPLY-0001",
+          "direction": "in",
+          "channel": "telegram",
+          "at": "2026-09-04T11:40:00+00:00",
+          "delivered_as": null,
+          "file": "inbox/2026-09-04-REPLY-0001.md",
+          "excerpt": null,
+          "excerpt_missing_reason": "listed on the message but not mapped to a section"
         }
       ],
       "reported_at": "2026-09-04T11:03:27+00:00"
