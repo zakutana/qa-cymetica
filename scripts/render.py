@@ -313,8 +313,19 @@ h4.sec {
 .note h3 { margin:0 0 8px; font-size:13px; color:var(--text); text-transform:uppercase; letter-spacing:.09em; }
 .note p { margin:0 0 9px; }
 .note code { font-family:var(--mono); font-size:12px; background:var(--surface-2); padding:1px 5px; border-radius:3px; }
-.legend { display:flex; flex-wrap:wrap; gap:4px 16px; margin-top:12px; font-size:12px; font-family:var(--mono); }
-.legend i { display:inline-block; width:9px; height:9px; border-radius:2px; margin-right:6px; vertical-align:-1px; }
+.note .verdicts { border-collapse:collapse; margin:12px 0 16px; }
+.note .verdicts td { padding:5px 12px 5px 0; vertical-align:top; font-size:13.2px; line-height:1.45; }
+.note .verdicts td:first-child { width:1%; padding-right:9px; padding-top:9px; }
+.note .verdicts td:nth-child(2) { white-space:nowrap; color:var(--text); }
+.note .verdicts i {
+  display:inline-block; width:10px; height:10px; border-radius:2px;
+  box-shadow:inset 0 0 0 1px var(--line);
+}
+.note .verdicts i.faint { opacity:.6; }
+.note .example {
+  background:var(--surface-2); border-radius:6px; padding:11px 13px;
+  border-left:2px solid var(--accent); font-size:13.2px;
+}
 @media (prefers-reduced-motion: reduce) { * { transition:none!important; animation:none!important; } }
 </style>
 
@@ -339,25 +350,48 @@ h4.sec {
   <div id="findings"></div>
 
   <div class="note">
-    <h3>What these numbers mean</h3>
-    <p><b>Reachability</b> is the share of each section's documented endpoints that answer
-    correctly right now, measured by read-only GET at two identities (anonymous and TRUSTED).
-    A <code>401</code> counts as healthy &mdash; the gate doing its job is not a defect. A
-    <code>404</code> on an endpoint the platform documents does not. A <code>405</code> is
-    excluded entirely: it means we sent the wrong verb and so learned nothing about function.</p>
-    <p><b>Checks</b> is how many real assertions exist about that section. It is deliberately
-    a separate number: a section can be 100% reachable and entirely unverified, and merging
-    the two would hide exactly the gap worth acting on.</p>
-    <p><b>Not established by this page:</b> that reachable endpoints return correct data, that
-    gated endpoints are gated for the right reasons, or that documented behaviour matches what
-    happens when called. Those need checks, and most sections have none yet.</p>
-    <div class="legend">
-      <span><i style="background:var(--ok)"></i>responds</span>
-      <span><i style="background:var(--auth)"></i>correctly gated / needs params</span>
-      <span><i style="background:var(--warn)"></i>wrong method documented</span>
-      <span><i style="background:var(--bad)"></i>documented but 404</span>
-      <span><i style="background:var(--none-bg)"></i>not probeable by GET</span>
-    </div>
+    <h3>How to read this page</h3>
+
+    <p><b>The big percentage answers one question:</b> of all the addresses Cymetica
+    publishes for this part of the platform, how many actually answer when you call them?</p>
+
+    <p>We call each address twice &mdash; once with no key, once with the API key &mdash;
+    and take the better of the two answers. Then each address lands in one of these:</p>
+
+    <table class="verdicts">
+      <tr><td><i style="background:var(--ok)"></i></td>
+          <td><b>It works.</b></td>
+          <td>Counts as good.</td></tr>
+      <tr><td><i style="background:var(--auth)"></i></td>
+          <td><b>&ldquo;You need to log in.&rdquo;</b></td>
+          <td>The lock is doing its job. Counts as good.</td></tr>
+      <tr><td><i style="background:var(--auth)" class="faint"></i></td>
+          <td><b>&ldquo;You forgot something.&rdquo;</b></td>
+          <td>It is there, it just wants a parameter. Counts as good.</td></tr>
+      <tr><td><i style="background:var(--bad)"></i></td>
+          <td><b>&ldquo;No such thing here.&rdquo;</b></td>
+          <td>They wrote it in their own docs but it does not exist. Counts as bad.</td></tr>
+      <tr><td><i style="background:var(--warn)"></i></td>
+          <td><b>&ldquo;Wrong way to ask.&rdquo;</b></td>
+          <td>Our mistake, not theirs. Left out of the score entirely.</td></tr>
+      <tr><td><i style="background:var(--none-bg)"></i></td>
+          <td><b>Cannot be checked this way.</b></td>
+          <td>Live feeds, or addresses needing an ID we do not have. Left out.</td></tr>
+    </table>
+
+    <p class="example"><b>Worked example &mdash; Markets &amp; prices, 64%.</b> It publishes
+    16 addresses. Five could not be checked with a simple call, leaving 11. Of those, seven
+    answered properly and four said &ldquo;no such thing here&rdquo;. Seven out of eleven is 64%.</p>
+
+    <p><b>&ldquo;Checks&rdquo; is a completely different number</b>, and most cards say
+    <em>no checks yet</em>. It counts the real tests written for that part. An address
+    answering does not mean the answer is <em>correct</em> &mdash; 100% with no checks means
+    &ldquo;it is alive, and nobody has verified a word it says&rdquo;. Those two things are kept
+    apart on purpose: merging them would hide the gap that is actually worth acting on.</p>
+
+    <p><b>So this page does not tell you</b> whether the numbers Cymetica returns are right,
+    whether the locks are on the right doors, or whether anything behaves the way they
+    documented. That is what the checks are for, and that is the work still ahead.</p>
   </div>
 </div>
 
