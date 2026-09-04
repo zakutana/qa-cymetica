@@ -448,9 +448,9 @@ function card(s) {
     <div class="bar">${bar}</div>
     <p class="blurb">${esc(s.blurb)}</p>
     <div class="stats">
-      <span class="chip">${s.endpoints_documented} paths</span>
-      ${s.tools_declared ? `<span class="chip">${s.tools_declared} tools</span>` : ""}
-      ${s.verdicts.missing ? `<span class="chip bad">${s.verdicts.missing} &times; 404</span>` : ""}
+      <span class="chip">${s.endpoints_documented} addresses</span>
+      ${s.tools_declared ? `<span class="chip">${s.tools_declared} MCP tools</span>` : ""}
+      ${s.verdicts.missing ? `<span class="chip bad">${s.verdicts.missing} &times; not there</span>` : ""}
       ${checks}${fnd}
     </div></article>`;
 }
