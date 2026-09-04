@@ -59,9 +59,21 @@ def latest_run() -> dict:
 
 def build_payload() -> dict:
     inventory = load("inventory.json")
-    findings = load("findings.json")
     thread = load("thread.json")
     run = latest_run()
+
+    # The ledger, not the current run, is the source of truth for findings.
+    # A finding whose check has started passing must still appear -- as
+    # VERIFIED FIXED, the one state that means "we checked" rather than "they
+    # said". Deriving the list from what is currently failing would delete
+    # exactly the records worth keeping.
+    from scripts.ledger import as_findings, load_ledger
+    ledger = load_ledger()
+    findings = {"findings": as_findings(ledger),
+                "by_severity": {}}
+    for f in findings["findings"]:
+        if f.get("state") != "VERIFIED FIXED":
+            findings["by_severity"][f["severity"]] =                 findings["by_severity"].get(f["severity"], 0) + 1
 
     checks: dict[str, dict[str, int]] = {}
     for result in run.get("results", []):
@@ -74,6 +86,8 @@ def build_payload() -> dict:
 
     by_section: dict[str, list[str]] = {}
     for finding in findings.get("findings", []):
+        if finding.get("state") == "VERIFIED FIXED":
+            continue
         targets = set(finding.get("affected_sections") or []) | {finding.get("section")}
         for section in targets:
             if section:
@@ -177,6 +191,7 @@ body {
 .tri.s0 .n,.tri.s1 .n { color:var(--bad); }
 .tri.s2 .n,.tri.s3 .n { color:var(--warn); }
 .tri.s4 .n { color:var(--text-dim); }
+.tri.ok .n { color:var(--ok); }
 
 h2.group {
   font-size:12px; text-transform:uppercase; letter-spacing:0.13em;
@@ -435,7 +450,8 @@ document.getElementById("triage").innerHTML =
   SEV.map(([k,l,c]) => `<div class="tri ${c}"><div class="n">${D.by_severity[k]||0}</div><div class="l">${l}</div></div>`).join("")
   + `<div class="tri"><div class="n">${D.sections.filter(s=>!(s.checks&&s.checks.total)).length}</div><div class="l">sections with no checks</div></div>`
   + `<div class="tri"><div class="n">${D.findings.filter(f=>f.filed&&f.filed.length).length}</div><div class="l">filed to their tracker</div></div>`
-  + `<div class="tri"><div class="n">${D.findings.filter(f=>f.state==="NOT RAISED YET").length}</div><div class="l">not raised yet</div></div>`;
+  + `<div class="tri ok"><div class="n">${D.findings.filter(f=>f.state==="VERIFIED FIXED").length}</div><div class="l">verified fixed by us</div></div>`
+  + `<div class="tri"><div class="n">${D.findings.filter(f=>f.state==="FIX CLAIMED").length}</div><div class="l">fix claimed, unverified</div></div>`;
 
 /* ---------- section map, grouped by product area ---------- */
 const ORDER = ["ok","auth","param","method","missing","unprobed","websocket"];
