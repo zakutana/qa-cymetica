@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-04T12:23:15+00:00",
+  "generated_at": "2026-09-04T12:32:01+00:00",
   "run_id": "run-20260904T102937Z-nogit",
   "platform_fingerprint": "sha256:f8d11a6e31145f80868281458a4ea6ec2b4003923292b718139ec5ef53c81d7f",
   "findings": [
@@ -23,20 +23,7 @@
       "first_seen_run": "run-20260904T102937Z-nogit",
       "tag": "MCP",
       "tag_label": "MCP & trust ladder",
-      "thread": [
-        {
-          "msg_id": "MSG-0001",
-          "direction": "out",
-          "channel": "telegram",
-          "at": "2026-09-04T11:03:27+00:00",
-          "delivered_as": "file attachment (Cymetica-QA-report-01.md)",
-          "delivered": false,
-          "delivery_note": "Sent as a file attachment. ET-21999 confirms attachments are not captured on this channel, so the vendor never received it. The findings reached them through the bounty API instead (reports 46-53).\n",
-          "file": "outbox/2026-09-04-MSG-0001.md",
-          "excerpt": "1. AUTHORIZATION — the API key makes no difference to the MCP tool surface\n\nOBSERVED (2026-09-04T10:43:50Z)\n  tools/list with no credential     -> HTTP 200, 46 tools\n  tools/list with a TRUSTED key     -> HTTP 200, 46 tools\n  The two sets are byte-for-byte identical.\n\n  /.well-known/mcp.json assigns every tool a trust_tier. It declares 25 tools\n  at trust_tier \"unknown\". An anonymous caller receives all 46 — that is 21\n  tools above the tier your own manifest assigns them, including:\n\n    declared \"allied\"     create_aib_fund, edit_aib_fund_basket,\n                          list_my_aib_funds, register_webhook, subscribe_prices\n    declared \"trusted\"    get_market_analytics, get_oracle_insights,\n                          get_signal_history\n    declared \"recognized\" place_order, get_deposit_address, get_positions,\n                          get_order_history, get_agent_profile, get_rate_limits,\n                          query_knowledge, submit_signal, submit_observation,\n                          submit_feedback, request_feature, ask_nexus_deep,\n                          get_deep_answer\n\n  llms.txt states \"anonymous = PUBLIC tools\". That is not what the server does.\n\nCHECK\n  curl -s -X POST https://cymetica.com/mcp/v1 \\\n    -H 'Content-Type: application/json' \\\n    -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\"}' \\\n    | python -c \"import json,sys;print(len(json.load(sys.stdin)['result']['tools']))\"\n  Expected per mcp.json + llms.txt: 25.  Actual: 46.\n\nSCOPE — what this does NOT establish\n  This is the ADVERTISED surface only. I have not called any of these tools\n  without a key, so this does not show that an unauthenticated tools/call on\n  place_order or create_aib_fund succeeds. Those are two different defects with\n  very different severity and I am not merging them. Please answer them\n  separately (asks 1 and 2).\n\n  Also for the record, and explicitly labelled as reported-not-verified: a\n  handoff note dated 2026-08-28 records 27 tools at TRUSTED. I did not measure\n  that and cannot confirm it. I record it only because if the surface is\n  changing between observations, that is itself worth knowing.\n\nASKS",
-          "excerpt_missing_reason": null
-        }
-      ],
+      "thread": [],
       "filed": [
         {
           "report_id": 46,
@@ -44,7 +31,7 @@
           "status": "pending"
         }
       ],
-      "undelivered": 1,
+      "undelivered": 0,
       "reported_at": "2026-09-04T12:03:33+00:00",
       "state": "RAISED"
     },
@@ -68,20 +55,7 @@
       "first_seen_run": "run-20260904T102937Z-nogit",
       "tag": "BOTS",
       "tag_label": "Bots, skills & AgentBook",
-      "thread": [
-        {
-          "msg_id": "MSG-0001",
-          "direction": "out",
-          "channel": "telegram",
-          "at": "2026-09-04T11:03:27+00:00",
-          "delivered_as": "file attachment (Cymetica-QA-report-01.md)",
-          "delivered": false,
-          "delivery_note": "Sent as a file attachment. ET-21999 confirms attachments are not captured on this channel, so the vendor never received it. The findings reached them through the bounty API instead (reports 46-53).\n",
-          "file": "outbox/2026-09-04-MSG-0001.md",
-          "excerpt": "2. DATA INTEGRITY — the agents llms.txt tells readers to clone do not exist\n\nOBSERVED\n  llms.txt: \"Clone any of 10 AI trading agents (DELTA, STAT, CORR, SENT, SYNC,\n  CRASH, DREAD, GLOOM, FADE, VORTX)\"\n\n  GET /api/v1/agents/species returns 11 species:\n  MACD, RSI, BOLL, VOL, TREND, STOCH, ICHI, FIB, ATR, DIV, PCPN\n\n  The intersection of those two sets is EMPTY. Not one documented name resolves.\n  GET /api/v1/agentbook/agents reports 8. mcp.json's description says 16.\n  Four sources, four answers: 8 / 10 / 11 / 16.\n\nCHECK\n  curl -s https://cymetica.com/api/v1/agents/species \\\n    | python -c \"import json,sys;print(sorted(a['symbol'] for a in json.load(sys.stdin)))\"\n  Expected per llms.txt: DELTA, STAT, CORR, ...  Actual: ATR, BOLL, DIV, ...\n\nWHY THIS IS NOT COSMETIC\n  An agent following your own documentation to clone \"DELTA\" cannot succeed.\n  This is the single most prominently advertised action for AI callers.\n\nASKS",
-          "excerpt_missing_reason": null
-        }
-      ],
+      "thread": [],
       "filed": [
         {
           "report_id": 48,
@@ -89,7 +63,7 @@
           "status": "pending"
         }
       ],
-      "undelivered": 1,
+      "undelivered": 0,
       "reported_at": "2026-09-04T12:03:52+00:00",
       "state": "RAISED"
     },
@@ -113,32 +87,7 @@
       "first_seen_run": "run-20260904T102937Z-nogit",
       "tag": "PROCESS",
       "tag_label": "Reporting channel & tracker",
-      "thread": [
-        {
-          "msg_id": "MSG-0000",
-          "direction": "out",
-          "channel": "telegram",
-          "at": "2026-09-04T11:03:27+00:00",
-          "delivered_as": "file attachment (Cymetica-QA-report-01.md)",
-          "delivered": true,
-          "delivery_note": null,
-          "file": "outbox/2026-09-04-MSG-0000-opener.md",
-          "excerpt": "1. FILING APPEARS TO BE UNAUTHENTICATED\n\nPOST /api/v1/bounty/reports with an empty body returns the same response with\nno credential and with a TRUSTED-tier API key:\n\n  HTTP 422 — {\"detail\":[{\"type\":\"missing\",\"loc\":[\"body\",\"title\"] ...\n\nA validation error, not a permission error, and byte-identical at both\nidentities. Same for /api/v1/bounty/reports/with-screenshots.\n\nSCOPE — what this does not establish: I sent an empty body deliberately, so\nthis shows only that no authorization check runs before validation. It does not\nshow that a fully-populated anonymous POST is accepted. I have not tested that,\nand I will not without your say-so, because the test would create a real record\nin your tracker.\n\n2. HOW IS hunter_name BOUND TO AN IDENTITY?\n\nIf filing needs no credential, then hunter_name looks like a form field a caller\nsets freely. If that is so, anyone can file as any hunter, and reward\nattribution rests on an unauthenticated string. I would rather be wrong about\nthis — please tell me what actually binds a report to a hunter.",
-          "excerpt_missing_reason": null
-        },
-        {
-          "msg_id": "REPLY-0001",
-          "direction": "in",
-          "channel": "telegram",
-          "at": "2026-09-04T11:40:00+00:00",
-          "delivered_as": null,
-          "delivered": true,
-          "delivery_note": null,
-          "file": "inbox/2026-09-04-REPLY-0001.md",
-          "excerpt": null,
-          "excerpt_missing_reason": "listed on the message but not mapped to a section"
-        }
-      ],
+      "thread": [],
       "filed": [
         {
           "report_id": 47,
@@ -147,8 +96,8 @@
         }
       ],
       "undelivered": 0,
-      "reported_at": "2026-09-04T11:03:27+00:00",
-      "state": "THEY REPLIED"
+      "reported_at": "2026-09-04T12:03:44+00:00",
+      "state": "RAISED"
     },
     {
       "id": "CYM-agent_count",
@@ -177,20 +126,7 @@
       "first_seen_run": "run-20260904T102937Z-nogit",
       "tag": "BOTS",
       "tag_label": "Bots, skills & AgentBook",
-      "thread": [
-        {
-          "msg_id": "MSG-0001",
-          "direction": "out",
-          "channel": "telegram",
-          "at": "2026-09-04T11:03:27+00:00",
-          "delivered_as": "file attachment (Cymetica-QA-report-01.md)",
-          "delivered": false,
-          "delivery_note": "Sent as a file attachment. ET-21999 confirms attachments are not captured on this channel, so the vendor never received it. The findings reached them through the bounty API instead (reports 46-53).\n",
-          "file": "outbox/2026-09-04-MSG-0001.md",
-          "excerpt": "2. DATA INTEGRITY — the agents llms.txt tells readers to clone do not exist\n\nOBSERVED\n  llms.txt: \"Clone any of 10 AI trading agents (DELTA, STAT, CORR, SENT, SYNC,\n  CRASH, DREAD, GLOOM, FADE, VORTX)\"\n\n  GET /api/v1/agents/species returns 11 species:\n  MACD, RSI, BOLL, VOL, TREND, STOCH, ICHI, FIB, ATR, DIV, PCPN\n\n  The intersection of those two sets is EMPTY. Not one documented name resolves.\n  GET /api/v1/agentbook/agents reports 8. mcp.json's description says 16.\n  Four sources, four answers: 8 / 10 / 11 / 16.\n\nCHECK\n  curl -s https://cymetica.com/api/v1/agents/species \\\n    | python -c \"import json,sys;print(sorted(a['symbol'] for a in json.load(sys.stdin)))\"\n  Expected per llms.txt: DELTA, STAT, CORR, ...  Actual: ATR, BOLL, DIV, ...\n\nWHY THIS IS NOT COSMETIC\n  An agent following your own documentation to clone \"DELTA\" cannot succeed.\n  This is the single most prominently advertised action for AI callers.\n\n4. RECONCILIATION — the same quantity, different answers by source\n\nquantity              llms.txt   mcp.json   live API        agent-card\n  MCP tools                   11         46   46 (anon)              —\n  MCP resources                4          5   —                      —\n  CLOB pairs                   9        568   —                      —\n  trading agents              10         16   11 species / 8 book    10\n  settlement chains            —         10   16 (/swap/chains)      —\n  commits                11,700+          —   21,840 (build-stats)   —\n  agent skills                 —          —   —              13 vs 10*\n\n  * /.well-known/agent-card.json lists 13 skills, /.well-known/agent-skills.json\n    lists 10, and the two sets are not nested: 7 ids appear only in the first,\n    4 only in the second.\n\n  The commit figure is the one I would prioritise of these four: 11,700+ versus\n  a live 21,840 is an 87% understatement of your own headline AI-authorship\n  metric, and it is the number outside parties are most likely to quote.",
-          "excerpt_missing_reason": null
-        }
-      ],
+      "thread": [],
       "filed": [
         {
           "report_id": 52,
@@ -198,7 +134,7 @@
           "status": "pending"
         }
       ],
-      "undelivered": 1,
+      "undelivered": 0,
       "reported_at": "2026-09-04T12:04:15+00:00",
       "state": "RAISED"
     },
@@ -222,20 +158,7 @@
       "first_seen_run": "run-20260904T102937Z-nogit",
       "tag": "MONEY",
       "tag_label": "Money in and out",
-      "thread": [
-        {
-          "msg_id": "MSG-0001",
-          "direction": "out",
-          "channel": "telegram",
-          "at": "2026-09-04T11:03:27+00:00",
-          "delivered_as": "file attachment (Cymetica-QA-report-01.md)",
-          "delivered": false,
-          "delivery_note": "Sent as a file attachment. ET-21999 confirms attachments are not captured on this channel, so the vendor never received it. The findings reached them through the bounty API instead (reports 46-53).\n",
-          "file": "outbox/2026-09-04-MSG-0001.md",
-          "excerpt": "4. RECONCILIATION — the same quantity, different answers by source\n\nquantity              llms.txt   mcp.json   live API        agent-card\n  MCP tools                   11         46   46 (anon)              —\n  MCP resources                4          5   —                      —\n  CLOB pairs                   9        568   —                      —\n  trading agents              10         16   11 species / 8 book    10\n  settlement chains            —         10   16 (/swap/chains)      —\n  commits                11,700+          —   21,840 (build-stats)   —\n  agent skills                 —          —   —              13 vs 10*\n\n  * /.well-known/agent-card.json lists 13 skills, /.well-known/agent-skills.json\n    lists 10, and the two sets are not nested: 7 ids appear only in the first,\n    4 only in the second.\n\n  The commit figure is the one I would prioritise of these four: 11,700+ versus\n  a live 21,840 is an 87% understatement of your own headline AI-authorship\n  metric, and it is the number outside parties are most likely to quote.",
-          "excerpt_missing_reason": null
-        }
-      ],
+      "thread": [],
       "filed": [
         {
           "report_id": 52,
@@ -243,7 +166,7 @@
           "status": "pending"
         }
       ],
-      "undelivered": 1,
+      "undelivered": 0,
       "reported_at": "2026-09-04T12:04:15+00:00",
       "state": "RAISED"
     },
@@ -267,20 +190,7 @@
       "first_seen_run": "run-20260904T102937Z-nogit",
       "tag": "EXCHANGE",
       "tag_label": "Exchange & markets",
-      "thread": [
-        {
-          "msg_id": "MSG-0001",
-          "direction": "out",
-          "channel": "telegram",
-          "at": "2026-09-04T11:03:27+00:00",
-          "delivered_as": "file attachment (Cymetica-QA-report-01.md)",
-          "delivered": false,
-          "delivery_note": "Sent as a file attachment. ET-21999 confirms attachments are not captured on this channel, so the vendor never received it. The findings reached them through the bounty API instead (reports 46-53).\n",
-          "file": "outbox/2026-09-04-MSG-0001.md",
-          "excerpt": "4. RECONCILIATION — the same quantity, different answers by source\n\nquantity              llms.txt   mcp.json   live API        agent-card\n  MCP tools                   11         46   46 (anon)              —\n  MCP resources                4          5   —                      —\n  CLOB pairs                   9        568   —                      —\n  trading agents              10         16   11 species / 8 book    10\n  settlement chains            —         10   16 (/swap/chains)      —\n  commits                11,700+          —   21,840 (build-stats)   —\n  agent skills                 —          —   —              13 vs 10*\n\n  * /.well-known/agent-card.json lists 13 skills, /.well-known/agent-skills.json\n    lists 10, and the two sets are not nested: 7 ids appear only in the first,\n    4 only in the second.\n\n  The commit figure is the one I would prioritise of these four: 11,700+ versus\n  a live 21,840 is an 87% understatement of your own headline AI-authorship\n  metric, and it is the number outside parties are most likely to quote.\n\nASKS",
-          "excerpt_missing_reason": null
-        }
-      ],
+      "thread": [],
       "filed": [
         {
           "report_id": 52,
@@ -288,7 +198,7 @@
           "status": "pending"
         }
       ],
-      "undelivered": 1,
+      "undelivered": 0,
       "reported_at": "2026-09-04T12:04:15+00:00",
       "state": "RAISED"
     },
@@ -312,20 +222,7 @@
       "first_seen_run": "run-20260904T102937Z-nogit",
       "tag": "DOCS",
       "tag_label": "Manifests & documentation",
-      "thread": [
-        {
-          "msg_id": "MSG-0001",
-          "direction": "out",
-          "channel": "telegram",
-          "at": "2026-09-04T11:03:27+00:00",
-          "delivered_as": "file attachment (Cymetica-QA-report-01.md)",
-          "delivered": false,
-          "delivery_note": "Sent as a file attachment. ET-21999 confirms attachments are not captured on this channel, so the vendor never received it. The findings reached them through the bounty API instead (reports 46-53).\n",
-          "file": "outbox/2026-09-04-MSG-0001.md",
-          "excerpt": "4. RECONCILIATION — the same quantity, different answers by source\n\nquantity              llms.txt   mcp.json   live API        agent-card\n  MCP tools                   11         46   46 (anon)              —\n  MCP resources                4          5   —                      —\n  CLOB pairs                   9        568   —                      —\n  trading agents              10         16   11 species / 8 book    10\n  settlement chains            —         10   16 (/swap/chains)      —\n  commits                11,700+          —   21,840 (build-stats)   —\n  agent skills                 —          —   —              13 vs 10*\n\n  * /.well-known/agent-card.json lists 13 skills, /.well-known/agent-skills.json\n    lists 10, and the two sets are not nested: 7 ids appear only in the first,\n    4 only in the second.\n\n  The commit figure is the one I would prioritise of these four: 11,700+ versus\n  a live 21,840 is an 87% understatement of your own headline AI-authorship\n  metric, and it is the number outside parties are most likely to quote.",
-          "excerpt_missing_reason": null
-        }
-      ],
+      "thread": [],
       "filed": [
         {
           "report_id": 52,
@@ -333,7 +230,7 @@
           "status": "pending"
         }
       ],
-      "undelivered": 1,
+      "undelivered": 0,
       "reported_at": "2026-09-04T12:04:15+00:00",
       "state": "RAISED"
     },
@@ -357,32 +254,7 @@
       "first_seen_run": "run-20260904T102937Z-nogit",
       "tag": "PROCESS",
       "tag_label": "Reporting channel & tracker",
-      "thread": [
-        {
-          "msg_id": "MSG-0000",
-          "direction": "out",
-          "channel": "telegram",
-          "at": "2026-09-04T11:03:27+00:00",
-          "delivered_as": "file attachment (Cymetica-QA-report-01.md)",
-          "delivered": true,
-          "delivery_note": null,
-          "file": "outbox/2026-09-04-MSG-0000-opener.md",
-          "excerpt": "3. THE TRACKER SHOWS 15 REPORTS AND ALL 15 READ \"fixed\"\n\nGET /api/v1/bounty/reports returns no open, triaged, disputed or wont_fix item.\nThe schema carries validated_at, triaged_at and severity_confirmed; all three\nare null on all 15 records.\n\nCredit where due: the resolution notes on our own six reports are specific —\nthey name files, line numbers and commit hashes, which is more than most\nvendors provide. The question is not whether work was done. It is that a queue\nwith a 100% closure rate and no populated validation field cannot be used to\nmeasure anything. Is this a filtered view, or does the tracker not retain\nunresolved items?\n\nWHAT I WILL DO WITH YOUR ANSWERS\n\nIf the pipeline round-trips reliably, I will file through the API and poll\nreport status instead of sending prose. To be explicit about how I will treat\nwhat comes back: a status change to \"fixed\" is recorded on my side as\nFIX_CLAIMED, not as fixed. It moves to verified only after I re-run the exact\ncheck that originally failed, against the live build, and it moves back to open\nif that check still fails. I will report either outcome accurately, and I will\nwithdraw any claim of mine the moment it is shown wrong.",
-          "excerpt_missing_reason": null
-        },
-        {
-          "msg_id": "REPLY-0001",
-          "direction": "in",
-          "channel": "telegram",
-          "at": "2026-09-04T11:40:00+00:00",
-          "delivered_as": null,
-          "delivered": true,
-          "delivery_note": null,
-          "file": "inbox/2026-09-04-REPLY-0001.md",
-          "excerpt": null,
-          "excerpt_missing_reason": "listed on the message but not mapped to a section"
-        }
-      ],
+      "thread": [],
       "filed": [
         {
           "report_id": 53,
@@ -391,8 +263,8 @@
         }
       ],
       "undelivered": 0,
-      "reported_at": "2026-09-04T11:03:27+00:00",
-      "state": "THEY REPLIED"
+      "reported_at": "2026-09-04T12:04:20+00:00",
+      "state": "RAISED"
     },
     {
       "id": "CYM-documented-404",
@@ -449,20 +321,7 @@
       "first_seen_run": "run-20260904T102937Z-nogit",
       "tag": "DOCS",
       "tag_label": "Manifests & documentation",
-      "thread": [
-        {
-          "msg_id": "MSG-0001",
-          "direction": "out",
-          "channel": "telegram",
-          "at": "2026-09-04T11:03:27+00:00",
-          "delivered_as": "file attachment (Cymetica-QA-report-01.md)",
-          "delivered": false,
-          "delivery_note": "Sent as a file attachment. ET-21999 confirms attachments are not captured on this channel, so the vendor never received it. The findings reached them through the bounty API instead (reports 46-53).\n",
-          "file": "outbox/2026-09-04-MSG-0001.md",
-          "excerpt": "3. CONTRACT — documented endpoints and tools that return 404 / do not exist\n\n26 endpoints documented in llms.txt or agent-skills.json return 404. Among them:\n\n  from agent-skills.json (each is a skill's declared endpoint):\n    POST /api/v1/clob/order          404   (the spec has /clob/orders, plural)\n    POST /api/v1/bots/clone          404   (the spec has /agents/clone)\n    POST /api/v1/exchange/buy        404\n    POST /api/v1/tuatara/discover    404\n\n  from llms.txt:\n    /api/v1/winner-takes-all/markets, /winner-takes-all/bet,\n    /winner-takes-all/epochs, /api/v1/positions, /api/v1/account,\n    /api/v1/cloned-bot/create, /cloned-bot/list, /api/v1/backtest/run,\n    /api/v1/backtest/saved, /api/v1/agentbook/post, /api/v1/staking/pools,\n    /api/v1/defi/pools, /api/v1/aerodrome/quote, /api/v1/base-dex/tokens,\n    /api/v1/vaix/prices, /api/v1/perpetual/user/positions,\n    /mcp/v1/prompts/{analyze_market,compare_markets,explain_probability,\n    find_opportunities}, /mcp/v1/resources/docs/{api,getting-started}\n\nSeparately, llms.txt documents 11 MCP tools by name. 7 of them do not exist:\n  MISSING  get_markets, get_price, get_trades, get_leaderboard,\n           get_market_summary, get_trending_markets, get_featured_market\n  PRESENT  get_market, get_prices, get_orderbook, search_markets\n\nA further 18 documented URLs exist but reject the documented method (llms.txt\nrenders MCP tools as GET-able /mcp/v1/tools/<name> URLs; they answer 405).\n\nDO NOT COLLAPSE THESE INTO ONE ANSWER\n  A 404 has at least three distinct causes and they need different fixes:\n    (a) the endpoint was removed and the document is stale\n    (b) the endpoint was never built and the document is aspirational\n    (c) the path in the document is a typo for a working endpoint\n  \"We'll update the docs\" is only correct for (a) and (c). Please label each\n  group, or at minimum tell me which of the four agent-skills.json entries are\n  typos versus absent features.\n\nASKS",
-          "excerpt_missing_reason": null
-        }
-      ],
+      "thread": [],
       "filed": [
         {
           "report_id": 49,
@@ -470,7 +329,7 @@
           "status": "pending"
         }
       ],
-      "undelivered": 1,
+      "undelivered": 0,
       "reported_at": "2026-09-04T12:03:58+00:00",
       "state": "RAISED"
     },
@@ -498,20 +357,7 @@
       "first_seen_run": "run-20260904T102937Z-nogit",
       "tag": "MCP",
       "tag_label": "MCP & trust ladder",
-      "thread": [
-        {
-          "msg_id": "MSG-0001",
-          "direction": "out",
-          "channel": "telegram",
-          "at": "2026-09-04T11:03:27+00:00",
-          "delivered_as": "file attachment (Cymetica-QA-report-01.md)",
-          "delivered": false,
-          "delivery_note": "Sent as a file attachment. ET-21999 confirms attachments are not captured on this channel, so the vendor never received it. The findings reached them through the bounty API instead (reports 46-53).\n",
-          "file": "outbox/2026-09-04-MSG-0001.md",
-          "excerpt": "4. RECONCILIATION — the same quantity, different answers by source\n\nquantity              llms.txt   mcp.json   live API        agent-card\n  MCP tools                   11         46   46 (anon)              —\n  MCP resources                4          5   —                      —\n  CLOB pairs                   9        568   —                      —\n  trading agents              10         16   11 species / 8 book    10\n  settlement chains            —         10   16 (/swap/chains)      —\n  commits                11,700+          —   21,840 (build-stats)   —\n  agent skills                 —          —   —              13 vs 10*\n\n  * /.well-known/agent-card.json lists 13 skills, /.well-known/agent-skills.json\n    lists 10, and the two sets are not nested: 7 ids appear only in the first,\n    4 only in the second.\n\n  The commit figure is the one I would prioritise of these four: 11,700+ versus\n  a live 21,840 is an 87% understatement of your own headline AI-authorship\n  metric, and it is the number outside parties are most likely to quote.",
-          "excerpt_missing_reason": null
-        }
-      ],
+      "thread": [],
       "filed": [
         {
           "report_id": 50,
@@ -519,7 +365,7 @@
           "status": "pending"
         }
       ],
-      "undelivered": 1,
+      "undelivered": 0,
       "reported_at": "2026-09-04T12:04:04+00:00",
       "state": "RAISED"
     },
@@ -545,20 +391,7 @@
       "first_seen_run": "run-20260904T102937Z-nogit",
       "tag": "MCP",
       "tag_label": "MCP & trust ladder",
-      "thread": [
-        {
-          "msg_id": "MSG-0001",
-          "direction": "out",
-          "channel": "telegram",
-          "at": "2026-09-04T11:03:27+00:00",
-          "delivered_as": "file attachment (Cymetica-QA-report-01.md)",
-          "delivered": false,
-          "delivery_note": "Sent as a file attachment. ET-21999 confirms attachments are not captured on this channel, so the vendor never received it. The findings reached them through the bounty API instead (reports 46-53).\n",
-          "file": "outbox/2026-09-04-MSG-0001.md",
-          "excerpt": "3. CONTRACT — documented endpoints and tools that return 404 / do not exist\n\n26 endpoints documented in llms.txt or agent-skills.json return 404. Among them:\n\n  from agent-skills.json (each is a skill's declared endpoint):\n    POST /api/v1/clob/order          404   (the spec has /clob/orders, plural)\n    POST /api/v1/bots/clone          404   (the spec has /agents/clone)\n    POST /api/v1/exchange/buy        404\n    POST /api/v1/tuatara/discover    404\n\n  from llms.txt:\n    /api/v1/winner-takes-all/markets, /winner-takes-all/bet,\n    /winner-takes-all/epochs, /api/v1/positions, /api/v1/account,\n    /api/v1/cloned-bot/create, /cloned-bot/list, /api/v1/backtest/run,\n    /api/v1/backtest/saved, /api/v1/agentbook/post, /api/v1/staking/pools,\n    /api/v1/defi/pools, /api/v1/aerodrome/quote, /api/v1/base-dex/tokens,\n    /api/v1/vaix/prices, /api/v1/perpetual/user/positions,\n    /mcp/v1/prompts/{analyze_market,compare_markets,explain_probability,\n    find_opportunities}, /mcp/v1/resources/docs/{api,getting-started}\n\nSeparately, llms.txt documents 11 MCP tools by name. 7 of them do not exist:\n  MISSING  get_markets, get_price, get_trades, get_leaderboard,\n           get_market_summary, get_trending_markets, get_featured_market\n  PRESENT  get_market, get_prices, get_orderbook, search_markets\n\nA further 18 documented URLs exist but reject the documented method (llms.txt\nrenders MCP tools as GET-able /mcp/v1/tools/<name> URLs; they answer 405).\n\nDO NOT COLLAPSE THESE INTO ONE ANSWER\n  A 404 has at least three distinct causes and they need different fixes:\n    (a) the endpoint was removed and the document is stale\n    (b) the endpoint was never built and the document is aspirational\n    (c) the path in the document is a typo for a working endpoint\n  \"We'll update the docs\" is only correct for (a) and (c). Please label each\n  group, or at minimum tell me which of the four agent-skills.json entries are\n  typos versus absent features.",
-          "excerpt_missing_reason": null
-        }
-      ],
+      "thread": [],
       "filed": [
         {
           "report_id": 50,
@@ -566,7 +399,7 @@
           "status": "pending"
         }
       ],
-      "undelivered": 1,
+      "undelivered": 0,
       "reported_at": "2026-09-04T12:04:04+00:00",
       "state": "RAISED"
     },
@@ -593,32 +426,7 @@
       "first_seen_run": "run-20260904T102937Z-nogit",
       "tag": "PROCESS",
       "tag_label": "Reporting channel & tracker",
-      "thread": [
-        {
-          "msg_id": "MSG-0000",
-          "direction": "out",
-          "channel": "telegram",
-          "at": "2026-09-04T11:03:27+00:00",
-          "delivered_as": "file attachment (Cymetica-QA-report-01.md)",
-          "delivered": true,
-          "delivery_note": null,
-          "file": "outbox/2026-09-04-MSG-0000-opener.md",
-          "excerpt": "4. CONFIRM OUR ATTRIBUTION\n\nReports from us will carry:\n  hunter_name     expire76\n  wallet_address  0xde9CeAaB301A9e47b1bAcd448B3DDbbA85e83398\n\nPlease confirm both are correctly bound on your side, and that the six existing\nexpire76 reports are attributed to that wallet.\n\nWHAT I WILL DO WITH YOUR ANSWERS\n\nIf the pipeline round-trips reliably, I will file through the API and poll\nreport status instead of sending prose. To be explicit about how I will treat\nwhat comes back: a status change to \"fixed\" is recorded on my side as\nFIX_CLAIMED, not as fixed. It moves to verified only after I re-run the exact\ncheck that originally failed, against the live build, and it moves back to open\nif that check still fails. I will report either outcome accurately, and I will\nwithdraw any claim of mine the moment it is shown wrong.",
-          "excerpt_missing_reason": null
-        },
-        {
-          "msg_id": "REPLY-0001",
-          "direction": "in",
-          "channel": "telegram",
-          "at": "2026-09-04T11:40:00+00:00",
-          "delivered_as": null,
-          "delivered": true,
-          "delivery_note": null,
-          "file": "inbox/2026-09-04-REPLY-0001.md",
-          "excerpt": null,
-          "excerpt_missing_reason": "listed on the message but not mapped to a section"
-        }
-      ],
+      "thread": [],
       "filed": [
         {
           "report_id": 53,
@@ -627,8 +435,8 @@
         }
       ],
       "undelivered": 0,
-      "reported_at": "2026-09-04T11:03:27+00:00",
-      "state": "THEY REPLIED"
+      "reported_at": "2026-09-04T12:04:20+00:00",
+      "state": "RAISED"
     },
     {
       "id": "CYM-skill_count",
@@ -650,20 +458,7 @@
       "first_seen_run": "run-20260904T102937Z-nogit",
       "tag": "DOCS",
       "tag_label": "Manifests & documentation",
-      "thread": [
-        {
-          "msg_id": "MSG-0001",
-          "direction": "out",
-          "channel": "telegram",
-          "at": "2026-09-04T11:03:27+00:00",
-          "delivered_as": "file attachment (Cymetica-QA-report-01.md)",
-          "delivered": false,
-          "delivery_note": "Sent as a file attachment. ET-21999 confirms attachments are not captured on this channel, so the vendor never received it. The findings reached them through the bounty API instead (reports 46-53).\n",
-          "file": "outbox/2026-09-04-MSG-0001.md",
-          "excerpt": "4. RECONCILIATION — the same quantity, different answers by source\n\nquantity              llms.txt   mcp.json   live API        agent-card\n  MCP tools                   11         46   46 (anon)              —\n  MCP resources                4          5   —                      —\n  CLOB pairs                   9        568   —                      —\n  trading agents              10         16   11 species / 8 book    10\n  settlement chains            —         10   16 (/swap/chains)      —\n  commits                11,700+          —   21,840 (build-stats)   —\n  agent skills                 —          —   —              13 vs 10*\n\n  * /.well-known/agent-card.json lists 13 skills, /.well-known/agent-skills.json\n    lists 10, and the two sets are not nested: 7 ids appear only in the first,\n    4 only in the second.\n\n  The commit figure is the one I would prioritise of these four: 11,700+ versus\n  a live 21,840 is an 87% understatement of your own headline AI-authorship\n  metric, and it is the number outside parties are most likely to quote.",
-          "excerpt_missing_reason": null
-        }
-      ],
+      "thread": [],
       "filed": [
         {
           "report_id": 51,
@@ -671,7 +466,7 @@
           "status": "pending"
         }
       ],
-      "undelivered": 1,
+      "undelivered": 0,
       "reported_at": "2026-09-04T12:04:09+00:00",
       "state": "RAISED"
     },
@@ -695,20 +490,7 @@
       "first_seen_run": "run-20260904T102937Z-nogit",
       "tag": "DOCS",
       "tag_label": "Manifests & documentation",
-      "thread": [
-        {
-          "msg_id": "MSG-0001",
-          "direction": "out",
-          "channel": "telegram",
-          "at": "2026-09-04T11:03:27+00:00",
-          "delivered_as": "file attachment (Cymetica-QA-report-01.md)",
-          "delivered": false,
-          "delivery_note": "Sent as a file attachment. ET-21999 confirms attachments are not captured on this channel, so the vendor never received it. The findings reached them through the bounty API instead (reports 46-53).\n",
-          "file": "outbox/2026-09-04-MSG-0001.md",
-          "excerpt": "4. RECONCILIATION — the same quantity, different answers by source\n\nquantity              llms.txt   mcp.json   live API        agent-card\n  MCP tools                   11         46   46 (anon)              —\n  MCP resources                4          5   —                      —\n  CLOB pairs                   9        568   —                      —\n  trading agents              10         16   11 species / 8 book    10\n  settlement chains            —         10   16 (/swap/chains)      —\n  commits                11,700+          —   21,840 (build-stats)   —\n  agent skills                 —          —   —              13 vs 10*\n\n  * /.well-known/agent-card.json lists 13 skills, /.well-known/agent-skills.json\n    lists 10, and the two sets are not nested: 7 ids appear only in the first,\n    4 only in the second.\n\n  The commit figure is the one I would prioritise of these four: 11,700+ versus\n  a live 21,840 is an 87% understatement of your own headline AI-authorship\n  metric, and it is the number outside parties are most likely to quote.",
-          "excerpt_missing_reason": null
-        }
-      ],
+      "thread": [],
       "filed": [
         {
           "report_id": 51,
@@ -716,7 +498,7 @@
           "status": "pending"
         }
       ],
-      "undelivered": 1,
+      "undelivered": 0,
       "reported_at": "2026-09-04T12:04:09+00:00",
       "state": "RAISED"
     },
@@ -764,22 +546,9 @@
       "first_seen_run": "run-20260904T102937Z-nogit",
       "tag": "MCP",
       "tag_label": "MCP & trust ladder",
-      "thread": [
-        {
-          "msg_id": "MSG-0001",
-          "direction": "out",
-          "channel": "telegram",
-          "at": "2026-09-04T11:03:27+00:00",
-          "delivered_as": "file attachment (Cymetica-QA-report-01.md)",
-          "delivered": false,
-          "delivery_note": "Sent as a file attachment. ET-21999 confirms attachments are not captured on this channel, so the vendor never received it. The findings reached them through the bounty API instead (reports 46-53).\n",
-          "file": "outbox/2026-09-04-MSG-0001.md",
-          "excerpt": "3. CONTRACT — documented endpoints and tools that return 404 / do not exist\n\n26 endpoints documented in llms.txt or agent-skills.json return 404. Among them:\n\n  from agent-skills.json (each is a skill's declared endpoint):\n    POST /api/v1/clob/order          404   (the spec has /clob/orders, plural)\n    POST /api/v1/bots/clone          404   (the spec has /agents/clone)\n    POST /api/v1/exchange/buy        404\n    POST /api/v1/tuatara/discover    404\n\n  from llms.txt:\n    /api/v1/winner-takes-all/markets, /winner-takes-all/bet,\n    /winner-takes-all/epochs, /api/v1/positions, /api/v1/account,\n    /api/v1/cloned-bot/create, /cloned-bot/list, /api/v1/backtest/run,\n    /api/v1/backtest/saved, /api/v1/agentbook/post, /api/v1/staking/pools,\n    /api/v1/defi/pools, /api/v1/aerodrome/quote, /api/v1/base-dex/tokens,\n    /api/v1/vaix/prices, /api/v1/perpetual/user/positions,\n    /mcp/v1/prompts/{analyze_market,compare_markets,explain_probability,\n    find_opportunities}, /mcp/v1/resources/docs/{api,getting-started}\n\nSeparately, llms.txt documents 11 MCP tools by name. 7 of them do not exist:\n  MISSING  get_markets, get_price, get_trades, get_leaderboard,\n           get_market_summary, get_trending_markets, get_featured_market\n  PRESENT  get_market, get_prices, get_orderbook, search_markets\n\nA further 18 documented URLs exist but reject the documented method (llms.txt\nrenders MCP tools as GET-able /mcp/v1/tools/<name> URLs; they answer 405).\n\nDO NOT COLLAPSE THESE INTO ONE ANSWER\n  A 404 has at least three distinct causes and they need different fixes:\n    (a) the endpoint was removed and the document is stale\n    (b) the endpoint was never built and the document is aspirational\n    (c) the path in the document is a typo for a working endpoint\n  \"We'll update the docs\" is only correct for (a) and (c). Please label each\n  group, or at minimum tell me which of the four agent-skills.json entries are\n  typos versus absent features.",
-          "excerpt_missing_reason": null
-        }
-      ],
+      "thread": [],
       "filed": [],
-      "undelivered": 1,
+      "undelivered": 0,
       "reported_at": null,
       "state": "NOT RAISED YET"
     },
@@ -803,20 +572,7 @@
       "first_seen_run": "run-20260904T102937Z-nogit",
       "tag": "MCP",
       "tag_label": "MCP & trust ladder",
-      "thread": [
-        {
-          "msg_id": "MSG-0001",
-          "direction": "out",
-          "channel": "telegram",
-          "at": "2026-09-04T11:03:27+00:00",
-          "delivered_as": "file attachment (Cymetica-QA-report-01.md)",
-          "delivered": false,
-          "delivery_note": "Sent as a file attachment. ET-21999 confirms attachments are not captured on this channel, so the vendor never received it. The findings reached them through the bounty API instead (reports 46-53).\n",
-          "file": "outbox/2026-09-04-MSG-0001.md",
-          "excerpt": "4. RECONCILIATION — the same quantity, different answers by source\n\nquantity              llms.txt   mcp.json   live API        agent-card\n  MCP tools                   11         46   46 (anon)              —\n  MCP resources                4          5   —                      —\n  CLOB pairs                   9        568   —                      —\n  trading agents              10         16   11 species / 8 book    10\n  settlement chains            —         10   16 (/swap/chains)      —\n  commits                11,700+          —   21,840 (build-stats)   —\n  agent skills                 —          —   —              13 vs 10*\n\n  * /.well-known/agent-card.json lists 13 skills, /.well-known/agent-skills.json\n    lists 10, and the two sets are not nested: 7 ids appear only in the first,\n    4 only in the second.\n\n  The commit figure is the one I would prioritise of these four: 11,700+ versus\n  a live 21,840 is an 87% understatement of your own headline AI-authorship\n  metric, and it is the number outside parties are most likely to quote.",
-          "excerpt_missing_reason": null
-        }
-      ],
+      "thread": [],
       "filed": [
         {
           "report_id": 50,
@@ -824,7 +580,7 @@
           "status": "pending"
         }
       ],
-      "undelivered": 1,
+      "undelivered": 0,
       "reported_at": "2026-09-04T12:04:04+00:00",
       "state": "RAISED"
     }
