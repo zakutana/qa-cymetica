@@ -332,6 +332,29 @@ endpoints:
     executable_params: []
     inert_params: [message, question, query, context]
 
+  # Our own filing channel. Not probe_only: filing a report IS the intended
+  # action here, and it is the one write this project performs on purpose.
+  # Declared so the guard permits it at MUTATE tier and blocks it everywhere else.
+  - id: bounty.submit
+    path: /api/v1/bounty/reports
+    methods: [POST]
+    component: rest.support
+    executable_params:
+      [title, description, severity_reported, category, steps_to_reproduce,
+       expected_behavior, actual_behavior, url, browser, device, os,
+       hunter_name, wallet_address]
+    inert_params: []
+
+  - id: bounty.submit_with_screenshots
+    path: /api/v1/bounty/reports/with-screenshots
+    methods: [POST]
+    component: rest.support
+    executable_params:
+      [title, description, severity_reported, category, steps_to_reproduce,
+       expected_behavior, actual_behavior, url, browser, device, os,
+       hunter_name, wallet_address, screenshots]
+    inert_params: []
+
   - id: bounty.qa_ask
     path: /api/v1/bounty/qa-agent/ask
     methods: [POST]
