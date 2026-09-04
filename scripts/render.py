@@ -63,6 +63,7 @@ def build_payload() -> dict:
         "rest.clob": "clob", "rest.markets": "markets", "rest.account": "account",
         "funding.withdraw": "funding", "funding.deposit": "funding",
         "platform.ai_native_proof": "provenance", "platform.status": "swaps",
+        "rest.support": "support",
         "meta.guard": "_meta", "meta.classifier": "_meta",
     }
     for result in run.get("results", []):

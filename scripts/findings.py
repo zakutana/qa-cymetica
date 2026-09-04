@@ -46,6 +46,11 @@ def load_inventory() -> dict | None:
     return json.loads(path.read_text(encoding="utf-8")) if path.exists() else None
 
 
+def load_bounty() -> dict | None:
+    path = STATE / "bounty.json"
+    return json.loads(path.read_text(encoding="utf-8")) if path.exists() else None
+
+
 def load_claims() -> dict:
     return yaml.safe_load(CLAIMS.read_text(encoding="utf-8"))
 
@@ -228,9 +233,89 @@ def from_tool_surface(inventory: dict) -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
+def from_bounty(bounty: dict) -> list[dict]:
+    """The vendor's own tracker, read as data rather than as a verdict."""
+    statuses = bounty.get("statuses", {})
+    total = bounty.get("total", 0)
+    if not total:
+        return []
+
+    findings: list[dict] = []
+    reports = bounty.get("reports", [])
+
+    # 1. Every item is closed and no item carries a platform-set validated_at.
+    unvalidated = [r for r in reports if not r.get("validated_at")]
+    if set(statuses) <= {"fixed", "resolved", "closed"} and len(unvalidated) == total:
+        findings.append({
+            "id": "CYM-tracker-closure-rate",
+            "kind": "process",
+            "severity": "S2-MEASUREMENT",
+            "title": (
+                f"All {total} reports in the public bounty tracker read "
+                f"'fixed', and validated_at is null on every one"
+            ),
+            "component": "rest.support",
+            "section": "support",
+            "note": (
+                "A queue with a 100% closure rate and no open, triaged, "
+                "disputed or wont_fix item is not a queue -- it is either a "
+                "filtered view or a tracker that does not retain unresolved "
+                "items. The schema HAS validated_at, triaged_at and "
+                "severity_confirmed fields; none is populated on any record. "
+                "SCOPE: this says nothing about whether the underlying fixes "
+                "are real. It says the tracker records no evidence that anyone "
+                "checked."
+            ),
+            "detail": {
+                "status distribution": ", ".join(f"{k}={v}" for k, v in statuses.items()),
+                "validated_at populated": f"0 of {total}",
+                "closed with no notes, no ticket, no PR link":
+                    str(bounty.get("closed_without_recorded_evidence", 0)),
+            },
+            "checks": ["scripts/bounty.py"],
+            "evidence_ids": [],
+        })
+
+    # 2. Our own reports were closed by them and never re-verified by us.
+    mine = [r for r in reports if r.get("hunter_name") == "expire76"]
+    if mine:
+        findings.append({
+            "id": "CYM-own-reports-unverified",
+            "kind": "process",
+            "severity": "S3-CONTRACT",
+            "title": (
+                f"{len(mine)} reports filed under our hunter name were closed by "
+                f"the platform and have never been re-verified by us"
+            ),
+            "component": "rest.support",
+            "section": "support",
+            "note": (
+                "The resolution notes are specific -- they name files, line "
+                "numbers and commit hashes. That is better than most vendors "
+                "provide and it is worth crediting. It is still a claim: the "
+                "commits are not inspectable from here, validated_at is null, "
+                "and our own records still list these as open with "
+                "last_regression_run: null. Correct state is FIX_CLAIMED, not "
+                "fixed. Note also that all six are UI defects in arena.js, "
+                "outside this project's API/MCP scope -- re-verifying them "
+                "needs the browser suite, not this one."
+            ),
+            "detail": {
+                f"#{r['id']}": f"{r['status']}, fixed_at={str(r.get('fixed_at'))[:19]}, "
+                               f"validated_at={r.get('validated_at')}"
+                for r in sorted(mine, key=lambda r: r["id"])
+            },
+            "checks": ["scripts/bounty.py"],
+            "evidence_ids": [],
+        })
+
+    return findings
+
+
 def build() -> dict:
     run = latest_run()
     inventory = load_inventory()
+    bounty = load_bounty()
     findings: list[dict] = []
 
     if run:
@@ -238,6 +323,8 @@ def build() -> dict:
     if inventory:
         findings += from_tool_surface(inventory)
         findings += from_inventory(inventory)
+    if bounty:
+        findings += from_bounty(bounty)
 
     findings.sort(key=lambda f: (SEVERITY_ORDER.index(f["severity"]), f["id"]))
 
