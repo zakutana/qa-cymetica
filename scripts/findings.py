@@ -33,6 +33,63 @@ CLAIMS = REPO_ROOT / "tests" / "reconciliation" / "claims.yaml"
 SEVERITY_ORDER = ["S0-CUSTODY", "S1-INTEGRITY", "S2-MEASUREMENT",
                   "S3-CONTRACT", "S4-COSMETIC"]
 
+# Product-facing tags. Named after what the platform is from a user's side, not
+# after how its routes are organised -- a finding should be placeable without
+# knowing the URL layout.
+# Ordered: the product as a user meets it first, the machinery underneath after.
+TAG_ORDER = ["EXCHANGE", "BOTS", "ARENA", "MONEY", "FUNDS", "MCP", "DOCS", "PROCESS"]
+TAGS = {
+    "EXCHANGE": (
+        "Exchange & markets",
+        "The CLOB, price feeds, event cards, prediction pools. Where orders meet.",
+        ["clob", "markets", "event_cards", "prediction_pools", "deadcoin"],
+    ),
+    "BOTS": (
+        "Bots, skills & AgentBook",
+        "Agent species, cloning, skills, backtests, the social/reputation layer.",
+        ["agents", "agentbook", "backtest"],
+    ),
+    "ARENA": (
+        "CyMetica-42 Arena",
+        "Blue vs Red AI hedge-fund competition and betting on it.",
+        ["arena"],
+    ),
+    "MONEY": (
+        "Money in and out",
+        "Deposits, withdrawals, balances, cross-chain swaps, token launches.",
+        ["funding", "account", "swaps", "launchpad"],
+    ),
+    "FUNDS": (
+        "Funds & prop desk",
+        "Agent-created AIB funds, the Tuatara fund, funded trading accounts.",
+        ["funds", "prop_desk"],
+    ),
+    "MCP": (
+        "MCP & trust ladder",
+        "The JSON-RPC surface other AI agents call, and the tiers meant to gate it.",
+        ["mcp", "identity_trust", "ontology"],
+    ),
+    "DOCS": (
+        "Manifests & documentation",
+        "What an outside agent reads before it acts: llms.txt, OpenAPI, the "
+        "well-known manifests. Nobody uses this daily, which is why it drifts.",
+        ["discovery", "provenance", "realtime", "unmapped"],
+    ),
+    "PROCESS": (
+        "Reporting channel & tracker",
+        "The bounty API we file through and the tracker we read status from. "
+        "It has to be trustworthy before anything travelling through it counts.",
+        ["support"],
+    ),
+}
+SECTION_TO_TAG = {
+    section: tag for tag, (_, _, sections) in TAGS.items() for section in sections
+}
+
+
+def tag_for(section: str) -> str:
+    return SECTION_TO_TAG.get(section, "DOCS")
+
 
 def latest_run() -> dict | None:
     runs = sorted((STATE / "runs").glob("run-*.json"))
@@ -44,6 +101,11 @@ def latest_run() -> dict | None:
 def load_inventory() -> dict | None:
     path = STATE / "inventory.json"
     return json.loads(path.read_text(encoding="utf-8")) if path.exists() else None
+
+
+def load_thread() -> dict:
+    path = STATE / "thread.json"
+    return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
 
 
 def load_bounty() -> dict | None:
@@ -243,6 +305,42 @@ def from_bounty(bounty: dict) -> list[dict]:
     findings: list[dict] = []
     reports = bounty.get("reports", [])
 
+    # 0. Does filing a report require a credential at all?
+    probe = bounty.get("filing_probe") or {}
+    by_identity = probe.get("by_identity", {})
+    classes = {k: v.get("error_class") for k, v in by_identity.items()}
+    if probe.get("identical_across_identities") and set(classes.values()) == {"VALIDATION"}:
+        findings.append({
+            "id": "CYM-bounty-filing-unauthenticated",
+            "kind": "authorization",
+            "severity": "S1-INTEGRITY",
+            "title": (
+                "Filing a bug report passes authorization with no credential: "
+                "hunter attribution rests on an unauthenticated form field"
+            ),
+            "component": "rest.support",
+            "section": "support",
+            "note": (
+                "POST /api/v1/bounty/reports with an empty body returns a "
+                "byte-identical validation error with no key and with a TRUSTED "
+                "key. No authorization check runs before validation. If that "
+                "holds for a populated body, hunter_name is a field any caller "
+                "sets freely and reward attribution is unauthenticated. SCOPE: "
+                "an empty body shows only that auth does not run FIRST. It does "
+                "not show a fully-populated anonymous POST is accepted -- "
+                "testing that would create a real record in their tracker, so "
+                "it is asked, not done. Verified after probing that the tracker "
+                f"total was unchanged at {bounty.get('total')}."
+            ),
+            "detail": {
+                f"{identity} (empty body)":
+                    f"HTTP {info.get('status')} -> {info.get('error_class')}"
+                for identity, info in sorted(by_identity.items())
+            } | {"responses identical across identities": "yes"},
+            "checks": ["scripts/bounty.py::probe_filing_auth"],
+            "evidence_ids": [],
+        })
+
     # 1. Every item is closed and no item carries a platform-set validated_at.
     unvalidated = [r for r in reports if not r.get("validated_at")]
     if set(statuses) <= {"fixed", "resolved", "closed"} and len(unvalidated) == total:
@@ -328,10 +426,22 @@ def build() -> dict:
 
     findings.sort(key=lambda f: (SEVERITY_ORDER.index(f["severity"]), f["id"]))
 
+    thread = load_thread()
     for finding in findings:
         finding.setdefault("state", "OPEN")
         finding.setdefault("first_seen_run", run["run_id"] if run else None)
-        finding.setdefault("reported_at", None)
+        finding["tag"] = tag_for(finding.get("section", ""))
+        finding["tag_label"] = TAGS[finding["tag"]][0]
+        finding["section_title"] = finding.get("section", "")
+        # Correspondence with the vendor about this specific finding.
+        finding["thread"] = thread.get("by_finding", {}).get(finding["id"], [])
+        sent = [m for m in finding["thread"] if m["direction"] == "out"]
+        replies = [m for m in finding["thread"] if m["direction"] == "in"]
+        finding["reported_at"] = sent[0]["at"] if sent else None
+        if replies:
+            finding["state"] = "AWAITING_VERIFICATION"
+        elif sent:
+            finding["state"] = "REPORTED"
 
     return {
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),

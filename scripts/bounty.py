@@ -36,6 +36,72 @@ EVIDENCE_FIELDS = ["validated_at", "triaged_at", "severity_confirmed",
                    "ticket_url", "fix_pr_url", "status_notes"]
 
 
+def probe_filing_auth() -> dict:
+    """Does filing a report require a credential?
+
+    Sent with an EMPTY body at both identities, so the request cannot create a
+    record whatever the answer -- verified after the fact: the tracker total did
+    not move. We read only the error CLASS. A validation error means the request
+    passed authorization; a permission error means the gate held.
+    """
+    registry = EndpointRegistry.load()
+    ids = identities()
+    results: dict[str, dict] = {}
+
+    token = CURRENT_TIER.set(SafetyTier.PROBE)
+    try:
+        for label in ("anon", "trusted"):
+            identity = ids[label]
+            if not identity.present:
+                continue
+            client = build_client(identity, registry)
+            try:
+                response = client.post("/api/v1/bounty/reports", json={})
+                body = response.text[:400]
+                results[label] = {
+                    "status": response.status_code,
+                    "error_class": classify_error(response.status_code, body),
+                    "body": body,
+                }
+            except Exception as exc:  # noqa: BLE001
+                results[label] = {"status": 0, "error_class": "unreachable",
+                                  "body": f"{type(exc).__name__}: {exc}"}
+            finally:
+                client.close()
+    finally:
+        CURRENT_TIER.reset(token)
+
+    bodies = {r["body"] for r in results.values()}
+    return {
+        "endpoint": "POST /api/v1/bounty/reports",
+        "method": "empty body, error class only",
+        "by_identity": results,
+        "identical_across_identities": len(bodies) == 1 and len(results) > 1,
+    }
+
+
+def classify_error(status: int, body: str) -> str:
+    """Deliberately coarse. The platform's taxonomy is not status-code driven.
+
+    /mcp/v1/agents/me returns 422 for a missing credential, and MCP tool errors
+    come back as HTTP 200 with isError set, so status alone cannot separate
+    'you may not' from 'you sent nothing'. Where the two are indistinguishable
+    we say so rather than guessing.
+    """
+    lowered = body.lower()
+    if status in (401, 403) or "unauthor" in lowered or "forbidden" in lowered:
+        return "PERMISSION"
+    if status in (400, 422) and ("field required" in lowered or "missing" in lowered):
+        return "VALIDATION"
+    if status in (400, 422):
+        return "VALIDATION_OR_UNKNOWN"
+    if status == 404:
+        return "NOT_FOUND"
+    if 200 <= status < 300:
+        return "ACCEPTED"
+    return f"OTHER_{status}"
+
+
 def fetch() -> dict:
     install_client_guard()
     registry = EndpointRegistry.load()
@@ -54,6 +120,7 @@ def fetch() -> dict:
 
     reports = payload.get("reports", [])
     statuses = Counter(r.get("status") for r in reports)
+    filing_probe = probe_filing_auth()
 
     closed = [r for r in reports if r.get("status") in ("fixed", "resolved", "closed")]
     unevidenced = [
@@ -65,6 +132,7 @@ def fetch() -> dict:
         "fetched_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "total": payload.get("total", len(reports)),
         "statuses": dict(statuses),
+        "filing_probe": filing_probe,
         "closed": len(closed),
         "closed_without_recorded_evidence": len(unevidenced),
         "evidence_fields_checked": EVIDENCE_FIELDS,

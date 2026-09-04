@@ -1,8 +1,25 @@
 {
-  "fetched_at": "2026-09-04T10:47:39+00:00",
+  "fetched_at": "2026-09-04T11:10:59+00:00",
   "total": 15,
   "statuses": {
     "fixed": 15
+  },
+  "filing_probe": {
+    "endpoint": "POST /api/v1/bounty/reports",
+    "method": "empty body, error class only",
+    "by_identity": {
+      "anon": {
+        "status": 422,
+        "error_class": "VALIDATION",
+        "body": "{\"detail\":[{\"type\":\"missing\",\"loc\":[\"body\",\"title\"],\"msg\":\"Field required\",\"input\":{}},{\"type\":\"missing\",\"loc\":[\"body\",\"description\"],\"msg\":\"Field required\",\"input\":{}},{\"type\":\"missing\",\"loc\":[\"body\",\"severity_reported\"],\"msg\":\"Field required\",\"input\":{}}]}"
+      },
+      "trusted": {
+        "status": 422,
+        "error_class": "VALIDATION",
+        "body": "{\"detail\":[{\"type\":\"missing\",\"loc\":[\"body\",\"title\"],\"msg\":\"Field required\",\"input\":{}},{\"type\":\"missing\",\"loc\":[\"body\",\"description\"],\"msg\":\"Field required\",\"input\":{}},{\"type\":\"missing\",\"loc\":[\"body\",\"severity_reported\"],\"msg\":\"Field required\",\"input\":{}}]}"
+      }
+    },
+    "identical_across_identities": true
   },
   "closed": 15,
   "closed_without_recorded_evidence": 5,
