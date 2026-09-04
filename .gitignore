@@ -1,0 +1,19 @@
+# Credentials -- never committed. The repo is public.
+.env
+*.key
+*.pem
+
+# Rebuildable projection of the journal. The journal is the source of truth.
+state/qa.sqlite
+state/qa.sqlite-*
+
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+build/
+dist/
+.DS_Store
+Thumbs.db

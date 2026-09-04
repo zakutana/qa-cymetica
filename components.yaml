@@ -1,0 +1,371 @@
+# components.yaml -- SINGLE SOURCE OF TRUTH
+#
+# Consumed by:
+#   qa/safety.py      -- endpoint rules, executable_params, probe_only floors
+#   qa/components.py  -- the component registry the dashboard renders
+#   qa/fingerprint.py -- the discovery corpus that stands in for a build version
+#   tests/conftest.py -- collection-time tag validation
+#
+# Rules of the file:
+#   * An endpoint with no rule is DENIED for any non-read method. Default-deny.
+#   * executable_params must be declared BEFORE an endpoint can be probed.
+#   * probe_only: true is a hard floor -- no MUTATE test may target it, ever,
+#     even with --allow-mutate. This is where money-moving endpoints live.
+
+version: 1
+
+base_urls:
+  web: https://cymetica.com
+  rest: https://cymetica.com
+  mcp: https://cymetica.com/mcp/v1
+  chain_rpc: https://rpc.mainnet.chain.robinhood.com
+
+# ---------------------------------------------------------------------------
+# Platform fingerprint corpus
+#
+# Cymetica exposes no build identifier: openapi.json pins info.version to a
+# static "0.1.0", /api/v1/build-stats returns aggregate telemetry rather than a
+# revision, and no response carries an x-build header. So we compute our own
+# fingerprint over the documents that DO change when they ship.
+#
+# Any change to this corpus demotes every GREEN component to AMBER. That is the
+# mechanism by which a silent deploy invalidates every prior verification
+# without anyone having to remember to do it.
+# ---------------------------------------------------------------------------
+fingerprint:
+  parts:
+    - {kind: http, path: /.well-known/mcp.json}
+    - {kind: http, path: /.well-known/agent-card.json}
+    - {kind: http, path: /.well-known/agent-skills.json}
+    - {kind: http, path: /.well-known/ai-plugin.json}
+    - {kind: http, path: /.well-known/udc.json}
+    - {kind: http, path: /openapi.json}
+    - {kind: http, path: /llms.txt}
+    - {kind: mcp_tool_names, auth: none}
+  # JSON pointers stripped before hashing. Too aggressive and we go blind to
+  # real changes -- `qa-cli fingerprint explain` prints exactly what was hashed.
+  volatile_keys:
+    - timestamp
+    - generated_at
+    - server_time
+    - as_of
+    - uptime_seconds
+    - request_id
+
+# ---------------------------------------------------------------------------
+# Component registry. Dotted names: <surface>.<area>
+# criticality drives ordering on the dashboard; staleness_hours drives AMBER.
+# ---------------------------------------------------------------------------
+components:
+  meta.guard:
+    title: Safety guard self-tests
+    surface: meta
+    criticality: critical
+    staleness_hours: 24
+  meta.classifier:
+    title: Error classifier calibration
+    surface: meta
+    criticality: critical
+    staleness_hours: 168
+
+  discovery.wellknown:
+    title: Well-known discovery documents
+    surface: discovery
+    criticality: high
+    staleness_hours: 24
+  discovery.openapi:
+    title: OpenAPI specification
+    surface: discovery
+    criticality: high
+    staleness_hours: 24
+  discovery.llmstxt:
+    title: llms.txt / llms-full.txt
+    surface: discovery
+    criticality: medium
+    staleness_hours: 24
+
+  reconciliation:
+    title: Cross-source contradiction sweep
+    surface: discovery
+    criticality: critical
+    staleness_hours: 12
+
+  mcp.protocol:
+    title: JSON-RPC 2.0 conformance
+    surface: mcp
+    criticality: high
+    staleness_hours: 24
+  mcp.tools_list:
+    title: MCP tool surface (tools/list)
+    surface: mcp
+    criticality: critical
+    staleness_hours: 12
+  mcp.tools_call:
+    title: MCP tool invocation (tools/call)
+    surface: mcp
+    criticality: high
+    staleness_hours: 24
+  mcp.trust_ladder:
+    title: Trust tier gating
+    surface: mcp
+    criticality: critical
+    staleness_hours: 24
+    security_boundary: true
+
+  rest.markets:
+    title: Markets and prices
+    surface: rest
+    criticality: high
+    staleness_hours: 24
+  rest.clob:
+    title: CLOB orderbook and orders
+    surface: rest
+    criticality: high
+    staleness_hours: 24
+  rest.account:
+    title: Account, portfolio, balances
+    surface: rest
+    criticality: high
+    staleness_hours: 24
+    security_boundary: true
+  rest.event_cards:
+    title: Event cards (EVCDX)
+    surface: rest
+    criticality: medium
+    staleness_hours: 48
+  rest.arena:
+    title: CyMetica-42 Arena
+    surface: rest
+    criticality: medium
+    staleness_hours: 48
+  rest.agents:
+    title: Trading agents / AgentBook
+    surface: rest
+    criticality: medium
+    staleness_hours: 24
+  rest.backtest:
+    title: Backtest engine
+    surface: rest
+    criticality: low
+    staleness_hours: 168
+  rest.support:
+    title: Support and A2A agents
+    surface: rest
+    criticality: medium
+    staleness_hours: 48
+
+  funding.deposit:
+    title: Deposit addresses
+    surface: rest
+    criticality: critical
+    staleness_hours: 24
+    security_boundary: true
+  funding.withdraw:
+    title: Withdrawal authorization boundary
+    surface: rest
+    criticality: critical
+    staleness_hours: 12
+    security_boundary: true
+
+  platform.ai_native_proof:
+    title: AI-native provenance claims
+    surface: rest
+    criticality: low
+    staleness_hours: 168
+  platform.status:
+    title: Platform status and rate limits
+    surface: rest
+    criticality: medium
+    staleness_hours: 24
+
+  chain.launchpad:
+    title: Robinhood Chain launchpad
+    surface: chain
+    criticality: medium
+    staleness_hours: 168
+
+  ws.feeds:
+    title: WebSocket feeds vs AsyncAPI spec
+    surface: ws
+    criticality: medium
+    staleness_hours: 168
+
+# ---------------------------------------------------------------------------
+# Endpoint rules.
+#
+# path may contain {placeholders}. Longest literal prefix wins.
+# readonly_rpc marks JSON-RPC endpoints whose safety depends on the BODY
+#   (which MCP method / which tool), not the HTTP method -- see mcp_tools below.
+# ---------------------------------------------------------------------------
+endpoints:
+  - id: mcp.rpc
+    path: /mcp/v1
+    methods: [POST]
+    component: mcp.protocol
+    readonly_rpc: true
+    executable_params: []
+    inert_params: [jsonrpc, id, method, params]
+
+  - id: mcp.agents_me
+    path: /mcp/v1/agents/me
+    methods: [GET]
+    component: mcp.trust_ladder
+    executable_params: []
+
+  - id: mcp.agents_me_upgrade
+    path: /mcp/v1/agents/me/upgrade
+    methods: [POST]
+    component: mcp.trust_ladder
+    executable_params: [reason]
+    inert_params: []
+    probe_only: true          # trust escalation is never executed by the suite
+
+  - id: mcp.register
+    path: /mcp/v1/register
+    methods: [POST]
+    component: mcp.trust_ladder
+    executable_params: [name, email, description, agent_name]
+    probe_only: true          # account creation is an operator action, not ours
+
+  - id: funding.withdraw
+    path: /api/v1/funding/withdraw
+    methods: [POST]
+    component: funding.withdraw
+    # Anything in this list, present and non-empty, aborts the request before
+    # it reaches the network. A probe proves REACHABILITY, never EXECUTION.
+    executable_params:
+      [token, amount, destination_address, to, address, chain, asset,
+       quantity, value, recipient, memo, tag]
+    inert_params: []
+    probe_only: true
+
+  - id: funding.deposit
+    path: /api/v1/funding/deposit
+    methods: [POST]
+    component: funding.deposit
+    executable_params: [token, amount, chain, asset, quantity]
+    probe_only: true
+
+  - id: funding.deposit_addresses
+    path: /api/v1/funding/deposit-addresses
+    methods: [GET]
+    component: funding.deposit
+    executable_params: []
+
+  - id: clob.orders
+    path: /api/v1/clob/orders
+    methods: [POST]
+    component: rest.clob
+    executable_params:
+      [side, price, size, quantity, amount, pair, symbol, market, type,
+       time_in_force, client_order_id]
+    inert_params: []
+
+  - id: clob.order_singular
+    path: /api/v1/clob/order
+    methods: [POST]
+    component: rest.clob
+    executable_params:
+      [side, price, size, quantity, amount, pair, symbol, market, type]
+    inert_params: []
+
+  - id: clob.book
+    path: /api/v1/clob/book/hybrid
+    methods: [GET]
+    component: rest.clob
+    executable_params: []
+
+  - id: exchange.orders
+    path: /api/v1/exchange/{symbol}/orders
+    methods: [POST]
+    component: rest.clob
+    executable_params: [side, price, size, quantity, amount, type]
+
+  - id: exchange.buy
+    path: /api/v1/exchange/buy
+    methods: [POST]
+    component: rest.clob
+    executable_params: [token, amount, quantity, size, price]
+
+  - id: arena.order
+    path: /api/v1/arena/order
+    methods: [POST]
+    component: rest.arena
+    executable_params: [team, side, amount, size, quantity, price]
+
+  - id: agents.clone
+    path: /api/v1/agents/clone
+    methods: [POST]
+    component: rest.agents
+    executable_params: [bot_id, slug, name, capital, funding, amount, species]
+
+  - id: bots.clone
+    path: /api/v1/bots/clone
+    methods: [POST]
+    component: rest.agents
+    executable_params: [bot_id, slug, name, capital, funding, amount, species]
+
+  - id: prop.signup
+    path: /api/v1/prop/signup
+    methods: [POST]
+    component: rest.account
+    executable_params: [tier, amount, payment_method, capital]
+    probe_only: true
+
+  - id: tuatara.discover
+    path: /api/v1/tuatara/discover
+    methods: [POST]
+    component: rest.markets
+    executable_params: []
+    inert_params: [query, headline, text, limit]
+
+  - id: backtest.run
+    path: /api/v1/backtest/bots/{slug}/run-backtest
+    methods: [POST]
+    component: rest.backtest
+    executable_params: [start, end, capital, params]
+
+  - id: support.ai_agent
+    path: /api/v1/support/ai-agent
+    methods: [POST]
+    component: rest.support
+    executable_params: []
+    inert_params: [message, question, query, context]
+
+  - id: bounty.qa_ask
+    path: /api/v1/bounty/qa-agent/ask
+    methods: [POST]
+    component: rest.support
+    executable_params: []
+    inert_params: [question, message, context]
+
+  - id: ai_due_diligence
+    path: /api/v1/ai-due-diligence
+    methods: [POST]
+    component: platform.ai_native_proof
+    executable_params: []
+    inert_params: [company, domain, name, url]
+
+# JSON-RPC tool classification for the MCP endpoint. The transport reads the
+# body: tools/list is always read-only; tools/call is classified by tool name.
+# A tool absent from every list is DENIED at SAFE and PROBE.
+mcp_tools:
+  read:
+    [get_trust_signal, list_markets, get_market, get_prices, get_orderbook,
+     list_clob_pairs, search_markets, get_platform_status, who_is_this,
+     get_ai_native_proof, get_trust_ladder, get_btc_pool_state,
+     get_btc_pool_history, get_prediction_statistics, get_deadcoin_quote,
+     get_deadcoin_desk_info, get_agent_profile, get_rate_limits,
+     get_deposit_address, get_signal_history, get_market_analytics,
+     get_oracle_insights, get_positions, get_order_history, query_knowledge,
+     launchpad_list_tokens, launchpad_trade_quote, list_my_aib_funds,
+     list_ontology_dimensions, browse_ontology, resolve_ontology_concept,
+     search_ontology, find_trade_path, get_strategy_returns,
+     get_deep_answer, ask_nexus_deep]
+  contribute:
+    [submit_observation, submit_feedback, request_feature, submit_signal]
+  trade:
+    [place_order]
+  provision:
+    [create_aib_fund, edit_aib_fund_basket, launchpad_launch_token,
+     register_webhook, subscribe_prices]

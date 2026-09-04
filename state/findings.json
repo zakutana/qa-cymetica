@@ -1,0 +1,359 @@
+{
+  "generated_at": "2026-09-04T10:37:43+00:00",
+  "run_id": "run-20260904T102937Z-nogit",
+  "platform_fingerprint": "sha256:f8d11a6e31145f80868281458a4ea6ec2b4003923292b718139ec5ef53c81d7f",
+  "findings": [
+    {
+      "id": "CYM-anon-tool-surface",
+      "kind": "authorization",
+      "severity": "S0-CUSTODY",
+      "title": "An unauthenticated caller is served all 46 MCP tools, including 21 above the tier declared for them",
+      "component": "mcp.trust_ladder",
+      "section": "identity_trust",
+      "note": "mcp.json assigns every tool a trust_tier and llms.txt states 'anonymous = PUBLIC tools'. An anonymous tools/list returns the full set anyway, including tools declared allied. SCOPE: this establishes the ADVERTISED surface only. It does not show that calling those tools without a key succeeds -- that is a separate check, and the distinction matters.",
+      "detail": {
+        "declared allied but served anonymously": "create_aib_fund, edit_aib_fund_basket, list_my_aib_funds, register_webhook, subscribe_prices",
+        "declared recognized but served anonymously": "ask_nexus_deep, get_agent_profile, get_deep_answer, get_deposit_address, get_order_history, get_positions, get_rate_limits, place_order, query_knowledge, request_feature, submit_feedback, submit_observation, submit_signal",
+        "declared trusted but served anonymously": "get_market_analytics, get_oracle_insights, get_signal_history"
+      },
+      "checks": [
+        "scripts/inventory.py"
+      ],
+      "evidence_ids": [],
+      "state": "OPEN",
+      "first_seen_run": "run-20260904T102937Z-nogit",
+      "reported_at": null
+    },
+    {
+      "id": "CYM-agent_names",
+      "kind": "contradiction",
+      "severity": "S1-INTEGRITY",
+      "title": "Which AI trading agents exist, by symbol?",
+      "component": "rest.agents",
+      "section": "agents",
+      "detail": {
+        "live_species": "{ATR, BOLL, DIV, FIB, ICHI, MACD, PCPN, RSI, STOCH, TREND, VOL}  n=11",
+        "llms_txt": "{CORR, CRASH, DELTA, DREAD, FADE, GLOOM, SENT, STAT, SYNC, VORTX}  n=10"
+      },
+      "note": "llms.txt instructs readers to clone named agents. If those names do not resolve, the instruction is not merely imprecise -- it is unfollowable.",
+      "checks": [
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_names::live_species-vs-llms_txt]"
+      ],
+      "failing_pairs": 1,
+      "evidence_ids": [],
+      "state": "OPEN",
+      "first_seen_run": "run-20260904T102937Z-nogit",
+      "reported_at": null
+    },
+    {
+      "id": "CYM-agent_count",
+      "kind": "contradiction",
+      "severity": "S2-MEASUREMENT",
+      "title": "How many AI trading agents exist?",
+      "component": "rest.agents",
+      "section": "agents",
+      "detail": {
+        "live_agentbook": "8",
+        "live_species": "11",
+        "llms_txt": "10",
+        "mcp_json": "16"
+      },
+      "note": null,
+      "checks": [
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_count::live_agentbook-vs-live_species]",
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_count::live_agentbook-vs-llms_txt]",
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_count::live_agentbook-vs-mcp_json]",
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_count::live_species-vs-llms_txt]",
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_count::live_species-vs-mcp_json]",
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_count::llms_txt-vs-mcp_json]"
+      ],
+      "failing_pairs": 6,
+      "evidence_ids": [],
+      "state": "OPEN",
+      "first_seen_run": "run-20260904T102937Z-nogit",
+      "reported_at": null
+    },
+    {
+      "id": "CYM-chain_count",
+      "kind": "contradiction",
+      "severity": "S2-MEASUREMENT",
+      "title": "How many blockchains does the platform settle on or support?",
+      "component": "platform.status",
+      "section": "swaps",
+      "detail": {
+        "live_chains": "16",
+        "mcp_json": "10"
+      },
+      "note": null,
+      "checks": [
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[chain_count::live_chains-vs-mcp_json]"
+      ],
+      "failing_pairs": 1,
+      "evidence_ids": [],
+      "state": "OPEN",
+      "first_seen_run": "run-20260904T102937Z-nogit",
+      "reported_at": null
+    },
+    {
+      "id": "CYM-clob_pair_count",
+      "kind": "contradiction",
+      "severity": "S2-MEASUREMENT",
+      "title": "How many CLOB trading pairs exist?",
+      "component": "rest.clob",
+      "section": "clob",
+      "detail": {
+        "llms_txt": "9",
+        "mcp_json": "568"
+      },
+      "note": null,
+      "checks": [
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[clob_pair_count::llms_txt-vs-mcp_json]"
+      ],
+      "failing_pairs": 1,
+      "evidence_ids": [],
+      "state": "OPEN",
+      "first_seen_run": "run-20260904T102937Z-nogit",
+      "reported_at": null
+    },
+    {
+      "id": "CYM-commit_count",
+      "kind": "contradiction",
+      "severity": "S2-MEASUREMENT",
+      "title": "How many commits are in the production codebase?",
+      "component": "platform.ai_native_proof",
+      "section": "provenance",
+      "detail": {
+        "build_stats": "21840",
+        "llms_txt": "11700"
+      },
+      "note": "Commits legitimately accrue, so a small gap is expected and a large one is not. The AI-native claim is the platform's headline marketing figure; a stale number here is a measurement defect, not a cosmetic one.",
+      "checks": [
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[commit_count::build_stats-vs-llms_txt]"
+      ],
+      "failing_pairs": 1,
+      "evidence_ids": [],
+      "state": "OPEN",
+      "first_seen_run": "run-20260904T102937Z-nogit",
+      "reported_at": null
+    },
+    {
+      "id": "CYM-documented-404",
+      "kind": "documentation",
+      "severity": "S3-CONTRACT",
+      "title": "26 endpoints the platform documents return 404",
+      "component": "discovery.llmstxt",
+      "section": "discovery",
+      "note": "This does not establish which of two things is true. Either the endpoints were removed and the documents are stale, or the documents are aspirational and these were never built. An agent following llms.txt cannot tell the difference, and neither can we -- the platform has to say which.",
+      "detail": {
+        "/api/v1/account": "404 (documented in llms.txt)",
+        "/api/v1/aerodrome/quote": "404 (documented in llms.txt)",
+        "/api/v1/agentbook/post": "404 (documented in llms.txt)",
+        "/api/v1/backtest/run": "404 (documented in llms.txt)",
+        "/api/v1/backtest/saved": "404 (documented in llms.txt)",
+        "/api/v1/base-dex/tokens": "404 (documented in llms.txt)",
+        "/api/v1/bots/clone": "404 (documented in agent-skills.json)",
+        "/api/v1/clob/order": "404 (documented in agent-skills.json)",
+        "/api/v1/cloned-bot/create": "404 (documented in llms.txt)",
+        "/api/v1/cloned-bot/list": "404 (documented in llms.txt)",
+        "/api/v1/defi/pools": "404 (documented in llms.txt)",
+        "/api/v1/exchange/buy": "404 (documented in agent-skills.json)",
+        "/api/v1/perpetual/user/positions": "404 (documented in llms.txt)",
+        "/api/v1/positions": "404 (documented in llms.txt)",
+        "/api/v1/staking/pools": "404 (documented in llms.txt)",
+        "/api/v1/tuatara/discover": "404 (documented in agent-skills.json)",
+        "/api/v1/vaix/prices": "404 (documented in llms.txt)",
+        "/api/v1/winner-takes-all/bet": "404 (documented in llms.txt)",
+        "/api/v1/winner-takes-all/epochs": "404 (documented in llms.txt)",
+        "/api/v1/winner-takes-all/markets": "404 (documented in llms.txt)",
+        "/mcp/v1/prompts/analyze_market": "404 (documented in llms.txt)",
+        "/mcp/v1/prompts/compare_markets": "404 (documented in llms.txt)",
+        "/mcp/v1/prompts/explain_probability": "404 (documented in llms.txt)",
+        "/mcp/v1/prompts/find_opportunities": "404 (documented in llms.txt)",
+        "/mcp/v1/resources/docs/api": "404 (documented in llms.txt)",
+        "/mcp/v1/resources/docs/getting-started": "404 (documented in llms.txt)"
+      },
+      "affected_sections": [
+        "account",
+        "agentbook",
+        "agents",
+        "backtest",
+        "clob",
+        "funds",
+        "markets",
+        "mcp",
+        "ontology",
+        "swaps"
+      ],
+      "checks": [
+        "scripts/inventory.py"
+      ],
+      "evidence_ids": [],
+      "state": "OPEN",
+      "first_seen_run": "run-20260904T102937Z-nogit",
+      "reported_at": null
+    },
+    {
+      "id": "CYM-mcp_tool_count",
+      "kind": "contradiction",
+      "severity": "S3-CONTRACT",
+      "title": "How many MCP tools does the server expose?",
+      "component": "mcp.tools_list",
+      "section": "mcp",
+      "detail": {
+        "llms_txt": "11",
+        "mcp_anon": "46",
+        "mcp_json": "46",
+        "mcp_trusted": "46"
+      },
+      "note": null,
+      "checks": [
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_count::llms_txt-vs-mcp_anon]",
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_count::llms_txt-vs-mcp_json]",
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_count::llms_txt-vs-mcp_trusted]"
+      ],
+      "failing_pairs": 3,
+      "evidence_ids": [],
+      "state": "OPEN",
+      "first_seen_run": "run-20260904T102937Z-nogit",
+      "reported_at": null
+    },
+    {
+      "id": "CYM-mcp_tool_names_declared_vs_served",
+      "kind": "contradiction",
+      "severity": "S3-CONTRACT",
+      "title": "Do the tool names the platform documents actually exist?",
+      "component": "mcp.tools_list",
+      "section": "mcp",
+      "detail": {
+        "llms_txt": "{get_featured_market, get_leaderboard, get_market, get_market_summary, get_markets, get_orderbook, get_price, get_prices, get_trades, get_trending_markets, search_markets}  n=11",
+        "mcp_anon": "{ask_nexus_deep, browse_ontology, create_aib_fund, edit_aib_fund_basket, find_trade_path, get_agent_profile, get_ai_native_proof, get_btc_pool_history, get_btc_pool_state, get_deadcoin_desk_info, get_deadcoin_quote, get_deep_answer ... (+34 more)}  n=46",
+        "mcp_json": "{ask_nexus_deep, browse_ontology, create_aib_fund, edit_aib_fund_basket, find_trade_path, get_agent_profile, get_ai_native_proof, get_btc_pool_history, get_btc_pool_state, get_deadcoin_desk_info, get_deadcoin_quote, get_deep_answer ... (+34 more)}  n=46"
+      },
+      "note": null,
+      "checks": [
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_names_declared_vs_served::llms_txt-vs-mcp_anon]",
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_names_declared_vs_served::llms_txt-vs-mcp_json]"
+      ],
+      "failing_pairs": 2,
+      "evidence_ids": [],
+      "state": "OPEN",
+      "first_seen_run": "run-20260904T102937Z-nogit",
+      "reported_at": null
+    },
+    {
+      "id": "CYM-skill_count",
+      "kind": "contradiction",
+      "severity": "S3-CONTRACT",
+      "title": "How many agent skills are advertised?",
+      "component": "discovery.wellknown",
+      "section": "discovery",
+      "detail": {
+        "agent_card": "13",
+        "agent_skills": "10"
+      },
+      "note": null,
+      "checks": [
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[skill_count::agent_card-vs-agent_skills]"
+      ],
+      "failing_pairs": 1,
+      "evidence_ids": [],
+      "state": "OPEN",
+      "first_seen_run": "run-20260904T102937Z-nogit",
+      "reported_at": null
+    },
+    {
+      "id": "CYM-skill_ids",
+      "kind": "contradiction",
+      "severity": "S3-CONTRACT",
+      "title": "Which agent skills does the platform advertise?",
+      "component": "discovery.wellknown",
+      "section": "discovery",
+      "detail": {
+        "agent_card": "{ai-due-diligence, ai-native-provenance, arena-trading, clone-ai-agent, et10-revenue-share, exchange-tokens, live-headlines, market-data, prop-desk-trading, smart-delegation, tge-prediction-markets, trade-event-cards ... (+1 more)}  n=13",
+        "agent_skills": "{arena-trading, asset-discovery, clone-ai-agent, et10-revenue-share, exchange-crypto, get-market-data, portfolio-management, prop-desk-trading, trade-event-cards, trade-prediction-markets}  n=10"
+      },
+      "note": null,
+      "checks": [
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[skill_ids::agent_card-vs-agent_skills]"
+      ],
+      "failing_pairs": 1,
+      "evidence_ids": [],
+      "state": "OPEN",
+      "first_seen_run": "run-20260904T102937Z-nogit",
+      "reported_at": null
+    },
+    {
+      "id": "CYM-documented-405",
+      "kind": "documentation",
+      "severity": "S4-COSMETIC",
+      "title": "18 documented URLs exist but reject the documented method",
+      "component": "discovery.llmstxt",
+      "section": "mcp",
+      "note": "llms.txt renders MCP tools as fetchable URLs of the form /mcp/v1/tools/<name>. They answer 405: the resource exists, the shape in the document does not. Low severity on its own, but it is the same document that carries the tool names and counts.",
+      "detail": {
+        "/api/v1/ai-due-diligence": "405 Method Not Allowed",
+        "/api/v1/arena/order": "405 Method Not Allowed",
+        "/api/v1/prop/signup": "405 Method Not Allowed",
+        "/api/v1/support/ai-agent": "405 Method Not Allowed",
+        "/api/v1/swap/execute": "405 Method Not Allowed",
+        "/mcp/v1": "405 Method Not Allowed",
+        "/mcp/v1/register": "405 Method Not Allowed",
+        "/mcp/v1/tools/get_featured_market": "405 Method Not Allowed",
+        "/mcp/v1/tools/get_leaderboard": "405 Method Not Allowed",
+        "/mcp/v1/tools/get_market": "405 Method Not Allowed",
+        "/mcp/v1/tools/get_market_summary": "405 Method Not Allowed",
+        "/mcp/v1/tools/get_markets": "405 Method Not Allowed",
+        "/mcp/v1/tools/get_orderbook": "405 Method Not Allowed",
+        "/mcp/v1/tools/get_price": "405 Method Not Allowed",
+        "/mcp/v1/tools/get_prices": "405 Method Not Allowed",
+        "/mcp/v1/tools/get_trades": "405 Method Not Allowed",
+        "/mcp/v1/tools/get_trending_markets": "405 Method Not Allowed",
+        "/mcp/v1/tools/search_markets": "405 Method Not Allowed"
+      },
+      "affected_sections": [
+        "arena",
+        "identity_trust",
+        "mcp",
+        "prop_desk",
+        "provenance",
+        "support",
+        "swaps"
+      ],
+      "checks": [
+        "scripts/inventory.py"
+      ],
+      "evidence_ids": [],
+      "state": "OPEN",
+      "first_seen_run": "run-20260904T102937Z-nogit",
+      "reported_at": null
+    },
+    {
+      "id": "CYM-mcp_resource_count",
+      "kind": "contradiction",
+      "severity": "S4-COSMETIC",
+      "title": "How many MCP resources are exposed?",
+      "component": "mcp.protocol",
+      "section": "mcp",
+      "detail": {
+        "llms_txt": "4",
+        "mcp_json": "5"
+      },
+      "note": null,
+      "checks": [
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_resource_count::llms_txt-vs-mcp_json]"
+      ],
+      "failing_pairs": 1,
+      "evidence_ids": [],
+      "state": "OPEN",
+      "first_seen_run": "run-20260904T102937Z-nogit",
+      "reported_at": null
+    }
+  ],
+  "by_severity": {
+    "S0-CUSTODY": 1,
+    "S1-INTEGRITY": 1,
+    "S2-MEASUREMENT": 4,
+    "S3-CONTRACT": 5,
+    "S4-COSMETIC": 2
+  }
+}

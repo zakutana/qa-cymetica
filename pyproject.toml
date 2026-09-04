@@ -1,0 +1,25 @@
+[project]
+name = "qa-cymetica"
+version = "0.1.0"
+description = "Independent API/MCP QA suite for the Cymetica / EventTrader platform"
+requires-python = ">=3.11"
+dependencies = [
+    "httpx>=0.27",
+    "pytest>=8.0",
+    "PyYAML>=6.0",
+    "Jinja2>=3.1",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+addopts = "-p qa.report_plugin --strict-markers -ra --tb=short"
+markers = [
+    "qa_component(name): platform component this test covers",
+    "qa_tier(name): SAFE | PROBE | MUTATE -- enforced by the transport",
+    "qa_surface(name): discovery | mcp | rest | ws | chain | meta",
+    "qa_claim(id): CLM-#### this test settles",
+    "qa_ticket(id): BUG-#### whose regression check this is",
+    "qa_volatile: value legitimately moves; mismatch is inconclusive",
+]
+filterwarnings = ["ignore::DeprecationWarning"]

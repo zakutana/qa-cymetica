@@ -1,0 +1,145 @@
+# The contradiction sweep.
+#
+# Each entry is one QUESTION the platform answers in more than one place. Every
+# pair of sources expands to its own named test, so a ticket pinned to
+# `agent_names::llms_txt-vs-live_species` keeps working forever even when a
+# fifth source is added later. An N-way test would change identity every time
+# the source list grew and silently orphan every pinned regression check.
+#
+# Extractor grammar: see qa/extractors.py
+# Relations: all_equal | set_equal | subset | within_tolerance
+#
+# volatile: true means the value legitimately moves. A mismatch is recorded as
+# inconclusive and may never open a ticket -- a number we cannot cleanly
+# measure is not a contradiction we are entitled to report.
+
+sources:
+  llms_txt:      {kind: text, url: "/llms.txt"}
+  mcp_json:      {kind: json, url: "/.well-known/mcp.json"}
+  agent_card:    {kind: json, url: "/.well-known/agent-card.json"}
+  agent_skills:  {kind: json, url: "/.well-known/agent-skills.json"}
+  openapi:       {kind: json, url: "/openapi.json"}
+  udc:           {kind: json, url: "/.well-known/udc.json"}
+  build_stats:   {kind: json, url: "/api/v1/build-stats"}
+  live_species:  {kind: json, url: "/api/v1/agents/species"}
+  live_agentbook: {kind: json, url: "/api/v1/agentbook/agents"}
+  live_chains:   {kind: json, url: "/api/v1/swap/chains"}
+  mcp_anon:      {kind: mcp_tools, identity: anon}
+  mcp_trusted:   {kind: mcp_tools, identity: trusted}
+
+claims:
+
+  # -------------------------------------------------------------------------
+  - id: agent_count
+    question: "How many AI trading agents exist?"
+    component: rest.agents
+    relation: all_equal
+    severity: S2-MEASUREMENT
+    sources:
+      llms_txt:       'regex_int:any of (\d+) AI trading agents'
+      mcp_json:       'regex_int:(\d+) AI trading agents'
+      live_species:   'len:$'
+      live_agentbook: 'jsonpath:$.data.total'
+
+  - id: agent_names
+    question: "Which AI trading agents exist, by symbol?"
+    component: rest.agents
+    relation: set_equal
+    severity: S1-INTEGRITY
+    note: >
+      llms.txt instructs readers to clone named agents. If those names do not
+      resolve, the instruction is not merely imprecise -- it is unfollowable.
+    sources:
+      llms_txt:       'regex_set:any of \d+ AI trading agents \(([A-Z, ]+)\)'
+      live_species:   'set:$[*].symbol'
+
+  # -------------------------------------------------------------------------
+  - id: mcp_tool_count
+    question: "How many MCP tools does the server expose?"
+    component: mcp.tools_list
+    relation: all_equal
+    severity: S3-CONTRACT
+    sources:
+      llms_txt:     'regex_int:cymetica-eventtrader-mcp \((\d+) tools'
+      mcp_json:     'len:$.tools'
+      mcp_anon:     'len:$.tools'
+      mcp_trusted:  'len:$.tools'
+
+  - id: mcp_tool_names_declared_vs_served
+    question: "Do the tool names the platform documents actually exist?"
+    component: mcp.tools_list
+    relation: set_equal
+    severity: S3-CONTRACT
+    sources:
+      llms_txt:  'regex_all:\[(\w+)\]\(/mcp/v1/tools/\w+\)'
+      mcp_json:  'set:$.tools[*].name'
+      mcp_anon:  'set:$.tools[*].name'
+
+  # The trust-ladder checks are NOT in this table. They are the highest-severity
+  # class in the project and they compare a declared tier against a served one,
+  # which the generic pairwise machinery would flatten into an unreadable
+  # message. See tests/mcp/test_trust_ladder.py.
+
+  - id: mcp_resource_count
+    question: "How many MCP resources are exposed?"
+    component: mcp.protocol
+    relation: all_equal
+    severity: S4-COSMETIC
+    sources:
+      llms_txt: 'regex_int:cymetica-eventtrader-mcp \(\d+ tools, (\d+) resources'
+      mcp_json: 'len:$.resources'
+
+  # -------------------------------------------------------------------------
+  - id: clob_pair_count
+    question: "How many CLOB trading pairs exist?"
+    component: rest.clob
+    relation: all_equal
+    severity: S2-MEASUREMENT
+    sources:
+      llms_txt: 'regex_int:trade on (\d+) CLOB pairs'
+      mcp_json: 'regex_int:CLOB exchange with (\d+) pairs'
+
+  # -------------------------------------------------------------------------
+  - id: chain_count
+    question: "How many blockchains does the platform settle on or support?"
+    component: platform.status
+    relation: all_equal
+    severity: S2-MEASUREMENT
+    sources:
+      mcp_json:    'regex_int:on-chain settlement on (\d+) chains'
+      live_chains: 'len:$.chains'
+
+  # -------------------------------------------------------------------------
+  - id: commit_count
+    question: "How many commits are in the production codebase?"
+    component: platform.ai_native_proof
+    relation: within_tolerance
+    tolerance_pct: 5
+    severity: S2-MEASUREMENT
+    volatile: true
+    note: >
+      Commits legitimately accrue, so a small gap is expected and a large one
+      is not. The AI-native claim is the platform's headline marketing figure;
+      a stale number here is a measurement defect, not a cosmetic one.
+    sources:
+      llms_txt:    'regex_int:With ([\d,]+)\+ commits'
+      build_stats: 'jsonpath:$.totals.commits'
+
+  # -------------------------------------------------------------------------
+  - id: skill_ids
+    question: "Which agent skills does the platform advertise?"
+    component: discovery.wellknown
+    relation: set_equal
+    severity: S3-CONTRACT
+    sources:
+      agent_card:   'set:$.skills[*].id'
+      agent_skills: 'set:$.skills[*].id'
+
+  - id: skill_count
+    question: "How many agent skills are advertised?"
+    component: discovery.wellknown
+    relation: all_equal
+    severity: S3-CONTRACT
+    sources:
+      agent_card:   'len:$.skills'
+      agent_skills: 'len:$.skills'

@@ -1,0 +1,167 @@
+"""Content-addressed evidence capture.
+
+A finding without its raw response is a claim, and we do not accept claims.
+Every request and response the suite makes is written to disk, hashed by
+content, and cited by id from the ticket that depends on it. That is what makes
+
+    "verified against <surface> at <time> by <check>"
+
+mechanically true rather than a form of words.
+
+Secrets never reach disk. Redaction happens here, before write, and
+tests/meta/test_no_secrets_leak.py greps the tree to prove it.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import re
+from contextvars import ContextVar
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
+
+import httpx
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+EVIDENCE_DIR = REPO_ROOT / "evidence"
+
+REDACTED = "<redacted>"
+
+# Header names whose values never reach disk.
+SECRET_HEADERS = frozenset({
+    "x-api-key", "authorization", "cookie", "set-cookie",
+    "x-hmac-signature", "x-signature", "proxy-authorization",
+})
+
+# Body/URL patterns that look like key material regardless of where they appear.
+SECRET_PATTERNS = [
+    re.compile(r"evt_[0-9a-fA-F]{32,}"),
+    re.compile(r"\b[0-9a-fA-F]{48,}\b"),
+    re.compile(r"\bBearer\s+[A-Za-z0-9._\-]{20,}", re.IGNORECASE),
+    re.compile(r"\beyJ[A-Za-z0-9._\-]{20,}"),  # JWT
+]
+
+# Evidence ids captured during the currently-running test. Drained by the
+# pytest plugin into the run record so each result cites its own bytes.
+CURRENT_EVIDENCE: ContextVar[list[str] | None] = ContextVar("qa_evidence", default=None)
+
+
+def redact(text: str) -> str:
+    for pattern in SECRET_PATTERNS:
+        text = pattern.sub(REDACTED, text)
+    return text
+
+
+def _redact_headers(headers) -> dict[str, str]:
+    out = {}
+    for key, value in headers.items():
+        out[key] = REDACTED if key.lower() in SECRET_HEADERS else redact(value)
+    return out
+
+
+def _decode(raw: bytes, limit: int = 512_000) -> dict[str, Any]:
+    """Body as structured JSON when possible, redacted text otherwise."""
+    if not raw:
+        return {"encoding": "empty", "value": None}
+    truncated = len(raw) > limit
+    blob = raw[:limit]
+    try:
+        text = blob.decode("utf-8")
+    except UnicodeDecodeError:
+        return {"encoding": "binary", "sha256": hashlib.sha256(raw).hexdigest(),
+                "bytes": len(raw)}
+    text = redact(text)
+    try:
+        return {"encoding": "json", "value": json.loads(text), "truncated": truncated}
+    except json.JSONDecodeError:
+        return {"encoding": "text", "value": text, "truncated": truncated}
+
+
+class EvidenceStore:
+    def __init__(self, run_id: str, root: Path | None = None):
+        self.run_id = run_id
+        self.root = (root or EVIDENCE_DIR) / "sha256"
+        self.root.mkdir(parents=True, exist_ok=True)
+        self.captured = 0
+
+    def capture(
+        self,
+        request: httpx.Request,
+        response: httpx.Response,
+        tier,
+        rule_id: str | None = None,
+    ) -> str:
+        try:
+            request_body = request.read()
+        except Exception:
+            request_body = b""
+        try:
+            response_body = response.read()
+        except Exception:
+            response_body = b""
+
+        record = {
+            "captured_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "run_id": self.run_id,
+            "nodeid": _current_nodeid(),
+            "tier": getattr(tier, "value", str(tier)),
+            "endpoint_rule": rule_id,
+            "request": {
+                "method": request.method,
+                "url": redact(str(request.url)),
+                "headers": _redact_headers(request.headers),
+                "body": _decode(request_body),
+            },
+            "response": {
+                "status_code": response.status_code,
+                "reason": response.reason_phrase,
+                "headers": _redact_headers(response.headers),
+                "body": _decode(response_body),
+                "elapsed_ms": _elapsed_ms(response),
+            },
+        }
+        return self.write(record)
+
+    def write(self, record: dict[str, Any]) -> str:
+        # Hash over the content minus the capture timestamp, so an identical
+        # response re-observed later dedupes to the same id.
+        stable = {k: v for k, v in record.items() if k not in ("captured_at", "run_id", "nodeid")}
+        blob = json.dumps(stable, sort_keys=True, ensure_ascii=False).encode("utf-8")
+        digest = hashlib.sha256(blob).hexdigest()
+
+        path = self.root / digest[:2] / f"{digest}.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        if not path.exists():
+            path.write_text(
+                json.dumps(record, indent=2, sort_keys=True, ensure_ascii=False),
+                encoding="utf-8",
+            )
+        self.captured += 1
+
+        bucket = CURRENT_EVIDENCE.get()
+        if bucket is not None and digest not in bucket:
+            bucket.append(digest)
+        return digest
+
+    @staticmethod
+    def path_for(evidence_id: str, root: Path | None = None) -> Path:
+        base = (root or EVIDENCE_DIR) / "sha256"
+        return base / evidence_id[:2] / f"{evidence_id}.json"
+
+    @staticmethod
+    def load(evidence_id: str, root: Path | None = None) -> dict[str, Any]:
+        return json.loads(EvidenceStore.path_for(evidence_id, root).read_text(encoding="utf-8"))
+
+
+def _elapsed_ms(response: httpx.Response) -> int | None:
+    try:
+        return int(response.elapsed.total_seconds() * 1000)
+    except (RuntimeError, AttributeError):
+        return None
+
+
+def _current_nodeid() -> str | None:
+    from qa.safety import CURRENT_NODEID
+    return CURRENT_NODEID.get()
