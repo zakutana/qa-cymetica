@@ -291,7 +291,8 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:13.5px; max-wid
 .state.s-raised { background:var(--auth-bg); color:var(--auth); }
 .state.s-they-replied { background:var(--wait-bg); color:var(--wait); }
 .state.s-fix-claimed { background:var(--warn-bg); color:var(--warn); }
-.state.s-verified { background:var(--ok-bg); color:var(--ok); }
+.state.s-verified-fixed { background:var(--ok-bg); color:var(--ok); }
+.state.s-regressed { background:var(--bad-bg); color:var(--bad); }
 .filed { font-family:var(--mono); font-size:11px; color:var(--text-faint); }
 .undelivered {
   font-family:var(--mono); font-size:10px; font-weight:600; padding:2px 6px;
@@ -503,12 +504,20 @@ document.getElementById("map").innerHTML = D.groups.map(g => {
 function filedNote(f) {
   if (!f.filed || !f.filed.length) return "";
   const rows = f.filed.map(x =>
-    `report #${x.report_id}${x.status ? ` — ${esc(x.status)}` : ""}` +
-    `${x.submitted_at ? ` — filed ${x.submitted_at.replace("T"," ").slice(0,16)}Z` : ""}`
+    `report #${x.report_id}${x.status ? ` &mdash; ${esc(x.status)}` : ""}` +
+    `${x.submitted_at ? ` &mdash; filed ${x.submitted_at.replace("T"," ").slice(0,16)}Z` : ""}`
   ).join("<br>");
-  return `<div class="awaiting">Filed to their bug tracker via the API:<br>${rows}
-    <br><br>A status of <em>fixed</em> here is a claim, not a verification. It becomes
-    verified only when the check below is re-run and passes.</div>`;
+  const verdict =
+    f.state === "VERIFIED FIXED"
+      ? `<br><br><b>We re-ran the check and it passes.</b> Verified ${
+          (f.verified_fixed_at || "").replace("T"," ").slice(0,16)}Z against the live
+         service. Their status above is their claim; this line is our own measurement,
+         and the two agreeing is what closes it.`
+      : f.state === "REGRESSED"
+      ? `<br><br><b>This was verified fixed and has started failing again.</b>`
+      : `<br><br>A status of <em>fixed</em> here is their claim, not a verification.
+         It becomes verified only once the check below is re-run and passes.`;
+  return `<div class="awaiting">Filed to their bug tracker via the API:<br>${rows}${verdict}</div>`;
 }
 
 function thread(f) {

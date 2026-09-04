@@ -101,6 +101,27 @@ def merge() -> dict:
         row["state"] = "VERIFIED FIXED"
         row["thread"] = row.get("thread", [])
 
+    # 3. Refresh the filing status of every row from the live tracker.
+    #    Rows carry a snapshot of what the vendor said when the row was
+    #    written; a backfilled row froze that snapshot at backfill time and
+    #    would otherwise keep displaying "pending" long after the report was
+    #    triaged. Showing a stale vendor status next to our own verification
+    #    makes the page contradict itself.
+    bounty = load("bounty.json")
+    live = {
+        r["id"]: r.get("status")
+        for r in (bounty.get("our_reports") or {}).get("reports", [])
+    }
+    refreshed = 0
+    for row in rows.values():
+        for entry in row.get("filed", []):
+            current_status = live.get(entry.get("report_id"))
+            if current_status and entry.get("status") != current_status:
+                entry["status"] = current_status
+                entry["status_seen_at"] = now
+                refreshed += 1
+    ledger["filing_status_refreshed"] = refreshed
+
     ledger["updated_at"] = now
     ledger["run_id"] = run_id
     ledger["counts"] = {
@@ -131,6 +152,7 @@ if __name__ == "__main__":
                       encoding="utf-8")
     print(f"-> {LEDGER.relative_to(REPO_ROOT)}")
     print(f"   {ledger['counts']}")
+    print(f"   refreshed {ledger['filing_status_refreshed']} stale filing statuses")
     for row in as_findings(ledger):
         filed = ", ".join(f"#{f['report_id']}" for f in row.get("filed", [])) or "-"
         print(f"   {row.get('state', '?'):<16} {row['severity']:<15} "

@@ -25,9 +25,9 @@
         }
       ],
       "thread": [],
-      "last_reproduced": "2026-09-04T12:49:12+00:00",
+      "last_reproduced": "2026-09-04T12:53:36+00:00",
       "last_reproduced_run": "run-20260904T123402Z-acf86e7",
-      "reproductions": 1,
+      "reproductions": 2,
       "state": "FIX CLAIMED"
     },
     "CYM-bounty-filing-unauthenticated": {
@@ -57,9 +57,9 @@
         }
       ],
       "thread": [],
-      "last_reproduced": "2026-09-04T12:49:12+00:00",
+      "last_reproduced": "2026-09-04T12:53:36+00:00",
       "last_reproduced_run": "run-20260904T123402Z-acf86e7",
-      "reproductions": 1,
+      "reproductions": 2,
       "state": "RAISED"
     },
     "CYM-agent_count": {
@@ -95,9 +95,9 @@
         }
       ],
       "thread": [],
-      "last_reproduced": "2026-09-04T12:49:12+00:00",
+      "last_reproduced": "2026-09-04T12:53:36+00:00",
       "last_reproduced_run": "run-20260904T123402Z-acf86e7",
-      "reproductions": 1,
+      "reproductions": 2,
       "state": "FIX CLAIMED"
     },
     "CYM-chain_count": {
@@ -126,9 +126,9 @@
         }
       ],
       "thread": [],
-      "last_reproduced": "2026-09-04T12:49:12+00:00",
+      "last_reproduced": "2026-09-04T12:53:36+00:00",
       "last_reproduced_run": "run-20260904T123402Z-acf86e7",
-      "reproductions": 1,
+      "reproductions": 2,
       "state": "FIX CLAIMED"
     },
     "CYM-mcp_tool_count": {
@@ -163,9 +163,9 @@
         }
       ],
       "thread": [],
-      "last_reproduced": "2026-09-04T12:49:12+00:00",
+      "last_reproduced": "2026-09-04T12:53:36+00:00",
       "last_reproduced_run": "run-20260904T123402Z-acf86e7",
-      "reproductions": 1,
+      "reproductions": 2,
       "state": "FIX CLAIMED"
     },
     "CYM-mcp_tool_names_declared_vs_served": {
@@ -197,9 +197,9 @@
         }
       ],
       "thread": [],
-      "last_reproduced": "2026-09-04T12:49:12+00:00",
+      "last_reproduced": "2026-09-04T12:53:36+00:00",
       "last_reproduced_run": "run-20260904T123402Z-acf86e7",
-      "reproductions": 1,
+      "reproductions": 2,
       "state": "FIX CLAIMED"
     },
     "CYM-own-reports-unverified": {
@@ -237,9 +237,9 @@
         }
       ],
       "thread": [],
-      "last_reproduced": "2026-09-04T12:49:12+00:00",
+      "last_reproduced": "2026-09-04T12:53:36+00:00",
       "last_reproduced_run": "run-20260904T123402Z-acf86e7",
-      "reproductions": 1,
+      "reproductions": 2,
       "state": "RAISED"
     },
     "CYM-skill_count": {
@@ -268,9 +268,9 @@
         }
       ],
       "thread": [],
-      "last_reproduced": "2026-09-04T12:49:12+00:00",
+      "last_reproduced": "2026-09-04T12:53:36+00:00",
       "last_reproduced_run": "run-20260904T123402Z-acf86e7",
-      "reproductions": 1,
+      "reproductions": 2,
       "state": "FIX CLAIMED"
     },
     "CYM-skill_ids": {
@@ -299,9 +299,9 @@
         }
       ],
       "thread": [],
-      "last_reproduced": "2026-09-04T12:49:12+00:00",
+      "last_reproduced": "2026-09-04T12:53:36+00:00",
       "last_reproduced_run": "run-20260904T123402Z-acf86e7",
-      "reproductions": 1,
+      "reproductions": 2,
       "state": "FIX CLAIMED"
     },
     "CYM-documented-405": {
@@ -332,9 +332,9 @@
       ],
       "filed": [],
       "thread": [],
-      "last_reproduced": "2026-09-04T12:49:12+00:00",
+      "last_reproduced": "2026-09-04T12:53:36+00:00",
       "last_reproduced_run": "run-20260904T123402Z-acf86e7",
-      "reproductions": 1,
+      "reproductions": 2,
       "state": "NOT RAISED YET"
     },
     "CYM-mcp_resource_count": {
@@ -362,9 +362,9 @@
         }
       ],
       "thread": [],
-      "last_reproduced": "2026-09-04T12:49:12+00:00",
+      "last_reproduced": "2026-09-04T12:53:36+00:00",
       "last_reproduced_run": "run-20260904T123402Z-acf86e7",
-      "reproductions": 1,
+      "reproductions": 2,
       "state": "FIX CLAIMED"
     },
     "CYM-anon-tool-surface": {
@@ -388,7 +388,8 @@
         {
           "report_id": 46,
           "submitted_at": "2026-09-04T12:03:33+00:00",
-          "status": "pending"
+          "status": "fixed",
+          "status_seen_at": "2026-09-04T12:53:36+00:00"
         }
       ],
       "thread": [],
@@ -421,7 +422,8 @@
         {
           "report_id": 52,
           "submitted_at": "2026-09-04T12:04:15+00:00",
-          "status": "pending"
+          "status": "fixed",
+          "status_seen_at": "2026-09-04T12:53:36+00:00"
         }
       ],
       "thread": [],
@@ -454,7 +456,8 @@
         {
           "report_id": 52,
           "submitted_at": "2026-09-04T12:04:15+00:00",
-          "status": "pending"
+          "status": "fixed",
+          "status_seen_at": "2026-09-04T12:53:36+00:00"
         }
       ],
       "thread": [],
@@ -488,7 +491,8 @@
         {
           "report_id": 53,
           "submitted_at": "2026-09-04T12:04:20+00:00",
-          "status": "pending"
+          "status": "validated",
+          "status_seen_at": "2026-09-04T12:53:36+00:00"
         }
       ],
       "thread": [],
@@ -545,7 +549,8 @@
         {
           "report_id": 49,
           "submitted_at": "2026-09-04T12:03:58+00:00",
-          "status": "pending"
+          "status": "fixed",
+          "status_seen_at": "2026-09-04T12:53:36+00:00"
         }
       ],
       "thread": [],
@@ -559,12 +564,13 @@
       "backfilled_from": "git acf86e7 (last snapshot before the vendor's fixes)"
     }
   },
-  "updated_at": "2026-09-04T12:49:12+00:00",
+  "updated_at": "2026-09-04T12:53:36+00:00",
   "run_id": "run-20260904T123402Z-acf86e7",
   "counts": {
     "FIX CLAIMED": 8,
-    "RAISED": 2,
     "NOT RAISED YET": 1,
+    "RAISED": 2,
     "VERIFIED FIXED": 5
-  }
+  },
+  "filing_status_refreshed": 5
 }
