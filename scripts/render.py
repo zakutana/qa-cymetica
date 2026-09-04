@@ -484,10 +484,23 @@ document.getElementById("map").innerHTML = D.groups.map(g => {
 }).join("");
 
 /* ---------- findings, each carrying its correspondence ---------- */
+function filedNote(f) {
+  if (!f.filed || !f.filed.length) return "";
+  const rows = f.filed.map(x =>
+    `report #${x.report_id}${x.status ? ` — ${esc(x.status)}` : ""}` +
+    `${x.submitted_at ? ` — filed ${x.submitted_at.replace("T"," ").slice(0,16)}Z` : ""}`
+  ).join("<br>");
+  return `<div class="awaiting">Filed to their bug tracker via the API:<br>${rows}
+    <br><br>A status of <em>fixed</em> here is a claim, not a verification. It becomes
+    verified only when the check below is re-run and passes.</div>`;
+}
+
 function thread(f) {
-  if (!f.thread || !f.thread.length)
-    return `<h4 class="sec">Correspondence</h4>
-            <div class="awaiting">Not yet raised with the vendor.</div>`;
+  if (!f.thread || !f.thread.length) {
+    const filed = filedNote(f);
+    return `<h4 class="sec">Correspondence</h4>` + (filed ||
+      `<div class="awaiting">Not yet raised with the vendor.</div>`);
+  }
   const rows = f.thread.map(m => {
     const dead = m.direction === "out" && m.delivered === false;
     const arrow = m.direction === "in" ? "← reply from vendor"
@@ -507,7 +520,7 @@ function thread(f) {
   const tail = replies ? "" :
     `<div class="awaiting">Sent, no reply yet. The finding stays open until they answer, and
      any answer claiming a fix is recorded as a claim until the failing check is re-run.</div>`;
-  return `<h4 class="sec">Correspondence</h4>${rows}${tail}`;
+  return `<h4 class="sec">Correspondence</h4>${rows}${filedNote(f)}${tail}`;
 }
 
 function finding(f) {
