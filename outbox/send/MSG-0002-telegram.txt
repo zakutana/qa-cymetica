@@ -1,0 +1,75 @@
+Following ET-21999 — thank you, that was fast and specific, and the schema
+details were exactly what I needed. I filed 8 findings via the API as you
+suggested (reports 46–53, all pending). Three problems with the pipeline
+itself, found by verifying my own submissions afterwards.
+
+1. REPORTS FILED VIA THE API DO NOT REACH THE QA TRACKER
+
+/leaderboard/bugs holds 74 items with a real workflow: pending, qa_testing,
+implementing, resolved, completed, rejected, wont_fix — plus Linear ticket
+links, comments and votes.
+
+None of the 15 reports in /api/v1/bounty/reports appears there. Zero of 15,
+matched by title. Every one of the 74 QA items carries source_channel "web".
+The id ranges do not overlap either: bounty is 7–43, the QA tracker is 226–530.
+
+My own history is split in two under the same name: 32 items in the QA tracker
+submitted through the web form, 6 in the bounty tracker submitted through the
+API, with no overlap.
+
+SCOPE: this does not establish that promotion never happens. It may be a manual
+step that has not run yet for reports 46–53. But six of mine have read "fixed"
+in the bounty tracker since May and are still absent from the QA tracker, so
+the gap is not simply a matter of time.
+
+2. FIVE SUBMITTED FIELDS ARE SILENTLY DISCARDED
+
+POST /api/v1/bounty/reports returned {"success": true, "report_id": N} for all
+eight. Reading the stored records back via
+/api/v1/bounty/my-reports?wallet_address=… shows these were accepted and not
+persisted:
+
+  hunter_name, steps_to_reproduce, expected_behavior, actual_behavior, url
+
+hunter_name is null on all eight despite being sent. Mine survived only because
+I also wrote the reproduction steps into the description body — a reporter who
+used the dedicated field as intended loses them and is told the submission
+succeeded.
+
+Related, and the reason I noticed: {"success": true, "report_id": 46} is not
+confirmable. GET /api/v1/bounty/reports/46 returns 404, and the id does not
+appear in the public list. Only the my-reports endpoint shows it.
+
+WHY THIS BLOCKS FURTHER FILING
+
+I am holding the remaining findings until this is resolved. Filing more into a
+branch that does not reach the tracker where work happens wastes your triage
+time as much as mine, and I would rather fix the channel first. This is also
+why the earlier "full report attached" failed: attachments are not captured
+here, so the technical detail has only ever reached you through the API.
+
+ASKS
+
+1. Do bounty reports get promoted into the QA tracker, and if so by what step?
+   If they do not, should I file through the web form instead and treat the
+   bounty API as a duplicate path?
+2. Will the five dropped fields be persisted, or should they be removed from
+   the accepted payload so a submission fails loudly instead of silently?
+3. Please confirm reports 46–53 are bound to
+   0xde9CeAaB301A9e47b1bAcd448B3DDbbA85e83398 and to hunter expire76, given
+   hunter_name did not store.
+4. An id returned by a create call should be fetchable. Is
+   GET /api/v1/bounty/reports/{id} intended to be public, or is a 404 correct
+   for a pending item?
+
+INVARIANT I would suggest for 2: reject unknown or unpersisted fields with a
+422 rather than accepting them. Silent acceptance is worse than rejection,
+because the reporter has no signal that anything was lost.
+
+──────────────────────────────────────────────────────
+SCOPE OF THIS REQUEST: read-only verification, plus the eight reports already
+filed at your suggestion. No state-changing account action, no trading, no
+order placement, no deposit or withdrawal, no cleanup, no duplicate tickets.
+UI defects remain out of scope. Every figure above was measured against the
+live service, and I will withdraw any claim here the moment it is shown wrong.
+──────────────────────────────────────────────────────

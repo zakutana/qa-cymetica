@@ -112,6 +112,8 @@ def build() -> dict:
                 "at": meta.get("sent_at") or meta.get("received_at"),
                 "composed_at": meta.get("composed_at"),
                 "delivered_as": meta.get("delivered_as"),
+                "delivered": meta.get("delivered", True),
+                "delivery_note": meta.get("delivery_note"),
                 "reply_to": meta.get("reply_to"),
                 "file": meta["file"],
                 "findings": meta.get("findings", []) or [],
@@ -146,6 +148,8 @@ def build() -> dict:
                 "channel": message["channel"],
                 "at": message["at"],
                 "delivered_as": message["delivered_as"],
+                "delivered": message["delivered"],
+                "delivery_note": message["delivery_note"],
                 "file": message["file"],
                 "excerpt": "\n\n".join(excerpts) if excerpts else None,
                 "excerpt_missing_reason": None if excerpts else

@@ -163,6 +163,60 @@ def fetch_our_reports() -> dict:
     }
 
 
+def fetch_qa_tracker() -> dict:
+    """The OTHER tracker -- /leaderboard/bugs, rendered server-side.
+
+    This is where work actually happens: it carries pending / qa_testing /
+    implementing / resolved / completed / rejected / wont_fix, Linear ticket
+    links, comments and votes. The bounty API has none of that.
+
+    Fetched by parsing the page's embedded allBugs array because no JSON
+    endpoint for it exists (/api/v1/bugs and five other spellings all 404).
+    """
+    import json as _json
+    import re as _re
+
+    registry = EndpointRegistry.load()
+    token = CURRENT_TIER.set(SafetyTier.SAFE)
+    try:
+        client = build_client(identities()["anon"], registry,
+                              base_url="https://cymetica.com")
+        try:
+            html = client.get("/leaderboard/bugs",
+                              headers={"Accept": "text/html"}).text
+        finally:
+            client.close()
+    except Exception as exc:  # noqa: BLE001
+        return {"error": f"{type(exc).__name__}: {exc}"}
+    finally:
+        CURRENT_TIER.reset(token)
+
+    rows: list = []
+    decoder = _json.JSONDecoder()
+    for match in _re.finditer(r"allBugs\s*=\s*", html):
+        start = html.find("[", match.end())
+        if start == -1 or start > match.end() + 3:
+            continue
+        try:
+            parsed, _ = decoder.raw_decode(html[start:])
+        except ValueError:
+            continue
+        if len(parsed) > len(rows):
+            rows = parsed
+
+    ids = [r.get("id") for r in rows if isinstance(r.get("id"), int)]
+    return {
+        "source": "https://cymetica.com/leaderboard/bugs (embedded allBugs)",
+        "total": len(rows),
+        "statuses": dict(Counter(r.get("status") for r in rows)),
+        "source_channels": dict(Counter(r.get("source_channel") for r in rows)),
+        "usernames": dict(Counter(r.get("username") for r in rows)),
+        "id_range": [min(ids), max(ids)] if ids else None,
+        "titles": [(r.get("title") or "").strip().lower() for r in rows],
+        "has_linear_links": sum(1 for r in rows if r.get("linear_ticket_url")),
+    }
+
+
 def fetch() -> dict:
     install_client_guard()
     registry = EndpointRegistry.load()
@@ -183,6 +237,7 @@ def fetch() -> dict:
     statuses = Counter(r.get("status") for r in reports)
     filing_probe = probe_filing_auth()
     ours = fetch_our_reports()
+    qa = fetch_qa_tracker()
 
     closed = [r for r in reports if r.get("status") in ("fixed", "resolved", "closed")]
     unevidenced = [
@@ -196,6 +251,7 @@ def fetch() -> dict:
         "statuses": dict(statuses),
         "filing_probe": filing_probe,
         "our_reports": ours,
+        "qa_tracker": qa,
         "closed": len(closed),
         "closed_without_recorded_evidence": len(unevidenced),
         "evidence_fields_checked": EVIDENCE_FIELDS,

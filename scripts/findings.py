@@ -103,6 +103,11 @@ def load_inventory() -> dict | None:
     return json.loads(path.read_text(encoding="utf-8")) if path.exists() else None
 
 
+def load_submissions() -> dict:
+    path = STATE / "submissions.json"
+    return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+
+
 def load_thread() -> dict:
     path = STATE / "thread.json"
     return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
@@ -427,21 +432,54 @@ def build() -> dict:
     findings.sort(key=lambda f: (SEVERITY_ORDER.index(f["severity"]), f["id"]))
 
     thread = load_thread()
+    submissions = load_submissions()
+    filed_status = {
+        r["id"]: r.get("status")
+        for r in ((bounty or {}).get("our_reports") or {}).get("reports", [])
+    }
+    filed_by_finding: dict[str, list[dict]] = {}
+    for sub in submissions.get("submissions", []):
+        for fid in sub.get("findings", []):
+            filed_by_finding.setdefault(fid, []).append({
+                "report_id": sub.get("report_id"),
+                "submitted_at": sub.get("submitted_at"),
+                "status": filed_status.get(sub.get("report_id")),
+            })
+
     for finding in findings:
-        finding.setdefault("state", "OPEN")
-        finding.setdefault("first_seen_run", run["run_id"] if run else None)
+        finding["first_seen_run"] = run["run_id"] if run else None
         finding["tag"] = tag_for(finding.get("section", ""))
         finding["tag_label"] = TAGS[finding["tag"]][0]
-        finding["section_title"] = finding.get("section", "")
-        # Correspondence with the vendor about this specific finding.
         finding["thread"] = thread.get("by_finding", {}).get(finding["id"], [])
-        sent = [m for m in finding["thread"] if m["direction"] == "out"]
+        finding["filed"] = filed_by_finding.get(finding["id"], [])
+
+        # A message we sent is not a message they received. MSG-0001 went as a
+        # file attachment, which their channel silently drops, so it counts as
+        # raised with nobody. Only delivered messages and filed reports do.
+        delivered = [m for m in finding["thread"]
+                     if m["direction"] == "out" and m.get("delivered", True)]
         replies = [m for m in finding["thread"] if m["direction"] == "in"]
-        finding["reported_at"] = sent[0]["at"] if sent else None
-        if replies:
-            finding["state"] = "AWAITING_VERIFICATION"
-        elif sent:
-            finding["state"] = "REPORTED"
+        undelivered = [m for m in finding["thread"]
+                       if m["direction"] == "out" and not m.get("delivered", True)]
+
+        finding["undelivered"] = len(undelivered)
+        finding["reported_at"] = (
+            delivered[0]["at"] if delivered
+            else (finding["filed"][0]["submitted_at"] if finding["filed"] else None)
+        )
+
+        claimed_fixed = any(
+            (f.get("status") or "") in ("fixed", "resolved", "completed")
+            for f in finding["filed"]
+        )
+        if claimed_fixed:
+            finding["state"] = "FIX CLAIMED"
+        elif replies:
+            finding["state"] = "THEY REPLIED"
+        elif delivered or finding["filed"]:
+            finding["state"] = "RAISED"
+        else:
+            finding["state"] = "NOT RAISED YET"
 
     return {
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),

@@ -272,9 +272,16 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:13.5px; max-wid
   font-family:var(--mono); font-size:10px; font-weight:600; padding:2px 6px;
   border-radius:4px; white-space:nowrap;
 }
-.state.OPEN { background:var(--none-bg); color:var(--text-dim); }
-.state.REPORTED { background:var(--auth-bg); color:var(--auth); }
-.state.AWAITING_VERIFICATION { background:var(--wait-bg); color:var(--wait); }
+.state.s-not-raised-yet { background:var(--none-bg); color:var(--text-dim); }
+.state.s-raised { background:var(--auth-bg); color:var(--auth); }
+.state.s-they-replied { background:var(--wait-bg); color:var(--wait); }
+.state.s-fix-claimed { background:var(--warn-bg); color:var(--warn); }
+.state.s-verified { background:var(--ok-bg); color:var(--ok); }
+.filed { font-family:var(--mono); font-size:11px; color:var(--text-faint); }
+.undelivered {
+  font-family:var(--mono); font-size:10px; font-weight:600; padding:2px 6px;
+  border-radius:4px; background:var(--bad-bg); color:var(--bad); white-space:nowrap;
+}
 
 .f-body { padding:0 15px 15px; border-top:1px solid var(--line-soft); }
 .f-note {
@@ -304,6 +311,7 @@ h4.sec {
 .dir { font-weight:600; }
 .dir.out { color:var(--auth); }
 .dir.in  { color:var(--ok); }
+.dir.dead { color:var(--bad); }
 .msg pre {
   margin:0; padding:11px 13px; font-family:var(--mono); font-size:11.5px;
   line-height:1.6; white-space:pre-wrap; word-break:break-word; color:var(--text);
@@ -426,7 +434,8 @@ document.getElementById("meta").innerHTML = [
 document.getElementById("triage").innerHTML =
   SEV.map(([k,l,c]) => `<div class="tri ${c}"><div class="n">${D.by_severity[k]||0}</div><div class="l">${l}</div></div>`).join("")
   + `<div class="tri"><div class="n">${D.sections.filter(s=>!(s.checks&&s.checks.total)).length}</div><div class="l">sections with no checks</div></div>`
-  + `<div class="tri"><div class="n">${D.thread_counts.awaiting_reply ?? 0}</div><div class="l">awaiting vendor reply</div></div>`;
+  + `<div class="tri"><div class="n">${D.findings.filter(f=>f.filed&&f.filed.length).length}</div><div class="l">filed to their tracker</div></div>`
+  + `<div class="tri"><div class="n">${D.findings.filter(f=>f.state==="NOT RAISED YET").length}</div><div class="l">not raised yet</div></div>`;
 
 /* ---------- section map, grouped by product area ---------- */
 const ORDER = ["ok","auth","param","method","missing","unprobed","websocket"];
@@ -480,12 +489,15 @@ function thread(f) {
     return `<h4 class="sec">Correspondence</h4>
             <div class="awaiting">Not yet raised with the vendor.</div>`;
   const rows = f.thread.map(m => {
-    const arrow = m.direction === "out" ? "→ sent to vendor" : "← reply from vendor";
+    const dead = m.direction === "out" && m.delivered === false;
+    const arrow = m.direction === "in" ? "← reply from vendor"
+                : dead ? "✕ sent but NEVER DELIVERED" : "→ sent to vendor";
     const when = m.at ? m.at.replace("T"," ").slice(0,16) + "Z" : "not sent";
     const text = m.excerpt || ("(this message references the finding but no section was "
       + "mapped to it — see " + m.file + ")");
     return `<div class="msg"><div class="msg-head">
-        <span class="dir ${m.direction}">${arrow}</span>
+        <span class="dir ${dead ? "dead" : m.direction}">${arrow}</span>
+        ${m.delivery_note ? `<span title="${esc(m.delivery_note)}">why</span>` : ""}
         <span>${esc(m.msg_id)}</span><span>${esc(when)}</span>
         <span>${esc(m.channel || "")}</span>
         ${m.delivered_as ? `<span>${esc(m.delivered_as)}</span>` : ""}
@@ -508,7 +520,9 @@ function finding(f) {
         <span class="f-title">${esc(f.title)}</span>
         <div class="f-sub">
           <span class="tagchip">${esc(f.tag)}</span>
-          <span class="state ${esc(f.state)}">${esc(f.state.replace(/_/g," "))}</span>
+          <span class="state s-${esc(f.state.toLowerCase().replace(/ /g,"-"))}">${esc(f.state)}</span>
+          ${f.filed && f.filed.length ? `<span class="filed">filed as #${f.filed.map(x=>x.report_id).join(", #")}</span>` : ""}
+          ${f.undelivered ? `<span class="undelivered">${f.undelivered} message never delivered</span>` : ""}
           <span>${esc(f.id)}</span><span>${esc(f.kind)}</span>
         </div>
       </span>
