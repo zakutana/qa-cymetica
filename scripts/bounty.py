@@ -102,6 +102,67 @@ def classify_error(status: int, body: str) -> str:
     return f"OTHER_{status}"
 
 
+def fetch_our_reports() -> dict:
+    """Our own filed reports -- THIS is the inbox.
+
+    GET /api/v1/bounty/reports is a filtered public view: it returns only
+    validated items, which is why every record in it reads "fixed". Our own
+    submissions live behind /api/v1/bounty/my-reports?wallet_address=<addr>
+    and are invisible in the public list until someone acts on them.
+
+    Two consequences worth stating. A submission acknowledged with
+    {"success": true, "report_id": N} is NOT retrievable at
+    /api/v1/bounty/reports/N, so the id in the response cannot be used to
+    confirm the write. And because the wallet address is the only key, anyone
+    holding it can list that hunter's reports.
+    """
+    import os
+    wallet = os.environ.get("QA_WALLET_ADDRESS", "")
+    if not wallet:
+        return {"error": "QA_WALLET_ADDRESS not set"}
+
+    registry = EndpointRegistry.load()
+    ids = identities()
+    token = CURRENT_TIER.set(SafetyTier.SAFE)
+    try:
+        client = build_client(ids["trusted"] if ids["trusted"].present else ids["anon"],
+                              registry)
+        try:
+            response = client.get("/api/v1/bounty/my-reports",
+                                  params={"wallet_address": wallet})
+            data = response.json()
+        finally:
+            client.close()
+    except Exception as exc:  # noqa: BLE001
+        return {"error": f"{type(exc).__name__}: {exc}"}
+    finally:
+        CURRENT_TIER.reset(token)
+
+    rows = data.get("reports") or data.get("data") or []
+    fields_sent = ["hunter_name", "steps_to_reproduce", "expected_behavior",
+                   "actual_behavior", "url"]
+    dropped = sorted({
+        field for field in fields_sent
+        for row in rows if not row.get(field)
+    })
+
+    return {
+        "endpoint": "GET /api/v1/bounty/my-reports?wallet_address=<addr>",
+        "total": data.get("total", len(rows)),
+        "statuses": dict(Counter(r.get("status") for r in rows)),
+        "fields_sent_but_not_stored": dropped,
+        "reports": [
+            {k: r.get(k) for k in (
+                "id", "title", "status", "hunter_name", "wallet_address",
+                "severity_reported", "severity_confirmed", "category",
+                "created_at", "fixed_at", "validated_at", "triaged_at",
+                "status_notes", "ticket_url", "fix_pr_url", "reward_amount",
+            )}
+            for r in sorted(rows, key=lambda r: r.get("id", 0))
+        ],
+    }
+
+
 def fetch() -> dict:
     install_client_guard()
     registry = EndpointRegistry.load()
@@ -121,6 +182,7 @@ def fetch() -> dict:
     reports = payload.get("reports", [])
     statuses = Counter(r.get("status") for r in reports)
     filing_probe = probe_filing_auth()
+    ours = fetch_our_reports()
 
     closed = [r for r in reports if r.get("status") in ("fixed", "resolved", "closed")]
     unevidenced = [
@@ -133,6 +195,7 @@ def fetch() -> dict:
         "total": payload.get("total", len(reports)),
         "statuses": dict(statuses),
         "filing_probe": filing_probe,
+        "our_reports": ours,
         "closed": len(closed),
         "closed_without_recorded_evidence": len(unevidenced),
         "evidence_fields_checked": EVIDENCE_FIELDS,

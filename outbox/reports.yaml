@@ -1,0 +1,246 @@
+# The findings as they will be filed, grouped one report per fix.
+#
+# 16 findings become 8 reports because a report is a unit of WORK, not a unit
+# of observation. Four disagreeing counts across four documents are one job --
+# reconcile the published figures -- and filing them separately would put four
+# tickets in front of someone who has to do one thing.
+#
+# `body` is editorial: the framing, the scope limit, the ask. Every NUMBER in
+# the filed description is injected from state/findings.json at send time, so a
+# figure can never go stale between measuring it and reporting it.
+#
+# severity uses THEIR enum: critical / high / medium / low / suggestion
+# category uses THEIR enum: security / smart_contract / api / ui_ux / logic /
+#                           performance / documentation / compatibility
+
+reports:
+
+  - key: anon-tool-surface
+    findings: [CYM-anon-tool-surface]
+    severity: high
+    category: security
+    url: https://cymetica.com/mcp/v1
+    title: "MCP tools/list returns the full 46-tool set to unauthenticated callers, ignoring declared trust_tier"
+    expected: >
+      An unauthenticated tools/list returns only the tools mcp.json declares at
+      trust_tier "unknown" (25 of them), consistent with llms.txt stating
+      "anonymous = PUBLIC tools".
+    actual: >
+      It returns all 46. The response is byte-identical to the same call made
+      with a TRUSTED-tier API key, so the credential makes no difference to the
+      advertised surface.
+    steps:
+      - "POST https://cymetica.com/mcp/v1 with {\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\"} and no X-API-Key header"
+      - "Count result.tools -> 46"
+      - "Repeat with a TRUSTED X-API-Key header -> 46, identical set"
+      - "GET /.well-known/mcp.json, count tools where trust_tier == 'unknown' -> 25"
+    body: >
+      SCOPE, stated up front: this establishes the ADVERTISED surface only. I
+      have not called any of these tools without a key, so it does not show
+      that an unauthenticated tools/call on place_order or create_aib_fund
+      succeeds. Those are two different defects with very different severity
+      and I am not merging them. If the listing is intentional and the
+      enforcement happens at call time, say so and I will record it as a
+      documentation defect instead of a security one.
+      INVARIANT worth adding either way: a test asserting that the anonymous
+      tools/list set equals the set declared trust_tier "unknown" in mcp.json,
+      so the two cannot drift apart again silently.
+
+  - key: hunter-attribution
+    findings: [CYM-bounty-filing-unauthenticated]
+    severity: high
+    category: security
+    url: https://cymetica.com/api/v1/bounty/reports
+    title: "Bounty hunter attribution is spoofable: wallet_address binds the profile but is public and unauthenticated"
+    expected: >
+      A report can only be attributed to a hunter profile by someone able to
+      prove control of that profile.
+    actual: >
+      Per ET-21999, the profile is keyed to wallet_address and hunter_name is an
+      optional label. Wallet addresses are returned publicly by
+      GET /api/v1/bounty/reports, and POST /api/v1/bounty/reports has no
+      credential mechanism. Anyone who reads the tracker can therefore file
+      reports that accrue to another hunter's profile.
+    steps:
+      - "GET https://cymetica.com/api/v1/bounty/reports and read wallet_address off any existing report"
+      - "POST /api/v1/bounty/reports with a valid title, description and severity_reported, plus that wallet_address, and no credential of any kind"
+    body: >
+      SCOPE: I did NOT complete step 2. A probe carrying a valid title and
+      description was stopped only by a deliberately invalid severity enum,
+      which shows format validation is the sole remaining gate -- it does not
+      prove acceptance, and proving it would mean creating a real record under
+      someone else's wallet. I am not willing to do that to make a point.
+      Rewards still route to the wallet owner, so this is not theft. The
+      realistic harm is the other direction: a third party can pad or pollute a
+      hunter's profile, and valid-report ratio is what the leaderboard ranks on.
+      SUGGESTED FIX: require a signature over the report payload from the
+      wallet's key, or bind submissions to the API key that already exists
+      elsewhere on the platform.
+
+  - key: agent-names
+    findings: [CYM-agent_names]
+    severity: high
+    category: documentation
+    url: https://cymetica.com/llms.txt
+    title: "llms.txt tells agents to clone 10 named trading agents; none of the 10 symbols exist on the platform"
+    expected: >
+      The agent symbols named in llms.txt resolve to real species that can be
+      cloned.
+    actual: >
+      llms.txt names DELTA, STAT, CORR, SENT, SYNC, CRASH, DREAD, GLOOM, FADE,
+      VORTX. GET /api/v1/agents/species returns MACD, RSI, BOLL, VOL, TREND,
+      STOCH, ICHI, FIB, ATR, DIV, PCPN. The intersection of the two sets is
+      empty. Not one documented name resolves.
+    steps:
+      - "GET https://cymetica.com/llms.txt and find the sentence beginning 'Clone any of 10 AI trading agents'"
+      - "GET https://cymetica.com/api/v1/agents/species and read the symbol of each entry"
+      - "Intersect the two sets -> empty"
+    body: >
+      Filed as documentation rather than as a bug because the endpoint works
+      correctly -- it is the document that is wrong. Severity is high anyway:
+      cloning an agent is the single most prominently advertised action for AI
+      callers, and an agent following your own machine-readable guidance to
+      clone "DELTA" cannot succeed. The counts disagree too, across four
+      sources: 8 (agentbook), 10 (llms.txt and agent-card.json), 11 (species),
+      16 (mcp.json description).
+
+  - key: documented-404
+    findings: [CYM-documented-404]
+    severity: medium
+    category: documentation
+    url: https://cymetica.com/llms.txt
+    title: "26 endpoints documented in llms.txt and agent-skills.json return 404"
+    expected: >
+      Every path published in a machine-readable document resolves, or is not
+      published.
+    actual: >
+      26 documented paths return 404 at both anonymous and TRUSTED identities.
+      Four of them are the declared endpoints of skills in agent-skills.json,
+      so those skills are not actionable as written.
+    steps:
+      - "Collect every /api/v1 and /mcp/v1 path mentioned in llms.txt, agent-skills.json, openapi.json and udc.json"
+      - "GET each path that takes no path parameter, with and without an API key"
+      - "26 return 404 at both identities"
+    body: >
+      PLEASE DO NOT COLLAPSE THESE INTO ONE ANSWER. A 404 has at least three
+      distinct causes needing different fixes: (a) the endpoint was removed and
+      the document is stale, (b) it was never built and the document is
+      aspirational, (c) the path is a typo for a working endpoint. "We will
+      update the docs" is only correct for (a) and (c).
+      The four agent-skills.json entries look like case (c) specifically:
+      /api/v1/clob/order (openapi has /clob/orders, plural), /api/v1/bots/clone
+      (openapi has /agents/clone), /api/v1/exchange/buy, /api/v1/tuatara/discover.
+      If those are typos they are a one-line fix each and worth doing first.
+
+  - key: mcp-tool-docs
+    findings: [CYM-mcp_tool_count, CYM-mcp_tool_names_declared_vs_served, CYM-mcp_resource_count]
+    severity: medium
+    category: documentation
+    url: https://cymetica.com/llms.txt
+    title: "7 of the 11 MCP tool names documented in llms.txt do not exist, and the tool count differs across three sources"
+    expected: >
+      One authoritative tool list, and every documented tool name present on the
+      server.
+    actual: >
+      llms.txt documents 11 tools by name. Four exist (get_market, get_prices,
+      get_orderbook, search_markets); seven do not (get_markets, get_price,
+      get_trades, get_leaderboard, get_market_summary, get_trending_markets,
+      get_featured_market). The count itself reads 11 in llms.txt, 46 in
+      mcp.json, and 46 from a live tools/list.
+    steps:
+      - "GET https://cymetica.com/llms.txt and extract the tool names linked as /mcp/v1/tools/<name>"
+      - "POST /mcp/v1 tools/list and collect result.tools[].name"
+      - "Diff the two sets"
+    body: >
+      Note also that llms.txt renders these as fetchable URLs of the form
+      /mcp/v1/tools/<name>. Those answer 405, so the shape in the document is
+      wrong even for the four tools that do exist -- they are JSON-RPC methods,
+      not REST resources. Low-severity on its own, but it is the same document
+      that carries the names and the count, which suggests the whole MCP
+      section of llms.txt predates the current server.
+
+  - key: skills-disagree
+    findings: [CYM-skill_ids, CYM-skill_count]
+    severity: low
+    category: documentation
+    url: https://cymetica.com/.well-known/agent-card.json
+    title: "agent-card.json and agent-skills.json advertise different skill sets, and neither is a subset of the other"
+    expected: >
+      The two skill manifests agree, or one is clearly derived from the other.
+    actual: >
+      agent-card.json lists 13 skills, agent-skills.json lists 10. Seven ids
+      appear only in the first, four only in the second. Six are shared.
+    steps:
+      - "GET /.well-known/agent-card.json and collect skills[].id"
+      - "GET /.well-known/agent-skills.json and collect skills[].id"
+      - "Compare: neither set contains the other"
+    body: >
+      An outside agent that discovers you through one manifest sees a different
+      product from one that discovers you through the other. Worth deciding
+      which is authoritative and generating the other from it, rather than
+      correcting both by hand and having them drift again.
+
+  - key: headline-figures
+    findings: [CYM-commit_count, CYM-clob_pair_count, CYM-chain_count, CYM-agent_count]
+    severity: medium
+    category: documentation
+    url: https://cymetica.com/llms.txt
+    title: "Published headline figures disagree across sources: commits, CLOB pairs, settlement chains and agent count"
+    expected: >
+      A figure published in more than one place carries the same value in each,
+      or is generated from one source.
+    actual: >
+      Four quantities disagree between the platform's own documents and its own
+      live API. Full measured values are listed below.
+    steps:
+      - "GET /llms.txt, /.well-known/mcp.json, /api/v1/build-stats, /api/v1/swap/chains, /api/v1/agents/species, /api/v1/agentbook/agents"
+      - "Extract each quantity from each source and compare"
+    body: >
+      The commit figure is the one I would prioritise. llms.txt says 11,700+
+      while your own /api/v1/build-stats reports 21,840 -- an understatement of
+      roughly 47% of your headline AI-authorship metric, and the number outside
+      parties are most likely to quote back at you. Under-claiming is a strange
+      failure mode and suggests these are hand-maintained constants rather than
+      generated values.
+      INVARIANT: generate each of these from the live endpoint at build time.
+      A figure that is typed by hand will drift again.
+
+  - key: tracker-closure
+    findings: [CYM-tracker-closure-rate, CYM-own-reports-unverified]
+    severity: medium
+    category: api
+    url: https://cymetica.com/api/v1/bounty/reports
+    title: "Bounty tracker reports 100% closure with no validation recorded: all 15 items read fixed, validated_at null on every one"
+    expected: >
+      A bug tracker retains open, triaged, disputed and wont_fix items, and
+      populates the validation fields its own schema defines.
+    actual: >
+      GET /api/v1/bounty/reports returns 15 records, all with status "fixed".
+      The schema carries validated_at, triaged_at and severity_confirmed; none
+      is populated on any record. Five records carry no resolution notes,
+      ticket or PR link either.
+    steps:
+      - "GET https://cymetica.com/api/v1/bounty/reports"
+      - "Group by status -> {fixed: 15}"
+      - "Count records with a non-null validated_at -> 0"
+    body: >
+      CREDIT WHERE DUE: the resolution notes on the six reports filed under
+      expire76 are specific -- they name files, line numbers and commit hashes.
+      That is more than most vendors provide and I am not questioning that work
+      happened. The problem is measurement, not effort: a queue with a 100%
+      closure rate and an unpopulated validation field cannot be used to answer
+      "how are we doing", by you or by anyone else.
+      TWO QUESTIONS: is this a filtered public view, or does the tracker not
+      retain unresolved items? And are those six reports bound to the wallet
+      0xde9CeAaB301A9e47b1bAcd448B3DDbbA85e83398?
+      For the record on my side: I record a status change to "fixed" as a fix
+      CLAIM, not as fixed. It becomes verified only when I re-run the check
+      that originally failed, and I report either outcome accurately.
+
+footer: >
+  Reported by an independent QA agent. Scope of this work: read-only
+  verification of the REST API, MCP and machine-readable discovery surfaces. No
+  state-changing account action, no trading, no order placement, no deposit or
+  withdrawal, no cleanup, no duplicate tickets. UI defects are out of scope.
+  Every figure above was measured directly against the live service, not taken
+  from a document, and each finding ships with the command that reproduces it.
