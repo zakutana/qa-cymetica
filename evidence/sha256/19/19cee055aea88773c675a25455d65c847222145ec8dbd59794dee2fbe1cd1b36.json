@@ -1,0 +1,77 @@
+{
+  "captured_at": "2026-09-05T20:03:34+00:00",
+  "endpoint_rule": null,
+  "nodeid": null,
+  "request": {
+    "body": {
+      "encoding": "json",
+      "truncated": false,
+      "value": {
+        "actual_behavior": "Three of the four items in your 2026-09-05 reply were our errors, and all\nthree were the same error: a check read nothing usable and then used the\nnothing as a measured value.",
+        "category": "documentation",
+        "description": "CORRECTIONS, in order. #52 (CLOB pair count) is retracted as filed. Our \"200\nvs 568\" compared a page against a document; list_clob_pairs paginates and says\nso in every response. Verified since: limit=2000 returns 569 rows, offset=200\nreturns the next window, total reads 569 in all three calls, and paging by\noffset traverses the collection exactly once, with no duplicate and no gap.\nYour pagination is correct and we reported it as a discrepancy. Separately,\nyour replacement shipped while we were writing this, and it verifies: llms.txt\nnow reads \"500+ CLOB pairs (live count: MCP tool list_clob_pairs, field\n`total`)\". 569 >= 500, and the sentence now points at the value instead of\nfreezing it. #53 (my-reports) is withdrawn entirely. The 401 was ours. The\nendpoint requires authentication by design and behaves correctly. Thank you\nfor finding the case-sensitive wallet comparison while answering a report that\nshould not have been filed -- reports #7 through #12 were genuinely missing\nfrom that view, and that part was real. #54 (trust tier): your rejection was\ncorrect, and we can now show it rather than concede it. The check reads GET\n/mcp/v1/agents/me, which reports this caller as allied, and compares the\nserved set against the entitlement mcp.json declares for that tier: 56 served,\n56 entitled, 0 above it. As a negative control the same served set is judged\nat every rung -- it fails at unknown, recognized and trusted, and passes only\nat allied. Both operands are now your own statements; neither is our label for\nour own key. WHAT WE CHANGED so this class stops reaching you: a source that\ndid not answer can no longer become a measured value. Reading a field that is\nabsent, a key no row carries, or a size taken by len() of a paginated response\nnow raises \"cannot measure\" together with the reason, instead of returning a\nnumber that flows on into a comparison. Four of our checks were wrong that way\nin a single day; the four shapes are held down by tests now. NO ACTION\nREQUESTED. Please close this as invalid or duplicate -- it exists so that #52\nand #53 are not left standing against you.\n\nMEASURED VALUES (from the live service):\n\n  [CYM-clob_pair_count] How many CLOB trading pairs exist?\n    left: 500+\n    right: 569\n    sources: {'document': '/llms.txt', 'catalogue': 'MCP list_clob_pairs'}\n    population: {'total': 569, 'floor': 500}\n    reason: llms.txt promises at least 500 CLOB pairs; list_clob_pairs states total=569.\n\nREPRODUCE:\n  - #52: we called list_clob_pairs with no arguments and counted len(pairs) = 200. The same object states total=569, limit=200, offset=0. We filed a page size as a catalogue size.\n  - #53: we called GET /api/v1/bounty/my-reports with no X-API-Key. The 401 body carries no `reports` key, our reader defaulted it to an empty list, and we filed 'we cannot see our own reports'. With the credential it answers 200 with all 20 rows.\n  - #54: we took the caller's tier from the name of our own config variable (QA_TRUSTED_KEY) and demanded trusted-tier entitlement. GET /mcp/v1/agents/me reports allied, trust_score 9419.\n\nAUTOMATED CHECKS (public repo: github.com/zakutana/qa-cymetica):\n  tests/mcp/test_clob_pairs.py::test_clob_pair_count_matches_the_catalogue\n\nReported by an independent QA agent. Scope of this work: read-only\nverification of the REST API, MCP and machine-readable discovery surfaces. No\nstate-changing account action, no trading, no order placement, no deposit or\nwithdrawal, no cleanup, no duplicate tickets. UI defects are out of scope.\nEvery figure above was measured directly against the live service, not taken\nfrom a document, and each finding ships with the command that reproduces it.",
+        "expected_behavior": "No action is requested. This retracts figures we filed that were artefacts of\nhow we read your API, so your records are not left holding our mistakes.",
+        "hunter_name": "expire76",
+        "severity_reported": "suggestion",
+        "steps_to_reproduce": "#52: we called list_clob_pairs with no arguments and counted len(pairs) = 200. The same object states total=569, limit=200, offset=0. We filed a page size as a catalogue size.\n#53: we called GET /api/v1/bounty/my-reports with no X-API-Key. The 401 body carries no `reports` key, our reader defaulted it to an empty list, and we filed 'we cannot see our own reports'. With the credential it answers 200 with all 20 rows.\n#54: we took the caller's tier from the name of our own config variable (QA_TRUSTED_KEY) and demanded trusted-tier entitlement. GET /mcp/v1/agents/me reports allied, trust_score 9419.",
+        "title": "CORRECTION from the reporter: reports #52 and #53 were wrong, and your rejection of #54 was right",
+        "url": "https://cymetica.com/mcp/v1",
+        "wallet_address": "0xde9CeAaB301A9e47b1bAcd448B3DDbbA85e83398"
+      }
+    },
+    "headers": {
+      "accept": "application/json",
+      "accept-encoding": "gzip, deflate, zstd",
+      "connection": "keep-alive",
+      "content-length": "5042",
+      "content-type": "application/json",
+      "host": "cymetica.com",
+      "user-agent": "qa-cymetica/0.1 (independent QA; contact via vendor Telegram channel)"
+    },
+    "method": "POST",
+    "url": "https://cymetica.com/api/v1/bounty/reports"
+  },
+  "response": {
+    "body": {
+      "encoding": "json",
+      "truncated": false,
+      "value": {
+        "message": "Bug report submitted successfully. We'll review it within 48 hours.",
+        "report_id": 62,
+        "success": true
+      }
+    },
+    "elapsed_ms": 7601,
+    "headers": {
+      "cache-control": "no-store, no-cache, must-revalidate, max-age=0",
+      "connection": "keep-alive",
+      "content-encoding": "gzip",
+      "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests",
+      "content-security-policy-report-only": "default-src 'self'; script-src 'self' 'nonce-h8CPqQvRKmCtYn37nzPbhw==' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'",
+      "content-signal": "ai-train=no, search=yes, ai-input=yes",
+      "content-type": "application/json",
+      "cross-origin-opener-policy": "same-origin-allow-popups",
+      "cross-origin-resource-policy": "cross-origin",
+      "date": "Sat, 05 Sep 2026 20:03:34 GMT",
+      "permissions-policy": "geolocation=(), microphone=(), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=(), browsing-topics=(), attribution-reporting=()",
+      "pragma": "no-cache",
+      "referrer-policy": "strict-origin-when-cross-origin, strict-origin-when-cross-origin",
+      "server": "nginx",
+      "strict-transport-security": "max-age=31536000; includeSubDomains",
+      "transfer-encoding": "chunked",
+      "vary": "Accept-Encoding",
+      "x-ai-strongest-model": "Claude Fable 5",
+      "x-content-type-options": "nosniff, nosniff",
+      "x-dns-prefetch-control": "off",
+      "x-frame-options": "SAMEORIGIN, SAMEORIGIN",
+      "x-ratelimit-limit": "60",
+      "x-ratelimit-remaining": "36",
+      "x-ratelimit-reset": "1788642000",
+      "x-xss-protection": "0"
+    },
+    "reason": "OK",
+    "status_code": 200
+  },
+  "run_id": "script-submit",
+  "tier": "MUTATE"
+}

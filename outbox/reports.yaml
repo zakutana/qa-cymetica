@@ -438,6 +438,61 @@ reports:
       report is retrievable in the work tracker, not only in the API's own
       list.
 
+  # A retraction, filed through the reporting endpoint because it is the only
+  # channel there is. Titled so triage can route it out of the work queue.
+  - key: corrections-52-53-54
+    findings: [CYM-clob_pair_count]
+    severity: suggestion
+    category: documentation
+    url: https://cymetica.com/mcp/v1
+    title: "CORRECTION from the reporter: reports #52 and #53 were wrong, and your rejection of #54 was right"
+    expected: >
+      No action is requested. This retracts figures we filed that were
+      artefacts of how we read your API, so your records are not left holding
+      our mistakes.
+    actual: >
+      Three of the four items in your 2026-09-05 reply were our errors, and
+      all three were the same error: a check read nothing usable and then used
+      the nothing as a measured value.
+    steps:
+      - "#52: we called list_clob_pairs with no arguments and counted len(pairs) = 200. The same object states total=569, limit=200, offset=0. We filed a page size as a catalogue size."
+      - "#53: we called GET /api/v1/bounty/my-reports with no X-API-Key. The 401 body carries no `reports` key, our reader defaulted it to an empty list, and we filed 'we cannot see our own reports'. With the credential it answers 200 with all 20 rows."
+      - "#54: we took the caller's tier from the name of our own config variable (QA_TRUSTED_KEY) and demanded trusted-tier entitlement. GET /mcp/v1/agents/me reports allied, trust_score 9419."
+    body: >
+      CORRECTIONS, in order.
+      #52 (CLOB pair count) is retracted as filed. Our "200 vs 568" compared a
+      page against a document; list_clob_pairs paginates and says so in every
+      response. Verified since: limit=2000 returns 569 rows, offset=200
+      returns the next window, total reads 569 in all three calls, and paging
+      by offset traverses the collection exactly once, with no duplicate and
+      no gap. Your pagination is correct and we reported it as a discrepancy.
+      Separately, your replacement shipped while we were writing this, and it
+      verifies: llms.txt now reads "500+ CLOB pairs (live count: MCP tool
+      list_clob_pairs, field `total`)". 569 >= 500, and the sentence now
+      points at the value instead of freezing it.
+      #53 (my-reports) is withdrawn entirely. The 401 was ours. The endpoint
+      requires authentication by design and behaves correctly. Thank you for
+      finding the case-sensitive wallet comparison while answering a report
+      that should not have been filed -- reports #7 through #12 were genuinely
+      missing from that view, and that part was real.
+      #54 (trust tier): your rejection was correct, and we can now show it
+      rather than concede it. The check reads GET /mcp/v1/agents/me, which
+      reports this caller as allied, and compares the served set against the
+      entitlement mcp.json declares for that tier: 56 served, 56 entitled, 0
+      above it. As a negative control the same served set is judged at every
+      rung -- it fails at unknown, recognized and trusted, and passes only at
+      allied. Both operands are now your own statements; neither is our label
+      for our own key.
+      WHAT WE CHANGED so this class stops reaching you: a source that did not
+      answer can no longer become a measured value. Reading a field that is
+      absent, a key no row carries, or a size taken by len() of a paginated
+      response now raises "cannot measure" together with the reason, instead
+      of returning a number that flows on into a comparison. Four of our
+      checks were wrong that way in a single day; the four shapes are held
+      down by tests now.
+      NO ACTION REQUESTED. Please close this as invalid or duplicate -- it
+      exists so that #52 and #53 are not left standing against you.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: read-only
   verification of the REST API, MCP and machine-readable discovery surfaces. No
