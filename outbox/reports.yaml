@@ -405,6 +405,39 @@ reports:
       evidence field is set. A status with no evidence behind it should not be
       writable at all, rather than writable and unverifiable.
 
+  - key: api-reports-absent-from-work-tracker
+    findings: [CYM-bounty-pipeline-deadend]
+    severity: high
+    category: api
+    url: https://cymetica.com/leaderboard/bugs
+    title: "None of the 11 reports we filed through the bounty API appears in /leaderboard/bugs, the tracker that carries triage state"
+    expected: >
+      A report accepted by the filing API becomes visible in the tracker where
+      triage and fixing happen.
+    actual: >
+      Zero of the eleven reports we filed via POST /api/v1/bounty/reports can
+      be found in /leaderboard/bugs, matched on their own titles. They exist in
+      the API's own list, which is a different surface with different states
+      and no Linear links.
+    steps:
+      - "POST /api/v1/bounty/reports -> report accepted, id returned"
+      - "GET /leaderboard/bugs -> search the page for the report's exact title"
+      - "Repeat for all 11 of our reports: none is present"
+    body: >
+      We match on title rather than on report id on purpose: a bare number
+      matches by coincidence in 250KB of markup, and a check that can pass by
+      accident is not a check.
+      /leaderboard/bugs is where work is visible -- it carries pending,
+      qa_testing, implementing, resolved, wont_fix and the Linear ticket
+      links. The API list carries a status field and little else. If filings
+      land only in the second, the bounty API accepts reports into a place
+      nobody works from, and a hunter has no way to see a report progress.
+      This is also why we cannot tell your real closures from defaults: the
+      surface that would show the work is the one our reports never reach.
+      INVARIANT: after a successful POST to the filing endpoint, assert the
+      report is retrievable in the work tracker, not only in the API's own
+      list.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: read-only
   verification of the REST API, MCP and machine-readable discovery surfaces. No
