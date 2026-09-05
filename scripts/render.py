@@ -56,6 +56,53 @@ def load(name: str) -> dict:
     return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
 
 
+def _api_conversation() -> tuple[dict, dict]:
+    """The exchange that happens through THEIR bounty API, per report.
+
+    This is the only thing the page calls Correspondence. Telegram is a
+    different channel with different properties -- attachments silently
+    dropped, delivery unconfirmable -- and mixing the two produced a panel
+    where a message nobody received sat beside a report they had answered, as
+    though both were the same kind of fact.
+
+    Returns (what we sent, what they said back), both keyed by report id.
+    """
+    import yaml
+
+    spec = yaml.safe_load((REPO_ROOT / "outbox" / "reports.yaml").read_text(
+        encoding="utf-8")) if (REPO_ROOT / "outbox" / "reports.yaml").exists() else {}
+    by_key = {r["key"]: r for r in (spec or {}).get("reports", [])}
+
+    submissions = load("submissions.json").get("submissions", [])
+    ours: dict[int, dict] = {}
+    for entry in submissions:
+        report_id = entry.get("report_id")
+        if report_id is None:
+            continue
+        report = by_key.get(entry.get("key"), {})
+        ours[report_id] = {
+            "at": entry.get("submitted_at"),
+            "title": entry.get("title") or report.get("title"),
+            "text": (report.get("body") or "").strip(),
+            "expected": (report.get("expected") or "").strip(),
+            "actual": (report.get("actual") or "").strip(),
+        }
+
+    theirs: dict[int, dict] = {}
+    for report in (load("bounty.json").get("our_reports") or {}).get("reports", []):
+        report_id = report.get("id")
+        if report_id is None:
+            continue
+        theirs[report_id] = {
+            "at": report.get("fixed_at") or report.get("validated_at")
+                  or report.get("triaged_at"),
+            "status": report.get("status"),
+            # Their own words, which is the whole reason this panel exists.
+            "text": (report.get("status_notes") or "").strip(),
+        }
+    return ours, theirs
+
+
 def _message_bodies() -> dict[str, dict]:
     """Every message file, indexed by its id.
 
@@ -91,6 +138,40 @@ def _message_bodies() -> dict[str, dict]:
                 "body": meta.get("body") or "",
             }
     return out
+
+
+def _thread_for(row: dict, sent: dict, replied: dict, filed_at: dict) -> list[dict]:
+    """The conversation about this finding, through their API, in order."""
+    out = []
+    for report in (row.get("filing") or {}).get("reports", []):
+        report_id = report["report_id"]
+        ours = sent.get(report_id, {})
+        out.append({
+            "who": "us", "report_id": report_id,
+            "at": ours.get("at") or filed_at.get(report_id),
+            "title": ours.get("title"),
+            "text": ours.get("text") or "",
+            "expected": ours.get("expected") or "",
+            "actual": ours.get("actual") or "",
+        })
+        answer = replied.get(report_id) or {}
+        if answer.get("status") and answer["status"] != "pending":
+            out.append({
+                "who": "them", "report_id": report_id,
+                "at": answer.get("at"), "status": answer.get("status"),
+                "text": answer.get("text") or "",
+            })
+    return sorted(out, key=lambda m: (m.get("at") or "", m["report_id"]))
+
+
+def _summary(row: dict) -> str | None:
+    """What this finding says, in one sentence."""
+    detail = row.get("detail") or {}
+    reason = (detail.get("reason") or "").strip()
+    if reason:
+        return reason
+    note = (row.get("note") or "").strip()
+    return note or None
 
 
 def _excerpt_for(source: dict, finding_id: str) -> str | None:
@@ -221,32 +302,12 @@ def build_payload(ledger: dict | None = None, inventory: dict | None = None,
     # tile reading "0 filed to their tracker" beside eleven filed reports, and
     # the Correspondence panel empty on every row. Same class as the display
     # state: the page read a field the fold had stopped writing.
-    bodies = _message_bodies()
-    messages: dict[str, list[dict]] = {}
+    sent, replied = _api_conversation()
     withdrawn_reason: dict[str, str] = {}
     filed_at: dict[int, str] = {}
     for event in events:
         etype = event.get("type")
-        if etype in ("message", "reply"):
-            msg_id = event.get("msg_id")
-            source = bodies.get(msg_id, {})
-            for fid in event.get("findings") or []:
-                messages.setdefault(fid, []).append({
-                    "msg_id": msg_id,
-                    "direction": "in" if etype == "reply" else "out",
-                    "at": event.get("at"),
-                    "delivered": event.get("delivered", True) if etype == "message" else True,
-                    "file": event.get("origin") or source.get("file"),
-                    "channel": source.get("channel"),
-                    "delivered_as": source.get("delivered_as"),
-                    "delivery_note": source.get("delivery_note"),
-                    # What this message actually said ABOUT THIS FINDING. The
-                    # journal is the index of which messages touch a row; the
-                    # words stay in the message files, where they were pasted
-                    # verbatim.
-                    "excerpt": _excerpt_for(source, fid),
-                })
-        elif etype == "withdraw" and event.get("finding_id"):
+        if etype == "withdraw" and event.get("finding_id"):
             withdrawn_reason[event["finding_id"]] = event.get("reason") or ""
         elif etype == "filing_outcome" and event.get("outcome") == "accepted":
             filed_at.setdefault(event.get("report_id"), event.get("at"))
@@ -292,11 +353,12 @@ def build_payload(ledger: dict | None = None, inventory: dict | None = None,
                  "submitted_at": filed_at.get(r["report_id"])}
                 for r in (row.get("filing") or {}).get("reports", [])
             ],
-            "thread": sorted(messages.get(row["id"], []),
-                             key=lambda m: m.get("at") or ""),
-            "undelivered": sum(1 for m in messages.get(row["id"], [])
-                               if m["direction"] == "out" and not m["delivered"]),
+            "thread": _thread_for(row, sent, replied, filed_at),
             "withdrawn_reason": withdrawn_reason.get(row["id"]),
+            # One sentence, from what the check deliberately measured. The
+            # panel used to show left / right / sources / population / reason
+            # as a table of field names -- accurate, and unreadable.
+            "summary": _summary(row),
         })
 
         for transition in row.get("transitions", []):
@@ -427,7 +489,7 @@ TEMPLATE = r"""<title>Cymetica QA Console</title>
 * { box-sizing:border-box; }
 body {
   margin:0; background:var(--bg); color:var(--text); font-family:var(--sans);
-  font-size:15px; line-height:1.55; -webkit-font-smoothing:antialiased;
+  font-size:16.5px; line-height:1.55; -webkit-font-smoothing:antialiased;
 }
 .wrap { max-width:1240px; margin:0 auto; padding:32px 22px 80px; }
 
@@ -436,10 +498,10 @@ body {
   font-size:clamp(26px,4vw,38px); font-weight:600; letter-spacing:-0.022em;
   margin:0 0 4px; text-wrap:balance;
 }
-.mast .sub { color:var(--text-dim); font-size:14.5px; max-width:70ch; margin:0; }
+.mast .sub { color:var(--text-dim); font-size:16.0px; max-width:70ch; margin:0; }
 .meta {
   display:flex; flex-wrap:wrap; gap:6px 20px; margin-top:14px;
-  font-family:var(--mono); font-size:11.5px; color:var(--text-faint);
+  font-family:var(--mono); font-size:13.0px; color:var(--text-faint);
 }
 .meta b { color:var(--text-dim); font-weight:500; }
 
@@ -454,7 +516,7 @@ body {
   font-variant-numeric:tabular-nums;
 }
 .tri .l {
-  font-size:10.5px; text-transform:uppercase; letter-spacing:0.09em;
+  font-size:12.0px; text-transform:uppercase; letter-spacing:0.09em;
   color:var(--text-faint); margin-top:3px; font-weight:600;
 }
 .tri.s0 .n,.tri.s1 .n { color:var(--bad); }
@@ -463,33 +525,35 @@ body {
 .tri.ok .n { color:var(--ok); }
 
 h2.group {
-  font-size:12px; text-transform:uppercase; letter-spacing:0.13em;
+  font-size:13.5px; text-transform:uppercase; letter-spacing:0.13em;
   font-weight:700; margin:38px 0 3px; display:flex; align-items:center; gap:10px;
 }
 .tagchip {
-  font-family:var(--mono); font-size:10px; font-weight:600; letter-spacing:0.06em;
+  font-family:var(--mono); font-size:11.5px; font-weight:600; letter-spacing:0.06em;
   padding:3px 7px; border-radius:4px; background:var(--accent-dim);
   color:var(--accent); white-space:nowrap;
 }
-p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:13.5px; max-width:74ch; }
+p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:15.0px; max-width:74ch; }
 
 .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:12px; }
 .card {
   background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
-  padding:15px 16px 14px; display:flex; flex-direction:column; gap:10px;
-  border-left:3px solid var(--none);
+  padding:15px 16px 14px; border-left:3px solid var(--none);
 }
+/* The card is a <details> now, so the column layout lives on the summary --
+   display:flex on a details element breaks the open/closed flow. */
+.card > summary { display:flex; flex-direction:column; gap:10px; }
 .card.h-ok{border-left-color:var(--ok)} .card.h-warn{border-left-color:var(--warn)}
 .card.h-bad{border-left-color:var(--bad)} .card.h-none{border-left-color:var(--none)}
 .card-top { display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
-.card h3 { margin:0; font-size:14.5px; font-weight:600; letter-spacing:-0.01em; }
+.card h3 { margin:0; font-size:16.0px; font-weight:600; letter-spacing:-0.01em; }
 .pct {
   font-family:var(--mono); font-size:25px; font-weight:600; line-height:1;
   font-variant-numeric:tabular-nums; white-space:nowrap;
 }
 .pct.h-ok{color:var(--ok)} .pct.h-warn{color:var(--warn)} .pct.h-bad{color:var(--bad)}
-.pct.h-none{color:var(--text-faint); font-size:13px}
-.pct small { font-size:12px; font-weight:500; color:var(--text-faint); }
+.pct.h-none{color:var(--text-faint); font-size:14.5px}
+.pct small { font-size:13.5px; font-weight:500; color:var(--text-faint); }
 
 .bar { display:flex; height:7px; border-radius:3px; overflow:hidden; background:var(--surface-2); }
 .bar span { display:block; }
@@ -502,15 +566,15 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:13.5px; max-wid
 }
 .pct-wrap { display:flex; flex-direction:column; align-items:flex-end; gap:2px; }
 .pct-cap {
-  font-family:var(--mono); font-size:9.5px; color:var(--text-faint);
+  font-family:var(--mono); font-size:11.0px; color:var(--text-faint);
   white-space:nowrap; letter-spacing:.02em;
 }
 .chip.untested {
   color:var(--text-faint); background:transparent;
   border:1px dashed var(--line); font-weight:600;
 }
-.blurb { font-size:12.6px; color:var(--text-dim); margin:0; line-height:1.5; }
-.stats { display:flex; flex-wrap:wrap; gap:5px; font-family:var(--mono); font-size:11px; }
+.blurb { font-size:14.1px; color:var(--text-dim); margin:0; line-height:1.5; }
+.stats { display:flex; flex-wrap:wrap; gap:5px; font-family:var(--mono); font-size:12.5px; }
 .chip {
   border:1px solid var(--line); border-radius:4px; padding:2px 6px;
   color:var(--text-dim); background:var(--surface-2); white-space:nowrap;
@@ -522,7 +586,7 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:13.5px; max-wid
 
 .filters { display:flex; flex-wrap:wrap; gap:6px; margin:16px 0 14px; align-items:center; }
 .filters button {
-  font-family:var(--mono); font-size:11.5px; padding:5px 11px; cursor:pointer;
+  font-family:var(--mono); font-size:13.0px; padding:5px 11px; cursor:pointer;
   border:1px solid var(--line); background:var(--surface); color:var(--text-dim);
   border-radius:20px; font-weight:500;
 }
@@ -530,7 +594,7 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:13.5px; max-wid
 .filters button:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
 .filters .sep { width:1px; height:20px; background:var(--line); margin:0 5px; }
 .filters .fl {
-  font-family:var(--mono); font-size:10px; text-transform:uppercase;
+  font-family:var(--mono); font-size:11.5px; text-transform:uppercase;
   letter-spacing:.06em; color:var(--text-faint); margin-right:2px;
 }
 
@@ -545,19 +609,19 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:13.5px; max-wid
 .finding > summary::-webkit-details-marker { display:none; }
 .finding > summary:focus-visible { outline:2px solid var(--accent); outline-offset:-2px; }
 .sev {
-  font-family:var(--mono); font-size:10px; font-weight:600; padding:3px 7px;
+  font-family:var(--mono); font-size:11.5px; font-weight:600; padding:3px 7px;
   border-radius:4px; letter-spacing:.04em; white-space:nowrap; margin-top:2px;
 }
 .sev.S0,.sev.S1 { background:var(--bad-bg); color:var(--bad); }
 .sev.S2,.sev.S3 { background:var(--warn-bg); color:var(--warn); }
 .sev.S4 { background:var(--none-bg); color:var(--text-dim); }
-.f-title { font-weight:500; font-size:14.5px; line-height:1.45; }
+.f-title { font-weight:500; font-size:16.0px; line-height:1.45; }
 .f-sub {
-  font-family:var(--mono); font-size:11px; color:var(--text-faint); margin-top:5px;
+  font-family:var(--mono); font-size:12.5px; color:var(--text-faint); margin-top:5px;
   display:flex; flex-wrap:wrap; gap:5px 9px; align-items:center;
 }
 .state {
-  font-family:var(--mono); font-size:10px; font-weight:600; padding:2px 6px;
+  font-family:var(--mono); font-size:11.5px; font-weight:600; padding:2px 6px;
   border-radius:4px; white-space:nowrap;
 }
 /* Every cell of the composition table gets a colour. Seven of the sixteen
@@ -590,23 +654,104 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:13.5px; max-wid
 .state.s-withdrawn  { background:var(--none-bg); color:var(--text-faint); text-decoration:line-through; }
 .state.s-superseded { background:var(--none-bg); color:var(--text-faint); text-decoration:line-through; }
 
-.filed { font-family:var(--mono); font-size:11px; color:var(--text-faint); }
+.filed { font-family:var(--mono); font-size:13.5px; color:var(--text-faint); }
+
+/* ---------- cards open, and the bar says what it means ---------- */
+.card > summary { list-style:none; cursor:pointer; }
+.card > summary::-webkit-details-marker { display:none; }
+.card-more {
+  display:inline-block; margin-top:11px; font-family:var(--mono);
+  font-size:12.5px; color:var(--accent);
+}
+.card[open] .card-more { visibility:hidden; }
+.blegend {
+  display:flex; flex-wrap:wrap; gap:4px 14px; margin:8px 0 0;
+  font-size:12.5px; color:var(--text-dim);
+}
+.blabel { display:flex; align-items:center; gap:5px; }
+.blabel i { width:9px; height:9px; border-radius:2px; display:inline-block; }
+.card-detail {
+  margin-top:14px; padding-top:14px; border-top:1px solid var(--line-soft);
+}
+.epgroup { margin-bottom:15px; }
+.epgroup-h {
+  display:flex; align-items:center; gap:7px; font-size:13.5px; color:var(--text);
+  margin-bottom:7px; font-weight:600;
+}
+.epgroup-h i { width:9px; height:9px; border-radius:2px; display:inline-block; }
+.ep { padding:4px 0 4px 16px; border-left:2px solid var(--line-soft); margin:2px 0; }
+.ep code { font-family:var(--mono); font-size:13px; color:var(--text-dim); }
+.ep-meta {
+  display:block; font-family:var(--mono); font-size:12px; color:var(--text-faint);
+}
+
+/* ---------- the finding body ---------- */
+.f-lede {
+  font-size:17.5px; line-height:1.5; color:var(--text); margin:16px 0 4px;
+  max-width:80ch;
+}
+.f-ref { margin-top:20px; border-top:1px solid var(--line-soft); padding-top:14px; }
+.f-ref > div {
+  display:flex; gap:14px; align-items:baseline; margin:7px 0; flex-wrap:wrap;
+}
+.ref-k {
+  flex:0 0 168px; font-size:13.5px; color:var(--text-faint);
+  text-transform:uppercase; letter-spacing:.04em;
+}
+.ref-v { font-size:15.0px; color:var(--text-dim); min-width:0; word-break:break-word; }
+.ref-v.mono { font-family:var(--mono); font-size:14.0px; }
+.kvt { border-collapse:collapse; font-size:14.5px; }
+.kvt td { padding:1px 14px 1px 0; vertical-align:top; color:var(--text-dim); }
+.kvt td:first-child { font-family:var(--mono); font-size:13.5px; color:var(--text-faint); }
+
+/* ---------- the conversation, as a conversation ---------- */
+.chat { margin:14px 0; max-width:84%; }
+.chat.us { margin-left:auto; }
+.chat-meta {
+  display:flex; gap:10px; align-items:baseline; font-size:14.0px;
+  color:var(--text-dim); margin-bottom:5px;
+}
+.chat.us .chat-meta { justify-content:flex-end; }
+.chat-meta time { font-family:var(--mono); font-size:13.0px; color:var(--text-faint); }
+.chat-status {
+  font-family:var(--mono); font-size:12.5px; text-transform:uppercase;
+  padding:1px 6px; border-radius:4px; background:var(--ok-bg); color:var(--ok);
+}
+.chat-body {
+  border-radius:12px; padding:12px 15px; font-size:16.0px; line-height:1.55;
+  border:1px solid var(--line-soft); white-space:normal;
+}
+.chat.us .chat-body {
+  background:var(--accent-dim); border-color:transparent;
+  border-bottom-right-radius:3px;
+}
+.chat.them .chat-body { background:var(--surface-2); border-bottom-left-radius:3px; }
+.chat-body p { margin:0 0 9px; }
+.chat-body p:last-child { margin-bottom:0; }
+.chat-title { font-weight:600; margin-bottom:8px; color:var(--text); }
+.chat-quiet { color:var(--text-faint); font-style:italic; }
+.chat-note {
+  margin:16px 0 0; font-size:15.0px; color:var(--text-dim);
+  padding-left:12px; border-left:3px solid var(--line);
+}
+.chat-note.ok { border-left-color:var(--ok); }
+.chat-note.bad { border-left-color:var(--bad); }
 .undelivered {
-  font-family:var(--mono); font-size:10px; font-weight:600; padding:2px 6px;
+  font-family:var(--mono); font-size:11.5px; font-weight:600; padding:2px 6px;
   border-radius:4px; background:var(--bad-bg); color:var(--bad); white-space:nowrap;
 }
 /* On 19 of 23 rows, so it must not shout. Red made it the loudest thing on
    the page and pushed the state chip -- the thing actually worth reading --
    into the background. It is a provenance note, not an alarm. */
 .unmeasured, .unmeasured-demo {
-  font-family:var(--mono); font-size:10px; padding:2px 6px; border-radius:4px;
+  font-family:var(--mono); font-size:11.5px; padding:2px 6px; border-radius:4px;
   background:transparent; color:var(--text-faint);
   border:1px dashed var(--line); white-space:nowrap; cursor:help;
 }
 .unmeasured-demo { font-weight:400; cursor:default; }
 
 /* ---------- legend: two axes, then the grid they make ---------- */
-.lead { font-size:13.5px; color:var(--text-dim); max-width:74ch; margin:14px 0 10px; }
+.lead { font-size:15.0px; color:var(--text-dim); max-width:74ch; margin:14px 0 10px; }
 .lead .hi { color:var(--ok); font-weight:600; }
 
 .axes { display:flex; gap:14px; align-items:stretch; flex-wrap:wrap; margin:14px 0 22px; }
@@ -614,22 +759,22 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:13.5px; max-wid
   flex:1 1 260px; min-width:0; background:var(--surface-2);
   border:1px solid var(--line-soft); border-radius:var(--radius); padding:12px 13px;
 }
-.axis-h { font-size:13px; font-weight:600; color:var(--text); }
+.axis-h { font-size:14.5px; font-weight:600; color:var(--text); }
 .axis-h b { color:var(--accent); }
 .axis-sub {
-  font-size:11.5px; color:var(--text-faint); margin:2px 0 10px;
+  font-size:13.0px; color:var(--text-faint); margin:2px 0 10px;
   padding-bottom:8px; border-bottom:1px solid var(--line-soft);
 }
 .axis-row {
   display:flex; gap:9px; align-items:baseline; margin:6px 0;
-  font-size:12.4px; color:var(--text-dim);
+  font-size:13.9px; color:var(--text-dim);
 }
 /* An axis VALUE, not a display state. Deliberately its own class: reusing
    .state gave NOT_RAISED the class s-not-raised, which no rule matches --
    the same unstyled-chip problem one level up. These are inputs to the grid;
    the colours belong to the squares the grid produces. */
 .axv {
-  flex:0 0 auto; font-family:var(--mono); font-size:10px; font-weight:600;
+  flex:0 0 auto; font-family:var(--mono); font-size:11.5px; font-weight:600;
   padding:2px 6px; border-radius:4px; white-space:nowrap;
   background:var(--none-bg); color:var(--text-dim);
 }
@@ -638,9 +783,9 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:13.5px; max-wid
 }
 
 .matrix-wrap { overflow-x:auto; margin:6px 0 10px; }
-.matrix { border-collapse:separate; border-spacing:3px; font-size:11px; }
+.matrix { border-collapse:separate; border-spacing:3px; font-size:12.5px; }
 .matrix th {
-  font-family:var(--mono); font-size:10px; font-weight:600; color:var(--text-faint);
+  font-family:var(--mono); font-size:11.5px; font-weight:600; color:var(--text-faint);
   text-align:left; white-space:nowrap; padding:3px 6px; text-transform:uppercase;
   letter-spacing:.04em;
 }
@@ -648,13 +793,13 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:13.5px; max-wid
 .matrix td { padding:0; }
 .matrix .state { display:block; text-align:center; }
 .matrix-note {
-  display:flex; flex-direction:column; gap:5px; font-size:12.4px; color:var(--text-dim);
+  display:flex; flex-direction:column; gap:5px; font-size:13.9px; color:var(--text-dim);
 }
 .marks { flex:none; margin:10px 0 20px; }
 .marks .axis-row { align-items:baseline; margin:8px 0; }
 .marks .axis-row > span:last-child { max-width:70ch; }
 .mono-faint {
-  font-family:var(--mono); font-size:11px; color:var(--text-faint); flex:0 0 auto;
+  font-family:var(--mono); font-size:12.5px; color:var(--text-faint); flex:0 0 auto;
 }
 .matrix-note span span.state { margin-right:7px; }
 
@@ -664,53 +809,53 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:13.5px; max-wid
 
 .f-body { padding:0 15px 15px; border-top:1px solid var(--line-soft); }
 .f-note {
-  font-size:13.2px; color:var(--text-dim); margin:12px 0 0; padding-left:11px;
+  font-size:14.7px; color:var(--text-dim); margin:12px 0 0; padding-left:11px;
   border-left:2px solid var(--accent-dim); max-width:78ch;
 }
 .kv { overflow-x:auto; }
-.kv table { border-collapse:collapse; width:100%; font-family:var(--mono); font-size:12px; }
+.kv table { border-collapse:collapse; width:100%; font-family:var(--mono); font-size:13.5px; }
 .kv td { padding:4px 10px 4px 0; vertical-align:top; border-bottom:1px solid var(--line-soft); }
 .kv td:first-child { color:var(--text-faint); white-space:nowrap; width:1%; }
 .kv td:last-child { color:var(--text); word-break:break-word; }
 .checks {
-  margin-top:13px; font-family:var(--mono); font-size:11px; color:var(--text-faint);
+  margin-top:13px; font-family:var(--mono); font-size:12.5px; color:var(--text-faint);
   word-break:break-all;
 }
 .checks b { color:var(--text-dim); font-weight:500; }
 
 h4.sec {
-  font-size:10.5px; text-transform:uppercase; letter-spacing:.1em; font-weight:700;
+  font-size:12.0px; text-transform:uppercase; letter-spacing:.1em; font-weight:700;
   color:var(--text-faint); margin:18px 0 8px;
 }
 .msg { border:1px solid var(--line-soft); border-radius:6px; margin-bottom:8px; overflow:hidden; }
 .msg-head {
   display:flex; flex-wrap:wrap; gap:4px 10px; align-items:center; padding:8px 11px;
-  background:var(--surface-2); font-family:var(--mono); font-size:11px; color:var(--text-faint);
+  background:var(--surface-2); font-family:var(--mono); font-size:12.5px; color:var(--text-faint);
 }
 .dir { font-weight:600; }
 .dir.out { color:var(--auth); }
 .dir.in  { color:var(--ok); }
 .dir.dead { color:var(--bad); }
 .msg pre {
-  margin:0; padding:11px 13px; font-family:var(--mono); font-size:11.5px;
+  margin:0; padding:11px 13px; font-family:var(--mono); font-size:13.0px;
   line-height:1.6; white-space:pre-wrap; word-break:break-word; color:var(--text);
   max-height:360px; overflow:auto; background:var(--surface);
 }
 .awaiting {
-  font-size:12.5px; color:var(--text-faint); padding:9px 11px;
+  font-size:14.0px; color:var(--text-faint); padding:9px 11px;
   border:1px dashed var(--line); border-radius:6px; max-width:78ch;
 }
 
 .note {
   margin-top:42px; padding:18px 20px; border:1px solid var(--line);
-  border-radius:var(--radius); background:var(--surface); font-size:13.5px;
+  border-radius:var(--radius); background:var(--surface); font-size:15.0px;
   color:var(--text-dim); max-width:82ch;
 }
-.note h3 { margin:0 0 8px; font-size:13px; color:var(--text); text-transform:uppercase; letter-spacing:.09em; }
+.note h3 { margin:0 0 8px; font-size:14.5px; color:var(--text); text-transform:uppercase; letter-spacing:.09em; }
 .note p { margin:0 0 9px; }
-.note code { font-family:var(--mono); font-size:12px; background:var(--surface-2); padding:1px 5px; border-radius:3px; }
+.note code { font-family:var(--mono); font-size:13.5px; background:var(--surface-2); padding:1px 5px; border-radius:3px; }
 .note .verdicts { border-collapse:collapse; margin:12px 0 16px; }
-.note .verdicts td { padding:5px 12px 5px 0; vertical-align:top; font-size:13.2px; line-height:1.45; }
+.note .verdicts td { padding:5px 12px 5px 0; vertical-align:top; font-size:14.7px; line-height:1.45; }
 .note .verdicts td:first-child { width:1%; padding-right:9px; padding-top:9px; }
 .note .verdicts td:nth-child(2) { white-space:nowrap; color:var(--text); }
 .note .verdicts i {
@@ -720,7 +865,7 @@ h4.sec {
 .note .verdicts i.faint { opacity:.6; }
 .note .example {
   background:var(--surface-2); border-radius:6px; padding:11px 13px;
-  border-left:2px solid var(--accent); font-size:13.2px;
+  border-left:2px solid var(--accent); font-size:14.7px;
 }
 @media (prefers-reduced-motion: reduce) { * { transition:none!important; animation:none!important; } }
 </style>
@@ -849,7 +994,6 @@ document.getElementById("triage").innerHTML =
   + `<div class="tri"><div class="n">${D.display_counts["FIX CLAIMED"]||0}</div><div class="l">fix claimed, unverified</div></div>`;
 
 /* ---------- section map, grouped by product area ---------- */
-const ORDER = ["ok","auth","param","method","missing","unprobed","websocket"];
 function health(s) {
   if (s.finding_severities.some(v => v === "S0-CUSTODY" || v === "S1-INTEGRITY")) return "h-bad";
   if (s.reachable_pct == null) return "h-none";
@@ -857,16 +1001,37 @@ function health(s) {
   if (s.reachable_pct < 90 || s.finding_severities.length) return "h-warn";
   return "h-ok";
 }
+// What each bar segment and each verdict actually means, in the operator's
+// words. "ok 6, method 1, unprobed 3" told nobody anything.
+const VERDICT_WORDS = {
+  ok:        "answers properly",
+  auth:      "asks for a key -- the lock works",
+  param:     "wants a parameter we did not send",
+  method:    "we asked the wrong way (our fault, left out of the score)",
+  missing:   "documented, but there is nothing there",
+  unprobed:  "cannot be checked by a simple call",
+  websocket: "a live feed, not a request",
+};
+const ORDER = ["ok","auth","param","method","missing","unprobed","websocket"];
+
 function card(s) {
   const h = health(s);
   const total = ORDER.reduce((a,k) => a + (s.verdicts[k]||0), 0) || 1;
   const bar = ORDER.filter(k => s.verdicts[k]).map(k =>
-    `<span class="seg-${k}" style="width:${(s.verdicts[k]/total*100).toFixed(2)}%" title="${k}: ${s.verdicts[k]}"></span>`).join("");
+    `<span class="seg-${k}" style="width:${(s.verdicts[k]/total*100).toFixed(2)}%"
+      title="${s.verdicts[k]} ${VERDICT_WORDS[k]}"></span>`).join("");
+
+  const legend = ORDER.filter(k => s.verdicts[k]).map(k =>
+    `<span class="blabel"><i class="seg-${k}"></i>${s.verdicts[k]} ${VERDICT_WORDS[k]}</span>`
+  ).join("");
+
   const pct = s.reachable_pct == null
     ? `<div class="pct-wrap"><span class="pct h-none">not checkable</span>
        <span class="pct-cap">nothing here answers a simple call</span></div>`
     : `<div class="pct-wrap"><span class="pct ${h}">${s.reachable_pct}<small>%</small></span>
-       <span class="pct-cap">${s.endpoints_reachable} of ${s.endpoints_probed} answered</span></div>`;
+       <span class="pct-cap">${s.endpoints_reachable} of ${s.endpoints_probed}
+       published addresses answer</span></div>`;
+
   const checks = s.checks && s.checks.total
     ? `<span class="chip ${s.checks.failed ? "bad" : "ok"}">${s.checks.total} tests written${s.checks.failed ? ", "+s.checks.failed+" failing" : ""}</span>`
     : `<span class="chip untested">0 tests written</span>`;
@@ -874,16 +1039,44 @@ function card(s) {
   s.finding_severities.forEach(v => { sev[v] = (sev[v]||0)+1; });
   const fnd = Object.entries(sev).map(([k,n]) =>
     `<span class="chip ${/^S[01]/.test(k) ? "bad" : /^S4/.test(k) ? "" : "warn"}">${n}&times; ${k.split("-")[0]}</span>`).join("");
-  return `<article class="card ${h}">
-    <div class="card-top"><h3>${esc(s.title)}</h3>${pct}</div>
-    <div class="bar">${bar}</div>
-    <p class="blurb">${esc(s.blurb)}</p>
-    <div class="stats">
-      <span class="chip">${s.endpoints_documented} addresses published</span>
-      ${s.tools_declared ? `<span class="chip">${s.tools_declared} MCP tools</span>` : ""}
-      ${s.verdicts.missing ? `<span class="chip bad">${s.verdicts.missing} &times; not there</span>` : ""}
-      ${checks}${fnd}
-    </div></article>`;
+
+  // Every address behind the number, so the percentage can be checked rather
+  // than believed. Grouped by what happened, worst first.
+  const byVerdict = {};
+  (s.endpoint_detail || []).forEach(e => {
+    (byVerdict[e.verdict] = byVerdict[e.verdict] || []).push(e);
+  });
+  const detail = ["missing","param","method","auth","ok","unprobed","websocket"]
+    .filter(k => byVerdict[k]).map(k => `
+      <div class="epgroup">
+        <div class="epgroup-h"><i class="seg-${k}"></i>${byVerdict[k].length}
+          ${VERDICT_WORDS[k]}</div>
+        ${byVerdict[k].map(e => `<div class="ep">
+          <code>${esc(e.path)}</code>
+          <span class="ep-meta">${esc((e.methods||["GET"]).join(", "))}
+            ${e.status_anon != null ? "&middot; anon " + e.status_anon : ""}
+            ${e.status_trusted != null && e.status_trusted !== e.status_anon
+               ? "&middot; with key " + e.status_trusted : ""}
+            ${e.sources && e.sources.length ? "&middot; from " + esc(e.sources.join(", ")) : ""}
+          </span></div>`).join("")}
+      </div>`).join("");
+
+  return `<details class="card ${h}">
+    <summary>
+      <div class="card-top"><h3>${esc(s.title)}</h3>${pct}</div>
+      <div class="bar">${bar}</div>
+      <div class="blegend">${legend}</div>
+      <p class="blurb">${esc(s.blurb)}</p>
+      <div class="stats">
+        <span class="chip">${s.endpoints_documented} addresses published</span>
+        ${s.tools_declared ? `<span class="chip">${s.tools_declared} MCP tools</span>` : ""}
+        ${s.verdicts.missing ? `<span class="chip bad">${s.verdicts.missing} &times; not there</span>` : ""}
+        ${checks}${fnd}
+      </div>
+      <span class="card-more">every address &rsaquo;</span>
+    </summary>
+    <div class="card-detail">${detail || "<p class=\"blurb\">Nothing documented here.</p>"}</div>
+  </details>`;
 }
 document.getElementById("map").innerHTML = D.groups.map(g => {
   const items = D.sections.filter(s => g.sections.includes(s.id));
@@ -894,66 +1087,59 @@ document.getElementById("map").innerHTML = D.groups.map(g => {
           <div class="grid">${items.map(card).join("")}</div>`;
 }).join("");
 
-/* ---------- findings, each carrying its correspondence ---------- */
-function filedNote(f) {
-  if (!f.filed || !f.filed.length) return "";
-  const rows = f.filed.map(x =>
-    `report #${x.report_id}${x.status ? ` &mdash; ${esc(x.status)}` : ""}` +
-    `${x.submitted_at ? ` &mdash; filed ${x.submitted_at.replace("T"," ").slice(0,16)}Z` : ""}`
-  ).join("<br>");
-  // Printed from the adjudication or not at all. Ten rows once carried this
-  // sentence with verified_by_run null on every one of them, and a timestamp
-  // taken from the merge that wrote the row rather than from any run.
-  const verdict =
-    f.verification
-      ? `<br><br><b>We re-ran the check and it passes.</b> Verified ${
-          (f.verification.at || "").replace("T"," ").slice(0,16)}Z by run
-         <code>${esc(f.verification.run_id)}</code> running
-         <code>${esc(f.verification.nodeid || "-")}</code>. Their status above is
-         their claim; this line is our own measurement, and the two agreeing is
-         what closes it.`
-      : f.regressions && f.regressions.length
-      ? `<br><br><b>This was verified fixed and has started failing again</b>
-         (run <code>${esc(f.regressions[f.regressions.length-1].run_id)}</code>).`
-      : f.not_checked_in
-      ? `<br><br>Not checked in run <code>${esc(f.not_checked_in)}</code> &mdash;
-         that run did not collect this check, so it says nothing either way.`
-      : `<br><br>A status of <em>fixed</em> here is their claim, not a verification.
-         It becomes verified only once the check below is re-run and passes.`;
-  return `<div class="awaiting">Filed to their bug tracker via the API:<br>${rows}${verdict}</div>`;
-}
+/* ---------- findings: the conversation through THEIR API ---------- */
+// Only the bounty API. Telegram is a different channel with different
+// properties -- attachments silently dropped, delivery unconfirmable -- and
+// mixing them produced a panel where a message nobody received sat beside a
+// report they had answered, as if both were the same kind of fact.
+function conversation(f) {
+  const when = t => t ? t.replace("T", " ").slice(0, 16) : "";
 
-function thread(f) {
   if (!f.thread || !f.thread.length) {
-    const filed = filedNote(f);
-    return `<h4 class="sec">Correspondence</h4>` + (filed ||
-      `<div class="awaiting">Not yet raised with the vendor.</div>`);
+    return `<h4 class="sec">Conversation with Cymetica</h4>
+      <div class="awaiting">Not filed to their tracker yet.</div>`;
   }
-  const rows = f.thread.map(m => {
-    const dead = m.direction === "out" && m.delivered === false;
-    const arrow = m.direction === "in" ? "← reply from vendor"
-                : dead ? "✕ sent but NEVER DELIVERED" : "→ sent to vendor";
-    const when = m.at ? m.at.replace("T"," ").slice(0,16) + "Z" : "not sent";
-    const text = m.excerpt || ("This message names the finding but has no section "
-      + "specifically about it." + (m.file ? "\nFull message: " + m.file : ""));
-    return `<div class="msg"><div class="msg-head">
-        <span class="dir ${dead ? "dead" : m.direction}">${arrow}</span>
-        ${m.delivery_note ? `<span title="${esc(m.delivery_note)}">why</span>` : ""}
-        <span>${esc(m.msg_id)}</span><span>${esc(when)}</span>
-        <span>${esc(m.channel || "")}</span>
-        ${m.delivered_as ? `<span>${esc(m.delivered_as)}</span>` : ""}
-      </div><pre>${esc(text)}</pre></div>`;
+
+  const bubbles = f.thread.map(m => {
+    const head = m.who === "us"
+      ? `<b>We filed report #${m.report_id}</b>`
+      : `<b>They answered</b> <span class="chat-status">${esc(m.status || "")}</span>`;
+    const body = m.who === "us"
+      ? [m.title && `<div class="chat-title">${esc(m.title)}</div>`,
+         m.text && `<p>${esc(m.text)}</p>`,
+         m.expected && `<p><b>Expected.</b> ${esc(m.expected)}</p>`,
+         m.actual && `<p><b>Actually.</b> ${esc(m.actual)}</p>`].filter(Boolean).join("")
+      : (m.text ? `<p>${esc(m.text)}</p>`
+                : `<p class="chat-quiet">Status changed with no note.</p>`);
+    return `<div class="chat ${m.who}">
+      <div class="chat-meta">${head}<time>${esc(when(m.at))}</time></div>
+      <div class="chat-body">${body}</div></div>`;
   }).join("");
-  const replies = f.thread.filter(m => m.direction === "in").length;
-  const tail = replies ? "" :
-    `<div class="awaiting">Sent, no reply yet. The finding stays open until they answer, and
-     any answer claiming a fix is recorded as a claim until the failing check is re-run.</div>`;
-  return `<h4 class="sec">Correspondence</h4>${rows}${filedNote(f)}${tail}`;
+
+  // Said once, under the thread, rather than under every message.
+  const note = f.verification
+    ? `<div class="chat-note ok"><b>We re-ran the test and it passes.</b>
+       ${esc(when(f.verification.at))} by run <code>${esc(f.verification.run_id)}</code>.
+       Their claim and our measurement agree, which is what closes it.</div>`
+    : f.regressions && f.regressions.length
+    ? `<div class="chat-note bad"><b>This was fixed and has broken again</b>
+       (run <code>${esc(f.regressions[f.regressions.length-1].run_id)}</code>).</div>`
+    : f.thread.some(m => m.who === "them")
+    ? `<div class="chat-note">Their answer is a claim until our own test passes.</div>`
+    : `<div class="chat-note">Filed, no answer yet.</div>`;
+
+  return `<h4 class="sec">Conversation with Cymetica</h4>${bubbles}${note}`;
 }
 
 function finding(f) {
-  const rows = Object.entries(f.detail || {}).map(([k,v]) =>
-    `<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`).join("");
+  const numbers = Object.entries(f.detail || {})
+    .filter(([k]) => k !== "reason")
+    .map(([k,v]) => `<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`).join("");
+
+  // The header carries only what identifies and prioritises the row. The
+  // report number, the internal kind word and the id moved inside: they are
+  // reference data, and on the summary line they read as though "#51" and
+  // "CYM-skill_ids" were competing names for the same thing.
   return `<details class="finding" data-sev="${esc(f.severity)}" data-tag="${esc(f.tag)}">
     <summary>
       <span class="sev ${f.severity.split("-")[0]}">${esc(f.severity.split("-")[0])}</span>
@@ -961,20 +1147,26 @@ function finding(f) {
         <span class="f-title">${esc(f.title)}</span>
         <div class="f-sub">
           <span class="tagchip">${esc(f.tag)}</span>
-          ${f.unmeasured ? `<span class="unmeasured" title="The title and figures on this row were carried over from the hand-written ledger when the pipeline was rebuilt. They were true when the finding was made and no admissible run has re-measured them since, so read them as history rather than as the current state. A run that adjudicates this row refreshes them.">figures not re-measured</span>` : ""}
           <span class="state ${stateClass(f.display_state)}">${esc(f.display_state)}</span>
-          ${f.filed && f.filed.length ? `<span class="filed">filed as #${f.filed.map(x=>x.report_id).join(", #")}</span>` : ""}
-          ${f.undelivered ? `<span class="undelivered">${f.undelivered} message never delivered</span>` : ""}
-          <span>${esc(f.id)}</span><span>${esc(f.kind)}</span>
+          ${f.unmeasured ? `<span class="unmeasured" title="The wording and numbers here are from the day this was written; no run since has confirmed they still hold.">figures not re-measured</span>` : ""}
         </div>
       </span>
     </summary>
     <div class="f-body">
-      ${f.withdrawn_reason ? `<p class="f-note"><b>Withdrawn by us.</b> ${esc(f.withdrawn_reason)}</p>` : ""}
+      ${f.summary ? `<p class="f-lede">${esc(f.summary)}</p>` : ""}
+      ${f.withdrawn_reason ? `<p class="f-note"><b>We withdrew this.</b> ${esc(f.withdrawn_reason)}</p>` : ""}
       ${f.note ? `<p class="f-note">${esc(f.note)}</p>` : ""}
-      ${rows ? `<h4 class="sec">Measured</h4><div class="kv"><table>${rows}</table></div>` : ""}
-      ${thread(f)}
-      <div class="checks"><b>check</b> ${(f.checks||[]).map(esc).join("<br>")}</div>
+      ${conversation(f)}
+      <div class="f-ref">
+        <div><span class="ref-k">Our name for it</span>
+             <span class="ref-v mono">${esc(f.id)}</span></div>
+        ${f.filed && f.filed.length ? `<div><span class="ref-k">Their report number</span>
+             <span class="ref-v mono">${f.filed.map(x=>"#"+x.report_id).join(", ")}</span></div>` : ""}
+        <div><span class="ref-k">Test that decides it</span>
+             <span class="ref-v mono">${(f.checks||[]).map(esc).join("<br>") || "&mdash; none, so nothing can settle this"}</span></div>
+        ${numbers ? `<div><span class="ref-k">What was measured</span>
+             <span class="ref-v"><table class="kvt">${numbers}</table></span></div>` : ""}
+      </div>
     </div></details>`;
 }
 

@@ -204,6 +204,44 @@ def test_legacy_content_is_labelled_unmeasured(tmp_path, monkeypatch):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_pages_javascript_parses(tmp_path, monkeypatch):
+    """A syntax error in the page is invisible from Python and total in the
+    browser: nothing renders, and the file still writes, commits and
+    publishes. One shipped -- a duplicate `const ORDER` left behind by an edit
+    -- and the page came up with the masthead and no findings at all.
+
+    Skipped rather than failed where node is absent: a missing tool is not a
+    defect in the page.
+    """
+    import shutil
+    import subprocess
+
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("node is not installed, so the page's JS cannot be parsed here")
+
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    render = _render()
+    html = render.TEMPLATE
+
+    start = html.index('<script>\n', html.index('id="data"'))
+    script = html[start + len("<script>\n"):html.rindex("</script>")]
+    script = script.replace("__DATA__", "{}")
+
+    # No preamble: --check parses without running, and the page declares its
+    # own `D`. Adding one produced exactly the duplicate-declaration error
+    # this test exists to catch, in the scaffolding rather than the page.
+    js = tmp_path / "page.js"
+    js.write_text(script, encoding="utf-8")
+    result = subprocess.run([node, "--check", str(js)], capture_output=True,
+                            text=True, timeout=60)
+    assert result.returncode == 0, (
+        "the dashboard's JavaScript does not parse, so the page renders "
+        f"nothing:\n{result.stderr[:800]}"
+    )
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_page_reads_no_field_the_payload_stops_writing(tmp_path, monkeypatch):
     """The class of defect behind three separate visible breakages.
 
@@ -268,8 +306,39 @@ def test_the_page_reads_no_field_the_payload_stops_writing(tmp_path, monkeypatch
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_filed_reports_and_correspondence_reach_the_page(tmp_path, monkeypatch):
-    """Both are rebuilt from the journal now, so both have to arrive."""
+def test_the_conversation_is_the_api_exchange_and_nothing_else(tmp_path, monkeypatch):
+    """One channel per panel.
+
+    Telegram and the bounty API have different properties -- attachments
+    silently dropped on one, delivery unconfirmable on one, a report number
+    and a written answer on the other. Showing both in one list produced a
+    panel where a message nobody received sat beside a report they had
+    answered, as though both were the same kind of fact. The panel is the API
+    exchange: what we filed, and what they wrote back.
+    """
+    monkeypatch.delenv("QA_STATE_DIR", raising=False)
+    render = _render()
+
+    payload = render.build_payload()
+    threads = {f["id"]: f["thread"] for f in payload["findings"]}
+
+    speakers = {m["who"] for t in threads.values() for m in t}
+    assert speakers <= {"us", "them"}, speakers
+    assert any(m["who"] == "them" and m.get("text") for t in threads.values() for m in t), \
+        "not one of their written answers reached the page"
+    for thread in threads.values():
+        for message in thread:
+            assert message.get("report_id"), "a message with no report behind it"
+            assert "msg_id" not in message, "a Telegram message leaked into the API panel"
+
+    # Every row that was filed has our side of it; nothing else has a thread.
+    for finding in payload["findings"]:
+        assert bool(finding["thread"]) == bool(finding["filed"]), finding["id"]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_filed_reports_reach_the_page(tmp_path, monkeypatch):
+    """The report numbers still have to arrive, from the journal."""
     monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
     render = _render()
 
@@ -298,8 +367,6 @@ def test_filed_reports_and_correspondence_reach_the_page(tmp_path, monkeypatch):
 
     finding = render.build_payload(ledger=state)["findings"][0]
     assert [r["report_id"] for r in finding["filed"]] == [46]
-    assert [m["msg_id"] for m in finding["thread"]] == ["MSG-0001", "REPLY-0001"]
-    assert finding["undelivered"] == 1, "a message nobody delivered reads as delivered"
     assert "our own probe" in finding["withdrawn_reason"]
 
 

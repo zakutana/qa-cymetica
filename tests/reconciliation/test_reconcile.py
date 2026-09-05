@@ -179,12 +179,48 @@ def test_sources_agree(pair, snapshot):
         claim["relation"], left, right, float(claim.get("tolerance_pct", 0))
     )
 
+    # A sentence a person can read, not a relation name and two operands. The
+    # dashboard shows this as the finding's one-line summary, so "values
+    # differ" beside a table of left/right/sources is what the operator gets
+    # if it is not written here.
+    if holds:
+        sentence = (f"{claim['question']} Both {_name(pair.a)} and "
+                    f"{_name(pair.b)} now say {_fmt(left)}.")
+    else:
+        sentence = (f"{claim['question']} {_name(pair.a)} says {_fmt(left)}; "
+                    f"{_name(pair.b)} says {_fmt(right)}.")
+        if why:
+            sentence += f" ({why})"
+
     conclude(measured(
-        "passed" if holds else "failed",
-        why or f"{claim['relation']} holds",
+        "passed" if holds else "failed", sentence,
         left=left, right=right,
         population={"witness": {pair.a: witness_a[:300], pair.b: witness_b[:300]}},
     ))
+
+
+def _name(source: str) -> str:
+    """The source as a person would refer to it."""
+    return {
+        "llms_txt": "llms.txt", "llms_txt_2": "llms.txt (second sentence)",
+        "mcp_json": ".well-known/mcp.json", "agent_card": "agent-card.json",
+        "agent_skills": "agent-skills.json", "openapi": "openapi.json",
+        "udc": "udc.json", "build_stats": "the build-stats endpoint",
+        "live_species": "the live species endpoint",
+        "live_agentbook": "the live AgentBook endpoint",
+        "live_chains": "the live chains endpoint",
+        "mcp_anon": "MCP as an anonymous caller",
+        "mcp_trusted": "MCP with our key",
+    }.get(source, source)
+
+
+def _fmt(value) -> str:
+    if isinstance(value, (set, frozenset)):
+        items = sorted(str(v) for v in value)
+        shown = ", ".join(items[:8])
+        more = f" and {len(items) - 8} more" if len(items) > 8 else ""
+        return f"{len(items)} ({shown}{more})"
+    return str(value)
 
 
 # _explain() and _fmt() are gone. The failure message is now rendered from the
