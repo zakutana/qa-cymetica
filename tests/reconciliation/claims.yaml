@@ -35,6 +35,9 @@ claims:
     question: "Does llms.txt name agent symbols that actually exist?"
     component: rest.agents
     relation: subset
+    # Which side must be CONTAINED. Without it the pair was ordered
+    # alphabetically and the claim could come out backwards.
+    subset: llms_txt
     severity: S1-INTEGRITY
     note: >
       Rewritten twice. The version filed with #48 enumerated the 21 symbols
@@ -89,6 +92,7 @@ claims:
     question: "Does every tool name llms.txt documents exist on the server?"
     component: mcp.tools_list
     relation: subset
+    subset: llms_txt
     severity: S3-CONTRACT
     note: >
       Subset, not set_equal. llms.txt is not obliged to list every tool -- it is
@@ -113,6 +117,7 @@ claims:
     question: "Is agent-skills.json the actionable subset of agent-card.json, as stated?"
     component: discovery.wellknown
     relation: subset
+    subset: agent_skills
     severity: S3-CONTRACT
     note: >
       Their resolution on #51 states agent-card.json is the full discovery card

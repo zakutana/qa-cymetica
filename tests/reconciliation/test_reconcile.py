@@ -41,6 +41,15 @@ STRUCTURED = frozenset({"jsonpath", "len", "set", "keys", "count"})
 class Pair:
     def __init__(self, claim: dict, a: str, b: str, sources: dict | None = None):
         self.claim = claim
+        # `subset` is not symmetric, and the pair was ordered ALPHABETICALLY:
+        # skills_subset compared agent_card as the subset of agent_skills,
+        # which is the claim backwards. It failed with agent-skills.json a
+        # perfectly good subset of agent-card.json, and would have gone to the
+        # vendor as a defect of theirs. A subset claim now names which source
+        # must be contained, and that source is always the left operand.
+        contained = claim.get("subset_of_pair")
+        if contained and contained == b:
+            a, b = b, a
         self.a = a
         self.b = b
         self.source_specs = sources or {}
@@ -107,7 +116,11 @@ def pytest_generate_tests(metafunc):
     cases, ids = [], []
     for claim in data["claims"]:
         for a, b in itertools.combinations(sorted(claim["sources"]), 2):
-            cases.append(Pair(claim, a, b, sources=data["sources"]))
+            # The nodeid keeps the alphabetical order so pinned ids stay
+            # valid; only the operand order inside the Pair follows the
+            # declared subset direction.
+            enriched = {**claim, "subset_of_pair": claim.get("subset")}
+            cases.append(Pair(enriched, a, b, sources=data["sources"]))
             ids.append(f"{claim['id']}::{a}-vs-{b}")
     metafunc.parametrize("pair", cases, ids=ids)
 
@@ -252,6 +265,27 @@ def _fmt(value) -> str:
 # same structured object the operator reads -- rather than the record carrying
 # a regex-scrape of the text we printed. That scrape is how a line of our own
 # source once reached the vendor as evidence about their platform.
+
+
+@qa(component="reconciliation", tier=SafetyTier.SAFE, surface="discovery")
+def test_every_subset_claim_names_its_direction():
+    """`subset` is not symmetric and the pair order is alphabetical, so a
+    claim that does not say which side must be contained is a coin flip.
+
+    skills_subset was checking agent-card as a subset of agent-skills -- the
+    claim backwards. It failed while agent-skills.json was a perfectly good
+    subset of agent-card.json, and that failure was one step from being filed
+    to the vendor as a defect of theirs."""
+    data = load_claims()
+    for claim in data["claims"]:
+        if claim["relation"] != "subset":
+            continue
+        contained = claim.get("subset")
+        assert contained, f"{claim['id']}: subset claim does not say which side is contained"
+        assert contained in claim["sources"], (
+            f"{claim['id']}: subset names {contained!r}, which is not one of "
+            f"its sources {sorted(claim['sources'])}"
+        )
 
 
 @qa(component="reconciliation", tier=SafetyTier.SAFE, surface="discovery")
