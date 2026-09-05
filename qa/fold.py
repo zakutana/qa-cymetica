@@ -174,6 +174,22 @@ def _apply_run(row: dict, run: dict, level: str) -> None:
     results = {r["nodeid"]: r for r in run.get("results", [])}
     mine = [results.get(nodeid) for nodeid in checks]
 
+    # A run that offered the whole suite and did not COLLECT this check has
+    # established that the check is gone -- a claim was renamed, a source
+    # dropped, a parametrisation changed. That is a fact about the row, not a
+    # gap in this run, and saying so is the difference between a row that
+    # merely looks stale and one whose problem is nameable and fixable
+    # (rebind it, or retire it).
+    if run.get("selector_full"):
+        collected = set(run.get("collected") or [])
+        missing = [c for c in checks if c not in collected]
+        if missing:
+            check["state"] = "UNVERIFIABLE"
+            check["unverifiable_reason"] = "check_missing"
+            check["missing_checks"] = sorted(missing)
+            return
+    check.pop("missing_checks", None)
+
     # Rule 2. A check that did not run tells us nothing. This is the branch
     # merge() reached only after its sticky-verified latch had already
     # returned, which is how partial runs closed rows they never touched.

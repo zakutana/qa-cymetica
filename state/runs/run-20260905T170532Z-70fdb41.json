@@ -1,0 +1,63 @@
+{
+  "schema": 2,
+  "run_id": "run-20260905T170532Z-70fdb41",
+  "started_at": "2026-09-05T17:05:32+00:00",
+  "finished_at": "2026-09-05T17:05:32+00:00",
+  "git_head": "70fdb4165df36f97df861b6e90533cfb895f75bf",
+  "git_short": "70fdb41",
+  "git_dirty": true,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": null,
+  "fingerprint_parts": {},
+  "fingerprint_errors": {
+    "offline": "QA_OFFLINE=1"
+  },
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/reconciliation --collect-only -q --no-header",
+  "selector_full": false,
+  "allow_mutate": false,
+  "collected": [
+    "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_names::live_species-vs-llms_txt]",
+    "tests/reconciliation/test_reconcile.py::test_sources_agree[llms_agent_count_self_consistent::llms_txt-vs-llms_txt_2]",
+    "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_count::live_species-vs-llms_txt]",
+    "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_names_documented_exist::llms_txt-vs-mcp_json]",
+    "tests/reconciliation/test_reconcile.py::test_sources_agree[skills_subset::agent_card-vs-agent_skills]",
+    "tests/reconciliation/test_reconcile.py::test_sources_agree[clob_pair_count::llms_txt-vs-mcp_json]",
+    "tests/reconciliation/test_reconcile.py::test_sources_agree[commit_count::build_stats-vs-llms_txt]",
+    "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_resource_count::llms_txt-vs-mcp_json]",
+    "tests/reconciliation/test_reconcile.py::test_every_claim_has_at_least_two_sources",
+    "tests/reconciliation/test_reconcile.py::test_every_claim_source_is_declared"
+  ],
+  "results": [],
+  "totals": {},
+  "ratelimit": {},
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [
+      "tests/reconciliation/test_reconcile.py::test_every_claim_has_at_least_two_sources",
+      "tests/reconciliation/test_reconcile.py::test_every_claim_source_is_declared",
+      "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_count::live_species-vs-llms_txt]",
+      "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_names::live_species-vs-llms_txt]",
+      "tests/reconciliation/test_reconcile.py::test_sources_agree[clob_pair_count::llms_txt-vs-mcp_json]",
+      "tests/reconciliation/test_reconcile.py::test_sources_agree[commit_count::build_stats-vs-llms_txt]",
+      "tests/reconciliation/test_reconcile.py::test_sources_agree[llms_agent_count_self_consistent::llms_txt-vs-llms_txt_2]",
+      "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_resource_count::llms_txt-vs-mcp_json]",
+      "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_names_documented_exist::llms_txt-vs-mcp_json]",
+      "tests/reconciliation/test_reconcile.py::test_sources_agree[skills_subset::agent_card-vs-agent_skills]"
+    ],
+    "budget_truncated": false
+  },
+  "fingerprint_after": null,
+  "exit_status": 0
+}

@@ -105,6 +105,11 @@ def pytest_sessionstart(session):
         "python_version": platform.python_version(),
         "pytest_version": pytest.__version__,
         "selector": " ".join(session.config.invocation_params.args),
+        # Did this run offer the WHOLE suite? Recorded at the source, where it
+        # is known, rather than guessed later from the selector string. It is
+        # what separates "that check was not selected" from "that check does
+        # not exist" -- and only a full run can say the second.
+        "selector_full": _selector_is_full(session.config),
         "allow_mutate": bool(_opt(session.config, "--allow-mutate", False)),
         "collected": [],
         "results": [],
@@ -193,6 +198,21 @@ def _strip_docstrings(tree: ast.AST) -> ast.AST:
             ) and isinstance(body[0].value.value, str):
                 node.body = body[1:] or [ast.Pass()]
     return tree
+
+
+def _selector_is_full(config) -> bool:
+    """True when nothing narrowed what pytest was asked to collect.
+
+    Only positional paths and -k / -m narrow the suite; -q, --tb and the rest
+    do not. A run that offered everything and did not collect a nodeid has
+    established that the nodeid is gone -- which no partial run can.
+    """
+    args = list(config.invocation_params.args)
+    positional = [a for a in args if not a.startswith("-")]
+    narrowed = any(a in ("-k", "-m") or a.startswith(("-k", "-m")) for a in args)
+    if narrowed:
+        return False
+    return not positional or positional == ["tests"]
 
 
 def check_fingerprint(item) -> str:

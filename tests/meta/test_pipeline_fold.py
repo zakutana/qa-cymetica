@@ -516,6 +516,35 @@ def test_filing_transition_requires_evidence_id():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_full_run_can_say_a_check_is_gone_and_a_partial_one_cannot():
+    """Six rows name reconciliation pairs that no longer exist -- a claim was
+    renamed, a source dropped. They sat as "not checked", indistinguishable
+    from a row a partial run skipped, wearing a stale-figures tag nobody could
+    act on. A full run that did not COLLECT the check has established it is
+    gone, and that is nameable and fixable: rebind it, or retire it.
+
+    A partial run must never draw that conclusion, which is why the run
+    records whether it offered the whole suite."""
+    from qa.fold import fold
+
+    state = ledger(row("CYM-a", check_state="REPRODUCING", checks=[CHECK_A], pinned=FP1))
+
+    partial = run("run-partial", [result(CHECK_B, "passed")], collected=[CHECK_B])
+    partial["selector_full"] = False
+    after = fold(state, run=partial, events=[])
+    assert after["findings"]["CYM-a"]["check"]["state"] == "REPRODUCING"
+    assert after["findings"]["CYM-a"]["check"]["not_checked_in"] == "run-partial"
+
+    full = run("run-full", [result(CHECK_B, "passed")], collected=[CHECK_B])
+    full["selector_full"] = True
+    after = fold(state, run=full, events=[])
+    r = after["findings"]["CYM-a"]["check"]
+    assert r["state"] == "UNVERIFIABLE"
+    assert r["unverifiable_reason"] == "check_missing"
+    assert r["missing_checks"] == [CHECK_A]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_an_evidence_only_check_verifies_nothing():
     """conclude() never raises for an evidence-role measurement, so such a
     check passes whatever it observes. Letting that pass establish PASSING
