@@ -35,13 +35,17 @@ import findings as findings_mod  # noqa: E402
 
 from qa.fold import display_state, fold  # noqa: E402
 from qa.state import (  # noqa: E402
+    RunIntegrityError,
     admissibility,
+    append_event,
     head,
     latest_admissible_run_id,
     ledger_path,
     list_runs,
     load_run,
     read_events,
+    run_integrity,
+    runs_dir,
     write_ledger,
 )
 
@@ -68,6 +72,28 @@ def load_previous() -> dict | None:
 
 def _candidates(run: dict | None) -> list[dict]:
     return findings_mod.candidates(run) if run is not None else []
+
+
+def _run_path(run_id: str) -> Path | None:
+    for path in sorted(runs_dir().glob("*.json")):
+        if json.loads(path.read_text(encoding="utf-8")).get("run_id") == run_id:
+            return path
+    return None
+
+
+def _run_recorded(run: dict, path: Path | None) -> dict:
+    """The journal's attestation of the bytes this composition read.
+
+    Once written, the record cannot be edited without run_integrity noticing.
+    """
+    import hashlib
+
+    digest = hashlib.sha256(path.read_bytes()).hexdigest() if path else None
+    return {
+        "type": "run_recorded", "at": run.get("finished_at") or run.get("started_at"),
+        "by": "agent", "source": "scripts/ledger.py",
+        "run_id": run["run_id"], "file_sha256": digest,
+    }
 
 
 def _no_admissible_run_message() -> str:
@@ -104,6 +130,19 @@ def compose(run_id: str | None = None, events_only: bool = False,
             if run_id is None:
                 raise SystemExit(_no_admissible_run_message())
         run = load_run(run_id)
+
+        # Gap 1: corroborate the record against things it does not control,
+        # before anything it says is allowed to move a row.
+        problems = run_integrity(run, path=_run_path(run_id), events=events)
+        if problems:
+            raise RunIntegrityError(
+                f"run {run_id} contradicts facts outside itself:\n  "
+                + "\n  ".join(problems)
+            )
+        # Attest to the bytes, in the chained journal. Idempotent by run_id,
+        # so re-composing the same run adds nothing.
+        append_event(_run_recorded(run, _run_path(run_id)))
+        events = read_events()
 
     ledger = fold(prev, run=run, candidates=_candidates(run), events=events)
     ledger["events_head"] = head()

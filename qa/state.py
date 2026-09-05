@@ -165,6 +165,61 @@ def admissibility(run: dict) -> Verdict:
     return Verdict("V", [], notes)
 
 
+class RunIntegrityError(RuntimeError):
+    """A run record contradicts something outside itself."""
+
+
+def run_integrity(run: dict, path: Path | None = None,
+                  events: list[dict] | None = None) -> list[str]:
+    """Check a run record against facts it does not control.
+
+    Critique gap 1: run records are the only input to the whole pipeline that
+    nothing corroborates. Level V is granted from fields the file asserts
+    ABOUT ITSELF -- `git_dirty: false`, `prereg_commit: <sha>` -- so editing
+    two strings in state/runs/*.json buys a verification carrying a real run
+    id. Everything else in the system is chained, hashed or cross-checked;
+    this was the way in.
+
+    Two corroborations, both cheap:
+      * the preregistration tag is re-resolved with git. The record may claim
+        any commit it likes; the tag is in the repository's object store.
+      * the file's hash is compared against the `run_recorded` event appended
+        when it was first composed, so a record cannot be edited after the
+        journal has attested to it.
+    """
+    import hashlib
+    import subprocess
+
+    problems: list[str] = []
+    prereg = run.get("prereg_id")
+    if prereg:
+        try:
+            resolved = subprocess.run(
+                ["git", "rev-parse", f"prereg/{prereg}^{{commit}}"],
+                cwd=REPO_ROOT, capture_output=True, text=True, check=True,
+            ).stdout.strip()
+        except (subprocess.CalledProcessError, OSError):
+            problems.append(f"no tag prereg/{prereg} in this repository")
+        else:
+            if run.get("prereg_commit") and run["prereg_commit"] != resolved:
+                problems.append(
+                    f"the record says prereg_commit {run['prereg_commit'][:12]} "
+                    f"but prereg/{prereg} resolves to {resolved[:12]}"
+                )
+
+    if path is not None and path.exists():
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        for event in events if events is not None else read_events():
+            if event.get("type") == "run_recorded" \
+                    and event.get("run_id") == run.get("run_id") \
+                    and event.get("file_sha256") not in (None, digest):
+                problems.append(
+                    f"the record has changed since the journal attested to it "
+                    f"({event['file_sha256'][:12]} -> {digest[:12]})"
+                )
+    return problems
+
+
 def latest_admissible_run_id(level: str = "V", runs: Path | None = None) -> str | None:
     """Newest admissible run of at least `level`, by started_at."""
     wanted = {"R": {"R", "V"}, "V": {"V"}, "none": {"none", "R", "V"}}[level]
