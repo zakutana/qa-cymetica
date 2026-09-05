@@ -36,17 +36,31 @@ from qa.state import admissibility, event_id
 CHECK_STATES = ("UNVERIFIED", "REPRODUCING", "PASSING", "PASSING_UNPINNED",
                 "CHECK_CHANGED", "INCONCLUSIVE", "UNVERIFIABLE")
 
-FILING_STATES = ("NOT_RAISED", "RAISED", "REPLIED", "FIX_CLAIMED", "WITHDRAWN")
+# SUPERSEDED is terminal and ours, like WITHDRAWN. Critique gap 6: renaming a
+# claim retires the old row as UNVERIFIABLE(check_removed) and opens a new one
+# for the same defect, so without this the deferred rename-gap counts the
+# defect twice and both halves show in the filter.
+FILING_STATES = ("NOT_RAISED", "RAISED", "REPLIED", "FIX_CLAIMED", "WITHDRAWN",
+                 "SUPERSEDED")
 
 # How far along the vendor conversation a filing state is. The axis moves
 # forward only -- a later `pending` does not undo an earlier `fixed`, because
 # a tracker that forgets is not evidence that they changed their mind.
 _FILING_RANK = {"NOT_RAISED": 0, "RAISED": 1, "REPLIED": 2, "FIX_CLAIMED": 3}
 
+# Terminal states, ours to declare. Neither can be moved by anything the
+# vendor subsequently says.
+_TERMINAL = ("WITHDRAWN", "SUPERSEDED")
+
 _FIX_CLAIMED_STATUSES = frozenset({"fixed", "resolved", "completed", "closed"})
 
 
 def _display_cell(check: str, filing: str) -> str:
+    if filing == "SUPERSEDED":
+        # Replaced by another row for the same defect. Terminal, excluded from
+        # the tiles, and kept visible so the report ids filed under the old id
+        # still lead somewhere.
+        return "SUPERSEDED"
     if filing == "WITHDRAWN":
         # Ours and terminal. Whatever the check now says about a finding we
         # retracted, the retraction is the fact of record.
@@ -194,6 +208,35 @@ def _apply_run(row: dict, run: dict, level: str) -> None:
 # ---------------------------------------------------------------------------
 # FILING axis
 # ---------------------------------------------------------------------------
+def _apply_check_definition(rows: dict, events: Iterable[dict]) -> None:
+    """Operator events that change WHICH checks adjudicate a row.
+
+    Applied before the run, so a rebind takes effect in the same fold rather
+    than a run later. These are the only way `checks` moves: five rows named
+    scripts/*.py, which pytest never collects, so they sat outside the
+    verification machinery while still displaying a state.
+    """
+    for event in events:
+        row = rows.get(event.get("finding_id") or "")
+        if row is None:
+            continue
+        etype = event.get("type")
+
+        if etype == "rebind_check":
+            checks = [c for c in (row.get("checks") or []) if c != event.get("value")]
+            nodeid = event.get("nodeid")
+            if nodeid and nodeid not in checks:
+                checks.append(nodeid)
+            row["checks"] = sorted(checks)
+
+        elif etype == "retire_check":
+            row["checks"] = sorted(
+                c for c in (row.get("checks") or []) if c != event.get("nodeid"))
+
+        elif etype == "pin_fingerprint":
+            row.setdefault("check", {})["pinned_fingerprint"] = event.get("value")
+
+
 def _filing_targets(event: dict, rows: dict) -> list[str]:
     """Which finding ids this event speaks about."""
     if event.get("finding_id"):
@@ -210,9 +253,9 @@ def _filing_targets(event: dict, rows: dict) -> list[str]:
 def _move_filing(row: dict, to: str, event: dict) -> None:
     filing = row["filing"]
     current = filing["state"]
-    if current == "WITHDRAWN":
+    if current in _TERMINAL:
         return
-    if to != "WITHDRAWN" and _FILING_RANK[to] <= _FILING_RANK.get(current, 0):
+    if to not in _TERMINAL and _FILING_RANK[to] <= _FILING_RANK.get(current, 0):
         return
     at = event["at"]
     filing["state"] = to
@@ -236,6 +279,9 @@ def _apply_events(rows: dict, events: Iterable[dict]) -> None:
         row["transitions"] = [t for t in row.get("transitions", [])
                               if t.get("axis") != "filing"]
         row.pop("retracted_reports", None)
+        # Rebuilt from the journal on every fold, like the axis itself.
+        row.pop("superseded_by", None)
+        row.pop("supersedes", None)
 
     retracted: dict[str, set[int]] = {}
 
@@ -248,6 +294,21 @@ def _apply_events(rows: dict, events: Iterable[dict]) -> None:
             # the vendor having closed everything.
             for row in rows.values():
                 row["filing"]["stale_from"] = event["at"]
+            continue
+
+        if etype == "supersede":
+            # Handled before the target lookup: this event names its two rows
+            # directly rather than through finding_id or a report.
+            old_id, new_id = event.get("from_id"), event.get("to_id")
+            if old_id in rows:
+                rows[old_id]["superseded_by"] = new_id
+                _move_filing(rows[old_id], "SUPERSEDED", event)
+            if new_id in rows:
+                # Reports filed under the old id still lead here, so the
+                # replacement carries the debt rather than starting clean.
+                supersedes = rows[new_id].setdefault("supersedes", [])
+                if old_id not in supersedes:
+                    supersedes.append(old_id)
             continue
 
         targets = [fid for fid in _filing_targets(event, rows) if fid in rows]
@@ -344,6 +405,10 @@ def fold(prev: dict | None = None, run: dict | None = None,
                                   "reports": [], "refused": []})
 
     out: dict[str, Any] = {"schema": 2, "findings": rows}
+
+    # Which checks adjudicate a row is settled before the run is read, so a
+    # rebind takes effect in the same fold that records it.
+    _apply_check_definition(rows, events)
 
     level = "none"
     if run is not None:

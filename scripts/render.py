@@ -87,9 +87,23 @@ def build_payload(ledger: dict | None = None, inventory: dict | None = None,
     from qa.fold import display_state
     from qa.state import head
 
+    from qa.state import read_events
+
     inventory = inventory if inventory is not None else load("inventory.json")
-    thread = thread if thread is not None else load("thread.json")
     run = run if run is not None else latest_run()
+
+    # Message counts come from the journal, not from thread.json. That file is
+    # a scan of outbox/ and inbox/, and once round 1 was moved to archive/ it
+    # reported zero messages sent -- while three had been. Correspondence is
+    # events now, and an event does not care where the file ended up.
+    events = read_events()
+    if thread is None:
+        sent = [e for e in events if e["type"] == "message"]
+        thread = {"counts": {
+            "sent": len(sent),
+            "received": sum(1 for e in events if e["type"] == "reply"),
+            "undelivered": sum(1 for e in sent if not e.get("delivered")),
+        }}
 
     # The ledger, not the current run, is the source of truth for findings.
     # A finding whose check has started passing must still appear -- as

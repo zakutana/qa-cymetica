@@ -8,8 +8,9 @@ that needs to be paranoid about what it sends and honest about what came back.
     python scripts/submit.py --confirm --only anon-tool-surface
 
 Guarantees:
-  * every NUMBER in a description is injected from state/findings.json at send
-    time, so a figure cannot go stale between measuring and reporting it
+  * every NUMBER in a description is injected from the ledger at send time, and
+    a finding whose figures no admissible run has measured is refused outright
+    rather than sent with values frozen at the moment it was found
   * a report whose title already exists in the tracker is skipped, not retried
     (their API answers 409 on a duplicate title within 24h; better not to ask)
   * the rate-limit budget is read from the response headers and the run stops
@@ -41,7 +42,6 @@ from qa.state import journal_path  # noqa: E402
 import os  # noqa: E402
 
 SPEC = REPO_ROOT / "outbox" / "reports.yaml"
-FINDINGS = REPO_ROOT / "state" / "findings.json"
 SUBMISSIONS = REPO_ROOT / "state" / "submissions.json"
 
 ENDPOINT = "/api/v1/bounty/reports"
@@ -64,16 +64,40 @@ def wrap(text: str, width: int = 78) -> str:
     )
 
 
+def load_findings() -> dict:
+    """The ledger is where a finding's content lives now.
+
+    findings.json was a rebuild-from-what-is-currently-failing snapshot, and
+    nothing writes it any more. Left pointed at it, this would inject figures
+    from a file that stopped being updated -- into a report going to the
+    vendor, which is the worst place for a stale number.
+    """
+    from qa.state import load_ledger, ledger_path
+
+    if not ledger_path().exists():
+        raise SystemExit("no ledger yet; run scripts/ledger.py first")
+    return {"findings": list(load_ledger()["findings"].values())}
+
+
 def compose(report: dict, findings: dict, footer: str) -> dict:
-    """Build one submission. Numbers come from the findings file, never typed."""
+    """Build one submission. Numbers come from the ledger, never typed."""
     by_id = {f["id"]: f for f in findings["findings"]}
     linked = [by_id[i] for i in report["findings"] if i in by_id]
     missing = [i for i in report["findings"] if i not in by_id]
     if missing:
         raise SystemExit(
-            f"{report['key']}: findings {missing} are not in state/findings.json. "
-            f"Re-run scripts/findings.py, or the report would cite figures that "
-            f"no longer exist."
+            f"{report['key']}: findings {missing} are not in the ledger. "
+            f"A report may not cite a finding the ledger does not hold."
+        )
+
+    unmeasured = [f["id"] for f in linked
+                  if not (f.get("provenance") or {}).get("measured_at")]
+    if unmeasured:
+        raise SystemExit(
+            f"{report['key']}: {unmeasured} carry figures no admissible run has "
+            f"measured (provenance.measured_at is null).\n"
+            f"Filing them would send the vendor numbers frozen at the moment "
+            f"the finding was made. Run the checks first."
         )
 
     parts = [wrap(report["body"])]
@@ -364,7 +388,7 @@ def main() -> None:
 
     load_dotenv()
     spec = yaml.safe_load(SPEC.read_text(encoding="utf-8"))
-    findings = json.loads(FINDINGS.read_text(encoding="utf-8"))
+    findings = load_findings()
 
     reports = spec["reports"]
     if args.only:

@@ -1,16 +1,14 @@
 {
+  "schema": 2,
   "findings": {
     "CYM-trusted-receives-nothing-above-its-tier": {
       "id": "CYM-trusted-receives-nothing-above-its-tier",
-      "first_seen": "2026-09-04T13:19:40+00:00",
-      "first_seen_run": "run-20260904T131842Z-7518e8e",
       "title": "Trust tier over-served: EXCESS     5 tools above the tier declared for them",
       "severity": "S0-CUSTODY",
       "tag": "MCP",
       "kind": "authorization",
       "section": "identity_trust",
       "component": "mcp.trust_ladder",
-      "note": null,
       "detail": {
         "identity": "TRUSTED",
         "served": "46 tools",
@@ -21,23 +19,57 @@
       "checks": [
         "tests/mcp/test_trust_ladder.py::test_trusted_receives_nothing_above_its_tier"
       ],
-      "filed": [
+      "first_seen": {
+        "at": "2026-09-04T13:19:40+00:00",
+        "cause": {
+          "run_id": "run-20260904T131842Z-7518e8e"
+        }
+      },
+      "reproductions": 3,
+      "provenance": {
+        "source": "legacy@ca0bc45",
+        "measured_at": null
+      },
+      "check": {
+        "state": "UNVERIFIED",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null
+      },
+      "filing": {
+        "state": "RAISED",
+        "adjudicated_by": {
+          "event_id": "9c5a28b9484d023d687cb7b862f798f8b20a2d1bd18436fd0ba9ace8892d8c00",
+          "at": "2026-09-04T13:20:49+00:00"
+        },
+        "reports": [
+          {
+            "report_id": 54,
+            "status": "pending"
+          }
+        ],
+        "refused": []
+      },
+      "transitions": [
         {
-          "report_id": 54,
-          "submitted_at": "2026-09-04T13:20:49+00:00",
-          "status": "pending"
+          "axis": "filing",
+          "from": "NOT_RAISED",
+          "to": "RAISED",
+          "cause": {
+            "event_id": "9c5a28b9484d023d687cb7b862f798f8b20a2d1bd18436fd0ba9ace8892d8c00"
+          },
+          "at": "2026-09-04T13:20:49+00:00"
         }
       ],
-      "thread": [],
-      "last_reproduced": "2026-09-04T13:27:22+00:00",
-      "last_reproduced_run": "run-20260904T131842Z-7518e8e",
-      "reproductions": 3,
-      "state": "RAISED"
+      "regressions": [],
+      "obligations": {
+        "reverify": false,
+        "repair_check": false,
+        "reopen": [],
+        "retractions": []
+      }
     },
     "CYM-bounty-filing-unauthenticated": {
       "id": "CYM-bounty-filing-unauthenticated",
-      "first_seen": "2026-09-04T13:19:40+00:00",
-      "first_seen_run": "run-20260904T131842Z-7518e8e",
       "title": "Filing a bug report passes authorization with no credential: hunter attribution rests on an unauthenticated form field",
       "severity": "S1-INTEGRITY",
       "tag": "PROCESS",
@@ -51,25 +83,68 @@
         "responses identical across identities": "yes"
       },
       "checks": [
-        "scripts/bounty.py::probe_filing_auth"
+        "tests/rest/test_bounty_tracker.py::test_filing_a_report_requires_a_credential"
       ],
-      "filed": [
+      "first_seen": {
+        "at": "2026-09-04T13:19:40+00:00",
+        "cause": {
+          "run_id": "run-20260904T131842Z-7518e8e"
+        }
+      },
+      "reproductions": 3,
+      "provenance": {
+        "source": "legacy@ca0bc45",
+        "measured_at": null
+      },
+      "check": {
+        "state": "UNVERIFIED",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null
+      },
+      "filing": {
+        "state": "REPLIED",
+        "adjudicated_by": {
+          "event_id": "30d2579811f885e4aac7b7c3afd4b08cee2967eab41db42536fb50a7f02b6f0d",
+          "at": "2026-09-04T11:40:00+00:00"
+        },
+        "reports": [
+          {
+            "report_id": 47,
+            "status": "validated"
+          }
+        ],
+        "refused": []
+      },
+      "transitions": [
         {
-          "report_id": 47,
-          "submitted_at": "2026-09-04T12:03:44+00:00",
-          "status": "validated"
+          "axis": "filing",
+          "from": "NOT_RAISED",
+          "to": "RAISED",
+          "cause": {
+            "event_id": "370b757d8abe32e5c27199849126ece6196f9ecda5e417d5c442fc035a13c4ef"
+          },
+          "at": "2026-09-04T12:03:44+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "RAISED",
+          "to": "REPLIED",
+          "cause": {
+            "event_id": "30d2579811f885e4aac7b7c3afd4b08cee2967eab41db42536fb50a7f02b6f0d"
+          },
+          "at": "2026-09-04T11:40:00+00:00"
         }
       ],
-      "thread": [],
-      "last_reproduced": "2026-09-04T13:27:22+00:00",
-      "last_reproduced_run": "run-20260904T131842Z-7518e8e",
-      "reproductions": 3,
-      "state": "RAISED"
+      "regressions": [],
+      "obligations": {
+        "reverify": false,
+        "repair_check": false,
+        "reopen": [],
+        "retractions": []
+      }
     },
     "CYM-llms_agent_count_self_consistent": {
       "id": "CYM-llms_agent_count_self_consistent",
-      "first_seen": "2026-09-04T13:19:40+00:00",
-      "first_seen_run": "run-20260904T131842Z-7518e8e",
       "title": "Does llms.txt quote the same agent count in all of its own sentences?",
       "severity": "S2-MEASUREMENT",
       "tag": "BOTS",
@@ -84,23 +159,57 @@
       "checks": [
         "tests/reconciliation/test_reconcile.py::test_sources_agree[llms_agent_count_self_consistent::llms_txt-vs-llms_txt_2]"
       ],
-      "filed": [
+      "first_seen": {
+        "at": "2026-09-04T13:19:40+00:00",
+        "cause": {
+          "run_id": "run-20260904T131842Z-7518e8e"
+        }
+      },
+      "reproductions": 3,
+      "provenance": {
+        "source": "legacy@ca0bc45",
+        "measured_at": null
+      },
+      "check": {
+        "state": "UNVERIFIED",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null
+      },
+      "filing": {
+        "state": "RAISED",
+        "adjudicated_by": {
+          "event_id": "4b0c09c9207ea7080369ff9dedc3a39c8a9cc862d38ebc6b431902178d706b89",
+          "at": "2026-09-04T13:20:58.089377+00:00"
+        },
+        "reports": [
+          {
+            "report_id": 55,
+            "status": "pending"
+          }
+        ],
+        "refused": []
+      },
+      "transitions": [
         {
-          "report_id": 55,
-          "submitted_at": "2026-09-04T13:20:58.089377+00:00",
-          "status": "pending"
+          "axis": "filing",
+          "from": "NOT_RAISED",
+          "to": "RAISED",
+          "cause": {
+            "event_id": "4b0c09c9207ea7080369ff9dedc3a39c8a9cc862d38ebc6b431902178d706b89"
+          },
+          "at": "2026-09-04T13:20:58.089377+00:00"
         }
       ],
-      "thread": [],
-      "last_reproduced": "2026-09-04T13:27:22+00:00",
-      "last_reproduced_run": "run-20260904T131842Z-7518e8e",
-      "reproductions": 3,
-      "state": "RAISED"
+      "regressions": [],
+      "obligations": {
+        "reverify": false,
+        "repair_check": false,
+        "reopen": [],
+        "retractions": []
+      }
     },
     "CYM-mcp_tool_names_documented_exist": {
       "id": "CYM-mcp_tool_names_documented_exist",
-      "first_seen": "2026-09-04T13:19:40+00:00",
-      "first_seen_run": "run-20260904T131842Z-7518e8e",
       "title": "Does every tool name llms.txt documents exist on the server?",
       "severity": "S3-CONTRACT",
       "tag": "MCP",
@@ -114,19 +223,52 @@
       "checks": [
         "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_names_documented_exist::llms_txt-vs-mcp_json]"
       ],
-      "filed": [],
-      "thread": [],
-      "last_reproduced": "2026-09-04T13:27:22+00:00",
-      "last_reproduced_run": "run-20260904T131842Z-7518e8e",
+      "first_seen": {
+        "at": "2026-09-04T13:19:40+00:00",
+        "cause": {
+          "run_id": "run-20260904T131842Z-7518e8e"
+        }
+      },
       "reproductions": 3,
-      "state": "WITHDRAWN",
-      "withdrawn_reason": "Never a defect. The check is INCONCLUSIVE, not failing: llms.txt no longer links any tool names, so there is nothing to verify. It entered the ledger from a run before the claim was rewritten.",
-      "withdrawn_at": "2026-09-04T13:19:40+00:00"
+      "provenance": {
+        "source": "legacy@ca0bc45",
+        "measured_at": null
+      },
+      "check": {
+        "state": "UNVERIFIED",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null
+      },
+      "filing": {
+        "state": "WITHDRAWN",
+        "adjudicated_by": {
+          "event_id": "1e1ad5241416c8316558b44394cb6ccbef7cb44003fdf66617ef3b3fbe5d43b6",
+          "at": "2026-09-04T13:27:44+00:00"
+        },
+        "reports": [],
+        "refused": []
+      },
+      "transitions": [
+        {
+          "axis": "filing",
+          "from": "NOT_RAISED",
+          "to": "WITHDRAWN",
+          "cause": {
+            "event_id": "1e1ad5241416c8316558b44394cb6ccbef7cb44003fdf66617ef3b3fbe5d43b6"
+          },
+          "at": "2026-09-04T13:27:44+00:00"
+        }
+      ],
+      "regressions": [],
+      "obligations": {
+        "reverify": false,
+        "repair_check": false,
+        "reopen": [],
+        "retractions": []
+      }
     },
     "CYM-own-reports-unverified": {
       "id": "CYM-own-reports-unverified",
-      "first_seen": "2026-09-04T13:19:40+00:00",
-      "first_seen_run": "run-20260904T131842Z-7518e8e",
       "title": "11 reports filed under our hunter name were closed by the platform and have never been re-verified by us",
       "severity": "S3-CONTRACT",
       "tag": "PROCESS",
@@ -148,25 +290,68 @@
         "#53": "validated, fixed_at=None, validated_at=2026-09-04T12:26:53.839834"
       },
       "checks": [
-        "scripts/bounty.py"
+        "tests/rest/test_bounty_tracker.py::test_reports_they_closed_have_been_rechecked_by_us"
       ],
-      "filed": [
+      "first_seen": {
+        "at": "2026-09-04T13:19:40+00:00",
+        "cause": {
+          "run_id": "run-20260904T131842Z-7518e8e"
+        }
+      },
+      "reproductions": 3,
+      "provenance": {
+        "source": "legacy@ca0bc45",
+        "measured_at": null
+      },
+      "check": {
+        "state": "UNVERIFIED",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null
+      },
+      "filing": {
+        "state": "REPLIED",
+        "adjudicated_by": {
+          "event_id": "30d2579811f885e4aac7b7c3afd4b08cee2967eab41db42536fb50a7f02b6f0d",
+          "at": "2026-09-04T11:40:00+00:00"
+        },
+        "reports": [
+          {
+            "report_id": 53,
+            "status": "validated"
+          }
+        ],
+        "refused": []
+      },
+      "transitions": [
         {
-          "report_id": 53,
-          "submitted_at": "2026-09-04T12:04:20+00:00",
-          "status": "validated"
+          "axis": "filing",
+          "from": "NOT_RAISED",
+          "to": "RAISED",
+          "cause": {
+            "event_id": "94a1be9fb4ee4826c79fcafa7f7e6efdc89882eb87d8913f0c9fbc7269e89953"
+          },
+          "at": "2026-09-04T12:04:20+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "RAISED",
+          "to": "REPLIED",
+          "cause": {
+            "event_id": "30d2579811f885e4aac7b7c3afd4b08cee2967eab41db42536fb50a7f02b6f0d"
+          },
+          "at": "2026-09-04T11:40:00+00:00"
         }
       ],
-      "thread": [],
-      "last_reproduced": "2026-09-04T13:27:22+00:00",
-      "last_reproduced_run": "run-20260904T131842Z-7518e8e",
-      "reproductions": 3,
-      "state": "RAISED"
+      "regressions": [],
+      "obligations": {
+        "reverify": false,
+        "repair_check": false,
+        "reopen": [],
+        "retractions": []
+      }
     },
     "CYM-skills_subset": {
       "id": "CYM-skills_subset",
-      "first_seen": "2026-09-04T13:19:40+00:00",
-      "first_seen_run": "run-20260904T131842Z-7518e8e",
       "title": "Is agent-skills.json the actionable subset of agent-card.json, as stated?",
       "severity": "S3-CONTRACT",
       "tag": "DOCS",
@@ -181,48 +366,126 @@
       "checks": [
         "tests/reconciliation/test_reconcile.py::test_sources_agree[skills_subset::agent_card-vs-agent_skills]"
       ],
-      "filed": [
+      "first_seen": {
+        "at": "2026-09-04T13:19:40+00:00",
+        "cause": {
+          "run_id": "run-20260904T131842Z-7518e8e"
+        }
+      },
+      "reproductions": 3,
+      "provenance": {
+        "source": "legacy@ca0bc45",
+        "measured_at": null
+      },
+      "check": {
+        "state": "UNVERIFIED",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null
+      },
+      "filing": {
+        "state": "RAISED",
+        "adjudicated_by": {
+          "event_id": "fa078f101ff2352644a8d363d58b72e4b62b0e1ba1246d1eb378614ea108e5f3",
+          "at": "2026-09-04T13:25:11+00:00"
+        },
+        "reports": [
+          {
+            "report_id": 56,
+            "status": "pending"
+          }
+        ],
+        "refused": []
+      },
+      "transitions": [
         {
-          "report_id": 56,
-          "submitted_at": "2026-09-04T13:25:11+00:00",
-          "status": "pending"
+          "axis": "filing",
+          "from": "NOT_RAISED",
+          "to": "RAISED",
+          "cause": {
+            "event_id": "fa078f101ff2352644a8d363d58b72e4b62b0e1ba1246d1eb378614ea108e5f3"
+          },
+          "at": "2026-09-04T13:25:11+00:00"
         }
       ],
-      "thread": [],
-      "last_reproduced": "2026-09-04T13:27:22+00:00",
-      "last_reproduced_run": "run-20260904T131842Z-7518e8e",
-      "reproductions": 3,
-      "state": "RAISED"
+      "regressions": [],
+      "obligations": {
+        "reverify": false,
+        "repair_check": false,
+        "reopen": [],
+        "retractions": []
+      }
     },
     "CYM-mcp_resource_count": {
       "id": "CYM-mcp_resource_count",
-      "first_seen": "2026-09-04T13:19:40+00:00",
-      "first_seen_run": "run-20260904T131842Z-7518e8e",
       "title": "How many MCP resources are exposed?",
       "severity": "S4-COSMETIC",
       "tag": "MCP",
       "kind": "contradiction",
       "section": "mcp",
       "component": "mcp.protocol",
-      "note": null,
       "detail": {
         "left": "snapshot.value(pair.a, extractors[pair.a])"
       },
       "checks": [
         "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_resource_count::llms_txt-vs-mcp_json]"
       ],
-      "filed": [
+      "first_seen": {
+        "at": "2026-09-04T13:19:40+00:00",
+        "cause": {
+          "run_id": "run-20260904T131842Z-7518e8e"
+        }
+      },
+      "reproductions": 3,
+      "provenance": {
+        "source": "legacy@ca0bc45",
+        "measured_at": null
+      },
+      "check": {
+        "state": "UNVERIFIED",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null
+      },
+      "filing": {
+        "state": "FIX_CLAIMED",
+        "adjudicated_by": {
+          "event_id": "89f2cbc1667df532052aee4c5766f2ceb85e4cf14c097a014a975babc70e5e2a",
+          "at": "2026-09-04T13:30:00+00:00"
+        },
+        "reports": [
+          {
+            "report_id": 50,
+            "status": "fixed"
+          }
+        ],
+        "refused": []
+      },
+      "transitions": [
         {
-          "report_id": 50,
-          "submitted_at": "2026-09-04T12:04:04+00:00",
-          "status": "fixed"
+          "axis": "filing",
+          "from": "NOT_RAISED",
+          "to": "RAISED",
+          "cause": {
+            "event_id": "03de9e5ae2dacdfe147b6621455ee6636092b507be03d343ca16d7b4ec9e7693"
+          },
+          "at": "2026-09-04T12:04:04+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "RAISED",
+          "to": "FIX_CLAIMED",
+          "cause": {
+            "event_id": "89f2cbc1667df532052aee4c5766f2ceb85e4cf14c097a014a975babc70e5e2a"
+          },
+          "at": "2026-09-04T13:30:00+00:00"
         }
       ],
-      "thread": [],
-      "last_reproduced": "2026-09-04T13:27:22+00:00",
-      "last_reproduced_run": "run-20260904T131842Z-7518e8e",
-      "reproductions": 3,
-      "state": "FIX CLAIMED"
+      "regressions": [],
+      "obligations": {
+        "reverify": true,
+        "repair_check": false,
+        "reopen": [],
+        "retractions": []
+      }
     },
     "CYM-anon-tool-surface": {
       "id": "CYM-anon-tool-surface",
@@ -239,23 +502,65 @@
         "declared trusted but served anonymously": "get_market_analytics, get_oracle_insights, get_signal_history"
       },
       "checks": [
-        "scripts/inventory.py"
+        "tests/mcp/test_trust_ladder.py::test_anonymous_receives_only_public_tools"
       ],
-      "filed": [
+      "first_seen": {
+        "at": "2026-09-04T10:29:00+00:00",
+        "cause": {
+          "run_id": "legacy"
+        }
+      },
+      "reproductions": 1,
+      "provenance": {
+        "source": "legacy@ca0bc45",
+        "measured_at": null
+      },
+      "check": {
+        "state": "UNVERIFIED",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null
+      },
+      "filing": {
+        "state": "FIX_CLAIMED",
+        "adjudicated_by": {
+          "event_id": "2dcb92c95b4ff7b4be922fd9b2a4b45ba2cd4a34c303b0e7def2e58bdd5ef85a",
+          "at": "2026-09-04T13:30:00+00:00"
+        },
+        "reports": [
+          {
+            "report_id": 46,
+            "status": "fixed"
+          }
+        ],
+        "refused": []
+      },
+      "transitions": [
         {
-          "report_id": 46,
-          "submitted_at": "2026-09-04T12:03:33+00:00",
-          "status": "fixed",
-          "status_seen_at": "2026-09-04T13:19:40+00:00"
+          "axis": "filing",
+          "from": "NOT_RAISED",
+          "to": "RAISED",
+          "cause": {
+            "event_id": "e10fc93ed3cc7eb8858904fa558cb136b879afbe71a3e3ddac6c905f452c85c1"
+          },
+          "at": "2026-09-04T12:03:33+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "RAISED",
+          "to": "FIX_CLAIMED",
+          "cause": {
+            "event_id": "2dcb92c95b4ff7b4be922fd9b2a4b45ba2cd4a34c303b0e7def2e58bdd5ef85a"
+          },
+          "at": "2026-09-04T13:30:00+00:00"
         }
       ],
-      "thread": [],
-      "first_seen": "2026-09-04T10:29:00+00:00",
-      "reproductions": 1,
-      "backfilled_from": "git acf86e7 (last snapshot before the vendor's fixes)",
-      "state": "VERIFIED FIXED",
-      "verified_fixed_at": "2026-09-04T13:19:40+00:00",
-      "verified_note": "anonymous tools/list now returns 25, matching mcp.json's declared unknown tier"
+      "regressions": [],
+      "obligations": {
+        "reverify": true,
+        "repair_check": false,
+        "reopen": [],
+        "retractions": []
+      }
     },
     "CYM-agent_names": {
       "id": "CYM-agent_names",
@@ -273,21 +578,63 @@
       "checks": [
         "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_names::live_species-vs-llms_txt]"
       ],
-      "filed": [
+      "first_seen": {
+        "at": "2026-09-04T10:29:00+00:00",
+        "cause": {
+          "run_id": "legacy"
+        }
+      },
+      "reproductions": 1,
+      "provenance": {
+        "source": "legacy@ca0bc45",
+        "measured_at": null
+      },
+      "check": {
+        "state": "UNVERIFIED",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null
+      },
+      "filing": {
+        "state": "FIX_CLAIMED",
+        "adjudicated_by": {
+          "event_id": "5ec577ef6846ca792c13d0282c74cf5b19042b7ffa13ef4170778e5443420c49",
+          "at": "2026-09-04T13:30:00+00:00"
+        },
+        "reports": [
+          {
+            "report_id": 48,
+            "status": "fixed"
+          }
+        ],
+        "refused": []
+      },
+      "transitions": [
         {
-          "report_id": 48,
-          "submitted_at": "2026-09-04T12:03:52+00:00",
-          "status": "fixed",
-          "status_seen_at": "2026-09-04T13:19:40+00:00"
+          "axis": "filing",
+          "from": "NOT_RAISED",
+          "to": "RAISED",
+          "cause": {
+            "event_id": "f0d4e82c1255dd9a4da61d2bba48baf6e5da893ae5f35f44bd4a58ee6a717fb0"
+          },
+          "at": "2026-09-04T12:03:52+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "RAISED",
+          "to": "FIX_CLAIMED",
+          "cause": {
+            "event_id": "5ec577ef6846ca792c13d0282c74cf5b19042b7ffa13ef4170778e5443420c49"
+          },
+          "at": "2026-09-04T13:30:00+00:00"
         }
       ],
-      "thread": [],
-      "first_seen": "2026-09-04T10:29:00+00:00",
-      "reproductions": 1,
-      "backfilled_from": "git acf86e7 (last snapshot before the vendor's fixes)",
-      "state": "VERIFIED FIXED",
-      "verified_fixed_at": "2026-09-04T13:19:40+00:00",
-      "verified_note": "all 11 real species symbols present in llms.txt, none of the 10 phantom names"
+      "regressions": [],
+      "obligations": {
+        "reverify": true,
+        "repair_check": false,
+        "reopen": [],
+        "retractions": []
+      }
     },
     "CYM-agent_count": {
       "id": "CYM-agent_count",
@@ -297,7 +644,6 @@
       "kind": "contradiction",
       "section": "agents",
       "component": "rest.agents",
-      "note": null,
       "detail": {
         "live_agentbook": "8",
         "live_species": "11",
@@ -312,21 +658,63 @@
         "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_count::live_species-vs-mcp_json]",
         "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_count::llms_txt-vs-mcp_json]"
       ],
-      "filed": [
+      "first_seen": {
+        "at": "2026-09-04T10:29:00+00:00",
+        "cause": {
+          "run_id": "legacy"
+        }
+      },
+      "reproductions": 1,
+      "provenance": {
+        "source": "legacy@ca0bc45",
+        "measured_at": null
+      },
+      "check": {
+        "state": "UNVERIFIED",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null
+      },
+      "filing": {
+        "state": "FIX_CLAIMED",
+        "adjudicated_by": {
+          "event_id": "41111596965404d93edc172474771089ff0e117b4a3845c5e5dec6197b0b077a",
+          "at": "2026-09-04T13:30:00+00:00"
+        },
+        "reports": [
+          {
+            "report_id": 52,
+            "status": "fixed"
+          }
+        ],
+        "refused": []
+      },
+      "transitions": [
         {
-          "report_id": 52,
-          "submitted_at": "2026-09-04T12:04:15+00:00",
-          "status": "fixed",
-          "status_seen_at": "2026-09-04T13:19:40+00:00"
+          "axis": "filing",
+          "from": "NOT_RAISED",
+          "to": "RAISED",
+          "cause": {
+            "event_id": "47bd4dc1089b99c1daac154f3d880de72f903d0cabd570177007fcbbbe15a59c"
+          },
+          "at": "2026-09-04T12:04:15+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "RAISED",
+          "to": "FIX_CLAIMED",
+          "cause": {
+            "event_id": "41111596965404d93edc172474771089ff0e117b4a3845c5e5dec6197b0b077a"
+          },
+          "at": "2026-09-04T13:30:00+00:00"
         }
       ],
-      "thread": [],
-      "first_seen": "2026-09-04T10:29:00+00:00",
-      "reproductions": 1,
-      "backfilled_from": "git acf86e7 (last snapshot before the vendor's fixes)",
-      "state": "VERIFIED FIXED",
-      "verified_fixed_at": "2026-09-04T13:19:40+00:00",
-      "verified_note": "llms.txt 11 == /api/v1/agents/species 11"
+      "regressions": [],
+      "obligations": {
+        "reverify": true,
+        "repair_check": false,
+        "reopen": [],
+        "retractions": []
+      }
     },
     "CYM-chain_count": {
       "id": "CYM-chain_count",
@@ -336,7 +724,6 @@
       "kind": "contradiction",
       "section": "swaps",
       "component": "platform.status",
-      "note": null,
       "detail": {
         "live_chains": "16",
         "mcp_json": "10"
@@ -344,21 +731,72 @@
       "checks": [
         "tests/reconciliation/test_reconcile.py::test_sources_agree[chain_count::live_chains-vs-mcp_json]"
       ],
-      "filed": [
+      "first_seen": {
+        "at": "2026-09-04T10:29:00+00:00",
+        "cause": {
+          "run_id": "legacy"
+        }
+      },
+      "reproductions": 1,
+      "provenance": {
+        "source": "legacy@ca0bc45",
+        "measured_at": null
+      },
+      "check": {
+        "state": "UNVERIFIED",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null
+      },
+      "filing": {
+        "state": "WITHDRAWN",
+        "adjudicated_by": {
+          "event_id": "df104bd0ae977939d1d01b7b23967cb2fdaef7b0f4f0c6c0bd905bd25c73eb0e",
+          "at": "2026-09-04T13:04:22+00:00"
+        },
+        "reports": [
+          {
+            "report_id": 52,
+            "status": "fixed"
+          }
+        ],
+        "refused": []
+      },
+      "transitions": [
         {
-          "report_id": 52,
-          "submitted_at": "2026-09-04T12:04:15+00:00",
-          "status": "fixed",
-          "status_seen_at": "2026-09-04T13:19:40+00:00"
+          "axis": "filing",
+          "from": "NOT_RAISED",
+          "to": "RAISED",
+          "cause": {
+            "event_id": "47bd4dc1089b99c1daac154f3d880de72f903d0cabd570177007fcbbbe15a59c"
+          },
+          "at": "2026-09-04T12:04:15+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "RAISED",
+          "to": "FIX_CLAIMED",
+          "cause": {
+            "event_id": "41111596965404d93edc172474771089ff0e117b4a3845c5e5dec6197b0b077a"
+          },
+          "at": "2026-09-04T13:30:00+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "FIX_CLAIMED",
+          "to": "WITHDRAWN",
+          "cause": {
+            "event_id": "df104bd0ae977939d1d01b7b23967cb2fdaef7b0f4f0c6c0bd905bd25c73eb0e"
+          },
+          "at": "2026-09-04T13:04:22+00:00"
         }
       ],
-      "thread": [],
-      "first_seen": "2026-09-04T10:29:00+00:00",
-      "reproductions": 1,
-      "backfilled_from": "git acf86e7 (last snapshot before the vendor's fixes)",
-      "state": "WITHDRAWN",
-      "withdrawn_reason": "Our check compared 'settlement on 10 chains' against the 16 chains /api/v1/swap/chains supports for swaps. Two different mechanisms; netting them is the collapsed-layer defect we report in others.",
-      "withdrawn_at": "2026-09-04T13:19:40+00:00"
+      "regressions": [],
+      "obligations": {
+        "reverify": false,
+        "repair_check": false,
+        "reopen": [],
+        "retractions": []
+      }
     },
     "CYM-clob_pair_count": {
       "id": "CYM-clob_pair_count",
@@ -368,7 +806,6 @@
       "kind": "contradiction",
       "section": "clob",
       "component": "rest.clob",
-      "note": null,
       "detail": {
         "llms_txt": "9",
         "mcp_json": "568"
@@ -376,21 +813,63 @@
       "checks": [
         "tests/reconciliation/test_reconcile.py::test_sources_agree[clob_pair_count::llms_txt-vs-mcp_json]"
       ],
-      "filed": [
+      "first_seen": {
+        "at": "2026-09-04T10:29:00+00:00",
+        "cause": {
+          "run_id": "legacy"
+        }
+      },
+      "reproductions": 1,
+      "provenance": {
+        "source": "legacy@ca0bc45",
+        "measured_at": null
+      },
+      "check": {
+        "state": "UNVERIFIED",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null
+      },
+      "filing": {
+        "state": "FIX_CLAIMED",
+        "adjudicated_by": {
+          "event_id": "41111596965404d93edc172474771089ff0e117b4a3845c5e5dec6197b0b077a",
+          "at": "2026-09-04T13:30:00+00:00"
+        },
+        "reports": [
+          {
+            "report_id": 52,
+            "status": "fixed"
+          }
+        ],
+        "refused": []
+      },
+      "transitions": [
         {
-          "report_id": 52,
-          "submitted_at": "2026-09-04T12:04:15+00:00",
-          "status": "fixed",
-          "status_seen_at": "2026-09-04T13:19:40+00:00"
+          "axis": "filing",
+          "from": "NOT_RAISED",
+          "to": "RAISED",
+          "cause": {
+            "event_id": "47bd4dc1089b99c1daac154f3d880de72f903d0cabd570177007fcbbbe15a59c"
+          },
+          "at": "2026-09-04T12:04:15+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "RAISED",
+          "to": "FIX_CLAIMED",
+          "cause": {
+            "event_id": "41111596965404d93edc172474771089ff0e117b4a3845c5e5dec6197b0b077a"
+          },
+          "at": "2026-09-04T13:30:00+00:00"
         }
       ],
-      "thread": [],
-      "first_seen": "2026-09-04T10:29:00+00:00",
-      "reproductions": 1,
-      "backfilled_from": "git acf86e7 (last snapshot before the vendor's fixes)",
-      "state": "VERIFIED FIXED",
-      "verified_fixed_at": "2026-09-04T13:19:40+00:00",
-      "verified_note": "reconciled as 568 total with the 9 core curated named as a subset"
+      "regressions": [],
+      "obligations": {
+        "reverify": true,
+        "repair_check": false,
+        "reopen": [],
+        "retractions": []
+      }
     },
     "CYM-commit_count": {
       "id": "CYM-commit_count",
@@ -408,21 +887,63 @@
       "checks": [
         "tests/reconciliation/test_reconcile.py::test_sources_agree[commit_count::build_stats-vs-llms_txt]"
       ],
-      "filed": [
+      "first_seen": {
+        "at": "2026-09-04T10:29:00+00:00",
+        "cause": {
+          "run_id": "legacy"
+        }
+      },
+      "reproductions": 1,
+      "provenance": {
+        "source": "legacy@ca0bc45",
+        "measured_at": null
+      },
+      "check": {
+        "state": "UNVERIFIED",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null
+      },
+      "filing": {
+        "state": "FIX_CLAIMED",
+        "adjudicated_by": {
+          "event_id": "41111596965404d93edc172474771089ff0e117b4a3845c5e5dec6197b0b077a",
+          "at": "2026-09-04T13:30:00+00:00"
+        },
+        "reports": [
+          {
+            "report_id": 52,
+            "status": "fixed"
+          }
+        ],
+        "refused": []
+      },
+      "transitions": [
         {
-          "report_id": 52,
-          "submitted_at": "2026-09-04T12:04:15+00:00",
-          "status": "fixed",
-          "status_seen_at": "2026-09-04T13:19:40+00:00"
+          "axis": "filing",
+          "from": "NOT_RAISED",
+          "to": "RAISED",
+          "cause": {
+            "event_id": "47bd4dc1089b99c1daac154f3d880de72f903d0cabd570177007fcbbbe15a59c"
+          },
+          "at": "2026-09-04T12:04:15+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "RAISED",
+          "to": "FIX_CLAIMED",
+          "cause": {
+            "event_id": "41111596965404d93edc172474771089ff0e117b4a3845c5e5dec6197b0b077a"
+          },
+          "at": "2026-09-04T13:30:00+00:00"
         }
       ],
-      "thread": [],
-      "first_seen": "2026-09-04T10:29:00+00:00",
-      "reproductions": 1,
-      "backfilled_from": "git acf86e7 (last snapshot before the vendor's fixes)",
-      "state": "VERIFIED FIXED",
-      "verified_fixed_at": "2026-09-04T13:19:40+00:00",
-      "verified_note": "llms.txt 21,800+ against a live 21,847, within tolerance"
+      "regressions": [],
+      "obligations": {
+        "reverify": true,
+        "repair_check": false,
+        "reopen": [],
+        "retractions": []
+      }
     },
     "CYM-tracker-closure-rate": {
       "id": "CYM-tracker-closure-rate",
@@ -439,23 +960,65 @@
         "closed with no notes, no ticket, no PR link": "5"
       },
       "checks": [
-        "scripts/bounty.py"
+        "tests/rest/test_bounty_tracker.py::test_closures_in_the_public_tracker_carry_evidence"
       ],
-      "filed": [
+      "first_seen": {
+        "at": "2026-09-04T10:29:00+00:00",
+        "cause": {
+          "run_id": "legacy"
+        }
+      },
+      "reproductions": 1,
+      "provenance": {
+        "source": "legacy@ca0bc45",
+        "measured_at": null
+      },
+      "check": {
+        "state": "UNVERIFIED",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null
+      },
+      "filing": {
+        "state": "REPLIED",
+        "adjudicated_by": {
+          "event_id": "30d2579811f885e4aac7b7c3afd4b08cee2967eab41db42536fb50a7f02b6f0d",
+          "at": "2026-09-04T11:40:00+00:00"
+        },
+        "reports": [
+          {
+            "report_id": 53,
+            "status": "validated"
+          }
+        ],
+        "refused": []
+      },
+      "transitions": [
         {
-          "report_id": 53,
-          "submitted_at": "2026-09-04T12:04:20+00:00",
-          "status": "validated",
-          "status_seen_at": "2026-09-04T13:19:40+00:00"
+          "axis": "filing",
+          "from": "NOT_RAISED",
+          "to": "RAISED",
+          "cause": {
+            "event_id": "94a1be9fb4ee4826c79fcafa7f7e6efdc89882eb87d8913f0c9fbc7269e89953"
+          },
+          "at": "2026-09-04T12:04:20+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "RAISED",
+          "to": "REPLIED",
+          "cause": {
+            "event_id": "30d2579811f885e4aac7b7c3afd4b08cee2967eab41db42536fb50a7f02b6f0d"
+          },
+          "at": "2026-09-04T11:40:00+00:00"
         }
       ],
-      "thread": [],
-      "first_seen": "2026-09-04T10:29:00+00:00",
-      "reproductions": 1,
-      "backfilled_from": "git acf86e7 (last snapshot before the vendor's fixes)",
-      "state": "VERIFIED FIXED",
-      "verified_fixed_at": "2026-09-04T13:19:40+00:00",
-      "verified_note": "validated_at now stamped; public list shows validated alongside fixed"
+      "regressions": [],
+      "obligations": {
+        "reverify": false,
+        "repair_check": false,
+        "reopen": [],
+        "retractions": []
+      }
     },
     "CYM-documented-404": {
       "id": "CYM-documented-404",
@@ -495,23 +1058,90 @@
         "/mcp/v1/resources/docs/getting-started": "404 (documented in llms.txt)"
       },
       "checks": [
-        "scripts/inventory.py"
+        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/account]",
+        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/aerodrome/quote]",
+        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/agentbook/post]",
+        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/backtest/run]",
+        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/backtest/saved]",
+        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/base-dex/tokens]",
+        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/bots/clone]",
+        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/clob/order]",
+        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/cloned-bot/create]",
+        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/cloned-bot/list]",
+        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/defi/pools]",
+        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/exchange/buy]",
+        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/perpetual/user/positions]",
+        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/positions]",
+        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/staking/pools]",
+        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/tuatara/discover]",
+        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/vaix/prices]",
+        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/winner-takes-all/bet]",
+        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/winner-takes-all/epochs]",
+        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/winner-takes-all/markets]",
+        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/mcp/v1/prompts/analyze_market]",
+        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/mcp/v1/prompts/compare_markets]",
+        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/mcp/v1/prompts/explain_probability]",
+        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/mcp/v1/prompts/find_opportunities]",
+        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/mcp/v1/resources/docs/api]",
+        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/mcp/v1/resources/docs/getting-started]"
       ],
-      "filed": [
+      "first_seen": {
+        "at": "2026-09-04T10:29:00+00:00",
+        "cause": {
+          "run_id": "legacy"
+        }
+      },
+      "reproductions": 1,
+      "provenance": {
+        "source": "legacy@ca0bc45",
+        "measured_at": null
+      },
+      "check": {
+        "state": "UNVERIFIED",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null
+      },
+      "filing": {
+        "state": "FIX_CLAIMED",
+        "adjudicated_by": {
+          "event_id": "478835a973f0e036c7bd12513acfed525f01286c2b5f109d3bc4da503d545f94",
+          "at": "2026-09-04T13:30:00+00:00"
+        },
+        "reports": [
+          {
+            "report_id": 49,
+            "status": "fixed"
+          }
+        ],
+        "refused": []
+      },
+      "transitions": [
         {
-          "report_id": 49,
-          "submitted_at": "2026-09-04T12:03:58+00:00",
-          "status": "fixed",
-          "status_seen_at": "2026-09-04T13:19:40+00:00"
+          "axis": "filing",
+          "from": "NOT_RAISED",
+          "to": "RAISED",
+          "cause": {
+            "event_id": "05fe363ff5ed721c933861f55b1b72ad853961d5ae990476cf06290a02d21043"
+          },
+          "at": "2026-09-04T12:03:58+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "RAISED",
+          "to": "FIX_CLAIMED",
+          "cause": {
+            "event_id": "478835a973f0e036c7bd12513acfed525f01286c2b5f109d3bc4da503d545f94"
+          },
+          "at": "2026-09-04T13:30:00+00:00"
         }
       ],
-      "thread": [],
-      "first_seen": "2026-09-04T10:29:00+00:00",
-      "reproductions": 1,
-      "backfilled_from": "git acf86e7 (last snapshot before the vendor's fixes)",
-      "state": "VERIFIED FIXED",
-      "verified_fixed_at": "2026-09-04T13:19:40+00:00",
-      "verified_note": "0 of 114 documented paths return 404"
+      "regressions": [],
+      "obligations": {
+        "reverify": true,
+        "repair_check": false,
+        "reopen": [],
+        "retractions": []
+      }
     },
     "CYM-mcp_tool_count": {
       "id": "CYM-mcp_tool_count",
@@ -521,7 +1151,6 @@
       "kind": "contradiction",
       "section": "mcp",
       "component": "mcp.tools_list",
-      "note": null,
       "detail": {
         "llms_txt": "11",
         "mcp_anon": "46",
@@ -533,21 +1162,72 @@
         "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_count::llms_txt-vs-mcp_json]",
         "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_count::llms_txt-vs-mcp_trusted]"
       ],
-      "filed": [
+      "first_seen": {
+        "at": "2026-09-04T10:29:00+00:00",
+        "cause": {
+          "run_id": "legacy"
+        }
+      },
+      "reproductions": 1,
+      "provenance": {
+        "source": "legacy@ca0bc45",
+        "measured_at": null
+      },
+      "check": {
+        "state": "UNVERIFIED",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null
+      },
+      "filing": {
+        "state": "WITHDRAWN",
+        "adjudicated_by": {
+          "event_id": "a3ae6837a4b4ea9a5f29759238efa4557e6613b758c1fbab161fd2877f065b83",
+          "at": "2026-09-04T13:04:22+00:00"
+        },
+        "reports": [
+          {
+            "report_id": 50,
+            "status": "fixed"
+          }
+        ],
+        "refused": []
+      },
+      "transitions": [
         {
-          "report_id": 50,
-          "submitted_at": "2026-09-04T12:04:04+00:00",
-          "status": "fixed",
-          "status_seen_at": "2026-09-04T13:19:40+00:00"
+          "axis": "filing",
+          "from": "NOT_RAISED",
+          "to": "RAISED",
+          "cause": {
+            "event_id": "03de9e5ae2dacdfe147b6621455ee6636092b507be03d343ca16d7b4ec9e7693"
+          },
+          "at": "2026-09-04T12:04:04+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "RAISED",
+          "to": "FIX_CLAIMED",
+          "cause": {
+            "event_id": "89f2cbc1667df532052aee4c5766f2ceb85e4cf14c097a014a975babc70e5e2a"
+          },
+          "at": "2026-09-04T13:30:00+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "FIX_CLAIMED",
+          "to": "WITHDRAWN",
+          "cause": {
+            "event_id": "a3ae6837a4b4ea9a5f29759238efa4557e6613b758c1fbab161fd2877f065b83"
+          },
+          "at": "2026-09-04T13:04:22+00:00"
         }
       ],
-      "thread": [],
-      "first_seen": "2026-09-04T10:29:00+00:00",
-      "reproductions": 1,
-      "backfilled_from": "git acf86e7 (last snapshot before the vendor's fixes)",
-      "state": "WITHDRAWN",
-      "withdrawn_reason": "Our check asserted the anonymous tool count equals the manifest total. That held only while tier gating was broken; once it was fixed, anonymous correctly returns 25 of 46 and our check reported their fix as a failure. Replaced by tests/mcp/test_trust_ladder.py.",
-      "withdrawn_at": "2026-09-04T13:19:40+00:00"
+      "regressions": [],
+      "obligations": {
+        "reverify": false,
+        "repair_check": false,
+        "reopen": [],
+        "retractions": []
+      }
     },
     "CYM-mcp_tool_names_declared_vs_served": {
       "id": "CYM-mcp_tool_names_declared_vs_served",
@@ -557,7 +1237,6 @@
       "kind": "contradiction",
       "section": "mcp",
       "component": "mcp.tools_list",
-      "note": null,
       "detail": {
         "llms_txt": "{get_featured_market, get_leaderboard, get_market, get_market_summary, get_markets, get_orderbook, get_price, get_prices, get_trades, get_trending_markets, search_markets}  n=11",
         "mcp_anon": "{ask_nexus_deep, browse_ontology, create_aib_fund, edit_aib_fund_basket, find_trade_path, get_agent_profile, get_ai_native_proof, get_btc_pool_history, get_btc_pool_state, get_deadcoin_desk_info, get_deadcoin_quote, get_deep_answer ... (+34 more)}  n=46",
@@ -567,21 +1246,63 @@
         "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_names_declared_vs_served::llms_txt-vs-mcp_anon]",
         "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_names_declared_vs_served::llms_txt-vs-mcp_json]"
       ],
-      "filed": [
+      "first_seen": {
+        "at": "2026-09-04T10:29:00+00:00",
+        "cause": {
+          "run_id": "legacy"
+        }
+      },
+      "reproductions": 1,
+      "provenance": {
+        "source": "legacy@ca0bc45",
+        "measured_at": null
+      },
+      "check": {
+        "state": "UNVERIFIED",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null
+      },
+      "filing": {
+        "state": "FIX_CLAIMED",
+        "adjudicated_by": {
+          "event_id": "89f2cbc1667df532052aee4c5766f2ceb85e4cf14c097a014a975babc70e5e2a",
+          "at": "2026-09-04T13:30:00+00:00"
+        },
+        "reports": [
+          {
+            "report_id": 50,
+            "status": "fixed"
+          }
+        ],
+        "refused": []
+      },
+      "transitions": [
         {
-          "report_id": 50,
-          "submitted_at": "2026-09-04T12:04:04+00:00",
-          "status": "fixed",
-          "status_seen_at": "2026-09-04T13:19:40+00:00"
+          "axis": "filing",
+          "from": "NOT_RAISED",
+          "to": "RAISED",
+          "cause": {
+            "event_id": "03de9e5ae2dacdfe147b6621455ee6636092b507be03d343ca16d7b4ec9e7693"
+          },
+          "at": "2026-09-04T12:04:04+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "RAISED",
+          "to": "FIX_CLAIMED",
+          "cause": {
+            "event_id": "89f2cbc1667df532052aee4c5766f2ceb85e4cf14c097a014a975babc70e5e2a"
+          },
+          "at": "2026-09-04T13:30:00+00:00"
         }
       ],
-      "thread": [],
-      "first_seen": "2026-09-04T10:29:00+00:00",
-      "reproductions": 1,
-      "backfilled_from": "git acf86e7 (last snapshot before the vendor's fixes)",
-      "state": "VERIFIED FIXED",
-      "verified_fixed_at": "2026-09-04T13:19:40+00:00",
-      "verified_note": "llms.txt links no nonexistent tool names"
+      "regressions": [],
+      "obligations": {
+        "reverify": true,
+        "repair_check": false,
+        "reopen": [],
+        "retractions": []
+      }
     },
     "CYM-skill_count": {
       "id": "CYM-skill_count",
@@ -591,7 +1312,6 @@
       "kind": "contradiction",
       "section": "discovery",
       "component": "discovery.wellknown",
-      "note": null,
       "detail": {
         "agent_card": "13",
         "agent_skills": "10"
@@ -599,21 +1319,63 @@
       "checks": [
         "tests/reconciliation/test_reconcile.py::test_sources_agree[skill_count::agent_card-vs-agent_skills]"
       ],
-      "filed": [
+      "first_seen": {
+        "at": "2026-09-04T10:29:00+00:00",
+        "cause": {
+          "run_id": "legacy"
+        }
+      },
+      "reproductions": 1,
+      "provenance": {
+        "source": "legacy@ca0bc45",
+        "measured_at": null
+      },
+      "check": {
+        "state": "UNVERIFIED",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null
+      },
+      "filing": {
+        "state": "FIX_CLAIMED",
+        "adjudicated_by": {
+          "event_id": "b71171c0d2ee346bf80bc36815d5b9e54f18fe0d65ccfc80abaec8b8647664cb",
+          "at": "2026-09-04T13:30:00+00:00"
+        },
+        "reports": [
+          {
+            "report_id": 51,
+            "status": "fixed"
+          }
+        ],
+        "refused": []
+      },
+      "transitions": [
         {
-          "report_id": 51,
-          "submitted_at": "2026-09-04T12:04:09+00:00",
-          "status": "fixed",
-          "status_seen_at": "2026-09-04T13:19:40+00:00"
+          "axis": "filing",
+          "from": "NOT_RAISED",
+          "to": "RAISED",
+          "cause": {
+            "event_id": "d34770b6a07c8661f58131146ffef486f6ff126612bfe121c594dd370e8e7a49"
+          },
+          "at": "2026-09-04T12:04:09+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "RAISED",
+          "to": "FIX_CLAIMED",
+          "cause": {
+            "event_id": "b71171c0d2ee346bf80bc36815d5b9e54f18fe0d65ccfc80abaec8b8647664cb"
+          },
+          "at": "2026-09-04T13:30:00+00:00"
         }
       ],
-      "thread": [],
-      "first_seen": "2026-09-04T10:29:00+00:00",
-      "reproductions": 1,
-      "backfilled_from": "git acf86e7 (last snapshot before the vendor's fixes)",
-      "state": "VERIFIED FIXED",
-      "verified_fixed_at": "2026-09-04T13:19:40+00:00",
-      "verified_note": "get-market-data -> market-data and exchange-crypto -> exchange-tokens landed"
+      "regressions": [],
+      "obligations": {
+        "reverify": true,
+        "repair_check": false,
+        "reopen": [],
+        "retractions": []
+      }
     },
     "CYM-skill_ids": {
       "id": "CYM-skill_ids",
@@ -623,7 +1385,6 @@
       "kind": "contradiction",
       "section": "discovery",
       "component": "discovery.wellknown",
-      "note": null,
       "detail": {
         "agent_card": "{ai-due-diligence, ai-native-provenance, arena-trading, clone-ai-agent, et10-revenue-share, exchange-tokens, live-headlines, market-data, prop-desk-trading, smart-delegation, tge-prediction-markets, trade-event-cards ... (+1 more)}  n=13",
         "agent_skills": "{arena-trading, asset-discovery, clone-ai-agent, et10-revenue-share, exchange-crypto, get-market-data, portfolio-management, prop-desk-trading, trade-event-cards, trade-prediction-markets}  n=10"
@@ -631,21 +1392,63 @@
       "checks": [
         "tests/reconciliation/test_reconcile.py::test_sources_agree[skill_ids::agent_card-vs-agent_skills]"
       ],
-      "filed": [
+      "first_seen": {
+        "at": "2026-09-04T10:29:00+00:00",
+        "cause": {
+          "run_id": "legacy"
+        }
+      },
+      "reproductions": 1,
+      "provenance": {
+        "source": "legacy@ca0bc45",
+        "measured_at": null
+      },
+      "check": {
+        "state": "UNVERIFIED",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null
+      },
+      "filing": {
+        "state": "FIX_CLAIMED",
+        "adjudicated_by": {
+          "event_id": "b71171c0d2ee346bf80bc36815d5b9e54f18fe0d65ccfc80abaec8b8647664cb",
+          "at": "2026-09-04T13:30:00+00:00"
+        },
+        "reports": [
+          {
+            "report_id": 51,
+            "status": "fixed"
+          }
+        ],
+        "refused": []
+      },
+      "transitions": [
         {
-          "report_id": 51,
-          "submitted_at": "2026-09-04T12:04:09+00:00",
-          "status": "fixed",
-          "status_seen_at": "2026-09-04T13:19:40+00:00"
+          "axis": "filing",
+          "from": "NOT_RAISED",
+          "to": "RAISED",
+          "cause": {
+            "event_id": "d34770b6a07c8661f58131146ffef486f6ff126612bfe121c594dd370e8e7a49"
+          },
+          "at": "2026-09-04T12:04:09+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "RAISED",
+          "to": "FIX_CLAIMED",
+          "cause": {
+            "event_id": "b71171c0d2ee346bf80bc36815d5b9e54f18fe0d65ccfc80abaec8b8647664cb"
+          },
+          "at": "2026-09-04T13:30:00+00:00"
         }
       ],
-      "thread": [],
-      "first_seen": "2026-09-04T10:29:00+00:00",
-      "reproductions": 1,
-      "backfilled_from": "git acf86e7 (last snapshot before the vendor's fixes)",
-      "state": "VERIFIED FIXED",
-      "verified_fixed_at": "2026-09-04T13:19:40+00:00",
-      "verified_note": "superseded by skills_subset, which tests their stated model"
+      "regressions": [],
+      "obligations": {
+        "reverify": true,
+        "repair_check": false,
+        "reopen": [],
+        "retractions": []
+      }
     },
     "CYM-documented-405": {
       "id": "CYM-documented-405",
@@ -676,26 +1479,185 @@
         "/mcp/v1/tools/get_trending_markets": "405 Method Not Allowed",
         "/mcp/v1/tools/search_markets": "405 Method Not Allowed"
       },
-      "checks": [
-        "scripts/inventory.py"
-      ],
-      "filed": [],
-      "thread": [],
-      "first_seen": "2026-09-04T10:29:00+00:00",
+      "checks": [],
+      "first_seen": {
+        "at": "2026-09-04T10:29:00+00:00",
+        "cause": {
+          "run_id": "legacy"
+        }
+      },
       "reproductions": 1,
-      "backfilled_from": "git acf86e7 (last snapshot before the vendor's fixes)",
-      "state": "WITHDRAWN",
-      "withdrawn_reason": "Measured our own probe method, not their contract. The original 18 were llms.txt rendering MCP tools as GET-able /mcp/v1/tools/<name> URLs, and those are gone. The 10 that remain are POST-only endpoints we probed with GET, where 405 is the correct answer.",
-      "withdrawn_at": "2026-09-04T13:19:40+00:00"
+      "provenance": {
+        "source": "legacy@ca0bc45",
+        "measured_at": null
+      },
+      "check": {
+        "state": "UNVERIFIABLE",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null,
+        "unverifiable_reason": "no_checks"
+      },
+      "filing": {
+        "state": "WITHDRAWN",
+        "adjudicated_by": {
+          "event_id": "8e7e0505c0ba430db7955a1fbcb3c74f86b99844e0158b6805542002b01185e8",
+          "at": "2026-09-04T13:27:44+00:00"
+        },
+        "reports": [],
+        "refused": []
+      },
+      "transitions": [
+        {
+          "axis": "filing",
+          "from": "NOT_RAISED",
+          "to": "WITHDRAWN",
+          "cause": {
+            "event_id": "8e7e0505c0ba430db7955a1fbcb3c74f86b99844e0158b6805542002b01185e8"
+          },
+          "at": "2026-09-04T13:27:44+00:00"
+        }
+      ],
+      "regressions": [],
+      "obligations": {
+        "reverify": false,
+        "repair_check": false,
+        "reopen": [],
+        "retractions": []
+      }
+    },
+    "CYM-bounty-pipeline-deadend": {
+      "id": "CYM-bounty-pipeline-deadend",
+      "severity": "S1-INTEGRITY",
+      "component": "rest.support",
+      "section": "support",
+      "title": "Reports filed through the bounty API do not reach the tracker where work happens",
+      "tag": "PROCESS",
+      "kind": "process",
+      "checks": [],
+      "first_seen": {
+        "at": "2026-09-04T13:30:00+00:00",
+        "cause": {
+          "run_id": "legacy"
+        }
+      },
+      "reproductions": 1,
+      "provenance": {
+        "source": "MSG-0002",
+        "measured_at": null
+      },
+      "check": {
+        "state": "UNVERIFIABLE",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null,
+        "unverifiable_reason": "no_checks"
+      },
+      "filing": {
+        "state": "NOT_RAISED",
+        "adjudicated_by": null,
+        "reports": [],
+        "refused": []
+      },
+      "transitions": [],
+      "regressions": [],
+      "obligations": {
+        "reverify": false,
+        "repair_check": false,
+        "reopen": [],
+        "retractions": []
+      }
+    },
+    "CYM-bounty-fields-dropped": {
+      "id": "CYM-bounty-fields-dropped",
+      "severity": "S2-MEASUREMENT",
+      "component": "rest.support",
+      "section": "support",
+      "title": "Five fields accepted by the filing endpoint are not stored",
+      "tag": "PROCESS",
+      "kind": "process",
+      "checks": [],
+      "first_seen": {
+        "at": "2026-09-04T13:30:00+00:00",
+        "cause": {
+          "run_id": "legacy"
+        }
+      },
+      "reproductions": 1,
+      "provenance": {
+        "source": "MSG-0002",
+        "measured_at": null
+      },
+      "check": {
+        "state": "UNVERIFIABLE",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null,
+        "unverifiable_reason": "no_checks"
+      },
+      "filing": {
+        "state": "NOT_RAISED",
+        "adjudicated_by": null,
+        "reports": [],
+        "refused": []
+      },
+      "transitions": [],
+      "regressions": [],
+      "obligations": {
+        "reverify": false,
+        "repair_check": false,
+        "reopen": [],
+        "retractions": []
+      }
+    },
+    "CYM-bounty-hunter-name-lost": {
+      "id": "CYM-bounty-hunter-name-lost",
+      "severity": "S2-MEASUREMENT",
+      "component": "rest.support",
+      "section": "support",
+      "title": "hunter_name is accepted on submission and not retained",
+      "tag": "PROCESS",
+      "kind": "process",
+      "checks": [],
+      "first_seen": {
+        "at": "2026-09-04T13:30:00+00:00",
+        "cause": {
+          "run_id": "legacy"
+        }
+      },
+      "reproductions": 1,
+      "provenance": {
+        "source": "MSG-0002",
+        "measured_at": null
+      },
+      "check": {
+        "state": "UNVERIFIABLE",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null,
+        "unverifiable_reason": "no_checks"
+      },
+      "filing": {
+        "state": "NOT_RAISED",
+        "adjudicated_by": null,
+        "reports": [],
+        "refused": []
+      },
+      "transitions": [],
+      "regressions": [],
+      "obligations": {
+        "reverify": false,
+        "repair_check": false,
+        "reopen": [],
+        "retractions": []
+      }
     }
   },
-  "filing_status_refreshed": 0,
-  "updated_at": "2026-09-04T13:27:22+00:00",
-  "run_id": "run-20260904T131842Z-7518e8e",
   "counts": {
-    "FIX CLAIMED": 1,
-    "RAISED": 5,
-    "VERIFIED FIXED": 10,
-    "WITHDRAWN": 4
+    "RAISED": 3,
+    "THEY REPLIED": 3,
+    "WITHDRAWN": 4,
+    "FIX CLAIMED": 10,
+    "UNVERIFIABLE": 3
+  },
+  "events_head": {
+    "seq": 107,
+    "chain": "2225066298c845d614a68a4c0dd5bcf413a84fd3603ca4664586841f53d457ab"
   }
 }

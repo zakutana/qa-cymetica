@@ -85,10 +85,17 @@ def _no_admissible_run_message() -> str:
     return "\n".join(lines)
 
 
-def compose(run_id: str | None = None, events_only: bool = False) -> dict:
-    """Fold one run and the whole journal onto the previous ledger."""
+def compose(run_id: str | None = None, events_only: bool = False,
+            seed: Path | None = None) -> dict:
+    """Fold one run and the whole journal onto the previous ledger.
+
+    `seed` replaces the previous ledger as the fold's starting rows. It exists
+    for the one-shot migration, which produces the row CONTENT from named
+    artefacts and then hands it here to be folded -- rather than writing a
+    ledger itself, which is the thing this whole plan exists to stop.
+    """
     events = read_events()
-    prev = load_previous()
+    prev = json.loads(seed.read_text(encoding="utf-8")) if seed else load_previous()
 
     run = None
     if not events_only:
@@ -123,9 +130,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--check", action="store_true",
                         help="exit 1 if the committed ledger is not what the "
                              "inputs fold to; writes nothing")
+    parser.add_argument("--seed", type=Path, default=None,
+                        help="start the fold from these rows instead of the "
+                             "committed ledger (one-shot migration only)")
     args = parser.parse_args(argv)
 
-    ledger = compose(run_id=args.run_id, events_only=args.events_only)
+    ledger = compose(run_id=args.run_id, events_only=args.events_only,
+                     seed=args.seed)
 
     if args.check:
         committed = load_previous()

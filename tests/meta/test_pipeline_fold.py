@@ -516,6 +516,38 @@ def test_filing_transition_requires_evidence_id():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_supersede_merges_rows_and_excludes_from_tiles():
+    """Critique gap 6. Renaming a claim retires the old row and opens a new
+    one for the same defect, so without a supersede event the deferred
+    rename-gap counts one defect twice and both halves sit in the filter."""
+    from qa.fold import DISPLAY, display_state, fold
+
+    state = ledger(row("CYM-old", check_state="REPRODUCING", checks=[CHECK_A]),
+                   row("CYM-new", check_state="REPRODUCING", checks=[CHECK_B]))
+    events = _filed("CYM-old", 46, "pending") + [
+        event("supersede", at="2026-09-05T13:00:00+00:00", by="operator",
+              source="scripts/withdraw.py", from_id="CYM-old", to_id="CYM-new",
+              reason="the claim was renamed; same defect, new id"),
+    ]
+
+    after = fold(state, events=events)
+    old, new = after["findings"]["CYM-old"], after["findings"]["CYM-new"]
+
+    assert old["filing"]["state"] == "SUPERSEDED"
+    assert display_state(old) == "SUPERSEDED"
+    assert old["superseded_by"] == "CYM-new"
+    assert new["supersedes"] == ["CYM-old"]
+
+    # Terminal: nothing the vendor says afterwards moves it back.
+    later = fold(state, events=events + _filed("CYM-old", 46, "fixed"))
+    assert later["findings"]["CYM-old"]["filing"]["state"] == "SUPERSEDED"
+
+    # And the composition table still has no holes.
+    for check in ("UNVERIFIED", "REPRODUCING", "PASSING"):
+        assert DISPLAY[(check, "SUPERSEDED")] == "SUPERSEDED"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_failed_read_marks_stale_and_does_not_move_filing():
     """Operating rule 8. bounty.py could not tell 401 from an empty tracker,
     so an expired key read as "the vendor closed everything"."""

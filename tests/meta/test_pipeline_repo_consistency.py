@@ -28,6 +28,8 @@ import json
 import re
 from pathlib import Path
 
+import pytest
+
 from qa.marks import SafetyTier, qa
 from qa.measure import Measurement, conclude
 
@@ -36,6 +38,14 @@ LEDGER = REPO / "state" / "ledger.json"
 DASHBOARD = REPO / "dashboard" / "index.html"
 
 HASH_MARKER = re.compile(r"<!-- qa-payload-sha256: ([0-9a-f]{64}) -->")
+
+
+@pytest.fixture(autouse=True)
+def _read_the_repository(monkeypatch):
+    """These two check the COMMITTED state, so they must not follow
+    QA_STATE_DIR -- under it they would compare the repository's dashboard
+    against a payload built from some temp directory and always disagree."""
+    monkeypatch.delenv("QA_STATE_DIR", raising=False)
 
 
 def _module(relpath: str, name: str):
@@ -76,11 +86,15 @@ def test_committed_ledger_is_what_its_inputs_fold_to():
     try:
         refolded = ledger_mod.compose()
     except SystemExit as exc:
-        conclude(Measurement(
-            verdict="inconclusive",
-            reason=f"the ledger cannot be re-folded right now: {exc}",
-        ))
-        return
+        if "no admissible run" not in str(exc):
+            conclude(Measurement(
+                verdict="inconclusive",
+                reason=f"the ledger cannot be re-folded right now: {exc}",
+            ))
+            return
+        # No admissible run exists yet, so the journal alone is the whole of
+        # the ledger's input. That is a real comparison, not a missing one.
+        refolded = ledger_mod.compose(events_only=True)
 
     drifted = {
         fid for fid in set(committed.get("findings", {})) | set(refolded["findings"])
