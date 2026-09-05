@@ -33,11 +33,33 @@ class Fetched:
     evidence_id: str | None = None
 
     @property
+    def klass(self) -> str:
+        """What KIND of read this was -- the same vocabulary bounty.py uses.
+
+        A 401 body is not data. Comparing one against a live endpoint would
+        manufacture a contradiction entirely out of our own credentials, and
+        then report it as theirs.
+        """
+        if self.error is not None:
+            return "unreachable"
+        if self.status == 401:
+            return "unauthorized"
+        if self.status == 403:
+            return "forbidden"
+        if self.status == 404:
+            return "not_found"
+        if self.status >= 500:
+            return "server_error"
+        if not 200 <= self.status < 300:
+            return "malformed"
+        return "ok" if self.body is not None else "malformed"
+
+    @property
     def ok(self) -> bool:
-        return self.error is None and 200 <= self.status < 300
+        return self.klass == "ok"
 
     def provenance(self) -> str:
-        bits = [f"HTTP {self.status}"]
+        bits = [f"HTTP {self.status}", f"read={self.klass}"]
         if self.cache_status:
             bits.append(f"cache={self.cache_status}")
         if self.age:
@@ -57,17 +79,33 @@ class Snapshot:
         self.rest_trusted_factory = rest_trusted_factory
         self.mcp_clients = mcp_clients
         self.window_seconds = window_seconds
-        self._cache: dict[str, Fetched] = {}
+        # Keyed by (kind, url) -- see _cache_key.
+        self._cache: dict[tuple, Fetched] = {}
         self.started_at = time.time()
 
     # -- fetching ---------------------------------------------------------
-    def fetch(self, name: str) -> Fetched:
-        if name in self._cache:
-            return self._cache[name]
+    @staticmethod
+    def _cache_key(source: dict) -> tuple:
+        """What identifies a fetch: the document, not the name we gave it.
 
+        `llms_txt` and `llms_txt_2` are the same URL -- two statements inside
+        one document. Keying the cache by source NAME fetched it twice, which
+        put a real time gap between two halves of a self-consistency claim and
+        made the drift guard measure a difference we created ourselves.
+        """
+        kind = source.get("kind")
+        if kind == "mcp_tools":
+            return (kind, source.get("identity", "anon"))
+        return (kind, source.get("url"))
+
+    def fetch(self, name: str) -> Fetched:
         source = self.spec.get(name)
         if source is None:
             raise ExtractionError(f"source {name!r} is not declared in claims.yaml")
+
+        key = self._cache_key(source)
+        if key in self._cache:
+            return self._cache[key]
 
         started = time.time()
         try:
@@ -77,7 +115,7 @@ class Snapshot:
                 name=name, body=None, status=0, fetched_at=started,
                 error=f"{type(exc).__name__}: {exc}",
             )
-        self._cache[name] = result
+        self._cache[key] = result
         return result
 
     def _fetch_uncached(self, name: str, source: dict, started: float) -> Fetched:
@@ -108,12 +146,24 @@ class Snapshot:
 
     # -- reading ----------------------------------------------------------
     def value(self, name: str, extractor: str) -> Any:
+        return self.value_with_witness(name, extractor)[0]
+
+    def value_with_witness(self, name: str, extractor: str) -> tuple[Any, str]:
+        """The value and the text it was read out of.
+
+        A finding about their document should be able to quote the sentence
+        rather than offer our summary of it.
+        """
+        from qa.extractors import extract_with_witness
+
         fetched = self.fetch(name)
         if not fetched.ok:
             raise ExtractionError(
-                f"source {name!r} is unreadable ({fetched.error or fetched.status})"
+                f"source {name!r} read as {fetched.klass} "
+                f"({fetched.error or f'HTTP {fetched.status}'}); "
+                f"a failed read is not a value"
             )
-        return extract(extractor, fetched.body)
+        return extract_with_witness(extractor, fetched.body)
 
     def drift_seconds(self, a: str, b: str) -> float:
         return abs(self.fetch(a).fetched_at - self.fetch(b).fetched_at)

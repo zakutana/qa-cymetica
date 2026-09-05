@@ -100,6 +100,19 @@ def list_runs(runs: Path | None = None) -> list[dict]:
 class Verdict:
     level: str                       # "none" | "R" | "V"
     reasons: list[str] = field(default_factory=list)
+    # Things that do not block the level but qualify it. Critique gap 8: a
+    # clean, tagged, full run made WITHOUT the trusted key is level V and has
+    # never adjudicated a single S0 row -- the checks that need that key were
+    # skipped. The fold is already safe (a skipped check moves nothing), but
+    # an operator reading "V" deserves to be told which half of the ladder the
+    # run could not reach.
+    notes: list[str] = field(default_factory=list)
+
+    @property
+    def label(self) -> str:
+        if self.level == "V" and self.notes:
+            return "V (partial identity)"
+        return self.level
 
 
 def admissibility(run: dict) -> Verdict:
@@ -140,11 +153,15 @@ def admissibility(run: dict) -> Verdict:
     elif run.get("prereg_commit") and run["prereg_commit"] != run.get("git_head"):
         blocks_v.append("prereg_commit_mismatch")
 
+    notes = [f"identity_absent:{name}"
+             for name, present in sorted((run.get("identities_present") or {}).items())
+             if not present]
+
     if blocks_r:
-        return Verdict("none", blocks_r + blocks_v)
+        return Verdict("none", blocks_r + blocks_v, notes)
     if blocks_v:
-        return Verdict("R", blocks_v)
-    return Verdict("V", [])
+        return Verdict("R", blocks_v, notes)
+    return Verdict("V", [], notes)
 
 
 def latest_admissible_run_id(level: str = "V", runs: Path | None = None) -> str | None:

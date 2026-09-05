@@ -458,6 +458,16 @@ def assemble(documented: dict, tools: dict) -> dict:
 
         sections.append({
             **{k: meta[k] for k in ("id", "title", "blurb", "blast")},
+            # The denominator, named and carried with the number it produced.
+            # Without it, a percentage computed over 17 documented paths and
+            # one computed over 9 look identical on the dashboard -- which is
+            # how eight sections went green when 27 paths left the
+            # documentation and nothing was fixed.
+            "population": {
+                "documented": len(endpoints),
+                "probed": len(probed),
+                "paths": sorted(e["path"] for e in endpoints),
+            },
             "endpoints_documented": len(endpoints),
             "endpoints_probed": len(probed),
             "endpoints_reachable": len(healthy),
@@ -481,6 +491,55 @@ def assemble(documented: dict, tools: dict) -> dict:
         },
         "tools": tools,
         "sections": sections,
+    }
+
+
+def _by_path(inventory: dict) -> dict[str, dict]:
+    return {
+        entry["path"]: entry
+        for section in inventory.get("sections", [])
+        for entry in section.get("endpoint_detail", [])
+    }
+
+
+def compare(before: dict, after: dict) -> dict[str, list[str]]:
+    """What actually changed between two inventories. Pure; no I/O, no clock.
+
+    The distinction this exists to force: a documented path that 404s can stop
+    being a finding in two completely different ways, and only one of them is
+    a fix.
+
+        fixed_in_place      still documented, and now reachable
+        still_missing       still documented, still 404
+        removed_from_docs   no longer documented at all
+        added               newly documented since the pin
+
+    Between the two committed captures, `fixed_in_place` is empty and all 26
+    of the missing paths are in `removed_from_docs`. Reachability was computed
+    over whatever the vendor documented at that moment, so the denominator
+    shrank from 141 to 114, eight sections turned green, and a finding about
+    404s read as verified.
+    """
+    old, new = _by_path(before), _by_path(after)
+    healthy = set(HEALTHY)
+
+    fixed, still, removed = [], [], []
+    for path, entry in old.items():
+        if entry.get("verdict") != "missing":
+            continue
+        current = new.get(path)
+        if current is None:
+            removed.append(path)
+        elif current.get("verdict") in healthy:
+            fixed.append(path)
+        else:
+            still.append(path)
+
+    return {
+        "fixed_in_place": sorted(fixed),
+        "still_missing": sorted(still),
+        "removed_from_docs": sorted(removed),
+        "added": sorted(set(new) - set(old)),
     }
 
 

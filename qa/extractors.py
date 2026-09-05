@@ -13,6 +13,11 @@ Grammar, as used in tests/reconciliation/claims.yaml:
     set:$.agents[*].id        set of values at a wildcard path
     regex_int:(\\d+) commits   first capture group of a regex, as an int
     regex_set:\\(([A-Z, ]+)\\)  first capture group, split into a set
+    list_after:AI trading agent
+                              the parenthesised list following a phrase, as a
+                              set. The phrase must resolve to one statement --
+                              this is how a claim names a PLACE in a document
+                              rather than the values it expects to find there
     count:MCP Tools           markdown list items under a heading
     keys:$.paths              set of keys of the object at a path
     const:42                  a literal, for values transcribed from a source
@@ -130,6 +135,9 @@ def extract(spec: str, body: Any) -> Any:
             part.strip() for part in re.split(r"[,\s]+", match.group(1)) if part.strip()
         )
 
+    if kind == "list_after":
+        return _list_after(arg, _as_text(body))
+
     if kind == "regex_all":
         found = re.findall(arg, _as_text(body))
         if not found:
@@ -159,6 +167,71 @@ def extract(spec: str, body: Any) -> Any:
 
 def _stringify(value: Any) -> str:
     return value if isinstance(value, str) else json.dumps(value, sort_keys=True)
+
+
+# ---------------------------------------------------------------------------
+# Anchored list extraction
+# ---------------------------------------------------------------------------
+_LIST_SEPARATORS = re.compile(r"[,;\s]+")
+
+
+def _list_after(phrase: str, text: str) -> frozenset[str]:
+    """The parenthesised list that follows `phrase`, which must say one thing.
+
+    This replaces the extractor the audit called
+    `claims-extractors-pin-to-prose-snapshots`. That one enumerated the 21
+    agent symbols observed on the day the finding was made, so it matched
+    whatever the document happened to contain and passed vacuously on exactly
+    the defect it was written for.
+
+    The fix is not a longer list of expected values -- a longer list has the
+    same defect, just later. It is to stop naming values at all: anchor to a
+    PLACE in the document, and read whatever is there. A phantom symbol
+    injected into the list is then caught, because nothing here has any
+    opinion about which symbols are legitimate.
+
+    The anchor must resolve to exactly one statement. A document that names
+    two different lists in the same breath is not something we may pick from,
+    so that is an ExtractionError -- and reaches the check as Inconclusive.
+    """
+    pattern = re.compile(
+        re.escape(phrase) + r"[A-Za-z ]{0,20}?\s*\(([^)]{3,300})\)", re.I)
+    found = pattern.findall(text)
+    if not found:
+        raise ExtractionError(
+            f"list_after: no parenthesised list follows {phrase!r}")
+
+    distinct = {
+        frozenset(p.strip() for p in _LIST_SEPARATORS.split(item) if p.strip())
+        for item in found
+    }
+    if len(distinct) != 1:
+        raise ExtractionError(
+            f"list_after: {phrase!r} is followed by {len(distinct)} DIFFERENT "
+            f"lists; there is no single statement to read"
+        )
+    return next(iter(distinct))
+
+
+def extract_with_witness(spec: str, body: Any) -> tuple[Any, str]:
+    """The value, plus the text it was read out of.
+
+    A finding that says "the document names X" should be able to show the
+    sentence. Without it, the evidence offered for a claim about their
+    document is our summary of their document.
+    """
+    value = extract(spec, body)
+    kind, _, arg = spec.partition(":")
+
+    if kind == "list_after":
+        text = _as_text(body)
+        match = re.search(
+            re.escape(arg) + r"[A-Za-z ]{0,20}?\s*\([^)]{3,300}\)", text, re.I)
+        return value, (match.group(0) if match else arg)
+    if kind in ("regex", "regex_int", "regex_set", "regex_all"):
+        match = re.search(arg, _as_text(body))
+        return value, (match.group(0) if match else arg)
+    return value, f"{kind}:{arg}"
 
 
 # ---------------------------------------------------------------------------

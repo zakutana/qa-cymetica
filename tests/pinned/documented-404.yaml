@@ -1,0 +1,57 @@
+# Paths the platform documented and did not serve, pinned on 2026-09-04.
+#
+# Why this file exists, stated plainly: the reachability percentages on the
+# dashboard were computed over whatever the vendor documented AT THAT MOMENT.
+# Between the two inventory captures the documentation went from 141 paths to
+# 114, and all 26 of these disappeared from it. Not one was fixed in place.
+# The board turned green in eight sections because the denominator shrank.
+#
+# A population that moves cannot measure a fix. So the population is frozen
+# here, in the repository, at the moment the finding was made -- and each path
+# gets its own collectible check, which can come back one of three ways:
+#
+#   still documented, still 404  -> FAIL. The defect stands.
+#   still documented, now served -> PASS. Fixed in place. This is the only
+#                                  thing that counts as a fix.
+#   no longer documented         -> INCONCLUSIVE, with the reason spelled out:
+#                                  removed from documentation, not fixed in
+#                                  place. Never a pass. Deleting the promise
+#                                  is a legitimate resolution, but it is the
+#                                  vendor's decision to announce, not a
+#                                  measurement we may quietly bank.
+#
+# `source` is the document that made the promise; the check reads that
+# document to decide which of the three cases applies.
+
+pinned_at: "2026-09-04T10:15:00+00:00"
+pinned_from: tests/meta/fixtures/inventory.before-fix.json
+population: 141          # paths documented when these 26 were measured
+reported_as: "#46, #47"
+
+paths:
+  - {path: /mcp/v1/prompts/analyze_market,        section: mcp,       source: llms.txt,          component: discovery.llmstxt}
+  - {path: /mcp/v1/prompts/compare_markets,       section: mcp,       source: llms.txt,          component: discovery.llmstxt}
+  - {path: /mcp/v1/prompts/explain_probability,   section: mcp,       source: llms.txt,          component: discovery.llmstxt}
+  - {path: /mcp/v1/prompts/find_opportunities,    section: mcp,       source: llms.txt,          component: discovery.llmstxt}
+  - {path: /mcp/v1/resources/docs/api,            section: mcp,       source: llms.txt,          component: discovery.llmstxt}
+  - {path: /mcp/v1/resources/docs/getting-started, section: mcp,      source: llms.txt,          component: discovery.llmstxt}
+  - {path: /api/v1/account,                       section: account,   source: llms.txt,          component: discovery.llmstxt}
+  - {path: /api/v1/clob/order,                    section: clob,      source: agent-skills.json, component: discovery.wellknown}
+  - {path: /api/v1/exchange/buy,                  section: clob,      source: agent-skills.json, component: discovery.wellknown}
+  - {path: /api/v1/positions,                     section: clob,      source: llms.txt,          component: discovery.llmstxt}
+  - {path: /api/v1/vaix/prices,                   section: clob,      source: llms.txt,          component: discovery.llmstxt}
+  - {path: /api/v1/perpetual/user/positions,      section: markets,   source: llms.txt,          component: discovery.llmstxt}
+  - {path: /api/v1/winner-takes-all/bet,          section: markets,   source: llms.txt,          component: discovery.llmstxt}
+  - {path: /api/v1/winner-takes-all/epochs,       section: markets,   source: llms.txt,          component: discovery.llmstxt}
+  - {path: /api/v1/winner-takes-all/markets,      section: markets,   source: llms.txt,          component: discovery.llmstxt}
+  - {path: /api/v1/bots/clone,                    section: agents,    source: agent-skills.json, component: discovery.wellknown}
+  - {path: /api/v1/cloned-bot/create,             section: agents,    source: llms.txt,          component: discovery.llmstxt}
+  - {path: /api/v1/cloned-bot/list,               section: agents,    source: llms.txt,          component: discovery.llmstxt}
+  - {path: /api/v1/agentbook/post,                section: agentbook, source: llms.txt,          component: discovery.llmstxt}
+  - {path: /api/v1/aerodrome/quote,               section: swaps,     source: llms.txt,          component: discovery.llmstxt}
+  - {path: /api/v1/base-dex/tokens,               section: swaps,     source: llms.txt,          component: discovery.llmstxt}
+  - {path: /api/v1/defi/pools,                    section: swaps,     source: llms.txt,          component: discovery.llmstxt}
+  - {path: /api/v1/staking/pools,                 section: funds,     source: llms.txt,          component: discovery.llmstxt}
+  - {path: /api/v1/tuatara/discover,              section: ontology,  source: agent-skills.json, component: discovery.wellknown}
+  - {path: /api/v1/backtest/run,                  section: backtest,  source: llms.txt,          component: discovery.llmstxt}
+  - {path: /api/v1/backtest/saved,                section: backtest,  source: llms.txt,          component: discovery.llmstxt}

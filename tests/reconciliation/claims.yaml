@@ -37,13 +37,17 @@ claims:
     relation: subset
     severity: S1-INTEGRITY
     note: >
-      Rewritten after report #48. The original compared a parenthesised list
-      that no longer exists in the document -- llms.txt now defers to the live
-      endpoint, which is the right answer. The invariant that still matters is
-      narrower: every agent symbol the document names must resolve. Subset, not
-      equality, because the document is not obliged to name them all.
+      Rewritten twice. The version filed with #48 enumerated the 21 symbols
+      observed across two captures, so it matched whatever the document
+      happened to contain and passed vacuously on the very defect it was
+      written for -- and because the nodeid never changed, that rewrite was
+      invisible to the ledger. The extractor now names a PLACE in the
+      document rather than the values it expects to find there: whatever list
+      follows the phrase is read, so a symbol that does not resolve is caught
+      however it got in. Subset, not equality, because the document is not
+      obliged to name them all.
     sources:
-      llms_txt:     'regex_all:(MACD|RSI|BOLL|VOL|TREND|STOCH|ICHI|FIB|ATR|DIV|PCPN|DELTA|STAT|CORR|SENT|SYNC|CRASH|DREAD|GLOOM|FADE|VORTX)'
+      llms_txt:     'list_after:AI trading agent'
       live_species: 'set:$[*].symbol'
 
   - id: llms_agent_count_self_consistent
@@ -55,6 +59,12 @@ claims:
       A document that contradicts itself is worse than two documents that
       disagree, because the reader has no way to pick. Added after report #52
       updated one occurrence of the count and left another behind.
+    prose_only: true
+    why: >
+      Both sides are prose by construction -- the claim IS about two sentences
+      in one document. There is no structured source that could settle it, and
+      no risk of comparing our reading of prose against reality, because
+      reality is not one of the operands.
     sources:
       llms_txt:   'regex_int:(\d+) AI trading agents,'
       llms_txt_2: 'regex_int:any of our (\d+) AI trading agent species'
@@ -116,6 +126,14 @@ claims:
     component: rest.clob
     relation: all_equal
     severity: S2-MEASUREMENT
+    note: >
+      Both sides are marketing sentences -- one in llms.txt, one in a blurb
+      inside mcp.json. Neither counts pairs; they quote a number. So this
+      records EVIDENCE and cannot open or verify a finding: it has no access
+      to how many pairs there are. Report #52 asked about the 9-vs-568
+      discrepancy and remains open on that basis. Promoting this to a verdict
+      needs a captured `list_clob_pairs` response to count, and no such
+      evidence blob exists yet.
     sources:
       llms_txt: 'regex_int:trade on (\d+) CLOB pairs'
       mcp_json: 'regex_int:CLOB exchange with (\d+) pairs'
