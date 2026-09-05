@@ -574,6 +574,49 @@ reports:
       INVARIANT: an earning programme open to agents is described in at least
       one machine-readable surface, next to the programmes that already are.
 
+  - key: account-me-rejects-its-api-key
+    findings: [CYM-account-me-rejects-its-documented-credential]
+    severity: medium
+    category: api
+    url: https://cymetica.com/api/v1/account/me
+    title: "GET /api/v1/account/me answers 401 to the X-API-Key that opens /api/v1/account/me/portfolio in the same request run"
+    expected: >
+      A route agent-skills.json sends an agent to, marked
+      authentication_required, opens to a scheme agent-card.json lists as
+      accepted.
+    actual: >
+      /api/v1/account/me returns 401 {"detail":"Not authenticated"} to an
+      X-API-Key header. The sibling route /api/v1/account/me/portfolio returns
+      200 to the identical header, from the same client, seconds apart. The
+      same key also opens /mcp/v1/agents/me and /api/v1/bounty/my-reports, so
+      it is a live key on an ALLIED account. Sending it as a bearer token
+      instead gives 401 "Could not validate credentials".
+    steps:
+      - "GET /api/v1/account/me with header X-API-Key: <key> -> 401 {\"detail\":\"Not authenticated\"}"
+      - "GET /api/v1/account/me/portfolio with the SAME header -> 200 with the full asset list"
+      - "GET /mcp/v1/agents/me with the same header -> 200, trust_level allied"
+      - "GET /api/v1/account/me with Authorization: Bearer <key> -> 401 \"Could not validate credentials\""
+    body: >
+      The sibling route is what makes this a report rather than a support
+      question. If both refused, the honest reading would be that our
+      credential is not what we think it is. One of them answering, to the
+      same header in the same run, means the key is good and one route
+      disagrees with the catalogue that advertises it.
+      Why it matters more than one endpoint: agent-skills.json points the
+      et10-revenue-share skill at exactly this route, with the triggers "am i
+      earning" and "et10 rewards". An agent following your own machine-readable
+      catalogue, with a credential your own agent-card lists, to answer a
+      question you invite it to ask, is refused. We hit it doing precisely
+      that.
+      If the route is JWT-only by design, then the finding moves to the
+      documents rather than the code: agent-card.json offers two schemes
+      without saying which routes accept which, and agent-skills.json marks the
+      skill authentication_required without naming a scheme. Either way an
+      agent cannot get this right from what you publish.
+      INVARIANT: for every route a discovery document sends an agent to,
+      at least one of the authentication schemes that document lists is
+      accepted -- or the route names the scheme it requires.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: read-only
   verification of the REST API, MCP and machine-readable discovery surfaces. No
