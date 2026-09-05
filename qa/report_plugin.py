@@ -33,7 +33,16 @@ import textwrap
 from datetime import datetime, timezone
 from pathlib import Path
 
+import httpx
 import pytest
+
+# Failures of OUR transport, not answers from their platform. A check that
+# never got a reply has measured nothing, and recording that as a failure
+# reports our network as their defect.
+_TRANSPORT_ERRORS = (
+    httpx.TimeoutException, httpx.NetworkError, httpx.ProtocolError,
+    httpx.TooManyRedirects, httpx.RemoteProtocolError,
+)
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SCHEMA = 2
@@ -229,6 +238,16 @@ def pytest_runtest_makereport(item, call):
     reason = None
     if call.excinfo is not None and call.excinfo.errisinstance(Inconclusive):
         reason = str(call.excinfo.value)
+        report.outcome = "skipped"
+        report.longrepr = (str(item.path), item.location[1] + 1, f"INCONCLUSIVE: {reason}")
+        kind = "inconclusive"
+    elif (report.when == "call" and call.excinfo is not None
+          and call.excinfo.errisinstance(_TRANSPORT_ERRORS)):
+        # We stopped listening; the platform said nothing. A read timeout is
+        # the definition of "could not measure", and calling it a failure
+        # files a finding about their platform on the strength of our network.
+        # One did: a ReadTimeout on /api/v1/vaix/prices minted a defect.
+        reason = f"{type(call.excinfo.value).__name__}: could not reach the platform"
         report.outcome = "skipped"
         report.longrepr = (str(item.path), item.location[1] + 1, f"INCONCLUSIVE: {reason}")
         kind = "inconclusive"

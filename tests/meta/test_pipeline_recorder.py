@@ -263,6 +263,31 @@ def test_measurement_conclude_couples_verdict_to_outcome():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_transport_failure_is_inconclusive_not_a_defect(pytester, tmp_path):
+    """A read timeout means we stopped listening, not that they answered
+    wrongly. Recorded as a failure it becomes a finding about their platform
+    on the strength of our network -- and one did: a ReadTimeout on
+    /api/v1/vaix/prices minted a defect row on the dashboard."""
+    _, run = _run_inner(pytester, tmp_path, """
+        import httpx
+
+        @qa(**TAG)
+        def test_the_network_gave_up():
+            raise httpx.ReadTimeout("the read operation timed out")
+
+        @qa(**TAG)
+        def test_a_real_disagreement():
+            assert 46 == 25, "documented 46, served 25"
+    """)
+
+    by_id = {r["nodeid"].rsplit("::", 1)[-1]: r for r in run["results"]}
+    assert by_id["test_the_network_gave_up"]["outcome"] == "inconclusive"
+    assert "ReadTimeout" in by_id["test_the_network_gave_up"]["reason"]
+    assert by_id["test_a_real_disagreement"]["outcome"] == "failed", \
+        "a genuine assertion failure must still be a failure"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_ratelimit_budget_reaches_the_run_record(pytester, tmp_path):
     """Critique gap 11. Every committed run record carries `ratelimit: {}`,
     because the recorder read a session attribute nothing ever set. A run the

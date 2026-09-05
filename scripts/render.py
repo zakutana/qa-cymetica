@@ -520,6 +520,10 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:13.5px; max-wid
 .filters button[aria-pressed="true"] { background:var(--text); color:var(--bg); border-color:var(--text); }
 .filters button:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
 .filters .sep { width:1px; height:20px; background:var(--line); margin:0 5px; }
+.filters .fl {
+  font-family:var(--mono); font-size:10px; text-transform:uppercase;
+  letter-spacing:.06em; color:var(--text-faint); margin-right:2px;
+}
 
 .finding {
   background:var(--surface); border:1px solid var(--line);
@@ -751,6 +755,21 @@ h4.sec {
 
     <div id="marks"></div>
 
+    <h4>S0 to S4 &mdash; how much damage, not how sure we are</h4>
+
+    <div id="sevs"></div>
+
+    <h4>The cards are places, not test suites</h4>
+
+    <p class="lead">One card = one part of the platform. Its chips count four
+    different things:</p>
+
+    <div id="cardmarks"></div>
+
+    <p class="lead">The buttons at the top of the page filter the finding list:
+    the first row by <b>damage</b> (the S numbers), the second by <b>area</b>
+    &mdash; the same areas the cards are grouped under.</p>
+
     <h4>The percentage on each card is a different thing</h4>
 
     <p><b>It answers one question:</b> of all the addresses Cymetica publishes for this
@@ -959,11 +978,14 @@ D.findings.forEach(f => {
   tagCounts[f.tag] = (tagCounts[f.tag]||0)+1;
 });
 document.getElementById("filters").innerHTML =
+  // Labelled, because two unlabelled rows of buttons filtering different
+  // things is a puzzle: one row is how much damage, the other is which part
+  // of the platform, and nothing on screen said so.
   `<button data-kind="all" aria-pressed="true">all &middot; ${D.findings.length}</button>`
-  + `<span class="sep"></span>`
+  + `<span class="sep"></span><span class="fl">damage</span>`
   + SEV.filter(s => sevCounts[s[0]]).map(s =>
       `<button data-kind="sev" data-v="${s[0]}" aria-pressed="false">${s[1]} &middot; ${sevCounts[s[0]]}</button>`).join("")
-  + `<span class="sep"></span>`
+  + `<span class="sep"></span><span class="fl">area</span>`
   + D.groups.filter(g => tagCounts[g.tag]).map(g =>
       `<button data-kind="tag" data-v="${g.tag}" aria-pressed="false">${g.tag} &middot; ${tagCounts[g.tag]}</button>`).join("");
 
@@ -1051,6 +1073,42 @@ const MARKS = [
 document.getElementById("marks").innerHTML = `
   <div class="axis marks">
     ${MARKS.map(([chip, words]) =>
+      `<div class="axis-row">${chip}<span>${words}</span></div>`).join("")}
+  </div>`;
+
+// Severity is blast radius: what breaks if this is real. It is not confidence,
+// and it is not urgency. The colours on the page are these.
+const SEV_WORDS = [
+  ["S0", "s0", "money, keys, or who is allowed to do what"],
+  ["S1", "s1", "wrong data that someone would act on"],
+  ["S2", "s2", "counts or labels that mislead"],
+  ["S3", "s3", "their documentation disagrees with their platform"],
+  ["S4", "s4", "cosmetic"],
+];
+document.getElementById("sevs").innerHTML = `
+  <div class="axis marks">
+    ${SEV_WORDS.map(([k, cls, words]) =>
+      `<div class="axis-row"><span class="sev ${cls}">${k}</span>
+       <span>${words}</span></div>`).join("")}
+  </div>`;
+
+const CARD_MARKS = [
+  [`<span class="chip">10 addresses published</span>`,
+   "URLs their own documentation lists for this part"],
+  [`<span class="chip">3 MCP tools</span>`,
+   "tools declared for it in the MCP manifest"],
+  [`<span class="chip bad">4 &times; not there</span>`,
+   "of those addresses, how many answer 404"],
+  [`<span class="chip untested">0 tests written</span>`,
+   "checks we have written here &mdash; zero means nobody has verified a word this part says, however green the percentage is"],
+  [`<span class="chip ok">6 tests written, 1 failing</span>`,
+   "the same count once checks exist"],
+  [`<span class="chip warn">1&times; S2</span>`,
+   "an open finding in this part, at that damage level"],
+];
+document.getElementById("cardmarks").innerHTML = `
+  <div class="axis marks">
+    ${CARD_MARKS.map(([chip, words]) =>
       `<div class="axis-row">${chip}<span>${words}</span></div>`).join("")}
   </div>`;
 
