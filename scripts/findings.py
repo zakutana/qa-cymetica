@@ -127,7 +127,13 @@ def _is_candidate(result: dict) -> bool:
     role = result.get("role") or (result.get("measurement") or {}).get("role") or "verdict"
     return (result.get("outcome") == "failed"
             and result.get("phase") == "call"
-            and role != "evidence")
+            and role != "evidence"
+            # A meta check failing is OUR machinery breaking, not their
+            # platform. The first admissible run proposed two findings named
+            # after the repo-consistency checks -- a stale dashboard offered as
+            # a defect in Cymetica. Same class as the setup-phase exclusion:
+            # the subject of the measurement has to be the platform.
+            and result.get("surface") != "meta")
 
 
 def _claim_of(result: dict) -> str:
@@ -174,19 +180,35 @@ def candidates(run: dict | None) -> list[dict]:
         component = claim.get("component") or results[0].get("component") or "unknown"
         section = section_for(component)
         detail = _detail(results)
-        out.append({
+        # Only fields this run actually determined. Severity and title are
+        # JUDGEMENTS, and a run does not make them -- claims.yaml does, or an
+        # operator did when the row was created. Supplying defaults here
+        # overwrote them on the first admissible run: CYM-anon-tool-surface
+        # went from S0-CUSTODY to S3-CONTRACT because no claims.yaml entry
+        # matched, silently downgrading a custody finding. A measurement may
+        # update what it measured; it may not restate what it was never told.
+        proposed = {
             "id": f"CYM-{claim_id}",
             "kind": "contradiction" if claim else "check_failure",
-            "severity": claim.get("severity", "S3-CONTRACT"),
-            "title": claim.get("question") or detail.get("reason") or claim_id,
             "component": component,
             "section": section,
             "tag": tag_for(section),
-            "note": " ".join((claim.get("note") or "").split()) or None,
             "detail": detail,
             "checks": sorted(r["nodeid"] for r in results),
             "evidence_ids": sorted({e for r in results for e in r.get("evidence_ids", [])}),
-        })
+        }
+        # Present only when claims.yaml states them, so an existing row keeps
+        # the severity and title it was given.
+        if claim.get("severity"):
+            proposed["severity"] = claim["severity"]
+        if claim.get("question"):
+            proposed["title"] = claim["question"]
+        if claim.get("note"):
+            proposed["note"] = " ".join(claim["note"].split())
+        # A brand-new row still needs both; the fold fills them at creation.
+        proposed["default_severity"] = "S3-CONTRACT"
+        proposed["default_title"] = detail.get("reason") or claim_id
+        out.append(proposed)
     return out
 
 

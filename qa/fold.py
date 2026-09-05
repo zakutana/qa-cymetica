@@ -438,9 +438,16 @@ def fold(prev: dict | None = None, run: dict | None = None,
                                "reports": [], "refused": []},
                     "transitions": [], "regressions": [],
                 }
+            # A default applies only at creation. Refreshing a row with one
+            # lets a run restate a judgement it never made, which is how
+            # CYM-anon-tool-surface was silently downgraded from S0-CUSTODY to
+            # S3-CONTRACT on the first admissible run: no claims.yaml entry
+            # matched, so the candidate carried a default severity.
+            row.setdefault("severity", cand.get("default_severity", "S3-CONTRACT"))
+            row.setdefault("title", cand.get("default_title", cand["id"]))
             row["reproductions"] = row.get("reproductions", 0) + 1
             for field in ("title", "severity", "component", "section", "tag",
-                          "kind", "checks", "detail"):
+                          "kind", "checks", "detail", "note"):
                 if field in cand:
                     row[field] = cand[field]
             row["provenance"] = {"run_id": run["run_id"], "measured_at": at}

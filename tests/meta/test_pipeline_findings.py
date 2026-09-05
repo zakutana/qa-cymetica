@@ -106,6 +106,58 @@ def test_finding_detail_never_scraped_from_traceback():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_our_own_machinery_breaking_is_not_a_platform_finding():
+    """The first admissible run proposed two findings named after the
+    repo-consistency checks -- a stale dashboard of ours, offered as a defect
+    in Cymetica. The subject of a measurement has to be the platform."""
+    findings = _findings()
+
+    run = _run([
+        _result("tests/repo/test_repo_consistency.py::test_committed_ledger",
+                "failed", surface="meta", component="meta.pipeline"),
+        _result("tests/rest/test_x.py::test_real", "failed", surface="rest"),
+    ])
+    checks = {c for cand in findings.candidates(run) for c in cand["checks"]}
+    assert checks == {"tests/rest/test_x.py::test_real"}, checks
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_run_may_not_restate_a_judgement_it_never_made():
+    """Severity and title are judgements. A run measures; it does not decide
+    how bad the thing it measured is. CYM-anon-tool-surface went from
+    S0-CUSTODY to S3-CONTRACT on the first admissible run, because the
+    candidate carried a default severity and the fold applied it."""
+    from qa.fold import fold
+
+    from tests.meta.test_pipeline_fold import fold_run, ledger, row
+
+    findings = _findings()
+    existing = row("CYM-anon-tool-surface", checks=["tests/a.py::test_x"])
+    existing["severity"] = "S0-CUSTODY"
+    existing["title"] = "An unauthenticated caller is served all 46 MCP tools"
+
+    run = _run([_result("tests/a.py::test_x", "failed",
+                        claim_id="anon-tool-surface")])
+    run["run_id"] = "run-v"
+    cand = findings.candidates(run)
+    assert [c["id"] for c in cand] == ["CYM-anon-tool-surface"], cand
+    assert "severity" not in cand[0], \
+        "a candidate for a claim nothing declares still asserts a severity"
+
+    after = fold(ledger(existing), run=fold_run("run-v", [("tests/a.py::test_x", "failed")]),
+                 candidates=cand, events=[])
+    kept = after["findings"]["CYM-anon-tool-surface"]
+    assert kept["severity"] == "S0-CUSTODY", kept["severity"]
+    assert kept["title"].startswith("An unauthenticated caller")
+
+    # A brand-new row still gets both.
+    fresh = fold({"findings": {}}, run=fold_run("run-v", [("tests/a.py::test_x", "failed")]),
+                 candidates=cand, events=[])
+    new = fresh["findings"]["CYM-anon-tool-surface"]
+    assert new["severity"] == "S3-CONTRACT" and new["title"]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_candidates_carry_no_state():
     """findings.py may not decide RAISED, FIX CLAIMED or anything else. It
     does not read the tracker; it does not know what the vendor said."""
