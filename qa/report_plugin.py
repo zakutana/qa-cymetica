@@ -162,13 +162,23 @@ def pytest_sessionfinish(session, exitstatus):
     except AttributeError:
         pass
 
-    RUNS_DIR.mkdir(parents=True, exist_ok=True)
-    path = RUNS_DIR / f"{run['run_id']}.json"
+    # Resolved at write time, not import time, so QA_STATE_DIR can redirect an
+    # inner test session away from the committed state/runs/.
+    from qa.state import state_dir
+    runs_dir = state_dir() / "runs"
+    runs_dir.mkdir(parents=True, exist_ok=True)
+    path = runs_dir / f"{run['run_id']}.json"
     path.write_text(
         json.dumps(run, indent=2, ensure_ascii=False), encoding="utf-8"
     )
 
-    print(f"\n[qa] run record -> {path.relative_to(REPO_ROOT)}")
+    # Display only. The record may live outside the repo (QA_STATE_DIR), and a
+    # cosmetic path helper must never be able to crash sessionfinish.
+    try:
+        shown = path.relative_to(REPO_ROOT)
+    except ValueError:
+        shown = path
+    print(f"\n[qa] run record -> {shown}")
     if changed:
         print(f"[qa] FINGERPRINT DRIFTED during this run: {changed}")
         print("[qa] The platform changed mid-run. No fix may be verified from it.")

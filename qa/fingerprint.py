@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from datetime import datetime, timezone
 from typing import Any
 
@@ -54,6 +55,17 @@ def compute(registry: EndpointRegistry | None = None, timeout: float = 20.0) -> 
     Never raises: a fingerprint we could not compute is recorded as such, and
     a run without one simply cannot verify a fix.
     """
+    # Offline seam: an inner pytest session (pytester) must never reach the
+    # network. A None fingerprint is recorded honestly and makes the run
+    # inadmissible for verification, which is exactly right for a test run.
+    if os.environ.get("QA_OFFLINE"):
+        return {
+            "fingerprint": None,
+            "parts": {},
+            "errors": {"offline": "QA_OFFLINE=1"},
+            "computed_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        }
+
     registry = registry or EndpointRegistry.load()
     spec = registry.raw.get("fingerprint", {})
     volatile = set(spec.get("volatile_keys", []))

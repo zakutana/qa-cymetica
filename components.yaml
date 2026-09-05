@@ -67,6 +67,11 @@ components:
     surface: meta
     criticality: critical
     staleness_hours: 168
+  meta.pipeline:
+    title: State pipeline self-tests
+    surface: meta
+    criticality: critical
+    staleness_hours: 24
 
   discovery.wellknown:
     title: Well-known discovery documents

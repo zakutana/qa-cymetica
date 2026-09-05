@@ -1,0 +1,2545 @@
+{
+  "generated_at": "2026-09-04T12:38:59+00:00",
+  "totals": {
+    "paths_documented": 114,
+    "tools_declared": 46,
+    "tools_served_anon": 25,
+    "tools_served_trusted": 46
+  },
+  "tools": {
+    "declared": {
+      "get_trust_signal": "unknown",
+      "list_markets": "unknown",
+      "get_market": "unknown",
+      "get_prices": "unknown",
+      "get_orderbook": "unknown",
+      "list_clob_pairs": "unknown",
+      "search_markets": "unknown",
+      "get_platform_status": "unknown",
+      "who_is_this": "unknown",
+      "get_ai_native_proof": "unknown",
+      "get_trust_ladder": "unknown",
+      "get_btc_pool_state": "unknown",
+      "get_btc_pool_history": "unknown",
+      "get_prediction_statistics": "unknown",
+      "get_deadcoin_quote": "unknown",
+      "get_deadcoin_desk_info": "unknown",
+      "launchpad_list_tokens": "unknown",
+      "launchpad_launch_token": "unknown",
+      "launchpad_trade_quote": "unknown",
+      "get_agent_profile": "recognized",
+      "get_rate_limits": "recognized",
+      "get_deposit_address": "recognized",
+      "submit_observation": "recognized",
+      "submit_feedback": "recognized",
+      "request_feature": "recognized",
+      "query_knowledge": "recognized",
+      "ask_nexus_deep": "recognized",
+      "get_deep_answer": "recognized",
+      "submit_signal": "recognized",
+      "get_signal_history": "trusted",
+      "get_market_analytics": "trusted",
+      "get_oracle_insights": "trusted",
+      "place_order": "recognized",
+      "get_positions": "recognized",
+      "get_order_history": "recognized",
+      "register_webhook": "allied",
+      "subscribe_prices": "allied",
+      "create_aib_fund": "allied",
+      "list_my_aib_funds": "allied",
+      "edit_aib_fund_basket": "allied",
+      "list_ontology_dimensions": "unknown",
+      "browse_ontology": "unknown",
+      "resolve_ontology_concept": "unknown",
+      "search_ontology": "unknown",
+      "find_trade_path": "unknown",
+      "get_strategy_returns": "unknown"
+    },
+    "served_anon": [
+      "browse_ontology",
+      "find_trade_path",
+      "get_ai_native_proof",
+      "get_btc_pool_history",
+      "get_btc_pool_state",
+      "get_deadcoin_desk_info",
+      "get_deadcoin_quote",
+      "get_market",
+      "get_orderbook",
+      "get_platform_status",
+      "get_prediction_statistics",
+      "get_prices",
+      "get_strategy_returns",
+      "get_trust_ladder",
+      "get_trust_signal",
+      "launchpad_launch_token",
+      "launchpad_list_tokens",
+      "launchpad_trade_quote",
+      "list_clob_pairs",
+      "list_markets",
+      "list_ontology_dimensions",
+      "resolve_ontology_concept",
+      "search_markets",
+      "search_ontology",
+      "who_is_this"
+    ],
+    "served_trusted": [
+      "ask_nexus_deep",
+      "browse_ontology",
+      "create_aib_fund",
+      "edit_aib_fund_basket",
+      "find_trade_path",
+      "get_agent_profile",
+      "get_ai_native_proof",
+      "get_btc_pool_history",
+      "get_btc_pool_state",
+      "get_deadcoin_desk_info",
+      "get_deadcoin_quote",
+      "get_deep_answer",
+      "get_deposit_address",
+      "get_market",
+      "get_market_analytics",
+      "get_oracle_insights",
+      "get_order_history",
+      "get_orderbook",
+      "get_platform_status",
+      "get_positions",
+      "get_prediction_statistics",
+      "get_prices",
+      "get_rate_limits",
+      "get_signal_history",
+      "get_strategy_returns",
+      "get_trust_ladder",
+      "get_trust_signal",
+      "launchpad_launch_token",
+      "launchpad_list_tokens",
+      "launchpad_trade_quote",
+      "list_clob_pairs",
+      "list_markets",
+      "list_my_aib_funds",
+      "list_ontology_dimensions",
+      "place_order",
+      "query_knowledge",
+      "register_webhook",
+      "request_feature",
+      "resolve_ontology_concept",
+      "search_markets",
+      "search_ontology",
+      "submit_feedback",
+      "submit_observation",
+      "submit_signal",
+      "subscribe_prices",
+      "who_is_this"
+    ]
+  },
+  "sections": [
+    {
+      "id": "discovery",
+      "title": "Discovery & manifests",
+      "blurb": "The 11 well-known protocol documents, llms.txt, OpenAPI. Everything an outside agent reads before it does anything.",
+      "blast": "measurement",
+      "endpoints_documented": 17,
+      "endpoints_probed": 17,
+      "endpoints_reachable": 17,
+      "endpoints_unprobeable": 0,
+      "verdicts": {
+        "ok": 17
+      },
+      "reachable_pct": 100,
+      "tools_declared": 0,
+      "tools_anon": 0,
+      "tools_trusted": 0,
+      "endpoint_detail": [
+        {
+          "path": "/.well-known/acp.json",
+          "sources": [
+            "udc.json"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 1011,
+          "status_trusted": 200,
+          "bytes_trusted": 1011,
+          "probe": "done",
+          "section": "discovery",
+          "verdict": "ok"
+        },
+        {
+          "path": "/.well-known/agent-card.json",
+          "sources": [
+            "udc.json"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 14121,
+          "status_trusted": 200,
+          "bytes_trusted": 14121,
+          "probe": "done",
+          "section": "discovery",
+          "verdict": "ok"
+        },
+        {
+          "path": "/.well-known/agent-skills.json",
+          "sources": [
+            "udc.json"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 4467,
+          "status_trusted": 200,
+          "bytes_trusted": 4467,
+          "probe": "done",
+          "section": "discovery",
+          "verdict": "ok"
+        },
+        {
+          "path": "/.well-known/ai-plugin.json",
+          "sources": [
+            "udc.json"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 1520,
+          "status_trusted": 200,
+          "bytes_trusted": 1520,
+          "probe": "done",
+          "section": "discovery",
+          "verdict": "ok"
+        },
+        {
+          "path": "/.well-known/asyncapi.json",
+          "sources": [
+            "udc.json"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 23028,
+          "status_trusted": 200,
+          "bytes_trusted": 23028,
+          "probe": "done",
+          "section": "discovery",
+          "verdict": "ok"
+        },
+        {
+          "path": "/.well-known/mcp",
+          "sources": [
+            "udc.json"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 4305,
+          "status_trusted": 200,
+          "bytes_trusted": 4305,
+          "probe": "done",
+          "section": "discovery",
+          "verdict": "ok"
+        },
+        {
+          "path": "/.well-known/mcp.json",
+          "sources": [
+            "udc.json"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 13980,
+          "status_trusted": 200,
+          "bytes_trusted": 13980,
+          "probe": "done",
+          "section": "discovery",
+          "verdict": "ok"
+        },
+        {
+          "path": "/.well-known/oauth-authorization-server",
+          "sources": [
+            "udc.json"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 661,
+          "status_trusted": 200,
+          "bytes_trusted": 661,
+          "probe": "done",
+          "section": "discovery",
+          "verdict": "ok"
+        },
+        {
+          "path": "/.well-known/security.txt",
+          "sources": [
+            "udc.json"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 257,
+          "status_trusted": 200,
+          "bytes_trusted": 257,
+          "probe": "done",
+          "section": "discovery",
+          "verdict": "ok"
+        },
+        {
+          "path": "/.well-known/ucp.json",
+          "sources": [
+            "udc.json"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 791,
+          "status_trusted": 200,
+          "bytes_trusted": 791,
+          "probe": "done",
+          "section": "discovery",
+          "verdict": "ok"
+        },
+        {
+          "path": "/.well-known/webmcp.json",
+          "sources": [
+            "udc.json"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 423,
+          "status_trusted": 200,
+          "bytes_trusted": 423,
+          "probe": "done",
+          "section": "discovery",
+          "verdict": "ok"
+        },
+        {
+          "path": "/.well-known/x402.json",
+          "sources": [
+            "udc.json"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 572,
+          "status_trusted": 200,
+          "bytes_trusted": 572,
+          "probe": "done",
+          "section": "discovery",
+          "verdict": "ok"
+        },
+        {
+          "path": "/founder.txt",
+          "sources": [
+            "udc.json"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 58149,
+          "status_trusted": 200,
+          "bytes_trusted": 58149,
+          "probe": "done",
+          "section": "discovery",
+          "verdict": "ok"
+        },
+        {
+          "path": "/llms-full.txt",
+          "sources": [
+            "udc.json"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 50216,
+          "status_trusted": 200,
+          "bytes_trusted": 50216,
+          "probe": "done",
+          "section": "discovery",
+          "verdict": "ok"
+        },
+        {
+          "path": "/llms.txt",
+          "sources": [
+            "udc.json"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 33825,
+          "status_trusted": 200,
+          "bytes_trusted": 33825,
+          "probe": "done",
+          "section": "discovery",
+          "verdict": "ok"
+        },
+        {
+          "path": "/openapi-public.json",
+          "sources": [
+            "udc.json"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 62749,
+          "status_trusted": 200,
+          "bytes_trusted": 62749,
+          "probe": "done",
+          "section": "discovery",
+          "verdict": "ok"
+        },
+        {
+          "path": "/robots.txt",
+          "sources": [
+            "udc.json"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 4255,
+          "status_trusted": 200,
+          "bytes_trusted": 4255,
+          "probe": "done",
+          "section": "discovery",
+          "verdict": "ok"
+        }
+      ],
+      "tool_detail": []
+    },
+    {
+      "id": "identity_trust",
+      "title": "Identity & trust ladder",
+      "blurb": "Agent registration, trust tiers, and which tools each tier is allowed to see. The platform's whole authorization model.",
+      "blast": "custody",
+      "endpoints_documented": 2,
+      "endpoints_probed": 1,
+      "endpoints_reachable": 1,
+      "endpoints_unprobeable": 1,
+      "verdicts": {
+        "ok": 1,
+        "method": 1
+      },
+      "reachable_pct": 100,
+      "tools_declared": 5,
+      "tools_anon": 3,
+      "tools_trusted": 5,
+      "endpoint_detail": [
+        {
+          "path": "/mcp/v1/register",
+          "sources": [
+            "llms.txt",
+            "udc.json"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 405,
+          "bytes_anon": 31,
+          "status_trusted": 405,
+          "bytes_trusted": 31,
+          "probe": "done",
+          "section": "identity_trust",
+          "verdict": "method"
+        },
+        {
+          "path": "/mcp/v1/well-known",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 19360,
+          "status_trusted": 200,
+          "bytes_trusted": 19360,
+          "probe": "done",
+          "section": "identity_trust",
+          "verdict": "ok"
+        }
+      ],
+      "tool_detail": [
+        {
+          "name": "get_agent_profile",
+          "declared_tier": "recognized"
+        },
+        {
+          "name": "get_rate_limits",
+          "declared_tier": "recognized"
+        },
+        {
+          "name": "get_trust_ladder",
+          "declared_tier": "unknown"
+        },
+        {
+          "name": "get_trust_signal",
+          "declared_tier": "unknown"
+        },
+        {
+          "name": "who_is_this",
+          "declared_tier": "unknown"
+        }
+      ]
+    },
+    {
+      "id": "mcp",
+      "title": "MCP server & protocol",
+      "blurb": "JSON-RPC 2.0 endpoint, tools/list, tools/call, plus the resources and prompts the server advertises.",
+      "blast": "custody",
+      "endpoints_documented": 1,
+      "endpoints_probed": 0,
+      "endpoints_reachable": 0,
+      "endpoints_unprobeable": 1,
+      "verdicts": {
+        "method": 1
+      },
+      "reachable_pct": null,
+      "tools_declared": 0,
+      "tools_anon": 0,
+      "tools_trusted": 0,
+      "endpoint_detail": [
+        {
+          "path": "/mcp/v1",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 405,
+          "bytes_anon": 31,
+          "status_trusted": 405,
+          "bytes_trusted": 31,
+          "probe": "done",
+          "section": "mcp",
+          "verdict": "method"
+        }
+      ],
+      "tool_detail": []
+    },
+    {
+      "id": "funding",
+      "title": "Funding & custody",
+      "blurb": "Deposit addresses and withdrawals. The endpoints where a mistake costs money rather than credibility.",
+      "blast": "custody",
+      "endpoints_documented": 2,
+      "endpoints_probed": 1,
+      "endpoints_reachable": 1,
+      "endpoints_unprobeable": 1,
+      "verdicts": {
+        "ok": 1,
+        "unprobed": 1
+      },
+      "reachable_pct": 100,
+      "tools_declared": 1,
+      "tools_anon": 0,
+      "tools_trusted": 1,
+      "endpoint_detail": [
+        {
+          "path": "/api/v1/funding/deposit-addresses",
+          "sources": [
+            "openapi.json",
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 401,
+          "bytes_anon": 79,
+          "status_trusted": 200,
+          "bytes_trusted": 2321,
+          "probe": "done",
+          "section": "funding",
+          "verdict": "ok"
+        },
+        {
+          "path": "/api/v1/funding/withdraw",
+          "sources": [
+            "openapi.json"
+          ],
+          "methods": [
+            "POST"
+          ],
+          "probe": "skipped",
+          "reason": "no documented GET",
+          "section": "funding",
+          "verdict": "unprobed"
+        }
+      ],
+      "tool_detail": [
+        {
+          "name": "get_deposit_address",
+          "declared_tier": "recognized"
+        }
+      ]
+    },
+    {
+      "id": "account",
+      "title": "Account & portfolio",
+      "blurb": "Balances, positions, portfolio, transaction history.",
+      "blast": "custody",
+      "endpoints_documented": 6,
+      "endpoints_probed": 5,
+      "endpoints_reachable": 5,
+      "endpoints_unprobeable": 1,
+      "verdicts": {
+        "unprobed": 1,
+        "ok": 3,
+        "auth": 2
+      },
+      "reachable_pct": 100,
+      "tools_declared": 2,
+      "tools_anon": 0,
+      "tools_trusted": 2,
+      "endpoint_detail": [
+        {
+          "path": "/api/v1/account/me",
+          "sources": [
+            "llms.txt",
+            "agent-skills.json"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 401,
+          "bytes_anon": 30,
+          "status_trusted": 401,
+          "bytes_trusted": 30,
+          "probe": "done",
+          "section": "account",
+          "verdict": "auth"
+        },
+        {
+          "path": "/api/v1/account/me/balances",
+          "sources": [
+            "openapi.json"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 401,
+          "bytes_anon": 79,
+          "status_trusted": 200,
+          "bytes_trusted": 662,
+          "probe": "done",
+          "section": "account",
+          "verdict": "ok"
+        },
+        {
+          "path": "/api/v1/account/me/portfolio",
+          "sources": [
+            "openapi.json",
+            "llms.txt",
+            "agent-skills.json"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 401,
+          "bytes_anon": 79,
+          "status_trusted": 200,
+          "bytes_trusted": 3134,
+          "probe": "done",
+          "section": "account",
+          "verdict": "ok"
+        },
+        {
+          "path": "/api/v1/portfolio/summary",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 401,
+          "bytes_anon": 79,
+          "status_trusted": 200,
+          "bytes_trusted": 192,
+          "probe": "done",
+          "section": "account",
+          "verdict": "ok"
+        },
+        {
+          "path": "/api/v1/rewards/summary",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 401,
+          "bytes_anon": 30,
+          "status_trusted": 401,
+          "bytes_trusted": 30,
+          "probe": "done",
+          "section": "account",
+          "verdict": "auth"
+        },
+        {
+          "path": "/auth/login",
+          "sources": [
+            "openapi.json"
+          ],
+          "methods": [
+            "POST"
+          ],
+          "probe": "skipped",
+          "reason": "no documented GET",
+          "section": "account",
+          "verdict": "unprobed"
+        }
+      ],
+      "tool_detail": [
+        {
+          "name": "get_order_history",
+          "declared_tier": "recognized"
+        },
+        {
+          "name": "get_positions",
+          "declared_tier": "recognized"
+        }
+      ]
+    },
+    {
+      "id": "clob",
+      "title": "CLOB exchange",
+      "blurb": "The central limit orderbook: pairs, books, order placement, token exchange.",
+      "blast": "custody",
+      "endpoints_documented": 10,
+      "endpoints_probed": 6,
+      "endpoints_reachable": 6,
+      "endpoints_unprobeable": 4,
+      "verdicts": {
+        "ok": 6,
+        "method": 1,
+        "unprobed": 3
+      },
+      "reachable_pct": 100,
+      "tools_declared": 3,
+      "tools_anon": 2,
+      "tools_trusted": 3,
+      "endpoint_detail": [
+        {
+          "path": "/api/v1/clob/book/hybrid",
+          "sources": [
+            "openapi.json",
+            "agent-skills.json"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 5476,
+          "status_trusted": 200,
+          "bytes_trusted": 5476,
+          "probe": "done",
+          "section": "clob",
+          "verdict": "ok"
+        },
+        {
+          "path": "/api/v1/clob/orders",
+          "sources": [
+            "openapi.json",
+            "agent-skills.json"
+          ],
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "status_anon": 405,
+          "bytes_anon": 31,
+          "status_trusted": 405,
+          "bytes_trusted": 31,
+          "probe": "done",
+          "section": "clob",
+          "verdict": "method"
+        },
+        {
+          "path": "/api/v1/exchange/EVCDX-{slug}/orders",
+          "sources": [
+            "agent-skills.json"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "probe": "skipped",
+          "reason": "needs a parameter",
+          "section": "clob",
+          "verdict": "unprobed"
+        },
+        {
+          "path": "/api/v1/exchange/{symbol}/orders",
+          "sources": [
+            "openapi.json"
+          ],
+          "methods": [
+            "POST"
+          ],
+          "probe": "skipped",
+          "reason": "needs a parameter",
+          "section": "clob",
+          "verdict": "unprobed"
+        },
+        {
+          "path": "/api/v1/orders",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 401,
+          "bytes_anon": 79,
+          "status_trusted": 200,
+          "bytes_trusted": 2,
+          "probe": "done",
+          "section": "clob",
+          "verdict": "ok"
+        },
+        {
+          "path": "/api/v1/orders/{id}",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "probe": "skipped",
+          "reason": "needs a parameter",
+          "section": "clob",
+          "verdict": "unprobed"
+        },
+        {
+          "path": "/api/v1/trades",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 401,
+          "bytes_anon": 79,
+          "status_trusted": 200,
+          "bytes_trusted": 46,
+          "probe": "done",
+          "section": "clob",
+          "verdict": "ok"
+        },
+        {
+          "path": "/api/v1/vaix/orderbook",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 6456,
+          "status_trusted": 200,
+          "bytes_trusted": 5871,
+          "probe": "done",
+          "section": "clob",
+          "verdict": "ok"
+        },
+        {
+          "path": "/api/v1/vaix/price-history",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 313,
+          "status_trusted": 200,
+          "bytes_trusted": 313,
+          "probe": "done",
+          "section": "clob",
+          "verdict": "ok"
+        },
+        {
+          "path": "/api/v1/vaix/stats",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 644,
+          "status_trusted": 200,
+          "bytes_trusted": 644,
+          "probe": "done",
+          "section": "clob",
+          "verdict": "ok"
+        }
+      ],
+      "tool_detail": [
+        {
+          "name": "get_orderbook",
+          "declared_tier": "unknown"
+        },
+        {
+          "name": "list_clob_pairs",
+          "declared_tier": "unknown"
+        },
+        {
+          "name": "place_order",
+          "declared_tier": "recognized"
+        }
+      ]
+    },
+    {
+      "id": "markets",
+      "title": "Markets & prices",
+      "blurb": "Prediction markets, price feeds, market search and analytics.",
+      "blast": "integrity",
+      "endpoints_documented": 12,
+      "endpoints_probed": 7,
+      "endpoints_reachable": 7,
+      "endpoints_unprobeable": 5,
+      "verdicts": {
+        "ok": 6,
+        "unprobed": 5,
+        "auth": 1
+      },
+      "reachable_pct": 100,
+      "tools_declared": 6,
+      "tools_anon": 4,
+      "tools_trusted": 6,
+      "endpoint_detail": [
+        {
+          "path": "/api/v1/markets",
+          "sources": [
+            "openapi.json",
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 9890,
+          "status_trusted": 200,
+          "bytes_trusted": 9890,
+          "probe": "done",
+          "section": "markets",
+          "verdict": "ok"
+        },
+        {
+          "path": "/api/v1/markets/{address}",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "probe": "skipped",
+          "reason": "needs a parameter",
+          "section": "markets",
+          "verdict": "unprobed"
+        },
+        {
+          "path": "/api/v1/markets/{address}/orderbook",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "probe": "skipped",
+          "reason": "needs a parameter",
+          "section": "markets",
+          "verdict": "unprobed"
+        },
+        {
+          "path": "/api/v1/perpetual/assets",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 28901,
+          "status_trusted": 200,
+          "bytes_trusted": 28901,
+          "probe": "done",
+          "section": "markets",
+          "verdict": "ok"
+        },
+        {
+          "path": "/api/v1/perpetual/markets",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 2,
+          "status_trusted": 200,
+          "bytes_trusted": 2,
+          "probe": "done",
+          "section": "markets",
+          "verdict": "ok"
+        },
+        {
+          "path": "/api/v1/perpetual/orderbook/{symbol}",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "probe": "skipped",
+          "reason": "needs a parameter",
+          "section": "markets",
+          "verdict": "unprobed"
+        },
+        {
+          "path": "/api/v1/perpetual/trades/{symbol}",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "probe": "skipped",
+          "reason": "needs a parameter",
+          "section": "markets",
+          "verdict": "unprobed"
+        },
+        {
+          "path": "/api/v1/perpetual/user/position/{market_symbol}",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "probe": "skipped",
+          "reason": "needs a parameter",
+          "section": "markets",
+          "verdict": "unprobed"
+        },
+        {
+          "path": "/api/v1/prices",
+          "sources": [
+            "openapi.json",
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 2,
+          "status_trusted": 200,
+          "bytes_trusted": 2,
+          "probe": "done",
+          "section": "markets",
+          "verdict": "ok"
+        },
+        {
+          "path": "/api/v1/robinhood/leaderboard",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 4148,
+          "status_trusted": 200,
+          "bytes_trusted": 4148,
+          "probe": "done",
+          "section": "markets",
+          "verdict": "ok"
+        },
+        {
+          "path": "/api/v1/robinhood/perpetual/markets",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 1744,
+          "status_trusted": 200,
+          "bytes_trusted": 1744,
+          "probe": "done",
+          "section": "markets",
+          "verdict": "ok"
+        },
+        {
+          "path": "/api/v1/robinhood/wallet",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 401,
+          "bytes_anon": 30,
+          "status_trusted": 401,
+          "bytes_trusted": 30,
+          "probe": "done",
+          "section": "markets",
+          "verdict": "auth"
+        }
+      ],
+      "tool_detail": [
+        {
+          "name": "get_market",
+          "declared_tier": "unknown"
+        },
+        {
+          "name": "get_market_analytics",
+          "declared_tier": "trusted"
+        },
+        {
+          "name": "get_oracle_insights",
+          "declared_tier": "trusted"
+        },
+        {
+          "name": "get_prices",
+          "declared_tier": "unknown"
+        },
+        {
+          "name": "list_markets",
+          "declared_tier": "unknown"
+        },
+        {
+          "name": "search_markets",
+          "declared_tier": "unknown"
+        }
+      ]
+    },
+    {
+      "id": "arena",
+      "title": "CyMetica-42 Arena",
+      "blurb": "Blue vs Red team AI hedge-fund competition and betting on it.",
+      "blast": "integrity",
+      "endpoints_documented": 2,
+      "endpoints_probed": 1,
+      "endpoints_reachable": 1,
+      "endpoints_unprobeable": 1,
+      "verdicts": {
+        "ok": 1,
+        "method": 1
+      },
+      "reachable_pct": 100,
+      "tools_declared": 0,
+      "tools_anon": 0,
+      "tools_trusted": 0,
+      "endpoint_detail": [
+        {
+          "path": "/api/v1/arena/market",
+          "sources": [
+            "openapi.json"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 7079,
+          "status_trusted": 200,
+          "bytes_trusted": 7079,
+          "probe": "done",
+          "section": "arena",
+          "verdict": "ok"
+        },
+        {
+          "path": "/api/v1/arena/order",
+          "sources": [
+            "agent-skills.json"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 405,
+          "bytes_anon": 31,
+          "status_trusted": 405,
+          "bytes_trusted": 31,
+          "probe": "done",
+          "section": "arena",
+          "verdict": "method"
+        }
+      ],
+      "tool_detail": []
+    },
+    {
+      "id": "agents",
+      "title": "AI trading agents",
+      "blurb": "Agent species, cloning, leaderboards, skills. The headline product for AI callers.",
+      "blast": "integrity",
+      "endpoints_documented": 10,
+      "endpoints_probed": 3,
+      "endpoints_reachable": 3,
+      "endpoints_unprobeable": 7,
+      "verdicts": {
+        "method": 2,
+        "ok": 3,
+        "unprobed": 5
+      },
+      "reachable_pct": 100,
+      "tools_declared": 0,
+      "tools_anon": 0,
+      "tools_trusted": 0,
+      "endpoint_detail": [
+        {
+          "path": "/api/v1/agent-species/{symbol}",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "probe": "skipped",
+          "reason": "needs a parameter",
+          "section": "agents",
+          "verdict": "unprobed"
+        },
+        {
+          "path": "/api/v1/agent-species/{symbol}/clone",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "probe": "skipped",
+          "reason": "needs a parameter",
+          "section": "agents",
+          "verdict": "unprobed"
+        },
+        {
+          "path": "/api/v1/agents/clone",
+          "sources": [
+            "openapi.json",
+            "agent-skills.json"
+          ],
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "status_anon": 405,
+          "bytes_anon": 31,
+          "status_trusted": 405,
+          "bytes_trusted": 31,
+          "probe": "done",
+          "section": "agents",
+          "verdict": "method"
+        },
+        {
+          "path": "/api/v1/agents/leaderboard",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 3144,
+          "status_trusted": 200,
+          "bytes_trusted": 3144,
+          "probe": "done",
+          "section": "agents",
+          "verdict": "ok"
+        },
+        {
+          "path": "/api/v1/agents/species",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 5841,
+          "status_trusted": 200,
+          "bytes_trusted": 5841,
+          "probe": "done",
+          "section": "agents",
+          "verdict": "ok"
+        },
+        {
+          "path": "/api/v1/cloned-bots/clone",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 405,
+          "bytes_anon": 31,
+          "status_trusted": 405,
+          "bytes_trusted": 31,
+          "probe": "done",
+          "section": "agents",
+          "verdict": "method"
+        },
+        {
+          "path": "/api/v1/cloned-bots/my-clones",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 401,
+          "bytes_anon": 92,
+          "status_trusted": 200,
+          "bytes_trusted": 2,
+          "probe": "done",
+          "section": "agents",
+          "verdict": "ok"
+        },
+        {
+          "path": "/api/v1/cloned-bots/{instance_id}/chat",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "probe": "skipped",
+          "reason": "needs a parameter",
+          "section": "agents",
+          "verdict": "unprobed"
+        },
+        {
+          "path": "/api/v1/cloned-bots/{instance_id}/fund",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "probe": "skipped",
+          "reason": "needs a parameter",
+          "section": "agents",
+          "verdict": "unprobed"
+        },
+        {
+          "path": "/api/v1/cloned-bots/{instance_id}/withdraw",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "probe": "skipped",
+          "reason": "needs a parameter",
+          "section": "agents",
+          "verdict": "unprobed"
+        }
+      ],
+      "tool_detail": []
+    },
+    {
+      "id": "agentbook",
+      "title": "AgentBook (social & reputation)",
+      "blurb": "Agent social feed, posts, votes, channels, reputation scoring backed by trading data.",
+      "blast": "measurement",
+      "endpoints_documented": 7,
+      "endpoints_probed": 3,
+      "endpoints_reachable": 3,
+      "endpoints_unprobeable": 4,
+      "verdicts": {
+        "ok": 3,
+        "unprobed": 4
+      },
+      "reachable_pct": 100,
+      "tools_declared": 4,
+      "tools_anon": 0,
+      "tools_trusted": 4,
+      "endpoint_detail": [
+        {
+          "path": "/api/v1/agentbook/channels/{slug}/chat",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "probe": "skipped",
+          "reason": "needs a parameter",
+          "section": "agentbook",
+          "verdict": "unprobed"
+        },
+        {
+          "path": "/api/v1/agentbook/channels/{slug}/subscribe",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "probe": "skipped",
+          "reason": "needs a parameter",
+          "section": "agentbook",
+          "verdict": "unprobed"
+        },
+        {
+          "path": "/api/v1/agentbook/feed",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 33841,
+          "status_trusted": 200,
+          "bytes_trusted": 33841,
+          "probe": "done",
+          "section": "agentbook",
+          "verdict": "ok"
+        },
+        {
+          "path": "/api/v1/agentbook/posts",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 15186,
+          "status_trusted": 200,
+          "bytes_trusted": 15186,
+          "probe": "done",
+          "section": "agentbook",
+          "verdict": "ok"
+        },
+        {
+          "path": "/api/v1/agentbook/posts/{id}/comments",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "probe": "skipped",
+          "reason": "needs a parameter",
+          "section": "agentbook",
+          "verdict": "unprobed"
+        },
+        {
+          "path": "/api/v1/agentbook/posts/{id}/vote",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "probe": "skipped",
+          "reason": "needs a parameter",
+          "section": "agentbook",
+          "verdict": "unprobed"
+        },
+        {
+          "path": "/api/v1/agentbook/reputation/leaderboard",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 2577,
+          "status_trusted": 200,
+          "bytes_trusted": 2577,
+          "probe": "done",
+          "section": "agentbook",
+          "verdict": "ok"
+        }
+      ],
+      "tool_detail": [
+        {
+          "name": "get_signal_history",
+          "declared_tier": "trusted"
+        },
+        {
+          "name": "submit_feedback",
+          "declared_tier": "recognized"
+        },
+        {
+          "name": "submit_observation",
+          "declared_tier": "recognized"
+        },
+        {
+          "name": "submit_signal",
+          "declared_tier": "recognized"
+        }
+      ]
+    },
+    {
+      "id": "prediction_pools",
+      "title": "Prediction pools & statistics",
+      "blurb": "BTC pool state and history, prediction statistics, epoch mechanics.",
+      "blast": "integrity",
+      "endpoints_documented": 0,
+      "endpoints_probed": 0,
+      "endpoints_reachable": 0,
+      "endpoints_unprobeable": 0,
+      "verdicts": {},
+      "reachable_pct": null,
+      "tools_declared": 3,
+      "tools_anon": 3,
+      "tools_trusted": 3,
+      "endpoint_detail": [],
+      "tool_detail": [
+        {
+          "name": "get_btc_pool_history",
+          "declared_tier": "unknown"
+        },
+        {
+          "name": "get_btc_pool_state",
+          "declared_tier": "unknown"
+        },
+        {
+          "name": "get_prediction_statistics",
+          "declared_tier": "unknown"
+        }
+      ]
+    },
+    {
+      "id": "swaps",
+      "title": "Swaps & cross-chain",
+      "blurb": "Multi-chain token swaps and bridges. The chain count is itself contested across sources.",
+      "blast": "custody",
+      "endpoints_documented": 4,
+      "endpoints_probed": 2,
+      "endpoints_reachable": 2,
+      "endpoints_unprobeable": 2,
+      "verdicts": {
+        "ok": 1,
+        "unprobed": 1,
+        "method": 1,
+        "auth": 1
+      },
+      "reachable_pct": 100,
+      "tools_declared": 0,
+      "tools_anon": 0,
+      "tools_trusted": 0,
+      "endpoint_detail": [
+        {
+          "path": "/api/v1/swap/chains",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 2461,
+          "status_trusted": 200,
+          "bytes_trusted": 2461,
+          "probe": "done",
+          "section": "swaps",
+          "verdict": "ok"
+        },
+        {
+          "path": "/api/v1/swap/execute",
+          "sources": [
+            "llms.txt",
+            "agent-skills.json"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 405,
+          "bytes_anon": 31,
+          "status_trusted": 405,
+          "bytes_trusted": 31,
+          "probe": "done",
+          "section": "swaps",
+          "verdict": "method"
+        },
+        {
+          "path": "/api/v1/swap/history",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 401,
+          "bytes_anon": 81,
+          "status_trusted": 401,
+          "bytes_trusted": 81,
+          "probe": "done",
+          "section": "swaps",
+          "verdict": "auth"
+        },
+        {
+          "path": "/api/v1/swap/tokens/{chain_id}",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "probe": "skipped",
+          "reason": "needs a parameter",
+          "section": "swaps",
+          "verdict": "unprobed"
+        }
+      ],
+      "tool_detail": []
+    },
+    {
+      "id": "launchpad",
+      "title": "Robinhood Chain launchpad",
+      "blurb": "Non-custodial token launches on chain 4663. Public MCP tools, returns unsigned transactions.",
+      "blast": "custody",
+      "endpoints_documented": 1,
+      "endpoints_probed": 1,
+      "endpoints_reachable": 1,
+      "endpoints_unprobeable": 0,
+      "verdicts": {
+        "ok": 1
+      },
+      "reachable_pct": 100,
+      "tools_declared": 3,
+      "tools_anon": 3,
+      "tools_trusted": 3,
+      "endpoint_detail": [
+        {
+          "path": "/api/v1/launchpad/onchain/screener",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 79125,
+          "status_trusted": 200,
+          "bytes_trusted": 79125,
+          "probe": "done",
+          "section": "launchpad",
+          "verdict": "ok"
+        }
+      ],
+      "tool_detail": [
+        {
+          "name": "launchpad_launch_token",
+          "declared_tier": "unknown"
+        },
+        {
+          "name": "launchpad_list_tokens",
+          "declared_tier": "unknown"
+        },
+        {
+          "name": "launchpad_trade_quote",
+          "declared_tier": "unknown"
+        }
+      ]
+    },
+    {
+      "id": "funds",
+      "title": "Custom funds (AIB)",
+      "blurb": "Agent-created index funds and the Tuatara fund. Redemption terms are contested between two pages.",
+      "blast": "custody",
+      "endpoints_documented": 2,
+      "endpoints_probed": 2,
+      "endpoints_reachable": 2,
+      "endpoints_unprobeable": 0,
+      "verdicts": {
+        "ok": 2
+      },
+      "reachable_pct": 100,
+      "tools_declared": 3,
+      "tools_anon": 0,
+      "tools_trusted": 3,
+      "endpoint_detail": [
+        {
+          "path": "/api/v1/staking/stats",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 359,
+          "status_trusted": 200,
+          "bytes_trusted": 359,
+          "probe": "done",
+          "section": "funds",
+          "verdict": "ok"
+        },
+        {
+          "path": "/api/v1/staking/tiers",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 593,
+          "status_trusted": 200,
+          "bytes_trusted": 593,
+          "probe": "done",
+          "section": "funds",
+          "verdict": "ok"
+        }
+      ],
+      "tool_detail": [
+        {
+          "name": "create_aib_fund",
+          "declared_tier": "allied"
+        },
+        {
+          "name": "edit_aib_fund_basket",
+          "declared_tier": "allied"
+        },
+        {
+          "name": "list_my_aib_funds",
+          "declared_tier": "allied"
+        }
+      ]
+    },
+    {
+      "id": "prop_desk",
+      "title": "Prop desk",
+      "blurb": "Funded trading accounts, $10K-$200K tiers, profit-split payouts.",
+      "blast": "custody",
+      "endpoints_documented": 1,
+      "endpoints_probed": 0,
+      "endpoints_reachable": 0,
+      "endpoints_unprobeable": 1,
+      "verdicts": {
+        "method": 1
+      },
+      "reachable_pct": null,
+      "tools_declared": 0,
+      "tools_anon": 0,
+      "tools_trusted": 0,
+      "endpoint_detail": [
+        {
+          "path": "/api/v1/prop/signup",
+          "sources": [
+            "agent-skills.json"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 405,
+          "bytes_anon": 31,
+          "status_trusted": 405,
+          "bytes_trusted": 31,
+          "probe": "done",
+          "section": "prop_desk",
+          "verdict": "method"
+        }
+      ],
+      "tool_detail": []
+    },
+    {
+      "id": "ontology",
+      "title": "Tuatara vectors & ontology",
+      "blurb": "The proprietary asset-relationship engine and its machine-readable ontology.",
+      "blast": "measurement",
+      "endpoints_documented": 3,
+      "endpoints_probed": 1,
+      "endpoints_reachable": 1,
+      "endpoints_unprobeable": 2,
+      "verdicts": {
+        "unprobed": 2,
+        "ok": 1
+      },
+      "reachable_pct": 100,
+      "tools_declared": 7,
+      "tools_anon": 6,
+      "tools_trusted": 7,
+      "endpoint_detail": [
+        {
+          "path": "/api/v1/ontology/master/concepts/{slug}",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "probe": "skipped",
+          "reason": "needs a parameter",
+          "section": "ontology",
+          "verdict": "unprobed"
+        },
+        {
+          "path": "/api/v1/ontology/master/export",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 1036376,
+          "status_trusted": 200,
+          "bytes_trusted": 1036376,
+          "probe": "done",
+          "section": "ontology",
+          "verdict": "ok"
+        },
+        {
+          "path": "/api/v1/ontology/master/find-path/{slug}",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "probe": "skipped",
+          "reason": "needs a parameter",
+          "section": "ontology",
+          "verdict": "unprobed"
+        }
+      ],
+      "tool_detail": [
+        {
+          "name": "browse_ontology",
+          "declared_tier": "unknown"
+        },
+        {
+          "name": "find_trade_path",
+          "declared_tier": "unknown"
+        },
+        {
+          "name": "get_strategy_returns",
+          "declared_tier": "unknown"
+        },
+        {
+          "name": "list_ontology_dimensions",
+          "declared_tier": "unknown"
+        },
+        {
+          "name": "query_knowledge",
+          "declared_tier": "recognized"
+        },
+        {
+          "name": "resolve_ontology_concept",
+          "declared_tier": "unknown"
+        },
+        {
+          "name": "search_ontology",
+          "declared_tier": "unknown"
+        }
+      ]
+    },
+    {
+      "id": "backtest",
+      "title": "Backtest engine",
+      "blurb": "30-day strategy backtests. Where pro-forma history and live measured history can be conflated.",
+      "blast": "measurement",
+      "endpoints_documented": 4,
+      "endpoints_probed": 1,
+      "endpoints_reachable": 1,
+      "endpoints_unprobeable": 3,
+      "verdicts": {
+        "unprobed": 3,
+        "ok": 1
+      },
+      "reachable_pct": 100,
+      "tools_declared": 0,
+      "tools_anon": 0,
+      "tools_trusted": 0,
+      "endpoint_detail": [
+        {
+          "path": "/api/v1/backtest/bots/{slug}",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "probe": "skipped",
+          "reason": "needs a parameter",
+          "section": "backtest",
+          "verdict": "unprobed"
+        },
+        {
+          "path": "/api/v1/backtest/bots/{slug}/equity",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "probe": "skipped",
+          "reason": "needs a parameter",
+          "section": "backtest",
+          "verdict": "unprobed"
+        },
+        {
+          "path": "/api/v1/backtest/bots/{slug}/run-backtest",
+          "sources": [
+            "openapi.json"
+          ],
+          "methods": [
+            "POST"
+          ],
+          "probe": "skipped",
+          "reason": "needs a parameter",
+          "section": "backtest",
+          "verdict": "unprobed"
+        },
+        {
+          "path": "/api/v1/backtest/leaderboard",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 12965,
+          "status_trusted": 200,
+          "bytes_trusted": 12965,
+          "probe": "done",
+          "section": "backtest",
+          "verdict": "ok"
+        }
+      ],
+      "tool_detail": []
+    },
+    {
+      "id": "support",
+      "title": "Support & A2A agents",
+      "blurb": "The AI support agent, the QA agent endpoint, and A2A messaging. Our own reporting channel.",
+      "blast": "measurement",
+      "endpoints_documented": 4,
+      "endpoints_probed": 3,
+      "endpoints_reachable": 3,
+      "endpoints_unprobeable": 1,
+      "verdicts": {
+        "method": 1,
+        "ok": 3
+      },
+      "reachable_pct": 100,
+      "tools_declared": 3,
+      "tools_anon": 0,
+      "tools_trusted": 3,
+      "endpoint_detail": [
+        {
+          "path": "/api/v1/agent/opportunities",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 496641,
+          "status_trusted": 200,
+          "bytes_trusted": 496641,
+          "probe": "done",
+          "section": "support",
+          "verdict": "ok"
+        },
+        {
+          "path": "/api/v1/support/ai-agent",
+          "sources": [
+            "llms.txt",
+            "udc.json"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 405,
+          "bytes_anon": 31,
+          "status_trusted": 405,
+          "bytes_trusted": 31,
+          "probe": "done",
+          "section": "support",
+          "verdict": "method"
+        },
+        {
+          "path": "/api/v1/support/ai-agent/capabilities",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 2613,
+          "status_trusted": 200,
+          "bytes_trusted": 2613,
+          "probe": "done",
+          "section": "support",
+          "verdict": "ok"
+        },
+        {
+          "path": "/api/v1/support/ai-agent/opportunities",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 1115,
+          "status_trusted": 200,
+          "bytes_trusted": 1115,
+          "probe": "done",
+          "section": "support",
+          "verdict": "ok"
+        }
+      ],
+      "tool_detail": [
+        {
+          "name": "ask_nexus_deep",
+          "declared_tier": "recognized"
+        },
+        {
+          "name": "get_deep_answer",
+          "declared_tier": "recognized"
+        },
+        {
+          "name": "request_feature",
+          "declared_tier": "recognized"
+        }
+      ]
+    },
+    {
+      "id": "provenance",
+      "title": "AI-native provenance",
+      "blurb": "Build stats, AI authorship proof, due-diligence scoring. The platform's central marketing claim.",
+      "blast": "measurement",
+      "endpoints_documented": 5,
+      "endpoints_probed": 4,
+      "endpoints_reachable": 4,
+      "endpoints_unprobeable": 1,
+      "verdicts": {
+        "ok": 3,
+        "param": 1,
+        "method": 1
+      },
+      "reachable_pct": 100,
+      "tools_declared": 2,
+      "tools_anon": 2,
+      "tools_trusted": 2,
+      "endpoint_detail": [
+        {
+          "path": "/api/v1/ai-due-diligence",
+          "sources": [
+            "llms.txt",
+            "udc.json"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 405,
+          "bytes_anon": 31,
+          "status_trusted": 405,
+          "bytes_trusted": 31,
+          "probe": "done",
+          "section": "provenance",
+          "verdict": "method"
+        },
+        {
+          "path": "/api/v1/build-stats",
+          "sources": [
+            "udc.json"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 29828,
+          "status_trusted": 200,
+          "bytes_trusted": 29828,
+          "probe": "done",
+          "section": "provenance",
+          "verdict": "ok"
+        },
+        {
+          "path": "/api/v1/features",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 43368,
+          "status_trusted": 200,
+          "bytes_trusted": 43368,
+          "probe": "done",
+          "section": "provenance",
+          "verdict": "ok"
+        },
+        {
+          "path": "/api/v1/features/leaderboard",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 180423,
+          "status_trusted": 200,
+          "bytes_trusted": 180423,
+          "probe": "done",
+          "section": "provenance",
+          "verdict": "ok"
+        },
+        {
+          "path": "/api/v1/features/vote",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 422,
+          "bytes_anon": 156,
+          "status_trusted": 422,
+          "bytes_trusted": 156,
+          "probe": "done",
+          "section": "provenance",
+          "verdict": "param"
+        }
+      ],
+      "tool_detail": [
+        {
+          "name": "get_ai_native_proof",
+          "declared_tier": "unknown"
+        },
+        {
+          "name": "get_platform_status",
+          "declared_tier": "unknown"
+        }
+      ]
+    },
+    {
+      "id": "deadcoin",
+      "title": "Dead coin desk",
+      "blurb": "Quotes and desk info for illiquid tokens.",
+      "blast": "measurement",
+      "endpoints_documented": 0,
+      "endpoints_probed": 0,
+      "endpoints_reachable": 0,
+      "endpoints_unprobeable": 0,
+      "verdicts": {},
+      "reachable_pct": null,
+      "tools_declared": 2,
+      "tools_anon": 2,
+      "tools_trusted": 2,
+      "endpoint_detail": [],
+      "tool_detail": [
+        {
+          "name": "get_deadcoin_desk_info",
+          "declared_tier": "unknown"
+        },
+        {
+          "name": "get_deadcoin_quote",
+          "declared_tier": "unknown"
+        }
+      ]
+    },
+    {
+      "id": "realtime",
+      "title": "WebSocket & webhooks",
+      "blurb": "Real-time feeds declared in AsyncAPI 3.0, plus webhook registration and price subscriptions.",
+      "blast": "measurement",
+      "endpoints_documented": 16,
+      "endpoints_probed": 0,
+      "endpoints_reachable": 0,
+      "endpoints_unprobeable": 16,
+      "verdicts": {
+        "websocket": 16
+      },
+      "reachable_pct": null,
+      "tools_declared": 2,
+      "tools_anon": 0,
+      "tools_trusted": 2,
+      "endpoint_detail": [
+        {
+          "path": "/ws/agentbook/feed",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 404,
+          "bytes_anon": 18551,
+          "status_trusted": 404,
+          "bytes_trusted": 18551,
+          "probe": "done",
+          "section": "realtime",
+          "verdict": "websocket"
+        },
+        {
+          "path": "/ws/agents/leaderboard",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 404,
+          "bytes_anon": 18551,
+          "status_trusted": 404,
+          "bytes_trusted": 18551,
+          "probe": "done",
+          "section": "realtime",
+          "verdict": "websocket"
+        },
+        {
+          "path": "/ws/backtest/progress",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 404,
+          "bytes_anon": 18551,
+          "status_trusted": 404,
+          "bytes_trusted": 18551,
+          "probe": "done",
+          "section": "realtime",
+          "verdict": "websocket"
+        },
+        {
+          "path": "/ws/deposits",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 404,
+          "bytes_anon": 18551,
+          "status_trusted": 404,
+          "bytes_trusted": 18551,
+          "probe": "done",
+          "section": "realtime",
+          "verdict": "websocket"
+        },
+        {
+          "path": "/ws/featured",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 404,
+          "bytes_anon": 18551,
+          "status_trusted": 404,
+          "bytes_trusted": 18551,
+          "probe": "done",
+          "section": "realtime",
+          "verdict": "websocket"
+        },
+        {
+          "path": "/ws/features/leaderboard",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 404,
+          "bytes_anon": 18551,
+          "status_trusted": 404,
+          "bytes_trusted": 18551,
+          "probe": "done",
+          "section": "realtime",
+          "verdict": "websocket"
+        },
+        {
+          "path": "/ws/robinhood/leaderboard",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 404,
+          "bytes_anon": 18551,
+          "status_trusted": 404,
+          "bytes_trusted": 18551,
+          "probe": "done",
+          "section": "realtime",
+          "verdict": "websocket"
+        },
+        {
+          "path": "/ws/robinhood/live",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 404,
+          "bytes_anon": 18551,
+          "status_trusted": 404,
+          "bytes_trusted": 18551,
+          "probe": "done",
+          "section": "realtime",
+          "verdict": "websocket"
+        },
+        {
+          "path": "/ws/top-markets",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 404,
+          "bytes_anon": 18551,
+          "status_trusted": 404,
+          "bytes_trusted": 18551,
+          "probe": "done",
+          "section": "realtime",
+          "verdict": "websocket"
+        },
+        {
+          "path": "/ws/user/balance",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 404,
+          "bytes_anon": 18551,
+          "status_trusted": 404,
+          "bytes_trusted": 18551,
+          "probe": "done",
+          "section": "realtime",
+          "verdict": "websocket"
+        },
+        {
+          "path": "/ws/vaix/candles",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 404,
+          "bytes_anon": 18551,
+          "status_trusted": 404,
+          "bytes_trusted": 18551,
+          "probe": "done",
+          "section": "realtime",
+          "verdict": "websocket"
+        },
+        {
+          "path": "/ws/vaix/dashboard",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 404,
+          "bytes_anon": 18551,
+          "status_trusted": 404,
+          "bytes_trusted": 18551,
+          "probe": "done",
+          "section": "realtime",
+          "verdict": "websocket"
+        },
+        {
+          "path": "/ws/vaix/orderbook",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 404,
+          "bytes_anon": 18551,
+          "status_trusted": 404,
+          "bytes_trusted": 18551,
+          "probe": "done",
+          "section": "realtime",
+          "verdict": "websocket"
+        },
+        {
+          "path": "/ws/vaix/prices",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 404,
+          "bytes_anon": 18551,
+          "status_trusted": 404,
+          "bytes_trusted": 18551,
+          "probe": "done",
+          "section": "realtime",
+          "verdict": "websocket"
+        },
+        {
+          "path": "/ws/vaix/trades",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 404,
+          "bytes_anon": 18551,
+          "status_trusted": 404,
+          "bytes_trusted": 18551,
+          "probe": "done",
+          "section": "realtime",
+          "verdict": "websocket"
+        },
+        {
+          "path": "/ws/wta",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 404,
+          "bytes_anon": 18551,
+          "status_trusted": 404,
+          "bytes_trusted": 18551,
+          "probe": "done",
+          "section": "realtime",
+          "verdict": "websocket"
+        }
+      ],
+      "tool_detail": [
+        {
+          "name": "register_webhook",
+          "declared_tier": "allied"
+        },
+        {
+          "name": "subscribe_prices",
+          "declared_tier": "allied"
+        }
+      ]
+    },
+    {
+      "id": "unmapped",
+      "title": "Unmapped surface",
+      "blurb": "Documented endpoints that fit no section yet.",
+      "blast": "measurement",
+      "endpoints_documented": 5,
+      "endpoints_probed": 2,
+      "endpoints_reachable": 2,
+      "endpoints_unprobeable": 3,
+      "verdicts": {
+        "ok": 1,
+        "unprobed": 3,
+        "param": 1
+      },
+      "reachable_pct": 100,
+      "tools_declared": 0,
+      "tools_anon": 0,
+      "tools_trusted": 0,
+      "endpoint_detail": [
+        {
+          "path": "/api/v1/discover/url",
+          "sources": [
+            "agent-skills.json"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 422,
+          "bytes_anon": 89,
+          "status_trusted": 422,
+          "bytes_trusted": 89,
+          "probe": "done",
+          "section": "unmapped",
+          "verdict": "param"
+        },
+        {
+          "path": "/api/v1/wta/markets",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 200,
+          "bytes_anon": 41772,
+          "status_trusted": 200,
+          "bytes_trusted": 48630,
+          "probe": "done",
+          "section": "unmapped",
+          "verdict": "ok"
+        },
+        {
+          "path": "/api/v1/wta/markets/{market_id}",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "probe": "skipped",
+          "reason": "needs a parameter",
+          "section": "unmapped",
+          "verdict": "unprobed"
+        },
+        {
+          "path": "/api/v1/wta/markets/{market_id}/bet",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "probe": "skipped",
+          "reason": "needs a parameter",
+          "section": "unmapped",
+          "verdict": "unprobed"
+        },
+        {
+          "path": "/api/v1/wta/markets/{market_id}/bets",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "probe": "skipped",
+          "reason": "needs a parameter",
+          "section": "unmapped",
+          "verdict": "unprobed"
+        }
+      ],
+      "tool_detail": []
+    }
+  ]
+}

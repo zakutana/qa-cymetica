@@ -13,7 +13,7 @@ dependencies = [
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
-addopts = "-p qa.report_plugin --strict-markers -ra --tb=short"
+addopts = "-p qa.report_plugin -p pytester --strict-markers -ra --tb=short"
 markers = [
     "qa_component(name): platform component this test covers",
     "qa_tier(name): SAFE | PROBE | MUTATE -- enforced by the transport",
