@@ -277,7 +277,16 @@ def build_payload(ledger: dict | None = None, inventory: dict | None = None,
             "not_checked_in": (row.get("check") or {}).get("not_checked_in"),
             # Critique gap 5: content carried over from the hand-written
             # ledger quotes figures frozen at their last failing values.
-            "unmeasured": not (row.get("provenance") or {}).get("measured_at"),
+            #
+            # Shown only where it is ACTIONABLE -- a row with a working check
+            # that has not run again yet. On a withdrawn row it is noise, and
+            # on an unverifiable one the state already says the stronger
+            # thing: nothing can measure this. The operator asked three times
+            # what the tag meant, and on those rows the honest answer was
+            # "nothing you can do".
+            "unmeasured": (not (row.get("provenance") or {}).get("measured_at")
+                           and shown not in ("WITHDRAWN", "SUPERSEDED",
+                                             "UNVERIFIABLE")),
             "filed": [
                 {"report_id": r["report_id"], "status": r.get("status"),
                  "submitted_at": filed_at.get(r["report_id"])}

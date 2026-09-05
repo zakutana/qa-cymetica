@@ -176,6 +176,18 @@ def test_legacy_content_is_labelled_unmeasured(tmp_path, monkeypatch):
     assert by_id["CYM-legacy"]["unmeasured"] is True
     assert by_id["CYM-measured"]["unmeasured"] is False
 
+    # ...and only where it is actionable. On a withdrawn row it is noise; on
+    # an unverifiable one the state already says the stronger thing. Six rows
+    # wore it with nothing the operator could do about it.
+    quiet = _row("CYM-withdrawn", "REPRODUCING", "WITHDRAWN")
+    quiet["provenance"] = {"source": "legacy@ca0bc45", "measured_at": None}
+    unmeasurable = _row("CYM-nocheck", "UNVERIFIABLE", "NOT_RAISED", checks=[])
+    unmeasurable["provenance"] = {"source": "MSG-0002", "measured_at": None}
+
+    shown = {f["id"]: f["unmeasured"] for f in
+             render.build_payload(ledger=_ledger(quiet, unmeasurable))["findings"]}
+    assert shown == {"CYM-withdrawn": False, "CYM-nocheck": False}, shown
+
     # The flag has to reach the page, and quietly: it is true on 19 of 23
     # rows, so styling it as an alarm buries the state chip beside it -- the
     # thing actually worth reading. Assert the marking exists and that it

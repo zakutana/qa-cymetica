@@ -19,16 +19,16 @@
           "run_id": "run-20260904T131842Z-7518e8e"
         }
       },
-      "reproductions": 6,
+      "reproductions": 7,
       "provenance": {
-        "run_id": "run-20260905T164759Z-4b4283c",
-        "measured_at": "2026-09-05T16:49:10+00:00"
+        "run_id": "run-20260905T170702Z-c34e365",
+        "measured_at": "2026-09-05T17:08:12+00:00"
       },
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20260905T164759Z-4b4283c",
-          "at": "2026-09-05T16:49:10+00:00"
+          "run_id": "run-20260905T170702Z-c34e365",
+          "at": "2026-09-05T17:08:12+00:00"
         },
         "pinned_fingerprint": "a00fa16074a898173577cb72f9e863a691aa4bfdb20c43a2d1476189800850ff"
       },
@@ -76,7 +76,8 @@
       "reproduced_in": [
         "run-20260905T101042Z-45f8015",
         "run-20260905T163840Z-ef3ef59",
-        "run-20260905T164759Z-4b4283c"
+        "run-20260905T164759Z-4b4283c",
+        "run-20260905T170702Z-c34e365"
       ]
     },
     "CYM-bounty-filing-unauthenticated": {
@@ -105,16 +106,16 @@
           "run_id": "run-20260904T131842Z-7518e8e"
         }
       },
-      "reproductions": 6,
+      "reproductions": 7,
       "provenance": {
-        "run_id": "run-20260905T164759Z-4b4283c",
-        "measured_at": "2026-09-05T16:49:10+00:00"
+        "run_id": "run-20260905T170702Z-c34e365",
+        "measured_at": "2026-09-05T17:08:12+00:00"
       },
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20260905T164759Z-4b4283c",
-          "at": "2026-09-05T16:49:10+00:00"
+          "run_id": "run-20260905T170702Z-c34e365",
+          "at": "2026-09-05T17:08:12+00:00"
         },
         "pinned_fingerprint": "50e9db1361160f8a637e5f0bef8567aa271131874edeee1a00f4b2960e7b9f57"
       },
@@ -171,7 +172,8 @@
       "reproduced_in": [
         "run-20260905T101042Z-45f8015",
         "run-20260905T163840Z-ef3ef59",
-        "run-20260905T164759Z-4b4283c"
+        "run-20260905T164759Z-4b4283c",
+        "run-20260905T170702Z-c34e365"
       ]
     },
     "CYM-llms_agent_count_self_consistent": {
@@ -201,14 +203,14 @@
       },
       "reproductions": 3,
       "provenance": {
-        "run_id": "run-20260905T164759Z-4b4283c",
-        "measured_at": "2026-09-05T16:49:10+00:00"
+        "run_id": "run-20260905T170702Z-c34e365",
+        "measured_at": "2026-09-05T17:08:12+00:00"
       },
       "check": {
         "state": "INCONCLUSIVE",
         "adjudicated_by": {
-          "run_id": "run-20260905T164759Z-4b4283c",
-          "at": "2026-09-05T16:49:10+00:00"
+          "run_id": "run-20260905T170702Z-c34e365",
+          "at": "2026-09-05T17:08:12+00:00"
         },
         "pinned_fingerprint": null
       },
@@ -281,14 +283,14 @@
       },
       "reproductions": 3,
       "provenance": {
-        "run_id": "run-20260905T164759Z-4b4283c",
-        "measured_at": "2026-09-05T16:49:10+00:00"
+        "run_id": "run-20260905T170702Z-c34e365",
+        "measured_at": "2026-09-05T17:08:12+00:00"
       },
       "check": {
         "state": "INCONCLUSIVE",
         "adjudicated_by": {
-          "run_id": "run-20260905T164759Z-4b4283c",
-          "at": "2026-09-05T16:49:10+00:00"
+          "run_id": "run-20260905T170702Z-c34e365",
+          "at": "2026-09-05T17:08:12+00:00"
         },
         "pinned_fingerprint": null
       },
@@ -354,14 +356,14 @@
       },
       "reproductions": 3,
       "provenance": {
-        "run_id": "run-20260905T164759Z-4b4283c",
-        "measured_at": "2026-09-05T16:49:10+00:00"
+        "run_id": "run-20260905T170702Z-c34e365",
+        "measured_at": "2026-09-05T17:08:12+00:00"
       },
       "check": {
         "state": "INCONCLUSIVE",
         "adjudicated_by": {
-          "run_id": "run-20260905T164759Z-4b4283c",
-          "at": "2026-09-05T16:49:10+00:00"
+          "run_id": "run-20260905T170702Z-c34e365",
+          "at": "2026-09-05T17:08:12+00:00"
         },
         "pinned_fingerprint": null
       },
@@ -476,16 +478,16 @@
           "run_id": "run-20260904T131842Z-7518e8e"
         }
       },
-      "reproductions": 6,
+      "reproductions": 7,
       "provenance": {
-        "run_id": "run-20260905T164759Z-4b4283c",
-        "measured_at": "2026-09-05T16:49:10+00:00"
+        "run_id": "run-20260905T170702Z-c34e365",
+        "measured_at": "2026-09-05T17:08:12+00:00"
       },
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20260905T164759Z-4b4283c",
-          "at": "2026-09-05T16:49:10+00:00"
+          "run_id": "run-20260905T170702Z-c34e365",
+          "at": "2026-09-05T17:08:12+00:00"
         },
         "pinned_fingerprint": "sha256:f9559807c42fd3328c8879e7b899b7cd"
       },
@@ -533,7 +535,8 @@
       "reproduced_in": [
         "run-20260905T101042Z-45f8015",
         "run-20260905T163840Z-ef3ef59",
-        "run-20260905T164759Z-4b4283c"
+        "run-20260905T164759Z-4b4283c",
+        "run-20260905T170702Z-c34e365"
       ]
     },
     "CYM-mcp_resource_count": {
@@ -562,14 +565,14 @@
       },
       "reproductions": 3,
       "provenance": {
-        "run_id": "run-20260905T164759Z-4b4283c",
-        "measured_at": "2026-09-05T16:49:10+00:00"
+        "run_id": "run-20260905T170702Z-c34e365",
+        "measured_at": "2026-09-05T17:08:12+00:00"
       },
       "check": {
         "state": "INCONCLUSIVE",
         "adjudicated_by": {
-          "run_id": "run-20260905T164759Z-4b4283c",
-          "at": "2026-09-05T16:49:10+00:00"
+          "run_id": "run-20260905T170702Z-c34e365",
+          "at": "2026-09-05T17:08:12+00:00"
         },
         "pinned_fingerprint": null
       },
@@ -649,14 +652,14 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260905T164759Z-4b4283c",
-        "measured_at": "2026-09-05T16:49:10+00:00"
+        "run_id": "run-20260905T170702Z-c34e365",
+        "measured_at": "2026-09-05T17:08:12+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260905T164759Z-4b4283c",
-          "at": "2026-09-05T16:49:10+00:00"
+          "run_id": "run-20260905T170702Z-c34e365",
+          "at": "2026-09-05T17:08:12+00:00"
         },
         "pinned_fingerprint": "aee41113b423d34dbb0fb7a237f679ec142e320ffd706e3a3645b1a3b80b4cd5"
       },
@@ -779,14 +782,14 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260905T164759Z-4b4283c",
-        "measured_at": "2026-09-05T16:49:10+00:00"
+        "run_id": "run-20260905T170702Z-c34e365",
+        "measured_at": "2026-09-05T17:08:12+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260905T164759Z-4b4283c",
-          "at": "2026-09-05T16:49:10+00:00"
+          "run_id": "run-20260905T170702Z-c34e365",
+          "at": "2026-09-05T17:08:12+00:00"
         },
         "pinned_fingerprint": "sha256:ba019a19f7a7c39de5c5c19601580248"
       },
@@ -859,18 +862,22 @@
       "section": "agents",
       "component": "rest.agents",
       "detail": {
-        "live_agentbook": "8",
-        "live_species": "11",
-        "llms_txt": "10",
-        "mcp_json": "16"
+        "left": 11,
+        "right": 11,
+        "sources": {
+          "live_species": "len:$",
+          "llms_txt": "regex_int:any of our (\\d+) AI trading agent species"
+        },
+        "population": {
+          "witness": {
+            "live_species": "len:$",
+            "llms_txt": "any of our 11 AI trading agent species"
+          }
+        },
+        "reason": "agent_count: values differ"
       },
       "checks": [
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_count::live_agentbook-vs-live_species]",
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_count::live_agentbook-vs-llms_txt]",
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_count::live_agentbook-vs-mcp_json]",
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_count::live_species-vs-llms_txt]",
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_count::live_species-vs-mcp_json]",
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_count::llms_txt-vs-mcp_json]"
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_count::live_species-vs-llms_txt]"
       ],
       "first_seen": {
         "at": "2026-09-04T10:29:00+00:00",
@@ -880,14 +887,16 @@
       },
       "reproductions": 1,
       "provenance": {
-        "source": "legacy@ca0bc45",
-        "measured_at": null
+        "run_id": "run-20260905T170702Z-c34e365",
+        "measured_at": "2026-09-05T17:08:12+00:00"
       },
       "check": {
-        "state": "UNVERIFIED",
-        "adjudicated_by": null,
-        "pinned_fingerprint": null,
-        "not_checked_in": "run-20260905T164759Z-4b4283c"
+        "state": "PASSING_UNPINNED",
+        "adjudicated_by": {
+          "run_id": "run-20260905T170702Z-c34e365",
+          "at": "2026-09-05T17:08:12+00:00"
+        },
+        "pinned_fingerprint": null
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -921,6 +930,15 @@
             "event_id": "41111596965404d93edc172474771089ff0e117b4a3845c5e5dec6197b0b077a"
           },
           "at": "2026-09-04T13:30:00+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "UNVERIFIED",
+          "to": "PASSING_UNPINNED",
+          "cause": {
+            "run_id": "run-20260905T170702Z-c34e365"
+          },
+          "at": "2026-09-05T17:08:12+00:00"
         }
       ],
       "regressions": [],
@@ -961,7 +979,7 @@
         "state": "UNVERIFIED",
         "adjudicated_by": null,
         "pinned_fingerprint": null,
-        "not_checked_in": "run-20260905T164759Z-4b4283c"
+        "not_checked_in": "run-20260905T170702Z-c34e365"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -1048,8 +1066,8 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260905T164759Z-4b4283c",
-        "measured_at": "2026-09-05T16:49:10+00:00"
+        "run_id": "run-20260905T170702Z-c34e365",
+        "measured_at": "2026-09-05T17:08:12+00:00"
       },
       "check": {
         "state": "PASSING_UNPINNED",
@@ -1058,7 +1076,7 @@
           "at": "2026-09-05T10:11:28+00:00"
         },
         "pinned_fingerprint": null,
-        "evidence_only": "run-20260905T164759Z-4b4283c"
+        "evidence_only": "run-20260905T170702Z-c34e365"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -1146,14 +1164,14 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260905T164759Z-4b4283c",
-        "measured_at": "2026-09-05T16:49:10+00:00"
+        "run_id": "run-20260905T170702Z-c34e365",
+        "measured_at": "2026-09-05T17:08:12+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260905T164759Z-4b4283c",
-          "at": "2026-09-05T16:49:10+00:00"
+          "run_id": "run-20260905T170702Z-c34e365",
+          "at": "2026-09-05T17:08:12+00:00"
         },
         "pinned_fingerprint": "sha256:e081c62f35eae60b83c14e9766dce049"
       },
@@ -1250,14 +1268,14 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260905T164759Z-4b4283c",
-        "measured_at": "2026-09-05T16:49:10+00:00"
+        "run_id": "run-20260905T170702Z-c34e365",
+        "measured_at": "2026-09-05T17:08:12+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260905T164759Z-4b4283c",
-          "at": "2026-09-05T16:49:10+00:00"
+          "run_id": "run-20260905T170702Z-c34e365",
+          "at": "2026-09-05T17:08:12+00:00"
         },
         "pinned_fingerprint": "eec8c826a9ff556658be3354fa9e29469b301df49817b0ddde9a152b2704f1d5"
       },
@@ -1351,16 +1369,16 @@
           "run_id": "legacy"
         }
       },
-      "reproductions": 4,
+      "reproductions": 5,
       "provenance": {
-        "run_id": "run-20260905T164759Z-4b4283c",
-        "measured_at": "2026-09-05T16:49:10+00:00"
+        "run_id": "run-20260905T170702Z-c34e365",
+        "measured_at": "2026-09-05T17:08:12+00:00"
       },
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20260905T164759Z-4b4283c",
-          "at": "2026-09-05T16:49:10+00:00"
+          "run_id": "run-20260905T170702Z-c34e365",
+          "at": "2026-09-05T17:08:12+00:00"
         },
         "pinned_fingerprint": "sha256:ece74c708d5503fb5502ea84e5e5eb93"
       },
@@ -1417,7 +1435,8 @@
       "reproduced_in": [
         "run-20260905T101042Z-45f8015",
         "run-20260905T163840Z-ef3ef59",
-        "run-20260905T164759Z-4b4283c"
+        "run-20260905T164759Z-4b4283c",
+        "run-20260905T170702Z-c34e365"
       ]
     },
     "CYM-mcp_tool_count": {
@@ -1454,7 +1473,7 @@
         "state": "UNVERIFIED",
         "adjudicated_by": null,
         "pinned_fingerprint": null,
-        "not_checked_in": "run-20260905T164759Z-4b4283c"
+        "not_checked_in": "run-20260905T170702Z-c34e365"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -1516,13 +1535,14 @@
       "section": "mcp",
       "component": "mcp.tools_list",
       "detail": {
-        "llms_txt": "{get_featured_market, get_leaderboard, get_market, get_market_summary, get_markets, get_orderbook, get_price, get_prices, get_trades, get_trending_markets, search_markets}  n=11",
-        "mcp_anon": "{ask_nexus_deep, browse_ontology, create_aib_fund, edit_aib_fund_basket, find_trade_path, get_agent_profile, get_ai_native_proof, get_btc_pool_history, get_btc_pool_state, get_deadcoin_desk_info, get_deadcoin_quote, get_deep_answer ... (+34 more)}  n=46",
-        "mcp_json": "{ask_nexus_deep, browse_ontology, create_aib_fund, edit_aib_fund_basket, find_trade_path, get_agent_profile, get_ai_native_proof, get_btc_pool_history, get_btc_pool_state, get_deadcoin_desk_info, get_deadcoin_quote, get_deep_answer ... (+34 more)}  n=46"
+        "sources": {
+          "llms_txt": "regex_all:\\[(\\w+)\\]\\(/mcp/v1/tools/\\w+\\)",
+          "mcp_json": "set:$.tools[*].name"
+        },
+        "reason": "mcp_tool_names_documented_exist: regex_all found no match for '\\\\[(\\\\w+)\\\\]\\\\(/mcp/v1/tools/\\\\w+\\\\)'"
       },
       "checks": [
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_names_declared_vs_served::llms_txt-vs-mcp_anon]",
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_names_declared_vs_served::llms_txt-vs-mcp_json]"
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_names_documented_exist::llms_txt-vs-mcp_json]"
       ],
       "first_seen": {
         "at": "2026-09-04T10:29:00+00:00",
@@ -1532,14 +1552,16 @@
       },
       "reproductions": 1,
       "provenance": {
-        "source": "legacy@ca0bc45",
-        "measured_at": null
+        "run_id": "run-20260905T170702Z-c34e365",
+        "measured_at": "2026-09-05T17:08:12+00:00"
       },
       "check": {
-        "state": "UNVERIFIED",
-        "adjudicated_by": null,
-        "pinned_fingerprint": null,
-        "not_checked_in": "run-20260905T164759Z-4b4283c"
+        "state": "INCONCLUSIVE",
+        "adjudicated_by": {
+          "run_id": "run-20260905T170702Z-c34e365",
+          "at": "2026-09-05T17:08:12+00:00"
+        },
+        "pinned_fingerprint": null
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -1573,12 +1595,21 @@
             "event_id": "89f2cbc1667df532052aee4c5766f2ceb85e4cf14c097a014a975babc70e5e2a"
           },
           "at": "2026-09-04T13:30:00+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "UNVERIFIED",
+          "to": "INCONCLUSIVE",
+          "cause": {
+            "run_id": "run-20260905T170702Z-c34e365"
+          },
+          "at": "2026-09-05T17:08:12+00:00"
         }
       ],
       "regressions": [],
       "obligations": {
         "reverify": true,
-        "repair_check": false,
+        "repair_check": true,
         "reopen": [],
         "retractions": []
       }
@@ -1592,11 +1623,49 @@
       "section": "discovery",
       "component": "discovery.wellknown",
       "detail": {
-        "agent_card": "13",
-        "agent_skills": "10"
+        "left": [
+          "ai-due-diligence",
+          "ai-native-provenance",
+          "arena-trading",
+          "asset-discovery",
+          "clone-ai-agent",
+          "et10-revenue-share",
+          "exchange-tokens",
+          "live-headlines",
+          "market-data",
+          "portfolio-management",
+          "prop-desk-trading",
+          "smart-delegation",
+          "tge-prediction-markets",
+          "trade-event-cards",
+          "trade-prediction-markets"
+        ],
+        "right": [
+          "arena-trading",
+          "asset-discovery",
+          "clone-ai-agent",
+          "et10-revenue-share",
+          "exchange-tokens",
+          "market-data",
+          "portfolio-management",
+          "prop-desk-trading",
+          "trade-event-cards",
+          "trade-prediction-markets"
+        ],
+        "sources": {
+          "agent_card": "set:$.skills[*].id",
+          "agent_skills": "set:$.skills[*].id"
+        },
+        "population": {
+          "witness": {
+            "agent_card": "set:$.skills[*].id",
+            "agent_skills": "set:$.skills[*].id"
+          }
+        },
+        "reason": "skills_subset: left has ['ai-due-diligence', 'ai-native-provenance', 'live-headlines', 'smart-delegation', 'tge-prediction-markets'] which right lacks"
       },
       "checks": [
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[skill_count::agent_card-vs-agent_skills]"
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[skills_subset::agent_card-vs-agent_skills]"
       ],
       "first_seen": {
         "at": "2026-09-04T10:29:00+00:00",
@@ -1606,14 +1675,16 @@
       },
       "reproductions": 1,
       "provenance": {
-        "source": "legacy@ca0bc45",
-        "measured_at": null
+        "run_id": "run-20260905T170702Z-c34e365",
+        "measured_at": "2026-09-05T17:08:12+00:00"
       },
       "check": {
-        "state": "UNVERIFIED",
-        "adjudicated_by": null,
-        "pinned_fingerprint": null,
-        "not_checked_in": "run-20260905T164759Z-4b4283c"
+        "state": "REPRODUCING",
+        "adjudicated_by": {
+          "run_id": "run-20260905T170702Z-c34e365",
+          "at": "2026-09-05T17:08:12+00:00"
+        },
+        "pinned_fingerprint": "sha256:f9559807c42fd3328c8879e7b899b7cd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -1647,6 +1718,15 @@
             "event_id": "b71171c0d2ee346bf80bc36815d5b9e54f18fe0d65ccfc80abaec8b8647664cb"
           },
           "at": "2026-09-04T13:30:00+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "UNVERIFIED",
+          "to": "REPRODUCING",
+          "cause": {
+            "run_id": "run-20260905T170702Z-c34e365"
+          },
+          "at": "2026-09-05T17:08:12+00:00"
         }
       ],
       "regressions": [],
@@ -1666,11 +1746,49 @@
       "section": "discovery",
       "component": "discovery.wellknown",
       "detail": {
-        "agent_card": "{ai-due-diligence, ai-native-provenance, arena-trading, clone-ai-agent, et10-revenue-share, exchange-tokens, live-headlines, market-data, prop-desk-trading, smart-delegation, tge-prediction-markets, trade-event-cards ... (+1 more)}  n=13",
-        "agent_skills": "{arena-trading, asset-discovery, clone-ai-agent, et10-revenue-share, exchange-crypto, get-market-data, portfolio-management, prop-desk-trading, trade-event-cards, trade-prediction-markets}  n=10"
+        "left": [
+          "ai-due-diligence",
+          "ai-native-provenance",
+          "arena-trading",
+          "asset-discovery",
+          "clone-ai-agent",
+          "et10-revenue-share",
+          "exchange-tokens",
+          "live-headlines",
+          "market-data",
+          "portfolio-management",
+          "prop-desk-trading",
+          "smart-delegation",
+          "tge-prediction-markets",
+          "trade-event-cards",
+          "trade-prediction-markets"
+        ],
+        "right": [
+          "arena-trading",
+          "asset-discovery",
+          "clone-ai-agent",
+          "et10-revenue-share",
+          "exchange-tokens",
+          "market-data",
+          "portfolio-management",
+          "prop-desk-trading",
+          "trade-event-cards",
+          "trade-prediction-markets"
+        ],
+        "sources": {
+          "agent_card": "set:$.skills[*].id",
+          "agent_skills": "set:$.skills[*].id"
+        },
+        "population": {
+          "witness": {
+            "agent_card": "set:$.skills[*].id",
+            "agent_skills": "set:$.skills[*].id"
+          }
+        },
+        "reason": "skills_subset: left has ['ai-due-diligence', 'ai-native-provenance', 'live-headlines', 'smart-delegation', 'tge-prediction-markets'] which right lacks"
       },
       "checks": [
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[skill_ids::agent_card-vs-agent_skills]"
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[skills_subset::agent_card-vs-agent_skills]"
       ],
       "first_seen": {
         "at": "2026-09-04T10:29:00+00:00",
@@ -1680,14 +1798,16 @@
       },
       "reproductions": 1,
       "provenance": {
-        "source": "legacy@ca0bc45",
-        "measured_at": null
+        "run_id": "run-20260905T170702Z-c34e365",
+        "measured_at": "2026-09-05T17:08:12+00:00"
       },
       "check": {
-        "state": "UNVERIFIED",
-        "adjudicated_by": null,
-        "pinned_fingerprint": null,
-        "not_checked_in": "run-20260905T164759Z-4b4283c"
+        "state": "REPRODUCING",
+        "adjudicated_by": {
+          "run_id": "run-20260905T170702Z-c34e365",
+          "at": "2026-09-05T17:08:12+00:00"
+        },
+        "pinned_fingerprint": "sha256:f9559807c42fd3328c8879e7b899b7cd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -1721,6 +1841,15 @@
             "event_id": "b71171c0d2ee346bf80bc36815d5b9e54f18fe0d65ccfc80abaec8b8647664cb"
           },
           "at": "2026-09-04T13:30:00+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "UNVERIFIED",
+          "to": "REPRODUCING",
+          "cause": {
+            "run_id": "run-20260905T170702Z-c34e365"
+          },
+          "at": "2026-09-05T17:08:12+00:00"
         }
       ],
       "regressions": [],
@@ -1941,8 +2070,8 @@
       "check": {
         "state": "INCONCLUSIVE",
         "adjudicated_by": {
-          "run_id": "run-20260905T164759Z-4b4283c",
-          "at": "2026-09-05T16:49:10+00:00"
+          "run_id": "run-20260905T170702Z-c34e365",
+          "at": "2026-09-05T17:08:12+00:00"
         },
         "pinned_fingerprint": "5e9d6943c1eaf398d598a59460e9acdf2a187f99ecb323ce600818b417cefeae"
       },
@@ -2007,8 +2136,8 @@
         "reason": "/api/v1/vaix/prices was removed from llms.txt, not fixed in place (it now answers 404)"
       },
       "provenance": {
-        "run_id": "run-20260905T164759Z-4b4283c",
-        "measured_at": "2026-09-05T16:49:10+00:00"
+        "run_id": "run-20260905T170702Z-c34e365",
+        "measured_at": "2026-09-05T17:08:12+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -2018,24 +2147,23 @@
       }
     }
   },
-  "run_id": "run-20260905T164759Z-4b4283c",
+  "run_id": "run-20260905T170702Z-c34e365",
   "run_level": "V",
-  "updated_at": "2026-09-05T16:49:10+00:00",
+  "updated_at": "2026-09-05T17:08:12+00:00",
   "counts": {
     "RAISED": 2,
     "THEY REPLIED": 1,
     "INCONCLUSIVE": 2,
     "WITHDRAWN": 5,
-    "NOT REPRODUCIBLE": 1,
+    "NOT REPRODUCIBLE": 2,
     "VERIFIED FIXED": 3,
-    "FIX CLAIMED": 4,
-    "PASSING (UNPINNED)": 1,
+    "PASSING (UNPINNED)": 2,
     "PASSING, UNCLAIMED": 1,
-    "STILL REPRODUCIBLE": 1,
+    "STILL REPRODUCIBLE": 3,
     "UNVERIFIABLE": 3
   },
   "events_head": {
-    "seq": 115,
-    "chain": "d6f31af5b0a33f67e0293a5800dae65c0fd86edd7a2429cd97b257b4aa5cccf7"
+    "seq": 127,
+    "chain": "331e2903a2b9d577c155c6bd565f3f2eace3e33c771ebc0b637f2ddde221e1b8"
   }
 }
