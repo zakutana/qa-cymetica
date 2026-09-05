@@ -34,14 +34,14 @@
       },
       "reproductions": 9,
       "provenance": {
-        "run_id": "run-20260905T203906Z-bb1644b",
-        "measured_at": "2026-09-05T20:40:28+00:00"
+        "run_id": "run-20260905T205037Z-0b4463c",
+        "measured_at": "2026-09-05T20:51:49+00:00"
       },
       "check": {
         "state": "CHECK_CHANGED",
         "adjudicated_by": {
-          "run_id": "run-20260905T203906Z-bb1644b",
-          "at": "2026-09-05T20:40:28+00:00"
+          "run_id": "run-20260905T205037Z-0b4463c",
+          "at": "2026-09-05T20:51:49+00:00"
         },
         "pinned_fingerprint": "a00fa16074a898173577cb72f9e863a691aa4bfdb20c43a2d1476189800850ff"
       },
@@ -155,14 +155,14 @@
       },
       "reproductions": 17,
       "provenance": {
-        "run_id": "run-20260905T203906Z-bb1644b",
-        "measured_at": "2026-09-05T20:40:28+00:00"
+        "run_id": "run-20260905T205037Z-0b4463c",
+        "measured_at": "2026-09-05T20:51:49+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260905T203906Z-bb1644b",
-          "at": "2026-09-05T20:40:28+00:00"
+          "run_id": "run-20260905T205037Z-0b4463c",
+          "at": "2026-09-05T20:51:49+00:00"
         },
         "pinned_fingerprint": "397e22c0e7398d16936993f413bf00f3a808e3278921c1aaf1b8132f95861a75"
       },
@@ -295,14 +295,14 @@
       },
       "reproductions": 3,
       "provenance": {
-        "run_id": "run-20260905T203906Z-bb1644b",
-        "measured_at": "2026-09-05T20:40:28+00:00"
+        "run_id": "run-20260905T205037Z-0b4463c",
+        "measured_at": "2026-09-05T20:51:49+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260905T203906Z-bb1644b",
-          "at": "2026-09-05T20:40:28+00:00"
+          "run_id": "run-20260905T205037Z-0b4463c",
+          "at": "2026-09-05T20:51:49+00:00"
         },
         "pinned_fingerprint": "ed84adfd7336f8497b0aab2f79944a79d9e797ae2cd57196bf5012246e3a5364"
       },
@@ -476,14 +476,14 @@
       },
       "reproductions": 3,
       "provenance": {
-        "run_id": "run-20260905T203906Z-bb1644b",
-        "measured_at": "2026-09-05T20:40:28+00:00"
+        "run_id": "run-20260905T205037Z-0b4463c",
+        "measured_at": "2026-09-05T20:51:49+00:00"
       },
       "check": {
         "state": "PASSING_UNPINNED",
         "adjudicated_by": {
-          "run_id": "run-20260905T203906Z-bb1644b",
-          "at": "2026-09-05T20:40:28+00:00"
+          "run_id": "run-20260905T205037Z-0b4463c",
+          "at": "2026-09-05T20:51:49+00:00"
         },
         "pinned_fingerprint": null
       },
@@ -590,8 +590,8 @@
       },
       "reproductions": 4,
       "provenance": {
-        "run_id": "run-20260905T203906Z-bb1644b",
-        "measured_at": "2026-09-05T20:40:28+00:00"
+        "run_id": "run-20260905T205037Z-0b4463c",
+        "measured_at": "2026-09-05T20:51:49+00:00"
       },
       "check": {
         "state": "REPRODUCING",
@@ -600,7 +600,7 @@
           "at": "2026-09-05T19:56:34+00:00"
         },
         "pinned_fingerprint": "76f53745c4961b0f0a6076e33cd1d16173f41f802d404fbbb746923be506797e",
-        "evidence_only": "run-20260905T203906Z-bb1644b"
+        "evidence_only": "run-20260905T205037Z-0b4463c"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -745,14 +745,14 @@
       },
       "reproductions": 8,
       "provenance": {
-        "run_id": "run-20260905T203906Z-bb1644b",
-        "measured_at": "2026-09-05T20:40:28+00:00"
+        "run_id": "run-20260905T205037Z-0b4463c",
+        "measured_at": "2026-09-05T20:51:49+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260905T203906Z-bb1644b",
-          "at": "2026-09-05T20:40:28+00:00"
+          "run_id": "run-20260905T205037Z-0b4463c",
+          "at": "2026-09-05T20:51:49+00:00"
         },
         "pinned_fingerprint": "sha256:f9559807c42fd3328c8879e7b899b7cd"
       },
@@ -854,14 +854,14 @@
       },
       "reproductions": 3,
       "provenance": {
-        "run_id": "run-20260905T203906Z-bb1644b",
-        "measured_at": "2026-09-05T20:40:28+00:00"
+        "run_id": "run-20260905T205037Z-0b4463c",
+        "measured_at": "2026-09-05T20:51:49+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260905T203906Z-bb1644b",
-          "at": "2026-09-05T20:40:28+00:00"
+          "run_id": "run-20260905T205037Z-0b4463c",
+          "at": "2026-09-05T20:51:49+00:00"
         },
         "pinned_fingerprint": "d5a3824c0ce9f24d09de8c39811e2fa1f2a28925a0c381baef0944b30dfb20e2"
       },
@@ -959,14 +959,14 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260905T203906Z-bb1644b",
-        "measured_at": "2026-09-05T20:40:28+00:00"
+        "run_id": "run-20260905T205037Z-0b4463c",
+        "measured_at": "2026-09-05T20:51:49+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260905T203906Z-bb1644b",
-          "at": "2026-09-05T20:40:28+00:00"
+          "run_id": "run-20260905T205037Z-0b4463c",
+          "at": "2026-09-05T20:51:49+00:00"
         },
         "pinned_fingerprint": "aee41113b423d34dbb0fb7a237f679ec142e320ffd706e3a3645b1a3b80b4cd5"
       },
@@ -1089,14 +1089,14 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260905T203906Z-bb1644b",
-        "measured_at": "2026-09-05T20:40:28+00:00"
+        "run_id": "run-20260905T205037Z-0b4463c",
+        "measured_at": "2026-09-05T20:51:49+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260905T203906Z-bb1644b",
-          "at": "2026-09-05T20:40:28+00:00"
+          "run_id": "run-20260905T205037Z-0b4463c",
+          "at": "2026-09-05T20:51:49+00:00"
         },
         "pinned_fingerprint": "sha256:ba019a19f7a7c39de5c5c19601580248"
       },
@@ -1194,14 +1194,14 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260905T203906Z-bb1644b",
-        "measured_at": "2026-09-05T20:40:28+00:00"
+        "run_id": "run-20260905T205037Z-0b4463c",
+        "measured_at": "2026-09-05T20:51:49+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260905T203906Z-bb1644b",
-          "at": "2026-09-05T20:40:28+00:00"
+          "run_id": "run-20260905T205037Z-0b4463c",
+          "at": "2026-09-05T20:51:49+00:00"
         },
         "pinned_fingerprint": "sha256:6156cefe281b0c01af3a3391dce65475"
       },
@@ -1295,7 +1295,7 @@
         "state": "UNVERIFIED",
         "adjudicated_by": null,
         "pinned_fingerprint": null,
-        "not_checked_in": "run-20260905T203906Z-bb1644b"
+        "not_checked_in": "run-20260905T205037Z-0b4463c"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -1380,14 +1380,14 @@
       },
       "reproductions": 4,
       "provenance": {
-        "run_id": "run-20260905T203906Z-bb1644b",
-        "measured_at": "2026-09-05T20:40:28+00:00"
+        "run_id": "run-20260905T205037Z-0b4463c",
+        "measured_at": "2026-09-05T20:51:49+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260905T203906Z-bb1644b",
-          "at": "2026-09-05T20:40:28+00:00"
+          "run_id": "run-20260905T205037Z-0b4463c",
+          "at": "2026-09-05T20:51:49+00:00"
         },
         "pinned_fingerprint": "7d407afa861e77a3cf508bd4322059dcb57278fd95b3e61c32246e840a94b4ee"
       },
@@ -1504,14 +1504,14 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260905T203906Z-bb1644b",
-        "measured_at": "2026-09-05T20:40:28+00:00"
+        "run_id": "run-20260905T205037Z-0b4463c",
+        "measured_at": "2026-09-05T20:51:49+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260905T203906Z-bb1644b",
-          "at": "2026-09-05T20:40:28+00:00"
+          "run_id": "run-20260905T205037Z-0b4463c",
+          "at": "2026-09-05T20:51:49+00:00"
         },
         "pinned_fingerprint": "sha256:e081c62f35eae60b83c14e9766dce049"
       },
@@ -1608,14 +1608,14 @@
       },
       "reproductions": 3,
       "provenance": {
-        "run_id": "run-20260905T203906Z-bb1644b",
-        "measured_at": "2026-09-05T20:40:28+00:00"
+        "run_id": "run-20260905T205037Z-0b4463c",
+        "measured_at": "2026-09-05T20:51:49+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260905T203906Z-bb1644b",
-          "at": "2026-09-05T20:40:28+00:00"
+          "run_id": "run-20260905T205037Z-0b4463c",
+          "at": "2026-09-05T20:51:49+00:00"
         },
         "pinned_fingerprint": "eec8c826a9ff556658be3354fa9e29469b301df49817b0ddde9a152b2704f1d5"
       },
@@ -1778,16 +1778,16 @@
       },
       "reproductions": 17,
       "provenance": {
-        "run_id": "run-20260905T203906Z-bb1644b",
-        "measured_at": "2026-09-05T20:40:28+00:00"
+        "run_id": "run-20260905T205037Z-0b4463c",
+        "measured_at": "2026-09-05T20:51:49+00:00"
       },
       "check": {
-        "state": "INCONCLUSIVE",
+        "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260905T203906Z-bb1644b",
-          "at": "2026-09-05T20:40:28+00:00"
+          "run_id": "run-20260905T205037Z-0b4463c",
+          "at": "2026-09-05T20:51:49+00:00"
         },
-        "pinned_fingerprint": "sha256:ece74c708d5503fb5502ea84e5e5eb93"
+        "pinned_fingerprint": "sha256:5c99ec0980ca532e1de54b67bc841220"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -1843,12 +1843,30 @@
             "run_id": "run-20260905T203906Z-bb1644b"
           },
           "at": "2026-09-05T20:40:28+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "CHECK_CHANGED",
+          "to": "PASSING",
+          "cause": {
+            "run_id": "run-20260905T205037Z-0b4463c"
+          },
+          "at": "2026-09-05T20:51:49+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "INCONCLUSIVE",
+          "to": "CHECK_CHANGED",
+          "cause": {
+            "run_id": "run-20260905T205037Z-0b4463c"
+          },
+          "at": "2026-09-05T20:51:49+00:00"
         }
       ],
       "regressions": [],
       "obligations": {
-        "reverify": true,
-        "repair_check": true,
+        "reverify": false,
+        "repair_check": false,
         "reopen": [],
         "retractions": []
       },
@@ -1905,7 +1923,7 @@
         "state": "UNVERIFIED",
         "adjudicated_by": null,
         "pinned_fingerprint": null,
-        "not_checked_in": "run-20260905T203906Z-bb1644b"
+        "not_checked_in": "run-20260905T205037Z-0b4463c"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -2058,14 +2076,14 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260905T203906Z-bb1644b",
-        "measured_at": "2026-09-05T20:40:28+00:00"
+        "run_id": "run-20260905T205037Z-0b4463c",
+        "measured_at": "2026-09-05T20:51:49+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260905T203906Z-bb1644b",
-          "at": "2026-09-05T20:40:28+00:00"
+          "run_id": "run-20260905T205037Z-0b4463c",
+          "at": "2026-09-05T20:51:49+00:00"
         },
         "pinned_fingerprint": "sha256:13577e53eb81ed18ef1bcf733fe4ca57"
       },
@@ -2199,14 +2217,14 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260905T203906Z-bb1644b",
-        "measured_at": "2026-09-05T20:40:28+00:00"
+        "run_id": "run-20260905T205037Z-0b4463c",
+        "measured_at": "2026-09-05T20:51:49+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260905T203906Z-bb1644b",
-          "at": "2026-09-05T20:40:28+00:00"
+          "run_id": "run-20260905T205037Z-0b4463c",
+          "at": "2026-09-05T20:51:49+00:00"
         },
         "pinned_fingerprint": "sha256:f9559807c42fd3328c8879e7b899b7cd"
       },
@@ -2331,14 +2349,14 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260905T203906Z-bb1644b",
-        "measured_at": "2026-09-05T20:40:28+00:00"
+        "run_id": "run-20260905T205037Z-0b4463c",
+        "measured_at": "2026-09-05T20:51:49+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260905T203906Z-bb1644b",
-          "at": "2026-09-05T20:40:28+00:00"
+          "run_id": "run-20260905T205037Z-0b4463c",
+          "at": "2026-09-05T20:51:49+00:00"
         },
         "pinned_fingerprint": "sha256:f9559807c42fd3328c8879e7b899b7cd"
       },
@@ -2496,14 +2514,14 @@
       },
       "reproductions": 8,
       "provenance": {
-        "run_id": "run-20260905T203906Z-bb1644b",
-        "measured_at": "2026-09-05T20:40:28+00:00"
+        "run_id": "run-20260905T205037Z-0b4463c",
+        "measured_at": "2026-09-05T20:51:49+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260905T203906Z-bb1644b",
-          "at": "2026-09-05T20:40:28+00:00"
+          "run_id": "run-20260905T205037Z-0b4463c",
+          "at": "2026-09-05T20:51:49+00:00"
         },
         "pinned_fingerprint": "72428c0f17a6565af6638a398900503553b08feb1ce717947a047309fc6af9ab"
       },
@@ -2623,20 +2641,23 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260905T203906Z-bb1644b",
-        "measured_at": "2026-09-05T20:40:28+00:00"
+        "run_id": "run-20260905T205037Z-0b4463c",
+        "measured_at": "2026-09-05T20:51:49+00:00"
       },
       "check": {
         "state": "PASSING_UNPINNED",
         "adjudicated_by": {
-          "run_id": "run-20260905T203906Z-bb1644b",
-          "at": "2026-09-05T20:40:28+00:00"
+          "run_id": "run-20260905T205037Z-0b4463c",
+          "at": "2026-09-05T20:51:49+00:00"
         },
         "pinned_fingerprint": null
       },
       "filing": {
-        "state": "NOT_RAISED",
-        "adjudicated_by": null,
+        "state": "WITHDRAWN",
+        "adjudicated_by": {
+          "event_id": "7fcc0a74b9f77bfe680befb4bd863e9451657083382c40ee49415d0303db7487",
+          "at": "2026-09-05T20:45:39+00:00"
+        },
         "reports": [],
         "refused": []
       },
@@ -2658,6 +2679,15 @@
             "run_id": "run-20260905T195522Z-2f46395"
           },
           "at": "2026-09-05T19:56:34+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "NOT_RAISED",
+          "to": "WITHDRAWN",
+          "cause": {
+            "event_id": "7fcc0a74b9f77bfe680befb4bd863e9451657083382c40ee49415d0303db7487"
+          },
+          "at": "2026-09-05T20:45:39+00:00"
         }
       ],
       "regressions": [],
@@ -2705,20 +2735,23 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260905T203906Z-bb1644b",
-        "measured_at": "2026-09-05T20:40:28+00:00"
+        "run_id": "run-20260905T205037Z-0b4463c",
+        "measured_at": "2026-09-05T20:51:49+00:00"
       },
       "check": {
         "state": "PASSING_UNPINNED",
         "adjudicated_by": {
-          "run_id": "run-20260905T203906Z-bb1644b",
-          "at": "2026-09-05T20:40:28+00:00"
+          "run_id": "run-20260905T205037Z-0b4463c",
+          "at": "2026-09-05T20:51:49+00:00"
         },
         "pinned_fingerprint": null
       },
       "filing": {
-        "state": "NOT_RAISED",
-        "adjudicated_by": null,
+        "state": "WITHDRAWN",
+        "adjudicated_by": {
+          "event_id": "607ff1a0ae9d95e5da2bfe7263eeb06000050d8767c10d7e34e12bdc15dfd1d4",
+          "at": "2026-09-05T20:45:39+00:00"
+        },
         "reports": [],
         "refused": []
       },
@@ -2740,6 +2773,15 @@
             "run_id": "run-20260905T195522Z-2f46395"
           },
           "at": "2026-09-05T19:56:34+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "NOT_RAISED",
+          "to": "WITHDRAWN",
+          "cause": {
+            "event_id": "607ff1a0ae9d95e5da2bfe7263eeb06000050d8767c10d7e34e12bdc15dfd1d4"
+          },
+          "at": "2026-09-05T20:45:39+00:00"
         }
       ],
       "regressions": [],
@@ -2772,10 +2814,10 @@
       },
       "reproductions": 1,
       "check": {
-        "state": "INCONCLUSIVE",
+        "state": "CHECK_CHANGED",
         "adjudicated_by": {
-          "run_id": "run-20260905T203906Z-bb1644b",
-          "at": "2026-09-05T20:40:28+00:00"
+          "run_id": "run-20260905T205037Z-0b4463c",
+          "at": "2026-09-05T20:51:49+00:00"
         },
         "pinned_fingerprint": "5e9d6943c1eaf398d598a59460e9acdf2a187f99ecb323ce600818b417cefeae"
       },
@@ -2815,6 +2857,15 @@
             "run_id": "run-20260905T164759Z-4b4283c"
           },
           "at": "2026-09-05T16:49:10+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "INCONCLUSIVE",
+          "to": "CHECK_CHANGED",
+          "cause": {
+            "run_id": "run-20260905T205037Z-0b4463c"
+          },
+          "at": "2026-09-05T20:51:49+00:00"
         }
       ],
       "regressions": [],
@@ -2832,16 +2883,18 @@
       ],
       "detail": {
         "left": "/api/v1/vaix/prices",
-        "right": 404,
+        "right": "removed from the documentation",
         "sources": {
           "document": "llms.txt",
-          "pinned_at": "2026-09-04T10:15:00+00:00"
+          "pinned_at": "2026-09-04T10:15:00+00:00",
+          "old_path_answers": 404
         },
-        "reason": "/api/v1/vaix/prices is no longer documented in llms.txt, and nothing replaced it -- removed from documentation, not fixed in place"
+        "population": 141,
+        "reason": "/api/v1/vaix/prices is no longer promised by llms.txt: the documentation was corrected by DELETING the entry, not by building the endpoint"
       },
       "provenance": {
-        "run_id": "run-20260905T203906Z-bb1644b",
-        "measured_at": "2026-09-05T20:40:28+00:00"
+        "run_id": "run-20260905T205037Z-0b4463c",
+        "measured_at": "2026-09-05T20:51:49+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -2851,17 +2904,15 @@
       }
     }
   },
-  "run_id": "run-20260905T203906Z-bb1644b",
+  "run_id": "run-20260905T205037Z-0b4463c",
   "run_level": "V",
-  "updated_at": "2026-09-05T20:40:28+00:00",
+  "updated_at": "2026-09-05T20:51:49+00:00",
   "counts": {
-    "WITHDRAWN": 7,
-    "VERIFIED FIXED": 14,
-    "NOT REPRODUCIBLE": 1,
-    "PASSING (UNPINNED)": 2
+    "WITHDRAWN": 9,
+    "VERIFIED FIXED": 15
   },
   "events_head": {
-    "seq": 406,
-    "chain": "6124033874d6d6d1b692625121efb01f4c94b6041bd41336454f413ba537df9e"
+    "seq": 434,
+    "chain": "eee4c3f0dc5df719bdae14932576e211c367db4a2f92f312056ce5b9c9fa394a"
   }
 }
