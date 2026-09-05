@@ -286,6 +286,15 @@ def test_every_subset_claim_names_its_direction():
             f"{claim['id']}: subset names {contained!r}, which is not one of "
             f"its sources {sorted(claim['sources'])}"
         )
+        # When the two sides hold the same values, no test can tell which way
+        # the claim runs -- both directions are true. The written reason is
+        # then the only thing standing between a correct claim and a reversed
+        # one, so it is required rather than optional.
+        assert (claim.get("subset_why") or "").strip(), (
+            f"{claim['id']}: subset claims must say WHY {contained} is the "
+            f"contained side. Where the two sides are equal, the direction "
+            f"cannot be verified from data and this sentence is all there is."
+        )
 
 
 @qa(component="reconciliation", tier=SafetyTier.SAFE, surface="discovery")

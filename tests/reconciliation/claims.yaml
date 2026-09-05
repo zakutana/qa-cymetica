@@ -38,6 +38,10 @@ claims:
     # Which side must be CONTAINED. Without it the pair was ordered
     # alphabetically and the claim could come out backwards.
     subset: llms_txt
+    subset_why: >
+      llms.txt is the claimant: it tells a reader which agents they can clone.
+      The live species catalogue is the fact. A document may name fewer than
+      exist; it may not name one that does not.
     severity: S1-INTEGRITY
     note: >
       Rewritten twice. The version filed with #48 enumerated the 21 symbols
@@ -93,6 +97,10 @@ claims:
     component: mcp.tools_list
     relation: subset
     subset: llms_txt
+    subset_why: >
+      Same shape as agent_names: llms.txt is the document making the claim and
+      the MCP manifest is the catalogue. Documenting fewer tools than exist is
+      fine; documenting one that does not exist is not.
     severity: S3-CONTRACT
     note: >
       Subset, not set_equal. llms.txt is not obliged to list every tool -- it is
@@ -118,6 +126,10 @@ claims:
     component: discovery.wellknown
     relation: subset
     subset: agent_skills
+    subset_why: >
+      Their own resolution on #51 states agent-card.json is the full discovery
+      card and agent-skills.json the endpoint-actionable subset of it. So the
+      skills file is the contained side, by their description of the model.
     severity: S3-CONTRACT
     note: >
       Their resolution on #51 states agent-card.json is the full discovery card
