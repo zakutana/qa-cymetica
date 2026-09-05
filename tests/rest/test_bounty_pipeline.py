@@ -54,12 +54,12 @@ def _our_submissions() -> list[dict]:
     return out
 
 
-def _mine(rest_anon):
+def _mine(rest_trusted):
     """Our own reports as the platform returns them, or why we cannot see."""
     wallet = os.environ.get("QA_WALLET_ADDRESS", "")
     if not wallet:
         return None, "QA_WALLET_ADDRESS is not set"
-    response = rest_anon.get(MINE, params={"wallet_address": wallet})
+    response = rest_trusted.get(MINE, params={"wallet_address": wallet})
     if response.status_code != 200:
         return None, f"my-reports answered HTTP {response.status_code}"
     rows = response.json().get("reports") or []
@@ -114,13 +114,13 @@ def test_filed_reports_reach_the_work_tracker(rest_anon):
 
 @qa(component="rest.support", tier=SafetyTier.SAFE, surface="rest",
     claim="bounty-fields-dropped")
-def test_submitted_fields_are_stored(rest_anon):
+def test_submitted_fields_are_stored(rest_trusted):
     """Fields the filing endpoint accepts and then does not keep.
 
     Accepting a field and discarding it is worse than rejecting it: the
     sender believes the information arrived.
     """
-    rows, why = _mine(rest_anon)
+    rows, why = _mine(rest_trusted)
     if rows is None:
         conclude(Measurement(
             verdict="inconclusive", reason=f"cannot tell: {why}",
@@ -151,10 +151,10 @@ def test_submitted_fields_are_stored(rest_anon):
 
 @qa(component="rest.support", tier=SafetyTier.SAFE, surface="rest",
     claim="bounty-hunter-name-lost")
-def test_hunter_name_is_retained(rest_anon):
+def test_hunter_name_is_retained(rest_trusted):
     """Named separately from the other dropped fields because it is the one
     that decides who gets credit for a finding."""
-    rows, why = _mine(rest_anon)
+    rows, why = _mine(rest_trusted)
     if rows is None:
         conclude(Measurement(
             verdict="inconclusive", reason=f"cannot tell: {why}",

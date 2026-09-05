@@ -52,6 +52,34 @@ def declared_by_tier(rest) -> dict[str, set[str]]:
     return out
 
 
+SELF = "/mcp/v1/agents/me"
+
+
+def own_tier(rest) -> tuple[str | None, str]:
+    """The tier the PLATFORM assigns this caller, read from the platform.
+
+    This is the whole difference between report #54 and a measurement. That
+    report asserted over-serving from a tier taken out of OUR OWN config file
+    -- the variable is named QA_TRUSTED_KEY, so the check demanded trusted
+    entitlement. The vendor rejected it as invalid: the key is ALLIED on their
+    side, and an ALLIED caller receiving allied tools is correct.
+
+    They were right, and our labels could never have settled it. They then
+    named the endpoint that can: it returns the caller's own trust_level, so
+    the tier is now the platform's answer about itself and the check compares
+    two of their statements instead of one of theirs against one of ours.
+    """
+    response = rest.get(SELF)
+    if response.status_code != 200:
+        return None, f"{SELF} answered HTTP {response.status_code}"
+    tier = str((response.json() or {}).get("trust_level") or "").lower()
+    if not tier:
+        return None, f"{SELF} answered 200 but stated no trust_level"
+    if tier not in LADDER:
+        return None, f"{SELF} reports tier {tier!r}, which is not on the ladder {LADDER}"
+    return tier, ""
+
+
 REFUSAL_CLASSES = ("refused_authz", "refused_validation", "executed", "unknown")
 
 _AUTHZ_WORDS = ("trust", "unauthor", "authoriz", "authenticat", "forbidden",
@@ -131,52 +159,57 @@ def test_anonymous_receives_only_public_tools(mcp_anon, rest_anon):
 
 @qa(component="mcp.trust_ladder", tier=SafetyTier.SAFE, surface="mcp",
     claim="trusted-receives-nothing-above-its-tier")
-def test_trusted_receives_nothing_above_its_tier(mcp_trusted, rest_anon):
-    """The same question one tier up, which report #46 did not cover.
+def test_credentialed_caller_receives_nothing_above_its_own_tier(mcp_trusted, rest_trusted, rest_anon):
+    """Served tools must not exceed the tier the platform says we hold.
 
-    The tier is the platform's to state, not ours to assume. This check took
-    the key's tier from OUR OWN configuration -- the file calls it "trusted",
-    so the check demanded trusted-tier entitlement. The vendor rejected report
-    #54 as invalid on exactly that point: the key is ALLIED on their side, and
-    an ALLIED caller receiving allied tools is correct behaviour.
-
-    They may be right, and our own labels cannot settle it. So while the
-    platform gives us no way to read the tier IT assigns to a caller, this is
-    Inconclusive -- naming the tools, so the question stays visible and
-    answerable -- rather than a failure asserted on our own assumption.
+    Both sides of this comparison are now the vendor's own statements: the
+    tier from GET /mcp/v1/agents/me, the entitlement from mcp.json's per-tool
+    trust_tier. Nothing here depends on what we call our key.
     """
-    declared = declared_by_tier(rest_anon)
-    served = mcp_trusted.tool_names()
-    entitled = entitled_up_to(declared, "trusted")
-    above = sorted(served - entitled)
-
-    if not above:
+    tier, why = own_tier(rest_trusted)
+    if tier is None:
         conclude(Measurement(
-            verdict="passed",
-            reason="the credentialed caller receives nothing above the trusted tier",
-            left=len(served), right=len(entitled),
+            verdict="inconclusive",
+            reason=f"cannot read the tier the platform assigns us: {why}",
+            sources={"identity": SELF},
             claim_id="trusted-receives-nothing-above-its-tier"))
         return
 
-    by_tier: dict[str, list[str]] = {}
-    for name in above:
-        for tier_name, names in declared.items():
-            if name in names:
-                by_tier.setdefault(tier_name, []).append(name)
+    declared = declared_by_tier(rest_anon)
+    served = mcp_trusted.tool_names()
+    entitled = entitled_up_to(declared, tier)
+    above = sorted(served - entitled)
 
     conclude(Measurement(
-        verdict="inconclusive",
-        reason=(f"Our key is served {len(above)} tools above the trusted tier "
-                f"({', '.join(f'{k}: {len(v)}' for k, v in sorted(by_tier.items()))}). "
-                f"Whether that is over-serving or correct depends on the tier "
-                f"the platform assigns this key, and it exposes no way to read "
-                f"that -- get_trust_signal requires a parameter we cannot supply "
-                f"for ourselves. Report #54 was rejected as invalid on the "
-                f"grounds that the key is ALLIED, which would make this correct."),
-        left=above, right=sorted(entitled),
-        sources={"manifest": "/.well-known/mcp.json", "identity": "our API key"},
-        population={"served": len(served), "entitled_at_trusted": len(entitled)},
+        verdict="failed" if above else "passed",
+        reason=(f"the platform states this caller is {tier.upper()}; it is served "
+                f"{len(served)} tools, {len(above)} of them declared above {tier}"),
+        left=above, right=tier,
+        sources={"tier_from": SELF, "entitlement_from": "/.well-known/mcp.json"},
+        population={"served": len(served), "entitled_at_" + tier: len(entitled),
+                    "declared_total": sum(len(v) for v in declared.values())},
         claim_id="trusted-receives-nothing-above-its-tier"))
+
+
+@qa(component="mcp.trust_ladder", tier=SafetyTier.SAFE, surface="mcp")
+def test_every_served_tool_is_declared_somewhere(mcp_trusted, rest_anon):
+    """A served tool that no manifest tier claims cannot be adjudicated at all.
+
+    Without this the check above has a blind spot in our favour: an undeclared
+    tool falls outside every tier set, so it can never count as excess. That
+    is the reverse of the failure it is meant to catch -- serving something
+    the catalogue never described.
+    """
+    declared = declared_by_tier(rest_anon)
+    everything = set().union(*declared.values())
+    undeclared = sorted(mcp_trusted.tool_names() - everything)
+
+    conclude(Measurement(
+        verdict="failed" if undeclared else "passed",
+        reason=(f"{len(undeclared)} served tool(s) carry no trust_tier in "
+                f"mcp.json, so no tier can be checked for them"),
+        left=undeclared, right=len(everything),
+        sources={"catalogue": "/.well-known/mcp.json", "served": "tools/list"}))
 
 
 @qa(component="mcp.trust_ladder", tier=SafetyTier.SAFE, surface="mcp")

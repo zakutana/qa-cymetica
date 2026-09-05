@@ -207,11 +207,18 @@ def test_prose_versus_prose_is_evidence_not_a_verdict():
     assert _pair("agent_names").role == "verdict"
     assert _pair("agent_count").role == "verdict"
 
-    self_consistency = _pair("llms_agent_count_self_consistent")
-    assert self_consistency.role == "verdict"
-    assert self_consistency.claim.get("prose_only") is True
-    assert (self_consistency.claim.get("why") or "").strip(), \
-        "prose_only without a stated reason is just an override"
+    # llms_agent_count_self_consistent was the prose_only example here until
+    # 2026-09-05, when the vendor consolidated the duplicated sentence it
+    # compared -- the claim would have gone green by losing an operand, so it
+    # was replaced by a check reading every stated count against the live
+    # catalogue. The table may legitimately hold no prose_only claim at all,
+    # so the rule is asserted over whatever is declared, rather than over one
+    # named example that can be removed out from under it.
+    for pair in (_pair(c["id"]) for c in _claims()["claims"]
+                 if c.get("prose_only")):
+        assert pair.role == "verdict", pair.claim["id"]
+        assert (pair.claim.get("why") or "").strip(), \
+            f"{pair.claim['id']}: prose_only without a reason is an override"
 
     # An evidence-role measurement cannot fail a check.
     from qa.measure import Measurement, conclude

@@ -81,7 +81,7 @@ def test_filing_a_report_requires_a_credential(rest_anon):
 
 @qa(component="rest.support", tier=SafetyTier.SAFE, surface="rest",
     claim="own-reports-unverified")
-def test_reports_they_closed_have_been_rechecked_by_us(rest_anon):
+def test_reports_they_closed_have_been_rechecked_by_us(rest_trusted):
     """Their closing a report is a claim. Ours is the check that follows it.
 
     This fails while any report they marked closed has no adjudication of its
@@ -98,7 +98,7 @@ def test_reports_they_closed_have_been_rechecked_by_us(rest_anon):
         ))
         return
 
-    response = rest_anon.get(MINE, params={"wallet_address": wallet})
+    response = rest_trusted.get(MINE, params={"wallet_address": wallet})
     if response.status_code != 200:
         conclude(Measurement(
             verdict="inconclusive",

@@ -57,24 +57,14 @@ claims:
       llms_txt:     'list_after:AI trading agent'
       live_species: 'set:$[*].symbol'
 
-  - id: llms_agent_count_self_consistent
-    question: "Does llms.txt quote the same agent count in all of its own sentences?"
-    component: rest.agents
-    relation: all_equal
-    severity: S2-MEASUREMENT
-    note: >
-      A document that contradicts itself is worse than two documents that
-      disagree, because the reader has no way to pick. Added after report #52
-      updated one occurrence of the count and left another behind.
-    prose_only: true
-    why: >
-      Both sides are prose by construction -- the claim IS about two sentences
-      in one document. There is no structured source that could settle it, and
-      no risk of comparing our reading of prose against reality, because
-      reality is not one of the operands.
-    sources:
-      llms_txt:   'regex_int:(\d+) AI trading agents,'
-      llms_txt_2: 'regex_int:any of our (\d+) AI trading agent species'
+  # llms_agent_count_self_consistent lived here. It pinned two particular
+  # sentences and compared them to each other. On 2026-09-05 the vendor
+  # corrected 10 -> 11 and consolidated the duplicate, which removes an
+  # operand -- so the claim would have gone green by losing the thing it
+  # compared, which is the failure mode this whole suite exists to prevent.
+  # Replaced by a check that reads EVERY stated count and settles them all
+  # against the live catalogue:
+  #   tests/rest/test_llms_counts.py::test_every_agent_count_in_llms_matches_the_live_species_list
 
   - id: agent_count
     question: "How many clonable AI trading agents exist?"
@@ -163,11 +153,11 @@ claims:
       llms_txt:    'regex_int:With ([\d,]+)\+ commits'
       build_stats: 'jsonpath:$.totals.commits'
 
-  - id: mcp_resource_count
-    question: "How many MCP resources are exposed?"
-    component: mcp.protocol
-    relation: all_equal
-    severity: S4-COSMETIC
-    sources:
-      llms_txt: 'regex_int:cymetica-eventtrader-mcp \(\d+ tools, (\d+) resources'
-      mcp_json: 'len:$.resources'
+  # mcp_resource_count lived here. Its llms_txt extractor read a fixed
+  # "N tools, M resources" line that the vendor removed on 2026-09-05,
+  # replacing it with a pointer to tools/list -- correct, because the
+  # catalogue is scoped to the caller's tier and no single figure is right
+  # for every reader (35 anonymous vs 56 allied, measured). With its source
+  # gone the claim could only score Inconclusive forever while presenting as
+  # a settled row. Replaced by a guard on the resolution itself:
+  #   tests/rest/test_llms_counts.py::test_llms_states_no_fixed_size_for_a_tier_scoped_catalogue
