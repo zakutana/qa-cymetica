@@ -1055,9 +1055,7 @@
         },
         "reason": "clob_pair_count: values differ"
       },
-      "checks": [
-        "tests/reconciliation/test_reconcile.py::test_sources_agree[clob_pair_count::llms_txt-vs-mcp_json]"
-      ],
+      "checks": [],
       "first_seen": {
         "at": "2026-09-04T10:29:00+00:00",
         "cause": {
@@ -1070,13 +1068,14 @@
         "measured_at": "2026-09-05T17:08:12+00:00"
       },
       "check": {
-        "state": "PASSING_UNPINNED",
+        "state": "UNVERIFIABLE",
         "adjudicated_by": {
           "run_id": "run-20260905T101042Z-45f8015",
           "at": "2026-09-05T10:11:28+00:00"
         },
         "pinned_fingerprint": null,
-        "evidence_only": "run-20260905T170702Z-c34e365"
+        "evidence_only": "run-20260905T170702Z-c34e365",
+        "unverifiable_reason": "no_checks"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -1124,7 +1123,7 @@
       "regressions": [],
       "obligations": {
         "reverify": true,
-        "repair_check": false,
+        "repair_check": true,
         "reopen": [],
         "retractions": []
       }
@@ -2152,18 +2151,17 @@
   "updated_at": "2026-09-05T17:08:12+00:00",
   "counts": {
     "RAISED": 2,
-    "THEY REPLIED": 1,
+    "STILL REPRODUCIBLE": 4,
     "INCONCLUSIVE": 2,
     "WITHDRAWN": 5,
     "NOT REPRODUCIBLE": 2,
     "VERIFIED FIXED": 3,
-    "PASSING (UNPINNED)": 2,
-    "PASSING, UNCLAIMED": 1,
-    "STILL REPRODUCIBLE": 3,
-    "UNVERIFIABLE": 3
+    "PASSING (UNPINNED)": 1,
+    "UNVERIFIABLE": 4,
+    "PASSING, UNCLAIMED": 1
   },
   "events_head": {
-    "seq": 127,
-    "chain": "331e2903a2b9d577c155c6bd565f3f2eace3e33c771ebc0b637f2ddde221e1b8"
+    "seq": 128,
+    "chain": "fdfb269c9e2eeb1f56f85e67582c688277b363b697d24226f957e0b429d5179b"
   }
 }
