@@ -1,9 +1,8 @@
 {
-  "fetched_at": "2026-09-05T19:32:46+00:00",
-  "total": 29,
+  "fetched_at": "2026-09-05T19:56:54+00:00",
+  "total": 30,
   "statuses": {
-    "validated": 1,
-    "fixed": 19
+    "fixed": 20
   },
   "filing_probe": {
     "endpoint": "POST /api/v1/bounty/reports",
@@ -25,15 +24,13 @@
   "our_reports": {
     "endpoint": "GET /api/v1/bounty/my-reports?wallet_address=<addr>",
     "klass": "ok",
-    "read_at": "2026-09-05T19:32:44+00:00",
-    "evidence_id": "462f4dd5b4c368d9b2617b1913013cd648a1b0e50a8058c93e39ae6cdfb34408",
+    "read_at": "2026-09-05T19:56:52+00:00",
+    "evidence_id": "3b6d5ef32c63e832ca46646ea56d4d02e31ceb8448222eeb3737f2d20fed87fe",
     "rows_returned": 20,
     "server_total": 20,
     "total": 20,
     "statuses": {
-      "pending": 1,
-      "validated": 1,
-      "fixed": 17,
+      "fixed": 19,
       "invalid": 1
     },
     "fields_sent_but_not_stored": [],
@@ -365,14 +362,14 @@
       {
         "id": 60,
         "title": "Report #59 was marked fixed within the hour with no evidence recorded, and none of the three paths it names has changed",
-        "status": "validated",
+        "status": "fixed",
         "hunter_name": "expire76",
         "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
         "severity_reported": "high",
         "severity_confirmed": null,
         "category": "api",
         "created_at": "2026-09-05T19:13:13.312688",
-        "fixed_at": null,
+        "fixed_at": "2026-09-05T19:32:48.396470",
         "validated_at": "2026-09-05T19:28:24.554635",
         "triaged_at": null,
         "status_notes": "Validated 2026-09-05 19:35 UTC. Confirmed: report #59 was moved to fixed at 18:46:58 UTC with every evidence field null. The verification that justified the closure existed (path-by-path live check of llms.txt, agent-skills.json, openapi.json and SKILL.md at 18:45 UTC) but was recorded on the internal ticket, not on the report. #59 now carries those notes.\n\nFix (landing with the next release): the admin status update refuses (HTTP 422) any transition to fixed / invalid / wontfix / duplicate unless at least one evidence field — status_notes, ticket_url, ticket_id, fix_pr_url, fix_commit or duplicate_of_id — is set on the update or already on the row, and nothing is mutated when it refuses. Pinned by tests for all four closed statuses.\n\nAlso fixed from the same report: GET /api/v1/bounty/my-reports compared the stored wallet case-sensitively, so the six oldest reports on this wallet (#7–#12, stored mixed-case) were missing from the hunter's own view. Data normalized now (all 20 reports return); code compares case-insensitively from the next release.\n\nReproduce (after release): PUT /api/v1/bounty/admin/reports/{id} {\"status\":\"fixed\"} with no evidence → 422 \"requires evidence\". GET /api/v1/bounty/my-reports?wallet_address=<your wallet> with your X-API-Key → total 20.",
@@ -383,17 +380,17 @@
       {
         "id": 61,
         "title": "None of the 11 reports we filed through the bounty API appears in /leaderboard/bugs, the tracker that carries triage state",
-        "status": "pending",
+        "status": "fixed",
         "hunter_name": "expire76",
         "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
         "severity_reported": "high",
         "severity_confirmed": null,
         "category": "api",
         "created_at": "2026-09-05T19:20:59.738866",
-        "fixed_at": null,
-        "validated_at": null,
+        "fixed_at": "2026-09-05T19:47:55.495639",
+        "validated_at": "2026-09-05T19:40:42.867548",
         "triaged_at": null,
-        "status_notes": null,
+        "status_notes": "Validated 2026-09-05 19:45 UTC. Confirmed: /leaderboard/bugs listed only feature_requests(category='bug'); bounty reports filed via POST /api/v1/bounty/reports never appeared there, although /leaderboard/bugs/{id} already resolved a bounty report by id.\n\nFix (landing with the next release): the tracker feed merges bounty reports at validated-and-later stages — validated→Awaiting Review, in_progress→In Progress, openclaw_testing/ready_for_review→Ready to Test, fixed→Resolved, paid→Verified — with the same publication posture as GET /api/v1/bounty/reports (pre-validation reports are never published; they can name unpatched issues). Entries carry source=bounty, the hunter name, severity and the ticket link. BugBountyReport.to_dict now exposes issue_ref (ET-xxxxx) so a hunter can cite the bridged ticket from my-reports.\n\nReproduce (after release): GET /leaderboard/bugs → search each of your validated/fixed titles → present, linking to /leaderboard/bugs/{report_id}.",
         "ticket_url": null,
         "fix_pr_url": null,
         "reward_amount": 0.0
@@ -402,22 +399,24 @@
   },
   "qa_tracker": {
     "source": "https://cymetica.com/leaderboard/bugs (embedded allBugs)",
-    "total": 74,
+    "total": 104,
     "statuses": {
       "qa_testing": 2,
       "implementing": 2,
-      "resolved": 12,
+      "resolved": 42,
       "completed": 32,
       "rejected": 2,
       "pending": 12,
       "wont_fix": 12
     },
     "source_channels": {
-      "web": 74
+      "web": 74,
+      "bounty": 30
     },
     "usernames": {
       "Maxorelaxo": 2,
-      "expire76": 32,
+      "expire76": 51,
+      "Crypto42day": 2,
       "tonybugs0439": 5,
       "joebloggs": 12,
       "Soul4you": 1,
@@ -427,10 +426,13 @@
       "testback_6384": 1,
       "bugrep8372": 7,
       "D10061999M": 1,
-      "Tulip": 1
+      "Tulip": 1,
+      "hunter_0x000000_0099": 2,
+      "null": 6,
+      "hunter_0x00000000": 1
     },
     "id_range": [
-      226,
+      7,
       530
     ],
     "titles": [
@@ -438,6 +440,8 @@
       "missing et10: pre-may 4th purchase of 100,000 et10 not in ledger",
       "global nexus ai chat — multiple ui/ux bugs",
       "why are these movers?\" returns no reasoning for ai pick selections",
+      "resting sbio limit order deleted by best-execution re-route without notice",
+      "support bot kept sending generic auto-acknowledgements after a real reply",
       "sbio orderbook api endpoint returns 404 not found — regression",
       "multiple issues on https://cymetica.com/terminal",
       "et 10 withdrawal",
@@ -507,11 +511,39 @@
       "crossed spread — existing buy order not immediately matched against available sell liquidity at identical price",
       "cloned bot profile does not display trading activity correctly",
       "неправильный баланс токенов в портфеле пользователя max",
-      "swap pages fail to display user token balances"
+      "swap pages fail to display user token balances",
+      "none of the 11 reports we filed through the bounty api appears in /leaderboard/bugs, the tracker that carries triage state",
+      "report #59 was marked fixed within the hour with no evidence recorded, and none of the three paths it names has changed",
+      "three paths from report #49 still 404: one rename landed in openapi.json but not in agent-skills.json",
+      "the stated agent-card/agent-skills subset model does not hold: 2 skill ids appear only in agent-skills.json",
+      "llms.txt gives two different agent counts in its own text: 10 in one sentence, 11 in another",
+      "bounty tracker reports 100% closure with no validation recorded: all 15 items read fixed, validated_at null on every one",
+      "published headline figures disagree across sources: commits, clob pairs, settlement chains and agent count",
+      "agent-card.json and agent-skills.json advertise different skill sets, and neither is a subset of the other",
+      "7 of the 11 mcp tool names documented in llms.txt do not exist, and the tool count differs across three sources",
+      "26 endpoints documented in llms.txt and agent-skills.json return 404",
+      "llms.txt tells agents to clone 10 named trading agents; none of the 10 symbols exist on the platform",
+      "bounty hunter attribution is spoofable: wallet_address binds the profile but is public and unauthenticated",
+      "mcp tools/list returns the full 46-tool set to unauthenticated callers, ignoring declared trust_tier",
+      "playwright e2e test — middleware body integrity",
+      "published pypi metadata of cymetica-eventtrader-mcp 1.1.0 instructs installing a nonexistent package",
+      "official docs sitewide instructed installing a third party's pypi package (pip install event-trader)",
+      "test middleware body integrity check",
+      "playwright e2e test — middleware body integrity",
+      "vcub maker fills not credited: 240k vcub gap for bvs_soul4you",
+      "balance display mismatch: ui shows stale on-chain values instead of ledger",
+      "a2a agent inbox endpoint returns data without authentication",
+      "test api probe — paper trading mode works but minimum order size validation message references wrong unit",
+      "epoch history performance column shows only dash placeholder for all resolved epochs",
+      "negative amount input shows negative shares in payoutshares preview and submit button stays enabled",
+      "shares preview rounds shares count to 1 decimal place instead of 2",
+      "fill confirmation message persists after position is fully closed",
+      "critical: my positions p&l shows -$3.15 for a $0.10 position",
+      "shares preview rounds to 1 decimal place instead of 2"
     ],
     "has_linear_links": 0
   },
-  "closed": 19,
+  "closed": 20,
   "closed_without_recorded_evidence": 0,
   "evidence_fields_checked": [
     "validated_at",
@@ -523,14 +555,32 @@
   ],
   "reports": [
     {
+      "id": 61,
+      "title": "None of the 11 reports we filed through the bounty API appears in /leaderboard/bugs, the tracker that carries triage state",
+      "status": "fixed",
+      "hunter_name": "expire76",
+      "severity_reported": "high",
+      "severity_confirmed": null,
+      "created_at": "2026-09-05T19:20:59.738866",
+      "fixed_at": "2026-09-05T19:47:55.495639",
+      "validated_at": "2026-09-05T19:40:42.867548",
+      "triaged_at": null,
+      "status_notes": "Validated 2026-09-05 19:45 UTC. Confirmed: /leaderboard/bugs listed only feature_requests(category='bug'); bounty reports filed via POST /api/v1/bounty/reports never appeared there, although /leaderboard/bugs/{id} already resolved a bounty report by id.\n\nFix (landing with the next release): the tracker feed merges bounty reports at validated-and-later stages — validated→Awaiting Review, in_progress→In Progress, openclaw_testing/ready_for_review→Ready to Test, fixed→Resolved, paid→Verified — with the same publication posture as GET /api/v1/bounty/reports (pre-validation reports are never published; they can name unpatched issues). Entries carry source=bounty, the hunter name, severity and the ticket link. BugBountyReport.to_dict now exposes issue_ref (ET-xxxxx) so a hunter can cite the bridged ticket from my-reports.\n\nReproduce (after release): GET /leaderboard/bugs → search each of your validated/fixed titles → present, linking to /leaderboard/bugs/{report_id}.",
+      "ticket_url": null,
+      "fix_pr_url": null,
+      "reward_amount": 0.0,
+      "paid_at": null,
+      "is_duplicate": false
+    },
+    {
       "id": 60,
       "title": "Report #59 was marked fixed within the hour with no evidence recorded, and none of the three paths it names has changed",
-      "status": "validated",
+      "status": "fixed",
       "hunter_name": "expire76",
       "severity_reported": "high",
       "severity_confirmed": null,
       "created_at": "2026-09-05T19:13:13.312688",
-      "fixed_at": null,
+      "fixed_at": "2026-09-05T19:32:48.396470",
       "validated_at": "2026-09-05T19:28:24.554635",
       "triaged_at": null,
       "status_notes": "Validated 2026-09-05 19:35 UTC. Confirmed: report #59 was moved to fixed at 18:46:58 UTC with every evidence field null. The verification that justified the closure existed (path-by-path live check of llms.txt, agent-skills.json, openapi.json and SKILL.md at 18:45 UTC) but was recorded on the internal ticket, not on the report. #59 now carries those notes.\n\nFix (landing with the next release): the admin status update refuses (HTTP 422) any transition to fixed / invalid / wontfix / duplicate unless at least one evidence field — status_notes, ticket_url, ticket_id, fix_pr_url, fix_commit or duplicate_of_id — is set on the update or already on the row, and nothing is mutated when it refuses. Pinned by tests for all four closed statuses.\n\nAlso fixed from the same report: GET /api/v1/bounty/my-reports compared the stored wallet case-sensitively, so the six oldest reports on this wallet (#7–#12, stored mixed-case) were missing from the hunter's own view. Data normalized now (all 20 reports return); code compares case-insensitively from the next release.\n\nReproduce (after release): PUT /api/v1/bounty/admin/reports/{id} {\"status\":\"fixed\"} with no evidence → 422 \"requires evidence\". GET /api/v1/bounty/my-reports?wallet_address=<your wallet> with your X-API-Key → total 20.",
@@ -863,24 +913,6 @@
       "reward_amount": 0.0,
       "paid_at": null,
       "is_duplicate": false
-    },
-    {
-      "id": 19,
-      "title": "VCUB maker fills not credited: 240K VCUB gap for BVS_Soul4you",
-      "status": "fixed",
-      "hunter_name": null,
-      "severity_reported": "high",
-      "severity_confirmed": "high",
-      "created_at": "2026-05-12T07:34:35.454079",
-      "fixed_at": "2026-05-19T18:24:17.861108",
-      "validated_at": "2026-05-19T18:24:17.861108",
-      "triaged_at": "2026-05-19T18:24:17.861108",
-      "status_notes": "Verified resolved. Soul4you VCUB internal_balances.balance_vcub=3,510,000 matches sum(clob_fill_credit ledger entries)=3,510,000 across 118 confirmed entries. Maker fill credit pipeline working correctly. Fixed by cumulative commits: 669caafcd (14 financial integrity fixes), ec365a0fd (maker position tracking), 87deeb9f3 (maker sync), 58c86fb18 (full-codebase financial integrity review).\n[2026-09-04 backfill] validated_at/triaged_at stamped from fixed_at: this report was closed before per-stage timestamps existed (validation and fix were recorded in one step at the time). Stamps are historical, not a fresh re-verification.",
-      "ticket_url": null,
-      "fix_pr_url": null,
-      "reward_amount": 0.0,
-      "paid_at": null,
-      "is_duplicate": null
     }
   ],
   "leaderboard": [
@@ -889,8 +921,8 @@
       "hunter_name": "expire76",
       "avatar_url": null,
       "tier": "senior",
-      "total_score": 320,
-      "valid_reports": 15,
+      "total_score": 370,
+      "valid_reports": 16,
       "total_likes": 0,
       "total_earned": 0.0
     },

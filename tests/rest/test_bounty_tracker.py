@@ -9,7 +9,9 @@ The channel has to be trustworthy before anything travelling through it counts,
 so it gets checks like everything else:
 
     CYM-bounty-filing-unauthenticated  can anyone file as anyone?
-    CYM-own-reports-unverified         did we re-check what they closed?
+    (CYM-own-reports-unverified was the second. It is gone: what that check
+     measures is OUR re-check backlog, so it is evidence now and holds no
+     finding against the vendor.)
     CYM-tracker-closure-rate           do their closures carry evidence?
 
 The third one is also where the critique landed: it compared 20 rows the
@@ -79,14 +81,20 @@ def test_filing_a_report_requires_a_credential(rest_anon):
     ))
 
 
-@qa(component="rest.support", tier=SafetyTier.SAFE, surface="rest",
-    claim="own-reports-unverified")
+@qa(component="rest.support", tier=SafetyTier.SAFE, surface="rest")
 def test_reports_they_closed_have_been_rechecked_by_us(rest_trusted):
     """Their closing a report is a claim. Ours is the check that follows it.
 
-    This fails while any report they marked closed has no adjudication of its
-    own on our side -- which is the state the whole hardening plan exists to
-    make visible rather than to paper over.
+    This measures OUR backlog, not their behaviour, and that distinction was
+    wrong here until 2026-09-05: the result was bound to the finding
+    CYM-own-reports-unverified, so a list of re-checks WE owed stood on the
+    dashboard as an open defect against the vendor, carrying report #53. Our
+    unfinished work is not their bug however true the number is.
+
+    So it is evidence now: recorded every run and visible, but unable to mint
+    or hold a finding. What it says is still worth knowing -- it is the only
+    thing standing between "they closed 20 reports" and "20 reports are
+    fixed" -- but the party it indicts is us.
     """
     wallet = os.environ.get("QA_WALLET_ADDRESS", "")
     if not wallet:
@@ -94,7 +102,7 @@ def test_reports_they_closed_have_been_rechecked_by_us(rest_trusted):
             verdict="inconclusive",
             reason="QA_WALLET_ADDRESS is not set, so we cannot list our own "
                    "reports. An unset identity is not an empty result.",
-            claim_id="own-reports-unverified",
+            role="evidence",
         ))
         return
 
@@ -104,7 +112,7 @@ def test_reports_they_closed_have_been_rechecked_by_us(rest_trusted):
             verdict="inconclusive",
             reason=f"my-reports answered HTTP {response.status_code}; a failed "
                    f"read is not an empty tracker",
-            right=response.status_code, claim_id="own-reports-unverified",
+            right=response.status_code, role="evidence",
         ))
         return
 
@@ -117,13 +125,13 @@ def test_reports_they_closed_have_been_rechecked_by_us(rest_trusted):
         verdict="failed" if unchecked else "passed",
         reason=(f"{len(unchecked)} of {len(closed)} reports they closed have "
                 f"never been re-checked by an admissible run of ours"),
+        role="evidence",
         left=unchecked, right=sorted(adjudicated),
         # The denominator is what this read actually returned, named, so it
         # cannot silently become the server's own claimed total.
         population={"reports_returned": len(rows), "closed": len(closed),
                     "server_total": response.json().get("total")},
         sources={"endpoint": f"GET {MINE}", "wallet": "<redacted>"},
-        claim_id="own-reports-unverified",
     ))
 
 
