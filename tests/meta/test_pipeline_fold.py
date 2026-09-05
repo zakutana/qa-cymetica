@@ -459,7 +459,13 @@ def test_display_state_composition_table():
     assert set(verified) == {("PASSING", "RAISED"), ("PASSING", "REPLIED"),
                              ("PASSING", "FIX_CLAIMED")}, verified
 
-    assert DISPLAY[("INCONCLUSIVE", "FIX_CLAIMED")] == "NOT REPRODUCIBLE"
+    assert DISPLAY[("INCONCLUSIVE", "FIX_CLAIMED")] == "OUR CHECK CANNOT TELL"
+    # Renamed 2026-09-05. The old label, "NOT REPRODUCIBLE", read as a
+    # measurement -- we ran it and it did not happen -- when it means we
+    # could not run it to a conclusion. The operator read it as "then it
+    # is fixed or it was never real", which are indeed the only honest
+    # destinations; the state is a waiting room, so it now names whose
+    # problem it is.
     assert DISPLAY[("REPRODUCING", "FIX_CLAIMED")] == "STILL REPRODUCIBLE"
     assert DISPLAY[("REPRODUCING", "NOT_RAISED")] == "NOT RAISED YET"
     assert DISPLAY[("REPRODUCING", "RAISED")] == "RAISED"

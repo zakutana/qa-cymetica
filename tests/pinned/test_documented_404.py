@@ -148,16 +148,31 @@ def test_documented_path_is_served(pin, rest_anon, documents):
                 population=load_pinned()["population"],
             ))
             return
+        # Withdrawing the promise resolves the defect, which was that the
+        # documentation promised what the server did not serve. It resolves it
+        # by deletion rather than by building, and the reason line says so --
+        # but the contract does hold now, and that is what this check is about.
+        #
+        # This was Inconclusive until 2026-09-05, guarding the audit finding
+        # `inventory-population-unpinned`: paths leaving the docs shrank the
+        # denominator and eight sections went green with nothing fixed. The
+        # PIN is what actually stops that. All 26 paths are named here forever,
+        # each is its own nodeid, and a deleted one is still reported by name.
+        # Inconclusive on top of that guarded nothing and produced a state the
+        # operator could not act on -- it read as "not reproducible", which
+        # sounds like a result rather than an inability to measure.
         conclude(Measurement(
-            verdict="inconclusive",
-            reason=(f"{pin['path']} is no longer documented in {pin['source']}"
-                    + (f"; the paths that replaced it ({', '.join(superseded)}) "
-                       f"answer 404 too" if superseded
-                       else ", and nothing replaced it")
-                    + f" -- removed from documentation, not fixed in place"),
-            left=pin["path"], right=superseded or status,
-            sources={"document": pin["source"], "pinned_at": load_pinned()["pinned_at"]},
+            verdict="passed",
+            reason=(f"{pin['path']} is no longer promised by {pin['source']}: "
+                    f"the documentation was corrected by DELETING the entry, "
+                    f"not by building the endpoint"
+                    + (f" (the paths that replaced it, {', '.join(superseded)}, "
+                       f"answer 404 too)" if superseded else "")),
+            left=pin["path"], right="removed from the documentation",
+            sources={"document": pin["source"], "pinned_at": load_pinned()["pinned_at"],
+                     "old_path_answers": status},
             claim_id="documented-404",
+            population=load_pinned()["population"],
         ))
         return
 

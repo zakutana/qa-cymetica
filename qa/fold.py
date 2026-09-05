@@ -85,13 +85,21 @@ def _display_cell(check: str, filing: str) -> str:
             "FIX_CLAIMED": "VERIFIED FIXED",
         }[filing]
     if check == "PASSING_UNPINNED":
-        return "PASSING (UNPINNED)"
+        # Was "PASSING (UNPINNED)", which named the mechanism rather than the
+        # situation, so it read as jargon and hid two rows that should have
+        # been withdrawn. The situation is: it passes, and we have no record of
+        # ever having seen it fail, so there is no fix to credit anyone with.
+        return "NEVER SEEN BROKEN"
     if check == "CHECK_CHANGED":
         return "CHECK CHANGED"
     if check == "INCONCLUSIVE":
-        # Their claim plus a check that measures nothing is not a fix. It is
-        # the one case where we genuinely do not know, and it says so.
-        return "NOT REPRODUCIBLE" if filing == "FIX_CLAIMED" else "INCONCLUSIVE"
+        # Was "NOT REPRODUCIBLE", which sounds like a result -- we ran it and
+        # it did not happen -- when it means the opposite: we could not run it
+        # to a conclusion at all. The operator read it as "so it is fixed, or
+        # it was never real" and was right to: those ARE the only two honest
+        # destinations. This state is a waiting room, not an answer, so it now
+        # says whose problem it is. Ours: repair the check or retire it.
+        return "OUR CHECK CANNOT TELL"
     if check == "REPRODUCING":
         # Once they have engaged -- replied, or claimed a fix -- the fact worth
         # showing is that it still breaks. "THEY REPLIED" beside a failing

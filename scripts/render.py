@@ -669,12 +669,11 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:15.0px; max-wid
 .state.s-they-replied       { background:var(--wait-bg); color:var(--wait); }
 .state.s-fix-claimed        { background:var(--warn-bg); color:var(--warn); }
 .state.s-check-changed      { background:var(--warn-bg); color:var(--warn); }
-.state.s-passing-unpinned   { background:var(--accent-dim); color:var(--accent); }
 .state.s-passing-never-raised { background:var(--accent-dim); color:var(--accent); }
 .state.s-verified-fixed     { background:var(--ok-bg); color:var(--ok); }
 .state.s-unverified         { background:var(--none-bg); color:var(--text-dim); }
-.state.s-inconclusive       { background:var(--none-bg); color:var(--text-dim); }
-.state.s-not-reproducible   { background:var(--none-bg); color:var(--text-dim); }
+.state.s-our-check-cannot-tell { background:var(--none-bg); color:var(--text-dim); }
+.state.s-never-seen-broken  { background:var(--accent-dim); color:var(--accent); }
 .state.s-unverifiable       { background:var(--none-bg); color:var(--text-dim); }
 .state.s-withdrawn  { background:var(--none-bg); color:var(--text-faint); text-decoration:line-through; }
 .state.s-superseded { background:var(--none-bg); color:var(--text-faint); text-decoration:line-through; }
