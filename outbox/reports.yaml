@@ -367,6 +367,44 @@ reports:
       document -- llms.txt, openapi.json and every .well-known file -- rather
       than only in the one where it was noticed.
 
+  - key: closed-without-fixing
+    findings: [CYM-tracker-closure-rate]
+    severity: high
+    category: api
+    url: https://cymetica.com/api/v1/bounty/reports
+    title: "Report #59 was marked fixed within the hour with no evidence recorded, and none of the three paths it names has changed"
+    expected: >
+      A report reaches "fixed" because something was fixed, and the row
+      records what: a validation timestamp, a note, a ticket or a commit.
+    actual: >
+      #59 reads status "fixed" in the public tracker with validated_at,
+      triaged_at, status_notes, ticket_url and fix_pr_url all null. All three
+      paths it reports are still published and still answer 404. Nothing about
+      them changed between filing and closure.
+    steps:
+      - "GET /api/v1/bounty/reports -> report 59, status fixed, every evidence field null"
+      - "GET /api/v1/account -> 404, and the path is still present in llms.txt"
+      - "GET /api/v1/agentbook/post -> 404, and the path is still present in llms.txt"
+      - "GET /api/v1/clob/order -> 404, and the path is still present in agent-skills.json"
+    body: >
+      This is report #53 caught in the act, on a report whose subject we can
+      verify precisely. #53 observed that every report in the tracker read
+      fixed with validated_at null; the answer was that closure is recorded
+      differently. #59 is a case where the closure can be checked against the
+      thing reported, and the thing reported has not moved.
+      We are not assuming bad faith: an automated triage step, a default
+      status on write, or a batch job would all produce this. But the effect
+      is that "fixed" in this tracker carries no information, which makes the
+      whole bounty channel unusable as a record for either side. We cannot
+      tell your real fixes from your defaults, and neither can you.
+      Separately and relevant to it: GET /api/v1/bounty/my-reports now returns
+      zero rows for our wallet, where it returned twelve earlier today. That
+      is the only view a hunter has of their own submissions, so while it is
+      empty we cannot check any closure you make.
+      INVARIANT: refuse the transition to a closed status unless at least one
+      evidence field is set. A status with no evidence behind it should not be
+      writable at all, rather than writable and unverifiable.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: read-only
   verification of the REST API, MCP and machine-readable discovery surfaces. No

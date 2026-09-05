@@ -1519,6 +1519,10 @@
           {
             "report_id": 53,
             "status": "fixed"
+          },
+          {
+            "report_id": 60,
+            "status": "pending"
           }
         ],
         "refused": []
@@ -1590,7 +1594,8 @@
         "reverify": true,
         "repair_check": false,
         "reopen": [
-          53
+          53,
+          60
         ],
         "retractions": []
       },
@@ -2536,7 +2541,7 @@
     "UNVERIFIABLE": 4
   },
   "events_head": {
-    "seq": 164,
-    "chain": "f111c0aeb750325c2122366d3fd35519477b353901c7c33c4da4da8257487c1f"
+    "seq": 180,
+    "chain": "35bacf69da451a7d4445f980a5a004a3e7a52eacedc85c81500f930a0e95f631"
   }
 }
