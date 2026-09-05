@@ -1,0 +1,98 @@
+{
+  "schema": 2,
+  "run_id": "run-20260905T211030Z-ea63669",
+  "started_at": "2026-09-05T21:10:36+00:00",
+  "finished_at": "2026-09-05T21:10:41+00:00",
+  "git_head": "ea63669a48dd086301d41d9009795b37b8c87e6c",
+  "git_short": "ea63669",
+  "git_dirty": true,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": "sha256:a18fb62e3a1251f3d33c47d9f54e9bb57c5e3cd48c4147e819f59e14c36671ad",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "687609a5e12d9a2e46d2c461660dd8adc85ab80a0853cfafc707ae0962f0d4ed",
+    "/.well-known/agent-card.json": "d3808146038b605f8a89995a66c57fa3d8a471653f8a3ab00a891458116e7042",
+    "/.well-known/agent-skills.json": "41a38971d7d79b8b4638dba285021fc011a7eb1f1062ae3b6707d4210c444ed7",
+    "/.well-known/ai-plugin.json": "e2f2d79821bf8e741fb18cefea6a94cb7a1ec358644306aeff02e763c61b1fb2",
+    "/.well-known/udc.json": "92cd8a5f7ec5a0a859594ef9fbd72cba4914eaab4220377db18adf2ed44611a4",
+    "/openapi.json": "f0cccb1f06ec266d303b1c7ab8e23f4af29a3c43106027595c95c1449fa1b2cf",
+    "/llms.txt": "300d02884e851fa63cc4ae4767f784ca813b220bd444736ae64e1aa273e9ee3d",
+    "mcp:tools/list:none": "32107ec8ab80ba0db0ad42f85e43abc1956dc37b3864851a8af95e522262d09e"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/rest/test_account_auth.py -q --no-header --tb=line",
+  "selector_full": false,
+  "allow_mutate": false,
+  "collected": [
+    "tests/rest/test_account_auth.py::test_the_documented_credential_opens_the_documented_route"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/rest/test_account_auth.py::test_the_documented_credential_opens_the_documented_route",
+      "component": "rest.account",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "account-me-rejects-its-documented-credential",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 1715,
+      "evidence_ids": [
+        "88b038f5abd67de52bf218e9ff64d1775616c10e136ca1e81fd3fcee1a29848a",
+        "0a45aaf7ad1efa3d2c82de40b898582b9330b8719324b99f5c5c6243b10105d6"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "/api/v1/account/me answers HTTP 401 to the same X-API-Key that opens /api/v1/account/me/portfolio (HTTP 200) in the same run. agent-skills.json sends the et10-revenue-share skill to the first of those, so an agent following the catalogue to check its own eligibility is refused",
+        "left": "/api/v1/account/me -> 401",
+        "right": "/api/v1/account/me/portfolio -> 200",
+        "sources": {
+          "schemes": "/.well-known/agent-card.json",
+          "skill": "/.well-known/agent-skills.json#et10-revenue-share"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "account-me-rejects-its-documented-credential",
+        "role": "verdict",
+        "population": {
+          "header": "X-API-Key",
+          "same_client": true
+        }
+      },
+      "check_fingerprint": "bbdc1d54bf684a9e645532950d2a04740ef9083655d287ae7dd192a9d16dfab5",
+      "reason": null,
+      "failure_repr": "E   AssertionError: /api/v1/account/me answers HTTP 401 to the same X-API-Key that opens /api/v1/account/me/portfolio (HTTP 200) in the same run. agent-skills.json sends the et10-revenue-share skill to the first of those, so an agent following the catalogue to check its own eligibility is refused\n      left  = '/api/v1/account/me -> 401'\n      right = '/api/v1/account/me/portfolio -> 200'"
+    }
+  ],
+  "totals": {
+    "failed": 1
+  },
+  "ratelimit": {
+    "requests": 2,
+    "limit": 2000,
+    "remaining": 1989,
+    "fraction_used": 0.0055,
+    "exhausted": false
+  },
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "fingerprint_after": "sha256:a18fb62e3a1251f3d33c47d9f54e9bb57c5e3cd48c4147e819f59e14c36671ad",
+  "exit_status": 1
+}
