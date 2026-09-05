@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -307,6 +308,50 @@ def test_every_display_state_is_visually_distinct(tmp_path, monkeypatch):
             for s in set(DISPLAY.values())}
     for slug in re.findall(r"\.state\.s-([a-z0-9-]+)", css):
         assert slug in live, f".state.s-{slug} styles a state that no longer exists"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_legend_explains_every_mark_and_uses_no_internal_words(tmp_path, monkeypatch):
+    """A legend that needs its own glossary is not a legend.
+
+    Two failures the operator hit. "figures not re-measured" appeared on rows
+    and was explained only as the last sentence under the grid, in the same
+    muted grey -- which is the same as not being explained. And the sentence
+    said the wording came from "the old ledger", a word the page has never
+    defined and the reader has no reason to know.
+
+    A row carries six marks. Explaining one of them implies the rest are
+    obvious, which is worse than explaining none.
+    """
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    render = _render()
+    # The legend's own markup and the JS that fills it -- not the whole file,
+    # which would drag in the masthead and every unrelated string below it.
+    static = render.TEMPLATE[render.TEMPLATE.index("How to read this page"):
+                             render.TEMPLATE.index('<script id="data"')]
+    # From CHECK_WORDS, so the axis panels' own copy is checked too -- they
+    # are the most-read part of the legend and were the first place the word
+    # "adjudicates" slipped in.
+    js = render.TEMPLATE[render.TEMPLATE.index("const CHECK_WORDS"):
+                         render.TEMPLATE.index('document.getElementById("filters").addEventListener')]
+    legend = static + js
+
+    for chip in ("unmeasured-demo", "tagchip", "filed", "undelivered",
+                 "mono-faint"):
+        assert chip in legend, f"the legend shows no example of the {chip} mark"
+    assert legend.count("MARKS") >= 2, "the marks panel is not rendered"
+
+    # Words that mean something inside the pipeline and nothing to a reader.
+    internal = ("ledger", "fold", "journal", "admissible", "fingerprint",
+                "nodeid", "adjudicat")
+    prose = re.sub(r"<[^>]+>", " ", legend)
+    prose = re.sub(r"/\*.*?\*/", " ", prose, flags=re.S)      # CSS comments
+    prose = re.sub(r"//[^\n]*", " ", prose)                    # JS comments
+    prose = re.sub(r"\.[a-z-]+\s*\{[^}]*\}", " ", prose)       # CSS rules
+    leaked = sorted({w for w in internal if w in prose.lower()})
+    assert not leaked, (
+        f"the legend uses vocabulary the reader has no way to know: {leaked}"
+    )
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

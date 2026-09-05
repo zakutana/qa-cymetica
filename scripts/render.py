@@ -909,7 +909,7 @@ document.getElementById("axes").innerHTML = `
   <div class="axes">
     <div class="axis">
       <div class="axis-h">What <b>we</b> measured</div>
-      <div class="axis-sub">moves only when a valid run adjudicates the check</div>
+      <div class="axis-sub">changes only when a proper test run actually ran this check</div>
       ${C.check_states.map(s => `<div class="axis-row">
         <span class="axv">${esc(short(s))}</span>
         <span>${CHECK_WORDS[s] ? CHECK_WORDS[s][0] : ""}</span></div>`).join("")}
@@ -917,7 +917,7 @@ document.getElementById("axes").innerHTML = `
     <div class="axis-join">&times;</div>
     <div class="axis">
       <div class="axis-h">Where it stands <b>with them</b></div>
-      <div class="axis-sub">moves only when a message or their tracker says so</div>
+      <div class="axis-sub">changes only when a message or their tracker says so</div>
       ${C.filing_states.map(s => `<div class="axis-row">
         <span class="axv">${esc(short(s))}</span>
         <span>${FILING_WORDS[s] || ""}</span></div>`).join("")}
