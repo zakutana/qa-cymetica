@@ -19,16 +19,16 @@
           "run_id": "run-20260904T131842Z-7518e8e"
         }
       },
-      "reproductions": 5,
+      "reproductions": 6,
       "provenance": {
-        "run_id": "run-20260905T163840Z-ef3ef59",
-        "measured_at": "2026-09-05T16:40:47+00:00"
+        "run_id": "run-20260905T164759Z-4b4283c",
+        "measured_at": "2026-09-05T16:49:10+00:00"
       },
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20260905T163840Z-ef3ef59",
-          "at": "2026-09-05T16:40:47+00:00"
+          "run_id": "run-20260905T164759Z-4b4283c",
+          "at": "2026-09-05T16:49:10+00:00"
         },
         "pinned_fingerprint": "a00fa16074a898173577cb72f9e863a691aa4bfdb20c43a2d1476189800850ff"
       },
@@ -75,7 +75,8 @@
       },
       "reproduced_in": [
         "run-20260905T101042Z-45f8015",
-        "run-20260905T163840Z-ef3ef59"
+        "run-20260905T163840Z-ef3ef59",
+        "run-20260905T164759Z-4b4283c"
       ]
     },
     "CYM-bounty-filing-unauthenticated": {
@@ -104,16 +105,16 @@
           "run_id": "run-20260904T131842Z-7518e8e"
         }
       },
-      "reproductions": 5,
+      "reproductions": 6,
       "provenance": {
-        "run_id": "run-20260905T163840Z-ef3ef59",
-        "measured_at": "2026-09-05T16:40:47+00:00"
+        "run_id": "run-20260905T164759Z-4b4283c",
+        "measured_at": "2026-09-05T16:49:10+00:00"
       },
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20260905T163840Z-ef3ef59",
-          "at": "2026-09-05T16:40:47+00:00"
+          "run_id": "run-20260905T164759Z-4b4283c",
+          "at": "2026-09-05T16:49:10+00:00"
         },
         "pinned_fingerprint": "50e9db1361160f8a637e5f0bef8567aa271131874edeee1a00f4b2960e7b9f57"
       },
@@ -169,7 +170,8 @@
       },
       "reproduced_in": [
         "run-20260905T101042Z-45f8015",
-        "run-20260905T163840Z-ef3ef59"
+        "run-20260905T163840Z-ef3ef59",
+        "run-20260905T164759Z-4b4283c"
       ]
     },
     "CYM-llms_agent_count_self_consistent": {
@@ -199,14 +201,14 @@
       },
       "reproductions": 3,
       "provenance": {
-        "run_id": "run-20260905T163840Z-ef3ef59",
-        "measured_at": "2026-09-05T16:40:47+00:00"
+        "run_id": "run-20260905T164759Z-4b4283c",
+        "measured_at": "2026-09-05T16:49:10+00:00"
       },
       "check": {
         "state": "INCONCLUSIVE",
         "adjudicated_by": {
-          "run_id": "run-20260905T163840Z-ef3ef59",
-          "at": "2026-09-05T16:40:47+00:00"
+          "run_id": "run-20260905T164759Z-4b4283c",
+          "at": "2026-09-05T16:49:10+00:00"
         },
         "pinned_fingerprint": null
       },
@@ -279,14 +281,14 @@
       },
       "reproductions": 3,
       "provenance": {
-        "run_id": "run-20260905T163840Z-ef3ef59",
-        "measured_at": "2026-09-05T16:40:47+00:00"
+        "run_id": "run-20260905T164759Z-4b4283c",
+        "measured_at": "2026-09-05T16:49:10+00:00"
       },
       "check": {
         "state": "INCONCLUSIVE",
         "adjudicated_by": {
-          "run_id": "run-20260905T163840Z-ef3ef59",
-          "at": "2026-09-05T16:40:47+00:00"
+          "run_id": "run-20260905T164759Z-4b4283c",
+          "at": "2026-09-05T16:49:10+00:00"
         },
         "pinned_fingerprint": null
       },
@@ -352,14 +354,14 @@
       },
       "reproductions": 3,
       "provenance": {
-        "run_id": "run-20260905T163840Z-ef3ef59",
-        "measured_at": "2026-09-05T16:40:47+00:00"
+        "run_id": "run-20260905T164759Z-4b4283c",
+        "measured_at": "2026-09-05T16:49:10+00:00"
       },
       "check": {
         "state": "INCONCLUSIVE",
         "adjudicated_by": {
-          "run_id": "run-20260905T163840Z-ef3ef59",
-          "at": "2026-09-05T16:40:47+00:00"
+          "run_id": "run-20260905T164759Z-4b4283c",
+          "at": "2026-09-05T16:49:10+00:00"
         },
         "pinned_fingerprint": null
       },
@@ -474,16 +476,16 @@
           "run_id": "run-20260904T131842Z-7518e8e"
         }
       },
-      "reproductions": 5,
+      "reproductions": 6,
       "provenance": {
-        "run_id": "run-20260905T163840Z-ef3ef59",
-        "measured_at": "2026-09-05T16:40:47+00:00"
+        "run_id": "run-20260905T164759Z-4b4283c",
+        "measured_at": "2026-09-05T16:49:10+00:00"
       },
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20260905T163840Z-ef3ef59",
-          "at": "2026-09-05T16:40:47+00:00"
+          "run_id": "run-20260905T164759Z-4b4283c",
+          "at": "2026-09-05T16:49:10+00:00"
         },
         "pinned_fingerprint": "sha256:f9559807c42fd3328c8879e7b899b7cd"
       },
@@ -530,7 +532,8 @@
       },
       "reproduced_in": [
         "run-20260905T101042Z-45f8015",
-        "run-20260905T163840Z-ef3ef59"
+        "run-20260905T163840Z-ef3ef59",
+        "run-20260905T164759Z-4b4283c"
       ]
     },
     "CYM-mcp_resource_count": {
@@ -559,14 +562,14 @@
       },
       "reproductions": 3,
       "provenance": {
-        "run_id": "run-20260905T163840Z-ef3ef59",
-        "measured_at": "2026-09-05T16:40:47+00:00"
+        "run_id": "run-20260905T164759Z-4b4283c",
+        "measured_at": "2026-09-05T16:49:10+00:00"
       },
       "check": {
         "state": "INCONCLUSIVE",
         "adjudicated_by": {
-          "run_id": "run-20260905T163840Z-ef3ef59",
-          "at": "2026-09-05T16:40:47+00:00"
+          "run_id": "run-20260905T164759Z-4b4283c",
+          "at": "2026-09-05T16:49:10+00:00"
         },
         "pinned_fingerprint": null
       },
@@ -646,14 +649,14 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260905T163840Z-ef3ef59",
-        "measured_at": "2026-09-05T16:40:47+00:00"
+        "run_id": "run-20260905T164759Z-4b4283c",
+        "measured_at": "2026-09-05T16:49:10+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260905T163840Z-ef3ef59",
-          "at": "2026-09-05T16:40:47+00:00"
+          "run_id": "run-20260905T164759Z-4b4283c",
+          "at": "2026-09-05T16:49:10+00:00"
         },
         "pinned_fingerprint": "aee41113b423d34dbb0fb7a237f679ec142e320ffd706e3a3645b1a3b80b4cd5"
       },
@@ -776,14 +779,14 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260905T163840Z-ef3ef59",
-        "measured_at": "2026-09-05T16:40:47+00:00"
+        "run_id": "run-20260905T164759Z-4b4283c",
+        "measured_at": "2026-09-05T16:49:10+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260905T163840Z-ef3ef59",
-          "at": "2026-09-05T16:40:47+00:00"
+          "run_id": "run-20260905T164759Z-4b4283c",
+          "at": "2026-09-05T16:49:10+00:00"
         },
         "pinned_fingerprint": "sha256:ba019a19f7a7c39de5c5c19601580248"
       },
@@ -884,7 +887,7 @@
         "state": "UNVERIFIED",
         "adjudicated_by": null,
         "pinned_fingerprint": null,
-        "not_checked_in": "run-20260905T163840Z-ef3ef59"
+        "not_checked_in": "run-20260905T164759Z-4b4283c"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -958,7 +961,7 @@
         "state": "UNVERIFIED",
         "adjudicated_by": null,
         "pinned_fingerprint": null,
-        "not_checked_in": "run-20260905T163840Z-ef3ef59"
+        "not_checked_in": "run-20260905T164759Z-4b4283c"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -1045,8 +1048,8 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260905T163840Z-ef3ef59",
-        "measured_at": "2026-09-05T16:40:47+00:00"
+        "run_id": "run-20260905T164759Z-4b4283c",
+        "measured_at": "2026-09-05T16:49:10+00:00"
       },
       "check": {
         "state": "PASSING_UNPINNED",
@@ -1055,7 +1058,7 @@
           "at": "2026-09-05T10:11:28+00:00"
         },
         "pinned_fingerprint": null,
-        "evidence_only": "run-20260905T163840Z-ef3ef59"
+        "evidence_only": "run-20260905T164759Z-4b4283c"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -1143,14 +1146,14 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260905T163840Z-ef3ef59",
-        "measured_at": "2026-09-05T16:40:47+00:00"
+        "run_id": "run-20260905T164759Z-4b4283c",
+        "measured_at": "2026-09-05T16:49:10+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260905T163840Z-ef3ef59",
-          "at": "2026-09-05T16:40:47+00:00"
+          "run_id": "run-20260905T164759Z-4b4283c",
+          "at": "2026-09-05T16:49:10+00:00"
         },
         "pinned_fingerprint": "sha256:e081c62f35eae60b83c14e9766dce049"
       },
@@ -1247,14 +1250,14 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260905T163840Z-ef3ef59",
-        "measured_at": "2026-09-05T16:40:47+00:00"
+        "run_id": "run-20260905T164759Z-4b4283c",
+        "measured_at": "2026-09-05T16:49:10+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260905T163840Z-ef3ef59",
-          "at": "2026-09-05T16:40:47+00:00"
+          "run_id": "run-20260905T164759Z-4b4283c",
+          "at": "2026-09-05T16:49:10+00:00"
         },
         "pinned_fingerprint": "eec8c826a9ff556658be3354fa9e29469b301df49817b0ddde9a152b2704f1d5"
       },
@@ -1348,16 +1351,16 @@
           "run_id": "legacy"
         }
       },
-      "reproductions": 3,
+      "reproductions": 4,
       "provenance": {
-        "run_id": "run-20260905T163840Z-ef3ef59",
-        "measured_at": "2026-09-05T16:40:47+00:00"
+        "run_id": "run-20260905T164759Z-4b4283c",
+        "measured_at": "2026-09-05T16:49:10+00:00"
       },
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20260905T163840Z-ef3ef59",
-          "at": "2026-09-05T16:40:47+00:00"
+          "run_id": "run-20260905T164759Z-4b4283c",
+          "at": "2026-09-05T16:49:10+00:00"
         },
         "pinned_fingerprint": "sha256:ece74c708d5503fb5502ea84e5e5eb93"
       },
@@ -1413,7 +1416,8 @@
       },
       "reproduced_in": [
         "run-20260905T101042Z-45f8015",
-        "run-20260905T163840Z-ef3ef59"
+        "run-20260905T163840Z-ef3ef59",
+        "run-20260905T164759Z-4b4283c"
       ]
     },
     "CYM-mcp_tool_count": {
@@ -1450,7 +1454,7 @@
         "state": "UNVERIFIED",
         "adjudicated_by": null,
         "pinned_fingerprint": null,
-        "not_checked_in": "run-20260905T163840Z-ef3ef59"
+        "not_checked_in": "run-20260905T164759Z-4b4283c"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -1535,7 +1539,7 @@
         "state": "UNVERIFIED",
         "adjudicated_by": null,
         "pinned_fingerprint": null,
-        "not_checked_in": "run-20260905T163840Z-ef3ef59"
+        "not_checked_in": "run-20260905T164759Z-4b4283c"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -1609,7 +1613,7 @@
         "state": "UNVERIFIED",
         "adjudicated_by": null,
         "pinned_fingerprint": null,
-        "not_checked_in": "run-20260905T163840Z-ef3ef59"
+        "not_checked_in": "run-20260905T164759Z-4b4283c"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -1683,7 +1687,7 @@
         "state": "UNVERIFIED",
         "adjudicated_by": null,
         "pinned_fingerprint": null,
-        "not_checked_in": "run-20260905T163840Z-ef3ef59"
+        "not_checked_in": "run-20260905T164759Z-4b4283c"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -1935,16 +1939,19 @@
       },
       "reproductions": 1,
       "check": {
-        "state": "REPRODUCING",
+        "state": "INCONCLUSIVE",
         "adjudicated_by": {
-          "run_id": "run-20260905T163840Z-ef3ef59",
-          "at": "2026-09-05T16:40:47+00:00"
+          "run_id": "run-20260905T164759Z-4b4283c",
+          "at": "2026-09-05T16:49:10+00:00"
         },
         "pinned_fingerprint": "5e9d6943c1eaf398d598a59460e9acdf2a187f99ecb323ce600818b417cefeae"
       },
       "filing": {
-        "state": "NOT_RAISED",
-        "adjudicated_by": null,
+        "state": "WITHDRAWN",
+        "adjudicated_by": {
+          "event_id": "22459f9b17663ec48482ad638b2d2d9247c7ea14da825bcd9354a107185055ad",
+          "at": "2026-09-05T16:45:01+00:00"
+        },
         "reports": [],
         "refused": []
       },
@@ -1957,6 +1964,24 @@
             "run_id": "run-20260905T163840Z-ef3ef59"
           },
           "at": "2026-09-05T16:40:47+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "NOT_RAISED",
+          "to": "WITHDRAWN",
+          "cause": {
+            "event_id": "22459f9b17663ec48482ad638b2d2d9247c7ea14da825bcd9354a107185055ad"
+          },
+          "at": "2026-09-05T16:45:01+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "REPRODUCING",
+          "to": "INCONCLUSIVE",
+          "cause": {
+            "run_id": "run-20260905T164759Z-4b4283c"
+          },
+          "at": "2026-09-05T16:49:10+00:00"
         }
       ],
       "regressions": [],
@@ -1972,10 +1997,18 @@
       "checks": [
         "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/vaix/prices]"
       ],
-      "detail": {},
+      "detail": {
+        "left": "/api/v1/vaix/prices",
+        "right": 404,
+        "sources": {
+          "document": "llms.txt",
+          "pinned_at": "2026-09-04T10:15:00+00:00"
+        },
+        "reason": "/api/v1/vaix/prices was removed from llms.txt, not fixed in place (it now answers 404)"
+      },
       "provenance": {
-        "run_id": "run-20260905T163840Z-ef3ef59",
-        "measured_at": "2026-09-05T16:40:47+00:00"
+        "run_id": "run-20260905T164759Z-4b4283c",
+        "measured_at": "2026-09-05T16:49:10+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -1985,25 +2018,24 @@
       }
     }
   },
-  "run_id": "run-20260905T163840Z-ef3ef59",
+  "run_id": "run-20260905T164759Z-4b4283c",
   "run_level": "V",
-  "updated_at": "2026-09-05T16:40:47+00:00",
+  "updated_at": "2026-09-05T16:49:10+00:00",
   "counts": {
     "RAISED": 2,
     "THEY REPLIED": 1,
     "INCONCLUSIVE": 2,
-    "WITHDRAWN": 4,
+    "WITHDRAWN": 5,
     "NOT REPRODUCIBLE": 1,
     "VERIFIED FIXED": 3,
     "FIX CLAIMED": 4,
     "PASSING (UNPINNED)": 1,
     "PASSING, UNCLAIMED": 1,
     "STILL REPRODUCIBLE": 1,
-    "UNVERIFIABLE": 3,
-    "NOT RAISED YET": 1
+    "UNVERIFIABLE": 3
   },
   "events_head": {
-    "seq": 113,
-    "chain": "5f5043ffdfe9a29e93ee09a09c0785fc17798827a5dbde74dd16f14ce1986f0b"
+    "seq": 115,
+    "chain": "d6f31af5b0a33f67e0293a5800dae65c0fd86edd7a2429cd97b257b4aa5cccf7"
   }
 }
