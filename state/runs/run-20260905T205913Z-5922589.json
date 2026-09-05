@@ -1,0 +1,148 @@
+{
+  "schema": 2,
+  "run_id": "run-20260905T205913Z-5922589",
+  "started_at": "2026-09-05T20:59:17+00:00",
+  "finished_at": "2026-09-05T20:59:24+00:00",
+  "git_head": "5922589516edadd4c79abc076baa79569773562a",
+  "git_short": "5922589",
+  "git_dirty": true,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": "sha256:a18fb62e3a1251f3d33c47d9f54e9bb57c5e3cd48c4147e819f59e14c36671ad",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "687609a5e12d9a2e46d2c461660dd8adc85ab80a0853cfafc707ae0962f0d4ed",
+    "/.well-known/agent-card.json": "d3808146038b605f8a89995a66c57fa3d8a471653f8a3ab00a891458116e7042",
+    "/.well-known/agent-skills.json": "41a38971d7d79b8b4638dba285021fc011a7eb1f1062ae3b6707d4210c444ed7",
+    "/.well-known/ai-plugin.json": "e2f2d79821bf8e741fb18cefea6a94cb7a1ec358644306aeff02e763c61b1fb2",
+    "/.well-known/udc.json": "92cd8a5f7ec5a0a859594ef9fbd72cba4914eaab4220377db18adf2ed44611a4",
+    "/openapi.json": "f0cccb1f06ec266d303b1c7ab8e23f4af29a3c43106027595c95c1449fa1b2cf",
+    "/llms.txt": "300d02884e851fa63cc4ae4767f784ca813b220bd444736ae64e1aa273e9ee3d",
+    "mcp:tools/list:none": "32107ec8ab80ba0db0ad42f85e43abc1956dc37b3864851a8af95e522262d09e"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/rest/test_bounty_rewards.py -q --no-header --tb=short",
+  "selector_full": false,
+  "allow_mutate": false,
+  "collected": [
+    "tests/rest/test_bounty_rewards.py::test_verified_reports_record_what_they_earned",
+    "tests/rest/test_bounty_rewards.py::test_the_reward_programme_is_discoverable_by_an_agent"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/rest/test_bounty_rewards.py::test_verified_reports_record_what_they_earned",
+      "component": "rest.support",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "bounty-rewards-unrecorded",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 1532,
+      "evidence_ids": [
+        "b1ae78695770cd0e26a156568c5388937a8b51051ee6680af9e21642916c5139",
+        "001ffdc49ee737c857ef6c24d8f3b2eff400a986923b1f88276fd1f763bdf551"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "20 of the 20 reports on the public tracker are closed as fixed, and 0 of those record any reward_amount; the platform's own stats report bugs_fixed=30 and total_paid=0.0",
+        "left": 0,
+        "right": 20,
+        "sources": {
+          "tracker": "/api/v1/bounty/reports",
+          "totals": "/api/v1/bounty/stats"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "bounty-rewards-unrecorded",
+        "role": "verdict",
+        "population": {
+          "rows_returned": 20,
+          "closed": 20,
+          "bugs_fixed_per_stats": 30,
+          "total_paid_per_stats": 0.0
+        }
+      },
+      "check_fingerprint": "7cb1edbf693141334f1e473d989917a7473df5ab3b8f6df4494a0758562ecb4f",
+      "reason": null,
+      "failure_repr": "tests\\rest\\test_bounty_rewards.py:98: in test_verified_reports_record_what_they_earned\n    conclude(Measurement(\nqa\\measure.py:165: in conclude\n    raise AssertionError(explain(m))\nE   AssertionError: 20 of the 20 reports on the public tracker are closed as fixed, and 0 of those record any reward_amount; the platform's own stats report bugs_fixed=30 and total_paid=0.0\nE     left  = 0\nE     right = 20"
+    },
+    {
+      "nodeid": "tests/rest/test_bounty_rewards.py::test_the_reward_programme_is_discoverable_by_an_agent",
+      "component": "discovery.llmstxt",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "bounty-rewards-undocumented",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 1589,
+      "evidence_ids": [
+        "b5aad6f9f0c1e18c522a92ebfc4a666f7dab7f1d5a164a02498f476bd7008dbf",
+        "730e77f7accb9fec59cbfab27b59cb0869e2d00080dc0962ae35e24eadaec38d",
+        "f8e45991f31b67622f268329b2169dbe9ca63c66d73f9c7310a7ebbcae2795d2",
+        "58266b6cb971b1c250f93331a5bb47667cf07345ae3ec195e613b2506bad74c2",
+        "fc1c90e0a76c3f3f6de346632f957eab9e7740cb7e232a20c296bd1083de8e8f"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "the bug-report reward programme appears in none of the machine-readable discovery surfaces, so an agent reading them cannot learn that filing a bug earns anything",
+        "left": [],
+        "right": [
+          "agent-card.json",
+          "agent-skills.json",
+          "llms.txt",
+          "mcp.json",
+          "openapi.json"
+        ],
+        "sources": {
+          "searched": "agent-card.json, agent-skills.json, llms.txt, mcp.json, openapi.json"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "bounty-rewards-undocumented",
+        "role": "verdict",
+        "population": {
+          "documents_read": 5,
+          "unreadable": {}
+        }
+      },
+      "check_fingerprint": "8a8ec949f57150dcf207546f69321615e4324542b82a752c981b4667aea99b60",
+      "reason": null,
+      "failure_repr": "tests\\rest\\test_bounty_rewards.py:147: in test_the_reward_programme_is_discoverable_by_an_agent\n    conclude(Measurement(\nqa\\measure.py:165: in conclude\n    raise AssertionError(explain(m))\nE   AssertionError: the bug-report reward programme appears in none of the machine-readable discovery surfaces, so an agent reading them cannot learn that filing a bug earns anything\nE     left  = []\nE     right = ['agent-card.json', 'agent-skills.json', 'llms.txt', 'mcp.json', 'openapi.json']"
+    }
+  ],
+  "totals": {
+    "failed": 2
+  },
+  "ratelimit": {
+    "requests": 7,
+    "limit": 2000,
+    "remaining": 1996,
+    "fraction_used": 0.002,
+    "exhausted": false
+  },
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "fingerprint_after": "sha256:a18fb62e3a1251f3d33c47d9f54e9bb57c5e3cd48c4147e819f59e14c36671ad",
+  "exit_status": 1
+}
