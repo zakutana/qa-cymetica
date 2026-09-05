@@ -1,0 +1,112 @@
+{
+  "schema": 2,
+  "run_id": "run-20260905T181918Z-08b86b7",
+  "started_at": "2026-09-05T18:19:18+00:00",
+  "finished_at": "2026-09-05T18:19:19+00:00",
+  "git_head": "08b86b7823c89bbbd816b78a3fe7ed2a17a11ae6",
+  "git_short": "08b86b7",
+  "git_dirty": true,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": null,
+  "fingerprint_parts": {},
+  "fingerprint_errors": {
+    "offline": "QA_OFFLINE=1"
+  },
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/repo -q --no-header --tb=line",
+  "selector_full": false,
+  "allow_mutate": false,
+  "collected": [
+    "tests/repo/test_repo_consistency.py::test_committed_ledger_is_what_its_inputs_fold_to",
+    "tests/repo/test_repo_consistency.py::test_committed_dashboard_matches_the_committed_ledger"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/repo/test_repo_consistency.py::test_committed_ledger_is_what_its_inputs_fold_to",
+      "component": "meta.pipeline",
+      "tier": "SAFE",
+      "surface": "meta",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 68,
+      "evidence_ids": [],
+      "measurement": {
+        "verdict": "passed",
+        "reason": "the committed ledger matches its inputs",
+        "left": [],
+        "right": [],
+        "sources": {
+          "ledger": "state/ledger.json",
+          "journal": "state/journal/events.jsonl"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": null,
+        "role": "verdict",
+        "population": null
+      },
+      "check_fingerprint": "d1e48949ac4a051fbfa03623027de30f25975692559bde5261f7f342cced052c",
+      "reason": null,
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/repo/test_repo_consistency.py::test_committed_dashboard_matches_the_committed_ledger",
+      "component": "meta.pipeline",
+      "tier": "SAFE",
+      "surface": "meta",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 54,
+      "evidence_ids": [],
+      "measurement": {
+        "verdict": "passed",
+        "reason": "the committed dashboard is a render of the committed state",
+        "left": "ac7080bde3ab732d",
+        "right": "ac7080bde3ab732d",
+        "sources": {
+          "dashboard": "dashboard/index.html"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": null,
+        "role": "verdict",
+        "population": null
+      },
+      "check_fingerprint": "9b356b0dd105f0fa87169baf5ee795cc796c13f419d57c286193a9932f90b38b",
+      "reason": null,
+      "failure_repr": null
+    }
+  ],
+  "totals": {
+    "passed": 2
+  },
+  "ratelimit": {},
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "fingerprint_after": null,
+  "exit_status": 0
+}

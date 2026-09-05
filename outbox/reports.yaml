@@ -333,6 +333,40 @@ reports:
       "has an endpoint", so the subset relationship is true by construction
       rather than by maintenance.
 
+  - key: documented-404-remainder
+    findings: [CYM-documented-404]
+    severity: low
+    category: documentation
+    url: https://cymetica.com/llms.txt
+    title: "Three paths from report #49 still 404: one rename landed in openapi.json but not in agent-skills.json"
+    expected: >
+      A path either appears in the documentation and answers, or is removed
+      from the documentation.
+    actual: >
+      Three of the 26 paths from report #49 are still published and still
+      return 404. /api/v1/clob/order is the interesting one: the resolution
+      note says it was renamed to clob/orders, and it was -- in openapi.json.
+      The old name is still in agent-skills.json.
+    steps:
+      - "GET /.well-known/agent-skills.json -> still contains /api/v1/clob/order"
+      - "GET /api/v1/clob/order -> 404"
+      - "GET /llms.txt -> still contains /api/v1/account and /api/v1/agentbook/post"
+      - "GET /api/v1/account -> 404"
+      - "GET /api/v1/agentbook/post -> 404"
+    body: >
+      Most of report #49 is genuinely fixed and we re-checked it path by path,
+      which is why this is a short list rather than a re-file of the original.
+      We pinned all 26 paths at the moment we first reported them, so we can
+      tell apart the three ways a path can stop failing: fixed in place, still
+      broken, or removed from the documentation. 23 are no longer documented.
+      These three are still documented and still 404.
+      The clob/order case suggests the rename was applied to openapi.json and
+      not to agent-skills.json, so the two discovery documents now disagree
+      with each other as well as with the platform.
+      INVARIANT: after a rename, assert the old path appears in NO published
+      document -- llms.txt, openapi.json and every .well-known file -- rather
+      than only in the one where it was noticed.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: read-only
   verification of the REST API, MCP and machine-readable discovery surfaces. No

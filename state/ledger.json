@@ -19,16 +19,16 @@
           "run_id": "run-20260904T131842Z-7518e8e"
         }
       },
-      "reproductions": 8,
+      "reproductions": 9,
       "provenance": {
-        "run_id": "run-20260905T180712Z-6b0880f",
-        "measured_at": "2026-09-05T18:07:58+00:00"
+        "run_id": "run-20260905T181806Z-08b86b7",
+        "measured_at": "2026-09-05T18:19:04+00:00"
       },
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20260905T180712Z-6b0880f",
-          "at": "2026-09-05T18:07:58+00:00"
+          "run_id": "run-20260905T181806Z-08b86b7",
+          "at": "2026-09-05T18:19:04+00:00"
         },
         "pinned_fingerprint": "a00fa16074a898173577cb72f9e863a691aa4bfdb20c43a2d1476189800850ff"
       },
@@ -41,7 +41,7 @@
         "reports": [
           {
             "report_id": 54,
-            "status": "pending"
+            "status": "invalid"
           }
         ],
         "refused": []
@@ -78,7 +78,8 @@
         "run-20260905T163840Z-ef3ef59",
         "run-20260905T164759Z-4b4283c",
         "run-20260905T170702Z-c34e365",
-        "run-20260905T180712Z-6b0880f"
+        "run-20260905T180712Z-6b0880f",
+        "run-20260905T181806Z-08b86b7"
       ]
     },
     "CYM-bounty-filing-unauthenticated": {
@@ -107,29 +108,29 @@
           "run_id": "run-20260904T131842Z-7518e8e"
         }
       },
-      "reproductions": 8,
+      "reproductions": 9,
       "provenance": {
-        "run_id": "run-20260905T180712Z-6b0880f",
-        "measured_at": "2026-09-05T18:07:58+00:00"
+        "run_id": "run-20260905T181806Z-08b86b7",
+        "measured_at": "2026-09-05T18:19:04+00:00"
       },
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20260905T180712Z-6b0880f",
-          "at": "2026-09-05T18:07:58+00:00"
+          "run_id": "run-20260905T181806Z-08b86b7",
+          "at": "2026-09-05T18:19:04+00:00"
         },
         "pinned_fingerprint": "50e9db1361160f8a637e5f0bef8567aa271131874edeee1a00f4b2960e7b9f57"
       },
       "filing": {
-        "state": "REPLIED",
+        "state": "FIX_CLAIMED",
         "adjudicated_by": {
-          "event_id": "30d2579811f885e4aac7b7c3afd4b08cee2967eab41db42536fb50a7f02b6f0d",
-          "at": "2026-09-04T11:40:00+00:00"
+          "event_id": "a3197a5a1b7622a9a3fd2b271e1d6feb9176225d0c163cbdae18f24d2879c849",
+          "at": "2026-09-05T18:24:07+00:00"
         },
         "reports": [
           {
             "report_id": 47,
-            "status": "validated"
+            "status": "fixed"
           }
         ],
         "refused": []
@@ -161,11 +162,20 @@
             "run_id": "run-20260905T101042Z-45f8015"
           },
           "at": "2026-09-05T10:11:28+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "REPLIED",
+          "to": "FIX_CLAIMED",
+          "cause": {
+            "event_id": "a3197a5a1b7622a9a3fd2b271e1d6feb9176225d0c163cbdae18f24d2879c849"
+          },
+          "at": "2026-09-05T18:24:07+00:00"
         }
       ],
       "regressions": [],
       "obligations": {
-        "reverify": false,
+        "reverify": true,
         "repair_check": false,
         "reopen": [],
         "retractions": []
@@ -175,7 +185,8 @@
         "run-20260905T163840Z-ef3ef59",
         "run-20260905T164759Z-4b4283c",
         "run-20260905T170702Z-c34e365",
-        "run-20260905T180712Z-6b0880f"
+        "run-20260905T180712Z-6b0880f",
+        "run-20260905T181806Z-08b86b7"
       ]
     },
     "CYM-llms_agent_count_self_consistent": {
@@ -208,27 +219,27 @@
       },
       "reproductions": 3,
       "provenance": {
-        "run_id": "run-20260905T180712Z-6b0880f",
-        "measured_at": "2026-09-05T18:07:58+00:00"
+        "run_id": "run-20260905T181806Z-08b86b7",
+        "measured_at": "2026-09-05T18:19:04+00:00"
       },
       "check": {
         "state": "INCONCLUSIVE",
         "adjudicated_by": {
-          "run_id": "run-20260905T180712Z-6b0880f",
-          "at": "2026-09-05T18:07:58+00:00"
+          "run_id": "run-20260905T181806Z-08b86b7",
+          "at": "2026-09-05T18:19:04+00:00"
         },
         "pinned_fingerprint": null
       },
       "filing": {
-        "state": "RAISED",
+        "state": "FIX_CLAIMED",
         "adjudicated_by": {
-          "event_id": "4b0c09c9207ea7080369ff9dedc3a39c8a9cc862d38ebc6b431902178d706b89",
-          "at": "2026-09-04T13:20:58.089377+00:00"
+          "event_id": "07648d254f5eb66f6ef3dc7f1d6af42e6259b3955355caa44205fa717c1cf5eb",
+          "at": "2026-09-05T18:24:07+00:00"
         },
         "reports": [
           {
             "report_id": 55,
-            "status": "pending"
+            "status": "fixed"
           }
         ],
         "refused": []
@@ -251,11 +262,20 @@
             "run_id": "run-20260905T101042Z-45f8015"
           },
           "at": "2026-09-05T10:11:28+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "RAISED",
+          "to": "FIX_CLAIMED",
+          "cause": {
+            "event_id": "07648d254f5eb66f6ef3dc7f1d6af42e6259b3955355caa44205fa717c1cf5eb"
+          },
+          "at": "2026-09-05T18:24:07+00:00"
         }
       ],
       "regressions": [],
       "obligations": {
-        "reverify": false,
+        "reverify": true,
         "repair_check": true,
         "reopen": [],
         "retractions": []
@@ -362,14 +382,14 @@
       },
       "reproductions": 3,
       "provenance": {
-        "run_id": "run-20260905T180712Z-6b0880f",
-        "measured_at": "2026-09-05T18:07:58+00:00"
+        "run_id": "run-20260905T181806Z-08b86b7",
+        "measured_at": "2026-09-05T18:19:04+00:00"
       },
       "check": {
         "state": "PASSING_UNPINNED",
         "adjudicated_by": {
-          "run_id": "run-20260905T180712Z-6b0880f",
-          "at": "2026-09-05T18:07:58+00:00"
+          "run_id": "run-20260905T181806Z-08b86b7",
+          "at": "2026-09-05T18:19:04+00:00"
         },
         "pinned_fingerprint": null
       },
@@ -444,27 +464,27 @@
       },
       "reproductions": 3,
       "provenance": {
-        "run_id": "run-20260905T180712Z-6b0880f",
-        "measured_at": "2026-09-05T18:07:58+00:00"
+        "run_id": "run-20260905T181806Z-08b86b7",
+        "measured_at": "2026-09-05T18:19:04+00:00"
       },
       "check": {
         "state": "INCONCLUSIVE",
         "adjudicated_by": {
-          "run_id": "run-20260905T180712Z-6b0880f",
-          "at": "2026-09-05T18:07:58+00:00"
+          "run_id": "run-20260905T181806Z-08b86b7",
+          "at": "2026-09-05T18:19:04+00:00"
         },
         "pinned_fingerprint": null
       },
       "filing": {
-        "state": "REPLIED",
+        "state": "FIX_CLAIMED",
         "adjudicated_by": {
-          "event_id": "30d2579811f885e4aac7b7c3afd4b08cee2967eab41db42536fb50a7f02b6f0d",
-          "at": "2026-09-04T11:40:00+00:00"
+          "event_id": "8f14a795a885fc6666ba1d2260df21b028f4375b1da1c2a76f5e28d77c8a590b",
+          "at": "2026-09-05T18:24:07+00:00"
         },
         "reports": [
           {
             "report_id": 53,
-            "status": "validated"
+            "status": "fixed"
           }
         ],
         "refused": []
@@ -496,11 +516,20 @@
             "run_id": "run-20260905T101042Z-45f8015"
           },
           "at": "2026-09-05T10:11:28+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "REPLIED",
+          "to": "FIX_CLAIMED",
+          "cause": {
+            "event_id": "8f14a795a885fc6666ba1d2260df21b028f4375b1da1c2a76f5e28d77c8a590b"
+          },
+          "at": "2026-09-05T18:24:07+00:00"
         }
       ],
       "regressions": [],
       "obligations": {
-        "reverify": false,
+        "reverify": true,
         "repair_check": true,
         "reopen": [],
         "retractions": []
@@ -517,6 +546,18 @@
       "note": "Their resolution on #51 states agent-card.json is the full discovery card and agent-skills.json the endpoint-actionable subset. That is a testable model and the right one, so this checks the claim they actually made rather than demanding the two files be identical -- which they explained, correctly, that they should not be.",
       "detail": {
         "left": [
+          "arena-trading",
+          "asset-discovery",
+          "clone-ai-agent",
+          "et10-revenue-share",
+          "exchange-tokens",
+          "market-data",
+          "portfolio-management",
+          "prop-desk-trading",
+          "trade-event-cards",
+          "trade-prediction-markets"
+        ],
+        "right": [
           "ai-due-diligence",
           "ai-native-provenance",
           "arena-trading",
@@ -533,29 +574,17 @@
           "trade-event-cards",
           "trade-prediction-markets"
         ],
-        "right": [
-          "arena-trading",
-          "asset-discovery",
-          "clone-ai-agent",
-          "et10-revenue-share",
-          "exchange-tokens",
-          "market-data",
-          "portfolio-management",
-          "prop-desk-trading",
-          "trade-event-cards",
-          "trade-prediction-markets"
-        ],
         "sources": {
-          "agent_card": "set:$.skills[*].id",
-          "agent_skills": "set:$.skills[*].id"
+          "agent_skills": "set:$.skills[*].id",
+          "agent_card": "set:$.skills[*].id"
         },
         "population": {
           "witness": {
-            "agent_card": "set:$.skills[*].id",
-            "agent_skills": "set:$.skills[*].id"
+            "agent_skills": "set:$.skills[*].id",
+            "agent_card": "set:$.skills[*].id"
           }
         },
-        "reason": "skills_subset: Is agent-skills.json the actionable subset of agent-card.json, as stated? agent-card.json says 15 (ai-due-diligence, ai-native-provenance, arena-trading, asset-discovery, clone-ai-agent, et10-revenue-share, exchange-tokens, live-headlines and 7 more); agent-skills.json says 10 (arena-trading, asset-discovery, clone-ai-agent, et10-revenue-share, exchange-tokens, market-data, portfolio-management, prop-desk-trading and 2 more). (left has ['ai-due-diligence', 'ai-native-provenance', 'live-headlines', 'smart-delegation', 'tge-prediction-markets'] which right lacks)"
+        "reason": "skills_subset: Is agent-skills.json the actionable subset of agent-card.json, as stated? Both agent-skills.json and agent-card.json now say 10 (arena-trading, asset-discovery, clone-ai-agent, et10-revenue-share, exchange-tokens, market-data, portfolio-management, prop-desk-trading and 2 more)."
       },
       "checks": [
         "tests/reconciliation/test_reconcile.py::test_sources_agree[skills_subset::agent_card-vs-agent_skills]"
@@ -568,27 +597,27 @@
       },
       "reproductions": 8,
       "provenance": {
-        "run_id": "run-20260905T180712Z-6b0880f",
-        "measured_at": "2026-09-05T18:07:58+00:00"
+        "run_id": "run-20260905T181806Z-08b86b7",
+        "measured_at": "2026-09-05T18:19:04+00:00"
       },
       "check": {
-        "state": "REPRODUCING",
+        "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260905T180712Z-6b0880f",
-          "at": "2026-09-05T18:07:58+00:00"
+          "run_id": "run-20260905T181806Z-08b86b7",
+          "at": "2026-09-05T18:19:04+00:00"
         },
         "pinned_fingerprint": "sha256:f9559807c42fd3328c8879e7b899b7cd"
       },
       "filing": {
-        "state": "RAISED",
+        "state": "FIX_CLAIMED",
         "adjudicated_by": {
-          "event_id": "fa078f101ff2352644a8d363d58b72e4b62b0e1ba1246d1eb378614ea108e5f3",
-          "at": "2026-09-04T13:25:11+00:00"
+          "event_id": "2bdd816df83580a65e1f1c95d407fa4e527193af47b1b5a23b2c728e60a5c746",
+          "at": "2026-09-05T18:24:07+00:00"
         },
         "reports": [
           {
             "report_id": 56,
-            "status": "pending"
+            "status": "fixed"
           }
         ],
         "refused": []
@@ -611,6 +640,24 @@
             "run_id": "run-20260905T101042Z-45f8015"
           },
           "at": "2026-09-05T10:11:28+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "REPRODUCING",
+          "to": "PASSING",
+          "cause": {
+            "run_id": "run-20260905T181806Z-08b86b7"
+          },
+          "at": "2026-09-05T18:19:04+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "RAISED",
+          "to": "FIX_CLAIMED",
+          "cause": {
+            "event_id": "2bdd816df83580a65e1f1c95d407fa4e527193af47b1b5a23b2c728e60a5c746"
+          },
+          "at": "2026-09-05T18:24:07+00:00"
         }
       ],
       "regressions": [],
@@ -657,14 +704,14 @@
       },
       "reproductions": 3,
       "provenance": {
-        "run_id": "run-20260905T180712Z-6b0880f",
-        "measured_at": "2026-09-05T18:07:58+00:00"
+        "run_id": "run-20260905T181806Z-08b86b7",
+        "measured_at": "2026-09-05T18:19:04+00:00"
       },
       "check": {
         "state": "INCONCLUSIVE",
         "adjudicated_by": {
-          "run_id": "run-20260905T180712Z-6b0880f",
-          "at": "2026-09-05T18:07:58+00:00"
+          "run_id": "run-20260905T181806Z-08b86b7",
+          "at": "2026-09-05T18:19:04+00:00"
         },
         "pinned_fingerprint": null
       },
@@ -744,14 +791,14 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260905T180712Z-6b0880f",
-        "measured_at": "2026-09-05T18:07:58+00:00"
+        "run_id": "run-20260905T181806Z-08b86b7",
+        "measured_at": "2026-09-05T18:19:04+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260905T180712Z-6b0880f",
-          "at": "2026-09-05T18:07:58+00:00"
+          "run_id": "run-20260905T181806Z-08b86b7",
+          "at": "2026-09-05T18:19:04+00:00"
         },
         "pinned_fingerprint": "aee41113b423d34dbb0fb7a237f679ec142e320ffd706e3a3645b1a3b80b4cd5"
       },
@@ -852,16 +899,16 @@
           "VOL"
         ],
         "sources": {
-          "live_species": "set:$[*].symbol",
-          "llms_txt": "list_after:AI trading agent"
+          "llms_txt": "list_after:AI trading agent",
+          "live_species": "set:$[*].symbol"
         },
         "population": {
           "witness": {
-            "live_species": "set:$[*].symbol",
-            "llms_txt": "AI trading agent species (MACD, RSI, BOLL, VOL, TREND, STOCH, ICHI, FIB, ATR, DIV, PCPN)"
+            "llms_txt": "AI trading agent species (MACD, RSI, BOLL, VOL, TREND, STOCH, ICHI, FIB, ATR, DIV, PCPN)",
+            "live_species": "set:$[*].symbol"
           }
         },
-        "reason": "agent_names: Does llms.txt name agent symbols that actually exist? Both the live species endpoint and llms.txt now say 11 (ATR, BOLL, DIV, FIB, ICHI, MACD, PCPN, RSI and 3 more)."
+        "reason": "agent_names: Does llms.txt name agent symbols that actually exist? Both llms.txt and the live species endpoint now say 11 (ATR, BOLL, DIV, FIB, ICHI, MACD, PCPN, RSI and 3 more)."
       },
       "checks": [
         "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_names::live_species-vs-llms_txt]"
@@ -874,14 +921,14 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260905T180712Z-6b0880f",
-        "measured_at": "2026-09-05T18:07:58+00:00"
+        "run_id": "run-20260905T181806Z-08b86b7",
+        "measured_at": "2026-09-05T18:19:04+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260905T180712Z-6b0880f",
-          "at": "2026-09-05T18:07:58+00:00"
+          "run_id": "run-20260905T181806Z-08b86b7",
+          "at": "2026-09-05T18:19:04+00:00"
         },
         "pinned_fingerprint": "sha256:ba019a19f7a7c39de5c5c19601580248"
       },
@@ -979,14 +1026,14 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260905T180712Z-6b0880f",
-        "measured_at": "2026-09-05T18:07:58+00:00"
+        "run_id": "run-20260905T181806Z-08b86b7",
+        "measured_at": "2026-09-05T18:19:04+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260905T180712Z-6b0880f",
-          "at": "2026-09-05T18:07:58+00:00"
+          "run_id": "run-20260905T181806Z-08b86b7",
+          "at": "2026-09-05T18:19:04+00:00"
         },
         "pinned_fingerprint": "sha256:6156cefe281b0c01af3a3391dce65475"
       },
@@ -1080,7 +1127,7 @@
         "state": "UNVERIFIED",
         "adjudicated_by": null,
         "pinned_fingerprint": null,
-        "not_checked_in": "run-20260905T180712Z-6b0880f"
+        "not_checked_in": "run-20260905T181806Z-08b86b7"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -1264,14 +1311,14 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260905T180712Z-6b0880f",
-        "measured_at": "2026-09-05T18:07:58+00:00"
+        "run_id": "run-20260905T181806Z-08b86b7",
+        "measured_at": "2026-09-05T18:19:04+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260905T180712Z-6b0880f",
-          "at": "2026-09-05T18:07:58+00:00"
+          "run_id": "run-20260905T181806Z-08b86b7",
+          "at": "2026-09-05T18:19:04+00:00"
         },
         "pinned_fingerprint": "sha256:e081c62f35eae60b83c14e9766dce049"
       },
@@ -1368,27 +1415,27 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260905T180712Z-6b0880f",
-        "measured_at": "2026-09-05T18:07:58+00:00"
+        "run_id": "run-20260905T181806Z-08b86b7",
+        "measured_at": "2026-09-05T18:19:04+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260905T180712Z-6b0880f",
-          "at": "2026-09-05T18:07:58+00:00"
+          "run_id": "run-20260905T181806Z-08b86b7",
+          "at": "2026-09-05T18:19:04+00:00"
         },
         "pinned_fingerprint": "eec8c826a9ff556658be3354fa9e29469b301df49817b0ddde9a152b2704f1d5"
       },
       "filing": {
-        "state": "REPLIED",
+        "state": "FIX_CLAIMED",
         "adjudicated_by": {
-          "event_id": "30d2579811f885e4aac7b7c3afd4b08cee2967eab41db42536fb50a7f02b6f0d",
-          "at": "2026-09-04T11:40:00+00:00"
+          "event_id": "8f14a795a885fc6666ba1d2260df21b028f4375b1da1c2a76f5e28d77c8a590b",
+          "at": "2026-09-05T18:24:07+00:00"
         },
         "reports": [
           {
             "report_id": 53,
-            "status": "validated"
+            "status": "fixed"
           }
         ],
         "refused": []
@@ -1429,6 +1476,15 @@
             "run_id": "run-20260905T101042Z-45f8015"
           },
           "at": "2026-09-05T10:11:28+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "REPLIED",
+          "to": "FIX_CLAIMED",
+          "cause": {
+            "event_id": "8f14a795a885fc6666ba1d2260df21b028f4375b1da1c2a76f5e28d77c8a590b"
+          },
+          "at": "2026-09-05T18:24:07+00:00"
         }
       ],
       "regressions": [],
@@ -1469,16 +1525,16 @@
           "run_id": "legacy"
         }
       },
-      "reproductions": 6,
+      "reproductions": 7,
       "provenance": {
-        "run_id": "run-20260905T180712Z-6b0880f",
-        "measured_at": "2026-09-05T18:07:58+00:00"
+        "run_id": "run-20260905T181806Z-08b86b7",
+        "measured_at": "2026-09-05T18:19:04+00:00"
       },
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20260905T180712Z-6b0880f",
-          "at": "2026-09-05T18:07:58+00:00"
+          "run_id": "run-20260905T181806Z-08b86b7",
+          "at": "2026-09-05T18:19:04+00:00"
         },
         "pinned_fingerprint": "sha256:ece74c708d5503fb5502ea84e5e5eb93"
       },
@@ -1492,6 +1548,10 @@
           {
             "report_id": 49,
             "status": "fixed"
+          },
+          {
+            "report_id": 59,
+            "status": "pending"
           }
         ],
         "refused": []
@@ -1537,7 +1597,8 @@
         "run-20260905T163840Z-ef3ef59",
         "run-20260905T164759Z-4b4283c",
         "run-20260905T170702Z-c34e365",
-        "run-20260905T180712Z-6b0880f"
+        "run-20260905T180712Z-6b0880f",
+        "run-20260905T181806Z-08b86b7"
       ]
     },
     "CYM-mcp_tool_count": {
@@ -1574,7 +1635,7 @@
         "state": "UNVERIFIED",
         "adjudicated_by": null,
         "pinned_fingerprint": null,
-        "not_checked_in": "run-20260905T180712Z-6b0880f"
+        "not_checked_in": "run-20260905T181806Z-08b86b7"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -1727,14 +1788,14 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260905T180712Z-6b0880f",
-        "measured_at": "2026-09-05T18:07:58+00:00"
+        "run_id": "run-20260905T181806Z-08b86b7",
+        "measured_at": "2026-09-05T18:19:04+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260905T180712Z-6b0880f",
-          "at": "2026-09-05T18:07:58+00:00"
+          "run_id": "run-20260905T181806Z-08b86b7",
+          "at": "2026-09-05T18:19:04+00:00"
         },
         "pinned_fingerprint": "sha256:13577e53eb81ed18ef1bcf733fe4ca57"
       },
@@ -1817,6 +1878,18 @@
       "component": "discovery.wellknown",
       "detail": {
         "left": [
+          "arena-trading",
+          "asset-discovery",
+          "clone-ai-agent",
+          "et10-revenue-share",
+          "exchange-tokens",
+          "market-data",
+          "portfolio-management",
+          "prop-desk-trading",
+          "trade-event-cards",
+          "trade-prediction-markets"
+        ],
+        "right": [
           "ai-due-diligence",
           "ai-native-provenance",
           "arena-trading",
@@ -1833,29 +1906,17 @@
           "trade-event-cards",
           "trade-prediction-markets"
         ],
-        "right": [
-          "arena-trading",
-          "asset-discovery",
-          "clone-ai-agent",
-          "et10-revenue-share",
-          "exchange-tokens",
-          "market-data",
-          "portfolio-management",
-          "prop-desk-trading",
-          "trade-event-cards",
-          "trade-prediction-markets"
-        ],
         "sources": {
-          "agent_card": "set:$.skills[*].id",
-          "agent_skills": "set:$.skills[*].id"
+          "agent_skills": "set:$.skills[*].id",
+          "agent_card": "set:$.skills[*].id"
         },
         "population": {
           "witness": {
-            "agent_card": "set:$.skills[*].id",
-            "agent_skills": "set:$.skills[*].id"
+            "agent_skills": "set:$.skills[*].id",
+            "agent_card": "set:$.skills[*].id"
           }
         },
-        "reason": "skills_subset: Is agent-skills.json the actionable subset of agent-card.json, as stated? agent-card.json says 15 (ai-due-diligence, ai-native-provenance, arena-trading, asset-discovery, clone-ai-agent, et10-revenue-share, exchange-tokens, live-headlines and 7 more); agent-skills.json says 10 (arena-trading, asset-discovery, clone-ai-agent, et10-revenue-share, exchange-tokens, market-data, portfolio-management, prop-desk-trading and 2 more). (left has ['ai-due-diligence', 'ai-native-provenance', 'live-headlines', 'smart-delegation', 'tge-prediction-markets'] which right lacks)"
+        "reason": "skills_subset: Is agent-skills.json the actionable subset of agent-card.json, as stated? Both agent-skills.json and agent-card.json now say 10 (arena-trading, asset-discovery, clone-ai-agent, et10-revenue-share, exchange-tokens, market-data, portfolio-management, prop-desk-trading and 2 more)."
       },
       "checks": [
         "tests/reconciliation/test_reconcile.py::test_sources_agree[skills_subset::agent_card-vs-agent_skills]"
@@ -1868,14 +1929,14 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260905T180712Z-6b0880f",
-        "measured_at": "2026-09-05T18:07:58+00:00"
+        "run_id": "run-20260905T181806Z-08b86b7",
+        "measured_at": "2026-09-05T18:19:04+00:00"
       },
       "check": {
-        "state": "REPRODUCING",
+        "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260905T180712Z-6b0880f",
-          "at": "2026-09-05T18:07:58+00:00"
+          "run_id": "run-20260905T181806Z-08b86b7",
+          "at": "2026-09-05T18:19:04+00:00"
         },
         "pinned_fingerprint": "sha256:f9559807c42fd3328c8879e7b899b7cd"
       },
@@ -1920,11 +1981,20 @@
             "run_id": "run-20260905T170702Z-c34e365"
           },
           "at": "2026-09-05T17:08:12+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "REPRODUCING",
+          "to": "PASSING",
+          "cause": {
+            "run_id": "run-20260905T181806Z-08b86b7"
+          },
+          "at": "2026-09-05T18:19:04+00:00"
         }
       ],
       "regressions": [],
       "obligations": {
-        "reverify": true,
+        "reverify": false,
         "repair_check": false,
         "reopen": [],
         "retractions": []
@@ -1940,6 +2010,18 @@
       "component": "discovery.wellknown",
       "detail": {
         "left": [
+          "arena-trading",
+          "asset-discovery",
+          "clone-ai-agent",
+          "et10-revenue-share",
+          "exchange-tokens",
+          "market-data",
+          "portfolio-management",
+          "prop-desk-trading",
+          "trade-event-cards",
+          "trade-prediction-markets"
+        ],
+        "right": [
           "ai-due-diligence",
           "ai-native-provenance",
           "arena-trading",
@@ -1956,29 +2038,17 @@
           "trade-event-cards",
           "trade-prediction-markets"
         ],
-        "right": [
-          "arena-trading",
-          "asset-discovery",
-          "clone-ai-agent",
-          "et10-revenue-share",
-          "exchange-tokens",
-          "market-data",
-          "portfolio-management",
-          "prop-desk-trading",
-          "trade-event-cards",
-          "trade-prediction-markets"
-        ],
         "sources": {
-          "agent_card": "set:$.skills[*].id",
-          "agent_skills": "set:$.skills[*].id"
+          "agent_skills": "set:$.skills[*].id",
+          "agent_card": "set:$.skills[*].id"
         },
         "population": {
           "witness": {
-            "agent_card": "set:$.skills[*].id",
-            "agent_skills": "set:$.skills[*].id"
+            "agent_skills": "set:$.skills[*].id",
+            "agent_card": "set:$.skills[*].id"
           }
         },
-        "reason": "skills_subset: Is agent-skills.json the actionable subset of agent-card.json, as stated? agent-card.json says 15 (ai-due-diligence, ai-native-provenance, arena-trading, asset-discovery, clone-ai-agent, et10-revenue-share, exchange-tokens, live-headlines and 7 more); agent-skills.json says 10 (arena-trading, asset-discovery, clone-ai-agent, et10-revenue-share, exchange-tokens, market-data, portfolio-management, prop-desk-trading and 2 more). (left has ['ai-due-diligence', 'ai-native-provenance', 'live-headlines', 'smart-delegation', 'tge-prediction-markets'] which right lacks)"
+        "reason": "skills_subset: Is agent-skills.json the actionable subset of agent-card.json, as stated? Both agent-skills.json and agent-card.json now say 10 (arena-trading, asset-discovery, clone-ai-agent, et10-revenue-share, exchange-tokens, market-data, portfolio-management, prop-desk-trading and 2 more)."
       },
       "checks": [
         "tests/reconciliation/test_reconcile.py::test_sources_agree[skills_subset::agent_card-vs-agent_skills]"
@@ -1991,14 +2061,14 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260905T180712Z-6b0880f",
-        "measured_at": "2026-09-05T18:07:58+00:00"
+        "run_id": "run-20260905T181806Z-08b86b7",
+        "measured_at": "2026-09-05T18:19:04+00:00"
       },
       "check": {
-        "state": "REPRODUCING",
+        "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260905T180712Z-6b0880f",
-          "at": "2026-09-05T18:07:58+00:00"
+          "run_id": "run-20260905T181806Z-08b86b7",
+          "at": "2026-09-05T18:19:04+00:00"
         },
         "pinned_fingerprint": "sha256:f9559807c42fd3328c8879e7b899b7cd"
       },
@@ -2043,11 +2113,20 @@
             "run_id": "run-20260905T170702Z-c34e365"
           },
           "at": "2026-09-05T17:08:12+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "REPRODUCING",
+          "to": "PASSING",
+          "cause": {
+            "run_id": "run-20260905T181806Z-08b86b7"
+          },
+          "at": "2026-09-05T18:19:04+00:00"
         }
       ],
       "regressions": [],
       "obligations": {
-        "reverify": true,
+        "reverify": false,
         "repair_check": false,
         "reopen": [],
         "retractions": []
@@ -2263,8 +2342,8 @@
       "check": {
         "state": "INCONCLUSIVE",
         "adjudicated_by": {
-          "run_id": "run-20260905T180712Z-6b0880f",
-          "at": "2026-09-05T18:07:58+00:00"
+          "run_id": "run-20260905T181806Z-08b86b7",
+          "at": "2026-09-05T18:19:04+00:00"
         },
         "pinned_fingerprint": "5e9d6943c1eaf398d598a59460e9acdf2a187f99ecb323ce600818b417cefeae"
       },
@@ -2329,8 +2408,8 @@
         "reason": "/api/v1/vaix/prices was removed from llms.txt, not fixed in place (it now answers 404)"
       },
       "provenance": {
-        "run_id": "run-20260905T180712Z-6b0880f",
-        "measured_at": "2026-09-05T18:07:58+00:00"
+        "run_id": "run-20260905T181806Z-08b86b7",
+        "measured_at": "2026-09-05T18:19:04+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -2340,21 +2419,19 @@
       }
     }
   },
-  "run_id": "run-20260905T180712Z-6b0880f",
+  "run_id": "run-20260905T181806Z-08b86b7",
   "run_level": "V",
-  "updated_at": "2026-09-05T18:07:58+00:00",
+  "updated_at": "2026-09-05T18:19:04+00:00",
   "counts": {
-    "RAISED": 2,
-    "STILL REPRODUCIBLE": 4,
-    "INCONCLUSIVE": 2,
+    "RAISED": 1,
+    "STILL REPRODUCIBLE": 2,
+    "NOT REPRODUCIBLE": 3,
     "WITHDRAWN": 5,
-    "NOT REPRODUCIBLE": 1,
-    "VERIFIED FIXED": 5,
-    "UNVERIFIABLE": 4,
-    "PASSING, UNCLAIMED": 1
+    "VERIFIED FIXED": 9,
+    "UNVERIFIABLE": 4
   },
   "events_head": {
-    "seq": 132,
-    "chain": "9d0984d6a351b54d0d0b6bcc619ab5786c8ebf22c26e3727ed920d027c160195"
+    "seq": 148,
+    "chain": "32a2612def8aa75908d26d3e71123a9c97dba16007d33d9e3faa8494c41fb3ef"
   }
 }

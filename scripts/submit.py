@@ -428,7 +428,15 @@ def main() -> None:
     # The only cost of a longer wait is waiting.
     client = build_client(identities()["anon"], registry, timeout=60.0)
     try:
-        seen = existing_titles(client)
+        # The dedup read is a read, and the transport requires every request
+        # to name its tier. Moving the MUTATE context inside submit_batch left
+        # this one outside any context at all, so the guard refused it and the
+        # script would not file -- correctly, and unhelpfully.
+        token = CURRENT_TIER.set(SafetyTier.SAFE)
+        try:
+            seen = existing_titles(client)
+        finally:
+            CURRENT_TIER.reset(token)
         print(f"tracker currently holds {len(seen)} reports\n")
 
         items = []

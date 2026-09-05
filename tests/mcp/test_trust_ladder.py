@@ -132,11 +132,51 @@ def test_anonymous_receives_only_public_tools(mcp_anon, rest_anon):
 @qa(component="mcp.trust_ladder", tier=SafetyTier.SAFE, surface="mcp",
     claim="trusted-receives-nothing-above-its-tier")
 def test_trusted_receives_nothing_above_its_tier(mcp_trusted, rest_anon):
-    """The same question one tier up, which report #46 did not cover."""
+    """The same question one tier up, which report #46 did not cover.
+
+    The tier is the platform's to state, not ours to assume. This check took
+    the key's tier from OUR OWN configuration -- the file calls it "trusted",
+    so the check demanded trusted-tier entitlement. The vendor rejected report
+    #54 as invalid on exactly that point: the key is ALLIED on their side, and
+    an ALLIED caller receiving allied tools is correct behaviour.
+
+    They may be right, and our own labels cannot settle it. So while the
+    platform gives us no way to read the tier IT assigns to a caller, this is
+    Inconclusive -- naming the tools, so the question stays visible and
+    answerable -- rather than a failure asserted on our own assumption.
+    """
     declared = declared_by_tier(rest_anon)
     served = mcp_trusted.tool_names()
     entitled = entitled_up_to(declared, "trusted")
-    assert served <= entitled, _report("TRUSTED", served, entitled, declared)
+    above = sorted(served - entitled)
+
+    if not above:
+        conclude(Measurement(
+            verdict="passed",
+            reason="the credentialed caller receives nothing above the trusted tier",
+            left=len(served), right=len(entitled),
+            claim_id="trusted-receives-nothing-above-its-tier"))
+        return
+
+    by_tier: dict[str, list[str]] = {}
+    for name in above:
+        for tier_name, names in declared.items():
+            if name in names:
+                by_tier.setdefault(tier_name, []).append(name)
+
+    conclude(Measurement(
+        verdict="inconclusive",
+        reason=(f"Our key is served {len(above)} tools above the trusted tier "
+                f"({', '.join(f'{k}: {len(v)}' for k, v in sorted(by_tier.items()))}). "
+                f"Whether that is over-serving or correct depends on the tier "
+                f"the platform assigns this key, and it exposes no way to read "
+                f"that -- get_trust_signal requires a parameter we cannot supply "
+                f"for ourselves. Report #54 was rejected as invalid on the "
+                f"grounds that the key is ALLIED, which would make this correct."),
+        left=above, right=sorted(entitled),
+        sources={"manifest": "/.well-known/mcp.json", "identity": "our API key"},
+        population={"served": len(served), "entitled_at_trusted": len(entitled)},
+        claim_id="trusted-receives-nothing-above-its-tier"))
 
 
 @qa(component="mcp.trust_ladder", tier=SafetyTier.SAFE, surface="mcp")
