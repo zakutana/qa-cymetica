@@ -376,6 +376,52 @@ def test_inventory_population_pinned():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_no_claim_id_shadows_an_existing_ledger_row():
+    """A finding's id is derived from its claim, so a claim that differs from
+    an existing row only in punctuation mints a DUPLICATE row for the same
+    defect -- one carrying the report ids and history, one empty.
+
+    That happened on the first admissible run: three checks written with
+    underscored claim ids produced CYM-documented_404 beside the existing
+    CYM-documented-404. The plan already records that finding ids derived from
+    check names is a limitation it does not solve; this at least makes the
+    collision loud instead of silent."""
+    import json
+    import re
+
+    ledger_file = REPO / "state" / "ledger.json"
+    if not ledger_file.exists():
+        pytest.skip("no committed ledger to compare against")
+
+    existing = set(json.loads(ledger_file.read_text(encoding="utf-8"))["findings"])
+    source = "\n".join(p.read_text(encoding="utf-8") for p in _check_files())
+    claims = set(re.findall(r"claim(?:_id)?\s*=\s*[\"']([\w.-]+)[\"']", source))
+
+    def normal(text: str) -> str:
+        return text.replace("_", "-").lower()
+
+    collisions = []
+    for claim in sorted(claims):
+        candidate = f"CYM-{claim}"
+        if candidate in existing:
+            continue
+        shadowed = [row for row in existing if normal(row) == normal(candidate)]
+        if shadowed:
+            collisions.append(f"{candidate} shadows {shadowed[0]}")
+    assert not collisions, (
+        "these claims would mint a duplicate row for a defect that already has "
+        "one:\n  " + "\n  ".join(collisions)
+    )
+
+
+def _check_files():
+    """Every check file except this block's own -- the meta tests name claim
+    ids as fixtures and would otherwise trip the guard on their own examples."""
+    return [p for p in REPO.glob("tests/**/*.py")
+            if "/meta/" not in p.as_posix().replace("\\", "/")]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_level_v_without_trusted_key_is_flagged_partial():
     """Critique gap 8. A clean, tagged, full run made without QA_TRUSTED_KEY
     is level V and has never adjudicated a single S0 row -- every check

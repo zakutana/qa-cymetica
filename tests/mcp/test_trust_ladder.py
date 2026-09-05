@@ -120,7 +120,7 @@ def _report(label: str, served: set[str], entitled: set[str],
 
 
 @qa(component="mcp.trust_ladder", tier=SafetyTier.SAFE, surface="mcp",
-    ticket="CYM-anon-tool-surface")
+    ticket="CYM-anon-tool-surface", claim="anon-tool-surface")
 def test_anonymous_receives_only_public_tools(mcp_anon, rest_anon):
     """The regression check for report #46. Must keep passing."""
     declared = declared_by_tier(rest_anon)
@@ -129,7 +129,8 @@ def test_anonymous_receives_only_public_tools(mcp_anon, rest_anon):
     assert served <= entitled, _report("anonymous", served, entitled, declared)
 
 
-@qa(component="mcp.trust_ladder", tier=SafetyTier.SAFE, surface="mcp")
+@qa(component="mcp.trust_ladder", tier=SafetyTier.SAFE, surface="mcp",
+    claim="trusted-receives-nothing-above-its-tier")
 def test_trusted_receives_nothing_above_its_tier(mcp_trusted, rest_anon):
     """The same question one tier up, which report #46 did not cover."""
     declared = declared_by_tier(rest_anon)

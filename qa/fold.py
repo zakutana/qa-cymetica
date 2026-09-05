@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import copy
 import hashlib
+import json
 from typing import Any, Iterable, Sequence
 
 from qa.state import admissibility, event_id
@@ -458,6 +459,14 @@ def fold(prev: dict | None = None, run: dict | None = None,
 
     _apply_events(rows, events)
     for row in rows.values():
+        # Chronological, and deterministically so. The FILING half is rebuilt
+        # from the journal on every fold while the CHECK half accumulates, so
+        # without this the two interleave by construction order and the
+        # ledger's monotonic guard sees a history that is not an extension of
+        # itself -- correctly refusing a write that was in fact forward-only.
+        row["transitions"].sort(
+            key=lambda t: (t["at"], t["axis"], str(t.get("from")), t["to"],
+                           json.dumps(t.get("cause") or {}, sort_keys=True)))
         row["obligations"] = _obligations(row)
 
     out["counts"] = {}

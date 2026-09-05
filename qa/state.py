@@ -26,6 +26,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -267,10 +268,22 @@ def write_ledger(prev: dict | None, new: dict, path: Path | None = None,
             errors.append(f"{fid}: reproductions {rb} -> {ra} (may not decrease)")
         if _verified_run(before) and not _verified_run(after):
             errors.append(f"{fid}: verified_by_run (verification provenance) cleared to null")
-        tb = before.get("transitions", [])
-        ta = after.get("transitions", [])
-        if ta[:len(tb)] != tb:
-            errors.append(f"{fid}: transitions are not an extension of the prior history")
+        # The invariant is that history is never LOST, not that it keeps its
+        # position in the file. A positional prefix check also forbids two
+        # legitimate things: writing the transitions in a stable chronological
+        # order (the FILING half is rebuilt from the journal on every fold
+        # while the CHECK half accumulates, so construction order interleaves
+        # them arbitrarily), and ingesting a back-dated event discovered later
+        # -- an archived reply, say -- which belongs earlier in the history it
+        # describes. Compare as a multiset instead.
+        tb = Counter(_canonical(t) for t in before.get("transitions", []))
+        ta = Counter(_canonical(t) for t in after.get("transitions", []))
+        dropped = tb - ta
+        if dropped:
+            errors.append(
+                f"{fid}: {sum(dropped.values())} transition(s) disappeared from "
+                f"the prior history: {sorted(dropped)[:2]}"
+            )
 
     # The written file must itself pass the load contract.
     for fid, row in new_rows.items():

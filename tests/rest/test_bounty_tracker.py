@@ -43,7 +43,7 @@ def _rows(response) -> list[dict]:
 
 
 @qa(component="rest.support", tier=SafetyTier.PROBE, surface="rest",
-    claim="bounty_filing_unauthenticated")
+    claim="bounty-filing-unauthenticated")
 def test_filing_a_report_requires_a_credential(rest_anon):
     """PROBE: an empty body, and we read only the class of the refusal.
 
@@ -75,12 +75,12 @@ def test_filing_a_report_requires_a_credential(rest_anon):
         verdict=verdict, reason=reason,
         left="anonymous POST with an empty body", right=status,
         sources={"endpoint": f"POST {TRACKER}"},
-        claim_id="bounty_filing_unauthenticated",
+        claim_id="bounty-filing-unauthenticated",
     ))
 
 
 @qa(component="rest.support", tier=SafetyTier.SAFE, surface="rest",
-    claim="own_reports_unverified")
+    claim="own-reports-unverified")
 def test_reports_they_closed_have_been_rechecked_by_us(rest_anon):
     """Their closing a report is a claim. Ours is the check that follows it.
 
@@ -94,7 +94,7 @@ def test_reports_they_closed_have_been_rechecked_by_us(rest_anon):
             verdict="inconclusive",
             reason="QA_WALLET_ADDRESS is not set, so we cannot list our own "
                    "reports. An unset identity is not an empty result.",
-            claim_id="own_reports_unverified",
+            claim_id="own-reports-unverified",
         ))
         return
 
@@ -104,7 +104,7 @@ def test_reports_they_closed_have_been_rechecked_by_us(rest_anon):
             verdict="inconclusive",
             reason=f"my-reports answered HTTP {response.status_code}; a failed "
                    f"read is not an empty tracker",
-            right=response.status_code, claim_id="own_reports_unverified",
+            right=response.status_code, claim_id="own-reports-unverified",
         ))
         return
 
@@ -123,7 +123,7 @@ def test_reports_they_closed_have_been_rechecked_by_us(rest_anon):
         population={"reports_returned": len(rows), "closed": len(closed),
                     "server_total": response.json().get("total")},
         sources={"endpoint": f"GET {MINE}", "wallet": "<redacted>"},
-        claim_id="own_reports_unverified",
+        claim_id="own-reports-unverified",
     ))
 
 
@@ -151,7 +151,7 @@ def _adjudicated_report_ids() -> set:
 
 
 @qa(component="rest.support", tier=SafetyTier.SAFE, surface="rest",
-    claim="tracker_closure_rate")
+    claim="tracker-closure-rate")
 def test_closures_in_the_public_tracker_carry_evidence(rest_anon):
     """Every row in the public tracker read `fixed` with validated_at null.
 
@@ -165,7 +165,7 @@ def test_closures_in_the_public_tracker_carry_evidence(rest_anon):
         conclude(Measurement(
             verdict="inconclusive",
             reason=f"the public tracker answered HTTP {response.status_code}",
-            right=response.status_code, claim_id="tracker_closure_rate",
+            right=response.status_code, claim_id="tracker-closure-rate",
         ))
         return
 
@@ -176,7 +176,7 @@ def test_closures_in_the_public_tracker_carry_evidence(rest_anon):
             verdict="inconclusive",
             reason="the tracker returned no rows; there is nothing to measure",
             population={"rows_returned": 0, "server_total": body.get("total")},
-            claim_id="tracker_closure_rate",
+            claim_id="tracker-closure-rate",
         ))
         return
 
@@ -193,5 +193,5 @@ def test_closures_in_the_public_tracker_carry_evidence(rest_anon):
         population={"rows_returned": len(rows), "closed": len(closed),
                     "server_total": body.get("total")},
         sources={"endpoint": f"GET {TRACKER}"},
-        claim_id="tracker_closure_rate",
+        claim_id="tracker-closure-rate",
     ))

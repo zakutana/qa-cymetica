@@ -105,7 +105,7 @@ def test_documented_path_is_served(pin, rest_anon, documents):
                    f"not fixed in place (it now answers {status})",
             left=pin["path"], right=status,
             sources={"document": pin["source"], "pinned_at": load_pinned()["pinned_at"]},
-            claim_id="documented_404",
+            claim_id="documented-404",
         ))
         return
 
@@ -114,7 +114,7 @@ def test_documented_path_is_served(pin, rest_anon, documents):
         reason=f"{pin['source']} documents {pin['path']}, which answers {status}",
         left=f"documented in {pin['source']}", right=status,
         sources={"document": pin["source"], "section": pin["section"]},
-        claim_id="documented_404",
+        claim_id="documented-404",
         population=load_pinned()["population"],
     ))
 
