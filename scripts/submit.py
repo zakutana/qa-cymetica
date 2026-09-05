@@ -36,6 +36,7 @@ import yaml  # noqa: E402
 from qa.client import build_client, install_client_guard  # noqa: E402
 from qa.config import identities, load_dotenv  # noqa: E402
 from qa.safety import CURRENT_TIER, EndpointRegistry, SafetyTier  # noqa: E402
+from qa.state import journal_path  # noqa: E402
 
 import os  # noqa: E402
 
@@ -172,12 +173,166 @@ def load_submissions() -> dict:
     return {"submissions": []}
 
 
-def save_submission(record: dict) -> None:
-    data = load_submissions()
-    data["submissions"].append(record)
-    data["updated_at"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
-    SUBMISSIONS.write_text(
-        json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+# ---------------------------------------------------------------------------
+# Filing: two events per report, and a timeout is neither of them
+# ---------------------------------------------------------------------------
+def _now() -> str:
+    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+
+def _capture(response) -> str | None:
+    from qa.evidence import EvidenceStore
+
+    try:
+        return EvidenceStore("script-submit").capture(
+            response.request, response, SafetyTier.MUTATE)
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def _report_id(body):
+    if not isinstance(body, dict):
+        return None
+    return (body.get("report_id") or body.get("id")
+            or (body.get("report") or {}).get("id"))
+
+
+def submit_batch(client, items: list[dict], confirm: bool = False,
+                 pause: float = 0.0) -> list[dict]:
+    """File each item, recording an intent BEFORE the POST and an outcome after.
+
+    The intent is what makes a lost response recoverable. #55 was accepted by
+    their server while our log said it had never been sent, because the only
+    record was written after a response that never arrived -- and the same
+    timeout aborted the rest of the batch.
+
+    Three outcomes, and only one of them is a filed report:
+      accepted  2xx AND a report id from the server. Anything less cannot be
+                pointed at later, so it is not a filing.
+      rejected  they refused it; 409 for a duplicate is the common case.
+      unknown   we do not know. Settled against my-reports, never guessed.
+    """
+    from qa.state import append_event
+
+    if not confirm:
+        raise SystemExit("refusing to file without confirm=True")
+
+    # Filing creates state on their side. Say so, rather than arriving at the
+    # transport as an unclassified request.
+    registry = getattr(getattr(client, "_transport", None), "registry", None)
+    if registry is not None:
+        registry.mutate_enabled = True
+        registry.mutate_allowed_hosts = frozenset({"cymetica.com"})
+
+    results = []
+    token = CURRENT_TIER.set(SafetyTier.MUTATE)
+    try:
+        for index, item in enumerate(items):
+            key, payload = item["key"], item["payload"]
+            findings = list(item.get("findings") or [])
+            at = _now()
+            append_event({
+                "type": "filing_intent", "at": at, "by": "agent",
+                "source": "scripts/submit.py", "key": key, "intent_at": at,
+                "title": payload["title"], "findings": findings,
+            })
+
+            try:
+                response = client.post(ENDPOINT, json=payload)
+            except Exception as exc:  # noqa: BLE001
+                # A timeout on a POST does not mean the server refused it. It
+                # means we stopped listening. Record that, and keep going.
+                append_event({
+                    "type": "filing_outcome", "at": _now(), "by": "agent",
+                    "source": "scripts/submit.py", "key": key,
+                    "outcome": "unknown", "findings": findings,
+                    "reason": f"{type(exc).__name__}: {exc} -- run submit.py "
+                              f"--reconcile to settle it against my-reports",
+                })
+                results.append({"key": key, "outcome": "unknown",
+                                "report_id": None, "error": str(exc)})
+                continue
+
+            evidence_id = _capture(response)
+            try:
+                body = response.json()
+            except ValueError:
+                body = {"raw": response.text[:300]}
+            report_id = _report_id(body)
+
+            if response.status_code == 409:
+                outcome = "rejected"
+            elif 200 <= response.status_code < 300 and report_id is not None:
+                outcome = "accepted"
+            else:
+                outcome = "unknown"
+
+            append_event({
+                "type": "filing_outcome", "at": _now(), "by": "agent",
+                "source": "scripts/submit.py", "key": key, "outcome": outcome,
+                "report_id": report_id, "http_status": response.status_code,
+                "findings": findings, "evidence_id": evidence_id,
+            })
+            results.append({"key": key, "outcome": outcome,
+                            "report_id": report_id,
+                            "http_status": response.status_code})
+
+            remaining = response.headers.get("x-ratelimit-remaining")
+            if remaining is not None and int(remaining) < 10:
+                break
+            if pause and index < len(items) - 1:
+                time.sleep(pause)
+    finally:
+        CURRENT_TIER.reset(token)
+    return results
+
+
+def reconcile(client, wallet: str) -> int:
+    """Settle `unknown` outcomes against their server. Appends, never edits.
+
+    The repair for a lost response is to ask the party that has it and write
+    down what they said. Editing our log into agreement would produce the same
+    file with none of the provenance.
+    """
+    from qa.state import append_event, read_events
+
+    token = CURRENT_TIER.set(SafetyTier.SAFE)
+    try:
+        response = client.get("/api/v1/bounty/my-reports",
+                              params={"wallet_address": wallet})
+        evidence_id = _capture(response)
+        body = response.json()
+    finally:
+        CURRENT_TIER.reset(token)
+
+    rows = body.get("reports") or body.get("data") or []
+    events = read_events()
+    settled = {e.get("report_id") for e in events
+               if e["type"] == "filing_outcome" and e.get("outcome") == "accepted"}
+    intents = {(e.get("title") or "").strip().lower(): e
+               for e in events if e["type"] == "filing_intent"}
+
+    added = 0
+    for row in sorted(rows, key=lambda r: r.get("id", 0)):
+        report_id = row.get("id")
+        if report_id in settled:
+            continue
+        intent = intents.get((row.get("title") or "").strip().lower())
+        if intent is None:
+            continue
+        # Count what the journal actually took. append_event is idempotent by
+        # natural key, so a second --reconcile settles nothing and says 0
+        # rather than reporting work it did not do.
+        outcome = append_event({
+            "type": "filing_outcome", "at": _now(), "by": "agent",
+            "source": "scripts/submit.py", "key": intent["key"],
+            "outcome": "accepted", "report_id": report_id,
+            "findings": list(intent.get("findings") or []),
+            "reconciled_from": "my-reports", "evidence_id": evidence_id,
+            "server_created_at": row.get("created_at"),
+        })
+        added += 1 if outcome == "appended" else 0
+    return added
 
 
 def main() -> None:
@@ -186,10 +341,26 @@ def main() -> None:
                         help="actually file. Without it nothing is sent.")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--only", action="append", metavar="KEY")
+    parser.add_argument("--reconcile", action="store_true",
+                        help="settle `unknown` outcomes against my-reports. "
+                             "Appends what their server says; never edits.")
     args = parser.parse_args()
 
-    if not (args.confirm or args.dry_run):
-        parser.error("pass --dry-run to preview or --confirm to file")
+    if not (args.confirm or args.dry_run or args.reconcile):
+        parser.error("pass --dry-run to preview, --confirm to file, "
+                     "or --reconcile to settle a lost response")
+
+    if args.reconcile and not (args.confirm or args.dry_run):
+        install_client_guard()
+        client = build_client(identities()["anon"], EndpointRegistry.load(),
+                              timeout=60.0)
+        try:
+            added = reconcile(client, os.environ.get("QA_WALLET_ADDRESS", ""))
+        finally:
+            client.close()
+        print(f"reconciled {added} outcome(s) from my-reports")
+        print(f"-> {journal_path()}")
+        return
 
     load_dotenv()
     spec = yaml.safe_load(SPEC.read_text(encoding="utf-8"))
@@ -228,64 +399,40 @@ def main() -> None:
     registry.mutate_enabled = True
     registry.mutate_allowed_hosts = frozenset({"cymetica.com"})
 
-    token = CURRENT_TIER.set(SafetyTier.MUTATE)
+    # A POST that creates a record is slower than a read; 30s dropped one
+    # response out of eleven today, after the server had already accepted it.
+    # The only cost of a longer wait is waiting.
+    client = build_client(identities()["anon"], registry, timeout=60.0)
     try:
-        # A POST that creates a record is slower than a read; 30s dropped one
-        # response out of eleven today, after the server had already accepted
-        # it. The write itself is idempotent on our side because of the title
-        # check above, so the only cost of a longer wait is waiting.
-        client = build_client(identities()["anon"], registry, timeout=60.0)
-        try:
-            seen = existing_titles(client)
-            print(f"tracker currently holds {len(seen)} reports\n")
+        seen = existing_titles(client)
+        print(f"tracker currently holds {len(seen)} reports\n")
 
-            for key, payload in payloads:
-                if payload["title"].strip().lower() in seen:
-                    print(f"  SKIP  {key}: a report with this title already exists")
-                    continue
+        items = []
+        for key, payload in payloads:
+            if payload["title"].strip().lower() in seen:
+                print(f"  SKIP  {key}: a report with this title already exists")
+                continue
+            items.append({
+                "key": key, "payload": payload,
+                "findings": [r["findings"] for r in reports if r["key"] == key][0],
+            })
 
-                response = client.post(ENDPOINT, json=payload)
-                remaining = response.headers.get("x-ratelimit-remaining")
-                ok = 200 <= response.status_code < 300
+        for result in submit_batch(client, items, confirm=True, pause=PAUSE_SECONDS):
+            detail = f"  id={result['report_id']}" if result.get("report_id") else ""
+            print(f"  {result['outcome'].upper():<9} {result['key']}: "
+                  f"HTTP {result.get('http_status', '-')}{detail}")
+            if result["outcome"] == "unknown":
+                print("        settle it with --reconcile; do not re-send blind")
 
-                try:
-                    body = response.json()
-                except Exception:  # noqa: BLE001
-                    body = {"raw": response.text[:300]}
-
-                # The server answers {"success": true, "report_id": N, ...}.
-                report_id = (body.get("report_id") or body.get("id")
-                             or (body.get("report") or {}).get("id"))
-                status = "OK  " if ok else "FAIL"
-                print(f"  {status}  {key}: HTTP {response.status_code}"
-                      f"{f'  id={report_id}' if report_id else ''}"
-                      f"  (rate-limit remaining {remaining})")
-                if not ok:
-                    print(f"        {json.dumps(body)[:400]}")
-
-                save_submission({
-                    "key": key,
-                    "submitted_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-                    "http_status": response.status_code,
-                    "report_id": report_id,
-                    "title": payload["title"],
-                    "severity_reported": payload["severity_reported"],
-                    "category": payload["category"],
-                    "findings": [r["findings"] for r in reports if r["key"] == key][0],
-                    "wallet_address": payload["wallet_address"],
-                    "response": body,
-                })
-
-                if remaining is not None and int(remaining) < 10:
-                    print("  stopping: rate-limit budget nearly exhausted")
-                    break
-                time.sleep(PAUSE_SECONDS)
-        finally:
-            client.close()
+        if args.reconcile:
+            wallet = os.environ.get("QA_WALLET_ADDRESS", "")
+            added = reconcile(client, wallet)
+            print(f"\nreconciled {added} outcome(s) from my-reports")
     finally:
-        CURRENT_TIER.reset(token)
+        client.close()
 
-    print(f"\n-> {SUBMISSIONS.relative_to(REPO_ROOT)}")
+    print(f"\n-> {journal_path()}")
+    print("   run scripts/ledger.py to fold these events into the ledger")
 
 
 if __name__ == "__main__":

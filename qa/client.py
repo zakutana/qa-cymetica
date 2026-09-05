@@ -112,6 +112,40 @@ def build_client(
     return httpx.Client(**kwargs)
 
 
+def build_mock_client(
+    handler,
+    registry: EndpointRegistry | None = None,
+    evidence=None,
+    budget=None,
+    base_url: str = "https://cymetica.com",
+    timeout: float = 5.0,
+) -> httpx.Client:
+    """A client whose network is a function, for testing the adapter scripts.
+
+    It exists so that testing bounty.py and submit.py does not mean bypassing
+    the construction guard -- the guard's own message says to add a factory
+    here rather than reach around it. The mock transport is wrapped in the
+    same SafetyTransport as a live client, so a call that would have violated
+    a tier rule still violates it.
+    """
+    transport = SafetyTransport(
+        inner=httpx.MockTransport(handler),
+        registry=registry if registry is not None else EndpointRegistry.load(),
+        evidence=evidence,
+        budget=budget,
+    )
+    kwargs = dict(
+        base_url=base_url,
+        headers={"User-Agent": USER_AGENT, "Accept": "application/json"},
+        transport=transport,
+        timeout=timeout,
+        follow_redirects=False,
+    )
+    if _GUARD_INSTALLED:
+        kwargs["_qa_factory"] = _FACTORY_SENTINEL
+    return httpx.Client(**kwargs)
+
+
 class McpError(RuntimeError):
     """A JSON-RPC or tool-level error. Carries the raw payload for evidence."""
 

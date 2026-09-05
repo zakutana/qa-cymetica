@@ -27,6 +27,17 @@ import httpx
 REPO_ROOT = Path(__file__).resolve().parent.parent
 EVIDENCE_DIR = REPO_ROOT / "evidence"
 
+
+def evidence_root() -> Path:
+    """Where captures land. Follows QA_STATE_DIR, so a test session -- or a
+    script run under one -- writes its evidence beside its state rather than
+    into the repository."""
+    import os
+
+    override = os.environ.get("QA_STATE_DIR")
+    return Path(override) / "evidence" if override else EVIDENCE_DIR
+
+
 REDACTED = "<redacted>"
 
 # Header names whose values never reach disk.
@@ -82,7 +93,7 @@ def _decode(raw: bytes, limit: int = 512_000) -> dict[str, Any]:
 class EvidenceStore:
     def __init__(self, run_id: str, root: Path | None = None):
         self.run_id = run_id
-        self.root = (root or EVIDENCE_DIR) / "sha256"
+        self.root = (root or evidence_root()) / "sha256"
         self.root.mkdir(parents=True, exist_ok=True)
         self.captured = 0
 
@@ -147,7 +158,7 @@ class EvidenceStore:
 
     @staticmethod
     def path_for(evidence_id: str, root: Path | None = None) -> Path:
-        base = (root or EVIDENCE_DIR) / "sha256"
+        base = (root or evidence_root()) / "sha256"
         return base / evidence_id[:2] / f"{evidence_id}.json"
 
     @staticmethod

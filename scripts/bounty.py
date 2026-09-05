@@ -102,7 +102,68 @@ def classify_error(status: int, body: str) -> str:
     return f"OTHER_{status}"
 
 
-def fetch_our_reports() -> dict:
+READ_CLASSES = ("ok", "unauthorized", "forbidden", "not_found", "malformed",
+                "server_error", "unreachable")
+
+REPORT_FIELDS = (
+    "id", "title", "status", "hunter_name", "wallet_address",
+    "severity_reported", "severity_confirmed", "category",
+    "created_at", "fixed_at", "validated_at", "triaged_at",
+    "status_notes", "ticket_url", "fix_pr_url", "reward_amount",
+)
+
+
+def classify_read(outcome) -> str:
+    """What KIND of read this was.
+
+    Nothing here ever looked at an HTTP status, so a 401 arrived as a body
+    with no reports in it -- byte for byte what a tracker looks like when the
+    vendor has closed everything. An expired key read as good news.
+    """
+    if isinstance(outcome, Exception):
+        return "unreachable"
+
+    status = outcome.status_code
+    if status == 401:
+        return "unauthorized"
+    if status == 403:
+        return "forbidden"
+    if status == 404:
+        return "not_found"
+    if status >= 500:
+        return "server_error"
+    if not 200 <= status < 300:
+        return "malformed"
+    try:
+        body = outcome.json()
+    except ValueError:
+        return "malformed"
+    return "ok" if isinstance(body, dict) else "malformed"
+
+
+def _capture(response) -> str | None:
+    """Store the bytes a read rests on and return their id.
+
+    Critique gap 2: FIX_CLAIMED is half of the strongest statement the
+    dashboard makes, and it used to rest on a response nobody kept. The fold
+    now refuses a filing transition whose event cites no evidence, so this is
+    load-bearing rather than tidy.
+    """
+    from qa.evidence import EvidenceStore
+
+    try:
+        return EvidenceStore("script-bounty").capture(
+            response.request, response, SafetyTier.SAFE)
+    except Exception:  # noqa: BLE001 -- evidence must not break the read
+        return None
+
+
+def _now() -> str:
+    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+
+def fetch_our_reports(client=None, wallet: str | None = None,
+                      previous: dict | None = None) -> dict:
     """Our own filed reports -- THIS is the inbox.
 
     GET /api/v1/bounty/reports is a filtered public view: it returns only
@@ -115,30 +176,77 @@ def fetch_our_reports() -> dict:
     /api/v1/bounty/reports/N, so the id in the response cannot be used to
     confirm the write. And because the wallet address is the only key, anyone
     holding it can list that hunter's reports.
+
+    On anything but a clean read this returns the PREVIOUS snapshot marked
+    stale. It does not return an empty one, because "we could not look" and
+    "there is nothing there" are different facts and only one of them is
+    evidence.
     """
     import os
-    wallet = os.environ.get("QA_WALLET_ADDRESS", "")
-    if not wallet:
-        return {"error": "QA_WALLET_ADDRESS not set"}
 
-    registry = EndpointRegistry.load()
-    ids = identities()
+    from qa.state import append_event
+
+    wallet = wallet or os.environ.get("QA_WALLET_ADDRESS", "")
+    if not wallet:
+        return {"error": "QA_WALLET_ADDRESS not set", "klass": "unreachable"}
+
+    owned = client is None
     token = CURRENT_TIER.set(SafetyTier.SAFE)
     try:
-        client = build_client(ids["trusted"] if ids["trusted"].present else ids["anon"],
-                              registry)
+        if owned:
+            ids = identities()
+            client = build_client(
+                ids["trusted"] if ids["trusted"].present else ids["anon"],
+                EndpointRegistry.load(), timeout=60.0)
         try:
             response = client.get("/api/v1/bounty/my-reports",
                                   params={"wallet_address": wallet})
-            data = response.json()
+            klass = classify_read(response)
+            evidence_id = _capture(response)
+        except Exception as exc:  # noqa: BLE001
+            response, klass, evidence_id = None, "unreachable", None
+            failure = f"{type(exc).__name__}: {exc}"
+        else:
+            failure = None
         finally:
-            client.close()
-    except Exception as exc:  # noqa: BLE001
-        return {"error": f"{type(exc).__name__}: {exc}"}
+            if owned:
+                client.close()
     finally:
         CURRENT_TIER.reset(token)
 
-    rows = data.get("reports") or data.get("data") or []
+    at = _now()
+    rows = []
+    server_total = None
+    if klass == "ok":
+        data = response.json()
+        rows = data.get("reports") or data.get("data") or []
+        server_total = data.get("total", len(rows))
+
+    append_event({
+        "type": "vendor_read", "at": at, "by": "agent", "source": "scripts/bounty.py",
+        "klass": klass, "evidence_id": evidence_id,
+        "rows_returned": len(rows) if klass == "ok" else None,
+        "server_total": server_total,
+    })
+
+    if klass != "ok":
+        stale = dict(previous or {})
+        stale.update({
+            "klass": klass, "rows_returned": None, "stale_from": at,
+            "evidence_id": evidence_id,
+        })
+        if failure:
+            stale["error"] = failure
+        return stale
+
+    for report in sorted(rows, key=lambda r: r.get("id", 0)):
+        append_event({
+            "type": "vendor_status", "at": at, "by": "agent",
+            "source": "scripts/bounty.py", "report_id": report.get("id"),
+            "status": report.get("status"), "observed_at": at,
+            "evidence_id": evidence_id,
+        })
+
     fields_sent = ["hunter_name", "steps_to_reproduce", "expected_behavior",
                    "actual_behavior", "url"]
     dropped = sorted({
@@ -148,18 +256,18 @@ def fetch_our_reports() -> dict:
 
     return {
         "endpoint": "GET /api/v1/bounty/my-reports?wallet_address=<addr>",
-        "total": data.get("total", len(rows)),
+        "klass": "ok",
+        "read_at": at,
+        "evidence_id": evidence_id,
+        # Ours and theirs, side by side: they disagreed (20 vs 23), and a
+        # closure rate computed over the wrong denominator is a made-up number.
+        "rows_returned": len(rows),
+        "server_total": server_total,
+        "total": server_total,
         "statuses": dict(Counter(r.get("status") for r in rows)),
         "fields_sent_but_not_stored": dropped,
-        "reports": [
-            {k: r.get(k) for k in (
-                "id", "title", "status", "hunter_name", "wallet_address",
-                "severity_reported", "severity_confirmed", "category",
-                "created_at", "fixed_at", "validated_at", "triaged_at",
-                "status_notes", "ticket_url", "fix_pr_url", "reward_amount",
-            )}
-            for r in sorted(rows, key=lambda r: r.get("id", 0))
-        ],
+        "reports": [{k: r.get(k) for k in REPORT_FIELDS}
+                    for r in sorted(rows, key=lambda r: r.get("id", 0))],
     }
 
 

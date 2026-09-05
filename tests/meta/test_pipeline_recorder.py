@@ -260,3 +260,25 @@ def test_measurement_conclude_couples_verdict_to_outcome():
 
     with pytest.raises(ValueError):
         Measurement(verdict="maybe")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_ratelimit_budget_reaches_the_run_record(pytester, tmp_path):
+    """Critique gap 11. Every committed run record carries `ratelimit: {}`,
+    because the recorder read a session attribute nothing ever set. A run the
+    quota cut short therefore looked exactly like a complete one -- and a
+    partial run may not verify anything."""
+    _, run = _run_inner(pytester, tmp_path, """
+        from qa.safety import RateLimitBudget
+
+        @qa(**TAG)
+        def test_spends_some_quota():
+            budget = RateLimitBudget(stop_at_fraction=0.6)
+            budget.before_request()
+            budget.before_request()
+    """)
+
+    assert run["ratelimit"], "the run record still says nothing about the quota"
+    assert run["ratelimit"]["requests"] == 2
+    assert run["ratelimit"]["exhausted"] is False
+    assert run["record_integrity"]["budget_truncated"] is False

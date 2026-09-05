@@ -310,7 +310,11 @@ def _natural_key(event: dict) -> str:
     if t == "filing_intent":
         return f"{t}|{g('key')}|{g('intent_at')}"
     if t == "filing_outcome":
-        return f"{t}|{g('key')}|{g('at')}|{g('source')}"
+        # The outcome is part of the identity. A submission that timed out and
+        # was later settled against my-reports produces two genuinely
+        # different facts about the same key -- and they can land in the same
+        # second, so time alone does not separate them.
+        return f"{t}|{g('key')}|{g('outcome')}|{g('report_id')}|{g('at')}|{g('source')}"
     if t == "vendor_status":
         return f"{t}|{g('report_id')}|{g('status')}|{g('observed_at')}"
     if t == "vendor_read":

@@ -308,7 +308,12 @@ def pytest_sessionfinish(session, exitstatus):
         totals[result["outcome"]] = totals.get(result["outcome"], 0) + 1
     run["totals"] = totals
 
-    budget = getattr(session, "qa_budget", None)
+    # The session attribute was never set by anything, which is why every
+    # committed run record carries an empty `ratelimit` -- and why a run cut
+    # short by an exhausted quota looked complete. The budget registers itself
+    # on construction now, so the recorder can find it either way.
+    from qa.safety import active_budget
+    budget = getattr(session, "qa_budget", None) or active_budget()
     if budget is not None:
         try:
             run["ratelimit"] = budget.snapshot()
