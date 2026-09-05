@@ -329,7 +329,19 @@ def reconcile(client, wallet: str) -> int:
     finally:
         CURRENT_TIER.reset(token)
 
+    if response.status_code != 200:
+        raise SystemExit(
+            f"cannot reconcile: my-reports answered HTTP {response.status_code}. "
+            f"A failed read is not an empty tracker -- settling against it "
+            f"would record that nothing was filed.\n{response.text[:200]}")
+
     rows = body.get("reports") or body.get("data") or []
+    if not rows:
+        raise SystemExit(
+            "cannot reconcile: my-reports returned 200 and zero rows. Either "
+            "nothing was ever filed from this wallet, or the wrong wallet was "
+            "asked about -- neither is a reason to settle an outcome.")
+
     events = read_events()
     settled = {e.get("report_id") for e in events
                if e["type"] == "filing_outcome" and e.get("outcome") == "accepted"}
@@ -376,7 +388,13 @@ def main() -> None:
 
     if args.reconcile and not (args.confirm or args.dry_run):
         install_client_guard()
-        client = build_client(identities()["anon"], EndpointRegistry.load(),
+        # TRUSTED, not anon. my-reports requires authentication; with the
+        # anonymous identity it answers 401, the body carries no `reports`
+        # key, rows read as empty, and --reconcile reported "reconciled 0"
+        # while having read nothing at all. That is the failure this whole
+        # repository exists to stop, sitting in the one path whose job is to
+        # repair a lost response.
+        client = build_client(identities()["trusted"], EndpointRegistry.load(),
                               timeout=60.0)
         try:
             added = reconcile(client, os.environ.get("QA_WALLET_ADDRESS", ""))

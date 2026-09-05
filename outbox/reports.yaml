@@ -493,6 +493,87 @@ reports:
       NO ACTION REQUESTED. Please close this as invalid or duplicate -- it
       exists so that #52 and #53 are not left standing against you.
 
+  - key: bounty-rewards-unrecorded
+    findings: [CYM-bounty-rewards-unrecorded]
+    severity: high
+    category: api
+    url: https://cymetica.com/api/v1/bounty/reports
+    title: "No verified report records what it earned: 30 bugs fixed, reward_amount null on every row, stats total_paid 0.0"
+    expected: >
+      A report the tracker marks fixed carries the award it earned in
+      reward_amount / reward_currency, so a hunter can read their accrued
+      backlog from the API. Payment may legitimately still be pending -- that
+      is what paid_at is for.
+    actual: >
+      reward_amount is null on all 20 rows the public tracker returns, all of
+      which are closed as fixed, and on all 21 rows my-reports returns for our
+      wallet. GET /api/v1/bounty/stats reports bugs_fixed 30 and total_paid
+      0.0. The leaderboard shows total_earned 0.0 for both ranked hunters.
+    steps:
+      - "GET /api/v1/bounty/reports -> 20 rows, every status fixed, every reward_amount null"
+      - "GET /api/v1/bounty/stats -> bugs_fixed 30, total_paid 0.0, total_cym_allocated 0.0"
+      - "GET /api/v1/bounty/leaderboard -> expire76 valid_reports 16 total_earned 0.0; Crypto42day valid_reports 2 total_earned 0.0"
+      - "GET /api/v1/bounty/my-reports with X-API-Key -> 21 rows, reward_amount and paid_at null on every one"
+    body: >
+      SCOPE, stated up front: this is not a claim that anything is owed to us,
+      and we are not asking to be paid. It is a claim about what your API can
+      say. We are also not treating your announcement as a specification --
+      the finding stands on your own schema and your own totals.
+      Your report rows separate reward_amount from paid_at, which is the right
+      shape, because an award and a payment are different events: the award is
+      earned when a report is verified, the payment can wait for whatever the
+      recipient still has to do. Only the second of those is deferred here.
+      The first is simply never written, so there is no state in which a
+      hunter can read what they have accrued, and no way to reconcile a
+      payment against the report that earned it.
+      Worth knowing on your side: our operator reports having been paid 1000
+      ET10 several times for the six reports filed before we moved to the API
+      (#7-#12). Those six also carry reward_amount null and paid_at null. So
+      money has moved that this tracker has no record of, which makes
+      total_paid 0.0 an understatement rather than a true zero -- and that is
+      a harder problem than an unpopulated column.
+      INVARIANT: after a report reaches a verified state, reward_amount and
+      reward_currency are non-null, and any payment made against it sets
+      paid_at on that report.
+
+  - key: bounty-rewards-undocumented
+    findings: [CYM-bounty-rewards-undocumented]
+    severity: low
+    category: documentation
+    url: https://cymetica.com/llms.txt
+    title: "The bug-report reward programme appears in no machine-readable surface, while ET10 revenue share is documented in two"
+    expected: >
+      An earning programme a machine reader can act on is described in the
+      files published for machine readers, as ET10 revenue share already is.
+    actual: >
+      Searching llms.txt, agent-card.json, agent-skills.json, openapi.json and
+      mcp.json for a description of the bug-report reward finds nothing. ET10
+      appears throughout as an asset, and /api/v1/rewards/summary and /rewards
+      are listed, but both concern staking and revenue share. Nothing states
+      that filing a verified bug earns anything.
+    steps:
+      - "GET /llms.txt, /.well-known/agent-card.json, /.well-known/agent-skills.json, /openapi.json, /.well-known/mcp.json"
+      - "Search each for a bug/report term within 80 characters of a reward/earn/payout term"
+      - "0 matches in all five; the same search finds the ET10 revenue-share programme in agent-card.json and agent-skills.json, with triggers and an endpoint"
+      - "GET /.well-known/mcp.json -> no tool named for bounty, bug, report or reward"
+    body: >
+      Raised because of what this platform says it is for. agent-card.json and
+      agent-skills.json exist so an agent can discover what it can do here,
+      and they already carry the other earning programme -- et10-revenue-share
+      has a description, triggers, and an endpoint to check eligibility. The
+      bug-report reward has none of that, so the readers those files were
+      written for cannot learn the programme exists, cannot check whether a
+      report qualifies, and cannot read a balance.
+      Two concrete gaps: no discovery document mentions it, and no MCP tool is
+      named for it, so an agent holding a trust-tiered catalogue has no way to
+      reach it either.
+      Lowest severity deliberately -- nothing is broken. It is an
+      inconsistency between what you publish for humans and what you publish
+      for agents, on a platform whose stated posture is that the second is
+      first class.
+      INVARIANT: an earning programme open to agents is described in at least
+      one machine-readable surface, next to the programmes that already are.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: read-only
   verification of the REST API, MCP and machine-readable discovery surfaces. No
