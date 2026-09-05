@@ -46,31 +46,51 @@ def load_pinned() -> dict:
 PINS = load_pinned()["paths"]
 
 
-@pytest.fixture(scope="session")
-def documents(rest_anon) -> dict[str, str]:
-    """Each documenting source, fetched once. Read as text: we are asking
-    whether the document still names a path, not what it means by it."""
-    out = {}
-    for name, url in SOURCE_URLS.items():
-        try:
-            response = rest_anon.get(url)
-            out[name] = response.text if 200 <= response.status_code < 300 else None
-        except Exception:  # noqa: BLE001 -- an unreadable source is data
-            out[name] = None
-    return out
+_DOCUMENTS: dict[str, tuple[str | None, str]] = {}
+
+
+@pytest.fixture
+def documents(rest_anon) -> dict[str, tuple[str | None, str]]:
+    """Each documenting source, fetched once, with WHY if it could not be read.
+
+    Function-scoped with a module-level cache rather than session-scoped, and
+    that is load-bearing: a session fixture is built during the first test's
+    setup, BEFORE the autouse fixture that puts a safety tier in scope. The
+    transport guard correctly refused all 26 fetches as fixture-time requests
+    with no tier -- exactly what it is for. Fetching lazily from inside the
+    test keeps the guard satisfied and still costs two requests per session.
+
+    The reason is carried alongside the text. Returning a bare None cost an
+    hour here: 26 checks said "llms.txt could not be read" while the actual
+    message sat in a swallowed exception. Same lesson as classify_read -- a
+    failure has a kind, and discarding the kind turns a diagnosable problem
+    into a mystery.
+    """
+    if not _DOCUMENTS:
+        for name, url in SOURCE_URLS.items():
+            try:
+                response = rest_anon.get(url)
+            except Exception as exc:  # noqa: BLE001 -- an unreadable source is data
+                _DOCUMENTS[name] = (None, f"{type(exc).__name__}: {exc}")
+                continue
+            if 200 <= response.status_code < 300:
+                _DOCUMENTS[name] = (response.text, "ok")
+            else:
+                _DOCUMENTS[name] = (None, f"HTTP {response.status_code}")
+    return _DOCUMENTS
 
 
 @qa(component="discovery.llmstxt", tier=SafetyTier.SAFE, surface="rest")
 @pytest.mark.parametrize("pin", PINS, ids=[p["path"] for p in PINS])
 def test_documented_path_is_served(pin, rest_anon, documents):
     """A path this platform documents must not answer 404."""
-    document = documents.get(pin["source"])
+    document, why = documents.get(pin["source"], (None, "not fetched"))
     if document is None:
         conclude(Measurement(
             verdict="inconclusive",
-            reason=f"{pin['source']} could not be read, so we cannot tell "
-                   f"whether {pin['path']} is still documented",
-            sources={"document": pin["source"]},
+            reason=f"{pin['source']} could not be read ({why}), so we cannot "
+                   f"tell whether {pin['path']} is still documented",
+            sources={"document": pin["source"], "read": why},
         ))
         return
 
