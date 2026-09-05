@@ -125,3 +125,23 @@ A zero here is not a regression to be fixed; it is the difference between
 The bash sandbox is Linux, the workspace is Windows. Writing UTF-8 through
 bash heredocs silently corrupts files (truncation, embedded null bytes). Use
 the Write and Edit tools for file content; bash is fine for running things.
+
+## Decided and closed: the wallet stays unverified
+
+Cymetica marks our bounty wallet UNVERIFIED, so a third party can file a
+report naming it. Do not raise this again as an action item.
+
+The operator's reasoning, on 2026-09-05, and it is right: that address is a
+cold wallet used only to receive bounty payouts. Someone naming it does not
+take anything — a payout on a spoofed report goes *to* that wallet. Verifying
+costs a signature from a cold wallet, and buys protection against a loss that
+cannot happen.
+
+What we reported (#47) was still real: attribution being spoofable is a defect
+in a bounty programme regardless of whether it happens to hurt us. They fixed
+it, and the check verifies the mechanism. Whether *we* opt in is a separate
+question and the answer is no.
+
+Say so once if the exposure ever changes shape — if reports start affecting
+trust_level or the API key's standing, that is new information. Otherwise this
+is settled.
