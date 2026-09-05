@@ -232,7 +232,7 @@ reports:
       "how are we doing", by you or by anyone else.
       TWO QUESTIONS: is this a filtered public view, or does the tracker not
       retain unresolved items? And are those six reports bound to the wallet
-      0xde9CeAaB301A9e47b1bAcd448B3DDbbA85e83398?
+      <wallet, sent in the wallet_address field>?
       For the record on my side: I record a status change to "fixed" as a fix
       CLAIM, not as fixed. It becomes verified only when I re-run the check
       that originally failed, and I report either outcome accurately.
