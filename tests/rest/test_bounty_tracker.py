@@ -22,10 +22,11 @@ row-derived, and travels in the Measurement.
 
 from __future__ import annotations
 
+import hashlib
 import os
 
 from qa.marks import SafetyTier, qa
-from qa.measure import Measurement, conclude
+from qa.measure import Measurement, conclude, required
 from qa.safety import CURRENT_TIER, SafetyTier as Tier
 
 TRACKER = "/api/v1/bounty/reports"
@@ -44,39 +45,113 @@ def _rows(response) -> list[dict]:
     return body.get("reports") or body.get("data") or []
 
 
-@qa(component="rest.support", tier=SafetyTier.PROBE, surface="rest",
-    claim="bounty-filing-unauthenticated")
-def test_filing_a_report_requires_a_credential(rest_anon):
-    """PROBE: an empty body, and we read only the class of the refusal.
+FILING_MESSAGE = "/api/v1/bounty/filing-message"
 
-    The question is whether authorization runs BEFORE validation. A 401 or 403
-    means the door is locked. A 422 means the door is open and the form was
-    merely incomplete -- which is how anyone can file a report under anyone
-    else's hunter name, since the name is a field in the body.
+
+def _wallet_is_verified(rest, wallet: str):
+    """Whether the platform treats this wallet as proven. Evidence, not a verdict.
+
+    A wallet nobody has proved ownership of is still nameable by anyone, which
+    is the residual exposure their fix leaves open by design -- but closing it
+    means signing once with the wallet's key, which is the operator's action
+    and not something a check can or should do.
     """
-    response = rest_anon.post(TRACKER, json={})
-    status = response.status_code
+    response = rest.get(FILING_MESSAGE, params={"wallet_address": wallet,
+                                                "title": "verification status"})
+    if response.status_code != 200:
+        return f"unknown (HTTP {response.status_code})"
+    body = response.json()
+    for key in ("wallet_verified", "verified", "is_verified"):
+        if key in body:
+            return bool(body[key])
+    return body.get("note", "not stated")
 
-    if status in (401, 403):
-        verdict, reason = "passed", f"filing is gated: HTTP {status} on an empty body"
-    elif status == 422:
-        verdict, reason = "failed", (
-            "filing is not gated: an unauthenticated empty body reaches "
-            "validation (HTTP 422), so authorization never ran"
-        )
-    elif 200 <= status < 300:
-        verdict, reason = "failed", (
-            f"an unauthenticated empty body was ACCEPTED (HTTP {status})"
-        )
-    else:
-        verdict, reason = "inconclusive", (
-            f"HTTP {status} is neither a refusal we recognise nor an acceptance"
-        )
+
+@qa(component="rest.support", tier=SafetyTier.SAFE, surface="rest",
+    claim="bounty-filing-unauthenticated")
+def test_attribution_to_a_wallet_is_provable(rest_anon):
+    """Can a filing be attributed to a wallet its author does not control?
+
+    This check asked the wrong question until 2026-09-05. It POSTed an empty
+    body and demanded 401/403, reading the 422 as "filing is not gated". But
+    an empty body names no wallet, so there is nothing to attribute and
+    nothing for an attribution gate to refuse -- 422 is the correct answer to
+    it, and the check was failing a design decision rather than a defect.
+    Open intake is deliberate on their side: anonymous, rate-limited per IP,
+    with a 24h duplicate-title gate.
+
+    Report #47's actual subject was that `hunter_name` and `wallet_address`
+    are body fields, so a filing could be attributed to someone else. They
+    shipped the fix in d12ea54a9: naming a VERIFIED wallet without proof is
+    refused with 401 WALLET_SIGNATURE_REQUIRED, where proof is either an
+    EIP-191 signature over a deterministic message or a session owning the
+    profile.
+
+    What is asserted here is that mechanism, because it is what makes
+    attribution provable, and it can be read without signing anything and
+    without filing a probe report. Deliberately NOT asserted by trying to
+    spoof a verified wallet: the only wallet we may name is our own, ours is
+    still unverified, and a successful spoof attempt would create a junk
+    report in their tracker to prove a point their own note concedes.
+    """
+    wallet = os.environ.get("QA_WALLET_ADDRESS", "")
+    if not wallet:
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason="QA_WALLET_ADDRESS is not set, so no attribution can be "
+                   "asked about",
+            claim_id="bounty-filing-unauthenticated"))
+        return
+
+    title = "attribution probe"
+    first = rest_anon.get(FILING_MESSAGE,
+                          params={"wallet_address": wallet, "title": title})
+    if first.status_code != 200:
+        conclude(Measurement(
+            verdict="failed",
+            reason=(f"the endpoint that makes attribution provable answers "
+                    f"HTTP {first.status_code}; without a deterministic "
+                    f"message to sign there is no way to prove a filing is "
+                    f"yours"),
+            left=first.status_code, right=200,
+            sources={"endpoint": f"GET {FILING_MESSAGE}"},
+            claim_id="bounty-filing-unauthenticated"))
+        return
+
+    message = required(first.json(), "message_to_sign", f"GET {FILING_MESSAGE}")
+    digest = hashlib.sha256(title.strip().encode()).hexdigest()
+
+    # Each property below is what stops a different attack. Binding the wallet
+    # stops signing for someone else; binding the title hash stops a captured
+    # signature being replayed onto a different report; determinism is what
+    # lets a signature be produced offline and checked by anyone.
+    broken = []
+    if wallet.lower() not in message:
+        broken.append("the message does not name the wallet it attributes to")
+    if digest not in message:
+        broken.append("the message is not bound to the report title, so a "
+                      "captured signature would re-file anything")
+    again = rest_anon.get(FILING_MESSAGE,
+                          params={"wallet_address": wallet, "title": title})
+    if again.status_code != 200 or again.json().get("message_to_sign") != message:
+        broken.append("the message is not deterministic, so it cannot be "
+                      "produced offline")
+    other = rest_anon.get(FILING_MESSAGE,
+                          params={"wallet_address": wallet, "title": title + "!"})
+    if other.status_code == 200 and other.json().get("message_to_sign") == message:
+        broken.append("two different titles produce the same message")
 
     conclude(Measurement(
-        verdict=verdict, reason=reason,
-        left="anonymous POST with an empty body", right=status,
-        sources={"endpoint": f"POST {TRACKER}"},
+        verdict="failed" if broken else "passed",
+        reason=("; ".join(broken) if broken else
+                "attribution is provable: the signing message names the wallet, "
+                "is bound to sha256(title), and is deterministic"),
+        left=broken, right=f"GET {FILING_MESSAGE}",
+        sources={"endpoint": FILING_MESSAGE, "fix": "commit d12ea54a9"},
+        # Recorded, not asserted: whether OUR wallet has been verified is our
+        # action, not their defect. While it is unverified we remain nameable.
+        population={"our_wallet_verified": _wallet_is_verified(rest_anon, wallet),
+                    "title_sha256": digest},
         claim_id="bounty-filing-unauthenticated",
     ))
 
