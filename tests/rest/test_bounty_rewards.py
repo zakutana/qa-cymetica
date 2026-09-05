@@ -79,7 +79,7 @@ def test_verified_reports_record_what_they_earned(rest_anon):
             claim_id="bounty-rewards-unrecorded"))
         return
 
-    if "reward_amount" not in rows[0]:
+    if "reward_amount" not in rows[0] and "reward_status" not in rows[0]:
         conclude(Measurement(
             verdict="inconclusive",
             reason=("the tracker rows carry no reward field at all, so this "
@@ -90,22 +90,44 @@ def test_verified_reports_record_what_they_earned(rest_anon):
         return
 
     closed = [r for r in rows if (r.get("status") or "").lower() in CLOSED]
-    awarded = [r for r in closed if r.get("reward_amount")]
+
+    # Re-scoped 2026-09-05 after their answer (ET-22226) and the field that
+    # shipped with it. They explained the architecture: the tracker and the
+    # ET10 reward lane are two separate records, and payments live in the
+    # lane. So demanding reward_amount on the tracker was asking the wrong
+    # object for the answer, and that part of report #63 is withdrawn.
+    #
+    # What they added is reward_status, and it does distinguish a verified
+    # report from an invalid one. It does not distinguish a PAID report from
+    # one whose award was never recorded -- both read pending_award -- which
+    # is the question a hunter actually has. Their own note says as much:
+    # "pending_award means verified, award not yet recorded".
+    #
+    # So the invariant is narrowed to exactly what is still missing, and it
+    # goes green the moment any report of ours reads as paid.
+    settled = [r for r in closed
+               if r.get("paid_at")
+               or r.get("reward_amount")
+               or str(r.get("reward_status") or "").lower() in
+               ("paid", "awarded", "award_recorded", "rewarded")]
 
     stats = rest_anon.get(STATS)
     totals = stats.json() if stats.status_code == 200 else {}
+    seen = sorted({str(r.get("reward_status")) for r in rows if r.get("reward_status")})
 
     conclude(Measurement(
-        verdict="failed" if closed and not awarded else "passed",
-        reason=(f"{len(closed)} of the {len(rows)} reports on the public "
-                f"tracker are closed as fixed, and {len(awarded)} of those "
-                f"record any reward_amount"
-                + (f"; the platform's own stats report bugs_fixed="
-                   f"{totals.get('bugs_fixed')} and total_paid="
-                   f"{totals.get('total_paid')}" if totals else "")),
-        left=len(awarded), right=len(closed),
-        sources={"tracker": TRACKER, "totals": STATS},
+        verdict="failed" if closed and not settled else "passed",
+        reason=(f"{len(closed)} of the {len(rows)} public reports are closed "
+                f"as fixed and {len(settled)} of them can be read as paid or "
+                f"awarded. reward_status takes {seen or ['no value']}, so a "
+                f"report that was paid and one whose award was never recorded "
+                f"are indistinguishable"
+                + (f"; stats still report bugs_fixed={totals.get('bugs_fixed')} "
+                   f"and total_paid={totals.get('total_paid')}" if totals else "")),
+        left=len(settled), right=len(closed),
+        sources={"tracker": TRACKER, "totals": STATS, "their_ref": "ET-22226"},
         population={"rows_returned": len(rows), "closed": len(closed),
+                    "reward_status_values": seen,
                     "bugs_fixed_per_stats": totals.get("bugs_fixed"),
                     "total_paid_per_stats": totals.get("total_paid")},
         claim_id="bounty-rewards-unrecorded"))

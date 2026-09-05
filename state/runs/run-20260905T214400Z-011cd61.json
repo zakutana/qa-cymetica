@@ -1,0 +1,98 @@
+{
+  "schema": 2,
+  "run_id": "run-20260905T214400Z-011cd61",
+  "started_at": "2026-09-05T21:44:05+00:00",
+  "finished_at": "2026-09-05T21:44:12+00:00",
+  "git_head": "011cd616ce9f45da27094332de84bda1e78f0528",
+  "git_short": "011cd61",
+  "git_dirty": true,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": "sha256:584da9a39679f51a764f2f15ed50110940e5618b499342b41e0d4187e893a371",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "1985e2c97cedb1d4e2248162050d04347c227cae6e369d115e88261893051ff3",
+    "/.well-known/agent-card.json": "3dfc7d39fe712e14967fbd019be8bec83c4a49e836fb3d04ff02248b2580fca5",
+    "/.well-known/agent-skills.json": "f2f992a77d58a157ec678cd17d4d94d216aa96d12ee4f9a3adae9fa291fb5a0d",
+    "/.well-known/ai-plugin.json": "e2f2d79821bf8e741fb18cefea6a94cb7a1ec358644306aeff02e763c61b1fb2",
+    "/.well-known/udc.json": "92cd8a5f7ec5a0a859594ef9fbd72cba4914eaab4220377db18adf2ed44611a4",
+    "/openapi.json": "f0cccb1f06ec266d303b1c7ab8e23f4af29a3c43106027595c95c1449fa1b2cf",
+    "/llms.txt": "9394176a9e0a58b300906e9f6c2843208353e59891bbb186c673c616e2cf96c8",
+    "mcp:tools/list:none": "cec661ca0567f7ae4801b552e785299b05660362e3d7dbb725424599331010e9"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/rest/test_qa_agent_channel.py -q --no-header --tb=short",
+  "selector_full": false,
+  "allow_mutate": false,
+  "collected": [
+    "tests/rest/test_qa_agent_channel.py::test_the_agent_can_report_a_value_it_publishes",
+    "tests/rest/test_qa_agent_channel.py::test_escalating_a_low_confidence_answer_does_not_return_the_same_advice"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/rest/test_qa_agent_channel.py::test_the_agent_can_report_a_value_it_publishes",
+      "component": "rest.support",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "qa-agent-cannot-report-its-own-data",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 1947,
+      "evidence_ids": [
+        "94ad8d607f6e4caef373836a8bfce9f2d278016d606a4a1af949904bd29a43d0"
+      ],
+      "measurement": null,
+      "check_fingerprint": "e4089a690f0858e988f49de100d4da6f845524865c508543beef09d7d5556d61",
+      "reason": null,
+      "failure_repr": "tests\\rest\\test_qa_agent_channel.py:57: in test_the_agent_can_report_a_value_it_publishes\n    answer = rest_anon.post(ASK, json={\"question\": question})\n..\\..\\..\\..\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\httpx\\_client.py:1144: in post\n    return self.request(\n..\\..\\..\\..\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\httpx\\_client.py:825: in request\n    return self.send(request, auth=auth, follow_redirects=follow_redirects)\n..\\..\\..\\..\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\httpx\\_client.py:914: in send\n    response = self._send_handling_auth(\n..\\..\\..\\..\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\httpx\\_client.py:942: in _send_handling_auth\n    response = self._send_handling_redirects(\n..\\..\\..\\..\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\httpx\\_client.py:979: in _send_handling_redirects\n    response = self._send_single_request(request)\n..\\..\\..\\..\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\httpx\\_client.py:1014: in _send_single_request\n    response = transport.handle_request(request)\nqa\\safety.py:177: in handle_request\n    self._check(request, tier, rule, path, method)\nqa\\safety.py:214: in _check\n    raise SafetyViolation(\nE   qa.safety.SafetyViolation: SAFE test attempted POST bounty.qa_ask. Raise the tier to PROBE and send an inert body, or to MUTATE."
+    },
+    {
+      "nodeid": "tests/rest/test_qa_agent_channel.py::test_escalating_a_low_confidence_answer_does_not_return_the_same_advice",
+      "component": "rest.support",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "qa-agent-escalation-is-a-loop",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 0,
+      "evidence_ids": [],
+      "measurement": null,
+      "check_fingerprint": "0057cd595ac2ba414f2df711322a6d84a57154580a6e2645fec8b25e9fd2e52d",
+      "reason": null,
+      "failure_repr": "tests\\rest\\test_qa_agent_channel.py:109: in test_escalating_a_low_confidence_answer_does_not_return_the_same_advice\n    first = rest_anon.post(ASK, json={\"question\": question})\n..\\..\\..\\..\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\httpx\\_client.py:1144: in post\n    return self.request(\n..\\..\\..\\..\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\httpx\\_client.py:825: in request\n    return self.send(request, auth=auth, follow_redirects=follow_redirects)\n..\\..\\..\\..\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\httpx\\_client.py:914: in send\n    response = self._send_handling_auth(\n..\\..\\..\\..\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\httpx\\_client.py:942: in _send_handling_auth\n    response = self._send_handling_redirects(\n..\\..\\..\\..\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\httpx\\_client.py:979: in _send_handling_redirects\n    response = self._send_single_request(request)\n..\\..\\..\\..\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\httpx\\_client.py:1014: in _send_single_request\n    response = transport.handle_request(request)\nqa\\safety.py:177: in handle_request\n    self._check(request, tier, rule, path, method)\nqa\\safety.py:214: in _check\n    raise SafetyViolation(\nE   qa.safety.SafetyViolation: SAFE test attempted POST bounty.qa_ask. Raise the tier to PROBE and send an inert body, or to MUTATE."
+    }
+  ],
+  "totals": {
+    "failed": 2
+  },
+  "ratelimit": {
+    "requests": 1,
+    "limit": 2000,
+    "remaining": 1992,
+    "fraction_used": 0.004,
+    "exhausted": false
+  },
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "fingerprint_after": "sha256:584da9a39679f51a764f2f15ed50110940e5618b499342b41e0d4187e893a371",
+  "exit_status": 1
+}
