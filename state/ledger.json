@@ -19,16 +19,16 @@
           "run_id": "run-20260904T131842Z-7518e8e"
         }
       },
-      "reproductions": 7,
+      "reproductions": 8,
       "provenance": {
-        "run_id": "run-20260905T170702Z-c34e365",
-        "measured_at": "2026-09-05T17:08:12+00:00"
+        "run_id": "run-20260905T180712Z-6b0880f",
+        "measured_at": "2026-09-05T18:07:58+00:00"
       },
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20260905T170702Z-c34e365",
-          "at": "2026-09-05T17:08:12+00:00"
+          "run_id": "run-20260905T180712Z-6b0880f",
+          "at": "2026-09-05T18:07:58+00:00"
         },
         "pinned_fingerprint": "a00fa16074a898173577cb72f9e863a691aa4bfdb20c43a2d1476189800850ff"
       },
@@ -77,7 +77,8 @@
         "run-20260905T101042Z-45f8015",
         "run-20260905T163840Z-ef3ef59",
         "run-20260905T164759Z-4b4283c",
-        "run-20260905T170702Z-c34e365"
+        "run-20260905T170702Z-c34e365",
+        "run-20260905T180712Z-6b0880f"
       ]
     },
     "CYM-bounty-filing-unauthenticated": {
@@ -106,16 +107,16 @@
           "run_id": "run-20260904T131842Z-7518e8e"
         }
       },
-      "reproductions": 7,
+      "reproductions": 8,
       "provenance": {
-        "run_id": "run-20260905T170702Z-c34e365",
-        "measured_at": "2026-09-05T17:08:12+00:00"
+        "run_id": "run-20260905T180712Z-6b0880f",
+        "measured_at": "2026-09-05T18:07:58+00:00"
       },
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20260905T170702Z-c34e365",
-          "at": "2026-09-05T17:08:12+00:00"
+          "run_id": "run-20260905T180712Z-6b0880f",
+          "at": "2026-09-05T18:07:58+00:00"
         },
         "pinned_fingerprint": "50e9db1361160f8a637e5f0bef8567aa271131874edeee1a00f4b2960e7b9f57"
       },
@@ -173,7 +174,8 @@
         "run-20260905T101042Z-45f8015",
         "run-20260905T163840Z-ef3ef59",
         "run-20260905T164759Z-4b4283c",
-        "run-20260905T170702Z-c34e365"
+        "run-20260905T170702Z-c34e365",
+        "run-20260905T180712Z-6b0880f"
       ]
     },
     "CYM-llms_agent_count_self_consistent": {
@@ -190,7 +192,10 @@
           "llms_txt": "regex_int:(\\d+) AI trading agents,",
           "llms_txt_2": "regex_int:any of our (\\d+) AI trading agent species"
         },
-        "reason": "llms_agent_count_self_consistent: regex_int found no match for '(\\\\d+) AI trading agents,'"
+        "population": {
+          "error": "regex_int found no match for '(\\\\d+) AI trading agents,'"
+        },
+        "reason": "llms_agent_count_self_consistent: Does llms.txt quote the same agent count in all of its own sentences? Cannot tell: the value is no longer there to read. The sentence or field this claim reads was removed from the document, so there is nothing left to compare. That is not the same as the numbers agreeing."
       },
       "checks": [
         "tests/reconciliation/test_reconcile.py::test_sources_agree[llms_agent_count_self_consistent::llms_txt-vs-llms_txt_2]"
@@ -203,14 +208,14 @@
       },
       "reproductions": 3,
       "provenance": {
-        "run_id": "run-20260905T170702Z-c34e365",
-        "measured_at": "2026-09-05T17:08:12+00:00"
+        "run_id": "run-20260905T180712Z-6b0880f",
+        "measured_at": "2026-09-05T18:07:58+00:00"
       },
       "check": {
         "state": "INCONCLUSIVE",
         "adjudicated_by": {
-          "run_id": "run-20260905T170702Z-c34e365",
-          "at": "2026-09-05T17:08:12+00:00"
+          "run_id": "run-20260905T180712Z-6b0880f",
+          "at": "2026-09-05T18:07:58+00:00"
         },
         "pinned_fingerprint": null
       },
@@ -266,11 +271,85 @@
       "component": "mcp.tools_list",
       "note": "Subset, not set_equal. llms.txt is not obliged to list every tool -- it is obliged not to name one that does not exist. The earlier set_equal form would now fail simply because the document lists fewer than the server serves, which is correct behaviour.",
       "detail": {
+        "left": [
+          "get_market",
+          "get_orderbook",
+          "get_platform_status",
+          "get_prices",
+          "get_trust_signal",
+          "list_clob_pairs",
+          "list_markets",
+          "search_markets"
+        ],
+        "right": [
+          "ask_nexus_deep",
+          "board_channels",
+          "board_flag",
+          "board_post",
+          "board_read_post",
+          "board_read_thread",
+          "board_replicate",
+          "board_revise",
+          "board_search",
+          "board_subscribe",
+          "board_threads",
+          "browse_ontology",
+          "create_aib_fund",
+          "edit_aib_fund_basket",
+          "find_trade_path",
+          "get_agent_profile",
+          "get_ai_native_proof",
+          "get_btc_pool_history",
+          "get_btc_pool_state",
+          "get_deadcoin_desk_info",
+          "get_deadcoin_quote",
+          "get_deep_answer",
+          "get_deposit_address",
+          "get_market",
+          "get_market_analytics",
+          "get_oracle_insights",
+          "get_order_history",
+          "get_orderbook",
+          "get_platform_status",
+          "get_positions",
+          "get_prediction_statistics",
+          "get_prices",
+          "get_rate_limits",
+          "get_signal_history",
+          "get_strategy_returns",
+          "get_trust_ladder",
+          "get_trust_signal",
+          "launchpad_launch_token",
+          "launchpad_list_tokens",
+          "launchpad_trade_quote",
+          "list_clob_pairs",
+          "list_markets",
+          "list_my_aib_funds",
+          "list_ontology_dimensions",
+          "place_order",
+          "query_knowledge",
+          "register_webhook",
+          "request_feature",
+          "resolve_ontology_concept",
+          "search_markets",
+          "search_ontology",
+          "submit_feedback",
+          "submit_observation",
+          "submit_signal",
+          "subscribe_prices",
+          "who_is_this"
+        ],
         "sources": {
-          "llms_txt": "regex_all:\\[(\\w+)\\]\\(/mcp/v1/tools/\\w+\\)",
+          "llms_txt": "scope:MCP Tools|regex_all:^- `([a-z][a-z0-9_]+)`",
           "mcp_json": "set:$.tools[*].name"
         },
-        "reason": "mcp_tool_names_documented_exist: regex_all found no match for '\\\\[(\\\\w+)\\\\]\\\\(/mcp/v1/tools/\\\\w+\\\\)'"
+        "population": {
+          "witness": {
+            "llms_txt": "scope:MCP Tools|regex_all:^- `([a-z][a-z0-9_]+)`",
+            "mcp_json": "set:$.tools[*].name"
+          }
+        },
+        "reason": "mcp_tool_names_documented_exist: Does every tool name llms.txt documents exist on the server? Both llms.txt and .well-known/mcp.json now say 8 (get_market, get_orderbook, get_platform_status, get_prices, get_trust_signal, list_clob_pairs, list_markets, search_markets)."
       },
       "checks": [
         "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_names_documented_exist::llms_txt-vs-mcp_json]"
@@ -283,14 +362,14 @@
       },
       "reproductions": 3,
       "provenance": {
-        "run_id": "run-20260905T170702Z-c34e365",
-        "measured_at": "2026-09-05T17:08:12+00:00"
+        "run_id": "run-20260905T180712Z-6b0880f",
+        "measured_at": "2026-09-05T18:07:58+00:00"
       },
       "check": {
-        "state": "INCONCLUSIVE",
+        "state": "PASSING_UNPINNED",
         "adjudicated_by": {
-          "run_id": "run-20260905T170702Z-c34e365",
-          "at": "2026-09-05T17:08:12+00:00"
+          "run_id": "run-20260905T180712Z-6b0880f",
+          "at": "2026-09-05T18:07:58+00:00"
         },
         "pinned_fingerprint": null
       },
@@ -321,6 +400,15 @@
             "run_id": "run-20260905T101042Z-45f8015"
           },
           "at": "2026-09-05T10:11:28+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "INCONCLUSIVE",
+          "to": "PASSING_UNPINNED",
+          "cause": {
+            "run_id": "run-20260905T180712Z-6b0880f"
+          },
+          "at": "2026-09-05T18:07:58+00:00"
         }
       ],
       "regressions": [],
@@ -356,14 +444,14 @@
       },
       "reproductions": 3,
       "provenance": {
-        "run_id": "run-20260905T170702Z-c34e365",
-        "measured_at": "2026-09-05T17:08:12+00:00"
+        "run_id": "run-20260905T180712Z-6b0880f",
+        "measured_at": "2026-09-05T18:07:58+00:00"
       },
       "check": {
         "state": "INCONCLUSIVE",
         "adjudicated_by": {
-          "run_id": "run-20260905T170702Z-c34e365",
-          "at": "2026-09-05T17:08:12+00:00"
+          "run_id": "run-20260905T180712Z-6b0880f",
+          "at": "2026-09-05T18:07:58+00:00"
         },
         "pinned_fingerprint": null
       },
@@ -467,7 +555,7 @@
             "agent_skills": "set:$.skills[*].id"
           }
         },
-        "reason": "skills_subset: left has ['ai-due-diligence', 'ai-native-provenance', 'live-headlines', 'smart-delegation', 'tge-prediction-markets'] which right lacks"
+        "reason": "skills_subset: Is agent-skills.json the actionable subset of agent-card.json, as stated? agent-card.json says 15 (ai-due-diligence, ai-native-provenance, arena-trading, asset-discovery, clone-ai-agent, et10-revenue-share, exchange-tokens, live-headlines and 7 more); agent-skills.json says 10 (arena-trading, asset-discovery, clone-ai-agent, et10-revenue-share, exchange-tokens, market-data, portfolio-management, prop-desk-trading and 2 more). (left has ['ai-due-diligence', 'ai-native-provenance', 'live-headlines', 'smart-delegation', 'tge-prediction-markets'] which right lacks)"
       },
       "checks": [
         "tests/reconciliation/test_reconcile.py::test_sources_agree[skills_subset::agent_card-vs-agent_skills]"
@@ -478,16 +566,16 @@
           "run_id": "run-20260904T131842Z-7518e8e"
         }
       },
-      "reproductions": 7,
+      "reproductions": 8,
       "provenance": {
-        "run_id": "run-20260905T170702Z-c34e365",
-        "measured_at": "2026-09-05T17:08:12+00:00"
+        "run_id": "run-20260905T180712Z-6b0880f",
+        "measured_at": "2026-09-05T18:07:58+00:00"
       },
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20260905T170702Z-c34e365",
-          "at": "2026-09-05T17:08:12+00:00"
+          "run_id": "run-20260905T180712Z-6b0880f",
+          "at": "2026-09-05T18:07:58+00:00"
         },
         "pinned_fingerprint": "sha256:f9559807c42fd3328c8879e7b899b7cd"
       },
@@ -536,7 +624,8 @@
         "run-20260905T101042Z-45f8015",
         "run-20260905T163840Z-ef3ef59",
         "run-20260905T164759Z-4b4283c",
-        "run-20260905T170702Z-c34e365"
+        "run-20260905T170702Z-c34e365",
+        "run-20260905T180712Z-6b0880f"
       ]
     },
     "CYM-mcp_resource_count": {
@@ -552,7 +641,10 @@
           "llms_txt": "regex_int:cymetica-eventtrader-mcp \\(\\d+ tools, (\\d+) resources",
           "mcp_json": "len:$.resources"
         },
-        "reason": "mcp_resource_count: regex_int found no match for 'cymetica-eventtrader-mcp \\\\(\\\\d+ tools, (\\\\d+) resources'"
+        "population": {
+          "error": "regex_int found no match for 'cymetica-eventtrader-mcp \\\\(\\\\d+ tools, (\\\\d+) resources'"
+        },
+        "reason": "mcp_resource_count: How many MCP resources are exposed? Cannot tell: the value is no longer there to read. The sentence or field this claim reads was removed from the document, so there is nothing left to compare. That is not the same as the numbers agreeing."
       },
       "checks": [
         "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_resource_count::llms_txt-vs-mcp_json]"
@@ -565,14 +657,14 @@
       },
       "reproductions": 3,
       "provenance": {
-        "run_id": "run-20260905T170702Z-c34e365",
-        "measured_at": "2026-09-05T17:08:12+00:00"
+        "run_id": "run-20260905T180712Z-6b0880f",
+        "measured_at": "2026-09-05T18:07:58+00:00"
       },
       "check": {
         "state": "INCONCLUSIVE",
         "adjudicated_by": {
-          "run_id": "run-20260905T170702Z-c34e365",
-          "at": "2026-09-05T17:08:12+00:00"
+          "run_id": "run-20260905T180712Z-6b0880f",
+          "at": "2026-09-05T18:07:58+00:00"
         },
         "pinned_fingerprint": null
       },
@@ -652,14 +744,14 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260905T170702Z-c34e365",
-        "measured_at": "2026-09-05T17:08:12+00:00"
+        "run_id": "run-20260905T180712Z-6b0880f",
+        "measured_at": "2026-09-05T18:07:58+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260905T170702Z-c34e365",
-          "at": "2026-09-05T17:08:12+00:00"
+          "run_id": "run-20260905T180712Z-6b0880f",
+          "at": "2026-09-05T18:07:58+00:00"
         },
         "pinned_fingerprint": "aee41113b423d34dbb0fb7a237f679ec142e320ffd706e3a3645b1a3b80b4cd5"
       },
@@ -769,7 +861,7 @@
             "llms_txt": "AI trading agent species (MACD, RSI, BOLL, VOL, TREND, STOCH, ICHI, FIB, ATR, DIV, PCPN)"
           }
         },
-        "reason": "agent_names: left has [] which right lacks"
+        "reason": "agent_names: Does llms.txt name agent symbols that actually exist? Both the live species endpoint and llms.txt now say 11 (ATR, BOLL, DIV, FIB, ICHI, MACD, PCPN, RSI and 3 more)."
       },
       "checks": [
         "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_names::live_species-vs-llms_txt]"
@@ -782,14 +874,14 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260905T170702Z-c34e365",
-        "measured_at": "2026-09-05T17:08:12+00:00"
+        "run_id": "run-20260905T180712Z-6b0880f",
+        "measured_at": "2026-09-05T18:07:58+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260905T170702Z-c34e365",
-          "at": "2026-09-05T17:08:12+00:00"
+          "run_id": "run-20260905T180712Z-6b0880f",
+          "at": "2026-09-05T18:07:58+00:00"
         },
         "pinned_fingerprint": "sha256:ba019a19f7a7c39de5c5c19601580248"
       },
@@ -874,7 +966,7 @@
             "llms_txt": "any of our 11 AI trading agent species"
           }
         },
-        "reason": "agent_count: values differ"
+        "reason": "agent_count: How many clonable AI trading agents exist? Both the live species endpoint and llms.txt now say 11."
       },
       "checks": [
         "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_count::live_species-vs-llms_txt]"
@@ -887,16 +979,16 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260905T170702Z-c34e365",
-        "measured_at": "2026-09-05T17:08:12+00:00"
+        "run_id": "run-20260905T180712Z-6b0880f",
+        "measured_at": "2026-09-05T18:07:58+00:00"
       },
       "check": {
-        "state": "PASSING_UNPINNED",
+        "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260905T170702Z-c34e365",
-          "at": "2026-09-05T17:08:12+00:00"
+          "run_id": "run-20260905T180712Z-6b0880f",
+          "at": "2026-09-05T18:07:58+00:00"
         },
-        "pinned_fingerprint": null
+        "pinned_fingerprint": "sha256:6156cefe281b0c01af3a3391dce65475"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -939,11 +1031,20 @@
             "run_id": "run-20260905T170702Z-c34e365"
           },
           "at": "2026-09-05T17:08:12+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "PASSING_UNPINNED",
+          "to": "PASSING",
+          "cause": {
+            "run_id": "run-20260905T180712Z-6b0880f"
+          },
+          "at": "2026-09-05T18:07:58+00:00"
         }
       ],
       "regressions": [],
       "obligations": {
-        "reverify": true,
+        "reverify": false,
         "repair_check": false,
         "reopen": [],
         "retractions": []
@@ -979,7 +1080,7 @@
         "state": "UNVERIFIED",
         "adjudicated_by": null,
         "pinned_fingerprint": null,
-        "not_checked_in": "run-20260905T170702Z-c34e365"
+        "not_checked_in": "run-20260905T180712Z-6b0880f"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -1138,7 +1239,7 @@
       "component": "platform.ai_native_proof",
       "note": "Commits legitimately accrue, so a small gap is expected and a large one is not. The AI-native claim is the platform's headline marketing figure; a stale number here is a measurement defect, not a cosmetic one.",
       "detail": {
-        "left": 21939,
+        "left": 21940,
         "right": 21800,
         "sources": {
           "build_stats": "jsonpath:$.totals.commits",
@@ -1150,7 +1251,7 @@
             "llms_txt": "With 21,800+ commits"
           }
         },
-        "reason": "commit_count: differ by 0.6% (tolerance 5.0%)"
+        "reason": "commit_count: How many commits are in the production codebase? Both the build-stats endpoint and llms.txt now say 21940."
       },
       "checks": [
         "tests/reconciliation/test_reconcile.py::test_sources_agree[commit_count::build_stats-vs-llms_txt]"
@@ -1163,14 +1264,14 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260905T170702Z-c34e365",
-        "measured_at": "2026-09-05T17:08:12+00:00"
+        "run_id": "run-20260905T180712Z-6b0880f",
+        "measured_at": "2026-09-05T18:07:58+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260905T170702Z-c34e365",
-          "at": "2026-09-05T17:08:12+00:00"
+          "run_id": "run-20260905T180712Z-6b0880f",
+          "at": "2026-09-05T18:07:58+00:00"
         },
         "pinned_fingerprint": "sha256:e081c62f35eae60b83c14e9766dce049"
       },
@@ -1267,14 +1368,14 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260905T170702Z-c34e365",
-        "measured_at": "2026-09-05T17:08:12+00:00"
+        "run_id": "run-20260905T180712Z-6b0880f",
+        "measured_at": "2026-09-05T18:07:58+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260905T170702Z-c34e365",
-          "at": "2026-09-05T17:08:12+00:00"
+          "run_id": "run-20260905T180712Z-6b0880f",
+          "at": "2026-09-05T18:07:58+00:00"
         },
         "pinned_fingerprint": "eec8c826a9ff556658be3354fa9e29469b301df49817b0ddde9a152b2704f1d5"
       },
@@ -1368,16 +1469,16 @@
           "run_id": "legacy"
         }
       },
-      "reproductions": 5,
+      "reproductions": 6,
       "provenance": {
-        "run_id": "run-20260905T170702Z-c34e365",
-        "measured_at": "2026-09-05T17:08:12+00:00"
+        "run_id": "run-20260905T180712Z-6b0880f",
+        "measured_at": "2026-09-05T18:07:58+00:00"
       },
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20260905T170702Z-c34e365",
-          "at": "2026-09-05T17:08:12+00:00"
+          "run_id": "run-20260905T180712Z-6b0880f",
+          "at": "2026-09-05T18:07:58+00:00"
         },
         "pinned_fingerprint": "sha256:ece74c708d5503fb5502ea84e5e5eb93"
       },
@@ -1435,7 +1536,8 @@
         "run-20260905T101042Z-45f8015",
         "run-20260905T163840Z-ef3ef59",
         "run-20260905T164759Z-4b4283c",
-        "run-20260905T170702Z-c34e365"
+        "run-20260905T170702Z-c34e365",
+        "run-20260905T180712Z-6b0880f"
       ]
     },
     "CYM-mcp_tool_count": {
@@ -1472,7 +1574,7 @@
         "state": "UNVERIFIED",
         "adjudicated_by": null,
         "pinned_fingerprint": null,
-        "not_checked_in": "run-20260905T170702Z-c34e365"
+        "not_checked_in": "run-20260905T180712Z-6b0880f"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -1534,11 +1636,85 @@
       "section": "mcp",
       "component": "mcp.tools_list",
       "detail": {
+        "left": [
+          "get_market",
+          "get_orderbook",
+          "get_platform_status",
+          "get_prices",
+          "get_trust_signal",
+          "list_clob_pairs",
+          "list_markets",
+          "search_markets"
+        ],
+        "right": [
+          "ask_nexus_deep",
+          "board_channels",
+          "board_flag",
+          "board_post",
+          "board_read_post",
+          "board_read_thread",
+          "board_replicate",
+          "board_revise",
+          "board_search",
+          "board_subscribe",
+          "board_threads",
+          "browse_ontology",
+          "create_aib_fund",
+          "edit_aib_fund_basket",
+          "find_trade_path",
+          "get_agent_profile",
+          "get_ai_native_proof",
+          "get_btc_pool_history",
+          "get_btc_pool_state",
+          "get_deadcoin_desk_info",
+          "get_deadcoin_quote",
+          "get_deep_answer",
+          "get_deposit_address",
+          "get_market",
+          "get_market_analytics",
+          "get_oracle_insights",
+          "get_order_history",
+          "get_orderbook",
+          "get_platform_status",
+          "get_positions",
+          "get_prediction_statistics",
+          "get_prices",
+          "get_rate_limits",
+          "get_signal_history",
+          "get_strategy_returns",
+          "get_trust_ladder",
+          "get_trust_signal",
+          "launchpad_launch_token",
+          "launchpad_list_tokens",
+          "launchpad_trade_quote",
+          "list_clob_pairs",
+          "list_markets",
+          "list_my_aib_funds",
+          "list_ontology_dimensions",
+          "place_order",
+          "query_knowledge",
+          "register_webhook",
+          "request_feature",
+          "resolve_ontology_concept",
+          "search_markets",
+          "search_ontology",
+          "submit_feedback",
+          "submit_observation",
+          "submit_signal",
+          "subscribe_prices",
+          "who_is_this"
+        ],
         "sources": {
-          "llms_txt": "regex_all:\\[(\\w+)\\]\\(/mcp/v1/tools/\\w+\\)",
+          "llms_txt": "scope:MCP Tools|regex_all:^- `([a-z][a-z0-9_]+)`",
           "mcp_json": "set:$.tools[*].name"
         },
-        "reason": "mcp_tool_names_documented_exist: regex_all found no match for '\\\\[(\\\\w+)\\\\]\\\\(/mcp/v1/tools/\\\\w+\\\\)'"
+        "population": {
+          "witness": {
+            "llms_txt": "scope:MCP Tools|regex_all:^- `([a-z][a-z0-9_]+)`",
+            "mcp_json": "set:$.tools[*].name"
+          }
+        },
+        "reason": "mcp_tool_names_documented_exist: Does every tool name llms.txt documents exist on the server? Both llms.txt and .well-known/mcp.json now say 8 (get_market, get_orderbook, get_platform_status, get_prices, get_trust_signal, list_clob_pairs, list_markets, search_markets)."
       },
       "checks": [
         "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_names_documented_exist::llms_txt-vs-mcp_json]"
@@ -1551,16 +1727,16 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260905T170702Z-c34e365",
-        "measured_at": "2026-09-05T17:08:12+00:00"
+        "run_id": "run-20260905T180712Z-6b0880f",
+        "measured_at": "2026-09-05T18:07:58+00:00"
       },
       "check": {
-        "state": "INCONCLUSIVE",
+        "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260905T170702Z-c34e365",
-          "at": "2026-09-05T17:08:12+00:00"
+          "run_id": "run-20260905T180712Z-6b0880f",
+          "at": "2026-09-05T18:07:58+00:00"
         },
-        "pinned_fingerprint": null
+        "pinned_fingerprint": "sha256:13577e53eb81ed18ef1bcf733fe4ca57"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -1603,12 +1779,30 @@
             "run_id": "run-20260905T170702Z-c34e365"
           },
           "at": "2026-09-05T17:08:12+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "INCONCLUSIVE",
+          "to": "PASSING_UNPINNED",
+          "cause": {
+            "run_id": "run-20260905T180712Z-6b0880f"
+          },
+          "at": "2026-09-05T18:07:58+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "PASSING_UNPINNED",
+          "to": "PASSING",
+          "cause": {
+            "run_id": "run-20260905T180712Z-6b0880f"
+          },
+          "at": "2026-09-05T18:07:58+00:00"
         }
       ],
       "regressions": [],
       "obligations": {
-        "reverify": true,
-        "repair_check": true,
+        "reverify": false,
+        "repair_check": false,
         "reopen": [],
         "retractions": []
       }
@@ -1661,7 +1855,7 @@
             "agent_skills": "set:$.skills[*].id"
           }
         },
-        "reason": "skills_subset: left has ['ai-due-diligence', 'ai-native-provenance', 'live-headlines', 'smart-delegation', 'tge-prediction-markets'] which right lacks"
+        "reason": "skills_subset: Is agent-skills.json the actionable subset of agent-card.json, as stated? agent-card.json says 15 (ai-due-diligence, ai-native-provenance, arena-trading, asset-discovery, clone-ai-agent, et10-revenue-share, exchange-tokens, live-headlines and 7 more); agent-skills.json says 10 (arena-trading, asset-discovery, clone-ai-agent, et10-revenue-share, exchange-tokens, market-data, portfolio-management, prop-desk-trading and 2 more). (left has ['ai-due-diligence', 'ai-native-provenance', 'live-headlines', 'smart-delegation', 'tge-prediction-markets'] which right lacks)"
       },
       "checks": [
         "tests/reconciliation/test_reconcile.py::test_sources_agree[skills_subset::agent_card-vs-agent_skills]"
@@ -1674,14 +1868,14 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260905T170702Z-c34e365",
-        "measured_at": "2026-09-05T17:08:12+00:00"
+        "run_id": "run-20260905T180712Z-6b0880f",
+        "measured_at": "2026-09-05T18:07:58+00:00"
       },
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20260905T170702Z-c34e365",
-          "at": "2026-09-05T17:08:12+00:00"
+          "run_id": "run-20260905T180712Z-6b0880f",
+          "at": "2026-09-05T18:07:58+00:00"
         },
         "pinned_fingerprint": "sha256:f9559807c42fd3328c8879e7b899b7cd"
       },
@@ -1784,7 +1978,7 @@
             "agent_skills": "set:$.skills[*].id"
           }
         },
-        "reason": "skills_subset: left has ['ai-due-diligence', 'ai-native-provenance', 'live-headlines', 'smart-delegation', 'tge-prediction-markets'] which right lacks"
+        "reason": "skills_subset: Is agent-skills.json the actionable subset of agent-card.json, as stated? agent-card.json says 15 (ai-due-diligence, ai-native-provenance, arena-trading, asset-discovery, clone-ai-agent, et10-revenue-share, exchange-tokens, live-headlines and 7 more); agent-skills.json says 10 (arena-trading, asset-discovery, clone-ai-agent, et10-revenue-share, exchange-tokens, market-data, portfolio-management, prop-desk-trading and 2 more). (left has ['ai-due-diligence', 'ai-native-provenance', 'live-headlines', 'smart-delegation', 'tge-prediction-markets'] which right lacks)"
       },
       "checks": [
         "tests/reconciliation/test_reconcile.py::test_sources_agree[skills_subset::agent_card-vs-agent_skills]"
@@ -1797,14 +1991,14 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260905T170702Z-c34e365",
-        "measured_at": "2026-09-05T17:08:12+00:00"
+        "run_id": "run-20260905T180712Z-6b0880f",
+        "measured_at": "2026-09-05T18:07:58+00:00"
       },
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20260905T170702Z-c34e365",
-          "at": "2026-09-05T17:08:12+00:00"
+          "run_id": "run-20260905T180712Z-6b0880f",
+          "at": "2026-09-05T18:07:58+00:00"
         },
         "pinned_fingerprint": "sha256:f9559807c42fd3328c8879e7b899b7cd"
       },
@@ -2069,8 +2263,8 @@
       "check": {
         "state": "INCONCLUSIVE",
         "adjudicated_by": {
-          "run_id": "run-20260905T170702Z-c34e365",
-          "at": "2026-09-05T17:08:12+00:00"
+          "run_id": "run-20260905T180712Z-6b0880f",
+          "at": "2026-09-05T18:07:58+00:00"
         },
         "pinned_fingerprint": "5e9d6943c1eaf398d598a59460e9acdf2a187f99ecb323ce600818b417cefeae"
       },
@@ -2135,8 +2329,8 @@
         "reason": "/api/v1/vaix/prices was removed from llms.txt, not fixed in place (it now answers 404)"
       },
       "provenance": {
-        "run_id": "run-20260905T170702Z-c34e365",
-        "measured_at": "2026-09-05T17:08:12+00:00"
+        "run_id": "run-20260905T180712Z-6b0880f",
+        "measured_at": "2026-09-05T18:07:58+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -2146,22 +2340,21 @@
       }
     }
   },
-  "run_id": "run-20260905T170702Z-c34e365",
+  "run_id": "run-20260905T180712Z-6b0880f",
   "run_level": "V",
-  "updated_at": "2026-09-05T17:08:12+00:00",
+  "updated_at": "2026-09-05T18:07:58+00:00",
   "counts": {
     "RAISED": 2,
     "STILL REPRODUCIBLE": 4,
     "INCONCLUSIVE": 2,
     "WITHDRAWN": 5,
-    "NOT REPRODUCIBLE": 2,
-    "VERIFIED FIXED": 3,
-    "PASSING (UNPINNED)": 1,
+    "NOT REPRODUCIBLE": 1,
+    "VERIFIED FIXED": 5,
     "UNVERIFIABLE": 4,
     "PASSING, UNCLAIMED": 1
   },
   "events_head": {
-    "seq": 128,
-    "chain": "fdfb269c9e2eeb1f56f85e67582c688277b363b697d24226f957e0b429d5179b"
+    "seq": 132,
+    "chain": "9d0984d6a351b54d0d0b6bcc619ab5786c8ebf22c26e3727ed920d027c160195"
   }
 }
