@@ -411,17 +411,48 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:13.5px; max-wid
   font-family:var(--mono); font-size:10px; font-weight:600; padding:2px 6px;
   border-radius:4px; white-space:nowrap;
 }
-.state.s-not-raised-yet { background:var(--none-bg); color:var(--text-dim); }
-.state.s-raised { background:var(--auth-bg); color:var(--auth); }
-.state.s-they-replied { background:var(--wait-bg); color:var(--wait); }
-.state.s-fix-claimed { background:var(--warn-bg); color:var(--warn); }
-.state.s-verified-fixed { background:var(--ok-bg); color:var(--ok); }
-.state.s-regressed { background:var(--bad-bg); color:var(--bad); }
-.state.s-withdrawn { background:var(--none-bg); color:var(--text-faint); text-decoration:line-through; }
+/* Every cell of the composition table gets a colour. Seven of the sixteen
+   were styled and three of those seven named states that no longer exist, so
+   nine chips -- PASSING (UNPINNED) and WITHDRAWN among them -- rendered as
+   plain grey text and were easy to read straight past. A state with no colour
+   is a state the eye does not register.
+
+   Grouped by what the operator should DO about it, not by axis:
+     red     it reproduces; the defect is live
+     amber   waiting on somebody -- them, or a decision of ours
+     teal    our check passes, but something short of a verification
+     green   verified: our measurement and their claim agree
+     grey    we cannot tell
+     muted   terminal and ours (struck through) */
+.state.s-still-reproducible { background:var(--bad-bg); color:var(--bad); }
+.state.s-not-raised-yet     { background:var(--bad-bg); color:var(--bad); }
+.state.s-raised             { background:var(--auth-bg); color:var(--auth); }
+.state.s-they-replied       { background:var(--wait-bg); color:var(--wait); }
+.state.s-fix-claimed        { background:var(--warn-bg); color:var(--warn); }
+.state.s-check-changed      { background:var(--warn-bg); color:var(--warn); }
+.state.s-passing-unpinned   { background:var(--accent-dim); color:var(--accent); }
+.state.s-passing-unclaimed  { background:var(--accent-dim); color:var(--accent); }
+.state.s-passing-never-raised { background:var(--accent-dim); color:var(--accent); }
+.state.s-verified-fixed     { background:var(--ok-bg); color:var(--ok); }
+.state.s-unverified         { background:var(--none-bg); color:var(--text-dim); }
+.state.s-inconclusive       { background:var(--none-bg); color:var(--text-dim); }
+.state.s-not-reproducible   { background:var(--none-bg); color:var(--text-dim); }
+.state.s-unverifiable       { background:var(--none-bg); color:var(--text-dim); }
+.state.s-withdrawn  { background:var(--none-bg); color:var(--text-faint); text-decoration:line-through; }
+.state.s-superseded { background:var(--none-bg); color:var(--text-faint); text-decoration:line-through; }
+
 .filed { font-family:var(--mono); font-size:11px; color:var(--text-faint); }
 .undelivered {
   font-family:var(--mono); font-size:10px; font-weight:600; padding:2px 6px;
   border-radius:4px; background:var(--bad-bg); color:var(--bad); white-space:nowrap;
+}
+/* On 19 of 23 rows, so it must not shout. Red made it the loudest thing on
+   the page and pushed the state chip -- the thing actually worth reading --
+   into the background. It is a provenance note, not an alarm. */
+.unmeasured {
+  font-family:var(--mono); font-size:10px; padding:2px 6px; border-radius:4px;
+  background:transparent; color:var(--text-faint);
+  border:1px dashed var(--line); white-space:nowrap; cursor:help;
 }
 
 .f-body { padding:0 15px 15px; border-top:1px solid var(--line-soft); }
@@ -557,6 +588,13 @@ h4.sec {
 <script>
 const D = JSON.parse(document.getElementById("data").textContent);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+// "PASSING (UNPINNED)" -> "s-passing-unpinned". The old version replaced only
+// spaces, so the class came out as s-passing-(unpinned) -- parentheses are not
+// valid in a bare CSS class selector, so no rule could ever match it and the
+// chip rendered unstyled however many rules were written.
+const stateClass = s =>
+  "s-" + String(s).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 const SEV = [
   ["S0-CUSTODY","custody / auth","s0"], ["S1-INTEGRITY","data integrity","s1"],
   ["S2-MEASUREMENT","measurement","s2"], ["S3-CONTRACT","contract","s3"],
@@ -692,11 +730,8 @@ function finding(f) {
         <span class="f-title">${esc(f.title)}</span>
         <div class="f-sub">
           <span class="tagchip">${esc(f.tag)}</span>
-          ${f.unmeasured ? `<span class="undelivered" title="These words were
-            carried over from the hand-written ledger. The numbers in them were
-            true when the finding was made and have not been re-measured
-            since.">figures not measured in an admissible run</span>` : ""}
-          <span class="state s-${esc(f.display_state.toLowerCase().replace(/ /g,"-"))}">${esc(f.display_state)}</span>
+          ${f.unmeasured ? `<span class="unmeasured" title="The title and figures on this row were carried over from the hand-written ledger when the pipeline was rebuilt. They were true when the finding was made and no admissible run has re-measured them since, so read them as history rather than as the current state. A run that adjudicates this row refreshes them.">figures not re-measured</span>` : ""}
+          <span class="state ${stateClass(f.display_state)}">${esc(f.display_state)}</span>
           ${f.filed && f.filed.length ? `<span class="filed">filed as #${f.filed.map(x=>x.report_id).join(", #")}</span>` : ""}
           ${f.undelivered ? `<span class="undelivered">${f.undelivered} message never delivered</span>` : ""}
           <span>${esc(f.id)}</span><span>${esc(f.kind)}</span>
@@ -756,6 +791,11 @@ def payload_hash(payload: dict) -> str:
 
     stable = {k: v for k, v in payload.items() if k != "generated_at"}
     blob = json.dumps(stable, sort_keys=True, ensure_ascii=False)
+    # The template is part of what the page shows. Hashing only the data let a
+    # presentation change land in the code with the committed page still built
+    # from the old template, and rule 12's check saw nothing -- which is how
+    # nine unstyled state chips could have survived a re-render.
+    blob += "\n" + hashlib.sha256(TEMPLATE.encode("utf-8")).hexdigest()
     return hashlib.sha256(blob.encode("utf-8")).hexdigest()
 
 

@@ -174,7 +174,61 @@ def test_legacy_content_is_labelled_unmeasured(tmp_path, monkeypatch):
 
     assert by_id["CYM-legacy"]["unmeasured"] is True
     assert by_id["CYM-measured"]["unmeasured"] is False
-    assert "not measured in an admissible run" in render.TEMPLATE
+
+    # The flag has to reach the page, and quietly: it is true on 19 of 23
+    # rows, so styling it as an alarm buries the state chip beside it -- the
+    # thing actually worth reading. Assert the marking exists and that it
+    # carries its own explanation, not that it uses one particular phrase.
+    assert 'class="unmeasured"' in render.TEMPLATE
+    assert "f.unmeasured ?" in render.TEMPLATE
+    chip = render.TEMPLATE[render.TEMPLATE.index(".unmeasured {"):]
+    assert "var(--bad" not in chip[:chip.index("}")], \
+        "the provenance note is styled as an alarm"
+    assert "re-measured" in render.TEMPLATE and "title=" in render.TEMPLATE
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_every_display_state_is_visually_distinct(tmp_path, monkeypatch):
+    """A state chip with no colour rule renders as plain grey text, and the
+    operator reads straight past it.
+
+    Seven of the sixteen states had a rule and three of those seven named
+    states that no longer exist, so nine chips -- PASSING (UNPINNED) and
+    WITHDRAWN among them -- were unstyled. The class was also built by
+    replacing spaces only, so PASSING (UNPINNED) produced the class
+    `s-passing-(unpinned)`: parentheses are not valid in a bare CSS class
+    selector, so no rule could have matched it however many were written.
+    """
+    import re
+
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    from qa.fold import DISPLAY
+    render = _render()
+
+    css = render.TEMPLATE
+    missing = []
+    for state in sorted(set(DISPLAY.values())):
+        slug = re.sub(r"[^a-z0-9]+", "-", state.lower()).strip("-")
+        assert "(" not in slug and ")" not in slug, slug
+        if f".state.s-{slug}" not in css:
+            missing.append(f"{state} -> .state.s-{slug}")
+    assert not missing, (
+        "these display states render with no colour of their own:\n  "
+        + "\n  ".join(missing)
+    )
+
+    # The class the page emits at runtime has to be the one CSS names, so the
+    # two slug rules are pinned to each other rather than left to drift.
+    assert 'replace(/[^a-z0-9]+/g, "-")' in css, \
+        "the state class is not slugified, so punctuation breaks the selector"
+    assert 'replace(/^-|-$/g, "")' in css, \
+        "the slug keeps edge hyphens, which the CSS rules do not have"
+
+    # Dead rules are their own hazard: they read as coverage that is not there.
+    live = {re.sub(r"[^a-z0-9]+", "-", s.lower()).strip("-")
+            for s in set(DISPLAY.values())}
+    for slug in re.findall(r"\.state\.s-([a-z0-9-]+)", css):
+        assert slug in live, f".state.s-{slug} styles a state that no longer exists"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
