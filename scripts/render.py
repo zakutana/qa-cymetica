@@ -550,6 +550,12 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:13.5px; max-wid
 .matrix-note {
   display:flex; flex-direction:column; gap:5px; font-size:12.4px; color:var(--text-dim);
 }
+.marks { flex:none; margin:10px 0 20px; }
+.marks .axis-row { align-items:baseline; margin:8px 0; }
+.marks .axis-row > span:last-child { max-width:70ch; }
+.mono-faint {
+  font-family:var(--mono); font-size:11px; color:var(--text-faint); flex:0 0 auto;
+}
 .matrix-note span span.state { margin-right:7px; }
 
 @media (max-width: 640px) {
@@ -654,9 +660,9 @@ h4.sec {
 
     <div id="matrix"></div>
 
-    <p class="lead"><b class="unmeasured-demo">figures not re-measured</b> on a row means
-    the wording and numbers came from the old ledger and no run has confirmed them since.
-    Read that row as history, not as today.</p>
+    <p class="lead"><b>A row carries other marks too.</b> None of them is a state:</p>
+
+    <div id="marks"></div>
 
     <h4>The percentage on each card is a different thing</h4>
 
@@ -933,6 +939,32 @@ document.getElementById("matrix").innerHTML = `
   <div class="matrix-note">
     ${C.terminal.map(t => `<span><span class="state ${stateClass(t)}">${esc(t)}</span>
       ${TERMINAL_WORDS[t] || ""} &mdash; ours, final, whatever the check says</span>`).join("")}
+  </div>`;
+
+// Everything on a finding row that is NOT a state. The operator hit exactly
+// this: an unexplained "figures not re-measured" beside a badge, with the
+// legend explaining only the badge. Five marks share that line; explaining one
+// of them is worse than explaining none, because it implies the rest are
+// obvious.
+const MARKS = [
+  [`<span class="tagchip">MCP</span>`,
+   "which part of the platform this belongs to"],
+  [`<span class="unmeasured-demo">figures not re-measured</span>`,
+   "the wording and numbers here are from the day the finding was written, and no run since has confirmed they still hold &mdash; read them as history, not as today"],
+  [`<span class="filed">filed as #46</span>`,
+   "the report number it has with them"],
+  [`<span class="undelivered">1 message never delivered</span>`,
+   "we sent it and nobody ever confirmed it arrived"],
+  [`<span class="mono-faint">contradiction</span>`,
+   "how it was found: sources disagreeing, a check failing, or the reporting channel itself"],
+  [`<span class="mono-faint">CYM-mcp_resource_count</span>`,
+   "our id for it &mdash; the same id in every report and every message"],
+];
+
+document.getElementById("marks").innerHTML = `
+  <div class="axis marks">
+    ${MARKS.map(([chip, words]) =>
+      `<div class="axis-row">${chip}<span>${words}</span></div>`).join("")}
   </div>`;
 
 document.getElementById("filters").addEventListener("click", e => {
