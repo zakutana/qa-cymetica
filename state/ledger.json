@@ -2921,9 +2921,17 @@
         "pinned_fingerprint": "8a8ec949f57150dcf207546f69321615e4324542b82a752c981b4667aea99b60"
       },
       "filing": {
-        "state": "NOT_RAISED",
-        "adjudicated_by": null,
-        "reports": [],
+        "state": "RAISED",
+        "adjudicated_by": {
+          "event_id": "6888d122ef92f3fce0e08e12be897b26bd361de7862a84900799dd21d2e41038",
+          "at": "2026-09-05T21:03:39+00:00"
+        },
+        "reports": [
+          {
+            "report_id": 64,
+            "status": "pending"
+          }
+        ],
         "refused": []
       },
       "transitions": [
@@ -2935,6 +2943,15 @@
             "run_id": "run-20260905T210001Z-d49d8e8"
           },
           "at": "2026-09-05T21:01:03+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "NOT_RAISED",
+          "to": "RAISED",
+          "cause": {
+            "event_id": "6888d122ef92f3fce0e08e12be897b26bd361de7862a84900799dd21d2e41038"
+          },
+          "at": "2026-09-05T21:03:39+00:00"
         }
       ],
       "regressions": [],
@@ -2997,10 +3014,20 @@
         "pinned_fingerprint": "7cb1edbf693141334f1e473d989917a7473df5ab3b8f6df4494a0758562ecb4f"
       },
       "filing": {
-        "state": "NOT_RAISED",
-        "adjudicated_by": null,
-        "reports": [],
-        "refused": []
+        "state": "RAISED",
+        "adjudicated_by": {
+          "event_id": "c428a38e6d2a46428bb29ac9328e3687200a3649f9f5655ba52e0eefc0f1f8e0",
+          "at": "2026-09-05T21:05:36+00:00"
+        },
+        "reports": [
+          {
+            "report_id": 63,
+            "status": "pending"
+          }
+        ],
+        "refused": [
+          "filing_outcome at 2026-09-05T21:03:29+00:00 carries no evidence_id -- the response it reports was never captured"
+        ]
       },
       "transitions": [
         {
@@ -3011,6 +3038,15 @@
             "run_id": "run-20260905T210001Z-d49d8e8"
           },
           "at": "2026-09-05T21:01:03+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "NOT_RAISED",
+          "to": "RAISED",
+          "cause": {
+            "event_id": "c428a38e6d2a46428bb29ac9328e3687200a3649f9f5655ba52e0eefc0f1f8e0"
+          },
+          "at": "2026-09-05T21:05:36+00:00"
         }
       ],
       "regressions": [],
@@ -3059,10 +3095,10 @@
   "counts": {
     "WITHDRAWN": 9,
     "VERIFIED FIXED": 15,
-    "NOT RAISED YET": 2
+    "RAISED": 2
   },
   "events_head": {
-    "seq": 458,
-    "chain": "69ada41da8fe227b552679936163c9104e500809be420b0c2257424257e48e7b"
+    "seq": 463,
+    "chain": "8ec24960457adb1388d0415b9426b96ff3b731f49e46de90b4decffa7eed2153"
   }
 }
