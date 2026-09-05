@@ -516,6 +516,56 @@ def test_filing_transition_requires_evidence_id():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_evidence_only_check_verifies_nothing():
+    """conclude() never raises for an evidence-role measurement, so such a
+    check passes whatever it observes. Letting that pass establish PASSING
+    would verify a fix on the strength of a check that cannot fail --
+    precisely the defect the role split was introduced to prevent.
+
+    CYM-clob_pair_count is the live case: one marketing sentence against
+    another, neither of which counts a single CLOB pair."""
+    from qa.fold import display_state, fold
+
+    ev = result(CHECK_A, "passed")
+    ev["role"] = "evidence"
+    ev["measurement"] = {"verdict": "passed", "reason": "9 vs 568", "role": "evidence"}
+
+    state = ledger(row("CYM-a", check_state="REPRODUCING", checks=[CHECK_A], pinned=FP1))
+    after = fold(state, run=run("run-v", [ev]), events=[])
+
+    r = after["findings"]["CYM-a"]
+    assert r["check"]["state"] == "REPRODUCING", "an unfailable check verified something"
+    assert r["check"]["evidence_only"] == "run-v"
+    assert display_state(r) != "VERIFIED FIXED"
+    assert [t for t in r["transitions"] if t["axis"] == "check"] == []
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_passing_run_re_measures_the_row_too():
+    """Only failures used to refresh a row's numbers, because only failures
+    produce a candidate. So a row whose check started passing kept the figures
+    from the day it broke and wore "figures not re-measured" for ever -- on
+    exactly the rows that were fine. Measuring and proposing a defect are two
+    different acts, and a run that ran the check has measured it."""
+    from qa.fold import fold
+
+    state = ledger(row("CYM-a", check_state="REPRODUCING", checks=[CHECK_A], pinned=FP1))
+    state["findings"]["CYM-a"]["detail"] = {"left": 46, "right": 46}
+    state["findings"]["CYM-a"]["provenance"] = {"source": "legacy", "measured_at": None}
+
+    passing = result(CHECK_A, "passed")
+    passing["measurement"] = {"verdict": "passed", "reason": "25 of 46, as declared",
+                              "left": 25, "right": 46, "role": "verdict"}
+    after = fold(state, run=run("run-v", [passing]), events=[])
+
+    r = after["findings"]["CYM-a"]
+    assert r["provenance"]["measured_at"], "a passing run left the row unmeasured"
+    assert r["provenance"]["run_id"] == "run-v"
+    assert r["detail"]["left"] == 25, "the row still quotes the figures from the day it broke"
+    assert "25 of 46" in r["detail"]["reason"]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_folding_the_same_run_twice_changes_nothing():
     """Composing one run must be idempotent, or every consistency check that
     re-folds to compare reports drift it created itself. `reproductions` was

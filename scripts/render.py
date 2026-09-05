@@ -56,6 +56,82 @@ def load(name: str) -> dict:
     return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
 
 
+def _message_bodies() -> dict[str, dict]:
+    """Every message file, indexed by its id.
+
+    The journal records WHICH messages touch a finding; the words stay in the
+    files, pasted verbatim. Reading them here is what puts the vendor's actual
+    sentences on the page instead of a summary of them -- and archive/ is
+    included, because where a file was filed afterwards says nothing about
+    what it said.
+    """
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "thread_reader", REPO_ROOT / "scripts" / "thread.py")
+    thread_mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(thread_mod)
+
+    out: dict[str, dict] = {}
+    for folder in (REPO_ROOT / "outbox", REPO_ROOT / "inbox",
+                   *sorted((REPO_ROOT / "archive").glob("*"))):
+        if not folder.is_dir():
+            continue
+        for path in sorted(folder.glob("*.md")):
+            meta = thread_mod.parse(path)
+            if meta is None or not meta.get("id"):
+                continue
+            out[meta["id"]] = {
+                "file": meta.get("file"),
+                "channel": meta.get("channel"),
+                "delivered_as": meta.get("delivered_as"),
+                "delivery_note": meta.get("delivery_note"),
+                "covers": meta.get("covers") or {},
+                "blocks": thread_mod.blocks(meta.get("body") or ""),
+                "body": meta.get("body") or "",
+            }
+    return out
+
+
+def _excerpt_for(source: dict, finding_id: str) -> str | None:
+    """The part of a message that discusses this finding, or nothing.
+
+    `covers` in the message's own frontmatter maps a heading to the findings
+    that section is about. A finding named in the message but not mapped to a
+    section gets NO excerpt rather than a wrong one -- the page then says the
+    message mentions it and points at the file, which is true, instead of
+    quoting a paragraph about something else.
+    """
+    if not source:
+        return None
+
+    needles = [n for n, ids in (source.get("covers") or {}).items()
+               if finding_id in (ids if isinstance(ids, list) else [ids])]
+    if not needles:
+        return None
+
+    parts = []
+    for needle in needles:
+        for heading, text in source.get("blocks") or []:
+            if needle.lower() in heading.lower():
+                parts.append(f"{heading}\n\n{text}".strip())
+    if parts:
+        return "\n\n".join(parts)
+
+    # Their messages are not shaped like ours: the vendor numbers answers as
+    # "1) ..." running on into a full paragraph, so nothing in them is a
+    # heading and the block split yields one nameless block. Fall back to the
+    # paragraph the needle begins, which is how `covers` was written anyway.
+    # Without this the single most valuable text on the page -- what they
+    # actually said -- rendered as nothing.
+    paragraphs = [p.strip() for p in (source.get("body") or "").split("\n\n")]
+    for needle in needles:
+        for para in paragraphs:
+            if para.lower().startswith(needle.lower()):
+                parts.append(para)
+    return "\n\n".join(parts) if parts else None
+
+
 def out_path() -> Path:
     from qa.state import state_dir
 
@@ -145,19 +221,30 @@ def build_payload(ledger: dict | None = None, inventory: dict | None = None,
     # tile reading "0 filed to their tracker" beside eleven filed reports, and
     # the Correspondence panel empty on every row. Same class as the display
     # state: the page read a field the fold had stopped writing.
+    bodies = _message_bodies()
     messages: dict[str, list[dict]] = {}
     withdrawn_reason: dict[str, str] = {}
     filed_at: dict[int, str] = {}
     for event in events:
         etype = event.get("type")
         if etype in ("message", "reply"):
+            msg_id = event.get("msg_id")
+            source = bodies.get(msg_id, {})
             for fid in event.get("findings") or []:
                 messages.setdefault(fid, []).append({
-                    "id": event.get("msg_id"),
+                    "msg_id": msg_id,
                     "direction": "in" if etype == "reply" else "out",
                     "at": event.get("at"),
                     "delivered": event.get("delivered", True) if etype == "message" else True,
-                    "origin": event.get("origin"),
+                    "file": event.get("origin") or source.get("file"),
+                    "channel": source.get("channel"),
+                    "delivered_as": source.get("delivered_as"),
+                    "delivery_note": source.get("delivery_note"),
+                    # What this message actually said ABOUT THIS FINDING. The
+                    # journal is the index of which messages touch a row; the
+                    # words stay in the message files, where they were pasted
+                    # verbatim.
+                    "excerpt": _excerpt_for(source, fid),
                 })
         elif etype == "withdraw" and event.get("finding_id"):
             withdrawn_reason[event["finding_id"]] = event.get("reason") or ""
@@ -819,8 +906,8 @@ function thread(f) {
     const arrow = m.direction === "in" ? "← reply from vendor"
                 : dead ? "✕ sent but NEVER DELIVERED" : "→ sent to vendor";
     const when = m.at ? m.at.replace("T"," ").slice(0,16) + "Z" : "not sent";
-    const text = m.excerpt || ("(this message references the finding but no section was "
-      + "mapped to it — see " + m.file + ")");
+    const text = m.excerpt || ("This message names the finding but has no section "
+      + "specifically about it." + (m.file ? "\nFull message: " + m.file : ""));
     return `<div class="msg"><div class="msg-head">
         <span class="dir ${dead ? "dead" : m.direction}">${arrow}</span>
         ${m.delivery_note ? `<span title="${esc(m.delivery_note)}">why</span>` : ""}

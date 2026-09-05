@@ -229,6 +229,16 @@ def test_the_page_reads_no_field_the_payload_stops_writing(tmp_path, monkeypatch
         f"render them as undefined rather than fail: {missing}"
     )
 
+    # The same check one level down. Missing it here put the literal words
+    # "see undefined" on the page, inside a message quoted to the operator.
+    threaded = {k for f in payload["findings"] for m in f["thread"] for k in m}
+    if threaded:
+        read_m = {m for m in re.findall(r"\bm\.([a-z_]+)\b", render.TEMPLATE)}
+        missing_m = sorted(read_m - threaded)
+        assert not missing_m, (
+            f"the page reads message fields no thread entry carries: {missing_m}"
+        )
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_filed_reports_and_correspondence_reach_the_page(tmp_path, monkeypatch):
@@ -261,7 +271,7 @@ def test_filed_reports_and_correspondence_reach_the_page(tmp_path, monkeypatch):
 
     finding = render.build_payload(ledger=state)["findings"][0]
     assert [r["report_id"] for r in finding["filed"]] == [46]
-    assert [m["id"] for m in finding["thread"]] == ["MSG-0001", "REPLY-0001"]
+    assert [m["msg_id"] for m in finding["thread"]] == ["MSG-0001", "REPLY-0001"]
     assert finding["undelivered"] == 1, "a message nobody delivered reads as delivered"
     assert "our own probe" in finding["withdrawn_reason"]
 

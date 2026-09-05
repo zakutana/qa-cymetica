@@ -124,6 +124,23 @@ def _fingerprint_of(results: Sequence[dict]) -> str | None:
     return "sha256:" + hashlib.sha256(joined.encode("utf-8")).hexdigest()[:32]
 
 
+def _measurement_detail(results: Sequence[dict]) -> dict:
+    """What these results actually measured, from the Measurement objects.
+
+    Never from the traceback. That scrape is how a line of our own source once
+    reached the vendor as evidence about their platform.
+    """
+    detail: dict = {}
+    for result in results:
+        measurement = (result or {}).get("measurement") or {}
+        for field in ("left", "right", "sources", "population"):
+            if measurement.get(field) is not None and field not in detail:
+                detail[field] = measurement[field]
+        if measurement.get("reason") and "reason" not in detail:
+            detail["reason"] = measurement["reason"]
+    return detail
+
+
 def _structural_reason(checks: Sequence[str]) -> str | None:
     """Why this row can never be adjudicated, if it cannot.
 
@@ -164,6 +181,29 @@ def _apply_run(row: dict, run: dict, level: str) -> None:
         check["not_checked_in"] = run_id
         return
     check.pop("not_checked_in", None)
+
+    # This run looked at every check the row declares, so whatever it measured
+    # is now the row's current reading -- pass or fail. Only failures used to
+    # refresh it, via candidates(), so a row whose check started passing kept
+    # the numbers from the day it broke and wore "figures not re-measured"
+    # forever. Measuring is measuring; proposing a defect is the separate act.
+    measured = _measurement_detail(mine)
+    if measured:
+        row["detail"] = measured
+    row["provenance"] = {"run_id": run_id, "measured_at": at}
+
+    # An evidence-role measurement can never fail -- conclude() returns rather
+    # than raising, because comparing one sentence against another says
+    # nothing about behaviour. So its "pass" is not evidence of anything and
+    # must not establish PASSING: that is a check which passes because of how
+    # it asks, which is the whole class this plan exists to stop. It measures
+    # (above) and adjudicates nothing.
+    roles = {(r.get("role") or (r.get("measurement") or {}).get("role") or "verdict")
+             for r in mine}
+    if roles == {"evidence"}:
+        check["evidence_only"] = run_id
+        return
+    check.pop("evidence_only", None)
 
     outcomes = [r["outcome"] for r in mine]
     prior = check["state"]
