@@ -142,22 +142,11 @@ claims:
       agent_card:   'set:$.skills[*].id'
 
   # -------------------------------------------------------------------------
-  - id: clob_pair_count
-    question: "How many CLOB trading pairs exist?"
-    component: rest.clob
-    relation: all_equal
-    severity: S2-MEASUREMENT
-    note: >
-      Both sides are marketing sentences -- one in llms.txt, one in a blurb
-      inside mcp.json. Neither counts pairs; they quote a number. So this
-      records EVIDENCE and cannot open or verify a finding: it has no access
-      to how many pairs there are. Report #52 asked about the 9-vs-568
-      discrepancy and remains open on that basis. Promoting this to a verdict
-      needs a captured `list_clob_pairs` response to count, and no such
-      evidence blob exists yet.
-    sources:
-      llms_txt: 'regex_int:trade on (\d+) CLOB pairs'
-      mcp_json: 'regex_int:CLOB exchange with (\d+) pairs'
+  # clob_pair_count moved OUT of this table. Both of its sources were
+  # sentences, so the comparison was prose against prose: evidence-role, unable
+  # to fail, and it had established a PASSING state anyway. It is now a real
+  # measurement in tests/mcp/test_clob_pairs.py -- the document's number
+  # against the catalogue list_clob_pairs actually returns.
 
   - id: commit_count
     question: "How many commits are in the production codebase?"

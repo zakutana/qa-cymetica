@@ -199,7 +199,11 @@ def test_prose_versus_prose_is_evidence_not_a_verdict():
 
     The exception is a claim that declares prose_only with a reason -- which
     is how a document's self-consistency stays a real verdict."""
-    assert _pair("clob_pair_count").role == "evidence"
+    # clob_pair_count used to be the example here. It has left the table
+    # entirely: both its sources were sentences, so it could not fail, and it
+    # is now a real count against list_clob_pairs. The rule is checked for
+    # every claim in test_pipeline_check_quality.py, so no claim can quietly
+    # become prose-versus-prose and keep a verdict.
     assert _pair("agent_names").role == "verdict"
     assert _pair("agent_count").role == "verdict"
 
