@@ -26,6 +26,14 @@ TRACKER = "/api/v1/bounty/reports"
 MINE = "/api/v1/bounty/my-reports"
 WORK_TRACKER = "/leaderboard/bugs"
 
+# The stages they publish, stated by them on 2026-09-05 when this was fixed:
+# validated -> "Awaiting Review", in progress, testing, fixed, paid. Anything
+# before validation is deliberately withheld, because an open report can name
+# an unpatched issue; `invalid` never reaches validation at all.
+PUBLISHED = frozenset({"validated", "in_progress", "in progress", "testing",
+                       "qa_testing", "implementing", "fixed", "resolved",
+                       "paid", "verified"})
+
 # Sent on every submission. The finding is that some are accepted and then
 # not stored, so what comes back is compared against what went out.
 SUBMITTED_FIELDS = ("hunter_name", "steps_to_reproduce", "expected_behavior",
@@ -71,7 +79,7 @@ def _mine(rest_trusted):
 
 @qa(component="rest.support", tier=SafetyTier.SAFE, surface="rest",
     claim="bounty-pipeline-deadend")
-def test_filed_reports_reach_the_work_tracker(rest_anon):
+def test_filed_reports_reach_the_work_tracker(rest_anon, rest_trusted):
     """A report accepted by the API has to arrive where triage happens.
 
     /leaderboard/bugs is the tracker that carries pending / qa_testing /
@@ -81,6 +89,15 @@ def test_filed_reports_reach_the_work_tracker(rest_anon):
 
     Matched on TITLE, not on id: a bare number matches by chance in 250KB of
     markup, and a check that can pass by coincidence is not a check.
+
+    Scoped to reports that have reached a PUBLISHED stage, which is the
+    invariant they actually owe. Their stated posture, given when they fixed
+    this on 2026-09-05, is that the page merges bounty reports from validated
+    onwards -- an unvalidated report is deliberately never published, because
+    it can name an unpatched issue. Demanding every filing appear would have
+    kept this red forever on the two they closed as invalid, including our own
+    correction #62, and a check that no possible behaviour can satisfy is not
+    a check on them; it is a check on our own expectations.
     """
     submissions = _our_submissions()
     if not submissions:
@@ -88,6 +105,26 @@ def test_filed_reports_reach_the_work_tracker(rest_anon):
             verdict="inconclusive",
             reason="we have filed nothing, so there is nothing to look for",
             claim_id="bounty-pipeline-deadend"))
+        return
+
+    rows, why = _mine(rest_trusted)
+    if rows is None:
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason=f"cannot tell which of our reports are publishable: {why}",
+            claim_id="bounty-pipeline-deadend"))
+        return
+
+    stage = {r.get("id"): (r.get("status") or "").lower() for r in rows}
+    due = [s for s in submissions if stage.get(s["report_id"]) in PUBLISHED]
+    withheld = sorted(s["report_id"] for s in submissions
+                      if stage.get(s["report_id"]) not in PUBLISHED)
+    if not due:
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason=("none of our reports has reached a stage they publish, so "
+                    "their absence from the page proves nothing"),
+            left=withheld, claim_id="bounty-pipeline-deadend"))
         return
 
     page = rest_anon.get(WORK_TRACKER)
@@ -99,16 +136,22 @@ def test_filed_reports_reach_the_work_tracker(rest_anon):
         return
 
     haystack = page.text.lower()
-    missing = [s["report_id"] for s in submissions
+    missing = [s["report_id"] for s in due
                if (s.get("title") or "").strip()[:45].lower() not in haystack]
 
     conclude(Measurement(
         verdict="failed" if missing else "passed",
-        reason=(f"{len(missing)} of {len(submissions)} reports we filed through "
-                f"the API do not appear in the tracker where work happens"),
-        left=sorted(missing), right=len(submissions),
-        sources={"filed_via": f"POST {TRACKER}", "looked_in": WORK_TRACKER},
-        population={"submitted": len(submissions), "page_bytes": len(page.text)},
+        reason=(f"{len(missing)} of the {len(due)} reports of ours that have "
+                f"reached a published stage are absent from the tracker where "
+                f"work happens"
+                + (f" (not counted: {withheld}, which they have not validated)"
+                   if withheld else "")),
+        left=sorted(missing), right=len(due),
+        sources={"filed_via": f"POST {TRACKER}", "looked_in": WORK_TRACKER,
+                 "stages_from": MINE},
+        population={"filed": len(submissions), "publishable": len(due),
+                    "withheld_pre_validation": withheld,
+                    "page_bytes": len(page.text)},
         claim_id="bounty-pipeline-deadend"))
 
 
