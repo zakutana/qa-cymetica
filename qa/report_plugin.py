@@ -53,12 +53,22 @@ def _utc() -> str:
 
 
 def _git(*args: str) -> str:
+    """git stdout, or "" if the command failed.
+
+    The returncode check is load-bearing: `git rev-parse` echoes its own
+    argument to stdout when a ref does not resolve, so ignoring the exit code
+    stored the string "prereg/PRE-0016^{commit}" in the run record as though
+    it were a commit sha. The record then contradicted the tag, and
+    run_integrity refused it -- correctly, and for a reason that pointed at
+    the wrong thing.
+    """
     try:
-        return subprocess.run(
+        result = subprocess.run(
             ["git", *args], cwd=REPO_ROOT, capture_output=True, text=True, timeout=10
-        ).stdout.strip()
+        )
     except Exception:  # noqa: BLE001
         return ""
+    return result.stdout.strip() if result.returncode == 0 else ""
 
 
 def _marker_arg(item, name, default=None):

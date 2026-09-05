@@ -58,9 +58,14 @@ def _live_payload(render):
         importlib.util.spec_from_file_location(
             "ledger_live", REPO / "scripts" / "ledger.py"))
     ledger_mod.__loader__.exec_module(ledger_mod)
+    from qa.state import RunIntegrityError
+
     try:
         current = ledger_mod.compose()
-    except SystemExit:
+    except (SystemExit, RunIntegrityError):
+        # No admissible run, or the newest one contradicts the repository.
+        # Either is a real condition to report elsewhere; neither says
+        # anything about whether the page reads fields the payload carries.
         current = ledger_mod.compose(events_only=True)
     return render.build_payload(ledger=current)
 
