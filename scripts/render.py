@@ -85,12 +85,11 @@ def build_payload(ledger: dict | None = None, inventory: dict | None = None,
     __main__ does.
     """
     from qa.fold import display_state
-    from qa.state import head
+    from qa.state import head, load_run
 
     from qa.state import read_events
 
     inventory = inventory if inventory is not None else load("inventory.json")
-    run = run if run is not None else latest_run()
 
     # Message counts come from the journal, not from thread.json. That file is
     # a scan of outbox/ and inbox/, and once round 1 was moved to archive/ it
@@ -126,6 +125,18 @@ def build_payload(ledger: dict | None = None, inventory: dict | None = None,
             f"refusing to render: the ledger cites journal head {cited} but the "
             f"journal is at {current}.\nRe-fold it first: python scripts/ledger.py"
         )
+
+    # The page describes the run the LEDGER was composed from, not whatever
+    # record is newest. A two-test re-run of tests/repo/ is a perfectly valid
+    # record and would otherwise have become the run of record for every
+    # per-section count on the page -- the partial-run problem, reappearing in
+    # the display layer after being closed in the fold.
+    if run is None:
+        composed = ledger.get("run_id")
+        try:
+            run = load_run(composed) if composed else {}
+        except KeyError:
+            run = {}
 
     rows = as_findings(ledger)
     findings = []
