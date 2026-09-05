@@ -33,11 +33,25 @@ SUBMITTED_FIELDS = ("hunter_name", "steps_to_reproduce", "expected_behavior",
 
 
 def _our_submissions() -> list[dict]:
-    path = REPO_ROOT / "state" / "submissions.json"
-    if not path.exists():
-        return []
-    return [s for s in json.loads(path.read_text(encoding="utf-8"))["submissions"]
-            if s.get("report_id") is not None]
+    """What we have filed, from the journal.
+
+    Not from state/submissions.json: that file stopped being written when
+    filing became two events, so it ends at #56 and this check would have
+    measured a shrinking, stale population without saying so.
+    """
+    from qa.state import read_events
+
+    titles: dict[str, str] = {}
+    out: list[dict] = []
+    for event in read_events():
+        if event.get("type") == "filing_intent":
+            titles[event["key"]] = event.get("title") or ""
+        elif (event.get("type") == "filing_outcome"
+              and event.get("outcome") == "accepted"
+              and event.get("report_id") is not None):
+            out.append({"report_id": event["report_id"],
+                        "title": titles.get(event.get("key"), "")})
+    return out
 
 
 def _mine(rest_anon):

@@ -73,20 +73,30 @@ def _api_conversation() -> tuple[dict, dict]:
         encoding="utf-8")) if (REPO_ROOT / "outbox" / "reports.yaml").exists() else {}
     by_key = {r["key"]: r for r in (spec or {}).get("reports", [])}
 
-    submissions = load("submissions.json").get("submissions", [])
+    # From the JOURNAL, not from state/submissions.json. That file stopped
+    # being written when filing became two events, so it ends at #56 -- and
+    # every report filed since rendered as an empty bubble with a date on it.
+    # A projection nobody updates is worse than no projection: it looks
+    # current.
+    from qa.state import read_events
+
+    intents: dict[str, dict] = {}
     ours: dict[int, dict] = {}
-    for entry in submissions:
-        report_id = entry.get("report_id")
-        if report_id is None:
-            continue
-        report = by_key.get(entry.get("key"), {})
-        ours[report_id] = {
-            "at": entry.get("submitted_at"),
-            "title": entry.get("title") or report.get("title"),
-            "text": (report.get("body") or "").strip(),
-            "expected": (report.get("expected") or "").strip(),
-            "actual": (report.get("actual") or "").strip(),
-        }
+    for event in read_events():
+        if event.get("type") == "filing_intent":
+            intents[event["key"]] = event
+        elif (event.get("type") == "filing_outcome"
+              and event.get("outcome") == "accepted"
+              and event.get("report_id") is not None):
+            intent = intents.get(event.get("key"), {})
+            report = by_key.get(event.get("key"), {})
+            ours[event["report_id"]] = {
+                "at": intent.get("intent_at") or event.get("at"),
+                "title": intent.get("title") or report.get("title"),
+                "text": (report.get("body") or "").strip(),
+                "expected": (report.get("expected") or "").strip(),
+                "actual": (report.get("actual") or "").strip(),
+            }
 
     theirs: dict[int, dict] = {}
     for report in (load("bounty.json").get("our_reports") or {}).get("reports", []):

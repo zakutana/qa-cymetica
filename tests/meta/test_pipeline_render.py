@@ -344,6 +344,17 @@ def test_the_conversation_is_the_api_exchange_and_nothing_else(tmp_path, monkeyp
     for finding in payload["findings"]:
         assert bool(finding["thread"]) == bool(finding["filed"]), finding["id"]
 
+    # And our side of it has WORDS. state/submissions.json stopped being
+    # written when filing became two events, so every report from #59 on
+    # rendered as an empty green bubble with a date on it -- a projection
+    # nobody updates, looking current. The words come from the journal now.
+    speechless = sorted({m["report_id"] for t in threads.values() for m in t
+                         if m["who"] == "us" and not (m.get("text") or "").strip()})
+    assert not speechless, (
+        f"reports {speechless} render as an empty bubble: what we sent them is "
+        f"not reaching the page"
+    )
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_filed_reports_reach_the_page(tmp_path, monkeypatch):
