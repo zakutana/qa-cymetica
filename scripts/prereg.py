@@ -36,7 +36,7 @@ PREREG_DIR_NAME = "preregistrations"
 
 def _git(*args: str) -> str:
     return subprocess.run(["git", *args], cwd=REPO_ROOT, capture_output=True,
-                          text=True, check=True).stdout.strip()
+                          text=True, encoding="utf-8", errors="replace", check=True).stdout.strip()
 
 
 def prereg_dir() -> Path:
@@ -116,11 +116,11 @@ difference produced by latency is our artefact, not their defect.
         # registration does not exist.
         _git("add", str(path))
         subprocess.run(["git", "commit", "-m", f"preregister {prereg_id}: {selector}"],
-                       cwd=REPO_ROOT, check=True, capture_output=True, text=True)
+                       cwd=REPO_ROOT, check=True, capture_output=True, text=True, encoding="utf-8", errors="replace")
         head = _git("rev-parse", "HEAD")
         subprocess.run(["git", "tag", "-a", f"prereg/{prereg_id}",
                         "-m", f"{prereg_id}: {selector} at {at}"],
-                       cwd=REPO_ROOT, check=True, capture_output=True, text=True)
+                       cwd=REPO_ROOT, check=True, capture_output=True, text=True, encoding="utf-8", errors="replace")
         print(f"   tagged prereg/{prereg_id} -> {head[:12]}")
         print(f"\nNow run:  pytest {selector} --prereg {prereg_id}")
     else:

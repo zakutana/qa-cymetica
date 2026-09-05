@@ -459,7 +459,7 @@ def test_pinned_and_bounty_checks_are_collectible():
     out = subprocess.run(
         [sys.executable, "-m", "pytest", "--collect-only", "-q", "--no-header",
          "tests/pinned", "tests/rest/test_bounty_tracker.py"],
-        cwd=REPO, capture_output=True, text=True, timeout=180,
+        cwd=REPO, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=180,
         env={**__import__("os").environ, "QA_OFFLINE": "1",
              "QA_STATE_DIR": str(Path(__import__("tempfile").mkdtemp())),
              "PYTHONIOENCODING": "utf-8"},

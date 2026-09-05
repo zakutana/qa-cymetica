@@ -67,7 +67,7 @@ def _run_inner(pytester, tmp_path: Path, body: str, conftest_extra: str = "",
     })
     proc = subprocess.run(
         [sys.executable, "-m", "pytest", "tests", "-q", "-p", "no:cacheprovider", *args],
-        cwd=pytester.path, env=env, capture_output=True, text=True, timeout=180,
+        cwd=pytester.path, env=env, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=180,
     )
     out = proc.stdout + proc.stderr
     records = sorted((state / "runs").glob("run-*.json"))

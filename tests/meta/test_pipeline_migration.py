@@ -51,7 +51,7 @@ def staged(tmp_path, monkeypatch):
 
 def _legacy() -> dict:
     blob = subprocess.run(["git", "show", "ca0bc45:state/ledger.json"], cwd=REPO,
-                          capture_output=True, text=True, check=True).stdout
+                          capture_output=True, text=True, encoding="utf-8", errors="replace", check=True).stdout
     return json.loads(blob)["findings"]
 
 

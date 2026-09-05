@@ -146,13 +146,35 @@ MIGRATED_AT = "2026-09-04T13:30:00+00:00"
 
 
 def _git_show(ref: str, path: str) -> str:
-    return subprocess.run(["git", "show", f"{ref}:{path}"], cwd=REPO_ROOT,
-                          capture_output=True, text=True, check=True).stdout
+    """A committed file, decoded as UTF-8 rather than as the console codepage.
+
+    `text=True` decodes with the locale encoding, which on this machine is
+    cp1250. state/bounty.json holds a byte cp1250 has no character for, so the
+    decode raised inside subprocess's reader THREAD -- where the exception is
+    printed and then dropped -- and stdout came back as None. json.loads(None)
+    was the first sign, three layers away from the cause.
+    """
+    return subprocess.run(
+        ["git", "show", f"{ref}:{path}"], cwd=REPO_ROOT, capture_output=True,
+        check=True, encoding="utf-8", errors="replace",
+    ).stdout
 
 
 def _load(name: str) -> dict:
-    path = state_dir() / name
-    return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+    """A migration source, read from the commit it belonged to.
+
+    Not from today's state/. This script replays history, so its inputs are
+    historical: state/submissions.json has since been deleted (the journal
+    replaced it) and state/bounty.json drifts every time the vendor answers
+    something. Reading either live made a one-shot migration produce a
+    different result on every run -- which is the opposite of what a migration
+    is for, and it broke its own test twice.
+    """
+    try:
+        return json.loads(_git_show(LEDGER_SHA, f"state/{name}"))
+    except (subprocess.CalledProcessError, json.JSONDecodeError):
+        path = state_dir() / name
+        return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
 
 
 def _frontmatter(path: Path) -> dict:

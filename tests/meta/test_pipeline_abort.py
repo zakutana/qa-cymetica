@@ -116,7 +116,7 @@ def test_failing_meta_test_aborts_session_before_later_tests(pytester, tmp_path)
 
     proc = subprocess.run(
         [sys.executable, "-m", "pytest", "tests", "-q", "-p", "no:cacheprovider"],
-        cwd=pytester.path, env=env, capture_output=True, text=True, timeout=180,
+        cwd=pytester.path, env=env, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=180,
     )
     out = proc.stdout + proc.stderr
     # With -q the final line is the bare summary, e.g. "1 failed in 0.19s".

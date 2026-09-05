@@ -196,7 +196,7 @@ def run_integrity(run: dict, path: Path | None = None,
         try:
             resolved = subprocess.run(
                 ["git", "rev-parse", f"prereg/{prereg}^{{commit}}"],
-                cwd=REPO_ROOT, capture_output=True, text=True, check=True,
+                cwd=REPO_ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace", check=True,
             ).stdout.strip()
         except (subprocess.CalledProcessError, OSError):
             problems.append(f"no tag prereg/{prereg} in this repository")
