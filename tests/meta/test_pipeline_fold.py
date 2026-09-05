@@ -516,6 +516,30 @@ def test_filing_transition_requires_evidence_id():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_folding_the_same_run_twice_changes_nothing():
+    """Composing one run must be idempotent, or every consistency check that
+    re-folds to compare reports drift it created itself. `reproductions` was
+    counting folds rather than runs -- the same species as the timestamp that
+    used to drive REGRESSED."""
+    from qa.fold import fold
+
+    cand = [candidate("CYM-a", checks=[CHECK_A], severity="S1-INTEGRITY")]
+    state = ledger(row("CYM-a", check_state="REPRODUCING", checks=[CHECK_A], pinned=FP1))
+    r = run("run-v", [result(CHECK_A, "failed")])
+
+    once = fold(state, run=r, candidates=cand, events=[])
+    twice = fold(once, run=r, candidates=cand, events=[])
+    assert twice == once, "folding the same run twice moved something"
+
+    later = fold(twice, run=run("run-w", [result(CHECK_A, "failed")],
+                                at="2026-09-05T11:00:00+00:00"),
+                 candidates=cand, events=[])
+    assert later["findings"]["CYM-a"]["reproductions"] == \
+        once["findings"]["CYM-a"]["reproductions"] + 1, \
+        "a second, genuinely different run did not count"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_supersede_merges_rows_and_excludes_from_tiles():
     """Critique gap 6. Renaming a claim retires the old row and opens a new
     one for the same defect, so without a supersede event the deferred

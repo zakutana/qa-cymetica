@@ -445,7 +445,15 @@ def fold(prev: dict | None = None, run: dict | None = None,
             # matched, so the candidate carried a default severity.
             row.setdefault("severity", cand.get("default_severity", "S3-CONTRACT"))
             row.setdefault("title", cand.get("default_title", cand["id"]))
-            row["reproductions"] = row.get("reproductions", 0) + 1
+            # Count RUNS in which it reproduced, not folds. Composing the same
+            # run twice must produce the same ledger, or the repo-consistency
+            # check reports drift every time it re-folds to compare -- and a
+            # counter that grows when nothing happened is the same species as
+            # the timestamp that used to drive REGRESSED.
+            seen_in = row.setdefault("reproduced_in", [])
+            if run["run_id"] not in seen_in:
+                seen_in.append(run["run_id"])
+                row["reproductions"] = row.get("reproductions", 0) + 1
             for field in ("title", "severity", "component", "section", "tag",
                           "kind", "checks", "detail", "note"):
                 if field in cand:
