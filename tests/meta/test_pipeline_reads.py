@@ -117,3 +117,32 @@ def test_empty_rows_are_not_an_empty_answer():
     """Zero rows can mean zero things, or a read that failed. Say which."""
     with pytest.raises(MissingData):
         field_of_every([], "pair", "list_clob_pairs")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_path_is_not_a_substring():
+    """Incident 5, same family: comparing structured things as text.
+
+    /api/v1/account occurs inside /api/v1/account/me. The pinned 404 check
+    asked `path in document`, so after the vendor renamed three paths on
+    2026-09-04 it went on reporting them as still documented and still broken.
+    Two days of a red row and a re-report, #59, about a fix that had shipped
+    before it was written. Their own note said to grep EXACT, which is exactly
+    the distinction that was missing.
+    """
+    from tests.pinned.test_documented_404 import documents_the_path, successors
+
+    renamed = "documented: /api/v1/account/me and /api/v1/agentbook/posts"
+    assert not documents_the_path(renamed, "/api/v1/account")
+    assert not documents_the_path(renamed, "/api/v1/agentbook/post")
+    assert documents_the_path(renamed, "/api/v1/account/me")
+
+    # The check must still be able to fail: a path that IS documented, exactly,
+    # has to read as documented however it is punctuated around.
+    for around in ("GET /api/v1/account.", "`/api/v1/account`",
+                   "/api/v1/account)", "see /api/v1/account\n"):
+        assert documents_the_path(around, "/api/v1/account"), around
+
+    # And a rename has to be reported as a rename, not as a disappearance.
+    assert successors(renamed, "/api/v1/account") == {"/api/v1/account/me"}
+    assert successors("nothing here", "/api/v1/account") == set()

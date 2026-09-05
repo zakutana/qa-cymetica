@@ -23,6 +23,8 @@ a measurement we may quietly bank on their behalf.
 
 from __future__ import annotations
 
+import re
+
 from pathlib import Path
 
 import pytest
@@ -80,6 +82,33 @@ def documents(rest_anon) -> dict[str, tuple[str | None, str]]:
     return _DOCUMENTS
 
 
+# A path ends where a path segment cannot continue. Without this the check
+# compared paths as SUBSTRINGS, and every rename in report #49 read as the old
+# path still being documented: /api/v1/account matches inside
+# /api/v1/account/me, /api/v1/clob/order inside /api/v1/clob/orders,
+# /api/v1/agentbook/post inside /api/v1/agentbook/posts. Three renames that
+# landed on 2026-09-04 were reported as unfixed for two days because of it,
+# and the vendor's own note said to grep EXACT -- which is precisely the
+# distinction this expresses.
+_CONTINUES = r"(?![A-Za-z0-9_/{}-])"
+
+
+def documents_the_path(document: str, path: str) -> bool:
+    """Is THIS path documented, as opposed to one that starts with it?"""
+    return re.search(re.escape(path) + _CONTINUES, document) is not None
+
+
+def successors(document: str, path: str) -> set[str]:
+    """Longer paths the document carries that begin with this one.
+
+    A rename and a deletion are different resolutions and deserve different
+    words on the page: "renamed to /api/v1/account/me" is a fix, "nothing
+    replaced it" is a removal.
+    """
+    found = set(re.findall(re.escape(path) + r"[A-Za-z0-9_/{}-]+", document))
+    return {f for f in found if f != path}
+
+
 @qa(component="discovery.llmstxt", tier=SafetyTier.SAFE, surface="rest")
 @pytest.mark.parametrize("pin", PINS, ids=[p["path"] for p in PINS])
 def test_documented_path_is_served(pin, rest_anon, documents):
@@ -94,16 +123,39 @@ def test_documented_path_is_served(pin, rest_anon, documents):
         ))
         return
 
-    still_documented = pin["path"] in document
+    still_documented = documents_the_path(document, pin["path"])
     response = rest_anon.get(pin["path"])
     status = response.status_code
 
     if not still_documented:
+        # A rename and a deletion are different resolutions. If the document
+        # now carries a longer path in place of this one AND that path is
+        # served, the promise was corrected rather than withdrawn -- which is
+        # a fix, and the only one of the three no-longer-documented outcomes
+        # that may pass. Verified by calling the successor, not by trusting
+        # that a similar-looking string means it works.
+        superseded = sorted(successors(document, pin["path"]))
+        served = [p for p in superseded if rest_anon.get(p).status_code != 404]
+        if served:
+            conclude(Measurement(
+                verdict="passed",
+                reason=(f"{pin['path']} was renamed, not withdrawn: "
+                        f"{pin['source']} now documents {', '.join(served)}, "
+                        f"which is served"),
+                left=pin["path"], right=served,
+                sources={"document": pin["source"], "section": pin["section"]},
+                claim_id="documented-404",
+                population=load_pinned()["population"],
+            ))
+            return
         conclude(Measurement(
             verdict="inconclusive",
-            reason=f"{pin['path']} was removed from {pin['source']}, "
-                   f"not fixed in place (it now answers {status})",
-            left=pin["path"], right=status,
+            reason=(f"{pin['path']} is no longer documented in {pin['source']}"
+                    + (f"; the paths that replaced it ({', '.join(superseded)}) "
+                       f"answer 404 too" if superseded
+                       else ", and nothing replaced it")
+                    + f" -- removed from documentation, not fixed in place"),
+            left=pin["path"], right=superseded or status,
             sources={"document": pin["source"], "pinned_at": load_pinned()["pinned_at"]},
             claim_id="documented-404",
         ))

@@ -1,0 +1,1031 @@
+{
+  "schema": 2,
+  "run_id": "run-20260905T203610Z-10d6e4f",
+  "started_at": "2026-09-05T20:36:32+00:00",
+  "finished_at": "2026-09-05T20:36:55+00:00",
+  "git_head": "10d6e4fa94abcca604e3a34de2e9a3db07044008",
+  "git_short": "10d6e4f",
+  "git_dirty": true,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": "sha256:a18fb62e3a1251f3d33c47d9f54e9bb57c5e3cd48c4147e819f59e14c36671ad",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "687609a5e12d9a2e46d2c461660dd8adc85ab80a0853cfafc707ae0962f0d4ed",
+    "/.well-known/agent-card.json": "d3808146038b605f8a89995a66c57fa3d8a471653f8a3ab00a891458116e7042",
+    "/.well-known/agent-skills.json": "41a38971d7d79b8b4638dba285021fc011a7eb1f1062ae3b6707d4210c444ed7",
+    "/.well-known/ai-plugin.json": "e2f2d79821bf8e741fb18cefea6a94cb7a1ec358644306aeff02e763c61b1fb2",
+    "/.well-known/udc.json": "92cd8a5f7ec5a0a859594ef9fbd72cba4914eaab4220377db18adf2ed44611a4",
+    "/openapi.json": "f0cccb1f06ec266d303b1c7ab8e23f4af29a3c43106027595c95c1449fa1b2cf",
+    "/llms.txt": "300d02884e851fa63cc4ae4767f784ca813b220bd444736ae64e1aa273e9ee3d",
+    "mcp:tools/list:none": "32107ec8ab80ba0db0ad42f85e43abc1956dc37b3864851a8af95e522262d09e"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/pinned -q --no-header --tb=line",
+  "selector_full": false,
+  "allow_mutate": false,
+  "collected": [
+    "tests/pinned/test_documented_404.py::test_documented_path_is_served[/mcp/v1/prompts/analyze_market]",
+    "tests/pinned/test_documented_404.py::test_documented_path_is_served[/mcp/v1/prompts/compare_markets]",
+    "tests/pinned/test_documented_404.py::test_documented_path_is_served[/mcp/v1/prompts/explain_probability]",
+    "tests/pinned/test_documented_404.py::test_documented_path_is_served[/mcp/v1/prompts/find_opportunities]",
+    "tests/pinned/test_documented_404.py::test_documented_path_is_served[/mcp/v1/resources/docs/api]",
+    "tests/pinned/test_documented_404.py::test_documented_path_is_served[/mcp/v1/resources/docs/getting-started]",
+    "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/account]",
+    "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/clob/order]",
+    "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/exchange/buy]",
+    "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/positions]",
+    "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/vaix/prices]",
+    "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/perpetual/user/positions]",
+    "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/winner-takes-all/bet]",
+    "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/winner-takes-all/epochs]",
+    "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/winner-takes-all/markets]",
+    "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/bots/clone]",
+    "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/cloned-bot/create]",
+    "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/cloned-bot/list]",
+    "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/agentbook/post]",
+    "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/aerodrome/quote]",
+    "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/base-dex/tokens]",
+    "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/defi/pools]",
+    "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/staking/pools]",
+    "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/tuatara/discover]",
+    "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/backtest/run]",
+    "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/backtest/saved]",
+    "tests/pinned/test_documented_404.py::test_the_pinned_population_is_intact"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/pinned/test_documented_404.py::test_documented_path_is_served[/mcp/v1/prompts/analyze_market]",
+      "component": "discovery.llmstxt",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "documented-404",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "inconclusive",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 365,
+      "evidence_ids": [
+        "b67393c3c51e2213c7645e183f1c85c00e8c192090a55b3f8ff5492cc5866f8a",
+        "8ce00b6be91a30a916958ec72e95083d08478e73ec317d5147057465b86287db",
+        "e9a649c698292c8231b48bedba17cf27f6fbaa8e5b252adda2ac9ac58e1e5ce9"
+      ],
+      "measurement": {
+        "verdict": "inconclusive",
+        "reason": "/mcp/v1/prompts/analyze_market is no longer documented in llms.txt, and nothing replaced it -- removed from documentation, not fixed in place",
+        "left": "/mcp/v1/prompts/analyze_market",
+        "right": 404,
+        "sources": {
+          "document": "llms.txt",
+          "pinned_at": "2026-09-04T10:15:00+00:00"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "documented-404",
+        "role": "verdict",
+        "population": null
+      },
+      "check_fingerprint": "8676dbc866623ad7941eb83533d86a0a80b3c71c25b48617789782e3a09d45e8",
+      "reason": "/mcp/v1/prompts/analyze_market is no longer documented in llms.txt, and nothing replaced it -- removed from documentation, not fixed in place",
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/pinned/test_documented_404.py::test_documented_path_is_served[/mcp/v1/prompts/compare_markets]",
+      "component": "discovery.llmstxt",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "documented-404",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "inconclusive",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 409,
+      "evidence_ids": [
+        "bb584395a793de9c602444874728d60115b358b3a4898154e5695a6adb675a02"
+      ],
+      "measurement": {
+        "verdict": "inconclusive",
+        "reason": "/mcp/v1/prompts/compare_markets is no longer documented in llms.txt, and nothing replaced it -- removed from documentation, not fixed in place",
+        "left": "/mcp/v1/prompts/compare_markets",
+        "right": 404,
+        "sources": {
+          "document": "llms.txt",
+          "pinned_at": "2026-09-04T10:15:00+00:00"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "documented-404",
+        "role": "verdict",
+        "population": null
+      },
+      "check_fingerprint": "8676dbc866623ad7941eb83533d86a0a80b3c71c25b48617789782e3a09d45e8",
+      "reason": "/mcp/v1/prompts/compare_markets is no longer documented in llms.txt, and nothing replaced it -- removed from documentation, not fixed in place",
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/pinned/test_documented_404.py::test_documented_path_is_served[/mcp/v1/prompts/explain_probability]",
+      "component": "discovery.llmstxt",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "documented-404",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "inconclusive",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 369,
+      "evidence_ids": [
+        "863a200222ba13a97a2566d0f34d71d8bf8fcb435b69c3cf579c89b7f68289bb"
+      ],
+      "measurement": {
+        "verdict": "inconclusive",
+        "reason": "/mcp/v1/prompts/explain_probability is no longer documented in llms.txt, and nothing replaced it -- removed from documentation, not fixed in place",
+        "left": "/mcp/v1/prompts/explain_probability",
+        "right": 404,
+        "sources": {
+          "document": "llms.txt",
+          "pinned_at": "2026-09-04T10:15:00+00:00"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "documented-404",
+        "role": "verdict",
+        "population": null
+      },
+      "check_fingerprint": "8676dbc866623ad7941eb83533d86a0a80b3c71c25b48617789782e3a09d45e8",
+      "reason": "/mcp/v1/prompts/explain_probability is no longer documented in llms.txt, and nothing replaced it -- removed from documentation, not fixed in place",
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/pinned/test_documented_404.py::test_documented_path_is_served[/mcp/v1/prompts/find_opportunities]",
+      "component": "discovery.llmstxt",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "documented-404",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "inconclusive",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 358,
+      "evidence_ids": [
+        "4800f7c56d8be57b10c0cca58c8f32c15b0109ee57b75220b9caae8b73c8ea10"
+      ],
+      "measurement": {
+        "verdict": "inconclusive",
+        "reason": "/mcp/v1/prompts/find_opportunities is no longer documented in llms.txt, and nothing replaced it -- removed from documentation, not fixed in place",
+        "left": "/mcp/v1/prompts/find_opportunities",
+        "right": 404,
+        "sources": {
+          "document": "llms.txt",
+          "pinned_at": "2026-09-04T10:15:00+00:00"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "documented-404",
+        "role": "verdict",
+        "population": null
+      },
+      "check_fingerprint": "8676dbc866623ad7941eb83533d86a0a80b3c71c25b48617789782e3a09d45e8",
+      "reason": "/mcp/v1/prompts/find_opportunities is no longer documented in llms.txt, and nothing replaced it -- removed from documentation, not fixed in place",
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/pinned/test_documented_404.py::test_documented_path_is_served[/mcp/v1/resources/docs/api]",
+      "component": "discovery.llmstxt",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "documented-404",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "inconclusive",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 338,
+      "evidence_ids": [
+        "21799da25ad7d5c988c8861e7eddc91655566bbfcc4e023c7d8338c1a49966c3"
+      ],
+      "measurement": {
+        "verdict": "inconclusive",
+        "reason": "/mcp/v1/resources/docs/api is no longer documented in llms.txt, and nothing replaced it -- removed from documentation, not fixed in place",
+        "left": "/mcp/v1/resources/docs/api",
+        "right": 404,
+        "sources": {
+          "document": "llms.txt",
+          "pinned_at": "2026-09-04T10:15:00+00:00"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "documented-404",
+        "role": "verdict",
+        "population": null
+      },
+      "check_fingerprint": "8676dbc866623ad7941eb83533d86a0a80b3c71c25b48617789782e3a09d45e8",
+      "reason": "/mcp/v1/resources/docs/api is no longer documented in llms.txt, and nothing replaced it -- removed from documentation, not fixed in place",
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/pinned/test_documented_404.py::test_documented_path_is_served[/mcp/v1/resources/docs/getting-started]",
+      "component": "discovery.llmstxt",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "documented-404",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "inconclusive",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 410,
+      "evidence_ids": [
+        "48ccea38ec03a635feb6e846dcda93238ca49007667bca9770b7aad49f9ccbb7"
+      ],
+      "measurement": {
+        "verdict": "inconclusive",
+        "reason": "/mcp/v1/resources/docs/getting-started is no longer documented in llms.txt, and nothing replaced it -- removed from documentation, not fixed in place",
+        "left": "/mcp/v1/resources/docs/getting-started",
+        "right": 404,
+        "sources": {
+          "document": "llms.txt",
+          "pinned_at": "2026-09-04T10:15:00+00:00"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "documented-404",
+        "role": "verdict",
+        "population": null
+      },
+      "check_fingerprint": "8676dbc866623ad7941eb83533d86a0a80b3c71c25b48617789782e3a09d45e8",
+      "reason": "/mcp/v1/resources/docs/getting-started is no longer documented in llms.txt, and nothing replaced it -- removed from documentation, not fixed in place",
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/account]",
+      "component": "discovery.llmstxt",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "documented-404",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 1215,
+      "evidence_ids": [
+        "3aed0991bf2d11c22e747a65eb9023f914c0942bc4c6a0efe8ada74c062bc127",
+        "a2ea1d4ac6c4896e936636d30068b39b8f6d34143736c6656475e072a8bbb286",
+        "50edf23bb93f3dca3f447020bc67267978d20fd3dd872f2f1f515fea9615e850"
+      ],
+      "measurement": {
+        "verdict": "passed",
+        "reason": "/api/v1/account was renamed, not withdrawn: llms.txt now documents /api/v1/account/me, /api/v1/account/me/portfolio, which is served",
+        "left": "/api/v1/account",
+        "right": [
+          "/api/v1/account/me",
+          "/api/v1/account/me/portfolio"
+        ],
+        "sources": {
+          "document": "llms.txt",
+          "section": "account"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "documented-404",
+        "role": "verdict",
+        "population": 141
+      },
+      "check_fingerprint": "8676dbc866623ad7941eb83533d86a0a80b3c71c25b48617789782e3a09d45e8",
+      "reason": null,
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/clob/order]",
+      "component": "discovery.llmstxt",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "documented-404",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 769,
+      "evidence_ids": [
+        "827f412b83c0ce60e123cf8ef33541568e74f2104e6c6c11d96e429d796b8a80",
+        "4635b2724f63e016040b00ecc0876d8e613c5e1cc09c097ce9551c846b79049e"
+      ],
+      "measurement": {
+        "verdict": "passed",
+        "reason": "/api/v1/clob/order was renamed, not withdrawn: agent-skills.json now documents /api/v1/clob/orders, which is served",
+        "left": "/api/v1/clob/order",
+        "right": [
+          "/api/v1/clob/orders"
+        ],
+        "sources": {
+          "document": "agent-skills.json",
+          "section": "clob"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "documented-404",
+        "role": "verdict",
+        "population": 141
+      },
+      "check_fingerprint": "8676dbc866623ad7941eb83533d86a0a80b3c71c25b48617789782e3a09d45e8",
+      "reason": null,
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/exchange/buy]",
+      "component": "discovery.llmstxt",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "documented-404",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "inconclusive",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 379,
+      "evidence_ids": [
+        "45a3b041657bf0425d03d1735ede64f2b3f7721ca73352c02b9ee35cd1712697"
+      ],
+      "measurement": {
+        "verdict": "inconclusive",
+        "reason": "/api/v1/exchange/buy is no longer documented in agent-skills.json, and nothing replaced it -- removed from documentation, not fixed in place",
+        "left": "/api/v1/exchange/buy",
+        "right": 404,
+        "sources": {
+          "document": "agent-skills.json",
+          "pinned_at": "2026-09-04T10:15:00+00:00"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "documented-404",
+        "role": "verdict",
+        "population": null
+      },
+      "check_fingerprint": "8676dbc866623ad7941eb83533d86a0a80b3c71c25b48617789782e3a09d45e8",
+      "reason": "/api/v1/exchange/buy is no longer documented in agent-skills.json, and nothing replaced it -- removed from documentation, not fixed in place",
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/positions]",
+      "component": "discovery.llmstxt",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "documented-404",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "inconclusive",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 613,
+      "evidence_ids": [
+        "02bc1a55ed9b4cab1c447b4a96b52e0b122c702a0fd7644a60ed720c2342f5e9"
+      ],
+      "measurement": {
+        "verdict": "inconclusive",
+        "reason": "/api/v1/positions is no longer documented in llms.txt, and nothing replaced it -- removed from documentation, not fixed in place",
+        "left": "/api/v1/positions",
+        "right": 404,
+        "sources": {
+          "document": "llms.txt",
+          "pinned_at": "2026-09-04T10:15:00+00:00"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "documented-404",
+        "role": "verdict",
+        "population": null
+      },
+      "check_fingerprint": "8676dbc866623ad7941eb83533d86a0a80b3c71c25b48617789782e3a09d45e8",
+      "reason": "/api/v1/positions is no longer documented in llms.txt, and nothing replaced it -- removed from documentation, not fixed in place",
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/vaix/prices]",
+      "component": "discovery.llmstxt",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "documented-404",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "inconclusive",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 489,
+      "evidence_ids": [
+        "a9cee1c4a88dbe506d524474e010ea6cabe17b58bea09093dc1f79a672fcef62"
+      ],
+      "measurement": {
+        "verdict": "inconclusive",
+        "reason": "/api/v1/vaix/prices is no longer documented in llms.txt, and nothing replaced it -- removed from documentation, not fixed in place",
+        "left": "/api/v1/vaix/prices",
+        "right": 404,
+        "sources": {
+          "document": "llms.txt",
+          "pinned_at": "2026-09-04T10:15:00+00:00"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "documented-404",
+        "role": "verdict",
+        "population": null
+      },
+      "check_fingerprint": "8676dbc866623ad7941eb83533d86a0a80b3c71c25b48617789782e3a09d45e8",
+      "reason": "/api/v1/vaix/prices is no longer documented in llms.txt, and nothing replaced it -- removed from documentation, not fixed in place",
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/perpetual/user/positions]",
+      "component": "discovery.llmstxt",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "documented-404",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "inconclusive",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 429,
+      "evidence_ids": [
+        "3475ea4d9489d5e5c19de03ec818b639f202b2b7aebd2eb6a9d06206283fe773"
+      ],
+      "measurement": {
+        "verdict": "inconclusive",
+        "reason": "/api/v1/perpetual/user/positions is no longer documented in llms.txt, and nothing replaced it -- removed from documentation, not fixed in place",
+        "left": "/api/v1/perpetual/user/positions",
+        "right": 404,
+        "sources": {
+          "document": "llms.txt",
+          "pinned_at": "2026-09-04T10:15:00+00:00"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "documented-404",
+        "role": "verdict",
+        "population": null
+      },
+      "check_fingerprint": "8676dbc866623ad7941eb83533d86a0a80b3c71c25b48617789782e3a09d45e8",
+      "reason": "/api/v1/perpetual/user/positions is no longer documented in llms.txt, and nothing replaced it -- removed from documentation, not fixed in place",
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/winner-takes-all/bet]",
+      "component": "discovery.llmstxt",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "documented-404",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "inconclusive",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 492,
+      "evidence_ids": [
+        "6e7b00960b86a0ce6d934744916a05cfaa82f93be7eca80d11af2285ce2d900a"
+      ],
+      "measurement": {
+        "verdict": "inconclusive",
+        "reason": "/api/v1/winner-takes-all/bet is no longer documented in llms.txt, and nothing replaced it -- removed from documentation, not fixed in place",
+        "left": "/api/v1/winner-takes-all/bet",
+        "right": 404,
+        "sources": {
+          "document": "llms.txt",
+          "pinned_at": "2026-09-04T10:15:00+00:00"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "documented-404",
+        "role": "verdict",
+        "population": null
+      },
+      "check_fingerprint": "8676dbc866623ad7941eb83533d86a0a80b3c71c25b48617789782e3a09d45e8",
+      "reason": "/api/v1/winner-takes-all/bet is no longer documented in llms.txt, and nothing replaced it -- removed from documentation, not fixed in place",
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/winner-takes-all/epochs]",
+      "component": "discovery.llmstxt",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "documented-404",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "inconclusive",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 510,
+      "evidence_ids": [
+        "50d0d989600c814e3187177bdf503c9eaaea2b9db5444c60b83ace126fb9f091"
+      ],
+      "measurement": {
+        "verdict": "inconclusive",
+        "reason": "/api/v1/winner-takes-all/epochs is no longer documented in llms.txt, and nothing replaced it -- removed from documentation, not fixed in place",
+        "left": "/api/v1/winner-takes-all/epochs",
+        "right": 404,
+        "sources": {
+          "document": "llms.txt",
+          "pinned_at": "2026-09-04T10:15:00+00:00"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "documented-404",
+        "role": "verdict",
+        "population": null
+      },
+      "check_fingerprint": "8676dbc866623ad7941eb83533d86a0a80b3c71c25b48617789782e3a09d45e8",
+      "reason": "/api/v1/winner-takes-all/epochs is no longer documented in llms.txt, and nothing replaced it -- removed from documentation, not fixed in place",
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/winner-takes-all/markets]",
+      "component": "discovery.llmstxt",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "documented-404",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "inconclusive",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 626,
+      "evidence_ids": [
+        "3f00ec266d4f73e80e9d255c8efef1ad7e7fafa5fa2275159236a9ffab15e6e2"
+      ],
+      "measurement": {
+        "verdict": "inconclusive",
+        "reason": "/api/v1/winner-takes-all/markets is no longer documented in llms.txt, and nothing replaced it -- removed from documentation, not fixed in place",
+        "left": "/api/v1/winner-takes-all/markets",
+        "right": 404,
+        "sources": {
+          "document": "llms.txt",
+          "pinned_at": "2026-09-04T10:15:00+00:00"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "documented-404",
+        "role": "verdict",
+        "population": null
+      },
+      "check_fingerprint": "8676dbc866623ad7941eb83533d86a0a80b3c71c25b48617789782e3a09d45e8",
+      "reason": "/api/v1/winner-takes-all/markets is no longer documented in llms.txt, and nothing replaced it -- removed from documentation, not fixed in place",
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/bots/clone]",
+      "component": "discovery.llmstxt",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "documented-404",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "inconclusive",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 434,
+      "evidence_ids": [
+        "484ee3c6141907b7304fa102caa8c81bc0da6022d0db05c5ad2526f5c70aa24e"
+      ],
+      "measurement": {
+        "verdict": "inconclusive",
+        "reason": "/api/v1/bots/clone is no longer documented in agent-skills.json, and nothing replaced it -- removed from documentation, not fixed in place",
+        "left": "/api/v1/bots/clone",
+        "right": 404,
+        "sources": {
+          "document": "agent-skills.json",
+          "pinned_at": "2026-09-04T10:15:00+00:00"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "documented-404",
+        "role": "verdict",
+        "population": null
+      },
+      "check_fingerprint": "8676dbc866623ad7941eb83533d86a0a80b3c71c25b48617789782e3a09d45e8",
+      "reason": "/api/v1/bots/clone is no longer documented in agent-skills.json, and nothing replaced it -- removed from documentation, not fixed in place",
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/cloned-bot/create]",
+      "component": "discovery.llmstxt",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "documented-404",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "inconclusive",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 394,
+      "evidence_ids": [
+        "8e5e7f89b5e9a6b3df4654f73107a41c64cc15b21cf7a4267e7db54f7eced94c"
+      ],
+      "measurement": {
+        "verdict": "inconclusive",
+        "reason": "/api/v1/cloned-bot/create is no longer documented in llms.txt, and nothing replaced it -- removed from documentation, not fixed in place",
+        "left": "/api/v1/cloned-bot/create",
+        "right": 404,
+        "sources": {
+          "document": "llms.txt",
+          "pinned_at": "2026-09-04T10:15:00+00:00"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "documented-404",
+        "role": "verdict",
+        "population": null
+      },
+      "check_fingerprint": "8676dbc866623ad7941eb83533d86a0a80b3c71c25b48617789782e3a09d45e8",
+      "reason": "/api/v1/cloned-bot/create is no longer documented in llms.txt, and nothing replaced it -- removed from documentation, not fixed in place",
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/cloned-bot/list]",
+      "component": "discovery.llmstxt",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "documented-404",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "inconclusive",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 429,
+      "evidence_ids": [
+        "e327f7dad785e57a41ef39e506fb8983d18d238ad2b5e2c9c5f697636ac6a0cf"
+      ],
+      "measurement": {
+        "verdict": "inconclusive",
+        "reason": "/api/v1/cloned-bot/list is no longer documented in llms.txt, and nothing replaced it -- removed from documentation, not fixed in place",
+        "left": "/api/v1/cloned-bot/list",
+        "right": 404,
+        "sources": {
+          "document": "llms.txt",
+          "pinned_at": "2026-09-04T10:15:00+00:00"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "documented-404",
+        "role": "verdict",
+        "population": null
+      },
+      "check_fingerprint": "8676dbc866623ad7941eb83533d86a0a80b3c71c25b48617789782e3a09d45e8",
+      "reason": "/api/v1/cloned-bot/list is no longer documented in llms.txt, and nothing replaced it -- removed from documentation, not fixed in place",
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/agentbook/post]",
+      "component": "discovery.llmstxt",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "documented-404",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 3539,
+      "evidence_ids": [
+        "adc9d35de88887a49075f7fa3b11fe38186ebb41a358c3ffe3aa006fd0565da3",
+        "68b3beadaa4f4ee1cfc52d71a6c086fef10372ca1c7abd7ed05de1b0547706fe",
+        "377c5d7f12d3bba1d854c621bf460f623f86ff4d2af4588e0d91afc94c4f929a",
+        "1cf35a3308742d8410c9c2acc28aa1d7ebf4eab145c16c19b25ed853c09b0f2d"
+      ],
+      "measurement": {
+        "verdict": "passed",
+        "reason": "/api/v1/agentbook/post was renamed, not withdrawn: llms.txt now documents /api/v1/agentbook/posts, /api/v1/agentbook/posts/{id}/comments, /api/v1/agentbook/posts/{id}/vote, which is served",
+        "left": "/api/v1/agentbook/post",
+        "right": [
+          "/api/v1/agentbook/posts",
+          "/api/v1/agentbook/posts/{id}/comments",
+          "/api/v1/agentbook/posts/{id}/vote"
+        ],
+        "sources": {
+          "document": "llms.txt",
+          "section": "agentbook"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "documented-404",
+        "role": "verdict",
+        "population": 141
+      },
+      "check_fingerprint": "8676dbc866623ad7941eb83533d86a0a80b3c71c25b48617789782e3a09d45e8",
+      "reason": null,
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/aerodrome/quote]",
+      "component": "discovery.llmstxt",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "documented-404",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "inconclusive",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 730,
+      "evidence_ids": [
+        "8eadba7a8b90cafe11a36f73ff36091a2217fa54bf336f9bc40f58923538fc36"
+      ],
+      "measurement": {
+        "verdict": "inconclusive",
+        "reason": "/api/v1/aerodrome/quote is no longer documented in llms.txt, and nothing replaced it -- removed from documentation, not fixed in place",
+        "left": "/api/v1/aerodrome/quote",
+        "right": 404,
+        "sources": {
+          "document": "llms.txt",
+          "pinned_at": "2026-09-04T10:15:00+00:00"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "documented-404",
+        "role": "verdict",
+        "population": null
+      },
+      "check_fingerprint": "8676dbc866623ad7941eb83533d86a0a80b3c71c25b48617789782e3a09d45e8",
+      "reason": "/api/v1/aerodrome/quote is no longer documented in llms.txt, and nothing replaced it -- removed from documentation, not fixed in place",
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/base-dex/tokens]",
+      "component": "discovery.llmstxt",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "documented-404",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "inconclusive",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 861,
+      "evidence_ids": [
+        "c0c3819239d0516bd2fbb2083a986f964bb4ab0120c69c36ea2e8e40ad65864d"
+      ],
+      "measurement": {
+        "verdict": "inconclusive",
+        "reason": "/api/v1/base-dex/tokens is no longer documented in llms.txt, and nothing replaced it -- removed from documentation, not fixed in place",
+        "left": "/api/v1/base-dex/tokens",
+        "right": 404,
+        "sources": {
+          "document": "llms.txt",
+          "pinned_at": "2026-09-04T10:15:00+00:00"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "documented-404",
+        "role": "verdict",
+        "population": null
+      },
+      "check_fingerprint": "8676dbc866623ad7941eb83533d86a0a80b3c71c25b48617789782e3a09d45e8",
+      "reason": "/api/v1/base-dex/tokens is no longer documented in llms.txt, and nothing replaced it -- removed from documentation, not fixed in place",
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/defi/pools]",
+      "component": "discovery.llmstxt",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "documented-404",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "inconclusive",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 895,
+      "evidence_ids": [
+        "27d7c15e27193ecbc1ec665793ebd232fb94d3c74d1eba65a3c3af56ff587e4c"
+      ],
+      "measurement": {
+        "verdict": "inconclusive",
+        "reason": "/api/v1/defi/pools is no longer documented in llms.txt, and nothing replaced it -- removed from documentation, not fixed in place",
+        "left": "/api/v1/defi/pools",
+        "right": 404,
+        "sources": {
+          "document": "llms.txt",
+          "pinned_at": "2026-09-04T10:15:00+00:00"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "documented-404",
+        "role": "verdict",
+        "population": null
+      },
+      "check_fingerprint": "8676dbc866623ad7941eb83533d86a0a80b3c71c25b48617789782e3a09d45e8",
+      "reason": "/api/v1/defi/pools is no longer documented in llms.txt, and nothing replaced it -- removed from documentation, not fixed in place",
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/staking/pools]",
+      "component": "discovery.llmstxt",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "documented-404",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "inconclusive",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 597,
+      "evidence_ids": [
+        "78447515a9869036c49ff4d28f17a85e447d33818cdde8934b3d17cb9dc6c818"
+      ],
+      "measurement": {
+        "verdict": "inconclusive",
+        "reason": "/api/v1/staking/pools is no longer documented in llms.txt, and nothing replaced it -- removed from documentation, not fixed in place",
+        "left": "/api/v1/staking/pools",
+        "right": 404,
+        "sources": {
+          "document": "llms.txt",
+          "pinned_at": "2026-09-04T10:15:00+00:00"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "documented-404",
+        "role": "verdict",
+        "population": null
+      },
+      "check_fingerprint": "8676dbc866623ad7941eb83533d86a0a80b3c71c25b48617789782e3a09d45e8",
+      "reason": "/api/v1/staking/pools is no longer documented in llms.txt, and nothing replaced it -- removed from documentation, not fixed in place",
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/tuatara/discover]",
+      "component": "discovery.llmstxt",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "documented-404",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "inconclusive",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 813,
+      "evidence_ids": [
+        "9cfce44d8265ad4e8addfef5953920ec687897d445fb4a97e0053879ad9ca994"
+      ],
+      "measurement": {
+        "verdict": "inconclusive",
+        "reason": "/api/v1/tuatara/discover is no longer documented in agent-skills.json, and nothing replaced it -- removed from documentation, not fixed in place",
+        "left": "/api/v1/tuatara/discover",
+        "right": 404,
+        "sources": {
+          "document": "agent-skills.json",
+          "pinned_at": "2026-09-04T10:15:00+00:00"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "documented-404",
+        "role": "verdict",
+        "population": null
+      },
+      "check_fingerprint": "8676dbc866623ad7941eb83533d86a0a80b3c71c25b48617789782e3a09d45e8",
+      "reason": "/api/v1/tuatara/discover is no longer documented in agent-skills.json, and nothing replaced it -- removed from documentation, not fixed in place",
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/backtest/run]",
+      "component": "discovery.llmstxt",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "documented-404",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "inconclusive",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 581,
+      "evidence_ids": [
+        "2cd59d3c6fb1833d2afce3d7a1c9e5b88fb94787805e49a11d5203101158946a"
+      ],
+      "measurement": {
+        "verdict": "inconclusive",
+        "reason": "/api/v1/backtest/run is no longer documented in llms.txt, and nothing replaced it -- removed from documentation, not fixed in place",
+        "left": "/api/v1/backtest/run",
+        "right": 404,
+        "sources": {
+          "document": "llms.txt",
+          "pinned_at": "2026-09-04T10:15:00+00:00"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "documented-404",
+        "role": "verdict",
+        "population": null
+      },
+      "check_fingerprint": "8676dbc866623ad7941eb83533d86a0a80b3c71c25b48617789782e3a09d45e8",
+      "reason": "/api/v1/backtest/run is no longer documented in llms.txt, and nothing replaced it -- removed from documentation, not fixed in place",
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/backtest/saved]",
+      "component": "discovery.llmstxt",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "documented-404",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "inconclusive",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 591,
+      "evidence_ids": [
+        "94f978f3ded31e1e69704d2a8437420c7fbda4e907c1bf74b5cdbcfdadc2d4af"
+      ],
+      "measurement": {
+        "verdict": "inconclusive",
+        "reason": "/api/v1/backtest/saved is no longer documented in llms.txt, and nothing replaced it -- removed from documentation, not fixed in place",
+        "left": "/api/v1/backtest/saved",
+        "right": 404,
+        "sources": {
+          "document": "llms.txt",
+          "pinned_at": "2026-09-04T10:15:00+00:00"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "documented-404",
+        "role": "verdict",
+        "population": null
+      },
+      "check_fingerprint": "8676dbc866623ad7941eb83533d86a0a80b3c71c25b48617789782e3a09d45e8",
+      "reason": "/api/v1/backtest/saved is no longer documented in llms.txt, and nothing replaced it -- removed from documentation, not fixed in place",
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/pinned/test_documented_404.py::test_the_pinned_population_is_intact",
+      "component": "discovery.llmstxt",
+      "tier": "SAFE",
+      "surface": "meta",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 3,
+      "evidence_ids": [],
+      "measurement": null,
+      "check_fingerprint": "ed84907cb44607f44c806d7f45237b30a0359aa28e0984e7c35225c8571c6127",
+      "reason": null,
+      "failure_repr": null
+    }
+  ],
+  "totals": {
+    "inconclusive": 23,
+    "passed": 4
+  },
+  "ratelimit": {
+    "requests": 34,
+    "limit": 2000,
+    "remaining": 1983,
+    "fraction_used": 0.0085,
+    "exhausted": false
+  },
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "fingerprint_after": "sha256:a18fb62e3a1251f3d33c47d9f54e9bb57c5e3cd48c4147e819f59e14c36671ad",
+  "exit_status": 0
+}
