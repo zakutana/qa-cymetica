@@ -94,9 +94,13 @@ claims:
       Subset, not set_equal. llms.txt is not obliged to list every tool -- it is
       obliged not to name one that does not exist. The earlier set_equal form
       would now fail simply because the document lists fewer than the server
-      serves, which is correct behaviour.
+      serves, which is correct behaviour. The extractor was rewritten after the
+      document stopped rendering tools as markdown links: the old pattern found
+      nothing at all, so the check reported INCONCLUSIVE for days while looking
+      like a resolved defect. It now anchors on the document's own "MCP Tools"
+      section and reads the list it contains, whatever that list says.
     sources:
-      llms_txt: 'regex_all:\[(\w+)\]\(/mcp/v1/tools/\w+\)'
+      llms_txt: 'scope:MCP Tools|regex_all:^- `([a-z][a-z0-9_]+)`'
       mcp_json: 'set:$.tools[*].name'
 
   # Tier correctness is NOT in this table. Comparing a served set against a

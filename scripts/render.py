@@ -535,7 +535,13 @@ h2.group {
 }
 p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:15.0px; max-width:74ch; }
 
-.grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:12px; }
+/* align-items:start, so opening one card does not stretch every other card
+   in its row to the same height -- which is what made one open tile look
+   like the whole row had come apart. */
+.grid {
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+  gap:12px; align-items:start;
+}
 .card {
   background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
   padding:15px 16px 14px; border-left:3px solid var(--none);
@@ -807,7 +813,15 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:15.0px; max-wid
   .axis-join { display:none; }
 }
 
-.f-body { padding:0 15px 15px; border-top:1px solid var(--line-soft); }
+.f-body {
+  padding:0 15px 15px; border-top:1px solid var(--line-soft); font-size:13.5px;
+}
+.f-body .f-lede { font-size:15px; }
+.f-body .chat-body { font-size:13.5px; padding:10px 13px; }
+.f-body .ref-k { font-size:11.5px; flex-basis:150px; }
+.f-body .ref-v { font-size:12.5px; }
+.f-body .ref-v.mono { font-size:11.8px; }
+.ref-note { color:var(--text-faint); }
 .f-note {
   font-size:14.7px; color:var(--text-dim); margin:12px 0 0; padding-left:11px;
   border-left:2px solid var(--accent-dim); max-width:78ch;
@@ -1064,7 +1078,6 @@ function card(s) {
   return `<details class="card ${h}">
     <summary>
       <div class="card-top"><h3>${esc(s.title)}</h3>${pct}</div>
-      <div class="bar">${bar}</div>
       <div class="blegend">${legend}</div>
       <p class="blurb">${esc(s.blurb)}</p>
       <div class="stats">
@@ -1073,7 +1086,6 @@ function card(s) {
         ${s.verdicts.missing ? `<span class="chip bad">${s.verdicts.missing} &times; not there</span>` : ""}
         ${checks}${fnd}
       </div>
-      <span class="card-more">every address &rsaquo;</span>
     </summary>
     <div class="card-detail">${detail || "<p class=\"blurb\">Nothing documented here.</p>"}</div>
   </details>`;
@@ -1131,6 +1143,15 @@ function conversation(f) {
   return `<h4 class="sec">Conversation with Cymetica</h4>${bubbles}${note}`;
 }
 
+// One bounty report can cover several findings -- #51 carried both the skill
+// ids and the skill count. Without saying so, two rows show the same number
+// and it reads as a collision.
+function sharedWith(f, reportId) {
+  return D.findings
+    .filter(o => o.id !== f.id && (o.filed || []).some(x => x.report_id === reportId))
+    .map(o => o.id);
+}
+
 function finding(f) {
   const numbers = Object.entries(f.detail || {})
     .filter(([k]) => k !== "reason")
@@ -1148,6 +1169,7 @@ function finding(f) {
         <div class="f-sub">
           <span class="tagchip">${esc(f.tag)}</span>
           <span class="state ${stateClass(f.display_state)}">${esc(f.display_state)}</span>
+          ${f.filed && f.filed.length ? `<span class="filed">${f.filed.map(x=>"#"+x.report_id).join(", ")}</span>` : ""}
           ${f.unmeasured ? `<span class="unmeasured" title="The wording and numbers here are from the day this was written; no run since has confirmed they still hold.">figures not re-measured</span>` : ""}
         </div>
       </span>
@@ -1161,7 +1183,11 @@ function finding(f) {
         <div><span class="ref-k">Our name for it</span>
              <span class="ref-v mono">${esc(f.id)}</span></div>
         ${f.filed && f.filed.length ? `<div><span class="ref-k">Their report number</span>
-             <span class="ref-v mono">${f.filed.map(x=>"#"+x.report_id).join(", ")}</span></div>` : ""}
+             <span class="ref-v mono">${f.filed.map(x => "#" + x.report_id +
+               (sharedWith(f, x.report_id).length
+                 ? ` <span class="ref-note">(one report, filed together with ` +
+                   sharedWith(f, x.report_id).map(esc).join(", ") + `)</span>` : "")
+             ).join(", ")}</span></div>` : ""}
         <div><span class="ref-k">Test that decides it</span>
              <span class="ref-v mono">${(f.checks||[]).map(esc).join("<br>") || "&mdash; none, so nothing can settle this"}</span></div>
         ${numbers ? `<div><span class="ref-k">What was measured</span>

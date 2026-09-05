@@ -172,7 +172,14 @@ def test_sources_agree(pair, snapshot):
     except ExtractionError as exc:
         # A source that cannot be read is a finding about that source, but it
         # is not evidence that two sources disagree. Keep the two apart.
-        conclude(measured("inconclusive", str(exc)))
+        #
+        # Said in words: the raw error is a regex, and a regex on the
+        # dashboard tells the reader nothing except that something is broken.
+        conclude(measured(
+            "inconclusive",
+            f"{claim['question']} Cannot tell: the value is no longer there "
+            f"to read. {_why_unreadable(exc)}",
+            population={"error": str(exc)}))
         return
 
     holds, why = relation_holds(
@@ -197,6 +204,23 @@ def test_sources_agree(pair, snapshot):
         left=left, right=right,
         population={"witness": {pair.a: witness_a[:300], pair.b: witness_b[:300]}},
     ))
+
+
+def _why_unreadable(exc: Exception) -> str:
+    """The extraction failure, in a sentence rather than as a pattern."""
+    text = str(exc)
+    if "found no match" in text or "matched nothing" in text:
+        return ("The sentence or field this claim reads was removed from the "
+                "document, so there is nothing left to compare. That is not the "
+                "same as the numbers agreeing.")
+    if "no section heading" in text:
+        return "The section this claim reads was removed from the document."
+    if "section headings contain" in text or "DIFFERENT lists" in text:
+        return ("The document now says it in more than one place, and they do "
+                "not agree, so there is no single statement to read.")
+    if "is not JSON" in text or "read as" in text:
+        return "The source could not be read at all."
+    return text
 
 
 def _name(source: str) -> str:

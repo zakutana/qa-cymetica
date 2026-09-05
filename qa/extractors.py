@@ -116,19 +116,19 @@ def extract(spec: str, body: Any) -> Any:
         return frozenset(value)
 
     if kind == "regex_int":
-        match = re.search(arg, _as_text(body))
+        match = re.search(arg, _as_text(body), re.M)
         if not match:
             raise ExtractionError(f"regex_int found no match for {arg!r}")
         return int(match.group(1).replace(",", "").replace(" ", ""))
 
     if kind == "regex":
-        match = re.search(arg, _as_text(body))
+        match = re.search(arg, _as_text(body), re.M)
         if not match:
             raise ExtractionError(f"regex found no match for {arg!r}")
         return match.group(1)
 
     if kind == "regex_set":
-        match = re.search(arg, _as_text(body))
+        match = re.search(arg, _as_text(body), re.M)
         if not match:
             raise ExtractionError(f"regex_set found no match for {arg!r}")
         return frozenset(
@@ -138,8 +138,17 @@ def extract(spec: str, body: Any) -> Any:
     if kind == "list_after":
         return _list_after(arg, _as_text(body))
 
+    if kind == "scope":
+        heading, sep, inner = arg.partition("|")
+        if not sep:
+            raise ExtractionError("scope: needs 'scope:<heading>|<extractor>'")
+        return extract(inner, _section(heading, _as_text(body)))
+
     if kind == "regex_all":
-        found = re.findall(arg, _as_text(body))
+        # MULTILINE: these read documents, where "^" means "start of a line".
+        # Without it a list-anchored pattern silently matches nothing, which
+        # reaches the check as Inconclusive and reads as a resolved defect.
+        found = re.findall(arg, _as_text(body), re.M)
         if not found:
             raise ExtractionError(f"regex_all found no match for {arg!r}")
         return frozenset(f if isinstance(f, str) else f[0] for f in found)
@@ -173,6 +182,37 @@ def _stringify(value: Any) -> str:
 # Anchored list extraction
 # ---------------------------------------------------------------------------
 _LIST_SEPARATORS = re.compile(r"[,;\s]+")
+_MD_HEADING = re.compile(r"^(#{1,6})\s+(.*)$")
+
+
+def _section(heading: str, text: str) -> str:
+    """The markdown section whose heading contains `heading`, exactly one.
+
+    An anchor to a PLACE. The alternative -- a regex over the whole document
+    -- is how an extractor ends up enumerating the values it expects, which
+    is the defect that made `agent_names` pass vacuously on the day it was
+    written. Two matching sections is an ExtractionError, not a choice for us
+    to make.
+    """
+    lines = text.splitlines()
+    starts = [i for i, line in enumerate(lines)
+              if (m := _MD_HEADING.match(line)) and heading.lower() in m.group(2).lower()]
+    if not starts:
+        raise ExtractionError(f"scope: no section heading contains {heading!r}")
+    if len(starts) > 1:
+        raise ExtractionError(
+            f"scope: {len(starts)} section headings contain {heading!r}; "
+            f"there is no single place to read")
+
+    start = starts[0]
+    level = len(_MD_HEADING.match(lines[start]).group(1))
+    end = len(lines)
+    for i in range(start + 1, len(lines)):
+        m = _MD_HEADING.match(lines[i])
+        if m and len(m.group(1)) <= level:
+            end = i
+            break
+    return "\n".join(lines[start:end])
 
 
 def _list_after(phrase: str, text: str) -> frozenset[str]:

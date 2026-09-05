@@ -84,10 +84,14 @@ def _display_cell(check: str, filing: str) -> str:
         # the one case where we genuinely do not know, and it says so.
         return "NOT REPRODUCIBLE" if filing == "FIX_CLAIMED" else "INCONCLUSIVE"
     if check == "REPRODUCING":
+        # Once they have engaged -- replied, or claimed a fix -- the fact worth
+        # showing is that it still breaks. "THEY REPLIED" beside a failing
+        # check hid exactly that: #47 read as a conversation in progress while
+        # the check said filing was still ungated.
         return {
             "NOT_RAISED": "NOT RAISED YET",
             "RAISED": "RAISED",
-            "REPLIED": "THEY REPLIED",
+            "REPLIED": "STILL REPRODUCIBLE",
             "FIX_CLAIMED": "STILL REPRODUCIBLE",
         }[filing]
     return {  # UNVERIFIED -- no admissible run has ever adjudicated this row
