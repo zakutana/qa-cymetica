@@ -180,8 +180,11 @@
       "component": "rest.agents",
       "note": "A document that contradicts itself is worse than two documents that disagree, because the reader has no way to pick. Added after report #52 updated one occurrence of the count and left another behind.",
       "detail": {
-        "llms_txt": "10",
-        "llms_txt_2": "11"
+        "sources": {
+          "llms_txt": "regex_int:(\\d+) AI trading agents,",
+          "llms_txt_2": "regex_int:any of our (\\d+) AI trading agent species"
+        },
+        "reason": "llms_agent_count_self_consistent: regex_int found no match for '(\\\\d+) AI trading agents,'"
       },
       "checks": [
         "tests/reconciliation/test_reconcile.py::test_sources_agree[llms_agent_count_self_consistent::llms_txt-vs-llms_txt_2]"
@@ -194,8 +197,8 @@
       },
       "reproductions": 3,
       "provenance": {
-        "source": "legacy@ca0bc45",
-        "measured_at": null
+        "run_id": "run-20260905T101042Z-45f8015",
+        "measured_at": "2026-09-05T10:11:28+00:00"
       },
       "check": {
         "state": "INCONCLUSIVE",
@@ -257,7 +260,11 @@
       "component": "mcp.tools_list",
       "note": "Subset, not set_equal. llms.txt is not obliged to list every tool -- it is obliged not to name one that does not exist. The earlier set_equal form would now fail simply because the document lists fewer than the server serves, which is correct behaviour.",
       "detail": {
-        "left": "snapshot.value(pair.a, extractors[pair.a])"
+        "sources": {
+          "llms_txt": "regex_all:\\[(\\w+)\\]\\(/mcp/v1/tools/\\w+\\)",
+          "mcp_json": "set:$.tools[*].name"
+        },
+        "reason": "mcp_tool_names_documented_exist: regex_all found no match for '\\\\[(\\\\w+)\\\\]\\\\(/mcp/v1/tools/\\\\w+\\\\)'"
       },
       "checks": [
         "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_names_documented_exist::llms_txt-vs-mcp_json]"
@@ -270,8 +277,8 @@
       },
       "reproductions": 3,
       "provenance": {
-        "source": "legacy@ca0bc45",
-        "measured_at": null
+        "run_id": "run-20260905T101042Z-45f8015",
+        "measured_at": "2026-09-05T10:11:28+00:00"
       },
       "check": {
         "state": "INCONCLUSIVE",
@@ -328,17 +335,9 @@
       "component": "rest.support",
       "note": "The resolution notes are specific -- they name files, line numbers and commit hashes. That is better than most vendors provide and it is worth crediting. It is still a claim: the commits are not inspectable from here, validated_at is null, and our own records still list these as open with last_regression_run: null. Correct state is FIX_CLAIMED, not fixed. Note also that all six are UI defects in arena.js, outside this project's API/MCP scope -- re-verifying them needs the browser suite, not this one.",
       "detail": {
-        "#10": "fixed, fixed_at=2026-05-19T18:22:00, validated_at=None",
-        "#11": "fixed, fixed_at=2026-05-19T18:22:00, validated_at=None",
-        "#12": "fixed, fixed_at=2026-05-19T18:22:00, validated_at=None",
-        "#46": "fixed, fixed_at=2026-09-04T12:26:49, validated_at=2026-09-04T12:26:49.323854",
-        "#47": "validated, fixed_at=None, validated_at=2026-09-04T12:26:50.065406",
-        "#48": "fixed, fixed_at=2026-09-04T12:26:50, validated_at=2026-09-04T12:26:50.675506",
-        "#49": "fixed, fixed_at=2026-09-04T12:26:51, validated_at=2026-09-04T12:26:51.463835",
-        "#50": "fixed, fixed_at=2026-09-04T12:26:52, validated_at=2026-09-04T12:26:52.353380",
-        "#51": "fixed, fixed_at=2026-09-04T12:26:53, validated_at=2026-09-04T12:26:52.993532",
-        "#52": "fixed, fixed_at=2026-09-04T12:26:53, validated_at=2026-09-04T12:26:53.530220",
-        "#53": "validated, fixed_at=None, validated_at=2026-09-04T12:26:53.839834"
+        "right": 401,
+        "sources": {},
+        "reason": "my-reports answered HTTP 401; a failed read is not an empty tracker"
       },
       "checks": [
         "tests/rest/test_bounty_tracker.py::test_reports_they_closed_have_been_rechecked_by_us"
@@ -351,8 +350,8 @@
       },
       "reproductions": 3,
       "provenance": {
-        "source": "legacy@ca0bc45",
-        "measured_at": null
+        "run_id": "run-20260905T101042Z-45f8015",
+        "measured_at": "2026-09-05T10:11:28+00:00"
       },
       "check": {
         "state": "INCONCLUSIVE",
@@ -540,7 +539,11 @@
       "section": "mcp",
       "component": "mcp.protocol",
       "detail": {
-        "left": "snapshot.value(pair.a, extractors[pair.a])"
+        "sources": {
+          "llms_txt": "regex_int:cymetica-eventtrader-mcp \\(\\d+ tools, (\\d+) resources",
+          "mcp_json": "len:$.resources"
+        },
+        "reason": "mcp_resource_count: regex_int found no match for 'cymetica-eventtrader-mcp \\\\(\\\\d+ tools, (\\\\d+) resources'"
       },
       "checks": [
         "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_resource_count::llms_txt-vs-mcp_json]"
@@ -553,8 +556,8 @@
       },
       "reproductions": 3,
       "provenance": {
-        "source": "legacy@ca0bc45",
-        "measured_at": null
+        "run_id": "run-20260905T101042Z-45f8015",
+        "measured_at": "2026-09-05T10:11:28+00:00"
       },
       "check": {
         "state": "INCONCLUSIVE",
@@ -640,16 +643,16 @@
       },
       "reproductions": 1,
       "provenance": {
-        "source": "legacy@ca0bc45",
-        "measured_at": null
+        "run_id": "run-20260905T101042Z-45f8015",
+        "measured_at": "2026-09-05T10:11:28+00:00"
       },
       "check": {
-        "state": "PASSING_UNPINNED",
+        "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260905T101042Z-45f8015",
           "at": "2026-09-05T10:11:28+00:00"
         },
-        "pinned_fingerprint": null
+        "pinned_fingerprint": "aee41113b423d34dbb0fb7a237f679ec142e320ffd706e3a3645b1a3b80b4cd5"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -686,6 +689,15 @@
         },
         {
           "axis": "check",
+          "from": "PASSING_UNPINNED",
+          "to": "PASSING",
+          "cause": {
+            "run_id": "run-20260905T101042Z-45f8015"
+          },
+          "at": "2026-09-05T10:11:28+00:00"
+        },
+        {
+          "axis": "check",
           "from": "UNVERIFIED",
           "to": "PASSING_UNPINNED",
           "cause": {
@@ -696,7 +708,7 @@
       ],
       "regressions": [],
       "obligations": {
-        "reverify": true,
+        "reverify": false,
         "repair_check": false,
         "reopen": [],
         "retractions": []
@@ -712,8 +724,43 @@
       "component": "rest.agents",
       "note": "llms.txt instructs readers to clone named agents. If those names do not resolve, the instruction is not merely imprecise -- it is unfollowable.",
       "detail": {
-        "live_species": "{ATR, BOLL, DIV, FIB, ICHI, MACD, PCPN, RSI, STOCH, TREND, VOL}  n=11",
-        "llms_txt": "{CORR, CRASH, DELTA, DREAD, FADE, GLOOM, SENT, STAT, SYNC, VORTX}  n=10"
+        "left": [
+          "ATR",
+          "BOLL",
+          "DIV",
+          "FIB",
+          "ICHI",
+          "MACD",
+          "PCPN",
+          "RSI",
+          "STOCH",
+          "TREND",
+          "VOL"
+        ],
+        "right": [
+          "ATR",
+          "BOLL",
+          "DIV",
+          "FIB",
+          "ICHI",
+          "MACD",
+          "PCPN",
+          "RSI",
+          "STOCH",
+          "TREND",
+          "VOL"
+        ],
+        "sources": {
+          "live_species": "set:$[*].symbol",
+          "llms_txt": "list_after:AI trading agent"
+        },
+        "population": {
+          "witness": {
+            "live_species": "set:$[*].symbol",
+            "llms_txt": "AI trading agent species (MACD, RSI, BOLL, VOL, TREND, STOCH, ICHI, FIB, ATR, DIV, PCPN)"
+          }
+        },
+        "reason": "agent_names: left has [] which right lacks"
       },
       "checks": [
         "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_names::live_species-vs-llms_txt]"
@@ -726,16 +773,16 @@
       },
       "reproductions": 1,
       "provenance": {
-        "source": "legacy@ca0bc45",
-        "measured_at": null
+        "run_id": "run-20260905T101042Z-45f8015",
+        "measured_at": "2026-09-05T10:11:28+00:00"
       },
       "check": {
-        "state": "PASSING_UNPINNED",
+        "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260905T101042Z-45f8015",
           "at": "2026-09-05T10:11:28+00:00"
         },
-        "pinned_fingerprint": null
+        "pinned_fingerprint": "sha256:ba019a19f7a7c39de5c5c19601580248"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -772,6 +819,15 @@
         },
         {
           "axis": "check",
+          "from": "PASSING_UNPINNED",
+          "to": "PASSING",
+          "cause": {
+            "run_id": "run-20260905T101042Z-45f8015"
+          },
+          "at": "2026-09-05T10:11:28+00:00"
+        },
+        {
+          "axis": "check",
           "from": "UNVERIFIED",
           "to": "PASSING_UNPINNED",
           "cause": {
@@ -782,7 +838,7 @@
       ],
       "regressions": [],
       "obligations": {
-        "reverify": true,
+        "reverify": false,
         "repair_check": false,
         "reopen": [],
         "retractions": []
@@ -961,8 +1017,19 @@
       "section": "clob",
       "component": "rest.clob",
       "detail": {
-        "llms_txt": "9",
-        "mcp_json": "568"
+        "left": 568,
+        "right": 569,
+        "sources": {
+          "llms_txt": "regex_int:trade on (\\d+) CLOB pairs",
+          "mcp_json": "regex_int:CLOB exchange with (\\d+) pairs"
+        },
+        "population": {
+          "witness": {
+            "llms_txt": "trade on 568 CLOB pairs",
+            "mcp_json": "CLOB exchange with 569 pairs"
+          }
+        },
+        "reason": "clob_pair_count: values differ"
       },
       "checks": [
         "tests/reconciliation/test_reconcile.py::test_sources_agree[clob_pair_count::llms_txt-vs-mcp_json]"
@@ -975,8 +1042,8 @@
       },
       "reproductions": 1,
       "provenance": {
-        "source": "legacy@ca0bc45",
-        "measured_at": null
+        "run_id": "run-20260905T101042Z-45f8015",
+        "measured_at": "2026-09-05T10:11:28+00:00"
       },
       "check": {
         "state": "PASSING_UNPINNED",
@@ -984,7 +1051,8 @@
           "run_id": "run-20260905T101042Z-45f8015",
           "at": "2026-09-05T10:11:28+00:00"
         },
-        "pinned_fingerprint": null
+        "pinned_fingerprint": null,
+        "evidence_only": "run-20260905T101042Z-45f8015"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -1047,8 +1115,19 @@
       "component": "platform.ai_native_proof",
       "note": "Commits legitimately accrue, so a small gap is expected and a large one is not. The AI-native claim is the platform's headline marketing figure; a stale number here is a measurement defect, not a cosmetic one.",
       "detail": {
-        "build_stats": "21840",
-        "llms_txt": "11700"
+        "left": 21912,
+        "right": 21800,
+        "sources": {
+          "build_stats": "jsonpath:$.totals.commits",
+          "llms_txt": "regex_int:With ([\\d,]+)\\+ commits"
+        },
+        "population": {
+          "witness": {
+            "build_stats": "jsonpath:$.totals.commits",
+            "llms_txt": "With 21,800+ commits"
+          }
+        },
+        "reason": "commit_count: differ by 0.5% (tolerance 5.0%)"
       },
       "checks": [
         "tests/reconciliation/test_reconcile.py::test_sources_agree[commit_count::build_stats-vs-llms_txt]"
@@ -1061,16 +1140,16 @@
       },
       "reproductions": 1,
       "provenance": {
-        "source": "legacy@ca0bc45",
-        "measured_at": null
+        "run_id": "run-20260905T101042Z-45f8015",
+        "measured_at": "2026-09-05T10:11:28+00:00"
       },
       "check": {
-        "state": "PASSING_UNPINNED",
+        "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260905T101042Z-45f8015",
           "at": "2026-09-05T10:11:28+00:00"
         },
-        "pinned_fingerprint": null
+        "pinned_fingerprint": "sha256:e081c62f35eae60b83c14e9766dce049"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -1107,6 +1186,15 @@
         },
         {
           "axis": "check",
+          "from": "PASSING_UNPINNED",
+          "to": "PASSING",
+          "cause": {
+            "run_id": "run-20260905T101042Z-45f8015"
+          },
+          "at": "2026-09-05T10:11:28+00:00"
+        },
+        {
+          "axis": "check",
           "from": "UNVERIFIED",
           "to": "PASSING_UNPINNED",
           "cause": {
@@ -1117,7 +1205,7 @@
       ],
       "regressions": [],
       "obligations": {
-        "reverify": true,
+        "reverify": false,
         "repair_check": false,
         "reopen": [],
         "retractions": []
@@ -1133,9 +1221,17 @@
       "component": "rest.support",
       "note": "A queue with a 100% closure rate and no open, triaged, disputed or wont_fix item is not a queue -- it is either a filtered view or a tracker that does not retain unresolved items. The schema HAS validated_at, triaged_at and severity_confirmed fields; none is populated on any record. SCOPE: this says nothing about whether the underlying fixes are real. It says the tracker records no evidence that anyone checked.",
       "detail": {
-        "status distribution": "fixed=15",
-        "validated_at populated": "0 of 15",
-        "closed with no notes, no ticket, no PR link": "5"
+        "left": [],
+        "right": 20,
+        "sources": {
+          "endpoint": "GET /api/v1/bounty/reports"
+        },
+        "population": {
+          "rows_returned": 20,
+          "closed": 20,
+          "server_total": 27
+        },
+        "reason": "0 of 20 closed reports carry no evidence field at all (validated_at, triaged_at, severity_confirmed, ticket_url, fix_pr_url, status_notes)"
       },
       "checks": [
         "tests/rest/test_bounty_tracker.py::test_closures_in_the_public_tracker_carry_evidence"
@@ -1148,16 +1244,16 @@
       },
       "reproductions": 1,
       "provenance": {
-        "source": "legacy@ca0bc45",
-        "measured_at": null
+        "run_id": "run-20260905T101042Z-45f8015",
+        "measured_at": "2026-09-05T10:11:28+00:00"
       },
       "check": {
-        "state": "PASSING_UNPINNED",
+        "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260905T101042Z-45f8015",
           "at": "2026-09-05T10:11:28+00:00"
         },
-        "pinned_fingerprint": null
+        "pinned_fingerprint": "eec8c826a9ff556658be3354fa9e29469b301df49817b0ddde9a152b2704f1d5"
       },
       "filing": {
         "state": "REPLIED",
@@ -1191,6 +1287,15 @@
             "event_id": "94a1be9fb4ee4826c79fcafa7f7e6efdc89882eb87d8913f0c9fbc7269e89953"
           },
           "at": "2026-09-04T12:04:20+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "PASSING_UNPINNED",
+          "to": "PASSING",
+          "cause": {
+            "run_id": "run-20260905T101042Z-45f8015"
+          },
+          "at": "2026-09-05T10:11:28+00:00"
         },
         {
           "axis": "check",
@@ -1826,13 +1931,15 @@
     "INCONCLUSIVE": 2,
     "WITHDRAWN": 4,
     "NOT REPRODUCIBLE": 1,
-    "PASSING (UNPINNED)": 5,
+    "VERIFIED FIXED": 3,
     "FIX CLAIMED": 4,
+    "PASSING (UNPINNED)": 1,
+    "PASSING, UNCLAIMED": 1,
     "STILL REPRODUCIBLE": 1,
     "UNVERIFIABLE": 3
   },
   "events_head": {
-    "seq": 108,
-    "chain": "95210d3e0eed0eecf477a05567b6c1e6e17fc9426a4e2744190292a055747485"
+    "seq": 112,
+    "chain": "977b93fd00055374bd081727166eb00ab1c73cf75de46665e6c8f26701b19f43"
   }
 }

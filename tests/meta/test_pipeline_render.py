@@ -219,7 +219,22 @@ def test_the_page_reads_no_field_the_payload_stops_writing(tmp_path, monkeypatch
 
     monkeypatch.delenv("QA_STATE_DIR", raising=False)
     render = _render()
-    payload = render.build_payload()
+
+    # Folded fresh rather than read off disk. Reading the committed ledger
+    # made this guard fail whenever the ledger was merely a re-fold behind the
+    # journal -- a bookkeeping lag, in a test whose failure aborts the whole
+    # session. It happened: four pin events were appended, the suite was run
+    # before re-folding, and the run died at 88% on a page-field check that
+    # had nothing to do with page fields.
+    ledger_mod = importlib.util.module_from_spec(
+        importlib.util.spec_from_file_location("ledger_fields", REPO / "scripts" / "ledger.py"))
+    ledger_mod.__loader__.exec_module(ledger_mod)
+    try:
+        current = ledger_mod.compose()
+    except SystemExit:
+        current = ledger_mod.compose(events_only=True)
+
+    payload = render.build_payload(ledger=current)
     present = {k for f in payload["findings"] for k in f}
 
     read = {m for m in re.findall(r"\bf\.([a-z_]+)\b", render.TEMPLATE)}
