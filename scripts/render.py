@@ -48,33 +48,121 @@ COMPONENT_TO_SECTION = {
 
 
 def load(name: str) -> dict:
-    path = STATE / name
+    # Through the seam, so a test session reads its own state directory
+    # rather than the committed one.
+    from qa.state import state_dir
+
+    path = state_dir() / name
     return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
 
 
+def out_path() -> Path:
+    from qa.state import state_dir
+
+    override = __import__("os").environ.get("QA_STATE_DIR")
+    return (state_dir() / "dashboard" / "index.html") if override else OUT
+
+
 def latest_run() -> dict:
-    runs = sorted((STATE / "runs").glob("run-*.json"))
-    return json.loads(runs[-1].read_text(encoding="utf-8")) if runs else {}
+    """The newest ADMISSIBLE run, by started_at -- never the last filename.
+
+    Three copies of `sorted(glob(...))[-1]` used to decide which run the
+    dashboard was describing, so a one-result re-run became the run of record
+    for every number on the page.
+    """
+    from qa.state import latest_admissible_run_id, load_run
+
+    run_id = latest_admissible_run_id("R")
+    return load_run(run_id) if run_id else {}
 
 
-def build_payload() -> dict:
-    inventory = load("inventory.json")
-    thread = load("thread.json")
-    run = latest_run()
+def build_payload(ledger: dict | None = None, inventory: dict | None = None,
+                  thread: dict | None = None, run: dict | None = None) -> dict:
+    """Everything the page shows, derived and reconciled before it is shown.
+
+    The arguments exist so this can be exercised without the committed state
+    directory. Passing none of them reads the repository, which is what
+    __main__ does.
+    """
+    from qa.fold import display_state
+    from qa.state import head
+
+    inventory = inventory if inventory is not None else load("inventory.json")
+    thread = thread if thread is not None else load("thread.json")
+    run = run if run is not None else latest_run()
 
     # The ledger, not the current run, is the source of truth for findings.
     # A finding whose check has started passing must still appear -- as
     # VERIFIED FIXED, the one state that means "we checked" rather than "they
     # said". Deriving the list from what is currently failing would delete
     # exactly the records worth keeping.
-    from scripts.ledger import as_findings, load_ledger
-    ledger = load_ledger()
-    rows = [r for r in as_findings(ledger) if r.get("state") != "WITHDRAWN"]
-    findings = {"findings": rows,
-                "by_severity": {}}
-    for f in rows:
-        if f.get("state") != "VERIFIED FIXED":
-            findings["by_severity"][f["severity"]] =                 findings["by_severity"].get(f["severity"], 0) + 1
+    from scripts.ledger import as_findings, load_previous
+    current = head()
+    if ledger is None:
+        # No ledger at all is not a stale projection -- it is a repository
+        # that has not folded one yet, and an empty page is the honest view.
+        ledger = load_previous() or {"findings": {}, "events_head": current}
+
+    # A projection that has fallen behind its source IS a different matter: a
+    # page that renders anyway is worse than no page, because it looks
+    # current. Refuse, and say how to fix it.
+    cited = ledger.get("events_head")
+    if cited != current:
+        raise SystemExit(
+            f"refusing to render: the ledger cites journal head {cited} but the "
+            f"journal is at {current}.\nRe-fold it first: python scripts/ledger.py"
+        )
+
+    rows = as_findings(ledger)
+    findings = []
+    display_counts: dict[str, int] = {}
+    timeline = []
+
+    for row in rows:
+        shown = display_state(row)
+        display_counts[shown] = display_counts.get(shown, 0) + 1
+
+        adjudicated = (row.get("check") or {}).get("adjudicated_by")
+        row_checks = row.get("checks") or []
+        findings.append({
+            **row,
+            "display_state": shown,
+            # The verification sentence is printed from THIS, or not at all.
+            # Ten rows read VERIFIED FIXED with verified_by_run null on every
+            # one, beneath a sentence claiming we had re-run the check.
+            "verification": (
+                {"run_id": adjudicated["run_id"], "at": adjudicated.get("at"),
+                 "nodeid": row_checks[0] if row_checks else None}
+                if adjudicated and adjudicated.get("run_id")
+                and shown == "VERIFIED FIXED" else None
+            ),
+            "not_checked_in": (row.get("check") or {}).get("not_checked_in"),
+            # Critique gap 5: content carried over from the hand-written
+            # ledger quotes figures frozen at their last failing values.
+            "unmeasured": not (row.get("provenance") or {}).get("measured_at"),
+        })
+
+        for transition in row.get("transitions", []):
+            if transition.get("axis") == "check":
+                timeline.append({
+                    "finding_id": row["id"], "at": transition["at"],
+                    "from": transition.get("from"), "to": transition["to"],
+                    "run_id": (transition.get("cause") or {}).get("run_id"),
+                })
+
+    timeline.sort(key=lambda e: e["at"])
+
+    # Every row lands in exactly one bucket, and the buckets sum to the rows.
+    # The filter said 16, the tiles summed to 6, the ledger held 20.
+    assert sum(display_counts.values()) == len(rows), (
+        f"display counts {display_counts} do not sum to {len(rows)} rows"
+    )
+
+    by_severity: dict[str, int] = {}
+    for finding in findings:
+        if finding["display_state"] not in ("VERIFIED FIXED", "WITHDRAWN"):
+            by_severity[finding["severity"]] = by_severity.get(
+                finding["severity"], 0) + 1
 
     checks: dict[str, dict[str, int]] = {}
     for result in run.get("results", []):
@@ -86,8 +174,8 @@ def build_payload() -> dict:
             bucket[result["outcome"]] += 1
 
     by_section: dict[str, list[str]] = {}
-    for finding in findings.get("findings", []):
-        if finding.get("state") == "VERIFIED FIXED":
+    for finding in findings:
+        if finding["display_state"] in ("VERIFIED FIXED", "WITHDRAWN"):
             continue
         targets = set(finding.get("affected_sections") or []) | {finding.get("section")}
         for section in targets:
@@ -107,14 +195,24 @@ def build_payload() -> dict:
         for tag in TAG_ORDER
     ]
 
+    from qa.state import admissibility
+
+    verdict = admissibility(run) if run else None
     return {
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "run_id": run.get("run_id"),
+        # Critique gap 8: "V" and "V (partial identity)" are different claims
+        # about how much of the ladder this run could reach.
+        "run_level": verdict.label if verdict else "none",
+        "run_notes": verdict.notes if verdict else [],
         "fingerprint": (run.get("platform_fingerprint") or "")[:23],
+        "events_head": ledger.get("events_head"),
         "totals": inventory.get("totals", {}),
         "sections": sections,
-        "findings": findings.get("findings", []),
-        "by_severity": findings.get("by_severity", {}),
+        "findings": findings,
+        "display_counts": display_counts,
+        "timeline": timeline,
+        "by_severity": by_severity,
         "groups": groups,
         "thread_counts": thread.get("counts", {}),
     }
@@ -453,8 +551,8 @@ document.getElementById("triage").innerHTML =
   SEV.map(([k,l,c]) => `<div class="tri ${c}"><div class="n">${D.by_severity[k]||0}</div><div class="l">${l}</div></div>`).join("")
   + `<div class="tri"><div class="n">${D.sections.filter(s=>!(s.checks&&s.checks.total)).length}</div><div class="l">sections with no checks</div></div>`
   + `<div class="tri"><div class="n">${D.findings.filter(f=>f.filed&&f.filed.length).length}</div><div class="l">filed to their tracker</div></div>`
-  + `<div class="tri ok"><div class="n">${D.findings.filter(f=>f.state==="VERIFIED FIXED").length}</div><div class="l">verified fixed by us</div></div>`
-  + `<div class="tri"><div class="n">${D.findings.filter(f=>f.state==="FIX CLAIMED").length}</div><div class="l">fix claimed, unverified</div></div>`;
+  + `<div class="tri ok"><div class="n">${D.display_counts["VERIFIED FIXED"]||0}</div><div class="l">verified fixed by us</div></div>`
+  + `<div class="tri"><div class="n">${D.display_counts["FIX CLAIMED"]||0}</div><div class="l">fix claimed, unverified</div></div>`;
 
 /* ---------- section map, grouped by product area ---------- */
 const ORDER = ["ok","auth","param","method","missing","unprobed","websocket"];
@@ -509,14 +607,23 @@ function filedNote(f) {
     `report #${x.report_id}${x.status ? ` &mdash; ${esc(x.status)}` : ""}` +
     `${x.submitted_at ? ` &mdash; filed ${x.submitted_at.replace("T"," ").slice(0,16)}Z` : ""}`
   ).join("<br>");
+  // Printed from the adjudication or not at all. Ten rows once carried this
+  // sentence with verified_by_run null on every one of them, and a timestamp
+  // taken from the merge that wrote the row rather than from any run.
   const verdict =
-    f.state === "VERIFIED FIXED"
+    f.verification
       ? `<br><br><b>We re-ran the check and it passes.</b> Verified ${
-          (f.verified_fixed_at || "").replace("T"," ").slice(0,16)}Z against the live
-         service. Their status above is their claim; this line is our own measurement,
-         and the two agreeing is what closes it.`
-      : f.state === "REGRESSED"
-      ? `<br><br><b>This was verified fixed and has started failing again.</b>`
+          (f.verification.at || "").replace("T"," ").slice(0,16)}Z by run
+         <code>${esc(f.verification.run_id)}</code> running
+         <code>${esc(f.verification.nodeid || "-")}</code>. Their status above is
+         their claim; this line is our own measurement, and the two agreeing is
+         what closes it.`
+      : f.regressions && f.regressions.length
+      ? `<br><br><b>This was verified fixed and has started failing again</b>
+         (run <code>${esc(f.regressions[f.regressions.length-1].run_id)}</code>).`
+      : f.not_checked_in
+      ? `<br><br>Not checked in run <code>${esc(f.not_checked_in)}</code> &mdash;
+         that run did not collect this check, so it says nothing either way.`
       : `<br><br>A status of <em>fixed</em> here is their claim, not a verification.
          It becomes verified only once the check below is re-run and passes.`;
   return `<div class="awaiting">Filed to their bug tracker via the API:<br>${rows}${verdict}</div>`;
@@ -560,7 +667,11 @@ function finding(f) {
         <span class="f-title">${esc(f.title)}</span>
         <div class="f-sub">
           <span class="tagchip">${esc(f.tag)}</span>
-          <span class="state s-${esc(f.state.toLowerCase().replace(/ /g,"-"))}">${esc(f.state)}</span>
+          ${f.unmeasured ? `<span class="undelivered" title="These words were
+            carried over from the hand-written ledger. The numbers in them were
+            true when the finding was made and have not been re-measured
+            since.">figures not measured in an admissible run</span>` : ""}
+          <span class="state s-${esc(f.display_state.toLowerCase().replace(/ /g,"-"))}">${esc(f.display_state)}</span>
           ${f.filed && f.filed.length ? `<span class="filed">filed as #${f.filed.map(x=>x.report_id).join(", #")}</span>` : ""}
           ${f.undelivered ? `<span class="undelivered">${f.undelivered} message never delivered</span>` : ""}
           <span>${esc(f.id)}</span><span>${esc(f.kind)}</span>
@@ -607,12 +718,41 @@ document.getElementById("filters").addEventListener("click", e => {
 """
 
 
-def render() -> str:
-    data = json.dumps(build_payload(), ensure_ascii=False).replace("</", "<\\/")
-    return TEMPLATE.replace("__DATA__", data)
+def payload_hash(payload: dict) -> str:
+    """A stable hash of everything the page shows, minus when it was made.
+
+    Embedded in the rendered file so a committed dashboard can be checked
+    against a re-render (critique gap 9). Without it, nothing catches a
+    dashboard that has fallen behind the ledger it claims to display --
+    exactly the drift behind 16 rows on the filter, 6 in the tiles and 20 in
+    the ledger.
+    """
+    import hashlib
+
+    stable = {k: v for k, v in payload.items() if k != "generated_at"}
+    blob = json.dumps(stable, sort_keys=True, ensure_ascii=False)
+    return hashlib.sha256(blob.encode("utf-8")).hexdigest()
+
+
+def render(payload: dict | None = None) -> str:
+    payload = payload if payload is not None else build_payload()
+    digest = payload_hash(payload)
+    data = json.dumps(payload, ensure_ascii=False).replace("</", "<\\/")
+    return (TEMPLATE.replace("__DATA__", data)
+            + f"\n<!-- qa-payload-sha256: {digest} -->\n")
 
 
 if __name__ == "__main__":
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(render(), encoding="utf-8")
-    print(f"-> {OUT.relative_to(REPO_ROOT)}  ({OUT.stat().st_size // 1024} KB)")
+    target = out_path()
+    target.parent.mkdir(parents=True, exist_ok=True)
+    payload = build_payload()
+    target.write_text(render(payload), encoding="utf-8")
+    try:
+        shown = target.relative_to(REPO_ROOT)
+    except ValueError:
+        shown = target
+    print(f"-> {shown}  ({target.stat().st_size // 1024} KB)")
+    print(f"   payload sha256 {payload_hash(payload)[:16]}  "
+          f"{sum(payload['display_counts'].values())} rows  "
+          f"run {payload['run_id'] or '(none admissible)'} "
+          f"at level {payload['run_level']}")
