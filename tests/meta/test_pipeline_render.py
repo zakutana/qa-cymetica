@@ -181,10 +181,88 @@ def test_legacy_content_is_labelled_unmeasured(tmp_path, monkeypatch):
     # carries its own explanation, not that it uses one particular phrase.
     assert 'class="unmeasured"' in render.TEMPLATE
     assert "f.unmeasured ?" in render.TEMPLATE
-    chip = render.TEMPLATE[render.TEMPLATE.index(".unmeasured {"):]
-    assert "var(--bad" not in chip[:chip.index("}")], \
+    import re
+
+    rule = re.search(r"\.unmeasured[^{]*\{([^}]*)\}", render.TEMPLATE)
+    assert rule, "the provenance note has no style of its own"
+    assert "var(--bad" not in rule.group(1), \
         "the provenance note is styled as an alarm"
     assert "re-measured" in render.TEMPLATE and "title=" in render.TEMPLATE
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_page_reads_no_field_the_payload_stops_writing(tmp_path, monkeypatch):
+    """The class of defect behind three separate visible breakages.
+
+    `f.state` survived the two-axis rewrite; `f.filed`, `f.thread`,
+    `f.undelivered` and `f.withdrawn_reason` survived the move of reports onto
+    filing.reports and messages into the journal. JavaScript reading a missing
+    property is `undefined`, not an error, so the page rendered quietly wrong:
+    a tile saying "0 filed to their tracker" beside eleven filed reports, and
+    an empty Correspondence panel on every row.
+    """
+    import re
+
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    render = _render()
+
+    # Measured against the COMMITTED ledger -- the page the operator actually
+    # opens -- not against a row this test shaped by hand. A synthetic row
+    # would only ever check the page against the test's idea of a row, and
+    # miss exactly the drift the guard exists to catch. Fields that are
+    # legitimately conditional (a `note` only some claims have) are covered
+    # because the union across 23 real rows contains them.
+    ledger_file = REPO / "state" / "ledger.json"
+    if not ledger_file.exists():
+        pytest.skip("no committed ledger to check the page against")
+
+    monkeypatch.delenv("QA_STATE_DIR", raising=False)
+    render = _render()
+    payload = render.build_payload()
+    present = {k for f in payload["findings"] for k in f}
+
+    read = {m for m in re.findall(r"\bf\.([a-z_]+)\b", render.TEMPLATE)}
+    missing = sorted(read - present)
+    assert not missing, (
+        "the page reads fields no payload row carries, and JavaScript will "
+        f"render them as undefined rather than fail: {missing}"
+    )
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_filed_reports_and_correspondence_reach_the_page(tmp_path, monkeypatch):
+    """Both are rebuilt from the journal now, so both have to arrive."""
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    render = _render()
+
+    from tests.meta.test_pipeline_fold import _filed, event
+    from qa.fold import fold
+
+    events = _filed("CYM-a", 46, "pending") + [
+        event("message", at="2026-09-04T11:03:00+00:00", by="operator",
+              source="scripts/thread.py", msg_id="MSG-0001",
+              findings=["CYM-a"], delivered=False),
+        event("reply", at="2026-09-04T11:40:00+00:00", by="vendor",
+              source="scripts/thread.py", msg_id="REPLY-0001",
+              findings=["CYM-a"], reply_to="MSG-0001", evidence_id="e"),
+        event("withdraw", at="2026-09-04T13:00:00+00:00", by="operator",
+              source="scripts/withdraw.py", finding_id="CYM-a",
+              reason="our check measured our own probe, not their contract"),
+    ]
+    for e in events:
+        from qa.state import append_event
+        append_event(e)
+
+    from qa.state import head, read_events
+    state = fold({"findings": {_row("CYM-a")["id"]: _row("CYM-a")}},
+                 events=read_events())
+    state["events_head"] = head()
+
+    finding = render.build_payload(ledger=state)["findings"][0]
+    assert [r["report_id"] for r in finding["filed"]] == [46]
+    assert [m["id"] for m in finding["thread"]] == ["MSG-0001", "REPLY-0001"]
+    assert finding["undelivered"] == 1, "a message nobody delivered reads as delivered"
+    assert "our own probe" in finding["withdrawn_reason"]
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

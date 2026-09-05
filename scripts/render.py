@@ -138,6 +138,32 @@ def build_payload(ledger: dict | None = None, inventory: dict | None = None,
         except KeyError:
             run = {}
 
+    # Per-row correspondence, rebuilt from the journal. The rewrite moved
+    # reports onto `filing.reports` and messages into events, but the page was
+    # still reading `f.filed`, `f.thread`, `f.undelivered` and
+    # `f.withdrawn_reason` -- fields no row carries any more. The result was a
+    # tile reading "0 filed to their tracker" beside eleven filed reports, and
+    # the Correspondence panel empty on every row. Same class as the display
+    # state: the page read a field the fold had stopped writing.
+    messages: dict[str, list[dict]] = {}
+    withdrawn_reason: dict[str, str] = {}
+    filed_at: dict[int, str] = {}
+    for event in events:
+        etype = event.get("type")
+        if etype in ("message", "reply"):
+            for fid in event.get("findings") or []:
+                messages.setdefault(fid, []).append({
+                    "id": event.get("msg_id"),
+                    "direction": "in" if etype == "reply" else "out",
+                    "at": event.get("at"),
+                    "delivered": event.get("delivered", True) if etype == "message" else True,
+                    "origin": event.get("origin"),
+                })
+        elif etype == "withdraw" and event.get("finding_id"):
+            withdrawn_reason[event["finding_id"]] = event.get("reason") or ""
+        elif etype == "filing_outcome" and event.get("outcome") == "accepted":
+            filed_at.setdefault(event.get("report_id"), event.get("at"))
+
     rows = as_findings(ledger)
     findings = []
     display_counts: dict[str, int] = {}
@@ -165,6 +191,16 @@ def build_payload(ledger: dict | None = None, inventory: dict | None = None,
             # Critique gap 5: content carried over from the hand-written
             # ledger quotes figures frozen at their last failing values.
             "unmeasured": not (row.get("provenance") or {}).get("measured_at"),
+            "filed": [
+                {"report_id": r["report_id"], "status": r.get("status"),
+                 "submitted_at": filed_at.get(r["report_id"])}
+                for r in (row.get("filing") or {}).get("reports", [])
+            ],
+            "thread": sorted(messages.get(row["id"], []),
+                             key=lambda m: m.get("at") or ""),
+            "undelivered": sum(1 for m in messages.get(row["id"], [])
+                               if m["direction"] == "out" and not m["delivered"]),
+            "withdrawn_reason": withdrawn_reason.get(row["id"]),
         })
 
         for transition in row.get("transitions", []):
@@ -220,10 +256,23 @@ def build_payload(ledger: dict | None = None, inventory: dict | None = None,
         for tag in TAG_ORDER
     ]
 
+    from qa.fold import CHECK_STATES, DISPLAY, FILING_STATES
     from qa.state import admissibility
+
+    # The legend's diagram is generated from the real composition table, not
+    # written out beside it. A hand-drawn legend is a second source of truth
+    # for the thing this whole rebuild exists to keep single.
+    composition = {
+        "check_states": [c for c in CHECK_STATES if c != "CHECK_CHANGED"],
+        "filing_states": [f for f in FILING_STATES if f not in ("WITHDRAWN", "SUPERSEDED")],
+        "terminal": ["WITHDRAWN", "SUPERSEDED"],
+        "table": {c: {f: DISPLAY[(c, f)] for f in FILING_STATES}
+                  for c in CHECK_STATES},
+    }
 
     verdict = admissibility(run) if run else None
     return {
+        "composition": composition,
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "run_id": run.get("run_id"),
         # Critique gap 8: "V" and "V (partial identity)" are different claims
@@ -449,10 +498,62 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:13.5px; max-wid
 /* On 19 of 23 rows, so it must not shout. Red made it the loudest thing on
    the page and pushed the state chip -- the thing actually worth reading --
    into the background. It is a provenance note, not an alarm. */
-.unmeasured {
+.unmeasured, .unmeasured-demo {
   font-family:var(--mono); font-size:10px; padding:2px 6px; border-radius:4px;
   background:transparent; color:var(--text-faint);
   border:1px dashed var(--line); white-space:nowrap; cursor:help;
+}
+.unmeasured-demo { font-weight:400; cursor:default; }
+
+/* ---------- legend: two axes, then the grid they make ---------- */
+.lead { font-size:13.5px; color:var(--text-dim); max-width:74ch; margin:14px 0 10px; }
+.lead .hi { color:var(--ok); font-weight:600; }
+
+.axes { display:flex; gap:14px; align-items:stretch; flex-wrap:wrap; margin:14px 0 22px; }
+.axis {
+  flex:1 1 260px; min-width:0; background:var(--surface-2);
+  border:1px solid var(--line-soft); border-radius:var(--radius); padding:12px 13px;
+}
+.axis-h { font-size:13px; font-weight:600; color:var(--text); }
+.axis-h b { color:var(--accent); }
+.axis-sub {
+  font-size:11.5px; color:var(--text-faint); margin:2px 0 10px;
+  padding-bottom:8px; border-bottom:1px solid var(--line-soft);
+}
+.axis-row {
+  display:flex; gap:9px; align-items:baseline; margin:6px 0;
+  font-size:12.4px; color:var(--text-dim);
+}
+/* An axis VALUE, not a display state. Deliberately its own class: reusing
+   .state gave NOT_RAISED the class s-not-raised, which no rule matches --
+   the same unstyled-chip problem one level up. These are inputs to the grid;
+   the colours belong to the squares the grid produces. */
+.axv {
+  flex:0 0 auto; font-family:var(--mono); font-size:10px; font-weight:600;
+  padding:2px 6px; border-radius:4px; white-space:nowrap;
+  background:var(--none-bg); color:var(--text-dim);
+}
+.axis-join {
+  align-self:center; font-family:var(--mono); font-size:22px; color:var(--text-faint);
+}
+
+.matrix-wrap { overflow-x:auto; margin:6px 0 10px; }
+.matrix { border-collapse:separate; border-spacing:3px; font-size:11px; }
+.matrix th {
+  font-family:var(--mono); font-size:10px; font-weight:600; color:var(--text-faint);
+  text-align:left; white-space:nowrap; padding:3px 6px; text-transform:uppercase;
+  letter-spacing:.04em;
+}
+.matrix tr th:first-child { text-align:right; }
+.matrix td { padding:0; }
+.matrix .state { display:block; text-align:center; }
+.matrix-note {
+  display:flex; flex-direction:column; gap:5px; font-size:12.4px; color:var(--text-dim);
+}
+.matrix-note span span.state { margin-right:7px; }
+
+@media (max-width: 640px) {
+  .axis-join { display:none; }
 }
 
 .f-body { padding:0 15px 15px; border-top:1px solid var(--line-soft); }
@@ -541,11 +642,27 @@ h4.sec {
   <div class="note">
     <h3>How to read this page</h3>
 
-    <p><b>The big percentage answers one question:</b> of all the addresses Cymetica
-    publishes for this part of the platform, how many actually answer when you call them?</p>
+    <p class="lead">Every badge answers <b>two</b> questions at once. That is why there
+    are so many of them &mdash; and the badge is just the square where the two answers meet.</p>
 
-    <p>We call each address twice &mdash; once with no key, once with the API key &mdash;
-    and take the better of the two answers. Then each address lands in one of these:</p>
+    <div id="axes"></div>
+
+    <p class="lead"><b>The grid below is the whole pipeline.</b> Down the side: what
+    <b>we</b> measured. Along the top: where it stands <b>with them</b>.
+    <span class="hi">Only one square is green</span> &mdash; our check passes <em>and</em>
+    they claim a fix. Nothing else counts as verified.</p>
+
+    <div id="matrix"></div>
+
+    <p class="lead"><b class="unmeasured-demo">figures not re-measured</b> on a row means
+    the wording and numbers came from the old ledger and no run has confirmed them since.
+    Read that row as history, not as today.</p>
+
+    <h4>The percentage on each card is a different thing</h4>
+
+    <p><b>It answers one question:</b> of all the addresses Cymetica publishes for this
+    part of the platform, how many actually answer when you call them? We call each twice
+    &mdash; once with no key, once with the API key &mdash; and take the better answer:</p>
 
     <table class="verdicts">
       <tr><td><i style="background:var(--ok)"></i></td>
@@ -568,19 +685,12 @@ h4.sec {
           <td>Live feeds, or addresses needing an ID we do not have. Left out.</td></tr>
     </table>
 
-    <p class="example"><b>Worked example &mdash; Markets &amp; prices, 64%.</b> It publishes
-    16 addresses. Five could not be checked with a simple call, leaving 11. Of those, seven
-    answered properly and four said &ldquo;no such thing here&rdquo;. Seven out of eleven is 64%.</p>
+    <p class="example"><b>Markets &amp; prices, 64%.</b> 16 addresses published, 5 not
+    checkable by a simple call, 7 of the remaining 11 answered. 7/11 = 64%.</p>
 
-    <p><b>&ldquo;Checks&rdquo; is a completely different number</b>, and most cards say
-    <em>no checks yet</em>. It counts the real tests written for that part. An address
-    answering does not mean the answer is <em>correct</em> &mdash; 100% with no checks means
-    &ldquo;it is alive, and nobody has verified a word it says&rdquo;. Those two things are kept
-    apart on purpose: merging them would hide the gap that is actually worth acting on.</p>
-
-    <p><b>So this page does not tell you</b> whether the numbers Cymetica returns are right,
-    whether the locks are on the right doors, or whether anything behaves the way they
-    documented. That is what the checks are for, and that is the work still ahead.</p>
+    <p><b>&ldquo;Checks&rdquo; is a different number again.</b> An address answering does
+    not mean the answer is <em>correct</em>. <b>100% with no checks</b> means
+    &ldquo;it is alive, and nobody has verified a word it says&rdquo;.</p>
   </div>
 </div>
 
@@ -763,6 +873,67 @@ document.getElementById("filters").innerHTML =
   + `<span class="sep"></span>`
   + D.groups.filter(g => tagCounts[g.tag]).map(g =>
       `<button data-kind="tag" data-v="${g.tag}" aria-pressed="false">${g.tag} &middot; ${tagCounts[g.tag]}</button>`).join("");
+
+/* ---------- legend: the composition table, drawn from the real one ---------- */
+// Plain-language gloss for each axis value. Six words or fewer: the point of
+// the diagram is that you do not have to read.
+const CHECK_WORDS = {
+  UNVERIFIED:        ["no valid run has looked yet", "grey"],
+  REPRODUCING:       ["we ran it &mdash; still broken", "bad"],
+  PASSING:           ["we ran it &mdash; it passes", "ok"],
+  PASSING_UNPINNED:  ["passes, but never seen failing", "teal"],
+  INCONCLUSIVE:      ["the check measured nothing", "grey"],
+  UNVERIFIABLE:      ["no check can answer this", "grey"],
+};
+const FILING_WORDS = {
+  NOT_RAISED:  "not sent to them",
+  RAISED:      "filed &mdash; no answer yet",
+  REPLIED:     "they answered",
+  FIX_CLAIMED: "they say it is fixed",
+};
+const TERMINAL_WORDS = {
+  WITHDRAWN:  "we took it back: we were wrong",
+  SUPERSEDED: "replaced by another finding",
+};
+
+const C = D.composition;
+const short = s => s.replace(/_/g, " ");
+
+document.getElementById("axes").innerHTML = `
+  <div class="axes">
+    <div class="axis">
+      <div class="axis-h">What <b>we</b> measured</div>
+      <div class="axis-sub">moves only when a valid run adjudicates the check</div>
+      ${C.check_states.map(s => `<div class="axis-row">
+        <span class="axv">${esc(short(s))}</span>
+        <span>${CHECK_WORDS[s] ? CHECK_WORDS[s][0] : ""}</span></div>`).join("")}
+    </div>
+    <div class="axis-join">&times;</div>
+    <div class="axis">
+      <div class="axis-h">Where it stands <b>with them</b></div>
+      <div class="axis-sub">moves only when a message or their tracker says so</div>
+      ${C.filing_states.map(s => `<div class="axis-row">
+        <span class="axv">${esc(short(s))}</span>
+        <span>${FILING_WORDS[s] || ""}</span></div>`).join("")}
+    </div>
+  </div>`;
+
+document.getElementById("matrix").innerHTML = `
+  <div class="matrix-wrap"><table class="matrix">
+    <tr><td></td>${C.filing_states.map(f =>
+      `<th>${esc(short(f))}</th>`).join("")}</tr>
+    ${C.check_states.map(c => `<tr>
+      <th>${esc(short(c))}</th>
+      ${C.filing_states.map(f => {
+        const v = C.table[c][f];
+        return `<td><span class="state ${stateClass(v)}">${esc(v)}</span></td>`;
+      }).join("")}
+    </tr>`).join("")}
+  </table></div>
+  <div class="matrix-note">
+    ${C.terminal.map(t => `<span><span class="state ${stateClass(t)}">${esc(t)}</span>
+      ${TERMINAL_WORDS[t] || ""} &mdash; ours, final, whatever the check says</span>`).join("")}
+  </div>`;
 
 document.getElementById("filters").addEventListener("click", e => {
   const btn = e.target.closest("button"); if (!btn) return;
