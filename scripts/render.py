@@ -244,8 +244,18 @@ def latest_run() -> dict:
 
 
 def build_payload(ledger: dict | None = None, inventory: dict | None = None,
-                  thread: dict | None = None, run: dict | None = None) -> dict:
+                  thread: dict | None = None, run: dict | None = None,
+                  allow_stale_head: bool = False) -> dict:
     """Everything the page shows, derived and reconciled before it is shown.
+
+    `allow_stale_head` exists for exactly one caller: the guard that compares
+    the committed dashboard against the committed ledger. Every pytest session
+    appends a run_recorded event, so by the time that guard runs the journal
+    has always moved past the head the ledger cites -- and refusing there made
+    it skip on every single run. A guard that never executes is not a guard.
+    Whether the ledger is level with the journal is a different question, and
+    the sibling guard asks it; this one asks whether the page is a render of
+    the ledger. Nothing that writes a page may pass this.
 
     The arguments exist so this can be exercised without the committed state
     directory. Passing none of them reads the repository, which is what
@@ -287,7 +297,7 @@ def build_payload(ledger: dict | None = None, inventory: dict | None = None,
     # page that renders anyway is worse than no page, because it looks
     # current. Refuse, and say how to fix it.
     cited = ledger.get("events_head")
-    if cited != current:
+    if cited != current and not allow_stale_head:
         raise SystemExit(
             f"refusing to render: the ledger cites journal head {cited} but the "
             f"journal is at {current}.\nRe-fold it first: python scripts/ledger.py"

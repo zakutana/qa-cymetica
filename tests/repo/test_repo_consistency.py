@@ -96,7 +96,15 @@ def test_committed_ledger_is_what_its_inputs_fold_to():
     ledger_mod = _module("scripts/ledger.py", "ledger_consistency")
     committed = json.loads(LEDGER.read_text(encoding="utf-8"))
     try:
-        refolded = ledger_mod.compose()
+        # Against the run the committed ledger CITES, not whichever run is
+        # newest. Folding against "latest admissible" made this test poison
+        # itself: every pytest session writes a run record, so this file's own
+        # previous invocation became the newest run, and a two-test selector
+        # marks every other row not_checked_in. It passed, then failed, then
+        # passed, on nothing but the order it was run in. A guard that
+        # alternates is worse than none, because the false failure teaches you
+        # to disbelieve the true one.
+        refolded = ledger_mod.compose(run_id=committed.get("run_id"))
     except SystemExit as exc:
         if "no admissible run" not in str(exc):
             conclude(Measurement(
@@ -147,7 +155,13 @@ def test_committed_dashboard_matches_the_committed_ledger():
 
     render_mod = _module("scripts/render.py", "render_consistency")
     try:
-        current = render_mod.payload_hash(render_mod.build_payload())
+        # Stale-head allowed HERE only: this guard asks whether the page is
+        # a render of the ledger. Whether the ledger is level with the
+        # journal is the sibling guard's question, and refusing on it here
+        # made this one skip on every run since every session appends an
+        # event of its own.
+        current = render_mod.payload_hash(
+            render_mod.build_payload(allow_stale_head=True))
     except SystemExit as exc:
         conclude(Measurement(verdict="inconclusive",
                              reason=f"the payload cannot be built: {exc}"))

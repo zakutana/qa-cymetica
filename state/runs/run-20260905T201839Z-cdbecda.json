@@ -1,0 +1,142 @@
+{
+  "schema": 2,
+  "run_id": "run-20260905T201839Z-cdbecda",
+  "started_at": "2026-09-05T20:18:43+00:00",
+  "finished_at": "2026-09-05T20:18:50+00:00",
+  "git_head": "cdbecda2fca8239ddc947592eab63ea9f4caa22c",
+  "git_short": "cdbecda",
+  "git_dirty": false,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": "sha256:a18fb62e3a1251f3d33c47d9f54e9bb57c5e3cd48c4147e819f59e14c36671ad",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "687609a5e12d9a2e46d2c461660dd8adc85ab80a0853cfafc707ae0962f0d4ed",
+    "/.well-known/agent-card.json": "d3808146038b605f8a89995a66c57fa3d8a471653f8a3ab00a891458116e7042",
+    "/.well-known/agent-skills.json": "41a38971d7d79b8b4638dba285021fc011a7eb1f1062ae3b6707d4210c444ed7",
+    "/.well-known/ai-plugin.json": "e2f2d79821bf8e741fb18cefea6a94cb7a1ec358644306aeff02e763c61b1fb2",
+    "/.well-known/udc.json": "92cd8a5f7ec5a0a859594ef9fbd72cba4914eaab4220377db18adf2ed44611a4",
+    "/openapi.json": "f0cccb1f06ec266d303b1c7ab8e23f4af29a3c43106027595c95c1449fa1b2cf",
+    "/llms.txt": "300d02884e851fa63cc4ae4767f784ca813b220bd444736ae64e1aa273e9ee3d",
+    "mcp:tools/list:none": "32107ec8ab80ba0db0ad42f85e43abc1956dc37b3864851a8af95e522262d09e"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/repo -q --no-header --tb=line",
+  "selector_full": false,
+  "allow_mutate": false,
+  "collected": [
+    "tests/repo/test_repo_consistency.py::test_committed_ledger_is_what_its_inputs_fold_to",
+    "tests/repo/test_repo_consistency.py::test_committed_dashboard_matches_the_committed_ledger"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/repo/test_repo_consistency.py::test_committed_ledger_is_what_its_inputs_fold_to",
+      "component": "meta.pipeline",
+      "tier": "SAFE",
+      "surface": "meta",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 109,
+      "evidence_ids": [],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "23 committed row(s) are not what the journal and run records fold to: ['CYM-agent_count', 'CYM-agent_names', 'CYM-anon-tool-surface', 'CYM-bounty-fields-dropped', 'CYM-bounty-filing-unauthenticated', 'CYM-bounty-hunter-name-lost', 'CYM-bounty-pipeline-deadend', 'CYM-chain_count', 'CYM-clob_pair_count', 'CYM-commit_count', 'CYM-documented-404', 'CYM-documented_path_is_served[/api/v1/vaix/prices]', 'CYM-llms_agent_count_self_consistent', 'CYM-mcp_resource_count', 'CYM-mcp_tool_count', 'CYM-mcp_tool_names_declared_vs_served', 'CYM-mcp_tool_names_documented_exist', 'CYM-own-reports-unverified', 'CYM-skill_count', 'CYM-skill_ids', 'CYM-skills_subset', 'CYM-tracker-closure-rate', 'CYM-trusted-receives-nothing-above-its-tier']",
+        "left": [
+          "CYM-agent_count",
+          "CYM-agent_names",
+          "CYM-anon-tool-surface",
+          "CYM-bounty-fields-dropped",
+          "CYM-bounty-filing-unauthenticated",
+          "CYM-bounty-hunter-name-lost",
+          "CYM-bounty-pipeline-deadend",
+          "CYM-chain_count",
+          "CYM-clob_pair_count",
+          "CYM-commit_count",
+          "CYM-documented-404",
+          "CYM-documented_path_is_served[/api/v1/vaix/prices]",
+          "CYM-llms_agent_count_self_consistent",
+          "CYM-mcp_resource_count",
+          "CYM-mcp_tool_count",
+          "CYM-mcp_tool_names_declared_vs_served",
+          "CYM-mcp_tool_names_documented_exist",
+          "CYM-own-reports-unverified",
+          "CYM-skill_count",
+          "CYM-skill_ids",
+          "CYM-skills_subset",
+          "CYM-tracker-closure-rate",
+          "CYM-trusted-receives-nothing-above-its-tier"
+        ],
+        "right": [],
+        "sources": {
+          "ledger": "state/ledger.json",
+          "journal": "state/journal/events.jsonl"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": null,
+        "role": "verdict",
+        "population": null
+      },
+      "check_fingerprint": "d1e48949ac4a051fbfa03623027de30f25975692559bde5261f7f342cced052c",
+      "reason": null,
+      "failure_repr": "E   AssertionError: 23 committed row(s) are not what the journal and run records fold to: ['CYM-agent_count', 'CYM-agent_names', 'CYM-anon-tool-surface', 'CYM-bounty-fields-dropped', 'CYM-bounty-filing-unauthenticated', 'CYM-bounty-hunter-name-lost', 'CYM-bounty-pipeline-deadend', 'CYM-chain_count', 'CYM-clob_pair_count', 'CYM-commit_count', 'CYM-documented-404', 'CYM-documented_path_is_served[/api/v1/vaix/prices]', 'CYM-llms_agent_count_self_consistent', 'CYM-mcp_resource_count', 'CYM-mcp_tool_count', 'CYM-mcp_tool_names_declared_vs_served', 'CYM-mcp_tool_names_documented_exist', 'CYM-own-reports-unverified', 'CYM-skill_count', 'CYM-skill_ids', 'CYM-skills_subset', 'CYM-tracker-closure-rate', 'CYM-trusted-receives-nothing-above-its-tier']\n      left  = ['CYM-agent_count', 'CYM-agent_names', 'CYM-anon-tool-surface', 'CYM-bounty-fields-dropped', 'CYM-bounty-filing-unauthenticated', 'CYM-bounty-hunter-name-lost', 'CYM-bounty-pipeline-deadend', 'CYM-chain_count', 'CYM-clob_pair_count', 'CYM-commit_count', 'CYM-documented-404', 'CYM-documented_path_is_served[/api/v1/vaix/prices]', 'CYM-llms_agent_count_self_consistent', 'CYM-mcp_resource_count', 'CYM-mcp_tool_count', 'CYM-mcp_tool_names_declared_vs_served', 'CYM-mcp_tool_names_documented_exist', 'CYM-own-reports-unverified', 'CYM-skill_count', 'CYM-skill_ids', 'CYM-skills_subset', 'CYM-tracker-closure-rate', 'CYM-trusted-receives-nothing-above-its-tier']\n      right = []"
+    },
+    {
+      "nodeid": "tests/repo/test_repo_consistency.py::test_committed_dashboard_matches_the_committed_ledger",
+      "component": "meta.pipeline",
+      "tier": "SAFE",
+      "surface": "meta",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "inconclusive",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 11,
+      "evidence_ids": [],
+      "measurement": {
+        "verdict": "inconclusive",
+        "reason": "the payload cannot be built: refusing to render: the ledger cites journal head {'seq': 351, 'chain': 'f6551e31ef2dd82161b504f6ece29032e1e8c31231f0fd5ba15992c4124ab849'} but the journal is at {'seq': 354, 'chain': '8d5181551cf3e12d7452969bdd5571c1ea078fac81976057882e39ff0926c0bc'}.\nRe-fold it first: python scripts/ledger.py",
+        "left": null,
+        "right": null,
+        "sources": {},
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": null,
+        "role": "verdict",
+        "population": null
+      },
+      "check_fingerprint": "9b356b0dd105f0fa87169baf5ee795cc796c13f419d57c286193a9932f90b38b",
+      "reason": "the payload cannot be built: refusing to render: the ledger cites journal head {'seq': 351, 'chain': 'f6551e31ef2dd82161b504f6ece29032e1e8c31231f0fd5ba15992c4124ab849'} but the journal is at {'seq': 354, 'chain': '8d5181551cf3e12d7452969bdd5571c1ea078fac81976057882e39ff0926c0bc'}.\nRe-fold it first: python scripts/ledger.py",
+      "failure_repr": null
+    }
+  ],
+  "totals": {
+    "failed": 1,
+    "inconclusive": 1
+  },
+  "ratelimit": {},
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "fingerprint_after": "sha256:a18fb62e3a1251f3d33c47d9f54e9bb57c5e3cd48c4147e819f59e14c36671ad",
+  "exit_status": 1
+}
