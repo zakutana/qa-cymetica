@@ -69,10 +69,19 @@ def _display_cell(check: str, filing: str) -> str:
     if check == "UNVERIFIABLE":
         return "UNVERIFIABLE"
     if check == "PASSING":
+        # Our own check passes under the fingerprint it last failed under.
+        # That is the verification, and whether they also claimed a fix does
+        # not change whether the thing is broken. Splitting it into
+        # "PASSING, UNCLAIMED" added a state without adding an action: both
+        # mean nothing to do. Who gets the credit is still visible inside the
+        # row, where it belongs, rather than as a colour on the list.
+        #
+        # NEVER RAISED stays separate: it passes and they were never told, so
+        # there is no conversation to read and no report to point at.
         return {
             "NOT_RAISED": "PASSING, NEVER RAISED",
-            "RAISED": "PASSING, UNCLAIMED",
-            "REPLIED": "PASSING, UNCLAIMED",
+            "RAISED": "VERIFIED FIXED",
+            "REPLIED": "VERIFIED FIXED",
             "FIX_CLAIMED": "VERIFIED FIXED",
         }[filing]
     if check == "PASSING_UNPINNED":

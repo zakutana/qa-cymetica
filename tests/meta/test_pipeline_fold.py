@@ -452,8 +452,12 @@ def test_display_state_composition_table():
     assert set(DISPLAY) == set(itertools.product(CHECK_STATES, FILING_STATES)), \
         "the composition table has a hole -- every pair must render something"
 
+    # Green requires our check to PASS. Nothing else does, and no combination
+    # of things the vendor said can produce it.
     verified = [pair for pair, text in DISPLAY.items() if text == "VERIFIED FIXED"]
-    assert verified == [("PASSING", "FIX_CLAIMED")], verified
+    assert {check for check, _ in verified} == {"PASSING"}, verified
+    assert set(verified) == {("PASSING", "RAISED"), ("PASSING", "REPLIED"),
+                             ("PASSING", "FIX_CLAIMED")}, verified
 
     assert DISPLAY[("INCONCLUSIVE", "FIX_CLAIMED")] == "NOT REPRODUCIBLE"
     assert DISPLAY[("REPRODUCING", "FIX_CLAIMED")] == "STILL REPRODUCIBLE"

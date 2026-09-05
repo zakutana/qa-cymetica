@@ -650,7 +650,6 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:15.0px; max-wid
 .state.s-fix-claimed        { background:var(--warn-bg); color:var(--warn); }
 .state.s-check-changed      { background:var(--warn-bg); color:var(--warn); }
 .state.s-passing-unpinned   { background:var(--accent-dim); color:var(--accent); }
-.state.s-passing-unclaimed  { background:var(--accent-dim); color:var(--accent); }
 .state.s-passing-never-raised { background:var(--accent-dim); color:var(--accent); }
 .state.s-verified-fixed     { background:var(--ok-bg); color:var(--ok); }
 .state.s-unverified         { background:var(--none-bg); color:var(--text-dim); }
@@ -1132,7 +1131,9 @@ function conversation(f) {
   const note = f.verification
     ? `<div class="chat-note ok"><b>We re-ran the test and it passes.</b>
        ${esc(when(f.verification.at))} by run <code>${esc(f.verification.run_id)}</code>.
-       Their claim and our measurement agree, which is what closes it.</div>`
+       ${f.thread.some(m => m.who === "them" && /fix|resolv|complet|clos/i.test(m.status || ""))
+         ? "Their claim and our measurement agree, which is what closes it."
+         : "They never claimed a fix for this one; our own test is what closes it."}</div>`
     : f.regressions && f.regressions.length
     ? `<div class="chat-note bad"><b>This was fixed and has broken again</b>
        (run <code>${esc(f.regressions[f.regressions.length-1].run_id)}</code>).</div>`
