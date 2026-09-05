@@ -288,9 +288,9 @@ class JournalError(RuntimeError):
 
 EVENT_TYPES = frozenset({
     "run_recorded", "filing_intent", "filing_outcome", "vendor_status",
-    "message", "reply", "withdraw", "retire_check", "rebind_check",
-    "pin_fingerprint", "retraction_sent", "supersede", "backfill",
-    "legacy_verification", "migrated", "note",
+    "vendor_read", "message", "reply", "withdraw", "retire_check",
+    "rebind_check", "pin_fingerprint", "retraction_sent", "supersede",
+    "backfill", "legacy_verification", "migrated", "note",
 })
 REQUIRED_EVENT_KEYS = ("type", "at", "by", "source")
 ALLOWED_EVENT_KEYS = frozenset({
@@ -300,6 +300,7 @@ ALLOWED_EVENT_KEYS = frozenset({
     "reply_to", "delivered", "nodeid", "from_id", "to_id", "value",
     "evidence_id", "reconciled_from", "server_created_at", "text",
     "run_id", "file_sha256", "migrated_from", "note", "origin", "via",
+    "klass", "rows_returned", "server_total", "stale_from",
 })
 
 
@@ -312,6 +313,8 @@ def _natural_key(event: dict) -> str:
         return f"{t}|{g('key')}|{g('at')}|{g('source')}"
     if t == "vendor_status":
         return f"{t}|{g('report_id')}|{g('status')}|{g('observed_at')}"
+    if t == "vendor_read":
+        return f"{t}|{g('at')}|{g('source')}|{g('klass')}"
     if t in ("message", "reply"):
         return f"{t}|{g('msg_id')}"
     if t == "run_recorded":
@@ -324,6 +327,18 @@ def _natural_key(event: dict) -> str:
         return f"{t}|{g('from_id')}|{g('to_id')}"
     # backfill / legacy_verification / migrated / note
     return f"{t}|{g('finding_id')}|{hashlib.sha256((g('text') or g('note') or '').encode()).hexdigest()[:12]}"
+
+
+def event_id(event: dict) -> str:
+    """The event's identity: type + its natural key, hashed.
+
+    Public because the fold cites it as the cause of every FILING transition,
+    and must be able to do so for an event it was handed directly rather than
+    read back off the journal.
+    """
+    return hashlib.sha256(
+        (event["type"] + "|" + _natural_key(event)).encode("utf-8")
+    ).hexdigest()
 
 
 def _canonical(obj: dict) -> str:
@@ -396,10 +411,9 @@ def append_event(event: dict, path: Path | None = None) -> str:
 
     seq = len(existing) + 1
     prev_chain = existing[-1]["chain"] if existing else ""
-    event_id = hashlib.sha256((event["type"] + "|" + key).encode("utf-8")).hexdigest()
     body = dict(event)
     body["seq"] = seq
-    body["event_id"] = event_id
+    body["event_id"] = event_id(event)
     chain = hashlib.sha256((prev_chain + _canonical(body)).encode("utf-8")).hexdigest()
     line = dict(body)
     line["chain"] = chain

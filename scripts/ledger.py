@@ -1,227 +1,171 @@
-"""Persistent finding ledger.
+"""Compose one run and the journal into the ledger.
 
-The bug this fixes: findings were derived fresh on every run from whatever was
-currently failing, so a finding whose check started passing simply vanished --
-taking with it the record that it had existed, been filed, and been verified.
+This script used to be `merge()`: it took the last run record by filename,
+rebuilt the finding list from whatever was currently failing, and stamped
+VERIFIED FIXED on every row that was no longer in it. The audit traced 71 of
+the 109 state changes an operator watched back to that function -- not to the
+platform changing, but to us re-deriving what we already knew.
 
-That is backwards. A finding we verified fixed OURSELVES is the most valuable
-record in the project: it is the only state that means "we checked", as opposed
-to "they said". Losing it credits nobody and leaves nothing to regress against.
+It now does no deriving at all. The rules live in qa/fold.py, which is pure;
+this file only reads the inputs, calls it, and writes the result through
+qa.state.write_ledger, which refuses anything that moves history backwards.
 
-So every finding ever seen gets a permanent row here. A finding that stops
-reproducing becomes VERIFIED FIXED, stamped with the run and timestamp that
-verified it. If it ever reproduces again, that same row becomes REGRESSED --
-which is only detectable because the row survived.
+    python scripts/ledger.py --run <run_id>   compose that run
+    python scripts/ledger.py                  the newest admissible run
+    python scripts/ledger.py --events-only    the journal alone, no run
+    python scripts/ledger.py --check          does the committed ledger match?
 
-    python scripts/ledger.py      # merge the current run into the ledger
+There is no invocation that picks a run for you when none is admissible. If
+that is the situation, the answer is to make an admissible run, and the script
+says so and names what is wrong with each candidate.
 """
 
 from __future__ import annotations
 
+import argparse
 import json
 import sys
-from datetime import datetime, timezone
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-STATE = REPO_ROOT / "state"
-LEDGER = STATE / "ledger.json"
+import findings as findings_mod  # noqa: E402
 
+from qa.fold import display_state, fold  # noqa: E402
+from qa.state import (  # noqa: E402
+    admissibility,
+    head,
+    latest_admissible_run_id,
+    ledger_path,
+    list_runs,
+    load_run,
+    read_events,
+    write_ledger,
+)
 
-# Findings WE withdrew, with the reason. A check that stops failing because we
-# deleted it is not a fix, and crediting the vendor for one would be the same
-# error as refusing to credit a real one -- just pointed the other way.
-WITHDRAWN = {
-    "CYM-mcp_tool_count":
-        "Our check asserted the anonymous tool count equals the manifest total. "
-        "That held only while tier gating was broken; once it was fixed, "
-        "anonymous correctly returns 25 of 46 and our check reported their fix "
-        "as a failure. Replaced by tests/mcp/test_trust_ladder.py.",
-    "CYM-documented-405":
-        "Measured our own probe method, not their contract. The original 18 were "
-        "llms.txt rendering MCP tools as GET-able /mcp/v1/tools/<name> URLs, and "
-        "those are gone. The 10 that remain are POST-only endpoints we probed "
-        "with GET, where 405 is the correct answer.",
-    "CYM-mcp_tool_names_documented_exist":
-        "Never a defect. The check is INCONCLUSIVE, not failing: llms.txt no "
-        "longer links any tool names, so there is nothing to verify. It entered "
-        "the ledger from a run before the claim was rewritten.",
-    "CYM-chain_count":
-        "Our check compared 'settlement on 10 chains' against the 16 chains "
-        "/api/v1/swap/chains supports for swaps. Two different mechanisms; "
-        "netting them is the collapsed-layer defect we report in others.",
+DISPLAY_RANK = {
+    "STILL REPRODUCIBLE": 0, "NOT RAISED YET": 1, "RAISED": 2,
+    "THEY REPLIED": 3, "FIX CLAIMED": 4, "UNVERIFIED": 5,
+    "NOT REPRODUCIBLE": 6, "INCONCLUSIVE": 7, "CHECK CHANGED": 8,
+    "UNVERIFIABLE": 9, "PASSING (UNPINNED)": 10, "PASSING, UNCLAIMED": 11,
+    "PASSING, NEVER RAISED": 12, "VERIFIED FIXED": 13, "WITHDRAWN": 14,
 }
-
-def load(name: str) -> dict:
-    path = STATE / name
-    return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+SEVERITY_RANK = ["S0-CUSTODY", "S1-INTEGRITY", "S2-MEASUREMENT",
+                 "S3-CONTRACT", "S4-COSMETIC"]
 
 
-def load_ledger() -> dict:
-    if LEDGER.exists():
-        return json.loads(LEDGER.read_text(encoding="utf-8"))
-    return {"findings": {}}
-
-
-def latest_run_id() -> str | None:
-    runs = sorted((STATE / "runs").glob("run-*.json"))
-    if not runs:
+def load_previous() -> dict | None:
+    path = ledger_path()
+    if not path.exists():
         return None
-    return json.loads(runs[-1].read_text(encoding="utf-8")).get("run_id")
+    # Deliberately the raw read, not load_ledger(): composing must still work
+    # against a ledger the loader would reject, so that the fix for a bad
+    # ledger is to re-fold it rather than to hand-edit it.
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
-def executed_nodeids() -> set[str]:
-    """Which checks actually ran in the latest run record."""
-    runs = sorted((STATE / "runs").glob("run-*.json"))
+def _candidates(run: dict | None) -> list[dict]:
+    return findings_mod.candidates(run) if run is not None else []
+
+
+def _no_admissible_run_message() -> str:
+    lines = ["no admissible run record exists, so there is nothing to compose.",
+             "Every candidate and what is wrong with it:"]
+    runs = list_runs()
     if not runs:
-        return set()
-    run = json.loads(runs[-1].read_text(encoding="utf-8"))
-    return {r["nodeid"] for r in run.get("results", [])}
+        lines.append("  (no run records at all)")
+    for run in runs[-8:]:
+        verdict = admissibility(run)
+        lines.append(f"  {run['run_id']}  {verdict.level:<4} {', '.join(verdict.reasons)}")
+    lines.append("")
+    lines.append("A run that may verify needs a clean tree and a tagged")
+    lines.append("preregistration:  python scripts/prereg.py new --tag")
+    return "\n".join(lines)
 
 
-def merge() -> dict:
-    current = load("findings.json")
-    ledger = load_ledger()
-    rows: dict = ledger.setdefault("findings", {})
+def compose(run_id: str | None = None, events_only: bool = False) -> dict:
+    """Fold one run and the whole journal onto the previous ledger."""
+    events = read_events()
+    prev = load_previous()
 
-    now = datetime.now(timezone.utc).isoformat(timespec="seconds")
-    run_id = latest_run_id()
-    seen_now = {f["id"] for f in current.get("findings", [])}
+    run = None
+    if not events_only:
+        if run_id is None:
+            run_id = latest_admissible_run_id("R")
+            if run_id is None:
+                raise SystemExit(_no_admissible_run_message())
+        run = load_run(run_id)
 
-    # 0. Withdrawals apply unconditionally -- a finding we retracted stays
-    #    retracted even if its check is still producing output.
-    # 1. Findings observed in this run: create or refresh the row.
-    for finding in current.get("findings", []):
-        row = rows.setdefault(finding["id"], {
-            "id": finding["id"],
-            "first_seen": now,
-            "first_seen_run": run_id,
-        })
-        row.update({
-            "title": finding["title"],
-            "severity": finding["severity"],
-            "tag": finding.get("tag"),
-            "kind": finding.get("kind"),
-            "section": finding.get("section"),
-            "component": finding.get("component"),
-            "note": finding.get("note"),
-            "detail": finding.get("detail"),
-            "checks": finding.get("checks", []),
-            "filed": finding.get("filed", []),
-            "thread": finding.get("thread", []),
-            "last_reproduced": now,
-            "last_reproduced_run": run_id,
-            "reproductions": row.get("reproductions", 0) + 1,
-        })
-        # A row that had been verified fixed and reproduces again is a regression.
-        if row.get("verified_fixed_at"):
-            row["regressed_at"] = now
-            row["regressed_run"] = run_id
-            row["verified_fixed_at"] = None
-            row["state"] = "REGRESSED"
-        else:
-            row["state"] = finding["state"]
-
-    # 2. Rows absent from this run.
-    #
-    #    Absence has two very different causes and conflating them is a defect:
-    #    the check RAN and passed, or the check never ran because the selector
-    #    did not include it. Only the first is a verification. Marking a finding
-    #    fixed because a partial run skipped it would let a targeted re-run
-    #    silently close everything it did not touch.
-    executed = executed_nodeids()
-    for finding_id, row in rows.items():
-        if finding_id in seen_now:
-            continue
-        if finding_id in WITHDRAWN:
-            row["state"] = "WITHDRAWN"
-            row["withdrawn_reason"] = WITHDRAWN[finding_id]
-            row["withdrawn_at"] = row.get("withdrawn_at") or now
-            row.pop("verified_fixed_at", None)
-            continue
-        if row.get("verified_fixed_at"):
-            row["state"] = "VERIFIED FIXED"
-            continue
-
-        checks = row.get("checks") or []
-        ran = [c for c in checks if c in executed]
-        if checks and not ran:
-            # The check exists and did not run. State is unchanged and the row
-            # is flagged, because "we did not look" must never read as "we
-            # looked and it was fine".
-            row["not_checked_in_last_run"] = True
-            continue
-        row.pop("not_checked_in_last_run", None)
-
-        row["verified_fixed_at"] = now
-        row["verified_by_run"] = run_id
-        row["state"] = "VERIFIED FIXED"
-        row["thread"] = row.get("thread", [])
-
-    # 3. Refresh the filing status of every row from the live tracker.
-    #    Rows carry a snapshot of what the vendor said when the row was
-    #    written; a backfilled row froze that snapshot at backfill time and
-    #    would otherwise keep displaying "pending" long after the report was
-    #    triaged. Showing a stale vendor status next to our own verification
-    #    makes the page contradict itself.
-    bounty = load("bounty.json")
-    live = {
-        r["id"]: r.get("status")
-        for r in (bounty.get("our_reports") or {}).get("reports", [])
-    }
-    refreshed = 0
-    for row in rows.values():
-        for entry in row.get("filed", []):
-            current_status = live.get(entry.get("report_id"))
-            if current_status and entry.get("status") != current_status:
-                entry["status"] = current_status
-                entry["status_seen_at"] = now
-                refreshed += 1
-    ledger["filing_status_refreshed"] = refreshed
-
-    for finding_id, reason in WITHDRAWN.items():
-        row = rows.get(finding_id)
-        if row is not None:
-            row["state"] = "WITHDRAWN"
-            row["withdrawn_reason"] = reason
-            row["withdrawn_at"] = row.get("withdrawn_at") or now
-            row.pop("verified_fixed_at", None)
-
-    ledger["updated_at"] = now
-    ledger["run_id"] = run_id
-    ledger["counts"] = {
-        state: sum(1 for r in rows.values() if r.get("state") == state)
-        for state in sorted({r.get("state") for r in rows.values()} - {None})
-    }
+    ledger = fold(prev, run=run, candidates=_candidates(run), events=events)
+    ledger["events_head"] = head()
     return ledger
 
 
 def as_findings(ledger: dict) -> list[dict]:
-    """Ledger rows in the shape the dashboard already renders."""
-    order = ["S0-CUSTODY", "S1-INTEGRITY", "S2-MEASUREMENT", "S3-CONTRACT",
-             "S4-COSMETIC"]
-    state_rank = {"REGRESSED": 0, "NOT RAISED YET": 1, "RAISED": 2,
-                  "THEY REPLIED": 3, "FIX CLAIMED": 4, "VERIFIED FIXED": 5,
-                  "WITHDRAWN": 6}
+    """Ledger rows in the order the dashboard shows them, worst first."""
     rows = list(ledger.get("findings", {}).values())
     rows.sort(key=lambda r: (
-        state_rank.get(r.get("state"), 9),
-        order.index(r["severity"]) if r.get("severity") in order else 9,
+        DISPLAY_RANK.get(display_state(r), 99),
+        SEVERITY_RANK.index(r["severity"]) if r.get("severity") in SEVERITY_RANK else 9,
         r["id"],
     ))
     return rows
 
 
-if __name__ == "__main__":
-    ledger = merge()
-    LEDGER.write_text(json.dumps(ledger, indent=2, ensure_ascii=False),
-                      encoding="utf-8")
-    print(f"-> {LEDGER.relative_to(REPO_ROOT)}")
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(prog="ledger.py", description=__doc__)
+    parser.add_argument("--run", dest="run_id", default=None,
+                        help="run record to compose (default: newest admissible)")
+    parser.add_argument("--events-only", action="store_true",
+                        help="fold the journal alone, adjudicating no checks")
+    parser.add_argument("--check", action="store_true",
+                        help="exit 1 if the committed ledger is not what the "
+                             "inputs fold to; writes nothing")
+    args = parser.parse_args(argv)
+
+    ledger = compose(run_id=args.run_id, events_only=args.events_only)
+
+    if args.check:
+        committed = load_previous()
+        if committed == ledger:
+            print("ledger matches its inputs")
+            return 0
+        print("the committed ledger is not what its inputs fold to.")
+        print("Re-fold it (scripts/ledger.py) rather than editing it.")
+        before = {fid: display_state(r)
+                  for fid, r in (committed or {}).get("findings", {}).items()}
+        after = {fid: display_state(r) for fid, r in ledger["findings"].items()}
+        for fid in sorted(set(before) | set(after)):
+            if before.get(fid) != after.get(fid):
+                print(f"  {fid}: {before.get(fid, '-')} -> {after.get(fid, '-')}")
+        return 1
+
+    if "rejected_run" in ledger:
+        # Refuse rather than write. Composing an inadmissible record would
+        # move nothing anyway, and writing the ledger afterwards would leave
+        # a timestamp implying somebody had looked.
+        rejected = ledger["rejected_run"]
+        print(f"run {rejected['run_id']} is not evidence: "
+              f"{', '.join(rejected['reasons'])}")
+        print("Nothing written. Fold the journal alone with --events-only, or "
+              "produce an admissible run.")
+        return 2
+
+    write_ledger(load_previous(), ledger)
+    print(f"-> {ledger_path()}")
+    print(f"   composed run {ledger.get('run_id', '(journal only)')} "
+          f"at level {ledger.get('run_level', '-')}")
     print(f"   {ledger['counts']}")
-    print(f"   refreshed {ledger['filing_status_refreshed']} stale filing statuses")
     for row in as_findings(ledger):
-        filed = ", ".join(f"#{f['report_id']}" for f in row.get("filed", [])) or "-"
-        print(f"   {row.get('state', '?'):<16} {row['severity']:<15} "
-              f"{filed:<8} {row['id']}")
+        reports = ", ".join(f"#{r['report_id']}" for r in row["filing"]["reports"]) or "-"
+        owed = [k for k, v in row["obligations"].items() if v]
+        print(f"   {display_state(row):<22} {row.get('severity', '?'):<15} "
+              f"{reports:<10} {row['id']}"
+              + (f"  OWED: {', '.join(owed)}" if owed else ""))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
