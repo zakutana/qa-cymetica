@@ -155,8 +155,15 @@ def test_day_one_is_twenty_three_rows_and_nothing_verified(staged):
     assert sum(counts.values()) == 23, counts
     assert counts.get("VERIFIED FIXED", 0) == 0, \
         "something claims to be verified without a run behind it"
-    assert counts.get("FIX CLAIMED") == 10, counts
     assert counts.get("WITHDRAWN") == 4, counts
+
+    # NOT an exact FIX CLAIMED count. That number is a function of the
+    # vendor's tracker at the moment this runs, and they keep answering
+    # reports -- it was 10 on day one and is higher now. Pinning it made this
+    # test fail for a change on their side, which is a test measuring the
+    # wrong thing. What the migration guarantees is that their claims move
+    # only the FILING axis and verify nothing.
+    assert counts.get("FIX CLAIMED", 0) >= 10, counts
 
     for fid, row in ledger["findings"].items():
         assert row["check"]["state"] in ("UNVERIFIED", "UNVERIFIABLE"), (fid, row["check"])
