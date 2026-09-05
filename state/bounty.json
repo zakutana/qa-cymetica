@@ -1,8 +1,9 @@
 {
-  "fetched_at": "2026-09-05T21:12:09+00:00",
-  "total": 30,
+  "fetched_at": "2026-09-05T21:47:57+00:00",
+  "total": 33,
   "statuses": {
-    "fixed": 20
+    "fixed": 19,
+    "validated": 1
   },
   "filing_probe": {
     "endpoint": "POST /api/v1/bounty/reports",
@@ -24,15 +25,15 @@
   "our_reports": {
     "endpoint": "GET /api/v1/bounty/my-reports?wallet_address=<addr>",
     "klass": "ok",
-    "read_at": "2026-09-05T21:12:07+00:00",
-    "evidence_id": "1e48eaaeacf35c404d6c9c4431b0bd31b262277f47666513725e6b3c0575f04e",
-    "rows_returned": 23,
-    "server_total": 23,
-    "total": 23,
+    "read_at": "2026-09-05T21:47:51+00:00",
+    "evidence_id": "67ece157453cec3bf60b31fea29a11a3afcbbcde17cf11649322df503161b9d7",
+    "rows_returned": 24,
+    "server_total": 24,
+    "total": 24,
     "statuses": {
-      "pending": 2,
-      "invalid": 2,
-      "fixed": 19
+      "fixed": 21,
+      "validated": 1,
+      "invalid": 2
     },
     "fields_sent_but_not_stored": [],
     "reports": [
@@ -417,7 +418,7 @@
       {
         "id": 63,
         "title": "No verified report records what it earned: 30 bugs fixed, reward_amount null on every row, stats total_paid 0.0",
-        "status": "pending",
+        "status": "validated",
         "hunter_name": "expire76",
         "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
         "severity_reported": "high",
@@ -425,9 +426,9 @@
         "category": "api",
         "created_at": "2026-09-05T21:02:33.274821",
         "fixed_at": null,
-        "validated_at": null,
+        "validated_at": "2026-09-05T21:23:22.675512",
         "triaged_at": null,
-        "status_notes": null,
+        "status_notes": "Validated. You are right on the schema point: an award and a payment are different events and the tracker could not express the first one — reward_amount defaults to 0 and paid_at to null, so \"no award recorded\" and \"awarded zero\" were the same row. Shipping now (deploying): every report exposes reward_status (not_applicable / pending_award / awarded / paid) and eligible_reward_range (the published CYM tier for the report's severity); /stats adds reports_pending_award, awards_recorded, awards_recorded_total and payouts_recorded. Your 20 tracker rows will read pending_award — that is the true state: no award has been recorded on any report yet. Recording the amounts is a team step within the published tiers, not something this fix assigns automatically; it stays open on our side (ET-22222) until the team records them, and any payment made outside the tracker gets linked (paid_at) in that same step. total_paid is the paid-status sum and stays 0.0 until then — it will no longer be the only signal.",
         "ticket_url": null,
         "fix_pr_url": null,
         "reward_amount": 0.0
@@ -435,17 +436,35 @@
       {
         "id": 64,
         "title": "The bug-report reward programme appears in no machine-readable surface, while ET10 revenue share is documented in two",
-        "status": "pending",
+        "status": "fixed",
         "hunter_name": "expire76",
         "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
         "severity_reported": "low",
         "severity_confirmed": null,
         "category": "documentation",
         "created_at": "2026-09-05T21:03:34.541943",
-        "fixed_at": null,
+        "fixed_at": "2026-09-05T21:26:02.019570",
         "validated_at": null,
         "triaged_at": null,
-        "status_notes": null,
+        "status_notes": "Fixed. The programme is now described on the same surfaces as the ET10 revenue-share programme: agent-skills.json (actionable entry id bug-bounty → POST /api/v1/bounty/reports), agent-card.json (id bug-bounty), llms.txt (section \"REST API — Bug Bounty (earn CYM for verified bugs)\": tiers, filing, my-reports, public tracker, stats, leaderboard), and a PUBLIC-tier MCP tool get_bug_bounty_program (reward tiers by severity, the reward_status vocabulary, endpoints) listed in /.well-known/mcp.json tools and callable anonymously on /mcp/v1. The wording states what the tracker records (awards are recorded by the team after verification; payment is a separate event) rather than restating the marketing page.",
+        "ticket_url": null,
+        "fix_pr_url": null,
+        "reward_amount": 0.0
+      },
+      {
+        "id": 65,
+        "title": "GET /api/v1/account/me answers 401 to the X-API-Key that opens /api/v1/account/me/portfolio in the same request run",
+        "status": "fixed",
+        "hunter_name": "expire76",
+        "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
+        "severity_reported": "medium",
+        "severity_confirmed": null,
+        "category": "api",
+        "created_at": "2026-09-05T21:12:35.531888",
+        "fixed_at": "2026-09-05T21:37:59.583669",
+        "validated_at": "2026-09-05T21:31:18.623149",
+        "triaged_at": null,
+        "status_notes": "Fixed and live. /api/v1/account/me now runs on the same JWT-or-X-API-Key dependency as /me/portfolio and /me/balances, so the credential agent-card.json lists opens the route agent-skills.json points the et10-revenue-share skill at. Same release: reports you file through the bounty API are bridged into our tracker as hunter:<id>, and the per-report reward lane now resolves that id through your linked hunter profile — previously those filings could not reach it at all.",
         "ticket_url": null,
         "fix_pr_url": null,
         "reward_amount": 0.0
@@ -454,23 +473,24 @@
   },
   "qa_tracker": {
     "source": "https://cymetica.com/leaderboard/bugs (embedded allBugs)",
-    "total": 104,
+    "total": 107,
     "statuses": {
       "qa_testing": 2,
       "implementing": 2,
-      "resolved": 42,
+      "resolved": 44,
       "completed": 32,
       "rejected": 2,
       "pending": 12,
-      "wont_fix": 12
+      "wont_fix": 12,
+      "approved": 1
     },
     "source_channels": {
       "web": 74,
-      "bounty": 30
+      "bounty": 33
     },
     "usernames": {
       "Maxorelaxo": 2,
-      "expire76": 51,
+      "expire76": 54,
       "Crypto42day": 2,
       "tonybugs0439": 5,
       "joebloggs": 12,
@@ -567,6 +587,9 @@
       "cloned bot profile does not display trading activity correctly",
       "неправильный баланс токенов в портфеле пользователя max",
       "swap pages fail to display user token balances",
+      "get /api/v1/account/me answers 401 to the x-api-key that opens /api/v1/account/me/portfolio in the same request run",
+      "the bug-report reward programme appears in no machine-readable surface, while et10 revenue share is documented in two",
+      "no verified report records what it earned: 30 bugs fixed, reward_amount null on every row, stats total_paid 0.0",
       "none of the 11 reports we filed through the bounty api appears in /leaderboard/bugs, the tracker that carries triage state",
       "report #59 was marked fixed within the hour with no evidence recorded, and none of the three paths it names has changed",
       "three paths from report #49 still 404: one rename landed in openapi.json but not in agent-skills.json",
@@ -598,7 +621,7 @@
     ],
     "has_linear_links": 0
   },
-  "closed": 20,
+  "closed": 19,
   "closed_without_recorded_evidence": 0,
   "evidence_fields_checked": [
     "validated_at",
@@ -609,6 +632,60 @@
     "status_notes"
   ],
   "reports": [
+    {
+      "id": 65,
+      "title": "GET /api/v1/account/me answers 401 to the X-API-Key that opens /api/v1/account/me/portfolio in the same request run",
+      "status": "fixed",
+      "hunter_name": "expire76",
+      "severity_reported": "medium",
+      "severity_confirmed": null,
+      "created_at": "2026-09-05T21:12:35.531888",
+      "fixed_at": "2026-09-05T21:37:59.583669",
+      "validated_at": "2026-09-05T21:31:18.623149",
+      "triaged_at": null,
+      "status_notes": "Fixed and live. /api/v1/account/me now runs on the same JWT-or-X-API-Key dependency as /me/portfolio and /me/balances, so the credential agent-card.json lists opens the route agent-skills.json points the et10-revenue-share skill at. Same release: reports you file through the bounty API are bridged into our tracker as hunter:<id>, and the per-report reward lane now resolves that id through your linked hunter profile — previously those filings could not reach it at all.",
+      "ticket_url": null,
+      "fix_pr_url": null,
+      "reward_amount": 0.0,
+      "paid_at": null,
+      "is_duplicate": false
+    },
+    {
+      "id": 64,
+      "title": "The bug-report reward programme appears in no machine-readable surface, while ET10 revenue share is documented in two",
+      "status": "fixed",
+      "hunter_name": "expire76",
+      "severity_reported": "low",
+      "severity_confirmed": null,
+      "created_at": "2026-09-05T21:03:34.541943",
+      "fixed_at": "2026-09-05T21:26:02.019570",
+      "validated_at": null,
+      "triaged_at": null,
+      "status_notes": "Fixed. The programme is now described on the same surfaces as the ET10 revenue-share programme: agent-skills.json (actionable entry id bug-bounty → POST /api/v1/bounty/reports), agent-card.json (id bug-bounty), llms.txt (section \"REST API — Bug Bounty (earn CYM for verified bugs)\": tiers, filing, my-reports, public tracker, stats, leaderboard), and a PUBLIC-tier MCP tool get_bug_bounty_program (reward tiers by severity, the reward_status vocabulary, endpoints) listed in /.well-known/mcp.json tools and callable anonymously on /mcp/v1. The wording states what the tracker records (awards are recorded by the team after verification; payment is a separate event) rather than restating the marketing page.",
+      "ticket_url": null,
+      "fix_pr_url": null,
+      "reward_amount": 0.0,
+      "paid_at": null,
+      "is_duplicate": false
+    },
+    {
+      "id": 63,
+      "title": "No verified report records what it earned: 30 bugs fixed, reward_amount null on every row, stats total_paid 0.0",
+      "status": "validated",
+      "hunter_name": "expire76",
+      "severity_reported": "high",
+      "severity_confirmed": null,
+      "created_at": "2026-09-05T21:02:33.274821",
+      "fixed_at": null,
+      "validated_at": "2026-09-05T21:23:22.675512",
+      "triaged_at": null,
+      "status_notes": "Validated. You are right on the schema point: an award and a payment are different events and the tracker could not express the first one — reward_amount defaults to 0 and paid_at to null, so \"no award recorded\" and \"awarded zero\" were the same row. Shipping now (deploying): every report exposes reward_status (not_applicable / pending_award / awarded / paid) and eligible_reward_range (the published CYM tier for the report's severity); /stats adds reports_pending_award, awards_recorded, awards_recorded_total and payouts_recorded. Your 20 tracker rows will read pending_award — that is the true state: no award has been recorded on any report yet. Recording the amounts is a team step within the published tiers, not something this fix assigns automatically; it stays open on our side (ET-22222) until the team records them, and any payment made outside the tracker gets linked (paid_at) in that same step. total_paid is the paid-status sum and stays 0.0 until then — it will no longer be the only signal.",
+      "ticket_url": null,
+      "fix_pr_url": null,
+      "reward_amount": 0.0,
+      "paid_at": null,
+      "is_duplicate": false
+    },
     {
       "id": 61,
       "title": "None of the 11 reports we filed through the bounty API appears in /leaderboard/bugs, the tracker that carries triage state",
@@ -914,60 +991,6 @@
       "reward_amount": 0.0,
       "paid_at": null,
       "is_duplicate": false
-    },
-    {
-      "id": 41,
-      "title": "Official docs sitewide instructed installing a third party's PyPI package (pip install event-trader)",
-      "status": "fixed",
-      "hunter_name": null,
-      "severity_reported": "high",
-      "severity_confirmed": null,
-      "created_at": "2026-07-30T01:39:11.189008",
-      "fixed_at": "2026-07-30T02:31:39.410030",
-      "validated_at": "2026-07-30T02:31:39.410030",
-      "triaged_at": "2026-07-30T02:31:39.410030",
-      "status_notes": "\n[2026-09-04 backfill] validated_at/triaged_at stamped from fixed_at: this report was closed before per-stage timestamps existed (validation and fix were recorded in one step at the time). Stamps are historical, not a fresh re-verification.",
-      "ticket_url": null,
-      "fix_pr_url": null,
-      "reward_amount": 0.0,
-      "paid_at": null,
-      "is_duplicate": false
-    },
-    {
-      "id": 40,
-      "title": "Test middleware body integrity check",
-      "status": "fixed",
-      "hunter_name": "hunter_0x00000000",
-      "severity_reported": "low",
-      "severity_confirmed": null,
-      "created_at": "2026-07-03T16:06:07.565277",
-      "fixed_at": "2026-07-04T16:53:17.900045",
-      "validated_at": "2026-07-04T16:53:17.900045",
-      "triaged_at": "2026-07-04T16:53:17.900045",
-      "status_notes": "\n[2026-09-04 backfill] validated_at/triaged_at stamped from fixed_at: this report was closed before per-stage timestamps existed (validation and fix were recorded in one step at the time). Stamps are historical, not a fresh re-verification.",
-      "ticket_url": null,
-      "fix_pr_url": null,
-      "reward_amount": 0.0,
-      "paid_at": null,
-      "is_duplicate": false
-    },
-    {
-      "id": 39,
-      "title": "Playwright E2E test — middleware body integrity",
-      "status": "fixed",
-      "hunter_name": "hunter_0x000000_0099",
-      "severity_reported": "low",
-      "severity_confirmed": null,
-      "created_at": "2026-07-03T16:05:41.815047",
-      "fixed_at": "2026-07-04T16:53:17.676632",
-      "validated_at": "2026-07-04T16:53:17.676632",
-      "triaged_at": "2026-07-04T16:53:17.676632",
-      "status_notes": "\n[2026-09-04 backfill] validated_at/triaged_at stamped from fixed_at: this report was closed before per-stage timestamps existed (validation and fix were recorded in one step at the time). Stamps are historical, not a fresh re-verification.",
-      "ticket_url": null,
-      "fix_pr_url": null,
-      "reward_amount": 0.0,
-      "paid_at": null,
-      "is_duplicate": false
     }
   ],
   "leaderboard": [
@@ -976,8 +999,8 @@
       "hunter_name": "expire76",
       "avatar_url": null,
       "tier": "senior",
-      "total_score": 370,
-      "valid_reports": 16,
+      "total_score": 440,
+      "valid_reports": 18,
       "total_likes": 0,
       "total_earned": 0.0
     },

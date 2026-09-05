@@ -617,6 +617,63 @@ reports:
       at least one of the authentication schemes that document lists is
       accepted -- or the route names the scheme it requires.
 
+  - key: qa-agent-cannot-report-its-own-data
+    findings: [CYM-qa-agent-cannot-report-its-own-data]
+    severity: medium
+    category: api
+    url: https://cymetica.com/api/v1/bounty/qa-agent/ask
+    title: "The A2A QA agent cannot report values the platform publishes, and escalating a low-confidence answer returns the routing guide"
+    expected: >
+      Asked for a value served at a documented endpoint, the channel
+      agent-card.json names for exactly this purpose answers with that value.
+      A question escalated under the platform's own confidence rule receives
+      something other than the rule itself.
+    actual: >
+      Asked which currency GET /api/v1/bounty/reward-tiers returns and what
+      the critical severity range is, the sync channel returned rewards-FAQ
+      marketing copy containing neither the currency (CYM) nor either bound
+      (400,000-1,000,000), at confidence 0.6, citing faq-rewards-1 and
+      faq-revenue-share-1. Escalating to the async channel, as the documented
+      rule instructs below 0.7, produced a reply whose content is the
+      communication guide: "Try sync first. If response.confidence < 0.7,
+      re-send via async" -- the step just taken.
+    steps:
+      - "GET /api/v1/bounty/reward-tiers -> {\"currency\": \"CYM\", \"severity_rewards\": {\"critical\": {\"min\": 400000, \"max\": 1000000}, ...}}"
+      - "POST /api/v1/bounty/qa-agent/ask {\"question\": \"What currency does GET /api/v1/bounty/reward-tiers return in its currency field, and what is the reward range for a critical severity report?\"}"
+      - "Read response.answer -> contains neither 'CYM' nor 400000 nor 1000000; confidence 0.6; sources faq-rewards-1, faq-revenue-share-1"
+      - "POST /api/v1/bounty/a2a/send with the same question, then GET /api/v1/bounty/a2a/inbox/{agent_id} -> the reply is the sync/async routing guide"
+    body: >
+      The question was chosen so the verdict does not rest on anyone's
+      judgement of tone. Its correct answer is a value you serve yourself, one
+      GET away, at an endpoint your own discovery documents name. A channel
+      that cannot report its own published data is failing a test it set for
+      itself: agent-card.json says of this endpoint that "Answers cite source
+      files, database state", and offers it as the way to check a claim the
+      card does not already list.
+      The escalation loop is the more serious half. Your decision rule sends a
+      sub-0.7 answer to the async channel, and the async channel replies with
+      the decision rule. A caller who follows your documentation exactly is
+      returned to where they started, so no question the fast path cannot
+      answer can ever reach a conclusion through the published route.
+      SEPARATE OBSERVATION, not a defect claim, because I would rather ask
+      than guess -- and asking is what failed above. Your surfaces began
+      stating today that bounty rewards are paid in CYM (llms.txt,
+      agent-card.json, agent-skills.json, and reward-tiers with a TGE/vesting
+      schedule). I cannot locate CYM: not among the four contracts
+      agent-card.json declares under verification.contracts, not in the 569
+      pairs list_clob_pairs returns (CYM42/USDC is a different asset), and
+      bounty/stats reports total_cym_allocated 0.0. The announcement in the
+      support channels promised 1000 ET10 per verified report, ET10 is
+      declared and source-verified, and ET10 is what was actually paid. If CYM
+      is pre-TGE, what should a hunter read today to know what a verified
+      report has earned?
+      NOT ASKING FOR A DIFFERENT TONE. The marketing register is a product
+      decision. The finding is that the answer did not contain the data.
+      INVARIANT: for a question whose answer is a value served at a documented
+      endpoint, the sync channel's answer contains that value, or reports a
+      confidence below its own floor AND the async channel returns something
+      other than the routing guide.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: read-only
   verification of the REST API, MCP and machine-readable discovery surfaces. No
