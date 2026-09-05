@@ -6,10 +6,22 @@ operator remembers" -- which is the same class of guarantee as the convention
 that every test carries a @qa tag, and that one needed a collection-time abort
 to survive contact with a tired operator at 2am.
 
-Two checks, both in the meta block, so they run before any live request:
+Two checks:
 
   (a) the committed ledger is what its journal and run records fold to
   (b) the committed dashboard is a render of that ledger
+
+They live in tests/repo/ rather than tests/meta/, deliberately. The meta block
+aborts the whole session on failure, which is right for the safety guard -- if
+the guard cannot be shown to block, no live request may be issued. It is wrong
+here, and the plan that put them in the meta block did not foresee why: a
+stale ledger would abort the very run whose record is needed to bring the
+ledger up to date. Deadlock, on the one check meant to keep the repository
+honest. Observed on the first attempt at the first admissible run.
+
+A stale projection is a bookkeeping failure, not a safety failure. These still
+run in every full session and still fail loudly; they just do not stop the
+session that would fix them.
 
 (b) is the one that matters most and the one nothing else covers. A ledger can
 be perfectly correct while the page beside it shows last week's numbers, and
