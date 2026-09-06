@@ -12,8 +12,8 @@ session picked up whatever was in front of it. A sweep is the same sequence
 every time, so what changed between two sweeps is a fact rather than an
 impression.
 
-Work in `../qa-cymetica` (sibling of the session's directory). Every command
-below assumes that directory.
+Work in the repository root. The skill used to say `../qa-cymetica`, from
+when it lived in a sibling project that has since been deleted.
 
 ## The spine — always, in this order
 
@@ -48,8 +48,10 @@ Do not skip steps. Each one exists because skipping it produced a wrong page.
    python -m pytest tests/repo -q
    ```
 
-6. **Commit, then publish** the dashboard to the existing artifact URL
-   (see the repo's CLAUDE.md). Same URL every time.
+6. **Commit.** That is the whole of it. The console is served locally by
+   `scripts/serve.py`, which watches `state/` and pushes the change to the
+   open tab within a second, so there is nothing to publish. Operator's
+   instruction, 2026-09-06: stop making Artifacts for this.
 
 ## What to do per status
 
