@@ -315,6 +315,51 @@ def test_the_page_reads_no_field_the_payload_stops_writing(tmp_path, monkeypatch
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_every_verdict_the_inventory_can_produce_is_drawable():
+    """A verdict the page cannot draw is a hole in the bar, not a zero.
+
+    `server_error` and `unreachable` were producible by inventory.py and
+    absent from the page's ORDER, so an endpoint in either state fell out of
+    the coloured bar, out of the legend, and -- because the bar's total is
+    summed over ORDER -- out of the denominator the segments are drawn
+    against. A section could read 80% with the remaining fifth represented by
+    nothing at all.
+
+    Neither had ever occurred, which is exactly why nobody noticed. Held
+    against the source of the verdicts rather than against a list written
+    beside it, so adding a tenth kind fails here rather than on the day it
+    first happens.
+    """
+    import inspect
+
+    spec = importlib.util.spec_from_file_location(
+        "inventory_mod", REPO / "scripts" / "inventory.py")
+    inventory = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(inventory)
+    render = _render()
+
+    produced = set(re.findall(r'return "([a-z_]+)"',
+                              inspect.getsource(inventory.verdict)))
+    order = re.search(r"const ORDER = \[(.*?)\];", render.TEMPLATE, re.S)
+    assert order, "the page no longer declares an ORDER of verdicts"
+    drawable = set(re.findall(r'"([a-z_]+)"', order.group(1)))
+
+    assert not produced - drawable, (
+        f"inventory.py produces verdicts the page cannot draw: "
+        f"{sorted(produced - drawable)}"
+    )
+    words = re.search(r"VERDICT_WORDS = \{(.*?)\};", render.TEMPLATE, re.S)
+    described = set(re.findall(r"^\s+([a-z_]+):", words.group(1), re.M))
+    assert not drawable - described, (
+        f"drawn with no words to explain them: {sorted(drawable - described)}"
+    )
+    uncoloured = [k for k in sorted(drawable)
+                  if f".seg-{k}{{" not in render.TEMPLATE
+                  and f".seg-{k}," not in render.TEMPLATE]
+    assert not uncoloured, f"drawn with no colour of their own: {uncoloured}"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_page_renders_every_field_it_is_given(monkeypatch):
     """The other direction, and the one that stayed open longer.
 

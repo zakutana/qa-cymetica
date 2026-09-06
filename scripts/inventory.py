@@ -447,8 +447,16 @@ def assemble(documented: dict, tools: dict) -> dict:
         # A 405 means we sent the wrong verb: we learned the endpoint exists and
         # nothing about whether it works. Scoring it 0% would report our own bad
         # probe as their broken section. It still raises a documentation finding.
+        # `unreachable` joins the excluded: it means neither identity got any
+        # status back at all -- a timeout or a DNS failure on OUR side -- and
+        # scoring it against them turns a hiccup on this machine into a
+        # platform regression on the page. Same principle as rule 8 one layer
+        # over: a read that failed is not a measurement. `method` is excluded
+        # for the same reason, and `server_error` and `missing` are not: a 5xx
+        # and a 404 are answers, and they are theirs.
         probed = [e for e in endpoints
-                  if e["verdict"] not in ("unprobed", "websocket", "method")]
+                  if e["verdict"] not in ("unprobed", "websocket", "method",
+                                          "unreachable")]
         healthy = [e for e in probed if e["verdict"] in HEALTHY]
         pct = round(100 * len(healthy) / len(probed)) if probed else None
 

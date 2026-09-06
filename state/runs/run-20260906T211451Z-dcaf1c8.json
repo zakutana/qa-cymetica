@@ -1,0 +1,71 @@
+{
+  "schema": 2,
+  "run_id": "run-20260906T211451Z-dcaf1c8",
+  "started_at": "2026-09-06T21:14:54+00:00",
+  "finished_at": "2026-09-06T21:14:58+00:00",
+  "git_head": "dcaf1c89dd54de6c1f216c2495c517b2c3402452",
+  "git_short": "dcaf1c8",
+  "git_dirty": true,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": "sha256:90e7579c68b557ad3e67ca79538fa7f1f8fcc41353d6aabb21c23c9d994df53f",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "892d82611a90587dddf0272a7ca5326676dbb3e54e17f99b34bce91a9b947033",
+    "/.well-known/agent-card.json": "3dfc7d39fe712e14967fbd019be8bec83c4a49e836fb3d04ff02248b2580fca5",
+    "/.well-known/agent-skills.json": "f2f992a77d58a157ec678cd17d4d94d216aa96d12ee4f9a3adae9fa291fb5a0d",
+    "/.well-known/ai-plugin.json": "e2f2d79821bf8e741fb18cefea6a94cb7a1ec358644306aeff02e763c61b1fb2",
+    "/.well-known/udc.json": "92cd8a5f7ec5a0a859594ef9fbd72cba4914eaab4220377db18adf2ed44611a4",
+    "/openapi.json": "f0cccb1f06ec266d303b1c7ab8e23f4af29a3c43106027595c95c1449fa1b2cf",
+    "/llms.txt": "98da5811f1b71dfc5598e361b965e590820b1ffa9fd931e41807d9a3950e45d3",
+    "mcp:tools/list:none": "cb9188ffdaf6a78e40cae9e30cd1fdfa9925f8f77b1c3d41f5ddb24108b27162"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/meta/test_pipeline_render.py::test_every_verdict_the_inventory_can_produce_is_drawable -q --no-header --tb=short",
+  "selector_full": false,
+  "allow_mutate": false,
+  "collected": [
+    "tests/meta/test_pipeline_render.py::test_every_verdict_the_inventory_can_produce_is_drawable"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/meta/test_pipeline_render.py::test_every_verdict_the_inventory_can_produce_is_drawable",
+      "component": "meta.pipeline",
+      "tier": "SAFE",
+      "surface": "meta",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 0,
+      "evidence_ids": [],
+      "measurement": null,
+      "check_fingerprint": "e8f83e1b6453da5be62aebaba3cd3c0b25e97534d2b62594c942190a699e704e",
+      "reason": null,
+      "failure_repr": "tests\\meta\\test_pipeline_render.py:335: in test_every_verdict_the_inventory_can_produce_is_drawable\n    inventory = _module(\"scripts/inventory.py\")\nE   NameError: name '_module' is not defined"
+    }
+  ],
+  "totals": {
+    "failed": 1
+  },
+  "ratelimit": {},
+  "record_integrity": {
+    "consistent": false,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "fingerprint_after": "sha256:90e7579c68b557ad3e67ca79538fa7f1f8fcc41353d6aabb21c23c9d994df53f",
+  "exit_status": 2
+}

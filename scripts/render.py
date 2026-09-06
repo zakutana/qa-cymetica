@@ -672,6 +672,14 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:15.0px; max-wid
 .seg-ok{background:var(--ok)} .seg-auth{background:var(--auth)}
 .seg-param{background:var(--auth);opacity:.6} .seg-method{background:var(--warn)}
 .seg-missing{background:var(--bad)}
+/* Theirs, and counted against them: a 5xx is an answer. */
+.seg-server_error{background:var(--bad);opacity:.65}
+/* Ours, and counted against nobody: no answer came back at all, which is a
+   fact about this machine's network. Hatched like the other exclusions. */
+.seg-unreachable{
+  background:repeating-linear-gradient(135deg,var(--warn) 0 3px,transparent 3px 7px);
+  box-shadow:inset 0 0 0 1px var(--warn);
+}
 .seg-unprobed,.seg-websocket{
   background:repeating-linear-gradient(135deg,var(--none-bg) 0 4px,transparent 4px 8px);
   box-shadow:inset 0 0 0 1px var(--none-bg);
@@ -1308,10 +1316,17 @@ const VERDICT_WORDS = {
   param:     "wants a parameter we did not send",
   method:    "we asked the wrong way (our fault, left out of the score)",
   missing:   "documented, but there is nothing there",
+  server_error: "it broke on their side (5xx)",
+  unreachable: "we got no answer at all -- our network, not their endpoint",
   unprobed:  "cannot be checked by a simple call",
   websocket: "a live feed, not a request",
 };
-const ORDER = ["ok","auth","param","method","missing","unprobed","websocket"];
+// Every verdict inventory.py can produce. server_error and unreachable were
+// missing, so an endpoint in either state vanished from the bar and from the
+// legend, and the bar's own total was computed over this list -- a section
+// could read 80% with the other 20% represented by nothing at all.
+const ORDER = ["ok","auth","param","method","missing","server_error",
+               "unreachable","unprobed","websocket"];
 
 function card(s) {
   const h = health(s);
