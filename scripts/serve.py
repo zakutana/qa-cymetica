@@ -87,6 +87,27 @@ class SingleServer(ThreadingHTTPServer):
     allow_reuse_address = False
     daemon_threads = True
 
+    def handle_error(self, request, client_address) -> None:
+        """A client hanging up is routine here, not an error.
+
+        Every live reload abandons an in-flight SSE stream and a keep-alive
+        connection, and Windows reports that as WinError 10053. socketserver
+        prints a full traceback for it, so the console window filled with
+        stack traces that look like a crashed server while it was working
+        exactly as designed -- and a real error in the same stream would have
+        been invisible among them.
+
+        The stream_events handler already swallows this on the write side;
+        this covers the read side, where socketserver reads the next request
+        line off a connection the browser has already dropped, outside any
+        code of ours.
+        """
+        kind = sys.exc_info()[1]
+        if isinstance(kind, (ConnectionAbortedError, ConnectionResetError,
+                             BrokenPipeError)):
+            return
+        super().handle_error(request, client_address)
+
 
 class Live:
     """The current page, the current payload hash, and who is listening."""

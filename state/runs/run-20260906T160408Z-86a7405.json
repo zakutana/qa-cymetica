@@ -1,0 +1,109 @@
+{
+  "schema": 2,
+  "run_id": "run-20260906T160408Z-86a7405",
+  "started_at": "2026-09-06T16:04:13+00:00",
+  "finished_at": "2026-09-06T16:04:18+00:00",
+  "git_head": "86a74054bcbac65a1bbf3ea2b189e4d1c65a9865",
+  "git_short": "86a7405",
+  "git_dirty": true,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": "sha256:067cbc6d64e271a7667dcf748076defdd48af524aa68dc416c5c127ce9fe303d",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "892d82611a90587dddf0272a7ca5326676dbb3e54e17f99b34bce91a9b947033",
+    "/.well-known/agent-card.json": "3dfc7d39fe712e14967fbd019be8bec83c4a49e836fb3d04ff02248b2580fca5",
+    "/.well-known/agent-skills.json": "f2f992a77d58a157ec678cd17d4d94d216aa96d12ee4f9a3adae9fa291fb5a0d",
+    "/.well-known/ai-plugin.json": "e2f2d79821bf8e741fb18cefea6a94cb7a1ec358644306aeff02e763c61b1fb2",
+    "/.well-known/udc.json": "92cd8a5f7ec5a0a859594ef9fbd72cba4914eaab4220377db18adf2ed44611a4",
+    "/openapi.json": "f0cccb1f06ec266d303b1c7ab8e23f4af29a3c43106027595c95c1449fa1b2cf",
+    "/llms.txt": "c66b994461454a7180a3577036e52cf535847df0a1cdfacb532cc48e72773906",
+    "mcp:tools/list:none": "cb9188ffdaf6a78e40cae9e30cd1fdfa9925f8f77b1c3d41f5ddb24108b27162"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/rest/test_qa_agent_channel.py::test_the_async_first_pass_is_grounded_like_the_sync_channel -q --no-header --tb=long",
+  "selector_full": false,
+  "allow_mutate": false,
+  "collected": [
+    "tests/rest/test_qa_agent_channel.py::test_the_async_first_pass_is_grounded_like_the_sync_channel"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/rest/test_qa_agent_channel.py::test_the_async_first_pass_is_grounded_like_the_sync_channel",
+      "component": "rest.support",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "a2a-first-pass-not-grounded",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 891,
+      "evidence_ids": [
+        "21bdd3031a8473bdd2240679924acdfc72325400b87452561905b3d863263f4c"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "0 of 9 automated first-pass replies cite a source or clear their own confidence floor of 0.7",
+        "left": [
+          {
+            "confidence": 0.5,
+            "sources": []
+          },
+          {
+            "confidence": 0.5,
+            "sources": []
+          },
+          {
+            "confidence": 0.5,
+            "sources": []
+          }
+        ],
+        "right": 0.7,
+        "sources": {
+          "inbox": "/api/v1/bounty/a2a/inbox/{agent_id}",
+          "compare_with": "/api/v1/bounty/qa-agent/ask"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "a2a-first-pass-not-grounded",
+        "role": "verdict",
+        "population": {
+          "first_pass": 9
+        }
+      },
+      "check_fingerprint": "707f158384ccecf9929ce24a949bd6190c568925df6ec54d3321acae4d56ce34",
+      "reason": null,
+      "failure_repr": "rest_trusted = <httpx.Client object at 0x000001B9EEB1E850>\n\n    @qa(component=\"rest.support\", tier=SafetyTier.SAFE, surface=\"rest\",\n        claim=\"a2a-first-pass-not-grounded\")\n    def test_the_async_first_pass_is_grounded_like_the_sync_channel(rest_trusted):\n        \"\"\"They said async now gets \"a substantive grounded first-pass reply\".\n    \n        The sync channel really was grounded by the same release: it appends the\n        live JSON verbatim and cites the endpoint under sources. The async\n        first-pass carries sources [] and the same confidence that triggers their\n        own escalation rule, so the two halves of one channel were not fixed\n        alike.\n        \"\"\"\n        inbox = rest_trusted.get(INBOX.format(agent_id=AGENT_ID),\n                                 params={\"unread_only\": \"false\"})\n        if inbox.status_code != 200:\n            conclude(Measurement(\n                verdict=\"inconclusive\",\n                reason=f\"the inbox answered HTTP {inbox.status_code}\",\n                claim_id=\"a2a-first-pass-not-grounded\"))\n            return\n    \n        first_pass = [m for m in (inbox.json().get(\"messages\") or [])\n                      if (m.get(\"metadata\") or {}).get(\"kind\") == \"first_pass\"]\n        if not first_pass:\n            conclude(Measurement(\n                verdict=\"inconclusive\",\n                reason=\"no first-pass reply in the inbox to judge\",\n                claim_id=\"a2a-first-pass-not-grounded\"))\n            return\n    \n        grounded = [m for m in first_pass\n                    if ((m.get(\"metadata\") or {}).get(\"sources\")\n                        or (m.get(\"confidence\") or 0) >= CONFIDENCE_FLOOR)]\n    \n>       conclude(Measurement(\n            verdict=\"failed\" if not grounded else \"passed\",\n            reason=(f\"{len(grounded)} of {len(first_pass)} automated first-pass \"\n                    f\"replies cite a source or clear their own confidence floor of \"\n                    f\"{CONFIDENCE_FLOOR}\"),\n            left=[{\"confidence\": m.get(\"confidence\"),\n                   \"sources\": (m.get(\"metadata\") or {}).get(\"sources\")}\n                  for m in first_pass[:3]],\n            right=CONFIDENCE_FLOOR,\n            sources={\"inbox\": INBOX, \"compare_with\": ASK},\n            population={\"first_pass\": len(first_pass)},\n            claim_id=\"a2a-first-pass-not-grounded\"))\n\ntests\\rest\\test_qa_agent_channel.py:238: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n\nm = Measurement(verdict='failed', reason='0 of 9 automated first-pass replies cite a source or clear their own confidence ...vidence_ids=[], fingerprint=None, claim_id='a2a-first-pass-not-grounded', role='verdict', population={'first_pass': 9})\n\n    def conclude(m: Measurement) -> None:\n        \"\"\"Emit, then raise or return from the verdict. The only way a check ends.\n    \n        An `evidence`-role measurement can never be a failure: it is recorded and\n        the check passes, because prose-versus-prose comparisons are evidence for\n        a finding, never a finding by themselves.\n        \"\"\"\n        emit(m)\n        if m.role == \"evidence\":\n            return None\n        if m.verdict == \"failed\":\n>           raise AssertionError(explain(m))\nE           AssertionError: 0 of 9 automated first-pass replies cite a source or clear their own confidence floor of 0.7\nE             left  = [{'confidence': 0.5, 'sources': []}, {'confidence': 0.5, 'sources': []}, {'confidence': 0.5, 'sources': []}]\nE             right = 0.7\n\nqa\\measure.py:165: AssertionError"
+    }
+  ],
+  "totals": {
+    "failed": 1
+  },
+  "ratelimit": {
+    "requests": 1,
+    "limit": 60,
+    "remaining": 59,
+    "fraction_used": 0.0167,
+    "exhausted": false
+  },
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "fingerprint_after": "sha256:067cbc6d64e271a7667dcf748076defdd48af524aa68dc416c5c127ce9fe303d",
+  "exit_status": 1
+}

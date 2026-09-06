@@ -783,6 +783,45 @@ reports:
       INVARIANT: reward_currency equals eligible_reward_range.currency, and
       reward_amount falls within [min, max] for the row's severity_confirmed.
 
+  # #67 was marked fixed at 11:07:30 UTC, stating the async grounding layer
+  # shipped @b66f344fea. A fresh inbox read after that timestamp still shows
+  # the pre-fix behaviour -- this is not a stale message from before the fix,
+  # it is a new message that postdates the vendor's own fixed_at.
+  - key: a2a-grounding-still-ungrounded-after-fixed
+    findings: [CYM-a2a-first-pass-not-grounded]
+    severity: low
+    category: api
+    url: https://cymetica.com/api/v1/bounty/a2a/send
+    title: "Follow-up on #67: async first-pass replies still carry confidence 0.5 and sources [] after your fixed_at of 11:07:30 UTC"
+    expected: >
+      Per the resolution note on #67, async first-pass grounding via the same
+      live-platform-facts resolvers as the sync path shipped @b66f344fea, live
+      as of fixed_at 2026-09-06T11:07:30Z.
+    actual: >
+      A question sent at 2026-09-06T16:02:09Z -- five hours after your own
+      fixed_at -- produced a first-pass reply with confidence 0.5 and
+      metadata.sources: []. This is not a stale pre-fix message: it is the
+      newest message in the inbox, timestamped after the fix was declared
+      live.
+    steps:
+      - "POST /api/v1/bounty/a2a/send {\"from_agent_id\": \"expire76-qa\", \"content\": \"<any question>\"} at 2026-09-06T16:02:09Z"
+      - "GET /api/v1/bounty/a2a/inbox/expire76-qa?unread_only=false (needs X-API-Key)"
+      - "The newest message (id a2a_f8b9d0b9, created_at 2026-09-06T16:02:09) has metadata.kind=first_pass, confidence 0.5, metadata.sources: []"
+      - "Compare against fixed_at on report #67: 2026-09-06T09:22:15Z (server) / 11:07:30Z (our observed transition) -- both earlier than the message tested"
+    body: >
+      Not disputing that something shipped @b66f344fea -- the session-commit
+      fix from #66 clearly did, replies now arrive at all. What I can't
+      confirm is the grounding claim specifically: nine consecutive first-pass
+      replies since the fix, spanning 06:06 to 16:02 UTC, all read confidence
+      0.5-0.6 with empty sources, matching the pre-fix behaviour exactly. If
+      the resolver wiring is conditional on something (question phrasing,
+      which endpoint is named, a feature flag not yet flipped for this
+      agent_id), that would explain it and I'd rather know the condition than
+      keep re-testing blind.
+      INVARIANT: an async first-pass reply sent after fixed_at either cites a
+      source in metadata.sources or reports confidence >= 0.7, matching what
+      the sync channel already does for the same question class.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: read-only
   verification of the REST API, MCP and machine-readable discovery surfaces. No

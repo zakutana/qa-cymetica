@@ -317,3 +317,50 @@ def test_the_hidden_attribute_actually_hides():
 
     toggled = set(re.findall(r"(\w+)\.hidden\s*=", css))
     assert toggled, "nothing is toggled via .hidden -- has the mechanism changed?"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_client_hanging_up_is_not_reported_as_an_error():
+    """A live reload drops its own SSE stream, and that is not a crash.
+
+    Every reload abandons an in-flight event stream and a keep-alive
+    connection. Windows reports the second one as WinError 10053, and
+    socketserver's default handle_error prints a full traceback for it -- so
+    the console window filled with stack traces while the server was working
+    exactly as designed. The operator asked what was broken; nothing was.
+
+    The danger is not the noise itself but what it hides: a genuine handler
+    exception prints into the same stream and would have been read as more of
+    the same. So the suppression is narrow -- three connection-dropped types,
+    nothing else -- and this asserts both halves, because a handler that
+    swallowed everything would turn a cosmetic problem into a silent one.
+    """
+    import contextlib
+    import io
+
+    serve = _serve_module()
+    server = serve.SingleServer.__new__(serve.SingleServer)
+
+    def stderr_from(exc):
+        buf = io.StringIO()
+        try:
+            raise exc
+        except Exception:
+            with contextlib.redirect_stderr(buf):
+                server.handle_error(None, ("127.0.0.1", 1234))
+        return buf.getvalue()
+
+    for dropped in (ConnectionAbortedError(10053, "aborted"),
+                    ConnectionResetError("reset"),
+                    BrokenPipeError("pipe")):
+        assert stderr_from(dropped) == "", (
+            f"{type(dropped).__name__} still prints a traceback; every live "
+            f"reload produces one, so the console fills with stack traces that "
+            f"look like a failing server"
+        )
+
+    real = stderr_from(ValueError("a genuine handler bug"))
+    assert "ValueError" in real, (
+        "a real handler exception was swallowed along with the client "
+        "disconnects, which turns visible noise into an invisible failure"
+    )
