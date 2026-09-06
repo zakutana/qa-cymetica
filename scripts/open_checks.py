@@ -72,6 +72,39 @@ def open_rows() -> list[dict]:
     return [r for r in rows if display_state(r) not in SETTLED]
 
 
+def since_last_full_run() -> str:
+    """How long since a run offered the whole suite, in words.
+
+    The narrow sweep cannot see a settled row regress: a VERIFIED FIXED row is
+    not in the selector, so nothing re-runs its check and nothing notices when
+    the platform takes the fix back. On 2026-09-07 two had, and both had been
+    sitting green -- one of them a side effect of a fix shipped that same day.
+
+    Only a full run can also tell a check that is GONE from one that merely
+    did not run, which is the other reason to say this out loud here, where
+    the width is being chosen.
+    """
+    from qa.state import list_runs
+
+    full = [r for r in list_runs() if r.get("selector_full")]
+    if not full:
+        return ("no run on record ever offered the whole suite -- a narrow "
+                "sweep cannot see a settled row regress")
+
+    newest = max(full, key=lambda r: r.get("started_at") or "")
+    at = newest.get("started_at") or "?"
+    try:
+        from datetime import datetime, timezone
+        hours = (datetime.now(timezone.utc)
+                 - datetime.fromisoformat(at)).total_seconds() / 3600
+    except (TypeError, ValueError):
+        return f"last full run {at} ({newest.get('run_id')})"
+
+    when = f"{hours:.0f}h ago" if hours < 48 else f"{hours / 24:.0f} days ago"
+    note = "" if hours < 24 else "  <- the settled rows have not been re-checked since"
+    return f"last full run {when}, {at} ({newest.get('run_id')}){note}"
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--selector", action="store_true",
@@ -96,6 +129,7 @@ def main() -> None:
                 print(f"{'':<22}   {nodeid}")
         print(f"\n{len(rows)} open row(s), {len(checks)} check(s), "
               f"plus {' '.join(ALWAYS)}")
+        print(since_last_full_run())
         return
 
     parts = ALWAYS + checks

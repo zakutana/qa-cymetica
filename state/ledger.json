@@ -3824,13 +3824,14 @@
   "run_id": "run-20260906T215314Z-2135185",
   "run_level": "V",
   "updated_at": "2026-09-06T21:55:01+00:00",
+  "run_carried": true,
   "counts": {
     "WITHDRAWN": 9,
     "VERIFIED FIXED": 18,
     "STILL REPRODUCIBLE": 4
   },
   "events_head": {
-    "seq": 912,
-    "chain": "45a40b2650fb316850d9e7ab09f9bcb7fdceadc26a2d22ff89d37a4e4b3a3cec"
+    "seq": 916,
+    "chain": "6787fff83a3b919b3375c99b4519c51fa74a9c3a94ee8d5d8f3b052d88187c9d"
   }
 }

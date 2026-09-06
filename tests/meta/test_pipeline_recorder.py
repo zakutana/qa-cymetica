@@ -307,3 +307,46 @@ def test_ratelimit_budget_reaches_the_run_record(pytester, tmp_path):
     assert run["ratelimit"]["requests"] == 2
     assert run["ratelimit"]["exhausted"] is False
     assert run["record_integrity"]["budget_truncated"] is False
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_option_value_is_not_a_test_path():
+    """selector_full decided the suite was narrowed by reading --prereg's value.
+
+    It filtered the raw command line on "does not start with a dash", which
+    counts OPTION VALUES as positional paths. Level V requires a
+    preregistration, so every run that could ever have used this carried
+    `--prereg PRE-NNNN`, positional came out as ["tests", "PRE-0045"], and
+    selector_full was False. 0 of 39 committed run records have it set.
+
+    What that switched off is not cosmetic. The fold's check_missing branch is
+    the only thing that can say a check is GONE -- renamed, reparametrised,
+    deleted -- rather than merely not run this time, and it is gated on
+    selector_full. It had never once been able to fire, while the sweep skill
+    told the operator to run the full width precisely to reach it.
+
+    Reads config.args now, which is what pytest resolved the positional
+    arguments to, and which falls back to the testpaths ini value when none
+    were given.
+    """
+    import types
+
+    from qa.report_plugin import _selector_is_full
+
+    def config(raw, resolved):
+        return types.SimpleNamespace(
+            invocation_params=types.SimpleNamespace(args=tuple(raw)),
+            args=list(resolved))
+
+    assert _selector_is_full(config(
+        ["tests", "--prereg", "PRE-0045", "-q"], ["tests"])), \
+        "the preregistration id was read as a test path again"
+    assert _selector_is_full(config(["-q"], ["tests"])), \
+        "no positional argument means the testpaths default, which is the suite"
+
+    assert not _selector_is_full(config(
+        ["tests/meta", "a.py::t", "--prereg", "P"], ["tests/meta", "a.py::t"]))
+    for narrowing in ("-k", "-m"):
+        assert not _selector_is_full(config(
+            ["tests", narrowing, "foo"], ["tests"])), \
+            f"{narrowing} narrows collection and must not read as full"
