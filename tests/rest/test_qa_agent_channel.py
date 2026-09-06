@@ -27,6 +27,11 @@ TIERS = "/api/v1/bounty/reward-tiers"
 # Their own threshold, from agent-card.json: below this, escalate.
 CONFIDENCE_FLOOR = 0.7
 
+# Asked of the sync half to establish the baseline the async half is measured
+# against. Deliberately a question their own FAQ answers, so an ungrounded
+# reply to it is about the channel and not about the question being obscure.
+SYNC_PROBE = "What currency does the bounty programme pay rewards in?"
+
 
 @qa(component="rest.support", tier=SafetyTier.PROBE, surface="rest",
     claim="qa-agent-cannot-report-its-own-data")
@@ -202,16 +207,34 @@ def test_the_automated_first_pass_is_tagged_as_they_documented(rest_trusted):
         claim_id="a2a-first-pass-contract"))
 
 
-@qa(component="rest.support", tier=SafetyTier.SAFE, surface="rest",
+def _grounded(sources, confidence) -> bool:
+    """One definition, applied to both halves of the channel."""
+    return bool(sources) or (confidence or 0) >= CONFIDENCE_FLOOR
+
+
+@qa(component="rest.support", tier=SafetyTier.PROBE, surface="rest",
     claim="a2a-first-pass-not-grounded")
-def test_the_async_first_pass_is_grounded_like_the_sync_channel(rest_trusted):
+def test_the_async_first_pass_is_grounded_like_the_sync_channel(rest_anon, rest_trusted):
     """They said async now gets "a substantive grounded first-pass reply".
 
-    The sync channel really was grounded by the same release: it appends the
-    live JSON verbatim and cites the endpoint under sources. The async
-    first-pass carries sources [] and the same confidence that triggers their
-    own escalation rule, so the two halves of one channel were not fixed
-    alike.
+    The claim is an ASYMMETRY -- that the sync half of one channel cites its
+    sources and the async half does not -- so both halves are read in the same
+    run, under one definition of grounded. The check used to assert the sync
+    side from this docstring and measure only the async side, which meant a
+    day when both stopped citing sources would still have been reported as the
+    async half lagging. That is a different and larger defect, and filing it
+    under this id would misstate it; it comes out inconclusive instead.
+
+    It also used to judge every first_pass reply the inbox had ever held, and
+    fail unless one of them was grounded. A reply that predates their fix is
+    not evidence about their platform now: with no new message sent after a
+    fix, the check would have gone on failing and a re-report would have said
+    "still broken" about something repaired. Rule 7 needs the run to measure
+    behaviour AFTER the claim, so the verdict is on the newest reply, with the
+    older ones kept in `population` as context.
+
+    Costs one question to the sync channel per sweep. Measuring the comparison
+    the finding is named after is worth a question.
     """
     inbox = rest_trusted.get(INBOX.format(agent_id=AGENT_ID),
                              params={"unread_only": "false"})
@@ -231,19 +254,56 @@ def test_the_async_first_pass_is_grounded_like_the_sync_channel(rest_trusted):
             claim_id="a2a-first-pass-not-grounded"))
         return
 
-    grounded = [m for m in first_pass
-                if ((m.get("metadata") or {}).get("sources")
-                    or (m.get("confidence") or 0) >= CONFIDENCE_FLOOR)]
+    sync = rest_anon.post(ASK, json={"question": SYNC_PROBE})
+    if sync.status_code != 200:
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason=f"the sync half answered HTTP {sync.status_code}, so there "
+                   f"is nothing to hold the async half against",
+            claim_id="a2a-first-pass-not-grounded"))
+        return
+
+    sync_body = sync.json()
+    sync_sources = sync_body.get("sources") or []
+    sync_grounded = _grounded(sync_sources, sync_body.get("confidence"))
+
+    newest = max(first_pass, key=lambda m: str(m.get("created_at") or ""))
+    newest_meta = newest.get("metadata") or {}
+    newest_sources = newest_meta.get("sources") or []
+    async_grounded = _grounded(newest_sources, newest.get("confidence"))
+
+    grounded_all = [m for m in first_pass
+                    if _grounded((m.get("metadata") or {}).get("sources"),
+                                 m.get("confidence"))]
+
+    if not sync_grounded and not async_grounded:
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason=("neither half of the channel cites a source, so this is "
+                    "not the asymmetry this claim is about -- the sync half "
+                    "is the baseline it is measured against"),
+            left={"sync": sync_sources, "async": newest_sources},
+            right=CONFIDENCE_FLOOR,
+            sources={"inbox": INBOX, "sync": ASK},
+            population={"first_pass": len(first_pass)},
+            claim_id="a2a-first-pass-not-grounded"))
+        return
 
     conclude(Measurement(
-        verdict="failed" if not grounded else "passed",
-        reason=(f"{len(grounded)} of {len(first_pass)} automated first-pass "
-                f"replies cite a source or clear their own confidence floor of "
-                f"{CONFIDENCE_FLOOR}"),
-        left=[{"confidence": m.get("confidence"),
-               "sources": (m.get("metadata") or {}).get("sources")}
-              for m in first_pass[:3]],
+        verdict="passed" if async_grounded else "failed",
+        reason=(f"the newest async first-pass reply ({newest.get('created_at')}) "
+                f"cites {len(newest_sources)} source(s) at confidence "
+                f"{newest.get('confidence')}, while the sync half cites "
+                f"{len(sync_sources)} at {sync_body.get('confidence')}; "
+                f"{len(grounded_all)} of {len(first_pass)} replies in the "
+                f"inbox are grounded at all"),
+        left={"async_newest": {"at": newest.get("created_at"),
+                               "confidence": newest.get("confidence"),
+                               "sources": newest_sources},
+              "sync": {"confidence": sync_body.get("confidence"),
+                       "sources": sync_sources}},
         right=CONFIDENCE_FLOOR,
-        sources={"inbox": INBOX, "compare_with": ASK},
-        population={"first_pass": len(first_pass)},
+        sources={"inbox": INBOX, "sync": ASK},
+        population={"first_pass": len(first_pass),
+                    "grounded": len(grounded_all)},
         claim_id="a2a-first-pass-not-grounded"))
