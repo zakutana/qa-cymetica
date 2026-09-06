@@ -145,3 +145,105 @@ def test_escalating_a_low_confidence_answer_does_not_return_the_same_advice(rest
         left=confidence, right=CONFIDENCE_FLOOR,
         sources={"sync": ASK, "async": SEND},
         population={"thread": (sent.json().get("message") or {}).get("thread_id")}))
+
+
+# The async half, after their 2026-09-06 fix. They reported the root cause --
+# POST /a2a/send wrote through a session that was never committed, so every
+# async message was rolled back and only the automated preference prompt could
+# reach the inbox -- and stated two properties of the fix. Both are checkable,
+# and reading the inbox is a plain GET, so this is SAFE.
+INBOX = "/api/v1/bounty/a2a/inbox/{agent_id}"
+AGENT_ID = "expire76-qa"
+
+
+@qa(component="rest.support", tier=SafetyTier.SAFE, surface="rest",
+    claim="a2a-first-pass-contract")
+def test_the_automated_first_pass_is_tagged_as_they_documented(rest_trusted):
+    """An automated reply must be machine-distinguishable from an answer.
+
+    They stated the tag as `metadata.is_answer=false`. What the messages carry
+    is `metadata.auto` and `metadata.kind`. The capability is there -- a
+    caller CAN filter -- but not under the name they published, so a client
+    written to their stated contract filters nothing and treats a routing
+    prompt as the answer.
+    """
+    inbox = rest_trusted.get(INBOX.format(agent_id=AGENT_ID),
+                             params={"unread_only": "false"})
+    if inbox.status_code != 200:
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason=f"the inbox answered HTTP {inbox.status_code}",
+            claim_id="a2a-first-pass-contract"))
+        return
+
+    messages = inbox.json().get("messages") or []
+    auto = [m for m in messages if (m.get("metadata") or {}).get("auto")]
+    if not auto:
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason="no automated reply in the inbox to check the tagging of",
+            population={"messages": len(messages)},
+            claim_id="a2a-first-pass-contract"))
+        return
+
+    documented = [m for m in auto if "is_answer" in (m.get("metadata") or {})]
+    usable = [m for m in auto if (m.get("metadata") or {}).get("kind")]
+
+    conclude(Measurement(
+        verdict="failed" if not documented else "passed",
+        reason=(f"{len(auto)} automated repl(ies) in the inbox; "
+                f"{len(documented)} carry the documented metadata.is_answer "
+                f"field. {len(usable)} are filterable by metadata.auto/kind "
+                f"instead, so the capability exists under different names"),
+        left=sorted({k for m in auto for k in (m.get("metadata") or {})}),
+        right="metadata.is_answer",
+        sources={"inbox": INBOX, "their_claim": "metadata.is_answer=false"},
+        population={"messages": len(messages), "automated": len(auto)},
+        claim_id="a2a-first-pass-contract"))
+
+
+@qa(component="rest.support", tier=SafetyTier.SAFE, surface="rest",
+    claim="a2a-first-pass-not-grounded")
+def test_the_async_first_pass_is_grounded_like_the_sync_channel(rest_trusted):
+    """They said async now gets "a substantive grounded first-pass reply".
+
+    The sync channel really was grounded by the same release: it appends the
+    live JSON verbatim and cites the endpoint under sources. The async
+    first-pass carries sources [] and the same confidence that triggers their
+    own escalation rule, so the two halves of one channel were not fixed
+    alike.
+    """
+    inbox = rest_trusted.get(INBOX.format(agent_id=AGENT_ID),
+                             params={"unread_only": "false"})
+    if inbox.status_code != 200:
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason=f"the inbox answered HTTP {inbox.status_code}",
+            claim_id="a2a-first-pass-not-grounded"))
+        return
+
+    first_pass = [m for m in (inbox.json().get("messages") or [])
+                  if (m.get("metadata") or {}).get("kind") == "first_pass"]
+    if not first_pass:
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason="no first-pass reply in the inbox to judge",
+            claim_id="a2a-first-pass-not-grounded"))
+        return
+
+    grounded = [m for m in first_pass
+                if ((m.get("metadata") or {}).get("sources")
+                    or (m.get("confidence") or 0) >= CONFIDENCE_FLOOR)]
+
+    conclude(Measurement(
+        verdict="failed" if not grounded else "passed",
+        reason=(f"{len(grounded)} of {len(first_pass)} automated first-pass "
+                f"replies cite a source or clear their own confidence floor of "
+                f"{CONFIDENCE_FLOOR}"),
+        left=[{"confidence": m.get("confidence"),
+               "sources": (m.get("metadata") or {}).get("sources")}
+              for m in first_pass[:3]],
+        right=CONFIDENCE_FLOOR,
+        sources={"inbox": INBOX, "compare_with": ASK},
+        population={"first_pass": len(first_pass)},
+        claim_id="a2a-first-pass-not-grounded"))
