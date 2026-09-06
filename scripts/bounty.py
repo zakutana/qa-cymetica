@@ -162,6 +162,22 @@ def _now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
+def _last_status_by_report() -> dict:
+    """The newest status we have recorded for each report.
+
+    From the journal, because that is where the claim lives. The snapshot in
+    state/bounty.json is a projection of the same thing and could be rebuilt
+    from these events, but not the other way round.
+    """
+    from qa.state import read_events
+
+    last: dict = {}
+    for event in read_events():
+        if event.get("type") == "vendor_status" and event.get("report_id") is not None:
+            last[event["report_id"]] = event.get("status")
+    return last
+
+
 def fetch_our_reports(client=None, wallet: str | None = None,
                       previous: dict | None = None) -> dict:
     """Our own filed reports -- THIS is the inbox.
@@ -239,11 +255,25 @@ def fetch_our_reports(client=None, wallet: str | None = None,
             stale["error"] = failure
         return stale
 
+    # Record CHANGES, not polls. One run appended one event per report
+    # unconditionally, so 599 of the journal's 865 events were 28 reports
+    # saying the same thing 27 times over -- and a poller on any useful
+    # interval would have added 2,784 a day, burying the handful of events
+    # that mean something under the ones that mean "we looked again".
+    #
+    # `vendor_read` above still fires every time: that a read happened, and
+    # whether it succeeded, is the fact rule 8 rests on, and it is one event
+    # rather than one per report.
+    last = _last_status_by_report()
     for report in sorted(rows, key=lambda r: r.get("id", 0)):
+        report_id = report.get("id")
+        status = report.get("status")
+        if report_id in last and last[report_id] == status:
+            continue
         append_event({
             "type": "vendor_status", "at": at, "by": "agent",
-            "source": "scripts/bounty.py", "report_id": report.get("id"),
-            "status": report.get("status"), "observed_at": at,
+            "source": "scripts/bounty.py", "report_id": report_id,
+            "status": status, "observed_at": at,
             "evidence_id": evidence_id,
         })
 

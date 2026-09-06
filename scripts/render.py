@@ -148,43 +148,6 @@ def _thread_module():
     return module
 
 
-def _unfiled_messages(events: list[dict]) -> list[dict]:
-    """Message files on disk that the journal has never absorbed.
-
-    thread.py turns each message into exactly one event keyed by its
-    frontmatter id. Until it runs, a pasted reply is attached to nothing:
-    _message_bodies() reads the words, but every row's correspondence and the
-    bell are built from the journal, so the page shows no reply and the bell
-    stays dark. That is correct -- a file on disk is not yet a claim about a
-    finding -- but silently correct, which is how a reply sits unread for a
-    day.
-
-    So the page says it out loud. Deliberately a reminder and not a state
-    change: nothing here appends an event. A filing state that moved because
-    a file appeared under a watcher is precisely the self-inflicted change
-    the pipeline exists to prevent, and the operator has to be the one who
-    decides a pasted message is real.
-    """
-    thread_mod = _thread_module()
-    known = {e.get("msg_id") for e in events if e.get("msg_id")}
-
-    out: list[dict] = []
-    for folder in (REPO_ROOT / "inbox", REPO_ROOT / "outbox"):
-        if not folder.is_dir():
-            continue
-        for path in sorted(folder.glob("*.md")):
-            meta = thread_mod.parse(path)
-            if meta is None or not meta.get("id") or meta["id"] in known:
-                continue
-            out.append({
-                "id": meta["id"],
-                "file": f"{folder.name}/{path.name}",
-                "direction": meta.get("direction") or (
-                    "in" if folder.name == "inbox" else "out"),
-            })
-    return out
-
-
 def _message_bodies() -> dict[str, dict]:
     """Every message file, indexed by its id.
 
@@ -544,7 +507,6 @@ def build_payload(ledger: dict | None = None, inventory: dict | None = None,
         "by_severity": by_severity,
         "groups": groups,
         "thread_counts": thread.get("counts", {}),
-        "unfiled": _unfiled_messages(events),
     }
 
 
@@ -1033,16 +995,6 @@ h4.sec {
   font-family:var(--mono); font-size:11px; line-height:18px; font-weight:600;
 }
 .bell-n[hidden] { display:none; }
-/* Not the bell. The bell counts what THEY said, which is a fact in the
-   journal; this counts message files nobody has folded in yet, which is a
-   fact about our own desk. Same corner, different colour, different word. */
-.unfiled {
-  position:absolute; top:0; right:48px; border:1px solid var(--warn);
-  border-radius:9px; color:var(--warn); background:none; cursor:help;
-  font-family:var(--mono); font-size:11px; font-weight:600;
-  line-height:1; padding:11px 9px; white-space:nowrap;
-}
-.unfiled[hidden] { display:none; }
 .inbox {
   position:absolute; top:44px; right:0; width:min(460px, 88vw); z-index:60;
   /* --surface, not --card: --card is not a token in this sheet, so the panel
@@ -1103,7 +1055,6 @@ h4.sec {
     <button class="bell" id="bell" aria-label="Replies from Cymetica" aria-expanded="false">
       &#128276;<span class="bell-n" id="bellN" hidden></span>
     </button>
-    <div class="unfiled" id="unfiled" hidden></div>
     <div class="inbox" id="inbox" hidden></div>
     <p class="sub">Independent verification of the Cymetica / EventTrader API, MCP and
     discovery surfaces. Every number below was measured, not reported.</p>
@@ -1181,26 +1132,17 @@ h4.sec {
     not mean the answer is <em>correct</em>. <b>100% with no checks</b> means
     &ldquo;it is alive, and nobody has verified a word it says&rdquo;.</p>
 
-    <h4>The two counters in the top corner</h4>
+    <h4>The bell, in the top corner</h4>
 
-    <p class="lead">They look alike and mean opposite things.</p>
+    <p class="lead">It counts <b>incoming answers on our own bug reports</b> that
+    you have not read yet &mdash; a status they changed, or a note they wrote
+    back &mdash; and nothing else. A number there means they have moved on
+    something we filed.</p>
 
-    <table class="verdicts">
-      <tr><td>&#128276;</td>
-          <td><b>The bell.</b></td>
-          <td>Replies from <b>them</b> you have not read yet. It counts only
-              what has been written into the permanent record, so it never
-              shows something nobody has entered.</td></tr>
-      <tr><td><b style="color:var(--warn);font-family:var(--mono);font-size:12px">n</b></td>
-          <td><b>Unfiled.</b></td>
-          <td>Message files sitting in <code>inbox/</code> or <code>outbox/</code>
-              that have not been entered into that record &mdash; a reply pasted
-              in but not yet processed. Hover it for the filenames. Nothing on
-              this page reads those words until
-              <code>scripts/thread.py</code> is run, and that is on purpose: a
-              file appearing on disk is not yet a claim about a finding, and no
-              timer gets to decide that it is.</td></tr>
-    </table>
+    <p class="example">It comes from their bug tracker, read back over their
+    own API, so it can only ever show something they actually said. That read
+    happens on a sweep, not when this page redraws: the page is where an answer
+    is delivered, never where one is discovered.</p>
 
     <h4>Where to start on their side</h4>
 
@@ -1801,25 +1743,6 @@ document.addEventListener("click", e => {
 });
 paintBell();
 
-/* ---------- pasted, not yet filed ----------
-   Deliberately not the bell, and deliberately not clickable: there is nothing
-   to read here yet, only something to run. Hovering names the files. */
-function paintUnfiled() {
-  const el = document.getElementById("unfiled");
-  const items = D.unfiled || [];
-  el.hidden = items.length === 0;
-  if (!items.length) return;
-  el.textContent = items.length + " unfiled";
-  /* `u`, not `m`: a thread message is what `m.` means everywhere else in
-     this template, and test_the_page_reads_no_field_the_payload_stops_writing
-     reads that convention literally. Reusing the name here made it demand
-     `file` on every thread entry. */
-  el.title = items.map(u => u.file).join("\n")
-    + "\n\nNot in the journal yet. Run:\n"
-    + "  python scripts/thread.py\n"
-    + "  python scripts/render.py";
-}
-paintUnfiled();
 
 /* ---------- the legend's two generated parts ----------
    Both were written out by hand and both had gone stale, in the way a second
