@@ -1703,19 +1703,31 @@ paintBell();
   const LOCAL = ["127.0.0.1", "localhost", "[::1]"];
   if (!window.EventSource || !LOCAL.includes(location.hostname)) return;
 
-  let mine = null;
+  // What THIS page was rendered from, baked in at render time. The client held
+  // the digest in a variable it overwrote on every hello -- so after the
+  // server restarted, the tab reconnected, adopted the new digest, said "live"
+  // and never reloaded. It then showed markup from before the restart while
+  // claiming to be current: the one failure this console exists to prevent,
+  // happening inside the console. Comparing against what the page actually IS
+  // cannot drift.
+  const RENDERED_AS = "__DIGEST__";
   const say = (cls, words) => {
     dot.className = "live " + cls;
     dot.innerHTML = '<i></i><span>' + words + '</span>';
   };
   let src;
   try { src = new EventSource("/events"); } catch (_) { return; }
-  src.addEventListener("hello", e => { mine = e.data; say("on", "live"); });
-  src.addEventListener("changed", e => {
-    if (e.data === mine) return;
+  const catchUp = e => {
+    say("on", "live");
+    if (!e.data || e.data === RENDERED_AS) return;
     writeStore("qa.scroll", window.scrollY);
     location.reload();
-  });
+  };
+  // Both events take the same path on purpose: a hello arriving after a
+  // dropped connection carries exactly the information a missed change would
+  // have, and treating it as merely a greeting is how the tab went stale.
+  src.addEventListener("hello", catchUp);
+  src.addEventListener("changed", catchUp);
   src.onerror = () => say("off", "reconnecting");
   window.addEventListener("beforeunload", () => src.close());
 })();
@@ -1753,7 +1765,7 @@ def render(payload: dict | None = None) -> str:
     payload = payload if payload is not None else build_payload()
     digest = payload_hash(payload)
     data = json.dumps(payload, ensure_ascii=False).replace("</", "<\\/")
-    return (TEMPLATE.replace("__DATA__", data)
+    return (TEMPLATE.replace("__DIGEST__", digest).replace("__DATA__", data)
             + f"\n<!-- qa-payload-sha256: {digest} -->\n")
 
 

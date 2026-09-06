@@ -144,3 +144,55 @@ def test_a_broken_render_keeps_serving_the_last_good_page(live, serve, monkeypat
                 "a failed render discarded the page the tab is showing"),
         left=live.error, right=good_digest[:16],
         sources={"module": "scripts/serve.py"}))
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_page_knows_which_render_it_is():
+    """A tab that reconnects must compare against itself, not against a memory.
+
+    The live client held the server's digest in a variable and overwrote it on
+    every hello. So when the server restarted -- which happens on any change to
+    the renderer -- the tab reconnected, adopted the new digest, printed "live"
+    and never reloaded. It then showed markup from before the restart while
+    claiming to be current: the console committing the exact drift it exists to
+    catch, and the reason an operator sat looking at notification marks that a
+    later render had already fixed.
+
+    Two properties make it self-healing, and both are structural:
+
+      the page carries the digest it was RENDERED from, so the comparison has
+        a fixed point that cannot be reassigned
+      hello and changed take the same path, because a hello after a dropped
+        connection carries exactly what a missed change would have
+    """
+    import re
+
+    render = _render_module_for_page()
+    html = render.render(render.build_payload(allow_stale_head=True))
+
+    baked = re.search(r'const RENDERED_AS = "([0-9a-f]{64})"', html)
+    assert baked, "the page does not carry the digest it was rendered from"
+
+    footer = re.search(r"qa-payload-sha256: ([0-9a-f]{64})", html)
+    assert footer and footer.group(1) == baked.group(1), (
+        "the digest baked into the page differs from the one stamped on it, so "
+        "the tab would compare against the wrong fixed point"
+    )
+    assert "__DIGEST__" not in html, "the placeholder was never substituted"
+
+    # Both events must reach the same handler. Asserted on the source because
+    # the failure is a missing branch, and a missing branch has no behaviour to
+    # observe until the day it costs you an afternoon.
+    for event in ("hello", "changed"):
+        assert f'src.addEventListener("{event}", catchUp)' in html, (
+            f"the {event} event does not go through the catch-up path, so a "
+            f"tab that lost the connection can stay stale while saying live"
+        )
+
+
+def _render_module_for_page():
+    spec = importlib.util.spec_from_file_location(
+        "render_for_page_test", REPO / "scripts" / "render.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
