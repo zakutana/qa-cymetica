@@ -87,6 +87,38 @@ def test_guard_sections_are_byte_identical_to_ca0bc45():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_no_guard_self_test_can_skip_itself():
+    """A skipped guard is exactly as unproven as a failed one, and quieter.
+
+    The session aborts when a meta test FAILS. Nothing notices a skip, so a
+    `skipif` on one of these would retire a safety proof while leaving the
+    suite green -- the relaxation CLAUDE.md names ("a red test here is the
+    system working; do not fix it by relaxing the rule") in its least visible
+    form.
+
+    One skip is legitimate and stays: `importorskip("requests")`, because the
+    ban it proves is itself conditional -- qa/client.py only bans
+    requests.Session when requests can be imported, and requests is not a
+    declared dependency. There is nothing to prove when there is nothing to
+    ban. Every other way out is refused.
+    """
+    source = GUARD_TESTS.read_text(encoding="utf-8")
+
+    for forbidden in ("skipif", "mark.skip", "xfail", "pytest.skip("):
+        assert forbidden not in source, (
+            f"{forbidden} appears in the guard self-tests. A guard that can "
+            f"excuse itself proves nothing, and the session only aborts on a "
+            f"failure -- a skip passes in silence."
+        )
+
+    allowed = 'pytest.importorskip("requests")'
+    assert source.count("importorskip") == source.count(allowed) == 1, (
+        "the only conditional skip permitted here is the requests import, "
+        "whose ban is conditional too"
+    )
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_meta_tests_are_ordered_guard_first():
     """Within the meta block, the guard's own tests must precede the pipeline's.
 
