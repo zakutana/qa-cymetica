@@ -674,6 +674,67 @@ reports:
       confidence below its own floor AND the async channel returns something
       other than the routing guide.
 
+  # A follow-up on their own fix, not a new defect class. Both halves of #66
+  # were addressed; two properties they stated about the async half do not
+  # hold as published.
+  - key: a2a-first-pass-deviations
+    findings: [CYM-a2a-first-pass-contract, CYM-a2a-first-pass-not-grounded]
+    severity: low
+    category: api
+    url: https://cymetica.com/api/v1/bounty/a2a/send
+    title: "Follow-up on #66: the async first-pass reply is not tagged metadata.is_answer and is not grounded, though the sync half now is"
+    expected: >
+      The two properties stated in the fix note: an automated reply carries
+      metadata.is_answer=false so an agent can filter it, and every async
+      question receives a grounded first-pass reply.
+    actual: >
+      No message in the inbox carries an is_answer field at any nesting level.
+      The metadata object is {"auto": true, "kind": "first_pass",
+      "in_reply_to": "...", "sources": []}. The first-pass replies carry
+      sources [] and confidence 0.6 -- the value that triggers your own
+      escalation rule -- and a question about your two OpenAPI documents was
+      answered with market-data copy.
+    steps:
+      - "POST /api/v1/bounty/a2a/send {\"from_agent_id\": \"expire76-qa\", \"content\": \"<a question naming GET /openapi-public.json>\"}"
+      - "GET /api/v1/bounty/a2a/inbox/expire76-qa?unread_only=false (needs X-API-Key) -> 3 messages"
+      - "Inspect metadata on each: {auto, kind, in_reply_to, sources}. 'is_answer' does not appear anywhere in the response body"
+      - "Read confidence and metadata.sources on the kind=first_pass replies -> 0.6 and []"
+    body: >
+      CREDIT FIRST, because most of that release holds. The session-commit
+      root cause is genuinely fixed: async messages now persist and a reply
+      arrives in seconds, where before only the routing prompt could reach the
+      inbox. The sync channel is genuinely grounded -- it appends the live
+      reward-tiers JSON verbatim, cites the endpoint under sources, and
+      answers at 0.85. The finding as I framed it in #66 is closed on its own
+      terms, and I said the register was your call, so the marketing preamble
+      is not what this is about.
+      TWO NARROW POINTS, both on the async half.
+      The filter works, but not under the name you published. metadata.auto
+      and metadata.kind='first_pass' both distinguish it perfectly. A client
+      written to metadata.is_answer filters nothing and treats a routing
+      prompt as an answer -- which is the exact failure the tag was added to
+      prevent. Either ship the field or correct the note; I do not mind which.
+      The async first-pass is not grounded the way the sync half is. Same
+      release, same question class, different behaviour: sync cited GET
+      /api/v1/bounty/reward-tiers and answered at 0.85; async cited nothing at
+      0.6. If the grounding layer is only wired into the sync path, the
+      escalation route still cannot answer the questions it exists for.
+      SEPARATE, and the reason I was asking in the first place: after
+      ET-22232 there are two OpenAPI documents. GET /openapi.json serves 13
+      paths; GET /openapi-public.json serves 49. llms.txt, udc.json and
+      mcp.json point at the second; agent-card.json and agent-skills.json
+      point at neither. /openapi.json is the conventional path a generated
+      client tries first, and it carries nothing indicating a fuller document
+      exists, so a client built from it silently gets a quarter of the
+      surface. Is openapi-public.json the spec of record, and should
+      /openapi.json redirect, mirror, or carry a pointer? For scale: 65 live
+      /api/v1 endpoints referenced by your own published sources appear in
+      neither document. The backtest slice I reported is now fully covered --
+      this is the rest of it.
+      INVARIANT: an automated reply is distinguishable by a documented field,
+      and the conventional spec path either serves the full surface or names
+      the document that does.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: read-only
   verification of the REST API, MCP and machine-readable discovery surfaces. No
