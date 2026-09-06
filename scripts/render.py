@@ -983,6 +983,14 @@ h4.sec {
   color:var(--text-dim); font:inherit; font-size:13px; cursor:pointer;
 }
 .inbox .seen:hover { color:var(--text); }
+/* Read state is invisible until it misbehaves, and then there is nothing on
+   screen to look at. This says what it holds and WHERE -- the host matters,
+   because localStorage is per origin: 127.0.0.1 and localhost are two
+   different stores, and the published Artifact is a third. */
+.inbox .seenline {
+  padding:8px 10px 4px; color:var(--text-faint); font-family:var(--mono);
+  font-size:11.5px; text-align:center; background:var(--surface);
+}
 
 /* Was the words "new reply" in a red pill, which shouted louder than the
    state chip beside it and read as another status. It is a mark, not a state:
@@ -1613,9 +1621,18 @@ function paintInbox() {
   const items = paintBell();
   const panel = document.getElementById("inbox");
   if (!items.length) {
-    panel.innerHTML = '<div class="empty">Nothing new since you last looked.</div>';
+    panel.innerHTML = '<div class="empty">Nothing new since you last looked.</div>'
+      + '<div class="seenline">' + (seenAt()
+          ? "read up to " + new Date(seenAt()).toISOString().slice(0, 16)
+            .replace("T", " ") + " UTC &middot; " + location.host
+          : "nothing marked read yet &middot; " + location.host) + '</div>';
     return;
   }
+  const seen = seenAt();
+  const footer = '<div class="seenline">' + (seen
+      ? "read up to " + new Date(seen).toISOString().slice(0, 16).replace("T", " ")
+        + " UTC &middot; " + location.host
+      : "nothing marked read yet &middot; " + location.host) + '</div>';
   panel.innerHTML = '<h4>Replies from Cymetica</h4>'
     + items.slice(0, 8).map(function (x) {
         const filed = (x.f.filed || []).map(r => "#" + r.report_id).join(", ");
@@ -1627,7 +1644,8 @@ function paintInbox() {
       }).join("")
     + (items.length > 8
         ? '<div class="empty">and ' + (items.length - 8) + ' more</div>' : "")
-    + '<button class="seen" data-seen>Mark all as read</button>';
+    + '<button class="seen" data-seen>Mark all as read</button>'
+    + footer;
 }
 
 document.getElementById("bell").addEventListener("click", () => {
