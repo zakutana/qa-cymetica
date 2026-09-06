@@ -81,18 +81,20 @@ then `pytest tests --prereg PRE-NNNN`, then `python scripts/ledger.py --run <run
 
 ## After any change to state
 
-Standing instruction from the operator: **republish the dashboard every time
-anything changes.**
-
 ```bash
 python scripts/ledger.py --run <run_id> && python scripts/render.py
 ```
 
-then publish `dashboard/index.html` to the existing artifact URL
-(`https://claude.ai/code/artifact/cc437012-e1dd-4df0-9b2e-25c9fd4bf3da`) —
-the same URL every time, so the operator's bookmark keeps working. Commit the
-ledger, the journal and the dashboard together; rule 12's test fails if the
-page and the ledger disagree.
+Then commit the ledger, the journal and the dashboard together; rule 12's test
+fails if the page and the ledger disagree. That is the whole of it.
+
+**Do not publish an Artifact.** The instruction to republish one to a fixed URL
+after every change was withdrawn by the operator on 2026-09-06: *"nechapu proc
+tvorit ty artifacty to uz nedelej"*. The console is served locally by
+`scripts/serve.py` — launched by `console.cmd` / `console.sh` on
+`http://127.0.0.1:8787` — which watches `state/` and pushes the change to the
+open tab within a second, so there is nothing left to publish. Publish one only
+if the operator asks for something they can open away from that machine.
 
 ## Where things live
 

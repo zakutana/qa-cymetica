@@ -236,6 +236,28 @@ def test_marking_read_is_the_only_switch_and_it_hides_every_mark():
         f'"Mark all as read" is not the switch that controls it: {mark_rules[0]}'
     )
 
+    # The assertion above counts only rules that MENTION vendorAt, so a second
+    # path that reveals a mark without consulting the read timestamp -- the
+    # obvious shape being `m.hidden = false` inside some expand-all or debug
+    # affordance -- would slip past it entirely while breaking the contract it
+    # claims to guard. Unconditional reveals are therefore enumerated: exactly
+    # one exists, and it is the inbox jumping to a row the filter had hidden.
+    # Matched on the source directly, not on `assignments`: that pattern reads
+    # up to the next semicolon, so an arrow-function body -- `forEach(m =>
+    # m.hidden = false)` -- captures "false)" and would not compare equal to
+    # "false". That is the likeliest shape a reveal would take, and the first
+    # draft of this assertion missed exactly it.
+    unconditional = re.findall(r"\.hidden\s*=\s*(false|!1)\b", template)
+    assert len(unconditional) == 1, (
+        f"{len(unconditional)} places set .hidden = false unconditionally; each "
+        f"one can reveal something the operator already cleared, so a new one "
+        f"needs a look rather than a silent pass: {unconditional}"
+    )
+    assert "row.hidden = false" in template, (
+        "the one permitted unconditional reveal is the inbox un-hiding the row "
+        "it jumps to; it is gone, so this allowance no longer describes the code"
+    )
+
     # And clearing writes the timestamp the comparison reads.
     assert 'writeStore("qa.seenAt"' in template, \
         "nothing persists the read timestamp, so the switch forgets on reload"
@@ -274,7 +296,24 @@ def test_the_hidden_attribute_actually_hides():
         "element stays on screen with its hidden attribute set"
     )
 
-    # And the elements the page toggles must be the ones that rule covers:
-    # anything given a display by a class AND toggled via .hidden in the JS.
-    toggled = set(re.findall(r'(\w+)\.hidden\s*=', css))
+    # The rule above wins on !important, and the one thing that can still beat
+    # it is another !important on display. That is not hypothetical: the bug it
+    # replaced was a plain class rule beating the UA stylesheet, and the same
+    # mistake one notch louder would beat this one. So no other rule may set
+    # display with !important.
+    #
+    # (This used to collect the names of toggled elements and assert only that
+    # the set was non-empty -- a check that could not fail for any realistic
+    # edit, sitting under a comment promising it verified coverage.)
+    important_display = [
+        m.group(0) for m in re.finditer(r"[^{}]+\{[^}]*display\s*:[^;}]*!important[^}]*\}", css)
+        if "[hidden]" not in m.group(0)
+    ]
+    assert not important_display, (
+        f"{len(important_display)} rule(s) other than [hidden] set display with "
+        f"!important, and any of them can beat the hide rule the way a plain "
+        f"class beat the browser's: {[r.strip()[:70] for r in important_display]}"
+    )
+
+    toggled = set(re.findall(r"(\w+)\.hidden\s*=", css))
     assert toggled, "nothing is toggled via .hidden -- has the mechanism changed?"
