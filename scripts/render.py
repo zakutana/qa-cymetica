@@ -377,7 +377,17 @@ def build_payload(ledger: dict | None = None, inventory: dict | None = None,
                 if adjudicated and adjudicated.get("run_id")
                 and shown == "VERIFIED FIXED" else None
             ),
-            "not_checked_in": (row.get("check") or {}).get("not_checked_in"),
+            # Set by the fold on any row this run did not adjudicate. On a
+            # terminal row it is noise -- nobody re-runs a withdrawal -- so it
+            # is dropped there and printed everywhere else, beside the time
+            # the row WAS last measured. Without this the open-only sweep
+            # would show 29 rows of last week's readings under a fresh
+            # header, which is precisely the 71-of-109 failure.
+            "not_checked_in": (
+                (row.get("check") or {}).get("not_checked_in")
+                if shown not in ("WITHDRAWN", "SUPERSEDED") else None
+            ),
+            "last_checked_at": (adjudicated or {}).get("at"),
             # Critique gap 5: content carried over from the hand-written
             # ledger quotes figures frozen at their last failing values.
             #
@@ -804,6 +814,17 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:15.0px; max-wid
   border:1px dashed var(--line); white-space:nowrap; cursor:help;
 }
 .unmeasured-demo { font-weight:400; cursor:default; }
+
+/* Same weight as "figures not re-measured", and for the same reason: it is a
+   provenance note. It appears whenever a sweep ran a narrower selector than
+   the whole suite, which since the open-only default is most sweeps -- so on
+   a lot of rows at once. What it must never do is let a stale reading pass
+   for a fresh one, which is the failure the whole ledger exists to prevent. */
+.unchecked {
+  font-family:var(--mono); font-size:11.5px; padding:2px 6px; border-radius:4px;
+  background:transparent; color:var(--text-faint);
+  border:1px dashed var(--line); white-space:nowrap; cursor:help;
+}
 
 /* ---------- legend: two axes, then the grid they make ---------- */
 .lead { font-size:15.0px; color:var(--text-dim); max-width:74ch; margin:14px 0 10px; }
@@ -1356,6 +1377,7 @@ function finding(f) {
           <span class="state ${stateClass(f.display_state)}">${esc(f.display_state)}</span>
           ${f.filed && f.filed.length ? `<span class="filed">${f.filed.map(x=>"#"+x.report_id).join(", ")}</span>` : ""}
           ${f.unmeasured ? `<span class="unmeasured" title="The wording and numbers here are from the day this was written; no run since has confirmed they still hold.">figures not re-measured</span>` : ""}
+          ${f.not_checked_in ? `<span class="unchecked" title="This sweep ran a narrower selector and did not include this check. The state and figures shown are the ones the last run that did include it left behind.">not re-checked${f.last_checked_at ? " &middot; last " + esc(when(f.last_checked_at)) : ""}</span>` : ""}
           <span class="newreply" data-newreply hidden title="They replied since you last looked"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="2.2" y="4.6" width="15.6" height="11" rx="2"/><path d="M2.6 6.2 10 11.4l7.4-5.2"/></svg><span class="sr-only">new reply</span></span>
         </div>
       </span>
