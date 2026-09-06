@@ -105,7 +105,7 @@ judgement, one row at a time. Read the states off the folded ledger.
 | **WITHDRAWN**, **SUPERSEDED** | Nothing. Terminal and ours. |
 | **PASSING, UNCLAIMED** | Nothing owed. They fixed it without saying so. |
 | **RAISED** | Look at whether they answered (step 3 already fetched it). If not, nothing to do — do not chase. |
-| **STILL REPRODUCIBLE** | They engaged and it still fails. If no re-report exists yet, write one and **file it** (`scripts/submit.py --confirm --only <key>`). |
+| **STILL REPRODUCIBLE** | They engaged and it still fails. If no re-report exists yet, write one and **file it** (`scripts/submit.py --confirm --only <key>`). **If they marked it fixed and our check still fails, dump the live field set of the endpoint the check reads before writing anything** — see below. |
 | **NOT RAISED YET** | It fails and has never been filed. Write the report and **file it**. |
 | **CHECK CHANGED** | The check's definition moved. Either `rebind-check` onto the right nodeid or `pin-fingerprint` — both need a stated reason. |
 | **PASSING (UNPINNED)** | It passes but was never seen failing under this definition. Pin only if a filed report documents the original failure; cite the report number in the reason. Otherwise leave it. |
@@ -119,11 +119,20 @@ judgement, one row at a time. Read the states off the folded ledger.
   vendor receives is in English.
 * **Before reporting anything as still broken, check whose bug it is.** This
   is the one thing that replaces the operator's review, so it is not optional.
-  Twice
-  now a failing check was ours: a `subset` relation with the operands
-  alphabetical rather than directional, and a tier assumed from our own config
-  file. Read the vendor's last answer on that report before believing our own
-  check.
+  Three times now a failing check was ours: a `subset` relation with the
+  operands alphabetical rather than directional, a tier assumed from our own
+  config file, and an award check that read any numeric `reward_amount` as a
+  recorded award. Read the vendor's last answer on that report before believing
+  our own check.
+
+  **When they have marked it fixed and the check still fails, read their data
+  before you read our failure message.** Fetch the endpoint the check reads and
+  print the whole field set of one row. On 2026-09-06 that is what showed
+  `reward_status: pending_award` on all 20 rows — a field our check never
+  looked at — turning "still broken, e.g. #68 at medium: 0 recorded against
+  25000-100000" into a check repair and a narrower, true report. A vendor who
+  answers a finding usually changes the shape of the data, and a check written
+  against the old shape keeps failing for a reason that has stopped existing.
 * **Never edit `state/*.json` or the journal.** Corrections are events via
   `scripts/withdraw.py`, always with a reason.
 * **Delete run records by name, never by glob.** A cleanup glob once removed
@@ -147,3 +156,28 @@ Short. Four parts, no preamble:
 
 Do not narrate the spine. The operator knows the sequence; they want the
 delta.
+
+## What the sweep taught you
+
+The last step, and the one that makes the next sweep cheaper than this one.
+
+Write a memory when a sweep **repaired one of our own checks**, **found a fault
+in our own machinery**, or **was misled by something in this repository**. One
+file under the project's `memory/` directory, one line added to its
+`MEMORY.md`. At most two per sweep: a memory that grows every run stops being
+read, which is the same failure as a badge nobody can clear.
+
+Do not write down what is already held elsewhere. `CLAUDE.md` has the rules and
+why they are strict, this skill has the sweep, git history has what changed and
+a test has every rule it enforces. What none of them hold is **how I went
+wrong** — the inference I made from a stale docstring, the field I did not read,
+the explanation I gave before tracing it. That dies with the session unless it
+is written here.
+
+The 2026-09-06 sweep is the worked example. It repaired the award check,
+uncovered `--events-only` dropping the ledger's run attribution, and caught
+`submit.py` about to send a figure frozen hours earlier. The commit messages
+record all three. What they could not record was that the session had spent an
+hour building a feature for a workflow nobody performs, because a docstring
+described it — so that became
+`verify-a-workflow-is-live-before-building-for-it`.

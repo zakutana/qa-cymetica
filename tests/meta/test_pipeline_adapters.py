@@ -231,48 +231,21 @@ def test_reconcile_adds_the_missing_record_and_never_edits(tmp_path, monkeypatch
 
 
 # ---------------------------------------------------------------------------
-# THR -- delivery is a claim somebody made, not a file's location
+# THR -- retired 2026-09-06, with the mechanism it guarded
+#
+# test_delivery_defaults_false_and_ingest_is_once held scripts/thread.py's
+# ingest(): moving a message into archive/ must not delete a vendor reply, and
+# an outbound message counts as delivered only when somebody said so. Both are
+# real incidents and the test was right about them.
+#
+# ingest() is gone. Nothing called it -- not the sweep, not render.py, not the
+# module's own __main__ -- and the workflow it served, correspondence pasted
+# into inbox/ by hand, was tried once in round one and never again. A guard
+# over a code path that no longer exists does not protect anything; it just
+# asserts that a deleted function still behaves.
+#
+# The incident cannot recur because the mechanism cannot run. If messages are
+# ever ingested from files again, restore this test in the same commit as the
+# code -- it names exactly what goes wrong. Correspondence now arrives through
+# the bounty API alone (scripts/bounty.py), which has its own guards.
 # ---------------------------------------------------------------------------
-def _message(path: Path, mid: str, direction: str, extra: str = "") -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        f"---\nid: {mid}\ndirection: {direction}\nchannel: telegram\n"
-        f"sent_at: 2026-09-04T12:00:00+00:00\nfindings: [CYM-a]\n{extra}---\n\n"
-        f"Body of {mid}.\n", encoding="utf-8")
-
-
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_delivery_defaults_false_and_ingest_is_once(tmp_path, monkeypatch):
-    """Moving a message to archive/ must change nothing, and an outbound
-    message is delivered only when somebody said so or a reply refers to it."""
-    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
-    thread = _module("scripts/thread.py")
-
-    root = tmp_path / "corr"
-    _message(root / "outbox" / "MSG-0001.md", "MSG-0001", "out")
-    _message(root / "outbox" / "MSG-0002.md", "MSG-0002", "out",
-             extra="delivered: true\n")
-    _message(root / "outbox" / "MSG-0003.md", "MSG-0003", "out")
-    _message(root / "inbox" / "REPLY-0001.md", "REPLY-0001", "in",
-             extra="reply_to: MSG-0003\n")
-
-    assert thread.ingest([root / "outbox", root / "inbox"]) == 4
-    assert thread.ingest([root / "outbox", root / "inbox"]) == 0, "ingest ran twice"
-
-    from qa.state import read_events
-    delivered = {e["msg_id"]: e.get("delivered") for e in read_events()
-                 if e["type"] == "message"}
-    assert delivered["MSG-0001"] is False, "an unconfirmed message reads as delivered"
-    assert delivered["MSG-0002"] is True, "an explicit delivered: true was dropped"
-    assert delivered["MSG-0003"] is True, "a reply naming the message is a receipt"
-
-    # The archive move that deleted a reply and three findings.
-    archive = root / "archive"
-    archive.mkdir()
-    for name in ("MSG-0001.md", "MSG-0003.md"):
-        (root / "outbox" / name).rename(archive / name)
-    (root / "inbox" / "REPLY-0001.md").rename(archive / "REPLY-0001.md")
-
-    before = read_events()
-    assert thread.ingest([root / "outbox", root / "inbox", archive]) == 0
-    assert read_events() == before, "moving files changed the correspondence"

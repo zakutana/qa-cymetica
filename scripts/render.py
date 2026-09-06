@@ -135,37 +135,25 @@ def _api_conversation() -> tuple[dict, dict]:
     return ours, theirs
 
 
-def _thread_module():
-    """thread.py, loaded as a module. Its parser is the one that decides what
-    counts as a message file, and a second reader here would be a second
-    answer to that question."""
-    import importlib.util
-
-    spec = importlib.util.spec_from_file_location(
-        "thread_reader", REPO_ROOT / "scripts" / "thread.py")
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
-
-
 def _message_bodies() -> dict[str, dict]:
     """Every message file, indexed by its id.
 
     The journal records WHICH messages touch a finding; the words stay in the
-    files, pasted verbatim. Reading them here is what puts the vendor's actual
+    files themselves. Reading them here is what puts the vendor's actual
     sentences on the page instead of a summary of them -- and archive/ is
     included, because where a file was filed afterwards says nothing about
-    what it said.
+    what it said. Every such file lives under archive/ now; outbox/ is scanned
+    because reports.yaml shares it, and holds no messages.
     """
-    thread_mod = _thread_module()
+    from qa.messages import blocks, parse
 
     out: dict[str, dict] = {}
-    for folder in (REPO_ROOT / "outbox", REPO_ROOT / "inbox",
+    for folder in (REPO_ROOT / "outbox",
                    *sorted((REPO_ROOT / "archive").glob("*"))):
         if not folder.is_dir():
             continue
         for path in sorted(folder.glob("*.md")):
-            meta = thread_mod.parse(path)
+            meta = parse(path)
             if meta is None or not meta.get("id"):
                 continue
             out[meta["id"]] = {
@@ -174,7 +162,7 @@ def _message_bodies() -> dict[str, dict]:
                 "delivered_as": meta.get("delivered_as"),
                 "delivery_note": meta.get("delivery_note"),
                 "covers": meta.get("covers") or {},
-                "blocks": thread_mod.blocks(meta.get("body") or ""),
+                "blocks": blocks(meta.get("body") or ""),
                 "body": meta.get("body") or "",
             }
     return out

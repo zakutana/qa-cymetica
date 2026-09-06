@@ -122,6 +122,40 @@ tests/repo/       repository consistency. Deliberately NOT in tests/meta:
                   next load, one step too late.
 ```
 
+The scripts a session actually spends its time in. This half of the map was
+missing until 2026-09-06, and its absence cost a session an hour: with nothing
+here to navigate by, it navigated by docstrings, and one of those described a
+workflow that had been dead since round one.
+
+```
+scripts/findings.py  what a run turns into a finding. Title and severity are
+                     JUDGEMENTS and a run may not overwrite them -- which is
+                     why a row's title stays frozen at the measurement that
+                     opened it while detail.reason moves. Anything reading a
+                     title as a current reading is wrong.
+scripts/bounty.py    their tracker -> state/bounty.json. THE inbound channel:
+                     this is what lights the console's bell, and there is no
+                     other. Records CHANGES, not polls -- one vendor_read per
+                     run, a vendor_status only when a status actually moved.
+scripts/submit.py    the one write we make on purpose. Every number in a
+                     report is injected from the ledger at send time, so a
+                     figure frozen when the finding opened can never go out.
+scripts/serve.py     the console on 127.0.0.1:8787. Read-only with respect to
+                     state; polls local files once a minute. `--ask MINUTES`
+                     adds the half that fetches: one GET of our own reports on
+                     a timer, so the bell can light unattended.
+scripts/open_checks.py  the selector for a sweep over what is still open.
+                     Always prepends tests/meta.
+scripts/inventory.py    the platform section map the dashboard renders. An
+                     inventory, not a test suite. SAFE tier, never a POST.
+qa/messages.py       parses archived message files for the Correspondence
+                     panel. A library, not a command.
+state/thread.json    dead. A projection from 2026-09-04 that nothing reads;
+                     render.py says so in as many words. It sits under state/
+                     where the hook protects it, so it stays -- do not build
+                     anything on it.
+```
+
 ## Reading the numbers honestly
 
 Day one after the migration showed **23 findings and zero verified**. That was
