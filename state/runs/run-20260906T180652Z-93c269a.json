@@ -1,0 +1,110 @@
+{
+  "schema": 2,
+  "run_id": "run-20260906T180652Z-93c269a",
+  "started_at": "2026-09-06T18:06:57+00:00",
+  "finished_at": "2026-09-06T18:07:02+00:00",
+  "git_head": "93c269aac7a7c0a74dbb56095916251484fcfce0",
+  "git_short": "93c269a",
+  "git_dirty": true,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": "sha256:90e7579c68b557ad3e67ca79538fa7f1f8fcc41353d6aabb21c23c9d994df53f",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "892d82611a90587dddf0272a7ca5326676dbb3e54e17f99b34bce91a9b947033",
+    "/.well-known/agent-card.json": "3dfc7d39fe712e14967fbd019be8bec83c4a49e836fb3d04ff02248b2580fca5",
+    "/.well-known/agent-skills.json": "f2f992a77d58a157ec678cd17d4d94d216aa96d12ee4f9a3adae9fa291fb5a0d",
+    "/.well-known/ai-plugin.json": "e2f2d79821bf8e741fb18cefea6a94cb7a1ec358644306aeff02e763c61b1fb2",
+    "/.well-known/udc.json": "92cd8a5f7ec5a0a859594ef9fbd72cba4914eaab4220377db18adf2ed44611a4",
+    "/openapi.json": "f0cccb1f06ec266d303b1c7ab8e23f4af29a3c43106027595c95c1449fa1b2cf",
+    "/llms.txt": "98da5811f1b71dfc5598e361b965e590820b1ffa9fd931e41807d9a3950e45d3",
+    "mcp:tools/list:none": "cb9188ffdaf6a78e40cae9e30cd1fdfa9925f8f77b1c3d41f5ddb24108b27162"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/rest/test_award_matches_its_tier.py::test_a_recorded_award_agrees_with_the_tier_on_the_same_row -q --no-header --tb=long",
+  "selector_full": false,
+  "allow_mutate": false,
+  "collected": [
+    "tests/rest/test_award_matches_its_tier.py::test_a_recorded_award_agrees_with_the_tier_on_the_same_row"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/rest/test_award_matches_its_tier.py::test_a_recorded_award_agrees_with_the_tier_on_the_same_row",
+      "component": "rest.support",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "award-contradicts-its-own-tier",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 1377,
+      "evidence_ids": [
+        "da505cf27559bb1cd4979339464172f7c097efe8f53fc222b4aac0ebf29f8558"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "20 row(s) record an award in one currency and publish an entitlement in another (e.g. #68: paid in USDC, entitled in CYM); 20 row(s) record an award outside the range they publish for their own confirmed severity (e.g. #68 at medium: 0 recorded against 25000-100000)",
+        "left": [
+          68,
+          67,
+          66,
+          65,
+          64,
+          63,
+          61,
+          60
+        ],
+        "right": 20,
+        "sources": {
+          "tracker": "/api/v1/bounty/reports",
+          "tiers": "/api/v1/bounty/reward-tiers"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "award-contradicts-its-own-tier",
+        "role": "verdict",
+        "population": {
+          "rows": 20,
+          "awarded": 20,
+          "measured": 20,
+          "without_a_band": 0,
+          "currency_mismatch": 20,
+          "below_published_minimum": 20
+        }
+      },
+      "check_fingerprint": "014957951f84e72dce3d78499ed75e4be6df32a87fef02ec5b95700840c34cd8",
+      "reason": null,
+      "failure_repr": "rest_anon = <httpx.Client object at 0x000001CE6ABFAC10>\n\n    @qa(component=\"rest.support\", tier=SafetyTier.SAFE, surface=\"rest\",\n        claim=\"award-contradicts-its-own-tier\")\n    def test_a_recorded_award_agrees_with_the_tier_on_the_same_row(rest_anon):\n        \"\"\"Read both fields off one row and ask whether they can coexist.\"\"\"\n        page = rest_anon.get(TRACKER)\n        if page.status_code != 200:\n            conclude(Measurement(\n                verdict=\"inconclusive\",\n                reason=f\"the public tracker answered HTTP {page.status_code}\",\n                claim_id=\"award-contradicts-its-own-tier\"))\n            return\n    \n        body = page.json()\n        rows = body.get(\"reports\") or body.get(\"data\") or []\n    \n        # An award of zero is a RECORDED award, and one recorded against a\n        # six-figure band is exactly the contradiction this check is for. Filtering\n        # on truthiness collapsed 0, None and a missing key into one bucket and\n        # dropped those rows out of the population -- the falsy-versus-absent\n        # mistake qa/measure.py's readers exist to prevent.\n        awarded = [r for r in rows\n                   if isinstance(r.get(\"reward_amount\"), (int, float))]\n        if not awarded:\n            conclude(Measurement(\n                verdict=\"inconclusive\",\n                reason=(\"no row records an award yet, so there is nothing to hold \"\n                        \"against the tier published beside it\"),\n                population={\"rows\": len(rows)},\n                claim_id=\"award-contradicts-its-own-tier\"))\n            return\n    \n        wrong_currency, outside, unmeasurable = [], [], []\n        for r in awarded:\n            band = r.get(\"eligible_reward_range\") or {}\n            low, high = band.get(\"min\"), band.get(\"max\")\n            if not isinstance(low, (int, float)) or not isinstance(high, (int, float)):\n                # No band, or one without numbers, means this row cannot be\n                # adjudicated. Counted, never skipped: skipping it silently let a\n                # tracker that DROPPED the field read as every award agreeing with\n                # its tier, which would settle this finding by deleting the\n                # evidence for it.\n                unmeasurable.append(r.get(\"id\"))\n                continue\n            if band.get(\"currency\") and r.get(\"reward_currency\") \\\n                    and band[\"currency\"] != r[\"reward_currency\"]:\n                wrong_currency.append(\n                    (r.get(\"id\"), r.get(\"reward_currency\"), band[\"currency\"]))\n            # BOTH bounds. Checking only the minimum meant an award above the\n            # published maximum passed, while the invariant filed as #68 is that\n            # the amount falls within [min, max].\n            if not (low <= r[\"reward_amount\"] <= high):\n                outside.append((r.get(\"id\"), r[\"reward_amount\"], low, high,\n                                band.get(\"severity\")))\n    \n        measured = len(awarded) - len(unmeasurable)\n        if not measured:\n            conclude(Measurement(\n                verdict=\"inconclusive\",\n                reason=(f\"all {len(awarded)} awarded row(s) publish no usable \"\n                        f\"eligible_reward_range, so nothing can be held against \"\n                        f\"the tier -- the field this check reads is gone\"),\n                left=unmeasurable[:8], right=len(awarded),\n                sources={\"tracker\": TRACKER, \"tiers\": TIERS},\n                population={\"rows\": len(rows), \"awarded\": len(awarded),\n                            \"without_a_band\": len(unmeasurable)},\n                claim_id=\"award-contradicts-its-own-tier\"))\n            return\n    \n        problems = []\n        if wrong_currency:\n            problems.append(\n                f\"{len(wrong_currency)} row(s) record an award in one currency and \"\n                f\"publish an entitlement in another \"\n                f\"(e.g. #{wrong_currency[0][0]}: paid in {wrong_currency[0][1]}, \"\n                f\"entitled in {wrong_currency[0][2]})\")\n        if outside:\n            rid, amt, low, high, sev = outside[0]\n            problems.append(\n                f\"{len(outside)} row(s) record an award outside the range they \"\n                f\"publish for their own confirmed severity \"\n                f\"(e.g. #{rid} at {sev}: {amt:.0f} recorded against {low}-{high})\")\n        if unmeasurable:\n            problems.append(\n                f\"{len(unmeasurable)} awarded row(s) publish no usable \"\n                f\"eligible_reward_range at all, so what they earned cannot be \"\n                f\"checked against what they promise\")\n    \n>       conclude(Measurement(\n            verdict=\"failed\" if problems else \"passed\",\n            reason=(\"; \".join(problems) if problems else\n                    f\"all {measured} recorded awards sit inside the tier each \"\n                    f\"row publishes, in the same currency\"),\n            left=([r[0] for r in outside] + [r[0] for r in wrong_currency]\n                  + unmeasurable)[:8],\n            right=measured,\n            sources={\"tracker\": TRACKER, \"tiers\": TIERS},\n            population={\"rows\": len(rows), \"awarded\": len(awarded),\n                        \"measured\": measured, \"without_a_band\": len(unmeasurable),\n                        \"currency_mismatch\": len(wrong_currency),\n                        \"below_published_minimum\": len(outside)},\n            claim_id=\"award-contradicts-its-own-tier\"))\n\ntests\\rest\\test_award_matches_its_tier.py:116: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n\nm = Measurement(verdict='failed', reason='20 row(s) record an award in one currency and publish an entitlement in another ...rows': 20, 'awarded': 20, 'measured': 20, 'without_a_band': 0, 'currency_mismatch': 20, 'below_published_minimum': 20})\n\n    def conclude(m: Measurement) -> None:\n        \"\"\"Emit, then raise or return from the verdict. The only way a check ends.\n    \n        An `evidence`-role measurement can never be a failure: it is recorded and\n        the check passes, because prose-versus-prose comparisons are evidence for\n        a finding, never a finding by themselves.\n        \"\"\"\n        emit(m)\n        if m.role == \"evidence\":\n            return None\n        if m.verdict == \"failed\":\n>           raise AssertionError(explain(m))\nE           AssertionError: 20 row(s) record an award in one currency and publish an entitlement in another (e.g. #68: paid in USDC, entitled in CYM); 20 row(s) record an award outside the range they publish for their own confirmed severity (e.g. #68 at medium: 0 recorded against 25000-100000)\nE             left  = [68, 67, 66, 65, 64, 63, 61, 60]\nE             right = 20\n\nqa\\measure.py:165: AssertionError"
+    }
+  ],
+  "totals": {
+    "failed": 1
+  },
+  "ratelimit": {
+    "requests": 1,
+    "limit": 2000,
+    "remaining": 1993,
+    "fraction_used": 0.0035,
+    "exhausted": false
+  },
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "fingerprint_after": "sha256:90e7579c68b557ad3e67ca79538fa7f1f8fcc41353d6aabb21c23c9d994df53f",
+  "exit_status": 1
+}

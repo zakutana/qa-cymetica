@@ -15,6 +15,18 @@ does not try. It asserts only that a row may not contradict itself: the award
 is expressed in the currency of the range it publishes, and lands inside it.
 Whichever way they resolve that -- correcting the amounts, or correcting the
 range to describe the programme actually being paid -- the check goes green.
+
+2026-09-06: they answered by zeroing every amount and marking all 20 rows
+`reward_status: pending_award`, which retires the amount half honestly --
+there is now no award to sit outside anything. The check had to be repaired to
+see that, because it read any numeric reward_amount as a recorded award and so
+reported "0 recorded against 25000-100000" about reports that had been awarded
+nothing. That was our error.
+
+The currency half survives, and needs no award to be judged: #68 still names
+USDC for its award beside an entitlement published in CYM, and eighteen others
+name ET10 beside the same CYM bands. A row that will pay in one currency and
+promises in another contradicts itself whether or not anything has been paid.
 """
 
 from __future__ import annotations
@@ -41,23 +53,35 @@ def test_a_recorded_award_agrees_with_the_tier_on_the_same_row(rest_anon):
     body = page.json()
     rows = body.get("reports") or body.get("data") or []
 
-    # An award of zero is a RECORDED award, and one recorded against a
-    # six-figure band is exactly the contradiction this check is for. Filtering
-    # on truthiness collapsed 0, None and a missing key into one bucket and
-    # dropped those rows out of the population -- the falsy-versus-absent
-    # mistake qa/measure.py's readers exist to prevent.
+    # `reward_status` is the tracker saying, in its own field, whether an award
+    # exists. This check used to ignore it and read any numeric reward_amount
+    # as a recorded award -- defensible when every row carried 1,000 ET10, and
+    # wrong the moment they zeroed the amounts and marked all 20 rows
+    # `pending_award`. It then reported "0 recorded against 25000-100000" on
+    # every row: an award that disagrees with its band, asserted about reports
+    # that have been awarded nothing. Our error, not theirs, and the shape the
+    # sweep rule about whose bug it is exists to catch.
+    #
+    # A row is awarded when the tracker does not call it pending. The amount
+    # may then legitimately be zero, and a zero award against a six-figure
+    # band is still the contradiction this check is for.
     awarded = [r for r in rows
-               if isinstance(r.get("reward_amount"), (int, float))]
-    if not awarded:
-        conclude(Measurement(
-            verdict="inconclusive",
-            reason=("no row records an award yet, so there is nothing to hold "
-                    "against the tier published beside it"),
-            population={"rows": len(rows)},
-            claim_id="award-contradicts-its-own-tier"))
-        return
+               if isinstance(r.get("reward_amount"), (int, float))
+               and (r.get("reward_status") or "").strip() != "pending_award"]
 
-    wrong_currency, outside, unmeasurable = [], [], []
+    # The currency half does not need an award to be judged. A row saying "this
+    # will be paid in USDC" beside a band reading "entitled to 25,000-100,000
+    # CYM" contradicts itself whether or not anything has been paid, so it is
+    # read across every row that declares both -- awarded or not.
+    wrong_currency = []
+    for r in rows:
+        band = r.get("eligible_reward_range") or {}
+        if band.get("currency") and r.get("reward_currency") \
+                and band["currency"] != r["reward_currency"]:
+            wrong_currency.append(
+                (r.get("id"), r.get("reward_currency"), band["currency"]))
+
+    outside, unmeasurable = [], []
     for r in awarded:
         band = r.get("eligible_reward_range") or {}
         low, high = band.get("min"), band.get("max")
@@ -69,10 +93,6 @@ def test_a_recorded_award_agrees_with_the_tier_on_the_same_row(rest_anon):
             # evidence for it.
             unmeasurable.append(r.get("id"))
             continue
-        if band.get("currency") and r.get("reward_currency") \
-                and band["currency"] != r["reward_currency"]:
-            wrong_currency.append(
-                (r.get("id"), r.get("reward_currency"), band["currency"]))
         # BOTH bounds. Checking only the minimum meant an award above the
         # published maximum passed, while the invariant filed as #68 is that
         # the amount falls within [min, max].
@@ -81,12 +101,13 @@ def test_a_recorded_award_agrees_with_the_tier_on_the_same_row(rest_anon):
                             band.get("severity")))
 
     measured = len(awarded) - len(unmeasurable)
-    if not measured:
+    if not measured and not wrong_currency:
         conclude(Measurement(
             verdict="inconclusive",
-            reason=(f"all {len(awarded)} awarded row(s) publish no usable "
-                    f"eligible_reward_range, so nothing can be held against "
-                    f"the tier -- the field this check reads is gone"),
+            reason=(f"no row records an award to hold against its tier: "
+                    f"{len(rows) - len(awarded)} of {len(rows)} are still "
+                    f"pending_award and the rest publish no usable "
+                    f"eligible_reward_range"),
             left=unmeasurable[:8], right=len(awarded),
             sources={"tracker": TRACKER, "tiers": TIERS},
             population={"rows": len(rows), "awarded": len(awarded),
@@ -96,11 +117,14 @@ def test_a_recorded_award_agrees_with_the_tier_on_the_same_row(rest_anon):
 
     problems = []
     if wrong_currency:
+        # Says "will be paid in", not "paid in": with every row pending_award
+        # nothing has been paid, and the old wording asserted a payment that
+        # had not happened.
         problems.append(
-            f"{len(wrong_currency)} row(s) record an award in one currency and "
-            f"publish an entitlement in another "
-            f"(e.g. #{wrong_currency[0][0]}: paid in {wrong_currency[0][1]}, "
-            f"entitled in {wrong_currency[0][2]})")
+            f"{len(wrong_currency)} row(s) name one currency for the award and "
+            f"publish the entitlement beside it in another "
+            f"(e.g. #{wrong_currency[0][0]}: to be paid in "
+            f"{wrong_currency[0][1]}, entitled in {wrong_currency[0][2]})")
     if outside:
         rid, amt, low, high, sev = outside[0]
         problems.append(
@@ -116,8 +140,9 @@ def test_a_recorded_award_agrees_with_the_tier_on_the_same_row(rest_anon):
     conclude(Measurement(
         verdict="failed" if problems else "passed",
         reason=("; ".join(problems) if problems else
-                f"all {measured} recorded awards sit inside the tier each "
-                f"row publishes, in the same currency"),
+                f"all {measured} recorded award(s) sit inside the tier each "
+                f"row publishes, and no row names a currency its own "
+                f"entitlement contradicts"),
         left=([r[0] for r in outside] + [r[0] for r in wrong_currency]
               + unmeasurable)[:8],
         right=measured,
