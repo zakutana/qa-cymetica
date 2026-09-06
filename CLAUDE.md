@@ -164,6 +164,36 @@ of the 13 pre-hardening run records is admissible — each names its own reason.
 A zero here is not a regression to be fixed; it is the difference between
 "we checked" and "they said".
 
+## Write down how you went wrong
+
+Not what you found — that is what the ledger, the journal and the commit
+messages are for, and they do it better than prose. What none of them record is
+the reasoning that failed: the inference drawn from a stale docstring, the
+field you did not read before believing a check, the mechanism you explained
+before tracing it. That dies with the session unless it is written down, and
+the next session then makes it again.
+
+So when you mislead the operator, build something that has to be thrown away,
+or are misled by something in this repository, write one memory file in this
+project's memory directory and add its line to `MEMORY.md`. Do it when it
+happens, not at the end — the end of a session is the least reliable moment
+there is.
+
+Two failure modes to avoid, in this order:
+
+* **Writing nothing.** This directory sat empty until 2026-09-06 while the
+  instruction to use it was present in every single session. Intent is not a
+  trigger; that is why this paragraph exists in the file that is always read.
+* **Writing everything.** A memory that grows every run stops being read, which
+  is the same defect as a badge nobody can clear. At most one or two per
+  session, and never something CLAUDE.md, a skill, a test or git history
+  already holds.
+
+The `qa-sweep` skill repeats this as its closing step, because a sweep is where
+our own machinery most often turns out to be the thing at fault. But it is not
+limited to sweeps. The hour lost on 2026-09-06 to a feature nobody needed was
+not spent during one.
+
 ## File writes on this workspace
 
 The bash sandbox is Linux, the workspace is Windows. Writing UTF-8 through
