@@ -451,7 +451,11 @@ def test_the_legend_explains_every_mark_and_uses_no_internal_words(tmp_path, mon
     render = _render()
     # The legend's own markup and the JS that fills it -- not the whole file,
     # which would drag in the masthead and every unrelated string below it.
-    static = render.TEMPLATE[render.TEMPLATE.index("How to read this page"):
+    # Anchored on the panel id, not on a heading. The legend moved into its
+    # own tab on 2026-09-06 and its <h3> went with it -- the tab label says it
+    # now -- so a test keyed to that sentence broke on a presentation change
+    # while the thing it guards was untouched.
+    static = render.TEMPLATE[render.TEMPLATE.index('id="panel-legend"'):
                              render.TEMPLATE.index('<script id="data"')]
     # From CHECK_WORDS, so the axis panels' own copy is checked too -- they
     # are the most-read part of the legend and were the first place the word
@@ -501,3 +505,29 @@ def test_regression_timeline_comes_from_transitions(tmp_path, monkeypatch):
     assert all(e.get("run_id") for e in timeline), \
         "a timeline entry with no run behind it"
     assert timeline[-1]["finding_id"] == "CYM-a"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_every_css_variable_the_sheet_uses_is_defined():
+    """A var() with no definition is invisible, not broken.
+
+    The notification panel was written with background:var(--card). This sheet
+    has no --card; the token is --surface. CSS does not complain -- the
+    declaration is simply dropped, so the panel had no background at all and
+    the page read straight through it. Nothing in the suite noticed, because
+    every test asked whether an element existed, and it did.
+
+    One line catches the whole class, including the next typo in a token name.
+    """
+    import re
+
+    css = _render().TEMPLATE
+    defined = set(re.findall(r"(--[a-z0-9-]+)\s*:", css))
+    used = set(re.findall(r"var\((--[a-z0-9-]+)\)", css))
+    missing = sorted(used - defined)
+
+    assert not missing, (
+        f"{len(missing)} CSS variable(s) are used but never defined, so every "
+        f"declaration reading them is silently dropped: {', '.join(missing)}"
+    )
+    assert used, "the sheet reads no variables at all, which cannot be right"

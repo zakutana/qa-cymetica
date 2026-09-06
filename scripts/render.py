@@ -916,6 +916,10 @@ h4.sec {
   background:var(--none-bg); color:var(--text-dim); font-family:var(--mono); font-size:12px;
 }
 .panel[hidden] { display:none; }
+.sr-only {
+  position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+}
 
 .mast { position:relative; }
 .bell {
@@ -932,17 +936,21 @@ h4.sec {
 }
 .bell-n[hidden] { display:none; }
 .inbox {
-  position:absolute; top:44px; right:0; width:min(460px, 88vw); z-index:40;
-  background:var(--card); border:1px solid var(--line); border-radius:12px;
-  box-shadow:0 18px 40px rgba(0,0,0,.45); padding:6px; text-align:left;
+  position:absolute; top:44px; right:0; width:min(460px, 88vw); z-index:60;
+  /* --surface, not --card: --card is not a token in this sheet, so the panel
+     resolved to no background at all and the page read straight through it. */
+  background:var(--surface); border:1px solid var(--line); border-radius:12px;
+  box-shadow:0 18px 44px rgba(0,0,0,.55); padding:6px; text-align:left;
+  max-height:min(70vh, 620px); overflow-y:auto;
 }
 .inbox[hidden] { display:none; }
 .inbox h4 { margin:8px 10px 6px; font-size:12px; letter-spacing:.08em;
   text-transform:uppercase; color:var(--text-faint); }
 .inbox button.item {
-  display:block; width:100%; text-align:left; background:none; border:0;
+  display:block; width:100%; text-align:left; background:var(--surface); border:0;
   color:var(--text); font:inherit; padding:9px 10px; border-radius:8px; cursor:pointer;
 }
+.inbox h4, .inbox .empty, .inbox .seen { background:var(--surface); }
 .inbox button.item:hover { background:var(--none-bg); }
 .inbox .item-t { display:block; font-size:14px; }
 .inbox .item-m { display:block; font-size:12.5px; color:var(--text-dim); margin-top:3px; }
@@ -954,10 +962,14 @@ h4.sec {
 }
 .inbox .seen:hover { color:var(--text); }
 
+/* Was the words "new reply" in a red pill, which shouted louder than the
+   state chip beside it and read as another status. It is a mark, not a state:
+   an envelope, at text size, in the accent. */
 .newreply {
-  font-family:var(--mono); font-size:12px; padding:1px 7px; border-radius:9px;
-  background:var(--bad-bg); color:var(--bad);
+  display:inline-flex; align-items:center; color:var(--accent);
+  vertical-align:-2px;
 }
+.newreply svg { width:15px; height:15px; display:block; }
 .live {
   font-family:var(--mono); font-size:12px; color:var(--text-faint);
   display:inline-flex; align-items:center; gap:6px;
@@ -985,6 +997,7 @@ h4.sec {
     <button data-tab="overview" aria-selected="true">Platform</button>
     <button data-tab="findings" aria-selected="false">Findings
       <span class="tab-n" id="tabN"></span></button>
+    <button data-tab="legend" aria-selected="false">How to read this</button>
   </nav>
 
   <section class="panel" id="panel-overview">
@@ -1003,8 +1016,8 @@ h4.sec {
   <div id="findings"></div>
   </section>
 
+  <section class="panel" id="panel-legend" hidden>
   <div class="note">
-    <h3>How to read this page</h3>
 
     <p class="lead">Every badge answers <b>two</b> questions at once. That is why there
     are so many of them &mdash; and the badge is just the square where the two answers meet.</p>
@@ -1071,6 +1084,7 @@ h4.sec {
     not mean the answer is <em>correct</em>. <b>100% with no checks</b> means
     &ldquo;it is alive, and nobody has verified a word it says&rdquo;.</p>
   </div>
+  </section>
 </div>
 
 <script id="data" type="application/json">__DATA__</script>
@@ -1295,7 +1309,7 @@ function finding(f) {
           <span class="state ${stateClass(f.display_state)}">${esc(f.display_state)}</span>
           ${f.filed && f.filed.length ? `<span class="filed">${f.filed.map(x=>"#"+x.report_id).join(", ")}</span>` : ""}
           ${f.unmeasured ? `<span class="unmeasured" title="The wording and numbers here are from the day this was written; no run since has confirmed they still hold.">figures not re-measured</span>` : ""}
-          <span class="newreply" data-newreply hidden>new reply</span>
+          <span class="newreply" data-newreply hidden title="They replied since you last looked"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="2.2" y="4.6" width="15.6" height="11" rx="2"/><path d="M2.6 6.2 10 11.4l7.4-5.2"/></svg><span class="sr-only">new reply</span></span>
         </div>
       </span>
     </summary>
@@ -1515,11 +1529,17 @@ document.getElementById("filters").addEventListener("click", e => {
 applyFilters();
 
 /* ---------- two tabs ---------- */
+const PANELS = { overview: "panel-overview", findings: "panel-findings",
+                legend: "panel-legend" };
+
 function showTab(name) {
+  if (!PANELS[name]) name = "overview";
   document.querySelectorAll("#tabs button").forEach(b =>
     b.setAttribute("aria-selected", String(b.dataset.tab === name)));
-  document.getElementById("panel-overview").hidden = name !== "overview";
-  document.getElementById("panel-findings").hidden = name !== "findings";
+  Object.entries(PANELS).forEach(([tab, id]) => {
+    const el = document.getElementById(id);
+    if (el) el.hidden = tab !== name;
+  });
   writeStore("qa.tab", name);
 }
 document.getElementById("tabs").addEventListener("click", e => {

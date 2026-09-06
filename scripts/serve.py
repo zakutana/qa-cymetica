@@ -73,6 +73,15 @@ def _fingerprint() -> tuple:
     return tuple(marks)
 
 
+class SingleServer(ThreadingHTTPServer):
+    """Refuse to share the port. The default is to reuse it, which on Windows
+    means two servers can listen at once and the browser gets whichever one
+    the OS feels like."""
+
+    allow_reuse_address = False
+    daemon_threads = True
+
+
 class Live:
     """The current page, the current payload hash, and who is listening."""
 
@@ -221,6 +230,22 @@ def make_handler(live: Live):
     return Handler
 
 
+def _already_ours(url: str) -> bool:
+    """Is the thing on that port this same server, or a stranger?
+
+    Checked rather than assumed: opening a browser at whatever happens to hold
+    port 8787 would be a small betrayal of the one promise this page makes,
+    which is that what you are looking at is our measurement.
+    """
+    import urllib.request
+
+    try:
+        with urllib.request.urlopen(url.rstrip("/") + "/status", timeout=2) as r:
+            return "digest" in json.loads(r.read().decode("utf-8"))
+    except Exception:  # noqa: BLE001 -- anything at all means "not ours"
+        return False
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--port", type=int, default=8787)
@@ -237,8 +262,26 @@ def main(argv: list[str] | None = None) -> int:
     thread = threading.Thread(target=watcher, args=(live, stop), daemon=True)
     thread.start()
 
-    server = ThreadingHTTPServer((args.host, args.port), make_handler(live))
     url = f"http://{args.host}:{args.port}/"
+
+    # Asked BEFORE binding, not after a failed bind. ThreadingHTTPServer sets
+    # allow_reuse_address, which on Windows lets a second process bind a port
+    # that is already listening -- so the bind succeeds, two servers answer at
+    # random, and the launcher looks like it worked. Double-clicking twice is
+    # the normal way that happens, so it has to be handled here rather than in
+    # an except branch that never runs.
+    if _already_ours(url):
+        print(f"[serve] already running at {url} -- opening that instead")
+        webbrowser.open(url)
+        return 0
+
+    try:
+        server = SingleServer((args.host, args.port), make_handler(live))
+    except OSError as exc:
+        print(f"[serve] cannot listen on {args.host}:{args.port}: {exc}", file=sys.stderr)
+        print("[serve] something else holds that port; try --port 8788",
+              file=sys.stderr)
+        return 1
     rows = sum(live.payload.get("display_counts", {}).values())
     print(f"[serve] {url}  {rows} rows, payload {live.digest[:16]}")
     print(f"[serve] watching {', '.join(WATCHED)} every {POLL_SECONDS:g}s")
