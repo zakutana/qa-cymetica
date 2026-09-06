@@ -196,3 +196,46 @@ def _render_module_for_page():
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_marking_read_is_the_only_switch_and_it_hides_every_mark():
+    """"Mark all as read" is one switch, and after it nothing is marked.
+
+    The operator stated the contract in one sentence: after clicking it, no
+    envelope may appear anywhere. That is only guaranteed if there is exactly
+    ONE place that decides whether a mark shows, and its decision is a
+    comparison against the read timestamp -- a second code path that could
+    reveal a mark would be a switch that does not switch.
+
+    So this asserts the shape rather than a behaviour: one renderer, one
+    decision, and a mark that ships hidden. The behaviour was verified in a
+    browser (23 marks, click, 0, reload, 0); what a test can hold down for
+    good is that the structure making it true does not quietly grow a second
+    branch.
+    """
+    import re
+
+    render = _render_module_for_page()
+    template = render.TEMPLATE
+
+    # It ships hidden: no window between render and paintBell where every row
+    # flashes a mark it has not earned.
+    assert re.search(r'<span class="newreply" data-newreply hidden', template), \
+        "the mark does not ship hidden, so it shows before anything decides"
+
+    # Exactly one place assigns its visibility, and it compares against seenAt.
+    assignments = re.findall(r"\.hidden\s*=\s*([^;]+);", template)
+    mark_rules = [a for a in assignments if "vendorAt" in a]
+    assert len(mark_rules) == 1, (
+        f"{len(mark_rules)} code paths decide whether a reply mark shows; one "
+        f"of them could reveal a mark the operator already cleared: {mark_rules}"
+    )
+    assert "seenAt()" in mark_rules[0], (
+        f"the mark's visibility is not decided by the read timestamp, so "
+        f'"Mark all as read" is not the switch that controls it: {mark_rules[0]}'
+    )
+
+    # And clearing writes the timestamp the comparison reads.
+    assert 'writeStore("qa.seenAt"' in template, \
+        "nothing persists the read timestamp, so the switch forgets on reload"
