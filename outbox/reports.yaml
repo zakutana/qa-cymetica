@@ -883,6 +883,87 @@ reports:
       the CYM ranges are legacy copy, saying so on the report closes this
       without any code change -- the check only asserts that the two agree, not
       which of them is right.
+
+  - key: rewards-unreadable-after-the-zeroing
+    findings:
+      - CYM-bounty-rewards-unrecorded
+    severity: low
+    category: api
+    url: https://cymetica.com/api/v1/bounty/reports
+    title: >-
+      Follow-up on #63: zeroing the awards made paid and never-awarded
+      indistinguishable, while stats still reports total_paid 2000.0
+    expected: >
+      A verified report should be readable as either awarded or not awarded,
+      and the aggregate in /api/v1/bounty/stats should agree with the rows it
+      aggregates.
+    actual: >
+      Read at 2026-09-06T21:53Z. All 20 rows on GET /api/v1/bounty/reports are
+      closed as fixed, every one carries reward_status pending_award and
+      reward_amount 0.0, and none can be read as paid or awarded. Meanwhile
+      GET /api/v1/bounty/stats reports total_paid 2000.0, awards_recorded 2,
+      awards_recorded_total 2000.0, payouts_recorded 0 and
+      reports_pending_award 34.
+    steps:
+      - "GET /api/v1/bounty/reports (no auth): 20 rows, all status=fixed, all reward_status=pending_award, all reward_amount=0.0"
+      - "GET /api/v1/bounty/stats (no auth): total_paid=2000.0, payouts_recorded=0, awards_recorded=2, reports_pending_award=34"
+      - "No row in the public list can be read as one of the 2 awards_recorded"
+    body: >
+      This one appears to be a side effect of the change that answered #68, so
+      it is offered as a heads-up rather than a complaint. #63 asked the
+      tracker to be able to say what a verified report had earned, and it
+      could: the fields shipped. Setting every reward_amount to 0.0 and every
+      reward_status to pending_award has taken that back -- a report that was
+      paid and one whose award was never recorded now read identically.
+
+
+      Two specifics that look like genuine contradictions rather than
+      presentation. total_paid is 2000.0 beside payouts_recorded 0, so
+      whatever total_paid counts, it is not payments; if it means "awarded",
+      the name is doing real damage to anyone reading the programme's numbers.
+      And awards_recorded is 2, but no row in the 20 the public endpoint
+      returns can be read as either of them, so the two awards are not
+      locatable from outside.
+
+
+      Our check for this had been passing since your fix and went red on
+      today's sweep, which is why you are hearing about it now rather than
+      earlier.
+
+  - key: closure-without-evidence-recurred-on-68
+    findings:
+      - CYM-tracker-closure-rate
+    severity: low
+    category: api
+    url: https://cymetica.com/api/v1/bounty/reports
+    title: >-
+      Follow-up on #53/#60: report #68 was closed as fixed with every evidence
+      field null, the pattern those reports were about
+    expected: >
+      A report moved to fixed should record something about who checked it --
+      any of validated_at, triaged_at, severity_confirmed, ticket_url,
+      fix_pr_url or status_notes.
+    actual: >
+      #68 moved to fixed at 2026-09-06T17:39:26 with all six of those null. It
+      is 1 of 20 closed reports in the public tracker in that state; the other
+      19 carry at least one. The check that covers this had been green since
+      #53/#60 were resolved and went red on today's sweep.
+    steps:
+      - "GET /api/v1/bounty/reports (no auth)"
+      - "Report #68: status=fixed, validated_at=null, triaged_at=null, severity_confirmed=null, ticket_url=null, fix_pr_url=null, status_notes=null"
+      - "The other 19 closed reports each carry at least one of those fields"
+    body: >
+      Not disputing the fix itself -- something did change, and we can see it
+      in the data. The point is narrower: with all six fields empty there is
+      nothing on the record saying what was changed or who checked it, which
+      is exactly what #53 and #60 were about and what the fix for them
+      addressed. One line in status_notes would have closed this and would
+      also have answered the currency question we filed as #70 without a
+      round trip.
+
+
+      Nineteen of twenty closures do carry evidence, so this reads as one
+      report slipping through rather than the practice lapsing.
 footer: >
   Reported by an independent QA agent. Scope of this work: read-only
   verification of the REST API, MCP and machine-readable discovery surfaces. No
