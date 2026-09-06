@@ -178,6 +178,90 @@ class RunIntegrityError(RuntimeError):
     """A run record contradicts something outside itself."""
 
 
+def _selector_covers(token: str, nodeid: str) -> bool:
+    """Would `token` on a pytest command line have collected `nodeid`?"""
+    nodeid = nodeid.replace("\\", "/")
+    token = token.replace("\\", "/").rstrip("/")
+    return (nodeid == token
+            or nodeid.startswith(token + "/")
+            or nodeid.startswith(token + "::")
+            or nodeid.startswith(token + "["))
+
+
+def _preregistered_selector(prereg_id: str) -> str | None:
+    """The selector as committed, read out of git at the tag.
+
+    From the object store, never the working tree: the whole point of the tag
+    is that what it points at cannot be edited afterwards.
+    """
+    import subprocess
+
+    try:
+        out = subprocess.run(
+            ["git", "show",
+             f"prereg/{prereg_id}:state/preregistrations/{prereg_id}.md"],
+            cwd=REPO_ROOT, capture_output=True, text=True,
+            encoding="utf-8", errors="replace", check=True,
+        ).stdout
+    except (subprocess.CalledProcessError, OSError):
+        return None
+    for line in out.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("Selector"):
+            return stripped[len("Selector"):].strip()
+    return None
+
+
+def _honoured_preregistration(run: dict, selector: str) -> list[str]:
+    """Did the run collect what it committed to collecting, and only that?
+
+    Gap 1 closed a record ASSERTING a preregistration it did not have. This
+    closes a record having a real one and running something else. Level V --
+    the only level that may close a finding -- was granted on clean tree, a
+    tag, and the tag pointing at HEAD; nothing compared the selector the tag
+    committed to against what the session actually collected. Preregister the
+    suite, run the one check you expect to pass, verify a fix with it. The tag
+    proved when the commitment was written and nothing proved it was kept.
+
+    Both directions matter and say different things. Something collected that
+    the selector does not reach means the session ran more than it declared.
+    A declared token that collected nothing means it ran less -- the shape of
+    narrowing to a result you like, and the reason this exists.
+    """
+    import shlex
+
+    try:
+        tokens = [t for t in shlex.split(selector) if not t.startswith("-")]
+    except ValueError:
+        return [f"the preregistered selector {selector!r} does not parse"]
+    if not tokens:
+        return [f"{run.get('prereg_id')} preregisters no selector to check against"]
+
+    collected = [str(n) for n in (run.get("collected") or [])]
+    if not collected:
+        return []          # nothing collected is its own problem, named elsewhere
+
+    problems: list[str] = []
+
+    uncovered = [n for n in collected
+                 if not any(_selector_covers(t, n) for t in tokens)]
+    if uncovered:
+        problems.append(
+            f"the run collected {len(uncovered)} check(s) that "
+            f"{run.get('prereg_id')} did not preregister, e.g. {uncovered[0]}"
+        )
+
+    unused = [t for t in tokens
+              if not any(_selector_covers(t, n) for n in collected)]
+    if unused:
+        problems.append(
+            f"{run.get('prereg_id')} preregistered {unused} but the run "
+            f"collected nothing under it -- the session ran less than it "
+            f"committed to"
+        )
+    return problems
+
+
 def run_integrity(run: dict, path: Path | None = None,
                   events: list[dict] | None = None) -> list[str]:
     """Check a run record against facts it does not control.
@@ -224,6 +308,15 @@ def run_integrity(run: dict, path: Path | None = None,
                     f"the record says prereg_commit {claimed[:12]} "
                     f"but prereg/{prereg} resolves to {resolved[:12]}"
                 )
+            else:
+                selector = _preregistered_selector(prereg)
+                if selector is None:
+                    problems.append(
+                        f"prereg/{prereg} names no selector that can be read "
+                        f"back from the commit it tags"
+                    )
+                else:
+                    problems.extend(_honoured_preregistration(run, selector))
 
     if path is not None and path.exists():
         digest = hashlib.sha256(path.read_bytes()).hexdigest()

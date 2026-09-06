@@ -39,9 +39,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from qa.fold import display_state  # noqa: E402
+from qa.state import ledger_path  # noqa: E402
 
 REPO = Path(__file__).resolve().parent.parent
-LEDGER = REPO / "state" / "ledger.json"
 
 # Always run, whatever is open: the guard must be proven before any live
 # request. tests/repo is deliberately NOT here -- a stale ledger must not
@@ -58,9 +58,15 @@ SETTLED = {
 
 
 def open_rows() -> list[dict]:
-    if not LEDGER.exists():
-        raise SystemExit(f"no ledger at {LEDGER}; run a full sweep first")
-    ledger = json.loads(LEDGER.read_text(encoding="utf-8"))
+    # Through ledger_path(), not a path built here: QA_STATE_DIR is the one
+    # seam the whole project reads state behind, and a hard-coded
+    # REPO/"state"/"ledger.json" made this the exception -- a test pointing
+    # QA_STATE_DIR at a temp tree would have got the committed ledger back
+    # and built a selector out of production rows.
+    path = ledger_path()
+    if not path.exists():
+        raise SystemExit(f"no ledger at {path}; run a full sweep first")
+    ledger = json.loads(path.read_text(encoding="utf-8"))
     findings = ledger["findings"]
     rows = list(findings.values()) if isinstance(findings, dict) else findings
     return [r for r in rows if display_state(r) not in SETTLED]
