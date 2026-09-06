@@ -495,6 +495,15 @@ def build_payload(ledger: dict | None = None, inventory: dict | None = None,
 TEMPLATE = r"""<title>Cymetica QA Console</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <style>
+/* The browser's own [hidden] rule is display:none at UA specificity, which
+   ANY class selector beats. `.newreply { display:inline-flex }` did exactly
+   that: setting el.hidden = true set the attribute and changed nothing on
+   screen, so "Mark all as read" cleared the badge and left every envelope
+   drawn. Published as an Artifact this never showed, because that runtime
+   injects this very rule; served raw from localhost, nothing did.
+   One line, first, so no later class can win against it. */
+[hidden] { display: none !important; }
+
 :root {
   --bg:#f6f7f6; --surface:#ffffff; --surface-2:#eef1f0; --line:#d5dbd9;
   --line-soft:#e6eae9; --text:#10171a; --text-dim:#5a6a6c; --text-faint:#8b9a9b;

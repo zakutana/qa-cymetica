@@ -239,3 +239,42 @@ def test_marking_read_is_the_only_switch_and_it_hides_every_mark():
     # And clearing writes the timestamp the comparison reads.
     assert 'writeStore("qa.seenAt"' in template, \
         "nothing persists the read timestamp, so the switch forgets on reload"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_hidden_attribute_actually_hides():
+    """Setting el.hidden must remove the element, not merely mark it.
+
+    This is the bug the sibling structural test could not catch, and the more
+    embarrassing half is how it survived verification.
+
+    `.newreply { display: inline-flex }` is a CLASS selector. The browser's own
+    `[hidden] { display: none }` lives in the user-agent stylesheet, which any
+    class rule outranks. So "Mark all as read" set el.hidden = true on all 30
+    marks, cleared the badge, and changed nothing on screen: every envelope
+    stayed drawn. Published as an Artifact it never showed, because that
+    runtime injects exactly this rule; served raw from localhost, nothing did.
+
+    It survived because the check measured `el.hidden` -- the property that was
+    being set correctly -- instead of `getComputedStyle(el).display`, which is
+    what a reader sees. A test that asks the code what it did, rather than the
+    page what it shows, will confirm any bug that lies in the gap between them.
+
+    One `!important` rule closes the whole class, for every element the page
+    toggles this way, now and later.
+    """
+    import re
+
+    css = _render_module_for_page().TEMPLATE
+
+    rule = re.search(r"\[hidden\]\s*\{[^}]*display\s*:\s*none\s*!important", css)
+    assert rule, (
+        "the sheet has no `[hidden] { display: none !important }`, so any class "
+        "rule setting `display` on a toggled element silently wins and the "
+        "element stays on screen with its hidden attribute set"
+    )
+
+    # And the elements the page toggles must be the ones that rule covers:
+    # anything given a display by a class AND toggled via .hidden in the JS.
+    toggled = set(re.findall(r'(\w+)\.hidden\s*=', css))
+    assert toggled, "nothing is toggled via .hidden -- has the mechanism changed?"
