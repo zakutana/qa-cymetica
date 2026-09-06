@@ -134,3 +134,62 @@ def test_a_single_test_run_closes_nothing(tmp_path):
     assert display_state(after["findings"]["CYM-b"]) == before["CYM-b"]
     assert after["findings"]["CYM-b"]["check"]["not_checked_in"] == "run-single"
     assert "VERIFIED" not in display_state(after["findings"]["CYM-b"])
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_concurrent_writers_cannot_break_the_chain(tmp_path):
+    """Two processes appending at once must not corrupt the journal.
+
+    append_event reads the whole journal, derives seq and chain from what it
+    read, and only then writes. Unserialised, two writers inside that window
+    derive the same seq, and the result is not a lost event: read_events
+    raises from then on, so the ledger cannot fold, the page cannot render and
+    every session aborts -- with rule 4 forbidding a hand repair, which leaves
+    no exit that does not break another rule. Three writers reproduced it on
+    the first attempt, at line 3 of 36.
+
+    It went unnoticed while every writer was an operator typing one command.
+    `serve.py --ask` appends on a timer, unattended, and can land in the
+    middle of a sweep, so the window is now real.
+
+    Subprocesses, not threads: the lock is a cross-PROCESS one, and threads
+    would not exercise it.
+    """
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    repo = Path(__file__).resolve().parent.parent.parent
+    writer = tmp_path / "writer.py"
+    writer.write_text(
+        "import os, sys\n"
+        "os.environ['QA_STATE_DIR'] = sys.argv[1]\n"
+        "sys.path.insert(0, sys.argv[2])\n"
+        "from qa.state import append_event\n"
+        "who = sys.argv[3]\n"
+        "for i in range(8):\n"
+        "    append_event({'type': 'note', 'at': '2026-09-05T00:00:0%d+00:00' % i,\n"
+        "                  'by': 'agent', 'source': 'w-' + who,\n"
+        "                  'finding_id': 'CYM-a', 'note': who + '-' + str(i)})\n",
+        encoding="utf-8")
+
+    (tmp_path / "journal").mkdir(parents=True, exist_ok=True)
+    procs = [subprocess.Popen([sys.executable, str(writer), str(tmp_path),
+                               str(repo), who])
+             for who in ("A", "B", "C")]
+    for p in procs:
+        assert p.wait(timeout=120) == 0, "a writer failed outright"
+
+    import os
+
+    from qa.state import read_events
+
+    os.environ["QA_STATE_DIR"] = str(tmp_path)
+    try:
+        events = read_events()          # raises JournalError if the chain broke
+    finally:
+        os.environ.pop("QA_STATE_DIR", None)
+
+    assert len(events) == 24, f"24 appends, {len(events)} survived"
+    assert [e["seq"] for e in events] == list(range(1, 25)), "sequence is not dense"
+    assert len({e["note"] for e in events}) == 24, "an append was lost or doubled"

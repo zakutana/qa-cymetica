@@ -23,6 +23,7 @@ Phase 0's state_dir() seam stays at the top.
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import json
 import os
@@ -487,27 +488,87 @@ def head(path: Path | None = None) -> dict:
     return {"seq": events[-1]["seq"], "chain": events[-1]["chain"]}
 
 
+@contextlib.contextmanager
+def _journal_lock(path: Path):
+    """Hold an exclusive cross-process lock for the length of one append.
+
+    `append_event` reads the whole journal, derives `seq` and `chain` from what
+    it read, and only then writes. Two writers interleaving inside that window
+    both derive the same seq, and the file ends up with a duplicate sequence
+    number and a broken chain. That is not a lost event: `read_events` raises
+    on the next load, so the ledger cannot fold, the page cannot render and
+    every session aborts -- and rule 4 forbids repairing it by hand, so there
+    is no way out that does not break another rule.
+
+    It stayed theoretical while every writer was an operator typing a command.
+    `serve.py --ask` ended that: it appends on a timer, unattended, and can
+    land in the middle of a sweep.
+
+    A separate .lock file rather than the journal itself, so the lock is never
+    confused with the data and locking cannot truncate or extend it. Held
+    around the read as well as the write, because the read is what the write
+    is derived from.
+    """
+    lock_path = path.with_name(path.name + ".lock")
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    handle = open(lock_path, "a+b")
+    try:
+        if os.name == "nt":
+            import msvcrt
+
+            handle.seek(0)
+            # LK_LOCK retries for about ten seconds, then raises. Locking one
+            # byte past EOF is legal on Windows and is the usual idiom.
+            msvcrt.locking(handle.fileno(), msvcrt.LK_LOCK, 1)
+        else:
+            import fcntl
+
+            fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            if os.name == "nt":
+                import msvcrt
+
+                handle.seek(0)
+                msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
+            else:
+                import fcntl
+
+                fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+    finally:
+        handle.close()
+
+
 def append_event(event: dict, path: Path | None = None) -> str:
     """Append one event. Returns 'appended' or 'duplicate' (idempotent by
-    natural key). Never rewrites an existing line."""
+    natural key). Never rewrites an existing line.
+
+    Serialised across processes: see `_journal_lock`.
+    """
     _validate_event(event)
     p = path or journal_path()
-    existing = read_events(path=p)
-    key = _natural_key(event)
-    for e in existing:
-        if _natural_key(e) == key:
-            return "duplicate"
-
-    seq = len(existing) + 1
-    prev_chain = existing[-1]["chain"] if existing else ""
-    body = dict(event)
-    body["seq"] = seq
-    body["event_id"] = event_id(event)
-    chain = hashlib.sha256((prev_chain + _canonical(body)).encode("utf-8")).hexdigest()
-    line = dict(body)
-    line["chain"] = chain
-
     p.parent.mkdir(parents=True, exist_ok=True)
-    with open(p, "a", encoding="utf-8", newline="\n") as fh:
-        fh.write(_canonical(line) + "\n")
-    return "appended"
+
+    with _journal_lock(p):
+        existing = read_events(path=p)
+        key = _natural_key(event)
+        for e in existing:
+            if _natural_key(e) == key:
+                return "duplicate"
+
+        seq = len(existing) + 1
+        prev_chain = existing[-1]["chain"] if existing else ""
+        body = dict(event)
+        body["seq"] = seq
+        body["event_id"] = event_id(event)
+        chain = hashlib.sha256((prev_chain + _canonical(body)).encode("utf-8")).hexdigest()
+        line = dict(body)
+        line["chain"] = chain
+
+        with open(p, "a", encoding="utf-8", newline="\n") as fh:
+            fh.write(_canonical(line) + "\n")
+            # Flushed inside the lock: a line still sitting in a buffer when
+            # the next writer reads would give it the same seq all over again.
+            fh.flush()
+        return "appended"

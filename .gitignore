@@ -17,3 +17,8 @@ build/
 dist/
 .DS_Store
 Thumbs.db
+
+# The journal's append lock. A zero-byte file whose only job is to exist while
+# one process holds it; committing it would put a machine's transient state in
+# everyone's tree.
+state/journal/*.lock
