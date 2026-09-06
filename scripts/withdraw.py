@@ -47,6 +47,54 @@ def _require_reason(reason: str | None, what: str) -> str:
     return text
 
 
+def _known_ids() -> set[str] | None:
+    """Every finding id in the ledger, or None if it cannot be read.
+
+    None means "cannot tell", and is never treated as "not there".
+    """
+    import json
+
+    path = ledger_path()
+    if not path.exists():
+        return None
+    try:
+        ledger = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    findings = ledger.get("findings")
+    return set(findings) if isinstance(findings, dict) else None
+
+
+def _must_exist(*finding_ids: str) -> None:
+    """Refuse to write an event about a finding that is not there.
+
+    Nothing checked this, so a mistyped id appended a permanent event to an
+    append-only journal, printed "appended: withdraw CYM-reallll" as though it
+    had worked, and left the row it was meant for exactly as it was. Both
+    halves are bad: the retraction that was owed never got recorded, and the
+    journal keeps a judgement about a finding that does not exist, which
+    cannot be deleted -- only annotated.
+
+    An unreadable or absent ledger means we cannot tell, and that must not
+    stop an operator recording a judgement: bootstrapping is a real case.
+    """
+    import difflib
+
+    known = _known_ids()
+    if known is None:
+        return
+    for finding_id in finding_ids:
+        if finding_id in known:
+            continue
+        close = difflib.get_close_matches(finding_id, sorted(known), n=3, cutoff=0.5)
+        hint = f"\n  did you mean: {', '.join(close)}" if close else ""
+        raise SystemExit(
+            f"no finding {finding_id!r} in the ledger, so this event would be "
+            f"a permanent no-op in an append-only journal.{hint}\n"
+            f"  {len(known)} findings exist; scripts/ledger.py lists them."
+        )
+
+
 def _affected(finding_id: str) -> tuple[list[int], str | None]:
     """Which vendor reports this finding is filed under, and how it renders.
 
@@ -85,7 +133,10 @@ def _emit(event: dict, finding_id: str, owes: str | None = None) -> int:
         print(f"  filed as {joined}")
         if owes:
             print(f"  OWED: {owes} on {joined}")
-    print("  run scripts/ledger.py to re-fold the ledger from the journal")
+    # --events-only, not bare ledger.py. This appended a journal event and
+    # nothing else; a bare fold also composes the newest admissible run, which
+    # would fold a run the operator did not ask about into the same write.
+    print("  run scripts/ledger.py --events-only to fold this in")
     return 0
 
 
@@ -130,6 +181,13 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     at, source = _now(), "scripts/withdraw.py"
     base = {"at": at, "by": "operator", "source": source}
+
+    # Before anything is written. supersede names two rows and both have to be
+    # real, or half the event lands and the other half points at nothing.
+    if args.command == "supersede":
+        _must_exist(args.from_id, args.to_id)
+    else:
+        _must_exist(args.finding_id)
 
     if args.command == "withdraw":
         reason = _require_reason(args.reason, "withdrawal")

@@ -174,10 +174,28 @@ def existing_titles(client) -> set[str]:
     whose POST response was lost to a timeout would be invisible here and only
     the server's 409 would stop the retry. Our own pending reports live behind
     my-reports, keyed by wallet -- read both.
+
+    Both reads check the STATUS before the body. my-reports answers a bad or
+    expired key with 401 and a perfectly parseable {"detail": ...}, so
+    `.json().get("reports", [])` returned an empty list, no exception was
+    raised, the "refusing to file blind" branch never ran, and the duplicate
+    went out. Same shape as the read bounty.py's classify_read exists for: an
+    unreadable tracker is byte-for-byte an empty one unless somebody looks at
+    the status line.
     """
+    def _rows(response, what: str) -> list:
+        if response.status_code != 200:
+            raise SystemExit(
+                f"  ! {what} answered HTTP {response.status_code}, so what is "
+                f"already filed cannot be known. Refusing to file blind -- a "
+                f"read that failed is not a tracker that is empty."
+            )
+        body = response.json()
+        return body.get("reports") or body.get("data") or []
+
     titles: set[str] = set()
     try:
-        reports = client.get(ENDPOINT).json().get("reports", [])
+        reports = _rows(client.get(ENDPOINT), "the public tracker")
         titles |= {(r.get("title") or "").strip().lower() for r in reports}
         wallet = os.environ.get("QA_WALLET_ADDRESS", "")
         if wallet:
@@ -192,13 +210,17 @@ def existing_titles(client) -> set[str]:
                 client._transport.registry, timeout=40.0,
             )
             try:
-                mine = reader.get("/api/v1/bounty/my-reports",
-                                  params={"wallet_address": wallet}).json()
+                rows = _rows(
+                    reader.get("/api/v1/bounty/my-reports",
+                               params={"wallet_address": wallet}),
+                    "my-reports")
             finally:
                 reader.close()
-            rows = mine.get("reports") or mine.get("data") or []
             titles |= {(r.get("title") or "").strip().lower() for r in rows}
         return titles
+    except SystemExit:
+        # Already said exactly what went wrong, with the status code in it.
+        raise
     except Exception as exc:  # noqa: BLE001
         print(f"  ! could not read the tracker first ({exc}); refusing to file blind")
         raise SystemExit(1)

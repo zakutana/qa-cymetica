@@ -151,15 +151,54 @@ def _detail(results: list[dict]) -> dict:
     Never from `failure_repr`. That field is our traceback -- it contains our
     file paths, our assertion source and our variable names, and none of it is
     a statement about the platform.
+
+    One row may declare many checks -- CYM-documented-404 declares 26 -- and
+    taking the first non-null value of each field independently built a
+    chimera: a reason from one measurement printed above a population from
+    another, with the second failure invisible. That detail is what
+    `_summary` puts on the page and what submit.py sends as the headline
+    under "MEASURED VALUES (from the live service)", so the mixture went out
+    as one reading.
+
+    So: every reason is kept, and a number is kept only when every check that
+    measured it agrees. A missing figure is honest; one check's figure
+    labelled as the row's is not.
     """
+    # By nodeid, so the same run always folds to the same detail. Run order is
+    # collection order, and the repo-consistency guard re-folds to compare.
+    ordered = sorted(results, key=lambda r: r.get("nodeid") or "")
+    measurements = [r.get("measurement") or {} for r in ordered]
+
     detail: dict = {}
-    for result in results:
-        measurement = result.get("measurement") or {}
-        for field in ("left", "right", "sources", "population"):
-            if measurement.get(field) is not None and field not in detail:
-                detail[field] = measurement[field]
-        if measurement.get("reason") and "reason" not in detail:
-            detail["reason"] = measurement["reason"]
+
+    for field in ("left", "right", "sources", "population"):
+        values = [m[field] for m in measurements if m.get(field) is not None]
+        if not values:
+            continue
+        if len(values) == 1:
+            detail[field] = values[0]
+        elif all(v == values[0] for v in values[1:]):
+            detail[field] = values[0]
+        elif field == "left" and all(isinstance(v, list) for v in values):
+            # The one field that composes: `left` is the offending items, and
+            # two checks each naming their own are one longer list of them.
+            merged: list = []
+            for value in values:
+                for item in value:
+                    if item not in merged:
+                        merged.append(item)
+            detail[field] = merged
+        # Otherwise dropped. Two checks disagreeing about a number is not a
+        # number about the row, and picking one would be picking at random.
+
+    reasons: list[str] = []
+    for measurement in measurements:
+        reason = (measurement.get("reason") or "").strip()
+        if reason and reason not in reasons:
+            reasons.append(reason)
+    if reasons:
+        detail["reason"] = "; ".join(reasons)
+
     return detail
 
 

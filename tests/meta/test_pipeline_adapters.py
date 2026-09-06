@@ -108,6 +108,52 @@ def test_401_read_is_not_empty(tmp_path, monkeypatch):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_duplicate_guard_refuses_a_read_it_could_not_make(monkeypatch):
+    """The same incident on the write path, where it costs the vendor.
+
+    existing_titles reads what is already filed so a retry cannot duplicate a
+    report. It called .json() without looking at the status, and my-reports
+    answers a bad or expired key with 401 and a perfectly parseable
+    {"detail": ...} -- so an unreadable tracker produced an empty title set,
+    no exception, and a duplicate on the vendor's desk. Its own docstring said
+    the anonymous-read version of this had been fixed by reading with the key;
+    an expired key brought it straight back.
+
+    A read that failed is not a tracker that is empty. Filing blind is the one
+    thing this function exists to prevent, so it exits instead.
+    """
+    # The public read alone is the subject here. With a wallet in the
+    # environment -- and .env puts one there -- existing_titles would go on to
+    # build a real client for my-reports, which is a live request in a test
+    # that is asserting about status codes.
+    monkeypatch.delenv("QA_WALLET_ADDRESS", raising=False)
+    submit = _module("scripts/submit.py")
+
+    class _Response:
+        def __init__(self, status, body):
+            self.status_code, self._body = status, body
+
+        def json(self):
+            return self._body
+
+    class _Client:
+        def __init__(self, response):
+            self._response = response
+
+        def get(self, *args, **kwargs):
+            return self._response
+
+    ok = _Client(_Response(200, {"reports": [{"title": "Alpha"}]}))
+    assert submit.existing_titles(ok) == {"alpha"}
+
+    for status in (401, 403, 500):
+        with pytest.raises(SystemExit) as raised:
+            submit.existing_titles(_Client(_Response(status, {"detail": "no"})))
+        assert str(status) in str(raised.value), \
+            "the refusal does not say what the tracker actually answered"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_vendor_status_events_carry_the_evidence_they_rest_on(tmp_path, monkeypatch):
     """Critique gap 2. FIX_CLAIMED is half of the strongest statement the
     dashboard makes; the fold refuses it without a captured response."""
