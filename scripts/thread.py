@@ -48,8 +48,78 @@ def parse(path: Path) -> dict | None:
             meta[key] = value.isoformat()
 
     meta["body"] = body.strip()
-    meta["file"] = str(path.relative_to(REPO_ROOT)).replace("\\", "/")
+    try:
+        meta["file"] = str(path.relative_to(REPO_ROOT)).replace("\\", "/")
+    except ValueError:
+        meta["file"] = str(path).replace("\\", "/")
     return meta
+
+
+def ingest(dirs) -> int:
+    """Turn every message file into exactly one journal event.
+
+    thread.py used to rebuild the correspondence by scanning directories on
+    every run, with `delivered` defaulting to True. Both consequences
+    happened: moving a message into archive/ deleted a vendor reply and three
+    reported findings from the record, and every outbound message claimed to
+    have been delivered whether or not anybody had sent it.
+
+    A message is now an EVENT, keyed by its frontmatter id. Where the file
+    sits afterwards is filing, not evidence -- ingesting the archive adds
+    nothing, because the event is already there.
+
+    Delivery is a claim somebody made. It is true only when the message says
+    `delivered: true`, or when a reply refers to it -- which is the one
+    receipt this channel actually produces.
+    """
+    from qa.state import append_event
+
+    messages = []
+    for directory in dirs:
+        directory = Path(directory)
+        if not directory.exists():
+            continue
+        for path in sorted(directory.glob("*.md")):
+            meta = parse(path)
+            if meta is not None:
+                messages.append(meta)
+
+    acknowledged = {m.get("reply_to") for m in messages if m.get("reply_to")}
+
+    added = 0
+    for meta in sorted(messages, key=lambda m: (
+            str(m.get("sent_at") or m.get("received_at") or ""),
+            str(m.get("id") or ""))):
+        msg_id = meta.get("id")
+        if not msg_id:
+            continue
+        inbound = meta.get("direction") == "in"
+        at = meta.get("sent_at") or meta.get("received_at") or meta.get("composed_at")
+        if not at:
+            at = datetime.fromtimestamp(
+                Path(meta["file"]).stat().st_mtime, timezone.utc
+            ).isoformat(timespec="seconds")
+
+        event = {
+            "type": "reply" if inbound else "message",
+            "at": str(at),
+            "by": "vendor" if inbound else "operator",
+            "source": "scripts/thread.py",
+            "msg_id": msg_id,
+            "findings": list(meta.get("findings") or []),
+            "origin": meta["file"],
+        }
+        if inbound:
+            event["reply_to"] = meta.get("reply_to")
+            # Their words, captured verbatim in the file itself.
+            event["evidence_id"] = meta.get("evidence_id") or f"inbox:{msg_id}"
+        else:
+            event["delivered"] = bool(
+                meta.get("delivered") is True or msg_id in acknowledged)
+
+        if append_event(event) == "appended":
+            added += 1
+    return added
 
 
 # Only TOP-LEVEL headings start a new block. Sub-headings inside a section --

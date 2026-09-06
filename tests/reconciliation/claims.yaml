@@ -35,29 +35,36 @@ claims:
     question: "Does llms.txt name agent symbols that actually exist?"
     component: rest.agents
     relation: subset
+    # Which side must be CONTAINED. Without it the pair was ordered
+    # alphabetically and the claim could come out backwards.
+    subset: llms_txt
+    subset_why: >
+      llms.txt is the claimant: it tells a reader which agents they can clone.
+      The live species catalogue is the fact. A document may name fewer than
+      exist; it may not name one that does not.
     severity: S1-INTEGRITY
     note: >
-      Rewritten after report #48. The original compared a parenthesised list
-      that no longer exists in the document -- llms.txt now defers to the live
-      endpoint, which is the right answer. The invariant that still matters is
-      narrower: every agent symbol the document names must resolve. Subset, not
-      equality, because the document is not obliged to name them all.
+      Rewritten twice. The version filed with #48 enumerated the 21 symbols
+      observed across two captures, so it matched whatever the document
+      happened to contain and passed vacuously on the very defect it was
+      written for -- and because the nodeid never changed, that rewrite was
+      invisible to the ledger. The extractor now names a PLACE in the
+      document rather than the values it expects to find there: whatever list
+      follows the phrase is read, so a symbol that does not resolve is caught
+      however it got in. Subset, not equality, because the document is not
+      obliged to name them all.
     sources:
-      llms_txt:     'regex_all:(MACD|RSI|BOLL|VOL|TREND|STOCH|ICHI|FIB|ATR|DIV|PCPN|DELTA|STAT|CORR|SENT|SYNC|CRASH|DREAD|GLOOM|FADE|VORTX)'
+      llms_txt:     'list_after:AI trading agent'
       live_species: 'set:$[*].symbol'
 
-  - id: llms_agent_count_self_consistent
-    question: "Does llms.txt quote the same agent count in all of its own sentences?"
-    component: rest.agents
-    relation: all_equal
-    severity: S2-MEASUREMENT
-    note: >
-      A document that contradicts itself is worse than two documents that
-      disagree, because the reader has no way to pick. Added after report #52
-      updated one occurrence of the count and left another behind.
-    sources:
-      llms_txt:   'regex_int:(\d+) AI trading agents,'
-      llms_txt_2: 'regex_int:any of our (\d+) AI trading agent species'
+  # llms_agent_count_self_consistent lived here. It pinned two particular
+  # sentences and compared them to each other. On 2026-09-05 the vendor
+  # corrected 10 -> 11 and consolidated the duplicate, which removes an
+  # operand -- so the claim would have gone green by losing the thing it
+  # compared, which is the failure mode this whole suite exists to prevent.
+  # Replaced by a check that reads EVERY stated count and settles them all
+  # against the live catalogue:
+  #   tests/rest/test_llms_counts.py::test_every_agent_count_in_llms_matches_the_live_species_list
 
   - id: agent_count
     question: "How many clonable AI trading agents exist?"
@@ -79,14 +86,23 @@ claims:
     question: "Does every tool name llms.txt documents exist on the server?"
     component: mcp.tools_list
     relation: subset
+    subset: llms_txt
+    subset_why: >
+      Same shape as agent_names: llms.txt is the document making the claim and
+      the MCP manifest is the catalogue. Documenting fewer tools than exist is
+      fine; documenting one that does not exist is not.
     severity: S3-CONTRACT
     note: >
       Subset, not set_equal. llms.txt is not obliged to list every tool -- it is
       obliged not to name one that does not exist. The earlier set_equal form
       would now fail simply because the document lists fewer than the server
-      serves, which is correct behaviour.
+      serves, which is correct behaviour. The extractor was rewritten after the
+      document stopped rendering tools as markdown links: the old pattern found
+      nothing at all, so the check reported INCONCLUSIVE for days while looking
+      like a resolved defect. It now anchors on the document's own "MCP Tools"
+      section and reads the list it contains, whatever that list says.
     sources:
-      llms_txt: 'regex_all:\[(\w+)\]\(/mcp/v1/tools/\w+\)'
+      llms_txt: 'scope:MCP Tools|regex_all:^- `([a-z][a-z0-9_]+)`'
       mcp_json: 'set:$.tools[*].name'
 
   # Tier correctness is NOT in this table. Comparing a served set against a
@@ -99,6 +115,11 @@ claims:
     question: "Is agent-skills.json the actionable subset of agent-card.json, as stated?"
     component: discovery.wellknown
     relation: subset
+    subset: agent_skills
+    subset_why: >
+      Their own resolution on #51 states agent-card.json is the full discovery
+      card and agent-skills.json the endpoint-actionable subset of it. So the
+      skills file is the contained side, by their description of the model.
     severity: S3-CONTRACT
     note: >
       Their resolution on #51 states agent-card.json is the full discovery card
@@ -111,14 +132,11 @@ claims:
       agent_card:   'set:$.skills[*].id'
 
   # -------------------------------------------------------------------------
-  - id: clob_pair_count
-    question: "How many CLOB trading pairs exist?"
-    component: rest.clob
-    relation: all_equal
-    severity: S2-MEASUREMENT
-    sources:
-      llms_txt: 'regex_int:trade on (\d+) CLOB pairs'
-      mcp_json: 'regex_int:CLOB exchange with (\d+) pairs'
+  # clob_pair_count moved OUT of this table. Both of its sources were
+  # sentences, so the comparison was prose against prose: evidence-role, unable
+  # to fail, and it had established a PASSING state anyway. It is now a real
+  # measurement in tests/mcp/test_clob_pairs.py -- the document's number
+  # against the catalogue list_clob_pairs actually returns.
 
   - id: commit_count
     question: "How many commits are in the production codebase?"
@@ -135,11 +153,11 @@ claims:
       llms_txt:    'regex_int:With ([\d,]+)\+ commits'
       build_stats: 'jsonpath:$.totals.commits'
 
-  - id: mcp_resource_count
-    question: "How many MCP resources are exposed?"
-    component: mcp.protocol
-    relation: all_equal
-    severity: S4-COSMETIC
-    sources:
-      llms_txt: 'regex_int:cymetica-eventtrader-mcp \(\d+ tools, (\d+) resources'
-      mcp_json: 'len:$.resources'
+  # mcp_resource_count lived here. Its llms_txt extractor read a fixed
+  # "N tools, M resources" line that the vendor removed on 2026-09-05,
+  # replacing it with a pointer to tools/list -- correct, because the
+  # catalogue is scoped to the caller's tier and no single figure is right
+  # for every reader (35 anonymous vs 56 allied, measured). With its source
+  # gone the claim could only score Inconclusive forever while presenting as
+  # a settled row. Replaced by a guard on the resolution itself:
+  #   tests/rest/test_llms_counts.py::test_llms_states_no_fixed_size_for_a_tier_scoped_catalogue

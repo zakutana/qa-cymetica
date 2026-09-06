@@ -1,0 +1,77 @@
+{
+  "captured_at": "2026-09-05T21:48:43+00:00",
+  "endpoint_rule": null,
+  "nodeid": null,
+  "request": {
+    "body": {
+      "encoding": "json",
+      "truncated": false,
+      "value": {
+        "actual_behavior": "Asked which currency GET /api/v1/bounty/reward-tiers returns and what the\ncritical severity range is, the sync channel returned rewards-FAQ marketing\ncopy containing neither the currency (CYM) nor either bound\n(400,000-1,000,000), at confidence 0.6, citing faq-rewards-1 and faq-revenue-\nshare-1. Escalating to the async channel, as the documented rule instructs\nbelow 0.7, produced a reply whose content is the communication guide: \"Try\nsync first. If response.confidence < 0.7, re-send via async\" -- the step just\ntaken.",
+        "category": "api",
+        "description": "The question was chosen so the verdict does not rest on anyone's judgement of\ntone. Its correct answer is a value you serve yourself, one GET away, at an\nendpoint your own discovery documents name. A channel that cannot report its\nown published data is failing a test it set for itself: agent-card.json says\nof this endpoint that \"Answers cite source files, database state\", and offers\nit as the way to check a claim the card does not already list. The escalation\nloop is the more serious half. Your decision rule sends a sub-0.7 answer to\nthe async channel, and the async channel replies with the decision rule. A\ncaller who follows your documentation exactly is returned to where they\nstarted, so no question the fast path cannot answer can ever reach a\nconclusion through the published route. SEPARATE OBSERVATION, not a defect\nclaim, because I would rather ask than guess -- and asking is what failed\nabove. Your surfaces began stating today that bounty rewards are paid in CYM\n(llms.txt, agent-card.json, agent-skills.json, and reward-tiers with a\nTGE/vesting schedule). I cannot locate CYM: not among the four contracts\nagent-card.json declares under verification.contracts, not in the 569 pairs\nlist_clob_pairs returns (CYM42/USDC is a different asset), and bounty/stats\nreports total_cym_allocated 0.0. The announcement in the support channels\npromised 1000 ET10 per verified report, ET10 is declared and source-verified,\nand ET10 is what was actually paid. If CYM is pre-TGE, what should a hunter\nread today to know what a verified report has earned? NOT ASKING FOR A\nDIFFERENT TONE. The marketing register is a product decision. The finding is\nthat the answer did not contain the data. INVARIANT: for a question whose\nanswer is a value served at a documented endpoint, the sync channel's answer\ncontains that value, or reports a confidence below its own floor AND the async\nchannel returns something other than the routing guide.\n\nMEASURED VALUES (from the live service):\n\n  [CYM-qa-agent-cannot-report-its-own-data] asked for two values it serves at /api/v1/bounty/reward-tiers, the channel's answer contains neither the currency it publishes (CYM) nor either bound of the critical range (400000-1000000)\n    left: ['the currency it publishes (CYM)', 'either bound of the critical range (400000-1000000)']\n    right: {'currency': 'CYM', 'critical': {'min': 400000, 'max': 1000000}}\n    sources: {'asked': '/api/v1/bounty/qa-agent/ask', 'published_at': '/api/v1/bounty/reward-tiers', 'cited_by_agent': ['faq-revenue-share-1']}\n    population: {'confidence': 0.7, 'answer_chars': 579, 'answer_head': \"🏆 **Reward Pathways Unlocked**\\n\\nThe battleship rewards those who sail with us:\\n\\n- **Trading Points** - Every trade powers the ship's evolution\\n- **Social Amplification** - Share an\"}\n    reason: asked for two values it serves at /api/v1/bounty/reward-tiers, the channel's answer contains neither the currency it publishes (CYM) nor either bound of the critical range (400000-1000000)\n\nREPRODUCE:\n  - GET /api/v1/bounty/reward-tiers -> {\"currency\": \"CYM\", \"severity_rewards\": {\"critical\": {\"min\": 400000, \"max\": 1000000}, ...}}\n  - POST /api/v1/bounty/qa-agent/ask {\"question\": \"What currency does GET /api/v1/bounty/reward-tiers return in its currency field, and what is the reward range for a critical severity report?\"}\n  - Read response.answer -> contains neither 'CYM' nor 400000 nor 1000000; confidence 0.6; sources faq-rewards-1, faq-revenue-share-1\n  - POST /api/v1/bounty/a2a/send with the same question, then GET /api/v1/bounty/a2a/inbox/{agent_id} -> the reply is the sync/async routing guide\n\nAUTOMATED CHECKS (public repo: github.com/zakutana/qa-cymetica):\n  tests/rest/test_qa_agent_channel.py::test_the_agent_can_report_a_value_it_publishes\n\nReported by an independent QA agent. Scope of this work: read-only\nverification of the REST API, MCP and machine-readable discovery surfaces. No\nstate-changing account action, no trading, no order placement, no deposit or\nwithdrawal, no cleanup, no duplicate tickets. UI defects are out of scope.\nEvery figure above was measured directly against the live service, not taken\nfrom a document, and each finding ships with the command that reproduces it.",
+        "expected_behavior": "Asked for a value served at a documented endpoint, the channel agent-card.json\nnames for exactly this purpose answers with that value. A question escalated\nunder the platform's own confidence rule receives something other than the\nrule itself.",
+        "hunter_name": "expire76",
+        "severity_reported": "medium",
+        "steps_to_reproduce": "GET /api/v1/bounty/reward-tiers -> {\"currency\": \"CYM\", \"severity_rewards\": {\"critical\": {\"min\": 400000, \"max\": 1000000}, ...}}\nPOST /api/v1/bounty/qa-agent/ask {\"question\": \"What currency does GET /api/v1/bounty/reward-tiers return in its currency field, and what is the reward range for a critical severity report?\"}\nRead response.answer -> contains neither 'CYM' nor 400000 nor 1000000; confidence 0.6; sources faq-rewards-1, faq-revenue-share-1\nPOST /api/v1/bounty/a2a/send with the same question, then GET /api/v1/bounty/a2a/inbox/{agent_id} -> the reply is the sync/async routing guide",
+        "title": "The A2A QA agent cannot report values the platform publishes, and escalating a low-confidence answer returns the routing guide",
+        "url": "https://cymetica.com/api/v1/bounty/qa-agent/ask",
+        "wallet_address": "0xde9CeAaB301A9e47b1bAcd448B3DDbbA85e83398"
+      }
+    },
+    "headers": {
+      "accept": "application/json",
+      "accept-encoding": "gzip, deflate, zstd",
+      "connection": "keep-alive",
+      "content-length": "6097",
+      "content-type": "application/json",
+      "host": "cymetica.com",
+      "user-agent": "qa-cymetica/0.1 (independent QA; contact via vendor Telegram channel)"
+    },
+    "method": "POST",
+    "url": "https://cymetica.com/api/v1/bounty/reports"
+  },
+  "response": {
+    "body": {
+      "encoding": "json",
+      "truncated": false,
+      "value": {
+        "message": "Bug report submitted successfully. We'll review it within 48 hours.",
+        "report_id": 66,
+        "success": true
+      }
+    },
+    "elapsed_ms": 2704,
+    "headers": {
+      "cache-control": "no-store, no-cache, must-revalidate, max-age=0",
+      "connection": "keep-alive",
+      "content-encoding": "gzip",
+      "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests",
+      "content-security-policy-report-only": "default-src 'self'; script-src 'self' 'nonce-7g0gceGubqjzzKHsDCYojQ==' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'",
+      "content-signal": "ai-train=no, search=yes, ai-input=yes",
+      "content-type": "application/json",
+      "cross-origin-opener-policy": "same-origin-allow-popups",
+      "cross-origin-resource-policy": "cross-origin",
+      "date": "Sat, 05 Sep 2026 21:48:43 GMT",
+      "permissions-policy": "geolocation=(), microphone=(), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=(), browsing-topics=(), attribution-reporting=()",
+      "pragma": "no-cache",
+      "referrer-policy": "strict-origin-when-cross-origin, strict-origin-when-cross-origin",
+      "server": "nginx",
+      "strict-transport-security": "max-age=31536000; includeSubDomains",
+      "transfer-encoding": "chunked",
+      "vary": "Accept-Encoding",
+      "x-ai-strongest-model": "Claude Fable 5",
+      "x-content-type-options": "nosniff, nosniff",
+      "x-dns-prefetch-control": "off",
+      "x-frame-options": "SAMEORIGIN, SAMEORIGIN",
+      "x-ratelimit-limit": "60",
+      "x-ratelimit-remaining": "54",
+      "x-ratelimit-reset": "1788645600",
+      "x-xss-protection": "0"
+    },
+    "reason": "OK",
+    "status_code": 200
+  },
+  "run_id": "script-submit",
+  "tier": "MUTATE"
+}

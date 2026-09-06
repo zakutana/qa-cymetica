@@ -1,0 +1,71 @@
+{
+  "schema": 2,
+  "run_id": "run-20260905T204838Z-9dfcf2c",
+  "started_at": "2026-09-05T20:48:42+00:00",
+  "finished_at": "2026-09-05T20:48:46+00:00",
+  "git_head": "9dfcf2cd830b82101f40339bd839482d184714ec",
+  "git_short": "9dfcf2c",
+  "git_dirty": true,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": "sha256:a18fb62e3a1251f3d33c47d9f54e9bb57c5e3cd48c4147e819f59e14c36671ad",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "687609a5e12d9a2e46d2c461660dd8adc85ab80a0853cfafc707ae0962f0d4ed",
+    "/.well-known/agent-card.json": "d3808146038b605f8a89995a66c57fa3d8a471653f8a3ab00a891458116e7042",
+    "/.well-known/agent-skills.json": "41a38971d7d79b8b4638dba285021fc011a7eb1f1062ae3b6707d4210c444ed7",
+    "/.well-known/ai-plugin.json": "e2f2d79821bf8e741fb18cefea6a94cb7a1ec358644306aeff02e763c61b1fb2",
+    "/.well-known/udc.json": "92cd8a5f7ec5a0a859594ef9fbd72cba4914eaab4220377db18adf2ed44611a4",
+    "/openapi.json": "f0cccb1f06ec266d303b1c7ab8e23f4af29a3c43106027595c95c1449fa1b2cf",
+    "/llms.txt": "300d02884e851fa63cc4ae4767f784ca813b220bd444736ae64e1aa273e9ee3d",
+    "mcp:tools/list:none": "32107ec8ab80ba0db0ad42f85e43abc1956dc37b3864851a8af95e522262d09e"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/meta/test_pipeline_render.py::test_every_display_state_is_visually_distinct -q --no-header --tb=long",
+  "selector_full": false,
+  "allow_mutate": false,
+  "collected": [
+    "tests/meta/test_pipeline_render.py::test_every_display_state_is_visually_distinct"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/meta/test_pipeline_render.py::test_every_display_state_is_visually_distinct",
+      "component": "meta.pipeline",
+      "tier": "SAFE",
+      "surface": "meta",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 5,
+      "evidence_ids": [],
+      "measurement": null,
+      "check_fingerprint": "66b7cb60f981efb76773400dd98a678f6f4eba5a772542b0898133dc4dc166fb",
+      "reason": null,
+      "failure_repr": "tmp_path = WindowsPath('C:/Users/adamz/AppData/Local/Temp/pytest-of-adamz/pytest-254/test_every_display_state_is_vi0')\nmonkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001B082D228B0>\n\n    @qa(component=\"meta.pipeline\", tier=SafetyTier.SAFE, surface=\"meta\")\n    def test_every_display_state_is_visually_distinct(tmp_path, monkeypatch):\n        \"\"\"A state chip with no colour rule renders as plain grey text, and the\n        operator reads straight past it.\n    \n        Seven of the sixteen states had a rule and three of those seven named\n        states that no longer exist, so nine chips -- PASSING (UNPINNED) and\n        WITHDRAWN among them -- were unstyled. The class was also built by\n        replacing spaces only, so PASSING (UNPINNED) produced the class\n        `s-passing-(unpinned)`: parentheses are not valid in a bare CSS class\n        selector, so no rule could have matched it however many were written.\n        \"\"\"\n        import re\n    \n        monkeypatch.setenv(\"QA_STATE_DIR\", str(tmp_path))\n        from qa.fold import DISPLAY\n        render = _render()\n    \n        css = render.TEMPLATE\n        missing = []\n        for state in sorted(set(DISPLAY.values())):\n            slug = re.sub(r\"[^a-z0-9]+\", \"-\", state.lower()).strip(\"-\")\n            assert \"(\" not in slug and \")\" not in slug, slug\n            if f\".state.s-{slug}\" not in css:\n                missing.append(f\"{state} -> .state.s-{slug}\")\n        assert not missing, (\n            \"these display states render with no colour of their own:\\n  \"\n            + \"\\n  \".join(missing)\n        )\n    \n        # The class the page emits at runtime has to be the one CSS names, so the\n        # two slug rules are pinned to each other rather than left to drift.\n        assert 'replace(/[^a-z0-9]+/g, \"-\")' in css, \\\n            \"the state class is not slugified, so punctuation breaks the selector\"\n        assert 'replace(/^-|-$/g, \"\")' in css, \\\n            \"the slug keeps edge hyphens, which the CSS rules do not have\"\n    \n        # Dead rules are their own hazard: they read as coverage that is not there.\n        live = {re.sub(r\"[^a-z0-9]+\", \"-\", s.lower()).strip(\"-\")\n                for s in set(DISPLAY.values())}\n        for slug in re.findall(r\"\\.state\\.s-([a-z0-9-]+)\", css):\n>           assert slug in live, f\".state.s-{slug} styles a state that no longer exists\"\nE           AssertionError: .state.s-passing-unpinned styles a state that no longer exists\nE           assert 'passing-unpinned' in {'check-changed', 'fix-claimed', 'never-seen-broken', 'not-raised-yet', 'our-check-cannot-tell', 'passing-never-raised', ...}\n\ntests\\meta\\test_pipeline_render.py:434: AssertionError"
+    }
+  ],
+  "totals": {
+    "failed": 1
+  },
+  "ratelimit": {},
+  "record_integrity": {
+    "consistent": false,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "fingerprint_after": "sha256:a18fb62e3a1251f3d33c47d9f54e9bb57c5e3cd48c4147e819f59e14c36671ad",
+  "exit_status": 2
+}

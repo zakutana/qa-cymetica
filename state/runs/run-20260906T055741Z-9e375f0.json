@@ -1,0 +1,149 @@
+{
+  "schema": 2,
+  "run_id": "run-20260906T055741Z-9e375f0",
+  "started_at": "2026-09-06T05:57:51+00:00",
+  "finished_at": "2026-09-06T05:58:10+00:00",
+  "git_head": "9e375f08c9dba07a9db15a379b6911ad26f29aac",
+  "git_short": "9e375f0",
+  "git_dirty": false,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": "sha256:5f60a8fed06daa974775a1ae0e8498cfbc6619c2d0f606266c0b99072c776248",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "cf88392e12e0aa2c31a85517b1a56f729f7895bc2eb0ce22df0a5b9498776681",
+    "/.well-known/agent-card.json": "3dfc7d39fe712e14967fbd019be8bec83c4a49e836fb3d04ff02248b2580fca5",
+    "/.well-known/agent-skills.json": "f2f992a77d58a157ec678cd17d4d94d216aa96d12ee4f9a3adae9fa291fb5a0d",
+    "/.well-known/ai-plugin.json": "e2f2d79821bf8e741fb18cefea6a94cb7a1ec358644306aeff02e763c61b1fb2",
+    "/.well-known/udc.json": "92cd8a5f7ec5a0a859594ef9fbd72cba4914eaab4220377db18adf2ed44611a4",
+    "/openapi.json": "f0cccb1f06ec266d303b1c7ab8e23f4af29a3c43106027595c95c1449fa1b2cf",
+    "/llms.txt": "8266bcdda0419cdf8e37cd2df345f9507aeb61220b1fc14393d631354202ec8f",
+    "mcp:tools/list:none": "21319c310fe5072fc1b5225f7a8da18c04e1c2cdf3ea512c4f3d8f396ab68ac0"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/rest/test_qa_agent_channel.py -q --no-header --tb=line",
+  "selector_full": false,
+  "allow_mutate": false,
+  "collected": [
+    "tests/rest/test_qa_agent_channel.py::test_the_agent_can_report_a_value_it_publishes",
+    "tests/rest/test_qa_agent_channel.py::test_escalating_a_low_confidence_answer_does_not_return_the_same_advice"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/rest/test_qa_agent_channel.py::test_the_agent_can_report_a_value_it_publishes",
+      "component": "rest.support",
+      "tier": "PROBE",
+      "surface": "rest",
+      "claim_id": "qa-agent-cannot-report-its-own-data",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 7089,
+      "evidence_ids": [
+        "0eb221540e0c06720a2a331fe891704f5a1f2cbe284df22791f38ee4a918712c",
+        "ed97404bee239290932bdb0cd22100ad6e40921bc1ba6ae7f028ee28763cd68c"
+      ],
+      "measurement": {
+        "verdict": "passed",
+        "reason": "the channel reported its own published reward-tier values",
+        "left": [],
+        "right": {
+          "currency": "CYM",
+          "critical": {
+            "min": 400000,
+            "max": 1000000
+          }
+        },
+        "sources": {
+          "asked": "/api/v1/bounty/qa-agent/ask",
+          "published_at": "/api/v1/bounty/reward-tiers",
+          "cited_by_agent": [
+            "faq-revenue-share-1",
+            "faq-rewards-1",
+            "GET /api/v1/bounty/reward-tiers"
+          ]
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "qa-agent-cannot-report-its-own-data",
+        "role": "verdict",
+        "population": {
+          "confidence": 0.85,
+          "answer_chars": 1329,
+          "answer_head": "🏆 **Reward Pathways Unlocked**\n\nThe battleship rewards those who sail with us:\n\n- **Trading Points** - Every trade powers the ship's evolution\n- **Social Amplification** - Share an"
+        }
+      },
+      "check_fingerprint": "c429bc6cb1c941ca55c199129a903bf2551c444ab31a19f91e20dd87adff2e58",
+      "reason": null,
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/rest/test_qa_agent_channel.py::test_escalating_a_low_confidence_answer_does_not_return_the_same_advice",
+      "component": "rest.support",
+      "tier": "PROBE",
+      "surface": "rest",
+      "claim_id": "qa-agent-escalation-is-a-loop",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "evidence",
+      "duration_ms": 6581,
+      "evidence_ids": [
+        "03aaa059320a40e28a11ff7298d88c002becc782804a055f09b2f6fce3443104",
+        "e04daba3ca39440ab3ca616681f1605ff4846887094bef60e6ba52bd3e5bba03"
+      ],
+      "measurement": {
+        "verdict": "passed",
+        "reason": "sync answered at confidence 0.5666666666666667, below the floor of 0.7, and the async channel accepted the escalation; whether its reply restates the routing guide is asserted from the inbox, which needs a credential",
+        "left": 0.5666666666666667,
+        "right": 0.7,
+        "sources": {
+          "sync": "/api/v1/bounty/qa-agent/ask",
+          "async": "/api/v1/bounty/a2a/send"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": null,
+        "role": "evidence",
+        "population": {
+          "thread": "a2a_8c38cfaa77bc35a0"
+        }
+      },
+      "check_fingerprint": "f9071e3d0bb7c711149d1ff073231a2bfb44157f83deac7f740d54b9da523511",
+      "reason": null,
+      "failure_repr": null
+    }
+  ],
+  "totals": {
+    "passed": 2
+  },
+  "ratelimit": {
+    "requests": 4,
+    "limit": 60,
+    "remaining": 57,
+    "fraction_used": 0.05,
+    "exhausted": false
+  },
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "fingerprint_after": "sha256:5f60a8fed06daa974775a1ae0e8498cfbc6619c2d0f606266c0b99072c776248",
+  "exit_status": 0
+}

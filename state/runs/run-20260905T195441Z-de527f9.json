@@ -1,0 +1,219 @@
+{
+  "schema": 2,
+  "run_id": "run-20260905T195441Z-de527f9",
+  "started_at": "2026-09-05T19:54:45+00:00",
+  "finished_at": "2026-09-05T19:54:52+00:00",
+  "git_head": "de527f9e8112e77888c8476c000f988a068f62f6",
+  "git_short": "de527f9",
+  "git_dirty": true,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": "sha256:58754a510c5007b711ba4578c30fcb97192eaf05ae85218a0965f412bd9211a0",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "687609a5e12d9a2e46d2c461660dd8adc85ab80a0853cfafc707ae0962f0d4ed",
+    "/.well-known/agent-card.json": "d3808146038b605f8a89995a66c57fa3d8a471653f8a3ab00a891458116e7042",
+    "/.well-known/agent-skills.json": "41a38971d7d79b8b4638dba285021fc011a7eb1f1062ae3b6707d4210c444ed7",
+    "/.well-known/ai-plugin.json": "e2f2d79821bf8e741fb18cefea6a94cb7a1ec358644306aeff02e763c61b1fb2",
+    "/.well-known/udc.json": "92cd8a5f7ec5a0a859594ef9fbd72cba4914eaab4220377db18adf2ed44611a4",
+    "/openapi.json": "f0cccb1f06ec266d303b1c7ab8e23f4af29a3c43106027595c95c1449fa1b2cf",
+    "/llms.txt": "ad1aa850062ba754ffcf78859f7d987e7c484bc5ca534603f5769ed1ad42aea0",
+    "mcp:tools/list:none": "32107ec8ab80ba0db0ad42f85e43abc1956dc37b3864851a8af95e522262d09e"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/mcp/test_clob_pairs.py tests/rest/test_llms_counts.py -q --no-header --tb=line",
+  "selector_full": false,
+  "allow_mutate": false,
+  "collected": [
+    "tests/mcp/test_clob_pairs.py::test_clob_pair_count_matches_the_catalogue",
+    "tests/mcp/test_clob_pairs.py::test_list_clob_pairs_paginates_consistently",
+    "tests/rest/test_llms_counts.py::test_llms_states_no_fixed_size_for_a_tier_scoped_catalogue",
+    "tests/rest/test_llms_counts.py::test_every_agent_count_in_llms_matches_the_live_species_list"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/mcp/test_clob_pairs.py::test_clob_pair_count_matches_the_catalogue",
+      "component": "rest.clob",
+      "tier": "SAFE",
+      "surface": "mcp",
+      "claim_id": "clob_pair_count",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 1960,
+      "evidence_ids": [
+        "82abf91f77e6caeb2e1581f47b27399227ac597e5c708b56f3b223856c9b84d8",
+        "439dfffd4142f3bbac0af42b1cf56223b4b2fcedb620c8a57065ac31aae00f90"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "How many CLOB pairs exist? llms.txt states 568 exactly; list_clob_pairs states total=569.",
+        "left": 568,
+        "right": 569,
+        "sources": {
+          "document": "/llms.txt",
+          "catalogue": "MCP list_clob_pairs"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "clob_pair_count",
+        "role": "verdict",
+        "population": {
+          "total": 569,
+          "returned": 569
+        }
+      },
+      "check_fingerprint": "7d407afa861e77a3cf508bd4322059dcb57278fd95b3e61c32246e840a94b4ee",
+      "reason": null,
+      "failure_repr": "E   AssertionError: How many CLOB pairs exist? llms.txt states 568 exactly; list_clob_pairs states total=569.\n      left  = 568\n      right = 569"
+    },
+    {
+      "nodeid": "tests/mcp/test_clob_pairs.py::test_list_clob_pairs_paginates_consistently",
+      "component": "rest.clob",
+      "tier": "SAFE",
+      "surface": "mcp",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 727,
+      "evidence_ids": [
+        "2a8deeca35b6f4569908674146e389a61b37341d2457a4e84edaf2bb80f197a9",
+        "b559720ba2b07652b5aae9020a8f165c5c618855c4542820705bf380ce514e61"
+      ],
+      "measurement": {
+        "verdict": "passed",
+        "reason": "list_clob_pairs windows a collection of 569 in pages of 200, and says so in every response",
+        "left": [],
+        "right": 569,
+        "sources": {
+          "catalogue": "MCP list_clob_pairs"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": null,
+        "role": "verdict",
+        "population": {
+          "total": 569,
+          "page": 200,
+          "first_page_rows": 200
+        }
+      },
+      "check_fingerprint": "941c011cfbbcb901ceb8f0afca6bc6fcc44a2d17d72e3a01d2f959d1ffd92bae",
+      "reason": null,
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/rest/test_llms_counts.py::test_llms_states_no_fixed_size_for_a_tier_scoped_catalogue",
+      "component": "mcp.protocol",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "mcp_resource_count",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 371,
+      "evidence_ids": [
+        "ddd42dd70e22b6384372484f34229cdc729724bf3752ec3a148c65c9a6095e8c"
+      ],
+      "measurement": {
+        "verdict": "passed",
+        "reason": "llms.txt states no fixed catalogue size and directs the reader to tools/list for their own tier",
+        "left": [],
+        "right": "tools/list",
+        "sources": {
+          "document": "/llms.txt"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "mcp_resource_count",
+        "role": "verdict",
+        "population": {
+          "mcp_lines": 4,
+          "doc_bytes": 35847
+        }
+      },
+      "check_fingerprint": "d5a3824c0ce9f24d09de8c39811e2fa1f2a28925a0c381baef0944b30dfb20e2",
+      "reason": null,
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/rest/test_llms_counts.py::test_every_agent_count_in_llms_matches_the_live_species_list",
+      "component": "rest.agents",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "llms_agent_count_self_consistent",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 694,
+      "evidence_ids": [
+        "7672d703a8b40aa24fd19ffab005fb32090a9a37dcaf10360a2e4db0ed9f65b8",
+        "c2d0f22359128266f835ff92839c8a7aee014a62470a0a0f70f89b8600c895d8"
+      ],
+      "measurement": {
+        "verdict": "passed",
+        "reason": "llms.txt states the species count in 6 place(s); the live catalogue lists 11, and every one of them agrees",
+        "left": [
+          11
+        ],
+        "right": 11,
+        "sources": {
+          "document": "/llms.txt",
+          "catalogue": "/api/v1/agents/species"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "llms_agent_count_self_consistent",
+        "role": "verdict",
+        "population": {
+          "occurrences": 6,
+          "live_species": 11
+        }
+      },
+      "check_fingerprint": "ed84adfd7336f8497b0aab2f79944a79d9e797ae2cd57196bf5012246e3a5364",
+      "reason": null,
+      "failure_repr": null
+    }
+  ],
+  "totals": {
+    "failed": 1,
+    "passed": 3
+  },
+  "ratelimit": {
+    "requests": 7,
+    "limit": 2000,
+    "remaining": 1989,
+    "fraction_used": 0.0055,
+    "exhausted": false
+  },
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "fingerprint_after": "sha256:58754a510c5007b711ba4578c30fcb97192eaf05ae85218a0965f412bd9211a0",
+  "exit_status": 1
+}

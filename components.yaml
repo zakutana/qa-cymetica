@@ -67,6 +67,11 @@ components:
     surface: meta
     criticality: critical
     staleness_hours: 168
+  meta.pipeline:
+    title: State pipeline self-tests
+    surface: meta
+    criticality: critical
+    staleness_hours: 24
 
   discovery.wellknown:
     title: Well-known discovery documents
@@ -361,6 +366,16 @@ endpoints:
     component: rest.support
     executable_params: []
     inert_params: [question, message, context]
+
+  # The async half of the same channel. agent-card.json publishes both as the
+  # way to ask a question the card does not already answer; the body carries a
+  # question and an agent id, and nothing it contains can execute anything.
+  - id: bounty.a2a_send
+    path: /api/v1/bounty/a2a/send
+    methods: [POST]
+    component: rest.support
+    executable_params: []
+    inert_params: [from_agent_id, to_agent_id, content, thread_id, subject]
 
   - id: ai_due_diligence
     path: /api/v1/ai-due-diligence

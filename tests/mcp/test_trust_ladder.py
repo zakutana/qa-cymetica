@@ -16,6 +16,7 @@ from __future__ import annotations
 import pytest
 
 from qa.marks import SafetyTier, qa
+from qa.measure import Measurement, conclude
 
 # mcp.json assigns each tool one of these, lowest first. A caller at a given
 # tier should receive that tier's tools and everything below it -- no more.
@@ -23,13 +24,98 @@ LADDER = ["unknown", "recognized", "trusted", "allied"]
 
 
 def declared_by_tier(rest) -> dict[str, set[str]]:
+    """Tools grouped by the tier the manifest declares for them.
+
+    A tool whose tier we do not recognise used to be dropped here, silently
+    shrinking the entitled set -- which makes the check quietly stricter and
+    would read as the platform over-serving. An unrecognised tier is now
+    named, so the answer is "we could not measure" rather than a finding.
+    """
     manifest = rest.get("/.well-known/mcp.json").json()
     out: dict[str, set[str]] = {tier: set() for tier in LADDER}
+    unrecognised: dict[str, str] = {}
     for tool in manifest.get("tools", []):
         tier = tool.get("trust_tier")
         if tier in out:
             out[tier].add(tool["name"])
+        else:
+            unrecognised[tool.get("name", "<unnamed>")] = tier
+    if unrecognised:
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason=(f"mcp.json declares {len(unrecognised)} tool(s) at a tier "
+                    f"this check does not know, so the entitled set cannot be "
+                    f"computed: {unrecognised}"),
+            left=sorted(unrecognised), right=LADDER,
+            sources={"manifest": "/.well-known/mcp.json"},
+        ))
     return out
+
+
+SELF = "/mcp/v1/agents/me"
+
+
+def own_tier(rest) -> tuple[str | None, str]:
+    """The tier the PLATFORM assigns this caller, read from the platform.
+
+    This is the whole difference between report #54 and a measurement. That
+    report asserted over-serving from a tier taken out of OUR OWN config file
+    -- the variable is named QA_TRUSTED_KEY, so the check demanded trusted
+    entitlement. The vendor rejected it as invalid: the key is ALLIED on their
+    side, and an ALLIED caller receiving allied tools is correct.
+
+    They were right, and our labels could never have settled it. They then
+    named the endpoint that can: it returns the caller's own trust_level, so
+    the tier is now the platform's answer about itself and the check compares
+    two of their statements instead of one of theirs against one of ours.
+    """
+    response = rest.get(SELF)
+    if response.status_code != 200:
+        return None, f"{SELF} answered HTTP {response.status_code}"
+    tier = str((response.json() or {}).get("trust_level") or "").lower()
+    if not tier:
+        return None, f"{SELF} answered 200 but stated no trust_level"
+    if tier not in LADDER:
+        return None, f"{SELF} reports tier {tier!r}, which is not on the ladder {LADDER}"
+    return tier, ""
+
+
+REFUSAL_CLASSES = ("refused_authz", "refused_validation", "executed", "unknown")
+
+_AUTHZ_WORDS = ("trust", "unauthor", "authoriz", "authenticat", "forbidden",
+                "permission", "not allowed", "denied", "credential", "api key")
+_VALIDATION_WORDS = ("required", "missing", "invalid", "validation", "schema",
+                     "must be", "expected", "parameter", "field")
+
+
+def refusal_class(payload: dict) -> tuple[str, str]:
+    """How the platform refused, as a class rather than as a phrase.
+
+    The old assertion was `"TRUST" in body.upper()` -- a check on the vendor's
+    WORDING. Rewording their error message would have broken it, and a
+    validation error that happened to contain the word "trust" would have
+    passed it. What we need to know is the ORDER: does authorization run
+    before the arguments are looked at?
+
+    So a validation error is a FAILURE, not a pass. It means the call got far
+    enough to have its arguments inspected, which is exactly where an
+    unauthorized caller should never arrive (methodology 2.5). The vocabulary
+    below only CLASSIFIES the refusal; an answer that fits no class is
+    Inconclusive, never a quiet pass.
+    """
+    result = payload.get("result") or {}
+    content = result.get("content") or [{}]
+    text = str(content[0].get("text", "")) if content else ""
+    body = f"{text} {payload.get('error', '')}".strip()
+    lowered = body.lower()
+
+    if not result.get("isError") and "error" not in payload:
+        return "executed", body
+    if any(word in lowered for word in _AUTHZ_WORDS):
+        return "refused_authz", body
+    if any(word in lowered for word in _VALIDATION_WORDS):
+        return "refused_validation", body
+    return "unknown", body
 
 
 def entitled_up_to(declared: dict[str, set[str]], tier: str) -> set[str]:
@@ -62,7 +148,7 @@ def _report(label: str, served: set[str], entitled: set[str],
 
 
 @qa(component="mcp.trust_ladder", tier=SafetyTier.SAFE, surface="mcp",
-    ticket="CYM-anon-tool-surface")
+    ticket="CYM-anon-tool-surface", claim="anon-tool-surface")
 def test_anonymous_receives_only_public_tools(mcp_anon, rest_anon):
     """The regression check for report #46. Must keep passing."""
     declared = declared_by_tier(rest_anon)
@@ -71,13 +157,59 @@ def test_anonymous_receives_only_public_tools(mcp_anon, rest_anon):
     assert served <= entitled, _report("anonymous", served, entitled, declared)
 
 
-@qa(component="mcp.trust_ladder", tier=SafetyTier.SAFE, surface="mcp")
-def test_trusted_receives_nothing_above_its_tier(mcp_trusted, rest_anon):
-    """The same question one tier up, which report #46 did not cover."""
+@qa(component="mcp.trust_ladder", tier=SafetyTier.SAFE, surface="mcp",
+    claim="trusted-receives-nothing-above-its-tier")
+def test_credentialed_caller_receives_nothing_above_its_own_tier(mcp_trusted, rest_trusted, rest_anon):
+    """Served tools must not exceed the tier the platform says we hold.
+
+    Both sides of this comparison are now the vendor's own statements: the
+    tier from GET /mcp/v1/agents/me, the entitlement from mcp.json's per-tool
+    trust_tier. Nothing here depends on what we call our key.
+    """
+    tier, why = own_tier(rest_trusted)
+    if tier is None:
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason=f"cannot read the tier the platform assigns us: {why}",
+            sources={"identity": SELF},
+            claim_id="trusted-receives-nothing-above-its-tier"))
+        return
+
     declared = declared_by_tier(rest_anon)
     served = mcp_trusted.tool_names()
-    entitled = entitled_up_to(declared, "trusted")
-    assert served <= entitled, _report("TRUSTED", served, entitled, declared)
+    entitled = entitled_up_to(declared, tier)
+    above = sorted(served - entitled)
+
+    conclude(Measurement(
+        verdict="failed" if above else "passed",
+        reason=(f"the platform states this caller is {tier.upper()}; it is served "
+                f"{len(served)} tools, {len(above)} of them declared above {tier}"),
+        left=above, right=tier,
+        sources={"tier_from": SELF, "entitlement_from": "/.well-known/mcp.json"},
+        population={"served": len(served), "entitled_at_" + tier: len(entitled),
+                    "declared_total": sum(len(v) for v in declared.values())},
+        claim_id="trusted-receives-nothing-above-its-tier"))
+
+
+@qa(component="mcp.trust_ladder", tier=SafetyTier.SAFE, surface="mcp")
+def test_every_served_tool_is_declared_somewhere(mcp_trusted, rest_anon):
+    """A served tool that no manifest tier claims cannot be adjudicated at all.
+
+    Without this the check above has a blind spot in our favour: an undeclared
+    tool falls outside every tier set, so it can never count as excess. That
+    is the reverse of the failure it is meant to catch -- serving something
+    the catalogue never described.
+    """
+    declared = declared_by_tier(rest_anon)
+    everything = set().union(*declared.values())
+    undeclared = sorted(mcp_trusted.tool_names() - everything)
+
+    conclude(Measurement(
+        verdict="failed" if undeclared else "passed",
+        reason=(f"{len(undeclared)} served tool(s) carry no trust_tier in "
+                f"mcp.json, so no tier can be checked for them"),
+        left=undeclared, right=len(everything),
+        sources={"catalogue": "/.well-known/mcp.json", "served": "tools/list"}))
 
 
 @qa(component="mcp.trust_ladder", tier=SafetyTier.SAFE, surface="mcp")
@@ -110,15 +242,27 @@ def test_call_time_authorization_holds_for_anonymous(mcp_anon, tool):
     only the error class.
     """
     payload = mcp_anon.call_raw(tool, {})
-    result = payload.get("result", {})
-    body = str(result.get("content", [{}])[0].get("text", "")) + str(payload.get("error", ""))
+    klass, body = refusal_class(payload)
 
-    assert result.get("isError"), (
-        f"\nAnonymous tools/call on {tool!r} did not report an error.\n"
-        f"Response: {str(payload)[:400]}"
-    )
-    assert "INSUFFICIENT_TRUST" in body.upper() or "TRUST" in body.upper(), (
-        f"\nAnonymous tools/call on {tool!r} failed, but not with a trust error.\n"
-        f"That is a different failure mode and does not establish the gate held.\n"
-        f"Body: {body[:300]}"
-    )
+    verdicts = {
+        "refused_authz": ("passed",
+                          "authorization ran first and refused the call"),
+        "refused_validation": ("failed",
+                               "the call reached ARGUMENT VALIDATION, so "
+                               "authorization did not run first -- an "
+                               "unauthorized caller must never get this far"),
+        "executed": ("failed", "an anonymous caller EXECUTED the tool"),
+        "unknown": ("inconclusive",
+                    "the refusal fits no class we recognise, so it does not "
+                    "establish that the gate held"),
+    }
+    verdict, why = verdicts[klass]
+
+    conclude(Measurement(
+        verdict=verdict,
+        reason=f"anonymous tools/call on {tool!r}: {klass} -- {why}",
+        left=klass, right="refused_authz",
+        sources={"tool": tool, "identity": "anonymous"},
+        population={"body": body[:300]},
+        claim_id="call_time_authorization",
+    ))

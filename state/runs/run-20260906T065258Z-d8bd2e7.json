@@ -1,0 +1,71 @@
+{
+  "schema": 2,
+  "run_id": "run-20260906T065258Z-d8bd2e7",
+  "started_at": "2026-09-06T06:53:19+00:00",
+  "finished_at": "2026-09-06T06:53:26+00:00",
+  "git_head": "d8bd2e70827564d1fb06de2c13206c0e9d23be70",
+  "git_short": "d8bd2e7",
+  "git_dirty": true,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": "sha256:5f60a8fed06daa974775a1ae0e8498cfbc6619c2d0f606266c0b99072c776248",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "cf88392e12e0aa2c31a85517b1a56f729f7895bc2eb0ce22df0a5b9498776681",
+    "/.well-known/agent-card.json": "3dfc7d39fe712e14967fbd019be8bec83c4a49e836fb3d04ff02248b2580fca5",
+    "/.well-known/agent-skills.json": "f2f992a77d58a157ec678cd17d4d94d216aa96d12ee4f9a3adae9fa291fb5a0d",
+    "/.well-known/ai-plugin.json": "e2f2d79821bf8e741fb18cefea6a94cb7a1ec358644306aeff02e763c61b1fb2",
+    "/.well-known/udc.json": "92cd8a5f7ec5a0a859594ef9fbd72cba4914eaab4220377db18adf2ed44611a4",
+    "/openapi.json": "f0cccb1f06ec266d303b1c7ab8e23f4af29a3c43106027595c95c1449fa1b2cf",
+    "/llms.txt": "8266bcdda0419cdf8e37cd2df345f9507aeb61220b1fc14393d631354202ec8f",
+    "mcp:tools/list:none": "21319c310fe5072fc1b5225f7a8da18c04e1c2cdf3ea512c4f3d8f396ab68ac0"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/meta/test_pipeline_render.py::test_the_legend_explains_every_mark_and_uses_no_internal_words -q --no-header --tb=long",
+  "selector_full": false,
+  "allow_mutate": false,
+  "collected": [
+    "tests/meta/test_pipeline_render.py::test_the_legend_explains_every_mark_and_uses_no_internal_words"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/meta/test_pipeline_render.py::test_the_legend_explains_every_mark_and_uses_no_internal_words",
+      "component": "meta.pipeline",
+      "tier": "SAFE",
+      "surface": "meta",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 2,
+      "evidence_ids": [],
+      "measurement": null,
+      "check_fingerprint": "81889b24f22de1b40f885eaf7c07448abec6deeff83d459cd571314ed37b7c97",
+      "reason": null,
+      "failure_repr": "tmp_path = WindowsPath('C:/Users/adamz/AppData/Local/Temp/pytest-of-adamz/pytest-268/test_the_legend_explains_every0')\nmonkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002447A2D68B0>\n\n    @qa(component=\"meta.pipeline\", tier=SafetyTier.SAFE, surface=\"meta\")\n    def test_the_legend_explains_every_mark_and_uses_no_internal_words(tmp_path, monkeypatch):\n        \"\"\"A legend that needs its own glossary is not a legend.\n    \n        Two failures the operator hit. \"figures not re-measured\" appeared on rows\n        and was explained only as the last sentence under the grid, in the same\n        muted grey -- which is the same as not being explained. And the sentence\n        said the wording came from \"the old ledger\", a word the page has never\n        defined and the reader has no reason to know.\n    \n        A row carries six marks. Explaining one of them implies the rest are\n        obvious, which is worse than explaining none.\n        \"\"\"\n        monkeypatch.setenv(\"QA_STATE_DIR\", str(tmp_path))\n        render = _render()\n        # The legend's own markup and the JS that fills it -- not the whole file,\n        # which would drag in the masthead and every unrelated string below it.\n>       static = render.TEMPLATE[render.TEMPLATE.index(\"How to read this page\"):\n                                 render.TEMPLATE.index('<script id=\"data\"')]\nE       ValueError: substring not found\n\ntests\\meta\\test_pipeline_render.py:454: ValueError"
+    }
+  ],
+  "totals": {
+    "failed": 1
+  },
+  "ratelimit": {},
+  "record_integrity": {
+    "consistent": false,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "fingerprint_after": "sha256:5f60a8fed06daa974775a1ae0e8498cfbc6619c2d0f606266c0b99072c776248",
+  "exit_status": 2
+}

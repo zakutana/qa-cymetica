@@ -1,0 +1,216 @@
+{
+  "schema": 2,
+  "run_id": "run-20260905T191701Z-f09a6ed",
+  "started_at": "2026-09-05T19:17:09+00:00",
+  "finished_at": "2026-09-05T19:17:18+00:00",
+  "git_head": "f09a6eda34b6961db2009209ceb6fe92bbdc493a",
+  "git_short": "f09a6ed",
+  "git_dirty": true,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": "sha256:58754a510c5007b711ba4578c30fcb97192eaf05ae85218a0965f412bd9211a0",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "687609a5e12d9a2e46d2c461660dd8adc85ab80a0853cfafc707ae0962f0d4ed",
+    "/.well-known/agent-card.json": "d3808146038b605f8a89995a66c57fa3d8a471653f8a3ab00a891458116e7042",
+    "/.well-known/agent-skills.json": "41a38971d7d79b8b4638dba285021fc011a7eb1f1062ae3b6707d4210c444ed7",
+    "/.well-known/ai-plugin.json": "e2f2d79821bf8e741fb18cefea6a94cb7a1ec358644306aeff02e763c61b1fb2",
+    "/.well-known/udc.json": "92cd8a5f7ec5a0a859594ef9fbd72cba4914eaab4220377db18adf2ed44611a4",
+    "/openapi.json": "f0cccb1f06ec266d303b1c7ab8e23f4af29a3c43106027595c95c1449fa1b2cf",
+    "/llms.txt": "ad1aa850062ba754ffcf78859f7d987e7c484bc5ca534603f5769ed1ad42aea0",
+    "mcp:tools/list:none": "32107ec8ab80ba0db0ad42f85e43abc1956dc37b3864851a8af95e522262d09e"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/mcp/test_clob_pairs.py tests/rest/test_bounty_pipeline.py -q --no-header --tb=line",
+  "selector_full": false,
+  "allow_mutate": false,
+  "collected": [
+    "tests/mcp/test_clob_pairs.py::test_clob_pair_count_matches_the_catalogue",
+    "tests/rest/test_bounty_pipeline.py::test_filed_reports_reach_the_work_tracker",
+    "tests/rest/test_bounty_pipeline.py::test_submitted_fields_are_stored",
+    "tests/rest/test_bounty_pipeline.py::test_hunter_name_is_retained"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/mcp/test_clob_pairs.py::test_clob_pair_count_matches_the_catalogue",
+      "component": "rest.clob",
+      "tier": "SAFE",
+      "surface": "mcp",
+      "claim_id": "clob_pair_count",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 2469,
+      "evidence_ids": [
+        "cdd71c9795d70de9a18e85fa4686d9fb58f92b4fe3655e60d276d14c589cf87f",
+        "be2501d2ca1a43a7bd7ba82ad6d98af323d5ff507ffc37ee1174a0a7dfdd9f9e"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "How many CLOB pairs exist? llms.txt says 568; list_clob_pairs returns 200 (200 enabled).",
+        "left": 568,
+        "right": 200,
+        "sources": {
+          "document": "/llms.txt",
+          "catalogue": "MCP list_clob_pairs"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "clob_pair_count",
+        "role": "verdict",
+        "population": {
+          "listed": 200,
+          "enabled": 200
+        }
+      },
+      "check_fingerprint": "1a2b07a2ae24696a37a8ca19fb2007f66638c4d08191cbb1d62b5d9961c13d74",
+      "reason": null,
+      "failure_repr": "E   AssertionError: How many CLOB pairs exist? llms.txt says 568; list_clob_pairs returns 200 (200 enabled).\n      left  = 568\n      right = 200"
+    },
+    {
+      "nodeid": "tests/rest/test_bounty_pipeline.py::test_filed_reports_reach_the_work_tracker",
+      "component": "rest.support",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "bounty-pipeline-deadend",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 1643,
+      "evidence_ids": [
+        "ae0ef707bddfb9f28eab7015f82c35afbb2f70f8e187e678534f158c5da9f507"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "11 of 11 reports we filed through the API do not appear in the tracker where work happens",
+        "left": [
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56
+        ],
+        "right": 11,
+        "sources": {
+          "filed_via": "POST /api/v1/bounty/reports",
+          "looked_in": "/leaderboard/bugs"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "bounty-pipeline-deadend",
+        "role": "verdict",
+        "population": {
+          "submitted": 11,
+          "page_bytes": 257824
+        }
+      },
+      "check_fingerprint": "aad05aa7f96fd8d738115fece6972810a8b8198dc2c3e57194e0d5240f442638",
+      "reason": null,
+      "failure_repr": "E   AssertionError: 11 of 11 reports we filed through the API do not appear in the tracker where work happens\n      left  = [46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56]\n      right = 11"
+    },
+    {
+      "nodeid": "tests/rest/test_bounty_pipeline.py::test_submitted_fields_are_stored",
+      "component": "rest.support",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "bounty-fields-dropped",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "inconclusive",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 350,
+      "evidence_ids": [
+        "e32176290a6792d51a1167d28a628641a0f14428d8407adca00c3cc639976644"
+      ],
+      "measurement": {
+        "verdict": "inconclusive",
+        "reason": "cannot tell: my-reports answered HTTP 401",
+        "left": null,
+        "right": null,
+        "sources": {},
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "bounty-fields-dropped",
+        "role": "verdict",
+        "population": null
+      },
+      "check_fingerprint": "dcb416dfbdc5d1900cc1572a382a15c154b555569e3ab7e627768aba850c946f",
+      "reason": "cannot tell: my-reports answered HTTP 401",
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/rest/test_bounty_pipeline.py::test_hunter_name_is_retained",
+      "component": "rest.support",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "bounty-hunter-name-lost",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "inconclusive",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 361,
+      "evidence_ids": [
+        "e0c7a7d48e2a89ce316cfc5846ef65f12d5c6c21d71cc5e557201c761de4c7e2"
+      ],
+      "measurement": {
+        "verdict": "inconclusive",
+        "reason": "cannot tell: my-reports answered HTTP 401",
+        "left": null,
+        "right": null,
+        "sources": {},
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "bounty-hunter-name-lost",
+        "role": "verdict",
+        "population": null
+      },
+      "check_fingerprint": "e4a742a346de1b8778b1ce8f32ede1c9c27d01db0a26286920cef322bc6fb5fe",
+      "reason": "cannot tell: my-reports answered HTTP 401",
+      "failure_repr": null
+    }
+  ],
+  "totals": {
+    "failed": 2,
+    "inconclusive": 2
+  },
+  "ratelimit": {
+    "requests": 5,
+    "limit": 2000,
+    "remaining": 1990,
+    "fraction_used": 0.005,
+    "exhausted": false
+  },
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "fingerprint_after": "sha256:58754a510c5007b711ba4578c30fcb97192eaf05ae85218a0965f412bd9211a0",
+  "exit_status": 1
+}

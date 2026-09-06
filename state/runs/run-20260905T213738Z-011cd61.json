@@ -1,0 +1,158 @@
+{
+  "schema": 2,
+  "run_id": "run-20260905T213738Z-011cd61",
+  "started_at": "2026-09-05T21:37:42+00:00",
+  "finished_at": "2026-09-05T21:37:48+00:00",
+  "git_head": "011cd616ce9f45da27094332de84bda1e78f0528",
+  "git_short": "011cd61",
+  "git_dirty": true,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": "sha256:584da9a39679f51a764f2f15ed50110940e5618b499342b41e0d4187e893a371",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "1985e2c97cedb1d4e2248162050d04347c227cae6e369d115e88261893051ff3",
+    "/.well-known/agent-card.json": "3dfc7d39fe712e14967fbd019be8bec83c4a49e836fb3d04ff02248b2580fca5",
+    "/.well-known/agent-skills.json": "f2f992a77d58a157ec678cd17d4d94d216aa96d12ee4f9a3adae9fa291fb5a0d",
+    "/.well-known/ai-plugin.json": "e2f2d79821bf8e741fb18cefea6a94cb7a1ec358644306aeff02e763c61b1fb2",
+    "/.well-known/udc.json": "92cd8a5f7ec5a0a859594ef9fbd72cba4914eaab4220377db18adf2ed44611a4",
+    "/openapi.json": "f0cccb1f06ec266d303b1c7ab8e23f4af29a3c43106027595c95c1449fa1b2cf",
+    "/llms.txt": "9394176a9e0a58b300906e9f6c2843208353e59891bbb186c673c616e2cf96c8",
+    "mcp:tools/list:none": "cec661ca0567f7ae4801b552e785299b05660362e3d7dbb725424599331010e9"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/rest/test_bounty_rewards.py -q --no-header --tb=line",
+  "selector_full": false,
+  "allow_mutate": false,
+  "collected": [
+    "tests/rest/test_bounty_rewards.py::test_verified_reports_record_what_they_earned",
+    "tests/rest/test_bounty_rewards.py::test_the_reward_programme_is_discoverable_by_an_agent"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/rest/test_bounty_rewards.py::test_verified_reports_record_what_they_earned",
+      "component": "rest.support",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "bounty-rewards-unrecorded",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 1714,
+      "evidence_ids": [
+        "9048d6dd38a5c114fba63377fe2215741155e0d26574c8700611b683f5370c7a",
+        "d5a893b42defadf9b1b8ab878172e82259ead520651c0af8f6741dc6f1353519"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "18 of the 20 public reports are closed as fixed and 0 of them can be read as paid or awarded. reward_status takes ['pending_award'], so a report that was paid and one whose award was never recorded are indistinguishable; stats still report bugs_fixed=31 and total_paid=0.0",
+        "left": 0,
+        "right": 18,
+        "sources": {
+          "tracker": "/api/v1/bounty/reports",
+          "totals": "/api/v1/bounty/stats",
+          "their_ref": "ET-22226"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "bounty-rewards-unrecorded",
+        "role": "verdict",
+        "population": {
+          "rows_returned": 20,
+          "closed": 18,
+          "reward_status_values": [
+            "pending_award"
+          ],
+          "bugs_fixed_per_stats": 31,
+          "total_paid_per_stats": 0.0
+        }
+      },
+      "check_fingerprint": "093784993d97b1427c6f1951135b9da162f73e8057ddcd0ea1146c0b3fe967f1",
+      "reason": null,
+      "failure_repr": "E   AssertionError: 18 of the 20 public reports are closed as fixed and 0 of them can be read as paid or awarded. reward_status takes ['pending_award'], so a report that was paid and one whose award was never recorded are indistinguishable; stats still report bugs_fixed=31 and total_paid=0.0\n      left  = 0\n      right = 18"
+    },
+    {
+      "nodeid": "tests/rest/test_bounty_rewards.py::test_the_reward_programme_is_discoverable_by_an_agent",
+      "component": "discovery.llmstxt",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "bounty-rewards-undocumented",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 1592,
+      "evidence_ids": [
+        "6cec85fd60e97eb476d2d2c3857e1ba550cb110231832662d4255a8b24f83ea1",
+        "b4b15d798d2c7c4163835127362573db333860837ef2d2cbc762c3edb68027b2",
+        "ceed0647ba9e407af3fc9c5ff63edb4c76260e074923391e42c5a138cf8b70d9",
+        "89f95a6d35896d0b34e2a2307605222f44fcaef2c05206f4718b3138bc21f1a2",
+        "8fb82d8cd6298f40e25ed26c51033cee7bf45a9226491b566802b47e1c05434d"
+      ],
+      "measurement": {
+        "verdict": "passed",
+        "reason": "the bug-report reward programme is described in agent-card.json, agent-skills.json, llms.txt, mcp.json",
+        "left": [
+          "agent-card.json",
+          "agent-skills.json",
+          "llms.txt",
+          "mcp.json"
+        ],
+        "right": [
+          "agent-card.json",
+          "agent-skills.json",
+          "llms.txt",
+          "mcp.json",
+          "openapi.json"
+        ],
+        "sources": {
+          "searched": "agent-card.json, agent-skills.json, llms.txt, mcp.json, openapi.json"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "bounty-rewards-undocumented",
+        "role": "verdict",
+        "population": {
+          "documents_read": 5,
+          "unreadable": {}
+        }
+      },
+      "check_fingerprint": "8a8ec949f57150dcf207546f69321615e4324542b82a752c981b4667aea99b60",
+      "reason": null,
+      "failure_repr": null
+    }
+  ],
+  "totals": {
+    "failed": 1,
+    "passed": 1
+  },
+  "ratelimit": {
+    "requests": 7,
+    "limit": 2000,
+    "remaining": 1999,
+    "fraction_used": 0.0005,
+    "exhausted": false
+  },
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "fingerprint_after": "sha256:584da9a39679f51a764f2f15ed50110940e5618b499342b41e0d4187e893a371",
+  "exit_status": 1
+}

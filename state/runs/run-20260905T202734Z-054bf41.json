@@ -1,0 +1,186 @@
+{
+  "schema": 2,
+  "run_id": "run-20260905T202734Z-054bf41",
+  "started_at": "2026-09-05T20:27:38+00:00",
+  "finished_at": "2026-09-05T20:27:46+00:00",
+  "git_head": "054bf41a090fd76a32f05df2139f3f0c269ca985",
+  "git_short": "054bf41",
+  "git_dirty": true,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": "sha256:a18fb62e3a1251f3d33c47d9f54e9bb57c5e3cd48c4147e819f59e14c36671ad",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "687609a5e12d9a2e46d2c461660dd8adc85ab80a0853cfafc707ae0962f0d4ed",
+    "/.well-known/agent-card.json": "d3808146038b605f8a89995a66c57fa3d8a471653f8a3ab00a891458116e7042",
+    "/.well-known/agent-skills.json": "41a38971d7d79b8b4638dba285021fc011a7eb1f1062ae3b6707d4210c444ed7",
+    "/.well-known/ai-plugin.json": "e2f2d79821bf8e741fb18cefea6a94cb7a1ec358644306aeff02e763c61b1fb2",
+    "/.well-known/udc.json": "92cd8a5f7ec5a0a859594ef9fbd72cba4914eaab4220377db18adf2ed44611a4",
+    "/openapi.json": "f0cccb1f06ec266d303b1c7ab8e23f4af29a3c43106027595c95c1449fa1b2cf",
+    "/llms.txt": "300d02884e851fa63cc4ae4767f784ca813b220bd444736ae64e1aa273e9ee3d",
+    "mcp:tools/list:none": "32107ec8ab80ba0db0ad42f85e43abc1956dc37b3864851a8af95e522262d09e"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/rest/test_bounty_pipeline.py -q --no-header --tb=short",
+  "selector_full": false,
+  "allow_mutate": false,
+  "collected": [
+    "tests/rest/test_bounty_pipeline.py::test_filed_reports_reach_the_work_tracker",
+    "tests/rest/test_bounty_pipeline.py::test_submitted_fields_are_stored",
+    "tests/rest/test_bounty_pipeline.py::test_hunter_name_is_retained"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/rest/test_bounty_pipeline.py::test_filed_reports_reach_the_work_tracker",
+      "component": "rest.support",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "bounty-pipeline-deadend",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 2782,
+      "evidence_ids": [
+        "08764e9d2c3d7b57976841ab5c71e1fac47bdd32d68a4730087107cfa207ecd8",
+        "89606d9d406800f8de890be794846853b6fe322caecd98c4a2307cf0cdf5dfa6"
+      ],
+      "measurement": {
+        "verdict": "passed",
+        "reason": "0 of the 13 reports of ours that have reached a published stage are absent from the tracker where work happens (not counted: [54, 62], which they have not validated)",
+        "left": [],
+        "right": 13,
+        "sources": {
+          "filed_via": "POST /api/v1/bounty/reports",
+          "looked_in": "/leaderboard/bugs",
+          "stages_from": "/api/v1/bounty/my-reports"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "bounty-pipeline-deadend",
+        "role": "verdict",
+        "population": {
+          "filed": 15,
+          "publishable": 13,
+          "withheld_pre_validation": [
+            54,
+            62
+          ],
+          "page_bytes": 278997
+        }
+      },
+      "check_fingerprint": "72428c0f17a6565af6638a398900503553b08feb1ce717947a047309fc6af9ab",
+      "reason": null,
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/rest/test_bounty_pipeline.py::test_submitted_fields_are_stored",
+      "component": "rest.support",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "bounty-fields-dropped",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 652,
+      "evidence_ids": [
+        "43819adea06a168940ae34b267d116d91235d13dd583106abbee602d7a1a5404"
+      ],
+      "measurement": {
+        "verdict": "passed",
+        "reason": "0 of the 5 fields we send come back empty on every one of our reports: none",
+        "left": [],
+        "right": [
+          "hunter_name",
+          "steps_to_reproduce",
+          "expected_behavior",
+          "actual_behavior",
+          "url"
+        ],
+        "sources": {
+          "sent_to": "POST /api/v1/bounty/reports",
+          "read_from": "/api/v1/bounty/my-reports"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "bounty-fields-dropped",
+        "role": "verdict",
+        "population": {
+          "reports_compared": 15
+        }
+      },
+      "check_fingerprint": "a290c41bf23a7e864af0c86a650fb9c3a844e0c013a6b8d7b50262aa66e45b08",
+      "reason": null,
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/rest/test_bounty_pipeline.py::test_hunter_name_is_retained",
+      "component": "rest.support",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "bounty-hunter-name-lost",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 726,
+      "evidence_ids": [
+        "4be1bb757edf6a9f2aafb2b8322cda30a64b92d9e8503a0a659847ff920ddaba"
+      ],
+      "measurement": {
+        "verdict": "passed",
+        "reason": "hunter_name survives on 15 of 15 of our reports; we send 'expire76' on every one",
+        "left": 15,
+        "right": 15,
+        "sources": {
+          "sent_to": "POST /api/v1/bounty/reports",
+          "read_from": "/api/v1/bounty/my-reports"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "bounty-hunter-name-lost",
+        "role": "verdict",
+        "population": {
+          "reports_compared": 15
+        }
+      },
+      "check_fingerprint": "496f09eb8929e62d5611c5aa76b8cb7f971e79c123dcaf4a803d25fc253a8933",
+      "reason": null,
+      "failure_repr": null
+    }
+  ],
+  "totals": {
+    "passed": 3
+  },
+  "ratelimit": {
+    "requests": 4,
+    "limit": 2000,
+    "remaining": 1997,
+    "fraction_used": 0.0015,
+    "exhausted": false
+  },
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "fingerprint_after": "sha256:a18fb62e3a1251f3d33c47d9f54e9bb57c5e3cd48c4147e819f59e14c36671ad",
+  "exit_status": 0
+}

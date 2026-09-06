@@ -1,0 +1,195 @@
+{
+  "schema": 2,
+  "run_id": "run-20260905T195811Z-2f46395",
+  "started_at": "2026-09-05T19:58:15+00:00",
+  "finished_at": "2026-09-05T19:58:22+00:00",
+  "git_head": "2f463950d627c4da639b93e3f557a84a0cbb6a80",
+  "git_short": "2f46395",
+  "git_dirty": true,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": "sha256:a18fb62e3a1251f3d33c47d9f54e9bb57c5e3cd48c4147e819f59e14c36671ad",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "687609a5e12d9a2e46d2c461660dd8adc85ab80a0853cfafc707ae0962f0d4ed",
+    "/.well-known/agent-card.json": "d3808146038b605f8a89995a66c57fa3d8a471653f8a3ab00a891458116e7042",
+    "/.well-known/agent-skills.json": "41a38971d7d79b8b4638dba285021fc011a7eb1f1062ae3b6707d4210c444ed7",
+    "/.well-known/ai-plugin.json": "e2f2d79821bf8e741fb18cefea6a94cb7a1ec358644306aeff02e763c61b1fb2",
+    "/.well-known/udc.json": "92cd8a5f7ec5a0a859594ef9fbd72cba4914eaab4220377db18adf2ed44611a4",
+    "/openapi.json": "f0cccb1f06ec266d303b1c7ab8e23f4af29a3c43106027595c95c1449fa1b2cf",
+    "/llms.txt": "300d02884e851fa63cc4ae4767f784ca813b220bd444736ae64e1aa273e9ee3d",
+    "mcp:tools/list:none": "32107ec8ab80ba0db0ad42f85e43abc1956dc37b3864851a8af95e522262d09e"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/rest/test_bounty_tracker.py -q --no-header --tb=line",
+  "selector_full": false,
+  "allow_mutate": false,
+  "collected": [
+    "tests/rest/test_bounty_tracker.py::test_filing_a_report_requires_a_credential",
+    "tests/rest/test_bounty_tracker.py::test_reports_they_closed_have_been_rechecked_by_us",
+    "tests/rest/test_bounty_tracker.py::test_closures_in_the_public_tracker_carry_evidence"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/rest/test_bounty_tracker.py::test_filing_a_report_requires_a_credential",
+      "component": "rest.support",
+      "tier": "PROBE",
+      "surface": "rest",
+      "claim_id": "bounty-filing-unauthenticated",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 854,
+      "evidence_ids": [
+        "f32a23934a37b9023685c35818deca8ccb4f8292e0b9096b17bf07cf44ff924a"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "filing is not gated: an unauthenticated empty body reaches validation (HTTP 422), so authorization never ran",
+        "left": "anonymous POST with an empty body",
+        "right": 422,
+        "sources": {
+          "endpoint": "POST /api/v1/bounty/reports"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "bounty-filing-unauthenticated",
+        "role": "verdict",
+        "population": null
+      },
+      "check_fingerprint": "50e9db1361160f8a637e5f0bef8567aa271131874edeee1a00f4b2960e7b9f57",
+      "reason": null,
+      "failure_repr": "E   AssertionError: filing is not gated: an unauthenticated empty body reaches validation (HTTP 422), so authorization never ran\n      left  = 'anonymous POST with an empty body'\n      right = 422"
+    },
+    {
+      "nodeid": "tests/rest/test_bounty_tracker.py::test_reports_they_closed_have_been_rechecked_by_us",
+      "component": "rest.support",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "evidence",
+      "duration_ms": 1371,
+      "evidence_ids": [
+        "f8eaebad37a2278e97abe017100e1582ece8f8baaf9ba08b0ff2fae2652d168d"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "6 of 19 reports they closed have never been re-checked by an admissible run of ours",
+        "left": [
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "right": [
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          59,
+          60,
+          61
+        ],
+        "sources": {
+          "endpoint": "GET /api/v1/bounty/my-reports",
+          "wallet": "<redacted>"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": null,
+        "role": "evidence",
+        "population": {
+          "reports_returned": 20,
+          "closed": 19,
+          "server_total": 20
+        }
+      },
+      "check_fingerprint": "b828649c2db5e04dda6dac6778c544c0a680571cf72d47c68a5d3eee700ca262",
+      "reason": null,
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/rest/test_bounty_tracker.py::test_closures_in_the_public_tracker_carry_evidence",
+      "component": "rest.support",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "tracker-closure-rate",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 508,
+      "evidence_ids": [
+        "5a5d346320c5f66c6b0cebf57c83429a10a44cddefd0651199e93dd0e0e21955"
+      ],
+      "measurement": {
+        "verdict": "passed",
+        "reason": "0 of 20 closed reports carry no evidence field at all (validated_at, triaged_at, severity_confirmed, ticket_url, fix_pr_url, status_notes)",
+        "left": [],
+        "right": 20,
+        "sources": {
+          "endpoint": "GET /api/v1/bounty/reports"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "tracker-closure-rate",
+        "role": "verdict",
+        "population": {
+          "rows_returned": 20,
+          "closed": 20,
+          "server_total": 30
+        }
+      },
+      "check_fingerprint": "eec8c826a9ff556658be3354fa9e29469b301df49817b0ddde9a152b2704f1d5",
+      "reason": null,
+      "failure_repr": null
+    }
+  ],
+  "totals": {
+    "failed": 1,
+    "passed": 2
+  },
+  "ratelimit": {
+    "requests": 3,
+    "limit": 2000,
+    "remaining": 1993,
+    "fraction_used": 0.0035,
+    "exhausted": false
+  },
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "fingerprint_after": "sha256:a18fb62e3a1251f3d33c47d9f54e9bb57c5e3cd48c4147e819f59e14c36671ad",
+  "exit_status": 1
+}

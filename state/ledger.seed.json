@@ -1,0 +1,984 @@
+{
+  "schema": 2,
+  "findings": {
+    "CYM-trusted-receives-nothing-above-its-tier": {
+      "id": "CYM-trusted-receives-nothing-above-its-tier",
+      "title": "Trust tier over-served: EXCESS     5 tools above the tier declared for them",
+      "severity": "S0-CUSTODY",
+      "tag": "MCP",
+      "kind": "authorization",
+      "section": "identity_trust",
+      "component": "mcp.trust_ladder",
+      "detail": {
+        "identity": "TRUSTED",
+        "served": "46 tools",
+        "entitled": "41 tools (its own tier and below, per mcp.json)",
+        "excess": "5 tools above the tier declared for them",
+        "declared allied": "create_aib_fund, edit_aib_fund_basket, list_my_aib_funds, register_webhook, subscribe_prices"
+      },
+      "checks": [
+        "tests/mcp/test_trust_ladder.py::test_trusted_receives_nothing_above_its_tier"
+      ],
+      "first_seen": {
+        "at": "2026-09-04T13:19:40+00:00",
+        "cause": {
+          "run_id": "run-20260904T131842Z-7518e8e"
+        }
+      },
+      "reproductions": 3,
+      "provenance": {
+        "source": "legacy@ca0bc45",
+        "measured_at": null
+      },
+      "check": {
+        "state": "UNVERIFIED",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null
+      },
+      "filing": {
+        "state": "NOT_RAISED",
+        "adjudicated_by": null,
+        "reports": [],
+        "refused": []
+      },
+      "transitions": [],
+      "regressions": []
+    },
+    "CYM-bounty-filing-unauthenticated": {
+      "id": "CYM-bounty-filing-unauthenticated",
+      "title": "Filing a bug report passes authorization with no credential: hunter attribution rests on an unauthenticated form field",
+      "severity": "S1-INTEGRITY",
+      "tag": "PROCESS",
+      "kind": "authorization",
+      "section": "support",
+      "component": "rest.support",
+      "note": "POST /api/v1/bounty/reports with an empty body returns a byte-identical validation error with no key and with a TRUSTED key. No authorization check runs before validation. If that holds for a populated body, hunter_name is a field any caller sets freely and reward attribution is unauthenticated. SCOPE: an empty body shows only that auth does not run FIRST. It does not show a fully-populated anonymous POST is accepted -- testing that would create a real record in their tracker, so it is asked, not done. Verified after probing that the tracker total was unchanged at 23.",
+      "detail": {
+        "anon (empty body)": "HTTP 422 -> VALIDATION",
+        "trusted (empty body)": "HTTP 422 -> VALIDATION",
+        "responses identical across identities": "yes"
+      },
+      "checks": [
+        "scripts/bounty.py::probe_filing_auth"
+      ],
+      "first_seen": {
+        "at": "2026-09-04T13:19:40+00:00",
+        "cause": {
+          "run_id": "run-20260904T131842Z-7518e8e"
+        }
+      },
+      "reproductions": 3,
+      "provenance": {
+        "source": "legacy@ca0bc45",
+        "measured_at": null
+      },
+      "check": {
+        "state": "UNVERIFIED",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null
+      },
+      "filing": {
+        "state": "NOT_RAISED",
+        "adjudicated_by": null,
+        "reports": [],
+        "refused": []
+      },
+      "transitions": [],
+      "regressions": []
+    },
+    "CYM-llms_agent_count_self_consistent": {
+      "id": "CYM-llms_agent_count_self_consistent",
+      "title": "Does llms.txt quote the same agent count in all of its own sentences?",
+      "severity": "S2-MEASUREMENT",
+      "tag": "BOTS",
+      "kind": "contradiction",
+      "section": "agents",
+      "component": "rest.agents",
+      "note": "A document that contradicts itself is worse than two documents that disagree, because the reader has no way to pick. Added after report #52 updated one occurrence of the count and left another behind.",
+      "detail": {
+        "llms_txt": "10",
+        "llms_txt_2": "11"
+      },
+      "checks": [
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[llms_agent_count_self_consistent::llms_txt-vs-llms_txt_2]"
+      ],
+      "first_seen": {
+        "at": "2026-09-04T13:19:40+00:00",
+        "cause": {
+          "run_id": "run-20260904T131842Z-7518e8e"
+        }
+      },
+      "reproductions": 3,
+      "provenance": {
+        "source": "legacy@ca0bc45",
+        "measured_at": null
+      },
+      "check": {
+        "state": "UNVERIFIED",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null
+      },
+      "filing": {
+        "state": "NOT_RAISED",
+        "adjudicated_by": null,
+        "reports": [],
+        "refused": []
+      },
+      "transitions": [],
+      "regressions": []
+    },
+    "CYM-mcp_tool_names_documented_exist": {
+      "id": "CYM-mcp_tool_names_documented_exist",
+      "title": "Does every tool name llms.txt documents exist on the server?",
+      "severity": "S3-CONTRACT",
+      "tag": "MCP",
+      "kind": "contradiction",
+      "section": "mcp",
+      "component": "mcp.tools_list",
+      "note": "Subset, not set_equal. llms.txt is not obliged to list every tool -- it is obliged not to name one that does not exist. The earlier set_equal form would now fail simply because the document lists fewer than the server serves, which is correct behaviour.",
+      "detail": {
+        "left": "snapshot.value(pair.a, extractors[pair.a])"
+      },
+      "checks": [
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_names_documented_exist::llms_txt-vs-mcp_json]"
+      ],
+      "first_seen": {
+        "at": "2026-09-04T13:19:40+00:00",
+        "cause": {
+          "run_id": "run-20260904T131842Z-7518e8e"
+        }
+      },
+      "reproductions": 3,
+      "provenance": {
+        "source": "legacy@ca0bc45",
+        "measured_at": null
+      },
+      "check": {
+        "state": "UNVERIFIED",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null
+      },
+      "filing": {
+        "state": "NOT_RAISED",
+        "adjudicated_by": null,
+        "reports": [],
+        "refused": []
+      },
+      "transitions": [],
+      "regressions": []
+    },
+    "CYM-own-reports-unverified": {
+      "id": "CYM-own-reports-unverified",
+      "title": "11 reports filed under our hunter name were closed by the platform and have never been re-verified by us",
+      "severity": "S3-CONTRACT",
+      "tag": "PROCESS",
+      "kind": "process",
+      "section": "support",
+      "component": "rest.support",
+      "note": "The resolution notes are specific -- they name files, line numbers and commit hashes. That is better than most vendors provide and it is worth crediting. It is still a claim: the commits are not inspectable from here, validated_at is null, and our own records still list these as open with last_regression_run: null. Correct state is FIX_CLAIMED, not fixed. Note also that all six are UI defects in arena.js, outside this project's API/MCP scope -- re-verifying them needs the browser suite, not this one.",
+      "detail": {
+        "#10": "fixed, fixed_at=2026-05-19T18:22:00, validated_at=None",
+        "#11": "fixed, fixed_at=2026-05-19T18:22:00, validated_at=None",
+        "#12": "fixed, fixed_at=2026-05-19T18:22:00, validated_at=None",
+        "#46": "fixed, fixed_at=2026-09-04T12:26:49, validated_at=2026-09-04T12:26:49.323854",
+        "#47": "validated, fixed_at=None, validated_at=2026-09-04T12:26:50.065406",
+        "#48": "fixed, fixed_at=2026-09-04T12:26:50, validated_at=2026-09-04T12:26:50.675506",
+        "#49": "fixed, fixed_at=2026-09-04T12:26:51, validated_at=2026-09-04T12:26:51.463835",
+        "#50": "fixed, fixed_at=2026-09-04T12:26:52, validated_at=2026-09-04T12:26:52.353380",
+        "#51": "fixed, fixed_at=2026-09-04T12:26:53, validated_at=2026-09-04T12:26:52.993532",
+        "#52": "fixed, fixed_at=2026-09-04T12:26:53, validated_at=2026-09-04T12:26:53.530220",
+        "#53": "validated, fixed_at=None, validated_at=2026-09-04T12:26:53.839834"
+      },
+      "checks": [
+        "scripts/bounty.py"
+      ],
+      "first_seen": {
+        "at": "2026-09-04T13:19:40+00:00",
+        "cause": {
+          "run_id": "run-20260904T131842Z-7518e8e"
+        }
+      },
+      "reproductions": 3,
+      "provenance": {
+        "source": "legacy@ca0bc45",
+        "measured_at": null
+      },
+      "check": {
+        "state": "UNVERIFIED",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null
+      },
+      "filing": {
+        "state": "NOT_RAISED",
+        "adjudicated_by": null,
+        "reports": [],
+        "refused": []
+      },
+      "transitions": [],
+      "regressions": []
+    },
+    "CYM-skills_subset": {
+      "id": "CYM-skills_subset",
+      "title": "Is agent-skills.json the actionable subset of agent-card.json, as stated?",
+      "severity": "S3-CONTRACT",
+      "tag": "DOCS",
+      "kind": "contradiction",
+      "section": "discovery",
+      "component": "discovery.wellknown",
+      "note": "Their resolution on #51 states agent-card.json is the full discovery card and agent-skills.json the endpoint-actionable subset. That is a testable model and the right one, so this checks the claim they actually made rather than demanding the two files be identical -- which they explained, correctly, that they should not be.",
+      "detail": {
+        "agent_card": "{ai-due-diligence, ai-native-provenance, arena-trading, clone-ai-agent, et10-revenue-share, exchange-tokens, live-headlines, market-data, prop-desk-trading, smart-delegation, tge-prediction-markets, trade-event-cards ... (+1 more)}  n=13",
+        "agent_skills": "{arena-trading, asset-discovery, clone-ai-agent, et10-revenue-share, exchange-tokens, market-data, portfolio-management, prop-desk-trading, trade-event-cards, trade-prediction-markets}  n=10"
+      },
+      "checks": [
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[skills_subset::agent_card-vs-agent_skills]"
+      ],
+      "first_seen": {
+        "at": "2026-09-04T13:19:40+00:00",
+        "cause": {
+          "run_id": "run-20260904T131842Z-7518e8e"
+        }
+      },
+      "reproductions": 3,
+      "provenance": {
+        "source": "legacy@ca0bc45",
+        "measured_at": null
+      },
+      "check": {
+        "state": "UNVERIFIED",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null
+      },
+      "filing": {
+        "state": "NOT_RAISED",
+        "adjudicated_by": null,
+        "reports": [],
+        "refused": []
+      },
+      "transitions": [],
+      "regressions": []
+    },
+    "CYM-mcp_resource_count": {
+      "id": "CYM-mcp_resource_count",
+      "title": "How many MCP resources are exposed?",
+      "severity": "S4-COSMETIC",
+      "tag": "MCP",
+      "kind": "contradiction",
+      "section": "mcp",
+      "component": "mcp.protocol",
+      "detail": {
+        "left": "snapshot.value(pair.a, extractors[pair.a])"
+      },
+      "checks": [
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_resource_count::llms_txt-vs-mcp_json]"
+      ],
+      "first_seen": {
+        "at": "2026-09-04T13:19:40+00:00",
+        "cause": {
+          "run_id": "run-20260904T131842Z-7518e8e"
+        }
+      },
+      "reproductions": 3,
+      "provenance": {
+        "source": "legacy@ca0bc45",
+        "measured_at": null
+      },
+      "check": {
+        "state": "UNVERIFIED",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null
+      },
+      "filing": {
+        "state": "NOT_RAISED",
+        "adjudicated_by": null,
+        "reports": [],
+        "refused": []
+      },
+      "transitions": [],
+      "regressions": []
+    },
+    "CYM-anon-tool-surface": {
+      "id": "CYM-anon-tool-surface",
+      "title": "An unauthenticated caller is served all 46 MCP tools, including 21 above the tier declared for them",
+      "severity": "S0-CUSTODY",
+      "tag": "MCP",
+      "kind": "authorization",
+      "section": "identity_trust",
+      "component": "mcp.trust_ladder",
+      "note": "mcp.json assigns every tool a trust_tier and llms.txt states 'anonymous = PUBLIC tools'. An anonymous tools/list returns the full set anyway, including tools declared allied. SCOPE: this establishes the ADVERTISED surface only. It does not show that calling those tools without a key succeeds -- that is a separate check, and the distinction matters.",
+      "detail": {
+        "declared allied but served anonymously": "create_aib_fund, edit_aib_fund_basket, list_my_aib_funds, register_webhook, subscribe_prices",
+        "declared recognized but served anonymously": "ask_nexus_deep, get_agent_profile, get_deep_answer, get_deposit_address, get_order_history, get_positions, get_rate_limits, place_order, query_knowledge, request_feature, submit_feedback, submit_observation, submit_signal",
+        "declared trusted but served anonymously": "get_market_analytics, get_oracle_insights, get_signal_history"
+      },
+      "checks": [
+        "scripts/inventory.py"
+      ],
+      "first_seen": {
+        "at": "2026-09-04T10:29:00+00:00",
+        "cause": {
+          "run_id": "legacy"
+        }
+      },
+      "reproductions": 1,
+      "provenance": {
+        "source": "legacy@ca0bc45",
+        "measured_at": null
+      },
+      "check": {
+        "state": "UNVERIFIED",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null
+      },
+      "filing": {
+        "state": "NOT_RAISED",
+        "adjudicated_by": null,
+        "reports": [],
+        "refused": []
+      },
+      "transitions": [],
+      "regressions": []
+    },
+    "CYM-agent_names": {
+      "id": "CYM-agent_names",
+      "title": "Which AI trading agents exist, by symbol?",
+      "severity": "S1-INTEGRITY",
+      "tag": "BOTS",
+      "kind": "contradiction",
+      "section": "agents",
+      "component": "rest.agents",
+      "note": "llms.txt instructs readers to clone named agents. If those names do not resolve, the instruction is not merely imprecise -- it is unfollowable.",
+      "detail": {
+        "live_species": "{ATR, BOLL, DIV, FIB, ICHI, MACD, PCPN, RSI, STOCH, TREND, VOL}  n=11",
+        "llms_txt": "{CORR, CRASH, DELTA, DREAD, FADE, GLOOM, SENT, STAT, SYNC, VORTX}  n=10"
+      },
+      "checks": [
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_names::live_species-vs-llms_txt]"
+      ],
+      "first_seen": {
+        "at": "2026-09-04T10:29:00+00:00",
+        "cause": {
+          "run_id": "legacy"
+        }
+      },
+      "reproductions": 1,
+      "provenance": {
+        "source": "legacy@ca0bc45",
+        "measured_at": null
+      },
+      "check": {
+        "state": "UNVERIFIED",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null
+      },
+      "filing": {
+        "state": "NOT_RAISED",
+        "adjudicated_by": null,
+        "reports": [],
+        "refused": []
+      },
+      "transitions": [],
+      "regressions": []
+    },
+    "CYM-agent_count": {
+      "id": "CYM-agent_count",
+      "title": "How many AI trading agents exist?",
+      "severity": "S2-MEASUREMENT",
+      "tag": "BOTS",
+      "kind": "contradiction",
+      "section": "agents",
+      "component": "rest.agents",
+      "detail": {
+        "live_agentbook": "8",
+        "live_species": "11",
+        "llms_txt": "10",
+        "mcp_json": "16"
+      },
+      "checks": [
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_count::live_agentbook-vs-live_species]",
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_count::live_agentbook-vs-llms_txt]",
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_count::live_agentbook-vs-mcp_json]",
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_count::live_species-vs-llms_txt]",
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_count::live_species-vs-mcp_json]",
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_count::llms_txt-vs-mcp_json]"
+      ],
+      "first_seen": {
+        "at": "2026-09-04T10:29:00+00:00",
+        "cause": {
+          "run_id": "legacy"
+        }
+      },
+      "reproductions": 1,
+      "provenance": {
+        "source": "legacy@ca0bc45",
+        "measured_at": null
+      },
+      "check": {
+        "state": "UNVERIFIED",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null
+      },
+      "filing": {
+        "state": "NOT_RAISED",
+        "adjudicated_by": null,
+        "reports": [],
+        "refused": []
+      },
+      "transitions": [],
+      "regressions": []
+    },
+    "CYM-chain_count": {
+      "id": "CYM-chain_count",
+      "title": "How many blockchains does the platform settle on or support?",
+      "severity": "S2-MEASUREMENT",
+      "tag": "MONEY",
+      "kind": "contradiction",
+      "section": "swaps",
+      "component": "platform.status",
+      "detail": {
+        "live_chains": "16",
+        "mcp_json": "10"
+      },
+      "checks": [
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[chain_count::live_chains-vs-mcp_json]"
+      ],
+      "first_seen": {
+        "at": "2026-09-04T10:29:00+00:00",
+        "cause": {
+          "run_id": "legacy"
+        }
+      },
+      "reproductions": 1,
+      "provenance": {
+        "source": "legacy@ca0bc45",
+        "measured_at": null
+      },
+      "check": {
+        "state": "UNVERIFIED",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null
+      },
+      "filing": {
+        "state": "NOT_RAISED",
+        "adjudicated_by": null,
+        "reports": [],
+        "refused": []
+      },
+      "transitions": [],
+      "regressions": []
+    },
+    "CYM-clob_pair_count": {
+      "id": "CYM-clob_pair_count",
+      "title": "How many CLOB trading pairs exist?",
+      "severity": "S2-MEASUREMENT",
+      "tag": "EXCHANGE",
+      "kind": "contradiction",
+      "section": "clob",
+      "component": "rest.clob",
+      "detail": {
+        "llms_txt": "9",
+        "mcp_json": "568"
+      },
+      "checks": [
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[clob_pair_count::llms_txt-vs-mcp_json]"
+      ],
+      "first_seen": {
+        "at": "2026-09-04T10:29:00+00:00",
+        "cause": {
+          "run_id": "legacy"
+        }
+      },
+      "reproductions": 1,
+      "provenance": {
+        "source": "legacy@ca0bc45",
+        "measured_at": null
+      },
+      "check": {
+        "state": "UNVERIFIED",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null
+      },
+      "filing": {
+        "state": "NOT_RAISED",
+        "adjudicated_by": null,
+        "reports": [],
+        "refused": []
+      },
+      "transitions": [],
+      "regressions": []
+    },
+    "CYM-commit_count": {
+      "id": "CYM-commit_count",
+      "title": "How many commits are in the production codebase?",
+      "severity": "S2-MEASUREMENT",
+      "tag": "DOCS",
+      "kind": "contradiction",
+      "section": "provenance",
+      "component": "platform.ai_native_proof",
+      "note": "Commits legitimately accrue, so a small gap is expected and a large one is not. The AI-native claim is the platform's headline marketing figure; a stale number here is a measurement defect, not a cosmetic one.",
+      "detail": {
+        "build_stats": "21840",
+        "llms_txt": "11700"
+      },
+      "checks": [
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[commit_count::build_stats-vs-llms_txt]"
+      ],
+      "first_seen": {
+        "at": "2026-09-04T10:29:00+00:00",
+        "cause": {
+          "run_id": "legacy"
+        }
+      },
+      "reproductions": 1,
+      "provenance": {
+        "source": "legacy@ca0bc45",
+        "measured_at": null
+      },
+      "check": {
+        "state": "UNVERIFIED",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null
+      },
+      "filing": {
+        "state": "NOT_RAISED",
+        "adjudicated_by": null,
+        "reports": [],
+        "refused": []
+      },
+      "transitions": [],
+      "regressions": []
+    },
+    "CYM-tracker-closure-rate": {
+      "id": "CYM-tracker-closure-rate",
+      "title": "All 15 reports in the public bounty tracker read 'fixed', and validated_at is null on every one",
+      "severity": "S2-MEASUREMENT",
+      "tag": "PROCESS",
+      "kind": "process",
+      "section": "support",
+      "component": "rest.support",
+      "note": "A queue with a 100% closure rate and no open, triaged, disputed or wont_fix item is not a queue -- it is either a filtered view or a tracker that does not retain unresolved items. The schema HAS validated_at, triaged_at and severity_confirmed fields; none is populated on any record. SCOPE: this says nothing about whether the underlying fixes are real. It says the tracker records no evidence that anyone checked.",
+      "detail": {
+        "status distribution": "fixed=15",
+        "validated_at populated": "0 of 15",
+        "closed with no notes, no ticket, no PR link": "5"
+      },
+      "checks": [
+        "scripts/bounty.py"
+      ],
+      "first_seen": {
+        "at": "2026-09-04T10:29:00+00:00",
+        "cause": {
+          "run_id": "legacy"
+        }
+      },
+      "reproductions": 1,
+      "provenance": {
+        "source": "legacy@ca0bc45",
+        "measured_at": null
+      },
+      "check": {
+        "state": "UNVERIFIED",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null
+      },
+      "filing": {
+        "state": "NOT_RAISED",
+        "adjudicated_by": null,
+        "reports": [],
+        "refused": []
+      },
+      "transitions": [],
+      "regressions": []
+    },
+    "CYM-documented-404": {
+      "id": "CYM-documented-404",
+      "title": "26 endpoints the platform documents return 404",
+      "severity": "S3-CONTRACT",
+      "tag": "DOCS",
+      "kind": "documentation",
+      "section": "discovery",
+      "component": "discovery.llmstxt",
+      "note": "This does not establish which of two things is true. Either the endpoints were removed and the documents are stale, or the documents are aspirational and these were never built. An agent following llms.txt cannot tell the difference, and neither can we -- the platform has to say which.",
+      "detail": {
+        "/api/v1/account": "404 (documented in llms.txt)",
+        "/api/v1/aerodrome/quote": "404 (documented in llms.txt)",
+        "/api/v1/agentbook/post": "404 (documented in llms.txt)",
+        "/api/v1/backtest/run": "404 (documented in llms.txt)",
+        "/api/v1/backtest/saved": "404 (documented in llms.txt)",
+        "/api/v1/base-dex/tokens": "404 (documented in llms.txt)",
+        "/api/v1/bots/clone": "404 (documented in agent-skills.json)",
+        "/api/v1/clob/order": "404 (documented in agent-skills.json)",
+        "/api/v1/cloned-bot/create": "404 (documented in llms.txt)",
+        "/api/v1/cloned-bot/list": "404 (documented in llms.txt)",
+        "/api/v1/defi/pools": "404 (documented in llms.txt)",
+        "/api/v1/exchange/buy": "404 (documented in agent-skills.json)",
+        "/api/v1/perpetual/user/positions": "404 (documented in llms.txt)",
+        "/api/v1/positions": "404 (documented in llms.txt)",
+        "/api/v1/staking/pools": "404 (documented in llms.txt)",
+        "/api/v1/tuatara/discover": "404 (documented in agent-skills.json)",
+        "/api/v1/vaix/prices": "404 (documented in llms.txt)",
+        "/api/v1/winner-takes-all/bet": "404 (documented in llms.txt)",
+        "/api/v1/winner-takes-all/epochs": "404 (documented in llms.txt)",
+        "/api/v1/winner-takes-all/markets": "404 (documented in llms.txt)",
+        "/mcp/v1/prompts/analyze_market": "404 (documented in llms.txt)",
+        "/mcp/v1/prompts/compare_markets": "404 (documented in llms.txt)",
+        "/mcp/v1/prompts/explain_probability": "404 (documented in llms.txt)",
+        "/mcp/v1/prompts/find_opportunities": "404 (documented in llms.txt)",
+        "/mcp/v1/resources/docs/api": "404 (documented in llms.txt)",
+        "/mcp/v1/resources/docs/getting-started": "404 (documented in llms.txt)"
+      },
+      "checks": [
+        "scripts/inventory.py"
+      ],
+      "first_seen": {
+        "at": "2026-09-04T10:29:00+00:00",
+        "cause": {
+          "run_id": "legacy"
+        }
+      },
+      "reproductions": 1,
+      "provenance": {
+        "source": "legacy@ca0bc45",
+        "measured_at": null
+      },
+      "check": {
+        "state": "UNVERIFIED",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null
+      },
+      "filing": {
+        "state": "NOT_RAISED",
+        "adjudicated_by": null,
+        "reports": [],
+        "refused": []
+      },
+      "transitions": [],
+      "regressions": []
+    },
+    "CYM-mcp_tool_count": {
+      "id": "CYM-mcp_tool_count",
+      "title": "How many MCP tools does the server expose?",
+      "severity": "S3-CONTRACT",
+      "tag": "MCP",
+      "kind": "contradiction",
+      "section": "mcp",
+      "component": "mcp.tools_list",
+      "detail": {
+        "llms_txt": "11",
+        "mcp_anon": "46",
+        "mcp_json": "46",
+        "mcp_trusted": "46"
+      },
+      "checks": [
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_count::llms_txt-vs-mcp_anon]",
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_count::llms_txt-vs-mcp_json]",
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_count::llms_txt-vs-mcp_trusted]"
+      ],
+      "first_seen": {
+        "at": "2026-09-04T10:29:00+00:00",
+        "cause": {
+          "run_id": "legacy"
+        }
+      },
+      "reproductions": 1,
+      "provenance": {
+        "source": "legacy@ca0bc45",
+        "measured_at": null
+      },
+      "check": {
+        "state": "UNVERIFIED",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null
+      },
+      "filing": {
+        "state": "NOT_RAISED",
+        "adjudicated_by": null,
+        "reports": [],
+        "refused": []
+      },
+      "transitions": [],
+      "regressions": []
+    },
+    "CYM-mcp_tool_names_declared_vs_served": {
+      "id": "CYM-mcp_tool_names_declared_vs_served",
+      "title": "Do the tool names the platform documents actually exist?",
+      "severity": "S3-CONTRACT",
+      "tag": "MCP",
+      "kind": "contradiction",
+      "section": "mcp",
+      "component": "mcp.tools_list",
+      "detail": {
+        "llms_txt": "{get_featured_market, get_leaderboard, get_market, get_market_summary, get_markets, get_orderbook, get_price, get_prices, get_trades, get_trending_markets, search_markets}  n=11",
+        "mcp_anon": "{ask_nexus_deep, browse_ontology, create_aib_fund, edit_aib_fund_basket, find_trade_path, get_agent_profile, get_ai_native_proof, get_btc_pool_history, get_btc_pool_state, get_deadcoin_desk_info, get_deadcoin_quote, get_deep_answer ... (+34 more)}  n=46",
+        "mcp_json": "{ask_nexus_deep, browse_ontology, create_aib_fund, edit_aib_fund_basket, find_trade_path, get_agent_profile, get_ai_native_proof, get_btc_pool_history, get_btc_pool_state, get_deadcoin_desk_info, get_deadcoin_quote, get_deep_answer ... (+34 more)}  n=46"
+      },
+      "checks": [
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_names_declared_vs_served::llms_txt-vs-mcp_anon]",
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_names_declared_vs_served::llms_txt-vs-mcp_json]"
+      ],
+      "first_seen": {
+        "at": "2026-09-04T10:29:00+00:00",
+        "cause": {
+          "run_id": "legacy"
+        }
+      },
+      "reproductions": 1,
+      "provenance": {
+        "source": "legacy@ca0bc45",
+        "measured_at": null
+      },
+      "check": {
+        "state": "UNVERIFIED",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null
+      },
+      "filing": {
+        "state": "NOT_RAISED",
+        "adjudicated_by": null,
+        "reports": [],
+        "refused": []
+      },
+      "transitions": [],
+      "regressions": []
+    },
+    "CYM-skill_count": {
+      "id": "CYM-skill_count",
+      "title": "How many agent skills are advertised?",
+      "severity": "S3-CONTRACT",
+      "tag": "DOCS",
+      "kind": "contradiction",
+      "section": "discovery",
+      "component": "discovery.wellknown",
+      "detail": {
+        "agent_card": "13",
+        "agent_skills": "10"
+      },
+      "checks": [
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[skill_count::agent_card-vs-agent_skills]"
+      ],
+      "first_seen": {
+        "at": "2026-09-04T10:29:00+00:00",
+        "cause": {
+          "run_id": "legacy"
+        }
+      },
+      "reproductions": 1,
+      "provenance": {
+        "source": "legacy@ca0bc45",
+        "measured_at": null
+      },
+      "check": {
+        "state": "UNVERIFIED",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null
+      },
+      "filing": {
+        "state": "NOT_RAISED",
+        "adjudicated_by": null,
+        "reports": [],
+        "refused": []
+      },
+      "transitions": [],
+      "regressions": []
+    },
+    "CYM-skill_ids": {
+      "id": "CYM-skill_ids",
+      "title": "Which agent skills does the platform advertise?",
+      "severity": "S3-CONTRACT",
+      "tag": "DOCS",
+      "kind": "contradiction",
+      "section": "discovery",
+      "component": "discovery.wellknown",
+      "detail": {
+        "agent_card": "{ai-due-diligence, ai-native-provenance, arena-trading, clone-ai-agent, et10-revenue-share, exchange-tokens, live-headlines, market-data, prop-desk-trading, smart-delegation, tge-prediction-markets, trade-event-cards ... (+1 more)}  n=13",
+        "agent_skills": "{arena-trading, asset-discovery, clone-ai-agent, et10-revenue-share, exchange-crypto, get-market-data, portfolio-management, prop-desk-trading, trade-event-cards, trade-prediction-markets}  n=10"
+      },
+      "checks": [
+        "tests/reconciliation/test_reconcile.py::test_sources_agree[skill_ids::agent_card-vs-agent_skills]"
+      ],
+      "first_seen": {
+        "at": "2026-09-04T10:29:00+00:00",
+        "cause": {
+          "run_id": "legacy"
+        }
+      },
+      "reproductions": 1,
+      "provenance": {
+        "source": "legacy@ca0bc45",
+        "measured_at": null
+      },
+      "check": {
+        "state": "UNVERIFIED",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null
+      },
+      "filing": {
+        "state": "NOT_RAISED",
+        "adjudicated_by": null,
+        "reports": [],
+        "refused": []
+      },
+      "transitions": [],
+      "regressions": []
+    },
+    "CYM-documented-405": {
+      "id": "CYM-documented-405",
+      "title": "18 documented URLs exist but reject the documented method",
+      "severity": "S4-COSMETIC",
+      "tag": "MCP",
+      "kind": "documentation",
+      "section": "mcp",
+      "component": "discovery.llmstxt",
+      "note": "llms.txt renders MCP tools as fetchable URLs of the form /mcp/v1/tools/<name>. They answer 405: the resource exists, the shape in the document does not. Low severity on its own, but it is the same document that carries the tool names and counts.",
+      "detail": {
+        "/api/v1/ai-due-diligence": "405 Method Not Allowed",
+        "/api/v1/arena/order": "405 Method Not Allowed",
+        "/api/v1/prop/signup": "405 Method Not Allowed",
+        "/api/v1/support/ai-agent": "405 Method Not Allowed",
+        "/api/v1/swap/execute": "405 Method Not Allowed",
+        "/mcp/v1": "405 Method Not Allowed",
+        "/mcp/v1/register": "405 Method Not Allowed",
+        "/mcp/v1/tools/get_featured_market": "405 Method Not Allowed",
+        "/mcp/v1/tools/get_leaderboard": "405 Method Not Allowed",
+        "/mcp/v1/tools/get_market": "405 Method Not Allowed",
+        "/mcp/v1/tools/get_market_summary": "405 Method Not Allowed",
+        "/mcp/v1/tools/get_markets": "405 Method Not Allowed",
+        "/mcp/v1/tools/get_orderbook": "405 Method Not Allowed",
+        "/mcp/v1/tools/get_price": "405 Method Not Allowed",
+        "/mcp/v1/tools/get_prices": "405 Method Not Allowed",
+        "/mcp/v1/tools/get_trades": "405 Method Not Allowed",
+        "/mcp/v1/tools/get_trending_markets": "405 Method Not Allowed",
+        "/mcp/v1/tools/search_markets": "405 Method Not Allowed"
+      },
+      "checks": [
+        "scripts/inventory.py"
+      ],
+      "first_seen": {
+        "at": "2026-09-04T10:29:00+00:00",
+        "cause": {
+          "run_id": "legacy"
+        }
+      },
+      "reproductions": 1,
+      "provenance": {
+        "source": "legacy@ca0bc45",
+        "measured_at": null
+      },
+      "check": {
+        "state": "UNVERIFIED",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null
+      },
+      "filing": {
+        "state": "NOT_RAISED",
+        "adjudicated_by": null,
+        "reports": [],
+        "refused": []
+      },
+      "transitions": [],
+      "regressions": []
+    },
+    "CYM-bounty-pipeline-deadend": {
+      "id": "CYM-bounty-pipeline-deadend",
+      "severity": "S1-INTEGRITY",
+      "component": "rest.support",
+      "section": "support",
+      "title": "Reports filed through the bounty API do not reach the tracker where work happens",
+      "tag": "PROCESS",
+      "kind": "process",
+      "checks": [],
+      "first_seen": {
+        "at": "2026-09-04T13:30:00+00:00",
+        "cause": {
+          "run_id": "legacy"
+        }
+      },
+      "reproductions": 1,
+      "provenance": {
+        "source": "MSG-0002",
+        "measured_at": null
+      },
+      "check": {
+        "state": "UNVERIFIED",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null
+      },
+      "filing": {
+        "state": "NOT_RAISED",
+        "adjudicated_by": null,
+        "reports": [],
+        "refused": []
+      },
+      "transitions": [],
+      "regressions": []
+    },
+    "CYM-bounty-fields-dropped": {
+      "id": "CYM-bounty-fields-dropped",
+      "severity": "S2-MEASUREMENT",
+      "component": "rest.support",
+      "section": "support",
+      "title": "Five fields accepted by the filing endpoint are not stored",
+      "tag": "PROCESS",
+      "kind": "process",
+      "checks": [],
+      "first_seen": {
+        "at": "2026-09-04T13:30:00+00:00",
+        "cause": {
+          "run_id": "legacy"
+        }
+      },
+      "reproductions": 1,
+      "provenance": {
+        "source": "MSG-0002",
+        "measured_at": null
+      },
+      "check": {
+        "state": "UNVERIFIED",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null
+      },
+      "filing": {
+        "state": "NOT_RAISED",
+        "adjudicated_by": null,
+        "reports": [],
+        "refused": []
+      },
+      "transitions": [],
+      "regressions": []
+    },
+    "CYM-bounty-hunter-name-lost": {
+      "id": "CYM-bounty-hunter-name-lost",
+      "severity": "S2-MEASUREMENT",
+      "component": "rest.support",
+      "section": "support",
+      "title": "hunter_name is accepted on submission and not retained",
+      "tag": "PROCESS",
+      "kind": "process",
+      "checks": [],
+      "first_seen": {
+        "at": "2026-09-04T13:30:00+00:00",
+        "cause": {
+          "run_id": "legacy"
+        }
+      },
+      "reproductions": 1,
+      "provenance": {
+        "source": "MSG-0002",
+        "measured_at": null
+      },
+      "check": {
+        "state": "UNVERIFIED",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null
+      },
+      "filing": {
+        "state": "NOT_RAISED",
+        "adjudicated_by": null,
+        "reports": [],
+        "refused": []
+      },
+      "transitions": [],
+      "regressions": []
+    }
+  }
+}

@@ -212,17 +212,7 @@ def rest_client(rest_anon):
     return rest_anon
 
 
-# ---------------------------------------------------------------------------
-# Inconclusive is neither pass nor fail
-# ---------------------------------------------------------------------------
-@pytest.hookimpl(hookwrapper=True)
-def pytest_runtest_makereport(item, call):
-    outcome = yield
-    report = outcome.get_result()
-    if call.excinfo is not None and call.excinfo.errisinstance(Inconclusive):
-        reason = str(call.excinfo.value)
-        report.outcome = "skipped"
-        # pytest's skip summary requires the (path, lineno, reason) shape.
-        report.longrepr = (str(item.path), item.location[1] + 1, f"INCONCLUSIVE: {reason}")
-        report.qa_outcome = "inconclusive"
-        report.qa_reason = reason
+# Inconclusive classification moved to qa/report_plugin.py in phase 1 of the
+# hardening plan: the recorder is now the single tryfirst classifier, so there
+# is no second wrapper whose ordering could disagree with it. The import of
+# Inconclusive above (line 30) is kept so the pinned line ranges do not shift.

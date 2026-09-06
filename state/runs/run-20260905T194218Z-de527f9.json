@@ -1,0 +1,295 @@
+{
+  "schema": 2,
+  "run_id": "run-20260905T194218Z-de527f9",
+  "started_at": "2026-09-05T19:42:22+00:00",
+  "finished_at": "2026-09-05T19:42:40+00:00",
+  "git_head": "de527f9e8112e77888c8476c000f988a068f62f6",
+  "git_short": "de527f9",
+  "git_dirty": true,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": "sha256:58754a510c5007b711ba4578c30fcb97192eaf05ae85218a0965f412bd9211a0",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "687609a5e12d9a2e46d2c461660dd8adc85ab80a0853cfafc707ae0962f0d4ed",
+    "/.well-known/agent-card.json": "d3808146038b605f8a89995a66c57fa3d8a471653f8a3ab00a891458116e7042",
+    "/.well-known/agent-skills.json": "41a38971d7d79b8b4638dba285021fc011a7eb1f1062ae3b6707d4210c444ed7",
+    "/.well-known/ai-plugin.json": "e2f2d79821bf8e741fb18cefea6a94cb7a1ec358644306aeff02e763c61b1fb2",
+    "/.well-known/udc.json": "92cd8a5f7ec5a0a859594ef9fbd72cba4914eaab4220377db18adf2ed44611a4",
+    "/openapi.json": "f0cccb1f06ec266d303b1c7ab8e23f4af29a3c43106027595c95c1449fa1b2cf",
+    "/llms.txt": "ad1aa850062ba754ffcf78859f7d987e7c484bc5ca534603f5769ed1ad42aea0",
+    "mcp:tools/list:none": "32107ec8ab80ba0db0ad42f85e43abc1956dc37b3864851a8af95e522262d09e"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/mcp/test_trust_ladder.py -q --no-header --tb=short",
+  "selector_full": false,
+  "allow_mutate": false,
+  "collected": [
+    "tests/mcp/test_trust_ladder.py::test_anonymous_receives_only_public_tools",
+    "tests/mcp/test_trust_ladder.py::test_credentialed_caller_receives_nothing_above_its_own_tier",
+    "tests/mcp/test_trust_ladder.py::test_every_served_tool_is_declared_somewhere",
+    "tests/mcp/test_trust_ladder.py::test_higher_tier_is_a_superset_of_lower",
+    "tests/mcp/test_trust_ladder.py::test_call_time_authorization_holds_for_anonymous[place_order]",
+    "tests/mcp/test_trust_ladder.py::test_call_time_authorization_holds_for_anonymous[create_aib_fund]",
+    "tests/mcp/test_trust_ladder.py::test_call_time_authorization_holds_for_anonymous[get_deposit_address]"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/mcp/test_trust_ladder.py::test_anonymous_receives_only_public_tools",
+      "component": "mcp.trust_ladder",
+      "tier": "SAFE",
+      "surface": "mcp",
+      "claim_id": "anon-tool-surface",
+      "ticket_id": "CYM-anon-tool-surface",
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 1815,
+      "evidence_ids": [
+        "36b0cf3bd55ea8fe992ee8093ce5a6d550cef5020fb54a6ebdc1059ca5d4f906",
+        "b85f0c33ee066870817b5806ba4faf1b5636dd1e74dd0ee3b3e8ef115ab8a371"
+      ],
+      "measurement": null,
+      "check_fingerprint": "aee41113b423d34dbb0fb7a237f679ec142e320ffd706e3a3645b1a3b80b4cd5",
+      "reason": null,
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/mcp/test_trust_ladder.py::test_credentialed_caller_receives_nothing_above_its_own_tier",
+      "component": "mcp.trust_ladder",
+      "tier": "SAFE",
+      "surface": "mcp",
+      "claim_id": "trusted-receives-nothing-above-its-tier",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 2303,
+      "evidence_ids": [
+        "1de9eff4a7afb3f05f1cd6572325d18776a0d18bb2e4d440357871c052518e8f",
+        "b6c4e5101c6bcaad02a6ec43492002fef462030befba24d8811e42db10e17b64",
+        "5b57c45d8881b3ea881923ba32a7d1e3150d816bafac8fe984d6926c349701b1"
+      ],
+      "measurement": {
+        "verdict": "passed",
+        "reason": "the platform states this caller is ALLIED; it is served 56 tools, 0 of them declared above allied",
+        "left": [],
+        "right": "allied",
+        "sources": {
+          "tier_from": "/mcp/v1/agents/me",
+          "entitlement_from": "/.well-known/mcp.json"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "trusted-receives-nothing-above-its-tier",
+        "role": "verdict",
+        "population": {
+          "served": 56,
+          "entitled_at_allied": 56,
+          "declared_total": 56
+        }
+      },
+      "check_fingerprint": "d47ca2e183ca62326018098c04eae3db6241fd755280c9eb62891319801f3f67",
+      "reason": null,
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/mcp/test_trust_ladder.py::test_every_served_tool_is_declared_somewhere",
+      "component": "mcp.trust_ladder",
+      "tier": "SAFE",
+      "surface": "mcp",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 776,
+      "evidence_ids": [
+        "e46cca50edb54957733e0d0d7969f4bd5bdc65a870d3456cdbe86e9520324542",
+        "953cab88e46c563b3eebd1b233b0c310b248fa3b2ff1b694ef7515c1e4552cee"
+      ],
+      "measurement": {
+        "verdict": "passed",
+        "reason": "0 served tool(s) carry no trust_tier in mcp.json, so no tier can be checked for them",
+        "left": [],
+        "right": 56,
+        "sources": {
+          "catalogue": "/.well-known/mcp.json",
+          "served": "tools/list"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": null,
+        "role": "verdict",
+        "population": null
+      },
+      "check_fingerprint": "d8f3c0ea8658c36237152550b0187a837334d99f2ab3007d58e0d5b1461b3225",
+      "reason": null,
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/mcp/test_trust_ladder.py::test_higher_tier_is_a_superset_of_lower",
+      "component": "mcp.trust_ladder",
+      "tier": "SAFE",
+      "surface": "mcp",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 5352,
+      "evidence_ids": [
+        "dff430604355cf0e54bd183139195c946357b53ee00f90c18bddc0a2a880a5df",
+        "a66801e7f26d2955fecea7260532941e1edd881714bb39c30f6d269dfd66cfd1"
+      ],
+      "measurement": null,
+      "check_fingerprint": "a4741b64fec40538b7b8f51656d219741a977fe04532c17b01d291f16c23c7be",
+      "reason": null,
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/mcp/test_trust_ladder.py::test_call_time_authorization_holds_for_anonymous[place_order]",
+      "component": "mcp.trust_ladder",
+      "tier": "PROBE",
+      "surface": "mcp",
+      "claim_id": "call_time_authorization",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 1946,
+      "evidence_ids": [
+        "5708f512d807f11ecf3bcfe3987898cb1af2c548a7421f483cb235c8d1754a34"
+      ],
+      "measurement": {
+        "verdict": "passed",
+        "reason": "anonymous tools/call on 'place_order': refused_authz -- authorization ran first and refused the call",
+        "left": "refused_authz",
+        "right": "refused_authz",
+        "sources": {
+          "tool": "place_order",
+          "identity": "anonymous"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "call_time_authorization",
+        "role": "verdict",
+        "population": {
+          "body": "{\"error\": \"INSUFFICIENT_TRUST\"}"
+        }
+      },
+      "check_fingerprint": "01399dfc88b05714a7dc09f2e15b205be0d13eadfb7e243bb4e04812a0165137",
+      "reason": null,
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/mcp/test_trust_ladder.py::test_call_time_authorization_holds_for_anonymous[create_aib_fund]",
+      "component": "mcp.trust_ladder",
+      "tier": "PROBE",
+      "surface": "mcp",
+      "claim_id": "call_time_authorization",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 1626,
+      "evidence_ids": [
+        "b40520e922052aa03a026dc4ff80d08069e17b60dc75e5db302f308f3704fc15"
+      ],
+      "measurement": {
+        "verdict": "passed",
+        "reason": "anonymous tools/call on 'create_aib_fund': refused_authz -- authorization ran first and refused the call",
+        "left": "refused_authz",
+        "right": "refused_authz",
+        "sources": {
+          "tool": "create_aib_fund",
+          "identity": "anonymous"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "call_time_authorization",
+        "role": "verdict",
+        "population": {
+          "body": "{\"error\": \"INSUFFICIENT_TRUST\"}"
+        }
+      },
+      "check_fingerprint": "01399dfc88b05714a7dc09f2e15b205be0d13eadfb7e243bb4e04812a0165137",
+      "reason": null,
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/mcp/test_trust_ladder.py::test_call_time_authorization_holds_for_anonymous[get_deposit_address]",
+      "component": "mcp.trust_ladder",
+      "tier": "PROBE",
+      "surface": "mcp",
+      "claim_id": "call_time_authorization",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 860,
+      "evidence_ids": [
+        "6224e17ccd24c0f1240a6e2582a48b972ea5373eddff4943fc8492fa305e2e43"
+      ],
+      "measurement": {
+        "verdict": "passed",
+        "reason": "anonymous tools/call on 'get_deposit_address': refused_authz -- authorization ran first and refused the call",
+        "left": "refused_authz",
+        "right": "refused_authz",
+        "sources": {
+          "tool": "get_deposit_address",
+          "identity": "anonymous"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "call_time_authorization",
+        "role": "verdict",
+        "population": {
+          "body": "{\"error\": \"INSUFFICIENT_TRUST\"}"
+        }
+      },
+      "check_fingerprint": "01399dfc88b05714a7dc09f2e15b205be0d13eadfb7e243bb4e04812a0165137",
+      "reason": null,
+      "failure_repr": null
+    }
+  ],
+  "totals": {
+    "passed": 7
+  },
+  "ratelimit": {
+    "requests": 12,
+    "limit": 2000,
+    "remaining": 1996,
+    "fraction_used": 0.002,
+    "exhausted": false
+  },
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "fingerprint_after": "sha256:58754a510c5007b711ba4578c30fcb97192eaf05ae85218a0965f412bd9211a0",
+  "exit_status": 0
+}

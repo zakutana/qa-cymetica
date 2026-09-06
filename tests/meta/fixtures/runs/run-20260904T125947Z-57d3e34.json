@@ -1,0 +1,131 @@
+{
+  "run_id": "run-20260904T125947Z-57d3e34",
+  "started_at": "2026-09-04T13:00:17+00:00",
+  "finished_at": "2026-09-04T13:00:47+00:00",
+  "git_head": "57d3e34192b6e9cb385745489da33165f7fc6296",
+  "git_short": "57d3e34",
+  "git_dirty": true,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "platform_fingerprint": "sha256:0ad5900f2b75210b2c6e1837516d5464948fcad36840bf0c113724c685c9524a",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "24d67155c73053c258adc969b08e774ed26ad96a2df276a8e2dc0a5027c8fe7f",
+    "/.well-known/agent-card.json": "90d1cf48b1fa516db507f29ed91a2051da05787d548c58042db3b26ae611032b",
+    "/.well-known/agent-skills.json": "41a38971d7d79b8b4638dba285021fc011a7eb1f1062ae3b6707d4210c444ed7",
+    "/.well-known/ai-plugin.json": "1cc1da5cd86dff95476563abc57e25a6aab694f3a1de4d29bc8755420f5ecbd4",
+    "/.well-known/udc.json": "92cd8a5f7ec5a0a859594ef9fbd72cba4914eaab4220377db18adf2ed44611a4",
+    "/openapi.json": "f0cccb1f06ec266d303b1c7ab8e23f4af29a3c43106027595c95c1449fa1b2cf",
+    "/llms.txt": "55c6504805356978292789e818f3c4757874c08787cdcdf0f025560fe2a6858f"
+  },
+  "fingerprint_errors": {
+    "{'kind': 'mcp_tool_names', 'auth': 'none'}": "ReadTimeout: The read operation timed out"
+  },
+  "fingerprint_drifted": true,
+  "fingerprint_changed_parts": [
+    "+mcp:tools/list:none"
+  ],
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "classifier_version": "unavailable",
+  "selector": "tests/mcp -q --no-header",
+  "allow_mutate": false,
+  "results": [
+    {
+      "nodeid": "tests/mcp/test_trust_ladder.py::test_anonymous_receives_only_public_tools",
+      "component": "mcp.trust_ladder",
+      "tier": "SAFE",
+      "surface": "mcp",
+      "claim_id": null,
+      "ticket_id": "CYM-anon-tool-surface",
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "duration_ms": 21665,
+      "evidence_ids": [],
+      "reason": null,
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/mcp/test_trust_ladder.py::test_trusted_receives_nothing_above_its_tier",
+      "component": "mcp.trust_ladder",
+      "tier": "SAFE",
+      "surface": "mcp",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "duration_ms": 1856,
+      "evidence_ids": [],
+      "reason": null,
+      "failure_repr": "tests\\mcp\\test_trust_ladder.py:80: in test_trusted_receives_nothing_above_its_tier\n    assert served <= entitled, _report(\"TRUSTED\", served, entitled, declared)\nE   AssertionError: \nE     IDENTITY   TRUSTED\nE     SERVED     46 tools\nE     ENTITLED   41 tools (its own tier and below, per mcp.json)\nE     EXCESS     5 tools above the tier declared for them\nE     \nE       declared allied: create_aib_fund, edit_aib_fund_basket, list_my_aib_funds, register_webhook, subscribe_prices\nE   assert {'ask_nexus_d...profile', ...} <= {'ask_nexus_d...history', ...}\nE     \nE     Extra items in the left set:\nE     'register_webhook'\nE     'create_aib_fund'\nE     'list_my_aib_funds'\nE     'subscribe_prices'\nE     'edit_aib_fund_basket'"
+    },
+    {
+      "nodeid": "tests/mcp/test_trust_ladder.py::test_higher_tier_is_a_superset_of_lower",
+      "component": "mcp.trust_ladder",
+      "tier": "SAFE",
+      "surface": "mcp",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "duration_ms": 791,
+      "evidence_ids": [],
+      "reason": null,
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/mcp/test_trust_ladder.py::test_call_time_authorization_holds_for_anonymous[place_order]",
+      "component": "mcp.trust_ladder",
+      "tier": "PROBE",
+      "surface": "mcp",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "duration_ms": 341,
+      "evidence_ids": [],
+      "reason": null,
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/mcp/test_trust_ladder.py::test_call_time_authorization_holds_for_anonymous[create_aib_fund]",
+      "component": "mcp.trust_ladder",
+      "tier": "PROBE",
+      "surface": "mcp",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "duration_ms": 325,
+      "evidence_ids": [],
+      "reason": null,
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/mcp/test_trust_ladder.py::test_call_time_authorization_holds_for_anonymous[get_deposit_address]",
+      "component": "mcp.trust_ladder",
+      "tier": "PROBE",
+      "surface": "mcp",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "duration_ms": 422,
+      "evidence_ids": [],
+      "reason": null,
+      "failure_repr": null
+    }
+  ],
+  "totals": {
+    "passed": 5,
+    "failed": 1
+  },
+  "ratelimit": {},
+  "fingerprint_after": "sha256:a5507c9d41612de3e634751b89cd2ce840ad3778510c1862657e6f518c99f037",
+  "exit_status": 1
+}

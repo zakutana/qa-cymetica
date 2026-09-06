@@ -1,0 +1,151 @@
+{
+  "schema": 2,
+  "run_id": "run-20260905T214450Z-011cd61",
+  "started_at": "2026-09-05T21:45:07+00:00",
+  "finished_at": "2026-09-05T21:45:21+00:00",
+  "git_head": "011cd616ce9f45da27094332de84bda1e78f0528",
+  "git_short": "011cd61",
+  "git_dirty": true,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": "sha256:584da9a39679f51a764f2f15ed50110940e5618b499342b41e0d4187e893a371",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "1985e2c97cedb1d4e2248162050d04347c227cae6e369d115e88261893051ff3",
+    "/.well-known/agent-card.json": "3dfc7d39fe712e14967fbd019be8bec83c4a49e836fb3d04ff02248b2580fca5",
+    "/.well-known/agent-skills.json": "f2f992a77d58a157ec678cd17d4d94d216aa96d12ee4f9a3adae9fa291fb5a0d",
+    "/.well-known/ai-plugin.json": "e2f2d79821bf8e741fb18cefea6a94cb7a1ec358644306aeff02e763c61b1fb2",
+    "/.well-known/udc.json": "92cd8a5f7ec5a0a859594ef9fbd72cba4914eaab4220377db18adf2ed44611a4",
+    "/openapi.json": "f0cccb1f06ec266d303b1c7ab8e23f4af29a3c43106027595c95c1449fa1b2cf",
+    "/llms.txt": "9394176a9e0a58b300906e9f6c2843208353e59891bbb186c673c616e2cf96c8",
+    "mcp:tools/list:none": "cec661ca0567f7ae4801b552e785299b05660362e3d7dbb725424599331010e9"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/rest/test_qa_agent_channel.py -q --no-header --tb=line",
+  "selector_full": false,
+  "allow_mutate": false,
+  "collected": [
+    "tests/rest/test_qa_agent_channel.py::test_the_agent_can_report_a_value_it_publishes",
+    "tests/rest/test_qa_agent_channel.py::test_escalating_a_low_confidence_answer_does_not_return_the_same_advice"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/rest/test_qa_agent_channel.py::test_the_agent_can_report_a_value_it_publishes",
+      "component": "rest.support",
+      "tier": "PROBE",
+      "surface": "rest",
+      "claim_id": "qa-agent-cannot-report-its-own-data",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 2549,
+      "evidence_ids": [
+        "bffd7666bd53f87a7b73e89b4377afd1f0e38979c09186303b22c11d3c41264a",
+        "1b7ecf7d62b5220d1cacfcea79aaf3e8c8e811328b5488281fcbb2f36689a4ac"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "asked for two values it serves at /api/v1/bounty/reward-tiers, the channel's answer contains neither the currency it publishes (CYM) nor either bound of the critical range (400000-1000000)",
+        "left": [
+          "the currency it publishes (CYM)",
+          "either bound of the critical range (400000-1000000)"
+        ],
+        "right": {
+          "currency": "CYM",
+          "critical": {
+            "min": 400000,
+            "max": 1000000
+          }
+        },
+        "sources": {
+          "asked": "/api/v1/bounty/qa-agent/ask",
+          "published_at": "/api/v1/bounty/reward-tiers",
+          "cited_by_agent": [
+            "faq-revenue-share-1"
+          ]
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "qa-agent-cannot-report-its-own-data",
+        "role": "verdict",
+        "population": {
+          "confidence": 0.7,
+          "answer_chars": 579,
+          "answer_head": "🏆 **Reward Pathways Unlocked**\n\nThe battleship rewards those who sail with us:\n\n- **Trading Points** - Every trade powers the ship's evolution\n- **Social Amplification** - Share an"
+        }
+      },
+      "check_fingerprint": "c429bc6cb1c941ca55c199129a903bf2551c444ab31a19f91e20dd87adff2e58",
+      "reason": null,
+      "failure_repr": "E   AssertionError: asked for two values it serves at /api/v1/bounty/reward-tiers, the channel's answer contains neither the currency it publishes (CYM) nor either bound of the critical range (400000-1000000)\n      left  = ['the currency it publishes (CYM)', 'either bound of the critical range (400000-1000000)']\n      right = {'currency': 'CYM', 'critical': {'min': 400000, 'max': 1000000}}"
+    },
+    {
+      "nodeid": "tests/rest/test_qa_agent_channel.py::test_escalating_a_low_confidence_answer_does_not_return_the_same_advice",
+      "component": "rest.support",
+      "tier": "PROBE",
+      "surface": "rest",
+      "claim_id": "qa-agent-escalation-is-a-loop",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "evidence",
+      "duration_ms": 2425,
+      "evidence_ids": [
+        "2bb933d7440dbcd2b760a9481228d4280f19e07a60a41cc0ab2663ab83cf9fc1",
+        "2b36fb3e57294d3b92bc506c1c14b45d989c9d55e7c5a556e88135663df0ed73"
+      ],
+      "measurement": {
+        "verdict": "passed",
+        "reason": "sync answered at confidence 0.5666666666666667, below the floor of 0.7, and the async channel accepted the escalation; whether its reply restates the routing guide is asserted from the inbox, which needs a credential",
+        "left": 0.5666666666666667,
+        "right": 0.7,
+        "sources": {
+          "sync": "/api/v1/bounty/qa-agent/ask",
+          "async": "/api/v1/bounty/a2a/send"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": null,
+        "role": "evidence",
+        "population": {
+          "thread": "a2a_8c38cfaa77bc35a0"
+        }
+      },
+      "check_fingerprint": "f9071e3d0bb7c711149d1ff073231a2bfb44157f83deac7f740d54b9da523511",
+      "reason": null,
+      "failure_repr": null
+    }
+  ],
+  "totals": {
+    "failed": 1,
+    "passed": 1
+  },
+  "ratelimit": {
+    "requests": 4,
+    "limit": 60,
+    "remaining": 57,
+    "fraction_used": 0.05,
+    "exhausted": false
+  },
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "fingerprint_after": "sha256:584da9a39679f51a764f2f15ed50110940e5618b499342b41e0d4187e893a371",
+  "exit_status": 1
+}

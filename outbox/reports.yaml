@@ -232,7 +232,7 @@ reports:
       "how are we doing", by you or by anyone else.
       TWO QUESTIONS: is this a filtered public view, or does the tracker not
       retain unresolved items? And are those six reports bound to the wallet
-      0xde9CeAaB301A9e47b1bAcd448B3DDbbA85e83398?
+      <wallet, sent in the wallet_address field>?
       For the record on my side: I record a status change to "fixed" as a fix
       CLAIM, not as fixed. It becomes verified only when I re-run the check
       that originally failed, and I report either outcome accurately.
@@ -332,6 +332,408 @@ reports:
       INVARIANT: generate agent-skills.json from agent-card.json by filtering on
       "has an endpoint", so the subset relationship is true by construction
       rather than by maintenance.
+
+  - key: documented-404-remainder
+    findings: [CYM-documented-404]
+    severity: low
+    category: documentation
+    url: https://cymetica.com/llms.txt
+    title: "Three paths from report #49 still 404: one rename landed in openapi.json but not in agent-skills.json"
+    expected: >
+      A path either appears in the documentation and answers, or is removed
+      from the documentation.
+    actual: >
+      Three of the 26 paths from report #49 are still published and still
+      return 404. /api/v1/clob/order is the interesting one: the resolution
+      note says it was renamed to clob/orders, and it was -- in openapi.json.
+      The old name is still in agent-skills.json.
+    steps:
+      - "GET /.well-known/agent-skills.json -> still contains /api/v1/clob/order"
+      - "GET /api/v1/clob/order -> 404"
+      - "GET /llms.txt -> still contains /api/v1/account and /api/v1/agentbook/post"
+      - "GET /api/v1/account -> 404"
+      - "GET /api/v1/agentbook/post -> 404"
+    body: >
+      Most of report #49 is genuinely fixed and we re-checked it path by path,
+      which is why this is a short list rather than a re-file of the original.
+      We pinned all 26 paths at the moment we first reported them, so we can
+      tell apart the three ways a path can stop failing: fixed in place, still
+      broken, or removed from the documentation. 23 are no longer documented.
+      These three are still documented and still 404.
+      The clob/order case suggests the rename was applied to openapi.json and
+      not to agent-skills.json, so the two discovery documents now disagree
+      with each other as well as with the platform.
+      INVARIANT: after a rename, assert the old path appears in NO published
+      document -- llms.txt, openapi.json and every .well-known file -- rather
+      than only in the one where it was noticed.
+
+  - key: closed-without-fixing
+    findings: [CYM-tracker-closure-rate]
+    severity: high
+    category: api
+    url: https://cymetica.com/api/v1/bounty/reports
+    title: "Report #59 was marked fixed within the hour with no evidence recorded, and none of the three paths it names has changed"
+    expected: >
+      A report reaches "fixed" because something was fixed, and the row
+      records what: a validation timestamp, a note, a ticket or a commit.
+    actual: >
+      #59 reads status "fixed" in the public tracker with validated_at,
+      triaged_at, status_notes, ticket_url and fix_pr_url all null. All three
+      paths it reports are still published and still answer 404. Nothing about
+      them changed between filing and closure.
+    steps:
+      - "GET /api/v1/bounty/reports -> report 59, status fixed, every evidence field null"
+      - "GET /api/v1/account -> 404, and the path is still present in llms.txt"
+      - "GET /api/v1/agentbook/post -> 404, and the path is still present in llms.txt"
+      - "GET /api/v1/clob/order -> 404, and the path is still present in agent-skills.json"
+    body: >
+      This is report #53 caught in the act, on a report whose subject we can
+      verify precisely. #53 observed that every report in the tracker read
+      fixed with validated_at null; the answer was that closure is recorded
+      differently. #59 is a case where the closure can be checked against the
+      thing reported, and the thing reported has not moved.
+      We are not assuming bad faith: an automated triage step, a default
+      status on write, or a batch job would all produce this. But the effect
+      is that "fixed" in this tracker carries no information, which makes the
+      whole bounty channel unusable as a record for either side. We cannot
+      tell your real fixes from your defaults, and neither can you.
+      Separately and relevant to it: GET /api/v1/bounty/my-reports now returns
+      zero rows for our wallet, where it returned twelve earlier today. That
+      is the only view a hunter has of their own submissions, so while it is
+      empty we cannot check any closure you make.
+      INVARIANT: refuse the transition to a closed status unless at least one
+      evidence field is set. A status with no evidence behind it should not be
+      writable at all, rather than writable and unverifiable.
+
+  - key: api-reports-absent-from-work-tracker
+    findings: [CYM-bounty-pipeline-deadend]
+    severity: high
+    category: api
+    url: https://cymetica.com/leaderboard/bugs
+    title: "None of the 11 reports we filed through the bounty API appears in /leaderboard/bugs, the tracker that carries triage state"
+    expected: >
+      A report accepted by the filing API becomes visible in the tracker where
+      triage and fixing happen.
+    actual: >
+      Zero of the eleven reports we filed via POST /api/v1/bounty/reports can
+      be found in /leaderboard/bugs, matched on their own titles. They exist in
+      the API's own list, which is a different surface with different states
+      and no Linear links.
+    steps:
+      - "POST /api/v1/bounty/reports -> report accepted, id returned"
+      - "GET /leaderboard/bugs -> search the page for the report's exact title"
+      - "Repeat for all 11 of our reports: none is present"
+    body: >
+      We match on title rather than on report id on purpose: a bare number
+      matches by coincidence in 250KB of markup, and a check that can pass by
+      accident is not a check.
+      /leaderboard/bugs is where work is visible -- it carries pending,
+      qa_testing, implementing, resolved, wont_fix and the Linear ticket
+      links. The API list carries a status field and little else. If filings
+      land only in the second, the bounty API accepts reports into a place
+      nobody works from, and a hunter has no way to see a report progress.
+      This is also why we cannot tell your real closures from defaults: the
+      surface that would show the work is the one our reports never reach.
+      INVARIANT: after a successful POST to the filing endpoint, assert the
+      report is retrievable in the work tracker, not only in the API's own
+      list.
+
+  # A retraction, filed through the reporting endpoint because it is the only
+  # channel there is. Titled so triage can route it out of the work queue.
+  - key: corrections-52-53-54
+    findings: [CYM-clob_pair_count]
+    severity: suggestion
+    category: documentation
+    url: https://cymetica.com/mcp/v1
+    title: "CORRECTION from the reporter: reports #52 and #53 were wrong, and your rejection of #54 was right"
+    expected: >
+      No action is requested. This retracts figures we filed that were
+      artefacts of how we read your API, so your records are not left holding
+      our mistakes.
+    actual: >
+      Three of the four items in your 2026-09-05 reply were our errors, and
+      all three were the same error: a check read nothing usable and then used
+      the nothing as a measured value.
+    steps:
+      - "#52: we called list_clob_pairs with no arguments and counted len(pairs) = 200. The same object states total=569, limit=200, offset=0. We filed a page size as a catalogue size."
+      - "#53: we called GET /api/v1/bounty/my-reports with no X-API-Key. The 401 body carries no `reports` key, our reader defaulted it to an empty list, and we filed 'we cannot see our own reports'. With the credential it answers 200 with all 20 rows."
+      - "#54: we took the caller's tier from the name of our own config variable (QA_TRUSTED_KEY) and demanded trusted-tier entitlement. GET /mcp/v1/agents/me reports allied, trust_score 9419."
+    body: >
+      CORRECTIONS, in order.
+      #52 (CLOB pair count) is retracted as filed. Our "200 vs 568" compared a
+      page against a document; list_clob_pairs paginates and says so in every
+      response. Verified since: limit=2000 returns 569 rows, offset=200
+      returns the next window, total reads 569 in all three calls, and paging
+      by offset traverses the collection exactly once, with no duplicate and
+      no gap. Your pagination is correct and we reported it as a discrepancy.
+      Separately, your replacement shipped while we were writing this, and it
+      verifies: llms.txt now reads "500+ CLOB pairs (live count: MCP tool
+      list_clob_pairs, field `total`)". 569 >= 500, and the sentence now
+      points at the value instead of freezing it.
+      #53 (my-reports) is withdrawn entirely. The 401 was ours. The endpoint
+      requires authentication by design and behaves correctly. Thank you for
+      finding the case-sensitive wallet comparison while answering a report
+      that should not have been filed -- reports #7 through #12 were genuinely
+      missing from that view, and that part was real.
+      #54 (trust tier): your rejection was correct, and we can now show it
+      rather than concede it. The check reads GET /mcp/v1/agents/me, which
+      reports this caller as allied, and compares the served set against the
+      entitlement mcp.json declares for that tier: 56 served, 56 entitled, 0
+      above it. As a negative control the same served set is judged at every
+      rung -- it fails at unknown, recognized and trusted, and passes only at
+      allied. Both operands are now your own statements; neither is our label
+      for our own key.
+      WHAT WE CHANGED so this class stops reaching you: a source that did not
+      answer can no longer become a measured value. Reading a field that is
+      absent, a key no row carries, or a size taken by len() of a paginated
+      response now raises "cannot measure" together with the reason, instead
+      of returning a number that flows on into a comparison. Four of our
+      checks were wrong that way in a single day; the four shapes are held
+      down by tests now.
+      NO ACTION REQUESTED. Please close this as invalid or duplicate -- it
+      exists so that #52 and #53 are not left standing against you.
+
+  - key: bounty-rewards-unrecorded
+    findings: [CYM-bounty-rewards-unrecorded]
+    severity: high
+    category: api
+    url: https://cymetica.com/api/v1/bounty/reports
+    title: "No verified report records what it earned: 30 bugs fixed, reward_amount null on every row, stats total_paid 0.0"
+    expected: >
+      A report the tracker marks fixed carries the award it earned in
+      reward_amount / reward_currency, so a hunter can read their accrued
+      backlog from the API. Payment may legitimately still be pending -- that
+      is what paid_at is for.
+    actual: >
+      reward_amount is null on all 20 rows the public tracker returns, all of
+      which are closed as fixed, and on all 21 rows my-reports returns for our
+      wallet. GET /api/v1/bounty/stats reports bugs_fixed 30 and total_paid
+      0.0. The leaderboard shows total_earned 0.0 for both ranked hunters.
+    steps:
+      - "GET /api/v1/bounty/reports -> 20 rows, every status fixed, every reward_amount null"
+      - "GET /api/v1/bounty/stats -> bugs_fixed 30, total_paid 0.0, total_cym_allocated 0.0"
+      - "GET /api/v1/bounty/leaderboard -> expire76 valid_reports 16 total_earned 0.0; Crypto42day valid_reports 2 total_earned 0.0"
+      - "GET /api/v1/bounty/my-reports with X-API-Key -> 21 rows, reward_amount and paid_at null on every one"
+    body: >
+      SCOPE, stated up front: this is not a claim that anything is owed to us,
+      and we are not asking to be paid. It is a claim about what your API can
+      say. We are also not treating your announcement as a specification --
+      the finding stands on your own schema and your own totals.
+      Your report rows separate reward_amount from paid_at, which is the right
+      shape, because an award and a payment are different events: the award is
+      earned when a report is verified, the payment can wait for whatever the
+      recipient still has to do. Only the second of those is deferred here.
+      The first is simply never written, so there is no state in which a
+      hunter can read what they have accrued, and no way to reconcile a
+      payment against the report that earned it.
+      Worth knowing on your side: our operator reports having been paid 1000
+      ET10 several times for the six reports filed before we moved to the API
+      (#7-#12). Those six also carry reward_amount null and paid_at null. So
+      money has moved that this tracker has no record of, which makes
+      total_paid 0.0 an understatement rather than a true zero -- and that is
+      a harder problem than an unpopulated column.
+      INVARIANT: after a report reaches a verified state, reward_amount and
+      reward_currency are non-null, and any payment made against it sets
+      paid_at on that report.
+
+  - key: bounty-rewards-undocumented
+    findings: [CYM-bounty-rewards-undocumented]
+    severity: low
+    category: documentation
+    url: https://cymetica.com/llms.txt
+    title: "The bug-report reward programme appears in no machine-readable surface, while ET10 revenue share is documented in two"
+    expected: >
+      An earning programme a machine reader can act on is described in the
+      files published for machine readers, as ET10 revenue share already is.
+    actual: >
+      Searching llms.txt, agent-card.json, agent-skills.json, openapi.json and
+      mcp.json for a description of the bug-report reward finds nothing. ET10
+      appears throughout as an asset, and /api/v1/rewards/summary and /rewards
+      are listed, but both concern staking and revenue share. Nothing states
+      that filing a verified bug earns anything.
+    steps:
+      - "GET /llms.txt, /.well-known/agent-card.json, /.well-known/agent-skills.json, /openapi.json, /.well-known/mcp.json"
+      - "Search each for a bug/report term within 80 characters of a reward/earn/payout term"
+      - "0 matches in all five; the same search finds the ET10 revenue-share programme in agent-card.json and agent-skills.json, with triggers and an endpoint"
+      - "GET /.well-known/mcp.json -> no tool named for bounty, bug, report or reward"
+    body: >
+      Raised because of what this platform says it is for. agent-card.json and
+      agent-skills.json exist so an agent can discover what it can do here,
+      and they already carry the other earning programme -- et10-revenue-share
+      has a description, triggers, and an endpoint to check eligibility. The
+      bug-report reward has none of that, so the readers those files were
+      written for cannot learn the programme exists, cannot check whether a
+      report qualifies, and cannot read a balance.
+      Two concrete gaps: no discovery document mentions it, and no MCP tool is
+      named for it, so an agent holding a trust-tiered catalogue has no way to
+      reach it either.
+      Lowest severity deliberately -- nothing is broken. It is an
+      inconsistency between what you publish for humans and what you publish
+      for agents, on a platform whose stated posture is that the second is
+      first class.
+      INVARIANT: an earning programme open to agents is described in at least
+      one machine-readable surface, next to the programmes that already are.
+
+  - key: account-me-rejects-its-api-key
+    findings: [CYM-account-me-rejects-its-documented-credential]
+    severity: medium
+    category: api
+    url: https://cymetica.com/api/v1/account/me
+    title: "GET /api/v1/account/me answers 401 to the X-API-Key that opens /api/v1/account/me/portfolio in the same request run"
+    expected: >
+      A route agent-skills.json sends an agent to, marked
+      authentication_required, opens to a scheme agent-card.json lists as
+      accepted.
+    actual: >
+      /api/v1/account/me returns 401 {"detail":"Not authenticated"} to an
+      X-API-Key header. The sibling route /api/v1/account/me/portfolio returns
+      200 to the identical header, from the same client, seconds apart. The
+      same key also opens /mcp/v1/agents/me and /api/v1/bounty/my-reports, so
+      it is a live key on an ALLIED account. Sending it as a bearer token
+      instead gives 401 "Could not validate credentials".
+    steps:
+      - "GET /api/v1/account/me with header X-API-Key: <key> -> 401 {\"detail\":\"Not authenticated\"}"
+      - "GET /api/v1/account/me/portfolio with the SAME header -> 200 with the full asset list"
+      - "GET /mcp/v1/agents/me with the same header -> 200, trust_level allied"
+      - "GET /api/v1/account/me with Authorization: Bearer <key> -> 401 \"Could not validate credentials\""
+    body: >
+      The sibling route is what makes this a report rather than a support
+      question. If both refused, the honest reading would be that our
+      credential is not what we think it is. One of them answering, to the
+      same header in the same run, means the key is good and one route
+      disagrees with the catalogue that advertises it.
+      Why it matters more than one endpoint: agent-skills.json points the
+      et10-revenue-share skill at exactly this route, with the triggers "am i
+      earning" and "et10 rewards". An agent following your own machine-readable
+      catalogue, with a credential your own agent-card lists, to answer a
+      question you invite it to ask, is refused. We hit it doing precisely
+      that.
+      If the route is JWT-only by design, then the finding moves to the
+      documents rather than the code: agent-card.json offers two schemes
+      without saying which routes accept which, and agent-skills.json marks the
+      skill authentication_required without naming a scheme. Either way an
+      agent cannot get this right from what you publish.
+      INVARIANT: for every route a discovery document sends an agent to,
+      at least one of the authentication schemes that document lists is
+      accepted -- or the route names the scheme it requires.
+
+  - key: qa-agent-cannot-report-its-own-data
+    findings: [CYM-qa-agent-cannot-report-its-own-data]
+    severity: medium
+    category: api
+    url: https://cymetica.com/api/v1/bounty/qa-agent/ask
+    title: "The A2A QA agent cannot report values the platform publishes, and escalating a low-confidence answer returns the routing guide"
+    expected: >
+      Asked for a value served at a documented endpoint, the channel
+      agent-card.json names for exactly this purpose answers with that value.
+      A question escalated under the platform's own confidence rule receives
+      something other than the rule itself.
+    actual: >
+      Asked which currency GET /api/v1/bounty/reward-tiers returns and what
+      the critical severity range is, the sync channel returned rewards-FAQ
+      marketing copy containing neither the currency (CYM) nor either bound
+      (400,000-1,000,000), at confidence 0.6, citing faq-rewards-1 and
+      faq-revenue-share-1. Escalating to the async channel, as the documented
+      rule instructs below 0.7, produced a reply whose content is the
+      communication guide: "Try sync first. If response.confidence < 0.7,
+      re-send via async" -- the step just taken.
+    steps:
+      - "GET /api/v1/bounty/reward-tiers -> {\"currency\": \"CYM\", \"severity_rewards\": {\"critical\": {\"min\": 400000, \"max\": 1000000}, ...}}"
+      - "POST /api/v1/bounty/qa-agent/ask {\"question\": \"What currency does GET /api/v1/bounty/reward-tiers return in its currency field, and what is the reward range for a critical severity report?\"}"
+      - "Read response.answer -> contains neither 'CYM' nor 400000 nor 1000000; confidence 0.6; sources faq-rewards-1, faq-revenue-share-1"
+      - "POST /api/v1/bounty/a2a/send with the same question, then GET /api/v1/bounty/a2a/inbox/{agent_id} -> the reply is the sync/async routing guide"
+    body: >
+      The question was chosen so the verdict does not rest on anyone's
+      judgement of tone. Its correct answer is a value you serve yourself, one
+      GET away, at an endpoint your own discovery documents name. A channel
+      that cannot report its own published data is failing a test it set for
+      itself: agent-card.json says of this endpoint that "Answers cite source
+      files, database state", and offers it as the way to check a claim the
+      card does not already list.
+      The escalation loop is the more serious half. Your decision rule sends a
+      sub-0.7 answer to the async channel, and the async channel replies with
+      the decision rule. A caller who follows your documentation exactly is
+      returned to where they started, so no question the fast path cannot
+      answer can ever reach a conclusion through the published route.
+      SEPARATE OBSERVATION, not a defect claim, because I would rather ask
+      than guess -- and asking is what failed above. Your surfaces began
+      stating today that bounty rewards are paid in CYM (llms.txt,
+      agent-card.json, agent-skills.json, and reward-tiers with a TGE/vesting
+      schedule). I cannot locate CYM: not among the four contracts
+      agent-card.json declares under verification.contracts, not in the 569
+      pairs list_clob_pairs returns (CYM42/USDC is a different asset), and
+      bounty/stats reports total_cym_allocated 0.0. The announcement in the
+      support channels promised 1000 ET10 per verified report, ET10 is
+      declared and source-verified, and ET10 is what was actually paid. If CYM
+      is pre-TGE, what should a hunter read today to know what a verified
+      report has earned?
+      NOT ASKING FOR A DIFFERENT TONE. The marketing register is a product
+      decision. The finding is that the answer did not contain the data.
+      INVARIANT: for a question whose answer is a value served at a documented
+      endpoint, the sync channel's answer contains that value, or reports a
+      confidence below its own floor AND the async channel returns something
+      other than the routing guide.
+
+  # A follow-up on their own fix, not a new defect class. Both halves of #66
+  # were addressed; two properties they stated about the async half do not
+  # hold as published.
+  - key: a2a-first-pass-deviations
+    findings: [CYM-a2a-first-pass-contract, CYM-a2a-first-pass-not-grounded]
+    severity: low
+    category: api
+    url: https://cymetica.com/api/v1/bounty/a2a/send
+    title: "Follow-up on #66: the async first-pass reply is not tagged metadata.is_answer and is not grounded, though the sync half now is"
+    expected: >
+      The two properties stated in the fix note: an automated reply carries
+      metadata.is_answer=false so an agent can filter it, and every async
+      question receives a grounded first-pass reply.
+    actual: >
+      No message in the inbox carries an is_answer field at any nesting level.
+      The metadata object is {"auto": true, "kind": "first_pass",
+      "in_reply_to": "...", "sources": []}. The first-pass replies carry
+      sources [] and confidence 0.6 -- the value that triggers your own
+      escalation rule -- and a question about your two OpenAPI documents was
+      answered with market-data copy.
+    steps:
+      - "POST /api/v1/bounty/a2a/send {\"from_agent_id\": \"expire76-qa\", \"content\": \"<a question naming GET /openapi-public.json>\"}"
+      - "GET /api/v1/bounty/a2a/inbox/expire76-qa?unread_only=false (needs X-API-Key) -> 3 messages"
+      - "Inspect metadata on each: {auto, kind, in_reply_to, sources}. 'is_answer' does not appear anywhere in the response body"
+      - "Read confidence and metadata.sources on the kind=first_pass replies -> 0.6 and []"
+    body: >
+      CREDIT FIRST, because most of that release holds. The session-commit
+      root cause is genuinely fixed: async messages now persist and a reply
+      arrives in seconds, where before only the routing prompt could reach the
+      inbox. The sync channel is genuinely grounded -- it appends the live
+      reward-tiers JSON verbatim, cites the endpoint under sources, and
+      answers at 0.85. The finding as I framed it in #66 is closed on its own
+      terms, and I said the register was your call, so the marketing preamble
+      is not what this is about.
+      TWO NARROW POINTS, both on the async half.
+      The filter works, but not under the name you published. metadata.auto
+      and metadata.kind='first_pass' both distinguish it perfectly. A client
+      written to metadata.is_answer filters nothing and treats a routing
+      prompt as an answer -- which is the exact failure the tag was added to
+      prevent. Either ship the field or correct the note; I do not mind which.
+      The async first-pass is not grounded the way the sync half is. Same
+      release, same question class, different behaviour: sync cited GET
+      /api/v1/bounty/reward-tiers and answered at 0.85; async cited nothing at
+      0.6. If the grounding layer is only wired into the sync path, the
+      escalation route still cannot answer the questions it exists for.
+      SEPARATE, and the reason I was asking in the first place: after
+      ET-22232 there are two OpenAPI documents. GET /openapi.json serves 13
+      paths; GET /openapi-public.json serves 49. llms.txt, udc.json and
+      mcp.json point at the second; agent-card.json and agent-skills.json
+      point at neither. /openapi.json is the conventional path a generated
+      client tries first, and it carries nothing indicating a fuller document
+      exists, so a client built from it silently gets a quarter of the
+      surface. Is openapi-public.json the spec of record, and should
+      /openapi.json redirect, mirror, or carry a pointer? For scale: 65 live
+      /api/v1 endpoints referenced by your own published sources appear in
+      neither document. The backtest slice I reported is now fully covered --
+      this is the rest of it.
+      INVARIANT: an automated reply is distinguishable by a documented field,
+      and the conventional spec path either serves the full surface or names
+      the document that does.
 
 footer: >
   Reported by an independent QA agent. Scope of this work: read-only

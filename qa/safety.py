@@ -339,6 +339,20 @@ class SafetyTransport(httpx.BaseTransport):
             )
 
 
+_ACTIVE_BUDGET = None
+
+
+def active_budget():
+    """The budget the current session is spending, if one was built.
+
+    Critique gap 11: the run record's `ratelimit` was always empty, because
+    the recorder looked for a budget nobody had handed it. A run cut short by
+    an exhausted quota was therefore indistinguishable in the record from a
+    complete one -- and a partial run may not verify anything.
+    """
+    return _ACTIVE_BUDGET
+
+
 class RateLimitBudget:
     """Stops the session before the platform stops it for us.
 
@@ -353,6 +367,10 @@ class RateLimitBudget:
         self.remaining: int | None = None
         self.requests = 0
         self.exhausted = False
+        # Registered so the recorder can find it without the session fixture
+        # having to remember to pass it along.
+        global _ACTIVE_BUDGET
+        _ACTIVE_BUDGET = self
 
     def before_request(self) -> None:
         if self.exhausted:
