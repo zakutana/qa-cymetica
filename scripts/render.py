@@ -474,6 +474,20 @@ def build_payload(ledger: dict | None = None, inventory: dict | None = None,
         f"display counts {display_counts} do not sum to {len(rows)} rows"
     )
 
+    # The page does `f.severity.split("-")` and `esc(f.title)` unguarded, so
+    # one row without either renders no findings AT ALL -- a blank list in the
+    # browser with nothing to say why. The fold only guarantees them at
+    # creation, via setdefault inside the candidate loop, so a row seeded by
+    # the migration without one would never acquire it. Fail here instead,
+    # loudly and with the row named: a render that stops is diagnosable, a
+    # page that silently empties is not.
+    for finding in findings:
+        for field in ("severity", "title"):
+            assert finding.get(field), (
+                f"{finding['id']} has no {field}, which the page cannot draw "
+                f"around -- the whole findings list would come out empty"
+            )
+
     by_severity: dict[str, int] = {}
     for finding in findings:
         if finding["display_state"] not in ("VERIFIED FIXED", "WITHDRAWN"):
