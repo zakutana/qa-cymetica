@@ -384,6 +384,16 @@ def build_payload(ledger: dict | None = None, inventory: dict | None = None,
                 if shown not in ("WITHDRAWN", "SUPERSEDED") else None
             ),
             "last_checked_at": (adjudicated or {}).get("at"),
+            # Rule 8's other half. The fold marks every row stale when a read
+            # of their tracker fails, so that "they have said nothing since"
+            # is never confused with "we could not hear them" -- and until
+            # now nothing displayed it, which made the mark a write nobody
+            # read. A terminal row is excluded for the same reason
+            # not_checked_in is: nothing about their tracker can change it.
+            "stale_from": (
+                (row.get("filing") or {}).get("stale_from")
+                if shown not in ("WITHDRAWN", "SUPERSEDED") else None
+            ),
             # Critique gap 5: content carried over from the hand-written
             # ledger quotes figures frozen at their last failing values.
             #
@@ -820,6 +830,14 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:15.0px; max-wid
   font-family:var(--mono); font-size:11.5px; padding:2px 6px; border-radius:4px;
   background:transparent; color:var(--text-faint);
   border:1px dashed var(--line); white-space:nowrap; cursor:help;
+}
+/* Louder than .unchecked on purpose. "We did not re-run our check" is routine
+   on a narrow sweep; "we could not hear them" means the vendor half of every
+   row on the page is older than it looks. */
+.unheard {
+  font-family:var(--mono); font-size:11.5px; padding:2px 6px; border-radius:4px;
+  background:transparent; color:var(--warn);
+  border:1px dashed var(--warn); white-space:nowrap; cursor:help;
 }
 
 /* ---------- legend: two axes, then the grid they make ---------- */
@@ -1395,6 +1413,7 @@ function finding(f) {
           ${f.filed && f.filed.length ? `<span class="filed">${f.filed.map(x=>"#"+x.report_id).join(", ")}</span>` : ""}
           ${f.unmeasured ? `<span class="unmeasured" title="The wording and numbers here are from the day this was written; no run since has confirmed they still hold.">figures not re-measured</span>` : ""}
           ${f.not_checked_in ? `<span class="unchecked" title="This sweep ran a narrower selector and did not include this check. The state and figures shown are the ones the last run that did include it left behind.">not re-checked${f.last_checked_at ? " &middot; last " + esc(when(f.last_checked_at)) : ""}</span>` : ""}
+          ${f.stale_from ? `<span class="unheard" title="The last attempt to read their bug tracker did not succeed, so what they say here is as of the last clean read and may have moved since. A failed read is not an empty one: nothing on the vendor's side was allowed to change on the strength of it.">their side unread &middot; since ${esc(when(f.stale_from))}</span>` : ""}
           <span class="newreply" data-newreply hidden title="They replied since you last looked"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="2.2" y="4.6" width="15.6" height="11" rx="2"/><path d="M2.6 6.2 10 11.4l7.4-5.2"/></svg><span class="sr-only">new reply</span></span>
         </div>
       </span>

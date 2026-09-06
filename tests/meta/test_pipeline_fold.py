@@ -713,3 +713,44 @@ def test_a_journal_only_fold_keeps_the_run_that_last_judged_the_rows():
 
     # Nothing to carry is still nothing: a first fold must not invent one.
     assert "run_id" not in fold(None, events=[])
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_failed_read_marks_every_row_and_a_clean_one_clears_it():
+    """Rule 8's mark has to be able to go out again.
+
+    A failed read of their tracker marks every row stale, so "they have said
+    nothing since" is never read as "we could not hear them". It was written
+    and never cleared: the first non-ok read in the journal's history would
+    have marked every row in every fold from then on, forever. That is the
+    badge nobody can clear -- the same defect the reply dating in render.py
+    was fixed for, one axis over. It had never fired only because all 33
+    vendor_read events so far are ok.
+
+    A read that records no class at all speaks neither way: it is not evidence
+    that the tracker was readable, and not evidence that it was not.
+    """
+    from qa.fold import fold
+
+    state = ledger(row("CYM-a", check_state="REPRODUCING", checks=[CHECK_A]))
+    read = lambda at, klass: {                                    # noqa: E731
+        "type": "vendor_read", "at": at, "by": "agent",
+        "source": "scripts/bounty.py", "klass": klass,
+    }
+
+    def stale(events):
+        return fold(state, events=events)["findings"]["CYM-a"]["filing"].get("stale_from")
+
+    bad = read("2026-09-05T10:00:00+00:00", "unauthorized")
+    good = read("2026-09-05T11:00:00+00:00", "ok")
+
+    assert stale([bad]) == "2026-09-05T10:00:00+00:00", "a failed read did not mark the row"
+    assert stale([bad, good]) is None, "a clean read afterwards did not clear the mark"
+    assert stale([good]) is None
+    assert stale([good, bad]) == "2026-09-05T10:00:00+00:00", \
+        "a failure after a clean read must mark again"
+
+    unknown = {"type": "vendor_read", "at": "2026-09-05T12:00:00+00:00",
+               "by": "agent", "source": "scripts/bounty.py"}
+    assert stale([bad, unknown]) == "2026-09-05T10:00:00+00:00", \
+        "a classless read cleared a mark it is no evidence against"

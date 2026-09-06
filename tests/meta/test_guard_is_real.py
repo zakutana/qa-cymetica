@@ -183,14 +183,53 @@ def test_probe_only_endpoints_refuse_mutate_even_when_enabled(evidence_store, pa
 
 @qa(component="meta.guard", tier=SafetyTier.SAFE, surface="meta")
 def test_mutate_against_unlisted_host_is_blocked(evidence_store):
+    """The host allowlist, on an endpoint that reaches it.
+
+    Not clob/orders: the probe_only floor is checked before the host, so an
+    endpoint behind that floor tests the floor and never the allowlist. The
+    bounty filing channel is the one write this project performs on purpose
+    and is deliberately not probe_only, which makes it the right subject --
+    and the guard still refuses before anything leaves the process.
+    """
     client = _mutating_client(
         evidence_store, mutate_enabled=True, base_url="https://evil.example.com"
     )
     try:
         with as_mutate_tier(), pytest.raises(SafetyViolation, match="unlisted host"):
-            client.post("/api/v1/clob/orders", json={"side": "buy"})
+            client.post("/api/v1/bounty/reports", json={"title": "x"})
     finally:
         client.close()
+
+
+@qa(component="meta.guard", tier=SafetyTier.SAFE, surface="meta")
+def test_the_money_loop_is_behind_the_probe_only_floor():
+    """components.yaml says probe_only is where money-moving endpoints live.
+
+    Deposit and withdrawal were behind it; the middle leg was not. Cymetica's
+    own trust ladder names the three together -- "the full money loop with
+    your own deposited funds: deposit, spot CLOB trading (REST
+    /api/v1/clob/orders), and withdrawal" -- so an order is the same kind of
+    thing as the two either side of it, and a MUTATE test could have placed
+    one with --allow-mutate. None does today, which is exactly why this is
+    worth pinning: the gap was a trap for whoever wrote the first.
+    """
+    from qa.safety import EndpointRegistry
+
+    registry = EndpointRegistry.load()
+    must = {
+        "clob.orders", "clob.order_singular", "arena.order",
+        "exchange.buy", "exchange.orders", "agents.clone", "bots.clone",
+        "funding.deposit", "funding.withdraw",
+    }
+    by_id = {rule.id: rule for rule in registry.rules}
+    missing = sorted(i for i in must if i in by_id and not by_id[i].probe_only)
+    assert not missing, (
+        f"money-moving endpoints reachable by a MUTATE test: {missing}. "
+        f"Add `probe_only: true`, or argue in components.yaml why this one is "
+        f"not spending anything."
+    )
+    assert not (must - set(by_id)), \
+        f"named in this guard but no longer declared: {sorted(must - set(by_id))}"
 
 
 @qa(component="meta.guard", tier=SafetyTier.SAFE, surface="meta")

@@ -152,7 +152,15 @@ def admissibility(run: dict) -> Verdict:
         blocks_v.append("git_dirty")
     if not run.get("prereg_id"):
         blocks_v.append("no_prereg")
-    elif run.get("prereg_commit") and run["prereg_commit"] != run.get("git_head"):
+    elif run.get("prereg_commit") != run.get("git_head"):
+        # Absent is a mismatch, not a pass. Guarding this with
+        # `if run.get("prereg_commit") and ...` meant a record naming a
+        # preregistration but declining to say which commit it was tagged at
+        # sailed through to level V, and run_integrity's git re-resolution had
+        # the same guard, so nothing checked the tag either. The gap 1
+        # hardening closed EDITING two strings in a run record; deleting one
+        # bought the same verification. Falsy-versus-absent, in the one place
+        # this module calls the way in.
         blocks_v.append("prereg_commit_mismatch")
 
     notes = [f"identity_absent:{name}"
@@ -202,9 +210,18 @@ def run_integrity(run: dict, path: Path | None = None,
         except (subprocess.CalledProcessError, OSError):
             problems.append(f"no tag prereg/{prereg} in this repository")
         else:
-            if run.get("prereg_commit") and run["prereg_commit"] != resolved:
+            claimed = run.get("prereg_commit")
+            if not claimed:
+                # The tag exists but the record declines to name a commit, so
+                # there is nothing to corroborate against it. Silence here is
+                # not agreement.
                 problems.append(
-                    f"the record says prereg_commit {run['prereg_commit'][:12]} "
+                    f"the record names {prereg} but carries no prereg_commit, "
+                    f"so the tag it claims cannot be checked against it"
+                )
+            elif claimed != resolved:
+                problems.append(
+                    f"the record says prereg_commit {claimed[:12]} "
                     f"but prereg/{prereg} resolves to {resolved[:12]}"
                 )
 

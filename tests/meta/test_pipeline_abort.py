@@ -38,7 +38,21 @@ GUARD_TESTS = REPO / "tests" / "meta" / "test_guard_is_real.py"
 PINNED = {
     "conftest.py:42-117": "0aeb83fba58d3846b25311fa7e4e5e9fb3232adcddf8c62b75c4a53c8158cd3c",
     "conftest.py:123-212": "d81006935096100794735750341c49d76393dd82d2f224dd55a9a0ce874e7454",
-    "test_guard_is_real.py": "7e5861339ca30b73150fd59b0666b57ea056d6bfe060b40cf6c13ef06ed3b444",
+    # Re-derived 2026-09-06, deliberately, for two edits that go the way this
+    # pin exists to protect:
+    #
+    #   * the money-loop endpoints gained `probe_only: true` in
+    #     components.yaml, which made test_mutate_against_unlisted_host_is_
+    #     blocked raise on the floor instead of the host allowlist -- so it
+    #     was moved onto the bounty filing channel, which is deliberately not
+    #     probe_only and therefore actually reaches the allowlist. The old
+    #     subject tested the floor twice and the allowlist never.
+    #   * test_the_money_loop_is_behind_the_probe_only_floor was added, so
+    #     the floor cannot quietly come off again.
+    #
+    # Both add enforcement. A future re-derivation that removes any is the
+    # thing this pin is for: check what changed before recomputing.
+    "test_guard_is_real.py": "2d8eb518bc6328ab6247a5cf9ad373b47423197267dca529f27c3f515f577c06",
 }
 
 
