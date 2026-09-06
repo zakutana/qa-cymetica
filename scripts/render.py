@@ -899,28 +899,109 @@ h4.sec {
   background:var(--surface-2); border-radius:6px; padding:11px 13px;
   border-left:2px solid var(--accent); font-size:14.7px;
 }
+/* ---------- tabs, the bell, and the live indicator ----------
+   Added when the console moved from a published snapshot to a page held open
+   in a tab all day. Two things follow from that: it has to say whether it is
+   live, and it has to be able to tell you something arrived while you were
+   looking elsewhere. */
+.tabs { display:flex; gap:4px; margin:26px 0 0; border-bottom:1px solid var(--line); }
+.tabs button {
+  background:none; border:0; border-bottom:2px solid transparent; color:var(--text-dim);
+  font:inherit; font-size:15px; padding:10px 16px; cursor:pointer; margin-bottom:-1px;
+}
+.tabs button[aria-selected="true"] { color:var(--text); border-bottom-color:var(--accent); }
+.tabs button:focus-visible { outline:2px solid var(--accent); outline-offset:-2px; }
+.tabs .tab-n {
+  display:inline-block; margin-left:7px; padding:1px 7px; border-radius:9px;
+  background:var(--none-bg); color:var(--text-dim); font-family:var(--mono); font-size:12px;
+}
+.panel[hidden] { display:none; }
+
+.mast { position:relative; }
+.bell {
+  position:absolute; top:0; right:0; background:none; border:1px solid var(--line);
+  border-radius:9px; color:var(--text-dim); cursor:pointer; font-size:17px;
+  line-height:1; padding:8px 10px;
+}
+.bell:hover { color:var(--text); border-color:var(--text-faint); }
+.bell:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+.bell-n {
+  position:absolute; top:-6px; right:-6px; min-width:18px; padding:0 5px;
+  background:var(--bad); color:#fff; border-radius:9px;
+  font-family:var(--mono); font-size:11px; line-height:18px; font-weight:600;
+}
+.bell-n[hidden] { display:none; }
+.inbox {
+  position:absolute; top:44px; right:0; width:min(460px, 88vw); z-index:40;
+  background:var(--card); border:1px solid var(--line); border-radius:12px;
+  box-shadow:0 18px 40px rgba(0,0,0,.45); padding:6px; text-align:left;
+}
+.inbox[hidden] { display:none; }
+.inbox h4 { margin:8px 10px 6px; font-size:12px; letter-spacing:.08em;
+  text-transform:uppercase; color:var(--text-faint); }
+.inbox button.item {
+  display:block; width:100%; text-align:left; background:none; border:0;
+  color:var(--text); font:inherit; padding:9px 10px; border-radius:8px; cursor:pointer;
+}
+.inbox button.item:hover { background:var(--none-bg); }
+.inbox .item-t { display:block; font-size:14px; }
+.inbox .item-m { display:block; font-size:12.5px; color:var(--text-dim); margin-top:3px; }
+.inbox .empty { padding:14px 10px; color:var(--text-dim); font-size:14px; }
+.inbox .seen {
+  display:block; width:100%; text-align:center; background:none; border:0;
+  border-top:1px solid var(--line); margin-top:4px; padding:9px;
+  color:var(--text-dim); font:inherit; font-size:13px; cursor:pointer;
+}
+.inbox .seen:hover { color:var(--text); }
+
+.newreply {
+  font-family:var(--mono); font-size:12px; padding:1px 7px; border-radius:9px;
+  background:var(--bad-bg); color:var(--bad);
+}
+.live {
+  font-family:var(--mono); font-size:12px; color:var(--text-faint);
+  display:inline-flex; align-items:center; gap:6px;
+}
+.live i { width:7px; height:7px; border-radius:50%; background:var(--text-faint); }
+.live.on i { background:var(--ok); }
+.live.off i { background:var(--warn); }
+
 @media (prefers-reduced-motion: reduce) { * { transition:none!important; animation:none!important; } }
 </style>
 
 <div class="wrap">
   <header class="mast">
     <h1>Cymetica QA Console</h1>
+    <button class="bell" id="bell" aria-label="Replies from Cymetica" aria-expanded="false">
+      &#128276;<span class="bell-n" id="bellN" hidden></span>
+    </button>
+    <div class="inbox" id="inbox" hidden></div>
     <p class="sub">Independent verification of the Cymetica / EventTrader API, MCP and
     discovery surfaces. Every number below was measured, not reported.</p>
     <div class="meta" id="meta"></div>
   </header>
 
+  <nav class="tabs" id="tabs">
+    <button data-tab="overview" aria-selected="true">Platform</button>
+    <button data-tab="findings" aria-selected="false">Findings
+      <span class="tab-n" id="tabN"></span></button>
+  </nav>
+
+  <section class="panel" id="panel-overview">
   <div class="triage" id="triage"></div>
 
   <div id="map"></div>
+  </section>
 
-  <h2 class="group" style="margin-top:46px">Findings</h2>
+  <section class="panel" id="panel-findings" hidden>
+  <h2 class="group" style="margin-top:26px">Findings</h2>
   <p class="group-note">Everything found so far, including defects in the platform's own
   documentation. Open one to read the exact correspondence sent about it. Nothing here is
   marked fixed &mdash; only <em>verified against a named surface, at a named time, by a
   named check</em>.</p>
   <div class="filters" id="filters"></div>
   <div id="findings"></div>
+  </section>
 
   <div class="note">
     <h3>How to read this page</h3>
@@ -996,6 +1077,27 @@ h4.sec {
 <script>
 const D = JSON.parse(document.getElementById("data").textContent);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+// localStorage is a convenience here, never state. A private window, a
+// browser set to block site data, or a thumbnailer will throw on access, so
+// every read falls back to its default and every write may fail silently.
+function readStore(key, dflt) {
+  try { const v = localStorage.getItem(key); return v === null ? dflt : v; }
+  catch (_) { return dflt; }
+}
+function writeStore(key, value) {
+  try { localStorage.setItem(key, String(value)); } catch (_) {}
+}
+
+// The newest thing THEY said on a row, as epoch ms; 0 when they have said
+// nothing. An unparseable timestamp returns now, so it reads as new rather
+// than silently as already seen -- this must never hide a reply.
+function newestFromThem(f) {
+  const times = (f.thread || [])
+    .filter(m => m && m.who && m.who !== "us")
+    .map(m => { const t = Date.parse(m.at); return Number.isNaN(t) ? Date.now() : t; });
+  return times.length ? Math.max.apply(null, times) : 0;
+}
 
 // "PASSING (UNPINNED)" -> "s-passing-unpinned". The old version replaced only
 // spaces, so the class came out as s-passing-(unpinned) -- parentheses are not
@@ -1181,7 +1283,9 @@ function finding(f) {
   // report number, the internal kind word and the id moved inside: they are
   // reference data, and on the summary line they read as though "#51" and
   // "CYM-skill_ids" were competing names for the same thing.
-  return `<details class="finding" data-sev="${esc(f.severity)}" data-tag="${esc(f.tag)}">
+  return `<details class="finding" id="f-${esc(f.id)}" data-sev="${esc(f.severity)}"
+    data-tag="${esc(f.tag)}" data-state="${esc(f.display_state)}"
+    data-vendor-at="${newestFromThem(f)}">
     <summary>
       <span class="sev ${f.severity.split("-")[0]}">${esc(f.severity.split("-")[0])}</span>
       <span>
@@ -1191,6 +1295,7 @@ function finding(f) {
           <span class="state ${stateClass(f.display_state)}">${esc(f.display_state)}</span>
           ${f.filed && f.filed.length ? `<span class="filed">${f.filed.map(x=>"#"+x.report_id).join(", ")}</span>` : ""}
           ${f.unmeasured ? `<span class="unmeasured" title="The wording and numbers here are from the day this was written; no run since has confirmed they still hold.">figures not re-measured</span>` : ""}
+          <span class="newreply" data-newreply hidden>new reply</span>
         </div>
       </span>
     </summary>
@@ -1359,16 +1464,198 @@ document.getElementById("cardmarks").innerHTML = `
       `<div class="axis-row">${chip}<span>${words}</span></div>`).join("")}
   </div>`;
 
+/* ---------- what is still live, and what is settled ----------
+   A row you have finished with is noise on a page you keep open all day.
+   These four states are finished: two are ours and terminal, two mean the
+   check passes and nobody is waiting on anything. "Open only" is on by
+   default, and the number on the Findings tab is whatever is visible. */
+const SETTLED = new Set(["VERIFIED FIXED", "WITHDRAWN", "SUPERSEDED",
+                         "PASSING, NEVER RAISED"]);
+let openOnly = readStore("qa.openOnly", "1") === "1";
+let activeKind = "all", activeValue = null;
+
+function applyFilters() {
+  let shown = 0;
+  box.querySelectorAll(".finding").forEach(el => {
+    const settled = SETTLED.has(el.dataset.state);
+    const matches = activeKind === "all" ||
+      (activeKind === "sev" ? el.dataset.sev === activeValue
+                            : el.dataset.tag === activeValue);
+    const visible = matches && !(openOnly && settled);
+    el.hidden = !visible;
+    if (visible) shown++;
+  });
+  const toggle = document.getElementById("openOnly");
+  if (toggle) {
+    toggle.setAttribute("aria-pressed", String(openOnly));
+    toggle.textContent = openOnly ? "open only" : "settled shown";
+  }
+  const badge = document.getElementById("tabN");
+  if (badge) badge.textContent = String(shown);
+}
+
+document.getElementById("filters").insertAdjacentHTML("afterbegin",
+  '<button id="openOnly" aria-pressed="true">open only</button><span class="sep"></span>');
+
 document.getElementById("filters").addEventListener("click", e => {
   const btn = e.target.closest("button"); if (!btn) return;
-  document.querySelectorAll("#filters button").forEach(b =>
-    b.setAttribute("aria-pressed", String(b === btn)));
-  const kind = btn.dataset.kind, want = btn.dataset.v;
-  box.querySelectorAll(".finding").forEach(el => {
-    el.hidden = kind !== "all" &&
-      (kind === "sev" ? el.dataset.sev !== want : el.dataset.tag !== want);
+  if (btn.id === "openOnly") {
+    openOnly = !openOnly;
+    writeStore("qa.openOnly", openOnly ? "1" : "0");
+    applyFilters();
+    return;
+  }
+  document.querySelectorAll("#filters button").forEach(b => {
+    if (b.id !== "openOnly") b.setAttribute("aria-pressed", String(b === btn));
   });
+  activeKind = btn.dataset.kind;
+  activeValue = btn.dataset.v || null;
+  applyFilters();
 });
+applyFilters();
+
+/* ---------- two tabs ---------- */
+function showTab(name) {
+  document.querySelectorAll("#tabs button").forEach(b =>
+    b.setAttribute("aria-selected", String(b.dataset.tab === name)));
+  document.getElementById("panel-overview").hidden = name !== "overview";
+  document.getElementById("panel-findings").hidden = name !== "findings";
+  writeStore("qa.tab", name);
+}
+document.getElementById("tabs").addEventListener("click", e => {
+  const b = e.target.closest("button");
+  if (b) showTab(b.dataset.tab);
+});
+showTab(readStore("qa.tab", "overview"));
+
+/* ---------- the bell: what they said while you were looking elsewhere ----------
+   Read state is per browser, not per user: a reading aid, not a fact about
+   the work. So it lives in localStorage and errs toward showing too much. */
+function seenAt() { return Number(readStore("qa.seenAt", "0")) || 0; }
+
+function unread() {
+  return D.findings.map(f => ({ f: f, at: newestFromThem(f) }))
+    .filter(x => x.at > seenAt())
+    .sort((a, b) => b.at - a.at);
+}
+
+function when(ms) {
+  const secs = Math.max(0, (Date.now() - ms) / 1000);
+  if (secs < 90) return "just now";
+  if (secs < 5400) return Math.round(secs / 60) + " min ago";
+  if (secs < 172800) return Math.round(secs / 3600) + " h ago";
+  return new Date(ms).toISOString().slice(0, 10);
+}
+
+function paintBell() {
+  const items = unread();
+  const badge = document.getElementById("bellN");
+  badge.textContent = String(items.length);
+  badge.hidden = items.length === 0;
+  box.querySelectorAll(".finding").forEach(el => {
+    const mark = el.querySelector("[data-newreply]");
+    if (mark) mark.hidden = Number(el.dataset.vendorAt || 0) <= seenAt();
+  });
+  return items;
+}
+
+function paintInbox() {
+  const items = paintBell();
+  const panel = document.getElementById("inbox");
+  if (!items.length) {
+    panel.innerHTML = '<div class="empty">Nothing new since you last looked.</div>';
+    return;
+  }
+  panel.innerHTML = '<h4>Replies from Cymetica</h4>'
+    + items.slice(0, 8).map(function (x) {
+        const filed = (x.f.filed || []).map(r => "#" + r.report_id).join(", ");
+        return '<button class="item" data-go="' + esc(x.f.id) + '">'
+             + '<span class="item-t">' + esc(x.f.title) + '</span>'
+             + '<span class="item-m">' + when(x.at)
+             + (filed ? " &middot; " + filed : "")
+             + " &middot; " + esc(x.f.display_state) + '</span></button>';
+      }).join("")
+    + (items.length > 8
+        ? '<div class="empty">and ' + (items.length - 8) + ' more</div>' : "")
+    + '<button class="seen" data-seen>Mark all as read</button>';
+}
+
+document.getElementById("bell").addEventListener("click", () => {
+  const panel = document.getElementById("inbox");
+  const opening = panel.hidden;
+  if (opening) paintInbox();
+  panel.hidden = !opening;
+  document.getElementById("bell").setAttribute("aria-expanded", String(opening));
+});
+
+document.getElementById("inbox").addEventListener("click", e => {
+  if (e.target.closest("[data-seen]")) {
+    writeStore("qa.seenAt", Date.now());
+    paintInbox();
+    return;
+  }
+  const item = e.target.closest("[data-go]");
+  if (!item) return;
+  const row = document.getElementById("f-" + item.dataset.go);
+  document.getElementById("inbox").hidden = true;
+  document.getElementById("bell").setAttribute("aria-expanded", "false");
+  showTab("findings");
+  if (row) {
+    row.hidden = false;   // a settled row must still be reachable from here
+    row.open = true;
+    row.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+});
+
+document.addEventListener("click", e => {
+  if (!e.target.closest("#inbox") && !e.target.closest("#bell")) {
+    document.getElementById("inbox").hidden = true;
+    document.getElementById("bell").setAttribute("aria-expanded", "false");
+  }
+});
+paintBell();
+
+/* ---------- live updates ----------
+   Only when served by scripts/serve.py. Opened as a file or published as an
+   Artifact there is no /events endpoint, EventSource never connects, and the
+   page stays exactly the static page it always was. One file serves both, and
+   the indicator says which one you are looking at rather than leaving you to
+   wonder whether the numbers are current. */
+(function live() {
+  const dot = document.createElement("span");
+  dot.className = "live";
+  dot.innerHTML = '<i></i><span>static snapshot</span>';
+  const meta = document.getElementById("meta");
+  if (meta) meta.appendChild(dot);
+  // Only localhost runs the server. Trying anywhere else -- opened as a file,
+  // or published as an Artifact -- would fail and leave the indicator saying
+  // "reconnecting", which claims a live page that is never coming. A snapshot
+  // that says it is a snapshot is honest; one that says it is reconnecting is
+  // not.
+  const LOCAL = ["127.0.0.1", "localhost", "[::1]"];
+  if (!window.EventSource || !LOCAL.includes(location.hostname)) return;
+
+  let mine = null;
+  const say = (cls, words) => {
+    dot.className = "live " + cls;
+    dot.innerHTML = '<i></i><span>' + words + '</span>';
+  };
+  let src;
+  try { src = new EventSource("/events"); } catch (_) { return; }
+  src.addEventListener("hello", e => { mine = e.data; say("on", "live"); });
+  src.addEventListener("changed", e => {
+    if (e.data === mine) return;
+    writeStore("qa.scroll", window.scrollY);
+    location.reload();
+  });
+  src.onerror = () => say("off", "reconnecting");
+  window.addEventListener("beforeunload", () => src.close());
+})();
+
+(function restoreScroll() {
+  const y = Number(readStore("qa.scroll", "0")) || 0;
+  if (y > 0) { window.scrollTo(0, y); writeStore("qa.scroll", 0); }
+})();
 </script>
 """
 
