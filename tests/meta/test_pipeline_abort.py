@@ -52,7 +52,17 @@ PINNED = {
     #
     # Both add enforcement. A future re-derivation that removes any is the
     # thing this pin is for: check what changed before recomputing.
-    "test_guard_is_real.py": "2d8eb518bc6328ab6247a5cf9ad373b47423197267dca529f27c3f515f577c06",
+    #
+    # Re-derived again the same day, for the reason this pin would most want
+    # to hear about. Every negative control in that file asked the guard to
+    # refuse something, and its only protection against actually doing it was
+    # the code under test. Mutating the probe_only floor off -- to check this
+    # suite could feel it -- sent a real POST to /api/v1/funding/withdraw with
+    # {"amount": "1"}; anonymous, refused 401, nothing moved, and it left the
+    # machine. The clients there now carry a transport that cannot send. The
+    # mutation is still caught, the message now reads THE GUARD LET IT
+    # THROUGH, and no evidence file is written because nothing is sent.
+    "test_guard_is_real.py": "1399c75aed23f65f66b4e427a4fb37ea1984233de6cf1bd4f08f55f44780879b",
 }
 
 

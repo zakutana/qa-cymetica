@@ -84,7 +84,18 @@ def build_client(
     budget=None,
     base_url: str | None = None,
     timeout: float = DEFAULT_TIMEOUT,
+    inner: httpx.BaseTransport | None = None,
 ) -> httpx.Client:
+    """`inner` replaces the transport underneath the guard. It exists for the
+    guard's own negative controls.
+
+    Those tests assert that a forbidden request is refused, and their only
+    protection against actually making it was the code they are testing. With
+    the probe_only floor mutated off, one of them sent a real POST to
+    /api/v1/funding/withdraw. Giving them a transport that refuses to carry
+    anything means a broken guard fails the test instead of performing the
+    action it was supposed to prevent.
+    """
     headers = {"User-Agent": USER_AGENT, "Accept": "application/json"}
     headers.update(identity.headers())
     if identity.scope != "read":
@@ -93,7 +104,7 @@ def build_client(
         headers["X-API-Key-Scope"] = identity.scope
 
     transport = SafetyTransport(
-        inner=httpx.HTTPTransport(retries=0),
+        inner=inner if inner is not None else httpx.HTTPTransport(retries=0),
         registry=registry,
         evidence=evidence,
         budget=budget,
