@@ -735,6 +735,54 @@ reports:
       and the conventional spec path either serves the full surface or names
       the document that does.
 
+  - key: award-contradicts-its-own-tier
+    findings: [CYM-award-contradicts-its-own-tier]
+    severity: medium
+    category: api
+    url: https://cymetica.com/api/v1/bounty/reports
+    title: "Every awarded report records 1000 ET10 beside an eligible_reward_range of 5,000-1,000,000 CYM for its own confirmed severity"
+    expected: >
+      A report's recorded award is expressed in the currency of the
+      entitlement published on the same row, and falls inside it.
+    actual: >
+      All 20 rows on the public tracker pair reward_currency ET10 with an
+      eligible_reward_range denominated in CYM, and every recorded amount is
+      below the minimum that range publishes for the row's own
+      severity_confirmed. Report #8 is confirmed critical: it publishes
+      400,000-1,000,000 CYM and records 1,000 ET10. Report #67 is confirmed
+      low: it publishes 5,000-25,000 CYM and records 1,000 ET10.
+    steps:
+      - "GET /api/v1/bounty/reports -> 20 rows, all with reward_status awarded"
+      - "On each row compare reward_amount / reward_currency against eligible_reward_range"
+      - "20 of 20 disagree on currency (ET10 vs CYM) and 20 of 20 record an amount below eligible_reward_range.min"
+      - "GET /api/v1/bounty/reward-tiers confirms the ranges are the published policy: currency CYM, critical 400000-1000000"
+    body: >
+      CREDIT FIRST, because the larger half of this landed and it is the part
+      that mattered. Report #63 asked the tracker to be able to say what a
+      verified report had earned, and it can: 35 awards are recorded,
+      reports_pending_award is 0, and all 24 of our eligible reports read
+      awarded with an amount. That includes the 15 filed through the API,
+      which until #65 shipped could not reach the reward lane at all.
+      What arrived with it is a row that contradicts itself. Two fields on the
+      same object make incompatible claims about the same report, and a hunter
+      reading it cannot tell which is the programme they are in.
+      WHICH ONE IS RIGHT IS YOURS TO SAY, NOT OURS, and this check does not
+      assume. Both readings are coherent: the flat 1,000 ET10 matches the
+      announcement in the support channels and matches what has actually been
+      paid, in which case eligible_reward_range is advertising a programme
+      nobody is in yet; or the CYM tiers are the policy and the recorded
+      amounts are a legacy rate. Either way one of the two fields is currently
+      wrong on every row.
+      Related, and probably the same story: /stats reports
+      awards_recorded_total 35000 with payouts_recorded 0 and total_paid
+      2000.0, while the leaderboard shows total_earned 0.0 for both ranked
+      hunters. Four numbers about the same money, none of which agree.
+      NOT A PAYMENT REQUEST. We are not asking to be paid, or to be paid more.
+      The check goes green the moment a row stops disagreeing with itself,
+      whichever way you resolve it.
+      INVARIANT: reward_currency equals eligible_reward_range.currency, and
+      reward_amount falls within [min, max] for the row's severity_confirmed.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: read-only
   verification of the REST API, MCP and machine-readable discovery surfaces. No
