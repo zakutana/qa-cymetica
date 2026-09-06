@@ -104,8 +104,21 @@ def compose(report: dict, findings: dict, footer: str) -> dict:
 
     parts.append("\nMEASURED VALUES (from the live service):")
     for finding in linked:
-        parts.append(f"\n  [{finding['id']}] {finding['title']}")
-        for key, value in (finding.get("detail") or {}).items():
+        # The row's TITLE is frozen at the measurement that first opened it --
+        # deliberately, so a finding keeps describing what was found -- while
+        # detail.reason is what the run being cited actually measured. Printing
+        # the title here labelled "from the live service" published the old
+        # sentence as a current reading: this block was about to tell them "20
+        # rows record an award below the minimum, e.g. #67 at low: 1000
+        # recorded against 5000-25000" when every amount had been zeroed hours
+        # earlier. Exactly the frozen figure this script's contract promises
+        # never to send.
+        detail = finding.get("detail") or {}
+        headline = detail.get("reason") or finding["title"]
+        parts.append(f"\n  [{finding['id']}] {headline}")
+        for key, value in detail.items():
+            if key == "reason":
+                continue
             parts.append(f"    {key}: {value}")
 
     parts.append("\nREPRODUCE:")

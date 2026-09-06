@@ -822,6 +822,67 @@ reports:
       source in metadata.sources or reports confidence >= 0.7, matching what
       the sync channel already does for the same question class.
 
+
+  - key: award-currency-still-contradicts-its-tier
+    findings:
+      - CYM-award-contradicts-its-own-tier
+    severity: low
+    category: api
+    url: https://cymetica.com/api/v1/bounty/reports
+    title: >-
+      Follow-up on #68: the amounts are resolved, but every row still names an
+      award currency its own published entitlement contradicts
+    expected: >
+      A row publishing eligible_reward_range in one currency should name that
+      same currency for its award, so the two statements on one row can both
+      be true.
+    actual: >
+      Read at 2026-09-06T18:10Z, all 20 rows on GET /api/v1/bounty/reports
+      carry reward_status pending_award and reward_amount 0.0 -- so the half
+      of #68 about an amount sitting outside its band is genuinely resolved,
+      and our check no longer asserts it. The currency half is untouched:
+      19 rows name ET10 and one names USDC, every one of them beside an
+      eligible_reward_range published in CYM.
+    steps:
+      - "GET /api/v1/bounty/reports (no auth)"
+      - "Every row: reward_status=pending_award, reward_amount=0.0"
+      - "19 rows: reward_currency=ET10 beside eligible_reward_range.currency=CYM"
+      - "Report #68: reward_currency=USDC beside eligible_reward_range {min 25000, max 100000, currency CYM, severity medium}"
+      - "Report #68: severity_confirmed=null, while the band it publishes is keyed to severity=medium, which is its severity_reported"
+    body: >
+      Crediting the part that moved: zeroing the amounts and marking the rows
+      pending_award is an honest answer to the amount half, and it retired that
+      half of the check rather than papering over it. Our own check had to be
+      repaired to see it -- it was reading any numeric reward_amount as a
+      recorded award and so kept reporting "0 recorded against 25000-100000"
+      about reports that had been awarded nothing. That was our error and it is
+      fixed on our side.
+
+
+      What still reads as two statements about one row that cannot both be
+      true: the award currency. Nothing has been paid, so this is not a
+      payment dispute -- it is that a row promises an entitlement in CYM and
+      names a different currency for the award beside it.
+
+
+      Two details that may point at the cause. First, #68 is the only row of
+      the twenty that reads USDC; the other nineteen still read ET10. Since #68
+      is the report that raised this, it looks like the row that was named got
+      edited rather than the mechanism that fills the field -- and it moved to
+      a third currency, so #68 now disagrees with both its own band and its
+      nineteen siblings. Second, #68 carries severity_confirmed=null while the
+      band beside it is keyed to severity=medium, which is its
+      severity_reported. If the entitlement is derived from the reporter's own
+      severity claim rather than a confirmed one, that is worth knowing
+      independently of the currency.
+
+
+      #68 was moved to fixed at 2026-09-06T17:39:26 with status_notes null and
+      fix_pr_url null, so there is nothing on the record saying what changed.
+      If the intended resolution is that awards are paid in ET10 or USDC and
+      the CYM ranges are legacy copy, saying so on the report closes this
+      without any code change -- the check only asserts that the two agree, not
+      which of them is right.
 footer: >
   Reported by an independent QA agent. Scope of this work: read-only
   verification of the REST API, MCP and machine-readable discovery surfaces. No
