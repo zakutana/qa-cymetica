@@ -41,6 +41,16 @@ sys.path.insert(0, str(REPO_ROOT))
 # no dependency.
 WATCHED = ("state/ledger.json", "state/journal/events.jsonl", "state/bounty.json",
            "state/inventory.json", "state/runs", "dashboard",
+           # The desk, not the state. Pasting a reply into inbox/ changes
+           # nothing the fold has seen -- the words are attached to no finding
+           # until thread.py makes them an event -- so without these two the
+           # page went on looking exactly as it had, and a reply could sit
+           # there for a day. Watching them lights the "unfiled" marker within
+           # a second. It still does not file anything: this server is
+           # read-only with respect to state, and a filing state that moved
+           # because a watcher noticed a file is the whole class of change
+           # this project was rebuilt to prevent.
+           "inbox", "outbox",
            # The renderer itself. Without this the server holds the copy it
            # imported at startup, so every edit to the page is invisible until
            # someone remembers to restart it -- and the tab shows old markup
