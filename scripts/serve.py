@@ -37,16 +37,16 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
 # What a change to the state means the page is out of date. Poll rather than
-# watch: three directories on Windows, once a second, costs nothing and needs
-# no dependency.
+# watch: a handful of directories on Windows, once a minute, needs no
+# dependency. See POLL_SECONDS for why it is a minute and not a second.
 WATCHED = ("state/ledger.json", "state/journal/events.jsonl", "state/bounty.json",
            "state/inventory.json", "state/runs", "dashboard",
            # The desk, not the state. Pasting a reply into inbox/ changes
            # nothing the fold has seen -- the words are attached to no finding
            # until thread.py makes them an event -- so without these two the
            # page went on looking exactly as it had, and a reply could sit
-           # there for a day. Watching them lights the "unfiled" marker within
-           # a second. It still does not file anything: this server is
+           # there for a day. Watching them lights the "unfiled" marker on the
+           # next tick. It still does not file anything: this server is
            # read-only with respect to state, and a filing state that moved
            # because a watcher noticed a file is the whole class of change
            # this project was rebuilt to prevent.
@@ -58,7 +58,13 @@ WATCHED = ("state/ledger.json", "state/journal/events.jsonl", "state/bounty.json
            # console exists to make impossible.
            "scripts/render.py")
 
-POLL_SECONDS = 1.0
+# A tick stats every file under the watched directories -- 173 of them today,
+# 2.2 ms, and growing, because state/runs/ gains a record on every pytest
+# session. Once a second that was 193 s of CPU a day to notice events that
+# arrive a few times an hour: a sweep finishing, a reply pasted. A minute is
+# the right order for both. Editing the page itself is the one case that wants
+# the old cadence, and `--poll 1` is there for it.
+POLL_SECONDS = 60.0
 
 
 def _render_module():
@@ -177,9 +183,9 @@ class Live:
                 self.listeners.remove(q)
 
 
-def watcher(live: Live, stop: threading.Event) -> None:
+def watcher(live: Live, stop: threading.Event, every: float = POLL_SECONDS) -> None:
     last = _fingerprint()
-    while not stop.wait(POLL_SECONDS):
+    while not stop.wait(every):
         now = _fingerprint()
         if now == last:
             continue
@@ -292,7 +298,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--port", type=int, default=8787)
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--open", action="store_true", help="open a browser tab")
+    parser.add_argument("--poll", type=float, default=POLL_SECONDS, metavar="SECONDS",
+                        help=f"how often to look for a change "
+                             f"(default {POLL_SECONDS:g}; use 1 while editing "
+                             f"scripts/render.py)")
     args = parser.parse_args(argv)
+    if args.poll <= 0:
+        parser.error("--poll must be greater than zero")
 
     live = Live()
     if live.error:
@@ -300,7 +312,7 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     stop = threading.Event()
-    thread = threading.Thread(target=watcher, args=(live, stop), daemon=True)
+    thread = threading.Thread(target=watcher, args=(live, stop, args.poll), daemon=True)
     thread.start()
 
     url = f"http://{args.host}:{args.port}/"
@@ -325,7 +337,7 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     rows = sum(live.payload.get("display_counts", {}).values())
     print(f"[serve] {url}  {rows} rows, payload {live.digest[:16]}")
-    print(f"[serve] watching {', '.join(WATCHED)} every {POLL_SECONDS:g}s")
+    print(f"[serve] watching {', '.join(WATCHED)} every {args.poll:g}s")
     print("[serve] the open tab reloads itself when the state moves. Ctrl-C to stop.")
     if args.open:
         webbrowser.open(url)

@@ -1173,33 +1173,63 @@ h4.sec {
     part of the platform, how many actually answer when you call them? We call each twice
     &mdash; once with no key, once with the API key &mdash; and take the better answer:</p>
 
-    <table class="verdicts">
-      <tr><td><i style="background:var(--ok)"></i></td>
-          <td><b>It works.</b></td>
-          <td>Counts as good.</td></tr>
-      <tr><td><i style="background:var(--auth)"></i></td>
-          <td><b>&ldquo;You need to log in.&rdquo;</b></td>
-          <td>The lock is doing its job. Counts as good.</td></tr>
-      <tr><td><i style="background:var(--auth)" class="faint"></i></td>
-          <td><b>&ldquo;You forgot something.&rdquo;</b></td>
-          <td>It is there, it just wants a parameter. Counts as good.</td></tr>
-      <tr><td><i style="background:var(--bad)"></i></td>
-          <td><b>&ldquo;No such thing here.&rdquo;</b></td>
-          <td>They wrote it in their own docs but it does not exist. Counts as bad.</td></tr>
-      <tr><td><i style="background:var(--warn)"></i></td>
-          <td><b>&ldquo;Wrong way to ask.&rdquo;</b></td>
-          <td>Our mistake, not theirs. Left out of the score entirely.</td></tr>
-      <tr><td><i style="background:var(--none-bg)"></i></td>
-          <td><b>Cannot be checked this way.</b></td>
-          <td>Live feeds, or addresses needing an ID we do not have. Left out.</td></tr>
-    </table>
+    <table class="verdicts"><tbody id="verdicts"></tbody></table>
 
-    <p class="example"><b>Markets &amp; prices, 64%.</b> 16 addresses published, 5 not
-    checkable by a simple call, 7 of the remaining 11 answered. 7/11 = 64%.</p>
+    <p class="example" id="pctexample"></p>
 
     <p><b>&ldquo;Checks&rdquo; is a different number again.</b> An address answering does
     not mean the answer is <em>correct</em>. <b>100% with no checks</b> means
     &ldquo;it is alive, and nobody has verified a word it says&rdquo;.</p>
+
+    <h4>The two counters in the top corner</h4>
+
+    <p class="lead">They look alike and mean opposite things.</p>
+
+    <table class="verdicts">
+      <tr><td>&#128276;</td>
+          <td><b>The bell.</b></td>
+          <td>Replies from <b>them</b> you have not read yet. It counts only
+              what has been written into the permanent record, so it never
+              shows something nobody has entered.</td></tr>
+      <tr><td><b style="color:var(--warn);font-family:var(--mono);font-size:12px">n</b></td>
+          <td><b>Unfiled.</b></td>
+          <td>Message files sitting in <code>inbox/</code> or <code>outbox/</code>
+              that have not been entered into that record &mdash; a reply pasted
+              in but not yet processed. Hover it for the filenames. Nothing on
+              this page reads those words until
+              <code>scripts/thread.py</code> is run, and that is on purpose: a
+              file appearing on disk is not yet a claim about a finding, and no
+              timer gets to decide that it is.</td></tr>
+    </table>
+
+    <h4>Where to start on their side</h4>
+
+    <p class="lead">Cymetica&rsquo;s own answer to &ldquo;point an agent at
+    this&rdquo;, in their words, and the four documents it names:</p>
+
+    <table class="verdicts">
+      <tr><td><i style="background:var(--ok)"></i></td>
+          <td><a href="https://cymetica.com/llms.txt">llms.txt</a></td>
+          <td>The machine-readable index of what EventTrader exposes and how to
+              use it. Start here.</td></tr>
+      <tr><td><i style="background:var(--ok)"></i></td>
+          <td><a href="https://cymetica.com/mcp/v1">POST /mcp/v1</a></td>
+          <td>The MCP endpoint &mdash; the tools themselves. 41 anonymous,
+              62 with a key.</td></tr>
+      <tr><td><i style="background:var(--ok)"></i></td>
+          <td><a href="https://cymetica.com/.well-known/agent-card.json">agent-card.json</a></td>
+          <td>Google A2A discovery: skills, auth, capabilities.</td></tr>
+      <tr><td><i style="background:var(--ok)"></i></td>
+          <td><a href="https://cymetica.com/fund-builder/api">/fund-builder/api</a></td>
+          <td>Developer and fund-builder API docs. HTML, and richer than the
+              OpenAPI covering the same ground.</td></tr>
+    </table>
+
+    <p class="example">Their four cover discovery, tools and the programmatic
+    surfaces &mdash; but not everything they publish. <a
+    href="https://cymetica.com/backtest/api">/backtest/api</a> is the same shape
+    of page for the five backtest surfaces, and carries request bodies that
+    <code>openapi-public.json</code> omits.</p>
   </div>
   </section>
 </div>
@@ -1790,6 +1820,49 @@ function paintUnfiled() {
     + "  python scripts/render.py";
 }
 paintUnfiled();
+
+/* ---------- the legend's two generated parts ----------
+   Both were written out by hand and both had gone stale, in the way a second
+   copy of a fact always does. The verdict table listed six kinds and the code
+   serves seven -- `websocket` was missing while 16 endpoints fell into it --
+   and its wording had drifted from VERDICT_WORDS. The worked example was
+   wrong in every figure: "Markets & prices, 64%, 16 published, 7 of 11
+   answered" against a live 12 published and 7 of 7. So both are drawn from
+   the same data the cards are, and cannot drift again. */
+function paintVerdicts() {
+  const seen = {};
+  (D.sections || []).forEach(s => Object.keys(s.verdicts || {}).forEach(k => {
+    seen[k] = (seen[k] || 0) + s.verdicts[k];
+  }));
+  document.getElementById("verdicts").innerHTML = ORDER.map(k =>
+    `<tr><td><i class="seg-${k}"></i></td>`
+    + `<td>${esc(VERDICT_WORDS[k])}</td>`
+    + `<td>${seen[k] || 0} today</td></tr>`).join("");
+}
+paintVerdicts();
+
+function paintPctExample() {
+  const el = document.getElementById("pctexample");
+  const usable = (D.sections || []).filter(s => s.endpoints_probed > 0);
+  if (!usable.length) { el.hidden = true; return; }
+  /* The weakest section, so the example shows the number doing some work. */
+  const s = usable.slice().sort((a, b) =>
+    (a.reachable_pct - b.reachable_pct) ||
+    (b.endpoints_probed - a.endpoints_probed))[0];
+  const floor = Math.min.apply(null, usable.map(x => x.reachable_pct));
+  el.innerHTML = `<b>${esc(s.title)}, ${s.reachable_pct}%.</b> `
+    + `${s.endpoints_documented} addresses published, `
+    + `${s.endpoints_unprobeable} not checkable by a simple call, `
+    + `${s.endpoints_reachable} of the ${s.endpoints_probed} we could call `
+    + `answered. ${s.endpoints_reachable}/${s.endpoints_probed} = `
+    + `${s.reachable_pct}%.`
+    + (floor === 100
+       ? ` <span class="hi">Every section reads 100% today</span> &mdash; so this
+          number is currently saying only that the published addresses exist,
+          which is the weaker half of the claim.`
+       : "");
+}
+paintPctExample();
 
 /* ---------- live updates ----------
    Only when served by scripts/serve.py. Opened as a file or published as an

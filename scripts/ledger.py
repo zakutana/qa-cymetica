@@ -205,8 +205,14 @@ def main(argv: list[str] | None = None) -> int:
 
     write_ledger(load_previous(), ledger)
     print(f"-> {ledger_path()}")
-    print(f"   composed run {ledger.get('run_id', '(journal only)')} "
-          f"at level {ledger.get('run_level', '-')}")
+    if ledger.get("run_carried"):
+        # Say which it was. "composed" would claim this fold judged something,
+        # and the whole point of --events-only is that it judged nothing.
+        print(f"   journal only; rows still stand on {ledger.get('run_id')} "
+              f"at level {ledger.get('run_level', '-')}")
+    else:
+        print(f"   composed run {ledger.get('run_id', '(journal only)')} "
+              f"at level {ledger.get('run_level', '-')}")
     print(f"   {ledger['counts']}")
     for row in as_findings(ledger):
         reports = ", ".join(f"#{r['report_id']}" for r in row["filing"]["reports"]) or "-"

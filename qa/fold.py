@@ -549,6 +549,18 @@ def fold(prev: dict | None = None, run: dict | None = None,
                 row["check"]["state"] = "UNVERIFIABLE"
                 row["check"]["unverifiable_reason"] = reason
 
+        # This fold adjudicated nothing. That does not un-adjudicate what came
+        # before, and dropping the attribution said it did: an --events-only
+        # fold over a single appended event rewrote a page that read "level V"
+        # into one reading "none admissible", while every row still named the
+        # run that last judged it. The rows were right and the header was
+        # wrong. Carry it, and let the caller say who composed what.
+        for field in ("run_id", "run_level", "updated_at"):
+            carried = (prev or {}).get(field)
+            if carried is not None:
+                out[field] = carried
+        out["run_carried"] = "run_id" in out
+
     _apply_events(rows, events)
     for row in rows.values():
         # Chronological, and deterministically so. The FILING half is rebuilt

@@ -676,3 +676,40 @@ def test_failed_read_marks_stale_and_does_not_move_filing():
     r = after["findings"]["CYM-a"]
     assert r["filing"]["state"] == "FIX_CLAIMED", "a failed read must not undo a good one"
     assert r["filing"]["stale_from"] == "2026-09-05T12:00:00+00:00"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_journal_only_fold_keeps_the_run_that_last_judged_the_rows():
+    """A fold that adjudicated nothing must not un-adjudicate what came before.
+
+    `ledger.py --events-only` over a single appended event dropped `run_id`
+    and `run_level` from the header, so the console read "none admissible"
+    while every row still named the level-V run that had judged it. No row had
+    moved. The rows were right and the header was wrong, and the operator's
+    fix for a wrong header is to re-fold -- which is how a header bug turns
+    into a state change nobody wanted.
+
+    Carried, not composed: `run_carried` marks the difference so the CLI can
+    say "rows still stand on X" rather than claiming this fold judged it.
+    """
+    from qa.fold import fold
+
+    cand = [candidate("CYM-a", checks=[CHECK_A], severity="S1-INTEGRITY")]
+    state = ledger(row("CYM-a", check_state="REPRODUCING", checks=[CHECK_A], pinned=FP1))
+
+    judged = fold(state, run=run("run-v", [result(CHECK_A, "failed")]),
+                  candidates=cand, events=[])
+    assert judged["run_id"] == "run-v"
+    assert not judged.get("run_carried"), "a fold that composed a run did not carry it"
+
+    carried = fold(judged, events=[])
+    assert carried["run_id"] == judged["run_id"], \
+        "a journal-only fold erased the run that last judged the rows"
+    assert carried["run_level"] == judged["run_level"]
+    assert carried["updated_at"] == judged["updated_at"]
+    assert carried["run_carried"] is True, "carried attribution was not marked as carried"
+    assert carried["findings"] == judged["findings"], \
+        "a journal-only fold over no events moved a row"
+
+    # Nothing to carry is still nothing: a first fold must not invent one.
+    assert "run_id" not in fold(None, events=[])
