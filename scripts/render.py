@@ -192,6 +192,31 @@ def _thread_for(row: dict, sent: dict, replied: dict, filed_at: dict) -> list[di
     return sorted(out, key=lambda m: (m.get("at") or "", m["report_id"]))
 
 
+def _owed(row: dict) -> list[str]:
+    """What this row still owes somebody, in words.
+
+    The fold computes `obligations` on every row and the CLI prints them
+    ("OWED: reverify"). The page did not, so rule 11 -- "a withdrawal prints
+    its debts; the row shows 'retraction owed on #N' until a retraction-sent
+    event clears it" -- was written down and never built, and the two rows
+    owing a re-verify today said so nowhere an operator looks.
+
+    Same shape as rule 8's stale mark, found the same way: a field the fold
+    writes that nothing reads.
+    """
+    obligations = row.get("obligations") or {}
+    out: list[str] = []
+    if obligations.get("reverify"):
+        out.append("re-verify owed")
+    if obligations.get("repair_check"):
+        out.append("check repair owed")
+    for report_id in obligations.get("reopen") or []:
+        out.append(f"reopen #{report_id}")
+    for report_id in obligations.get("retractions") or []:
+        out.append(f"retraction owed on #{report_id}")
+    return out
+
+
 def _summary(row: dict) -> str | None:
     """What this finding says, in one sentence."""
     detail = row.get("detail") or {}
@@ -362,7 +387,20 @@ def build_payload(ledger: dict | None = None, inventory: dict | None = None,
         adjudicated = (row.get("check") or {}).get("adjudicated_by")
         row_checks = row.get("checks") or []
         findings.append({
-            **row,
+            # Named, not splatted. `**row` shipped the whole ledger row and
+            # the page read eight of its fields; the other eleven rode along
+            # unread, which is how `stale_from` could be written for a month
+            # and displayed never. A payload field is a promise that something
+            # renders it, and test_the_page_renders_every_field_it_is_given
+            # holds this list to that.
+            "id": row["id"],
+            "title": row.get("title"),
+            "severity": row.get("severity"),
+            "tag": row.get("tag"),
+            "note": row.get("note"),
+            "checks": row_checks,
+            "detail": row.get("detail"),
+            "regressions": row.get("regressions") or [],
             "display_state": shown,
             # The verification sentence is printed from THIS, or not at all.
             # Ten rows read VERIFIED FIXED with verified_by_run null on every
@@ -417,6 +455,7 @@ def build_payload(ledger: dict | None = None, inventory: dict | None = None,
             # panel used to show left / right / sources / population / reason
             # as a table of field names -- accurate, and unreadable.
             "summary": _summary(row),
+            "owed": _owed(row),
         })
 
         for transition in row.get("transitions", []):
@@ -830,6 +869,15 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:15.0px; max-wid
   font-family:var(--mono); font-size:11.5px; padding:2px 6px; border-radius:4px;
   background:transparent; color:var(--text-faint);
   border:1px dashed var(--line); white-space:nowrap; cursor:help;
+}
+/* A debt of ours, not a fact about them. Solid rather than dashed: the dashed
+   marks say "this reading may be old", this one says "you still have to do
+   something". */
+.owed {
+  font-family:var(--mono); font-size:11.5px; padding:2px 6px; border-radius:4px;
+  background:transparent; color:var(--accent);
+  border:1px solid var(--accent); white-space:nowrap; cursor:help;
+  margin-right:4px;
 }
 /* Louder than .unchecked on purpose. "We did not re-run our check" is routine
    on a narrow sweep; "we could not hear them" means the vendor half of every
@@ -1413,6 +1461,7 @@ function finding(f) {
           ${f.filed && f.filed.length ? `<span class="filed">${f.filed.map(x=>"#"+x.report_id).join(", ")}</span>` : ""}
           ${f.unmeasured ? `<span class="unmeasured" title="The wording and numbers here are from the day this was written; no run since has confirmed they still hold.">figures not re-measured</span>` : ""}
           ${f.not_checked_in ? `<span class="unchecked" title="This sweep ran a narrower selector and did not include this check. The state and figures shown are the ones the last run that did include it left behind.">not re-checked${f.last_checked_at ? " &middot; last " + esc(when(f.last_checked_at)) : ""}</span>` : ""}
+          ${(f.owed || []).map(o => `<span class="owed" title="Something is still owed on this row: the fold works it out from the events, and it stays here until an event settles it. A re-verify is cleared by a level-V run under the pinned fingerprint; a retraction by a retraction-sent event.">${esc(o)}</span>`).join("")}
           ${f.stale_from ? `<span class="unheard" title="The last attempt to read their bug tracker did not succeed, so what they say here is as of the last clean read and may have moved since. A failed read is not an empty one: nothing on the vendor's side was allowed to change on the strength of it.">their side unread &middot; since ${esc(when(f.stale_from))}</span>` : ""}
           <span class="newreply" data-newreply hidden title="They replied since you last looked"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="2.2" y="4.6" width="15.6" height="11" rx="2"/><path d="M2.6 6.2 10 11.4l7.4-5.2"/></svg><span class="sr-only">new reply</span></span>
         </div>

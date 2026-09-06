@@ -315,6 +315,45 @@ def test_the_page_reads_no_field_the_payload_stops_writing(tmp_path, monkeypatch
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_page_renders_every_field_it_is_given(monkeypatch):
+    """The other direction, and the one that stayed open longer.
+
+    Its sibling above catches a page reading a field the payload stopped
+    writing -- undefined on screen, loudly. This catches a payload writing a
+    field the page never reads, which is silent, and therefore worse: nothing
+    ever tells you the value stopped being right, because nothing is looking
+    at it.
+
+    Two rules were half-built behind exactly that. `stale_from` carried rule
+    8's "mark the row stale" and was rendered nowhere, so a failed read of the
+    vendor's tracker changed nothing an operator could see. `obligations`
+    carried rule 11's "the row shows retraction owed on #N" and was rendered
+    nowhere, so the two rows owing a re-verify said so in CLI output alone.
+    Both were found by hand; this is here to find the next one.
+
+    The payload row used to be `{**row, ...derived}`, shipping eleven of
+    nineteen ledger fields to the browser unread. It is a named projection
+    now, which is what makes this a contract rather than a chore.
+    """
+    render = _render()
+    payload = _live_payload(render)
+    present = {k for f in payload["findings"] for k in f}
+
+    # `f.x` is how the template reads a row, but a bare `.x` counts too: a
+    # field read through a helper under another name is still read, and this
+    # guard must not push anyone into renaming variables to satisfy it.
+    unread = sorted(
+        field for field in present
+        if not re.search(r"\.%s\b" % re.escape(field), render.TEMPLATE)
+    )
+    assert not unread, (
+        "the payload ships row fields the page never reads, so nothing would "
+        f"notice if they stopped being correct: {unread}. Render them, or "
+        f"stop sending them."
+    )
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_conversation_is_the_api_exchange_and_nothing_else(tmp_path, monkeypatch):
     """One channel per panel.
 
