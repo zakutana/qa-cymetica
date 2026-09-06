@@ -1,11 +1,11 @@
 ---
 name: qa-sweep
-description: Walk every Cymetica finding, take the one action its status calls for, and report what changed. Use when the operator says /qa-sweep, "projdi bugy", "udelej sweep", or asks for the current state of the QA work.
+description: Re-check the open Cymetica findings, take the one action each one's status calls for, and report what changed. Use when the operator says /qa-sweep, "projdi bugy", "udelej sweep", or asks for the current state of the QA work. Say "full sweep" / "cely sweep" to re-verify all 31 rows instead.
 ---
 
 # QA sweep
 
-One command, one pass over every finding, one short report at the end.
+One command, one pass over what is open, one short report at the end.
 
 The operator's complaint that produced this: the work felt chaotic — each
 session picked up whatever was in front of it. A sweep is the same sequence
@@ -15,6 +15,36 @@ impression.
 Work in the repository root. The skill used to say `../qa-cymetica`, from
 when it lived in a sibling project that has since been deleted.
 
+## Two widths, and which one you were asked for
+
+| The operator said | Selector | Cost |
+|---|---|---|
+| "sweep", "projdi bugy", `/qa-sweep` | **open rows only**, plus `tests/meta` | ~25s |
+| "full sweep", "cely sweep", "over vsechno" | the whole suite | ~82s |
+
+Default to the narrow one. The operator's decision, 2026-09-06: *"kdyz napisu
+sweep tak chci jen at udelas ty otevrene bugy"*. Most sweeps have nothing to
+say about the 29 settled rows, and 82 seconds is almost entirely waiting on
+their server.
+
+Two things make the narrow default safe, and both are load-bearing:
+
+* **`tests/meta` runs either way.** `open_checks.py` prepends it. Those are
+  the self-tests that prove the safety guard blocks; they run first and abort
+  the session on failure, so that a broken guard stops every live request. A
+  bare selector of two nodeids does not collect them — that happened once
+  while measuring, and live requests went out with the guard unproven.
+* **The fold will not close a row it did not run,** and the page says so. The
+  29 untouched rows keep their state, their numbers and the timestamp of the
+  run that last adjudicated them, and each card prints "not re-checked, last
+  &lt;when&gt;". Never present a narrow sweep as if it had re-verified
+  everything, and never remove that marker to tidy the page.
+
+Run the full width when the operator asks, before anything that depends on all
+31 rows being current, and when a row's check definition has changed —
+`selector_full` is what lets the fold say a check has gone missing rather than
+merely untested.
+
 ## The spine — always, in this order
 
 Do not skip steps. Each one exists because skipping it produced a wrong page.
@@ -23,13 +53,24 @@ Do not skip steps. Each one exists because skipping it produced a wrong page.
    preregistration refuses a dirty tree, and without one the run is level R
    and may verify nothing.
 
-2. **Preregister and run.**
+2. **Preregister and run.** Narrow (the default):
+   ```
+   python scripts/open_checks.py --explain          # see what is open, and why
+   SEL=$(python scripts/open_checks.py --selector)
+   python scripts/prereg.py new --selector "$SEL" --window 30 --tag
+   python -m pytest <the nodeids prereg echoes> --prereg PRE-NNNN -q --no-header --tb=no
+   ```
+   Full, when asked:
    ```
    python scripts/prereg.py new --selector tests --window 30 --tag
    python -m pytest tests --prereg PRE-NNNN -q --no-header --tb=no
    ```
    Use the id `prereg.py` prints. Do not reuse an older one: the tag must
    point at HEAD, so any commit after tagging invalidates it.
+
+   If `open_checks.py` prints nothing open, that is the sweep's answer. Run
+   `tests/meta` alone, fold, and report that nothing is open — do not go
+   looking for work.
 
 3. **Refresh their side.** `python scripts/bounty.py` — reads their tracker
    and appends `vendor_status` events. Do this *before* folding, so their
@@ -94,7 +135,10 @@ judgement, one row at a time. Read the states off the folded ledger.
 
 Short. Four parts, no preamble:
 
-1. **Ran** — prereg id, run id, level, pass/fail counts.
+1. **Ran** — width (open-only or full), prereg id, run id, level, pass/fail
+   counts. Say the width in the first line: on a narrow sweep the operator is
+   entitled to know that 29 rows were not looked at, without opening the page
+   to find out.
 2. **Changed** — only rows whose displayed state moved, `old -> new`, one line
    each. If nothing moved, say so in one sentence.
 3. **Needs you** — anything waiting on a decision: reports drafted but not
