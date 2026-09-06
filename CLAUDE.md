@@ -112,6 +112,14 @@ tests/meta/       self-tests. Run FIRST and abort the session on failure, so
                   a broken guard stops every live request.
 tests/repo/       repository consistency. Deliberately NOT in tests/meta:
                   a stale ledger must not abort the run that would fix it.
+.claude/hooks/protect_state.py
+                  rule 4, enforced before the write instead of after it. A
+                  PreToolUse hook that refuses an editor write, a shell
+                  redirect, sed -i, rm or git checkout aimed under state/.
+                  Reads are untouched, and the sanctioned writers go through
+                  qa/state.py so they never name the path. Without it the
+                  hash chain still catches a hand edit -- but only at the
+                  next load, one step too late.
 ```
 
 ## Reading the numbers honestly
