@@ -40,7 +40,13 @@ sys.path.insert(0, str(REPO_ROOT))
 # watch: three directories on Windows, once a second, costs nothing and needs
 # no dependency.
 WATCHED = ("state/ledger.json", "state/journal/events.jsonl", "state/bounty.json",
-           "state/inventory.json", "state/runs", "dashboard")
+           "state/inventory.json", "state/runs", "dashboard",
+           # The renderer itself. Without this the server holds the copy it
+           # imported at startup, so every edit to the page is invisible until
+           # someone remembers to restart it -- and the tab shows old markup
+           # while the file on disk has the new. That is the drift this whole
+           # console exists to make impossible.
+           "scripts/render.py")
 
 POLL_SECONDS = 1.0
 
@@ -98,6 +104,10 @@ class Live:
     def rebuild(self) -> bool:
         """Re-render. Returns True if what the page shows actually changed."""
         try:
+            # Re-import first: a change to render.py is a change to the page,
+            # and serving from a module frozen at startup would show markup
+            # that no longer matches the file.
+            self.render = _render_module()
             payload = self.render.build_payload(allow_stale_head=True)
             html = self.render.render(payload)
             digest = self.render.payload_hash(payload)

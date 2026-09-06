@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import types
 import queue
 import shutil
 from pathlib import Path
@@ -44,9 +45,14 @@ def _serve_module():
 
 
 @pytest.fixture
-def live(tmp_path, monkeypatch):
+def serve(tmp_path, monkeypatch):
+    """The module under test, so a test can reach its import seam."""
+    return _serve_module()
+
+
+@pytest.fixture
+def live(tmp_path, monkeypatch, serve):
     """A Live built over a copy of the committed state, writing nowhere real."""
-    serve = _serve_module()
     state = tmp_path / "state"
     shutil.copytree(REPO / "state", state)
     # QA_STATE_DIR alone is enough: render.out_path() follows it, so the only
@@ -107,7 +113,7 @@ def test_rebuilding_unchanged_state_notifies_nobody(live):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_a_broken_render_keeps_serving_the_last_good_page(live, monkeypatch):
+def test_a_broken_render_keeps_serving_the_last_good_page(live, serve, monkeypatch):
     """A page that dies on a bad fold is a page nobody trusts to be open.
 
     The console is the thing being read while the pipeline is being changed,
@@ -117,10 +123,17 @@ def test_a_broken_render_keeps_serving_the_last_good_page(live, monkeypatch):
     good_html, good_digest = live.html, live.digest
     assert good_html
 
+    # Patched at the import seam, not on the loaded module: rebuild() now
+    # re-imports render.py first, so that a change to the renderer reaches the
+    # open tab -- which means a patch applied to the old object is discarded
+    # before it is ever called.
     def explode(*_, **__):
         raise ValueError("deliberate")
 
-    monkeypatch.setattr(live.render, "build_payload", explode)
+    broken = types.SimpleNamespace(build_payload=explode,
+                                   render=explode, payload_hash=explode,
+                                   out_path=live.render.out_path)
+    monkeypatch.setattr(serve, "_render_module", lambda: broken)
     live.rebuild()
 
     conclude(Measurement(

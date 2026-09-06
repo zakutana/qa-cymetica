@@ -531,3 +531,44 @@ def test_every_css_variable_the_sheet_uses_is_defined():
         f"declaration reading them is silently dropped: {', '.join(missing)}"
     )
     assert used, "the sheet reads no variables at all, which cannot be right"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_every_vendor_reply_carries_a_stable_date():
+    """A reply with no date is one the reader can never mark as read.
+
+    The page marks a row when the vendor said something newer than the last
+    time you looked. Two replies had no date at all: a report closed as
+    `invalid` carries none of fixed_at, validated_at, triaged_at or even
+    updated_at -- only created_at, which is when WE filed it. The page filled
+    the gap with Date.now(), which is recomputed on every render, so those two
+    rows were newer than any "seen" moment forever and their envelopes could
+    not be cleared. "Mark all as read" appeared to do nothing.
+
+    Two properties, and the second is the one the first fix missed: the date
+    must EXIST, and it must not move. bounty.py appends a vendor_status event
+    on every run, so dating a reply from the newest observation would record
+    when we last polled and bring the mark back after every sweep.
+    """
+    render = _render()
+    first = render.build_payload(allow_stale_head=True)
+    second = render.build_payload(allow_stale_head=True)
+
+    def replies(payload):
+        return {(f["id"], m.get("report_id")): m.get("at")
+                for f in payload["findings"]
+                for m in (f.get("thread") or [])
+                if m.get("who") and m["who"] != "us"}
+
+    a, b = replies(first), replies(second)
+    undated = sorted(k for k, v in a.items() if not v)
+    assert not undated, (
+        f"{len(undated)} vendor repl(ies) carry no date, so the row they are "
+        f"on can never be marked read: {undated}"
+    )
+
+    moved = sorted(k for k in a if a[k] != b.get(k))
+    assert not moved, (
+        f"{len(moved)} vendor repl(ies) changed date between two builds of the "
+        f"same state, so the unread mark would return on every render: {moved}"
+    )

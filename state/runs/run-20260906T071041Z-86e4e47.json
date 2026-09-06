@@ -1,0 +1,219 @@
+{
+  "schema": 2,
+  "run_id": "run-20260906T071041Z-86e4e47",
+  "started_at": "2026-09-06T07:10:44+00:00",
+  "finished_at": "2026-09-06T07:10:53+00:00",
+  "git_head": "86e4e47370d389ecb9be798972f840aba307c3f5",
+  "git_short": "86e4e47",
+  "git_dirty": true,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": "sha256:5f60a8fed06daa974775a1ae0e8498cfbc6619c2d0f606266c0b99072c776248",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "cf88392e12e0aa2c31a85517b1a56f729f7895bc2eb0ce22df0a5b9498776681",
+    "/.well-known/agent-card.json": "3dfc7d39fe712e14967fbd019be8bec83c4a49e836fb3d04ff02248b2580fca5",
+    "/.well-known/agent-skills.json": "f2f992a77d58a157ec678cd17d4d94d216aa96d12ee4f9a3adae9fa291fb5a0d",
+    "/.well-known/ai-plugin.json": "e2f2d79821bf8e741fb18cefea6a94cb7a1ec358644306aeff02e763c61b1fb2",
+    "/.well-known/udc.json": "92cd8a5f7ec5a0a859594ef9fbd72cba4914eaab4220377db18adf2ed44611a4",
+    "/openapi.json": "f0cccb1f06ec266d303b1c7ab8e23f4af29a3c43106027595c95c1449fa1b2cf",
+    "/llms.txt": "8266bcdda0419cdf8e37cd2df345f9507aeb61220b1fc14393d631354202ec8f",
+    "mcp:tools/list:none": "21319c310fe5072fc1b5225f7a8da18c04e1c2cdf3ea512c4f3d8f396ab68ac0"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/repo -q --no-header --tb=line",
+  "selector_full": false,
+  "allow_mutate": false,
+  "collected": [
+    "tests/repo/test_live_server.py::test_a_real_change_reaches_a_subscriber",
+    "tests/repo/test_live_server.py::test_rebuilding_unchanged_state_notifies_nobody",
+    "tests/repo/test_live_server.py::test_a_broken_render_keeps_serving_the_last_good_page",
+    "tests/repo/test_repo_consistency.py::test_committed_ledger_is_what_its_inputs_fold_to",
+    "tests/repo/test_repo_consistency.py::test_committed_dashboard_matches_the_committed_ledger"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/repo/test_live_server.py::test_a_real_change_reaches_a_subscriber",
+      "component": "meta.pipeline",
+      "tier": "SAFE",
+      "surface": "meta",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 0,
+      "evidence_ids": [],
+      "measurement": {
+        "verdict": "passed",
+        "reason": "a subscriber received the new digest",
+        "left": "0000000000000000000000000000000000000000000000000000000000000000",
+        "right": "0000000000000000000000000000000000000000000000000000000000000000",
+        "sources": {
+          "module": "scripts/serve.py"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": null,
+        "role": "verdict",
+        "population": null
+      },
+      "check_fingerprint": "17dd5814354ac132b898e41598bfa4e53bfc159f79bbfafa463e845b35280aea",
+      "reason": null,
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/repo/test_live_server.py::test_rebuilding_unchanged_state_notifies_nobody",
+      "component": "meta.pipeline",
+      "tier": "SAFE",
+      "surface": "meta",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 583,
+      "evidence_ids": [],
+      "measurement": {
+        "verdict": "passed",
+        "reason": "re-rendering unchanged state produced no change and woke no subscriber, so the open tab keeps its scroll and open rows",
+        "left": false,
+        "right": "1da7e5003082657ed5c461072ce5cb7664b1d187aedb309176ca9973980b5169",
+        "sources": {
+          "module": "scripts/serve.py"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": null,
+        "role": "verdict",
+        "population": null
+      },
+      "check_fingerprint": "1313bf471e267fb7c07cd3e08b43ef6f5a49d176448b5fb9770bc7cd30811851",
+      "reason": null,
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/repo/test_live_server.py::test_a_broken_render_keeps_serving_the_last_good_page",
+      "component": "meta.pipeline",
+      "tier": "SAFE",
+      "surface": "meta",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 0,
+      "evidence_ids": [],
+      "measurement": {
+        "verdict": "passed",
+        "reason": "a failed render left the last good page in place and recorded the reason: ValueError: deliberate",
+        "left": "ValueError: deliberate",
+        "right": "1da7e5003082657e",
+        "sources": {
+          "module": "scripts/serve.py"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": null,
+        "role": "verdict",
+        "population": null
+      },
+      "check_fingerprint": "f19fa90160c0456a71fd4f6daa729ab86b8b46747ab430469facca818a34d090",
+      "reason": null,
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/repo/test_repo_consistency.py::test_committed_ledger_is_what_its_inputs_fold_to",
+      "component": "meta.pipeline",
+      "tier": "SAFE",
+      "surface": "meta",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 124,
+      "evidence_ids": [],
+      "measurement": {
+        "verdict": "passed",
+        "reason": "the committed ledger matches its inputs",
+        "left": [],
+        "right": [],
+        "sources": {
+          "ledger": "state/ledger.json",
+          "journal": "state/journal/events.jsonl"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": null,
+        "role": "verdict",
+        "population": null
+      },
+      "check_fingerprint": "a61d19f394f36d925e52dec3797b17640651da3f44faf78f082af0f3f9a48088",
+      "reason": null,
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/repo/test_repo_consistency.py::test_committed_dashboard_matches_the_committed_ledger",
+      "component": "meta.pipeline",
+      "tier": "SAFE",
+      "surface": "meta",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 68,
+      "evidence_ids": [],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "the committed dashboard is NOT a render of the committed state -- re-run scripts/render.py and commit the result",
+        "left": "c78529a40e3c7001",
+        "right": "1da7e5003082657e",
+        "sources": {
+          "dashboard": "dashboard/index.html"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": null,
+        "role": "verdict",
+        "population": null
+      },
+      "check_fingerprint": "2bc7fc550147f284d30f55237b5e63f4305f9758ce589136defa8151b6df9f34",
+      "reason": null,
+      "failure_repr": "E   AssertionError: the committed dashboard is NOT a render of the committed state -- re-run scripts/render.py and commit the result\n      left  = 'c78529a40e3c7001'\n      right = '1da7e5003082657e'"
+    }
+  ],
+  "totals": {
+    "passed": 4,
+    "failed": 1
+  },
+  "ratelimit": {},
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "fingerprint_after": "sha256:5f60a8fed06daa974775a1ae0e8498cfbc6619c2d0f606266c0b99072c776248",
+  "exit_status": 1
+}

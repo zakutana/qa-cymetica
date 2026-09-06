@@ -98,15 +98,37 @@ def _api_conversation() -> tuple[dict, dict]:
                 "actual": (report.get("actual") or "").strip(),
             }
 
+    # When they FIRST said what they currently say. Not the newest observation:
+    # bounty.py appends a vendor_status event on every run, so the newest one
+    # records when we last polled, and using it made the "new reply" mark
+    # reappear after every sweep -- a badge that cannot be cleared, which
+    # teaches you to ignore the badge.
+    first_said: dict[tuple, str] = {}
+    for event in read_events():
+        if event.get("type") != "vendor_status":
+            continue
+        key = (event.get("report_id"), event.get("status"))
+        when = event.get("observed_at") or event.get("at")
+        if when and (key not in first_said or when < first_said[key]):
+            first_said[key] = when
+
     theirs: dict[int, dict] = {}
     for report in (load("bounty.json").get("our_reports") or {}).get("reports", []):
         report_id = report.get("id")
         if report_id is None:
             continue
+        status = report.get("status")
         theirs[report_id] = {
-            "at": report.get("fixed_at") or report.get("validated_at")
-                  or report.get("triaged_at"),
-            "status": report.get("status"),
+            # A report they closed as `invalid` carries none of fixed_at,
+            # validated_at, triaged_at or even updated_at -- only created_at,
+            # which is when WE filed it. Reading those four and stopping left
+            # the reply undated, and an undated reply is one the page cannot
+            # ever mark as read.
+            "at": (report.get("fixed_at") or report.get("validated_at")
+                   or report.get("triaged_at")
+                   or first_said.get((report_id, status))
+                   or report.get("updated_at") or report.get("created_at")),
+            "status": status,
             # Their own words, which is the whole reason this panel exists.
             "text": (report.get("status_notes") or "").strip(),
         }
@@ -1107,9 +1129,17 @@ function writeStore(key, value) {
 // nothing. An unparseable timestamp returns now, so it reads as new rather
 // than silently as already seen -- this must never hide a reply.
 function newestFromThem(f) {
+  // An undated reply returns 0, not Date.now(). Date.now() was the original
+  // choice, on the reasoning that a missing timestamp should err toward
+  // showing the mark rather than hiding it -- but it is recomputed on every
+  // render, so such a row was newer than any "seen" moment forever and its
+  // envelope could never be cleared. Every reply carries a date now (see
+  // _api_conversation), so a missing one is genuinely no information, and a
+  // badge you cannot clear is worse than a mark you did not get.
   const times = (f.thread || [])
     .filter(m => m && m.who && m.who !== "us")
-    .map(m => { const t = Date.parse(m.at); return Number.isNaN(t) ? Date.now() : t; });
+    .map(m => Date.parse(m.at))
+    .filter(t => !Number.isNaN(t));
   return times.length ? Math.max.apply(null, times) : 0;
 }
 
