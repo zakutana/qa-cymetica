@@ -108,6 +108,35 @@ def successors(document: str, path: str) -> set[str]:
     found = set(re.findall(re.escape(path) + r"[A-Za-z0-9_/{}-]+", document))
     return {f for f in found if f != path}
 
+def outcome_for(documented: bool, status: int, served_successors: list) -> tuple:
+    """(verdict, reason-shape) for one pinned path. The table, in one place.
+
+    Extracted 2026-09-07 because the decision lived inside a live,
+    parametrised check and could therefore only be inspected by reading it --
+    which is how the third row came to disagree with the docstring, the pin
+    file and itself for two days, while sending 26 fix-verifications to the
+    vendor for paths that still answer 404.
+
+        still documented, still 404          FAIL
+        still documented, now served         PASS   <- the fix
+        renamed, and the successor is served PASS   <- also a fix
+        no longer documented                 INCONCLUSIVE
+
+    The last row is not a pass and the reason is in the module docstring:
+    withdrawing a promise resolves the broken promise, but it is the vendor's
+    call to announce, not a measurement we may bank on their behalf. It is not
+    a FAIL either -- nothing is promised, so nothing is broken. It is the one
+    honest thing left: we cannot measure a promise that no longer exists, and
+    the row needs a decision (retire the pin, or accept the withdrawal) rather
+    than a verdict.
+    """
+    if not documented:
+        if served_successors:
+            return "passed", "renamed"
+        return "inconclusive", "withdrawn"
+    return ("failed" if status == 404 else "passed"), "documented"
+
+
 
 @qa(component="discovery.llmstxt", tier=SafetyTier.SAFE, surface="rest")
 @pytest.mark.parametrize("pin", PINS, ids=[p["path"] for p in PINS])
@@ -161,11 +190,17 @@ def test_documented_path_is_served(pin, rest_anon, documents):
         # Inconclusive on top of that guarded nothing and produced a state the
         # operator could not act on -- it read as "not reproducible", which
         # sounds like a result rather than an inability to measure.
+        # INCONCLUSIVE, not passed. See outcome_for() above and the table in
+        # the module docstring: a withdrawal is not a fix, and banking it as
+        # one sent "VERDICT pass" to reports #49 and #59 for 26 paths that all
+        # still answer 404.
         conclude(Measurement(
-            verdict="passed",
+            verdict=outcome_for(False, status, [])[0],
             reason=(f"{pin['path']} is no longer promised by {pin['source']}: "
                     f"the documentation was corrected by DELETING the entry, "
-                    f"not by building the endpoint"
+                    f"not by building the endpoint, and the path still answers "
+                    f"{status}. Withdrawing a promise is theirs to announce, "
+                    f"not ours to bank as a fix -- retire the pin or accept it"
                     + (f" (the paths that replaced it, {', '.join(superseded)}, "
                        f"answer 404 too)" if superseded else "")),
             left=pin["path"], right="removed from the documentation",

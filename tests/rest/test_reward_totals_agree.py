@@ -35,6 +35,60 @@ def _number(value):
     """A figure, or None. A missing field is not a zero."""
     return value if isinstance(value, (int, float)) and not isinstance(value, bool) else None
 
+def money_problems(stats: dict, entries: list, definition: str | None) -> list:
+    """Both money invariants. They are not alternatives.
+
+    When they answered #73 by publishing `total_earned_definition` instead of
+    moving a figure, this check was repaired to hold each hunter's
+    `total_earned` against the column that definition names -- and the repair
+    put that comparison in an `else`, so the ORIGINAL invariant ran only while
+    no definition was published. The comment called the result "strictly
+    stronger"; on the money axis it was strictly weaker, and the cross-surface
+    contradiction the module docstring is about stopped being measured.
+
+    Live proof, run-20260907T135100Z: stats total_paid 2000.0 with
+    payouts_recorded 2, all four hunters at total_earned 0.0 AND total_paid
+    0.0, verdict passed, reason "the aggregate and the leaderboard agree". A
+    pass verification for that reached #73.
+
+    So: the cross-surface check always, and the column check as well when they
+    have said which column they mean. A within-row comparison cannot see two
+    surfaces disagreeing, and a cross-surface comparison cannot see a column
+    disagreeing with its own published definition.
+    """
+    problems: list[str] = []
+    awarded = _number(stats.get("awards_recorded_total"))
+    paid = _number(stats.get("total_paid"))
+    column = {"paid": "total_paid", "awarded": "total_awarded"}.get(definition)
+
+    # Whatever `total_earned` means, a programme that has recorded money
+    # against reports cannot show zero for every hunter it lists.
+    earned = [_number(e.get("total_earned")) for e in entries]
+    recorded = max([v for v in (awarded, paid) if v is not None] or [0])
+    if entries and recorded > 0 and all(v == 0 for v in earned if v is not None):
+        problems.append(
+            f"stats records {awarded} awarded and {paid} paid, and every one "
+            f"of the {len(entries)} hunter(s) on the leaderboard shows "
+            f"total_earned 0.0"
+            + (f", which stats defines as {definition!r}" if column else
+               ", with no total_earned_definition to say which of the two the "
+               "column means")
+        )
+
+    if column:
+        for entry in entries:
+            mine, theirs = _number(entry.get("total_earned")), _number(entry.get(column))
+            if mine is None or theirs is None:
+                continue  # handled by the caller: rule 8, a missing column is not a zero
+            if mine != theirs:
+                problems.append(
+                    f"{entry.get('hunter_name')} shows total_earned {mine} "
+                    f"while {column} is {theirs}, and stats defines earned as "
+                    f"{definition!r}"
+                )
+    return problems
+
+
 
 @qa(component="rest.support", tier=SafetyTier.SAFE, surface="rest",
     claim="reward-totals-disagree")
@@ -90,27 +144,11 @@ def test_the_reward_totals_agree_with_each_other(rest_anon):
     attributed = _number(s.get("valid_reports_attributed"))
     expected_valid = attributed if attributed is not None else valid
 
-    problems = []
-
-    if column is None:
-        # No definition published, so we are back to the original reading:
-        # whatever `total_earned` means, a programme that has recorded money
-        # against reports cannot show zero for every hunter it lists.
-        recorded = max(v for v in (awarded, paid, 0) if v is not None)
-        if recorded > 0 and all(v == 0 for v, _ in earned if v is not None):
-            problems.append(
-                f"stats records {awarded} awarded and {paid} paid, and every "
-                f"one of the {len(entries)} hunter(s) on the leaderboard shows "
-                f"total_earned 0.0, with no total_earned_definition to say "
-                f"which of the two the column means"
-            )
-    else:
+    # Rule 8 one layer down, before the comparison: a column a row does not
+    # carry is not a column that reads zero.
+    if column:
         for entry in entries:
-            mine = _number(entry.get("total_earned"))
-            theirs = _number(entry.get(column))
-            if mine is None or theirs is None:
-                # Rule 8 one layer down: a column the row does not carry is
-                # not a column that reads zero.
+            if _number(entry.get(column)) is None:
                 conclude(Measurement(
                     verdict="inconclusive",
                     reason=f"total_earned_definition says {definition!r} but "
@@ -119,12 +157,8 @@ def test_the_reward_totals_agree_with_each_other(rest_anon):
                     sources={"stats": STATS, "leaderboard": BOARD},
                     claim_id="reward-totals-disagree"))
                 return
-            if mine != theirs:
-                problems.append(
-                    f"{entry.get('hunter_name')} shows total_earned {mine} "
-                    f"while {column} is {theirs}, and stats defines earned as "
-                    f"{definition!r}"
-                )
+
+    problems = money_problems(s, entries, definition)
 
     # The leaderboard claims to list every hunter -- active_hunters agrees with
     # its length -- so between them they should account for the same reports.

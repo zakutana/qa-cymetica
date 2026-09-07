@@ -367,3 +367,120 @@ def test_the_is_answer_rule_is_self_calibrating_and_still_bites():
     # `false` is a tag. Their routing prompt carries it, and a check that
     # counted only `true` would call their documented behaviour a miss.
     assert tagging_gap([m("2026-09-06T11:07", True), m("2026-09-07T13:52", False)]) == (0, [])
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_withdrawn_promise_is_not_a_fix():
+    """A1: the branch that sent 26 fix-verifications for paths that still 404.
+
+    The module docstring of tests/pinned/test_documented_404.py states the
+    table, and tests/pinned/documented-404.yaml repeats it word for word:
+
+        still documented, still 404   FAIL
+        still documented, now served  PASS   <- the fix
+        no longer documented          INCONCLUSIVE
+
+    "The third is deliberately not a pass. Withdrawing a promise is a
+    legitimate way to resolve a broken promise, but it is the vendor's call to
+    announce, not a measurement we may quietly bank on their behalf."
+
+    The code returned `passed` on that third case. An inline comment argues
+    the 2026-09-05 change: that Inconclusive guarded nothing once the pins
+    existed, and read to the operator as "not reproducible" rather than as an
+    inability to measure. That argument is about the DISPLAY of a state; it
+    does not make a withdrawal a fix. And on 2026-09-07 the consequence stopped
+    being internal: verify.py posted "VERDICT pass -- the check that recorded
+    this defect now passes" to reports #49 and #59, for 26 paths every one of
+    which still answers 404.
+
+    Three independent triage agents reproduced it. Two statements of the
+    contract against one comment, and the comment never answers them.
+
+    Pulled into a function so the three outcomes can be held against the table
+    without calling the live platform -- which is what nobody could do while
+    the decision lived inside a parametrised live check.
+    """
+    from tests.pinned.test_documented_404 import outcome_for
+
+    # Still promised, still broken.
+    assert outcome_for(documented=True, status=404, served_successors=[])[0] == "failed"
+    # Still promised, now built. The only fix.
+    assert outcome_for(documented=True, status=200, served_successors=[])[0] == "passed"
+    # Renamed, and the new name works: also a fix, and verified by calling it.
+    assert outcome_for(documented=False, status=404,
+                       served_successors=["/api/v1/new"])[0] == "passed"
+    # Withdrawn. Not a fix, whatever it resolves.
+    verdict, shape = outcome_for(documented=False, status=404, served_successors=[])
+    assert verdict == "inconclusive", \
+        "a promise they deleted was banked as a fix on their behalf"
+    assert shape == "withdrawn", \
+        "the three no-longer-documented outcomes must stay distinguishable"
+
+    # And the live check must still SAY what happened. An inconclusive that
+    # does not name the withdrawal is the "not reproducible" reading the
+    # 2026-09-05 comment rightly objected to -- the verdict is corrected here,
+    # its objection about legibility is not dismissed.
+    import inspect
+
+    from tests.pinned import test_documented_404 as mod
+
+    source = inspect.getsource(mod.test_documented_path_is_served)
+    assert "DELETING the entry" in source and "still answers" in source, \
+        "the reason line stopped naming the withdrawal or the live status"
+
+    # Withdrawn AND the path started working: still not ours to call a fix,
+    # because nothing documents it any more -- there is no promise to measure.
+    assert outcome_for(documented=False, status=200,
+                       served_successors=[])[0] == "inconclusive"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_publishing_a_definition_does_not_disable_the_money_check():
+    """A9: the repair that called itself "strictly stronger" was strictly weaker.
+
+    The module docstring of tests/rest/test_reward_totals_agree.py states the
+    invariant the check exists for: "a programme that has recorded 36 awards
+    cannot show zero earned for every hunter it has". When Cymetica answered
+    #73 by publishing `total_earned_definition` rather than by moving a figure,
+    the check was repaired to hold the column against the definition -- and the
+    repair put the new comparison in an `else`, so the original invariant ran
+    only while no definition was published.
+
+    Live consequence, run-20260907T135100Z: stats read total_paid 2000.0 and
+    payouts_recorded 2, all four hunters read total_earned 0.0 and total_paid
+    0.0, and the check emitted "the aggregate and the leaderboard agree". A
+    pass verification for that went to #73.
+
+    Both belong. Column agreement is a within-row check and cannot see a
+    cross-surface contradiction; the cross-surface check cannot see a column
+    that disagrees with its own definition.
+    """
+    from tests.rest.test_reward_totals_agree import money_problems
+
+    hunters_at_zero = [{"hunter_name": "a", "total_earned": 0.0, "total_paid": 0.0},
+                       {"hunter_name": "b", "total_earned": 0.0, "total_paid": 0.0}]
+    programme_paid = {"awards_recorded_total": 38000.0, "total_paid": 2000.0}
+
+    # The live state that passed. It must not.
+    problems = money_problems(programme_paid, hunters_at_zero, "paid")
+    assert problems, \
+        "a programme that paid 2000.0 with every hunter at zero read as agreement"
+    assert any("2000" in p for p in problems), problems
+
+    # The same contradiction with no definition published -- the original
+    # reading, which must still work.
+    assert money_problems(programme_paid, hunters_at_zero, None)
+
+    # A column that disagrees with the definition it publishes.
+    mismatched = [{"hunter_name": "a", "total_earned": 5.0, "total_paid": 9.0}]
+    assert money_problems({"awards_recorded_total": 9.0, "total_paid": 9.0},
+                          mismatched, "paid")
+
+    # Agreement on both axes is agreement.
+    consistent = [{"hunter_name": "a", "total_earned": 2000.0, "total_paid": 2000.0}]
+    assert money_problems({"awards_recorded_total": 2000.0, "total_paid": 2000.0},
+                          consistent, "paid") == []
+
+    # Nothing recorded anywhere is not a contradiction.
+    assert money_problems({"awards_recorded_total": 0.0, "total_paid": 0.0},
+                          hunters_at_zero, "paid") == []
