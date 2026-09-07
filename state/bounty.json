@@ -633,7 +633,7 @@
       }
     ],
     "error": "QA_WALLET_ADDRESS not set",
-    "stale_from": "2026-09-07T18:01:38+00:00"
+    "stale_from": "2026-09-07T19:31:38+00:00"
   },
   "qa_tracker": {
     "source": "https://cymetica.com/leaderboard/bugs (embedded allBugs)",
@@ -1234,5 +1234,5 @@
       "reward_currency": "ET10"
     }
   ],
-  "our_reports_refreshed_at": "2026-09-07T18:01:38+00:00"
+  "our_reports_refreshed_at": "2026-09-07T19:31:38+00:00"
 }
