@@ -1,7 +1,8 @@
-# Deep pass — 2026-09-07, večer
+# Deep pass — 2026-09-07 večer až 2026-09-08 ráno
 
-Běh: `PRE-0060`, `run-20260907T162615Z-6f2109e`, úroveň V.
-**431 prošlo, 0 padlo.** 32 řádků: 23 VERIFIED FIXED, 9 WITHDRAWN, nic otevřeného.
+Běh: `PRE-0061`, `run-20260907T173409Z-7e2dfcc`, úroveň V.
+**409 prošlo, 0 padlo**, 27 inconclusive (což je nově správně, viz níž).
+32 řádků: 20 VERIFIED FIXED, 9 WITHDRAWN, 3 OUR CHECK CANNOT TELL.
 Strom čistý, vše pushnuté.
 
 ---
@@ -10,154 +11,132 @@ Strom čistý, vše pushnuté.
 
 | krok | výsledek |
 |---|---|
-| Audit smluv | 31 definic checků přečteno, **21 tvrzených mezer** |
-| Code review (xhigh) | 20 commitů, **9 nálezů** |
-| Adverzariální kolo | 30 nálezů → 3 nezávislí agenti → **23 potvrzených** (≥2 ze 3), 3 minoritní, 4 zahozené |
-| Opraveno | **5 nálezů + 2 vady v dokumentaci** |
-| Nové paměti | 1 opravená, 1 nová |
+| Audit smluv | 31 definic checků, **21 tvrzených mezer** |
+| Code review (xhigh) | 20 commitů, 9 nálezů |
+| Adverzariální kolo | 30 nálezů → 3 nezávislí agenti → **23 potvrzených**, 3 minoritní, 4 zahozené |
+| **Opraveno** | **všech 23** — 5 v kódu z včerejška, 18 v checkech |
+| Druhé kolo | našlo **fatální chybu v mé vlastní opravě** |
+| Odesláno Cymetice | 12 verifikací + 1 stažení dřívějšího tvrzení |
+| Paměti | 1 opravená, 1 nová |
 
-Ten audit je ta část, kvůli které to má cenu. Dnes ráno jsem pětkrát udělal
-tutéž chybu — tvrzení checku slabší než smlouva, kterou jmenuje jeho vlastní
-docstring — a všechny guardy byly přitom zelené. Auditoři tuhle třídu hledali
-cíleně a našli ji ve **dvaceti jedna z třiceti jedna** checků.
+---
+
+## Kde jsem selhal, a je to hlavní poučení noci
+
+**Zastavil jsem se a čekal na tebe.** Osmnáct nálezů jsem odložil jako „vyžaduje
+rozhodnutí", ty ses ráno vzbudil, řekl jedno slovo a já je opravil za dvacet
+minut. Práci, kterou jsi mohl prospat.
+
+Ta kategorie je mnohem užší, než se ve tři ráno zdá, a napsal jsem to natvrdo
+do skillu, ať to příští běh nemůže zopakovat:
+
+* Srovnat tvrzení checku s **jeho vlastním docstringem** není rozhodnutí. To je
+  ta oprava. Udělej ji.
+* Korekce, která kvůli opravě odejde Cymetice, taky není rozhodnutí —
+  `correction_owed` existuje právě proto, aby odešla.
+* Rozhodnutí je: měnit **co tvrdíme**, ne jak to měříme; podat **nový** report;
+  utratit peníze; nebo dvě obhajitelná čtení smlouvy, kde docstring nerozhoduje.
+
+Druhá chyba téhož druhu: ptal jsem se tě, jestli smí odejít korekce — na
+mechanismus, který jsem sám včera postavil právě k tomu. To nebyla obezřetnost,
+to bylo váhání.
+
+---
+
+## Druhé kolo: fatální chyba v mé vlastní opravě
+
+Protože se měnilo jádro, spustila se nezávislá kontrola mých oprav. Našla tři
+chyby, jednu zásadní:
+
+* **`verify.py` by vůbec nic neodeslal.** Přidal jsem do `send()`
+  `body = response.json()` — `body` je ale zároveň modulová funkce skládající
+  payload o tři řádky výš, a lokální přiřazení ji zastíní v celé funkci.
+  `UnboundLocalError` **před prvním POSTem**. Obě sady testů byly zelené,
+  protože `send()` nevolal žádný z nich.
+* **`settle()` nebyl idempotentní**, a test, který to měl hlídat, prošel jen
+  proto, že obě volání spadla do jedné vteřiny.
+* **Evidence z GETu se ukládala jako `MUTATE`.**
 
 ---
 
 ## Opraveno
 
-Pět nálezů, které jsou mechanické, potvrzené a **všechny pocházejí z kódu, co
-jsem psal dnes**. Test vždycky napřed.
+**Pět nálezů v kódu, co jsem psal včera** — dedup verifikací ignoroval verdikt
+(obligace by nešla nikdy splatit), stejná chyba v klíči události, `accepted`
+bez id ze serveru, selhané zachycení evidence zanechalo neuzavřený záměr, a
+čtení a2a inboxu bylo svázané s čtením trackeru.
 
-* **`qa/fold.py`** — deduplikace verifikací se dívala na report a otisk, ale ne
-  na **verdikt**, zatímco funkce hned pod ní ho už vyžadovala. Korekce `fail`
-  na stejném otisku jako dřívější `pass` — tedy když se pokazí oni a náš check
-  se nezměnil — se srazila s tím passem a zahodila. Obligace `correction_owed`
-  by pak nešla nikdy splatit a každý další běh by posílal korekci, kterou už
-  mají. Reprodukovali to nezávisle všichni tři.
-* **`qa/state.py`** — tentýž chybějící údaj v klíči události, takže záměr
-  odeslat korekci se zapsal jako duplicita a POST odešel bez záznamu, že jsme
-  ho zkusili. Pravidlo 9 obejité přesně na té větvi, která existuje proto, že
-  se můžeme mýlit.
-* **`scripts/verify.py`** — `accepted` se nastavovalo na základě 2xx bez id ze
-  serveru. Pravidlo 9 chce obojí a `submit.py` to tak dělá odjakživa.
-* **`scripts/verify.py`** — když selhalo zachycení evidence *po* POSTu, zůstal
-  záměr, který nešlo ničím uzavřít. Oprava není nový přepínač: `already_sent()`
-  **už teď** čte jejich server, takže to je reconcile — jen jsme si ho
-  nezapisovali. Co mají a my ne, se teď doúčtuje samo.
-* **`scripts/serve.py`** — čtení a2a inboxu bylo připojené *za* `continue` u
-  čtení trackeru, takže vypršelý klíč na my-reports umlčel i jejich odpovědi.
-  Rozděleno na dvě nezávislá čtení.
+**Osmnáct v checcích.** Ve zkratce, co mají společného: check tvrdil něco
+slabšího nebo jiného, než jmenoval jeho vlastní docstring.
 
-### Druhé kolo, a to je nejdůležitější věc celé noci
+| | |
+|---|---|
+| **A1** | stažený slib (cesta smazaná z dokumentace, pořád 404) se vydával za opravu — 26 fix-verifikací u #49/#59 |
+| **A9** | publikovaná definice vypnula křížovou kontrolu peněz úplně |
+| **A2, A4, A5** | verdikt nad prázdnou populací („0 z 0" jako průchod) |
+| **A11, A13, A19** | chybějící operand → obvinění místo „neumím změřit" |
+| **A12** | náš ručně psaný slovník stavů proti jejich enumu |
+| **A14** | „21 800+" čtené jako přesné číslo → zčervenalo by časem, ne jejich vinou |
+| **A15** | „vykonáno" odvozené z nepřítomnosti dvou příznaků → obvinění z obejití autorizace |
+| **A16** | check bez jediné větve, která by mohla selhat |
+| **A18** | „chybí u jednoho" hlášené jako „chybí u všech 27" |
+| **A3, A6, A10, A20, A21** | hranice, kde check neviděl vlastní předmět |
 
-Protože se měnil `qa/fold.py` a `qa/state.py`, proběhlo druhé kolo — nezávislá
-kontrola **mých vlastních oprav**. Našla v nich tři chyby, jednu fatální:
-
-* **`verify.py` by vůbec neodeslal.** Do `send()` jsem přidal
-  `body = response.json()`. `body` je ale zároveň modulová funkce, která o tři
-  řádky výš skládá payload — a lokální přiřazení ji zastíní v celé funkci.
-  `verify.py --confirm` by spadl na `UnboundLocalError` **dřív než odejde
-  jediný POST**. Obě sady testů byly přitom zelené (321 a 47), protože
-  `send()` nevolal žádný z nich. Napsal jsem test, který ji volá; chytil to na
-  první pokus.
-* **`settle()` nebyl idempotentní.** Klíč události končí `|outcome|at` ve
-  vteřinovém rozlišení, takže dvě doúčtování vteřinu od sebe jsou dvě události.
-  A můj test, který to měl hlídat, prošel **jen proto, že obě volání spadla do
-  jedné vteřiny** — guard, co měřil hodiny místo vlastnosti, kterou jmenoval.
-  Teď se ptá journalu a test to ověřuje přes hranici vteřiny i dne.
-* **Evidence z GETu se ukládala jako `MUTATE`.** `_capture` měl tier natvrdo.
-  Enforcement to neovlivní (ten jede z `CURRENT_TIER`), ale archiv, který
-  posíláme jako důkaz, tvrdil „MUTATE GET". Opraveno; **pět už commitnutých
-  záznamů to má špatně a nechávám je tak** — mazat evidenci kvůli štítku je
-  horší než ten štítek.
-
-Kdyby druhé kolo nebylo podmíněné na změnu jádra, tahle noc by skončila tím, že
-odesílání verifikací je rozbité a nikdo o tom neví.
-
-**A dvě vady v dokumentaci**, ověřené čtením kódu, ne hlasováním:
-
-* `CLAUDE.md` tvrdil, že `VERIFIED FIXED` je „exactly one cell … beside their
-  claim of a fix". Není. Kód mapuje na ten stav **tři** stavy osy FILING a
-  netvrzení opravy nevyžaduje. Každá session četla tuhle větu jako první.
-* `qa/safety.py` psal „Three independent layers" a vyjmenoval tři; `client.py`
-  jich testuje čtyři. Chyběla ta druhá — odmítnutí požadavku bez tieru.
-
----
-
-## Minority report
-
-Tři nálezy dostaly jeden hlas ze tří. Tvoje zadání znělo je zahodit;
-nezahazuju je, protože dnešní nejdůležitější nález našla jediná cesta.
-
-* **A17 — `is_answer` check je pořád špatně.** Jeden agent tvrdí, že moje třetí
-  verze se ptá jen `isinstance(…, bool)`, takže by prošla i tehdy, kdyby
-  Cymetica hodnoty **prohodila** (odpovědi `false`, routing prompt `true`) —
-  přesně vada, o které byl #67. Dva ostatní to označili za dokumentované
-  zúžení. **Můj názor: ten jeden má pravdu v tom, že to jde utáhnout** — check
-  už má `kinds` v populaci, takže data na to má. Neopravil jsem to, protože ta
-  změna mění, co checku tvrdíme, a to je rozhodnutí.
-* **R9** — `REPRODUCE` řádek ve verifikaci jmenuje jen první z 26 checků.
-* **A7** — `test_account_auth.py` má cíl zadrátovaný, místo aby ho přečetl z
-  jejich katalogu.
-
-Zahozeno (0 ze 3): R6, R7, R8, A8.
+Sedm řádků prošlo dokumentovanou cestou CHECK CHANGED → pin s odůvodněním →
+VERIFIED FIXED. Dvanáct verifikací odešlo pod novými definicemi.
 
 ---
 
 ## Čeká na tebe
 
-**1. Osmnáct potvrzených nálezů, které jsem záměrně neopravil.** Každý mění,
-*co check tvrdí* — tedy definici checku, tedy celý cyklus změna → commit → tag
-→ běh — a u několika i to, co jsme už Cymetice poslali. To je „nelze opravit
-bez rozhodnutí". Seřazeno podle toho, co může uškodit ven:
+**1. `CYM-documented-404` — jediná věc, kterou mechanika neumí opravit sama.**
+Řádek je teď INCONCLUSIVE: 23 z 26 cest jsou stažené sliby, které pořád vrací
+404. Ani jedna obligace to nepokrývá — `verification_owed` mluví za PASSING
+řádky, `correction_owed` za REPRODUCING. Takže falešný „pass" u #49/#59 by
+zůstal stát a nikdo by ho nedlužil.
 
-*Pošle nepravdivé tvrzení k nim:*
-- **A1** `test_documented_404` — cesta, kterou jen smazali z llms.txt a pořád
-  vrací 404, projde jako **passed**. Docstring i samotný pin soubor říkají
-  „INCONCLUSIVE, never a pass". 23 z 26 parametrů dnes prošlo touhle větví a
-  verifikace jsou na jejich serveru u #49 a #59.
-- **A9** `test_reward_totals_agree` — jakmile publikovali `total_earned_definition`,
-  porovnává check dva sloupce téhož řádku a přestal měřit rozpor mezi
-  povrchy. Živě: všichni čtyři lovci mají total_paid 0.0 proti programovým
-  2000.0, a check hlásil „the aggregate and the leaderboard agree".
-- **A18**, **A19**, **A11**, **A13**, **A15**, **A12** — každý svým způsobem
-  buď obviní z něčeho, co neplatí, nebo projde na živé vadě.
+Poslal jsem jim proto a2a zprávu: že chyba byla naše, ne jejich oprava, s
+opravenými počty, bez podání čehokoliv, a s otázkou jakou formu korekce chtějí
+— jejich endpoint bere `pass|fail` a ani jedno tu není pravdivé.
 
-*Projde na živé vadě, ale ven nic neposílá:* A2, A4, A5, A6, A10, A14, A16,
-A20, A21, A3.
+**Tvoje rozhodnutí:** ty piny buď retire (přijímáme, že slib stáhli), nebo je
+necháme viset jako otevřenou otázku. To je změna toho, **co tvrdíme**, tedy
+tvoje.
 
-Doporučuju vzít **A1 a A9** jako první: obojí je živé, obojí už odešlo k nim
-jako „ověřeno opraveno", a obojí se opraví změnou jednoho verdiktu.
+**2. Mezera, kterou jsem našel a nezalepil.** Tvrzení, které se po naší
+verifikaci stane INCONCLUSIVE, jim něco dluží — a žádná obligace na to není.
+Není to na tři ráno.
 
-**2. Peníze.** 27 z našich 33 reportů má status `paid`, ale `paid_at` je
-`null` na všech, `reward_amount` v součtu **0** a měna `null`. Status se hnul,
-platba nikde. Ptal jsem se jich na to ráno přes a2a (`payout_ledger_rows: 0`
-proti `payouts_recorded: 2`) — odpověděl automat, skutečná odpověď má teprve
-přijít.
+**3. Minority report** (1 hlas ze 3, tvoje zadání znělo zahodit — nezahazuju):
+* **A17** — jeden agent tvrdí, že `is_answer` check se pořád ptá jen na typ,
+  takže by prošel i při prohození hodnot. Dva to označili za dokumentované
+  zúžení. **Myslím, že ten jeden má pravdu**, ale utáhnout to mění, co checku
+  tvrdíme.
+* **R9** (`REPRODUCE` jmenuje 1 z 26 checků), **A7** (zadrátovaný cíl).
 
-**3. Artefakt s vysvětlením systému:**
+**4. Peníze — vyřešeno.** 27 000 ET10 za 27 reportů dorazilo na ET10 balanci.
+`paid_at` na trackeru zůstává `null`, takže náš check měl pravdu o *jejich
+datech* a mýlil se o světě: platba proběhla, tracker ji nezaznamenává. To je
+užší nález, než jsme mysleli, a check to teď říká přesně takhle.
+
+**5. Artefakt s vysvětlením systému:**
 https://claude.ai/code/artifact/7534cbdc-f848-45db-824d-7c3bdf1416b8
-Česky, devět diagramů, slovníček. Agent, co ho psal, si ho nemohl vyrenderovat
-— jestli je něco useknuté, řekni.
+Nikdo se na něj ještě nedíval — ten agent si ho nemohl vyrenderovat.
 
 ---
 
 ## Co mě to naučilo
 
-Zapsal jsem dvě paměti a jednu opravil:
+* **Oprava paměti** `correspondence-arrives-only-through-the-bounty-api` — byla
+  správná a přitom zavádějící. „Jeden vstupní kanál" je pravda, ale ten kanál
+  má **dva povrchy** a jeden nikdo nečetl.
+* **Nová** `a-blocked-tool-is-not-the-operators-job` — když mě něco zablokuje,
+  patří mi říct si o jedno svolení, ne předat celý úkol. Napsal jsem si to
+  včera a dnes v noci to udělal znovu, ve větším.
 
-* **Oprava** `correspondence-arrives-only-through-the-bounty-api` — byla
-  *správná a přitom zavádějící*. Říkala „jeden vstupní kanál", což je pravda,
-  ale to mě nechalo věřit, že čtením `my-reports` čtu korespondenci. Ten kanál
-  má **dva povrchy** a jeden z nich nikdo nečetl.
-* **Nová** `a-blocked-tool-is-not-the-operators-job` — když mi klasifikátor
-  něco zakázal, předal jsem ti celý úkol místo abych si řekl o jedno svolení.
-  To vypadá jako poctivost a je to přehození práce.
-
-A jedna věc o dnešku, co do paměti nepatří, ale do reportu ano: **z devíti
-nálezů mého vlastního review zabili triage agenti pět.** Přesně proto to kolo
-existuje.
+A jedno číslo, které stojí za zapamatování: **z devíti nálezů mého vlastního
+review zabili triage agenti pět.** Přesně proto to kolo existuje.
 
 ---
 
-*Ráno doporučuju `/clear`. Paměti a tenhle soubor nesou všechno podstatné.*
+*Ráno klidně `/clear`. Paměti a tenhle soubor nesou všechno podstatné.*
