@@ -350,3 +350,39 @@ def test_an_option_value_is_not_a_test_path():
         assert not _selector_is_full(config(
             ["tests", narrowing, "foo"], ["tests"])), \
             f"{narrowing} narrows collection and must not read as full"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_part_that_could_not_be_read_is_not_a_part_that_changed():
+    """The deploy detector must not fire on our own slow morning.
+
+    diff() compared the two `parts` maps, so a corpus part that failed to read
+    at the start of a run was absent from `before`, present in `after`, and
+    reported as an appearance. On 2026-09-07 one ReadTimeout on /openapi.json
+    did exactly that: fingerprint_drifted went true, the run became
+    inadmissible for a reason that names a platform change, and 397 passing
+    checks were thrown away. Nothing had deployed.
+
+    Rule 8 one layer up. A read that failed is not a measurement, and it is
+    certainly not a measurement that differs from the last one.
+
+    The errors and the parts had to start sharing a key namespace for this to
+    be possible at all -- errors were keyed by the part's dict repr and parts
+    by path, so nothing downstream could match them up.
+    """
+    from qa.fingerprint import diff
+
+    timed_out = {"parts": {"/llms.txt": "a"},
+                 "errors": {"/openapi.json": "ReadTimeout: too slow"}}
+    read_fine = {"parts": {"/llms.txt": "a", "/openapi.json": "b"}, "errors": {}}
+    assert diff(timed_out, read_fine) == [], \
+        "a part that could not be read was reported as a platform change"
+    assert diff(read_fine, timed_out) == [], "and the same in the other direction"
+
+    # What it must still catch.
+    moved = {"parts": {"/llms.txt": "a", "/openapi.json": "CHANGED"}, "errors": {}}
+    assert diff(read_fine, moved) == ["/openapi.json"], "a real change went unseen"
+
+    gone = {"parts": {"/llms.txt": "a"}, "errors": {}}
+    assert diff(read_fine, gone) == ["-/openapi.json"], \
+        "a part genuinely dropped from the corpus went unseen"
