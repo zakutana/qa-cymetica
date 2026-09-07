@@ -1,0 +1,108 @@
+{
+  "captured_at": "2026-09-07T21:46:15+00:00",
+  "endpoint_rule": null,
+  "nodeid": null,
+  "request": {
+    "body": {
+      "encoding": "empty",
+      "value": null
+    },
+    "headers": {
+      "accept": "application/json",
+      "accept-encoding": "gzip, deflate, zstd",
+      "connection": "keep-alive",
+      "host": "cymetica.com",
+      "user-agent": "qa-cymetica/0.1 (independent QA; contact via vendor Telegram channel)",
+      "x-api-key": "<redacted>"
+    },
+    "method": "GET",
+    "url": "https://cymetica.com/api/v1/bounty/reports/52/verifications"
+  },
+  "response": {
+    "body": {
+      "encoding": "json",
+      "truncated": false,
+      "value": {
+        "report_id": 52,
+        "ticket_status": "resolved",
+        "total": 3,
+        "verifications": [
+          {
+            "checked_at": "2026-09-07T13:53:09",
+            "created_at": "2026-09-07T13:54:24.369975",
+            "evidence": "Independent re-check by the QA agent for hunter expire76.\n\nVERDICT pass -- the check that recorded this defect now passes, under the same definition it failed under.\n\nWHAT THE FINGERPRINT IS: a SHA-256 of the check function's parsed syntax tree. It changes when the check's logic changes and not when its comments or formatting do. Because it matches the one recorded at the failure, this is the same test, not a rewritten one that happens to pass.\n\nRUN: run-20260907T135100Z-0923c37, preregistration PRE-0057, on a clean working tree at commit 0923c3706a7f30ee1b0157d6017447dc770b365e. The selector was frozen and git-tagged BEFORE the run, so the set of checks could not be narrowed after seeing the results.\n\nCHECK(S) THIS COVERS:\n  tests/reconciliation/test_reconcile.py::test_sources_agree[commit_count::build_stats-vs-llms_txt]\n\nREPRODUCE: github.com/zakutana/qa-cymetica at 0923c3706a7f30ee1b0157d6017447dc770b365e, then\n  pytest tests/reconciliation/test_reconcile.py::test_sources_agree[commit_count::build_stats-vs-llms_txt]\n\nFINDING CYM-commit_count: How many commits are in the production codebase?",
+            "fingerprint": "sha256:e081c62f35eae60b83c14e9766dce049",
+            "hunter_id": 5,
+            "id": 18,
+            "issue_effect": "pass_marker_recorded",
+            "issue_ref": "ET-22014",
+            "report_id": 52,
+            "test_run_id": "run-20260907T135100Z-0923c37",
+            "tree_sha": "0923c3706a7f30ee1b0157d6017447dc770b365e",
+            "verdict": "pass"
+          },
+          {
+            "checked_at": "2026-09-07T13:53:09",
+            "created_at": "2026-09-07T13:54:14.924827",
+            "evidence": "Independent re-check by the QA agent for hunter expire76.\n\nVERDICT pass -- the check that recorded this defect now passes, under the same definition it failed under.\n\nWHAT THE FINGERPRINT IS: a SHA-256 of the check function's parsed syntax tree. It changes when the check's logic changes and not when its comments or formatting do. Because it matches the one recorded at the failure, this is the same test, not a rewritten one that happens to pass.\n\nRUN: run-20260907T135100Z-0923c37, preregistration PRE-0057, on a clean working tree at commit 0923c3706a7f30ee1b0157d6017447dc770b365e. The selector was frozen and git-tagged BEFORE the run, so the set of checks could not be narrowed after seeing the results.\n\nCHECK(S) THIS COVERS:\n  tests/mcp/test_clob_pairs.py::test_clob_pair_count_matches_the_catalogue\n\nREPRODUCE: github.com/zakutana/qa-cymetica at 0923c3706a7f30ee1b0157d6017447dc770b365e, then\n  pytest tests/mcp/test_clob_pairs.py::test_clob_pair_count_matches_the_catalogue\n\nFINDING CYM-clob_pair_count: How many CLOB trading pairs exist?",
+            "fingerprint": "<redacted>",
+            "hunter_id": 5,
+            "id": 16,
+            "issue_effect": "pass_marker_recorded",
+            "issue_ref": "ET-22014",
+            "report_id": 52,
+            "test_run_id": "run-20260907T135100Z-0923c37",
+            "tree_sha": "0923c3706a7f30ee1b0157d6017447dc770b365e",
+            "verdict": "pass"
+          },
+          {
+            "checked_at": "2026-09-07T12:40:29",
+            "created_at": "2026-09-07T13:33:53.203499",
+            "evidence": "Independent re-check by the QA agent for hunter expire76.\n\nVERDICT pass -- the check that recorded this defect now passes, under the same definition it failed under.\n\nWHAT THE FINGERPRINT IS: a SHA-256 of the check function's parsed syntax tree. It changes when the check's logic changes and not when its comments or formatting do. Because it matches the one recorded at the failure, this is the same test, not a rewritten one that happens to pass.\n\nRUN: run-20260907T123825Z-8bf609f, preregistration PRE-0056, on a clean working tree at commit 8bf609f6d0d27434425c8fb2c53ce1c5edd3bca7. The selector was frozen and git-tagged BEFORE the run, so the set of checks could not be narrowed after seeing the results.\n\nCHECK(S) THIS COVERS:\n  tests/reconciliation/test_reconcile.py::test_sources_agree[agent_count::live_species-vs-llms_txt]\n\nREPRODUCE: github.com/zakutana/qa-cymetica at 8bf609f6d0d27434425c8fb2c53ce1c5edd3bca7, then\n  pytest tests/reconciliation/test_reconcile.py::test_sources_agree[agent_count::live_species-vs-llms_txt]\n\nFINDING CYM-agent_count: How many AI trading agents exist?",
+            "fingerprint": "sha256:6156cefe281b0c01af3a3391dce65475",
+            "hunter_id": 5,
+            "id": 6,
+            "issue_effect": "pass_marker_recorded",
+            "issue_ref": "ET-22014",
+            "report_id": 52,
+            "test_run_id": "run-20260907T123825Z-8bf609f",
+            "tree_sha": "8bf609f6d0d27434425c8fb2c53ce1c5edd3bca7",
+            "verdict": "pass"
+          }
+        ]
+      }
+    },
+    "elapsed_ms": 325,
+    "headers": {
+      "cache-control": "no-store, no-cache, must-revalidate, max-age=0",
+      "connection": "keep-alive",
+      "content-encoding": "gzip",
+      "content-length": "1156",
+      "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests",
+      "content-security-policy-report-only": "default-src 'self'; script-src 'self' 'nonce-zA+csKuFAZ263wZ4yaSxKg==' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'",
+      "content-signal": "ai-train=no, search=yes, ai-input=yes",
+      "content-type": "application/json",
+      "cross-origin-opener-policy": "same-origin-allow-popups",
+      "cross-origin-resource-policy": "cross-origin",
+      "date": "Mon, 07 Sep 2026 21:46:15 GMT",
+      "permissions-policy": "geolocation=(), microphone=(), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=(), browsing-topics=(), attribution-reporting=()",
+      "pragma": "no-cache",
+      "referrer-policy": "strict-origin-when-cross-origin, strict-origin-when-cross-origin",
+      "server": "nginx",
+      "strict-transport-security": "max-age=31536000; includeSubDomains",
+      "vary": "Accept-Encoding",
+      "x-ai-strongest-model": "Claude Fable 5",
+      "x-content-type-options": "nosniff, nosniff",
+      "x-dns-prefetch-control": "off",
+      "x-frame-options": "SAMEORIGIN, SAMEORIGIN",
+      "x-ratelimit-limit": "2000",
+      "x-ratelimit-remaining": "1992",
+      "x-ratelimit-reset": "1788817620",
+      "x-xss-protection": "0"
+    },
+    "reason": "OK",
+    "status_code": 200
+  },
+  "run_id": "script-verify",
+  "tier": "SAFE"
+}

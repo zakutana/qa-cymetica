@@ -34,14 +34,14 @@
       },
       "reproductions": 9,
       "provenance": {
-        "run_id": "run-20260907T201230Z-7fee4cf",
-        "measured_at": "2026-09-07T20:14:54+00:00"
+        "run_id": "run-20260907T214201Z-b04267d",
+        "measured_at": "2026-09-07T21:44:00+00:00"
       },
       "check": {
         "state": "CHECK_CHANGED",
         "adjudicated_by": {
-          "run_id": "run-20260907T201230Z-7fee4cf",
-          "at": "2026-09-07T20:14:54+00:00"
+          "run_id": "run-20260907T214201Z-b04267d",
+          "at": "2026-09-07T21:44:00+00:00"
         },
         "pinned_fingerprint": "a00fa16074a898173577cb72f9e863a691aa4bfdb20c43a2d1476189800850ff"
       },
@@ -159,16 +159,16 @@
       },
       "reproductions": 17,
       "provenance": {
-        "run_id": "run-20260907T201230Z-7fee4cf",
-        "measured_at": "2026-09-07T20:14:54+00:00"
+        "run_id": "run-20260907T214201Z-b04267d",
+        "measured_at": "2026-09-07T21:44:00+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260907T201230Z-7fee4cf",
-          "at": "2026-09-07T20:14:54+00:00"
+          "run_id": "run-20260907T214201Z-b04267d",
+          "at": "2026-09-07T21:44:00+00:00"
         },
-        "pinned_fingerprint": "4adc7cdb96f01338e889be63e6b4eafe789b07b87371a355c07cd5495a77182c"
+        "pinned_fingerprint": "c128bb487c196aee5ab6a08c9bfedce70d99544cab71152a482c5530ad93b4a7"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -197,6 +197,13 @@
             "run_id": "run-20260907T173409Z-7e2dfcc",
             "verdict": "pass",
             "at": "2026-09-07T17:42:35+00:00"
+          },
+          {
+            "report_id": 47,
+            "fingerprint": "c128bb487c196aee5ab6a08c9bfedce70d99544cab71152a482c5530ad93b4a7",
+            "run_id": "run-20260907T214201Z-b04267d",
+            "verdict": "pass",
+            "at": "2026-09-07T21:46:26+00:00"
           }
         ]
       },
@@ -272,6 +279,24 @@
             "run_id": "run-20260907T173409Z-7e2dfcc"
           },
           "at": "2026-09-07T17:40:13+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "CHECK_CHANGED",
+          "to": "PASSING",
+          "cause": {
+            "run_id": "run-20260907T214201Z-b04267d"
+          },
+          "at": "2026-09-07T21:44:00+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "PASSING",
+          "to": "CHECK_CHANGED",
+          "cause": {
+            "run_id": "run-20260907T214201Z-b04267d"
+          },
+          "at": "2026-09-07T21:44:00+00:00"
         }
       ],
       "regressions": [],
@@ -336,14 +361,14 @@
       },
       "reproductions": 3,
       "provenance": {
-        "run_id": "run-20260907T201230Z-7fee4cf",
-        "measured_at": "2026-09-07T20:14:54+00:00"
+        "run_id": "run-20260907T214201Z-b04267d",
+        "measured_at": "2026-09-07T21:44:00+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260907T201230Z-7fee4cf",
-          "at": "2026-09-07T20:14:54+00:00"
+          "run_id": "run-20260907T214201Z-b04267d",
+          "at": "2026-09-07T21:44:00+00:00"
         },
         "pinned_fingerprint": "2150b030a8e4860cf7a2480bc36a2ae989dae3d032e200d87b5667f27c8c236f"
       },
@@ -540,7 +565,7 @@
             "mcp_json": "set:$.tools[*].name"
           }
         },
-        "reason": "mcp_tool_names_documented_exist: Does every tool name llms.txt documents exist on the server? Both llms.txt and .well-known/mcp.json now say 8 (get_market, get_orderbook, get_platform_status, get_prices, get_trust_signal, list_clob_pairs, list_markets, search_markets)."
+        "reason": "mcp_tool_names_documented_exist: Does every tool name llms.txt documents exist on the server? llms.txt says 8 (get_market, get_orderbook, get_platform_status, get_prices, get_trust_signal, list_clob_pairs, list_markets, search_markets), .well-known/mcp.json says 62 (ask_nexus_deep, board_channels, board_flag, board_post, board_read_post, board_read_thread, board_replicate, board_revise and 54 more), and that satisfies subset."
       },
       "checks": [
         "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_names_documented_exist::llms_txt-vs-mcp_json]"
@@ -553,14 +578,14 @@
       },
       "reproductions": 3,
       "provenance": {
-        "run_id": "run-20260907T201230Z-7fee4cf",
-        "measured_at": "2026-09-07T20:14:54+00:00"
+        "run_id": "run-20260907T214201Z-b04267d",
+        "measured_at": "2026-09-07T21:44:00+00:00"
       },
       "check": {
         "state": "PASSING_UNPINNED",
         "adjudicated_by": {
-          "run_id": "run-20260907T201230Z-7fee4cf",
-          "at": "2026-09-07T20:14:54+00:00"
+          "run_id": "run-20260907T214201Z-b04267d",
+          "at": "2026-09-07T21:44:00+00:00"
         },
         "pinned_fingerprint": null
       },
@@ -677,18 +702,21 @@
           71,
           72,
           73,
-          74
+          74,
+          76,
+          77,
+          78
         ],
         "sources": {
           "endpoint": "GET /api/v1/bounty/my-reports",
           "wallet": "<redacted>"
         },
         "population": {
-          "reports_returned": 33,
-          "closed": 33,
-          "server_total": 33
+          "reports_returned": 36,
+          "closed": 36,
+          "server_total": 36
         },
-        "reason": "7 of 33 reports they closed have never been re-checked by an admissible run of ours"
+        "reason": "7 of 36 reports they closed have never been re-checked by an admissible run of ours"
       },
       "checks": [
         "tests/rest/test_bounty_tracker.py::test_reports_they_closed_have_been_rechecked_by_us"
@@ -701,8 +729,8 @@
       },
       "reproductions": 4,
       "provenance": {
-        "run_id": "run-20260907T201230Z-7fee4cf",
-        "measured_at": "2026-09-07T20:14:54+00:00"
+        "run_id": "run-20260907T214201Z-b04267d",
+        "measured_at": "2026-09-07T21:44:00+00:00"
       },
       "check": {
         "state": "REPRODUCING",
@@ -711,7 +739,7 @@
           "at": "2026-09-05T19:56:34+00:00"
         },
         "pinned_fingerprint": "76f53745c4961b0f0a6076e33cd1d16173f41f802d404fbbb746923be506797e",
-        "evidence_only": "run-20260907T201230Z-7fee4cf"
+        "evidence_only": "run-20260907T214201Z-b04267d"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -849,7 +877,7 @@
             "agent_card": "set:$.skills[*].id"
           }
         },
-        "reason": "skills_subset: Is agent-skills.json the actionable subset of agent-card.json, as stated? Both agent-skills.json and agent-card.json now say 11 (arena-trading, asset-discovery, bug-bounty, clone-ai-agent, et10-revenue-share, exchange-tokens, market-data, portfolio-management and 3 more)."
+        "reason": "skills_subset: Is agent-skills.json the actionable subset of agent-card.json, as stated? agent-skills.json says 11 (arena-trading, asset-discovery, bug-bounty, clone-ai-agent, et10-revenue-share, exchange-tokens, market-data, portfolio-management and 3 more), agent-card.json says 16 (ai-due-diligence, ai-native-provenance, arena-trading, asset-discovery, bug-bounty, clone-ai-agent, et10-revenue-share, exchange-tokens and 8 more), and that satisfies subset."
       },
       "checks": [
         "tests/reconciliation/test_reconcile.py::test_sources_agree[skills_subset::agent_card-vs-agent_skills]"
@@ -862,14 +890,14 @@
       },
       "reproductions": 8,
       "provenance": {
-        "run_id": "run-20260907T201230Z-7fee4cf",
-        "measured_at": "2026-09-07T20:14:54+00:00"
+        "run_id": "run-20260907T214201Z-b04267d",
+        "measured_at": "2026-09-07T21:44:00+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260907T201230Z-7fee4cf",
-          "at": "2026-09-07T20:14:54+00:00"
+          "run_id": "run-20260907T214201Z-b04267d",
+          "at": "2026-09-07T21:44:00+00:00"
         },
         "pinned_fingerprint": "sha256:f9559807c42fd3328c8879e7b899b7cd"
       },
@@ -968,7 +996,7 @@
         },
         "population": {
           "mcp_lines": 4,
-          "doc_bytes": 44374
+          "doc_bytes": 44657
         },
         "reason": "llms.txt states no fixed catalogue size and directs the reader to tools/list for their own tier"
       },
@@ -983,14 +1011,14 @@
       },
       "reproductions": 3,
       "provenance": {
-        "run_id": "run-20260907T201230Z-7fee4cf",
-        "measured_at": "2026-09-07T20:14:54+00:00"
+        "run_id": "run-20260907T214201Z-b04267d",
+        "measured_at": "2026-09-07T21:44:00+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260907T201230Z-7fee4cf",
-          "at": "2026-09-07T20:14:54+00:00"
+          "run_id": "run-20260907T214201Z-b04267d",
+          "at": "2026-09-07T21:44:00+00:00"
         },
         "pinned_fingerprint": "5ec2ad807e24bbd1d7b1426ec466461d8cacd67ff55a809ed16b497f18351a97"
       },
@@ -1125,14 +1153,14 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260907T201230Z-7fee4cf",
-        "measured_at": "2026-09-07T20:14:54+00:00"
+        "run_id": "run-20260907T214201Z-b04267d",
+        "measured_at": "2026-09-07T21:44:00+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260907T201230Z-7fee4cf",
-          "at": "2026-09-07T20:14:54+00:00"
+          "run_id": "run-20260907T214201Z-b04267d",
+          "at": "2026-09-07T21:44:00+00:00"
         },
         "pinned_fingerprint": "aee41113b423d34dbb0fb7a237f679ec142e320ffd706e3a3645b1a3b80b4cd5"
       },
@@ -1267,14 +1295,14 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260907T201230Z-7fee4cf",
-        "measured_at": "2026-09-07T20:14:54+00:00"
+        "run_id": "run-20260907T214201Z-b04267d",
+        "measured_at": "2026-09-07T21:44:00+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260907T201230Z-7fee4cf",
-          "at": "2026-09-07T20:14:54+00:00"
+          "run_id": "run-20260907T214201Z-b04267d",
+          "at": "2026-09-07T21:44:00+00:00"
         },
         "pinned_fingerprint": "sha256:ba019a19f7a7c39de5c5c19601580248"
       },
@@ -1384,14 +1412,14 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260907T201230Z-7fee4cf",
-        "measured_at": "2026-09-07T20:14:54+00:00"
+        "run_id": "run-20260907T214201Z-b04267d",
+        "measured_at": "2026-09-07T21:44:00+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260907T201230Z-7fee4cf",
-          "at": "2026-09-07T20:14:54+00:00"
+          "run_id": "run-20260907T214201Z-b04267d",
+          "at": "2026-09-07T21:44:00+00:00"
         },
         "pinned_fingerprint": "sha256:6156cefe281b0c01af3a3391dce65475"
       },
@@ -1498,10 +1526,10 @@
         "adjudicated_by": null,
         "pinned_fingerprint": null,
         "not_checked_in": "run-20260907T201839Z-6b8f268",
-        "unverifiable_reason": "check_missing",
         "missing_checks": [
           "tests/reconciliation/test_reconcile.py::test_sources_agree[chain_count::live_chains-vs-mcp_json]"
-        ]
+        ],
+        "unverifiable_reason": "check_missing"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -1590,14 +1618,14 @@
       },
       "reproductions": 4,
       "provenance": {
-        "run_id": "run-20260907T201230Z-7fee4cf",
-        "measured_at": "2026-09-07T20:14:54+00:00"
+        "run_id": "run-20260907T214201Z-b04267d",
+        "measured_at": "2026-09-07T21:44:00+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260907T201230Z-7fee4cf",
-          "at": "2026-09-07T20:14:54+00:00"
+          "run_id": "run-20260907T214201Z-b04267d",
+          "at": "2026-09-07T21:44:00+00:00"
         },
         "pinned_fingerprint": "7d407afa861e77a3cf508bd4322059dcb57278fd95b3e61c32246e840a94b4ee"
       },
@@ -1709,7 +1737,7 @@
       "note": "Commits legitimately accrue, so a small gap is expected and a large one is not. The AI-native claim is the platform's headline marketing figure; a stale number here is a measurement defect, not a cosmetic one.",
       "detail": {
         "left": 21800,
-        "right": 22082,
+        "right": 22089,
         "sources": {
           "llms_txt": "regex_int:With ([\\d,]+)\\+ commits",
           "build_stats": "jsonpath:$.totals.commits"
@@ -1720,7 +1748,7 @@
             "build_stats": "jsonpath:$.totals.commits"
           }
         },
-        "reason": "commit_count: How many commits are in the production codebase? Both llms.txt and the build-stats endpoint now say 21800."
+        "reason": "commit_count: How many commits are in the production codebase? llms.txt says 21800, the build-stats endpoint says 22089, and that satisfies at_least."
       },
       "checks": [
         "tests/reconciliation/test_reconcile.py::test_sources_agree[commit_count::build_stats-vs-llms_txt]"
@@ -1733,16 +1761,16 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260907T201230Z-7fee4cf",
-        "measured_at": "2026-09-07T20:14:54+00:00"
+        "run_id": "run-20260907T214201Z-b04267d",
+        "measured_at": "2026-09-07T21:44:00+00:00"
       },
       "check": {
-        "state": "CHECK_CHANGED",
+        "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260907T201230Z-7fee4cf",
-          "at": "2026-09-07T20:14:54+00:00"
+          "run_id": "run-20260907T214201Z-b04267d",
+          "at": "2026-09-07T21:44:00+00:00"
         },
-        "pinned_fingerprint": "sha256:e081c62f35eae60b83c14e9766dce049"
+        "pinned_fingerprint": "sha256:7faa6c280a992da1b4ca50ae36c0142b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -1764,6 +1792,13 @@
             "run_id": "run-20260907T135100Z-0923c37",
             "verdict": "pass",
             "at": "2026-09-07T13:54:24+00:00"
+          },
+          {
+            "report_id": 52,
+            "fingerprint": "sha256:7faa6c280a992da1b4ca50ae36c0142b",
+            "run_id": "run-20260907T214201Z-b04267d",
+            "verdict": "pass",
+            "at": "2026-09-07T21:46:50+00:00"
           }
         ]
       },
@@ -1821,11 +1856,20 @@
             "run_id": "run-20260907T201230Z-7fee4cf"
           },
           "at": "2026-09-07T20:14:54+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "CHECK_CHANGED",
+          "to": "PASSING",
+          "cause": {
+            "run_id": "run-20260907T214201Z-b04267d"
+          },
+          "at": "2026-09-07T21:44:00+00:00"
         }
       ],
       "regressions": [],
       "obligations": {
-        "reverify": true,
+        "reverify": false,
         "repair_check": false,
         "reopen": [],
         "retractions": [],
@@ -1852,7 +1896,7 @@
         "population": {
           "rows_returned": 20,
           "closed": 20,
-          "server_total": 43
+          "server_total": 46
         },
         "reason": "0 of 20 closed reports carry no evidence field at all (validated_at, triaged_at, severity_confirmed, ticket_url, fix_pr_url, status_notes)"
       },
@@ -1867,14 +1911,14 @@
       },
       "reproductions": 8,
       "provenance": {
-        "run_id": "run-20260907T201230Z-7fee4cf",
-        "measured_at": "2026-09-07T20:14:54+00:00"
+        "run_id": "run-20260907T214201Z-b04267d",
+        "measured_at": "2026-09-07T21:44:00+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260907T201230Z-7fee4cf",
-          "at": "2026-09-07T20:14:54+00:00"
+          "run_id": "run-20260907T214201Z-b04267d",
+          "at": "2026-09-07T21:44:00+00:00"
         },
         "pinned_fingerprint": "b29402efa7bf2470bde86d34d23e67843ebdc1e6f2fcb235b26081136d119299"
       },
@@ -2152,14 +2196,14 @@
       },
       "reproductions": 17,
       "provenance": {
-        "run_id": "run-20260907T201230Z-7fee4cf",
-        "measured_at": "2026-09-07T20:14:54+00:00"
+        "run_id": "run-20260907T214201Z-b04267d",
+        "measured_at": "2026-09-07T21:44:00+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260907T201230Z-7fee4cf",
-          "at": "2026-09-07T20:14:54+00:00"
+          "run_id": "run-20260907T214201Z-b04267d",
+          "at": "2026-09-07T21:44:00+00:00"
         },
         "pinned_fingerprint": "sha256:c92311ababf484c409f09471d3d2b835"
       },
@@ -2194,6 +2238,20 @@
             "run_id": "run-20260907T135100Z-0923c37",
             "verdict": "pass",
             "at": "2026-09-07T13:54:33+00:00"
+          },
+          {
+            "report_id": 49,
+            "fingerprint": "sha256:c92311ababf484c409f09471d3d2b835",
+            "run_id": "run-20260907T214201Z-b04267d",
+            "verdict": "pass",
+            "at": "2026-09-07T21:46:54+00:00"
+          },
+          {
+            "report_id": 59,
+            "fingerprint": "sha256:c92311ababf484c409f09471d3d2b835",
+            "run_id": "run-20260907T214201Z-b04267d",
+            "verdict": "pass",
+            "at": "2026-09-07T21:46:59+00:00"
           }
         ]
       },
@@ -2286,10 +2344,7 @@
         "repair_check": false,
         "reopen": [],
         "retractions": [],
-        "verification_owed": [
-          49,
-          59
-        ],
+        "verification_owed": [],
         "correction_owed": [],
         "disputed": []
       },
@@ -2347,12 +2402,12 @@
         "adjudicated_by": null,
         "pinned_fingerprint": null,
         "not_checked_in": "run-20260907T201839Z-6b8f268",
-        "unverifiable_reason": "check_missing",
         "missing_checks": [
           "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_count::llms_txt-vs-mcp_anon]",
           "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_count::llms_txt-vs-mcp_json]",
           "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_count::llms_txt-vs-mcp_trusted]"
-        ]
+        ],
+        "unverifiable_reason": "check_missing"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -2502,7 +2557,7 @@
             "mcp_json": "set:$.tools[*].name"
           }
         },
-        "reason": "mcp_tool_names_documented_exist: Does every tool name llms.txt documents exist on the server? Both llms.txt and .well-known/mcp.json now say 8 (get_market, get_orderbook, get_platform_status, get_prices, get_trust_signal, list_clob_pairs, list_markets, search_markets)."
+        "reason": "mcp_tool_names_documented_exist: Does every tool name llms.txt documents exist on the server? llms.txt says 8 (get_market, get_orderbook, get_platform_status, get_prices, get_trust_signal, list_clob_pairs, list_markets, search_markets), .well-known/mcp.json says 62 (ask_nexus_deep, board_channels, board_flag, board_post, board_read_post, board_read_thread, board_replicate, board_revise and 54 more), and that satisfies subset."
       },
       "checks": [
         "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_names_documented_exist::llms_txt-vs-mcp_json]"
@@ -2515,14 +2570,14 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260907T201230Z-7fee4cf",
-        "measured_at": "2026-09-07T20:14:54+00:00"
+        "run_id": "run-20260907T214201Z-b04267d",
+        "measured_at": "2026-09-07T21:44:00+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260907T201230Z-7fee4cf",
-          "at": "2026-09-07T20:14:54+00:00"
+          "run_id": "run-20260907T214201Z-b04267d",
+          "at": "2026-09-07T21:44:00+00:00"
         },
         "pinned_fingerprint": "sha256:13577e53eb81ed18ef1bcf733fe4ca57"
       },
@@ -2675,7 +2730,7 @@
             "agent_card": "set:$.skills[*].id"
           }
         },
-        "reason": "skills_subset: Is agent-skills.json the actionable subset of agent-card.json, as stated? Both agent-skills.json and agent-card.json now say 11 (arena-trading, asset-discovery, bug-bounty, clone-ai-agent, et10-revenue-share, exchange-tokens, market-data, portfolio-management and 3 more)."
+        "reason": "skills_subset: Is agent-skills.json the actionable subset of agent-card.json, as stated? agent-skills.json says 11 (arena-trading, asset-discovery, bug-bounty, clone-ai-agent, et10-revenue-share, exchange-tokens, market-data, portfolio-management and 3 more), agent-card.json says 16 (ai-due-diligence, ai-native-provenance, arena-trading, asset-discovery, bug-bounty, clone-ai-agent, et10-revenue-share, exchange-tokens and 8 more), and that satisfies subset."
       },
       "checks": [
         "tests/reconciliation/test_reconcile.py::test_sources_agree[skills_subset::agent_card-vs-agent_skills]"
@@ -2688,14 +2743,14 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260907T201230Z-7fee4cf",
-        "measured_at": "2026-09-07T20:14:54+00:00"
+        "run_id": "run-20260907T214201Z-b04267d",
+        "measured_at": "2026-09-07T21:44:00+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260907T201230Z-7fee4cf",
-          "at": "2026-09-07T20:14:54+00:00"
+          "run_id": "run-20260907T214201Z-b04267d",
+          "at": "2026-09-07T21:44:00+00:00"
         },
         "pinned_fingerprint": "sha256:f9559807c42fd3328c8879e7b899b7cd"
       },
@@ -2821,7 +2876,7 @@
             "agent_card": "set:$.skills[*].id"
           }
         },
-        "reason": "skills_subset: Is agent-skills.json the actionable subset of agent-card.json, as stated? Both agent-skills.json and agent-card.json now say 11 (arena-trading, asset-discovery, bug-bounty, clone-ai-agent, et10-revenue-share, exchange-tokens, market-data, portfolio-management and 3 more)."
+        "reason": "skills_subset: Is agent-skills.json the actionable subset of agent-card.json, as stated? agent-skills.json says 11 (arena-trading, asset-discovery, bug-bounty, clone-ai-agent, et10-revenue-share, exchange-tokens, market-data, portfolio-management and 3 more), agent-card.json says 16 (ai-due-diligence, ai-native-provenance, arena-trading, asset-discovery, bug-bounty, clone-ai-agent, et10-revenue-share, exchange-tokens and 8 more), and that satisfies subset."
       },
       "checks": [
         "tests/reconciliation/test_reconcile.py::test_sources_agree[skills_subset::agent_card-vs-agent_skills]"
@@ -2834,14 +2889,14 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260907T201230Z-7fee4cf",
-        "measured_at": "2026-09-07T20:14:54+00:00"
+        "run_id": "run-20260907T214201Z-b04267d",
+        "measured_at": "2026-09-07T21:44:00+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260907T201230Z-7fee4cf",
-          "at": "2026-09-07T20:14:54+00:00"
+          "run_id": "run-20260907T214201Z-b04267d",
+          "at": "2026-09-07T21:44:00+00:00"
         },
         "pinned_fingerprint": "sha256:f9559807c42fd3328c8879e7b899b7cd"
       },
@@ -3015,14 +3070,14 @@
       },
       "reproductions": 8,
       "provenance": {
-        "run_id": "run-20260907T201230Z-7fee4cf",
-        "measured_at": "2026-09-07T20:14:54+00:00"
+        "run_id": "run-20260907T214201Z-b04267d",
+        "measured_at": "2026-09-07T21:44:00+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260907T201230Z-7fee4cf",
-          "at": "2026-09-07T20:14:54+00:00"
+          "run_id": "run-20260907T214201Z-b04267d",
+          "at": "2026-09-07T21:44:00+00:00"
         },
         "pinned_fingerprint": "7e9fa3b315c02dbafde5c9fd268cdc7c32c6019c6dbfe7476611705cb1c95608"
       },
@@ -3135,22 +3190,22 @@
       ],
       "detail": {
         "left": [],
-        "right": 25,
+        "right": 28,
         "sources": {
           "filed_via": "POST /api/v1/bounty/reports",
           "looked_in": "/leaderboard/bugs",
           "stages_from": "/api/v1/bounty/my-reports"
         },
         "population": {
-          "filed": 27,
-          "publishable": 25,
+          "filed": 30,
+          "publishable": 28,
           "withheld_pre_validation": [
             54,
             62
           ],
-          "page_bytes": 289203
+          "page_bytes": 291645
         },
-        "reason": "0 of the 25 reports of ours that have reached a published stage are absent from the tracker where work happens (not counted: [54, 62], which they have not validated)"
+        "reason": "0 of the 28 reports of ours that have reached a published stage are absent from the tracker where work happens (not counted: [54, 62], which they have not validated)"
       }
     },
     "CYM-bounty-fields-dropped": {
@@ -3172,14 +3227,14 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260907T201230Z-7fee4cf",
-        "measured_at": "2026-09-07T20:14:54+00:00"
+        "run_id": "run-20260907T214201Z-b04267d",
+        "measured_at": "2026-09-07T21:44:00+00:00"
       },
       "check": {
         "state": "PASSING_UNPINNED",
         "adjudicated_by": {
-          "run_id": "run-20260907T201230Z-7fee4cf",
-          "at": "2026-09-07T20:14:54+00:00"
+          "run_id": "run-20260907T214201Z-b04267d",
+          "at": "2026-09-07T21:44:00+00:00"
         },
         "pinned_fingerprint": null
       },
@@ -3246,10 +3301,10 @@
           "read_from": "/api/v1/bounty/my-reports"
         },
         "population": {
-          "reports_compared": 27,
+          "reports_compared": 30,
           "empty_on_some_rows": {}
         },
-        "reason": "0 of the 5 fields we send come back empty on every one of our 27 reports: none"
+        "reason": "0 of the 5 fields we send come back empty on every one of our 30 reports: none"
       }
     },
     "CYM-bounty-hunter-name-lost": {
@@ -3271,14 +3326,14 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260907T201230Z-7fee4cf",
-        "measured_at": "2026-09-07T20:14:54+00:00"
+        "run_id": "run-20260907T214201Z-b04267d",
+        "measured_at": "2026-09-07T21:44:00+00:00"
       },
       "check": {
         "state": "PASSING_UNPINNED",
         "adjudicated_by": {
-          "run_id": "run-20260907T201230Z-7fee4cf",
-          "at": "2026-09-07T20:14:54+00:00"
+          "run_id": "run-20260907T214201Z-b04267d",
+          "at": "2026-09-07T21:44:00+00:00"
         },
         "pinned_fingerprint": null
       },
@@ -3332,16 +3387,16 @@
         "disputed": []
       },
       "detail": {
-        "left": 27,
-        "right": 27,
+        "left": 30,
+        "right": 30,
         "sources": {
           "sent_to": "POST /api/v1/bounty/reports",
           "read_from": "/api/v1/bounty/my-reports"
         },
         "population": {
-          "reports_compared": 27
+          "reports_compared": 30
         },
-        "reason": "hunter_name survives on 27 of 27 of our reports; we send 'expire76' on every one"
+        "reason": "hunter_name survives on 30 of 30 of our reports; we send 'expire76' on every one"
       }
     },
     "CYM-documented_path_is_served[/api/v1/vaix/prices]": {
@@ -3361,10 +3416,10 @@
         },
         "pinned_fingerprint": "5e9d6943c1eaf398d598a59460e9acdf2a187f99ecb323ce600818b417cefeae",
         "not_checked_in": "run-20260907T201839Z-6b8f268",
-        "unverifiable_reason": "check_missing",
         "missing_checks": [
           "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/vaix/prices]"
-        ]
+        ],
+        "unverifiable_reason": "check_missing"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -3473,10 +3528,10 @@
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260907T201230Z-7fee4cf",
-          "at": "2026-09-07T20:14:54+00:00"
+          "run_id": "run-20260907T214201Z-b04267d",
+          "at": "2026-09-07T21:44:00+00:00"
         },
-        "pinned_fingerprint": "8a8ec949f57150dcf207546f69321615e4324542b82a752c981b4667aea99b60"
+        "pinned_fingerprint": "63b5af80410517bcd0f649fe3bfddfbb4986eb2d467a60c979a1bc66dc452220"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -3498,6 +3553,13 @@
             "run_id": "run-20260907T123825Z-8bf609f",
             "verdict": "pass",
             "at": "2026-09-07T13:34:19+00:00"
+          },
+          {
+            "report_id": 64,
+            "fingerprint": "63b5af80410517bcd0f649fe3bfddfbb4986eb2d467a60c979a1bc66dc452220",
+            "run_id": "run-20260907T214201Z-b04267d",
+            "verdict": "pass",
+            "at": "2026-09-07T21:46:31+00:00"
           }
         ]
       },
@@ -3537,6 +3599,24 @@
             "event_id": "8b8e746949514fb8d2c1dbe1b78b92d8939a350bd0efd3e1d6194e6cda4d499a"
           },
           "at": "2026-09-05T21:47:51+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "CHECK_CHANGED",
+          "to": "PASSING",
+          "cause": {
+            "run_id": "run-20260907T214201Z-b04267d"
+          },
+          "at": "2026-09-07T21:44:00+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "PASSING",
+          "to": "CHECK_CHANGED",
+          "cause": {
+            "run_id": "run-20260907T214201Z-b04267d"
+          },
+          "at": "2026-09-07T21:44:00+00:00"
         }
       ],
       "regressions": [],
@@ -3577,8 +3657,8 @@
         "reason": "the bug-report reward programme is described in agent-card.json, agent-skills.json, llms.txt, mcp.json"
       },
       "provenance": {
-        "run_id": "run-20260907T201230Z-7fee4cf",
-        "measured_at": "2026-09-07T20:14:54+00:00"
+        "run_id": "run-20260907T214201Z-b04267d",
+        "measured_at": "2026-09-07T21:44:00+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -3602,10 +3682,10 @@
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260907T201230Z-7fee4cf",
-          "at": "2026-09-07T20:14:54+00:00"
+          "run_id": "run-20260907T214201Z-b04267d",
+          "at": "2026-09-07T21:44:00+00:00"
         },
-        "pinned_fingerprint": "ad763a98070e6fe37cc356c065be1409ccad2708d13476052da879ba19668574"
+        "pinned_fingerprint": "1033f53fa5b34e524bab5b4953d8c5826842dfc0b4ff5bd5977271c8aa2ac5d5"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -3654,6 +3734,20 @@
             "run_id": "run-20260907T173409Z-7e2dfcc",
             "verdict": "pass",
             "at": "2026-09-07T17:42:44+00:00"
+          },
+          {
+            "report_id": 63,
+            "fingerprint": "1033f53fa5b34e524bab5b4953d8c5826842dfc0b4ff5bd5977271c8aa2ac5d5",
+            "run_id": "run-20260907T214201Z-b04267d",
+            "verdict": "pass",
+            "at": "2026-09-07T21:46:36+00:00"
+          },
+          {
+            "report_id": 71,
+            "fingerprint": "1033f53fa5b34e524bab5b4953d8c5826842dfc0b4ff5bd5977271c8aa2ac5d5",
+            "run_id": "run-20260907T214201Z-b04267d",
+            "verdict": "pass",
+            "at": "2026-09-07T21:46:41+00:00"
           }
         ]
       },
@@ -3729,6 +3823,24 @@
             "run_id": "run-20260907T173409Z-7e2dfcc"
           },
           "at": "2026-09-07T17:40:13+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "CHECK_CHANGED",
+          "to": "PASSING",
+          "cause": {
+            "run_id": "run-20260907T214201Z-b04267d"
+          },
+          "at": "2026-09-07T21:44:00+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "PASSING",
+          "to": "CHECK_CHANGED",
+          "cause": {
+            "run_id": "run-20260907T214201Z-b04267d"
+          },
+          "at": "2026-09-07T21:44:00+00:00"
         }
       ],
       "regressions": [
@@ -3774,14 +3886,14 @@
             "paid",
             "pending_award"
           ],
-          "bugs_fixed_per_stats": 43,
-          "total_paid_per_stats": 32000.0
+          "bugs_fixed_per_stats": 46,
+          "total_paid_per_stats": 35000.0
         },
-        "reason": "20 of the 20 public reports are closed as fixed and 16 of them can be read as paid or awarded. reward_status takes ['paid', 'pending_award'], so a report that was paid and one whose award was never recorded are indistinguishable; stats still report bugs_fixed=43 and total_paid=32000.0"
+        "reason": "20 of the 20 public reports are closed as fixed and 16 of them can be read as paid or awarded. reward_status takes ['paid', 'pending_award'], so a report that was paid and one whose award was never recorded are indistinguishable; stats still report bugs_fixed=46 and total_paid=35000.0"
       },
       "provenance": {
-        "run_id": "run-20260907T201230Z-7fee4cf",
-        "measured_at": "2026-09-07T20:14:54+00:00"
+        "run_id": "run-20260907T214201Z-b04267d",
+        "measured_at": "2026-09-07T21:44:00+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -3805,8 +3917,8 @@
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260907T201230Z-7fee4cf",
-          "at": "2026-09-07T20:14:54+00:00"
+          "run_id": "run-20260907T214201Z-b04267d",
+          "at": "2026-09-07T21:44:00+00:00"
         },
         "pinned_fingerprint": "bbdc1d54bf684a9e645532950d2a04740ef9083655d287ae7dd192a9d16dfab5"
       },
@@ -3898,8 +4010,8 @@
         "reason": "/api/v1/account/me answers HTTP 200 to the credential the catalogue names"
       },
       "provenance": {
-        "run_id": "run-20260907T201230Z-7fee4cf",
-        "measured_at": "2026-09-07T20:14:54+00:00"
+        "run_id": "run-20260907T214201Z-b04267d",
+        "measured_at": "2026-09-07T21:44:00+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -3923,8 +4035,8 @@
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260907T201230Z-7fee4cf",
-          "at": "2026-09-07T20:14:54+00:00"
+          "run_id": "run-20260907T214201Z-b04267d",
+          "at": "2026-09-07T21:44:00+00:00"
         },
         "pinned_fingerprint": "fab9ea34aa0eefe65a940f193a856ca6e13426fdee9c14c85bd53118a81b3ba5"
       },
@@ -4088,8 +4200,8 @@
         "reason": "the channel reported its own published reward-tier values"
       },
       "provenance": {
-        "run_id": "run-20260907T201230Z-7fee4cf",
-        "measured_at": "2026-09-07T20:14:54+00:00"
+        "run_id": "run-20260907T214201Z-b04267d",
+        "measured_at": "2026-09-07T21:44:00+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -4113,8 +4225,8 @@
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260907T201230Z-7fee4cf",
-          "at": "2026-09-07T20:14:54+00:00"
+          "run_id": "run-20260907T214201Z-b04267d",
+          "at": "2026-09-07T21:44:00+00:00"
         },
         "pinned_fingerprint": "04cf163554964f44f24aae44e443668700ca69347c90e518ffd3a2cff7d10810"
       },
@@ -4244,15 +4356,15 @@
         "tests/rest/test_qa_agent_channel.py::test_the_automated_first_pass_is_tagged_as_they_documented"
       ],
       "detail": {
-        "left": 24,
-        "right": 24,
+        "left": 26,
+        "right": 26,
         "sources": {
           "inbox": "/api/v1/bounty/a2a/inbox/{agent_id}",
           "their_claim": "is_answer=true on every substantive answer; false on the routing/preference prompt"
         },
         "population": {
-          "messages": 33,
-          "automated": 31,
+          "messages": 36,
+          "automated": 33,
           "before_they_began_tagging": 7,
           "tagging_began": "2026-09-06T11:07:16.275267+00:00",
           "untagged_since": [],
@@ -4260,11 +4372,11 @@
             "first_pass"
           ]
         },
-        "reason": "every one of the 24 automated repl(ies) since 2026-09-06T11:07:16.275267+00:00 carries metadata.is_answer (24 of them true, which is their rule for a substantive answer)"
+        "reason": "every one of the 26 automated repl(ies) since 2026-09-06T11:07:16.275267+00:00 carries metadata.is_answer (26 of them true, which is their rule for a substantive answer)"
       },
       "provenance": {
-        "run_id": "run-20260907T201230Z-7fee4cf",
-        "measured_at": "2026-09-07T20:14:54+00:00"
+        "run_id": "run-20260907T214201Z-b04267d",
+        "measured_at": "2026-09-07T21:44:00+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -4288,8 +4400,8 @@
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260907T201230Z-7fee4cf",
-          "at": "2026-09-07T20:14:54+00:00"
+          "run_id": "run-20260907T214201Z-b04267d",
+          "at": "2026-09-07T21:44:00+00:00"
         },
         "pinned_fingerprint": "d8c89bb5d9dfb6abe6d9f240604f15d80183028892047d05a574abc9740d5a4c"
       },
@@ -4412,8 +4524,8 @@
       "detail": {
         "left": {
           "async": {
-            "in_reply_to": "a2a_dc32c06dfa97434d",
-            "at": "2026-09-07T20:14:39.042180+00:00",
+            "in_reply_to": "a2a_020578c4a63b4454",
+            "at": "2026-09-07T21:43:51.976495+00:00",
             "confidence": 0.85,
             "sources": [
               "GET /api/v1/bounty/reward-tiers",
@@ -4437,13 +4549,13 @@
           "asked": "/api/v1/bounty/a2a/send"
         },
         "population": {
-          "first_pass_in_inbox": 32
+          "first_pass_in_inbox": 34
         },
-        "reason": "the async first-pass reply to a2a_dc32c06dfa97434d, asked and answered during this run, cites 3 source(s) at confidence 0.85, while the sync half cites 3 at 0.85"
+        "reason": "the async first-pass reply to a2a_020578c4a63b4454, asked and answered during this run, cites 3 source(s) at confidence 0.85, while the sync half cites 3 at 0.85"
       },
       "provenance": {
-        "run_id": "run-20260907T201230Z-7fee4cf",
-        "measured_at": "2026-09-07T20:14:54+00:00"
+        "run_id": "run-20260907T214201Z-b04267d",
+        "measured_at": "2026-09-07T21:44:00+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -4467,10 +4579,10 @@
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260907T201230Z-7fee4cf",
-          "at": "2026-09-07T20:14:54+00:00"
+          "run_id": "run-20260907T214201Z-b04267d",
+          "at": "2026-09-07T21:44:00+00:00"
         },
-        "pinned_fingerprint": "87bae99d309f2d0d84531a0f4d5e97e9a60c1a006ac5a8198c35f74c4af0c012"
+        "pinned_fingerprint": "b04e1541accf43b3d9702e74a4f9a34ea67b200330527119268128d08d364d24"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -4517,6 +4629,20 @@
             "run_id": "run-20260907T173409Z-7e2dfcc",
             "verdict": "pass",
             "at": "2026-09-07T17:42:30+00:00"
+          },
+          {
+            "report_id": 68,
+            "fingerprint": "b04e1541accf43b3d9702e74a4f9a34ea67b200330527119268128d08d364d24",
+            "run_id": "run-20260907T214201Z-b04267d",
+            "verdict": "pass",
+            "at": "2026-09-07T21:46:17+00:00"
+          },
+          {
+            "report_id": 70,
+            "fingerprint": "b04e1541accf43b3d9702e74a4f9a34ea67b200330527119268128d08d364d24",
+            "run_id": "run-20260907T214201Z-b04267d",
+            "verdict": "pass",
+            "at": "2026-09-07T21:46:22+00:00"
           }
         ]
       },
@@ -4574,6 +4700,24 @@
             "run_id": "run-20260907T173409Z-7e2dfcc"
           },
           "at": "2026-09-07T17:40:13+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "CHECK_CHANGED",
+          "to": "PASSING",
+          "cause": {
+            "run_id": "run-20260907T214201Z-b04267d"
+          },
+          "at": "2026-09-07T21:44:00+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "PASSING",
+          "to": "CHECK_CHANGED",
+          "cause": {
+            "run_id": "run-20260907T214201Z-b04267d"
+          },
+          "at": "2026-09-07T21:44:00+00:00"
         }
       ],
       "regressions": [],
@@ -4609,13 +4753,14 @@
           "measured": 16,
           "without_a_band": 0,
           "currency_mismatch": 0,
+          "currency_unmeasurable": 0,
           "below_published_minimum": 0
         },
-        "reason": "all 16 recorded award(s) sit inside the tier each row publishes, and no row names a currency its own entitlement contradicts"
+        "reason": "all 16 recorded award(s) sit inside the tier each row publishes, and of the 16 row(s) that name a currency on both sides, none contradicts itself"
       },
       "provenance": {
-        "run_id": "run-20260907T201230Z-7fee4cf",
-        "measured_at": "2026-09-07T20:14:54+00:00"
+        "run_id": "run-20260907T214201Z-b04267d",
+        "measured_at": "2026-09-07T21:44:00+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -4639,10 +4784,10 @@
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260907T201230Z-7fee4cf",
-          "at": "2026-09-07T20:14:54+00:00"
+          "run_id": "run-20260907T214201Z-b04267d",
+          "at": "2026-09-07T21:44:00+00:00"
         },
-        "pinned_fingerprint": "e444d3b853260e67d24a6fbf688cde15c4f8a198dfdc224eb67e08201d20d618"
+        "pinned_fingerprint": "9843e8c89f3c0011614f290e26536d8fbb1f5029a7c740d8d7a4c32ea7be75b9"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -4671,6 +4816,13 @@
             "run_id": "run-20260907T173409Z-7e2dfcc",
             "verdict": "pass",
             "at": "2026-09-07T17:43:07+00:00"
+          },
+          {
+            "report_id": 73,
+            "fingerprint": "9843e8c89f3c0011614f290e26536d8fbb1f5029a7c740d8d7a4c32ea7be75b9",
+            "run_id": "run-20260907T214201Z-b04267d",
+            "verdict": "pass",
+            "at": "2026-09-07T21:47:08+00:00"
           }
         ]
       },
@@ -4737,6 +4889,24 @@
             "run_id": "run-20260907T173409Z-7e2dfcc"
           },
           "at": "2026-09-07T17:40:13+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "CHECK_CHANGED",
+          "to": "PASSING",
+          "cause": {
+            "run_id": "run-20260907T214201Z-b04267d"
+          },
+          "at": "2026-09-07T21:44:00+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "PASSING",
+          "to": "CHECK_CHANGED",
+          "cause": {
+            "run_id": "run-20260907T214201Z-b04267d"
+          },
+          "at": "2026-09-07T21:44:00+00:00"
         }
       ],
       "regressions": [],
@@ -4758,9 +4928,9 @@
           "leaderboard": [
             {
               "hunter": "expire76",
-              "earned": 27000.0,
-              "awarded": 27000.0,
-              "paid": 27000.0
+              "earned": 30000.0,
+              "awarded": 30000.0,
+              "paid": 30000.0
             },
             {
               "hunter": "Crypto42day",
@@ -4781,15 +4951,15 @@
               "paid": 0.0
             }
           ],
-          "board_valid_reports": 36
+          "board_valid_reports": 39
         },
         "right": {
-          "awards_recorded": 39,
-          "awards_recorded_total": 39000.0,
-          "payouts_recorded": 32,
-          "total_paid": 32000.0,
-          "valid_reports": 43,
-          "valid_reports_attributed": 36,
+          "awards_recorded": 42,
+          "awards_recorded_total": 42000.0,
+          "payouts_recorded": 35,
+          "total_paid": 35000.0,
+          "valid_reports": 46,
+          "valid_reports_attributed": 39,
           "total_earned_definition": "paid"
         },
         "sources": {
@@ -4800,11 +4970,11 @@
           "hunters_listed": 4,
           "active_hunters": 4
         },
-        "reason": "the aggregate and the leaderboard agree: 36 valid report(s) either way, and every hunter's total_earned matches the total_paid it is defined as"
+        "reason": "the aggregate and the leaderboard agree: 39 valid report(s) either way, and every hunter's total_earned matches the total_paid it is defined as"
       },
       "provenance": {
-        "run_id": "run-20260907T201230Z-7fee4cf",
-        "measured_at": "2026-09-07T20:14:54+00:00"
+        "run_id": "run-20260907T214201Z-b04267d",
+        "measured_at": "2026-09-07T21:44:00+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -4824,29 +4994,37 @@
           "run_id": "run-20260907T201230Z-7fee4cf"
         }
       },
-      "reproductions": 2,
+      "reproductions": 3,
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20260907T201230Z-7fee4cf",
-          "at": "2026-09-07T20:14:54+00:00"
+          "run_id": "run-20260907T214201Z-b04267d",
+          "at": "2026-09-07T21:44:00+00:00"
         },
-        "pinned_fingerprint": "01712722926568327db7de049d28e00267d8c5cb9f6892bb64c8a0da32900b07"
+        "pinned_fingerprint": "480b48064fdcb8fb3af5565412ec0f1bb1b6189e5b1124cc3df9b80b7ab97561"
       },
       "filing": {
-        "state": "RAISED",
+        "state": "FIX_CLAIMED",
         "adjudicated_by": {
-          "event_id": "bc8a52cfd6688e8f64860d4b572b23f48fe64aead81fa0983138c5c43d3a710e",
-          "at": "2026-09-07T20:19:56+00:00"
+          "event_id": "1e851924b61025d5856a06c0d3d84411e0a64790b89ed405b2a11dabb4d620f5",
+          "at": "2026-09-07T21:41:41+00:00"
         },
         "reports": [
           {
             "report_id": 76,
-            "status": "pending"
+            "status": "paid"
           }
         ],
         "refused": [],
-        "verifications": []
+        "verifications": [
+          {
+            "report_id": 76,
+            "fingerprint": "480b48064fdcb8fb3af5565412ec0f1bb1b6189e5b1124cc3df9b80b7ab97561",
+            "run_id": "run-20260907T214201Z-b04267d",
+            "verdict": "fail",
+            "at": "2026-09-07T21:46:45+00:00"
+          }
+        ]
       },
       "transitions": [
         {
@@ -4866,6 +5044,15 @@
             "event_id": "bc8a52cfd6688e8f64860d4b572b23f48fe64aead81fa0983138c5c43d3a710e"
           },
           "at": "2026-09-07T20:19:56+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "RAISED",
+          "to": "FIX_CLAIMED",
+          "cause": {
+            "event_id": "1e851924b61025d5856a06c0d3d84411e0a64790b89ed405b2a11dabb4d620f5"
+          },
+          "at": "2026-09-07T21:41:41+00:00"
         }
       ],
       "regressions": [],
@@ -4873,7 +5060,8 @@
       "title": "a /build recipe sends an agent to a route that is not in the curated schema and does not answer JSON: /events/universe (HTTP 200 text/html)",
       "reproduced_in": [
         "run-20260907T201230Z-7fee4cf",
-        "run-20260907T201839Z-6b8f268"
+        "run-20260907T201839Z-6b8f268",
+        "run-20260907T214201Z-b04267d"
       ],
       "component": "discovery.onboarding",
       "section": "onboarding",
@@ -4887,7 +5075,9 @@
           "/events/universe"
         ],
         "right": [
-          "/events/universe"
+          "/api/v1/event-cards/symbols/search",
+          "/events/universe",
+          "/mcp/v1/agents/me"
         ],
         "sources": {
           "page": "/build",
@@ -4895,17 +5085,17 @@
         },
         "population": {
           "recipes": 10,
-          "paths_named": 1,
+          "paths_named": 3,
           "documented_paths": 53
         },
         "reason": "a /build recipe sends an agent to a route that is not in the curated schema and does not answer JSON: /events/universe (HTTP 200 text/html)"
       },
       "provenance": {
-        "run_id": "run-20260907T201230Z-7fee4cf",
-        "measured_at": "2026-09-07T20:14:54+00:00"
+        "run_id": "run-20260907T214201Z-b04267d",
+        "measured_at": "2026-09-07T21:44:00+00:00"
       },
       "obligations": {
-        "reverify": false,
+        "reverify": true,
         "repair_check": false,
         "reopen": [],
         "retractions": [],
@@ -4924,27 +5114,35 @@
       },
       "reproductions": 2,
       "check": {
-        "state": "REPRODUCING",
+        "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260907T201230Z-7fee4cf",
-          "at": "2026-09-07T20:14:54+00:00"
+          "run_id": "run-20260907T214201Z-b04267d",
+          "at": "2026-09-07T21:44:00+00:00"
         },
         "pinned_fingerprint": "0760ba619fbd7a06945b43cc499e2a739d906a4deb8ebe97cd3dbd484d066d37"
       },
       "filing": {
-        "state": "RAISED",
+        "state": "FIX_CLAIMED",
         "adjudicated_by": {
-          "event_id": "3c208a469c9da53146f13e2d438d8ec11d22eed95c996b0518436e2de5c04a8f",
-          "at": "2026-09-07T20:20:15+00:00"
+          "event_id": "6f160dfa43c1f0248869eb797d975b24c00f8245b728394f6e0f104d0efd204e",
+          "at": "2026-09-07T21:41:41+00:00"
         },
         "reports": [
           {
             "report_id": 77,
-            "status": "pending"
+            "status": "paid"
           }
         ],
         "refused": [],
-        "verifications": []
+        "verifications": [
+          {
+            "report_id": 77,
+            "fingerprint": "0760ba619fbd7a06945b43cc499e2a739d906a4deb8ebe97cd3dbd484d066d37",
+            "run_id": "run-20260907T214201Z-b04267d",
+            "verdict": "pass",
+            "at": "2026-09-07T21:47:03+00:00"
+          }
+        ]
       },
       "transitions": [
         {
@@ -4964,6 +5162,24 @@
             "event_id": "3c208a469c9da53146f13e2d438d8ec11d22eed95c996b0518436e2de5c04a8f"
           },
           "at": "2026-09-07T20:20:15+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "RAISED",
+          "to": "FIX_CLAIMED",
+          "cause": {
+            "event_id": "6f160dfa43c1f0248869eb797d975b24c00f8245b728394f6e0f104d0efd204e"
+          },
+          "at": "2026-09-07T21:41:41+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "REPRODUCING",
+          "to": "PASSING",
+          "cause": {
+            "run_id": "run-20260907T214201Z-b04267d"
+          },
+          "at": "2026-09-07T21:44:00+00:00"
         }
       ],
       "regressions": [],
@@ -4982,19 +5198,38 @@
       ],
       "detail": {
         "left": "api_key",
-        "right": [],
+        "right": [
+          "agent_id",
+          "api_docs_url",
+          "api_key",
+          "created_at",
+          "expires_at",
+          "fee_structure",
+          "important_notice",
+          "onboarding_url",
+          "paper_trading_available",
+          "profit_paths_count",
+          "quick_start",
+          "rate_limits",
+          "role",
+          "role_guidance",
+          "sdk_docs_url",
+          "trading_pairs",
+          "trust_level",
+          "welcome_message"
+        ],
         "sources": {
           "page": "/build",
           "schema": "/openapi-public.json"
         },
         "population": {
-          "described_fields": 0
+          "described_fields": 18
         },
-        "reason": "the field /build tells an agent to save is absent from the published schema for the call that returns it: 'api_key' is in no 2xx response of POST /mcp/v1/register, which describes 0 field(s)"
+        "reason": "POST /mcp/v1/register documents the field /build says to save: 'api_key'"
       },
       "provenance": {
-        "run_id": "run-20260907T201230Z-7fee4cf",
-        "measured_at": "2026-09-07T20:14:54+00:00"
+        "run_id": "run-20260907T214201Z-b04267d",
+        "measured_at": "2026-09-07T21:44:00+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -5016,27 +5251,35 @@
       },
       "reproductions": 2,
       "check": {
-        "state": "REPRODUCING",
+        "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260907T201230Z-7fee4cf",
-          "at": "2026-09-07T20:14:54+00:00"
+          "run_id": "run-20260907T214201Z-b04267d",
+          "at": "2026-09-07T21:44:00+00:00"
         },
-        "pinned_fingerprint": "cbf446333d6a227a51c185bcdd1443afa1eb20366fe490ef1759614838663580"
+        "pinned_fingerprint": "92c230648502812ed80e88cfba49ef71ca8303fae2f1ac8a4ea40bb2bb1a90d1"
       },
       "filing": {
-        "state": "RAISED",
+        "state": "FIX_CLAIMED",
         "adjudicated_by": {
-          "event_id": "026206ca13a8511e6d79bc1b93de833b93895038888ed0f9eafe33dd9e7c28e6",
-          "at": "2026-09-07T20:20:25+00:00"
+          "event_id": "c80adb76875f3ab6fe2e7cdb40f6adec1011f1cce2eadd8fc696e9858331b457",
+          "at": "2026-09-07T21:41:41+00:00"
         },
         "reports": [
           {
             "report_id": 78,
-            "status": "pending"
+            "status": "paid"
           }
         ],
         "refused": [],
-        "verifications": []
+        "verifications": [
+          {
+            "report_id": 78,
+            "fingerprint": "92c230648502812ed80e88cfba49ef71ca8303fae2f1ac8a4ea40bb2bb1a90d1",
+            "run_id": "run-20260907T214201Z-b04267d",
+            "verdict": "pass",
+            "at": "2026-09-07T21:47:46+00:00"
+          }
+        ]
       },
       "transitions": [
         {
@@ -5056,6 +5299,33 @@
             "event_id": "026206ca13a8511e6d79bc1b93de833b93895038888ed0f9eafe33dd9e7c28e6"
           },
           "at": "2026-09-07T20:20:25+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "RAISED",
+          "to": "FIX_CLAIMED",
+          "cause": {
+            "event_id": "c80adb76875f3ab6fe2e7cdb40f6adec1011f1cce2eadd8fc696e9858331b457"
+          },
+          "at": "2026-09-07T21:41:41+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "CHECK_CHANGED",
+          "to": "PASSING",
+          "cause": {
+            "run_id": "run-20260907T214201Z-b04267d"
+          },
+          "at": "2026-09-07T21:44:00+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "REPRODUCING",
+          "to": "CHECK_CHANGED",
+          "cause": {
+            "run_id": "run-20260907T214201Z-b04267d"
+          },
+          "at": "2026-09-07T21:44:00+00:00"
         }
       ],
       "regressions": [],
@@ -5079,7 +5349,7 @@
           "trusted",
           "unknown"
         ],
-        "right": "{\"/build\": [\"allied\", \"public\", \"recognized\", \"trusted\"], \"llms.txt\": [\"allied\", \"authenticated\", \"federated\", \"public\"], \"mcp.json\": [\"allied\", \"recognized\", \"trusted\", \"unknown\"]}",
+        "right": "{\"/build\": [\"allied\", \"recognized\", \"trusted\", \"unknown\"], \"llms.txt\": [\"allied\", \"recognized\", \"trusted\", \"unknown\"], \"mcp.json\": [\"allied\", \"recognized\", \"trusted\", \"unknown\"]}",
         "sources": {
           "page": "/build",
           "document": "/llms.txt",
@@ -5089,11 +5359,11 @@
           "tools": 62,
           "surfaces": 3
         },
-        "reason": "the same trust ladder is named differently on each surface an agent reads, so an agent cannot tell which rung it holds: /build says ['allied', 'public', 'recognized', 'trusted']; llms.txt says ['allied', 'authenticated', 'federated', 'public']; mcp.json says ['allied', 'recognized', 'trusted', 'unknown']"
+        "reason": "every surface names the same rungs: ['allied', 'recognized', 'trusted', 'unknown']"
       },
       "provenance": {
-        "run_id": "run-20260907T201230Z-7fee4cf",
-        "measured_at": "2026-09-07T20:14:54+00:00"
+        "run_id": "run-20260907T214201Z-b04267d",
+        "measured_at": "2026-09-07T21:44:00+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -5106,17 +5376,16 @@
       }
     }
   },
-  "run_id": "run-20260907T201230Z-7fee4cf",
+  "run_id": "run-20260907T214201Z-b04267d",
   "run_level": "V",
-  "updated_at": "2026-09-07T20:14:54+00:00",
+  "updated_at": "2026-09-07T21:44:00+00:00",
   "counts": {
     "WITHDRAWN": 9,
-    "VERIFIED FIXED": 22,
-    "CHECK CHANGED": 1,
-    "RAISED": 3
+    "VERIFIED FIXED": 25,
+    "STILL REPRODUCIBLE": 1
   },
   "events_head": {
-    "seq": 1202,
-    "chain": "4f01e1df7056c88535367bec8b2b5ce50ab1d23525286b603de3c4168021c0af"
+    "seq": 1247,
+    "chain": "ceef032185ea52cdad519f1add24fb2ab4d1319ccd5c3712289510dd7aeab054"
   }
 }
