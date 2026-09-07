@@ -109,7 +109,28 @@ def refusal_class(payload: dict) -> tuple[str, str]:
     body = f"{text} {payload.get('error', '')}".strip()
     lowered = body.lower()
 
+    # "Executed" is the only branch that used to be decided by the ABSENCE of
+    # two markers without reading the body it already holds -- and `isError`
+    # is optional in MCP and defaults false. Their live refusal is
+    # {"content":[{"text":"{\"error\": \"INSUFFICIENT_TRUST\"}"}],"isError":true};
+    # served without the flag it classified as executed, and the check
+    # concluded "an anonymous caller EXECUTED the tool" -- an S1
+    # authorization-bypass accusation against a response whose own text
+    # refuses the call. An HTTP error body reaches here the same way, because
+    # rpc() does not raise for status.
+    #
+    # So the vocabulary is consulted first, and the absence of markers is only
+    # believed when the text says nothing that sounds like a refusal.
     if not result.get("isError") and "error" not in payload:
+        if any(word in lowered for word in _AUTHZ_WORDS):
+            return "refused_authz", body
+        if any(word in lowered for word in _VALIDATION_WORDS):
+            return "refused_validation", body
+        if "error" in lowered:
+            # It says error and carries no flag: we cannot tell execution from
+            # a refusal we do not have the vocabulary for. Never a quiet
+            # accusation.
+            return "unknown", body
         return "executed", body
     if any(word in lowered for word in _AUTHZ_WORDS):
         return "refused_authz", body

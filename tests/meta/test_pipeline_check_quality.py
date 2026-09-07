@@ -145,6 +145,29 @@ def test_every_check_can_fail(claim):
         # mutation -- the first version of this test did exactly that.
         _assert_subset_direction_is_right(claim)
 
+    elif relation == "at_least":
+        # Two ways a floor claim must be able to fail, and they are opposite:
+        # the figure drops below the stated minimum (the document is wrong),
+        # or it climbs so far above it that the document is stale. A relation
+        # that only checks one of those is half a check.
+        holds, _ = relation_holds(relation, 100, 100, tolerance)
+        assert holds, f"{claim['id']}: a figure exactly at the floor is below it"
+        holds, _ = relation_holds(relation, 100, 100 * (1 + tolerance / 200), tolerance)
+        assert holds, f"{claim['id']}: a figure just above the floor fails"
+        below, _ = relation_holds(relation, 100, 99, tolerance)
+        assert not below, f"{claim['id']}: a figure below the stated minimum holds"
+        stale, _ = relation_holds(relation, 100, 100 * (1 + (tolerance + 20) / 100),
+                                  tolerance)
+        assert not stale, (
+            f"{claim['id']}: the floor may drift {(tolerance + 20):.0f}% out of "
+            f"date and still hold, so a stale published figure is invisible"
+        )
+        assert claim.get("floor") in claim["sources"], (
+            f"{claim['id']}: `at_least` is not symmetric and this claim does "
+            f"not name which source states the minimum, so the comparison can "
+            f"run backwards -- the same defect as an unnamed subset direction"
+        )
+
     elif relation == "within_tolerance":
         holds, _ = relation_holds(relation, 100, 100, tolerance)
         assert holds, f"{claim['id']}: identical values are outside tolerance"

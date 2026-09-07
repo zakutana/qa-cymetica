@@ -105,11 +105,23 @@ def test_verified_reports_record_what_they_earned(rest_anon):
     #
     # So the invariant is narrowed to exactly what is still missing, and it
     # goes green the moment any report of ours reads as paid.
+    # `awarded` and a truthy reward_amount are AWARD-side signals, and the
+    # comment above states the green condition as "the moment any report of
+    # ours reads as paid" -- so accepting them settled the check on exactly
+    # the field the paragraph says is the wrong object. reward_amount was also
+    # read as a flag, so a recorded award of 0.0 counted as no award.
+    #
+    # 2026-09-08: the operator was credited 27,000 ET10 for 27 reports while
+    # every tracker row still read paid_at null. That is the answer, and it is
+    # narrower than the report assumed: payment happens in the ET10 lane and
+    # the tracker does not record it. So this measures the tracker's own
+    # claim, and the reason says which record it is talking about -- it is a
+    # reporting gap, not a missing payment, and the text must not imply
+    # otherwise.
     settled = [r for r in closed
                if r.get("paid_at")
-               or r.get("reward_amount")
                or str(r.get("reward_status") or "").lower() in
-               ("paid", "awarded", "award_recorded", "rewarded")]
+               ("paid", "award_recorded", "rewarded")]
 
     stats = rest_anon.get(STATS)
     totals = stats.json() if stats.status_code == 200 else {}

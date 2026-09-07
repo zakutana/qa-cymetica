@@ -107,8 +107,24 @@ def test_the_agent_can_report_a_value_it_publishes(rest_anon):
         except (KeyError, TypeError, ValueError):
             return None
 
-    said_range = any(_published(k) in spoken for k in ("min", "max")
-                     if _published(k) is not None)
+    bounds = [_published(k) for k in ("min", "max")]
+    if all(b is None for b in bounds):
+        # Rule 10, and `required()` five lines up already does this for the
+        # currency. A range they have stopped publishing is not a range the
+        # channel failed to state: the programme went flat on 2026-09-07
+        # (min == max == 1000.0), so severity_rewards collapsing is their next
+        # plausible edit -- and this filed "either bound of the critical range
+        # (None-None)" against #66 for it.
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason=f"{TIERS} no longer publishes a critical severity range, "
+                   f"so there is no second value to ask the channel for",
+            left=said_currency, right={"currency": currency, "critical": critical},
+            sources={"asked": ASK, "published_at": TIERS},
+            claim_id="qa-agent-cannot-report-its-own-data"))
+        return
+
+    said_range = any(b in spoken for b in bounds if b is not None)
 
     missing = []
     if not said_currency:
@@ -154,12 +170,19 @@ def test_escalating_a_low_confidence_answer_does_not_return_the_same_advice(rest
 
     confidence = first.json().get("confidence")
     if confidence is not None and confidence >= CONFIDENCE_FLOOR:
+        # INCONCLUSIVE, not passed. The question did not go below their own
+        # floor, so the escalation path was never walked and nothing was
+        # learned about it -- and a verdict-role pass on an unexercised path
+        # is a guard that guards nothing while counting as evidence that it
+        # does. It is also, today, the branch this check always takes.
         conclude(Measurement(
-            verdict="passed",
+            verdict="inconclusive",
             reason=(f"the sync channel answered at confidence {confidence}, at "
-                    f"or above its own escalation floor, so the escalation "
-                    f"path is not exercised"),
+                    f"or above its own escalation floor of {CONFIDENCE_FLOOR}, "
+                    f"so the escalation path was not exercised and this run "
+                    f"establishes nothing about it"),
             left=confidence, right=CONFIDENCE_FLOOR,
+            sources={"sync": ASK},
             claim_id="qa-agent-escalation-is-a-loop"))
         return
 
@@ -323,8 +346,20 @@ def test_the_automated_first_pass_is_tagged_as_they_documented(rest_trusted):
 
 
 def _grounded(sources, confidence) -> bool:
-    """One definition, applied to both halves of the channel."""
-    return bool(sources) or (confidence or 0) >= CONFIDENCE_FLOOR
+    """One definition, applied to both halves of the channel.
+
+    Sources only. The channel's published promise, quoted in the module
+    docstring, is "Answers cite source files, database state" -- a citation,
+    not a number. Accepting `confidence >= 0.7` in its place meant a reply
+    citing nothing at 0.85 read as grounded while the sync half cited three,
+    which is the asymmetry the claim id names; the row would have stayed green
+    through a regression that dropped citations and kept the score.
+
+    Confidence is still reported beside the verdict, because it is how they
+    route and the operator wants to see it. It just does not stand in for the
+    thing that was promised.
+    """
+    return bool(sources)
 
 
 @qa(component="rest.support", tier=SafetyTier.PROBE, surface="rest",

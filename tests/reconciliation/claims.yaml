@@ -141,10 +141,18 @@ claims:
   - id: commit_count
     question: "How many commits are in the production codebase?"
     component: platform.ai_native_proof
-    relation: within_tolerance
+    relation: at_least
+    floor: llms_txt
+    floor_why: >
+      llms.txt says "With 21,800+ commits". The "+" makes it a MINIMUM, and
+      the extractor discards it -- so read as an exact figure the claim goes
+      red the moment the repository grows past the tolerance, filing a
+      contradiction against a document that is still telling the truth. That
+      arrives by the passage of time rather than by anything they do.
+      tests/mcp/test_clob_pairs.py handles the same FLOOR/EXACT distinction
+      explicitly; this claim did not until 2026-09-08.
     tolerance_pct: 5
     severity: S2-MEASUREMENT
-    volatile: true
     note: >
       Commits legitimately accrue, so a small gap is expected and a large one
       is not. This is the platform's headline marketing figure, so a stale

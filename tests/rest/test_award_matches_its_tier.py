@@ -116,6 +116,13 @@ def test_a_recorded_award_agrees_with_the_tier_on_the_same_row(rest_anon):
         return
 
     problems = []
+    # An absent currency on either side used to clear silently -- so deleting
+    # the field was a way to pass, which is exactly what `unmeasurable` exists
+    # to stop for the band. Counted the same way now.
+    currency_unmeasurable = [r.get("id") for r in awarded
+                             if not (r.get("reward_currency")
+                                     and ((r.get("eligible_reward_range") or {})
+                                          .get("currency")))]
     if wrong_currency:
         # Says "will be paid in", not "paid in": with every row pending_award
         # nothing has been paid, and the old wording asserted a payment that
@@ -131,11 +138,13 @@ def test_a_recorded_award_agrees_with_the_tier_on_the_same_row(rest_anon):
             f"{len(outside)} row(s) record an award outside the range they "
             f"publish for their own confirmed severity "
             f"(e.g. #{rid} at {sev}: {amt:.0f} recorded against {low}-{high})")
-    if unmeasurable:
-        problems.append(
-            f"{len(unmeasurable)} awarded row(s) publish no usable "
-            f"eligible_reward_range at all, so what they earned cannot be "
-            f"checked against what they promise")
+    # NOT a problem. The contract this check names is "a row may not
+    # contradict itself", and a row with no band makes one statement, not two
+    # -- so it cannot contradict itself. Counting it as a failure sent a FAIL
+    # verification to #68 and #70 for a state the contract permits, while the
+    # honest answer for a row that cannot be adjudicated is the one this same
+    # function already gives eleven lines above: inconclusive. It stays in the
+    # population, where the operator can see it.
 
     conclude(Measurement(
         verdict="failed" if problems else "passed",

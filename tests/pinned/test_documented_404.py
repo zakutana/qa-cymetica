@@ -220,6 +220,34 @@ def test_documented_path_is_served(pin, rest_anon, documents):
         population=load_pinned()["population"],
     ))
 
+# What the 26 pins MEASURE, hashed: path|source|section for each, sorted.
+# Updated deliberately, in the same commit as the pin change, with the
+# reason in the message. See _pin_digest().
+PIN_DIGEST = "a3cd16e5e12b84e9675157dac9a4bf57a2df13067590d2625d6567a5ea4de36d"
+
+
+
+def _pin_digest() -> str:
+    """A hash of what the pins MEASURE, not of how many there are.
+
+    The integrity guard asserted cardinality and shape: 26 entries, 26 distinct
+    paths, population 141, each source in SOURCE_URLS, each path starting with
+    "/". Every one of those survives repointing a pin's `source` from llms.txt
+    to agent-skills.json -- and `source` is, in the yaml's own words, "the
+    document the check reads to decide which of the three cases applies", so a
+    repointed pin reads a document that never promised the path and takes the
+    withdrawn branch. The nodeid is the path, so it does not change; the check
+    fingerprint hashes the function AST and only params exposing a
+    `.fingerprint`, which a plain dict does not, so that does not change
+    either. The fold would see nothing.
+    """
+    import hashlib
+
+    pins = load_pinned()["paths"]
+    canonical = "\n".join(f"{p['path']}|{p['source']}|{p.get('section', '')}"
+                          for p in sorted(pins, key=lambda p: p["path"]))
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
 
 @qa(component="discovery.llmstxt", tier=SafetyTier.SAFE, surface="meta")
 def test_the_pinned_population_is_intact():
@@ -232,3 +260,14 @@ def test_the_pinned_population_is_intact():
     for pin in data["paths"]:
         assert pin["source"] in SOURCE_URLS, pin
         assert pin["path"].startswith("/"), pin
+
+    # And WHICH document each path is pinned to, which none of the above sees.
+    # `source` decides which of the three cases a pin takes, so repointing one
+    # silently converts a still-documented 404 into the withdrawn branch --
+    # with the nodeid, the check fingerprint and therefore the fold all
+    # unchanged. Cardinality guarded the count; this guards the measurement.
+    assert _pin_digest() == PIN_DIGEST, (
+        "the pins changed: a path, a source or a section moved. That is a "
+        "deliberate act -- update PIN_DIGEST in the same commit and say why, "
+        "so the change is reviewable instead of silent."
+    )

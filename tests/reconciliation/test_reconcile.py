@@ -50,6 +50,11 @@ class Pair:
         contained = claim.get("subset_of_pair")
         if contained and contained == b:
             a, b = b, a
+        # Same non-symmetry, same fix: `at_least` needs the side that STATES
+        # the minimum on the left, or the comparison runs backwards.
+        floor = claim.get("floor")
+        if floor and floor == b:
+            a, b = b, a
         self.a = a
         self.b = b
         self.source_specs = sources or {}
@@ -119,7 +124,8 @@ def pytest_generate_tests(metafunc):
             # The nodeid keeps the alphabetical order so pinned ids stay
             # valid; only the operand order inside the Pair follows the
             # declared subset direction.
-            enriched = {**claim, "subset_of_pair": claim.get("subset")}
+            enriched = {**claim, "subset_of_pair": claim.get("subset"),
+                        "floor": claim.get("floor")}
             cases.append(Pair(enriched, a, b, sources=data["sources"]))
             ids.append(f"{claim['id']}::{a}-vs-{b}")
     metafunc.parametrize("pair", cases, ids=ids)

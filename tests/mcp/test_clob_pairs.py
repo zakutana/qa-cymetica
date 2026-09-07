@@ -161,6 +161,29 @@ def test_list_clob_pairs_paginates_consistently(mcp_anon):
         problems.append(f"a default call returned {rows} rows but states "
                         f"limit={limit} and total={total}")
 
+    if total == rows == limit:
+        # The one input where this check cannot see its own subject. The
+        # docstring's contract is "that the window and the whole are
+        # distinguishable from the response itself" -- and when total, limit
+        # and rows are the same number they are not: `total` could be the
+        # collection size or the page size and nothing here separates them.
+        # Probe past the window rather than concluding either way.
+        beyond, why = _page(mcp_anon, {"limit": limit, "offset": rows})
+        if beyond is None:
+            conclude(Measurement(
+                verdict="inconclusive",
+                reason=(f"a default call returned {rows} rows with "
+                        f"total={total} and limit={limit}, so the window and "
+                        f"the collection are the same number and cannot be "
+                        f"told apart; the probe past it could not be read: {why}"),
+                population={"rows": rows, "total": total, "limit": limit}))
+            return
+        if beyond.get("pairs"):
+            problems.append(
+                f"total={total} equals the page size ({limit}) while "
+                f"offset={rows} returns {len(beyond['pairs'])} more rows, so "
+                f"`total` describes the window and not the collection")
+
     if total > rows:
         nxt, why = _page(mcp_anon, {"limit": limit, "offset": rows})
         if nxt is None:

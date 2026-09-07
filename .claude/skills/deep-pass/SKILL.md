@@ -133,6 +133,25 @@ By the repository's rules, not quickly:
   `DEEP-PASS.md`. A judgement made with nobody to check it is how a wrong
   claim reaches a third party.
 
+  **That category is far narrower than it feels at 3am.** On the first run I
+  put eighteen findings in it, the operator woke up, said one word, and I
+  fixed them in twenty minutes — work they could have slept through. Their
+  reply: *"tos celou dobu cekal na me jedno slovo abych pracoval 20 minut? To
+  jsem mohl jeste spat."* So, explicitly:
+
+  * Making a check assert the contract **its own docstring names** is not a
+    decision. It is the repair. Do it.
+  * A correction going to the vendor because a check was repaired is not a
+    decision either — `correction_owed` exists to send it, and asking whether
+    the mechanism may do the job it was built for is hesitation wearing
+    diligence.
+  * A decision is: changing what we CLAIM rather than how we measure it,
+    filing a NEW report, spending money, or two defensible readings of a
+    contract where the docstring does not settle it. That is all.
+
+  When in doubt, fix it and write down what you assumed. A wrong fix is
+  visible in the morning and revertible; a night spent not fixing is not.
+
 ### 6 · Verify, the whole way
 
 ```bash

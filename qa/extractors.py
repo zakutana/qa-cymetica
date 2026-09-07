@@ -293,6 +293,32 @@ def relation_holds(relation: str, left: Any, right: Any, tolerance_pct: float = 
         a, b = frozenset(left), frozenset(right)
         return a <= b, f"left has {sorted(a - b)} which right lacks"
 
+    if relation == "at_least":
+        # A FLOOR, and the direction matters: `left` is the side that states
+        # the minimum. llms.txt says "With 21,800+ commits", and reading the
+        # "+" away turned a true statement into a red check by the passage of
+        # time -- build-stats crossing ~22,890 would have filed "the endpoint
+        # says 23,000; llms.txt says 21,800" against a document that is right.
+        #
+        # The tolerance is still load-bearing in the other direction: a floor
+        # nobody has moved in a year is stale, and the claim's note calls that
+        # a measurement defect. So the actual must be at or above the floor,
+        # and not absurdly above it.
+        try:
+            floor, actual = float(left), float(right)
+        except (TypeError, ValueError):
+            return False, "values are not numeric"
+        if actual < floor:
+            return False, (f"{actual:.0f} is below the stated minimum of "
+                           f"{floor:.0f}")
+        if floor == 0:
+            return True, ""
+        drift = (actual - floor) / floor * 100
+        return drift <= tolerance_pct, (
+            f"{actual:.0f} is {drift:.1f}% above the stated minimum of "
+            f"{floor:.0f} (tolerance {tolerance_pct}%), so the published "
+            f"figure is stale rather than wrong")
+
     if relation == "within_tolerance":
         try:
             a, b = float(left), float(right)
