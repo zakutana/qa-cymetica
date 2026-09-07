@@ -127,6 +127,22 @@ def test_verified_reports_record_what_they_earned(rest_anon):
     totals = stats.json() if stats.status_code == 200 else {}
     seen = sorted({str(r.get("reward_status")) for r in rows if r.get("reward_status")})
 
+    if not closed:
+        # 0 of 0 is not a pass. The window is 20 rows and their statuses move,
+        # so a page holding nothing closed is reachable -- the sibling in
+        # test_bounty_tracker.py says so in as many words and concludes
+        # inconclusive there. Here it used to mint a PASSING verification for a
+        # filed row out of an empty measurement.
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason=(f"none of the {len(rows)} public reports in this window is "
+                    f"closed, so there is no closed report whose award record "
+                    f"could be read"),
+            left=0, right=len(rows),
+            sources={"tracker": TRACKER},
+            claim_id="bounty-rewards-unrecorded"))
+        return
+
     conclude(Measurement(
         verdict="failed" if closed and not settled else "passed",
         reason=(f"{len(closed)} of the {len(rows)} public reports are closed "
@@ -175,6 +191,25 @@ def test_the_reward_programme_is_discoverable_by_an_agent(rest_anon):
         conclude(Measurement(
             verdict="inconclusive",
             reason=f"none of the discovery documents could be read: {unreadable}",
+            claim_id="bounty-rewards-undocumented"))
+        return
+
+    if not found and unreadable:
+        # "Appears in NONE of the machine-readable discovery surfaces" is a
+        # claim about every document in DISCOVERY. Until 2026-09-07 the only
+        # guard was "all five unreadable", so four 503s plus one readable
+        # non-match sent that sentence to the vendor about four documents this
+        # check never read. Rule 8: a failed read is not an empty read.
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason=(f"the programme is absent from the "
+                    f"{len(DISCOVERY) - len(unreadable)} discovery document(s) "
+                    f"that could be read, but {len(unreadable)} did not answer "
+                    f"({unreadable}), so 'absent from all of them' is not "
+                    f"something this run measured"),
+            left=[], right=sorted(DISCOVERY),
+            population={"documents_read": len(DISCOVERY) - len(unreadable),
+                        "unreadable": unreadable},
             claim_id="bounty-rewards-undocumented"))
         return
 

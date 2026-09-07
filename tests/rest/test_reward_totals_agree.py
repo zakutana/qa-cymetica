@@ -65,7 +65,14 @@ def money_problems(stats: dict, entries: list, definition: str | None) -> list:
     # against reports cannot show zero for every hunter it lists.
     earned = [_number(e.get("total_earned")) for e in entries]
     recorded = max([v for v in (awarded, paid) if v is not None] or [0])
-    if entries and recorded > 0 and all(v == 0 for v in earned if v is not None):
+    # `all(... if v is not None)` over an all-None column is vacuously True, so
+    # a leaderboard that stopped publishing total_earned would have produced
+    # "every one of the 4 hunter(s) shows total_earned 0.0" about hunters that
+    # show none -- sent to #73, and contradicting _number's own docstring, "a
+    # missing field is not a zero". The rule-8 gate below existed for `column`
+    # and never for this. Audit, 2026-09-07.
+    present = [v for v in earned if v is not None]
+    if entries and recorded > 0 and present and all(v == 0 for v in present):
         problems.append(
             f"stats records {awarded} awarded and {paid} paid, and every one "
             f"of the {len(entries)} hunter(s) on the leaderboard shows "
@@ -172,6 +179,25 @@ def test_the_reward_totals_agree_with_each_other(rest_anon):
             f"for {board_valid:.0f} valid report(s), while stats calls "
             f"{expected_valid:.0f} {named}"
         )
+
+    # The other half of the same repair: with no hunter publishing
+    # total_earned there is nothing to reconcile the aggregate against, and the
+    # pass sentence below would claim "every hunter's total_earned matches the
+    # column it is defined as" over an empty set. Dropping the field must not
+    # be a way to pass -- the same reason `unmeasurable` exists in the sibling
+    # award check.
+    if not problems and not [e for e in entries
+                             if _number(e.get("total_earned")) is not None]:
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason=(f"none of the {len(entries)} hunter(s) on the leaderboard "
+                    f"publishes total_earned, so the aggregate stats reports "
+                    f"cannot be reconciled against it"),
+            sources={"stats": STATS, "leaderboard": BOARD},
+            population={"hunters_listed": len(entries),
+                        "total_earned_published": 0},
+            claim_id="reward-totals-disagree"))
+        return
 
     conclude(Measurement(
         verdict="failed" if problems else "passed",

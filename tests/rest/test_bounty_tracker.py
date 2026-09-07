@@ -119,9 +119,21 @@ def test_attribution_to_a_wallet_is_provable(rest_anon):
     first = rest_anon.get(FILING_MESSAGE,
                           params={"wallet_address": wallet, "title": title})
     if first.status_code != 200:
+        # A 404 is the defect this check exists for; a 429 or a 5xx on a
+        # rate-limited endpoint we read three times in one test is our own
+        # traffic coming back at us. Until 2026-09-07 both concluded `failed`,
+        # so one transient filed "the endpoint that makes attribution provable
+        # answers HTTP 429" against #47 -- while the REPEAT read thirty lines
+        # below had already been given rule 8 for that exact case.
+        transient = first.status_code == 429 or first.status_code >= 500
         conclude(Measurement(
-            verdict="failed",
+            verdict="inconclusive" if transient else "failed",
             reason=(f"the endpoint that makes attribution provable answers "
+                    f"HTTP {first.status_code}, which is a transient this "
+                    f"check cannot tell from an outage, so nothing is "
+                    f"established about attribution"
+                    if transient else
+                    f"the endpoint that makes attribution provable answers "
                     f"HTTP {first.status_code}; without a deterministic "
                     f"message to sign there is no way to prove a filing is "
                     f"yours"),

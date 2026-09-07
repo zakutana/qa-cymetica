@@ -146,12 +146,36 @@ def test_a_recorded_award_agrees_with_the_tier_on_the_same_row(rest_anon):
     # function already gives eleven lines above: inconclusive. It stays in the
     # population, where the operator can see it.
 
+    # The currency half, said out loud. `currency_unmeasurable` was computed
+    # above and then read by nothing -- not the problems, not the population,
+    # not the gate -- so the comment that introduces it ("Counted the same way
+    # now") was false, and a tracker that dropped reward_currency from every
+    # row would have passed this check with "no row names a currency its own
+    # entitlement contradicts": deleting the evidence as a way to bank a
+    # verification for #68 and #70. Audit, 2026-09-07.
+    currency_measured = len(awarded) - len(currency_unmeasurable)
+    if not problems and not currency_measured and awarded:
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason=(f"no row publishes a currency on both sides, so the half "
+                    f"of this contract about currency could not be measured: "
+                    f"{len(currency_unmeasurable)} of {len(awarded)} awarded "
+                    f"row(s) name a currency for the award or for the "
+                    f"entitlement, but not both"),
+            left=currency_unmeasurable[:8], right=len(awarded),
+            sources={"tracker": TRACKER, "tiers": TIERS},
+            population={"rows": len(rows), "awarded": len(awarded),
+                        "measured": measured,
+                        "currency_unmeasurable": len(currency_unmeasurable)},
+            claim_id="award-contradicts-its-own-tier"))
+        return
+
     conclude(Measurement(
         verdict="failed" if problems else "passed",
         reason=("; ".join(problems) if problems else
                 f"all {measured} recorded award(s) sit inside the tier each "
-                f"row publishes, and no row names a currency its own "
-                f"entitlement contradicts"),
+                f"row publishes, and of the {currency_measured} row(s) that "
+                f"name a currency on both sides, none contradicts itself"),
         left=([r[0] for r in outside] + [r[0] for r in wrong_currency]
               + unmeasurable)[:8],
         right=measured,
@@ -159,5 +183,6 @@ def test_a_recorded_award_agrees_with_the_tier_on_the_same_row(rest_anon):
         population={"rows": len(rows), "awarded": len(awarded),
                     "measured": measured, "without_a_band": len(unmeasurable),
                     "currency_mismatch": len(wrong_currency),
+                    "currency_unmeasurable": len(currency_unmeasurable),
                     "below_published_minimum": len(outside)},
         claim_id="award-contradicts-its-own-tier"))

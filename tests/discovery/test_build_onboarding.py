@@ -40,7 +40,7 @@ REGISTER = "/mcp/v1/register"
 # Anchored here rather than on the <pre> block that holds the copy-paste
 # prompt, because every path in THAT block resolves. A check pointed at the
 # prose that is correct would have passed beside the sentence that is not.
-RECIPE = re.compile(r'data-i18n="build\.recipe_[a-z_]+"\s*>(.*?)</', re.S)
+RECIPE = re.compile(r'data-i18n="build\.recipe_[a-z_]+"\s*>(.*?)</(?:span|b|li)>', re.S)
 
 # A path as an agent would read one out of an instruction: leading slash, not
 # preceded by a word character or another slash (so "https://x/y" and "$25" are
@@ -58,11 +58,25 @@ FIELD_TO_SAVE = re.compile(r"Save the returned\s+([a-z][a-z_]{2,})", re.I)
 
 TAG = re.compile(r"<[^>]+>")
 
-# "climb the trust ladder (PUBLIC -> RECOGNIZED -> TRUSTED -> ALLIED)"
-LADDER_ON_PAGE = re.compile(r"trust ladder\s*\(([^)]{4,120})\)", re.I)
+# "climb the trust ladder (PUBLIC -> RECOGNIZED -> TRUSTED -> ALLIED)", and
+# after their 2026-09-07 fix "(unknown -> recognized -> trusted -> allied --
+# the trust_tiers keys in /.well-known/mcp.json; your rung is trust_level on
+# GET /mcp/v1/agents/me)". The parenthetical now carries an explanation after
+# the rungs, so the cap is wide enough to match it and RUNGS_ONLY cuts the
+# prose off. At 120 characters this stopped matching the moment they answered
+# the report, and the fix would have reached us as an inconclusive.
+LADDER_ON_PAGE = re.compile(r"trust ladder\s*\(([^)]{4,400})\)", re.I)
 
-# "Register via MCP for trust-based access levels (Public, Authenticated, ...)"
-LADDER_IN_LLMS = re.compile(r"access levels\s*\(([^)]{4,120})\)", re.I)
+# Only the rung list: whatever precedes the first em dash, semicolon or " -- ".
+RUNGS_ONLY = re.compile(r"^(.*?)(?:—|;| -- |:|\))")
+
+# Both forms they have published: the old parenthesised list
+# "access levels (Public, Authenticated, Federated, Allied)" and, after the
+# 2026-09-07 fix, a colon with the explanation moved into the parenthesis:
+# "access levels: unknown -> recognized -> trusted -> allied (the trust_tiers
+# keys in /.well-known/mcp.json...)". Anchored on the phrase, tolerant of what
+# introduces the list, and stopping before the parenthetical.
+LADDER_IN_LLMS = re.compile(r"access levels[:\s]*\(?\s*([^(\n]{4,200})", re.I)
 
 # Rungs are separated by commas on one surface and by U+2192 arrows on the
 # other. qa.extractors.regex_set splits on [,\s]+ only, so it would return the
@@ -94,11 +108,25 @@ def _prose(html):
 
 
 def _rungs(text):
-    return frozenset(
+    """The rung names in a stated ladder, or None if this does not read as one.
+
+    The shape test is the point. Without it any parenthetical after the phrase
+    became "the rungs": "trust ladder (see the docs)" would have been filed to
+    the vendor as the three surfaces disagreeing. A capture that is not a short
+    list of single bare words is something else, and something else is
+    inconclusive, not a defect.
+    """
+    head = RUNGS_ONLY.match(text)
+    rungs = frozenset(
         part.strip().lower()
-        for part in RUNG_SEPARATORS.split(text)
+        for part in RUNG_SEPARATORS.split(head.group(1) if head else text)
         if part.strip()
     )
+    if not 2 <= len(rungs) <= 8:
+        return None
+    if any(not r.isalpha() for r in rungs):
+        return None
+    return rungs
 
 
 @qa(component="discovery.onboarding", tier=SafetyTier.SAFE, surface="discovery",
@@ -150,7 +178,14 @@ def test_every_route_a_recipe_names_is_reachable_as_an_api(rest_anon):
             continue
         response = rest_anon.get(path)
         content_type = response.headers.get("content-type", "")
-        if response.status_code == 200 and "json" in content_type:
+        # Any JSON answer means an API is there. The predicate used to demand
+        # 200 as well, while the sentence built below says "does not answer
+        # JSON" -- so an authenticated route absent from the public schema
+        # (401 application/json to an anonymous caller) would have been filed
+        # to the vendor in a sentence its own parenthesis refutes, about a
+        # route the key-holding agent this page creates can call. Status is not
+        # the question here; reachability as an API is. Audit, 2026-09-07.
+        if "json" in content_type:
             continue
         unreachable[path] = f"HTTP {response.status_code} {content_type.split(';')[0]}"
 
@@ -295,6 +330,20 @@ def test_trust_ladder_rungs_agree_across_surfaces(rest_anon):
     stated = {"/build": _rungs(on_page.group(1)),
               "llms.txt": _rungs(in_llms.group(1)),
               "mcp.json": served}
+    unreadable = [where for where, rungs in stated.items() if rungs is None]
+    if unreadable:
+        # The anchor matched but what followed is not a ladder. Saying the
+        # surfaces disagree on the strength of that would be a defect filed out
+        # of a sentence that names no rungs.
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason=(f"the text this check reads as the ladder does not read as "
+                    f"a list of rungs on {', '.join(unreadable)}, so the "
+                    f"surfaces were not compared"),
+            left=[where for where in unreadable],
+            right={k: sorted(v) if v else None for k, v in stated.items()},
+            sources={"page": BUILD, "document": LLMS, "manifest": MANIFEST}))
+        return
     agree = len({frozenset(v) for v in stated.values()}) == 1
 
     reason = (
