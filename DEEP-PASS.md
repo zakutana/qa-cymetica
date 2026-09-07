@@ -48,6 +48,32 @@ jsem psal dnes**. Test vždycky napřed.
   čtení trackeru, takže vypršelý klíč na my-reports umlčel i jejich odpovědi.
   Rozděleno na dvě nezávislá čtení.
 
+### Druhé kolo, a to je nejdůležitější věc celé noci
+
+Protože se měnil `qa/fold.py` a `qa/state.py`, proběhlo druhé kolo — nezávislá
+kontrola **mých vlastních oprav**. Našla v nich tři chyby, jednu fatální:
+
+* **`verify.py` by vůbec neodeslal.** Do `send()` jsem přidal
+  `body = response.json()`. `body` je ale zároveň modulová funkce, která o tři
+  řádky výš skládá payload — a lokální přiřazení ji zastíní v celé funkci.
+  `verify.py --confirm` by spadl na `UnboundLocalError` **dřív než odejde
+  jediný POST**. Obě sady testů byly přitom zelené (321 a 47), protože
+  `send()` nevolal žádný z nich. Napsal jsem test, který ji volá; chytil to na
+  první pokus.
+* **`settle()` nebyl idempotentní.** Klíč události končí `|outcome|at` ve
+  vteřinovém rozlišení, takže dvě doúčtování vteřinu od sebe jsou dvě události.
+  A můj test, který to měl hlídat, prošel **jen proto, že obě volání spadla do
+  jedné vteřiny** — guard, co měřil hodiny místo vlastnosti, kterou jmenoval.
+  Teď se ptá journalu a test to ověřuje přes hranici vteřiny i dne.
+* **Evidence z GETu se ukládala jako `MUTATE`.** `_capture` měl tier natvrdo.
+  Enforcement to neovlivní (ten jede z `CURRENT_TIER`), ale archiv, který
+  posíláme jako důkaz, tvrdil „MUTATE GET". Opraveno; **pět už commitnutých
+  záznamů to má špatně a nechávám je tak** — mazat evidenci kvůli štítku je
+  horší než ten štítek.
+
+Kdyby druhé kolo nebylo podmíněné na změnu jádra, tahle noc by skončila tím, že
+odesílání verifikací je rozbité a nikdo o tom neví.
+
 **A dvě vady v dokumentaci**, ověřené čtením kódu, ne hlasováním:
 
 * `CLAUDE.md` tvrdil, že `VERIFIED FIXED` je „exactly one cell … beside their

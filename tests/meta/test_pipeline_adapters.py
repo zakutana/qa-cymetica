@@ -645,7 +645,7 @@ def test_a_verification_whose_response_cannot_be_kept_is_not_claimed():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_verifications_they_already_hold_are_not_sent_again():
+def test_verifications_they_already_hold_are_not_sent_again(tmp_path, monkeypatch):
     """VER: and a read that failed is not a server holding nothing (rule 8).
 
     The obligation already stops us re-sending what OUR journal records. This
@@ -653,6 +653,11 @@ def test_verifications_they_already_hold_are_not_sent_again():
     submit.py exists because the two once disagreed -- report #55 was on their
     server and not in our log.
     """
+    # QA_STATE_DIR, because already_sent() captures the read it makes and the
+    # evidence store follows that seam. Without it this test wrote five real
+    # records into the committed archive on every run -- a test that became a
+    # writer of durable artefacts, which is what the seam exists to stop.
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
     verify = _module("scripts/verify.py")
 
     held = _client(lambda r: httpx.Response(
@@ -851,9 +856,23 @@ def test_a_verification_their_server_already_holds_is_settled_not_re_sent(tmp_pa
     assert outcomes[0]["reconciled_from"] == "verifications", \
         "a settlement must be distinguishable from an outcome we watched happen"
 
-    # Idempotent: settling twice is one fact.
-    assert verify.settle(item, evidence_id="ev-read") is False
+    # Idempotent, and asserted ACROSS a second boundary. The outcome's natural
+    # key ends in |outcome|at, so two settlements a second apart are two
+    # events unless something looks at the journal. The first version of this
+    # test called settle() twice in a row and passed only because both landed
+    # inside one wall-clock second -- a guard that measured the clock, not the
+    # property its own comment named. Found by the adversarial round.
+    later = ["2026-09-07T16:00:01+00:00", "2026-09-07T16:05:00+00:00",
+             "2026-09-08T09:00:00+00:00"]
+    for when in later:
+        monkeypatch.setattr(verify, "_now", lambda w=when: w)
+        assert verify.settle(item, evidence_id="ev-read") is False,             f"settling again at {when} wrote a second event for one fact"
     assert len([e for e in read_events() if e["type"] == "verification_outcome"]) == 1
+
+    # A different verdict for the same report and definition IS a second fact.
+    monkeypatch.setattr(verify, "_now", lambda: "2026-09-07T17:00:00+00:00")
+    assert verify.settle({**item, "verdict": "fail"}, evidence_id="ev-read") is True
+    assert len([e for e in read_events() if e["type"] == "verification_outcome"]) == 2
 
     # And it refuses to invent evidence.
     with pytest.raises(SystemExit, match="evidence"):
@@ -906,3 +925,68 @@ def test_a_broken_tracker_read_does_not_silence_the_inbox():
         assert stub.inbox_reads == 1, (
             f"a tracker read of {tracker!r} skipped the inbox; the one channel "
             f"their replies arrive on went silent on an unrelated fault")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_send_actually_sends(tmp_path, monkeypatch):
+    """VER: the one test that calls send(), because nothing did.
+
+    The rule-9 fix on 2026-09-07 added `body = response.json()` inside send().
+    `body` is also the module-level function that composes the payload, and a
+    local binding shadows it for the WHOLE function -- so `payload = body(item)`
+    on the loop's first line raised UnboundLocalError before any POST. Every
+    suite stayed green (321 and 47) because the five tests touching verify.py
+    called owed, _capture, already_sent, verification_id and settle, and never
+    the function that sends.
+
+    A test that exercised the outcome branches would still have missed it; it
+    had to be one that enters the loop. So this one drives a real batch through
+    a mock transport and asserts on the journal, which is the only record that
+    would have existed if it had gone out.
+    """
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    verify = _module("scripts/verify.py")
+    from qa.state import read_events
+
+    item = {"finding_id": "CYM-a", "report_id": 46, "fingerprint": "fp-1",
+            "verdict": "pass", "run_id": "run-1", "tree_sha": "abc123",
+            "checked_at": "2026-09-07T12:00:00+00:00", "prereg_id": "PRE-0001",
+            "checks": ["tests/a.py::test_x"], "title": "t"}
+
+    def _sender(handler):
+        """A mock client the guard will let POST, the way main() arranges it.
+
+        Left to itself the transport refuses -- `MUTATE test attempted POST
+        bounty.verification without --allow-mutate` -- which is the guard doing
+        its job and is worth seeing here rather than mocked away.
+        """
+        client = _client(handler)
+        client._transport.registry.mutate_enabled = True
+        client._transport.registry.mutate_allowed_hosts = frozenset({"cymetica.com"})
+        return client
+
+    created = _sender(lambda r: httpx.Response(
+        200, json={"success": True, "verification": {"id": 19}}))
+    [result] = verify.send(created, [copy_item(item)], pause=0)
+    assert result["outcome"] == "accepted", result
+
+    events = [e for e in read_events() if e["type"].startswith("verification_")]
+    assert [e["type"] for e in events] == ["verification_intent",
+                                           "verification_outcome"], \
+        "rule 9 wants the intent before the POST and the outcome after it"
+    assert events[1]["evidence_id"], "the outcome cites nothing"
+
+    # A 2xx that is not a created verification is not accepted (rule 9), and
+    # the outcome is still written -- the attempt must never vanish.
+    vague = _sender(lambda r: httpx.Response(200, json={"success": False}))
+    [result] = verify.send(vague, [copy_item(item, report_id=47)], pause=0)
+    assert result["outcome"] == "unknown"
+    assert [e["type"] for e in read_events()
+            if e.get("report_id") == 47] == ["verification_intent",
+                                             "verification_outcome"]
+
+
+def copy_item(item, **over):
+    out = dict(item)
+    out.update(over)
+    return out

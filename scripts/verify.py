@@ -65,7 +65,7 @@ from qa.client import build_client, install_client_guard  # noqa: E402
 from qa.config import identities, load_dotenv  # noqa: E402
 from qa.safety import CURRENT_TIER, EndpointRegistry, SafetyTier  # noqa: E402
 from qa.state import (admissibility, append_event, journal_path,  # noqa: E402
-                      load_ledger, load_run)
+                      load_ledger, load_run, read_events)
 
 # Their cap is unresolved -- they said 20/hour, the header advertises 60 -- so
 # submit.py takes the stricter and this follows it. 27 verifications is three
@@ -82,7 +82,7 @@ def _path(report_id: int) -> str:
     return f"/api/v1/bounty/reports/{report_id}/verification"
 
 
-def _capture(response) -> str:
+def _capture(response, tier: SafetyTier = SafetyTier.MUTATE) -> str:
     """The evidence id, or raise.
 
     submit.py swallows a capture failure into None, and qa/fold.py then refuses
@@ -95,7 +95,7 @@ def _capture(response) -> str:
 
     try:
         evidence_id = EvidenceStore("script-verify").capture(
-            response.request, response, SafetyTier.MUTATE)
+            response.request, response, tier)
     except Exception as exc:  # noqa: BLE001
         evidence_id, why = None, f"{type(exc).__name__}: {exc}"
     else:
@@ -265,6 +265,20 @@ def settle(item: dict, evidence_id: str | None) -> bool:
             "read that found it -- the fold rejects an outcome that cites "
             "nothing, so this would record a fact with no support."
         )
+    # Idempotent against the JOURNAL, not against the second hand. The
+    # natural key for an outcome ends in |outcome|at, deliberately, so that a
+    # timeout and its later settlement are two facts -- which means two
+    # settlements a second apart are two events unless something looks. The
+    # first version relied on append_event's dedup and its test passed only
+    # because both calls fell inside one wall-clock second.
+    for event in read_events():
+        if (event.get("type") == "verification_outcome"
+                and event.get("outcome") == "accepted"
+                and event.get("finding_id") == item["finding_id"]
+                and event.get("report_id") == item["report_id"]
+                and event.get("fingerprint") == item["fingerprint"]
+                and event.get("verdict") == item["verdict"]):
+            return False
     wrote = append_event({
         "type": "verification_outcome", "at": _now(), "by": "agent",
         "source": "scripts/verify.py", "finding_id": item["finding_id"],
@@ -288,7 +302,11 @@ def already_sent(client, report_id: int) -> tuple[set, str | None]:
     response = client.get(f"/api/v1/bounty/reports/{report_id}/verifications")
     evidence_id = None
     try:
-        evidence_id = _capture(response)
+        # SAFE, because that is what this read runs at. Passing MUTATE wrote
+        # "MUTATE GET .../verifications" into the durable evidence archive --
+        # cosmetic to the machinery, which enforces from CURRENT_TIER, and
+        # misleading to anyone reading the archive as a record of what we did.
+        evidence_id = _capture(response, SafetyTier.SAFE)
     except SystemExit:
         # A read we could not keep still tells us what to skip; it just cannot
         # settle anything, and settle() refuses without it.
@@ -348,11 +366,16 @@ def send(client, items: list[dict], pause: int = PAUSE_SECONDS) -> list[dict]:
             except SystemExit as exc:
                 evidence_id, capture_error = None, str(exc)
 
+            # NOT `body` -- that is the module-level function that composed
+            # the payload three lines up, and a local binding shadows it for
+            # the whole of send(). The first draft of this hunk did exactly
+            # that and send() raised UnboundLocalError before any POST, with
+            # both suites green because no test called it.
             try:
-                body = response.json()
+                answer = response.json()
             except ValueError:
-                body = None
-            server_id = verification_id(body)
+                answer = None
+            server_id = verification_id(answer)
 
             # Rule 9: 2xx AND an id from their server. A 2xx without one is
             # not a created verification, whatever it looks like.

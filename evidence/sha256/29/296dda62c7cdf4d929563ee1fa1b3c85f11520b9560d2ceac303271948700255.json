@@ -1,0 +1,36 @@
+{
+  "captured_at": "2026-09-07T16:21:22+00:00",
+  "endpoint_rule": null,
+  "nodeid": "tests/meta/test_pipeline_adapters.py::test_verifications_they_already_hold_are_not_sent_again",
+  "request": {
+    "body": {
+      "encoding": "empty",
+      "value": null
+    },
+    "headers": {
+      "accept": "application/json",
+      "accept-encoding": "gzip, deflate, zstd",
+      "connection": "keep-alive",
+      "host": "cymetica.com",
+      "user-agent": "qa-cymetica/0.1 (independent QA; contact via vendor Telegram channel)"
+    },
+    "method": "GET",
+    "url": "https://cymetica.com/api/v1/bounty/reports/46/verifications"
+  },
+  "response": {
+    "body": {
+      "encoding": "text",
+      "truncated": false,
+      "value": "nope"
+    },
+    "elapsed_ms": null,
+    "headers": {
+      "content-length": "4",
+      "content-type": "text/plain; charset=utf-8"
+    },
+    "reason": "Internal Server Error",
+    "status_code": 500
+  },
+  "run_id": "script-verify",
+  "tier": "SAFE"
+}
