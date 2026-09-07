@@ -35,9 +35,13 @@ Modelled on scripts/submit.py, which is the other outbound writer, and
 deliberately unlike it in four places where its behaviour was found wanting
 while planning this one:
 
-  * a failed evidence capture is a hard stop here, not a silent None. In
-    submit.py it returns None and the fold then refuses the outcome it
-    produced -- a request that went out and cannot be folded.
+  * a failed evidence capture stops the batch here rather than becoming a
+    silent None, but the outcome event is written FIRST. submit.py returns
+    None and the fold then refuses the outcome it produced -- a request that
+    went out and cannot be folded. The first version of this file was worse:
+    it raised between the POST and the event, so the attempt left no outcome
+    at all and the obligation could never clear. Three triage agents found
+    that on 2026-09-07; settle() is the exit.
   * the rate-limit break says what did not go, per item, instead of dropping
     the remainder with no event and no line of output.
   * the per-run cap is applied after deduplication, not before, so requests we
@@ -213,8 +217,68 @@ def body(item: dict) -> dict:
     }
 
 
-def already_sent(client, report_id: int) -> set[tuple]:
-    """(fingerprint, verdict) pairs their server already holds for this report.
+def verification_id(body) -> int | str | None:
+    """The id their server assigned, or None.
+
+    Rule 9: "`accepted` needs 2xx **and** a server report id". verify.py
+    shipped taking the status alone, which submit.py has never done -- so a
+    200 that is not a created verification (a proxy page, `success: false`, a
+    202 queued) recorded as accepted, cleared verification_owed, and left the
+    dashboard showing them holding something their server never made. There is
+    no path back from that: the obligation is the only thing the sender reads.
+
+    Their shape, captured: {"success": true, ..., "verification": {"id": 19}}.
+    """
+    if not isinstance(body, dict):
+        return None
+    if body.get("success") is False:
+        return None
+    nested = body.get("verification")
+    if isinstance(nested, dict) and nested.get("id") is not None:
+        return nested["id"]
+    for key in ("verification_id", "id"):
+        if body.get(key) is not None:
+            return body[key]
+    return None
+
+
+def settle(item: dict, evidence_id: str | None) -> bool:
+    """Record a verification their server holds and our journal does not.
+
+    Not a new mechanism, and deliberately not a flag. `already_sent()` is
+    already a read of their server -- the same evidence submit.py's
+    `--reconcile` goes and fetches -- and we were simply not writing down what
+    it found.
+
+    Without this, one failure mode has no exit. If evidence capture fails
+    between the POST and the outcome event, they hold the verification and we
+    hold only an intent; the obligation is computed from accepted outcomes, so
+    it stays owed for ever, and every later run's dedup read sees their copy
+    and SKIPs. Nothing is sent and nothing clears: a badge nobody can clear,
+    with rule 4 forbidding a hand fix.
+
+    Returns True when it wrote something.
+    """
+    if not evidence_id:
+        raise SystemExit(
+            "refusing to settle a verification without the evidence of the "
+            "read that found it -- the fold rejects an outcome that cites "
+            "nothing, so this would record a fact with no support."
+        )
+    wrote = append_event({
+        "type": "verification_outcome", "at": _now(), "by": "agent",
+        "source": "scripts/verify.py", "finding_id": item["finding_id"],
+        "report_id": item["report_id"], "fingerprint": item["fingerprint"],
+        "verdict": item["verdict"], "run_id": item["run_id"],
+        "tree_sha": item["tree_sha"], "checked_at": item["checked_at"],
+        "outcome": "accepted", "evidence_id": evidence_id,
+        "reconciled_from": "verifications",
+    })
+    return wrote == "appended"
+
+
+def already_sent(client, report_id: int) -> tuple[set, str | None]:
+    """(fingerprint, verdict) pairs their server holds, and the read's evidence.
 
     Rule 8, and the reason submit.py reads the tracker before filing: a read
     that failed is not a server with nothing on it. Refusing here costs one
@@ -222,10 +286,17 @@ def already_sent(client, report_id: int) -> set[tuple]:
     real second opinion.
     """
     response = client.get(f"/api/v1/bounty/reports/{report_id}/verifications")
+    evidence_id = None
+    try:
+        evidence_id = _capture(response)
+    except SystemExit:
+        # A read we could not keep still tells us what to skip; it just cannot
+        # settle anything, and settle() refuses without it.
+        evidence_id = None
     if response.status_code == 404:
         # No verifications yet is a legitimate shape for a report nobody has
         # verified, and it is distinguishable from a failed read.
-        return set()
+        return set(), evidence_id
     if response.status_code != 200:
         raise SystemExit(
             f"  ! verifications for #{report_id} answered HTTP "
@@ -237,8 +308,8 @@ def already_sent(client, report_id: int) -> set[tuple]:
     except ValueError:
         raise SystemExit(f"  ! verifications for #{report_id} was not JSON")
     rows = payload.get("verifications") if isinstance(payload, dict) else payload
-    return {((r or {}).get("fingerprint"), (r or {}).get("verdict"))
-            for r in (rows or [])}
+    return ({((r or {}).get("fingerprint"), (r or {}).get("verdict"))
+             for r in (rows or [])}, evidence_id)
 
 
 def send(client, items: list[dict], pause: int = PAUSE_SECONDS) -> list[dict]:
@@ -266,13 +337,45 @@ def send(client, items: list[dict], pause: int = PAUSE_SECONDS) -> list[dict]:
                 results.append({**item, "outcome": "unknown", "error": str(exc)})
                 continue
 
-            evidence_id = _capture(response)
+            # The outcome is written whatever happens next. _capture used to
+            # raise SystemExit here, between the POST and this event, leaving
+            # an intent with nothing to settle it -- and the obligation is
+            # computed from accepted outcomes, so it could never clear.
             status = response.status_code
-            outcome = "accepted" if 200 <= status < 300 else "unknown"
+            try:
+                evidence_id = _capture(response)
+                capture_error = None
+            except SystemExit as exc:
+                evidence_id, capture_error = None, str(exc)
+
+            try:
+                body = response.json()
+            except ValueError:
+                body = None
+            server_id = verification_id(body)
+
+            # Rule 9: 2xx AND an id from their server. A 2xx without one is
+            # not a created verification, whatever it looks like.
+            if capture_error or not (200 <= status < 300 and server_id is not None):
+                outcome = "unknown"
+            else:
+                outcome = "accepted"
+
             append_event({**common, "type": "verification_outcome",
                           "at": _now(), "outcome": outcome,
-                          "http_status": status, "evidence_id": evidence_id})
-            results.append({**item, "outcome": outcome, "http_status": status})
+                          "http_status": status, "evidence_id": evidence_id,
+                          **({"reason": capture_error} if capture_error else {})})
+            results.append({**item, "outcome": outcome, "http_status": status,
+                            **({"error": capture_error} if capture_error else {}),
+                            **({} if server_id is not None or outcome == "accepted"
+                               else {"error": f"HTTP {status} carried no "
+                                              f"verification id"})})
+            if capture_error:
+                # Their answer could not be kept, so nothing further may be
+                # sent on its authority -- but the attempt is now on record,
+                # and the next run's dedup read will settle it.
+                print(f"  STOP  {capture_error}")
+                break
 
             remaining = response.headers.get("x-ratelimit-remaining")
             if remaining is not None and int(remaining) < 10:
@@ -326,19 +429,28 @@ def main(argv: list[str] | None = None) -> int:
         token = CURRENT_TIER.set(SafetyTier.SAFE)
         try:
             held: dict[int, set] = {}
+            evidence: dict[int, str | None] = {}
             for item in work:
                 rid = item["report_id"]
                 if rid not in held:
-                    held[rid] = already_sent(client, rid)
+                    held[rid], evidence[rid] = already_sent(client, rid)
         finally:
             CURRENT_TIER.reset(token)
 
         fresh = []
         for item in work:
             if (item["fingerprint"], item["verdict"]) in held[item["report_id"]]:
-                print(f"  SKIP  {item['finding_id']} on #{item['report_id']}: "
-                      f"they already hold this {item['verdict']} for this "
-                      f"fingerprint")
+                # They hold it and the obligation says we do not, so this read
+                # IS the settlement -- see settle(). Without it a capture that
+                # failed after a successful POST leaves a debt nothing can pay.
+                if settle(item, evidence[item["report_id"]]):
+                    print(f"  SETTLED {item['finding_id']} on "
+                          f"#{item['report_id']}: their server holds this "
+                          f"{item['verdict']}; recorded from the read")
+                else:
+                    print(f"  SKIP  {item['finding_id']} on #{item['report_id']}: "
+                          f"they already hold this {item['verdict']} for this "
+                          f"fingerprint")
                 continue
             fresh.append(item)
 

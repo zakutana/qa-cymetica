@@ -7,16 +7,24 @@ The single rule this module exists to make true:
 
 Enforcement is in the transport, below every helper and every fixture, so a
 buggy test, a copy-pasted probe body, or a helper that builds its own payload
-all hit the same wall. Three independent layers guard the network:
+all hit the same wall. Four independent layers guard the network:
 
     1. httpx client construction is banned outside our fixtures (client.py)
-    2. this transport checks the tier of the currently-running test
-    3. executable parameters are declared per endpoint in components.yaml,
-       never inferred
+    2. a request made with NO tier in scope is refused outright -- there is no
+       default, so code that forgot to declare what it may do does nothing
+    3. this transport checks the tier of the currently-running test
+    4. executable parameters are declared per endpoint in components.yaml,
+       never inferred, and a probe_only endpoint may never be executed
 
-Defeating one still leaves two. tests/meta/ proves all three block, runs first,
-and aborts the session on failure -- so if the guard is broken, zero live
-requests are issued.
+Defeating one still leaves three. tests/meta/ proves all four block, runs
+first, and aborts the session on failure -- so if the guard is broken, zero
+live requests are issued. The configure-time self-check in
+qa/client.py::assert_client_guard_blocks feels each of the four coming off
+before a single test is collected, and names them by these numbers.
+
+(This said "Three" and listed three until 2026-09-07, while client.py had
+tested four since the self-check was added. The missing one is layer 2, which
+is the one a narrow selector would otherwise leave unproven.)
 """
 
 from __future__ import annotations

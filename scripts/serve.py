@@ -205,58 +205,80 @@ def asker(stop: threading.Event, every: float) -> None:
     spec.loader.exec_module(bounty)
 
     while not stop.wait(every):
-        try:
-            before = bounty._last_status_by_report()
-            # refresh_our_reports, not fetch_our_reports: the latter appends
-            # the journal event and returns the rows without writing
-            # state/bounty.json, and the bell reads the vendor's status out of
-            # that file. Recording the change and leaving the page saying the
-            # old thing is the failure this whole option exists to remove.
-            snapshot = bounty.refresh_our_reports()
-            after = bounty._last_status_by_report()
-        except Exception as exc:  # noqa: BLE001 -- a bad read must not kill the server
-            print(f"[ask] read failed, leaving the page as it was: "
-                  f"{type(exc).__name__}: {exc}", file=sys.stderr)
-            continue
+        poll_once(bounty)
 
-        klass = (snapshot or {}).get("klass")
-        if klass != "ok":
-            # Rule 8: a failed read is not an empty read. bounty.py has
-            # already recorded that we looked and could not see; say so here
-            # rather than letting silence read as "nothing has changed".
-            print(f"[ask] could not read their tracker ({klass}); "
-                  f"the page keeps what it had")
-            continue
 
-        moved = {k: (before.get(k), v) for k, v in after.items() if before.get(k) != v}
-        if moved:
-            for report_id, (was, now) in sorted(moved.items()):
-                print(f"[ask] #{report_id}: {was or '-'} -> {now}")
-            print(f"[ask] {len(moved)} report(s) moved -- re-fold to take it in: "
-                  f"python scripts/ledger.py --events-only")
+def poll_once(bounty) -> None:
+    """One tick: read their tracker, then read their inbox. Both, always.
 
-        # The other surface they answer on. A question sent to /a2a/send is
-        # replied to in the inbox and nowhere else, and until 2026-09-07
-        # nothing in this project read it -- so a reply sat there until
-        # somebody thought to look, which is not a mechanism.
-        try:
-            inbox = bounty.fetch_inbox()
-        except Exception as exc:  # noqa: BLE001 -- a bad read must not kill the server
-            print(f"[ask] inbox read failed, leaving the page as it was: "
-                  f"{type(exc).__name__}: {exc}", file=sys.stderr)
+    The two are independent surfaces and each guards itself. They were once
+    chained -- the inbox read was appended after the tracker block's `continue`
+    statements -- so an expired key on my-reports also stopped a2a replies from
+    being noticed, which is precisely the "a reply sat there until somebody
+    thought to look" state the inbox read exists to end. Three triage agents
+    found that on 2026-09-07.
+
+    A function rather than a loop body so it can be exercised without a timer.
+    """
+    _poll_tracker(bounty)
+    _poll_inbox(bounty)
+
+
+def _poll_tracker(bounty) -> None:
+    try:
+        before = bounty._last_status_by_report()
+        # refresh_our_reports, not fetch_our_reports: the latter appends the
+        # journal event and returns the rows without writing state/bounty.json,
+        # and the bell reads the vendor's status out of that file. Recording
+        # the change and leaving the page saying the old thing is the failure
+        # this whole option exists to remove.
+        snapshot = bounty.refresh_our_reports()
+        after = bounty._last_status_by_report()
+    except Exception as exc:  # noqa: BLE001 -- a bad read must not kill the server
+        print(f"[ask] read failed, leaving the page as it was: "
+              f"{type(exc).__name__}: {exc}", file=sys.stderr)
+        return
+
+    klass = (snapshot or {}).get("klass")
+    if klass != "ok":
+        # Rule 8: a failed read is not an empty read. bounty.py has already
+        # recorded that we looked and could not see; say so here rather than
+        # letting silence read as "nothing has changed".
+        print(f"[ask] could not read their tracker ({klass}); "
+              f"the page keeps what it had")
+        return
+
+    moved = {k: (before.get(k), v) for k, v in after.items() if before.get(k) != v}
+    if moved:
+        for report_id, (was, now) in sorted(moved.items()):
+            print(f"[ask] #{report_id}: {was or '-'} -> {now}")
+        print(f"[ask] {len(moved)} report(s) moved -- re-fold to take it in: "
+              f"python scripts/ledger.py --events-only")
+
+
+def _poll_inbox(bounty) -> None:
+    """The other surface they answer on.
+
+    A question sent to /a2a/send is replied to in the inbox and nowhere else.
+    """
+    try:
+        inbox = bounty.fetch_inbox()
+    except Exception as exc:  # noqa: BLE001 -- a bad read must not kill the server
+        print(f"[ask] inbox read failed, leaving the page as it was: "
+              f"{type(exc).__name__}: {exc}", file=sys.stderr)
+        return
+    if inbox["klass"] != "ok":
+        # Rule 8 again: silence here would be indistinguishable from a vendor
+        # who simply has not replied.
+        print(f"[ask] could not read the a2a inbox ({inbox['klass']}); "
+              f"that is not an empty inbox")
+        return
+    for message in inbox["new"]:
+        if message["auto"]:
             continue
-        if inbox["klass"] != "ok":
-            # Rule 8 again: silence here would be indistinguishable from a
-            # vendor who simply has not replied.
-            print(f"[ask] could not read the a2a inbox ({inbox['klass']}); "
-                  f"that is not an empty inbox")
-            continue
-        for message in inbox["new"]:
-            if message["auto"]:
-                continue
-            first = (message["text"] or "").strip().splitlines()
-            print(f"[ask] a2a reply {message['msg_id']} at {message['at']}")
-            print(f"      {bounty._printable(first[0] if first else '')[:100]}")
+        first = (message["text"] or "").strip().splitlines()
+        print(f"[ask] a2a reply {message['msg_id']} at {message['at']}")
+        print(f"      {bounty._printable(first[0] if first else '')[:100]}")
 
 
 def watcher(live: Live, stop: threading.Event, every: float = POLL_SECONDS) -> None:

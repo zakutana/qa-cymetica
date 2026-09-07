@@ -234,3 +234,15 @@ def test_two_verifications_on_one_report_do_not_collapse(tmp_path):
     assert append_event(verification("CYM-mcp_resource_count", "d5a3824c",
                                      type_="verification_intent"),
                         path=path) == "duplicate"
+
+    # But the VERDICT is part of the identity, and was not until 2026-09-07.
+    # A correction is a different fact from the pass it corrects even when
+    # every other field matches -- which is the case when the vendor regresses
+    # and our check's definition never moved. Losing that intent means a POST
+    # leaves with nothing in the journal saying we tried, on the one leg that
+    # exists because we can be wrong.
+    correction = verification("CYM-mcp_resource_count", "d5a3824c",
+                             type_="verification_intent")
+    correction["verdict"] = "fail"
+    assert append_event(correction, path=path) == "appended",         "the correction's intent collided with the pass it corrects"
+    assert append_event(correction, path=path) == "duplicate"

@@ -1053,3 +1053,52 @@ def test_a_pass_we_sent_that_stopped_being_true_owes_a_correction():
     passing = fold(ledger(_verified_row()), events=filed_claimed)
     ob = passing["findings"]["CYM-a"]["obligations"]
     assert ob["verification_owed"] == [46] and ob["correction_owed"] == []
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_correction_under_the_same_definition_is_recorded():
+    """VER: the collision the first version of this file did not test.
+
+    `_told` was given a `verdict` parameter when correction_owed was added; the
+    guard that decides whether to APPEND a verification was not, and still
+    matches on report_id and fingerprint alone. So a `fail` sent for a report
+    that already holds a `pass` at the same fingerprint is dropped on arrival.
+
+    The path needs no vendor cooperation and no rewrite of ours: the vendor
+    regresses while our check's code is unchanged, `_apply_run` re-pins the
+    SAME fingerprint (it pins whatever the row failed under), the row goes
+    REPRODUCING, correction_owed fires, we send the fail -- and the fold does
+    not record it. `_told(..., "fail")` stays False, so the debt never clears,
+    and every later run re-sends a correction the server already holds.
+
+    That is the badge-nobody-can-clear shape, arrived at by the obligation
+    built specifically to survive being discovered.
+
+    Its predecessor `test_a_pass_we_sent_that_stopped_being_true_owes_a_correction`
+    misses it because the pass there carries a DIFFERENT fingerprint -- the
+    case where we repaired the check. Three independent triage agents found
+    this on 2026-09-07; all three reproduced it, which is why the same-
+    fingerprint case is pinned separately here.
+    """
+    from qa.fold import fold
+
+    filed = _filed("CYM-a", 46, "pending")
+    broken = row("CYM-a", check_state="REPRODUCING", pinned=FP)
+    sent_pass = _verification(fingerprint=FP, verdict="pass")
+    correction = _verification(fingerprint=FP, verdict="fail",
+                               at="2026-09-07T16:00:00+00:00")
+
+    out = fold(ledger(copy.deepcopy(broken)), events=filed + [sent_pass, correction])
+    marks = out["findings"]["CYM-a"]["filing"]["verifications"]
+
+    assert [(v["verdict"], v["fingerprint"]) for v in marks] == \
+        [("pass", FP), ("fail", FP)], \
+        "the correction collided with the pass it corrects and was dropped"
+    assert out["findings"]["CYM-a"]["obligations"]["correction_owed"] == [], \
+        "the debt survived the correction that paid it"
+
+    # And the same fact twice is still one fact -- the dedup must not simply
+    # be removed, or every re-fold would append another mark.
+    twice = fold(ledger(copy.deepcopy(broken)),
+                 events=filed + [sent_pass, correction, correction])
+    assert len(twice["findings"]["CYM-a"]["filing"]["verifications"]) == 2

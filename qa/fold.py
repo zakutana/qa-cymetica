@@ -526,8 +526,19 @@ def _apply_events(rows: dict, events: Iterable[dict]) -> None:
                         "run_id": event.get("run_id"),
                         "verdict": event.get("verdict"),
                         "at": event["at"]}
+                # The VERDICT is part of what makes two marks the same, and it
+                # was missing here while _told() below already required it.
+                # A `fail` correcting a `pass` at the SAME fingerprint -- the
+                # vendor regresses, our check's code unchanged, _apply_run
+                # re-pins what it failed under -- collided with the pass and
+                # was dropped, so correction_owed could never clear and every
+                # later run re-sent a correction their server already held.
+                # Found by all three triage agents on 2026-09-07; the test
+                # above it had exercised only the repaired-check case, where
+                # the two carry different fingerprints.
                 if not any(v["report_id"] == mark["report_id"]
                            and v["fingerprint"] == mark["fingerprint"]
+                           and v.get("verdict") == mark["verdict"]
                            for v in sent):
                     sent.append(mark)
 

@@ -658,11 +658,13 @@ def test_verifications_they_already_hold_are_not_sent_again():
     held = _client(lambda r: httpx.Response(
         200, json={"verifications": [{"fingerprint": "fp-1", "verdict": "pass"},
                                      {"fingerprint": "fp-old", "verdict": "fail"}]}))
-    assert verify.already_sent(held, 46) == {("fp-1", "pass"), ("fp-old", "fail")}
+    pairs, evidence_id = verify.already_sent(held, 46)
+    assert pairs == {("fp-1", "pass"), ("fp-old", "fail")}
+    assert evidence_id,         "the read that deduplicates is also the read that settles, so it has "         "to hand back what it can be stood on"
 
     # No verifications yet is a real answer; a failed read is not.
     empty = _client(lambda r: httpx.Response(404, text="not found"))
-    assert verify.already_sent(empty, 46) == set()
+    assert verify.already_sent(empty, 46)[0] == set()
 
     for status in (401, 500, 503):
         broken = _client(lambda r, s=status: httpx.Response(s, text="nope"))
@@ -786,3 +788,121 @@ def test_a_reply_full_of_emoji_does_not_kill_the_read():
 
     # One message, one line: a newline would break the shape the caller prints.
     assert "\n" not in bounty._printable("two\nlines", "cp1250")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_verification_is_accepted_only_with_an_id_from_their_server():
+    """VER: rule 9's other half, which verify.py shipped without.
+
+    CLAUDE.md rule 9: "`accepted` needs 2xx **and** a server report id."
+    submit.py implements exactly that; verify.py took the status alone. A 200
+    that is not a created verification -- `{"success": false}`, a proxy's HTML,
+    a 202 queued -- recorded as accepted, and the fold then clears
+    verification_owed permanently, because the obligation is the only thing
+    the sender ever reads. The dashboard would show them holding a
+    verification their server never created, with no path to unwind it.
+
+    Their real response carries one: {"success": true, "verification": {"id": 19}}.
+    """
+    verify = _module("scripts/verify.py")
+
+    assert verify.verification_id({"success": True, "verification": {"id": 19}}) == 19
+    assert verify.verification_id({"id": 3}) == 3
+    assert verify.verification_id({"verification_id": 7}) == 7
+
+    for refused in ({"success": False}, {"detail": "queued"}, {}, [], None,
+                    {"verification": {}}, {"verification": None}):
+        assert verify.verification_id(refused) is None, \
+            f"{refused!r} was read as a created verification"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_verification_their_server_already_holds_is_settled_not_re_sent(tmp_path, monkeypatch):
+    """VER: the read that deduplicates is also the read that settles.
+
+    If evidence capture fails between the POST and the outcome event, the
+    vendor holds a verification and our journal holds only an intent. The
+    obligation is computed from accepted outcomes, so it stays owed for ever;
+    the next run's dedup read sees their copy and SKIPs; nothing is ever
+    sent and nothing ever clears. A badge nobody can clear, which is the shape
+    CLAUDE.md names.
+
+    The fix is not a new flag. `already_sent()` is ALREADY a read of their
+    server, which is the same evidence `--reconcile` gathers in submit.py --
+    we simply were not writing down what it found. So a pair they hold and we
+    do not settles itself, with the GET as its evidence.
+    """
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    verify = _module("scripts/verify.py")
+    from qa.state import read_events
+
+    item = {"finding_id": "CYM-a", "report_id": 46, "fingerprint": "fp-1",
+            "verdict": "pass", "run_id": "run-1", "tree_sha": "abc",
+            "checked_at": "2026-09-07T12:00:00+00:00"}
+
+    settled = verify.settle(item, evidence_id="ev-read")
+    assert settled is True
+
+    outcomes = [e for e in read_events() if e["type"] == "verification_outcome"]
+    assert len(outcomes) == 1
+    assert outcomes[0]["outcome"] == "accepted"
+    assert outcomes[0]["evidence_id"] == "ev-read", \
+        "the settlement cites nothing, so the fold will refuse it"
+    assert outcomes[0]["reconciled_from"] == "verifications", \
+        "a settlement must be distinguishable from an outcome we watched happen"
+
+    # Idempotent: settling twice is one fact.
+    assert verify.settle(item, evidence_id="ev-read") is False
+    assert len([e for e in read_events() if e["type"] == "verification_outcome"]) == 1
+
+    # And it refuses to invent evidence.
+    with pytest.raises(SystemExit, match="evidence"):
+        verify.settle(item, evidence_id=None)
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_broken_tracker_read_does_not_silence_the_inbox():
+    """ASK: two surfaces, two faults, no shared control flow.
+
+    The a2a inbox read was appended to serve.py's poll on 2026-09-07 after the
+    tracker block's existing `continue`s, so a non-ok tracker read ended the
+    iteration before it. An expired key on my-reports -- the exact incident
+    classify_read exists for -- would therefore also stop a2a replies being
+    noticed, for as long as the key stayed expired.
+
+    That is the failure the inbox read was added to end: "a reply sat there
+    until somebody thought to look, which is not a mechanism". Coupling it to
+    an unrelated endpoint's health puts it straight back.
+
+    Three triage agents reproduced it independently.
+    """
+    serve = _module("scripts/serve.py")
+
+    class Bounty:
+        def __init__(self, tracker):
+            self.tracker, self.inbox_reads = tracker, 0
+
+        def _last_status_by_report(self):
+            return {}
+
+        def refresh_our_reports(self):
+            if self.tracker == "raises":
+                raise RuntimeError("connection reset")
+            return {"klass": self.tracker}
+
+        def fetch_inbox(self):
+            self.inbox_reads += 1
+            return {"klass": "ok", "rows_returned": 1,
+                    "new": [{"msg_id": "a2a_1", "at": "2026-09-07T16:00:00+00:00",
+                             "auto": False, "text": "a real answer"}]}
+
+        @staticmethod
+        def _printable(text, encoding=None):
+            return text
+
+    for tracker in ("ok", "unauthorized", "server_error", "raises"):
+        stub = Bounty(tracker)
+        serve.poll_once(stub)
+        assert stub.inbox_reads == 1, (
+            f"a tracker read of {tracker!r} skipped the inbox; the one channel "
+            f"their replies arrive on went silent on an unrelated fault")

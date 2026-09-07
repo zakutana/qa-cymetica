@@ -62,9 +62,20 @@ is that sentence, executable, over 200 random sequences.
 | FILING | a journal event | NOT_RAISED · RAISED · REPLIED · FIX_CLAIMED · WITHDRAWN · SUPERSEDED |
 
 The displayed state is the **composition** of the two, computed at render
-time. It is never stored, so it cannot be assigned. `VERIFIED FIXED` occupies
-exactly one cell: our check passing under the fingerprint it last failed
-under, beside their claim of a fix.
+time. It is never stored, so it cannot be assigned.
+
+`VERIFIED FIXED` means **our check passes under the fingerprint it last failed
+under**, and nothing more. It does not require them to have claimed a fix:
+`_display_cell` maps PASSING beside RAISED, REPLIED *and* FIX_CLAIMED onto it,
+because whether the thing is broken does not depend on whether they said
+anything. Who gets the credit stays inside the row. The one case held apart is
+`PASSING, NEVER RAISED` — it passes and they were never told, so there is no
+conversation to read.
+
+(This paragraph said "exactly one cell … beside their claim of a fix" until
+2026-09-07. The code had said otherwise since the display states were
+collapsed, and every session read the wrong sentence first. Found by an agent
+drawing the state grid from `qa/fold.py` rather than from here.)
 
 ## Run admissibility
 

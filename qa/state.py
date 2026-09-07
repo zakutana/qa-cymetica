@@ -555,7 +555,16 @@ def _natural_key(event: dict) -> str:
         # fact, not a new one. The outcome joins the key for outcomes only, for
         # the reason filing_outcome gives: a timeout and its later settlement
         # are two genuine facts about one attempt.
-        base = f"{t}|{g('finding_id')}|{g('report_id')}|{g('fingerprint')}"
+        #
+        # The VERDICT was missing until 2026-09-07, and the comment above was
+        # the reason it was missed: "the same verdict for the same definition"
+        # was the intent, and a different verdict is not the same fact. A
+        # correction's intent collided with the pass it corrects, append_event
+        # answered "duplicate" without raising, and the POST left the building
+        # with no intent on the journal -- rule 9 defeated on exactly the leg
+        # that exists because we can be wrong.
+        base = (f"{t}|{g('finding_id')}|{g('report_id')}|{g('fingerprint')}"
+                f"|{g('verdict')}")
         if t == "verification_outcome":
             return f"{base}|{g('outcome')}|{g('at')}"
         return base
