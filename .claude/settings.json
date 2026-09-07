@@ -1,5 +1,32 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(python -m pytest:*)",
+      "Bash(python scripts/prereg.py:*)",
+      "Bash(python scripts/ledger.py:*)",
+      "Bash(python scripts/render.py:*)",
+      "Bash(python scripts/bounty.py:*)",
+      "Bash(python scripts/open_checks.py:*)",
+      "Bash(python scripts/never_fired.py:*)",
+      "Bash(python scripts/inventory.py:*)",
+      "Bash(python scripts/withdraw.py:*)",
+      "Bash(python scripts/submit.py:*)",
+      "Bash(python scripts/verify.py:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git blame:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git tag:*)",
+      "Bash(git push:*)",
+      "Bash(git revert:*)",
+      "Bash(git ls-files:*)",
+      "Bash(git rev-parse:*)"
+    ]
+  },
   "hooks": {
     "PreToolUse": [
       {

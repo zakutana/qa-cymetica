@@ -1,0 +1,5 @@
+{
+  "schema": 1,
+  "note": "Which checks have had their assertion read against the contract their docstring names, and under which definition. Written by the night-shift skill, step 2. Keyed on the check's AST fingerprint rather than on a date, so a check is audited once per definition and a night that changes nothing re-reads nothing -- the same shape as verification_owed in qa/fold.py. Empty here means the first night audits everything. NOT under state/: this is not ledger state, nothing folds it, and it carries no claim about the vendor.",
+  "audited": {}
+}

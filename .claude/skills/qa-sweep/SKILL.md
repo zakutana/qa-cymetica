@@ -1,6 +1,7 @@
 ---
 name: qa-sweep
 description: Re-check the open Cymetica findings, take the one action each one's status calls for, and report what changed. Use when the operator says /qa-sweep, "projdi bugy", "udelej sweep", or asks for the current state of the QA work. Say "full sweep" / "cely sweep" to re-verify all 31 rows instead.
+effort: medium
 ---
 
 # QA sweep
