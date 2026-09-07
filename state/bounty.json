@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-09-07T11:48:09+00:00",
+  "fetched_at": "2026-09-07T12:22:15+00:00",
   "total": 41,
   "statuses": {
     "fixed": 20
@@ -24,8 +24,8 @@
   "our_reports": {
     "endpoint": "GET /api/v1/bounty/my-reports?wallet_address=<addr>",
     "klass": "ok",
-    "read_at": "2026-09-07T11:48:05+00:00",
-    "evidence_id": "8f59ebb4417a5d9d664c80a7f9c155d978dcdd9fec74f9d3ed79ae12d01bd7d1",
+    "read_at": "2026-09-07T12:22:13+00:00",
+    "evidence_id": "22032301f966c093ef794dbb45b085aa6bda794436ee85df5c3f37b1b19379f3",
     "rows_returned": 32,
     "server_total": 32,
     "total": 32,
