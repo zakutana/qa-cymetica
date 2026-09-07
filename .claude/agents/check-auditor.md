@@ -1,6 +1,6 @@
 ---
 name: check-auditor
-description: Read a QA check's assertion against the contract its own docstring names, and report where the two disagree. The audit that would have caught five defects in one day; used by the night-shift skill over checks whose fingerprint has changed.
+description: Read a QA check's assertion against the contract its own docstring names, and report where the two disagree. The audit that would have caught five defects in one day; used by the deep-pass skill over checks whose fingerprint has changed.
 model: opus
 effort: high
 tools: Read, Grep, Glob, Bash

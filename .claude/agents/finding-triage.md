@@ -1,6 +1,6 @@
 ---
 name: finding-triage
-description: Independently decide whether one code-review finding is a real defect or a false positive, by reproducing it from the source. Used three times in parallel by the night-shift skill, with no shared context, so that a finding survives only when at least two of three agree.
+description: Independently decide whether one code-review finding is a real defect or a false positive, by reproducing it from the source. Used three times in parallel by the deep-pass skill, with no shared context, so that a finding survives only when at least two of three agree.
 model: opus
 effort: high
 tools: Read, Grep, Glob, Bash
