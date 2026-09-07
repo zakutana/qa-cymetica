@@ -72,10 +72,31 @@ def test_the_agent_can_report_a_value_it_publishes(rest_anon):
     confidence = body.get("confidence")
 
     # Did the answer contain the published value at all?
+    #
+    # Compared as NUMBERS, not as strings. The published figures were integers
+    # and str(400000) matched a digit run of "400000"; on 2026-09-07 the
+    # programme became a flat 1000.0 per verified bug, str() gave "1000.0",
+    # the digit extractor gives "1000", and a channel answering "1000 ET10"
+    # correctly was reported as unable to state its own reward range. Their
+    # change, our failure -- a comparison that depends on how a number happens
+    # to be spelled is not a measurement of what was said.
     said_currency = bool(re.search(rf"\b{re.escape(str(currency))}\b", text, re.I))
-    numbers = set(re.findall(r"\d[\d,]*", text.replace(" ", "")))
-    said_range = any(str(critical.get(k, "")).replace(",", "") in
-                     {n.replace(",", "") for n in numbers} for k in ("min", "max"))
+
+    spoken: set[float] = set()
+    for run_of_digits in re.findall(r"\d[\d,]*", text.replace(" ", "")):
+        try:
+            spoken.add(float(run_of_digits.replace(",", "")))
+        except ValueError:
+            continue
+
+    def _published(key):
+        try:
+            return float(critical[key])
+        except (KeyError, TypeError, ValueError):
+            return None
+
+    said_range = any(_published(k) in spoken for k in ("min", "max")
+                     if _published(k) is not None)
 
     missing = []
     if not said_currency:
