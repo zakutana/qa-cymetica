@@ -416,6 +416,25 @@ def send(client, items: list[dict], pause: int = PAUSE_SECONDS) -> list[dict]:
     return results
 
 
+def partition_by_what_they_hold(work, held):
+    """Split the owed verifications into the ones to send and the ones they hold.
+
+    A named function because it was five lines inside main(), reachable by no
+    test: tests/meta/test_pipeline_adapters.py asserts what already_sent()
+    PARSES and never that anything acts on it, so replacing the filter with
+    `fresh = work` left the whole suite green while the vendor received a
+    duplicate verification for every pair they already hold. Their server is
+    the authority on what they have, and this is where that is honoured.
+    """
+    fresh, duplicates = [], []
+    for item in work:
+        if (item["fingerprint"], item["verdict"]) in held[item["report_id"]]:
+            duplicates.append(item)
+        else:
+            fresh.append(item)
+    return fresh, duplicates
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="verify.py", description=__doc__)
     parser.add_argument("--confirm", action="store_true",
@@ -460,22 +479,19 @@ def main(argv: list[str] | None = None) -> int:
         finally:
             CURRENT_TIER.reset(token)
 
-        fresh = []
-        for item in work:
-            if (item["fingerprint"], item["verdict"]) in held[item["report_id"]]:
-                # They hold it and the obligation says we do not, so this read
-                # IS the settlement -- see settle(). Without it a capture that
-                # failed after a successful POST leaves a debt nothing can pay.
-                if settle(item, evidence[item["report_id"]]):
-                    print(f"  SETTLED {item['finding_id']} on "
-                          f"#{item['report_id']}: their server holds this "
-                          f"{item['verdict']}; recorded from the read")
-                else:
-                    print(f"  SKIP  {item['finding_id']} on #{item['report_id']}: "
-                          f"they already hold this {item['verdict']} for this "
-                          f"fingerprint")
-                continue
-            fresh.append(item)
+        fresh, duplicates = partition_by_what_they_hold(work, held)
+        for item in duplicates:
+            # They hold it and the obligation says we do not, so this read
+            # IS the settlement -- see settle(). Without it a capture that
+            # failed after a successful POST leaves a debt nothing can pay.
+            if settle(item, evidence[item["report_id"]]):
+                print(f"  SETTLED {item['finding_id']} on "
+                      f"#{item['report_id']}: their server holds this "
+                      f"{item['verdict']}; recorded from the read")
+            else:
+                print(f"  SKIP  {item['finding_id']} on #{item['report_id']}: "
+                      f"they already hold this {item['verdict']} for this "
+                      f"fingerprint")
 
         # After deduplication, not before: requests we were never going to make
         # should not spend the budget.

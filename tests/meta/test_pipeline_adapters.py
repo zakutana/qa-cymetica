@@ -691,6 +691,42 @@ def _msg(msg_id, at, content="hello", auto=False, thread="th-1"):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_what_their_server_already_holds_is_dropped_before_sending():
+    """VER: the sibling above tests the READ; this tests that anything acts on it.
+
+    The dedup lived as five lines inside verify.main(), which no test calls, so
+    `already_sent()` could parse their server's answer perfectly while nothing
+    used it. Replacing the filter with `fresh = work` left the whole suite
+    green and sent the vendor a duplicate verification for every pair they
+    already held. Found by the contract audit on 2026-09-07 and confirmed by
+    three independent triage agents.
+
+    The partition is now a named function, so deleting it is a visible change
+    rather than an invisible one.
+    """
+    verify = _module("scripts/verify.py")
+
+    work = [
+        {"finding_id": "CYM-a", "report_id": 49, "fingerprint": "fp-1",
+         "verdict": "pass"},
+        {"finding_id": "CYM-b", "report_id": 49, "fingerprint": "fp-2",
+         "verdict": "pass"},
+        # Same fingerprint as the first, opposite verdict: a correction is new
+        # information and must go, or we can never take a claim back.
+        {"finding_id": "CYM-c", "report_id": 59, "fingerprint": "fp-1",
+         "verdict": "fail"},
+    ]
+    held = {49: {("fp-1", "pass")}, 59: {("fp-1", "pass")}}
+
+    fresh, duplicates = verify.partition_by_what_they_hold(work, held)
+
+    assert [i["finding_id"] for i in duplicates] == ["CYM-a"], \
+        "a verification their server already holds was queued for sending again"
+    assert [i["finding_id"] for i in fresh] == ["CYM-b", "CYM-c"], \
+        "a verification they do not hold was dropped, so the debt cannot be paid"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_a2a_inbox_is_read_and_each_message_recorded_once(tmp_path, monkeypatch):
     """A2A: the channel we send questions down, and nothing was reading back.
 

@@ -656,3 +656,38 @@ def test_every_vendor_reply_carries_a_stable_date():
         f"{len(moved)} vendor repl(ies) changed date between two builds of the "
         f"same state, so the unread mark would return on every render: {moved}"
     )
+
+    # The half the comparison above cannot see. Two builds over ONE journal are
+    # identical whether the date is taken from the first observation or the
+    # newest, so the failure the docstring names -- a mark that returns after
+    # every sweep, because bounty.py appends a vendor_status on every run --
+    # passed this test. Measured from the journal instead: where a status was
+    # observed more than once, the page must be showing the EARLIEST.
+    from qa.state import read_events
+
+    observations: dict[tuple, list[str]] = {}
+    for ev in read_events():
+        if ev.get("type") != "vendor_status":
+            continue
+        when = ev.get("observed_at") or ev.get("at")
+        if when:
+            observations.setdefault(
+                (ev.get("report_id"), ev.get("status")), []).append(when)
+    repeated = {k: v for k, v in observations.items() if len(set(v)) > 1}
+    assert repeated, (
+        "no status in the journal was observed at two different times, so "
+        "'dated from the first observation, not the newest' is untested here "
+        "-- this control is vacuous until bounty.py has polled twice"
+    )
+    latest = {report_id: max(times)
+              for (report_id, _), times in repeated.items()}
+    dated_from_the_newest = sorted(
+        k for k, when in a.items()
+        if k[1] in latest and when == latest[k[1]] and when != min(
+            t for (rid, _), times in repeated.items() if rid == k[1] for t in times)
+    )
+    assert not dated_from_the_newest, (
+        f"{len(dated_from_the_newest)} repl(ies) are dated from the newest "
+        f"observation of their status rather than the first, so the unread "
+        f"mark returns after every sweep: {dated_from_the_newest}"
+    )

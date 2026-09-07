@@ -171,7 +171,17 @@ def test_no_state_change_without_run_id_or_event_id():
         state = ledger(row("CYM-a", checks=[CHECK_A]), row("CYM-b", checks=[CHECK_B]))
         events: list[dict] = []
         for step in range(rng.randint(1, 6)):
-            before = {fid: display_state(r) for fid, r in state["findings"].items()}
+            # BOTH axes, not only their composition. _display_cell maps
+            # PASSING beside RAISED, REPLIED and FIX_CLAIMED onto one cell, so
+            # a filing move inside that group was invisible to this property --
+            # and CLAUDE.md cites this test as its central rule made
+            # executable. Reproduced by triage before this change: assigning
+            # filing.state = FIX_CLAIMED with no transition whenever the check
+            # was PASSING fired four times across the 200 sequences and the
+            # test still passed.
+            before = {fid: (display_state(r), r["check"]["state"],
+                            r["filing"]["state"])
+                      for fid, r in state["findings"].items()}
             # Compared as sets: the FILING half is rebuilt from the journal on
             # every fold, so positions move even when nothing changed.
             before_tx = {fid: {_key(t) for t in r["transitions"]}
@@ -185,16 +195,23 @@ def test_no_state_change_without_run_id_or_event_id():
                         level=level, at=f"2026-09-05T10:{step:02d}:00+00:00")
                 state = fold(state, run=r, events=events)
             else:
-                events = events + _filed("CYM-a", report_id=100 + step,
-                                         at=f"2026-09-05T09:{step:02d}:00+00:00")
+                # The status varies. Every sequence used the default
+                # "pending", so FILING never left RAISED in any of the 200 and
+                # the axis had exactly one reachable value.
+                events = events + _filed(
+                    "CYM-a", report_id=100 + step,
+                    status=rng.choice(["pending", "triaging", "acknowledged",
+                                       "fixed", "resolved"]),
+                    at=f"2026-09-05T09:{step:02d}:00+00:00")
                 state = fold(state, run=None, events=events)
 
             for fid, row_ in state["findings"].items():
-                after = display_state(row_)
+                after = (display_state(row_), row_["check"]["state"],
+                         row_["filing"]["state"])
                 new = [t for t in row_["transitions"] if _key(t) not in before_tx[fid]]
                 if after != before[fid]:
                     assert new, (
-                        f"seed {seed} step {step}: {fid} display state moved "
+                        f"seed {seed} step {step}: {fid} moved "
                         f"{before[fid]} -> {after} with no transition recorded"
                     )
                 for t in new:
@@ -506,6 +523,24 @@ def test_filing_axis_is_a_replay_of_the_journal():
     assert claimed["findings"]["CYM-a"]["filing"]["state"] == "FIX_CLAIMED"
     tx = [t for t in claimed["findings"]["CYM-a"]["transitions"] if t["axis"] == "filing"]
     assert tx[-1]["to"] == "FIX_CLAIMED" and tx[-1]["cause"]["event_id"]
+
+    # "Cannot be nudged in place" -- the half of the docstring nothing above
+    # touches. Every fold here starts from a pristine row whose filing state is
+    # already NOT_RAISED, so the reset at the top of _apply_events is a no-op
+    # and deleting it left all of the assertions above green. A row carrying a
+    # state the journal does not justify is exactly what a hand edit, or a
+    # ledger written by an older mapping, leaves behind: replaying an empty
+    # journal must put it back to NOT_RAISED rather than carry it forward.
+    nudged = ledger(row("CYM-a", checks=[CHECK_A]))
+    nudged["findings"]["CYM-a"]["filing"]["state"] = "FIX_CLAIMED"
+    nudged["findings"]["CYM-a"]["filing"]["reports"] = [
+        {"report_id": 99, "status": "fixed"}]
+    replayed = fold(nudged, events=[])
+    assert replayed["findings"]["CYM-a"]["filing"]["state"] == "NOT_RAISED", (
+        "a filing state with no event behind it survived a replay of the "
+        "journal, so the axis can be written by hand after all"
+    )
+    assert replayed["findings"]["CYM-a"]["filing"]["reports"] == []
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -971,9 +1006,21 @@ def test_the_verification_debt_is_keyed_on_the_fingerprint_not_the_run():
         "the debt survived the verification that paid it"
 
     # A later run, same definition: nothing new to tell them.
+    #
+    # The run has to be ADMISSIBLE or this case proves nothing. It used to be
+    # the stub {"run_id": "run-2", "schema": 2}, which admissibility() rejects
+    # for legacy_schema, no_fingerprint and exit_status_disagrees -- so the
+    # fold discarded it, `adjudicated_by` never moved, and the two folds had
+    # identical inputs. An implementation that re-owed the debt whenever the
+    # run changed would have passed this assertion unchanged, which is the one
+    # thing it exists to rule out.
+    later = run("run-2", [result(CHECK_A, "passed")], collected=[CHECK_A],
+                at="2026-09-06T10:00:00+00:00")
     again = fold(ledger(_verified_row()),
                  events=filed + [_verification()],
-                 run={"run_id": "run-2", "schema": 2})
+                 run=later)
+    assert again["findings"]["CYM-a"]["check"]["adjudicated_by"]["run_id"] == "run-2", \
+        "the later run was not applied, so this case compares a row with itself"
     assert again["findings"]["CYM-a"]["obligations"]["verification_owed"] == [], \
         "the next sweep asked for the same 27 verifications over again"
 

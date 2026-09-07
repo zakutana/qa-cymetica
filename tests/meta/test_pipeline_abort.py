@@ -72,7 +72,18 @@ PINNED = {
     # machine. The clients there now carry a transport that cannot send. The
     # mutation is still caught, the message now reads THE GUARD LET IT
     # THROUGH, and no evidence file is written because nothing is sent.
-    "test_guard_is_real.py": "f66ef1b4a5e2b89e15f237c18ef72f2a482d8c60625f4d6a367dce4501be5b5a",
+    # Re-derived 2026-09-07, deep pass, and the pin earned its keep: it fired
+    # on the change described below rather than letting it through.
+    #
+    # WHAT CHANGED AND WHY: the four MCP negative controls were moved off the
+    # live transport onto _Unsendable, via a new _deaf_mcp_client, and the
+    # fifth (test_request_without_tier_context_is_denied) onto _deaf_client.
+    # build_mcp_client took no `inner`, so the 2026-09-06 remediation had never
+    # reached them: one of those tests sets mutate_enabled, allows
+    # cymetica.com and raises the tier to MUTATE before asking the guard to
+    # refuse place_order. This change can only REMOVE reach, never add it --
+    # which is the direction a re-derivation is allowed to go.
+    "test_guard_is_real.py": "5319cb1bfbc147528bc13051746551ae30dd2ac360bf505a0b8db720ee0f0250",
 }
 
 
