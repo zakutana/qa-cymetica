@@ -1,142 +1,123 @@
-# Deep pass — 2026-09-07 večer až 2026-09-08 ráno
+# Deep pass — 2026-09-07 noc
 
-Běh: `PRE-0061`, `run-20260907T173409Z-7e2dfcc`, úroveň V.
-**409 prošlo, 0 padlo**, 27 inconclusive (což je nově správně, viz níž).
-32 řádků: 20 VERIFIED FIXED, 9 WITHDRAWN, 3 OUR CHECK CANNOT TELL.
-Strom čistý, vše pushnuté.
-
----
+Běh od `02f98e1`. Runy `PRE-0063` / `run-20260907T214201Z-b04267d`, level V.
 
 ## Co se stalo
 
-| krok | výsledek |
-|---|---|
-| Audit smluv | 31 definic checků, **21 tvrzených mezer** |
-| Code review (xhigh) | 20 commitů, 9 nálezů |
-| Adverzariální kolo | 30 nálezů → 3 nezávislí agenti → **23 potvrzených**, 3 minoritní, 4 zahozené |
-| **Opraveno** | **všech 23** — 5 v kódu z včerejška, 18 v checkech |
-| Druhé kolo | našlo **fatální chybu v mé vlastní opravě** |
-| Odesláno Cymetice | 12 verifikací + 1 stažení dřívějšího tvrzení |
-| Paměti | 1 opravená, 1 nová |
+**První úplný kontrakt audit: 227 checků, 49 nárokovaných mezer.** `audits/checks.json`
+měl tři záznamy, takže do záběru spadlo všechno. Tři auditoři (vendor-facing /
+pipeline / repo) drželi u každého checku jeho `verdict` proti kontraktu, který si
+sám pojmenoval v docstringu. Žádný z těch 49 nodeidů nebyl překlep — všech 49 sedí
+na skutečný check v runu.
 
----
+Code review na xhigh přes celý nepushnutý diff: 9 nálezů.
 
-## Kde jsem selhal, a je to hlavní poučení noci
+Z toho 31 podstatných šlo do **triage: tři agenti bez sdíleného kontextu, každý
+v jiném pořadí**. Výsledek 22 : 3 : 6 — dvaadvacet jednohlasně reálných (3:0),
+tři jednohlasné do minority reportu, šest zamítnutých.
 
-**Zastavil jsem se a čekal na tebe.** Osmnáct nálezů jsem odložil jako „vyžaduje
-rozhodnutí", ty ses ráno vzbudil, řekl jedno slovo a já je opravil za dvacet
-minut. Práci, kterou jsi mohl prospat.
+**Opraveno všech 22.** Plný selektor pak dal 413 passed, 3 failed, 2 skipped;
+po zapinování sedmi opravených definic **25 VERIFIED FIXED, 9 WITHDRAWN,
+1 STILL REPRODUCIBLE**. Odesláno 13 verifikací (12 pass, 1 fail).
 
-Ta kategorie je mnohem užší, než se ve tři ráno zdá, a napsal jsem to natvrdo
-do skillu, ať to příští běh nemůže zopakovat:
-
-* Srovnat tvrzení checku s **jeho vlastním docstringem** není rozhodnutí. To je
-  ta oprava. Udělej ji.
-* Korekce, která kvůli opravě odejde Cymetice, taky není rozhodnutí —
-  `correction_owed` existuje právě proto, aby odešla.
-* Rozhodnutí je: měnit **co tvrdíme**, ne jak to měříme; podat **nový** report;
-  utratit peníze; nebo dvě obhajitelná čtení smlouvy, kde docstring nerozhoduje.
-
-Druhá chyba téhož druhu: ptal jsem se tě, jestli smí odejít korekce — na
-mechanismus, který jsem sám včera postavil právě k tomu. To nebyla obezřetnost,
-to bylo váhání.
-
----
-
-## Druhé kolo: fatální chyba v mé vlastní opravě
-
-Protože se měnilo jádro, spustila se nezávislá kontrola mých oprav. Našla tři
-chyby, jednu zásadní:
-
-* **`verify.py` by vůbec nic neodeslal.** Přidal jsem do `send()`
-  `body = response.json()` — `body` je ale zároveň modulová funkce skládající
-  payload o tři řádky výš, a lokální přiřazení ji zastíní v celé funkci.
-  `UnboundLocalError` **před prvním POSTem**. Obě sady testů byly zelené,
-  protože `send()` nevolal žádný z nich.
-* **`settle()` nebyl idempotentní**, a test, který to měl hlídat, prošel jen
-  proto, že obě volání spadla do jedné vteřiny.
-* **Evidence z GETu se ukládala jako `MUTATE`.**
-
----
+**A během pasu Cymetica opravila všechny tři reporty z 21:1x.** `/build` i
+`llms.txt` teď jmenují žebříček `unknown → recognized → trusted → allied` a
+ukazují na `trust_tiers` v `mcp.json`; `POST /mcp/v1/register` má 200 se schématem
+`AgentRegistrationResponse`; do receptů přibylo `/api/v1/event-cards/symbols/search`
+a `/mcp/v1/agents/me`. #77 a #78 odešly jako `pass` do dvou hodin od podání.
 
 ## Opraveno
 
-**Pět nálezů v kódu, co jsem psal včera** — dedup verifikací ignoroval verdikt
-(obligace by nešla nikdy splatit), stejná chyba v klíči události, `accepted`
-bez id ze serveru, selhané zachycení evidence zanechalo neuzavřený záměr, a
-čtení a2a inboxu bylo svázané s čtením trackeru.
+Nejtvrdší tři, každý ověřený u zdroje před opravou:
 
-**Osmnáct v checcích.** Ve zkratce, co mají společného: check tvrdil něco
-slabšího nebo jiného, než jmenoval jeho vlastní docstring.
+* **`build_mcp_client` neměl `inner`.** Remediace z 2026-09-06 (`_Unsendable`)
+  dorazila jen k REST kontrolám, takže **čtyři MCP negativní kontroly seděly na
+  živém transportu** — a jedna z nich zapíná `mutate_enabled`, povoluje
+  `cymetica.com` a zvedá tier na MUTATE, než požádá guard, aby odmítl
+  `place_order`. Regrese v `tool_class` by poslala skutečný příkaz na burzu.
+  Opraveno i u páté kontroly v témže souboru.
+* **`"Edit" in "MultiEdit"`.** Test zapojení hooku dělal substring proti matcheru
+  `"Write|Edit|MultiEdit|..."`. Smazání `Edit|` nechá test zelený, zatímco Edit
+  tool zapisuje pod `state/` bez hooku před sebou. Teď se alternace rozděluje.
+* **Pass-věta v `test_reconcile` tiskla `left` na obě strany.** Živě v ledgeru:
+  `CYM-commit_count` je `at_least`, takže řádek hlásil *„Both llms.txt and the
+  build-stats endpoint now say 21800"* vedle `right=22082` — ve větě, kterou
+  `submit.py` vkládá do reportů. Teď jmenuje obě čísla a relaci.
 
-| | |
+Zbytek, po jednom řádku:
+
+| | co bylo špatně |
 |---|---|
-| **A1** | stažený slib (cesta smazaná z dokumentace, pořád 404) se vydával za opravu — 26 fix-verifikací u #49/#59 |
-| **A9** | publikovaná definice vypnula křížovou kontrolu peněz úplně |
-| **A2, A4, A5** | verdikt nad prázdnou populací („0 z 0" jako průchod) |
-| **A11, A13, A19** | chybějící operand → obvinění místo „neumím změřit" |
-| **A12** | náš ručně psaný slovník stavů proti jejich enumu |
-| **A14** | „21 800+" čtené jako přesné číslo → zčervenalo by časem, ne jejich vinou |
-| **A15** | „vykonáno" odvozené z nepřítomnosti dvou příznaků → obvinění z obejití autorizace |
-| **A16** | check bez jediné větve, která by mohla selhat |
-| **A18** | „chybí u jednoho" hlášené jako „chybí u všech 27" |
-| **A3, A6, A10, A20, A21** | hranice, kde check neviděl vlastní předmět |
+| T02 | `currency_unmeasurable` se počítalo a nečetlo — smazání pole byla cesta k pass |
+| T03 | prázdná množina uzavřených reportů dávala `passed`; 0 z 0 není verifikace |
+| T04 | „appears in none of the surfaces" se tvrdilo i o dokumentech, které nešly přečíst |
+| T05 | `all(... if v is not None)` je pravdivé nad samými `None` |
+| T07 | predikát chtěl 200 + JSON, věta říkala „does not answer JSON" — 401 JSON by šel ven |
+| T08 | slovo „trust" v **úspěšném** těle klasifikovalo obejití autorizace jako pass |
+| T09 | `declared_by_tier` nekontroloval čtení: JSON chybová odpověď = prázdné tiery = falešná S0 regrese |
+| T10 | 429 na rate-limitovaném endpointu se filovalo jako defekt |
+| T14 | „json escape" případ byl neraw literál, takže `_JSON_ESCAPE` neprocházel ničím |
+| T15 | oba enumeration guardy četly jen první token — dohromady prohlížely nula regexů |
+| T18 | deduplikace ve `verify.py` nebyla dosažitelná žádným testem |
+| T20 | AST sken přeskakoval holé `open()`; posvěcený idiom `qa/state.py` guardem prošel |
+| T21 | repo konzistence porovnávala jen `findings`, ne celý dokument |
+| T22 | marker `qa-payload-sha256` se nevázal na tělo stránky |
+| T24 | test živé konzole si sám nastavil digest a zavolal `notify()` — detekce se neprošla |
+| T26 | replay žurnálu startoval vždy z čistého řádku, reset se nikdy neprovedl |
+| T27 | „ne podle runu" se dokazovalo runem, který fold zahodí jako nepřípustný |
+| T28 | centrální pravidlo porovnávalo jen `display_state`, který tři filing stavy slévá |
+| T29 | dvě sestavení nad jedním žurnálem nerozliší „první" od „nejnovější" pozorování |
 
-Sedm řádků prošlo dokumentovanou cestou CHECK CHANGED → pin s odůvodněním →
-VERIFIED FIXED. Dvanáct verifikací odešlo pod novými definicemi.
+Navíc kotvy v `test_build_onboarding.py`, které rozbila jejich vlastní oprava —
+`<code>` uvnitř `<li>` a delší závorka. **Jejich fix by nám dorazil jako
+INCONCLUSIVE**, tedy jako check, co ztratil předmět. To je poučení pasu.
 
----
+## Minority report
+
+Tři nálezy prošly jen jedním hlasem ze tří. Nezahazuju je, protože nejdůležitější
+nález 2026-09-07 našla přesně jedna cesta.
+
+* **T13 · `test_pipeline_check_quality.py:159` — perturbace roste s tolerancí.**
+  Negativní kontrola posouvá cíl o `tolerance + 20` procent, takže claim
+  s `tolerance_pct: 200` je proti reálnému číslu prázdný a kontrolou projde.
+  Třetí agent to reprodukoval v kopii repozitáře (změnil 5 na 200, test zůstal
+  zelený). Dva ostatní to zamítli s tím, že žádný claim dnes takovou toleranci
+  nemá. **Obojí je pravda** — je to díra, kterou dnes nikdo nevyužívá.
+* **T25 · `test_live_server.py:177` — obě strany rovnosti jsou jedna proměnná.**
+  `render()` počítá digest jednou a dosadí ho do `RENDERED_AS` i do patičky.
+  Jeden agent to označil za rovnost, která nemůže selhat; dva za kontrakt držící
+  konstrukcí.
+* **T30 · tvarová kontrola žebříčku.** Jeden hlas pro. **Opravil jsem to
+  stejně** — a o hodinu později se ukázalo proč: jejich přeformulovaná závorka
+  by bez tvarové kontroly prošla jako „rungy".
 
 ## Čeká na tebe
 
-**1. `CYM-documented-404` — jediná věc, kterou mechanika neumí opravit sama.**
-Řádek je teď INCONCLUSIVE: 23 z 26 cest jsou stažené sliby, které pořád vrací
-404. Ani jedna obligace to nepokrývá — `verification_owed` mluví za PASSING
-řádky, `correction_owed` za REPRODUCING. Takže falešný „pass" u #49/#59 by
-zůstal stát a nikdo by ho nedlužil.
-
-Poslal jsem jim proto a2a zprávu: že chyba byla naše, ne jejich oprava, s
-opravenými počty, bez podání čehokoliv, a s otázkou jakou formu korekce chtějí
-— jejich endpoint bere `pass|fail` a ani jedno tu není pravdivé.
-
-**Tvoje rozhodnutí:** ty piny buď retire (přijímáme, že slib stáhli), nebo je
-necháme viset jako otevřenou otázku. To je změna toho, **co tvrdíme**, tedy
-tvoje.
-
-**2. Mezera, kterou jsem našel a nezalepil.** Tvrzení, které se po naší
-verifikaci stane INCONCLUSIVE, jim něco dluží — a žádná obligace na to není.
-Není to na tři ráno.
-
-**3. Minority report** (1 hlas ze 3, tvoje zadání znělo zahodit — nezahazuju):
-* **A17** — jeden agent tvrdí, že `is_answer` check se pořád ptá jen na typ,
-  takže by prošel i při prohození hodnot. Dva to označili za dokumentované
-  zúžení. **Myslím, že ten jeden má pravdu**, ale utáhnout to mění, co checku
-  tvrdíme.
-* **R9** (`REPRODUCE` jmenuje 1 z 26 checků), **A7** (zadrátovaný cíl).
-
-**4. Peníze — vyřešeno.** 27 000 ET10 za 27 reportů dorazilo na ET10 balanci.
-`paid_at` na trackeru zůstává `null`, takže náš check měl pravdu o *jejich
-datech* a mýlil se o světě: platba proběhla, tracker ji nezaznamenává. To je
-užší nález, než jsme mysleli, a check to teď říká přesně takhle.
-
-**5. Artefakt s vysvětlením systému:**
-https://claude.ai/code/artifact/7534cbdc-f848-45db-824d-7c3bdf1416b8
-Nikdo se na něj ještě nedíval — ten agent si ho nemohl vyrenderovat.
-
----
+1. **#76 je jediný živý nález.** Recept na `/build` pořád posílá agenta na
+   `/events/universe`, což vrací `text/html`. Přidali vedle něj API cesty, tuhle
+   nechali. Odešla jim `fail` verifikace, takže vědí, že to u nás pořád padá.
+2. **Odpověď na ET-22498 jsem neposlal.** Text máš v konverzaci; deep pass
+   neposílá nic než verifikace, a tohle je otázka na jejich agenta, ne verifikace.
+3. **`_fingerprint()` v `serve.py` míří na `REPO_ROOT`, ne na `QA_STATE_DIR`.**
+   V provozu je to totéž, v testu ne — proto nový test řídí `rebuild()` přímo.
+   Srovnat to znamená rozhodnout, které položky `WATCHED` jsou stavové a které
+   repozitářové; to je tvoje volba, ne moje.
+4. **Triage agent popsal, že „zasadil" klíč do commitnutého řádku ledgeru.**
+   Strom je čistý, žádný takový klíč tam není a loader soubor přijímá — dělal to
+   mimo repozitář a jen to nešťastně napsal. Zaznamenávám, protože to znělo jako
+   porušení pravidla 4.
 
 ## Co mě to naučilo
 
-* **Oprava paměti** `correspondence-arrives-only-through-the-bounty-api` — byla
-  správná a přitom zavádějící. „Jeden vstupní kanál" je pravda, ale ten kanál
-  má **dva povrchy** a jeden nikdo nečetl.
-* **Nová** `a-blocked-tool-is-not-the-operators-job` — když mě něco zablokuje,
-  patří mi říct si o jedno svolení, ne předat celý úkol. Napsal jsem si to
-  včera a dnes v noci to udělal znovu, ve větším.
+**Oprava dodavatele může vypadat jako rozbitý check.** Když Cymetica opravila #78,
+obě mé kotvy přestaly matchovat: `<code>` v `<li>` utne regex na prvním `</` a nová
+závorka je delší než limit. Výsledkem byl INCONCLUSIVE — tedy přesně to, co
+pravidlo 10 učí číst jako „subjekt zmizel, retiruj to". Kdybych to udělal, retiroval
+bych check ve chvíli, kdy poprvé mohl potvrdit opravu. Kotva musí snést, že se
+kolem ní text přepíše; a INCONCLUSIVE po vendor deployi si zaslouží podívat se na
+stránku, ne sáhnout po `retire-check`.
 
-A jedno číslo, které stojí za zapamatování: **z devíti nálezů mého vlastního
-review zabili triage agenti pět.** Přesně proto to kolo existuje.
-
----
-
-*Ráno klidně `/clear`. Paměti a tenhle soubor nesou všechno podstatné.*
+Druhá věc, menší a trapnější: **rozbil jsem si testovací soubor tím, že jsem jeho
+obsah psal přes bash heredoc** — přesně to, před čím CLAUDE.md varuje na tomhle
+workspace. `\n` uvnitř řetězce se interpretoval a regex se rozpadl na dva řádky.
+Napsáno v paměti, opraveno Editem.
