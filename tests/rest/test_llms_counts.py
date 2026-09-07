@@ -53,6 +53,9 @@ def _document(rest):
         return None, f"{LLMS} answered HTTP {response.status_code}"
     return response.text, None
 
+MCP_ANCHORS = ("eventtrader-mcp", "MCP Server:")
+
+
 
 @qa(component="mcp.protocol", tier=SafetyTier.SAFE, surface="rest",
     claim="mcp_resource_count")
@@ -67,8 +70,28 @@ def test_llms_states_no_fixed_size_for_a_tier_scoped_catalogue(rest_anon):
     # Only the lines that describe the MCP server itself. Counting every "N
     # tools" in the whole document would sweep up prose about other things and
     # fail for reasons that have nothing to do with the catalogue.
+    #
+    # These are their words, so an empty section means our anchors have gone
+    # stale, not that they stopped stating a size -- see the guard below.
     section = [line for line in text.splitlines()
-               if "eventtrader-mcp" in line or "MCP Server:" in line]
+               if any(anchor in line for anchor in MCP_ANCHORS)]
+    if not section:
+        # Zero lines examined -- and the verdict below would then have read
+        # "llms.txt states no fixed catalogue size", asserted about a section
+        # never read. The anchors are two string literals of THEIRS: rename
+        # the server or drop the heading and this empties, while POINTER is
+        # searched over the whole 42KB document and stays true. This vendor
+        # has removed the sentences behind #50 and #55 before, and the sibling
+        # in this file already goes inconclusive when its operand disappears.
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason=f"no line of llms.txt carries either anchor this check "
+                   f"scopes on ({' or '.join(repr(a) for a in MCP_ANCHORS)}), "
+                   f"so there was no section to read a catalogue size out of",
+            population={"mcp_lines": 0, "doc_bytes": len(text)},
+            sources={"document": LLMS},
+            claim_id="mcp_resource_count"))
+        return
     stated = sorted({f"{n} {noun.lower()}"
                      for line in section for n, noun in FIXED_SIZE.findall(line)})
     points_at_live = POINTER in text

@@ -37,7 +37,19 @@ MINE = "/api/v1/bounty/my-reports"
 EVIDENCE_FIELDS = ("validated_at", "triaged_at", "severity_confirmed",
                    "ticket_url", "fix_pr_url", "status_notes")
 
-CLOSED = frozenset({"fixed", "resolved", "completed", "closed"})
+# Their published report_status enum has eleven values; `resolved`, `completed`
+# and `closed` are not among them (the first is a TICKET status, the other two
+# were invented) and `paid` -- which is closed and which 16 of the tracker's
+# rows now carry -- was missing. Derived rather than retyped, so their
+# vocabulary lives in one place: qa/fold.py, held against the live enum by
+# tests/rest/test_status_vocabulary_is_mapped.py.
+def _closed_statuses() -> frozenset:
+    from qa.fold import _FIX_CLAIMED_STATUSES, _REJECTED_STATUSES
+
+    return frozenset(_FIX_CLAIMED_STATUSES | _REJECTED_STATUSES)
+
+
+CLOSED = _closed_statuses()
 
 
 def _rows(response) -> list[dict]:
@@ -126,14 +138,33 @@ def test_attribution_to_a_wallet_is_provable(rest_anon):
     # signature being replayed onto a different report; determinism is what
     # lets a signature be produced offline and checked by anyone.
     broken = []
-    if wallet.lower() not in message:
+    # Case-folded on both sides. They echo the address lower-cased today, but
+    # an EIP-191 message conventionally carries the EIP-55 checksummed form,
+    # and the moment they adopt it a case-sensitive substring reads as "the
+    # message does not name the wallet" about a message that names it.
+    message_folded = message.lower()
+    if wallet.lower() not in message_folded:
         broken.append("the message does not name the wallet it attributes to")
-    if digest not in message:
+    if digest.lower() not in message_folded:
         broken.append("the message is not bound to the report title, so a "
                       "captured signature would re-file anything")
+    # Rule 8, and the probe below already had it right. `again.status_code
+    # != 200 or ...` filed "the message is not deterministic" on a transient
+    # 503 -- three GETs to one rate-limited endpoint in a row -- so a failed
+    # read accused their signing message of a defect it does not have, on a
+    # row that is filed as #47 and could carry that fail to their server.
     again = rest_anon.get(FILING_MESSAGE,
                           params={"wallet_address": wallet, "title": title})
-    if again.status_code != 200 or again.json().get("message_to_sign") != message:
+    if again.status_code != 200:
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason=f"the repeat read of {FILING_MESSAGE} answered HTTP "
+                   f"{again.status_code}, so determinism could not be tested; "
+                   f"a read that failed is not a message that changed",
+            sources={"endpoint": FILING_MESSAGE},
+            claim_id="bounty-filing-unauthenticated"))
+        return
+    if again.json().get("message_to_sign") != message:
         broken.append("the message is not deterministic, so it cannot be "
                       "produced offline")
     other = rest_anon.get(FILING_MESSAGE,
@@ -211,7 +242,7 @@ def test_reports_they_closed_have_been_rechecked_by_us(rest_trusted):
 
 
 def _adjudicated_report_ids() -> set:
-    """Report ids whose finding a level-V run has actually adjudicated."""
+    """Report ids whose finding a run actually adjudicated to a verdict."""
     from qa.state import ledger_path
 
     import json
@@ -224,9 +255,19 @@ def _adjudicated_report_ids() -> set:
     except (OSError, ValueError):
         return set()
 
+    # A run that REACHED a verdict, not merely one that touched the row.
+    # qa/fold.py sets adjudicated_by on INCONCLUSIVE and CHECK_CHANGED too, so
+    # "their endpoint was down" and "we rewrote the check" both counted as
+    # re-checked -- and an all-inconclusive sweep would have reported "0 of 30
+    # reports they closed have never been re-checked". This is the number the
+    # operator reads before deciding a VERIFIED FIXED is safe to send.
+    settled = ("PASSING", "REPRODUCING")
     out = set()
     for row in (ledger.get("findings") or {}).values():
-        if not ((row.get("check") or {}).get("adjudicated_by") or {}).get("run_id"):
+        check = row.get("check") or {}
+        if not (check.get("adjudicated_by") or {}).get("run_id"):
+            continue
+        if check.get("state") not in settled:
             continue
         for report in (row.get("filing") or {}).get("reports", []):
             out.add(report.get("report_id"))
@@ -264,6 +305,20 @@ def test_closures_in_the_public_tracker_carry_evidence(rest_anon):
         return
 
     closed = [r for r in rows if (r.get("status") or "").lower() in CLOSED]
+    if not closed:
+        # "0 of 0 closed reports carry no evidence" is not a pass, it is a
+        # measurement of nothing -- and the empty-rows case one branch above
+        # already says so. Reachable: the page carries 20 of 42 rows, and as
+        # reports move to `paid` the window can hold none that are closed.
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason=f"none of the {len(rows)} rows this read returned is "
+                   f"closed, so closure evidence was measured on nothing",
+            population={"rows_returned": len(rows), "closed": 0,
+                        "server_total": body.get("total")},
+            claim_id="tracker-closure-rate",
+        ))
+        return
     unevidenced = [r.get("id") for r in closed
                    if not any(r.get(f) for f in EVIDENCE_FIELDS)]
 
