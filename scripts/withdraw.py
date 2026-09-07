@@ -27,12 +27,46 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
-from qa.fold import display_state  # noqa: E402
+from qa.fold import _fingerprint_of, display_state  # noqa: E402
 from qa.state import append_event, journal_path, ledger_path  # noqa: E402
 
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+
+def fingerprint_from_run(run: dict, checks: list) -> str:
+    """The fingerprint that run observed for these checks.
+
+    Derived, never retyped. Pinning a repaired check needs the value the run
+    saw, and twice on 2026-09-07 that was fetched with a throwaway one-liner
+    over the run record and pasted in by hand.
+
+    The reason it calls the fold's own `_fingerprint_of` instead of reading a
+    field: a row can declare several checks, and the combined value is a hash
+    of the sorted nodeid=fingerprint pairs -- not the first one, not the newest.
+    A second implementation here would pin something the fold never computes,
+    and the row would read CHECK CHANGED for ever with a justification
+    attached to it: a badge nobody can clear, signed.
+    """
+    # Built exactly as qa/fold.py:236 builds it -- same comprehension, same
+    # last-wins on a repeated nodeid, and deliberately no filter of its own.
+    # An earlier draft here skipped results carrying no fingerprint, which
+    # would have picked a different object than the fold whenever a nodeid
+    # appeared twice. Two selections is two rules.
+    by_nodeid = {r["nodeid"]: r for r in run.get("results") or []}
+    missing = [c for c in checks if c not in by_nodeid]
+    if missing:
+        raise SystemExit(
+            f"run {run.get('run_id')} did not adjudicate "
+            f"{len(missing)} of this row's checks, so it cannot say what "
+            f"fingerprint they have: {', '.join(missing)}"
+        )
+    value = _fingerprint_of([by_nodeid[c] for c in checks])
+    if not value:
+        raise SystemExit(f"run {run.get('run_id')} recorded no fingerprint for "
+                         f"this row's checks")
+    return value
 
 
 def _require_reason(reason: str | None, what: str) -> str:
@@ -161,7 +195,9 @@ def main(argv: list[str] | None = None) -> int:
 
     p = sub.add_parser("pin-fingerprint", help="accept a changed check definition")
     p.add_argument("finding_id")
-    p.add_argument("--value", required=True)
+    p.add_argument("--value", help="the fingerprint to pin; or use --from-run")
+    p.add_argument("--from-run", metavar="RUN_ID",
+                   help="read it from that run, the way the fold computes it")
     p.add_argument("--reason", required=True)
 
     p = sub.add_parser("retraction-sent", help="a correction was actually sent")
@@ -209,8 +245,21 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "pin-fingerprint":
         reason = _require_reason(args.reason, "fingerprint pin")
+        value = args.value
+        if bool(value) == bool(args.from_run):
+            raise SystemExit("pin-fingerprint needs exactly one of --value or "
+                             "--from-run")
+        if args.from_run:
+            from qa.state import load_ledger, load_run
+
+            row = (load_ledger().get("findings") or {}).get(args.finding_id)
+            if row is None:
+                raise SystemExit(f"the ledger has no row {args.finding_id!r}")
+            value = fingerprint_from_run(load_run(args.from_run),
+                                         row.get("checks") or [])
+            print(f"   fingerprint from {args.from_run}: {value}")
         return _emit({**base, "type": "pin_fingerprint", "finding_id": args.finding_id,
-                      "value": args.value, "reason": reason}, args.finding_id)
+                      "value": value, "reason": reason}, args.finding_id)
 
     if args.command == "retraction-sent":
         reason = _require_reason(args.reason, "retraction")

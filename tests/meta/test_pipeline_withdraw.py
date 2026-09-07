@@ -190,3 +190,61 @@ def test_only_state_module_writes_state_files():
         "only qa/state.py may write state/ledger.json and the journal:\n  "
         + "\n  ".join(offenders)
     )
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_pinned_fingerprint_can_be_read_from_the_run_that_produced_it(tmp_path):
+    """PIN: the value is derived, not retyped, and derived the fold's way.
+
+    Pinning a repaired check needs the fingerprint the run observed. Twice on
+    2026-09-07 that was fetched by hand -- a throwaway one-liner over the run
+    record, then the hash pasted into `--value`. A hand-copied 64-character
+    hash between two commands is a step that exists only because nothing
+    offered to do it.
+
+    The danger in automating it is worse than the tedium: a row can declare
+    several checks, and the fold combines their fingerprints in a way that is
+    not "the first one" (qa/fold.py::_fingerprint_of). A second implementation
+    here would pin a value the fold never computes, and the row would read
+    CHECK CHANGED forever with a justification attached -- a badge nobody can
+    clear, signed. So the CLI imports the fold's function rather than
+    reproducing it, and this test holds the two together over the multi-check
+    case, which is where they would diverge.
+    """
+    import json
+
+    from qa.fold import _fingerprint_of
+
+    withdraw = _module("scripts/withdraw.py")
+
+    one = [{"nodeid": "tests/one.py::test_x", "check_fingerprint": "fp-single"}]
+    two = [{"nodeid": "tests/b.py::test_y", "check_fingerprint": "fp-b"},
+           {"nodeid": "tests/a.py::test_x", "check_fingerprint": "fp-a"}]
+
+    run = {"run_id": "run-20260907T000000Z-abc1234",
+           "results": one + two + [{"nodeid": "tests/z.py::test_other",
+                                    "check_fingerprint": "fp-unrelated"}]}
+    (tmp_path / "run.json").write_text(json.dumps(run), encoding="utf-8")
+
+    # A result carrying no fingerprint is still the fold's chosen result for
+    # that nodeid, so it must be this function's too -- and then refused for
+    # having no value, not skipped as if the run had never run it.
+    blind = {"run_id": "run-blind",
+             "results": [{"nodeid": "tests/one.py::test_x", "outcome": "passed"}]}
+    with pytest.raises(SystemExit, match="no fingerprint"):
+        withdraw.fingerprint_from_run(blind, ["tests/one.py::test_x"])
+
+    assert withdraw.fingerprint_from_run(run, [r["nodeid"] for r in one]) \
+        == _fingerprint_of(one) == "fp-single"
+
+    # The case that would diverge if this were reimplemented: the fold sorts by
+    # nodeid and hashes the pairs, so it is neither the first nor the newest.
+    combined = withdraw.fingerprint_from_run(run, [r["nodeid"] for r in two])
+    assert combined == _fingerprint_of(two)
+    assert combined not in ("fp-a", "fp-b"), \
+        "a multi-check row pinned one member's fingerprint, which the fold never computes"
+
+    # A check the run did not adjudicate cannot be pinned from it: silently
+    # pinning a partial row is how a fold verifies something it never ran.
+    with pytest.raises(SystemExit, match="did not adjudicate"):
+        withdraw.fingerprint_from_run(run, ["tests/a.py::test_x", "tests/never.py::test_q"])
