@@ -98,6 +98,11 @@ nález 2026-09-07 našla přesně jedna cesta.
    nechali. Odešla jim `fail` verifikace, takže vědí, že to u nás pořád padá.
 2. **Odpověď na ET-22498 jsem neposlal.** Text máš v konverzaci; deep pass
    neposílá nic než verifikace, a tohle je otázka na jejich agenta, ne verifikace.
+   **Jednu věc v tom textu oprav:** večer jsem ti řekl, že nálezy o first-pass
+   odpovědích jsou otevřené. Fold to přepsal — `CYM-a2a-first-pass-contract`
+   i `CYM-a2a-first-pass-not-grounded` jsou **VERIFIED FIXED**. Argument tím
+   sílí, ne slábne: jejich agent teď kontrakt drží, takže otázka „proč tedy
+   neodpovídá on" stojí na jejich vlastním fungujícím kódu.
 3. **`_fingerprint()` v `serve.py` míří na `REPO_ROOT`, ne na `QA_STATE_DIR`.**
    V provozu je to totéž, v testu ne — proto nový test řídí `rebuild()` přímo.
    Srovnat to znamená rozhodnout, které položky `WATCHED` jsou stavové a které
@@ -106,6 +111,14 @@ nález 2026-09-07 našla přesně jedna cesta.
    Strom je čistý, žádný takový klíč tam není a loader soubor přijímá — dělal to
    mimo repozitář a jen to nešťastně napsal. Zaznamenávám, protože to znělo jako
    porušení pravidla 4.
+5. **`never_fired --zeros`: 5 z 50.** `SUPERSEDED`, `supersede`,
+   `results_not_collected`, `prereg_commit_mismatch`, `reopen`. Nástroj to
+   nerozhodne za tebe: buď jsme na ty podmínky nikdy nenarazili, nebo ta pětice
+   nefunguje. Nečekal bych je ani dnes: refusals `prereg_commit_mismatch`
+   a `results_not_collected` padají jen na vadném runu a dnešní byly čisté.
+   (Bajtový pin, který dnes
+   v noci spadl poprvé, do téhle padesátky nepatří: `never_fired` počítá
+   filing stavy, žurnálové události, run refusals a obligace, ne asserty.)
 
 ## Co mě to naučilo
 
