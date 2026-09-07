@@ -1,0 +1,60 @@
+{
+  "captured_at": "2026-09-07T07:52:30+00:00",
+  "endpoint_rule": null,
+  "nodeid": "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/agentbook/post]",
+  "request": {
+    "body": {
+      "encoding": "empty",
+      "value": null
+    },
+    "headers": {
+      "accept": "application/json",
+      "accept-encoding": "gzip, deflate, zstd",
+      "connection": "keep-alive",
+      "host": "cymetica.com",
+      "user-agent": "qa-cymetica/0.1 (independent QA; contact via vendor Telegram channel)"
+    },
+    "method": "GET",
+    "url": "https://cymetica.com/api/v1/agentbook/posts/%7Bid%7D/comments"
+  },
+  "response": {
+    "body": {
+      "encoding": "json",
+      "truncated": false,
+      "value": {
+        "detail": "Method Not Allowed"
+      }
+    },
+    "elapsed_ms": null,
+    "headers": {
+      "allow": "POST",
+      "cache-control": "no-store, no-cache, must-revalidate, max-age=0",
+      "connection": "keep-alive",
+      "content-length": "31",
+      "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests",
+      "content-security-policy-report-only": "default-src 'self'; script-src 'self' 'nonce-B6w21eO764bpl3NFmMIORg==' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'",
+      "content-signal": "ai-train=no, search=yes, ai-input=yes",
+      "content-type": "application/json",
+      "cross-origin-opener-policy": "same-origin-allow-popups",
+      "cross-origin-resource-policy": "cross-origin",
+      "date": "Mon, 07 Sep 2026 07:52:30 GMT",
+      "permissions-policy": "geolocation=(), microphone=(), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=(), browsing-topics=(), attribution-reporting=()",
+      "pragma": "no-cache",
+      "referrer-policy": "strict-origin-when-cross-origin, strict-origin-when-cross-origin",
+      "server": "nginx",
+      "strict-transport-security": "max-age=31536000; includeSubDomains",
+      "x-ai-strongest-model": "Claude Fable 5",
+      "x-content-type-options": "nosniff, nosniff",
+      "x-dns-prefetch-control": "off",
+      "x-frame-options": "SAMEORIGIN, SAMEORIGIN",
+      "x-ratelimit-limit": "2000",
+      "x-ratelimit-remaining": "1979",
+      "x-ratelimit-reset": "1788767580",
+      "x-xss-protection": "0"
+    },
+    "reason": "Method Not Allowed",
+    "status_code": 405
+  },
+  "run_id": "run-20260907T075046Z-ec7a4f4",
+  "tier": "SAFE"
+}

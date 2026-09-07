@@ -1,0 +1,104 @@
+{
+  "captured_at": "2026-09-07T07:53:17+00:00",
+  "endpoint_rule": "bounty.a2a_send",
+  "nodeid": "tests/rest/test_qa_agent_channel.py::test_the_async_first_pass_is_grounded_like_the_sync_channel",
+  "request": {
+    "body": {
+      "encoding": "json",
+      "truncated": false,
+      "value": {
+        "content": "What currency does the bounty programme pay rewards in, and what is the flat amount per verified bug?",
+        "from_agent_id": "expire76-qa"
+      }
+    },
+    "headers": {
+      "accept": "application/json",
+      "accept-encoding": "gzip, deflate, zstd",
+      "connection": "keep-alive",
+      "content-length": "145",
+      "content-type": "application/json",
+      "host": "cymetica.com",
+      "user-agent": "qa-cymetica/0.1 (independent QA; contact via vendor Telegram channel)"
+    },
+    "method": "POST",
+    "url": "https://cymetica.com/api/v1/bounty/a2a/send"
+  },
+  "response": {
+    "body": {
+      "encoding": "json",
+      "truncated": false,
+      "value": {
+        "_next": {
+          "expected_response_time": "1-10 minutes for investigations, seconds for simple routing",
+          "poll_inbox": "GET https://cymetica.com/api/v1/bounty/a2a/inbox/expire76-qa?unread_only=true",
+          "poll_interval_seconds": 30,
+          "tip": "For instant answers, use POST /api/v1/bounty/qa-agent/ask instead. Reserve /a2a/send for complex questions requiring source code inspection or async workflows."
+        },
+        "message": {
+          "confidence": null,
+          "content": "What currency does the bounty programme pay rewards in, and what is the flat amount per verified bug?",
+          "created_at": "2026-09-07T07:53:17.388872+00:00",
+          "delivered_at": null,
+          "delivery_method": null,
+          "embedding_dims": 384,
+          "embedding_model": "all-MiniLM-L6-v2",
+          "embedding_provider": "onnx",
+          "from_agent_id": "expire76-qa",
+          "from_agent_name": null,
+          "id": "a2a_ae9e291d2413415a",
+          "is_read": false,
+          "message_type": "qa_ask",
+          "metadata": null,
+          "page_url": null,
+          "parent_message_id": null,
+          "platform_section": null,
+          "quality_score": null,
+          "replied_at": null,
+          "replied_by": null,
+          "reply_content": null,
+          "reply_method_used": null,
+          "reply_status": null,
+          "summary": null,
+          "telegram_message_id": null,
+          "thread_id": "a2a_8c38cfaa77bc35a0",
+          "to_agent_id": "nexus",
+          "to_agent_name": null,
+          "was_helpful": null
+        },
+        "success": true
+      }
+    },
+    "elapsed_ms": null,
+    "headers": {
+      "cache-control": "no-store, no-cache, must-revalidate, max-age=0",
+      "connection": "keep-alive",
+      "content-encoding": "gzip",
+      "content-length": "667",
+      "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests",
+      "content-security-policy-report-only": "default-src 'self'; script-src 'self' 'nonce-3+FMCbHyfKc7j4djKHW+qg==' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'",
+      "content-signal": "ai-train=no, search=yes, ai-input=yes",
+      "content-type": "application/json",
+      "cross-origin-opener-policy": "same-origin-allow-popups",
+      "cross-origin-resource-policy": "cross-origin",
+      "date": "Mon, 07 Sep 2026 07:53:17 GMT",
+      "permissions-policy": "geolocation=(), microphone=(), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=(), browsing-topics=(), attribution-reporting=()",
+      "pragma": "no-cache",
+      "referrer-policy": "strict-origin-when-cross-origin, strict-origin-when-cross-origin",
+      "server": "nginx",
+      "strict-transport-security": "max-age=31536000; includeSubDomains",
+      "vary": "Accept-Encoding",
+      "x-ai-strongest-model": "Claude Fable 5",
+      "x-content-type-options": "nosniff, nosniff",
+      "x-dns-prefetch-control": "off",
+      "x-frame-options": "SAMEORIGIN, SAMEORIGIN",
+      "x-ratelimit-limit": "60",
+      "x-ratelimit-remaining": "56",
+      "x-ratelimit-reset": "1788767640",
+      "x-xss-protection": "0"
+    },
+    "reason": "OK",
+    "status_code": 200
+  },
+  "run_id": "run-20260907T075046Z-ec7a4f4",
+  "tier": "PROBE"
+}
