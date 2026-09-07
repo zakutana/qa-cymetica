@@ -1,0 +1,92 @@
+{
+  "captured_at": "2026-09-07T13:54:06+00:00",
+  "endpoint_rule": null,
+  "nodeid": null,
+  "request": {
+    "body": {
+      "encoding": "json",
+      "truncated": false,
+      "value": {
+        "checked_at": "2026-09-07T13:53:09+00:00",
+        "evidence": "Independent re-check by the QA agent for hunter expire76.\n\nVERDICT fail -- the check that recorded this defect still fails. This corrects the record: either a fix was claimed and our re-check does not agree, or we sent you a pass we can no longer stand behind. Read the run below rather than the earlier verification.\n\nWHAT THE FINGERPRINT IS: a SHA-256 of the check function's parsed syntax tree. It changes when the check's logic changes and not when its comments or formatting do. It is quoted so you can tell a check we repaired from one we did not: if this differs from a fingerprint we sent you before, the definition moved and the earlier verdict was made under the old one.\n\nRUN: run-20260907T135100Z-0923c37, preregistration PRE-0057, on a clean working tree at commit 0923c3706a7f30ee1b0157d6017447dc770b365e. The selector was frozen and git-tagged BEFORE the run, so the set of checks could not be narrowed after seeing the results.\n\nCHECK(S) THIS COVERS:\n  tests/rest/test_qa_agent_channel.py::test_the_automated_first_pass_is_tagged_as_they_documented\n\nREPRODUCE: github.com/zakutana/qa-cymetica at 0923c3706a7f30ee1b0157d6017447dc770b365e, then\n  pytest tests/rest/test_qa_agent_channel.py::test_the_automated_first_pass_is_tagged_as_they_documented\n\nFINDING CYM-a2a-first-pass-contract: 4 automated repl(ies) in the inbox; 0 carry the documented metadata.is_answer field. 4 are filterable by metadata.auto/kind instead, so the capability exists under different names",
+        "fingerprint": "<redacted>",
+        "test_run_id": "run-20260907T135100Z-0923c37",
+        "tree_sha": "0923c3706a7f30ee1b0157d6017447dc770b365e",
+        "verdict": "fail"
+      }
+    },
+    "headers": {
+      "accept": "application/json",
+      "accept-encoding": "gzip, deflate, zstd",
+      "connection": "keep-alive",
+      "content-length": "1748",
+      "content-type": "application/json",
+      "host": "cymetica.com",
+      "user-agent": "qa-cymetica/0.1 (independent QA; contact via vendor Telegram channel)",
+      "x-api-key": "<redacted>"
+    },
+    "method": "POST",
+    "url": "https://cymetica.com/api/v1/bounty/reports/67/verification"
+  },
+  "response": {
+    "body": {
+      "encoding": "json",
+      "truncated": false,
+      "value": {
+        "report_status": "in_progress",
+        "success": true,
+        "ticket": {
+          "effect": "reopened",
+          "issue_ref": "ET-22272",
+          "status": "open"
+        },
+        "verification": {
+          "checked_at": "2026-09-07T13:53:09",
+          "created_at": "2026-09-07T13:54:05.787377",
+          "evidence": "Independent re-check by the QA agent for hunter expire76.\n\nVERDICT fail -- the check that recorded this defect still fails. This corrects the record: either a fix was claimed and our re-check does not agree, or we sent you a pass we can no longer stand behind. Read the run below rather than the earlier verification.\n\nWHAT THE FINGERPRINT IS: a SHA-256 of the check function's parsed syntax tree. It changes when the check's logic changes and not when its comments or formatting do. It is quoted so you can tell a check we repaired from one we did not: if this differs from a fingerprint we sent you before, the definition moved and the earlier verdict was made under the old one.\n\nRUN: run-20260907T135100Z-0923c37, preregistration PRE-0057, on a clean working tree at commit 0923c3706a7f30ee1b0157d6017447dc770b365e. The selector was frozen and git-tagged BEFORE the run, so the set of checks could not be narrowed after seeing the results.\n\nCHECK(S) THIS COVERS:\n  tests/rest/test_qa_agent_channel.py::test_the_automated_first_pass_is_tagged_as_they_documented\n\nREPRODUCE: github.com/zakutana/qa-cymetica at 0923c3706a7f30ee1b0157d6017447dc770b365e, then\n  pytest tests/rest/test_qa_agent_channel.py::test_the_automated_first_pass_is_tagged_as_they_documented\n\nFINDING CYM-a2a-first-pass-contract: 4 automated repl(ies) in the inbox; 0 carry the documented metadata.is_answer field. 4 are filterable by metadata.auto/kind instead, so the capability exists under different names",
+          "fingerprint": "<redacted>",
+          "hunter_id": 5,
+          "id": 14,
+          "issue_effect": "reopened",
+          "issue_ref": "ET-22272",
+          "report_id": 67,
+          "test_run_id": "run-20260907T135100Z-0923c37",
+          "tree_sha": "0923c3706a7f30ee1b0157d6017447dc770b365e",
+          "verdict": "fail"
+        }
+      }
+    },
+    "elapsed_ms": 664,
+    "headers": {
+      "cache-control": "no-store, no-cache, must-revalidate, max-age=0",
+      "connection": "keep-alive",
+      "content-encoding": "gzip",
+      "content-length": "1076",
+      "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests",
+      "content-security-policy-report-only": "default-src 'self'; script-src 'self' 'nonce-7Mnur50lZ/ZkNCY1LSS3FA==' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'",
+      "content-signal": "ai-train=no, search=yes, ai-input=yes",
+      "content-type": "application/json",
+      "cross-origin-opener-policy": "same-origin-allow-popups",
+      "cross-origin-resource-policy": "cross-origin",
+      "date": "Mon, 07 Sep 2026 13:54:06 GMT",
+      "permissions-policy": "geolocation=(), microphone=(), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=(), browsing-topics=(), attribution-reporting=()",
+      "pragma": "no-cache",
+      "referrer-policy": "strict-origin-when-cross-origin, strict-origin-when-cross-origin",
+      "server": "nginx",
+      "strict-transport-security": "max-age=31536000; includeSubDomains",
+      "vary": "Accept-Encoding",
+      "x-ai-strongest-model": "Claude Fable 5",
+      "x-content-type-options": "nosniff, nosniff",
+      "x-dns-prefetch-control": "off",
+      "x-frame-options": "SAMEORIGIN, SAMEORIGIN",
+      "x-ratelimit-limit": "60",
+      "x-ratelimit-remaining": "43",
+      "x-ratelimit-reset": "1788789600",
+      "x-xss-protection": "0"
+    },
+    "reason": "OK",
+    "status_code": 200
+  },
+  "run_id": "script-verify",
+  "tier": "MUTATE"
+}
