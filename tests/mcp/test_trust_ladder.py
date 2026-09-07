@@ -31,7 +31,30 @@ def declared_by_tier(rest) -> dict[str, set[str]]:
     would read as the platform over-serving. An unrecognised tier is now
     named, so the answer is "we could not measure" rather than a finding.
     """
-    manifest = rest.get("/.well-known/mcp.json").json()
+    # Rule 8, applied to the operand this whole file rests on. This used to be
+    # a bare .json() with no status or shape check: a 500 carrying
+    # {"detail": ...} parses, `tools` is absent, every tier set comes back
+    # empty, `unrecognised` stays empty so the guard below never fires -- and
+    # the S0 regression check for #46 then reports "EXCESS 46 tools above the
+    # tier declared for them" out of a failed read. A failed read is not an
+    # empty manifest.
+    response = rest.get("/.well-known/mcp.json")
+    manifest = None
+    if response.status_code == 200:
+        try:
+            manifest = response.json()
+        except ValueError:
+            manifest = None
+    if not isinstance(manifest, dict) or not isinstance(manifest.get("tools"), list):
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason=(f"/.well-known/mcp.json did not yield a tool catalogue "
+                    f"(HTTP {response.status_code}, "
+                    f"{len(response.content)} bytes), so there is no declared "
+                    f"entitlement to hold the served set against"),
+            sources={"manifest": "/.well-known/mcp.json"},
+            population={"status": response.status_code},
+        ))
     out: dict[str, set[str]] = {tier: set() for tier in LADDER}
     unrecognised: dict[str, str] = {}
     for tool in manifest.get("tools", []):
@@ -122,14 +145,27 @@ def refusal_class(payload: dict) -> tuple[str, str]:
     # So the vocabulary is consulted first, and the absence of markers is only
     # believed when the text says nothing that sounds like a refusal.
     if not result.get("isError") and "error" not in payload:
-        if any(word in lowered for word in _AUTHZ_WORDS):
-            return "refused_authz", body
-        if any(word in lowered for word in _VALIDATION_WORDS):
-            return "refused_validation", body
-        if "error" in lowered:
+        # The vocabulary is still consulted, but only for a body that ALSO
+        # reads as an error. Without that conjunction the branch turned any
+        # SUCCESSFUL payload mentioning one of these words into
+        # `refused_authz`, i.e. a pass: this platform puts `trust_level` in
+        # ordinary results and tells callers to "send your api key", so a tool
+        # that executed anonymously read as the gate holding -- the S1 bypass
+        # reported as the resolution of #46. Audit, 2026-09-07.
+        if "error" in lowered or "refus" in lowered or "reject" in lowered:
+            if any(word in lowered for word in _AUTHZ_WORDS):
+                return "refused_authz", body
+            if any(word in lowered for word in _VALIDATION_WORDS):
+                return "refused_validation", body
             # It says error and carries no flag: we cannot tell execution from
             # a refusal we do not have the vocabulary for. Never a quiet
             # accusation.
+            return "unknown", body
+        if any(word in lowered for word in _AUTHZ_WORDS + _VALIDATION_WORDS):
+            # Authorization words inside an apparently successful result settle
+            # nothing: as consistent with a call that executed and mentioned
+            # trust as with a refusal served without the flag. Inconclusive,
+            # per this function's own docstring.
             return "unknown", body
         return "executed", body
     if any(word in lowered for word in _AUTHZ_WORDS):

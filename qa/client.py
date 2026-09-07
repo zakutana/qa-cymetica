@@ -379,9 +379,17 @@ def build_mcp_client(
     registry: EndpointRegistry,
     evidence=None,
     budget=None,
+    inner: httpx.BaseTransport | None = None,
 ) -> McpClient:
+    # `inner` exists for the negative controls, and only for them. Without it
+    # the four MCP guard self-tests sat on a live transport while the REST ones
+    # had been moved to _Unsendable on 2026-09-06 -- so "assert the guard
+    # refuses place_order" was one tool_class regression away from placing one.
+    # Found by the contract audit on 2026-09-07; the REST remediation had simply
+    # never been carried across to this constructor.
     http = build_client(
-        identity, registry, evidence, budget, base_url=base_urls()["mcp"]
+        identity, registry, evidence, budget, base_url=base_urls()["mcp"],
+        inner=inner,
     )
     http.headers["Content-Type"] = "application/json"
     return McpClient(http, identity)

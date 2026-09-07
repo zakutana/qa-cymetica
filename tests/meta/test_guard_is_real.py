@@ -86,6 +86,21 @@ def _deaf_client(evidence_store=None, **kwargs):
                         inner=_Unsendable(), **kwargs)
 
 
+def _deaf_mcp_client(registry=None, evidence_store=None):
+    """The same deafness for the MCP controls, which did not have it.
+
+    The 2026-09-06 remediation stopped at `_deaf_client`, so the four MCP
+    negative controls below kept performing `tools/call` on a live transport --
+    including one that sets `mutate_enabled` and raises the tier to MUTATE
+    before asking the guard to refuse `place_order`. The refusal was the only
+    thing between the test and a real order. That is the shape the whole file
+    exists to rule out, and it survived here for a day because the constructor
+    took no `inner`.
+    """
+    return build_mcp_client(ANON, registry or EndpointRegistry.load(),
+                            evidence_store, inner=_Unsendable())
+
+
 # ---------------------------------------------------------------------------
 # Layer 2 -- the transport enforces the tier of the running test
 # ---------------------------------------------------------------------------
@@ -122,7 +137,10 @@ def test_unknown_write_path_is_default_denied(evidence_store):
 @qa(component="meta.guard", tier=SafetyTier.SAFE, surface="meta")
 def test_request_without_tier_context_is_denied(registry, evidence_store):
     """A request issued outside any test must be refused, not silently allowed."""
-    client = build_client(ANON, registry, evidence_store)
+    # Deaf like the rest: if the `tier is None` branch goes, this is a READ and
+    # the guard returns, so a live GET would leave the machine from the one test
+    # that says that is impossible.
+    client = _deaf_client(evidence_store, registry=registry)
     token = CURRENT_TIER.set(None)
     try:
         with pytest.raises(SafetyViolation, match="No safety tier is in scope"):
@@ -304,7 +322,7 @@ def test_mutate_never_executes_trade_or_provision_mcp_tools(registry, evidence_s
     reg = EndpointRegistry.load()
     reg.mutate_enabled = True
     reg.mutate_allowed_hosts = frozenset({"cymetica.com"})
-    mcp = build_mcp_client(ANON, reg, evidence_store)
+    mcp = _deaf_mcp_client(reg, evidence_store)
     try:
         for tool in ("place_order", "create_aib_fund", "launchpad_launch_token"):
             with as_mutate_tier(), pytest.raises(SafetyViolation, match="never executes it"):
@@ -318,7 +336,7 @@ def test_mutate_never_executes_trade_or_provision_mcp_tools(registry, evidence_s
 # ---------------------------------------------------------------------------
 @qa(component="meta.guard", tier=SafetyTier.SAFE, surface="meta")
 def test_safe_tier_blocks_non_read_mcp_tool(registry, evidence_store):
-    mcp = build_mcp_client(ANON, registry, evidence_store)
+    mcp = _deaf_mcp_client(registry, evidence_store)
     try:
         with pytest.raises(SafetyViolation, match="classified 'trade'"):
             mcp.call_raw("place_order", {})
@@ -330,7 +348,7 @@ def test_safe_tier_blocks_non_read_mcp_tool(registry, evidence_store):
 
 @qa(component="meta.guard", tier=SafetyTier.PROBE, surface="meta")
 def test_probe_of_non_read_tool_must_send_empty_arguments(registry, evidence_store):
-    mcp = build_mcp_client(ANON, registry, evidence_store)
+    mcp = _deaf_mcp_client(registry, evidence_store)
     try:
         with pytest.raises(SafetyViolation, match="carries arguments"):
             mcp.call_raw("place_order", {"pair": "BTC-USD", "side": "buy"})
@@ -341,7 +359,7 @@ def test_probe_of_non_read_tool_must_send_empty_arguments(registry, evidence_sto
 @qa(component="meta.guard", tier=SafetyTier.SAFE, surface="meta")
 def test_unknown_mcp_tool_is_denied_at_safe(registry, evidence_store):
     """A tool we have not classified is denied, not assumed harmless."""
-    mcp = build_mcp_client(ANON, registry, evidence_store)
+    mcp = _deaf_mcp_client(registry, evidence_store)
     try:
         with pytest.raises(SafetyViolation, match="classified 'unknown'"):
             mcp.call_raw("some_tool_we_have_never_seen", {})

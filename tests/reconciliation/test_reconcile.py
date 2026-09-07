@@ -209,9 +209,21 @@ def test_sources_agree(pair, snapshot):
     # dashboard shows this as the finding's one-line summary, so "values
     # differ" beside a table of left/right/sources is what the operator gets
     # if it is not written here.
-    if holds:
+    if holds and left == right:
         sentence = (f"{claim['question']} Both {_name(pair.a)} and "
                     f"{_name(pair.b)} now say {_fmt(left)}.")
+    elif holds:
+        # A non-equality relation holds between two values that are NOT the
+        # same, and this branch used to take the "Both ... now say {left}"
+        # sentence with it. It was live: CYM-commit_count is `at_least`, so
+        # 22082 >= 21800 held and the row's headline read "Both llms.txt and
+        # the build-stats endpoint now say 21800" -- a figure neither source
+        # published as agreed, on a filed row, in the sentence submit.py
+        # injects into a report. Say both numbers and name the relation that
+        # makes them compatible.
+        sentence = (f"{claim['question']} {_name(pair.a)} says {_fmt(left)}, "
+                    f"{_name(pair.b)} says {_fmt(right)}, and that satisfies "
+                    f"{claim['relation']}.")
     else:
         sentence = (f"{claim['question']} {_name(pair.a)} says {_fmt(left)}; "
                     f"{_name(pair.b)} says {_fmt(right)}.")

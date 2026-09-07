@@ -165,5 +165,14 @@ def test_the_hook_is_actually_wired_up():
         for entry in entries
         if any("protect_state.py" in " ".join(h.get("args", [])) for h in entry["hooks"])
     )
-    for tool in ("Write", "Edit", "Bash"):
-        assert tool in matcher, f"{tool} is not covered by the guard's matcher"
+    # The matcher is an alternation, so split it and compare whole tokens.
+    # `tool in matcher` was a substring test, and the collision was already in
+    # the file: delete `Edit|` and "Edit" is still found inside "MultiEdit",
+    # so the Edit tool would write under state/ with no hook in front of it
+    # while this test stayed green. Found by the contract audit, 2026-09-07.
+    covered = {token.strip() for token in matcher.split("|")}
+    for tool in ("Write", "Edit", "MultiEdit", "Bash"):
+        assert tool in covered, (
+            f"{tool} is not one of the alternatives in the guard's matcher "
+            f"({sorted(covered)}); a substring of another entry does not count"
+        )
