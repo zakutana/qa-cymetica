@@ -97,6 +97,14 @@ components:
     surface: discovery
     criticality: medium
     staleness_hours: 24
+  discovery.onboarding:
+    # /build: the page they point outside agents at. It names paths, a field of
+    # the registration reply, and the trust ladder -- a contract with a reader
+    # who cannot ask a follow-up question, so every sentence of it is checkable.
+    title: Agent onboarding page (/build)
+    surface: discovery
+    criticality: high
+    staleness_hours: 24
 
   reconciliation:
     title: Cross-source contradiction sweep
