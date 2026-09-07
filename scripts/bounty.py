@@ -193,7 +193,7 @@ def _last_status_by_report() -> dict:
     return last
 
 
-def refresh_our_reports() -> dict:
+def refresh_our_reports(client=None) -> dict:
     """Re-read our own reports and update just that half of the snapshot.
 
     `fetch_our_reports` appends the journal events and returns the rows; it
@@ -217,23 +217,36 @@ def refresh_our_reports() -> dict:
     back unreachable -- wrote 0 reports over 20 good ones. A failed read is
     not an empty read, and a refresher that forgets that is worse than no
     refresher.
+
+    The read, the fetch and the write are held under one lock, the same one
+    the journal uses. Without it this is a read-modify-write across a network
+    call: a full `python scripts/bounty.py` completing inside that window --
+    the sweep runs one -- would be undone the moment the refresher wrote its
+    copy back, reverting statuses, filing_probe, qa_tracker, closed and
+    leaderboard to whatever they were before the fetch while our_reports alone
+    stayed current. A snapshot half of one read and half of another, with
+    nothing malformed to notice it by.
     """
-    data: dict = {}
+    from qa.state import file_lock
+
     out = out_path()
-    if out.exists():
-        try:
-            data = json.loads(out.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            data = {}
-
-    ours = fetch_our_reports(previous=data.get("our_reports"))
-    data["our_reports"] = ours
-    data["our_reports_refreshed_at"] = _now()
-
     out.parent.mkdir(parents=True, exist_ok=True)
-    tmp = out.with_suffix(".json.tmp")
-    tmp.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
-    os.replace(tmp, out)
+
+    with file_lock(out):
+        data: dict = {}
+        if out.exists():
+            try:
+                data = json.loads(out.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                data = {}
+
+        ours = fetch_our_reports(client=client, previous=data.get("our_reports"))
+        data["our_reports"] = ours
+        data["our_reports_refreshed_at"] = _now()
+
+        tmp = out.with_suffix(".json.tmp")
+        tmp.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+        os.replace(tmp, out)
     return ours
 
 
@@ -489,10 +502,16 @@ def fetch() -> dict:
 
 
 if __name__ == "__main__":
+    from qa.state import file_lock
+
     data = fetch()
     out = out_path()
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+    # Under the same lock refresh_our_reports takes. A lock only one of two
+    # writers holds is not a lock -- this is the write the refresher must not
+    # be allowed to interleave with, and the one whose loss would be silent.
+    with file_lock(out):
+        out.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
     print(f"-> {out}")
     print(f"   total={data['total']}  statuses={data['statuses']}")
     print(f"   closed={data['closed']}  "

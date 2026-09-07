@@ -237,7 +237,15 @@ def _honoured_preregistration(run: dict, selector: str) -> list[str]:
     import shlex
 
     try:
-        tokens = [t for t in shlex.split(selector) if not t.startswith("-")]
+        # posix=False, because posix mode reads a backslash as an escape and
+        # this workspace is Windows: `--selector tests\meta` was recorded
+        # verbatim by prereg.py and came back out of shlex as `testsmeta`, so
+        # run_integrity reported two problems about a run that had honoured
+        # its preregistration exactly, and compose() raised on them. The
+        # normalisation in _selector_covers was written for these tokens and
+        # never saw one. Non-posix keeps the quotes on, so strip them here.
+        tokens = [t.strip("\"'") for t in shlex.split(selector, posix=False)]
+        tokens = [t for t in tokens if t and not t.startswith("-")]
     except ValueError:
         return [f"the preregistered selector {selector!r} does not parse"]
     if not tokens:
@@ -605,8 +613,14 @@ def head(path: Path | None = None) -> dict:
 
 
 @contextlib.contextmanager
-def _journal_lock(path: Path):
-    """Hold an exclusive cross-process lock for the length of one append.
+def file_lock(path: Path):
+    """Hold an exclusive cross-process lock on one state file.
+
+    Public, and not journal-specific, because the journal is not the only file
+    with a read-modify-write in front of it: scripts/bounty.py reads the whole
+    vendor snapshot, replaces one section and writes it back, and serve.py
+    --ask does that on a timer beside an operator running a full fetch. Same
+    hazard, same remedy, one implementation.
 
     `append_event` reads the whole journal, derives `seq` and `chain` from what
     it read, and only then writes. Two writers interleaving inside that window
@@ -660,13 +674,13 @@ def append_event(event: dict, path: Path | None = None) -> str:
     """Append one event. Returns 'appended' or 'duplicate' (idempotent by
     natural key). Never rewrites an existing line.
 
-    Serialised across processes: see `_journal_lock`.
+    Serialised across processes: see `file_lock`.
     """
     _validate_event(event)
     p = path or journal_path()
     p.parent.mkdir(parents=True, exist_ok=True)
 
-    with _journal_lock(p):
+    with file_lock(p):
         existing = read_events(path=p)
         key = _natural_key(event)
         for e in existing:

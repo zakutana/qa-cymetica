@@ -108,6 +108,57 @@ def test_401_read_is_not_empty(tmp_path, monkeypatch):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_refresh_writes_the_section_the_bell_reads(tmp_path, monkeypatch):
+    """The success path of serve.py --ask, which nothing covered.
+
+    The bell renders the vendor's status out of state/bounty.json, not out of
+    the journal, so a refresher that appends the event and writes no file
+    leaves the page saying the old thing. That is exactly what --ask shipped
+    doing: it called fetch_our_reports, which appends and returns rows without
+    touching the snapshot, and every test stayed green because the only test
+    of the refresher exercised the FAILURE path, where the correct behaviour
+    is to leave the file alone.
+
+    So this asserts the write, on a clean read, with new statuses -- and that
+    reverting serve.py to fetch_our_reports would fail here.
+    """
+    import json as _json
+
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    monkeypatch.setenv("QA_WALLET_ADDRESS", "0xabc")
+    bounty = _module("scripts/bounty.py")
+
+    snapshot = bounty.out_path()
+    snapshot.parent.mkdir(parents=True, exist_ok=True)
+    snapshot.write_text(_json.dumps({
+        "our_reports": {"klass": "ok", "rows_returned": 1,
+                        "reports": [{"id": 46, "status": "pending"}]},
+        "leaderboard": ["untouched"],
+    }), encoding="utf-8")
+
+    moved = _client(lambda r: httpx.Response(200, json={
+        "reports": [{"id": 46, "status": "fixed", "title": "t",
+                     "status_notes": "shipped @abc123"}],
+        "total": 1,
+    }))
+    ours = bounty.refresh_our_reports(client=moved)
+    assert ours["klass"] == "ok"
+
+    on_disk = _json.loads(snapshot.read_text(encoding="utf-8"))["our_reports"]
+    assert on_disk["reports"][0]["status"] == "fixed", \
+        "the new status never reached the file the bell reads"
+    assert on_disk["reports"][0]["status_notes"] == "shipped @abc123", \
+        "their words did not reach the snapshot"
+    assert _json.loads(snapshot.read_text(encoding="utf-8"))["leaderboard"] == \
+        ["untouched"], "the refresher rewrote a section it was not asked to touch"
+
+    from qa.state import read_events
+    statuses = [e for e in read_events() if e["type"] == "vendor_status"]
+    assert [(e["report_id"], e["status"]) for e in statuses] == [(46, "fixed")], \
+        "the journal and the snapshot disagree about what changed"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_refresh_that_could_not_read_keeps_the_snapshot(tmp_path, monkeypatch):
     """Rule 8 on the write side, where losing it costs the data.
 
