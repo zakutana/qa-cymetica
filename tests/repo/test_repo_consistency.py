@@ -176,3 +176,99 @@ def test_committed_dashboard_matches_the_committed_ledger():
         left=match.group(1)[:16], right=current[:16],
         sources={"dashboard": "dashboard/index.html"},
     ))
+
+
+RUN_ID = re.compile(r"run-\d{8}T\d{6}Z-[0-9a-z]+")
+
+# Run records the committed journal cites and this repository does not have.
+# Both predate the guard below and neither can be recovered:
+#
+#   run-20260905T180442Z-8f0af4f  never committed. The bytes are gone; the
+#       journal keeps its attested sha256 4202df91... and nothing else.
+#   run-20260905T182750Z-8d7126c  committed in b2bbaad, deleted in efe76d1
+#       ("git rev-parse echoes its argument on failure; the run record
+#       believed it") because the record itself was wrong. The blob still in
+#       history hashes to 5bf4bf91..., not the 581f82ee... the journal
+#       attested -- so even that copy is not the version the fold read.
+#
+# The current ledger stands on neither. This is a record of a loss, not
+# permission for the next one: an addition here means evidence went missing,
+# and it has to be explained as specifically as these two. When a listed
+# record turns out to exist after all, the test says so and the line goes.
+LOST_RUN_RECORDS = {
+    "run-20260905T180442Z-8f0af4f",
+    "run-20260905T182750Z-8d7126c",
+}
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_every_run_record_the_state_cites_is_in_the_repository():
+    """Whatever the ledger or the journal stands on must be readable by others.
+
+    `state/runs/` is gitignored: most of what lands there adjudicated nothing,
+    and an untracked record made every tree dirty enough for prereg.py to
+    refuse. The records that ARE evidence are force-added by
+    scripts/ledger.py::_track_run_record at the moment a fold stands on one.
+
+    This is the converse, and it is deliberately stated over the *citation*
+    rather than over that function: a run reachable only through a journal
+    event still has to be there, and the mechanism that puts it there can be
+    replaced without touching this test. A cited record that is not in the
+    repository makes the ledger unverifiable by anyone who clones it -- the
+    one thing the whole evidence trail exists to prevent.
+    """
+    import subprocess
+
+    cited = set()
+    for path in (LEDGER, REPO / "state" / "journal" / "events.jsonl"):
+        if path.exists():
+            cited |= set(RUN_ID.findall(path.read_text(encoding="utf-8")))
+    for path in (REPO / "state" / "preregistrations").glob("*.md"):
+        cited |= set(RUN_ID.findall(path.read_text(encoding="utf-8")))
+
+    if not cited:
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason="no committed state cites a run record yet",
+            sources={"ledger": "state/ledger.json"}))
+        return
+
+    try:
+        listed = subprocess.run(
+            ["git", "ls-files", "state/runs"], cwd=REPO, check=True,
+            capture_output=True, text=True).stdout
+    except (OSError, subprocess.CalledProcessError) as exc:  # noqa: BLE001
+        # Rule 8: a read we could not make is not an empty read. Reporting
+        # "every cited record is missing" because git would not run would be
+        # a louder lie than saying nothing.
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason=f"git could not list state/runs: {exc}"))
+        return
+
+    tracked = set(RUN_ID.findall(listed))
+    missing = sorted(cited - tracked - LOST_RUN_RECORDS)
+    # A loss that stopped being one must not stay on the list, or the list
+    # slowly becomes a place to put inconvenient ids.
+    recovered = sorted(LOST_RUN_RECORDS & tracked)
+
+    problems = []
+    if missing:
+        problems.append(
+            f"{len(missing)} run record(s) cited by the committed state are "
+            f"not in the repository, so the ledger cannot be re-folded from a "
+            f"clone: {', '.join(missing[:5])}")
+    if recovered:
+        problems.append(
+            f"{', '.join(recovered)} is listed as lost and is tracked after "
+            f"all -- delete the entry from LOST_RUN_RECORDS")
+
+    conclude(Measurement(
+        verdict="failed" if problems else "passed",
+        reason=("; ".join(problems) if problems else
+                f"all {len(cited - LOST_RUN_RECORDS)} cited run record(s) are "
+                f"tracked, beside {len(LOST_RUN_RECORDS)} named as lost"),
+        left={"cited": len(cited)}, right={"tracked": len(tracked)},
+        population={"missing": missing[:20], "recovered": recovered},
+        sources={"journal": "state/journal/events.jsonl",
+                 "runs": "state/runs"}))

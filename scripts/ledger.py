@@ -96,6 +96,35 @@ def _run_recorded(run: dict, path: Path | None) -> dict:
     }
 
 
+def _track_run_record(run_id: str | None) -> None:
+    """Keep the record this ledger stands on; let the exploratory ones go.
+
+    `state/runs/` is gitignored, because most of what lands there adjudicated
+    nothing -- 237 of 283 records on the day this was written -- while every
+    one of them made the tree dirty enough for prereg.py to refuse, so each
+    sweep began by committing debug output.
+
+    A record becomes evidence at exactly one moment: when a fold stands on it.
+    That moment is here. Failing to track it is worth a warning and not an
+    abort -- the ledger is already written, and tests/repo will say so.
+    """
+    if not run_id:
+        return
+    path = _run_path(run_id)
+    if path is None:
+        return
+    import subprocess
+
+    try:
+        subprocess.run(["git", "add", "-f", str(path)],
+                       cwd=path.parents[2], check=True,
+                       capture_output=True, text=True)
+    except (OSError, subprocess.CalledProcessError) as exc:  # noqa: BLE001
+        print(f"   WARNING: could not track {path.name}: {exc}. The ledger "
+              f"cites a run record that is not in the repository; "
+              f"tests/repo will fail until it is.")
+
+
 def _no_admissible_run_message() -> str:
     lines = ["no admissible run record exists, so there is nothing to compose.",
              "Every candidate and what is wrong with it:"]
@@ -112,13 +141,26 @@ def _no_admissible_run_message() -> str:
 
 
 def compose(run_id: str | None = None, events_only: bool = False,
-            seed: Path | None = None) -> dict:
+            seed: Path | None = None, attest: bool = False) -> dict:
     """Fold one run and the whole journal onto the previous ledger.
 
     `seed` replaces the previous ledger as the fold's starting rows. It exists
     for the one-shot migration, which produces the row CONTENT from named
     artefacts and then hands it here to be folded -- rather than writing a
     ledger itself, which is the thing this whole plan exists to stop.
+
+    `attest` appends the `run_recorded` event that pins the record's bytes, and
+    is OFF by default because most callers here are not writing a ledger. It
+    used to be unconditional, so a fold performed only to look -- the page's
+    field-coverage check in tests/meta/test_pipeline_render.py folds fresh on
+    every session -- wrote into the append-only journal, attesting whatever run
+    was newest, which was that session's own exploratory record. 98 of the 137
+    run_recorded events on 2026-09-07 cite a run the ledger never used. None of
+    them moved a row; the fold does not read this event type at all. What they
+    did was fill the audit trail with attestations of runs nobody stood on, and
+    -- once state/runs/ became gitignored -- cite records that would never be
+    tracked. Default-off means a caller that only looks cannot write by
+    accident; only main(), which goes on to write the ledger, asks for it.
     """
     events = read_events()
     prev = json.loads(seed.read_text(encoding="utf-8")) if seed else load_previous()
@@ -141,8 +183,9 @@ def compose(run_id: str | None = None, events_only: bool = False,
             )
         # Attest to the bytes, in the chained journal. Idempotent by run_id,
         # so re-composing the same run adds nothing.
-        append_event(_run_recorded(run, _run_path(run_id)))
-        events = read_events()
+        if attest:
+            append_event(_run_recorded(run, _run_path(run_id)))
+            events = read_events()
 
     ledger = fold(prev, run=run, candidates=_candidates(run), events=events)
     ledger["events_head"] = head()
@@ -174,8 +217,11 @@ def main(argv: list[str] | None = None) -> int:
                              "committed ledger (one-shot migration only)")
     args = parser.parse_args(argv)
 
+    # --check writes nothing, so it attests nothing either. Everything else
+    # here goes on to write the ledger, which is the moment the record's bytes
+    # become worth pinning.
     ledger = compose(run_id=args.run_id, events_only=args.events_only,
-                     seed=args.seed)
+                     seed=args.seed, attest=not args.check)
 
     if args.check:
         committed = load_previous()
@@ -204,6 +250,7 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     write_ledger(load_previous(), ledger)
+    _track_run_record(ledger.get("run_id"))
     print(f"-> {ledger_path()}")
     if ledger.get("run_carried"):
         # Say which it was. "composed" would claim this fold judged something,

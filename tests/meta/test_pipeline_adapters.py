@@ -388,3 +388,101 @@ def test_reconcile_adds_the_missing_record_and_never_edits(tmp_path, monkeypatch
 # code -- it names exactly what goes wrong. Correspondence now arrives through
 # the bounty API alone (scripts/bounty.py), which has its own guards.
 # ---------------------------------------------------------------------------
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_fold_that_writes_no_ledger_writes_nothing_to_the_journal(tmp_path, monkeypatch):
+    """LDG: looking at what the state folds to is a read, and reads do not write.
+
+    compose() attested the run record unconditionally, so every caller that
+    folded merely to look appended to the append-only journal. One of them --
+    the page's field-coverage check in tests/meta -- folds fresh on every
+    session against whichever run is NEWEST, which is that session's own
+    exploratory record. On 2026-09-07 that was 98 of the 137 run_recorded
+    events: attestations of runs the ledger never stood on, in the file whose
+    whole value is that nothing enters it by accident.
+
+    Nothing moved -- the fold does not read this event type. The damage was to
+    the audit trail, and then to the guard in tests/repo, which asks that every
+    cited record be in the repository and was being handed ids that never would
+    be.
+
+    Two claims: a look-only fold appends nothing, and the writing path still
+    attests. The second is what stops this being fixed by deleting the feature.
+    """
+    ledger_mod = _module("scripts/ledger.py")
+    state = tmp_path / "state"
+    (state / "journal").mkdir(parents=True)
+    monkeypatch.setenv("QA_STATE_DIR", str(state))
+
+    from qa.state import append_event, read_events
+
+    def _events():
+        return len(read_events())
+
+    append_event({"type": "note", "at": "2026-09-07T00:00:00+00:00",
+                  "by": "test", "source": "test", "finding_id": "CYM-x",
+                  "text": "so the journal is not empty"})
+    before = _events()
+
+    # No admissible run exists in this empty state dir, so the fold that a
+    # read-only caller performs is the journal-only one. It must not write.
+    ledger_mod.compose(events_only=True)
+    assert _events() == before, "an events-only fold appended to the journal"
+
+    ledger_mod.compose(events_only=True, attest=True)
+    assert _events() == before, \
+        "an events-only fold attested a run it never read"
+
+    # And the writing path is still wired: main() asks for the attestation
+    # unless --check, which writes nothing.
+    source = (REPO / "scripts" / "ledger.py").read_text(encoding="utf-8")
+    assert "attest=not args.check" in source, \
+        "main() no longer attests the record the ledger it writes stands on"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_folded_run_record_is_tracked_even_though_the_others_are_not(tmp_path):
+    """LDG: `state/runs/` is ignored, so the fold has to force what it stood on.
+
+    The ignore rule is what stops every exploratory run from dirtying the tree
+    and making prereg.py refuse. The cost of getting it wrong is silent: an
+    ordinary `git add` succeeds, reports nothing, and adds nothing, leaving a
+    ledger that cites evidence a clone cannot read. So this asserts the -f,
+    inside a throwaway repository carrying the same ignore rule.
+
+    tests/repo states the property over the real state -- every cited record
+    is tracked. This states the mechanism that keeps it true.
+    """
+    import subprocess
+
+    ledger_mod = _module("scripts/ledger.py")
+
+    def git(*args):
+        return subprocess.run(["git", *args], cwd=tmp_path, check=True,
+                              capture_output=True, text=True).stdout
+
+    git("init", "-q")
+    git("config", "user.email", "t@t"); git("config", "user.name", "t")
+    (tmp_path / ".gitignore").write_text("state/runs/\n", encoding="utf-8")
+    runs = tmp_path / "state" / "runs"
+    runs.mkdir(parents=True)
+    record = runs / "run-20260907T000000Z-abc1234.json"
+    record.write_text(json.dumps({"run_id": "run-20260907T000000Z-abc1234"}),
+                      encoding="utf-8")
+
+    # The premise: git really is ignoring it, so the assertion below is not
+    # passing for the trivial reason that nothing was ignored in the first
+    # place.
+    git("add", "state")
+    assert "state/runs" not in git("ls-files"), "the ignore rule did not apply"
+
+    monkey = ledger_mod.runs_dir
+    try:
+        ledger_mod.runs_dir = lambda: runs
+        ledger_mod._track_run_record("run-20260907T000000Z-abc1234")
+    finally:
+        ledger_mod.runs_dir = monkey
+
+    assert "state/runs/run-20260907T000000Z-abc1234.json" in git("ls-files"), \
+        "the record the ledger stands on was not forced past the ignore rule"
