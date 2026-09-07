@@ -188,8 +188,9 @@ RUN_ID = re.compile(r"run-\d{8}T\d{6}Z-[0-9a-z]+")
 #   run-20260905T182750Z-8d7126c  committed in b2bbaad, deleted in efe76d1
 #       ("git rev-parse echoes its argument on failure; the run record
 #       believed it") because the record itself was wrong. The blob still in
-#       history hashes to 5bf4bf91..., not the 581f82ee... the journal
-#       attested -- so even that copy is not the version the fold read.
+#       history hashes to 5bf4bf91..., the journal attested 581f82ee... The
+#       two disagree and nothing here says which is the version the fold read,
+#       so neither can be restored as evidence.
 #
 # The current ledger stands on neither. This is a record of a loss, not
 # permission for the next one: an addition here means evidence went missing,

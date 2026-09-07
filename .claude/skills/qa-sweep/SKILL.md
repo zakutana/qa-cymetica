@@ -160,6 +160,14 @@ Short. Four parts, no preamble:
    short of doing it. If the sweep showed nothing, leave this out rather than
    padding it.
 
+   Read `python scripts/never_fired.py --zeros` before writing this. It lists
+   the mechanisms — states, verdicts, event types, run refusals, obligations —
+   that have never once occurred in our data. A zero is a question, not a
+   finding: it is either a condition we have been lucky to avoid or something
+   that has never worked. Three of them were the second kind on 2026-09-06,
+   and 289 passing guards had said nothing, because a guard exercises its own
+   mechanism and then goes home.
+
    Operator's request, 2026-09-07: *"libi se mi ze po sweepu jsi prisel z
    navrhy co vylepsit, to je dobre pravidlo to tak delej"*. The reason it
    works is that a sweep is the only moment the whole system has just been

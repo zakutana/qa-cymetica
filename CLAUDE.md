@@ -129,6 +129,10 @@ qa/measure.py     Measurement + conclude(): a check's verdict and pytest's
 scripts/ledger.py CLI over the fold
 scripts/withdraw.py  the only human writer — every command is one event
 scripts/prereg.py    freeze and tag a run's configuration
+scripts/never_fired.py  which of our mechanisms have never once occurred in
+                     the data. A green guard says a mechanism WOULD work; this
+                     says whether it ever has. Read `--zeros` at the end of a
+                     sweep.
 scripts/migrate_ledger.py  one-shot, already run; refuses to run twice
 tests/meta/       self-tests. Run FIRST and abort the session on failure, so
                   a broken guard stops every live request.
