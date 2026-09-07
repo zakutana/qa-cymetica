@@ -394,7 +394,7 @@ def _apply_events(rows: dict, events: Iterable[dict]) -> None:
     """
     for row in rows.values():
         row["filing"] = {"state": "NOT_RAISED", "adjudicated_by": None,
-                         "reports": [], "refused": []}
+                         "reports": [], "refused": [], "verifications": []}
         row["transitions"] = [t for t in row.get("transitions", [])
                               if t.get("axis") != "filing"]
         row.pop("retracted_reports", None)
@@ -460,7 +460,8 @@ def _apply_events(rows: dict, events: Iterable[dict]) -> None:
         # Everything below is the vendor conversation, and gap 2 applies: the
         # strongest thing the dashboard says rests on their words, so their
         # words must have been captured.
-        if etype in ("filing_outcome", "vendor_status", "reply"):
+        if etype in ("filing_outcome", "vendor_status", "reply",
+                     "verification_outcome"):
             if not event.get("evidence_id"):
                 for fid in targets:
                     rows[fid]["filing"]["refused"].append(
@@ -506,6 +507,30 @@ def _apply_events(rows: dict, events: Iterable[dict]) -> None:
             for fid in targets:
                 _move_filing(rows[fid], "REPLIED", event)
 
+        elif etype == "verification_outcome":
+            # Outbound, so it moves NEITHER axis. CHECK has one mover, an
+            # admissible run; FILING has one mover, something the vendor did.
+            # This is us telling them what our run already decided, and the
+            # only honest effect is a record that we said it.
+            #
+            # Reusing filing_outcome would have been the cheap route and would
+            # have fabricated filings: the branch above moves any accepted
+            # outcome with a report_id to RAISED and attaches the report,
+            # with no notion of which endpoint it went to.
+            if event.get("outcome") != "accepted":
+                continue
+            for fid in targets:
+                sent = rows[fid]["filing"]["verifications"]
+                mark = {"report_id": event.get("report_id"),
+                        "fingerprint": event.get("fingerprint"),
+                        "run_id": event.get("run_id"),
+                        "verdict": event.get("verdict"),
+                        "at": event["at"]}
+                if not any(v["report_id"] == mark["report_id"]
+                           and v["fingerprint"] == mark["fingerprint"]
+                           for v in sent):
+                    sent.append(mark)
+
     for fid, row in rows.items():
         row["_retracted"] = sorted(r for r in retracted.get(fid, set()) if r is not None)
 
@@ -517,6 +542,8 @@ def _obligations(row: dict) -> dict:
     check, filing = row["check"]["state"], row["filing"]["state"]
     filed = [r["report_id"] for r in row["filing"]["reports"]]
     retracted = set(row.pop("_retracted", []))
+    pinned = row["check"].get("pinned_fingerprint")
+    verified = row["filing"].get("verifications") or []
 
     return {
         # Rule 7: their claim of a fix is a claim. It opens work, never closes it.
@@ -532,6 +559,20 @@ def _obligations(row: dict) -> dict:
         # Rule 11: withdrawing a filed finding leaves a correction owed.
         "retractions": ([r for r in filed if r not in retracted]
                         if filing == "WITHDRAWN" else []),
+        # We hold evidence they asked for and have not sent it. Keyed on the
+        # FINGERPRINT, never on the run: every sweep re-adjudicates every
+        # passing row, so a run-keyed debt would come due again after each one
+        # and send them the same verifications daily. On the fingerprint it is
+        # a statement about the CHECK -- we have told them this definition
+        # passes -- so it comes due once, clears when sent, and speaks again
+        # only when the definition moves, which is the one case that is new
+        # information. PASSING_UNPINNED is excluded on purpose: passing under
+        # a definition we never saw fail proves no fix.
+        "verification_owed": ([r for r in filed
+                               if not any(v["report_id"] == r
+                                          and v["fingerprint"] == pinned
+                                          for v in verified)]
+                              if check == "PASSING" and pinned else []),
         # They read the report and said no, and our check still fails. One of
         # the two has to give -- we withdraw because they are right, or we
         # answer because we are -- and neither happens on its own. Nothing is
@@ -558,7 +599,7 @@ def fold(prev: dict | None = None, run: dict | None = None,
         row.setdefault("check", {"state": "UNVERIFIED", "adjudicated_by": None,
                                  "pinned_fingerprint": None})
         row.setdefault("filing", {"state": "NOT_RAISED", "adjudicated_by": None,
-                                  "reports": [], "refused": []})
+                                  "reports": [], "refused": [], "verifications": []})
 
     out: dict[str, Any] = {"schema": 2, "findings": rows}
 
@@ -590,7 +631,7 @@ def fold(prev: dict | None = None, run: dict | None = None,
                     "check": {"state": "UNVERIFIED", "adjudicated_by": None,
                               "pinned_fingerprint": None},
                     "filing": {"state": "NOT_RAISED", "adjudicated_by": None,
-                               "reports": [], "refused": []},
+                               "reports": [], "refused": [], "verifications": []},
                     "transitions": [], "regressions": [],
                 }
             # A default applies only at creation. Refreshing a row with one

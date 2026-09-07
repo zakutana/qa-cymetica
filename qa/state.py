@@ -501,6 +501,11 @@ EVENT_TYPES = frozenset({
     "vendor_read", "message", "reply", "withdraw", "retire_check",
     "rebind_check", "pin_fingerprint", "retraction_sent", "supersede",
     "backfill", "legacy_verification", "migrated", "note",
+    # Outbound, and the first pair that is not a report: we tell them a check
+    # of ours passes under the fingerprint it last failed under. Two events
+    # for the one reason every submission has two (rule 9) -- the intent
+    # survives a timeout that eats the outcome.
+    "verification_intent", "verification_outcome",
 })
 REQUIRED_EVENT_KEYS = ("type", "at", "by", "source")
 ALLOWED_EVENT_KEYS = frozenset({
@@ -511,6 +516,8 @@ ALLOWED_EVENT_KEYS = frozenset({
     "evidence_id", "reconciled_from", "server_created_at", "text",
     "run_id", "file_sha256", "migrated_from", "note", "origin", "via",
     "klass", "rows_returned", "server_total", "stale_from",
+    # verification_intent / verification_outcome
+    "verdict", "fingerprint", "tree_sha", "checked_at",
 })
 
 
@@ -539,6 +546,19 @@ def _natural_key(event: dict) -> str:
         return f"{t}|{g('finding_id')}|{g('report_id')}"
     if t == "supersede":
         return f"{t}|{g('from_id')}|{g('to_id')}"
+    if t in ("verification_intent", "verification_outcome"):
+        # The FINGERPRINT is in the key, not the run. One report can carry two
+        # checks -- #50, #51, #52 and #67 each do -- so keying on the report
+        # alone would silently collapse the second into the first and answer
+        # "duplicate" without raising. The run is deliberately absent: re-sending
+        # the same verdict for the same definition after a later run is the same
+        # fact, not a new one. The outcome joins the key for outcomes only, for
+        # the reason filing_outcome gives: a timeout and its later settlement
+        # are two genuine facts about one attempt.
+        base = f"{t}|{g('finding_id')}|{g('report_id')}|{g('fingerprint')}"
+        if t == "verification_outcome":
+            return f"{base}|{g('outcome')}|{g('at')}"
+        return base
     # backfill / legacy_verification / migrated / note
     return f"{t}|{g('finding_id')}|{hashlib.sha256((g('text') or g('note') or '').encode()).hexdigest()[:12]}"
 

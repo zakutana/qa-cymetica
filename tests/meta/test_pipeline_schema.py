@@ -183,3 +183,54 @@ def test_append_refuses_incomplete_or_unknown_events(tmp_path):
         append_event({"type": "withdraw", "at": "x", "by": "operator", "source": "cli",
                       "finding_id": "CYM-x", "reason": ""}, path=path)
     assert not path.exists() or path.read_text(encoding="utf-8") == ""
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_two_verifications_on_one_report_do_not_collapse(tmp_path):
+    """VER: a new event type without a natural key dedupes against itself.
+
+    `_natural_key` ends in a fallback that keys on finding_id plus a hash of
+    `text or note or ''` -- both empty on a verification. So two genuinely
+    different verifications sent to the same report, which is exactly what
+    #50, #51, #52 and #67 need (each covers two checks with two fingerprints),
+    would produce the same key, and append_event would answer "duplicate" and
+    return WITHOUT raising. The second fingerprint would simply never be
+    recorded, and nothing would say so.
+
+    Stated over the pair that actually collides in our data rather than over
+    the function, so it stays true if the keying is rewritten.
+    """
+    from qa.state import append_event, read_events
+
+    path = tmp_path / "events.jsonl"
+
+    def verification(finding_id, fingerprint, report_id=50, type_="verification_outcome"):
+        return {
+            "type": type_, "at": "2026-09-07T13:00:00+00:00", "by": "agent",
+            "source": "scripts/verify.py", "finding_id": finding_id,
+            "report_id": report_id, "fingerprint": fingerprint,
+            "verdict": "pass", "outcome": "accepted",
+            "run_id": "run-20260907T123825Z-8bf609f", "evidence_id": "ev-1",
+        }
+
+    assert append_event(verification("CYM-mcp_resource_count", "d5a3824c"),
+                        path=path) == "appended"
+    assert append_event(verification("CYM-mcp_tool_names_declared_vs_served",
+                                     "sha256:1"), path=path) == "appended", \
+        "the second check on report #50 collapsed into the first"
+    # And the same fact twice really is one fact.
+    assert append_event(verification("CYM-mcp_resource_count", "d5a3824c"),
+                        path=path) == "duplicate"
+
+    events = read_events(path=path)
+    assert len(events) == 2
+    assert {e["fingerprint"] for e in events} == {"d5a3824c", "sha256:1"}
+
+    # The intent half is keyed without the outcome, so re-running the sender
+    # after a timeout does not add a second intent for the same attempt.
+    assert append_event(verification("CYM-mcp_resource_count", "d5a3824c",
+                                     type_="verification_intent"),
+                        path=path) == "appended"
+    assert append_event(verification("CYM-mcp_resource_count", "d5a3824c",
+                                     type_="verification_intent"),
+                        path=path) == "duplicate"

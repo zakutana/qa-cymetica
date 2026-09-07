@@ -870,3 +870,130 @@ def test_a_rejection_we_still_reproduce_owes_a_decision():
         assert settled["obligations"]["disputed"] == [], (
             f"a {terminal} row is still asked to settle a dispute it closed by "
             f"being {terminal}")
+
+
+# ---------------------------------------------------------------------------
+# VER: telling them our check passes -- outbound, and owed until it is sent
+# ---------------------------------------------------------------------------
+FP = "aee41113b423d34dbb0fb7a237f679ec142e320ffd706e3a3645b1a3b80b4cd5"
+
+
+def _verification(fid="CYM-a", report_id=46, fingerprint=FP, outcome="accepted",
+                  at="2026-09-07T13:00:00+00:00", **over):
+    base = {"finding_id": fid, "report_id": report_id, "fingerprint": fingerprint,
+            "verdict": "pass", "outcome": outcome, "http_status": 200,
+            "run_id": "run-1", "evidence_id": "ev-9"}
+    base.update(over)
+    return event("verification_outcome", at=at, source="scripts/verify.py", **base)
+
+
+def _verified_row(fid="CYM-a"):
+    """A row that passes under the fingerprint it last failed under."""
+    return row(fid, check_state="PASSING", pinned=FP)
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_verification_we_send_moves_neither_axis():
+    """VER: it is our statement, so it changes nothing about their side.
+
+    The two axes have exactly one mover each -- an admissible run for CHECK, a
+    journal event of THEIRS for FILING -- and a reporter verification is
+    neither. It is us telling them something we already knew, so the only
+    honest effect is a record that we said it.
+
+    The danger this pins is concrete: reusing filing_outcome would have been
+    the cheap route, and qa/fold.py moves any accepted outcome carrying a
+    report_id to RAISED and attaches the report, with no notion of which
+    endpoint it went to. That would have invented filings that never happened
+    on rows that were already closed.
+    """
+    from qa.fold import fold
+
+    before = fold(ledger(_verified_row()), events=_filed("CYM-a", 46, "fixed"))
+    after = fold(ledger(_verified_row()),
+                 events=_filed("CYM-a", 46, "fixed") + [_verification()])
+
+    b, a = before["findings"]["CYM-a"], after["findings"]["CYM-a"]
+    assert a["check"]["state"] == b["check"]["state"] == "PASSING"
+    assert a["filing"]["state"] == b["filing"]["state"] == "FIX_CLAIMED"
+    assert len(a["transitions"]) == len(b["transitions"]), \
+        "sending a verification wrote a transition; it is not a state change"
+
+    sent = a["filing"]["verifications"]
+    assert [(v["report_id"], v["fingerprint"], v["verdict"]) for v in sent] == \
+        [(46, FP, "pass")], "the verification we sent is not on the row"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_verification_whose_response_was_not_captured_is_refused():
+    """Gap 2, and it cuts both ways: our claim rests on their 200.
+
+    The evidence_id gate exists for events reporting what the vendor said.
+    An outcome is exactly that -- it says their server accepted the
+    verification -- so an uncaptured one is a claim with nothing behind it.
+    """
+    from qa.fold import fold
+
+    out = fold(ledger(_verified_row()),
+               events=_filed("CYM-a", 46, "fixed") + [_verification(evidence_id=None)])
+    filing = out["findings"]["CYM-a"]["filing"]
+    assert filing["verifications"] == []
+    assert any("evidence_id" in r for r in filing["refused"]), \
+        "an uncaptured verification was recorded as if the server had answered"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_verification_debt_is_keyed_on_the_fingerprint_not_the_run():
+    """VER: the property that stops this becoming 27 POSTs every sweep.
+
+    Every sweep re-adjudicates every PASSING row, so `adjudicated_by.run_id`
+    moves on all of them whether or not anything changed. An obligation keyed
+    on the run would therefore come due again after each one, and we would
+    send Cymetica the same 27 verifications daily -- a badge that clears
+    itself into spam, which is worse than a badge nobody can clear.
+
+    Keyed on the fingerprint it is a statement about the CHECK: we have told
+    them this check passes under this definition. It comes due once, clears
+    when sent, and speaks again only when the definition moves -- which is
+    genuinely new information and the one case worth another request.
+    """
+    from qa.fold import fold
+
+    filed = _filed("CYM-a", 46, "fixed")
+
+    owed = fold(ledger(_verified_row()), events=filed)
+    assert owed["findings"]["CYM-a"]["obligations"]["verification_owed"] == [46], \
+        "a passing, fix-claimed row owes them the evidence and does not say so"
+
+    cleared = fold(ledger(_verified_row()), events=filed + [_verification()])
+    assert cleared["findings"]["CYM-a"]["obligations"]["verification_owed"] == [], \
+        "the debt survived the verification that paid it"
+
+    # A later run, same definition: nothing new to tell them.
+    again = fold(ledger(_verified_row()),
+                 events=filed + [_verification()],
+                 run={"run_id": "run-2", "schema": 2})
+    assert again["findings"]["CYM-a"]["obligations"]["verification_owed"] == [], \
+        "the next sweep asked for the same 27 verifications over again"
+
+    # A changed definition IS new information.
+    moved = fold(ledger(row("CYM-a", check_state="PASSING", pinned="a-new-fingerprint")),
+                 events=filed + [_verification()])
+    assert moved["findings"]["CYM-a"]["obligations"]["verification_owed"] == [46], \
+        "the check passes under a definition we have never told them about"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_nothing_is_owed_where_there_is_nothing_to_verify():
+    """A debt that comes due on rows we cannot pay is a badge nobody clears."""
+    from qa.fold import fold
+
+    def owed(state, events, pinned=FP):
+        out = fold(ledger(row("CYM-a", check_state=state, pinned=pinned)), events=events)
+        return out["findings"]["CYM-a"]["obligations"]["verification_owed"]
+
+    assert owed("PASSING", []) == [], "never filed, so there is no report to verify on"
+    assert owed("REPRODUCING", _filed("CYM-a", 46, "fixed")) == [], \
+        "our check still fails; a pass verification would be a false statement"
+    assert owed("PASSING", _filed("CYM-a", 46, "fixed"), pinned=None) == [], \
+        "never seen failing under this definition, so passing proves no fix"

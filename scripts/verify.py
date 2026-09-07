@@ -1,0 +1,331 @@
+"""Tell them a check of ours passes under the fingerprint it last failed under.
+
+The second write this project performs on purpose, and the first that is not a
+report. Cymetica published POST /api/v1/bounty/reports/{id}/verification on
+2026-09-07 and asked for the evidence we were holding; until then a fix we had
+verified was a fact that existed only on our own dashboard.
+
+What it sends is deliberately small. Not "the bug is fixed" -- that is their
+claim to make -- but: this check, under this definition, passed in this
+preregistered run against this tree, at this time. Every field is a fact
+somebody else can re-derive from the public repository.
+
+    python scripts/verify.py --dry-run     compose, send nothing
+    python scripts/verify.py --confirm     send, up to MAX_PER_RUN
+    python scripts/verify.py --only CYM-x  one finding
+
+WHAT IT SENDS IS NOT A LIST IT KEEPS. The selection is the `verification_owed`
+obligation in qa/fold.py, which is keyed on the check's fingerprint: a row owes
+a verification when it passes under a pinned fingerprint we have never told
+them about. So re-running after a partial batch resumes exactly where it
+stopped, and running it when nothing is owed sends nothing. There is no cursor
+to corrupt and no list to get out of date.
+
+Modelled on scripts/submit.py, which is the other outbound writer, and
+deliberately unlike it in four places where its behaviour was found wanting
+while planning this one:
+
+  * a failed evidence capture is a hard stop here, not a silent None. In
+    submit.py it returns None and the fold then refuses the outcome it
+    produced -- a request that went out and cannot be folded.
+  * the rate-limit break says what did not go, per item, instead of dropping
+    the remainder with no event and no line of output.
+  * the per-run cap is applied after deduplication, not before, so requests we
+    were never going to make do not consume it.
+  * a response's status is read before its body (rule 8).
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+import time
+from datetime import datetime, timezone
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(REPO_ROOT))
+
+from qa.client import build_client, install_client_guard  # noqa: E402
+from qa.config import identities, load_dotenv  # noqa: E402
+from qa.safety import CURRENT_TIER, EndpointRegistry, SafetyTier  # noqa: E402
+from qa.state import (admissibility, append_event, journal_path,  # noqa: E402
+                      load_ledger, load_run)
+
+# Their cap is unresolved -- they said 20/hour, the header advertises 60 -- so
+# submit.py takes the stricter and this follows it. 27 verifications is three
+# runs, and re-running is free because the obligation is the selection.
+MAX_PER_RUN = 12
+PAUSE_SECONDS = 4
+
+
+def _now() -> str:
+    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+
+def _path(report_id: int) -> str:
+    return f"/api/v1/bounty/reports/{report_id}/verification"
+
+
+def _capture(response) -> str:
+    """The evidence id, or raise.
+
+    submit.py swallows a capture failure into None, and qa/fold.py then refuses
+    the outcome for having no evidence_id -- so the request went out, the
+    journal recorded it, and the ledger cannot use it. Here the capture is part
+    of the transaction: if their answer cannot be preserved, we do not get to
+    keep the claim that they answered.
+    """
+    from qa.evidence import EvidenceStore
+
+    try:
+        evidence_id = EvidenceStore("script-verify").capture(
+            response.request, response, SafetyTier.MUTATE)
+    except Exception as exc:  # noqa: BLE001
+        evidence_id, why = None, f"{type(exc).__name__}: {exc}"
+    else:
+        why = "the store returned no id"
+    if not evidence_id:
+        raise SystemExit(
+            f"the response to {response.request.method} {response.request.url} "
+            f"was not captured ({why}), so nothing can stand on it. Nothing "
+            f"further will be sent; the journal already records the intent."
+        )
+    return evidence_id
+
+
+def owed(ledger: dict, only: list[str] | None) -> list[dict]:
+    """Every (finding, report) pair that owes a verification, with its evidence.
+
+    Reads the obligation rather than re-deriving who is owed one. The rule
+    lives in qa/fold.py where it is tested; a second copy here would be a
+    second rule.
+    """
+    work: list[dict] = []
+    for fid, row in sorted(ledger["findings"].items()):
+        if only and fid not in only:
+            continue
+        reports = (row.get("obligations") or {}).get("verification_owed") or []
+        if not reports:
+            continue
+
+        provenance = row.get("provenance") or {}
+        if not provenance.get("measured_at"):
+            raise SystemExit(
+                f"{fid} owes a verification but carries no provenance."
+                f"measured_at, so the figures behind it were never measured by "
+                f"an admissible run. Run the checks first."
+            )
+        adjudicated = (row["check"].get("adjudicated_by") or {})
+        run_id = adjudicated.get("run_id")
+        if not run_id:
+            raise SystemExit(f"{fid} is PASSING with no run that adjudicated it")
+
+        # Rule 6: only a level-V run may verify a fix. Sending anything less
+        # would be a claim our own rules do not let us make about ourselves.
+        run = load_run(run_id)
+        verdict = admissibility(run)
+        if verdict.level != "V":
+            raise SystemExit(
+                f"{fid} was adjudicated by {run_id}, which is level "
+                f"{verdict.level}: {', '.join(verdict.reasons) or 'no reason given'}.\n"
+                f"Only a level-V run -- clean tree, tagged preregistration at "
+                f"HEAD -- may verify a fix. Nothing sent."
+            )
+
+        for report_id in reports:
+            work.append({
+                "finding_id": fid,
+                "report_id": report_id,
+                "fingerprint": row["check"]["pinned_fingerprint"],
+                "run_id": run_id,
+                "checked_at": adjudicated.get("at"),
+                "tree_sha": run.get("git_head"),
+                "prereg_id": run.get("prereg_id"),
+                "checks": row.get("checks") or [],
+                "title": row.get("title") or fid,
+            })
+    return work
+
+
+def body(item: dict) -> dict:
+    checks = "\n".join(f"  {c}" for c in item["checks"])
+    evidence = (
+        f"Independent re-check by the QA agent for hunter expire76.\n\n"
+        f"VERDICT pass -- the check that recorded this defect now passes, under "
+        f"the same definition it failed under.\n\n"
+        f"WHAT THE FINGERPRINT IS: a SHA-256 of the check function's parsed "
+        f"syntax tree. It changes when the check's logic changes and not when "
+        f"its comments or formatting do. Because it matches the one recorded at "
+        f"the failure, this is the same test, not a rewritten one that happens "
+        f"to pass.\n\n"
+        f"RUN: {item['run_id']}, preregistration {item['prereg_id']}, on a clean "
+        f"working tree at commit {item['tree_sha']}. The selector was frozen and "
+        f"git-tagged BEFORE the run, so the set of checks could not be narrowed "
+        f"after seeing the results.\n\n"
+        f"CHECK(S) THIS COVERS:\n{checks}\n\n"
+        f"REPRODUCE: github.com/zakutana/qa-cymetica at {item['tree_sha']}, then\n"
+        f"  pytest {item['checks'][0] if item['checks'] else ''}\n\n"
+        f"FINDING {item['finding_id']}: {item['title']}"
+    )
+    return {
+        "verdict": "pass",
+        "test_run_id": item["run_id"],
+        "fingerprint": item["fingerprint"],
+        "tree_sha": item["tree_sha"],
+        "checked_at": item["checked_at"],
+        "evidence": evidence,
+    }
+
+
+def already_sent(client, report_id: int) -> set[tuple]:
+    """(fingerprint, verdict) pairs their server already holds for this report.
+
+    Rule 8, and the reason submit.py reads the tracker before filing: a read
+    that failed is not a server with nothing on it. Refusing here costs one
+    verification; guessing costs a duplicate that neither side can tell from a
+    real second opinion.
+    """
+    response = client.get(f"/api/v1/bounty/reports/{report_id}/verifications")
+    if response.status_code == 404:
+        # No verifications yet is a legitimate shape for a report nobody has
+        # verified, and it is distinguishable from a failed read.
+        return set()
+    if response.status_code != 200:
+        raise SystemExit(
+            f"  ! verifications for #{report_id} answered HTTP "
+            f"{response.status_code}, so what they already hold cannot be "
+            f"known. Refusing to send blind."
+        )
+    try:
+        payload = response.json()
+    except ValueError:
+        raise SystemExit(f"  ! verifications for #{report_id} was not JSON")
+    rows = payload.get("verifications") if isinstance(payload, dict) else payload
+    return {((r or {}).get("fingerprint"), (r or {}).get("verdict"))
+            for r in (rows or [])}
+
+
+def send(client, items: list[dict], pause: int = PAUSE_SECONDS) -> list[dict]:
+    results: list[dict] = []
+    token = CURRENT_TIER.set(SafetyTier.MUTATE)
+    try:
+        for index, item in enumerate(items):
+            payload = body(item)
+            at = _now()
+            common = {
+                "at": at, "by": "agent", "source": "scripts/verify.py",
+                "finding_id": item["finding_id"], "report_id": item["report_id"],
+                "fingerprint": item["fingerprint"], "run_id": item["run_id"],
+                "verdict": "pass", "tree_sha": item["tree_sha"],
+                "checked_at": item["checked_at"],
+            }
+            append_event({**common, "type": "verification_intent"})
+
+            try:
+                response = client.post(_path(item["report_id"]), json=payload)
+            except Exception as exc:  # noqa: BLE001
+                append_event({**common, "type": "verification_outcome",
+                              "at": _now(), "outcome": "unknown",
+                              "reason": f"{type(exc).__name__}: {exc}"})
+                results.append({**item, "outcome": "unknown", "error": str(exc)})
+                continue
+
+            evidence_id = _capture(response)
+            status = response.status_code
+            outcome = "accepted" if 200 <= status < 300 else "unknown"
+            append_event({**common, "type": "verification_outcome",
+                          "at": _now(), "outcome": outcome,
+                          "http_status": status, "evidence_id": evidence_id})
+            results.append({**item, "outcome": outcome, "http_status": status})
+
+            remaining = response.headers.get("x-ratelimit-remaining")
+            if remaining is not None and int(remaining) < 10:
+                # Named, not dropped. submit.py breaks here and the rest of the
+                # batch vanishes with no event and no line of output.
+                for skipped in items[index + 1:]:
+                    results.append({**skipped, "outcome": "not attempted",
+                                    "error": f"stopped: {remaining} requests "
+                                             f"left in their rate limit"})
+                break
+            if pause and index < len(items) - 1:
+                time.sleep(pause)
+    finally:
+        CURRENT_TIER.reset(token)
+    return results
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(prog="verify.py", description=__doc__)
+    parser.add_argument("--confirm", action="store_true",
+                        help="actually send. Without it nothing leaves.")
+    parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--only", action="append", metavar="FINDING_ID")
+    args = parser.parse_args(argv)
+    if not (args.confirm or args.dry_run):
+        parser.error("pass --dry-run to preview, --confirm to send")
+
+    load_dotenv()
+    work = owed(load_ledger(), args.only)
+    if not work:
+        print("nothing is owed a verification.")
+        return 0
+    print(f"{len(work)} verification(s) owed across "
+          f"{len({w['report_id'] for w in work})} report(s)")
+
+    if args.dry_run:
+        for item in work:
+            print("=" * 78)
+            print(f"POST {_path(item['report_id'])}   [{item['finding_id']}]")
+            print(json.dumps(body(item), indent=2)[:1400])
+        print(f"\n{len(work)} composed. Nothing sent (--dry-run).")
+        return 0
+
+    install_client_guard()
+    registry = EndpointRegistry.load()
+    registry.mutate_enabled = True
+    registry.mutate_allowed_hosts = frozenset({"cymetica.com"})
+    client = build_client(identities()["trusted"], registry, timeout=60.0)
+    try:
+        token = CURRENT_TIER.set(SafetyTier.SAFE)
+        try:
+            held: dict[int, set] = {}
+            for item in work:
+                rid = item["report_id"]
+                if rid not in held:
+                    held[rid] = already_sent(client, rid)
+        finally:
+            CURRENT_TIER.reset(token)
+
+        fresh = []
+        for item in work:
+            if (item["fingerprint"], "pass") in held[item["report_id"]]:
+                print(f"  SKIP  {item['finding_id']} on #{item['report_id']}: "
+                      f"they already hold this fingerprint")
+                continue
+            fresh.append(item)
+
+        # After deduplication, not before: requests we were never going to make
+        # should not spend the budget.
+        batch = fresh[:MAX_PER_RUN]
+        if len(fresh) > MAX_PER_RUN:
+            print(f"  {len(fresh)} to send, {MAX_PER_RUN} per run -- "
+                  f"re-run to continue; the obligation resumes it")
+
+        for result in send(client, batch):
+            mark = {"accepted": "SENT ", "unknown": "?    ",
+                    "not attempted": "-    "}.get(result["outcome"], "?    ")
+            print(f"  {mark} {result['finding_id']} on #{result['report_id']}"
+                  + (f": {result.get('error') or result.get('http_status')}"
+                     if result["outcome"] != "accepted" else ""))
+    finally:
+        client.close()
+
+    print(f"\n-> {journal_path()}")
+    print("   run scripts/ledger.py to fold these events into the ledger")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

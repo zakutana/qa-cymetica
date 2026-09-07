@@ -54,7 +54,8 @@ BLOCK_REASONS = (
     "results_not_collected", "exit_status_disagrees",
     "git_dirty", "no_prereg", "prereg_commit_mismatch",
 )
-OBLIGATIONS = ("reverify", "repair_check", "reopen", "retractions", "disputed")
+OBLIGATIONS = ("reverify", "repair_check", "reopen", "retractions", "disputed",
+               "verification_owed")
 
 
 def _ledger() -> dict:
@@ -228,6 +229,15 @@ def _obligations(ledger: dict, events: list[dict]) -> tuple[Counter, dict[str, s
                 if (_at(check, when) != "PASSING"
                         and _at(filing, when) not in ("WITHDRAWN", "SUPERSEDED")):
                     note("disputed", when)
+
+        # Paid, then still owed. A verification we sent is proof the debt had
+        # come due, because that is the only thing the sender acts on -- so
+        # counting the payments recovers the history the row itself no longer
+        # shows. Anything still outstanding is added from the current row.
+        for sent in (row.get("filing") or {}).get("verifications") or []:
+            note("verification_owed", sent.get("at") or "")
+        for _ in (row.get("obligations") or {}).get("verification_owed") or []:
+            note("verification_owed", "")
 
         # Snapshot: nothing records a regression that has since been resolved.
         if row.get("regressions") and (row.get("obligations") or {}).get("reopen"):

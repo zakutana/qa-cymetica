@@ -570,3 +570,101 @@ def test_a_refused_ledger_still_leaves_its_attestation_tracked(monkeypatch):
         f"journal cites a record no clone can read. Track it beside the "
         f"attestation, not after the write."
     )
+
+
+# ---------------------------------------------------------------------------
+# VER -- the outbound claim, and the two things that make it honest
+# ---------------------------------------------------------------------------
+def _owed_ledger(fid="CYM-a", report_id=46, run_id="run-1"):
+    return {"schema": 2, "findings": {fid: {
+        "id": fid, "title": "t", "checks": ["tests/rest/test_x.py::test_y"],
+        "provenance": {"run_id": run_id, "measured_at": "2026-09-07T12:40:29+00:00"},
+        "check": {"state": "PASSING", "pinned_fingerprint": "fp-1",
+                  "adjudicated_by": {"run_id": run_id, "at": "2026-09-07T12:40:29+00:00"}},
+        "filing": {"state": "FIX_CLAIMED", "reports": [{"report_id": report_id}],
+                   "refused": [], "verifications": []},
+        "obligations": {"verification_owed": [report_id]},
+    }}}
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_verification_is_refused_unless_the_run_could_verify(monkeypatch):
+    """VER: rule 6, applied to the one place it leaves the building.
+
+    Inside this repository a level-R run simply moves nothing, and the ledger
+    is the only thing that notices. A verification is different: it is a
+    sentence sent to somebody else, and "our check passes" said on the back of
+    a dirty tree or an untagged selector is a claim our own rules do not let us
+    make about ourselves. So the level is checked at the point of sending, not
+    inferred from the row having reached PASSING.
+
+    Deliberately fatal rather than a skip. A batch where some items are
+    verified and some quietly are not is worse than one that refuses: the
+    operator would have to reconstruct which was which from the journal.
+    """
+    verify = _module("scripts/verify.py")
+    ledger = _owed_ledger()
+
+    class Verdict:
+        def __init__(self, level, reasons):
+            self.level, self.reasons = level, reasons
+
+    monkeypatch.setattr(verify, "load_run", lambda rid: {"run_id": rid})
+
+    monkeypatch.setattr(verify, "admissibility", lambda run: Verdict("R", ["git_dirty"]))
+    with pytest.raises(SystemExit, match="level R"):
+        verify.owed(ledger, None)
+
+    monkeypatch.setattr(verify, "admissibility", lambda run: Verdict("none", ["legacy_schema"]))
+    with pytest.raises(SystemExit, match="Nothing sent"):
+        verify.owed(ledger, None)
+
+    # The control: with a level-V run the same ledger yields the work, so the
+    # refusals above are the level and not something else about the fixture.
+    monkeypatch.setattr(verify, "admissibility", lambda run: Verdict("V", []))
+    work = verify.owed(ledger, None)
+    assert [(w["finding_id"], w["report_id"]) for w in work] == [("CYM-a", 46)]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_verification_whose_response_cannot_be_kept_is_not_claimed():
+    """VER: the capture is part of the transaction, not a courtesy afterwards.
+
+    submit.py's `_capture` swallows any exception and returns None. The cost
+    shows up one layer away: qa/fold.py refuses an outcome with no evidence_id,
+    so the request went out, the journal recorded it, and the ledger cannot use
+    it -- a claim we made and cannot stand behind. Here it stops the run.
+    """
+    verify = _module("scripts/verify.py")
+
+    class Boom:
+        request = httpx.Request("POST", "https://cymetica.com/api/v1/bounty/reports/46/verification")
+
+    with pytest.raises(SystemExit, match="was not captured"):
+        verify._capture(Boom())
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_verifications_they_already_hold_are_not_sent_again():
+    """VER: and a read that failed is not a server holding nothing (rule 8).
+
+    The obligation already stops us re-sending what OUR journal records. This
+    is the other half: their server is the authority on what they have, and
+    submit.py exists because the two once disagreed -- report #55 was on their
+    server and not in our log.
+    """
+    verify = _module("scripts/verify.py")
+
+    held = _client(lambda r: httpx.Response(
+        200, json={"verifications": [{"fingerprint": "fp-1", "verdict": "pass"},
+                                     {"fingerprint": "fp-old", "verdict": "fail"}]}))
+    assert verify.already_sent(held, 46) == {("fp-1", "pass"), ("fp-old", "fail")}
+
+    # No verifications yet is a real answer; a failed read is not.
+    empty = _client(lambda r: httpx.Response(404, text="not found"))
+    assert verify.already_sent(empty, 46) == set()
+
+    for status in (401, 500, 503):
+        broken = _client(lambda r, s=status: httpx.Response(s, text="nope"))
+        with pytest.raises(SystemExit, match="Refusing to send blind"):
+            verify.already_sent(broken, 46)

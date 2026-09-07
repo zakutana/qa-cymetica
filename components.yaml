@@ -368,6 +368,22 @@ endpoints:
        hunter_name, wallet_address]
     inert_params: []
 
+  # The second write, added 2026-09-07 when they published the endpoint and
+  # asked for the verifications we were holding. Not probe_only, for the same
+  # reason as bounty.submit: recording our own re-check IS the intended action.
+  # It carries no figure of theirs and moves no money -- what it asserts is
+  # that a check of ours passes under the fingerprint it last failed under.
+  #
+  # Specificity 5, so it wins over any future /reports/{id} rule, and
+  # bounty.submit's regex (^/api/v1/bounty/reports/?$) does not reach it.
+  - id: bounty.verification
+    path: /api/v1/bounty/reports/{id}/verification
+    methods: [POST]
+    component: rest.support
+    executable_params:
+      [verdict, evidence, test_run_id, fingerprint, tree_sha, checked_at]
+    inert_params: []
+
   - id: bounty.submit_with_screenshots
     path: /api/v1/bounty/reports/with-screenshots
     methods: [POST]

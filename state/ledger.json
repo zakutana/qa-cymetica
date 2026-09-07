@@ -57,7 +57,8 @@
             "status": "invalid"
           }
         ],
-        "refused": []
+        "refused": [],
+        "verifications": []
       },
       "transitions": [
         {
@@ -112,6 +113,7 @@
         "repair_check": false,
         "reopen": [],
         "retractions": [],
+        "verification_owed": [],
         "disputed": []
       },
       "reproduced_in": [
@@ -179,7 +181,8 @@
             "status": "fixed"
           }
         ],
-        "refused": []
+        "refused": [],
+        "verifications": []
       },
       "transitions": [
         {
@@ -243,6 +246,9 @@
         "repair_check": false,
         "reopen": [],
         "retractions": [],
+        "verification_owed": [
+          47
+        ],
         "disputed": []
       },
       "reproduced_in": [
@@ -320,7 +326,8 @@
             "status": "fixed"
           }
         ],
-        "refused": []
+        "refused": [],
+        "verifications": []
       },
       "transitions": [
         {
@@ -393,6 +400,9 @@
         "repair_check": false,
         "reopen": [],
         "retractions": [],
+        "verification_owed": [
+          55
+        ],
         "disputed": []
       }
     },
@@ -521,7 +531,8 @@
           "at": "2026-09-04T13:27:44+00:00"
         },
         "reports": [],
-        "refused": []
+        "refused": [],
+        "verifications": []
       },
       "transitions": [
         {
@@ -558,6 +569,7 @@
         "repair_check": false,
         "reopen": [],
         "retractions": [],
+        "verification_owed": [],
         "disputed": []
       }
     },
@@ -653,7 +665,8 @@
             "status": "fixed"
           }
         ],
-        "refused": []
+        "refused": [],
+        "verifications": []
       },
       "transitions": [
         {
@@ -717,6 +730,7 @@
         "repair_check": false,
         "reopen": [],
         "retractions": [],
+        "verification_owed": [],
         "disputed": []
       },
       "reproduced_in": [
@@ -810,7 +824,8 @@
             "status": "fixed"
           }
         ],
-        "refused": []
+        "refused": [],
+        "verifications": []
       },
       "transitions": [
         {
@@ -856,6 +871,9 @@
         "repair_check": false,
         "reopen": [],
         "retractions": [],
+        "verification_owed": [
+          56
+        ],
         "disputed": []
       },
       "reproduced_in": [
@@ -920,7 +938,8 @@
             "status": "fixed"
           }
         ],
-        "refused": []
+        "refused": [],
+        "verifications": []
       },
       "transitions": [
         {
@@ -975,6 +994,9 @@
         "repair_check": false,
         "reopen": [],
         "retractions": [],
+        "verification_owed": [
+          50
+        ],
         "disputed": []
       }
     },
@@ -1026,7 +1048,8 @@
             "status": "fixed"
           }
         ],
-        "refused": []
+        "refused": [],
+        "verifications": []
       },
       "transitions": [
         {
@@ -1072,6 +1095,9 @@
         "repair_check": false,
         "reopen": [],
         "retractions": [],
+        "verification_owed": [
+          46
+        ],
         "disputed": []
       }
     },
@@ -1157,7 +1183,8 @@
             "status": "fixed"
           }
         ],
-        "refused": []
+        "refused": [],
+        "verifications": []
       },
       "transitions": [
         {
@@ -1203,6 +1230,9 @@
         "repair_check": false,
         "reopen": [],
         "retractions": [],
+        "verification_owed": [
+          48
+        ],
         "disputed": []
       }
     },
@@ -1263,7 +1293,8 @@
             "status": "fixed"
           }
         ],
-        "refused": []
+        "refused": [],
+        "verifications": []
       },
       "transitions": [
         {
@@ -1309,6 +1340,9 @@
         "repair_check": false,
         "reopen": [],
         "retractions": [],
+        "verification_owed": [
+          52
+        ],
         "disputed": []
       }
     },
@@ -1360,7 +1394,8 @@
             "status": "fixed"
           }
         ],
-        "refused": []
+        "refused": [],
+        "verifications": []
       },
       "transitions": [
         {
@@ -1397,6 +1432,7 @@
         "repair_check": false,
         "reopen": [],
         "retractions": [],
+        "verification_owed": [],
         "disputed": []
       }
     },
@@ -1459,7 +1495,8 @@
             "status": "invalid"
           }
         ],
-        "refused": []
+        "refused": [],
+        "verifications": []
       },
       "transitions": [
         {
@@ -1514,6 +1551,10 @@
         "repair_check": false,
         "reopen": [],
         "retractions": [],
+        "verification_owed": [
+          52,
+          62
+        ],
         "disputed": []
       },
       "reproduced_in": [
@@ -1580,7 +1621,8 @@
             "status": "fixed"
           }
         ],
-        "refused": []
+        "refused": [],
+        "verifications": []
       },
       "transitions": [
         {
@@ -1626,6 +1668,9 @@
         "repair_check": false,
         "reopen": [],
         "retractions": [],
+        "verification_owed": [
+          52
+        ],
         "disputed": []
       }
     },
@@ -1699,7 +1744,8 @@
             "status": "pending"
           }
         ],
-        "refused": []
+        "refused": [],
+        "verifications": []
       },
       "transitions": [
         {
@@ -1820,6 +1866,7 @@
           74
         ],
         "retractions": [],
+        "verification_owed": [],
         "disputed": []
       },
       "reproduced_in": [
@@ -1917,7 +1964,8 @@
             "status": "fixed"
           }
         ],
-        "refused": []
+        "refused": [],
+        "verifications": []
       },
       "transitions": [
         {
@@ -1981,6 +2029,10 @@
         "repair_check": false,
         "reopen": [],
         "retractions": [],
+        "verification_owed": [
+          49,
+          59
+        ],
         "disputed": []
       },
       "reproduced_in": [
@@ -2056,7 +2108,8 @@
             "status": "fixed"
           }
         ],
-        "refused": []
+        "refused": [],
+        "verifications": []
       },
       "transitions": [
         {
@@ -2093,6 +2146,7 @@
         "repair_check": false,
         "reopen": [],
         "retractions": [],
+        "verification_owed": [],
         "disputed": []
       }
     },
@@ -2225,7 +2279,8 @@
             "status": "fixed"
           }
         ],
-        "refused": []
+        "refused": [],
+        "verifications": []
       },
       "transitions": [
         {
@@ -2280,6 +2335,9 @@
         "repair_check": false,
         "reopen": [],
         "retractions": [],
+        "verification_owed": [
+          50
+        ],
         "disputed": []
       }
     },
@@ -2369,7 +2427,8 @@
             "status": "fixed"
           }
         ],
-        "refused": []
+        "refused": [],
+        "verifications": []
       },
       "transitions": [
         {
@@ -2415,6 +2474,9 @@
         "repair_check": false,
         "reopen": [],
         "retractions": [],
+        "verification_owed": [
+          51
+        ],
         "disputed": []
       }
     },
@@ -2504,7 +2566,8 @@
             "status": "fixed"
           }
         ],
-        "refused": []
+        "refused": [],
+        "verifications": []
       },
       "transitions": [
         {
@@ -2550,6 +2613,9 @@
         "repair_check": false,
         "reopen": [],
         "retractions": [],
+        "verification_owed": [
+          51
+        ],
         "disputed": []
       }
     },
@@ -2607,7 +2673,8 @@
           "at": "2026-09-04T13:27:44+00:00"
         },
         "reports": [],
-        "refused": []
+        "refused": [],
+        "verifications": []
       },
       "transitions": [
         {
@@ -2626,6 +2693,7 @@
         "repair_check": false,
         "reopen": [],
         "retractions": [],
+        "verification_owed": [],
         "disputed": []
       }
     },
@@ -2671,7 +2739,8 @@
             "status": "fixed"
           }
         ],
-        "refused": []
+        "refused": [],
+        "verifications": []
       },
       "transitions": [
         {
@@ -2744,6 +2813,9 @@
         "repair_check": false,
         "reopen": [],
         "retractions": [],
+        "verification_owed": [
+          61
+        ],
         "disputed": []
       },
       "reproduced_in": [
@@ -2812,7 +2884,8 @@
           "at": "2026-09-05T20:45:39+00:00"
         },
         "reports": [],
-        "refused": []
+        "refused": [],
+        "verifications": []
       },
       "transitions": [
         {
@@ -2849,6 +2922,7 @@
         "repair_check": false,
         "reopen": [],
         "retractions": [],
+        "verification_owed": [],
         "disputed": []
       },
       "detail": {
@@ -2907,7 +2981,8 @@
           "at": "2026-09-05T20:45:39+00:00"
         },
         "reports": [],
-        "refused": []
+        "refused": [],
+        "verifications": []
       },
       "transitions": [
         {
@@ -2944,6 +3019,7 @@
         "repair_check": false,
         "reopen": [],
         "retractions": [],
+        "verification_owed": [],
         "disputed": []
       },
       "detail": {
@@ -2983,7 +3059,8 @@
           "at": "2026-09-05T16:45:01+00:00"
         },
         "reports": [],
-        "refused": []
+        "refused": [],
+        "verifications": []
       },
       "transitions": [
         {
@@ -3056,6 +3133,7 @@
         "repair_check": false,
         "reopen": [],
         "retractions": [],
+        "verification_owed": [],
         "disputed": []
       }
     },
@@ -3088,7 +3166,8 @@
             "status": "fixed"
           }
         ],
-        "refused": []
+        "refused": [],
+        "verifications": []
       },
       "transitions": [
         {
@@ -3174,6 +3253,9 @@
         "repair_check": false,
         "reopen": [],
         "retractions": [],
+        "verification_owed": [
+          64
+        ],
         "disputed": []
       }
     },
@@ -3212,7 +3294,8 @@
         ],
         "refused": [
           "filing_outcome at 2026-09-05T21:03:29+00:00 carries no evidence_id -- the response it reports was never captured"
-        ]
+        ],
+        "verifications": []
       },
       "transitions": [
         {
@@ -3327,6 +3410,10 @@
         "repair_check": false,
         "reopen": [],
         "retractions": [],
+        "verification_owed": [
+          63,
+          71
+        ],
         "disputed": []
       }
     },
@@ -3359,7 +3446,8 @@
             "status": "fixed"
           }
         ],
-        "refused": []
+        "refused": [],
+        "verifications": []
       },
       "transitions": [
         {
@@ -3434,6 +3522,9 @@
         "repair_check": false,
         "reopen": [],
         "retractions": [],
+        "verification_owed": [
+          65
+        ],
         "disputed": []
       }
     },
@@ -3466,7 +3557,8 @@
             "status": "fixed"
           }
         ],
-        "refused": []
+        "refused": [],
+        "verifications": []
       },
       "transitions": [
         {
@@ -3588,6 +3680,9 @@
         "repair_check": false,
         "reopen": [],
         "retractions": [],
+        "verification_owed": [
+          66
+        ],
         "disputed": []
       }
     },
@@ -3620,7 +3715,8 @@
             "status": "fixed"
           }
         ],
-        "refused": []
+        "refused": [],
+        "verifications": []
       },
       "transitions": [
         {
@@ -3704,6 +3800,9 @@
         "repair_check": false,
         "reopen": [],
         "retractions": [],
+        "verification_owed": [
+          67
+        ],
         "disputed": []
       }
     },
@@ -3740,7 +3839,8 @@
             "status": "fixed"
           }
         ],
-        "refused": []
+        "refused": [],
+        "verifications": []
       },
       "transitions": [
         {
@@ -3865,6 +3965,10 @@
         "repair_check": false,
         "reopen": [],
         "retractions": [],
+        "verification_owed": [
+          67,
+          69
+        ],
         "disputed": []
       }
     },
@@ -3901,7 +4005,8 @@
             "status": "fixed"
           }
         ],
-        "refused": []
+        "refused": [],
+        "verifications": []
       },
       "transitions": [
         {
@@ -3987,6 +4092,10 @@
         "repair_check": false,
         "reopen": [],
         "retractions": [],
+        "verification_owed": [
+          68,
+          70
+        ],
         "disputed": []
       }
     },
@@ -4019,7 +4128,8 @@
             "status": "fixed"
           }
         ],
-        "refused": []
+        "refused": [],
+        "verifications": []
       },
       "transitions": [
         {
@@ -4140,6 +4250,9 @@
         "repair_check": false,
         "reopen": [],
         "retractions": [],
+        "verification_owed": [
+          73
+        ],
         "disputed": []
       }
     }
