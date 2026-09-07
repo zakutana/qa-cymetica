@@ -775,18 +775,48 @@ def test_a_rejected_report_is_not_the_same_as_no_answer():
     API actually sends that are not "fixed", `invalid` (45 occurrences) and
     `validated` (10) both landed on RAISED -- the state that means "filed, no
     answer". Being told our report is worthless read as silence.
+
+    **And the axis still reads them that way, deliberately.** Mapping `invalid`
+    onto REPLIED was written on 2026-09-07 and the fold refused to write it:
+    this axis is a replay of the journal, so a change to how a status is READ
+    rewrites the history of every row that ever carried it -- five rows would
+    have grown a REPLIED between transitions already recorded, and write_ledger
+    refuses a ledger whose transitions are not an extension of the ones on
+    disk. That guard is correct. RAISED is what we believed on 2026-09-04, and
+    a transition log records what we believed, not what we later learned.
+
+    So this test pins the shape of the compromise, in both directions: the
+    status vocabulary does not move the axis beyond a fix claim, REPLIED is
+    reachable only through an explicit `reply` event, and the answer we were
+    missing is delivered by the `disputed` obligation instead -- which reads
+    the report's current status and touches no transition. The next test is
+    that half. Do not "fix" this one by mapping the statuses; fix it by
+    freezing the history first, and then it is a migration, not a rule.
     """
     from qa.fold import fold
 
-    def filing(status):
+    def filing(status, events=None):
         state = ledger(row("CYM-a", check_state="REPRODUCING"))
-        out = fold(state, events=_filed("CYM-a", 46, status))
+        out = fold(state, events=events or _filed("CYM-a", 46, status))
         return out["findings"]["CYM-a"]["filing"]
 
     assert filing("pending")["state"] == "RAISED",         "pending is the vendor not having answered yet"
     assert filing("fixed")["state"] == "FIX_CLAIMED"
-    assert filing("validated")["state"] == "REPLIED",         "they confirmed the defect is real; that is engagement, not silence"
-    assert filing("invalid")["state"] == "REPLIED",         "they rejected the report; that is an answer, not silence"
+    assert filing("paid")["state"] == "FIX_CLAIMED",         "they paid for it, which is a fix claim with money behind it"
+
+    for engaged in ("validated", "invalid", "triaging", "ready_for_review"):
+        assert filing(engaged)["state"] == "RAISED", (
+            f"{engaged!r} moved the axis past RAISED. That reading is more "
+            f"accurate and it is also retroactive -- see this docstring before "
+            f"changing it back")
+        assert filing(engaged)["reports"][0]["status"] == engaged,             "the status itself is recorded on the report, which is what disputed reads"
+
+    replied = fold(ledger(row("CYM-a", check_state="REPRODUCING")),
+                   events=_filed("CYM-a", 46, "invalid") + [
+                       event("reply", at="2026-09-05T10:00:00+00:00",
+                             report_id=46, findings=["CYM-a"],
+                             evidence_id="ev-3")])
+    assert replied["findings"]["CYM-a"]["filing"]["state"] == "REPLIED",         "an explicit reply event is the one route to REPLIED, and it still works"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

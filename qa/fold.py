@@ -81,6 +81,13 @@ _REJECTED_STATUSES = frozenset({"invalid", "duplicate", "wontfix"})
 # They engaged with the report without claiming a fix. openclaw_testing and
 # ready_for_review are their own QA stages, which is work on the report and not
 # a claim about it.
+#
+# NOT consulted by the fold. This names what we KNOW means engagement; the
+# FILING axis does not move on it, because that axis is a replay and reading a
+# status differently rewrites history the forward-only guard protects. It is
+# used to tell a status we understand from one we have never seen -- which is
+# what tests/rest/test_status_vocabulary_is_mapped.py holds against their
+# published enum. See the vendor_status branch below for the whole of it.
 _REPLIED_STATUSES = _REJECTED_STATUSES | frozenset({
     "triaging", "validated", "in_progress", "openclaw_testing",
     "ready_for_review",
@@ -478,12 +485,21 @@ def _apply_events(rows: dict, events: Iterable[dict]) -> None:
                 for report in rows[fid]["filing"]["reports"]:
                     if report["report_id"] == event.get("report_id"):
                         report["status"] = event.get("status")
-                if status in _FIX_CLAIMED_STATUSES:
-                    to = "FIX_CLAIMED"
-                elif status in _REPLIED_STATUSES:
-                    to = "REPLIED"
-                else:
-                    to = "RAISED"
+                # _REPLIED_STATUSES is deliberately NOT consulted here. Reading
+                # `invalid` as REPLIED is more accurate, and it is also
+                # retroactive: this axis is rebuilt from the journal on every
+                # fold, so changing how a status is read rewrites the history
+                # of every row that ever carried it. Rows that recorded
+                # RAISED -> FIX_CLAIMED would gain a REPLIED in between, and
+                # write_ledger refuses a ledger whose transitions are not an
+                # extension of the ones already written. That guard is right:
+                # RAISED is what we believed at the time, and the transition
+                # log says what we believed, not what we later learned.
+                #
+                # The value that mattered is delivered instead by the
+                # `disputed` obligation, which reads the report's CURRENT
+                # status and touches no transition.
+                to = "FIX_CLAIMED" if status in _FIX_CLAIMED_STATUSES else "RAISED"
                 _move_filing(rows[fid], to, event)
 
         elif etype == "reply":

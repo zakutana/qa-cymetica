@@ -270,3 +270,49 @@ def test_no_check_enumerates_the_answer_it_expects(claim):
                 f"values.\n  {spec}\nAnchor on a place in the document instead "
                 f"-- scope: or list_after:."
             )
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_title_is_found_on_the_page_however_the_page_quotes_it():
+    """A check that reads punctuation is measuring the wrong thing.
+
+    2026-09-07, and the fourth time a red check turned out to be ours.
+    `test_filed_reports_reach_the_work_tracker` asked whether a report of ours
+    appears on /leaderboard/bugs by looking for the first 45 characters of its
+    title in the page text. The page embeds those titles in a JSON blob, so
+    report #73 was published as "The bounty programme\u0027s own reward
+    totals disagree..." -- and the substring stopped matching at character 21,
+    the apostrophe. The check reported the report as absent from a tracker
+    that was displaying it, against a row that had been VERIFIED FIXED, which
+    is a false regression one fold away from being filed back to the vendor.
+
+    The family this belongs to is the module's subject: a check that cannot
+    fail for the reason it names. This one could only fail for a reason it did
+    not name. So the guard is the encodings themselves -- every way a page can
+    legitimately write the same title -- and it is a unit test because the
+    live page is not required to keep any of them.
+    """
+    from tests.rest.test_bounty_pipeline import _PROBE_CHARS, _probe, _squash
+
+    title = "The bounty programme's own reward totals disagree: stats records 36"
+    renderings = {
+        "json escape": 'x{"title": "The bounty programme\u0027s own reward totals disagree: stats records 36"}',
+        "html entity": "<h3>The bounty programme&#39;s own reward totals disagree: stats records 36</h3>",
+        "curly quote": "<h3>The bounty programme\u2019s own reward totals disagree: stats records 36</h3>",
+        "re-wrapped":  "<h3>The bounty programme's own\n  reward totals\tdisagree: stats records 36</h3>",
+        "plain":       "<h3>" + title + "</h3>",
+    }
+    for name, page in renderings.items():
+        assert _probe(title) in _squash(page), (
+            f"a title the page renders with a {name} reads as absent, and the "
+            f"check would call the report missing from a tracker showing it")
+
+    assert _probe(title) not in _squash("<h3>Some other report entirely</h3>"), \
+        "the probe matches a page that does not carry the title at all"
+
+    # The probe has to be long enough that two of our own titles cannot
+    # collide -- several share an opening clause.
+    assert len(_probe(title)) == _PROBE_CHARS
+    assert _probe("The bounty programme's own reward totals disagree") \
+        != _probe("The bounty programme's own tier table contradicts"), \
+        "two real titles squash to the same probe; _PROBE_CHARS is too short"

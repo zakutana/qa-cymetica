@@ -177,6 +177,13 @@ def _obligations(ledger: dict, events: list[dict]) -> tuple[Counter, dict[str, s
     needs a vendor status as well, and the journal has those. `reopen` needs
     the regression list, which is only ever current -- that one is still a
     snapshot and the report says so.
+
+    `disputed` reads _REJECTED_STATUSES straight off the journal's events,
+    which the fold does NOT do -- the fold leaves the axis at RAISED for those
+    statuses so it does not rewrite recorded transitions. That is fine here and
+    it is worth saying out loud: this is analysis over history, it writes
+    nothing, and its count of a disputed report can therefore be larger than
+    anything the ledger's own transitions would show.
     """
     seen: Counter = Counter()
     last: dict[str, str] = {}

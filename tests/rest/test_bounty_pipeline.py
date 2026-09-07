@@ -13,8 +13,10 @@ direction.
 
 from __future__ import annotations
 
+import html
 import json
 import os
+import re
 from pathlib import Path
 
 from qa.marks import SafetyTier, qa
@@ -25,6 +27,42 @@ REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 TRACKER = "/api/v1/bounty/reports"
 MINE = "/api/v1/bounty/my-reports"
 WORK_TRACKER = "/leaderboard/bugs"
+
+# How many characters of a title have to be found before we believe the page
+# is showing that report. Long enough that no two of our titles collide,
+# short enough to survive a truncated heading.
+_PROBE_CHARS = 38
+
+
+_JSON_ESCAPE = re.compile(r"\\u([0-9a-fA-F]{4})")
+
+
+def _squash(text: str) -> str:
+    """Decode how the text was quoted, then keep letters and digits only.
+
+    The page carries our titles inside an embedded JSON blob, so an apostrophe
+    reaches it as `\\u0027`: report #73's title is published as "The bounty
+    programme\\u0027s own reward totals disagree...". A raw substring of the
+    title we sent therefore stopped matching at character 21, and on
+    2026-09-07 this check reported a report as missing from the tracker while
+    the tracker was displaying it. The defect was in the punctuation, and
+    punctuation is not what the check is about.
+
+    Dropping punctuation is not enough on its own, which the guard in
+    tests/meta/test_pipeline_check_quality.py caught before this shipped: an
+    escape sequence is mostly alphanumeric, so `&#39;` leaves a `39` and
+    `\\u0027` a `u0027` sitting in the middle of the word. The escapes have to
+    be decoded first, and only then does squashing ask the question the check
+    means to ask -- is this title on the page -- without asserting anything
+    about how the page chose to write a quote.
+    """
+    decoded = html.unescape(
+        _JSON_ESCAPE.sub(lambda m: chr(int(m.group(1), 16)), text))
+    return "".join(c for c in decoded.lower() if c.isalnum())
+
+
+def _probe(title: str) -> str:
+    return _squash(title)[:_PROBE_CHARS]
 
 # The stages they publish, stated by them on 2026-09-05 when this was fixed:
 # validated -> "Awaiting Review", in progress, testing, fixed, paid. Anything
@@ -135,9 +173,24 @@ def test_filed_reports_reach_the_work_tracker(rest_anon, rest_trusted):
             right=page.status_code, claim_id="bounty-pipeline-deadend"))
         return
 
-    haystack = page.text.lower()
+    # An empty probe is inside every haystack, so a title too short to
+    # discriminate would pass silently rather than fail to be measured.
+    unmeasurable = sorted(s["report_id"] for s in due
+                          if len(_probe(s.get("title") or "")) < _PROBE_CHARS)
+    if unmeasurable:
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason=(f"{len(unmeasurable)} report(s) have titles shorter than "
+                    f"{_PROBE_CHARS} characters, which is too short to tell "
+                    f"presence on the page from coincidence: {unmeasurable}"),
+            left=unmeasurable, right=len(due),
+            sources={"looked_in": WORK_TRACKER, "stages_from": MINE},
+            claim_id="bounty-pipeline-deadend"))
+        return
+
+    haystack = _squash(page.text)
     missing = [s["report_id"] for s in due
-               if (s.get("title") or "").strip()[:45].lower() not in haystack]
+               if _probe(s.get("title") or "") not in haystack]
 
     conclude(Measurement(
         verdict="failed" if missing else "passed",
