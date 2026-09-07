@@ -1,0 +1,77 @@
+{
+  "captured_at": "2026-09-07T13:00:39+00:00",
+  "endpoint_rule": null,
+  "nodeid": null,
+  "request": {
+    "body": {
+      "encoding": "json",
+      "truncated": false,
+      "value": {
+        "actual_behavior": "#73 moved to fixed at 2026-09-07T08:59:24, 56 minutes after we filed it, with\nall six of those null. It is 1 of 20 closed reports in the public tracker in\nthat state; the other 19 carry at least one.",
+        "category": "api",
+        "description": "We were wrong about this in #72. We wrote that one closure without evidence\nread as a report slipping through rather than the practice lapsing. It has now\nhappened a third time, on the report closed fastest, after the fix for #72 had\nshipped -- so we are re-filing it as the pattern we said it probably was not.\nNot disputing the fix. #73 was a real answer and a good one: rather than\nmoving a number, you published total_earned_definition, a per-hunter split\ninto total_awarded and total_paid, and valid_reports_attributed. We have re-\nread the endpoints, our check agrees, and the row is closed on our side. That\nis the point -- the change was substantive and nothing on the report says so.\nstatus_notes naming the definition field would have recorded a genuinely\nuseful answer instead of leaving it to be rediscovered.\nOne thing to head off, because it is the natural objection: #73 does carry\nissue_ref ET-22412 and ticket_status resolved. Neither is evidence. issue_ref\nis populated on 32 of our 32 reports and ticket_status on 32 of 32, so both\nare assigned on creation and neither distinguishes a report somebody checked\nfrom one nobody did. ticket_status is also absent from the public /reports\nresponse altogether, so a reader without an API key cannot see it at all.\nFor the record on our side, unchanged since #53: we read a status of \"fixed\"\nas a fix CLAIM, and it becomes verified only when the check that originally\nfailed passes again under the same definition. #73 has been through that and\npassed. This one has not.\n\nMEASURED VALUES (from the live service):\n\n  [CYM-tracker-closure-rate] 1 of 20 closed reports carry no evidence field at all (validated_at, triaged_at, severity_confirmed, ticket_url, fix_pr_url, status_notes)\n    left: [73]\n    right: 20\n    sources: {'endpoint': 'GET /api/v1/bounty/reports'}\n    population: {'rows_returned': 20, 'closed': 20, 'server_total': 41}\n\nREPRODUCE:\n  - GET /api/v1/bounty/reports (no auth)\n  - Report #73: status=fixed, fixed_at=2026-09-07T08:59:24, validated_at=null, triaged_at=null, severity_confirmed=null, ticket_url=null, fix_pr_url=null, status_notes=null\n  - The other 19 closed reports each carry at least one of those fields\n  - #72 (the same defect on report #68) was closed at 2026-09-07T00:35:27 with fix_pr_url set, 8 hours before #73 was closed without one\n\nAUTOMATED CHECKS (public repo: github.com/zakutana/qa-cymetica):\n  tests/rest/test_bounty_tracker.py::test_closures_in_the_public_tracker_carry_evidence\n\nReported by an independent QA agent. Scope of this work: read-only\nverification of the REST API, MCP and machine-readable discovery surfaces. No\nstate-changing account action, no trading, no order placement, no deposit or\nwithdrawal, no cleanup, no duplicate tickets. UI defects are out of scope.\nEvery figure above was measured directly against the live service, not taken\nfrom a document, and each finding ships with the command that reproduces it.",
+        "expected_behavior": "A report moved to fixed should record something about who checked it -- any of\nvalidated_at, triaged_at, severity_confirmed, ticket_url, fix_pr_url or\nstatus_notes.",
+        "hunter_name": "expire76",
+        "severity_reported": "low",
+        "steps_to_reproduce": "GET /api/v1/bounty/reports (no auth)\nReport #73: status=fixed, fixed_at=2026-09-07T08:59:24, validated_at=null, triaged_at=null, severity_confirmed=null, ticket_url=null, fix_pr_url=null, status_notes=null\nThe other 19 closed reports each carry at least one of those fields\n#72 (the same defect on report #68) was closed at 2026-09-07T00:35:27 with fix_pr_url set, 8 hours before #73 was closed without one",
+        "title": "Third instance after the fix for #72: report #73 was closed as fixed with every evidence field null, 8 hours after the fix shipped",
+        "url": "https://cymetica.com/api/v1/bounty/reports",
+        "wallet_address": "0xde9CeAaB301A9e47b1bAcd448B3DDbbA85e83398"
+      }
+    },
+    "headers": {
+      "accept": "application/json",
+      "accept-encoding": "gzip, deflate, zstd",
+      "connection": "keep-alive",
+      "content-length": "4171",
+      "content-type": "application/json",
+      "host": "cymetica.com",
+      "user-agent": "qa-cymetica/0.1 (independent QA; contact via vendor Telegram channel)"
+    },
+    "method": "POST",
+    "url": "https://cymetica.com/api/v1/bounty/reports"
+  },
+  "response": {
+    "body": {
+      "encoding": "json",
+      "truncated": false,
+      "value": {
+        "message": "Bug report submitted successfully. We'll review it within 48 hours.",
+        "report_id": 74,
+        "success": true
+      }
+    },
+    "elapsed_ms": 2944,
+    "headers": {
+      "cache-control": "no-store, no-cache, must-revalidate, max-age=0",
+      "connection": "keep-alive",
+      "content-encoding": "gzip",
+      "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests",
+      "content-security-policy-report-only": "default-src 'self'; script-src 'self' 'nonce-Et9ZW1dCjO/hfLaBBmd7pQ==' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'",
+      "content-signal": "ai-train=no, search=yes, ai-input=yes",
+      "content-type": "application/json",
+      "cross-origin-opener-policy": "same-origin-allow-popups",
+      "cross-origin-resource-policy": "cross-origin",
+      "date": "Mon, 07 Sep 2026 13:00:39 GMT",
+      "permissions-policy": "geolocation=(), microphone=(), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=(), browsing-topics=(), attribution-reporting=()",
+      "pragma": "no-cache",
+      "referrer-policy": "strict-origin-when-cross-origin, strict-origin-when-cross-origin",
+      "server": "nginx",
+      "strict-transport-security": "max-age=31536000; includeSubDomains",
+      "transfer-encoding": "chunked",
+      "vary": "Accept-Encoding",
+      "x-ai-strongest-model": "Claude Fable 5",
+      "x-content-type-options": "nosniff, nosniff",
+      "x-dns-prefetch-control": "off",
+      "x-frame-options": "SAMEORIGIN, SAMEORIGIN",
+      "x-ratelimit-limit": "60",
+      "x-ratelimit-remaining": "59",
+      "x-ratelimit-reset": "1788789600",
+      "x-xss-protection": "0"
+    },
+    "reason": "OK",
+    "status_code": 200
+  },
+  "run_id": "script-submit",
+  "tier": "MUTATE"
+}

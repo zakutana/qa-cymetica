@@ -1693,6 +1693,10 @@
           {
             "report_id": 72,
             "status": "fixed"
+          },
+          {
+            "report_id": 74,
+            "status": "pending"
           }
         ],
         "refused": []
@@ -1812,7 +1816,8 @@
         "reopen": [
           53,
           60,
-          72
+          72,
+          74
         ],
         "retractions": [],
         "disputed": []
@@ -4148,7 +4153,7 @@
     "STILL REPRODUCIBLE": 1
   },
   "events_head": {
-    "seq": 971,
-    "chain": "32638568915da0d68f29d6b0ec1cb0039c89582b34c05b91b21a69c9a125bcf1"
+    "seq": 973,
+    "chain": "b794ec191a3d9890bd65b08c0c241e448719a914c3ac5ff4493b8e878366cd3c"
   }
 }
