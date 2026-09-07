@@ -199,11 +199,25 @@ AGENT_ID = "expire76-qa"
 def test_the_automated_first_pass_is_tagged_as_they_documented(rest_trusted):
     """An automated reply must be machine-distinguishable from an answer.
 
-    They stated the tag as `metadata.is_answer=false`. What the messages carry
-    is `metadata.auto` and `metadata.kind`. The capability is there -- a
-    caller CAN filter -- but not under the name they published, so a client
-    written to their stated contract filters nothing and treats a routing
-    prompt as the answer.
+    They stated the tag as `metadata.is_answer=false`. What the messages
+    carried when this was written was `metadata.auto` and `metadata.kind`: the
+    capability was there -- a caller COULD filter -- but not under the name
+    they published, so a client written to their stated contract filtered
+    nothing and treated a routing prompt as the answer.
+
+    Repaired 2026-09-07, and this check was the fault. It asked whether the
+    key was PRESENT, and the contract is about its VALUE. They shipped the
+    field and set it to `true` on the automated first pass -- 14 of the 21
+    auto-tagged messages in our inbox, each one saying "Automated first-pass
+    reply" in its own body -- so `is_answer` is now present, and worse than
+    absent: a client filtering on `is_answer == false` still keeps every
+    routing prompt, and now believes it has filtered. The check called that
+    fixed, the row read VERIFIED FIXED, and a PASS verification for it went to
+    their server before anyone looked at a value.
+
+    A presence assertion cannot verify a contract about a value. That is the
+    general form, and it is why this now reads the value and says what it
+    found.
     """
     inbox = rest_trusted.get(INBOX.format(agent_id=AGENT_ID),
                              params={"unread_only": "false"})
@@ -224,19 +238,34 @@ def test_the_automated_first_pass_is_tagged_as_they_documented(rest_trusted):
             claim_id="a2a-first-pass-contract"))
         return
 
-    documented = [m for m in auto if "is_answer" in (m.get("metadata") or {})]
+    present = [m for m in auto if "is_answer" in (m.get("metadata") or {})]
+    # The contract is the VALUE. An automated reply that declares itself an
+    # answer defeats the filter it was published for, so it is counted as a
+    # miss whether the field is missing, null, or true.
+    mistagged = [m for m in auto
+                 if (m.get("metadata") or {}).get("is_answer") is not False]
     usable = [m for m in auto if (m.get("metadata") or {}).get("kind")]
 
     conclude(Measurement(
-        verdict="failed" if not documented else "passed",
-        reason=(f"{len(auto)} automated repl(ies) in the inbox; "
-                f"{len(documented)} carry the documented metadata.is_answer "
-                f"field. {len(usable)} are filterable by metadata.auto/kind "
-                f"instead, so the capability exists under different names"),
-        left=sorted({k for m in auto for k in (m.get("metadata") or {})}),
-        right="metadata.is_answer",
+        verdict="failed" if mistagged else "passed",
+        reason=(f"{len(mistagged)} of {len(auto)} automated repl(ies) in the "
+                f"inbox are not tagged metadata.is_answer=false as documented "
+                f"({len(present)} carry the field at all). A client filtering "
+                f"on that value keeps every routing prompt and believes it has "
+                f"filtered. {len(usable)} are filterable by metadata.auto/kind "
+                f"instead, so the capability exists under different names"
+                if mistagged else
+                f"all {len(auto)} automated repl(ies) carry "
+                f"metadata.is_answer=false"),
+        left=sorted({repr((m.get("metadata") or {}).get("is_answer"))
+                     for m in auto}),
+        right="False",
         sources={"inbox": INBOX, "their_claim": "metadata.is_answer=false"},
-        population={"messages": len(messages), "automated": len(auto)},
+        population={"messages": len(messages), "automated": len(auto),
+                    "field_present": len(present),
+                    "mistagged": len(mistagged),
+                    "kinds": sorted({(m.get("metadata") or {}).get("kind")
+                                     for m in auto} - {None})},
         claim_id="a2a-first-pass-contract"))
 
 
