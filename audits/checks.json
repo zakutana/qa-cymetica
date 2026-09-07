@@ -1,5 +1,258 @@
 {
-  "schema": 1,
-  "note": "Which checks have had their assertion read against the contract their docstring names, and under which definition. Written by the deep-pass skill, step 2. Keyed on the check's AST fingerprint rather than on a date, so a check is audited once per definition and a run that changes nothing re-reads nothing -- the same shape as verification_owed in qa/fold.py. Empty here means the first run audits everything. NOT under state/: this is not ledger state, nothing folds it, and it carries no claim about the vendor.",
-  "audited": {}
+ "schema": 1,
+ "note": "Which checks have had their assertion read against the contract their docstring names, and under which definition. Written by the deep-pass skill, step 2. Keyed on the check's AST fingerprint rather than on a date, so a check is audited once per definition and a run that changes nothing re-reads nothing -- the same shape as verification_owed in qa/fold.py. Empty here means the first run audits everything. NOT under state/: this is not ledger state, nothing folds it, and it carries no claim about the vendor.",
+ "audited": {
+  "tests/mcp/test_clob_pairs.py::test_clob_pair_count_matches_the_catalogue": {
+   "fingerprints": [
+    "7d407afa861e77a3cf508bd4322059dcb57278fd95b3e61c32246e840a94b4ee"
+   ],
+   "at": "2026-09-07T15:40:00+00:00",
+   "run_id": "run-20260907T142254Z-d035a50",
+   "gap_claimed": false
+  },
+  "tests/mcp/test_clob_pairs.py::test_list_clob_pairs_paginates_consistently": {
+   "fingerprints": [
+    "941c011cfbbcb901ceb8f0afca6bc6fcc44a2d17d72e3a01d2f959d1ffd92bae"
+   ],
+   "at": "2026-09-07T15:40:00+00:00",
+   "run_id": "run-20260907T142254Z-d035a50",
+   "gap_claimed": true
+  },
+  "tests/mcp/test_trust_ladder.py::test_anonymous_receives_only_public_tools": {
+   "fingerprints": [
+    "aee41113b423d34dbb0fb7a237f679ec142e320ffd706e3a3645b1a3b80b4cd5"
+   ],
+   "at": "2026-09-07T15:40:00+00:00",
+   "run_id": "run-20260907T142254Z-d035a50",
+   "gap_claimed": false
+  },
+  "tests/mcp/test_trust_ladder.py::test_call_time_authorization_holds_for_anonymous": {
+   "fingerprints": [
+    "01399dfc88b05714a7dc09f2e15b205be0d13eadfb7e243bb4e04812a0165137"
+   ],
+   "at": "2026-09-07T15:40:00+00:00",
+   "run_id": "run-20260907T142254Z-d035a50",
+   "gap_claimed": true
+  },
+  "tests/mcp/test_trust_ladder.py::test_credentialed_caller_receives_nothing_above_its_own_tier": {
+   "fingerprints": [
+    "d47ca2e183ca62326018098c04eae3db6241fd755280c9eb62891319801f3f67"
+   ],
+   "at": "2026-09-07T15:40:00+00:00",
+   "run_id": "run-20260907T142254Z-d035a50",
+   "gap_claimed": true
+  },
+  "tests/mcp/test_trust_ladder.py::test_every_served_tool_is_declared_somewhere": {
+   "fingerprints": [
+    "d8f3c0ea8658c36237152550b0187a837334d99f2ab3007d58e0d5b1461b3225"
+   ],
+   "at": "2026-09-07T15:40:00+00:00",
+   "run_id": "run-20260907T142254Z-d035a50",
+   "gap_claimed": false
+  },
+  "tests/mcp/test_trust_ladder.py::test_higher_tier_is_a_superset_of_lower": {
+   "fingerprints": [
+    "a4741b64fec40538b7b8f51656d219741a977fe04532c17b01d291f16c23c7be"
+   ],
+   "at": "2026-09-07T15:40:00+00:00",
+   "run_id": "run-20260907T142254Z-d035a50",
+   "gap_claimed": false
+  },
+  "tests/pinned/test_documented_404.py::test_documented_path_is_served": {
+   "fingerprints": [
+    "1cfb9206fb4357a78821508d7a0bf283969d9e278d0ec37d4f009924ad164b49"
+   ],
+   "at": "2026-09-07T15:40:00+00:00",
+   "run_id": "run-20260907T142254Z-d035a50",
+   "gap_claimed": true
+  },
+  "tests/pinned/test_documented_404.py::test_the_pinned_population_is_intact": {
+   "fingerprints": [
+    "ed84907cb44607f44c806d7f45237b30a0359aa28e0984e7c35225c8571c6127"
+   ],
+   "at": "2026-09-07T15:40:00+00:00",
+   "run_id": "run-20260907T142254Z-d035a50",
+   "gap_claimed": true
+  },
+  "tests/reconciliation/test_reconcile.py::test_every_claim_has_at_least_two_sources": {
+   "fingerprints": [
+    "a2637009808655cc4d5531d2db5f3c739b7dffc9bab6976718208bfc0e766ad0"
+   ],
+   "at": "2026-09-07T15:40:00+00:00",
+   "run_id": "run-20260907T142254Z-d035a50",
+   "gap_claimed": false
+  },
+  "tests/reconciliation/test_reconcile.py::test_every_claim_source_is_declared": {
+   "fingerprints": [
+    "a700735f4cbaf4075f5096704691aadb56b08571bcb45aabc1e4c01cfa3b5917"
+   ],
+   "at": "2026-09-07T15:40:00+00:00",
+   "run_id": "run-20260907T142254Z-d035a50",
+   "gap_claimed": false
+  },
+  "tests/reconciliation/test_reconcile.py::test_every_subset_claim_names_its_direction": {
+   "fingerprints": [
+    "36688d39615bc2dbde5311cd0b321a2f3b8e9d9dd843c1d80ff951ed9d3977ab"
+   ],
+   "at": "2026-09-07T15:40:00+00:00",
+   "run_id": "run-20260907T142254Z-d035a50",
+   "gap_claimed": false
+  },
+  "tests/reconciliation/test_reconcile.py::test_sources_agree": {
+   "fingerprints": [
+    "sha256:13577e53eb81ed18ef1bcf733fe4ca57",
+    "sha256:6156cefe281b0c01af3a3391dce65475",
+    "sha256:ba019a19f7a7c39de5c5c19601580248",
+    "sha256:e081c62f35eae60b83c14e9766dce049",
+    "sha256:f9559807c42fd3328c8879e7b899b7cd"
+   ],
+   "at": "2026-09-07T15:40:00+00:00",
+   "run_id": "run-20260907T142254Z-d035a50",
+   "gap_claimed": true
+  },
+  "tests/rest/test_account_auth.py::test_the_documented_credential_opens_the_documented_route": {
+   "fingerprints": [
+    "bbdc1d54bf684a9e645532950d2a04740ef9083655d287ae7dd192a9d16dfab5"
+   ],
+   "at": "2026-09-07T15:40:00+00:00",
+   "run_id": "run-20260907T142254Z-d035a50",
+   "gap_claimed": true
+  },
+  "tests/rest/test_award_matches_its_tier.py::test_a_recorded_award_agrees_with_the_tier_on_the_same_row": {
+   "fingerprints": [
+    "517b275a55d6b866c0526f6c223191ee3219d4340a6c8facdc0782d62f76813f"
+   ],
+   "at": "2026-09-07T15:40:00+00:00",
+   "run_id": "run-20260907T142254Z-d035a50",
+   "gap_claimed": true
+  },
+  "tests/rest/test_bounty_pipeline.py::test_filed_reports_reach_the_work_tracker": {
+   "fingerprints": [
+    "7e9fa3b315c02dbafde5c9fd268cdc7c32c6019c6dbfe7476611705cb1c95608"
+   ],
+   "at": "2026-09-07T15:40:00+00:00",
+   "run_id": "run-20260907T142254Z-d035a50",
+   "gap_claimed": true
+  },
+  "tests/rest/test_bounty_pipeline.py::test_hunter_name_is_retained": {
+   "fingerprints": [
+    "496f09eb8929e62d5611c5aa76b8cb7f971e79c123dcaf4a803d25fc253a8933"
+   ],
+   "at": "2026-09-07T15:40:00+00:00",
+   "run_id": "run-20260907T142254Z-d035a50",
+   "gap_claimed": true
+  },
+  "tests/rest/test_bounty_pipeline.py::test_submitted_fields_are_stored": {
+   "fingerprints": [
+    "a290c41bf23a7e864af0c86a650fb9c3a844e0c013a6b8d7b50262aa66e45b08"
+   ],
+   "at": "2026-09-07T15:40:00+00:00",
+   "run_id": "run-20260907T142254Z-d035a50",
+   "gap_claimed": true
+  },
+  "tests/rest/test_bounty_rewards.py::test_the_reward_programme_is_discoverable_by_an_agent": {
+   "fingerprints": [
+    "8a8ec949f57150dcf207546f69321615e4324542b82a752c981b4667aea99b60"
+   ],
+   "at": "2026-09-07T15:40:00+00:00",
+   "run_id": "run-20260907T142254Z-d035a50",
+   "gap_claimed": false
+  },
+  "tests/rest/test_bounty_rewards.py::test_verified_reports_record_what_they_earned": {
+   "fingerprints": [
+    "093784993d97b1427c6f1951135b9da162f73e8057ddcd0ea1146c0b3fe967f1"
+   ],
+   "at": "2026-09-07T15:40:00+00:00",
+   "run_id": "run-20260907T142254Z-d035a50",
+   "gap_claimed": true
+  },
+  "tests/rest/test_bounty_tracker.py::test_attribution_to_a_wallet_is_provable": {
+   "fingerprints": [
+    "397e22c0e7398d16936993f413bf00f3a808e3278921c1aaf1b8132f95861a75"
+   ],
+   "at": "2026-09-07T15:40:00+00:00",
+   "run_id": "run-20260907T142254Z-d035a50",
+   "gap_claimed": true
+  },
+  "tests/rest/test_bounty_tracker.py::test_closures_in_the_public_tracker_carry_evidence": {
+   "fingerprints": [
+    "eec8c826a9ff556658be3354fa9e29469b301df49817b0ddde9a152b2704f1d5"
+   ],
+   "at": "2026-09-07T15:40:00+00:00",
+   "run_id": "run-20260907T142254Z-d035a50",
+   "gap_claimed": true
+  },
+  "tests/rest/test_bounty_tracker.py::test_reports_they_closed_have_been_rechecked_by_us": {
+   "fingerprints": [
+    "b828649c2db5e04dda6dac6778c544c0a680571cf72d47c68a5d3eee700ca262"
+   ],
+   "at": "2026-09-07T15:40:00+00:00",
+   "run_id": "run-20260907T142254Z-d035a50",
+   "gap_claimed": true
+  },
+  "tests/rest/test_llms_counts.py::test_every_agent_count_in_llms_matches_the_live_species_list": {
+   "fingerprints": [
+    "2150b030a8e4860cf7a2480bc36a2ae989dae3d032e200d87b5667f27c8c236f"
+   ],
+   "at": "2026-09-07T15:40:00+00:00",
+   "run_id": "run-20260907T142254Z-d035a50",
+   "gap_claimed": false
+  },
+  "tests/rest/test_llms_counts.py::test_llms_states_no_fixed_size_for_a_tier_scoped_catalogue": {
+   "fingerprints": [
+    "d5a3824c0ce9f24d09de8c39811e2fa1f2a28925a0c381baef0944b30dfb20e2"
+   ],
+   "at": "2026-09-07T15:40:00+00:00",
+   "run_id": "run-20260907T142254Z-d035a50",
+   "gap_claimed": true
+  },
+  "tests/rest/test_qa_agent_channel.py::test_escalating_a_low_confidence_answer_does_not_return_the_same_advice": {
+   "fingerprints": [
+    "f9071e3d0bb7c711149d1ff073231a2bfb44157f83deac7f740d54b9da523511"
+   ],
+   "at": "2026-09-07T15:40:00+00:00",
+   "run_id": "run-20260907T142254Z-d035a50",
+   "gap_claimed": true
+  },
+  "tests/rest/test_qa_agent_channel.py::test_the_agent_can_report_a_value_it_publishes": {
+   "fingerprints": [
+    "866ccbae691f76135d2f0d006b05ff0b597ffe08f9bde8d4e994e6844ff91297"
+   ],
+   "at": "2026-09-07T15:40:00+00:00",
+   "run_id": "run-20260907T142254Z-d035a50",
+   "gap_claimed": true
+  },
+  "tests/rest/test_qa_agent_channel.py::test_the_async_first_pass_is_grounded_like_the_sync_channel": {
+   "fingerprints": [
+    "d8c89bb5d9dfb6abe6d9f240604f15d80183028892047d05a574abc9740d5a4c"
+   ],
+   "at": "2026-09-07T15:40:00+00:00",
+   "run_id": "run-20260907T142254Z-d035a50",
+   "gap_claimed": true
+  },
+  "tests/rest/test_qa_agent_channel.py::test_the_automated_first_pass_is_tagged_as_they_documented": {
+   "fingerprints": [
+    "04cf163554964f44f24aae44e443668700ca69347c90e518ffd3a2cff7d10810"
+   ],
+   "at": "2026-09-07T15:40:00+00:00",
+   "run_id": "run-20260907T142254Z-d035a50",
+   "gap_claimed": true
+  },
+  "tests/rest/test_reward_totals_agree.py::test_the_reward_totals_agree_with_each_other": {
+   "fingerprints": [
+    "faecfd3ba660949fd8a3291a0127bc782e4bc194e95cf3e4d8a4615580d99394"
+   ],
+   "at": "2026-09-07T15:40:00+00:00",
+   "run_id": "run-20260907T142254Z-d035a50",
+   "gap_claimed": true
+  },
+  "tests/rest/test_status_vocabulary_is_mapped.py::test_every_status_they_publish_has_a_meaning_on_our_axis": {
+   "fingerprints": [
+    "33c51d4f0a67dcfc817607cd72a9278a78caab80a20cd971a95b5b6c4609cad4"
+   ],
+   "at": "2026-09-07T15:40:00+00:00",
+   "run_id": "run-20260907T142254Z-d035a50",
+   "gap_claimed": false
+  }
+ }
 }
