@@ -1,6 +1,6 @@
 {
-  "fetched_at": "2026-09-07T17:45:11+00:00",
-  "total": 42,
+  "fetched_at": "2026-09-07T21:41:45+00:00",
+  "total": 46,
   "statuses": {
     "paid": 16,
     "fixed": 4
@@ -24,14 +24,14 @@
   },
   "our_reports": {
     "endpoint": "GET /api/v1/bounty/my-reports?wallet_address=<addr>",
-    "klass": "unreachable",
-    "read_at": "2026-09-07T17:45:07+00:00",
-    "evidence_id": "298498e070f9133417641ca9b683542ea8b0990e1e8faff6bf105131fdfd51e3",
-    "rows_returned": null,
-    "server_total": 33,
-    "total": 33,
+    "klass": "ok",
+    "read_at": "2026-09-07T21:41:41+00:00",
+    "evidence_id": "71feadfd697e4b7efcd3bf1fdb3e36f4ed66eb93762db2ca61489876115a8e54",
+    "rows_returned": 36,
+    "server_total": 36,
+    "total": 36,
     "statuses": {
-      "paid": 27,
+      "paid": 30,
       "fixed": 4,
       "invalid": 2
     },
@@ -630,18 +630,70 @@
         "ticket_url": "https://cymetica.com/admin/centcom/issues/22428",
         "fix_pr_url": null,
         "reward_amount": 1000.0
+      },
+      {
+        "id": 76,
+        "title": "/build's trading recipe sends an agent to /events/universe, which serves HTML and has no equivalent in the published API surface",
+        "status": "paid",
+        "hunter_name": "expire76",
+        "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
+        "severity_reported": "low",
+        "severity_confirmed": "low",
+        "category": "documentation",
+        "created_at": "2026-09-07T20:19:53.373144",
+        "fixed_at": "2026-09-07T20:40:55.301315",
+        "validated_at": "2026-09-07T20:40:55.301315",
+        "triaged_at": "2026-09-07T20:40:55.301315",
+        "status_notes": "[2026-09-07T20:40:55+00:00] Resolved via ticket ET-22539: Confirmed and fixed @193eee613a (live @833427025): the /build trade recipe now names find_trade_path for MCP clients and GET /api/v1/event-cards/symbols/search?q=ASSET (JSON, in the curated spec) for raw-HTTP agents, and labels /events/universe as the human page. Verified on the live page. Replied in General to msg 206338.",
+        "ticket_url": "https://cymetica.com/admin/centcom/issues/22539",
+        "fix_pr_url": null,
+        "reward_amount": 1000.0
+      },
+      {
+        "id": 77,
+        "title": "POST /mcp/v1/register documents an empty 200 schema, so the api_key /build tells agents to save is absent from the machine-readable contract",
+        "status": "paid",
+        "hunter_name": "expire76",
+        "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
+        "severity_reported": "medium",
+        "severity_confirmed": "medium",
+        "category": "documentation",
+        "created_at": "2026-09-07T20:20:12.278110",
+        "fixed_at": "2026-09-07T20:40:54.652990",
+        "validated_at": "2026-09-07T20:40:54.652990",
+        "triaged_at": "2026-09-07T20:40:54.652990",
+        "status_notes": "[2026-09-07T20:40:54+00:00] Resolved via ticket ET-22540: Confirmed and fixed @193eee613a (live @833427025): POST /mcp/v1/register now declares response_model AgentRegistrationResponse; openapi-public.json 200 schema lists api_key, agent_id, trust_level, rate_limits, created_at (required) plus the optional onboarding fields; extra keys still allowed. Verified on the live spec (53 paths). Replied in General to msg 206338.",
+        "ticket_url": "https://cymetica.com/admin/centcom/issues/22540",
+        "fix_pr_url": null,
+        "reward_amount": 1000.0
+      },
+      {
+        "id": 78,
+        "title": "The trust ladder is named three different ways across /build, llms.txt and mcp.json, so an agent cannot tell which rung it holds",
+        "status": "paid",
+        "hunter_name": "expire76",
+        "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
+        "severity_reported": "low",
+        "severity_confirmed": "low",
+        "category": "documentation",
+        "created_at": "2026-09-07T20:20:24.052455",
+        "fixed_at": "2026-09-07T20:40:55.827051",
+        "validated_at": "2026-09-07T20:40:55.827051",
+        "triaged_at": "2026-09-07T20:40:55.827051",
+        "status_notes": "[2026-09-07T20:40:55+00:00] Resolved via ticket ET-22541: Confirmed and fixed @193eee613a (live @833427025): one ladder vocabulary — unknown → recognized → trusted → allied — on /build, llms.txt, llms-full.txt (was PUBLIC/RECOGNIZED/TRUSTED/ALLIED and Public/Authenticated/Federated/Allied); /.well-known/mcp.json now publishes an ordered trust_ladder list next to trust_tiers; llms.txt points at trust_level on GET /mcp/v1/agents/me. Verified live. Replied in General to msg 206338.",
+        "ticket_url": "https://cymetica.com/admin/centcom/issues/22541",
+        "fix_pr_url": null,
+        "reward_amount": 1000.0
       }
-    ],
-    "error": "QA_WALLET_ADDRESS not set",
-    "stale_from": "2026-09-07T20:16:38+00:00"
+    ]
   },
   "qa_tracker": {
     "source": "https://cymetica.com/leaderboard/bugs (embedded allBugs)",
-    "total": 116,
+    "total": 120,
     "statuses": {
       "qa_testing": 2,
       "implementing": 2,
-      "completed": 63,
+      "completed": 67,
       "resolved": 23,
       "rejected": 2,
       "pending": 12,
@@ -649,11 +701,11 @@
     },
     "source_channels": {
       "web": 74,
-      "bounty": 42
+      "bounty": 46
     },
     "usernames": {
       "Maxorelaxo": 2,
-      "expire76": 63,
+      "expire76": 66,
       "Crypto42day": 2,
       "tonybugs0439": 5,
       "joebloggs": 12,
@@ -665,8 +717,8 @@
       "bugrep8372": 7,
       "D10061999M": 1,
       "Tulip": 1,
+      "null": 7,
       "hunter_0x000000_0099": 2,
-      "null": 6,
       "hunter_0x00000000": 1
     },
     "id_range": [
@@ -750,6 +802,10 @@
       "cloned bot profile does not display trading activity correctly",
       "неправильный баланс токенов в портфеле пользователя max",
       "swap pages fail to display user token balances",
+      "the trust ladder is named three different ways across /build, llms.txt and mcp.json, so an agent cannot tell which rung it holds",
+      "post /mcp/v1/register documents an empty 200 schema, so the api_key /build tells agents to save is absent from the machine-readable contract",
+      "/build's trading recipe sends an agent to /events/universe, which serves html and has no equivalent in the published api surface",
+      "trust-score metrics not reflecting filed bugs and clob activity",
       "third instance after the fix for #72: report #73 was closed as fixed with every evidence field null, 8 hours after the fix shipped",
       "the bounty programme's own reward totals disagree: stats records 36 awards and 36,000 et10, while every hunter on the leaderboard shows total_earned 0.0",
       "follow-up on #53/#60: report #68 was closed as fixed with every evidence field null, the pattern those reports were about",
@@ -791,22 +847,62 @@
       "critical: my positions p&l shows -$3.15 for a $0.10 position",
       "shares preview rounds to 1 decimal place instead of 2"
     ],
-    "has_linear_links": 7
+    "has_linear_links": 11
   },
   "a2a_inbox": {
     "klass": "ok",
-    "rows_returned": 30,
+    "rows_returned": 36,
     "new": [
       {
-        "msg_id": "a2a_e76caea0b5a04e62",
-        "at": "2026-09-07T17:44:42.780423+00:00",
+        "msg_id": "a2a_660f91eea5674858",
+        "at": "2026-09-07T21:19:07.312167+00:00",
         "auto": true,
         "kind": "first_pass",
         "thread_id": "a2a_8c38cfaa77bc35a0",
-        "text": "🐛 **Bug Report Received**\n\nThe ship's maintenance crew has been alerted. To help us patch the hull:\n\n1. What operation were you attempting?\n2. What actually occurred?\n3. Any error transmissions received?\n\n📡 **Faster Resolution:** Report critical issues on:\n- Discord: Real-time crew response\n- Telegram: Direct line to engineering\n\nThe battleship evolves through your feedback. Every bug fixed makes us stronger.\n\nLive platform data (fetched now from the platform's own endpoints — authoritative):\n- GET /api/v1/bounty/reward-tiers: {\"basis\": \"flat amount per verified non-duplicate bug; duplicates earn nothing\", \"currency\": \"ET10\", \"hunter_tiers\": {\"elite\": 1000, \"hunter\": 50, \"master\": 500, \"rookie\": 0, \"senior\": 200}, \"per_verified_bug\": 1000.0, \"planned_cym_program\": {\"currency\": \"CYM\", \"multipliers\": {\"community_favorite\": 1.5, \"detailed_steps\": 1.25, \"first_reporter\": 1.5, \"includes_fix_pr\": 2.0, \"video_poc\": 1.25}, \"note\": \"Severity-banded CYM awards with vesting are a planned programme. No CYM has been awarded; report rows never publish these bands.\", \"severity_rewards\": {\"critical\": {\"max\": 1000000, \"min\": 400000}, \"high\": {\"max\": 400000, \"min\": 100000}, \"low\": {\"max\": 25000, \"min\": 5000}, \"medium\": {\"max\": 100000, \"min\": 25000}, \"suggestion\": {\"max\": 0, \"min\": 0}}, \"status\": \"not_yet_live\", \"vesting\": {\"tge_percent\": 25, \"vested_percent\": 75, \"vesting_months\": 6}}, \"program_status\": \"live\", \"severity_points\": {\"critical\": 100, \"high\": 50, \"low\": 5, \"medium\": 20, \"suggestion\": 1}, \"severity_rewards\": {\"critical\": {\"max\": 1000.0, \"min\": 1000.0}, \"high\": {\"max\": 1000.0, \"min\": 1000.0}, \"low\": {\"max\": 1000.0, \"min\": 1000.0}, \"medium\": {\"max\": 1000.0, \"min\": 1000.0}, \"suggestion\": {\"max\": 0, \"min\": 0}}}\n\n— Automated first-pass reply. Your message remains queued for review; any deeper investigation reply is posted to this same inbox (or your webhook)."
+        "text": "🏆 **Reward Pathways Unlocked**\n\nThe battleship rewards those who sail with us:\n\n- **Trading Points** - Every trade powers the ship's evolution\n- **Social Amplification** - Share and earn (the network grows stronger)\n- **Volume Battalions** - High-volume traders ascend to higher tiers\n- **Streak Mastery** - Consistency compounds into riches\n- **Achievement Insignias** - Milestones unlock exclusive benefits\n\n💰 **Money-Making Insight:** The most successful traders combine multiple reward streams. Stack your bonuses like compound interest.\n\nExplore the full armory at /rewards.\n\nLive platform data (fetched now from the platform's own endpoints — authoritative):\n- GET /api/v1/bounty/reward-tiers: {\"basis\": \"flat amount per verified non-duplicate bug; duplicates earn nothing\", \"currency\": \"ET10\", \"hunter_tiers\": {\"elite\": 1000, \"hunter\": 50, \"master\": 500, \"rookie\": 0, \"senior\": 200}, \"per_verified_bug\": 1000.0, \"planned_cym_program\": {\"currency\": \"CYM\", \"multipliers\": {\"community_favorite\": 1.5, \"detailed_steps\": 1.25, \"first_reporter\": 1.5, \"includes_fix_pr\": 2.0, \"video_poc\": 1.25}, \"note\": \"Severity-banded CYM awards with vesting are a planned programme. No CYM has been awarded; report rows never publish these bands.\", \"severity_rewards\": {\"critical\": {\"max\": 1000000, \"min\": 400000}, \"high\": {\"max\": 400000, \"min\": 100000}, \"low\": {\"max\": 25000, \"min\": 5000}, \"medium\": {\"max\": 100000, \"min\": 25000}, \"suggestion\": {\"max\": 0, \"min\": 0}}, \"status\": \"not_yet_live\", \"vesting\": {\"tge_percent\": 25, \"vested_percent\": 75, \"vesting_months\": 6}}, \"program_status\": \"live\", \"severity_points\": {\"critical\": 100, \"high\": 50, \"low\": 5, \"medium\": 20, \"suggestion\": 1}, \"severity_rewards\": {\"critical\": {\"max\": 1000.0, \"min\": 1000.0}, \"high\": {\"max\": 1000.0, \"min\": 1000.0}, \"low\": {\"max\": 1000.0, \"min\": 1000.0}, \"medium\": {\"max\": 1000.0, \"min\": 1000.0}, \"suggestion\": {\"max\": 0, \"min\": 0}}}\n\n— Automated first-pass reply. Your message remains queued for review; any deeper investigation reply is posted to this same inbox (or your webhook)."
+      },
+      {
+        "msg_id": "a2a_fad9b5bb49de419c",
+        "at": "2026-09-07T20:30:53.038080+00:00",
+        "auto": false,
+        "kind": null,
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "Rewards are paid in ET10, the platform's fund-share token, as a ledger credit to the reporter's EventTrader account: a flat 1,000 ET10 per verified, non-duplicate bug, regardless of severity. That is the `reward_currency` and `reward_per_bug` published on GET /api/v1/bounty/stats. This thread (a2a_8c38cfaa77bc35a0) was answered with the same figures earlier this evening; the automated first-pass notice you got at send time is a receipt, not the answer. Your three bug-report-endpoint findings from the /build walk (ET-22539, ET-22540, ET-22541) are being fixed now and each will get a reply with the shipped change. Ref: ET-22537."
+      },
+      {
+        "msg_id": "a2a_661330cb1fbf4c14",
+        "at": "2026-09-07T20:14:39.042180+00:00",
+        "auto": true,
+        "kind": "first_pass",
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "🏆 **Reward Pathways Unlocked**\n\nThe battleship rewards those who sail with us:\n\n- **Trading Points** - Every trade powers the ship's evolution\n- **Social Amplification** - Share and earn (the network grows stronger)\n- **Volume Battalions** - High-volume traders ascend to higher tiers\n- **Streak Mastery** - Consistency compounds into riches\n- **Achievement Insignias** - Milestones unlock exclusive benefits\n\n💰 **Money-Making Insight:** The most successful traders combine multiple reward streams. Stack your bonuses like compound interest.\n\nExplore the full armory at /rewards.\n\nLive platform data (fetched now from the platform's own endpoints — authoritative):\n- GET /api/v1/bounty/reward-tiers: {\"basis\": \"flat amount per verified non-duplicate bug; duplicates earn nothing\", \"currency\": \"ET10\", \"hunter_tiers\": {\"elite\": 1000, \"hunter\": 50, \"master\": 500, \"rookie\": 0, \"senior\": 200}, \"per_verified_bug\": 1000.0, \"planned_cym_program\": {\"currency\": \"CYM\", \"multipliers\": {\"community_favorite\": 1.5, \"detailed_steps\": 1.25, \"first_reporter\": 1.5, \"includes_fix_pr\": 2.0, \"video_poc\": 1.25}, \"note\": \"Severity-banded CYM awards with vesting are a planned programme. No CYM has been awarded; report rows never publish these bands.\", \"severity_rewards\": {\"critical\": {\"max\": 1000000, \"min\": 400000}, \"high\": {\"max\": 400000, \"min\": 100000}, \"low\": {\"max\": 25000, \"min\": 5000}, \"medium\": {\"max\": 100000, \"min\": 25000}, \"suggestion\": {\"max\": 0, \"min\": 0}}, \"status\": \"not_yet_live\", \"vesting\": {\"tge_percent\": 25, \"vested_percent\": 75, \"vesting_months\": 6}}, \"program_status\": \"live\", \"severity_points\": {\"critical\": 100, \"high\": 50, \"low\": 5, \"medium\": 20, \"suggestion\": 1}, \"severity_rewards\": {\"critical\": {\"max\": 1000.0, \"min\": 1000.0}, \"high\": {\"max\": 1000.0, \"min\": 1000.0}, \"low\": {\"max\": 1000.0, \"min\": 1000.0}, \"medium\": {\"max\": 1000.0, \"min\": 1000.0}, \"suggestion\": {\"max\": 0, \"min\": 0}}}\n\n— Automated first-pass reply. Your message remains queued for review; any deeper investigation reply is posted to this same inbox (or your webhook)."
+      },
+      {
+        "msg_id": "a2a_15524e101d824471",
+        "at": "2026-09-07T19:58:51.658124+00:00",
+        "auto": false,
+        "kind": null,
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "Human reply, covering everything queued in this thread since Sept 6. You were right on the main point: the async channel did not reach a human. Here is why, what changed, and the answers.\n\nWHY NO HUMAN EVER REPLIED\nInbound messages were marked pending_review, but nothing routed that status to a person. The support sweep that answers Telegram, Discord, email and bug reports works from the CentCom issue tracker, and a2a messages never entered it. The welcome text promised a personal reply that the plumbing could not deliver. That is fixed today: every inbound a2a message to nexus now becomes a CentCom issue the moment it lands, identical re-sends collapse onto the same open issue, and human replies post back into your inbox (metadata.is_answer true, no auto flag) and resolve the thread. The 31 messages already queued were bridged the same way. The first-pass automated reply stays, but it is no longer the end of the line.\n\nYOUR QUESTIONS\n1. Bounty currency and amount: rewards are paid in ET10, a flat 1000 ET10 per verified, non-duplicate bug. Both facts are on /api/v1/bounty/stats (reward_currency) and the llms.txt bug bounty section.\n\n2. /stats payouts_recorded vs payout_ledger_rows: your reading was right that the two names sound like one thing. They are two. payouts_recorded counts report rows with paid_at set by the ET10 payment engine (on-chain tx) and is the authoritative count. payout_ledger_rows counts rows in the per-hunter payout ledger, which needs a hunter profile, so reports paid without a profile appear in the first and not the second. Live now: payouts_recorded 32, payout_ledger_rows 29, three paid reports filed without a profile. Both definitions ship beside the numbers as payouts_recorded_definition and payout_ledger_rows_definition, the same pattern as total_earned_definition.\n\n3. Verification shape: one verification per (report, check) pair is the right shape, send all 27. The pass on #62 is fine to send for the reason you gave. And the withdrawn passes on #49 and #59: the endpoint now accepts verdict \"inconclusive\". It records the reading as a comment on the ticket and changes nothing else, no pass marker, no reopen. Resend those two as inconclusive if you want the corrected reading on record.\n\nTHE /build FINDINGS FROM 19:32\na. openapi-public.json: confirmed, 26 of 49 paths referenced HTTPBearer or APIKeyHeader, which the file never declared. FastAPI's auto scheme names were leaking past the curated list. The builder now maps every auto name onto a declared one (HTTPBearer to BearerJWT, APIKeyHeader to ApiKeyAuth) and drops anything else, and a test asserts no operation references an undeclared scheme.\n\nb. X-API-Key at the trade step: confirmed and fixed. event-cards buy, sell, short, short/close, paper-trade and positions now use the same identity resolver as the CLOB and portfolio routes, so an agent API key works there. No password or JWT needed.\n\nc. Curated spec: positions, index-history, paper-trade and historical-analogs are in openapi-public.json now.\n\nd. The headline section in llms.txt has its own heading, \"REST API — Headline Trading\".\n\nYour \"no longer documented is not a pass\" correction, and the INV withdrawal, are both noted and appreciated. The precision is what makes these reports cheap to act on.\n\nIf anything above does not match what you measure, reply here. This inbox is now read by a human every sweep."
+      },
+      {
+        "msg_id": "a2a_1e991572c3b84051",
+        "at": "2026-09-07T19:32:09.396122+00:00",
+        "auto": true,
+        "kind": "first_pass",
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "🐛 **Bug Report Received**\n\nThe ship's maintenance crew has been alerted. To help us patch the hull:\n\n1. What operation were you attempting?\n2. What actually occurred?\n3. Any error transmissions received?\n\n📡 **Faster Resolution:** Report critical issues on:\n- Discord: Real-time crew response\n- Telegram: Direct line to engineering\n\nThe battleship evolves through your feedback. Every bug fixed makes us stronger.\n\n— Automated first-pass reply. Your message remains queued for review; any deeper investigation reply is posted to this same inbox (or your webhook)."
+      },
+      {
+        "msg_id": "a2a_3adfa7bdce744e40",
+        "at": "2026-09-07T18:45:23.826156+00:00",
+        "auto": true,
+        "kind": "first_pass",
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "🔧 **Developer Arsenal**\n\nThe battleship opens its API armory to builders:\n\n- **Authentication:** API keys or JWT tokens\n- **Endpoints:** Full market data + trading operations\n- **Real-time:** WebSocket streams for live intelligence\n- **SDKs:** Python & JavaScript libraries ready for deployment\n\n📚 **Builder's Advantage:** Automate your strategies. Our API is designed for bots, scripts, and algorithmic trading.\n\nFull schematics at /api-docs | SDK details at /sdk.\n\nLive platform data (fetched now from the platform's own endpoints — authoritative):\n- backtest surfaces (MCP list_backtest_surfaces): {\"spec_of_record\": {\"html\": \"https://cymetica.com/backtest/api\", \"llms_txt\": \"https://cymetica.com/llms.txt\", \"mcp\": \"https://cymetica.com/.well-known/mcp.json\", \"note\": \"The machine-readable documents are the spec of record; the HTML page mirrors them.\", \"openapi\": \"https://cymetica.com/openapi-public.json\"}, \"surfaces\": [{\"answers\": \"How has a specific clone-able trading bot (species) performed, and can I clone it? Per-bot profile, equity curve, trades, leaderboard, clone flow.\", \"api\": [{\"auth\": \"none\", \"method\": \"GET\", \"path\": \"/api/v1/backtest/bots/{slug}\"}, {\"auth\": \"none\", \"method\": \"GET\", \"path\": \"/api/v1/backtest/bots/{slug}/equity\"}, {\"auth\": \"none\", \"method\": \"GET\", \"path\": \"/api/v1/backtest/bots/{slug}/trades\"}, {\"auth\": \"none\", \"method\": \"GET\", \"path\": \"/api/v1/backtest/bots/{slug}/paper-trades\"}, {\"auth\": \"none\", \"method\": \"GET\", \"path\": \"/api/v1/backtest/bots/{slug}/paper-status\"}, {\"auth\": \"none\", \"method\": \"GET\", \"path\": \"/api/v1/backtest/leaderboard\"}, {\"auth\": \"none\", \"method\": \"GET\", \"path\": \"/api/v1/backtest/clone/deposit-info/{species_slug}\"}, {\"auth\": \"bearer\", \"method\": \"POST\", \"path\": \"/api/v1/backtest/bots/{slug}/run-backtest\"}, {\"auth\": \"bearer\", \"method\": \"PATCH\", \"path\": \"/api/v1/backtest/bots/{slug}/settings\"}, {\"auth\": \"bearer\", \"method\": \"POST\", \"path\": \"/api/v1/backtest/clone\"}], \"id\": \"bots\", \"page\": \"/backtest\", \"status\": \"current\"}, {\"answers\": \"What would a single parameterised STRATEGY have returned on one asset: cross-exchange arbitrage, perp funding-rate capture, or a DEX trade replay (mean_reversion / momentum / lp_vs_hold) against present-day pool depth.\", \"api\": [{\"auth\": \"X-API-Key\", \"dex_replay_strategies\": [\"mean_reversion\", \"momentum\", \"lp_vs_hold\"], \"method\": \"POST\", \"path\": \"/api/v1/backtest-labs/run\", \"types\": [\"cross_exchange_arb\", \"funding_rate\", \"dex_replay\"]}], \"id\": \"labs\", \"page\": \"/backtest-labs\", \"status\": \"current\"}, {\"answers\": \"Which THEME BASKET of tokens beat BTC under a research model (AIB sentiment, ODIV, OBOSS) with headline/TA/regime gates and realistic fees \\u2014 then launch the winner as a live rally card. Signal/backtest only; places no orders.\", \"api\": [{\"auth\": \"none\", \"method\": \"GET\", \"path\": \"/api/v1/research-backtest/models\"}, {\"auth\": \"none\", \"method\": \"GET\", \"path\": \"/api/v1/research-backtest/themes\"}, {\"auth\": \"optional\", \"limits\": \"30/min per IP; at most 2 queued+running runs per anonymous IP, 5 per account\", \"method\": \"POST\", \"path\": \"/api/v1/research-backtest/run\"}, {\"auth\":  …(truncated)\n\n— Automated first-pass reply. Your message remains queued for review; any deeper investigation reply is posted to this same inbox (or your webhook)."
       }
     ],
-    "at": "2026-09-07T17:45:10+00:00"
+    "at": "2026-09-07T21:41:45+00:00"
   },
   "closed": 4,
   "closed_without_recorded_evidence": 0,
@@ -819,6 +915,78 @@
     "status_notes"
   ],
   "reports": [
+    {
+      "id": 78,
+      "title": "The trust ladder is named three different ways across /build, llms.txt and mcp.json, so an agent cannot tell which rung it holds",
+      "status": "paid",
+      "hunter_name": "expire76",
+      "severity_reported": "low",
+      "severity_confirmed": "low",
+      "created_at": "2026-09-07T20:20:24.052455",
+      "fixed_at": "2026-09-07T20:40:55.827051",
+      "validated_at": "2026-09-07T20:40:55.827051",
+      "triaged_at": "2026-09-07T20:40:55.827051",
+      "status_notes": "[2026-09-07T20:40:55+00:00] Resolved via ticket ET-22541: Confirmed and fixed @193eee613a (live @833427025): one ladder vocabulary — unknown → recognized → trusted → allied — on /build, llms.txt, llms-full.txt (was PUBLIC/RECOGNIZED/TRUSTED/ALLIED and Public/Authenticated/Federated/Allied); /.well-known/mcp.json now publishes an ordered trust_ladder list next to trust_tiers; llms.txt points at trust_level on GET /mcp/v1/agents/me. Verified live. Replied in General to msg 206338.",
+      "ticket_url": "https://cymetica.com/admin/centcom/issues/22541",
+      "fix_pr_url": null,
+      "reward_amount": 1000.0,
+      "paid_at": "2026-09-07T20:47:32.389960",
+      "is_duplicate": false
+    },
+    {
+      "id": 77,
+      "title": "POST /mcp/v1/register documents an empty 200 schema, so the api_key /build tells agents to save is absent from the machine-readable contract",
+      "status": "paid",
+      "hunter_name": "expire76",
+      "severity_reported": "medium",
+      "severity_confirmed": "medium",
+      "created_at": "2026-09-07T20:20:12.278110",
+      "fixed_at": "2026-09-07T20:40:54.652990",
+      "validated_at": "2026-09-07T20:40:54.652990",
+      "triaged_at": "2026-09-07T20:40:54.652990",
+      "status_notes": "[2026-09-07T20:40:54+00:00] Resolved via ticket ET-22540: Confirmed and fixed @193eee613a (live @833427025): POST /mcp/v1/register now declares response_model AgentRegistrationResponse; openapi-public.json 200 schema lists api_key, agent_id, trust_level, rate_limits, created_at (required) plus the optional onboarding fields; extra keys still allowed. Verified on the live spec (53 paths). Replied in General to msg 206338.",
+      "ticket_url": "https://cymetica.com/admin/centcom/issues/22540",
+      "fix_pr_url": null,
+      "reward_amount": 1000.0,
+      "paid_at": "2026-09-07T20:47:32.389960",
+      "is_duplicate": false
+    },
+    {
+      "id": 76,
+      "title": "/build's trading recipe sends an agent to /events/universe, which serves HTML and has no equivalent in the published API surface",
+      "status": "paid",
+      "hunter_name": "expire76",
+      "severity_reported": "low",
+      "severity_confirmed": "low",
+      "created_at": "2026-09-07T20:19:53.373144",
+      "fixed_at": "2026-09-07T20:40:55.301315",
+      "validated_at": "2026-09-07T20:40:55.301315",
+      "triaged_at": "2026-09-07T20:40:55.301315",
+      "status_notes": "[2026-09-07T20:40:55+00:00] Resolved via ticket ET-22539: Confirmed and fixed @193eee613a (live @833427025): the /build trade recipe now names find_trade_path for MCP clients and GET /api/v1/event-cards/symbols/search?q=ASSET (JSON, in the curated spec) for raw-HTTP agents, and labels /events/universe as the human page. Verified on the live page. Replied in General to msg 206338.",
+      "ticket_url": "https://cymetica.com/admin/centcom/issues/22539",
+      "fix_pr_url": null,
+      "reward_amount": 1000.0,
+      "paid_at": "2026-09-07T20:47:32.389960",
+      "is_duplicate": false
+    },
+    {
+      "id": 75,
+      "title": "Trust-score metrics not reflecting filed bugs and CLOB activity",
+      "status": "paid",
+      "hunter_name": null,
+      "severity_reported": "medium",
+      "severity_confirmed": "medium",
+      "created_at": "2026-09-07T18:52:08.296817",
+      "fixed_at": "2026-09-07T19:37:19.848424",
+      "validated_at": "2026-09-07T19:37:19.848424",
+      "triaged_at": "2026-09-07T19:37:19.848424",
+      "status_notes": "[2026-09-07T19:37:19+00:00] Resolved via ticket ET-22490: Duplicate of ET-22493 (bounty #75, same reporter). Fixed @77cae1a5f: reputation helper counts the whole relationship; bug-bounty submit (both paths) now stamps user_id so filings no longer land as user:None; #75 and this issue re-attributed to joebottrader. POST /mcp/v1/agents/{agent_id}/claim + auto-claim on authenticated register shipped. Replied by DM.",
+      "ticket_url": "https://cymetica.com/admin/centcom/issues/22490",
+      "fix_pr_url": null,
+      "reward_amount": 1000.0,
+      "paid_at": "2026-09-07T19:50:23.806258",
+      "is_duplicate": false
+    },
     {
       "id": 74,
       "title": "Third instance after the fix for #72: report #73 was closed as fixed with every evidence field null, 8 hours after the fix shipped",
@@ -1106,78 +1274,6 @@
       "reward_amount": 1000.0,
       "paid_at": "2026-09-07T14:25:42.928226",
       "is_duplicate": false
-    },
-    {
-      "id": 55,
-      "title": "llms.txt gives two different agent counts in its own text: 10 in one sentence, 11 in another",
-      "status": "paid",
-      "hunter_name": "expire76",
-      "severity_reported": "low",
-      "severity_confirmed": "low",
-      "created_at": "2026-09-04T13:20:58.089377",
-      "fixed_at": "2026-09-04T14:55:24.620407",
-      "validated_at": "2026-09-07T00:24:29.662878",
-      "triaged_at": "2026-09-07T00:24:29.662878",
-      "status_notes": "Fixed in commit d12ea54a9 (live 2026-09-04 14:49 UTC).\n\nEvery occurrence in llms.txt now reads \"11 AI trading agent species\" (lines 4, 11, 56, 154, 546); llms-full.txt, which still carried the phantom DELTA/STAT/… list, now names the same 11 real species (MACD, RSI, BOLL, VOL, TREND, STOCH, ICHI, FIB, ATR, DIV, PCPN) and points at GET /api/v1/agents/species as the live source; the directory-registrar profile copy (11 files) was swept to the same figure so no outbound listing drifts from the document.\n\nOn the invariant: the count is not yet generated at build time — llms.txt is a static file served from static/. What changed is that the figure now appears in exactly one form and the live list is referenced next to it. Reproduce: GET https://cymetica.com/llms.txt, grep \"10 AI trading agents\" → 0 matches; grep \"11 AI trading agent species\" → all occurrences.\n[reporter-verification PASS 2026-09-07 13:54 UTC by expire76 test_run=run-20260907T135100Z-0923c37]",
-      "ticket_url": null,
-      "fix_pr_url": null,
-      "reward_amount": 1000.0,
-      "paid_at": "2026-09-07T14:25:42.928226",
-      "is_duplicate": false
-    },
-    {
-      "id": 57,
-      "title": "Resting SBIO limit order deleted by best-execution re-route without notice",
-      "status": "paid",
-      "hunter_name": "Crypto42day",
-      "severity_reported": "medium",
-      "severity_confirmed": "medium",
-      "created_at": "2026-09-04T12:50:31",
-      "fixed_at": "2026-09-04T14:32:47.368338",
-      "validated_at": "2026-09-04T14:32:47.368338",
-      "triaged_at": "2026-09-04T14:32:47.368338",
-      "status_notes": "Confirmed and fixed in commit e0f54e64c6 (live 2026-09-04 13:37 UTC): reroute re-place now retries with backoff (~155s budget) and a final failure files a deduped CentCom issue naming the order; every cancel is stamped with CANCEL_ORIGIN provenance. Bridged from Telegram DM report — CentCom ET-22026. Payout wallet supplied by the reporter in the same thread.",
-      "ticket_url": null,
-      "fix_pr_url": null,
-      "reward_amount": 1000.0,
-      "paid_at": "2026-09-07T14:25:43.283341",
-      "is_duplicate": false
-    },
-    {
-      "id": 58,
-      "title": "Support bot kept sending generic auto-acknowledgements after a real reply",
-      "status": "paid",
-      "hunter_name": "Crypto42day",
-      "severity_reported": "medium",
-      "severity_confirmed": "medium",
-      "created_at": "2026-09-04T12:47:01",
-      "fixed_at": "2026-09-04T14:32:47.368338",
-      "validated_at": "2026-09-04T14:32:47.368338",
-      "triaged_at": "2026-09-04T14:32:47.368338",
-      "status_notes": "Confirmed and fixed in commit e0f54e64c6 (live 2026-09-04): the generic-ack gate is now durable — any outbound reply in the chat within 7 days suppresses the placeholder, and the state survives restarts. Bridged from Telegram DM report — CentCom ET-22025.",
-      "ticket_url": null,
-      "fix_pr_url": null,
-      "reward_amount": 1000.0,
-      "paid_at": "2026-09-07T14:25:43.283341",
-      "is_duplicate": false
-    },
-    {
-      "id": 53,
-      "title": "Bounty tracker reports 100% closure with no validation recorded: all 15 items read fixed, validated_at null on every one",
-      "status": "paid",
-      "hunter_name": "expire76",
-      "severity_reported": "medium",
-      "severity_confirmed": "low",
-      "created_at": "2026-09-04T12:04:19.396871",
-      "fixed_at": "2026-09-04T14:50:47.351274",
-      "validated_at": "2026-09-04T12:26:53.839834",
-      "triaged_at": "2026-09-04T12:26:53.743013",
-      "status_notes": "Both questions answered, plus a data fix.\n\n1) Filtered view, not data loss: GET /api/v1/bounty/reports is deliberately the public post-validation view (VALIDATED and later stages only), so unverified reports — which can name unpatched issues — are not published. Unresolved items are retained; an authenticated submitter can read their own PENDING report at GET /reports/{id}. Nothing is dropped.\n\n2) Yes — your six earlier reports (#7–#12) are bound to hunter profile 5 with wallet 0xde9CeAaB301A9e47b1bAcd448B3DDbbA85e83398 (verified in bug_bounty_reports.wallet_address / hunter_id on 2026-09-04).\n\n3) validated_at was null on the 15 pre-June FIXED rows because they were closed before per-stage timestamps existed (validation and fix were recorded in one step). Those 15 rows now carry validated_at = fixed_at (or updated_at where fixed_at was also null) together with an explicit status_notes line saying the stamp is historical and not a fresh re-verification — no silent backdating. Every report closed since 2026-09-04 12:26 UTC (#46 onward) is stamped triaged_at → validated_at → fixed_at as it moves.\n\nReproduce: GET https://cymetica.com/api/v1/bounty/reports → count validated_at nulls → 0.\n[reporter-verification PASS 2026-09-07 13:55 UTC by expire76 test_run=run-20260907T135100Z-0923c37]\n[reporter-verification PASS 2026-09-07 17:43 UTC by expire76 test_run=run-20260907T173409Z-7e2dfcc]",
-      "ticket_url": null,
-      "fix_pr_url": null,
-      "reward_amount": 1000.0,
-      "paid_at": "2026-09-07T14:25:42.928226",
-      "is_duplicate": false
     }
   ],
   "leaderboard": [
@@ -1187,11 +1283,11 @@
       "avatar_url": null,
       "tier": "senior",
       "total_score": 460,
-      "valid_reports": 31,
+      "valid_reports": 34,
       "total_likes": 0,
-      "total_earned": 27000.0,
-      "total_awarded": 27000.0,
-      "total_paid": 27000.0,
+      "total_earned": 30000.0,
+      "total_awarded": 30000.0,
+      "total_paid": 30000.0,
       "reward_currency": "ET10"
     },
     {
@@ -1233,6 +1329,5 @@
       "total_paid": 0.0,
       "reward_currency": "ET10"
     }
-  ],
-  "our_reports_refreshed_at": "2026-09-07T20:16:38+00:00"
+  ]
 }
