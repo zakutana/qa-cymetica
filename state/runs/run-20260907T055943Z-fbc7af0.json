@@ -1,0 +1,300 @@
+{
+  "schema": 2,
+  "run_id": "run-20260907T055943Z-fbc7af0",
+  "started_at": "2026-09-07T05:59:53+00:00",
+  "finished_at": "2026-09-07T06:00:15+00:00",
+  "git_head": "fbc7af0716b197e0eff5f7b423138535bd44c1f5",
+  "git_short": "fbc7af0",
+  "git_dirty": true,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": "sha256:381e671ceab014bfeb3f11ef3d56fcc245a6f5a02ce988635cfe3db1a93fadd3",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "da8911c94880b920d02e1e7c78d62b5e48324e983e9a39bd995b6425d15d48ad",
+    "/.well-known/agent-card.json": "10a060302db128749e97e38a0fa6e540dac6cdfef7555c92e97ea6568a624998",
+    "/.well-known/agent-skills.json": "3ee22148aea8e6314344f5675c7a51d4800a25b674c7dbcca1babecdda04c7c4",
+    "/.well-known/ai-plugin.json": "e2f2d79821bf8e741fb18cefea6a94cb7a1ec358644306aeff02e763c61b1fb2",
+    "/.well-known/udc.json": "92cd8a5f7ec5a0a859594ef9fbd72cba4914eaab4220377db18adf2ed44611a4",
+    "/openapi.json": "f0cccb1f06ec266d303b1c7ab8e23f4af29a3c43106027595c95c1449fa1b2cf",
+    "/llms.txt": "dc2c08a4ff03faa66ddef703a132ca6fb554e69f68ed734b7fed4845d3006e28",
+    "mcp:tools/list:none": "cb9188ffdaf6a78e40cae9e30cd1fdfa9925f8f77b1c3d41f5ddb24108b27162"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/rest/test_award_matches_its_tier.py tests/rest/test_bounty_rewards.py tests/rest/test_bounty_tracker.py::test_closures_in_the_public_tracker_carry_evidence tests/rest/test_qa_agent_channel.py::test_the_async_first_pass_is_grounded_like_the_sync_channel -q --no-header --tb=line",
+  "selector_full": false,
+  "allow_mutate": false,
+  "collected": [
+    "tests/rest/test_award_matches_its_tier.py::test_a_recorded_award_agrees_with_the_tier_on_the_same_row",
+    "tests/rest/test_bounty_rewards.py::test_verified_reports_record_what_they_earned",
+    "tests/rest/test_bounty_rewards.py::test_the_reward_programme_is_discoverable_by_an_agent",
+    "tests/rest/test_bounty_tracker.py::test_closures_in_the_public_tracker_carry_evidence",
+    "tests/rest/test_qa_agent_channel.py::test_the_async_first_pass_is_grounded_like_the_sync_channel"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/rest/test_award_matches_its_tier.py::test_a_recorded_award_agrees_with_the_tier_on_the_same_row",
+      "component": "rest.support",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "award-contradicts-its-own-tier",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 1343,
+      "evidence_ids": [
+        "102e97b92cc127204246414613fc957da302220556fe5795730f81f4017653b3"
+      ],
+      "measurement": {
+        "verdict": "passed",
+        "reason": "all 16 recorded award(s) sit inside the tier each row publishes, and no row names a currency its own entitlement contradicts",
+        "left": [],
+        "right": 16,
+        "sources": {
+          "tracker": "/api/v1/bounty/reports",
+          "tiers": "/api/v1/bounty/reward-tiers"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "award-contradicts-its-own-tier",
+        "role": "verdict",
+        "population": {
+          "rows": 20,
+          "awarded": 16,
+          "measured": 16,
+          "without_a_band": 0,
+          "currency_mismatch": 0,
+          "below_published_minimum": 0
+        }
+      },
+      "check_fingerprint": "517b275a55d6b866c0526f6c223191ee3219d4340a6c8facdc0782d62f76813f",
+      "reason": null,
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/rest/test_bounty_rewards.py::test_verified_reports_record_what_they_earned",
+      "component": "rest.support",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "bounty-rewards-unrecorded",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 1091,
+      "evidence_ids": [
+        "980c35d7c375b71397bbe04a3c0bbe5e0fc4e70b442db9b90eab6f618a9bc404",
+        "281d7ff8a615d571e17f34a0ae3d8005b3cdd88d589123cb35c5d8894e30c7bc"
+      ],
+      "measurement": {
+        "verdict": "passed",
+        "reason": "20 of the 20 public reports are closed as fixed and 16 of them can be read as paid or awarded. reward_status takes ['awarded', 'pending_award'], so a report that was paid and one whose award was never recorded are indistinguishable; stats still report bugs_fixed=40 and total_paid=2000.0",
+        "left": 16,
+        "right": 20,
+        "sources": {
+          "tracker": "/api/v1/bounty/reports",
+          "totals": "/api/v1/bounty/stats",
+          "their_ref": "ET-22226"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "bounty-rewards-unrecorded",
+        "role": "verdict",
+        "population": {
+          "rows_returned": 20,
+          "closed": 20,
+          "reward_status_values": [
+            "awarded",
+            "pending_award"
+          ],
+          "bugs_fixed_per_stats": 40,
+          "total_paid_per_stats": 2000.0
+        }
+      },
+      "check_fingerprint": "093784993d97b1427c6f1951135b9da162f73e8057ddcd0ea1146c0b3fe967f1",
+      "reason": null,
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/rest/test_bounty_rewards.py::test_the_reward_programme_is_discoverable_by_an_agent",
+      "component": "discovery.llmstxt",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "bounty-rewards-undocumented",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 1601,
+      "evidence_ids": [
+        "a16f0c5cfaa10478f13fd71e51fff7859d5afd61eb0d2578ac631cd6f60ce8f1",
+        "a28977ca629992f573f6bef2783816509e3278707c30bafec63556f02264c5b7",
+        "0ee0490c80eb164ca5b06a3e7e100f2db2c0b3a313a9b8bc828234a8e4c19edf",
+        "a5f61a1b2261a11de232d8c6520e3a89f03f7e4fcca2ccf3581dc4b93bcb529a",
+        "c59a75c35a37225113dc4743d9734f183fe16507bbcc1223921e5c08d734c0d5"
+      ],
+      "measurement": {
+        "verdict": "passed",
+        "reason": "the bug-report reward programme is described in agent-card.json, agent-skills.json, llms.txt, mcp.json",
+        "left": [
+          "agent-card.json",
+          "agent-skills.json",
+          "llms.txt",
+          "mcp.json"
+        ],
+        "right": [
+          "agent-card.json",
+          "agent-skills.json",
+          "llms.txt",
+          "mcp.json",
+          "openapi.json"
+        ],
+        "sources": {
+          "searched": "agent-card.json, agent-skills.json, llms.txt, mcp.json, openapi.json"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "bounty-rewards-undocumented",
+        "role": "verdict",
+        "population": {
+          "documents_read": 5,
+          "unreadable": {}
+        }
+      },
+      "check_fingerprint": "8a8ec949f57150dcf207546f69321615e4324542b82a752c981b4667aea99b60",
+      "reason": null,
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/rest/test_bounty_tracker.py::test_closures_in_the_public_tracker_carry_evidence",
+      "component": "rest.support",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "tracker-closure-rate",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 773,
+      "evidence_ids": [
+        "ea3aac56daca8b42f65d2aca95a5fc9bc3f97a3b00436e7602349a443c503f87"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "4 of 20 closed reports carry no evidence field at all (validated_at, triaged_at, severity_confirmed, ticket_url, fix_pr_url, status_notes)",
+        "left": [
+          69,
+          70,
+          71,
+          72
+        ],
+        "right": 20,
+        "sources": {
+          "endpoint": "GET /api/v1/bounty/reports"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "tracker-closure-rate",
+        "role": "verdict",
+        "population": {
+          "rows_returned": 20,
+          "closed": 20,
+          "server_total": 40
+        }
+      },
+      "check_fingerprint": "eec8c826a9ff556658be3354fa9e29469b301df49817b0ddde9a152b2704f1d5",
+      "reason": null,
+      "failure_repr": "E   AssertionError: 4 of 20 closed reports carry no evidence field at all (validated_at, triaged_at, severity_confirmed, ticket_url, fix_pr_url, status_notes)\n      left  = [69, 70, 71, 72]\n      right = 20"
+    },
+    {
+      "nodeid": "tests/rest/test_qa_agent_channel.py::test_the_async_first_pass_is_grounded_like_the_sync_channel",
+      "component": "rest.support",
+      "tier": "PROBE",
+      "surface": "rest",
+      "claim_id": "a2a-first-pass-not-grounded",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 10098,
+      "evidence_ids": [
+        "dcbc634c9af25a6e687df0c7f1231a7e8d965ca351c772de816fa55147d8438d",
+        "3dbb9d0e074322e2c5f23dfc0bd78764b3d24f4c3e7d9cb5a206b8d2318aa090"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "the newest async first-pass reply (2026-09-06T22:12:07.838417+00:00) cites 0 source(s) at confidence 0.5, while the sync half cites 3 at 0.85; 0 of 12 replies in the inbox are grounded at all",
+        "left": {
+          "async_newest": {
+            "at": "2026-09-06T22:12:07.838417+00:00",
+            "confidence": 0.5,
+            "sources": []
+          },
+          "sync": {
+            "confidence": 0.85,
+            "sources": [
+              "faq-rewards-1",
+              "faq-revenue-share-1",
+              "GET /api/v1/bounty/reward-tiers"
+            ]
+          }
+        },
+        "right": 0.7,
+        "sources": {
+          "inbox": "/api/v1/bounty/a2a/inbox/{agent_id}",
+          "sync": "/api/v1/bounty/qa-agent/ask"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "a2a-first-pass-not-grounded",
+        "role": "verdict",
+        "population": {
+          "first_pass": 12,
+          "grounded": 0
+        }
+      },
+      "check_fingerprint": "16a96cad414a989a3211713e88f2dcd2eeb261f78c979cb0e0aa74bfa8af6cea",
+      "reason": null,
+      "failure_repr": "E   AssertionError: the newest async first-pass reply (2026-09-06T22:12:07.838417+00:00) cites 0 source(s) at confidence 0.5, while the sync half cites 3 at 0.85; 0 of 12 replies in the inbox are grounded at all\n      left  = {'async_newest': {'at': '2026-09-06T22:12:07.838417+00:00', 'confidence': 0.5, 'sources': []}, 'sync': {'confidence': 0.85, 'sources': ['faq-rewards-1', 'faq-revenue-share-1', 'GET /api/v1/bounty/reward-tiers']}}\n      right = 0.7"
+    }
+  ],
+  "totals": {
+    "passed": 3,
+    "failed": 2
+  },
+  "ratelimit": {
+    "requests": 11,
+    "limit": 60,
+    "remaining": 58,
+    "fraction_used": 0.0333,
+    "exhausted": false
+  },
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "fingerprint_after": "sha256:381e671ceab014bfeb3f11ef3d56fcc245a6f5a02ce988635cfe3db1a93fadd3",
+  "exit_status": 1
+}
