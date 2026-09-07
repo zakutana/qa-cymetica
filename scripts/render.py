@@ -139,25 +139,21 @@ def _message_bodies() -> dict[str, dict]:
     """Every message file, indexed by its id.
 
     The journal records WHICH messages touch a finding; the words stay in the
-    files, pasted verbatim. Reading them here is what puts the vendor's actual
+    files themselves. Reading them here is what puts the vendor's actual
     sentences on the page instead of a summary of them -- and archive/ is
     included, because where a file was filed afterwards says nothing about
-    what it said.
+    what it said. Every such file lives under archive/ now; outbox/ is scanned
+    because reports.yaml shares it, and holds no messages.
     """
-    import importlib.util
-
-    spec = importlib.util.spec_from_file_location(
-        "thread_reader", REPO_ROOT / "scripts" / "thread.py")
-    thread_mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(thread_mod)
+    from qa.messages import blocks, parse
 
     out: dict[str, dict] = {}
-    for folder in (REPO_ROOT / "outbox", REPO_ROOT / "inbox",
+    for folder in (REPO_ROOT / "outbox",
                    *sorted((REPO_ROOT / "archive").glob("*"))):
         if not folder.is_dir():
             continue
         for path in sorted(folder.glob("*.md")):
-            meta = thread_mod.parse(path)
+            meta = parse(path)
             if meta is None or not meta.get("id"):
                 continue
             out[meta["id"]] = {
@@ -166,7 +162,7 @@ def _message_bodies() -> dict[str, dict]:
                 "delivered_as": meta.get("delivered_as"),
                 "delivery_note": meta.get("delivery_note"),
                 "covers": meta.get("covers") or {},
-                "blocks": thread_mod.blocks(meta.get("body") or ""),
+                "blocks": blocks(meta.get("body") or ""),
                 "body": meta.get("body") or "",
             }
     return out
@@ -194,6 +190,31 @@ def _thread_for(row: dict, sent: dict, replied: dict, filed_at: dict) -> list[di
                 "text": answer.get("text") or "",
             })
     return sorted(out, key=lambda m: (m.get("at") or "", m["report_id"]))
+
+
+def _owed(row: dict) -> list[str]:
+    """What this row still owes somebody, in words.
+
+    The fold computes `obligations` on every row and the CLI prints them
+    ("OWED: reverify"). The page did not, so rule 11 -- "a withdrawal prints
+    its debts; the row shows 'retraction owed on #N' until a retraction-sent
+    event clears it" -- was written down and never built, and the two rows
+    owing a re-verify today said so nowhere an operator looks.
+
+    Same shape as rule 8's stale mark, found the same way: a field the fold
+    writes that nothing reads.
+    """
+    obligations = row.get("obligations") or {}
+    out: list[str] = []
+    if obligations.get("reverify"):
+        out.append("re-verify owed")
+    if obligations.get("repair_check"):
+        out.append("check repair owed")
+    for report_id in obligations.get("reopen") or []:
+        out.append(f"reopen #{report_id}")
+    for report_id in obligations.get("retractions") or []:
+        out.append(f"retraction owed on #{report_id}")
+    return out
 
 
 def _summary(row: dict) -> str | None:
@@ -366,7 +387,20 @@ def build_payload(ledger: dict | None = None, inventory: dict | None = None,
         adjudicated = (row.get("check") or {}).get("adjudicated_by")
         row_checks = row.get("checks") or []
         findings.append({
-            **row,
+            # Named, not splatted. `**row` shipped the whole ledger row and
+            # the page read eight of its fields; the other eleven rode along
+            # unread, which is how `stale_from` could be written for a month
+            # and displayed never. A payload field is a promise that something
+            # renders it, and test_the_page_renders_every_field_it_is_given
+            # holds this list to that.
+            "id": row["id"],
+            "title": row.get("title"),
+            "severity": row.get("severity"),
+            "tag": row.get("tag"),
+            "note": row.get("note"),
+            "checks": row_checks,
+            "detail": row.get("detail"),
+            "regressions": row.get("regressions") or [],
             "display_state": shown,
             # The verification sentence is printed from THIS, or not at all.
             # Ten rows read VERIFIED FIXED with verified_by_run null on every
@@ -377,7 +411,27 @@ def build_payload(ledger: dict | None = None, inventory: dict | None = None,
                 if adjudicated and adjudicated.get("run_id")
                 and shown == "VERIFIED FIXED" else None
             ),
-            "not_checked_in": (row.get("check") or {}).get("not_checked_in"),
+            # Set by the fold on any row this run did not adjudicate. On a
+            # terminal row it is noise -- nobody re-runs a withdrawal -- so it
+            # is dropped there and printed everywhere else, beside the time
+            # the row WAS last measured. Without this the open-only sweep
+            # would show 29 rows of last week's readings under a fresh
+            # header, which is precisely the 71-of-109 failure.
+            "not_checked_in": (
+                (row.get("check") or {}).get("not_checked_in")
+                if shown not in ("WITHDRAWN", "SUPERSEDED") else None
+            ),
+            "last_checked_at": (adjudicated or {}).get("at"),
+            # Rule 8's other half. The fold marks every row stale when a read
+            # of their tracker fails, so that "they have said nothing since"
+            # is never confused with "we could not hear them" -- and until
+            # now nothing displayed it, which made the mark a write nobody
+            # read. A terminal row is excluded for the same reason
+            # not_checked_in is: nothing about their tracker can change it.
+            "stale_from": (
+                (row.get("filing") or {}).get("stale_from")
+                if shown not in ("WITHDRAWN", "SUPERSEDED") else None
+            ),
             # Critique gap 5: content carried over from the hand-written
             # ledger quotes figures frozen at their last failing values.
             #
@@ -401,6 +455,7 @@ def build_payload(ledger: dict | None = None, inventory: dict | None = None,
             # panel used to show left / right / sources / population / reason
             # as a table of field names -- accurate, and unreadable.
             "summary": _summary(row),
+            "owed": _owed(row),
         })
 
         for transition in row.get("transitions", []):
@@ -418,6 +473,20 @@ def build_payload(ledger: dict | None = None, inventory: dict | None = None,
     assert sum(display_counts.values()) == len(rows), (
         f"display counts {display_counts} do not sum to {len(rows)} rows"
     )
+
+    # The page does `f.severity.split("-")` and `esc(f.title)` unguarded, so
+    # one row without either renders no findings AT ALL -- a blank list in the
+    # browser with nothing to say why. The fold only guarantees them at
+    # creation, via setdefault inside the candidate loop, so a row seeded by
+    # the migration without one would never acquire it. Fail here instead,
+    # loudly and with the row named: a render that stops is diagnosable, a
+    # page that silently empties is not.
+    for finding in findings:
+        for field in ("severity", "title"):
+            assert finding.get(field), (
+                f"{finding['id']} has no {field}, which the page cannot draw "
+                f"around -- the whole findings list would come out empty"
+            )
 
     by_severity: dict[str, int] = {}
     for finding in findings:
@@ -495,6 +564,15 @@ def build_payload(ledger: dict | None = None, inventory: dict | None = None,
 TEMPLATE = r"""<title>Cymetica QA Console</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <style>
+/* The browser's own [hidden] rule is display:none at UA specificity, which
+   ANY class selector beats. `.newreply { display:inline-flex }` did exactly
+   that: setting el.hidden = true set the attribute and changed nothing on
+   screen, so "Mark all as read" cleared the badge and left every envelope
+   drawn. Published as an Artifact this never showed, because that runtime
+   injects this very rule; served raw from localhost, nothing did.
+   One line, first, so no later class can win against it. */
+[hidden] { display: none !important; }
+
 :root {
   --bg:#f6f7f6; --surface:#ffffff; --surface-2:#eef1f0; --line:#d5dbd9;
   --line-soft:#e6eae9; --text:#10171a; --text-dim:#5a6a6c; --text-faint:#8b9a9b;
@@ -608,6 +686,14 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:15.0px; max-wid
 .seg-ok{background:var(--ok)} .seg-auth{background:var(--auth)}
 .seg-param{background:var(--auth);opacity:.6} .seg-method{background:var(--warn)}
 .seg-missing{background:var(--bad)}
+/* Theirs, and counted against them: a 5xx is an answer. */
+.seg-server_error{background:var(--bad);opacity:.65}
+/* Ours, and counted against nobody: no answer came back at all, which is a
+   fact about this machine's network. Hatched like the other exclusions. */
+.seg-unreachable{
+  background:repeating-linear-gradient(135deg,var(--warn) 0 3px,transparent 3px 7px);
+  box-shadow:inset 0 0 0 1px var(--warn);
+}
 .seg-unprobed,.seg-websocket{
   background:repeating-linear-gradient(135deg,var(--none-bg) 0 4px,transparent 4px 8px);
   box-shadow:inset 0 0 0 1px var(--none-bg);
@@ -795,6 +881,34 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:15.0px; max-wid
   border:1px dashed var(--line); white-space:nowrap; cursor:help;
 }
 .unmeasured-demo { font-weight:400; cursor:default; }
+
+/* Same weight as "figures not re-measured", and for the same reason: it is a
+   provenance note. It appears whenever a sweep ran a narrower selector than
+   the whole suite, which since the open-only default is most sweeps -- so on
+   a lot of rows at once. What it must never do is let a stale reading pass
+   for a fresh one, which is the failure the whole ledger exists to prevent. */
+.unchecked {
+  font-family:var(--mono); font-size:11.5px; padding:2px 6px; border-radius:4px;
+  background:transparent; color:var(--text-faint);
+  border:1px dashed var(--line); white-space:nowrap; cursor:help;
+}
+/* A debt of ours, not a fact about them. Solid rather than dashed: the dashed
+   marks say "this reading may be old", this one says "you still have to do
+   something". */
+.owed {
+  font-family:var(--mono); font-size:11.5px; padding:2px 6px; border-radius:4px;
+  background:transparent; color:var(--accent);
+  border:1px solid var(--accent); white-space:nowrap; cursor:help;
+  margin-right:4px;
+}
+/* Louder than .unchecked on purpose. "We did not re-run our check" is routine
+   on a narrow sweep; "we could not hear them" means the vendor half of every
+   row on the page is older than it looks. */
+.unheard {
+  font-family:var(--mono); font-size:11.5px; padding:2px 6px; border-radius:4px;
+  background:transparent; color:var(--warn);
+  border:1px dashed var(--warn); white-space:nowrap; cursor:help;
+}
 
 /* ---------- legend: two axes, then the grid they make ---------- */
 .lead { font-size:15.0px; color:var(--text-dim); max-width:74ch; margin:14px 0 10px; }
@@ -1086,33 +1200,54 @@ h4.sec {
     part of the platform, how many actually answer when you call them? We call each twice
     &mdash; once with no key, once with the API key &mdash; and take the better answer:</p>
 
-    <table class="verdicts">
-      <tr><td><i style="background:var(--ok)"></i></td>
-          <td><b>It works.</b></td>
-          <td>Counts as good.</td></tr>
-      <tr><td><i style="background:var(--auth)"></i></td>
-          <td><b>&ldquo;You need to log in.&rdquo;</b></td>
-          <td>The lock is doing its job. Counts as good.</td></tr>
-      <tr><td><i style="background:var(--auth)" class="faint"></i></td>
-          <td><b>&ldquo;You forgot something.&rdquo;</b></td>
-          <td>It is there, it just wants a parameter. Counts as good.</td></tr>
-      <tr><td><i style="background:var(--bad)"></i></td>
-          <td><b>&ldquo;No such thing here.&rdquo;</b></td>
-          <td>They wrote it in their own docs but it does not exist. Counts as bad.</td></tr>
-      <tr><td><i style="background:var(--warn)"></i></td>
-          <td><b>&ldquo;Wrong way to ask.&rdquo;</b></td>
-          <td>Our mistake, not theirs. Left out of the score entirely.</td></tr>
-      <tr><td><i style="background:var(--none-bg)"></i></td>
-          <td><b>Cannot be checked this way.</b></td>
-          <td>Live feeds, or addresses needing an ID we do not have. Left out.</td></tr>
-    </table>
+    <table class="verdicts"><tbody id="verdicts"></tbody></table>
 
-    <p class="example"><b>Markets &amp; prices, 64%.</b> 16 addresses published, 5 not
-    checkable by a simple call, 7 of the remaining 11 answered. 7/11 = 64%.</p>
+    <p class="example" id="pctexample"></p>
 
     <p><b>&ldquo;Checks&rdquo; is a different number again.</b> An address answering does
     not mean the answer is <em>correct</em>. <b>100% with no checks</b> means
     &ldquo;it is alive, and nobody has verified a word it says&rdquo;.</p>
+
+    <h4>The bell, in the top corner</h4>
+
+    <p class="lead">It counts <b>incoming answers on our own bug reports</b> that
+    you have not read yet &mdash; a status they changed, or a note they wrote
+    back &mdash; and nothing else. A number there means they have moved on
+    something we filed.</p>
+
+    <p class="example">It comes from their bug tracker, read back over their
+    own API, so it can only ever show something they actually said. That read
+    happens on a sweep, not when this page redraws: the page is where an answer
+    is delivered, never where one is discovered.</p>
+
+    <h4>Where to start on their side</h4>
+
+    <p class="lead">Cymetica&rsquo;s own answer to &ldquo;point an agent at
+    this&rdquo;, in their words, and the four documents it names:</p>
+
+    <table class="verdicts">
+      <tr><td><i style="background:var(--ok)"></i></td>
+          <td><a href="https://cymetica.com/llms.txt">llms.txt</a></td>
+          <td>The machine-readable index of what EventTrader exposes and how to
+              use it. Start here.</td></tr>
+      <tr><td><i style="background:var(--ok)"></i></td>
+          <td><a href="https://cymetica.com/mcp/v1">POST /mcp/v1</a></td>
+          <td>The MCP endpoint &mdash; the tools themselves. 41 anonymous,
+              62 with a key.</td></tr>
+      <tr><td><i style="background:var(--ok)"></i></td>
+          <td><a href="https://cymetica.com/.well-known/agent-card.json">agent-card.json</a></td>
+          <td>Google A2A discovery: skills, auth, capabilities.</td></tr>
+      <tr><td><i style="background:var(--ok)"></i></td>
+          <td><a href="https://cymetica.com/fund-builder/api">/fund-builder/api</a></td>
+          <td>Developer and fund-builder API docs. HTML, and richer than the
+              OpenAPI covering the same ground.</td></tr>
+    </table>
+
+    <p class="example">Their four cover discovery, tools and the programmatic
+    surfaces &mdash; but not everything they publish. <a
+    href="https://cymetica.com/backtest/api">/backtest/api</a> is the same shape
+    of page for the five backtest surfaces, and carries request bodies that
+    <code>openapi-public.json</code> omits.</p>
   </div>
   </section>
 </div>
@@ -1195,10 +1330,17 @@ const VERDICT_WORDS = {
   param:     "wants a parameter we did not send",
   method:    "we asked the wrong way (our fault, left out of the score)",
   missing:   "documented, but there is nothing there",
+  server_error: "it broke on their side (5xx)",
+  unreachable: "we got no answer at all -- our network, not their endpoint",
   unprobed:  "cannot be checked by a simple call",
   websocket: "a live feed, not a request",
 };
-const ORDER = ["ok","auth","param","method","missing","unprobed","websocket"];
+// Every verdict inventory.py can produce. server_error and unreachable were
+// missing, so an endpoint in either state vanished from the bar and from the
+// legend, and the bar's own total was computed over this list -- a section
+// could read 80% with the other 20% represented by nothing at all.
+const ORDER = ["ok","auth","param","method","missing","server_error",
+               "unreachable","unprobed","websocket"];
 
 function card(s) {
   const h = health(s);
@@ -1347,6 +1489,9 @@ function finding(f) {
           <span class="state ${stateClass(f.display_state)}">${esc(f.display_state)}</span>
           ${f.filed && f.filed.length ? `<span class="filed">${f.filed.map(x=>"#"+x.report_id).join(", ")}</span>` : ""}
           ${f.unmeasured ? `<span class="unmeasured" title="The wording and numbers here are from the day this was written; no run since has confirmed they still hold.">figures not re-measured</span>` : ""}
+          ${f.not_checked_in ? `<span class="unchecked" title="This sweep ran a narrower selector and did not include this check. The state and figures shown are the ones the last run that did include it left behind.">not re-checked${f.last_checked_at ? " &middot; last " + esc(when(f.last_checked_at)) : ""}</span>` : ""}
+          ${(f.owed || []).map(o => `<span class="owed" title="Something is still owed on this row: the fold works it out from the events, and it stays here until an event settles it. A re-verify is cleared by a level-V run under the pinned fingerprint; a retraction by a retraction-sent event.">${esc(o)}</span>`).join("")}
+          ${f.stale_from ? `<span class="unheard" title="The last attempt to read their bug tracker did not succeed, so what they say here is as of the last clean read and may have moved since. A failed read is not an empty one: nothing on the vendor's side was allowed to change on the strength of it.">their side unread &middot; since ${esc(when(f.stale_from))}</span>` : ""}
           <span class="newreply" data-newreply hidden title="They replied since you last looked"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="2.2" y="4.6" width="15.6" height="11" rx="2"/><path d="M2.6 6.2 10 11.4l7.4-5.2"/></svg><span class="sr-only">new reply</span></span>
         </div>
       </span>
@@ -1682,6 +1827,50 @@ document.addEventListener("click", e => {
   }
 });
 paintBell();
+
+
+/* ---------- the legend's two generated parts ----------
+   Both were written out by hand and both had gone stale, in the way a second
+   copy of a fact always does. The verdict table listed six kinds and the code
+   serves seven -- `websocket` was missing while 16 endpoints fell into it --
+   and its wording had drifted from VERDICT_WORDS. The worked example was
+   wrong in every figure: "Markets & prices, 64%, 16 published, 7 of 11
+   answered" against a live 12 published and 7 of 7. So both are drawn from
+   the same data the cards are, and cannot drift again. */
+function paintVerdicts() {
+  const seen = {};
+  (D.sections || []).forEach(s => Object.keys(s.verdicts || {}).forEach(k => {
+    seen[k] = (seen[k] || 0) + s.verdicts[k];
+  }));
+  document.getElementById("verdicts").innerHTML = ORDER.map(k =>
+    `<tr><td><i class="seg-${k}"></i></td>`
+    + `<td>${esc(VERDICT_WORDS[k])}</td>`
+    + `<td>${seen[k] || 0} today</td></tr>`).join("");
+}
+paintVerdicts();
+
+function paintPctExample() {
+  const el = document.getElementById("pctexample");
+  const usable = (D.sections || []).filter(s => s.endpoints_probed > 0);
+  if (!usable.length) { el.hidden = true; return; }
+  /* The weakest section, so the example shows the number doing some work. */
+  const s = usable.slice().sort((a, b) =>
+    (a.reachable_pct - b.reachable_pct) ||
+    (b.endpoints_probed - a.endpoints_probed))[0];
+  const floor = Math.min.apply(null, usable.map(x => x.reachable_pct));
+  el.innerHTML = `<b>${esc(s.title)}, ${s.reachable_pct}%.</b> `
+    + `${s.endpoints_documented} addresses published, `
+    + `${s.endpoints_unprobeable} not checkable by a simple call, `
+    + `${s.endpoints_reachable} of the ${s.endpoints_probed} we could call `
+    + `answered. ${s.endpoints_reachable}/${s.endpoints_probed} = `
+    + `${s.reachable_pct}%.`
+    + (floor === 100
+       ? ` <span class="hi">Every section reads 100% today</span> &mdash; so this
+          number is currently saying only that the published addresses exist,
+          which is the weaker half of the claim.`
+       : "");
+}
+paintPctExample();
 
 /* ---------- live updates ----------
    Only when served by scripts/serve.py. Opened as a file or published as an

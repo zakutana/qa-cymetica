@@ -17,3 +17,30 @@ build/
 dist/
 .DS_Store
 Thumbs.db
+
+# The journal's append lock. A zero-byte file whose only job is to exist while
+# one process holds it; committing it would put a machine's transient state in
+# everyone's tree.
+state/**/*.lock
+state/*.lock
+
+# Run records. Every pytest invocation writes one, including the single-file
+# runs with --tb=line that make up most of a working session: on 2026-09-07,
+# 237 of 283 committed records had adjudicated nothing, and the tree grew
+# 9-15 MB on a working day. The cost that mattered was not the megabytes --
+# an untracked record makes `git status --porcelain` dirty, prereg.py refuses
+# a dirty tree, and so every sweep opened by committing debug output.
+#
+# A record is evidence when a fold stood on it, and scripts/ledger.py force-
+# adds exactly that one. tests/repo asserts the converse: nothing cited by the
+# ledger, the journal or a preregistration may be untracked. Records committed
+# before this line stay committed.
+state/runs/
+
+# Half-written snapshots. Every atomic write under state/ goes tmp-then-replace,
+# and a process killed between the two leaves the tmp behind -- untracked, which
+# means git status is dirty, which means prereg.py refuses and no run can reach
+# level V. protect_state.py then blocks removing it from a shell, so the
+# operator is left with a tree they cannot clean by the sanctioned route.
+state/**/*.tmp
+state/*.tmp

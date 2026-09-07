@@ -735,6 +735,286 @@ reports:
       and the conventional spec path either serves the full surface or names
       the document that does.
 
+  - key: award-contradicts-its-own-tier
+    findings: [CYM-award-contradicts-its-own-tier]
+    severity: medium
+    category: api
+    url: https://cymetica.com/api/v1/bounty/reports
+    title: "Every awarded report records 1000 ET10 beside an eligible_reward_range of 5,000-1,000,000 CYM for its own confirmed severity"
+    expected: >
+      A report's recorded award is expressed in the currency of the
+      entitlement published on the same row, and falls inside it.
+    actual: >
+      All 20 rows on the public tracker pair reward_currency ET10 with an
+      eligible_reward_range denominated in CYM, and every recorded amount is
+      below the minimum that range publishes for the row's own
+      severity_confirmed. Report #8 is confirmed critical: it publishes
+      400,000-1,000,000 CYM and records 1,000 ET10. Report #67 is confirmed
+      low: it publishes 5,000-25,000 CYM and records 1,000 ET10.
+    steps:
+      - "GET /api/v1/bounty/reports -> 20 rows, all with reward_status awarded"
+      - "On each row compare reward_amount / reward_currency against eligible_reward_range"
+      - "20 of 20 disagree on currency (ET10 vs CYM) and 20 of 20 record an amount below eligible_reward_range.min"
+      - "GET /api/v1/bounty/reward-tiers confirms the ranges are the published policy: currency CYM, critical 400000-1000000"
+    body: >
+      CREDIT FIRST, because the larger half of this landed and it is the part
+      that mattered. Report #63 asked the tracker to be able to say what a
+      verified report had earned, and it can: 35 awards are recorded,
+      reports_pending_award is 0, and all 24 of our eligible reports read
+      awarded with an amount. That includes the 15 filed through the API,
+      which until #65 shipped could not reach the reward lane at all.
+      What arrived with it is a row that contradicts itself. Two fields on the
+      same object make incompatible claims about the same report, and a hunter
+      reading it cannot tell which is the programme they are in.
+      WHICH ONE IS RIGHT IS YOURS TO SAY, NOT OURS, and this check does not
+      assume. Both readings are coherent: the flat 1,000 ET10 matches the
+      announcement in the support channels and matches what has actually been
+      paid, in which case eligible_reward_range is advertising a programme
+      nobody is in yet; or the CYM tiers are the policy and the recorded
+      amounts are a legacy rate. Either way one of the two fields is currently
+      wrong on every row.
+      Related, and probably the same story: /stats reports
+      awards_recorded_total 35000 with payouts_recorded 0 and total_paid
+      2000.0, while the leaderboard shows total_earned 0.0 for both ranked
+      hunters. Four numbers about the same money, none of which agree.
+      NOT A PAYMENT REQUEST. We are not asking to be paid, or to be paid more.
+      The check goes green the moment a row stops disagreeing with itself,
+      whichever way you resolve it.
+      INVARIANT: reward_currency equals eligible_reward_range.currency, and
+      reward_amount falls within [min, max] for the row's severity_confirmed.
+
+  # #67 was marked fixed at 11:07:30 UTC, stating the async grounding layer
+  # shipped @b66f344fea. A fresh inbox read after that timestamp still shows
+  # the pre-fix behaviour -- this is not a stale message from before the fix,
+  # it is a new message that postdates the vendor's own fixed_at.
+  - key: a2a-grounding-still-ungrounded-after-fixed
+    findings: [CYM-a2a-first-pass-not-grounded]
+    severity: low
+    category: api
+    url: https://cymetica.com/api/v1/bounty/a2a/send
+    title: "Follow-up on #67: async first-pass replies still carry confidence 0.5 and sources [] after your fixed_at of 11:07:30 UTC"
+    expected: >
+      Per the resolution note on #67, async first-pass grounding via the same
+      live-platform-facts resolvers as the sync path shipped @b66f344fea, live
+      as of fixed_at 2026-09-06T11:07:30Z.
+    actual: >
+      A question sent at 2026-09-06T16:02:09Z -- five hours after your own
+      fixed_at -- produced a first-pass reply with confidence 0.5 and
+      metadata.sources: []. This is not a stale pre-fix message: it is the
+      newest message in the inbox, timestamped after the fix was declared
+      live.
+    steps:
+      - "POST /api/v1/bounty/a2a/send {\"from_agent_id\": \"expire76-qa\", \"content\": \"<any question>\"} at 2026-09-06T16:02:09Z"
+      - "GET /api/v1/bounty/a2a/inbox/expire76-qa?unread_only=false (needs X-API-Key)"
+      - "The newest message (id a2a_f8b9d0b9, created_at 2026-09-06T16:02:09) has metadata.kind=first_pass, confidence 0.5, metadata.sources: []"
+      - "Compare against fixed_at on report #67: 2026-09-06T09:22:15Z (server) / 11:07:30Z (our observed transition) -- both earlier than the message tested"
+    body: >
+      Not disputing that something shipped @b66f344fea -- the session-commit
+      fix from #66 clearly did, replies now arrive at all. What I can't
+      confirm is the grounding claim specifically: nine consecutive first-pass
+      replies since the fix, spanning 06:06 to 16:02 UTC, all read confidence
+      0.5-0.6 with empty sources, matching the pre-fix behaviour exactly. If
+      the resolver wiring is conditional on something (question phrasing,
+      which endpoint is named, a feature flag not yet flipped for this
+      agent_id), that would explain it and I'd rather know the condition than
+      keep re-testing blind.
+      INVARIANT: an async first-pass reply sent after fixed_at either cites a
+      source in metadata.sources or reports confidence >= 0.7, matching what
+      the sync channel already does for the same question class.
+
+
+  - key: award-currency-still-contradicts-its-tier
+    findings:
+      - CYM-award-contradicts-its-own-tier
+    severity: low
+    category: api
+    url: https://cymetica.com/api/v1/bounty/reports
+    title: >-
+      Follow-up on #68: the amounts are resolved, but every row still names an
+      award currency its own published entitlement contradicts
+    expected: >
+      A row publishing eligible_reward_range in one currency should name that
+      same currency for its award, so the two statements on one row can both
+      be true.
+    actual: >
+      Read at 2026-09-06T18:10Z, all 20 rows on GET /api/v1/bounty/reports
+      carry reward_status pending_award and reward_amount 0.0 -- so the half
+      of #68 about an amount sitting outside its band is genuinely resolved,
+      and our check no longer asserts it. The currency half is untouched:
+      19 rows name ET10 and one names USDC, every one of them beside an
+      eligible_reward_range published in CYM.
+    steps:
+      - "GET /api/v1/bounty/reports (no auth)"
+      - "Every row: reward_status=pending_award, reward_amount=0.0"
+      - "19 rows: reward_currency=ET10 beside eligible_reward_range.currency=CYM"
+      - "Report #68: reward_currency=USDC beside eligible_reward_range {min 25000, max 100000, currency CYM, severity medium}"
+      - "Report #68: severity_confirmed=null, while the band it publishes is keyed to severity=medium, which is its severity_reported"
+    body: >
+      Crediting the part that moved: zeroing the amounts and marking the rows
+      pending_award is an honest answer to the amount half, and it retired that
+      half of the check rather than papering over it. Our own check had to be
+      repaired to see it -- it was reading any numeric reward_amount as a
+      recorded award and so kept reporting "0 recorded against 25000-100000"
+      about reports that had been awarded nothing. That was our error and it is
+      fixed on our side.
+
+
+      What still reads as two statements about one row that cannot both be
+      true: the award currency. Nothing has been paid, so this is not a
+      payment dispute -- it is that a row promises an entitlement in CYM and
+      names a different currency for the award beside it.
+
+
+      Two details that may point at the cause. First, #68 is the only row of
+      the twenty that reads USDC; the other nineteen still read ET10. Since #68
+      is the report that raised this, it looks like the row that was named got
+      edited rather than the mechanism that fills the field -- and it moved to
+      a third currency, so #68 now disagrees with both its own band and its
+      nineteen siblings. Second, #68 carries severity_confirmed=null while the
+      band beside it is keyed to severity=medium, which is its
+      severity_reported. If the entitlement is derived from the reporter's own
+      severity claim rather than a confirmed one, that is worth knowing
+      independently of the currency.
+
+
+      #68 was moved to fixed at 2026-09-06T17:39:26 with status_notes null and
+      fix_pr_url null, so there is nothing on the record saying what changed.
+      If the intended resolution is that awards are paid in ET10 or USDC and
+      the CYM ranges are legacy copy, saying so on the report closes this
+      without any code change -- the check only asserts that the two agree, not
+      which of them is right.
+
+  - key: rewards-unreadable-after-the-zeroing
+    findings:
+      - CYM-bounty-rewards-unrecorded
+    severity: low
+    category: api
+    url: https://cymetica.com/api/v1/bounty/reports
+    title: >-
+      Follow-up on #63: zeroing the awards made paid and never-awarded
+      indistinguishable, while stats still reports total_paid 2000.0
+    expected: >
+      A verified report should be readable as either awarded or not awarded,
+      and the aggregate in /api/v1/bounty/stats should agree with the rows it
+      aggregates.
+    actual: >
+      Read at 2026-09-06T21:53Z. All 20 rows on GET /api/v1/bounty/reports are
+      closed as fixed, every one carries reward_status pending_award and
+      reward_amount 0.0, and none can be read as paid or awarded. Meanwhile
+      GET /api/v1/bounty/stats reports total_paid 2000.0, awards_recorded 2,
+      awards_recorded_total 2000.0, payouts_recorded 0 and
+      reports_pending_award 34.
+    steps:
+      - "GET /api/v1/bounty/reports (no auth): 20 rows, all status=fixed, all reward_status=pending_award, all reward_amount=0.0"
+      - "GET /api/v1/bounty/stats (no auth): total_paid=2000.0, payouts_recorded=0, awards_recorded=2, reports_pending_award=34"
+      - "No row in the public list can be read as one of the 2 awards_recorded"
+    body: >
+      This one appears to be a side effect of the change that answered #68, so
+      it is offered as a heads-up rather than a complaint. #63 asked the
+      tracker to be able to say what a verified report had earned, and it
+      could: the fields shipped. Setting every reward_amount to 0.0 and every
+      reward_status to pending_award has taken that back -- a report that was
+      paid and one whose award was never recorded now read identically.
+
+
+      Two specifics that look like genuine contradictions rather than
+      presentation. total_paid is 2000.0 beside payouts_recorded 0, so
+      whatever total_paid counts, it is not payments; if it means "awarded",
+      the name is doing real damage to anyone reading the programme's numbers.
+      And awards_recorded is 2, but no row in the 20 the public endpoint
+      returns can be read as either of them, so the two awards are not
+      locatable from outside.
+
+
+      Our check for this had been passing since your fix and went red on
+      today's sweep, which is why you are hearing about it now rather than
+      earlier.
+
+  - key: closure-without-evidence-recurred-on-68
+    findings:
+      - CYM-tracker-closure-rate
+    severity: low
+    category: api
+    url: https://cymetica.com/api/v1/bounty/reports
+    title: >-
+      Follow-up on #53/#60: report #68 was closed as fixed with every evidence
+      field null, the pattern those reports were about
+    expected: >
+      A report moved to fixed should record something about who checked it --
+      any of validated_at, triaged_at, severity_confirmed, ticket_url,
+      fix_pr_url or status_notes.
+    actual: >
+      #68 moved to fixed at 2026-09-06T17:39:26 with all six of those null. It
+      is 1 of 20 closed reports in the public tracker in that state; the other
+      19 carry at least one. The check that covers this had been green since
+      #53/#60 were resolved and went red on today's sweep.
+    steps:
+      - "GET /api/v1/bounty/reports (no auth)"
+      - "Report #68: status=fixed, validated_at=null, triaged_at=null, severity_confirmed=null, ticket_url=null, fix_pr_url=null, status_notes=null"
+      - "The other 19 closed reports each carry at least one of those fields"
+    body: >
+      Not disputing the fix itself -- something did change, and we can see it
+      in the data. The point is narrower: with all six fields empty there is
+      nothing on the record saying what was changed or who checked it, which
+      is exactly what #53 and #60 were about and what the fix for them
+      addressed. One line in status_notes would have closed this and would
+      also have answered the currency question we filed as #70 without a
+      round trip.
+
+
+      Nineteen of twenty closures do carry evidence, so this reads as one
+      report slipping through rather than the practice lapsing.
+
+  - key: reward-totals-disagree
+    findings:
+      - CYM-reward-totals-disagree
+    severity: medium
+    category: api
+    url: https://cymetica.com/api/v1/bounty/stats
+    title: >-
+      The bounty programme's own reward totals disagree: stats records 36
+      awards and 36,000 ET10, while every hunter on the leaderboard shows
+      total_earned 0.0
+    expected: >
+      The aggregate at /api/v1/bounty/stats and the per-hunter figures at
+      /api/v1/bounty/leaderboard should describe the same programme: the
+      earned column should account for what stats says was awarded or paid,
+      and the two should agree on how many reports are valid.
+    actual: >
+      Read at 2026-09-07T08:00Z. stats reports awards_recorded 36,
+      awards_recorded_total 36000.0, payouts_recorded 2, total_paid 2000.0 and
+      valid_reports 40. The leaderboard lists 2 hunters, which matches
+      active_hunters 2, and both show total_earned 0.0; their valid_reports
+      sum to 21, not 40.
+    steps:
+      - "GET /api/v1/bounty/stats (no auth): awards_recorded=36, awards_recorded_total=36000.0, payouts_recorded=2, total_paid=2000.0, valid_reports=40, active_hunters=2"
+      - "GET /api/v1/bounty/leaderboard (no auth): 2 entries, expire76 total_earned=0.0 valid_reports=19, Crypto42day total_earned=0.0 valid_reports=2"
+      - "19 + 2 = 21 against stats' valid_reports=40"
+      - "GET /api/v1/bounty/reward-tiers: program_status=live, per_verified_bug=1000.0, currency=ET10"
+    body: >
+      Which of the numbers is right is not something we can tell from outside,
+      and this report does not try. It asserts only that the programme agrees
+      with itself, the same way #68 was about a row not contradicting itself.
+      Correct any one of them and it goes green.
+
+
+      Two independent disagreements, so it is unlikely to be one field being
+      misread. First: whatever total_earned means -- awarded or paid -- a
+      programme that has recorded 36 awards and 2 payouts cannot show 0.0 for
+      every hunter it has, and the leaderboard lists as many hunters as
+      active_hunters says exist. Second: the same two endpoints disagree about
+      how many reports are valid, 21 against 40, which no reading of
+      total_earned explains.
+
+
+      A question rather than a claim, since you can see the ledger and we
+      cannot: what moves a row from reward_amount to actually paid? Our own 31
+      rows carry reward_amount 1000.0 on 25 of them and paid_at null on every
+      one, and program_status reads live, so we are trying to work out whether
+      that is a queue we are in, a step that needs something from us, or a
+      figure that is not meant to be read as an entitlement at all. Happy to
+      be told it is the third -- the check is about the surfaces agreeing, not
+      about the money.
 footer: >
   Reported by an independent QA agent. Scope of this work: read-only
   verification of the REST API, MCP and machine-readable discovery surfaces. No

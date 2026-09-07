@@ -1,0 +1,118 @@
+{
+  "schema": 2,
+  "run_id": "run-20260907T075619Z-ec7a4f4",
+  "started_at": "2026-09-07T07:56:44+00:00",
+  "finished_at": "2026-09-07T07:56:49+00:00",
+  "git_head": "ec7a4f402a721577cad350c688d06a33353801d7",
+  "git_short": "ec7a4f4",
+  "git_dirty": true,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": "sha256:381e671ceab014bfeb3f11ef3d56fcc245a6f5a02ce988635cfe3db1a93fadd3",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "da8911c94880b920d02e1e7c78d62b5e48324e983e9a39bd995b6425d15d48ad",
+    "/.well-known/agent-card.json": "10a060302db128749e97e38a0fa6e540dac6cdfef7555c92e97ea6568a624998",
+    "/.well-known/agent-skills.json": "3ee22148aea8e6314344f5675c7a51d4800a25b674c7dbcca1babecdda04c7c4",
+    "/.well-known/ai-plugin.json": "e2f2d79821bf8e741fb18cefea6a94cb7a1ec358644306aeff02e763c61b1fb2",
+    "/.well-known/udc.json": "92cd8a5f7ec5a0a859594ef9fbd72cba4914eaab4220377db18adf2ed44611a4",
+    "/openapi.json": "f0cccb1f06ec266d303b1c7ab8e23f4af29a3c43106027595c95c1449fa1b2cf",
+    "/llms.txt": "dc2c08a4ff03faa66ddef703a132ca6fb554e69f68ed734b7fed4845d3006e28",
+    "mcp:tools/list:none": "cb9188ffdaf6a78e40cae9e30cd1fdfa9925f8f77b1c3d41f5ddb24108b27162"
+  },
+  "fingerprint_errors": {
+    "/openapi-public.json": "ReadTimeout: The read operation timed out"
+  },
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/rest/test_reward_totals_agree.py -q --no-header --tb=line",
+  "selector_full": false,
+  "allow_mutate": false,
+  "collected": [
+    "tests/rest/test_reward_totals_agree.py::test_the_reward_totals_agree_with_each_other"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/rest/test_reward_totals_agree.py::test_the_reward_totals_agree_with_each_other",
+      "component": "rest.support",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "reward-totals-disagree",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 1236,
+      "evidence_ids": [
+        "55d0df5db3b828ed80cac8482470a4b82574b9acb8ad60000d063cdf062df2b8",
+        "8f34f9ff8949af9afc84cd791604cff1513fb4d9108562189b387ebf89a15ed3"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "stats records 36000.0 awarded and 2000.0 paid, and every one of the 2 hunter(s) on the leaderboard shows total_earned 0.0; the leaderboard lists all 2 hunter(s) and accounts for 21 valid report(s), while stats calls 40 valid",
+        "left": {
+          "leaderboard": [
+            {
+              "hunter": "expire76",
+              "earned": 0.0
+            },
+            {
+              "hunter": "Crypto42day",
+              "earned": 0.0
+            }
+          ],
+          "board_valid_reports": 21
+        },
+        "right": {
+          "awards_recorded": 36,
+          "awards_recorded_total": 36000.0,
+          "payouts_recorded": 2,
+          "total_paid": 2000.0,
+          "valid_reports": 40
+        },
+        "sources": {
+          "stats": "/api/v1/bounty/stats",
+          "leaderboard": "/api/v1/bounty/leaderboard"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "reward-totals-disagree",
+        "role": "verdict",
+        "population": {
+          "hunters_listed": 2,
+          "active_hunters": 2
+        }
+      },
+      "check_fingerprint": "4fc3b5c375a0a25220966aa968c79c2e87c576f35265f0fd232e34c4f4d5d910",
+      "reason": null,
+      "failure_repr": "E   AssertionError: stats records 36000.0 awarded and 2000.0 paid, and every one of the 2 hunter(s) on the leaderboard shows total_earned 0.0; the leaderboard lists all 2 hunter(s) and accounts for 21 valid report(s), while stats calls 40 valid\n      left  = {'leaderboard': [{'hunter': 'expire76', 'earned': 0.0}, {'hunter': 'Crypto42day', 'earned': 0.0}], 'board_valid_reports': 21}\n      right = {'awards_recorded': 36, 'awards_recorded_total': 36000.0, 'payouts_recorded': 2, 'total_paid': 2000.0, 'valid_reports': 40}"
+    }
+  ],
+  "totals": {
+    "failed": 1
+  },
+  "ratelimit": {
+    "requests": 2,
+    "limit": 2000,
+    "remaining": 1991,
+    "fraction_used": 0.0045,
+    "exhausted": false
+  },
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "fingerprint_after": "sha256:97d3d7ec7f95b865c20e38b2b420073341493fa33d08fb9ce4816d8f544e8a67",
+  "exit_status": 1
+}

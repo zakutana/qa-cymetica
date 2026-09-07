@@ -1,0 +1,138 @@
+{
+  "schema": 2,
+  "run_id": "run-20260906T215146Z-64d658c",
+  "started_at": "2026-09-06T21:51:56+00:00",
+  "finished_at": "2026-09-06T21:52:02+00:00",
+  "git_head": "64d658ca91f8a036fedeb1f4c02b0e1dcb191fc2",
+  "git_short": "64d658c",
+  "git_dirty": true,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": "sha256:90e7579c68b557ad3e67ca79538fa7f1f8fcc41353d6aabb21c23c9d994df53f",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "892d82611a90587dddf0272a7ca5326676dbb3e54e17f99b34bce91a9b947033",
+    "/.well-known/agent-card.json": "3dfc7d39fe712e14967fbd019be8bec83c4a49e836fb3d04ff02248b2580fca5",
+    "/.well-known/agent-skills.json": "f2f992a77d58a157ec678cd17d4d94d216aa96d12ee4f9a3adae9fa291fb5a0d",
+    "/.well-known/ai-plugin.json": "e2f2d79821bf8e741fb18cefea6a94cb7a1ec358644306aeff02e763c61b1fb2",
+    "/.well-known/udc.json": "92cd8a5f7ec5a0a859594ef9fbd72cba4914eaab4220377db18adf2ed44611a4",
+    "/openapi.json": "f0cccb1f06ec266d303b1c7ab8e23f4af29a3c43106027595c95c1449fa1b2cf",
+    "/llms.txt": "98da5811f1b71dfc5598e361b965e590820b1ffa9fd931e41807d9a3950e45d3",
+    "mcp:tools/list:none": "cb9188ffdaf6a78e40cae9e30cd1fdfa9925f8f77b1c3d41f5ddb24108b27162"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/rest/test_llms_counts.py -q --no-header --tb=line",
+  "selector_full": false,
+  "allow_mutate": false,
+  "collected": [
+    "tests/rest/test_llms_counts.py::test_llms_states_no_fixed_size_for_a_tier_scoped_catalogue",
+    "tests/rest/test_llms_counts.py::test_every_agent_count_in_llms_matches_the_live_species_list"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/rest/test_llms_counts.py::test_llms_states_no_fixed_size_for_a_tier_scoped_catalogue",
+      "component": "mcp.protocol",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "mcp_resource_count",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 1165,
+      "evidence_ids": [
+        "bacbbcd4403011229bc85b399a6821ebff1a7593e64a2a03da190827f3766893"
+      ],
+      "measurement": {
+        "verdict": "passed",
+        "reason": "llms.txt states no fixed catalogue size and directs the reader to tools/list for their own tier",
+        "left": [],
+        "right": "tools/list",
+        "sources": {
+          "document": "/llms.txt"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "mcp_resource_count",
+        "role": "verdict",
+        "population": {
+          "mcp_lines": 4,
+          "doc_bytes": 41342
+        }
+      },
+      "check_fingerprint": "d5a3824c0ce9f24d09de8c39811e2fa1f2a28925a0c381baef0944b30dfb20e2",
+      "reason": null,
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/rest/test_llms_counts.py::test_every_agent_count_in_llms_matches_the_live_species_list",
+      "component": "rest.agents",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "llms_agent_count_self_consistent",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 814,
+      "evidence_ids": [
+        "9a8f7f691daf891594d2374b7f122565778ed449245e6dfe3df7b932b5c668fd",
+        "359855b1805059efa1d7d53434b67dd8072e90135f5ff0ea1b29e45e501c1e4f"
+      ],
+      "measurement": {
+        "verdict": "passed",
+        "reason": "llms.txt states the species count in 6 place(s); the live catalogue lists 11, and every one of them agrees",
+        "left": [
+          11
+        ],
+        "right": 11,
+        "sources": {
+          "document": "/llms.txt",
+          "catalogue": "/api/v1/agents/species"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "llms_agent_count_self_consistent",
+        "role": "verdict",
+        "population": {
+          "occurrences": 6,
+          "live_species": 11
+        }
+      },
+      "check_fingerprint": "2150b030a8e4860cf7a2480bc36a2ae989dae3d032e200d87b5667f27c8c236f",
+      "reason": null,
+      "failure_repr": null
+    }
+  ],
+  "totals": {
+    "passed": 2
+  },
+  "ratelimit": {
+    "requests": 3,
+    "limit": 2000,
+    "remaining": 1992,
+    "fraction_used": 0.004,
+    "exhausted": false
+  },
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "fingerprint_after": "sha256:90e7579c68b557ad3e67ca79538fa7f1f8fcc41353d6aabb21c23c9d994df53f",
+  "exit_status": 0
+}

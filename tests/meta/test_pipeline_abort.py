@@ -8,14 +8,16 @@ its Inconclusive wrapper in phase 1). If any later edit drifts into the guard
 sections, this test turns red and -- via the very mechanism it pins -- stops
 the session.
 
-The hashes below were computed at commit ca0bc45 over:
-  tests/conftest.py            lines 42-117  (markers, options, collection-time
+The hashes below were computed at commit ca0bc45 over the sections named here,
+and re-derived since -- each time with its reason beside the hash:
+  tests/conftest.py            lines 44-135  (markers, options, the guard
+                                              self-check, collection-time
                                               enforcement, meta-first ordering,
                                               the abort hook, sessionstart)
-  tests/conftest.py            lines 123-212 (session resources and fixtures)
+  tests/conftest.py            lines 141-230 (session resources and fixtures)
   tests/meta/test_guard_is_real.py  whole file
-Lines 215-228 of conftest.py (the Inconclusive hookwrapper) and line 30 (its
-import) are deliberately outside the pinned ranges: phase 1 removes them.
+Lines 233-236 of conftest.py (what is left of the Inconclusive hookwrapper,
+removed in phase 1) sit deliberately outside the pinned ranges.
 """
 
 from __future__ import annotations
@@ -36,9 +38,41 @@ CONFTEST = REPO / "tests" / "conftest.py"
 GUARD_TESTS = REPO / "tests" / "meta" / "test_guard_is_real.py"
 
 PINNED = {
-    "conftest.py:42-117": "0aeb83fba58d3846b25311fa7e4e5e9fb3232adcddf8c62b75c4a53c8158cd3c",
-    "conftest.py:123-212": "d81006935096100794735750341c49d76393dd82d2f224dd55a9a0ce874e7454",
-    "test_guard_is_real.py": "7e5861339ca30b73150fd59b0666b57ea056d6bfe060b40cf6c13ef06ed3b444",
+    # Re-derived 2026-09-07, and the ranges moved with it (42-117 -> 44-135,
+    # 123-212 -> 141-230), for one edit that adds enforcement:
+    # pytest_configure now calls assert_client_guard_blocks() straight after
+    # install_client_guard(). The ordering pinned here aborts a session whose
+    # guard tests FAIL; a selector that never collects them aborts nothing,
+    # and live requests have gone out exactly that way. The self-check closes
+    # the case the ordering cannot see. Section two's hash is unchanged, which
+    # is the evidence that only section one moved.
+    "conftest.py:44-135": "e29df32b2ce0afd02c2fd309f0d45647192380e696fe345dcb41aab4ab2c1184",
+    "conftest.py:141-230": "d81006935096100794735750341c49d76393dd82d2f224dd55a9a0ce874e7454",
+    # Re-derived 2026-09-06, deliberately, for two edits that go the way this
+    # pin exists to protect:
+    #
+    #   * the money-loop endpoints gained `probe_only: true` in
+    #     components.yaml, which made test_mutate_against_unlisted_host_is_
+    #     blocked raise on the floor instead of the host allowlist -- so it
+    #     was moved onto the bounty filing channel, which is deliberately not
+    #     probe_only and therefore actually reaches the allowlist. The old
+    #     subject tested the floor twice and the allowlist never.
+    #   * test_the_money_loop_is_behind_the_probe_only_floor was added, so
+    #     the floor cannot quietly come off again.
+    #
+    # Both add enforcement. A future re-derivation that removes any is the
+    # thing this pin is for: check what changed before recomputing.
+    #
+    # Re-derived again the same day, for the reason this pin would most want
+    # to hear about. Every negative control in that file asked the guard to
+    # refuse something, and its only protection against actually doing it was
+    # the code under test. Mutating the probe_only floor off -- to check this
+    # suite could feel it -- sent a real POST to /api/v1/funding/withdraw with
+    # {"amount": "1"}; anonymous, refused 401, nothing moved, and it left the
+    # machine. The clients there now carry a transport that cannot send. The
+    # mutation is still caught, the message now reads THE GUARD LET IT
+    # THROUGH, and no evidence file is written because nothing is sent.
+    "test_guard_is_real.py": "1399c75aed23f65f66b4e427a4fb37ea1984233de6cf1bd4f08f55f44780879b",
 }
 
 
@@ -50,8 +84,8 @@ def _sha_lines(path: Path, first: int, last: int) -> str:
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_guard_sections_are_byte_identical_to_ca0bc45():
     actual = {
-        "conftest.py:42-117": _sha_lines(CONFTEST, 42, 117),
-        "conftest.py:123-212": _sha_lines(CONFTEST, 123, 212),
+        "conftest.py:44-135": _sha_lines(CONFTEST, 44, 135),
+        "conftest.py:141-230": _sha_lines(CONFTEST, 141, 230),
         "test_guard_is_real.py": hashlib.sha256(GUARD_TESTS.read_bytes()).hexdigest(),
     }
     drifted = {k: (PINNED[k][:12], v[:12]) for k, v in actual.items() if v != PINNED[k]}
@@ -59,6 +93,38 @@ def test_guard_sections_are_byte_identical_to_ca0bc45():
         "\nThe safety guard's pinned sections changed. If that was intended, "
         "re-derive the hashes deliberately and say why in the commit; if not, "
         "revert.\n" + "\n".join(f"  {k}: pinned {a}… now {b}…" for k, (a, b) in drifted.items())
+    )
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_no_guard_self_test_can_skip_itself():
+    """A skipped guard is exactly as unproven as a failed one, and quieter.
+
+    The session aborts when a meta test FAILS. Nothing notices a skip, so a
+    `skipif` on one of these would retire a safety proof while leaving the
+    suite green -- the relaxation CLAUDE.md names ("a red test here is the
+    system working; do not fix it by relaxing the rule") in its least visible
+    form.
+
+    One skip is legitimate and stays: `importorskip("requests")`, because the
+    ban it proves is itself conditional -- qa/client.py only bans
+    requests.Session when requests can be imported, and requests is not a
+    declared dependency. There is nothing to prove when there is nothing to
+    ban. Every other way out is refused.
+    """
+    source = GUARD_TESTS.read_text(encoding="utf-8")
+
+    for forbidden in ("skipif", "mark.skip", "xfail", "pytest.skip("):
+        assert forbidden not in source, (
+            f"{forbidden} appears in the guard self-tests. A guard that can "
+            f"excuse itself proves nothing, and the session only aborts on a "
+            f"failure -- a skip passes in silence."
+        )
+
+    allowed = 'pytest.importorskip("requests")'
+    assert source.count("importorskip") == source.count(allowed) == 1, (
+        "the only conditional skip permitted here is the requests import, "
+        "whose ban is conditional too"
     )
 
 
@@ -73,6 +139,93 @@ def test_meta_tests_are_ordered_guard_first():
     names = sorted(p.name for p in (REPO / "tests" / "meta").glob("test_*.py"))
     assert names[0] == "test_guard_is_real.py", names
     assert all(n.startswith("test_pipeline_") for n in names[1:]), names
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_configure_time_self_check_feels_each_layer_coming_off(monkeypatch):
+    """Negative controls for the check that runs before every session.
+
+    The ordering pinned above stops a session whose guard tests FAIL. It stops
+    nothing when the selector never collects them, and that has happened: live
+    requests went out with the guard unproven. So `pytest_configure` now calls
+    `assert_client_guard_blocks()` on every invocation, however narrow.
+
+    A self-check that cannot fail is worse than none, because it reads like
+    proof. Take each layer off and require the check to name the one that let
+    go. Nothing here can send: every client it builds sits on a transport that
+    raises instead of carrying, which is why breaking the probe_only floor
+    below produces a message rather than a POST to /api/v1/funding/withdraw.
+    """
+    from dataclasses import replace
+
+    from qa.client import (GuardBreached, assert_client_guard_blocks,
+                           install_client_guard, remove_client_guard)
+    from qa.safety import EndpointRegistry, SafetyTransport
+
+    assert "assert_client_guard_blocks()" in CONFTEST.read_text(encoding="utf-8"), \
+        "pytest_configure no longer runs the self-check; the layers below are " \
+        "proven for nothing if nothing calls them"
+
+    # Unbroken, it passes. Otherwise the controls below prove only that a
+    # thrower throws.
+    assert_client_guard_blocks()
+
+    # Layer 1 -- the construction ban.
+    remove_client_guard()
+    try:
+        with pytest.raises(GuardBreached, match="layer 1"):
+            assert_client_guard_blocks()
+    finally:
+        install_client_guard()
+
+    # Layer 2 -- the transport stops enforcing at all.
+    with monkeypatch.context() as m:
+        m.setattr(SafetyTransport, "handle_request",
+                  lambda self, request: self.inner.handle_request(request))
+        with pytest.raises(GuardBreached, match="layer 2"):
+            assert_client_guard_blocks()
+
+    # Layer 3 -- the tier ladder goes, the no-tier check stays.
+    with monkeypatch.context() as m:
+        m.setattr(SafetyTransport, "_check", lambda self, *a, **k: None)
+        with pytest.raises(GuardBreached, match="layer 3"):
+            assert_client_guard_blocks()
+
+    # Layer 4 -- the probe_only floor comes off, which is the one that has.
+    #
+    # At ENFORCEMENT, not in the corpus: the check picks its subject from the
+    # rules that declare probe_only, so emptying that list makes it report
+    # "nothing to test" instead of exercising the floor -- a control that
+    # passes on the precondition and proves nothing about the transport.
+    # Patching match() leaves the subject declared and takes the floor off the
+    # rule the transport actually consults.
+    real_match = EndpointRegistry.match
+
+    with monkeypatch.context() as m:
+        m.setattr(EndpointRegistry, "match",
+                  lambda self, path, method: (
+                      replace(rule, probe_only=False)
+                      if (rule := real_match(self, path, method)) else None))
+        with pytest.raises(GuardBreached, match="layer 4.*let it through"):
+            assert_client_guard_blocks()
+
+    # And the precondition has its own control, since it is now the thing that
+    # would stop every session if the corpus lost its floors altogether.
+    real_load = EndpointRegistry.load  # bound before the patch, or it recurses
+
+    def _floorless(*args, **kwargs):
+        reg = real_load()
+        reg.rules = [replace(r, probe_only=False) for r in reg.rules]
+        return reg
+
+    with monkeypatch.context() as m:
+        m.setattr(EndpointRegistry, "load", _floorless)
+        with pytest.raises(GuardBreached, match="layer 4 has nothing to test"):
+            assert_client_guard_blocks()
+
+    # And it is whole again afterwards -- a control that leaves the guard off
+    # would hand every later test in this session a live client.
+    assert_client_guard_blocks()
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

@@ -88,6 +88,17 @@ def compute(registry: EndpointRegistry | None = None, timeout: float = 20.0) -> 
         try:
             for part in spec.get("parts", []):
                 kind = part.get("kind")
+                # The key a successful read WOULD have used, computed before
+                # the read so a failure can be recorded under it. Errors used
+                # to be keyed by the part's dict repr while parts were keyed
+                # by path, so nothing downstream could tell that a missing
+                # part was missing because it could not be read.
+                if kind == "http":
+                    key = part["path"]
+                elif kind == "mcp_tool_names":
+                    key = f"mcp:tools/list:{part.get('auth', 'none')}"
+                else:
+                    key = str(part)
                 try:
                     if kind == "http":
                         path = part["path"]
@@ -108,7 +119,7 @@ def compute(registry: EndpointRegistry | None = None, timeout: float = 20.0) -> 
                             json.dumps(names).encode("utf-8")
                         ).hexdigest()
                 except Exception as exc:  # noqa: BLE001 -- recorded, never raised
-                    errors[str(part)] = f"{type(exc).__name__}: {exc}"
+                    errors[key] = f"{type(exc).__name__}: {exc}"
         finally:
             client.close()
     finally:
@@ -127,8 +138,23 @@ def compute(registry: EndpointRegistry | None = None, timeout: float = 20.0) -> 
 
 
 def diff(before: dict[str, Any], after: dict[str, Any]) -> list[str]:
-    """Which parts of the corpus changed. This is the deploy detector."""
-    a, b = before.get("parts", {}), after.get("parts", {})
+    """Which parts of the corpus changed. This is the deploy detector.
+
+    A part that could not be READ on either side is left out of the
+    comparison. It was counted as an appearance or a disappearance, which is
+    rule 8 one layer up: on 2026-09-07 a single ReadTimeout on /openapi.json
+    at the start of a sweep put that part in `after` and not in `before`, the
+    diff reported `+/openapi.json`, the run was marked fingerprint_drifted and
+    became inadmissible -- 397 passing checks thrown away because one document
+    was slow once. Nothing had deployed.
+
+    Excluding it is not the same as ignoring it: the failure is recorded in
+    `errors` and carried into the run record as fingerprint_errors, so a part
+    that never reads is visible rather than silently uncompared.
+    """
+    unread = set(before.get("errors") or {}) | set(after.get("errors") or {})
+    a = {k: v for k, v in (before.get("parts") or {}).items() if k not in unread}
+    b = {k: v for k, v in (after.get("parts") or {}).items() if k not in unread}
     changed = [k for k in sorted(set(a) & set(b)) if a[k] != b[k]]
     changed += [f"+{k}" for k in sorted(set(b) - set(a))]
     changed += [f"-{k}" for k in sorted(set(a) - set(b))]

@@ -108,6 +108,145 @@ def test_401_read_is_not_empty(tmp_path, monkeypatch):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_refresh_writes_the_section_the_bell_reads(tmp_path, monkeypatch):
+    """The success path of serve.py --ask, which nothing covered.
+
+    The bell renders the vendor's status out of state/bounty.json, not out of
+    the journal, so a refresher that appends the event and writes no file
+    leaves the page saying the old thing. That is exactly what --ask shipped
+    doing: it called fetch_our_reports, which appends and returns rows without
+    touching the snapshot, and every test stayed green because the only test
+    of the refresher exercised the FAILURE path, where the correct behaviour
+    is to leave the file alone.
+
+    So this asserts the write, on a clean read, with new statuses -- and that
+    reverting serve.py to fetch_our_reports would fail here.
+    """
+    import json as _json
+
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    monkeypatch.setenv("QA_WALLET_ADDRESS", "0xabc")
+    bounty = _module("scripts/bounty.py")
+
+    snapshot = bounty.out_path()
+    snapshot.parent.mkdir(parents=True, exist_ok=True)
+    snapshot.write_text(_json.dumps({
+        "our_reports": {"klass": "ok", "rows_returned": 1,
+                        "reports": [{"id": 46, "status": "pending"}]},
+        "leaderboard": ["untouched"],
+    }), encoding="utf-8")
+
+    moved = _client(lambda r: httpx.Response(200, json={
+        "reports": [{"id": 46, "status": "fixed", "title": "t",
+                     "status_notes": "shipped @abc123"}],
+        "total": 1,
+    }))
+    ours = bounty.refresh_our_reports(client=moved)
+    assert ours["klass"] == "ok"
+
+    on_disk = _json.loads(snapshot.read_text(encoding="utf-8"))["our_reports"]
+    assert on_disk["reports"][0]["status"] == "fixed", \
+        "the new status never reached the file the bell reads"
+    assert on_disk["reports"][0]["status_notes"] == "shipped @abc123", \
+        "their words did not reach the snapshot"
+    assert _json.loads(snapshot.read_text(encoding="utf-8"))["leaderboard"] == \
+        ["untouched"], "the refresher rewrote a section it was not asked to touch"
+
+    from qa.state import read_events
+    statuses = [e for e in read_events() if e["type"] == "vendor_status"]
+    assert [(e["report_id"], e["status"]) for e in statuses] == [(46, "fixed")], \
+        "the journal and the snapshot disagree about what changed"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_refresh_that_could_not_read_keeps_the_snapshot(tmp_path, monkeypatch):
+    """Rule 8 on the write side, where losing it costs the data.
+
+    fetch_our_reports returns the previous snapshot marked stale on any read
+    that is not clean -- except one path. The missing-wallet branch returned a
+    bare {"error", "klass"} with no rows and no stale_from, so a run with no
+    QA_WALLET_ADDRESS in the environment wrote an empty our_reports over a
+    good one. serve.py --ask made that worse by calling the refresher on a
+    timer, unattended.
+
+    Verified against the live snapshot while writing this: the first draft of
+    refresh_our_reports dropped 20 reports on its first invocation.
+    """
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    monkeypatch.delenv("QA_WALLET_ADDRESS", raising=False)
+    bounty = _module("scripts/bounty.py")
+
+    good = {"klass": "ok", "rows_returned": 2,
+            "reports": [{"id": 46, "status": "fixed"},
+                        {"id": 47, "status": "pending"}]}
+    snapshot = bounty.out_path()
+    snapshot.parent.mkdir(parents=True, exist_ok=True)
+    snapshot.write_text(json.dumps({"our_reports": good, "leaderboard": ["keep me"]}),
+                        encoding="utf-8")
+    assert snapshot.is_relative_to(tmp_path), \
+        "the fixture is writing outside the temp state directory"
+
+    ours = bounty.refresh_our_reports()
+
+    assert ours["klass"] == "unreachable"
+    assert ours["reports"] == good["reports"], \
+        "a read that could not be made replaced the rows it could not read"
+    assert ours["rows_returned"] is None, "0 rows would claim an empty tracker"
+    assert ours["stale_from"], "the snapshot was not marked stale"
+
+    on_disk = json.loads(snapshot.read_text(encoding="utf-8"))
+    assert on_disk["our_reports"]["reports"] == good["reports"]
+    assert on_disk["leaderboard"] == ["keep me"], \
+        "the refresher rewrote sections it was not asked to touch"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_duplicate_guard_refuses_a_read_it_could_not_make(monkeypatch):
+    """The same incident on the write path, where it costs the vendor.
+
+    existing_titles reads what is already filed so a retry cannot duplicate a
+    report. It called .json() without looking at the status, and my-reports
+    answers a bad or expired key with 401 and a perfectly parseable
+    {"detail": ...} -- so an unreadable tracker produced an empty title set,
+    no exception, and a duplicate on the vendor's desk. Its own docstring said
+    the anonymous-read version of this had been fixed by reading with the key;
+    an expired key brought it straight back.
+
+    A read that failed is not a tracker that is empty. Filing blind is the one
+    thing this function exists to prevent, so it exits instead.
+    """
+    # The public read alone is the subject here. With a wallet in the
+    # environment -- and .env puts one there -- existing_titles would go on to
+    # build a real client for my-reports, which is a live request in a test
+    # that is asserting about status codes.
+    monkeypatch.delenv("QA_WALLET_ADDRESS", raising=False)
+    submit = _module("scripts/submit.py")
+
+    class _Response:
+        def __init__(self, status, body):
+            self.status_code, self._body = status, body
+
+        def json(self):
+            return self._body
+
+    class _Client:
+        def __init__(self, response):
+            self._response = response
+
+        def get(self, *args, **kwargs):
+            return self._response
+
+    ok = _Client(_Response(200, {"reports": [{"title": "Alpha"}]}))
+    assert submit.existing_titles(ok) == {"alpha"}
+
+    for status in (401, 403, 500):
+        with pytest.raises(SystemExit) as raised:
+            submit.existing_titles(_Client(_Response(status, {"detail": "no"})))
+        assert str(status) in str(raised.value), \
+            "the refusal does not say what the tracker actually answered"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_vendor_status_events_carry_the_evidence_they_rest_on(tmp_path, monkeypatch):
     """Critique gap 2. FIX_CLAIMED is half of the strongest statement the
     dashboard makes; the fold refuses it without a captured response."""
@@ -231,48 +370,146 @@ def test_reconcile_adds_the_missing_record_and_never_edits(tmp_path, monkeypatch
 
 
 # ---------------------------------------------------------------------------
-# THR -- delivery is a claim somebody made, not a file's location
+# THR -- retired 2026-09-06, with the mechanism it guarded
+#
+# test_delivery_defaults_false_and_ingest_is_once held scripts/thread.py's
+# ingest(): moving a message into archive/ must not delete a vendor reply, and
+# an outbound message counts as delivered only when somebody said so. Both are
+# real incidents and the test was right about them.
+#
+# ingest() is gone. Nothing called it -- not the sweep, not render.py, not the
+# module's own __main__ -- and the workflow it served, correspondence pasted
+# into inbox/ by hand, was tried once in round one and never again. A guard
+# over a code path that no longer exists does not protect anything; it just
+# asserts that a deleted function still behaves.
+#
+# The incident cannot recur because the mechanism cannot run. If messages are
+# ever ingested from files again, restore this test in the same commit as the
+# code -- it names exactly what goes wrong. Correspondence now arrives through
+# the bounty API alone (scripts/bounty.py), which has its own guards.
 # ---------------------------------------------------------------------------
-def _message(path: Path, mid: str, direction: str, extra: str = "") -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        f"---\nid: {mid}\ndirection: {direction}\nchannel: telegram\n"
-        f"sent_at: 2026-09-04T12:00:00+00:00\nfindings: [CYM-a]\n{extra}---\n\n"
-        f"Body of {mid}.\n", encoding="utf-8")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_delivery_defaults_false_and_ingest_is_once(tmp_path, monkeypatch):
-    """Moving a message to archive/ must change nothing, and an outbound
-    message is delivered only when somebody said so or a reply refers to it."""
-    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
-    thread = _module("scripts/thread.py")
+def test_a_fold_that_writes_no_ledger_writes_nothing_to_the_journal(tmp_path, monkeypatch):
+    """LDG: looking at what the state folds to is a read, and reads do not write.
 
-    root = tmp_path / "corr"
-    _message(root / "outbox" / "MSG-0001.md", "MSG-0001", "out")
-    _message(root / "outbox" / "MSG-0002.md", "MSG-0002", "out",
-             extra="delivered: true\n")
-    _message(root / "outbox" / "MSG-0003.md", "MSG-0003", "out")
-    _message(root / "inbox" / "REPLY-0001.md", "REPLY-0001", "in",
-             extra="reply_to: MSG-0003\n")
+    compose() attested the run record unconditionally, so every caller that
+    folded merely to look appended to the append-only journal. One of them --
+    the page's field-coverage check in tests/meta -- folds fresh on every
+    session against whichever run is NEWEST, which is that session's own
+    exploratory record. On 2026-09-07 that was 98 of the 137 run_recorded
+    events: attestations of runs the ledger never stood on, in the file whose
+    whole value is that nothing enters it by accident.
 
-    assert thread.ingest([root / "outbox", root / "inbox"]) == 4
-    assert thread.ingest([root / "outbox", root / "inbox"]) == 0, "ingest ran twice"
+    Nothing moved -- the fold does not read this event type. The damage was to
+    the audit trail, and then to the guard in tests/repo, which asks that every
+    cited record be in the repository and was being handed ids that never would
+    be.
 
-    from qa.state import read_events
-    delivered = {e["msg_id"]: e.get("delivered") for e in read_events()
-                 if e["type"] == "message"}
-    assert delivered["MSG-0001"] is False, "an unconfirmed message reads as delivered"
-    assert delivered["MSG-0002"] is True, "an explicit delivered: true was dropped"
-    assert delivered["MSG-0003"] is True, "a reply naming the message is a receipt"
+    Three claims: a fold that folds a real run and only looks appends nothing,
+    the same fold asked to attest appends exactly one event, and a second
+    attesting fold of the same run adds nothing on top. The first is the
+    regression. The second is what stops this being "fixed" by deleting the
+    feature -- and the reason the fold here has to stand on an actual run
+    record: the `attest` branch sits inside `if not events_only`, so a test
+    that only ever folds the journal cannot reach it, and an earlier version
+    of this one passed with the fix reverted.
+    """
+    ledger_mod = _module("scripts/ledger.py")
+    state = tmp_path / "state"
+    (state / "journal").mkdir(parents=True)
+    (state / "runs").mkdir(parents=True)
+    monkeypatch.setenv("QA_STATE_DIR", str(state))
 
-    # The archive move that deleted a reply and three findings.
-    archive = root / "archive"
-    archive.mkdir()
-    for name in ("MSG-0001.md", "MSG-0003.md"):
-        (root / "outbox" / name).rename(archive / name)
-    (root / "inbox" / "REPLY-0001.md").rename(archive / "REPLY-0001.md")
+    from qa.state import append_event, read_events
 
-    before = read_events()
-    assert thread.ingest([root / "outbox", root / "inbox", archive]) == 0
-    assert read_events() == before, "moving files changed the correspondence"
+    def _events():
+        return [e for e in read_events()]
+
+    append_event({"type": "note", "at": "2026-09-07T00:00:00+00:00",
+                  "by": "test", "source": "test", "finding_id": "CYM-x",
+                  "text": "so the journal is not empty"})
+    before = len(_events())
+
+    run_id = "run-20260907T000000Z-abc1234"
+    (state / "runs" / f"{run_id}.json").write_text(json.dumps({
+        "schema": 2, "run_id": run_id,
+        "started_at": "2026-09-07T00:00:00+00:00",
+        "finished_at": "2026-09-07T00:00:10+00:00",
+        "collected": [], "results": [], "exit_status": 0,
+        "platform_fingerprint": "sha256:" + "0" * 64,
+        "fingerprint_drifted": False, "git_dirty": False,
+        "selector": ["tests"], "totals": {},
+    }), encoding="utf-8")
+
+    ledger_mod.compose(run_id=run_id)
+    assert len(_events()) == before, \
+        "a fold that only looked appended to the journal"
+
+    ledger_mod.compose(run_id=run_id, attest=True)
+    attested = [e for e in _events() if e["type"] == "run_recorded"]
+    assert len(_events()) == before + 1 and len(attested) == 1, \
+        "the writing path no longer attests the record it stands on"
+    assert attested[0]["run_id"] == run_id
+
+    # Idempotent by run_id, so re-composing the same run adds nothing.
+    ledger_mod.compose(run_id=run_id, attest=True)
+    assert len(_events()) == before + 1, "the same run was attested twice"
+
+    # A journal-only fold has no record to pin, whatever it is asked for.
+    ledger_mod.compose(events_only=True, attest=True)
+    assert len(_events()) == before + 1, \
+        "an events-only fold attested a run it never read"
+
+    # And main() is what asks -- unless --check, which writes nothing.
+    source = (REPO / "scripts" / "ledger.py").read_text(encoding="utf-8")
+    assert "attest=not args.check" in source, \
+        "main() no longer attests the record the ledger it writes stands on"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_folded_run_record_is_tracked_even_though_the_others_are_not(tmp_path):
+    """LDG: `state/runs/` is ignored, so the fold has to force what it stood on.
+
+    The ignore rule is what stops every exploratory run from dirtying the tree
+    and making prereg.py refuse. The cost of getting it wrong is silent: an
+    ordinary `git add` succeeds, reports nothing, and adds nothing, leaving a
+    ledger that cites evidence a clone cannot read. So this asserts the -f,
+    inside a throwaway repository carrying the same ignore rule.
+
+    tests/repo states the property over the real state -- every cited record
+    is tracked. This states the mechanism that keeps it true.
+    """
+    import subprocess
+
+    ledger_mod = _module("scripts/ledger.py")
+
+    def git(*args):
+        return subprocess.run(["git", *args], cwd=tmp_path, check=True,
+                              capture_output=True, text=True).stdout
+
+    git("init", "-q")
+    git("config", "user.email", "t@t"); git("config", "user.name", "t")
+    (tmp_path / ".gitignore").write_text("state/runs/\n", encoding="utf-8")
+    runs = tmp_path / "state" / "runs"
+    runs.mkdir(parents=True)
+    record = runs / "run-20260907T000000Z-abc1234.json"
+    record.write_text(json.dumps({"run_id": "run-20260907T000000Z-abc1234"}),
+                      encoding="utf-8")
+
+    # The premise: git really is ignoring it, so the assertion below is not
+    # passing for the trivial reason that nothing was ignored in the first
+    # place.
+    git("add", "state")
+    assert "state/runs" not in git("ls-files"), "the ignore rule did not apply"
+
+    monkey = ledger_mod.runs_dir
+    try:
+        ledger_mod.runs_dir = lambda: runs
+        ledger_mod._track_run_record("run-20260907T000000Z-abc1234")
+    finally:
+        ledger_mod.runs_dir = monkey
+
+    assert "state/runs/run-20260907T000000Z-abc1234.json" in git("ls-files"), \
+        "the record the ledger stands on was not forced past the ignore rule"

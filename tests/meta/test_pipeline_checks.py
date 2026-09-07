@@ -476,5 +476,19 @@ def test_pinned_and_bounty_checks_are_collectible():
 
     pinned = [n for n in nodeids if "test_documented_path_is_served" in n]
     bounty = [n for n in nodeids if "test_bounty_tracker" in n]
-    assert len(pinned) == 26, f"{len(pinned)} pinned 404 checks collected"
+
+    # Against the pin file, not against the number 26. The invariant is that
+    # every pinned path becomes a collectible check -- which is the whole
+    # point, five rows once naming scripts/*.py that pytest never collects.
+    # Hard-coding the count made a 27th pinned path fail this test with
+    # "27 pinned 404 checks collected", which reads like a defect and is a
+    # list getting longer. This file's own title is that the checks assert
+    # invariants and not snapshots.
+    expected = yaml.safe_load(
+        (REPO / "tests" / "pinned" / "documented-404.yaml").read_text(encoding="utf-8"))
+    assert len(pinned) == len(expected["paths"]), (
+        f"{len(pinned)} checks collected for {len(expected['paths'])} pinned "
+        f"paths -- a pinned path that collects no check is a row outside the "
+        f"verification machinery"
+    )
     assert len(bounty) == 3, f"{len(bounty)} bounty checks collected: {bounty}"

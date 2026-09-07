@@ -17,6 +17,7 @@ further.
 from __future__ import annotations
 
 import json
+import os
 import sys
 from collections import Counter
 from datetime import datetime, timezone
@@ -29,7 +30,21 @@ from qa.client import build_client, install_client_guard  # noqa: E402
 from qa.config import identities  # noqa: E402
 from qa.safety import CURRENT_TIER, EndpointRegistry, SafetyTier  # noqa: E402
 
-OUT = REPO_ROOT / "state" / "bounty.json"
+
+def out_path() -> Path:
+    """The snapshot, resolved through the QA_STATE_DIR seam at call time.
+
+    It was a module constant built from REPO_ROOT, which is the one seam the
+    whole project reads state behind and the only module that ignored it after
+    open_checks.py was fixed. A test setting QA_STATE_DIR to a temp tree was
+    handed the committed file instead -- and one written while reviewing this
+    wrote its two-row fixture over the real snapshot, losing the vendor's
+    status_notes until the next full fetch.
+    """
+    from qa.state import state_dir
+
+    return state_dir() / "bounty.json"
+
 
 # Fields that, if null, mean the platform recorded no evidence for a closure.
 EVIDENCE_FIELDS = ["validated_at", "triaged_at", "severity_confirmed",
@@ -162,6 +177,79 @@ def _now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
+def _last_status_by_report() -> dict:
+    """The newest status we have recorded for each report.
+
+    From the journal, because that is where the claim lives. The snapshot in
+    state/bounty.json is a projection of the same thing and could be rebuilt
+    from these events, but not the other way round.
+    """
+    from qa.state import read_events
+
+    last: dict = {}
+    for event in read_events():
+        if event.get("type") == "vendor_status" and event.get("report_id") is not None:
+            last[event["report_id"]] = event.get("status")
+    return last
+
+
+def refresh_our_reports(client=None) -> dict:
+    """Re-read our own reports and update just that half of the snapshot.
+
+    `fetch_our_reports` appends the journal events and returns the rows; it
+    does NOT write state/bounty.json, which only fetch() + __main__ do. The
+    console's bell reads the vendor's status, notes and dates out of
+    bounty.json (render._api_conversation), so an event without the snapshot
+    beside it moves nothing an operator can see -- which is what serve.py
+    --ask was doing: recording the change and leaving the page saying the old
+    thing.
+
+    Only the `our_reports` section, and deliberately: fetch() also probes the
+    filing endpoint with empty POSTs at two identities, and a timer has no
+    business doing that every quarter of an hour. One read-only GET, one
+    section rewritten, the rest of the file left as the last full fetch left
+    it.
+
+    Rule 8 runs through it: the snapshot on disk is handed back as `previous`,
+    so a read that fails returns those rows marked stale instead of an empty
+    section. The first draft of this called fetch_our_reports() with no
+    previous, and the first live invocation -- a read that happened to come
+    back unreachable -- wrote 0 reports over 20 good ones. A failed read is
+    not an empty read, and a refresher that forgets that is worse than no
+    refresher.
+
+    The read, the fetch and the write are held under one lock, the same one
+    the journal uses. Without it this is a read-modify-write across a network
+    call: a full `python scripts/bounty.py` completing inside that window --
+    the sweep runs one -- would be undone the moment the refresher wrote its
+    copy back, reverting statuses, filing_probe, qa_tracker, closed and
+    leaderboard to whatever they were before the fetch while our_reports alone
+    stayed current. A snapshot half of one read and half of another, with
+    nothing malformed to notice it by.
+    """
+    from qa.state import file_lock
+
+    out = out_path()
+    out.parent.mkdir(parents=True, exist_ok=True)
+
+    with file_lock(out):
+        data: dict = {}
+        if out.exists():
+            try:
+                data = json.loads(out.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                data = {}
+
+        ours = fetch_our_reports(client=client, previous=data.get("our_reports"))
+        data["our_reports"] = ours
+        data["our_reports_refreshed_at"] = _now()
+
+        tmp = out.with_suffix(".json.tmp")
+        tmp.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+        os.replace(tmp, out)
+    return ours
+
+
 def fetch_our_reports(client=None, wallet: str | None = None,
                       previous: dict | None = None) -> dict:
     """Our own filed reports -- THIS is the inbox.
@@ -188,7 +276,20 @@ def fetch_our_reports(client=None, wallet: str | None = None,
 
     wallet = wallet or os.environ.get("QA_WALLET_ADDRESS", "")
     if not wallet:
-        return {"error": "QA_WALLET_ADDRESS not set", "klass": "unreachable"}
+        # The same shape as every other failed read, and for the same reason:
+        # this return used to hand back a bare error with no rows, so a run
+        # with no wallet in the environment wrote an empty our_reports over a
+        # good one. "We could not look" is not "there is nothing there" --
+        # this function's own docstring says so two paragraphs up, and the
+        # klass != "ok" branch below already did it correctly.
+        stale = dict(previous or {})
+        stale.update({
+            "klass": "unreachable",
+            "error": "QA_WALLET_ADDRESS not set",
+            "rows_returned": None,
+            "stale_from": _now(),
+        })
+        return stale
 
     owned = client is None
     token = CURRENT_TIER.set(SafetyTier.SAFE)
@@ -239,11 +340,35 @@ def fetch_our_reports(client=None, wallet: str | None = None,
             stale["error"] = failure
         return stale
 
+    # Record CHANGES, not polls. One run appended one event per report
+    # unconditionally, so 599 of the journal's 865 events were 28 reports
+    # saying the same thing 27 times over -- and a poller on any useful
+    # interval would have added 2,784 a day, burying the handful of events
+    # that mean something under the ones that mean "we looked again".
+    #
+    # `vendor_read` above still fires every time: that a read happened, and
+    # whether it succeeded, is the fact rule 8 rests on, and it is one event
+    # rather than one per report.
+    last = _last_status_by_report()
     for report in sorted(rows, key=lambda r: r.get("id", 0)):
+        report_id = report.get("id")
+        status = report.get("status")
+        if report_id is None:
+            # Nothing to compare it against and nothing to attach it to: the
+            # journal keys a vendor_status by report_id, and
+            # _last_status_by_report skips the None key, so an id-less row
+            # would never match `last` and would append a fresh event on every
+            # poll -- the poll-recording this loop exists to stop, at 96 a day
+            # with serve.py --ask running. A row the tracker gave no id is not
+            # a status change we can record; the vendor_read event above
+            # already says the read happened.
+            continue
+        if report_id in last and last[report_id] == status:
+            continue
         append_event({
             "type": "vendor_status", "at": at, "by": "agent",
-            "source": "scripts/bounty.py", "report_id": report.get("id"),
-            "status": report.get("status"), "observed_at": at,
+            "source": "scripts/bounty.py", "report_id": report_id,
+            "status": status, "observed_at": at,
             "evidence_id": evidence_id,
         })
 
@@ -377,10 +502,17 @@ def fetch() -> dict:
 
 
 if __name__ == "__main__":
+    from qa.state import file_lock
+
     data = fetch()
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
-    print(f"-> {OUT.relative_to(REPO_ROOT)}")
+    out = out_path()
+    out.parent.mkdir(parents=True, exist_ok=True)
+    # Under the same lock refresh_our_reports takes. A lock only one of two
+    # writers holds is not a lock -- this is the write the refresher must not
+    # be allowed to interleave with, and the one whose loss would be silent.
+    with file_lock(out):
+        out.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+    print(f"-> {out}")
     print(f"   total={data['total']}  statuses={data['statuses']}")
     print(f"   closed={data['closed']}  "
           f"without any recorded evidence={data['closed_without_recorded_evidence']}")

@@ -40,6 +40,15 @@ fingerprint:
     - {kind: http, path: /.well-known/ai-plugin.json}
     - {kind: http, path: /.well-known/udc.json}
     - {kind: http, path: /openapi.json}
+    # The one they tell outside agents to import, and the bigger of the two by
+    # far: 49 paths against openapi.json's 13. It was not watched, and on
+    # 2026-09-07 they shipped 11 KB of new response and request schemas into it
+    # overnight -- a substantive change to the machine-readable API surface --
+    # and the fingerprint did not move. Every run that day carried
+    # sha256:381e671ceab01 before and after. A corpus that misses the document
+    # under the most active development is a silent-deploy detector with the
+    # deploys taken out.
+    - {kind: http, path: /openapi-public.json}
     - {kind: http, path: /llms.txt}
     - {kind: mcp_tool_names, auth: none}
   # JSON pointers stripped before hashing. Too aggressive and we go blind to
@@ -265,6 +274,8 @@ endpoints:
       [side, price, size, quantity, amount, pair, symbol, market, type,
        time_in_force, client_order_id]
     inert_params: []
+    probe_only: true   # places a real order -- the middle leg of the money loop their
+    # own trust ladder names: deposit, CLOB trading, withdrawal
 
   - id: clob.order_singular
     path: /api/v1/clob/order
@@ -273,6 +284,7 @@ endpoints:
     executable_params:
       [side, price, size, quantity, amount, pair, symbol, market, type]
     inert_params: []
+    probe_only: true   # singular alias of clob.orders; same money, same floor
 
   - id: clob.book
     path: /api/v1/clob/book/hybrid
@@ -285,30 +297,36 @@ endpoints:
     methods: [POST]
     component: rest.clob
     executable_params: [side, price, size, quantity, amount, type]
+    probe_only: true   # places an order on a token exchange book
 
   - id: exchange.buy
     path: /api/v1/exchange/buy
     methods: [POST]
     component: rest.clob
     executable_params: [token, amount, quantity, size, price]
+    probe_only: true   # buys on a token exchange book
 
   - id: arena.order
     path: /api/v1/arena/order
     methods: [POST]
     component: rest.arena
     executable_params: [team, side, amount, size, quantity, price]
+    probe_only: true   # an Arena order carries amount/size/price and settles
 
   - id: agents.clone
     path: /api/v1/agents/clone
     methods: [POST]
     component: rest.agents
     executable_params: [bot_id, slug, name, capital, funding, amount, species]
+    probe_only: true   # cloning funds an agent; the gas policy bills cloned agents to
+    # the user's own balance, and clone/deposit-info exists for a reason
 
   - id: bots.clone
     path: /api/v1/bots/clone
     methods: [POST]
     component: rest.agents
     executable_params: [bot_id, slug, name, capital, funding, amount, species]
+    probe_only: true   # the other clone route; same money, same floor
 
   - id: prop.signup
     path: /api/v1/prop/signup

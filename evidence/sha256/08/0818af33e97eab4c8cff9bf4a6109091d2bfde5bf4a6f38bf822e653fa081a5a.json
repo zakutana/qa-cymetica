@@ -1,0 +1,130 @@
+{
+  "captured_at": "2026-09-06T11:07:14+00:00",
+  "endpoint_rule": "bounty.qa_ask",
+  "nodeid": "tests/rest/test_qa_agent_channel.py::test_the_agent_can_report_a_value_it_publishes",
+  "request": {
+    "body": {
+      "encoding": "json",
+      "truncated": false,
+      "value": {
+        "question": "What currency does GET /api/v1/bounty/reward-tiers return in its `currency` field, and what is the reward range for a critical severity report?"
+      }
+    },
+    "headers": {
+      "accept": "application/json",
+      "accept-encoding": "gzip, deflate, zstd",
+      "connection": "keep-alive",
+      "content-length": "158",
+      "content-type": "application/json",
+      "host": "cymetica.com",
+      "user-agent": "qa-cymetica/0.1 (independent QA; contact via vendor Telegram channel)"
+    },
+    "method": "POST",
+    "url": "https://cymetica.com/api/v1/bounty/qa-agent/ask"
+  },
+  "response": {
+    "body": {
+      "encoding": "json",
+      "truncated": false,
+      "value": {
+        "answer": "🏆 **Reward Pathways Unlocked**\n\nThe battleship rewards those who sail with us:\n\n- **Trading Points** - Every trade powers the ship's evolution\n- **Social Amplification** - Share and earn (the network grows stronger)\n- **Volume Battalions** - High-volume traders ascend to higher tiers\n- **Streak Mastery** - Consistency compounds into riches\n- **Achievement Insignias** - Milestones unlock exclusive benefits\n\n💰 **Money-Making Insight:** The most successful traders combine multiple reward streams. Stack your bonuses like compound interest.\n\nExplore the full armory at /rewards.\n\nLive platform data (fetched now from the platform's own endpoints — authoritative):\n- GET /api/v1/bounty/reward-tiers: {\"currency\": \"CYM\", \"hunter_tiers\": {\"elite\": 1000, \"hunter\": 50, \"master\": 500, \"rookie\": 0, \"senior\": 200}, \"multipliers\": {\"community_favorite\": 1.5, \"detailed_steps\": 1.25, \"first_reporter\": 1.5, \"includes_fix_pr\": 2.0, \"video_poc\": 1.25}, \"severity_points\": {\"critical\": 100, \"high\": 50, \"low\": 5, \"medium\": 20, \"suggestion\": 1}, \"severity_rewards\": {\"critical\": {\"max\": 1000000, \"min\": 400000}, \"high\": {\"max\": 400000, \"min\": 100000}, \"low\": {\"max\": 25000, \"min\": 5000}, \"medium\": {\"max\": 100000, \"min\": 25000}, \"suggestion\": {\"max\": 0, \"min\": 0}}, \"vesting\": {\"tge_percent\": 25, \"vested_percent\": 75, \"vesting_months\": 6}}",
+        "confidence": 0.85,
+        "follow_up_questions": [],
+        "live_data": [
+          {
+            "data": {
+              "currency": "CYM",
+              "hunter_tiers": {
+                "elite": 1000,
+                "hunter": 50,
+                "master": 500,
+                "rookie": 0,
+                "senior": 200
+              },
+              "multipliers": {
+                "community_favorite": 1.5,
+                "detailed_steps": 1.25,
+                "first_reporter": 1.5,
+                "includes_fix_pr": 2.0,
+                "video_poc": 1.25
+              },
+              "severity_points": {
+                "critical": 100,
+                "high": 50,
+                "low": 5,
+                "medium": 20,
+                "suggestion": 1
+              },
+              "severity_rewards": {
+                "critical": {
+                  "max": 1000000,
+                  "min": 400000
+                },
+                "high": {
+                  "max": 400000,
+                  "min": 100000
+                },
+                "low": {
+                  "max": 25000,
+                  "min": 5000
+                },
+                "medium": {
+                  "max": 100000,
+                  "min": 25000
+                },
+                "suggestion": {
+                  "max": 0,
+                  "min": 0
+                }
+              },
+              "vesting": {
+                "tge_percent": 25,
+                "vested_percent": 75,
+                "vesting_months": 6
+              }
+            },
+            "source": "GET /api/v1/bounty/reward-tiers"
+          }
+        ],
+        "session_id": "be4d35ac-a04c-4952-8f7d-7839dd5c8006",
+        "sources": [
+          "faq-revenue-share-1",
+          "faq-rewards-1",
+          "GET /api/v1/bounty/reward-tiers"
+        ]
+      }
+    },
+    "elapsed_ms": null,
+    "headers": {
+      "cache-control": "no-store, no-cache, must-revalidate, max-age=0",
+      "connection": "keep-alive",
+      "content-encoding": "gzip",
+      "content-length": "1074",
+      "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests",
+      "content-security-policy-report-only": "default-src 'self'; script-src 'self' 'nonce-xH0xHruX0diga4MjlAyWLQ==' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'",
+      "content-signal": "ai-train=no, search=yes, ai-input=yes",
+      "content-type": "application/json",
+      "cross-origin-opener-policy": "same-origin-allow-popups",
+      "cross-origin-resource-policy": "cross-origin",
+      "date": "Sun, 06 Sep 2026 11:07:14 GMT",
+      "permissions-policy": "geolocation=(), microphone=(), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=(), browsing-topics=(), attribution-reporting=()",
+      "pragma": "no-cache",
+      "referrer-policy": "strict-origin-when-cross-origin, strict-origin-when-cross-origin",
+      "server": "nginx",
+      "strict-transport-security": "max-age=31536000; includeSubDomains",
+      "vary": "Accept-Encoding",
+      "x-ai-strongest-model": "Claude Fable 5",
+      "x-content-type-options": "nosniff, nosniff",
+      "x-dns-prefetch-control": "off",
+      "x-frame-options": "SAMEORIGIN, SAMEORIGIN",
+      "x-ratelimit-limit": "60",
+      "x-ratelimit-remaining": "59",
+      "x-ratelimit-reset": "1788692880",
+      "x-xss-protection": "0"
+    },
+    "reason": "OK",
+    "status_code": 200
+  },
+  "run_id": "run-20260906T110530Z-54d9836",
+  "tier": "PROBE"
+}

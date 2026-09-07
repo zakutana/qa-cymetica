@@ -23,6 +23,7 @@ Phase 0's state_dir() seam stays at the top.
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import json
 import os
@@ -151,7 +152,21 @@ def admissibility(run: dict) -> Verdict:
         blocks_v.append("git_dirty")
     if not run.get("prereg_id"):
         blocks_v.append("no_prereg")
-    elif run.get("prereg_commit") and run["prereg_commit"] != run.get("git_head"):
+    elif not run.get("prereg_commit") or not run.get("git_head"):
+        # Neither may be missing. Comparing them directly closed the case
+        # where ONE is absent and reopened the case where BOTH are: None !=
+        # None is False, so a record naming a preregistration and carrying
+        # neither commit came out V with no reasons at all.
+        blocks_v.append("prereg_commit_mismatch")
+    elif run.get("prereg_commit") != run.get("git_head"):
+        # Absent is a mismatch, not a pass. Guarding this with
+        # `if run.get("prereg_commit") and ...` meant a record naming a
+        # preregistration but declining to say which commit it was tagged at
+        # sailed through to level V, and run_integrity's git re-resolution had
+        # the same guard, so nothing checked the tag either. The gap 1
+        # hardening closed EDITING two strings in a run record; deleting one
+        # bought the same verification. Falsy-versus-absent, in the one place
+        # this module calls the way in.
         blocks_v.append("prereg_commit_mismatch")
 
     notes = [f"identity_absent:{name}"
@@ -167,6 +182,98 @@ def admissibility(run: dict) -> Verdict:
 
 class RunIntegrityError(RuntimeError):
     """A run record contradicts something outside itself."""
+
+
+def _selector_covers(token: str, nodeid: str) -> bool:
+    """Would `token` on a pytest command line have collected `nodeid`?"""
+    nodeid = nodeid.replace("\\", "/")
+    token = token.replace("\\", "/").rstrip("/")
+    return (nodeid == token
+            or nodeid.startswith(token + "/")
+            or nodeid.startswith(token + "::")
+            or nodeid.startswith(token + "["))
+
+
+def _preregistered_selector(prereg_id: str) -> str | None:
+    """The selector as committed, read out of git at the tag.
+
+    From the object store, never the working tree: the whole point of the tag
+    is that what it points at cannot be edited afterwards.
+    """
+    import subprocess
+
+    try:
+        out = subprocess.run(
+            ["git", "show",
+             f"prereg/{prereg_id}:state/preregistrations/{prereg_id}.md"],
+            cwd=REPO_ROOT, capture_output=True, text=True,
+            encoding="utf-8", errors="replace", check=True,
+        ).stdout
+    except (subprocess.CalledProcessError, OSError):
+        return None
+    for line in out.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("Selector"):
+            return stripped[len("Selector"):].strip()
+    return None
+
+
+def _honoured_preregistration(run: dict, selector: str) -> list[str]:
+    """Did the run collect what it committed to collecting, and only that?
+
+    Gap 1 closed a record ASSERTING a preregistration it did not have. This
+    closes a record having a real one and running something else. Level V --
+    the only level that may close a finding -- was granted on clean tree, a
+    tag, and the tag pointing at HEAD; nothing compared the selector the tag
+    committed to against what the session actually collected. Preregister the
+    suite, run the one check you expect to pass, verify a fix with it. The tag
+    proved when the commitment was written and nothing proved it was kept.
+
+    Both directions matter and say different things. Something collected that
+    the selector does not reach means the session ran more than it declared.
+    A declared token that collected nothing means it ran less -- the shape of
+    narrowing to a result you like, and the reason this exists.
+    """
+    import shlex
+
+    try:
+        # posix=False, because posix mode reads a backslash as an escape and
+        # this workspace is Windows: `--selector tests\meta` was recorded
+        # verbatim by prereg.py and came back out of shlex as `testsmeta`, so
+        # run_integrity reported two problems about a run that had honoured
+        # its preregistration exactly, and compose() raised on them. The
+        # normalisation in _selector_covers was written for these tokens and
+        # never saw one. Non-posix keeps the quotes on, so strip them here.
+        tokens = [t.strip("\"'") for t in shlex.split(selector, posix=False)]
+        tokens = [t for t in tokens if t and not t.startswith("-")]
+    except ValueError:
+        return [f"the preregistered selector {selector!r} does not parse"]
+    if not tokens:
+        return [f"{run.get('prereg_id')} preregisters no selector to check against"]
+
+    collected = [str(n) for n in (run.get("collected") or [])]
+    if not collected:
+        return []          # nothing collected is its own problem, named elsewhere
+
+    problems: list[str] = []
+
+    uncovered = [n for n in collected
+                 if not any(_selector_covers(t, n) for t in tokens)]
+    if uncovered:
+        problems.append(
+            f"the run collected {len(uncovered)} check(s) that "
+            f"{run.get('prereg_id')} did not preregister, e.g. {uncovered[0]}"
+        )
+
+    unused = [t for t in tokens
+              if not any(_selector_covers(t, n) for n in collected)]
+    if unused:
+        problems.append(
+            f"{run.get('prereg_id')} preregistered {unused} but the run "
+            f"collected nothing under it -- the session ran less than it "
+            f"committed to"
+        )
+    return problems
 
 
 def run_integrity(run: dict, path: Path | None = None,
@@ -201,11 +308,29 @@ def run_integrity(run: dict, path: Path | None = None,
         except (subprocess.CalledProcessError, OSError):
             problems.append(f"no tag prereg/{prereg} in this repository")
         else:
-            if run.get("prereg_commit") and run["prereg_commit"] != resolved:
+            claimed = run.get("prereg_commit")
+            if not claimed:
+                # The tag exists but the record declines to name a commit, so
+                # there is nothing to corroborate against it. Silence here is
+                # not agreement.
                 problems.append(
-                    f"the record says prereg_commit {run['prereg_commit'][:12]} "
+                    f"the record names {prereg} but carries no prereg_commit, "
+                    f"so the tag it claims cannot be checked against it"
+                )
+            elif claimed != resolved:
+                problems.append(
+                    f"the record says prereg_commit {claimed[:12]} "
                     f"but prereg/{prereg} resolves to {resolved[:12]}"
                 )
+            else:
+                selector = _preregistered_selector(prereg)
+                if selector is None:
+                    problems.append(
+                        f"prereg/{prereg} names no selector that can be read "
+                        f"back from the commit it tags"
+                    )
+                else:
+                    problems.extend(_honoured_preregistration(run, selector))
 
     if path is not None and path.exists():
         digest = hashlib.sha256(path.read_bytes()).hexdigest()
@@ -487,27 +612,93 @@ def head(path: Path | None = None) -> dict:
     return {"seq": events[-1]["seq"], "chain": events[-1]["chain"]}
 
 
+@contextlib.contextmanager
+def file_lock(path: Path):
+    """Hold an exclusive cross-process lock on one state file.
+
+    Public, and not journal-specific, because the journal is not the only file
+    with a read-modify-write in front of it: scripts/bounty.py reads the whole
+    vendor snapshot, replaces one section and writes it back, and serve.py
+    --ask does that on a timer beside an operator running a full fetch. Same
+    hazard, same remedy, one implementation.
+
+    `append_event` reads the whole journal, derives `seq` and `chain` from what
+    it read, and only then writes. Two writers interleaving inside that window
+    both derive the same seq, and the file ends up with a duplicate sequence
+    number and a broken chain. That is not a lost event: `read_events` raises
+    on the next load, so the ledger cannot fold, the page cannot render and
+    every session aborts -- and rule 4 forbids repairing it by hand, so there
+    is no way out that does not break another rule.
+
+    It stayed theoretical while every writer was an operator typing a command.
+    `serve.py --ask` ended that: it appends on a timer, unattended, and can
+    land in the middle of a sweep.
+
+    A separate .lock file rather than the journal itself, so the lock is never
+    confused with the data and locking cannot truncate or extend it. Held
+    around the read as well as the write, because the read is what the write
+    is derived from.
+    """
+    lock_path = path.with_name(path.name + ".lock")
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    handle = open(lock_path, "a+b")
+    try:
+        if os.name == "nt":
+            import msvcrt
+
+            handle.seek(0)
+            # LK_LOCK retries for about ten seconds, then raises. Locking one
+            # byte past EOF is legal on Windows and is the usual idiom.
+            msvcrt.locking(handle.fileno(), msvcrt.LK_LOCK, 1)
+        else:
+            import fcntl
+
+            fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            if os.name == "nt":
+                import msvcrt
+
+                handle.seek(0)
+                msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
+            else:
+                import fcntl
+
+                fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+    finally:
+        handle.close()
+
+
 def append_event(event: dict, path: Path | None = None) -> str:
     """Append one event. Returns 'appended' or 'duplicate' (idempotent by
-    natural key). Never rewrites an existing line."""
+    natural key). Never rewrites an existing line.
+
+    Serialised across processes: see `file_lock`.
+    """
     _validate_event(event)
     p = path or journal_path()
-    existing = read_events(path=p)
-    key = _natural_key(event)
-    for e in existing:
-        if _natural_key(e) == key:
-            return "duplicate"
-
-    seq = len(existing) + 1
-    prev_chain = existing[-1]["chain"] if existing else ""
-    body = dict(event)
-    body["seq"] = seq
-    body["event_id"] = event_id(event)
-    chain = hashlib.sha256((prev_chain + _canonical(body)).encode("utf-8")).hexdigest()
-    line = dict(body)
-    line["chain"] = chain
-
     p.parent.mkdir(parents=True, exist_ok=True)
-    with open(p, "a", encoding="utf-8", newline="\n") as fh:
-        fh.write(_canonical(line) + "\n")
-    return "appended"
+
+    with file_lock(p):
+        existing = read_events(path=p)
+        key = _natural_key(event)
+        for e in existing:
+            if _natural_key(e) == key:
+                return "duplicate"
+
+        seq = len(existing) + 1
+        prev_chain = existing[-1]["chain"] if existing else ""
+        body = dict(event)
+        body["seq"] = seq
+        body["event_id"] = event_id(event)
+        chain = hashlib.sha256((prev_chain + _canonical(body)).encode("utf-8")).hexdigest()
+        line = dict(body)
+        line["chain"] = chain
+
+        with open(p, "a", encoding="utf-8", newline="\n") as fh:
+            fh.write(_canonical(line) + "\n")
+            # Flushed inside the lock: a line still sitting in a buffer when
+            # the next writer reads would give it the same seq all over again.
+            fh.flush()
+        return "appended"

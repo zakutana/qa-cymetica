@@ -216,12 +216,24 @@ def _selector_is_full(config) -> bool:
     Only positional paths and -k / -m narrow the suite; -q, --tb and the rest
     do not. A run that offered everything and did not collect a nodeid has
     established that the nodeid is gone -- which no partial run can.
+
+    Read off config.args, which is what pytest resolved the positional
+    arguments to, and not off the raw command line. Filtering the raw args on
+    "does not start with a dash" counted OPTION VALUES as paths: every
+    admissible run carries `--prereg PRE-NNNN`, so `positional` came out as
+    ["tests", "PRE-0045"] and this returned False. Level V requires a
+    preregistration, so selector_full was false on every run that could ever
+    have used it -- 0 of 39 run records have it set -- and the fold's
+    check_missing branch, the only thing that can say a check is GONE rather
+    than merely untested, has never once been able to fire.
     """
     args = list(config.invocation_params.args)
-    positional = [a for a in args if not a.startswith("-")]
     narrowed = any(a in ("-k", "-m") or a.startswith(("-k", "-m")) for a in args)
     if narrowed:
         return False
+    # config.args falls back to the testpaths ini value when nothing
+    # positional was given, which is the same thing: the whole suite.
+    positional = [str(a) for a in (getattr(config, "args", None) or [])]
     return not positional or positional == ["tests"]
 
 

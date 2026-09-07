@@ -315,6 +315,90 @@ def test_the_page_reads_no_field_the_payload_stops_writing(tmp_path, monkeypatch
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_every_verdict_the_inventory_can_produce_is_drawable():
+    """A verdict the page cannot draw is a hole in the bar, not a zero.
+
+    `server_error` and `unreachable` were producible by inventory.py and
+    absent from the page's ORDER, so an endpoint in either state fell out of
+    the coloured bar, out of the legend, and -- because the bar's total is
+    summed over ORDER -- out of the denominator the segments are drawn
+    against. A section could read 80% with the remaining fifth represented by
+    nothing at all.
+
+    Neither had ever occurred, which is exactly why nobody noticed. Held
+    against the source of the verdicts rather than against a list written
+    beside it, so adding a tenth kind fails here rather than on the day it
+    first happens.
+    """
+    import inspect
+
+    spec = importlib.util.spec_from_file_location(
+        "inventory_mod", REPO / "scripts" / "inventory.py")
+    inventory = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(inventory)
+    render = _render()
+
+    produced = set(re.findall(r'return "([a-z_]+)"',
+                              inspect.getsource(inventory.verdict)))
+    order = re.search(r"const ORDER = \[(.*?)\];", render.TEMPLATE, re.S)
+    assert order, "the page no longer declares an ORDER of verdicts"
+    drawable = set(re.findall(r'"([a-z_]+)"', order.group(1)))
+
+    assert not produced - drawable, (
+        f"inventory.py produces verdicts the page cannot draw: "
+        f"{sorted(produced - drawable)}"
+    )
+    words = re.search(r"VERDICT_WORDS = \{(.*?)\};", render.TEMPLATE, re.S)
+    described = set(re.findall(r"^\s+([a-z_]+):", words.group(1), re.M))
+    assert not drawable - described, (
+        f"drawn with no words to explain them: {sorted(drawable - described)}"
+    )
+    uncoloured = [k for k in sorted(drawable)
+                  if f".seg-{k}{{" not in render.TEMPLATE
+                  and f".seg-{k}," not in render.TEMPLATE]
+    assert not uncoloured, f"drawn with no colour of their own: {uncoloured}"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_page_renders_every_field_it_is_given(monkeypatch):
+    """The other direction, and the one that stayed open longer.
+
+    Its sibling above catches a page reading a field the payload stopped
+    writing -- undefined on screen, loudly. This catches a payload writing a
+    field the page never reads, which is silent, and therefore worse: nothing
+    ever tells you the value stopped being right, because nothing is looking
+    at it.
+
+    Two rules were half-built behind exactly that. `stale_from` carried rule
+    8's "mark the row stale" and was rendered nowhere, so a failed read of the
+    vendor's tracker changed nothing an operator could see. `obligations`
+    carried rule 11's "the row shows retraction owed on #N" and was rendered
+    nowhere, so the two rows owing a re-verify said so in CLI output alone.
+    Both were found by hand; this is here to find the next one.
+
+    The payload row used to be `{**row, ...derived}`, shipping eleven of
+    nineteen ledger fields to the browser unread. It is a named projection
+    now, which is what makes this a contract rather than a chore.
+    """
+    render = _render()
+    payload = _live_payload(render)
+    present = {k for f in payload["findings"] for k in f}
+
+    # `f.x` is how the template reads a row, but a bare `.x` counts too: a
+    # field read through a helper under another name is still read, and this
+    # guard must not push anyone into renaming variables to satisfy it.
+    unread = sorted(
+        field for field in present
+        if not re.search(r"\.%s\b" % re.escape(field), render.TEMPLATE)
+    )
+    assert not unread, (
+        "the payload ships row fields the page never reads, so nothing would "
+        f"notice if they stopped being correct: {unread}. Render them, or "
+        f"stop sending them."
+    )
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_conversation_is_the_api_exchange_and_nothing_else(tmp_path, monkeypatch):
     """One channel per panel.
 

@@ -37,8 +37,8 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
 # What a change to the state means the page is out of date. Poll rather than
-# watch: three directories on Windows, once a second, costs nothing and needs
-# no dependency.
+# watch: a handful of directories on Windows, once a minute, needs no
+# dependency. See POLL_SECONDS for why it is a minute and not a second.
 WATCHED = ("state/ledger.json", "state/journal/events.jsonl", "state/bounty.json",
            "state/inventory.json", "state/runs", "dashboard",
            # The renderer itself. Without this the server holds the copy it
@@ -48,7 +48,13 @@ WATCHED = ("state/ledger.json", "state/journal/events.jsonl", "state/bounty.json
            # console exists to make impossible.
            "scripts/render.py")
 
-POLL_SECONDS = 1.0
+# A tick stats every file under the watched directories -- 173 of them today,
+# 2.2 ms, and growing, because state/runs/ gains a record on every pytest
+# session. Once a second that was 193 s of CPU a day to notice events that
+# arrive a few times an hour: a sweep finishing, a reply pasted. A minute is
+# the right order for both. Editing the page itself is the one case that wants
+# the old cadence, and `--poll 1` is there for it.
+POLL_SECONDS = 60.0
 
 
 def _render_module():
@@ -86,6 +92,27 @@ class SingleServer(ThreadingHTTPServer):
 
     allow_reuse_address = False
     daemon_threads = True
+
+    def handle_error(self, request, client_address) -> None:
+        """A client hanging up is routine here, not an error.
+
+        Every live reload abandons an in-flight SSE stream and a keep-alive
+        connection, and Windows reports that as WinError 10053. socketserver
+        prints a full traceback for it, so the console window filled with
+        stack traces that look like a crashed server while it was working
+        exactly as designed -- and a real error in the same stream would have
+        been invisible among them.
+
+        The stream_events handler already swallows this on the write side;
+        this covers the read side, where socketserver reads the next request
+        line off a connection the browser has already dropped, outside any
+        code of ours.
+        """
+        kind = sys.exc_info()[1]
+        if isinstance(kind, (ConnectionAbortedError, ConnectionResetError,
+                             BrokenPipeError)):
+            return
+        super().handle_error(request, client_address)
 
 
 class Live:
@@ -146,9 +173,72 @@ class Live:
                 self.listeners.remove(q)
 
 
-def watcher(live: Live, stop: threading.Event) -> None:
+def asker(stop: threading.Event, every: float) -> None:
+    """Ask their bug tracker whether anything moved, on a timer.
+
+    The watcher below is a delivery mechanism: it notices that a file on this
+    machine changed and pushes the redrawn page to the open tab. It never goes
+    near the network, so on its own the console can only ever show you an
+    answer that something else already fetched -- which meant sitting in front
+    of a page waiting for a bell that, by construction, could not ring.
+
+    This is the half that fetches. One read-only GET of our own filed reports,
+    the same call scripts/bounty.py makes, at SAFE tier. When a report's
+    status has actually changed it writes one event and a new snapshot, the
+    watcher sees state/bounty.json move within a tick, and the bell lights on
+    its own.
+
+    Two things it deliberately does not do. It does not run checks: a bell is
+    news that THEY moved, and whether their claim is true is a question only
+    an admissible run may answer. And it does not touch the CHECK axis at all,
+    so nothing here can mark anything verified.
+
+    It does write, which is the honest cost: after a change your tree is dirty
+    until you commit, and a run started in that window cannot reach level V.
+    Off by default for exactly that reason.
+    """
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "bounty_poll", REPO_ROOT / "scripts" / "bounty.py")
+    bounty = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(bounty)
+
+    while not stop.wait(every):
+        try:
+            before = bounty._last_status_by_report()
+            # refresh_our_reports, not fetch_our_reports: the latter appends
+            # the journal event and returns the rows without writing
+            # state/bounty.json, and the bell reads the vendor's status out of
+            # that file. Recording the change and leaving the page saying the
+            # old thing is the failure this whole option exists to remove.
+            snapshot = bounty.refresh_our_reports()
+            after = bounty._last_status_by_report()
+        except Exception as exc:  # noqa: BLE001 -- a bad read must not kill the server
+            print(f"[ask] read failed, leaving the page as it was: "
+                  f"{type(exc).__name__}: {exc}", file=sys.stderr)
+            continue
+
+        klass = (snapshot or {}).get("klass")
+        if klass != "ok":
+            # Rule 8: a failed read is not an empty read. bounty.py has
+            # already recorded that we looked and could not see; say so here
+            # rather than letting silence read as "nothing has changed".
+            print(f"[ask] could not read their tracker ({klass}); "
+                  f"the page keeps what it had")
+            continue
+
+        moved = {k: (before.get(k), v) for k, v in after.items() if before.get(k) != v}
+        if moved:
+            for report_id, (was, now) in sorted(moved.items()):
+                print(f"[ask] #{report_id}: {was or '-'} -> {now}")
+            print(f"[ask] {len(moved)} report(s) moved -- re-fold to take it in: "
+                  f"python scripts/ledger.py --events-only")
+
+
+def watcher(live: Live, stop: threading.Event, every: float = POLL_SECONDS) -> None:
     last = _fingerprint()
-    while not stop.wait(POLL_SECONDS):
+    while not stop.wait(every):
         now = _fingerprint()
         if now == last:
             continue
@@ -261,7 +351,20 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--port", type=int, default=8787)
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--open", action="store_true", help="open a browser tab")
+    parser.add_argument("--poll", type=float, default=POLL_SECONDS, metavar="SECONDS",
+                        help=f"how often to look for a change "
+                             f"(default {POLL_SECONDS:g}; use 1 while editing "
+                             f"scripts/render.py)")
+    parser.add_argument("--ask", type=float, default=0, metavar="MINUTES",
+                        help="also ask their bug tracker this often, so the "
+                             "bell can light on its own (e.g. --ask 15). "
+                             "Writes when a report moves, which dirties the "
+                             "tree; off by default")
     args = parser.parse_args(argv)
+    if args.poll <= 0:
+        parser.error("--poll must be greater than zero")
+    if args.ask and args.ask < 1:
+        parser.error("--ask is in minutes; anything under 1 is hammering them")
 
     live = Live()
     if live.error:
@@ -269,8 +372,12 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     stop = threading.Event()
-    thread = threading.Thread(target=watcher, args=(live, stop), daemon=True)
+    thread = threading.Thread(target=watcher, args=(live, stop, args.poll), daemon=True)
     thread.start()
+
+    if args.ask:
+        threading.Thread(target=asker, args=(stop, args.ask * 60),
+                         daemon=True).start()
 
     url = f"http://{args.host}:{args.port}/"
 
@@ -294,7 +401,13 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     rows = sum(live.payload.get("display_counts", {}).values())
     print(f"[serve] {url}  {rows} rows, payload {live.digest[:16]}")
-    print(f"[serve] watching {', '.join(WATCHED)} every {POLL_SECONDS:g}s")
+    print(f"[serve] watching {', '.join(WATCHED)} every {args.poll:g}s")
+    if args.ask:
+        print(f"[serve] asking their tracker every {args.ask:g} min -- the bell "
+              f"can light without you")
+    else:
+        print("[serve] not asking their tracker; the bell only moves after a "
+              "sweep (--ask 15 to change that)")
     print("[serve] the open tab reloads itself when the state moves. Ctrl-C to stop.")
     if args.open:
         webbrowser.open(url)

@@ -104,8 +104,21 @@ def compose(report: dict, findings: dict, footer: str) -> dict:
 
     parts.append("\nMEASURED VALUES (from the live service):")
     for finding in linked:
-        parts.append(f"\n  [{finding['id']}] {finding['title']}")
-        for key, value in (finding.get("detail") or {}).items():
+        # The row's TITLE is frozen at the measurement that first opened it --
+        # deliberately, so a finding keeps describing what was found -- while
+        # detail.reason is what the run being cited actually measured. Printing
+        # the title here labelled "from the live service" published the old
+        # sentence as a current reading: this block was about to tell them "20
+        # rows record an award below the minimum, e.g. #67 at low: 1000
+        # recorded against 5000-25000" when every amount had been zeroed hours
+        # earlier. Exactly the frozen figure this script's contract promises
+        # never to send.
+        detail = finding.get("detail") or {}
+        headline = detail.get("reason") or finding["title"]
+        parts.append(f"\n  [{finding['id']}] {headline}")
+        for key, value in detail.items():
+            if key == "reason":
+                continue
             parts.append(f"    {key}: {value}")
 
     parts.append("\nREPRODUCE:")
@@ -161,10 +174,28 @@ def existing_titles(client) -> set[str]:
     whose POST response was lost to a timeout would be invisible here and only
     the server's 409 would stop the retry. Our own pending reports live behind
     my-reports, keyed by wallet -- read both.
+
+    Both reads check the STATUS before the body. my-reports answers a bad or
+    expired key with 401 and a perfectly parseable {"detail": ...}, so
+    `.json().get("reports", [])` returned an empty list, no exception was
+    raised, the "refusing to file blind" branch never ran, and the duplicate
+    went out. Same shape as the read bounty.py's classify_read exists for: an
+    unreadable tracker is byte-for-byte an empty one unless somebody looks at
+    the status line.
     """
+    def _rows(response, what: str) -> list:
+        if response.status_code != 200:
+            raise SystemExit(
+                f"  ! {what} answered HTTP {response.status_code}, so what is "
+                f"already filed cannot be known. Refusing to file blind -- a "
+                f"read that failed is not a tracker that is empty."
+            )
+        body = response.json()
+        return body.get("reports") or body.get("data") or []
+
     titles: set[str] = set()
     try:
-        reports = client.get(ENDPOINT).json().get("reports", [])
+        reports = _rows(client.get(ENDPOINT), "the public tracker")
         titles |= {(r.get("title") or "").strip().lower() for r in reports}
         wallet = os.environ.get("QA_WALLET_ADDRESS", "")
         if wallet:
@@ -179,13 +210,17 @@ def existing_titles(client) -> set[str]:
                 client._transport.registry, timeout=40.0,
             )
             try:
-                mine = reader.get("/api/v1/bounty/my-reports",
-                                  params={"wallet_address": wallet}).json()
+                rows = _rows(
+                    reader.get("/api/v1/bounty/my-reports",
+                               params={"wallet_address": wallet}),
+                    "my-reports")
             finally:
                 reader.close()
-            rows = mine.get("reports") or mine.get("data") or []
             titles |= {(r.get("title") or "").strip().lower() for r in rows}
         return titles
+    except SystemExit:
+        # Already said exactly what went wrong, with the status code in it.
+        raise
     except Exception as exc:  # noqa: BLE001
         print(f"  ! could not read the tracker first ({exc}); refusing to file blind")
         raise SystemExit(1)

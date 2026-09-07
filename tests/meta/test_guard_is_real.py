@@ -4,8 +4,12 @@ These run first and abort the session on failure. If the guard cannot be shown
 to stop a SAFE POST, a probe carrying executable parameters, and an ungated
 MUTATE, then zero live requests are issued for the rest of the run.
 
-Every test here asserts a REFUSAL. Nothing in this file reaches the network:
-each violation is raised before the transport delegates.
+Every test here asserts a REFUSAL, and nothing in this file reaches the
+network -- not because the violation is raised before the transport delegates,
+which is only true while the guard works, but because the transport underneath
+these clients cannot carry a request at all. That distinction was not academic:
+mutating the probe_only floor off, to check this suite could feel it, sent a
+real POST to /api/v1/funding/withdraw.
 """
 
 from __future__ import annotations
@@ -52,24 +56,67 @@ def test_requests_session_is_forbidden():
 
 
 # ---------------------------------------------------------------------------
+# Every negative control below asks the guard to refuse something, and until
+# 2026-09-06 its only protection against actually DOING that thing was the
+# code it was testing. Mutating the probe_only floor off, to check this suite
+# could feel it, sent a real POST to /api/v1/funding/withdraw with
+# {"amount": "1"}. It came back 401 because the client was anonymous, and
+# nothing moved -- but it left, and the list these tests iterate also holds
+# deposit, register and prop/signup.
+#
+# So they carry a transport that refuses to carry anything. Guard correct: the
+# SafetyViolation is raised before the transport is ever reached and the test
+# passes exactly as it did. Guard broken: the request dies here with a
+# distinctive error, the test fails, and nothing leaves the machine. A
+# negative control must not depend on the thing it is controlling for.
+# ---------------------------------------------------------------------------
+class _Unsendable(httpx.BaseTransport):
+    """Carries nothing. Reaching it means the guard let something through."""
+
+    def handle_request(self, request: httpx.Request) -> httpx.Response:
+        raise AssertionError(
+            f"THE GUARD LET IT THROUGH: {request.method} {request.url} would "
+            f"have gone to the live platform. Nothing was sent."
+        )
+
+
+def _deaf_client(evidence_store=None, **kwargs):
+    registry = kwargs.pop("registry", None) or EndpointRegistry.load()
+    return build_client(ANON, registry, evidence_store,
+                        inner=_Unsendable(), **kwargs)
+
+
+# ---------------------------------------------------------------------------
 # Layer 2 -- the transport enforces the tier of the running test
 # ---------------------------------------------------------------------------
 @qa(component="meta.guard", tier=SafetyTier.SAFE, surface="meta")
-def test_safe_tier_blocks_post(rest_client):
-    with pytest.raises(SafetyViolation, match="SAFE test attempted POST"):
-        rest_client.post("/api/v1/clob/orders", json={})
+def test_safe_tier_blocks_post(evidence_store):
+    client = _deaf_client(evidence_store)
+    try:
+        with pytest.raises(SafetyViolation, match="SAFE test attempted POST"):
+            client.post("/api/v1/clob/orders", json={})
+    finally:
+        client.close()
 
 
 @qa(component="meta.guard", tier=SafetyTier.SAFE, surface="meta")
-def test_safe_tier_blocks_withdraw_entirely(rest_client):
-    with pytest.raises(SafetyViolation, match="SAFE test attempted POST"):
-        rest_client.post("/api/v1/funding/withdraw", json={})
+def test_safe_tier_blocks_withdraw_entirely(evidence_store):
+    client = _deaf_client(evidence_store)
+    try:
+        with pytest.raises(SafetyViolation, match="SAFE test attempted POST"):
+            client.post("/api/v1/funding/withdraw", json={})
+    finally:
+        client.close()
 
 
 @qa(component="meta.guard", tier=SafetyTier.SAFE, surface="meta")
-def test_unknown_write_path_is_default_denied(rest_client):
-    with pytest.raises(SafetyViolation, match="matches no rule in components.yaml"):
-        rest_client.post("/api/v1/some/undeclared/endpoint", json={})
+def test_unknown_write_path_is_default_denied(evidence_store):
+    client = _deaf_client(evidence_store)
+    try:
+        with pytest.raises(SafetyViolation, match="matches no rule in components.yaml"):
+            client.post("/api/v1/some/undeclared/endpoint", json={})
+    finally:
+        client.close()
 
 
 @qa(component="meta.guard", tier=SafetyTier.SAFE, surface="meta")
@@ -89,35 +136,51 @@ def test_request_without_tier_context_is_denied(registry, evidence_store):
 # Layer 3 -- declared executable parameters, never inferred
 # ---------------------------------------------------------------------------
 @qa(component="meta.guard", tier=SafetyTier.PROBE, surface="meta")
-def test_probe_blocks_executable_params(rest_client):
+def test_probe_blocks_executable_params(evidence_store):
     """The exact shape of the request we must never send."""
-    with pytest.raises(SafetyViolation, match="carries executable parameters"):
-        rest_client.post(
-            "/api/v1/funding/withdraw",
-            json={"token": "USDC", "amount": "1", "destination_address": "0xdead"},
-        )
+    client = _deaf_client(evidence_store)
+    try:
+        with pytest.raises(SafetyViolation, match="carries executable parameters"):
+            client.post(
+                "/api/v1/funding/withdraw",
+                json={"token": "USDC", "amount": "1", "destination_address": "0xdead"},
+            )
+    finally:
+        client.close()
 
 
 @qa(component="meta.guard", tier=SafetyTier.PROBE, surface="meta")
-def test_probe_blocks_a_single_executable_param(rest_client):
-    with pytest.raises(SafetyViolation, match="carries executable parameters"):
-        rest_client.post("/api/v1/funding/withdraw", json={"amount": "0.0001"})
+def test_probe_blocks_a_single_executable_param(evidence_store):
+    client = _deaf_client(evidence_store)
+    try:
+        with pytest.raises(SafetyViolation, match="carries executable parameters"):
+            client.post("/api/v1/funding/withdraw", json={"amount": "0.0001"})
+    finally:
+        client.close()
 
 
 @qa(component="meta.guard", tier=SafetyTier.PROBE, surface="meta")
-def test_probe_blocks_undeclared_keys(rest_client):
+def test_probe_blocks_undeclared_keys(evidence_store):
     """The guard cannot reason about parameters it has never seen."""
-    with pytest.raises(SafetyViolation, match="undeclared keys"):
-        rest_client.post("/api/v1/funding/withdraw", json={"surprise_field": "x"})
+    client = _deaf_client(evidence_store)
+    try:
+        with pytest.raises(SafetyViolation, match="undeclared keys"):
+            client.post("/api/v1/funding/withdraw", json={"surprise_field": "x"})
+    finally:
+        client.close()
 
 
 @qa(component="meta.guard", tier=SafetyTier.PROBE, surface="meta")
-def test_probe_blocks_order_params(rest_client):
-    with pytest.raises(SafetyViolation, match="carries executable parameters"):
-        rest_client.post(
-            "/api/v1/clob/orders",
-            json={"side": "buy", "price": "0.01", "size": "1"},
-        )
+def test_probe_blocks_order_params(evidence_store):
+    client = _deaf_client(evidence_store)
+    try:
+        with pytest.raises(SafetyViolation, match="carries executable parameters"):
+            client.post(
+                "/api/v1/clob/orders",
+                json={"side": "buy", "price": "0.01", "size": "1"},
+            )
+    finally:
+        client.close()
 
 
 # ---------------------------------------------------------------------------
@@ -143,7 +206,10 @@ def _mutating_client(evidence_store, mutate_enabled: bool, base_url=None):
     registry = EndpointRegistry.load()
     registry.mutate_enabled = mutate_enabled
     registry.mutate_allowed_hosts = frozenset({"cymetica.com"})
-    return build_client(ANON, registry, evidence_store, base_url=base_url)
+    # Deaf, like every negative control here: these ask the guard to refuse a
+    # withdrawal, a deposit and a registration, and one of them really sent a
+    # withdrawal the day the floor beneath it was mutated off.
+    return _deaf_client(evidence_store, registry=registry, base_url=base_url)
 
 
 @qa(component="meta.guard", tier=SafetyTier.SAFE, surface="meta")
@@ -183,14 +249,53 @@ def test_probe_only_endpoints_refuse_mutate_even_when_enabled(evidence_store, pa
 
 @qa(component="meta.guard", tier=SafetyTier.SAFE, surface="meta")
 def test_mutate_against_unlisted_host_is_blocked(evidence_store):
+    """The host allowlist, on an endpoint that reaches it.
+
+    Not clob/orders: the probe_only floor is checked before the host, so an
+    endpoint behind that floor tests the floor and never the allowlist. The
+    bounty filing channel is the one write this project performs on purpose
+    and is deliberately not probe_only, which makes it the right subject --
+    and the guard still refuses before anything leaves the process.
+    """
     client = _mutating_client(
         evidence_store, mutate_enabled=True, base_url="https://evil.example.com"
     )
     try:
         with as_mutate_tier(), pytest.raises(SafetyViolation, match="unlisted host"):
-            client.post("/api/v1/clob/orders", json={"side": "buy"})
+            client.post("/api/v1/bounty/reports", json={"title": "x"})
     finally:
         client.close()
+
+
+@qa(component="meta.guard", tier=SafetyTier.SAFE, surface="meta")
+def test_the_money_loop_is_behind_the_probe_only_floor():
+    """components.yaml says probe_only is where money-moving endpoints live.
+
+    Deposit and withdrawal were behind it; the middle leg was not. Cymetica's
+    own trust ladder names the three together -- "the full money loop with
+    your own deposited funds: deposit, spot CLOB trading (REST
+    /api/v1/clob/orders), and withdrawal" -- so an order is the same kind of
+    thing as the two either side of it, and a MUTATE test could have placed
+    one with --allow-mutate. None does today, which is exactly why this is
+    worth pinning: the gap was a trap for whoever wrote the first.
+    """
+    from qa.safety import EndpointRegistry
+
+    registry = EndpointRegistry.load()
+    must = {
+        "clob.orders", "clob.order_singular", "arena.order",
+        "exchange.buy", "exchange.orders", "agents.clone", "bots.clone",
+        "funding.deposit", "funding.withdraw",
+    }
+    by_id = {rule.id: rule for rule in registry.rules}
+    missing = sorted(i for i in must if i in by_id and not by_id[i].probe_only)
+    assert not missing, (
+        f"money-moving endpoints reachable by a MUTATE test: {missing}. "
+        f"Add `probe_only: true`, or argue in components.yaml why this one is "
+        f"not spending anything."
+    )
+    assert not (must - set(by_id)), \
+        f"named in this guard but no longer declared: {sorted(must - set(by_id))}"
 
 
 @qa(component="meta.guard", tier=SafetyTier.SAFE, surface="meta")

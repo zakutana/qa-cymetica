@@ -240,3 +240,52 @@ def test_regression_after_closed_report_opens_reopen_obligation():
     regressed = fold(passing, run=fold_run("run-w", [(CHECK_A, "failed")],
                                            at="2026-09-05T11:00:00+00:00"), events=events)
     assert regressed["findings"]["CYM-a"]["obligations"]["reopen"] == [46]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_row_with_many_checks_does_not_get_a_chimera_for_a_detail():
+    """One row, several failing checks, one honest set of numbers.
+
+    _detail took the first non-null value of each field independently, so a
+    row declaring more than one check -- CYM-documented-404 declares 26 --
+    could show a reason measured by one check above a population measured by
+    another, with the second failure named nowhere. That detail is the
+    sentence on the page and the headline submit.py sends under "MEASURED
+    VALUES (from the live service)", so the mixture went out as one reading.
+
+    Every reason is kept now. A figure is kept only where the checks that
+    measured it agree; `left` is the exception, because two checks each naming
+    their own offending items compose into one longer list of them.
+    """
+    findings = _findings()
+
+    def measured(nodeid, reason, **fields):
+        return _result(nodeid, "failed", measurement=dict(
+            {"role": "verdict", "claim_id": "documented-404", "reason": reason},
+            **fields))
+
+    alpha = measured("t::a", "/alpha is documented and returns 404",
+                     left=["/alpha"], population={"checked": 1})
+    beta = measured("t::b", "/beta is documented and returns 404",
+                    population={"checked": 99})
+
+    detail = findings._detail([alpha, beta])
+    assert detail["reason"] == (
+        "/alpha is documented and returns 404; /beta is documented and returns 404"
+    ), "a failing check's reason went missing from the row it belongs to"
+    assert "population" not in detail, \
+        "two checks disagreed about a number and one of them became the row's"
+    assert findings._detail([beta, alpha]) == detail, \
+        "the detail depends on the order results happen to arrive in"
+
+    gamma = measured("t::c", "/gamma is documented and returns 404",
+                     left=["/gamma"], population={"checked": 1})
+    both = findings._detail([alpha, gamma])
+    assert both["left"] == ["/alpha", "/gamma"], "offending items did not compose"
+    assert both["population"] == {"checked": 1}, \
+        "a figure both checks agreed on was dropped"
+
+    assert findings._detail([alpha]) == {
+        "left": ["/alpha"], "population": {"checked": 1},
+        "reason": "/alpha is documented and returns 404",
+    }, "the single-check case changed shape"

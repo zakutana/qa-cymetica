@@ -121,6 +121,22 @@ def test_every_agent_count_in_llms_matches_the_live_species_list(rest_anon):
 
     body = catalogue.json()
     live = body if isinstance(body, list) else (body.get("species") or [])
+    if not live:
+        # A 200 we could not parse is not a catalogue of zero. Both shapes we
+        # know are handled above; a third would fall through to live_count 0
+        # and report "llms.txt says 11, the catalogue lists 0" -- a sentence
+        # that is obviously wrong to a reader and would be sent to the vendor
+        # in earnest. The same principle as rule 8, one layer in: an empty
+        # parse is not a measurement.
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason=(f"{SPECIES} answered 200 but no species could be read out "
+                    f"of it (top-level keys: "
+                    f"{sorted(body)[:6] if isinstance(body, dict) else type(body).__name__}), "
+                    f"so the document's figures cannot be settled"),
+            sources={"catalogue": SPECIES},
+            claim_id="llms_agent_count_self_consistent"))
+        return
     live_count = len(live)
 
     stated = [int(n) for n in AGENT_COUNT.findall(text)]

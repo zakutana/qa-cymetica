@@ -1,0 +1,208 @@
+{
+  "schema": 2,
+  "run_id": "run-20260906T110452Z-84891b3",
+  "started_at": "2026-09-06T11:04:56+00:00",
+  "finished_at": "2026-09-06T11:05:04+00:00",
+  "git_head": "84891b3926e61b2ec8c1ca3ad013244ae98e34d3",
+  "git_short": "84891b3",
+  "git_dirty": true,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": "sha256:5f60a8fed06daa974775a1ae0e8498cfbc6619c2d0f606266c0b99072c776248",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "cf88392e12e0aa2c31a85517b1a56f729f7895bc2eb0ce22df0a5b9498776681",
+    "/.well-known/agent-card.json": "3dfc7d39fe712e14967fbd019be8bec83c4a49e836fb3d04ff02248b2580fca5",
+    "/.well-known/agent-skills.json": "f2f992a77d58a157ec678cd17d4d94d216aa96d12ee4f9a3adae9fa291fb5a0d",
+    "/.well-known/ai-plugin.json": "e2f2d79821bf8e741fb18cefea6a94cb7a1ec358644306aeff02e763c61b1fb2",
+    "/.well-known/udc.json": "92cd8a5f7ec5a0a859594ef9fbd72cba4914eaab4220377db18adf2ed44611a4",
+    "/openapi.json": "f0cccb1f06ec266d303b1c7ab8e23f4af29a3c43106027595c95c1449fa1b2cf",
+    "/llms.txt": "8266bcdda0419cdf8e37cd2df345f9507aeb61220b1fc14393d631354202ec8f",
+    "mcp:tools/list:none": "21319c310fe5072fc1b5225f7a8da18c04e1c2cdf3ea512c4f3d8f396ab68ac0"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/rest/test_award_matches_its_tier.py tests/rest/test_bounty_rewards.py -q --no-header --tb=line",
+  "selector_full": false,
+  "allow_mutate": false,
+  "collected": [
+    "tests/rest/test_award_matches_its_tier.py::test_a_recorded_award_agrees_with_the_tier_on_the_same_row",
+    "tests/rest/test_bounty_rewards.py::test_verified_reports_record_what_they_earned",
+    "tests/rest/test_bounty_rewards.py::test_the_reward_programme_is_discoverable_by_an_agent"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/rest/test_award_matches_its_tier.py::test_a_recorded_award_agrees_with_the_tier_on_the_same_row",
+      "component": "rest.support",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "award-contradicts-its-own-tier",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 1215,
+      "evidence_ids": [
+        "aa453ce9122711e00b54ee5fd7014051bfebe59f147d20be633352e345d10b3f"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "20 row(s) record an award in one currency and publish an entitlement in another (e.g. #67: paid in ET10, entitled in CYM); 20 row(s) record an award below the minimum they publish for their own confirmed severity (e.g. #67 at low: 1000 recorded against 5000-25000)",
+        "left": [
+          67,
+          66,
+          65,
+          64,
+          63,
+          61,
+          60,
+          59
+        ],
+        "right": 20,
+        "sources": {
+          "tracker": "/api/v1/bounty/reports",
+          "tiers": "/api/v1/bounty/reward-tiers"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "award-contradicts-its-own-tier",
+        "role": "verdict",
+        "population": {
+          "rows": 20,
+          "awarded": 20,
+          "currency_mismatch": 20,
+          "below_published_minimum": 20
+        }
+      },
+      "check_fingerprint": "d7e72c1d674932db94e165b09e4dc8a72b4d9fc7b817e09512df689d7f7927d2",
+      "reason": null,
+      "failure_repr": "E   AssertionError: 20 row(s) record an award in one currency and publish an entitlement in another (e.g. #67: paid in ET10, entitled in CYM); 20 row(s) record an award below the minimum they publish for their own confirmed severity (e.g. #67 at low: 1000 recorded against 5000-25000)\n      left  = [67, 66, 65, 64, 63, 61, 60, 59]\n      right = 20"
+    },
+    {
+      "nodeid": "tests/rest/test_bounty_rewards.py::test_verified_reports_record_what_they_earned",
+      "component": "rest.support",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "bounty-rewards-unrecorded",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 868,
+      "evidence_ids": [
+        "57e5faa8301cfee770cae76321bd6413cca9b61a10494c1c6dbc4a76af134b01",
+        "e92755748222685ce9f13b8df14410964e3796c1d33649f2925a322f87d9ffaf"
+      ],
+      "measurement": {
+        "verdict": "passed",
+        "reason": "20 of the 20 public reports are closed as fixed and 20 of them can be read as paid or awarded. reward_status takes ['awarded'], so a report that was paid and one whose award was never recorded are indistinguishable; stats still report bugs_fixed=35 and total_paid=2000.0",
+        "left": 20,
+        "right": 20,
+        "sources": {
+          "tracker": "/api/v1/bounty/reports",
+          "totals": "/api/v1/bounty/stats",
+          "their_ref": "ET-22226"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "bounty-rewards-unrecorded",
+        "role": "verdict",
+        "population": {
+          "rows_returned": 20,
+          "closed": 20,
+          "reward_status_values": [
+            "awarded"
+          ],
+          "bugs_fixed_per_stats": 35,
+          "total_paid_per_stats": 2000.0
+        }
+      },
+      "check_fingerprint": "093784993d97b1427c6f1951135b9da162f73e8057ddcd0ea1146c0b3fe967f1",
+      "reason": null,
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/rest/test_bounty_rewards.py::test_the_reward_programme_is_discoverable_by_an_agent",
+      "component": "discovery.llmstxt",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "bounty-rewards-undocumented",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 1527,
+      "evidence_ids": [
+        "6f35c9c84f0c43cebbf37cdf505e7d35e493afbe9f1e959b58aeff030f6e3164",
+        "0a9ae8c559e0bef09cc8b13269399062e4935e3061a279fccc321755b0b1f71b",
+        "d98b7926e300cdf1c2ebd84381905636a84fcc0c6c5e0c9a835abd55f63e71fb",
+        "c9dd4ca1cbefacbf20969abc92e69c5e1f7507bcfb019b20778a7f2e29df9f3a",
+        "6db9221e3e4b4cb050cfd3e0d9861c36323315582eafb2d6ad10d60c5e1b7b8d"
+      ],
+      "measurement": {
+        "verdict": "passed",
+        "reason": "the bug-report reward programme is described in agent-card.json, agent-skills.json, llms.txt, mcp.json",
+        "left": [
+          "agent-card.json",
+          "agent-skills.json",
+          "llms.txt",
+          "mcp.json"
+        ],
+        "right": [
+          "agent-card.json",
+          "agent-skills.json",
+          "llms.txt",
+          "mcp.json",
+          "openapi.json"
+        ],
+        "sources": {
+          "searched": "agent-card.json, agent-skills.json, llms.txt, mcp.json, openapi.json"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "bounty-rewards-undocumented",
+        "role": "verdict",
+        "population": {
+          "documents_read": 5,
+          "unreadable": {}
+        }
+      },
+      "check_fingerprint": "8a8ec949f57150dcf207546f69321615e4324542b82a752c981b4667aea99b60",
+      "reason": null,
+      "failure_repr": null
+    }
+  ],
+  "totals": {
+    "failed": 1,
+    "passed": 2
+  },
+  "ratelimit": {
+    "requests": 8,
+    "limit": 2000,
+    "remaining": 1999,
+    "fraction_used": 0.0005,
+    "exhausted": false
+  },
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "fingerprint_after": "sha256:5f60a8fed06daa974775a1ae0e8498cfbc6619c2d0f606266c0b99072c776248",
+  "exit_status": 1
+}

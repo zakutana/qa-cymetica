@@ -1,0 +1,92 @@
+{
+  "schema": 2,
+  "run_id": "run-20260907T071456Z-eef070c",
+  "started_at": "2026-09-07T07:15:03+00:00",
+  "finished_at": "2026-09-07T07:15:14+00:00",
+  "git_head": "eef070c8d798e67aabd31412d7d6e5a04786223d",
+  "git_short": "eef070c",
+  "git_dirty": true,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": "sha256:97d3d7ec7f95b865c20e38b2b420073341493fa33d08fb9ce4816d8f544e8a67",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "da8911c94880b920d02e1e7c78d62b5e48324e983e9a39bd995b6425d15d48ad",
+    "/.well-known/agent-card.json": "10a060302db128749e97e38a0fa6e540dac6cdfef7555c92e97ea6568a624998",
+    "/.well-known/agent-skills.json": "3ee22148aea8e6314344f5675c7a51d4800a25b674c7dbcca1babecdda04c7c4",
+    "/.well-known/ai-plugin.json": "e2f2d79821bf8e741fb18cefea6a94cb7a1ec358644306aeff02e763c61b1fb2",
+    "/.well-known/udc.json": "92cd8a5f7ec5a0a859594ef9fbd72cba4914eaab4220377db18adf2ed44611a4",
+    "/openapi.json": "f0cccb1f06ec266d303b1c7ab8e23f4af29a3c43106027595c95c1449fa1b2cf",
+    "/openapi-public.json": "f24293f7d6668641e2fcf03ea7e77ca5d431a2f03bf6ea92f97eb9f6a72bc4d0",
+    "/llms.txt": "dc2c08a4ff03faa66ddef703a132ca6fb554e69f68ed734b7fed4845d3006e28",
+    "mcp:tools/list:none": "cb9188ffdaf6a78e40cae9e30cd1fdfa9925f8f77b1c3d41f5ddb24108b27162"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/rest/test_qa_agent_channel.py::test_escalating_a_low_confidence_answer_does_not_return_the_same_advice -q --no-header --tb=line",
+  "selector_full": false,
+  "allow_mutate": false,
+  "collected": [
+    "tests/rest/test_qa_agent_channel.py::test_escalating_a_low_confidence_answer_does_not_return_the_same_advice"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/rest/test_qa_agent_channel.py::test_escalating_a_low_confidence_answer_does_not_return_the_same_advice",
+      "component": "rest.support",
+      "tier": "PROBE",
+      "surface": "rest",
+      "claim_id": "qa-agent-escalation-is-a-loop",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 7006,
+      "evidence_ids": [
+        "f1036570364917c0be269a9e6c667f304691fa2d1f295c7ec18f0c373e223b3c"
+      ],
+      "measurement": {
+        "verdict": "passed",
+        "reason": "the sync channel answered at confidence 0.85, at or above its own escalation floor, so the escalation path is not exercised",
+        "left": 0.85,
+        "right": 0.7,
+        "sources": {},
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "qa-agent-escalation-is-a-loop",
+        "role": "verdict",
+        "population": null
+      },
+      "check_fingerprint": "f9071e3d0bb7c711149d1ff073231a2bfb44157f83deac7f740d54b9da523511",
+      "reason": null,
+      "failure_repr": null
+    }
+  ],
+  "totals": {
+    "passed": 1
+  },
+  "ratelimit": {
+    "requests": 1,
+    "limit": 60,
+    "remaining": 59,
+    "fraction_used": 0.0167,
+    "exhausted": false
+  },
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "fingerprint_after": "sha256:97d3d7ec7f95b865c20e38b2b420073341493fa33d08fb9ce4816d8f544e8a67",
+  "exit_status": 0
+}

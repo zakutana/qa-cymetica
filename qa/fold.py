@@ -366,12 +366,25 @@ def _apply_events(rows: dict, events: Iterable[dict]) -> None:
     for event in events:
         etype = event.get("type")
 
-        if etype == "vendor_read" and event.get("klass") not in (None, "ok"):
+        if etype == "vendor_read":
             # Rule 8: a failed read is not an empty read. bounty.py could not
             # tell 401 from "the tracker is empty", so an expired key read as
             # the vendor having closed everything.
-            for row in rows.values():
-                row["filing"]["stale_from"] = event["at"]
+            #
+            # A clean read afterwards clears it. Marking without clearing made
+            # the first failed read in the journal's history mark every row
+            # stale in every fold from then on -- a badge nobody can clear,
+            # the same defect the reply-date logic in render.py was fixed for.
+            # Only an explicit klass speaks: "ok" clears, a named failure
+            # marks, and a read that recorded no class does neither, because
+            # it is not evidence either way.
+            klass = event.get("klass")
+            if klass == "ok":
+                for row in rows.values():
+                    row["filing"].pop("stale_from", None)
+            elif klass is not None:
+                for row in rows.values():
+                    row["filing"]["stale_from"] = event["at"]
             continue
 
         if etype == "supersede":
@@ -548,6 +561,18 @@ def fold(prev: dict | None = None, run: dict | None = None,
             if reason:
                 row["check"]["state"] = "UNVERIFIABLE"
                 row["check"]["unverifiable_reason"] = reason
+
+        # This fold adjudicated nothing. That does not un-adjudicate what came
+        # before, and dropping the attribution said it did: an --events-only
+        # fold over a single appended event rewrote a page that read "level V"
+        # into one reading "none admissible", while every row still named the
+        # run that last judged it. The rows were right and the header was
+        # wrong. Carry it, and let the caller say who composed what.
+        for field in ("run_id", "run_level", "updated_at"):
+            carried = (prev or {}).get(field)
+            if carried is not None:
+                out[field] = carried
+        out["run_carried"] = "run_id" in out
 
     _apply_events(rows, events)
     for row in rows.values():

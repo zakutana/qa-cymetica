@@ -1,0 +1,119 @@
+{
+  "schema": 2,
+  "run_id": "run-20260907T072918Z-d8588e1",
+  "started_at": "2026-09-07T07:29:27+00:00",
+  "finished_at": "2026-09-07T07:30:30+00:00",
+  "git_head": "d8588e13d5323255a11a81bb16646cd5e637fb23",
+  "git_short": "d8588e1",
+  "git_dirty": true,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": "sha256:97d3d7ec7f95b865c20e38b2b420073341493fa33d08fb9ce4816d8f544e8a67",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "da8911c94880b920d02e1e7c78d62b5e48324e983e9a39bd995b6425d15d48ad",
+    "/.well-known/agent-card.json": "10a060302db128749e97e38a0fa6e540dac6cdfef7555c92e97ea6568a624998",
+    "/.well-known/agent-skills.json": "3ee22148aea8e6314344f5675c7a51d4800a25b674c7dbcca1babecdda04c7c4",
+    "/.well-known/ai-plugin.json": "e2f2d79821bf8e741fb18cefea6a94cb7a1ec358644306aeff02e763c61b1fb2",
+    "/.well-known/udc.json": "92cd8a5f7ec5a0a859594ef9fbd72cba4914eaab4220377db18adf2ed44611a4",
+    "/openapi.json": "f0cccb1f06ec266d303b1c7ab8e23f4af29a3c43106027595c95c1449fa1b2cf",
+    "/openapi-public.json": "f24293f7d6668641e2fcf03ea7e77ca5d431a2f03bf6ea92f97eb9f6a72bc4d0",
+    "/llms.txt": "dc2c08a4ff03faa66ddef703a132ca6fb554e69f68ed734b7fed4845d3006e28",
+    "mcp:tools/list:none": "cb9188ffdaf6a78e40cae9e30cd1fdfa9925f8f77b1c3d41f5ddb24108b27162"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/rest/test_qa_agent_channel.py::test_the_async_first_pass_is_grounded_like_the_sync_channel -q --no-header --tb=short",
+  "selector_full": false,
+  "allow_mutate": false,
+  "collected": [
+    "tests/rest/test_qa_agent_channel.py::test_the_async_first_pass_is_grounded_like_the_sync_channel"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/rest/test_qa_agent_channel.py::test_the_async_first_pass_is_grounded_like_the_sync_channel",
+      "component": "rest.support",
+      "tier": "PROBE",
+      "surface": "rest",
+      "claim_id": "a2a-first-pass-not-grounded",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 31706,
+      "evidence_ids": [
+        "258cdc698f75cdbb34738f00155164d0aa9cbafbff9e1bde6057e4bd8f07519e",
+        "c8adaabacef6476d350d3b910a6ec4ab260f1f5a1ae70ab1a34e3550b64ba1f9",
+        "2b7398a3ca27efd096f583498ac511dcda3c27c654431ae6d65c32e9b7789d49"
+      ],
+      "measurement": {
+        "verdict": "passed",
+        "reason": "the async first-pass reply to a2a_cd06dd40e3884704, asked and answered during this run, cites 3 source(s) at confidence 0.85, while the sync half cites 3 at 0.85",
+        "left": {
+          "async": {
+            "in_reply_to": "a2a_cd06dd40e3884704",
+            "at": "2026-09-07T07:29:34.831845+00:00",
+            "confidence": 0.85,
+            "sources": [
+              "GET /api/v1/bounty/reward-tiers",
+              "faq-revenue-share-1",
+              "faq-rewards-1"
+            ]
+          },
+          "sync": {
+            "confidence": 0.85,
+            "sources": [
+              "faq-rewards-1",
+              "faq-revenue-share-1",
+              "GET /api/v1/bounty/reward-tiers"
+            ]
+          }
+        },
+        "right": 0.7,
+        "sources": {
+          "inbox": "/api/v1/bounty/a2a/inbox/{agent_id}",
+          "sync": "/api/v1/bounty/qa-agent/ask",
+          "asked": "/api/v1/bounty/a2a/send"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "a2a-first-pass-not-grounded",
+        "role": "verdict",
+        "population": {
+          "first_pass_in_inbox": 14
+        }
+      },
+      "check_fingerprint": "1df34400f145d054ef8a959dab5b41e9c3e78d3119b3bd5693ab9cd394d8bb24",
+      "reason": null,
+      "failure_repr": null
+    }
+  ],
+  "totals": {
+    "passed": 1
+  },
+  "ratelimit": {
+    "requests": 3,
+    "limit": 60,
+    "remaining": 57,
+    "fraction_used": 0.05,
+    "exhausted": false
+  },
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "fingerprint_after": "sha256:97d3d7ec7f95b865c20e38b2b420073341493fa33d08fb9ce4816d8f544e8a67",
+  "exit_status": 0
+}

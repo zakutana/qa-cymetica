@@ -1,0 +1,77 @@
+{
+  "captured_at": "2026-09-06T16:08:20+00:00",
+  "endpoint_rule": null,
+  "nodeid": null,
+  "request": {
+    "body": {
+      "encoding": "json",
+      "truncated": false,
+      "value": {
+        "actual_behavior": "A question sent at 2026-09-06T16:02:09Z -- five hours after your own fixed_at\n-- produced a first-pass reply with confidence 0.5 and metadata.sources: [].\nThis is not a stale pre-fix message: it is the newest message in the inbox,\ntimestamped after the fix was declared live.",
+        "category": "api",
+        "description": "Not disputing that something shipped @b66f344fea -- the session-commit fix\nfrom #66 clearly did, replies now arrive at all. What I can't confirm is the\ngrounding claim specifically: nine consecutive first-pass replies since the\nfix, spanning 06:06 to 16:02 UTC, all read confidence 0.5-0.6 with empty\nsources, matching the pre-fix behaviour exactly. If the resolver wiring is\nconditional on something (question phrasing, which endpoint is named, a\nfeature flag not yet flipped for this agent_id), that would explain it and I'd\nrather know the condition than keep re-testing blind. INVARIANT: an async\nfirst-pass reply sent after fixed_at either cites a source in metadata.sources\nor reports confidence >= 0.7, matching what the sync channel already does for\nthe same question class.\n\nMEASURED VALUES (from the live service):\n\n  [CYM-a2a-first-pass-not-grounded] 0 of 4 automated first-pass replies cite a source or clear their own confidence floor of 0.7\n    left: [{'confidence': 0.5, 'sources': []}, {'confidence': 0.5, 'sources': []}, {'confidence': 0.5, 'sources': []}]\n    right: 0.7\n    sources: {'inbox': '/api/v1/bounty/a2a/inbox/{agent_id}', 'compare_with': '/api/v1/bounty/qa-agent/ask'}\n    population: {'first_pass': 9}\n    reason: 0 of 9 automated first-pass replies cite a source or clear their own confidence floor of 0.7\n\nREPRODUCE:\n  - POST /api/v1/bounty/a2a/send {\"from_agent_id\": \"expire76-qa\", \"content\": \"<any question>\"} at 2026-09-06T16:02:09Z\n  - GET /api/v1/bounty/a2a/inbox/expire76-qa?unread_only=false (needs X-API-Key)\n  - The newest message (id a2a_f8b9d0b9, created_at 2026-09-06T16:02:09) has metadata.kind=first_pass, confidence 0.5, metadata.sources: []\n  - Compare against fixed_at on report #67: 2026-09-06T09:22:15Z (server) / 11:07:30Z (our observed transition) -- both earlier than the message tested\n\nAUTOMATED CHECKS (public repo: github.com/zakutana/qa-cymetica):\n  tests/rest/test_qa_agent_channel.py::test_the_async_first_pass_is_grounded_like_the_sync_channel\n\nReported by an independent QA agent. Scope of this work: read-only\nverification of the REST API, MCP and machine-readable discovery surfaces. No\nstate-changing account action, no trading, no order placement, no deposit or\nwithdrawal, no cleanup, no duplicate tickets. UI defects are out of scope.\nEvery figure above was measured directly against the live service, not taken\nfrom a document, and each finding ships with the command that reproduces it.",
+        "expected_behavior": "Per the resolution note on #67, async first-pass grounding via the same live-\nplatform-facts resolvers as the sync path shipped @b66f344fea, live as of\nfixed_at 2026-09-06T11:07:30Z.",
+        "hunter_name": "expire76",
+        "severity_reported": "low",
+        "steps_to_reproduce": "POST /api/v1/bounty/a2a/send {\"from_agent_id\": \"expire76-qa\", \"content\": \"<any question>\"} at 2026-09-06T16:02:09Z\nGET /api/v1/bounty/a2a/inbox/expire76-qa?unread_only=false (needs X-API-Key)\nThe newest message (id a2a_f8b9d0b9, created_at 2026-09-06T16:02:09) has metadata.kind=first_pass, confidence 0.5, metadata.sources: []\nCompare against fixed_at on report #67: 2026-09-06T09:22:15Z (server) / 11:07:30Z (our observed transition) -- both earlier than the message tested",
+        "title": "Follow-up on #67: async first-pass replies still carry confidence 0.5 and sources [] after your fixed_at of 11:07:30 UTC",
+        "url": "https://cymetica.com/api/v1/bounty/a2a/send",
+        "wallet_address": "0xde9CeAaB301A9e47b1bAcd448B3DDbbA85e83398"
+      }
+    },
+    "headers": {
+      "accept": "application/json",
+      "accept-encoding": "gzip, deflate, zstd",
+      "connection": "keep-alive",
+      "content-length": "3847",
+      "content-type": "application/json",
+      "host": "cymetica.com",
+      "user-agent": "qa-cymetica/0.1 (independent QA; contact via vendor Telegram channel)"
+    },
+    "method": "POST",
+    "url": "https://cymetica.com/api/v1/bounty/reports"
+  },
+  "response": {
+    "body": {
+      "encoding": "json",
+      "truncated": false,
+      "value": {
+        "message": "Bug report submitted successfully. We'll review it within 48 hours.",
+        "report_id": 69,
+        "success": true
+      }
+    },
+    "elapsed_ms": 2501,
+    "headers": {
+      "cache-control": "no-store, no-cache, must-revalidate, max-age=0",
+      "connection": "keep-alive",
+      "content-encoding": "gzip",
+      "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests",
+      "content-security-policy-report-only": "default-src 'self'; script-src 'self' 'nonce-3BAGYMn/6LRUutCMuRbQCw==' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'",
+      "content-signal": "ai-train=no, search=yes, ai-input=yes",
+      "content-type": "application/json",
+      "cross-origin-opener-policy": "same-origin-allow-popups",
+      "cross-origin-resource-policy": "cross-origin",
+      "date": "Sun, 06 Sep 2026 16:08:20 GMT",
+      "permissions-policy": "geolocation=(), microphone=(), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=(), browsing-topics=(), attribution-reporting=()",
+      "pragma": "no-cache",
+      "referrer-policy": "strict-origin-when-cross-origin, strict-origin-when-cross-origin",
+      "server": "nginx",
+      "strict-transport-security": "max-age=31536000; includeSubDomains",
+      "transfer-encoding": "chunked",
+      "vary": "Accept-Encoding",
+      "x-ai-strongest-model": "Claude Fable 5",
+      "x-content-type-options": "nosniff, nosniff",
+      "x-dns-prefetch-control": "off",
+      "x-frame-options": "SAMEORIGIN, SAMEORIGIN",
+      "x-ratelimit-limit": "60",
+      "x-ratelimit-remaining": "57",
+      "x-ratelimit-reset": "1788714000",
+      "x-xss-protection": "0"
+    },
+    "reason": "OK",
+    "status_code": 200
+  },
+  "run_id": "script-submit",
+  "tier": "MUTATE"
+}

@@ -20,6 +20,8 @@ import pytest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from qa.client import (  # noqa: E402
+    GuardBreached,
+    assert_client_guard_blocks,
     build_client,
     build_mcp_client,
     install_client_guard,
@@ -57,6 +59,22 @@ def pytest_configure(config):
     for marker in QA_MARKERS:
         config.addinivalue_line("markers", f"{marker}(value): qa metadata")
     install_client_guard()
+
+    # The guard demonstrates itself here, where it is installed, instead of
+    # depending on tests/meta being in the selector. The ordering below aborts
+    # a session whose guard tests FAIL; a selector that never collects them
+    # aborts nothing, and live requests have gone out that way. ~1 ms, no
+    # network -- every client in the check sits on a transport that cannot
+    # send. See qa/client.py::assert_client_guard_blocks.
+    try:
+        assert_client_guard_blocks()
+    except GuardBreached as exc:
+        pytest.exit(
+            f"SAFETY GUARD SELF-CHECK FAILED\n\n  {exc}\n\n"
+            f"No test ran and no request was sent. Fix the guard; do not "
+            f"work around this.",
+            returncode=3,
+        )
 
 
 def pytest_unconfigure(config):
@@ -215,4 +233,4 @@ def rest_client(rest_anon):
 # Inconclusive classification moved to qa/report_plugin.py in phase 1 of the
 # hardening plan: the recorder is now the single tryfirst classifier, so there
 # is no second wrapper whose ordering could disagree with it. The import of
-# Inconclusive above (line 30) is kept so the pinned line ranges do not shift.
+# Inconclusive above (line 32) is kept so the pinned line ranges do not shift.

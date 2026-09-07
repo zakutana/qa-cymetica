@@ -196,3 +196,171 @@ def _render_module_for_page():
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_marking_read_is_the_only_switch_and_it_hides_every_mark():
+    """"Mark all as read" is one switch, and after it nothing is marked.
+
+    The operator stated the contract in one sentence: after clicking it, no
+    envelope may appear anywhere. That is only guaranteed if there is exactly
+    ONE place that decides whether a mark shows, and its decision is a
+    comparison against the read timestamp -- a second code path that could
+    reveal a mark would be a switch that does not switch.
+
+    So this asserts the shape rather than a behaviour: one renderer, one
+    decision, and a mark that ships hidden. The behaviour was verified in a
+    browser (23 marks, click, 0, reload, 0); what a test can hold down for
+    good is that the structure making it true does not quietly grow a second
+    branch.
+    """
+    import re
+
+    render = _render_module_for_page()
+    template = render.TEMPLATE
+
+    # It ships hidden: no window between render and paintBell where every row
+    # flashes a mark it has not earned.
+    assert re.search(r'<span class="newreply" data-newreply hidden', template), \
+        "the mark does not ship hidden, so it shows before anything decides"
+
+    # Exactly one place assigns its visibility, and it compares against seenAt.
+    assignments = re.findall(r"\.hidden\s*=\s*([^;]+);", template)
+    mark_rules = [a for a in assignments if "vendorAt" in a]
+    assert len(mark_rules) == 1, (
+        f"{len(mark_rules)} code paths decide whether a reply mark shows; one "
+        f"of them could reveal a mark the operator already cleared: {mark_rules}"
+    )
+    assert "seenAt()" in mark_rules[0], (
+        f"the mark's visibility is not decided by the read timestamp, so "
+        f'"Mark all as read" is not the switch that controls it: {mark_rules[0]}'
+    )
+
+    # The assertion above counts only rules that MENTION vendorAt, so a second
+    # path that reveals a mark without consulting the read timestamp -- the
+    # obvious shape being `m.hidden = false` inside some expand-all or debug
+    # affordance -- would slip past it entirely while breaking the contract it
+    # claims to guard. Unconditional reveals are therefore enumerated: exactly
+    # one exists, and it is the inbox jumping to a row the filter had hidden.
+    # Matched on the source directly, not on `assignments`: that pattern reads
+    # up to the next semicolon, so an arrow-function body -- `forEach(m =>
+    # m.hidden = false)` -- captures "false)" and would not compare equal to
+    # "false". That is the likeliest shape a reveal would take, and the first
+    # draft of this assertion missed exactly it.
+    unconditional = re.findall(r"\.hidden\s*=\s*(false|!1)\b", template)
+    assert len(unconditional) == 1, (
+        f"{len(unconditional)} places set .hidden = false unconditionally; each "
+        f"one can reveal something the operator already cleared, so a new one "
+        f"needs a look rather than a silent pass: {unconditional}"
+    )
+    assert "row.hidden = false" in template, (
+        "the one permitted unconditional reveal is the inbox un-hiding the row "
+        "it jumps to; it is gone, so this allowance no longer describes the code"
+    )
+
+    # And clearing writes the timestamp the comparison reads.
+    assert 'writeStore("qa.seenAt"' in template, \
+        "nothing persists the read timestamp, so the switch forgets on reload"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_hidden_attribute_actually_hides():
+    """Setting el.hidden must remove the element, not merely mark it.
+
+    This is the bug the sibling structural test could not catch, and the more
+    embarrassing half is how it survived verification.
+
+    `.newreply { display: inline-flex }` is a CLASS selector. The browser's own
+    `[hidden] { display: none }` lives in the user-agent stylesheet, which any
+    class rule outranks. So "Mark all as read" set el.hidden = true on all 30
+    marks, cleared the badge, and changed nothing on screen: every envelope
+    stayed drawn. Published as an Artifact it never showed, because that
+    runtime injects exactly this rule; served raw from localhost, nothing did.
+
+    It survived because the check measured `el.hidden` -- the property that was
+    being set correctly -- instead of `getComputedStyle(el).display`, which is
+    what a reader sees. A test that asks the code what it did, rather than the
+    page what it shows, will confirm any bug that lies in the gap between them.
+
+    One `!important` rule closes the whole class, for every element the page
+    toggles this way, now and later.
+    """
+    import re
+
+    css = _render_module_for_page().TEMPLATE
+
+    rule = re.search(r"\[hidden\]\s*\{[^}]*display\s*:\s*none\s*!important", css)
+    assert rule, (
+        "the sheet has no `[hidden] { display: none !important }`, so any class "
+        "rule setting `display` on a toggled element silently wins and the "
+        "element stays on screen with its hidden attribute set"
+    )
+
+    # The rule above wins on !important, and the one thing that can still beat
+    # it is another !important on display. That is not hypothetical: the bug it
+    # replaced was a plain class rule beating the UA stylesheet, and the same
+    # mistake one notch louder would beat this one. So no other rule may set
+    # display with !important.
+    #
+    # (This used to collect the names of toggled elements and assert only that
+    # the set was non-empty -- a check that could not fail for any realistic
+    # edit, sitting under a comment promising it verified coverage.)
+    important_display = [
+        m.group(0) for m in re.finditer(r"[^{}]+\{[^}]*display\s*:[^;}]*!important[^}]*\}", css)
+        if "[hidden]" not in m.group(0)
+    ]
+    assert not important_display, (
+        f"{len(important_display)} rule(s) other than [hidden] set display with "
+        f"!important, and any of them can beat the hide rule the way a plain "
+        f"class beat the browser's: {[r.strip()[:70] for r in important_display]}"
+    )
+
+    toggled = set(re.findall(r"(\w+)\.hidden\s*=", css))
+    assert toggled, "nothing is toggled via .hidden -- has the mechanism changed?"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_client_hanging_up_is_not_reported_as_an_error():
+    """A live reload drops its own SSE stream, and that is not a crash.
+
+    Every reload abandons an in-flight event stream and a keep-alive
+    connection. Windows reports the second one as WinError 10053, and
+    socketserver's default handle_error prints a full traceback for it -- so
+    the console window filled with stack traces while the server was working
+    exactly as designed. The operator asked what was broken; nothing was.
+
+    The danger is not the noise itself but what it hides: a genuine handler
+    exception prints into the same stream and would have been read as more of
+    the same. So the suppression is narrow -- three connection-dropped types,
+    nothing else -- and this asserts both halves, because a handler that
+    swallowed everything would turn a cosmetic problem into a silent one.
+    """
+    import contextlib
+    import io
+
+    serve = _serve_module()
+    server = serve.SingleServer.__new__(serve.SingleServer)
+
+    def stderr_from(exc):
+        buf = io.StringIO()
+        try:
+            raise exc
+        except Exception:
+            with contextlib.redirect_stderr(buf):
+                server.handle_error(None, ("127.0.0.1", 1234))
+        return buf.getvalue()
+
+    for dropped in (ConnectionAbortedError(10053, "aborted"),
+                    ConnectionResetError("reset"),
+                    BrokenPipeError("pipe")):
+        assert stderr_from(dropped) == "", (
+            f"{type(dropped).__name__} still prints a traceback; every live "
+            f"reload produces one, so the console fills with stack traces that "
+            f"look like a failing server"
+        )
+
+    real = stderr_from(ValueError("a genuine handler bug"))
+    assert "ValueError" in real, (
+        "a real handler exception was swallowed along with the client "
+        "disconnects, which turns visible noise into an invisible failure"
+    )

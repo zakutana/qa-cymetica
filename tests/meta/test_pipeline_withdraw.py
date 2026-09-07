@@ -86,6 +86,56 @@ def test_withdraw_refuses_an_empty_reason(tmp_path, monkeypatch):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_mistyped_finding_id_is_refused_before_it_is_permanent(tmp_path, monkeypatch):
+    """A judgement about a finding that is not there must not be recorded.
+
+    Nothing checked the id, so one wrong character appended a permanent event
+    to an append-only journal, printed "appended: withdraw CYM-reallll" as
+    though it had worked, and left the row it was meant for untouched. Both
+    halves hurt: the retraction that was owed never got recorded, and the
+    journal keeps a judgement about nothing, which cannot be removed -- only
+    annotated.
+
+    An absent ledger still lets the event through. Being unable to check is
+    not the same as having checked, and bootstrapping is a real case.
+    """
+    import json
+
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    withdraw = _module("scripts/withdraw.py")
+    journal = tmp_path / "journal" / "events.jsonl"
+
+    # No ledger yet: the check cannot run, so it must not block.
+    assert withdraw.main(["withdraw", "CYM-anything", "--reason", "bootstrapping"]) == 0
+    journal.unlink()
+
+    row = {"id": "CYM-real", "title": "t", "severity": "S3-CONTRACT",
+           "checks": ["t::a"],
+           "first_seen": {"at": "2026-09-01T00:00:00+00:00",
+                          "cause": {"run_id": "r0"}},
+           "check": {"state": "REPRODUCING", "adjudicated_by": None,
+                     "pinned_fingerprint": None},
+           "filing": {"state": "RAISED", "adjudicated_by": None,
+                      "reports": [], "refused": []},
+           "transitions": [], "regressions": []}
+    (tmp_path / "ledger.json").write_text(
+        json.dumps({"schema": 2, "findings": {"CYM-real": row}}), encoding="utf-8")
+
+    with pytest.raises(SystemExit) as raised:
+        withdraw.main(["withdraw", "CYM-reallll", "--reason", "one character out"])
+    assert "CYM-real" in str(raised.value), "the near miss was not offered"
+    assert not journal.exists(), "a refused judgement still reached the journal"
+
+    # supersede names two rows, and both have to be real.
+    with pytest.raises(SystemExit):
+        withdraw.main(["supersede", "CYM-real", "CYM-nope", "--reason", "r"])
+    assert not journal.exists()
+
+    assert withdraw.main(["withdraw", "CYM-real", "--reason", "the real one"]) == 0
+    assert journal.exists()
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_hardcoded_withdrawal_dict_is_gone():
     """The literal and its two accomplices. Each one is a place where state
     was assigned by editing code rather than by recording an event."""
