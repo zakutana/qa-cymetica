@@ -16,6 +16,7 @@ of tone.
 from __future__ import annotations
 
 import re
+import time
 
 from qa.marks import SafetyTier, qa
 from qa.measure import Measurement, conclude, required
@@ -31,6 +32,17 @@ CONFIDENCE_FLOOR = 0.7
 # against. Deliberately a question their own FAQ answers, so an ungrounded
 # reply to it is about the channel and not about the question being obscure.
 SYNC_PROBE = "What currency does the bounty programme pay rewards in?"
+
+# Asked of the async half in the same run, so the two are compared on answers
+# to the same kind of question rather than on whatever the inbox happened to
+# hold. Deliberately answerable from their own published data.
+ASYNC_PROBE = ("What currency does the bounty programme pay rewards in, and "
+               "what is the flat amount per verified bug?")
+
+# Their first-pass answered in about a second when measured by hand. This is
+# slack for a slow morning, not an expectation; polling stops at the reply, and
+# running out of it is inconclusive rather than a defect on their side.
+REPLY_WAIT_SECONDS = 25
 
 
 @qa(component="rest.support", tier=SafetyTier.PROBE, surface="rest",
@@ -254,27 +266,34 @@ def test_the_async_first_pass_is_grounded_like_the_sync_channel(rest_anon, rest_
     behaviour AFTER the claim, so the verdict is on the newest reply, with the
     older ones kept in `population` as context.
 
-    Costs one question to the sync channel per sweep. Measuring the comparison
-    the finding is named after is worth a question.
+    And it ASKS, rather than judging whatever the inbox happens to hold. On
+    2026-09-07 they reported the async half grounded since 00:25; the newest
+    reply we had was from 22:12 the evening before, so the check would have
+    gone on failing against evidence older than the fix it was meant to judge,
+    and no amount of re-running would have changed that -- reading an inbox
+    does not put anything in it. A check that judges only fresh evidence has
+    to be able to produce some. Clearing a finding needs a measurement taken
+    after the claim, which is rule 7, and this is what that costs.
+
+    Two questions per sweep, one to each half. Measuring the comparison the
+    finding is named after, on evidence this run produced, is worth two.
     """
-    inbox = rest_trusted.get(INBOX.format(agent_id=AGENT_ID),
-                             params={"unread_only": "false"})
-    if inbox.status_code != 200:
+    sent = rest_anon.post(SEND, json={"from_agent_id": AGENT_ID,
+                                      "content": ASYNC_PROBE})
+    if sent.status_code != 200:
         conclude(Measurement(
             verdict="inconclusive",
-            reason=f"the inbox answered HTTP {inbox.status_code}",
+            reason=f"the async channel answered HTTP {sent.status_code} to the "
+                   f"question this check exists to have answered",
             claim_id="a2a-first-pass-not-grounded"))
         return
+    asked = (sent.json().get("message") or {}).get("id")
 
-    first_pass = [m for m in (inbox.json().get("messages") or [])
-                  if (m.get("metadata") or {}).get("kind") == "first_pass"]
-    if not first_pass:
-        conclude(Measurement(
-            verdict="inconclusive",
-            reason="no first-pass reply in the inbox to judge",
-            claim_id="a2a-first-pass-not-grounded"))
-        return
-
+    # The sync half goes now, while their async pipeline is working on the
+    # question just sent, rather than after the reply has been waited for.
+    # Sequentially this check took 62s, most of it two waits that do not
+    # depend on each other. It also puts the two measurements within seconds
+    # of each other, which a comparison between them wants anyway.
     sync = rest_anon.post(ASK, json={"question": SYNC_PROBE})
     if sync.status_code != 200:
         conclude(Measurement(
@@ -283,19 +302,61 @@ def test_the_async_first_pass_is_grounded_like_the_sync_channel(rest_anon, rest_
                    f"is nothing to hold the async half against",
             claim_id="a2a-first-pass-not-grounded"))
         return
-
     sync_body = sync.json()
     sync_sources = sync_body.get("sources") or []
     sync_grounded = _grounded(sync_sources, sync_body.get("confidence"))
 
-    newest = max(first_pass, key=lambda m: str(m.get("created_at") or ""))
-    newest_meta = newest.get("metadata") or {}
-    newest_sources = newest_meta.get("sources") or []
-    async_grounded = _grounded(newest_sources, newest.get("confidence"))
+    # Their first-pass came back inside a second when measured by hand, so
+    # this is slack rather than an expectation. Polling stops at the reply.
+    reply = None
+    deadline = time.monotonic() + REPLY_WAIT_SECONDS
+    while reply is None and time.monotonic() < deadline:
+        time.sleep(2.0)
+        inbox = rest_trusted.get(INBOX.format(agent_id=AGENT_ID),
+                                 params={"unread_only": "false"})
+        if inbox.status_code != 200:
+            conclude(Measurement(
+                verdict="inconclusive",
+                reason=f"the inbox answered HTTP {inbox.status_code}",
+                claim_id="a2a-first-pass-not-grounded"))
+            return
+        messages = inbox.json().get("messages") or []
+        first_pass = [m for m in messages
+                      if (m.get("metadata") or {}).get("kind") == "first_pass"]
+        # Matched to OUR message, not merely to the clock: two runs overlapping,
+        # or anyone else on this agent id, would otherwise let one run judge
+        # another's evidence.
+        for m in first_pass:
+            if (m.get("metadata") or {}).get("in_reply_to") == asked:
+                reply = m
+                break
 
-    grounded_all = [m for m in first_pass
-                    if _grounded((m.get("metadata") or {}).get("sources"),
-                                 m.get("confidence"))]
+    if reply is None:
+        # Evidence, not inconclusive, and the distinction is load-bearing.
+        # INCONCLUSIVE on a filed row opens a repair_check obligation
+        # (qa/fold.py, gap 3) -- "a filed row whose check measures nothing is
+        # a broken check wearing a resolved defect's clothes". That is right
+        # when the check CANNOT measure, and wrong here: their agent thinking
+        # for a while, or being down for an hour, is not our check breaking,
+        # and the page would have told the operator to repair something that
+        # works. An evidence-role measurement is recorded and moves no state,
+        # so the row keeps whatever the last run that got an answer
+        # established, which is exactly what we know.
+        conclude(Measurement(
+            verdict="inconclusive",
+            role="evidence",
+            reason=(f"asked {asked} and no first-pass reply arrived within "
+                    f"{REPLY_WAIT_SECONDS}s. Their side, not ours, and not a "
+                    f"defect: this run simply measured nothing about how the "
+                    f"async half grounds an answer"),
+            left=asked, right=REPLY_WAIT_SECONDS,
+            sources={"asked": SEND, "inbox": INBOX},
+            population={"first_pass_in_inbox": len(first_pass)},
+            claim_id="a2a-first-pass-not-grounded"))
+        return
+
+    reply_sources = (reply.get("metadata") or {}).get("sources") or []
+    async_grounded = _grounded(reply_sources, reply.get("confidence"))
 
     if not sync_grounded and not async_grounded:
         conclude(Measurement(
@@ -303,28 +364,26 @@ def test_the_async_first_pass_is_grounded_like_the_sync_channel(rest_anon, rest_
             reason=("neither half of the channel cites a source, so this is "
                     "not the asymmetry this claim is about -- the sync half "
                     "is the baseline it is measured against"),
-            left={"sync": sync_sources, "async": newest_sources},
+            left={"sync": sync_sources, "async": reply_sources},
             right=CONFIDENCE_FLOOR,
             sources={"inbox": INBOX, "sync": ASK},
-            population={"first_pass": len(first_pass)},
+            population={"first_pass_in_inbox": len(first_pass)},
             claim_id="a2a-first-pass-not-grounded"))
         return
 
     conclude(Measurement(
         verdict="passed" if async_grounded else "failed",
-        reason=(f"the newest async first-pass reply ({newest.get('created_at')}) "
-                f"cites {len(newest_sources)} source(s) at confidence "
-                f"{newest.get('confidence')}, while the sync half cites "
-                f"{len(sync_sources)} at {sync_body.get('confidence')}; "
-                f"{len(grounded_all)} of {len(first_pass)} replies in the "
-                f"inbox are grounded at all"),
-        left={"async_newest": {"at": newest.get("created_at"),
-                               "confidence": newest.get("confidence"),
-                               "sources": newest_sources},
+        reason=(f"the async first-pass reply to {asked}, asked and answered "
+                f"during this run, cites {len(reply_sources)} source(s) at "
+                f"confidence {reply.get('confidence')}, while the sync half "
+                f"cites {len(sync_sources)} at {sync_body.get('confidence')}"),
+        left={"async": {"in_reply_to": asked,
+                        "at": reply.get("created_at"),
+                        "confidence": reply.get("confidence"),
+                        "sources": reply_sources},
               "sync": {"confidence": sync_body.get("confidence"),
                        "sources": sync_sources}},
         right=CONFIDENCE_FLOOR,
-        sources={"inbox": INBOX, "sync": ASK},
-        population={"first_pass": len(first_pass),
-                    "grounded": len(grounded_all)},
+        sources={"inbox": INBOX, "sync": ASK, "asked": SEND},
+        population={"first_pass_in_inbox": len(first_pass)},
         claim_id="a2a-first-pass-not-grounded"))

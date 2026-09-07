@@ -153,6 +153,18 @@ Short. Four parts, no preamble:
 3. **Needs you** — anything waiting on a decision: reports drafted but not
    sent, questions only the vendor can answer, findings with no check.
 4. **Link** — the dashboard URL.
+5. **Worth improving** — anything the sweep showed about OUR side that is
+   worth changing, with a recommendation, not a menu. A check that could not
+   see a fix, a number that is stale, a rule written down and not built, a
+   step that had to be done by hand. Say what you would do and why, and stop
+   short of doing it. If the sweep showed nothing, leave this out rather than
+   padding it.
+
+   Operator's request, 2026-09-07: *"libi se mi ze po sweepu jsi prisel z
+   navrhy co vylepsit, to je dobre pravidlo to tak delej"*. The reason it
+   works is that a sweep is the only moment the whole system has just been
+   exercised end to end, so the weak parts are visible and cheap to name --
+   and by the next session they are invisible again.
 
 Do not narrate the spine. The operator knows the sequence; they want the
 delta.
