@@ -8,14 +8,16 @@ its Inconclusive wrapper in phase 1). If any later edit drifts into the guard
 sections, this test turns red and -- via the very mechanism it pins -- stops
 the session.
 
-The hashes below were computed at commit ca0bc45 over:
-  tests/conftest.py            lines 42-117  (markers, options, collection-time
+The hashes below were computed at commit ca0bc45 over the sections named here,
+and re-derived since -- each time with its reason beside the hash:
+  tests/conftest.py            lines 44-135  (markers, options, the guard
+                                              self-check, collection-time
                                               enforcement, meta-first ordering,
                                               the abort hook, sessionstart)
-  tests/conftest.py            lines 123-212 (session resources and fixtures)
+  tests/conftest.py            lines 141-230 (session resources and fixtures)
   tests/meta/test_guard_is_real.py  whole file
-Lines 215-228 of conftest.py (the Inconclusive hookwrapper) and line 30 (its
-import) are deliberately outside the pinned ranges: phase 1 removes them.
+Lines 233-236 of conftest.py (what is left of the Inconclusive hookwrapper,
+removed in phase 1) sit deliberately outside the pinned ranges.
 """
 
 from __future__ import annotations
@@ -36,8 +38,16 @@ CONFTEST = REPO / "tests" / "conftest.py"
 GUARD_TESTS = REPO / "tests" / "meta" / "test_guard_is_real.py"
 
 PINNED = {
-    "conftest.py:42-117": "0aeb83fba58d3846b25311fa7e4e5e9fb3232adcddf8c62b75c4a53c8158cd3c",
-    "conftest.py:123-212": "d81006935096100794735750341c49d76393dd82d2f224dd55a9a0ce874e7454",
+    # Re-derived 2026-09-07, and the ranges moved with it (42-117 -> 44-135,
+    # 123-212 -> 141-230), for one edit that adds enforcement:
+    # pytest_configure now calls assert_client_guard_blocks() straight after
+    # install_client_guard(). The ordering pinned here aborts a session whose
+    # guard tests FAIL; a selector that never collects them aborts nothing,
+    # and live requests have gone out exactly that way. The self-check closes
+    # the case the ordering cannot see. Section two's hash is unchanged, which
+    # is the evidence that only section one moved.
+    "conftest.py:44-135": "e29df32b2ce0afd02c2fd309f0d45647192380e696fe345dcb41aab4ab2c1184",
+    "conftest.py:141-230": "d81006935096100794735750341c49d76393dd82d2f224dd55a9a0ce874e7454",
     # Re-derived 2026-09-06, deliberately, for two edits that go the way this
     # pin exists to protect:
     #
@@ -74,8 +84,8 @@ def _sha_lines(path: Path, first: int, last: int) -> str:
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_guard_sections_are_byte_identical_to_ca0bc45():
     actual = {
-        "conftest.py:42-117": _sha_lines(CONFTEST, 42, 117),
-        "conftest.py:123-212": _sha_lines(CONFTEST, 123, 212),
+        "conftest.py:44-135": _sha_lines(CONFTEST, 44, 135),
+        "conftest.py:141-230": _sha_lines(CONFTEST, 141, 230),
         "test_guard_is_real.py": hashlib.sha256(GUARD_TESTS.read_bytes()).hexdigest(),
     }
     drifted = {k: (PINNED[k][:12], v[:12]) for k, v in actual.items() if v != PINNED[k]}
@@ -129,6 +139,74 @@ def test_meta_tests_are_ordered_guard_first():
     names = sorted(p.name for p in (REPO / "tests" / "meta").glob("test_*.py"))
     assert names[0] == "test_guard_is_real.py", names
     assert all(n.startswith("test_pipeline_") for n in names[1:]), names
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_configure_time_self_check_feels_each_layer_coming_off(monkeypatch):
+    """Negative controls for the check that runs before every session.
+
+    The ordering pinned above stops a session whose guard tests FAIL. It stops
+    nothing when the selector never collects them, and that has happened: live
+    requests went out with the guard unproven. So `pytest_configure` now calls
+    `assert_client_guard_blocks()` on every invocation, however narrow.
+
+    A self-check that cannot fail is worse than none, because it reads like
+    proof. Take each layer off and require the check to name the one that let
+    go. Nothing here can send: every client it builds sits on a transport that
+    raises instead of carrying, which is why breaking the probe_only floor
+    below produces a message rather than a POST to /api/v1/funding/withdraw.
+    """
+    from dataclasses import replace
+
+    from qa.client import (GuardBreached, assert_client_guard_blocks,
+                           install_client_guard, remove_client_guard)
+    from qa.safety import EndpointRegistry, SafetyTransport
+
+    assert "assert_client_guard_blocks()" in CONFTEST.read_text(encoding="utf-8"), \
+        "pytest_configure no longer runs the self-check; the layers below are " \
+        "proven for nothing if nothing calls them"
+
+    # Unbroken, it passes. Otherwise the controls below prove only that a
+    # thrower throws.
+    assert_client_guard_blocks()
+
+    # Layer 1 -- the construction ban.
+    remove_client_guard()
+    try:
+        with pytest.raises(GuardBreached, match="layer 1"):
+            assert_client_guard_blocks()
+    finally:
+        install_client_guard()
+
+    # Layer 2 -- the transport stops enforcing at all.
+    with monkeypatch.context() as m:
+        m.setattr(SafetyTransport, "handle_request",
+                  lambda self, request: self.inner.handle_request(request))
+        with pytest.raises(GuardBreached, match="layer 2"):
+            assert_client_guard_blocks()
+
+    # Layer 3 -- the tier ladder goes, the no-tier check stays.
+    with monkeypatch.context() as m:
+        m.setattr(SafetyTransport, "_check", lambda self, *a, **k: None)
+        with pytest.raises(GuardBreached, match="layer 3"):
+            assert_client_guard_blocks()
+
+    # Layer 4 -- the probe_only floor comes off, which is the one that has.
+    real_load = EndpointRegistry.load  # bound before the patch, or it recurses
+
+    def _floorless(*args, **kwargs):
+        reg = real_load()
+        reg.rules = [replace(r, probe_only=False) for r in reg.rules]
+        return reg
+
+    with monkeypatch.context() as m:
+        m.setattr(EndpointRegistry, "load", _floorless)
+        with pytest.raises(GuardBreached, match="layer 4"):
+            assert_client_guard_blocks()
+
+    # And it is whole again afterwards -- a control that leaves the guard off
+    # would hand every later test in this session a live client.
+    assert_client_guard_blocks()
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

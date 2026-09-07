@@ -77,6 +77,92 @@ def remove_client_guard() -> None:
     _GUARD_INSTALLED = False
 
 
+class GuardBreached(RuntimeError):
+    """The guard failed to refuse something it exists to refuse."""
+
+
+class _NeverSends(httpx.BaseTransport):
+    """The self-check's floor. Reaching it IS the failure being looked for."""
+
+    def handle_request(self, request: httpx.Request) -> httpx.Response:
+        raise GuardBreached(
+            f"{request.method} {request.url} reached the transport. The guard "
+            f"let it through; on a live transport it would have been sent."
+        )
+
+
+def assert_client_guard_blocks() -> None:
+    """Prove the guard refuses, before anything is allowed to ask it to.
+
+    `tests/conftest.py` sorts `tests/meta` first and aborts the session when
+    one of them fails, so a broken guard stops every live request -- but only
+    when the meta tests are IN the selector. A bare `pytest
+    tests/rest/test_x.py` collects none of them, and that has happened: live
+    requests went out with the guard unproven. Policing the selector would
+    treat the symptom. The guard is installed in `pytest_configure`, so this
+    is where it should also be made to demonstrate itself.
+
+    Four claims, each one an enforcement layer, none of them touching the
+    network: every client here carries `_NeverSends` underneath, so a layer
+    that has stopped working raises instead of performing the act it exists to
+    prevent. That distinction is not theoretical -- mutating the probe_only
+    floor off to see whether the suite could feel it sent a real POST to
+    /api/v1/funding/withdraw.
+
+    Costs about a millisecond. Raises `GuardBreached` naming the layer that
+    let go; the caller decides what to do about it.
+    """
+    from qa.safety import CURRENT_TIER, SafetyTier
+
+    # 1 -- construction ban: nothing may build a client outside this module.
+    try:
+        httpx.Client()
+    except SafetyViolation:
+        pass
+    except GuardBreached:  # pragma: no cover -- unreachable, states the intent
+        raise
+    else:
+        raise GuardBreached(
+            "layer 1: httpx.Client() was constructed without going through "
+            "qa/client.py. Anything could now build its own client and skip "
+            "SafetyTransport entirely."
+        )
+
+    registry = EndpointRegistry.load()
+    anon = Identity(name="guard-self-check")
+
+    def _refuses(tier: SafetyTier | None, layer: str, reg=registry):
+        token = CURRENT_TIER.set(tier)
+        client = build_client(anon, reg, inner=_NeverSends())
+        try:
+            client.post("/api/v1/funding/withdraw", json={"amount": "1"})
+        except SafetyViolation:
+            return
+        except GuardBreached as exc:
+            raise GuardBreached(f"{layer} let it through. {exc}") from None
+        finally:
+            client.close()
+            CURRENT_TIER.reset(token)
+        raise GuardBreached(
+            f"{layer} let it through: POST /api/v1/funding/withdraw returned "
+            f"without reaching the transport, so something answered it early."
+        )
+
+    # 2 -- no tier in scope: a request from outside a test is nobody's.
+    _refuses(None, "layer 2: no safety tier in scope")
+
+    # 3 -- the tier ladder: a SAFE test may not write.
+    _refuses(SafetyTier.SAFE, "layer 3: SAFE tier")
+
+    # 4 -- the probe_only floor, which is the one that has actually come off.
+    #      A private registry copy: the session's own must keep whatever
+    #      --allow-mutate said.
+    mutating = EndpointRegistry.load()
+    mutating.mutate_enabled = True
+    mutating.mutate_allowed_hosts = frozenset({"cymetica.com"})
+    _refuses(SafetyTier.MUTATE, "layer 4: probe_only floor", reg=mutating)
+
+
 def build_client(
     identity: Identity,
     registry: EndpointRegistry,
