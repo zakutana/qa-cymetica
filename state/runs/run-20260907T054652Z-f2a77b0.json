@@ -1,0 +1,71 @@
+{
+  "schema": 2,
+  "run_id": "run-20260907T054652Z-f2a77b0",
+  "started_at": "2026-09-07T05:47:03+00:00",
+  "finished_at": "2026-09-07T05:47:10+00:00",
+  "git_head": "f2a77b0725b218b133bd5afade6c4762fc181dbf",
+  "git_short": "f2a77b0",
+  "git_dirty": true,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": "sha256:381e671ceab014bfeb3f11ef3d56fcc245a6f5a02ce988635cfe3db1a93fadd3",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "da8911c94880b920d02e1e7c78d62b5e48324e983e9a39bd995b6425d15d48ad",
+    "/.well-known/agent-card.json": "10a060302db128749e97e38a0fa6e540dac6cdfef7555c92e97ea6568a624998",
+    "/.well-known/agent-skills.json": "3ee22148aea8e6314344f5675c7a51d4800a25b674c7dbcca1babecdda04c7c4",
+    "/.well-known/ai-plugin.json": "e2f2d79821bf8e741fb18cefea6a94cb7a1ec358644306aeff02e763c61b1fb2",
+    "/.well-known/udc.json": "92cd8a5f7ec5a0a859594ef9fbd72cba4914eaab4220377db18adf2ed44611a4",
+    "/openapi.json": "f0cccb1f06ec266d303b1c7ab8e23f4af29a3c43106027595c95c1449fa1b2cf",
+    "/llms.txt": "dc2c08a4ff03faa66ddef703a132ca6fb554e69f68ed734b7fed4845d3006e28",
+    "mcp:tools/list:none": "cb9188ffdaf6a78e40cae9e30cd1fdfa9925f8f77b1c3d41f5ddb24108b27162"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/meta/test_pipeline_render.py::test_the_conversation_is_the_api_exchange_and_nothing_else -q --no-header --tb=short",
+  "selector_full": false,
+  "allow_mutate": false,
+  "collected": [
+    "tests/meta/test_pipeline_render.py::test_the_conversation_is_the_api_exchange_and_nothing_else"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/meta/test_pipeline_render.py::test_the_conversation_is_the_api_exchange_and_nothing_else",
+      "component": "meta.pipeline",
+      "tier": "SAFE",
+      "surface": "meta",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 598,
+      "evidence_ids": [],
+      "measurement": null,
+      "check_fingerprint": "fac42deb018448cf0ea2ece0691080bd08cfc8ccc788dda13357602d97e31b01",
+      "reason": null,
+      "failure_repr": "tests\\meta\\test_pipeline_render.py:420: in test_the_conversation_is_the_api_exchange_and_nothing_else\n    assert any(m[\"who\"] == \"them\" and m.get(\"text\") for t in threads.values() for m in t), \\\nE   AssertionError: not one of their written answers reached the page\nE   assert False\nE    +  where False = any(<generator object test_the_conversation_is_the_api_exchange_and_nothing_else.<locals>.<genexpr> at 0x000001E0D1CAC4A0>)"
+    }
+  ],
+  "totals": {
+    "failed": 1
+  },
+  "ratelimit": {},
+  "record_integrity": {
+    "consistent": false,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "fingerprint_after": "sha256:381e671ceab014bfeb3f11ef3d56fcc245a6f5a02ce988635cfe3db1a93fadd3",
+  "exit_status": 2
+}

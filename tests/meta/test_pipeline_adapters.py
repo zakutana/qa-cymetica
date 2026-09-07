@@ -108,6 +108,48 @@ def test_401_read_is_not_empty(tmp_path, monkeypatch):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_refresh_that_could_not_read_keeps_the_snapshot(tmp_path, monkeypatch):
+    """Rule 8 on the write side, where losing it costs the data.
+
+    fetch_our_reports returns the previous snapshot marked stale on any read
+    that is not clean -- except one path. The missing-wallet branch returned a
+    bare {"error", "klass"} with no rows and no stale_from, so a run with no
+    QA_WALLET_ADDRESS in the environment wrote an empty our_reports over a
+    good one. serve.py --ask made that worse by calling the refresher on a
+    timer, unattended.
+
+    Verified against the live snapshot while writing this: the first draft of
+    refresh_our_reports dropped 20 reports on its first invocation.
+    """
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    monkeypatch.delenv("QA_WALLET_ADDRESS", raising=False)
+    bounty = _module("scripts/bounty.py")
+
+    good = {"klass": "ok", "rows_returned": 2,
+            "reports": [{"id": 46, "status": "fixed"},
+                        {"id": 47, "status": "pending"}]}
+    snapshot = bounty.out_path()
+    snapshot.parent.mkdir(parents=True, exist_ok=True)
+    snapshot.write_text(json.dumps({"our_reports": good, "leaderboard": ["keep me"]}),
+                        encoding="utf-8")
+    assert snapshot.is_relative_to(tmp_path), \
+        "the fixture is writing outside the temp state directory"
+
+    ours = bounty.refresh_our_reports()
+
+    assert ours["klass"] == "unreachable"
+    assert ours["reports"] == good["reports"], \
+        "a read that could not be made replaced the rows it could not read"
+    assert ours["rows_returned"] is None, "0 rows would claim an empty tracker"
+    assert ours["stale_from"], "the snapshot was not marked stale"
+
+    on_disk = json.loads(snapshot.read_text(encoding="utf-8"))
+    assert on_disk["our_reports"]["reports"] == good["reports"]
+    assert on_disk["leaderboard"] == ["keep me"], \
+        "the refresher rewrote sections it was not asked to touch"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_duplicate_guard_refuses_a_read_it_could_not_make(monkeypatch):
     """The same incident on the write path, where it costs the vendor.
 

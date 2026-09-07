@@ -207,7 +207,12 @@ def asker(stop: threading.Event, every: float) -> None:
     while not stop.wait(every):
         try:
             before = bounty._last_status_by_report()
-            snapshot = bounty.fetch_our_reports()
+            # refresh_our_reports, not fetch_our_reports: the latter appends
+            # the journal event and returns the rows without writing
+            # state/bounty.json, and the bell reads the vendor's status out of
+            # that file. Recording the change and leaving the page saying the
+            # old thing is the failure this whole option exists to remove.
+            snapshot = bounty.refresh_our_reports()
             after = bounty._last_status_by_report()
         except Exception as exc:  # noqa: BLE001 -- a bad read must not kill the server
             print(f"[ask] read failed, leaving the page as it was: "

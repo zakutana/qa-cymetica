@@ -1678,7 +1678,7 @@
           },
           {
             "report_id": 72,
-            "status": "pending"
+            "status": "fixed"
           }
         ],
         "refused": []
@@ -3136,7 +3136,7 @@
           },
           {
             "report_id": 71,
-            "status": "pending"
+            "status": "fixed"
           }
         ],
         "refused": [
@@ -3621,7 +3621,7 @@
           },
           {
             "report_id": 69,
-            "status": "pending"
+            "status": "fixed"
           }
         ],
         "refused": []
@@ -3747,7 +3747,7 @@
           },
           {
             "report_id": 70,
-            "status": "pending"
+            "status": "fixed"
           }
         ],
         "refused": []
@@ -3842,13 +3842,14 @@
   "run_id": "run-20260906T221008Z-bb225c7",
   "run_level": "V",
   "updated_at": "2026-09-06T22:12:13+00:00",
+  "run_carried": true,
   "counts": {
     "WITHDRAWN": 9,
     "VERIFIED FIXED": 18,
     "STILL REPRODUCIBLE": 4
   },
   "events_head": {
-    "seq": 919,
-    "chain": "0ab558f74d4e4bd4cf92675a9571a345f65921c1d030dc98526a1d081b4e2418"
+    "seq": 927,
+    "chain": "81fb7e35e5da7cc560306444f54bbf4eb24a1f83ded6d318787876c339ac79af"
   }
 }

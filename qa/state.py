@@ -152,6 +152,12 @@ def admissibility(run: dict) -> Verdict:
         blocks_v.append("git_dirty")
     if not run.get("prereg_id"):
         blocks_v.append("no_prereg")
+    elif not run.get("prereg_commit") or not run.get("git_head"):
+        # Neither may be missing. Comparing them directly closed the case
+        # where ONE is absent and reopened the case where BOTH are: None !=
+        # None is False, so a record naming a preregistration and carrying
+        # neither commit came out V with no reasons at all.
+        blocks_v.append("prereg_commit_mismatch")
     elif run.get("prereg_commit") != run.get("git_head"):
         # Absent is a mismatch, not a pass. Guarding this with
         # `if run.get("prereg_commit") and ...` meant a record naming a
