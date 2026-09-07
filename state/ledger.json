@@ -3643,12 +3643,12 @@
       },
       "reproductions": 14,
       "check": {
-        "state": "CHECK_CHANGED",
+        "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260907T075046Z-ec7a4f4",
           "at": "2026-09-07T07:53:24+00:00"
         },
-        "pinned_fingerprint": "16a96cad414a989a3211713e88f2dcd2eeb261f78c979cb0e0aa74bfa8af6cea"
+        "pinned_fingerprint": "d8c89bb5d9dfb6abe6d9f240604f15d80183028892047d05a574abc9740d5a4c"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -3704,6 +3704,15 @@
             "run_id": "run-20260907T071940Z-5a5f10b"
           },
           "at": "2026-09-07T07:21:56+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "CHECK_CHANGED",
+          "to": "PASSING",
+          "cause": {
+            "run_id": "run-20260907T075046Z-ec7a4f4"
+          },
+          "at": "2026-09-07T07:53:24+00:00"
         },
         {
           "axis": "check",
@@ -3778,7 +3787,7 @@
         "measured_at": "2026-09-07T07:53:24+00:00"
       },
       "obligations": {
-        "reverify": true,
+        "reverify": false,
         "repair_check": false,
         "reopen": [],
         "retractions": []
@@ -3911,11 +3920,10 @@
   "updated_at": "2026-09-07T07:53:24+00:00",
   "counts": {
     "WITHDRAWN": 9,
-    "VERIFIED FIXED": 21,
-    "CHECK CHANGED": 1
+    "VERIFIED FIXED": 22
   },
   "events_head": {
-    "seq": 951,
-    "chain": "1a838a961f12345c4b7c4aad7b170beeb7a6696969df05b0554d9cad21ef62cd"
+    "seq": 953,
+    "chain": "8877520082180fa161038afb0cfec612cea61c7ea91f66c8c6cc4589c9e09bc2"
   }
 }
