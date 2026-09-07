@@ -964,6 +964,57 @@ reports:
 
       Nineteen of twenty closures do carry evidence, so this reads as one
       report slipping through rather than the practice lapsing.
+
+  - key: reward-totals-disagree
+    findings:
+      - CYM-reward-totals-disagree
+    severity: medium
+    category: api
+    url: https://cymetica.com/api/v1/bounty/stats
+    title: >-
+      The bounty programme's own reward totals disagree: stats records 36
+      awards and 36,000 ET10, while every hunter on the leaderboard shows
+      total_earned 0.0
+    expected: >
+      The aggregate at /api/v1/bounty/stats and the per-hunter figures at
+      /api/v1/bounty/leaderboard should describe the same programme: the
+      earned column should account for what stats says was awarded or paid,
+      and the two should agree on how many reports are valid.
+    actual: >
+      Read at 2026-09-07T08:00Z. stats reports awards_recorded 36,
+      awards_recorded_total 36000.0, payouts_recorded 2, total_paid 2000.0 and
+      valid_reports 40. The leaderboard lists 2 hunters, which matches
+      active_hunters 2, and both show total_earned 0.0; their valid_reports
+      sum to 21, not 40.
+    steps:
+      - "GET /api/v1/bounty/stats (no auth): awards_recorded=36, awards_recorded_total=36000.0, payouts_recorded=2, total_paid=2000.0, valid_reports=40, active_hunters=2"
+      - "GET /api/v1/bounty/leaderboard (no auth): 2 entries, expire76 total_earned=0.0 valid_reports=19, Crypto42day total_earned=0.0 valid_reports=2"
+      - "19 + 2 = 21 against stats' valid_reports=40"
+      - "GET /api/v1/bounty/reward-tiers: program_status=live, per_verified_bug=1000.0, currency=ET10"
+    body: >
+      Which of the numbers is right is not something we can tell from outside,
+      and this report does not try. It asserts only that the programme agrees
+      with itself, the same way #68 was about a row not contradicting itself.
+      Correct any one of them and it goes green.
+
+
+      Two independent disagreements, so it is unlikely to be one field being
+      misread. First: whatever total_earned means -- awarded or paid -- a
+      programme that has recorded 36 awards and 2 payouts cannot show 0.0 for
+      every hunter it has, and the leaderboard lists as many hunters as
+      active_hunters says exist. Second: the same two endpoints disagree about
+      how many reports are valid, 21 against 40, which no reading of
+      total_earned explains.
+
+
+      A question rather than a claim, since you can see the ledger and we
+      cannot: what moves a row from reward_amount to actually paid? Our own 31
+      rows carry reward_amount 1000.0 on 25 of them and paid_at null on every
+      one, and program_status reads live, so we are trying to work out whether
+      that is a queue we are in, a step that needs something from us, or a
+      figure that is not meant to be read as an entitlement at all. Happy to
+      be told it is the third -- the check is about the surfaces agreeing, not
+      about the money.
 footer: >
   Reported by an independent QA agent. Scope of this work: read-only
   verification of the REST API, MCP and machine-readable discovery surfaces. No

@@ -1,0 +1,2365 @@
+{
+  "captured_at": "2026-09-07T08:00:43+00:00",
+  "endpoint_rule": null,
+  "nodeid": "tests/reconciliation/test_reconcile.py::test_sources_agree[commit_count::build_stats-vs-llms_txt]",
+  "request": {
+    "body": {
+      "encoding": "empty",
+      "value": null
+    },
+    "headers": {
+      "accept": "application/json",
+      "accept-encoding": "gzip, deflate, zstd",
+      "connection": "keep-alive",
+      "host": "cymetica.com",
+      "user-agent": "qa-cymetica/0.1 (independent QA; contact via vendor Telegram channel)"
+    },
+    "method": "GET",
+    "url": "https://cymetica.com/api/v1/build-stats"
+  },
+  "response": {
+    "body": {
+      "encoding": "json",
+      "truncated": false,
+      "value": {
+        "ai_native_proof": {
+          "ai_authorship_pct": 88.5,
+          "ai_coauthored_commits": 19534,
+          "ai_models": {
+            "Claude": 2321,
+            "Claude (deploy)": 1,
+            "Claude Fable 5": 2884,
+            "Claude Fable 5.1": 137,
+            "Claude Haiku 4.5": 47,
+            "Claude Opus 4.5": 1571,
+            "Claude Opus 4.6": 8265,
+            "Claude Opus 4.7": 872,
+            "Claude Opus 4.7 (1M context)": 247,
+            "Claude Opus 4.8": 2697,
+            "Claude Opus 4.8 (1M context)": 32,
+            "Claude Opus 5": 648,
+            "Claude Sonnet 4.6": 67,
+            "Dev": 161
+          },
+          "days_of_continuous_development": 288,
+          "first_ai_commit_date": "2025-11-23",
+          "first_commit_date": "2025-11-23",
+          "hours_to_first_ai_commit": 0,
+          "total_commits": 22062
+        },
+        "daily_activity": [
+          {
+            "date": "2026-01-31",
+            "messages": 17297,
+            "sessions": 13,
+            "tool_calls": 1450
+          },
+          {
+            "date": "2026-02-01",
+            "messages": 53854,
+            "sessions": 26,
+            "tool_calls": 4496
+          },
+          {
+            "date": "2026-02-02",
+            "messages": 108723,
+            "sessions": 24,
+            "tool_calls": 7041
+          },
+          {
+            "date": "2026-02-03",
+            "messages": 26512,
+            "sessions": 20,
+            "tool_calls": 3040
+          },
+          {
+            "date": "2026-02-04",
+            "messages": 29250,
+            "sessions": 20,
+            "tool_calls": 2802
+          },
+          {
+            "date": "2026-02-05",
+            "messages": 40990,
+            "sessions": 22,
+            "tool_calls": 4038
+          },
+          {
+            "date": "2026-02-06",
+            "messages": 30898,
+            "sessions": 18,
+            "tool_calls": 3417
+          },
+          {
+            "date": "2026-02-07",
+            "messages": 30946,
+            "sessions": 21,
+            "tool_calls": 3051
+          },
+          {
+            "date": "2026-02-08",
+            "messages": 23520,
+            "sessions": 14,
+            "tool_calls": 2942
+          },
+          {
+            "date": "2026-02-09",
+            "messages": 23436,
+            "sessions": 11,
+            "tool_calls": 2654
+          },
+          {
+            "date": "2026-02-10",
+            "messages": 30565,
+            "sessions": 11,
+            "tool_calls": 3154
+          },
+          {
+            "date": "2026-02-11",
+            "messages": 23245,
+            "sessions": 8,
+            "tool_calls": 2911
+          },
+          {
+            "date": "2026-02-12",
+            "messages": 32414,
+            "sessions": 15,
+            "tool_calls": 3031
+          },
+          {
+            "date": "2026-02-13",
+            "messages": 48440,
+            "sessions": 36,
+            "tool_calls": 5752
+          },
+          {
+            "date": "2026-02-14",
+            "messages": 28753,
+            "sessions": 21,
+            "tool_calls": 3789
+          },
+          {
+            "date": "2026-02-15",
+            "messages": 37623,
+            "sessions": 27,
+            "tool_calls": 4843
+          },
+          {
+            "date": "2026-02-16",
+            "messages": 21719,
+            "sessions": 8,
+            "tool_calls": 2108
+          }
+        ],
+        "daily_commits": [
+          {
+            "ai_commits": 1,
+            "commits": 6,
+            "date": "2025-11-23",
+            "lines_added": 83101,
+            "lines_removed": 118
+          },
+          {
+            "ai_commits": 9,
+            "commits": 17,
+            "date": "2025-11-24",
+            "lines_added": 7096,
+            "lines_removed": 126
+          },
+          {
+            "ai_commits": 3,
+            "commits": 3,
+            "date": "2025-11-25",
+            "lines_added": 4201,
+            "lines_removed": 46
+          },
+          {
+            "ai_commits": 10,
+            "commits": 10,
+            "date": "2025-11-26",
+            "lines_added": 25136,
+            "lines_removed": 109
+          },
+          {
+            "ai_commits": 18,
+            "commits": 18,
+            "date": "2025-11-27",
+            "lines_added": 48765,
+            "lines_removed": 255
+          },
+          {
+            "ai_commits": 40,
+            "commits": 40,
+            "date": "2025-11-28",
+            "lines_added": 223826,
+            "lines_removed": 5280
+          },
+          {
+            "ai_commits": 52,
+            "commits": 55,
+            "date": "2025-11-29",
+            "lines_added": 570384,
+            "lines_removed": 1004
+          },
+          {
+            "ai_commits": 77,
+            "commits": 77,
+            "date": "2025-11-30",
+            "lines_added": 102333,
+            "lines_removed": 8695
+          },
+          {
+            "ai_commits": 20,
+            "commits": 20,
+            "date": "2025-12-01",
+            "lines_added": 13990,
+            "lines_removed": 2564
+          },
+          {
+            "ai_commits": 12,
+            "commits": 13,
+            "date": "2025-12-02",
+            "lines_added": 33962,
+            "lines_removed": 517
+          },
+          {
+            "ai_commits": 24,
+            "commits": 24,
+            "date": "2025-12-03",
+            "lines_added": 97910,
+            "lines_removed": 2218
+          },
+          {
+            "ai_commits": 43,
+            "commits": 43,
+            "date": "2025-12-04",
+            "lines_added": 46891,
+            "lines_removed": 280
+          },
+          {
+            "ai_commits": 58,
+            "commits": 59,
+            "date": "2025-12-05",
+            "lines_added": 62176,
+            "lines_removed": 591
+          },
+          {
+            "ai_commits": 36,
+            "commits": 38,
+            "date": "2025-12-06",
+            "lines_added": 42858,
+            "lines_removed": 3467
+          },
+          {
+            "ai_commits": 59,
+            "commits": 61,
+            "date": "2025-12-07",
+            "lines_added": 21622,
+            "lines_removed": 4678
+          },
+          {
+            "ai_commits": 103,
+            "commits": 104,
+            "date": "2025-12-08",
+            "lines_added": 14794,
+            "lines_removed": 4611
+          },
+          {
+            "ai_commits": 31,
+            "commits": 31,
+            "date": "2025-12-09",
+            "lines_added": 31846,
+            "lines_removed": 1116
+          },
+          {
+            "ai_commits": 43,
+            "commits": 43,
+            "date": "2025-12-10",
+            "lines_added": 129577,
+            "lines_removed": 12942
+          },
+          {
+            "ai_commits": 60,
+            "commits": 61,
+            "date": "2025-12-11",
+            "lines_added": 28219,
+            "lines_removed": 1311
+          },
+          {
+            "ai_commits": 28,
+            "commits": 29,
+            "date": "2025-12-12",
+            "lines_added": 11210,
+            "lines_removed": 619
+          },
+          {
+            "ai_commits": 14,
+            "commits": 17,
+            "date": "2025-12-13",
+            "lines_added": 8060,
+            "lines_removed": 635
+          },
+          {
+            "ai_commits": 62,
+            "commits": 68,
+            "date": "2025-12-14",
+            "lines_added": 1198198,
+            "lines_removed": 71481
+          },
+          {
+            "ai_commits": 24,
+            "commits": 25,
+            "date": "2025-12-15",
+            "lines_added": 34353,
+            "lines_removed": 1131
+          },
+          {
+            "ai_commits": 46,
+            "commits": 47,
+            "date": "2025-12-16",
+            "lines_added": 5952,
+            "lines_removed": 1017
+          },
+          {
+            "ai_commits": 39,
+            "commits": 40,
+            "date": "2025-12-17",
+            "lines_added": 14699,
+            "lines_removed": 765
+          },
+          {
+            "ai_commits": 21,
+            "commits": 22,
+            "date": "2025-12-18",
+            "lines_added": 6789,
+            "lines_removed": 448
+          },
+          {
+            "ai_commits": 36,
+            "commits": 37,
+            "date": "2025-12-19",
+            "lines_added": 26863,
+            "lines_removed": 1124
+          },
+          {
+            "ai_commits": 44,
+            "commits": 49,
+            "date": "2025-12-20",
+            "lines_added": 9789,
+            "lines_removed": 17088
+          },
+          {
+            "ai_commits": 36,
+            "commits": 37,
+            "date": "2025-12-21",
+            "lines_added": 7007,
+            "lines_removed": 2326
+          },
+          {
+            "ai_commits": 53,
+            "commits": 55,
+            "date": "2025-12-22",
+            "lines_added": 24515,
+            "lines_removed": 1272
+          },
+          {
+            "ai_commits": 35,
+            "commits": 35,
+            "date": "2025-12-23",
+            "lines_added": 31011,
+            "lines_removed": 430
+          },
+          {
+            "ai_commits": 33,
+            "commits": 33,
+            "date": "2025-12-24",
+            "lines_added": 32603,
+            "lines_removed": 468
+          },
+          {
+            "ai_commits": 43,
+            "commits": 54,
+            "date": "2025-12-25",
+            "lines_added": 29086,
+            "lines_removed": 1103
+          },
+          {
+            "ai_commits": 59,
+            "commits": 60,
+            "date": "2025-12-26",
+            "lines_added": 313802,
+            "lines_removed": 2878
+          },
+          {
+            "ai_commits": 88,
+            "commits": 89,
+            "date": "2025-12-27",
+            "lines_added": 43266,
+            "lines_removed": 2573
+          },
+          {
+            "ai_commits": 81,
+            "commits": 81,
+            "date": "2025-12-28",
+            "lines_added": 107579,
+            "lines_removed": 45572
+          },
+          {
+            "ai_commits": 93,
+            "commits": 96,
+            "date": "2025-12-29",
+            "lines_added": 49099,
+            "lines_removed": 32404
+          },
+          {
+            "ai_commits": 99,
+            "commits": 101,
+            "date": "2025-12-30",
+            "lines_added": 90832,
+            "lines_removed": 18228
+          },
+          {
+            "ai_commits": 89,
+            "commits": 97,
+            "date": "2025-12-31",
+            "lines_added": 23243,
+            "lines_removed": 5097
+          },
+          {
+            "ai_commits": 94,
+            "commits": 97,
+            "date": "2026-01-01",
+            "lines_added": 50604,
+            "lines_removed": 37894
+          },
+          {
+            "ai_commits": 77,
+            "commits": 79,
+            "date": "2026-01-02",
+            "lines_added": 38304,
+            "lines_removed": 1598
+          },
+          {
+            "ai_commits": 78,
+            "commits": 85,
+            "date": "2026-01-03",
+            "lines_added": 30303,
+            "lines_removed": 1745
+          },
+          {
+            "ai_commits": 43,
+            "commits": 48,
+            "date": "2026-01-04",
+            "lines_added": 9677,
+            "lines_removed": 851
+          },
+          {
+            "ai_commits": 35,
+            "commits": 36,
+            "date": "2026-01-05",
+            "lines_added": 9613,
+            "lines_removed": 623
+          },
+          {
+            "ai_commits": 60,
+            "commits": 60,
+            "date": "2026-01-06",
+            "lines_added": 10063,
+            "lines_removed": 701
+          },
+          {
+            "ai_commits": 40,
+            "commits": 40,
+            "date": "2026-01-07",
+            "lines_added": 13664,
+            "lines_removed": 628
+          },
+          {
+            "ai_commits": 29,
+            "commits": 34,
+            "date": "2026-01-08",
+            "lines_added": 7677,
+            "lines_removed": 1715
+          },
+          {
+            "ai_commits": 47,
+            "commits": 47,
+            "date": "2026-01-09",
+            "lines_added": 13712,
+            "lines_removed": 991
+          },
+          {
+            "ai_commits": 46,
+            "commits": 48,
+            "date": "2026-01-10",
+            "lines_added": 76237,
+            "lines_removed": 4326
+          },
+          {
+            "ai_commits": 58,
+            "commits": 61,
+            "date": "2026-01-11",
+            "lines_added": 59873,
+            "lines_removed": 883
+          },
+          {
+            "ai_commits": 71,
+            "commits": 72,
+            "date": "2026-01-12",
+            "lines_added": 26227,
+            "lines_removed": 778
+          },
+          {
+            "ai_commits": 23,
+            "commits": 24,
+            "date": "2026-01-13",
+            "lines_added": 15717,
+            "lines_removed": 3600
+          },
+          {
+            "ai_commits": 60,
+            "commits": 62,
+            "date": "2026-01-14",
+            "lines_added": 17366,
+            "lines_removed": 1219
+          },
+          {
+            "ai_commits": 66,
+            "commits": 68,
+            "date": "2026-01-15",
+            "lines_added": 48389,
+            "lines_removed": 24412
+          },
+          {
+            "ai_commits": 87,
+            "commits": 88,
+            "date": "2026-01-16",
+            "lines_added": 45187,
+            "lines_removed": 3848
+          },
+          {
+            "ai_commits": 71,
+            "commits": 71,
+            "date": "2026-01-17",
+            "lines_added": 56793,
+            "lines_removed": 2240
+          },
+          {
+            "ai_commits": 58,
+            "commits": 59,
+            "date": "2026-01-18",
+            "lines_added": 25663,
+            "lines_removed": 1691
+          },
+          {
+            "ai_commits": 82,
+            "commits": 83,
+            "date": "2026-01-19",
+            "lines_added": 36132,
+            "lines_removed": 2803
+          },
+          {
+            "ai_commits": 54,
+            "commits": 54,
+            "date": "2026-01-20",
+            "lines_added": 27095,
+            "lines_removed": 844
+          },
+          {
+            "ai_commits": 23,
+            "commits": 23,
+            "date": "2026-01-21",
+            "lines_added": 11409,
+            "lines_removed": 1817
+          },
+          {
+            "ai_commits": 34,
+            "commits": 35,
+            "date": "2026-01-22",
+            "lines_added": 15074,
+            "lines_removed": 3516
+          },
+          {
+            "ai_commits": 69,
+            "commits": 75,
+            "date": "2026-01-23",
+            "lines_added": 25598,
+            "lines_removed": 1740
+          },
+          {
+            "ai_commits": 28,
+            "commits": 28,
+            "date": "2026-01-24",
+            "lines_added": 11032,
+            "lines_removed": 375
+          },
+          {
+            "ai_commits": 64,
+            "commits": 64,
+            "date": "2026-01-25",
+            "lines_added": 22844,
+            "lines_removed": 4463
+          },
+          {
+            "ai_commits": 43,
+            "commits": 43,
+            "date": "2026-01-26",
+            "lines_added": 30408,
+            "lines_removed": 97035
+          },
+          {
+            "ai_commits": 48,
+            "commits": 49,
+            "date": "2026-01-27",
+            "lines_added": 14020,
+            "lines_removed": 1207
+          },
+          {
+            "ai_commits": 76,
+            "commits": 76,
+            "date": "2026-01-28",
+            "lines_added": 14086,
+            "lines_removed": 2816
+          },
+          {
+            "ai_commits": 26,
+            "commits": 26,
+            "date": "2026-01-29",
+            "lines_added": 13244,
+            "lines_removed": 3322
+          },
+          {
+            "ai_commits": 29,
+            "commits": 29,
+            "date": "2026-01-30",
+            "lines_added": 5985,
+            "lines_removed": 286
+          },
+          {
+            "ai_commits": 21,
+            "commits": 21,
+            "date": "2026-01-31",
+            "lines_added": 9444,
+            "lines_removed": 434
+          },
+          {
+            "ai_commits": 58,
+            "commits": 58,
+            "date": "2026-02-01",
+            "lines_added": 12428,
+            "lines_removed": 9880
+          },
+          {
+            "ai_commits": 66,
+            "commits": 66,
+            "date": "2026-02-02",
+            "lines_added": 14618,
+            "lines_removed": 2677
+          },
+          {
+            "ai_commits": 36,
+            "commits": 36,
+            "date": "2026-02-03",
+            "lines_added": 11943,
+            "lines_removed": 9930
+          },
+          {
+            "ai_commits": 68,
+            "commits": 68,
+            "date": "2026-02-04",
+            "lines_added": 13627,
+            "lines_removed": 2680
+          },
+          {
+            "ai_commits": 72,
+            "commits": 72,
+            "date": "2026-02-05",
+            "lines_added": 57256,
+            "lines_removed": 2819
+          },
+          {
+            "ai_commits": 70,
+            "commits": 70,
+            "date": "2026-02-06",
+            "lines_added": 22738,
+            "lines_removed": 5544
+          },
+          {
+            "ai_commits": 53,
+            "commits": 53,
+            "date": "2026-02-07",
+            "lines_added": 8849,
+            "lines_removed": 1195
+          },
+          {
+            "ai_commits": 70,
+            "commits": 70,
+            "date": "2026-02-08",
+            "lines_added": 10471,
+            "lines_removed": 2833
+          },
+          {
+            "ai_commits": 26,
+            "commits": 26,
+            "date": "2026-02-09",
+            "lines_added": 11904,
+            "lines_removed": 997
+          },
+          {
+            "ai_commits": 19,
+            "commits": 19,
+            "date": "2026-02-10",
+            "lines_added": 11444,
+            "lines_removed": 701
+          },
+          {
+            "ai_commits": 39,
+            "commits": 39,
+            "date": "2026-02-11",
+            "lines_added": 38739,
+            "lines_removed": 768
+          },
+          {
+            "ai_commits": 46,
+            "commits": 46,
+            "date": "2026-02-12",
+            "lines_added": 19932,
+            "lines_removed": 2619
+          },
+          {
+            "ai_commits": 67,
+            "commits": 67,
+            "date": "2026-02-13",
+            "lines_added": 25247,
+            "lines_removed": 1960
+          },
+          {
+            "ai_commits": 50,
+            "commits": 50,
+            "date": "2026-02-14",
+            "lines_added": 4756,
+            "lines_removed": 2438
+          },
+          {
+            "ai_commits": 60,
+            "commits": 60,
+            "date": "2026-02-15",
+            "lines_added": 10760,
+            "lines_removed": 5375
+          },
+          {
+            "ai_commits": 31,
+            "commits": 31,
+            "date": "2026-02-16",
+            "lines_added": 4350,
+            "lines_removed": 923
+          },
+          {
+            "ai_commits": 17,
+            "commits": 17,
+            "date": "2026-02-17",
+            "lines_added": 4481,
+            "lines_removed": 487
+          },
+          {
+            "ai_commits": 40,
+            "commits": 41,
+            "date": "2026-02-18",
+            "lines_added": 7780,
+            "lines_removed": 1516
+          },
+          {
+            "ai_commits": 30,
+            "commits": 30,
+            "date": "2026-02-19",
+            "lines_added": 4878,
+            "lines_removed": 1821
+          },
+          {
+            "ai_commits": 60,
+            "commits": 60,
+            "date": "2026-02-20",
+            "lines_added": 11299,
+            "lines_removed": 2291
+          },
+          {
+            "ai_commits": 50,
+            "commits": 50,
+            "date": "2026-02-21",
+            "lines_added": 14359,
+            "lines_removed": 1919
+          },
+          {
+            "ai_commits": 55,
+            "commits": 55,
+            "date": "2026-02-22",
+            "lines_added": 4342,
+            "lines_removed": 877
+          },
+          {
+            "ai_commits": 22,
+            "commits": 22,
+            "date": "2026-02-23",
+            "lines_added": 5843,
+            "lines_removed": 1142
+          },
+          {
+            "ai_commits": 25,
+            "commits": 25,
+            "date": "2026-02-24",
+            "lines_added": 5966,
+            "lines_removed": 1213
+          },
+          {
+            "ai_commits": 28,
+            "commits": 28,
+            "date": "2026-02-25",
+            "lines_added": 16578,
+            "lines_removed": 588
+          },
+          {
+            "ai_commits": 55,
+            "commits": 55,
+            "date": "2026-02-26",
+            "lines_added": 10329,
+            "lines_removed": 1678
+          },
+          {
+            "ai_commits": 45,
+            "commits": 45,
+            "date": "2026-02-27",
+            "lines_added": 54272,
+            "lines_removed": 3820
+          },
+          {
+            "ai_commits": 27,
+            "commits": 27,
+            "date": "2026-02-28",
+            "lines_added": 7417,
+            "lines_removed": 1894
+          },
+          {
+            "ai_commits": 31,
+            "commits": 31,
+            "date": "2026-03-01",
+            "lines_added": 2908,
+            "lines_removed": 712
+          },
+          {
+            "ai_commits": 42,
+            "commits": 42,
+            "date": "2026-03-02",
+            "lines_added": 2553,
+            "lines_removed": 1207
+          },
+          {
+            "ai_commits": 34,
+            "commits": 34,
+            "date": "2026-03-03",
+            "lines_added": 10942,
+            "lines_removed": 1080
+          },
+          {
+            "ai_commits": 56,
+            "commits": 56,
+            "date": "2026-03-04",
+            "lines_added": 23948,
+            "lines_removed": 2156
+          },
+          {
+            "ai_commits": 32,
+            "commits": 32,
+            "date": "2026-03-05",
+            "lines_added": 8181,
+            "lines_removed": 1123
+          },
+          {
+            "ai_commits": 17,
+            "commits": 17,
+            "date": "2026-03-06",
+            "lines_added": 6243,
+            "lines_removed": 378
+          },
+          {
+            "ai_commits": 38,
+            "commits": 38,
+            "date": "2026-03-07",
+            "lines_added": 11086,
+            "lines_removed": 951
+          },
+          {
+            "ai_commits": 31,
+            "commits": 31,
+            "date": "2026-03-08",
+            "lines_added": 20380,
+            "lines_removed": 935
+          },
+          {
+            "ai_commits": 31,
+            "commits": 31,
+            "date": "2026-03-09",
+            "lines_added": 50863,
+            "lines_removed": 1140
+          },
+          {
+            "ai_commits": 47,
+            "commits": 47,
+            "date": "2026-03-10",
+            "lines_added": 25244,
+            "lines_removed": 1776
+          },
+          {
+            "ai_commits": 25,
+            "commits": 25,
+            "date": "2026-03-11",
+            "lines_added": 13956,
+            "lines_removed": 965
+          },
+          {
+            "ai_commits": 45,
+            "commits": 45,
+            "date": "2026-03-12",
+            "lines_added": 11212,
+            "lines_removed": 1265
+          },
+          {
+            "ai_commits": 70,
+            "commits": 70,
+            "date": "2026-03-13",
+            "lines_added": 33080,
+            "lines_removed": 2599
+          },
+          {
+            "ai_commits": 30,
+            "commits": 30,
+            "date": "2026-03-14",
+            "lines_added": 73850,
+            "lines_removed": 1432
+          },
+          {
+            "ai_commits": 45,
+            "commits": 46,
+            "date": "2026-03-15",
+            "lines_added": 21461,
+            "lines_removed": 1035
+          },
+          {
+            "ai_commits": 86,
+            "commits": 86,
+            "date": "2026-03-16",
+            "lines_added": 90964,
+            "lines_removed": 4919
+          },
+          {
+            "ai_commits": 110,
+            "commits": 110,
+            "date": "2026-03-17",
+            "lines_added": 49131,
+            "lines_removed": 4844
+          },
+          {
+            "ai_commits": 119,
+            "commits": 119,
+            "date": "2026-03-18",
+            "lines_added": 313427,
+            "lines_removed": 5700
+          },
+          {
+            "ai_commits": 233,
+            "commits": 233,
+            "date": "2026-03-19",
+            "lines_added": 45004,
+            "lines_removed": 10422
+          },
+          {
+            "ai_commits": 234,
+            "commits": 234,
+            "date": "2026-03-20",
+            "lines_added": 46327,
+            "lines_removed": 6274
+          },
+          {
+            "ai_commits": 382,
+            "commits": 422,
+            "date": "2026-03-21",
+            "lines_added": 72964,
+            "lines_removed": 12140
+          },
+          {
+            "ai_commits": 197,
+            "commits": 246,
+            "date": "2026-03-22",
+            "lines_added": 50938,
+            "lines_removed": 8632
+          },
+          {
+            "ai_commits": 78,
+            "commits": 83,
+            "date": "2026-03-23",
+            "lines_added": 17589,
+            "lines_removed": 2276
+          },
+          {
+            "ai_commits": 39,
+            "commits": 49,
+            "date": "2026-03-24",
+            "lines_added": 8499,
+            "lines_removed": 955
+          },
+          {
+            "ai_commits": 69,
+            "commits": 83,
+            "date": "2026-03-25",
+            "lines_added": 15736,
+            "lines_removed": 2312
+          },
+          {
+            "ai_commits": 61,
+            "commits": 82,
+            "date": "2026-03-26",
+            "lines_added": 8149,
+            "lines_removed": 2040
+          },
+          {
+            "ai_commits": 87,
+            "commits": 98,
+            "date": "2026-03-27",
+            "lines_added": 24436,
+            "lines_removed": 4163
+          },
+          {
+            "ai_commits": 54,
+            "commits": 83,
+            "date": "2026-03-28",
+            "lines_added": 14409,
+            "lines_removed": 3262
+          },
+          {
+            "ai_commits": 38,
+            "commits": 47,
+            "date": "2026-03-29",
+            "lines_added": 10892,
+            "lines_removed": 2290
+          },
+          {
+            "ai_commits": 157,
+            "commits": 178,
+            "date": "2026-03-30",
+            "lines_added": 27919,
+            "lines_removed": 2644
+          },
+          {
+            "ai_commits": 86,
+            "commits": 95,
+            "date": "2026-03-31",
+            "lines_added": 22911,
+            "lines_removed": 8625
+          },
+          {
+            "ai_commits": 58,
+            "commits": 72,
+            "date": "2026-04-01",
+            "lines_added": 9050,
+            "lines_removed": 1862
+          },
+          {
+            "ai_commits": 76,
+            "commits": 90,
+            "date": "2026-04-02",
+            "lines_added": 16897,
+            "lines_removed": 1863
+          },
+          {
+            "ai_commits": 113,
+            "commits": 119,
+            "date": "2026-04-03",
+            "lines_added": 15644,
+            "lines_removed": 25117
+          },
+          {
+            "ai_commits": 70,
+            "commits": 71,
+            "date": "2026-04-04",
+            "lines_added": 11883,
+            "lines_removed": 1061
+          },
+          {
+            "ai_commits": 72,
+            "commits": 86,
+            "date": "2026-04-05",
+            "lines_added": 14635,
+            "lines_removed": 1146
+          },
+          {
+            "ai_commits": 71,
+            "commits": 72,
+            "date": "2026-04-06",
+            "lines_added": 8950,
+            "lines_removed": 984
+          },
+          {
+            "ai_commits": 98,
+            "commits": 132,
+            "date": "2026-04-07",
+            "lines_added": 12074,
+            "lines_removed": 1562
+          },
+          {
+            "ai_commits": 85,
+            "commits": 103,
+            "date": "2026-04-08",
+            "lines_added": 13900,
+            "lines_removed": 1639
+          },
+          {
+            "ai_commits": 56,
+            "commits": 79,
+            "date": "2026-04-09",
+            "lines_added": 11615,
+            "lines_removed": 1100
+          },
+          {
+            "ai_commits": 132,
+            "commits": 169,
+            "date": "2026-04-10",
+            "lines_added": 48359,
+            "lines_removed": 18428
+          },
+          {
+            "ai_commits": 116,
+            "commits": 155,
+            "date": "2026-04-11",
+            "lines_added": 25094,
+            "lines_removed": 14549
+          },
+          {
+            "ai_commits": 96,
+            "commits": 126,
+            "date": "2026-04-12",
+            "lines_added": 17484,
+            "lines_removed": 2289
+          },
+          {
+            "ai_commits": 48,
+            "commits": 52,
+            "date": "2026-04-13",
+            "lines_added": 7548,
+            "lines_removed": 1281
+          },
+          {
+            "ai_commits": 53,
+            "commits": 53,
+            "date": "2026-04-14",
+            "lines_added": 5770,
+            "lines_removed": 3373
+          },
+          {
+            "ai_commits": 74,
+            "commits": 97,
+            "date": "2026-04-15",
+            "lines_added": 16422,
+            "lines_removed": 1053
+          },
+          {
+            "ai_commits": 168,
+            "commits": 195,
+            "date": "2026-04-16",
+            "lines_added": 23418,
+            "lines_removed": 3358
+          },
+          {
+            "ai_commits": 153,
+            "commits": 228,
+            "date": "2026-04-17",
+            "lines_added": 17442,
+            "lines_removed": 3780
+          },
+          {
+            "ai_commits": 116,
+            "commits": 181,
+            "date": "2026-04-18",
+            "lines_added": 26447,
+            "lines_removed": 8316
+          },
+          {
+            "ai_commits": 92,
+            "commits": 139,
+            "date": "2026-04-19",
+            "lines_added": 8706,
+            "lines_removed": 2705
+          },
+          {
+            "ai_commits": 58,
+            "commits": 78,
+            "date": "2026-04-20",
+            "lines_added": 6300,
+            "lines_removed": 1757
+          },
+          {
+            "ai_commits": 44,
+            "commits": 49,
+            "date": "2026-04-21",
+            "lines_added": 4927,
+            "lines_removed": 1341
+          },
+          {
+            "ai_commits": 38,
+            "commits": 48,
+            "date": "2026-04-22",
+            "lines_added": 4180,
+            "lines_removed": 629
+          },
+          {
+            "ai_commits": 218,
+            "commits": 311,
+            "date": "2026-04-23",
+            "lines_added": 18143,
+            "lines_removed": 7279
+          },
+          {
+            "ai_commits": 225,
+            "commits": 273,
+            "date": "2026-04-24",
+            "lines_added": 27735,
+            "lines_removed": 9264
+          },
+          {
+            "ai_commits": 117,
+            "commits": 131,
+            "date": "2026-04-25",
+            "lines_added": 7157,
+            "lines_removed": 2229
+          },
+          {
+            "ai_commits": 164,
+            "commits": 185,
+            "date": "2026-04-26",
+            "lines_added": 38485,
+            "lines_removed": 12782
+          },
+          {
+            "ai_commits": 291,
+            "commits": 349,
+            "date": "2026-04-27",
+            "lines_added": 41493,
+            "lines_removed": 8694
+          },
+          {
+            "ai_commits": 155,
+            "commits": 210,
+            "date": "2026-04-28",
+            "lines_added": 22501,
+            "lines_removed": 7912
+          },
+          {
+            "ai_commits": 110,
+            "commits": 159,
+            "date": "2026-04-29",
+            "lines_added": 20300,
+            "lines_removed": 6679
+          },
+          {
+            "ai_commits": 88,
+            "commits": 120,
+            "date": "2026-04-30",
+            "lines_added": 49791,
+            "lines_removed": 3164
+          },
+          {
+            "ai_commits": 56,
+            "commits": 58,
+            "date": "2026-05-01",
+            "lines_added": 13001,
+            "lines_removed": 789
+          },
+          {
+            "ai_commits": 82,
+            "commits": 86,
+            "date": "2026-05-02",
+            "lines_added": 12589,
+            "lines_removed": 3021
+          },
+          {
+            "ai_commits": 129,
+            "commits": 135,
+            "date": "2026-05-03",
+            "lines_added": 14493,
+            "lines_removed": 1732
+          },
+          {
+            "ai_commits": 44,
+            "commits": 47,
+            "date": "2026-05-04",
+            "lines_added": 44347,
+            "lines_removed": 2281
+          },
+          {
+            "ai_commits": 90,
+            "commits": 101,
+            "date": "2026-05-05",
+            "lines_added": 71632,
+            "lines_removed": 4368
+          },
+          {
+            "ai_commits": 57,
+            "commits": 66,
+            "date": "2026-05-06",
+            "lines_added": 16358,
+            "lines_removed": 1643
+          },
+          {
+            "ai_commits": 81,
+            "commits": 116,
+            "date": "2026-05-07",
+            "lines_added": 22486,
+            "lines_removed": 1550
+          },
+          {
+            "ai_commits": 122,
+            "commits": 158,
+            "date": "2026-05-08",
+            "lines_added": 17221,
+            "lines_removed": 3523
+          },
+          {
+            "ai_commits": 104,
+            "commits": 137,
+            "date": "2026-05-09",
+            "lines_added": 132115,
+            "lines_removed": 22335
+          },
+          {
+            "ai_commits": 69,
+            "commits": 77,
+            "date": "2026-05-10",
+            "lines_added": 273461,
+            "lines_removed": 11971
+          },
+          {
+            "ai_commits": 191,
+            "commits": 256,
+            "date": "2026-05-11",
+            "lines_added": 62625,
+            "lines_removed": 30939
+          },
+          {
+            "ai_commits": 117,
+            "commits": 167,
+            "date": "2026-05-12",
+            "lines_added": 25494,
+            "lines_removed": 5241
+          },
+          {
+            "ai_commits": 42,
+            "commits": 58,
+            "date": "2026-05-13",
+            "lines_added": 65834,
+            "lines_removed": 64902
+          },
+          {
+            "ai_commits": 76,
+            "commits": 144,
+            "date": "2026-05-14",
+            "lines_added": 44669,
+            "lines_removed": 2868
+          },
+          {
+            "ai_commits": 52,
+            "commits": 96,
+            "date": "2026-05-15",
+            "lines_added": 14762,
+            "lines_removed": 1491
+          },
+          {
+            "ai_commits": 39,
+            "commits": 41,
+            "date": "2026-05-16",
+            "lines_added": 16961,
+            "lines_removed": 4436
+          },
+          {
+            "ai_commits": 77,
+            "commits": 110,
+            "date": "2026-05-17",
+            "lines_added": 93955,
+            "lines_removed": 81188
+          },
+          {
+            "ai_commits": 92,
+            "commits": 112,
+            "date": "2026-05-18",
+            "lines_added": 47448,
+            "lines_removed": 16283
+          },
+          {
+            "ai_commits": 85,
+            "commits": 248,
+            "date": "2026-05-19",
+            "lines_added": 52129,
+            "lines_removed": 12359
+          },
+          {
+            "ai_commits": 83,
+            "commits": 140,
+            "date": "2026-05-20",
+            "lines_added": 27725,
+            "lines_removed": 6887
+          },
+          {
+            "ai_commits": 174,
+            "commits": 238,
+            "date": "2026-05-21",
+            "lines_added": 51745,
+            "lines_removed": 11113
+          },
+          {
+            "ai_commits": 78,
+            "commits": 93,
+            "date": "2026-05-22",
+            "lines_added": 26071,
+            "lines_removed": 5618
+          },
+          {
+            "ai_commits": 49,
+            "commits": 52,
+            "date": "2026-05-23",
+            "lines_added": 15381,
+            "lines_removed": 1939
+          },
+          {
+            "ai_commits": 99,
+            "commits": 110,
+            "date": "2026-05-24",
+            "lines_added": 34028,
+            "lines_removed": 4065
+          },
+          {
+            "ai_commits": 73,
+            "commits": 76,
+            "date": "2026-05-25",
+            "lines_added": 22787,
+            "lines_removed": 1927
+          },
+          {
+            "ai_commits": 130,
+            "commits": 149,
+            "date": "2026-05-26",
+            "lines_added": 23726,
+            "lines_removed": 3735
+          },
+          {
+            "ai_commits": 158,
+            "commits": 163,
+            "date": "2026-05-27",
+            "lines_added": 73909,
+            "lines_removed": 2688
+          },
+          {
+            "ai_commits": 112,
+            "commits": 154,
+            "date": "2026-05-28",
+            "lines_added": 14359,
+            "lines_removed": 1237
+          },
+          {
+            "ai_commits": 101,
+            "commits": 126,
+            "date": "2026-05-29",
+            "lines_added": 23891,
+            "lines_removed": 10248
+          },
+          {
+            "ai_commits": 141,
+            "commits": 143,
+            "date": "2026-05-30",
+            "lines_added": 23397,
+            "lines_removed": 3783
+          },
+          {
+            "ai_commits": 118,
+            "commits": 143,
+            "date": "2026-05-31",
+            "lines_added": 21889,
+            "lines_removed": 1357
+          },
+          {
+            "ai_commits": 83,
+            "commits": 85,
+            "date": "2026-06-01",
+            "lines_added": 13896,
+            "lines_removed": 1075
+          },
+          {
+            "ai_commits": 112,
+            "commits": 115,
+            "date": "2026-06-02",
+            "lines_added": 18757,
+            "lines_removed": 1598
+          },
+          {
+            "ai_commits": 56,
+            "commits": 57,
+            "date": "2026-06-03",
+            "lines_added": 254993,
+            "lines_removed": 3532
+          },
+          {
+            "ai_commits": 51,
+            "commits": 51,
+            "date": "2026-06-04",
+            "lines_added": 7655,
+            "lines_removed": 662
+          },
+          {
+            "ai_commits": 32,
+            "commits": 32,
+            "date": "2026-06-05",
+            "lines_added": 4577,
+            "lines_removed": 502
+          },
+          {
+            "ai_commits": 19,
+            "commits": 19,
+            "date": "2026-06-06",
+            "lines_added": 2916,
+            "lines_removed": 105
+          },
+          {
+            "ai_commits": 24,
+            "commits": 24,
+            "date": "2026-06-07",
+            "lines_added": 4632,
+            "lines_removed": 367
+          },
+          {
+            "ai_commits": 33,
+            "commits": 33,
+            "date": "2026-06-08",
+            "lines_added": 3302,
+            "lines_removed": 10546
+          },
+          {
+            "ai_commits": 36,
+            "commits": 36,
+            "date": "2026-06-09",
+            "lines_added": 7888,
+            "lines_removed": 662
+          },
+          {
+            "ai_commits": 82,
+            "commits": 84,
+            "date": "2026-06-10",
+            "lines_added": 11398,
+            "lines_removed": 1463
+          },
+          {
+            "ai_commits": 84,
+            "commits": 84,
+            "date": "2026-06-11",
+            "lines_added": 18513,
+            "lines_removed": 2247
+          },
+          {
+            "ai_commits": 75,
+            "commits": 75,
+            "date": "2026-06-12",
+            "lines_added": 13800,
+            "lines_removed": 1185
+          },
+          {
+            "ai_commits": 37,
+            "commits": 37,
+            "date": "2026-06-13",
+            "lines_added": 7531,
+            "lines_removed": 831
+          },
+          {
+            "ai_commits": 102,
+            "commits": 126,
+            "date": "2026-06-14",
+            "lines_added": 1287963,
+            "lines_removed": 167093
+          },
+          {
+            "ai_commits": 101,
+            "commits": 117,
+            "date": "2026-06-15",
+            "lines_added": 18656,
+            "lines_removed": 1200
+          },
+          {
+            "ai_commits": 104,
+            "commits": 104,
+            "date": "2026-06-16",
+            "lines_added": 20133,
+            "lines_removed": 3347
+          },
+          {
+            "ai_commits": 116,
+            "commits": 118,
+            "date": "2026-06-17",
+            "lines_added": 32036,
+            "lines_removed": 2531
+          },
+          {
+            "ai_commits": 107,
+            "commits": 108,
+            "date": "2026-06-18",
+            "lines_added": 18171,
+            "lines_removed": 1671
+          },
+          {
+            "ai_commits": 87,
+            "commits": 100,
+            "date": "2026-06-19",
+            "lines_added": 19888,
+            "lines_removed": 1068
+          },
+          {
+            "ai_commits": 33,
+            "commits": 33,
+            "date": "2026-06-20",
+            "lines_added": 6740,
+            "lines_removed": 1167
+          },
+          {
+            "ai_commits": 50,
+            "commits": 50,
+            "date": "2026-06-21",
+            "lines_added": 17182,
+            "lines_removed": 509
+          },
+          {
+            "ai_commits": 118,
+            "commits": 143,
+            "date": "2026-06-22",
+            "lines_added": 19751,
+            "lines_removed": 738
+          },
+          {
+            "ai_commits": 75,
+            "commits": 76,
+            "date": "2026-06-23",
+            "lines_added": 2814181,
+            "lines_removed": 1415025
+          },
+          {
+            "ai_commits": 102,
+            "commits": 102,
+            "date": "2026-06-24",
+            "lines_added": 312506,
+            "lines_removed": 753
+          },
+          {
+            "ai_commits": 130,
+            "commits": 130,
+            "date": "2026-06-25",
+            "lines_added": 18158,
+            "lines_removed": 2090
+          },
+          {
+            "ai_commits": 38,
+            "commits": 55,
+            "date": "2026-06-26",
+            "lines_added": 10489,
+            "lines_removed": 467
+          },
+          {
+            "ai_commits": 67,
+            "commits": 68,
+            "date": "2026-06-27",
+            "lines_added": 11464,
+            "lines_removed": 2965
+          },
+          {
+            "ai_commits": 98,
+            "commits": 99,
+            "date": "2026-06-28",
+            "lines_added": 16731,
+            "lines_removed": 2136
+          },
+          {
+            "ai_commits": 65,
+            "commits": 65,
+            "date": "2026-06-29",
+            "lines_added": 40706,
+            "lines_removed": 896
+          },
+          {
+            "ai_commits": 72,
+            "commits": 72,
+            "date": "2026-06-30",
+            "lines_added": 756722,
+            "lines_removed": 550
+          },
+          {
+            "ai_commits": 77,
+            "commits": 78,
+            "date": "2026-07-01",
+            "lines_added": 10586,
+            "lines_removed": 1573
+          },
+          {
+            "ai_commits": 86,
+            "commits": 95,
+            "date": "2026-07-02",
+            "lines_added": 9502,
+            "lines_removed": 601
+          },
+          {
+            "ai_commits": 69,
+            "commits": 72,
+            "date": "2026-07-03",
+            "lines_added": 9032,
+            "lines_removed": 812
+          },
+          {
+            "ai_commits": 70,
+            "commits": 75,
+            "date": "2026-07-04",
+            "lines_added": 6400,
+            "lines_removed": 627
+          },
+          {
+            "ai_commits": 25,
+            "commits": 28,
+            "date": "2026-07-05",
+            "lines_added": 2108,
+            "lines_removed": 365
+          },
+          {
+            "ai_commits": 22,
+            "commits": 22,
+            "date": "2026-07-06",
+            "lines_added": 3185,
+            "lines_removed": 106
+          },
+          {
+            "ai_commits": 6,
+            "commits": 6,
+            "date": "2026-07-07",
+            "lines_added": 722,
+            "lines_removed": 20
+          },
+          {
+            "ai_commits": 4,
+            "commits": 4,
+            "date": "2026-07-08",
+            "lines_added": 548,
+            "lines_removed": 20
+          },
+          {
+            "ai_commits": 5,
+            "commits": 5,
+            "date": "2026-07-09",
+            "lines_added": 800,
+            "lines_removed": 79
+          },
+          {
+            "ai_commits": 5,
+            "commits": 5,
+            "date": "2026-07-10",
+            "lines_added": 1890,
+            "lines_removed": 8
+          },
+          {
+            "ai_commits": 7,
+            "commits": 7,
+            "date": "2026-07-12",
+            "lines_added": 514,
+            "lines_removed": 16
+          },
+          {
+            "ai_commits": 6,
+            "commits": 19,
+            "date": "2026-07-13",
+            "lines_added": 5847,
+            "lines_removed": 159
+          },
+          {
+            "ai_commits": 1,
+            "commits": 1,
+            "date": "2026-07-14",
+            "lines_added": 149,
+            "lines_removed": 10
+          },
+          {
+            "ai_commits": 4,
+            "commits": 4,
+            "date": "2026-07-15",
+            "lines_added": 234,
+            "lines_removed": 44
+          },
+          {
+            "ai_commits": 8,
+            "commits": 8,
+            "date": "2026-07-16",
+            "lines_added": 688,
+            "lines_removed": 29
+          },
+          {
+            "ai_commits": 8,
+            "commits": 9,
+            "date": "2026-07-17",
+            "lines_added": 2115,
+            "lines_removed": 294
+          },
+          {
+            "ai_commits": 5,
+            "commits": 5,
+            "date": "2026-07-18",
+            "lines_added": 1522,
+            "lines_removed": 62
+          },
+          {
+            "ai_commits": 17,
+            "commits": 17,
+            "date": "2026-07-19",
+            "lines_added": 4002,
+            "lines_removed": 69
+          },
+          {
+            "ai_commits": 39,
+            "commits": 39,
+            "date": "2026-07-20",
+            "lines_added": 8225,
+            "lines_removed": 901
+          },
+          {
+            "ai_commits": 71,
+            "commits": 71,
+            "date": "2026-07-21",
+            "lines_added": 9285,
+            "lines_removed": 559
+          },
+          {
+            "ai_commits": 22,
+            "commits": 22,
+            "date": "2026-07-22",
+            "lines_added": 2310,
+            "lines_removed": 482
+          },
+          {
+            "ai_commits": 64,
+            "commits": 64,
+            "date": "2026-07-23",
+            "lines_added": 7719,
+            "lines_removed": 1431
+          },
+          {
+            "ai_commits": 73,
+            "commits": 75,
+            "date": "2026-07-24",
+            "lines_added": 13271,
+            "lines_removed": 787
+          },
+          {
+            "ai_commits": 90,
+            "commits": 104,
+            "date": "2026-07-25",
+            "lines_added": 20393,
+            "lines_removed": 3324
+          },
+          {
+            "ai_commits": 49,
+            "commits": 73,
+            "date": "2026-07-26",
+            "lines_added": 17296,
+            "lines_removed": 992
+          },
+          {
+            "ai_commits": 42,
+            "commits": 42,
+            "date": "2026-07-27",
+            "lines_added": 4864,
+            "lines_removed": 293
+          },
+          {
+            "ai_commits": 70,
+            "commits": 87,
+            "date": "2026-07-28",
+            "lines_added": 18918,
+            "lines_removed": 1291
+          },
+          {
+            "ai_commits": 83,
+            "commits": 86,
+            "date": "2026-07-29",
+            "lines_added": 6749,
+            "lines_removed": 914
+          },
+          {
+            "ai_commits": 47,
+            "commits": 47,
+            "date": "2026-07-30",
+            "lines_added": 8344,
+            "lines_removed": 15154
+          },
+          {
+            "ai_commits": 72,
+            "commits": 83,
+            "date": "2026-07-31",
+            "lines_added": 17383,
+            "lines_removed": 857
+          },
+          {
+            "ai_commits": 55,
+            "commits": 73,
+            "date": "2026-08-01",
+            "lines_added": 10426,
+            "lines_removed": 2012
+          },
+          {
+            "ai_commits": 71,
+            "commits": 77,
+            "date": "2026-08-02",
+            "lines_added": 16887,
+            "lines_removed": 1033
+          },
+          {
+            "ai_commits": 92,
+            "commits": 97,
+            "date": "2026-08-03",
+            "lines_added": 21919,
+            "lines_removed": 4787
+          },
+          {
+            "ai_commits": 95,
+            "commits": 101,
+            "date": "2026-08-04",
+            "lines_added": 18087,
+            "lines_removed": 2043
+          },
+          {
+            "ai_commits": 85,
+            "commits": 86,
+            "date": "2026-08-05",
+            "lines_added": 15563,
+            "lines_removed": 1166
+          },
+          {
+            "ai_commits": 80,
+            "commits": 87,
+            "date": "2026-08-06",
+            "lines_added": 15736,
+            "lines_removed": 1461
+          },
+          {
+            "ai_commits": 80,
+            "commits": 123,
+            "date": "2026-08-07",
+            "lines_added": 14878,
+            "lines_removed": 1433
+          },
+          {
+            "ai_commits": 106,
+            "commits": 144,
+            "date": "2026-08-08",
+            "lines_added": 34363,
+            "lines_removed": 1651
+          },
+          {
+            "ai_commits": 96,
+            "commits": 97,
+            "date": "2026-08-09",
+            "lines_added": 15355,
+            "lines_removed": 947
+          },
+          {
+            "ai_commits": 81,
+            "commits": 87,
+            "date": "2026-08-10",
+            "lines_added": 20004,
+            "lines_removed": 984
+          },
+          {
+            "ai_commits": 105,
+            "commits": 105,
+            "date": "2026-08-11",
+            "lines_added": 16552,
+            "lines_removed": 1398
+          },
+          {
+            "ai_commits": 77,
+            "commits": 85,
+            "date": "2026-08-12",
+            "lines_added": 15434,
+            "lines_removed": 561
+          },
+          {
+            "ai_commits": 105,
+            "commits": 105,
+            "date": "2026-08-13",
+            "lines_added": 25318,
+            "lines_removed": 2010
+          },
+          {
+            "ai_commits": 97,
+            "commits": 98,
+            "date": "2026-08-14",
+            "lines_added": 136165,
+            "lines_removed": 2767
+          },
+          {
+            "ai_commits": 73,
+            "commits": 75,
+            "date": "2026-08-15",
+            "lines_added": 13622,
+            "lines_removed": 806
+          },
+          {
+            "ai_commits": 74,
+            "commits": 74,
+            "date": "2026-08-16",
+            "lines_added": 18181,
+            "lines_removed": 773
+          },
+          {
+            "ai_commits": 66,
+            "commits": 66,
+            "date": "2026-08-17",
+            "lines_added": 10179,
+            "lines_removed": 829
+          },
+          {
+            "ai_commits": 86,
+            "commits": 87,
+            "date": "2026-08-18",
+            "lines_added": 18190,
+            "lines_removed": 579
+          },
+          {
+            "ai_commits": 123,
+            "commits": 123,
+            "date": "2026-08-19",
+            "lines_added": 101236,
+            "lines_removed": 1329
+          },
+          {
+            "ai_commits": 64,
+            "commits": 74,
+            "date": "2026-08-20",
+            "lines_added": 16823,
+            "lines_removed": 1304
+          },
+          {
+            "ai_commits": 58,
+            "commits": 59,
+            "date": "2026-08-21",
+            "lines_added": 20019,
+            "lines_removed": 2927
+          },
+          {
+            "ai_commits": 74,
+            "commits": 83,
+            "date": "2026-08-22",
+            "lines_added": 31390,
+            "lines_removed": 1478
+          },
+          {
+            "ai_commits": 46,
+            "commits": 47,
+            "date": "2026-08-23",
+            "lines_added": 15373,
+            "lines_removed": 522
+          },
+          {
+            "ai_commits": 72,
+            "commits": 76,
+            "date": "2026-08-24",
+            "lines_added": 18631,
+            "lines_removed": 1675
+          },
+          {
+            "ai_commits": 60,
+            "commits": 72,
+            "date": "2026-08-25",
+            "lines_added": 10670,
+            "lines_removed": 748
+          },
+          {
+            "ai_commits": 83,
+            "commits": 91,
+            "date": "2026-08-26",
+            "lines_added": 19040,
+            "lines_removed": 1798
+          },
+          {
+            "ai_commits": 57,
+            "commits": 57,
+            "date": "2026-08-27",
+            "lines_added": 391897,
+            "lines_removed": 952
+          },
+          {
+            "ai_commits": 27,
+            "commits": 41,
+            "date": "2026-08-28",
+            "lines_added": 3453,
+            "lines_removed": 287
+          },
+          {
+            "ai_commits": 30,
+            "commits": 46,
+            "date": "2026-08-29",
+            "lines_added": 12160,
+            "lines_removed": 356
+          },
+          {
+            "ai_commits": 53,
+            "commits": 53,
+            "date": "2026-08-30",
+            "lines_added": 10874,
+            "lines_removed": 1587
+          },
+          {
+            "ai_commits": 65,
+            "commits": 65,
+            "date": "2026-08-31",
+            "lines_added": 53267,
+            "lines_removed": 1166
+          },
+          {
+            "ai_commits": 68,
+            "commits": 68,
+            "date": "2026-09-01",
+            "lines_added": 12129,
+            "lines_removed": 321
+          },
+          {
+            "ai_commits": 53,
+            "commits": 53,
+            "date": "2026-09-02",
+            "lines_added": 7090,
+            "lines_removed": 717
+          },
+          {
+            "ai_commits": 45,
+            "commits": 45,
+            "date": "2026-09-03",
+            "lines_added": 9942,
+            "lines_removed": 724
+          },
+          {
+            "ai_commits": 89,
+            "commits": 89,
+            "date": "2026-09-04",
+            "lines_added": 13629,
+            "lines_removed": 2024
+          },
+          {
+            "ai_commits": 89,
+            "commits": 89,
+            "date": "2026-09-05",
+            "lines_added": 22299,
+            "lines_removed": 1422
+          },
+          {
+            "ai_commits": 85,
+            "commits": 86,
+            "date": "2026-09-06",
+            "lines_added": 18775,
+            "lines_removed": 728
+          },
+          {
+            "ai_commits": 6,
+            "commits": 6,
+            "date": "2026-09-07",
+            "lines_added": 1170,
+            "lines_removed": 128
+          }
+        ],
+        "daily_model_tokens": [
+          {
+            "date": "2026-01-31",
+            "tokens_by_model": {
+              "claude-opus-4-5-20251101": 54318
+            }
+          },
+          {
+            "date": "2026-02-01",
+            "tokens_by_model": {
+              "claude-opus-4-5-20251101": 158860
+            }
+          },
+          {
+            "date": "2026-02-02",
+            "tokens_by_model": {
+              "claude-opus-4-5-20251101": 244676
+            }
+          },
+          {
+            "date": "2026-02-03",
+            "tokens_by_model": {
+              "claude-opus-4-5-20251101": 288723
+            }
+          },
+          {
+            "date": "2026-02-04",
+            "tokens_by_model": {
+              "claude-opus-4-5-20251101": 590544
+            }
+          },
+          {
+            "date": "2026-02-05",
+            "tokens_by_model": {
+              "claude-opus-4-5-20251101": 428635,
+              "claude-opus-4-6": 308280
+            }
+          },
+          {
+            "date": "2026-02-06",
+            "tokens_by_model": {
+              "claude-opus-4-6": 600558
+            }
+          },
+          {
+            "date": "2026-02-07",
+            "tokens_by_model": {
+              "claude-opus-4-6": 458241
+            }
+          },
+          {
+            "date": "2026-02-08",
+            "tokens_by_model": {
+              "claude-opus-4-6": 383733
+            }
+          },
+          {
+            "date": "2026-02-09",
+            "tokens_by_model": {
+              "claude-opus-4-6": 522484
+            }
+          },
+          {
+            "date": "2026-02-10",
+            "tokens_by_model": {
+              "claude-opus-4-6": 533284
+            }
+          },
+          {
+            "date": "2026-02-11",
+            "tokens_by_model": {
+              "claude-opus-4-6": 513437
+            }
+          },
+          {
+            "date": "2026-02-12",
+            "tokens_by_model": {
+              "claude-opus-4-6": 585585
+            }
+          },
+          {
+            "date": "2026-02-13",
+            "tokens_by_model": {
+              "claude-opus-4-6": 1107931
+            }
+          },
+          {
+            "date": "2026-02-14",
+            "tokens_by_model": {
+              "claude-opus-4-6": 562696
+            }
+          },
+          {
+            "date": "2026-02-15",
+            "tokens_by_model": {
+              "claude-opus-4-6": 807628
+            }
+          },
+          {
+            "date": "2026-02-16",
+            "tokens_by_model": {
+              "claude-opus-4-6": 334632
+            }
+          }
+        ],
+        "first_session": "2025-11-23",
+        "hourly_distribution": {
+          "0": 18,
+          "1": 22,
+          "10": 3,
+          "11": 7,
+          "12": 4,
+          "13": 6,
+          "14": 20,
+          "15": 11,
+          "16": 13,
+          "17": 13,
+          "18": 22,
+          "19": 27,
+          "2": 11,
+          "20": 12,
+          "21": 18,
+          "22": 17,
+          "23": 21,
+          "3": 19,
+          "4": 19,
+          "5": 9,
+          "6": 12,
+          "7": 9,
+          "8": 2,
+          "9": 0
+        },
+        "longest_session": {
+          "duration_hours": 28.85,
+          "messages": 2127
+        },
+        "model_usage": {
+          "claude-opus-4-5-20251101": {
+            "cache_read": 3159422479,
+            "cache_write": 65683894,
+            "input": 523942,
+            "output": 1241814
+          },
+          "claude-opus-4-6": {
+            "cache_read": 6009672342,
+            "cache_write": 112233466,
+            "input": 911548,
+            "output": 5806941
+          }
+        },
+        "totals": {
+          "commits": 22062,
+          "lines_added": 15175391,
+          "lines_removed": 2834831,
+          "messages": 608185,
+          "sessions": 315,
+          "tool_calls": 60519
+        }
+      }
+    },
+    "elapsed_ms": null,
+    "headers": {
+      "cache-control": "no-store, no-cache, must-revalidate, max-age=0",
+      "connection": "keep-alive",
+      "content-encoding": "gzip",
+      "content-length": "5192",
+      "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests",
+      "content-security-policy-report-only": "default-src 'self'; script-src 'self' 'nonce-oEiTg2lP7zl+xhGGKNPELQ==' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'",
+      "content-signal": "ai-train=no, search=yes, ai-input=yes",
+      "content-type": "application/json",
+      "cross-origin-opener-policy": "same-origin-allow-popups",
+      "cross-origin-resource-policy": "cross-origin",
+      "date": "Mon, 07 Sep 2026 08:00:43 GMT",
+      "permissions-policy": "geolocation=(), microphone=(), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=(), browsing-topics=(), attribution-reporting=()",
+      "pragma": "no-cache",
+      "referrer-policy": "strict-origin-when-cross-origin, strict-origin-when-cross-origin",
+      "server": "nginx",
+      "strict-transport-security": "max-age=31536000; includeSubDomains",
+      "vary": "Accept-Encoding",
+      "x-ai-strongest-model": "Claude Fable 5",
+      "x-content-type-options": "nosniff, nosniff",
+      "x-dns-prefetch-control": "off",
+      "x-frame-options": "SAMEORIGIN, SAMEORIGIN",
+      "x-ratelimit-limit": "2000",
+      "x-ratelimit-remaining": "1987",
+      "x-ratelimit-reset": "1788768060",
+      "x-xss-protection": "0"
+    },
+    "reason": "OK",
+    "status_code": 200
+  },
+  "run_id": "run-20260907T075938Z-6185358",
+  "tier": "SAFE"
+}
