@@ -192,6 +192,25 @@ def test_the_configure_time_self_check_feels_each_layer_coming_off(monkeypatch):
             assert_client_guard_blocks()
 
     # Layer 4 -- the probe_only floor comes off, which is the one that has.
+    #
+    # At ENFORCEMENT, not in the corpus: the check picks its subject from the
+    # rules that declare probe_only, so emptying that list makes it report
+    # "nothing to test" instead of exercising the floor -- a control that
+    # passes on the precondition and proves nothing about the transport.
+    # Patching match() leaves the subject declared and takes the floor off the
+    # rule the transport actually consults.
+    real_match = EndpointRegistry.match
+
+    with monkeypatch.context() as m:
+        m.setattr(EndpointRegistry, "match",
+                  lambda self, path, method: (
+                      replace(rule, probe_only=False)
+                      if (rule := real_match(self, path, method)) else None))
+        with pytest.raises(GuardBreached, match="layer 4.*let it through"):
+            assert_client_guard_blocks()
+
+    # And the precondition has its own control, since it is now the thing that
+    # would stop every session if the corpus lost its floors altogether.
     real_load = EndpointRegistry.load  # bound before the patch, or it recurses
 
     def _floorless(*args, **kwargs):
@@ -201,7 +220,7 @@ def test_the_configure_time_self_check_feels_each_layer_coming_off(monkeypatch):
 
     with monkeypatch.context() as m:
         m.setattr(EndpointRegistry, "load", _floorless)
-        with pytest.raises(GuardBreached, match="layer 4"):
+        with pytest.raises(GuardBreached, match="layer 4 has nothing to test"):
             assert_client_guard_blocks()
 
     # And it is whole again afterwards -- a control that leaves the guard off

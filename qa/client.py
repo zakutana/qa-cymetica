@@ -81,6 +81,36 @@ class GuardBreached(RuntimeError):
     """The guard failed to refuse something it exists to refuse."""
 
 
+# The subject of layers 2 and 3: a declared, money-moving POST. Which endpoint
+# it is does not matter to them -- only that it is a write.
+WITHDRAW = "/api/v1/funding/withdraw"
+
+
+def _probe_only_path(registry: EndpointRegistry) -> str:
+    """Any endpoint the corpus declares probe_only, for layer 4 to bounce off.
+
+    Naming one endpoint made a config change lethal: take `probe_only` off
+    funding.withdraw for a good reason and layer 4 stops being refused, so
+    pytest_configure aborts EVERY session -- including the ones that would
+    explain the change -- with a message blaming the floor rather than the
+    corpus. Asking the registry instead means one endpoint leaving the floor
+    is a config change, and the floor being gone everywhere is what stops the
+    suite, which is the condition actually worth stopping for.
+    """
+    floors = [r for r in sorted(registry.rules, key=lambda r: r.id)
+              if r.probe_only and "POST" in r.methods]
+    for rule in floors:
+        if rule.path == WITHDRAW:  # the usual subject, so failures read alike
+            return rule.path
+    if floors:
+        return floors[0].path
+    raise GuardBreached(
+        "layer 4 has nothing to test: components.yaml declares no probe_only "
+        "POST endpoint at all, so the floor that keeps MUTATE tests off the "
+        "money loop does not exist. Restore it before running anything."
+    )
+
+
 class _NeverSends(httpx.BaseTransport):
     """The self-check's floor. Reaching it IS the failure being looked for."""
 
@@ -115,44 +145,54 @@ def assert_client_guard_blocks() -> None:
     from qa.safety import CURRENT_TIER, SafetyTier
 
     # 1 -- construction ban: nothing may build a client outside this module.
+    #      Tested by behaviour, never by the _GUARD_INSTALLED flag, which is
+    #      the thing that would be wrong if the ban were half-applied. The
+    #      flag only words the message.
     try:
-        httpx.Client()
+        probe = httpx.Client()
     except SafetyViolation:
         pass
-    except GuardBreached:  # pragma: no cover -- unreachable, states the intent
-        raise
     else:
+        probe.close()  # or the breach path leaks the pool it just opened
         raise GuardBreached(
             "layer 1: httpx.Client() was constructed without going through "
-            "qa/client.py. Anything could now build its own client and skip "
+            "qa/client.py -- "
+            + ("the construction ban was never installed" if not _GUARD_INSTALLED
+               else "the ban is installed and did not fire")
+            + ". Anything could now build its own client and skip "
             "SafetyTransport entirely."
         )
 
     registry = EndpointRegistry.load()
     anon = Identity(name="guard-self-check")
 
-    def _refuses(tier: SafetyTier | None, layer: str, reg=registry):
+    def _refuses(path: str, tier: SafetyTier | None, layer: str, reg=registry):
         token = CURRENT_TIER.set(tier)
-        client = build_client(anon, reg, inner=_NeverSends())
+        client = None
         try:
-            client.post("/api/v1/funding/withdraw", json={"amount": "1"})
+            # Inside the try: the tier is already set, so anything that raises
+            # between here and the reset leaves it set for the process. At
+            # layer 4 that would be a leaked MUTATE.
+            client = build_client(anon, reg, inner=_NeverSends())
+            client.post(path, json={"amount": "1"})
         except SafetyViolation:
             return
         except GuardBreached as exc:
             raise GuardBreached(f"{layer} let it through. {exc}") from None
         finally:
-            client.close()
+            if client is not None:
+                client.close()
             CURRENT_TIER.reset(token)
         raise GuardBreached(
-            f"{layer} let it through: POST /api/v1/funding/withdraw returned "
-            f"without reaching the transport, so something answered it early."
+            f"{layer} let it through: POST {path} returned without reaching "
+            f"the transport, so something answered it early."
         )
 
     # 2 -- no tier in scope: a request from outside a test is nobody's.
-    _refuses(None, "layer 2: no safety tier in scope")
+    _refuses(WITHDRAW, None, "layer 2: no safety tier in scope")
 
     # 3 -- the tier ladder: a SAFE test may not write.
-    _refuses(SafetyTier.SAFE, "layer 3: SAFE tier")
+    _refuses(WITHDRAW, SafetyTier.SAFE, "layer 3: SAFE tier")
 
     # 4 -- the probe_only floor, which is the one that has actually come off.
     #      A private registry copy: the session's own must keep whatever
@@ -160,7 +200,8 @@ def assert_client_guard_blocks() -> None:
     mutating = EndpointRegistry.load()
     mutating.mutate_enabled = True
     mutating.mutate_allowed_hosts = frozenset({"cymetica.com"})
-    _refuses(SafetyTier.MUTATE, "layer 4: probe_only floor", reg=mutating)
+    _refuses(_probe_only_path(mutating), SafetyTier.MUTATE,
+             "layer 4: probe_only floor", reg=mutating)
 
 
 def build_client(

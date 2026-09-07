@@ -24,8 +24,9 @@ Read as: what the code offers, against what the world has ever asked of it.
     python scripts/never_fired.py            # everything
     python scripts/never_fired.py --zeros    # only what has never fired
 
-Parses every run record, so about 29 MB of JSON on 2026-09-07 and a few
-seconds. That is the cost of asking over the data rather than the source.
+Parses every run record -- 297 of them, 29 MB of JSON on 2026-09-07 -- in
+about half a second. Cheap enough to be a step in the sweep rather than a
+thing you decide to do.
 """
 
 from __future__ import annotations
@@ -84,13 +85,13 @@ def _states(ledger: dict, axis: str) -> tuple[Counter, dict[str, str]]:
         moves.sort(key=lambda t: t.get("at") or "")
         if moves:
             if moves[0].get("from"):
-                note(moves[0]["from"], row.get("first_seen", {}).get("at") or "")
+                note(moves[0]["from"], (row.get("first_seen") or {}).get("at") or "")
             for t in moves:
                 note(t["to"], t.get("at") or "")
         else:
             current = (row.get(axis) or {}).get("state")
             if current:
-                note(current, row.get("first_seen", {}).get("at") or "")
+                note(current, (row.get("first_seen") or {}).get("at") or "")
     return seen, last
 
 
@@ -129,13 +130,15 @@ def _blocks(runs: list[dict]) -> tuple[Counter, dict[str, str]]:
     last: dict[str, str] = {}
     for run in runs:
         at = run.get("started_at") or ""
+        # `reasons` only, never `notes`: identity_absent:<name> qualifies a
+        # level rather than blocking one, and lives on the other field. Counted
+        # whole, so a reason this report does not know about shows up as
+        # itself and fails the guard test instead of being trimmed into
+        # something that looks familiar.
         for reason in admissibility(run).reasons:
-            # identity_absent:<name> is a note, not a blocker, and carries a
-            # value we do not want as its own row.
-            key = reason.split(":", 1)[0]
-            seen[key] += 1
-            if at > last.get(key, ""):
-                last[key] = at
+            seen[reason] += 1
+            if at > last.get(reason, ""):
+                last[reason] = at
     return seen, last
 
 

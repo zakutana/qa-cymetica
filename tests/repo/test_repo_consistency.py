@@ -180,6 +180,32 @@ def test_committed_dashboard_matches_the_committed_ledger():
 
 RUN_ID = re.compile(r"run-\d{8}T\d{6}Z-[0-9a-z]+")
 
+
+def _run_ids(node) -> set[str]:
+    """Every `run_id` field anywhere in the ledger, at any depth.
+
+    A row cites its run from four places -- provenance, first_seen.cause,
+    check.adjudicated_by and each transition's cause -- and a fifth would be
+    added without this test hearing about it. Walking for the field name
+    covers all of them and, unlike a text scan, counts only citations.
+
+    The value has to look like a record id as well as sit under the right
+    key: 16 rows migrated from before the contract carry `run_id: "legacy"`,
+    which names the migration rather than a file, and no file will ever
+    satisfy it.
+    """
+    found: set[str] = set()
+    if isinstance(node, dict):
+        for key, value in node.items():
+            if key == "run_id" and isinstance(value, str) and RUN_ID.fullmatch(value):
+                found.add(value)
+            else:
+                found |= _run_ids(value)
+    elif isinstance(node, list):
+        for value in node:
+            found |= _run_ids(value)
+    return found
+
 # Run records the committed journal cites and this repository does not have.
 # Both predate the guard below and neither can be recovered:
 #
@@ -220,12 +246,21 @@ def test_every_run_record_the_state_cites_is_in_the_repository():
     """
     import subprocess
 
+    # Structurally, never by scanning the text. A regex over the whole file
+    # also matches a run id merely MENTIONED -- in a withdraw reason, a note,
+    # a detail.reason -- and one mention of an exploratory run would demand
+    # that a gitignored record be tracked, with no way out but to commit
+    # evidence nothing stands on. A citation is a `run_id` field.
     cited = set()
-    for path in (LEDGER, REPO / "state" / "journal" / "events.jsonl"):
-        if path.exists():
-            cited |= set(RUN_ID.findall(path.read_text(encoding="utf-8")))
-    for path in (REPO / "state" / "preregistrations").glob("*.md"):
-        cited |= set(RUN_ID.findall(path.read_text(encoding="utf-8")))
+    if LEDGER.exists():
+        cited |= _run_ids(json.loads(LEDGER.read_text(encoding="utf-8")))
+    journal = REPO / "state" / "journal" / "events.jsonl"
+    if journal.exists():
+        for line in journal.read_text(encoding="utf-8").splitlines():
+            if line.strip():
+                event = json.loads(line)
+                if event.get("type") == "run_recorded" and event.get("run_id"):
+                    cited.add(event["run_id"])
 
     if not cited:
         conclude(Measurement(

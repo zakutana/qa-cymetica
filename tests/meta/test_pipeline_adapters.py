@@ -407,35 +407,62 @@ def test_a_fold_that_writes_no_ledger_writes_nothing_to_the_journal(tmp_path, mo
     cited record be in the repository and was being handed ids that never would
     be.
 
-    Two claims: a look-only fold appends nothing, and the writing path still
-    attests. The second is what stops this being fixed by deleting the feature.
+    Three claims: a fold that folds a real run and only looks appends nothing,
+    the same fold asked to attest appends exactly one event, and a second
+    attesting fold of the same run adds nothing on top. The first is the
+    regression. The second is what stops this being "fixed" by deleting the
+    feature -- and the reason the fold here has to stand on an actual run
+    record: the `attest` branch sits inside `if not events_only`, so a test
+    that only ever folds the journal cannot reach it, and an earlier version
+    of this one passed with the fix reverted.
     """
     ledger_mod = _module("scripts/ledger.py")
     state = tmp_path / "state"
     (state / "journal").mkdir(parents=True)
+    (state / "runs").mkdir(parents=True)
     monkeypatch.setenv("QA_STATE_DIR", str(state))
 
     from qa.state import append_event, read_events
 
     def _events():
-        return len(read_events())
+        return [e for e in read_events()]
 
     append_event({"type": "note", "at": "2026-09-07T00:00:00+00:00",
                   "by": "test", "source": "test", "finding_id": "CYM-x",
                   "text": "so the journal is not empty"})
-    before = _events()
+    before = len(_events())
 
-    # No admissible run exists in this empty state dir, so the fold that a
-    # read-only caller performs is the journal-only one. It must not write.
-    ledger_mod.compose(events_only=True)
-    assert _events() == before, "an events-only fold appended to the journal"
+    run_id = "run-20260907T000000Z-abc1234"
+    (state / "runs" / f"{run_id}.json").write_text(json.dumps({
+        "schema": 2, "run_id": run_id,
+        "started_at": "2026-09-07T00:00:00+00:00",
+        "finished_at": "2026-09-07T00:00:10+00:00",
+        "collected": [], "results": [], "exit_status": 0,
+        "platform_fingerprint": "sha256:" + "0" * 64,
+        "fingerprint_drifted": False, "git_dirty": False,
+        "selector": ["tests"], "totals": {},
+    }), encoding="utf-8")
 
+    ledger_mod.compose(run_id=run_id)
+    assert len(_events()) == before, \
+        "a fold that only looked appended to the journal"
+
+    ledger_mod.compose(run_id=run_id, attest=True)
+    attested = [e for e in _events() if e["type"] == "run_recorded"]
+    assert len(_events()) == before + 1 and len(attested) == 1, \
+        "the writing path no longer attests the record it stands on"
+    assert attested[0]["run_id"] == run_id
+
+    # Idempotent by run_id, so re-composing the same run adds nothing.
+    ledger_mod.compose(run_id=run_id, attest=True)
+    assert len(_events()) == before + 1, "the same run was attested twice"
+
+    # A journal-only fold has no record to pin, whatever it is asked for.
     ledger_mod.compose(events_only=True, attest=True)
-    assert _events() == before, \
+    assert len(_events()) == before + 1, \
         "an events-only fold attested a run it never read"
 
-    # And the writing path is still wired: main() asks for the attestation
-    # unless --check, which writes nothing.
+    # And main() is what asks -- unless --check, which writes nothing.
     source = (REPO / "scripts" / "ledger.py").read_text(encoding="utf-8")
     assert "attest=not args.check" in source, \
         "main() no longer attests the record the ledger it writes stands on"

@@ -106,7 +106,12 @@ def test_a_mechanism_with_no_occurrences_is_printed_first():
 
     zeros = mod.render(fake, zeros_only=True)
     assert "NEVER_USED" in zeros and "test states" in zeros
-    assert "3" not in zeros, "--zeros printed the counts it exists to omit"
+    # The table is what --zeros omits, so look for the table's own header
+    # rather than for a digit: the summary line always carries counts, so
+    # `"3" not in zeros` failed on a vocabulary that happened to have three
+    # symbols and blamed it on the counts being printed.
+    assert "test states  (nothing)" not in zeros, \
+        "--zeros printed the per-vocabulary table it exists to omit"
 
     quiet = mod.render([{"name": "test states", "over": "nothing",
                          "symbols": ("USED",), "seen": Counter({"USED": 1}),

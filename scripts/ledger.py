@@ -160,7 +160,8 @@ def compose(run_id: str | None = None, events_only: bool = False,
     did was fill the audit trail with attestations of runs nobody stood on, and
     -- once state/runs/ became gitignored -- cite records that would never be
     tracked. Default-off means a caller that only looks cannot write by
-    accident; only main(), which goes on to write the ledger, asks for it.
+    accident; only main() asks for it, and then only for a fold that took the
+    run and is about to be written.
     """
     events = read_events()
     prev = json.loads(seed.read_text(encoding="utf-8")) if seed else load_previous()
@@ -181,13 +182,23 @@ def compose(run_id: str | None = None, events_only: bool = False,
                 f"run {run_id} contradicts facts outside itself:\n  "
                 + "\n  ".join(problems)
             )
-        # Attest to the bytes, in the chained journal. Idempotent by run_id,
-        # so re-composing the same run adds nothing.
-        if attest:
-            append_event(_run_recorded(run, _run_path(run_id)))
-            events = read_events()
-
     ledger = fold(prev, run=run, candidates=_candidates(run), events=events)
+
+    # Attest to the bytes, in the chained journal. Idempotent by run_id, so
+    # re-composing the same run adds nothing.
+    #
+    # After the fold, and only if the fold took the run. Attesting before it
+    # meant an INADMISSIBLE run was pinned too: compose() appended, fold()
+    # then set rejected_run, and main() printed "is not evidence" and returned
+    # without writing a ledger -- leaving the journal permanently vouching for
+    # a record nothing stands on, which is the same stray attestation the
+    # `attest` flag exists to stop. The fold never reads this event type, so
+    # moving it after costs nothing and saves a second read of the journal.
+    if attest and run is not None and "rejected_run" not in ledger:
+        append_event(_run_recorded(run, _run_path(run_id)))
+
+    # Read AFTER the append: write_ledger refuses a ledger whose events_head
+    # is not the journal's current head (qa/state.py).
     ledger["events_head"] = head()
     return ledger
 
