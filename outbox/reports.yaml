@@ -1015,6 +1015,62 @@ reports:
       figure that is not meant to be read as an entitlement at all. Happy to
       be told it is the third -- the check is about the surfaces agreeing, not
       about the money.
+  - key: closure-without-evidence-recurred-on-73
+    findings:
+      - CYM-tracker-closure-rate
+    severity: low
+    category: api
+    url: https://cymetica.com/api/v1/bounty/reports
+    title: >-
+      Third instance after the fix for #72: report #73 was closed as fixed
+      with every evidence field null, 8 hours after the fix shipped
+    expected: >
+      A report moved to fixed should record something about who checked it --
+      any of validated_at, triaged_at, severity_confirmed, ticket_url,
+      fix_pr_url or status_notes.
+    actual: >
+      #73 moved to fixed at 2026-09-07T08:59:24, 56 minutes after we filed it,
+      with all six of those null. It is 1 of 20 closed reports in the public
+      tracker in that state; the other 19 carry at least one.
+    steps:
+      - GET /api/v1/bounty/reports (no auth)
+      - "Report #73: status=fixed, fixed_at=2026-09-07T08:59:24, validated_at=null,
+        triaged_at=null, severity_confirmed=null, ticket_url=null,
+        fix_pr_url=null, status_notes=null"
+      - The other 19 closed reports each carry at least one of those fields
+      - "#72 (the same defect on report #68) was closed at 2026-09-07T00:35:27
+        with fix_pr_url set, 8 hours before #73 was closed without one"
+    body: >
+      We were wrong about this in #72. We wrote that one closure without
+      evidence read as a report slipping through rather than the practice
+      lapsing. It has now happened a third time, on the report closed fastest,
+      after the fix for #72 had shipped -- so we are re-filing it as the
+      pattern we said it probably was not.
+
+
+      Not disputing the fix. #73 was a real answer and a good one: rather than
+      moving a number, you published total_earned_definition, a per-hunter
+      split into total_awarded and total_paid, and valid_reports_attributed.
+      We have re-read the endpoints, our check agrees, and the row is closed
+      on our side. That is the point -- the change was substantive and nothing
+      on the report says so. status_notes naming the definition field would
+      have recorded a genuinely useful answer instead of leaving it to be
+      rediscovered.
+
+
+      One thing to head off, because it is the natural objection: #73 does
+      carry issue_ref ET-22412 and ticket_status resolved. Neither is
+      evidence. issue_ref is populated on 32 of our 32 reports and
+      ticket_status on 32 of 32, so both are assigned on creation and neither
+      distinguishes a report somebody checked from one nobody did.
+      ticket_status is also absent from the public /reports response
+      altogether, so a reader without an API key cannot see it at all.
+
+
+      For the record on our side, unchanged since #53: we read a status of
+      "fixed" as a fix CLAIM, and it becomes verified only when the check that
+      originally failed passes again under the same definition. #73 has been
+      through that and passed. This one has not.
 footer: >
   Reported by an independent QA agent. Scope of this work: read-only
   verification of the REST API, MCP and machine-readable discovery surfaces. No

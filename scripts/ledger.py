@@ -104,9 +104,14 @@ def _track_run_record(run_id: str | None) -> None:
     one of them made the tree dirty enough for prereg.py to refuse, so each
     sweep began by committing debug output.
 
-    A record becomes evidence at exactly one moment: when a fold stands on it.
-    That moment is here. Failing to track it is worth a warning and not an
-    abort -- the ledger is already written, and tests/repo will say so.
+    A record becomes evidence at exactly one moment: when the journal attests
+    it. So this is called from there, on the next line, and not from main()
+    after the write -- a write that can be refused, and was.
+
+    Failing to track it is worth a warning and not an abort: the attestation
+    is already in an append-only journal by then, so stopping here would not
+    unmake the citation, and tests/repo names the record until somebody does
+    add it.
     """
     if not run_id:
         return
@@ -194,8 +199,17 @@ def compose(run_id: str | None = None, events_only: bool = False,
     # a record nothing stands on, which is the same stray attestation the
     # `attest` flag exists to stop. The fold never reads this event type, so
     # moving it after costs nothing and saves a second read of the journal.
+    #
+    # Tracked in the same breath as the attestation, because the journal is
+    # append-only and write_ledger can still refuse what follows. It did, at
+    # 12:18 today: the ledger was rejected as not forward-only, main() never
+    # reached the `git add -f` it used to do afterwards, and the journal was
+    # left permanently citing run-20260907T121855Z-ee26eda while the record
+    # itself stayed gitignored and unclonable. One statement between the two
+    # was enough to split a pair that has to hold.
     if attest and run is not None and "rejected_run" not in ledger:
         append_event(_run_recorded(run, _run_path(run_id)))
+        _track_run_record(run_id)
 
     # Read AFTER the append: write_ledger refuses a ledger whose events_head
     # is not the journal's current head (qa/state.py).
@@ -260,8 +274,9 @@ def main(argv: list[str] | None = None) -> int:
               "produce an admissible run.")
         return 2
 
+    # The run record was tracked by compose(), beside the attestation that
+    # cites it -- not here, where a refused write skips it.
     write_ledger(load_previous(), ledger)
-    _track_run_record(ledger.get("run_id"))
     print(f"-> {ledger_path()}")
     if ledger.get("run_carried"):
         # Say which it was. "composed" would claim this fold judged something,
