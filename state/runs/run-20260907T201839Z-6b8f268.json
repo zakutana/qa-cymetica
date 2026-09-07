@@ -1,0 +1,192 @@
+{
+  "schema": 2,
+  "run_id": "run-20260907T201839Z-6b8f268",
+  "started_at": "2026-09-07T20:19:19+00:00",
+  "finished_at": "2026-09-07T20:19:33+00:00",
+  "git_head": "6b8f268b8cdeca6e1bc878807b68ce4d799a6c8a",
+  "git_short": "6b8f268",
+  "git_dirty": true,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": "sha256:a45fa8e0fddae5960152bce9fbd15a9207a5d6c5c0fb080f47a9fde2d1d4cbb4",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "0b656692e49568ca4706101bdee966852dd87efd7062dc39de7b5551284e24d0",
+    "/.well-known/agent-card.json": "10a060302db128749e97e38a0fa6e540dac6cdfef7555c92e97ea6568a624998",
+    "/.well-known/ai-plugin.json": "e2f2d79821bf8e741fb18cefea6a94cb7a1ec358644306aeff02e763c61b1fb2",
+    "/.well-known/udc.json": "92cd8a5f7ec5a0a859594ef9fbd72cba4914eaab4220377db18adf2ed44611a4",
+    "/openapi.json": "f0cccb1f06ec266d303b1c7ab8e23f4af29a3c43106027595c95c1449fa1b2cf",
+    "/openapi-public.json": "f412934dad295e7bbc23a038f93d1037c9814ead20817b3a5e4de82a004a2903",
+    "/llms.txt": "62db19c870b20a25b0ea0c20d291bb724b56c95f00ec1c79d864f3ed6d28ba12",
+    "mcp:tools/list:none": "cb9188ffdaf6a78e40cae9e30cd1fdfa9925f8f77b1c3d41f5ddb24108b27162"
+  },
+  "fingerprint_errors": {
+    "/.well-known/agent-skills.json": "ReadTimeout: The read operation timed out"
+  },
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/discovery -q --no-header",
+  "selector_full": false,
+  "allow_mutate": false,
+  "collected": [
+    "tests/discovery/test_build_onboarding.py::test_every_route_a_recipe_names_is_reachable_as_an_api",
+    "tests/discovery/test_build_onboarding.py::test_register_response_documents_the_field_the_page_says_to_save",
+    "tests/discovery/test_build_onboarding.py::test_trust_ladder_rungs_agree_across_surfaces"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/discovery/test_build_onboarding.py::test_every_route_a_recipe_names_is_reachable_as_an_api",
+      "component": "discovery.onboarding",
+      "tier": "SAFE",
+      "surface": "discovery",
+      "claim_id": "build-recipe-names-a-browser-route",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 6503,
+      "evidence_ids": [
+        "e803bdb457c91b672323e3344d98ff335c8794cfb9b5b70e888a5e1795475fd9",
+        "3c9b831a0b0df8688c9c288d117bd8612686f72d329ddec33ece98acdb206b69",
+        "23edf89de3d79764ad35859f5d6d7c32421cb7fdaf54f9178ff1590181b1fc41"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "a /build recipe sends an agent to a route that is not in the curated schema and does not answer JSON: /events/universe (HTTP 200 text/html)",
+        "left": [
+          "/events/universe"
+        ],
+        "right": [
+          "/events/universe"
+        ],
+        "sources": {
+          "page": "/build",
+          "schema": "/openapi-public.json"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": null,
+        "role": "verdict",
+        "population": {
+          "recipes": 10,
+          "paths_named": 1,
+          "documented_paths": 53
+        }
+      },
+      "check_fingerprint": "01712722926568327db7de049d28e00267d8c5cb9f6892bb64c8a0da32900b07",
+      "reason": null,
+      "failure_repr": "tests\\discovery\\test_build_onboarding.py:166: in test_every_route_a_recipe_names_is_reachable_as_an_api\n    conclude(Measurement(\nqa\\measure.py:165: in conclude\n    raise AssertionError(explain(m))\nE   AssertionError: a /build recipe sends an agent to a route that is not in the curated schema and does not answer JSON: /events/universe (HTTP 200 text/html)\nE     left  = ['/events/universe']\nE     right = ['/events/universe']"
+    },
+    {
+      "nodeid": "tests/discovery/test_build_onboarding.py::test_register_response_documents_the_field_the_page_says_to_save",
+      "component": "discovery.onboarding",
+      "tier": "SAFE",
+      "surface": "discovery",
+      "claim_id": "register-response-undocumented",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 776,
+      "evidence_ids": [
+        "f597ca1f2cbcc704b7175f2ddf4b34cef748d88ec8853a4d69971dfea2d19942",
+        "12e064adfeb1d6bc6e3dcd61a13991a76c5fa61c9b9420ad8e0e494e97e4f54c"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "the field /build tells an agent to save is absent from the published schema for the call that returns it: 'api_key' is in no 2xx response of POST /mcp/v1/register, which describes 0 field(s)",
+        "left": "api_key",
+        "right": [],
+        "sources": {
+          "page": "/build",
+          "schema": "/openapi-public.json"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": null,
+        "role": "verdict",
+        "population": {
+          "described_fields": 0
+        }
+      },
+      "check_fingerprint": "0760ba619fbd7a06945b43cc499e2a739d906a4deb8ebe97cd3dbd484d066d37",
+      "reason": null,
+      "failure_repr": "tests\\discovery\\test_build_onboarding.py:237: in test_register_response_documents_the_field_the_page_says_to_save\n    conclude(Measurement(\nqa\\measure.py:165: in conclude\n    raise AssertionError(explain(m))\nE   AssertionError: the field /build tells an agent to save is absent from the published schema for the call that returns it: 'api_key' is in no 2xx response of POST /mcp/v1/register, which describes 0 field(s)\nE     left  = 'api_key'\nE     right = []"
+    },
+    {
+      "nodeid": "tests/discovery/test_build_onboarding.py::test_trust_ladder_rungs_agree_across_surfaces",
+      "component": "discovery.onboarding",
+      "tier": "SAFE",
+      "surface": "discovery",
+      "claim_id": "trust-ladder-vocabulary",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 1515,
+      "evidence_ids": [
+        "f597ca1f2cbcc704b7175f2ddf4b34cef748d88ec8853a4d69971dfea2d19942",
+        "76099431c4e5d419beae00720503bd3f68ed79cbdab4bd791a7589dc6c26450e",
+        "a7f01734bee841f490168ff6409b3d1971113d04f07fc7e0a460c37415fdb1b4"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "the same trust ladder is named differently on each surface an agent reads, so an agent cannot tell which rung it holds: /build says ['allied', 'public', 'recognized', 'trusted']; llms.txt says ['allied', 'authenticated', 'federated', 'public']; mcp.json says ['allied', 'recognized', 'trusted', 'unknown']",
+        "left": [
+          "allied",
+          "recognized",
+          "trusted",
+          "unknown"
+        ],
+        "right": "{\"/build\": [\"allied\", \"public\", \"recognized\", \"trusted\"], \"llms.txt\": [\"allied\", \"authenticated\", \"federated\", \"public\"], \"mcp.json\": [\"allied\", \"recognized\", \"trusted\", \"unknown\"]}",
+        "sources": {
+          "page": "/build",
+          "document": "/llms.txt",
+          "manifest": "/.well-known/mcp.json"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": null,
+        "role": "verdict",
+        "population": {
+          "tools": 62,
+          "surfaces": 3
+        }
+      },
+      "check_fingerprint": "cbf446333d6a227a51c185bcdd1443afa1eb20366fe490ef1759614838663580",
+      "reason": null,
+      "failure_repr": "tests\\discovery\\test_build_onboarding.py:309: in test_trust_ladder_rungs_agree_across_surfaces\n    conclude(Measurement(\nqa\\measure.py:165: in conclude\n    raise AssertionError(explain(m))\nE   AssertionError: the same trust ladder is named differently on each surface an agent reads, so an agent cannot tell which rung it holds: /build says ['allied', 'public', 'recognized', 'trusted']; llms.txt says ['allied', 'authenticated', 'federated', 'public']; mcp.json says ['allied', 'recognized', 'trusted', 'unknown']\nE     left  = ['allied', 'recognized', 'trusted', 'unknown']\nE     right = '{\"/build\": [\"allied\", \"public\", \"recognized\", \"trusted\"], \"llms.txt\": [\"allied\", \"authenticated\", \"federated\", \"public\"], \"mcp.json\": [\"allied\", \"recognized\", \"trusted\", \"unknown\"]}'"
+    }
+  ],
+  "totals": {
+    "failed": 3
+  },
+  "ratelimit": {
+    "requests": 8,
+    "limit": 2000,
+    "remaining": 1998,
+    "fraction_used": 0.001,
+    "exhausted": false
+  },
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "fingerprint_after": "sha256:0a44c7146fc47b64ba8e441d7fac0e5225440d5b324ccc4b379b264c5a0e9cac",
+  "exit_status": 1
+}

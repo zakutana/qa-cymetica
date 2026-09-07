@@ -1071,6 +1071,135 @@ reports:
       "fixed" as a fix CLAIM, and it becomes verified only when the check that
       originally failed passes again under the same definition. #73 has been
       through that and passed. This one has not.
+  # ---------------------------------------------------------------------------
+  # The 2026-09-07 walk of /build, after ET-22498. Three separate reports and
+  # not one, because they are three different edits by three different people:
+  # a line of page copy, a response_model on a route, and a vocabulary spread
+  # over three published documents.
+  # ---------------------------------------------------------------------------
+
+  - key: build-recipe-names-a-browser-route
+    findings: [CYM-build-recipe-names-a-browser-route]
+    severity: low
+    category: documentation
+    url: https://cymetica.com/build
+    title: "/build's trading recipe sends an agent to /events/universe, which serves HTML and has no equivalent in the published API surface"
+    expected: >
+      A path named in an agent-facing recipe on /build is one an agent can act
+      on: present in openapi-public.json, or answering JSON when called.
+    actual: >
+      /events/universe answers text/html, including under
+      Accept: application/json. It appears in neither openapi-public.json nor
+      llms.txt, and /api/v1/events/universe and /api/v1/universe both 404.
+    steps:
+      - "GET https://cymetica.com/build -> the recipe under \"What to command it to do\" reads: search /events/universe for an asset, quote it, place a $25 limit buy"
+      - "curl -H 'Accept: application/json' -i https://cymetica.com/events/universe -> 200 text/html"
+      - "GET https://cymetica.com/openapi-public.json -> no path containing 'universe'"
+      - "GET https://cymetica.com/llms.txt -> the string 'universe' does not occur"
+      - "GET https://cymetica.com/api/v1/events/universe and /api/v1/universe -> 404"
+    body: >
+      The counter-argument first, because it is the one that decides how much
+      this is worth: an MCP client is fine. mcp.json serves find_trade_path,
+      described as a money-path resolver that takes an instrument or asset
+      concept and returns the venues it trades on, which is exactly what the
+      recipe asks for. Claude Code, Claude Desktop, Gemini CLI and the
+      OpenClaw family all arrive through MCP from your own "Connect your
+      platform" cards, and for them nothing is broken.
+
+
+      What is left is narrower but still real. The same page invites callers
+      who do not have that catalogue -- "raw HTTP agents start at /llms.txt",
+      the ChatGPT Custom GPT flow importing openapi-public.json, OpenRouter
+      agents wired to the SDK -- and for those the recipe names a route that
+      returns a web page. An agent that follows it literally parses HTML, or
+      gives up. The nearest published equivalents are named differently
+      (/api/v1/event-cards/symbols/search) and the recipe does not mention
+      them.
+
+
+      The ask is one line of copy, not an endpoint: name find_trade_path for
+      MCP callers and a REST path for the rest, or say plainly that
+      /events/universe is a page for humans. We have no view on which.
+
+  - key: register-response-undocumented
+    findings: [CYM-register-response-undocumented]
+    severity: medium
+    category: documentation
+    url: https://cymetica.com/openapi-public.json
+    title: "POST /mcp/v1/register documents an empty 200 schema, so the api_key /build tells agents to save is absent from the machine-readable contract"
+    expected: >
+      The response of the endpoint the onboarding depends on is described in
+      the schema the same page tells outside agents to import, including the
+      field /build instructs the reader to keep.
+    actual: >
+      The 200 response of POST /mcp/v1/register is documented as
+      "schema": {} -- no properties at all. The property api_key is described
+      only on APIKeyBootstrapResponse, which belongs to POST /auth/api-key, a
+      different endpoint an agent registering itself never calls.
+    steps:
+      - "GET https://cymetica.com/build -> the copy-paste prompt reads: Save the returned api_key and send it as X-API-Key on every call"
+      - "GET https://cymetica.com/openapi-public.json -> paths['/mcp/v1/register'].post.responses['200'].content['application/json'].schema == {}"
+      - "Search the same document for api_key -> it occurs as a property only under components.schemas.APIKeyBootstrapResponse, reached from POST /auth/api-key"
+    body: >
+      First: thank you for the security-scheme fix in the same file today. We
+      re-measured it before writing this and it holds -- every scheme
+      referenced is now declared. This is a different field of that document
+      and does not undo it.
+
+
+      The gap is between two sentences on /build that only work together if
+      the schema describes the reply. The page tells a reader to save a named
+      field out of the registration response, and it tells ChatGPT users to
+      import openapi-public.json as a Custom GPT Action schema. An agent that
+      does the second has no description of the first: the success response of
+      the one call the whole onboarding starts with is an empty object.
+
+
+      Scope, stated so it is not read as more than it is: this report is about
+      the one endpoint /build points at, and the measured values above are
+      about that endpoint alone. Other routes in the file share the shape, but
+      we have not filed them here and no figure above covers them.
+
+
+      The ask is a response_model on POST /mcp/v1/register.
+
+  - key: trust-ladder-vocabulary
+    findings: [CYM-trust-ladder-vocabulary]
+    severity: low
+    category: documentation
+    url: https://cymetica.com/.well-known/mcp.json
+    title: "The trust ladder is named three different ways across /build, llms.txt and mcp.json, so an agent cannot tell which rung it holds"
+    expected: >
+      The four rungs of the trust ladder carry the same names wherever an
+      agent can read them, so a caller can place its own tier against the
+      documented one.
+    actual: >
+      Three surfaces, three vocabularies. Two of the four rungs differ in
+      wording between llms.txt and mcp.json, and the differences are words,
+      not capitalisation. The exact sets are in MEASURED VALUES.
+    steps:
+      - "GET https://cymetica.com/build -> the Level up recipe names the ladder in parentheses"
+      - "GET https://cymetica.com/llms.txt -> \"Register via MCP for trust-based access levels (...)\" names a different four"
+      - "GET https://cymetica.com/.well-known/mcp.json -> collect the distinct trust_tier values over tools[]"
+      - "Lowercase all three sets and compare"
+    body: >
+      This is a naming question, not a gating one: we are not claiming the
+      tiers are enforced wrongly here, and our separate check on what
+      tools/list serves per tier is passing.
+
+
+      mcp.json is the surface that decides -- its per-tool trust_tier is what
+      the catalogue is scoped by, and it is what our regression check for #46
+      reads -- so it seems the right one to align the prose to rather than the
+      other way round. As it stands, an agent told on /build to climb the
+      ladder cannot map the rung it is on to either of the other two
+      documents, and the first rung is the worst case: the page and llms.txt
+      both call it something the manifest does not use at all.
+
+
+      The ask is to pick the manifest's words and use them in both documents,
+      or to publish the mapping somewhere machine-readable.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: read-only
   verification of the REST API, MCP and machine-readable discovery surfaces. No
