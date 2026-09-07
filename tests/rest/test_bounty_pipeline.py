@@ -68,9 +68,30 @@ def _probe(title: str) -> str:
 # validated -> "Awaiting Review", in progress, testing, fixed, paid. Anything
 # before validation is deliberately withheld, because an open report can name
 # an unpatched issue; `invalid` never reaches validation at all.
-PUBLISHED = frozenset({"validated", "in_progress", "in progress", "testing",
-                       "qa_testing", "implementing", "fixed", "resolved",
-                       "paid", "verified"})
+#
+# Held to THEIR published enum, 2026-09-08. The hand-written set intersected it
+# in four words: six of its ten (in progress, testing, qa_testing,
+# implementing, resolved, verified) cannot be returned by this surface at all,
+# and two post-validation statuses that CAN be -- openclaw_testing and
+# ready_for_review -- were missing. A report of ours sitting at ready_for_review
+# and absent from the page fell into `withheld`, out of `due`, and was never
+# looked for: the check passed on exactly the defect it exists to catch, and
+# the reason line called that report one "which they have not validated" about
+# a report validated two stages earlier.
+#
+# Derived from qa/fold.py's sets rather than retyped, so their vocabulary is
+# stated in one place. tests/rest/test_status_vocabulary_is_mapped.py holds
+# those against the live enum, which makes this transitively held too.
+def _published_stages() -> frozenset:
+    from qa.fold import _FIX_CLAIMED_STATUSES, _REPLIED_STATUSES, _REJECTED_STATUSES
+
+    # Everything they engage with, minus the rejections (an invalid report was
+    # never validated) and minus triage, which is before validation.
+    engaged = (_REPLIED_STATUSES | _FIX_CLAIMED_STATUSES) - _REJECTED_STATUSES
+    return frozenset(engaged - {"triaging"})
+
+
+PUBLISHED = _published_stages()
 
 # Sent on every submission. The finding is that some are accepted and then
 # not stored, so what comes back is compared against what went out.
@@ -232,15 +253,28 @@ def test_submitted_fields_are_stored(rest_trusted):
             claim_id="bounty-fields-dropped"))
         return
 
-    dropped = sorted({field for field in SUBMITTED_FIELDS
-                      for row in theirs if not row.get(field)})
+    # Counted per field, not collapsed to a set. The comprehension used to be
+    # `{field for field ... for row in theirs if not row.get(field)}` -- which
+    # fires when ANY one row is missing a field -- while the reason line
+    # submit.py injects as the report headline said "on every one of our
+    # reports". One stale row among 27 sent the vendor a quantified claim
+    # about 27.
+    empty = {field: [r.get("id") for r in theirs if not r.get(field)]
+             for field in SUBMITTED_FIELDS}
+    dropped = sorted(f for f, rows_missing in empty.items()
+                     if len(rows_missing) == len(theirs))
+    partial = sorted(f for f, rows_missing in empty.items()
+                     if rows_missing and len(rows_missing) < len(theirs))
     conclude(Measurement(
         verdict="failed" if dropped else "passed",
         reason=(f"{len(dropped)} of the {len(SUBMITTED_FIELDS)} fields we send "
-                f"come back empty on every one of our reports: "
-                f"{', '.join(dropped) or 'none'}"),
+                f"come back empty on every one of our {len(theirs)} reports: "
+                f"{', '.join(dropped) or 'none'}"
+                + (f" ({len(partial)} more are empty on some but not all: "
+                   f"{', '.join(partial)})" if partial else "")),
         left=dropped, right=list(SUBMITTED_FIELDS),
-        population={"reports_compared": len(theirs)},
+        population={"reports_compared": len(theirs),
+                    "empty_on_some_rows": {f: v for f, v in empty.items() if v}},
         sources={"sent_to": f"POST {TRACKER}", "read_from": MINE},
         claim_id="bounty-fields-dropped"))
 
@@ -267,6 +301,19 @@ def test_hunter_name_is_retained(rest_trusted):
 
     ours = {s["report_id"] for s in _our_submissions()}
     theirs = [r for r in rows if r.get("id") in ours]
+    if not theirs:
+        # `len(kept) < len(theirs)` is `0 < 0` -- False -- so an empty
+        # population passed with nothing compared, on the check that decides
+        # who gets credit for a finding. Both siblings in this file already
+        # guard it; this one did not.
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason="none of our own reports came back, so hunter_name was "
+                   "compared on nothing",
+            population={"rows_returned": len(rows), "ours_filed": len(ours)},
+            sources={"sent_to": f"POST {TRACKER}", "read_from": MINE},
+            claim_id="bounty-hunter-name-lost"))
+        return
     kept = [r["id"] for r in theirs if (r.get("hunter_name") or "") == sent]
 
     conclude(Measurement(

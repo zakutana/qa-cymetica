@@ -484,3 +484,71 @@ def test_publishing_a_definition_does_not_disable_the_money_check():
     # Nothing recorded anywhere is not a contradiction.
     assert money_problems({"awards_recorded_total": 0.0, "total_paid": 0.0},
                           hunters_at_zero, "paid") == []
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_our_published_stage_set_is_theirs():
+    """A12: a hand-written copy of somebody else's vocabulary goes stale.
+
+    `PUBLISHED` in tests/rest/test_bounty_pipeline.py decides which of our
+    reports the work tracker is obliged to show. It was typed by hand from a
+    sentence they said on 2026-09-05 and intersected their published enum in
+    four words: six of its ten could not be returned by that surface at all,
+    and two post-validation statuses that CAN be -- openclaw_testing and
+    ready_for_review -- were missing. A report sitting at ready_for_review and
+    absent from the page was dropped from the denominator, so the check passed
+    on the defect it exists to catch, and told them the report "had not been
+    validated" two stages after they validated it.
+
+    Same shape as the five defects of 2026-09-07: an operand taken from our
+    side while the contract is about theirs.
+    """
+    from tests.rest.test_bounty_pipeline import PUBLISHED
+
+    # Their enum, as published at my-reports -> status_vocabulary.report_status
+    # and verified live on 2026-09-07. test_status_vocabulary_is_mapped.py is
+    # what notices if they change it.
+    theirs = {"pending", "triaging", "validated", "in_progress",
+              "openclaw_testing", "ready_for_review", "fixed", "paid",
+              "duplicate", "invalid", "wontfix"}
+    pre_validation = {"pending", "triaging"}
+    never_validated = {"duplicate", "invalid", "wontfix"}
+
+    assert PUBLISHED <= theirs, \
+        f"we demand publication for statuses they cannot return: {sorted(PUBLISHED - theirs)}"
+    assert PUBLISHED == theirs - pre_validation - never_validated, \
+        ("the set is no longer 'validated onwards', which is the invariant the "
+         "docstring names")
+    assert not PUBLISHED & never_validated, \
+        "an invalid report was never validated and is not owed a place on the page"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_field_missing_from_one_row_is_not_a_claim_about_all_of_them():
+    """A18: the comprehension said any, the sentence we send said every.
+
+    `{field for field in SUBMITTED_FIELDS for row in theirs if not row.get(field)}`
+    puts a field in `dropped` when ONE row lacks it, and submit.py injects the
+    reason as the report headline: "N of the 5 fields we send come back empty
+    on every one of our reports". One stale row among 27 sent the vendor a
+    quantified claim about 27.
+
+    Asserted over the source because the comprehension is the defect, and a
+    live run cannot reach the state while their data happens to be complete.
+    """
+    import inspect
+
+    from tests.rest import test_bounty_pipeline as mod
+
+    source = inspect.getsource(mod.test_submitted_fields_are_stored)
+    assert "len(rows_missing) == len(theirs)" in source, \
+        "a field empty on one row can again be reported as empty on every row"
+    assert "empty_on_some_rows" in source, \
+        "the partial case is no longer carried in the population, so it is invisible"
+
+    # And the two siblings that guard an empty population must both keep doing
+    # so -- A5 was the one that did not, and passed as "0 of 0".
+    for name in ("test_submitted_fields_are_stored", "test_hunter_name_is_retained",
+                 "test_filed_reports_reach_the_work_tracker"):
+        body = inspect.getsource(getattr(mod, name))
+        assert "inconclusive" in body, f"{name} can conclude with nothing compared"
