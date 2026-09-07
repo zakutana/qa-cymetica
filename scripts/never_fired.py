@@ -222,7 +222,11 @@ def _obligations(ledger: dict, events: list[dict]) -> tuple[Counter, dict[str, s
             note("retractions", next((w for w, s in filing if s == "WITHDRAWN"), ""))
         for report in reports:
             for when in rejected_at.get(report.get("report_id"), []):
-                if _at(check, when) != "PASSING":
+                # Both gates the fold applies, so the replay cannot report a
+                # history the ledger would never have shown: a terminal row
+                # settled the dispute by being terminal.
+                if (_at(check, when) != "PASSING"
+                        and _at(filing, when) not in ("WITHDRAWN", "SUPERSEDED")):
                     note("disputed", when)
 
         # Snapshot: nothing records a regression that has since been resolved.

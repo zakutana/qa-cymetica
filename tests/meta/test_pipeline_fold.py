@@ -841,3 +841,32 @@ def test_a_rejection_we_still_reproduce_owes_a_decision():
     assert owed("invalid", "PASSING") == [],         "nothing is owed once our own check agrees with them"
     assert owed("fixed", "REPRODUCING") == []
     assert owed("pending", "REPRODUCING") == []
+
+    # The other way the disagreement ends, and the one this got wrong on its
+    # first firing in the project's life: we gave them the point. The fold
+    # printed "OWED: disputed" beside CYM-trusted-receives-nothing-above-its-
+    # tier, a WITHDRAWN row -- a decision demanded of somebody who had already
+    # made it, on a terminal state, which is precisely the badge nobody can
+    # clear that CLAUDE.md forbids. Withdrawal owes a retraction (rule 11),
+    # not a decision.
+    # The two events name their rows differently -- withdraw through
+    # `findings`, supersede through from_id/to_id, which the fold handles
+    # before the target lookup. Getting that wrong is why the precondition
+    # below is asserted separately: written as one, this test passed a
+    # SUPERSEDED case that had never left RAISED.
+    settlements = {
+        "WITHDRAWN": {"findings": ["CYM-a"]},
+        "SUPERSEDED": {"from_id": "CYM-a", "to_id": "CYM-b"},
+    }
+    for terminal, naming in settlements.items():
+        evt = "withdraw" if terminal == "WITHDRAWN" else "supersede"
+        out = fold(ledger(row("CYM-a", check_state="REPRODUCING")),
+                   events=_filed("CYM-a", 46, "invalid") + [
+                       event(evt, at="2026-09-05T11:00:00+00:00",
+                             reason="they were right", **naming)])
+        settled = out["findings"]["CYM-a"]
+        assert settled["filing"]["state"] == terminal, \
+            f"the {evt} event did not reach the axis; the case below proves nothing"
+        assert settled["obligations"]["disputed"] == [], (
+            f"a {terminal} row is still asked to settle a dispute it closed by "
+            f"being {terminal}")

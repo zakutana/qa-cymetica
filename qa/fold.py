@@ -535,10 +535,13 @@ def _obligations(row: dict) -> dict:
         # They read the report and said no, and our check still fails. One of
         # the two has to give -- we withdraw because they are right, or we
         # answer because we are -- and neither happens on its own. Nothing is
-        # owed once our own check agrees with them.
+        # owed once our own check agrees with them, and nothing is owed on a
+        # terminal row: withdrawing IS giving them the point, and asking a
+        # WITHDRAWN row to settle the dispute again is a badge that can never
+        # be cleared. What that row owes is a retraction, below.
         "disputed": ([r["report_id"] for r in row["filing"]["reports"]
                       if (r.get("status") or "").lower() in _REJECTED_STATUSES]
-                     if check != "PASSING" else []),
+                     if check != "PASSING" and filing not in _TERMINAL else []),
     }
 
 

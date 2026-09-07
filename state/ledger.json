@@ -112,9 +112,7 @@
         "repair_check": false,
         "reopen": [],
         "retractions": [],
-        "disputed": [
-          54
-        ]
+        "disputed": []
       },
       "reproduced_in": [
         "run-20260905T101042Z-45f8015",

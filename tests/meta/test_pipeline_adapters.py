@@ -513,3 +513,60 @@ def test_a_folded_run_record_is_tracked_even_though_the_others_are_not(tmp_path)
 
     assert "state/runs/run-20260907T000000Z-abc1234.json" in git("ls-files"), \
         "the record the ledger stands on was not forced past the ignore rule"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_refused_ledger_still_leaves_its_attestation_tracked(monkeypatch):
+    """LDG: the journal is append-only, so the pair cannot be split.
+
+    2026-09-07, and mine from that morning. compose() appended the
+    run_recorded event; main() force-added the record AFTERWARDS, with
+    write_ledger between them. write_ledger then did what it is for -- refused
+    a ledger that was not forward-only -- main() returned before the add, and
+    the append-only journal was left permanently citing
+    run-20260907T121855Z-ee26eda while the record itself stayed gitignored and
+    unclonable. tests/repo caught it, which is the right outcome and one step
+    later than it needed to be.
+
+    A refusal is not an exceptional path here. Every guard in qa/state.py can
+    take it, and each one leaves the journal already written. So the property
+    is not "tracking happens" but "tracking happens on the failing path too",
+    and the two calls have to be adjacent with nothing fallible between them.
+
+    Stated behaviourally rather than by scanning the source for an ordering:
+    a source check would pass on any file that merely mentions both names.
+    """
+    ledger_mod = _module("scripts/ledger.py")
+    tracked: list[str] = []
+    attested: list[str] = []
+
+    class Refused(Exception):
+        pass
+
+    def refuse(*_a, **_k):
+        raise Refused("not forward-only")
+
+    monkeypatch.setattr(ledger_mod, "_track_run_record", tracked.append)
+    monkeypatch.setattr(ledger_mod, "write_ledger", refuse)
+    monkeypatch.setattr(ledger_mod, "append_event",
+                        lambda e: attested.append(e.get("run_id")))
+    monkeypatch.setattr(ledger_mod, "load_previous", lambda: None)
+
+    run_id = ledger_mod.latest_admissible_run_id("R")
+    if run_id is None:
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason="no admissible run record exists, so the write cannot be "
+                   "driven as far as the refusal this is about"))
+        return
+
+    with pytest.raises(Refused):
+        ledger_mod.main(["--run", run_id])
+
+    assert attested == [run_id], \
+        f"the journal did not attest {run_id}, so there is nothing to orphan"
+    assert tracked == [run_id], (
+        f"write_ledger refused and {run_id} was never force-added, so the "
+        f"journal cites a record no clone can read. Track it beside the "
+        f"attestation, not after the write."
+    )
