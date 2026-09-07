@@ -51,6 +51,11 @@ DASHBOARD = REPO / "dashboard" / "index.html"
 
 HASH_MARKER = re.compile(r"<!-- qa-payload-sha256: ([0-9a-f]{64}) -->")
 
+# What the page actually shows, so the marker can be held against it rather
+# than against a value recomputed from the ledger alone.
+EMBEDDED_PAYLOAD = re.compile(
+    r'<script id="data" type="application/json">(.*?)</script>', re.S)
+
 
 @pytest.fixture(autouse=True)
 def _read_the_repository(monkeypatch):
@@ -120,12 +125,25 @@ def test_committed_ledger_is_what_its_inputs_fold_to():
         fid for fid in set(committed.get("findings", {})) | set(refolded["findings"])
         if committed.get("findings", {}).get(fid) != refolded["findings"].get(fid)
     }
+    # Everything else in the document too. This compared only `findings`, while
+    # the docstring says "ledger.py --check, in-process" and that compares
+    # `committed == ledger` whole. So a stale `counts` block -- exactly the "6
+    # in the tiles" drift the module docstring names as the reason this file
+    # exists -- was invisible here while --check exited 1, and so was an
+    # events_head left behind by a bounty.py run nobody re-folded.
+    elsewhere = sorted(
+        key for key in set(committed) | set(refolded)
+        if key != "findings" and committed.get(key) != refolded.get(key)
+    )
     conclude(Measurement(
-        verdict="failed" if drifted else "passed",
+        verdict="failed" if drifted or elsewhere else "passed",
         reason=(f"{len(drifted)} committed row(s) are not what the journal and "
                 f"run records fold to: {sorted(drifted)}"
-                if drifted else "the committed ledger matches its inputs"),
-        left=sorted(drifted), right=[],
+                if drifted else
+                f"the committed rows fold correctly, but {len(elsewhere)} "
+                f"top-level key(s) of the ledger do not: {elsewhere}"
+                if elsewhere else "the committed ledger matches its inputs"),
+        left=sorted(drifted), right=elsewhere,
         sources={"ledger": "state/ledger.json", "journal": "state/journal/events.jsonl"},
     ))
 
@@ -167,13 +185,42 @@ def test_committed_dashboard_matches_the_committed_ledger():
                              reason=f"the payload cannot be built: {exc}"))
         return
 
+    # Bind the marker to the BODY. Comparing a recomputed hash with the comment
+    # read back out of the same file left the page itself unexamined: nothing
+    # tied that string to the data beneath it, so editing a number in the
+    # embedded payload -- dashboard/index.html is not under state/, so the
+    # PreToolUse hook does not stop it -- kept this guard green on a page that
+    # was not a render of anything. Audit, 2026-09-07.
+    embedded = EMBEDDED_PAYLOAD.search(html)
+    if embedded is None:
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason="the committed dashboard carries no embedded payload block, "
+                   "so the marker cannot be bound to what the page shows",
+            sources={"dashboard": "dashboard/index.html"}))
+        return
+    try:
+        page_hash = render_mod.payload_hash(json.loads(embedded.group(1)))
+    except ValueError as exc:
+        conclude(Measurement(
+            verdict="failed",
+            reason=f"the dashboard's embedded payload is not valid JSON: {exc}",
+            sources={"dashboard": "dashboard/index.html"}))
+        return
+
+    agrees = current == match.group(1) == page_hash
     conclude(Measurement(
-        verdict="passed" if current == match.group(1) else "failed",
-        reason=("the committed dashboard is a render of the committed state"
-                if current == match.group(1) else
+        verdict="passed" if agrees else "failed",
+        reason=("the committed dashboard is a render of the committed state, "
+                "and the payload it carries hashes to the marker stamped on it"
+                if agrees else
                 "the committed dashboard is NOT a render of the committed "
-                "state -- re-run scripts/render.py and commit the result"),
-        left=match.group(1)[:16], right=current[:16],
+                "state -- re-run scripts/render.py and commit the result"
+                if page_hash == match.group(1) else
+                "the dashboard's own payload does not hash to the marker "
+                "stamped on the page: the file has been edited after render"),
+        left=match.group(1)[:16], right={"rebuilt": current[:16],
+                                         "from_the_page": page_hash[:16]},
         sources={"dashboard": "dashboard/index.html"},
     ))
 

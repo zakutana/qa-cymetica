@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import types
 import queue
 import shutil
@@ -70,21 +71,44 @@ def test_a_real_change_reaches_a_subscriber(live):
 
     listener = live.subscribe()
 
-    # Change what the page shows, without touching the committed state: the
-    # digest is a function of the payload, so this is the same signal a real
-    # ledger change produces.
-    live.payload = dict(live.payload)
-    live.payload["display_counts"] = {"MADE UP": 1}
-    live.digest = "0" * 64
-    live.notify()
+    # A REAL change to the state this Live renders from, then rebuild().
+    #
+    # This used to set live.payload, set live.digest to zeros and call
+    # live.notify() by hand -- which exercised the last step and skipped every
+    # one before it. Nothing in the file entered rebuild() on a changed state,
+    # so `rebuild` returning False on a genuine change, or a file dropping out
+    # of WATCHED, left the tab permanently stale with this test green. The
+    # module docstring calls that outcome worse than a snapshot.
+    # A section title, because that is something the page RENDERS. A new
+    # top-level key would not do: build_payload reads `sections` and `totals`
+    # and nothing else out of this file, so an invented key changes the bytes
+    # on disk and not the payload -- and a test that perturbed one would report
+    # "no change reached the tab" for a change the page was never going to
+    # show. Checked before writing it, rather than after.
+    inventory_path = Path(os.environ["QA_STATE_DIR"]) / "inventory.json"
+    inventory = json.loads(inventory_path.read_text(encoding="utf-8"))
+    inventory["sections"][0]["title"] += " (a real change)"
+    inventory_path.write_text(json.dumps(inventory), encoding="utf-8")
 
-    got = listener.get(timeout=5)
+    # The pair the poll loop runs (serve.py:292-293): rebuild decides, notify
+    # wakes. The old test performed only the second half, on a digest it had
+    # set itself.
+    changed = live.rebuild()
+    if changed:
+        live.notify()
+    got = listener.get(timeout=5) if changed else None
+
+    agrees = changed and got == live.digest and got != first
     conclude(Measurement(
-        verdict="passed" if got == live.digest else "failed",
-        reason=("a subscriber received the new digest"
-                if got == live.digest else
+        verdict="passed" if agrees else "failed",
+        reason=("a change under state/ was detected by rebuild() and the new "
+                "digest reached a subscriber"
+                if agrees else
+                "rebuild() did not report the state as changed"
+                if not changed else
                 f"the subscriber received {got!r}, not the current digest"),
-        left=got, right=live.digest,
+        left=got, right={"digest": live.digest, "before": first,
+                         "rebuild_reported_a_change": changed},
         sources={"module": "scripts/serve.py"}))
 
 
