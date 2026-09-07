@@ -44,6 +44,7 @@ from pathlib import Path
 import pytest
 import yaml
 
+from qa.extractors import iter_extractors
 from qa.marks import SafetyTier, qa
 
 REPO = Path(__file__).resolve().parent.parent.parent
@@ -285,8 +286,11 @@ def test_no_check_enumerates_the_answer_it_expects(claim):
     there. agent_names enumerated 21 symbols and passed vacuously on the very
     document that had the defect."""
     for name, spec in claim["sources"].items():
-        kind, _, arg = spec.partition(":")
-        if kind in ("regex_all", "regex_set", "regex"):
+        # iter_extractors, not partition: the wrapper used to hide the regex.
+        # regex_int counts too -- it was not in the tuple at all.
+        for kind, arg in iter_extractors(spec):
+            if kind not in ("regex_all", "regex_set", "regex", "regex_int"):
+                continue
             alternatives = arg.count("|")
             assert alternatives < 3, (
                 f"{claim['id']}.{name} enumerates {alternatives + 1} expected "
@@ -319,7 +323,14 @@ def test_a_title_is_found_on_the_page_however_the_page_quotes_it():
 
     title = "The bounty programme's own reward totals disagree: stats records 36"
     renderings = {
-        "json escape": 'x{"title": "The bounty programme\u0027s own reward totals disagree: stats records 36"}',
+        # RAW, deliberately. Written unraw, Python decoded the escape at
+        # compile time and the one rendering named for the escape carried an
+        # apostrophe instead -- so _JSON_ESCAPE in _squash was exercised by no
+        # case here, and deleting that substitution left all five green while
+        # the live tracker page, which really does serve the escape, read as
+        # not carrying report #73's title at all. The 2026-09-07 incident,
+        # reproduced by the contract audit.
+        "json escape": r'x{"title": "The bounty programme\u0027s own reward totals disagree: stats records 36"}',
         "html entity": "<h3>The bounty programme&#39;s own reward totals disagree: stats records 36</h3>",
         "curly quote": "<h3>The bounty programme\u2019s own reward totals disagree: stats records 36</h3>",
         "re-wrapped":  "<h3>The bounty programme's own\n  reward totals\tdisagree: stats records 36</h3>",

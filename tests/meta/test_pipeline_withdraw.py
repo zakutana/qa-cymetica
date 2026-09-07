@@ -176,15 +176,35 @@ def test_only_state_module_writes_state_files():
         rel = path.relative_to(REPO).as_posix()
         if rel in ("qa/state.py", "scripts/migrate_ledger.py"):
             continue
-        tree = ast.parse(path.read_text(encoding="utf-8"))
+        source = path.read_text(encoding="utf-8")
+        tree = ast.parse(source)
+        lines = source.splitlines()
         for node in ast.walk(tree):
             if not isinstance(node, ast.Call):
                 continue
-            name = getattr(node.func, "attr", None)
-            if name not in ("write_text", "open", "replace"):
+            # A bare `open(...)` is an ast.Name, so reading only `.attr`
+            # skipped it entirely -- and qa/state.py appends the journal with
+            # exactly that idiom. The write names were also short of the ones
+            # a person reaches for next.
+            name = (getattr(node.func, "attr", None)
+                    or getattr(node.func, "id", None))
+            if name not in ("write_text", "write_bytes", "open", "replace",
+                            "rename", "dump", "copy", "copyfile", "copy2"):
                 continue
+            # The path is rarely spelled in the same expression as the write:
+            # `p = ledger_path()` two lines up, then `tmp.write_text(...)` and
+            # `os.replace(tmp, p)`. Neither of those calls contains any of the
+            # three words, which is how the sanctioned writer's own idiom
+            # passed this guard. Look at the surrounding lines, not just the
+            # call. Audit, 2026-09-07.
             src = ast.unparse(node)
-            if "ledger" in src.lower() or "events" in src.lower() or "journal" in src.lower():
+            window = "\n".join(
+                lines[max(0, node.lineno - 6):node.lineno + 1]).lower()
+            # Only the two artefacts the contract names. Widening this to
+            # "state" or "state_dir" catches the run-record recorder and the
+            # dashboard writer, which are allowed to write what they write --
+            # a guard that fires on those would be relaxed within a day.
+            if any(word in window for word in ("ledger", "events", "journal")):
                 offenders.append(f"{rel}:{node.lineno}: {src[:80]}")
     assert not offenders, (
         "only qa/state.py may write state/ledger.json and the journal:\n  "

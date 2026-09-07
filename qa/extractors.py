@@ -35,6 +35,25 @@ class ExtractionError(RuntimeError):
     """The extractor could not produce a value. Never silently returns None."""
 
 
+def iter_extractors(spec: str):
+    """Every extractor in a spec, with composition unwrapped.
+
+    `scope:<heading>|<inner>` hides the extractor that actually reads values
+    behind a wrapper, so anything inspecting `spec.partition(":")[0]` sees
+    "scope" and looks no further. Both enumeration guards did exactly that,
+    and between them they examined ZERO of claims.yaml's regexes -- while the
+    one composed spec in the file is the only regex-bearing one there is.
+    Found by the contract audit, 2026-09-07.
+    """
+    kind, sep, arg = spec.partition(":")
+    if kind == "scope" and sep:
+        _, inner_sep, inner = arg.partition("|")
+        if inner_sep:
+            yield from iter_extractors(inner)
+            return
+    yield kind, arg
+
+
 # ---------------------------------------------------------------------------
 # Minimal JSON path: $.a.b, $.a[0].b, $.a[*].b
 # ---------------------------------------------------------------------------

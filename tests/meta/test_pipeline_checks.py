@@ -32,6 +32,7 @@ from pathlib import Path
 import pytest
 import yaml
 
+from qa.extractors import iter_extractors
 from qa.marks import SafetyTier, qa
 
 REPO = Path(__file__).resolve().parent.parent.parent
@@ -132,8 +133,12 @@ def test_no_claim_enumerates_the_values_it_expects():
     for claim in _claims()["claims"]:
         for name, spec in claim["sources"].items():
             assert "stoplist" not in spec, f"{claim['id']}.{name}"
-            kind, _, arg = spec.partition(":")
-            if kind in ("regex_all", "regex_set"):
+            # The sibling of this guard read only the first token too, so a
+            # regex behind `scope:<heading>|...` was invisible to both -- and
+            # that wrapper holds the only regex in the file.
+            for kind, arg in iter_extractors(spec):
+                if kind not in ("regex_all", "regex_set", "regex", "regex_int"):
+                    continue
                 alternatives = arg.count("|")
                 assert alternatives < 3, (
                     f"{claim['id']}.{name} enumerates {alternatives + 1} expected "
