@@ -3886,13 +3886,14 @@
   "run_id": "run-20260907T060929Z-2871e0e",
   "run_level": "V",
   "updated_at": "2026-09-07T06:12:30+00:00",
+  "run_carried": true,
   "counts": {
     "WITHDRAWN": 9,
     "VERIFIED FIXED": 20,
     "STILL REPRODUCIBLE": 2
   },
   "events_head": {
-    "seq": 936,
-    "chain": "7acb7ca8f9c31e341022ae4d26911136ea574a613bd5ab68ad5183ae37f924d8"
+    "seq": 937,
+    "chain": "f5516eaa943a0980aae41e280e61e90557d3392e10baa790a4d837a1feb54185"
   }
 }

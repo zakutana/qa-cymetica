@@ -40,6 +40,15 @@ fingerprint:
     - {kind: http, path: /.well-known/ai-plugin.json}
     - {kind: http, path: /.well-known/udc.json}
     - {kind: http, path: /openapi.json}
+    # The one they tell outside agents to import, and the bigger of the two by
+    # far: 49 paths against openapi.json's 13. It was not watched, and on
+    # 2026-09-07 they shipped 11 KB of new response and request schemas into it
+    # overnight -- a substantive change to the machine-readable API surface --
+    # and the fingerprint did not move. Every run that day carried
+    # sha256:381e671ceab01 before and after. A corpus that misses the document
+    # under the most active development is a silent-deploy detector with the
+    # deploys taken out.
+    - {kind: http, path: /openapi-public.json}
     - {kind: http, path: /llms.txt}
     - {kind: mcp_tool_names, auth: none}
   # JSON pointers stripped before hashing. Too aggressive and we go blind to
