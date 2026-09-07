@@ -67,44 +67,97 @@ def test_the_reward_totals_agree_with_each_other(rest_anon):
     paid = _number(s.get("total_paid"))
     valid = _number(s.get("valid_reports"))
 
+    # Repaired 2026-09-07, after they answered #73 by publishing meaning rather
+    # than by moving a figure -- which is the better fix and the one this check
+    # did not anticipate. It said "whichever number they correct, the check
+    # goes green"; they corrected neither, and instead added
+    # `total_earned_definition`, a per-hunter split into total_awarded and
+    # total_paid, and `valid_reports_attributed`/`_unattributed`. Both
+    # disagreements turned out to be ambiguity in the documentation, not
+    # contradiction in the data.
+    #
+    # So the check now holds the column against the definition the platform
+    # publishes for it. That is strictly stronger than the old test: it fails
+    # if the two ever stop agreeing, where before it could only complain that
+    # a number was zero.
+    definition = s.get("total_earned_definition")
+    column = {"paid": "total_paid", "awarded": "total_awarded"}.get(definition)
+
     earned = [(_number(e.get("total_earned")), e.get("hunter_name")) for e in entries]
     board_valid = sum(_number(e.get("valid_reports")) or 0 for e in entries)
+    # A programme that says how many of its valid reports are attributed to a
+    # hunter is telling us what the leaderboard is allowed to add up to.
+    attributed = _number(s.get("valid_reports_attributed"))
+    expected_valid = attributed if attributed is not None else valid
 
     problems = []
 
-    # Whichever of the two `total_earned` means, a programme that has recorded
-    # money against reports cannot show zero for every hunter it lists.
-    recorded = max(v for v in (awarded, paid, 0) if v is not None)
-    if recorded > 0 and all(v == 0 for v, _ in earned if v is not None):
-        problems.append(
-            f"stats records {awarded} awarded and {paid} paid, and every one "
-            f"of the {len(entries)} hunter(s) on the leaderboard shows "
-            f"total_earned 0.0"
-        )
+    if column is None:
+        # No definition published, so we are back to the original reading:
+        # whatever `total_earned` means, a programme that has recorded money
+        # against reports cannot show zero for every hunter it lists.
+        recorded = max(v for v in (awarded, paid, 0) if v is not None)
+        if recorded > 0 and all(v == 0 for v, _ in earned if v is not None):
+            problems.append(
+                f"stats records {awarded} awarded and {paid} paid, and every "
+                f"one of the {len(entries)} hunter(s) on the leaderboard shows "
+                f"total_earned 0.0, with no total_earned_definition to say "
+                f"which of the two the column means"
+            )
+    else:
+        for entry in entries:
+            mine = _number(entry.get("total_earned"))
+            theirs = _number(entry.get(column))
+            if mine is None or theirs is None:
+                # Rule 8 one layer down: a column the row does not carry is
+                # not a column that reads zero.
+                conclude(Measurement(
+                    verdict="inconclusive",
+                    reason=f"total_earned_definition says {definition!r} but "
+                           f"{entry.get('hunter_name')!r} carries no "
+                           f"{column}, so the two cannot be held together",
+                    sources={"stats": STATS, "leaderboard": BOARD},
+                    claim_id="reward-totals-disagree"))
+                return
+            if mine != theirs:
+                problems.append(
+                    f"{entry.get('hunter_name')} shows total_earned {mine} "
+                    f"while {column} is {theirs}, and stats defines earned as "
+                    f"{definition!r}"
+                )
 
     # The leaderboard claims to list every hunter -- active_hunters agrees with
     # its length -- so between them they should account for the same reports.
     hunters = _number(s.get("active_hunters"))
-    if (valid is not None and hunters == len(entries) and board_valid != valid):
+    if (expected_valid is not None and hunters == len(entries)
+            and board_valid != expected_valid):
+        named = ("valid_reports_attributed" if attributed is not None
+                 else "valid_reports")
         problems.append(
             f"the leaderboard lists all {len(entries)} hunter(s) and accounts "
             f"for {board_valid:.0f} valid report(s), while stats calls "
-            f"{valid:.0f} valid"
+            f"{expected_valid:.0f} {named}"
         )
 
     conclude(Measurement(
         verdict="failed" if problems else "passed",
         reason=("; ".join(problems) if problems else
                 f"the aggregate and the leaderboard agree: {board_valid:.0f} "
-                f"valid report(s) either way, and the earned column is "
-                f"consistent with {awarded} awarded"),
-        left={"leaderboard": [{"hunter": n, "earned": v} for v, n in earned],
+                f"valid report(s) either way, and every hunter's total_earned "
+                f"matches the {column} it is defined as"),
+        left={"leaderboard": [{"hunter": e.get("hunter_name"),
+                               "earned": _number(e.get("total_earned")),
+                               "awarded": _number(e.get("total_awarded")),
+                               "paid": _number(e.get("total_paid"))}
+                              for e in entries],
               "board_valid_reports": board_valid},
         right={"awards_recorded": s.get("awards_recorded"),
                "awards_recorded_total": awarded,
                "payouts_recorded": s.get("payouts_recorded"),
                "total_paid": paid,
-               "valid_reports": valid},
+               "valid_reports": valid,
+               "valid_reports_attributed": attributed,
+               "total_earned_definition": definition},
         sources={"stats": STATS, "leaderboard": BOARD},
         population={"hunters_listed": len(entries),
                     "active_hunters": s.get("active_hunters")},
