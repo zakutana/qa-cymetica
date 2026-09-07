@@ -486,9 +486,18 @@ def test_pinned_and_bounty_checks_are_collectible():
     # invariants and not snapshots.
     expected = yaml.safe_load(
         (REPO / "tests" / "pinned" / "documented-404.yaml").read_text(encoding="utf-8"))
-    assert len(pinned) == len(expected["paths"]), (
-        f"{len(pinned)} checks collected for {len(expected['paths'])} pinned "
-        f"paths -- a pinned path that collects no check is a row outside the "
+    # A retired path is the one legitimate way a pin stops collecting: the
+    # document stopped promising it, so there is nothing left to measure, and
+    # the retirement is a journal event with a reason. It keeps its line in
+    # the pin file, which is what makes the shrink visible -- so the sum is
+    # still the frozen 26 and this guard still catches a path that vanishes
+    # without anyone saying so.
+    retired = set(expected.get("retired") or ())
+    assert len(pinned) + len(retired) == len(expected["paths"]), (
+        f"{len(pinned)} checks collected and {len(retired)} retired for "
+        f"{len(expected['paths'])} pinned paths -- a pinned path that neither "
+        f"collects a check nor was retired by an event is a row outside the "
         f"verification machinery"
     )
+    assert retired <= {p["path"] for p in expected["paths"]},         "a retired path was never one of the pinned ones"
     assert len(bounty) == 3, f"{len(bounty)} bounty checks collected: {bounty}"

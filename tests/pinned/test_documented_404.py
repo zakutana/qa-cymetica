@@ -45,7 +45,14 @@ def load_pinned() -> dict:
     return yaml.safe_load(PINNED.read_text(encoding="utf-8"))
 
 
-PINS = load_pinned()["paths"]
+# Only what is still promised. A retired path keeps its line in the pin file --
+# the denominator must shrink visibly, never silently -- but it is not
+# collected, because there is nothing left to measure: nothing documents it and
+# it still 404s. Operator's rule, 2026-09-08: "Testujem jen to co je viditelne
+# ne nejake historicke veci." Delete it from `retired:` and it comes straight
+# back as its own nodeid.
+_RETIRED = frozenset(load_pinned().get("retired") or ())
+PINS = [p for p in load_pinned()["paths"] if p["path"] not in _RETIRED]
 
 
 _DOCUMENTS: dict[str, tuple[str | None, str]] = {}
@@ -223,7 +230,7 @@ def test_documented_path_is_served(pin, rest_anon, documents):
 # What the 26 pins MEASURE, hashed: path|source|section for each, sorted.
 # Updated deliberately, in the same commit as the pin change, with the
 # reason in the message. See _pin_digest().
-PIN_DIGEST = "a3cd16e5e12b84e9675157dac9a4bf57a2df13067590d2625d6567a5ea4de36d"
+PIN_DIGEST = "291e78ee2220cf176f0ceee0f2b179a0d831bde51bfe1425839561bdd5b16750"
 
 
 
@@ -243,9 +250,13 @@ def _pin_digest() -> str:
     """
     import hashlib
 
-    pins = load_pinned()["paths"]
+    data = load_pinned()
     canonical = "\n".join(f"{p['path']}|{p['source']}|{p.get('section', '')}"
-                          for p in sorted(pins, key=lambda p: p["path"]))
+                          for p in sorted(data["paths"], key=lambda p: p["path"]))
+    # The retired list too. Adding a path to it stops that path being
+    # collected, which is a shrink of what we measure -- the same silent loss
+    # from the other direction, and the whole reason this file is pinned.
+    canonical += "\nretired:" + ",".join(sorted(data.get("retired") or ()))
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
@@ -254,7 +265,10 @@ def test_the_pinned_population_is_intact():
     """The pin file is the denominator. If it can be edited without anyone
     noticing, the measurement it protects is worth nothing."""
     data = load_pinned()
+    # 26 for ever. Retirement removes a path from what is COLLECTED, never
+    # from what was measured -- see `retired:` in the yaml.
     assert len(data["paths"]) == 26, len(data["paths"])
+    assert set(data.get("retired") or ()) <= {p["path"] for p in data["paths"]},         "a retired path is not one of the 26 that were pinned"
     assert data["population"] == 141
     assert len({p["path"] for p in data["paths"]}) == 26, "a path is pinned twice"
     for pin in data["paths"]:

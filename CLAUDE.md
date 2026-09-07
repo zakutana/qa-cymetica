@@ -118,7 +118,15 @@ then `pytest tests --prereg PRE-NNNN`, then `python scripts/ledger.py --run <run
    is settled with `--reconcile`, never by editing.
 10. **Inconclusive is never a defect.** An empty measurement is not filed. A
     check that stops reading its source is retired by an *event*, and on a
-    filed row it opens a `repair_check` obligation.
+    filed row it opens a `repair_check` obligation. **Retire it promptly, do
+    not collect them.** The operator, 2026-09-08: *"Jestli neco v dokumentaci
+    neni tak to netestuj. Dej to bojem a kdyz se treba znova objevi tak to
+    obnovis. Testujem jen to co je viditelne ne nejake historicke veci,
+    jejich platforma je ve vyvoji a bude se casto menit."* Their platform is
+    under development, so a subject that disappears is normal and not a
+    grievance. The event is what makes the retirement loud instead of silent —
+    that is the whole of what the pin bought us — and a subject that comes
+    back is restored the same way.
 11. **A withdrawal prints its debts.** The row shows "retraction owed on #N"
     until a `retraction-sent` event clears it.
 12. **A test enforces this, not memory.** `tests/repo/test_repo_consistency.py`

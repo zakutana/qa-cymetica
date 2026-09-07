@@ -2040,31 +2040,8 @@
       },
       "checks": [
         "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/account]",
-        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/aerodrome/quote]",
         "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/agentbook/post]",
-        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/backtest/run]",
-        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/backtest/saved]",
-        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/base-dex/tokens]",
-        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/bots/clone]",
-        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/clob/order]",
-        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/cloned-bot/create]",
-        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/cloned-bot/list]",
-        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/defi/pools]",
-        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/exchange/buy]",
-        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/perpetual/user/positions]",
-        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/positions]",
-        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/staking/pools]",
-        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/tuatara/discover]",
-        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/vaix/prices]",
-        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/winner-takes-all/bet]",
-        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/winner-takes-all/epochs]",
-        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/winner-takes-all/markets]",
-        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/mcp/v1/prompts/analyze_market]",
-        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/mcp/v1/prompts/compare_markets]",
-        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/mcp/v1/prompts/explain_probability]",
-        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/mcp/v1/prompts/find_opportunities]",
-        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/mcp/v1/resources/docs/api]",
-        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/mcp/v1/resources/docs/getting-started]"
+        "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/clob/order]"
       ],
       "first_seen": {
         "at": "2026-09-04T10:29:00+00:00",
@@ -2078,12 +2055,12 @@
         "measured_at": "2026-09-07T17:40:13+00:00"
       },
       "check": {
-        "state": "INCONCLUSIVE",
+        "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260907T173409Z-7e2dfcc",
           "at": "2026-09-07T17:40:13+00:00"
         },
-        "pinned_fingerprint": "sha256:5c99ec0980ca532e1de54b67bc841220"
+        "pinned_fingerprint": "sha256:c92311ababf484c409f09471d3d2b835"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -2176,6 +2153,24 @@
         },
         {
           "axis": "check",
+          "from": "CHECK_CHANGED",
+          "to": "PASSING",
+          "cause": {
+            "run_id": "run-20260907T173409Z-7e2dfcc"
+          },
+          "at": "2026-09-07T17:40:13+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "INCONCLUSIVE",
+          "to": "CHECK_CHANGED",
+          "cause": {
+            "run_id": "run-20260907T173409Z-7e2dfcc"
+          },
+          "at": "2026-09-07T17:40:13+00:00"
+        },
+        {
+          "axis": "check",
           "from": "PASSING",
           "to": "INCONCLUSIVE",
           "cause": {
@@ -2186,11 +2181,14 @@
       ],
       "regressions": [],
       "obligations": {
-        "reverify": true,
-        "repair_check": true,
+        "reverify": false,
+        "repair_check": false,
         "reopen": [],
         "retractions": [],
-        "verification_owed": [],
+        "verification_owed": [
+          49,
+          59
+        ],
         "correction_owed": [],
         "disputed": []
       },
@@ -4632,11 +4630,11 @@
   "updated_at": "2026-09-07T17:40:13+00:00",
   "counts": {
     "WITHDRAWN": 9,
-    "VERIFIED FIXED": 20,
-    "OUR CHECK CANNOT TELL": 3
+    "VERIFIED FIXED": 21,
+    "OUR CHECK CANNOT TELL": 2
   },
   "events_head": {
-    "seq": 1148,
-    "chain": "034957e08010614db2ada57e0d3c22f472565d7e7c953363a925eb00cf489e88"
+    "seq": 1194,
+    "chain": "e21bed22758a61d972fdcef6a48a9bf23f5e671f9c98d4c1c9bfde527fc102c6"
   }
 }

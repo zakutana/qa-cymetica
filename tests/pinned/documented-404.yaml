@@ -22,6 +22,27 @@
 #
 # `source` is the document that made the promise; the check reads that
 # document to decide which of the three cases applies.
+#
+# WHAT HAPPENS TO THE THIRD CASE -- operator's standing rule, 2026-09-08:
+#
+#     "Jestli neco v dokumentaci neni tak to netestuj. Dej to bojem a kdyz se
+#      treba znova objevi tak to obnovis. Testujem jen to co je viditelne ne
+#      nejake historicke veci, jejich platforma je ve vyvoji a bude se casto
+#      menit."
+#
+# So INCONCLUSIVE is a waiting room, not a resting place. A pin that reaches
+# it is RETIRED by a retire_check event, with the reason recorded -- and if
+# the path reappears in their documentation, the pin is restored the same way.
+#
+# That does not undo the reason this file exists; it is the point of it. The
+# audit finding was that the denominator shrank SILENTLY. Retiring by an event
+# shrinks it loudly: the path is named, the reason is written, and the ledger
+# can show what left and why. What we must never do is let a path fall out of
+# the count because nobody looked.
+#
+# Done once already: 23 of the 26 were retired on 2026-09-08, all of them
+# still answering 404 and none of them promised anywhere any more. Three
+# remain, each renamed to a path that IS served.
 
 pinned_at: "2026-09-04T10:15:00+00:00"
 pinned_from: tests/meta/fixtures/inventory.before-fix.json
@@ -55,3 +76,37 @@ paths:
   - {path: /api/v1/tuatara/discover,              section: ontology,  source: agent-skills.json, component: discovery.wellknown}
   - {path: /api/v1/backtest/run,                  section: backtest,  source: llms.txt,          component: discovery.llmstxt}
   - {path: /api/v1/backtest/saved,                section: backtest,  source: llms.txt,          component: discovery.llmstxt}
+
+# Retired 2026-09-08. Each of these is no longer promised by ANY document
+# and still answers 404, so there is no documentation-versus-server mismatch
+# left to measure -- which is what #49 and #59 reported. Each retirement is a
+# retire_check event in the journal carrying its own reason; this list is the
+# same fact where a reader will see it.
+#
+# `paths:` above is deliberately NOT edited. It is the frozen denominator and
+# stays at 26 for ever, so what left is visible rather than absent. Restore a
+# path by deleting its line here if their documentation promises it again.
+retired:
+  - /api/v1/aerodrome/quote
+  - /api/v1/backtest/run
+  - /api/v1/backtest/saved
+  - /api/v1/base-dex/tokens
+  - /api/v1/bots/clone
+  - /api/v1/cloned-bot/create
+  - /api/v1/cloned-bot/list
+  - /api/v1/defi/pools
+  - /api/v1/exchange/buy
+  - /api/v1/perpetual/user/positions
+  - /api/v1/positions
+  - /api/v1/staking/pools
+  - /api/v1/tuatara/discover
+  - /api/v1/vaix/prices
+  - /api/v1/winner-takes-all/bet
+  - /api/v1/winner-takes-all/epochs
+  - /api/v1/winner-takes-all/markets
+  - /mcp/v1/prompts/analyze_market
+  - /mcp/v1/prompts/compare_markets
+  - /mcp/v1/prompts/explain_probability
+  - /mcp/v1/prompts/find_opportunities
+  - /mcp/v1/resources/docs/api
+  - /mcp/v1/resources/docs/getting-started
