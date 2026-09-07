@@ -194,6 +194,25 @@ INBOX = "/api/v1/bounty/a2a/inbox/{agent_id}"
 AGENT_ID = "expire76-qa"
 
 
+def tagging_gap(automated: list) -> tuple[int | None, list]:
+    """(index where they began tagging, the ones since that are not tagged).
+
+    Their rule, self-calibrated. Pulled out of the check so it can be held
+    against cases the live inbox does not currently contain -- this check has
+    been wrong three times in one day, twice in a way its own docstring
+    contradicted, and each time the live data happened to agree with the
+    mistake. See tests/meta/test_pipeline_check_quality.py.
+    """
+    def tagged(message) -> bool:
+        return isinstance((message.get("metadata") or {}).get("is_answer"), bool)
+
+    ordered = sorted(automated, key=lambda m: m.get("created_at") or "")
+    started = next((i for i, m in enumerate(ordered) if tagged(m)), None)
+    if started is None:
+        return None, []
+    return started, [m for m in ordered[started:] if not tagged(m)]
+
+
 @qa(component="rest.support", tier=SafetyTier.SAFE, surface="rest",
     claim="a2a-first-pass-contract")
 def test_the_automated_first_pass_is_tagged_as_they_documented(rest_trusted):
@@ -205,19 +224,35 @@ def test_the_automated_first_pass_is_tagged_as_they_documented(rest_trusted):
     they published, so a client written to their stated contract filtered
     nothing and treated a routing prompt as the answer.
 
-    Repaired 2026-09-07, and this check was the fault. It asked whether the
-    key was PRESENT, and the contract is about its VALUE. They shipped the
-    field and set it to `true` on the automated first pass -- 14 of the 21
-    auto-tagged messages in our inbox, each one saying "Automated first-pass
-    reply" in its own body -- so `is_answer` is now present, and worse than
-    absent: a client filtering on `is_answer == false` still keeps every
-    routing prompt, and now believes it has filtered. The check called that
-    fixed, the row read VERIFIED FIXED, and a PASS verification for it went to
-    their server before anyone looked at a value.
+    Third version. The first two were wrong the same way: neither measured the
+    contract it named.
 
-    A presence assertion cannot verify a contract about a value. That is the
-    general form, and it is why this now reads the value and says what it
-    found.
+    v1 asked whether the key was PRESENT, so it went green the moment the
+    field existed, whatever it said. A PASS verification for it reached their
+    server on 2026-09-07 at 13:33.
+
+    v2, written hours later on finding that, asked whether every auto-tagged
+    message carried `is_answer: false` -- reading their contract as "automated
+    implies not an answer". Their resolution on #67 says the opposite in as
+    many words: "metadata.is_answer=true now set on every substantive answer
+    (async first-pass, reviewer reply, cross-thread reply); the
+    routing/preference prompt carries is_answer=false". Two questions that v2
+    collapsed into one: `auto` and `kind` say HOW a message was produced,
+    `is_answer` says WHETHER IT ANSWERS. A first pass is automated and it does
+    answer -- ten of them carry `sources` -- so `true` is right, and v2 sent
+    them a FAIL verification at 13:54 for behaving exactly as they said.
+
+    What the inbox says, read before this was written: every message up to
+    2026-09-06T08:47 carries `is_answer: null`, and all fifteen from
+    2026-09-06T11:07 onward carry `true`. Their fix landed and has held for 27
+    hours without exception.
+
+    So this asks THEIR question. Find the first message that carries the tag;
+    from there on, every one must. Self-calibrating, so there is no date
+    constant to update the next time they ship, it cannot stay red on history
+    nobody can now change, and it goes red the moment an untagged reply
+    arrives after a tagged one. Zero tagged messages is the original defect
+    and fails.
     """
     inbox = rest_trusted.get(INBOX.format(agent_id=AGENT_ID),
                              params={"unread_only": "false"})
@@ -238,32 +273,50 @@ def test_the_automated_first_pass_is_tagged_as_they_documented(rest_trusted):
             claim_id="a2a-first-pass-contract"))
         return
 
-    present = [m for m in auto if "is_answer" in (m.get("metadata") or {})]
-    # The contract is the VALUE. An automated reply that declares itself an
-    # answer defeats the filter it was published for, so it is counted as a
-    # miss whether the field is missing, null, or true.
-    mistagged = [m for m in auto
-                 if (m.get("metadata") or {}).get("is_answer") is not False]
-    usable = [m for m in auto if (m.get("metadata") or {}).get("kind")]
+    ordered = sorted(auto, key=lambda m: m.get("created_at") or "")
+    started, missing = tagging_gap(auto)
+    if started is None:
+        # The original defect: the field they published does not exist, so a
+        # client written to their contract can filter nothing.
+        conclude(Measurement(
+            verdict="failed",
+            reason=(f"none of the {len(auto)} automated repl(ies) carries "
+                    f"metadata.is_answer, the field they documented as the way "
+                    f"to tell a reply from an answer"),
+            left=sorted({k for m in auto for k in (m.get("metadata") or {})}),
+            right="metadata.is_answer",
+            sources={"inbox": INBOX, "their_claim": "metadata.is_answer"},
+            population={"messages": len(messages), "automated": len(auto)},
+            claim_id="a2a-first-pass-contract"))
+        return
+
+    since = ordered[started:]
+    untagged = [m.get("created_at") for m in missing]
+    # Their rule, not ours: a first pass answers, so it is tagged true. The
+    # routing prompt does not, and is tagged false. Reported either way,
+    # because a first pass tagged false would be them contradicting their own
+    # resolution and is worth seeing without being asserted here.
+    answers = sum(1 for m in since
+                  if (m.get("metadata") or {}).get("is_answer") is True)
 
     conclude(Measurement(
-        verdict="failed" if mistagged else "passed",
-        reason=(f"{len(mistagged)} of {len(auto)} automated repl(ies) in the "
-                f"inbox are not tagged metadata.is_answer=false as documented "
-                f"({len(present)} carry the field at all). A client filtering "
-                f"on that value keeps every routing prompt and believes it has "
-                f"filtered. {len(usable)} are filterable by metadata.auto/kind "
-                f"instead, so the capability exists under different names"
-                if mistagged else
-                f"all {len(auto)} automated repl(ies) carry "
-                f"metadata.is_answer=false"),
-        left=sorted({repr((m.get("metadata") or {}).get("is_answer"))
-                     for m in auto}),
-        right="False",
-        sources={"inbox": INBOX, "their_claim": "metadata.is_answer=false"},
+        verdict="failed" if untagged else "passed",
+        reason=(f"{len(untagged)} automated repl(ies) since they began tagging "
+                f"at {ordered[started].get('created_at')} carry no "
+                f"metadata.is_answer: {', '.join(str(u) for u in untagged)}"
+                if untagged else
+                f"every one of the {len(since)} automated repl(ies) since "
+                f"{ordered[started].get('created_at')} carries "
+                f"metadata.is_answer ({answers} of them true, which is their "
+                f"rule for a substantive answer)"),
+        left=len(since) - len(untagged), right=len(since),
+        sources={"inbox": INBOX,
+                 "their_claim": "is_answer=true on every substantive answer; "
+                                "false on the routing/preference prompt"},
         population={"messages": len(messages), "automated": len(auto),
-                    "field_present": len(present),
-                    "mistagged": len(mistagged),
+                    "before_they_began_tagging": started,
+                    "tagging_began": ordered[started].get("created_at"),
+                    "untagged_since": untagged,
                     "kinds": sorted({(m.get("metadata") or {}).get("kind")
                                      for m in auto} - {None})},
         claim_id="a2a-first-pass-contract"))

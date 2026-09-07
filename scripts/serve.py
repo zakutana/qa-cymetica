@@ -235,6 +235,29 @@ def asker(stop: threading.Event, every: float) -> None:
             print(f"[ask] {len(moved)} report(s) moved -- re-fold to take it in: "
                   f"python scripts/ledger.py --events-only")
 
+        # The other surface they answer on. A question sent to /a2a/send is
+        # replied to in the inbox and nowhere else, and until 2026-09-07
+        # nothing in this project read it -- so a reply sat there until
+        # somebody thought to look, which is not a mechanism.
+        try:
+            inbox = bounty.fetch_inbox()
+        except Exception as exc:  # noqa: BLE001 -- a bad read must not kill the server
+            print(f"[ask] inbox read failed, leaving the page as it was: "
+                  f"{type(exc).__name__}: {exc}", file=sys.stderr)
+            continue
+        if inbox["klass"] != "ok":
+            # Rule 8 again: silence here would be indistinguishable from a
+            # vendor who simply has not replied.
+            print(f"[ask] could not read the a2a inbox ({inbox['klass']}); "
+                  f"that is not an empty inbox")
+            continue
+        for message in inbox["new"]:
+            if message["auto"]:
+                continue
+            first = (message["text"] or "").strip().splitlines()
+            print(f"[ask] a2a reply {message['msg_id']} at {message['at']}")
+            print(f"      {bounty._printable(first[0] if first else '')[:100]}")
+
 
 def watcher(live: Live, stop: threading.Event, every: float = POLL_SECONDS) -> None:
     last = _fingerprint()

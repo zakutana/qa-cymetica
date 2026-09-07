@@ -173,6 +173,27 @@ def _capture(response) -> str | None:
         return None
 
 
+def _printable(text: str, encoding: str | None = None) -> str:
+    """Their words, reduced to what this terminal can actually show.
+
+    The console codepage on this workspace is cp1250 and their automated
+    replies open with a trophy emoji, so printing one through an un-pinned
+    stdout raises UnicodeEncodeError. Every entry point pins utf-8, which is
+    why this is a second line of defence -- but the input is a third party's
+    and the failure is total: it would land between the read and the events
+    the read is there to write, taking the snapshot down with it.
+
+    Replaces rather than strips, so a mangled character is visible as one.
+    The journal keeps the original; this is only for the terminal.
+    """
+    encoding = encoding or getattr(sys.stdout, "encoding", None) or "ascii"
+    flat = " ".join((text or "").split())
+    try:
+        return flat.encode(encoding, errors="replace").decode(encoding, errors="replace")
+    except LookupError:  # an encoding name Python does not know
+        return flat.encode("ascii", errors="replace").decode("ascii")
+
+
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
@@ -248,6 +269,110 @@ def refresh_our_reports(client=None) -> dict:
         tmp.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
         os.replace(tmp, out)
     return ours
+
+
+A2A_INBOX = "/api/v1/bounty/a2a/inbox/{agent_id}"
+
+# NOT "scripts/bounty.py". A vendor_read is keyed on at|source|klass, and this
+# function runs in the same second as the tracker read, from the same file,
+# usually with the same klass -- so sharing the source would make the second
+# read a duplicate of the first and it would be silently dropped. The source
+# says which surface was read, which is what the field is for.
+A2A_SOURCE = "scripts/bounty.py a2a-inbox"
+
+
+def fetch_inbox(client=None, agent_id: str | None = None) -> dict:
+    """The other half of the inbound channel, and nobody was reading it.
+
+    Correspondence with them arrives on two surfaces, not one. `my-reports`
+    carries what they did to a report. The a2a inbox carries what they SAID --
+    it is where a question sent to POST /a2a/send is answered, and their own
+    onboarding message promises that "a human will review your message and
+    reply personally" there.
+
+    Nothing read it until 2026-09-07. bounty.py read my-reports and stopped;
+    serve.py --ask runs bounty.py; qa/messages.py parses an archive that
+    stopped being written in round one and says in its docstring that
+    correspondence now arrives through the bounty API -- true, but that API
+    has two surfaces and we were reading one. Twenty-three messages had piled
+    up, and the only reason any had been read was the operator asking out loud
+    how a reply would be noticed. The answer was: it would not.
+
+    One event per message, keyed by the message's own id, so re-reading the
+    same inbox next sweep costs nothing and a reply cannot be missed twice.
+    The automated first pass is flagged rather than dropped: 21 of those 23
+    were routing prompts, and a channel that hides them hides the one real
+    message with them.
+    """
+    import os
+
+    from qa.state import append_event
+
+    agent_id = agent_id or os.environ.get("QA_A2A_AGENT_ID", "expire76-qa")
+
+    owned = client is None
+    token = CURRENT_TIER.set(SafetyTier.SAFE)
+    try:
+        if owned:
+            ids = identities()
+            client = build_client(
+                ids["trusted"] if ids["trusted"].present else ids["anon"],
+                EndpointRegistry.load(), timeout=60.0)
+        try:
+            response = client.get(A2A_INBOX.format(agent_id=agent_id),
+                                  params={"unread_only": "false"})
+            klass = classify_read(response)
+            evidence_id = _capture(response)
+        except Exception:  # noqa: BLE001
+            response, klass, evidence_id = None, "unreachable", None
+        finally:
+            if owned:
+                client.close()
+    finally:
+        CURRENT_TIER.reset(token)
+
+    at = _now()
+    messages = []
+    if klass == "ok":
+        data = response.json()
+        messages = data.get("messages") or data.get("inbox") or []
+
+    append_event({
+        "type": "vendor_read", "at": at, "by": "agent", "source": A2A_SOURCE,
+        "klass": klass, "evidence_id": evidence_id,
+        "rows_returned": len(messages) if klass == "ok" else None,
+    })
+
+    # Rule 8. A refused inbox is not an empty one, and the quiet failure here
+    # is the dangerous one: 401, nothing parsed, nothing written, a sweep that
+    # says nothing -- indistinguishable from a vendor who has not replied.
+    if klass != "ok":
+        return {"klass": klass, "rows_returned": None, "new": [], "at": at}
+
+    new = []
+    for message in messages:
+        msg_id = message.get("id")
+        if not msg_id:
+            continue
+        metadata = message.get("metadata") or {}
+        # append_event is the authority on whether we have seen this, not a
+        # set built here: the journal keys a message on its id, so a second
+        # reader cannot disagree with it.
+        wrote = append_event({
+            "type": "message", "at": message.get("created_at") or at,
+            "by": "vendor", "source": A2A_SOURCE, "msg_id": str(msg_id),
+            "text": message.get("content") or "",
+            "origin": "a2a", "via": message.get("thread_id"),
+        })
+        if wrote == "appended":
+            new.append({"msg_id": str(msg_id),
+                        "at": message.get("created_at") or at,
+                        "auto": bool(metadata.get("auto")),
+                        "kind": metadata.get("kind"),
+                        "thread_id": message.get("thread_id"),
+                        "text": message.get("content") or ""})
+
+    return {"klass": klass, "rows_returned": len(messages), "new": new, "at": at}
 
 
 def fetch_our_reports(client=None, wallet: str | None = None,
@@ -471,6 +596,7 @@ def fetch() -> dict:
     filing_probe = probe_filing_auth()
     ours = fetch_our_reports()
     qa = fetch_qa_tracker()
+    inbox = fetch_inbox()
 
     closed = [r for r in reports if r.get("status") in ("fixed", "resolved", "closed")]
     unevidenced = [
@@ -485,6 +611,7 @@ def fetch() -> dict:
         "filing_probe": filing_probe,
         "our_reports": ours,
         "qa_tracker": qa,
+        "a2a_inbox": inbox,
         "closed": len(closed),
         "closed_without_recorded_evidence": len(unevidenced),
         "evidence_fields_checked": EVIDENCE_FIELDS,
@@ -516,3 +643,20 @@ if __name__ == "__main__":
     print(f"   total={data['total']}  statuses={data['statuses']}")
     print(f"   closed={data['closed']}  "
           f"without any recorded evidence={data['closed_without_recorded_evidence']}")
+
+    # Said out loud, because the whole point of reading the inbox is that a
+    # reply must not depend on somebody remembering to look. An automated
+    # first pass is counted but not announced; a real one is announced.
+    inbox = data.get("a2a_inbox") or {}
+    if inbox.get("klass") != "ok":
+        print(f"   a2a inbox: could not read it ({inbox.get('klass')}) -- "
+              f"that is not an empty inbox")
+    else:
+        answers = [m for m in inbox.get("new") or [] if not m["auto"]]
+        auto = len(inbox.get("new") or []) - len(answers)
+        print(f"   a2a inbox: {inbox.get('rows_returned')} message(s), "
+              f"{len(answers)} new repl(ies), {auto} new automated")
+        for message in answers:
+            first = (message["text"] or "").strip().splitlines()
+            print(f"   >> {message['at']}  {message['msg_id']}")
+            print(f"      {_printable(first[0] if first else '')[:100]}")

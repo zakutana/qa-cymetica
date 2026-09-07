@@ -316,3 +316,54 @@ def test_a_title_is_found_on_the_page_however_the_page_quotes_it():
     assert _probe("The bounty programme's own reward totals disagree") \
         != _probe("The bounty programme's own tier table contradicts"), \
         "two real titles squash to the same probe; _PROBE_CHARS is too short"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_is_answer_rule_is_self_calibrating_and_still_bites():
+    """The rule that check has now been wrong about three times in one day.
+
+    v1 asserted the field was PRESENT and went green whatever it said. v2
+    asserted it was FALSE on every automated reply, which is the opposite of
+    the contract their own resolution states. Both times the live inbox
+    happened to agree with the mistake, so running the check proved nothing --
+    which is exactly why the rule is held here against cases the live data
+    does not currently contain.
+
+    Two properties, and they pull against each other. It must not stay red on
+    messages from before they began tagging, or it is a badge nobody can
+    clear. And it must go red the moment they stop, or it is decoration.
+    """
+    from tests.rest.test_qa_agent_channel import tagging_gap
+
+    def m(at, is_answer="absent"):
+        meta = {"auto": True, "kind": "first_pass"}
+        if is_answer != "absent":
+            meta["is_answer"] = is_answer
+        return {"created_at": at, "metadata": meta}
+
+    # The shape of the real inbox on 2026-09-07: untagged, then tagged, and
+    # the untagged ones are history nobody can now change.
+    started, missing = tagging_gap(
+        [m("2026-09-06T05:58"), m("2026-09-06T08:47"),
+         m("2026-09-06T11:07", True), m("2026-09-07T13:52", True)])
+    assert (started, missing) == (2, []), \
+        "history from before they began tagging keeps the check permanently red"
+
+    # A regression: one arrives untagged after they had started.
+    started, missing = tagging_gap(
+        [m("2026-09-06T11:07", True), m("2026-09-07T13:52")])
+    assert started == 0 and [x["created_at"] for x in missing] == ["2026-09-07T13:52"], \
+        "they stopped tagging and the check did not notice"
+
+    # Order comes from the timestamps, not from the order the inbox returned
+    # them -- theirs is newest-first, which would invert the calibration.
+    newest_first = [m("2026-09-07T13:52"), m("2026-09-06T11:07", True)]
+    assert [x["created_at"] for x in tagging_gap(newest_first)[1]] == ["2026-09-07T13:52"]
+
+    # Never tagged at all is the original defect, and is not "no gap".
+    assert tagging_gap([m("2026-09-06T05:58"), m("2026-09-06T08:47")]) == (None, [])
+    assert tagging_gap([]) == (None, [])
+
+    # `false` is a tag. Their routing prompt carries it, and a check that
+    # counted only `true` would call their documented behaviour a miss.
+    assert tagging_gap([m("2026-09-06T11:07", True), m("2026-09-07T13:52", False)]) == (0, [])

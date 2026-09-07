@@ -35,7 +35,21 @@ echo   Starting the QA console. Keep this window open.
 echo   Close it, or press Ctrl-C, to stop the server.
 echo.
 
-%PY% scripts\serve.py --open %*
+rem --ask 15 is ON here, and that is a decision rather than a default.
+rem
+rem Without it the console is a viewer: it redraws when a file on this machine
+rem changes and never touches the network, so the bell can only ever show what
+rem a sweep already fetched. The operator ran it that way for two days
+rem believing the bell was live, which it was not.
+rem
+rem With it, the server asks their tracker and the a2a inbox every 15 minutes
+rem and the bell lights on its own. The cost is real: it writes, so after a
+rem change the tree is dirty until it is committed, and a run started in that
+rem window cannot reach level V. That cost falls on the agent running sweeps,
+rem not on the person watching the page -- which is why it is on.
+rem
+rem Pass --ask 0 to turn it off:  console.cmd --ask 0
+%PY% scripts\serve.py --open --ask 15 %*
 
 rem Only pause on a failure; a clean Ctrl-C should just close.
 if errorlevel 1 (

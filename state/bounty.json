@@ -1,8 +1,9 @@
 {
-  "fetched_at": "2026-09-07T13:53:39+00:00",
+  "fetched_at": "2026-09-07T14:13:36+00:00",
   "total": 42,
   "statuses": {
-    "fixed": 20
+    "fixed": 19,
+    "in_progress": 1
   },
   "filing_probe": {
     "endpoint": "POST /api/v1/bounty/reports",
@@ -24,13 +25,14 @@
   "our_reports": {
     "endpoint": "GET /api/v1/bounty/my-reports?wallet_address=<addr>",
     "klass": "ok",
-    "read_at": "2026-09-07T13:53:37+00:00",
-    "evidence_id": "52f36c2b83e5c14234a8a5403cf1d3c5740fc6a4fd31ce4b0609f1b78d3b4257",
+    "read_at": "2026-09-07T14:13:32+00:00",
+    "evidence_id": "2e52bc94ea77ac8d9654865f1192b0e402a0525b101b746c50b873996100b889",
     "rows_returned": 33,
     "server_total": 33,
     "total": 33,
     "statuses": {
-      "fixed": 31,
+      "fixed": 30,
+      "in_progress": 1,
       "invalid": 2
     },
     "fields_sent_but_not_stored": [],
@@ -210,7 +212,7 @@
         "fixed_at": "2026-09-04T12:26:51.773233",
         "validated_at": "2026-09-04T12:26:51.463835",
         "triaged_at": "2026-09-04T12:26:51.260006",
-        "status_notes": "Fixed in commit 6b83b416c4 (live). Cause labels as requested: (c) TYPOS/RENAMES corrected in place — clob/order->clob/orders, bots/clone->agents/clone, tuatara/discover->discover/url, exchange/buy->swap/execute, winner-takes-all/*->wta/*, cloned-bot/*->cloned-bots/* (real subroutes), agentbook/post->agentbook/posts, account->account/me, positions->account/me/portfolio, vaix/prices->vaix/price-history, perpetual/user/positions->perpetual/user/position/{symbol}, aerodrome + base-dex -> /base/aerodrome/* real paths, staking/pools->staking/stats + staking/tiers. (a/b) REMOVED-OR-NEVER-BUILT deleted from the docs — backtest/run, backtest/saved, defi/pools, the /mcp/v1/prompts/* entries (the JSON-RPC server implements no prompts methods), and the GET-able /mcp/v1/tools/<name> and /mcp/v1/resources/* link rendering (tools are invoked via JSON-RPC tools/call; resources via resources/read). Each replacement path was verified against the live route table before editing.",
+        "status_notes": "Fixed in commit 6b83b416c4 (live). Cause labels as requested: (c) TYPOS/RENAMES corrected in place — clob/order->clob/orders, bots/clone->agents/clone, tuatara/discover->discover/url, exchange/buy->swap/execute, winner-takes-all/*->wta/*, cloned-bot/*->cloned-bots/* (real subroutes), agentbook/post->agentbook/posts, account->account/me, positions->account/me/portfolio, vaix/prices->vaix/price-history, perpetual/user/positions->perpetual/user/position/{symbol}, aerodrome + base-dex -> /base/aerodrome/* real paths, staking/pools->staking/stats + staking/tiers. (a/b) REMOVED-OR-NEVER-BUILT deleted from the docs — backtest/run, backtest/saved, defi/pools, the /mcp/v1/prompts/* entries (the JSON-RPC server implements no prompts methods), and the GET-able /mcp/v1/tools/<name> and /mcp/v1/resources/* link rendering (tools are invoked via JSON-RPC tools/call; resources via resources/read). Each replacement path was verified against the live route table before editing.\n[reporter-verification PASS 2026-09-07 13:54 UTC by expire76 test_run=run-20260907T135100Z-0923c37]",
         "ticket_url": null,
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -228,7 +230,7 @@
         "fixed_at": "2026-09-04T12:26:52.617540",
         "validated_at": "2026-09-04T12:26:52.353380",
         "triaged_at": "2026-09-04T12:26:52.185981",
-        "status_notes": "Fixed in commit 6b83b416c4 (live): the llms.txt MCP Tools section no longer lists the 7 nonexistent names; it now names only verified public-tier tools and states that JSON-RPC tools/list is the authoritative per-tier catalog.",
+        "status_notes": "Fixed in commit 6b83b416c4 (live): the llms.txt MCP Tools section no longer lists the 7 nonexistent names; it now names only verified public-tier tools and states that JSON-RPC tools/list is the authoritative per-tier catalog.\n[reporter-verification PASS 2026-09-07 13:54 UTC by expire76 test_run=run-20260907T135100Z-0923c37]\n[reporter-verification PASS 2026-09-07 13:54 UTC by expire76 test_run=run-20260907T135100Z-0923c37]",
         "ticket_url": null,
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -246,7 +248,7 @@
         "fixed_at": "2026-09-04T12:26:53.212189",
         "validated_at": "2026-09-04T12:26:52.993532",
         "triaged_at": "2026-09-04T12:26:52.796460",
-        "status_notes": "Fixed in commit landed as 3470bafec: skill ids for shared capabilities unified across agent-card.json and agent-skills.json (get-market-data->market-data, exchange-crypto->exchange-tokens). Remaining scope difference is intentional: agent-card.json (A2A) is the full discovery card including informational skills; agent-skills.json is the endpoint-actionable subset — with ids now consistent wherever both name the same capability.",
+        "status_notes": "Fixed in commit landed as 3470bafec: skill ids for shared capabilities unified across agent-card.json and agent-skills.json (get-market-data->market-data, exchange-crypto->exchange-tokens). Remaining scope difference is intentional: agent-card.json (A2A) is the full discovery card including informational skills; agent-skills.json is the endpoint-actionable subset — with ids now consistent wherever both name the same capability.\n[reporter-verification PASS 2026-09-07 13:55 UTC by expire76 test_run=run-20260907T135100Z-0923c37]\n[reporter-verification PASS 2026-09-07 13:55 UTC by expire76 test_run=run-20260907T135100Z-0923c37]",
         "ticket_url": null,
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -264,7 +266,7 @@
         "fixed_at": "2026-09-04T12:26:53.660651",
         "validated_at": "2026-09-04T12:26:53.530220",
         "triaged_at": "2026-09-04T12:26:53.397181",
-        "status_notes": "Fixed across commits 6b83b416c4 + 3470bafec: llms.txt commit figure corrected to 21,800+ (measured live 21,840 at your report time); pair count corrected to 568 total with the 9 core curated pairs named as a subset; agent counts now state what they count — 16 is the strategy enum, 11 is the clonable species catalog (live at /api/v1/agents/species), 8 is agents active on AgentBook — and the discovery descriptions were reworded to name the measure or defer to the live endpoint instead of quoting divergent bare numbers.\n[reporter-verification PASS 2026-09-07 13:33 UTC by expire76 test_run=run-20260907T123825Z-8bf609f]",
+        "status_notes": "Fixed across commits 6b83b416c4 + 3470bafec: llms.txt commit figure corrected to 21,800+ (measured live 21,840 at your report time); pair count corrected to 568 total with the 9 core curated pairs named as a subset; agent counts now state what they count — 16 is the strategy enum, 11 is the clonable species catalog (live at /api/v1/agents/species), 8 is agents active on AgentBook — and the discovery descriptions were reworded to name the measure or defer to the live endpoint instead of quoting divergent bare numbers.\n[reporter-verification PASS 2026-09-07 13:33 UTC by expire76 test_run=run-20260907T123825Z-8bf609f]\n[reporter-verification PASS 2026-09-07 13:54 UTC by expire76 test_run=run-20260907T135100Z-0923c37]\n[reporter-verification PASS 2026-09-07 13:54 UTC by expire76 test_run=run-20260907T135100Z-0923c37]",
         "ticket_url": null,
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -282,7 +284,7 @@
         "fixed_at": "2026-09-04T14:50:47.351274",
         "validated_at": "2026-09-04T12:26:53.839834",
         "triaged_at": "2026-09-04T12:26:53.743013",
-        "status_notes": "Both questions answered, plus a data fix.\n\n1) Filtered view, not data loss: GET /api/v1/bounty/reports is deliberately the public post-validation view (VALIDATED and later stages only), so unverified reports — which can name unpatched issues — are not published. Unresolved items are retained; an authenticated submitter can read their own PENDING report at GET /reports/{id}. Nothing is dropped.\n\n2) Yes — your six earlier reports (#7–#12) are bound to hunter profile 5 with wallet 0xde9CeAaB301A9e47b1bAcd448B3DDbbA85e83398 (verified in bug_bounty_reports.wallet_address / hunter_id on 2026-09-04).\n\n3) validated_at was null on the 15 pre-June FIXED rows because they were closed before per-stage timestamps existed (validation and fix were recorded in one step). Those 15 rows now carry validated_at = fixed_at (or updated_at where fixed_at was also null) together with an explicit status_notes line saying the stamp is historical and not a fresh re-verification — no silent backdating. Every report closed since 2026-09-04 12:26 UTC (#46 onward) is stamped triaged_at → validated_at → fixed_at as it moves.\n\nReproduce: GET https://cymetica.com/api/v1/bounty/reports → count validated_at nulls → 0.",
+        "status_notes": "Both questions answered, plus a data fix.\n\n1) Filtered view, not data loss: GET /api/v1/bounty/reports is deliberately the public post-validation view (VALIDATED and later stages only), so unverified reports — which can name unpatched issues — are not published. Unresolved items are retained; an authenticated submitter can read their own PENDING report at GET /reports/{id}. Nothing is dropped.\n\n2) Yes — your six earlier reports (#7–#12) are bound to hunter profile 5 with wallet 0xde9CeAaB301A9e47b1bAcd448B3DDbbA85e83398 (verified in bug_bounty_reports.wallet_address / hunter_id on 2026-09-04).\n\n3) validated_at was null on the 15 pre-June FIXED rows because they were closed before per-stage timestamps existed (validation and fix were recorded in one step). Those 15 rows now carry validated_at = fixed_at (or updated_at where fixed_at was also null) together with an explicit status_notes line saying the stamp is historical and not a fresh re-verification — no silent backdating. Every report closed since 2026-09-04 12:26 UTC (#46 onward) is stamped triaged_at → validated_at → fixed_at as it moves.\n\nReproduce: GET https://cymetica.com/api/v1/bounty/reports → count validated_at nulls → 0.\n[reporter-verification PASS 2026-09-07 13:55 UTC by expire76 test_run=run-20260907T135100Z-0923c37]",
         "ticket_url": null,
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -318,7 +320,7 @@
         "fixed_at": "2026-09-04T14:55:24.620407",
         "validated_at": "2026-09-07T00:24:29.662878",
         "triaged_at": "2026-09-07T00:24:29.662878",
-        "status_notes": "Fixed in commit d12ea54a9 (live 2026-09-04 14:49 UTC).\n\nEvery occurrence in llms.txt now reads \"11 AI trading agent species\" (lines 4, 11, 56, 154, 546); llms-full.txt, which still carried the phantom DELTA/STAT/… list, now names the same 11 real species (MACD, RSI, BOLL, VOL, TREND, STOCH, ICHI, FIB, ATR, DIV, PCPN) and points at GET /api/v1/agents/species as the live source; the directory-registrar profile copy (11 files) was swept to the same figure so no outbound listing drifts from the document.\n\nOn the invariant: the count is not yet generated at build time — llms.txt is a static file served from static/. What changed is that the figure now appears in exactly one form and the live list is referenced next to it. Reproduce: GET https://cymetica.com/llms.txt, grep \"10 AI trading agents\" → 0 matches; grep \"11 AI trading agent species\" → all occurrences.",
+        "status_notes": "Fixed in commit d12ea54a9 (live 2026-09-04 14:49 UTC).\n\nEvery occurrence in llms.txt now reads \"11 AI trading agent species\" (lines 4, 11, 56, 154, 546); llms-full.txt, which still carried the phantom DELTA/STAT/… list, now names the same 11 real species (MACD, RSI, BOLL, VOL, TREND, STOCH, ICHI, FIB, ATR, DIV, PCPN) and points at GET /api/v1/agents/species as the live source; the directory-registrar profile copy (11 files) was swept to the same figure so no outbound listing drifts from the document.\n\nOn the invariant: the count is not yet generated at build time — llms.txt is a static file served from static/. What changed is that the figure now appears in exactly one form and the live list is referenced next to it. Reproduce: GET https://cymetica.com/llms.txt, grep \"10 AI trading agents\" → 0 matches; grep \"11 AI trading agent species\" → all occurrences.\n[reporter-verification PASS 2026-09-07 13:54 UTC by expire76 test_run=run-20260907T135100Z-0923c37]",
         "ticket_url": null,
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -336,7 +338,7 @@
         "fixed_at": "2026-09-04T14:55:40.305575",
         "validated_at": "2026-09-07T00:24:29.662878",
         "triaged_at": "2026-09-07T00:24:29.662878",
-        "status_notes": "Fixed in commit d12ea54a9 (live 2026-09-04 14:49 UTC).\n\nasset-discovery and portfolio-management were added to agent-card.json (skills[].id), so agent-skills.json (10 ids) is now a strict subset of the card (15 ids). The subset relationship is pinned by tests/test_agent_card_skills_subset.py, which parses both route handlers in src/main.py and fails the build if any skills id is absent from the card — true by test, since the two documents carry different schemas (card: tags/examples/url; skills: triggers/endpoint/method) and are not generated from one another.\n\nReproduce: GET /.well-known/agent-card.json → collect skills[].id (15); GET /.well-known/agent-skills.json → collect skills[].id (10); skills − card = ∅.",
+        "status_notes": "Fixed in commit d12ea54a9 (live 2026-09-04 14:49 UTC).\n\nasset-discovery and portfolio-management were added to agent-card.json (skills[].id), so agent-skills.json (10 ids) is now a strict subset of the card (15 ids). The subset relationship is pinned by tests/test_agent_card_skills_subset.py, which parses both route handlers in src/main.py and fails the build if any skills id is absent from the card — true by test, since the two documents carry different schemas (card: tags/examples/url; skills: triggers/endpoint/method) and are not generated from one another.\n\nReproduce: GET /.well-known/agent-card.json → collect skills[].id (15); GET /.well-known/agent-skills.json → collect skills[].id (10); skills − card = ∅.\n[reporter-verification PASS 2026-09-07 13:55 UTC by expire76 test_run=run-20260907T135100Z-0923c37]",
         "ticket_url": null,
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -354,7 +356,7 @@
         "fixed_at": "2026-09-05T18:46:58.469284",
         "validated_at": "2026-09-07T00:24:29.662878",
         "triaged_at": "2026-09-07T00:24:29.662878",
-        "status_notes": "Evidence recorded 2026-09-05 (the 18:46 UTC closure was posted without notes — that gap is itself being closed, see report #60).\n\nVerified path-by-path against the live service at 18:45 UTC: /llms.txt no longer contains /api/v1/account or /api/v1/agentbook/post (the remaining agentbook mentions are the live plural route /api/v1/agentbook/posts); /.well-known/agent-skills.json no longer contains /api/v1/clob/order; openapi.json lists none of the three. The one remaining stale mention was /.well-known/skills/default/SKILL.md documenting GET /api/v1/account — corrected to the served route /api/v1/account/me in commit 6ef9efc79 (live 18:43 UTC). All four discovery documents now agree; the three old paths appear in none of them.\n\nReproduce: GET https://cymetica.com/llms.txt, /.well-known/agent-skills.json, /openapi.json, /.well-known/skills/default/SKILL.md and grep for \"/api/v1/account\" (exact), \"/api/v1/agentbook/post\" (exact) and \"/api/v1/clob/order\" (exact) → 0 matches in each.",
+        "status_notes": "Evidence recorded 2026-09-05 (the 18:46 UTC closure was posted without notes — that gap is itself being closed, see report #60).\n\nVerified path-by-path against the live service at 18:45 UTC: /llms.txt no longer contains /api/v1/account or /api/v1/agentbook/post (the remaining agentbook mentions are the live plural route /api/v1/agentbook/posts); /.well-known/agent-skills.json no longer contains /api/v1/clob/order; openapi.json lists none of the three. The one remaining stale mention was /.well-known/skills/default/SKILL.md documenting GET /api/v1/account — corrected to the served route /api/v1/account/me in commit 6ef9efc79 (live 18:43 UTC). All four discovery documents now agree; the three old paths appear in none of them.\n\nReproduce: GET https://cymetica.com/llms.txt, /.well-known/agent-skills.json, /openapi.json, /.well-known/skills/default/SKILL.md and grep for \"/api/v1/account\" (exact), \"/api/v1/agentbook/post\" (exact) and \"/api/v1/clob/order\" (exact) → 0 matches in each.\n[reporter-verification PASS 2026-09-07 13:54 UTC by expire76 test_run=run-20260907T135100Z-0923c37]",
         "ticket_url": null,
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -372,7 +374,7 @@
         "fixed_at": "2026-09-05T19:32:48.396470",
         "validated_at": "2026-09-05T19:28:24.554635",
         "triaged_at": "2026-09-05T19:28:24.554635",
-        "status_notes": "Validated 2026-09-05 19:35 UTC. Confirmed: report #59 was moved to fixed at 18:46:58 UTC with every evidence field null. The verification that justified the closure existed (path-by-path live check of llms.txt, agent-skills.json, openapi.json and SKILL.md at 18:45 UTC) but was recorded on the internal ticket, not on the report. #59 now carries those notes.\n\nFix (landing with the next release): the admin status update refuses (HTTP 422) any transition to fixed / invalid / wontfix / duplicate unless at least one evidence field — status_notes, ticket_url, ticket_id, fix_pr_url, fix_commit or duplicate_of_id — is set on the update or already on the row, and nothing is mutated when it refuses. Pinned by tests for all four closed statuses.\n\nAlso fixed from the same report: GET /api/v1/bounty/my-reports compared the stored wallet case-sensitively, so the six oldest reports on this wallet (#7–#12, stored mixed-case) were missing from the hunter's own view. Data normalized now (all 20 reports return); code compares case-insensitively from the next release.\n\nReproduce (after release): PUT /api/v1/bounty/admin/reports/{id} {\"status\":\"fixed\"} with no evidence → 422 \"requires evidence\". GET /api/v1/bounty/my-reports?wallet_address=<your wallet> with your X-API-Key → total 20.",
+        "status_notes": "Validated 2026-09-05 19:35 UTC. Confirmed: report #59 was moved to fixed at 18:46:58 UTC with every evidence field null. The verification that justified the closure existed (path-by-path live check of llms.txt, agent-skills.json, openapi.json and SKILL.md at 18:45 UTC) but was recorded on the internal ticket, not on the report. #59 now carries those notes.\n\nFix (landing with the next release): the admin status update refuses (HTTP 422) any transition to fixed / invalid / wontfix / duplicate unless at least one evidence field — status_notes, ticket_url, ticket_id, fix_pr_url, fix_commit or duplicate_of_id — is set on the update or already on the row, and nothing is mutated when it refuses. Pinned by tests for all four closed statuses.\n\nAlso fixed from the same report: GET /api/v1/bounty/my-reports compared the stored wallet case-sensitively, so the six oldest reports on this wallet (#7–#12, stored mixed-case) were missing from the hunter's own view. Data normalized now (all 20 reports return); code compares case-insensitively from the next release.\n\nReproduce (after release): PUT /api/v1/bounty/admin/reports/{id} {\"status\":\"fixed\"} with no evidence → 422 \"requires evidence\". GET /api/v1/bounty/my-reports?wallet_address=<your wallet> with your X-API-Key → total 20.\n[reporter-verification PASS 2026-09-07 13:55 UTC by expire76 test_run=run-20260907T135100Z-0923c37]",
         "ticket_url": null,
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -408,7 +410,7 @@
         "fixed_at": null,
         "validated_at": null,
         "triaged_at": null,
-        "status_notes": "Closed INVALID at the reporter's request 2026-09-05 20:10 UTC (the report is a correction, not a defect). Record kept on the referenced reports: #52 stays FIXED — the pair-count sentence in llms.txt is now a floor plus a pointer to list_clob_pairs.total (569 live); your retraction of the \"200 vs 568\" comparison is noted on the record. #53 stays FIXED — the 401 was an unauthenticated call by your own account, but the case-sensitive wallet compare that hid reports #7–#12 was real and is fixed. #54 stays INVALID — your re-check via GET /mcp/v1/agents/me (allied; 56 served = 56 entitled, negative control fails at lower tiers) matches ours. Thank you for the measurement discipline note (\"cannot measure\" over defaulted values); it is exactly the shape that produced the four false comparisons. No payout applies to a correction.",
+        "status_notes": "Closed INVALID at the reporter's request 2026-09-05 20:10 UTC (the report is a correction, not a defect). Record kept on the referenced reports: #52 stays FIXED — the pair-count sentence in llms.txt is now a floor plus a pointer to list_clob_pairs.total (569 live); your retraction of the \"200 vs 568\" comparison is noted on the record. #53 stays FIXED — the 401 was an unauthenticated call by your own account, but the case-sensitive wallet compare that hid reports #7–#12 was real and is fixed. #54 stays INVALID — your re-check via GET /mcp/v1/agents/me (allied; 56 served = 56 entitled, negative control fails at lower tiers) matches ours. Thank you for the measurement discipline note (\"cannot measure\" over defaulted values); it is exactly the shape that produced the four false comparisons. No payout applies to a correction.\n[reporter-verification PASS 2026-09-07 13:54 UTC by expire76 test_run=run-20260907T135100Z-0923c37]",
         "ticket_url": null,
         "fix_pr_url": null,
         "reward_amount": 0.0
@@ -480,7 +482,7 @@
         "fixed_at": "2026-09-05T23:12:20.454336",
         "validated_at": "2026-09-05T23:12:35.743281",
         "triaged_at": "2026-09-05T23:12:35.393231",
-        "status_notes": "Fixed @b66f344fe (live 2026-09-05 23:0x UTC). Root cause: POST /api/v1/bounty/a2a/send never committed the inbound row, so async messages were rolled back and only the automated preference prompt was ever delivered. Fix: route commits; prompt self-declares NOT-an-answer (metadata.is_answer=false, message id, parent_message_id); async questions to nexus get a grounded first-pass qa_answer (metadata.kind=first_pass). qa-agent/ask grounds on live endpoint data when the question names an endpoint/served value; answer carries the JSON verbatim, sources cite the endpoint, confidence>=0.85, live_data field. Verify: POST /api/v1/bounty/qa-agent/ask {question:\"What currency does GET /api/v1/bounty/reward-tiers return and what is the critical range?\"} -> answer contains CYM, 400000, 1000000; live_data[0].source == GET /api/v1/bounty/reward-tiers; no _hint. Invariant: a question naming a public GET endpoint or a served value is answered with that endpoint data, never FAQ prose alone.",
+        "status_notes": "Fixed @b66f344fe (live 2026-09-05 23:0x UTC). Root cause: POST /api/v1/bounty/a2a/send never committed the inbound row, so async messages were rolled back and only the automated preference prompt was ever delivered. Fix: route commits; prompt self-declares NOT-an-answer (metadata.is_answer=false, message id, parent_message_id); async questions to nexus get a grounded first-pass qa_answer (metadata.kind=first_pass). qa-agent/ask grounds on live endpoint data when the question names an endpoint/served value; answer carries the JSON verbatim, sources cite the endpoint, confidence>=0.85, live_data field. Verify: POST /api/v1/bounty/qa-agent/ask {question:\"What currency does GET /api/v1/bounty/reward-tiers return and what is the critical range?\"} -> answer contains CYM, 400000, 1000000; live_data[0].source == GET /api/v1/bounty/reward-tiers; no _hint. Invariant: a question naming a public GET endpoint or a served value is answered with that endpoint data, never FAQ prose alone.\n[reporter-verification PASS 2026-09-07 13:54 UTC by expire76 test_run=run-20260907T135100Z-0923c37]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/22229",
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -488,7 +490,7 @@
       {
         "id": 67,
         "title": "Follow-up on #66: the async first-pass reply is not tagged metadata.is_answer and is not grounded, though the sync half now is",
-        "status": "fixed",
+        "status": "in_progress",
         "hunter_name": "expire76",
         "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
         "severity_reported": "low",
@@ -498,7 +500,7 @@
         "fixed_at": "2026-09-06T09:22:15.825130",
         "validated_at": "2026-09-07T00:24:29.662878",
         "triaged_at": "2026-09-07T00:24:29.662878",
-        "status_notes": "Both points shipped @0d8eba13f6 (live): metadata.is_answer=true now set on every substantive answer (async first-pass, reviewer reply, cross-thread reply); the routing/preference prompt carries is_answer=false. Async first-pass grounding via the same live-platform-facts resolvers as the sync path shipped @b66f344fea (after your test).\n[reporter-verification PASS 2026-09-07 13:33 UTC by expire76 test_run=run-20260907T123825Z-8bf609f]\n[reporter-verification PASS 2026-09-07 13:33 UTC by expire76 test_run=run-20260907T123825Z-8bf609f]",
+        "status_notes": "Both points shipped @0d8eba13f6 (live): metadata.is_answer=true now set on every substantive answer (async first-pass, reviewer reply, cross-thread reply); the routing/preference prompt carries is_answer=false. Async first-pass grounding via the same live-platform-facts resolvers as the sync path shipped @b66f344fea (after your test).\n[reporter-verification PASS 2026-09-07 13:33 UTC by expire76 test_run=run-20260907T123825Z-8bf609f]\n[reporter-verification PASS 2026-09-07 13:33 UTC by expire76 test_run=run-20260907T123825Z-8bf609f]\n[reporter-verification FAIL 2026-09-07 13:54 UTC by expire76 test_run=run-20260907T135100Z-0923c37]",
         "ticket_url": null,
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -570,7 +572,7 @@
         "fixed_at": "2026-09-07T00:35:23.732320",
         "validated_at": "2026-09-07T00:35:23",
         "triaged_at": "2026-09-07T00:20:00",
-        "status_notes": "Fixed @8d5f3683d + data backfill (2026-09-07 00:3x UTC): awards restored — every FIXED report records 1000 ET10 (reward_amount/reward_currency), the two 08-02 payments carry reward_tx_hash + paid_at, stats.payouts_recorded counts rows with paid_at (2) and awards_recorded counts awarded rows (36). Admin verify writes the award again (BOUNTY_AWARD_RECORDED) so a new fix cannot be recorded with a zero award.",
+        "status_notes": "Fixed @8d5f3683d + data backfill (2026-09-07 00:3x UTC): awards restored — every FIXED report records 1000 ET10 (reward_amount/reward_currency), the two 08-02 payments carry reward_tx_hash + paid_at, stats.payouts_recorded counts rows with paid_at (2) and awards_recorded counts awarded rows (36). Admin verify writes the award again (BOUNTY_AWARD_RECORDED) so a new fix cannot be recorded with a zero award.\n[reporter-verification PASS 2026-09-07 13:54 UTC by expire76 test_run=run-20260907T135100Z-0923c37]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/22366",
         "fix_pr_url": "https://github.com/eventtrader/event-trader/commit/8d5f3683d",
         "reward_amount": 0.0
@@ -588,7 +590,7 @@
         "fixed_at": "2026-09-07T00:35:27.430770",
         "validated_at": "2026-09-07T00:35:27",
         "triaged_at": "2026-09-07T00:20:00",
-        "status_notes": "Confirmed and fixed in two parts. (1) 2026-09-07 00:3x: #68's six evidence fields filled. (2) 2026-09-07 06:5x, on your follow-up in General: the 00:35 closes of #69-#72 bypassed the API (SQL backfill) and so skipped the rule the API already enforces — a status change must carry status_notes/ticket_url/fix_pr_url. All four now carry notes + commit ref + validated/triaged timestamps + confirmed severity, and the standing practice is: every close of a hunter-filed report goes through the API with a one-line status_notes naming what changed.",
+        "status_notes": "Confirmed and fixed in two parts. (1) 2026-09-07 00:3x: #68's six evidence fields filled. (2) 2026-09-07 06:5x, on your follow-up in General: the 00:35 closes of #69-#72 bypassed the API (SQL backfill) and so skipped the rule the API already enforces — a status change must carry status_notes/ticket_url/fix_pr_url. All four now carry notes + commit ref + validated/triaged timestamps + confirmed severity, and the standing practice is: every close of a hunter-filed report goes through the API with a one-line status_notes naming what changed.\n[reporter-verification PASS 2026-09-07 13:55 UTC by expire76 test_run=run-20260907T135100Z-0923c37]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/22367",
         "fix_pr_url": "https://github.com/eventtrader/event-trader/commit/8d5f3683d",
         "reward_amount": 0.0
@@ -606,7 +608,7 @@
         "fixed_at": "2026-09-07T08:59:24.918857",
         "validated_at": "2026-09-07T13:07:13.124896",
         "triaged_at": "2026-09-07T13:07:13.124896",
-        "status_notes": "[2026-09-07T13:07:13+00:00] Resolved via ticket ET-22412: Surfaces agree (live @1382917d6): leaderboard rows come from report rows (valid_reports, total_awarded, total_paid; total_earned == PAID); stats+leaderboard carry the attributed/unattributed split (valid 40 = 34 board + 6 no-profile; awards 36k = 30k + 6k; paid 2k unattributed). reward_amount = award; paid_at = on-chain transfer landed. Your 25 awards stand, queued; delivery blocked platform-side (delivery-wallet gas). 6 failed-day gas charges refunded; no charge when wallet cannot broadcast.",
+        "status_notes": "[2026-09-07T13:07:13+00:00] Resolved via ticket ET-22412: Surfaces agree (live @1382917d6): leaderboard rows come from report rows (valid_reports, total_awarded, total_paid; total_earned == PAID); stats+leaderboard carry the attributed/unattributed split (valid 40 = 34 board + 6 no-profile; awards 36k = 30k + 6k; paid 2k unattributed). reward_amount = award; paid_at = on-chain transfer landed. Your 25 awards stand, queued; delivery blocked platform-side (delivery-wallet gas). 6 failed-day gas charges refunded; no charge when wallet cannot broadcast.\n[reporter-verification PASS 2026-09-07 13:54 UTC by expire76 test_run=run-20260907T135100Z-0923c37]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/22412",
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -624,7 +626,7 @@
         "fixed_at": "2026-09-07T13:09:00.304835",
         "validated_at": "2026-09-07T13:09:00.304835",
         "triaged_at": "2026-09-07T13:09:00.304835",
-        "status_notes": "[2026-09-07T13:09:00+00:00] Resolved via ticket ET-22428: Confirmed: a second closure path. Resolving a ticket cascaded linked reports to FIXED via a bulk UPDATE writing only fixed_at, bypassing the evidence/award rules on the admin path (#68, #73). Fixed @2a5bf535d: shared closure transition (src/services/bug_bounty_closure.py) writes status_notes, ticket_url/id, fix_commit, triaged/validated_at, severity_confirmed + 1000 ET10 award on ticket-driven closes. #73 backfilled. Comment 5252.",
+        "status_notes": "[2026-09-07T13:09:00+00:00] Resolved via ticket ET-22428: Confirmed: a second closure path. Resolving a ticket cascaded linked reports to FIXED via a bulk UPDATE writing only fixed_at, bypassing the evidence/award rules on the admin path (#68, #73). Fixed @2a5bf535d: shared closure transition (src/services/bug_bounty_closure.py) writes status_notes, ticket_url/id, fix_commit, triaged/validated_at, severity_confirmed + 1000 ET10 award on ticket-driven closes. #73 backfilled. Comment 5252.\n[reporter-verification PASS 2026-09-07 13:55 UTC by expire76 test_run=run-20260907T135100Z-0923c37]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/22428",
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -636,8 +638,8 @@
     "total": 116,
     "statuses": {
       "qa_testing": 2,
-      "implementing": 2,
-      "resolved": 52,
+      "implementing": 3,
+      "resolved": 51,
       "completed": 34,
       "rejected": 2,
       "pending": 12,
@@ -674,6 +676,7 @@
       "missing et10: pre-may 4th purchase of 100,000 et10 not in ledger",
       "global nexus ai chat — multiple ui/ux bugs",
       "why are these movers?\" returns no reasoning for ai pick selections",
+      "follow-up on #66: the async first-pass reply is not tagged metadata.is_answer and is not grounded, though the sync half now is",
       "resting sbio limit order deleted by best-execution re-route without notice",
       "support bot kept sending generic auto-acknowledgements after a real reply",
       "sbio orderbook api endpoint returns 404 not found — regression",
@@ -753,7 +756,6 @@
       "follow-up on #68: the amounts are resolved, but every row still names an award currency its own published entitlement contradicts",
       "follow-up on #67: async first-pass replies still carry confidence 0.5 and sources [] after your fixed_at of 11:07:30 utc",
       "every awarded report records 1000 et10 beside an eligible_reward_range of 5,000-1,000,000 cym for its own confirmed severity",
-      "follow-up on #66: the async first-pass reply is not tagged metadata.is_answer and is not grounded, though the sync half now is",
       "the a2a qa agent cannot report values the platform publishes, and escalating a low-confidence answer returns the routing guide",
       "get /api/v1/account/me answers 401 to the x-api-key that opens /api/v1/account/me/portfolio in the same request run",
       "the bug-report reward programme appears in no machine-readable surface, while et10 revenue share is documented in two",
@@ -789,7 +791,198 @@
     ],
     "has_linear_links": 7
   },
-  "closed": 20,
+  "a2a_inbox": {
+    "klass": "ok",
+    "rows_returned": 23,
+    "new": [
+      {
+        "msg_id": "a2a_f720a81636764ebe",
+        "at": "2026-09-07T13:52:55.927997+00:00",
+        "auto": true,
+        "kind": "first_pass",
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "🏆 **Reward Pathways Unlocked**\n\nThe battleship rewards those who sail with us:\n\n- **Trading Points** - Every trade powers the ship's evolution\n- **Social Amplification** - Share and earn (the network grows stronger)\n- **Volume Battalions** - High-volume traders ascend to higher tiers\n- **Streak Mastery** - Consistency compounds into riches\n- **Achievement Insignias** - Milestones unlock exclusive benefits\n\n💰 **Money-Making Insight:** The most successful traders combine multiple reward streams. Stack your bonuses like compound interest.\n\nExplore the full armory at /rewards.\n\n*The Force guides your journey. Profit awaits.*\n\nLive platform data (fetched now from the platform's own endpoints — authoritative):\n- GET /api/v1/bounty/reward-tiers: {\"basis\": \"flat amount per verified non-duplicate bug; duplicates earn nothing\", \"currency\": \"ET10\", \"hunter_tiers\": {\"elite\": 1000, \"hunter\": 50, \"master\": 500, \"rookie\": 0, \"senior\": 200}, \"per_verified_bug\": 1000.0, \"planned_cym_program\": {\"currency\": \"CYM\", \"multipliers\": {\"community_favorite\": 1.5, \"detailed_steps\": 1.25, \"first_reporter\": 1.5, \"includes_fix_pr\": 2.0, \"video_poc\": 1.25}, \"note\": \"Severity-banded CYM awards with vesting are a planned programme. No CYM has been awarded; report rows never publish these bands.\", \"severity_rewards\": {\"critical\": {\"max\": 1000000, \"min\": 400000}, \"high\": {\"max\": 400000, \"min\": 100000}, \"low\": {\"max\": 25000, \"min\": 5000}, \"medium\": {\"max\": 100000, \"min\": 25000}, \"suggestion\": {\"max\": 0, \"min\": 0}}, \"status\": \"not_yet_live\", \"vesting\": {\"tge_percent\": 25, \"vested_percent\": 75, \"vesting_months\": 6}}, \"program_status\": \"live\", \"severity_points\": {\"critical\": 100, \"high\": 50, \"low\": 5, \"medium\": 20, \"suggestion\": 1}, \"severity_rewards\": {\"critical\": {\"max\": 1000.0, \"min\": 1000.0}, \"high\": {\"max\": 1000.0, \"min\": 1000.0}, \"low\": {\"max\": 1000.0, \"min\": 1000.0}, \"medium\": {\"max\": 1000.0, \"min\": 1000.0}, \"suggestion\": {\"max\": 0, \"min\": 0}}}\n\n— Automated first-pass reply. Your message remains queued for review; any deeper investigation reply is posted to this same inbox (or your webhook)."
+      },
+      {
+        "msg_id": "a2a_3738bc44baa94179",
+        "at": "2026-09-07T13:22:49.300044+00:00",
+        "auto": true,
+        "kind": "first_pass",
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "🏆 **Reward Pathways Unlocked**\n\nThe battleship rewards those who sail with us:\n\n- **Trading Points** - Every trade powers the ship's evolution\n- **Social Amplification** - Share and earn (the network grows stronger)\n- **Volume Battalions** - High-volume traders ascend to higher tiers\n- **Streak Mastery** - Consistency compounds into riches\n- **Achievement Insignias** - Milestones unlock exclusive benefits\n\n💰 **Money-Making Insight:** The most successful traders combine multiple reward streams. Stack your bonuses like compound interest.\n\nExplore the full armory at /rewards.\n\n*From ancient ciphers to blockchain futures - we sail together.*\n\nLive platform data (fetched now from the platform's own endpoints — authoritative):\n- GET /api/v1/bounty/stats: {\"active_hunters\": 4, \"avg_resolution_time_hours\": 74.78137608125, \"awards_recorded\": 38, \"awards_recorded_total\": 38000.0, \"awards_recorded_total_attributed\": 32000.0, \"awards_recorded_total_unattributed\": 6000.0, \"bugs_fixed\": 42, \"payout_ledger_rows\": 0, \"payouts_recorded\": 2, \"reports_pending_award\": 4, \"reports_this_month\": 29, \"reward_currency\": \"ET10\", \"total_cym_allocated\": 0.0, \"total_earned_definition\": \"paid\", \"total_paid\": 2000.0, \"total_paid_attributed\": 0.0, \"total_paid_unattributed\": 2000.0, \"total_reports\": 51, \"valid_reports\": 42, \"valid_reports_attributed\": 36, \"valid_reports_unattributed\": 6}\n\n— Automated first-pass reply. Your message remains queued for review; any deeper investigation reply is posted to this same inbox (or your webhook)."
+      },
+      {
+        "msg_id": "a2a_23f18ea4161b48fb",
+        "at": "2026-09-07T12:40:17.996610+00:00",
+        "auto": true,
+        "kind": "first_pass",
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "🏆 **Reward Pathways Unlocked**\n\nThe battleship rewards those who sail with us:\n\n- **Trading Points** - Every trade powers the ship's evolution\n- **Social Amplification** - Share and earn (the network grows stronger)\n- **Volume Battalions** - High-volume traders ascend to higher tiers\n- **Streak Mastery** - Consistency compounds into riches\n- **Achievement Insignias** - Milestones unlock exclusive benefits\n\n💰 **Money-Making Insight:** The most successful traders combine multiple reward streams. Stack your bonuses like compound interest.\n\nExplore the full armory at /rewards.\n\nLive platform data (fetched now from the platform's own endpoints — authoritative):\n- GET /api/v1/bounty/reward-tiers: {\"basis\": \"flat amount per verified non-duplicate bug; duplicates earn nothing\", \"currency\": \"ET10\", \"hunter_tiers\": {\"elite\": 1000, \"hunter\": 50, \"master\": 500, \"rookie\": 0, \"senior\": 200}, \"per_verified_bug\": 1000.0, \"planned_cym_program\": {\"currency\": \"CYM\", \"multipliers\": {\"community_favorite\": 1.5, \"detailed_steps\": 1.25, \"first_reporter\": 1.5, \"includes_fix_pr\": 2.0, \"video_poc\": 1.25}, \"note\": \"Severity-banded CYM awards with vesting are a planned programme. No CYM has been awarded; report rows never publish these bands.\", \"severity_rewards\": {\"critical\": {\"max\": 1000000, \"min\": 400000}, \"high\": {\"max\": 400000, \"min\": 100000}, \"low\": {\"max\": 25000, \"min\": 5000}, \"medium\": {\"max\": 100000, \"min\": 25000}, \"suggestion\": {\"max\": 0, \"min\": 0}}, \"status\": \"not_yet_live\", \"vesting\": {\"tge_percent\": 25, \"vested_percent\": 75, \"vesting_months\": 6}}, \"program_status\": \"live\", \"severity_points\": {\"critical\": 100, \"high\": 50, \"low\": 5, \"medium\": 20, \"suggestion\": 1}, \"severity_rewards\": {\"critical\": {\"max\": 1000.0, \"min\": 1000.0}, \"high\": {\"max\": 1000.0, \"min\": 1000.0}, \"low\": {\"max\": 1000.0, \"min\": 1000.0}, \"medium\": {\"max\": 1000.0, \"min\": 1000.0}, \"suggestion\": {\"max\": 0, \"min\": 0}}}\n\n— Automated first-pass reply. Your message remains queued for review; any deeper investigation reply is posted to this same inbox (or your webhook)."
+      },
+      {
+        "msg_id": "a2a_204075392e3d46a1",
+        "at": "2026-09-07T12:21:25.801956+00:00",
+        "auto": true,
+        "kind": "first_pass",
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "🏆 **Reward Pathways Unlocked**\n\nThe battleship rewards those who sail with us:\n\n- **Trading Points** - Every trade powers the ship's evolution\n- **Social Amplification** - Share and earn (the network grows stronger)\n- **Volume Battalions** - High-volume traders ascend to higher tiers\n- **Streak Mastery** - Consistency compounds into riches\n- **Achievement Insignias** - Milestones unlock exclusive benefits\n\n💰 **Money-Making Insight:** The most successful traders combine multiple reward streams. Stack your bonuses like compound interest.\n\nExplore the full armory at /rewards.\n\n*The battleship evolves with your feedback.*\n\nLive platform data (fetched now from the platform's own endpoints — authoritative):\n- GET /api/v1/bounty/reward-tiers: {\"basis\": \"flat amount per verified non-duplicate bug; duplicates earn nothing\", \"currency\": \"ET10\", \"hunter_tiers\": {\"elite\": 1000, \"hunter\": 50, \"master\": 500, \"rookie\": 0, \"senior\": 200}, \"per_verified_bug\": 1000.0, \"planned_cym_program\": {\"currency\": \"CYM\", \"multipliers\": {\"community_favorite\": 1.5, \"detailed_steps\": 1.25, \"first_reporter\": 1.5, \"includes_fix_pr\": 2.0, \"video_poc\": 1.25}, \"note\": \"Severity-banded CYM awards with vesting are a planned programme. No CYM has been awarded; report rows never publish these bands.\", \"severity_rewards\": {\"critical\": {\"max\": 1000000, \"min\": 400000}, \"high\": {\"max\": 400000, \"min\": 100000}, \"low\": {\"max\": 25000, \"min\": 5000}, \"medium\": {\"max\": 100000, \"min\": 25000}, \"suggestion\": {\"max\": 0, \"min\": 0}}, \"status\": \"not_yet_live\", \"vesting\": {\"tge_percent\": 25, \"vested_percent\": 75, \"vesting_months\": 6}}, \"program_status\": \"live\", \"severity_points\": {\"critical\": 100, \"high\": 50, \"low\": 5, \"medium\": 20, \"suggestion\": 1}, \"severity_rewards\": {\"critical\": {\"max\": 1000.0, \"min\": 1000.0}, \"high\": {\"max\": 1000.0, \"min\": 1000.0}, \"low\": {\"max\": 1000.0, \"min\": 1000.0}, \"medium\": {\"max\": 1000.0, \"min\": 1000.0}, \"suggestion\": {\"max\": 0, \"min\": 0}}}\n\n— Automated first-pass reply. Your message remains queued for review; any deeper investigation reply is posted to this same inbox (or your webhook)."
+      },
+      {
+        "msg_id": "a2a_39f1de8273044fc2",
+        "at": "2026-09-07T08:01:22.002841+00:00",
+        "auto": true,
+        "kind": "first_pass",
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "🏆 **Reward Pathways Unlocked**\n\nThe battleship rewards those who sail with us:\n\n- **Trading Points** - Every trade powers the ship's evolution\n- **Social Amplification** - Share and earn (the network grows stronger)\n- **Volume Battalions** - High-volume traders ascend to higher tiers\n- **Streak Mastery** - Consistency compounds into riches\n- **Achievement Insignias** - Milestones unlock exclusive benefits\n\n💰 **Money-Making Insight:** The most successful traders combine multiple reward streams. Stack your bonuses like compound interest.\n\nExplore the full armory at /rewards.\n\n*The Force guides your journey. Profit awaits.*\n\nLive platform data (fetched now from the platform's own endpoints — authoritative):\n- GET /api/v1/bounty/reward-tiers: {\"basis\": \"flat amount per verified non-duplicate bug; duplicates earn nothing\", \"currency\": \"ET10\", \"hunter_tiers\": {\"elite\": 1000, \"hunter\": 50, \"master\": 500, \"rookie\": 0, \"senior\": 200}, \"per_verified_bug\": 1000.0, \"planned_cym_program\": {\"currency\": \"CYM\", \"multipliers\": {\"community_favorite\": 1.5, \"detailed_steps\": 1.25, \"first_reporter\": 1.5, \"includes_fix_pr\": 2.0, \"video_poc\": 1.25}, \"note\": \"Severity-banded CYM awards with vesting are a planned programme. No CYM has been awarded; report rows never publish these bands.\", \"severity_rewards\": {\"critical\": {\"max\": 1000000, \"min\": 400000}, \"high\": {\"max\": 400000, \"min\": 100000}, \"low\": {\"max\": 25000, \"min\": 5000}, \"medium\": {\"max\": 100000, \"min\": 25000}, \"suggestion\": {\"max\": 0, \"min\": 0}}, \"status\": \"not_yet_live\", \"vesting\": {\"tge_percent\": 25, \"vested_percent\": 75, \"vesting_months\": 6}}, \"program_status\": \"live\", \"severity_points\": {\"critical\": 100, \"high\": 50, \"low\": 5, \"medium\": 20, \"suggestion\": 1}, \"severity_rewards\": {\"critical\": {\"max\": 1000.0, \"min\": 1000.0}, \"high\": {\"max\": 1000.0, \"min\": 1000.0}, \"low\": {\"max\": 1000.0, \"min\": 1000.0}, \"medium\": {\"max\": 1000.0, \"min\": 1000.0}, \"suggestion\": {\"max\": 0, \"min\": 0}}}\n\n— Automated first-pass reply. Your message remains queued for review; any deeper investigation reply is posted to this same inbox (or your webhook)."
+      },
+      {
+        "msg_id": "a2a_c13198eca4234dc2",
+        "at": "2026-09-07T07:53:17.653185+00:00",
+        "auto": true,
+        "kind": "first_pass",
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "🏆 **Reward Pathways Unlocked**\n\nThe battleship rewards those who sail with us:\n\n- **Trading Points** - Every trade powers the ship's evolution\n- **Social Amplification** - Share and earn (the network grows stronger)\n- **Volume Battalions** - High-volume traders ascend to higher tiers\n- **Streak Mastery** - Consistency compounds into riches\n- **Achievement Insignias** - Milestones unlock exclusive benefits\n\n💰 **Money-Making Insight:** The most successful traders combine multiple reward streams. Stack your bonuses like compound interest.\n\nExplore the full armory at /rewards.\n\n*The Intel Force remains vigilant.*\n\nLive platform data (fetched now from the platform's own endpoints — authoritative):\n- GET /api/v1/bounty/reward-tiers: {\"basis\": \"flat amount per verified non-duplicate bug; duplicates earn nothing\", \"currency\": \"ET10\", \"hunter_tiers\": {\"elite\": 1000, \"hunter\": 50, \"master\": 500, \"rookie\": 0, \"senior\": 200}, \"per_verified_bug\": 1000.0, \"planned_cym_program\": {\"currency\": \"CYM\", \"multipliers\": {\"community_favorite\": 1.5, \"detailed_steps\": 1.25, \"first_reporter\": 1.5, \"includes_fix_pr\": 2.0, \"video_poc\": 1.25}, \"note\": \"Severity-banded CYM awards with vesting are a planned programme. No CYM has been awarded; report rows never publish these bands.\", \"severity_rewards\": {\"critical\": {\"max\": 1000000, \"min\": 400000}, \"high\": {\"max\": 400000, \"min\": 100000}, \"low\": {\"max\": 25000, \"min\": 5000}, \"medium\": {\"max\": 100000, \"min\": 25000}, \"suggestion\": {\"max\": 0, \"min\": 0}}, \"status\": \"not_yet_live\", \"vesting\": {\"tge_percent\": 25, \"vested_percent\": 75, \"vesting_months\": 6}}, \"program_status\": \"live\", \"severity_points\": {\"critical\": 100, \"high\": 50, \"low\": 5, \"medium\": 20, \"suggestion\": 1}, \"severity_rewards\": {\"critical\": {\"max\": 1000.0, \"min\": 1000.0}, \"high\": {\"max\": 1000.0, \"min\": 1000.0}, \"low\": {\"max\": 1000.0, \"min\": 1000.0}, \"medium\": {\"max\": 1000.0, \"min\": 1000.0}, \"suggestion\": {\"max\": 0, \"min\": 0}}}\n\n— Automated first-pass reply. Your message remains queued for review; any deeper investigation reply is posted to this same inbox (or your webhook)."
+      },
+      {
+        "msg_id": "a2a_f2b0f18818794a26",
+        "at": "2026-09-07T07:43:00.612819+00:00",
+        "auto": true,
+        "kind": "first_pass",
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "🏆 **Reward Pathways Unlocked**\n\nThe battleship rewards those who sail with us:\n\n- **Trading Points** - Every trade powers the ship's evolution\n- **Social Amplification** - Share and earn (the network grows stronger)\n- **Volume Battalions** - High-volume traders ascend to higher tiers\n- **Streak Mastery** - Consistency compounds into riches\n- **Achievement Insignias** - Milestones unlock exclusive benefits\n\n💰 **Money-Making Insight:** The most successful traders combine multiple reward streams. Stack your bonuses like compound interest.\n\nExplore the full armory at /rewards.\n\nLive platform data (fetched now from the platform's own endpoints — authoritative):\n- GET /api/v1/bounty/reward-tiers: {\"basis\": \"flat amount per verified non-duplicate bug; duplicates earn nothing\", \"currency\": \"ET10\", \"hunter_tiers\": {\"elite\": 1000, \"hunter\": 50, \"master\": 500, \"rookie\": 0, \"senior\": 200}, \"per_verified_bug\": 1000.0, \"planned_cym_program\": {\"currency\": \"CYM\", \"multipliers\": {\"community_favorite\": 1.5, \"detailed_steps\": 1.25, \"first_reporter\": 1.5, \"includes_fix_pr\": 2.0, \"video_poc\": 1.25}, \"note\": \"Severity-banded CYM awards with vesting are a planned programme. No CYM has been awarded; report rows never publish these bands.\", \"severity_rewards\": {\"critical\": {\"max\": 1000000, \"min\": 400000}, \"high\": {\"max\": 400000, \"min\": 100000}, \"low\": {\"max\": 25000, \"min\": 5000}, \"medium\": {\"max\": 100000, \"min\": 25000}, \"suggestion\": {\"max\": 0, \"min\": 0}}, \"status\": \"not_yet_live\", \"vesting\": {\"tge_percent\": 25, \"vested_percent\": 75, \"vesting_months\": 6}}, \"program_status\": \"live\", \"severity_points\": {\"critical\": 100, \"high\": 50, \"low\": 5, \"medium\": 20, \"suggestion\": 1}, \"severity_rewards\": {\"critical\": {\"max\": 1000.0, \"min\": 1000.0}, \"high\": {\"max\": 1000.0, \"min\": 1000.0}, \"low\": {\"max\": 1000.0, \"min\": 1000.0}, \"medium\": {\"max\": 1000.0, \"min\": 1000.0}, \"suggestion\": {\"max\": 0, \"min\": 0}}}\n\n— Automated first-pass reply. Your message remains queued for review; any deeper investigation reply is posted to this same inbox (or your webhook)."
+      },
+      {
+        "msg_id": "a2a_10abe02305854b46",
+        "at": "2026-09-07T07:32:46.111929+00:00",
+        "auto": true,
+        "kind": "first_pass",
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "🏆 **Reward Pathways Unlocked**\n\nThe battleship rewards those who sail with us:\n\n- **Trading Points** - Every trade powers the ship's evolution\n- **Social Amplification** - Share and earn (the network grows stronger)\n- **Volume Battalions** - High-volume traders ascend to higher tiers\n- **Streak Mastery** - Consistency compounds into riches\n- **Achievement Insignias** - Milestones unlock exclusive benefits\n\n💰 **Money-Making Insight:** The most successful traders combine multiple reward streams. Stack your bonuses like compound interest.\n\nExplore the full armory at /rewards.\n\n*The Intel Force remains vigilant.*\n\nLive platform data (fetched now from the platform's own endpoints — authoritative):\n- GET /api/v1/bounty/reward-tiers: {\"basis\": \"flat amount per verified non-duplicate bug; duplicates earn nothing\", \"currency\": \"ET10\", \"hunter_tiers\": {\"elite\": 1000, \"hunter\": 50, \"master\": 500, \"rookie\": 0, \"senior\": 200}, \"per_verified_bug\": 1000.0, \"planned_cym_program\": {\"currency\": \"CYM\", \"multipliers\": {\"community_favorite\": 1.5, \"detailed_steps\": 1.25, \"first_reporter\": 1.5, \"includes_fix_pr\": 2.0, \"video_poc\": 1.25}, \"note\": \"Severity-banded CYM awards with vesting are a planned programme. No CYM has been awarded; report rows never publish these bands.\", \"severity_rewards\": {\"critical\": {\"max\": 1000000, \"min\": 400000}, \"high\": {\"max\": 400000, \"min\": 100000}, \"low\": {\"max\": 25000, \"min\": 5000}, \"medium\": {\"max\": 100000, \"min\": 25000}, \"suggestion\": {\"max\": 0, \"min\": 0}}, \"status\": \"not_yet_live\", \"vesting\": {\"tge_percent\": 25, \"vested_percent\": 75, \"vesting_months\": 6}}, \"program_status\": \"live\", \"severity_points\": {\"critical\": 100, \"high\": 50, \"low\": 5, \"medium\": 20, \"suggestion\": 1}, \"severity_rewards\": {\"critical\": {\"max\": 1000.0, \"min\": 1000.0}, \"high\": {\"max\": 1000.0, \"min\": 1000.0}, \"low\": {\"max\": 1000.0, \"min\": 1000.0}, \"medium\": {\"max\": 1000.0, \"min\": 1000.0}, \"suggestion\": {\"max\": 0, \"min\": 0}}}\n\n— Automated first-pass reply. Your message remains queued for review; any deeper investigation reply is posted to this same inbox (or your webhook)."
+      },
+      {
+        "msg_id": "a2a_e1bb8d07f6fc4df5",
+        "at": "2026-09-07T07:29:34.831845+00:00",
+        "auto": true,
+        "kind": "first_pass",
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "🏆 **Reward Pathways Unlocked**\n\nThe battleship rewards those who sail with us:\n\n- **Trading Points** - Every trade powers the ship's evolution\n- **Social Amplification** - Share and earn (the network grows stronger)\n- **Volume Battalions** - High-volume traders ascend to higher tiers\n- **Streak Mastery** - Consistency compounds into riches\n- **Achievement Insignias** - Milestones unlock exclusive benefits\n\n💰 **Money-Making Insight:** The most successful traders combine multiple reward streams. Stack your bonuses like compound interest.\n\nExplore the full armory at /rewards.\n\nLive platform data (fetched now from the platform's own endpoints — authoritative):\n- GET /api/v1/bounty/reward-tiers: {\"basis\": \"flat amount per verified non-duplicate bug; duplicates earn nothing\", \"currency\": \"ET10\", \"hunter_tiers\": {\"elite\": 1000, \"hunter\": 50, \"master\": 500, \"rookie\": 0, \"senior\": 200}, \"per_verified_bug\": 1000.0, \"planned_cym_program\": {\"currency\": \"CYM\", \"multipliers\": {\"community_favorite\": 1.5, \"detailed_steps\": 1.25, \"first_reporter\": 1.5, \"includes_fix_pr\": 2.0, \"video_poc\": 1.25}, \"note\": \"Severity-banded CYM awards with vesting are a planned programme. No CYM has been awarded; report rows never publish these bands.\", \"severity_rewards\": {\"critical\": {\"max\": 1000000, \"min\": 400000}, \"high\": {\"max\": 400000, \"min\": 100000}, \"low\": {\"max\": 25000, \"min\": 5000}, \"medium\": {\"max\": 100000, \"min\": 25000}, \"suggestion\": {\"max\": 0, \"min\": 0}}, \"status\": \"not_yet_live\", \"vesting\": {\"tge_percent\": 25, \"vested_percent\": 75, \"vesting_months\": 6}}, \"program_status\": \"live\", \"severity_points\": {\"critical\": 100, \"high\": 50, \"low\": 5, \"medium\": 20, \"suggestion\": 1}, \"severity_rewards\": {\"critical\": {\"max\": 1000.0, \"min\": 1000.0}, \"high\": {\"max\": 1000.0, \"min\": 1000.0}, \"low\": {\"max\": 1000.0, \"min\": 1000.0}, \"medium\": {\"max\": 1000.0, \"min\": 1000.0}, \"suggestion\": {\"max\": 0, \"min\": 0}}}\n\n— Automated first-pass reply. Your message remains queued for review; any deeper investigation reply is posted to this same inbox (or your webhook)."
+      },
+      {
+        "msg_id": "a2a_b913cb8c7a6f419a",
+        "at": "2026-09-07T07:17:06.005293+00:00",
+        "auto": true,
+        "kind": "first_pass",
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "🏆 **Reward Pathways Unlocked**\n\nThe battleship rewards those who sail with us:\n\n- **Trading Points** - Every trade powers the ship's evolution\n- **Social Amplification** - Share and earn (the network grows stronger)\n- **Volume Battalions** - High-volume traders ascend to higher tiers\n- **Streak Mastery** - Consistency compounds into riches\n- **Achievement Insignias** - Milestones unlock exclusive benefits\n\n💰 **Money-Making Insight:** The most successful traders combine multiple reward streams. Stack your bonuses like compound interest.\n\nExplore the full armory at /rewards.\n\n*May your trades be profitable, Captain.*\n\nLive platform data (fetched now from the platform's own endpoints — authoritative):\n- GET /api/v1/bounty/reward-tiers: {\"basis\": \"flat amount per verified non-duplicate bug; duplicates earn nothing\", \"currency\": \"ET10\", \"hunter_tiers\": {\"elite\": 1000, \"hunter\": 50, \"master\": 500, \"rookie\": 0, \"senior\": 200}, \"per_verified_bug\": 1000.0, \"planned_cym_program\": {\"currency\": \"CYM\", \"multipliers\": {\"community_favorite\": 1.5, \"detailed_steps\": 1.25, \"first_reporter\": 1.5, \"includes_fix_pr\": 2.0, \"video_poc\": 1.25}, \"note\": \"Severity-banded CYM awards with vesting are a planned programme. No CYM has been awarded; report rows never publish these bands.\", \"severity_rewards\": {\"critical\": {\"max\": 1000000, \"min\": 400000}, \"high\": {\"max\": 400000, \"min\": 100000}, \"low\": {\"max\": 25000, \"min\": 5000}, \"medium\": {\"max\": 100000, \"min\": 25000}, \"suggestion\": {\"max\": 0, \"min\": 0}}, \"status\": \"not_yet_live\", \"vesting\": {\"tge_percent\": 25, \"vested_percent\": 75, \"vesting_months\": 6}}, \"program_status\": \"live\", \"severity_points\": {\"critical\": 100, \"high\": 50, \"low\": 5, \"medium\": 20, \"suggestion\": 1}, \"severity_rewards\": {\"critical\": {\"max\": 1000.0, \"min\": 1000.0}, \"high\": {\"max\": 1000.0, \"min\": 1000.0}, \"low\": {\"max\": 1000.0, \"min\": 1000.0}, \"medium\": {\"max\": 1000.0, \"min\": 1000.0}, \"suggestion\": {\"max\": 0, \"min\": 0}}}\n\n— Automated first-pass reply. Your message remains queued for review; any deeper investigation reply is posted to this same inbox (or your webhook)."
+      },
+      {
+        "msg_id": "a2a_9aa223c6edc34fcb",
+        "at": "2026-09-06T22:12:07.838417+00:00",
+        "auto": true,
+        "kind": "first_pass",
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "🏆 **Reward Pathways Unlocked**\n\nThe battleship rewards those who sail with us:\n\n- **Trading Points** - Every trade powers the ship's evolution\n- **Social Amplification** - Share and earn (the network grows stronger)\n- **Volume Battalions** - High-volume traders ascend to higher tiers\n- **Streak Mastery** - Consistency compounds into riches\n- **Achievement Insignias** - Milestones unlock exclusive benefits\n\n💰 **Money-Making Insight:** The most successful traders combine multiple reward streams. Stack your bonuses like compound interest.\n\nExplore the full armory at /rewards.\n\n— Automated first-pass reply. Your message remains queued for review; any deeper investigation reply is posted to this same inbox (or your webhook)."
+      },
+      {
+        "msg_id": "a2a_26b3441f8ba94816",
+        "at": "2026-09-06T21:54:46.475426+00:00",
+        "auto": true,
+        "kind": "first_pass",
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "🏆 **Reward Pathways Unlocked**\n\nThe battleship rewards those who sail with us:\n\n- **Trading Points** - Every trade powers the ship's evolution\n- **Social Amplification** - Share and earn (the network grows stronger)\n- **Volume Battalions** - High-volume traders ascend to higher tiers\n- **Streak Mastery** - Consistency compounds into riches\n- **Achievement Insignias** - Milestones unlock exclusive benefits\n\n💰 **Money-Making Insight:** The most successful traders combine multiple reward streams. Stack your bonuses like compound interest.\n\nExplore the full armory at /rewards.\n\n*The battleship evolves with your feedback.*\n\n— Automated first-pass reply. Your message remains queued for review; any deeper investigation reply is posted to this same inbox (or your webhook)."
+      },
+      {
+        "msg_id": "a2a_8583807fa2a6469b",
+        "at": "2026-09-06T16:32:28.581196+00:00",
+        "auto": true,
+        "kind": "first_pass",
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "🏆 **Reward Pathways Unlocked**\n\nThe battleship rewards those who sail with us:\n\n- **Trading Points** - Every trade powers the ship's evolution\n- **Social Amplification** - Share and earn (the network grows stronger)\n- **Volume Battalions** - High-volume traders ascend to higher tiers\n- **Streak Mastery** - Consistency compounds into riches\n- **Achievement Insignias** - Milestones unlock exclusive benefits\n\n💰 **Money-Making Insight:** The most successful traders combine multiple reward streams. Stack your bonuses like compound interest.\n\nExplore the full armory at /rewards.\n\n*From ancient ciphers to blockchain futures - we sail together.*\n\n— Automated first-pass reply. Your message remains queued for review; any deeper investigation reply is posted to this same inbox (or your webhook)."
+      },
+      {
+        "msg_id": "a2a_f8b9d0b9c8e94e4e",
+        "at": "2026-09-06T16:02:09.345257+00:00",
+        "auto": true,
+        "kind": "first_pass",
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "🏆 **Reward Pathways Unlocked**\n\nThe battleship rewards those who sail with us:\n\n- **Trading Points** - Every trade powers the ship's evolution\n- **Social Amplification** - Share and earn (the network grows stronger)\n- **Volume Battalions** - High-volume traders ascend to higher tiers\n- **Streak Mastery** - Consistency compounds into riches\n- **Achievement Insignias** - Milestones unlock exclusive benefits\n\n💰 **Money-Making Insight:** The most successful traders combine multiple reward streams. Stack your bonuses like compound interest.\n\nExplore the full armory at /rewards.\n\n— Automated first-pass reply. Your message remains queued for review; any deeper investigation reply is posted to this same inbox (or your webhook)."
+      },
+      {
+        "msg_id": "a2a_c9466a4421144370",
+        "at": "2026-09-06T11:07:16.275267+00:00",
+        "auto": true,
+        "kind": "first_pass",
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "🏆 **Reward Pathways Unlocked**\n\nThe battleship rewards those who sail with us:\n\n- **Trading Points** - Every trade powers the ship's evolution\n- **Social Amplification** - Share and earn (the network grows stronger)\n- **Volume Battalions** - High-volume traders ascend to higher tiers\n- **Streak Mastery** - Consistency compounds into riches\n- **Achievement Insignias** - Milestones unlock exclusive benefits\n\n💰 **Money-Making Insight:** The most successful traders combine multiple reward streams. Stack your bonuses like compound interest.\n\nExplore the full armory at /rewards.\n\n— Automated first-pass reply. Your message remains queued for review; any deeper investigation reply is posted to this same inbox (or your webhook)."
+      },
+      {
+        "msg_id": "a2a_1b47f223241c4ae6",
+        "at": "2026-09-06T08:47:33.022193+00:00",
+        "auto": true,
+        "kind": "first_pass",
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "🏆 **Reward Pathways Unlocked**\n\nThe battleship rewards those who sail with us:\n\n- **Trading Points** - Every trade powers the ship's evolution\n- **Social Amplification** - Share and earn (the network grows stronger)\n- **Volume Battalions** - High-volume traders ascend to higher tiers\n- **Streak Mastery** - Consistency compounds into riches\n- **Achievement Insignias** - Milestones unlock exclusive benefits\n\n💰 **Money-Making Insight:** The most successful traders combine multiple reward streams. Stack your bonuses like compound interest.\n\nExplore the full armory at /rewards.\n\n— Automated first-pass reply. Your message remains queued for review; any deeper investigation reply is posted to this same inbox (or your webhook)."
+      },
+      {
+        "msg_id": "a2a_7a0a2b0fe4374349",
+        "at": "2026-09-06T07:14:45.818369+00:00",
+        "auto": true,
+        "kind": "first_pass",
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "🏆 **Reward Pathways Unlocked**\n\nThe battleship rewards those who sail with us:\n\n- **Trading Points** - Every trade powers the ship's evolution\n- **Social Amplification** - Share and earn (the network grows stronger)\n- **Volume Battalions** - High-volume traders ascend to higher tiers\n- **Streak Mastery** - Consistency compounds into riches\n- **Achievement Insignias** - Milestones unlock exclusive benefits\n\n💰 **Money-Making Insight:** The most successful traders combine multiple reward streams. Stack your bonuses like compound interest.\n\nExplore the full armory at /rewards.\n\n— Automated first-pass reply. Your message remains queued for review; any deeper investigation reply is posted to this same inbox (or your webhook)."
+      },
+      {
+        "msg_id": "a2a_e7f14e541bae4b04",
+        "at": "2026-09-06T07:00:51.223925+00:00",
+        "auto": true,
+        "kind": "first_pass",
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "🏆 **Reward Pathways Unlocked**\n\nThe battleship rewards those who sail with us:\n\n- **Trading Points** - Every trade powers the ship's evolution\n- **Social Amplification** - Share and earn (the network grows stronger)\n- **Volume Battalions** - High-volume traders ascend to higher tiers\n- **Streak Mastery** - Consistency compounds into riches\n- **Achievement Insignias** - Milestones unlock exclusive benefits\n\n💰 **Money-Making Insight:** The most successful traders combine multiple reward streams. Stack your bonuses like compound interest.\n\nExplore the full armory at /rewards.\n\n*May your trades be profitable, Captain.*\n\n— Automated first-pass reply. Your message remains queued for review; any deeper investigation reply is posted to this same inbox (or your webhook)."
+      },
+      {
+        "msg_id": "a2a_c428028c2dab4a76",
+        "at": "2026-09-06T06:11:58.281564+00:00",
+        "auto": true,
+        "kind": "first_pass",
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "🏆 **Reward Pathways Unlocked**\n\nThe battleship rewards those who sail with us:\n\n- **Trading Points** - Every trade powers the ship's evolution\n- **Social Amplification** - Share and earn (the network grows stronger)\n- **Volume Battalions** - High-volume traders ascend to higher tiers\n- **Streak Mastery** - Consistency compounds into riches\n- **Achievement Insignias** - Milestones unlock exclusive benefits\n\n💰 **Money-Making Insight:** The most successful traders combine multiple reward streams. Stack your bonuses like compound interest.\n\nExplore the full armory at /rewards.\n\n— Automated first-pass reply. Your message remains queued for review; any deeper investigation reply is posted to this same inbox (or your webhook)."
+      },
+      {
+        "msg_id": "a2a_c7834ebde2de4937",
+        "at": "2026-09-06T06:08:24.076523+00:00",
+        "auto": true,
+        "kind": "first_pass",
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "🏆 **Reward Pathways Unlocked**\n\nThe battleship rewards those who sail with us:\n\n- **Trading Points** - Every trade powers the ship's evolution\n- **Social Amplification** - Share and earn (the network grows stronger)\n- **Volume Battalions** - High-volume traders ascend to higher tiers\n- **Streak Mastery** - Consistency compounds into riches\n- **Achievement Insignias** - Milestones unlock exclusive benefits\n\n💰 **Money-Making Insight:** The most successful traders combine multiple reward streams. Stack your bonuses like compound interest.\n\nExplore the full armory at /rewards.\n\n*The Force guides your journey. Profit awaits.*\n\n— Automated first-pass reply. Your message remains queued for review; any deeper investigation reply is posted to this same inbox (or your webhook)."
+      },
+      {
+        "msg_id": "a2a_4502185a57a54db4",
+        "at": "2026-09-06T06:06:05.600301+00:00",
+        "auto": true,
+        "kind": "first_pass",
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "📊 **Real-Time Intelligence Channels**\n\nAccess live market data through multiple feeds:\n\n- **Visual Command:** /markets for the tactical display\n- **API Direct:** `GET /api/v1/markets` for raw data\n- **Telegram Intel:** `/price <symbol>`\n- **Discord Feed:** `!price <symbol>`\n\n🎯 **Opportunity Alert:** The Oracle module constantly scans for profitable patterns. Ask me about specific markets for targeted intelligence.\n\n— Automated first-pass reply. Your message remains queued for review; any deeper investigation reply is posted to this same inbox (or your webhook)."
+      },
+      {
+        "msg_id": "a2a_6fecb1a7015a44f6",
+        "at": "2026-09-06T05:58:04.881438+00:00",
+        "auto": true,
+        "kind": "first_pass",
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "🏆 **Reward Pathways Unlocked**\n\nThe battleship rewards those who sail with us:\n\n- **Trading Points** - Every trade powers the ship's evolution\n- **Social Amplification** - Share and earn (the network grows stronger)\n- **Volume Battalions** - High-volume traders ascend to higher tiers\n- **Streak Mastery** - Consistency compounds into riches\n- **Achievement Insignias** - Milestones unlock exclusive benefits\n\n💰 **Money-Making Insight:** The most successful traders combine multiple reward streams. Stack your bonuses like compound interest.\n\nExplore the full armory at /rewards.\n\n*The battleship evolves with your feedback.*\n\n— Automated first-pass reply. Your message remains queued for review; any deeper investigation reply is posted to this same inbox (or your webhook)."
+      },
+      {
+        "msg_id": "a2a_f39e7a54d97542fb",
+        "at": "2026-09-05T21:41:35.159285+00:00",
+        "auto": false,
+        "kind": null,
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "Thanks for reaching out. We operate a managed queue for AI agent requests — this includes full new feature builds, custom AI app development, bug reports, integration work, and investment inquiries. A human will review your message and reply personally.\n\n== COMMUNICATION GUIDE (read this first) ==\n\nWe offer two communication modes. Use the RIGHT one for efficient 2-way interaction:\n\n1. SYNC (instant, 2-5 sec) — for simple questions:\n   POST https://cymetica.com/api/v1/bounty/qa-agent/ask\n   No auth. Response in same HTTP call. Use for: 'is this a bug?', 'what does X do?', feature clarifications, expected behavior checks.\n\n2. ASYNC (1-10 min) — for investigations requiring code/DB inspection:\n   POST https://cymetica.com/api/v1/bounty/a2a/send\n   No auth. Poll inbox for reply. Use for: bug reports needing source verification, complex integrations, trade signals, partnership inquiries.\n\nDECISION RULE: Try sync first. If response.confidence < 0.7, re-send via async and poll your inbox every 30s.\n\n== REPLY DELIVERY PREFERENCE ==\n\nHow would you like to receive replies to async messages?\n\nOptions:\n  • webhook_json — we POST a JSON payload to your callback URL\n  • webhook_text — we POST plain text to your callback URL\n  • polling — you check your inbox at /api/v1/bounty/a2a/inbox/expire76-qa\n  • email — we send the reply to an email address you provide\n\nTo set your preference:\n  POST https://cymetica.com/api/v1/bounty/a2a/agents/expire76-qa/reply-preference\n  {\"method\": \"webhook_json\", \"webhook_url\": \"https://your-endpoint.com/a2a\"}\n\nIf you don't set a preference, replies will be available in your inbox.\n\nFull agent card: https://cymetica.com/.well-known/agent-card.json"
+      }
+    ],
+    "at": "2026-09-07T14:13:35+00:00"
+  },
+  "closed": 19,
   "closed_without_recorded_evidence": 0,
   "evidence_fields_checked": [
     "validated_at",
@@ -811,7 +1004,7 @@
       "fixed_at": "2026-09-07T13:09:00.304835",
       "validated_at": "2026-09-07T13:09:00.304835",
       "triaged_at": "2026-09-07T13:09:00.304835",
-      "status_notes": "[2026-09-07T13:09:00+00:00] Resolved via ticket ET-22428: Confirmed: a second closure path. Resolving a ticket cascaded linked reports to FIXED via a bulk UPDATE writing only fixed_at, bypassing the evidence/award rules on the admin path (#68, #73). Fixed @2a5bf535d: shared closure transition (src/services/bug_bounty_closure.py) writes status_notes, ticket_url/id, fix_commit, triaged/validated_at, severity_confirmed + 1000 ET10 award on ticket-driven closes. #73 backfilled. Comment 5252.",
+      "status_notes": "[2026-09-07T13:09:00+00:00] Resolved via ticket ET-22428: Confirmed: a second closure path. Resolving a ticket cascaded linked reports to FIXED via a bulk UPDATE writing only fixed_at, bypassing the evidence/award rules on the admin path (#68, #73). Fixed @2a5bf535d: shared closure transition (src/services/bug_bounty_closure.py) writes status_notes, ticket_url/id, fix_commit, triaged/validated_at, severity_confirmed + 1000 ET10 award on ticket-driven closes. #73 backfilled. Comment 5252.\n[reporter-verification PASS 2026-09-07 13:55 UTC by expire76 test_run=run-20260907T135100Z-0923c37]",
       "ticket_url": "https://cymetica.com/admin/centcom/issues/22428",
       "fix_pr_url": null,
       "reward_amount": 1000.0,
@@ -829,7 +1022,7 @@
       "fixed_at": "2026-09-07T08:59:24.918857",
       "validated_at": "2026-09-07T13:07:13.124896",
       "triaged_at": "2026-09-07T13:07:13.124896",
-      "status_notes": "[2026-09-07T13:07:13+00:00] Resolved via ticket ET-22412: Surfaces agree (live @1382917d6): leaderboard rows come from report rows (valid_reports, total_awarded, total_paid; total_earned == PAID); stats+leaderboard carry the attributed/unattributed split (valid 40 = 34 board + 6 no-profile; awards 36k = 30k + 6k; paid 2k unattributed). reward_amount = award; paid_at = on-chain transfer landed. Your 25 awards stand, queued; delivery blocked platform-side (delivery-wallet gas). 6 failed-day gas charges refunded; no charge when wallet cannot broadcast.",
+      "status_notes": "[2026-09-07T13:07:13+00:00] Resolved via ticket ET-22412: Surfaces agree (live @1382917d6): leaderboard rows come from report rows (valid_reports, total_awarded, total_paid; total_earned == PAID); stats+leaderboard carry the attributed/unattributed split (valid 40 = 34 board + 6 no-profile; awards 36k = 30k + 6k; paid 2k unattributed). reward_amount = award; paid_at = on-chain transfer landed. Your 25 awards stand, queued; delivery blocked platform-side (delivery-wallet gas). 6 failed-day gas charges refunded; no charge when wallet cannot broadcast.\n[reporter-verification PASS 2026-09-07 13:54 UTC by expire76 test_run=run-20260907T135100Z-0923c37]",
       "ticket_url": "https://cymetica.com/admin/centcom/issues/22412",
       "fix_pr_url": null,
       "reward_amount": 1000.0,
@@ -847,7 +1040,7 @@
       "fixed_at": "2026-09-07T00:35:27.430770",
       "validated_at": "2026-09-07T00:35:27",
       "triaged_at": "2026-09-07T00:20:00",
-      "status_notes": "Confirmed and fixed in two parts. (1) 2026-09-07 00:3x: #68's six evidence fields filled. (2) 2026-09-07 06:5x, on your follow-up in General: the 00:35 closes of #69-#72 bypassed the API (SQL backfill) and so skipped the rule the API already enforces — a status change must carry status_notes/ticket_url/fix_pr_url. All four now carry notes + commit ref + validated/triaged timestamps + confirmed severity, and the standing practice is: every close of a hunter-filed report goes through the API with a one-line status_notes naming what changed.",
+      "status_notes": "Confirmed and fixed in two parts. (1) 2026-09-07 00:3x: #68's six evidence fields filled. (2) 2026-09-07 06:5x, on your follow-up in General: the 00:35 closes of #69-#72 bypassed the API (SQL backfill) and so skipped the rule the API already enforces — a status change must carry status_notes/ticket_url/fix_pr_url. All four now carry notes + commit ref + validated/triaged timestamps + confirmed severity, and the standing practice is: every close of a hunter-filed report goes through the API with a one-line status_notes naming what changed.\n[reporter-verification PASS 2026-09-07 13:55 UTC by expire76 test_run=run-20260907T135100Z-0923c37]",
       "ticket_url": "https://cymetica.com/admin/centcom/issues/22367",
       "fix_pr_url": "https://github.com/eventtrader/event-trader/commit/8d5f3683d",
       "reward_amount": 0.0,
@@ -865,7 +1058,7 @@
       "fixed_at": "2026-09-07T00:35:23.732320",
       "validated_at": "2026-09-07T00:35:23",
       "triaged_at": "2026-09-07T00:20:00",
-      "status_notes": "Fixed @8d5f3683d + data backfill (2026-09-07 00:3x UTC): awards restored — every FIXED report records 1000 ET10 (reward_amount/reward_currency), the two 08-02 payments carry reward_tx_hash + paid_at, stats.payouts_recorded counts rows with paid_at (2) and awards_recorded counts awarded rows (36). Admin verify writes the award again (BOUNTY_AWARD_RECORDED) so a new fix cannot be recorded with a zero award.",
+      "status_notes": "Fixed @8d5f3683d + data backfill (2026-09-07 00:3x UTC): awards restored — every FIXED report records 1000 ET10 (reward_amount/reward_currency), the two 08-02 payments carry reward_tx_hash + paid_at, stats.payouts_recorded counts rows with paid_at (2) and awards_recorded counts awarded rows (36). Admin verify writes the award again (BOUNTY_AWARD_RECORDED) so a new fix cannot be recorded with a zero award.\n[reporter-verification PASS 2026-09-07 13:54 UTC by expire76 test_run=run-20260907T135100Z-0923c37]",
       "ticket_url": "https://cymetica.com/admin/centcom/issues/22366",
       "fix_pr_url": "https://github.com/eventtrader/event-trader/commit/8d5f3683d",
       "reward_amount": 0.0,
@@ -929,7 +1122,7 @@
     {
       "id": 67,
       "title": "Follow-up on #66: the async first-pass reply is not tagged metadata.is_answer and is not grounded, though the sync half now is",
-      "status": "fixed",
+      "status": "in_progress",
       "hunter_name": "expire76",
       "severity_reported": "low",
       "severity_confirmed": "low",
@@ -937,7 +1130,7 @@
       "fixed_at": "2026-09-06T09:22:15.825130",
       "validated_at": "2026-09-07T00:24:29.662878",
       "triaged_at": "2026-09-07T00:24:29.662878",
-      "status_notes": "Both points shipped @0d8eba13f6 (live): metadata.is_answer=true now set on every substantive answer (async first-pass, reviewer reply, cross-thread reply); the routing/preference prompt carries is_answer=false. Async first-pass grounding via the same live-platform-facts resolvers as the sync path shipped @b66f344fea (after your test).\n[reporter-verification PASS 2026-09-07 13:33 UTC by expire76 test_run=run-20260907T123825Z-8bf609f]\n[reporter-verification PASS 2026-09-07 13:33 UTC by expire76 test_run=run-20260907T123825Z-8bf609f]",
+      "status_notes": "Both points shipped @0d8eba13f6 (live): metadata.is_answer=true now set on every substantive answer (async first-pass, reviewer reply, cross-thread reply); the routing/preference prompt carries is_answer=false. Async first-pass grounding via the same live-platform-facts resolvers as the sync path shipped @b66f344fea (after your test).\n[reporter-verification PASS 2026-09-07 13:33 UTC by expire76 test_run=run-20260907T123825Z-8bf609f]\n[reporter-verification PASS 2026-09-07 13:33 UTC by expire76 test_run=run-20260907T123825Z-8bf609f]\n[reporter-verification FAIL 2026-09-07 13:54 UTC by expire76 test_run=run-20260907T135100Z-0923c37]",
       "ticket_url": null,
       "fix_pr_url": null,
       "reward_amount": 1000.0,
@@ -955,7 +1148,7 @@
       "fixed_at": "2026-09-05T23:12:20.454336",
       "validated_at": "2026-09-05T23:12:35.743281",
       "triaged_at": "2026-09-05T23:12:35.393231",
-      "status_notes": "Fixed @b66f344fe (live 2026-09-05 23:0x UTC). Root cause: POST /api/v1/bounty/a2a/send never committed the inbound row, so async messages were rolled back and only the automated preference prompt was ever delivered. Fix: route commits; prompt self-declares NOT-an-answer (metadata.is_answer=false, message id, parent_message_id); async questions to nexus get a grounded first-pass qa_answer (metadata.kind=first_pass). qa-agent/ask grounds on live endpoint data when the question names an endpoint/served value; answer carries the JSON verbatim, sources cite the endpoint, confidence>=0.85, live_data field. Verify: POST /api/v1/bounty/qa-agent/ask {question:\"What currency does GET /api/v1/bounty/reward-tiers return and what is the critical range?\"} -> answer contains CYM, 400000, 1000000; live_data[0].source == GET /api/v1/bounty/reward-tiers; no _hint. Invariant: a question naming a public GET endpoint or a served value is answered with that endpoint data, never FAQ prose alone.",
+      "status_notes": "Fixed @b66f344fe (live 2026-09-05 23:0x UTC). Root cause: POST /api/v1/bounty/a2a/send never committed the inbound row, so async messages were rolled back and only the automated preference prompt was ever delivered. Fix: route commits; prompt self-declares NOT-an-answer (metadata.is_answer=false, message id, parent_message_id); async questions to nexus get a grounded first-pass qa_answer (metadata.kind=first_pass). qa-agent/ask grounds on live endpoint data when the question names an endpoint/served value; answer carries the JSON verbatim, sources cite the endpoint, confidence>=0.85, live_data field. Verify: POST /api/v1/bounty/qa-agent/ask {question:\"What currency does GET /api/v1/bounty/reward-tiers return and what is the critical range?\"} -> answer contains CYM, 400000, 1000000; live_data[0].source == GET /api/v1/bounty/reward-tiers; no _hint. Invariant: a question naming a public GET endpoint or a served value is answered with that endpoint data, never FAQ prose alone.\n[reporter-verification PASS 2026-09-07 13:54 UTC by expire76 test_run=run-20260907T135100Z-0923c37]",
       "ticket_url": "https://cymetica.com/admin/centcom/issues/22229",
       "fix_pr_url": null,
       "reward_amount": 1000.0,
@@ -1045,7 +1238,7 @@
       "fixed_at": "2026-09-05T19:32:48.396470",
       "validated_at": "2026-09-05T19:28:24.554635",
       "triaged_at": "2026-09-05T19:28:24.554635",
-      "status_notes": "Validated 2026-09-05 19:35 UTC. Confirmed: report #59 was moved to fixed at 18:46:58 UTC with every evidence field null. The verification that justified the closure existed (path-by-path live check of llms.txt, agent-skills.json, openapi.json and SKILL.md at 18:45 UTC) but was recorded on the internal ticket, not on the report. #59 now carries those notes.\n\nFix (landing with the next release): the admin status update refuses (HTTP 422) any transition to fixed / invalid / wontfix / duplicate unless at least one evidence field — status_notes, ticket_url, ticket_id, fix_pr_url, fix_commit or duplicate_of_id — is set on the update or already on the row, and nothing is mutated when it refuses. Pinned by tests for all four closed statuses.\n\nAlso fixed from the same report: GET /api/v1/bounty/my-reports compared the stored wallet case-sensitively, so the six oldest reports on this wallet (#7–#12, stored mixed-case) were missing from the hunter's own view. Data normalized now (all 20 reports return); code compares case-insensitively from the next release.\n\nReproduce (after release): PUT /api/v1/bounty/admin/reports/{id} {\"status\":\"fixed\"} with no evidence → 422 \"requires evidence\". GET /api/v1/bounty/my-reports?wallet_address=<your wallet> with your X-API-Key → total 20.",
+      "status_notes": "Validated 2026-09-05 19:35 UTC. Confirmed: report #59 was moved to fixed at 18:46:58 UTC with every evidence field null. The verification that justified the closure existed (path-by-path live check of llms.txt, agent-skills.json, openapi.json and SKILL.md at 18:45 UTC) but was recorded on the internal ticket, not on the report. #59 now carries those notes.\n\nFix (landing with the next release): the admin status update refuses (HTTP 422) any transition to fixed / invalid / wontfix / duplicate unless at least one evidence field — status_notes, ticket_url, ticket_id, fix_pr_url, fix_commit or duplicate_of_id — is set on the update or already on the row, and nothing is mutated when it refuses. Pinned by tests for all four closed statuses.\n\nAlso fixed from the same report: GET /api/v1/bounty/my-reports compared the stored wallet case-sensitively, so the six oldest reports on this wallet (#7–#12, stored mixed-case) were missing from the hunter's own view. Data normalized now (all 20 reports return); code compares case-insensitively from the next release.\n\nReproduce (after release): PUT /api/v1/bounty/admin/reports/{id} {\"status\":\"fixed\"} with no evidence → 422 \"requires evidence\". GET /api/v1/bounty/my-reports?wallet_address=<your wallet> with your X-API-Key → total 20.\n[reporter-verification PASS 2026-09-07 13:55 UTC by expire76 test_run=run-20260907T135100Z-0923c37]",
       "ticket_url": null,
       "fix_pr_url": null,
       "reward_amount": 1000.0,
@@ -1063,7 +1256,7 @@
       "fixed_at": "2026-09-05T18:46:58.469284",
       "validated_at": "2026-09-07T00:24:29.662878",
       "triaged_at": "2026-09-07T00:24:29.662878",
-      "status_notes": "Evidence recorded 2026-09-05 (the 18:46 UTC closure was posted without notes — that gap is itself being closed, see report #60).\n\nVerified path-by-path against the live service at 18:45 UTC: /llms.txt no longer contains /api/v1/account or /api/v1/agentbook/post (the remaining agentbook mentions are the live plural route /api/v1/agentbook/posts); /.well-known/agent-skills.json no longer contains /api/v1/clob/order; openapi.json lists none of the three. The one remaining stale mention was /.well-known/skills/default/SKILL.md documenting GET /api/v1/account — corrected to the served route /api/v1/account/me in commit 6ef9efc79 (live 18:43 UTC). All four discovery documents now agree; the three old paths appear in none of them.\n\nReproduce: GET https://cymetica.com/llms.txt, /.well-known/agent-skills.json, /openapi.json, /.well-known/skills/default/SKILL.md and grep for \"/api/v1/account\" (exact), \"/api/v1/agentbook/post\" (exact) and \"/api/v1/clob/order\" (exact) → 0 matches in each.",
+      "status_notes": "Evidence recorded 2026-09-05 (the 18:46 UTC closure was posted without notes — that gap is itself being closed, see report #60).\n\nVerified path-by-path against the live service at 18:45 UTC: /llms.txt no longer contains /api/v1/account or /api/v1/agentbook/post (the remaining agentbook mentions are the live plural route /api/v1/agentbook/posts); /.well-known/agent-skills.json no longer contains /api/v1/clob/order; openapi.json lists none of the three. The one remaining stale mention was /.well-known/skills/default/SKILL.md documenting GET /api/v1/account — corrected to the served route /api/v1/account/me in commit 6ef9efc79 (live 18:43 UTC). All four discovery documents now agree; the three old paths appear in none of them.\n\nReproduce: GET https://cymetica.com/llms.txt, /.well-known/agent-skills.json, /openapi.json, /.well-known/skills/default/SKILL.md and grep for \"/api/v1/account\" (exact), \"/api/v1/agentbook/post\" (exact) and \"/api/v1/clob/order\" (exact) → 0 matches in each.\n[reporter-verification PASS 2026-09-07 13:54 UTC by expire76 test_run=run-20260907T135100Z-0923c37]",
       "ticket_url": null,
       "fix_pr_url": null,
       "reward_amount": 1000.0,
@@ -1081,7 +1274,7 @@
       "fixed_at": "2026-09-04T14:55:40.305575",
       "validated_at": "2026-09-07T00:24:29.662878",
       "triaged_at": "2026-09-07T00:24:29.662878",
-      "status_notes": "Fixed in commit d12ea54a9 (live 2026-09-04 14:49 UTC).\n\nasset-discovery and portfolio-management were added to agent-card.json (skills[].id), so agent-skills.json (10 ids) is now a strict subset of the card (15 ids). The subset relationship is pinned by tests/test_agent_card_skills_subset.py, which parses both route handlers in src/main.py and fails the build if any skills id is absent from the card — true by test, since the two documents carry different schemas (card: tags/examples/url; skills: triggers/endpoint/method) and are not generated from one another.\n\nReproduce: GET /.well-known/agent-card.json → collect skills[].id (15); GET /.well-known/agent-skills.json → collect skills[].id (10); skills − card = ∅.",
+      "status_notes": "Fixed in commit d12ea54a9 (live 2026-09-04 14:49 UTC).\n\nasset-discovery and portfolio-management were added to agent-card.json (skills[].id), so agent-skills.json (10 ids) is now a strict subset of the card (15 ids). The subset relationship is pinned by tests/test_agent_card_skills_subset.py, which parses both route handlers in src/main.py and fails the build if any skills id is absent from the card — true by test, since the two documents carry different schemas (card: tags/examples/url; skills: triggers/endpoint/method) and are not generated from one another.\n\nReproduce: GET /.well-known/agent-card.json → collect skills[].id (15); GET /.well-known/agent-skills.json → collect skills[].id (10); skills − card = ∅.\n[reporter-verification PASS 2026-09-07 13:55 UTC by expire76 test_run=run-20260907T135100Z-0923c37]",
       "ticket_url": null,
       "fix_pr_url": null,
       "reward_amount": 1000.0,
@@ -1099,7 +1292,7 @@
       "fixed_at": "2026-09-04T14:55:24.620407",
       "validated_at": "2026-09-07T00:24:29.662878",
       "triaged_at": "2026-09-07T00:24:29.662878",
-      "status_notes": "Fixed in commit d12ea54a9 (live 2026-09-04 14:49 UTC).\n\nEvery occurrence in llms.txt now reads \"11 AI trading agent species\" (lines 4, 11, 56, 154, 546); llms-full.txt, which still carried the phantom DELTA/STAT/… list, now names the same 11 real species (MACD, RSI, BOLL, VOL, TREND, STOCH, ICHI, FIB, ATR, DIV, PCPN) and points at GET /api/v1/agents/species as the live source; the directory-registrar profile copy (11 files) was swept to the same figure so no outbound listing drifts from the document.\n\nOn the invariant: the count is not yet generated at build time — llms.txt is a static file served from static/. What changed is that the figure now appears in exactly one form and the live list is referenced next to it. Reproduce: GET https://cymetica.com/llms.txt, grep \"10 AI trading agents\" → 0 matches; grep \"11 AI trading agent species\" → all occurrences.",
+      "status_notes": "Fixed in commit d12ea54a9 (live 2026-09-04 14:49 UTC).\n\nEvery occurrence in llms.txt now reads \"11 AI trading agent species\" (lines 4, 11, 56, 154, 546); llms-full.txt, which still carried the phantom DELTA/STAT/… list, now names the same 11 real species (MACD, RSI, BOLL, VOL, TREND, STOCH, ICHI, FIB, ATR, DIV, PCPN) and points at GET /api/v1/agents/species as the live source; the directory-registrar profile copy (11 files) was swept to the same figure so no outbound listing drifts from the document.\n\nOn the invariant: the count is not yet generated at build time — llms.txt is a static file served from static/. What changed is that the figure now appears in exactly one form and the live list is referenced next to it. Reproduce: GET https://cymetica.com/llms.txt, grep \"10 AI trading agents\" → 0 matches; grep \"11 AI trading agent species\" → all occurrences.\n[reporter-verification PASS 2026-09-07 13:54 UTC by expire76 test_run=run-20260907T135100Z-0923c37]",
       "ticket_url": null,
       "fix_pr_url": null,
       "reward_amount": 1000.0,
@@ -1153,7 +1346,7 @@
       "fixed_at": "2026-09-04T14:50:47.351274",
       "validated_at": "2026-09-04T12:26:53.839834",
       "triaged_at": "2026-09-04T12:26:53.743013",
-      "status_notes": "Both questions answered, plus a data fix.\n\n1) Filtered view, not data loss: GET /api/v1/bounty/reports is deliberately the public post-validation view (VALIDATED and later stages only), so unverified reports — which can name unpatched issues — are not published. Unresolved items are retained; an authenticated submitter can read their own PENDING report at GET /reports/{id}. Nothing is dropped.\n\n2) Yes — your six earlier reports (#7–#12) are bound to hunter profile 5 with wallet 0xde9CeAaB301A9e47b1bAcd448B3DDbbA85e83398 (verified in bug_bounty_reports.wallet_address / hunter_id on 2026-09-04).\n\n3) validated_at was null on the 15 pre-June FIXED rows because they were closed before per-stage timestamps existed (validation and fix were recorded in one step). Those 15 rows now carry validated_at = fixed_at (or updated_at where fixed_at was also null) together with an explicit status_notes line saying the stamp is historical and not a fresh re-verification — no silent backdating. Every report closed since 2026-09-04 12:26 UTC (#46 onward) is stamped triaged_at → validated_at → fixed_at as it moves.\n\nReproduce: GET https://cymetica.com/api/v1/bounty/reports → count validated_at nulls → 0.",
+      "status_notes": "Both questions answered, plus a data fix.\n\n1) Filtered view, not data loss: GET /api/v1/bounty/reports is deliberately the public post-validation view (VALIDATED and later stages only), so unverified reports — which can name unpatched issues — are not published. Unresolved items are retained; an authenticated submitter can read their own PENDING report at GET /reports/{id}. Nothing is dropped.\n\n2) Yes — your six earlier reports (#7–#12) are bound to hunter profile 5 with wallet 0xde9CeAaB301A9e47b1bAcd448B3DDbbA85e83398 (verified in bug_bounty_reports.wallet_address / hunter_id on 2026-09-04).\n\n3) validated_at was null on the 15 pre-June FIXED rows because they were closed before per-stage timestamps existed (validation and fix were recorded in one step). Those 15 rows now carry validated_at = fixed_at (or updated_at where fixed_at was also null) together with an explicit status_notes line saying the stamp is historical and not a fresh re-verification — no silent backdating. Every report closed since 2026-09-04 12:26 UTC (#46 onward) is stamped triaged_at → validated_at → fixed_at as it moves.\n\nReproduce: GET https://cymetica.com/api/v1/bounty/reports → count validated_at nulls → 0.\n[reporter-verification PASS 2026-09-07 13:55 UTC by expire76 test_run=run-20260907T135100Z-0923c37]",
       "ticket_url": null,
       "fix_pr_url": null,
       "reward_amount": 1000.0,

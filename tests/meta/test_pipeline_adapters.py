@@ -668,3 +668,121 @@ def test_verifications_they_already_hold_are_not_sent_again():
         broken = _client(lambda r, s=status: httpx.Response(s, text="nope"))
         with pytest.raises(SystemExit, match="Refusing to send blind"):
             verify.already_sent(broken, 46)
+
+
+# ---------------------------------------------------------------------------
+# A2A -- the inbox nothing was reading
+# ---------------------------------------------------------------------------
+def _inbox(*messages):
+    return _client(lambda r: httpx.Response(200, json={"messages": list(messages)}))
+
+
+def _msg(msg_id, at, content="hello", auto=False, thread="th-1"):
+    meta = {"auto": True, "kind": "first_pass"} if auto else {}
+    return {"id": msg_id, "created_at": at, "content": content,
+            "from_agent_id": "nexus", "thread_id": thread, "metadata": meta}
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_a2a_inbox_is_read_and_each_message_recorded_once(tmp_path, monkeypatch):
+    """A2A: the channel we send questions down, and nothing was reading back.
+
+    Found on 2026-09-07 by the operator asking how I would notice a reply.
+    The answer was that I would not: bounty.py reads my-reports and nothing
+    else, serve.py --ask runs bounty.py, and qa/messages.py parses an archive
+    that stopped being written in round one. Twenty-three messages had
+    accumulated in the a2a inbox and the only reason any of them had been read
+    was that somebody asked out loud.
+
+    So the read joins the sweep, and each message becomes one journal event
+    keyed by its own id -- which makes re-reading the same inbox on the next
+    sweep free, and makes forgetting impossible rather than unlikely.
+    """
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    bounty = _module("scripts/bounty.py")
+    from qa.state import read_events
+
+    inbox = _inbox(_msg("a2a_1", "2026-09-07T10:00:00+00:00", "the routing guide", auto=True),
+                   _msg("a2a_2", "2026-09-07T13:22:00+00:00", "a real answer"))
+
+    first = bounty.fetch_inbox(client=inbox, agent_id="expire76-qa")
+    assert first["klass"] == "ok"
+    assert first["rows_returned"] == 2
+    assert [m["msg_id"] for m in first["new"]] == ["a2a_1", "a2a_2"]
+
+    messages = [e for e in read_events() if e["type"] == "message"]
+    assert [e["msg_id"] for e in messages] == ["a2a_1", "a2a_2"]
+    assert all(e["by"] == "vendor" for e in messages), \
+        "a message from them recorded as ours"
+    assert messages[1]["text"] == "a real answer", \
+        "the body is not kept, so the journal records that they spoke and not what they said"
+
+    # The next sweep reads the same inbox. Nothing is owed twice.
+    again = bounty.fetch_inbox(client=inbox, agent_id="expire76-qa")
+    assert again["new"] == []
+    assert len([e for e in read_events() if e["type"] == "message"]) == 2
+
+    # And the automated first pass is distinguishable from an answer, because
+    # 21 of the 23 messages sitting in the real inbox were routing prompts.
+    assert [m["msg_id"] for m in first["new"] if not m["auto"]] == ["a2a_2"]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_inbox_we_could_not_read_records_no_messages(tmp_path, monkeypatch):
+    """Rule 8, on the newest read. A refused inbox is not an empty inbox.
+
+    The failure mode this forbids is the quiet one: 401, zero messages parsed,
+    zero events written, and a sweep that says nothing -- indistinguishable
+    from a vendor who has not replied. The read itself is still recorded, so
+    the journal can tell "we looked and could not see" from "we did not look".
+    """
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    bounty = _module("scripts/bounty.py")
+    from qa.state import read_events
+
+    for status, klass in ((401, "unauthorized"), (500, "server_error"),
+                          (404, "not_found")):
+        denied = _client(lambda r, s=status: httpx.Response(s, text="no"))
+        out = bounty.fetch_inbox(client=denied, agent_id="expire76-qa")
+        assert out["klass"] == klass
+        assert out["new"] == []
+        assert out["rows_returned"] is None, \
+            "0 would claim we read an inbox and found it empty"
+
+    assert [e["type"] for e in read_events()] == ["vendor_read"] * 3, \
+        "a refused read wrote a message event, or did not record that we looked"
+    assert all(e["source"] != "scripts/bounty.py" for e in read_events()), \
+        ("the inbox read shares a source with the tracker read, and vendor_read "
+         "is keyed on at|source|klass -- two reads in one second would collapse")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_reply_full_of_emoji_does_not_kill_the_read():
+    """Their text is data, and on this workspace data can kill the process.
+
+    The console codepage here is cp1250. Their automated first pass opens with
+    a trophy emoji, and printing it through an un-pinned stdout raises
+    UnicodeEncodeError -- which happened to a scratch script on 2026-09-07 and
+    would have taken the whole fetch down with it had it happened inside
+    bounty.py, between the read and the events it writes.
+
+    Every entry point pins utf-8, so this is a second line rather than the
+    first. It is worth having because the input is a third party's and the
+    failure is total: no snapshot, no events, and a sweep that stops on a
+    character.
+    """
+    bounty = _module("scripts/bounty.py")
+
+    trophy = "\U0001f3c6 Reward Pathways \u2014 stack your bonuses"
+    # The encoding is a parameter so this asserts the reduction rather than
+    # whatever pytest's own stdout happens to be. It is utf-8 here, and a test
+    # that trusted it would watch the emoji sail straight through.
+    safe = bounty._printable(trophy, "cp1250")
+    assert "Reward Pathways" in safe
+    safe.encode("cp1250")  # raises if a character survived that cannot be shown
+
+    for hostile in ("", "\U0001f4b0" * 40, "line\nbreak", "\u2014\u2019\u201c"):
+        bounty._printable(hostile, "cp1250").encode("cp1250")
+
+    # One message, one line: a newline would break the shape the caller prints.
+    assert "\n" not in bounty._printable("two\nlines", "cp1250")
