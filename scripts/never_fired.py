@@ -39,7 +39,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from qa.fold import CHECK_STATES, FILING_STATES  # noqa: E402
+from qa.fold import (CHECK_STATES, FILING_STATES,  # noqa: E402
+                     _REJECTED_STATUSES as REJECTED_STATUSES)
 from qa.measure import VERDICTS  # noqa: E402
 from qa.state import (EVENT_TYPES, admissibility, ledger_path,  # noqa: E402
                       list_runs, read_events)
@@ -53,7 +54,7 @@ BLOCK_REASONS = (
     "results_not_collected", "exit_status_disagrees",
     "git_dirty", "no_prereg", "prereg_commit_mismatch",
 )
-OBLIGATIONS = ("reverify", "repair_check", "reopen", "retractions")
+OBLIGATIONS = ("reverify", "repair_check", "reopen", "retractions", "disputed")
 
 
 def _ledger() -> dict:
@@ -142,13 +143,86 @@ def _blocks(runs: list[dict]) -> tuple[Counter, dict[str, str]]:
     return seen, last
 
 
-def _obligations(ledger: dict) -> tuple[Counter, dict[str, str]]:
+def _timeline(row: dict, axis: str) -> list[tuple[str, str]]:
+    """(when, state) over the row's whole life on one axis, earliest first."""
+    moves = sorted([t for t in (row.get("transitions") or [])
+                    if t.get("axis") == axis and t.get("to")],
+                   key=lambda t: t.get("at") or "")
+    born = (row.get("first_seen") or {}).get("at") or ""
+    if not moves:
+        return [(born, (row.get(axis) or {}).get("state"))]
+    return ([(born, moves[0].get("from"))]
+            + [(t.get("at") or "", t["to"]) for t in moves])
+
+
+def _at(timeline: list[tuple[str, str]], when: str) -> str | None:
+    state = None
+    for moment, value in timeline:
+        if moment <= when:
+            state = value
+    return state
+
+
+def _obligations(ledger: dict, events: list[dict]) -> tuple[Counter, dict[str, str]]:
+    """Replayed, not sampled.
+
+    Counting these off the current ledger answered "what is owed today", which
+    is a weaker question than the one this report asks and was wrong within
+    four hours of being written: `reverify` fired for the first time in the
+    project's life on 2026-09-07, was cleared by a level-V run, and the report
+    went on saying it had never fired.
+
+    Two of the four are pure functions of the two axes, and both axes keep
+    their history in the row's transitions, so those are exact. `disputed`
+    needs a vendor status as well, and the journal has those. `reopen` needs
+    the regression list, which is only ever current -- that one is still a
+    snapshot and the report says so.
+    """
     seen: Counter = Counter()
+    last: dict[str, str] = {}
+
+    def note(name: str, when: str) -> None:
+        seen[name] += 1
+        if when > last.get(name, ""):
+            last[name] = when
+
+    rejected_at: dict[int, list[str]] = {}
+    for event in events:
+        if (event.get("type") == "vendor_status"
+                and (event.get("status") or "").lower() in REJECTED_STATUSES
+                and event.get("report_id") is not None):
+            rejected_at.setdefault(event["report_id"], []).append(event.get("at") or "")
+
     for row in (ledger.get("findings") or {}).values():
-        for name, value in (row.get("obligations") or {}).items():
-            if value:
-                seen[name] += 1
-    return seen, {}
+        check = _timeline(row, "check")
+        filing = _timeline(row, "filing")
+
+        for moment in sorted({w for w, _ in check} | {w for w, _ in filing}):
+            c, f = _at(check, moment), _at(filing, moment)
+            # Rule 7: their claim of a fix opens work until one of our runs
+            # agrees with it.
+            if f == "FIX_CLAIMED" and c != "PASSING":
+                note("reverify", moment)
+            # Gap 3: a filed row whose check measures nothing.
+            if (c in ("INCONCLUSIVE", "UNVERIFIABLE")
+                    and f in ("RAISED", "REPLIED", "FIX_CLAIMED")):
+                note("repair_check", moment)
+
+        reports = (row.get("filing") or {}).get("reports") or []
+        # WITHDRAWN is terminal, so the current state IS the whole history --
+        # the moment it was entered is the moment the correction fell due.
+        if (row.get("filing") or {}).get("state") == "WITHDRAWN" and reports:
+            note("retractions", next((w for w, s in filing if s == "WITHDRAWN"), ""))
+        for report in reports:
+            for when in rejected_at.get(report.get("report_id"), []):
+                if _at(check, when) != "PASSING":
+                    note("disputed", when)
+
+        # Snapshot: nothing records a regression that has since been resolved.
+        if row.get("regressions") and (row.get("obligations") or {}).get("reopen"):
+            note("reopen", "")
+
+    return seen, last
 
 
 def vocabularies() -> list[dict]:
@@ -161,7 +235,7 @@ def vocabularies() -> list[dict]:
     verdict_seen, verdict_last = _verdicts(runs)
     event_seen, event_last = _events()
     block_seen, block_last = _blocks(runs)
-    ob_seen, ob_last = _obligations(ledger)
+    ob_seen, ob_last = _obligations(ledger, read_events())
 
     return [
         {"name": "check states", "over": "ledger transitions and current rows",
@@ -175,11 +249,12 @@ def vocabularies() -> list[dict]:
          "last": event_last},
         {"name": "run refusals", "over": f"admissibility of {len(runs)} run records",
          "symbols": BLOCK_REASONS, "seen": block_seen, "last": block_last},
-        # An obligation that was raised and then cleared leaves no trace: the
-        # ledger holds only what is owed NOW, and transitions record the axes,
-        # not the obligations. A zero here means "not owed today", which is a
-        # weaker statement than every other line in this report.
-        {"name": "obligations", "over": "the CURRENT ledger only",
+        # Replayed from each row's transitions, so an obligation raised and
+        # paid between two runs of this report still counts. `reopen` is the
+        # exception and is still a snapshot: nothing records a regression that
+        # has since been resolved.
+        {"name": "obligations",
+         "over": "replayed from transitions; reopen is current-only",
          "symbols": OBLIGATIONS, "seen": ob_seen, "last": ob_last},
     ]
 

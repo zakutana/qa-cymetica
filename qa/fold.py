@@ -53,7 +53,41 @@ _FILING_RANK = {"NOT_RAISED": 0, "RAISED": 1, "REPLIED": 2, "FIX_CLAIMED": 3}
 # vendor subsequently says.
 _TERMINAL = ("WITHDRAWN", "SUPERSEDED")
 
-_FIX_CLAIMED_STATUSES = frozenset({"fixed", "resolved", "completed", "closed"})
+# Their REPORT statuses, and which of ours each one means.
+#
+# Read off the enum the platform publishes at
+# GET /api/v1/bounty/my-reports -> status_vocabulary.report_status, verified
+# live on 2026-09-07. There is a second vocabulary, ticket_status (open,
+# investigating, in_progress, resolved, closed, wont_fix), which belongs to the
+# ET-number ticket rather than the bounty report and answers a different
+# question: the report status is the bounty state, the ticket status is the fix
+# state. Only the report status reaches this fold -- scripts/bounty.py emits
+# vendor_status from my-reports alone.
+#
+# The rule here used to be `FIX_CLAIMED if status in {fixed, resolved,
+# completed, closed} else RAISED`. Every part of that was wrong. `resolved` and
+# `closed` are ticket statuses, so they could not arrive; `completed` is in
+# neither enum and was invented; and everything the API actually sends other
+# than "fixed" fell through to RAISED, the state that means "filed, and they
+# have not answered". Being told our report is invalid read as silence, 45
+# times. tests/rest/test_status_vocabulary_is_mapped.py now holds these sets
+# against the published enum, so a value they add cannot land here unmapped.
+_FIX_CLAIMED_STATUSES = frozenset({"fixed", "paid"})
+
+# They looked and said no. Their answer, not their silence -- and against a
+# check of ours that still fails, a disagreement one of us has to settle.
+_REJECTED_STATUSES = frozenset({"invalid", "duplicate", "wontfix"})
+
+# They engaged with the report without claiming a fix. openclaw_testing and
+# ready_for_review are their own QA stages, which is work on the report and not
+# a claim about it.
+_REPLIED_STATUSES = _REJECTED_STATUSES | frozenset({
+    "triaging", "validated", "in_progress", "openclaw_testing",
+    "ready_for_review",
+})
+
+# Filed, and nothing has happened yet.
+_RAISED_STATUSES = frozenset({"pending"})
 
 
 def _display_cell(check: str, filing: str) -> str:
@@ -444,7 +478,12 @@ def _apply_events(rows: dict, events: Iterable[dict]) -> None:
                 for report in rows[fid]["filing"]["reports"]:
                     if report["report_id"] == event.get("report_id"):
                         report["status"] = event.get("status")
-                to = "FIX_CLAIMED" if status in _FIX_CLAIMED_STATUSES else "RAISED"
+                if status in _FIX_CLAIMED_STATUSES:
+                    to = "FIX_CLAIMED"
+                elif status in _REPLIED_STATUSES:
+                    to = "REPLIED"
+                else:
+                    to = "RAISED"
                 _move_filing(rows[fid], to, event)
 
         elif etype == "reply":
@@ -477,6 +516,13 @@ def _obligations(row: dict) -> dict:
         # Rule 11: withdrawing a filed finding leaves a correction owed.
         "retractions": ([r for r in filed if r not in retracted]
                         if filing == "WITHDRAWN" else []),
+        # They read the report and said no, and our check still fails. One of
+        # the two has to give -- we withdraw because they are right, or we
+        # answer because we are -- and neither happens on its own. Nothing is
+        # owed once our own check agrees with them.
+        "disputed": ([r["report_id"] for r in row["filing"]["reports"]
+                      if (r.get("status") or "").lower() in _REJECTED_STATUSES]
+                     if check != "PASSING" else []),
     }
 
 

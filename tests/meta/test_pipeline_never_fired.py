@@ -117,3 +117,84 @@ def test_a_mechanism_with_no_occurrences_is_printed_first():
                          "symbols": ("USED",), "seen": Counter({"USED": 1}),
                          "last": {}}])
     assert "NEVER FIRED" not in quiet and "every mechanism has fired" in quiet
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_obligation_that_was_raised_and_cleared_still_counts():
+    """The report's weakest line, and the day it was caught out.
+
+    Obligations were counted off the CURRENT ledger, so one raised and paid
+    between two runs of the report left no trace. On 2026-09-07 `reverify`
+    fired for the first time in the project's life, was cleared four hours
+    later by a level-V run, and the report went on saying it had never fired --
+    right about what it measured and wrong about the world.
+
+    Both axes keep their history in the row's transitions, so the pairs a row
+    has ever been in are reconstructable, and the obligations that are pure
+    functions of those two states are reconstructable with them.
+
+    The fixture below is a row that is now quiet: PASSING beside FIX_CLAIMED,
+    owing nothing today, having owed a re-verify yesterday.
+    """
+    mod = _never_fired()
+
+    quiet_now = {
+        "id": "CYM-a",
+        "first_seen": {"at": "2026-09-05T00:00:00+00:00"},
+        "check": {"state": "PASSING"},
+        "filing": {"state": "FIX_CLAIMED", "reports": [{"report_id": 46}]},
+        "obligations": {"reverify": False, "repair_check": False,
+                        "reopen": [], "retractions": [], "disputed": []},
+        "transitions": [
+            {"axis": "check", "from": "UNVERIFIED", "to": "REPRODUCING",
+             "at": "2026-09-05T01:00:00+00:00"},
+            {"axis": "filing", "from": "NOT_RAISED", "to": "RAISED",
+             "at": "2026-09-05T02:00:00+00:00"},
+            # They claim a fix while our check still fails: reverify is owed
+            # from here...
+            {"axis": "filing", "from": "RAISED", "to": "FIX_CLAIMED",
+             "at": "2026-09-05T03:00:00+00:00"},
+            # ...until a run of ours agrees.
+            {"axis": "check", "from": "REPRODUCING", "to": "PASSING",
+             "at": "2026-09-05T04:00:00+00:00"},
+        ],
+    }
+
+    seen, _ = mod._obligations({"findings": {"CYM-a": quiet_now}}, events=[])
+    assert seen.get("reverify"),         "an obligation raised and cleared between two reports left no trace"
+    assert not seen.get("repair_check"),         "repair_check never held for this row and must not be invented"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_rejection_counts_from_the_journal_not_from_today():
+    """`disputed` is not a pure function of the two axes, so it reads events.
+
+    A report they marked invalid while our check was failing owed a decision at
+    that moment, whatever the row looks like now.
+    """
+    mod = _never_fired()
+
+    row = {
+        "id": "CYM-a",
+        "first_seen": {"at": "2026-09-05T00:00:00+00:00"},
+        "check": {"state": "PASSING"},
+        "filing": {"state": "REPLIED", "reports": [{"report_id": 46}]},
+        "obligations": {"disputed": []},
+        "transitions": [
+            {"axis": "check", "from": "UNVERIFIED", "to": "REPRODUCING",
+             "at": "2026-09-05T01:00:00+00:00"},
+            {"axis": "check", "from": "REPRODUCING", "to": "PASSING",
+             "at": "2026-09-05T09:00:00+00:00"},
+        ],
+    }
+    ledger = {"findings": {"CYM-a": row}}
+
+    rejected_while_failing = [{"type": "vendor_status", "report_id": 46,
+                               "status": "invalid",
+                               "at": "2026-09-05T05:00:00+00:00"}]
+    rejected_after_passing = [{"type": "vendor_status", "report_id": 46,
+                               "status": "invalid",
+                               "at": "2026-09-05T11:00:00+00:00"}]
+
+    assert mod._obligations(ledger, rejected_while_failing)[0].get("disputed"),         "a rejection we were still reproducing owed a decision at the time"
+    assert not mod._obligations(ledger, rejected_after_passing)[0].get("disputed"),         "a rejection that arrived after our own check agreed owes nothing"

@@ -754,3 +754,60 @@ def test_a_failed_read_marks_every_row_and_a_clean_one_clears_it():
                "by": "agent", "source": "scripts/bounty.py"}
     assert stale([bad, unknown]) == "2026-09-05T10:00:00+00:00", \
         "a classless read cleared a mark it is no evidence against"
+
+
+# ---------------------------------------------------------------------------
+# BNT: their status vocabulary, and the half of it that read as silence
+# ---------------------------------------------------------------------------
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_rejected_report_is_not_the_same_as_no_answer():
+    """`invalid` moved the axis exactly as far as hearing nothing did.
+
+    Two vocabularies exist for one programme. The bounty API's status field has
+    carried four values across 608 observations -- fixed, invalid, pending,
+    validated -- while their public tracker uses a disjoint set (resolved,
+    completed, wont_fix, qa_testing, implementing, rejected, pending). Only the
+    API reaches this fold: scripts/bounty.py emits vendor_status from
+    my-reports and from nothing else.
+
+    The old rule was `FIX_CLAIMED if status in {fixed, resolved, completed,
+    closed} else RAISED`, written against the tracker. So of the two values the
+    API actually sends that are not "fixed", `invalid` (45 occurrences) and
+    `validated` (10) both landed on RAISED -- the state that means "filed, no
+    answer". Being told our report is worthless read as silence.
+    """
+    from qa.fold import fold
+
+    def filing(status):
+        state = ledger(row("CYM-a", check_state="REPRODUCING"))
+        out = fold(state, events=_filed("CYM-a", 46, status))
+        return out["findings"]["CYM-a"]["filing"]
+
+    assert filing("pending")["state"] == "RAISED",         "pending is the vendor not having answered yet"
+    assert filing("fixed")["state"] == "FIX_CLAIMED"
+    assert filing("validated")["state"] == "REPLIED",         "they confirmed the defect is real; that is engagement, not silence"
+    assert filing("invalid")["state"] == "REPLIED",         "they rejected the report; that is an answer, not silence"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_rejection_we_still_reproduce_owes_a_decision():
+    """Their `invalid` against our failing check is ours to settle, not theirs.
+
+    One of the two has to give: either we withdraw the finding because they are
+    right, or we answer them because we are. Neither happens by itself, and
+    without an obligation the row sits looking filed and quiet.
+
+    Nothing is owed while our own check passes -- then the disagreement is
+    academic and the row is closing anyway.
+    """
+    from qa.fold import fold
+
+    def owed(status, check_state):
+        state = ledger(row("CYM-a", check_state=check_state))
+        out = fold(state, events=_filed("CYM-a", 46, status))
+        return out["findings"]["CYM-a"]["obligations"]["disputed"]
+
+    assert owed("invalid", "REPRODUCING") == [46],         "a rejected report we still reproduce owes a decision"
+    assert owed("invalid", "PASSING") == [],         "nothing is owed once our own check agrees with them"
+    assert owed("fixed", "REPRODUCING") == []
+    assert owed("pending", "REPRODUCING") == []
