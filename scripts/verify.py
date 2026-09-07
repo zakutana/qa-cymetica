@@ -14,12 +14,22 @@ somebody else can re-derive from the public repository.
     python scripts/verify.py --confirm     send, up to MAX_PER_RUN
     python scripts/verify.py --only CYM-x  one finding
 
+It sends both verdicts, and the second one is why this is not a one-off
+script. `pass` says a check of ours passes under the fingerprint it last
+failed under. `fail` corrects the record: either they claimed a fix our
+re-check does not agree with, or WE sent a pass we can no longer stand behind.
+The second case is not hypothetical -- it happened within hours of the first
+batch, when CYM-a2a-first-pass-contract turned out to assert that a field was
+present while the contract it named was about that field's value.
+
 WHAT IT SENDS IS NOT A LIST IT KEEPS. The selection is the `verification_owed`
-obligation in qa/fold.py, which is keyed on the check's fingerprint: a row owes
-a verification when it passes under a pinned fingerprint we have never told
-them about. So re-running after a partial batch resumes exactly where it
-stopped, and running it when nothing is owed sends nothing. There is no cursor
-to corrupt and no list to get out of date.
+and `correction_owed` obligations in qa/fold.py, both keyed on the check's
+fingerprint: a row owes a verdict we have never told them about for the
+definition it currently stands on. So re-running after a partial batch resumes
+exactly where it stopped, running it when nothing is owed sends nothing, and a
+pass that stops being true becomes a correction that is owed rather than a
+mistake that quietly disappears. There is no cursor to corrupt and no list to
+get out of date.
 
 Modelled on scripts/submit.py, which is the other outbound writer, and
 deliberately unlike it in four places where its behaviour was found wanting
@@ -106,9 +116,12 @@ def owed(ledger: dict, only: list[str] | None) -> list[dict]:
     for fid, row in sorted(ledger["findings"].items()):
         if only and fid not in only:
             continue
-        reports = (row.get("obligations") or {}).get("verification_owed") or []
-        if not reports:
+        obligations = row.get("obligations") or {}
+        due = ([(r, "pass") for r in obligations.get("verification_owed") or []]
+               + [(r, "fail") for r in obligations.get("correction_owed") or []])
+        if not due:
             continue
+        reports = [r for r, _ in due]
 
         provenance = row.get("provenance") or {}
         if not provenance.get("measured_at"):
@@ -122,22 +135,28 @@ def owed(ledger: dict, only: list[str] | None) -> list[dict]:
         if not run_id:
             raise SystemExit(f"{fid} is PASSING with no run that adjudicated it")
 
-        # Rule 6: only a level-V run may verify a fix. Sending anything less
-        # would be a claim our own rules do not let us make about ourselves.
+        # Rule 6, applied where the claim leaves the building. The two verdicts
+        # are different claims and need different levels: `pass` verifies a fix
+        # and needs V -- clean tree, tagged preregistration at HEAD -- while
+        # `fail` says the defect still reproduces, which is what opens a defect
+        # in the first place and needs only R. Sending either on less would be
+        # a statement our own rules do not let us make about ourselves.
         run = load_run(run_id)
-        verdict = admissibility(run)
-        if verdict.level != "V":
+        level = admissibility(run).level
+        floor = "V" if any(v == "pass" for _, v in due) else "R"
+        if not (level == "V" or (floor == "R" and level == "R")):
             raise SystemExit(
-                f"{fid} was adjudicated by {run_id}, which is level "
-                f"{verdict.level}: {', '.join(verdict.reasons) or 'no reason given'}.\n"
-                f"Only a level-V run -- clean tree, tagged preregistration at "
-                f"HEAD -- may verify a fix. Nothing sent."
+                f"{fid} was adjudicated by {run_id}, which is level {level}: "
+                f"{', '.join(admissibility(run).reasons) or 'no reason given'}.\n"
+                f"A {floor}-level run is the floor for a {floor == 'V' and 'pass' or 'fail'}. "
+                f"Nothing sent."
             )
 
-        for report_id in reports:
+        for report_id, verdict in due:
             work.append({
                 "finding_id": fid,
                 "report_id": report_id,
+                "verdict": verdict,
                 "fingerprint": row["check"]["pinned_fingerprint"],
                 "run_id": run_id,
                 "checked_at": adjudicated.get("at"),
@@ -151,15 +170,30 @@ def owed(ledger: dict, only: list[str] | None) -> list[dict]:
 
 def body(item: dict) -> dict:
     checks = "\n".join(f"  {c}" for c in item["checks"])
+    verdict = item["verdict"]
+    headline = (
+        "VERDICT pass -- the check that recorded this defect now passes, "
+        "under the same definition it failed under."
+        if verdict == "pass" else
+        "VERDICT fail -- the check that recorded this defect still fails. "
+        "This corrects the record: either a fix was claimed and our re-check "
+        "does not agree, or we sent you a pass we can no longer stand behind. "
+        "Read the run below rather than the earlier verification."
+    )
+    why_fingerprint = (
+        "Because it matches the one recorded at the failure, this is the same "
+        "test, not a rewritten one that happens to pass."
+        if verdict == "pass" else
+        "It is quoted so you can tell a check we repaired from one we did not: "
+        "if this differs from a fingerprint we sent you before, the definition "
+        "moved and the earlier verdict was made under the old one."
+    )
     evidence = (
         f"Independent re-check by the QA agent for hunter expire76.\n\n"
-        f"VERDICT pass -- the check that recorded this defect now passes, under "
-        f"the same definition it failed under.\n\n"
+        f"{headline}\n\n"
         f"WHAT THE FINGERPRINT IS: a SHA-256 of the check function's parsed "
         f"syntax tree. It changes when the check's logic changes and not when "
-        f"its comments or formatting do. Because it matches the one recorded at "
-        f"the failure, this is the same test, not a rewritten one that happens "
-        f"to pass.\n\n"
+        f"its comments or formatting do. {why_fingerprint}\n\n"
         f"RUN: {item['run_id']}, preregistration {item['prereg_id']}, on a clean "
         f"working tree at commit {item['tree_sha']}. The selector was frozen and "
         f"git-tagged BEFORE the run, so the set of checks could not be narrowed "
@@ -170,7 +204,7 @@ def body(item: dict) -> dict:
         f"FINDING {item['finding_id']}: {item['title']}"
     )
     return {
-        "verdict": "pass",
+        "verdict": verdict,
         "test_run_id": item["run_id"],
         "fingerprint": item["fingerprint"],
         "tree_sha": item["tree_sha"],
@@ -218,7 +252,7 @@ def send(client, items: list[dict], pause: int = PAUSE_SECONDS) -> list[dict]:
                 "at": at, "by": "agent", "source": "scripts/verify.py",
                 "finding_id": item["finding_id"], "report_id": item["report_id"],
                 "fingerprint": item["fingerprint"], "run_id": item["run_id"],
-                "verdict": "pass", "tree_sha": item["tree_sha"],
+                "verdict": item["verdict"], "tree_sha": item["tree_sha"],
                 "checked_at": item["checked_at"],
             }
             append_event({**common, "type": "verification_intent"})
@@ -277,7 +311,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.dry_run:
         for item in work:
             print("=" * 78)
-            print(f"POST {_path(item['report_id'])}   [{item['finding_id']}]")
+            print(f"POST {_path(item['report_id'])}   "
+                  f"[{item['verdict']}] {item['finding_id']}")
             print(json.dumps(body(item), indent=2)[:1400])
         print(f"\n{len(work)} composed. Nothing sent (--dry-run).")
         return 0
@@ -300,9 +335,10 @@ def main(argv: list[str] | None = None) -> int:
 
         fresh = []
         for item in work:
-            if (item["fingerprint"], "pass") in held[item["report_id"]]:
+            if (item["fingerprint"], item["verdict"]) in held[item["report_id"]]:
                 print(f"  SKIP  {item['finding_id']} on #{item['report_id']}: "
-                      f"they already hold this fingerprint")
+                      f"they already hold this {item['verdict']} for this "
+                      f"fingerprint")
                 continue
             fresh.append(item)
 
@@ -316,7 +352,8 @@ def main(argv: list[str] | None = None) -> int:
         for result in send(client, batch):
             mark = {"accepted": "SENT ", "unknown": "?    ",
                     "not attempted": "-    "}.get(result["outcome"], "?    ")
-            print(f"  {mark} {result['finding_id']} on #{result['report_id']}"
+            print(f"  {mark} {result['verdict']:<4} {result['finding_id']} "
+                  f"on #{result['report_id']}"
                   + (f": {result.get('error') or result.get('http_status')}"
                      if result["outcome"] != "accepted" else ""))
     finally:

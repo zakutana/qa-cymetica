@@ -538,6 +538,19 @@ def _apply_events(rows: dict, events: Iterable[dict]) -> None:
 # ---------------------------------------------------------------------------
 # Obligations -- what each row still owes somebody
 # ---------------------------------------------------------------------------
+def _told(verified: list, report_id, fingerprint, verdict: str) -> bool:
+    """Have we already told them this verdict, for this check definition?
+
+    Keyed on the FINGERPRINT and never on the run: every sweep re-adjudicates
+    every row, so a run-keyed debt would come due after each one and send the
+    same verifications daily -- a badge that clears itself into spam.
+    """
+    return any(v["report_id"] == report_id
+               and v["fingerprint"] == fingerprint
+               and v.get("verdict") == verdict
+               for v in verified)
+
+
 def _obligations(row: dict) -> dict:
     check, filing = row["check"]["state"], row["filing"]["state"]
     filed = [r["report_id"] for r in row["filing"]["reports"]]
@@ -569,10 +582,26 @@ def _obligations(row: dict) -> dict:
         # information. PASSING_UNPINNED is excluded on purpose: passing under
         # a definition we never saw fail proves no fix.
         "verification_owed": ([r for r in filed
-                               if not any(v["report_id"] == r
-                                          and v["fingerprint"] == pinned
-                                          for v in verified)]
+                               if not _told(verified, r, pinned, "pass")]
                               if check == "PASSING" and pinned else []),
+        # The other direction, and the one that exists because we can be
+        # wrong. A pass we sent stops being true the moment the check is
+        # repaired -- and with a pass-only rule it would stop being OWED at
+        # the same moment, because verification_owed speaks only for passing
+        # rows. That is a debt that vanishes when you discover it. It cost us
+        # a false claim on their server on 2026-09-07 (#67).
+        #
+        # Due when either of us said it was fixed: they claimed one, or we
+        # sent a pass under any definition. NOT on a row that is merely filed
+        # and failing -- we said that when we filed it, and repeating it down
+        # a second channel is noise rather than news.
+        "correction_owed": ([r for r in filed
+                             if not _told(verified, r, pinned, "fail")
+                             and (filing == "FIX_CLAIMED"
+                                  or any(v["report_id"] == r
+                                         and v.get("verdict") == "pass"
+                                         for v in verified))]
+                            if check == "REPRODUCING" and pinned else []),
         # They read the report and said no, and our check still fails. One of
         # the two has to give -- we withdraw because they are right, or we
         # answer because we are -- and neither happens on its own. Nothing is

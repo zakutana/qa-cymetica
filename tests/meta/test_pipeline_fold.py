@@ -26,6 +26,7 @@ Fails at 11e43ea: there is no qa.fold.
 
 from __future__ import annotations
 
+import copy
 import itertools
 import random
 
@@ -997,3 +998,58 @@ def test_nothing_is_owed_where_there_is_nothing_to_verify():
         "our check still fails; a pass verification would be a false statement"
     assert owed("PASSING", _filed("CYM-a", 46, "fixed"), pinned=None) == [], \
         "never seen failing under this definition, so passing proves no fix"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_pass_we_sent_that_stopped_being_true_owes_a_correction():
+    """VER: the debt that only exists because we made a claim.
+
+    2026-09-07, hours after the first 13 verifications went out. One of them
+    was false: CYM-a2a-first-pass-contract asserted that `metadata.is_answer`
+    was PRESENT, while their published contract is about its VALUE. They
+    shipped the field set to `true` on the automated first pass, our check
+    called that fixed, and a PASS verification for it reached their server
+    before anybody read a value.
+
+    With the pass-only rule that mistake was invisible the moment it was
+    found: repairing the check moves the row off PASSING, `verification_owed`
+    returns [] because it only speaks for passing rows, and the false claim
+    sits on their server owed by nobody. A debt that disappears when you
+    discover it is not a debt.
+
+    So a correction is owed on a REPRODUCING row when either of us said it was
+    fixed: they claimed one, or we sent a pass. Not on a row that is merely
+    filed and failing -- we already told them that when we filed it, and
+    saying it again through a second channel is noise, not news.
+    """
+    from qa.fold import fold
+
+    filed_claimed = _filed("CYM-a", 46, "fixed")
+    filed_quiet = _filed("CYM-a", 46, "pending")
+    broken = row("CYM-a", check_state="REPRODUCING", pinned=FP)
+
+    def owed(base_row, events):
+        out = fold(ledger(copy.deepcopy(base_row)), events=events)
+        return out["findings"]["CYM-a"]["obligations"]["correction_owed"]
+
+    # Their claim of a fix, against our check that still fails.
+    assert owed(broken, filed_claimed) == [46]
+
+    # Ours: we sent a pass under the definition that has since been repaired,
+    # so the fingerprint on the verification is not the one it now fails under.
+    old_pass = _verification(fingerprint="the-definition-we-have-since-fixed")
+    assert owed(broken, filed_quiet + [old_pass]) == [46], \
+        "a pass we sent and can no longer stand behind is owed by nobody"
+
+    # Paid, once the correction is on the record under the current definition.
+    corrected = _verification(fingerprint=FP, verdict="fail")
+    assert owed(broken, filed_claimed + [corrected]) == []
+    assert owed(broken, filed_quiet + [old_pass, corrected]) == []
+
+    # Filed, failing, and neither of us ever said otherwise: nothing new.
+    assert owed(broken, filed_quiet) == []
+
+    # And the two debts never both apply: one speaks for a passing row.
+    passing = fold(ledger(_verified_row()), events=filed_claimed)
+    ob = passing["findings"]["CYM-a"]["obligations"]
+    assert ob["verification_owed"] == [46] and ob["correction_owed"] == []

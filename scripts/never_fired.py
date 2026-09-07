@@ -55,7 +55,7 @@ BLOCK_REASONS = (
     "git_dirty", "no_prereg", "prereg_commit_mismatch",
 )
 OBLIGATIONS = ("reverify", "repair_check", "reopen", "retractions", "disputed",
-               "verification_owed")
+               "verification_owed", "correction_owed")
 
 
 def _ledger() -> dict:
@@ -238,6 +238,11 @@ def _obligations(ledger: dict, events: list[dict]) -> tuple[Counter, dict[str, s
             note("verification_owed", sent.get("at") or "")
         for _ in (row.get("obligations") or {}).get("verification_owed") or []:
             note("verification_owed", "")
+        for corrected in (row.get("filing") or {}).get("verifications") or []:
+            if corrected.get("verdict") == "fail":
+                note("correction_owed", corrected.get("at") or "")
+        for _ in (row.get("obligations") or {}).get("correction_owed") or []:
+            note("correction_owed", "")
 
         # Snapshot: nothing records a regression that has since been resolved.
         if row.get("regressions") and (row.get("obligations") or {}).get("reopen"):
