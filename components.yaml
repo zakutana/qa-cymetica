@@ -238,7 +238,13 @@ endpoints:
     path: /mcp/v1/register
     methods: [POST]
     component: mcp.trust_ladder
-    executable_params: [name, email, description, agent_name]
+    # The first three are what the server actually requires -- POST with {}
+    # answers 422 naming name, contact_email and intended_use (measured
+    # 2026-09-07 walking /build). The rest are kept as aliases in case the
+    # schema grows back into them. See test_register_floor_names_the_fields_
+    # that_actually_create_an_account for why the spelling matters.
+    executable_params:
+      [name, contact_email, intended_use, email, description, agent_name]
     probe_only: true          # account creation is an operator action, not ours
 
   - id: funding.withdraw

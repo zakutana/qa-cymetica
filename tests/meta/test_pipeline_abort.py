@@ -72,7 +72,7 @@ PINNED = {
     # machine. The clients there now carry a transport that cannot send. The
     # mutation is still caught, the message now reads THE GUARD LET IT
     # THROUGH, and no evidence file is written because nothing is sent.
-    "test_guard_is_real.py": "1399c75aed23f65f66b4e427a4fb37ea1984233de6cf1bd4f08f55f44780879b",
+    "test_guard_is_real.py": "f66ef1b4a5e2b89e15f237c18ef72f2a482d8c60625f4d6a367dce4501be5b5a",
 }
 
 

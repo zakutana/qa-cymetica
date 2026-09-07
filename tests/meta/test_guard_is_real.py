@@ -399,3 +399,37 @@ def test_empty_probe_body_is_permitted():
         assert transport.handle_request(request).status_code == 422
     finally:
         CURRENT_TIER.reset(token)
+
+
+@qa(component="meta.guard", tier=SafetyTier.SAFE, surface="meta")
+def test_register_floor_names_the_fields_that_actually_create_an_account():
+    """mcp.register's floor must be spelled in the SERVER's vocabulary.
+
+    Measured 2026-09-07 while walking the /build onboarding: POST
+    /mcp/v1/register with an empty body answers 422 naming exactly three
+    required fields -- name, contact_email, intended_use. components.yaml
+    declared [name, email, description, agent_name]: right idea, wrong words.
+
+    Nothing was open. `_assert_inert` refuses undeclared keys too, so a probe
+    carrying contact_email was already stopped -- by the catch-all, not by the
+    floor. That is the whole point of this test. A single
+    `inert_params: [contact_email, intended_use]` edit would move those two
+    fields out of the catch-all and into the permitted set, and every other
+    guard test would stay green while POST /mcp/v1/register became executable.
+
+    A floor that does not name what it is standing on is one edit from not
+    being a floor.
+    """
+    rule = next(r for r in EndpointRegistry.load().rules if r.id == "mcp.register")
+    assert rule.probe_only, "account creation is an operator action, not ours"
+
+    required_by_server = {"name", "contact_email", "intended_use"}
+    missing = required_by_server - rule.executable_params
+    assert not missing, (
+        f"POST /mcp/v1/register requires {sorted(required_by_server)} (422, "
+        f"measured 2026-09-07); {sorted(missing)} is not in its "
+        f"executable_params, so only the undeclared-keys catch-all stops it"
+    )
+    assert not (rule.inert_params & required_by_server), (
+        "a field that creates an account is never inert"
+    )
