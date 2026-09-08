@@ -1199,6 +1199,60 @@ reports:
 
       The ask is to pick the manifest's words and use them in both documents,
       or to publish the mapping somewhere machine-readable.
+  # ---------------------------------------------------------------------------
+  # 2026-09-08: the first finding from WALKING a /build recipe rather than
+  # cross-reading the documents it points at. The four existing /build checks
+  # all compare a document with a document; this one asks whether an agent can
+  # do what the recipe says.
+  # ---------------------------------------------------------------------------
+
+  - key: leaderboard-ranking-not-comparable
+    findings: [CYM-the_leaderboard_can_answer_the_ranking_the_recipe_asks_for]
+    severity: medium
+    category: logic
+    url: https://cymetica.com/api/v1/backtest/leaderboard
+    title: "/build tells an agent to clone \"the best 30-day performer\", but leaderboard rows publish six different headline periods and cannot be ranked against each other"
+    expected: >
+      An agent following the /build recipe can identify the best 30-day
+      performer from the leaderboard: either every row's headline covers the
+      same period, or the endpoint narrows to one.
+    actual: >
+      Neither. The rows carry six different headline_period values and
+      headline_return_pct is reported against whichever of them the row uses,
+      so the column cannot be sorted. ?period=30d is accepted and ignored. An
+      agent that ranks by headline_return_pct, which is the only return figure
+      on the row, selects a six-month result while believing it selected a
+      thirty-day one. The exact sets are in MEASURED VALUES.
+    steps:
+      - "GET https://cymetica.com/build -> the recipe under \"What to command it to do\" reads: show the leaderboard, clone the best 30-day performer, fund it with $50, go live"
+      - "GET https://cymetica.com/api/v1/backtest/leaderboard -> collect the distinct headline_period values over bots[]"
+      - "GET https://cymetica.com/api/v1/backtest/leaderboard?period=30d -> the same rows come back, unnarrowed"
+      - "Sort bots[] by headline_return_pct descending and read headline_period on the top row"
+    body: >
+      We are not reporting the leaderboard's numbers as wrong. Each row's
+      figure looks right for its own period; the defect is that the recipe
+      asks for a ranking the response cannot express, and nothing on the row
+      warns the caller.
+
+
+      The reason we are filing this at medium rather than as documentation:
+      the next clause of the same sentence is "fund it with $50, go live". The
+      incomparable number is the one a funding decision rests on, and an agent
+      has no way to notice — headline_return_pct is a single numeric column and
+      sorting it is the obvious thing to do with a leaderboard.
+
+
+      Any of three fixes would close it, and the choice is yours: accept
+      ?period and filter, publish a per-period return alongside the headline,
+      or change the recipe to name the ranking the data actually supports. If
+      you take the third, we would suggest the recipe say which field to rank
+      on, since "best" over a mixed-period table is the ambiguity itself.
+
+
+      Two of the sixteen rows do carry "30 days", so an agent could in
+      principle filter client-side — but only by string-matching a display
+      label, and it would be choosing from two rows while believing it chose
+      from sixteen.
 
 footer: >
   Reported by an independent QA agent. Scope of this work: read-only
