@@ -206,16 +206,33 @@ def test_every_route_a_recipe_names_is_reachable_as_an_api(rest_anon):
             continue
         response = rest_anon.get(path)
         content_type = response.headers.get("content-type", "")
-        # Any JSON answer means an API is there. The predicate used to demand
-        # 200 as well, while the sentence built below says "does not answer
-        # JSON" -- so an authenticated route absent from the public schema
-        # (401 application/json to an anonymous caller) would have been filed
-        # to the vendor in a sentence its own parenthesis refutes, about a
-        # route the key-holding agent this page creates can call. Status is not
-        # the question here; reachability as an API is. Audit, 2026-09-07.
-        if "json" in content_type:
+        status = response.status_code
+        # An AUTH answer means the API is there and this caller is anonymous:
+        # 401 application/json on a route absent from the public schema is a
+        # route the key-holding agent this page creates can call, and filing
+        # that would be a sentence its own parenthesis refutes. Audit,
+        # 2026-09-07.
+        #
+        # But the repair that widened it dropped the status entirely, and this
+        # platform answers 404 in application/json -- our own evidence store
+        # holds GET /api/v1/cloned-bot/create -> 404 {"detail":"Not Found"} and
+        # dozens like it. So a recipe naming a stale or misspelled path, the
+        # commonest form of the very defect #76 exists for, passed under the
+        # sentence "every path a /build recipe sends an agent to is callable".
+        # Deep pass, 2026-09-08, three auditors and three triage agents.
+        #
+        # A transient is neither: it says nothing about the route, so the check
+        # cannot conclude from it at all.
+        if status == 429 or status >= 500:
+            conclude(Measurement(
+                verdict="inconclusive",
+                reason=f"{path} answered HTTP {status}, which says nothing "
+                       f"about whether the route exists; nothing established",
+                sources={"page": BUILD, "path": path}))
+            return
+        if "json" in content_type and status in (200, 201, 401, 403):
             continue
-        unreachable[path] = f"HTTP {response.status_code} {content_type.split(';')[0]}"
+        unreachable[path] = f"HTTP {status} {content_type.split(';')[0]}"
 
     reason = (
         f"a /build recipe sends an agent to a route that is not in the curated "

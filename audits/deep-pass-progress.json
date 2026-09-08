@@ -16,8 +16,8 @@
     "t1": "REAL"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null,
+   "fixed": true,
+   "commit": "e4473be",
    "real_votes": 3
   },
   {
@@ -32,8 +32,8 @@
     "t1": "REAL"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null,
+   "fixed": true,
+   "commit": "e4473be",
    "real_votes": 3
   },
   {
@@ -48,8 +48,8 @@
     "t1": "REAL"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null,
+   "fixed": true,
+   "commit": "e4473be",
    "real_votes": 3
   },
   {
@@ -144,8 +144,8 @@
     "t1": "REAL"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null,
+   "fixed": true,
+   "commit": "pending",
    "real_votes": 3
   },
   {
@@ -160,8 +160,8 @@
     "t1": "REAL"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null,
+   "fixed": true,
+   "commit": "pending",
    "real_votes": 2
   },
   {
@@ -192,8 +192,8 @@
     "t1": "REAL"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null,
+   "fixed": true,
+   "commit": "pending",
    "real_votes": 3
   },
   {
@@ -208,8 +208,8 @@
     "t1": "REAL"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null,
+   "fixed": true,
+   "commit": "pending",
    "real_votes": 2
   },
   {
@@ -272,8 +272,8 @@
     "t1": "REAL"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null,
+   "fixed": true,
+   "commit": "pending",
    "real_votes": 3
   },
   {
@@ -288,8 +288,8 @@
     "t1": "REAL"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null,
+   "fixed": true,
+   "commit": "pending",
    "real_votes": 3
   },
   {
@@ -320,8 +320,8 @@
     "t1": "FALSE"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null,
+   "fixed": true,
+   "commit": "pending",
    "real_votes": 2
   },
   {
@@ -336,8 +336,8 @@
     "t1": "REAL"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null,
+   "fixed": true,
+   "commit": "pending",
    "real_votes": 3
   },
   {
@@ -384,8 +384,8 @@
     "t1": "REAL"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null,
+   "fixed": true,
+   "commit": "pending",
    "real_votes": 3
   },
   {
@@ -464,8 +464,8 @@
     "t1": "REAL"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null,
+   "fixed": true,
+   "commit": "pending",
    "real_votes": 3
   }
  ],

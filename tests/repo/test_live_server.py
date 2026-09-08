@@ -69,7 +69,12 @@ def test_a_real_change_reaches_a_subscriber(live):
     first = live.digest
     assert first, "the server produced no payload to begin with"
 
-    listener = live.subscribe()
+    # TWO listeners, because the docstring says "every open tab" and one
+    # subscriber cannot measure that: a notify() waking only listeners[0] used
+    # to pass here. The emptiness check below is the "exactly once" half, and
+    # it is the pattern the sibling test already owns. Deep pass, 2026-09-08,
+    # 3/3.
+    listener, second = live.subscribe(), live.subscribe()
 
     # A REAL change to the state this Live renders from, then rebuild().
     #
@@ -97,18 +102,33 @@ def test_a_real_change_reaches_a_subscriber(live):
     if changed:
         live.notify()
     got = listener.get(timeout=5) if changed else None
+    also = second.get(timeout=5) if changed else None
+    twice = False
+    if changed:
+        for queued in (listener, second):
+            try:
+                queued.get(timeout=0.5)
+                twice = True
+            except queue.Empty:
+                pass
 
-    agrees = changed and got == live.digest and got != first
+    agrees = (changed and got == live.digest and got != first
+              and also == live.digest and not twice)
     conclude(Measurement(
         verdict="passed" if agrees else "failed",
         reason=("a change under state/ was detected by rebuild() and the new "
-                "digest reached a subscriber"
+                "digest reached BOTH subscribers, exactly once each"
                 if agrees else
                 "rebuild() did not report the state as changed"
                 if not changed else
-                f"the subscriber received {got!r}, not the current digest"),
-        left=got, right={"digest": live.digest, "before": first,
-                         "rebuild_reported_a_change": changed},
+                "a subscriber was woken twice for one change, so every open "
+                "tab would reload twice"
+                if twice else
+                f"the subscribers received {got!r} and {also!r}, not the "
+                f"current digest"),
+        left=[got, also], right={"digest": live.digest, "before": first,
+                                 "rebuild_reported_a_change": changed,
+                                 "woken_twice": twice},
         sources={"module": "scripts/serve.py"}))
 
 
@@ -213,9 +233,19 @@ def test_a_page_that_stopped_updating_says_so_on_itself(live, serve, monkeypatch
         "the page served after a failed rebuild is byte-identical to the last "
         "good one, so a stalled console is indistinguishable from a working one"
     )
-    assert "unknown key" in served or "stale" in served.lower(), (
+    # The band's own words, not any occurrence of "stale". The first version
+    # accepted `"stale" in served.lower()`, and the rendered page carries
+    # "stale" 8 times and "stale_from" 43 more from TEMPLATE itself -- so the
+    # disjunct was true of every page the renderer can emit, and replacing the
+    # band with an empty div would have kept all three assertions green while
+    # the page named nothing. Deep pass, 2026-09-08, 3/3.
+    assert serve.STALE_BANNER in served, (
         "the page does not say it stopped updating; the only trace is a line "
         "in a server window nobody reads"
+    )
+    assert "unknown key" in served, (
+        "the band is there but does not name the error, so a reader cannot "
+        "tell a stalled console from a slow one"
     )
 
 

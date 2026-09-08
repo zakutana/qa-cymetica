@@ -56,6 +56,12 @@ WATCHED = ("state/ledger.json", "state/journal/events.jsonl", "state/bounty.json
 # the old cadence, and `--poll 1` is there for it.
 POLL_SECONDS = 60.0
 
+# The words the stalled-page band puts on the page, named here so a test
+# can assert THEM rather than any occurrence of "stale" -- the rendered
+# page carries that word 51 times from the template itself, which made
+# the first version of that assertion unfalsifiable.
+STALE_BANNER = "THIS PAGE HAS STOPPED UPDATING"
+
 
 def _escape(text) -> str:
     """Their error text lands in our markup; it is data, not HTML."""
@@ -194,7 +200,7 @@ class Live:
             '<div style="position:sticky;top:0;z-index:99999;padding:.6rem 1rem;'
             'background:#5a1111;color:#ffd7d7;font:600 13px/1.5 ui-monospace,'
             'monospace;border-bottom:1px solid #ff6b6b">'
-            f'THIS PAGE HAS STOPPED UPDATING &mdash; frozen at {_escape(frozen)}. '
+            f'{STALE_BANNER} &mdash; frozen at {_escape(frozen)}. '
             f'Every rebuild since has failed: {_escape(error)} '
             '&middot; restart the console to pick up changed modules.'
             '</div>')

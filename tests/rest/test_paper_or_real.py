@@ -114,21 +114,56 @@ def test_the_setting_that_decides_whether_real_money_moves_is_readable(rest_trus
             sources={"schema": OPENAPI}))
         return
 
-    # A response that publishes it would appear as a property name, not only
-    # inside prose. Prose is where all three of today's occurrences live.
+    # Over RESPONSES only. The first version walked every `properties` dict in
+    # the document, request bodies included -- so a settings endpoint that
+    # merely ACCEPTS simulation_mode would have turned this green under the
+    # sentence "no documented response publishes it". Today it is right for the
+    # right reason (PortfolioSummaryResponse carries the field), which is
+    # exactly the kind of latent hole a green check hides. Deep pass,
+    # 2026-09-08, 2/3.
+    schemas = (spec.get("components") or {}).get("schemas") or {}
+
+    def properties_of(node, seen=None, depth=0):
+        """Property names reachable from a schema node, following $ref.
+
+        Depth-limited rather than cycle-detected: a $ref cycle is caught by
+        `seen`, but an inline schema nested through enough properties is not,
+        and this walk over the real document hit Python's recursion limit. Six
+        is past every response shape this API publishes and cannot run away.
+        """
+        seen = seen if seen is not None else set()
+        if not isinstance(node, dict) or depth > 6:
+            return
+        ref = node.get("$ref")
+        if isinstance(ref, str) and ref.startswith("#/components/schemas/"):
+            name = ref.rsplit("/", 1)[-1]
+            if name not in seen:
+                seen.add(name)
+                yield from properties_of(schemas.get(name) or {}, seen, depth + 1)
+            return
+        properties = node.get("properties") or {}
+        for prop in properties:
+            yield prop
+        for nested in properties.values():
+            yield from properties_of(nested, seen, depth + 1)
+        for key in ("items", "additionalProperties"):
+            yield from properties_of(node.get(key) or {}, seen, depth + 1)
+        for combinator in ("allOf", "anyOf", "oneOf"):
+            for member in node.get(combinator) or []:
+                yield from properties_of(member, seen, depth + 1)
+
     readable = []
-    def walk(node):
-        if isinstance(node, dict):
-            for key, value in node.items():
-                if key == "properties" and isinstance(value, dict):
-                    for prop in value:
+    for operations in (spec.get("paths") or {}).values():
+        if not isinstance(operations, dict):
+            continue
+        for operation in operations.values():
+            if not isinstance(operation, dict):
+                continue
+            for response in (operation.get("responses") or {}).values():
+                for media in ((response or {}).get("content") or {}).values():
+                    for prop in properties_of((media or {}).get("schema") or {}):
                         if "simulation" in prop.lower():
                             readable.append(prop)
-                walk(value)
-        elif isinstance(node, list):
-            for value in node:
-                walk(value)
-    walk(spec)
 
     conclude(Measurement(
         verdict="passed" if readable else "failed",
@@ -162,14 +197,24 @@ def test_every_order_endpoint_decides_the_book_the_same_way(rest_trusted):
     So the check now holds the two things that actually protect a caller:
 
       * every order surface names the control the same way, so one helper can
-        set it everywhere;
-      * and no surface lets OMISSION spend real money on an account that has
-        put itself in paper mode. Inherit it, force it, or refuse the order --
-        any of the three is safe. Silently going live is not.
+        set it everywhere.
 
-    The second half is read from the field descriptions rather than by placing
-    orders. That is a real limit and it is the honest one: we are not going to
-    prove a live-order path by taking it.
+    That is ONE property, and the docstring used to promise two. The second --
+    "no surface lets omission spend real money" -- was never measured here:
+    `not_honoured` was computed beside it and read by nothing, so once every
+    surface carried `paper` the check went green whatever the defaults did.
+    Deep pass, 2026-09-08, 3/3.
+
+    The second property is not asserted anywhere now, and that is deliberate
+    rather than an oversight. Measuring it means matching English in a field
+    description for a statement about omission, and this file's own comment
+    records two false failures in one day from exactly that -- a regex that
+    rejected "None (default) → use simulation_mode" for not saying "omitted",
+    and one that failed a schema for pointing at its sibling instead of
+    repeating it. What a caller is actually protected by is `paper` being
+    present and honoured, and those two are asserted, here and in the sibling
+    below. A docstring promising a third thing over an assertion that measures
+    two is how a check starts lying.
     """
     spec, why = _spec(rest_trusted)
     if spec is None:
@@ -241,6 +286,27 @@ def test_an_explicit_paper_request_is_honoured_on_every_surface(rest_trusted):
         return
 
     schemas = (spec.get("components") or {}).get("schemas") or {}
+    # A schema that is not there is not a schema that says nothing. The first
+    # version coalesced a missing one to {} -> "" -> no match, so renaming
+    # ShortRequest -- and two of these six keys are already FastAPI
+    # path-mangled, so a module move renames them for free -- would have
+    # printed "a caller that asks for paper is given paper" over zero surfaces
+    # read, while population still reported six. The sibling above has this
+    # gate; this one did not. Deep pass, 2026-09-08, 3/3.
+    missing = sorted(label for label, (name, _) in ORDER_SCHEMAS.items()
+                     if schemas.get(name) is None)
+    if missing:
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason=f"{', '.join(missing)} are not in the specification under "
+                   f"the names this check knows, so whether `{CONTROL}` is "
+                   f"honoured there could not be read",
+            left=missing, right=sorted(ORDER_SCHEMAS),
+            population={"surfaces_expected": len(ORDER_SCHEMAS),
+                        "surfaces_read": len(ORDER_SCHEMAS) - len(missing)},
+            sources={"schema": OPENAPI}))
+        return
+
     ignored = {}
     for label, (schema_name, _) in ORDER_SCHEMAS.items():
         props = (schemas.get(schema_name) or {}).get("properties") or {}
@@ -258,6 +324,6 @@ def test_an_explicit_paper_request_is_honoured_on_every_surface(rest_trusted):
                 f"paper can be given a real-ledger position — "
                 f"{list(ignored.values())[0][:200]}"),
         left=sorted(ignored), right=[],
-        population={"surfaces_checked": len(ORDER_SCHEMAS),
+        population={"surfaces_checked": len(ORDER_SCHEMAS) - len(missing),
                     "not_always_honoured": len(ignored)},
         sources={"schema": OPENAPI}))

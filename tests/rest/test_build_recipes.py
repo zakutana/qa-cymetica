@@ -31,6 +31,11 @@ POSITIONS = "/api/v1/event-cards/positions"
 CARD = "/api/v1/event-cards/{card_id}"
 HISTORY = "/api/v1/event-cards/{card_id}/index-history"
 
+# How many distinct cards the position check probes. A cap is right on a
+# live surface; a cap under the word "every" is not, so the verdict says
+# how many were probed whenever it is fewer than we hold.
+CARD_PROBE_CAP = 20
+
 
 @qa(component="rest.event_cards", tier=SafetyTier.SAFE, surface="rest",
     volatile=True)
@@ -48,6 +53,20 @@ def test_the_asset_search_the_recipe_names_finds_a_major_asset(rest_anon):
     major asset, and a catalogue without one answers nothing.
     """
     response = rest_anon.get(SEARCH, params={"q": "BTC"})
+    # A rate limit or a 5xx says nothing about the recipe, and this check used
+    # to mint a defect out of one -- "the recipe's first step fails" about a
+    # step nothing was established for. The identical repair was already made
+    # to test_bounty_tracker.py on 2026-09-07, after one transient filed
+    # "answers HTTP 429" against #47, and `volatile=True` does not save it: the
+    # marker is recorded and read by neither findings.py nor fold.py, so the
+    # failure opens a row like any other. Deep pass, 2026-09-08.
+    if response.status_code == 429 or response.status_code >= 500:
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason=f"the search answered HTTP {response.status_code}, a "
+                   f"transient that establishes nothing about the recipe",
+            sources={"search": SEARCH, "page": BUILD}))
+        return
     if response.status_code != 200:
         conclude(Measurement(
             verdict="failed",
@@ -115,9 +134,27 @@ def test_the_leaderboard_can_answer_the_ranking_the_recipe_asks_for(rest_anon):
 
     periods = sorted({str(r.get("headline_period")) for r in rows})
     narrowed = rest_anon.get(LEADERBOARD, params={"period": "30d"})
-    filtered = (narrowed.json() or {}).get("bots") or [] \
-        if narrowed.status_code == 200 else []
-    filters = 0 < len(filtered) < len(rows)
+    if narrowed.status_code != 200:
+        # Rule 8, and the reason the old shape was wrong in both directions: a
+        # non-200 used to collapse into `filtered = []`, which made `filters`
+        # false and emitted "?period=30d does not narrow them" about a request
+        # that errored. A failed read is not an empty read.
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason=f"the narrowed leaderboard answered HTTP "
+                   f"{narrowed.status_code}, so whether the period filter "
+                   f"works could not be measured",
+            sources={"leaderboard": LEADERBOARD, "page": BUILD}))
+        return
+
+    filtered = (narrowed.json() or {}).get("bots") or []
+    # Comparability is about the PERIODS the rows carry, not about the count.
+    # `0 < len(filtered) < len(rows)` merely says the set shrank -- so eight of
+    # sixteen rows still spanning four different headline_period values read as
+    # "the period narrows the set" and passed on the violation. Deep pass,
+    # 2026-09-08, 3/3.
+    filtered_periods = {str(r.get("headline_period")) for r in filtered}
+    filters = bool(filtered) and len(filtered_periods) == 1
 
     ranked = sorted((r for r in rows if r.get("headline_return_pct") is not None),
                     key=lambda r: -r["headline_return_pct"])
@@ -170,7 +207,34 @@ def test_the_event_card_feed_carries_headlines_an_agent_can_match(rest_trusted):
     cards = body.get("cards") or []
     titled = [c for c in cards if str(c.get("title") or "").strip()]
     counted = body.get("count")
-    agrees = counted is None or counted == len(cards)
+    # `count` is a stated total and `len(cards)` is a window: the endpoint
+    # documents `limit`, defaulting to 50, and returns exactly 50 today. So a
+    # disagreement is a PAGE, not a missing headline, and failing on it would
+    # have told the vendor "an agent told to match a headline cannot" about
+    # titles that are all present -- report #52 went out for that exact
+    # conflation. And `counted is None` passing vacuously means a feed that
+    # stops publishing the field is never noticed. Both halves: deep pass,
+    # 2026-09-08, 2/3.
+    if counted is None:
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason=f"the feed returned {len(cards)} card(s) and published no "
+                   f"`count`, so the reconciliation this check claims to make "
+                   f"could not be made",
+            population={"cards": len(cards), "titled": len(titled)},
+            sources={"feed": FEED, "page": BUILD}))
+        return
+    if counted != len(cards):
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason=f"the feed states {counted} card(s) and returned "
+                   f"{len(cards)}, which is a page rather than a headline "
+                   f"defect; {len(titled)} of the returned rows carry a title",
+            population={"cards": len(cards), "titled": len(titled),
+                        "count_field": counted},
+            sources={"feed": FEED, "page": BUILD}))
+        return
+    agrees = True
 
     conclude(Measurement(
         verdict="passed" if cards and len(titled) == len(cards) and agrees
@@ -257,18 +321,32 @@ def test_every_card_we_hold_a_position_in_still_resolves(rest_trusted):
 
     # Distinct ids only, and capped: this is a live surface and the point is
     # whether the reference holds, not how many times we can ask.
+    #
+    # The cap and the word "every" cannot both stand. Today's 39 positions hold
+    # 19 distinct cards so the truncation does not bite, but the 21st distinct
+    # card can 404 under a sentence claiming all of them resolve -- and account
+    # growth, not a vendor change, is what reaches it. So the population says
+    # how many were probed, and the verdict says "the N we probed" whenever
+    # that is fewer than we hold. Deep pass, 2026-09-08, 2/3.
+    distinct = list(dict.fromkeys(p.get("card_id") for p in positions))
+    probed = distinct[:CARD_PROBE_CAP]
     unresolved = []
-    for card_id in list(dict.fromkeys(p.get("card_id") for p in positions))[:20]:
+    for card_id in probed:
         if rest_trusted.get(CARD.format(card_id=card_id)).status_code != 200:
             unresolved.append(card_id)
+    complete = len(probed) == len(distinct)
 
     conclude(Measurement(
         verdict="passed" if not unresolved else "failed",
-        reason=(f"every card we hold a position in resolves"
+        reason=((f"every card we hold a position in resolves"
+                 if complete else
+                 f"the {len(probed)} most recent of our {len(distinct)} "
+                 f"distinct cards resolve; the rest were not probed")
                 if not unresolved else
                 f"{len(unresolved)} card(s) we hold a position in no longer "
                 f"resolve, so those rows cannot be priced or closed from the "
                 f"API: {', '.join(unresolved)}"),
         left=sorted(unresolved), right=[],
-        population={"positions": len(positions)},
+        population={"positions": len(positions), "distinct_cards": len(distinct),
+                    "cards_probed": len(probed)},
         sources={"positions": POSITIONS, "card": CARD}))
