@@ -266,6 +266,23 @@ scripts/serve.py     the console on 127.0.0.1:8787. Read-only with respect to
                      state; polls local files once a minute. `--ask MINUTES`
                      adds the half that fetches: one GET of our own reports on
                      a timer, so the bell can light unattended.
+scripts/a2a.py       the third channel, from our side. `send` posts a question
+                     and only on `--confirm` -- the operator's condition, and
+                     without it nothing is written either. Two events per send,
+                     keyed on OUR id, so a POST that times out still leaves the
+                     text on the journal. Built 2026-09-08 because nothing in
+                     scripts/ had ever sent an a2a message and the question
+                     that started the whole /build walk exists nowhere.
+scripts/channels.py  all three channels in one place. `status` reads them live
+                     and says where each stands, `status --offline` answers
+                     from the journal alone, `watch` prints one line per new
+                     inbound message so a Monitor turns it into a chat message.
+                     Everything it knows comes from qa/channels.py.
+qa/channels.py       the ONE reader across bug reports, Telegram and a2a. A
+                     library, so the CLI, the alert and the skill cannot grow
+                     three ideas of what "unanswered" means. Encodes one
+                     judgement: an automated reply is silent, an unclassifiable
+                     one is not.
 scripts/open_checks.py  the selector for a sweep over what is still open.
                      Always prepends tests/meta.
 scripts/inventory.py    the platform section map the dashboard renders. An

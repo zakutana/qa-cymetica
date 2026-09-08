@@ -58,7 +58,8 @@
           }
         ],
         "refused": [],
-        "verifications": []
+        "verifications": [],
+        "stale_from": "2026-09-08T08:56:27+00:00"
       },
       "transitions": [
         {
@@ -205,7 +206,8 @@
             "verdict": "pass",
             "at": "2026-09-07T21:46:26+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-08T08:56:27+00:00"
       },
       "transitions": [
         {
@@ -393,7 +395,8 @@
             "verdict": "pass",
             "at": "2026-09-07T13:54:37+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-08T08:56:27+00:00"
       },
       "transitions": [
         {
@@ -597,7 +600,8 @@
         },
         "reports": [],
         "refused": [],
-        "verifications": []
+        "verifications": [],
+        "stale_from": "2026-09-08T08:56:27+00:00"
       },
       "transitions": [
         {
@@ -754,7 +758,8 @@
           }
         ],
         "refused": [],
-        "verifications": []
+        "verifications": [],
+        "stale_from": "2026-09-08T08:56:27+00:00"
       },
       "transitions": [
         {
@@ -922,7 +927,8 @@
             "verdict": "pass",
             "at": "2026-09-07T13:55:22+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-08T08:56:27+00:00"
       },
       "transitions": [
         {
@@ -1050,7 +1056,8 @@
             "verdict": "pass",
             "at": "2026-09-07T17:42:51+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-08T08:56:27+00:00"
       },
       "transitions": [
         {
@@ -1185,7 +1192,8 @@
             "verdict": "pass",
             "at": "2026-09-07T13:32:26+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-08T08:56:27+00:00"
       },
       "transitions": [
         {
@@ -1327,7 +1335,8 @@
             "verdict": "pass",
             "at": "2026-09-07T13:33:57+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-08T08:56:27+00:00"
       },
       "transitions": [
         {
@@ -1444,7 +1453,8 @@
             "verdict": "pass",
             "at": "2026-09-07T13:33:53+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-08T08:56:27+00:00"
       },
       "transitions": [
         {
@@ -1544,7 +1554,8 @@
           }
         ],
         "refused": [],
-        "verifications": []
+        "verifications": [],
+        "stale_from": "2026-09-08T08:56:27+00:00"
       },
       "transitions": [
         {
@@ -1661,7 +1672,8 @@
             "verdict": "pass",
             "at": "2026-09-07T13:54:19+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-08T08:56:27+00:00"
       },
       "transitions": [
         {
@@ -1800,7 +1812,8 @@
             "verdict": "pass",
             "at": "2026-09-07T21:46:50+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-08T08:56:27+00:00"
       },
       "transitions": [
         {
@@ -2004,7 +2017,8 @@
             "verdict": "pass",
             "at": "2026-09-07T17:43:30+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-08T08:56:27+00:00"
       },
       "transitions": [
         {
@@ -2253,7 +2267,8 @@
             "verdict": "pass",
             "at": "2026-09-07T21:46:59+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-08T08:56:27+00:00"
       },
       "transitions": [
         {
@@ -2422,7 +2437,8 @@
           }
         ],
         "refused": [],
-        "verifications": []
+        "verifications": [],
+        "stale_from": "2026-09-08T08:56:27+00:00"
       },
       "transitions": [
         {
@@ -2602,7 +2618,8 @@
             "verdict": "pass",
             "at": "2026-09-07T13:54:48+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-08T08:56:27+00:00"
       },
       "transitions": [
         {
@@ -2775,7 +2792,8 @@
             "verdict": "pass",
             "at": "2026-09-07T13:55:12+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-08T08:56:27+00:00"
       },
       "transitions": [
         {
@@ -2921,7 +2939,8 @@
             "verdict": "pass",
             "at": "2026-09-07T13:55:17+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-08T08:56:27+00:00"
       },
       "transitions": [
         {
@@ -3027,7 +3046,8 @@
         },
         "reports": [],
         "refused": [],
-        "verifications": []
+        "verifications": [],
+        "stale_from": "2026-09-08T08:56:27+00:00"
       },
       "transitions": [
         {
@@ -3102,7 +3122,8 @@
             "verdict": "pass",
             "at": "2026-09-07T13:34:15+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-08T08:56:27+00:00"
       },
       "transitions": [
         {
@@ -3246,7 +3267,8 @@
         },
         "reports": [],
         "refused": [],
-        "verifications": []
+        "verifications": [],
+        "stale_from": "2026-09-08T08:56:27+00:00"
       },
       "transitions": [
         {
@@ -3345,7 +3367,8 @@
         },
         "reports": [],
         "refused": [],
-        "verifications": []
+        "verifications": [],
+        "stale_from": "2026-09-08T08:56:27+00:00"
       },
       "transitions": [
         {
@@ -3429,7 +3452,8 @@
         },
         "reports": [],
         "refused": [],
-        "verifications": []
+        "verifications": [],
+        "stale_from": "2026-09-08T08:56:27+00:00"
       },
       "transitions": [
         {
@@ -3561,7 +3585,8 @@
             "verdict": "pass",
             "at": "2026-09-07T21:46:31+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-08T08:56:27+00:00"
       },
       "transitions": [
         {
@@ -3749,7 +3774,8 @@
             "verdict": "pass",
             "at": "2026-09-07T21:46:41+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-08T08:56:27+00:00"
       },
       "transitions": [
         {
@@ -3943,7 +3969,8 @@
             "verdict": "pass",
             "at": "2026-09-07T13:33:48+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-08T08:56:27+00:00"
       },
       "transitions": [
         {
@@ -4068,7 +4095,8 @@
             "verdict": "pass",
             "at": "2026-09-07T17:42:57+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-08T08:56:27+00:00"
       },
       "transitions": [
         {
@@ -4265,7 +4293,8 @@
             "verdict": "pass",
             "at": "2026-09-07T14:27:11+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-08T08:56:27+00:00"
       },
       "transitions": [
         {
@@ -4437,7 +4466,8 @@
             "verdict": "pass",
             "at": "2026-09-07T13:33:44+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-08T08:56:27+00:00"
       },
       "transitions": [
         {
@@ -4644,7 +4674,8 @@
             "verdict": "pass",
             "at": "2026-09-07T21:46:22+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-08T08:56:27+00:00"
       },
       "transitions": [
         {
@@ -4824,7 +4855,8 @@
             "verdict": "pass",
             "at": "2026-09-07T21:47:08+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-08T08:56:27+00:00"
       },
       "transitions": [
         {
@@ -5031,7 +5063,8 @@
             "verdict": "pass",
             "at": "2026-09-08T07:27:26+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-08T08:56:27+00:00"
       },
       "transitions": [
         {
@@ -5165,7 +5198,8 @@
             "verdict": "pass",
             "at": "2026-09-07T21:47:03+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-08T08:56:27+00:00"
       },
       "transitions": [
         {
@@ -5302,7 +5336,8 @@
             "verdict": "pass",
             "at": "2026-09-07T21:47:46+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-08T08:56:27+00:00"
       },
       "transitions": [
         {
@@ -5407,7 +5442,7 @@
     "VERIFIED FIXED": 26
   },
   "events_head": {
-    "seq": 1285,
-    "chain": "939f19b0fd465ba0a051f1591fc25ca8d32ea756a19cda109445d939225a4630"
+    "seq": 1287,
+    "chain": "80e7f4aa7accfb67dfd81d3c460de1ea2b48b07b425e58bd1c9d90ec38261b6d"
   }
 }
