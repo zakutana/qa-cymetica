@@ -261,7 +261,15 @@ def state(events: list[dict] | None = None) -> dict:
         last[row["channel"]] = row["at"]
 
     out = {BUG: _bug(events), TELEGRAM: _telegram(events), A2A: _a2a(events)}
+    # Which side the outstanding items sit on, per channel. On the two chat
+    # channels `unanswered` means a message of OURS nobody has replied to, so
+    # it waits on them. On the bug channel it means a row carrying an
+    # obligation, which is a debt of ours. The first version of this printed
+    # "waiting on us" over all three, and told the operator to act on a
+    # telegram thread that was sitting with the vendor.
+    waiting = {BUG: "us", TELEGRAM: "them", A2A: "them"}
     for name, channel in out.items():
         channel["last_from_them"] = last.get(name)
         channel["heard"] = sum(1 for row in heard if row["channel"] == name)
+        channel["waiting_on"] = waiting[name]
     return out

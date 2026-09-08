@@ -318,7 +318,39 @@ endpoints:
     methods: [POST]
     component: rest.clob
     executable_params: [token, amount, quantity, size, price]
-    probe_only: true   # buys on a token exchange book
+    probe_only: true
+
+  # Event-card trading. Declared 2026-09-08 so the floor names what it is
+  # standing on: until now these were stopped only by the undeclared-keys
+  # catch-all, and a floor that does not name what it holds is one edit from
+  # not holding it (tests/meta/test_guard_is_real.py).
+  #
+  # NOT probe_only, because the operator has asked for paper trading through
+  # the API. amount_usdc is executable, so SAFE and PROBE both refuse a body
+  # carrying one -- reaching this endpoint takes a deliberate MUTATE, the same
+  # door submit.py goes through to file a report. `paper` is inert: it is the
+  # flag that says no money moves, and marking it executable would invert its
+  # meaning.
+  - id: event_cards.buy
+    path: /api/v1/event-cards/{card_id}/buy
+    methods: [POST]
+    component: rest.event_cards
+    executable_params: [amount_usdc]
+    inert_params: [paper]
+
+  - id: event_cards.sell
+    path: /api/v1/event-cards/{card_id}/sell
+    methods: [POST]
+    component: rest.event_cards
+    executable_params: [amount_usdc, units]
+    inert_params: [paper]
+
+  - id: event_cards.short
+    path: /api/v1/event-cards/{card_id}/short
+    methods: [POST]
+    component: rest.event_cards
+    executable_params: [amount_usdc]
+    inert_params: [paper]   # buys on a token exchange book
 
   - id: arena.order
     path: /api/v1/arena/order

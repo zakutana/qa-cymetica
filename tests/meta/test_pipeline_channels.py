@@ -142,8 +142,19 @@ def test_the_state_names_all_three_channels(tmp_path, monkeypatch):
     state = _channels().state()
     assert set(state) == {"bug", "telegram", "a2a"}
     for name, channel in state.items():
-        assert "unanswered" in channel, f"{name} cannot say what is waiting on us"
+        assert "unanswered" in channel, f"{name} cannot say what is outstanding"
         assert "last_from_them" in channel, f"{name} cannot say when they last spoke"
+        # Which side the outstanding items are on. A message of ours with no
+        # reply waits on THEM; an obligation on a filed row waits on US, and
+        # the first version of this printed one label over both -- so the
+        # status report told the operator to act on a thread that was theirs.
+        assert channel["waiting_on"] in ("us", "them"), name
+
+    assert state["bug"]["waiting_on"] == "us", (
+        "an obligation on a report is a debt of ours"
+    )
+    assert state["telegram"]["waiting_on"] == "them"
+    assert state["a2a"]["waiting_on"] == "them"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

@@ -99,9 +99,11 @@ def cmd_status(args) -> int:
         channel = state[name]
         waiting = channel.get("unanswered") or []
         last = channel.get("last_from_them") or "never"
+        side = "waiting on them" if channel.get("waiting_on") == "them" \
+            else "waiting on us"
         print(f"{name.upper()}")
         print(f"  last heard from them  {last}")
-        print(f"  waiting on us         {len(waiting)}"
+        print(f"  {side:20}  {len(waiting)}"
               + (f": {', '.join(str(w) for w in waiting[:8])}" if waiting else ""))
         if name == "a2a" and channel.get("undelivered"):
             print(f"  never confirmed sent  {', '.join(channel['undelivered'])}")
