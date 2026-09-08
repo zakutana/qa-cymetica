@@ -168,30 +168,77 @@ def owed(ledger: dict, only: list[str] | None) -> list[dict]:
                 "prereg_id": run.get("prereg_id"),
                 "checks": row.get("checks") or [],
                 "title": row.get("title") or fid,
+                "repair": repair_reason(fid, row["check"]["pinned_fingerprint"]),
             })
     return work
+
+
+def repair_reason(finding_id: str, fingerprint: str) -> str | None:
+    """Why this definition was pinned by hand, or None if it was not.
+
+    qa/fold.py:293 pins the fingerprint a row failed under by itself, inside
+    the run that failed. Nothing else writes that field except a
+    `pin_fingerprint` event, so an event carrying the fingerprint we are about
+    to send means a human replaced the definition after the failure -- there is
+    no innocent reading of it.
+
+    Matched on the value as well as the finding: a row can be repaired twice,
+    and only the pin naming THIS fingerprint describes the definition this
+    verification is about.
+    """
+    latest = None
+    for event in read_events():
+        if (event.get("type") == "pin_fingerprint"
+                and event.get("finding_id") == finding_id
+                and event.get("value") == fingerprint):
+            latest = event.get("reason") or None
+    return latest
 
 
 def body(item: dict) -> dict:
     checks = "\n".join(f"  {c}" for c in item["checks"])
     verdict = item["verdict"]
-    headline = (
-        "VERDICT pass -- the check that recorded this defect now passes, "
-        "under the same definition it failed under."
-        if verdict == "pass" else
-        "VERDICT fail -- the check that recorded this defect still fails. "
-        "This corrects the record: either a fix was claimed and our re-check "
-        "does not agree, or we sent you a pass we can no longer stand behind. "
-        "Read the run below rather than the earlier verification."
-    )
-    why_fingerprint = (
-        "Because it matches the one recorded at the failure, this is the same "
-        "test, not a rewritten one that happens to pass."
-        if verdict == "pass" else
-        "It is quoted so you can tell a check we repaired from one we did not: "
-        "if this differs from a fingerprint we sent you before, the definition "
-        "moved and the earlier verdict was made under the old one."
-    )
+    # A repaired definition may not be sold as the one that failed. The check
+    # still passes and the fix is still real -- what must not go out is "this
+    # is the same test, not a rewritten one", about a test we rewrote. That is
+    # the single claim they cannot check for themselves, and it is why they are
+    # being asked to believe the rest. Seven checks were repaired and pinned in
+    # the deep pass of 2026-09-07 and the passes that followed carried the
+    # identity sentence; found on 2026-09-08, filing the eighth.
+    repair = item.get("repair")
+    if verdict == "pass" and repair:
+        headline = (
+            "VERDICT pass -- the check that recorded this defect now passes. "
+            "Its definition was REPAIRED after the failure, so this is not the "
+            "identical test: the reason for the repair is stated below and the "
+            "fingerprint is the repaired one."
+        )
+        why_fingerprint = (
+            "It does NOT match the one recorded at the failure, because we "
+            "changed the check. What was wrong with it, in our own words: "
+            f"{repair}"
+        )
+    elif verdict == "pass":
+        headline = (
+            "VERDICT pass -- the check that recorded this defect now passes, "
+            "under the same definition it failed under."
+        )
+        why_fingerprint = (
+            "Because it matches the one recorded at the failure, this is the "
+            "same test, not a rewritten one that happens to pass."
+        )
+    else:
+        headline = (
+            "VERDICT fail -- the check that recorded this defect still fails. "
+            "This corrects the record: either a fix was claimed and our re-check "
+            "does not agree, or we sent you a pass we can no longer stand behind. "
+            "Read the run below rather than the earlier verification."
+        )
+        why_fingerprint = (
+            "It is quoted so you can tell a check we repaired from one we did "
+            "not: if this differs from a fingerprint we sent you before, the "
+            "definition moved and the earlier verdict was made under the old one."
+        )
     evidence = (
         f"Independent re-check by the QA agent for hunter expire76.\n\n"
         f"{headline}\n\n"
