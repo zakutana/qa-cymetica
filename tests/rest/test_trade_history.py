@@ -80,12 +80,20 @@ def test_trade_history_is_not_empty_for_an_account_that_has_traded(rest_trusted)
     # products the number spans, and where the rest of its activity lives.
     stated = [field for field in ("identity", "covers", "does_not_cover", "see_also")
               if scope.get(field)]
-    explained = len(stated) >= 3
+    # `identity` is required, not counted. It is the field that answers the
+    # module docstring's open question -- "or it is scoped to an identity our
+    # API key is not" -- and `len(stated) >= 3` passed a scope block that
+    # dropped exactly it. Deep pass, 2026-09-08, 3/3.
+    explained = "identity" in stated and len(stated) >= 3
 
     conclude(Measurement(
         verdict="passed" if reported > 0 or explained else "failed",
-        reason=(f"trade history reports {reported} trade(s) and says what that "
-                f"number spans: {', '.join(stated)}"
+        reason=((f"trade history reports {reported} trade(s) and says what "
+                 f"that number spans: {', '.join(stated)}"
+                 if stated else
+                 f"trade history reports {reported} trade(s); non-empty, so "
+                 f"there is no empty answer to misread -- but it publishes no "
+                 f"scope block at all")
                 if reported > 0 or explained else
                 f"\"Trade history\" reports {reported} trades and does not say "
                 f"what it covers, so an empty answer is indistinguishable from "

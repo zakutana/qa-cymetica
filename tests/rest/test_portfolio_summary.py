@@ -71,6 +71,25 @@ def test_the_summary_does_not_report_a_history_the_positions_contradict(rest_tru
     predictions = number(body.get("total_predictions"))
     volume = number(body.get("total_volume"))
     notional = sum(number(p.get("notional_usdc")) or 0.0 for p in held)
+    # An ABSENT counter is not a zero one. `number(None)` is None and
+    # `None == 0` is False, so a summary that stopped publishing these passed
+    # while stating "the counters are non-zero" about two values it never read
+    # -- and this row is filed as #83, so that pass would have gone out as a
+    # fix verification. Unread is unmeasurable. Deep pass, 2026-09-08, 3/3.
+    unread = [name for name, value in (("total_predictions", predictions),
+                                       ("total_volume", volume))
+              if value is None]
+    if unread:
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason=f"the summary does not publish {', '.join(unread)}, so "
+                   f"whether it contradicts the {len(held)} position(s) it "
+                   f"lists could not be read",
+            left=unread, right=["total_predictions", "total_volume"],
+            population={"positions": len(held)},
+            sources={"summary": SUMMARY, "positions": POSITIONS}))
+        return
+
     silent = [name for name, value in (("total_predictions", predictions),
                                        ("total_volume", volume))
               if value == 0]

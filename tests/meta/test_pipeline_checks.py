@@ -139,8 +139,16 @@ def test_no_claim_enumerates_the_values_it_expects():
             for kind, arg in iter_extractors(spec):
                 if kind not in ("regex_all", "regex_set", "regex", "regex_int"):
                     continue
+                # No alternation at all. The threshold used to be `< 3`, which
+                # admitted `regex_set:(DELTA|STAT|CORR)` -- three enumerated
+                # values, and precisely the extractor shape the
+                # phantom-injection test forty lines above condemns, since a
+                # fourth symbol in the document would be invisible to it.
+                # Nothing justified the number: no claim in claims.yaml carries
+                # any alternation inside an extractor argument, and every other
+                # clause in this check is absolute. Deep pass, 2026-09-08, 3/3.
                 alternatives = arg.count("|")
-                assert alternatives < 3, (
+                assert alternatives == 0, (
                     f"{claim['id']}.{name} enumerates {alternatives + 1} expected "
                     f"values: {spec}\nAnchor to a place in the document instead."
                 )

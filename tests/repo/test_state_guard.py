@@ -170,9 +170,23 @@ def test_the_hook_is_actually_wired_up():
     # the file: delete `Edit|` and "Edit" is still found inside "MultiEdit",
     # so the Edit tool would write under state/ with no hook in front of it
     # while this test stayed green. Found by the contract audit, 2026-09-07.
+    #
+    # And the list comes from the GUARD, not from four names typed here. It was
+    # four -- Write, Edit, MultiEdit, Bash -- while protect_state.py handled
+    # six, so deleting `PowerShell|` from the matcher left this green, left
+    # `test_shell_write_under_state_is_refused` green too (decide() calls the
+    # guard directly and never reads settings.json), and left
+    # `Set-Content state\ledger.json` reaching disk unhooked on the machine
+    # where PowerShell is the primary shell. Rule 4 unenforced with every guard
+    # green. Deep pass, 2026-09-08, 3/3.
+    guard = _load()
+    handled = set(guard.FILE_TOOLS) | set(guard.SHELL_TOOLS)
+    assert handled, "the guard names no tools at all, so this asserts nothing"
+
     covered = {token.strip() for token in matcher.split("|")}
-    for tool in ("Write", "Edit", "MultiEdit", "Bash"):
+    for tool in sorted(handled):
         assert tool in covered, (
-            f"{tool} is not one of the alternatives in the guard's matcher "
-            f"({sorted(covered)}); a substring of another entry does not count"
+            f"{tool} is handled by protect_state.py but is not one of the "
+            f"alternatives in the matcher ({sorted(covered)}), so the hook "
+            f"never runs for it; a substring of another entry does not count"
         )

@@ -128,8 +128,8 @@
     "t1": "REAL"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null,
+   "fixed": true,
+   "commit": "pending",
    "real_votes": 3
   },
   {
@@ -176,8 +176,8 @@
     "t1": "REAL"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null,
+   "fixed": true,
+   "commit": "pending",
    "real_votes": 3
   },
   {
@@ -224,8 +224,8 @@
     "t1": "REAL"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null,
+   "fixed": true,
+   "commit": "pending",
    "real_votes": 3
   },
   {
@@ -240,8 +240,8 @@
     "t1": "REAL"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null,
+   "fixed": true,
+   "commit": "pending",
    "real_votes": 3
   },
   {
@@ -304,8 +304,8 @@
     "t1": "REAL"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null,
+   "fixed": true,
+   "commit": "pending",
    "real_votes": 3
   },
   {
@@ -352,8 +352,8 @@
     "t1": "REAL"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null,
+   "fixed": true,
+   "commit": "pending",
    "real_votes": 3
   },
   {
@@ -400,8 +400,8 @@
     "t1": "REAL"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null,
+   "fixed": true,
+   "commit": "pending",
    "real_votes": 3
   },
   {
@@ -416,8 +416,8 @@
     "t1": "REAL"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null,
+   "fixed": true,
+   "commit": "pending",
    "real_votes": 3
   },
   {
@@ -448,8 +448,8 @@
     "t1": "REAL"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null,
+   "fixed": true,
+   "commit": "pending",
    "real_votes": 3
   },
   {

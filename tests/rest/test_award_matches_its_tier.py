@@ -35,6 +35,15 @@ from qa.marks import SafetyTier, qa
 from qa.measure import Measurement, conclude
 
 TRACKER = "/api/v1/bounty/reports"
+
+# What the tracker calls a row whose award EXISTS, and what it calls one still
+# waiting. Positive lists on both sides: a status in neither is unmeasurable
+# and is counted, never silently adjudicated. The values are theirs and have
+# already moved once -- `awarded` and `pending_award` on 2026-09-06, `paid`
+# today -- which is why a status this check does not recognise must land in a
+# population figure rather than in a verdict.
+AWARDED_STATUSES = {"awarded", "award_recorded", "rewarded", "paid"}
+PENDING_STATUSES = {"pending_award", "pending", "awaiting_award", "none", ""}
 TIERS = "/api/v1/bounty/reward-tiers"
 
 
@@ -62,12 +71,30 @@ def test_a_recorded_award_agrees_with_the_tier_on_the_same_row(rest_anon):
     # that have been awarded nothing. Our error, not theirs, and the shape the
     # sweep rule about whose bug it is exists to catch.
     #
-    # A row is awarded when the tracker does not call it pending. The amount
-    # may then legitimately be zero, and a zero award against a six-figure
-    # band is still the contradiction this check is for.
-    awarded = [r for r in rows
-               if isinstance(r.get("reward_amount"), (int, float))
-               and (r.get("reward_status") or "").strip() != "pending_award"]
+    # A row is awarded when the tracker SAYS SO, not when it fails to say one
+    # particular word. `reward_status != "pending_award"` is a whitelist of one
+    # string that fails OPEN: rename the status, or drop the field as the
+    # my-reports projection already does, and every zeroed row becomes an award
+    # of nothing against a published band -- "0 recorded against 1000.0-1000.0"
+    # -- which is a FAIL verification to #68 and #70 for a state the contract
+    # permits. That is the same shape as the error the comment above records as
+    # ours, and it is the only place in this file where an absent field is read
+    # as data rather than counted as unmeasurable. Deep pass, 2026-09-08, 3/3.
+    #
+    # The amount may still legitimately be zero once a row IS awarded, and a
+    # zero award against a six-figure band is the contradiction this check is
+    # for.
+    awarded, unstated = [], []
+    for r in rows:
+        if not isinstance(r.get("reward_amount"), (int, float)):
+            continue
+        status = (r.get("reward_status") or "").strip().lower()
+        if status in AWARDED_STATUSES:
+            awarded.append(r)
+        elif status in PENDING_STATUSES:
+            continue
+        else:
+            unstated.append((r.get("id"), r.get("reward_status")))
 
     # The currency half does not need an award to be judged. A row saying "this
     # will be paid in USDC" beside a band reading "entitled to 25,000-100,000
@@ -107,11 +134,16 @@ def test_a_recorded_award_agrees_with_the_tier_on_the_same_row(rest_anon):
             reason=(f"no row records an award to hold against its tier: "
                     f"{len(rows) - len(awarded)} of {len(rows)} are still "
                     f"pending_award and the rest publish no usable "
-                    f"eligible_reward_range"),
+                    f"eligible_reward_range"
+                    + (f"; {len(unstated)} row(s) carry a reward_status this "
+                       f"check does not recognise ({sorted({str(u[1]) for u in unstated})}), "
+                       f"so they were adjudicated neither way"
+                       if unstated else "")),
             left=unmeasurable[:8], right=len(awarded),
             sources={"tracker": TRACKER, "tiers": TIERS},
             population={"rows": len(rows), "awarded": len(awarded),
-                        "without_a_band": len(unmeasurable)},
+                        "without_a_band": len(unmeasurable),
+                        "status_not_recognised": len(unstated)},
             claim_id="award-contradicts-its-own-tier"))
         return
 

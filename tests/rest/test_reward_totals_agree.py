@@ -199,12 +199,33 @@ def test_the_reward_totals_agree_with_each_other(rest_anon):
             claim_id="reward-totals-disagree"))
         return
 
+    # The pass sentence used to assert both reconciliations unconditionally,
+    # and either can be skipped without being measured: with
+    # total_earned_definition absent the per-hunter loop never runs, and the
+    # sentence still read "matches the None it is defined as"; with
+    # active_hunters != len(entries) the valid-report comparison is skipped and
+    # the sentence still printed the leaderboard's own figure on both sides of
+    # a comparison nobody made. That is the shape repaired as T01 and quoted in
+    # test_pipeline_verify.py, and a pass reason on this claim reaches the
+    # vendor. Deep pass, 2026-09-08, 3/3.
+    held = []
+    if hunters == len(entries):
+        held.append(f"the aggregate and the leaderboard agree on "
+                    f"{board_valid:.0f} valid report(s)")
+    else:
+        held.append(f"the valid-report totals were NOT compared: stats count "
+                    f"{hunters} active hunter(s) against {len(entries)} "
+                    f"leaderboard row(s)")
+    if column:
+        held.append(f"every hunter's total_earned matches the {column} it is "
+                    f"defined as")
+    else:
+        held.append("total_earned was NOT compared: the leaderboard publishes "
+                    "no total_earned_definition to compare it against")
+
     conclude(Measurement(
         verdict="failed" if problems else "passed",
-        reason=("; ".join(problems) if problems else
-                f"the aggregate and the leaderboard agree: {board_valid:.0f} "
-                f"valid report(s) either way, and every hunter's total_earned "
-                f"matches the {column} it is defined as"),
+        reason=("; ".join(problems) if problems else "; ".join(held)),
         left={"leaderboard": [{"hunter": e.get("hunter_name"),
                                "earned": _number(e.get("total_earned")),
                                "awarded": _number(e.get("total_awarded")),

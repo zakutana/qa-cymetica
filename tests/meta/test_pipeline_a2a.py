@@ -103,6 +103,16 @@ def test_the_inbox_keeps_what_tells_a_human_from_a_robot(tmp_path, monkeypatch):
     assert by_id["a2a_1"]["auto"] is True
     assert by_id["a2a_1"]["kind"] == "first_pass"
     assert by_id["a2a_2"].get("auto") is not True
+    # And its kind. Asserting it only on the automated row left the keeping of
+    # `kind` free to be nested under the `auto` branch in fetch_inbox: still
+    # green, while every human reply loses its kind and the alert -- whose rule
+    # is that a missing kind means UNKNOWN -- announces it forever as
+    # unclassifiable, the one distinction this check is named for. Deep pass,
+    # 2026-09-08, 3/3.
+    assert by_id["a2a_2"].get("kind") == "human", (
+        "the human reply's kind was dropped, so it is indistinguishable from "
+        "the 39 messages recorded before the discriminator was kept"
+    )
     assert by_id["a2a_2"]["reply_to"] == "a2a_ours", (
         "parent_message_id is the only exact pairing key they give us -- the "
         "thread id is one value for the whole account and pairs nothing"
@@ -146,11 +156,28 @@ def test_a_send_that_never_answers_keeps_the_text_and_says_unknown(tmp_path, mon
 
     mod = _a2a()
 
+    # Read the journal from INSIDE the request. Asserting after main() returns
+    # cannot see the ordering at all: moving the intent append down into the
+    # timeout handler leaves both events present with the same text and the
+    # check green, while a process killed mid-POST loses the words -- the only
+    # failure the two-event record exists for. The mock's handler is the one
+    # place that observes the moment the request leaves, and it was the place
+    # this test did not look. Deep pass, 2026-09-08, 3/3.
+    in_flight = {}
+
     def dies(request):
+        in_flight["events"] = [e for e in read_events()
+                               if e["type"] == "a2a_intent"]
         raise httpx.ReadTimeout("no answer", request=request)
 
     mod._client_for = lambda: _client(dies)
     mod.main(["send", "--text", "the long question about the channel", "--confirm"])
+
+    assert in_flight.get("events"), (
+        "the POST left with no a2a_intent on the journal, so a process killed "
+        "here would lose the text -- which is the whole reason for two events"
+    )
+    assert in_flight["events"][0]["text"] == "the long question about the channel"
 
     events = read_events()
     intent = [e for e in events if e["type"] == "a2a_intent"]

@@ -143,13 +143,22 @@ def test_verified_reports_record_what_they_earned(rest_anon):
             claim_id="bounty-rewards-unrecorded"))
         return
 
+    # One sentence used to serve both verdicts, so a PASS carried the defect
+    # clause -- "a report that was paid and one whose award was never recorded
+    # are indistinguishable" -- while the same sentence's own data refuted it.
+    # Sixteen rows read `paid` with a paid_at today; the values distinguish
+    # them, which is exactly what the pass means. Deep pass, 2026-09-08, 3/3.
     conclude(Measurement(
         verdict="failed" if closed and not settled else "passed",
-        reason=(f"{len(closed)} of the {len(rows)} public reports are closed "
-                f"as fixed and {len(settled)} of them can be read as paid or "
-                f"awarded. reward_status takes {seen or ['no value']}, so a "
-                f"report that was paid and one whose award was never recorded "
-                f"are indistinguishable"
+        reason=((f"{len(closed)} of the {len(rows)} public reports are closed "
+                 f"as fixed and none of them can be read as paid or awarded. "
+                 f"reward_status takes {seen or ['no value']}, so a report that "
+                 f"was paid and one whose award was never recorded are "
+                 f"indistinguishable"
+                 if closed and not settled else
+                 f"{len(settled)} of the {len(closed)} closed report(s) can be "
+                 f"read as paid or awarded from reward_status {seen or ['no value']}, "
+                 f"so a settled report is distinguishable from an unrecorded one")
                 + (f"; stats still report bugs_fixed={totals.get('bugs_fixed')} "
                    f"and total_paid={totals.get('total_paid')}" if totals else "")),
         left=len(settled), right=len(closed),
