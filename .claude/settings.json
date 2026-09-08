@@ -11,6 +11,7 @@
       "Bash(python scripts/never_fired.py:*)",
       "Bash(python scripts/inventory.py:*)",
       "Bash(python scripts/withdraw.py:*)",
+      "Bash(python scripts/correspond.py:*)",
       "Bash(python scripts/submit.py:*)",
       "Bash(python scripts/verify.py:*)",
       "Bash(git status:*)",
@@ -28,6 +29,19 @@
     ]
   },
   "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python",
+            "args": [".claude/hooks/open_threads.py"],
+            "timeout": 10,
+            "statusMessage": "reading open telegram threads"
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "matcher": "Write|Edit|MultiEdit|NotebookEdit|Bash|PowerShell",

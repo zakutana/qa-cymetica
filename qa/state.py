@@ -506,6 +506,16 @@ EVENT_TYPES = frozenset({
     # for the one reason every submission has two (rule 9) -- the intent
     # survives a timeout that eats the outcome.
     "verification_intent", "verification_outcome",
+    # The operator's Telegram conversation with the vendor, which this
+    # repository could not see at all until 2026-09-08: ET-22498 set off the
+    # whole walk of /build and the question we asked in it exists nowhere.
+    #
+    # Deliberately NOT `message`/`reply`. A `reply` moves the FILING axis to
+    # REPLIED and is refused without an evidence_id, because it means "they
+    # answered the report we filed". A chat message is not a filing, and
+    # reusing the type would let text pasted out of Telegram rewrite finding
+    # states. These two move neither axis; the fold does not read them.
+    "telegram_sent", "telegram_reply",
 })
 REQUIRED_EVENT_KEYS = ("type", "at", "by", "source")
 ALLOWED_EVENT_KEYS = frozenset({
@@ -536,7 +546,14 @@ def _natural_key(event: dict) -> str:
         return f"{t}|{g('report_id')}|{g('status')}|{g('observed_at')}"
     if t == "vendor_read":
         return f"{t}|{g('at')}|{g('source')}|{g('klass')}"
-    if t in ("message", "reply"):
+    if t in ("message", "reply", "telegram_sent", "telegram_reply"):
+        # The type is part of the key, so the archived MSG-0001 (a `message`
+        # migrated out of round one) and a MSG-0001 sent on Telegram would be
+        # two different keys and both would append. That is not permission to
+        # reuse the number: what stops it is the allocator in
+        # scripts/correspond.py reading every event regardless of type, because
+        # two things called MSG-0001 are ambiguous for ever in a journal that
+        # cannot be rewritten.
         return f"{t}|{g('msg_id')}"
     if t == "run_recorded":
         return f"{t}|{g('run_id')}"
@@ -599,6 +616,20 @@ def _validate_event(event: dict) -> None:
         raise JournalError(f"event has unknown keys {sorted(unknown)}")
     if event["type"] == "withdraw" and not (event.get("reason") or "").strip():
         raise JournalError("a withdraw event needs a non-empty reason")
+    if event["type"] in ("telegram_sent", "telegram_reply"):
+        # Without an id the natural key is `telegram_sent|None`, so the second
+        # id-less message is answered "duplicate" and dropped without a word --
+        # the same defect the verification key comment above describes, on the
+        # one channel where the text exists nowhere else.
+        if not (event.get("msg_id") or "").strip():
+            raise JournalError(f"a {event['type']} event needs a msg_id")
+        # A correspondence record that does not carry the words is ET-22498
+        # again with a nicer id: we would know a conversation happened and
+        # still not know what was in it.
+        if not (event.get("text") or "").strip():
+            raise JournalError(f"a {event['type']} event needs non-empty text")
+        if event["type"] == "telegram_reply" and not event.get("reply_to"):
+            raise JournalError("a telegram_reply needs the msg_id it answers")
 
 
 def read_events(path: Path | None = None) -> list[dict]:

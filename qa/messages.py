@@ -17,8 +17,12 @@ workflow was live, and built a console marker for it before the operator said
 plainly that nothing is ever pasted anywhere. So what remains is the part that
 runs: a parser.
 
-Correspondence now reaches us through exactly one channel, the bounty API --
-see `scripts/bounty.py`.
+Correspondence reaches us through the bounty API -- see `scripts/bounty.py` --
+and, since 2026-09-08, through the operator's Telegram thread, which
+`scripts/correspond.py` records as journal events when they confirm they sent
+something. That is not a reversal of the paragraph above: nothing is pasted
+into a directory for a scanner to find, and no file here is a source of state.
+This module still parses only the four round-one files under `archive/`.
 """
 
 from __future__ import annotations
