@@ -358,12 +358,30 @@ def fetch_inbox(client=None, agent_id: str | None = None) -> dict:
         # append_event is the authority on whether we have seen this, not a
         # set built here: the journal keys a message on its id, so a second
         # reader cannot disagree with it.
-        wrote = append_event({
+        # auto, kind and the message it answers were read into `new` and then
+        # dropped when this returned, so from the journal a routing prompt and
+        # a human answer were the same row -- and an alert that fires on the
+        # trophy emoji is one the operator learns to ignore. `reply_to` takes
+        # their parent_message_id: the thread id is one value for the whole
+        # account and pairs nothing, this pairs a question with its answer.
+        #
+        # The 39 messages recorded before 2026-09-08 carry none of these and
+        # cannot be given them -- the journal is append-only. A missing `kind`
+        # therefore means UNKNOWN, never "human" and never "robot".
+        record = {
             "type": "message", "at": message.get("created_at") or at,
             "by": "vendor", "source": A2A_SOURCE, "msg_id": str(msg_id),
             "text": message.get("content") or "",
             "origin": "a2a", "via": message.get("thread_id"),
-        })
+        }
+        if metadata.get("auto"):
+            record["auto"] = True
+        if metadata.get("kind"):
+            record["kind"] = str(metadata["kind"])
+        answers = message.get("parent_message_id") or metadata.get("in_reply_to")
+        if answers:
+            record["reply_to"] = str(answers)
+        wrote = append_event(record)
         if wrote == "appended":
             new.append({"msg_id": str(msg_id),
                         "at": message.get("created_at") or at,

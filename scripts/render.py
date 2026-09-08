@@ -317,10 +317,22 @@ def build_payload(ledger: dict | None = None, inventory: dict | None = None,
     # events now, and an event does not care where the file ended up.
     events = read_events()
     if thread is None:
-        sent = [e for e in events if e["type"] == "message"]
+        # `by`, not just the type. `message` was ours in round one and has been
+        # the vendor's a2a inbox since 2026-09-07, so counting the type alone
+        # read "messages sent / received 43 / 1" while 40 of the 43 were theirs
+        # -- the one number on this page about correspondence, wrong in the
+        # flattering direction. Their messages are counted as received.
+        # Telegram is deliberately absent from both sides: the operator ruled
+        # that channel off this page on 2026-09-08, and a count is still the
+        # page. tests/meta/test_pipeline_correspond.py holds that line.
+        sent = [e for e in events
+                if e["type"] == "message" and e.get("by") != "vendor"]
+        heard = [e for e in events
+                 if e["type"] == "reply"
+                 or (e["type"] == "message" and e.get("by") == "vendor")]
         thread = {"counts": {
             "sent": len(sent),
-            "received": sum(1 for e in events if e["type"] == "reply"),
+            "received": len(heard),
             "undelivered": sum(1 for e in sent if not e.get("delivered")),
         }}
 

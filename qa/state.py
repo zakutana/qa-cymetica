@@ -516,6 +516,15 @@ EVENT_TYPES = frozenset({
     # reusing the type would let text pasted out of Telegram rewrite finding
     # states. These two move neither axis; the fold does not read them.
     "telegram_sent", "telegram_reply",
+    # The third channel, and the one we could only ever listen to: nothing in
+    # scripts/ had ever sent an a2a message, so the question of 2026-09-07
+    # 19:32 that made them route a2a to a human exists nowhere. Their answer is
+    # on this journal; ours is not.
+    #
+    # Two events for the reason rule 9 gives, and keyed on OUR id rather than
+    # the server's: a send whose response never arrived has no server id, and
+    # that is exactly the case the record exists for.
+    "a2a_intent", "a2a_outcome",
 })
 REQUIRED_EVENT_KEYS = ("type", "at", "by", "source")
 ALLOWED_EVENT_KEYS = frozenset({
@@ -528,6 +537,12 @@ ALLOWED_EVENT_KEYS = frozenset({
     "klass", "rows_returned", "server_total", "stale_from",
     # verification_intent / verification_outcome
     "verdict", "fingerprint", "tree_sha", "checked_at",
+    # What tells one of their a2a messages from another. fetch_inbox read all
+    # three off the wire and kept none, so a routing prompt and a human answer
+    # were the same row. `reply_to` already exists and takes their
+    # parent_message_id, which is the only exact pairing key they give us --
+    # the thread id is one value for the whole account.
+    "auto", "kind",
 })
 
 
@@ -555,6 +570,14 @@ def _natural_key(event: dict) -> str:
         # two things called MSG-0001 are ambiguous for ever in a journal that
         # cannot be rewritten.
         return f"{t}|{g('msg_id')}"
+    if t == "a2a_intent":
+        return f"{t}|{g('msg_id')}"
+    if t == "a2a_outcome":
+        # The outcome joins the key, as filing_outcome's comment explains: a
+        # send that timed out and was later settled against their inbox is two
+        # genuine facts about one attempt, and collapsing them would leave the
+        # record saying we still do not know whether they got it.
+        return f"{t}|{g('msg_id')}|{g('outcome')}|{g('at')}"
     if t == "run_recorded":
         return f"{t}|{g('run_id')}"
     if t in ("withdraw", "retire_check", "rebind_check", "pin_fingerprint"):
@@ -630,6 +653,13 @@ def _validate_event(event: dict) -> None:
             raise JournalError(f"a {event['type']} event needs non-empty text")
         if event["type"] == "telegram_reply" and not event.get("reply_to"):
             raise JournalError("a telegram_reply needs the msg_id it answers")
+    if event["type"] in ("a2a_intent", "a2a_outcome"):
+        if not (event.get("msg_id") or "").strip():
+            raise JournalError(f"an {event['type']} event needs our msg_id")
+        # Only the intent carries words. The outcome is what became of them,
+        # and on a timeout there is nothing to say but "we do not know".
+        if event["type"] == "a2a_intent" and not (event.get("text") or "").strip():
+            raise JournalError("an a2a_intent event needs non-empty text")
 
 
 def read_events(path: Path | None = None) -> list[dict]:
