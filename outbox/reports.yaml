@@ -1370,6 +1370,97 @@ reports:
       it serves. An empty 200 is indistinguishable from a true empty history,
       and that is the part that misleads.
 
+  - key: short-ignores-an-explicit-paper-request
+    findings: [CYM-an_explicit_paper_request_is_honoured_on_every_surface]
+    severity: high
+    category: api
+    url: https://cymetica.com/openapi-public.json
+    title: "POST /api/v1/event-cards/{card_id}/short accepts paper=true and opens a real-ledger perp anyway, by your own field description"
+    expected: >
+      A caller that explicitly sends paper=true is not given a position that
+      moves real money. Refusing the order would be fine; silently opening a
+      real one is not.
+    actual: >
+      ShortRequest.paper, in openapi-public.json today: "Per-trade paper
+      override — honoured only on the spot-bear fallback (cards without an
+      EVCDX token); perps are always real-ledger". So a short on a card that
+      has an EVCDX token opens a real-ledger position while the request said
+      paper, and the caller has no documented way to tell which cards those
+      are before ordering.
+    steps:
+      - "GET https://cymetica.com/openapi-public.json"
+      - "Read components.schemas.ShortRequest.properties.paper.description"
+      - "Compare with BuyRequest.paper, which honours the flag unconditionally"
+      - "Look for a field on GET /api/v1/event-cards or /api/v1/event-cards/{card_id} that tells a caller whether the card has an EVCDX token -> we could not find one"
+    body: >
+      This is the sharpest form of the family that #80 was about, and we are
+      filing it separately because #80 asked whether a caller CAN state the
+      book — which you closed properly, and we have sent the pass. This asks
+      whether stating it is enough.
+
+
+      An ignored explicit instruction is worse than an undocumented default.
+      With a default, a careful caller learns the rule once and complies. Here
+      the caller did everything right: it read the schema, it sent the
+      canonical control, it asked for the one thing that guarantees no real
+      money moves — and on some cards it gets a real perp. It cannot even
+      choose to avoid those cards, because we could find no published field
+      saying which cards carry an EVCDX token.
+
+
+      We are not asking for paper perps. If the perp ledger cannot be
+      simulated, the safe behaviour is the one you already chose for the CLOB
+      an hour ago: refuse. A 400 saying "paper is not available for perp
+      shorts on this card" costs the caller one branch and cannot cost it
+      money. Silently downgrading paper=true to a real position is the case
+      that can.
+
+
+      Credit where it is due: we only found this because your new description
+      says so plainly. The previous text did not, and the behaviour was the
+      same.
+
+  - key: summary-counters-read-zero-in-live-mode
+    findings: [CYM-the_summary_does_not_report_a_history_the_positions_contradict]
+    severity: medium
+    category: api
+    url: https://cymetica.com/api/v1/portfolio/summary
+    title: "GET /api/v1/portfolio/summary reports total_predictions 0 and total_volume 0 on an account holding 39 positions worth $2,901"
+    expected: >
+      An agent reading its own summary is not told it has never traded while
+      the same platform lists its positions.
+    actual: >
+      The counters read 0 and 0 beside 39 event-card positions totalling
+      2901.00 USDC of notional. We have seen them read 142 and 3582.146846 on
+      the same account earlier the same day; the two readings differ in the
+      account's simulation_mode, which was true then and false now, so the
+      counters look mode-scoped. Nothing in the response says so, and the
+      positions listed alongside them are not mode-scoped.
+    steps:
+      - "GET https://cymetica.com/api/v1/portfolio/summary -> total_predictions 0, total_volume 0, simulation_mode false"
+      - "GET https://cymetica.com/api/v1/event-cards/positions -> 39 positions, 2901.00 USDC of notional, 28 of them is_paper false"
+      - "Switch the account to paper and read the summary again -> we saw 142 and 3582.146846"
+    body: >
+      We are not claiming a number, and we may be wrong about the mechanism.
+      What we can hold is that two of your own surfaces, read in the same
+      second with the same key, say incompatible things: one says nothing has
+      ever been traded here, the other lists what was traded.
+
+
+      If the counters are deliberately scoped to the active book, that is a
+      reasonable design and the fix is small: say so in the response, the way
+      /api/v1/trades now says what it covers. That scope block is a good
+      pattern and this is the endpoint next in line for it — with the
+      difference that here the positions in the same account are NOT scoped
+      the same way, so the two numbers sitting beside each other belong to
+      different populations.
+
+
+      Worth one extra look before you close it: an agent that reads
+      total_volume to size its next order, or win_rate to decide whether its
+      strategy is working, gets a truthful-looking zero rather than an error.
+      That is the shape that does damage quietly.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: read-only
   verification of the REST API, MCP and machine-readable discovery surfaces. No
