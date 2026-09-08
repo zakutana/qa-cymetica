@@ -57,6 +57,13 @@ WATCHED = ("state/ledger.json", "state/journal/events.jsonl", "state/bounty.json
 POLL_SECONDS = 60.0
 
 
+def _escape(text) -> str:
+    """Their error text lands in our markup; it is data, not HTML."""
+    from html import escape
+
+    return escape(str(text), quote=True)
+
+
 def _render_module():
     spec = importlib.util.spec_from_file_location(
         "render_live", REPO_ROOT / "scripts" / "render.py")
@@ -143,6 +150,18 @@ class Live:
             payload, html, digest = self.payload, self.html, self.digest
             error = f"{type(exc).__name__}: {exc}"
 
+        if error:
+            # Every time, not only when the message changes. On 2026-09-08 the
+            # same JournalError repeated once a minute for two hours -- a
+            # module this process imported before ALLOWED_EVENT_KEYS grew two
+            # keys -- and because `changed` compares the error with the
+            # PREVIOUS error, an identical failure read as "nothing moved". No
+            # log line, no notification, and a page serving a two-hour-old
+            # truth. A repeating failure is not a quiet one.
+            print(f"[serve] REBUILD FAILED, page is frozen at "
+                  f"{(self.payload or {}).get('generated_at')}: {error}",
+                  file=sys.stderr)
+
         with self.lock:
             changed = digest != self.digest or error != self.error
             self.payload, self.html, self.digest, self.error = payload, html, digest, error
@@ -153,6 +172,36 @@ class Live:
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(html, encoding="utf-8")
         return changed
+
+    def serve_html(self) -> str:
+        """The page, and a band across it when it has stopped being rebuilt.
+
+        The last good page is the right thing to keep serving -- a blank tab
+        during a bad fold helps nobody. What was wrong until 2026-09-08 is that
+        it was served silently: the console showed 39 findings and three rows
+        as STILL REPRODUCIBLE for two hours after they had been verified fixed,
+        and the operator found it by disbelieving their own dashboard.
+
+        The server window is not where anyone looks. The page is, so the page
+        says it.
+        """
+        with self.lock:
+            html, error, payload = self.html, self.error, self.payload
+        if not error or not html:
+            return html
+        frozen = (payload or {}).get("generated_at") or "an unknown time"
+        band = (
+            '<div style="position:sticky;top:0;z-index:99999;padding:.6rem 1rem;'
+            'background:#5a1111;color:#ffd7d7;font:600 13px/1.5 ui-monospace,'
+            'monospace;border-bottom:1px solid #ff6b6b">'
+            f'THIS PAGE HAS STOPPED UPDATING &mdash; frozen at {_escape(frozen)}. '
+            f'Every rebuild since has failed: {_escape(error)} '
+            '&middot; restart the console to pick up changed modules.'
+            '</div>')
+        marker = "<body>"
+        if marker in html:
+            return html.replace(marker, marker + band, 1)
+        return band + html
 
     def notify(self) -> None:
         with self.lock:
@@ -318,7 +367,11 @@ def make_handler(live: Live):
                     self._send(f"render failed: {error}".encode("utf-8"),
                                "text/plain; charset=utf-8", 500)
                     return
-                self._send(html.encode("utf-8"), "text/html; charset=utf-8")
+                # serve_html, not html: a page that has stopped being rebuilt
+                # carries a band saying so. Serving `html` here is what let a
+                # frozen console look healthy for two hours on 2026-09-08.
+                self._send(live.serve_html().encode("utf-8"),
+                           "text/html; charset=utf-8")
                 return
 
             if path == "/payload.json":

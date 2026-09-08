@@ -171,6 +171,55 @@ def test_a_broken_render_keeps_serving_the_last_good_page(live, serve, monkeypat
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_page_that_stopped_updating_says_so_on_itself(live, serve, monkeypatch):
+    """The failure that served a two-hour-old truth without a word.
+
+    2026-09-08: `auto` and `kind` were added to ALLOWED_EVENT_KEYS. The console
+    had been running since before that, holding the older qa.state -- rebuild()
+    re-imports render.py by design but nothing under it -- so its loader
+    refused every journal line carrying the new key. From 11:32 to 13:30 it
+    served a page showing 39 rows and three findings as STILL REPRODUCIBLE that
+    had been verified as fixed hours earlier, and the operator found it by
+    disbelieving their own dashboard.
+
+    Two things made it silent, and this holds the second one. rebuild() keeps
+    the last good html on an exception, which is right. But `changed` compares
+    the error to the PREVIOUS error, so an identical failure repeating every
+    minute reads as "nothing moved": no log line, no notification, and a page
+    that looks live.
+
+    A page that has stopped being rebuilt must say so on itself. The server
+    window is not where anyone looks -- the page is.
+    """
+    assert live.html, "nothing to go stale"
+    good = live.html
+
+    # At the import seam, like the sibling above: rebuild() re-imports render.py
+    # every time, so a patch on the loaded object is discarded before it is used.
+    def explode(*_, **__):
+        raise RuntimeError("JournalError: line 1338: unknown key 'auto'")
+
+    broken = types.SimpleNamespace(build_payload=explode, render=explode,
+                                   payload_hash=explode,
+                                   out_path=live.render.out_path)
+    monkeypatch.setattr(serve, "_render_module", lambda: broken)
+    # Twice, with the SAME error: the second is the one that used to go silent.
+    live.rebuild()
+    live.rebuild()
+
+    assert live.error and "unknown key" in live.error
+    served = live.serve_html()
+    assert served != good, (
+        "the page served after a failed rebuild is byte-identical to the last "
+        "good one, so a stalled console is indistinguishable from a working one"
+    )
+    assert "unknown key" in served or "stale" in served.lower(), (
+        "the page does not say it stopped updating; the only trace is a line "
+        "in a server window nobody reads"
+    )
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_page_knows_which_render_it_is():
     """A tab that reconnects must compare against itself, not against a memory.
 
