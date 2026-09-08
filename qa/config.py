@@ -68,7 +68,13 @@ def identities() -> dict[str, Identity]:
             header="X-API-Key",
             value=os.environ.get("QA_TRUSTED_KEY") or None,
             scope="read",
-            expected_trust="trusted",
+            # `allied`, not `trusted`: the identity is called trusted because
+            # that is what it was in round one, and the server has served it as
+            # the TOP rung since at least 2026-09-08 -- trust_score 10226,
+            # sixteen paid reports. Nothing read this field until a check was
+            # written for it, so the promotion went unnoticed and every
+            # sentence about which rung we tested from was wrong.
+            expected_trust="allied",
         ),
         "recognized": Identity(
             name="recognized",
