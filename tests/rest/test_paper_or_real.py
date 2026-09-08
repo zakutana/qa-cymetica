@@ -33,6 +33,7 @@ mistake inside a trading loop is the whole finding.
 from __future__ import annotations
 
 import json
+import re
 
 from qa.marks import SafetyTier, qa
 from qa.measure import Measurement, conclude
@@ -49,6 +50,32 @@ ORDER_SCHEMAS = {
     "exchange order": ("src__api__routes__exchange__PlaceOrderRequest", "mode"),
     "clob order": ("src__api__routes__clob__PlaceOrderRequest", None),
 }
+
+# The one name every order surface agreed on, 2026-09-08. `is_paper` survives
+# on the clone request as an alias; `paper` is the canonical one and is what a
+# caller writing a single helper will reach for.
+CONTROL = "paper"
+
+# A surface admitting, in its own schema, that the control does not decide.
+#
+# This replaced a clause that asked whether the description SAID what omitting
+# the field does. That was asking for a vocabulary: it failed the event-card
+# endpoints, whose text settles the case perfectly well in other words ("None
+# (default) → use user.simulation_mode if set"), and it failed SellRequest for
+# the crime of pointing at BuyRequest instead of repeating it. Two false
+# failures in one check, on the same day I twice reported a vendor's fix as a
+# defect by demanding my own phrasing back.
+#
+# What is worth failing on is the opposite and much sharper: a surface that
+# takes `paper` and then says it will not always be obeyed. ShortRequest says
+# exactly that -- "honoured only on the spot-bear fallback (cards without an
+# EVCDX token); perps are always real-ledger" -- so a caller who explicitly
+# asks for paper can be given a real-ledger position. An ignored explicit
+# instruction is worse than an undocumented default, because the caller did
+# everything right.
+NOT_HONOURED = re.compile(
+    r"honou?red only|only honou?red|ignored|not honou?red|has no effect"
+    r"|always real|always live|regardless of", re.I)
 
 
 def _spec(client):
@@ -121,14 +148,28 @@ def test_the_setting_that_decides_whether_real_money_moves_is_readable(rest_trus
 
 @qa(component="rest.event_cards", tier=SafetyTier.SAFE, surface="rest")
 def test_every_order_endpoint_decides_the_book_the_same_way(rest_trusted):
-    """Four ways to place an order, four different answers to one question.
+    """One control on every order surface, and omission never spends by surprise.
 
-    Not a style complaint. The defaults DIVERGE: omit the field on an
-    event-card trade or a bot clone and the account's setting decides; omit
-    `mode` on an exchange order and it is `"live"`. An agent that has set
-    itself to paper, and writes one helper that omits the optional field
-    because omitting it worked on the first endpoint, places a real order on
-    the second. The CLOB endpoint offers no control at all.
+    The first version of this demanded one field AND one default. That was the
+    shape of our own request, not of the contract, and Cymetica's fix on
+    2026-09-08 showed the difference: they gave every surface the same field,
+    `paper`, and kept the defaults deliberately unlike each other, because the
+    surfaces are unlike each other. The CLOB has no paper book, so it cannot
+    default to paper; it refuses instead. Demanding identical defaults would
+    have been demanding something wrong, and would have reported their fix as
+    the defect it closed -- the same over-reach #76 taught us this morning.
+
+    So the check now holds the two things that actually protect a caller:
+
+      * every order surface names the control the same way, so one helper can
+        set it everywhere;
+      * and no surface lets OMISSION spend real money on an account that has
+        put itself in paper mode. Inherit it, force it, or refuse the order --
+        any of the three is safe. Silently going live is not.
+
+    The second half is read from the field descriptions rather than by placing
+    orders. That is a real limit and it is the honest one: we are not going to
+    prove a live-order path by taking it.
     """
     spec, why = _spec(rest_trusted)
     if spec is None:
@@ -138,15 +179,15 @@ def test_every_order_endpoint_decides_the_book_the_same_way(rest_trusted):
 
     schemas = (spec.get("components") or {}).get("schemas") or {}
     found = {}
-    for label, (schema_name, field) in ORDER_SCHEMAS.items():
+    for label, (schema_name, _) in ORDER_SCHEMAS.items():
         schema = schemas.get(schema_name)
         if schema is None:
             continue
         props = schema.get("properties") or {}
-        named = [p for p in props
-                 if p in ("paper", "is_paper", "mode") or "paper" in p.lower()]
-        default = (props.get(field) or {}).get("default") if field else None
-        found[label] = {"field": named[0] if named else None, "default": default}
+        described = (props.get(CONTROL) or {}).get("description") or ""
+        found[label] = {"has_control": CONTROL in props,
+                        "not_honoured": bool(NOT_HONOURED.search(described)),
+                        "description": described}
 
     if len(found) < 2:
         conclude(Measurement(
@@ -156,25 +197,67 @@ def test_every_order_endpoint_decides_the_book_the_same_way(rest_trusted):
             sources={"schema": OPENAPI}))
         return
 
-    fields = {v["field"] for v in found.values()}
-    defaults = {str(v["default"]) for v in found.values()}
-    missing = sorted(k for k, v in found.items() if v["field"] is None)
-    consistent = len(fields) == 1 and len(defaults) == 1
+    nameless = sorted(k for k, v in found.items() if not v["has_control"])
 
     conclude(Measurement(
-        verdict="passed" if consistent else "failed",
-        reason=(f"every order endpoint decides the book through the same field "
-                f"and the same default: {fields}"
-                if consistent else
-                f"the order endpoints name the paper/live control "
-                f"{len(fields)} different ways ({', '.join(sorted(str(f) for f in fields))}) "
-                f"and disagree on what omitting it means "
-                f"({', '.join(sorted(defaults))})"
-                + (f"; {', '.join(missing)} offers no control at all"
-                   if missing else "")),
-        left=sorted(f"{k}: {v['field']} default={v['default']}"
-                    for k, v in found.items()),
-        right=["one field, one default, on every order endpoint"],
-        population={"endpoints": len(found), "distinct_fields": len(fields),
-                    "distinct_defaults": len(defaults)},
+        verdict="passed" if not nameless else "failed",
+        reason=(f"all {len(found)} order surfaces take the same control, "
+                f"`{CONTROL}`, so one helper can state the book everywhere"
+                if not nameless else
+                f"{', '.join(nameless)} take no `{CONTROL}` field, so a caller "
+                f"cannot state which book the order belongs in"),
+        left=sorted(nameless), right=[],
+        population={"endpoints": len(found),
+                    "without_the_control": len(nameless)},
+        sources={"schema": OPENAPI}))
+
+
+@qa(component="rest.event_cards", tier=SafetyTier.SAFE, surface="rest")
+def test_an_explicit_paper_request_is_honoured_on_every_surface(rest_trusted):
+    """A caller that says `paper: true` is not given a real-ledger position.
+
+    Separate from the check above on purpose, and filed separately, because it
+    is a different defect: that one asks whether a caller CAN state the book,
+    and Cymetica closed it on 2026-09-08 by putting `paper` on all four
+    surfaces. This asks whether stating it is enough, and the same fix
+    documented the case where it is not.
+
+    ShortRequest, in their own schema: "Per-trade paper override — honoured
+    only on the spot-bear fallback (cards without an EVCDX token); perps are
+    always real-ledger". So a short on a card that has an EVCDX token opens a
+    real position while the request said paper.
+
+    An ignored explicit instruction is worse than an undocumented default. The
+    caller did everything right, has no way to know which cards carry an EVCDX
+    token before ordering, and the one thing it asked for -- that no real money
+    move -- is the thing that is not honoured.
+
+    Read from the schema, not by shorting anything.
+    """
+    spec, why = _spec(rest_trusted)
+    if spec is None:
+        conclude(Measurement(verdict="inconclusive", reason=why,
+                             sources={"schema": OPENAPI}))
+        return
+
+    schemas = (spec.get("components") or {}).get("schemas") or {}
+    ignored = {}
+    for label, (schema_name, _) in ORDER_SCHEMAS.items():
+        props = (schemas.get(schema_name) or {}).get("properties") or {}
+        described = (props.get(CONTROL) or {}).get("description") or ""
+        if NOT_HONOURED.search(described):
+            ignored[label] = " ".join(described.split())
+
+    conclude(Measurement(
+        verdict="passed" if not ignored else "failed",
+        reason=(f"no order surface says `{CONTROL}` may be disobeyed, so a "
+                f"caller that asks for paper is given paper"
+                if not ignored else
+                f"{', '.join(sorted(ignored))} take `{CONTROL}` and then say it "
+                f"is not always honoured, so a caller that explicitly asks for "
+                f"paper can be given a real-ledger position — "
+                f"{list(ignored.values())[0][:200]}"),
+        left=sorted(ignored), right=[],
+        population={"surfaces_checked": len(ORDER_SCHEMAS),
+                    "not_always_honoured": len(ignored)},
         sources={"schema": OPENAPI}))
