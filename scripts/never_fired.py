@@ -32,12 +32,15 @@ thing you decide to do.
 from __future__ import annotations
 
 import argparse
+import ast
 import json
 import sys
 from collections import Counter
+from functools import lru_cache
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+REPO_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(REPO_ROOT))
 
 from qa.fold import (CHECK_STATES, FILING_STATES,  # noqa: E402
                      _REJECTED_STATUSES as REJECTED_STATUSES)
@@ -285,6 +288,42 @@ def vocabularies() -> list[dict]:
     ]
 
 
+@lru_cache(maxsize=1)
+def _test_functions() -> tuple[tuple[str, str, str], ...]:
+    """(path, test name, source) for every test function in the repository."""
+    found = []
+    for path in sorted((REPO_ROOT / "tests").rglob("test_*.py")):
+        try:
+            source = path.read_text(encoding="utf-8")
+            tree = ast.parse(source)
+        except (OSError, SyntaxError, ValueError):
+            continue
+        rel = str(path.relative_to(REPO_ROOT)).replace("\\", "/")
+        for node in ast.walk(tree):
+            if (isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+                    and node.name.startswith("test_")):
+                found.append((rel, node.name,
+                              ast.get_source_segment(source, node) or ""))
+    return tuple(found)
+
+
+def guards_for(symbol: str) -> list[str]:
+    """Which test functions name this symbol, as `path::name`.
+
+    The other half of a zero. The count says the world has never asked this of
+    us; this says whether WE have ever made it happen on purpose. A symbol no
+    test names has never been shown to work at all -- that is a different thing
+    from a condition we have been lucky to avoid, and the report said it could
+    not tell them apart while the answer sat in tests/ the whole time.
+
+    A test FUNCTION only. A module-level fixture carrying the word in a dict is
+    not a guard, and crediting one would let this report say a mechanism is
+    exercised when nothing exercises it.
+    """
+    return [f"{rel}::{name}" for rel, name, source in _test_functions()
+            if symbol in source]
+
+
 def render(vocabs: list[dict], zeros_only: bool = False) -> str:
     lines: list[str] = []
 
@@ -293,12 +332,32 @@ def render(vocabs: list[dict], zeros_only: bool = False) -> str:
     if never:
         lines.append(f"NEVER FIRED -- {len(never)} of "
                      f"{sum(len(v['symbols']) for v in vocabs)}")
+        unguarded = 0
         for name, symbol in never:
             lines.append(f"  {symbol:<26} {name}")
+            guards = guards_for(symbol)
+            if guards:
+                extra = f"  (+{len(guards) - 1} more)" if len(guards) > 1 else ""
+                lines.append(f"      exercised by {guards[0]}{extra}")
+            else:
+                unguarded += 1
+                lines.append("      NO TEST NAMES IT -- nothing has ever shown "
+                             "this works")
         lines.append("")
-        lines.append("A zero can be a condition we have been lucky enough not to")
-        lines.append("meet, or a mechanism that has never worked. This cannot tell")
-        lines.append("them apart; that is the reading it is asking for.")
+        lines.append("A zero means the world has never asked this of us. Where a")
+        lines.append("test exercises the symbol, the mechanism has been made to")
+        lines.append("happen on purpose at least once and the zero is luck.")
+        if unguarded:
+            lines.append(f"{unguarded} of these has nothing at all behind it. Read "
+                         f"those first: never fired")
+            lines.append("and never exercised is the shape all three dead "
+                         "mechanisms had on 2026-09-06.")
+        else:
+            lines.append("All of these are guarded, so none is known to be broken. "
+                         "What is")
+            lines.append("left is a judgement no tool can make: whether a "
+                         "condition we have")
+            lines.append("never met is one we should have met by now.")
     else:
         lines.append("every mechanism has fired at least once")
     if zeros_only:

@@ -198,3 +198,44 @@ def test_a_rejection_counts_from_the_journal_not_from_today():
 
     assert mod._obligations(ledger, rejected_while_failing)[0].get("disputed"),         "a rejection we were still reproducing owed a decision at the time"
     assert not mod._obligations(ledger, rejected_after_passing)[0].get("disputed"),         "a rejection that arrived after our own check agreed owes nothing"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_zero_says_whether_any_test_has_ever_named_it():
+    """Half the reading, done by the tool instead of by a person.
+
+    The report printed five zeros and a paragraph saying it could not tell a
+    condition we have been lucky to avoid from a mechanism that has never
+    worked. That paragraph is true of the DATA and false of the repository:
+    whether anything has ever exercised the mechanism is written down, in
+    tests/. Nobody read it, so the same five lines came back every sweep and
+    the operator was asked to hold the answer in their head.
+
+    It resolves the half it can. A symbol some test names has at least been
+    made to happen once on purpose; a symbol nothing names has never been
+    shown to work at all, and is the one to read first.
+    """
+    mod = _never_fired()
+
+    supersede = mod.guards_for("supersede")
+    assert supersede, "tests/meta/test_pipeline_fold.py drives a supersede event"
+    assert supersede[0].startswith("tests/")
+    assert "test_supersede" in supersede[0]
+
+    reopen = mod.guards_for("reopen")
+    assert reopen and "test_regression_after_closed_report_opens_reopen_obligation" \
+        in reopen[0], (
+        "the guard that PRODUCES the obligation must be named ahead of the "
+        "files that merely carry the word in a fixture"
+    )
+
+    # Built at runtime on purpose: a literal here would be a string in this
+    # test's own source, and guards_for scans test sources -- so the negative
+    # control would find itself and pass for the wrong reason.
+    assert mod.guards_for("zzz" + "_no_such_mechanism") == []
+
+    # A symbol is only credited to a test FUNCTION. A module-level fixture
+    # mentioning it is not a guard, and counting one would let the report say
+    # a mechanism is exercised when nothing exercises it -- the exact
+    # reassurance this file exists to prevent.
+    assert all("::test_" in g for g in supersede + reopen)

@@ -175,7 +175,13 @@ scripts/prereg.py    freeze and tag a run's configuration
 scripts/never_fired.py  which of our mechanisms have never once occurred in
                      the data. A green guard says a mechanism WOULD work; this
                      says whether it ever has. Read `--zeros` at the end of a
-                     sweep.
+                     sweep. Each zero now names the test that exercises it, or
+                     says nothing does -- so the line to act on is "never fired
+                     AND never exercised", the shape all three dead mechanisms
+                     had on 2026-09-06. The five standing on 2026-09-08 are all
+                     exercised, so none is broken; what is left of them is a
+                     judgement about whether we should have met the condition
+                     by now, and that one is the operator's.
 scripts/migrate_ledger.py  one-shot, already run; refuses to run twice
 tests/meta/       self-tests. Run FIRST and abort the session on failure, so
                   a broken guard stops every live request.
