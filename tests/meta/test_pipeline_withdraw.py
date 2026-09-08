@@ -168,11 +168,21 @@ def test_the_hardcoded_withdrawal_dict_is_gone():
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_only_state_module_writes_state_files():
     """Critique gap 10. Without this, the whole class returns with the next
-    script that finds it convenient to write the ledger itself."""
+    script that finds it convenient to write the ledger itself.
+
+    `.claude/hooks/` is scanned because the message below claims a universal
+    and the glob `[qs]*` did not reach it, while real Python runs there on
+    every PreToolUse and at every SessionStart. Deep pass 2026-09-08 filed it
+    as A3-09 and two of three triage agents objected that no such writer
+    exists today -- true, and beside the point: a negative control dropped
+    into that directory passed this test untouched. The operator: "ok".
+    """
     import ast
 
     offenders = []
-    for path in sorted(REPO.glob("[qs]*/**/*.py")):
+    roots = ("qa/**/*.py", "scripts/**/*.py", ".claude/hooks/**/*.py")
+    scanned = sorted({p for root in roots for p in REPO.glob(root)})
+    for path in scanned:
         rel = path.relative_to(REPO).as_posix()
         if rel in ("qa/state.py", "scripts/migrate_ledger.py"):
             continue
