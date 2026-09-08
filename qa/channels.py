@@ -104,6 +104,105 @@ def new_lines(events: list[dict], seen: set) -> tuple[list[str], set]:
     return lines, marked
 
 
+# ---------------------------------------------------------------------------
+# The comparison: which channel actually answers, and how fast
+# ---------------------------------------------------------------------------
+def _moment(at) -> "datetime | None":
+    from datetime import datetime, timezone
+
+    try:
+        parsed = datetime.fromisoformat(str(at))
+    except (TypeError, ValueError):
+        return None
+    return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
+
+
+def pairs(events: list[dict]) -> list[dict]:
+    """Each question of ours beside their first REAL answer to it.
+
+    The automated first pass is not an answer and must never be timed as one.
+    Cymetica said so in writing on 2026-09-08: *"the 2 to 6 second a2a first
+    pass is a receipt, the same thing as the Ref: ET-xxxxx auto-ack you see on
+    Telegram."* Timing the receipt would make a2a look a thousand times faster
+    than Telegram, and it would be a NUMBER -- which is worse than an
+    impression, because the point of measuring was to replace one.
+
+    An unclassifiable message is not counted as an answer either. It is not
+    evidence of speed, and guessing here would put the guess into a statistic.
+    """
+    ours, theirs = {}, []
+    for event in events:
+        kind = event.get("type")
+        if kind == "telegram_sent":
+            ours[("telegram", event["msg_id"])] = event
+        elif kind == "a2a_outcome" and event.get("via"):
+            intent = next((e for e in events if e.get("type") == "a2a_intent"
+                           and e.get("msg_id") == event.get("msg_id")), None)
+            if intent is not None:
+                # Their id for our message is what their reply names.
+                ours[("a2a", str(event["via"]))] = intent
+        elif kind == "telegram_reply":
+            theirs.append(("telegram", event, True))
+        elif kind == "message" and event.get("by") == "vendor":
+            real = not event.get("auto") and bool(event.get("kind"))
+            theirs.append(("a2a", event, real))
+
+    out = []
+    for (channel, our_id), sent in ours.items():
+        answers = [e for c, e, real in theirs
+                   if c == channel and str(e.get("reply_to") or "") == our_id and real]
+        answers.sort(key=lambda e: str(e.get("at") or ""))
+        row = {"channel": channel, "question_id": sent.get("msg_id"),
+               "asked_at": sent.get("at"), "answer_id": None, "minutes": None}
+        if answers:
+            asked, replied = _moment(sent.get("at")), _moment(answers[0].get("at"))
+            row["answer_id"] = answers[0].get("msg_id")
+            # Two events written in the same breath are not a latency. The four
+            # telegram events we hold share one timestamp, because they were
+            # typed in together on 2026-09-08 for a conversation held on the
+            # 7th -- and the arithmetic read "answered in 0 minutes". A wrong
+            # number is worse than none here: it displaces the impression it
+            # was meant to correct. `correspond.py --at` is how a backdated
+            # message stops being this case.
+            same_breath = str(sent.get("at")) == str(answers[0].get("at"))
+            if asked and replied and not same_breath:
+                row["minutes"] = round((replied - asked).total_seconds() / 60)
+            elif same_breath:
+                row["untimed"] = "both recorded at the same moment"
+        out.append(row)
+    out.sort(key=lambda row: str(row["asked_at"] or ""))
+    return out
+
+
+ENOUGH = 5
+
+
+def compare(events: list[dict] | None = None) -> dict:
+    """Telegram against a2a, with the size of the evidence stated.
+
+    `conclusive` is False until both channels have ENOUGH answered questions.
+    Three answers on one evening is a demonstration; the operator asked for a
+    comparison, and the difference between the two is the whole reason this
+    exists rather than an opinion.
+    """
+    events = read_events() if events is None else events
+    report = {}
+    for channel in (TELEGRAM, A2A):
+        rows = [r for r in pairs(events) if r["channel"] == channel]
+        timed = sorted(r["minutes"] for r in rows if r["minutes"] is not None)
+        median = None
+        if timed:
+            middle = len(timed) // 2
+            median = (timed[middle] if len(timed) % 2
+                      else round((timed[middle - 1] + timed[middle]) / 2))
+        report[channel] = {"asked": len(rows), "n": len(timed),
+                           "median_minutes": median,
+                           "unanswered": sum(1 for r in rows
+                                             if r["minutes"] is None)}
+    report["conclusive"] = all(report[c]["n"] >= ENOUGH for c in (TELEGRAM, A2A))
+    return report
+
+
 def _telegram(events: list[dict]) -> dict:
     import importlib.util
     from pathlib import Path

@@ -108,6 +108,30 @@ def cmd_status(args) -> int:
     return 0
 
 
+def cmd_compare(args) -> int:
+    """Telegram against a2a, with the size of the evidence said out loud."""
+    report = channels.compare()
+    for name in ("telegram", "a2a"):
+        row = report[name]
+        median = ("no answered question yet" if row["median_minutes"] is None
+                  else f"{row['median_minutes']} min median over n={row['n']}")
+        print(f"{name.upper():9} asked {row['asked']}, {median}"
+              + (f", {row['unanswered']} still unanswered"
+                 if row["unanswered"] else ""))
+    print()
+    if report["conclusive"]:
+        print("Both channels have enough answered questions to compare.")
+    else:
+        print(f"NOT a comparison yet: each channel needs {channels.ENOUGH} "
+              f"answered questions.")
+        print("Three answers on one evening is a demonstration. The point of "
+              "measuring was")
+        print("to replace an impression with a number, and a number from n=1 "
+              "is the impression")
+        print("wearing a number's clothes.")
+    return 0
+
+
 def cmd_watch(args) -> int:
     """One line per new thing they said. Every line is a chat message."""
     seen: set = set()
@@ -146,8 +170,11 @@ def main(argv: list[str] | None = None) -> int:
     watch = sub.add_parser("watch", help="one line per new thing they said")
     watch.add_argument("--interval", type=float, default=POLL_SECONDS)
 
+    sub.add_parser("compare", help="which channel answers, and how fast")
+
     args = parser.parse_args(argv)
-    return {"status": cmd_status, "watch": cmd_watch}[args.command](args)
+    return {"status": cmd_status, "watch": cmd_watch,
+            "compare": cmd_compare}[args.command](args)
 
 
 if __name__ == "__main__":

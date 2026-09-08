@@ -182,7 +182,7 @@ def cmd_sent(args) -> int:
     if not text.strip():
         raise SystemExit("refusing to record a message with no text.")
 
-    event = {"type": "telegram_sent", "at": _now(), "by": "operator",
+    event = {"type": "telegram_sent", "at": args.at or _now(), "by": "operator",
              "source": SOURCE, "msg_id": next_msg_id(events, "MSG"),
              "text": text, "origin": CHANNEL}
     if args.via:
@@ -216,7 +216,7 @@ def cmd_reply(args) -> int:
     if not text.strip():
         raise SystemExit("refusing to record a reply with no text.")
 
-    event = {"type": "telegram_reply", "at": _now(), "by": "vendor",
+    event = {"type": "telegram_reply", "at": args.at or _now(), "by": "vendor",
              "source": SOURCE, "msg_id": next_msg_id(events, "REPLY"),
              "reply_to": args.to, "text": text, "origin": CHANNEL}
     if args.via:
@@ -292,6 +292,11 @@ def main(argv: list[str] | None = None) -> int:
     send.add_argument("--via", help="their ticket id, e.g. ET-22498")
     send.add_argument("--findings", help="comma-separated; advisory, never folded")
     send.add_argument("--note")
+    # When it was actually sent, not when it was typed in here. Every telegram
+    # event recorded before 2026-09-08 carries the moment of recording, with
+    # the truth in a note no arithmetic can read -- so a comparison of this
+    # channel against a2a had no telegram data at all.
+    send.add_argument("--at", help="ISO time it was really sent")
 
     answer = sub.add_parser("reply", help="record THEIR answer to one of ours")
     answer.add_argument("--to", required=True, help="the MSG-NNNN it answers")
@@ -299,6 +304,7 @@ def main(argv: list[str] | None = None) -> int:
     answer.add_argument("--text-file")
     answer.add_argument("--via")
     answer.add_argument("--note")
+    answer.add_argument("--at", help="ISO time they really answered")
 
     sub.add_parser("list", help="what is unanswered, then what is answered")
 

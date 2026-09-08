@@ -48,7 +48,7 @@ def _cli():
     return mod
 
 
-def _vendor_a2a(msg_id, at=AT, text="hello", auto=None, kind=None):
+def _vendor_a2a(msg_id, at=AT, text="hello", auto=None, kind=None, answers=None):
     event = {"type": "message", "at": at, "by": "vendor",
              "source": "scripts/bounty.py a2a-inbox", "msg_id": msg_id,
              "text": text, "origin": "a2a"}
@@ -56,6 +56,8 @@ def _vendor_a2a(msg_id, at=AT, text="hello", auto=None, kind=None):
         event["auto"] = True
     if kind:
         event["kind"] = kind
+    if answers:
+        event["reply_to"] = answers
     return event
 
 
@@ -142,6 +144,116 @@ def test_the_state_names_all_three_channels(tmp_path, monkeypatch):
     for name, channel in state.items():
         assert "unanswered" in channel, f"{name} cannot say what is waiting on us"
         assert "last_from_them" in channel, f"{name} cannot say when they last spoke"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_receipt_is_not_the_answer_when_timing_a_channel(tmp_path, monkeypatch):
+    """The whole side quest turns on this one line.
+
+    The a2a first pass arrives in 2 to 6 seconds, and Cymetica said in writing
+    what it is: *"the 2 to 6 second a2a first pass is a receipt, the same thing
+    as the Ref: ET-xxxxx auto-ack you see on Telegram."* A comparison that
+    times the receipt would report a2a as roughly a thousand times faster than
+    Telegram and be worthless -- worse than worthless, because it would be a
+    number, and the point of measuring is to replace an impression with one.
+    """
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    from qa.state import append_event, read_events
+
+    append_event({"type": "a2a_intent", "at": "2026-09-08T08:00:00+00:00",
+                  "by": "operator", "source": "scripts/a2a.py",
+                  "msg_id": "A2A-0001", "text": "a question", "origin": "a2a"})
+    append_event({"type": "a2a_outcome", "at": "2026-09-08T08:00:01+00:00",
+                  "by": "agent", "source": "scripts/a2a.py",
+                  "msg_id": "A2A-0001", "outcome": "accepted", "via": "a2a_ours"})
+    # Both of their messages answer the same send of ours.
+    append_event(_vendor_a2a("a2a_receipt", at="2026-09-08T08:00:04+00:00",
+                             text="queued for review", auto=True,
+                             kind="first_pass", answers="a2a_ours"))
+    append_event(_vendor_a2a("a2a_human", at="2026-09-08T09:30:00+00:00",
+                             text="You were right.", kind="human",
+                             answers="a2a_ours"))
+
+    paired = _channels().pairs(read_events())
+    a2a_rows = [p for p in paired if p["channel"] == "a2a"]
+    assert len(a2a_rows) == 1
+    assert a2a_rows[0]["answer_id"] == "a2a_human", (
+        f"the receipt was timed as the answer: {a2a_rows[0]}"
+    )
+    assert a2a_rows[0]["minutes"] == 90
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_two_events_recorded_in_one_breath_are_not_a_latency(tmp_path, monkeypatch):
+    """The four telegram events we hold share one timestamp, and it is not theirs.
+
+    They were entered together on 2026-09-08 for a conversation held on the
+    7th, so the arithmetic reads "answered in 0 minutes" and `compare` printed
+    exactly that. A channel that appears to answer instantly because somebody
+    typed both halves in at once is the worst possible output here: it is a
+    number, and a wrong number displaces the impression it was meant to
+    correct.
+    """
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    from qa.state import append_event, read_events
+
+    both = "2026-09-08T06:58:42+00:00"
+    append_event({"type": "telegram_sent", "at": both, "by": "operator",
+                  "source": "scripts/correspond.py", "msg_id": "MSG-0001",
+                  "text": "q", "origin": "telegram"})
+    append_event({"type": "telegram_reply", "at": both, "by": "vendor",
+                  "source": "scripts/correspond.py", "msg_id": "REPLY-0001",
+                  "reply_to": "MSG-0001", "text": "a", "origin": "telegram"})
+
+    row = _channels().pairs(read_events())[0]
+    assert row["answer_id"] == "REPLY-0001", "the answer itself is still recorded"
+    assert row["minutes"] is None, "0 minutes was reported as a real latency"
+    assert _channels().compare(read_events())["telegram"]["n"] == 0
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_comparison_says_how_little_it_rests_on(tmp_path, monkeypatch):
+    """Three answers on one evening is a demonstration, not a comparison."""
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    from qa.state import append_event, read_events
+
+    append_event({"type": "telegram_sent", "at": "2026-09-08T08:00:00+00:00",
+                  "by": "operator", "source": "scripts/correspond.py",
+                  "msg_id": "MSG-0001", "text": "q", "origin": "telegram"})
+    append_event({"type": "telegram_reply", "at": "2026-09-08T08:30:00+00:00",
+                  "by": "vendor", "source": "scripts/correspond.py",
+                  "msg_id": "REPLY-0001", "reply_to": "MSG-0001",
+                  "text": "a", "origin": "telegram"})
+
+    report = _channels().compare(read_events())
+    assert report["telegram"]["n"] == 1
+    assert report["telegram"]["median_minutes"] == 30
+    assert report["conclusive"] is False, (
+        "one answer per channel is not a comparison, and a report that does "
+        "not say so will be read as one"
+    )
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_backdated_message_tells_the_truth_about_when_it_was_sent(tmp_path, monkeypatch):
+    """Every Telegram event we hold is stamped the moment it was typed in.
+
+    All four were recorded on 2026-09-08 for a conversation held on the 7th,
+    with the truth in a note that no arithmetic can read. Without --at the
+    comparison has no Telegram data at all, only a2a.
+    """
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    from qa.state import read_events
+
+    spec = importlib.util.spec_from_file_location(
+        "correspond_at", REPO / "scripts" / "correspond.py")
+    correspond = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(correspond)
+
+    correspond.main(["sent", "--text", "asked yesterday",
+                     "--at", "2026-09-07T19:32:00+00:00"])
+    sent = [e for e in read_events() if e["type"] == "telegram_sent"][0]
+    assert sent["at"] == "2026-09-07T19:32:00+00:00"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
