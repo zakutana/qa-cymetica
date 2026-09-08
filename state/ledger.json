@@ -5023,6 +5023,13 @@
             "run_id": "run-20260907T214201Z-b04267d",
             "verdict": "fail",
             "at": "2026-09-07T21:46:45+00:00"
+          },
+          {
+            "report_id": 76,
+            "fingerprint": "ae9ec31c6f88b796223e53504874c9541213ae1b11a7ae2ae504d4c0988afb14",
+            "run_id": "run-20260908T071821Z-e48a701",
+            "verdict": "pass",
+            "at": "2026-09-08T07:27:26+00:00"
           }
         ]
       },
@@ -5115,9 +5122,7 @@
         "repair_check": false,
         "reopen": [],
         "retractions": [],
-        "verification_owed": [
-          76
-        ],
+        "verification_owed": [],
         "correction_owed": [],
         "disputed": []
       }
@@ -5402,7 +5407,7 @@
     "VERIFIED FIXED": 26
   },
   "events_head": {
-    "seq": 1267,
-    "chain": "064e0760d33d4e28a30f97ee6623677fd0bd1e73687cad5cf09c93e4c10f14d8"
+    "seq": 1274,
+    "chain": "53b57ce1129d980ce9384eff8adf062ecdaa9d934eefe06b790c6f16d76b5c52"
   }
 }
