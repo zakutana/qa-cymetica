@@ -38,6 +38,13 @@
             "args": [".claude/hooks/open_threads.py"],
             "timeout": 10,
             "statusMessage": "reading open telegram threads"
+          },
+          {
+            "type": "command",
+            "command": "python",
+            "args": [".claude/hooks/deep_pass_handover.py"],
+            "timeout": 10,
+            "statusMessage": "reading the last deep pass handover"
           }
         ]
       }
