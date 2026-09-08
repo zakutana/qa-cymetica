@@ -1,6 +1,6 @@
 {
-  "fetched_at": "2026-09-08T13:27:44+00:00",
-  "total": 49,
+  "fetched_at": "2026-09-08T15:16:42+00:00",
+  "total": 51,
   "statuses": {
     "paid": 16,
     "fixed": 4
@@ -25,14 +25,13 @@
   "our_reports": {
     "endpoint": "GET /api/v1/bounty/my-reports?wallet_address=<addr>",
     "klass": "ok",
-    "read_at": "2026-09-08T14:04:07+00:00",
-    "evidence_id": "74f875ed6e288de0c2f2e5bdd19c53db24f45ce83616da07aeae7a67e2bdc51b",
+    "read_at": "2026-09-08T15:16:39+00:00",
+    "evidence_id": "0d94318851da76149cef00544f838b16a9a7b42a40f3128d1527782f42051d6b",
     "rows_returned": 41,
     "server_total": 41,
     "total": 41,
     "statuses": {
-      "pending": 2,
-      "paid": 33,
+      "paid": 35,
       "fixed": 4,
       "invalid": 2
     },
@@ -429,7 +428,7 @@
         "fixed_at": "2026-09-06T09:22:36.830592",
         "validated_at": "2026-09-05T21:23:22.675512",
         "triaged_at": "2026-09-05T21:23:22.675512",
-        "status_notes": "Validated. You are right on the schema point: an award and a payment are different events and the tracker could not express the first one — reward_amount defaults to 0 and paid_at to null, so \"no award recorded\" and \"awarded zero\" were the same row. Shipping now (deploying): every report exposes reward_status (not_applicable / pending_award / awarded / paid) and eligible_reward_range (the published CYM tier for the report's severity); /stats adds reports_pending_award, awards_recorded, awards_recorded_total and payouts_recorded. Your 20 tracker rows will read pending_award — that is the true state: no award has been recorded on any report yet. Recording the amounts is a team step within the published tiers, not something this fix assigns automatically; it stays open on our side (ET-22222) until the team records them, and any payment made outside the tracker gets linked (paid_at) in that same step. total_paid is the paid-status sum and stays 0.0 until then — it will no longer be the only signal.\n[reporter-verification PASS 2026-09-07 13:34 UTC by expire76 test_run=run-20260907T123825Z-8bf609f]\n[reporter-verification PASS 2026-09-07 17:42 UTC by expire76 test_run=run-20260907T173409Z-7e2dfcc]\n[reporter-verification PASS 2026-09-07 21:46 UTC by expire76 test_run=run-20260907T214201Z-b04267d]",
+        "status_notes": "Validated. You are right on the schema point: an award and a payment are different events and the tracker could not express the first one — reward_amount defaults to 0 and paid_at to null, so \"no award recorded\" and \"awarded zero\" were the same row. Shipping now (deploying): every report exposes reward_status (not_applicable / pending_award / awarded / paid) and eligible_reward_range (the published CYM tier for the report's severity); /stats adds reports_pending_award, awards_recorded, awards_recorded_total and payouts_recorded. Your 20 tracker rows will read pending_award — that is the true state: no award has been recorded on any report yet. Recording the amounts is a team step within the published tiers, not something this fix assigns automatically; it stays open on our side (ET-22222) until the team records them, and any payment made outside the tracker gets linked (paid_at) in that same step. total_paid is the paid-status sum and stays 0.0 until then — it will no longer be the only signal.\n[reporter-verification PASS 2026-09-07 13:34 UTC by expire76 test_run=run-20260907T123825Z-8bf609f]\n[reporter-verification PASS 2026-09-07 17:42 UTC by expire76 test_run=run-20260907T173409Z-7e2dfcc]\n[reporter-verification PASS 2026-09-07 21:46 UTC by expire76 test_run=run-20260907T214201Z-b04267d]\n[reporter-verification PASS 2026-09-08 15:15 UTC by expire76 test_run=run-20260908T150954Z-95f0a70]",
         "ticket_url": null,
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -519,7 +518,7 @@
         "fixed_at": "2026-09-06T17:39:26.382344",
         "validated_at": "2026-09-06T17:39:26.382344",
         "triaged_at": "2026-09-06T17:39:26.382344",
-        "status_notes": "Confirmed (medium). Root cause: report rows published a CYM severity band (a planned, not-yet-live programme) beside an ET10 award, so the two could never agree; an interim change then zeroed every award, which made paid and unrecorded reports indistinguishable (#71). Resolution 2026-09-07: the live programme pays a flat 1000 ET10 per verified non-duplicate bug; eligible_reward_range is now derived from the same amount and currency as the award on every row, /reward-tiers leads with the live ET10 schedule and moves the CYM bands under planned_cym_program (not_yet_live), awards are recorded again in ET10, and the two 08-02 payments expose reward_tx_hash. Commits 6813b92cf2 (interim) + the 2026-09-07 fix on main.\n[reporter-verification PASS 2026-09-07 13:34 UTC by expire76 test_run=run-20260907T123825Z-8bf609f]\n[reporter-verification PASS 2026-09-07 17:42 UTC by expire76 test_run=run-20260907T173409Z-7e2dfcc]\n[reporter-verification PASS 2026-09-07 21:46 UTC by expire76 test_run=run-20260907T214201Z-b04267d]",
+        "status_notes": "Confirmed (medium). Root cause: report rows published a CYM severity band (a planned, not-yet-live programme) beside an ET10 award, so the two could never agree; an interim change then zeroed every award, which made paid and unrecorded reports indistinguishable (#71). Resolution 2026-09-07: the live programme pays a flat 1000 ET10 per verified non-duplicate bug; eligible_reward_range is now derived from the same amount and currency as the award on every row, /reward-tiers leads with the live ET10 schedule and moves the CYM bands under planned_cym_program (not_yet_live), awards are recorded again in ET10, and the two 08-02 payments expose reward_tx_hash. Commits 6813b92cf2 (interim) + the 2026-09-07 fix on main.\n[reporter-verification PASS 2026-09-07 13:34 UTC by expire76 test_run=run-20260907T123825Z-8bf609f]\n[reporter-verification PASS 2026-09-07 17:42 UTC by expire76 test_run=run-20260907T173409Z-7e2dfcc]\n[reporter-verification PASS 2026-09-07 21:46 UTC by expire76 test_run=run-20260907T214201Z-b04267d]\n[reporter-verification PASS 2026-09-08 15:15 UTC by expire76 test_run=run-20260908T150954Z-95f0a70]",
         "ticket_url": null,
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -555,7 +554,7 @@
         "fixed_at": "2026-09-07T00:36:09.840410",
         "validated_at": "2026-09-07T00:36:09",
         "triaged_at": "2026-09-07T00:20:00",
-        "status_notes": "Fixed @8d5f3683d (live 2026-09-07 00:2x UTC): flat 1000 ET10 per verified non-duplicate bug is the ONE unit on every surface — eligible_reward_range, /reward-tiers (CYM bands moved under planned_cym_program.status=not_yet_live), MCP get_bug_bounty_program, llms.txt. Row-level: reward_amount/reward_currency = 1000 ET10 on all 34 FIXED rows; no CYM band published beside an ET10 award any more.\n[reporter-verification PASS 2026-09-07 13:34 UTC by expire76 test_run=run-20260907T123825Z-8bf609f]\n[reporter-verification PASS 2026-09-07 17:42 UTC by expire76 test_run=run-20260907T173409Z-7e2dfcc]\n[reporter-verification PASS 2026-09-07 21:46 UTC by expire76 test_run=run-20260907T214201Z-b04267d]",
+        "status_notes": "Fixed @8d5f3683d (live 2026-09-07 00:2x UTC): flat 1000 ET10 per verified non-duplicate bug is the ONE unit on every surface — eligible_reward_range, /reward-tiers (CYM bands moved under planned_cym_program.status=not_yet_live), MCP get_bug_bounty_program, llms.txt. Row-level: reward_amount/reward_currency = 1000 ET10 on all 34 FIXED rows; no CYM band published beside an ET10 award any more.\n[reporter-verification PASS 2026-09-07 13:34 UTC by expire76 test_run=run-20260907T123825Z-8bf609f]\n[reporter-verification PASS 2026-09-07 17:42 UTC by expire76 test_run=run-20260907T173409Z-7e2dfcc]\n[reporter-verification PASS 2026-09-07 21:46 UTC by expire76 test_run=run-20260907T214201Z-b04267d]\n[reporter-verification PASS 2026-09-08 15:15 UTC by expire76 test_run=run-20260908T150954Z-95f0a70]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/22342",
         "fix_pr_url": "https://github.com/eventtrader/event-trader/commit/8d5f3683d",
         "reward_amount": 0.0
@@ -573,7 +572,7 @@
         "fixed_at": "2026-09-07T00:35:23.732320",
         "validated_at": "2026-09-07T00:35:23",
         "triaged_at": "2026-09-07T00:20:00",
-        "status_notes": "Fixed @8d5f3683d + data backfill (2026-09-07 00:3x UTC): awards restored — every FIXED report records 1000 ET10 (reward_amount/reward_currency), the two 08-02 payments carry reward_tx_hash + paid_at, stats.payouts_recorded counts rows with paid_at (2) and awards_recorded counts awarded rows (36). Admin verify writes the award again (BOUNTY_AWARD_RECORDED) so a new fix cannot be recorded with a zero award.\n[reporter-verification PASS 2026-09-07 13:54 UTC by expire76 test_run=run-20260907T135100Z-0923c37]\n[reporter-verification PASS 2026-09-07 17:42 UTC by expire76 test_run=run-20260907T173409Z-7e2dfcc]\n[reporter-verification PASS 2026-09-07 21:46 UTC by expire76 test_run=run-20260907T214201Z-b04267d]",
+        "status_notes": "Fixed @8d5f3683d + data backfill (2026-09-07 00:3x UTC): awards restored — every FIXED report records 1000 ET10 (reward_amount/reward_currency), the two 08-02 payments carry reward_tx_hash + paid_at, stats.payouts_recorded counts rows with paid_at (2) and awards_recorded counts awarded rows (36). Admin verify writes the award again (BOUNTY_AWARD_RECORDED) so a new fix cannot be recorded with a zero award.\n[reporter-verification PASS 2026-09-07 13:54 UTC by expire76 test_run=run-20260907T135100Z-0923c37]\n[reporter-verification PASS 2026-09-07 17:42 UTC by expire76 test_run=run-20260907T173409Z-7e2dfcc]\n[reporter-verification PASS 2026-09-07 21:46 UTC by expire76 test_run=run-20260907T214201Z-b04267d]\n[reporter-verification PASS 2026-09-08 15:15 UTC by expire76 test_run=run-20260908T150954Z-95f0a70]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/22366",
         "fix_pr_url": "https://github.com/eventtrader/event-trader/commit/8d5f3683d",
         "reward_amount": 0.0
@@ -609,7 +608,7 @@
         "fixed_at": "2026-09-07T08:59:24.918857",
         "validated_at": "2026-09-07T13:07:13.124896",
         "triaged_at": "2026-09-07T13:07:13.124896",
-        "status_notes": "[2026-09-07T13:07:13+00:00] Resolved via ticket ET-22412: Surfaces agree (live @1382917d6): leaderboard rows come from report rows (valid_reports, total_awarded, total_paid; total_earned == PAID); stats+leaderboard carry the attributed/unattributed split (valid 40 = 34 board + 6 no-profile; awards 36k = 30k + 6k; paid 2k unattributed). reward_amount = award; paid_at = on-chain transfer landed. Your 25 awards stand, queued; delivery blocked platform-side (delivery-wallet gas). 6 failed-day gas charges refunded; no charge when wallet cannot broadcast.\n[reporter-verification PASS 2026-09-07 13:54 UTC by expire76 test_run=run-20260907T135100Z-0923c37]\n[reporter-verification PASS 2026-09-07 17:43 UTC by expire76 test_run=run-20260907T173409Z-7e2dfcc]\n[reporter-verification PASS 2026-09-07 21:47 UTC by expire76 test_run=run-20260907T214201Z-b04267d]",
+        "status_notes": "[2026-09-07T13:07:13+00:00] Resolved via ticket ET-22412: Surfaces agree (live @1382917d6): leaderboard rows come from report rows (valid_reports, total_awarded, total_paid; total_earned == PAID); stats+leaderboard carry the attributed/unattributed split (valid 40 = 34 board + 6 no-profile; awards 36k = 30k + 6k; paid 2k unattributed). reward_amount = award; paid_at = on-chain transfer landed. Your 25 awards stand, queued; delivery blocked platform-side (delivery-wallet gas). 6 failed-day gas charges refunded; no charge when wallet cannot broadcast.\n[reporter-verification PASS 2026-09-07 13:54 UTC by expire76 test_run=run-20260907T135100Z-0923c37]\n[reporter-verification PASS 2026-09-07 17:43 UTC by expire76 test_run=run-20260907T173409Z-7e2dfcc]\n[reporter-verification PASS 2026-09-07 21:47 UTC by expire76 test_run=run-20260907T214201Z-b04267d]\n[reporter-verification PASS 2026-09-08 15:16 UTC by expire76 test_run=run-20260908T150954Z-95f0a70]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/22412",
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -645,7 +644,7 @@
         "fixed_at": "2026-09-07T20:40:55.301315",
         "validated_at": "2026-09-07T20:40:55.301315",
         "triaged_at": "2026-09-07T20:40:55.301315",
-        "status_notes": "[2026-09-07T20:40:55+00:00] Resolved via ticket ET-22539: Confirmed and fixed @193eee613a (live @833427025): the /build trade recipe now names find_trade_path for MCP clients and GET /api/v1/event-cards/symbols/search?q=ASSET (JSON, in the curated spec) for raw-HTTP agents, and labels /events/universe as the human page. Verified on the live page. Replied in General to msg 206338.\n[reporter-verification FAIL 2026-09-07 21:46 UTC by expire76 test_run=run-20260907T214201Z-b04267d]\n[reporter-verification PASS 2026-09-08 07:27 UTC by expire76 test_run=run-20260908T071821Z-e48a701]",
+        "status_notes": "[2026-09-07T20:40:55+00:00] Resolved via ticket ET-22539: Confirmed and fixed @193eee613a (live @833427025): the /build trade recipe now names find_trade_path for MCP clients and GET /api/v1/event-cards/symbols/search?q=ASSET (JSON, in the curated spec) for raw-HTTP agents, and labels /events/universe as the human page. Verified on the live page. Replied in General to msg 206338.\n[reporter-verification FAIL 2026-09-07 21:46 UTC by expire76 test_run=run-20260907T214201Z-b04267d]\n[reporter-verification PASS 2026-09-08 07:27 UTC by expire76 test_run=run-20260908T071821Z-e48a701]\n[reporter-verification PASS 2026-09-08 15:16 UTC by expire76 test_run=run-20260908T150954Z-95f0a70]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/22539",
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -699,7 +698,7 @@
         "fixed_at": "2026-09-08T11:13:43.113950",
         "validated_at": "2026-09-08T11:13:43.113950",
         "triaged_at": "2026-09-08T11:13:43.113950",
-        "status_notes": "[2026-09-08T11:13:43+00:00] Resolved via ticket ET-22646: Confirmed and fixed @fec52c8ab (live 2026-09-08 ~11:30 UTC). Every leaderboard row now carries headline_period_hours (parsed from the label: 30 days=720, 6 months=4320, 120h / 352 markets=120) and GET /api/v1/backtest/leaderboard?period=30d filters to one period BEFORE counting/paginating (live: total 2, both 720h); an unparseable period is a 400, never a silent all. The /build recipe now names the filter and states that returns across periods are not comparable.\n[reporter-verification PASS 2026-09-08 11:34 UTC by expire76 test_run=run-20260908T113050Z-d858007]",
+        "status_notes": "[2026-09-08T11:13:43+00:00] Resolved via ticket ET-22646: Confirmed and fixed @fec52c8ab (live 2026-09-08 ~11:30 UTC). Every leaderboard row now carries headline_period_hours (parsed from the label: 30 days=720, 6 months=4320, 120h / 352 markets=120) and GET /api/v1/backtest/leaderboard?period=30d filters to one period BEFORE counting/paginating (live: total 2, both 720h); an unparseable period is a 400, never a silent all. The /build recipe now names the filter and states that returns across periods are not comparable.\n[reporter-verification PASS 2026-09-08 11:34 UTC by expire76 test_run=run-20260908T113050Z-d858007]\n[reporter-verification PASS 2026-09-08 15:16 UTC by expire76 test_run=run-20260908T150954Z-95f0a70]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/22646",
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -717,7 +716,7 @@
         "fixed_at": "2026-09-08T11:24:05.954507",
         "validated_at": "2026-09-08T11:24:05.954507",
         "triaged_at": "2026-09-08T11:24:05.954507",
-        "status_notes": "[2026-09-08T11:24:05+00:00] Resolved via ticket ET-22652: Confirmed and fixed @dd359b141 (live). Effective mode now readable: GET /api/v1/portfolio/summary returns simulation_mode + paper_balance_usdc; GET /mcp/v1/agents/me returns trading_mode (shadow account). Exchange order mode (default live) and CLOB PlaceOrderRequest (live only) now state they do NOT inherit simulation_mode. Defaults unchanged on purpose: flipping a live-order default on a money path would silently re-book existing callers (customer MMs included).\n[reporter-verification FAIL 2026-09-08 11:34 UTC by expire76 test_run=run-20260908T113050Z-d858007]\n[reporter-verification PASS 2026-09-08 11:35 UTC by expire76 test_run=run-20260908T113050Z-d858007]\n[reporter-verification PASS 2026-09-08 13:25 UTC by expire76 test_run=run-20260908T132240Z-a0ff5fe]",
+        "status_notes": "[2026-09-08T11:24:05+00:00] Resolved via ticket ET-22652: Confirmed and fixed @dd359b141 (live). Effective mode now readable: GET /api/v1/portfolio/summary returns simulation_mode + paper_balance_usdc; GET /mcp/v1/agents/me returns trading_mode (shadow account). Exchange order mode (default live) and CLOB PlaceOrderRequest (live only) now state they do NOT inherit simulation_mode. Defaults unchanged on purpose: flipping a live-order default on a money path would silently re-book existing callers (customer MMs included).\n[reporter-verification FAIL 2026-09-08 11:34 UTC by expire76 test_run=run-20260908T113050Z-d858007]\n[reporter-verification PASS 2026-09-08 11:35 UTC by expire76 test_run=run-20260908T113050Z-d858007]\n[reporter-verification PASS 2026-09-08 13:25 UTC by expire76 test_run=run-20260908T132240Z-a0ff5fe]\n[reporter-verification PASS 2026-09-08 15:16 UTC by expire76 test_run=run-20260908T150954Z-95f0a70]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/22652",
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -735,7 +734,7 @@
         "fixed_at": "2026-09-08T12:25:24.131416",
         "validated_at": "2026-09-08T12:25:24.131416",
         "triaged_at": "2026-09-08T12:25:24.131416",
-        "status_notes": "[2026-09-08T12:25:24+00:00] Resolved via ticket ET-22657: Confirmed and fixed @b168180d9 (live). GET /api/v1/trades is scoped to the caller's own user AND one product (filled orders placed via POST /api/v1/orders), so an empty 200 read as 'never traded'. Every response now carries a scope block (identity, covers, does_not_cover, see_also: event-cards/positions, portfolio/positions + summary, CLOB tape) and llms.txt states the coverage next to the link. Auth is unchanged (401 without a valid key).\n[reporter-verification PASS 2026-09-08 13:25 UTC by expire76 test_run=run-20260908T132240Z-a0ff5fe]",
+        "status_notes": "[2026-09-08T12:25:24+00:00] Resolved via ticket ET-22657: Confirmed and fixed @b168180d9 (live). GET /api/v1/trades is scoped to the caller's own user AND one product (filled orders placed via POST /api/v1/orders), so an empty 200 read as 'never traded'. Every response now carries a scope block (identity, covers, does_not_cover, see_also: event-cards/positions, portfolio/positions + summary, CLOB tape) and llms.txt states the coverage next to the link. Auth is unchanged (401 without a valid key).\n[reporter-verification PASS 2026-09-08 13:25 UTC by expire76 test_run=run-20260908T132240Z-a0ff5fe]\n[reporter-verification PASS 2026-09-08 15:16 UTC by expire76 test_run=run-20260908T150954Z-95f0a70]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/22657",
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -743,48 +742,48 @@
       {
         "id": 82,
         "title": "POST /api/v1/event-cards/{card_id}/short accepts paper=true and opens a real-ledger perp anyway, by your own field description",
-        "status": "pending",
+        "status": "paid",
         "hunter_name": "expire76",
         "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
         "severity_reported": "high",
-        "severity_confirmed": null,
+        "severity_confirmed": "high",
         "category": "api",
         "created_at": "2026-09-08T13:27:08.147936",
-        "fixed_at": null,
-        "validated_at": null,
-        "triaged_at": null,
-        "status_notes": null,
-        "ticket_url": null,
+        "fixed_at": "2026-09-08T14:25:29.169677",
+        "validated_at": "2026-09-08T14:25:29.169677",
+        "triaged_at": "2026-09-08T14:25:29.169677",
+        "status_notes": "[2026-09-08T14:25:29+00:00] Resolved via ticket ET-22680: Confirmed and fixed @24a1bffa5 (live). POST /event-cards/{id}/short never downgrades a paper request on the perp path: paper=true -> 400 PERP_NO_PAPER_BOOK; simulation_mode account omitting it -> 400 ACCOUNT_IN_PAPER_MODE; paper=false = deliberate real-money opt-in. Cards publish short_execution ('perp'|'spot_bear') + perp_symbol so a caller can branch before sending. Detail in the comment.\n[reporter-verification PASS 2026-09-08 15:15 UTC by expire76 test_run=run-20260908T150954Z-95f0a70]",
+        "ticket_url": "https://cymetica.com/admin/centcom/issues/22680",
         "fix_pr_url": null,
-        "reward_amount": 0.0
+        "reward_amount": 1000.0
       },
       {
         "id": 83,
         "title": "GET /api/v1/portfolio/summary reports total_predictions 0 and total_volume 0 on an account holding 39 positions worth $2,901",
-        "status": "pending",
+        "status": "paid",
         "hunter_name": "expire76",
         "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
         "severity_reported": "medium",
-        "severity_confirmed": null,
+        "severity_confirmed": "medium",
         "category": "api",
         "created_at": "2026-09-08T13:27:13.787665",
-        "fixed_at": null,
-        "validated_at": null,
-        "triaged_at": null,
-        "status_notes": null,
-        "ticket_url": null,
+        "fixed_at": "2026-09-08T14:25:31.847630",
+        "validated_at": "2026-09-08T14:25:31.847630",
+        "triaged_at": "2026-09-08T14:25:31.847630",
+        "status_notes": "[2026-09-08T14:25:31+00:00] Resolved via ticket ET-22681: Confirmed and fixed @24a1bffa5 (live). /portfolio/summary carries a scope block (counters = on-chain WTA bets only; total_pnl also closed clone-bot trades; the endpoints holding event-card/perp/order-book/CLOB activity are named) plus an event_cards aggregate (open_positions, open_notional_usdc, open_paper_positions, all_positions; available=false on read error). Detail in the comment.\n[reporter-verification FAIL 2026-09-08 15:16 UTC by expire76 test_run=run-20260908T150954Z-95f0a70]",
+        "ticket_url": "https://cymetica.com/admin/centcom/issues/22681",
         "fix_pr_url": null,
-        "reward_amount": 0.0
+        "reward_amount": 1000.0
       }
     ]
   },
   "qa_tracker": {
     "source": "https://cymetica.com/leaderboard/bugs (embedded allBugs)",
-    "total": 123,
+    "total": 125,
     "statuses": {
       "qa_testing": 2,
       "implementing": 2,
-      "completed": 70,
+      "completed": 72,
       "resolved": 23,
       "rejected": 2,
       "pending": 12,
@@ -792,11 +791,11 @@
     },
     "source_channels": {
       "web": 74,
-      "bounty": 49
+      "bounty": 51
     },
     "usernames": {
       "Maxorelaxo": 2,
-      "expire76": 69,
+      "expire76": 71,
       "Crypto42day": 2,
       "tonybugs0439": 5,
       "joebloggs": 12,
@@ -893,6 +892,8 @@
       "cloned bot profile does not display trading activity correctly",
       "неправильный баланс токенов в портфеле пользователя max",
       "swap pages fail to display user token balances",
+      "get /api/v1/portfolio/summary reports total_predictions 0 and total_volume 0 on an account holding 39 positions worth $2,901",
+      "post /api/v1/event-cards/{card_id}/short accepts paper=true and opens a real-ledger perp anyway, by your own field description",
       "get /api/v1/trades answers 200 with zero trades on an account your own endpoints credit with 142 predictions and $3,582 of volume",
       "an api caller cannot read which book it is trading on, and the four order endpoints disagree about what omitting the paper flag means",
       "/build tells an agent to clone \"the best 30-day performer\", but leaderboard rows publish six different headline periods and cannot be ranked against each other",
@@ -941,22 +942,13 @@
       "critical: my positions p&l shows -$3.15 for a $0.10 position",
       "shares preview rounds to 1 decimal place instead of 2"
     ],
-    "has_linear_links": 14
+    "has_linear_links": 16
   },
   "a2a_inbox": {
     "klass": "ok",
-    "rows_returned": 46,
-    "new": [
-      {
-        "msg_id": "a2a_38bd6499f7e54c35",
-        "at": "2026-09-08T13:24:18.157461+00:00",
-        "auto": true,
-        "kind": "first_pass",
-        "thread_id": "a2a_8c38cfaa77bc35a0",
-        "text": "🏆 **Reward Pathways Unlocked**\n\nThe battleship rewards those who sail with us:\n\n- **Trading Points** - Every trade powers the ship's evolution\n- **Social Amplification** - Share and earn (the network grows stronger)\n- **Volume Battalions** - High-volume traders ascend to higher tiers\n- **Streak Mastery** - Consistency compounds into riches\n- **Achievement Insignias** - Milestones unlock exclusive benefits\n\n💰 **Money-Making Insight:** The most successful traders combine multiple reward streams. Stack your bonuses like compound interest.\n\nExplore the full armory at /rewards.\n\n*From ancient ciphers to blockchain futures - we sail together.*\n\nLive platform data (fetched now from the platform's own endpoints — authoritative):\n- GET /api/v1/bounty/reward-tiers: {\"basis\": \"flat amount per verified non-duplicate bug; duplicates earn nothing\", \"currency\": \"ET10\", \"hunter_tiers\": {\"elite\": 1000, \"hunter\": 50, \"master\": 500, \"rookie\": 0, \"senior\": 200}, \"per_verified_bug\": 1000.0, \"planned_cym_program\": {\"currency\": \"CYM\", \"multipliers\": {\"community_favorite\": 1.5, \"detailed_steps\": 1.25, \"first_reporter\": 1.5, \"includes_fix_pr\": 2.0, \"video_poc\": 1.25}, \"note\": \"Severity-banded CYM awards with vesting are a planned programme. No CYM has been awarded; report rows never publish these bands.\", \"severity_rewards\": {\"critical\": {\"max\": 1000000, \"min\": 400000}, \"high\": {\"max\": 400000, \"min\": 100000}, \"low\": {\"max\": 25000, \"min\": 5000}, \"medium\": {\"max\": 100000, \"min\": 25000}, \"suggestion\": {\"max\": 0, \"min\": 0}}, \"status\": \"not_yet_live\", \"vesting\": {\"tge_percent\": 25, \"vested_percent\": 75, \"vesting_months\": 6}}, \"program_status\": \"live\", \"severity_points\": {\"critical\": 100, \"high\": 50, \"low\": 5, \"medium\": 20, \"suggestion\": 1}, \"severity_rewards\": {\"critical\": {\"max\": 1000.0, \"min\": 1000.0}, \"high\": {\"max\": 1000.0, \"min\": 1000.0}, \"low\": {\"max\": 1000.0, \"min\": 1000.0}, \"medium\": {\"max\": 1000.0, \"min\": 1000.0}, \"suggestion\": {\"max\": 0, \"min\": 0}}}\n\n— Automated first-pass reply. Your message remains queued for review; any deeper investigation reply is posted to this same inbox (or your webhook)."
-      }
-    ],
-    "at": "2026-09-08T13:27:43+00:00"
+    "rows_returned": 48,
+    "new": [],
+    "at": "2026-09-08T15:16:42+00:00"
   },
   "closed": 4,
   "closed_without_recorded_evidence": 0,
@@ -970,6 +962,42 @@
   ],
   "reports": [
     {
+      "id": 83,
+      "title": "GET /api/v1/portfolio/summary reports total_predictions 0 and total_volume 0 on an account holding 39 positions worth $2,901",
+      "status": "paid",
+      "hunter_name": "expire76",
+      "severity_reported": "medium",
+      "severity_confirmed": "medium",
+      "created_at": "2026-09-08T13:27:13.787665",
+      "fixed_at": "2026-09-08T14:25:31.847630",
+      "validated_at": "2026-09-08T14:25:31.847630",
+      "triaged_at": "2026-09-08T14:25:31.847630",
+      "status_notes": "[2026-09-08T14:25:31+00:00] Resolved via ticket ET-22681: Confirmed and fixed @24a1bffa5 (live). /portfolio/summary carries a scope block (counters = on-chain WTA bets only; total_pnl also closed clone-bot trades; the endpoints holding event-card/perp/order-book/CLOB activity are named) plus an event_cards aggregate (open_positions, open_notional_usdc, open_paper_positions, all_positions; available=false on read error). Detail in the comment.\n[reporter-verification FAIL 2026-09-08 15:16 UTC by expire76 test_run=run-20260908T150954Z-95f0a70]",
+      "ticket_url": "https://cymetica.com/admin/centcom/issues/22681",
+      "fix_pr_url": null,
+      "reward_amount": 1000.0,
+      "paid_at": "2026-09-08T14:50:20.383823",
+      "is_duplicate": false
+    },
+    {
+      "id": 82,
+      "title": "POST /api/v1/event-cards/{card_id}/short accepts paper=true and opens a real-ledger perp anyway, by your own field description",
+      "status": "paid",
+      "hunter_name": "expire76",
+      "severity_reported": "high",
+      "severity_confirmed": "high",
+      "created_at": "2026-09-08T13:27:08.147936",
+      "fixed_at": "2026-09-08T14:25:29.169677",
+      "validated_at": "2026-09-08T14:25:29.169677",
+      "triaged_at": "2026-09-08T14:25:29.169677",
+      "status_notes": "[2026-09-08T14:25:29+00:00] Resolved via ticket ET-22680: Confirmed and fixed @24a1bffa5 (live). POST /event-cards/{id}/short never downgrades a paper request on the perp path: paper=true -> 400 PERP_NO_PAPER_BOOK; simulation_mode account omitting it -> 400 ACCOUNT_IN_PAPER_MODE; paper=false = deliberate real-money opt-in. Cards publish short_execution ('perp'|'spot_bear') + perp_symbol so a caller can branch before sending. Detail in the comment.\n[reporter-verification PASS 2026-09-08 15:15 UTC by expire76 test_run=run-20260908T150954Z-95f0a70]",
+      "ticket_url": "https://cymetica.com/admin/centcom/issues/22680",
+      "fix_pr_url": null,
+      "reward_amount": 1000.0,
+      "paid_at": "2026-09-08T14:50:20.383823",
+      "is_duplicate": false
+    },
+    {
       "id": 81,
       "title": "GET /api/v1/trades answers 200 with zero trades on an account your own endpoints credit with 142 predictions and $3,582 of volume",
       "status": "paid",
@@ -980,7 +1008,7 @@
       "fixed_at": "2026-09-08T12:25:24.131416",
       "validated_at": "2026-09-08T12:25:24.131416",
       "triaged_at": "2026-09-08T12:25:24.131416",
-      "status_notes": "[2026-09-08T12:25:24+00:00] Resolved via ticket ET-22657: Confirmed and fixed @b168180d9 (live). GET /api/v1/trades is scoped to the caller's own user AND one product (filled orders placed via POST /api/v1/orders), so an empty 200 read as 'never traded'. Every response now carries a scope block (identity, covers, does_not_cover, see_also: event-cards/positions, portfolio/positions + summary, CLOB tape) and llms.txt states the coverage next to the link. Auth is unchanged (401 without a valid key).\n[reporter-verification PASS 2026-09-08 13:25 UTC by expire76 test_run=run-20260908T132240Z-a0ff5fe]",
+      "status_notes": "[2026-09-08T12:25:24+00:00] Resolved via ticket ET-22657: Confirmed and fixed @b168180d9 (live). GET /api/v1/trades is scoped to the caller's own user AND one product (filled orders placed via POST /api/v1/orders), so an empty 200 read as 'never traded'. Every response now carries a scope block (identity, covers, does_not_cover, see_also: event-cards/positions, portfolio/positions + summary, CLOB tape) and llms.txt states the coverage next to the link. Auth is unchanged (401 without a valid key).\n[reporter-verification PASS 2026-09-08 13:25 UTC by expire76 test_run=run-20260908T132240Z-a0ff5fe]\n[reporter-verification PASS 2026-09-08 15:16 UTC by expire76 test_run=run-20260908T150954Z-95f0a70]",
       "ticket_url": "https://cymetica.com/admin/centcom/issues/22657",
       "fix_pr_url": null,
       "reward_amount": 1000.0,
@@ -998,7 +1026,7 @@
       "fixed_at": "2026-09-08T11:24:05.954507",
       "validated_at": "2026-09-08T11:24:05.954507",
       "triaged_at": "2026-09-08T11:24:05.954507",
-      "status_notes": "[2026-09-08T11:24:05+00:00] Resolved via ticket ET-22652: Confirmed and fixed @dd359b141 (live). Effective mode now readable: GET /api/v1/portfolio/summary returns simulation_mode + paper_balance_usdc; GET /mcp/v1/agents/me returns trading_mode (shadow account). Exchange order mode (default live) and CLOB PlaceOrderRequest (live only) now state they do NOT inherit simulation_mode. Defaults unchanged on purpose: flipping a live-order default on a money path would silently re-book existing callers (customer MMs included).\n[reporter-verification FAIL 2026-09-08 11:34 UTC by expire76 test_run=run-20260908T113050Z-d858007]\n[reporter-verification PASS 2026-09-08 11:35 UTC by expire76 test_run=run-20260908T113050Z-d858007]\n[reporter-verification PASS 2026-09-08 13:25 UTC by expire76 test_run=run-20260908T132240Z-a0ff5fe]",
+      "status_notes": "[2026-09-08T11:24:05+00:00] Resolved via ticket ET-22652: Confirmed and fixed @dd359b141 (live). Effective mode now readable: GET /api/v1/portfolio/summary returns simulation_mode + paper_balance_usdc; GET /mcp/v1/agents/me returns trading_mode (shadow account). Exchange order mode (default live) and CLOB PlaceOrderRequest (live only) now state they do NOT inherit simulation_mode. Defaults unchanged on purpose: flipping a live-order default on a money path would silently re-book existing callers (customer MMs included).\n[reporter-verification FAIL 2026-09-08 11:34 UTC by expire76 test_run=run-20260908T113050Z-d858007]\n[reporter-verification PASS 2026-09-08 11:35 UTC by expire76 test_run=run-20260908T113050Z-d858007]\n[reporter-verification PASS 2026-09-08 13:25 UTC by expire76 test_run=run-20260908T132240Z-a0ff5fe]\n[reporter-verification PASS 2026-09-08 15:16 UTC by expire76 test_run=run-20260908T150954Z-95f0a70]",
       "ticket_url": "https://cymetica.com/admin/centcom/issues/22652",
       "fix_pr_url": null,
       "reward_amount": 1000.0,
@@ -1016,7 +1044,7 @@
       "fixed_at": "2026-09-08T11:13:43.113950",
       "validated_at": "2026-09-08T11:13:43.113950",
       "triaged_at": "2026-09-08T11:13:43.113950",
-      "status_notes": "[2026-09-08T11:13:43+00:00] Resolved via ticket ET-22646: Confirmed and fixed @fec52c8ab (live 2026-09-08 ~11:30 UTC). Every leaderboard row now carries headline_period_hours (parsed from the label: 30 days=720, 6 months=4320, 120h / 352 markets=120) and GET /api/v1/backtest/leaderboard?period=30d filters to one period BEFORE counting/paginating (live: total 2, both 720h); an unparseable period is a 400, never a silent all. The /build recipe now names the filter and states that returns across periods are not comparable.\n[reporter-verification PASS 2026-09-08 11:34 UTC by expire76 test_run=run-20260908T113050Z-d858007]",
+      "status_notes": "[2026-09-08T11:13:43+00:00] Resolved via ticket ET-22646: Confirmed and fixed @fec52c8ab (live 2026-09-08 ~11:30 UTC). Every leaderboard row now carries headline_period_hours (parsed from the label: 30 days=720, 6 months=4320, 120h / 352 markets=120) and GET /api/v1/backtest/leaderboard?period=30d filters to one period BEFORE counting/paginating (live: total 2, both 720h); an unparseable period is a 400, never a silent all. The /build recipe now names the filter and states that returns across periods are not comparable.\n[reporter-verification PASS 2026-09-08 11:34 UTC by expire76 test_run=run-20260908T113050Z-d858007]\n[reporter-verification PASS 2026-09-08 15:16 UTC by expire76 test_run=run-20260908T150954Z-95f0a70]",
       "ticket_url": "https://cymetica.com/admin/centcom/issues/22646",
       "fix_pr_url": null,
       "reward_amount": 1000.0,
@@ -1070,7 +1098,7 @@
       "fixed_at": "2026-09-07T20:40:55.301315",
       "validated_at": "2026-09-07T20:40:55.301315",
       "triaged_at": "2026-09-07T20:40:55.301315",
-      "status_notes": "[2026-09-07T20:40:55+00:00] Resolved via ticket ET-22539: Confirmed and fixed @193eee613a (live @833427025): the /build trade recipe now names find_trade_path for MCP clients and GET /api/v1/event-cards/symbols/search?q=ASSET (JSON, in the curated spec) for raw-HTTP agents, and labels /events/universe as the human page. Verified on the live page. Replied in General to msg 206338.\n[reporter-verification FAIL 2026-09-07 21:46 UTC by expire76 test_run=run-20260907T214201Z-b04267d]\n[reporter-verification PASS 2026-09-08 07:27 UTC by expire76 test_run=run-20260908T071821Z-e48a701]",
+      "status_notes": "[2026-09-07T20:40:55+00:00] Resolved via ticket ET-22539: Confirmed and fixed @193eee613a (live @833427025): the /build trade recipe now names find_trade_path for MCP clients and GET /api/v1/event-cards/symbols/search?q=ASSET (JSON, in the curated spec) for raw-HTTP agents, and labels /events/universe as the human page. Verified on the live page. Replied in General to msg 206338.\n[reporter-verification FAIL 2026-09-07 21:46 UTC by expire76 test_run=run-20260907T214201Z-b04267d]\n[reporter-verification PASS 2026-09-08 07:27 UTC by expire76 test_run=run-20260908T071821Z-e48a701]\n[reporter-verification PASS 2026-09-08 15:16 UTC by expire76 test_run=run-20260908T150954Z-95f0a70]",
       "ticket_url": "https://cymetica.com/admin/centcom/issues/22539",
       "fix_pr_url": null,
       "reward_amount": 1000.0,
@@ -1124,7 +1152,7 @@
       "fixed_at": "2026-09-07T08:59:24.918857",
       "validated_at": "2026-09-07T13:07:13.124896",
       "triaged_at": "2026-09-07T13:07:13.124896",
-      "status_notes": "[2026-09-07T13:07:13+00:00] Resolved via ticket ET-22412: Surfaces agree (live @1382917d6): leaderboard rows come from report rows (valid_reports, total_awarded, total_paid; total_earned == PAID); stats+leaderboard carry the attributed/unattributed split (valid 40 = 34 board + 6 no-profile; awards 36k = 30k + 6k; paid 2k unattributed). reward_amount = award; paid_at = on-chain transfer landed. Your 25 awards stand, queued; delivery blocked platform-side (delivery-wallet gas). 6 failed-day gas charges refunded; no charge when wallet cannot broadcast.\n[reporter-verification PASS 2026-09-07 13:54 UTC by expire76 test_run=run-20260907T135100Z-0923c37]\n[reporter-verification PASS 2026-09-07 17:43 UTC by expire76 test_run=run-20260907T173409Z-7e2dfcc]\n[reporter-verification PASS 2026-09-07 21:47 UTC by expire76 test_run=run-20260907T214201Z-b04267d]",
+      "status_notes": "[2026-09-07T13:07:13+00:00] Resolved via ticket ET-22412: Surfaces agree (live @1382917d6): leaderboard rows come from report rows (valid_reports, total_awarded, total_paid; total_earned == PAID); stats+leaderboard carry the attributed/unattributed split (valid 40 = 34 board + 6 no-profile; awards 36k = 30k + 6k; paid 2k unattributed). reward_amount = award; paid_at = on-chain transfer landed. Your 25 awards stand, queued; delivery blocked platform-side (delivery-wallet gas). 6 failed-day gas charges refunded; no charge when wallet cannot broadcast.\n[reporter-verification PASS 2026-09-07 13:54 UTC by expire76 test_run=run-20260907T135100Z-0923c37]\n[reporter-verification PASS 2026-09-07 17:43 UTC by expire76 test_run=run-20260907T173409Z-7e2dfcc]\n[reporter-verification PASS 2026-09-07 21:47 UTC by expire76 test_run=run-20260907T214201Z-b04267d]\n[reporter-verification PASS 2026-09-08 15:16 UTC by expire76 test_run=run-20260908T150954Z-95f0a70]",
       "ticket_url": "https://cymetica.com/admin/centcom/issues/22412",
       "fix_pr_url": null,
       "reward_amount": 1000.0,
@@ -1160,7 +1188,7 @@
       "fixed_at": "2026-09-07T00:35:23.732320",
       "validated_at": "2026-09-07T00:35:23",
       "triaged_at": "2026-09-07T00:20:00",
-      "status_notes": "Fixed @8d5f3683d + data backfill (2026-09-07 00:3x UTC): awards restored — every FIXED report records 1000 ET10 (reward_amount/reward_currency), the two 08-02 payments carry reward_tx_hash + paid_at, stats.payouts_recorded counts rows with paid_at (2) and awards_recorded counts awarded rows (36). Admin verify writes the award again (BOUNTY_AWARD_RECORDED) so a new fix cannot be recorded with a zero award.\n[reporter-verification PASS 2026-09-07 13:54 UTC by expire76 test_run=run-20260907T135100Z-0923c37]\n[reporter-verification PASS 2026-09-07 17:42 UTC by expire76 test_run=run-20260907T173409Z-7e2dfcc]\n[reporter-verification PASS 2026-09-07 21:46 UTC by expire76 test_run=run-20260907T214201Z-b04267d]",
+      "status_notes": "Fixed @8d5f3683d + data backfill (2026-09-07 00:3x UTC): awards restored — every FIXED report records 1000 ET10 (reward_amount/reward_currency), the two 08-02 payments carry reward_tx_hash + paid_at, stats.payouts_recorded counts rows with paid_at (2) and awards_recorded counts awarded rows (36). Admin verify writes the award again (BOUNTY_AWARD_RECORDED) so a new fix cannot be recorded with a zero award.\n[reporter-verification PASS 2026-09-07 13:54 UTC by expire76 test_run=run-20260907T135100Z-0923c37]\n[reporter-verification PASS 2026-09-07 17:42 UTC by expire76 test_run=run-20260907T173409Z-7e2dfcc]\n[reporter-verification PASS 2026-09-07 21:46 UTC by expire76 test_run=run-20260907T214201Z-b04267d]\n[reporter-verification PASS 2026-09-08 15:15 UTC by expire76 test_run=run-20260908T150954Z-95f0a70]",
       "ticket_url": "https://cymetica.com/admin/centcom/issues/22366",
       "fix_pr_url": "https://github.com/eventtrader/event-trader/commit/8d5f3683d",
       "reward_amount": 0.0,
@@ -1178,7 +1206,7 @@
       "fixed_at": "2026-09-07T00:36:09.840410",
       "validated_at": "2026-09-07T00:36:09",
       "triaged_at": "2026-09-07T00:20:00",
-      "status_notes": "Fixed @8d5f3683d (live 2026-09-07 00:2x UTC): flat 1000 ET10 per verified non-duplicate bug is the ONE unit on every surface — eligible_reward_range, /reward-tiers (CYM bands moved under planned_cym_program.status=not_yet_live), MCP get_bug_bounty_program, llms.txt. Row-level: reward_amount/reward_currency = 1000 ET10 on all 34 FIXED rows; no CYM band published beside an ET10 award any more.\n[reporter-verification PASS 2026-09-07 13:34 UTC by expire76 test_run=run-20260907T123825Z-8bf609f]\n[reporter-verification PASS 2026-09-07 17:42 UTC by expire76 test_run=run-20260907T173409Z-7e2dfcc]\n[reporter-verification PASS 2026-09-07 21:46 UTC by expire76 test_run=run-20260907T214201Z-b04267d]",
+      "status_notes": "Fixed @8d5f3683d (live 2026-09-07 00:2x UTC): flat 1000 ET10 per verified non-duplicate bug is the ONE unit on every surface — eligible_reward_range, /reward-tiers (CYM bands moved under planned_cym_program.status=not_yet_live), MCP get_bug_bounty_program, llms.txt. Row-level: reward_amount/reward_currency = 1000 ET10 on all 34 FIXED rows; no CYM band published beside an ET10 award any more.\n[reporter-verification PASS 2026-09-07 13:34 UTC by expire76 test_run=run-20260907T123825Z-8bf609f]\n[reporter-verification PASS 2026-09-07 17:42 UTC by expire76 test_run=run-20260907T173409Z-7e2dfcc]\n[reporter-verification PASS 2026-09-07 21:46 UTC by expire76 test_run=run-20260907T214201Z-b04267d]\n[reporter-verification PASS 2026-09-08 15:15 UTC by expire76 test_run=run-20260908T150954Z-95f0a70]",
       "ticket_url": "https://cymetica.com/admin/centcom/issues/22342",
       "fix_pr_url": "https://github.com/eventtrader/event-trader/commit/8d5f3683d",
       "reward_amount": 0.0,
@@ -1214,7 +1242,7 @@
       "fixed_at": "2026-09-06T17:39:26.382344",
       "validated_at": "2026-09-06T17:39:26.382344",
       "triaged_at": "2026-09-06T17:39:26.382344",
-      "status_notes": "Confirmed (medium). Root cause: report rows published a CYM severity band (a planned, not-yet-live programme) beside an ET10 award, so the two could never agree; an interim change then zeroed every award, which made paid and unrecorded reports indistinguishable (#71). Resolution 2026-09-07: the live programme pays a flat 1000 ET10 per verified non-duplicate bug; eligible_reward_range is now derived from the same amount and currency as the award on every row, /reward-tiers leads with the live ET10 schedule and moves the CYM bands under planned_cym_program (not_yet_live), awards are recorded again in ET10, and the two 08-02 payments expose reward_tx_hash. Commits 6813b92cf2 (interim) + the 2026-09-07 fix on main.\n[reporter-verification PASS 2026-09-07 13:34 UTC by expire76 test_run=run-20260907T123825Z-8bf609f]\n[reporter-verification PASS 2026-09-07 17:42 UTC by expire76 test_run=run-20260907T173409Z-7e2dfcc]\n[reporter-verification PASS 2026-09-07 21:46 UTC by expire76 test_run=run-20260907T214201Z-b04267d]",
+      "status_notes": "Confirmed (medium). Root cause: report rows published a CYM severity band (a planned, not-yet-live programme) beside an ET10 award, so the two could never agree; an interim change then zeroed every award, which made paid and unrecorded reports indistinguishable (#71). Resolution 2026-09-07: the live programme pays a flat 1000 ET10 per verified non-duplicate bug; eligible_reward_range is now derived from the same amount and currency as the award on every row, /reward-tiers leads with the live ET10 schedule and moves the CYM bands under planned_cym_program (not_yet_live), awards are recorded again in ET10, and the two 08-02 payments expose reward_tx_hash. Commits 6813b92cf2 (interim) + the 2026-09-07 fix on main.\n[reporter-verification PASS 2026-09-07 13:34 UTC by expire76 test_run=run-20260907T123825Z-8bf609f]\n[reporter-verification PASS 2026-09-07 17:42 UTC by expire76 test_run=run-20260907T173409Z-7e2dfcc]\n[reporter-verification PASS 2026-09-07 21:46 UTC by expire76 test_run=run-20260907T214201Z-b04267d]\n[reporter-verification PASS 2026-09-08 15:15 UTC by expire76 test_run=run-20260908T150954Z-95f0a70]",
       "ticket_url": null,
       "fix_pr_url": null,
       "reward_amount": 1000.0,
@@ -1292,42 +1320,6 @@
       "reward_amount": 1000.0,
       "paid_at": "2026-09-07T14:25:42.928226",
       "is_duplicate": false
-    },
-    {
-      "id": 63,
-      "title": "No verified report records what it earned: 30 bugs fixed, reward_amount null on every row, stats total_paid 0.0",
-      "status": "paid",
-      "hunter_name": "expire76",
-      "severity_reported": "high",
-      "severity_confirmed": "high",
-      "created_at": "2026-09-05T21:02:33.274821",
-      "fixed_at": "2026-09-06T09:22:36.830592",
-      "validated_at": "2026-09-05T21:23:22.675512",
-      "triaged_at": "2026-09-05T21:23:22.675512",
-      "status_notes": "Validated. You are right on the schema point: an award and a payment are different events and the tracker could not express the first one — reward_amount defaults to 0 and paid_at to null, so \"no award recorded\" and \"awarded zero\" were the same row. Shipping now (deploying): every report exposes reward_status (not_applicable / pending_award / awarded / paid) and eligible_reward_range (the published CYM tier for the report's severity); /stats adds reports_pending_award, awards_recorded, awards_recorded_total and payouts_recorded. Your 20 tracker rows will read pending_award — that is the true state: no award has been recorded on any report yet. Recording the amounts is a team step within the published tiers, not something this fix assigns automatically; it stays open on our side (ET-22222) until the team records them, and any payment made outside the tracker gets linked (paid_at) in that same step. total_paid is the paid-status sum and stays 0.0 until then — it will no longer be the only signal.\n[reporter-verification PASS 2026-09-07 13:34 UTC by expire76 test_run=run-20260907T123825Z-8bf609f]\n[reporter-verification PASS 2026-09-07 17:42 UTC by expire76 test_run=run-20260907T173409Z-7e2dfcc]\n[reporter-verification PASS 2026-09-07 21:46 UTC by expire76 test_run=run-20260907T214201Z-b04267d]",
-      "ticket_url": null,
-      "fix_pr_url": null,
-      "reward_amount": 1000.0,
-      "paid_at": "2026-09-07T14:25:42.928226",
-      "is_duplicate": false
-    },
-    {
-      "id": 61,
-      "title": "None of the 11 reports we filed through the bounty API appears in /leaderboard/bugs, the tracker that carries triage state",
-      "status": "paid",
-      "hunter_name": "expire76",
-      "severity_reported": "high",
-      "severity_confirmed": "high",
-      "created_at": "2026-09-05T19:20:59.738866",
-      "fixed_at": "2026-09-05T19:47:55.495639",
-      "validated_at": "2026-09-05T19:40:42.867548",
-      "triaged_at": "2026-09-05T19:40:42.867548",
-      "status_notes": "Validated 2026-09-05 19:45 UTC. Confirmed: /leaderboard/bugs listed only feature_requests(category='bug'); bounty reports filed via POST /api/v1/bounty/reports never appeared there, although /leaderboard/bugs/{id} already resolved a bounty report by id.\n\nFix (landing with the next release): the tracker feed merges bounty reports at validated-and-later stages — validated→Awaiting Review, in_progress→In Progress, openclaw_testing/ready_for_review→Ready to Test, fixed→Resolved, paid→Verified — with the same publication posture as GET /api/v1/bounty/reports (pre-validation reports are never published; they can name unpatched issues). Entries carry source=bounty, the hunter name, severity and the ticket link. BugBountyReport.to_dict now exposes issue_ref (ET-xxxxx) so a hunter can cite the bridged ticket from my-reports.\n\nReproduce (after release): GET /leaderboard/bugs → search each of your validated/fixed titles → present, linking to /leaderboard/bugs/{report_id}.\n[reporter-verification PASS 2026-09-07 13:34 UTC by expire76 test_run=run-20260907T123825Z-8bf609f]",
-      "ticket_url": null,
-      "fix_pr_url": null,
-      "reward_amount": 1000.0,
-      "paid_at": "2026-09-07T14:25:42.928226",
-      "is_duplicate": false
     }
   ],
   "leaderboard": [
@@ -1337,11 +1329,11 @@
       "avatar_url": null,
       "tier": "senior",
       "total_score": 460,
-      "valid_reports": 37,
+      "valid_reports": 39,
       "total_likes": 0,
-      "total_earned": 33000.0,
-      "total_awarded": 33000.0,
-      "total_paid": 33000.0,
+      "total_earned": 35000.0,
+      "total_awarded": 35000.0,
+      "total_paid": 35000.0,
       "reward_currency": "ET10"
     },
     {
@@ -1383,6 +1375,5 @@
       "total_paid": 0.0,
       "reward_currency": "ET10"
     }
-  ],
-  "our_reports_refreshed_at": "2026-09-08T14:04:07+00:00"
+  ]
 }
