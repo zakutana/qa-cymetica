@@ -1,0 +1,77 @@
+{
+  "captured_at": "2026-09-08T13:27:15+00:00",
+  "endpoint_rule": null,
+  "nodeid": null,
+  "request": {
+    "body": {
+      "encoding": "json",
+      "truncated": false,
+      "value": {
+        "actual_behavior": "The counters read 0 and 0 beside 39 event-card positions totalling 2901.00\nUSDC of notional. We have seen them read 142 and 3582.146846 on the same\naccount earlier the same day; the two readings differ in the account's\nsimulation_mode, which was true then and false now, so the counters look mode-\nscoped. Nothing in the response says so, and the positions listed alongside\nthem are not mode-scoped.",
+        "category": "api",
+        "description": "We are not claiming a number, and we may be wrong about the mechanism. What we\ncan hold is that two of your own surfaces, read in the same second with the\nsame key, say incompatible things: one says nothing has ever been traded here,\nthe other lists what was traded.\nIf the counters are deliberately scoped to the active book, that is a\nreasonable design and the fix is small: say so in the response, the way\n/api/v1/trades now says what it covers. That scope block is a good pattern and\nthis is the endpoint next in line for it — with the difference that here the\npositions in the same account are NOT scoped the same way, so the two numbers\nsitting beside each other belong to different populations.\nWorth one extra look before you close it: an agent that reads total_volume to\nsize its next order, or win_rate to decide whether its strategy is working,\ngets a truthful-looking zero rather than an error. That is the shape that does\ndamage quietly.\n\nMEASURED VALUES (from the live service):\n\n  [CYM-the_summary_does_not_report_a_history_the_positions_contradict] the summary reports total_predictions, total_volume as zero while 39 position(s) worth 2901.00 USDC of notional are listed on the same account: an agent reading its own summary would conclude it had never traded\n    left: ['total_predictions', 'total_volume']\n    right: []\n    sources: {'summary': '/api/v1/portfolio/summary', 'positions': '/api/v1/event-cards/positions'}\n    population: {'positions': 39, 'notional_usdc': 2901.0, 'total_predictions': 0.0, 'total_volume': 0.0}\n\nREPRODUCE:\n  - GET https://cymetica.com/api/v1/portfolio/summary -> total_predictions 0, total_volume 0, simulation_mode false\n  - GET https://cymetica.com/api/v1/event-cards/positions -> 39 positions, 2901.00 USDC of notional, 28 of them is_paper false\n  - Switch the account to paper and read the summary again -> we saw 142 and 3582.146846\n\nAUTOMATED CHECKS (public repo: github.com/zakutana/qa-cymetica):\n  tests/rest/test_portfolio_summary.py::test_the_summary_does_not_report_a_history_the_positions_contradict\n\nReported by an independent QA agent. Scope of this work: read-only\nverification of the REST API, MCP and machine-readable discovery surfaces. No\nstate-changing account action, no trading, no order placement, no deposit or\nwithdrawal, no cleanup, no duplicate tickets. UI defects are out of scope.\nEvery figure above was measured directly against the live service, not taken\nfrom a document, and each finding ships with the command that reproduces it.",
+        "expected_behavior": "An agent reading its own summary is not told it has never traded while the\nsame platform lists its positions.",
+        "hunter_name": "expire76",
+        "severity_reported": "medium",
+        "steps_to_reproduce": "GET https://cymetica.com/api/v1/portfolio/summary -> total_predictions 0, total_volume 0, simulation_mode false\nGET https://cymetica.com/api/v1/event-cards/positions -> 39 positions, 2901.00 USDC of notional, 28 of them is_paper false\nSwitch the account to paper and read the summary again -> we saw 142 and 3582.146846",
+        "title": "GET /api/v1/portfolio/summary reports total_predictions 0 and total_volume 0 on an account holding 39 positions worth $2,901",
+        "url": "https://cymetica.com/api/v1/portfolio/summary",
+        "wallet_address": "0xde9CeAaB301A9e47b1bAcd448B3DDbbA85e83398"
+      }
+    },
+    "headers": {
+      "accept": "application/json",
+      "accept-encoding": "gzip, deflate, zstd",
+      "connection": "keep-alive",
+      "content-length": "3795",
+      "content-type": "application/json",
+      "host": "cymetica.com",
+      "user-agent": "qa-cymetica/0.1 (independent QA; contact via vendor Telegram channel)"
+    },
+    "method": "POST",
+    "url": "https://cymetica.com/api/v1/bounty/reports"
+  },
+  "response": {
+    "body": {
+      "encoding": "json",
+      "truncated": false,
+      "value": {
+        "message": "Bug report submitted successfully. We'll review it within 48 hours.",
+        "report_id": 83,
+        "success": true
+      }
+    },
+    "elapsed_ms": 1567,
+    "headers": {
+      "cache-control": "no-store, no-cache, must-revalidate, max-age=0",
+      "connection": "keep-alive",
+      "content-encoding": "gzip",
+      "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests",
+      "content-security-policy-report-only": "default-src 'self'; script-src 'self' 'nonce-vgGIwsyRYQiejfRAvBsNTg==' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'",
+      "content-signal": "ai-train=no, search=yes, ai-input=yes",
+      "content-type": "application/json",
+      "cross-origin-opener-policy": "same-origin-allow-popups",
+      "cross-origin-resource-policy": "cross-origin",
+      "date": "Tue, 08 Sep 2026 13:27:15 GMT",
+      "permissions-policy": "geolocation=(), microphone=(), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=(), browsing-topics=(), attribution-reporting=()",
+      "pragma": "no-cache",
+      "referrer-policy": "strict-origin-when-cross-origin, strict-origin-when-cross-origin",
+      "server": "nginx",
+      "strict-transport-security": "max-age=31536000; includeSubDomains",
+      "transfer-encoding": "chunked",
+      "vary": "Accept-Encoding",
+      "x-ai-strongest-model": "Claude Fable 5",
+      "x-content-type-options": "nosniff, nosniff",
+      "x-dns-prefetch-control": "off",
+      "x-frame-options": "SAMEORIGIN, SAMEORIGIN",
+      "x-ratelimit-limit": "60",
+      "x-ratelimit-remaining": "54",
+      "x-ratelimit-reset": "1788876000",
+      "x-xss-protection": "0"
+    },
+    "reason": "OK",
+    "status_code": 200
+  },
+  "run_id": "script-submit",
+  "tier": "MUTATE"
+}
