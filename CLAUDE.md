@@ -196,6 +196,16 @@ tests/repo/       repository consistency. Deliberately NOT in tests/meta:
                   one of them sent a false claim to the vendor. Named for
                   what it does, not for the night -- the operator runs it in
                   the day too.
+DEEP-PASS.md      what the last deep pass did, in Czech, overwritten each
+                  run. **Read it at the start of any session that follows
+                  one** -- five headings, and "Ceka na tebe" is the handover:
+                  what the pass could not finish and what needs the
+                  operator's judgement. Nothing else loads it, so a session
+                  that does not open it will answer "how did the deep pass
+                  go" out of nothing. That happened on 2026-09-08; the skill
+                  had said since it was written that this file carries what
+                  survives a /clear, but the pointer to it lived only in the
+                  skill, which a fresh session has no reason to read.
 .claude/agents/   model and effort per role, in frontmatter. So neither the
                   operator nor a session has to choose one per task -- the
                   task carries its own. A session still cannot change its
