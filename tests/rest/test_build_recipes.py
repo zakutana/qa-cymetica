@@ -26,6 +26,10 @@ from qa.measure import Measurement, conclude
 BUILD = "/build"
 SEARCH = "/api/v1/event-cards/symbols/search"
 LEADERBOARD = "/api/v1/backtest/leaderboard"
+FEED = "/api/v1/event-cards"
+POSITIONS = "/api/v1/event-cards/positions"
+CARD = "/api/v1/event-cards/{card_id}"
+HISTORY = "/api/v1/event-cards/{card_id}/index-history"
 
 
 @qa(component="rest.event_cards", tier=SafetyTier.SAFE, surface="rest",
@@ -137,3 +141,134 @@ def test_the_leaderboard_can_answer_the_ranking_the_recipe_asks_for(rest_anon):
                     "rows_with_30_days": sum(1 for r in rows
                                              if r.get("headline_period") == "30 days")},
         sources={"leaderboard": LEADERBOARD, "page": BUILD}))
+
+
+@qa(component="rest.event_cards", tier=SafetyTier.SAFE, surface="rest")
+def test_the_event_card_feed_carries_headlines_an_agent_can_match(rest_trusted):
+    """Recipe 3, step 1: "watch the event-card feed; when a headline matches
+    my thesis, alert me or place the pre-approved order."
+
+    Matching a headline needs a headline. A feed that answers 200 with cards
+    carrying scores about a headline and not the headline itself would leave
+    the recipe's only decision -- does this match my thesis -- unmakeable, and
+    every card does publish two headline SCORES, which is exactly the shape
+    that could pass a shallower check.
+
+    The count is held against the rows in the same breath, because this
+    repository has filed that reconciliation four times on other surfaces.
+    """
+    response = rest_trusted.get(FEED)
+    if response.status_code != 200:
+        conclude(Measurement(
+            verdict="failed",
+            reason=f"the event-card feed a /build recipe tells an agent to "
+                   f"watch answered HTTP {response.status_code}",
+            sources={"feed": FEED, "page": BUILD}))
+        return
+
+    body = response.json() or {}
+    cards = body.get("cards") or []
+    titled = [c for c in cards if str(c.get("title") or "").strip()]
+    counted = body.get("count")
+    agrees = counted is None or counted == len(cards)
+
+    conclude(Measurement(
+        verdict="passed" if cards and len(titled) == len(cards) and agrees
+        else "failed",
+        reason=(f"every one of the {len(cards)} cards in the feed carries a "
+                f"title an agent can match a thesis against, and count agrees "
+                f"with the rows returned"
+                if cards and len(titled) == len(cards) and agrees else
+                f"the feed returned {len(cards)} card(s), {len(titled)} with a "
+                f"title, and count says {counted}: an agent told to match a "
+                f"headline cannot"),
+        left=len(titled), right=len(cards),
+        population={"cards": len(cards), "titled": len(titled),
+                    "count_field": counted},
+        sources={"feed": FEED, "page": BUILD}))
+
+
+@qa(component="rest.event_cards", tier=SafetyTier.SAFE, surface="rest")
+def test_a_card_in_the_feed_resolves_and_publishes_its_index_history(rest_trusted):
+    """Recipe 3, steps 2 and 3: read the card, then decide from its history.
+
+    Walked forward from the feed rather than from an id typed in here, so the
+    check cannot outlive the card it was written against -- the failure mode
+    that retires a check the day the platform rotates its data.
+    """
+    feed = rest_trusted.get(FEED)
+    cards = (feed.json() or {}).get("cards") or [] if feed.status_code == 200 else []
+    if not cards:
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason=f"the feed returned no card to walk forward from "
+                   f"(HTTP {feed.status_code})",
+            sources={"feed": FEED}))
+        return
+
+    card_id = cards[0].get("id") or cards[0].get("card_id")
+    detail = rest_trusted.get(CARD.format(card_id=card_id))
+    history = rest_trusted.get(HISTORY.format(card_id=card_id))
+    points = ((history.json() or {}).get("points") or []
+              if history.status_code == 200 else [])
+
+    walked = detail.status_code == 200 and history.status_code == 200 and points
+    conclude(Measurement(
+        verdict="passed" if walked else "failed",
+        reason=(f"a card taken from the feed resolves and publishes "
+                f"{len(points)} index point(s), so the monitor recipe can read "
+                f"a card and decide from its history"
+                if walked else
+                f"walking the monitor recipe forward from the feed stops: "
+                f"card detail HTTP {detail.status_code}, index-history HTTP "
+                f"{history.status_code}, {len(points)} point(s)"),
+        left=card_id, right=len(points),
+        population={"points": len(points)},
+        sources={"feed": FEED, "card": CARD, "history": HISTORY}))
+
+
+@qa(component="rest.event_cards", tier=SafetyTier.SAFE, surface="rest")
+def test_every_card_we_hold_a_position_in_still_resolves(rest_trusted):
+    """A position pointing at a card that has stopped existing.
+
+    Not a recipe step -- a consequence of one. The recipes end in holding
+    something, and `/positions` is where an agent reads what it holds. A
+    position whose card_id 404s is a row an agent cannot price, close or
+    explain, and nothing else here would notice: the position endpoint answers
+    200 with the stale row in it.
+    """
+    response = rest_trusted.get(POSITIONS)
+    if response.status_code != 200:
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason=f"{POSITIONS} answered HTTP {response.status_code}, so what "
+                   f"we hold could not be read",
+            sources={"positions": POSITIONS}))
+        return
+
+    positions = (response.json() or {}).get("positions") or []
+    if not positions:
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason="we hold no event-card position, so there is no card to "
+                   "resolve and this establishes nothing",
+            sources={"positions": POSITIONS}))
+        return
+
+    # Distinct ids only, and capped: this is a live surface and the point is
+    # whether the reference holds, not how many times we can ask.
+    unresolved = []
+    for card_id in list(dict.fromkeys(p.get("card_id") for p in positions))[:20]:
+        if rest_trusted.get(CARD.format(card_id=card_id)).status_code != 200:
+            unresolved.append(card_id)
+
+    conclude(Measurement(
+        verdict="passed" if not unresolved else "failed",
+        reason=(f"every card we hold a position in resolves"
+                if not unresolved else
+                f"{len(unresolved)} card(s) we hold a position in no longer "
+                f"resolve, so those rows cannot be priced or closed from the "
+                f"API: {', '.join(unresolved)}"),
+        left=sorted(unresolved), right=[],
+        population={"positions": len(positions)},
+        sources={"positions": POSITIONS, "card": CARD}))
