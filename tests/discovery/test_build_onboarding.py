@@ -47,6 +47,22 @@ RECIPE = re.compile(r'data-i18n="build\.recipe_[a-z_]+"\s*>(.*?)</(?:span|b|li)>
 # not mistaken for one).
 PATH_IN_PROSE = re.compile(r"(?<![\w/])/[a-z][\w.-]*(?:/[\w.{}-]+)*")
 
+# A recipe can name a path in order to say it is NOT for agents, and one now
+# does. #76 was filed because the trade recipe read "search /events/universe
+# for an asset, quote it, place a $25 limit buy" -- an instruction. Their fix
+# moved the instruction to find_trade_path and the symbols search, and left the
+# path in an aside: "/events/universe is the same catalogue as a page for
+# humans." Reading every path in the recipe as an instruction reports that
+# sentence as the defect it replaced, which is what happened on 2026-09-08.
+#
+# So the SENTENCE is the unit, not the recipe. A sentence that says its path is
+# for people is not sending an agent anywhere; one that says "search
+# /events/universe for an asset" still is, and still fails.
+FOR_PEOPLE = re.compile(r"\bfor humans\b|\bhuman page\b|\bfor people\b"
+                        r"|\bin a browser\b|\bbrowser page\b", re.I)
+
+SENTENCE = re.compile(r"(?<=\.)\s+")
+
 # "Save the returned api_key and send it as X-API-Key on every call."
 # The sentence is the anchor; the FIELD NAME is read out of it, never assumed.
 #
@@ -132,12 +148,17 @@ def _rungs(text):
 @qa(component="discovery.onboarding", tier=SafetyTier.SAFE, surface="discovery",
     claim="build-recipe-names-a-browser-route")
 def test_every_route_a_recipe_names_is_reachable_as_an_api(rest_anon):
-    """A path in an agent-facing recipe must be one an agent can call.
+    """A path a recipe SENDS AN AGENT TO must be one an agent can call.
 
     Either it is in the curated schema the page tells ChatGPT users to import,
     or it answers JSON. A browser route in a list of things to command an agent
     to do is a dead end for the HTTP callers the same page invites ("raw HTTP
     agents start at /llms.txt").
+
+    Sends an agent to, not merely mentions: a sentence that says its path is a
+    page for people is describing the catalogue, not routing a caller at it.
+    That distinction is the difference between #76 and #76's fix, and the
+    excluded paths are named in the verdict so the exclusion is never silent.
     """
     page, why = _fetch(rest_anon, BUILD)
     if page is None:
@@ -155,8 +176,15 @@ def test_every_route_a_recipe_names_is_reachable_as_an_api(rest_anon):
             sources={"page": BUILD}))
         return
 
-    named = sorted({m for recipe in recipes
-                    for m in PATH_IN_PROSE.findall(_prose(recipe))})
+    sentences = [s for recipe in recipes
+                 for s in SENTENCE.split(_prose(recipe)) if s.strip()]
+    named = sorted({m for s in sentences if not FOR_PEOPLE.search(s)
+                    for m in PATH_IN_PROSE.findall(s)})
+    # Kept and reported, never dropped in silence: a check that quietly stops
+    # looking at something is indistinguishable from one that looked and found
+    # nothing, and this exclusion is the whole reason the check can pass today.
+    for_people = sorted({m for s in sentences if FOR_PEOPLE.search(s)
+                         for m in PATH_IN_PROSE.findall(s)} - set(named))
     if not named:
         conclude(Measurement(
             verdict="inconclusive",
@@ -194,8 +222,10 @@ def test_every_route_a_recipe_names_is_reachable_as_an_api(rest_anon):
         f"schema and does not answer JSON: "
         + ", ".join(f"{p} ({w})" for p, w in sorted(unreachable.items()))
     ) if unreachable else (
-        f"every path named in a /build recipe is callable: "
+        f"every path a /build recipe sends an agent to is callable: "
         f"{len(named)} checked against {len(documented)} documented paths"
+        + (f"; {', '.join(for_people)} named as being for people, not called"
+           if for_people else "")
     )
 
     conclude(Measurement(
@@ -203,8 +233,39 @@ def test_every_route_a_recipe_names_is_reachable_as_an_api(rest_anon):
         reason=reason,
         left=sorted(unreachable), right=sorted(named),
         population={"recipes": len(recipes), "paths_named": len(named),
+                    "paths_named_for_people": len(for_people),
                     "documented_paths": len(documented)},
         sources={"page": BUILD, "schema": OPENAPI}))
+
+
+@qa(component="discovery.onboarding", tier=SafetyTier.SAFE, surface="discovery")
+def test_a_recipe_that_routes_an_agent_is_still_told_from_one_that_does_not():
+    """The repair above, pinned. Offline: two sentences, no network.
+
+    Narrowing a check the day its finding is fixed is how a check quietly stops
+    catching the thing it was written for. So both halves are held here: #76's
+    sentence as filed must still read as routing an agent at /events/universe,
+    and their fix must not. If a later edit widens FOR_PEOPLE until the first
+    one is excluded too, this fails rather than the sweep going green on a
+    defect that came back.
+    """
+    def routed(text):
+        parts = [s for s in SENTENCE.split(text) if s.strip()]
+        return sorted({p for s in parts if not FOR_PEOPLE.search(s)
+                       for p in PATH_IN_PROSE.findall(s)})
+
+    as_filed = '— "search /events/universe for an asset, quote it, place a buy."'
+    as_fixed = ("raw HTTP agents search GET /api/v1/event-cards/symbols/search"
+                "?q=<asset> (JSON). /events/universe is the same catalogue as "
+                "a page for humans.")
+
+    assert "/events/universe" in routed(as_filed), (
+        "the sentence #76 was filed for must still read as an instruction"
+    )
+    assert "/events/universe" not in routed(as_fixed)
+    assert "/api/v1/event-cards/symbols/search" in routed(as_fixed), (
+        "the instruction in the same recipe must still be read and checked"
+    )
 
 
 @qa(component="discovery.onboarding", tier=SafetyTier.SAFE, surface="discovery",
