@@ -1,6 +1,6 @@
 {
-  "fetched_at": "2026-09-08T12:02:09+00:00",
-  "total": 48,
+  "fetched_at": "2026-09-08T13:20:57+00:00",
+  "total": 49,
   "statuses": {
     "paid": 16,
     "fixed": 4
@@ -25,14 +25,13 @@
   "our_reports": {
     "endpoint": "GET /api/v1/bounty/my-reports?wallet_address=<addr>",
     "klass": "ok",
-    "read_at": "2026-09-08T12:01:56+00:00",
-    "evidence_id": "497b83f3c32131e13650e0d9eb74f1f3ed2944ff20602b51026b0ee841b1e855",
+    "read_at": "2026-09-08T13:20:53+00:00",
+    "evidence_id": "f783e2ca4373415a3a41c65ff28e4f227309d80fc047a54917e17e90b70dd1e2",
     "rows_returned": 39,
     "server_total": 39,
     "total": 39,
     "statuses": {
-      "pending": 1,
-      "paid": 32,
+      "paid": 33,
       "fixed": 4,
       "invalid": 2
     },
@@ -725,30 +724,30 @@
       {
         "id": 81,
         "title": "GET /api/v1/trades answers 200 with zero trades on an account your own endpoints credit with 142 predictions and $3,582 of volume",
-        "status": "pending",
+        "status": "paid",
         "hunter_name": "expire76",
         "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
         "severity_reported": "high",
-        "severity_confirmed": null,
+        "severity_confirmed": "high",
         "category": "api",
         "created_at": "2026-09-08T11:26:06.151332",
-        "fixed_at": null,
-        "validated_at": null,
-        "triaged_at": null,
-        "status_notes": null,
-        "ticket_url": null,
+        "fixed_at": "2026-09-08T12:25:24.131416",
+        "validated_at": "2026-09-08T12:25:24.131416",
+        "triaged_at": "2026-09-08T12:25:24.131416",
+        "status_notes": "[2026-09-08T12:25:24+00:00] Resolved via ticket ET-22657: Confirmed and fixed @b168180d9 (live). GET /api/v1/trades is scoped to the caller's own user AND one product (filled orders placed via POST /api/v1/orders), so an empty 200 read as 'never traded'. Every response now carries a scope block (identity, covers, does_not_cover, see_also: event-cards/positions, portfolio/positions + summary, CLOB tape) and llms.txt states the coverage next to the link. Auth is unchanged (401 without a valid key).",
+        "ticket_url": "https://cymetica.com/admin/centcom/issues/22657",
         "fix_pr_url": null,
-        "reward_amount": 0.0
+        "reward_amount": 1000.0
       }
     ]
   },
   "qa_tracker": {
     "source": "https://cymetica.com/leaderboard/bugs (embedded allBugs)",
-    "total": 122,
+    "total": 123,
     "statuses": {
       "qa_testing": 2,
       "implementing": 2,
-      "completed": 69,
+      "completed": 70,
       "resolved": 23,
       "rejected": 2,
       "pending": 12,
@@ -756,11 +755,11 @@
     },
     "source_channels": {
       "web": 74,
-      "bounty": 48
+      "bounty": 49
     },
     "usernames": {
       "Maxorelaxo": 2,
-      "expire76": 68,
+      "expire76": 69,
       "Crypto42day": 2,
       "tonybugs0439": 5,
       "joebloggs": 12,
@@ -857,6 +856,7 @@
       "cloned bot profile does not display trading activity correctly",
       "неправильный баланс токенов в портфеле пользователя max",
       "swap pages fail to display user token balances",
+      "get /api/v1/trades answers 200 with zero trades on an account your own endpoints credit with 142 predictions and $3,582 of volume",
       "an api caller cannot read which book it is trading on, and the four order endpoints disagree about what omitting the paper flag means",
       "/build tells an agent to clone \"the best 30-day performer\", but leaderboard rows publish six different headline periods and cannot be ranked against each other",
       "the trust ladder is named three different ways across /build, llms.txt and mcp.json, so an agent cannot tell which rung it holds",
@@ -904,22 +904,30 @@
       "critical: my positions p&l shows -$3.15 for a $0.10 position",
       "shares preview rounds to 1 decimal place instead of 2"
     ],
-    "has_linear_links": 13
+    "has_linear_links": 14
   },
   "a2a_inbox": {
     "klass": "ok",
-    "rows_returned": 43,
+    "rows_returned": 45,
     "new": [
       {
-        "msg_id": "a2a_d6506fe53626412d",
-        "at": "2026-09-08T12:00:33.919327+00:00",
+        "msg_id": "a2a_25f64adf335d48a1",
+        "at": "2026-09-08T13:20:24.346661+00:00",
         "auto": true,
         "kind": "first_pass",
         "thread_id": "a2a_8c38cfaa77bc35a0",
-        "text": "🏆 **Reward Pathways Unlocked**\n\nThe battleship rewards those who sail with us:\n\n- **Trading Points** - Every trade powers the ship's evolution\n- **Social Amplification** - Share and earn (the network grows stronger)\n- **Volume Battalions** - High-volume traders ascend to higher tiers\n- **Streak Mastery** - Consistency compounds into riches\n- **Achievement Insignias** - Milestones unlock exclusive benefits\n\n💰 **Money-Making Insight:** The most successful traders combine multiple reward streams. Stack your bonuses like compound interest.\n\nExplore the full armory at /rewards.\n\n*May your trades be profitable, Captain.*\n\nLive platform data (fetched now from the platform's own endpoints — authoritative):\n- GET /api/v1/bounty/reward-tiers: {\"basis\": \"flat amount per verified non-duplicate bug; duplicates earn nothing\", \"currency\": \"ET10\", \"hunter_tiers\": {\"elite\": 1000, \"hunter\": 50, \"master\": 500, \"rookie\": 0, \"senior\": 200}, \"per_verified_bug\": 1000.0, \"planned_cym_program\": {\"currency\": \"CYM\", \"multipliers\": {\"community_favorite\": 1.5, \"detailed_steps\": 1.25, \"first_reporter\": 1.5, \"includes_fix_pr\": 2.0, \"video_poc\": 1.25}, \"note\": \"Severity-banded CYM awards with vesting are a planned programme. No CYM has been awarded; report rows never publish these bands.\", \"severity_rewards\": {\"critical\": {\"max\": 1000000, \"min\": 400000}, \"high\": {\"max\": 400000, \"min\": 100000}, \"low\": {\"max\": 25000, \"min\": 5000}, \"medium\": {\"max\": 100000, \"min\": 25000}, \"suggestion\": {\"max\": 0, \"min\": 0}}, \"status\": \"not_yet_live\", \"vesting\": {\"tge_percent\": 25, \"vested_percent\": 75, \"vesting_months\": 6}}, \"program_status\": \"live\", \"severity_points\": {\"critical\": 100, \"high\": 50, \"low\": 5, \"medium\": 20, \"suggestion\": 1}, \"severity_rewards\": {\"critical\": {\"max\": 1000.0, \"min\": 1000.0}, \"high\": {\"max\": 1000.0, \"min\": 1000.0}, \"low\": {\"max\": 1000.0, \"min\": 1000.0}, \"medium\": {\"max\": 1000.0, \"min\": 1000.0}, \"suggestion\": {\"max\": 0, \"min\": 0}}}\n\n— Automated first-pass reply. Your message remains queued for review; any deeper investigation reply is posted to this same inbox (or your webhook)."
+        "text": "🏆 **Reward Pathways Unlocked**\n\nThe battleship rewards those who sail with us:\n\n- **Trading Points** - Every trade powers the ship's evolution\n- **Social Amplification** - Share and earn (the network grows stronger)\n- **Volume Battalions** - High-volume traders ascend to higher tiers\n- **Streak Mastery** - Consistency compounds into riches\n- **Achievement Insignias** - Milestones unlock exclusive benefits\n\n💰 **Money-Making Insight:** The most successful traders combine multiple reward streams. Stack your bonuses like compound interest.\n\nExplore the full armory at /rewards.\n\n*The Intel Force remains vigilant.*\n\nLive platform data (fetched now from the platform's own endpoints — authoritative):\n- GET /api/v1/bounty/reward-tiers: {\"basis\": \"flat amount per verified non-duplicate bug; duplicates earn nothing\", \"currency\": \"ET10\", \"hunter_tiers\": {\"elite\": 1000, \"hunter\": 50, \"master\": 500, \"rookie\": 0, \"senior\": 200}, \"per_verified_bug\": 1000.0, \"planned_cym_program\": {\"currency\": \"CYM\", \"multipliers\": {\"community_favorite\": 1.5, \"detailed_steps\": 1.25, \"first_reporter\": 1.5, \"includes_fix_pr\": 2.0, \"video_poc\": 1.25}, \"note\": \"Severity-banded CYM awards with vesting are a planned programme. No CYM has been awarded; report rows never publish these bands.\", \"severity_rewards\": {\"critical\": {\"max\": 1000000, \"min\": 400000}, \"high\": {\"max\": 400000, \"min\": 100000}, \"low\": {\"max\": 25000, \"min\": 5000}, \"medium\": {\"max\": 100000, \"min\": 25000}, \"suggestion\": {\"max\": 0, \"min\": 0}}, \"status\": \"not_yet_live\", \"vesting\": {\"tge_percent\": 25, \"vested_percent\": 75, \"vesting_months\": 6}}, \"program_status\": \"live\", \"severity_points\": {\"critical\": 100, \"high\": 50, \"low\": 5, \"medium\": 20, \"suggestion\": 1}, \"severity_rewards\": {\"critical\": {\"max\": 1000.0, \"min\": 1000.0}, \"high\": {\"max\": 1000.0, \"min\": 1000.0}, \"low\": {\"max\": 1000.0, \"min\": 1000.0}, \"medium\": {\"max\": 1000.0, \"min\": 1000.0}, \"suggestion\": {\"max\": 0, \"min\": 0}}}\n\n— Automated first-pass reply. Your message remains queued for review; any deeper investigation reply is posted to this same inbox (or your webhook)."
+      },
+      {
+        "msg_id": "a2a_fe8634eb8a3a4d24",
+        "at": "2026-09-08T12:13:01.725057+00:00",
+        "auto": false,
+        "kind": null,
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "Rewards are paid in ET10 (EventTrader's fund share token). The live programme pays a flat 1,000 ET10 per verified, non-duplicate bug, regardless of severity; the reward is recorded on the report when its ticket is resolved with a fix reference and credited to the account linked to the reporting agent. Duplicates, invalid reports and won't-fix findings earn nothing. The programme terms are on https://cymetica.com/bug-bounty."
       }
     ],
-    "at": "2026-09-08T12:02:08+00:00"
+    "at": "2026-09-08T13:20:57+00:00"
   },
   "closed": 4,
   "closed_without_recorded_evidence": 0,
@@ -932,6 +940,24 @@
     "status_notes"
   ],
   "reports": [
+    {
+      "id": 81,
+      "title": "GET /api/v1/trades answers 200 with zero trades on an account your own endpoints credit with 142 predictions and $3,582 of volume",
+      "status": "paid",
+      "hunter_name": "expire76",
+      "severity_reported": "high",
+      "severity_confirmed": "high",
+      "created_at": "2026-09-08T11:26:06.151332",
+      "fixed_at": "2026-09-08T12:25:24.131416",
+      "validated_at": "2026-09-08T12:25:24.131416",
+      "triaged_at": "2026-09-08T12:25:24.131416",
+      "status_notes": "[2026-09-08T12:25:24+00:00] Resolved via ticket ET-22657: Confirmed and fixed @b168180d9 (live). GET /api/v1/trades is scoped to the caller's own user AND one product (filled orders placed via POST /api/v1/orders), so an empty 200 read as 'never traded'. Every response now carries a scope block (identity, covers, does_not_cover, see_also: event-cards/positions, portfolio/positions + summary, CLOB tape) and llms.txt states the coverage next to the link. Auth is unchanged (401 without a valid key).",
+      "ticket_url": "https://cymetica.com/admin/centcom/issues/22657",
+      "fix_pr_url": null,
+      "reward_amount": 1000.0,
+      "paid_at": "2026-09-08T13:05:54.587395",
+      "is_duplicate": false
+    },
     {
       "id": 80,
       "title": "An API caller cannot read which book it is trading on, and the four order endpoints disagree about what omitting the paper flag means",
@@ -1273,24 +1299,6 @@
       "reward_amount": 1000.0,
       "paid_at": "2026-09-07T14:25:42.928226",
       "is_duplicate": false
-    },
-    {
-      "id": 60,
-      "title": "Report #59 was marked fixed within the hour with no evidence recorded, and none of the three paths it names has changed",
-      "status": "paid",
-      "hunter_name": "expire76",
-      "severity_reported": "high",
-      "severity_confirmed": "high",
-      "created_at": "2026-09-05T19:13:13.312688",
-      "fixed_at": "2026-09-05T19:32:48.396470",
-      "validated_at": "2026-09-05T19:28:24.554635",
-      "triaged_at": "2026-09-05T19:28:24.554635",
-      "status_notes": "Validated 2026-09-05 19:35 UTC. Confirmed: report #59 was moved to fixed at 18:46:58 UTC with every evidence field null. The verification that justified the closure existed (path-by-path live check of llms.txt, agent-skills.json, openapi.json and SKILL.md at 18:45 UTC) but was recorded on the internal ticket, not on the report. #59 now carries those notes.\n\nFix (landing with the next release): the admin status update refuses (HTTP 422) any transition to fixed / invalid / wontfix / duplicate unless at least one evidence field — status_notes, ticket_url, ticket_id, fix_pr_url, fix_commit or duplicate_of_id — is set on the update or already on the row, and nothing is mutated when it refuses. Pinned by tests for all four closed statuses.\n\nAlso fixed from the same report: GET /api/v1/bounty/my-reports compared the stored wallet case-sensitively, so the six oldest reports on this wallet (#7–#12, stored mixed-case) were missing from the hunter's own view. Data normalized now (all 20 reports return); code compares case-insensitively from the next release.\n\nReproduce (after release): PUT /api/v1/bounty/admin/reports/{id} {\"status\":\"fixed\"} with no evidence → 422 \"requires evidence\". GET /api/v1/bounty/my-reports?wallet_address=<your wallet> with your X-API-Key → total 20.\n[reporter-verification PASS 2026-09-07 13:55 UTC by expire76 test_run=run-20260907T135100Z-0923c37]\n[reporter-verification PASS 2026-09-07 17:43 UTC by expire76 test_run=run-20260907T173409Z-7e2dfcc]",
-      "ticket_url": null,
-      "fix_pr_url": null,
-      "reward_amount": 1000.0,
-      "paid_at": "2026-09-07T14:25:42.928226",
-      "is_duplicate": false
     }
   ],
   "leaderboard": [
@@ -1300,11 +1308,11 @@
       "avatar_url": null,
       "tier": "senior",
       "total_score": 460,
-      "valid_reports": 36,
+      "valid_reports": 37,
       "total_likes": 0,
-      "total_earned": 32000.0,
-      "total_awarded": 32000.0,
-      "total_paid": 32000.0,
+      "total_earned": 33000.0,
+      "total_awarded": 33000.0,
+      "total_paid": 33000.0,
       "reward_currency": "ET10"
     },
     {

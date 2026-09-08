@@ -37,7 +37,24 @@ POSITIONS = "/api/v1/event-cards/positions"
 
 @qa(component="rest.account", tier=SafetyTier.SAFE, surface="rest")
 def test_trade_history_is_not_empty_for_an_account_that_has_traded(rest_trusted):
-    """"Trade history" against the two surfaces that say there is history."""
+    """An empty history is not mistakable for "you have never traded".
+
+    Repaired 2026-09-08 after Cymetica answered #81. The first version demanded
+    a non-empty list whenever the account held positions, and their fix showed
+    why that was the wrong demand: the endpoint covers filled order-book orders
+    only, we have never placed one, and zero is the truthful answer. What was
+    actually wrong was that nothing said so -- an empty 200 read exactly like
+    "no trading has happened here".
+
+    They closed it by publishing a `scope` block on every response: the
+    identity, what it covers, what it does not, and the endpoints that do. So
+    the contract to hold is that one. An empty list with a scope beside it is
+    honest; an empty list on its own is the defect.
+
+    Third repair of this shape today. A check written against a defect tends to
+    encode the fix its author imagined, and the vendor is entitled to a better
+    one.
+    """
     history = rest_trusted.get(TRADES)
     if history.status_code != 200:
         conclude(Measurement(
@@ -57,40 +74,22 @@ def test_trade_history_is_not_empty_for_an_account_that_has_traded(rest_trusted)
             sources={"trades": TRADES}))
         return
 
-    summary = rest_trusted.get(SUMMARY)
-    positions = rest_trusted.get(POSITIONS)
-    if summary.status_code != 200 or positions.status_code != 200:
-        conclude(Measurement(
-            verdict="inconclusive",
-            reason="the surfaces this is held against could not be read, so "
-                   "an empty history proves nothing on its own",
-            sources={"trades": TRADES, "summary": SUMMARY}))
-        return
-
-    def number(value):
-        try:
-            return float(value)
-        except (TypeError, ValueError):
-            return 0.0
-
-    counters = summary.json() or {}
-    predictions = number(counters.get("total_predictions"))
-    volume = number(counters.get("total_volume"))
-    held = len((positions.json() or {}).get("positions") or [])
-    traded = predictions > 0 or volume > 0 or held > 0
     reported = int(body.get("total") or len(rows))
+    scope = body.get("scope") or {}
+    # What an agent needs from an empty answer: whose trades these are, which
+    # products the number spans, and where the rest of its activity lives.
+    stated = [field for field in ("identity", "covers", "does_not_cover", "see_also")
+              if scope.get(field)]
+    explained = len(stated) >= 3
 
     conclude(Measurement(
-        verdict="failed" if traded and reported == 0 else "passed",
-        reason=(f"\"Trade history\" reports {reported} trades while the same "
-                f"platform reports {predictions:.0f} predictions, "
-                f"{volume:.2f} USDC of volume and {held} open-or-closed "
-                f"event-card position(s) on this account: an agent cannot read "
-                f"back what it did"
-                if traded and reported == 0 else
-                f"trade history reports {reported} trade(s) beside "
-                f"{predictions:.0f} prediction(s) and {held} position(s)"),
-        left=reported, right=[predictions, volume, held],
-        population={"trades_reported": reported, "total_predictions": predictions,
-                    "total_volume": volume, "event_card_positions": held},
-        sources={"trades": TRADES, "summary": SUMMARY, "positions": POSITIONS}))
+        verdict="passed" if reported > 0 or explained else "failed",
+        reason=(f"trade history reports {reported} trade(s) and says what that "
+                f"number spans: {', '.join(stated)}"
+                if reported > 0 or explained else
+                f"\"Trade history\" reports {reported} trades and does not say "
+                f"what it covers, so an empty answer is indistinguishable from "
+                f"an account that has never traded"),
+        left=sorted(stated), right=["identity", "covers", "does_not_cover"],
+        population={"trades_reported": reported, "scope_fields": len(stated)},
+        sources={"trades": TRADES}))
