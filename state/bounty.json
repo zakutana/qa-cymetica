@@ -1,9 +1,9 @@
 {
-  "fetched_at": "2026-09-08T10:54:58+00:00",
-  "total": 46,
+  "fetched_at": "2026-09-08T11:26:35+00:00",
+  "total": 48,
   "statuses": {
-    "paid": 16,
-    "fixed": 4
+    "fixed": 6,
+    "paid": 14
   },
   "filing_probe": {
     "endpoint": "POST /api/v1/bounty/reports",
@@ -25,15 +25,15 @@
   "our_reports": {
     "endpoint": "GET /api/v1/bounty/my-reports?wallet_address=<addr>",
     "klass": "ok",
-    "read_at": "2026-09-08T11:12:59+00:00",
-    "evidence_id": "525753515516166799064c1acb20345857d7b1879184a4fb9db48f1d58f81404",
-    "rows_returned": 38,
-    "server_total": 38,
-    "total": 38,
+    "read_at": "2026-09-08T11:26:29+00:00",
+    "evidence_id": "66606c280c190022f1e254c9f18831c996e101053dc078ba07283d88faa00399",
+    "rows_returned": 39,
+    "server_total": 39,
+    "total": 39,
     "statuses": {
-      "pending": 2,
+      "pending": 1,
+      "fixed": 6,
       "paid": 30,
-      "fixed": 4,
       "invalid": 2
     },
     "fields_sent_but_not_stored": [],
@@ -689,31 +689,49 @@
       {
         "id": 79,
         "title": "/build tells an agent to clone \"the best 30-day performer\", but leaderboard rows publish six different headline periods and cannot be ranked against each other",
-        "status": "pending",
+        "status": "fixed",
         "hunter_name": "expire76",
         "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
         "severity_reported": "medium",
-        "severity_confirmed": null,
+        "severity_confirmed": "medium",
         "category": "logic",
         "created_at": "2026-09-08T09:45:20.741795",
-        "fixed_at": null,
-        "validated_at": null,
-        "triaged_at": null,
-        "status_notes": null,
-        "ticket_url": null,
+        "fixed_at": "2026-09-08T11:13:43.113950",
+        "validated_at": "2026-09-08T11:13:43.113950",
+        "triaged_at": "2026-09-08T11:13:43.113950",
+        "status_notes": "[2026-09-08T11:13:43+00:00] Resolved via ticket ET-22646: Confirmed and fixed @fec52c8ab (live 2026-09-08 ~11:30 UTC). Every leaderboard row now carries headline_period_hours (parsed from the label: 30 days=720, 6 months=4320, 120h / 352 markets=120) and GET /api/v1/backtest/leaderboard?period=30d filters to one period BEFORE counting/paginating (live: total 2, both 720h); an unparseable period is a 400, never a silent all. The /build recipe now names the filter and states that returns across periods are not comparable.",
+        "ticket_url": "https://cymetica.com/admin/centcom/issues/22646",
         "fix_pr_url": null,
-        "reward_amount": 0.0
+        "reward_amount": 1000.0
       },
       {
         "id": 80,
         "title": "An API caller cannot read which book it is trading on, and the four order endpoints disagree about what omitting the paper flag means",
+        "status": "fixed",
+        "hunter_name": "expire76",
+        "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
+        "severity_reported": "high",
+        "severity_confirmed": "high",
+        "category": "api",
+        "created_at": "2026-09-08T10:54:22.851803",
+        "fixed_at": "2026-09-08T11:24:05.954507",
+        "validated_at": "2026-09-08T11:24:05.954507",
+        "triaged_at": "2026-09-08T11:24:05.954507",
+        "status_notes": "[2026-09-08T11:24:05+00:00] Resolved via ticket ET-22652: Confirmed and fixed @dd359b141 (live). Effective mode now readable: GET /api/v1/portfolio/summary returns simulation_mode + paper_balance_usdc; GET /mcp/v1/agents/me returns trading_mode (shadow account). Exchange order mode (default live) and CLOB PlaceOrderRequest (live only) now state they do NOT inherit simulation_mode. Defaults unchanged on purpose: flipping a live-order default on a money path would silently re-book existing callers (customer MMs included).",
+        "ticket_url": "https://cymetica.com/admin/centcom/issues/22652",
+        "fix_pr_url": null,
+        "reward_amount": 1000.0
+      },
+      {
+        "id": 81,
+        "title": "GET /api/v1/trades answers 200 with zero trades on an account your own endpoints credit with 142 predictions and $3,582 of volume",
         "status": "pending",
         "hunter_name": "expire76",
         "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
         "severity_reported": "high",
         "severity_confirmed": null,
         "category": "api",
-        "created_at": "2026-09-08T10:54:22.851803",
+        "created_at": "2026-09-08T11:26:06.151332",
         "fixed_at": null,
         "validated_at": null,
         "triaged_at": null,
@@ -726,23 +744,23 @@
   },
   "qa_tracker": {
     "source": "https://cymetica.com/leaderboard/bugs (embedded allBugs)",
-    "total": 120,
+    "total": 122,
     "statuses": {
       "qa_testing": 2,
       "implementing": 2,
       "completed": 67,
-      "resolved": 23,
+      "resolved": 25,
       "rejected": 2,
       "pending": 12,
       "wont_fix": 12
     },
     "source_channels": {
       "web": 74,
-      "bounty": 46
+      "bounty": 48
     },
     "usernames": {
       "Maxorelaxo": 2,
-      "expire76": 66,
+      "expire76": 68,
       "Crypto42day": 2,
       "tonybugs0439": 5,
       "joebloggs": 12,
@@ -839,6 +857,8 @@
       "cloned bot profile does not display trading activity correctly",
       "неправильный баланс токенов в портфеле пользователя max",
       "swap pages fail to display user token balances",
+      "an api caller cannot read which book it is trading on, and the four order endpoints disagree about what omitting the paper flag means",
+      "/build tells an agent to clone \"the best 30-day performer\", but leaderboard rows publish six different headline periods and cannot be ranked against each other",
       "the trust ladder is named three different ways across /build, llms.txt and mcp.json, so an agent cannot tell which rung it holds",
       "post /mcp/v1/register documents an empty 200 schema, so the api_key /build tells agents to save is absent from the machine-readable contract",
       "/build's trading recipe sends an agent to /events/universe, which serves html and has no equivalent in the published api surface",
@@ -884,15 +904,15 @@
       "critical: my positions p&l shows -$3.15 for a $0.10 position",
       "shares preview rounds to 1 decimal place instead of 2"
     ],
-    "has_linear_links": 11
+    "has_linear_links": 13
   },
   "a2a_inbox": {
     "klass": "ok",
     "rows_returned": 40,
     "new": [],
-    "at": "2026-09-08T10:54:58+00:00"
+    "at": "2026-09-08T11:26:34+00:00"
   },
-  "closed": 4,
+  "closed": 6,
   "closed_without_recorded_evidence": 0,
   "evidence_fields_checked": [
     "validated_at",
@@ -903,6 +923,42 @@
     "status_notes"
   ],
   "reports": [
+    {
+      "id": 80,
+      "title": "An API caller cannot read which book it is trading on, and the four order endpoints disagree about what omitting the paper flag means",
+      "status": "fixed",
+      "hunter_name": "expire76",
+      "severity_reported": "high",
+      "severity_confirmed": "high",
+      "created_at": "2026-09-08T10:54:22.851803",
+      "fixed_at": "2026-09-08T11:24:05.954507",
+      "validated_at": "2026-09-08T11:24:05.954507",
+      "triaged_at": "2026-09-08T11:24:05.954507",
+      "status_notes": "[2026-09-08T11:24:05+00:00] Resolved via ticket ET-22652: Confirmed and fixed @dd359b141 (live). Effective mode now readable: GET /api/v1/portfolio/summary returns simulation_mode + paper_balance_usdc; GET /mcp/v1/agents/me returns trading_mode (shadow account). Exchange order mode (default live) and CLOB PlaceOrderRequest (live only) now state they do NOT inherit simulation_mode. Defaults unchanged on purpose: flipping a live-order default on a money path would silently re-book existing callers (customer MMs included).",
+      "ticket_url": "https://cymetica.com/admin/centcom/issues/22652",
+      "fix_pr_url": null,
+      "reward_amount": 1000.0,
+      "paid_at": null,
+      "is_duplicate": false
+    },
+    {
+      "id": 79,
+      "title": "/build tells an agent to clone \"the best 30-day performer\", but leaderboard rows publish six different headline periods and cannot be ranked against each other",
+      "status": "fixed",
+      "hunter_name": "expire76",
+      "severity_reported": "medium",
+      "severity_confirmed": "medium",
+      "created_at": "2026-09-08T09:45:20.741795",
+      "fixed_at": "2026-09-08T11:13:43.113950",
+      "validated_at": "2026-09-08T11:13:43.113950",
+      "triaged_at": "2026-09-08T11:13:43.113950",
+      "status_notes": "[2026-09-08T11:13:43+00:00] Resolved via ticket ET-22646: Confirmed and fixed @fec52c8ab (live 2026-09-08 ~11:30 UTC). Every leaderboard row now carries headline_period_hours (parsed from the label: 30 days=720, 6 months=4320, 120h / 352 markets=120) and GET /api/v1/backtest/leaderboard?period=30d filters to one period BEFORE counting/paginating (live: total 2, both 720h); an unparseable period is a 400, never a silent all. The /build recipe now names the filter and states that returns across periods are not comparable.",
+      "ticket_url": "https://cymetica.com/admin/centcom/issues/22646",
+      "fix_pr_url": null,
+      "reward_amount": 1000.0,
+      "paid_at": null,
+      "is_duplicate": false
+    },
     {
       "id": 78,
       "title": "The trust ladder is named three different ways across /build, llms.txt and mcp.json, so an agent cannot tell which rung it holds",
@@ -1226,42 +1282,6 @@
       "reward_amount": 1000.0,
       "paid_at": "2026-09-07T14:25:42.928226",
       "is_duplicate": false
-    },
-    {
-      "id": 59,
-      "title": "Three paths from report #49 still 404: one rename landed in openapi.json but not in agent-skills.json",
-      "status": "paid",
-      "hunter_name": "expire76",
-      "severity_reported": "low",
-      "severity_confirmed": "low",
-      "created_at": "2026-09-05T18:23:32.342024",
-      "fixed_at": "2026-09-05T18:46:58.469284",
-      "validated_at": "2026-09-07T00:24:29.662878",
-      "triaged_at": "2026-09-07T00:24:29.662878",
-      "status_notes": "Evidence recorded 2026-09-05 (the 18:46 UTC closure was posted without notes — that gap is itself being closed, see report #60).\n\nVerified path-by-path against the live service at 18:45 UTC: /llms.txt no longer contains /api/v1/account or /api/v1/agentbook/post (the remaining agentbook mentions are the live plural route /api/v1/agentbook/posts); /.well-known/agent-skills.json no longer contains /api/v1/clob/order; openapi.json lists none of the three. The one remaining stale mention was /.well-known/skills/default/SKILL.md documenting GET /api/v1/account — corrected to the served route /api/v1/account/me in commit 6ef9efc79 (live 18:43 UTC). All four discovery documents now agree; the three old paths appear in none of them.\n\nReproduce: GET https://cymetica.com/llms.txt, /.well-known/agent-skills.json, /openapi.json, /.well-known/skills/default/SKILL.md and grep for \"/api/v1/account\" (exact), \"/api/v1/agentbook/post\" (exact) and \"/api/v1/clob/order\" (exact) → 0 matches in each.\n[reporter-verification PASS 2026-09-07 13:54 UTC by expire76 test_run=run-20260907T135100Z-0923c37]\n[reporter-verification PASS 2026-09-07 21:46 UTC by expire76 test_run=run-20260907T214201Z-b04267d]",
-      "ticket_url": null,
-      "fix_pr_url": null,
-      "reward_amount": 1000.0,
-      "paid_at": "2026-09-07T14:25:42.928226",
-      "is_duplicate": false
-    },
-    {
-      "id": 56,
-      "title": "The stated agent-card/agent-skills subset model does not hold: 2 skill ids appear only in agent-skills.json",
-      "status": "paid",
-      "hunter_name": "expire76",
-      "severity_reported": "low",
-      "severity_confirmed": "low",
-      "created_at": "2026-09-04T13:25:02.502545",
-      "fixed_at": "2026-09-04T14:55:40.305575",
-      "validated_at": "2026-09-07T00:24:29.662878",
-      "triaged_at": "2026-09-07T00:24:29.662878",
-      "status_notes": "Fixed in commit d12ea54a9 (live 2026-09-04 14:49 UTC).\n\nasset-discovery and portfolio-management were added to agent-card.json (skills[].id), so agent-skills.json (10 ids) is now a strict subset of the card (15 ids). The subset relationship is pinned by tests/test_agent_card_skills_subset.py, which parses both route handlers in src/main.py and fails the build if any skills id is absent from the card — true by test, since the two documents carry different schemas (card: tags/examples/url; skills: triggers/endpoint/method) and are not generated from one another.\n\nReproduce: GET /.well-known/agent-card.json → collect skills[].id (15); GET /.well-known/agent-skills.json → collect skills[].id (10); skills − card = ∅.\n[reporter-verification PASS 2026-09-07 13:55 UTC by expire76 test_run=run-20260907T135100Z-0923c37]",
-      "ticket_url": null,
-      "fix_pr_url": null,
-      "reward_amount": 1000.0,
-      "paid_at": "2026-09-07T14:25:42.928226",
-      "is_duplicate": false
     }
   ],
   "leaderboard": [
@@ -1271,10 +1291,10 @@
       "avatar_url": null,
       "tier": "senior",
       "total_score": 460,
-      "valid_reports": 34,
+      "valid_reports": 36,
       "total_likes": 0,
       "total_earned": 30000.0,
-      "total_awarded": 30000.0,
+      "total_awarded": 32000.0,
       "total_paid": 30000.0,
       "reward_currency": "ET10"
     },
@@ -1317,6 +1337,5 @@
       "total_paid": 0.0,
       "reward_currency": "ET10"
     }
-  ],
-  "our_reports_refreshed_at": "2026-09-08T11:12:59+00:00"
+  ]
 }

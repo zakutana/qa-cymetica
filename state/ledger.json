@@ -5434,15 +5434,15 @@
         "not_checked_in": "run-20260908T112439Z-60cf4e8"
       },
       "filing": {
-        "state": "RAISED",
+        "state": "FIX_CLAIMED",
         "adjudicated_by": {
-          "event_id": "089c3484a404930c1cee305ae6c80c299ac263c4821a82cefa68d7c4c4b53d41",
-          "at": "2026-09-08T09:45:23+00:00"
+          "event_id": "c9d3ad927c6f4e61231e0cffd9802188fae6da9ebbfe6a4788e2eadc579cf1a5",
+          "at": "2026-09-08T11:26:29+00:00"
         },
         "reports": [
           {
             "report_id": 79,
-            "status": "pending"
+            "status": "fixed"
           }
         ],
         "refused": [],
@@ -5466,6 +5466,15 @@
             "event_id": "089c3484a404930c1cee305ae6c80c299ac263c4821a82cefa68d7c4c4b53d41"
           },
           "at": "2026-09-08T09:45:23+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "RAISED",
+          "to": "FIX_CLAIMED",
+          "cause": {
+            "event_id": "c9d3ad927c6f4e61231e0cffd9802188fae6da9ebbfe6a4788e2eadc579cf1a5"
+          },
+          "at": "2026-09-08T11:26:29+00:00"
         }
       ],
       "regressions": [],
@@ -5509,12 +5518,14 @@
         "measured_at": "2026-09-08T09:41:31+00:00"
       },
       "obligations": {
-        "reverify": false,
+        "reverify": true,
         "repair_check": false,
         "reopen": [],
         "retractions": [],
         "verification_owed": [],
-        "correction_owed": [],
+        "correction_owed": [
+          79
+        ],
         "disputed": []
       }
     },
@@ -5537,15 +5548,15 @@
         "not_checked_in": "run-20260908T112439Z-60cf4e8"
       },
       "filing": {
-        "state": "RAISED",
+        "state": "FIX_CLAIMED",
         "adjudicated_by": {
-          "event_id": "986e2f6f7e03b1aaadbb1deeb9e9c32f28d18c20cc7e63b099a6d6c9f86c6b7b",
-          "at": "2026-09-08T10:54:27+00:00"
+          "event_id": "6c33ab3033a2d516e3b48536b458619081e897d2e0b1ae573b5ab40f7f22a751",
+          "at": "2026-09-08T11:26:29+00:00"
         },
         "reports": [
           {
             "report_id": 80,
-            "status": "pending"
+            "status": "fixed"
           }
         ],
         "refused": [],
@@ -5569,6 +5580,15 @@
             "event_id": "986e2f6f7e03b1aaadbb1deeb9e9c32f28d18c20cc7e63b099a6d6c9f86c6b7b"
           },
           "at": "2026-09-08T10:54:27+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "RAISED",
+          "to": "FIX_CLAIMED",
+          "cause": {
+            "event_id": "6c33ab3033a2d516e3b48536b458619081e897d2e0b1ae573b5ab40f7f22a751"
+          },
+          "at": "2026-09-08T11:26:29+00:00"
         }
       ],
       "regressions": [],
@@ -5611,12 +5631,14 @@
         "measured_at": "2026-09-08T10:52:59+00:00"
       },
       "obligations": {
-        "reverify": false,
+        "reverify": true,
         "repair_check": false,
         "reopen": [],
         "retractions": [],
         "verification_owed": [],
-        "correction_owed": [],
+        "correction_owed": [
+          80
+        ],
         "disputed": []
       }
     },
@@ -5639,15 +5661,15 @@
         "not_checked_in": "run-20260908T112439Z-60cf4e8"
       },
       "filing": {
-        "state": "RAISED",
+        "state": "FIX_CLAIMED",
         "adjudicated_by": {
-          "event_id": "986e2f6f7e03b1aaadbb1deeb9e9c32f28d18c20cc7e63b099a6d6c9f86c6b7b",
-          "at": "2026-09-08T10:54:27+00:00"
+          "event_id": "6c33ab3033a2d516e3b48536b458619081e897d2e0b1ae573b5ab40f7f22a751",
+          "at": "2026-09-08T11:26:29+00:00"
         },
         "reports": [
           {
             "report_id": 80,
-            "status": "pending"
+            "status": "fixed"
           }
         ],
         "refused": [],
@@ -5671,6 +5693,15 @@
             "event_id": "986e2f6f7e03b1aaadbb1deeb9e9c32f28d18c20cc7e63b099a6d6c9f86c6b7b"
           },
           "at": "2026-09-08T10:54:27+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "RAISED",
+          "to": "FIX_CLAIMED",
+          "cause": {
+            "event_id": "6c33ab3033a2d516e3b48536b458619081e897d2e0b1ae573b5ab40f7f22a751"
+          },
+          "at": "2026-09-08T11:26:29+00:00"
         }
       ],
       "regressions": [],
@@ -5705,12 +5736,14 @@
         "measured_at": "2026-09-08T10:52:59+00:00"
       },
       "obligations": {
-        "reverify": false,
+        "reverify": true,
         "repair_check": false,
         "reopen": [],
         "retractions": [],
         "verification_owed": [],
-        "correction_owed": [],
+        "correction_owed": [
+          80
+        ],
         "disputed": []
       }
     },
@@ -5732,9 +5765,17 @@
         "pinned_fingerprint": "834b4a656eaca61b33a3648548d01d08956b02b31222f269f52f4150dd968618"
       },
       "filing": {
-        "state": "NOT_RAISED",
-        "adjudicated_by": null,
-        "reports": [],
+        "state": "RAISED",
+        "adjudicated_by": {
+          "event_id": "fdd726368c486e77a4883cd7981a6cb9b850eb87e8b1731bfc0d498df2f09729",
+          "at": "2026-09-08T11:26:12+00:00"
+        },
+        "reports": [
+          {
+            "report_id": 81,
+            "status": "pending"
+          }
+        ],
         "refused": [],
         "verifications": []
       },
@@ -5747,6 +5788,15 @@
             "run_id": "run-20260908T112439Z-60cf4e8"
           },
           "at": "2026-09-08T11:25:24+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "NOT_RAISED",
+          "to": "RAISED",
+          "cause": {
+            "event_id": "fdd726368c486e77a4883cd7981a6cb9b850eb87e8b1731bfc0d498df2f09729"
+          },
+          "at": "2026-09-08T11:26:12+00:00"
         }
       ],
       "regressions": [],
@@ -5803,11 +5853,11 @@
   "counts": {
     "WITHDRAWN": 9,
     "VERIFIED FIXED": 26,
-    "RAISED": 3,
-    "NOT RAISED YET": 1
+    "STILL REPRODUCIBLE": 3,
+    "RAISED": 1
   },
   "events_head": {
-    "seq": 1325,
-    "chain": "f23d001f2d6d72e3f9f0884de961d10a8d3dbc62e7ca97c6a505d6ed68377f03"
+    "seq": 1332,
+    "chain": "5027706cd4ddde7ca4a5e77a073cb399b57ee09cd00fb21626b2f20e16b00043"
   }
 }
