@@ -42,6 +42,47 @@ Everything else here is ordinary hygiene. Step 2 is why this is worth running.
 
 ---
 
+## The working file, and why the pass cannot be held in a head
+
+`audits/deep-pass-progress.json`. Overwritten each run, committed at step 8
+with everything else.
+
+The operator invokes this once, in the session that did the day's work, and
+goes to bed. That session is usually past 70% of its context window by then,
+so **this pass will be compacted somewhere in the middle of itself.** The
+question is what a compaction can destroy.
+
+Not the fixes: step 6 runs the whole suite before step 8 commits, so a
+half-applied fix is caught by a red test. What a compaction destroys is the
+part that lives nowhere else — *which* gaps step 2 claimed, and which of them
+step 4's three agents voted real. Lose that between step 4 and step 5 and the
+findings do not fail loudly. They are simply never fixed, the suite stays
+green, and the report says nothing was found.
+
+So each step writes its own result as it produces it, and the next step reads
+the file rather than remembering:
+
+```json
+{"run": "...", "at": "...", "gaps": [
+  {"id": "T01", "nodeid": "...", "claim": "...", "source": "audit|review",
+   "votes": null, "verdict": null, "fixed": false, "commit": null}]}
+```
+
+* **Step 2** appends a gap the moment an auditor returns it. `votes` and
+  `verdict` stay null.
+* **Step 4** fills `votes` and `verdict` per gap, one at a time.
+* **Step 5** reads the file for `verdict == "real" and not fixed`, and sets
+  `fixed` and `commit` as each one lands.
+* **Step 10** writes `DEEP-PASS.md` from this file, not from recollection.
+
+**After a compaction, re-read this file before doing anything else.** It says
+what was claimed, what survived, and what is still owed a fix. That is the
+whole of the pass's state; if the file and your memory disagree, the file is
+right.
+
+Context is then not a constraint on when this runs. It can be started at 70%
+or at 90%, once, in the evening, by somebody who is going to bed.
+
 ## The spine — ten steps, always in this order
 
 ### 0 · Gate and tidy
@@ -91,6 +132,10 @@ audit only what moved. Self-limiting by construction, the same way
 Update `audits/checks.json` afterwards whatever it found — an audit that found
 nothing still happened.
 
+Append each claimed gap to `audits/deep-pass-progress.json` **as the auditor
+returns it**, not after all three have finished. An agent's report is in
+context and nowhere else until it is written down.
+
 ### 3 · Code review at xhigh
 
 Invoke the `code-review` skill with `xhigh` over `git diff @{upstream}...HEAD`,
@@ -118,7 +163,18 @@ most important finding of 2026-09-07 — a false verification already sitting on
 the vendor's server — was found by exactly one path. Three lines in a report
 cost less than that mistake.
 
+Write `votes` and `verdict` into `audits/deep-pass-progress.json` **one gap at
+a time, as each is settled.** This is the step whose output exists nowhere but
+in context, and the one a compaction would erase without a single test going
+red — the findings would not fail, they would simply never be fixed.
+
 ### 5 · Fix
+
+The list comes from `audits/deep-pass-progress.json` — every gap with
+`verdict: "real"` and `fixed: false` — and each one is marked `fixed` with its
+commit as it lands. Work from the file, not from what you remember claiming;
+by this step the pass has been running for a while and may have been compacted
+more than once.
 
 By the repository's rules, not quickly:
 
@@ -205,6 +261,13 @@ Overwritten each run, committed with the rest. Czech, short, five headings:
 Numbers, not adjectives. Name the run id and the prereg. If something was
 refused or skipped, say which and why — a run that quietly did less is the one
 failure mode they cannot see.
+
+Write it **from `audits/deep-pass-progress.json`**, counting the rows rather
+than recalling them. Every number in those five headings — gaps claimed, votes
+split, fixed, left for the operator — is a count of that file, and any gap
+still `verdict: null` or `fixed: false` at this point belongs in "Čeká na
+tebe" by name. The one report nobody can check is the one written from
+memory at the end of a long night.
 
 ---
 

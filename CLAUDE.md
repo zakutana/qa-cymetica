@@ -203,7 +203,13 @@ tests/repo/       repository consistency. Deliberately NOT in tests/meta:
                   five times on 2026-09-07, every guard green throughout, and
                   one of them sent a false claim to the vendor. Named for
                   what it does, not for the night -- the operator runs it in
-                  the day too.
+                  the day too. It writes its own progress to
+                  audits/deep-pass-progress.json as it goes, because it is
+                  started once from a session that has already spent most of
+                  its context and will be compacted mid-run: the fixes survive
+                  that (a red suite catches a half-applied one) but the triage
+                  verdicts would not, and a lost verdict is a finding that
+                  silently never gets fixed.
 DEEP-PASS.md      what the last deep pass did, in Czech, overwritten each
                   run. **Read it at the start of any session that follows
                   one** -- five headings, and "Ceka na tebe" is the handover:
