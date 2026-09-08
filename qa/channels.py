@@ -195,10 +195,19 @@ def compare(events: list[dict] | None = None) -> dict:
             middle = len(timed) // 2
             median = (timed[middle] if len(timed) % 2
                       else round((timed[middle - 1] + timed[middle]) / 2))
+        # Unanswered means NO ANSWER, not "no number". A pair recorded in one
+        # breath has an answer_id and no minutes, and counting it here made
+        # `compare` print "2 still unanswered" about two questions the vendor
+        # had answered -- which the operator read on 2026-09-08. Untimed is its
+        # own state and is reported as its own number.
         report[channel] = {"asked": len(rows), "n": len(timed),
                            "median_minutes": median,
                            "unanswered": sum(1 for r in rows
-                                             if r["minutes"] is None)}
+                                             if r["answer_id"] is None),
+                           "answered_but_untimed": sum(
+                               1 for r in rows
+                               if r["answer_id"] is not None
+                               and r["minutes"] is None)}
     report["conclusive"] = all(report[c]["n"] >= ENOUGH for c in (TELEGRAM, A2A))
     return report
 

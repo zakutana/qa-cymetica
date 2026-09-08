@@ -21,6 +21,10 @@ Two things it must get right or it is worse than nothing:
 from __future__ import annotations
 
 import importlib.util
+import time
+import sys
+import subprocess
+import os
 from pathlib import Path
 
 import httpx
@@ -265,6 +269,83 @@ def test_a_backdated_message_tells_the_truth_about_when_it_was_sent(tmp_path, mo
                      "--at", "2026-09-07T19:32:00+00:00"])
     sent = [e for e in read_events() if e["type"] == "telegram_sent"][0]
     assert sent["at"] == "2026-09-07T19:32:00+00:00"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_answer_we_cannot_time_is_not_an_unanswered_question(tmp_path, monkeypatch):
+    """"Unanswered" means no answer, not "no number".
+
+    The deep pass of 2026-09-08 found this by reading the output: `compare`
+    printed "2 still unanswered" about MSG-0003 and MSG-0004, both of which the
+    vendor had answered. Their pairs carry an answer_id and no minutes, because
+    both halves were recorded in the same breath, and the count was keyed on
+    the minutes instead of on the answer.
+
+    A report that miscounts the thing it exists to count is worse than no
+    report: the operator would have chased two replies that were already in.
+    """
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    from qa.state import append_event, read_events
+
+    both = "2026-09-08T06:58:42+00:00"
+    append_event({"type": "telegram_sent", "at": both, "by": "operator",
+                  "source": "scripts/correspond.py", "msg_id": "MSG-0001",
+                  "text": "answered, but both rows typed in together",
+                  "origin": "telegram"})
+    append_event({"type": "telegram_reply", "at": both, "by": "vendor",
+                  "source": "scripts/correspond.py", "msg_id": "REPLY-0001",
+                  "reply_to": "MSG-0001", "text": "a", "origin": "telegram"})
+    append_event({"type": "telegram_sent", "at": "2026-09-08T07:00:00+00:00",
+                  "by": "operator", "source": "scripts/correspond.py",
+                  "msg_id": "MSG-0002", "text": "really unanswered",
+                  "origin": "telegram"})
+
+    report = _channels().compare(read_events())["telegram"]
+    assert report["unanswered"] == 1, (
+        f"an answered question was counted as unanswered: {report}"
+    )
+    assert report["answered_but_untimed"] == 1, (
+        "the untimed pair vanished instead of being reported as its own state"
+    )
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_alert_survives_a_journal_caught_mid_append(tmp_path):
+    """`watch` must not die on the condition its own comment calls normal.
+
+    serve.py --ask appends every fifteen minutes. A journal read while a line
+    is half-written raises JournalError, and the priming read used to sit
+    outside the try that protects the loop -- so starting the watcher in that
+    window killed it before its first tick and the alert was silently off for
+    the whole session.
+
+    The retry notice goes to stderr for the second half of the same reason:
+    every stdout line of this command becomes a message in the operator's chat.
+    """
+    journal = tmp_path / "journal" / "events.jsonl"
+    journal.parent.mkdir(parents=True, exist_ok=True)
+    journal.write_text('{"type":"telegram_sent","seq":1', encoding="utf-8")
+
+    proc = subprocess.Popen(
+        [sys.executable, str(REPO / "scripts" / "channels.py"), "watch",
+         "--interval", "0.2"],
+        cwd=str(REPO), env={**os.environ, "QA_STATE_DIR": str(tmp_path),
+                            "PYTHONIOENCODING": "utf-8"},
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    try:
+        time.sleep(2.0)
+        assert proc.poll() is None, (
+            "watch exited on a truncated journal instead of retrying, so the "
+            "alert would be off for the session"
+        )
+    finally:
+        proc.terminate()
+        out, err = proc.communicate(timeout=10)
+
+    assert out.strip() == "", (
+        f"the retry notice reached stdout, which is the operator's chat: {out!r}"
+    )
+    assert "read failed" in err, "the retry was not reported anywhere at all"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

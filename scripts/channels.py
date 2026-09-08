@@ -119,7 +119,9 @@ def cmd_compare(args) -> int:
                   else f"{row['median_minutes']} min median over n={row['n']}")
         print(f"{name.upper():9} asked {row['asked']}, {median}"
               + (f", {row['unanswered']} still unanswered"
-                 if row["unanswered"] else ""))
+                 if row["unanswered"] else "")
+              + (f", {row['answered_but_untimed']} answered but not timeable"
+                 if row.get("answered_but_untimed") else ""))
     print()
     if report["conclusive"]:
         print("Both channels have enough answered questions to compare.")
@@ -139,15 +141,27 @@ def cmd_watch(args) -> int:
     seen: set = set()
     # The backlog is the watermark, not an alert: arming this must not replay
     # forty messages the operator has already dealt with.
-    _, seen = channels.new_lines(read_events(), seen)
+    #
+    # Inside the loop, not before it. serve.py --ask appends every fifteen
+    # minutes, and a journal caught mid-append raises the same JournalError the
+    # comment below calls normal -- so priming outside the guard killed `watch`
+    # at start-up and left the alert silently off for the session, which is the
+    # one failure this command exists to prevent.
+    primed = False
     while True:
         try:
             lines, seen = channels.new_lines(read_events(), seen)
+            if not primed:
+                lines, primed = [], True
         except Exception as exc:  # noqa: BLE001
             # A half-written journal line is normal -- another process appends
             # to it. Never die on one; the next tick reads a whole file.
+            #
+            # stderr, not stdout: every stdout line of this command becomes a
+            # message in the operator's chat, and a routine transient must not
+            # page anyone. Monitor sends stderr to the log instead.
             print(f"[channels] read failed, retrying: {type(exc).__name__}",
-                  flush=True)
+                  file=sys.stderr, flush=True)
             time.sleep(args.interval)
             continue
         for line in lines:
