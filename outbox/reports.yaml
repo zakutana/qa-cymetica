@@ -1254,6 +1254,64 @@ reports:
       label, and it would be choosing from two rows while believing it chose
       from sixteen.
 
+  - key: which-book-an-order-hits
+    findings: [CYM-the_setting_that_decides_whether_real_money_moves_is_readable,
+               CYM-every_order_endpoint_decides_the_book_the_same_way]
+    severity: high
+    category: api
+    url: https://cymetica.com/openapi-public.json
+    title: "An API caller cannot read which book it is trading on, and the four order endpoints disagree about what omitting the paper flag means"
+    expected: >
+      An agent placing an order over HTTP can determine, before it sends,
+      whether that order will move real USDC — and every order endpoint
+      answers that question the same way.
+    actual: >
+      Neither holds. The paper/live control is named three different ways
+      across four order endpoints and the defaults diverge: omitting it on an
+      event-card trade or a bot clone inherits user.simulation_mode, while
+      omitting `mode` on an exchange order is documented as "live". The CLOB
+      order schema has no such field at all. And user.simulation_mode, the
+      setting two of those resolve against, appears three times in
+      openapi-public.json — every occurrence prose inside a request body. No
+      documented response returns it and llms.txt does not mention it.
+    steps:
+      - "GET https://cymetica.com/openapi-public.json"
+      - "Read BuyRequest.paper — the description gives the resolution order: body.paper, then user.simulation_mode, then the platform-wide gate"
+      - "Read CloneBotRequest.is_paper — \"If None, inherits user's simulation_mode\""
+      - "Read src__api__routes__exchange__PlaceOrderRequest.mode — \"Trading mode: 'live' or 'paper'\", default \"live\""
+      - "Read src__api__routes__clob__PlaceOrderRequest.properties — no paper or mode field exists"
+      - "Search the whole document for a RESPONSE property matching simulation_mode -> none; all three occurrences are request-body prose"
+    body: >
+      We are not reporting that the modes are wired wrongly. Each endpoint
+      probably does exactly what its own description says. The defect is that
+      an autonomous caller cannot act on them safely, and /build is an
+      invitation to autonomous callers specifically.
+
+
+      The concrete failure: an agent sets itself to paper, writes one helper
+      that omits the optional flag because omitting it worked against the
+      event-card endpoint, and then places a REAL order the first time that
+      helper is pointed at the exchange. Nothing in the response to any prior
+      call would have warned it, because the setting it thought it was
+      inheriting is not published anywhere it can read.
+
+
+      We got this wrong ourselves today, which is why we think it is worth
+      your time. Reading an unauthenticated fetch of /aci-challenge, we saw
+      "PAPER TRADING MODE" and concluded our own account was in paper. It is
+      live, with real USDC in it. The badge in the logged-in UI says so
+      plainly — the API says nothing at all, and we had no way to check
+      without the browser.
+
+
+      Two changes would close it, and they are independent: publish the
+      effective mode on a read an agent already makes (portfolio/summary or
+      /mcp/v1/agents/me would both be natural), and make the four order
+      endpoints agree on one field name and one default. If you would rather
+      not change the exchange default, saying so in the field description —
+      "unlike the event-card endpoints, this does not inherit
+      simulation_mode" — would remove most of the risk on its own.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: read-only
   verification of the REST API, MCP and machine-readable discovery surfaces. No
