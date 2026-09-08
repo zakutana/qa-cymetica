@@ -168,12 +168,12 @@ def owed(ledger: dict, only: list[str] | None) -> list[dict]:
                 "prereg_id": run.get("prereg_id"),
                 "checks": row.get("checks") or [],
                 "title": row.get("title") or fid,
-                "repair": repair_reason(fid, row["check"]["pinned_fingerprint"]),
+                "pin": pin_reason(fid, row["check"]["pinned_fingerprint"]),
             })
     return work
 
 
-def repair_reason(finding_id: str, fingerprint: str) -> str | None:
+def pin_reason(finding_id: str, fingerprint: str) -> str | None:
     """Why this definition was pinned by hand, or None if it was not.
 
     qa/fold.py:293 pins the fingerprint a row failed under by itself, inside
@@ -198,25 +198,31 @@ def repair_reason(finding_id: str, fingerprint: str) -> str | None:
 def body(item: dict) -> dict:
     checks = "\n".join(f"  {c}" for c in item["checks"])
     verdict = item["verdict"]
-    # A repaired definition may not be sold as the one that failed. The check
-    # still passes and the fix is still real -- what must not go out is "this
-    # is the same test, not a rewritten one", about a test we rewrote. That is
-    # the single claim they cannot check for themselves, and it is why they are
-    # being asked to believe the rest. Seven checks were repaired and pinned in
-    # the deep pass of 2026-09-07 and the passes that followed carried the
-    # identity sentence; found on 2026-09-08, filing the eighth.
-    repair = item.get("repair")
-    if verdict == "pass" and repair:
+    # A hand-pinned definition may not be sold as the one that failed. The
+    # check still passes and the fix is still real -- what must not go out is
+    # "this is the same test, not a rewritten one", on a row where we cannot
+    # know that. That is the single claim they cannot check for themselves, and
+    # it is why they are being asked to believe the rest.
+    #
+    # It says PINNED, not REPAIRED, and the difference is the whole care here.
+    # The 27 rows affected split two ways: some were repaired (the definition
+    # moved and we say so), and some were pinned because the pre-contract runs
+    # recorded no fingerprint at all, so there is nothing to have matched. A
+    # blanket "we repaired this check" would be false for the second group --
+    # the same overclaim in the other direction, made an hour after finding the
+    # first. Both are true under one sentence: the pin was ours, here is why.
+    pin = item.get("pin")
+    if verdict == "pass" and pin:
         headline = (
-            "VERDICT pass -- the check that recorded this defect now passes. "
-            "Its definition was REPAIRED after the failure, so this is not the "
-            "identical test: the reason for the repair is stated below and the "
-            "fingerprint is the repaired one."
+            "VERDICT pass -- the check that recorded this defect now passes, "
+            "under the definition PINNED for this row. That pin was written by "
+            "us rather than taken from the failing run, so this is not "
+            "automatically the identical test; our reason is below, judge it."
         )
         why_fingerprint = (
-            "It does NOT match the one recorded at the failure, because we "
-            "changed the check. What was wrong with it, in our own words: "
-            f"{repair}"
+            "It is the pinned definition, which is not necessarily the one "
+            "recorded at the failure. Why this row carries a pin, in our own "
+            f"words: {pin}"
         )
     elif verdict == "pass":
         headline = (
