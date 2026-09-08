@@ -25,8 +25,8 @@
   "our_reports": {
     "endpoint": "GET /api/v1/bounty/my-reports?wallet_address=<addr>",
     "klass": "ok",
-    "read_at": "2026-09-08T09:26:48+00:00",
-    "evidence_id": "cbc2f543d49ee643b85ce7927d9953a4d2612a34d2e227ba4850619b2048f74c",
+    "read_at": "2026-09-08T09:41:55+00:00",
+    "evidence_id": "bbfad520d73a77729de27033b1165721262bfdcfd4455d5ed37bdf44ea12de38",
     "rows_returned": 36,
     "server_total": 36,
     "total": 36,
@@ -1281,5 +1281,5 @@
       "reward_currency": "ET10"
     }
   ],
-  "our_reports_refreshed_at": "2026-09-08T09:26:48+00:00"
+  "our_reports_refreshed_at": "2026-09-08T09:41:55+00:00"
 }
