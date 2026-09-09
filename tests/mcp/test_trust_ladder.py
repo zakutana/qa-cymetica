@@ -13,6 +13,8 @@ that only corrects the tier it was reported at is not a fix for the class.
 
 from __future__ import annotations
 
+import json
+
 import pytest
 
 from qa.marks import SafetyTier, qa
@@ -126,6 +128,24 @@ def refusal_class(payload: dict) -> tuple[str, str]:
     below only CLASSIFIES the refusal; an answer that fits no class is
     Inconclusive, never a quiet pass.
     """
+    # Not an MCP envelope at all. `McpClient.raw()` returns response.json()
+    # whatever the HTTP status -- its own comment says rpc() does not raise
+    # for status -- so a 401 {"detail": "Not authenticated"}, a 422 validation
+    # envelope and a 500 all arrive here. Each carries neither `result` nor
+    # `error`, so the body below came out empty, matched no vocabulary, and
+    # fell through to `executed`: an S1 authorization-bypass accusation minted
+    # out of a FAILED READ, shipped with an empty body as its evidence. Rule 8,
+    # in the one check that speaks to the vendor. Found by the deep pass of
+    # 2026-09-09, three readers of three, each reproducing it by calling this
+    # function directly.
+    #
+    # We do not read authorization out of an HTTP error either: a 401 proves
+    # the transport refused us, not that the platform checks authorization
+    # before it inspects arguments, which is the only thing this function is
+    # for. So: unknown, carrying the body, so the reason says what came back.
+    if "result" not in payload and "error" not in payload:
+        return "unknown", json.dumps(payload, ensure_ascii=False)[:300]
+
     result = payload.get("result") or {}
     content = result.get("content") or [{}]
     text = str(content[0].get("text", "")) if content else ""
@@ -166,6 +186,10 @@ def refusal_class(payload: dict) -> tuple[str, str]:
             # nothing: as consistent with a call that executed and mentioned
             # trust as with a refusal served without the flag. Inconclusive,
             # per this function's own docstring.
+            return "unknown", body
+        if not body:
+            # An MCP result with nothing in it. The same rule from the other
+            # side: silence is not evidence that a money tool ran.
             return "unknown", body
         return "executed", body
     if any(word in lowered for word in _AUTHZ_WORDS):

@@ -350,6 +350,24 @@ def test_a_failed_read_is_never_a_value(status, klass):
      "refused_validation"),
     ({"result": {"content": [{"text": "order placed"}]}}, "executed"),
     ({"result": {"isError": True, "content": [{"text": "E_17"}]}}, "unknown"),
+    # B01, deep pass 2026-09-09, three votes of three. `executed` was the
+    # FALL-THROUGH, and McpClient.raw() returns response.json() whatever the
+    # HTTP status -- its own comment says rpc() does not raise for status. So
+    # a 401, a 422 and a 500 all arrived here carrying neither `result` nor
+    # `error`, produced an empty body, matched no vocabulary, and fell through
+    # to "an anonymous caller EXECUTED the tool": an S1 authorization-bypass
+    # accusation minted out of a failed read, and shipped with population
+    # {"body": ""}, i.e. no evidence of execution at all. Rule 8 in the one
+    # check that speaks to the vendor. Nothing false went out -- no ledger row
+    # cites this check.
+    ({"detail": "Not authenticated"}, "unknown"),
+    ({"detail": "Internal Server Error"}, "unknown"),
+    ({"detail": [{"loc": ["body", "amount"], "msg": "field required"}]},
+     "unknown"),
+    ({}, "unknown"),
+    # And the same rule from the other side: a well-formed MCP result whose
+    # body is empty says nothing either.
+    ({"result": {"content": [{"text": ""}]}}, "unknown"),
 ])
 def test_trust_ladder_asserts_property_not_vocabulary(payload, expected):
     """Rewording their error must not break the check, and a validation error
