@@ -355,5 +355,24 @@
     "A01_final": "Three-way split resolved on primary evidence rather than on the count. t3 confirmed (b) the same way I did and made the same mistake: we both measured the HOOK and neither read the TEST's input. t1 read it. I then verified t1 by hand -- test_the_hook_does_not_paste_the_whole_report writes its own REPORT fixture to tmp_path and never opens a real report, so 17-against-16 cannot redden it. Fix (a) only. For (b) the right change is not raising the cap but deriving it from SECTIONS, so the magic number cannot drift away from what the hook can emit.",
     "R04_final": "1 of 3, so minority report, and the pass agrees with the two who refused it. t1 and t3 both ran the hook and t1 ran `git interpret-trailers --parse`, which echoes `effort: low` -- git matches trailer tokens case-insensitively, so a lowercase line already IS an Effort trailer and -i is correct. Verified by the pass. t1 names the residual weakness as a different finding: the grep scans the whole message rather than the trailer block. Not filed tonight, not fixed tonight."
   },
-  "effort_of_the_readers": "The operator asked, 2026-09-09, whether the three agents run at the same effort as the pass. They do not: check-auditor and finding-triage both carry model: opus, effort: high, while this skill carries xhigh. Decided: no change tonight, and the reason is evidence rather than comfort. CLAUDE.md's table puts 'a guard's assertion, review' at high-xhigh, so high already conforms. And tonight high outperformed xhigh in the place it counts: t1 at high refuted TWO findings this pass made at xhigh (A01b and R04), one of them with a command the xhigh pass never ran, and t2 at high found a second axis on B03 that the xhigh review missed. Three readers at high with a 2-of-3 rule buy redundancy where one reader at xhigh buys depth, and tonight the redundancy is what caught the errors. Raising it without evidence is the add-a-mechanism-because-it-sounds-better failure this whole upgrade was against. Handed to step 11 as its question 3, with tonight's counts as the first data point."
+  "effort_of_the_readers": "The operator asked, 2026-09-09, whether the three agents run at the same effort as the pass. They do not: check-auditor and finding-triage both carry model: opus, effort: high, while this skill carries xhigh. Decided: no change tonight, and the reason is evidence rather than comfort. CLAUDE.md's table puts 'a guard's assertion, review' at high-xhigh, so high already conforms. And tonight high outperformed xhigh in the place it counts: t1 at high refuted TWO findings this pass made at xhigh (A01b and R04), one of them with a command the xhigh pass never ran, and t2 at high found a second axis on B03 that the xhigh review missed. Three readers at high with a 2-of-3 rule buy redundancy where one reader at xhigh buys depth, and tonight the redundancy is what caught the errors. Raising it without evidence is the add-a-mechanism-because-it-sounds-better failure this whole upgrade was against. Handed to step 11 as its question 3, with tonight's counts as the first data point.",
+  "step6_verification": {
+    "prereg": "PRE-0074",
+    "run": "run-20260909T221034Z-8dbf050",
+    "level": "V (partial identity)",
+    "suite": "1 failed, 525 passed, 3 skipped",
+    "the_one_red": "tests/rest/test_portfolio_summary.py::test_the_summary_does_not_report_a_history_the_positions_contradict -- finding #83, the live vendor defect. It is SUPPOSED to be red.",
+    "check_changed": [
+      "CYM-skills_subset",
+      "CYM-agent_names",
+      "CYM-commit_count",
+      "CYM-trusted-receives-nothing-above-its-tier",
+      "CYM-mcp_tool_names_declared_vs_served",
+      "CYM-skill_count",
+      "CYM-skill_ids"
+    ],
+    "check_changed_decision": "Seven rows read CHECK_CHANGED and NONE is rebound tonight. Three are the reconciliation claims whose fingerprint now covers the direction of the comparison (B03) and four are in files whose modules this pass edited. For the three, the measurement is arguably unchanged and a rebind-check would be defensible; for the trust-ladder ones the measurement genuinely DID change, because a 401 that used to read `executed` now reads `unknown`. Rebinding asserts that what is measured did not move, and that assertion is false for at least some of these seven. So they stay CHECK_CHANGED, which is not a defect -- it is rule 5 saying these want re-verifying under their new definitions -- and the next sweep clears them the honest way. Named in the handover.",
+    "never_fired": "7 of 54, unchanged, every one exercised",
+    "step7": "Skipped by its own condition: no fix touched qa/state.py, qa/fold.py or qa/measure.py. The files changed are two skills' prose, scripts/ledger.py, scripts/never_fired.py, four test modules and one hook."
+  }
 }
