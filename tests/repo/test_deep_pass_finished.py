@@ -45,6 +45,8 @@ state written before the contract.
 
 from __future__ import annotations
 
+import datetime as _dt
+
 import json
 from datetime import date
 from pathlib import Path
@@ -94,6 +96,34 @@ def _days(later: str, earlier: str) -> int | None:
         return None
 
 
+def liveness(progress: dict, today: str | None = None) -> str:
+    """Is this pass running, finished, or did it die halfway?
+
+    The distinction the guard below did not have and could not make. Step 0
+    opens the progress file with `retrospective {last: null, done: false}`
+    and step 11 is what sets `done`, so for as long as a pass runs it looks
+    exactly like a pass that skipped the week. Step 6 runs `pytest tests/repo`
+    in the middle of that, and step 9 reverts the run's commits on a red it
+    cannot resolve -- so this guard would have made a pass revert its own
+    night, on a test written hours earlier the same day.
+
+    Rule 8's shape: in progress is not skipped. But "unfinished" may not
+    become a permanent excuse either, so it is bounded by the date the pass
+    itself stamped. Unfinished and stamped today is a pass that is running.
+    Unfinished and older is a pass that died without finishing, which is
+    worth saying out loud rather than passing over.
+
+    `finished` is the pass's last progress write, after the week and before
+    the push.
+    """
+    if progress.get("finished"):
+        return "finished"
+    at = str(progress.get("at") or "")[:10]
+    if today is None:
+        today = _dt.date.today().isoformat()
+    return "running" if at and at == today else "abandoned"
+
+
 def problems(progress: dict, nodeids: set[str] | None = None) -> list[str]:
     """Everything this pass promised and did not finish, in English.
 
@@ -116,7 +146,18 @@ def problems(progress: dict, nodeids: set[str] | None = None) -> list[str]:
             + ", ".join(str(g.get("id") or g.get("nodeid")) for g in owed[:6]))
 
     at = str(progress.get("at") or "")
-    if at[:10] < KEYS_FROM:
+    if not at:
+        # An ABSENT date used to sort below the gate and excuse the whole
+        # file as predating the contract, so a pass with no retrospective,
+        # no rule_changes key and no meta_tests returned clean. The gate is
+        # read from a field the pass itself writes, and its absence says the
+        # pass did not write it, not that the pass is old. Found 2026-09-09,
+        # three votes of three; this function had already chosen the safe
+        # direction for an unreadable `last`.
+        out.append("no `at`: the pass recorded no date, so nothing can say "
+                   "which contract it was written under, and every promise "
+                   "below would be excused by its absence")
+    elif at[:10] < KEYS_FROM:
         return out
 
     retro = progress.get("retrospective")
@@ -162,10 +203,23 @@ def problems(progress: dict, nodeids: set[str] | None = None) -> list[str]:
                     f"'no' or 'yes'. The question is whether the change weakens "
                     f"a guard or touches an [operator ...] paragraph, so 'no' "
                     f"is the vote that lets it land")
+            # Two of THREE independent agents. This counted "no" votes and
+            # flagged only `agreed < 2`, never checking how many voted, so
+            # two of two -- a third agent never run, or its dissent not
+            # written down -- landed green, while the message hardcoded the
+            # denominator it had not verified. The guard over the operator's
+            # own condition of 2026-09-08 did not enforce it. Found
+            # 2026-09-09, three votes of three.
+            if len(spoken) != 3:
+                out.append(f"rule change {who}: {len(spoken)} vote(s) "
+                           f"recorded. The condition is two of THREE "
+                           f"independent agents, so three is what a "
+                           f"majority is counted out of")
             agreed = sum(1 for v in spoken.values() if v == "no")
             if agreed < 2:
-                out.append(f"rule change {who}: {agreed} of 3 agents said it "
-                           f"does not weaken a guard; two is the floor")
+                out.append(f"rule change {who}: {agreed} of {len(spoken)} "
+                           f"agents said it does not weaken a guard; two "
+                           f"is the floor")
             test = change.get("test")
             if not test or test not in known:
                 out.append(f"rule change {who}: names no test that exists "
@@ -180,7 +234,19 @@ def problems(progress: dict, nodeids: set[str] | None = None) -> list[str]:
     if not isinstance(meta, dict):
         out.append("no `meta_tests` block: the self-test count at the start and "
                    "the end is how growth stays visible")
-    elif (meta.get("end") or 0) > (meta.get("start") or 0) \
+    elif meta.get("end") is None:
+        # `or 0` coerced a null end to zero, which can never exceed a
+        # start, so real unexplained growth read as no growth. Missing is
+        # not empty -- the distinction this same function draws for
+        # `rule_changes` one block up. Found 2026-09-09, three votes of
+        # three, and one reader noted it was permanent rather than
+        # occasional: `end` was written only by step 11, which runs only
+        # when the week is due.
+        out.append(
+            f"`meta_tests.end` was never written (start {meta.get('start')}), "
+            f"so this pass measured no growth in tests/meta at all. A "
+            f"pass writes it whether or not the week was due")
+    elif meta["end"] > (meta.get("start") or 0) \
             and not (meta.get("reason") or "").strip():
         out.append(
             f"tests/meta grew {meta.get('start')} -> {meta.get('end')} with no "
@@ -213,9 +279,28 @@ def test_no_confirmed_finding_was_left_unfixed_by_a_deep_pass():
             sources={"progress": "audits/deep-pass-progress.json"}))
         return
 
+    state = liveness(progress)
+    if state == "running":
+        # A pass is writing this file right now, and every promise below
+        # is kept at its END. Judging it mid-flight made this red from
+        # step 0 to step 11 of every pass, and step 9 reverts a night on
+        # an unresolvable red. In progress is not skipped.
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason=f"a deep pass ({progress.get('run')}) is still "
+                   f"running: it stamped {str(progress.get('at'))[:10]} "
+                   f"and has not written `finished`. Its promises are "
+                   f"judged when it says it is done",
+            sources={"progress": "audits/deep-pass-progress.json"}))
+        return
+
     gaps = progress.get("gaps") or []
     undecided = [g for g in gaps if g.get("verdict") is None]
     found = problems(progress)
+    if state == "abandoned":
+        found = [f"the pass stamped {str(progress.get('at'))[:10]} never "
+                 f"wrote `finished`, so it died somewhere in its own "
+                 f"spine and nothing said so"] + found
 
     conclude(Measurement(
         verdict="failed" if found else "passed",
@@ -235,6 +320,79 @@ def test_no_confirmed_finding_was_left_unfixed_by_a_deep_pass():
 # The three promises, each shown to fire
 # ---------------------------------------------------------------------------
 NODEIDS = {"tests/meta/test_pipeline_fold.py::test_axes_are_independent"}
+
+
+# --- the four defects the 2026-09-09 deep pass found in this file, each with
+# --- the fixture that showed it. Written before the fixes, red against them.
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_pass_still_running_is_not_a_pass_that_skipped_the_week():
+    """S03. The state every pass is in between step 0 and step 11.
+
+    Step 0 opens the file with `retrospective {last: null, done: false}` and
+    step 11 is what sets `done`. This guard read that as "the week was due and
+    this pass did not do it" -- so it was red for the whole of every pass, step
+    6 runs `pytest tests/repo` in the middle of that, and step 9 reverts the
+    run's commits on a red it cannot resolve. A pass following its own spine
+    would have reverted its night on a test written hours earlier. Rule 8's
+    distinction, missed in a file that cites rule 8: in progress is not
+    skipped.
+    """
+    running = _pass(at="2026-09-20T02:00:00+00:00",
+                    retrospective={"last": None, "done": False})
+    assert liveness(running, today="2026-09-20") == "running"
+
+    # And the hole that would open if "unfinished" simply meant "excused":
+    assert liveness(running, today="2026-09-27") == "abandoned"
+    assert liveness(_pass(finished=True), today="2026-09-27") == "finished"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_pass_that_wrote_no_date_is_not_excused_as_ancient():
+    """C01. `at[:10] < KEYS_FROM` scored an ABSENT date as predating the
+    contract, so a file with no retrospective, no rule_changes and no
+    meta_tests returned clean. The gate is read from a field the pass itself
+    writes. The same function already chose the safe direction for an
+    unreadable `last`; this is the other one."""
+    assert problems({"run": "deep pass 2026-09-20", "gaps": []}, NODEIDS)
+    assert problems({"run": "x", "at": "", "gaps": []}, NODEIDS)
+    # Still excused when it really does predate the keys.
+    assert problems({"run": "old", "at": "2026-09-08T14:20:48+00:00",
+                     "gaps": []}, NODEIDS) == []
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_two_of_two_is_not_two_of_three():
+    """C02. The operator's condition of 2026-09-08 is two of THREE independent
+    agents. This counted "no" votes and flagged only `agreed < 2`, so two votes
+    with the third agent never run -- or its dissent not written down -- landed
+    green, while the failure string hardcoded the denominator it never checked.
+    The guard over their own condition did not enforce it."""
+    def change(votes):
+        return _pass(rule_changes=[{"id": "RC1", "what": "x", "votes": votes,
+                                    "test": sorted(NODEIDS)[0],
+                                    "handover": True}])
+    assert problems(change({"t1": "no", "t2": "no"}), NODEIDS)
+    assert problems(change({"t1": "no", "t2": "no", "t3": "yes", "t4": "yes"}),
+                    NODEIDS)
+    assert problems(change({"t1": "no", "t2": "yes", "t3": "yes"}), NODEIDS)
+    assert problems(change({"t1": "no", "t2": "no", "t3": "yes"}), NODEIDS) == []
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_unwritten_growth_count_is_not_a_count_of_zero():
+    """C03. `(meta.get("end") or 0) > (meta.get("start") or 0)` coerced a null
+    end to zero, which can never exceed a start, so real unexplained growth
+    read as no growth. The same function draws the missing-versus-empty
+    distinction one block up for `rule_changes` and dropped it here."""
+    assert problems(_pass(meta_tests={"start": 200, "end": None,
+                                      "reason": None}), NODEIDS)
+    assert problems(_pass(meta_tests={"start": 200}), NODEIDS)
+    assert problems(_pass(meta_tests={"start": 200, "end": 218,
+                                      "reason": None}), NODEIDS)
+    assert problems(_pass(meta_tests={"start": 200, "end": 218,
+                                      "reason": "the boundary pin"}),
+                    NODEIDS) == []
 
 
 def _pass(**over) -> dict:
