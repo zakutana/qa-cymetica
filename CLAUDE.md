@@ -37,8 +37,8 @@ asked for it. So it is kept here.
   *"Pushovat se bude jen v deep pasu nebo kdyz vylozene reknu."*
 
   1. **The `deep-pass` skill pushes.** That is the same rule, not a hole in
-     it — the skill runs the review itself in step 3 and pushes in step 8 with
-     the scope already spent.
+     it — the skill runs the review itself in step 3 and pushes last, in
+     step 12, with the scope already spent.
   2. **The operator says so, in that turn, in words.** Not implied by "carry
      on", not inherited from an earlier push, not because the work looks
      finished.
