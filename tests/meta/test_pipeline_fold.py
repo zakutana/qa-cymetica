@@ -260,7 +260,15 @@ def test_partial_run_cannot_close_anything():
     """Modelled on the real run-20260904T131713Z: one result, three open rows.
 
     merge() read that run and closed the two rows it never touched. The fold
-    must leave them exactly where they were and say so with not_checked_in."""
+    must leave them exactly where they were and say so with not_checked_in.
+
+    Rule 1, and the plan's negative control for it: a partial run may open
+    REPRODUCING and may never close what it did not run. tests/meta held that
+    twice -- test_pipeline_tamper.py stated the same fold call over two rows,
+    importing this file's fixtures to do it -- and the second copy was deleted
+    on 2026-09-09 in favour of this one, which is the stronger statement: three
+    rows, the not_checked_in mark, and the absence of a CHECK transition, not
+    only the absence of the word VERIFIED."""
     from qa.fold import display_state, fold
 
     events = (events_for("CYM-a", "RAISED", 46)

@@ -112,31 +112,6 @@ def test_a_run_claiming_a_preregistration_that_does_not_exist_is_refused(tmp_pat
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_a_single_test_run_closes_nothing(tmp_path):
-    """The plan's last negative control. A one-result run may open a defect
-    and may never close a row it did not adjudicate -- the failure that let a
-    targeted re-run silently verify everything it never touched."""
-    from qa.fold import display_state, fold
-
-    from tests.meta.test_pipeline_fold import (CHECK_A, CHECK_B, FP1,
-                                               fold_run, ledger, row)
-
-    state = ledger(
-        row("CYM-a", check_state="REPRODUCING", checks=[CHECK_A], pinned=FP1),
-        row("CYM-b", check_state="REPRODUCING", checks=[CHECK_B], pinned=FP1),
-    )
-    before = {fid: display_state(r) for fid, r in state["findings"].items()}
-
-    single = fold_run("run-single", [(CHECK_A, "passed")])
-    single["collected"] = [CHECK_A]
-    after = fold(state, run=single, events=[])
-
-    assert display_state(after["findings"]["CYM-b"]) == before["CYM-b"]
-    assert after["findings"]["CYM-b"]["check"]["not_checked_in"] == "run-single"
-    assert "VERIFIED" not in display_state(after["findings"]["CYM-b"])
-
-
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_run_that_did_not_honour_its_preregistration_is_refused():
     """Gap 1's last door: a real tag, and a different selector.
 
