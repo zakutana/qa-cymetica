@@ -4,6 +4,31 @@ Read from the source on 2026-09-08, at commit `702a65c`, deliberately **without*
 taking CLAUDE.md's word for anything. Where the two disagree, the disagreement is
 recorded in the last section rather than silently resolved.
 
+> **Superseded in part on 2026-09-09** by `docs/UPGRADE-PLAN.md`, which was built
+> from this document and then acted on. This file was not rewritten — it is a
+> dated reading, and rewriting it would destroy the record of what was true when
+> the plan was made. What has since changed, so nothing here is believed twice:
+>
+> * §6's red guard is fixed. Rule 12's comparison is `scripts/ledger.py::drift`,
+>   shared with `--check`; `events_head` is checked as a citation and the rows
+>   against a refold over the whole journal. Its `UNCERTAIN` is resolved: the
+>   deep pass had been tolerating the red inside its step-6 prereg run.
+> * `scripts/migrate_ledger.py`, `tests/meta/test_pipeline_migration.py`,
+>   `qa/messages.py`, three dead functions in `render.py`, the
+>   `allow_stale_head` flag and `tests/boundaries/` are gone; `render.py` is
+>   1899 lines. Three duplicate meta tests were merged or deleted.
+> * §7's `UNCERTAIN` is resolved: `consolidate-memory` had never run here. The
+>   deep pass now prunes as well as adds, may change a rule under the operator's
+>   three conditions, and looks back weekly.
+> * §7's fourth layer was measured and this document's own figure was wrong in
+>   composition: `evidence/` is written mostly by the test suite, not the
+>   console. See the plan's Context section.
+> * Decisions attributed to the operator now carry an `[operator YYYY-MM-DD]`
+>   tag and are pinned by `tests/meta/test_pipeline_decisions.py`.
+>
+> §8's list of documentation that lies was acted on: 8.2, 8.4 and 8.5 are fixed
+> in place, 8.1 and 8.3 are not.
+
 This file is for sessions, not for the operator. It is descriptive only: no
 proposals, no fixes. Claims marked `UNCERTAIN:` were not established from the
 source and must not be built on. Claims marked `UNCONFIRMED (triage)` failed the
