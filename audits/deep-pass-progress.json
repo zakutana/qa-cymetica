@@ -151,6 +151,56 @@
       "verdict": null,
       "fixed": false,
       "commit": null
+    },
+    {
+      "id": "R01",
+      "nodeid": "scripts/ledger.py::main --check",
+      "claim": "Today's change made --check compose the run the committed ledger CITES instead of the newest admissible one. Nothing handles that record being absent. state/runs/ is gitignored with 305 of 697 force-tracked, and _track_run_record downgrades a tracking failure to a warning, so a ledger can cite a record that never reached the repository. `ledger.py --check` then dies with an unhandled KeyError naming the run id. Reproduced against a temp state dir citing run-does-not-exist. The old latest_admissible path was always present locally, so this is new.",
+      "source": "review",
+      "votes": null,
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "R02",
+      "nodeid": "scripts/ledger.py::main --check",
+      "claim": "Same path, second failure. When the cited run is no longer admissible, compose returns a ledger carrying rejected_run and --check compares it as an ordinary refold: it prints '1 committed row(s) are not what the journal and run records fold to' and advises re-folding, which would refuse to write. The rejection reason compose already computed, and which main() prints on every other path, never reaches the operator. Reproduced against a temp state dir citing a schema-1 record.",
+      "source": "review",
+      "votes": null,
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "R03",
+      "nodeid": ".claude/hooks/deep_pass_handover.py::handover",
+      "claim": "`for block in _blocks(body)[:cap]` applies the per-section cap to raw list items BEFORE the bold-lead filter, so an item written without a bold lead consumes a slot and prints nothing. A section whose first five items lack bold leads prints nothing at all even when item six is bolded, and the morning reads as quiet. The skill instructs the pass to bold every lead, so this is a drafting slip rather than an impossibility.",
+      "source": "review",
+      "votes": null,
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "R04",
+      "nodeid": ".githooks/prepare-commit-msg",
+      "claim": "The already-present check is `grep -qiE`, case-insensitive. A body line that is exactly 'effort: low' -- for instance a note about a task's effort class, which CLAUDE.md now asks every task to state in its first line -- suppresses the real trailer and that commit records nothing. The hook's own comment explains the earlier looser pattern was fixed because a body line can look like a trailer; the case-insensitivity reopens a narrower version of it.",
+      "source": "review",
+      "votes": null,
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "R05",
+      "nodeid": "tests/meta/test_pipeline_tamper.py",
+      "claim": "The five new drift tests cover pending events, row drift, key drift and three bad anchors, but never the case where composing the cited run FAILS. Both R01 and R02 live in the path these tests were written to guard, and neither is exercised, so a fix to either can regress silently.",
+      "source": "review",
+      "votes": null,
+      "verdict": null,
+      "fixed": false,
+      "commit": null
     }
   ],
   "retrospective": {
