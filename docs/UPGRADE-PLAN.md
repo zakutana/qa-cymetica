@@ -1,5 +1,15 @@
 # Upgrade plan — balance, three rhythms, the red guard, model/effort
 
+> **Provedeno 2026-09-09.** All twelve steps, `ee1c5e5..83724f0`, 22 commits on
+> `main`, not pushed. 458 passed / 1 skipped in `tests/meta tests/repo` after
+> every step; 513 collected across the whole suite. `/code-review` at high over
+> the branch returned five findings, all fixed in `83724f0` — the first of them
+> serious and in this plan's own step 10: the decision guard promised a hash it
+> never compared. Two things this plan predicted wrongly are recorded where they
+> happened: the evidence store's composition (Context) and "test functions about
+> even" (they grew by 40 collected items, ratio 88.6% → 89.5%). What remains is
+> the "Open for the operator" list at the end.
+
 Written 2026-09-09 from ARCHITECTURE.md (commit `702a65c`), CLAUDE.md, DEEP-PASS.md and
 the source. UNCONFIRMED / UNCERTAIN claims in ARCHITECTURE.md were not used; three of
 them were resolved from the source and are recorded below. The draft was put to one

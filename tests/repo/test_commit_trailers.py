@@ -12,6 +12,15 @@ a session set to `max`. Checked before this was built, because a trailer that
 recorded the session setting on every commit would answer a question nobody
 asked and look like an answer to the one that matters.
 
+**What was checked and what was inferred.** The subagent case was run: a
+`finding-triage` agent whose frontmatter says `effort: high` printed `high`
+inside a session set to `max`. The SKILL case was not. No skill turn has
+committed since this landed, so whether a `/qa-sweep` commit's trailer carries
+the skill's `high` or the session's setting is an inference from the same
+mechanism, not a measurement. The next sweep commit settles it, and if it
+records the session's setting then this hook records the wrong thing and
+should be dropped rather than patched.
+
 So a `prepare-commit-msg` hook appends `Effort: <level>` when the variable is
 set. When it is not -- the operator committing by hand -- it appends nothing,
 which is the honest record: nobody's effort setting wrote that commit.
