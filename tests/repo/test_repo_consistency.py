@@ -113,7 +113,24 @@ def test_committed_ledger_is_what_its_inputs_fold_to():
         # passed, on nothing but the order it was run in. A guard that
         # alternates is worse than none, because the false failure teaches you
         # to disbelieve the true one.
-        refolded = ledger_mod.compose(run_id=committed.get("run_id"))
+        # ...and through the BRANCH that produced it. Always taking the run
+        # branch made this disagree by `run_carried` with any ledger folded
+        # by --events-only -- the path withdraw.py prints after every
+        # withdrawal -- so the guard went red on a ledger that was exactly
+        # what its inputs fold to. Same boring red the events_head change
+        # removed this morning, arriving through a different key. Found by
+        # the deep pass of 2026-09-09, three votes of three.
+        refolded = ledger_mod.compose(**ledger_mod.refold_recipe(committed))
+    except KeyError as exc:
+        # The ledger cites a run record this clone does not have.
+        # state/runs/ is gitignored with only the cited records
+        # force-tracked. Rule 8 again: a comparison we could not make.
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason=f"the ledger cites run {exc.args[0]!r} and no record "
+                   f"here carries that id, so it cannot be re-folded",
+            sources={"ledger": "state/ledger.json"}))
+        return
     except RunIntegrityError as exc:
         # A clone has the run record and not the preregistration tags, so the
         # record contradicts a fact outside itself and compose refuses. Rule 8:

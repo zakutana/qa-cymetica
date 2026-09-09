@@ -298,6 +298,25 @@ def drift(committed: dict, refolded: dict, events: Sequence[dict]) -> dict:
             "since_head": since_head, "reason": reason}
 
 
+def refold_recipe(committed: dict) -> dict:
+    """The inputs that produced this ledger, so a refold can use the same ones.
+
+    Both `--check` and rule 12's guard used to refold through the run branch
+    whatever the committed ledger was made of. A ledger folded by
+    `ledger.py --events-only` -- the path `scripts/withdraw.py` prints after
+    every withdrawal, and the one `main()` offers below as the remedy --
+    carries `run_carried`, which the run branch never sets. So the refold
+    differed from the committed ledger by exactly that key, and both the CLI
+    and the guard reported a ledger wrong that was precisely what its inputs
+    fold to. The same class of boring red the `events_head` change removed on
+    2026-09-09, arriving the same day through a different key. Found by the
+    deep pass, three votes of three.
+    """
+    if committed.get("run_carried"):
+        return {"run_id": None, "events_only": True}
+    return {"run_id": committed.get("run_id"), "events_only": False}
+
+
 def as_findings(ledger: dict) -> list[dict]:
     """Ledger rows in the order the dashboard shows them, worst first."""
     rows = list(ledger.get("findings", {}).values())
@@ -320,36 +339,59 @@ def main(argv: list[str] | None = None) -> int:
                              "inputs fold to; writes nothing")
     args = parser.parse_args(argv)
 
-    # Against the run the committed ledger CITES, not whichever is newest.
-    # Folding --check against "latest admissible" made it answer about a
-    # different document: every pytest session writes a run record, so the
-    # newest run is usually some two-test re-run, and every row it did not
-    # collect reads not_checked_in. tests/repo has held this since 2026-09-05
-    # and the CLI beside it did not.
-    run_id = args.run_id
-    if args.check and run_id is None and not args.events_only:
-        run_id = (load_previous() or {}).get("run_id")
-
-    # --check writes nothing, so it attests nothing either. Everything else
-    # here goes on to write the ledger, which is the moment the record's bytes
-    # become worth pinning.
-    ledger = compose(run_id=run_id, events_only=args.events_only,
-                     attest=not args.check)
-
     if args.check:
+        # Refold through the branch that PRODUCED this ledger, against the run
+        # it cites rather than whichever is newest. Folding --check against
+        # "latest admissible" made it answer about a different document: every
+        # pytest session writes a run record, so the newest is usually some
+        # two-test re-run and every row it did not collect reads
+        # not_checked_in. And always taking the RUN branch made it disagree by
+        # `run_carried` with any ledger folded by --events-only, which is the
+        # path withdraw.py prints after every withdrawal.
         committed = load_previous() or {}
+        recipe = refold_recipe(committed)
+        run_id = args.run_id if args.run_id is not None else recipe['run_id']
+        events_only = args.events_only or recipe['events_only']
+        try:
+            ledger = compose(run_id=run_id, events_only=events_only,
+                             attest=False)
+        except KeyError as exc:
+            # The ledger names a run record that is not here. state/runs/ is
+            # gitignored with only the cited records force-tracked, and
+            # _track_run_record downgrades a tracking failure to a warning, so
+            # a committed ledger CAN cite a record that never reached the
+            # repository. This was the guard you would run to find that out,
+            # dying with a traceback instead of saying it. Found 2026-09-09.
+            print(f'the committed ledger cites run {exc.args[0]!r} and no '
+                  f'record in {runs_dir()} carries that id. Without it nothing '
+                  f'can say whether these rows are what their inputs fold to.')
+            return 1
+        if 'rejected_run' in ledger:
+            # compose() already worked out WHY, and --check used to return
+            # before the block that prints it -- so the operator got a generic
+            # key-drift message and advice to re-fold, which would exit 2 and
+            # write nothing. Found 2026-09-09.
+            bad = ledger['rejected_run']
+            print(f"the committed ledger stands on run {bad['run_id']}, "
+                  f"which is not admissible: {', '.join(bad['reasons'])}. "
+                  f"Re-folding cannot fix that; produce an admissible run, "
+                  f"or fold the journal alone with --events-only.")
+            return 1
         verdict = drift(committed, ledger, read_events())
-        print(verdict["reason"])
-        if not (verdict["rows"] or verdict["keys"]) and verdict["anchored"]:
+        print(verdict['reason'])
+        if not (verdict['rows'] or verdict['keys']) and verdict['anchored']:
             return 0
-        print("Re-fold it (scripts/ledger.py) rather than editing it.")
+        print('Re-fold it (scripts/ledger.py) rather than editing it.')
         before = {fid: display_state(r)
-                  for fid, r in committed.get("findings", {}).items()}
-        after = {fid: display_state(r) for fid, r in ledger["findings"].items()}
+                  for fid, r in committed.get('findings', {}).items()}
+        after = {fid: display_state(r) for fid, r in ledger['findings'].items()}
         for fid in sorted(set(before) | set(after)):
             if before.get(fid) != after.get(fid):
                 print(f"  {fid}: {before.get(fid, '-')} -> {after.get(fid, '-')}")
         return 1
+
+    ledger = compose(run_id=args.run_id, events_only=args.events_only,
+                     attest=True)
 
     if "rejected_run" in ledger:
         # Refuse rather than write. Composing an inadmissible record would

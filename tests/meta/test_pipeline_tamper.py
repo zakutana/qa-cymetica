@@ -340,3 +340,27 @@ def test_an_empty_journal_anchors_at_zero():
 
     d = drift(_committed(0, ""), _committed(0, ""), [])
     assert d["anchored"] is True and d["rows"] == [] and d["since_head"] == {}
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_refold_uses_the_inputs_that_produced_the_ledger():
+    """R01, R02, C04: what --check and rule 12's guard must re-compose.
+
+    Both refolded through the RUN branch whatever the committed ledger was
+    made of. A ledger folded by `ledger.py --events-only` -- the path
+    withdraw.py prints after every withdrawal, and the one main() itself
+    offers as the remedy -- carries `run_carried`, which the run branch never
+    sets. So `keys == ['run_carried']` and both the CLI and the guard called a
+    ledger wrong that was exactly what its inputs fold to: the same class of
+    boring red the events_head change removed this morning, arriving through a
+    different key. Found 2026-09-09, three votes of three.
+    """
+    from scripts.ledger import refold_recipe
+
+    assert refold_recipe({"run_id": "run-x"}) == {
+        "run_id": "run-x", "events_only": False}
+    assert refold_recipe({"run_id": "run-x", "run_carried": True}) == {
+        "run_id": None, "events_only": True}
+    assert refold_recipe({"run_id": "run-x", "run_carried": False}) == {
+        "run_id": "run-x", "events_only": False}
+    assert refold_recipe({}) == {"run_id": None, "events_only": False}
