@@ -98,6 +98,8 @@ def test_committed_ledger_is_what_its_inputs_fold_to():
         ))
         return
 
+    from qa.state import RunIntegrityError, read_events
+
     ledger_mod = _module("scripts/ledger.py", "ledger_consistency")
     committed = json.loads(LEDGER.read_text(encoding="utf-8"))
     try:
@@ -110,6 +112,16 @@ def test_committed_ledger_is_what_its_inputs_fold_to():
         # alternates is worse than none, because the false failure teaches you
         # to disbelieve the true one.
         refolded = ledger_mod.compose(run_id=committed.get("run_id"))
+    except RunIntegrityError as exc:
+        # A clone has the run record and not the preregistration tags, so the
+        # record contradicts a fact outside itself and compose refuses. Rule 8:
+        # a comparison we could not make is not a comparison that failed. This
+        # escaped the SystemExit below and errored the guard outright.
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason=f"the ledger cannot be re-folded here: {exc}",
+            sources={"ledger": "state/ledger.json"}))
+        return
     except SystemExit as exc:
         if "no admissible run" not in str(exc):
             conclude(Measurement(
@@ -121,29 +133,33 @@ def test_committed_ledger_is_what_its_inputs_fold_to():
         # the ledger's input. That is a real comparison, not a missing one.
         refolded = ledger_mod.compose(events_only=True)
 
-    drifted = {
-        fid for fid in set(committed.get("findings", {})) | set(refolded["findings"])
-        if committed.get("findings", {}).get(fid) != refolded["findings"].get(fid)
-    }
-    # Everything else in the document too. This compared only `findings`, while
-    # the docstring says "ledger.py --check, in-process" and that compares
-    # `committed == ledger` whole. So a stale `counts` block -- exactly the "6
-    # in the tiles" drift the module docstring names as the reason this file
-    # exists -- was invisible here while --check exited 1, and so was an
-    # events_head left behind by a bounty.py run nobody re-folded.
-    elsewhere = sorted(
-        key for key in set(committed) | set(refolded)
-        if key != "findings" and committed.get(key) != refolded.get(key)
-    )
+    # One definition of drift, in scripts/ledger.py, shared with `--check`.
+    # It was written out twice before and the two disagreed: this compared only
+    # `findings` while --check compared the whole document, so a stale `counts`
+    # block -- the "6 in the tiles" drift the module docstring names as the
+    # reason this file exists -- was invisible here while --check exited 1.
+    #
+    # `events_head` was then folded into the comparison to catch "a head left
+    # behind by a bounty.py run nobody re-folded" (2026-09-07). That reading is
+    # withdrawn, and the argument is in `drift`'s docstring: it conflated being
+    # BEHIND the journal with not being WHAT THE INPUTS FOLD TO. The console
+    # appends two vendor_read events every fifteen minutes, the fold moves
+    # nothing on an ok read, and this guard was therefore red for a boring
+    # reason most of its life -- which is how a guard stops being read.
+    #
+    # Nothing is given up. The rows are still compared against a refold over
+    # the WHOLE journal, so a pending event that WOULD move something fires
+    # this before anyone folds it; the head is checked as a citation, and
+    # write_ledger keeps the level-with-the-journal invariant where it belongs,
+    # at the moment of the write.
+    verdict = ledger_mod.drift(committed, refolded, read_events())
     conclude(Measurement(
-        verdict="failed" if drifted or elsewhere else "passed",
-        reason=(f"{len(drifted)} committed row(s) are not what the journal and "
-                f"run records fold to: {sorted(drifted)}"
-                if drifted else
-                f"the committed rows fold correctly, but {len(elsewhere)} "
-                f"top-level key(s) of the ledger do not: {elsewhere}"
-                if elsewhere else "the committed ledger matches its inputs"),
-        left=sorted(drifted), right=elsewhere,
+        verdict=("failed" if verdict["rows"] or verdict["keys"]
+                 or not verdict["anchored"] else "passed"),
+        reason=verdict["reason"],
+        left=verdict["rows"], right=verdict["keys"],
+        population={"since_head": verdict["since_head"],
+                    "anchored": verdict["anchored"]},
         sources={"ledger": "state/ledger.json", "journal": "state/journal/events.jsonl"},
     ))
 

@@ -25,6 +25,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from collections.abc import Sequence
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -217,6 +218,91 @@ def compose(run_id: str | None = None, events_only: bool = False,
     return ledger
 
 
+def drift(committed: dict, refolded: dict, events: Sequence[dict]) -> dict:
+    """Rule 12, asked as one question: are the committed rows what the inputs
+    fold to?
+
+    One definition, called by `--check` and by tests/repo, so the CLI and the
+    guard cannot grow two ideas of what "stale" means.
+
+    Everything is compared against a refold over the WHOLE journal, pending
+    events included, so an event that would move something turns this red
+    whether or not anybody has folded it yet. The one key held out is
+    `events_head`, and holding it out is the change:
+
+      Until 2026-09-09 it was compared like any other key. It is the journal's
+      head at the moment of the compose, so `serve.py --ask 15` -- two
+      `vendor_read` events per tick, which the fold reads only to set or clear
+      `stale_from`, and an `ok` read moves nothing -- put this guard in the red
+      within fifteen minutes of every fold and left it there until the next
+      one. The comment that widened the comparison (tests/repo, 2026-09-07)
+      wanted "an events_head left behind by a bounty.py run nobody re-folded",
+      and that reading conflated two questions: whether the ledger is BEHIND
+      the journal, and whether it is NOT WHAT ITS INPUTS FOLD TO. The second is
+      rule 12 and is kept exactly, by the rows. The first is answered at the
+      moment of the write, by `write_ledger`, which refuses a ledger whose head
+      is not the journal's head; that invariant is untouched.
+
+    So the head is checked as a CITATION: the line it names must be a line the
+    journal really has, at that seq, with that chain. A ledger folded against
+    some other journal -- a temp state directory leaking in, a journal rewritten
+    underneath it -- names a line that is not there.
+
+    What this no longer catches, stated plainly rather than discovered later: a
+    head hand-rolled BACKWARDS to an older line the journal really has. It
+    anchors, over-reports the suffix, and changes nothing else, because the rows
+    are still compared against the whole journal. `write_ledger` refuses to
+    write such a ledger in the first place.
+
+    Returns `rows`, `keys`, `anchored`, `since_head` (the pending suffix counted
+    by type -- a report, never the verdict) and a `reason` in English.
+    """
+    from collections import Counter
+
+    head_cited = committed.get("events_head") or {}
+    seq, chain = head_cited.get("seq"), head_cited.get("chain")
+
+    if seq == 0 and chain == "":
+        # The empty prefix, which every journal has. This is what head() gives
+        # before the first event, and it is a citation like any other.
+        anchored, pending = True, list(events)
+    elif isinstance(seq, int) and 1 <= seq <= len(events) \
+            and events[seq - 1].get("chain") == chain:
+        anchored, pending = True, list(events[seq:])
+    else:
+        anchored, pending = False, []
+
+    committed_rows = committed.get("findings") or {}
+    refolded_rows = refolded.get("findings") or {}
+    rows = sorted(fid for fid in set(committed_rows) | set(refolded_rows)
+                  if committed_rows.get(fid) != refolded_rows.get(fid))
+    keys = sorted(key for key in set(committed) | set(refolded)
+                  if key not in ("findings", "events_head")
+                  and committed.get(key) != refolded.get(key))
+    since_head = dict(Counter(e.get("type") for e in pending))
+
+    if not anchored:
+        reason = (f"the ledger cites journal head {head_cited}, and the journal "
+                  f"has no such line: it holds {len(events)} event(s)"
+                  + (f" and line {seq} is {events[seq - 1].get('chain')!r}"
+                     if isinstance(seq, int) and 1 <= seq <= len(events) else ""))
+    elif rows:
+        reason = (f"{len(rows)} committed row(s) are not what the journal and "
+                  f"run records fold to: {rows}")
+    elif keys:
+        reason = (f"the committed rows fold correctly, but {len(keys)} "
+                  f"top-level key(s) of the ledger do not: {keys}")
+    else:
+        pending_says = (", ".join(f"{n} {t}" for t, n in sorted(since_head.items()))
+                        if since_head else "nothing")
+        reason = (f"the committed ledger matches its inputs; anchored at journal "
+                  f"event {seq} of {len(events)}, {pending_says} since, "
+                  f"none moved a row")
+
+    return {"rows": rows, "keys": keys, "anchored": anchored,
+            "since_head": since_head, "reason": reason}
+
+
 def as_findings(ledger: dict) -> list[dict]:
     """Ledger rows in the order the dashboard shows them, worst first."""
     rows = list(ledger.get("findings", {}).values())
@@ -242,21 +328,31 @@ def main(argv: list[str] | None = None) -> int:
                              "committed ledger (one-shot migration only)")
     args = parser.parse_args(argv)
 
+    # Against the run the committed ledger CITES, not whichever is newest.
+    # Folding --check against "latest admissible" made it answer about a
+    # different document: every pytest session writes a run record, so the
+    # newest run is usually some two-test re-run, and every row it did not
+    # collect reads not_checked_in. tests/repo has held this since 2026-09-05
+    # and the CLI beside it did not.
+    run_id = args.run_id
+    if args.check and run_id is None and not args.events_only:
+        run_id = (load_previous() or {}).get("run_id")
+
     # --check writes nothing, so it attests nothing either. Everything else
     # here goes on to write the ledger, which is the moment the record's bytes
     # become worth pinning.
-    ledger = compose(run_id=args.run_id, events_only=args.events_only,
+    ledger = compose(run_id=run_id, events_only=args.events_only,
                      seed=args.seed, attest=not args.check)
 
     if args.check:
-        committed = load_previous()
-        if committed == ledger:
-            print("ledger matches its inputs")
+        committed = load_previous() or {}
+        verdict = drift(committed, ledger, read_events())
+        print(verdict["reason"])
+        if not (verdict["rows"] or verdict["keys"]) and verdict["anchored"]:
             return 0
-        print("the committed ledger is not what its inputs fold to.")
         print("Re-fold it (scripts/ledger.py) rather than editing it.")
         before = {fid: display_state(r)
-                  for fid, r in (committed or {}).get("findings", {}).items()}
+                  for fid, r in committed.get("findings", {}).items()}
         after = {fid: display_state(r) for fid, r in ledger["findings"].items()}
         for fid in sorted(set(before) | set(after)):
             if before.get(fid) != after.get(fid):

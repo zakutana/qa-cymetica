@@ -245,3 +245,135 @@ def test_concurrent_writers_cannot_break_the_chain(tmp_path):
     assert len(events) == 24, f"24 appends, {len(events)} survived"
     assert [e["seq"] for e in events] == list(range(1, 25)), "sequence is not dense"
     assert len({e["note"] for e in events}) == 24, "an append was lost or doubled"
+
+
+# ---------------------------------------------------------------------------
+# Rule 12, asked as one question instead of two
+# ---------------------------------------------------------------------------
+def _journal(*types) -> list[dict]:
+    """A journal-shaped list: dense seq from 1, each line with its own chain.
+
+    Hand-built rather than appended through qa.state, because `drift` is pure
+    and reads only `seq`, `chain` and `type`. The chain values need only be
+    distinct; what they hash to is `read_events`'s question, and it is asked
+    on every load already.
+    """
+    return [{"seq": i, "chain": f"chain-{i:02d}", "type": t,
+             "at": f"2026-09-05T00:00:{i:02d}+00:00",
+             "by": "agent", "source": "test"}
+            for i, t in enumerate(types, start=1)]
+
+
+def _committed(head_seq: int, head_chain: str, **over) -> dict:
+    led = {"schema": 2, "run_id": "run-1", "run_level": "V",
+           "counts": {"STILL REPRODUCIBLE": 1},
+           "events_head": {"seq": head_seq, "chain": head_chain}}
+    led.update(_ledger())
+    led["events_head"] = {"seq": head_seq, "chain": head_chain}
+    led.update(over)
+    return led
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_events_the_fold_does_not_read_are_counted_not_charged():
+    """An event that moved no row must not read as a stale projection.
+
+    Rule 12's guard compared the committed ledger to a refold key by key,
+    `events_head` among them. That key is the journal's head at the moment of
+    the compose, so the console -- `serve.py --ask 15`, two `vendor_read`
+    events per tick -- put the guard in the red within fifteen minutes of
+    every fold and left it there. The fold reads `vendor_read` only to set or
+    clear `stale_from`; an `ok` read moves nothing. So the guard spent most of
+    its life red for the most boring reason available, which is how a guard
+    stops being read.
+
+    The question rule 12 actually asks is whether the committed rows are what
+    the inputs fold to. That is asked by comparing the ROWS, against a refold
+    over the WHOLE journal -- pending events included -- so an event that
+    would move something still turns this red. The head is then not a
+    comparison at all but a citation, and the honest check on a citation is
+    that it points at a line the journal really has.
+    """
+    from scripts.ledger import drift
+
+    events = _journal("vendor_read", "vendor_read", "note", "vendor_read")
+    committed = _committed(1, "chain-01")
+    refolded = _committed(4, "chain-04")
+
+    d = drift(committed, refolded, events)
+    assert d["rows"] == [], d
+    assert d["keys"] == [], "events_head is a citation, not a compared key"
+    assert d["anchored"] is True
+    assert d["since_head"] == {"vendor_read": 2, "note": 1}
+    assert "none moved a row" in d["reason"]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_pending_event_that_moves_a_row_is_still_caught():
+    """The half that must not be lost. Counting the suffix by type is a
+    report, never the verdict: the verdict is that the rows agree with a
+    refold that already read every pending event."""
+    from scripts.ledger import drift
+
+    events = _journal("vendor_read", "withdraw")
+    committed = _committed(1, "chain-01")
+    moved = _committed(2, "chain-02")
+    moved["findings"]["CYM-a"]["filing"]["state"] = "WITHDRAWN"
+
+    d = drift(committed, moved, events)
+    assert d["rows"] == ["CYM-a"], d
+    assert "CYM-a" in d["reason"]
+    assert d["anchored"] is True, "the head is fine; it is the row that drifted"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_every_other_top_level_key_is_still_compared():
+    """`counts` is the one the module docstring of tests/repo names: a ledger
+    whose rows are right beside tiles that are not. Only `events_head` is
+    exempt, and only because it is checked as a citation instead."""
+    from scripts.ledger import drift
+
+    events = _journal("note")
+    committed = _committed(1, "chain-01", counts={"VERIFIED FIXED": 9})
+    refolded = _committed(1, "chain-01")
+
+    d = drift(committed, refolded, events)
+    assert d["keys"] == ["counts"], d
+    assert "counts" in d["reason"]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+@pytest.mark.parametrize("seq,chain,why", [
+    (2, "not-the-chain", "a head the journal does not have at that line"),
+    (9, "chain-03", "a head past the end of the journal"),
+    (-1, "chain-01", "a head before the beginning"),
+])
+def test_a_head_the_journal_cannot_confirm_is_refused(seq, chain, why):
+    """The citation, checked. A ledger folded against some other journal --
+    a temp state directory leaking into the repository, a journal rewritten
+    underneath it -- names a line that is not there, and that is exactly what
+    `events_head` is for. Demoting it from a compared key to a citation must
+    not demote it to nothing.
+
+    What this no longer catches, said plainly: a head hand-rolled BACKWARDS to
+    an older line the journal really has. It passes here, over-reports the
+    suffix, and moves nothing else -- the rows are still compared against the
+    whole journal. `write_ledger` refuses that ledger at the moment it is
+    written (qa/state.py), which is where the invariant belongs.
+    """
+    from scripts.ledger import drift
+
+    events = _journal("note", "note", "note")
+    d = drift(_committed(seq, chain), _committed(3, "chain-03"), events)
+    assert d["anchored"] is False, why
+    assert "journal" in d["reason"]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_empty_journal_anchors_at_zero():
+    """A repository before its first event. `head()` returns seq 0 and an
+    empty chain, and that is a citation like any other."""
+    from scripts.ledger import drift
+
+    d = drift(_committed(0, ""), _committed(0, ""), [])
+    assert d["anchored"] is True and d["rows"] == [] and d["since_head"] == {}
