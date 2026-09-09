@@ -15,192 +15,287 @@
       "nodeid": ".claude/skills/deep-pass/SKILL.md::step-2",
       "claim": "Step 2 says \"Fingerprints come from the newest run record in state/runs/\". Any pytest invocation writes a run record, including this skill's own step-0 `pytest tests/meta -q`. Tonight the newest record was run-20260909T203159Z-77ca5a1 with 398 results, ALL of them tests/meta. Taken literally the audit scope becomes whatever that partial run collected: every vendor-facing check reads as 'not in this record' and is silently skipped, while 206 meta checks read as 'never audited'. Rule 1's shape -- a partial run must not stand in for a full one -- applied to the pass's own scoping. The fix used tonight: for each nodeid take its newest fingerprint across all run records.",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t2": "real",
+        "t1": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "real_votes": 3
     },
     {
       "id": "S02",
       "nodeid": ".claude/skills/deep-pass/SKILL.md::step-2",
       "claim": "Nothing filters nodeids whose test no longer exists. 72 of the 587 nodeids carrying a fingerprint in state/runs/ are dead -- tests/meta/test_pipeline_migration.py was deleted today, tests/meta/test_deep_pass_handover.py earlier. An unfiltered scope dispatches auditors to read functions that are not there, and they cannot report that as anything but confusion. Filter against `pytest --collect-only -q`.",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t2": "real",
+        "t1": "real",
+        "t3": "not-real"
+      },
+      "verdict": "real",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "real_votes": 2
     },
     {
       "id": "S03",
       "nodeid": "tests/repo/test_deep_pass_finished.py::test_no_confirmed_finding_was_left_unfixed_by_a_deep_pass",
       "claim": "SEVERE, and it is this afternoon's work. The guard reads retrospective {last: null, done: false} as 'the week was due and this pass did not do it' and fails. But that is the state of EVERY pass from step 0, where the file is opened, until step 11, where Tyden runs. Verified red just now against this run's own in-progress file. Step 6 runs `pytest tests/repo` BEFORE Tyden, and step 9 reverts the run's commits on a red that cannot be resolved -- so a pass following its own spine literally would revert its whole night because of a test written hours earlier. The guard cannot tell 'in progress' from 'skipped'. Rule 8's shape, missed in the file that quotes rule 8. Proposed fix: the pass writes finished:true as its last progress write; an unfinished file dated today is inconclusive (a pass is running), an unfinished file older than that is failed (a pass died without finishing), so the hole does not become an escape hatch. meta_tests.end=null did NOT raise, and the missing severity/real_votes keys from yesterday's shape are not read -- both checked.",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t2": "real",
+        "t1": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "real_votes": 3
     },
     {
       "id": "A01",
       "nodeid": "tests/meta/test_pipeline_handover.py::test_the_hook_does_not_paste_the_whole_report",
       "claim": "Two divergences, both mine from today. (a) The docstring's contract is that the hook prints the bold LEADS and not the prose under them; nothing asserts that. Swapping the lead for the whole block in deep_pass_handover.py pastes every paragraph and this check stays green -- it only forbids two strings from sections the hook never reads. (b) The 16-line cap is one below what the hook can legally emit: my own per-section caps are 5+5+3+2 = 15 leads, plus title and tail = 17. A report that fills every section reddens a META test, which aborts the session. Auditor reproduced both by running handover() on such a report.",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t2": "real",
+        "t1": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
       "commit": null,
-      "reproduced_by_the_pass": "Ran handover() on a report filling every section: 17 lines against the test's cap of 16. Confirmed."
+      "reproduced_by_the_pass": "Ran handover() on a report filling every section: 17 lines against the test's cap of 16. Confirmed.",
+      "real_votes": 3
     },
     {
       "id": "A02",
       "nodeid": "tests/meta/test_pipeline_handover.py::test_the_committed_report_parses",
       "claim": "The check asserts a line of the committed DEEP-PASS.md contains the literal \"#83\" -- content from the 2026-09-08 pass. CLAUDE.md and this skill both say DEEP-PASS.md is overwritten wholesale each run. THIS PASS OVERWRITES IT AT STEP 10, so the check goes red tonight, in tests/meta, which aborts every session, and step 9 would read that as an unresolvable red and revert the night. The auditor filed it cosmetic; the timing makes it the most urgent item in this pass. Same function, opposite direction: a MISSING DEEP-PASS.md returns green rather than inconclusive, so 'the report in the repository' is never actually held against anything.",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t2": "real",
+        "t1": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
       "commit": null,
-      "reproduced_by_the_pass": "grep '#83': three hits in tests/meta/test_pipeline_handover.py. Line 76 is inside the REPORT fixture, harmless. Line 119 is in test_the_hook_carries_the_handover_not_a_pointer and runs against tmp_path, harmless. Line 244 in test_the_committed_report_parses reads the REAL committed DEEP-PASS.md -- that is the one, and it is exactly one. Breaks at step 10 of this pass."
+      "reproduced_by_the_pass": "grep '#83': three hits in tests/meta/test_pipeline_handover.py. Line 76 is inside the REPORT fixture, harmless. Line 119 is in test_the_hook_carries_the_handover_not_a_pointer and runs against tmp_path, harmless. Line 244 in test_the_committed_report_parses reads the REAL committed DEEP-PASS.md -- that is the one, and it is exactly one. Breaks at step 10 of this pass.",
+      "real_votes": 3
     },
     {
       "id": "A03",
       "nodeid": "tests/repo/test_commit_trailers.py::test_the_effort_trailer_hook_is_installed_or_honestly_absent",
       "claim": "Mine from today. The check tests the hook by substring over its SOURCE TEXT, and both substrings it looks for ('CLAUDE_EFFORT', 'Effort:') already occur in the hook's own comments. Deleting every executable line after `set -e` leaves the check reporting passed with the reason 'the hook there records the effort a commit was written under', while no commit records anything. Opposite direction: core.hooksPath set to an ABSOLUTE path at the same directory is reported failed as 'the hook never runs', and git accepts that form and does run it.",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t2": "real",
+        "t1": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "real_votes": 3
     },
     {
       "id": "B01",
       "nodeid": "tests/mcp/test_trust_ladder.py::test_call_time_authorization_holds_for_anonymous",
       "claim": "SEVERE, class 'sends a false claim'. The check reads only the error class of an anonymous tools/call on a money tool. `executed` is the FALL-THROUGH: any JSON body carrying neither result nor error yields body=='' , matches no vocabulary, and lands on executed -> verdict=failed, 'an anonymous caller EXECUTED the tool', an S1 authorization bypass. qa/client.py:325-333 McpClient.raw() returns response.json() regardless of HTTP status, its own comment saying rpc() does not raise for status. The auditor called refusal_class directly: a 401 {\"detail\":\"Not authenticated\"}, a 500 and a 422 ALL return ('executed',''). So a failed read becomes an S1 accusation, and population carries body[:300] == '' so it ships with no evidence of execution at all. Rule 8, in a vendor-facing check. declared_by_tier in the same file guards its REST read for exactly this; call_raw is unguarded.",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t2": "real",
+        "t1": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "real_votes": 3
     },
     {
       "id": "B02",
       "nodeid": "tests/meta/test_pipeline_check_quality.py::test_every_check_can_fail",
       "claim": "The docstring says 'a check that holds for every input it could receive is not measuring anything'. For all_equal / set_equal / within_tolerance the test perturbs _sample(relation) -- the literals 7 and frozenset({'a','b'}) -- never the claim's own extractors or capture. So it proves relation_holds is non-constant, not that THIS claim can fail. A claim whose two sources are the same document read with the same spec (llms_txt and llms_txt_2 both resolve to /llms.txt) is constant-true, is role: verdict, and may open or close a finding; all four quality guards pass on it. The subset branch does not have the problem and its own comment says why.",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t2": "real",
+        "t1": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "real_votes": 3
     },
     {
       "id": "B03",
       "nodeid": "tests/reconciliation/test_reconcile.py::test_sources_agree",
       "claim": "Pair.fingerprint claims to hash 'what this comparison IS, not what it is called', which is what rule 5 and CHECK_CHANGED rest on. Its definition dict holds relation, tolerance_pct, prose_only, extractors, sources -- NOT subset_of_pair and NOT floor. Flipping subset: llms_txt -> live_species reverses the operands, the direction bug that nearly went to the vendor, and the fingerprint is byte-identical; verified for all four non-symmetric claims. Second axis: qa/report_plugin.py:311-314 REPLACES the AST-derived check_fingerprint with measurement.fingerprint instead of combining them, so editing the function body leaves the identity unchanged too. A reversed or rewritten claim keeps its pinned fingerprint, verification_owed never reopens, and the row stays VERIFIED FIXED.",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t2": "real",
+        "t1": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "real_votes": 3
     },
     {
       "id": "B04",
       "nodeid": "tests/meta/test_pipeline_check_quality.py::test_every_extractor_can_read_its_source",
       "claim": "Latent. The message says 'extractor produced an empty value' but the assertion catches only None and an empty frozenset; 0, [], '' and {} all pass. Reachable shapes: jsonpath: returning [] or {} when the anchor resolves but the container is empty, and count: returning 0 when a heading survives but its list stops rendering as bullets -- which is the 2026-09-05 llms.txt change this module was written for. No spec in claims.yaml yields either today.",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t2": "not-real",
+        "t1": "not-real",
+        "t3": "real"
+      },
+      "verdict": "minority",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "real_votes": 1
     },
     {
       "id": "C01",
       "nodeid": "tests/repo/test_deep_pass_finished.py::test_no_confirmed_finding_was_left_unfixed_by_a_deep_pass",
       "claim": "Mine from today, and a SECOND defect in the same test as S03. problems() returns early, skipping all three promise checks, whenever str(progress.get('at') or '')[:10] < '2026-09-09'. An ABSENT, empty or non-ISO `at` gives '' , which sorts below the gate, so {'run': 'deep-pass 2026-09-20', 'gaps': []} is green with no retrospective, no rule_changes key and no meta_tests. The gate is read from the field the pass itself writes and its absence is scored as 'predates the contract'. The same file chose the SAFE direction for an unreadable `last` (_days -> None -> treated as due) and the unsafe one for an unreadable `at`.",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t2": "real",
+        "t1": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "real_votes": 3
     },
     {
       "id": "C02",
       "nodeid": "tests/repo/test_deep_pass_finished.py::test_a_rule_change_carries_all_three_of_the_operators_conditions",
       "claim": "Mine from today, and it weakens THE OPERATOR'S OWN CONDITION of 2026-09-08: two of three independent agents. The code counts `sum(1 for v in spoken.values() if v == 'no')` and flags only `agreed < 2`, never checking that there are three votes. {'t1':'no','t2':'no'} -- the third agent never run, or its dissent simply not written down -- gives agreed == 2 and lands green on two of two. The failure string hardcodes the denominator it never verified ('{agreed} of 3 agents'). A 2-2 split across four votes also passes. The parametrisation only ever supplies three, so the denominator is never exercised.",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t2": "real",
+        "t1": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "real_votes": 3
     },
     {
       "id": "C03",
       "nodeid": "tests/repo/test_deep_pass_finished.py::test_growth_in_the_self_tests_is_reported_not_forbidden",
       "claim": "Mine from today. Problem iff (meta.get('end') or 0) > (meta.get('start') or 0), so a missing or null `end` coerces to 0 and real growth with no reason reads as no growth. That is exactly what audits/deep-pass-progress.json holds right now, because step 11 sets `end`. The same file draws the missing-vs-empty distinction explicitly for rule_changes (`if changes is None`) and drops it here. Auditor flagged lower confidence, arguing the module's 'form, not everything it did' disclaimer might cover it; that disclaimer is about unrecorded ACTIONS, not about a key the pass did write with a null in it.",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t2": "real",
+        "t1": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "real_votes": 3
     },
     {
       "id": "C04",
       "nodeid": "tests/repo/test_repo_consistency.py::test_committed_ledger_is_what_its_inputs_fold_to",
       "claim": "A ledger committed after `python scripts/ledger.py --events-only` -- a documented CLI path, and qa/fold.py:711-716 records it having happened -- goes through the `run is None` branch and sets `run_carried` (fold.py:721). The guard's refold always takes the run branch, which never sets that key, so keys == ['run_carried'] and the guard reads 'the committed rows fold correctly, but 1 top-level key(s) do not' on a ledger that IS what its inputs fold to. `ledger.py main()` under --check shares the fault. Cosmetic in that it accuses us and not the vendor, but it is precisely the 'guard red for a boring reason so it stops being read' failure that today's events_head change was made to remove, reintroduced through a different key.",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t2": "real",
+        "t1": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "real_votes": 3
     },
     {
       "id": "R01",
       "nodeid": "scripts/ledger.py::main --check",
       "claim": "Today's change made --check compose the run the committed ledger CITES instead of the newest admissible one. Nothing handles that record being absent. state/runs/ is gitignored with 305 of 697 force-tracked, and _track_run_record downgrades a tracking failure to a warning, so a ledger can cite a record that never reached the repository. `ledger.py --check` then dies with an unhandled KeyError naming the run id. Reproduced against a temp state dir citing run-does-not-exist. The old latest_admissible path was always present locally, so this is new.",
       "source": "review",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t2": "real",
+        "t1": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "real_votes": 3
     },
     {
       "id": "R02",
       "nodeid": "scripts/ledger.py::main --check",
       "claim": "Same path, second failure. When the cited run is no longer admissible, compose returns a ledger carrying rejected_run and --check compares it as an ordinary refold: it prints '1 committed row(s) are not what the journal and run records fold to' and advises re-folding, which would refuse to write. The rejection reason compose already computed, and which main() prints on every other path, never reaches the operator. Reproduced against a temp state dir citing a schema-1 record.",
       "source": "review",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t2": "real",
+        "t1": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "real_votes": 3
     },
     {
       "id": "R03",
       "nodeid": ".claude/hooks/deep_pass_handover.py::handover",
       "claim": "`for block in _blocks(body)[:cap]` applies the per-section cap to raw list items BEFORE the bold-lead filter, so an item written without a bold lead consumes a slot and prints nothing. A section whose first five items lack bold leads prints nothing at all even when item six is bolded, and the morning reads as quiet. The skill instructs the pass to bold every lead, so this is a drafting slip rather than an impossibility.",
       "source": "review",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t2": "real",
+        "t1": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "real_votes": 3
     },
     {
       "id": "R04",
       "nodeid": ".githooks/prepare-commit-msg",
       "claim": "The already-present check is `grep -qiE`, case-insensitive. A body line that is exactly 'effort: low' -- for instance a note about a task's effort class, which CLAUDE.md now asks every task to state in its first line -- suppresses the real trailer and that commit records nothing. The hook's own comment explains the earlier looser pattern was fixed because a body line can look like a trailer; the case-insensitivity reopens a narrower version of it.",
       "source": "review",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t2": "real",
+        "t1": "not-real",
+        "t3": "not-real"
+      },
+      "verdict": "minority",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "real_votes": 1
     },
     {
       "id": "R05",
       "nodeid": "tests/meta/test_pipeline_tamper.py",
       "claim": "The five new drift tests cover pending events, row drift, key drift and three bad anchors, but never the case where composing the cited run FAILS. Both R01 and R02 live in the path these tests were written to guard, and neither is exercised, so a fix to either can regress silently.",
       "source": "review",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t2": "not-real",
+        "t1": "not-real",
+        "t3": "not-real"
+      },
+      "verdict": "dropped",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "real_votes": 0
     }
   ],
   "retrospective": {
@@ -220,5 +315,18 @@
   },
   "decided_in_advance": "If an auditor claims a gap in tests/meta/test_pipeline_decisions.py, the fix would edit the test that pins the operator's decisions, and 1c says this pass does not touch that file. Such a finding goes to 'Ceka na tebe' by name whatever the three agents vote. Decided at step 2, so that it is not decided at 3am by whoever is holding the finding.",
   "cleared_by_audit": "Group 2 independently cleared tests/meta/test_pipeline_decisions.py (26 passed; the presence walk is parametrized from the pinned rows so a deletion fails, the SHA-256 comparison is real and all 15 digests match, both tripwire regexes match live text, and the negative control works) and tests/repo/test_state_guard.py (the refusal tests cannot pass if the refusal breaks; protect_state.py writes nothing under any branch). That closes the concern recorded in decided_in_advance -- no finding lands on the file this pass may not touch.",
-  "drift_verified_independently": "Group 3 was asked to break today's central change and could not. Rows are compared against compose(), which reads the whole working journal and rebuilds the FILING axis on every fold, so a pending event that moves anything is red before anyone folds it. Every other top-level key is still compared. The head is verified against events[seq-1]['chain'], and chain is a running hash (state.py:690), so matching it at seq authenticates the whole prefix rather than one line. A forward head cannot anchor, so the only non-current head that can is an older one -- the one relaxation the docstring names, and nothing else slipped through. write_ledger's refusal is live in every production path (check_journal=False appears nowhere outside test_pipeline_schema.py). Nuance, not a finding: the `seq == 0 and chain == \"\"` branch anchors by fiat against any journal, so a ledger folded under a fresh QA_STATE_DIR anchors green and is caught by the rows instead; the docstring credits the wrong half of the check for that one case."
+  "drift_verified_independently": "Group 3 was asked to break today's central change and could not. Rows are compared against compose(), which reads the whole working journal and rebuilds the FILING axis on every fold, so a pending event that moves anything is red before anyone folds it. Every other top-level key is still compared. The head is verified against events[seq-1]['chain'], and chain is a running hash (state.py:690), so matching it at seq authenticates the whole prefix rather than one line. A forward head cannot anchor, so the only non-current head that can is an older one -- the one relaxation the docstring names, and nothing else slipped through. write_ledger's refusal is live in every production path (check_journal=False appears nowhere outside test_pipeline_schema.py). Nuance, not a finding: the `seq == 0 and chain == \"\"` branch anchors by fiat against any journal, so a ledger folded under a fresh QA_STATE_DIR anchors green and is caught by the rows instead; the docstring credits the wrong half of the check for that one case.",
+  "triage_corrections": {
+    "C01": "t2 corrected the claim: a non-ISO `at` such as 'soon' sorts ABOVE the gate and does not return early. Only an absent or empty `at` does. The defect stands, narrower than filed.",
+    "R02": "t2 corrected the claim: the message is the KEYS one with zero row drift -- 'the committed rows fold correctly, but 2 top-level key(s) do not: [rejected_run, run_carried]' -- not the rows one. The substance holds: the three rejection reasons never reach the operator, who is told to re-fold.",
+    "S02": "t3 refuted it as filed and is right about the scope: the 72 dead nodeids exist only under a union over ALL run records. Step 2 as WRITTEN scopes to the newest record, which is by construction just-collected and holds no dead ids. t1 and t2 confirmed the count, so it carries 2 of 3 -- but t3's point changes the fix: S02 is not a defect in the spine today, it is a defect the S01 fix CREATES. Both land in one commit.",
+    "B02": "t2 corrected the example: llms_agent_count_self_consistent has been removed from claims.yaml, so the named instance is stale. The shape stands -- llms_txt_2 is still declared as the same URL as llms_txt, count: is in STRUCTURED, so such a claim would be constant-true, role verdict, and green under all four quality guards.",
+    "R01": "t2 measured 714 local run records against 305 tracked, and noted the currently cited record IS force-tracked, so a fresh clone is safe TODAY. What makes it reachable is the 409 untracked records plus _track_run_record downgrading a failure to a warning. Also: `--check --run <typo>` reaches it at once.",
+    "B03": "t2 found a second axis I had not: check_fingerprint() already folds callspec.fingerprint into the AST hash, and report_plugin.py:311 discards that combination in favour of measurement.fingerprint alone. It landed in 517731f with no stated rationale, so t2 could not verify the replacement as deliberate.",
+    "A01": "t1 split it and t1 is right; I was wrong and so was t2. Half (a) -- nothing asserts the hook prints leads rather than prose -- is real: t1 mutated the hook to paste whole blocks and all four assertions still held. Half (b), the 17-lines-against-a-cap-of-16, is NOT real: the test writes its own fixed REPORT fixture to tmp_path and never reads a real report, so the arithmetic can never redden it. I 'reproduced' (b) by running handover() on a full report -- the hook's behaviour -- and never checked the test's input. That is reproducing the mechanism and not the trigger, and it is the exact failure this round exists to catch. Do not raise the cap.",
+    "R04": "t1 refuted it with a command I should have run: `printf 'a commit\n\neffort: low\n' | git interpret-trailers --parse` echoes `effort: low`, so git parses trailer keys case-insensitively and a lowercase line IS an effort trailer. Removing -i would leave the identical suppression under the canonical spelling and would make the hook double-stamp. Verified independently by the pass. t2 voted real; t1 is right on the evidence. t1 names the residual weakness -- the grep scans the whole message rather than the trailer block -- as a DIFFERENT finding, not this one.",
+    "A01_final": "Three-way split resolved on primary evidence rather than on the count. t3 confirmed (b) the same way I did and made the same mistake: we both measured the HOOK and neither read the TEST's input. t1 read it. I then verified t1 by hand -- test_the_hook_does_not_paste_the_whole_report writes its own REPORT fixture to tmp_path and never opens a real report, so 17-against-16 cannot redden it. Fix (a) only. For (b) the right change is not raising the cap but deriving it from SECTIONS, so the magic number cannot drift away from what the hook can emit.",
+    "R04_final": "1 of 3, so minority report, and the pass agrees with the two who refused it. t1 and t3 both ran the hook and t1 ran `git interpret-trailers --parse`, which echoes `effort: low` -- git matches trailer tokens case-insensitively, so a lowercase line already IS an Effort trailer and -i is correct. Verified by the pass. t1 names the residual weakness as a different finding: the grep scans the whole message rather than the trailer block. Not filed tonight, not fixed tonight."
+  },
+  "effort_of_the_readers": "The operator asked, 2026-09-09, whether the three agents run at the same effort as the pass. They do not: check-auditor and finding-triage both carry model: opus, effort: high, while this skill carries xhigh. Decided: no change tonight, and the reason is evidence rather than comfort. CLAUDE.md's table puts 'a guard's assertion, review' at high-xhigh, so high already conforms. And tonight high outperformed xhigh in the place it counts: t1 at high refuted TWO findings this pass made at xhigh (A01b and R04), one of them with a command the xhigh pass never ran, and t2 at high found a second axis on B03 that the xhigh review missed. Three readers at high with a 2-of-3 rule buy redundancy where one reader at xhigh buys depth, and tonight the redundancy is what caught the errors. Raising it without evidence is the add-a-mechanism-because-it-sounds-better failure this whole upgrade was against. Handed to step 11 as its question 3, with tonight's counts as the first data point."
 }
