@@ -297,8 +297,6 @@ scripts/open_checks.py  the selector for a sweep over what is still open.
                      Always prepends tests/meta.
 scripts/inventory.py    the platform section map the dashboard renders. An
                      inventory, not a test suite. SAFE tier, never a POST.
-qa/messages.py       parses archived message files for the Correspondence
-                     panel. A library, not a command.
 state/thread.json    dead. A projection from 2026-09-04 that nothing reads;
                      render.py says so in as many words. It sits under state/
                      where the hook protects it, so it stays -- do not build

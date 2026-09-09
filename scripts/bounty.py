@@ -291,9 +291,10 @@ def fetch_inbox(client=None, agent_id: str | None = None) -> dict:
     reply personally" there.
 
     Nothing read it until 2026-09-07. bounty.py read my-reports and stopped;
-    serve.py --ask runs bounty.py; qa/messages.py parses an archive that
-    stopped being written in round one and says in its docstring that
-    correspondence now arrives through the bounty API -- true, but that API
+    serve.py --ask runs bounty.py; the only other reader was a parser for an
+    archive that stopped being written in round one (qa/messages.py, retired
+    2026-09-09), and it said in its own docstring that correspondence now
+    arrives through the bounty API -- true, but that API
     has two surfaces and we were reading one. Twenty-three messages had piled
     up, and the only reason any had been read was the operator asking out loud
     how a reply would be noticed. The answer was: it would not.

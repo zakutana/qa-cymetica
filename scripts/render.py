@@ -135,39 +135,6 @@ def _api_conversation() -> tuple[dict, dict]:
     return ours, theirs
 
 
-def _message_bodies() -> dict[str, dict]:
-    """Every message file, indexed by its id.
-
-    The journal records WHICH messages touch a finding; the words stay in the
-    files themselves. Reading them here is what puts the vendor's actual
-    sentences on the page instead of a summary of them -- and archive/ is
-    included, because where a file was filed afterwards says nothing about
-    what it said. Every such file lives under archive/ now; outbox/ is scanned
-    because reports.yaml shares it, and holds no messages.
-    """
-    from qa.messages import blocks, parse
-
-    out: dict[str, dict] = {}
-    for folder in (REPO_ROOT / "outbox",
-                   *sorted((REPO_ROOT / "archive").glob("*"))):
-        if not folder.is_dir():
-            continue
-        for path in sorted(folder.glob("*.md")):
-            meta = parse(path)
-            if meta is None or not meta.get("id"):
-                continue
-            out[meta["id"]] = {
-                "file": meta.get("file"),
-                "channel": meta.get("channel"),
-                "delivered_as": meta.get("delivered_as"),
-                "delivery_note": meta.get("delivery_note"),
-                "covers": meta.get("covers") or {},
-                "blocks": blocks(meta.get("body") or ""),
-                "body": meta.get("body") or "",
-            }
-    return out
-
-
 def _thread_for(row: dict, sent: dict, replied: dict, filed_at: dict) -> list[dict]:
     """The conversation about this finding, through their API, in order."""
     out = []
@@ -227,63 +194,11 @@ def _summary(row: dict) -> str | None:
     return note or None
 
 
-def _excerpt_for(source: dict, finding_id: str) -> str | None:
-    """The part of a message that discusses this finding, or nothing.
-
-    `covers` in the message's own frontmatter maps a heading to the findings
-    that section is about. A finding named in the message but not mapped to a
-    section gets NO excerpt rather than a wrong one -- the page then says the
-    message mentions it and points at the file, which is true, instead of
-    quoting a paragraph about something else.
-    """
-    if not source:
-        return None
-
-    needles = [n for n, ids in (source.get("covers") or {}).items()
-               if finding_id in (ids if isinstance(ids, list) else [ids])]
-    if not needles:
-        return None
-
-    parts = []
-    for needle in needles:
-        for heading, text in source.get("blocks") or []:
-            if needle.lower() in heading.lower():
-                parts.append(f"{heading}\n\n{text}".strip())
-    if parts:
-        return "\n\n".join(parts)
-
-    # Their messages are not shaped like ours: the vendor numbers answers as
-    # "1) ..." running on into a full paragraph, so nothing in them is a
-    # heading and the block split yields one nameless block. Fall back to the
-    # paragraph the needle begins, which is how `covers` was written anyway.
-    # Without this the single most valuable text on the page -- what they
-    # actually said -- rendered as nothing.
-    paragraphs = [p.strip() for p in (source.get("body") or "").split("\n\n")]
-    for needle in needles:
-        for para in paragraphs:
-            if para.lower().startswith(needle.lower()):
-                parts.append(para)
-    return "\n\n".join(parts) if parts else None
-
-
 def out_path() -> Path:
     from qa.state import state_dir
 
     override = __import__("os").environ.get("QA_STATE_DIR")
     return (state_dir() / "dashboard" / "index.html") if override else OUT
-
-
-def latest_run() -> dict:
-    """The newest ADMISSIBLE run, by started_at -- never the last filename.
-
-    Three copies of `sorted(glob(...))[-1]` used to decide which run the
-    dashboard was describing, so a one-result re-run became the run of record
-    for every number on the page.
-    """
-    from qa.state import latest_admissible_run_id, load_run
-
-    run_id = latest_admissible_run_id("R")
-    return load_run(run_id) if run_id else {}
 
 
 def build_payload(ledger: dict | None = None, inventory: dict | None = None,

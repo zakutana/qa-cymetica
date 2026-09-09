@@ -732,8 +732,9 @@ def test_the_a2a_inbox_is_read_and_each_message_recorded_once(tmp_path, monkeypa
 
     Found on 2026-09-07 by the operator asking how I would notice a reply.
     The answer was that I would not: bounty.py reads my-reports and nothing
-    else, serve.py --ask runs bounty.py, and qa/messages.py parses an archive
-    that stopped being written in round one. Twenty-three messages had
+    else, serve.py --ask runs bounty.py, and the only other reader parsed an
+    archive that stopped being written in round one (qa/messages.py, retired
+    2026-09-09 with the dead render helper that was its one importer). Twenty-three messages had
     accumulated in the a2a inbox and the only reason any of them had been read
     was that somebody asked out loud.
 
