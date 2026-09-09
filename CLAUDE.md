@@ -182,7 +182,11 @@ scripts/never_fired.py  which of our mechanisms have never once occurred in
                      exercised, so none is broken; what is left of them is a
                      judgement about whether we should have met the condition
                      by now, and that one is the operator's.
-scripts/migrate_ledger.py  one-shot, already run; refuses to run twice
+(migration)       the one-shot that brought the ledger under the contract ran
+                  2026-09-05; scripts/migrate_ledger.py was retired 2026-09-09,
+                  spent and unrunnable (it refused on any non-empty journal). The
+                  record it left is what remains: three `migrated` events and
+                  state/ledger.seed.json.
 tests/meta/       self-tests. Run FIRST and abort the session on failure, so
                   a broken guard stops every live request.
 tests/repo/       repository consistency. Deliberately NOT in tests/meta:

@@ -93,7 +93,9 @@ def test_committed_ledger_is_what_its_inputs_fold_to():
         conclude(Measurement(
             verdict="inconclusive",
             reason=f"{why}; there is nothing to check it against until "
-                   f"scripts/migrate_ledger.py has run",
+                   f"the ledger is under the contract (the one-shot migration "
+                   f"ran on 2026-09-05; its script was retired on 2026-09-09 "
+                   f"and the `migrated` events are the record)",
             sources={"ledger": "state/ledger.json"},
         ))
         return

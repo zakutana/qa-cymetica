@@ -184,7 +184,7 @@ def test_only_state_module_writes_state_files():
     scanned = sorted({p for root in roots for p in REPO.glob(root)})
     for path in scanned:
         rel = path.relative_to(REPO).as_posix()
-        if rel in ("qa/state.py", "scripts/migrate_ledger.py"):
+        if rel == "qa/state.py":
             continue
         source = path.read_text(encoding="utf-8")
         tree = ast.parse(source)
