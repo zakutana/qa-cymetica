@@ -1,0 +1,42 @@
+#!/bin/sh
+# Record which effort wrote this commit, for the weekly retrospective.
+#
+# `Co-Authored-By` already names the model. Effort is the other half of the
+# operator's table in CLAUDE.md, and nothing recorded it. $CLAUDE_EFFORT carries
+# the EFFECTIVE value -- a subagent whose frontmatter says `effort: high` reads
+# `high` inside a session set to `max` -- so the trailer says what actually ran,
+# not what the session was set to.
+#
+# Silent in three cases, each on purpose:
+#   * no $CLAUDE_EFFORT      the operator committing by hand. Nobody's effort
+#                            setting wrote it, and inventing one would put a
+#                            number in the retrospective that means nothing.
+#   * a trailer already there an amend and a rebase both replay this hook, and
+#                            two Effort: lines would be read as two commits.
+#   * anything unexpected    exit 0 regardless. A bookkeeping hook may never be
+#                            the reason a commit cannot be made.
+#
+# Installed with `git config core.hooksPath .githooks`, which lives in
+# .git/config and cannot be committed -- so a fresh clone does not have it and
+# tests/repo/test_commit_trailers.py reports that as inconclusive, not failed.
+set -e
+
+msg_file="$1"
+[ -n "$msg_file" ] || exit 0
+[ -f "$msg_file" ] || exit 0
+[ -n "$CLAUDE_EFFORT" ] || exit 0
+
+# Only the trailer we would add. A commit whose prose happens to contain the
+# word effort is not one that already carries the trailer.
+if grep -qi '^Effort:[[:space:]]' "$msg_file"; then
+    exit 0
+fi
+
+# A message file whose last line has no newline would otherwise get the trailer
+# glued onto the end of it.
+if [ -s "$msg_file" ] && [ -n "$(tail -c 1 "$msg_file")" ]; then
+    printf '\n' >> "$msg_file"
+fi
+
+printf 'Effort: %s\n' "$CLAUDE_EFFORT" >> "$msg_file"
+exit 0
