@@ -99,10 +99,19 @@ Nothing may be added without something being removed.
   skill **departing** from an operator instruction (the minority report vs "discard
   everything below two votes") — under the new boundary that needs the operator's
   word, one way or the other (see "Open for the operator").
-* **A fourth imbalance the brief did not list**: `evidence/` — 5 332 tracked files,
-  206 MB, +729 files / +52 MB on 09-08 alone, of which 93 files / 16.7 MB were cited
-  only by console `vendor_read` events that nothing reads. Not acted on here
-  (retention is a decision); named for the operator.
+* **A fourth imbalance the brief did not list**: `evidence/` — 5 346 files, 196 MB,
+  +729 files / +52 MB on 09-08 alone. Measured by writer, and the first answer was
+  wrong: the console is **not** the main writer. ~5 000 files (~170 MB) are written by
+  the **test suite** — every check stores the whole request and response of every call
+  it makes, on every run, and a sweep runs every check
+  (`tests/pinned/test_documented_404.py` alone: 1 927 files;
+  `tests/rest/test_bounty_pipeline.py`: 36 MB). Content addressing does not dedupe them
+  because the vendor's bodies carry changing timestamps and ids. Scripts, the console
+  among them, wrote 321 files / 28 MB. Only 279 of the 5 346 are cited by the journal at
+  all; the rest are cited by run records. Second store, on disk: `state/runs/` — 645
+  records, 57 MB, of which 305 are tracked (`scripts/ledger.py::_track_run_record`
+  force-adds the one a fold stands on; the rest are gitignored and never pruned). Not
+  acted on here (retention is a decision); named for the operator.
 
 ## The three variants
 
@@ -521,10 +530,14 @@ the pattern is not already held by `read-the-whole-path-before-explaining-it`.
 
 ## Open for the operator (decisions, not steps — one word each)
 
-* **Evidence retention.** `evidence/` grows ~50 MB a day, a third of it console polls
-  nothing reads (only `vendor_status`, `filing_outcome`, `reply`, `verification_outcome`
-  evidence is load-bearing, `qa/fold.py:463-471`). Keep committing, or V2's
-  change-only `vendor_read` which stops capturing them.
+* **Evidence retention.** `evidence/` grows ~50 MB a day and is 196 MB. The writer is
+  the **test suite**, not the console: every check stores the whole request and response
+  of every call on every run, and nothing dedupes them because their bodies change. Of
+  the whole store only 99 files / 0.9 MB are load-bearing — the evidence the fold
+  refuses a filing move without (`qa/fold.py:463-471`). Three answers, one word: keep
+  committing all of it; stop committing evidence a check merely passed on (keep it on
+  disk, gitignored, like `state/runs/`); or cap what is stored per response. This is the
+  largest growth mechanism in the repository and V1 does not touch it.
 * **Three dead tracked files under `state/`** a session cannot remove (the hook refuses):
   `state/ledger.seed.json`, `state/thread.json`, `state/inventory.before-fix.json`.
   `git rm` by hand, or leave.
