@@ -109,11 +109,16 @@ def handover(report: str) -> list[str]:
         body = next((text for head, text in bodies.items() if wanted in head), None)
         if body is None:
             continue
-        for block in _blocks(body)[:cap]:
-            bold = re.search(r"\*\*(.+?)\*\*", block)
-            if not bold:
-                continue
-            lead = " ".join(bold.group(1).split())
+        # Cap the LEADS, not the raw items. Slicing before the filter let an
+        # item written without a bold lead consume a slot and print nothing:
+        # five unbolded items under "Ceka na tebe" and the bolded sixth was
+        # never reached, so the hook printed nothing at all and the morning
+        # read as quiet. Found 2026-09-09, three votes of three.
+        leads = (m.group(1) for m in
+                 (re.search(r"\*\*(.+?)\*\*", block) for block in _blocks(body))
+                 if m)
+        for raw in list(leads)[:cap]:
+            lead = " ".join(raw.split())
             if len(lead) > LEAD_CHARS:
                 lead = lead[:LEAD_CHARS - 1].rstrip() + "…"
             lines.append(f"  {label}: {lead}")
