@@ -374,6 +374,56 @@ def render(vocabs: list[dict], zeros_only: bool = False) -> str:
     return "\n".join(lines)
 
 
+def audit_scope(audited: dict, runs: list[dict],
+                live: set[str] | None = None) -> list[str]:
+    """Which checks the deep pass's contract audit still owes a reading.
+
+    Prose until 2026-09-09, and the prose was wrong twice.
+
+    It said "fingerprints come from the newest run record". Every pytest
+    invocation writes a run record -- including the pass's own step-0
+    `pytest tests/meta -q` -- so the newest record is normally a PARTIAL run.
+    On 2026-09-09 it held 398 results, every one of them tests/meta: read
+    literally, every vendor-facing check was simply absent from it and dropped
+    out of scope without a word, while two hundred meta checks read as never
+    audited. Rule 1's shape -- a partial run standing in for a full one --
+    applied to the pass's own scoping.
+
+    So: each nodeid's NEWEST known fingerprint across all records, newest
+    first. Which then needs the second half, and only because of the first: the
+    union over every record carries the nodeids of tests that no longer exist
+    (72 of 587 that night, including a file that same day had deleted), and an
+    auditor sent to read a function that is not there can report nothing but
+    confusion. `live` is what still collects.
+
+    Both were found by running the pass against itself. They are one function
+    now rather than two paragraphs, because a paragraph cannot be red.
+    """
+    if live is None:
+        live = {f"{rel}::{name}" for rel, name, _ in _test_functions()}
+    live = {n.replace("\\", "/") for n in live}
+
+    newest: dict[str, str] = {}
+    for run in runs:
+        for result in run.get("results") or []:
+            nodeid = str(result.get("nodeid") or "").replace("\\", "/")
+            fingerprint = result.get("check_fingerprint")
+            if nodeid and fingerprint and nodeid not in newest:
+                newest[nodeid] = fingerprint
+
+    def function_of(nodeid: str) -> str:
+        return nodeid.split("[", 1)[0]
+
+    owed = []
+    for nodeid, fingerprint in newest.items():
+        if function_of(nodeid) not in live:
+            continue
+        seen = (audited.get(nodeid) or {}).get("fingerprints") or []
+        if fingerprint not in seen:
+            owed.append(function_of(nodeid))
+    return sorted(set(owed))
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="never_fired.py", description=__doc__)
     parser.add_argument("--zeros", action="store_true",

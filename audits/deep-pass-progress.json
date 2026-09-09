@@ -21,8 +21,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "pending",
       "real_votes": 3
     },
     {
@@ -36,8 +36,8 @@
         "t3": "not-real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "pending",
       "real_votes": 2
     },
     {
@@ -51,8 +51,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "2ece23b",
       "real_votes": 3
     },
     {
@@ -66,8 +66,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "f090d9b",
       "reproduced_by_the_pass": "Ran handover() on a report filling every section: 17 lines against the test's cap of 16. Confirmed.",
       "real_votes": 3
     },
@@ -82,8 +82,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "f090d9b",
       "reproduced_by_the_pass": "grep '#83': three hits in tests/meta/test_pipeline_handover.py. Line 76 is inside the REPORT fixture, harmless. Line 119 is in test_the_hook_carries_the_handover_not_a_pointer and runs against tmp_path, harmless. Line 244 in test_the_committed_report_parses reads the REAL committed DEEP-PASS.md -- that is the one, and it is exactly one. Breaks at step 10 of this pass.",
       "real_votes": 3
     },
@@ -98,8 +98,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "c682a74",
       "real_votes": 3
     },
     {
@@ -113,8 +113,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "2eb58a0",
       "real_votes": 3
     },
     {
@@ -128,8 +128,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "8ec5b45",
       "real_votes": 3
     },
     {
@@ -143,9 +143,11 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
-      "real_votes": 3
+      "fixed": true,
+      "commit": "8ec5b45",
+      "real_votes": 3,
+      "deferred_part": "The report_plugin axis is NOT fixed and goes to the operator: it replaces the AST check_fingerprint with measurement.fingerprint instead of combining them, so editing a check's body leaves its identity unchanged. Combining moves all 41 rows at once and one reader could not establish from git history whether the replacement was deliberate.",
+      "deferred_to_operator": true
     },
     {
       "id": "B04",
@@ -173,8 +175,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "2ece23b",
       "real_votes": 3
     },
     {
@@ -188,8 +190,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "2ece23b",
       "real_votes": 3
     },
     {
@@ -203,8 +205,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "2ece23b",
       "real_votes": 3
     },
     {
@@ -218,8 +220,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "83aea68",
       "real_votes": 3
     },
     {
@@ -233,8 +235,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "83aea68",
       "real_votes": 3
     },
     {
@@ -248,8 +250,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "83aea68",
       "real_votes": 3
     },
     {
@@ -263,8 +265,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "f090d9b",
       "real_votes": 3
     },
     {
@@ -296,13 +298,38 @@
       "fixed": false,
       "commit": null,
       "real_votes": 0
+    },
+    {
+      "id": "S04",
+      "nodeid": ".claude/skills/deep-pass/SKILL.md::step-11",
+      "claim": "Found by the operator's question, 2026-09-09: does the week see today's review, and the fact they asked about the agents' effort? Two gaps in what step 11 reads. (1) Its material list does not include `git log -p -- audits/deep-pass-progress.json`, so the pass's own notebook -- the richest record of any night, holding every vote, every correction and every question put to the pass -- is invisible to the week. Step 10 reads it; step 11 does not, and the file is overwritten each run so only git history holds the past ones. Exactly parallel to the `git log -p -- DEEP-PASS.md` pointer already there. (2) The log format is `--stat --format='%h %ad %s%n%(trailers)'`, which gives the SUBJECT and the trailers and not the body -- and this repository deliberately keeps its reasoning in commit bodies. The week would read 'deep pass: three readers, 16 real' and none of why. Both are one-line fixes to the same code block.",
+      "source": "operator-question",
+      "votes": null,
+      "verdict": null,
+      "fixed": true,
+      "commit": "pending"
     }
   ],
   "retrospective": {
     "last": null,
     "done": false
   },
-  "rule_changes": [],
+  "rule_changes": [
+    {
+      "id": "RC1",
+      "what": "Four changes to the deep pass's spine plus the code one of them needs. Step 2's audit scope moves from 'the newest run record' to each live nodeid's newest fingerprint across all records, and that recipe becomes scripts/never_fired.py::audit_scope() rather than a paragraph. Step 11's material gains `git log -p -- audits/deep-pass-progress.json` and %b, so the week can see the notebook and the commit bodies. A new step 11b writes meta_tests.end and finished:true on every pass. Step 5 must set deferred_to_operator on a gap it hands over.",
+      "why": "S01: every pytest invocation writes a run record including step 0's own, so 'the newest' is normally a PARTIAL run -- tonight 398 results, all tests/meta -- and the literal reading would have dropped every vendor-facing check out of scope in silence. Rule 1's shape applied to the pass's own scoping. S02: the union that fixes it carries 72 dead nodeids, so it needs the liveness filter with it. S04: the operator asked whether the week would see that night's review and their own question about the agents' effort; it would not have, because step 10 reads the notebook and step 11 did not, and %s is the subject while this repository keeps its reasoning in the body. C03/S03 second halves: meta_tests.end was written only when a week was due, so growth was unmeasured six days in seven, and without `finished` every in-flight pass was indistinguishable from one that skipped its week. And deferred_to_operator was never written by anything, so the guard could not tell a proper handover from an abandoned finding.",
+      "votes": {
+        "t1": "no",
+        "t2": "no",
+        "t3": "no"
+      },
+      "test": "tests/repo/test_audit_scope.py::test_a_partial_run_does_not_shrink_the_audit",
+      "commit": "pending",
+      "handover": true,
+      "what_the_readers_caught": "All three voted no, and between them they found five defects in the change that did not move the vote. Two readers independently: the step-2 recipe did not RUN -- a heredoc turned the escape in print('\n'.join(scope)) into a real newline, the third time that trap fired tonight and this time in the snippet written to replace prose with code. Two readers: 'write nothing to audits/' contradicted the bolded instruction eight lines below to append each gap as it arrives, which is the one thing a compaction destroys. Two readers: liveness() compared calendar days, so a pass crossing midnight read as dead -- and it WAS red, on this pass, when the clock rolled to 2026-09-10 while it was still running. A day boundary in the guard over a job named for the night. One reader: the new prose passed the operator-quote tripwire only because a line break fell between 'the operator' and the date, so a re-wrap would have turned a tests/meta test red and aborted every session. One reader: deferred_to_operator had never been written by anything. All five fixed before this landed."
+    }
+  ],
   "meta_tests": {
     "start": 225,
     "end": null,

@@ -1017,10 +1017,11 @@
   },
   "tests/meta/test_pipeline_fold.py::test_a_failed_read_marks_every_row_and_a_clean_one_clears_it": {
    "fingerprints": [
-    "ed8d66007e08d68bb0dbe8fa56c1b65147df6127df85f5fc827035f766f8281d"
+    "ed8d66007e08d68bb0dbe8fa56c1b65147df6127df85f5fc827035f766f8281d",
+    "97ca05ceb9380d3e08c75f16108aa56cbbd8ba62791623377001b9a70a5175c2"
    ],
-   "at": "2026-09-07T20:50:41+00:00",
-   "run_id": "run-20260907T201230Z-7fee4cf",
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45",
    "gap_claimed": false
   },
   "tests/meta/test_pipeline_fold.py::test_a_full_run_can_say_a_check_is_gone_and_a_partial_one_cannot": {
@@ -1429,10 +1430,11 @@
   "tests/meta/test_pipeline_render.py::test_every_vendor_reply_carries_a_stable_date": {
    "fingerprints": [
     "bfd96dd218d71feb375e7e22a2c9c0ebc7c8d6872c99fa3290be2a1375a44816",
-    "4f7a066c9bb09231abe45f917c5af50e80e289e547bf2fe55ed428da96d2a973"
+    "4f7a066c9bb09231abe45f917c5af50e80e289e547bf2fe55ed428da96d2a973",
+    "2045f1122da0ea60e90f82dc60c8520a4286c6536764493bef8eb2020eaa359e"
    ],
-   "at": "2026-09-08T15:18:57+00:00",
-   "run_id": "run-20260908T150954Z-95f0a70",
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45",
    "gap_claimed": true
   },
   "tests/meta/test_pipeline_render.py::test_every_verdict_the_inventory_can_produce_is_drawable": {
@@ -1662,10 +1664,11 @@
   "tests/meta/test_pipeline_withdraw.py::test_only_state_module_writes_state_files": {
    "fingerprints": [
     "fc4716151d75a068fe6d0b709d6ee4d520038c4fba9768ddc7627f86321f173f",
-    "ecd5bdfb19a01222cfdf88b9ebfd9fe536e6c13ff0ed9c6dd9256eaa9426a11b"
+    "ecd5bdfb19a01222cfdf88b9ebfd9fe536e6c13ff0ed9c6dd9256eaa9426a11b",
+    "5cfcb2281451cb5142752411b1c746244610bf97c272a22ef9043c88d7147a2c"
    ],
-   "at": "2026-09-08T15:18:57+00:00",
-   "run_id": "run-20260908T150954Z-95f0a70",
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45",
    "gap_claimed": true
   },
   "tests/meta/test_pipeline_withdraw.py::test_the_hardcoded_withdrawal_dict_is_gone": {
@@ -1743,28 +1746,31 @@
   },
   "tests/repo/test_live_server.py::test_the_page_knows_which_render_it_is": {
    "fingerprints": [
-    "ef000265196c0cad5858b57fcfce42b6f53f12122e3e234f28d92a6707e3f3d0"
+    "ef000265196c0cad5858b57fcfce42b6f53f12122e3e234f28d92a6707e3f3d0",
+    "6147dcfe2c98f1bec2436a1c606ea028733abf16ac29c4113a37637b50f14669"
    ],
-   "at": "2026-09-07T20:50:41+00:00",
-   "run_id": "run-20260907T201230Z-7fee4cf",
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45",
    "gap_claimed": true
   },
   "tests/repo/test_repo_consistency.py::test_committed_dashboard_matches_the_committed_ledger": {
    "fingerprints": [
     "2bc7fc550147f284d30f55237b5e63f4305f9758ce589136defa8151b6df9f34",
-    "6d2675833ee3f8becf9c93d8e23093943c6d455b7e5abff48688898dc5a7fce1"
+    "6d2675833ee3f8becf9c93d8e23093943c6d455b7e5abff48688898dc5a7fce1",
+    "d9f4efa66522b005dcbd73bb655e49cb79ca05961e380260f01a21c7da962d11"
    ],
-   "at": "2026-09-08T15:18:57+00:00",
-   "run_id": "run-20260908T150954Z-95f0a70",
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45",
    "gap_claimed": true
   },
   "tests/repo/test_repo_consistency.py::test_committed_ledger_is_what_its_inputs_fold_to": {
    "fingerprints": [
     "a61d19f394f36d925e52dec3797b17640651da3f44faf78f082af0f3f9a48088",
-    "9134f23e61a7e79e5db9723c80659ab2a779a8948e50db71dbde6b2f7d7c77f0"
+    "9134f23e61a7e79e5db9723c80659ab2a779a8948e50db71dbde6b2f7d7c77f0",
+    "602b8547ba0e17e3721ce6ea80e012bb648376c68d1bc9d6909b351edb91b7e5"
    ],
-   "at": "2026-09-08T15:18:57+00:00",
-   "run_id": "run-20260908T150954Z-95f0a70",
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45",
    "gap_claimed": true
   },
   "tests/repo/test_repo_consistency.py::test_every_run_record_the_state_cites_is_in_the_repository": {
@@ -2266,10 +2272,11 @@
   },
   "tests/repo/test_deep_pass_finished.py::test_no_confirmed_finding_was_left_unfixed_by_a_deep_pass": {
    "fingerprints": [
-    "bf552236f034d0965eab71b5326a130a75ad6318960b29d254c19b475f7a2192"
+    "bf552236f034d0965eab71b5326a130a75ad6318960b29d254c19b475f7a2192",
+    "1feefdd11d331da0f147564a02043c62eec6ee206bfef6f11819fb122227b867"
    ],
-   "at": "2026-09-08T15:18:57+00:00",
-   "run_id": "run-20260908T150954Z-95f0a70",
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45",
    "gap_claimed": true
   },
   "tests/meta/test_pipeline_channels.py::test_an_answer_we_cannot_time_is_not_an_unanswered_question": {
@@ -2287,6 +2294,2260 @@
    "at": "2026-09-08T15:18:57+00:00",
    "run_id": "run-20260908T150954Z-95f0a70",
    "gap_claimed": false
+  },
+  "tests/meta/test_guard_is_real.py::test_probe_only_endpoints_refuse_mutate_even_when_enabled[/api/v1/funding/withdraw-body0]": {
+   "fingerprints": [
+    "6662330ed6f38f8c082f5b9b91886274a0a3527f87d5e09ea1867700ebca5615"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_guard_is_real.py::test_probe_only_endpoints_refuse_mutate_even_when_enabled[/api/v1/funding/deposit-body1]": {
+   "fingerprints": [
+    "6662330ed6f38f8c082f5b9b91886274a0a3527f87d5e09ea1867700ebca5615"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_guard_is_real.py::test_probe_only_endpoints_refuse_mutate_even_when_enabled[/mcp/v1/agents/me/upgrade-body2]": {
+   "fingerprints": [
+    "6662330ed6f38f8c082f5b9b91886274a0a3527f87d5e09ea1867700ebca5615"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_guard_is_real.py::test_probe_only_endpoints_refuse_mutate_even_when_enabled[/mcp/v1/register-body3]": {
+   "fingerprints": [
+    "6662330ed6f38f8c082f5b9b91886274a0a3527f87d5e09ea1867700ebca5615"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_guard_is_real.py::test_probe_only_endpoints_refuse_mutate_even_when_enabled[/api/v1/prop/signup-body4]": {
+   "fingerprints": [
+    "6662330ed6f38f8c082f5b9b91886274a0a3527f87d5e09ea1867700ebca5615"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_adapters.py::test_read_outcomes_are_classified_not_assumed[200-{\"reports\": [], \"total\": 0}-ok]": {
+   "fingerprints": [
+    "9ea0ae1f7f5b867131c857d322be00ddaa4e72775ef776b5b26c346dfceac48a"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_adapters.py::test_read_outcomes_are_classified_not_assumed[401-{\"detail\": \"Invalid API key\"}-unauthorized]": {
+   "fingerprints": [
+    "9ea0ae1f7f5b867131c857d322be00ddaa4e72775ef776b5b26c346dfceac48a"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_adapters.py::test_read_outcomes_are_classified_not_assumed[403-{\"detail\": \"forbidden\"}-forbidden]": {
+   "fingerprints": [
+    "9ea0ae1f7f5b867131c857d322be00ddaa4e72775ef776b5b26c346dfceac48a"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_adapters.py::test_read_outcomes_are_classified_not_assumed[404-not found-not_found]": {
+   "fingerprints": [
+    "9ea0ae1f7f5b867131c857d322be00ddaa4e72775ef776b5b26c346dfceac48a"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_adapters.py::test_read_outcomes_are_classified_not_assumed[200-<html>login</html>-malformed]": {
+   "fingerprints": [
+    "9ea0ae1f7f5b867131c857d322be00ddaa4e72775ef776b5b26c346dfceac48a"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_adapters.py::test_read_outcomes_are_classified_not_assumed[500-boom-server_error]": {
+   "fingerprints": [
+    "9ea0ae1f7f5b867131c857d322be00ddaa4e72775ef776b5b26c346dfceac48a"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_adapters.py::test_read_outcomes_are_classified_not_assumed[503--server_error]": {
+   "fingerprints": [
+    "9ea0ae1f7f5b867131c857d322be00ddaa4e72775ef776b5b26c346dfceac48a"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_admissibility.py::test_every_committed_run_is_inadmissible_for_a_named_reason[20260904T100429]": {
+   "fingerprints": [
+    "33241e68ff57c41d7ddbe91d9bb33aa0f538a2359db23bbc0e2dd7f25e89179a"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_admissibility.py::test_every_committed_run_is_inadmissible_for_a_named_reason[20260904T100559]": {
+   "fingerprints": [
+    "33241e68ff57c41d7ddbe91d9bb33aa0f538a2359db23bbc0e2dd7f25e89179a"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_admissibility.py::test_every_committed_run_is_inadmissible_for_a_named_reason[20260904T101515]": {
+   "fingerprints": [
+    "33241e68ff57c41d7ddbe91d9bb33aa0f538a2359db23bbc0e2dd7f25e89179a"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_admissibility.py::test_every_committed_run_is_inadmissible_for_a_named_reason[20260904T102903]": {
+   "fingerprints": [
+    "33241e68ff57c41d7ddbe91d9bb33aa0f538a2359db23bbc0e2dd7f25e89179a"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_admissibility.py::test_every_committed_run_is_inadmissible_for_a_named_reason[20260904T102937]": {
+   "fingerprints": [
+    "33241e68ff57c41d7ddbe91d9bb33aa0f538a2359db23bbc0e2dd7f25e89179a"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_admissibility.py::test_every_committed_run_is_inadmissible_for_a_named_reason[20260904T123402]": {
+   "fingerprints": [
+    "33241e68ff57c41d7ddbe91d9bb33aa0f538a2359db23bbc0e2dd7f25e89179a"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_admissibility.py::test_every_committed_run_is_inadmissible_for_a_named_reason[20260904T125841]": {
+   "fingerprints": [
+    "33241e68ff57c41d7ddbe91d9bb33aa0f538a2359db23bbc0e2dd7f25e89179a"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_admissibility.py::test_every_committed_run_is_inadmissible_for_a_named_reason[20260904T125947]": {
+   "fingerprints": [
+    "33241e68ff57c41d7ddbe91d9bb33aa0f538a2359db23bbc0e2dd7f25e89179a"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_admissibility.py::test_every_committed_run_is_inadmissible_for_a_named_reason[20260904T130132]": {
+   "fingerprints": [
+    "33241e68ff57c41d7ddbe91d9bb33aa0f538a2359db23bbc0e2dd7f25e89179a"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_admissibility.py::test_every_committed_run_is_inadmissible_for_a_named_reason[20260904T131102]": {
+   "fingerprints": [
+    "33241e68ff57c41d7ddbe91d9bb33aa0f538a2359db23bbc0e2dd7f25e89179a"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_admissibility.py::test_every_committed_run_is_inadmissible_for_a_named_reason[20260904T131713]": {
+   "fingerprints": [
+    "33241e68ff57c41d7ddbe91d9bb33aa0f538a2359db23bbc0e2dd7f25e89179a"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_admissibility.py::test_every_committed_run_is_inadmissible_for_a_named_reason[20260904T131813]": {
+   "fingerprints": [
+    "33241e68ff57c41d7ddbe91d9bb33aa0f538a2359db23bbc0e2dd7f25e89179a"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_admissibility.py::test_every_committed_run_is_inadmissible_for_a_named_reason[20260904T131842]": {
+   "fingerprints": [
+    "33241e68ff57c41d7ddbe91d9bb33aa0f538a2359db23bbc0e2dd7f25e89179a"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_check_quality.py::test_every_extractor_can_read_its_source[agent_names]": {
+   "fingerprints": [
+    "0bbb9ba23912587d9a6b8d80ac73bfb890904ca816dc0750d72e8b8ac0a38de3"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_check_quality.py::test_every_extractor_can_read_its_source[agent_count]": {
+   "fingerprints": [
+    "0bbb9ba23912587d9a6b8d80ac73bfb890904ca816dc0750d72e8b8ac0a38de3"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_check_quality.py::test_every_extractor_can_read_its_source[mcp_tool_names_documented_exist]": {
+   "fingerprints": [
+    "0bbb9ba23912587d9a6b8d80ac73bfb890904ca816dc0750d72e8b8ac0a38de3"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_check_quality.py::test_every_extractor_can_read_its_source[skills_subset]": {
+   "fingerprints": [
+    "0bbb9ba23912587d9a6b8d80ac73bfb890904ca816dc0750d72e8b8ac0a38de3"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_check_quality.py::test_every_extractor_can_read_its_source[commit_count]": {
+   "fingerprints": [
+    "0bbb9ba23912587d9a6b8d80ac73bfb890904ca816dc0750d72e8b8ac0a38de3"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_check_quality.py::test_every_check_can_fail[agent_names]": {
+   "fingerprints": [
+    "e728ca4da34b7358ad1041d78820c3fa23eb62463257ccbdcb9e2cb6420c0b44"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_check_quality.py::test_every_check_can_fail[agent_count]": {
+   "fingerprints": [
+    "e728ca4da34b7358ad1041d78820c3fa23eb62463257ccbdcb9e2cb6420c0b44"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_check_quality.py::test_every_check_can_fail[mcp_tool_names_documented_exist]": {
+   "fingerprints": [
+    "e728ca4da34b7358ad1041d78820c3fa23eb62463257ccbdcb9e2cb6420c0b44"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_check_quality.py::test_every_check_can_fail[skills_subset]": {
+   "fingerprints": [
+    "e728ca4da34b7358ad1041d78820c3fa23eb62463257ccbdcb9e2cb6420c0b44"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_check_quality.py::test_every_check_can_fail[commit_count]": {
+   "fingerprints": [
+    "e728ca4da34b7358ad1041d78820c3fa23eb62463257ccbdcb9e2cb6420c0b44"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_check_quality.py::test_a_prose_only_comparison_cannot_mint_a_finding[agent_names]": {
+   "fingerprints": [
+    "e8be93be039dbe582d85250ab6d1a3df51fb2d3b7320f964ae63f9feb3a96d6b"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_check_quality.py::test_a_prose_only_comparison_cannot_mint_a_finding[agent_count]": {
+   "fingerprints": [
+    "e8be93be039dbe582d85250ab6d1a3df51fb2d3b7320f964ae63f9feb3a96d6b"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_check_quality.py::test_a_prose_only_comparison_cannot_mint_a_finding[mcp_tool_names_documented_exist]": {
+   "fingerprints": [
+    "e8be93be039dbe582d85250ab6d1a3df51fb2d3b7320f964ae63f9feb3a96d6b"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_check_quality.py::test_a_prose_only_comparison_cannot_mint_a_finding[skills_subset]": {
+   "fingerprints": [
+    "e8be93be039dbe582d85250ab6d1a3df51fb2d3b7320f964ae63f9feb3a96d6b"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_check_quality.py::test_a_prose_only_comparison_cannot_mint_a_finding[commit_count]": {
+   "fingerprints": [
+    "e8be93be039dbe582d85250ab6d1a3df51fb2d3b7320f964ae63f9feb3a96d6b"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_check_quality.py::test_no_check_enumerates_the_answer_it_expects[agent_names]": {
+   "fingerprints": [
+    "de7db79cdd9a137472f12059e3c38d199cc959b50df10383add59bafa45d7612"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_check_quality.py::test_no_check_enumerates_the_answer_it_expects[agent_count]": {
+   "fingerprints": [
+    "de7db79cdd9a137472f12059e3c38d199cc959b50df10383add59bafa45d7612"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_check_quality.py::test_no_check_enumerates_the_answer_it_expects[mcp_tool_names_documented_exist]": {
+   "fingerprints": [
+    "de7db79cdd9a137472f12059e3c38d199cc959b50df10383add59bafa45d7612"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_check_quality.py::test_no_check_enumerates_the_answer_it_expects[skills_subset]": {
+   "fingerprints": [
+    "de7db79cdd9a137472f12059e3c38d199cc959b50df10383add59bafa45d7612"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_check_quality.py::test_no_check_enumerates_the_answer_it_expects[commit_count]": {
+   "fingerprints": [
+    "de7db79cdd9a137472f12059e3c38d199cc959b50df10383add59bafa45d7612"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_checks.py::test_extractor_detects_injected_phantom[with_agents]": {
+   "fingerprints": [
+    "8fcc5685d37b4ab0bf4ff3a69ce371b5855d9fc0addc0486ef93cf4d0090b90a"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_checks.py::test_extractor_detects_injected_phantom[with_species]": {
+   "fingerprints": [
+    "8fcc5685d37b4ab0bf4ff3a69ce371b5855d9fc0addc0486ef93cf4d0090b90a"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_checks.py::test_freshness_guard_applies_to_every_claim[agent_names]": {
+   "fingerprints": [
+    "sha256:ba019a19f7a7c39de5c5c19601580248"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_checks.py::test_freshness_guard_applies_to_every_claim[agent_count]": {
+   "fingerprints": [
+    "sha256:6156cefe281b0c01af3a3391dce65475"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_checks.py::test_freshness_guard_applies_to_every_claim[skills_subset]": {
+   "fingerprints": [
+    "sha256:f9559807c42fd3328c8879e7b899b7cd"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_checks.py::test_a_failed_read_is_never_a_value[200-ok]": {
+   "fingerprints": [
+    "f4754d92d52b234ebdfe65358702d98f5258908f896ba58b9a09368adb861d42"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_checks.py::test_a_failed_read_is_never_a_value[401-unauthorized]": {
+   "fingerprints": [
+    "f4754d92d52b234ebdfe65358702d98f5258908f896ba58b9a09368adb861d42"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_checks.py::test_a_failed_read_is_never_a_value[403-forbidden]": {
+   "fingerprints": [
+    "f4754d92d52b234ebdfe65358702d98f5258908f896ba58b9a09368adb861d42"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_checks.py::test_a_failed_read_is_never_a_value[404-not_found]": {
+   "fingerprints": [
+    "f4754d92d52b234ebdfe65358702d98f5258908f896ba58b9a09368adb861d42"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_checks.py::test_a_failed_read_is_never_a_value[500-server_error]": {
+   "fingerprints": [
+    "f4754d92d52b234ebdfe65358702d98f5258908f896ba58b9a09368adb861d42"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_checks.py::test_a_failed_read_is_never_a_value[302-malformed]": {
+   "fingerprints": [
+    "f4754d92d52b234ebdfe65358702d98f5258908f896ba58b9a09368adb861d42"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_checks.py::test_trust_ladder_asserts_property_not_vocabulary[payload0-refused_authz]": {
+   "fingerprints": [
+    "a755c62aaf2f7966e10d2229cc09d0fda58dae6b38dc1b3fb8d361ffa5201d31"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_checks.py::test_trust_ladder_asserts_property_not_vocabulary[payload1-refused_authz]": {
+   "fingerprints": [
+    "a755c62aaf2f7966e10d2229cc09d0fda58dae6b38dc1b3fb8d361ffa5201d31"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_checks.py::test_trust_ladder_asserts_property_not_vocabulary[payload2-refused_validation]": {
+   "fingerprints": [
+    "a755c62aaf2f7966e10d2229cc09d0fda58dae6b38dc1b3fb8d361ffa5201d31"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_checks.py::test_trust_ladder_asserts_property_not_vocabulary[payload3-refused_validation]": {
+   "fingerprints": [
+    "a755c62aaf2f7966e10d2229cc09d0fda58dae6b38dc1b3fb8d361ffa5201d31"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_checks.py::test_trust_ladder_asserts_property_not_vocabulary[payload4-executed]": {
+   "fingerprints": [
+    "a755c62aaf2f7966e10d2229cc09d0fda58dae6b38dc1b3fb8d361ffa5201d31"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_checks.py::test_trust_ladder_asserts_property_not_vocabulary[payload5-unknown]": {
+   "fingerprints": [
+    "a755c62aaf2f7966e10d2229cc09d0fda58dae6b38dc1b3fb8d361ffa5201d31"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_checks.py::test_trust_ladder_asserts_property_not_vocabulary[payload6-unknown]": {
+   "fingerprints": [
+    "a755c62aaf2f7966e10d2229cc09d0fda58dae6b38dc1b3fb8d361ffa5201d31"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_checks.py::test_trust_ladder_asserts_property_not_vocabulary[payload7-unknown]": {
+   "fingerprints": [
+    "a755c62aaf2f7966e10d2229cc09d0fda58dae6b38dc1b3fb8d361ffa5201d31"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_checks.py::test_trust_ladder_asserts_property_not_vocabulary[payload8-unknown]": {
+   "fingerprints": [
+    "a755c62aaf2f7966e10d2229cc09d0fda58dae6b38dc1b3fb8d361ffa5201d31"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_checks.py::test_trust_ladder_asserts_property_not_vocabulary[payload9-unknown]": {
+   "fingerprints": [
+    "a755c62aaf2f7966e10d2229cc09d0fda58dae6b38dc1b3fb8d361ffa5201d31"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_checks.py::test_trust_ladder_asserts_property_not_vocabulary[payload10-unknown]": {
+   "fingerprints": [
+    "a755c62aaf2f7966e10d2229cc09d0fda58dae6b38dc1b3fb8d361ffa5201d31"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_decisions.py::test_every_decision_the_operator_made_is_still_there[CLAUDE.md-2026-09-09-ano 5. levny protoze jen cte-bf3b0779a1ff08ab06e6619df7be54265601746348e15345fc35db7fbdb8b9ea]": {
+   "fingerprints": [
+    "25024653ae3ed0ca220b6cfea2bfbef7df46d326167f00c41e8c45e5df1283d1"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_decisions.py::test_every_decision_the_operator_made_is_still_there[CLAUDE.md-2026-09-09-nechtel po me zadna takova rozhnodnuti-c96da38a0cbea54eaae8ddc2c7eefce96f57a580915164d23f9c876edde987dc]": {
+   "fingerprints": [
+    "25024653ae3ed0ca220b6cfea2bfbef7df46d326167f00c41e8c45e5df1283d1"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_decisions.py::test_every_decision_the_operator_made_is_still_there[CLAUDE.md-2026-09-07-both halves of this are their instruction-73951f58e15c2865c681eaa9b432c84453ac399c1d7c6e01056a1779c7df6b2f]": {
+   "fingerprints": [
+    "25024653ae3ed0ca220b6cfea2bfbef7df46d326167f00c41e8c45e5df1283d1"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_decisions.py::test_every_decision_the_operator_made_is_still_there[CLAUDE.md-2026-09-08-pushovat se bude jen v deep pasu-24dc71665c3dc1604518393e8a065f31768bc30cfcf6090787e1c827679f6db4]": {
+   "fingerprints": [
+    "25024653ae3ed0ca220b6cfea2bfbef7df46d326167f00c41e8c45e5df1283d1"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_decisions.py::test_every_decision_the_operator_made_is_still_there[CLAUDE.md-2026-09-08-jestli neco v dokumentaci neni-b9f592459c8890095492cd4bfbc54ad8315ba61f5c2b1561f01ace427c29eb3b]": {
+   "fingerprints": [
+    "25024653ae3ed0ca220b6cfea2bfbef7df46d326167f00c41e8c45e5df1283d1"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_decisions.py::test_every_decision_the_operator_made_is_still_there[CLAUDE.md-2026-09-06-nechapu proc tvorit ty artifacty-e9e06543700e4ef3df1adcbff995ba1db022ea8d6181e6d8f3e1715f38d44825]": {
+   "fingerprints": [
+    "25024653ae3ed0ca220b6cfea2bfbef7df46d326167f00c41e8c45e5df1283d1"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_decisions.py::test_every_decision_the_operator_made_is_still_there[CLAUDE.md-2026-09-05-the wallet stays unverified-d9ce618c9d1f48611e45423d9d07ba2f8ec951eb686c2f9c7d46c3c4ace7aa5a]": {
+   "fingerprints": [
+    "25024653ae3ed0ca220b6cfea2bfbef7df46d326167f00c41e8c45e5df1283d1"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_decisions.py::test_every_decision_the_operator_made_is_still_there[.claude/skills/qa-sweep/SKILL.md-2026-09-06-kdyz napisu sweep-610e9b087433a203e8e38e73dcbe1c6f85f4ef3552dbf59ff499e704efc79d49]": {
+   "fingerprints": [
+    "25024653ae3ed0ca220b6cfea2bfbef7df46d326167f00c41e8c45e5df1283d1"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_decisions.py::test_every_decision_the_operator_made_is_still_there[.claude/skills/qa-sweep/SKILL.md-2026-09-06-file without asking-06d4c8a79677483d48c429b42d7fd00bba92f7d808e098992f599a141dd0b28c]": {
+   "fingerprints": [
+    "25024653ae3ed0ca220b6cfea2bfbef7df46d326167f00c41e8c45e5df1283d1"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_decisions.py::test_every_decision_the_operator_made_is_still_there[.claude/skills/qa-sweep/SKILL.md-2026-09-07-libi se mi ze po sweepu-f4798675029b70b2926b9019189a8ddff76b9cb24e4aad1ed409b78ee6fe0c9d]": {
+   "fingerprints": [
+    "25024653ae3ed0ca220b6cfea2bfbef7df46d326167f00c41e8c45e5df1283d1"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_decisions.py::test_every_decision_the_operator_made_is_still_there[.claude/skills/channels/SKILL.md-2026-09-08-kdyz je server vypnuty-45c092f91272b69262a18cb5e05e107ef404910f4c7d45892d72a73a27c46d91]": {
+   "fingerprints": [
+    "25024653ae3ed0ca220b6cfea2bfbef7df46d326167f00c41e8c45e5df1283d1"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_decisions.py::test_every_decision_the_operator_made_is_still_there[.claude/skills/channels/SKILL.md-2026-09-08-the bell is bug-tracker only-d19c226ec84ee951da90b3d36b279ade48560674dfd6cdb3786698a8229a5311]": {
+   "fingerprints": [
+    "25024653ae3ed0ca220b6cfea2bfbef7df46d326167f00c41e8c45e5df1283d1"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_decisions.py::test_every_decision_the_operator_made_is_still_there[.claude/skills/deep-pass/SKILL.md-2026-09-07-nechci behem dne ztracet cas-99c552e7f54ed42777ce76d246f0d2038f0c49be80d8c10eaded976b5b2ae855]": {
+   "fingerprints": [
+    "25024653ae3ed0ca220b6cfea2bfbef7df46d326167f00c41e8c45e5df1283d1"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_decisions.py::test_every_decision_the_operator_made_is_still_there[.claude/skills/deep-pass/SKILL.md-2026-09-08-the night loop may change the rules-e280ab0ad68dc07d06651ec89c6eaafef7a5488130a1e337a6f6f769d834c4b1]": {
+   "fingerprints": [
+    "25024653ae3ed0ca220b6cfea2bfbef7df46d326167f00c41e8c45e5df1283d1"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_decisions.py::test_every_decision_the_operator_made_is_still_there[.claude/skills/deep-pass/SKILL.md-2026-09-08-tos celou dobu cekal na me jedno slovo-c0da8c03a527261e41cfa17265f32caabba02db77c0d094815a4c3221098b5b5]": {
+   "fingerprints": [
+    "25024653ae3ed0ca220b6cfea2bfbef7df46d326167f00c41e8c45e5df1283d1"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_decisions.py::test_no_decision_was_added_or_reworded_without_the_operator[CLAUDE.md]": {
+   "fingerprints": [
+    "f0edd88534bf51ad49641ad59c9d5f0c5447cc0a501219371f77e601179ab181"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_decisions.py::test_no_decision_was_added_or_reworded_without_the_operator[.claude/skills/channels/SKILL.md]": {
+   "fingerprints": [
+    "f0edd88534bf51ad49641ad59c9d5f0c5447cc0a501219371f77e601179ab181"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_decisions.py::test_no_decision_was_added_or_reworded_without_the_operator[.claude/skills/deep-pass/SKILL.md]": {
+   "fingerprints": [
+    "f0edd88534bf51ad49641ad59c9d5f0c5447cc0a501219371f77e601179ab181"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_decisions.py::test_no_decision_was_added_or_reworded_without_the_operator[.claude/skills/qa-sweep/SKILL.md]": {
+   "fingerprints": [
+    "f0edd88534bf51ad49641ad59c9d5f0c5447cc0a501219371f77e601179ab181"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_decisions.py::test_nothing_quotes_the_operator_outside_a_tagged_decision[CLAUDE.md]": {
+   "fingerprints": [
+    "635693572497640cc015daa56cd4ce04f6a7413e5eeb8b303264d1d71db4bab9"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_decisions.py::test_nothing_quotes_the_operator_outside_a_tagged_decision[.claude/skills/channels/SKILL.md]": {
+   "fingerprints": [
+    "635693572497640cc015daa56cd4ce04f6a7413e5eeb8b303264d1d71db4bab9"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_decisions.py::test_nothing_quotes_the_operator_outside_a_tagged_decision[.claude/skills/deep-pass/SKILL.md]": {
+   "fingerprints": [
+    "635693572497640cc015daa56cd4ce04f6a7413e5eeb8b303264d1d71db4bab9"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_decisions.py::test_nothing_quotes_the_operator_outside_a_tagged_decision[.claude/skills/qa-sweep/SKILL.md]": {
+   "fingerprints": [
+    "635693572497640cc015daa56cd4ce04f6a7413e5eeb8b303264d1d71db4bab9"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_decisions.py::test_the_parser_notices_a_decision_that_was_removed": {
+   "fingerprints": [
+    "a9f0c64907ac6fbe2ba6140f56094d39aeca09dce0c8c7999b7cd4ce2bc9744c"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_decisions.py::test_rewrapping_is_free_and_rewording_is_not": {
+   "fingerprints": [
+    "9ce66e8947195e8eb0975b633a0527eabf54aad673d61b9eb93c17bfacc3af63"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_decisions.py::test_a_decision_does_not_swallow_the_rule_beside_it": {
+   "fingerprints": [
+    "daa1a579df8eced85d42158fd46944e64c93e0751d66b83a7b479b7f67bcc5f1"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[UNVERIFIED-all_passed_V-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[UNVERIFIED-all_passed_V-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[UNVERIFIED-all_passed_V_drift-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[UNVERIFIED-all_passed_V_drift-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[UNVERIFIED-all_passed_R-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[UNVERIFIED-all_passed_R-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[UNVERIFIED-one_failed-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[UNVERIFIED-one_failed-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[UNVERIFIED-one_inconclusive-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[UNVERIFIED-one_inconclusive-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[UNVERIFIED-failed_and_inconc-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[UNVERIFIED-failed_and_inconc-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[UNVERIFIED-skipped-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[UNVERIFIED-skipped-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[UNVERIFIED-errored-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[UNVERIFIED-errored-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[REPRODUCING-all_passed_V-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[REPRODUCING-all_passed_V-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[REPRODUCING-all_passed_V_drift-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[REPRODUCING-all_passed_V_drift-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[REPRODUCING-all_passed_R-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[REPRODUCING-all_passed_R-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[REPRODUCING-one_failed-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[REPRODUCING-one_failed-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[REPRODUCING-one_inconclusive-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[REPRODUCING-one_inconclusive-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[REPRODUCING-failed_and_inconc-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[REPRODUCING-failed_and_inconc-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[REPRODUCING-skipped-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[REPRODUCING-skipped-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[REPRODUCING-errored-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[REPRODUCING-errored-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[PASSING-all_passed_V-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[PASSING-all_passed_V-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[PASSING-all_passed_V_drift-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[PASSING-all_passed_V_drift-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[PASSING-all_passed_R-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[PASSING-all_passed_R-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[PASSING-one_failed-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[PASSING-one_failed-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[PASSING-one_inconclusive-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[PASSING-one_inconclusive-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[PASSING-failed_and_inconc-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[PASSING-failed_and_inconc-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[PASSING-skipped-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[PASSING-skipped-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[PASSING-errored-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[PASSING-errored-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[PASSING_UNPINNED-all_passed_V-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[PASSING_UNPINNED-all_passed_V-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[PASSING_UNPINNED-all_passed_V_drift-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[PASSING_UNPINNED-all_passed_V_drift-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[PASSING_UNPINNED-all_passed_R-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[PASSING_UNPINNED-all_passed_R-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[PASSING_UNPINNED-one_failed-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[PASSING_UNPINNED-one_failed-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[PASSING_UNPINNED-one_inconclusive-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[PASSING_UNPINNED-one_inconclusive-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[PASSING_UNPINNED-failed_and_inconc-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[PASSING_UNPINNED-failed_and_inconc-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[PASSING_UNPINNED-skipped-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[PASSING_UNPINNED-skipped-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[PASSING_UNPINNED-errored-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[PASSING_UNPINNED-errored-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[CHECK_CHANGED-all_passed_V-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[CHECK_CHANGED-all_passed_V-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[CHECK_CHANGED-all_passed_V_drift-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[CHECK_CHANGED-all_passed_V_drift-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[CHECK_CHANGED-all_passed_R-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[CHECK_CHANGED-all_passed_R-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[CHECK_CHANGED-one_failed-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[CHECK_CHANGED-one_failed-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[CHECK_CHANGED-one_inconclusive-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[CHECK_CHANGED-one_inconclusive-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[CHECK_CHANGED-failed_and_inconc-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[CHECK_CHANGED-failed_and_inconc-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[CHECK_CHANGED-skipped-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[CHECK_CHANGED-skipped-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[CHECK_CHANGED-errored-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[CHECK_CHANGED-errored-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[INCONCLUSIVE-all_passed_V-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[INCONCLUSIVE-all_passed_V-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[INCONCLUSIVE-all_passed_V_drift-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[INCONCLUSIVE-all_passed_V_drift-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[INCONCLUSIVE-all_passed_R-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[INCONCLUSIVE-all_passed_R-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[INCONCLUSIVE-one_failed-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[INCONCLUSIVE-one_failed-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[INCONCLUSIVE-one_inconclusive-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[INCONCLUSIVE-one_inconclusive-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[INCONCLUSIVE-failed_and_inconc-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[INCONCLUSIVE-failed_and_inconc-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[INCONCLUSIVE-skipped-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[INCONCLUSIVE-skipped-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[INCONCLUSIVE-errored-pinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_fold.py::test_check_axis_transition_table[INCONCLUSIVE-errored-unpinned]": {
+   "fingerprints": [
+    "5c4eb08a7b60286b894252923eb96b2c0694e5848327cad47159d1a908365e0f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_handover.py::test_the_hook_carries_the_handover_not_a_pointer": {
+   "fingerprints": [
+    "e2691a8e8172b160b42d13479e64933d357b8d427c175c75e8783b6dc482c584"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_handover.py::test_the_hook_carries_the_minority_report_too": {
+   "fingerprints": [
+    "465945018c3d1fd4d1175673af1b1e9b959f800ee7b7810c0b5cdef44005e577"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_handover.py::test_the_hook_carries_what_the_pass_changed_and_the_week": {
+   "fingerprints": [
+    "1a80cc30d446ca152f7012f61721905f3e4d34ce63d84eb2fb23b6b6bb36baa4"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_handover.py::test_the_hook_does_not_paste_the_whole_report": {
+   "fingerprints": [
+    "15313b99d77866d7da977e8c79ba770c3833222dd3c21554c30190833b412802"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_handover.py::test_the_hook_is_silent_when_there_is_no_deep_pass": {
+   "fingerprints": [
+    "26feb66da6cb0e30452a74419edbe6bc487ec7e4baafa545d617f5a0cb47c886"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_handover.py::test_the_hook_never_fails_a_session": {
+   "fingerprints": [
+    "6a5e51bfd85075fd265bf92bf28a704588810ab7c735d4c21fe4b6e9733dd02a"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_handover.py::test_the_committed_report_parses": {
+   "fingerprints": [
+    "4733437c4990298e1eefc57a21d96870cd593544e7eed6c467abd03fa496c856"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_recorder.py::test_exit_status_agrees_with_results[failed]": {
+   "fingerprints": [
+    "88ea0a533b297f138a054409a4521744a4c6567e174c79df677959adf4cc29d9"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_recorder.py::test_exit_status_agrees_with_results[passed]": {
+   "fingerprints": [
+    "88ea0a533b297f138a054409a4521744a4c6567e174c79df677959adf4cc29d9"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_recorder.py::test_exit_status_agrees_with_results[inconclusive]": {
+   "fingerprints": [
+    "88ea0a533b297f138a054409a4521744a4c6567e174c79df677959adf4cc29d9"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_render.py::test_the_page_says_which_journal_head_it_stands_on": {
+   "fingerprints": [
+    "a7d9ade0857398d1d9840c3ca7c4608e074b43bde6d12165e207f5b7980754bd"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_tamper.py::test_a_hand_written_key_is_refused[verified_note-looks fine to me]": {
+   "fingerprints": [
+    "f2ee6b69d870a90617b92d155bae0d689f1706557c880405b58e00e1be61ccc4"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_tamper.py::test_a_hand_written_key_is_refused[verified_fixed_at-2026-09-05T00:00:00+00:00]": {
+   "fingerprints": [
+    "f2ee6b69d870a90617b92d155bae0d689f1706557c880405b58e00e1be61ccc4"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_tamper.py::test_a_hand_written_key_is_refused[verified_by_run-run-1]": {
+   "fingerprints": [
+    "f2ee6b69d870a90617b92d155bae0d689f1706557c880405b58e00e1be61ccc4"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_tamper.py::test_a_hand_written_key_is_refused[backfilled_from-ledger@ca0bc45]": {
+   "fingerprints": [
+    "f2ee6b69d870a90617b92d155bae0d689f1706557c880405b58e00e1be61ccc4"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_tamper.py::test_events_the_fold_does_not_read_are_counted_not_charged": {
+   "fingerprints": [
+    "dca7906e41de649b0a4493f94949f1670b6c3ba427f011632629abb8e0d6a9da"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_tamper.py::test_a_pending_event_that_moves_a_row_is_still_caught": {
+   "fingerprints": [
+    "1c40005fc621707c48a272b5152b6065c8d4ec01d015803b61d979abcf509645"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_tamper.py::test_every_other_top_level_key_is_still_compared": {
+   "fingerprints": [
+    "1b2520e7a8c47d59e77e8731031b0e53532f48b45ceebfa896a2c92a169583bc"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_tamper.py::test_a_head_the_journal_cannot_confirm_is_refused[2-not-the-chain-a head the journal does not have at that line]": {
+   "fingerprints": [
+    "357d64ed55d9cf3c6800a65de2309ff0ab2a9b7bbe1453a191307346abcb99c4"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_tamper.py::test_a_head_the_journal_cannot_confirm_is_refused[9-chain-03-a head past the end of the journal]": {
+   "fingerprints": [
+    "357d64ed55d9cf3c6800a65de2309ff0ab2a9b7bbe1453a191307346abcb99c4"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_tamper.py::test_a_head_the_journal_cannot_confirm_is_refused[-1-chain-01-a head before the beginning]": {
+   "fingerprints": [
+    "357d64ed55d9cf3c6800a65de2309ff0ab2a9b7bbe1453a191307346abcb99c4"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/meta/test_pipeline_tamper.py::test_an_empty_journal_anchors_at_zero": {
+   "fingerprints": [
+    "b83e91324d8c4283291f97bb6c8c981285535114fbb8586debdf39a7fbe379f0"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_commit_trailers.py::test_the_effort_trailer_hook_is_installed_or_honestly_absent": {
+   "fingerprints": [
+    "189a477a7090aaac0ea772de059daa1089cf71c2cdc5ead5f168c774d3fb48f3"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_commit_trailers.py::test_the_hook_is_quiet_when_nobody_set_an_effort": {
+   "fingerprints": [
+    "aa7c849765c4b4698423c45421c55056be9359e50fc0bdc77c46015cbc51912f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_deep_pass_finished.py::test_a_pass_from_before_the_keys_is_not_failed_for_lacking_them": {
+   "fingerprints": [
+    "e663fd5cab8be41ca9f0754584f5060575e34134cc3f557feb73873dfbcbe4a8"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_deep_pass_finished.py::test_the_week_cannot_be_quietly_skipped[retro0-False]": {
+   "fingerprints": [
+    "87d758f27feb8b04cb8ae96b3657d723b7f87197b4b8a6eab469510cffb77f5b"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_deep_pass_finished.py::test_the_week_cannot_be_quietly_skipped[retro1-False]": {
+   "fingerprints": [
+    "87d758f27feb8b04cb8ae96b3657d723b7f87197b4b8a6eab469510cffb77f5b"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_deep_pass_finished.py::test_the_week_cannot_be_quietly_skipped[retro2-True]": {
+   "fingerprints": [
+    "87d758f27feb8b04cb8ae96b3657d723b7f87197b4b8a6eab469510cffb77f5b"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_deep_pass_finished.py::test_the_week_cannot_be_quietly_skipped[retro3-False]": {
+   "fingerprints": [
+    "87d758f27feb8b04cb8ae96b3657d723b7f87197b4b8a6eab469510cffb77f5b"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_deep_pass_finished.py::test_the_week_cannot_be_quietly_skipped[retro4-True]": {
+   "fingerprints": [
+    "87d758f27feb8b04cb8ae96b3657d723b7f87197b4b8a6eab469510cffb77f5b"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_deep_pass_finished.py::test_a_rule_change_carries_all_three_of_the_operators_conditions[change0-None]": {
+   "fingerprints": [
+    "ce74c52202a6a8470834e8e6c56fb570d622b7f4073d9ce2d2be89f895173232"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_deep_pass_finished.py::test_a_rule_change_carries_all_three_of_the_operators_conditions[change1-two is the floor]": {
+   "fingerprints": [
+    "ce74c52202a6a8470834e8e6c56fb570d622b7f4073d9ce2d2be89f895173232"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_deep_pass_finished.py::test_a_rule_change_carries_all_three_of_the_operators_conditions[change2-names no test that exists]": {
+   "fingerprints": [
+    "ce74c52202a6a8470834e8e6c56fb570d622b7f4073d9ce2d2be89f895173232"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_deep_pass_finished.py::test_a_rule_change_carries_all_three_of_the_operators_conditions[change3-no paragraph in the morning]": {
+   "fingerprints": [
+    "ce74c52202a6a8470834e8e6c56fb570d622b7f4073d9ce2d2be89f895173232"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_deep_pass_finished.py::test_growth_in_the_self_tests_is_reported_not_forbidden": {
+   "fingerprints": [
+    "23fc78bc9fb546a7918112968a8cd88f5efaca5e8745fffb6db3bec906dbd75c"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_deep_pass_finished.py::test_a_missing_key_is_not_the_same_as_an_empty_one": {
+   "fingerprints": [
+    "bfee5c6ecd2643177abf7821ad7a9b08c19f2b199a5a8894d198b4eb833036da"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_state_guard.py::test_editor_write_under_state_is_refused[state/ledger.json]": {
+   "fingerprints": [
+    "acef1ef6d04338d2cbf2482311ed9e9d4832185659449482a12517b8a014074f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_state_guard.py::test_editor_write_under_state_is_refused[state/journal/events.jsonl]": {
+   "fingerprints": [
+    "acef1ef6d04338d2cbf2482311ed9e9d4832185659449482a12517b8a014074f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_state_guard.py::test_editor_write_under_state_is_refused[state/runs/run-1.json]": {
+   "fingerprints": [
+    "acef1ef6d04338d2cbf2482311ed9e9d4832185659449482a12517b8a014074f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_state_guard.py::test_editor_write_under_state_is_refused[docs/../state/ledger.json]": {
+   "fingerprints": [
+    "acef1ef6d04338d2cbf2482311ed9e9d4832185659449482a12517b8a014074f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_state_guard.py::test_editor_write_under_state_is_refused[C://Users//adamz//Documents//Projects//cymetica-qa-agent//qa-cymetica//state//ledger.json]": {
+   "fingerprints": [
+    "acef1ef6d04338d2cbf2482311ed9e9d4832185659449482a12517b8a014074f"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_state_guard.py::test_editor_write_elsewhere_passes[dashboard/index.html]": {
+   "fingerprints": [
+    "cb9dbfc07d2acee3b5450a795dfecaa9e780b9ac9d56fcdbea5f7cbe9fc2f05c"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_state_guard.py::test_editor_write_elsewhere_passes[qa/state.py]": {
+   "fingerprints": [
+    "cb9dbfc07d2acee3b5450a795dfecaa9e780b9ac9d56fcdbea5f7cbe9fc2f05c"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_state_guard.py::test_editor_write_elsewhere_passes[CLAUDE.md]": {
+   "fingerprints": [
+    "cb9dbfc07d2acee3b5450a795dfecaa9e780b9ac9d56fcdbea5f7cbe9fc2f05c"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_state_guard.py::test_editor_write_elsewhere_passes[tests/repo/test_state_guard.py]": {
+   "fingerprints": [
+    "cb9dbfc07d2acee3b5450a795dfecaa9e780b9ac9d56fcdbea5f7cbe9fc2f05c"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_state_guard.py::test_editor_write_elsewhere_passes[components.yaml]": {
+   "fingerprints": [
+    "cb9dbfc07d2acee3b5450a795dfecaa9e780b9ac9d56fcdbea5f7cbe9fc2f05c"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_state_guard.py::test_shell_write_under_state_is_refused[echo x >> state/journal/events.jsonl]": {
+   "fingerprints": [
+    "bbdd80fd9a8c6a4f420c26128d6b2d7bc1523eb3beb9fa415f8c2dd07f66cada"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_state_guard.py::test_shell_write_under_state_is_refused[echo x > state/ledger.json]": {
+   "fingerprints": [
+    "bbdd80fd9a8c6a4f420c26128d6b2d7bc1523eb3beb9fa415f8c2dd07f66cada"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_state_guard.py::test_shell_write_under_state_is_refused[sed -i s/a/b/ state/ledger.json]": {
+   "fingerprints": [
+    "bbdd80fd9a8c6a4f420c26128d6b2d7bc1523eb3beb9fa415f8c2dd07f66cada"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_state_guard.py::test_shell_write_under_state_is_refused[tee state/ledger.json]": {
+   "fingerprints": [
+    "bbdd80fd9a8c6a4f420c26128d6b2d7bc1523eb3beb9fa415f8c2dd07f66cada"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_state_guard.py::test_shell_write_under_state_is_refused[rm state/ledger.json]": {
+   "fingerprints": [
+    "bbdd80fd9a8c6a4f420c26128d6b2d7bc1523eb3beb9fa415f8c2dd07f66cada"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_state_guard.py::test_shell_write_under_state_is_refused[rm -rf state/runs]": {
+   "fingerprints": [
+    "bbdd80fd9a8c6a4f420c26128d6b2d7bc1523eb3beb9fa415f8c2dd07f66cada"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_state_guard.py::test_shell_write_under_state_is_refused[mv state/ledger.json state/old.json]": {
+   "fingerprints": [
+    "bbdd80fd9a8c6a4f420c26128d6b2d7bc1523eb3beb9fa415f8c2dd07f66cada"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_state_guard.py::test_shell_write_under_state_is_refused[git checkout -- state/ledger.json]": {
+   "fingerprints": [
+    "bbdd80fd9a8c6a4f420c26128d6b2d7bc1523eb3beb9fa415f8c2dd07f66cada"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_state_guard.py::test_shell_write_under_state_is_refused[git restore state/journal/events.jsonl]": {
+   "fingerprints": [
+    "bbdd80fd9a8c6a4f420c26128d6b2d7bc1523eb3beb9fa415f8c2dd07f66cada"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_state_guard.py::test_shell_write_under_state_is_refused[python -c \"open('state/ledger.json','w').write('{}')\"]": {
+   "fingerprints": [
+    "bbdd80fd9a8c6a4f420c26128d6b2d7bc1523eb3beb9fa415f8c2dd07f66cada"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_state_guard.py::test_shell_write_under_state_is_refused[Set-Content state//ledger.json -Value x]": {
+   "fingerprints": [
+    "bbdd80fd9a8c6a4f420c26128d6b2d7bc1523eb3beb9fa415f8c2dd07f66cada"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_state_guard.py::test_shell_write_under_state_is_refused[Remove-Item state//ledger.json]": {
+   "fingerprints": [
+    "bbdd80fd9a8c6a4f420c26128d6b2d7bc1523eb3beb9fa415f8c2dd07f66cada"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_state_guard.py::test_reads_and_sanctioned_writers_pass[python scripts/ledger.py --run run-20260906T162414Z-a177e73]": {
+   "fingerprints": [
+    "a03e6dd3d986ac95cf5d6ff2daf77615a4346574146aa6ecff0d087595f1848e"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_state_guard.py::test_reads_and_sanctioned_writers_pass[python scripts/withdraw.py retract 68 --reason 'wrong tier']": {
+   "fingerprints": [
+    "a03e6dd3d986ac95cf5d6ff2daf77615a4346574146aa6ecff0d087595f1848e"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_state_guard.py::test_reads_and_sanctioned_writers_pass[python scripts/render.py]": {
+   "fingerprints": [
+    "a03e6dd3d986ac95cf5d6ff2daf77615a4346574146aa6ecff0d087595f1848e"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_state_guard.py::test_reads_and_sanctioned_writers_pass[python -m pytest tests --prereg PRE-0039 -q]": {
+   "fingerprints": [
+    "a03e6dd3d986ac95cf5d6ff2daf77615a4346574146aa6ecff0d087595f1848e"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_state_guard.py::test_reads_and_sanctioned_writers_pass[python scripts/prereg.py new --selector tests --window 30 --tag]": {
+   "fingerprints": [
+    "a03e6dd3d986ac95cf5d6ff2daf77615a4346574146aa6ecff0d087595f1848e"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_state_guard.py::test_reads_and_sanctioned_writers_pass[cat state/ledger.json]": {
+   "fingerprints": [
+    "a03e6dd3d986ac95cf5d6ff2daf77615a4346574146aa6ecff0d087595f1848e"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_state_guard.py::test_reads_and_sanctioned_writers_pass[grep RAISED state/journal/events.jsonl]": {
+   "fingerprints": [
+    "a03e6dd3d986ac95cf5d6ff2daf77615a4346574146aa6ecff0d087595f1848e"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_state_guard.py::test_reads_and_sanctioned_writers_pass[ls -la state/runs]": {
+   "fingerprints": [
+    "a03e6dd3d986ac95cf5d6ff2daf77615a4346574146aa6ecff0d087595f1848e"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_state_guard.py::test_reads_and_sanctioned_writers_pass[git status --short]": {
+   "fingerprints": [
+    "a03e6dd3d986ac95cf5d6ff2daf77615a4346574146aa6ecff0d087595f1848e"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_state_guard.py::test_reads_and_sanctioned_writers_pass[git add state/ dashboard/index.html]": {
+   "fingerprints": [
+    "a03e6dd3d986ac95cf5d6ff2daf77615a4346574146aa6ecff0d087595f1848e"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_state_guard.py::test_reads_and_sanctioned_writers_pass[git diff --stat state/]": {
+   "fingerprints": [
+    "a03e6dd3d986ac95cf5d6ff2daf77615a4346574146aa6ecff0d087595f1848e"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_state_guard.py::test_reads_and_sanctioned_writers_pass[git commit -m 'guard state/ before the write: refuses rm, sed -i and git checkout aimed under state/']": {
+   "fingerprints": [
+    "a03e6dd3d986ac95cf5d6ff2daf77615a4346574146aa6ecff0d087595f1848e"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/repo/test_state_guard.py::test_reads_and_sanctioned_writers_pass[git commit -F - <<'EOF'/nrule 4, before the write/n/nRefuses a redirect, sed -i, rm, mv or git checkout aimed under state/./nReads are untouched: cat, grep and ls still reach state/ freely./nEOF]": {
+   "fingerprints": [
+    "a03e6dd3d986ac95cf5d6ff2daf77615a4346574146aa6ecff0d087595f1848e"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T220449Z-8ec5b45"
+  },
+  "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_names::live_species-vs-llms_txt]": {
+   "fingerprints": [
+    "sha256:480bd5eb9d55f9495ccad7c95a78bea9"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T215330Z-2eb58a0"
+  },
+  "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_count::live_species-vs-llms_txt]": {
+   "fingerprints": [
+    "sha256:6156cefe281b0c01af3a3391dce65475"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T215330Z-2eb58a0"
+  },
+  "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_names_documented_exist::llms_txt-vs-mcp_json]": {
+   "fingerprints": [
+    "sha256:3bd11ec340a31060a08d40b5e9a262d7"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T215330Z-2eb58a0"
+  },
+  "tests/reconciliation/test_reconcile.py::test_sources_agree[skills_subset::agent_card-vs-agent_skills]": {
+   "fingerprints": [
+    "sha256:9e5564057407dd11f05887c86b3b9017"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T215330Z-2eb58a0"
+  },
+  "tests/reconciliation/test_reconcile.py::test_sources_agree[commit_count::build_stats-vs-llms_txt]": {
+   "fingerprints": [
+    "sha256:f3d9b4a71fbf227f926c530f5d62476d"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T215330Z-2eb58a0"
+  },
+  "tests/meta/test_pipeline_decisions.py::test_every_decision_the_operator_made_is_still_there[CLAUDE.md-2026-09-07-both halves of this are their instruction]": {
+   "fingerprints": [
+    "f8fb13a64c6adca0fcf31c33d0194f1438d4f11bb048d7a429e24de2e5094ffe"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T170719Z-687e9e9"
+  },
+  "tests/meta/test_pipeline_decisions.py::test_every_decision_the_operator_made_is_still_there[CLAUDE.md-2026-09-08-pushovat se bude jen v deep pasu]": {
+   "fingerprints": [
+    "f8fb13a64c6adca0fcf31c33d0194f1438d4f11bb048d7a429e24de2e5094ffe"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T170719Z-687e9e9"
+  },
+  "tests/meta/test_pipeline_decisions.py::test_every_decision_the_operator_made_is_still_there[CLAUDE.md-2026-09-08-jestli neco v dokumentaci neni]": {
+   "fingerprints": [
+    "f8fb13a64c6adca0fcf31c33d0194f1438d4f11bb048d7a429e24de2e5094ffe"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T170719Z-687e9e9"
+  },
+  "tests/meta/test_pipeline_decisions.py::test_every_decision_the_operator_made_is_still_there[CLAUDE.md-2026-09-06-nechapu proc tvorit ty artifacty]": {
+   "fingerprints": [
+    "f8fb13a64c6adca0fcf31c33d0194f1438d4f11bb048d7a429e24de2e5094ffe"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T170719Z-687e9e9"
+  },
+  "tests/meta/test_pipeline_decisions.py::test_every_decision_the_operator_made_is_still_there[CLAUDE.md-2026-09-05-the wallet stays unverified]": {
+   "fingerprints": [
+    "f8fb13a64c6adca0fcf31c33d0194f1438d4f11bb048d7a429e24de2e5094ffe"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T170719Z-687e9e9"
+  },
+  "tests/meta/test_pipeline_decisions.py::test_every_decision_the_operator_made_is_still_there[.claude/skills/qa-sweep/SKILL.md-2026-09-06-kdyz napisu sweep]": {
+   "fingerprints": [
+    "f8fb13a64c6adca0fcf31c33d0194f1438d4f11bb048d7a429e24de2e5094ffe"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T170719Z-687e9e9"
+  },
+  "tests/meta/test_pipeline_decisions.py::test_every_decision_the_operator_made_is_still_there[.claude/skills/qa-sweep/SKILL.md-2026-09-06-file without asking]": {
+   "fingerprints": [
+    "f8fb13a64c6adca0fcf31c33d0194f1438d4f11bb048d7a429e24de2e5094ffe"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T170719Z-687e9e9"
+  },
+  "tests/meta/test_pipeline_decisions.py::test_every_decision_the_operator_made_is_still_there[.claude/skills/qa-sweep/SKILL.md-2026-09-07-libi se mi ze po sweepu]": {
+   "fingerprints": [
+    "f8fb13a64c6adca0fcf31c33d0194f1438d4f11bb048d7a429e24de2e5094ffe"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T170719Z-687e9e9"
+  },
+  "tests/meta/test_pipeline_decisions.py::test_every_decision_the_operator_made_is_still_there[.claude/skills/channels/SKILL.md-2026-09-08-kdyz je server vypnuty]": {
+   "fingerprints": [
+    "f8fb13a64c6adca0fcf31c33d0194f1438d4f11bb048d7a429e24de2e5094ffe"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T170719Z-687e9e9"
+  },
+  "tests/meta/test_pipeline_decisions.py::test_every_decision_the_operator_made_is_still_there[.claude/skills/channels/SKILL.md-2026-09-08-the bell is bug-tracker only]": {
+   "fingerprints": [
+    "f8fb13a64c6adca0fcf31c33d0194f1438d4f11bb048d7a429e24de2e5094ffe"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T170719Z-687e9e9"
+  },
+  "tests/meta/test_pipeline_decisions.py::test_every_decision_the_operator_made_is_still_there[.claude/skills/deep-pass/SKILL.md-2026-09-07-nechci behem dne ztracet cas]": {
+   "fingerprints": [
+    "f8fb13a64c6adca0fcf31c33d0194f1438d4f11bb048d7a429e24de2e5094ffe"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T170719Z-687e9e9"
+  },
+  "tests/meta/test_pipeline_decisions.py::test_every_decision_the_operator_made_is_still_there[.claude/skills/deep-pass/SKILL.md-2026-09-08-the night loop may change the rules]": {
+   "fingerprints": [
+    "f8fb13a64c6adca0fcf31c33d0194f1438d4f11bb048d7a429e24de2e5094ffe"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T170719Z-687e9e9"
+  },
+  "tests/meta/test_pipeline_decisions.py::test_every_decision_the_operator_made_is_still_there[.claude/skills/deep-pass/SKILL.md-2026-09-08-tos celou dobu cekal na me jedno slovo]": {
+   "fingerprints": [
+    "f8fb13a64c6adca0fcf31c33d0194f1438d4f11bb048d7a429e24de2e5094ffe"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260909T170719Z-687e9e9"
+  },
+  "tests/mcp/test_trust_ladder.py::test_call_time_authorization_holds_for_anonymous[place_order]": {
+   "fingerprints": [
+    "01399dfc88b05714a7dc09f2e15b205be0d13eadfb7e243bb4e04812a0165137"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260908T150954Z-95f0a70"
+  },
+  "tests/mcp/test_trust_ladder.py::test_call_time_authorization_holds_for_anonymous[create_aib_fund]": {
+   "fingerprints": [
+    "01399dfc88b05714a7dc09f2e15b205be0d13eadfb7e243bb4e04812a0165137"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260908T150954Z-95f0a70"
+  },
+  "tests/mcp/test_trust_ladder.py::test_call_time_authorization_holds_for_anonymous[get_deposit_address]": {
+   "fingerprints": [
+    "01399dfc88b05714a7dc09f2e15b205be0d13eadfb7e243bb4e04812a0165137"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260908T150954Z-95f0a70"
+  },
+  "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/account]": {
+   "fingerprints": [
+    "4bee6d834f3d33026b775b34fee2afc50006ba7543dcd2608b1678868b972c09"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260908T150954Z-95f0a70"
+  },
+  "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/clob/order]": {
+   "fingerprints": [
+    "4bee6d834f3d33026b775b34fee2afc50006ba7543dcd2608b1678868b972c09"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260908T150954Z-95f0a70"
+  },
+  "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/agentbook/post]": {
+   "fingerprints": [
+    "4bee6d834f3d33026b775b34fee2afc50006ba7543dcd2608b1678868b972c09"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260908T150954Z-95f0a70"
+  },
+  "tests/pinned/test_documented_404.py::test_documented_path_is_served[/mcp/v1/prompts/analyze_market]": {
+   "fingerprints": [
+    "4bee6d834f3d33026b775b34fee2afc50006ba7543dcd2608b1678868b972c09"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260907T175903Z-c4b34d4"
+  },
+  "tests/pinned/test_documented_404.py::test_documented_path_is_served[/mcp/v1/prompts/compare_markets]": {
+   "fingerprints": [
+    "4bee6d834f3d33026b775b34fee2afc50006ba7543dcd2608b1678868b972c09"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260907T175903Z-c4b34d4"
+  },
+  "tests/pinned/test_documented_404.py::test_documented_path_is_served[/mcp/v1/prompts/explain_probability]": {
+   "fingerprints": [
+    "4bee6d834f3d33026b775b34fee2afc50006ba7543dcd2608b1678868b972c09"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260907T175903Z-c4b34d4"
+  },
+  "tests/pinned/test_documented_404.py::test_documented_path_is_served[/mcp/v1/prompts/find_opportunities]": {
+   "fingerprints": [
+    "4bee6d834f3d33026b775b34fee2afc50006ba7543dcd2608b1678868b972c09"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260907T175903Z-c4b34d4"
+  },
+  "tests/pinned/test_documented_404.py::test_documented_path_is_served[/mcp/v1/resources/docs/api]": {
+   "fingerprints": [
+    "4bee6d834f3d33026b775b34fee2afc50006ba7543dcd2608b1678868b972c09"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260907T175903Z-c4b34d4"
+  },
+  "tests/pinned/test_documented_404.py::test_documented_path_is_served[/mcp/v1/resources/docs/getting-started]": {
+   "fingerprints": [
+    "4bee6d834f3d33026b775b34fee2afc50006ba7543dcd2608b1678868b972c09"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260907T175903Z-c4b34d4"
+  },
+  "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/exchange/buy]": {
+   "fingerprints": [
+    "4bee6d834f3d33026b775b34fee2afc50006ba7543dcd2608b1678868b972c09"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260907T175903Z-c4b34d4"
+  },
+  "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/positions]": {
+   "fingerprints": [
+    "4bee6d834f3d33026b775b34fee2afc50006ba7543dcd2608b1678868b972c09"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260907T175903Z-c4b34d4"
+  },
+  "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/vaix/prices]": {
+   "fingerprints": [
+    "4bee6d834f3d33026b775b34fee2afc50006ba7543dcd2608b1678868b972c09"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260907T175903Z-c4b34d4"
+  },
+  "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/perpetual/user/positions]": {
+   "fingerprints": [
+    "4bee6d834f3d33026b775b34fee2afc50006ba7543dcd2608b1678868b972c09"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260907T175903Z-c4b34d4"
+  },
+  "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/winner-takes-all/bet]": {
+   "fingerprints": [
+    "4bee6d834f3d33026b775b34fee2afc50006ba7543dcd2608b1678868b972c09"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260907T175903Z-c4b34d4"
+  },
+  "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/winner-takes-all/epochs]": {
+   "fingerprints": [
+    "4bee6d834f3d33026b775b34fee2afc50006ba7543dcd2608b1678868b972c09"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260907T175903Z-c4b34d4"
+  },
+  "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/winner-takes-all/markets]": {
+   "fingerprints": [
+    "4bee6d834f3d33026b775b34fee2afc50006ba7543dcd2608b1678868b972c09"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260907T175903Z-c4b34d4"
+  },
+  "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/bots/clone]": {
+   "fingerprints": [
+    "4bee6d834f3d33026b775b34fee2afc50006ba7543dcd2608b1678868b972c09"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260907T175903Z-c4b34d4"
+  },
+  "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/cloned-bot/create]": {
+   "fingerprints": [
+    "4bee6d834f3d33026b775b34fee2afc50006ba7543dcd2608b1678868b972c09"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260907T175903Z-c4b34d4"
+  },
+  "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/cloned-bot/list]": {
+   "fingerprints": [
+    "4bee6d834f3d33026b775b34fee2afc50006ba7543dcd2608b1678868b972c09"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260907T175903Z-c4b34d4"
+  },
+  "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/aerodrome/quote]": {
+   "fingerprints": [
+    "4bee6d834f3d33026b775b34fee2afc50006ba7543dcd2608b1678868b972c09"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260907T175903Z-c4b34d4"
+  },
+  "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/base-dex/tokens]": {
+   "fingerprints": [
+    "4bee6d834f3d33026b775b34fee2afc50006ba7543dcd2608b1678868b972c09"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260907T175903Z-c4b34d4"
+  },
+  "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/defi/pools]": {
+   "fingerprints": [
+    "4bee6d834f3d33026b775b34fee2afc50006ba7543dcd2608b1678868b972c09"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260907T175903Z-c4b34d4"
+  },
+  "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/staking/pools]": {
+   "fingerprints": [
+    "4bee6d834f3d33026b775b34fee2afc50006ba7543dcd2608b1678868b972c09"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260907T175903Z-c4b34d4"
+  },
+  "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/tuatara/discover]": {
+   "fingerprints": [
+    "4bee6d834f3d33026b775b34fee2afc50006ba7543dcd2608b1678868b972c09"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260907T175903Z-c4b34d4"
+  },
+  "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/backtest/run]": {
+   "fingerprints": [
+    "4bee6d834f3d33026b775b34fee2afc50006ba7543dcd2608b1678868b972c09"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260907T175903Z-c4b34d4"
+  },
+  "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/backtest/saved]": {
+   "fingerprints": [
+    "4bee6d834f3d33026b775b34fee2afc50006ba7543dcd2608b1678868b972c09"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260907T175903Z-c4b34d4"
+  },
+  "tests/meta/test_pipeline_check_quality.py::test_every_extractor_can_read_its_source[llms_agent_count_self_consistent]": {
+   "fingerprints": [
+    "0bbb9ba23912587d9a6b8d80ac73bfb890904ca816dc0750d72e8b8ac0a38de3"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260905T193145Z-a59f943"
+  },
+  "tests/meta/test_pipeline_check_quality.py::test_every_extractor_can_read_its_source[mcp_resource_count]": {
+   "fingerprints": [
+    "0bbb9ba23912587d9a6b8d80ac73bfb890904ca816dc0750d72e8b8ac0a38de3"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260905T193145Z-a59f943"
+  },
+  "tests/meta/test_pipeline_check_quality.py::test_every_check_can_fail[llms_agent_count_self_consistent]": {
+   "fingerprints": [
+    "8494c81951216aa0734058c0e6dee90bbb649c3e74d556fc40e08bc193e45310"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260905T193145Z-a59f943"
+  },
+  "tests/meta/test_pipeline_check_quality.py::test_every_check_can_fail[mcp_resource_count]": {
+   "fingerprints": [
+    "8494c81951216aa0734058c0e6dee90bbb649c3e74d556fc40e08bc193e45310"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260905T193145Z-a59f943"
+  },
+  "tests/meta/test_pipeline_check_quality.py::test_a_prose_only_comparison_cannot_mint_a_finding[llms_agent_count_self_consistent]": {
+   "fingerprints": [
+    "e8be93be039dbe582d85250ab6d1a3df51fb2d3b7320f964ae63f9feb3a96d6b"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260905T193145Z-a59f943"
+  },
+  "tests/meta/test_pipeline_check_quality.py::test_a_prose_only_comparison_cannot_mint_a_finding[mcp_resource_count]": {
+   "fingerprints": [
+    "e8be93be039dbe582d85250ab6d1a3df51fb2d3b7320f964ae63f9feb3a96d6b"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260905T193145Z-a59f943"
+  },
+  "tests/meta/test_pipeline_check_quality.py::test_no_check_enumerates_the_answer_it_expects[llms_agent_count_self_consistent]": {
+   "fingerprints": [
+    "681f6b558064b67ce70d87ab320208e5ff244bbc7032b7c1a45cd16b1290c297"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260905T193145Z-a59f943"
+  },
+  "tests/meta/test_pipeline_check_quality.py::test_no_check_enumerates_the_answer_it_expects[mcp_resource_count]": {
+   "fingerprints": [
+    "681f6b558064b67ce70d87ab320208e5ff244bbc7032b7c1a45cd16b1290c297"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260905T193145Z-a59f943"
+  },
+  "tests/reconciliation/test_reconcile.py::test_sources_agree[llms_agent_count_self_consistent::llms_txt-vs-llms_txt_2]": {
+   "fingerprints": [
+    "sha256:5d8181b7cee20f5cafd8c44dfe1369b5"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260905T193145Z-a59f943"
+  },
+  "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_resource_count::llms_txt-vs-mcp_json]": {
+   "fingerprints": [
+    "sha256:a94ffaae844009e0edf0a27d103ddfea"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260905T193145Z-a59f943"
+  },
+  "tests/meta/test_pipeline_check_quality.py::test_every_extractor_can_read_its_source[clob_pair_count]": {
+   "fingerprints": [
+    "0bbb9ba23912587d9a6b8d80ac73bfb890904ca816dc0750d72e8b8ac0a38de3"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260905T190532Z-f233726"
+  },
+  "tests/meta/test_pipeline_check_quality.py::test_every_check_can_fail[clob_pair_count]": {
+   "fingerprints": [
+    "8494c81951216aa0734058c0e6dee90bbb649c3e74d556fc40e08bc193e45310"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260905T190532Z-f233726"
+  },
+  "tests/meta/test_pipeline_check_quality.py::test_a_prose_only_comparison_cannot_mint_a_finding[clob_pair_count]": {
+   "fingerprints": [
+    "e8be93be039dbe582d85250ab6d1a3df51fb2d3b7320f964ae63f9feb3a96d6b"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260905T190532Z-f233726"
+  },
+  "tests/meta/test_pipeline_check_quality.py::test_no_check_enumerates_the_answer_it_expects[clob_pair_count]": {
+   "fingerprints": [
+    "681f6b558064b67ce70d87ab320208e5ff244bbc7032b7c1a45cd16b1290c297"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260905T190532Z-f233726"
+  },
+  "tests/reconciliation/test_reconcile.py::test_sources_agree[clob_pair_count::llms_txt-vs-mcp_json]": {
+   "fingerprints": [
+    "sha256:54901377d28dca5bd401ab6c0c833d56"
+   ],
+   "at": "2026-09-09T22:07:14+00:00",
+   "run_id": "run-20260905T190532Z-f233726"
   }
  }
 }

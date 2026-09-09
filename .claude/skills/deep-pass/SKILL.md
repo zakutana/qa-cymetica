@@ -74,7 +74,8 @@ the file rather than remembering:
   {"id": "RC1", "what": "...", "why": "...",
    "votes": {"t1": "no", "t2": "no", "t3": "yes"},
    "test": "tests/meta/test_x.py::test_y", "commit": "...", "handover": true}],
- "meta_tests": {"start": 218, "end": 218, "reason": null}}
+ "meta_tests": {"start": 218, "end": 218, "reason": null},
+ "finished": true}
 ```
 
 * **Step 0** carries `retrospective.last` forward from the previous run's file
@@ -84,13 +85,23 @@ the file rather than remembering:
   `verdict` stay null.
 * **Step 4** fills `votes` and `verdict` per gap, one at a time.
 * **Step 5** reads the file for `verdict == "real" and not fixed`, and sets
-  `fixed` and `commit` as each one lands.
+  `fixed` and `commit` as each one lands. A gap it deliberately leaves for the
+  operator gets `deferred_to_operator: true` **in the same breath as the
+  paragraph naming it** — nothing else in this repository ever wrote that
+  field, so `tests/repo/test_deep_pass_finished.py` could not tell a gap
+  properly handed over from one silently abandoned, and every honest pass
+  looked like the second. Found by the second reader of the 2026-09-09 rule
+  change, who went looking for a true positive the new inconclusive branch
+  might be swallowing and found instead that the field had never been written
+  at all.
 * **Any step that changes a rule** appends to `rule_changes` — see the
   procedure below. A pass that changed none writes `[]`; leaving the key out
   says something different and `tests/repo/test_deep_pass_finished.py` reads
   the difference.
 * **Step 10** writes `DEEP-PASS.md` from this file, not from recollection.
-* **Step 11** sets `retrospective.done` and `meta_tests.end`.
+* **Step 11** sets `retrospective.done`; **step 11b** sets `meta_tests.end`
+  and `finished`, on every pass, and `finished` is what lets the guard tell
+  a pass in flight from a pass that skipped its promises.
 
 `tests/repo/test_deep_pass_finished.py` reads all of it back. It checks the
 form of what was written, not that everything done was written — that half is
@@ -243,11 +254,55 @@ Three `check-auditor` agents in parallel, splitting the checks between them.
 Each holds a check's `verdict=` line against the contract its docstring names.
 
 Which checks: those whose fingerprint has changed since they were last
-audited. `audits/checks.json` maps nodeid → the fingerprint audited and when.
-Fingerprints come from the newest run record in `state/runs/`
-(`results[].check_fingerprint`). The first run audits everything; later runs
-audit only what moved. Self-limiting by construction, the same way
-`verification_owed` in `qa/fold.py` is.
+audited. `audits/checks.json` maps nodeid → the fingerprints audited and when.
+The first run audits everything; later runs audit only what moved.
+Self-limiting by construction, the same way `verification_owed` in
+`qa/fold.py` is.
+
+**Where the fingerprints come from, and the two ways of getting it wrong.**
+This said "the newest run record in `state/runs/`" until 2026-09-09. Every
+pytest invocation writes a run record — including step 0's own
+`pytest tests/meta -q` — so the newest record is normally a PARTIAL run.
+Tonight it held 398 results, all of them `tests/meta`: read literally, every
+vendor-facing check was absent from it and would have dropped silently out of
+scope while two hundred meta checks read as never audited. That is rule 1's
+shape, a partial run standing in for a full one, applied to the pass's own
+scoping.
+
+So: for each nodeid, its NEWEST known `check_fingerprint` across all run
+records, newest first — and then filtered against what still exists, because
+the union over all records carries the nodeids of deleted tests (72 of 587
+tonight, including a file this pass's own day removed) and an auditor sent to
+read a function that is not there can report nothing but confusion. The second
+half only became necessary because of the first; whoever changes one changes
+both.
+
+That recipe is `scripts/never_fired.py::audit_scope(audited, runs, live)`,
+because a paragraph cannot be red and this one was wrong twice:
+
+```bash
+python - <<'EOF'
+import json, glob, io, os, importlib.util
+spec = importlib.util.spec_from_file_location("nf", "scripts/never_fired.py")
+nf = importlib.util.module_from_spec(spec); spec.loader.exec_module(nf)
+audited = json.load(io.open("audits/checks.json", encoding="utf-8"))["audited"]
+runs = [json.load(io.open(p, encoding="utf-8"))
+        for p in sorted(glob.glob("state/runs/*.json"), key=os.path.getmtime,
+                        reverse=True)]
+scope = nf.audit_scope(audited, runs)
+print(len(scope))
+for nodeid in scope:
+    print(nodeid)
+EOF
+```
+
+It returns FUNCTIONS, parametrised ids already collapsed, because that is what
+an auditor reads: 273 nodeids were 54 functions on the night this was written.
+Split those between the three agents with whole files kept together. Write no
+SCRATCH file under `audits/` while doing it — the sanctioned writes there
+(`checks.json`, and the gap appends below) are committed by step 6's own
+`git add -A` before `prereg.py` ever looks, and a stray one is not.
+`tests/repo/test_audit_scope.py` holds both halves against the real records.
 
 Update `audits/checks.json` afterwards whatever it found — an audit that found
 nothing still happened.
@@ -428,10 +483,22 @@ pointer nobody had:
 
 ```bash
 git log -p -- DEEP-PASS.md            # every past pass, in full
-git log --since='7 days ago' --stat --format='%h %ad %s%n%(trailers)'
+git log -p -- audits/deep-pass-progress.json   # every pass's own notebook
+git log --since='7 days ago' --stat --format='%h %ad %s%n%b%n%(trailers)'
 python -m pytest --collect-only -q | tail -1
 python scripts/never_fired.py --zeros | head -1
 ```
+
+The notebook and the commit BODIES are on that list because of a question
+put to a pass while it was running: would the week see the review that night
+had just done, and the question about the agents' effort asked an hour
+earlier?
+It would not have. Step 10 reads `audits/deep-pass-progress.json` and step 11
+did not, and the file is overwritten each run so only git history holds the
+past ones — every vote, every correction, every question put to a pass lived
+where the week could not see it. And `%s` is the subject line, while this
+repository deliberately keeps its reasoning in the body: the week would have
+read "16 real, 2 minority" and none of why.
 
 plus `audits/checks.json` (what was audited, when) and the memory directory
 (how many files, what was merged, what was retired). The transcripts are step
@@ -452,7 +519,31 @@ Three questions, answered in Czech under **Týden**, in that order:
    later corrected (`correction_owed`, `withdraw`) is in the ledger.
 
 **"Nic neměnit" is a complete answer** and is written as such. Then set
-`retrospective.last` to today and `done` to true, and `meta_tests.end`.
+`retrospective.last` to today and `done` to true.
+
+### 11b · Close the notebook, whatever happened above
+
+Two writes, and both go in on EVERY pass, not only when the week was due.
+
+* `meta_tests.end`, the `def test_` count under `tests/meta` now. It used to be
+  written only by step 11, which runs only when a week is owed — so on every
+  other pass it stayed null, the guard coerced null to zero, and growth in the
+  self-tests read as none. Unexplained growth in `tests/meta` was invisible for
+  six days out of seven. Found 2026-09-09.
+* `finished: true`. Until it is there, the pass is running: step 0 opens the
+  file with `retrospective {last: null, done: false}` and step 11 is what sets
+  `done`, so for the whole of every pass the progress file is indistinguishable
+  from one that skipped the week. `tests/repo/test_deep_pass_finished.py` read
+  that as a broken promise, step 6 runs `pytest tests/repo` in the middle of
+  it, and step 9 reverts the run's commits on a red it cannot resolve — so a
+  pass following this spine literally would have reverted its own night. The
+  guard now reports inconclusive while a pass is running and fails only when an
+  unfinished file is more than 24 hours old, which is a pass that died halfway.
+  The window is elapsed time and not a calendar day: it WAS a calendar day for
+  four hours on 2026-09-09, the clock rolled to 09-10 while the pass that wrote
+  it was still running, and it declared that pass dead — the exact failure the
+  whole distinction exists to prevent, in a job named for the night. `finished` is what tells the two apart, so it is the last thing
+  written before the push and nothing else may write it.
 
 ### 12 · Push
 

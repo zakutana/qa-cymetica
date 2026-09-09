@@ -63,6 +63,15 @@ PROGRESS = REPO / "audits" / "deep-pass-progress.json"
 KEYS_FROM = "2026-09-09"
 WEEK = 7
 
+# How long a pass may be in flight before an unwritten `finished` stops
+# meaning "running" and starts meaning "died". This was a CALENDAR-DAY
+# comparison for four hours on 2026-09-09, and the clock rolled to 09-10
+# while the pass that wrote it was still running: it declared that pass dead,
+# turned this guard red, and step 9 reverts a night on an unresolvable red.
+# A day boundary, in the guard over a job named for the night. Found by the
+# first reader of the rule change, who noticed it in passing.
+MAX_PASS = _dt.timedelta(hours=24)
+
 
 def _known_nodeids() -> set[str]:
     """Every `path::name` the repository actually has.
@@ -118,10 +127,32 @@ def liveness(progress: dict, today: str | None = None) -> str:
     """
     if progress.get("finished"):
         return "finished"
-    at = str(progress.get("at") or "")[:10]
+    stamped = _when(str(progress.get("at") or ""))
+    if stamped is None:
+        return "abandoned"
     if today is None:
-        today = _dt.date.today().isoformat()
-    return "running" if at and at == today else "abandoned"
+        now = _dt.datetime.now(_dt.timezone.utc)
+    else:
+        # A bare date given as "now" means the END of that day, so that
+        # liveness(pass stamped 02:00 today, today="today") reads running
+        # rather than negative-elapsed.
+        now = _when(today if len(today.strip()) > 10
+                    else today.strip() + "T23:59:59+00:00")
+    if now is None:
+        return "abandoned"
+    return "running" if _dt.timedelta(0) <= now - stamped <= MAX_PASS else "abandoned"
+
+
+def _when(text: str):
+    """A timestamp or a bare date, as an aware datetime. None if neither."""
+    text = text.strip()
+    for form in (text, text[:10]):
+        try:
+            when = _dt.datetime.fromisoformat(form.replace("Z", "+00:00"))
+        except ValueError:
+            continue
+        return when if when.tzinfo else when.replace(tzinfo=_dt.timezone.utc)
+    return None
 
 
 def problems(progress: dict, nodeids: set[str] | None = None) -> list[str]:
@@ -345,6 +376,17 @@ def test_a_pass_still_running_is_not_a_pass_that_skipped_the_week():
     # And the hole that would open if "unfinished" simply meant "excused":
     assert liveness(running, today="2026-09-27") == "abandoned"
     assert liveness(_pass(finished=True), today="2026-09-27") == "finished"
+
+    # A pass runs at NIGHT. This compared calendar days for four hours on
+    # 2026-09-09, and the clock rolled over while the pass that wrote it was
+    # still going: it declared that pass dead and turned this guard red, which
+    # is the exact failure the whole function exists to prevent.
+    assert liveness(running, today="2026-09-20T06:00:00+00:00") == "running"
+    assert liveness(running, today="2026-09-21T03:00:00+00:00") == "abandoned"
+    # A stamp the future cannot explain is not a pass in flight either.
+    assert liveness(_pass(at="2026-10-01T02:00:00+00:00"),
+                    today="2026-09-20T06:00:00+00:00") == "abandoned"
+    assert liveness(_pass(at="not a date"), today="2026-09-20") == "abandoned"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
