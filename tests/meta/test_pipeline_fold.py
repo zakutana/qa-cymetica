@@ -705,24 +705,6 @@ def test_supersede_merges_rows_and_excludes_from_tiles():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_failed_read_marks_stale_and_does_not_move_filing():
-    """Operating rule 8. bounty.py could not tell 401 from an empty tracker,
-    so an expired key read as "the vendor closed everything"."""
-    from qa.fold import fold
-
-    state = ledger(row("CYM-a", checks=[CHECK_A]))
-    events = _filed("CYM-a", 46, "fixed")
-    events.append(event("vendor_read", at="2026-09-05T12:00:00+00:00",
-                        source="scripts/bounty.py", klass="unauthorized",
-                        evidence_id="ev-9"))
-
-    after = fold(state, events=events)
-    r = after["findings"]["CYM-a"]
-    assert r["filing"]["state"] == "FIX_CLAIMED", "a failed read must not undo a good one"
-    assert r["filing"]["stale_from"] == "2026-09-05T12:00:00+00:00"
-
-
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_journal_only_fold_keeps_the_run_that_last_judged_the_rows():
     """A fold that adjudicated nothing must not un-adjudicate what came before.
 
@@ -773,6 +755,13 @@ def test_a_failed_read_marks_every_row_and_a_clean_one_clears_it():
 
     A read that records no class at all speaks neither way: it is not evidence
     that the tracker was readable, and not evidence that it was not.
+
+    The mark is also the ONLY thing a failed read may do, and that half was a
+    second test in this file until 2026-09-09: a failed read is not an empty
+    read, so it may not move a filing state -- least of all the FIX_CLAIMED
+    that a read which SUCCEEDED had put there. Merged in below rather than
+    kept beside this one, because the row here never leaves NOT_RAISED and so
+    could not have caught it.
     """
     from qa.fold import fold
 
@@ -798,6 +787,16 @@ def test_a_failed_read_marks_every_row_and_a_clean_one_clears_it():
                "by": "agent", "source": "scripts/bounty.py"}
     assert stale([bad, unknown]) == "2026-09-05T10:00:00+00:00", \
         "a classless read cleared a mark it is no evidence against"
+
+    # The filing half, on a row that has one.
+    filed = ledger(row("CYM-a", checks=[CHECK_A]))
+    events = _filed("CYM-a", 46, "fixed") + [
+        event("vendor_read", at="2026-09-05T12:00:00+00:00",
+              source="scripts/bounty.py", klass="unauthorized",
+              evidence_id="ev-9")]
+    r = fold(filed, events=events)["findings"]["CYM-a"]
+    assert r["filing"]["state"] == "FIX_CLAIMED", "a failed read must not undo a good one"
+    assert r["filing"]["stale_from"] == "2026-09-05T12:00:00+00:00"
 
 
 # ---------------------------------------------------------------------------
