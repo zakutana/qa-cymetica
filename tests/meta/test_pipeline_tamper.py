@@ -58,18 +58,6 @@ def test_a_hand_written_key_is_refused(tmp_path, key, value):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_a_state_change_without_a_cause_is_refused(tmp_path):
-    from qa.state import LedgerError, load_ledger
-
-    path = tmp_path / "ledger.json"
-    path.write_text(json.dumps(_ledger(transitions=[
-        {"axis": "check", "from": "REPRODUCING", "to": "PASSING",
-         "cause": {}, "at": "2026-09-05T00:00:00+00:00"}])), encoding="utf-8")
-    with pytest.raises(LedgerError, match="run_id"):
-        load_ledger(path)
-
-
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_run_record_edited_after_attestation_is_refused(tmp_path):
     """Critique gap 1, the half that needs no git.
 

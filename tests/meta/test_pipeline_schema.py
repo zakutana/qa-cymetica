@@ -93,7 +93,15 @@ def test_write_is_atomic_and_round_trips(tmp_path):
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_load_rejects_transitions_without_a_cause(tmp_path):
-    """A CHECK transition must cite a run_id; a FILING one an event_id."""
+    """A CHECK transition must cite a run_id; a FILING one an event_id.
+
+    Rule 3 at the loader, which is where it has to be: there is nowhere to
+    write a state by hand, and a file that carries one is refused rather than
+    read. test_pipeline_tamper.py stated the same thing over the check axis
+    alone until 2026-09-09; this one covers both, so the weaker copy went and
+    its framing came here. Its parametrised sibling, the four hand-written keys
+    that were really in the committed ledger, is not a duplicate and stays.
+    """
     from qa.state import LedgerError, load_ledger
 
     def ledger_with(transition):
