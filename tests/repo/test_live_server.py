@@ -271,7 +271,7 @@ def test_the_page_knows_which_render_it_is():
     import re
 
     render = _render_module_for_page()
-    html = render.render(render.build_payload(allow_stale_head=True))
+    html = render.render(render.build_payload())
 
     baked = re.search(r'const RENDERED_AS = "([0-9a-f]{64})"', html)
     assert baked, "the page does not carry the digest it was rendered from"

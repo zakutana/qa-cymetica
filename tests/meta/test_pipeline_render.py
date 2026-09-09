@@ -16,9 +16,12 @@ Three rules here, each of which would have caught one of those:
      and it prints the run id and the nodeid, so it can be checked.
   2. Every row lands in exactly one displayed bucket, and the buckets sum to
      the number of rows.
-  3. Rendering is refused when the ledger does not cite the journal's current
-     head -- a projection that has fallen behind its source is not a view of
-     anything.
+  3. The page says which journal event the state it shows was composed at,
+     and says only what the ledger knows. It used to REFUSE to render behind
+     the journal; that refusal is gone, because the console appends two
+     vendor_read events a quarter-hour and the fold moves nothing on them --
+     see scripts/ledger.py::drift, which asks the question the refusal was
+     reaching for and asks it of the rows.
 
 Fails at 1188032: render.py imports load_ledger from scripts.ledger, which no
 longer exists, and reads a `state` field that rows no longer carry.
@@ -157,25 +160,46 @@ def test_counts_reconcile_and_every_bucket_rendered(tmp_path, monkeypatch):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_render_refuses_stale_ledger_head(tmp_path, monkeypatch):
-    """A projection that has fallen behind its source is not a view of
-    anything, and a dashboard that renders anyway is worse than no dashboard:
-    it looks current."""
+def test_the_page_says_which_journal_head_it_stands_on(tmp_path, monkeypatch):
+    """A page behind the journal is fine; a page that will not say so is not.
+
+    This replaces test_render_refuses_stale_ledger_head. Refusing was the
+    right instinct aimed at the wrong thing: build_payload raised when the
+    ledger cited anything but the journal's current head, so the console
+    (serve.py:151), both repo guards and this file all passed
+    allow_stale_head=True and the refusal reached nobody but the CLI -- while
+    the console appended two vendor_read events every fifteen minutes that the
+    fold reads only to set or clear stale_from.
+
+    Whether the ledger is WHAT ITS INPUTS FOLD TO is asked, of the rows, by
+    scripts/ledger.py::drift. What is left for the page is to say what it is a
+    view of, which is the honest version of the same care: the operator can
+    read the number and see it move after a fold.
+    """
     monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
-    from qa.state import append_event
+    from qa.state import append_event, head
     render = _render()
 
     append_event({"type": "note", "at": "2026-09-05T10:00:00+00:00",
                   "by": "operator", "source": "t", "finding_id": "CYM-a",
                   "text": "one"})
-    stale = _ledger(_row("CYM-a"), head={"seq": 0, "chain": ""})
+    behind = _ledger(_row("CYM-a"), head={"seq": 0, "chain": ""})
 
-    with pytest.raises(SystemExit, match="head"):
-        render.build_payload(ledger=stale)
+    # No refusal, and the payload carries the LEDGER's head, never the
+    # journal's -- the page may not claim more than the ledger knows.
+    payload = render.build_payload(ledger=behind)
+    assert payload["events_head"] == {"seq": 0, "chain": ""}
+    assert payload["events_head"] != head()
 
-    # Current head renders.
-    from qa.state import head
-    render.build_payload(ledger=_ledger(_row("CYM-a"), head=head()))
+    # And the page reads it. The field was already in the payload and hashed
+    # into the marker, and nothing drew it: an unread payload key, which is
+    # the class test_the_page_renders_every_field_it_is_given exists for and
+    # does not cover, because that one walks per-finding keys only.
+    assert re.search(r"\bD\.events_head\b", render.TEMPLATE), (
+        "the payload names the journal event the state was composed at and "
+        "the page does not print it"
+    )
+    assert "state as of" in render.render(payload)
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -635,8 +659,8 @@ def test_every_vendor_reply_carries_a_stable_date():
     when we last polled and bring the mark back after every sweep.
     """
     render = _render()
-    first = render.build_payload(allow_stale_head=True)
-    second = render.build_payload(allow_stale_head=True)
+    first = render.build_payload()
+    second = render.build_payload()
 
     def replies(payload):
         return {(f["id"], m.get("report_id")): m.get("at")

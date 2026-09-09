@@ -148,7 +148,7 @@ class Live:
             # and serving from a module frozen at startup would show markup
             # that no longer matches the file.
             self.render = _render_module()
-            payload = self.render.build_payload(allow_stale_head=True)
+            payload = self.render.build_payload()
             html = self.render.render(payload)
             digest = self.render.payload_hash(payload)
             error = None

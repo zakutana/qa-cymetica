@@ -189,13 +189,15 @@ def test_committed_dashboard_matches_the_committed_ledger():
 
     render_mod = _module("scripts/render.py", "render_consistency")
     try:
-        # Stale-head allowed HERE only: this guard asks whether the page is
-        # a render of the ledger. Whether the ledger is level with the
-        # journal is the sibling guard's question, and refusing on it here
-        # made this one skip on every run since every session appends an
-        # event of its own.
-        current = render_mod.payload_hash(
-            render_mod.build_payload(allow_stale_head=True))
+        # This guard asks one question: is the page a render of the ledger?
+        # Whether the ledger is level with the journal is the sibling guard's,
+        # and build_payload no longer refuses on it at all -- the flag that
+        # used to be needed here is gone with the refusal. The reason the flag
+        # gave was stale too: it said every pytest session appends a
+        # run_recorded event, which stopped being true when `attest` became
+        # default-off. What actually moves the journal under this guard is the
+        # console's timer.
+        current = render_mod.payload_hash(render_mod.build_payload())
     except SystemExit as exc:
         conclude(Measurement(verdict="inconclusive",
                              reason=f"the payload cannot be built: {exc}"))

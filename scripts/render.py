@@ -287,18 +287,22 @@ def latest_run() -> dict:
 
 
 def build_payload(ledger: dict | None = None, inventory: dict | None = None,
-                  thread: dict | None = None, run: dict | None = None,
-                  allow_stale_head: bool = False) -> dict:
+                  thread: dict | None = None, run: dict | None = None) -> dict:
     """Everything the page shows, derived and reconciled before it is shown.
 
-    `allow_stale_head` exists for exactly one caller: the guard that compares
-    the committed dashboard against the committed ledger. Every pytest session
-    appends a run_recorded event, so by the time that guard runs the journal
-    has always moved past the head the ledger cites -- and refusing there made
-    it skip on every single run. A guard that never executes is not a guard.
-    Whether the ledger is level with the journal is a different question, and
-    the sibling guard asks it; this one asks whether the page is a render of
-    the ledger. Nothing that writes a page may pass this.
+    This used to REFUSE, with `allow_stale_head` as the way past it, when the
+    ledger cited anything but the journal's current head. Every caller that
+    matters passed the escape -- the console on its watch loop, both repo
+    guards, the render tests -- so the refusal reached nobody but the CLI,
+    which is preceded by a fold anyway. Meanwhile the console appends two
+    vendor_read events a quarter-hour, and the fold reads those only to set or
+    clear stale_from.
+
+    Whether the ledger is WHAT ITS INPUTS FOLD TO is asked, of the rows, by
+    scripts/ledger.py::drift. What is left for the page is to SAY what it is a
+    view of, and the masthead now does: "state as of journal event N", from the
+    ledger's own head and never from the journal's. The page may not claim more
+    than the ledger knows, and the number moves when a fold moves it.
 
     The arguments exist so this can be exercised without the committed state
     directory. Passing none of them reads the repository, which is what
@@ -347,16 +351,6 @@ def build_payload(ledger: dict | None = None, inventory: dict | None = None,
         # No ledger at all is not a stale projection -- it is a repository
         # that has not folded one yet, and an empty page is the honest view.
         ledger = load_previous() or {"findings": {}, "events_head": current}
-
-    # A projection that has fallen behind its source IS a different matter: a
-    # page that renders anyway is worse than no page, because it looks
-    # current. Refuse, and say how to fix it.
-    cited = ledger.get("events_head")
-    if cited != current and not allow_stale_head:
-        raise SystemExit(
-            f"refusing to render: the ledger cites journal head {cited} but the "
-            f"journal is at {current}.\nRe-fold it first: python scripts/ledger.py"
-        )
 
     # The page describes the run the LEDGER was composed from, not whatever
     # record is newest. A two-test re-run of tests/repo/ is a perfectly valid
@@ -1312,6 +1306,10 @@ const SEV = [
 
 document.getElementById("meta").innerHTML = [
   ["run", D.run_id || "—"],
+  // What the ledger cites, never what the journal is at now. The journal
+  // moves on a timer and this page is hashed into a guard, so a live number
+  // here would make the dashboard stale against itself every fifteen minutes.
+  ["state as of", D.events_head ? `journal event ${D.events_head.seq}` : "—"],
   ["fingerprint", D.fingerprint || "—"],
   ["documented paths", D.totals.paths_documented ?? "—"],
   ["MCP tools anon / trusted", `${D.totals.tools_served_anon ?? "—"} / ${D.totals.tools_served_trusted ?? "—"}`],
