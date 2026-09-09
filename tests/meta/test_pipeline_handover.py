@@ -61,6 +61,16 @@ Běh od `f5708fa`, 46 commitů. Runy `PRE-0073`, level V.
 * **`A1-04b` · brána na inconclusive obchází měnovou půlku.** Jeden agent tvrdí,
   že s nulou přiznách se vrátí inconclusive dřív.
 
+## Změněná pravidla
+
+* **Guard pravidla 12 se ptá na řádky, ne na hlavičku žurnálu.** Tři agenti
+  nezávisle potvrdili, že to strážce nezeslabuje; test jmenuje incident.
+
+## Týden
+
+* **Nic neměnit.** Poměr testů se nepohnul, žádný mechanismus nepřestal
+  střílet.
+
 ## Čeká na tebe
 
 1. **#83 je jediný živý nález.** `portfolio/summary` hlásí nuly na účtu
@@ -133,6 +143,35 @@ def test_the_hook_carries_the_minority_report_too(tmp_path):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_hook_carries_what_the_pass_changed_and_the_week(tmp_path):
+    """The two headings a pass writes about itself, not about the findings.
+
+    The night loop may now change a rule on its own, under three conditions at
+    once, and the third of them is that the morning says in Czech what changed
+    and why. A paragraph in a file nobody opens is not saying so -- that is the
+    exact failure this hook exists for, which happened twice on 2026-09-08. So
+    a changed rule arrives in the same breath as the open items, and the
+    operator's veto is a veto over something they have actually seen.
+
+    Tyden is the same shape one rhythm up. A retrospective that lands where
+    nobody reads it is a ritual, and the operator's condition was that it must
+    not depend on them remembering.
+    """
+    report = tmp_path / "DEEP-PASS.md"
+    report.write_text(REPORT, encoding="utf-8")
+
+    proc = _run(report)
+    assert proc.returncode == 0, proc.stderr
+    assert "Guard pravidla 12" in proc.stdout, \
+        "a rule the pass changed on its own did not reach the morning"
+    assert "Nic" in proc.stdout, (
+        "the week's answer did not reach the morning -- and 'change nothing' "
+        "is the answer that most needs to arrive, because a retrospective that "
+        "speaks only when it proposes something becomes a proposal mill"
+    )
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_hook_does_not_paste_the_whole_report(tmp_path):
     """Bounded: the leads, not the prose under them.
 
@@ -146,7 +185,11 @@ def test_the_hook_does_not_paste_the_whole_report(tmp_path):
     proc = _run(report)
     assert "Zelená" not in proc.stdout, "the 'Co me to naucilo' prose is not handover"
     assert "Kontrakt audit" not in proc.stdout, "'Co se stalo' is history, not open work"
-    assert len(proc.stdout.splitlines()) <= 12
+    # Four sections now instead of two, so the cap moves with them -- but not
+    # by four times five. The two that a pass writes about ITSELF are capped
+    # tighter in the hook: a night that changed six rules has a bigger problem
+    # than a long handover, and the week's answer is one paragraph by design.
+    assert len(proc.stdout.splitlines()) <= 16
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

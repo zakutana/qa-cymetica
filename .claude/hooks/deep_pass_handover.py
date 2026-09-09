@@ -39,12 +39,26 @@ import unicodedata
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-PER_SECTION = 5
 LEAD_CHARS = 140
 
-# Both are matched after diacritics are stripped, so the skill may write the
-# heading with or without them.
-SECTIONS = (("ceka na tebe", "open"), ("minority report", "decide"))
+# All four are matched after diacritics are stripped, so the skill may write
+# the heading with or without them.
+#
+# The first two are about the findings; the last two are about the pass
+# itself, and they are here for the reason the whole hook is. A night that may
+# change a rule on its own owes the morning a Czech paragraph saying what and
+# why -- the operator's third condition, 2026-09-08 -- and a paragraph in a
+# file nobody opens is not owed, it is filed. Same for the week: a
+# retrospective that depends on somebody remembering to read it is the
+# mechanism this repository keeps discovering it does not have.
+#
+# Capped tighter than the findings. A pass that changed six rules in one night
+# has a worse problem than a long handover, and the week's answer is meant to
+# be one paragraph -- often "nic nemenit", which is the answer that most needs
+# to arrive, because a retrospective that speaks only when it proposes
+# something turns into a proposal mill.
+SECTIONS = (("ceka na tebe", "open", 5), ("minority report", "decide", 5),
+            ("zmenena pravidla", "rule", 3), ("tyden", "week", 2))
 
 
 def _plain(text: str) -> str:
@@ -91,11 +105,11 @@ def handover(report: str) -> list[str]:
         elif current is not None:
             bodies[current] += line + "\n"
 
-    for wanted, label in SECTIONS:
+    for wanted, label, cap in SECTIONS:
         body = next((text for head, text in bodies.items() if wanted in head), None)
         if body is None:
             continue
-        for block in _blocks(body)[:PER_SECTION]:
+        for block in _blocks(body)[:cap]:
             bold = re.search(r"\*\*(.+?)\*\*", block)
             if not bold:
                 continue
