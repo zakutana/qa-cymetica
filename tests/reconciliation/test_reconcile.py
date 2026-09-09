@@ -88,6 +88,24 @@ class Pair:
             "sources": {name: self.source_specs.get(name, {})
                         for name in (self.a, self.b)},
         }
+        # DIRECTION is part of what the comparison is, and it was hashed away.
+        # __init__ above reads these two keys to decide which source must be
+        # contained and which states the minimum -- the very fix its own
+        # comment records as the bug that nearly went to the vendor -- while
+        # the definition dict held neither. Flipping subset_of_pair on any of
+        # the four non-symmetric claims reversed the operands and left the
+        # fingerprint byte-identical, so CHECK_CHANGED never fired,
+        # verification_owed never reopened, and the row stayed VERIFIED FIXED
+        # under a claim that now asks the opposite question. Found by the deep
+        # pass of 2026-09-09; all three readers reproduced the collision.
+        #
+        # Added only WHEN PRESENT, so the symmetric claims keep the hash they
+        # have. Four fingerprints move tonight and four rows will read
+        # CHECK_CHANGED, which is the truthful reading: their definitions did
+        # change. Rule 5 -- no verifying run is composed in this commit.
+        for key in ("subset_of_pair", "floor"):
+            if self.claim.get(key):
+                definition[key] = self.claim[key]
         blob = json.dumps(definition, sort_keys=True, ensure_ascii=False)
         return "sha256:" + hashlib.sha256(blob.encode("utf-8")).hexdigest()[:32]
 

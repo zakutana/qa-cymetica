@@ -63,6 +63,7 @@ def _capture() -> dict:
 
 
 CLAIMS = _claims()["claims"]
+SOURCES = _claims().get("sources") or {}
 IDS = [c["id"] for c in CLAIMS]
 
 
@@ -130,6 +131,28 @@ def test_every_check_can_fail(claim):
 
     relation = claim["relation"]
     tolerance = float(claim.get("tolerance_pct", 0))
+
+    # THIS claim, before the relation in the abstract. Everything below
+    # perturbs _sample(relation) -- the literals 7 and frozenset({"a","b"}) --
+    # which proves relation_holds is non-constant and says nothing about
+    # whether this particular claim can ever go red. A claim whose two sides
+    # are the same document read with the same spec is constant-true by
+    # construction, is role: verdict (so it may open or close a finding), and
+    # passed all four quality guards. `llms_txt` and `llms_txt_2` are declared
+    # as the same URL in claims.yaml, in as many words -- "same doc, a second
+    # statement in it" -- so the two-names-one-document shape is one line away
+    # at all times. Found by the deep pass of 2026-09-09, three votes of
+    # three. The `subset` branch below already refused to reason from the
+    # declaration and says why; this is the same objection, one level up.
+    specs = claim["sources"]
+    if len(specs) == 2:
+        (an, aspec), (bn, bspec) = sorted(specs.items())
+        urls = {n: (SOURCES.get(n) or {}).get("url") for n in (an, bn)}
+        assert not (aspec == bspec and urls[an] == urls[bn] and urls[an]), (
+            f"{claim['id']}: {an} and {bn} are the same document "
+            f"({urls[an]}) read with the same spec ({aspec!r}), so the two "
+            f"sides are equal by construction and no state of the platform "
+            f"can make this check fail")
 
     if relation in ("all_equal", "set_equal"):
         holds, _ = relation_holds(relation, _sample(relation), _sample(relation), tolerance)
