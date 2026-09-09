@@ -283,6 +283,15 @@ most important finding of 2026-09-07 — a false verification already sitting on
 the vendor's server — was found by exactly one path. Three lines in a report
 cost less than that mistake.
 
+Raised on 2026-09-09 and left standing. The operator declined to rule on it and
+asked not to be handed decisions of this kind, so it rests on evidence rather
+than on a word from them -- and the evidence arrived the morning after the
+paragraph above was written. `A3-09` had one vote of three, was real, and was
+fixed in `702a65c`: the state-writer guard claimed a universal and scanned two
+directories. Deliberately **not** tagged `[operator ...]`, because nobody
+decided it but the loop, and the loop can be told otherwise. Do not put it back
+on an open list.
+
 Write `votes` and `verdict` into `audits/deep-pass-progress.json` **one gap at
 a time, as each is settled.** This is the step whose output exists nowhere but
 in context, and the one a compaction would erase without a single test going

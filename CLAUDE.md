@@ -17,6 +17,23 @@ asked for it. So it is kept here.
   how we will both know it is done**. If the operator did not say — and they
   usually will not — ask. One question at a time, then say the three back in
   a sentence and go.
+* [operator 2026-09-09] *"hele nevim, delej jak chces ale nechtel po me zadna
+  takova rozhnodnuti, ja vubec tomu systemu jeste nerozumim, budu se teprv
+  ucit jak funguje"*
+
+  Said after a session closed a piece of work by handing them five open
+  questions: how long to keep evidence, which dead files to remove, whether a
+  one-vote finding earns a line in the report, which effort a command runs at.
+  **Ask about the goal, the constraints and how we will both know it is done.
+  Do not hand over a judgement about how the system should work.** Those are
+  ours. The boundary of 2026-09-08 already said so -- default is go, veto
+  afterwards -- and a list of open decisions at the end of a piece of work is
+  that boundary quietly handed back.
+
+  The difference is not difficulty. It is who holds the material. Someone
+  still learning how a thing works cannot weigh a choice about it, so the
+  question is not a choice, it is homework. Decide, say what you decided and
+  what it rests on, and leave the veto open.
 * Non-trivial work starts in plan mode. Ask for it; do not wait to be told.
 * Tests before implementation. A test written afterwards passes whatever the
   code does, including the mistake, and 21 commits here carry code with no
@@ -254,8 +271,10 @@ scripts/never_fired.py  which of our mechanisms have never once occurred in
 (migration)       the one-shot that brought the ledger under the contract ran
                   2026-09-05; scripts/migrate_ledger.py was retired 2026-09-09,
                   spent and unrunnable (it refused on any non-empty journal). The
-                  record it left is what remains: three `migrated` events and
-                  state/ledger.seed.json.
+                  record it left is three `migrated` events in the journal.
+                  The seed it started from was state/ledger.seed.json; git
+                  history keeps that whether or not the file is still in the
+                  tree, so removing it loses nothing.
 tests/meta/       self-tests. Run FIRST and abort the session on failure, so
                   a broken guard stops every live request.
 tests/repo/       repository consistency. Deliberately NOT in tests/meta:

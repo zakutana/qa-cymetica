@@ -23,7 +23,8 @@
 > better estimate: it is `meta_tests` in the progress file, which makes the
 > growth report itself every night.
 >
-> What remains is the "Open for the operator" list at the end.
+> The five things this plan left open were decided on 2026-09-09 and are
+> at the end, under Rozhodnuto.
 
 Written 2026-09-09 from ARCHITECTURE.md (commit `702a65c`), CLAUDE.md, DEEP-PASS.md and
 the source. UNCONFIRMED / UNCERTAIN claims in ARCHITECTURE.md were not used; three of
@@ -123,7 +124,7 @@ Nothing may be added without something being removed.
   untagged, with that reason in the test. `deep-pass/SKILL.md:159-164` records the
   skill **departing** from an operator instruction (the minority report vs "discard
   everything below two votes") — under the new boundary that needs the operator's
-  word, one way or the other (see "Open for the operator").
+  word, one way or the other; decided 2026-09-09, see Rozhodnuto at the end.
 * **A fourth imbalance the brief did not list**: `evidence/` — 5 346 files, 196 MB,
   +729 files / +52 MB on 09-08 alone. Measured by writer, and the first answer was
   wrong: the console is **not** the main writer. ~5 000 files (~170 MB) are written by
@@ -553,21 +554,50 @@ the pattern is not already held by `read-the-whole-path-before-explaining-it`.
 7. Next morning: the SessionStart hook prints Čeká na tebe, Minority report, Změněná
    pravidla and Týden leads.
 
-## Open for the operator (decisions, not steps — one word each)
+## Rozhodnuto 2026-09-09 -- taken here, veto open
 
-* **Evidence retention.** `evidence/` grows ~50 MB a day and is 196 MB. The writer is
-  the **test suite**, not the console: every check stores the whole request and response
-  of every call on every run, and nothing dedupes them because their bodies change. Of
-  the whole store only 99 files / 0.9 MB are load-bearing — the evidence the fold
-  refuses a filing move without (`qa/fold.py:463-471`). Three answers, one word: keep
-  committing all of it; stop committing evidence a check merely passed on (keep it on
-  disk, gitignored, like `state/runs/`); or cap what is stored per response. This is the
-  largest growth mechanism in the repository and V1 does not touch it.
-* **Three dead tracked files under `state/`** a session cannot remove (the hook refuses):
-  `state/ledger.seed.json`, `state/thread.json`, `state/inventory.before-fix.json`.
-  `git rm` by hand, or leave.
-* **`state/runs/`** on disk: uncited records are never pruned and `never_fired.py`
-  parses all of them; pruning needs a sanctioned writer in `qa/state.py`. Not built here.
-* **The minority report** (`deep-pass/SKILL.md:159-164`) departs from the instruction
-  "discard everything below two votes". Ratify it with a date, or revert it.
-* **`/channels` at low effort** against the table's "correspondence: high".
+This was a list of five questions for the operator. They answered four with
+questions of their own and the fifth with *"nechtel po me zadna takova
+rozhnodnuti, ja vubec tomu systemu jeste nerozumim"*, now a pinned decision in
+CLAUDE.md. So they are decided below, each on the fact it rests on, and any of
+them reverses on one word.
+
+* **Evidence: stop committing new ones, keep every existing file.** The fact
+  that settles it is that **nothing reads the store by machine.**
+  `EvidenceStore.load()` has exactly one caller in the repository and it is a
+  meta test; `render.py` mentions evidence zero times; the report that goes to
+  the vendor carries none; 1 of 41 ledger rows carries an `evidence_id`; 279 of
+  5346 files are cited by the journal. `git rm` would also shrink nothing --
+  207 MB is in git history and stays there -- so the only live question was the
+  future rate, about 700 files and 50 MB a day. Not built here, because it wants
+  test-first and a commit of its own. The shape, so the next session does not
+  re-derive it: gitignore `evidence/`; a `_track_evidence` beside
+  `scripts/ledger.py::_track_run_record`; called where the journal attests an
+  event carrying an `evidence_id` (`qa/state.py:763 append_event`, or its
+  callers in `submit.py` / `bounty.py`); then `git rm --cached` the uncited.
+  Check first which repo test asserts a cited evidence file exists -- that is
+  the guard that goes red.
+* **The three dead files: remove them.** Confirmed unread -- nothing in `.py`,
+  `.md`, `.html`, `.cmd` or `.sh` opens `state/thread.json`,
+  `state/ledger.seed.json` or `state/inventory.before-fix.json`. The one hit
+  that looked like a reader, `tests/meta/test_pipeline_checks.py:383`, reads
+  `tests/meta/fixtures/inventory.before-fix.json`, a separate copy. The hook
+  refuses a session's `rm` under `state/`, correctly, so the command runs in the
+  operator's own terminal once and nothing here waits on it. CLAUDE.md's
+  migration entry was reworded first, so it is true either way.
+* **`state/runs/`: keep all of it. The item should not have been on the list.**
+  The operator's objection is right, and it is the point of the whole week step:
+  history is what a retrospective is computed from. `never_fired.py` parses every
+  record to say what has ever fired. The split is already correct -- 305 of 697
+  are tracked in git because the ledger stands on them, the other 392 are
+  gitignored local debug output that adjudicated nothing and costs local disk
+  only.
+* **The minority report stands, on evidence rather than on a ruling.** `A3-09`
+  had one vote of three on 2026-09-08, was real, and was fixed the next morning
+  in `702a65c`. Recorded in `deep-pass/SKILL.md` beside the departure, and
+  deliberately not tagged `[operator ...]`: the loop decided it, so the loop can
+  be told otherwise.
+* **`/channels` stays at low effort.** Reading three channels' status is not
+  writing to the vendor, which is what the table's "high" row is about. If a
+  report filed off a low-effort read is ever corrected, the week says so --
+  `correction_owed`, `withdraw` -- and that is the evidence that would move it.
