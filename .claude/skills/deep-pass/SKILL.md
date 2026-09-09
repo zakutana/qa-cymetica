@@ -221,6 +221,12 @@ spine — not a docstring and not a comment.
    no to both. This is its own step, not a paragraph of reasoning inside the
    session that wrote the change — the whole value is that the reader did not
    write it.
+
+   **Record each vote as the bare word `no` or `yes`**, nothing else — `no`
+   meaning it weakens nothing and touches no decision, which is the vote that
+   lets the change land. The agent's reasoning goes in `why`, not in `votes`.
+   `tests/repo/test_deep_pass_finished.py` reads these two words and says so
+   when it sees a third.
 2. **A test that names the incident**, landing in the same commit.
 3. **A Czech paragraph under `Změněná pravidla`** in `DEEP-PASS.md`, which the
    SessionStart hook prints in the morning. The operator's veto is only a veto

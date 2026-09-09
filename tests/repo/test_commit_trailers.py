@@ -113,6 +113,21 @@ def test_the_hook_is_quiet_when_nobody_set_an_effort(tmp_path):
         assert done.returncode == 0, done.stderr
         return msg.read_text(encoding="utf-8")
 
+    try:
+        run("probe\n", None)
+    except OSError as exc:
+        # No POSIX shell on this machine, so the hook cannot be exercised
+        # here -- and git could not run it either. That is a fact about the
+        # environment, not about the hook, and the module docstring says such
+        # a case reports inconclusive. It used to raise FileNotFoundError out
+        # of the test instead. Found by review, 2026-09-09.
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason=f"no POSIX shell to run the hook with ({exc}); git could "
+                   f"not run it on this machine either",
+            sources={"hook": ".githooks/prepare-commit-msg"}))
+        return
+
     body = "a commit\n\nCo-Authored-By: Someone <x@y>\n"
 
     silent = run(body, None)

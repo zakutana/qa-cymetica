@@ -78,8 +78,20 @@ def _known_nodeids() -> set[str]:
     return {f"{rel}::{name}" for rel, name, _ in mod._test_functions()}
 
 
-def _days(later: str, earlier: str) -> int:
-    return (date.fromisoformat(later[:10]) - date.fromisoformat(earlier[:10])).days
+def _days(later: str, earlier: str) -> int | None:
+    """None when either date cannot be read.
+
+    `date.fromisoformat` raises on anything that is not a date, and a pass
+    writing the obvious literal for a week that never happened -- "never"
+    rather than null -- would make this guard ERROR instead of report. A file
+    whose whole job is to say what a pass left unfinished must not be the thing
+    that raises. Found by review, 2026-09-09.
+    """
+    try:
+        return (date.fromisoformat(str(later)[:10])
+                - date.fromisoformat(str(earlier)[:10])).days
+    except (TypeError, ValueError):
+        return None
 
 
 def problems(progress: dict, nodeids: set[str] | None = None) -> list[str]:
@@ -114,11 +126,17 @@ def problems(progress: dict, nodeids: set[str] | None = None) -> list[str]:
                    "thing it may not depend on")
     else:
         last, done = retro.get("last"), bool(retro.get("done"))
-        due = last is None or _days(at, str(last)) >= WEEK
+        elapsed = None if last is None else _days(at, last)
+        # An unreadable date is treated as "never", not as "recently": the
+        # safe direction for a trigger the operator asked never to depend on
+        # somebody remembering.
+        due = last is None or elapsed is None or elapsed >= WEEK
         if due and not done:
             out.append(
                 f"the week was due (last {last or 'never'}, this pass {at[:10]}) "
-                f"and this pass did not do it")
+                f"and this pass did not do it"
+                + ("" if last is None or elapsed is not None else
+                   f"; `last` is {last!r}, which is not a date"))
 
     changes = progress.get("rule_changes")
     if changes is None:
@@ -130,8 +148,21 @@ def problems(progress: dict, nodeids: set[str] | None = None) -> list[str]:
         for change in changes:
             who = change.get("id") or change.get("what") or "?"
             votes = change.get("votes") or {}
-            agreed = sum(1 for v in votes.values()
-                         if str(v).lower() in ("no", "does not weaken", "ok", "false"))
+            # The vocabulary is exactly "no" and "yes", answering "does this
+            # weaken a guard or touch a decision?" -- and the skill says so
+            # where the pass writes the file. It accepted four spellings and
+            # documented none, so an agent's answer recorded verbatim ("no, it
+            # does not weaken any guard") counted as disagreement and turned
+            # this red on a compliant pass. Found by review, 2026-09-09.
+            spoken = {k: str(v).strip().lower() for k, v in votes.items()}
+            odd = sorted(k for k, v in spoken.items() if v not in ("no", "yes"))
+            if odd:
+                out.append(
+                    f"rule change {who}: {odd} answered something other than "
+                    f"'no' or 'yes'. The question is whether the change weakens "
+                    f"a guard or touches an [operator ...] paragraph, so 'no' "
+                    f"is the vote that lets it land")
+            agreed = sum(1 for v in spoken.values() if v == "no")
             if agreed < 2:
                 out.append(f"rule change {who}: {agreed} of 3 agents said it "
                            f"does not weaken a guard; two is the floor")

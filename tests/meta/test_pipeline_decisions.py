@@ -81,7 +81,12 @@ def decisions(text: str) -> list[dict]:
                and not ITEM.match(lines[j + 1]) and not TAG.search(lines[j + 1])):
             j += 1
         body = " ".join(" ".join(lines[i:j + 1]).split())
+        # `span` is the 0-based half-open line range, returned rather than
+        # recomputed by callers: the tripwire below needs to know which lines a
+        # decision covers, and a second copy of this loop would be free to
+        # disagree with this one the moment either changed.
         found.append({"date": tag.group(1), "line": i + 1, "body": body,
+                      "span": range(i, j + 1),
                       "sha256": hashlib.sha256(body.encode("utf-8")).hexdigest()})
     return found
 
@@ -94,25 +99,38 @@ def _text(rel: str) -> str:
 # words. Added to only when they make one; never edited to make a test pass.
 PINNED = {
     "CLAUDE.md": [
-        ("2026-09-07", "both halves of this are their instruction"),
-        ("2026-09-08", "pushovat se bude jen v deep pasu"),
-        ("2026-09-08", "jestli neco v dokumentaci neni"),
-        ("2026-09-06", "nechapu proc tvorit ty artifacty"),
-        ("2026-09-05", "the wallet stays unverified"),
+        ("2026-09-07", "both halves of this are their instruction",
+         "73951f58e15c2865c681eaa9b432c84453ac399c1d7c6e01056a1779c7df6b2f"),
+        ("2026-09-08", "pushovat se bude jen v deep pasu",
+         "24dc71665c3dc1604518393e8a065f31768bc30cfcf6090787e1c827679f6db4"),
+        ("2026-09-08", "jestli neco v dokumentaci neni",
+         "b9f592459c8890095492cd4bfbc54ad8315ba61f5c2b1561f01ace427c29eb3b"),
+        ("2026-09-06", "nechapu proc tvorit ty artifacty",
+         "e9e06543700e4ef3df1adcbff995ba1db022ea8d6181e6d8f3e1715f38d44825"),
+        ("2026-09-05", "the wallet stays unverified",
+         "d9ce618c9d1f48611e45423d9d07ba2f8ec951eb686c2f9c7d46c3c4ace7aa5a"),
     ],
     ".claude/skills/qa-sweep/SKILL.md": [
-        ("2026-09-06", "kdyz napisu sweep"),
-        ("2026-09-06", "file without asking"),
-        ("2026-09-07", "libi se mi ze po sweepu"),
+        ("2026-09-06", "kdyz napisu sweep",
+         "610e9b087433a203e8e38e73dcbe1c6f85f4ef3552dbf59ff499e704efc79d49"),
+        ("2026-09-06", "file without asking",
+         "06d4c8a79677483d48c429b42d7fd00bba92f7d808e098992f599a141dd0b28c"),
+        ("2026-09-07", "libi se mi ze po sweepu",
+         "f4798675029b70b2926b9019189a8ddff76b9cb24e4aad1ed409b78ee6fe0c9d"),
     ],
     ".claude/skills/channels/SKILL.md": [
-        ("2026-09-08", "kdyz je server vypnuty"),
-        ("2026-09-08", "the bell is bug-tracker only"),
+        ("2026-09-08", "kdyz je server vypnuty",
+         "45c092f91272b69262a18cb5e05e107ef404910f4c7d45892d72a73a27c46d91"),
+        ("2026-09-08", "the bell is bug-tracker only",
+         "d19c226ec84ee951da90b3d36b279ade48560674dfd6cdb3786698a8229a5311"),
     ],
     ".claude/skills/deep-pass/SKILL.md": [
-        ("2026-09-07", "nechci behem dne ztracet cas"),
-        ("2026-09-08", "the night loop may change the rules"),
-        ("2026-09-08", "tos celou dobu cekal na me jedno slovo"),
+        ("2026-09-07", "nechci behem dne ztracet cas",
+         "99c552e7f54ed42777ce76d246f0d2038f0c49be80d8c10eaded976b5b2ae855"),
+        ("2026-09-08", "the night loop may change the rules",
+         "e280ab0ad68dc07d06651ec89c6eaafef7a5488130a1e337a6f6f769d834c4b1"),
+        ("2026-09-08", "tos celou dobu cekal na me jedno slovo",
+         "c0da8c03a527261e41cfa17265f32caabba02db77c0d094815a4c3221098b5b5"),
     ],
 }
 
@@ -126,17 +144,25 @@ EXCEPTIONS = {
 }
 
 
-def _pinned_pairs() -> list[tuple[str, str, str]]:
-    return [(rel, date, hint) for rel, rows in PINNED.items() for date, hint in rows]
+def _pinned_rows() -> list[tuple[str, str, str, str]]:
+    return [(rel, date, hint, digest)
+            for rel, rows in PINNED.items() for date, hint, digest in rows]
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-@pytest.mark.parametrize("rel,date,hint", _pinned_pairs())
-def test_every_decision_the_operator_made_is_still_there(rel, date, hint):
-    """Starts from the pinned list, so a DELETED decision fails.
+@pytest.mark.parametrize("rel,date,hint,digest", _pinned_rows())
+def test_every_decision_the_operator_made_is_still_there(rel, date, hint, digest):
+    """Starts from the pinned list, so a DELETED decision fails -- and holds
+    the HASH, so a reworded one fails too.
 
-    The obvious shape -- walk the tags in the file, check each against a list
-    -- is green on a deletion, because a tag that is gone is a tag not walked.
+    Two mistakes, both made here first. The obvious shape -- walk the tags in
+    the file, check each against a list -- is green on a deletion, because a
+    tag that is gone is a tag not walked. And the first version of this file
+    pinned only (date, hint): the hint is a substring, so rewriting
+    *"Pushovat se bude jen v deep pasu nebo kdyz vylozene reknu."* into
+    *"Pushovat se bude jen v deep pasu, nebo kdykoliv se mi zachce."* kept the
+    substring, kept both tests green, and reversed the decision. The docstring
+    claimed a hash the code never compared. Found by review, 2026-09-09.
     """
     here = [d for d in decisions(_text(rel)) if d["date"] == date
             and hint.lower() in d["body"].lower()]
@@ -145,6 +171,13 @@ def test_every_decision_the_operator_made_is_still_there(rel, date, hint):
         f"operator's, not a rule -- restore it, or take it to them"
     )
     assert len(here) == 1, f"{rel}: {date} {hint!r} appears {len(here)} times"
+    assert here[0]["sha256"] == digest, (
+        f"{rel}:{here[0]['line']}: the decision of {date} has been reworded.\n"
+        f"  now: {here[0]['body'][:160]}\n"
+        f"These are the operator's words. If they changed them, update the "
+        f"pin with the new hash and say in the commit that they did; if they "
+        f"did not, put the sentence back."
+    )
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -154,12 +187,16 @@ def test_no_decision_was_added_or_reworded_without_the_operator(rel):
     mouth, and a reworded one is the same thing with a paper trail."""
     pinned = PINNED.get(rel, [])
     for found in decisions(_text(rel)):
-        match = [(d, h) for d, h in pinned
+        match = [(d, h, g) for d, h, g in pinned
                  if d == found["date"] and h.lower() in found["body"].lower()]
         assert match, (
             f"{rel}:{found['line']}: a decision tagged {found['date']} that "
             f"nothing pins: {found['body'][:90]!r}. If they said it, pin it "
             f"here; if they did not, it is a rule and must not wear the tag"
+        )
+        assert any(found["sha256"] == g for _, _, g in match), (
+            f"{rel}:{found['line']}: tagged {found['date']} and pinned, but "
+            f"the words have moved: {found['body'][:90]!r}"
         )
 
 
@@ -175,16 +212,12 @@ def test_nothing_quotes_the_operator_outside_a_tagged_decision(rel):
     """
     text = _text(rel).replace("\r\n", "\n")
     lines = text.split("\n")
-    covered = set()
-    for found in decisions(text):
-        start = found["line"] - 1
-        end = start + found["body"].count("\n")
-        j = start
-        while (j + 1 < len(lines) and lines[j + 1].strip()
-               and not ITEM.match(lines[j + 1]) and not TAG.search(lines[j + 1])):
-            j += 1
-        covered.update(range(start, j + 1))
-        del end
+    # From the parser's own spans. This recomputed the block boundary with a
+    # second copy of the loop in decisions(), which is the one thing this
+    # repository keeps learning not to do: widen the rule in one place and the
+    # copy quietly disagrees, here by reporting a covered line as an untagged
+    # decision -- in tests/meta, which aborts every session.
+    covered = {i for found in decisions(text) for i in found["span"]}
 
     loose = []
     for pattern in (QUOTED, ATTRIBUTED):
