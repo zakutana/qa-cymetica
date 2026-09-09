@@ -1,14 +1,29 @@
 # Upgrade plan — balance, three rhythms, the red guard, model/effort
 
-> **Provedeno 2026-09-09.** All twelve steps, `ee1c5e5..83724f0`, 22 commits on
-> `main`, not pushed. 458 passed / 1 skipped in `tests/meta tests/repo` after
-> every step; 513 collected across the whole suite. `/code-review` at high over
-> the branch returned five findings, all fixed in `83724f0` — the first of them
-> serious and in this plan's own step 10: the decision guard promised a hash it
-> never compared. Two things this plan predicted wrongly are recorded where they
-> happened: the evidence store's composition (Context) and "test functions about
-> even" (they grew by 40 collected items, ratio 88.6% → 89.5%). What remains is
-> the "Open for the operator" list at the end.
+> **Provedeno 2026-09-09.** All twelve steps, from `ee1c5e5` onward, on `main`,
+> not pushed. `pytest tests/meta tests/repo` was green after every step and is
+> 458 passed / 1 skipped now; 513 collected across the whole suite.
+> `/code-review` at high over the branch returned five findings, all fixed in
+> `83724f0` -- the first of them serious and in this plan's own step 10: the
+> decision guard promised a hash it never compared, so rewording an operator's
+> decision passed green.
+>
+> **Three numbers this plan predicted wrongly**, recorded here rather than
+> quietly left standing. The evidence store's composition: the test suite
+> writes about 94% of it, not the console (corrected in Context, on the
+> operator's challenge). "Test functions about even": they grew by 40 collected
+> items, and the self-test ratio went 419/473 to 459/513, 88.6% to 89.5% -- the
+> wrong direction. "About -870 lines, +160": actually -1059 and +1584 across
+> `scripts qa tests .claude .githooks CLAUDE.md`, a net **+525**. The deletions
+> landed as planned (447 + 178 + 105 + 87 for the migration script, its test,
+> `qa/messages.py` and render's dead code); the additions were three times the
+> estimate, nearly all of it the guards this plan itself required -- the
+> boundary pin, the loop's promises, `drift`'s cases and the trailer test.
+> That is the imbalance the brief was about, and the answer to it is not a
+> better estimate: it is `meta_tests` in the progress file, which makes the
+> growth report itself every night.
+>
+> What remains is the "Open for the operator" list at the end.
 
 Written 2026-09-09 from ARCHITECTURE.md (commit `702a65c`), CLAUDE.md, DEEP-PASS.md and
 the source. UNCONFIRMED / UNCERTAIN claims in ARCHITECTURE.md were not used; three of
