@@ -390,8 +390,12 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"  {fid}: {before.get(fid, '-')} -> {after.get(fid, '-')}")
         return 1
 
+    # --check returned above, so this is always True -- written as the
+    # expression anyway, because tests/meta pins it: a fold that writes no
+    # ledger must write nothing to the journal, and the pin is what stops a
+    # restructure attesting during a read-only check. It caught this one.
     ledger = compose(run_id=args.run_id, events_only=args.events_only,
-                     attest=True)
+                     attest=not args.check)
 
     if "rejected_run" in ledger:
         # Refuse rather than write. Composing an inadmissible record would
