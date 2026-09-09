@@ -311,8 +311,8 @@
     }
   ],
   "retrospective": {
-    "last": null,
-    "done": false
+    "last": "2026-09-09",
+    "done": true
   },
   "rule_changes": [
     {
@@ -332,13 +332,13 @@
   ],
   "meta_tests": {
     "start": 225,
-    "end": null,
-    "reason": null
+    "end": 226,
+    "reason": "One new FUNCTION in tests/meta, 225 -> 226: test_pipeline_tamper.py::test_a_refold_uses_the_inputs_that_produced_the_ledger. What it was considered for merging into and why not: the five existing drift tests in that file call the pure drift() on hand-built dicts and answer 'did anything move?'; this one answers 'which inputs does a refold use?', a different question against a different function (refold_recipe), and folding it in would have made one of those tests assert two contracts. Collected CASES in tests/meta grew 396 -> 404, the other seven being parameters added to two existing tests: five error-body shapes on the trust-ladder vocabulary test and two on the decisions pin. Parameters, not functions. Everything else this pass added went to tests/repo: four cases in test_deep_pass_finished.py and the new file test_audit_scope.py. That file is the honest cost of condition 2 of the operator's rule-change procedure -- a change to the spine needs a test naming the incident, and a scope recipe that lived in prose had nowhere to be tested. It is in tests/repo and not tests/meta on purpose: a wrong audit scope misroutes readers, it does not admit a bad state, so it must not abort a live session."
   },
   "prorez": {
     "memory": "anthropic-skills:consolidate-memory is NOT an available skill in this session (ListSkills returned import-memory, morning, skill-creator, xlsx, pptx, pdf, docx and nothing else), so the pass did the three bounded moves by hand rather than waiting. One merge: an-open-decisions-list-hands-the-boundary-back, written earlier today, folded into the older the-operator-does-not-review-documents, which already held the 'they will not review' half; the 2026-09-09 half says the one-word choice is not enough either when they cannot evaluate it. Its line dropped from MEMORY.md, 25 lines to 24; the file stays on disk because rm is not allowlisted. No retirements: each remaining memory was checked against CLAUDE.md, the tests and the skills and none is fully held elsewhere. Note for the next pass: the merged file's NAME is now narrower than its content.",
     "mechanisms": "never_fired --zeros: 7 of 54, unchanged from 2026-09-08. Every one is exercised by a named test, so none has the 'never fired AND never exercised' shape that sends a mechanism to removal. Nothing cut.",
-    "tests": "pending step 11"
+    "tests": "One new FUNCTION in tests/meta, 225 -> 226: test_pipeline_tamper.py::test_a_refold_uses_the_inputs_that_produced_the_ledger. What it was considered for merging into and why not: the five existing drift tests in that file call the pure drift() on hand-built dicts and answer 'did anything move?'; this one answers 'which inputs does a refold use?', a different question against a different function (refold_recipe), and folding it in would have made one of those tests assert two contracts. Collected CASES in tests/meta grew 396 -> 404, the other seven being parameters added to two existing tests: five error-body shapes on the trust-ladder vocabulary test and two on the decisions pin. Parameters, not functions. Everything else this pass added went to tests/repo: four cases in test_deep_pass_finished.py and the new file test_audit_scope.py. That file is the honest cost of condition 2 of the operator's rule-change procedure -- a change to the spine needs a test naming the incident, and a scope recipe that lived in prose had nowhere to be tested. It is in tests/repo and not tests/meta on purpose: a wrong audit scope misroutes readers, it does not admit a bad state, so it must not abort a live session."
   },
   "decided_in_advance": "If an auditor claims a gap in tests/meta/test_pipeline_decisions.py, the fix would edit the test that pins the operator's decisions, and 1c says this pass does not touch that file. Such a finding goes to 'Ceka na tebe' by name whatever the three agents vote. Decided at step 2, so that it is not decided at 3am by whoever is holding the finding.",
   "cleared_by_audit": "Group 2 independently cleared tests/meta/test_pipeline_decisions.py (26 passed; the presence walk is parametrized from the pinned rows so a deletion fails, the SHA-256 comparison is real and all 15 digests match, both tripwire regexes match live text, and the negative control works) and tests/repo/test_state_guard.py (the refusal tests cannot pass if the refusal breaks; protect_state.py writes nothing under any branch). That closes the concern recorded in decided_in_advance -- no finding lands on the file this pass may not touch.",
@@ -374,5 +374,7 @@
     "check_changed_decision": "Seven rows read CHECK_CHANGED and NONE is rebound tonight. Three are the reconciliation claims whose fingerprint now covers the direction of the comparison (B03) and four are in files whose modules this pass edited. For the three, the measurement is arguably unchanged and a rebind-check would be defensible; for the trust-ladder ones the measurement genuinely DID change, because a 401 that used to read `executed` now reads `unknown`. Rebinding asserts that what is measured did not move, and that assertion is false for at least some of these seven. So they stay CHECK_CHANGED, which is not a defect -- it is rule 5 saying these want re-verifying under their new definitions -- and the next sweep clears them the honest way. Named in the handover.",
     "never_fired": "7 of 54, unchanged, every one exercised",
     "step7": "Skipped by its own condition: no fix touched qa/state.py, qa/fold.py or qa/measure.py. The files changed are two skills' prose, scripts/ledger.py, scripts/never_fired.py, four test modules and one hook."
-  }
+  },
+  "finished": true,
+  "at_finished": "2026-09-09T22:19:31+00:00"
 }
