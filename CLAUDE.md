@@ -107,6 +107,11 @@ its own setting does not fit the work in front of it.
 | the deep pass | Opus 5 · xhigh (its frontmatter carries it) |
 | architecture, a plan like `docs/UPGRADE-PLAN.md` | Fable 5.1 or Opus 5 · max |
 
+[operator 2026-09-09] *"ano 5. levny protoze jen cte"* -- the `/channels` row.
+They ruled on it after a session put the mismatch to them: the table says
+correspondence needs high, and a status read is not correspondence. So that row
+is theirs now, not the loop's, and the loop may not raise it on its own.
+
 **The first line of a task names its class, what that class needs, and what
 this session is running on** — the model from its own system prompt, the effort
 from `$CLAUDE_EFFORT`, which every Bash command and hook can read. If the
@@ -434,6 +439,15 @@ not spent during one.
 The bash sandbox is Linux, the workspace is Windows. Writing UTF-8 through
 bash heredocs silently corrupts files (truncation, embedded null bytes). Use
 the Write and Edit tools for file content; bash is fine for running things.
+
+**A command handed to the operator runs in Windows PowerShell 5.1, not in the
+bash sandbox.** `&&` is a parser error there, and so are `||`, `2>/dev/null`
+and every here-string this file's own examples use. Give one command per
+block, or chain with `;` when a failure of the first is harmless. On
+2026-09-09 a session handed them `git rm ... && git commit ...`; it died on the
+`&&` before either half ran, and they had to ask what the error was. The shell
+is named in the session's own environment block, so this is not something a
+session has to discover.
 
 ## Decided and closed: the wallet stays unverified
 
