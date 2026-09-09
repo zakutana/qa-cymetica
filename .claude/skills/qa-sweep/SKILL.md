@@ -1,7 +1,8 @@
 ---
 name: qa-sweep
-description: Re-check the open Cymetica findings, take the one action each one's status calls for, and report what changed. Use when the operator says /qa-sweep, "projdi bugy", "udelej sweep", or asks for the current state of the QA work. Say "full sweep" / "cely sweep" to re-verify all 31 rows instead.
-effort: medium
+description: Re-check the open Cymetica findings, take the one action each one's status calls for, and report what changed. Use when the operator says /qa-sweep, "projdi bugy", "udelej sweep", or asks for the current state of the QA work. Say "full sweep" / "cely sweep" to re-verify every row instead.
+model: sonnet
+effort: high
 ---
 
 # QA sweep
@@ -25,7 +26,7 @@ when it lived in a sibling project that has since been deleted.
 
 Default to the narrow one. The operator's decision, 2026-09-06: *"kdyz napisu
 sweep tak chci jen at udelas ty otevrene bugy"*. Most sweeps have nothing to
-say about the 29 settled rows, and 82 seconds is almost entirely waiting on
+say about the settled rows, and the time is almost entirely waiting on
 their server.
 
 Two things make the narrow default safe, and both are load-bearing:
@@ -42,7 +43,7 @@ Two things make the narrow default safe, and both are load-bearing:
   everything, and never remove that marker to tidy the page.
 
 Run the full width when the operator asks, before anything that depends on all
-31 rows being current, and when a row's check definition has changed —
+every row being current, and when a row's check definition has changed —
 `selector_full` is what lets the fold say a check has gone missing rather than
 merely untested.
 

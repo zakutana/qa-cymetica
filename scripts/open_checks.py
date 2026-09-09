@@ -1,9 +1,12 @@
 """The selector for a sweep that only looks at what is still open.
 
-A full sweep re-adjudicates all 31 rows and takes 82 seconds, nearly all of it
-waiting on their server. Most sweeps have nothing to say about 29 of those
-rows: they are verified fixed, withdrawn or superseded, and re-running them
-changes a state about as often as never. The operator asked for the default to
+A full sweep re-adjudicates every row and takes about a minute and a half,
+nearly all of it waiting on their server. Most sweeps have nothing to say about
+almost all of them: they are verified fixed, withdrawn or superseded, and
+re-running them changes a state about as often as never. (This said "all 31
+rows" and "29 of those" until 2026-09-09, when the ledger held 41 -- 31 is the
+count of VERIFIED FIXED, which is why the wrong number survived: it is still on
+the dashboard, against a different label.) The operator asked for the default to
 be the two that are actually open, with the full pass kept as its own command.
 
 That is safe, but only because of two things that are easy to get wrong:

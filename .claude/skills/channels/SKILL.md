@@ -1,6 +1,7 @@
 ---
 name: channels
 description: Check all three channels we talk to Cymetica on — bug reports, Telegram, a2a — and report where each stands. Use when the operator says /channels, "zkontroluj kanaly", "prisla nejaka zprava?", "co je noveho", or asks whether the vendor has answered. Also the place to re-arm the chat alert after a /clear.
+model: sonnet
 effort: low
 ---
 
