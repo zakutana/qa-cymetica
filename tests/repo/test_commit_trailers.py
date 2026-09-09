@@ -69,28 +69,64 @@ def test_the_effort_trailer_hook_is_installed_or_honestly_absent():
         return
 
     problems = []
-    if configured != ".githooks":
-        problems.append(f"core.hooksPath is {configured!r}, so the hook in "
-                        f".githooks never runs")
-    if not HOOK.is_file():
+    # Whether the hook this repository ships is the one git will run, not
+    # whether core.hooksPath is spelled the way we spell it. `configured !=
+    # ".githooks"` called a working install broken: git accepts an ABSOLUTE
+    # core.hooksPath at the same directory and runs the hook from it. Found
+    # 2026-09-09, three votes of three.
+    try:
+        pointed_at = (REPO / configured).resolve()
+    except OSError:
+        pointed_at = None
+    if pointed_at != HOOK.parent.resolve():
+        problems.append(f"core.hooksPath is {configured!r}, which is not "
+                        f"{HOOK.parent}, so the hook this repository ships "
+                        f"never runs")
+    elif not HOOK.is_file():
         problems.append(".githooks/prepare-commit-msg does not exist, and "
                         "core.hooksPath points at a directory without it -- "
                         "which also means no OTHER git hook can be added there")
     else:
-        body = HOOK.read_text(encoding="utf-8")
-        if "CLAUDE_EFFORT" not in body:
-            problems.append("the hook does not read $CLAUDE_EFFORT")
-        # Appending unconditionally would stamp a second trailer on every
-        # amend and on every rebase that replays a commit.
-        if "Effort:" not in body:
-            problems.append("the hook does not look for an Effort: trailer "
-                            "before adding one")
+        # BEHAVIOUR, not substrings. This asked whether "CLAUDE_EFFORT" and
+        # "Effort:" appear in the hook's source -- and both appear in its own
+        # comment block, so a hook truncated to its comments plus `set -e`
+        # reported passed with the reason "the hook there records the effort a
+        # commit was written under" while no commit recorded anything.
+        # Presence over source text, where the contract is behaviour: the
+        # 2026-09-07 class exactly, in the check written to catch it.
+        import os
+        import tempfile
+
+        env = {k: v for k, v in os.environ.items() if k != "CLAUDE_EFFORT"}
+        env["CLAUDE_EFFORT"] = "probe-effort"
+        with tempfile.TemporaryDirectory() as tmp:
+            msg = Path(tmp) / "COMMIT_EDITMSG"
+            msg.write_text("probe" + chr(10), encoding="utf-8")
+            try:
+                done = subprocess.run(["sh", str(HOOK), str(msg), "message"],
+                                      cwd=REPO, env=env, capture_output=True,
+                                      text=True)
+            except OSError as exc:
+                conclude(Measurement(
+                    verdict="inconclusive",
+                    reason=f"no POSIX shell to run the hook with ({exc}); git "
+                           f"could not run it on this machine either",
+                    sources={"hook": ".githooks/prepare-commit-msg"}))
+                return
+            wrote = msg.read_text(encoding="utf-8")
+        if done.returncode != 0:
+            problems.append(f"the hook exits {done.returncode}, so it would "
+                            f"block a commit: {done.stderr.strip()[:200]}")
+        if "Effort: probe-effort" not in wrote:
+            problems.append(f"the hook did not record an effort it was given: "
+                            f"{wrote!r}")
 
     conclude(Measurement(
         verdict="failed" if problems else "passed",
         reason=("; ".join(problems) if problems else
-                "core.hooksPath points at .githooks and the hook there records "
-                "the effort a commit was written under"),
+                f"core.hooksPath resolves to {HOOK.parent.name}, and the hook "
+                f"there was run against a message file and did record the "
+                f"effort it was given"),
         left=problems,
         sources={"hook": ".githooks/prepare-commit-msg"}))
 
