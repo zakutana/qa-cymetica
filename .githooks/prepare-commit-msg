@@ -26,9 +26,13 @@ msg_file="$1"
 [ -f "$msg_file" ] || exit 0
 [ -n "$CLAUDE_EFFORT" ] || exit 0
 
-# Only the trailer we would add. A commit whose prose happens to contain the
-# word effort is not one that already carries the trailer.
-if grep -qi '^Effort:[[:space:]]' "$msg_file"; then
+# Only a line in the exact shape of the trailer: the key, one word, nothing
+# else. `^Effort:[[:space:]]` was the first version and it failed on the very
+# first commit it ran on -- the one that added this hook, whose prose wrapped
+# so that a line began "Effort: lines read as two commits". The hook read that
+# as a trailer already present and added none. A body can say anything; a
+# trailer is one word.
+if grep -qiE '^Effort:[[:space:]]+[^[:space:]]+[[:space:]]*$' "$msg_file"; then
     exit 0
 fi
 

@@ -119,13 +119,25 @@ def test_the_hook_is_quiet_when_nobody_set_an_effort(tmp_path):
     stamped = run(body, "xhigh")
     twice = run(stamped, "xhigh")
 
+    # The defect this hook shipped with, found by its own first real commit.
+    # That message explained the hook, and its prose wrapped so that a line
+    # began "Effort: lines read as two commits"; the guard against
+    # double-stamping was `^Effort:[[:space:]]`, matched it, and added nothing.
+    # A body may say anything. A trailer is the key and one word.
+    prose = ("a commit\n\nthe hook skips a message where an\n"
+             "Effort: line already appears in the prose, which is not\n"
+             "the same thing at all\n")
+    wrapped = run(prose, "high")
+
+    ok = (silent == body and "Effort: xhigh" in stamped
+          and twice.count("Effort: ") == 1
+          and wrapped.rstrip().endswith("Effort: high"))
     conclude(Measurement(
-        verdict="passed" if (silent == body
-                             and "Effort: xhigh" in stamped
-                             and twice.count("Effort:") == 1) else "failed",
-        reason=("unset effort adds nothing, a set one is recorded once, and a "
-                "second pass over the same message adds no second trailer"
-                if (silent == body and "Effort: xhigh" in stamped
-                    and twice.count("Effort:") == 1) else
-                f"unset={silent!r} set={stamped!r} twice={twice!r}"),
+        verdict="passed" if ok else "failed",
+        reason=("unset effort adds nothing, a set one is recorded once, a "
+                "second pass adds no second trailer, and prose that merely "
+                "starts a line with the key does not suppress the real one"
+                if ok else
+                f"unset={silent!r} set={stamped!r} twice={twice!r} "
+                f"prose={wrapped!r}"),
         sources={"hook": ".githooks/prepare-commit-msg"}))
