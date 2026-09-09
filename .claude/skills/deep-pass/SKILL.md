@@ -14,9 +14,11 @@ happened and what needs a decision.
 Named for what it is, not for when it runs. It suits a night because it is
 long and needs nobody, but it is meant to be run in the day too.
 
-Their reason for it, 2026-09-07: *"nechci behem dne ztracet cas code review a
-optimalizaci"*. Review and self-correction are exactly the work that does not
-need them present — and 2026-09-07 spent hours of their day on it.
+[operator 2026-09-07] *"nechci behem dne ztracet cas code review a
+optimalizaci"*
+
+Review and self-correction are exactly the work that does not need them
+present, and hours of a working day went into it on 2026-09-07.
 
 **Nobody will click "allow" while this runs.** Every step assumes that. If
 something is refused, record it and continue; never wait.
@@ -207,9 +209,11 @@ each one loud rather than silent:
 
 ### 1c · Changing a rule, which this pass may now do
 
-The operator, 2026-09-08: the night loop may change the rules themselves, under
-**three conditions at once**. A "rule" here is CLAUDE.md's twelve, a guard's
-assertion, a hook, or a skill's spine — not a docstring and not a comment.
+[operator 2026-09-08] the night loop may change the rules themselves, under
+three conditions at once, and the default is to go — they can veto afterwards.
+
+A "rule" here is CLAUDE.md's twelve, a guard's assertion, a hook, or a skill's
+spine — not a docstring and not a comment.
 
 1. **Three `finding-triage` agents, no shared context**, each handed the diff
    and one question: *does this weaken a guard, and does it touch a paragraph
@@ -301,9 +305,12 @@ By the repository's rules, not quickly:
 
   **That category is far narrower than it feels at 3am.** On the first run I
   put eighteen findings in it, the operator woke up, said one word, and I
-  fixed them in twenty minutes — work they could have slept through. Their
-  reply: *"tos celou dobu cekal na me jedno slovo abych pracoval 20 minut? To
-  jsem mohl jeste spat."* So, explicitly:
+  fixed them in twenty minutes — work they could have slept through.
+
+  [operator 2026-09-08] *"tos celou dobu cekal na me jedno slovo abych
+  pracoval 20 minut? To jsem mohl jeste spat."*
+
+  So, explicitly:
 
   * Making a check assert the contract **its own docstring names** is not a
     decision. It is the repair. Do it.

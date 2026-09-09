@@ -24,10 +24,13 @@ when it lived in a sibling project that has since been deleted.
 | "sweep", "projdi bugy", `/qa-sweep` | **open rows only**, plus `tests/meta` | ~25s |
 | "full sweep", "cely sweep", "over vsechno" | the whole suite | ~82s |
 
-Default to the narrow one. The operator's decision, 2026-09-06: *"kdyz napisu
-sweep tak chci jen at udelas ty otevrene bugy"*. Most sweeps have nothing to
-say about the settled rows, and the time is almost entirely waiting on
-their server.
+Default to the narrow one.
+
+[operator 2026-09-06] *"kdyz napisu sweep tak chci jen at udelas ty otevrene
+bugy"*
+
+Most sweeps have nothing to say about the settled rows, and the time is almost
+entirely waiting on their server.
 
 Two things make the narrow default safe, and both are load-bearing:
 
@@ -116,9 +119,10 @@ judgement, one row at a time. Read the states off the folded ledger.
 
 ## Rules that hold during a sweep
 
-* **File without asking.** Standing instruction from the operator: they will
-  not read or approve drafts. Write the report and send it. Everything the
-  vendor receives is in English.
+* [operator 2026-09-06] **File without asking.** Their standing instruction:
+  they will not read or approve drafts. Write the report and send it.
+  Everything the vendor receives is in English. (Undated in this file until
+  2026-09-09; the date is from `git blame` on the commit that wrote it.)
 * **Before reporting anything as still broken, check whose bug it is.** This
   is the one thing that replaces the operator's review, so it is not optional.
   Three times now a failing check was ours: a `subset` relation with the
@@ -170,8 +174,10 @@ Short. Four parts, no preamble:
    and 289 passing guards had said nothing, because a guard exercises its own
    mechanism and then goes home.
 
-   Operator's request, 2026-09-07: *"libi se mi ze po sweepu jsi prisel z
-   navrhy co vylepsit, to je dobre pravidlo to tak delej"*. The reason it
+   [operator 2026-09-07] *"libi se mi ze po sweepu jsi prisel z navrhy co
+   vylepsit, to je dobre pravidlo to tak delej"*
+
+   The reason it
    works is that a sweep is the only moment the whole system has just been
    exercised end to end, so the weak parts are visible and cheap to name --
    and by the next session they are invisible again.

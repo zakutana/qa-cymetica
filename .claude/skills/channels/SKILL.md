@@ -7,9 +7,12 @@ effort: low
 
 # Channels
 
-Three channels, one journal, one command. The operator on 2026-09-08:
-*"kdyz je server vypnuty tak je treba udelat nejaky skill nebo komand ze ti jen
-povim at zkontrolujes vsechny kanaly a podas mi stav."* This is that.
+Three channels, one journal, one command.
+
+[operator 2026-09-08] *"kdyz je server vypnuty tak je treba udelat nejaky skill
+nebo komand ze ti jen povim at zkontrolujes vsechny kanaly a podas mi stav."*
+
+This is that.
 
 ## The check
 
@@ -58,8 +61,10 @@ API is how we would get rate-limited.
 **A Monitor lives only as long as the session.** After a `/clear`, or in a new
 session, nothing reaches the chat until it is armed again — so arm it when the
 operator asks for the alert, and say plainly that it stopped when the session
-did. The console's bell does not cover this: it is bug-tracker only, by the
-operator's decision on 2026-09-08.
+did. The console's bell does not cover this:
+
+[operator 2026-09-08] the bell is bug-tracker only. Telegram and a2a stay off
+the console, and the alert here is what covers them.
 
 Automated first-pass replies are silent on purpose — 35 of the 39 a2a messages
 we hold are the trophy-emoji routing prompt, and an alert that fires on those is
