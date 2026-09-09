@@ -22,7 +22,7 @@
       },
       "verdict": "real",
       "fixed": true,
-      "commit": "pending",
+      "commit": "358c2d6",
       "real_votes": 3
     },
     {
@@ -37,7 +37,7 @@
       },
       "verdict": "real",
       "fixed": true,
-      "commit": "pending",
+      "commit": "358c2d6",
       "real_votes": 2
     },
     {
@@ -307,7 +307,7 @@
       "votes": null,
       "verdict": null,
       "fixed": true,
-      "commit": "pending"
+      "commit": "358c2d6"
     }
   ],
   "retrospective": {
@@ -325,7 +325,7 @@
         "t3": "no"
       },
       "test": "tests/repo/test_audit_scope.py::test_a_partial_run_does_not_shrink_the_audit",
-      "commit": "pending",
+      "commit": "358c2d6",
       "handover": true,
       "what_the_readers_caught": "All three voted no, and between them they found five defects in the change that did not move the vote. Two readers independently: the step-2 recipe did not RUN -- a heredoc turned the escape in print('\n'.join(scope)) into a real newline, the third time that trap fired tonight and this time in the snippet written to replace prose with code. Two readers: 'write nothing to audits/' contradicted the bolded instruction eight lines below to append each gap as it arrives, which is the one thing a compaction destroys. Two readers: liveness() compared calendar days, so a pass crossing midnight read as dead -- and it WAS red, on this pass, when the clock rolled to 2026-09-10 while it was still running. A day boundary in the guard over a job named for the night. One reader: the new prose passed the operator-quote tripwire only because a line break fell between 'the operator' and the date, so a re-wrap would have turned a tests/meta test red and aborted every session. One reader: deferred_to_operator had never been written by anything. All five fixed before this landed."
     }
