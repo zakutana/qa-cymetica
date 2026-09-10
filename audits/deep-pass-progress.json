@@ -146,8 +146,8 @@
       "fixed": true,
       "commit": "8ec5b45",
       "real_votes": 3,
-      "deferred_part": "The report_plugin axis is NOT fixed and goes to the operator: it replaces the AST check_fingerprint with measurement.fingerprint instead of combining them, so editing a check's body leaves its identity unchanged. Combining moves all 41 rows at once and one reader could not establish from git history whether the replacement was deliberate.",
-      "deferred_to_operator": true
+      "deferred_part": "DECIDED BY THE PASS, not handed over. The report_plugin axis stays unfixed until the next pass digs the history out: it replaces the AST check_fingerprint with measurement.fingerprint instead of combining them, so editing a check's body leaves its identity unchanged. Fixing it moves all 41 rows at once and nobody has yet established whether the replacement was deliberate. Waiting one pass is better than moving every check's identity on an undocumented assumption. This was first written into 'Ceka na tebe' as a question for the operator, which is exactly what their own decision of 2026-09-09 says not to do; corrected after they pointed out the report did not say plainly what waited for them.",
+      "deferred_to_operator": false
     },
     {
       "id": "B04",

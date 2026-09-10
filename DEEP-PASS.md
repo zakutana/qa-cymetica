@@ -91,10 +91,14 @@ testů se ptá, jestli se něco pohnulo, tenhle se ptá, z čeho se to přepoč�
   Příští sweep je uklidí poctivou cestou. Nemusíš s tím dělat nic, jen ať tě to na stránce
   nepřekvapí.
 
-* **Druhá půlka nálezu o otiscích zůstává neopravená a je to rozhodnutí, ne opomenutí.**
-  Otisk odvozený z kódu se spočítá a pak zahodí ve prospěch jiného, takže úprava těla
-  kontroly její identitu nezmění. Spravit to znamená pohnout všemi 41 řádky najednou
-  a jeden ze čtenářů nedokázal z historie zjistit, jestli to zahození bylo úmyslné.
+* **Druhou půlku nálezu o otiscích jsem odložil na příští průchod a rozhodl jsem to
+  sám.** Nejdřív jsem ji napsal sem jako otázku pro tebe, a to bylo proti tvému
+  vlastnímu rozhodnutí z 9. září. Takže: otisk odvozený z kódu se spočítá a pak zahodí
+  ve prospěch jiného, takže úprava těla kontroly její identitu nezmění. Opravit to
+  znamená pohnout všemi 41 řádky najednou a nikdo zatím nedoložil, jestli to zahození
+  bylo úmyslné. Příští průchod to má za úkol vyhrabat z historie a teprve pak měnit —
+  ne proto, že je to na tebe, ale proto, že měnit identitu všech kontrol kvůli
+  nedoložené domněnce je horší než počkat jeden den.
 
 * **Konzole neběží od 8. září 19:05.** Až ji pustíš, poběží s kódem, který dnes vznikl.
 
