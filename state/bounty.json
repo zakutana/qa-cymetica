@@ -25,15 +25,15 @@
   "our_reports": {
     "endpoint": "GET /api/v1/bounty/my-reports?wallet_address=<addr>",
     "klass": "ok",
-    "read_at": "2026-09-10T12:51:33+00:00",
-    "evidence_id": "90ff5224e4817a2dadaabc35d2c038d1440914c48f30c0d244952bf1a948cb93",
+    "read_at": "2026-09-10T13:06:37+00:00",
+    "evidence_id": "960e256c3cf2de189db651b7d06d4d240e6e59ce6a7f8273914a9a862b892d5b",
     "rows_returned": 44,
     "server_total": 44,
     "total": 44,
     "statuses": {
       "pending": 1,
-      "fixed": 6,
-      "paid": 35,
+      "paid": 37,
+      "fixed": 4,
       "invalid": 2
     },
     "fields_sent_but_not_stored": [],
@@ -779,7 +779,7 @@
       {
         "id": 85,
         "title": "NEXUS tells an agent to call three MCP tools that return TOOL_NOT_FOUND, and quotes figures from one of them",
-        "status": "fixed",
+        "status": "paid",
         "hunter_name": "expire76",
         "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
         "severity_reported": "high",
@@ -797,7 +797,7 @@
       {
         "id": 86,
         "title": "ask_nexus_deep fails about half the time, and its failure message sends an agent to the human web chat",
-        "status": "fixed",
+        "status": "paid",
         "hunter_name": "expire76",
         "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
         "severity_reported": "medium",
@@ -1440,5 +1440,5 @@
       "reward_currency": "ET10"
     }
   ],
-  "our_reports_refreshed_at": "2026-09-10T12:51:33+00:00"
+  "our_reports_refreshed_at": "2026-09-10T13:06:37+00:00"
 }

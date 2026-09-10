@@ -23,7 +23,15 @@ December whose idea a trade in September was.
     python scripts/paper.py buy --card <id> --usdc 1 --nexus NEX-0002
     python scripts/paper.py buy --card <id> --usdc 1 --confirm
     python scripts/paper.py positions
+    python scripts/paper.py book
     python scripts/paper.py proof
+
+THE BOOK IS THE CONSTRAINT. Their paper balance does not move when a position
+opens -- finding #87 -- so nothing on their side stops an agent deploying
+500,000 against a 100,000 bankroll. A campaign that cannot run out of money
+cannot be measured, because a strategy that would have lost everything looks
+exactly like one that doubled. `book()` computes what is left from their own
+position rows and `buy` refuses an order it cannot pay for.
 
 WHOSE DECISION IT IS. CLAUDE.md's tagged decision of 2026-09-10: Cymetica's
 own AI supplies the guidance, we test and execute. `--nexus NEX-000N` names the
@@ -178,6 +186,90 @@ def _guidance(nexus_id: str | None) -> dict:
             "advice": (answer.get("text") or "")[:2000]}
 
 
+# What we started with. Their headline number never moves (#87), so this is
+# nominal: the book is what makes it mean something.
+BANKROLL = 100000.0
+
+
+def _positions(client) -> list[dict]:
+    """Their position rows, which are the only working half of the scoreboard."""
+    token = CURRENT_TIER.set(SafetyTier.SAFE)
+    try:
+        response = client.get(POSITIONS)
+        if response.status_code != 200:
+            raise SystemExit(
+                f"their positions endpoint answered HTTP {response.status_code}; "
+                f"the book cannot be computed and no order will be sent on a "
+                f"failed read.")
+        return (response.json() or {}).get("positions") or []
+    finally:
+        CURRENT_TIER.reset(token)
+
+
+def book(positions: list[dict], rows: list[dict] | None = None) -> dict:
+    """Our own accounting of the campaign, from their position rows.
+
+    Their paper balance does not move when a position opens, so no number they
+    publish says what a campaign has left. This is that number, and only the
+    arithmetic is ours: every value in it comes off their own rows.
+
+    A position that is no longer open stops being deployed capital and its
+    proceeds return to cash -- without that the book leaks, and after enough
+    round trips a campaign would refuse to trade with a bankroll it still has.
+    """
+    rows = load() if rows is None else rows
+    chains: dict[str, dict] = {}
+    for row in rows:
+        chains.setdefault(row["id"], {})[row.get("type")] = row
+
+    by_position = {p.get("position_id"): p for p in positions}
+    deployed = 0.0
+    value = 0.0
+    realised = 0.0
+    open_count = 0
+    for chain in chains.values():
+        intent, outcome = chain.get("intent") or {}, chain.get("outcome") or {}
+        if outcome.get("outcome") != "accepted":
+            continue
+        held = by_position.get(outcome.get("position_id"))
+        if held is None:
+            # Accepted by them and not in their positions: not ours to spend
+            # against, and worth noticing rather than quietly dropping.
+            continue
+        if str(held.get("status")) == "open":
+            deployed += float(intent.get("usdc") or 0)
+            value += float(held.get("current_value_usdc") or 0)
+            open_count += 1
+        else:
+            realised += float(held.get("realized_pnl_usdc") or 0)
+
+    cash = BANKROLL - deployed + realised
+    return {"bankroll": BANKROLL, "deployed": round(deployed, 6),
+            "cash": round(cash, 6), "value": round(value, 6),
+            "realised": round(realised, 6),
+            "equity": round(cash + value, 6), "open": open_count}
+
+
+def affordable(usdc: float, positions: list[dict],
+               rows: list[dict] | None = None) -> tuple[bool, str]:
+    """Whether the book can pay for this order.
+
+    Their side will accept it either way -- it has accepted every order we
+    have sent and debited nothing. If we accept it too then the campaign has
+    no downside, and a strategy that would have lost the bankroll looks
+    exactly like one that doubled it.
+    """
+    state = book(positions, rows)
+    if usdc <= state["cash"]:
+        return True, f"{state['cash']:.2f} USDC uncommitted"
+    return False, (
+        f"the book has {state['cash']:.2f} USDC uncommitted and this order "
+        f"wants {usdc:.2f}. {state['deployed']:.2f} is already in "
+        f"{state['open']} open position(s). Their paper balance will accept "
+        f"this order anyway; that is finding #87, and it is why this refusal "
+        f"is here rather than there.")
+
+
 def buy(card_id: str, usdc: float, nexus_id: str | None, confirm: bool) -> dict:
     """One order, recorded as intent then outcome, with the account either side."""
     if usdc <= 0:
@@ -201,6 +293,12 @@ def buy(card_id: str, usdc: float, nexus_id: str | None, confirm: bool) -> dict:
 
     try:
         before = _snapshot(client)
+        held = _positions(client)
+        can, why = affordable(float(usdc), held)
+        print(f"[book] {why}")
+        if not can:
+            raise SystemExit(
+                f"refused by our own book: {why}")
         if before.get("simulation_mode") is True:
             print("[paper] note: the account is in simulation_mode, so every "
                   "order is paper whatever this sends")
@@ -332,6 +430,7 @@ def main(argv: list[str] | None = None) -> int:
                        help="actually place it; without this nothing is sent")
 
     sub.add_parser("positions", help="their side of the account, read now")
+    sub.add_parser("book", help="what the campaign has, by our own reckoning")
     sub.add_parser("proof", help="the chain, and whether it agrees")
 
     args = parser.parse_args(argv)
@@ -342,6 +441,23 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.cmd == "proof":
         return proof()
+    if args.cmd == "book":
+        install_client_guard()
+        ids = identities()
+        client = build_client(ids["trusted"], EndpointRegistry.load(), timeout=30.0)
+        try:
+            state = book(_positions(client))
+        finally:
+            client.close()
+        print(f"  bankroll   {state['bankroll']:>14,.2f}")
+        print(f"  deployed   {state['deployed']:>14,.2f}   in {state['open']} open position(s)")
+        print(f"  realised   {state['realised']:>14,.2f}")
+        print(f"  cash       {state['cash']:>14,.2f}   available to trade")
+        print(f"  positions  {state['value']:>14,.6f}   at their current index")
+        print(f"  EQUITY     {state['equity']:>14,.6f}")
+        gain = state["equity"] - state["bankroll"]
+        print(f"             {gain:>+14,.6f}   since the campaign opened")
+        return 0
 
     install_client_guard()
     ids = identities()
