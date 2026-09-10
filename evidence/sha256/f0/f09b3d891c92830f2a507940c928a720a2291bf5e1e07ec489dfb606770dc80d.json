@@ -1,0 +1,92 @@
+{
+  "captured_at": "2026-09-10T13:51:20+00:00",
+  "endpoint_rule": null,
+  "nodeid": null,
+  "request": {
+    "body": {
+      "encoding": "json",
+      "truncated": false,
+      "value": {
+        "checked_at": "2026-09-10T13:49:20+00:00",
+        "evidence": "Independent re-check by the QA agent for hunter expire76.\n\nVERDICT pass -- the check that recorded this defect now passes, under the same definition it failed under.\n\nWHAT THE FINGERPRINT IS: a SHA-256 of the check function's parsed syntax tree. It changes when the check's logic changes and not when its comments or formatting do. Because it matches the one recorded at the failure, this is the same test, not a rewritten one that happens to pass.\n\nRUN: run-20260910T134627Z-75a0326, preregistration PRE-0079, on a clean working tree at commit 75a032636275d346a8b97d270eebc87646217734. The selector was frozen and git-tagged BEFORE the run, so the set of checks could not be narrowed after seeing the results.\n\nCHECK(S) THIS COVERS:\n  tests/mcp/test_nexus_channel.py::test_every_tool_nexus_tells_an_agent_to_call_exists\n\nEVIDENCE: the request and response behind this verdict are retained under evidence id(s) <redacted> and are provided on request, as are the check's definition and the preregistration named above.\n\nFINDING CYM-every_tool_nexus_tells_an_agent_to_call_exists: Nexus told an agent to call backtest_event_card_idea, get_event_card_info, trade_event_card, and the server serves 62 tools, none of them by that name: an agent following the platform's own guidance cannot act on it",
+        "fingerprint": "<redacted>",
+        "test_run_id": "run-20260910T134627Z-75a0326",
+        "tree_sha": "75a032636275d346a8b97d270eebc87646217734",
+        "verdict": "pass"
+      }
+    },
+    "headers": {
+      "accept": "application/json",
+      "accept-encoding": "gzip, deflate, zstd",
+      "connection": "keep-alive",
+      "content-length": "1614",
+      "content-type": "application/json",
+      "host": "cymetica.com",
+      "user-agent": "qa-cymetica/0.1 (independent QA; contact via vendor Telegram channel)",
+      "x-api-key": "<redacted>"
+    },
+    "method": "POST",
+    "url": "https://cymetica.com/api/v1/bounty/reports/85/verification"
+  },
+  "response": {
+    "body": {
+      "encoding": "json",
+      "truncated": false,
+      "value": {
+        "report_status": "paid",
+        "success": true,
+        "ticket": {
+          "effect": "pass_marker_recorded",
+          "issue_ref": "ET-24492",
+          "status": "resolved"
+        },
+        "verification": {
+          "checked_at": "2026-09-10T13:49:20",
+          "created_at": "2026-09-10T13:51:20.211541",
+          "evidence": "Independent re-check by the QA agent for hunter expire76.\n\nVERDICT pass -- the check that recorded this defect now passes, under the same definition it failed under.\n\nWHAT THE FINGERPRINT IS: a SHA-256 of the check function's parsed syntax tree. It changes when the check's logic changes and not when its comments or formatting do. Because it matches the one recorded at the failure, this is the same test, not a rewritten one that happens to pass.\n\nRUN: run-20260910T134627Z-75a0326, preregistration PRE-0079, on a clean working tree at commit 75a032636275d346a8b97d270eebc87646217734. The selector was frozen and git-tagged BEFORE the run, so the set of checks could not be narrowed after seeing the results.\n\nCHECK(S) THIS COVERS:\n  tests/mcp/test_nexus_channel.py::test_every_tool_nexus_tells_an_agent_to_call_exists\n\nEVIDENCE: the request and response behind this verdict are retained under evidence id(s) <redacted> and are provided on request, as are the check's definition and the preregistration named above.\n\nFINDING CYM-every_tool_nexus_tells_an_agent_to_call_exists: Nexus told an agent to call backtest_event_card_idea, get_event_card_info, trade_event_card, and the server serves 62 tools, none of them by that name: an agent following the platform's own guidance cannot act on it",
+          "fingerprint": "<redacted>",
+          "hunter_id": 5,
+          "id": 83,
+          "issue_effect": "pass_marker_recorded",
+          "issue_ref": "ET-24492",
+          "report_id": 85,
+          "test_run_id": "run-20260910T134627Z-75a0326",
+          "tree_sha": "75a032636275d346a8b97d270eebc87646217734",
+          "verdict": "pass"
+        }
+      }
+    },
+    "elapsed_ms": 499,
+    "headers": {
+      "cache-control": "no-store, no-cache, must-revalidate, max-age=0",
+      "connection": "keep-alive",
+      "content-encoding": "gzip",
+      "content-length": "1044",
+      "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests",
+      "content-security-policy-report-only": "default-src 'self'; script-src 'self' 'nonce-9POGJvUJ9jHbba7aMZBr5g==' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'",
+      "content-signal": "ai-train=no, search=yes, ai-input=yes",
+      "content-type": "application/json",
+      "cross-origin-opener-policy": "same-origin-allow-popups",
+      "cross-origin-resource-policy": "cross-origin",
+      "date": "Thu, 10 Sep 2026 13:51:20 GMT",
+      "permissions-policy": "geolocation=(), microphone=(), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=(), browsing-topics=(), attribution-reporting=()",
+      "pragma": "no-cache",
+      "referrer-policy": "strict-origin-when-cross-origin, strict-origin-when-cross-origin",
+      "server": "nginx",
+      "strict-transport-security": "max-age=31536000; includeSubDomains",
+      "vary": "Accept-Encoding",
+      "x-ai-strongest-model": "Claude Fable 5",
+      "x-content-type-options": "nosniff, nosniff",
+      "x-dns-prefetch-control": "off",
+      "x-frame-options": "SAMEORIGIN, SAMEORIGIN",
+      "x-ratelimit-limit": "60",
+      "x-ratelimit-remaining": "54",
+      "x-ratelimit-reset": "1789048800",
+      "x-xss-protection": "0"
+    },
+    "reason": "OK",
+    "status_code": 200
+  },
+  "run_id": "script-verify",
+  "tier": "MUTATE"
+}

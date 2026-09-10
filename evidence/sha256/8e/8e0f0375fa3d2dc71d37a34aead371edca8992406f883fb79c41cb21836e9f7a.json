@@ -1,0 +1,199 @@
+{
+  "captured_at": "2026-09-10T13:48:40+00:00",
+  "endpoint_rule": null,
+  "nodeid": "tests/rest/test_build_recipes.py::test_every_card_we_hold_a_position_in_still_resolves",
+  "request": {
+    "body": {
+      "encoding": "empty",
+      "value": null
+    },
+    "headers": {
+      "accept": "application/json",
+      "accept-encoding": "gzip, deflate, zstd",
+      "connection": "keep-alive",
+      "host": "cymetica.com",
+      "user-agent": "qa-cymetica/0.1 (independent QA; contact via vendor Telegram channel)",
+      "x-api-key": "<redacted>"
+    },
+    "method": "GET",
+    "url": "https://cymetica.com/api/v1/event-cards/765d6e6d-a863-4bd9-8284-d0e26e105f89"
+  },
+  "response": {
+    "body": {
+      "encoding": "json",
+      "truncated": false,
+      "value": {
+        "basket": [
+          {
+            "asset_type": "crypto",
+            "association_score": 0.7583,
+            "image_url": "https://coin-images.coingecko.com/coins/images/33566/large/dogwifhat.jpg?1702499428",
+            "is_direct": null,
+            "market_cap_rank": 198,
+            "name": "dogwifhat",
+            "symbol": "WIF",
+            "venue": "binance_ws",
+            "weight": 0.0
+          },
+          {
+            "asset_type": "crypto",
+            "association_score": 0.2242,
+            "image_url": "https://coin-images.coingecko.com/coins/images/1/large/bitcoin.png?1696501400",
+            "is_direct": null,
+            "market_cap_rank": 1,
+            "name": "Bitcoin",
+            "symbol": "BTC",
+            "venue": "binance_ws",
+            "weight": 1.0
+          },
+          {
+            "asset_type": "crypto",
+            "association_score": 0.0031,
+            "image_url": "https://coin-images.coingecko.com/coins/images/2687/large/Zilliqa-logo.png?1696503475",
+            "is_direct": null,
+            "market_cap_rank": 351,
+            "name": "Zilliqa",
+            "symbol": "ZIL",
+            "venue": "binance_ws",
+            "weight": 0.0
+          },
+          {
+            "asset_type": "crypto",
+            "association_score": 0.0021,
+            "image_url": "https://coin-images.coingecko.com/coins/images/34057/large/LOGOMARK.png?1708356054",
+            "is_direct": null,
+            "market_cap_rank": 112,
+            "name": "Virtuals Protocol",
+            "symbol": "VIRTUAL",
+            "venue": "binance_ws",
+            "weight": 0.0
+          }
+        ],
+        "bear_notional_usdc": 0.0,
+        "bull_notional_usdc": 0.0,
+        "card_url": "/events/765d6e6d-a863-4bd9-8284-d0e26e105f89",
+        "contract_spec": {
+          "appellate_body": "VAIX Trading Committee",
+          "dispute_window": "24h",
+          "fallback_source": "okx_ws",
+          "max_price_staleness": "30s",
+          "methodology": "last-tick",
+          "notes": "Auto-generated from headline e5e48558-4074-463c-9f02-2edca2bcca46",
+          "resolution_at_utc": "2026-05-29T19:58:54.463184+00:00",
+          "resolution_source": "binance_ws",
+          "version": 1
+        },
+        "created_at": "2026-05-28T19:58:54.465514+00:00",
+        "current_index": 104.840617,
+        "direction": null,
+        "evcdx_symbol": "EVCDX-CRYPTO-TRADING-FIRM",
+        "has_stock_legs": false,
+        "headline_impact_score": 7.5,
+        "headline_sentiment_score": 0.0,
+        "holdings": [
+          {
+            "quantity": 15.874162846,
+            "symbol": "EVCDX-CRYPTO-TRADING-FIRM",
+            "venue": "ledger"
+          }
+        ],
+        "id": "765d6e6d-a863-4bd9-8284-d0e26e105f89",
+        "image_url": "https://cdn.sanity.io/images/s3y3vcno/production/38aee79cab59a25bddb2ecd5cdc315881254baff-3024x2113.jpg?auto=format&w=960&h=540&crop=focalpoint&fit=clip&q=75&fm=jpg",
+        "index_base": 100.0,
+        "is_featured": false,
+        "perp_symbol": "EVCDX-CRYPTO-TRADING-FIRM",
+        "pipeline_status": {
+          "current_stage": "mm_quoting",
+          "progress_pct": 66,
+          "stages": [
+            {
+              "done": true,
+              "id": "card_created",
+              "label": "Card Created"
+            },
+            {
+              "done": true,
+              "id": "token_deployed",
+              "label": "Token Deployed"
+            },
+            {
+              "done": true,
+              "id": "pair_registered",
+              "label": "Pair Registered"
+            },
+            {
+              "done": true,
+              "id": "mm_funded",
+              "label": "Liquidity Seeded"
+            },
+            {
+              "done": false,
+              "id": "mm_quoting",
+              "label": "Market Making"
+            },
+            {
+              "done": false,
+              "id": "tradeable",
+              "label": "Tradeable"
+            }
+          ]
+        },
+        "pons_coin": null,
+        "pro_terminal_url": "/exchange/EVCDX-CRYPTO-TRADING-FIRM-pro",
+        "published_at": "2026-05-28T19:53:38+00:00",
+        "pw_base": 18366.894367,
+        "pw_index": null,
+        "share_price_usd": "1.0483",
+        "share_url": "https://cymetica.com/events/765d6e6d-a863-4bd9-8284-d0e26e105f89",
+        "short_execution": "perp",
+        "source_url": "https://www.coindesk.com/business/2026/05/28/crypto-trading-firm-falconx-confidentially-files-with-sec-for-ipo-hires-bankers",
+        "status": "live",
+        "stock_tokenized_live": false,
+        "strategy_name": null,
+        "summary": null,
+        "title": "Crypto trading firm FalconX confidentially files with SEC for IPO, hires bankers",
+        "tradeable_now": true,
+        "trading_blocked_reason": null,
+        "trading_closes_at": null,
+        "upvoted_by_me": false,
+        "upvotes": 0,
+        "us_market_open": null,
+        "user_position": null,
+        "vehicle_structure": null,
+        "vehicle_structure_name": null
+      }
+    },
+    "elapsed_ms": null,
+    "headers": {
+      "cache-control": "no-store, no-cache, must-revalidate, max-age=0",
+      "connection": "keep-alive",
+      "content-encoding": "gzip",
+      "content-length": "1440",
+      "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests",
+      "content-security-policy-report-only": "default-src 'self'; script-src 'self' 'nonce-5yMNICewwf4iPhhtTl863g==' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'",
+      "content-signal": "ai-train=no, search=yes, ai-input=yes",
+      "content-type": "application/json",
+      "cross-origin-opener-policy": "same-origin-allow-popups",
+      "cross-origin-resource-policy": "cross-origin",
+      "date": "Thu, 10 Sep 2026 13:48:40 GMT",
+      "permissions-policy": "geolocation=(), microphone=(), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=(), browsing-topics=(), attribution-reporting=()",
+      "pragma": "no-cache",
+      "referrer-policy": "strict-origin-when-cross-origin, strict-origin-when-cross-origin",
+      "server": "nginx",
+      "strict-transport-security": "max-age=31536000; includeSubDomains",
+      "vary": "Accept-Encoding",
+      "x-ai-strongest-model": "Claude Fable 5",
+      "x-content-type-options": "nosniff, nosniff",
+      "x-dns-prefetch-control": "off",
+      "x-frame-options": "SAMEORIGIN, SAMEORIGIN",
+      "x-ratelimit-limit": "2000",
+      "x-ratelimit-remaining": "1979",
+      "x-ratelimit-reset": "1789048140",
+      "x-xss-protection": "0"
+    },
+    "reason": "OK",
+    "status_code": 200
+  },
+  "run_id": "run-20260910T134627Z-75a0326",
+  "tier": "SAFE"
+}
