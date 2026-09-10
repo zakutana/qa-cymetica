@@ -1158,3 +1158,125 @@ def test_a_tile_lists_the_tests_behind_its_count(tmp_path, monkeypatch):
         f"first line of the function's docstring is where that comes "
         f"from: {silent[:5]}"
     )
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_stats_are_derived_and_a_re_pin_is_not_a_fix(tmp_path, monkeypatch):
+    """Five figures the operator asked for, and one judgement inside them.
+
+    *"kolik jsme opravili bugu, kolik mame testu napsanych, kolik jsme
+    vydelali odmen uz, pak porovnani A2A komunikace vs. telegram"*.
+
+    The judgement is which transition counts as a fix. `REPRODUCING ->
+    PASSING` is something that was broken and now is not. `CHECK_CHANGED ->
+    PASSING` is a definition we re-pinned by hand -- there are 41 of those
+    against 18 real ones, six of them written this morning -- and counting
+    them would treble the headline with our own bookkeeping. That is the exact
+    shape of defect this repository keeps finding in itself, so it is asserted
+    rather than commented.
+    """
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    render = _render()
+
+    fixed = _row("CYM-fixed", check_state="PASSING", filing_state="FIX_CLAIMED")
+    fixed["transitions"] = [
+        {"axis": "check", "from": "REPRODUCING", "to": "PASSING",
+         "cause": {"run_id": "run-a"}, "at": "2026-09-08T09:00:00+00:00"},
+    ]
+    fixed["filing"]["verifications"] = [
+        {"report_id": 1, "verdict": "pass", "at": "2026-09-08T10:00:00+00:00"},
+        {"report_id": 1, "verdict": "fail", "at": "2026-09-08T11:00:00+00:00"},
+    ]
+    repinned = _row("CYM-repinned", check_state="PASSING",
+                    filing_state="FIX_CLAIMED")
+    repinned["transitions"] = [
+        {"axis": "check", "from": "CHECK_CHANGED", "to": "PASSING",
+         "cause": {"run_id": "run-b"}, "at": "2026-09-10T04:56:30+00:00"},
+    ]
+
+    stats = render.build_payload(ledger=_ledger(fixed, repinned))["stats"]
+
+    assert stats["fixes"]["verified_by_us"] == 1, (
+        "a definition we re-pinned was counted as a defect they repaired"
+    )
+    assert stats["fixes"]["by_day"] == [{"day": "2026-09-08", "n": 1}]
+    assert stats["fixes"]["told_them"] == 1, "only a pass verdict was told to them"
+
+    # Counted off the files, not recalled: every number quoted for this has
+    # come from a different command.
+    assert stats["tests"]["vendor_facing"] > 0
+    assert stats["tests"]["self_tests"] > stats["tests"]["vendor_facing"]
+    assert sum(d["n"] for d in stats["tests"]["by_dir"]) == (
+        stats["tests"]["vendor_facing"] + stats["tests"]["self_tests"])
+
+    # And the channel block is the one reader's own answer, not a second copy
+    # of the arithmetic.
+    from qa.state import read_events
+
+    assert stats["channels"] == __import__(
+        "qa.channels", fromlist=["compare"]).compare(read_events())
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_rewards_come_from_their_tracker(tmp_path, monkeypatch):
+    """35,000 ET10 is their figure, and ours must agree with it or say why."""
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    (tmp_path / "bounty.json").write_text(json.dumps({
+        "our_reports": {"reports": [
+            {"id": 1, "status": "paid", "reward_amount": 1000.0,
+             "fixed_at": "2026-09-08T14:25:31"},
+            {"id": 2, "status": "paid", "reward_amount": 1000.0,
+             "fixed_at": "2026-09-08T15:25:31"},
+            {"id": 3, "status": "fixed", "reward_amount": 0.0,
+             "fixed_at": "2026-09-09T10:00:00"},
+            {"id": 4, "status": "invalid", "reward_amount": 0.0,
+             "created_at": "2026-09-05T10:00:00"},
+        ]},
+        "leaderboard": [{"reward_currency": "ET10", "total_paid": 2000.0}],
+    }), encoding="utf-8")
+    render = _render()
+
+    rewards = render.build_payload(ledger=_ledger())["stats"]["rewards"]
+    assert rewards["paid_n"] == 2
+    assert rewards["paid_total"] == 2000
+    assert rewards["pending_n"] == 1, "a fixed report is owed a reward"
+    assert rewards["invalid_n"] == 1
+    assert rewards["currency"] == "ET10"
+    assert rewards["by_day"] == [{"day": "2026-09-08", "amount": 2000}]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_stats_panel_draws_without_throwing(tmp_path, monkeypatch):
+    """The panel is JavaScript over a payload that can be empty in five ways.
+
+    Every block has to survive a missing key: a fresh state directory has no
+    bounty.json, git may be absent so the deep-pass table is empty, and a
+    channel with no answered question has a null median. A throw here is not a
+    blank panel -- it is a blank PAGE, because this runs at the top level of
+    the page's only script.
+    """
+    import shutil
+
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("node is not installed, so the page cannot be run here")
+    if not (REPO / "state" / "ledger.json").exists():
+        pytest.skip("no committed ledger, so there is no page to run")
+
+    monkeypatch.delenv("QA_STATE_DIR", raising=False)
+    render = _render()
+    payload = _committed_payload(render)
+
+    code, err, captured = _run_page(node, tmp_path / "stats", payload)
+    assert code == 0, f"the stats panel throws:\n{err[:900]}"
+    panel = captured.get("stats", "")
+    assert "Rewards" in panel and "Defects fixed" in panel
+    assert "Checks written" in panel and "How fast they answer" in panel
+
+    empty = json.loads(json.dumps(payload))
+    empty["stats"] = {}
+    code, err, _ = _run_page(node, tmp_path / "stats-empty", empty)
+    assert code == 0, (
+        "the page throws when a figure is missing, which blanks everything "
+        f"below it:\n{err[:900]}"
+    )

@@ -23,6 +23,7 @@ exists to catch: a section can be 100% reachable and completely unverified.
 from __future__ import annotations
 
 import ast
+import importlib.util
 import json
 import sys
 from datetime import datetime, timezone
@@ -258,6 +259,129 @@ def _tests_by_section(run: dict) -> dict[str, list[dict]]:
     for tests in out.values():
         tests.sort(key=lambda t: t["nodeid"])
     return out
+
+
+def _stats(ledger: dict, run: dict, events: list[dict]) -> dict:
+    """The five figures the operator asked to see, each derived where it lives.
+
+    Nothing here is typed in. Rewards come from their tracker, fixes from the
+    transitions the fold wrote, test counts from the files themselves, channel
+    latencies from qa/channels.py -- the one reader -- and the deep pass's own
+    record from the notebooks in git history.
+
+    The one judgement is which transition counts as a fix. `REPRODUCING ->
+    PASSING` is a thing that was broken and now is not. `CHECK_CHANGED ->
+    PASSING` is a definition we re-pinned, and there are 41 of those against
+    18 real ones: counting them would more than treble the number and every
+    one of the extras would be our own bookkeeping.
+    """
+    rewards = _rewards()
+    fixes: dict[str, int] = {}
+    told: dict[str, int] = {}
+    for row in ledger.get("findings", {}).values():
+        for transition in row.get("transitions", []):
+            if (transition.get("axis") == "check"
+                    and transition.get("from") == "REPRODUCING"
+                    and transition.get("to") == "PASSING"):
+                day = str(transition.get("at", ""))[:10]
+                fixes[day] = fixes.get(day, 0) + 1
+        for verification in (row.get("filing") or {}).get("verifications", []):
+            if verification.get("verdict") == "pass":
+                day = str(verification.get("at", ""))[:10]
+                told[day] = told.get(day, 0) + 1
+
+    counts = _test_counts()
+    try:
+        from qa import channels as channels_mod
+
+        comparison = channels_mod.compare(events)
+    except Exception:  # noqa: BLE001 -- a channel we cannot read is not a page defect
+        comparison = {}
+
+    return {
+        "rewards": rewards,
+        "fixes": {
+            "verified_by_us": sum(fixes.values()),
+            "by_day": [{"day": d, "n": n} for d, n in sorted(fixes.items())],
+            "told_them": sum(told.values()),
+        },
+        "tests": counts,
+        "channels": comparison,
+        "process": _process_rows(),
+    }
+
+
+def _rewards() -> dict:
+    """What their tracker says we have been paid, and what is still pending.
+
+    From `our_reports`, not from the 20-row public feed: that one carries
+    `paid_at` and ours does not, but it is a page of everybody's reports and
+    six of ours are not on it. A day axis therefore uses the day they resolved
+    the report, and says so on the page.
+    """
+    bounty = load("bounty.json")
+    reports = ((bounty.get("our_reports") or {}).get("reports")
+               or bounty.get("reports") or [])
+    by_status: dict[str, list[dict]] = {}
+    for report in reports:
+        by_status.setdefault(str(report.get("status")), []).append(report)
+    paid = by_status.get("paid", [])
+    pending = by_status.get("fixed", []) + by_status.get("validated", [])
+    per_day: dict[str, int] = {}
+    for report in paid:
+        day = str(report.get("fixed_at") or report.get("validated_at")
+                  or report.get("created_at") or "")[:10]
+        if day:
+            per_day[day] = per_day.get(day, 0) + int(report.get("reward_amount") or 0)
+    return {
+        "currency": ((bounty.get("leaderboard") or [{}])[0]
+                     .get("reward_currency") or "ET10"),
+        "paid_n": len(paid),
+        "paid_total": sum(int(r.get("reward_amount") or 0) for r in paid),
+        "pending_n": len(pending),
+        "invalid_n": len(by_status.get("invalid", [])),
+        "by_day": [{"day": d, "amount": n} for d, n in sorted(per_day.items())],
+    }
+
+
+def _test_counts() -> dict:
+    """How many checks measure them, and how many measure us.
+
+    Counted off the files, because every number anybody has quoted for this
+    came from a different command -- `grep -c "^def test_"` said 283 where
+    `--collect-only` said 473 -- and the interesting ratio is not the one
+    either of them measures.
+    """
+    theirs, ours, by_dir = 0, 0, {}
+    for path in sorted((REPO_ROOT / "tests").rglob("test_*.py")):
+        rel = path.relative_to(REPO_ROOT).as_posix()
+        try:
+            tree = ast.parse(path.read_text(encoding="utf-8"))
+        except (OSError, SyntaxError):
+            continue
+        n = sum(1 for node in ast.walk(tree)
+                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+                and node.name.startswith("test_"))
+        group = "/".join(rel.split("/")[:2])
+        by_dir[group] = by_dir.get(group, 0) + n
+        if rel.startswith(SELF_TEST_DIRS):
+            ours += n
+        else:
+            theirs += n
+    return {"vendor_facing": theirs, "self_tests": ours,
+            "by_dir": [{"dir": d, "n": n} for d, n in sorted(by_dir.items())]}
+
+
+def _process_rows() -> list[dict]:
+    """One row per deep pass, or nothing when git cannot answer."""
+    try:
+        spec = importlib.util.spec_from_file_location(
+            "deep_pass_process", REPO_ROOT / "scripts" / "deep_pass_process.py")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module.passes()
+    except Exception:  # noqa: BLE001 -- no git, no history, no panel
+        return []
 
 
 def _last_change(row: dict) -> dict:
@@ -612,6 +736,7 @@ def build_payload(ledger: dict | None = None, inventory: dict | None = None,
         "events_head": ledger.get("events_head"),
         "totals": inventory.get("totals", {}),
         "sections": sections,
+        "stats": _stats(ledger, run, events),
         "findings": findings,
         "display_counts": display_counts,
         "timeline": timeline,
@@ -999,6 +1124,39 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:15.0px; max-wid
   border:1px dashed var(--warn); white-space:nowrap; cursor:help;
 }
 
+/* ---------- stats ---------- */
+.stat-grid {
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+  gap:14px; margin-top:20px;
+}
+.stat {
+  background:var(--surface); border:1px solid var(--line); border-radius:10px;
+  padding:16px 18px 14px; min-width:0;
+}
+.stat.wide { grid-column:1 / -1; }
+.stat h3 { margin:0 0 10px; font-size:14px; font-weight:600; color:var(--text); }
+.hero { font-size:30px; font-weight:600; color:var(--text); line-height:1.1; }
+.hero span { font-size:13px; font-weight:400; color:var(--text-dim); }
+.figs { display:flex; flex-wrap:wrap; gap:4px 18px; margin:10px 0 12px; }
+.figs div { display:flex; gap:6px; align-items:baseline; }
+.figs dt { font-size:12px; color:var(--text-faint); }
+.figs dd { margin:0; font-size:12.5px; color:var(--text-dim); font-family:var(--mono); }
+svg.bars { width:100%; height:80px; display:block; }
+.bars-x {
+  display:flex; justify-content:space-between; font-family:var(--mono);
+  font-size:10px; color:var(--text-faint); margin-top:2px;
+}
+.stat-t { width:100%; border-collapse:collapse; font-size:13px; }
+.stat-t th {
+  text-align:left; font-weight:500; font-size:11.5px; color:var(--text-faint);
+  border-bottom:1px solid var(--line); padding:0 10px 5px 0;
+}
+.stat-t td {
+  padding:6px 10px 6px 0; color:var(--text-dim); font-family:var(--mono);
+  font-size:12.5px; border-bottom:1px solid var(--line-soft);
+}
+.stat-t td:first-child { color:var(--text); font-family:inherit; }
+
 /* ---------- legend: two axes, then the grid they make ---------- */
 .lead { font-size:15.0px; color:var(--text-dim); max-width:74ch; margin:14px 0 10px; }
 .lead .hi { color:var(--ok); font-weight:600; }
@@ -1228,6 +1386,7 @@ h4.sec {
     <button data-tab="overview" aria-selected="true">Platform</button>
     <button data-tab="findings" aria-selected="false">Findings
       <span class="tab-n" id="tabN"></span></button>
+    <button data-tab="stats" aria-selected="false">Stats</button>
     <button data-tab="legend" aria-selected="false">How to read this</button>
   </nav>
 
@@ -1240,6 +1399,10 @@ h4.sec {
   <section class="panel" id="panel-findings" hidden>
   <div class="filters" id="filters"></div>
   <div id="findings"></div>
+  </section>
+
+  <section class="panel" id="panel-stats" hidden>
+  <div class="stat-grid" id="stats"></div>
   </section>
 
   <section class="panel" id="panel-legend" hidden>
@@ -1895,7 +2058,7 @@ applyFilters();
 
 /* ---------- two tabs ---------- */
 const PANELS = { overview: "panel-overview", findings: "panel-findings",
-                legend: "panel-legend" };
+                stats: "panel-stats", legend: "panel-legend" };
 
 function showTab(name) {
   if (!PANELS[name]) name = "overview";
@@ -2110,6 +2273,109 @@ paintPctExample();
   src.onerror = () => say("off", "reconnecting");
   window.addEventListener("beforeunload", () => src.close());
 })();
+
+
+/* ---------- Stats: five figures, each one derived where it lives ----------
+   One hue for every bar, because every chart here is a single series: the
+   colours on this page already mean something (green passes, red fails), and
+   a bar borrowing one would say a thing it does not mean. Numbers wear text
+   colours, never the mark's. */
+const money = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+
+function bars(rows, label) {
+  if (!rows.length) return '<p class="blurb">Nothing recorded yet.</p>';
+  const top = Math.max.apply(null, rows.map(r => r.v)) || 1;
+  const w = 100 / rows.length;
+  return `<svg class="bars" viewBox="0 0 100 34" preserveAspectRatio="none"
+      role="img" aria-label="${esc(label)}">
+    ${rows.map((r, i) => {
+      const h = Math.max(1.2, (r.v / top) * 26);
+      return `<rect x="${(i * w) + w * 0.18}" y="${28 - h}" width="${w * 0.64}"
+        height="${h}" rx="0.8" fill="var(--accent)"><title>${esc(r.k)}: ${esc(r.t || r.v)}</title></rect>`;
+    }).join("")}
+    <line x1="0" y1="28" x2="100" y2="28" stroke="var(--line)" stroke-width="0.4"/>
+  </svg>
+  <div class="bars-x">${rows.map(r => `<span>${esc(r.k.slice(5))}</span>`).join("")}</div>`;
+}
+
+function statBlocks() {
+  const S = D.stats || {};
+  const rw = S.rewards || {}, fx = S.fixes || {}, ts = S.tests || {};
+  const ch = S.channels || {}, pr = S.process || [];
+  const out = [];
+
+  out.push(`<section class="stat">
+    <h3>Rewards</h3>
+    <div class="hero">${esc(money(rw.paid_total || 0))} <span>${esc(rw.currency || "")}</span></div>
+    <dl class="figs">
+      <div><dt>paid</dt><dd>${rw.paid_n || 0} reports</dd></div>
+      <div><dt>pending</dt><dd>${rw.pending_n || 0} fixed, not yet paid</dd></div>
+      <div><dt>rejected</dt><dd>${rw.invalid_n || 0}</dd></div>
+    </dl>
+    ${bars((rw.by_day || []).map(d => ({k: d.day, v: d.amount, t: money(d.amount) + " " + (rw.currency || "")})), "rewards by day")}
+    <p class="blurb">Dated by the day they resolved the report; their tracker
+    does not tell us when each payment landed.</p>
+  </section>`);
+
+  out.push(`<section class="stat">
+    <h3>Defects fixed</h3>
+    <div class="hero">${fx.verified_by_us || 0} <span>verified by us</span></div>
+    <dl class="figs">
+      <div><dt>verifications sent</dt><dd>${fx.told_them || 0}</dd></div>
+    </dl>
+    ${bars((fx.by_day || []).map(d => ({k: d.day, v: d.n})), "defects verified fixed by day")}
+    <p class="blurb">A defect counts when a check that was failing passes
+    again. Re-pinned definitions are not counted &mdash; there are 41 of those
+    and they are our own bookkeeping, not their repairs.</p>
+  </section>`);
+
+  out.push(`<section class="stat">
+    <h3>Checks written</h3>
+    <div class="hero">${ts.vendor_facing || 0} <span>measure them</span></div>
+    <dl class="figs">
+      <div><dt>measure us</dt><dd>${ts.self_tests || 0}</dd></div>
+      ${(ts.by_dir || []).map(d => `<div><dt>${esc(d.dir)}</dt><dd>${d.n}</dd></div>`).join("")}
+    </dl>
+    <p class="blurb">The second number is the machinery checking itself. It
+    should grow slower than the first, and has not.</p>
+  </section>`);
+
+  const rows = ["bug", "a2a", "telegram"].filter(k => ch[k]).map(k => {
+    const c = ch[k];
+    return `<tr><td>${esc(k)}</td><td>${c.asked ?? "&mdash;"}</td>
+      <td>${c.n ?? 0}</td>
+      <td>${c.median_minutes == null ? "&mdash;" : c.median_minutes + " min"}</td>
+      <td>${c.unanswered ?? 0}</td></tr>`;
+  }).join("");
+  out.push(`<section class="stat wide">
+    <h3>How fast they answer</h3>
+    ${rows ? `<table class="stat-t">
+      <thead><tr><th>channel</th><th>asked</th><th>timed</th>
+        <th>median</th><th>unanswered</th></tr></thead>
+      <tbody>${rows}</tbody></table>` : '<p class="blurb">Nothing recorded yet.</p>'}
+    <p class="blurb">${ch.conclusive
+      ? "Both channels have enough answered questions to compare."
+      : "Not a comparison yet: each channel needs five answered questions. A median over two is the impression wearing a number's clothes."}</p>
+  </section>`);
+
+  if (pr.length) {
+    out.push(`<section class="stat wide">
+      <h3>What the deep pass costs</h3>
+      <table class="stat-t">
+        <thead><tr><th>pass</th><th>claimed</th><th>real</th>
+          <th>rejected by the readers</th><th>fixed</th><th>minutes</th></tr></thead>
+        <tbody>${pr.map(p => `<tr><td>${esc(p.run || "?")}</td>
+          <td>${p.claimed}</td><td>${p.real}</td><td>${p.overturned}</td>
+          <td>${p.fixed}</td><td>${p.elapsed_min == null ? "&mdash;" : p.elapsed_min}</td></tr>`).join("")}</tbody>
+      </table>
+      <p class="blurb">The fourth column is what the three independent readers
+      removed. While it is above zero they are earning their cost; three
+      passes of zero is the condition for asking whether they still are.</p>
+    </section>`);
+  }
+  return out.join("");
+}
+document.getElementById("stats").innerHTML = statBlocks();
 
 (function restoreScroll() {
   const y = Number(readStore("qa.scroll", "0")) || 0;
