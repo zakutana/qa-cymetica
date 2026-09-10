@@ -92,7 +92,10 @@ def test_every_tool_nexus_tells_an_agent_to_call_exists(mcp_trusted):
                 f"act on it"
                 if missing else
                 f"every one of the {len(named)} tool(s) Nexus named is served"),
-        left=sorted(named), right=sorted(missing) or None,
+        # Not the same list twice: what Nexus named, against the ones of
+        # those the server actually serves -- which is the empty set, and
+        # saying so is the finding.
+        left=sorted(named), right=sorted(set(named) & served),
         population={"answers_read": len(answers), "tools_served": len(served)},
         sources={"answers": str(nexus.path().name),
                  "tools": "POST /mcp/v1 tools/list"},

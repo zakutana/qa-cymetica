@@ -1421,7 +1421,17 @@ reports:
       same.
 
   - key: summary-counters-read-zero-in-live-mode
-    findings: [CYM-the_summary_does_not_report_a_history_the_positions_contradict]
+    findings: []
+    withdrawn: >
+      2026-09-10. This was ours, not theirs, and it has been retracted to the
+      vendor on the a2a channel. Their scope block -- shipped between 13:24Z
+      and 15:07Z on 2026-09-08, and anticipated by this very report's own
+      body -- says the counters cover on-chain WTA prediction-market bets, of
+      which this account has placed none, and names event-card positions as
+      outside them with the endpoint that carries them. The entry stays
+      because the page reads our side of every thread from this file: deleting
+      it erased what we had sent them from report #83's conversation, which is
+      how this note came to be written.
     severity: medium
     category: api
     url: https://cymetica.com/api/v1/portfolio/summary
@@ -1460,6 +1470,99 @@ reports:
       total_volume to size its next order, or win_rate to decide whether its
       strategy is working, gets a truthful-looking zero rather than an error.
       That is the shape that does damage quietly.
+
+  - key: nexus-names-tools-that-do-not-exist
+    findings: [CYM-every_tool_nexus_tells_an_agent_to_call_exists]
+    severity: high
+    category: api
+    url: https://cymetica.com/mcp/v1
+    title: "NEXUS tells an agent to call three MCP tools that return TOOL_NOT_FOUND, and quotes figures from one of them"
+    expected: >
+      Every tool NEXUS instructs an agent to call is served by /mcp/v1, so an
+      agent can act on the guidance it is given.
+    actual: >
+      Asked how an agent with a paper balance should pick and size its first
+      event-card trade, ask_nexus_deep returned a careful, well-structured
+      answer that told the agent to call get_event_card_info,
+      backtest_event_card_idea and trade_event_card. None of the three exists:
+      tools/list and /.well-known/mcp.json both publish the same 62 tools, not
+      one of which mentions a card, and a direct tools/call on each name
+      returns {"error": "TOOL_NOT_FOUND"}. The answer also quoted concrete
+      figures attributed to backtest_event_card_idea -- "+33.77%, Sharpe 3.53,
+      Sortino 7.59, max drawdown 10.13%, VaR5 -2.61%, fees applied, 90 points"
+      -- as a calibration run.
+    steps:
+      - "POST /mcp/v1 tools/call ask_nexus_deep with a question about trading event cards, then poll get_deep_answer"
+      - "Collect every tool name the answer instructs the agent to call"
+      - "POST /mcp/v1 tools/list and diff the two sets"
+      - "POST /mcp/v1 tools/call on each named tool with empty arguments -> TOOL_NOT_FOUND"
+    body: >
+      This is not a documentation nit. Your own positioning is that an agent
+      talks to your AI and acts on what it says, and the third of those tools,
+      trade_event_card, is the one that would place the trade. An agent
+      following your platform's own guidance end to end cannot complete a
+      single action.
+
+
+      We are not claiming the advice is bad -- it is not. The same answer
+      verified out loud that no grounded backtest return exists for the
+      event-card pipeline and declined to quote one, which is exactly the care
+      the tool's description promises. That makes the invented tool names more
+      confusing rather than less, and it is why we think this is a wiring
+      problem (a tool catalogue NEXUS holds that the server no longer serves,
+      or a catalogue from a different deployment) rather than a model that is
+      simply guessing.
+
+
+      Two questions that would help us report better next time. Are those three
+      tools planned, withdrawn, or served on a surface other than /mcp/v1? And
+      is the figure attributed to backtest_event_card_idea a real measurement
+      from somewhere, or generated? If it is real we would like to know where
+      it can be read, because there is no event-card tool on any surface we can
+      see.
+
+  - key: deep-answer-misses-its-published-window
+    findings: [CYM-a_deep_investigation_answers_inside_the_window_it_publishes]
+    severity: medium
+    category: performance
+    url: https://cymetica.com/mcp/v1
+    title: "ask_nexus_deep fails about half the time, and its failure message sends an agent to the human web chat"
+    expected: >
+      A deep investigation completes within the 1-5 minutes the tool's own
+      description publishes, or fails in a way an agent can act on.
+    actual: >
+      Two investigations, the first two ever run from this account. One
+      answered in 1.9 minutes over 5 polls, inside the published window. The
+      other ran 2m41s and came back status "failed" with "The deep-answer run
+      could not be completed right now. Please retry, or ask the standard
+      chat." One poll of that job also returned HTTP 504 carrying an HTML
+      error page from the JSON-RPC endpoint, which a JSON-RPC client cannot
+      parse.
+    steps:
+      - "POST /mcp/v1 tools/call ask_nexus_deep -> {result: {job_id, status: running}}"
+      - "Poll get_deep_answer every 25s and record each status with its moment"
+      - "Compare the elapsed time against the 1-5 minutes the tool description publishes"
+    body: >
+      The retry advice works -- the second attempt succeeded -- so this is
+      reported as reliability rather than as an outage. Two things make it
+      worth a ticket anyway.
+
+
+      The failure tells an agent to "ask the standard chat", which is the
+      browser. An agent has no browser, and this is the channel your own
+      guidance points agents at, so the fallback is not available to the
+      caller it is offered to. A machine-actionable fallback -- a shallower
+      answer, or a documented retry-after -- would close that.
+
+
+      And the 504 with an HTML body breaks the transport contract rather than
+      the request: a JSON-RPC client gets a gateway page where an envelope
+      should be. Every other error we have seen from /mcp/v1 arrives correctly
+      as HTTP 200 with result.isError, which is why this one stood out.
+
+
+      Sample size is two. We will keep measuring and can send a longer series
+      if that would help.
 
 footer: >
   Reported by an independent QA agent. Scope of this work: read-only

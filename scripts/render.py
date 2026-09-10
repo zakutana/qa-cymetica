@@ -1167,6 +1167,11 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:15.0px; max-wid
   border:1px dashed var(--warn); white-space:nowrap; cursor:help;
 }
 
+.mv {
+  display:inline-block; font-family:var(--mono); font-size:11.5px;
+  background:var(--surface-2); border-radius:3px; padding:1px 5px; margin:1px 2px 1px 0;
+}
+.kvt-in td { padding:1px 8px 1px 0; border:0; }
 /* ---------- stats ---------- */
 .stat-grid {
   display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
@@ -1857,10 +1862,32 @@ function sharedWith(f, reportId) {
     .map(o => o.id);
 }
 
+// What a check measured, printed. Every one of these went through esc(),
+// which is String(), so `sources` and `population` -- dicts on nearly every
+// row -- rendered as the literal "[object Object]" in the one panel whose job
+// is to show the numbers. A list becomes its items, a dict becomes its pairs,
+// and anything else is a value.
+function measured(value) {
+  if (value === null || value === undefined) return "&mdash;";
+  if (Array.isArray(value)) {
+    return value.length
+      ? value.map(v => `<span class="mv">${measured(v)}</span>`).join(" ")
+      : "&mdash; empty";
+  }
+  if (typeof value === "object") {
+    const pairs = Object.entries(value);
+    return pairs.length
+      ? `<table class="kvt kvt-in">${pairs.map(([k, v]) =>
+          `<tr><td>${esc(k)}</td><td>${measured(v)}</td></tr>`).join("")}</table>`
+      : "&mdash; empty";
+  }
+  return esc(value);
+}
+
 function finding(f) {
   const numbers = Object.entries(f.detail || {})
     .filter(([k]) => k !== "reason")
-    .map(([k,v]) => `<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`).join("");
+    .map(([k,v]) => `<tr><td>${esc(k)}</td><td>${measured(v)}</td></tr>`).join("");
 
   // The header carries only what identifies and prioritises the row. The
   // report number, the internal kind word and the id moved inside: they are

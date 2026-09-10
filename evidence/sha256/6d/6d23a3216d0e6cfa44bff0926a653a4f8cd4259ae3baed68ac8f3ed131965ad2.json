@@ -1,0 +1,77 @@
+{
+  "captured_at": "2026-09-10T11:09:27+00:00",
+  "endpoint_rule": null,
+  "nodeid": null,
+  "request": {
+    "body": {
+      "encoding": "json",
+      "truncated": false,
+      "value": {
+        "actual_behavior": "Two investigations, the first two ever run from this account. One answered in\n1.9 minutes over 5 polls, inside the published window. The other ran 2m41s and\ncame back status \"failed\" with \"The deep-answer run could not be completed\nright now. Please retry, or ask the standard chat.\" One poll of that job also\nreturned HTTP 504 carrying an HTML error page from the JSON-RPC endpoint,\nwhich a JSON-RPC client cannot parse.",
+        "category": "performance",
+        "description": "The retry advice works -- the second attempt succeeded -- so this is reported\nas reliability rather than as an outage. Two things make it worth a ticket\nanyway.\nThe failure tells an agent to \"ask the standard chat\", which is the browser.\nAn agent has no browser, and this is the channel your own guidance points\nagents at, so the fallback is not available to the caller it is offered to. A\nmachine-actionable fallback -- a shallower answer, or a documented retry-after\n-- would close that.\nAnd the 504 with an HTML body breaks the transport contract rather than the\nrequest: a JSON-RPC client gets a gateway page where an envelope should be.\nEvery other error we have seen from /mcp/v1 arrives correctly as HTTP 200 with\nresult.isError, which is why this one stood out.\nSample size is two. We will keep measuring and can send a longer series if\nthat would help.\n\nMEASURED VALUES (from the live service):\n\n  [CYM-a_deep_investigation_answers_inside_the_window_it_publishes] 1 of 2 did not answer at all (NEX-0001: failed)\n    left: [112.9, 0.0]\n    right: 300\n    sources: {'contract': 'ask_nexus_deep tool description', 'timeline': 'nexus.jsonl'}\n    population: {'finished': 2, 'failed': 1, 'late': 0}\n\nREPRODUCE:\n  - POST /mcp/v1 tools/call ask_nexus_deep -> {result: {job_id, status: running}}\n  - Poll get_deep_answer every 25s and record each status with its moment\n  - Compare the elapsed time against the 1-5 minutes the tool description publishes\n\nAUTOMATED CHECKS (evidence retained; the request and response behind each are provided on request):\n  tests/mcp/test_nexus_channel.py::test_a_deep_investigation_answers_inside_the_window_it_publishes\n\nReported by an independent QA agent. Scope of this work: read-only\nverification of the REST API, MCP and machine-readable discovery surfaces. No\nstate-changing account action, no trading, no order placement, no deposit or\nwithdrawal, no cleanup, no duplicate tickets. UI defects are out of scope.\nEvery figure above was measured directly against the live service, not taken\nfrom a document, and each finding ships with the command that reproduces it.",
+        "expected_behavior": "A deep investigation completes within the 1-5 minutes the tool's own\ndescription publishes, or fails in a way an agent can act on.",
+        "hunter_name": "expire76",
+        "severity_reported": "medium",
+        "steps_to_reproduce": "POST /mcp/v1 tools/call ask_nexus_deep -> {result: {job_id, status: running}}\nPoll get_deep_answer every 25s and record each status with its moment\nCompare the elapsed time against the 1-5 minutes the tool description publishes",
+        "title": "ask_nexus_deep fails about half the time, and its failure message sends an agent to the human web chat",
+        "url": "https://cymetica.com/mcp/v1",
+        "wallet_address": "0xde9CeAaB301A9e47b1bAcd448B3DDbbA85e83398"
+      }
+    },
+    "headers": {
+      "accept": "application/json",
+      "accept-encoding": "gzip, deflate, zstd",
+      "connection": "keep-alive",
+      "content-length": "3311",
+      "content-type": "application/json",
+      "host": "cymetica.com",
+      "user-agent": "qa-cymetica/0.1 (independent QA; contact via vendor Telegram channel)"
+    },
+    "method": "POST",
+    "url": "https://cymetica.com/api/v1/bounty/reports"
+  },
+  "response": {
+    "body": {
+      "encoding": "json",
+      "truncated": false,
+      "value": {
+        "message": "Bug report submitted successfully. We'll review it within 48 hours.",
+        "report_id": 86,
+        "success": true
+      }
+    },
+    "elapsed_ms": 2067,
+    "headers": {
+      "cache-control": "no-store, no-cache, must-revalidate, max-age=0",
+      "connection": "keep-alive",
+      "content-encoding": "gzip",
+      "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests",
+      "content-security-policy-report-only": "default-src 'self'; script-src 'self' 'nonce-rArd4nS0yq85dGEE1jmlBQ==' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'",
+      "content-signal": "ai-train=no, search=yes, ai-input=yes",
+      "content-type": "application/json",
+      "cross-origin-opener-policy": "same-origin-allow-popups",
+      "cross-origin-resource-policy": "cross-origin",
+      "date": "Thu, 10 Sep 2026 11:09:27 GMT",
+      "permissions-policy": "geolocation=(), microphone=(), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=(), browsing-topics=(), attribution-reporting=()",
+      "pragma": "no-cache",
+      "referrer-policy": "strict-origin-when-cross-origin, strict-origin-when-cross-origin",
+      "server": "nginx",
+      "strict-transport-security": "max-age=31536000; includeSubDomains",
+      "transfer-encoding": "chunked",
+      "vary": "Accept-Encoding",
+      "x-ai-strongest-model": "Claude Fable 5",
+      "x-content-type-options": "nosniff, nosniff",
+      "x-dns-prefetch-control": "off",
+      "x-frame-options": "SAMEORIGIN, SAMEORIGIN",
+      "x-ratelimit-limit": "60",
+      "x-ratelimit-remaining": "56",
+      "x-ratelimit-reset": "1789041600",
+      "x-xss-protection": "0"
+    },
+    "reason": "OK",
+    "status_code": 200
+  },
+  "run_id": "script-submit",
+  "tier": "MUTATE"
+}
