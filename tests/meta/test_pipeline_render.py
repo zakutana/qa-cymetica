@@ -921,3 +921,93 @@ def test_every_row_says_when_it_last_changed(tmp_path, monkeypatch):
             f"{row['id']} cannot say when it last changed"
         )
         assert change["axis"] in ("check", "filing", None)
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_page_opens_on_what_moved_and_says_it_in_one_line(tmp_path, monkeypatch):
+    """Two of the operator's eight complaints, and they are the same complaint.
+
+    *"co to tu je nahore jako za statistiky, to nikdy nectu a je to hnus"* --
+    seven labelled figures across the masthead, none of which anyone had ever
+    used. And the Findings intro, three lines of prose above the list. Both
+    were written for a reader; there is none. What is left in the header is
+    what the page cannot be read without: which run, at what level, standing
+    on which journal event. The rest moved into the tooltip, where it costs
+    nothing until somebody wants it.
+
+    The other half is the sweep problem. `changed since read` reuses the
+    watermark the bell already keeps (`qa.seenAt`), so the rows a sweep just
+    closed stay reachable in one click until the operator marks them read --
+    and the list is sorted by when each row last moved, newest first.
+
+    One read switch, not two: the bell's "Mark all as read" and this chip both
+    call the same `markRead`, or the two would drift and the page would hold
+    two ideas of what "since you last looked" means.
+    """
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    render = _render()
+    template = render.TEMPLATE
+
+    assert "Everything found so far" not in template, (
+        "the Findings intro is prose above a list nobody reads"
+    )
+    assert 'class="sub"' not in template, "the masthead blurb is still there"
+    for gone in ("documented paths", "MCP tools anon / trusted",
+                 "messages sent / received"):
+        assert f'["{gone}"' not in template, (
+            f"{gone!r} is still a labelled figure in the header rather than "
+            "a line in the tooltip"
+        )
+
+    # The three chips, the switch and the sort, by the attributes the click
+    # handler dispatches on -- not by their labels, which are copy.
+    for kind in ('data-kind="open"', 'data-kind="changed"', 'data-kind="all"'):
+        assert kind in template, f"the {kind} chip is missing"
+    assert "function markRead" in template
+    assert template.count("markRead()") >= 2, (
+        "the bell and the chip must call the same read switch"
+    )
+    assert 'data-sort="changed"' in template and 'data-sort="damage"' in template
+
+    # The header still says the two things the guards pin, and the run's own
+    # moment is now in the payload rather than the render's clock.
+    assert "D.events_head" in template and "state as of" in render.render(
+        _live_payload_or_empty(render))
+    assert "D.run_at" in template
+
+
+def _live_payload_or_empty(render):
+    try:
+        return _live_payload(render)
+    except Exception:  # noqa: BLE001 -- a state dir with no journal is fine here
+        return render.build_payload(ledger=_ledger())
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_page_runs_with_the_new_filters(tmp_path, monkeypatch):
+    """The filters are JavaScript, so the guard for them has to execute.
+
+    Sorting re-appends nodes and the chips read `data-changed-at`; a typo in
+    either is invisible to every assertion about the template's text, and the
+    last time something in this script threw at the top level the whole page
+    rendered blank below the masthead.
+    """
+    import shutil
+
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("node is not installed, so the page cannot be run here")
+    if not (REPO / "state" / "ledger.json").exists():
+        pytest.skip("no committed ledger, so there is no page to run")
+
+    monkeypatch.delenv("QA_STATE_DIR", raising=False)
+    render = _render()
+    code, err, captured = _run_page(node, tmp_path / "filters",
+                                    _live_payload(render))
+    assert code == 0, f"the page throws with the new filters:\n{err[:900]}"
+    filters = captured.get("filters", "")
+    for kind in ("open", "changed", "all"):
+        assert f'data-kind="{kind}"' in filters, (
+            f"the {kind} chip never reached the page"
+        )
+    assert "mark read" in filters.lower()

@@ -489,6 +489,11 @@ def build_payload(ledger: dict | None = None, inventory: dict | None = None,
         "composition": composition,
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "run_id": run.get("run_id"),
+        # When the run that adjudicated this page actually ran -- not when the
+        # page was generated. The header used to print the generation moment,
+        # which moves every time the console re-renders and says nothing about
+        # how fresh the measurements are.
+        "run_at": run.get("finished_at") or run.get("started_at"),
         # Critique gap 8: "V" and "V (partial identity)" are different claims
         # about how much of the ladder this run could reach.
         "run_level": verdict.label if verdict else "none",
@@ -1083,8 +1088,6 @@ h4.sec {
       &#128276;<span class="bell-n" id="bellN" hidden></span>
     </button>
     <div class="inbox" id="inbox" hidden></div>
-    <p class="sub">Independent verification of the Cymetica / EventTrader API, MCP and
-    discovery surfaces. Every number below was measured, not reported.</p>
     <div class="meta" id="meta"></div>
   </header>
 
@@ -1102,11 +1105,6 @@ h4.sec {
   </section>
 
   <section class="panel" id="panel-findings" hidden>
-  <h2 class="group" style="margin-top:26px">Findings</h2>
-  <p class="group-note">Everything found so far, including defects in the platform's own
-  documentation. Open one to read the exact correspondence sent about it. Nothing here is
-  marked fixed &mdash; only <em>verified against a named surface, at a named time, by a
-  named check</em>.</p>
   <div class="filters" id="filters"></div>
   <div id="findings"></div>
   </section>
@@ -1256,18 +1254,26 @@ const SEV = [
   ["S4-COSMETIC","cosmetic","s4"],
 ];
 
-document.getElementById("meta").innerHTML = [
-  ["run", D.run_id || "—"],
+// One line, because the seven-figure row above it was read by nobody: "to
+// nikdy nectu a je to hnus". What survives is what the page cannot be read
+// without -- which run, at what level, standing on which journal event. The
+// rest is still here, in the tooltip, where it costs nothing until wanted.
+document.getElementById("meta").innerHTML =
+  `<span class="runline" title="${esc([
+      `run ${D.run_id || "—"}`,
+      `platform fingerprint ${D.fingerprint || "—"}`,
+      `documented paths ${D.totals.paths_documented ?? "—"}`,
+      `MCP tools anon / trusted ${D.totals.tools_served_anon ?? "—"} / ${D.totals.tools_served_trusted ?? "—"}`,
+      `messages sent / received ${D.thread_counts.sent ?? 0} / ${D.thread_counts.received ?? 0}`,
+      `page generated ${D.generated_at.replace("T"," ").replace("+00:00","Z")}`,
+      ...(D.run_notes || []),
+    ].join("\n"))}">`
+  + `run ${esc(stamp(D.run_at) || "—")} &middot; level ${esc(D.run_level || "—")} &middot; `
   // What the ledger cites, never what the journal is at now. The journal
   // moves on a timer and this page is hashed into a guard, so a live number
   // here would make the dashboard stale against itself every fifteen minutes.
-  ["state as of", D.events_head ? `journal event ${D.events_head.seq}` : "—"],
-  ["fingerprint", D.fingerprint || "—"],
-  ["documented paths", D.totals.paths_documented ?? "—"],
-  ["MCP tools anon / trusted", `${D.totals.tools_served_anon ?? "—"} / ${D.totals.tools_served_trusted ?? "—"}`],
-  ["messages sent / received", `${D.thread_counts.sent ?? 0} / ${D.thread_counts.received ?? 0}`],
-  ["generated", D.generated_at.replace("T"," ").replace("+00:00","Z")],
-].map(([k,v]) => `<span><b>${esc(k)}</b> ${esc(v)}</span>`).join("");
+  + `state as of ${D.events_head ? "journal event " + esc(D.events_head.seq) : "—"}`
+  + `</span>`;
 
 document.getElementById("triage").innerHTML =
   SEV.map(([k,l,c]) => `<div class="tri ${c}"><div class="n">${D.by_severity[k]||0}</div><div class="l">${l}</div></div>`).join("")
@@ -1493,12 +1499,24 @@ D.findings.forEach(f => {
   sevCounts[f.severity] = (sevCounts[f.severity]||0)+1;
   tagCounts[f.tag] = (tagCounts[f.tag]||0)+1;
 });
+// Three views, one facet row. The counts on the three views are filled in by
+// applyFilters, not baked here: "changed since read" moves whenever the read
+// mark moves, and a number printed once would be wrong by the next click. The
+// old row printed `all - 41` from the payload while the tab badge counted what
+// was visible, so two numbers a centimetre apart meant different things.
 document.getElementById("filters").innerHTML =
+  `<button data-kind="open" aria-pressed="true">open <span class="cn"></span></button>`
+  + `<button data-kind="changed" aria-pressed="false">changed since read <span class="cn"></span></button>`
+  + `<button data-kind="all" aria-pressed="false">all <span class="cn"></span></button>`
+  + `<span class="sep"></span><button data-act="read">mark read</button>`
+  + `<span class="sep"></span><span class="fl">sort</span>`
+  + `<button data-sort="changed" aria-pressed="true">last change</button>`
+  + `<button data-sort="damage" aria-pressed="false">damage</button>`
   // Labelled, because two unlabelled rows of buttons filtering different
   // things is a puzzle: one row is how much damage, the other is which part
   // of the platform, and nothing on screen said so.
-  `<button data-kind="all" aria-pressed="true">all &middot; ${D.findings.length}</button>`
   + `<span class="sep"></span><span class="fl">damage</span>`
+  + `<button data-kind="sev" data-v="" aria-pressed="true">any</button>`
   + SEV.filter(s => sevCounts[s[0]]).map(s =>
       `<button data-kind="sev" data-v="${s[0]}" aria-pressed="false">${s[1]} &middot; ${sevCounts[s[0]]}</button>`).join("")
   + `<span class="sep"></span><span class="fl">area</span>`
@@ -1635,47 +1653,84 @@ document.getElementById("cardmarks").innerHTML = `
    default, and the number on the Findings tab is whatever is visible. */
 const SETTLED = new Set(["VERIFIED FIXED", "WITHDRAWN", "SUPERSEDED",
                          "PASSING, NEVER RAISED"]);
-let openOnly = readStore("qa.openOnly", "1") === "1";
-let activeKind = "all", activeValue = null;
+let view = readStore("qa.view", "open");
+let sortBy = readStore("qa.sort", "changed");
+let activeKind = "sev", activeValue = null;
+
+/* A row that closed while you were away is the one thing a sweep produces
+   that the page could not show. It is not "unread" in the bell's sense --
+   nobody said anything -- so it is a third view rather than a badge, and it
+   shares the bell's read mark so that clearing one clears both. */
+const changedSince = el => Number(el.dataset.changedAt || 0) > seenAt();
+
+function inView(el) {
+  if (view === "all") return true;
+  if (view === "changed") return changedSince(el);
+  return !SETTLED.has(el.dataset.state);
+}
 
 function applyFilters() {
+  const counts = { open: 0, changed: 0, all: 0 };
   let shown = 0;
   box.querySelectorAll(".finding").forEach(el => {
-    const settled = SETTLED.has(el.dataset.state);
-    const matches = activeKind === "all" ||
+    counts.all++;
+    if (!SETTLED.has(el.dataset.state)) counts.open++;
+    if (changedSince(el)) counts.changed++;
+    const matches = !activeValue ||
       (activeKind === "sev" ? el.dataset.sev === activeValue
                             : el.dataset.tag === activeValue);
-    const visible = matches && !(openOnly && settled);
+    const visible = matches && inView(el);
     el.hidden = !visible;
     if (visible) shown++;
   });
-  const toggle = document.getElementById("openOnly");
-  if (toggle) {
-    toggle.setAttribute("aria-pressed", String(openOnly));
-    toggle.textContent = openOnly ? "open only" : "settled shown";
-  }
+  document.querySelectorAll("#filters button[data-kind]").forEach(b => {
+    const kind = b.dataset.kind;
+    if (kind in counts) {
+      b.setAttribute("aria-pressed", String(view === kind));
+      const n = b.querySelector(".cn");
+      if (n) n.textContent = "· " + counts[kind];
+    } else {
+      b.setAttribute("aria-pressed",
+        String((b.dataset.v || null) === activeValue && kind === activeKind));
+    }
+  });
+  document.querySelectorAll("#filters button[data-sort]").forEach(b =>
+    b.setAttribute("aria-pressed", String(b.dataset.sort === sortBy)));
   const badge = document.getElementById("tabN");
   if (badge) badge.textContent = String(shown);
 }
 
-document.getElementById("filters").insertAdjacentHTML("afterbegin",
-  '<button id="openOnly" aria-pressed="true">open only</button><span class="sep"></span>');
+/* Newest movement first, because after a sweep that is the question. Damage
+   order is the other one anybody asks, and S0 sorts above S4 by its own name.
+   Re-appending the nodes keeps one list rather than rendering a second. */
+const SEV_RANK = SEV.map(s => s[0]);
+function sortRows() {
+  const rows = Array.from(box.querySelectorAll(".finding"));
+  rows.sort((a, b) => sortBy === "damage"
+    ? (SEV_RANK.indexOf(a.dataset.sev) - SEV_RANK.indexOf(b.dataset.sev))
+      || (Number(b.dataset.changedAt || 0) - Number(a.dataset.changedAt || 0))
+    : Number(b.dataset.changedAt || 0) - Number(a.dataset.changedAt || 0));
+  rows.forEach(el => box.appendChild(el));
+}
 
 document.getElementById("filters").addEventListener("click", e => {
   const btn = e.target.closest("button"); if (!btn) return;
-  if (btn.id === "openOnly") {
-    openOnly = !openOnly;
-    writeStore("qa.openOnly", openOnly ? "1" : "0");
-    applyFilters();
-    return;
+  if (btn.dataset.act === "read") { markRead(); return; }
+  if (btn.dataset.sort) {
+    sortBy = btn.dataset.sort;
+    writeStore("qa.sort", sortBy);
+    sortRows();
+  } else if (btn.dataset.kind === "open" || btn.dataset.kind === "changed"
+             || btn.dataset.kind === "all") {
+    view = btn.dataset.kind;
+    writeStore("qa.view", view);
+  } else if (btn.dataset.kind) {
+    activeKind = btn.dataset.kind;
+    activeValue = btn.dataset.v || null;
   }
-  document.querySelectorAll("#filters button").forEach(b => {
-    if (b.id !== "openOnly") b.setAttribute("aria-pressed", String(b === btn));
-  });
-  activeKind = btn.dataset.kind;
-  activeValue = btn.dataset.v || null;
   applyFilters();
 });
+sortRows();
 applyFilters();
 
 /* ---------- two tabs ---------- */
@@ -1702,6 +1757,15 @@ showTab(readStore("qa.tab", "overview"));
    Read state is per browser, not per user: a reading aid, not a fact about
    the work. So it lives in localStorage and errs toward showing too much. */
 function seenAt() { return Number(readStore("qa.seenAt", "0")) || 0; }
+
+/* The one read switch. The bell's "Mark all as read" and the "changed since
+   read" chip are two doors onto the same mark, and two copies of this line
+   would be two ideas of when you last looked. */
+function markRead() {
+  writeStore("qa.seenAt", Date.now());
+  paintInbox();
+  applyFilters();
+}
 
 function unread() {
   return D.findings.map(f => ({ f: f, at: newestFromThem(f) }))
@@ -1770,8 +1834,7 @@ document.getElementById("bell").addEventListener("click", () => {
 
 document.getElementById("inbox").addEventListener("click", e => {
   if (e.target.closest("[data-seen]")) {
-    writeStore("qa.seenAt", Date.now());
-    paintInbox();
+    markRead();
     return;
   }
   const item = e.target.closest("[data-go]");
