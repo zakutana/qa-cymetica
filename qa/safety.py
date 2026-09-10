@@ -80,6 +80,11 @@ class EndpointRule:
     component: str
     executable_params: frozenset[str] = frozenset()
     inert_params: frozenset[str] = frozenset()
+    # Must be PRESENT and TRUE on a MUTATE body, or the request is
+    # refused. Distinct from inert_params, which says which keys are
+    # harmless in a probe -- five declared, three sent, and requiring
+    # all of them would have broken the a2a writer.
+    required_flags: frozenset[str] = frozenset()
     probe_only: bool = False
     readonly_rpc: bool = False
     forbidden_always: bool = False
@@ -113,6 +118,7 @@ class EndpointRegistry:
                     component=e["component"],
                     executable_params=frozenset(e.get("executable_params", [])),
                     inert_params=frozenset(e.get("inert_params", [])),
+                    required_flags=frozenset(e.get("required_flags", [])),
                     probe_only=bool(e.get("probe_only", False)),
                     readonly_rpc=bool(e.get("readonly_rpc", False)),
                     forbidden_always=bool(e.get("forbidden_always", False)),
@@ -238,6 +244,7 @@ class SafetyTransport(httpx.BaseTransport):
                 f"{rule.id} is probe_only: reachability is testable, execution is "
                 f"not. No MUTATE test may target it, even with --allow-mutate."
             )
+        self._assert_declared_flags(request, rule)
         host = request.url.host
         if host not in self.registry.mutate_allowed_hosts:
             raise SafetyViolation(f"MUTATE against unlisted host {host!r}.")
@@ -311,6 +318,52 @@ class SafetyTransport(httpx.BaseTransport):
             )
 
     # -- the inert-body proof ---------------------------------------------
+    def _assert_declared_flags(self, request, rule) -> None:
+        """A MUTATE body must carry every flag its rule declares inert.
+
+        components.yaml said of the event-card orders that *"`paper` is
+        inert: it is the flag that says no money moves"*, and nothing
+        implemented it: `inert_params` is read only by `_assert_inert`, which
+        runs at PROBE, and the MUTATE branch checked the tier, `probe_only`
+        and the host without ever looking at a body.
+
+        It could not be fixed by enforcing `inert_params`, which was the first
+        attempt: elsewhere that key means "these are harmless in a probe body"
+        -- `bounty.a2a_send` declares five and sends three -- so requiring all
+        of them would have refused the a2a writer. Hence a separate
+        declaration for a separate idea.
+
+        What it cost: the live schema resolves an absent `paper` as "use
+        user.simulation_mode", and this account's is False. An order with
+        `amount_usdc` and no `paper` was a live order, and every guard we had
+        would have passed it.
+
+        Present AND truthy. `paper: false` is not a paper order, and a reading
+        that only asked whether the key existed would wave it through -- which
+        is the same shape as asserting a field is present when the contract is
+        about its value.
+        """
+        declared = getattr(rule, "required_flags", frozenset())
+        if not declared:
+            return
+        try:
+            payload = json.loads(request.read() or b"{}")
+        except json.JSONDecodeError:
+            payload = None
+        if not isinstance(payload, dict):
+            raise SafetyViolation(
+                f"MUTATE body for {rule.id} is not a JSON object, so the "
+                f"{', '.join(sorted(declared))} flag it must carry cannot be read."
+            )
+        missing = sorted(flag for flag in declared if not payload.get(flag))
+        if missing:
+            raise SafetyViolation(
+                f"MUTATE {rule.id} without {', '.join(missing)}. That flag is "
+                f"what says no money moves, and this endpoint resolves its "
+                f"absence against the account's own simulation_mode. Send it "
+                f"true, or do not send the order."
+            )
+
     def _assert_inert(self, request, rule) -> None:
         """A PROBE body must be provably incapable of executing."""
         body = request.read()

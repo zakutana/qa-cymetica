@@ -83,7 +83,20 @@ PINNED = {
     # cymetica.com and raises the tier to MUTATE before asking the guard to
     # refuse place_order. This change can only REMOVE reach, never add it --
     # which is the direction a re-derivation is allowed to go.
-    "test_guard_is_real.py": "5319cb1bfbc147528bc13051746551ae30dd2ac360bf505a0b8db720ee0f0250",
+    #
+    # Re-derived 2026-09-10, and only by ADDING two controls -- no existing
+    # line moved. WHAT CHANGED AND WHY: `paper` was declared inert on the three
+    # event-card orders and enforced nowhere, because inert_params is read at
+    # PROBE and the MUTATE branch never looked at a body. An order carrying
+    # amount_usdc and no paper would have gone live, since the platform
+    # resolves an absent flag against the account's simulation_mode, which is
+    # False. The two new controls assert the refusal and assert that it does
+    # NOT widen to the writers that merely declare inert params -- caught by
+    # this pin's sibling assertion when the first attempt hung the rule on
+    # inert_params and would have refused the a2a writer. Both run through
+    # _Unsendable, so a broken refusal reaches a transport that carries
+    # nothing rather than the live platform.
+    "test_guard_is_real.py": "cbe6913e7909d0894e7ad23bf1bf8250ae29257d5e462271a7a59d18177950e6",
 }
 
 

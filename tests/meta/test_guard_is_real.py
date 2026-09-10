@@ -451,3 +451,101 @@ def test_register_floor_names_the_fields_that_actually_create_an_account():
     assert not (rule.inert_params & required_by_server), (
         "a field that creates an account is never inert"
     )
+
+
+@qa(component="meta.guard", tier=SafetyTier.SAFE, surface="meta")
+def test_an_order_without_its_paper_flag_never_leaves_this_machine():
+    """`inert_params` was declared, documented, and enforced nowhere.
+
+    components.yaml says it in as many words at the event-card rules: *"`paper`
+    is inert: it is the flag that says no money moves, and marking it
+    executable would invert its meaning."* The floor was written on 2026-09-08
+    so that it would "name what it is standing on". It named it and did not
+    stand on it: `_assert_inert` is called only from the PROBE branch, and the
+    MUTATE branch checks `mutate_enabled`, `probe_only` and the host without
+    ever reading the body.
+
+    What that costs, exactly. The live schema resolves an absent `paper` as
+    *"None (default) -> use user.simulation_mode"*, and this account's
+    `simulation_mode` is **False**. So a MUTATE POST carrying `amount_usdc` and
+    no `paper` key is a live order against the real balance, and every guard we
+    have would pass it. Found on 2026-09-10 while planning the paper campaign,
+    before the first order rather than after it.
+
+    The rule is the one the comment already claims: at MUTATE, a request to a
+    rule that declares inert parameters must carry every one of them, truthy.
+    Only the three event-card orders declare any, so nothing else changes.
+
+    Through a transport that cannot send: a control asserting "this is refused"
+    performs the thing the moment the refusal breaks, and mutation-testing a
+    guard here once sent a real withdrawal.
+    """
+    registry = EndpointRegistry.load()
+    registry.mutate_enabled = True
+    registry.mutate_allowed_hosts = frozenset({"cymetica.com"})
+    client = _deaf_client(registry=registry)
+
+    token = CURRENT_TIER.set(SafetyTier.MUTATE)
+    try:
+        with pytest.raises(SafetyViolation) as refused:
+            client.post("https://cymetica.com/api/v1/event-cards/42/buy",
+                        json={"amount_usdc": 10})
+        assert "paper" in str(refused.value), (
+            "the refusal must name the flag that was missing, or the next "
+            f"person reads it as a tier problem: {refused.value}"
+        )
+
+        # The same order, with the flag the floor exists to require, reaches
+        # the transport -- which is where _Unsendable stops it.
+        with pytest.raises(AssertionError, match="THE GUARD LET IT THROUGH"):
+            client.post("https://cymetica.com/api/v1/event-cards/42/buy",
+                        json={"amount_usdc": 10, "paper": True})
+
+        # And a flag that is present but false is not a paper order. This is
+        # the shape that would slip past a `"paper" in body` reading.
+        with pytest.raises(SafetyViolation):
+            client.post("https://cymetica.com/api/v1/event-cards/42/buy",
+                        json={"amount_usdc": 10, "paper": False})
+    finally:
+        CURRENT_TIER.reset(token)
+        client.close()
+
+
+@qa(component="meta.guard", tier=SafetyTier.SAFE, surface="meta")
+def test_a_rule_that_requires_no_flag_is_unaffected():
+    """The new refusal must not become a tax on every other MUTATE.
+
+    Filing a report, sending a verification, asking the vendor a question --
+    the writes this project performs on purpose -- must go through exactly as
+    before.
+    """
+    registry = EndpointRegistry.load()
+    registry.mutate_enabled = True
+    registry.mutate_allowed_hosts = frozenset({"cymetica.com"})
+    client = _deaf_client(registry=registry)
+
+    # Pinned, because widening this widens what the refusal blocks. The first
+    # attempt hung it on `inert_params` and this assertion is what caught it:
+    # nine rules declare that key, and on six of them it means "these are
+    # harmless in a probe body" -- bounty.a2a_send declares five and sends
+    # three, so requiring them would have refused the a2a writer.
+    declares = [rule.id for rule in registry.rules if getattr(rule, "required_flags", None)]
+    assert sorted(declares) == ["event_cards.buy", "event_cards.sell",
+                                "event_cards.short"], (
+        f"the set of rules requiring a flag has moved: {declares}"
+    )
+    inert_only = sorted(rule.id for rule in registry.rules
+                        if rule.inert_params and not rule.required_flags)
+    assert "bounty.a2a_send" in inert_only, (
+        "a2a_send declares inert params and requires none; if that stops "
+        "being true, sending a question to the vendor starts being refused"
+    )
+
+    token = CURRENT_TIER.set(SafetyTier.MUTATE)
+    try:
+        with pytest.raises(AssertionError, match="THE GUARD LET IT THROUGH"):
+            client.post("https://cymetica.com/api/v1/bounty/reports",
+                        json={"title": "x", "description": "y"})
+    finally:
+        CURRENT_TIER.reset(token)
+        client.close()

@@ -331,12 +331,22 @@ endpoints:
   # door submit.py goes through to file a report. `paper` is inert: it is the
   # flag that says no money moves, and marking it executable would invert its
   # meaning.
+  #
+  # `required_flags` is what makes that sentence true. Until 2026-09-10 it was
+  # only a sentence: inert_params is read at PROBE and the MUTATE branch never
+  # looked at a body, so an order carrying amount_usdc and no paper passed
+  # every guard -- and the live schema resolves an absent paper against the
+  # account's simulation_mode, which is False. inert_params could not carry
+  # this, because elsewhere it means "these keys are harmless in a probe body"
+  # (a2a_send declares five and sends three); required_flags means "this must
+  # be here, and true, or the request does not leave the machine".
   - id: event_cards.buy
     path: /api/v1/event-cards/{card_id}/buy
     methods: [POST]
     component: rest.event_cards
     executable_params: [amount_usdc]
     inert_params: [paper]
+    required_flags: [paper]
 
   - id: event_cards.sell
     path: /api/v1/event-cards/{card_id}/sell
@@ -344,13 +354,15 @@ endpoints:
     component: rest.event_cards
     executable_params: [amount_usdc, units]
     inert_params: [paper]
+    required_flags: [paper]
 
   - id: event_cards.short
     path: /api/v1/event-cards/{card_id}/short
     methods: [POST]
     component: rest.event_cards
     executable_params: [amount_usdc]
-    inert_params: [paper]   # buys on a token exchange book
+    inert_params: [paper]
+    required_flags: [paper]
 
   - id: arena.order
     path: /api/v1/arena/order
