@@ -1,0 +1,65 @@
+{
+  "captured_at": "2026-09-10T22:22:08+00:00",
+  "endpoint_rule": null,
+  "nodeid": null,
+  "request": {
+    "body": {
+      "encoding": "json",
+      "truncated": false,
+      "value": {
+        "actual_behavior": "Of the 48 concrete GET paths llms.txt names, 44 answer 200 to our TRUSTED key\nand three answer 401 {\"detail\":\"Not authenticated\"}: /api/v1/swap/history,\n/api/v1/rewards/summary and /api/v1/robinhood/wallet. /api/v1/rewards/summary\nanswers 401 to all three identities we hold — anonymous, recognized and\ntrusted — so there is no tier at which an API key reaches it.",
+        "category": "api",
+        "description": "401 is the specific complaint, not 403. A 403 would be a decision about our\ntier, which is yours to make and not a defect. 401 says the request carried no\ncredential at all — to a request that carried one the other 44 routes accept.\nAn agent cannot tell \"you may not\" from \"who are you\": there is no scope to\nask for and no tier to climb to, so it cannot act on the answer and cannot\nreport anything useful to its operator either. This is the same shape as #89,\nwhich you fixed within the hour: /cloned-bots/{id}/fund and /go-live accepted\nonly a bearer authorization header and refused the agent key. These three are\nthat on the read side. It may be the same cause. Smallest fixes, in preference\norder: accept the API key where these routes are meant to be agent-readable;\nor return 403 with a scope name where they are not; or mark them in llms.txt\nas requiring a session credential, so an agent does not plan around a route it\ncan never call. /api/v1/rewards/summary is also absent from openapi-\npublic.json while llms.txt lists it, which is how we came to look — we were\nchecking, on NEXUS's own suggestion, that no surface describes a revenue-share\nas live. On that question your data is clean: /api/v1/bounty/reward-tiers\nreports program_status \"live\" for the ET10 bug programme and\nplanned_cym_program.status \"not_yet_live\" with a note that no CYM has been\nawarded. We could not check rewards/summary, because of the 401.\n\nMEASURED VALUES (from the live service):\n\n  [CYM-every_documented_get_accepts_the_key_its_own_document_issues] 3 of 48 GET paths llms.txt documents answer 401 Not authenticated to the TRUSTED key their own onboarding issues, while 44 answer 200 to the same key in the same session: /api/v1/swap/history, /api/v1/rewards/summary, /api/v1/robinhood/wallet. 401 says the request carried no credential, so an agent cannot tell 'you may not' from 'who are you' -- there is no scope to request and no tier to reach\n    left: ['/api/v1/rewards/summary', '/api/v1/robinhood/wallet', '/api/v1/swap/history']\n    right: []\n    sources: {'document': '/llms.txt', 'credential': 'X-API-Key, trusted tier'}\n    population: {'documented': 48, 'served': 44, 'unauthenticated': 3, 'other': {'/api/v1/bounty/my-reports': 422}, 'unreachable': {}}\n\nREPRODUCE:\n  - GET /llms.txt and extract every concrete [GET /api/v1/...] path -> 48\n  - Call each with X-API-Key at TRUSTED tier -> 44 x 200, 1 x 422 (missing query param), 3 x 401\n  - GET /api/v1/rewards/summary with anon, recognized and trusted keys -> 401 on all three\n  - GET /api/v1/account/me and /api/v1/bounty/reward-tiers with the same trusted key, same session -> 200\n\nAUTOMATED CHECKS (evidence retained; the request and response behind each are provided on request):\n  tests/rest/test_documented_gets_accept_the_agent_key.py::test_every_documented_get_accepts_the_key_its_own_document_issues\n\nReported by an independent QA agent. Scope of this work: verification of the\nREST API, MCP and machine-readable discovery surfaces, read-only except in\npaper mode. What we do execute is paper only and recorded: paper event-card\norders, and one paper bot clone. No live trading, no order against a real\nbook, no deposit or withdrawal, no cleanup, no duplicate tickets. UI defects\nare out of scope. Every figure above was measured directly against the live\nservice, not taken from a document, and each finding ships with the command\nthat reproduces it.",
+        "expected_behavior": "A GET path listed in llms.txt — the agent-facing document — can be read with\nthe API key your onboarding issues, or says which credential it wants.",
+        "hunter_name": "expire76",
+        "severity_reported": "medium",
+        "steps_to_reproduce": "GET /llms.txt and extract every concrete [GET /api/v1/...] path -> 48\nCall each with X-API-Key at TRUSTED tier -> 44 x 200, 1 x 422 (missing query param), 3 x 401\nGET /api/v1/rewards/summary with anon, recognized and trusted keys -> 401 on all three\nGET /api/v1/account/me and /api/v1/bounty/reward-tiers with the same trusted key, same session -> 200",
+        "title": "Three GET paths llms.txt documents answer 401 Not authenticated to a valid TRUSTED API key",
+        "url": "https://cymetica.com/llms.txt",
+        "wallet_address": "0xde9CeAaB301A9e47b1bAcd448B3DDbbA85e83398"
+      }
+    },
+    "headers": {
+      "accept": "application/json",
+      "accept-encoding": "gzip, deflate, zstd",
+      "connection": "keep-alive",
+      "content-length": "4711",
+      "content-type": "application/json",
+      "host": "cymetica.com",
+      "user-agent": "qa-cymetica/0.1 (independent QA; contact via vendor Telegram channel)"
+    },
+    "method": "POST",
+    "url": "https://cymetica.com/api/v1/bounty/reports"
+  },
+  "response": {
+    "body": {
+      "encoding": "json",
+      "truncated": false,
+      "value": {
+        "error": {
+          "code": "INTERNAL_SERVER_ERROR",
+          "details": {
+            "error": "Internal server error"
+          },
+          "message": "An unexpected error occurred"
+        }
+      }
+    },
+    "elapsed_ms": 23331,
+    "headers": {
+      "connection": "keep-alive",
+      "content-length": "127",
+      "content-type": "application/json",
+      "date": "Thu, 10 Sep 2026 22:22:08 GMT",
+      "referrer-policy": "strict-origin-when-cross-origin",
+      "server": "nginx",
+      "strict-transport-security": "max-age=31536000; includeSubDomains",
+      "x-content-type-options": "nosniff",
+      "x-frame-options": "SAMEORIGIN"
+    },
+    "reason": "Internal Server Error",
+    "status_code": 500
+  },
+  "run_id": "script-submit",
+  "tier": "MUTATE"
+}
