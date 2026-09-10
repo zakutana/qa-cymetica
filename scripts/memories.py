@@ -105,13 +105,44 @@ def load() -> list[dict]:
             if p.name != "MEMORY.md"]
 
 
-def index_names() -> set[str]:
-    """Every memory `MEMORY.md` links to."""
+def _index_text() -> str:
     path = memory_dir() / "MEMORY.md"
-    if not path.is_file():
-        return set()
-    return set(re.findall(r"\]\(([^)]+)\.md\)",
-                          path.read_text(encoding="utf-8")))
+    return path.read_text(encoding="utf-8") if path.is_file() else ""
+
+
+# A retirement is marked IN ITS OWN LINE, not by where the line sits.
+#
+# The deep pass retires a memory by taking it out of what sessions read and
+# leaving the file -- `rm` is not on its allowlist and an unattended pass may
+# not ask. Doing that by deleting the line made `problems()` report the file as
+# one nobody linked, which is `tests/repo` red at step 6, and step 9 reverts a
+# night over a red it cannot resolve. Found 2026-09-10 by performing the
+# procedure.
+#
+# Two positional designs were tried and BOTH were voted down by an independent
+# reader before they landed, for the same underlying reason: a `## Retired`
+# heading has to go at the end of MEMORY.md, and the end of MEMORY.md is
+# exactly where a new memory's line is appended. First attempt -- the heading
+# swallowed anything below it, so the next memory written would be skipped by
+# `--for` and reported clean. Second attempt -- requiring a date on the line
+# fixed that until a memory's own one-line hook happened to start with a date,
+# which the real file already does.
+#
+# So position is not used at all. A line is retired when it says so, and a line
+# appended by a session that has not read this cannot accidentally say so.
+RETIRED_LINE = re.compile(
+    r"^-\s.*?\]\(([^)]+)\.md\)[^\n]*?\bRETIRED\s+(\d{4}-\d{2}-\d{2})\b", re.M)
+ANY_LINE = re.compile(r"\]\(([^)]+)\.md\)")
+
+
+def retired_names() -> set[str]:
+    """Every memory whose index line carries `RETIRED <date>`."""
+    return {m.group(1) for m in RETIRED_LINE.finditer(_index_text())}
+
+
+def index_names() -> set[str]:
+    """Every memory `MEMORY.md` links. Retired ones are linked but not read."""
+    return set(ANY_LINE.findall(_index_text()))
 
 
 def problems(memories: list[dict], indexed: set[str]) -> list[str]:
@@ -120,8 +151,14 @@ def problems(memories: list[dict], indexed: set[str]) -> list[str]:
     Pure, so the test can hand it a temp directory and get the same answers.
     """
     out = []
+    retired = retired_names()
     for memory in memories:
         stem = memory["path"].stem
+        if stem in retired:
+            # Retired on purpose: not loaded, not classified, not a problem.
+            # The reason lives beside its line under `## Retired`, which is the
+            # only history this directory has.
+            continue
         if not memory["applies"]:
             out.append(f"{stem}: no `applies:` -- nothing will ever read it")
         unknown = sorted(set(memory["applies"]) - set(CLASSES))
@@ -129,9 +166,16 @@ def problems(memories: list[dict], indexed: set[str]) -> list[str]:
             out.append(f"{stem}: applies to {unknown}, which is not a class")
         if stem not in indexed:
             out.append(f"{stem}: not linked from MEMORY.md, so no session "
-                       f"knows it exists")
-    for name in sorted(indexed - {m["path"].stem for m in memories}):
+                       f"knows it exists. If it was retired deliberately, keep "
+                       f"its line and mark it `RETIRED YYYY-MM-DD: <reason>`")
+    on_disk = {m["path"].stem for m in memories}
+    for name in sorted(indexed - on_disk):
         out.append(f"MEMORY.md links {name}, which is not a file")
+    for name in sorted(retired - on_disk):
+        # Retiring preserves the record. A retired line whose file is gone has
+        # lost the thing the procedure exists to keep.
+        out.append(f"MEMORY.md retires {name}, whose file is gone -- a "
+                   f"retirement keeps the record, it does not remove it")
     return out
 
 
@@ -167,7 +211,9 @@ def main(argv: list[str] | None = None) -> int:
             print(f"{memory['path'].stem:56} {','.join(memory['applies'])}")
         return 0
 
-    matching = [m for m in memories if args.klass in m["applies"]]
+    retired = retired_names()
+    matching = [m for m in memories
+                if args.klass in m["applies"] and m["path"].stem not in retired]
     if not matching:
         print(f"nothing recorded about {args.klass} yet")
         return 0

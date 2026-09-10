@@ -144,6 +144,125 @@ def test_the_reader_accepts_every_shape_the_harness_actually_writes(tmp_path,
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_memory_retired_on_purpose_is_not_a_memory_nobody_linked(tmp_path,
+                                                                  monkeypatch):
+    """The skill's own retirement procedure turned this file red.
+
+    Deep pass, step 1b: retire a memory by "dropping the line from `MEMORY.md`
+    and leaving the file" -- `rm` is not on the allowlist and an unattended pass
+    may not ask. Doing exactly that made `problems()` say "not linked from
+    MEMORY.md, so no session knows it exists", which is `tests/repo` red at step
+    6, and step 9 reverts a night over a red it cannot resolve. Found on
+    2026-09-10 by performing the procedure; three readers reproduced it the
+    same way.
+
+    Neither half was wrong. An unlinked file really is invisible, and a
+    retirement really must not delete the record -- that directory is outside
+    git, so `MEMORY.md` is the only history it has. What was missing was a way
+    to say WHICH of the two happened.
+
+    **The line stays in the list and says `RETIRED <date>: <reason>` itself.**
+    Two POSITIONAL designs were tried first and an independent reader voted
+    each one down before it landed, both for the same underlying reason: any
+    "below this heading means retired" rule has to put the heading at the end
+    of MEMORY.md, and the end of MEMORY.md is exactly where a new memory's line
+    is appended.
+
+      1. `## Retired` swallowed every appended line -- the next memory written
+         would have been skipped by `--for` and reported clean.
+      2. Requiring a date on the line fixed that until a memory's own one-line
+         hook began with a date, which the real file already had.
+
+    So position is not used at all. A session appending a line cannot
+    accidentally write `RETIRED`, and where the line sits stops mattering.
+    """
+    import contextlib
+    import io as _io
+
+    mod = _module()
+    monkeypatch.setenv("QA_MEMORY_DIR", str(tmp_path))
+    for stem in ("live", "old"):
+        (tmp_path / f"{stem}.md").write_text(
+            f'---\nname: {stem}\ndescription: "d"\napplies: "sweep"\n---\n\n'
+            f"body of {stem}\n", encoding="utf-8")
+
+    # Forgotten: the file exists and nothing in MEMORY.md mentions it.
+    (tmp_path / "MEMORY.md").write_text(
+        "- [Live](live.md) — a\n", encoding="utf-8")
+    found = mod.problems(mod.load(), mod.index_names())
+    assert any("old" in p and "not linked" in p for p in found), (
+        f"a memory nobody linked must still be caught: {found}")
+
+    # Retired on purpose: the line STAYS in the list and says so itself.
+    (tmp_path / "MEMORY.md").write_text(
+        "- [Live](live.md) — a\n"
+        "- [Old](old.md) — RETIRED 2026-09-10: superseded by CLAUDE.md's map.\n",
+        encoding="utf-8")
+    assert mod.problems(mod.load(), mod.index_names()) == [], \
+        "a retirement performed as the skill prescribes must not be a problem"
+
+    # And it stops being loaded, which is the point of retiring it.
+    out = _io.StringIO()
+    with contextlib.redirect_stdout(out):
+        mod.main(["--for", "sweep"])
+    printed = out.getvalue()
+    assert "body of live" in printed
+    assert "body of old" not in printed, \
+        "a retired memory is still being read into sessions"
+
+    # The two holes independent readers found in the two POSITIONAL designs
+    # that came before this one, both reproduced here as data. A new memory's
+    # line is appended to the END of MEMORY.md, so any design that says "below
+    # this heading means retired" swallows the next memory written.
+    #
+    #   1. a `## Retired` heading at the end swallowed every appended line;
+    #   2. requiring a date on the line fixed that until a memory's own hook
+    #      happened to start with a date -- and the real MEMORY.md already had
+    #      a line of that shape.
+    #
+    # Hence no position at all: a line is retired when the LINE says so, and a
+    # session appending a new one cannot accidentally say it.
+    (tmp_path / "fresh.md").write_text(
+        '---\nname: fresh\ndescription: "d"\napplies: "sweep"\n---\n\n'
+        "body of fresh\n", encoding="utf-8")
+    (tmp_path / "dated.md").write_text(
+        '---\nname: dated\ndescription: "d"\napplies: "sweep"\n---\n\n'
+        "body of dated\n", encoding="utf-8")
+    (tmp_path / "MEMORY.md").write_text(
+        "- [Live](live.md) — a\n"
+        "- [Old](old.md) — RETIRED 2026-09-10: superseded by CLAUDE.md's map.\n"
+        "- [Fresh](fresh.md) — appended by a session that did not read this\n"
+        "- [Dated](dated.md) — 2026-09-10, the day this one was learned\n",
+        encoding="utf-8")
+    assert mod.problems(mod.load(), mod.index_names()) == [], \
+        "an appended line is a normal line, wherever it sits"
+    assert mod.retired_names() == {"old"}, (
+        f"only the line that says RETIRED is retired: {mod.retired_names()}")
+
+    out = _io.StringIO()
+    with contextlib.redirect_stdout(out):
+        mod.main(["--for", "sweep"])
+    printed = out.getvalue()
+    for stem in ("live", "fresh", "dated"):
+        assert f"body of {stem}" in printed, (
+            f"{stem} was appended after the retired line and is no longer "
+            f"read: this is the failure both earlier designs had")
+    assert "body of old" not in printed
+
+    # A retired line naming a file that is gone is still a problem: the record
+    # is what retirement preserves, so losing it silently is the other failure.
+    (tmp_path / "MEMORY.md").write_text(
+        "- [Live](live.md) — a\n"
+        "- [Old](old.md) — RETIRED 2026-09-10: superseded by CLAUDE.md's map.\n",
+        encoding="utf-8")
+    (tmp_path / "old.md").unlink()
+    found = mod.problems(mod.load(), mod.index_names())
+    assert any("old" in p for p in found), (
+        f"MEMORY.md retires a file that no longer exists and nothing said so: "
+        f"{found}")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_an_unclassified_or_unlinked_memory_is_a_problem(tmp_path, monkeypatch):
     """Both directions: a file nothing links, and a link with no file."""
     mod = _module()

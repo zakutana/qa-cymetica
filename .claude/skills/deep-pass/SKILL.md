@@ -209,12 +209,34 @@ each one loud rather than silent:
 * **Memory.** Invoke `anthropic-skills:consolidate-memory`, bounded to three
   moves: merge a file whose description overlaps an older one into the older
   one, keeping the richer path; retire a file whose content CLAUDE.md, a test
-  or a skill now holds; turn a relative date into an absolute one. Retire by
-  **dropping the line from `MEMORY.md`** and leaving the file — `rm` is not on
-  the allowlist and an unattended pass may not ask. That directory is outside
-  git, so the report is its only history: every merge and retirement goes under
-  **Prořezáno** in `DEEP-PASS.md` with the reason. It had never run here up to
-  2026-09-09; 22 files, all appended, none merged.
+  or a skill now holds; turn a relative date into an absolute one.
+
+  **Retire by marking the line in `MEMORY.md` — leave it where it is and add
+  `RETIRED YYYY-MM-DD: <reason>` to it — and leave the file.** `rm` is not on
+  the allowlist and an unattended pass may not ask, so the file always stays.
+
+  This said "drop the line from MEMORY.md and leave the file" until
+  2026-09-10, when a pass performed it exactly and
+  `tests/repo/test_memories.py` went red: an unlinked file is reported as one
+  nobody knows exists, which is a step-6 red that step 9 reverts a night over.
+  Neither half was wrong — an unlinked file really is invisible, and the record
+  really must survive, because this directory is outside git and `MEMORY.md` is
+  the only history it has. What was missing was a way to say which of the two
+  happened. `scripts/memories.py` skips retired bodies, and a retired line
+  whose file has gone is itself reported.
+
+  **Why a marker rather than a section.** Two positional designs were put to
+  the three readers first and each was voted down before it landed, both for
+  the same reason: a `## Retired` heading has to sit at the end of the file,
+  and the end of the file is where a new memory's line is appended — so the
+  next memory written would be silently skipped. Requiring a date on the line
+  patched that until a memory's own hook began with a date, which the real
+  file already had. A marker in the line has no position to get wrong.
+
+  Every merge and retirement also goes under **Prořezáno** in `DEEP-PASS.md`
+  with the reason — the morning's account of it, while MEMORY.md is the
+  permanent one. Prořez had never run here up to 2026-09-09; 22 files, all
+  appended, none merged.
 
 * **Mechanisms.** `python scripts/never_fired.py --zeros`. A symbol that is
   never fired **and** never exercised — "nothing at all behind it", in the

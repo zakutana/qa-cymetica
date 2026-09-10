@@ -34,8 +34,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "1491128"
   },
   {
    "id": "R02",
@@ -48,8 +48,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "a92236c"
   },
   {
    "id": "R03",
@@ -76,8 +76,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "6d9ff3b"
   },
   {
    "id": "R05",
@@ -175,8 +175,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "5f68c91"
   },
   {
    "id": "B02",
@@ -190,8 +190,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "5f68c91"
   },
   {
    "id": "B03",
@@ -295,8 +295,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "a92236c"
   },
   {
    "id": "A02",
@@ -310,8 +310,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "c5410ce"
   },
   {
    "id": "A03",
@@ -325,8 +325,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "c5410ce"
   },
   {
    "id": "A04",
@@ -355,8 +355,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "6d9ff3b"
   },
   {
    "id": "A06",
@@ -385,8 +385,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "a92236c"
   },
   {
    "id": "A08",
@@ -400,8 +400,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "a92236c"
   },
   {
    "id": "C01",
@@ -460,8 +460,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "1491128"
   },
   {
    "id": "C05",
@@ -475,8 +475,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "1491128"
   },
   {
    "id": "C06",

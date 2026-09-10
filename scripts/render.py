@@ -347,13 +347,26 @@ def _stats(ledger: dict, run: dict, events: list[dict]) -> dict:
     rewards = _rewards()
     fixes: dict[str, int] = {}
     told: dict[str, int] = {}
-    for row in ledger.get("findings", {}).values():
+    # Distinct FINDINGS, not transitions. Summing transitions counted a bug
+    # that regressed and was fixed again twice -- the live ledger holds 19
+    # REPRODUCING->PASSING moves across 16 findings (CYM-tracker-closure-rate
+    # three times, CYM-bounty-rewards-unrecorded twice), and the page printed
+    # 19 under a heading the operator reads as a count of bugs. The fold has a
+    # `reopen` obligation precisely because a row can go back and forth, so
+    # this is the ordinary case, not an edge one. Found by review 2026-09-10,
+    # confirmed 3/3.
+    #
+    # The by-day series still counts each move, because that IS an event on a
+    # day; only the headline counts things that were broken and now are not.
+    fixed_findings: set[str] = set()
+    for finding_id, row in ledger.get("findings", {}).items():
         for transition in row.get("transitions", []):
             if (transition.get("axis") == "check"
                     and transition.get("from") == "REPRODUCING"
                     and transition.get("to") == "PASSING"):
                 day = str(transition.get("at", ""))[:10]
                 fixes[day] = fixes.get(day, 0) + 1
+                fixed_findings.add(finding_id)
         for verification in (row.get("filing") or {}).get("verifications", []):
             if verification.get("verdict") == "pass":
                 day = str(verification.get("at", ""))[:10]
@@ -370,7 +383,8 @@ def _stats(ledger: dict, run: dict, events: list[dict]) -> dict:
     return {
         "rewards": rewards,
         "fixes": {
-            "verified_by_us": sum(fixes.values()),
+            "verified_by_us": len(fixed_findings),
+            "re_fixed": sum(fixes.values()) - len(fixed_findings),
             "by_day": [{"day": d, "n": n} for d, n in sorted(fixes.items())],
             "told_them": sum(told.values()),
         },
@@ -402,14 +416,35 @@ def _rewards() -> dict:
                   or report.get("created_at") or "")[:10]
         if day:
             per_day[day] = per_day.get(day, 0) + int(report.get("reward_amount") or 0)
+    # Their own two figures, held beside ours. This computed everything from
+    # the rows it happened to hold and compared none of it to what THEY say,
+    # so a my-reports read that windowed to 20 of 44 would have printed "20,000
+    # paid" beside their 37,000 with nothing failing and nothing on the page
+    # saying why -- the report-#52 shape that `qa/measure.collection_size`
+    # exists to prevent. Found by a check-auditor 2026-09-10, confirmed 3/3.
+    #
+    # Reported rather than reconciled: which of the two is right is not
+    # something this renderer can know, and a page that silently picks one is
+    # worse than a page that shows the gap.
+    leaderboard = (bounty.get("leaderboard") or [{}])[0]
+    theirs = leaderboard.get("total_paid")
+    rows_total = sum(int(r.get("reward_amount") or 0) for r in paid)
+    server_n = (bounty.get("our_reports") or {}).get("total")
     return {
-        "currency": ((bounty.get("leaderboard") or [{}])[0]
-                     .get("reward_currency") or "ET10"),
+        "currency": leaderboard.get("reward_currency") or "ET10",
         "paid_n": len(paid),
-        "paid_total": sum(int(r.get("reward_amount") or 0) for r in paid),
+        "paid_total": rows_total,
         "pending_n": len(pending),
         "invalid_n": len(by_status.get("invalid", [])),
         "by_day": [{"day": d, "amount": n} for d, n in sorted(per_day.items())],
+        # None when they publish no figure; a number we can disagree with is
+        # better than a number nobody checked, and no figure is neither.
+        "their_total": None if theirs is None else float(theirs),
+        "rows_read": len(reports),
+        "rows_they_hold": None if server_n is None else int(server_n),
+        "disagrees": bool(
+            (theirs is not None and abs(float(theirs) - rows_total) > 0.01)
+            or (server_n is not None and int(server_n) != len(reports))),
     }
 
 
@@ -2465,6 +2500,15 @@ function statBlocks() {
       <div><dt>rejected</dt><dd>${rw.invalid_n || 0}</dd></div>
     </dl>
     ${bars((rw.by_day || []).map(d => ({k: d.day, v: d.amount, t: money(d.amount) + " " + (rw.currency || "")})), "rewards by day")}
+    ${rw.disagrees ? `<p class="blurb warn">This does not match their own
+      figure. They publish ${esc(money(rw.their_total))} ${esc(rw.currency || "")}
+      across ${esc(String(rw.rows_they_hold))} report(s); we read
+      ${esc(String(rw.rows_read))} row(s) and add up
+      ${esc(money(rw.paid_total || 0))}. The number above is ours, and the gap
+      is the thing to look at first.</p>`
+      : `<p class="blurb">Agrees with their own published total
+      (${esc(money(rw.their_total))} ${esc(rw.currency || "")} over
+      ${esc(String(rw.rows_they_hold))} reports).</p>`}
     <p class="blurb">Dated by the day they resolved the report; their tracker
     does not tell us when each payment landed.</p>
   </section>`);

@@ -747,10 +747,43 @@ function node(id) {
     set innerHTML(v) { captured[id] = String(v); },
     addEventListener() {}, insertAdjacentHTML() {}, setAttribute() {},
     appendChild() {}, scrollIntoView() {}, closest() { return null; },
-    querySelector() { return null; }, querySelectorAll() { return []; },
+    querySelector() { return null; },
+    // Rows PARSED OUT OF THE HTML THIS ELEMENT WAS GIVEN, not invented. This
+    // returned [] until 2026-09-10, so the sort comparator and changedSince
+    // never ran over a single row: typing `dataset.changedAt` or the
+    // `data-changed-at` attribute left the page exiting 0 with every row
+    // reading as unchanged, and the test whose docstring says it catches
+    // "a typo in either" stayed green. Three readers reproduced it.
+    //
+    // Reading the captured markup is not a second implementation of the page
+    // -- it is the page's own output, which is the only thing that makes this
+    // faithful.
+    querySelectorAll(sel) { return rowsOf(captured[id] || "", sel); },
   };
   nodes[id] = el;
   return el;
+}
+
+function rowsOf(html, sel) {
+  const cls = String(sel || "").replace(/^\\./, "");
+  if (!cls) return [];
+  const out = [];
+  const open = new RegExp('<[a-z]+([^>]*class="[^"]*\\\\b' + cls + '\\\\b[^"]*"[^>]*)>', "gi");
+  let m;
+  while ((m = open.exec(html)) !== null) {
+    const attrs = m[1];
+    const dataset = {};
+    const attr = /data-([a-z0-9-]+)="([^"]*)"/gi;
+    let a;
+    while ((a = attr.exec(attrs)) !== null) {
+      // The browser's own camelCase mapping: data-changed-at -> changedAt.
+      dataset[a[1].replace(/-([a-z])/g, (_, c) => c.toUpperCase())] = a[2];
+    }
+    out.push({ dataset, hidden: false, className: cls,
+               querySelector() { return null; },
+               setAttribute() {}, appendChild() {} });
+  }
+  return out;
 }
 globalThis.document = {
   getElementById: node,
@@ -977,10 +1010,23 @@ def test_the_page_opens_on_what_moved_and_says_it_in_one_line(tmp_path, monkeypa
     # handler dispatches on -- not by their labels, which are copy.
     for kind in ('data-kind="open"', 'data-kind="changed"', 'data-kind="all"'):
         assert kind in template, f"the {kind} chip is missing"
+    # ONE read switch, counted as CALL SITES rather than as occurrences of the
+    # string. `template.count("markRead()") >= 2` was satisfied by the function
+    # DEFINITION plus one call, so giving the chip its own `markChangedRead()`
+    # with a second watermark left the check green while the bell and the chip
+    # held two ideas of "since you last looked" -- which is the exact drift
+    # this test's own docstring says it exists to prevent. Three readers each
+    # reproduced it by making that split. Found 2026-09-10.
     assert "function markRead" in template
-    assert template.count("markRead()") >= 2, (
-        "the bell and the chip must call the same read switch"
-    )
+    watermarks = set(re.findall(r"""(?:localStorage|qa)[.\[]\s*['"]?(seenAt|\w*[sS]eenAt)""",
+                                template))
+    assert watermarks <= {"seenAt"}, (
+        f"the page keeps more than one 'since you last looked' watermark "
+        f"({sorted(watermarks)}), so the bell and the chip can disagree")
+    call_sites = len(re.findall(r"(?<!function )\bmarkRead\(\)", template))
+    assert call_sites >= 2, (
+        f"the bell and the chip must CALL the same read switch; found "
+        f"{call_sites} call site(s) beside its definition")
     assert 'data-sort="changed"' in template and 'data-sort="damage"' in template
 
     # The header still says the two things the guards pin, and the run's own
@@ -1202,6 +1248,34 @@ def test_the_stats_are_derived_and_a_re_pin_is_not_a_fix(tmp_path, monkeypatch):
         "a definition we re-pinned was counted as a defect they repaired"
     )
     assert stats["fixes"]["by_day"] == [{"day": "2026-09-08", "n": 1}]
+
+    # A bug that regressed and was fixed AGAIN is one bug. The headline summed
+    # transitions, so the live ledger's 19 REPRODUCING->PASSING moves across 16
+    # findings printed 19 under a heading the operator reads as a count of
+    # bugs. The fold has a `reopen` obligation precisely because a row can go
+    # back and forth, so this is the ordinary case. Found by review 2026-09-10,
+    # confirmed 3/3.
+    regressed = _row("CYM-regressed", check_state="PASSING",
+                     filing_state="FIX_CLAIMED")
+    regressed["transitions"] = [
+        {"axis": "check", "from": "REPRODUCING", "to": "PASSING",
+         "cause": {"run_id": "run-c"}, "at": "2026-09-08T12:00:00+00:00"},
+        {"axis": "check", "from": "PASSING", "to": "REPRODUCING",
+         "cause": {"run_id": "run-d"}, "at": "2026-09-09T09:00:00+00:00"},
+        {"axis": "check", "from": "REPRODUCING", "to": "PASSING",
+         "cause": {"run_id": "run-e"}, "at": "2026-09-09T18:00:00+00:00"},
+    ]
+    twice = render.build_payload(ledger=_ledger(fixed, repinned, regressed))["stats"]
+    assert twice["fixes"]["verified_by_us"] == 2, (
+        f"one bug fixed, broken and fixed again is one bug: "
+        f"{twice['fixes']}")
+    assert twice["fixes"]["re_fixed"] == 1, (
+        f"and the second repair is not thrown away -- it is named apart, so "
+        f"the headline can be small and honest without hiding it: "
+        f"{twice['fixes']}")
+    # The daily series still counts each event, because a repair IS a thing
+    # that happened on a day.
+    assert sum(d["n"] for d in twice["fixes"]["by_day"]) == 3
     assert stats["fixes"]["told_them"] == 1, "only a pass verdict was told to them"
 
     # Counted off the files, not recalled: every number quoted for this has
@@ -1245,6 +1319,43 @@ def test_the_rewards_come_from_their_tracker(tmp_path, monkeypatch):
     assert rewards["invalid_n"] == 1
     assert rewards["currency"] == "ET10"
     assert rewards["by_day"] == [{"day": "2026-09-08", "amount": 2000}]
+
+    # "or say why" -- the half this test named and never checked. Their figure
+    # sat in the same fixture and only `reward_currency` was ever read from it,
+    # so setting total_paid to anything at all left the check green. A
+    # my-reports read windowed to 20 of 44 would have printed 20,000 beside
+    # their 37,000 with nothing failing: the report-#52 shape. Found by a
+    # check-auditor 2026-09-10, confirmed 3/3.
+    assert rewards["their_total"] == 2000.0
+    assert rewards["disagrees"] is False, rewards
+
+    def rebuild(**over):
+        blob = json.loads((tmp_path / "bounty.json").read_text(encoding="utf-8"))
+        for key, value in over.items():
+            if key == "total_paid":
+                blob["leaderboard"][0]["total_paid"] = value
+            else:
+                blob["our_reports"][key] = value
+        (tmp_path / "bounty.json").write_text(json.dumps(blob), encoding="utf-8")
+        return _render().build_payload(ledger=_ledger())["stats"]["rewards"]
+
+    disagreeing = rebuild(total_paid=37000.0)
+    assert disagreeing["disagrees"] is True, (
+        f"their figure is 37000 and ours 2000, and the page says nothing: "
+        f"{disagreeing}")
+    assert disagreeing["their_total"] == 37000.0
+
+    # And the other half of a windowed read: they hold more rows than we read.
+    windowed = rebuild(total_paid=2000.0, total=44)
+    assert windowed["rows_read"] == 4 and windowed["rows_they_hold"] == 44
+    assert windowed["disagrees"] is True, (
+        f"we counted 4 of the 44 reports they hold and the totals happened to "
+        f"match anyway: {windowed}")
+
+    # A tracker that publishes no figure is not a disagreement. Rule 8's shape:
+    # absent is not zero.
+    silent = rebuild(total_paid=None, total=4)
+    assert silent["their_total"] is None and silent["disagrees"] is False, silent
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -1321,6 +1432,28 @@ def test_the_model_table_on_the_page_is_the_one_in_the_operating_rules(
 
     assert expected, "the operating rules' table did not parse; fix the test"
     assert render._help_models() == expected
+
+    # ON THE PAGE, which is what the docstring above claims and what neither
+    # side of the comparison touched: both are Python parsers over CLAUDE.md,
+    # so deleting the only site that reads `D.help.models` left them agreeing
+    # while the page showed nothing. All three readers reproduced that.
+    # `test_the_page_renders_every_field_it_is_given` does not cover it either
+    # -- it walks per-finding keys, which is the blind spot its sibling names
+    # in its own docstring.
+    import shutil
+
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("node is not installed, so the page cannot be run here")
+    payload = render.build_payload(ledger=_ledger())
+    code, err, captured = _run_page(node, tmp_path / "models", payload)
+    assert code == 0, f"the page throws:\n{err[:600]}"
+    drawn = " ".join(captured.values())
+    for row in expected[:3]:
+        assert row["task"][:30] in drawn, (
+            f"the model table is in the payload and not on the page: "
+            f"{row['task'][:40]!r} never rendered")
+        assert row["model"] in drawn
 
     # And a file without the table is a page that must not pretend.
     empty = tmp_path / "CLAUDE.md"
