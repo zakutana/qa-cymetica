@@ -347,6 +347,31 @@ def pytest_runtest_logreport(report):
 # ---------------------------------------------------------------------------
 # Session finish: integrity, totals, write
 # ---------------------------------------------------------------------------
+# The two directories whose checks measure US. CLAUDE.md names them: tests/meta
+# aborts the session on failure, tests/repo is repository consistency. Nothing
+# in either says anything about Cymetica.
+SELF_TEST_DIRS = ("tests/meta/", "tests/repo/")
+
+
+def should_record(nodeids, prereg_id) -> bool:
+    """Whether this session produced a record worth keeping.
+
+    779 records on disk, 542 of them from sessions that adjudicated nothing
+    about the platform: every `pytest tests/meta -q` while working, every
+    single-file run with --tb=line. They cost 74 MB, they push a real record
+    out of the newest-first scan that step 2 of the deep pass uses, and the
+    operator asked not to have to think about any of it.
+
+    A preregistered session always writes, whatever it ran: that is the record
+    a verification stands on, and the decision about what it covers was made
+    before it started.
+    """
+    if prereg_id:
+        return True
+    return any(not str(nodeid).replace("\\", "/").startswith(SELF_TEST_DIRS)
+               for nodeid in nodeids)
+
+
 def pytest_sessionfinish(session, exitstatus):
     run = getattr(session, "qa_run", None)
     if run is None:
@@ -396,6 +421,13 @@ def pytest_sessionfinish(session, exitstatus):
     # Resolved at write time, not import time, so QA_STATE_DIR can redirect an
     # inner test session away from the committed state/runs/.
     from qa.state import state_dir
+
+    if not should_record(
+            set(run.get("collected") or []) | {r["nodeid"] for r in run["results"]},
+            run.get("prereg_id")):
+        print("\n[qa] only self-tests ran; no run record written")
+        return
+
     runs_dir = state_dir() / "runs"
     runs_dir.mkdir(parents=True, exist_ok=True)
     path = runs_dir / f"{run['run_id']}.json"

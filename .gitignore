@@ -35,6 +35,10 @@ state/*.lock
 # adds exactly that one. tests/repo asserts the converse: nothing cited by the
 # ledger, the journal or a preregistration may be untracked. Records committed
 # before this line stay committed.
+#
+# Since 2026-09-10 two things keep the untracked pile down: a session that ran
+# only tests/meta and tests/repo writes no record at all (qa/report_plugin.py
+# ::should_record), and scripts/prune_runs.py removes what nothing cites.
 state/runs/
 
 # Half-written snapshots. Every atomic write under state/ goes tmp-then-replace,

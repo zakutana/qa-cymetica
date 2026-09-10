@@ -123,6 +123,7 @@ or at 90%, once, in the evening, by somebody who is going to bed.
 git status --short
 git log --oneline @{upstream}..HEAD
 python -m pytest tests/meta -q
+python scripts/prune_runs.py --apply
 ```
 
 * **Red `tests/meta` ends the run.** Write that to `DEEP-PASS.md` and stop.
@@ -133,6 +134,12 @@ python -m pytest tests/meta -q
   tree. That trap was built on 2026-09-07 by turning `--ask` on; the answer is
   a `console poll` commit here, and another immediately before step 6's
   preregistration. The window between prereg and run is ~3 minutes against 15.
+* **Prune the run records.** `prune_runs.py --apply` removes records older
+  than a week that nothing cites, nothing tracks, and that are not the newest
+  witness to a check's definition or to a symbol's last occurrence -- by name,
+  printing the reason each survivor was kept. It is here rather than at the
+  end because step 2 scans every record on disk, and 500 records from
+  `pytest tests/meta -q` sessions are 500 files it reads to learn nothing.
 * **Record the starting commit.** Step 9 needs it.
 * **Open the progress file with what the last pass left.** Carry
   `retrospective.last` forward from the previous run's file (absent → `null`,
