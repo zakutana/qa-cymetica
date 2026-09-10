@@ -124,6 +124,7 @@ git status --short
 git log --oneline @{upstream}..HEAD
 python -m pytest tests/meta -q
 python scripts/prune_runs.py --apply
+python scripts/memories.py --for deep-pass
 ```
 
 * **Red `tests/meta` ends the run.** Write that to `DEEP-PASS.md` and stop.

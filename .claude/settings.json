@@ -25,7 +25,10 @@
       "Bash(git push:*)",
       "Bash(git revert:*)",
       "Bash(git ls-files:*)",
-      "Bash(git rev-parse:*)"
+      "Bash(git rev-parse:*)",
+      "Bash(python scripts/memories.py:*)",
+      "Bash(python scripts/prune_runs.py:*)",
+      "Bash(python scripts/deep_pass_process.py:*)"
     ]
   },
   "hooks": {
@@ -35,16 +38,29 @@
           {
             "type": "command",
             "command": "python",
-            "args": [".claude/hooks/open_threads.py"],
+            "args": [
+              ".claude/hooks/open_threads.py"
+            ],
             "timeout": 10,
             "statusMessage": "reading open telegram threads"
           },
           {
             "type": "command",
             "command": "python",
-            "args": [".claude/hooks/deep_pass_handover.py"],
+            "args": [
+              ".claude/hooks/deep_pass_handover.py"
+            ],
             "timeout": 10,
             "statusMessage": "reading the last deep pass handover"
+          },
+          {
+            "type": "command",
+            "command": "python",
+            "args": [
+              ".claude/hooks/memory_index.py"
+            ],
+            "timeout": 10,
+            "statusMessage": "counting the memories"
           }
         ]
       }
@@ -56,7 +72,9 @@
           {
             "type": "command",
             "command": "python",
-            "args": [".claude/hooks/protect_state.py"],
+            "args": [
+              ".claude/hooks/protect_state.py"
+            ],
             "timeout": 15,
             "statusMessage": "checking state/ guard"
           }

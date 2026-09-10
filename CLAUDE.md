@@ -406,11 +406,16 @@ A zero here is not a regression to be fixed; it is the difference between
 
 ## Read the memories before the work, not after it
 
-Only `MEMORY.md` is loaded for you: 25 one-line hooks, no bodies. **Open the
-two or three whose line touches the work in front of you, before the first
-substantive step** — a sweep opens the ones about checks and outbound claims, a
-change to the fold opens the ones about derivation and replay. It costs a
-single tool call and it is the whole point of the directory.
+Only `MEMORY.md` is loaded for you: one line each, no bodies. **Read the ones
+that apply to the work in front of you, before the first substantive step:**
+
+```bash
+python scripts/memories.py --for <sweep|fold|console|correspondence|deep-pass|plan>
+```
+
+Each memory declares which of those it applies to, `--check` fails on one that
+declares nothing, and a SessionStart hook prints the count and this command. It
+costs a single call and it is the whole point of the directory.
 
 Asked on 2026-09-10 whether the memories load themselves, the answer was no,
 and the session had read none until the question came. The four it then opened

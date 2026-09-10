@@ -54,6 +54,12 @@ merely untested.
 
 Do not skip steps. Each one exists because skipping it produced a wrong page.
 
+0. **Read what the last sweeps learned.** `python scripts/memories.py --for
+   sweep` prints the twelve memories that apply to this kind of work. It costs
+   one call. The directory sat write-only for four days because knowing the
+   memories exist and reading one are different acts, and only the first was
+   ever automatic.
+
 1. **Clean the tree.** `git status --short`. Commit or stash first; a
    preregistration refuses a dirty tree, and without one the run is level R
    and may verify nothing.
