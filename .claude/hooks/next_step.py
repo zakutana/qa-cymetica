@@ -34,6 +34,14 @@ WIDTH = 150
 
 ITEM = re.compile(r"^- \[( |x)\] (\d{4}-\d{2}-\d{2}) +(\S.*)$")
 
+# Anything a reader would call an item. Wider than ITEM on purpose: the guard
+# over malformed lines only held lines beginning exactly `- [` against ITEM, so
+# `* [ ] 2026-09-10 ...` or `-[ ] 2026-09-10 ...` -- both of which any reader
+# would take for an agreed next step -- were never printed by this hook and
+# never flagged. Precisely the state the guard's own docstring names. Found by
+# a check-auditor on the day this file was written, 3/3 on triage.
+LOOKS_LIKE_ITEM = re.compile(r"^\s*[-*+]\s?\[")
+
 
 def body(text: str) -> list[str]:
     """Every line that is not inside a fenced block.

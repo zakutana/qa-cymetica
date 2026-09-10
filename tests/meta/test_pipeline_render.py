@@ -1154,6 +1154,19 @@ def test_a_tile_lists_the_tests_behind_its_count(tmp_path, monkeypatch):
             {"nodeid": "tests/meta/test_pipeline_render.py::test_d",
              "role": "verdict", "component": "meta.pipeline",
              "outcome": "passed", "measurement": {}},
+            # A self-test wearing a PLATFORM component. The only self-test in
+            # this fixture used to be meta.pipeline, which `_tests_by_section`
+            # drops one line later at `section == "_meta"` -- so removing the
+            # SELF_TEST_DIRS filter entirely left this test green and the
+            # exclusion it names guarded by the other branch. Three readers
+            # reproduced that deletion. This row can only be excluded by the
+            # directory filter, which is the thing under test.
+            {"nodeid": "tests/meta/test_guard_is_real.py::test_e",
+             "role": "verdict", "component": "rest.support",
+             "outcome": "passed", "measurement": {}},
+            {"nodeid": "tests/repo/test_repo_consistency.py::test_f",
+             "role": "verdict", "component": "rest.support",
+             "outcome": "passed", "measurement": {}},
         ],
     }
     inventory = {"totals": {}, "sections": [

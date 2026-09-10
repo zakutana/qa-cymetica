@@ -410,6 +410,37 @@ def test_a_thread_is_reconstructed_from_their_reply_to_when_our_send_was_not_jou
         "proxy for a send we never recorded"
     )
 
+    # The other half of the docstring -- "a journalled intent still wins where
+    # one exists" -- which nothing asserted. Deleting the precedence guard, so
+    # that reconstruction overwrites a real send, left every self-test green:
+    # this fixture has no intent, and the sibling that does has its intent and
+    # receipt four seconds apart, both rounding to 90 minutes, and never reads
+    # `asked_at_from`. Three readers reproduced it. So the intent goes in HERE,
+    # after the fact, and the row must change back to ours.
+    from qa.state import append_event as _append
+
+    _append({"type": "a2a_intent", "at": "2026-09-08T07:55:00+00:00",
+             "by": "operator", "source": "scripts/a2a.py",
+             "msg_id": "A2A-9001", "text": "How are rewards paid?",
+             "origin": "a2a"})
+    _append({"type": "a2a_outcome", "at": "2026-09-08T07:55:02+00:00",
+             "by": "agent", "source": "scripts/a2a.py",
+             "msg_id": "A2A-9001", "outcome": "accepted", "via": "a2a_theirs"})
+
+    rows = [p for p in _channels().pairs(read_events()) if p["channel"] == "a2a"]
+    assert len(rows) == 1, f"the intent created a second row: {rows}"
+    assert rows[0]["asked_at_from"] == "us", (
+        f"a send we actually journalled was overwritten by a proxy taken from "
+        f"their receipt, so the moment we asked is now theirs to define: "
+        f"{rows[0]}")
+    # OUR id for the message, which is what a2a.py records and what the
+    # reconstruction cannot know -- so this is also the visible difference
+    # between a thread we journalled and one rebuilt from their side.
+    assert rows[0]["question_id"] == "A2A-9001"
+    assert rows[0]["minutes"] == 95, (
+        f"and the latency is measured from OUR send (07:55) rather than from "
+        f"their receipt (08:00:04): {rows[0]}")
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_human_reply_is_real_even_when_nothing_classified_it(tmp_path, monkeypatch):

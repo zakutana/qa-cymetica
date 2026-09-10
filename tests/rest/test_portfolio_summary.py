@@ -34,6 +34,8 @@ cannot regress quietly back into the state that fooled us.
 
 from __future__ import annotations
 
+import json
+
 from qa.marks import Inconclusive, SafetyTier, qa
 from qa.measure import Measurement, conclude
 
@@ -84,7 +86,20 @@ def test_the_summary_says_which_populations_its_counters_leave_out(rest_trusted)
     # that is the one the scope has to account for -- either by counting it or
     # by naming it as excluded and saying where it is read.
     named = "event-card" in words or "event card" in words
-    points_at = POSITIONS in words or "event-cards/positions" in words
+
+    # WHERE IT IS READ, wherever the body says it. This looked only inside the
+    # joined prose of `counters_do_not_cover`, and their captured fix carries
+    # the pointer twice: in that parenthetical AND in the body's own
+    # `event_cards.rows` field. Tidying the parenthetical while keeping the
+    # machine-readable field would have filed "the reader is not told which
+    # endpoint carries it" against a body that tells the reader exactly that --
+    # the #83 shape, on this same endpoint, which was withdrawn and cost a
+    # retraction. Found by a check-auditor 2026-09-10, 3/3 on triage.
+    #
+    # Their whole answer is the subject, because "does the body say where to
+    # read it" is a question about the body, not about one field of it.
+    everywhere = json.dumps(body, ensure_ascii=False).lower()
+    points_at = POSITIONS in everywhere or "event-cards/positions" in everywhere
 
     problems = []
     if not covers:

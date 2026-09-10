@@ -84,6 +84,21 @@ WEEK = 7
 # first reader of the rule change, who noticed it in passing.
 MAX_PASS = _dt.timedelta(hours=24)
 
+# And how far AHEAD of the checking clock a stamp may sit and still be a pass
+# that is running. The lower bound was zero, so a stamp even seconds in the
+# future read as "abandoned" -- the third instance of this class after the
+# calendar-day comparison and the week read as skipped, and the first one to
+# actually fire: the pass of 2026-09-10 wrote 21:40Z against a 14:42Z clock
+# and declared itself dead, mid-run, in the guard that step 9 reverts on.
+# Every fixture had put `today` after `at`, and the one future case was
+# +11 days, which blessed the bound rather than testing it. Found by a
+# check-auditor and reproduced by all three triage readers.
+#
+# Twelve hours, because the causes are clock skew between a container and a
+# host and a hand-written timestamp, and both are hours. Beyond that a stamp
+# is not skew, it is wrong, and "abandoned" is the honest reading.
+MAX_SKEW = _dt.timedelta(hours=12)
+
 
 def _known_nodeids() -> set[str]:
     """Every `path::name` the repository actually has.
@@ -152,7 +167,7 @@ def liveness(progress: dict, today: str | None = None) -> str:
                     else today.strip() + "T23:59:59+00:00")
     if now is None:
         return "abandoned"
-    return "running" if _dt.timedelta(0) <= now - stamped <= MAX_PASS else "abandoned"
+    return "running" if -MAX_SKEW <= now - stamped <= MAX_PASS else "abandoned"
 
 
 def _when(text: str):
@@ -470,6 +485,25 @@ def test_a_pass_still_running_is_not_a_pass_that_skipped_the_week():
     assert liveness(_pass(at="2026-10-01T02:00:00+00:00"),
                     today="2026-09-20T06:00:00+00:00") == "abandoned"
     assert liveness(_pass(at="not a date"), today="2026-09-20") == "abandoned"
+
+    # HOURS ahead, which is the case every fixture above missed: the only
+    # future stamp tested was +11 days, and that blesses the bound rather than
+    # testing it. The lower bound was zero, so a stamp seconds into the future
+    # read as "abandoned" -- and this fired for real. The pass of 2026-09-10
+    # wrote 21:40Z against a 14:42Z clock, declared itself dead mid-run, and
+    # turned the guard red in the file step 9 reverts a night over. Third
+    # instance of this class; found by a check-auditor, 3/3 on triage.
+    #
+    # Clock skew between a container and a host, and a hand-written timestamp,
+    # are both measured in hours. So hours ahead is a pass that is running.
+    ahead = _pass(at="2026-09-20T21:40:00+00:00")
+    assert liveness(ahead, today="2026-09-20T14:42:00+00:00") == "running", (
+        "a stamp seven hours ahead of the clock is skew, not a dead pass")
+    assert liveness(ahead, today="2026-09-20T21:39:59+00:00") == "running"
+    # Beyond the skew window it is not skew, it is a wrong date, and
+    # "abandoned" is then the honest reading rather than a courtesy.
+    assert liveness(_pass(at="2026-09-21T12:00:00+00:00"),
+                    today="2026-09-20T14:42:00+00:00") == "abandoned"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

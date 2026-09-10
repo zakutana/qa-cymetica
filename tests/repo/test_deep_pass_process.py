@@ -110,7 +110,21 @@ def test_the_triad_is_retired_only_after_three_quiet_passes():
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_committed_history_reads():
-    """Over the real notebooks, so a schema change here shows up as red."""
+    """Over the real notebooks, so a schema change here shows up as red.
+
+    It did not. All three assertions were true for ANY input -- `real` counts a
+    subset of `claimed`, `unanimous` a subset of `voted`, and the header is a
+    constant format string. A reader renamed the `gaps` key this reads and ran
+    it against the real committed history: every row went to zeros and every
+    assertion still held. An all-zero row already existed. 3/3 on triage.
+
+    What a schema change actually looks like is a row of zeros where the
+    commit body says work happened, so that is what is asserted: at least one
+    committed pass must have CLAIMED something. That is a fact about the
+    history rather than an arithmetic identity, and it is the one the tool's
+    whole output rests on -- `deep_pass_process.py` exists to say whether the
+    triad is still paying for itself, and it cannot say that from zeros.
+    """
     from qa.marks import Inconclusive
 
     mod = _module()
@@ -122,3 +136,19 @@ def test_the_committed_history_reads():
     assert all(row["claimed"] >= row["real"] for row in rows)
     assert all(row["voted"] >= row["unanimous"] for row in rows)
     assert mod.render(rows).splitlines()[0].startswith("pass")
+
+    # The assertion a rename cannot survive.
+    with_work = [r for r in rows if r["claimed"] > 0]
+    assert with_work, (
+        f"every one of the {len(rows)} committed pass(es) reads as zero gaps "
+        f"claimed. Passes do not run for hours and find nothing, so the reader "
+        f"has stopped finding the field it counts -- which is exactly what this "
+        f"test says it catches: {[r['pass'] for r in rows]}")
+
+    # And the votes, on any pass that recorded them. A schema change that left
+    # `gaps` intact but moved `votes` would slip past the line above.
+    voted = [r for r in rows if r["voted"] > 0]
+    assert voted, (
+        f"no committed pass records a single triage vote, so the column the "
+        f"whole tool is FOR -- claims the readers rejected -- is being read "
+        f"from nothing: {[r['pass'] for r in rows]}")

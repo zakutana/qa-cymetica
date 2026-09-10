@@ -85,7 +85,23 @@ def test_every_line_that_looks_like_an_item_is_one():
         raise Inconclusive("NEXT.md does not exist yet")
     hook = _hook()
     loose = [line for line in hook.body(NEXT.read_text(encoding="utf-8"))
-             if line.startswith("- [") and not hook.ITEM.match(line.rstrip())]
+             if hook.LOOKS_LIKE_ITEM.match(line) and not hook.ITEM.match(line.rstrip())]
+
+    # The shapes a hand edit actually produces, pinned as data. This held only
+    # lines beginning exactly `- [` against ITEM, so a bullet written `*` or
+    # with no space after the dash was invisible to the hook AND to this guard
+    # -- an agreed next step that will never be printed and never noticed,
+    # which is the sentence in this test's own docstring.
+    for shape in ("* [ ] 2026-09-10  clone the bot Nexus recommended",
+                  "-[ ] 2026-09-10  clone the bot Nexus recommended",
+                  "  - [ ] 2026-09-10  clone the bot Nexus recommended",
+                  "+ [x] 2026-09-10  already done"):
+        assert hook.LOOKS_LIKE_ITEM.match(shape), \
+            f"a reader would call this an item and the guard would not: {shape!r}"
+        assert not hook.ITEM.match(shape.rstrip()), \
+            f"the fixture no longer represents a malformed line: {shape!r}"
+    # And a line that is prose, not a bullet, is not an item.
+    assert not hook.LOOKS_LIKE_ITEM.match("Formát je závazný, protože [...]")
     assert not loose, (
         "these lines start like an item and do not parse as one, so the hook "
         f"will silently skip them: {loose}"
