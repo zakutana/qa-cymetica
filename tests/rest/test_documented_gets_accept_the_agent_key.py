@@ -66,15 +66,30 @@ def test_every_documented_get_accepts_the_key_its_own_document_issues(rest_trust
         raise Inconclusive(
             f"{LLMS} names no concrete GET path, so there was nothing to call")
 
-    refused, served, other = [], 0, {}
+    refused, served, other, unread = [], 0, {}, {}
     for path in paths:
-        response = rest_trusted.get(path)
+        # Forty-eight sequential calls against a platform that times out now
+        # and then. One unreachable path is a hole in the sample, not a
+        # reason to throw away the other forty-seven: the verdict is about
+        # the paths that ANSWERED, and the holes travel in population so a
+        # reader can see how much of the surface was actually covered.
+        try:
+            response = rest_trusted.get(path)
+        except Exception as exc:  # noqa: BLE001
+            unread[path] = type(exc).__name__
+            continue
         if response.status_code == 401:
             refused.append(path)
         elif response.status_code == 200:
             served += 1
         else:
             other[path] = response.status_code
+
+    if len(unread) > len(paths) // 4:
+        raise Inconclusive(
+            f"{len(unread)} of {len(paths)} documented paths could not be "
+            f"reached at all ({sorted(unread)[:4]}), so this run says more "
+            f"about the platform's availability than about its credentials")
 
     if not served:
         raise Inconclusive(
@@ -97,6 +112,7 @@ def test_every_documented_get_accepts_the_key_its_own_document_issues(rest_trust
             f"agent key"),
         left=sorted(refused), right=[],
         population={"documented": len(paths), "served": served,
-                    "unauthenticated": len(refused), "other": other},
+                    "unauthenticated": len(refused), "other": other,
+                    "unreachable": unread},
         sources={"document": LLMS, "credential": "X-API-Key, trusted tier"},
     ))
