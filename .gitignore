@@ -55,3 +55,9 @@ state/*.tmp
 # preregistration refuses a dirty tree. tests/mcp/test_nexus_channel.py reads
 # it from disk; nothing else needs it in git.
 state/nexus.jsonl
+
+# Every paper trade and the account either side of it. Gitignored for the same
+# reason as state/nexus.jsonl -- it is appended to while a campaign runs, and a
+# tree that is dirty during a run is a tree no run can reach level V from.
+# scripts/paper.py proof reads it from disk.
+state/paper.jsonl

@@ -1,0 +1,359 @@
+"""Place one paper trade on an event card, and keep the chain that proves it.
+
+The operator's question when this was designed: when the paper balance goes
+from 100,000 to 1,000,000, will we be able to prove it, and does the proof come
+from our own records or from their transaction history? Both, and neither is
+sufficient alone. Their history shows the money moved and cannot show whose
+decision it was. Ours shows the decision and could have been typed by anyone.
+What makes either believable is the third thing: the request and response
+records, addressed by the hash of their own bytes.
+
+So every trade here is written as a chain, and each link names the one before
+it:
+
+    the guidance   which question was asked, their job id for it, the words
+    the order      the card, the notional, `paper`, and the guidance it acts on
+    their answer   HTTP status, their position id, the evidence id
+    the account    their balance and position count, read before and after
+
+The reason it is built before the first order rather than after the first
+million: a chain cannot be assembled backwards. There is no way to prove in
+December whose idea a trade in September was.
+
+    python scripts/paper.py buy --card <id> --usdc 1 --nexus NEX-0002
+    python scripts/paper.py buy --card <id> --usdc 1 --confirm
+    python scripts/paper.py positions
+    python scripts/paper.py proof
+
+WHOSE DECISION IT IS. CLAUDE.md's tagged decision of 2026-09-10: Cymetica's
+own AI supplies the guidance, we test and execute. `--nexus NEX-000N` names the
+recorded answer an order acts on, and the chain carries it. An order placed
+without one is ours, is marked so, and should be rare enough to notice.
+
+SAFETY. `paper` is sent explicitly and asserted here before the request is
+built, and qa/safety.py refuses the request again at the transport since
+2026-09-10 -- two independent readings, because this account's
+`simulation_mode` is False and the platform resolves an absent flag against
+it. That is a live order. Neither check is the other's backup: this one can be
+edited out by someone working on this file, and the transport one cannot.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+import time
+from datetime import datetime, timezone
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(REPO_ROOT))
+
+from qa.client import build_client, install_client_guard  # noqa: E402
+from qa.config import identities, load_dotenv  # noqa: E402
+from qa.safety import CURRENT_TIER, EndpointRegistry, SafetyTier  # noqa: E402
+from qa.state import file_lock, state_dir  # noqa: E402
+
+BUY = "/api/v1/event-cards/{card_id}/buy"
+SELL = "/api/v1/event-cards/{card_id}/sell"
+POSITIONS = "/api/v1/event-cards/positions"
+ACCOUNT = "/api/v1/account/me"
+SUMMARY = "/api/v1/portfolio/summary"
+
+# Their cap is unresolved -- they said 20/hour, the header advertises 60 -- and
+# submit.py and verify.py each took the stricter reading separately. This is
+# the third copy, and it is a copy on purpose: a shared constant would make one
+# script's pause depend on another's judgement.
+PAUSE_SECONDS = 4
+
+
+def _now() -> str:
+    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+
+def path() -> Path:
+    return state_dir() / "paper.jsonl"
+
+
+def load() -> list[dict]:
+    target = path()
+    if not target.is_file():
+        return []
+    out = []
+    for line in target.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if line:
+            try:
+                out.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+    return out
+
+
+def _append(record: dict) -> None:
+    target = path()
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with file_lock(target):
+        with open(target, "a", encoding="utf-8") as handle:
+            handle.write(json.dumps(record, ensure_ascii=False) + "\n")
+
+
+def _next_id(rows: list[dict]) -> str:
+    used = [int(r["id"].split("-")[1]) for r in rows
+            if isinstance(r.get("id"), str) and r["id"].startswith("TRD-")]
+    return f"TRD-{max(used, default=0) + 1:04d}"
+
+
+def _capture(response, tier: SafetyTier = SafetyTier.MUTATE) -> str | None:
+    """The evidence id, or None with the reason -- never a raise.
+
+    verify.py's shape, and for its reason: a capture that raises between the
+    request and the record leaves an intent nothing can settle. The caller
+    writes the outcome either way and says the capture failed.
+    """
+    from qa.evidence import EvidenceStore
+
+    try:
+        return EvidenceStore("script-paper").capture(
+            response.request, response, tier) or None
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def _snapshot(client) -> dict:
+    """Their side of the account, read the same way before and after.
+
+    Three numbers from two endpoints, because one of them is already known to
+    disagree with itself: sim_balance.total_trades reads 0 against 39 position
+    rows. Recording all three is what lets a later reader see which one moved.
+    """
+    out: dict = {"at": _now()}
+    token = CURRENT_TIER.set(SafetyTier.SAFE)
+    try:
+        me = client.get(ACCOUNT)
+        out["evidence_account"] = _capture(me, SafetyTier.SAFE)
+        if me.status_code == 200:
+            sim = (me.json() or {}).get("sim_balance") or {}
+            out["sim_balance_usdc"] = sim.get("usdc")
+            out["sim_total_trades"] = sim.get("total_trades")
+            out["simulation_mode"] = (me.json() or {}).get("simulation_mode")
+        rows = client.get(POSITIONS)
+        out["evidence_positions"] = _capture(rows, SafetyTier.SAFE)
+        if rows.status_code == 200:
+            held = (rows.json() or {}).get("positions") or []
+            out["positions"] = len(held)
+            out["paper_positions"] = sum(1 for p in held if p.get("is_paper"))
+            out["notional_usdc"] = round(
+                sum(float(p.get("notional_usdc") or 0) for p in held), 2)
+    finally:
+        CURRENT_TIER.reset(token)
+    return out
+
+
+def _guidance(nexus_id: str | None) -> dict:
+    """The advice this order acts on, from the recorded answer."""
+    if not nexus_id:
+        return {"id": None, "job_id": None, "note": "no recorded guidance; "
+                "this order is ours, not Cymetica's"}
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "nexus_for_paper", REPO_ROOT / "scripts" / "nexus.py")
+    nexus = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(nexus)
+    rows = nexus.load()
+    answer = next((r for r in rows
+                   if r.get("id") == nexus_id and r.get("type") == "answer"), None)
+    if answer is None:
+        raise SystemExit(
+            f"{nexus_id} is not a recorded Nexus answer. `python "
+            f"scripts/nexus.py list` shows what has been asked and answered; "
+            f"an order may not cite guidance that was never given.")
+    question = next((r for r in rows
+                     if r.get("id") == nexus_id and r.get("type") == "question"), {})
+    return {"id": nexus_id, "job_id": answer.get("job_id"),
+            "asked": question.get("question"),
+            "answered_in_seconds": answer.get("waited_seconds"),
+            "advice": (answer.get("text") or "")[:2000]}
+
+
+def buy(card_id: str, usdc: float, nexus_id: str | None, confirm: bool) -> dict:
+    """One order, recorded as intent then outcome, with the account either side."""
+    if usdc <= 0:
+        raise SystemExit("an order needs a positive notional")
+
+    paper = True
+    # Asserted here, before a body exists, because this is the file somebody
+    # edits when they want to place a live order and the assertion is what
+    # they have to delete on purpose.
+    assert paper is True, "this script places paper orders only"
+
+    guidance = _guidance(nexus_id)
+    body = {"amount_usdc": float(usdc), "paper": paper}
+
+    install_client_guard()
+    registry = EndpointRegistry.load()
+    registry.mutate_enabled = True
+    registry.mutate_allowed_hosts = frozenset({"cymetica.com"})
+    ids = identities()
+    client = build_client(ids["trusted"], registry, timeout=60.0)
+
+    try:
+        before = _snapshot(client)
+        if before.get("simulation_mode") is True:
+            print("[paper] note: the account is in simulation_mode, so every "
+                  "order is paper whatever this sends")
+        entry = {"id": _next_id(load()), "type": "intent", "at": _now(),
+                 "card_id": card_id, "usdc": float(usdc), "paper": paper,
+                 "nexus": guidance, "before": before, "body": body}
+
+        if not confirm:
+            print(json.dumps({k: v for k, v in entry.items() if k != "nexus"},
+                             ensure_ascii=False, indent=1))
+            print(f"\nguidance: {guidance['id'] or 'NONE -- this order would be ours'}")
+            print("nothing sent (--confirm to place it)")
+            return entry
+
+        # Intent first. A POST that times out still leaves the order on the
+        # record, which is the whole of rule 9 and the reason a2a survives a
+        # timeout.
+        _append(entry)
+        token = CURRENT_TIER.set(SafetyTier.MUTATE)
+        try:
+            response = client.post(BUY.format(card_id=card_id), json=body)
+        except Exception as exc:  # noqa: BLE001
+            _append({"id": entry["id"], "type": "outcome", "at": _now(),
+                     "outcome": "unknown", "error": f"{type(exc).__name__}: {exc}"})
+            raise SystemExit(
+                f"{entry['id']}: the order did not complete ({type(exc).__name__}). "
+                f"The intent is on the record; read their positions before "
+                f"retrying, because the order may have landed.")
+        finally:
+            CURRENT_TIER.reset(token)
+
+        evidence_id = _capture(response)
+        payload = {}
+        try:
+            payload = response.json() or {}
+        except ValueError:
+            payload = {}
+        inner = payload.get("result") if isinstance(payload.get("result"), dict) else payload
+        position_id = (inner or {}).get("position_id") or (inner or {}).get("id")
+        accepted = 200 <= response.status_code < 300 and bool(position_id)
+
+        _append({"id": entry["id"], "type": "outcome", "at": _now(),
+                 "outcome": "accepted" if accepted else "unknown",
+                 "http_status": response.status_code,
+                 "position_id": position_id, "evidence_id": evidence_id,
+                 "response": json.dumps(payload, ensure_ascii=False)[:1200]})
+
+        time.sleep(PAUSE_SECONDS)
+        after = _snapshot(client)
+        _append({"id": entry["id"], "type": "after", "at": _now(), **after})
+
+        moved = None
+        try:
+            moved = round(float(before.get("sim_balance_usdc") or 0)
+                          - float(after.get("sim_balance_usdc") or 0), 2)
+        except (TypeError, ValueError):
+            pass
+        print(f"{entry['id']}: HTTP {response.status_code}, position "
+              f"{position_id or '(none returned)'}")
+        print(f"   paper balance {before.get('sim_balance_usdc')} -> "
+              f"{after.get('sim_balance_usdc')}  (moved {moved})")
+        print(f"   positions {before.get('positions')} -> {after.get('positions')}")
+        return entry
+    finally:
+        client.close()
+
+
+def proof() -> int:
+    """The chain, and whether the three records agree.
+
+    This is the answer to "will we be able to prove it": not one number, but
+    our order beside their position beside their balance, each with the
+    evidence that carries their own bytes.
+    """
+    rows = load()
+    if not rows:
+        print("no paper trade recorded yet")
+        return 0
+
+    by_id: dict[str, dict] = {}
+    for row in rows:
+        by_id.setdefault(row["id"], {})[row.get("type")] = row
+
+    print(f"{'trade':9} {'guidance':10} {'usdc':>7} {'position':>12} "
+          f"{'balance moved':>14}  agrees")
+    print("-" * 74)
+    disagreements = 0
+    for trade_id in sorted(by_id):
+        chain = by_id[trade_id]
+        intent, outcome, after = (chain.get("intent") or {},
+                                  chain.get("outcome") or {},
+                                  chain.get("after") or {})
+        before = intent.get("before") or {}
+        want = float(intent.get("usdc") or 0)
+        try:
+            moved = round(float(before.get("sim_balance_usdc") or 0)
+                          - float(after.get("sim_balance_usdc") or 0), 2)
+        except (TypeError, ValueError):
+            moved = None
+        grew = ((after.get("positions") or 0) - (before.get("positions") or 0)) == 1
+        agrees = (outcome.get("outcome") == "accepted" and grew
+                  and moved is not None and abs(moved - want) < 0.01)
+        if not agrees:
+            disagreements += 1
+        print(f"{trade_id:9} {str((intent.get('nexus') or {}).get('id')):10} "
+              f"{want:>7.2f} {str(outcome.get('position_id'))[:12]:>12} "
+              f"{str(moved):>14}  {'yes' if agrees else 'NO'}")
+
+    print()
+    if disagreements:
+        print(f"{disagreements} trade(s) where our record, their position count "
+              f"and their balance do not tell the same story. That is the "
+              f"finding, not the bookkeeping.")
+    else:
+        print("every trade agrees across our record, their positions and their "
+              "balance.")
+    return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    sub = parser.add_subparsers(dest="cmd", required=True)
+
+    order = sub.add_parser("buy", help="go bull on one card, in paper")
+    order.add_argument("--card", required=True)
+    order.add_argument("--usdc", type=float, required=True)
+    order.add_argument("--nexus", help="the recorded Nexus answer this acts on")
+    order.add_argument("--confirm", action="store_true",
+                       help="actually place it; without this nothing is sent")
+
+    sub.add_parser("positions", help="their side of the account, read now")
+    sub.add_parser("proof", help="the chain, and whether it agrees")
+
+    args = parser.parse_args(argv)
+    load_dotenv()
+
+    if args.cmd == "buy":
+        buy(args.card, args.usdc, args.nexus, args.confirm)
+        return 0
+    if args.cmd == "proof":
+        return proof()
+
+    install_client_guard()
+    ids = identities()
+    client = build_client(ids["trusted"], EndpointRegistry.load(), timeout=30.0)
+    try:
+        snap = _snapshot(client)
+    finally:
+        client.close()
+    for key in sorted(snap):
+        print(f"{key:22} {snap[key]}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
