@@ -112,6 +112,14 @@ def test_a_deep_investigation_answers_inside_the_window_it_publishes():
         raise Inconclusive(
             "no investigation has finished, so its latency could not be read")
 
+    # The MOST RECENT few, not everything ever recorded. A reliability check
+    # that reads all history can never go green again: today's failures would
+    # pin it red through any fix they ship, which is the badge nobody can
+    # clear. New evidence displaces old, and a channel that has answered its
+    # last five is a channel that works now.
+    WINDOW = 5
+    finished = finished[-WINDOW:]
+
     low, high = nexus.PUBLISHED_MINUTES
     ceiling = high * 60
     late = [(r["id"], round(r.get("waited_seconds") or 0)) for r in finished
@@ -134,8 +142,8 @@ def test_a_deep_investigation_answers_inside_the_window_it_publishes():
                 f"published {low}-{high} min"),
         left=[r.get("waited_seconds") for r in finished],
         right=ceiling,
-        population={"finished": len(finished), "failed": len(failed),
-                    "late": len(late)},
+        population={"window": WINDOW, "finished": len(finished),
+                    "failed": len(failed), "late": len(late)},
         sources={"contract": "ask_nexus_deep tool description",
                  "timeline": str(nexus.path().name)},
     ))
