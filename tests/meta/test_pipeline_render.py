@@ -73,6 +73,18 @@ def _live_payload(render):
     return render.build_payload(ledger=current)
 
 
+def _committed_payload(render):
+    """The page as COMMITTED: the ledger in the tree and the run it cites.
+
+    Not `_live_payload`, which composes fresh and therefore stands on the
+    newest admissible run -- which, during a test session, is whatever record
+    the last pytest invocation wrote. A self-test-only run has no result about
+    their platform in it, so every assertion about the tiles passes vacuously
+    over an empty list.
+    """
+    return render.build_payload()
+
+
 def _ledger(*rows, head=None):
     from qa.state import head as journal_head
 
@@ -915,7 +927,9 @@ def test_every_row_says_when_it_last_changed(tmp_path, monkeypatch):
     # synthetic pair.
     monkeypatch.delenv("QA_STATE_DIR", raising=False)
     render = _render()
-    for row in _live_payload(render)["findings"]:
+    committed = _committed_payload(render)["findings"]
+    assert committed, "no committed rows, so the rest of this proves nothing"
+    for row in committed:
         change = row["last_change"]
         assert change and change.get("at"), (
             f"{row['id']} cannot say when it last changed"
@@ -1011,3 +1025,136 @@ def test_the_page_runs_with_the_new_filters(tmp_path, monkeypatch):
             f"the {kind} chip never reached the page"
         )
     assert "mark read" in filters.lower()
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_every_component_lands_on_a_tile_or_is_declared_a_self_test():
+    """A tile said "2 tests written" while 460 of 525 results counted nowhere.
+
+    `COMPONENT_TO_SECTION` is a hand-written map and components.yaml is the
+    registry every `@qa(component=)` is validated against at collection time,
+    so the two drift in one direction only: a component is added, tests are
+    written under it, and the map does not hear about it. Eight of the
+    twenty-six were unmapped -- among them `rest.event_cards` with seven
+    checks and `discovery.onboarding` with four -- and every result they
+    produced fell into a bucket no tile carries.
+
+    Both halves are asserted, because the other drift is a section id that was
+    renamed under a mapping still pointing at the old one.
+    """
+    import yaml
+
+    render = _render()
+    registry = yaml.safe_load(
+        (REPO / "components.yaml").read_text(encoding="utf-8"))["components"]
+    # From inventory.py, not from state/inventory.json: the snapshot is
+    # whatever the last inventory run wrote, and the committed one was six
+    # days old and missing a section the code has declared since. A guard that
+    # reads the snapshot fails when the snapshot is stale and passes when the
+    # map is wrong, which is backwards.
+    inventory_mod = importlib.util.module_from_spec(
+        importlib.util.spec_from_file_location(
+            "inventory_sections", REPO / "scripts" / "inventory.py"))
+    inventory_mod.__loader__.exec_module(inventory_mod)
+    section_ids = {s["id"] for s in inventory_mod.SECTIONS} | {"_meta"}
+
+    unmapped = sorted(c for c in registry
+                      if c not in render.COMPONENT_TO_SECTION)
+    assert not unmapped, (
+        "components.yaml declares these and the page has nowhere to put "
+        f"their results, so the tiles undercount: {unmapped}"
+    )
+    stray = sorted({c: s for c, s in render.COMPONENT_TO_SECTION.items()
+                    if s not in section_ids}.items())
+    assert not stray, (
+        f"these map to a section the inventory does not have: {stray}"
+    )
+    assert all(render.COMPONENT_TO_SECTION[c] == "_meta"
+               for c in registry if c.startswith("meta.")), (
+        "our own self-tests belong to no part of their platform"
+    )
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_tile_lists_the_tests_behind_its_count(tmp_path, monkeypatch):
+    """*"chci si to rozkliknout a videt ktere testy to jsou"* -- and one line
+    each saying what they check.
+
+    The count was the only thing a tile said about its checks: a number with
+    nothing behind it. The names come from the run, and the sentence from the
+    check's own docstring, so neither can be typed in and drift. A
+    parametrised reconciliation case has no docstring of its own -- it is one
+    function over five claims -- so it borrows the claim's `question`, which
+    is the sentence that claim exists to ask.
+
+    Self-tests are excluded from the tiles: they measure us, not them, and
+    448 of them on a platform tile is the loudest possible wrong number.
+    """
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    render = _render()
+
+    run = {
+        "run_id": "run-20260910T000000Z-abc1234",
+        "results": [
+            {"nodeid": "tests/rest/test_support.py::test_a", "role": "verdict",
+             "component": "rest.support", "outcome": "passed",
+             "measurement": {"reason": "the desk answers"}},
+            {"nodeid": "tests/rest/test_support.py::test_b", "role": "verdict",
+             "component": "rest.support", "outcome": "failed",
+             "measurement": {"reason": "it does not"}},
+            {"nodeid": "tests/mcp/test_trust_ladder.py::test_c", "role": "verdict",
+             "component": "mcp.trust_ladder", "outcome": "passed",
+             "measurement": {}},
+            {"nodeid": "tests/meta/test_pipeline_render.py::test_d",
+             "role": "verdict", "component": "meta.pipeline",
+             "outcome": "passed", "measurement": {}},
+        ],
+    }
+    inventory = {"totals": {}, "sections": [
+        {"id": "support", "title": "Support desk", "blurb": "", "blast": "",
+         "verdicts": {}, "reachable_pct": None, "endpoint_detail": []},
+        {"id": "identity_trust", "title": "Identity and trust", "blurb": "",
+         "blast": "", "verdicts": {}, "reachable_pct": None,
+         "endpoint_detail": []},
+    ]}
+    sections = {s["id"]: s for s in render.build_payload(
+        ledger=_ledger(), inventory=inventory, run=run)["sections"]}
+
+    support = sections["support"]
+    assert [t["nodeid"] for t in support["tests"]] == [
+        "tests/rest/test_support.py::test_a",
+        "tests/rest/test_support.py::test_b",
+    ]
+    assert support["checks"]["total"] == len(support["tests"]), (
+        "the count and the list must be the same fact, or the tile is back "
+        "to a number nobody can open"
+    )
+    assert support["checks"]["failed"] == 1
+    assert {t["outcome"] for t in support["tests"]} == {"passed", "failed"}
+
+    for section in sections.values():
+        for test in section["tests"]:
+            assert not test["nodeid"].startswith(("tests/meta/", "tests/repo/")), (
+                "a self-test reached a tile about their platform"
+            )
+
+    # Every check on a tile can say in one sentence what it looks at.
+    monkeypatch.delenv("QA_STATE_DIR", raising=False)
+    render = _render()
+    live = _committed_payload(render)
+    assert sum(len(s["tests"]) for s in live["sections"]), (
+        "no check reached any tile, so the rest of this proves nothing"
+    )
+    described, silent = 0, []
+    for section in live["sections"]:
+        for test in section["tests"]:
+            if test.get("doc"):
+                described += 1
+            else:
+                silent.append(test["nodeid"])
+    assert described, "no check on any tile says what it checks"
+    assert not silent, (
+        f"{len(silent)} check(s) on a tile cannot say what they look at; the "
+        f"first line of the function's docstring is where that comes "
+        f"from: {silent[:5]}"
+    )

@@ -22,6 +22,7 @@ exists to catch: a section can be 100% reachable and completely unverified.
 
 from __future__ import annotations
 
+import ast
 import json
 import sys
 from datetime import datetime, timezone
@@ -35,16 +36,29 @@ from scripts.findings import TAG_ORDER, TAGS  # noqa: E402
 STATE = REPO_ROOT / "state"
 OUT = REPO_ROOT / "dashboard" / "index.html"
 
+# Every component in components.yaml, which is the registry conftest.py
+# validates each @qa(component=) against at collection time. Eight were
+# missing here -- rest.event_cards with seven checks, discovery.onboarding
+# with four -- and their results fell into a bucket no tile carries, so the
+# tiles undercounted by 460 of 525. test_every_component_lands_on_a_tile_or_
+# is_declared_a_self_test is the guard; "_meta" is where our own self-tests
+# go, and no tile draws it.
 COMPONENT_TO_SECTION = {
     "reconciliation": "discovery", "discovery.wellknown": "discovery",
     "discovery.llmstxt": "discovery", "discovery.openapi": "discovery",
-    "mcp.tools_list": "mcp", "mcp.protocol": "mcp",
+    "discovery.onboarding": "discovery",
+    "mcp.tools_list": "mcp", "mcp.protocol": "mcp", "mcp.tools_call": "mcp",
     "mcp.trust_ladder": "identity_trust", "rest.agents": "agents",
     "rest.clob": "clob", "rest.markets": "markets", "rest.account": "account",
+    "rest.arena": "arena", "rest.backtest": "backtest",
+    "rest.event_cards": "event_cards", "ws.feeds": "realtime",
+    "chain.launchpad": "launchpad",
     "funding.withdraw": "funding", "funding.deposit": "funding",
     "platform.ai_native_proof": "provenance", "platform.status": "swaps",
     "rest.support": "support", "meta.guard": "_meta", "meta.classifier": "_meta",
+    "meta.pipeline": "_meta",
 }
+SELF_TEST_DIRS = ("tests/meta/", "tests/repo/")
 
 
 def load(name: str) -> dict:
@@ -157,6 +171,93 @@ def _thread_for(row: dict, sent: dict, replied: dict, filed_at: dict) -> list[di
                 "text": answer.get("text") or "",
             })
     return sorted(out, key=lambda m: (m.get("at") or "", m["report_id"]))
+
+
+def _test_catalogue() -> dict[str, str]:
+    """nodeid without its parameters -> the one sentence the check opens with.
+
+    The operator asked to open a tile and see WHICH checks are behind its
+    count, *"a kazdy test by mel mit nejaky description 1 vetu z ceho
+    pochopim co to zhruba testuje"*. That sentence exists already: it is the
+    first line of the check's docstring, which every check in this repository
+    writes because the contract audit reads it. Taking it from there rather
+    than from a table means it cannot drift from the check, and a check whose
+    docstring is rewritten says the new thing on the page the same day.
+    """
+    catalogue: dict[str, str] = {}
+    for path in sorted((REPO_ROOT / "tests").rglob("test_*.py")):
+        rel = path.relative_to(REPO_ROOT).as_posix()
+        try:
+            tree = ast.parse(path.read_text(encoding="utf-8"))
+        except (OSError, SyntaxError):
+            continue
+        for node in ast.walk(tree):
+            if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                continue
+            if not node.name.startswith("test_"):
+                continue
+            doc = (ast.get_docstring(node) or "").strip()
+            first = doc.split("\n", 1)[0].strip() if doc else ""
+            catalogue[f"{rel}::{node.name}"] = first
+    return catalogue
+
+
+def _claim_questions() -> dict[str, str]:
+    """claim id -> the question that claim exists to ask.
+
+    One function, `test_sources_agree`, stands for every reconciliation claim,
+    so its docstring cannot describe any of them. claims.yaml gives each claim
+    a `question` in the operator's own words, which is the better sentence
+    anyway.
+    """
+    path = REPO_ROOT / "tests" / "reconciliation" / "claims.yaml"
+    try:
+        import yaml
+
+        data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    except Exception:  # noqa: BLE001 -- a missing claims file is not a page defect
+        return {}
+    return {c["id"]: (c.get("question") or "").strip()
+            for c in data.get("claims", []) if c.get("id")}
+
+
+def _tests_by_section(run: dict) -> dict[str, list[dict]]:
+    """The checks a run adjudicated, per tile, each able to say what it looks at.
+
+    Deduped by nodeid: a result is written per phase, and a tile listing the
+    same check three times is a tile nobody trusts. Self-tests are dropped --
+    they measure us, and 448 of them under "Support desk" is the loudest
+    possible wrong number.
+    """
+    catalogue = _test_catalogue()
+    questions = _claim_questions()
+    out: dict[str, list[dict]] = {}
+    seen: set[str] = set()
+    for result in run.get("results", []):
+        nodeid = result.get("nodeid") or ""
+        if not nodeid or nodeid in seen:
+            continue
+        if nodeid.startswith(SELF_TEST_DIRS):
+            continue
+        section = COMPONENT_TO_SECTION.get(result.get("component", ""))
+        if not section or section == "_meta":
+            continue
+        seen.add(nodeid)
+        base, _, params = nodeid.partition("[")
+        params = params.rstrip("]")
+        doc = catalogue.get(base, "")
+        if params and "::" in params:
+            doc = questions.get(params.split("::", 1)[0], doc)
+        out.setdefault(section, []).append({
+            "nodeid": nodeid,
+            "name": base.rsplit("::", 1)[-1].removeprefix("test_").replace("_", " "),
+            "doc": doc,
+            "outcome": result.get("outcome"),
+            "reason": ((result.get("measurement") or {}).get("reason") or "")[:300],
+        })
+    for tests in out.values():
+        tests.sort(key=lambda t: t["nodeid"])
+    return out
 
 
 def _last_change(row: dict) -> dict:
@@ -439,27 +540,36 @@ def build_payload(ledger: dict | None = None, inventory: dict | None = None,
             by_severity[finding["severity"]] = by_severity.get(
                 finding["severity"], 0) + 1
 
+    # One list, and the count read off it. They were two computations over the
+    # same results and the count included every phase of every check, so a
+    # tile could say more checks than it could name.
+    tests_by_section = _tests_by_section(run)
     checks: dict[str, dict[str, int]] = {}
-    for result in run.get("results", []):
-        section = COMPONENT_TO_SECTION.get(result.get("component", ""), "_other")
+    for section, tests in tests_by_section.items():
         bucket = checks.setdefault(
             section, {"passed": 0, "failed": 0, "inconclusive": 0, "total": 0})
-        bucket["total"] += 1
-        if result.get("outcome") in bucket:
-            bucket[result["outcome"]] += 1
+        for test in tests:
+            bucket["total"] += 1
+            if test.get("outcome") in bucket:
+                bucket[test["outcome"]] += 1
 
+    # From the LEDGER row, which carries `section`, not from the projection
+    # above, which deliberately does not. Reading it off the projection meant
+    # this was [] on all 22 sections: no tile ever turned red for a finding,
+    # and the severity chips the legend promises were never drawn.
     by_section: dict[str, list[str]] = {}
-    for finding in findings:
-        if finding["display_state"] in ("VERIFIED FIXED", "WITHDRAWN"):
+    for row in ledger.get("findings", {}).values():
+        if display_state(row) in ("VERIFIED FIXED", "WITHDRAWN", "SUPERSEDED"):
             continue
-        targets = set(finding.get("affected_sections") or []) | {finding.get("section")}
+        targets = set(row.get("affected_sections") or []) | {row.get("section")}
         for section in targets:
             if section:
-                by_section.setdefault(section, []).append(finding["severity"])
+                by_section.setdefault(section, []).append(row.get("severity"))
 
     sections = [
         {**s,
          "checks": checks.get(s["id"], {}),
+         "tests": tests_by_section.get(s["id"], []),
          "finding_severities": by_section.get(s["id"], [])}
         for s in inventory.get("sections", [])
     ]
@@ -752,9 +862,32 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:15.0px; max-wid
 }
 .blabel { display:flex; align-items:center; gap:5px; }
 .blabel i { width:9px; height:9px; border-radius:2px; display:inline-block; }
+/* An open tile takes the whole row. It used to expand downward inside a
+   300px column -- "rozsiri jen smerem dolu a porad je uzka, takze je to
+   takove neprehledne, na cele te strance musim porad hodne dolu scrollovat"
+   -- so the two lists sit side by side and the scrolling stops. */
+.card[open] { grid-column:1 / -1; }
 .card-detail {
   margin-top:14px; padding-top:14px; border-top:1px solid var(--line-soft);
+  display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:24px;
+  align-items:start;
 }
+@media (max-width:820px) { .card-detail { grid-template-columns:1fr; } }
+.cd-tests, .cd-eps { min-width:0; max-height:56vh; overflow:auto; }
+.tlist { list-style:none; margin:0; padding:0; }
+.tlist li {
+  display:grid; grid-template-columns:1fr auto; gap:2px 10px;
+  padding:7px 0; border-bottom:1px solid var(--line-soft);
+}
+.t-n { font-size:13.5px; color:var(--text); }
+.t-o {
+  font-family:var(--mono); font-size:11px; text-transform:uppercase;
+  letter-spacing:.04em; color:var(--text-faint); justify-self:end;
+}
+.t-failed .t-o { color:var(--bad); }
+.t-passed .t-o { color:var(--ok); }
+.t-d, .t-r { grid-column:1 / -1; font-size:12.5px; color:var(--text-dim); }
+.t-r { font-family:var(--mono); font-size:11.5px; color:var(--warn); }
 .epgroup { margin-bottom:15px; }
 .epgroup-h {
   display:flex; align-items:center; gap:7px; font-size:13.5px; color:var(--text);
@@ -1342,7 +1475,10 @@ function card(s) {
   (s.endpoint_detail || []).forEach(e => {
     (byVerdict[e.verdict] = byVerdict[e.verdict] || []).push(e);
   });
-  const detail = ["missing","param","method","auth","ok","unprobed","websocket"]
+  // ORDER, not a second list written by hand: the hand-written one omitted
+  // server_error and unreachable, so an address in either state showed in the
+  // bar and the legend and then vanished from the panel that explains the bar.
+  const detail = ORDER
     .filter(k => byVerdict[k]).map(k => `
       <div class="epgroup">
         <div class="epgroup-h"><i class="seg-${k}"></i>${byVerdict[k].length}
@@ -1357,6 +1493,18 @@ function card(s) {
           </span></div>`).join("")}
       </div>`).join("");
 
+  // The count was the only thing a tile said about its checks, and the
+  // operator asked to open it and see which ones: "chci si to rozkliknout a
+  // videt ktere testy to jsou". One line each, from the check's own docstring.
+  const tests = (s.tests || []).length
+    ? `<ul class="tlist">${s.tests.map(t => `<li class="t-${esc(t.outcome)}">
+        <span class="t-n">${esc(t.name)}</span>
+        <span class="t-o">${esc(t.outcome)}</span>
+        ${t.doc ? `<span class="t-d">${esc(t.doc)}</span>` : ""}
+        ${t.outcome === "passed" || !t.reason ? "" : `<span class="t-r">${esc(t.reason)}</span>`}
+      </li>`).join("")}</ul>`
+    : `<p class="blurb">No check here yet, so nothing on this tile has been verified.</p>`;
+
   return `<details class="card ${h}">
     <summary>
       <div class="card-top"><h3>${esc(s.title)}</h3>${pct}</div>
@@ -1369,9 +1517,21 @@ function card(s) {
         ${checks}${fnd}
       </div>
     </summary>
-    <div class="card-detail">${detail || "<p class=\"blurb\">Nothing documented here.</p>"}</div>
+    <div class="card-detail">
+      <section class="cd-tests"><h4 class="sec">Checks behind that count</h4>${tests}</section>
+      <section class="cd-eps"><h4 class="sec">Published addresses</h4>
+        ${detail || "<p class=\"blurb\">Nothing documented here.</p>"}</section>
+    </div>
   </details>`;
 }
+document.getElementById("map").addEventListener("toggle", e => {
+  const card = e.target.closest ? e.target.closest(".card") : null;
+  if (!card || !card.open) return;
+  document.querySelectorAll("#map details.card[open]").forEach(other => {
+    if (other !== card) other.open = false;
+  });
+}, true);
+
 document.getElementById("map").innerHTML = D.groups.map(g => {
   const items = D.sections.filter(s => g.sections.includes(s.id));
   if (!items.length) return "";
