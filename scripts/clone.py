@@ -229,7 +229,7 @@ def clone(source_type: str, source_id: str, name: str | None,
              "before": before, "body": body}
 
     if not confirm:
-        print(printable(json.dumps(entry, indent=2, ensure_ascii=False)))
+        print(json.dumps(entry, indent=2, ensure_ascii=False))
         print("\nnothing sent, and nothing recorded. Add --confirm.")
         return entry
 
@@ -267,6 +267,10 @@ def clone(source_type: str, source_id: str, name: str | None,
 
 
 def main() -> int:
+    # Reconfigures stdout/stderr to UTF-8; it does not transcode a string,
+    # and using it as `print(printable(text))` prints None. cp1250 is the
+    # console default on this workspace and their bot names are not all ASCII.
+    printable()
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = parser.add_subparsers(dest="cmd", required=True)
 
@@ -298,7 +302,7 @@ def main() -> int:
             return 1
         for bot in available_bots(response.json()):
             print(f"  {bot['source_type']:<17} {bot['id']}  "
-                  f"{printable(str(bot.get('name')))}")
+                  f"{bot.get('name')}")
         client.close()
         return 0
 
@@ -311,7 +315,7 @@ def main() -> int:
             intent = chain.get("intent") or {}
             print(f"  {cid}  {out.get('outcome', 'pending'):<9} "
                   f"is_paper={out.get('is_paper')!r}  "
-                  f"{printable(str(intent.get('custom_name') or ''))}")
+                  f"{intent.get('custom_name') or ''}")
         return 0
 
     clone(args.source_type, args.source_id, args.name, args.nexus,
