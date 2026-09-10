@@ -48,3 +48,10 @@ state/runs/
 # operator is left with a tree they cannot clean by the sanctioned route.
 state/**/*.tmp
 state/*.tmp
+
+# What Nexus was asked and how long it took to answer. A deep investigation
+# runs for minutes and this file grows while it polls, so committing it would
+# mean a tree that is dirty exactly while a question is outstanding -- and a
+# preregistration refuses a dirty tree. tests/mcp/test_nexus_channel.py reads
+# it from disk; nothing else needs it in git.
+state/nexus.jsonl
