@@ -261,6 +261,41 @@ def _tests_by_section(run: dict) -> dict[str, list[dict]]:
     return out
 
 
+def _help_models() -> list[dict]:
+    """The model/effort table, read out of CLAUDE.md at render time.
+
+    The operator asked for it on the page: they set `/model` and `/effort`
+    before giving a task, and the only copy lived in a file they do not open.
+    Parsed rather than retyped, because a second copy of a table is a table
+    that will disagree with the first one -- and this repository has the
+    incident to prove it, in this very file's own git history.
+
+    It stops at the first line that is not a table row, which is the blank
+    line before the operator's tagged paragraph beneath it. Nothing reads
+    past that.
+    """
+    text = (REPO_ROOT / "CLAUDE.md").read_text(encoding="utf-8")
+    start = text.index("## What a task needs")
+    rows: list[dict] = []
+    for line in text[start:].splitlines():
+        line = line.strip()
+        if not line.startswith("|"):
+            if rows:
+                break
+            continue
+        cells = [c.strip().replace("`", "") for c in line.strip("|").split("|")]
+        if len(cells) != 2 or cells[0].lower() == "task" or set(cells[0]) <= {"-"}:
+            continue
+        model, _, effort = cells[1].partition(" · ")
+        rows.append({"task": cells[0], "model": model.strip(),
+                     "effort": effort.strip()})
+    if not rows:
+        raise RuntimeError(
+            "CLAUDE.md's model table parsed to nothing, and a page showing an "
+            "empty table would be claiming there are no rules")
+    return rows
+
+
 def _stats(ledger: dict, run: dict, events: list[dict]) -> dict:
     """The five figures the operator asked to see, each derived where it lives.
 
@@ -737,6 +772,7 @@ def build_payload(ledger: dict | None = None, inventory: dict | None = None,
         "totals": inventory.get("totals", {}),
         "sections": sections,
         "stats": _stats(ledger, run, events),
+        "help": {"models": _help_models(), "source": "CLAUDE.md"},
         "findings": findings,
         "display_counts": display_counts,
         "timeline": timeline,
@@ -1157,6 +1193,9 @@ svg.bars { width:100%; height:80px; display:block; }
 }
 .stat-t td:first-child { color:var(--text); font-family:inherit; }
 
+.diagram {
+  width:100%; height:auto; max-width:980px; display:block; margin:18px 0 6px;
+}
 /* ---------- legend: two axes, then the grid they make ---------- */
 .lead { font-size:15.0px; color:var(--text-dim); max-width:74ch; margin:14px 0 10px; }
 .lead .hi { color:var(--ok); font-weight:600; }
@@ -1264,7 +1303,7 @@ h4.sec {
 .note {
   margin-top:42px; padding:18px 20px; border:1px solid var(--line);
   border-radius:var(--radius); background:var(--surface); font-size:15.0px;
-  color:var(--text-dim); max-width:82ch;
+  color:var(--text-dim); max-width:none;
 }
 .note h3 { margin:0 0 8px; font-size:14.5px; color:var(--text); text-transform:uppercase; letter-spacing:.09em; }
 .note p { margin:0 0 9px; }
@@ -1405,6 +1444,88 @@ h4.sec {
   <div class="stat-grid" id="stats"></div>
   </section>
 
+  <section class="panel" id="panel-help" hidden>
+  <h2 class="group">How this works</h2>
+  <p class="lead">Their platform is on the left. Everything to the right of it
+  is ours, and the only way anything on this page moves.</p>
+
+  <svg class="diagram" viewBox="0 0 980 300" role="img"
+       aria-label="Their platform is measured by checks; a run of those checks moves the left half of a row, and a message from them moves the right half; the page shows the two together.">
+    <defs>
+      <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7"
+              markerHeight="7" orient="auto-start-reverse">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-faint)"/>
+      </marker>
+    </defs>
+    <g font-size="13" fill="var(--text)" font-family="inherit">
+      <rect x="8" y="96" width="150" height="72" rx="8" fill="var(--surface-2)"
+            stroke="var(--line)"/>
+      <text x="83" y="126" text-anchor="middle" font-weight="600">Cymetica</text>
+      <text x="83" y="146" text-anchor="middle" font-size="11.5"
+            fill="var(--text-dim)">the thing being tested</text>
+
+      <rect x="212" y="96" width="150" height="72" rx="8" fill="var(--surface)"
+            stroke="var(--line)"/>
+      <text x="287" y="126" text-anchor="middle" font-weight="600">checks</text>
+      <text x="287" y="146" text-anchor="middle" font-size="11.5"
+            fill="var(--text-dim)">46 of them, each one asks one question</text>
+
+      <rect x="416" y="96" width="150" height="72" rx="8" fill="var(--surface)"
+            stroke="var(--line)"/>
+      <text x="491" y="126" text-anchor="middle" font-weight="600">a run</text>
+      <text x="491" y="146" text-anchor="middle" font-size="11.5"
+            fill="var(--text-dim)">frozen before it starts</text>
+
+      <rect x="620" y="30" width="170" height="64" rx="8" fill="var(--surface)"
+            stroke="var(--ok)"/>
+      <text x="705" y="56" text-anchor="middle" font-weight="600">what we measured</text>
+      <text x="705" y="76" text-anchor="middle" font-size="11.5"
+            fill="var(--text-dim)">only a run moves this</text>
+
+      <rect x="620" y="170" width="170" height="64" rx="8" fill="var(--surface)"
+            stroke="var(--accent)"/>
+      <text x="705" y="196" text-anchor="middle" font-weight="600">where it stands with them</text>
+      <text x="705" y="216" text-anchor="middle" font-size="11.5"
+            fill="var(--text-dim)">only a message moves this</text>
+
+      <rect x="844" y="96" width="128" height="72" rx="8" fill="var(--surface-2)"
+            stroke="var(--line)"/>
+      <text x="908" y="126" text-anchor="middle" font-weight="600">this page</text>
+      <text x="908" y="146" text-anchor="middle" font-size="11.5"
+            fill="var(--text-dim)">the two, side by side</text>
+
+      <rect x="212" y="244" width="354" height="48" rx="8" fill="var(--surface)"
+            stroke="var(--line)" stroke-dasharray="4 3"/>
+      <text x="389" y="266" text-anchor="middle" font-size="12">bug tracker &middot; a2a &middot; Telegram</text>
+      <text x="389" y="283" text-anchor="middle" font-size="11.5"
+            fill="var(--text-dim)">what they say back</text>
+
+      <g stroke="var(--text-faint)" stroke-width="1.4" fill="none" marker-end="url(#ar)">
+        <path d="M162 132 H206"/>
+        <path d="M366 132 H410"/>
+        <path d="M570 128 C596 128 596 62 614 62"/>
+        <path d="M570 152 C596 152 596 202 614 202"/>
+        <path d="M794 62 C820 62 820 128 838 128"/>
+        <path d="M794 202 C820 202 820 140 838 140"/>
+        <path d="M389 240 V176"/>
+        <path d="M566 268 C600 268 600 214 614 210"/>
+      </g>
+      <text x="180" y="122" font-size="11" fill="var(--text-faint)">reads</text>
+      <text x="384" y="122" font-size="11" fill="var(--text-faint)">runs</text>
+    </g>
+  </svg>
+
+  <p class="lead">A row on this page is those two halves put together. Nothing
+  writes a state directly &mdash; a run moves the left half, a message from
+  them moves the right, and every move says which one caused it.</p>
+
+  <h3 class="sec">What to run me on</h3>
+  <p class="lead">You set the model and the effort before giving a task; I
+  cannot change either. This table is read from the operating rules when the
+  page is built, so it is never a second copy.</p>
+  <table class="stat-t" id="models"></table>
+  </section>
+
   <section class="panel" id="panel-legend" hidden>
   <div class="note">
 
@@ -1447,7 +1568,6 @@ h4.sec {
 
     <table class="verdicts"><tbody id="verdicts"></tbody></table>
 
-    <p class="example" id="pctexample"></p>
 
     <p><b>&ldquo;Checks&rdquo; is a different number again.</b> An address answering does
     not mean the answer is <em>correct</em>. <b>100% with no checks</b> means
@@ -1465,34 +1585,6 @@ h4.sec {
     happens on a sweep, not when this page redraws: the page is where an answer
     is delivered, never where one is discovered.</p>
 
-    <h4>Where to start on their side</h4>
-
-    <p class="lead">Cymetica&rsquo;s own answer to &ldquo;point an agent at
-    this&rdquo;, in their words, and the four documents it names:</p>
-
-    <table class="verdicts">
-      <tr><td><i style="background:var(--ok)"></i></td>
-          <td><a href="https://cymetica.com/llms.txt">llms.txt</a></td>
-          <td>The machine-readable index of what EventTrader exposes and how to
-              use it. Start here.</td></tr>
-      <tr><td><i style="background:var(--ok)"></i></td>
-          <td><a href="https://cymetica.com/mcp/v1">POST /mcp/v1</a></td>
-          <td>The MCP endpoint &mdash; the tools themselves. 41 anonymous,
-              62 with a key.</td></tr>
-      <tr><td><i style="background:var(--ok)"></i></td>
-          <td><a href="https://cymetica.com/.well-known/agent-card.json">agent-card.json</a></td>
-          <td>Google A2A discovery: skills, auth, capabilities.</td></tr>
-      <tr><td><i style="background:var(--ok)"></i></td>
-          <td><a href="https://cymetica.com/fund-builder/api">/fund-builder/api</a></td>
-          <td>Developer and fund-builder API docs. HTML, and richer than the
-              OpenAPI covering the same ground.</td></tr>
-    </table>
-
-    <p class="example">Their four cover discovery, tools and the programmatic
-    surfaces &mdash; but not everything they publish. <a
-    href="https://cymetica.com/backtest/api">/backtest/api</a> is the same shape
-    of page for the five backtest surfaces, and carries request bodies that
-    <code>openapi-public.json</code> omits.</p>
   </div>
   </section>
 </div>
@@ -2068,6 +2160,11 @@ function showTab(name) {
     const el = document.getElementById(id);
     if (el) el.hidden = tab !== name;
   });
+  // Two sections under one tab. The operator asked for fewer things to read,
+  // not more places to look, so "how it works" sits above "what the badges
+  // mean" rather than becoming a fifth tab.
+  const help = document.getElementById("panel-help");
+  if (help) help.hidden = name !== "legend";
   writeStore("qa.tab", name);
 }
 document.getElementById("tabs").addEventListener("click", e => {
@@ -2202,28 +2299,6 @@ function paintVerdicts() {
 }
 paintVerdicts();
 
-function paintPctExample() {
-  const el = document.getElementById("pctexample");
-  const usable = (D.sections || []).filter(s => s.endpoints_probed > 0);
-  if (!usable.length) { el.hidden = true; return; }
-  /* The weakest section, so the example shows the number doing some work. */
-  const s = usable.slice().sort((a, b) =>
-    (a.reachable_pct - b.reachable_pct) ||
-    (b.endpoints_probed - a.endpoints_probed))[0];
-  const floor = Math.min.apply(null, usable.map(x => x.reachable_pct));
-  el.innerHTML = `<b>${esc(s.title)}, ${s.reachable_pct}%.</b> `
-    + `${s.endpoints_documented} addresses published, `
-    + `${s.endpoints_unprobeable} not checkable by a simple call, `
-    + `${s.endpoints_reachable} of the ${s.endpoints_probed} we could call `
-    + `answered. ${s.endpoints_reachable}/${s.endpoints_probed} = `
-    + `${s.reachable_pct}%.`
-    + (floor === 100
-       ? ` <span class="hi">Every section reads 100% today</span> &mdash; so this
-          number is currently saying only that the published addresses exist,
-          which is the weaker half of the claim.`
-       : "");
-}
-paintPctExample();
 
 /* ---------- live updates ----------
    Only when served by scripts/serve.py. Opened as a file or published as an
@@ -2376,6 +2451,15 @@ function statBlocks() {
   return out.join("");
 }
 document.getElementById("stats").innerHTML = statBlocks();
+
+// The table the operator sets /model and /effort from, drawn from the
+// operating rules rather than retyped beside them.
+document.getElementById("models").innerHTML =
+  "<thead><tr><th>task</th><th>model</th><th>effort</th></tr></thead><tbody>"
+  + ((D.help && D.help.models) || []).map(r =>
+      `<tr><td>${esc(r.task)}</td><td>${esc(r.model)}</td><td>${esc(r.effort)}</td></tr>`
+    ).join("")
+  + "</tbody>";
 
 (function restoreScroll() {
   const y = Number(readStore("qa.scroll", "0")) || 0;

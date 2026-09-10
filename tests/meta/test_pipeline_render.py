@@ -1280,3 +1280,86 @@ def test_the_stats_panel_draws_without_throwing(tmp_path, monkeypatch):
         "the page throws when a figure is missing, which blanks everything "
         f"below it:\n{err[:900]}"
     )
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_model_table_on_the_page_is_the_one_in_the_operating_rules(
+        tmp_path, monkeypatch):
+    """The operator sets /model and /effort, and the table lived where they do
+    not look.
+
+    Parsed at render time rather than retyped, and this holds the two to each
+    other: a row added to CLAUDE.md appears on the page at the next render, and
+    a row edited on the page is impossible, because there is no copy to edit.
+
+    The independent parse below is deliberately a different expression from
+    the one in render.py. Two implementations of the same read disagree on
+    exactly the malformed row that matters.
+    """
+    import re
+
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    render = _render()
+
+    text = (REPO / "CLAUDE.md").read_text(encoding="utf-8")
+    block = text.split("## What a task needs", 1)[1]
+    expected = []
+    for line in block.splitlines():
+        row = re.match(r"^\|\s*(.+?)\s*\|\s*(.+?)\s*\|$", line.strip())
+        if not row:
+            if expected:
+                break
+            continue
+        task, needs = (c.replace("`", "").strip() for c in row.groups())
+        if task.lower() == "task" or set(task) <= {"-"}:
+            continue
+        model, _, effort = needs.partition(" · ")
+        expected.append({"task": task, "model": model.strip(),
+                         "effort": effort.strip()})
+
+    assert expected, "the operating rules' table did not parse; fix the test"
+    assert render._help_models() == expected
+
+    # And a file without the table is a page that must not pretend.
+    empty = tmp_path / "CLAUDE.md"
+    empty.write_text("## What a task needs\n\nnothing here\n", encoding="utf-8")
+    monkeypatch.setattr(render, "REPO_ROOT", tmp_path)
+    with pytest.raises(RuntimeError):
+        render._help_models()
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_help_panel_is_outside_the_legend_and_speaks_plainly(
+        tmp_path, monkeypatch):
+    """*"opet takovy uzky tunel nechapu proc to neni sirsi a zas strasne moc
+    textu"*.
+
+    The prose was capped at 82 characters wide and ran to two screens. What
+    went: the tour of their four documents, and the worked example of a
+    percentage. What arrived: a picture of the machine, and the table saying
+    what to run me on.
+
+    The picture sits in its own section BEFORE the legend, which keeps the
+    legend's scanned slice exactly where it was -- and it is held to the same
+    standard anyway, because a diagram that needs the vocabulary is a diagram
+    that has not been drawn yet.
+    """
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    render = _render()
+    template = render.TEMPLATE
+
+    assert 'id="panel-help"' in template
+    assert template.index('id="panel-help"') < template.index('id="panel-legend"')
+    assert "Where to start on their side" not in template, \
+        "the tour of their documents is gone"
+    assert "paintPctExample" not in template, "the worked example is gone"
+    assert "max-width:82ch" not in template, "the prose is still in a tunnel"
+
+    panel = template[template.index('id="panel-help"'):
+                     template.index('id="panel-legend"')]
+    for word in ("ledger", "fold", "journal", "admissible", "fingerprint",
+                 "nodeid", "adjudicat"):
+        assert word not in panel.lower(), (
+            f"the diagram explains the machine using the machine's own word "
+            f"{word!r}, which is the thing it is there to replace"
+        )
