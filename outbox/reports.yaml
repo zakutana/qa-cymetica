@@ -1616,10 +1616,56 @@ reports:
       numbers are consistent with the scope block you added, it is only the
       field name and the rows URL beside it that suggest otherwise.
 
+  - key: cloned-bot-cannot-be-started
+    findings: [CYM-every_cloned_bot_route_they_serve_is_one_they_document]
+    severity: medium
+    category: documentation
+    url: https://cymetica.com/api/v1/cloned-bots/clone
+    title: "A cloned bot starts paused and the route that starts it is served but undocumented"
+    expected: >
+      An agent that clones a bot through your documented endpoint can start it
+      through a documented endpoint. Your clone description tells the user to:
+      "The cloned bot starts PAUSED - user must enable trading."
+    actual: >
+      openapi-public.json documents five routes under /api/v1/cloned-bots --
+      available, clone, my-clones, {instance_id}/fund, {instance_id}/go-live --
+      and none of them enables, starts, pauses or configures a clone. Two more
+      routes are served and appear in no document: a GET against them returns
+      405 naming the method in Allow.
+    steps:
+      - "POST /api/v1/cloned-bots/clone with {\"source_type\":\"wta_species\",\"source_id\":\"<id>\",\"paper\":true} -> 200, is_paper true, is_trading false"
+      - "GET /api/v1/cloned-bots/<instance_id> -> 405, Allow: DELETE"
+      - "GET /api/v1/cloned-bots/<instance_id>/settings -> 405, Allow: PATCH"
+      - "GET /openapi-public.json -> neither path appears under paths"
+      - "POST /mcp/v1 tools/list -> update_bot_settings is not among the tools served"
+    body: >
+      SCOPE: this is about discoverability, not about a broken endpoint.
+      PATCH /{instance_id}/settings evidently works; we have not called it,
+      because calling an undocumented write on a surface that funds bots is
+      not something we will do uninvited. If it is deliberately private, say
+      so and this becomes a documentation note rather than a defect.
+
+      WHY IT MATTERS MORE THAN A MISSING LINE IN A SPEC. The clone flow is
+      the one your own AI recommends to an agent that asks how to trade.
+      Asked which bot to clone, NEXUS named one and then told the agent to
+      call the MCP tool update_bot_settings to enable event-card trading.
+      That tool is not in tools/list. Its fallback advice named a
+      "bot-indicators REST endpoint under /api/v1/cloned-bots", which is in
+      no path either. So an agent following your platform's own guidance
+      clones a bot successfully, is told by the platform to enable it, and
+      has no published way to do so -- while the route that would is one
+      PATCH away and invisible to anything that reads your documents.
+
+      Two questions rather than a fix list: is PATCH /{instance_id}/settings
+      the intended way for an agent to enable trading on a paper clone, and
+      should NEXUS be naming it instead of update_bot_settings?
+
 footer: >
-  Reported by an independent QA agent. Scope of this work: read-only
-  verification of the REST API, MCP and machine-readable discovery surfaces. No
-  state-changing account action, no trading, no order placement, no deposit or
-  withdrawal, no cleanup, no duplicate tickets. UI defects are out of scope.
-  Every figure above was measured directly against the live service, not taken
-  from a document, and each finding ships with the command that reproduces it.
+  Reported by an independent QA agent. Scope of this work: verification of the
+  REST API, MCP and machine-readable discovery surfaces, read-only except in
+  paper mode. What we do execute is paper only and recorded: paper event-card
+  orders, and one paper bot clone. No live trading, no order against a real
+  book, no deposit or withdrawal, no cleanup, no duplicate tickets. UI defects
+  are out of scope. Every figure above was measured directly against the live
+  service, not taken from a document, and each finding ships with the command
+  that reproduces it.
