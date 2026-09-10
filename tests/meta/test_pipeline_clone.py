@@ -69,6 +69,27 @@ def test_source_type_comes_from_the_group_not_from_the_row(tmp_path, monkeypatch
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_my_clones_is_a_bare_list_and_an_empty_one_is_not_an_absent_one(
+        tmp_path, monkeypatch):
+    """`GET /api/v1/cloned-bots/my-clones?mode=paper` answers `[]`, not an
+    object with a `clones` key. Read as a dict it yields nothing, the count
+    goes absent, and the after-snapshot cannot show the clone appeared --
+    which is the whole evidence that the clone is paper and exists.
+
+    The distinction that matters is the one this repo keeps making: zero
+    clones is an answer, and a body we could not read is not.
+    """
+    mod = _clone(tmp_path, monkeypatch)
+
+    assert mod.clone_rows([]) == []
+    assert mod.clone_rows([{"id": "c1"}]) == [{"id": "c1"}]
+    assert mod.clone_rows({"clones": [{"id": "c1"}]}) == [{"id": "c1"}]
+    assert mod.clone_rows({"result": [{"id": "c1"}]}) == [{"id": "c1"}]
+    assert mod.clone_rows({"nothing": "we know"}) is None
+    assert mod.clone_rows(None) is None
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_source_type_their_schema_does_not_publish_is_refused(
         tmp_path, monkeypatch):
     """Before the request, so a typo is not spent as a 422 against them."""

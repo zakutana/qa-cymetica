@@ -122,6 +122,24 @@ def unwrap(payload):
     return payload if isinstance(payload, dict) else {}
 
 
+def clone_rows(payload):
+    """Our clones, or None when the body is one we cannot read.
+
+    `my-clones?mode=paper` answers a bare JSON list -- `[]` on this account
+    before the first clone -- not an object with a `clones` key. None is the
+    unreadable case and stays distinct from the empty one: an absent count
+    leaves the after-snapshot unable to show the clone appeared, and a zero
+    would claim it did not.
+    """
+    if isinstance(payload, list):
+        return payload
+    if isinstance(payload, dict):
+        for key in ("clones", "bots", "result"):
+            if isinstance(payload.get(key), list):
+                return payload[key]
+    return None
+
+
 def available_bots(payload) -> list[dict]:
     """Every clonable bot, carrying the source_type its group implies.
 
@@ -155,13 +173,14 @@ def _snapshot(client) -> dict:
         mine = client.get(MY_CLONES, params={"mode": "paper"})
         out["evidence_clones"] = _capture(mine, SafetyTier.SAFE)
         if mine.status_code == 200:
-            body = unwrap(mine.json())
-            rows = body.get("clones") or body.get("bots")
-            # Absent, never zero. A failed or reshaped read that counts as 0
-            # is rule 8 inverted, and here it would report a clone that did
-            # not appear as a clone that did.
-            if isinstance(rows, list):
+            # Absent, never zero. A failed or reshaped read counted as 0 is
+            # rule 8 inverted, and here it would report a clone that did not
+            # appear as a clone that did.
+            rows = clone_rows(mine.json())
+            if rows is not None:
                 out["paper_clones"] = len(rows)
+                out["paper_clone_ids"] = [r.get("id") for r in rows
+                                          if isinstance(r, dict)]
     finally:
         CURRENT_TIER.reset(token)
     return out
@@ -219,6 +238,7 @@ def clone(source_type: str, source_id: str, name: str | None,
     ids = identities()
     registry = EndpointRegistry.load()
     registry.mutate_enabled = True
+    registry.mutate_allowed_hosts = frozenset({"cymetica.com"})
     client = build_client(ids["trusted"], registry, timeout=60.0)
 
     before = _snapshot(client)
@@ -237,6 +257,15 @@ def clone(source_type: str, source_id: str, name: str | None,
     token = CURRENT_TIER.set(SafetyTier.MUTATE)
     try:
         response = client.post(CLONE, json=body)
+    except Exception as exc:  # noqa: BLE001
+        # Rule 9 says the intent is written before the POST, which means every
+        # path out of here owes an outcome. The first run of this script left
+        # CLN-0001 as a bare intent because the guard refused an unlisted host
+        # -- nothing was sent, and the record could not say so. An intent with
+        # no outcome is the shape the journal's own `unknown` exists to avoid.
+        _append({"id": clone_id, "type": "outcome", "at": _now(),
+                 "outcome": "not_sent", "error": f"{type(exc).__name__}: {exc}"})
+        raise
     finally:
         CURRENT_TIER.reset(token)
 
