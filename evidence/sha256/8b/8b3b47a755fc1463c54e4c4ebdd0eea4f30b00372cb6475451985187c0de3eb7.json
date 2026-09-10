@@ -1,0 +1,243 @@
+{
+  "captured_at": "2026-09-10T13:41:21+00:00",
+  "endpoint_rule": null,
+  "nodeid": "tests/rest/test_build_recipes.py::test_every_card_we_hold_a_position_in_still_resolves",
+  "request": {
+    "body": {
+      "encoding": "empty",
+      "value": null
+    },
+    "headers": {
+      "accept": "application/json",
+      "accept-encoding": "gzip, deflate, zstd",
+      "connection": "keep-alive",
+      "host": "cymetica.com",
+      "user-agent": "qa-cymetica/0.1 (independent QA; contact via vendor Telegram channel)",
+      "x-api-key": "<redacted>"
+    },
+    "method": "GET",
+    "url": "https://cymetica.com/api/v1/event-cards/cc8f1e63-3136-4243-b021-31f6e6c5240e"
+  },
+  "response": {
+    "body": {
+      "encoding": "json",
+      "truncated": false,
+      "value": {
+        "basket": [
+          {
+            "asset_type": "stock",
+            "association_score": 1.0,
+            "image_url": "https://financialmodelingprep.com/image-stock/TMDE.png",
+            "is_direct": null,
+            "market_cap_rank": null,
+            "name": "TMDE",
+            "symbol": "TMDE",
+            "venue": "finnhub",
+            "weight": 0.0149
+          },
+          {
+            "asset_type": "stock",
+            "association_score": 0.2605,
+            "image_url": "https://financialmodelingprep.com/image-stock/UFG.png",
+            "is_direct": null,
+            "market_cap_rank": null,
+            "name": "UFG",
+            "symbol": "UFG",
+            "venue": "finnhub",
+            "weight": 0.0106
+          },
+          {
+            "asset_type": "stock",
+            "association_score": 0.1529,
+            "image_url": "https://financialmodelingprep.com/image-stock/PTLE.png",
+            "is_direct": null,
+            "market_cap_rank": null,
+            "name": "PTLE",
+            "symbol": "PTLE",
+            "venue": "finnhub",
+            "weight": 0.1455
+          },
+          {
+            "asset_type": "stock",
+            "association_score": 0.1276,
+            "image_url": "https://financialmodelingprep.com/image-stock/BANL.png",
+            "is_direct": null,
+            "market_cap_rank": null,
+            "name": "BANL",
+            "symbol": "BANL",
+            "venue": "finnhub",
+            "weight": 0.2985
+          },
+          {
+            "asset_type": "stock",
+            "association_score": 0.0745,
+            "image_url": "https://financialmodelingprep.com/image-stock/CCEC.png",
+            "is_direct": null,
+            "market_cap_rank": null,
+            "name": "CCEC",
+            "symbol": "CCEC",
+            "venue": "finnhub",
+            "weight": 0.4439
+          },
+          {
+            "asset_type": "stock",
+            "association_score": 0.0471,
+            "image_url": "https://financialmodelingprep.com/image-stock/MMLP.png",
+            "is_direct": null,
+            "market_cap_rank": null,
+            "name": "MMLP",
+            "symbol": "MMLP",
+            "venue": "finnhub",
+            "weight": 0.0458
+          },
+          {
+            "asset_type": "stock",
+            "association_score": 0.0445,
+            "image_url": "https://financialmodelingprep.com/image-stock/VNTG.png",
+            "is_direct": null,
+            "market_cap_rank": null,
+            "name": "VNTG",
+            "symbol": "VNTG",
+            "venue": "finnhub",
+            "weight": 0.012
+          },
+          {
+            "asset_type": "stock",
+            "association_score": 0.0422,
+            "image_url": "https://financialmodelingprep.com/image-stock/BGLC.png",
+            "is_direct": null,
+            "market_cap_rank": null,
+            "name": "BGLC",
+            "symbol": "BGLC",
+            "venue": "finnhub",
+            "weight": 0.0289
+          }
+        ],
+        "bear_notional_usdc": 0.0,
+        "bull_notional_usdc": 0.0,
+        "card_url": "/events/cc8f1e63-3136-4243-b021-31f6e6c5240e",
+        "contract_spec": {
+          "appellate_body": "VAIX Trading Committee",
+          "dispute_window": "24h",
+          "fallback_source": "okx_ws",
+          "max_price_staleness": "30s",
+          "methodology": "last-tick",
+          "notes": "Auto-generated from headline 39447aa9-3dab-460c-8c33-565c08e490c5",
+          "resolution_at_utc": "2026-05-28T22:59:49.013295+00:00",
+          "resolution_source": "binance_ws",
+          "version": 1
+        },
+        "created_at": "2026-05-27T22:59:49.014725+00:00",
+        "current_index": 58.352249,
+        "direction": null,
+        "evcdx_symbol": "EVCDX-TRADERS-ARE-SKEPTICA",
+        "has_stock_legs": true,
+        "headline_impact_score": 5.0,
+        "headline_sentiment_score": 0.55,
+        "holdings": [
+          {
+            "quantity": 11474.7488666635,
+            "symbol": "EVCDX-TRADERS-ARE-SKEPTICA",
+            "venue": "ledger"
+          }
+        ],
+        "id": "cc8f1e63-3136-4243-b021-31f6e6c5240e",
+        "image_url": "https://image.cnbcfm.com/api/v1/image/108301541-17779013922026-05-04t131616z_1678722555_rc231lakzi7g_rtrmadp_0_iran-crisis.jpeg?v=1777901528&w=1920&h=1080",
+        "index_base": 100.0,
+        "is_featured": false,
+        "perp_symbol": "EVCDX-TRADERS-ARE-SKEPTICA",
+        "pipeline_status": {
+          "current_stage": "mm_quoting",
+          "progress_pct": 66,
+          "stages": [
+            {
+              "done": true,
+              "id": "card_created",
+              "label": "Card Created"
+            },
+            {
+              "done": true,
+              "id": "token_deployed",
+              "label": "Token Deployed"
+            },
+            {
+              "done": true,
+              "id": "pair_registered",
+              "label": "Pair Registered"
+            },
+            {
+              "done": true,
+              "id": "mm_funded",
+              "label": "Liquidity Seeded"
+            },
+            {
+              "done": false,
+              "id": "mm_quoting",
+              "label": "Market Making"
+            },
+            {
+              "done": false,
+              "id": "tradeable",
+              "label": "Tradeable"
+            }
+          ]
+        },
+        "pons_coin": null,
+        "pro_terminal_url": "/exchange/EVCDX-TRADERS-ARE-SKEPTICA-pro",
+        "published_at": "2026-05-27T22:59:31.277152+00:00",
+        "pw_base": 8.794284,
+        "pw_index": 5.131663,
+        "share_price_usd": "0.5835",
+        "share_url": "https://cymetica.com/events/cc8f1e63-3136-4243-b021-31f6e6c5240e",
+        "short_execution": "perp",
+        "source_url": "https://www.cnbc.com/2026/05/27/traders-are-skeptical-of-iran-timeline-for-strait-of-hormuz-reopening.html",
+        "status": "live",
+        "stock_tokenized_live": false,
+        "strategy_name": null,
+        "summary": "Despite reports Iran could return the passageway to normal traffic flows within a month of a peace deal, Kalshi traders thought that was unlikely.",
+        "title": "Traders are skeptical of Iran timeline for Strait of Hormuz reopening",
+        "tradeable_now": true,
+        "trading_blocked_reason": null,
+        "trading_closes_at": null,
+        "upvoted_by_me": false,
+        "upvotes": 0,
+        "us_market_open": true,
+        "user_position": null,
+        "vehicle_structure": null,
+        "vehicle_structure_name": null
+      }
+    },
+    "elapsed_ms": null,
+    "headers": {
+      "cache-control": "no-store, no-cache, must-revalidate, max-age=0",
+      "connection": "keep-alive",
+      "content-encoding": "gzip",
+      "content-length": "1515",
+      "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests",
+      "content-security-policy-report-only": "default-src 'self'; script-src 'self' 'nonce-LuVe6SQ8WCGkQpt+CFIMhw==' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'",
+      "content-signal": "ai-train=no, search=yes, ai-input=yes",
+      "content-type": "application/json",
+      "cross-origin-opener-policy": "same-origin-allow-popups",
+      "cross-origin-resource-policy": "cross-origin",
+      "date": "Thu, 10 Sep 2026 13:41:21 GMT",
+      "permissions-policy": "geolocation=(), microphone=(), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=(), browsing-topics=(), attribution-reporting=()",
+      "pragma": "no-cache",
+      "referrer-policy": "strict-origin-when-cross-origin, strict-origin-when-cross-origin",
+      "server": "nginx",
+      "strict-transport-security": "max-age=31536000; includeSubDomains",
+      "vary": "Accept-Encoding",
+      "x-ai-strongest-model": "Claude Fable 5",
+      "x-content-type-options": "nosniff, nosniff",
+      "x-dns-prefetch-control": "off",
+      "x-frame-options": "SAMEORIGIN, SAMEORIGIN",
+      "x-ratelimit-limit": "2000",
+      "x-ratelimit-remaining": "1983",
+      "x-ratelimit-reset": "1789047720",
+      "x-xss-protection": "0"
+    },
+    "reason": "OK",
+    "status_code": 200
+  },
+  "run_id": "run-20260910T133838Z-986feb8",
+  "tier": "SAFE"
+}

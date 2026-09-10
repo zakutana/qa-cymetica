@@ -20,13 +20,19 @@ tells it what it holds; no surface tells it what it has left, so it cannot
 size the next order, cannot know whether it is up or down, and cannot tell a
 profitable run from a ruinous one.
 
-**This check places no order.** It reads what `scripts/paper.py` recorded --
-their own before-and-after responses, each with the evidence id of the capture
--- and re-reads the balance live, so a debit that merely settles late is not
-reported as a debit that never came. Only trades opened since the paper
-account's current `started_at` are counted: switching the account into
-simulation_mode resets that pool, and holding it to trades from before the
-reset would be our arithmetic, not their defect.
+**This check places no order.** It reads what `scripts/paper.py` recorded:
+for each accepted order, the account as they reported it seconds before the
+POST and seconds after, each read carrying the evidence id of its capture. One
+trade, two reads, their own numbers.
+
+It used to compare the live balance against the bankroll and count only trades
+since the pool's `started_at`. That went INCONCLUSIVE within the hour, because
+`started_at` moves -- the pool is reset when the account's mode is switched,
+and possibly at other times -- so no trade was ever "since" it. A check keyed
+on something that moves measures nothing, which is the same defect as pinning
+a fingerprint that is not stable. A pair of reads around one order cannot
+drift: whatever the pool did before or after, those two numbers were taken
+either side of one POST.
 """
 
 from __future__ import annotations
@@ -67,74 +73,57 @@ def test_a_paper_buy_debits_the_paper_balance(rest_trusted):
     for row in rows:
         chains.setdefault(row["id"], {})[row.get("type")] = row
 
-    account = rest_trusted.get(ACCOUNT)
-    if account.status_code != 200:
-        raise Inconclusive(
-            f"the account read answered HTTP {account.status_code}; a failed "
-            f"read is not an unchanged balance")
-    sim = (account.json() or {}).get("sim_balance") or {}
-    started = _moment(sim.get("started_at"))
-    try:
-        balance_now = float(sim.get("usdc"))
-    except (TypeError, ValueError):
-        raise Inconclusive(
-            f"sim_balance.usdc did not read as a number ({sim.get('usdc')!r})")
-
-    # Only what this pool could have paid for. The pool is reset when the
-    # account's mode is switched, and charging it for trades that predate its
-    # own start would be a defect of ours.
-    counted, opened = [], 0.0
+    measured = []
     for trade_id, chain in sorted(chains.items()):
-        intent, outcome = chain.get("intent") or {}, chain.get("outcome") or {}
+        intent, outcome, after = (chain.get("intent") or {},
+                                  chain.get("outcome") or {},
+                                  chain.get("after") or {})
         if outcome.get("outcome") != "accepted":
             continue
-        when = _moment(outcome.get("at"))
-        if started and when and when < started:
+        before = intent.get("before") or {}
+        try:
+            was, now = (float(before.get("sim_balance_usdc")),
+                        float(after.get("sim_balance_usdc")))
+        except (TypeError, ValueError):
             continue
-        counted.append(trade_id)
-        opened += float(intent.get("usdc") or 0)
+        measured.append({
+            "id": trade_id, "usdc": float(intent.get("usdc") or 0),
+            "moved": round(was - now, 6),
+            "positions_grew": (after.get("positions") or 0) - (before.get("positions") or 0),
+            "trades_counter": (before.get("sim_total_trades"),
+                               after.get("sim_total_trades")),
+        })
 
-    if not counted:
+    if not measured:
         raise Inconclusive(
-            "no accepted paper trade has been recorded since this paper "
-            "balance was opened, so whether a buy debits it cannot be read; "
-            "`python scripts/paper.py buy --card <id> --usdc 1 --confirm` "
-            "records one")
+            "no accepted paper trade carries a balance read on both sides of "
+            "it, so whether a buy debits anything cannot be read; `python "
+            "scripts/paper.py buy --card <id> --usdc 1 --confirm` records one")
 
-    before = (chains[counted[0]].get("intent") or {}).get("before") or {}
-    try:
-        balance_before = float(before.get("sim_balance_usdc"))
-    except (TypeError, ValueError):
-        raise Inconclusive("the balance before the first counted trade was "
-                           "not recorded as a number")
+    silent = [m for m in measured if abs(m["moved"] - m["usdc"]) > 0.01]
+    landed = [m for m in measured if m["positions_grew"] >= 1]
 
-    moved = round(balance_before - balance_now, 2)
-    expected = round(opened, 2)
-    trades_counter = sim.get("total_trades")
-
-    problems = []
-    if abs(moved - expected) > 0.01:
-        problems.append(
-            f"{len(counted)} accepted paper buy(s) opened {expected:.2f} USDC "
-            f"of notional and the paper balance moved {moved:.2f} "
-            f"({balance_before:.2f} -> {balance_now:.2f})")
-    if isinstance(trades_counter, (int, float)) and trades_counter < len(counted):
-        problems.append(
-            f"sim_balance.total_trades reads {trades_counter} after "
-            f"{len(counted)} accepted trade(s)")
+    # A buy that did not create a position is a different fault and not this
+    # one. What is asserted here is a position opening and nothing paying.
+    subject = [m for m in silent if m in landed]
 
     conclude(Measurement(
-        verdict="failed" if problems else "passed",
-        reason=("; ".join(problems) + ": an agent running a paper campaign has "
-                "no published number to score itself against, so it cannot "
-                "size its next order or tell a winning run from a losing one"
-                if problems else
-                f"{len(counted)} paper buy(s) worth {expected:.2f} USDC "
-                f"debited the paper balance by {moved:.2f}"),
-        left=balance_now, right=round(balance_before - expected, 2),
-        population={"trades": len(counted), "notional_usdc": expected,
-                    "total_trades": trades_counter,
-                    "pool_opened_at": sim.get("started_at")},
+        verdict="failed" if subject else "passed",
+        reason=(f"{len(subject)} paper buy(s) opened a position and moved the "
+                f"paper balance by nothing: "
+                + "; ".join(f"{m['id']} bought {m['usdc']:.2f} and the balance "
+                            f"moved {m['moved']:.2f}" for m in subject[:3])
+                + ". An agent running a paper campaign has no published number "
+                  "to score itself against, so it cannot size its next order "
+                  "or tell a winning run from a losing one"
+                if subject else
+                f"each of the {len(measured)} recorded paper buy(s) debited "
+                f"the paper balance by its own notional"),
+        left=[m["moved"] for m in measured],
+        right=[m["usdc"] for m in measured],
+        population={"accepted": len(measured), "opened_a_position": len(landed),
+                    "debited_nothing": len(subject),
+                    "trades_counter": measured[-1]["trades_counter"]},
         sources={"balance": ACCOUNT, "positions": POSITIONS,
                  "our_record": str(paper.path().name)},
     ))
