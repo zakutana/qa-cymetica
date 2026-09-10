@@ -140,3 +140,48 @@ def test_the_pin_is_read_from_the_journal_by_id_and_by_value(tmp_path, monkeypat
         "a fingerprint no pin names is one the fold wrote at the failure"
     )
     assert mod.pin_reason("CYM-other", "second-fp") is None
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_evidence_does_not_describe_a_syntax_tree_hash_it_did_not_send():
+    """The sentence explaining the fingerprint was true of only some of them.
+
+    `body()` printed one fixed line for every verification -- *"a SHA-256 of
+    the check function's parsed syntax tree ... it changes when the check's
+    logic changes and not when its comments or formatting do"* -- while
+    qa/report_plugin.py:311 prefers `measurement.fingerprint` and falls back to
+    the AST hash only when a check offers none. The five reconciliation rows
+    verified on 2026-09-10 all carry the first kind: a hash of the claim
+    declared in claims.yaml -- the two documents, the extractor on each, the
+    relation and its direction -- and editing those check functions does not
+    move it at all. Both halves of the sentence were therefore false about the
+    value in the same payload, in the one paragraph that exists to tell the
+    vendor how to read it.
+
+    Same family as the pin sentence above and as the deep pass of 2026-09-09:
+    the mechanism works, the prose wrapped around it claims more than it knows.
+    Nothing audits outbound prose, which is why the claim lives in a test.
+    """
+    mod = _verify()
+
+    declared = mod.body(_item(identity="declared"))["evidence"]
+    assert "syntax tree" not in declared, (
+        "this fingerprint is a hash of the claim's declared definition; "
+        "the check's own source is not in it"
+    )
+    assert "claims.yaml" in declared or "declared definition" in declared
+    assert "the relation and its direction" in declared, (
+        "direction is what moved these six rows; say what is in the hash"
+    )
+
+    ast = mod.body(_item(identity="ast"))["evidence"]
+    assert "parsed syntax tree" in ast, (
+        "the ordinary case keeps its true sentence"
+    )
+
+    # A row whose provenance we could not establish says the honest little.
+    unknown = mod.body(_item())["evidence"]
+    assert "syntax tree" not in unknown, (
+        "an unestablished provenance is not a licence to guess the stronger "
+        "of the two sentences"
+    )

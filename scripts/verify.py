@@ -169,8 +169,30 @@ def owed(ledger: dict, only: list[str] | None) -> list[dict]:
                 "checks": row.get("checks") or [],
                 "title": row.get("title") or fid,
                 "pin": pin_reason(fid, row["check"]["pinned_fingerprint"]),
+                "identity": identity_kind(run, row.get("checks") or []),
             })
     return work
+
+
+def identity_kind(run: dict, checks: list[str]) -> str | None:
+    """Where this row's fingerprint came from: a declared claim, or the AST.
+
+    qa/report_plugin.py:311 takes the Measurement's own fingerprint when the
+    check offers one and hashes the function's syntax tree otherwise, so the
+    two kinds are indistinguishable by the time the fold has them -- both are
+    `check_fingerprint`. The run record still holds the measurement, so the
+    provenance is read there rather than guessed.
+
+    None when the checks in this row disagree or none of them ran: the
+    verification then says the smaller true thing instead of picking one.
+    """
+    wanted = set(checks)
+    kinds = {
+        "declared" if ((result.get("measurement") or {}).get("fingerprint")) else "ast"
+        for result in (run.get("results") or [])
+        if result.get("nodeid") in wanted and result.get("role") == "verdict"
+    }
+    return kinds.pop() if len(kinds) == 1 else None
 
 
 def pin_reason(finding_id: str, fingerprint: str) -> str | None:
@@ -245,12 +267,37 @@ def body(item: dict) -> dict:
             "not: if this differs from a fingerprint we sent you before, the "
             "definition moved and the earlier verdict was made under the old one."
         )
+    # Two kinds of check produce two kinds of fingerprint, and this paragraph
+    # used to describe only one of them. qa/report_plugin.py:311 prefers the
+    # Measurement's own fingerprint and falls back to the AST hash only when a
+    # check offers none -- so for every reconciliation row the value in this
+    # payload is a hash of the claim declared in claims.yaml, and editing the
+    # check function does not move it. Sending "a SHA-256 of the check
+    # function's parsed syntax tree" beside such a value was false in both
+    # halves, in the one paragraph whose whole job is to say how to read it.
+    what_it_is = {
+        "ast": (
+            "a SHA-256 of the check function's parsed syntax tree. It changes "
+            "when the check's logic changes and not when its comments or "
+            "formatting do."
+        ),
+        "declared": (
+            "a SHA-256 of the claim's declared definition in claims.yaml -- "
+            "the two documents compared, the extractor read from each, and "
+            "the relation and its direction. It changes when any of those "
+            "change and not when the wording of the question does; the check "
+            "function is a loop over the claims and is not part of it."
+        ),
+    }.get(item.get("identity"), (
+        "a SHA-256 of this check's definition: the claim it is declared from "
+        "where there is one, the check's own parsed source otherwise. It "
+        "changes when that definition changes and not when comments or "
+        "formatting do."
+    ))
     evidence = (
         f"Independent re-check by the QA agent for hunter expire76.\n\n"
         f"{headline}\n\n"
-        f"WHAT THE FINGERPRINT IS: a SHA-256 of the check function's parsed "
-        f"syntax tree. It changes when the check's logic changes and not when "
-        f"its comments or formatting do. {why_fingerprint}\n\n"
+        f"WHAT THE FINGERPRINT IS: {what_it_is} {why_fingerprint}\n\n"
         f"RUN: {item['run_id']}, preregistration {item['prereg_id']}, on a clean "
         f"working tree at commit {item['tree_sha']}. The selector was frozen and "
         f"git-tagged BEFORE the run, so the set of checks could not be narrowed "
