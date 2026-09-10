@@ -222,6 +222,41 @@ def ask(question: str, wait: bool = True) -> dict:
         CURRENT_TIER.reset(token)
 
 
+def _moment(value):
+    try:
+        return datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except (TypeError, ValueError):
+        return None
+
+
+def elapsed_since_asked(rows, question_id: str, at: str) -> float | None:
+    """Seconds between the question and `at`, from the two recorded moments.
+
+    Not `waited_seconds`. That field is how long ONE poll loop waited, and
+    `answer` enters a second one, so a question asked at 10:00 and picked up
+    at 11:00 reports about zero. Two timestamps cannot restart.
+    """
+    asked = next((r.get("at") for r in rows
+                  if r.get("id") == question_id and r.get("type") == "question"),
+                 None)
+    start, end = _moment(asked), _moment(at)
+    if start is None or end is None:
+        return None
+    return (end - start).total_seconds()
+
+
+def window_verdict(elapsed: float | None) -> str:
+    """Their own published window, against the elapsed we can defend.
+
+    `None` is "unknown", never "within": rows written before the question's
+    timestamp was recorded cannot be judged, and answering the reassuring half
+    of an unknown is the defect this module's docstring is about.
+    """
+    if elapsed is None:
+        return "unknown"
+    return "within" if elapsed <= PUBLISHED_MINUTES[1] * 60 else "OVER"
+
+
 def _poll(client, entry: dict) -> dict:
     """Poll on their cadence, recording every attempt with its moment."""
     started = time.monotonic()
@@ -250,9 +285,15 @@ def _poll(client, entry: dict) -> dict:
                     "polls": attempt, "text": _text_of(_inner(answer))}
             _append(done)
             low, high = PUBLISHED_MINUTES
-            verdict = ("within" if waited <= high * 60 else "OVER")
-            print(f"\nanswered after {waited / 60:.1f} min, {attempt} polls "
-                  f"-- {verdict} their published {low}-{high} min\n")
+            # From the question's own moment, not from this loop's stopwatch.
+            # `answer` enters a second loop, so `waited` there is time since
+            # the pickup and printed 0.0 min for NEX-0009's 14.3.
+            since = elapsed_since_asked(load(), entry["id"], done["at"])
+            done["since_asked_seconds"] = since
+            shown = f"{since / 60:.1f}" if since is not None else "?"
+            print(f"\nanswered after {shown} min, {attempt} polls "
+                  f"-- {window_verdict(since)} their published "
+                  f"{low}-{high} min\n")
             print(done["text"])
             return done
         if status.startswith("failed"):
