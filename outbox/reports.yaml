@@ -1793,6 +1793,53 @@ reports:
       names against the live catalogue, and drop or mark the ones that do not
       resolve. That converts this whole class into a non-event.
 
+  - key: nexus-hands-out-internal-source-locations
+    findings: [CYM-a_deep_answer_does_not_hand_out_internal_source_locations]
+    severity: medium
+    category: security
+    url: https://cymetica.com/mcp/v1
+    title: "ask_nexus_deep answers an external caller with internal source paths, line numbers and code"
+    expected: >
+      An answer to an outside caller describes behaviour. Internal module
+      paths, line numbers and source lines are not part of the surface you
+      publish.
+    actual: >
+      Two of the eight deep answers we have recorded cite internal source
+      locations — sixteen of them — to an external bug-bounty participant
+      holding an ordinary API key, and one quotes a line of code verbatim.
+    steps:
+      - "POST /mcp/v1 tools/call ask_nexus_deep: \"What are the three most important things we should be testing that we probably are not?\""
+      - "The answer cites src/api/websocket/exchange_websocket.py:112, :124, :518-520; src/api/dependencies.py:933, :954, :968; src/api/routes/rst_crypto_buy.py:2259, :2496, :2508, :2599; src/api/routes/exchange.py:345-360"
+      - "POST /mcp/v1 tools/call ask_nexus_deep: \"What is the measured historical win rate, trade count and maximum drawdown of PCPN, and where do those figures come from?\""
+      - "The answer cites src/services/wta_payout_service.py:272 and quotes `species.win_rate = (trades_won * 100) / total_resolved`, plus src/services/ai_agent_trading_orchestrator.py:1218 quoting `species.total_trades = (species.total_trades or 0) + 1`"
+    body: >
+      WE ARE ASKING, NOT ASSERTING. The first of those answers prefaces itself
+      with "behavior described generally per our disclosure rules", so a
+      policy exists and the model believes it is inside it. We cannot know
+      what you intend to publish. What we can say is that a file path with a
+      line number is not a general description of behaviour, and a quoted
+      assignment is not one either. If this is deliberate, say so and we will
+      withdraw it.
+
+      WHY WE THINK IT IS WORTH YOUR TIME ANYWAY. Two questions produced
+      sixteen locations across nine modules, and they were ordinary questions
+      — what should we test, and where does a number come from. A handful more
+      would map the private tree: module layout, which file holds the money
+      paths, and roughly where in each. Several of the citations are precisely
+      the sensitive ones — the withdrawal gate, the refund/delivery dedupe
+      key, the paper/live resolver.
+
+      That is a materially different surface from the API you document, and it
+      is reachable by anyone who can call ask_nexus_deep. The answers
+      themselves were excellent and we would not want them made vaguer; the
+      narrow fix is to keep the reasoning and drop the coordinates.
+
+      Scope note: we hold a TRUSTED-tier key. We have not checked whether an
+      anonymous or lower-tier caller gets the same detail, and we are not
+      going to probe that without being asked — if the answer depends on tier,
+      that is worth knowing and you can see it from inside more cheaply than
+      we can from outside.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in
