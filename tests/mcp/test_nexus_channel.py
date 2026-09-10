@@ -100,6 +100,33 @@ def _nexus():
     return mod
 
 
+def newest_answer_naming_tools(answers):
+    """The last answer that told an agent to call something, or None.
+
+    The newest that NAMES a tool, not simply the newest: Nexus answers about
+    fees or caveats name none, and reading those as "nothing to measure"
+    would make the check go Inconclusive for a reason that is not about the
+    vendor at all.
+
+    Why not all of them, which is what this read until the 2026-09-10 sweep:
+    the union across every answer ever recorded can only grow. Its one
+    offender, `update_bot_settings`, was named in NEX-0002 at 10:23 -- before
+    their 12:37 release -- and became visible to us only when the deep pass
+    widened the mention extractor that morning, from 3 tools to 8. So the
+    `fail` verify.py sent at 16:52 was our own better reading of an old
+    answer, three hours after we had told them on telegram that a fresh
+    answer named only served tools. Both were computed honestly. They
+    contradict each other because one read the newest answer and the other
+    read all of them.
+    """
+    dated = [r for r in answers if r.get("text")]
+    dated.sort(key=lambda r: (r.get("at") or "", r.get("id") or ""))
+    for row in reversed(dated):
+        if tool_mentions(row["text"]):
+            return row
+    return None
+
+
 @qa(component="mcp.tools_call", tier=SafetyTier.SAFE, surface="mcp")
 def test_every_tool_nexus_tells_an_agent_to_call_exists(mcp_trusted):
     """Guidance an agent cannot act on is guidance that does not work."""
@@ -110,14 +137,12 @@ def test_every_tool_nexus_tells_an_agent_to_call_exists(mcp_trusted):
             "no Nexus answer has been recorded, so there is nothing to read; "
             "`python scripts/nexus.py ask \"...\"` records one")
 
-    named: dict[str, str] = {}
-    for row in answers:
-        for tool in tool_mentions(row["text"]):
-            named.setdefault(tool, row["id"])
-    if not named:
+    latest = newest_answer_naming_tools(answers)
+    if latest is None:
         raise Inconclusive(
             f"{len(answers)} recorded answer(s) name no MCP tool at all, so "
             f"whether the tools it names exist could not be measured")
+    named = {tool: latest["id"] for tool in tool_mentions(latest["text"])}
 
     served = {t["name"] for t in mcp_trusted.tools_list() if "name" in t}
     if not served:
@@ -150,7 +175,9 @@ def test_every_tool_nexus_tells_an_agent_to_call_exists(mcp_trusted):
         # those the server actually serves -- which is the empty set, and
         # saying so is the finding.
         left=sorted(named), right=sorted(set(named) & served),
-        population={"answers_read": len(answers), "tools_served": len(served)},
+        population={"answers_recorded": len(answers), "subject": latest["id"],
+                    "subject_at": latest.get("at"),
+                    "tools_served": len(served)},
         sources={"answers": str(nexus.path().name),
                  "tools": "POST /mcp/v1 tools/list"},
     ))

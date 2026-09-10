@@ -25,6 +25,15 @@ for each accepted order, the account as they reported it seconds before the
 POST and seconds after, each read carrying the evidence id of its capture. One
 trade, two reads, their own numbers.
 
+**It judges the NEWEST trade, and only that one.** Until the 2026-09-10 sweep
+it judged every trade in the log, which is a different question -- "has a buy
+ever failed to debit" rather than "does a buy debit" -- and one no fix the
+vendor ships can change the answer to. The two trades on file are from 11:41
+and 11:59 that day; the fix was claimed live at 18:06. Frozen rows cannot be
+repaired, so the check could not have gone green again, and a red that cannot
+turn green is not a measurement. The history stays in `population`, where it
+is a record rather than a verdict.
+
 It used to compare the live balance against the bankroll and count only trades
 since the pool's `started_at`. That went INCONCLUSIVE within the hour, because
 `started_at` moves -- the pool is reset when the account's mode is switched,
@@ -64,11 +73,15 @@ def _moment(value):
         return None
 
 
-@qa(component="rest.event_cards", tier=SafetyTier.SAFE, surface="rest")
-def test_a_paper_buy_debits_the_paper_balance(rest_trusted):
-    """Opening a position costs something, or the balance means nothing."""
-    paper = _paper()
-    rows = paper.load()
+def measurements(rows):
+    """Every accepted trade that carries a balance read on both sides.
+
+    The population, and deliberately not the verdict. Judging all of it is
+    what made this check unable to ever pass: TRD-0001 and TRD-0002 were
+    recorded at 11:41 and 11:59 on 2026-09-10 and the vendor claimed the fix
+    live at 18:06, so those two rows are frozen evidence of the old behaviour
+    and no fix they ship can reach them. Sorted oldest first.
+    """
     chains: dict[str, dict] = {}
     for row in rows:
         chains.setdefault(row["id"], {})[row.get("type")] = row
@@ -97,6 +110,7 @@ def test_a_paper_buy_debits_the_paper_balance(rest_trusted):
                   if snap.get("positions") is None]
         measured.append({
             "id": trade_id, "usdc": float(intent.get("usdc") or 0),
+            "at": intent.get("at") or outcome.get("at") or "",
             "moved": round(was - now, 6),
             "unread": unread,
             "positions_grew": (None if unread else
@@ -105,54 +119,87 @@ def test_a_paper_buy_debits_the_paper_balance(rest_trusted):
                                after.get("sim_total_trades")),
         })
 
+    measured.sort(key=lambda m: (m["at"], m["id"]))
+    return measured
+
+
+def newest(measured):
+    """The one trade this check has an opinion about: the last one placed.
+
+    By time, and NOT by "the last one we could read". The fallback is the
+    trap: a fresh trade whose account read failed would hand the verdict back
+    to a trade from before the fix, and the check would report the vendor's
+    old defect with today's date on it. A newest trade that cannot be read is
+    Inconclusive -- rule 8, on the row that decides #87.
+    """
+    return measured[-1] if measured else None
+
+
+@qa(component="rest.event_cards", tier=SafetyTier.SAFE, surface="rest")
+def test_a_paper_buy_debits_the_paper_balance(rest_trusted):
+    """Opening a position costs something, or the balance means nothing."""
+    paper = _paper()
+    measured = measurements(paper.load())
+
     if not measured:
         raise Inconclusive(
             "no accepted paper trade carries a balance read on both sides of "
             "it, so whether a buy debits anything cannot be read; `python "
             "scripts/paper.py buy --card <id> --usdc 1 --confirm` records one")
 
-    blind = [m for m in measured if m["unread"]]
-    readable = [m for m in measured if not m["unread"]]
-    if not readable:
+    subject = newest(measured)
+    if subject["unread"]:
         raise Inconclusive(
-            f"every recorded trade is missing a positions read on one side "
-            f"({[m['id'] for m in blind][:3]}), so whether a position opened "
-            f"cannot be established -- and a trade whose position is unknown "
-            f"is not a trade that debited correctly")
+            f"the newest trade {subject['id']} is missing a positions read on "
+            f"the {', '.join(subject['unread'])} side, so whether a position "
+            f"opened cannot be established -- and judging the trade before it "
+            f"instead would report a pre-fix trade with today's date on it")
+
+    # A buy that did not create a position is a different fault and not this
+    # one. What is asserted here is a position opening and nothing paying, so
+    # with a single subject there is nothing left to compare and the honest
+    # answer is that this check could not measure -- not "passed".
+    if subject["positions_grew"] < 1:
+        raise Inconclusive(
+            f"the newest trade {subject['id']} was accepted but opened no "
+            f"position ({subject['positions_grew']:+d}), which is a different "
+            f"fault from the one this check reads: there is no position whose "
+            f"cost could have been debited")
 
     # "Costs something", which is the contract this check's own docstring
     # states. It demanded EXACTLY the notional, so a 1.00 buy debited 0.97 --
     # a fee, a rounding, a partial fill -- was filed under the headline "moved
     # the paper balance by nothing" while the same sentence quoted 0.97. A
     # false claim to the vendor, from the strictness rather than from the data.
-    silent = [m for m in readable if m["moved"] <= 0.01]
-    landed = [m for m in readable if m["positions_grew"] >= 1]
+    silent = subject["moved"] <= 0.01
 
-    # A buy that did not create a position is a different fault and not this
-    # one. What is asserted here is a position opening and nothing paying.
-    subject = [m for m in silent if m in landed]
-
+    history = [m for m in measured if not m["unread"]]
     conclude(Measurement(
-        verdict="failed" if subject else "passed",
-        reason=(f"{len(subject)} paper buy(s) opened a position and moved the "
-                f"paper balance by nothing: "
-                + "; ".join(f"{m['id']} bought {m['usdc']:.2f} and the balance "
-                            f"moved {m['moved']:.2f}" for m in subject[:3])
-                + ". An agent running a paper campaign has no published number "
-                  "to score itself against, so it cannot size its next order "
-                  "or tell a winning run from a losing one"
-                if subject else
-                f"each of the {len(readable)} readable paper buy(s) debited "
-                f"the paper balance"
-                + (f"; {len(blind)} could not be read on one side and were not "
-                   f"counted either way" if blind else "")),
-        left=[m["moved"] for m in readable],
-        right=[m["usdc"] for m in readable],
-        population={"accepted": len(measured), "readable": len(readable),
-                    "unreadable": len(blind),
-                    "opened_a_position": len(landed),
-                    "debited_nothing": len(subject),
-                    "trades_counter": readable[-1]["trades_counter"]},
+        verdict="failed" if silent else "passed",
+        reason=(f"the newest paper buy {subject['id']} ({subject['at']}) "
+                f"opened a position and moved the paper balance by nothing: "
+                f"bought {subject['usdc']:.2f}, balance moved "
+                f"{subject['moved']:.2f}. An agent running a paper campaign "
+                f"has no published number to score itself against, so it "
+                f"cannot size its next order or tell a winning run from a "
+                f"losing one"
+                if silent else
+                f"the newest paper buy {subject['id']} ({subject['at']}) "
+                f"bought {subject['usdc']:.2f} and debited "
+                f"{subject['moved']:.2f} from the paper balance"),
+        # The subject, not the log. The history stays in population, where it
+        # is a record rather than a verdict -- judging all of it is what kept
+        # this check red no matter what the vendor shipped.
+        left=[subject["moved"]],
+        right=[subject["usdc"]],
+        population={"accepted": len(measured),
+                    "readable": len(history),
+                    "unreadable": len(measured) - len(history),
+                    "subject": subject["id"],
+                    "ever_debited_nothing": sum(
+                        1 for m in history
+                        if m["moved"] <= 0.01 and m["positions_grew"] >= 1),
+                    "trades_counter": subject["trades_counter"]},
         sources={"balance": ACCOUNT, "positions": POSITIONS,
                  "our_record": str(paper.path().name)},
     ))

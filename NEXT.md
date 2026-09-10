@@ -46,6 +46,47 @@ to neodškrtl, nebo to nikdy nebylo další na řadě.
 
   `python scripts/nexus.py ask "..."` je SAFE tier, nic nestojí a zapisuje se.
 
+- [ ] 2026-09-10  Obě hromadící kontroly soudit v přítomném čase, ne přes celý log
+
+  Sweep `PRE-0081`: #87 čte `state/paper.jsonl` a soudí **každý** obchod, #85
+  čte všechny zaznamenané odpovědi Nexuse a soudí **sjednocení** nástrojů přes
+  ně. Obě proto nemůžou zezelenat, ať vendor udělá cokoli. Obě docstringy
+  přitom slibují přítomný čas („costs something", „cannot act on"), ne „někdy
+  selhalo".
+
+  Oprava je **nejnovější záznam**, historie zůstane v `population`. Ne časové
+  okno podle jejich releasu — to je ten pohyblivý `started_at`, který už jednou
+  #87 pohřbil. U #85 nejde ani `WINDOW = 5`: odpovědi jsou tři, takže každé
+  okno ≥ 3 zase spolkne `NEX-0002`; bere se **nejnovější odpověď, která jmenuje
+  aspoň jeden nástroj**.
+
+  Past podle pravidla 8: když je nejnovější obchod nečitelný na jedné straně,
+  je to `Inconclusive`. **Ne** spadnout na předposlední čitelný — to by potichu
+  soudilo zase TRD-0002.
+
+  Pořadí je závazné: opravit → commit → prereg → běh **před** novým obchodem,
+  aby nová definice jednou zčervenala pod vlastním otiskem. To je přesně to, co
+  `VERIFIED FIXED` potřebuje.
+
+- [ ] 2026-09-10  Jeden 1 USDC paper obchod po jejich opravě, jako měření
+
+  Jejich zpráva v 18:06 tvrdí, že paper nákup teď odečítá. Změřit se to dá
+  jenom obchodem umístěným **po** té opravě. Před ním přečíst `paper.py
+  positions` a `book` — v 18:06 psali, že positions teď vrací i perp nohy a
+  `sim_balance` má nová pole; kdyby `_snapshot` přestal některé číst, je obchod
+  k ničemu (`unread` → Inconclusive). Zároveň opravit R07 (`_positions` čte
+  neočekávaný obal jako nulu).
+
+  Karta: jedna ze tří živých z MSG-0008, po ověření `tradeable_now`. Bez
+  `--nexus` — měření je naše, ne obchod podle Nexuse, a docstring říká, že to
+  má být vzácné. Tohle je ten případ.
+
+- [ ] 2026-09-10  Korekce na #85 přes `verify.py`, ne prózou
+
+  `fail` v 16:52 stál na odpovědi z 10:23, tedy starší než jejich release ve
+  12:37. Až bude čerstvá odpověď (`NEX-0009`) čistá, projde korekce pipeline
+  jako verifikace. Telegram k tomu dostane jednu větu, ne celý obsah.
+
 - [ ] 2026-09-10  Klonovací pravidlo ve `components.yaml` míří na cestu, která neexistuje
 
   Blokuje položku o Hybrid 2 nad tímhle řádkem, tak se dělá první. Jejich

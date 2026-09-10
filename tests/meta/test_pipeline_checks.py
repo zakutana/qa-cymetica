@@ -532,3 +532,132 @@ def test_pinned_and_bounty_checks_are_collectible():
     )
     assert retired <= {p["path"] for p in expected["paths"]},         "a retired path was never one of the pinned ones"
     assert len(bounty) == 3, f"{len(bounty)} bounty checks collected: {bounty}"
+
+
+# -- the subject grows, and the check kept judging all of it ---------------
+#
+# The fifth mechanism, found by the 2026-09-10 sweep. Two open checks read an
+# append-only log of OURS and judged every row in it, so no fix the vendor
+# could ship would ever turn them green:
+#
+#   * #87 failed if ANY recorded paper trade opened a position without a
+#     debit. The two trades in the log are from 11:41 and 11:59; the fix was
+#     claimed live at 18:06. Those rows are frozen evidence of the old
+#     behaviour.
+#   * #85 failed on the UNION of tools named across every recorded Nexus
+#     answer. Its only offender was named at 10:23, before their 12:37
+#     release -- and we had already told them at 13:11 that a fresh answer
+#     was clean, then sent a `fail` at 16:52 anyway.
+#
+# Both docstrings promise the present tense ("costs something", "cannot act
+# on"). Nothing caught the drift: the fold was right, the run admissible, the
+# fingerprint stable, and the assertion matched the docstring's words. What
+# moved was the subject set, months after the sentence was written -- on the
+# day it is written the log has one entry and both readings agree.
+#
+# So these fix the reading to the NEWEST entry and keep the rest as
+# population. The anti-fallback case is the one that matters: a newest trade
+# that could not be read is Inconclusive, never "then judge the one before
+# it", which would silently re-report TRD-0002 after a fresh trade whose read
+# failed. Rule 8, on the row that decides #87.
+
+
+def _trade(trade_id, at, *, usdc, was, now, positions, unread_after=False):
+    """One paper trade as scripts/paper.py records it: three rows, one id."""
+    before = {"at": at, "sim_balance_usdc": f"{was:.2f}",
+              "sim_total_trades": 0, "positions": positions[0]}
+    after = {"at": at, "sim_balance_usdc": f"{now:.2f}",
+             "sim_total_trades": 0}
+    if not unread_after:
+        after["positions"] = positions[1]
+    return [
+        {"id": trade_id, "type": "intent", "at": at, "usdc": usdc,
+         "paper": True, "before": before},
+        {"id": trade_id, "type": "outcome", "at": at, "outcome": "accepted",
+         "http_status": 200},
+        {"id": trade_id, "type": "after", **after},
+    ]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_paper_balance_judges_the_newest_trade_not_the_whole_log():
+    """A fix cannot reach a row that was recorded before it shipped."""
+    from tests.rest.test_paper_balance_moves import measurements, newest
+
+    rows = (_trade("TRD-0001", "2026-09-10T11:41:45+00:00",
+                   usdc=1.0, was=100000.0, now=100000.0, positions=(39, 40))
+            + _trade("TRD-0002", "2026-09-10T19:41:45+00:00",
+                     usdc=1.0, was=100000.0, now=99999.0, positions=(40, 41)))
+
+    measured = measurements(rows)
+    assert [m["id"] for m in measured] == ["TRD-0001", "TRD-0002"], (
+        "the whole log is still the population -- the history does not stop "
+        "being recorded, it stops being the verdict")
+
+    subject = newest(measured)
+    assert subject["id"] == "TRD-0002", (
+        "the newest trade is the one that answers 'does a buy debit the "
+        "balance NOW'; judging TRD-0001 answers 'did it ever fail', which is "
+        "a question no fix can change the answer to")
+    assert subject["moved"] == 1.0
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_paper_balance_newest_unreadable_never_falls_back_to_an_older_one():
+    """Rule 8: a failed read is not an empty read, and it is not a licence to
+    judge the trade before it. Falling back here would report the vendor's
+    defect again off a pre-fix row, with a fresh timestamp on the claim."""
+    from tests.rest.test_paper_balance_moves import measurements, newest
+
+    rows = (_trade("TRD-0001", "2026-09-10T11:41:45+00:00",
+                   usdc=1.0, was=100000.0, now=100000.0, positions=(39, 40))
+            + _trade("TRD-0002", "2026-09-10T19:41:45+00:00",
+                     usdc=1.0, was=100000.0, now=99999.0, positions=(40, 41),
+                     unread_after=True))
+
+    subject = newest(measurements(rows))
+    assert subject["id"] == "TRD-0002", (
+        "the newest trade is the subject whether or not it could be read; "
+        "picking the newest READABLE one is the fallback that re-reports a "
+        "pre-fix trade")
+    assert subject["unread"] == ["after"], (
+        "and it must carry why it could not be read, so the check can say "
+        "Inconclusive instead of counting a missing key as zero")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_nexus_tools_judges_the_newest_answer_that_names_any():
+    """The union across every answer ever recorded cannot go green either --
+    and worse, widening the extractor re-reads old answers into new
+    accusations. NEX-0002 named update_bot_settings at 10:23; the release was
+    12:37; the fail went out at 16:52."""
+    from tests.mcp.test_nexus_channel import newest_answer_naming_tools
+
+    answers = [
+        {"id": "NEX-0002", "type": "answer", "at": "2026-09-10T10:23:10+00:00",
+         "text": "call `update_bot_settings(instance_id)` to enable trading"},
+        {"id": "NEX-0008", "type": "answer", "at": "2026-09-10T13:18:42+00:00",
+         "text": "call `get_event_card_info(card_id)` first"},
+    ]
+    assert newest_answer_naming_tools(answers)["id"] == "NEX-0008"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_nexus_tools_skips_a_newest_answer_that_names_no_tool():
+    """Not the newest answer -- the newest that names a tool. An answer about
+    fees names none, and reading that as 'nothing to measure' would turn the
+    check Inconclusive every time Nexus happened to answer in prose, which is
+    a check that stops measuring for a reason that is not about the vendor."""
+    from tests.mcp.test_nexus_channel import newest_answer_naming_tools
+
+    answers = [
+        {"id": "NEX-0002", "type": "answer", "at": "2026-09-10T10:23:10+00:00",
+         "text": "call `update_bot_settings(instance_id)` to enable trading"},
+        {"id": "NEX-0008", "type": "answer", "at": "2026-09-10T13:18:42+00:00",
+         "text": "call `get_event_card_info(card_id)` first"},
+        {"id": "NEX-0009", "type": "answer", "at": "2026-09-10T20:00:00+00:00",
+         "text": "Fees are 2% round trip and slippage is about 0.5%."},
+    ]
+    assert newest_answer_naming_tools(answers)["id"] == "NEX-0008"
+    assert newest_answer_naming_tools([]) is None
+

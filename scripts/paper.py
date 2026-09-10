@@ -148,8 +148,18 @@ def _snapshot(client) -> dict:
             out["simulation_mode"] = (me.json() or {}).get("simulation_mode")
         rows = client.get(POSITIONS)
         out["evidence_positions"] = _capture(rows, SafetyTier.SAFE)
+        held = None
         if rows.status_code == 200:
-            held = (rows.json() or {}).get("positions") or []
+            # Rule 8 in the other direction from _positions: here an
+            # unreadable body must leave `positions` ABSENT, so the check
+            # reads `unread` and says Inconclusive. Writing 0 would be the
+            # `(x or 0)` that turned a failed read into a passing verdict on
+            # the row that decides #87.
+            try:
+                held = position_rows(rows.json())
+            except UnreadableBody:
+                held = None
+        if held is not None:
             out["positions"] = len(held)
             out["paper_positions"] = sum(1 for p in held if p.get("is_paper"))
             out["notional_usdc"] = round(
@@ -191,6 +201,35 @@ def _guidance(nexus_id: str | None) -> dict:
 BANKROLL = 100000.0
 
 
+class UnreadableBody(ValueError):
+    """A 200 whose shape this reader does not recognise.
+
+    Distinct from an empty book on purpose. `(body or {}).get("positions") or
+    []` collapsed the two, and of all the ways to be wrong about a book, "no
+    positions are deployed" is the worst: it frees the entire bankroll and
+    `affordable()` waves through the order that should have been refused.
+    """
+
+
+def position_rows(payload) -> list[dict]:
+    """Their position rows, out of whichever envelope they arrived in.
+
+    `buy()` in this same file already unwraps `payload["result"]`, so the
+    envelope is known to exist on this platform -- it simply has not appeared
+    on this endpoint yet, in 41 captures. That is a fact about today's data
+    and their platform ships several times a day, which is the whole argument
+    for reading the shape rather than assuming it.
+    """
+    for body in (payload, (payload or {}).get("result")
+                 if isinstance(payload, dict) else None):
+        if isinstance(body, dict) and isinstance(body.get("positions"), list):
+            return body["positions"]
+    raise UnreadableBody(
+        f"a 200 from {POSITIONS} carried no positions list, in a body shaped "
+        f"{sorted(payload)[:6] if isinstance(payload, dict) else type(payload).__name__}. "
+        f"An unreadable book is not an empty one")
+
+
 def _positions(client) -> list[dict]:
     """Their position rows, which are the only working half of the scoreboard."""
     token = CURRENT_TIER.set(SafetyTier.SAFE)
@@ -201,7 +240,13 @@ def _positions(client) -> list[dict]:
                 f"their positions endpoint answered HTTP {response.status_code}; "
                 f"the book cannot be computed and no order will be sent on a "
                 f"failed read.")
-        return (response.json() or {}).get("positions") or []
+        try:
+            return position_rows(response.json())
+        except UnreadableBody as exc:
+            raise SystemExit(
+                f"{exc}. No order will be sent on a book that could not be "
+                f"read: reading it as zero deployed would free the whole "
+                f"bankroll.")
     finally:
         CURRENT_TIER.reset(token)
 

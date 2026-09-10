@@ -249,3 +249,37 @@ def test_the_cap_is_not_advisory(tmp_path, monkeypatch):
             "nothing between the book check and the POST raises, so the book's "
             "answer decorates the order instead of stopping it"
         )
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_200_in_an_unexpected_wrapper_is_not_an_empty_book(tmp_path, monkeypatch):
+    """R07, from the 2026-09-10 deep pass, confirmed by the sweep after it.
+
+    `(response.json() or {}).get("positions") or []` reads a body shaped
+    `{"result": {"positions": [...]}}` as ZERO positions -- and `buy()` in the
+    same file already unwraps `payload["result"]`, so the platform is known to
+    use that envelope somewhere. Zero positions is the most dangerous possible
+    misreading here: the book computes the whole bankroll as free and
+    `affordable()` waves through an order that should have been refused.
+
+    Two readers rejected this at triage because all 41 captured responses have
+    the flat shape. That is a fact about today's data, not about the function
+    -- and their platform ships several times a day.
+    """
+    mod = _paper(tmp_path, monkeypatch)
+
+    flat = {"positions": [{"notional_usdc": 5.0, "is_paper": True}]}
+    wrapped = {"result": flat}
+    assert mod.position_rows(flat) == flat["positions"]
+    assert mod.position_rows(wrapped) == flat["positions"], (
+        "the result envelope is the shape buy() already unwraps in this same "
+        "file; reading it as no positions frees the whole bankroll")
+
+    # An empty book is a legitimate answer and must stay one.
+    assert mod.position_rows({"positions": []}) == []
+
+    # Anything else is a read this function cannot interpret, and the one
+    # thing it must not do is answer "nothing is deployed".
+    for body in ({"data": {"rows": []}}, [], "positions", None):
+        with pytest.raises(mod.UnreadableBody):
+            mod.position_rows(body)
