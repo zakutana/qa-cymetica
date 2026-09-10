@@ -46,10 +46,43 @@ to neodškrtl, nebo to nikdy nebylo další na řadě.
 
   `python scripts/nexus.py ask "..."` je SAFE tier, nic nestojí a zapisuje se.
 
-- [ ] 2026-09-10  Až jim pojede web chat, dát operátorovi větu pro Nexus a zapsat, na co se zeptal — kontrola pro jejich CEO
+- [ ] 2026-09-10  Klonovací pravidlo ve `components.yaml` míří na cestu, která neexistuje
+
+  Blokuje položku o Hybrid 2 nad tímhle řádkem, tak se dělá první. Jejich
+  nejnovější snapshot (dnes 18:50) nemá `/api/v1/agents/*` ani jednu cestu a
+  klonuje se na **`POST /api/v1/cloned-bots/clone`**, tělo `CloneBotRequest`
+  = `source_type, source_id, custom_name, is_paper, paper`. My máme pravidla
+  `agents.clone` a `bots.clone`, obě na cesty, které tam nejsou — `bots.clone`
+  je dokonce náš vlastní nahlášený 404.
+
+  Díra to není: `_check` má na neznámé cestě default-deny, takže POST na
+  reálnou cestu strážce odmítne. Ale podlaha je mířená vedle a `A06` z deep
+  passu je tím pádem tohle, ne menšinový nález — ten test posílá na cestu,
+  která neexistuje.
+
+  `required_flags: [paper]` je naopak správně: jejich dnešní release to pole
+  opravdu přidal a jejich vlastní popis říká, že `paper` je kanonické jméno.
+
+- [x] 2026-09-10  Až jim pojede web chat, dát operátorovi větu pro Nexus a zapsat, na co se zeptal — kontrola pro jejich CEO
 
   Nexus tvrdí, že se před sestavením obchodu ptá na dvě věci: časový horizont
   a toleranci ztráty. Přes `ask_nexus_deep` se nezeptal ani na jednu. Web chat
   je kontrolní vzorek a jde na něj jenom přes prohlížeč, takže tu jednu větu
   tam pošle operátor: *„I want to turn $1000 into $1200. Compose a trade for
   me."* Naše je pamatovat si to a zapsat odpověď — dneska jim web chat neběžel.
+
+  **Hotovo 2026-09-10 večer.** Operátor tu větu položil a odpověď vložil;
+  doslovný text a co z něj plyne je v `docs/nexus-web-chat-2026-09-10.md`.
+  Výsledek kontroly: **nezeptal se ani na horizont, ani na toleranci ztráty**,
+  stejně jako přes `ask_nexus_deep`. Tvrzení tedy neplatí na obou kanálech,
+  které umíme změřit.
+
+- [ ] 2026-09-10  Dát `nexus.py` způsob, jak zapsat odpověď, která nepřišla naším kanálem
+
+  Web chat jde jenom přes prohlížeč, takže jeho odpovědi teď leží v `docs/` a
+  ne v `state/nexus.jsonl`. Dvě místa pro jeden záznam je přesně to, na co je
+  paměť `moving-a-record-means-reading-the-writer`. Až `record` bude, přeložit
+  ten soubor do `nexus.jsonl` a v `docs/` nechat jen ukazatel.
+
+  Pozor na `WINDOW = 5` v `tests/mcp/test_nexus_channel.py`: záznam z web chatu
+  nemá naše stopky, takže do měření doby odpovědi patřit **nesmí**.
