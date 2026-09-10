@@ -24,10 +24,10 @@
   },
   "our_reports": {
     "endpoint": "GET /api/v1/bounty/my-reports?wallet_address=<addr>",
-    "klass": "unreachable",
-    "read_at": "2026-09-10T11:34:54+00:00",
-    "evidence_id": null,
-    "rows_returned": null,
+    "klass": "ok",
+    "read_at": "2026-09-10T12:21:21+00:00",
+    "evidence_id": "e036b837b435080f3024bdd7cfab57334aab28ec89f3f4c063e974b3d5327524",
+    "rows_returned": 43,
     "server_total": 43,
     "total": 43,
     "statuses": {
@@ -812,9 +812,7 @@
         "fix_pr_url": null,
         "reward_amount": 0.0
       }
-    ],
-    "stale_from": "2026-09-10T11:50:26+00:00",
-    "error": "RemoteProtocolError: Server disconnected without sending a response."
+    ]
   },
   "qa_tracker": {
     "source": "https://cymetica.com/leaderboard/bugs (embedded allBugs)",
@@ -1424,5 +1422,5 @@
       "reward_currency": "ET10"
     }
   ],
-  "our_reports_refreshed_at": "2026-09-10T11:50:26+00:00"
+  "our_reports_refreshed_at": "2026-09-10T12:21:21+00:00"
 }
