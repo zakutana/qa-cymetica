@@ -103,7 +103,8 @@ its own setting does not fit the work in front of it.
 | sweep, filing, verification (`qa-sweep`) | Sonnet 5 · high |
 | correspondence written to the vendor (`correspond.py`, `a2a.py send`) | Sonnet 5 · high |
 | channel status (`/channels`) | Sonnet 5 · low — a status read, not correspondence |
-| `qa/state.py`, `qa/fold.py`, `qa/measure.py`, a guard's assertion, review | Opus 5 · high–xhigh |
+| writing a new check against their platform — a surface nothing tests yet | Opus 5 · high–xhigh |
+| `qa/state.py`, `qa/fold.py`, `qa/measure.py`, review | Opus 5 · high–xhigh |
 | the deep pass | Opus 5 · xhigh (its frontmatter carries it) |
 | architecture, a plan like `docs/UPGRADE-PLAN.md` | Fable 5.1 or Opus 5 · max |
 
