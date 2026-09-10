@@ -462,6 +462,19 @@ endpoints:
   # The async half of the same channel. agent-card.json publishes both as the
   # way to ask a question the card does not already answer; the body carries a
   # question and an agent id, and nothing it contains can execute anything.
+  # The a2a protocol endpoint agent-card.json publishes as THE cross-platform
+  # door to their agents ("Any AI agent can send structured messages to
+  # CyMetica AI agents", message_types chat / trade_signal / advice). Declared
+  # 2026-09-10 so its reachability can be measured rather than assumed: a GET
+  # answers 404 and no openapi path mentions it, and FastAPI answers 405 when
+  # a route exists under another method -- so a PROBE settles whether the
+  # route exists at all.
+  - id: a2a.message
+    path: /api/v1/a2a/message
+    methods: [POST]
+    component: rest.support
+    executable_params: [message, content, payload, type, message_type]
+
   - id: bounty.a2a_send
     path: /api/v1/bounty/a2a/send
     methods: [POST]
