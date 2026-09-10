@@ -162,6 +162,17 @@ to neodškrtl, nebo to nikdy nebylo další na řadě.
   jako dokumentace. Do té doby je to blokátor kampaně — klon vzniká s 0.00 a
   bez nabití neobchoduje.
 
+- [ ] 2026-09-10  Změřit, jestli se odměna připíše při resolve karty
+
+  Poslední netestovaná věta z jejich zprávy v 18:06: *„Reward is credited on
+  the resolve."* Nákup odečítá (#87), close vrací a účtuje P&L (změřeno
+  TRD-0005) — resolve nikdo neviděl, a vynutit se nedá: karta se musí vyřešit
+  sama. Držíme dvě otevřené paper pozice na živých kartách, takže to chce
+  počkat a pak přečíst zůstatek a `total_pnl` kolem toho okamžiku.
+
+  Bez toho je poslední článek řetězce „vsadíme → vyřeší se → dostaneme
+  zaplaceno" nezměřený, a je to ten, na kterém kampaň vydělá.
+
 - [ ] 2026-09-10  Dát `nexus.py` způsob, jak zapsat odpověď, která nepřišla naším kanálem
 
   Web chat jde jenom přes prohlížeč, takže jeho odpovědi teď leží v `docs/` a
