@@ -246,6 +246,11 @@ def _tests_by_section(run: dict) -> dict[str, list[dict]]:
         seen.add(nodeid)
         base, _, params = nodeid.partition("[")
         params = params.rstrip("]")
+        # A run record is history, and a check can be renamed or retired after
+        # it. Such a nodeid is not one whose description is missing -- it is
+        # one that is GONE, and a tile that shows it blank invites the reader
+        # to think we simply never wrote a description.
+        gone = base not in catalogue
         doc = catalogue.get(base, "")
         if params and "::" in params:
             doc = questions.get(params.split("::", 1)[0], doc)
@@ -253,6 +258,7 @@ def _tests_by_section(run: dict) -> dict[str, list[dict]]:
             "nodeid": nodeid,
             "name": base.rsplit("::", 1)[-1].removeprefix("test_").replace("_", " "),
             "doc": doc,
+            "gone": gone,
             "outcome": result.get("outcome"),
             "reason": ((result.get("measurement") or {}).get("reason") or "")[:300],
         })
@@ -1049,6 +1055,7 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:15.0px; max-wid
 .t-passed .t-o { color:var(--ok); }
 .t-d, .t-r { grid-column:1 / -1; font-size:12.5px; color:var(--text-dim); }
 .t-r { font-family:var(--mono); font-size:11.5px; color:var(--warn); }
+.t-gone { color:var(--text-faint); font-style:italic; }
 .epgroup { margin-bottom:15px; }
 .epgroup-h {
   display:flex; align-items:center; gap:7px; font-size:13.5px; color:var(--text);
@@ -1755,7 +1762,8 @@ function card(s) {
     ? `<ul class="tlist">${s.tests.map(t => `<li class="t-${esc(t.outcome)}">
         <span class="t-n">${esc(t.name)}</span>
         <span class="t-o">${esc(t.outcome)}</span>
-        ${t.doc ? `<span class="t-d">${esc(t.doc)}</span>` : ""}
+        ${t.gone ? `<span class="t-d t-gone">no longer exists &mdash; this row stands on the run that last ran it</span>`
+                 : (t.doc ? `<span class="t-d">${esc(t.doc)}</span>` : "")}
         ${t.outcome === "passed" || !t.reason ? "" : `<span class="t-r">${esc(t.reason)}</span>`}
       </li>`).join("")}</ul>`
     : `<p class="blurb">No check here yet, so nothing on this tile has been verified.</p>`;

@@ -1,29 +1,40 @@
-"""The account summary against the positions the same platform reports.
+"""The account summary must say what its counters do and do not cover.
 
 Measured 2026-09-08, either side of one $1 paper trade:
 
     before   total_predictions 0     total_volume 0
     after    total_predictions 142   total_volume 3582.146846
 
-The account held 38 event-card positions and $2,900 of historical notional
-throughout. Nothing about that dollar created 142 predictions or $3,582 of
-volume — those figures were true before the trade and the endpoint was
-reporting zeros. A write appears to have forced a recompute.
+That looked like a summary reporting zeros over an account holding 38
+event-card positions, and it was filed as #83: an agent reading its own
+summary would conclude it had never traded, and no other surface would
+contradict it.
 
-So an agent reading its own summary would have concluded it had never traded,
-on an account with 38 positions in it, and no other surface would have
-contradicted that: /event-cards/positions is a different endpoint and an agent
-has no reason to cross-read it against the summary.
+**The filing was wrong, and this file is the repair.** Cymetica shipped a
+`scope` block between 13:24Z and 15:07Z that same day. It says those counters
+cover "on-chain WTA prediction-market bets placed from this user's swarm
+wallet" — of which this account has placed none, so 0 was true — and it names
+"event-card bull/bear positions" first among what they do not cover, pointing
+at `/api/v1/event-cards/positions` by URL. The body carries an `event_cards`
+block with the counts and that URL. The summary does not claim we never
+traded; it says where the other history lives.
 
-**This guard cannot reproduce the zero state.** The write that revealed it also
-repaired it, and we will not file a report we cannot reproduce — that is the
-whole reason the vendor takes our filings seriously. What this does is notice
-if it comes back, with the evidence attached, on any account that has traded.
+We sent them a `fail` verification at 15:16Z, nine minutes after their fix was
+already captured on this disk, and edited this check ninety seconds after that
+capture without reading it. #83 is withdrawn and a retraction was owed and
+sent. It is the same shape as #81, where an endpoint's zero was truthful and
+what was missing was a statement of scope — they shipped one there too, and
+that is twice this account has read a scope statement as a contradiction.
+
+So what is checked now is the thing that is actually true and worth keeping
+true: **a summary whose counters exclude a population it holds must say so,
+and say where that population can be read.** That is their fix, pinned, so it
+cannot regress quietly back into the state that fooled us.
 """
 
 from __future__ import annotations
 
-from qa.marks import SafetyTier, qa
+from qa.marks import Inconclusive, SafetyTier, qa
 from qa.measure import Measurement, conclude
 
 SUMMARY = "/api/v1/portfolio/summary"
@@ -31,16 +42,8 @@ POSITIONS = "/api/v1/event-cards/positions"
 
 
 @qa(component="rest.account", tier=SafetyTier.SAFE, surface="rest")
-def test_the_summary_does_not_report_a_history_the_positions_contradict(rest_trusted):
-    """Zero traded, beside positions that were traded.
-
-    Deliberately weak as an equality and strong as a contradiction: the two
-    endpoints count different populations -- 142 predictions against 39
-    event-card positions, so the summary spans instruments this one does not --
-    and demanding they match would be a check that fails on a truth. What
-    cannot both be true is "you have never traded" and "here are your
-    positions".
-    """
+def test_the_summary_says_which_populations_its_counters_leave_out(rest_trusted):
+    """Zero counters are honest when the reader is told what they count."""
     summary = rest_trusted.get(SUMMARY)
     positions = rest_trusted.get(POSITIONS)
     if summary.status_code != 200 or positions.status_code != 200:
@@ -55,55 +58,52 @@ def test_the_summary_does_not_report_a_history_the_positions_contradict(rest_tru
     body = summary.json() or {}
     held = (positions.json() or {}).get("positions") or []
     if not held:
-        conclude(Measurement(
-            verdict="inconclusive",
-            reason="this account holds no event-card position, so an empty "
-                   "summary is not a contradiction and this establishes nothing",
-            sources={"summary": SUMMARY, "positions": POSITIONS}))
-        return
+        raise Inconclusive(
+            "this account holds no event-card position, so whether the "
+            "summary accounts for one cannot be measured here")
 
-    def number(value):
-        try:
-            return float(value)
-        except (TypeError, ValueError):
-            return None
-
-    predictions = number(body.get("total_predictions"))
-    volume = number(body.get("total_volume"))
-    notional = sum(number(p.get("notional_usdc")) or 0.0 for p in held)
-    # An ABSENT counter is not a zero one. `number(None)` is None and
-    # `None == 0` is False, so a summary that stopped publishing these passed
-    # while stating "the counters are non-zero" about two values it never read
-    # -- and this row is filed as #83, so that pass would have gone out as a
-    # fix verification. Unread is unmeasurable. Deep pass, 2026-09-08, 3/3.
-    unread = [name for name, value in (("total_predictions", predictions),
-                                       ("total_volume", volume))
-              if value is None]
-    if unread:
+    scope = body.get("scope")
+    if not isinstance(scope, dict):
         conclude(Measurement(
-            verdict="inconclusive",
-            reason=f"the summary does not publish {', '.join(unread)}, so "
-                   f"whether it contradicts the {len(held)} position(s) it "
-                   f"lists could not be read",
-            left=unread, right=["total_predictions", "total_volume"],
+            verdict="failed",
+            reason=(f"the summary publishes no scope block while listing "
+                    f"counters beside {len(held)} event-card position(s) it "
+                    f"does not count: a reader has no way to tell a true zero "
+                    f"from a broken one"),
+            left=sorted(body), right="scope",
             population={"positions": len(held)},
             sources={"summary": SUMMARY, "positions": POSITIONS}))
         return
 
-    silent = [name for name, value in (("total_predictions", predictions),
-                                       ("total_volume", volume))
-              if value == 0]
+    covers = str(scope.get("counters_cover") or "")
+    excluded = scope.get("counters_do_not_cover")
+    excluded = excluded if isinstance(excluded, list) else []
+    words = " ".join(str(item) for item in excluded).lower()
+
+    # The population this account actually holds is event-card positions, so
+    # that is the one the scope has to account for -- either by counting it or
+    # by naming it as excluded and saying where it is read.
+    named = "event-card" in words or "event card" in words
+    points_at = POSITIONS in words or "event-cards/positions" in words
+
+    problems = []
+    if not covers:
+        problems.append("counters_cover is empty, so what the counters count "
+                        "is still unsaid")
+    if not named:
+        problems.append(f"{len(held)} event-card position(s) are held and "
+                        f"nothing in counters_do_not_cover names them")
+    elif not points_at:
+        problems.append("the excluded population is named but the reader is "
+                        "not told which endpoint carries it")
 
     conclude(Measurement(
-        verdict="failed" if silent else "passed",
-        reason=(f"the summary reports {', '.join(silent)} as zero while "
-                f"{len(held)} position(s) worth {notional:.2f} USDC of notional "
-                f"are listed on the same account: an agent reading its own "
-                f"summary would conclude it had never traded"
-                if silent else
-                f"the summary's counters are non-zero beside {len(held)} "
-                f"position(s), so it does not contradict what the account holds"),
-        left=silent, right=[],
-        population={"positions": len(held), "notional_usdc": round(notional, 2),
-                    "total_predictions": predictions, "total_volume": volume},
+        verdict="failed" if problems else "passed",
+        reason=("; ".join(problems) if problems else
+                f"the counters state what they cover, and name the "
+                f"{len(held)} event-card position(s) they do not, with the "
+                f"endpoint that carries them"),
+        left=excluded, right=POSITIONS,
+        population={"positions": len(held),
+                    "counters_do_not_cover": len(excluded)},
         sources={"summary": SUMMARY, "positions": POSITIONS}))

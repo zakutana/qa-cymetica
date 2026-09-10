@@ -1148,6 +1148,8 @@ def test_a_tile_lists_the_tests_behind_its_count(tmp_path, monkeypatch):
     described, silent = 0, []
     for section in live["sections"]:
         for test in section["tests"]:
+            if test.get("gone"):
+                continue  # retired since that run; the tile says so
             if test.get("doc"):
                 described += 1
             else:
