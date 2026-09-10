@@ -56,6 +56,7 @@ from qa.state import file_lock, state_dir  # noqa: E402
 AVAILABLE = "/api/v1/cloned-bots/available"
 CLONE = "/api/v1/cloned-bots/clone"
 MY_CLONES = "/api/v1/cloned-bots/my-clones"
+PREFIX_FUND = "/api/v1/cloned-bots/{id}/fund"
 ACCOUNT = "/api/v1/account/me"
 
 # Their two group keys, and the enum value each maps to. The plural/singular
@@ -158,6 +159,22 @@ def available_bots(payload) -> list[dict]:
     return out
 
 
+def fundable(row) -> bool:
+    """Whether THEY currently say this clone is paper.
+
+    The floor for funding, and it has to live here: FundBotRequest carries
+    one property, `amount`, so there is no flag for the transport to read.
+    What makes the transfer harmless is a property of the instance.
+
+    Asked of them rather than of our own record. A bot that went live after
+    we wrote clones.jsonl would still read as paper there, which is the same
+    mistake as judging a fix by a trade placed before it shipped. And absent
+    is not permission: on the money side an answer we could not read is a
+    refusal, not a default.
+    """
+    return isinstance(row, dict) and row.get("is_paper") is True
+
+
 def _snapshot(client) -> dict:
     """Their side, read the same way before and after."""
     out: dict = {"at": _now()}
@@ -170,6 +187,14 @@ def _snapshot(client) -> dict:
             sim = body.get("sim_balance") or {}
             out["sim_balance_usdc"] = sim.get("usdc")
             out["simulation_mode"] = body.get("simulation_mode")
+            # BOTH pockets, because funding a clone is the one operation
+            # where which one moves is the whole question. Their own
+            # provisional flags travel with it: balance_usdc read "0.00"
+            # under balance_check_status "timeout" on 2026-09-10, and a
+            # zero from a read that timed out is not a zero.
+            out["balance_usdc"] = body.get("balance_usdc")
+            out["balances_provisional"] = body.get("balances_provisional")
+            out["balance_check_status"] = body.get("balance_check_status")
         mine = client.get(MY_CLONES, params={"mode": "paper"})
         out["evidence_clones"] = _capture(mine, SafetyTier.SAFE)
         if mine.status_code == 200:
@@ -295,6 +320,90 @@ def clone(source_type: str, source_id: str, name: str | None,
     return outcome
 
 
+def fund(instance_id: str, amount: float, confirm: bool) -> dict:
+    """Move practice money into a paper clone, and record which pocket moved.
+
+    A clone arrives with a practice balance of 0.00, so it cannot trade until
+    it is funded -- their UI card shows exactly that beside a Fund button.
+    """
+    if amount <= 0:
+        raise SystemExit("a transfer needs a positive amount")
+
+    load_dotenv()
+    install_client_guard()
+    registry = EndpointRegistry.load()
+    registry.mutate_enabled = True
+    registry.mutate_allowed_hosts = frozenset({"cymetica.com"})
+    client = build_client(identities()["trusted"], registry, timeout=60.0)
+
+    token = CURRENT_TIER.set(SafetyTier.SAFE)
+    try:
+        mine = client.get(MY_CLONES, params={"mode": "paper"})
+    finally:
+        CURRENT_TIER.reset(token)
+    rows = clone_rows(mine.json()) if mine.status_code == 200 else None
+    if rows is None:
+        raise SystemExit(
+            f"{MY_CLONES} answered HTTP {mine.status_code} or a body we could "
+            f"not read, so whether this bot is paper is unknown. Nothing is "
+            f"funded on an unreadable answer.")
+    target = next((r for r in rows if isinstance(r, dict)
+                   and r.get("id") == instance_id), None)
+    if not fundable(target):
+        raise SystemExit(
+            f"{instance_id} is not listed as a paper clone by them "
+            f"(is_paper={None if target is None else target.get('is_paper')!r}). "
+            f"FundBotRequest carries no paper flag, so this is the only floor "
+            f"there is and it does not bend.")
+
+    before = _snapshot(client)
+    fund_id = _next_id(load())
+    body = {"amount": float(amount)}
+    entry = {"id": fund_id, "type": "intent", "at": _now(), "kind": "fund",
+             "instance_id": instance_id, "amount": float(amount),
+             "their_is_paper": True, "before": before, "body": body}
+
+    if not confirm:
+        print(json.dumps(entry, indent=2, ensure_ascii=False))
+        print("\nnothing sent, and nothing recorded. Add --confirm.")
+        return entry
+
+    _append(entry)
+    token = CURRENT_TIER.set(SafetyTier.MUTATE)
+    try:
+        response = client.post(PREFIX_FUND.format(id=instance_id), json=body)
+    except Exception as exc:  # noqa: BLE001
+        _append({"id": fund_id, "type": "outcome", "at": _now(), "kind": "fund",
+                 "outcome": "not_sent",
+                 "error": f"{type(exc).__name__}: {exc}"})
+        raise
+    finally:
+        CURRENT_TIER.reset(token)
+
+    evidence = _capture(response)
+    served = unwrap(response.json()) if response.status_code == 200 else {}
+    _append({"id": fund_id, "type": "outcome", "at": _now(), "kind": "fund",
+             "outcome": "accepted" if response.status_code == 200 else "rejected",
+             "http_status": response.status_code, "evidence_id": evidence,
+             "response": json.dumps(served)[:2000]})
+    after = _snapshot(client)
+    _append({"id": fund_id, "type": "after", **after})
+    client.close()
+
+    def _delta(key):
+        try:
+            return round(float(after.get(key)) - float(before.get(key)), 6)
+        except (TypeError, ValueError):
+            return None
+
+    print(f"{fund_id}: HTTP {response.status_code}, funded {amount} to "
+          f"{instance_id}")
+    print(f"   practice balance moved {_delta('sim_balance_usdc')}")
+    print(f"   real balance moved     {_delta('balance_usdc')}  "
+          f"(their read was {before.get('balance_check_status')!r})")
+    return served
+
+
 def main() -> int:
     # Reconfigures stdout/stderr to UTF-8; it does not transcode a string,
     # and using it as `print(printable(text))` prints None. cp1250 is the
@@ -311,6 +420,11 @@ def main() -> int:
     one.add_argument("--name")
     one.add_argument("--nexus", help="the NEX-000N answer that named this bot")
     one.add_argument("--confirm", action="store_true")
+
+    money = sub.add_parser("fund", help="move practice money into a paper clone")
+    money.add_argument("--instance-id", required=True)
+    money.add_argument("--amount", type=float, required=True)
+    money.add_argument("--confirm", action="store_true")
 
     sub.add_parser("list", help="what we have cloned")
 
@@ -345,6 +459,10 @@ def main() -> int:
             print(f"  {cid}  {out.get('outcome', 'pending'):<9} "
                   f"is_paper={out.get('is_paper')!r}  "
                   f"{intent.get('custom_name') or ''}")
+        return 0
+
+    if args.cmd == "fund":
+        fund(args.instance_id, args.amount, args.confirm)
         return 0
 
     clone(args.source_type, args.source_id, args.name, args.nexus,

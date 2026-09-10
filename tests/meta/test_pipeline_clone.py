@@ -146,6 +146,35 @@ def test_only_a_405_counts_as_a_route_that_exists():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_funding_asks_the_platform_whether_the_bot_is_paper(tmp_path, monkeypatch):
+    """The floor for `fund` cannot be a flag, because there is no flag.
+
+    `FundBotRequest` has exactly one property, `amount`. So the transport's
+    required_flags floor -- which reads a truthy `paper` out of the body --
+    has nothing to read, and the thing that makes funding safe is a property
+    of the INSTANCE rather than of the request.
+
+    That leaves the enforcement here, and it has to ask THEM. Reading
+    `is_paper` off our own clones.jsonl would let a bot that went live after
+    we recorded it be funded from a record that predates the change, which is
+    the same shape as judging a fix by a trade placed before it shipped.
+
+    Neither absent nor false may pass: absent is a read we could not
+    interpret, and this is the money side, where an unreadable answer is a
+    refusal.
+    """
+    mod = _clone(tmp_path, monkeypatch)
+
+    assert mod.fundable({"id": "c1", "is_paper": True}) is True
+    for row in ({"id": "c1", "is_paper": False},
+                {"id": "c1", "is_paper": None},
+                {"id": "c1"},
+                {},
+                None):
+        assert mod.fundable(row) is False, row
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_clone_record_is_not_written_into_the_paper_trade_log(
         tmp_path, monkeypatch):
     """#87 groups every id in paper.jsonl into intent/outcome/after and reads

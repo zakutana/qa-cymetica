@@ -415,6 +415,25 @@ endpoints:
     executable_params: [source_type, source_id, custom_name]
     required_flags: [paper]
 
+  # Funding a clone, and the one place on this surface where required_flags
+  # cannot be the floor: `FundBotRequest` has exactly one property, `amount`.
+  # There is no flag in the body to carry, because what makes the transfer
+  # harmless is a property of the INSTANCE -- a paper clone holds a practice
+  # balance -- and the transport can only read bodies.
+  #
+  # So this is declared with its executable param and the floor lives in
+  # scripts/clone.py, which reads the target's `is_paper` from THEM before
+  # every transfer and refuses on false, on null and on a body it could not
+  # read. Said plainly because it is weaker than the two floors above: a
+  # MUTATE test with --allow-mutate could reach this endpoint, and nothing at
+  # the transport would stop it. If a test ever needs to, give it a floor
+  # first -- their schema would have to publish something to hang it on.
+  - id: cloned_bots.fund
+    path: /api/v1/cloned-bots/{instance_id}/fund
+    methods: [POST]
+    component: rest.agents
+    executable_params: [amount]
+
   - id: prop.signup
     path: /api/v1/prop/signup
     methods: [POST]

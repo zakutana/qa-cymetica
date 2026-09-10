@@ -1660,6 +1660,49 @@ reports:
       the intended way for an agent to enable trading on a paper clone, and
       should NEXUS be naming it instead of update_bot_settings?
 
+  - key: clone-cannot-be-funded-with-an-api-key
+    findings: [CYM-one_credential_carries_a_clone_from_creation_to_funding]
+    severity: high
+    category: api
+    url: https://cymetica.com/api/v1/cloned-bots/{instance_id}/fund
+    title: "An API-key agent can clone a bot but cannot fund it: /fund and /go-live accept only authorization"
+    expected: >
+      One credential carries a clone through its lifecycle. An agent that
+      authenticates with the API key your documents tell it to use can create
+      a clone, fund it, and start it.
+    actual: >
+      POST /api/v1/cloned-bots/clone accepted the API key and created a paper
+      clone. POST /api/v1/cloned-bots/{instance_id}/fund with the same key
+      returned 401 with an empty body. Your openapi says why: clone and
+      my-clones document both authorization and x-api-key, while fund and
+      go-live document authorization alone.
+    steps:
+      - "POST /api/v1/cloned-bots/clone with X-API-Key -> 200, is_paper true, is_trading false"
+      - "GET /api/v1/cloned-bots/my-clones?mode=paper with the same key -> 200, the clone is listed"
+      - "POST /api/v1/cloned-bots/<instance_id>/fund with the same key and {\"amount\": 1.0} -> 401, body {}"
+      - "GET /openapi-public.json -> clone and my-clones list header params authorization + x-api-key; fund and go-live list authorization only"
+    body: >
+      A clone is created with a practice balance of 0.00 -- your own bot card
+      shows that beside a Fund button -- so a clone that cannot be funded
+      cannot trade. The effect is that an agent following your documented path
+      ends up owning a bot it can see and can never start.
+
+      IF THIS IS DELIBERATE, say so and we will withdraw this as a defect and
+      re-file it as documentation. Requiring a stronger credential to move
+      money is a defensible design; what is not workable is that the
+      difference appears only in the header list of one openapi entry, and
+      that the refusal is a bare 401 with an empty body. An agent cannot tell
+      "your key is wrong" from "your key is the wrong KIND", and there is no
+      published way for it to obtain the other kind.
+
+      This is the blocker on the case your own AI recommends. Asked how to
+      turn a paper balance into a return, NEXUS recommends cloning a bot; the
+      clone succeeds and stops there.
+
+      Related but separate, filed as #88: the route that enables trading on a
+      clone -- PATCH /{instance_id}/settings -- is served and appears in no
+      document. Even with funding solved, that step is undiscoverable.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in

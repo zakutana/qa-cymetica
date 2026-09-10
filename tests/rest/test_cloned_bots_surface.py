@@ -71,6 +71,88 @@ def served_but_undocumented(probed: dict, documented: set) -> list[dict]:
     return out
 
 
+def credential_gap(paths: dict) -> dict:
+    """Which cloned-bots routes accept the agent credential, and which do not.
+
+    A comparison between their own routes, not an assertion that a header is
+    missing. `clone` and `my-clones` document `x-api-key` beside
+    `authorization`; `fund` and `go-live` document only `authorization`. Those
+    four are steps of one flow, so the difference is the finding, and it is
+    stated as a difference rather than as an absence.
+    """
+    accepts, refuses = {}, {}
+    for path, ops in sorted(paths.items()):
+        for method, op in sorted(ops.items()):
+            if method.upper() not in ("GET", "POST", "PATCH", "DELETE"):
+                continue
+            headers = {q.get("name") for q in (op.get("parameters") or [])
+                       if q.get("in") == "header"}
+            if not headers:
+                continue  # public, and not part of the credential question
+            (accepts if "x-api-key" in headers else refuses)[
+                f"{method.upper()} {path}"] = sorted(headers)
+    return {"accepts": accepts, "refuses": refuses}
+
+
+@qa(component="rest.agents", tier=SafetyTier.SAFE, surface="rest")
+def test_one_credential_carries_a_clone_from_creation_to_funding(rest_trusted):
+    """An agent that can clone a bot can put money in it.
+
+    Measured 2026-09-10, with the API key their own documents tell an agent to
+    use: `POST /api/v1/cloned-bots/clone` returned 200 and created
+    d778102d in paper; `POST /api/v1/cloned-bots/d778102d/fund` with
+    {"amount": 1.0} returned **401 with an empty body**.
+
+    The clone arrives with a practice balance of 0.00 -- their own UI card
+    shows it beside a Fund button -- so a bot that cannot be funded cannot
+    trade. An agent following the documented path therefore gets a bot it
+    owns, can see, and can never start.
+
+    This reads the credential question off their own document rather than off
+    the 401, so it is a comparison between their routes: two steps of one flow
+    publish `x-api-key`, two do not. The live 401 is what makes the difference
+    consequential rather than cosmetic, and it is in the report.
+    """
+    spec = rest_trusted.get(OPENAPI)
+    if spec.status_code != 200:
+        raise Inconclusive(
+            f"{OPENAPI} answered HTTP {spec.status_code}; a failed read is "
+            f"not an empty document")
+    paths = {p: ops for p, ops in (spec.json().get("paths") or {}).items()
+             if p.startswith(PREFIX)}
+    if not paths:
+        raise Inconclusive(f"their openapi names no {PREFIX} path at all")
+
+    gap = credential_gap(paths)
+    if not gap["accepts"]:
+        raise Inconclusive(
+            f"no {PREFIX} route documents x-api-key, so there is no agent "
+            f"credential on this surface to be inconsistent with -- a "
+            f"different fault, and not the one this check reads")
+
+    conclude(Measurement(
+        verdict="failed" if gap["refuses"] else "passed",
+        reason=(
+            f"{len(gap['accepts'])} cloned-bots route(s) accept the agent's "
+            f"x-api-key and {len(gap['refuses'])} do not: "
+            + ", ".join(sorted(gap["refuses"]))
+            + ". A clone is created with a practice balance of 0.00, so an "
+              "agent that authenticates the documented way can create a bot "
+              "and cannot put money in it; funding it with that key returns "
+              "401 with an empty body"
+            if gap["refuses"] else
+            f"every one of the {len(gap['accepts'])} authenticated "
+            f"cloned-bots routes accepts the same agent credential"),
+        left=sorted(gap["refuses"]),
+        right=sorted(gap["accepts"]),
+        population={"authenticated_routes":
+                    len(gap["accepts"]) + len(gap["refuses"]),
+                    "accept_api_key": len(gap["accepts"]),
+                    "authorization_only": len(gap["refuses"])},
+        sources={"documented": OPENAPI},
+    ))
+
+
 @qa(component="rest.agents", tier=SafetyTier.SAFE, surface="rest")
 def test_every_cloned_bot_route_they_serve_is_one_they_document(rest_trusted):
     """A clone starts paused, and the way to start it is unpublished."""
