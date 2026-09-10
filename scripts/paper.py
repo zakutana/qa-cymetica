@@ -145,6 +145,12 @@ def _snapshot(client) -> dict:
             sim = (me.json() or {}).get("sim_balance") or {}
             out["sim_balance_usdc"] = sim.get("usdc")
             out["sim_total_trades"] = sim.get("total_trades")
+            # The number their 18:06 message of 2026-09-10 claims a close
+            # books, and the one nothing here had ever read. Recorded on both
+            # sides of every order from now on, so the claim is measurable
+            # without a second trip.
+            out["sim_total_pnl"] = sim.get("total_pnl")
+            out["sim_started_at"] = sim.get("started_at")
             out["simulation_mode"] = (me.json() or {}).get("simulation_mode")
         rows = client.get(POSITIONS)
         out["evidence_positions"] = _capture(rows, SafetyTier.SAFE)
@@ -430,6 +436,121 @@ def buy(card_id: str, usdc: float, nexus_id: str | None, confirm: bool) -> dict:
         client.close()
 
 
+def close(position_id: str, confirm: bool) -> dict:
+    """Close one paper position, and read whether the money comes back.
+
+    The other half of the book, and until 2026-09-10 the untested one. #87
+    established that a buy DEBITS; nothing here had ever called `/sell`, so
+    whether a close CREDITS rested entirely on their telegram message of that
+    evening: *"a paper close returns the proceeds and books total_pnl."* A
+    book that debits and never credits reads every strategy as losing money,
+    and it would take weeks of campaign to notice.
+
+    Written into the same log as a buy, because it is the same campaign and
+    `book()` reads both -- but tagged `kind: "close"`, since to #87's reader
+    the three rows under one id are otherwise indistinguishable from a buy,
+    and the wrong way round: the balance goes up and the position count goes
+    down.
+    """
+    install_client_guard()
+    registry = EndpointRegistry.load()
+    registry.mutate_enabled = True
+    registry.mutate_allowed_hosts = frozenset({"cymetica.com"})
+    client = build_client(identities()["trusted"], registry, timeout=60.0)
+
+    try:
+        held = _positions(client)
+        target = next((p for p in held
+                       if p.get("position_id") == position_id), None)
+        if target is None:
+            raise SystemExit(
+                f"they do not list {position_id}, so what closing it should "
+                f"return cannot be established. Nothing is sent against a "
+                f"position we cannot read.")
+        if target.get("is_paper") is not True:
+            raise SystemExit(
+                f"{position_id} is not a paper position by their own reading "
+                f"(is_paper={target.get('is_paper')!r}). This script closes "
+                f"paper positions only.")
+        if target.get("status") == "closed":
+            raise SystemExit(f"{position_id} is already closed.")
+
+        card_id = target.get("card_id")
+        # `paper` travels even though the position already carries it: the
+        # transport floor reads the BODY, and required_flags on
+        # event_cards.sell is what stops an absent flag resolving against
+        # simulation_mode.
+        body = {"position_id": position_id, "fraction": 1.0, "paper": True}
+        before = _snapshot(client)
+        entry = {"id": _next_id(load()), "type": "intent", "at": _now(),
+                 "kind": "close", "card_id": card_id,
+                 "position_id": position_id,
+                 "notional_usdc": target.get("notional_usdc"),
+                 "unrealized_pnl_usdc": target.get("unrealized_pnl_usdc"),
+                 "paper": True, "before": before, "body": body}
+
+        if not confirm:
+            print(json.dumps(entry, ensure_ascii=False, indent=1))
+            print("\nnothing sent (--confirm to close it)")
+            return entry
+
+        _append(entry)
+        token = CURRENT_TIER.set(SafetyTier.MUTATE)
+        try:
+            response = client.post(SELL.format(card_id=card_id), json=body)
+        except Exception as exc:  # noqa: BLE001
+            _append({"id": entry["id"], "type": "outcome", "at": _now(),
+                     "kind": "close", "outcome": "unknown",
+                     "error": f"{type(exc).__name__}: {exc}"})
+            raise SystemExit(
+                f"{entry['id']}: the close did not complete "
+                f"({type(exc).__name__}). The intent is on the record; read "
+                f"their positions before retrying, it may have landed.")
+        finally:
+            CURRENT_TIER.reset(token)
+
+        evidence_id = _capture(response)
+        try:
+            payload = response.json() or {}
+        except ValueError:
+            payload = {}
+        inner = (payload.get("result")
+                 if isinstance(payload.get("result"), dict) else payload)
+        _append({"id": entry["id"], "type": "outcome", "at": _now(),
+                 "kind": "close",
+                 "outcome": ("accepted" if 200 <= response.status_code < 300
+                             else "unknown"),
+                 "http_status": response.status_code,
+                 "realized_pnl_usdc": (inner or {}).get("realized_pnl_usdc"),
+                 "proceeds_usdc": (inner or {}).get("proceeds_usdc"),
+                 "evidence_id": evidence_id,
+                 "response": json.dumps(payload, ensure_ascii=False)[:1200]})
+
+        time.sleep(PAUSE_SECONDS)
+        after = _snapshot(client)
+        _append({"id": entry["id"], "type": "after", "at": _now(),
+                 "kind": "close", **after})
+
+        def _moved(key):
+            try:
+                return round(float(after.get(key)) - float(before.get(key)), 6)
+            except (TypeError, ValueError):
+                return None
+
+        print(f"{entry['id']}: HTTP {response.status_code}, closed "
+              f"{position_id}")
+        print(f"   paper balance {before.get('sim_balance_usdc')} -> "
+              f"{after.get('sim_balance_usdc')}  "
+              f"(credited {_moved('sim_balance_usdc')})")
+        print(f"   total_pnl     {before.get('sim_total_pnl')} -> "
+              f"{after.get('sim_total_pnl')}  (moved {_moved('sim_total_pnl')})")
+        print(f"   positions     {before.get('positions')} -> "
+              f"{after.get('positions')}")
+        return entry
+    finally:
+        client.close()
+
+
 def proof() -> int:
     """The chain, and whether the three records agree.
 
@@ -493,6 +614,10 @@ def main(argv: list[str] | None = None) -> int:
     order.add_argument("--confirm", action="store_true",
                        help="actually place it; without this nothing is sent")
 
+    shut = sub.add_parser("close", help="close one paper position, in full")
+    shut.add_argument("--position-id", required=True)
+    shut.add_argument("--confirm", action="store_true")
+
     sub.add_parser("positions", help="their side of the account, read now")
     sub.add_parser("book", help="what the campaign has, by our own reckoning")
     sub.add_parser("proof", help="the chain, and whether it agrees")
@@ -503,6 +628,10 @@ def main(argv: list[str] | None = None) -> int:
     if args.cmd == "buy":
         buy(args.card, args.usdc, args.nexus, args.confirm)
         return 0
+    if args.cmd == "close":
+        close(args.position_id, args.confirm)
+        return 0
+
     if args.cmd == "proof":
         return proof()
     if args.cmd == "book":

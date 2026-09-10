@@ -626,6 +626,92 @@ def test_paper_balance_newest_unreadable_never_falls_back_to_an_older_one():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_close_is_not_read_as_a_buy_that_debited_nothing():
+    """`paper.jsonl` gains a second kind of chain, and #87 reads all of them.
+
+    A close is written into the same log as a buy -- deliberately, because it
+    is the same campaign and `book()` reads both -- and it has the same three
+    row types under one id. To #87 that is indistinguishable from a paper buy,
+    and the wrong way round: a close CREDITS the balance, so `moved` comes out
+    negative and the position count goes DOWN. It would be filtered out of
+    `landed` and, on a day when the newest chain is a close, would make the
+    check judge a row that answers a different question.
+
+    Rows written before this existed carry no `kind` at all, so absent means
+    buy. Pinning that here rather than in the reader: the default is the part
+    that silently changes meaning when somebody adds a third kind.
+    """
+    from tests.rest.test_paper_balance_moves import measurements
+
+    rows = (_trade("TRD-0003", "2026-09-10T20:05:00+00:00",
+                   usdc=1.0, was=100000.0, now=99999.0, positions=(41, 42))
+            + _trade("TRD-0004", "2026-09-10T21:00:00+00:00",
+                     usdc=1.0, was=99999.0, now=100000.4, positions=(42, 41)))
+    for row in rows:
+        if row["id"] == "TRD-0004" and row["type"] == "intent":
+            row["kind"] = "close"
+
+    measured = measurements(rows)
+    assert [m["id"] for m in measured] == ["TRD-0003"], (
+        "a close was read as a buy; its credit reads as a negative debit and "
+        "its position count goes down, so it answers the opposite question")
+
+
+def _close(trade_id, at, *, notional, expected_pnl, credited, pnl_booked):
+    """One close as scripts/paper.py records it."""
+    before = {"sim_balance_usdc": "100000.00", "sim_total_pnl": "0.00"}
+    after = {"sim_balance_usdc": f"{100000.0 + credited:.6f}",
+             "sim_total_pnl": f"{pnl_booked:.6f}"}
+    return [
+        {"id": trade_id, "type": "intent", "at": at, "kind": "close",
+         "notional_usdc": notional, "unrealized_pnl_usdc": expected_pnl,
+         "before": before},
+        {"id": trade_id, "type": "outcome", "at": at, "kind": "close",
+         "outcome": "accepted", "http_status": 200},
+        {"id": trade_id, "type": "after", "at": at, "kind": "close", **after},
+    ]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_close_check_can_be_red_for_the_state_it_names():
+    """A check that cannot fail is nine of the ones this repo has written.
+
+    Both halves, and the conditional one is the half that would have produced
+    a false report: TRD-0004 closed for +0.0022 and total_pnl stayed 0.00,
+    which is right, because their field is published to two decimals. A check
+    demanding movement there reports arithmetic as a defect.
+    """
+    from tests.rest.test_paper_close_returns_the_money import closes
+
+    # The real TRD-0005: 1.00 position that had lost 0.044, 0.96 back.
+    good = closes(_close("TRD-0005", "2026-09-10T21:07:00+00:00",
+                         notional=1.0, expected_pnl=-0.0438840707940783,
+                         credited=0.96, pnl_booked=-0.04))
+    assert len(good) == 1
+    assert good[0]["credited"] == 0.96
+    assert good[0]["pnl_booked"] == -0.04
+
+    # The money did not come back. This is the state the check exists for.
+    bad = closes(_close("TRD-0006", "2026-09-10T21:08:00+00:00",
+                        notional=1.0, expected_pnl=-0.04,
+                        credited=0.0, pnl_booked=0.0))
+    assert bad[0]["credited"] == 0.0, (
+        "a close that credited nothing must reach the verdict as zero, not "
+        "be smoothed into the notional it was due")
+
+    # Sub-cent, and the pnl half must not be judged on it.
+    tiny = closes(_close("TRD-0004", "2026-09-10T21:05:00+00:00",
+                         notional=1.0, expected_pnl=0.0021598811497629544,
+                         credited=1.0, pnl_booked=0.0))
+    assert abs(float(tiny[0]["expected_pnl"])) < 0.01
+
+    # A buy is not a close, whatever else it looks like.
+    assert closes(_trade("TRD-0003", "2026-09-10T20:05:00+00:00",
+                         usdc=1.0, was=100000.0, now=99999.0,
+                         positions=(41, 42))) == []
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_nexus_tools_judges_the_newest_answer_that_names_any():
     """The union across every answer ever recorded cannot go green either --
     and worse, widening the extractor re-reads old answers into new

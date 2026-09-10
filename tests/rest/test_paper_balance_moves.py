@@ -88,6 +88,12 @@ def measurements(rows):
 
     measured = []
     for trade_id, chain in sorted(chains.items()):
+        # A close lives in this same log and wears the same three row types.
+        # It credits rather than debits and its position count falls, so
+        # reading one as a buy answers the opposite question. Rows written
+        # before closes existed carry no `kind`, so absent means buy.
+        if (chain.get("intent") or {}).get("kind") == "close":
+            continue
         intent, outcome, after = (chain.get("intent") or {},
                                   chain.get("outcome") or {},
                                   chain.get("after") or {})
