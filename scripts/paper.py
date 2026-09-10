@@ -257,7 +257,8 @@ def _positions(client) -> list[dict]:
         CURRENT_TIER.reset(token)
 
 
-def book(positions: list[dict], rows: list[dict] | None = None) -> dict:
+def book(positions: list[dict], rows: list[dict] | None = None,
+         clone_capital: float | None = None) -> dict:
     """Our own accounting of the campaign, from their position rows.
 
     Their paper balance does not move when a position opens, so no number they
@@ -267,6 +268,13 @@ def book(positions: list[dict], rows: list[dict] | None = None) -> dict:
     A position that is no longer open stops being deployed capital and its
     proceeds return to cash -- without that the book leaks, and after enough
     round trips a campaign would refuse to trade with a bankroll it still has.
+
+    `clone_capital` is money funded into paper bots, which is deployed and not
+    cash: the bot spends it on its own schedule and we cannot recall it by
+    deciding not to trade. It is passed in rather than read here because it
+    comes off THEIR my-clones rows, and `None` -- a balance we could not read
+    -- deliberately changes nothing, since the direction that frees money we
+    have already handed over is the dangerous one.
     """
     rows = load() if rows is None else rows
     chains: dict[str, dict] = {}
@@ -307,17 +315,59 @@ def book(positions: list[dict], rows: list[dict] | None = None) -> dict:
         else:
             realised += float(held.get("realized_pnl_usdc") or 0)
 
+    in_bots = float(clone_capital or 0)
+    deployed += in_bots
     cash = BANKROLL - deployed - unaccounted_usdc + realised
     return {"bankroll": BANKROLL, "deployed": round(deployed, 6),
+            "in_bots": round(in_bots, 6),
             "cash": round(cash, 6), "value": round(value, 6),
             "realised": round(realised, 6),
-            "equity": round(cash + value, 6), "open": open_count,
+            # Money in a bot is still ours -- their /withdraw route brings it
+            # back -- so it leaves cash and stays in equity. `value` keeps
+            # meaning positions at their index and nothing else.
+            "equity": round(cash + value + in_bots, 6), "open": open_count,
             "unaccounted": unaccounted,
             "unaccounted_usdc": round(unaccounted_usdc, 6)}
 
 
+def clone_capital(client) -> float | None:
+    """USDC sitting in our paper bots, from THEIR my-clones rows.
+
+    None when the read failed or came back in a shape we do not know. A bot
+    balance we cannot read must not be counted as zero: that is the direction
+    that frees money we have already handed over, and `affordable` would then
+    authorise spending it a second time.
+    """
+    token = CURRENT_TIER.set(SafetyTier.SAFE)
+    try:
+        response = client.get("/api/v1/cloned-bots/my-clones",
+                              params={"mode": "paper"})
+    except Exception:  # noqa: BLE001
+        return None
+    finally:
+        CURRENT_TIER.reset(token)
+    if response.status_code != 200:
+        return None
+    try:
+        rows = response.json()
+    except ValueError:
+        return None
+    if not isinstance(rows, list):
+        return None
+    total = 0.0
+    for row in rows:
+        if not isinstance(row, dict):
+            return None
+        try:
+            total += float(row.get("current_balance_usdc") or 0)
+        except (TypeError, ValueError):
+            return None
+    return round(total, 6)
+
+
 def affordable(usdc: float, positions: list[dict],
-               rows: list[dict] | None = None) -> tuple[bool, str]:
+               rows: list[dict] | None = None,
+               in_bots: float | None = None) -> tuple[bool, str]:
     """Whether the book can pay for this order.
 
     Their side will accept it either way -- it has accepted every order we
@@ -325,7 +375,7 @@ def affordable(usdc: float, positions: list[dict],
     no downside, and a strategy that would have lost the bankroll looks
     exactly like one that doubled it.
     """
-    state = book(positions, rows)
+    state = book(positions, rows, clone_capital=in_bots)
     stranded = (f" A further {state['unaccounted_usdc']:.2f} is unaccounted: "
                 f"{state['unaccounted']} accepted order(s) they did not list, "
                 f"held as spent because money we cannot see is not money we "
@@ -364,7 +414,8 @@ def buy(card_id: str, usdc: float, nexus_id: str | None, confirm: bool) -> dict:
     try:
         before = _snapshot(client)
         held = _positions(client)
-        can, why = affordable(float(usdc), held)
+        can, why = affordable(float(usdc), held,
+                              in_bots=clone_capital(client))
         print(f"[book] {why}")
         if not can:
             raise SystemExit(
@@ -639,7 +690,8 @@ def main(argv: list[str] | None = None) -> int:
         ids = identities()
         client = build_client(ids["trusted"], EndpointRegistry.load(), timeout=30.0)
         try:
-            state = book(_positions(client))
+            state = book(_positions(client),
+                         clone_capital=clone_capital(client))
         finally:
             client.close()
         print(f"  bankroll   {state['bankroll']:>14,.2f}")

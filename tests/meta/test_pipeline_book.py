@@ -252,6 +252,41 @@ def test_the_cap_is_not_advisory(tmp_path, monkeypatch):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_capital_moved_into_a_bot_is_deployed_not_cash(tmp_path, monkeypatch):
+    """The book counted money it had already given away.
+
+    2026-09-10: 1,000 USDC was funded into a paper clone, and `book()` went
+    on reporting 99,998 uncommitted because it reads event-card positions and
+    nothing else. Their own practice balance had already dropped to 99,000.96
+    -- so the platform knew, and our constraint did not.
+
+    That is the same defect as `test_capital_they_accepted_and_do_not_list_is
+    _still_spent`, one layer out: money we cannot see in positions is still
+    money we do not have. It matters more here, because the whole reason the
+    book exists is that their paper balance will accept an order the bankroll
+    cannot cover (#87), so the book is the only thing that can run out.
+    """
+    mod = _paper(tmp_path, monkeypatch)
+    _trade(mod, "TRD-0001", 2.0, "p1")
+    positions = [{"position_id": "p1", "current_value_usdc": 2.0,
+                  "status": "open", "notional_usdc": 2.0}]
+
+    loose = mod.book(positions)
+    held = mod.book(positions, clone_capital=1000.0)
+
+    assert held["cash"] == loose["cash"] - 1000.0, (
+        "capital sitting in a bot is not available to trade; the bot spends "
+        "it on its own schedule and we cannot recall it by deciding not to")
+    assert held["deployed"] == loose["deployed"] + 1000.0
+    # Equity is unchanged: the money still exists, it is somewhere else.
+    assert round(held["equity"], 6) == round(loose["equity"], 6)
+
+    # An unreadable clone balance must not read as zero -- that is the
+    # direction that frees money we have already handed over.
+    assert mod.book(positions, clone_capital=None)["cash"] == loose["cash"]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_200_in_an_unexpected_wrapper_is_not_an_empty_book(tmp_path, monkeypatch):
     """R07, from the 2026-09-10 deep pass, confirmed by the sweep after it.
 
