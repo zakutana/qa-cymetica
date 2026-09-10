@@ -127,7 +127,11 @@ def compose(report: dict, findings: dict, footer: str) -> dict:
 
     checks = sorted({c for f in linked for c in f.get("checks", [])})
     if checks:
-        parts.append("\nAUTOMATED CHECKS (public repo: github.com/zakutana/qa-cymetica):")
+        # It named the repository as public and it is not: the vendor is not
+        # on it, so the line offered them a door that does not open. What we
+        # can actually offer is the evidence itself.
+        parts.append("\nAUTOMATED CHECKS (evidence retained; the request and "
+                     "response behind each are provided on request):")
         for check in checks:
             parts.append(f"  {check}")
 

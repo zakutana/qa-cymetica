@@ -185,3 +185,57 @@ def test_the_evidence_does_not_describe_a_syntax_tree_hash_it_did_not_send():
         "an unestablished provenance is not a licence to guess the stronger "
         "of the two sentences"
     )
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_we_never_send_them_to_a_repository_they_cannot_open():
+    """Every verification we have sent ended with an instruction they cannot follow.
+
+    `body()` closed with *"REPRODUCE: github.com/zakutana/qa-cymetica at
+    <sha>, then pytest ..."*, and submit.py headed its check list *"AUTOMATED
+    CHECKS (public repo: ...)"*. `gh repo view` says PRIVATE and the only
+    collaborator is the operator's own account. Six verifications went out
+    that way this morning and more before.
+
+    Nothing in the verdict was wrong -- the check did pass, under the pinned
+    definition -- but the one line telling them how to check us for themselves
+    pointed at a door that does not open for them, which is the same class of
+    defect as a check claiming more than it measures: the mechanism is right
+    and the sentence around it is not.
+
+    What replaces it is what we can actually stand behind: the request and
+    response are kept, under an id, and we will send them if asked.
+    """
+    verify = _verify()
+    body = verify.body(_item(evidence_ids=["abc123", "def456"]))["evidence"]
+
+    for banned in ("github.com", "public repo", "REPRODUCE:"):
+        assert banned not in body, (
+            f"{banned!r} is still in what goes to the vendor, and the "
+            f"repository it names is private"
+        )
+    assert "provided on request" in body
+    assert "abc123" in body, "the evidence id they would have to quote is missing"
+
+    # A row whose evidence we did not capture still says the true thing,
+    # without inventing an id.
+    bare = verify.body(_item())["evidence"]
+    assert "provided on request" in bare
+    assert "None" not in bare and "[]" not in bare
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_filed_report_says_the_same_thing():
+    """submit.py is the other outbound writer and carried the same sentence."""
+    import importlib.util
+    from pathlib import Path
+
+    repo = Path(__file__).resolve().parent.parent.parent
+    spec = importlib.util.spec_from_file_location(
+        "submit_under_test", repo / "scripts" / "submit.py")
+    submit = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(submit)
+
+    source = (repo / "scripts" / "submit.py").read_text(encoding="utf-8")
+    assert "public repo: github.com/zakutana" not in source
+    assert "evidence retained" in source

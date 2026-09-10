@@ -7,8 +7,13 @@ verified was a fact that existed only on our own dashboard.
 
 What it sends is deliberately small. Not "the bug is fixed" -- that is their
 claim to make -- but: this check, under this definition, passed in this
-preregistered run against this tree, at this time. Every field is a fact
-somebody else can re-derive from the public repository.
+preregistered run against this tree, at this time.
+
+It used to close by telling them to reproduce it from github.com/zakutana/
+qa-cymetica. That repository is PRIVATE and they are not on it, so the line
+inviting them to check us for themselves pointed at a door that does not open.
+What goes now is what we can stand behind: the request and the response are
+kept, under an id, and we send them if asked.
 
     python scripts/verify.py --dry-run     compose, send nothing
     python scripts/verify.py --confirm     send, up to MAX_PER_RUN
@@ -170,6 +175,10 @@ def owed(ledger: dict, only: list[str] | None) -> list[dict]:
                 "title": row.get("title") or fid,
                 "pin": pin_reason(fid, row["check"]["pinned_fingerprint"]),
                 "identity": identity_kind(run, row.get("checks") or []),
+                "evidence_ids": sorted({
+                    str(e) for result in (run.get("results") or [])
+                    if result.get("nodeid") in set(row.get("checks") or [])
+                    for e in (result.get("evidence_ids") or [])}),
             })
     return work
 
@@ -215,6 +224,20 @@ def pin_reason(finding_id: str, fingerprint: str) -> str | None:
                 and event.get("value") == fingerprint):
             latest = event.get("reason") or None
     return latest
+
+
+def _evidence_offer(item: dict) -> str:
+    """How they can check this, said truthfully.
+
+    The repository is private, so "reproduce it from github" was never an
+    offer they could take up. The evidence store is real, addressed by the
+    hash of its content, and one message away.
+    """
+    ids = [str(i) for i in (item.get("evidence_ids") or []) if i]
+    named = f" under evidence id(s) {', '.join(ids)}" if ids else ""
+    return ("EVIDENCE: the request and response behind this verdict are "
+            f"retained{named} and are provided on request, as are the "
+            "check's definition and the preregistration named above.")
 
 
 def body(item: dict) -> dict:
@@ -303,8 +326,7 @@ def body(item: dict) -> dict:
         f"git-tagged BEFORE the run, so the set of checks could not be narrowed "
         f"after seeing the results.\n\n"
         f"CHECK(S) THIS COVERS:\n{checks}\n\n"
-        f"REPRODUCE: github.com/zakutana/qa-cymetica at {item['tree_sha']}, then\n"
-        f"  pytest {item['checks'][0] if item['checks'] else ''}\n\n"
+        f"{_evidence_offer(item)}\n\n"
         f"FINDING {item['finding_id']}: {item['title']}"
     )
     return {

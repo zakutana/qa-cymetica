@@ -1,7 +1,11 @@
 """Configuration and identity registry.
 
 Credentials live in .env, which is gitignored, and never anywhere else. The
-repo is public: assume the vendor reads every line of it.
+repo is PRIVATE -- checked 2026-09-10, the operator is its only collaborator --
+so the old line here, "assume the vendor reads every line of it", was wrong in
+its premise and right in its instruction. Keep the instruction: what we quote
+to them is what they end up holding, and a repository's visibility can be
+changed by one click in a settings page nobody tests.
 """
 
 from __future__ import annotations

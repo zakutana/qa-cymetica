@@ -1,4 +1,4 @@
-# Credentials -- never committed. The repo is public.
+# Credentials -- never committed.
 .env
 *.key
 *.pem
