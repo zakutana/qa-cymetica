@@ -89,6 +89,60 @@ def test_a_closed_position_returns_its_money_to_the_book(tmp_path, monkeypatch):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_capital_they_accepted_and_do_not_list_is_still_spent(tmp_path, monkeypatch):
+    """An order we cannot see is not an order that did not happen.
+
+    `book()` skipped any accepted order whose `position_id` was absent from
+    their positions endpoint, with a comment saying such a row was "worth
+    noticing rather than quietly dropping" -- and nothing noticed: no counter,
+    no field, no print. The capital went back to cash and `affordable()` would
+    authorise spending it a second time.
+
+    Reachable three ways that have nothing to do with a bug on their side:
+    pagination, a filter, and the lag between an order being accepted and the
+    position appearing. Two readers of three reproduced it; the third could not
+    construct it against today's captures, which is a statement about today's
+    data and not about the arithmetic.
+
+    Rule 8's shape, applied to a row rather than a read: an accepted order we
+    cannot account for is UNACCOUNTED, and the safe direction is to hold its
+    capital rather than to release it.
+    """
+    mod = _paper(tmp_path, monkeypatch)
+    _trade(mod, "TRD-0001", 30000.0, "p1")
+    _trade(mod, "TRD-0002", 60000.0, "p2")
+
+    # Only one of the two comes back from their endpoint.
+    listed = [{"position_id": "p1", "current_value_usdc": 30000.0,
+               "status": "open"}]
+    state = mod.book(listed)
+
+    assert state["unaccounted"] == 1, (
+        f"an accepted order absent from their positions must be counted, not "
+        f"skipped: {state}")
+    assert state["unaccounted_usdc"] == 60000.0, (
+        f"and its notional named, so a reader knows how much is unexplained: "
+        f"{state}")
+    assert state["cash"] == 10000.0, (
+        f"its capital is committed until we can see it: 100000 - 30000 - 60000. "
+        f"Releasing it lets the same money be spent twice: {state}")
+
+    ok, why = mod.affordable(50000.0, listed)
+    assert ok is False, (
+        f"the book authorised an order the unaccounted capital cannot cover: {why}")
+    assert "unaccounted" in why.lower() or "60000" in why, (
+        f"the refusal must say WHY the money is unavailable, or it reads as a "
+        f"book that lost track: {why}")
+
+    # And when their endpoint lists everything, nothing is unaccounted and the
+    # arithmetic is exactly as before -- this must not tax the ordinary case.
+    both = listed + [{"position_id": "p2", "current_value_usdc": 60000.0,
+                      "status": "open"}]
+    full = mod.book(both)
+    assert full["unaccounted"] == 0 and full["cash"] == 10000.0, full
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_an_order_the_book_cannot_pay_for_is_refused(tmp_path, monkeypatch):
     """The refusal that makes the campaign mean something.
 
@@ -104,9 +158,23 @@ def test_an_order_the_book_cannot_pay_for_is_refused(tmp_path, monkeypatch):
 
     ok, why = mod.affordable(6000.0, positions)
     assert ok is False
-    assert "5000" in why or "5,000" in why, (
-        f"the refusal has to say what is actually left: {why}"
+
+    # The figure, computed here rather than matched as a substring. `"5000" in
+    # why` was satisfied by the rendered `95000.00` deployed figure, so a
+    # refusal that dropped the uncommitted number entirely still passed -- true
+    # for cash 5000.00, 4999.50, 1.00 and 0.00 alike. Three readers reproduced
+    # it by deleting the clause. A number that appears inside another number is
+    # not a number this test read.
+    cash = f"{mod.book(positions)['cash']:.2f}"
+    assert cash == "5000.00", f"the fixture no longer leaves 5000.00: {cash}"
+    stripped = why.replace("95000.00", "").replace("95,000.00", "")
+    assert cash in stripped or "5,000.00" in stripped, (
+        f"the refusal has to say what is actually left, and {cash} appears in "
+        f"it only as part of the deployed figure: {why}"
     )
+    assert f"{6000.0:.2f}" in why, (
+        f"the refusal has to say what was asked for, or a reader cannot tell "
+        f"how far over the order was: {why}")
 
     ok, why = mod.affordable(4999.0, positions)
     assert ok is True, why
@@ -114,19 +182,70 @@ def test_an_order_the_book_cannot_pay_for_is_refused(tmp_path, monkeypatch):
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_cap_is_not_advisory(tmp_path, monkeypatch):
-    """A later edit that turns the refusal into a print fails here.
+    """The gate runs before the order, on the path the order takes.
 
-    The whole value of the book is that it says no. This reads the source
-    rather than the behaviour on purpose: behaviour can be preserved while the
-    gate is moved somewhere it never runs.
+    The whole value of the book is that it says no, and the docstring used to
+    say this reads the source "on purpose: behaviour can be preserved while the
+    gate is moved somewhere it never runs" -- while the assertion was textual
+    proximity, which is exactly what cannot see a move. Three readers each
+    defeated it: relocate the `affordable`/`raise` pair to just after
+    `client.post(...)`, or into the `if not confirm:` branch, and both tokens
+    stay inside the 600-character window with the check green and a confirmed
+    order never checked against the book. One of them made it pass with no gate
+    in `buy()` at all, by adding a dead helper later in the file containing
+    both words.
+
+    So it is read as a tree instead of as a string: the call, the refusal it
+    raises, and the POST must be statements of ONE block, in that order. That
+    is what "before the order, unconditionally" means, and it is a property a
+    relocation cannot preserve.
     """
+    import ast
+
     source = (REPO / "scripts" / "paper.py").read_text(encoding="utf-8")
-    assert "affordable(" in source
-    placement = source.index("def buy(")
-    tail = source[placement:]
-    assert "affordable(" in tail, "buy() no longer consults the book"
-    gate = tail.index("affordable(")
-    following = tail[gate:gate + 600]
-    assert "SystemExit" in following or "raise" in following, (
-        "the book's answer must stop the order, not decorate it"
+    tree = ast.parse(source)
+    buy = next((n for n in ast.walk(tree)
+                if isinstance(n, ast.FunctionDef) and n.name == "buy"), None)
+    assert buy is not None, "scripts/paper.py no longer defines buy()"
+
+    def calls(node, name: str) -> bool:
+        return any(isinstance(c, ast.Call) and (
+                   getattr(c.func, "id", None) == name
+                   or getattr(c.func, "attr", None) == name)
+                   for c in ast.walk(node))
+
+    # The one block holding all three. Statement lists are searched rather than
+    # the whole function, because "in the same block" is the property that
+    # stops the gate being moved into a branch the confirmed path skips.
+    def holds_both(block) -> bool:
+        gate = next((i for i, s in enumerate(block) if calls(s, "affordable")), None)
+        post = next((i for i, s in enumerate(block) if calls(s, "post")), None)
+        # Distinct statements: an enclosing block "contains" both only because
+        # one nested statement holds them, which says nothing about order.
+        return gate is not None and post is not None and gate != post
+
+    blocks = [b for b in ([buy.body] + [
+        child.body for child in ast.walk(buy)
+        if isinstance(child, (ast.Try, ast.If, ast.With, ast.For, ast.While))])
+        if holds_both(b)]
+    assert blocks, (
+        "no single block of buy() holds both the book check and the POST, so "
+        "the gate is on a different path from the order -- which is the move "
+        "this test exists to catch, not a refactor to wave through"
     )
+
+    for block in blocks:
+        gate = next(i for i, s in enumerate(block) if calls(s, "affordable"))
+        post = next(i for i, s in enumerate(block) if calls(s, "post"))
+        assert gate < post, (
+            f"buy() consults the book at statement {gate} and posts the order "
+            f"at {post}: the platform has already accepted it by the time our "
+            f"own refusal is computed"
+        )
+        refusal = next((i for i, s in enumerate(block)
+                        if i > gate and any(isinstance(n, ast.Raise)
+                                            for n in ast.walk(s))), None)
+        assert refusal is not None and refusal < post, (
+            "nothing between the book check and the POST raises, so the book's "
+            "answer decorates the order instead of stopping it"
+        )

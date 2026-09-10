@@ -86,10 +86,21 @@ def test_a_paper_buy_debits_the_paper_balance(rest_trusted):
                         float(after.get("sim_balance_usdc")))
         except (TypeError, ValueError):
             continue
+        # `positions` is written by _snapshot ONLY on a 200. Absent means the
+        # read failed, and `(x or 0)` turned that into 0 -- so a failed read
+        # gave 0 - 39 = -39, the trade fell out of `landed`, the subject list
+        # emptied and the verdict was PASSED with the reason "each buy debited
+        # the balance by its own notional" while nothing had moved. Rule 8
+        # inverted, on the row that would flip #87 to VERIFIED FIXED. Found by
+        # a check-auditor 2026-09-10, confirmed 3/3.
+        unread = [side for side, snap in (("before", before), ("after", after))
+                  if snap.get("positions") is None]
         measured.append({
             "id": trade_id, "usdc": float(intent.get("usdc") or 0),
             "moved": round(was - now, 6),
-            "positions_grew": (after.get("positions") or 0) - (before.get("positions") or 0),
+            "unread": unread,
+            "positions_grew": (None if unread else
+                               after["positions"] - before["positions"]),
             "trades_counter": (before.get("sim_total_trades"),
                                after.get("sim_total_trades")),
         })
@@ -100,8 +111,22 @@ def test_a_paper_buy_debits_the_paper_balance(rest_trusted):
             "it, so whether a buy debits anything cannot be read; `python "
             "scripts/paper.py buy --card <id> --usdc 1 --confirm` records one")
 
-    silent = [m for m in measured if abs(m["moved"] - m["usdc"]) > 0.01]
-    landed = [m for m in measured if m["positions_grew"] >= 1]
+    blind = [m for m in measured if m["unread"]]
+    readable = [m for m in measured if not m["unread"]]
+    if not readable:
+        raise Inconclusive(
+            f"every recorded trade is missing a positions read on one side "
+            f"({[m['id'] for m in blind][:3]}), so whether a position opened "
+            f"cannot be established -- and a trade whose position is unknown "
+            f"is not a trade that debited correctly")
+
+    # "Costs something", which is the contract this check's own docstring
+    # states. It demanded EXACTLY the notional, so a 1.00 buy debited 0.97 --
+    # a fee, a rounding, a partial fill -- was filed under the headline "moved
+    # the paper balance by nothing" while the same sentence quoted 0.97. A
+    # false claim to the vendor, from the strictness rather than from the data.
+    silent = [m for m in readable if m["moved"] <= 0.01]
+    landed = [m for m in readable if m["positions_grew"] >= 1]
 
     # A buy that did not create a position is a different fault and not this
     # one. What is asserted here is a position opening and nothing paying.
@@ -117,13 +142,17 @@ def test_a_paper_buy_debits_the_paper_balance(rest_trusted):
                   "to score itself against, so it cannot size its next order "
                   "or tell a winning run from a losing one"
                 if subject else
-                f"each of the {len(measured)} recorded paper buy(s) debited "
-                f"the paper balance by its own notional"),
-        left=[m["moved"] for m in measured],
-        right=[m["usdc"] for m in measured],
-        population={"accepted": len(measured), "opened_a_position": len(landed),
+                f"each of the {len(readable)} readable paper buy(s) debited "
+                f"the paper balance"
+                + (f"; {len(blind)} could not be read on one side and were not "
+                   f"counted either way" if blind else "")),
+        left=[m["moved"] for m in readable],
+        right=[m["usdc"] for m in readable],
+        population={"accepted": len(measured), "readable": len(readable),
+                    "unreadable": len(blind),
+                    "opened_a_position": len(landed),
                     "debited_nothing": len(subject),
-                    "trades_counter": measured[-1]["trades_counter"]},
+                    "trades_counter": readable[-1]["trades_counter"]},
         sources={"balance": ACCOUNT, "positions": POSITIONS,
                  "our_record": str(paper.path().name)},
     ))

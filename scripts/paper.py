@@ -227,14 +227,27 @@ def book(positions: list[dict], rows: list[dict] | None = None) -> dict:
     value = 0.0
     realised = 0.0
     open_count = 0
+    unaccounted = 0
+    unaccounted_usdc = 0.0
     for chain in chains.values():
         intent, outcome = chain.get("intent") or {}, chain.get("outcome") or {}
         if outcome.get("outcome") != "accepted":
             continue
         held = by_position.get(outcome.get("position_id"))
         if held is None:
-            # Accepted by them and not in their positions: not ours to spend
-            # against, and worth noticing rather than quietly dropping.
+            # Accepted by them and not in their positions. This said it was
+            # "worth noticing rather than quietly dropping" and then dropped
+            # it: no counter, no field, no print, and the capital went back to
+            # cash so `affordable` would authorise spending it twice. Reachable
+            # without any bug on their side -- pagination, a filter, or the lag
+            # between acceptance and listing.
+            #
+            # Rule 8's shape applied to a row: an accepted order we cannot
+            # account for is UNACCOUNTED, and its money stays committed. The
+            # safe direction is to hold capital we cannot see, never to
+            # release it.
+            unaccounted += 1
+            unaccounted_usdc += float(intent.get("usdc") or 0)
             continue
         if str(held.get("status")) == "open":
             deployed += float(intent.get("usdc") or 0)
@@ -243,11 +256,13 @@ def book(positions: list[dict], rows: list[dict] | None = None) -> dict:
         else:
             realised += float(held.get("realized_pnl_usdc") or 0)
 
-    cash = BANKROLL - deployed + realised
+    cash = BANKROLL - deployed - unaccounted_usdc + realised
     return {"bankroll": BANKROLL, "deployed": round(deployed, 6),
             "cash": round(cash, 6), "value": round(value, 6),
             "realised": round(realised, 6),
-            "equity": round(cash + value, 6), "open": open_count}
+            "equity": round(cash + value, 6), "open": open_count,
+            "unaccounted": unaccounted,
+            "unaccounted_usdc": round(unaccounted_usdc, 6)}
 
 
 def affordable(usdc: float, positions: list[dict],
@@ -260,14 +275,18 @@ def affordable(usdc: float, positions: list[dict],
     exactly like one that doubled it.
     """
     state = book(positions, rows)
+    stranded = (f" A further {state['unaccounted_usdc']:.2f} is unaccounted: "
+                f"{state['unaccounted']} accepted order(s) they did not list, "
+                f"held as spent because money we cannot see is not money we "
+                f"have." if state["unaccounted"] else "")
     if usdc <= state["cash"]:
-        return True, f"{state['cash']:.2f} USDC uncommitted"
+        return True, f"{state['cash']:.2f} USDC uncommitted{stranded}"
     return False, (
         f"the book has {state['cash']:.2f} USDC uncommitted and this order "
         f"wants {usdc:.2f}. {state['deployed']:.2f} is already in "
-        f"{state['open']} open position(s). Their paper balance will accept "
-        f"this order anyway; that is finding #87, and it is why this refusal "
-        f"is here rather than there.")
+        f"{state['open']} open position(s).{stranded} Their paper balance will "
+        f"accept this order anyway; that is finding #87, and it is why this "
+        f"refusal is here rather than there.")
 
 
 def buy(card_id: str, usdc: float, nexus_id: str | None, confirm: bool) -> dict:
