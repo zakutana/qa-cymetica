@@ -108,7 +108,23 @@ PINNED = {
     # that there are two floors rather than one, since what it must forbid is
     # an endpoint standing behind NEITHER. place_order is deliberately not
     # gated: the CLOB has no paper book and refuses paper=true outright.
-    "test_guard_is_real.py": "e516ff3d1c410d4e2ceacda894240a0102bd27a19038fd8309e0c04cb487723f",
+    #
+    # Re-derived a THIRD time, 2026-09-10, by the deep pass -- and this one is
+    # the guard's own hole rather than a new floor. `_check_rpc` raised for
+    # `trade` and `provision` and then fell off the end of the function, so an
+    # MCP tool in none of components.yaml's lists was PERMITTED at MUTATE with
+    # full arguments: the one tier that can spend, while SAFE refuses it by
+    # name and PROBE forces empty arguments. Found by the xhigh review and
+    # independently by a check-auditor; all three triage readers reached the
+    # transport with a tool that does not exist. Two changes: a control that
+    # calls an unknown tool at MUTATE and asserts the refusal, and the
+    # money-loop floor taught to read the flag NAME rather than only that the
+    # set is non-empty -- renaming agents.clone's required_flags from [paper]
+    # to [confirm] had left all three sibling guards green while a MUTATE POST
+    # carrying `confirm: true` and no paper key satisfied the transport. That
+    # second one ships with a negative control, because an assertion that is
+    # green on today's file whatever it checks is one nobody has watched fire.
+    "test_guard_is_real.py": "c2c72612cb7c18ee1080333d512868edd75781b10b2ca7730b19006eac9068db",
 }
 
 

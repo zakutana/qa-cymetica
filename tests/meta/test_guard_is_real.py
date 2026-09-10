@@ -328,6 +328,39 @@ def test_the_money_loop_is_behind_the_probe_only_floor():
     assert not (must - set(by_id)), \
         f"named in this guard but no longer declared: {sorted(must - set(by_id))}"
 
+    # The flag by NAME. Until 2026-09-10 this asserted only that the set was
+    # non-empty, and the contract above is about WHICH flag: "the platform's
+    # own paper control". Renaming agents.clone's `required_flags` from
+    # [paper] to [confirm] left this green, left the two sibling guards green
+    # (one pins rule ids, the other posts only to bots.clone), and a MUTATE
+    # POST carrying `confirm: true` and no `paper` key then satisfied
+    # `_assert_declared_flags` -- while the live schema resolves an absent
+    # `paper` against simulation_mode, which is False on this account.
+    # Three readers reproduced it. Presence of a declaration is not a contract
+    # about its value, which is the defect class this whole file exists for.
+    def named_wrong(rules: dict) -> list[str]:
+        return sorted(f"{i}={sorted(rules[i].required_flags)}" for i in must
+                      if i in rules and rules[i].required_flags
+                      and "paper" not in rules[i].required_flags)
+
+    assert not named_wrong(by_id), (
+        f"standing on required_flags that do not name the paper control: "
+        f"{named_wrong(by_id)}. Only the platform's own paper flag stops money "
+        f"moving; a different key satisfies our guard and leaves the order live."
+    )
+
+    # The negative control, because the assertion above is green on today's
+    # file whatever it checks, and a guard nobody has watched fire is a guard
+    # nobody has tested. This is the exact mutation three readers used.
+    import dataclasses
+
+    renamed = dict(by_id)
+    renamed["agents.clone"] = dataclasses.replace(
+        by_id["agents.clone"], required_flags=frozenset({"confirm"}))
+    assert named_wrong(renamed) == ["agents.clone=['confirm']"], (
+        "the flag-name check does not fire on a renamed flag, so it is not "
+        "checking the name")
+
 
 @qa(component="meta.guard", tier=SafetyTier.SAFE, surface="meta")
 def test_mutate_never_executes_trade_or_provision_mcp_tools(registry, evidence_store):
@@ -612,6 +645,56 @@ def test_a_money_tool_with_a_paper_flag_is_executable_only_with_it():
         with pytest.raises(SafetyViolation) as still:
             client.call_raw("place_order", {"symbol": "BTC", "size": 1})
         assert "trade" in str(still.value)
+    finally:
+        CURRENT_TIER.reset(token)
+        client.http.close()
+
+
+@qa(component="meta.guard", tier=SafetyTier.SAFE, surface="meta")
+def test_a_tool_this_registry_has_never_heard_of_is_refused_at_mutate():
+    """Default-deny, at the one tier that can spend.
+
+    `_check_rpc` raised for `trade` and `provision` and then fell off the end
+    of the function, so a tool in none of `components.yaml`'s four lists was
+    PERMITTED at MUTATE with full arguments. SAFE refuses it by name and PROBE
+    forces empty arguments; the only tier that can move money was the one that
+    let it through. Three readers reproduced it independently, each by calling
+    a tool that does not exist and reaching the transport.
+
+    Cymetica publish 62 tools and shipped a changed one this morning, so "a
+    tool the registry has not been taught" is the ordinary case after any
+    release, not a hypothetical. And `trade_event_card` is itself classified in
+    no list at all -- it is reachable only through `mcp_tools.paper_gated`, so
+    the moment that entry is removed it would become permitted rather than
+    refused, which is the opposite of what removing a gate should do.
+    """
+    registry = EndpointRegistry.load()
+    registry.mutate_enabled = True
+    registry.mutate_allowed_hosts = frozenset({"cymetica.com"})
+    client = _deaf_mcp_client(registry=registry)
+
+    token = CURRENT_TIER.set(SafetyTier.MUTATE)
+    try:
+        # No blanket `except AssertionError` here, and that is deliberate: the
+        # deaf transport signals a let-through BY raising AssertionError, so
+        # catching one would swallow exactly the failure this test is for. The
+        # first draft of this test did that and passed against the unfixed
+        # guard.
+        with pytest.raises(SafetyViolation) as refused:
+            client.call_raw("a_tool_shipped_after_this_registry_was_written",
+                            {"amount_usdc": 1000, "confirm": True})
+        assert "unclassified" in str(refused.value).lower(), (
+            f"the refusal must say the tool is unclassified, so a reader knows "
+            f"to classify it rather than to hunt a bug: {refused.value}")
+    finally:
+        CURRENT_TIER.reset(token)
+
+    # A classified read tool is untouched: the point is default-deny for the
+    # unknown, not a wider refusal. Reaching the transport is the pass here.
+    token = CURRENT_TIER.set(SafetyTier.MUTATE)
+    try:
+        with pytest.raises(AssertionError, match="THE GUARD LET IT THROUGH"):
+            client.call_raw("get_event_card_info", {})
     finally:
         CURRENT_TIER.reset(token)
         client.http.close()

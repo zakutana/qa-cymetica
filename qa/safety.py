@@ -334,6 +334,27 @@ class SafetyTransport(httpx.BaseTransport):
                 f"Generate an operator command instead."
             )
 
+        # Default-deny, and it was missing at the only tier that can spend.
+        # This branch raised for `trade` and `provision` and then fell off the
+        # end of the function, so a tool in none of components.yaml's lists was
+        # PERMITTED at MUTATE with full arguments -- while SAFE refuses it by
+        # name and PROBE forces empty arguments. Found 2026-09-10 by the code
+        # review and independently by an auditor; three triage readers each
+        # reached the transport with a tool that does not exist.
+        #
+        # It is the ordinary case after any of their releases: 62 tools today
+        # and a changed one this morning. `trade_event_card` is itself in no
+        # list -- reachable only through mcp_tools.paper_gated -- so removing
+        # that gate would have turned it from refused into permitted, which is
+        # the opposite of what removing a gate should do.
+        if klass != "read":
+            raise SafetyViolation(
+                f"MCP tool {tool!r} is unclassified: components.yaml puts it in "
+                f"no mcp_tools list, so nothing here knows whether it spends. "
+                f"Classify it (read / contribute / trade / provision, or "
+                f"paper_gated with the flag that stops it) before calling it."
+            )
+
     # -- the inert-body proof ---------------------------------------------
     def _assert_declared_flags(self, request, rule) -> None:
         """A MUTATE body must carry every flag its rule declares inert.
