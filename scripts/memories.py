@@ -10,9 +10,11 @@ load themselves. They do not.
     python scripts/memories.py --list
     python scripts/memories.py --check
 
-Each memory declares `applies:` in its frontmatter, one or more of the classes
-below. A memory that applies to everything applies to nothing in particular
-and would be read past, so `all` is deliberately not a class.
+Each memory declares `applies:` in its frontmatter -- top level or under
+`metadata:`, wherever the harness that rewrites these files decides to put it
+-- as one or more of the classes below. A memory that applies to everything
+applies to nothing in particular and would be read past, so `all` is
+deliberately not a class.
 
 The directory lives outside the repository, beside the session transcripts, so
 this is the only thing that knows where it is.
@@ -50,7 +52,10 @@ def read(path: Path) -> dict:
     body = text[front.end():] if front else text
 
     def field(name: str) -> str:
-        found = re.search(rf"^{name}:\s*(.+)$", head, re.M)
+        # Indented, because the memory harness rewrites this frontmatter and
+        # puts anything it does not recognise under `metadata:`. Where the
+        # field lands is its decision, not ours; the reader accepts both.
+        found = re.search(rf"^\s*{name}:\s*(.+)$", head, re.M)
         return found.group(1).strip().strip('"') if found else ""
 
     applies = [a.strip() for a in field("applies").split(",") if a.strip()]
