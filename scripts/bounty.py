@@ -350,7 +350,22 @@ def fetch_inbox(client=None, agent_id: str | None = None) -> dict:
     if klass != "ok":
         return {"klass": klass, "rows_returned": None, "new": [], "at": at}
 
-    new = []
+    return record_inbox(messages, klass=klass, at=at)
+
+
+def record_inbox(messages: list[dict], klass: str = "ok",
+                 at: str | None = None) -> dict:
+    """Their messages onto the journal, one event each, keyed on their id.
+
+    Split out of fetch_inbox so the recording can be tested without the
+    network -- which matters because everything downstream of it reads only
+    what is written HERE, and the discriminator it drops is the discriminator
+    qa/channels.py needs.
+    """
+    from qa.state import append_event
+
+    at = at or _now()
+    new: list[dict] = []
     for message in messages:
         msg_id = message.get("id")
         if not msg_id:
@@ -375,10 +390,15 @@ def fetch_inbox(client=None, agent_id: str | None = None) -> dict:
             "text": message.get("content") or "",
             "origin": "a2a", "via": message.get("thread_id"),
         }
-        if metadata.get("auto"):
-            record["auto"] = True
-        if metadata.get("kind"):
-            record["kind"] = str(metadata["kind"])
+        # Written even when false or absent, which is the whole point: "the
+        # vendor says this is a person" and "nobody classified this" were the
+        # same row on the journal -- no key either way -- so every human
+        # answer they have sent landed in the bucket that exists for the 39
+        # messages written before there was a discriminator at all.
+        if "auto" in metadata or "kind" in metadata:
+            record["auto"] = bool(metadata.get("auto"))
+            record["kind"] = (str(metadata["kind"])
+                              if metadata.get("kind") else None)
         answers = message.get("parent_message_id") or metadata.get("in_reply_to")
         if answers:
             record["reply_to"] = str(answers)

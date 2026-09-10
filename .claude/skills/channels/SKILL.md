@@ -66,6 +66,14 @@ did. The console's bell does not cover this:
 [operator 2026-09-08] the bell is bug-tracker only. Telegram and a2a stay off
 the console, and the alert here is what covers them.
 
+[operator 2026-09-10] *"Ano, jen čísla."* Asked whether the console's new Stats
+tab could carry a2a against Telegram — how many we asked, how many they
+answered, the median minutes — when the message text and the bell stayed as
+they are. It can. Counts and response times are figures about a channel, not
+correspondence: nothing anyone says appears on the page, and the bell still
+lights for the bug tracker alone. The 2026-09-08 decision above is unchanged
+and stands over everything except those figures.
+
 Automated first-pass replies are silent on purpose — 35 of the 39 a2a messages
 we hold are the trophy-emoji routing prompt, and an alert that fires on those is
 one nobody reads. A message that cannot be classified is **not** silent; it

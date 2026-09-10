@@ -144,8 +144,38 @@ def pairs(events: list[dict]) -> list[dict]:
         elif kind == "telegram_reply":
             theirs.append(("telegram", event, True))
         elif kind == "message" and event.get("by") == "vendor":
-            real = not event.get("auto") and bool(event.get("kind"))
+            # An answer unless it is automated or is the receipt. It used to
+            # require a `kind`, and scripts/bounty.py wrote that key only when
+            # it was truthy -- so every human reply they have sent arrived
+            # with no kind at all and was discarded as unreal. The receipt is
+            # excluded by name because that is what it is; absence of a label
+            # is not evidence of anything.
+            real = not event.get("auto") and event.get("kind") != "first_pass"
             theirs.append(("a2a", event, real))
+
+    # Their `reply_to` names a message of OURS, with THEIR id for it. Where no
+    # a2a_intent exists -- and none ever has, because scripts/a2a.py has never
+    # been run -- that name is the only record the question was asked at all,
+    # and eight threads sit in the journal that way. The moment we asked is
+    # then taken from the automated receipt on the same thread, which by their
+    # own description arrives within seconds of a send. It is marked as a
+    # proxy, because a number that cannot say where it came from is how a
+    # measurement turns back into an impression.
+    for event in events:
+        if event.get("type") != "message" or event.get("by") != "vendor":
+            continue
+        answered = event.get("reply_to")
+        if not answered or ("a2a", str(answered)) in ours:
+            continue
+        receipts = [e for e in events
+                    if e.get("type") == "message" and e.get("by") == "vendor"
+                    and str(e.get("reply_to") or "") == str(answered)
+                    and (e.get("auto") or e.get("kind") == "first_pass")]
+        asked_at = min((str(r.get("at") or "") for r in receipts), default="")
+        ours[("a2a", str(answered))] = {
+            "msg_id": str(answered), "at": asked_at or None,
+            "asked_at_from": "receipt" if asked_at else None,
+        }
 
     out = []
     for (channel, our_id), sent in ours.items():
@@ -153,7 +183,8 @@ def pairs(events: list[dict]) -> list[dict]:
                    if c == channel and str(e.get("reply_to") or "") == our_id and real]
         answers.sort(key=lambda e: str(e.get("at") or ""))
         row = {"channel": channel, "question_id": sent.get("msg_id"),
-               "asked_at": sent.get("at"), "answer_id": None, "minutes": None}
+               "asked_at": sent.get("at"), "answer_id": None, "minutes": None,
+               "asked_at_from": sent.get("asked_at_from") or "us"}
         if answers:
             asked, replied = _moment(sent.get("at")), _moment(answers[0].get("at"))
             row["answer_id"] = answers[0].get("msg_id")

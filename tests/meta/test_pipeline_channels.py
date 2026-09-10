@@ -44,6 +44,14 @@ def _channels():
     return mod
 
 
+def _bounty_module():
+    spec = importlib.util.spec_from_file_location(
+        "bounty_under_test", REPO / "scripts" / "bounty.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
 def _cli():
     spec = importlib.util.spec_from_file_location(
         "channels_cli", REPO / "scripts" / "channels.py")
@@ -361,3 +369,126 @@ def test_status_offline_makes_no_request(tmp_path, monkeypatch):
 
     assert cli.main(["status", "--offline"]) == 0
     assert calls == [], f"--offline reached the network {len(calls)} time(s)"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_thread_is_reconstructed_from_their_reply_to_when_our_send_was_not_journalled(
+        tmp_path, monkeypatch):
+    """`compare` said a2a asked 0 while eight threads of ours sat in the journal.
+
+    `pairs` keyed a2a on `a2a_outcome.via`, and `scripts/a2a.py` -- which is
+    the only thing that writes an a2a_intent -- has never once been run: both
+    event types are zero in a journal of 1,475. The eight questions we did ask
+    went out by another path, and the only record of them is the `reply_to` on
+    their answers, which names OUR message with THEIR id for it.
+
+    So the thread key is their `reply_to`, and the moment we asked is taken
+    from the automated receipt on that thread -- the one message guaranteed to
+    arrive seconds after a send, by their own description of it. It is marked
+    `asked_at_from: "receipt"` because it is a proxy: a number that cannot say
+    where it came from is how a comparison becomes an impression again.
+
+    A journalled intent still wins where one exists, so nothing about
+    scripts/a2a.py's contract changes.
+    """
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    from qa.state import append_event, read_events
+
+    append_event(_vendor_a2a("a2a_r1", at="2026-09-08T08:00:04+00:00",
+                             text="queued for review", auto=True,
+                             kind="first_pass", answers="a2a_theirs"))
+    append_event(_vendor_a2a("a2a_h1", at="2026-09-08T09:30:00+00:00",
+                             text="Rewards are paid in ET10.",
+                             answers="a2a_theirs"))
+
+    rows = [p for p in _channels().pairs(read_events()) if p["channel"] == "a2a"]
+    assert len(rows) == 1, f"the thread was not reconstructed: {rows}"
+    assert rows[0]["answer_id"] == "a2a_h1"
+    assert rows[0]["minutes"] == 90
+    assert rows[0]["asked_at_from"] == "receipt", (
+        "a moment taken from their receipt must say so, because it is a "
+        "proxy for a send we never recorded"
+    )
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_human_reply_is_real_even_when_nothing_classified_it(tmp_path, monkeypatch):
+    """`real` required a `kind`, and their human replies carry none.
+
+    `scripts/bounty.py` wrote `auto` and `kind` only when truthy, so a reply
+    the vendor marked `auto: false, kind: null` -- which is every human answer
+    they have sent -- reached the journal with neither key, and
+    `bool(event.get("kind"))` made it unreal. The four answers we actually
+    have were invisible to the comparison for that reason alone.
+
+    The discriminator is the receipt, not the presence of a label: a message
+    is an answer unless it is automated or is the first-pass receipt.
+    """
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    from qa.state import append_event, read_events
+
+    append_event(_vendor_a2a("a2a_r2", at="2026-09-08T08:00:04+00:00",
+                             auto=True, kind="first_pass", answers="a2a_t2"))
+    # As bounty.py recorded it before this commit: no auto, no kind.
+    append_event(_vendor_a2a("a2a_bare", at="2026-09-08T08:45:00+00:00",
+                             text="Ref: ET-23959. The answer is 1,000 ET10.",
+                             answers="a2a_t2"))
+
+    rows = [p for p in _channels().pairs(read_events()) if p["channel"] == "a2a"]
+    assert rows and rows[0]["answer_id"] == "a2a_bare", (
+        "their answer was discarded for carrying no label"
+    )
+    assert rows[0]["minutes"] == 45
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_receipt_alone_is_a_question_they_have_not_answered(tmp_path, monkeypatch):
+    """Four of the eight threads have only the receipt, and that is the point.
+
+    An unanswered question must count as asked and unanswered, not vanish. If
+    the receipt were allowed to close its own thread the four would read as
+    answered in four seconds each, which is the failure this whole reader was
+    built to prevent.
+    """
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    from qa.state import append_event, read_events
+
+    append_event(_vendor_a2a("a2a_r3", at="2026-09-09T22:13:17+00:00",
+                             auto=True, kind="first_pass", answers="a2a_t3"))
+
+    report = _channels().compare(read_events())
+    assert report["a2a"]["asked"] == 1
+    assert report["a2a"]["unanswered"] == 1
+    assert report["a2a"]["n"] == 0
+    assert report["a2a"]["median_minutes"] is None
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_discriminator_is_recorded_even_when_it_is_false(tmp_path, monkeypatch):
+    """The reader can only be as good as what fetch_inbox wrote down.
+
+    `if metadata.get("auto")` kept the key only when it was True, so "we know
+    this is a person" and "we have no idea" arrived on the journal as the same
+    thing: no key. The three-valued alert -- robot, human, unclassifiable --
+    then had nothing to read for the human case, and 44 of 52 messages sat in
+    the unclassifiable bucket that exists for the 39 written before there was
+    a discriminator at all.
+    """
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    from qa.state import read_events
+
+    bounty = _bounty_module()
+    recorded = bounty.record_inbox([{
+        "id": "a2a_new", "created_at": "2026-09-10T01:51:41+00:00",
+        "content": "Rewards are paid in ET10.", "thread_id": "a2a_via",
+        "parent_message_id": "a2a_ours",
+        "metadata": {"auto": False, "kind": None},
+    }])
+    assert len(recorded["new"]) == 1
+
+    event = [e for e in read_events() if e.get("msg_id") == "a2a_new"][0]
+    assert event["auto"] is False, (
+        "a message the vendor says is not automated must say so on the "
+        "journal, or it cannot be told from one nobody classified"
+    )
+    assert "kind" in event and event["kind"] is None

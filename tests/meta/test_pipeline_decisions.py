@@ -127,6 +127,8 @@ PINNED = {
          "45c092f91272b69262a18cb5e05e107ef404910f4c7d45892d72a73a27c46d91"),
         ("2026-09-08", "the bell is bug-tracker only",
          "d19c226ec84ee951da90b3d36b279ade48560674dfd6cdb3786698a8229a5311"),
+        ("2026-09-10", "Ano, jen čísla",
+         "4d18272203a67eaede4d3380b022a4c03367dd846a2381893b1e44930c3b2117"),
     ],
     ".claude/skills/deep-pass/SKILL.md": [
         ("2026-09-07", "nechci behem dne ztracet cas",
