@@ -225,8 +225,74 @@ def test_we_never_send_them_to_a_repository_they_cannot_open():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_paragraph_names_the_kind_of_fingerprint_the_run_produced():
+    """`identity_kind` decides which sentence goes to the vendor, and nothing
+    tested it.
+
+    Three readers found the same hole from three directions: replace its body
+    with a constant `"declared"`, or invert its ternary, and the whole suite
+    stays green while every verification sends the claims.yaml sentence beside
+    an AST hash -- which is precisely the false paragraph the function was
+    written to prevent.
+
+    What it must do: read the MEASUREMENT, and only the results that actually
+    adjudicated this row. A check that declared its own fingerprint is
+    `declared`; one hashed from its syntax tree is `ast`; a row whose checks
+    disagree, or whose checks did not run, is None and the body then says the
+    smaller true thing rather than picking one.
+
+    Not asserted here, because it is unreachable: that the `identity` matches
+    the fingerprint actually SENT. verify.py sends `pinned_fingerprint` while
+    this reads the current run, and one reader worked out that the two cannot
+    differ on a row eligible for verification -- PASSING and REPRODUCING both
+    force pinned == observed. So the divergence is a latent shape, not a live
+    defect, and saying so here is cheaper than a test that cannot fail.
+    """
+    verify = _verify()
+    checks = ["tests/rest/test_a.py::test_one", "tests/rest/test_b.py::test_two"]
+
+    def run(*fingerprints, role="verdict"):
+        return {"results": [
+            {"nodeid": nodeid, "role": role,
+             "measurement": ({"fingerprint": fp} if fp else {})}
+            for nodeid, fp in zip(checks, fingerprints)]}
+
+    assert verify.identity_kind(run("sha256:claim-a", "sha256:claim-b"),
+                                checks) == "declared"
+    assert verify.identity_kind(run(None, None), checks) == "ast"
+    assert verify.identity_kind(run("sha256:claim-a", None), checks) is None, \
+        "checks that disagree must not have one of the two sentences picked for them"
+    assert verify.identity_kind({"results": []}, checks) is None, \
+        "no result adjudicated this row, so nothing is known about its fingerprint"
+
+    # A result that is not the verdict is not evidence about the row's
+    # identity: the same nodeid can report setup or teardown rows.
+    assert verify.identity_kind(run("sha256:claim-a", "sha256:claim-b",
+                                    role="setup"), checks) is None
+
+    # And a result for some other row cannot decide this one.
+    other = {"results": [{"nodeid": "tests/rest/test_z.py::test_z",
+                          "role": "verdict",
+                          "measurement": {"fingerprint": "sha256:z"}}]}
+    assert verify.identity_kind(other, checks) is None
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_filed_report_says_the_same_thing():
-    """submit.py is the other outbound writer and carried the same sentence."""
+    """submit.py is the other outbound writer and carried the same sentence.
+
+    **Asserted over the composed description, not over the file's text.** Until
+    2026-09-10 this exec'd the module, never called it, and grepped the source
+    for two literals. Three readers each defeated it the same way: rebuild the
+    line as `"(public repo: " + REPO_URL + ")"` and the pinned literal is absent
+    from the source while the private link is back in what the vendor receives;
+    leave "evidence retained" in a comment and the second assertion passes over
+    a payload that no longer says it. Its own sibling four functions up does
+    this correctly -- it calls `body()` and greps the result.
+
+    The domain is checked rather than the sentence, because what must never go
+    out is a pointer into a repository they cannot open, however it is worded.
+    """
     import importlib.util
     from pathlib import Path
 
@@ -236,6 +302,32 @@ def test_a_filed_report_says_the_same_thing():
     submit = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(submit)
 
-    source = (repo / "scripts" / "submit.py").read_text(encoding="utf-8")
-    assert "public repo: github.com/zakutana" not in source
-    assert "evidence retained" in source
+    report = {
+        "title": "A finding we filed",
+        "body": "One paragraph of what we measured.",
+        "severity": "medium",
+        "category": "api",
+        "expected": "The counter covers every position.",
+        "actual": "It covers 29 of 39.",
+        "steps": ["GET /api/v1/example", "read the count"],
+        "findings": ["CYM-example"],
+    }
+    findings = {"findings": [{
+        "id": "CYM-example", "title": "frozen title",
+        "detail": {"reason": "what the run measured", "count": 3},
+        "checks": ["tests/rest/test_example.py::test_one"],
+        "provenance": {"measured_at": "2026-09-10T12:00:00+00:00"},
+    }]}
+    composed = submit.compose(report, findings, "Filed by the QA agent.")
+    description = composed["description"]
+
+    assert "github.com" not in description and "github" not in description.lower(), (
+        f"the filed description points the vendor at a repository. Ours is "
+        f"private and they are not on it, so the line offers a door that does "
+        f"not open:\n{description}"
+    )
+    assert "evidence retained" in description, (
+        f"the description names the checks and does not say the evidence is "
+        f"kept and available, so it asks them to take the result on trust:\n"
+        f"{description}"
+    )
