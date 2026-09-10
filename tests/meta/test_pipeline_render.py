@@ -715,3 +715,147 @@ def test_every_vendor_reply_carries_a_stable_date():
         f"observation of their status rather than the first, so the unread "
         f"mark returns after every sweep: {dated_from_the_newest}"
     )
+
+
+# The stubs the page needs to run outside a browser. Deliberately dumb: every
+# element records what was written into it and answers nothing back, because
+# the question is whether the script REACHES the end, not whether the DOM is
+# faithful. A stub that returned live nodes would be a second implementation
+# of the page, and the second copy of a fact is the defect this repo keeps
+# finding.
+HARNESS = """
+const captured = {};
+const nodes = {};
+function node(id) {
+  if (nodes[id]) return nodes[id];
+  const el = {
+    id: id, dataset: {}, hidden: false, open: false, className: "",
+    textContent: "",
+    get innerHTML() { return captured[id] || ""; },
+    set innerHTML(v) { captured[id] = String(v); },
+    addEventListener() {}, insertAdjacentHTML() {}, setAttribute() {},
+    appendChild() {}, scrollIntoView() {}, closest() { return null; },
+    querySelector() { return null; }, querySelectorAll() { return []; },
+  };
+  nodes[id] = el;
+  return el;
+}
+globalThis.document = {
+  getElementById: node,
+  createElement: () => node("created-" + Math.random()),
+  querySelectorAll: () => [],
+  addEventListener() {},
+};
+globalThis.localStorage = {
+  store: {},
+  getItem(k) { return k in this.store ? this.store[k] : null; },
+  setItem(k, v) { this.store[k] = String(v); },
+};
+globalThis.location = { hostname: "test-harness", host: "test-harness" };
+globalThis.window = { addEventListener() {}, scrollY: 0, scrollTo() {} };
+process.on("exit", () => {
+  process.stdout.write("CAPTURED-JSON:" + JSON.stringify(captured));
+});
+"""
+
+
+def _run_page(node, workdir, payload):
+    """Execute the page's own script over `payload`.
+
+    Returns (returncode, stderr, captured), where `captured` maps element id
+    to the HTML the page wrote into it.
+    """
+    import subprocess
+
+    workdir.mkdir(parents=True, exist_ok=True)
+    render = _render()
+    html = render.TEMPLATE
+    opening = "<script>\n"
+    start = html.index(opening, html.index('id="data"'))
+    script = html[start + len(opening):html.rindex("</script>")]
+    script = script.replace("__DIGEST__", "0" * 64)
+
+    (workdir / "harness.js").write_text(
+        HARNESS + '\ndocument.getElementById("data").textContent = '
+        + json.dumps(json.dumps(payload)) + ";\n", encoding="utf-8")
+    (workdir / "page.js").write_text(script, encoding="utf-8")
+    (workdir / "run.js").write_text(
+        'require("./harness.js");\nrequire("./page.js");\n', encoding="utf-8")
+
+    # encoding is named: the page carries the vendor's own text, and this
+    # machine's console codepage is cp1250, which cannot decode it.
+    result = subprocess.run([node, str(workdir / "run.js")], capture_output=True,
+                            text=True, encoding="utf-8", errors="replace",
+                            timeout=60, cwd=str(workdir))
+    marker = "CAPTURED-JSON:"
+    captured = (json.loads(result.stdout.split(marker, 1)[1])
+                if marker in result.stdout else {})
+    return result.returncode, result.stderr, captured
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_page_runs_end_to_end_and_not_only_parses(tmp_path, monkeypatch):
+    """Parsing is not running, and two marks on the page had never been run.
+
+    `finding()` calls the formatter on `f.last_checked_at` and `f.stale_from`,
+    which are ISO strings, and the function in scope there was the hoisted
+    `when(ms)` -- the bell's relative-age formatter, which expects epoch
+    milliseconds. `Date.now() - "2026-09-09T22:13:39+00:00"` is NaN, so every
+    comparison in it is false and all three relative branches are unreachable;
+    it falls through to `new Date(ms).toISOString().slice(0, 10)`, which does
+    parse an ISO string, and the chip printed a bare date where the moment was
+    meant. Not a crash -- this test was written expecting one and the run said
+    otherwise -- but two marks whose only job is to say WHEN, printing less
+    than they were given.
+
+    They had never been drawn at all: `not_checked_in` is set by a NARROW
+    sweep and `stale_from` by a failed read of their tracker, and every
+    committed row has both null. `test_the_pages_javascript_parses` cannot see
+    either: `node --check` parses without executing, and both identifiers
+    resolve. So this one runs the page -- over the payload it renders today,
+    and over the payload the next `qa-sweep` produces.
+    """
+    import shutil
+
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("node is not installed, so the page cannot be run here")
+    if not (REPO / "state" / "ledger.json").exists():
+        pytest.skip("no committed ledger, so there is no page to run")
+
+    # Against the real payload, for the reason
+    # test_the_page_reads_no_field_the_payload_stops_writing gives: a row this
+    # test shaped by hand would only ever check the page against the test's
+    # idea of a row. Composing reads; nothing here writes.
+    monkeypatch.delenv("QA_STATE_DIR", raising=False)
+    render = _render()
+    live = _live_payload(render)
+
+    code, err, captured = _run_page(node, tmp_path / "now", live)
+    assert code == 0, f"the page throws on today's payload:\n{err[:900]}"
+    assert captured.get("findings"), "the page wrote no findings"
+
+    # The sweep that has never run while the console was up: a narrower
+    # selector leaves rows it did not adjudicate, and the fold marks them.
+    narrow = json.loads(json.dumps(live))
+    assert narrow["findings"], "no rows, so this test would prove nothing"
+    for row in narrow["findings"]:
+        row["not_checked_in"] = "run-20260910T045212Z-de93be7"
+        row["last_checked_at"] = "2026-09-09T22:13:39+00:00"
+        row["stale_from"] = "2026-09-09T22:13:39+00:00"
+
+    code, err, captured = _run_page(node, tmp_path / "narrow", narrow)
+    assert code == 0, (
+        "the page throws on a payload from a narrow sweep, which is the "
+        "ordinary sweep -- and a throw at the top level of the page's only "
+        f"script would render nothing at all:\n{err[:900]}"
+    )
+    body = captured.get("findings", "")
+    assert "not re-checked" in body, (
+        "the mark saying a row was not re-checked never reached the page"
+    )
+    assert "their side unread" in body
+    assert "2026-09-09 22:13" in body, (
+        "the moment beside those marks is printed plainly; a relative age is "
+        "what the wrong `when` was reaching for"
+    )

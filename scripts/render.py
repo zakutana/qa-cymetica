@@ -1213,6 +1213,13 @@ function newestFromThem(f) {
 // chip rendered unstyled however many rules were written.
 const stateClass = s =>
   "s-" + String(s).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+
+// An ISO moment, printed. There are two formatters on this page and they take
+// different things: this one a timestamp string, `when(ms)` below an epoch. The
+// marks in finding() called `when` on an ISO string, where every comparison is
+// NaN-false and only the last line survives, so they printed a bare date. Both
+// are drawn by a narrow sweep or a failed read, so neither had ever been seen.
+const stamp = t => t ? String(t).replace("T", " ").slice(0, 16) : "";
 const SEV = [
   ["S0-CUSTODY","custody / auth","s0"], ["S1-INTEGRITY","data integrity","s1"],
   ["S2-MEASUREMENT","measurement","s2"], ["S3-CONTRACT","contract","s3"],
@@ -1344,8 +1351,6 @@ document.getElementById("map").innerHTML = D.groups.map(g => {
 // mixing them produced a panel where a message nobody received sat beside a
 // report they had answered, as if both were the same kind of fact.
 function conversation(f) {
-  const when = t => t ? t.replace("T", " ").slice(0, 16) : "";
-
   if (!f.thread || !f.thread.length) {
     return `<h4 class="sec">Conversation with Cymetica</h4>
       <div class="awaiting">Not filed to their tracker yet.</div>`;
@@ -1363,14 +1368,14 @@ function conversation(f) {
       : (m.text ? `<p>${esc(m.text)}</p>`
                 : `<p class="chat-quiet">Status changed with no note.</p>`);
     return `<div class="chat ${m.who}">
-      <div class="chat-meta">${head}<time>${esc(when(m.at))}</time></div>
+      <div class="chat-meta">${head}<time>${esc(stamp(m.at))}</time></div>
       <div class="chat-body">${body}</div></div>`;
   }).join("");
 
   // Said once, under the thread, rather than under every message.
   const note = f.verification
     ? `<div class="chat-note ok"><b>We re-ran the test and it passes.</b>
-       ${esc(when(f.verification.at))} by run <code>${esc(f.verification.run_id)}</code>.
+       ${esc(stamp(f.verification.at))} by run <code>${esc(f.verification.run_id)}</code>.
        ${f.thread.some(m => m.who === "them" && /fix|resolv|complet|clos/i.test(m.status || ""))
          ? "Their claim and our measurement agree, which is what closes it."
          : "They never claimed a fix for this one; our own test is what closes it."}</div>`
@@ -1414,9 +1419,9 @@ function finding(f) {
           <span class="state ${stateClass(f.display_state)}">${esc(f.display_state)}</span>
           ${f.filed && f.filed.length ? `<span class="filed">${f.filed.map(x=>"#"+x.report_id).join(", ")}</span>` : ""}
           ${f.unmeasured ? `<span class="unmeasured" title="The wording and numbers here are from the day this was written; no run since has confirmed they still hold.">figures not re-measured</span>` : ""}
-          ${f.not_checked_in ? `<span class="unchecked" title="This sweep ran a narrower selector and did not include this check. The state and figures shown are the ones the last run that did include it left behind.">not re-checked${f.last_checked_at ? " &middot; last " + esc(when(f.last_checked_at)) : ""}</span>` : ""}
+          ${f.not_checked_in ? `<span class="unchecked" title="This sweep ran a narrower selector and did not include this check. The state and figures shown are the ones the last run that did include it left behind.">not re-checked${f.last_checked_at ? " &middot; last " + esc(stamp(f.last_checked_at)) : ""}</span>` : ""}
           ${(f.owed || []).map(o => `<span class="owed" title="Something is still owed on this row: the fold works it out from the events, and it stays here until an event settles it. A re-verify is cleared by a level-V run under the pinned fingerprint; a retraction by a retraction-sent event.">${esc(o)}</span>`).join("")}
-          ${f.stale_from ? `<span class="unheard" title="The last attempt to read their bug tracker did not succeed, so what they say here is as of the last clean read and may have moved since. A failed read is not an empty one: nothing on the vendor's side was allowed to change on the strength of it.">their side unread &middot; since ${esc(when(f.stale_from))}</span>` : ""}
+          ${f.stale_from ? `<span class="unheard" title="The last attempt to read their bug tracker did not succeed, so what they say here is as of the last clean read and may have moved since. A failed read is not an empty one: nothing on the vendor's side was allowed to change on the strength of it.">their side unread &middot; since ${esc(stamp(f.stale_from))}</span>` : ""}
           <span class="newreply" data-newreply hidden title="They replied since you last looked"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="2.2" y="4.6" width="15.6" height="11" rx="2"/><path d="M2.6 6.2 10 11.4l7.4-5.2"/></svg><span class="sr-only">new reply</span></span>
         </div>
       </span>
