@@ -1,0 +1,48 @@
+{
+  "captured_at": "2026-09-10T22:29:06+00:00",
+  "endpoint_rule": null,
+  "nodeid": null,
+  "request": {
+    "body": {
+      "encoding": "empty",
+      "value": null
+    },
+    "headers": {
+      "accept": "application/json",
+      "accept-encoding": "gzip, deflate, zstd",
+      "connection": "keep-alive",
+      "host": "cymetica.com",
+      "user-agent": "qa-cymetica/0.1 (independent QA; contact via vendor Telegram channel)",
+      "x-api-key": "<redacted>"
+    },
+    "method": "GET",
+    "url": "https://cymetica.com/api/v1/bounty/a2a/inbox/expire76-qa?unread_only=false"
+  },
+  "response": {
+    "body": {
+      "encoding": "json",
+      "truncated": false,
+      "value": {
+        "error": "Service temporarily unavailable",
+        "retry_after": 3
+      }
+    },
+    "elapsed_ms": 48454,
+    "headers": {
+      "connection": "keep-alive",
+      "content-length": "59",
+      "content-type": "application/json",
+      "date": "Thu, 10 Sep 2026 22:29:07 GMT",
+      "referrer-policy": "strict-origin-when-cross-origin",
+      "retry-after": "3",
+      "server": "nginx",
+      "strict-transport-security": "max-age=31536000; includeSubDomains",
+      "x-content-type-options": "nosniff",
+      "x-frame-options": "SAMEORIGIN"
+    },
+    "reason": "Service Temporarily Unavailable",
+    "status_code": 503
+  },
+  "run_id": "script-bounty",
+  "tier": "SAFE"
+}

@@ -173,6 +173,35 @@ to neodškrtl, nebo to nikdy nebylo další na řadě.
   Bez toho je poslední článek řetězce „vsadíme → vyřeší se → dostaneme
   zaplaceno" nezměřený, a je to ten, na kterém kampaň vydělá.
 
+- [ ] 2026-09-11  Přečíst `docs/night-2026-09-11.md` — co se stalo v noci, čtyři nové nálezy a tři naše vlastní vady
+
+- [ ] 2026-09-11  Zjistit, jestli naklonovaný bot vůbec obchoduje
+
+  `CLN-0002` běží v paperu s 1 000 USDC, `is_trading: true`, a za prvních
+  40 minut udělal **nula obchodů**. `clone.py watch` vzorkuje každých deset
+  minut do `state/clones.jsonl` osm hodin. Ráno přečíst řadu: pokud je
+  `trades_executed` pořád 0, je to nález — bot, který jde naklonovat, nabít a
+  spustit a nic nedělá, je celá ta cesta zbytečná. Pokud obchoduje, je to
+  první měřená odpověď na to, jestli kampaň vydělává.
+
+- [ ] 2026-09-11  Rozhodnout, co s `QUERY_RESTRICTED` u Nexuse
+
+  Na otázku „kolik nabít a jaké stop-lossy nastavit" odpovídá
+  `{'error': 'QUERY_RESTRICTED'}` — dvakrát, s id instance i bez něj. Tu samou
+  třídu rady pro event cards dá v plném rozsahu (NEX-0012, NEX-0016). Může to
+  být záměr; co záměr být nemůže, je odmítnutí bez důvodu, protože agent nemá
+  jak otázku přeformulovat. Nezaloženo — chce to tvůj úsudek, jestli to je
+  vada nebo jejich politika.
+
+- [ ] 2026-09-11  Dvě z Nexusových vlastních priorit jsme odmítli otestovat
+
+  Chtěl po nás poslat `mode=live` na `place_order` a překlopit klon
+  paper→live→paper, abychom ověřili, že server vynutí paper zpátky. Kdyby to
+  nevynutil, je to reálný obchod za reálné peníze; CLAUDE.md říká, že jejich
+  rada nesmí utrácet bez paperu, a tohle je přesně ten případ. Zvenčí to
+  bezpečně otestovat nejde. Jestli to má být otestované, je to **zpráva pro
+  ně** — mají to zevnitř levnější a bezpečnější.
+
 - [ ] 2026-09-10  Dát `nexus.py` způsob, jak zapsat odpověď, která nepřišla naším kanálem
 
   Web chat jde jenom přes prohlížeč, takže jeho odpovědi teď leží v `docs/` a
