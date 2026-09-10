@@ -21,7 +21,7 @@ to neodškrtl, nebo to nikdy nebylo další na řadě.
 
 ---
 
-- [ ] 2026-09-10  Naklonovat Hybrid 2 (Blue) v paper režimu — bota, kterého Nexus sám doporučil (+19,86 % backtest, Sharpe 2,79, max DD 1,75 %)
+- [x] 2026-09-10  Naklonovat Hybrid 2 (Blue) v paper režimu — bota, kterého Nexus sám doporučil (+19,86 % backtest, Sharpe 2,79, max DD 1,75 %)
 
   Nexus ho jmenoval jako odpověď na „jak z 100k udělat 1M". Do dneška to
   neslo blokované: `bots.clone` bylo `probe_only`, protože klonování agenta se
@@ -36,7 +36,14 @@ to neodškrtl, nebo to nikdy nebylo další na řadě.
   neznámý MCP nástroj se na MUTATE už nepustí, a `required_flags` se čte podle
   **jména** příznaku, ne jen že seznam není prázdný. Klon bez `paper` neodejde.
 
-- [ ] 2026-09-10  Doměřit Nexus kanál na větším vzorku, než z něj uděláme závěr pro Cymeticu
+  **Odškrtnuto 2026-09-10 večer, ale ne tím botem.** Hybrid 2 (Blue) klonovat
+  nejde — v `/api/v1/cloned-bots/available` není, protože to podle Nexuse
+  vůbec není druh bota, ale konfigurace backtestu (`bt-hybrid2-blue`). Nevybíral
+  jsem náhradu sám; zeptal jsem se Nexuse, který z těch 22 skutečných to má být,
+  a `NEX-0010` odpověděl **Perceptron Oracle** s odůvodněním. Naklonováno jako
+  `CLN-0002`, `is_paper: true` podle **jejich** odpovědi, zůstatek se nehnul.
+
+- [x] 2026-09-10  Doměřit Nexus kanál na větším vzorku, než z něj uděláme závěr pro Cymeticu
 
   Deep pass opravil měření a první pravdivý údaj je zlý: tři z pěti hlubokých
   dotazů nedopověděly, zbylé 1527 s, 552 s a 535 s proti jejich publikovaným
@@ -46,7 +53,7 @@ to neodškrtl, nebo to nikdy nebylo další na řadě.
 
   `python scripts/nexus.py ask "..."` je SAFE tier, nic nestojí a zapisuje se.
 
-- [ ] 2026-09-10  Obě hromadící kontroly soudit v přítomném čase, ne přes celý log
+- [x] 2026-09-10  Obě hromadící kontroly soudit v přítomném čase, ne přes celý log
 
   Sweep `PRE-0081`: #87 čte `state/paper.jsonl` a soudí **každý** obchod, #85
   čte všechny zaznamenané odpovědi Nexuse a soudí **sjednocení** nástrojů přes
@@ -68,7 +75,7 @@ to neodškrtl, nebo to nikdy nebylo další na řadě.
   aby nová definice jednou zčervenala pod vlastním otiskem. To je přesně to, co
   `VERIFIED FIXED` potřebuje.
 
-- [ ] 2026-09-10  Jeden 1 USDC paper obchod po jejich opravě, jako měření
+- [x] 2026-09-10  Jeden 1 USDC paper obchod po jejich opravě, jako měření
 
   Jejich zpráva v 18:06 tvrdí, že paper nákup teď odečítá. Změřit se to dá
   jenom obchodem umístěným **po** té opravě. Před ním přečíst `paper.py
@@ -81,13 +88,13 @@ to neodškrtl, nebo to nikdy nebylo další na řadě.
   `--nexus` — měření je naše, ne obchod podle Nexuse, a docstring říká, že to
   má být vzácné. Tohle je ten případ.
 
-- [ ] 2026-09-10  Korekce na #85 přes `verify.py`, ne prózou
+- [x] 2026-09-10  Korekce na #85 přes `verify.py`, ne prózou
 
   `fail` v 16:52 stál na odpovědi z 10:23, tedy starší než jejich release ve
   12:37. Až bude čerstvá odpověď (`NEX-0009`) čistá, projde korekce pipeline
   jako verifikace. Telegram k tomu dostane jednu větu, ne celý obsah.
 
-- [ ] 2026-09-10  Klonovací pravidlo ve `components.yaml` míří na cestu, která neexistuje
+- [x] 2026-09-10  Klonovací pravidlo ve `components.yaml` míří na cestu, která neexistuje
 
   Blokuje položku o Hybrid 2 nad tímhle řádkem, tak se dělá první. Jejich
   nejnovější snapshot (dnes 18:50) nemá `/api/v1/agents/*` ani jednu cestu a
@@ -117,6 +124,20 @@ to neodškrtl, nebo to nikdy nebylo další na řadě.
   Výsledek kontroly: **nezeptal se ani na horizont, ani na toleranci ztráty**,
   stejně jako přes `ask_nexus_deep`. Tvrzení tedy neplatí na obou kanálech,
   které umíme změřit.
+
+- [ ] 2026-09-10  Naklonovaného bota nejde spustit — napsat na to kontrolu a založit nález
+
+  `CLN-0002` se vrátil `is_trading: false` a jejich vlastní popis říká *„The
+  cloned bot starts PAUSED - user must enable trading."* Celý jejich
+  cloned-bots povrch je pět cest — `available`, `clone`, `my-clones`,
+  `{id}/fund`, `{id}/go-live` — a ani jedna klona nespouští, nepauzuje ani
+  nekonfiguruje. Nexus radí volat `update_bot_settings`, který `tools/list`
+  neservíruje, a jako záložní radu jmenuje „bot-indicators REST endpoint under
+  `/api/v1/cloned-bots`", který v žádné openapi cestě není.
+
+  Kampaň, kterou to má rozjet, tím stojí: klonovat v paperu umíme, rozjet ne.
+  Nález zatím **nezaložený** — sweep dneska už proběhl a tohle chce nejdřív
+  kontrolu, aby bylo co ověřit.
 
 - [ ] 2026-09-10  Dát `nexus.py` způsob, jak zapsat odpověď, která nepřišla naším kanálem
 
