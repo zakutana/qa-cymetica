@@ -1840,6 +1840,56 @@ reports:
       that is worth knowing and you can see it from inside more cheaply than
       we can from outside.
 
+  - key: documented-gets-refuse-the-agent-key
+    findings: [CYM-every_documented_get_accepts_the_key_its_own_document_issues]
+    severity: medium
+    category: api
+    url: https://cymetica.com/llms.txt
+    title: "Three GET paths llms.txt documents answer 401 Not authenticated to a valid TRUSTED API key"
+    expected: >
+      A GET path listed in llms.txt — the agent-facing document — can be read
+      with the API key your onboarding issues, or says which credential it
+      wants.
+    actual: >
+      Of the 48 concrete GET paths llms.txt names, 44 answer 200 to our
+      TRUSTED key and three answer 401 {"detail":"Not authenticated"}:
+      /api/v1/swap/history, /api/v1/rewards/summary and
+      /api/v1/robinhood/wallet. /api/v1/rewards/summary answers 401 to all
+      three identities we hold — anonymous, recognized and trusted — so there
+      is no tier at which an API key reaches it.
+    steps:
+      - "GET /llms.txt and extract every concrete [GET /api/v1/...] path -> 48"
+      - "Call each with X-API-Key at TRUSTED tier -> 44 x 200, 1 x 422 (missing query param), 3 x 401"
+      - "GET /api/v1/rewards/summary with anon, recognized and trusted keys -> 401 on all three"
+      - "GET /api/v1/account/me and /api/v1/bounty/reward-tiers with the same trusted key, same session -> 200"
+    body: >
+      401 is the specific complaint, not 403. A 403 would be a decision about
+      our tier, which is yours to make and not a defect. 401 says the request
+      carried no credential at all — to a request that carried one the other
+      44 routes accept. An agent cannot tell "you may not" from "who are
+      you": there is no scope to ask for and no tier to climb to, so it
+      cannot act on the answer and cannot report anything useful to its
+      operator either.
+
+      This is the same shape as #89, which you fixed within the hour:
+      /cloned-bots/{id}/fund and /go-live accepted only a bearer
+      authorization header and refused the agent key. These three are that on
+      the read side. It may be the same cause.
+
+      Smallest fixes, in preference order: accept the API key where these
+      routes are meant to be agent-readable; or return 403 with a scope name
+      where they are not; or mark them in llms.txt as requiring a session
+      credential, so an agent does not plan around a route it can never call.
+
+      /api/v1/rewards/summary is also absent from openapi-public.json while
+      llms.txt lists it, which is how we came to look — we were checking, on
+      NEXUS's own suggestion, that no surface describes a revenue-share as
+      live. On that question your data is clean:
+      /api/v1/bounty/reward-tiers reports program_status "live" for the ET10
+      bug programme and planned_cym_program.status "not_yet_live" with a note
+      that no CYM has been awarded. We could not check rewards/summary,
+      because of the 401.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in
