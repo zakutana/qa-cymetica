@@ -171,6 +171,34 @@ def _thread_for(row: dict, sent: dict, replied: dict, filed_at: dict) -> list[di
                 "at": answer.get("at"), "status": answer.get("status"),
                 "text": answer.get("text") or "",
             })
+
+    # What WE said after their answer. A verification goes out through
+    # POST /reports/{id}/verification rather than as a comment, so it had no
+    # bubble here -- and the operator read #86, saw "Resolved via ticket
+    # ET-24493" as the last word, and asked why the page was calling the row
+    # STILL REPRODUCIBLE. We had told them, an hour later. The only trace was
+    # our own verdict quoted back inside THEIR message, because their
+    # status_notes is one growing field their server appends to.
+    #
+    # From filing.verifications, which the fold computes, so the panel and the
+    # ledger cannot disagree about what was sent.
+    filed_ids = {r["report_id"] for r in (row.get("filing") or {}).get("reports", [])}
+    for verification in (row.get("filing") or {}).get("verifications", []):
+        report_id = verification.get("report_id")
+        if report_id not in filed_ids:
+            continue
+        passed = verification.get("verdict") == "pass"
+        out.append({
+            "who": "us", "report_id": report_id,
+            "at": verification.get("at"),
+            "verdict": verification.get("verdict"),
+            "run_id": verification.get("run_id"),
+            "text": ("We re-checked and it passes, under the definition it "
+                     "failed under."
+                     if passed else
+                     "We re-checked and it still fails. This corrects the "
+                     "record rather than answering it."),
+        })
     return sorted(out, key=lambda m: (m.get("at") or "", m["report_id"]))
 
 
@@ -1172,6 +1200,12 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:15.0px; max-wid
   background:var(--surface-2); border-radius:3px; padding:1px 5px; margin:1px 2px 1px 0;
 }
 .kvt-in td { padding:1px 8px 1px 0; border:0; }
+.chat-verdict {
+  font-family:var(--mono); font-size:11px; text-transform:uppercase;
+  letter-spacing:.04em; padding:1px 6px; border-radius:4px;
+}
+.chat-verdict.ok  { color:var(--ok);  border:1px solid var(--ok); }
+.chat-verdict.bad { color:var(--bad); border:1px solid var(--bad); }
 /* ---------- stats ---------- */
 .stat-grid {
   display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
@@ -1821,10 +1855,18 @@ function conversation(f) {
   }
 
   const bubbles = f.thread.map(m => {
-    const head = m.who === "us"
+    // Three kinds of message, not two. A verification is ours but it is not a
+    // report: it goes out through a different endpoint, says one thing, and
+    // is the only way this panel can show that we answered their answer.
+    const head = m.verdict
+      ? `<b>We re-checked</b> <span class="chat-verdict ${m.verdict === "pass" ? "ok" : "bad"}">${esc(m.verdict)}</span>`
+      : m.who === "us"
       ? `<b>We filed report #${m.report_id}</b>`
       : `<b>They answered</b> <span class="chat-status">${esc(m.status || "")}</span>`;
-    const body = m.who === "us"
+    const body = m.verdict
+      ? `<p>${esc(m.text)}</p>`
+        + (m.run_id ? `<p class="chat-quiet">run <code>${esc(m.run_id)}</code></p>` : "")
+      : m.who === "us"
       ? [m.title && `<div class="chat-title">${esc(m.title)}</div>`,
          m.text && `<p>${esc(m.text)}</p>`,
          m.expected && `<p><b>Expected.</b> ${esc(m.expected)}</p>`,

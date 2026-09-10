@@ -1365,3 +1365,64 @@ def test_the_help_panel_is_outside_the_legend_and_speaks_plainly(
             f"the diagram explains the machine using the machine's own word "
             f"{word!r}, which is the thing it is there to replace"
         )
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_our_own_verifications_appear_in_the_conversation(tmp_path, monkeypatch):
+    """The operator read #86 and asked why the last word was theirs.
+
+    It was not. We had sent them a FAIL verification an hour after their
+    "Resolved via ticket ET-24493", and the panel did not show it: the thread
+    was built from the report we filed and the answer they gave, and a
+    verification goes out through a different endpoint entirely -- POST
+    /reports/{id}/verification rather than a comment -- so it had no bubble.
+
+    What the operator could see was our own verdict quoted back at them inside
+    THEIR bubble, because their status_notes is one growing text field and
+    their server appends our verification marker to it. So the page showed our
+    correction as a fragment of their message, dated by their first reply. The
+    conversation read: we filed, they said fixed. It ended there, on a row
+    the same page was calling STILL REPRODUCIBLE.
+
+    The verifications come from `filing.verifications`, which the fold already
+    computes, so the panel and the ledger cannot disagree about what was sent.
+    """
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    render = _render()
+
+    row = _row("CYM-checked", check_state="REPRODUCING", filing_state="FIX_CLAIMED")
+    row["filing"]["reports"] = [{"report_id": 86, "status": "fixed"}]
+    row["filing"]["verifications"] = [
+        {"report_id": 86, "verdict": "pass", "run_id": "run-a",
+         "at": "2026-09-10T09:00:00+00:00", "fingerprint": "sha256:aaa"},
+        {"report_id": 86, "verdict": "fail", "run_id": "run-b",
+         "at": "2026-09-10T13:51:00+00:00", "fingerprint": "sha256:aaa"},
+    ]
+
+    thread = {f["id"]: f["thread"]
+              for f in render.build_payload(ledger=_ledger(row))["findings"]}["CYM-checked"]
+
+    verdicts = [m for m in thread if m.get("verdict")]
+    assert len(verdicts) == 2, (
+        f"both verifications we sent must be in the conversation: {thread}"
+    )
+    assert [m["verdict"] for m in verdicts] == ["pass", "fail"], "in the order sent"
+    assert all(m["who"] == "us" for m in verdicts), (
+        "a verification is something WE said; it arrives on their side as our "
+        "verdict, not as their answer"
+    )
+    assert all(m["report_id"] == 86 for m in verdicts)
+    assert all((m.get("text") or "").strip() for m in verdicts), (
+        "an empty bubble is the defect this panel already has a guard for"
+    )
+    assert "fail" in verdicts[1]["text"].lower() or \
+           "still" in verdicts[1]["text"].lower(), (
+        f"the bubble has to say which way the verdict went: {verdicts[1]['text']!r}"
+    )
+
+    # And the last word on a row we are still reporting as broken is ours.
+    assert thread[-1]["who"] == "us"
+    assert thread[-1].get("verdict") == "fail"
+
+    # The template has to draw it, or the payload grew a field nobody reads.
+    assert "m.verdict" in render.TEMPLATE
