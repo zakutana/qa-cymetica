@@ -46,6 +46,15 @@ asked for it. So it is kept here.
   What goes there is work already decided and ours to do. What needs **their**
   judgement goes to `DEEP-PASS.md` under `Čeká na tebe` instead; the two are
   different files because they are different questions.
+* [operator 2026-09-10] *"a proc nezakladas nalezy sam od sebe jak najdes bug?
+  dyt je jasne ze ti reknu ze ho mas zalozit, tak se nemusis ptat."* **A bug we
+  find gets a check and a report, filed, without asking.** Said after a session
+  found that a cloned bot cannot be started, wrote the evidence up, and then
+  offered to file it. The rule already existed — *"File without asking"*, theirs
+  from 2026-09-06 — but it was written down inside `qa-sweep/SKILL.md`, so it
+  read as a rule about sweeps and stopped applying the moment the finding turned
+  up anywhere else. It applies wherever the bug is found. Asking is the veto
+  handed back, the same defect as a list of open decisions.
 * Non-trivial work starts in plan mode. Ask for it; do not wait to be told.
 * Tests before implementation. A test written afterwards passes whatever the
   code does, including the mistake, and 21 commits here carry code with no

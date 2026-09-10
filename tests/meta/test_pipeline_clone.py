@@ -112,6 +112,40 @@ def test_guidance_that_was_never_answered_is_refused(tmp_path, monkeypatch):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_only_a_405_counts_as_a_route_that_exists():
+    """The check over their clone surface claims existence and never absence.
+
+    A GET against a path FastAPI routes for another method answers 405 and
+    names the method in `Allow`; that is positive evidence the router matched.
+    A 404 is not evidence -- an unrouted path and a path that simply has no
+    GET look identical from outside -- so a 404 must never reach the verdict.
+
+    Every audit claim this repository has had rejected at triage asserted an
+    absence, which is why the direction is pinned by a test rather than left
+    to whoever next edits the check.
+    """
+    from tests.rest.test_cloned_bots_surface import served_but_undocumented
+
+    documented = {"/api/v1/cloned-bots/{instance_id}/fund",
+                  "/api/v1/cloned-bots/{instance_id}/go-live"}
+    probed = {
+        "/api/v1/cloned-bots/abc": "DELETE",
+        "/api/v1/cloned-bots/abc/settings": "PATCH",
+        "/api/v1/cloned-bots/abc/fund": "POST",
+        # 404 under GET. Says nothing either way, and must not be reported.
+        "/api/v1/cloned-bots/abc/indicators": None,
+    }
+    hidden = served_but_undocumented(probed, documented)
+
+    assert [h["path"] for h in hidden] == [
+        "/api/v1/cloned-bots/{instance_id}",
+        "/api/v1/cloned-bots/{instance_id}/settings"], (
+        "a 404 was counted as a missing route, or the uuid was compared "
+        "against their {instance_id} template without being normalised")
+    assert [h["methods"] for h in hidden] == ["DELETE", "PATCH"]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_clone_record_is_not_written_into_the_paper_trade_log(
         tmp_path, monkeypatch):
     """#87 groups every id in paper.jsonl into intent/outcome/after and reads
