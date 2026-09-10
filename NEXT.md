@@ -125,7 +125,7 @@ to neodškrtl, nebo to nikdy nebylo další na řadě.
   stejně jako přes `ask_nexus_deep`. Tvrzení tedy neplatí na obou kanálech,
   které umíme změřit.
 
-- [ ] 2026-09-10  Naklonovaného bota nejde spustit — napsat na to kontrolu a založit nález
+- [x] 2026-09-10  Naklonovaného bota nejde spustit — napsat na to kontrolu a založit nález
 
   `CLN-0002` se vrátil `is_trading: false` a jejich vlastní popis říká *„The
   cloned bot starts PAUSED - user must enable trading."* Celý jejich
@@ -136,8 +136,31 @@ to neodškrtl, nebo to nikdy nebylo další na řadě.
   `/api/v1/cloned-bots`", který v žádné openapi cestě není.
 
   Kampaň, kterou to má rozjet, tím stojí: klonovat v paperu umíme, rozjet ne.
-  Nález zatím **nezaložený** — sweep dneska už proběhl a tohle chce nejdřív
-  kontrolu, aby bylo co ověřit.
+
+  **Založeno jako #88** — a při psaní se ukázalo, že to není chybějící
+  endpoint: `GET` na obě cesty vrací 405 s hlavičkou `Allow`, takže existují a
+  jen je nikde nepublikují. Ostřejší nález a pravdivý.
+
+- [x] 2026-09-10  Klon nejde nabít agentním klíčem — #89
+
+  Operátor ukázal kartu bota: practice balance 0.00 a tlačítko Fund. Volání
+  `POST /cloned-bots/{id}/fund` tím samým klíčem, co klon vytvořil, vrátí
+  **401 s prázdným tělem**. Jejich openapi říká proč: `clone` a `my-clones`
+  publikují `authorization` i `x-api-key`, `fund` a `go-live` jen
+  `authorization`.
+
+  Podlaha pro `fund` nemůže být `required_flags` — `FundBotRequest` má jediné
+  pole `amount`, není co nést. Bydlí proto v `clone.py`: `fundable()` se před
+  každým převodem zeptá **jich**, jestli je cíl paper, a odmítne na false, na
+  null i na tělo, které nepřečte. Slabší než podlaha v transportu, a je to
+  napsané nahlas.
+
+- [ ] 2026-09-10  Zjistit, jestli je 401 na `/fund` záměr, a podle toho #89 upravit
+
+  V reportu je to napsané jako otázka: kdyby chtěli na pohyb peněz silnější
+  credential než API klíč, je to obhajitelný návrh a #89 se stáhne a přepodá
+  jako dokumentace. Do té doby je to blokátor kampaně — klon vzniká s 0.00 a
+  bez nabití neobchoduje.
 
 - [ ] 2026-09-10  Dát `nexus.py` způsob, jak zapsat odpověď, která nepřišla naším kanálem
 
