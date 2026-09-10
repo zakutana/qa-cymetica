@@ -504,11 +504,19 @@ mcp_tools:
      launchpad_list_tokens, launchpad_trade_quote, list_my_aib_funds,
      list_ontology_dimensions, browse_ontology, resolve_ontology_concept,
      search_ontology, find_trade_path, get_strategy_returns,
-     get_deep_answer, ask_nexus_deep]
+     get_deep_answer, ask_nexus_deep,
+     # Served from their 2026-09-10 12:37 release, after they fixed #85.
+     # Both read: one looks a card up, the other backtests a basket and
+     # NEXUS describes it as free and read-only.
+     get_event_card_info, backtest_event_card_idea]
   contribute:
     [submit_observation, submit_feedback, request_feature, submit_signal]
   trade:
-    [place_order]
+    # trade_event_card is paper by default and live on a funded account,
+    # which is a control the classifier cannot see from the tool name. It
+    # sits here until the paper floor is re-derived per endpoint, the way
+    # event_cards.buy was on 2026-09-10.
+    [place_order, trade_event_card]
   provision:
     [create_aib_fund, edit_aib_fund_basket, launchpad_launch_token,
      register_webhook, subscribe_prices]
