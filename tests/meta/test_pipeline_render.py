@@ -859,3 +859,65 @@ def test_the_page_runs_end_to_end_and_not_only_parses(tmp_path, monkeypatch):
         "the moment beside those marks is printed plainly; a relative age is "
         "what the wrong `when` was reaching for"
     )
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_every_row_says_when_it_last_changed(tmp_path, monkeypatch):
+    """The operator ran a sweep, six rows closed, and the page could not say so.
+
+    Their words, 2026-09-10: *"mame open issues nejake a pak dam sweep a ty
+    plno veci opravis a ony zmiznou z toho tabu protoze se uzavrely a ja nevim
+    co se deje... neni tam zaden cas zmeny posledni videt, nebo to nejde nijak
+    sesortovat podle casu"*. The ledger has the answer on every row and had
+    never projected it: `transitions[]` carries `at` for both axes, and the
+    payload carried neither that nor `first_seen.at`.
+
+    Both axes count. A row that closed because THEY answered moved on the
+    filing axis and never touched the check axis, and it disappears from the
+    open filter exactly as loudly as one our own run closed.
+    """
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    render = _render()
+
+    moved = _row("CYM-moved", check_state="PASSING", filing_state="FIX_CLAIMED")
+    moved["first_seen"] = {"at": "2026-09-04T10:00:00+00:00",
+                           "cause": {"run_id": "run-a"}}
+    moved["transitions"] = [
+        {"axis": "check", "from": "REPRODUCING", "to": "PASSING",
+         "cause": {"run_id": "run-b"}, "at": "2026-09-08T09:00:00+00:00"},
+        {"axis": "filing", "from": "REPLIED", "to": "FIX_CLAIMED",
+         "cause": {"event_id": "e1"}, "at": "2026-09-09T22:13:39+00:00"},
+    ]
+    quiet = _row("CYM-quiet", check_state="UNVERIFIED")
+    quiet["first_seen"] = {"at": "2026-09-05T08:30:00+00:00",
+                           "cause": {"run_id": "run-a"}}
+    quiet["transitions"] = []
+
+    rows = {f["id"]: f for f in render.build_payload(
+        ledger=_ledger(moved, quiet))["findings"]}
+
+    assert rows["CYM-moved"]["last_change"] == {
+        "at": "2026-09-09T22:13:39+00:00", "axis": "filing",
+        "from": "REPLIED", "to": "FIX_CLAIMED",
+    }, "the newest transition wins, whichever axis it is on"
+    assert rows["CYM-moved"]["first_seen_at"] == "2026-09-04T10:00:00+00:00"
+
+    # A row nothing has moved still has a date: the day it was first seen.
+    # Sorting by change puts it where it belongs rather than at the top with
+    # an empty cell, which is what a null would do.
+    assert rows["CYM-quiet"]["last_change"] == {
+        "at": "2026-09-05T08:30:00+00:00", "axis": None,
+        "from": None, "to": None,
+    }
+    assert rows["CYM-quiet"]["first_seen_at"] == "2026-09-05T08:30:00+00:00"
+
+    # Every committed row, so a shape the fold can produce cannot slip past a
+    # synthetic pair.
+    monkeypatch.delenv("QA_STATE_DIR", raising=False)
+    render = _render()
+    for row in _live_payload(render)["findings"]:
+        change = row["last_change"]
+        assert change and change.get("at"), (
+            f"{row['id']} cannot say when it last changed"
+        )
+        assert change["axis"] in ("check", "filing", None)

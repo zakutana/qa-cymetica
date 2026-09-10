@@ -159,6 +159,28 @@ def _thread_for(row: dict, sent: dict, replied: dict, filed_at: dict) -> list[di
     return sorted(out, key=lambda m: (m.get("at") or "", m["report_id"]))
 
 
+def _last_change(row: dict) -> dict:
+    """When this row last moved, on either axis, and from what to what.
+
+    The operator ran a sweep, six rows closed, and they vanished out of the
+    open filter with nothing on the page saying which six or when: *"neni tam
+    zaden cas zmeny posledni videt"*. Every transition the fold writes carries
+    `at`; none of them reached the payload.
+
+    Both axes, because a row that closed because THEY answered moved only on
+    the filing axis and disappears from the filter exactly as loudly. A row
+    nothing has moved falls back to the day it was first seen, so sorting by
+    change puts it where it belongs instead of at the top with an empty cell.
+    """
+    transitions = [t for t in (row.get("transitions") or []) if t.get("at")]
+    if not transitions:
+        return {"at": (row.get("first_seen") or {}).get("at"),
+                "axis": None, "from": None, "to": None}
+    newest = max(transitions, key=lambda t: str(t["at"]))
+    return {"at": newest["at"], "axis": newest.get("axis"),
+            "from": newest.get("from"), "to": newest.get("to")}
+
+
 def _owed(row: dict) -> list[str]:
     """What this row still owes somebody, in words.
 
@@ -323,6 +345,8 @@ def build_payload(ledger: dict | None = None, inventory: dict | None = None,
             "detail": row.get("detail"),
             "regressions": row.get("regressions") or [],
             "display_state": shown,
+            "last_change": _last_change(row),
+            "first_seen_at": (row.get("first_seen") or {}).get("at"),
             # The verification sentence is printed from THIS, or not at all.
             # Ten rows read VERIFIED FIXED with verified_by_run null on every
             # one, beneath a sentence claiming we had re-run the check.
@@ -821,6 +845,12 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:15.0px; max-wid
   background:transparent; color:var(--accent);
   border:1px solid var(--accent); white-space:nowrap; cursor:help;
   margin-right:4px;
+}
+/* No border: this is on every row, so a box around it would be 41 boxes. It is
+   the answer to "a sweep just closed six things and I cannot see which". */
+.changed {
+  font-family:var(--mono); font-size:11.5px; color:var(--text-faint);
+  white-space:nowrap; cursor:help;
 }
 /* Louder than .unchecked on purpose. "We did not re-run our check" is routine
    on a narrow sweep; "we could not hear them" means the vendor half of every
@@ -1407,8 +1437,10 @@ function finding(f) {
   // report number, the internal kind word and the id moved inside: they are
   // reference data, and on the summary line they read as though "#51" and
   // "CYM-skill_ids" were competing names for the same thing.
+  const changed = Date.parse(f.last_change.at) || 0;
   return `<details class="finding" id="f-${esc(f.id)}" data-sev="${esc(f.severity)}"
     data-tag="${esc(f.tag)}" data-state="${esc(f.display_state)}"
+    data-changed-at="${changed}"
     data-vendor-at="${newestFromThem(f)}">
     <summary>
       <span class="sev ${f.severity.split("-")[0]}">${esc(f.severity.split("-")[0])}</span>
@@ -1422,6 +1454,9 @@ function finding(f) {
           ${f.not_checked_in ? `<span class="unchecked" title="This sweep ran a narrower selector and did not include this check. The state and figures shown are the ones the last run that did include it left behind.">not re-checked${f.last_checked_at ? " &middot; last " + esc(stamp(f.last_checked_at)) : ""}</span>` : ""}
           ${(f.owed || []).map(o => `<span class="owed" title="Something is still owed on this row: the fold works it out from the events, and it stays here until an event settles it. A re-verify is cleared by a level-V run under the pinned fingerprint; a retraction by a retraction-sent event.">${esc(o)}</span>`).join("")}
           ${f.stale_from ? `<span class="unheard" title="The last attempt to read their bug tracker did not succeed, so what they say here is as of the last clean read and may have moved since. A failed read is not an empty one: nothing on the vendor's side was allowed to change on the strength of it.">their side unread &middot; since ${esc(stamp(f.stale_from))}</span>` : ""}
+          ${changed ? `<span class="changed" title="The last time anything about this row moved -- either a run adjudicating the check, or a message on their tracker.">${f.last_change.axis
+              ? "changed " + esc(when(changed)) + " &middot; " + esc(f.last_change.from) + " &rarr; " + esc(f.last_change.to)
+              : "first seen " + esc(when(changed))}</span>` : ""}
           <span class="newreply" data-newreply hidden title="They replied since you last looked"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="2.2" y="4.6" width="15.6" height="11" rx="2"/><path d="M2.6 6.2 10 11.4l7.4-5.2"/></svg><span class="sr-only">new reply</span></span>
         </div>
       </span>
@@ -1434,6 +1469,8 @@ function finding(f) {
       <div class="f-ref">
         <div><span class="ref-k">Our name for it</span>
              <span class="ref-v mono">${esc(f.id)}</span></div>
+        <div><span class="ref-k">First seen</span>
+             <span class="ref-v mono">${esc(stamp(f.first_seen_at)) || "&mdash;"}</span></div>
         ${f.filed && f.filed.length ? `<div><span class="ref-k">Their report number</span>
              <span class="ref-v mono">${f.filed.map(x => "#" + x.report_id +
                (sharedWith(f, x.report_id).length
