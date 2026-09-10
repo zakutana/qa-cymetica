@@ -36,6 +36,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
 from qa import channels  # noqa: E402
+from qa.console import printable  # noqa: E402
 from qa.state import read_events  # noqa: E402
 
 POLL_SECONDS = 30.0
@@ -170,11 +171,7 @@ def cmd_watch(args) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    for stream in (sys.stdout, sys.stderr):
-        try:
-            stream.reconfigure(encoding="utf-8", errors="replace")
-        except (AttributeError, ValueError):
-            pass
+    printable()
 
     parser = argparse.ArgumentParser(prog="channels.py", description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)

@@ -52,6 +52,7 @@ import httpx  # noqa: E402
 
 from qa.client import McpError, build_mcp_client  # noqa: E402
 from qa.config import identities, load_dotenv  # noqa: E402
+from qa.console import printable  # noqa: E402
 from qa.safety import CURRENT_TIER, EndpointRegistry, SafetyTier  # noqa: E402
 from qa.state import file_lock, state_dir  # noqa: E402
 
@@ -308,23 +309,8 @@ def _summary() -> list[dict]:
     return list(out.values())
 
 
-def _printable() -> None:
-    """This console is cp1250 and their answers are not.
-
-    Three runs ended in a UnicodeEncodeError traceback after the answer had
-    already been written to disk -- the work had succeeded and the screen said
-    it had crashed. Reconfiguring the stream is the fix; replacing the
-    characters is what the terminal then does, visibly, instead of raising.
-    """
-    for stream in (sys.stdout, sys.stderr):
-        try:
-            stream.reconfigure(encoding="utf-8", errors="replace")
-        except (AttributeError, ValueError):
-            pass
-
-
 def main(argv: list[str] | None = None) -> int:
-    _printable()
+    printable()
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = parser.add_subparsers(dest="cmd", required=True)
 

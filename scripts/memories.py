@@ -28,6 +28,9 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(REPO_ROOT))
+
+from qa.console import printable  # noqa: E402
 
 CLASSES = ("sweep", "fold", "console", "correspondence", "deep-pass", "plan")
 
@@ -103,6 +106,10 @@ def problems(memories: list[dict], indexed: set[str]) -> list[str]:
 
 
 def main(argv: list[str] | None = None) -> int:
+    # A memory body is prose, and prose here carries arrows and dashes. This
+    # crashed at step 0 of the deep pass on 2026-09-10, printing the very
+    # memories the pass is told to read before it starts.
+    printable()
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--for", dest="klass", choices=CLASSES,

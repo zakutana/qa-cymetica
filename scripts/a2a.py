@@ -39,6 +39,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
 from qa.client import build_client, install_client_guard  # noqa: E402
+from qa.console import printable  # noqa: E402
 from qa.config import identities, load_dotenv  # noqa: E402
 from qa.safety import CURRENT_TIER, EndpointRegistry, SafetyTier  # noqa: E402
 from qa.state import append_event, journal_path, read_events  # noqa: E402
@@ -256,11 +257,7 @@ def cmd_show(args) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    for stream in (sys.stdout, sys.stderr):
-        try:
-            stream.reconfigure(encoding="utf-8", errors="replace")
-        except (AttributeError, ValueError):
-            pass
+    printable()
 
     parser = argparse.ArgumentParser(prog="a2a.py", description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)

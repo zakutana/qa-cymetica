@@ -37,6 +37,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
+from qa.console import printable  # noqa: E402
 from qa.state import append_event, journal_path, read_events  # noqa: E402
 
 SOURCE = "scripts/correspond.py"
@@ -277,11 +278,7 @@ def cmd_show(args) -> int:
 def main(argv: list[str] | None = None) -> int:
     # The journal is full of their emoji and this is a Czech Windows console.
     # Without this, `show` dies mid-output on a cp1250 UnicodeEncodeError.
-    for stream in (sys.stdout, sys.stderr):
-        try:
-            stream.reconfigure(encoding="utf-8", errors="replace")
-        except (AttributeError, ValueError):
-            pass
+    printable()
 
     parser = argparse.ArgumentParser(prog="correspond.py", description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
