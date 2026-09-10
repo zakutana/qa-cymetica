@@ -265,8 +265,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "e5701b6"
   },
   {
    "id": "B08",
@@ -280,8 +280,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "e5701b6"
   },
   {
    "id": "A01",
@@ -340,8 +340,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "e5701b6"
   },
   {
    "id": "A05",
@@ -415,8 +415,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "e5701b6"
   },
   {
    "id": "C02",
@@ -430,8 +430,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "e5701b6"
   },
   {
    "id": "C03",
@@ -445,8 +445,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "e5701b6"
   },
   {
    "id": "C04",
@@ -490,8 +490,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "e5701b6"
   },
   {
    "id": "C07",
@@ -505,8 +505,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "e5701b6"
   },
   {
    "id": "C08",
@@ -520,8 +520,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "e5701b6"
   }
  ],
  "next": [],
