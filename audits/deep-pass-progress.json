@@ -524,7 +524,11 @@
    "commit": "e5701b6"
   }
  ],
- "next": [],
+ "next": [
+  "Naklonovat Hybrid 2 (Blue) v paper režimu — bota, kterého Nexus sám doporučil",
+  "Až jim pojede web chat, dát operátorovi větu pro Nexus a zapsat, na co se zeptal",
+  "Doměřit Nexus kanál na větším vzorku, než z něj uděláme závěr pro Cymeticu"
+ ],
  "retrospective": {
   "last": "2026-09-09",
   "done": false
@@ -546,8 +550,8 @@
  ],
  "meta_tests": {
   "start": 254,
-  "end": null,
-  "reason": null
+  "end": 260,
+  "reason": "254 -> 260. Three are tests/meta/test_pipeline_console.py, a new file: the existing home considered was test_pipeline_adapters.py, where bounty._printable lives, but that tests TEXT transcoding while these test STREAM reconfiguration, and folding them together makes one file about two unrelated strategies for the same failure. The other three came from widening existing checks in test_guard_is_real.py, test_pipeline_book.py and test_pipeline_channels.py rather than adding files."
  },
- "finished": false
+ "finished": true
 }

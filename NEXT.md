@@ -32,6 +32,20 @@ to neodškrtl, nebo to nikdy nebylo další na řadě.
   Je to přesně ten tvar, co má být: **Nexus rozhoduje co, my provádíme a
   měříme.** Ne moje strategie.
 
+  Deep pass z 10. 9. u toho zavřel dvě věci, které tomu stály v cestě:
+  neznámý MCP nástroj se na MUTATE už nepustí, a `required_flags` se čte podle
+  **jména** příznaku, ne jen že seznam není prázdný. Klon bez `paper` neodejde.
+
+- [ ] 2026-09-10  Doměřit Nexus kanál na větším vzorku, než z něj uděláme závěr pro Cymeticu
+
+  Deep pass opravil měření a první pravdivý údaj je zlý: tři z pěti hlubokých
+  dotazů nedopověděly, zbylé 1527 s, 552 s a 535 s proti jejich publikovaným
+  300 s. Ale pět je pět. `WINDOW = 5` v `tests/mcp/test_nexus_channel.py` je
+  tam schválně, aby oprava mohla kontrolu vyčistit — takže než operátor napíše
+  na Telegram, že jim kanál nefunguje, chce to víc než pět položených otázek.
+
+  `python scripts/nexus.py ask "..."` je SAFE tier, nic nestojí a zapisuje se.
+
 - [ ] 2026-09-10  Až jim pojede web chat, dát operátorovi větu pro Nexus a zapsat, na co se zeptal — kontrola pro jejich CEO
 
   Nexus tvrdí, že se před sestavením obchodu ptá na dvě věci: časový horizont

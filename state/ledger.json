@@ -6868,7 +6868,7 @@
         "reports": [
           {
             "report_id": 87,
-            "status": "fixed"
+            "status": "in_progress"
           }
         ],
         "refused": [],
@@ -6995,7 +6995,7 @@
     "STILL REPRODUCIBLE": 3
   },
   "events_head": {
-    "seq": 1593,
-    "chain": "66872aaec2432c4b372713bbd1dfdd013eb169783041c20ed0278e580f819800"
+    "seq": 1596,
+    "chain": "9248028f949dbc6fcfc74166030a7203bd9702afcb7af87a01b77d9c15aa2987"
   }
 }

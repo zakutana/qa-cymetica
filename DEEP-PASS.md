@@ -1,142 +1,185 @@
-# Deep pass — 2026-09-09
+# Deep pass — 2026-09-10
 
-Běh přes půlnoc, od `77ca5a1`. Preregistrace `PRE-0074`, run
-`run-20260909T221034Z-8dbf050`, level V. Plná sada: 525 prošlo, 1 spadl, 3 nerozhodnuté.
-Ten jeden spadlý je nález #83, skutečná vada na jejich straně, a spadnout má.
+Běh `deep-pass 2026-09-10`, start na commitu `481958e`, preregistrace
+**PRE-0080**, běh **run-20260910T164705Z-b56d1d3**, level V.
+62 commitů k pushnutí, strom čistý.
 
 ## Co se stalo
 
-**Audit definic přečetl 54 funkcí, revize celý rozdíl 30 commitů. Devatenáct nálezů,
-tři nezávislí čtenáři, 16 uznaných.** Rozsah auditu se počítal z nejnovějšího otisku
-každé živé kontroly napříč 703 záznamy běhů, ne z posledního záznamu — to je nález
-`S01` a bez něj by dnešní audit tiše přeskočil všechno, co měří Cymeticu.
+**36 nálezů, 30 potvrzených, 30 opravených, 0 odložených na tebe.**
 
-**Devět ze čtrnácti nálezů auditu bylo v práci napsané téhož dne.** Průchod prověřoval
-den, který ho postavil, a většinu děr našel právě tam.
+| odkud | nálezů | potvrzeno | zamítnuto | menšinových |
+|---|---|---|---|---|
+| audit kontraktů (3 auditoři, 55 funkcí) | 24 | 24 | 0 | 0 |
+| code review xhigh (přes 5 850 řádků zdroje) | 9 | 3 | 4 | 2 |
+| krok 1 — vlastní údržba | 2 | 2 | — | — |
+| krok 1b — prořez | 1 | 1 | — | — |
 
-**Dvě věci by tenhle průchod zastavily, kdyby je nenašel.** Test připnutý na obsah
-minulého přehledu, který se v kroku 10 přepisuje. A strážce postupu červený od kroku 0
-do kroku 11, na který krok 9 reaguje vrácením celé noční práce.
+Triáž: tři čtenáři, 34 nálezů, **31 jednomyslných**. Triáda zamítla 4 nálezy
+a všechny čtyři byly z **mé recenze**, ani jeden z auditu. Auditoři čtou
+tvrzení proti kontraktu, který si test sám napsal; já jsem četl kód a
+domýšlel dopad, který nikam nedosáhne.
+
+Konec: 583 prošlo, 5 selhalo, 4 neprůkazné. Dvě selhání byla nesložený ledger
+a fold je vyřešil. Tři jsou nálezy na jejich straně.
 
 ## Opraveno
 
-**`B01` — neúspěšné čtení se mohlo změnit v obvinění nejvyšší závažnosti.** Test na
-anonymní volání peněžního nástroje bral `executed` jako propadovou větev, a klient
-vrací tělo odpovědi bez ohledu na návratový kód. Chyba 401, 422 i 500 tedy četly jako
-„anonymní volající ten nástroj spustil", a odešlo by to s prázdným polem místo důkazu.
-Pravidlo 8 v jediné kontrole, která mluví ven. Všichni tři čtenáři to reprodukovali.
-Ven nešlo nic falešného — žádný řádek tabulky tu kontrolu necituje.
+**Strážce pouštěl na MUTATE nástroj, o kterém nic neví.** `_check_rpc` odmítal
+`trade` a `provision` a pak vypadl z funkce — takže MCP nástroj, který není v
+žádném seznamu v `components.yaml`, byl na jediné úrovni, která umí utrácet,
+**povolen s plnými argumenty**. Na SAFE se odmítá jménem, na PROBE se nutí
+prázdné argumenty. Po každém jejich releasu je to běžný stav, ne výjimka:
+publikují 62 nástrojů a jeden dnes ráno změnili. `trade_event_card` sám v
+žádném seznamu není, takže odebrání jeho brány by ho z odmítnutého udělalo
+povolený.
 
-**`B03` — otisk kontroly nepoznal obrácený směr porovnání.** Přesně ta vada, která
-loni málem odešla vendorovi, a otisk, který ji má hlídat, směr vůbec neobsahoval.
-Přidán jen tam, kde směr existuje, takže se pohnuly čtyři otisky místo všech.
+**Podlaha u peněz četla, že příznak existuje, ne který to je.** Přejmenování
+`required_flags` u `agents.clone` z `[paper]` na `[confirm]` nechalo všechny
+tři strážce zelené a MUTATE POST s `confirm: true` bez `paper` prošel — a
+absenci `paper` řeší jejich schéma proti `simulation_mode`, který je na tomhle
+účtu False.
 
-**`S03`, `C01`, `C02`, `C03` — čtyři vady ve strážci nad tímhle průchodem, všechny
-z včerejšího odpoledne.** Nejhorší je `C02`: hlídá tvoji podmínku dvou hlasů ze tří
-a počítal jen souhlasy, takže dva ze dvou prošly.
+**Obě kontroly nad tím, co odchází vendorovi, četly text skriptu, ne zprávu.**
+Kontrola, že už jim neposíláme odkaz do našeho privátního repa, grepovala
+zdroj `submit.py`; poskládat ten řádek z proměnné a odkaz odejde znovu se
+zelenou kontrolou. A `identity_kind`, který rozhoduje, kterou ze dvou vět o
+otisku jim pošleme, neměl test vůbec.
 
-**Dalších sedm:** připnutý obsah přehledu, test, který netestoval to, co tvrdil, strop
-o řádek nižší než skutečná potřeba, pojistka na záznam nastavení kontrolující vlastní
-komentáře, tři chyby v příkazu na kontrolu stavu tabulky.
+**Nexus kanál měřil stopky, které se restartují.** `waited_seconds` se počítá
+od vstupu do polling smyčky, a `nexus.py answer` do ní vstoupí znovu — takže
+otázka položená v 10:00, vzdaná v 10:15 a vyzvednutá v 11:00 se zapsala jako
+„0 sekund". Kontrola pak hlásila, že kanál drží slíbených 1–5 minut. Po
+opravě, měřeno od otázky: **tři z pěti nedopověděly vůbec, zbylé 1527 s,
+552 s a 535 s proti jejich vlastnímu stropu 300 s.**
+
+**A extraktor nástrojů v Nexusových odpovědích neviděl nic.** Vyžadoval slovo
+„MCP" před zpětnými uvozovkami a ve dvou ze tří zaznamenaných odpovědí našel
+nula nástrojů. Po rozšíření vidí 8 místo 3.
+
+**Kniha uvolňovala kapitál, který nevidí.** `book()` tiše přeskočil přijatou
+objednávku, jejíž pozici jejich endpoint nevrátil — komentář u toho řádku
+říkal „stojí za povšimnutí" a nevšímalo si toho nic. Peníze se vrátily do
+hotovosti a `affordable()` by je povolil utratit znovu.
+
+**Kontrola paper zůstatku procházela jako `passed`, když selhalo čtení
+pozic.** `(x or 0)` proměnilo chybějící klíč na nulu, `0 - 39 = -39` vyhodilo
+obchod z posuzované množiny a zbyla prázdná — verdikt „každý nákup odečetl
+svou hodnotu", zatímco se nepohnulo nic. Pravidlo 8 obráceně, na řádku, který
+by překlopil #87 na VERIFIED FIXED.
+
+**Jediný skript, který maže, bral selhané čtení jako prázdné.** Záznam běhu
+zachycený v půli zápisu se rozparsuje na `{}`, mine všechny důvody k zachování
+a smaže se. A `cited_run_ids` hledalo jen klíč `run_id`, takže běh jmenovaný v
+*textu důvodu* withdraw eventu — důkaz pro retrakci u #83 — by se za pět dní
+stal obětí.
+
+**Čtyři render kontroly testovaly řetězec místo chování.** Číslo „opravených
+bugů" sčítalo přechody, takže 19 přechodů přes 16 nálezů se zobrazilo jako 19.
+Odměny se nikdy neporovnaly s jejich vlastním číslem. Harness JS testu
+podstrkoval prázdný seznam řádků, takže se komparátor řazení nikdy nespustil.
+A tabulka modelů se porovnávala dvěma parsery, z nichž ani jeden se nedíval na
+stránku.
+
+**Devět dalších kontrol nemohlo zčervenat pro stav, který samy jmenují** —
+včetně tří, které tenhle pass dnes napsal a auditor je posoudil stejně tvrdě
+jako zbytek. Správně.
 
 ## Prořezáno
 
-**Skill na slučování paměti tady není k dispozici, tak jsem ty tři pohyby udělal
-ručně.** Jedno sloučení, index paměti z 25 řádků na 24. Žádná paměť neodešla do
-výslužby — každou jsem držel proti CLAUDE.md, testům a skillům a žádná v nich není celá.
-
-**Mechanismů, které nikdy nenastaly, je 7 z 54 a všechny má pod sebou test.** Nic
-nesplňuje podmínku „nikdy nenastalo a nikdo to nikdy nevyzkoušel", takže se nic neruší.
-
-**Vlastních testovacích funkcí přibyla jedna, z 225 na 226.** Případů včetně parametrů
-přibylo osm, ze 396 na 404 — sedm z nich jsou parametry přidané ke dvěma existujícím
-testům, ne nové testy. Všechno ostatní, co dnes vzniklo, jsem dal do `tests/repo`, kde
-červená nezastaví běžící session. Ta jedna nová funkce se nedala sloučit: pět sousedních
-testů se ptá, jestli se něco pohnulo, tenhle se ptá, z čeho se to přepočítává.
+* **Paměti.** Jedna retirovaná: `correspondence-arrives-only-through-the-bounty-api`.
+  Její první věta — „jejich bug tracker je jediný příchozí kanál" — přestala
+  platit 8. září. Rozdíl my-reports / a2a-inbox, kvůli kterému vznikla, drží
+  `qa/channels.py` a mapa v CLAUDE.md. Její vlastní varování znělo, že paměť
+  může být v době napsání přesná a přesto instalovat špatný model; stala se
+  tím. Sloučeno nic — prošel jsem 30 popisů a žádné dva se nepřekrývají tak,
+  aby jedno vstřebalo druhé.
+* **Mechanismy.** `never_fired --zeros` šlo z 5 na 4. Všechny čtyři jsou
+  zkoušené testem, takže žádný není rozbitý; k odstranění nešel ani jeden.
+* **Testy.** `tests/meta` narostlo 254 → 260. Šest nových: tři pro cp1250
+  konzoli (`test_pipeline_console.py`, nový soubor — zvažoval jsem přidat je
+  do `test_pipeline_adapters.py`, kde žije `bounty._printable`, ale ten testuje
+  *transkódování textu*, ne rekonfiguraci streamu, a spojit je by znamenalo
+  jeden soubor o dvou nesouvisejících strategiích), a tři přibyly rozšířením
+  existujících kontrol v guard, book a channels souborech.
 
 ## Minority report
 
-* **`B04` — prázdná hodnota z extraktoru projde jako platná.** Jeden hlas ze tří.
-  Zpráva testu říká „extraktor vrátil prázdnou hodnotu", ale kontrola zachytí jen dva
-  tvary z pěti; nula, prázdný seznam a prázdný řetězec projdou. Dva čtenáři to označili
-  za nedosažitelné, protože žádná definice v repozitáři takovou hodnotu dnes nevyrobí.
-  Třetí namítá, že tvar `count:` ji vyrobí ve chvíli, kdy jejich dokumentace přestane
-  psát seznam odrážkami — což je přesně ta změna z 5. září, kvůli které tenhle modul
-  vznikl.
+Dva nálezy dostaly jeden hlas ze tří. Nejsou zahozené, protože nejdůležitější
+nález 7. září našla přesně jedna cesta.
 
-* **`R04` — pojistka proti dvojímu zápisu nastavení do commitu je necitlivá na velikost
-  písmen.** Jeden hlas ze tří, a s těmi dvěma proti souhlasím. Řádek `effort: low` v těle
-  commitu skutečně potlačí zápis — jenže git sám čte klíče bez ohledu na velikost, takže
-  takový řádek už zápisem je. Jeden čtenář to doložil příkazem, který jsem měl pustit já.
-  Skutečná slabina je jinde: ta pojistka prohledává celou zprávu, ne jen patičku.
+* **R07 — `_positions` čte 200 s neočekávaným obalem jako nula pozic.**
+  `(response.json() or {}).get("positions") or []` vrátí prázdno pro tělo
+  tvaru `{"result": {"positions": [...]}}` — a `buy()` ve stejném souboru
+  `payload["result"]` rozbaluje. Dva čtenáři to zamítli, protože všech 41
+  zachycených odpovědí má tvar `{count, positions}`. To je fakt o dnešních
+  datech, ne o té funkci.
+* **A06 — `test_cloning_a_bot_needs_its_paper_flag_too` netestuje
+  `agents.clone`.** Docstring říká „**obě** klonovací cesty". Dva čtenáři to
+  zamítli, protože smazání pravidla chytí jiná kontrola; jediná mutace, která
+  projde — přejmenování příznaku — je A05, a ta je opravená.
 
 ## Změněná pravidla
 
-* **Rozsah auditu se počítá z nejnovějšího otisku každé živé kontroly, ne z posledního
-  záznamu běhu.** Tři hlasy ze tří: neoslabuje to žádnou pojistku a nesahá to na žádný
-  odstavec s tvým jménem. Ten recept je teď kód, ne odstavec, protože odstavec nemůže
-  zčervenat, a tenhle byl špatně dvakrát.
+**Retirace paměti se značí v řádku, ne smazáním řádku.**
 
-* **Týdenní ohlédnutí bude nově číst sešit průchodu a těla commitů.** Tvoje otázka
-  z dnešního večera to odhalila: bez toho by týden neviděl ani tuhle revizi, ani to, na
-  co ses ptal. Krok 10 ten sešit čte, krok 11 ne, a z commitů se četl jen první řádek.
+Krok 1b předepisoval retirovat paměť smazáním jejího řádku z `MEMORY.md`
+(`rm` unattended pass nesmí). Provedl jsem to a `tests/repo` zčervenalo:
+nezalinkovaný soubor se hlásí jako ten, o kterém nikdo neví — což je červená
+v kroku 6, kterou krok 9 řeší revertem celé noci. Ani jedna půlka nebyla
+špatně: nezalinkovaný soubor je opravdu neviditelný a záznam opravdu musí
+přežít, protože ten adresář je mimo git a `MEMORY.md` je jeho jediná historie.
+Chyběl způsob, jak říct, co z toho se stalo.
 
-* **Nový krok 11b zapisuje `finished` a počet vlastních testů na konci každého průchodu.**
-  Bez `finished` je běžící průchod k nerozeznání od průchodu, který vynechal týden.
+Řádek teď zůstává a nese `RETIRED YYYY-MM-DD: důvod`.
+
+**Byl to třetí návrh.** Dva poziční šly ke třem čtenářům první a každý byl
+shozen dřív, než přistál — pokaždé ze stejného důvodu: nadpis `## Retired`
+musí být na konci souboru a na konec souboru se připisuje řádek nové paměti.
+První pokus nadpis spolkl každý připsaný řádek. Druhý to opravil požadavkem na
+datum, dokud jeden čtenář nenašel, že vlastní jednořádkový popisek paměti může
+datem začínat — a v reálném `MEMORY.md` takový řádek už byl.
+
+Hlasy nad druhou verzí: **ne, ne, ano** — projde. Verze, která je
+zacommitovaná, poziční parsování ruší úplně, tedy zavírá i tu zbytkovou mezeru,
+kterou pojmenoval nesouhlasící čtenář *a* označil ji jako jedinou zbývající i
+jeden ze souhlasících. Je přísnější než to, co bylo odhlasováno, ve směru,
+kterým ukazovaly oba nesouhlasy. **Tvoje veto je otevřené.**
 
 ## Čeká na tebe
 
-* **Sedm řádků čeká na nové ověření, protože se jim změnila definice.** Nepřepsal jsem
-  jim identitu, i když bych mohl — u části z nich se totiž opravdu změnilo i to, co měří.
-  Příští sweep je uklidí poctivou cestou. Nemusíš s tím dělat nic, jen ať tě to na stránce
-  nepřekvapí.
-
-* **Druhou půlku nálezu o otiscích jsem odložil na příští průchod a rozhodl jsem to
-  sám.** Nejdřív jsem ji napsal sem jako otázku pro tebe, a to bylo proti tvému
-  vlastnímu rozhodnutí z 9. září. Takže: otisk odvozený z kódu se spočítá a pak zahodí
-  ve prospěch jiného, takže úprava těla kontroly její identitu nezmění. Opravit to
-  znamená pohnout všemi 41 řádky najednou a nikdo zatím nedoložil, jestli to zahození
-  bylo úmyslné. Příští průchod to má za úkol vyhrabat z historie a teprve pak měnit —
-  ne proto, že je to na tebe, ale proto, že měnit identitu všech kontrol kvůli
-  nedoložené domněnce je horší než počkat jeden den.
-
-* **Konzole neběží od 8. září 19:05.** Až ji pustíš, poběží s kódem, který dnes vznikl.
+* **Nexus jim nefunguje, a teď to máme změřené jejich vlastním číslem.** Tři
+  z pěti posledních hlubokých dotazů nedopověděly. Zbylé trvaly 25 minut, 9 a
+  9 minut proti jejich publikovaným 1–5. Verifikace `fail` odešly na #85, #86
+  a #87 — a u #85 a #86 to jsou **opravy záznamu**, protože dřívější verdikt
+  spočítala kontrola, která tu vadu neviděla. Stojí za zprávu na Telegram, ale
+  formulace je tvoje.
+* **Nový nález, nezaložený.** Nexus říká agentovi, ať zavolá MCP nástroj
+  `update_bot_settings`, který jejich server neservíruje. Deep pass nezakládá
+  reporty — to je na sweepu, který je tvůj.
+* **Jeden z triage agentů nechal v repu odkládací soubor** (`memories_old.py`)
+  navzdory instrukci pracovat ve vlastním tempu. Odstraněno. Kdyby se to
+  opakovalo, je to důvod tu instrukci zpřísnit, ne ji opakovat.
 
 ## Týden
 
-* **Opakuje se jedna jediná třída vady, a je naše, ne jejich: kontrola, která tvrdí víc,
-  než měří.** Za týden ji zmiňuje 16 commitů. Sedmého září se stala pětkrát za den a jedna
-  z nich poslala vendorovi falešné tvrzení. Osmého jednou. Dnes v noci devět z devatenácti
-  nálezů, všechny v práci napsané téhož dne. Druhá opakující se věc je technická past
-  tohohle stroje: zpětné lomítko v heredocu, 19 zmínek za týden, dnes v noci třikrát,
-  naposledy uvnitř úryvku, který měl nahradit prózu kódem. CLAUDE.md před ní varuje
-  a stejně vyhrála.
-
-* **Poměr testů se posunul znovu špatným směrem, ale zajímavější je něco jiného: dnes
-  v noci nechytil ani jeden nález žádný test.** Je nás 475 z 529, tedy 89,8 %, včera ráno
-  88,6 %. Přitom všech devatenáct nálezů našlo čtení — audit a revize — a pojistky byly
-  celou dobu zelené. To je nejsilnější důkaz, jaký zatím máme, že přidávat vlastní testy
-  není to, co tenhle systém dělá bezpečnějším. Dělá to audit definic a hlasování tří
-  čtenářů. Na druhé straně stojí 54 testů, které měří Cymeticu, a přesně tam přistávají
-  ty incidenty, které něco stojí. Nenavrhuju s poměrem dělat nic, navrhuju ho přestat
-  číst jako míru zdraví.
-
-* **Model a effort zatím posoudit nejde a je poctivější to říct než si vymyslet závěr.**
-  Za týden je 286 commitů z 291 od jednoho modelu, čtyři od jiného a jeden od třetího.
-  Záznam nastavení existuje od dneška, má 21 řádků a nic se z něj vyčíst nedá. Jediné
-  skutečné číslo je dnešní: tři agenti na nižším stupni vyvrátili dva nálezy, které
-  tenhle průchod udělal na nejvyšším, a jeden z nich to doložil příkazem, který průchod
-  nepustil. Takže na zvýšení jejich stupně zatím není důvod. Zbytek tabulky ať posoudí
-  příští týden, až bude co měřit.
+Neproběhl. Poslední byl 2026-09-09, tedy před jedním dnem; je splatný po
+sedmi. `retrospective.done` zůstává false.
 
 ## Co mě to naučilo
 
-Nejtvrdší lekce noci není v žádném nálezu. Tvrdil jsem, že jeden test zčervená, a jako
-důkaz jsem spustil mechanismus, který ten test měří — ne ten test. Změřil jsem spoušť
-místo pasti. Třetí čtenář udělal stejnou chybu a hlasoval se mnou; kdybych šel podle
-většiny, opravoval bych něco, co není rozbité. Rozhodl to jediný čtenář, který si
-otevřel ten soubor.
+**Nálezy z auditu obstály, nálezy z mé recenze ze dvou třetin ne.** Čtyři
+zamítnuté byly všechny moje. Rozdíl není v pečlivosti: auditor drží tvrzení
+proti kontraktu, který si ten test **sám napsal**, takže jeho nález má vestavěný
+protějšek. Já jsem četl kód a domýšlel si, kam ten dopad dosáhne — a třikrát ze
+čtyř nedosáhl nikam (`asked_at_from` nečte nic kromě testu, souhrn v
+`prune_runs` se tiskne *před* mazací smyčkou, `bounty.py` píše `at` vždy).
 
-A jeden commit šel dovnitř červený, protože jsem si suitu ověřoval čtením posledních
-dvou řádků výpisu. Návratový kód roury patří poslednímu příkazu, ne testům. Chytila to
-až připínací pojistka o commit později.
+**Dvakrát mě heredoc připravil o zpětné lomítko a pokaždé to vypadalo jako
+chyba v logice.** `\b` v regexu dorazilo jako znak backspace; grep ho vykreslil
+neviditelně a testy padaly na něčem, co v souboru vypadalo správně. CLAUDE.md
+to říká, a říká to právě kvůli tomuhle.
+
+**A jednou jsem `git checkout` použil na soubor, jehož opravy nebyly
+zacommitované** — vrátil se celý, ne jen mutace. Mutační test se dělá na
+zacommitovaném souboru, jinak je to nerozlišitelné od úklidu.
