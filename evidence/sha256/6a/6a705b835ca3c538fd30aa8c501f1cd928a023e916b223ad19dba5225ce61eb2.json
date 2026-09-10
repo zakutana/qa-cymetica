@@ -1,0 +1,77 @@
+{
+  "captured_at": "2026-09-10T22:02:04+00:00",
+  "endpoint_rule": null,
+  "nodeid": null,
+  "request": {
+    "body": {
+      "encoding": "json",
+      "truncated": false,
+      "value": {
+        "actual_behavior": "Two of the eight deep answers we have recorded cite internal source locations\n— sixteen of them — to an external bug-bounty participant holding an ordinary\nAPI key, and one quotes a line of code verbatim.",
+        "category": "security",
+        "description": "WE ARE ASKING, NOT ASSERTING. The first of those answers prefaces itself with\n\"behavior described generally per our disclosure rules\", so a policy exists\nand the model believes it is inside it. We cannot know what you intend to\npublish. What we can say is that a file path with a line number is not a\ngeneral description of behaviour, and a quoted assignment is not one either.\nIf this is deliberate, say so and we will withdraw it. WHY WE THINK IT IS\nWORTH YOUR TIME ANYWAY. Two questions produced sixteen locations across nine\nmodules, and they were ordinary questions — what should we test, and where\ndoes a number come from. A handful more would map the private tree: module\nlayout, which file holds the money paths, and roughly where in each. Several\nof the citations are precisely the sensitive ones — the withdrawal gate, the\nrefund/delivery dedupe key, the paper/live resolver. That is a materially\ndifferent surface from the API you document, and it is reachable by anyone who\ncan call ask_nexus_deep. The answers themselves were excellent and we would\nnot want them made vaguer; the narrow fix is to keep the reasoning and drop\nthe coordinates. Scope note: we hold a TRUSTED-tier key. We have not checked\nwhether an anonymous or lower-tier caller gets the same detail, and we are not\ngoing to probe that without being asked — if the answer depends on tier, that\nis worth knowing and you can see it from inside more cheaply than we can from\noutside.\n\nMEASURED VALUES (from the live service):\n\n  [CYM-a_deep_answer_does_not_hand_out_internal_source_locations] 2 of 8 recorded deep answers cite internal source locations, 16 of them, to an external bug-bounty caller holding an ordinary API key: NEX-0011 names src/api/websocket/exchange_websocket.py:112, src/api/websocket/fta_fund_websocket.py:64, src/api/websocket/ma_fund_websocket.py:122, src/api/dependencies.py:933; NEX-0015 names src/services/wta_payout_service.py:272, src/api/websocket/bot_activity_websocket.py:525, src/services/offchain_perpetual_orchestrator.py:2604, src/services/perpetual_agent_claims.py:816. A few questions assemble a map of the private tree, which is a different surface from the API they document\n    left: ['src/api/websocket/exchange_websocket.py:112', 'src/api/websocket/fta_fund_websocket.py:64', 'src/api/websocket/ma_fund_websocket.py:122', 'src/api/dependencies.py:933', 'src/api/websocket/user_balance_websocket.py:64', 'src/api/dependencies.py:954', 'src/api/routes/rst_crypto_buy.py:2259', 'src/api/routes/rst_crypto_buy.py:2496', 'src/api/routes/exchange.py:345', 'src/services/wta_payout_service.py:272', 'src/api/websocket/bot_activity_websocket.py:525', 'src/services/offchain_perpetual_orchestrator.py:2604', 'src/services/perpetual_agent_claims.py:816', 'src/services/ai_agent_trading_orchestrator.py:1218', 'src/api/routes/agent_species.py:370', 'src/api/routes/backtest_bots.py:461']\n    right: []\n    sources: {'answers': 'state/nexus.jsonl', 'tool': 'POST /mcp/v1 tools/call ask_nexus_deep'}\n    population: {'answers': 8, 'answers_leaking': 2, 'locations': 16}\n\nREPRODUCE:\n  - POST /mcp/v1 tools/call ask_nexus_deep: \"What are the three most important things we should be testing that we probably are not?\"\n  - The answer cites src/api/websocket/exchange_websocket.py:112, :124, :518-520; src/api/dependencies.py:933, :954, :968; src/api/routes/rst_crypto_buy.py:2259, :2496, :2508, :2599; src/api/routes/exchange.py:345-360\n  - POST /mcp/v1 tools/call ask_nexus_deep: \"What is the measured historical win rate, trade count and maximum drawdown of PCPN, and where do those figures come from?\"\n  - The answer cites src/services/wta_payout_service.py:272 and quotes `species.win_rate = (trades_won * 100) / total_resolved`, plus src/services/ai_agent_trading_orchestrator.py:1218 quoting `species.total_trades = (species.total_trades or 0) + 1`\n\nAUTOMATED CHECKS (evidence retained; the request and response behind each are provided on request):\n  tests/mcp/test_nexus_does_not_quote_source.py::test_a_deep_answer_does_not_hand_out_internal_source_locations\n\nReported by an independent QA agent. Scope of this work: verification of the\nREST API, MCP and machine-readable discovery surfaces, read-only except in\npaper mode. What we do execute is paper only and recorded: paper event-card\norders, and one paper bot clone. No live trading, no order against a real\nbook, no deposit or withdrawal, no cleanup, no duplicate tickets. UI defects\nare out of scope. Every figure above was measured directly against the live\nservice, not taken from a document, and each finding ships with the command\nthat reproduces it.",
+        "expected_behavior": "An answer to an outside caller describes behaviour. Internal module paths,\nline numbers and source lines are not part of the surface you publish.",
+        "hunter_name": "expire76",
+        "severity_reported": "medium",
+        "steps_to_reproduce": "POST /mcp/v1 tools/call ask_nexus_deep: \"What are the three most important things we should be testing that we probably are not?\"\nThe answer cites src/api/websocket/exchange_websocket.py:112, :124, :518-520; src/api/dependencies.py:933, :954, :968; src/api/routes/rst_crypto_buy.py:2259, :2496, :2508, :2599; src/api/routes/exchange.py:345-360\nPOST /mcp/v1 tools/call ask_nexus_deep: \"What is the measured historical win rate, trade count and maximum drawdown of PCPN, and where do those figures come from?\"\nThe answer cites src/services/wta_payout_service.py:272 and quotes `species.win_rate = (trades_won * 100) / total_resolved`, plus src/services/ai_agent_trading_orchestrator.py:1218 quoting `species.total_trades = (species.total_trades or 0) + 1`",
+        "title": "ask_nexus_deep answers an external caller with internal source paths, line numbers and code",
+        "url": "https://cymetica.com/mcp/v1",
+        "wallet_address": "0xde9CeAaB301A9e47b1bAcd448B3DDbbA85e83398"
+      }
+    },
+    "headers": {
+      "accept": "application/json",
+      "accept-encoding": "gzip, deflate, zstd",
+      "connection": "keep-alive",
+      "content-length": "6156",
+      "content-type": "application/json",
+      "host": "cymetica.com",
+      "user-agent": "qa-cymetica/0.1 (independent QA; contact via vendor Telegram channel)"
+    },
+    "method": "POST",
+    "url": "https://cymetica.com/api/v1/bounty/reports"
+  },
+  "response": {
+    "body": {
+      "encoding": "json",
+      "truncated": false,
+      "value": {
+        "message": "Bug report submitted successfully. We'll review it within 48 hours.",
+        "report_id": 92,
+        "success": true
+      }
+    },
+    "elapsed_ms": 6985,
+    "headers": {
+      "cache-control": "no-store, no-cache, must-revalidate, max-age=0",
+      "connection": "keep-alive",
+      "content-encoding": "gzip",
+      "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests",
+      "content-security-policy-report-only": "default-src 'self'; script-src 'self' 'nonce-aiVL2iAnPeoFT5OLVSm7Tw==' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'",
+      "content-signal": "ai-train=no, search=yes, ai-input=yes",
+      "content-type": "application/json",
+      "cross-origin-opener-policy": "same-origin-allow-popups",
+      "cross-origin-resource-policy": "cross-origin",
+      "date": "Thu, 10 Sep 2026 22:02:04 GMT",
+      "permissions-policy": "geolocation=(), microphone=(), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=(), browsing-topics=(), attribution-reporting=()",
+      "pragma": "no-cache",
+      "referrer-policy": "strict-origin-when-cross-origin, strict-origin-when-cross-origin",
+      "server": "nginx",
+      "strict-transport-security": "max-age=31536000; includeSubDomains",
+      "transfer-encoding": "chunked",
+      "vary": "Accept-Encoding",
+      "x-ai-strongest-model": "Claude Fable 5",
+      "x-content-type-options": "nosniff, nosniff",
+      "x-dns-prefetch-control": "off",
+      "x-frame-options": "SAMEORIGIN, SAMEORIGIN",
+      "x-ratelimit-limit": "60",
+      "x-ratelimit-remaining": "54",
+      "x-ratelimit-reset": "1789081200",
+      "x-xss-protection": "0"
+    },
+    "reason": "OK",
+    "status_code": 200
+  },
+  "run_id": "script-submit",
+  "tier": "MUTATE"
+}
