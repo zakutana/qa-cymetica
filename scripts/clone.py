@@ -57,6 +57,7 @@ AVAILABLE = "/api/v1/cloned-bots/available"
 CLONE = "/api/v1/cloned-bots/clone"
 MY_CLONES = "/api/v1/cloned-bots/my-clones"
 PREFIX_FUND = "/api/v1/cloned-bots/{id}/fund"
+TOGGLE = "/api/v1/cloned-bots/{id}/toggle-trading"
 ACCOUNT = "/api/v1/account/me"
 
 # Their two group keys, and the enum value each maps to. The plural/singular
@@ -173,6 +174,26 @@ def fundable(row) -> bool:
     refusal, not a default.
     """
     return isinstance(row, dict) and row.get("is_paper") is True
+
+
+def startable(row) -> bool:
+    """Whether BOTH of their statements say this bot simulates.
+
+    A stricter floor than `fundable`, and deliberately: funding moves an
+    amount once, starting a bot delegates spending to it indefinitely. The
+    toggle-trading description says "bot will trade 100% on-chain" with no
+    paper caveat, while the instance carries `onchain_pct: 100` beside
+    `execution_class: "PAPER_SIMULATION"`. Those cannot both be the whole
+    truth, and only the object is machine-readable, so the floor reads two of
+    its fields and requires them to agree.
+    """
+    if not isinstance(row, dict):
+        return False
+    economics = row.get("execution_economics")
+    if not isinstance(economics, dict):
+        return False
+    klass = str(economics.get("execution_class") or "")
+    return row.get("is_paper") is True and "PAPER" in klass.upper()
 
 
 def _snapshot(client) -> dict:
@@ -404,6 +425,158 @@ def fund(instance_id: str, amount: float, confirm: bool) -> dict:
     return served
 
 
+def _instance(client, instance_id: str) -> dict:
+    """Their current row for one clone, or a refusal. Never our own record."""
+    token = CURRENT_TIER.set(SafetyTier.SAFE)
+    try:
+        mine = client.get(MY_CLONES, params={"mode": "paper"})
+    finally:
+        CURRENT_TIER.reset(token)
+    rows = clone_rows(mine.json()) if mine.status_code == 200 else None
+    if rows is None:
+        raise SystemExit(
+            f"{MY_CLONES} answered HTTP {mine.status_code} or a body we could "
+            f"not read, so this bot's mode is unknown. Nothing is started on "
+            f"an unreadable answer.")
+    row = next((r for r in rows if isinstance(r, dict)
+                and r.get("id") == instance_id), None)
+    if row is None:
+        raise SystemExit(f"they do not list {instance_id} as a paper clone.")
+    return row
+
+
+def enable(instance_id: str, confirm: bool) -> dict:
+    """Start a paper bot trading, and record what they said it was first.
+
+    The one call here that keeps spending after we stop watching, so the
+    floor reads both of their statements about the instance and refuses
+    unless they agree. See `startable`.
+    """
+    load_dotenv()
+    install_client_guard()
+    registry = EndpointRegistry.load()
+    registry.mutate_enabled = True
+    registry.mutate_allowed_hosts = frozenset({"cymetica.com"})
+    client = build_client(identities()["trusted"], registry, timeout=60.0)
+
+    row = _instance(client, instance_id)
+    if not startable(row):
+        economics = row.get("execution_economics") or {}
+        raise SystemExit(
+            f"{instance_id}: they say is_paper="
+            f"{row.get('is_paper')!r} and execution_class="
+            f"{economics.get('execution_class')!r}. Both must say paper "
+            f"before a bot is told to trade on its own -- toggle-trading "
+            f"carries no flag for the transport to read, so this is the only "
+            f"floor there is.")
+
+    before = _snapshot(client)
+    run_id = _next_id(load())
+    entry = {"id": run_id, "type": "intent", "at": _now(), "kind": "enable",
+             "instance_id": instance_id,
+             "their_is_paper": row.get("is_paper"),
+             "their_execution_class":
+                 (row.get("execution_economics") or {}).get("execution_class"),
+             "bot_balance_usdc": row.get("current_balance_usdc"),
+             "before": before,
+             "sizing": "ours -- Nexus answered QUERY_RESTRICTED to the sizing "
+                       "question (NEX-0013, NEX-0014), so no recorded guidance "
+                       "stands behind this amount"}
+
+    if not confirm:
+        print(json.dumps(entry, indent=2, ensure_ascii=False))
+        print("\nnothing sent, and nothing recorded. Add --confirm.")
+        return entry
+
+    _append(entry)
+    token = CURRENT_TIER.set(SafetyTier.MUTATE)
+    try:
+        response = client.post(TOGGLE.format(id=instance_id),
+                               params={"enabled": "true"})
+    except Exception as exc:  # noqa: BLE001
+        _append({"id": run_id, "type": "outcome", "at": _now(), "kind": "enable",
+                 "outcome": "not_sent", "error": f"{type(exc).__name__}: {exc}"})
+        raise
+    finally:
+        CURRENT_TIER.reset(token)
+
+    served = unwrap(response.json()) if response.status_code == 200 else {}
+    _append({"id": run_id, "type": "outcome", "at": _now(), "kind": "enable",
+             "outcome": "accepted" if response.status_code == 200 else "rejected",
+             "http_status": response.status_code,
+             "evidence_id": _capture(response),
+             "response": json.dumps(served)[:1200]})
+    after_row = _instance(client, instance_id)
+    _append({"id": run_id, "type": "after", "at": _now(), "kind": "enable",
+             "their_is_trading": after_row.get("is_trading"),
+             "their_is_paper": after_row.get("is_paper"),
+             "bot_balance_usdc": after_row.get("current_balance_usdc"),
+             **_snapshot(client)})
+    client.close()
+
+    print(f"{run_id}: HTTP {response.status_code}, "
+          f"is_trading now {after_row.get('is_trading')!r}, "
+          f"is_paper {after_row.get('is_paper')!r}, "
+          f"bot balance {after_row.get('current_balance_usdc')}")
+    return served
+
+
+def watch(instance_id: str, every: int, until: int) -> int:
+    """Sample a running bot on a timer, so the morning has a series.
+
+    A bot that is enabled and then read once tells you whether it was
+    enabled. Whether it TRADES is a different question and it needs more than
+    one reading -- `trades_executed`, its balance, and its profit, sampled
+    while nobody is watching. That is the whole point of leaving it running.
+
+    SAFE throughout: this reads `my-clones` and writes rows tagged
+    `kind: "sample"` into clones.jsonl. It sends nothing.
+    """
+    import time
+
+    load_dotenv()
+    install_client_guard()
+    client = build_client(identities()["trusted"],
+                          EndpointRegistry.load(), timeout=60.0)
+    deadline = time.monotonic() + until
+    taken = 0
+    while time.monotonic() < deadline:
+        try:
+            row = _instance(client, instance_id)
+            record = {
+                "id": "SAMPLE", "type": "sample", "kind": "sample",
+                "at": _now(), "instance_id": instance_id,
+                "is_trading": row.get("is_trading"),
+                "is_paper": row.get("is_paper"),
+                "balance_usdc": row.get("current_balance_usdc"),
+                "total_profit_usdc": row.get("total_profit_usdc"),
+                "trades_executed": row.get("trades_executed"),
+                "win_rate": row.get("win_rate"),
+                "owner_balance_usdc": row.get("owner_balance_usdc"),
+            }
+        except SystemExit as exc:
+            # A read we could not interpret is recorded as one. The series is
+            # more useful with a hole that says why than with a gap.
+            record = {"id": "SAMPLE", "type": "sample", "kind": "sample",
+                      "at": _now(), "instance_id": instance_id,
+                      "error": str(exc)[:200]}
+        except Exception as exc:  # noqa: BLE001
+            record = {"id": "SAMPLE", "type": "sample", "kind": "sample",
+                      "at": _now(), "instance_id": instance_id,
+                      "error": f"{type(exc).__name__}: {exc}"[:200]}
+        _append(record)
+        taken += 1
+        print(f"[{record['at']}] trades={record.get('trades_executed')} "
+              f"balance={record.get('balance_usdc')} "
+              f"pnl={record.get('total_profit_usdc')}"
+              f"{' ' + record['error'] if record.get('error') else ''}",
+              flush=True)
+        time.sleep(every)
+    client.close()
+    print(f"{taken} sample(s) taken")
+    return 0
+
+
 def main() -> int:
     # Reconfigures stdout/stderr to UTF-8; it does not transcode a string,
     # and using it as `print(printable(text))` prints None. cp1250 is the
@@ -425,6 +598,15 @@ def main() -> int:
     money.add_argument("--instance-id", required=True)
     money.add_argument("--amount", type=float, required=True)
     money.add_argument("--confirm", action="store_true")
+
+    go = sub.add_parser("enable", help="start a paper bot trading")
+    go.add_argument("--instance-id", required=True)
+    go.add_argument("--confirm", action="store_true")
+
+    eye = sub.add_parser("watch", help="sample a running bot on a timer")
+    eye.add_argument("--instance-id", required=True)
+    eye.add_argument("--every", type=int, default=600)
+    eye.add_argument("--until", type=int, default=28800)
 
     sub.add_parser("list", help="what we have cloned")
 
@@ -459,6 +641,13 @@ def main() -> int:
             print(f"  {cid}  {out.get('outcome', 'pending'):<9} "
                   f"is_paper={out.get('is_paper')!r}  "
                   f"{intent.get('custom_name') or ''}")
+        return 0
+
+    if args.cmd == "watch":
+        return watch(args.instance_id, args.every, args.until)
+
+    if args.cmd == "enable":
+        enable(args.instance_id, args.confirm)
         return 0
 
     if args.cmd == "fund":

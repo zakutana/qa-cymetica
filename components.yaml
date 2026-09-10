@@ -434,6 +434,35 @@ endpoints:
     component: rest.agents
     executable_params: [amount]
 
+  # Starting and configuring a clone. Declared 2026-09-10 after they published
+  # the routes in response to #88 -- until then both were served and in no
+  # document, and default-deny was the only thing holding them.
+  #
+  # Same floor problem as fund, one step worse: neither request carries a
+  # paper flag, and toggle-trading takes no body at all -- `enabled` is a
+  # query parameter. So there is nothing for required_flags to read, and the
+  # floor is in scripts/clone.py, which asks THEM for the instance's
+  # `is_paper` AND `execution_class` before either call and refuses unless
+  # both say paper.
+  #
+  # Why that pair rather than is_paper alone: the toggle-trading description
+  # reads "When enabled, bot will trade 100% on-chain", with no paper caveat,
+  # while the instance carries onchain_pct 100 beside
+  # execution_class PAPER_SIMULATION. The description and the object appear
+  # to disagree and only the object is machine-readable, so the floor stands
+  # on the object and reads both of its fields.
+  - id: cloned_bots.toggle_trading
+    path: /api/v1/cloned-bots/{instance_id}/toggle-trading
+    methods: [POST]
+    component: rest.agents
+    executable_params: [enabled]
+
+  - id: cloned_bots.settings
+    path: /api/v1/cloned-bots/{instance_id}/settings
+    methods: [PATCH]
+    component: rest.agents
+    executable_params: [is_trading, stop_loss_pct, take_profit_pct, max_position_pct]
+
   - id: prop.signup
     path: /api/v1/prop/signup
     methods: [POST]

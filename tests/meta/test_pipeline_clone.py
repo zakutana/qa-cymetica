@@ -175,6 +175,44 @@ def test_funding_asks_the_platform_whether_the_bot_is_paper(tmp_path, monkeypatc
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_starting_a_bot_needs_both_of_their_paper_statements(tmp_path, monkeypatch):
+    """Enabling autonomous trading is the one call that keeps spending.
+
+    `toggle-trading` carries no body at all -- `enabled` is a query parameter
+    -- so required_flags has nothing to read, and its own description says
+    "When enabled, bot will trade 100% on-chain" with no paper caveat. The
+    instance says something else: `onchain_pct: 100` beside
+    `execution_class: "PAPER_SIMULATION"`. The description and the object
+    disagree, and only the object is machine-readable.
+
+    So the floor reads BOTH of the object's statements. `is_paper` alone is
+    the weaker reading and it is the one that would let a bot whose execution
+    class had changed be started anyway -- and unlike a single order, a
+    started bot keeps trading after we stop watching.
+    """
+    mod = _clone(tmp_path, monkeypatch)
+
+    live = {"id": "b1", "is_paper": True,
+            "execution_economics": {"execution_class": "PAPER_SIMULATION"}}
+    assert mod.startable(live) is True
+
+    for row in (
+            # Their two statements, disagreeing. Either one saying live is a
+            # refusal; agreement is the only thing that starts a bot.
+            {"id": "b1", "is_paper": False,
+             "execution_economics": {"execution_class": "PAPER_SIMULATION"}},
+            {"id": "b1", "is_paper": True,
+             "execution_economics": {"execution_class": "LIVE_ONCHAIN"}},
+            # Absent is not permission, on the side that keeps spending.
+            {"id": "b1", "is_paper": True, "execution_economics": {}},
+            {"id": "b1", "is_paper": True},
+            {"id": "b1"},
+            {},
+            None):
+        assert mod.startable(row) is False, row
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_clone_record_is_not_written_into_the_paper_trade_log(
         tmp_path, monkeypatch):
     """#87 groups every id in paper.jsonl into intent/outcome/after and reads
