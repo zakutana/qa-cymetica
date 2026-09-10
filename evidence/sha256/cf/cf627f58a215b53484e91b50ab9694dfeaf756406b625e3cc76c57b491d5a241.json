@@ -1,0 +1,243 @@
+{
+  "captured_at": "2026-09-10T21:42:35+00:00",
+  "endpoint_rule": null,
+  "nodeid": "tests/rest/test_build_recipes.py::test_every_card_we_hold_a_position_in_still_resolves",
+  "request": {
+    "body": {
+      "encoding": "empty",
+      "value": null
+    },
+    "headers": {
+      "accept": "application/json",
+      "accept-encoding": "gzip, deflate, zstd",
+      "connection": "keep-alive",
+      "host": "cymetica.com",
+      "user-agent": "qa-cymetica/0.1 (independent QA; contact via vendor Telegram channel)",
+      "x-api-key": "<redacted>"
+    },
+    "method": "GET",
+    "url": "https://cymetica.com/api/v1/event-cards/c9fdbaba-e8d9-474f-91d0-29249d4bf22c"
+  },
+  "response": {
+    "body": {
+      "encoding": "json",
+      "truncated": false,
+      "value": {
+        "basket": [
+          {
+            "asset_type": "stock",
+            "association_score": 1.0,
+            "image_url": "https://s3-symbol-logo.tradingview.com/coinbase--big.svg",
+            "is_direct": null,
+            "market_cap_rank": null,
+            "name": "COIN",
+            "symbol": "COIN",
+            "venue": "finnhub",
+            "weight": 0.2507
+          },
+          {
+            "asset_type": "stock",
+            "association_score": 0.0835,
+            "image_url": "https://financialmodelingprep.com/image-stock/MRX.png",
+            "is_direct": null,
+            "market_cap_rank": null,
+            "name": "MRX",
+            "symbol": "MRX",
+            "venue": "finnhub",
+            "weight": 0.103
+          },
+          {
+            "asset_type": "stock",
+            "association_score": 0.0672,
+            "image_url": "https://financialmodelingprep.com/image-stock/CRCL.png",
+            "is_direct": null,
+            "market_cap_rank": null,
+            "name": "CRCL",
+            "symbol": "CRCL",
+            "venue": "finnhub",
+            "weight": 0.1269
+          },
+          {
+            "asset_type": "stock",
+            "association_score": 0.0522,
+            "image_url": "https://financialmodelingprep.com/image-stock/GEMI.png",
+            "is_direct": null,
+            "market_cap_rank": null,
+            "name": "GEMI",
+            "symbol": "GEMI",
+            "venue": "finnhub",
+            "weight": 0.0059
+          },
+          {
+            "asset_type": "stock",
+            "association_score": 0.0392,
+            "image_url": "https://financialmodelingprep.com/image-stock/BGC.png",
+            "is_direct": null,
+            "market_cap_rank": null,
+            "name": "BGC",
+            "symbol": "BGC",
+            "venue": "finnhub",
+            "weight": 0.017
+          },
+          {
+            "asset_type": "stock",
+            "association_score": 0.0373,
+            "image_url": "https://financialmodelingprep.com/image-stock/BNY.png",
+            "is_direct": null,
+            "market_cap_rank": null,
+            "name": "BNY",
+            "symbol": "BNY",
+            "venue": "finnhub",
+            "weight": 0.2276
+          },
+          {
+            "asset_type": "stock",
+            "association_score": 0.037,
+            "image_url": "https://financialmodelingprep.com/image-stock/SWIM.png",
+            "is_direct": null,
+            "market_cap_rank": null,
+            "name": "SWIM",
+            "symbol": "SWIM",
+            "venue": "finnhub",
+            "weight": 0.0097
+          },
+          {
+            "asset_type": "stock",
+            "association_score": 0.0363,
+            "image_url": "https://financialmodelingprep.com/image-stock/POOL.png",
+            "is_direct": null,
+            "market_cap_rank": null,
+            "name": "POOL",
+            "symbol": "POOL",
+            "venue": "finnhub",
+            "weight": 0.2592
+          }
+        ],
+        "bear_notional_usdc": 0.0,
+        "bull_notional_usdc": 0.0,
+        "card_url": "/events/c9fdbaba-e8d9-474f-91d0-29249d4bf22c",
+        "contract_spec": {
+          "appellate_body": "Cymetica Operations",
+          "dispute_window": "1h",
+          "fallback_source": "Operator manual review if primary CoinGecko feed unavailable; secondary CMC + Binance WS as cross-check",
+          "max_price_staleness": null,
+          "methodology": "Index close at resolution_time_utc; basket-weighted per event_card_assets weights",
+          "notes": null,
+          "resolution_at_utc": null,
+          "resolution_source": "Tuatara basket index — CoinGecko price feed at resolution time",
+          "version": 1
+        },
+        "created_at": "2026-05-27T00:18:15.024028+00:00",
+        "current_index": 116.439997,
+        "direction": null,
+        "evcdx_symbol": "EVCDX-KEVIN-WARSH-SWORN-IN",
+        "has_stock_legs": true,
+        "headline_impact_score": 7.5,
+        "headline_sentiment_score": 1.0,
+        "holdings": [
+          {
+            "quantity": 21.3996399615,
+            "symbol": "EVCDX-KEVIN-WARSH-SWORN-IN",
+            "venue": "ledger"
+          }
+        ],
+        "id": "c9fdbaba-e8d9-474f-91d0-29249d4bf22c",
+        "image_url": "https://s3-images.ctmedia.io/media/article-covers/kevin-warsh-2-3.jpg",
+        "index_base": 100.0,
+        "is_featured": false,
+        "perp_symbol": "EVCDX-KEVIN-WARSH-SWORN-IN",
+        "pipeline_status": {
+          "current_stage": "mm_quoting",
+          "progress_pct": 66,
+          "stages": [
+            {
+              "done": true,
+              "id": "card_created",
+              "label": "Card Created"
+            },
+            {
+              "done": true,
+              "id": "token_deployed",
+              "label": "Token Deployed"
+            },
+            {
+              "done": true,
+              "id": "pair_registered",
+              "label": "Pair Registered"
+            },
+            {
+              "done": true,
+              "id": "mm_funded",
+              "label": "Liquidity Seeded"
+            },
+            {
+              "done": false,
+              "id": "mm_quoting",
+              "label": "Market Making"
+            },
+            {
+              "done": false,
+              "id": "tradeable",
+              "label": "Tradeable"
+            }
+          ]
+        },
+        "pons_coin": null,
+        "pro_terminal_url": "/exchange/EVCDX-KEVIN-WARSH-SWORN-IN-pro",
+        "published_at": "2026-05-22T22:12:01+00:00",
+        "pw_base": 75.711782,
+        "pw_index": null,
+        "share_price_usd": "1.1644",
+        "share_url": "https://cymetica.com/events/c9fdbaba-e8d9-474f-91d0-29249d4bf22c",
+        "short_execution": "perp",
+        "source_url": "https://cointelegraph.com/news/kevin-warsh-sworn-fed-chair-traders-rate-hikes-2026?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
+        "status": "live",
+        "stock_tokenized_live": false,
+        "strategy_name": null,
+        "summary": "US President Donald Trump has repeatedly said he wants the Federal Reserve to lower interest rates, but investors forecast no chance of a rate cut in 2026.",
+        "title": "Kevin Warsh sworn in as Fed chair, as traders forecast rate hikes in 2026",
+        "tradeable_now": false,
+        "trading_blocked_reason": "This card's price is not currently available — its index has not refreshed recently. Trading is paused rather than filling at a stale price.",
+        "trading_closes_at": null,
+        "upvoted_by_me": false,
+        "upvotes": 0,
+        "us_market_open": false,
+        "user_position": null,
+        "vehicle_structure": null,
+        "vehicle_structure_name": null
+      }
+    },
+    "elapsed_ms": null,
+    "headers": {
+      "cache-control": "no-store, no-cache, must-revalidate, max-age=0",
+      "connection": "keep-alive",
+      "content-encoding": "gzip",
+      "content-length": "1624",
+      "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests",
+      "content-security-policy-report-only": "default-src 'self'; script-src 'self' 'nonce-adDAWfHw/EJI3YyKWst2/g==' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'",
+      "content-signal": "ai-train=no, search=yes, ai-input=yes",
+      "content-type": "application/json",
+      "cross-origin-opener-policy": "same-origin-allow-popups",
+      "cross-origin-resource-policy": "cross-origin",
+      "date": "Thu, 10 Sep 2026 21:42:36 GMT",
+      "permissions-policy": "geolocation=(), microphone=(), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=(), browsing-topics=(), attribution-reporting=()",
+      "pragma": "no-cache",
+      "referrer-policy": "strict-origin-when-cross-origin, strict-origin-when-cross-origin",
+      "server": "nginx",
+      "strict-transport-security": "max-age=31536000; includeSubDomains",
+      "vary": "Accept-Encoding",
+      "x-ai-strongest-model": "Claude Fable 5",
+      "x-content-type-options": "nosniff, nosniff",
+      "x-dns-prefetch-control": "off",
+      "x-frame-options": "SAMEORIGIN, SAMEORIGIN",
+      "x-ratelimit-limit": "2000",
+      "x-ratelimit-remaining": "1971",
+      "x-ratelimit-reset": "1789076580",
+      "x-xss-protection": "0"
+    },
+    "reason": "OK",
+    "status_code": 200
+  },
+  "run_id": "run-20260910T213841Z-adc2783",
+  "tier": "SAFE"
+}
