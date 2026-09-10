@@ -306,11 +306,24 @@ def test_the_money_loop_is_behind_the_probe_only_floor():
         "funding.deposit", "funding.withdraw",
     }
     by_id = {rule.id: rule for rule in registry.rules}
-    missing = sorted(i for i in must if i in by_id and not by_id[i].probe_only)
+    # Two floors, not one. `probe_only` says execution is never permitted;
+    # `required_flags` says it is permitted only carrying a flag the platform
+    # publishes as the thing that stops money moving, and the transport
+    # refuses the request without it. What is forbidden is an endpoint on this
+    # list standing behind NEITHER.
+    #
+    # agents.clone and bots.clone moved to the second floor on 2026-09-10,
+    # after CloneBotRequest published `paper`: "true = paper clone, false =
+    # live clone, omitted = inherits the account's simulation_mode". The old
+    # floor was written when cloning could only spend.
+    missing = sorted(i for i in must if i in by_id
+                     and not by_id[i].probe_only
+                     and not by_id[i].required_flags)
     assert not missing, (
         f"money-moving endpoints reachable by a MUTATE test: {missing}. "
-        f"Add `probe_only: true`, or argue in components.yaml why this one is "
-        f"not spending anything."
+        f"Add `probe_only: true`, or `required_flags` naming the platform's "
+        f"own paper control, or argue in components.yaml why this one is not "
+        f"spending anything."
     )
     assert not (must - set(by_id)), \
         f"named in this guard but no longer declared: {sorted(must - set(by_id))}"
@@ -530,9 +543,12 @@ def test_a_rule_that_requires_no_flag_is_unaffected():
     # harmless in a probe body" -- bounty.a2a_send declares five and sends
     # three, so requiring them would have refused the a2a writer.
     declares = [rule.id for rule in registry.rules if getattr(rule, "required_flags", None)]
-    assert sorted(declares) == ["event_cards.buy", "event_cards.sell",
+    assert sorted(declares) == ["agents.clone", "bots.clone",
+                                "event_cards.buy", "event_cards.sell",
                                 "event_cards.short"], (
-        f"the set of rules requiring a flag has moved: {declares}"
+        f"the set of rules requiring a flag has moved: {declares}. Each entry "
+        f"is an endpoint whose floor was lowered from probe_only, and each one "
+        f"needs its own reason in components.yaml."
     )
     inert_only = sorted(rule.id for rule in registry.rules
                         if rule.inert_params and not rule.required_flags)
@@ -546,6 +562,104 @@ def test_a_rule_that_requires_no_flag_is_unaffected():
         with pytest.raises(AssertionError, match="THE GUARD LET IT THROUGH"):
             client.post("https://cymetica.com/api/v1/bounty/reports",
                         json={"title": "x", "description": "y"})
+    finally:
+        CURRENT_TIER.reset(token)
+        client.close()
+
+
+@qa(component="meta.guard", tier=SafetyTier.SAFE, surface="meta")
+def test_a_money_tool_with_a_paper_flag_is_executable_only_with_it():
+    """The floor moves from the endpoint to the flag, for tools as well.
+
+    `trade_event_card` moves money and is classified `trade`, so the guard
+    refused it at every tier -- correctly, while the only thing it could do was
+    spend. Their 2026-09-10 release made it paper by default: *"Defaults to
+    PAPER trading (no real funds move). Live trading only on an explicit
+    paper=false AND the platform trading gate."*
+
+    A blanket refusal on a tool that can be told not to spend is the same
+    mistake `event_cards.buy` carried until this morning: a floor written for a
+    world before the flag existed. So the tool becomes executable at MUTATE and
+    only ever with the flag, which is the rule `required_flags` already makes
+    for REST.
+
+    What must NOT change: `place_order` has no paper control on this surface
+    and stays refused, and neither tool is reachable below MUTATE.
+    """
+    registry = EndpointRegistry.load()
+    registry.mutate_enabled = True
+    registry.mutate_allowed_hosts = frozenset({"cymetica.com"})
+    client = _deaf_mcp_client(registry=registry)
+
+    token = CURRENT_TIER.set(SafetyTier.MUTATE)
+    try:
+        # Without the flag: refused, and the refusal names it.
+        with pytest.raises(SafetyViolation) as refused:
+            client.call_raw("trade_event_card", {"card_id": "c1", "amount_usdc": 1})
+        assert "paper" in str(refused.value)
+
+        # With it false: that is a live order wearing the flag's name.
+        with pytest.raises(SafetyViolation):
+            client.call_raw("trade_event_card",
+                            {"card_id": "c1", "amount_usdc": 1, "paper": False})
+
+        # With it true: allowed through to a transport that carries nothing.
+        with pytest.raises(AssertionError, match="THE GUARD LET IT THROUGH"):
+            client.call_raw("trade_event_card",
+                            {"card_id": "c1", "amount_usdc": 1, "paper": True})
+
+        # A tool with no paper control is untouched by any of this.
+        with pytest.raises(SafetyViolation) as still:
+            client.call_raw("place_order", {"symbol": "BTC", "size": 1})
+        assert "trade" in str(still.value)
+    finally:
+        CURRENT_TIER.reset(token)
+        client.http.close()
+
+
+@qa(component="meta.guard", tier=SafetyTier.SAFE, surface="meta")
+def test_a_paper_gated_tool_is_still_refused_below_mutate():
+    """Paper is not free. Every call still costs a rate limit and creates a
+    position on their side, so it stays a deliberate MUTATE."""
+    registry = EndpointRegistry.load()
+    client = _deaf_mcp_client(registry=registry)
+    for tier in (SafetyTier.SAFE, SafetyTier.PROBE):
+        token = CURRENT_TIER.set(tier)
+        try:
+            with pytest.raises(SafetyViolation):
+                client.call_raw("trade_event_card",
+                                {"card_id": "c1", "amount_usdc": 1, "paper": True})
+        finally:
+            CURRENT_TIER.reset(token)
+    client.http.close()
+
+
+@qa(component="meta.guard", tier=SafetyTier.SAFE, surface="meta")
+def test_cloning_a_bot_needs_its_paper_flag_too():
+    """The operator's hundred bots, and the floor that stood in their way.
+
+    Both clone routes were probe_only because "cloning funds an agent; the gas
+    policy bills cloned agents to the user's own balance". CloneBotRequest now
+    documents `paper`: *"true = paper clone, false = live clone, omitted =
+    inherits the account's simulation_mode."* Omitted is the dangerous one, and
+    it is exactly what required_flags refuses.
+    """
+    registry = EndpointRegistry.load()
+    registry.mutate_enabled = True
+    registry.mutate_allowed_hosts = frozenset({"cymetica.com"})
+    client = _deaf_client(registry=registry)
+
+    token = CURRENT_TIER.set(SafetyTier.MUTATE)
+    try:
+        with pytest.raises(SafetyViolation) as refused:
+            client.post("https://cymetica.com/api/v1/bots/clone",
+                        json={"source_type": "wta_species", "source_id": "s1"})
+        assert "paper" in str(refused.value)
+
+        with pytest.raises(AssertionError, match="THE GUARD LET IT THROUGH"):
+            client.post("https://cymetica.com/api/v1/bots/clone",
+                        json={"source_type": "wta_species", "source_id": "s1",
+                              "paper": True})
     finally:
         CURRENT_TIER.reset(token)
         client.close()

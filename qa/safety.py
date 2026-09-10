@@ -130,6 +130,9 @@ class EndpointRegistry:
         self.tools_contribute = frozenset(tools.get("contribute", []))
         self.tools_trade = frozenset(tools.get("trade", []))
         self.tools_provision = frozenset(tools.get("provision", []))
+        # tool name -> the argument that must be present and true before it may
+        # be executed. The tool-side twin of EndpointRule.required_flags.
+        self.tools_paper_gated: dict[str, str] = dict(tools.get("paper_gated", {}))
         self.components = raw.get("components", {})
         self.mutate_enabled = False
         self.mutate_allowed_hosts: frozenset[str] = frozenset()
@@ -310,6 +313,20 @@ class SafetyTransport(httpx.BaseTransport):
             raise SafetyViolation(
                 f"MUTATE call to tool {tool!r} without --allow-mutate."
             )
+        # A tool that publishes a flag which stops it spending is not the same
+        # thing as one that cannot be stopped. Checked before the blanket
+        # refusal, and only at MUTATE: paper is not free, since every call
+        # costs a rate limit and leaves a position on their side.
+        gate = self.registry.tools_paper_gated.get(str(tool))
+        if gate:
+            if not args.get(gate):
+                raise SafetyViolation(
+                    f"MCP tool {tool!r} moves money unless {gate!r} is true, "
+                    f"and this call does not carry it. That flag is what says "
+                    f"no real funds move; send it, or do not call the tool."
+                )
+            return
+
         if klass in ("trade", "provision"):
             raise SafetyViolation(
                 f"MCP tool {tool!r} is classified {klass!r}: it moves money or "

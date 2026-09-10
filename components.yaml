@@ -371,12 +371,17 @@ endpoints:
     executable_params: [team, side, amount, size, quantity, price]
     probe_only: true   # an Arena order carries amount/size/price and settles
 
+  # The clone floor was "cloning funds an agent; the gas policy bills cloned
+  # agents to the user's own balance". True before CloneBotRequest published
+  # `paper`: "true = paper clone, false = live clone, omitted = inherits the
+  # account's simulation_mode". Omitted is the dangerous reading and is exactly
+  # what required_flags refuses. Re-derived 2026-09-10.
   - id: agents.clone
     path: /api/v1/agents/clone
     methods: [POST]
     component: rest.agents
     executable_params: [bot_id, slug, name, capital, funding, amount, species]
-    probe_only: true   # cloning funds an agent; the gas policy bills cloned agents to
+    required_flags: [paper]   # cloning funds an agent; the gas policy bills cloned agents to
     # the user's own balance, and clone/deposit-info exists for a reason
 
   - id: bots.clone
@@ -384,7 +389,7 @@ endpoints:
     methods: [POST]
     component: rest.agents
     executable_params: [bot_id, slug, name, capital, funding, amount, species]
-    probe_only: true   # the other clone route; same money, same floor
+    required_flags: [paper]   # the other clone route; same money, same floor
 
   - id: prop.signup
     path: /api/v1/prop/signup
@@ -512,11 +517,21 @@ mcp_tools:
   contribute:
     [submit_observation, submit_feedback, request_feature, submit_signal]
   trade:
-    # trade_event_card is paper by default and live on a funded account,
-    # which is a control the classifier cannot see from the tool name. It
-    # sits here until the paper floor is re-derived per endpoint, the way
-    # event_cards.buy was on 2026-09-10.
-    [place_order, trade_event_card]
+    [place_order]
+
+  # Tools that move money AND publish a flag that stops them moving it. The
+  # value is the argument that must be present and true before the tool may be
+  # executed at MUTATE -- the same rule required_flags makes for REST
+  # endpoints, and for the same reason: a blanket refusal on a tool that can be
+  # told not to spend is a floor written for a world before the flag existed.
+  #
+  # trade_event_card, from its own description: "Defaults to PAPER trading (no
+  # real funds move -- positions and P&L are tracked and tagged paper). Live
+  # trading only on an explicit paper=false AND the platform trading gate."
+  # place_order is NOT here: the CLOB has no paper book at all and refuses
+  # paper=true with 400 CLOB_NO_PAPER_BOOK, so its floor stays absolute.
+  paper_gated:
+    trade_event_card: paper
   provision:
     [create_aib_fund, edit_aib_fund_basket, launchpad_launch_token,
      register_webhook, subscribe_prices]

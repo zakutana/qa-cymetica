@@ -96,7 +96,19 @@ PINNED = {
     # inert_params and would have refused the a2a writer. Both run through
     # _Unsendable, so a broken refusal reaches a transport that carries
     # nothing rather than the live platform.
-    "test_guard_is_real.py": "cbe6913e7909d0894e7ad23bf1bf8250ae29257d5e462271a7a59d18177950e6",
+    #
+    # Re-derived again 2026-09-10, later the same day, for the second half of
+    # the same argument. Their release made trade_event_card paper by default
+    # and CloneBotRequest publish `paper`, so three floors written for a world
+    # without that flag were lowered: the two clone routes to
+    # `required_flags: [paper]`, and trade_event_card into a new
+    # `mcp_tools.paper_gated` map that the RPC classifier consults before its
+    # blanket trade refusal. Three controls added here, all through
+    # _Unsendable, and one existing guard -- the money-loop floor -- taught
+    # that there are two floors rather than one, since what it must forbid is
+    # an endpoint standing behind NEITHER. place_order is deliberately not
+    # gated: the CLOB has no paper book and refuses paper=true outright.
+    "test_guard_is_real.py": "e516ff3d1c410d4e2ceacda894240a0102bd27a19038fd8309e0c04cb487723f",
 }
 
 
