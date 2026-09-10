@@ -391,6 +391,30 @@ endpoints:
     executable_params: [bot_id, slug, name, capital, funding, amount, species]
     required_flags: [paper]   # the other clone route; same money, same floor
 
+  # The one they actually serve. Found by the sweep of 2026-09-10: the two
+  # rules above name paths that are in no openapi document -- /api/v1/agents/*
+  # is absent entirely and /api/v1/bots/clone is our own reported 404 (#49) --
+  # so the paper floor was guarding two doors nobody opens while the real one
+  # stood only behind default-deny. That held, and it is not the same thing as
+  # a floor: the day somebody declares this endpoint to make their request go
+  # through, the floor they inherit is whatever they wrote in that commit.
+  # The other two stay because a 404 that comes back is restored by being
+  # served, not by being re-declared.
+  #
+  # CloneBotRequest, from their 18:50 snapshot: source_type ('wta_species' or
+  # 'perpetual_agent'), source_id, custom_name, is_paper, and paper -- "Same
+  # as is_paper (canonical name shared with the event-card endpoints). true =
+  # paper clone, false = live clone, omitted = inherits the account's
+  # simulation_mode." Omitted is the dangerous reading; this account's
+  # simulation_mode has been False. Their own description makes `paper` the
+  # canonical name, so that is the flag the floor names.
+  - id: cloned_bots.clone
+    path: /api/v1/cloned-bots/clone
+    methods: [POST]
+    component: rest.agents
+    executable_params: [source_type, source_id, custom_name]
+    required_flags: [paper]
+
   - id: prop.signup
     path: /api/v1/prop/signup
     methods: [POST]

@@ -303,6 +303,7 @@ def test_the_money_loop_is_behind_the_probe_only_floor():
     must = {
         "clob.orders", "clob.order_singular", "arena.order",
         "exchange.buy", "exchange.orders", "agents.clone", "bots.clone",
+        "cloned_bots.clone",
         "funding.deposit", "funding.withdraw",
     }
     by_id = {rule.id: rule for rule in registry.rules}
@@ -577,6 +578,7 @@ def test_a_rule_that_requires_no_flag_is_unaffected():
     # three, so requiring them would have refused the a2a writer.
     declares = [rule.id for rule in registry.rules if getattr(rule, "required_flags", None)]
     assert sorted(declares) == ["agents.clone", "bots.clone",
+                                "cloned_bots.clone",
                                 "event_cards.buy", "event_cards.sell",
                                 "event_cards.short"], (
         f"the set of rules requiring a flag has moved: {declares}. Each entry "
@@ -726,23 +728,45 @@ def test_cloning_a_bot_needs_its_paper_flag_too():
     documents `paper`: *"true = paper clone, false = live clone, omitted =
     inherits the account's simulation_mode."* Omitted is the dangerous one, and
     it is exactly what required_flags refuses.
+
+    **Every clone route, including the one that exists.** Deep-pass finding
+    A06 said this test named "both clone paths" and exercised one. The 2026-09-
+    10 sweep found the sharper version of the same thing: it exercised the one
+    the platform does not serve. `/api/v1/agents/*` is absent from their
+    openapi entirely and `/api/v1/bots/clone` is our own reported 404 -- the
+    route that clones is `/api/v1/cloned-bots/clone`, and until this commit it
+    stood behind no rule at all. Default-deny caught it, so nothing could have
+    been spent, but the paper floor was guarding two doors nobody serves while
+    the real one was held shut only by not being declared. A floor aimed at
+    the wrong door is indistinguishable from a floor, right up until someone
+    declares the endpoint to make their request work.
     """
     registry = EndpointRegistry.load()
     registry.mutate_enabled = True
     registry.mutate_allowed_hosts = frozenset({"cymetica.com"})
     client = _deaf_client(registry=registry)
 
+    routes = ["https://cymetica.com/api/v1/cloned-bots/clone",
+              "https://cymetica.com/api/v1/bots/clone",
+              "https://cymetica.com/api/v1/agents/clone"]
+    source = {"source_type": "wta_species", "source_id": "s1"}
+
     token = CURRENT_TIER.set(SafetyTier.MUTATE)
     try:
-        with pytest.raises(SafetyViolation) as refused:
-            client.post("https://cymetica.com/api/v1/bots/clone",
-                        json={"source_type": "wta_species", "source_id": "s1"})
-        assert "paper" in str(refused.value)
+        for url in routes:
+            with pytest.raises(SafetyViolation) as refused:
+                client.post(url, json=source)
+            assert "paper" in str(refused.value), url
 
-        with pytest.raises(AssertionError, match="THE GUARD LET IT THROUGH"):
-            client.post("https://cymetica.com/api/v1/bots/clone",
-                        json={"source_type": "wta_species", "source_id": "s1",
-                              "paper": True})
+            # By VALUE, not by presence. `paper: false` is documented as a
+            # LIVE clone -- the reading that only asks whether the key exists
+            # would wave through the one body on this endpoint that spends.
+            with pytest.raises(SafetyViolation) as live:
+                client.post(url, json={**source, "paper": False})
+            assert "paper" in str(live.value), url
+
+            with pytest.raises(AssertionError, match="THE GUARD LET IT THROUGH"):
+                client.post(url, json={**source, "paper": True})
     finally:
         CURRENT_TIER.reset(token)
         client.close()

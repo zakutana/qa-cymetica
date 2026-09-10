@@ -124,7 +124,28 @@ PINNED = {
     # carrying `confirm: true` and no paper key satisfied the transport. That
     # second one ships with a negative control, because an assertion that is
     # green on today's file whatever it checks is one nobody has watched fire.
-    "test_guard_is_real.py": "c2c72612cb7c18ee1080333d512868edd75781b10b2ca7730b19006eac9068db",
+    #
+    # Re-derived a FOURTH time, 2026-09-10, by the sweep after that deep pass,
+    # and this one is about WHERE a floor points rather than whether it holds.
+    # `test_cloning_a_bot_needs_its_paper_flag_too` exercised
+    # /api/v1/bots/clone. That path is in no openapi document they publish --
+    # it is our own reported 404, #49 -- and /api/v1/agents/* is absent
+    # entirely. The route that clones is /api/v1/cloned-bots/clone, and it
+    # stood behind NO rule at all, so the paper floor was guarding two doors
+    # nobody opens. Default-deny held the real one, which is why nothing could
+    # have been spent; but a floor aimed at the wrong door is
+    # indistinguishable from a floor until somebody declares the endpoint to
+    # make their own request work, and then they inherit whatever they wrote
+    # in that commit.
+    #
+    # Two changes, both adding enforcement: the control now iterates all three
+    # routes, and it asserts `paper: false` is refused as well as absent --
+    # their schema documents false as a LIVE clone, so a reading that only
+    # asked whether the key exists would wave through the one body on that
+    # endpoint that spends. Deep-pass finding A06 said this test named "both
+    # clone paths" and exercised one; this is the sharper version of the same
+    # sentence.
+    "test_guard_is_real.py": "0a6ec25622e8d8f2e007ac40b17f75d6f781eb5dbf98316890964e82102cf86f",
 }
 
 
