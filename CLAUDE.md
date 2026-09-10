@@ -404,6 +404,20 @@ of the 13 pre-hardening run records is admissible — each names its own reason.
 A zero here is not a regression to be fixed; it is the difference between
 "we checked" and "they said".
 
+## Read the memories before the work, not after it
+
+Only `MEMORY.md` is loaded for you: 25 one-line hooks, no bodies. **Open the
+two or three whose line touches the work in front of you, before the first
+substantive step** — a sweep opens the ones about checks and outbound claims, a
+change to the fold opens the ones about derivation and replay. It costs a
+single tool call and it is the whole point of the directory.
+
+Asked on 2026-09-10 whether the memories load themselves, the answer was no,
+and the session had read none until the question came. The four it then opened
+were what caught a false sentence in `verify.py` before it reached the vendor.
+The index is auto-loaded context; reading is a step, and a step nobody takes is
+not a mechanism.
+
 ## Write down how you went wrong
 
 Not what you found — that is what the ledger, the journal and the commit
