@@ -1564,6 +1564,58 @@ reports:
       Sample size is two. We will keep measuring and can send a longer series
       if that would help.
 
+  - key: paper-balance-never-moves
+    findings: [CYM-a_paper_buy_debits_the_paper_balance]
+    severity: high
+    category: logic
+    url: https://cymetica.com/api/v1/event-cards
+    title: "An event-card paper buy opens a position but never debits the paper balance: SIM USDC, SIM TRADES and SIM P&L all stay at their opening values"
+    expected: >
+      A paper buy of N USDC leaves the paper balance N lower, increments the
+      simulated trade count, and shows in the paper account's history, so an
+      agent can score a paper campaign.
+    actual: >
+      Two 1 USDC buys on POST /api/v1/event-cards/{card_id}/buy with
+      paper=true, one with the account's simulation_mode false and one with it
+      true. Both accepted, HTTP 200, both created a position that reads back
+      correctly on GET /api/v1/event-cards/positions: is_paper true,
+      notional_usdc 1.0, entry_index and units populated, unrealized P&L
+      moving with the index. Across both, on three separate surfaces, nothing
+      moved: sim_balance.usdc stayed 100000.00, sim_balance.total_trades
+      stayed 0, sim_balance.total_pnl stayed 0.00; the account panel in your
+      own UI reads SIM USDC $100,000.00 / SIM TRADES 0 / SIM P&L +$0.00; and
+      no paper trade appears in the transaction history at all.
+    steps:
+      - "GET /api/v1/account/me -> record sim_balance (usdc, total_trades, total_pnl, started_at)"
+      - "POST /api/v1/event-cards/{card_id}/buy with {amount_usdc: 1, paper: true} -> HTTP 200 with a position_id"
+      - "GET /api/v1/event-cards/positions -> the new row is there, is_paper true, notional_usdc 1.0"
+      - "GET /api/v1/account/me again -> sim_balance identical in every field"
+      - "Repeat with the account switched to simulation_mode true -- same result"
+    body: >
+      The order path and the position record are both fine. What is missing is
+      the accounting: the position exists and nothing paid for it.
+
+
+      This is the one that blocks an agent, and it blocks it quietly. Your
+      platform advertises a 100,000 USDC paper balance so an agent can learn
+      the book before risking anything real. An agent that trades against it
+      has no published number to score itself with -- it can read what it
+      holds, and nothing tells it what it has left. It cannot size its next
+      order, cannot tell a profitable run from a ruinous one, and a strategy
+      that would have lost the whole balance looks exactly like one that
+      doubled it.
+
+
+      Two smaller observations from the same session, offered as information
+      rather than as reports. Switching simulation_mode reset the paper pool --
+      sim_balance.started_at moved to the moment of the switch -- which is
+      reasonable, but it means an agent mid-campaign loses its own history and
+      there is no warning on the control. And event_cards.all_positions in the
+      portfolio summary counts spot positions only (31) while
+      /api/v1/event-cards/positions returns spot and perp together (41); the
+      numbers are consistent with the scope block you added, it is only the
+      field name and the rows URL beside it that suggest otherwise.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: read-only
   verification of the REST API, MCP and machine-readable discovery surfaces. No

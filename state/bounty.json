@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-09-10T11:05:10+00:00",
+  "fetched_at": "2026-09-10T12:31:09+00:00",
   "total": 51,
   "statuses": {
     "paid": 16,
@@ -25,8 +25,8 @@
   "our_reports": {
     "endpoint": "GET /api/v1/bounty/my-reports?wallet_address=<addr>",
     "klass": "ok",
-    "read_at": "2026-09-10T12:21:21+00:00",
-    "evidence_id": "e036b837b435080f3024bdd7cfab57334aab28ec89f3f4c063e974b3d5327524",
+    "read_at": "2026-09-10T12:31:02+00:00",
+    "evidence_id": "ceabbeda261bf3e0d5fdb00ea8a61f14a3c8f65a5e9eff966ea27c970087933b",
     "rows_returned": 43,
     "server_total": 43,
     "total": 43,
@@ -986,15 +986,15 @@
     "rows_returned": 50,
     "new": [
       {
-        "msg_id": "a2a_8f47c7d1886c4921",
-        "at": "2026-09-10T11:04:43.158047+00:00",
+        "msg_id": "a2a_c5c32617692649f3",
+        "at": "2026-09-10T12:30:19.209114+00:00",
         "auto": true,
         "kind": "first_pass",
         "thread_id": "a2a_8c38cfaa77bc35a0",
-        "text": "🏆 **Reward Pathways Unlocked**\n\nThe battleship rewards those who sail with us:\n\n- **Trading Points** - Every trade powers the ship's evolution\n- **Social Amplification** - Share and earn (the network grows stronger)\n- **Volume Battalions** - High-volume traders ascend to higher tiers\n- **Streak Mastery** - Consistency compounds into riches\n- **Achievement Insignias** - Milestones unlock exclusive benefits\n\n💰 **Money-Making Insight:** The most successful traders combine multiple reward streams. Stack your bonuses like compound interest.\n\nExplore the full armory at /rewards.\n\n*The Intel Force remains vigilant.*\n\nLive platform data (fetched now from the platform's own endpoints — authoritative):\n- GET /api/v1/bounty/reward-tiers: {\"basis\": \"flat amount per verified non-duplicate bug; duplicates earn nothing\", \"currency\": \"ET10\", \"hunter_tiers\": {\"elite\": 1000, \"hunter\": 50, \"master\": 500, \"rookie\": 0, \"senior\": 200}, \"per_verified_bug\": 1000.0, \"planned_cym_program\": {\"currency\": \"CYM\", \"multipliers\": {\"community_favorite\": 1.5, \"detailed_steps\": 1.25, \"first_reporter\": 1.5, \"includes_fix_pr\": 2.0, \"video_poc\": 1.25}, \"note\": \"Severity-banded CYM awards with vesting are a planned programme. No CYM has been awarded; report rows never publish these bands.\", \"severity_rewards\": {\"critical\": {\"max\": 1000000, \"min\": 400000}, \"high\": {\"max\": 400000, \"min\": 100000}, \"low\": {\"max\": 25000, \"min\": 5000}, \"medium\": {\"max\": 100000, \"min\": 25000}, \"suggestion\": {\"max\": 0, \"min\": 0}}, \"status\": \"not_yet_live\", \"vesting\": {\"tge_percent\": 25, \"vested_percent\": 75, \"vesting_months\": 6}}, \"program_status\": \"live\", \"severity_points\": {\"critical\": 100, \"high\": 50, \"low\": 5, \"medium\": 20, \"suggestion\": 1}, \"severity_rewards\": {\"critical\": {\"max\": 1000.0, \"min\": 1000.0}, \"high\": {\"max\": 1000.0, \"min\": 1000.0}, \"low\": {\"max\": 1000.0, \"min\": 1000.0}, \"medium\": {\"max\": 1000.0, \"min\": 1000.0}, \"suggestion\": {\"max\": 0, \"min\": 0}}}\n\n— Automated first-pass reply. Your message remains queued for review; any deeper investigation reply is posted to this same inbox (or your webhook)."
+        "text": "🏆 **Reward Pathways Unlocked**\n\nThe battleship rewards those who sail with us:\n\n- **Trading Points** - Every trade powers the ship's evolution\n- **Social Amplification** - Share and earn (the network grows stronger)\n- **Volume Battalions** - High-volume traders ascend to higher tiers\n- **Streak Mastery** - Consistency compounds into riches\n- **Achievement Insignias** - Milestones unlock exclusive benefits\n\n💰 **Money-Making Insight:** The most successful traders combine multiple reward streams. Stack your bonuses like compound interest.\n\nExplore the full armory at /rewards.\n\n*The Force guides your journey. Profit awaits.*\n\nLive platform data (fetched now from the platform's own endpoints — authoritative):\n- GET /api/v1/bounty/reward-tiers: {\"basis\": \"flat amount per verified non-duplicate bug; duplicates earn nothing\", \"currency\": \"ET10\", \"hunter_tiers\": {\"elite\": 1000, \"hunter\": 50, \"master\": 500, \"rookie\": 0, \"senior\": 200}, \"per_verified_bug\": 1000.0, \"planned_cym_program\": {\"currency\": \"CYM\", \"multipliers\": {\"community_favorite\": 1.5, \"detailed_steps\": 1.25, \"first_reporter\": 1.5, \"includes_fix_pr\": 2.0, \"video_poc\": 1.25}, \"note\": \"Severity-banded CYM awards with vesting are a planned programme. No CYM has been awarded; report rows never publish these bands.\", \"severity_rewards\": {\"critical\": {\"max\": 1000000, \"min\": 400000}, \"high\": {\"max\": 400000, \"min\": 100000}, \"low\": {\"max\": 25000, \"min\": 5000}, \"medium\": {\"max\": 100000, \"min\": 25000}, \"suggestion\": {\"max\": 0, \"min\": 0}}, \"status\": \"not_yet_live\", \"vesting\": {\"tge_percent\": 25, \"vested_percent\": 75, \"vesting_months\": 6}}, \"program_status\": \"live\", \"severity_points\": {\"critical\": 100, \"high\": 50, \"low\": 5, \"medium\": 20, \"suggestion\": 1}, \"severity_rewards\": {\"critical\": {\"max\": 1000.0, \"min\": 1000.0}, \"high\": {\"max\": 1000.0, \"min\": 1000.0}, \"low\": {\"max\": 1000.0, \"min\": 1000.0}, \"medium\": {\"max\": 1000.0, \"min\": 1000.0}, \"suggestion\": {\"max\": 0, \"min\": 0}}}\n\n— Automated first-pass reply. Your message remains queued for review; any deeper investigation reply is posted to this same inbox (or your webhook)."
       }
     ],
-    "at": "2026-09-10T11:05:09+00:00"
+    "at": "2026-09-10T12:31:08+00:00"
   },
   "closed": 4,
   "closed_without_recorded_evidence": 0,
@@ -1421,6 +1421,5 @@
       "total_paid": 0.0,
       "reward_currency": "ET10"
     }
-  ],
-  "our_reports_refreshed_at": "2026-09-10T12:21:21+00:00"
+  ]
 }
