@@ -58,10 +58,40 @@ def read(path: Path) -> dict:
         # Indented, because the memory harness rewrites this frontmatter and
         # puts anything it does not recognise under `metadata:`. Where the
         # field lands is its decision, not ours; the reader accepts both.
-        found = re.search(rf"^\s*{name}:\s*(.+)$", head, re.M)
+        # `[ \t]*`, never `\s*`: in multiline mode `\s` matches the newline, so
+        # `\s*(.+)$` on `applies:\n    - sweep` returns `- sweep` -- the first
+        # item of a block list read as the entire value. That is how a memory
+        # ended up applying to a class called `- correspondence`.
+        found = re.search(rf"^[ \t]*{name}:[ \t]*(.+)$", head, re.M)
         return found.group(1).strip().strip('"') if found else ""
 
-    applies = [a.strip() for a in field("applies").split(",") if a.strip()]
+    def listing(name: str) -> list[str]:
+        """`a, b`, `"a, b"`, or a YAML block list. All three are written here.
+
+        We do not own this frontmatter. A session types the inline form and the
+        harness may rewrite it as a block list afterwards -- it did exactly that
+        to two memories on 2026-09-10, and this reader took the first indented
+        line as the whole value, so both applied to a class named
+        `- correspondence` and were never printed for anything.
+
+        Quiet in the direction that matters: `--for <class>` simply skips them.
+        Hence read here rather than trusted.
+        """
+        inline = field(name)
+        if inline:
+            return [a.strip() for a in inline.split(",") if a.strip()]
+        block = re.search(rf"^([ \t]*){name}:[ \t]*$", head, re.M)
+        if not block:
+            return []
+        out = []
+        for line in head[block.end():].splitlines()[1:]:
+            item = re.match(r"^[ \t]+-[ \t]+(\S.*?)[ \t]*$", line)
+            if not item:
+                break
+            out.append(item.group(1).strip().strip('"').strip("'"))
+        return out
+
+    applies = listing("applies")
     return {"path": path, "name": field("name") or path.stem,
             "description": field("description"), "applies": applies,
             "body": body.strip()}

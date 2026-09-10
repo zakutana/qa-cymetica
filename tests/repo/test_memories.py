@@ -78,6 +78,72 @@ def test_a_class_prints_only_its_own(tmp_path, monkeypatch):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_reader_accepts_every_shape_the_harness_actually_writes(tmp_path,
+                                                                   monkeypatch):
+    """We do not own this frontmatter. The memory harness rewrites it.
+
+    Written on 2026-09-10, when two memories saved that evening declared
+    `applies:` and `--check` reported them as `['- correspondence']`, which is
+    not a class. The harness had normalised an inline list into a YAML block
+    list -- its own choice, made after the file was written -- and this reader
+    took the first indented line as the whole value.
+
+    The failure is quiet in the direction that matters: a memory in the block
+    form applies to nothing, so `--for <class>` never prints it, and the only
+    signal is a `--check` nobody runs between sessions. A memory nothing reads
+    is a memory that was not written, which is the defect the whole directory
+    exists against.
+
+    So the shapes are pinned as data. `read()` already documents that WHERE the
+    field lands is the harness's decision and not ours; this says the same about
+    HOW it is written.
+    """
+    mod = _module()
+    monkeypatch.setenv("QA_MEMORY_DIR", str(tmp_path))
+
+    shapes = {
+        # What a session types.
+        "inline": 'applies: "sweep, fold"',
+        # What older files here carry.
+        "bare": "applies: sweep, fold",
+        # What the harness rewrote both of tonight's memories into.
+        "block": "applies:\n    - sweep\n    - fold",
+        # And the same, under metadata:, which is where it puts it.
+        "nested": "metadata:\n  type: feedback\n  applies:\n    - sweep\n    - fold",
+        # A one-item block list: the shape that reads as a valid class by
+        # accident if only the leading dash is stripped.
+        "single": "applies:\n    - sweep",
+    }
+    for stem, declared in shapes.items():
+        (tmp_path / f"{stem}.md").write_text(
+            f'---\nname: {stem}\ndescription: "d"\n{declared}\n---\n\n'
+            f"body of {stem}\n", encoding="utf-8")
+    (tmp_path / "MEMORY.md").write_text(
+        "".join(f"- [{s}]({s}.md) — x\n" for s in shapes), encoding="utf-8")
+
+    by_name = {m["path"].stem: m for m in mod.load()}
+    for stem in shapes:
+        expected = ["sweep"] if stem == "single" else ["sweep", "fold"]
+        assert by_name[stem]["applies"] == expected, (
+            f"{stem}: read {by_name[stem]['applies']!r}. A memory whose "
+            f"classes cannot be read applies to nothing and is never printed"
+        )
+
+    assert not mod.problems(mod.load(), mod.index_names())
+
+    import contextlib
+    import io as _io
+
+    out = _io.StringIO()
+    with contextlib.redirect_stdout(out):
+        mod.main(["--for", "fold"])
+    printed = out.getvalue()
+    for stem in ("inline", "bare", "block", "nested"):
+        assert f"body of {stem}" in printed, f"{stem} never reached --for fold"
+    assert "body of single" not in printed
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_an_unclassified_or_unlinked_memory_is_a_problem(tmp_path, monkeypatch):
     """Both directions: a file nothing links, and a link with no file."""
     mod = _module()
