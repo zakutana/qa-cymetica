@@ -123,13 +123,80 @@ def test_the_newest_definition_of_a_live_check_is_never_deleted(
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_last_run_a_verdict_ever_occurred_in_survives(tmp_path, monkeypatch):
     """never_fired.py answers "has this ever happened"; deleting the only
-    record where it did would turn a yes into a no."""
+    record where it did would turn a yes into a no.
+
+    The reason is `last-verdict`, and it must not be the same word the refusals
+    branch writes. Both said "last-fired", so deleting the verdict branch
+    outright left this assertion green -- `admissibility()` on the same bare
+    fixture returns four unseen refusal reasons and the other branch set the
+    identical string. Three readers reproduced that by removing the four lines.
+    Two mechanisms whose output cannot be told apart are one mechanism as far
+    as any test can see.
+    """
     state, mod = _state(tmp_path, monkeypatch)
     _write(state, "run-20260801T000000Z-rare", _ago(30),
            results=[{"nodeid": "tests/gone.py::test_x", "outcome": "failed",
                      "measurement": {"verdict": "inconclusive"}}])
 
-    assert mod.keep_set().get("run-20260801T000000Z-rare") == "last-fired"
+    assert mod.keep_set().get("run-20260801T000000Z-rare") == "last-verdict"
+
+    # The distinguishing case: a NEWER record carrying the same refusal reasons
+    # and no measurements at all. It takes `last-refusal`, and the older one
+    # must still be saved by its verdict rather than sharing the same word.
+    _write(state, "run-20260901T000000Z-empty", _ago(20), results=[])
+    keep = mod.keep_set()
+    assert keep.get("run-20260801T000000Z-rare") == "last-verdict", (
+        f"the sole occurrence of a verdict lost its own reason to a newer "
+        f"record with none: {keep}")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_record_that_cannot_be_read_is_never_a_victim(tmp_path, monkeypatch):
+    """Rule 8, in the only script here that deletes.
+
+    `_load` returned `{}` on any failure and every keep-reason then missed the
+    record -- no started_at so not young, no results so neither scope nor
+    last-fired -- and an untracked, uncited one went straight into `victims()`.
+    `qa/report_plugin.py` writes these with a non-atomic `write_text`, so a
+    record caught mid-write by a concurrent pytest parses as garbage. Three
+    readers reproduced the deletion.
+    """
+    state, mod = _state(tmp_path, monkeypatch)
+    _write(state, "run-20260801T000000Z-fine", _ago(30), results=[])
+    broken = state / "runs" / "run-20260801T000000Z-corrupt.json"
+    broken.write_text('{"run_id": "run-20260801T000000Z-corr', encoding="utf-8")
+
+    keep = mod.keep_set()
+    assert keep.get("run-20260801T000000Z-corrupt") == "unreadable", (
+        f"a record that cannot be parsed is one we cannot show is safe to "
+        f"remove: {keep}")
+    assert broken not in mod.victims()
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_run_named_only_in_prose_is_still_cited(tmp_path, monkeypatch):
+    """`cited_run_ids` claims "every run id anything in the repository still
+    names" and matched only the literal key `run_id`.
+
+    It missed run-20260908T150721Z-435ad0b, which is named inside a withdraw
+    event's REASON TEXT as the capture proving their fix predated our fail
+    verification -- the evidence behind the retraction owed on #83. The
+    structural walk returned 170 ids against 171 by text scan, and that record
+    survived only as "young", which runs out. Three readers reproduced it.
+    """
+    named = "run-20260801T000000Z-abc1234"
+    # The id sits in a REASON, which is prose. No `run_id` key holds it, and
+    # that is the whole point: the structural walk cannot see it.
+    ledger = {"schema": 2, "findings": {"CYM-a": {
+        "detail": {"reason": f"withdrawn: the capture in {named} shows their "
+                             f"fix predated our fail verification"},
+    }}}
+    state, mod = _state(tmp_path, monkeypatch, ledger=ledger)
+    _write(state, named, _ago(30), results=[])
+
+    assert named in mod.cited_run_ids(), (
+        "a run id the repository names in prose is still a citation")
+    assert mod.keep_set().get(named) == "cited"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

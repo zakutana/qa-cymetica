@@ -13,8 +13,13 @@ five reasons, and each surviving record prints the one that saved it:
     young       newer than --older-than days (default 7)
     scope       it holds the newest known definition of a check that still
                 exists, which is what the deep pass's audit scope is built from
-    last-fired  it is the most recent run in which some verdict or some refusal
-                reason occurred, which is what never_fired.py reports on
+    last-verdict / last-refusal
+                it is the most recent run in which some verdict, or some
+                refusal reason, occurred -- what never_fired.py reports on.
+                Two names, because two branches writing one word meant
+                deleting either left the guard over both of them green
+    unreadable  it could not be parsed, so nothing can show it is safe to
+                remove. A failed read is not an empty read
 
     python scripts/prune_runs.py              # say what would go, delete nothing
     python scripts/prune_runs.py --apply
@@ -27,6 +32,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 from datetime import datetime, timedelta, timezone
@@ -35,7 +41,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
-from qa.state import read_events, runs_dir, state_dir  # noqa: E402
+from qa.state import journal_path, read_events, runs_dir, state_dir  # noqa: E402
 
 
 def records_on_disk() -> list[Path]:
@@ -44,11 +50,27 @@ def records_on_disk() -> list[Path]:
     return sorted(runs_dir().glob("*.json"))
 
 
+UNREADABLE = "unreadable"
+
+
 def _load(path: Path) -> dict:
+    """The record, or a marker saying it could not be read.
+
+    It returned an empty dict on any failure, and every keep-reason then missed
+    the record: no started_at so not young, no results so neither scope nor a
+    last occurrence -- and an untracked, uncited one went straight into
+    victims() and was deleted. A failed read treated as an empty one, in the
+    only script here that removes anything. qa/report_plugin.py writes these
+    with a non-atomic write_text, so a record caught mid-write by a concurrent
+    pytest parses as garbage; three readers reproduced the deletion.
+
+    Rule 8, and its safe direction: a record we cannot read is one we cannot
+    show is safe to remove.
+    """
     try:
         return json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
-        return {}
+        return {UNREADABLE: True}
 
 
 def tracked_records() -> set[str]:
@@ -90,6 +112,26 @@ def cited_run_ids() -> set[str]:
     for entry in audited.values():
         if isinstance(entry, dict) and isinstance(entry.get("run_id"), str):
             found.add(entry["run_id"])
+
+    # And a run id named in PROSE. The structural walk matches only the literal
+    # key run_id, while this function's own claim is "every run id anything in
+    # the repository still names". It missed one that matters:
+    # run-20260908T150721Z-435ad0b is named inside a withdraw event's reason
+    # text, as the capture proving their fix predated our fail verification --
+    # the evidence behind the retraction owed on #83. The structural walk
+    # returned 170 ids, a text scan 171, and that record survived only as
+    # "young", which runs out. Three readers reproduced it.
+    pattern = re.compile(r"\brun-[0-9]{8}T[0-9]{6}Z-[0-9a-f]{7,40}\b")
+    for path in (state_dir() / "ledger.json", journal_path(),
+                 REPO_ROOT / "audits" / "checks.json",
+                 REPO_ROOT / "audits" / "deep-pass-progress.json"):
+        try:
+            found.update(pattern.findall(path.read_text(encoding="utf-8")))
+        except OSError:
+            # Unreadable here is not empty either, but the caller's safe
+            # direction is already "keep": a citation we cannot read leaves
+            # the record to the other reasons.
+            continue
     return found
 
 
@@ -105,6 +147,9 @@ def keep_set(older_than_days: int = 7) -> dict[str, str]:
               - timedelta(days=older_than_days)).isoformat()
 
     keep: dict[str, str] = {}
+    for run_id, record in records.items():
+        if record.get(UNREADABLE):
+            keep.setdefault(run_id, "unreadable")
     for run_id in tracked_records():
         keep.setdefault(run_id, "tracked")
     for run_id in cited_run_ids():
@@ -128,14 +173,20 @@ def keep_set(older_than_days: int = 7) -> dict[str, str]:
             if nodeid in live and nodeid not in seen_check:
                 seen_check.add(nodeid)
                 keep.setdefault(run_id, "scope")
+            # "last-verdict" and "last-refusal", not one shared word. Both
+            # branches wrote "last-fired", so deleting the verdict branch
+            # entirely left the guard green -- the refusals branch set the same
+            # string on the same fixture record. Three readers reproduced that.
+            # Two mechanisms whose output cannot be told apart are one
+            # mechanism as far as any test can see.
             verdict = (result.get("measurement") or {}).get("verdict")
             if verdict and verdict not in seen_symbol:
                 seen_symbol.add(verdict)
-                keep.setdefault(run_id, "last-fired")
+                keep.setdefault(run_id, "last-verdict")
         for reason in _refusals(record):
             if reason not in seen_symbol:
                 seen_symbol.add(reason)
-                keep.setdefault(run_id, "last-fired")
+                keep.setdefault(run_id, "last-refusal")
     return keep
 
 
