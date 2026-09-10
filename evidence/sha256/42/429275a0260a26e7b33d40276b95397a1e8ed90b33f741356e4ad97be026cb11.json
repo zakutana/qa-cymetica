@@ -1,0 +1,77 @@
+{
+  "captured_at": "2026-09-10T21:47:00+00:00",
+  "endpoint_rule": null,
+  "nodeid": null,
+  "request": {
+    "body": {
+      "encoding": "json",
+      "truncated": false,
+      "value": {
+        "actual_behavior": "limit caps at 200 and 201 answers 422. offset, skip and page are accepted and\nignored — every call returns the identical window with the same first id. q,\nsearch, query, symbol, status and tradeable_now are accepted and ignored too;\nthe response is the same unfiltered set. Card\na4a5b71e-de11-4805-b8a3-ed9c3f8f8161 answers 200 on /api/v1/event-cards/{id}\nwith status live and tradeable_now true, and appears in no listing response.",
+        "category": "api",
+        "description": "The consequence is not a missing page of results. An agent that enumerates the\nboard and picks the best of what it sees is choosing over a sample whose shape\nit cannot know, and nothing in the response says so — `count` echoes the rows\nreturned, not a total, so 200 looks like the market. A strategy measured\nagainst \"every live card\" is silently measured against a fixed window. HOW WE\nFOUND IT, because it says something about the shape of the problem: we asked\nNEXUS for an executable strategy and it named three cards by id. Two of them\nare unreachable through the listing, and one of those two is tradeable right\nnow. So the ids your own AI hands out include cards the public listing cannot\nproduce — which means an agent can only trade what it was told about, not what\nit can find. If the 200 cap is deliberate, the fix is small: report the true\ntotal alongside the window, and make one of offset or page work.\n\nMEASURED VALUES (from the live service):\n\n  [CYM-the_listing_returns_every_card_it_says_is_tradeable] 1 card(s) answer status live and tradeable_now true on /api/v1/event-cards/{id} and appear in no response from /api/v1/event-cards: a4a5b71e-de11-4805-b8a3-ed9c3f8f8161. The listing caps at 200 rows and its offset, skip, page, search and status parameters are accepted and ignored, so an agent enumerating the market cannot reach them and nothing in the response says the window is truncated\n    left: ['a4a5b71e-de11-4805-b8a3-ed9c3f8f8161']\n    right: ['009db705-ee8e-419f-8bcc-2499c8ddc9c8', '00e45ca0-35fb-49d0-937d-ebbbc0177005', '0146dd20-dde6-4d48-8776-f62d965e5c6f', '0251cd6e-2297-4f9b-9999-2a706ddd17e9', '05b07c1a-8a46-4530-b936-0098dc5e4353']\n    sources: {'listing': 'GET /api/v1/event-cards?limit=200', 'card': 'GET /api/v1/event-cards/{id}'}\n    population: {'listed': 200, 'witnesses': 4, 'checked': 2, 'unreachable': 1}\n\nREPRODUCE:\n  - GET /api/v1/event-cards -> 50 cards, count 50\n  - GET /api/v1/event-cards?limit=200 -> 200 cards; ?limit=201 -> 422\n  - GET /api/v1/event-cards?limit=50&offset=50 -> the same 50 ids as offset=0, same first id; skip= and page= behave identically\n  - GET /api/v1/event-cards?q=SpaceX and ?symbol=EVCDX-SPACEX-IPO-TOP-10-CR -> the unfiltered window, target absent\n  - GET /api/v1/event-cards/a4a5b71e-de11-4805-b8a3-ed9c3f8f8161 -> 200, status live, tradeable_now true, current_index 123.27\n\nAUTOMATED CHECKS (evidence retained; the request and response behind each are provided on request):\n  tests/rest/test_event_card_listing_reaches_them.py::test_the_listing_returns_every_card_it_says_is_tradeable\n\nReported by an independent QA agent. Scope of this work: verification of the\nREST API, MCP and machine-readable discovery surfaces, read-only except in\npaper mode. What we do execute is paper only and recorded: paper event-card\norders, and one paper bot clone. No live trading, no order against a real\nbook, no deposit or withdrawal, no cleanup, no duplicate tickets. UI defects\nare out of scope. Every figure above was measured directly against the live\nservice, not taken from a document, and each finding ships with the command\nthat reproduces it.",
+        "expected_behavior": "An agent can enumerate the tradeable market. Either the listing returns every\ncard, or its paging parameters work, or the response says the window is\ntruncated.",
+        "hunter_name": "expire76",
+        "severity_reported": "high",
+        "steps_to_reproduce": "GET /api/v1/event-cards -> 50 cards, count 50\nGET /api/v1/event-cards?limit=200 -> 200 cards; ?limit=201 -> 422\nGET /api/v1/event-cards?limit=50&offset=50 -> the same 50 ids as offset=0, same first id; skip= and page= behave identically\nGET /api/v1/event-cards?q=SpaceX and ?symbol=EVCDX-SPACEX-IPO-TOP-10-CR -> the unfiltered window, target absent\nGET /api/v1/event-cards/a4a5b71e-de11-4805-b8a3-ed9c3f8f8161 -> 200, status live, tradeable_now true, current_index 123.27",
+        "title": "The event-card listing caps at 200 and ignores offset/page/search, so tradeable cards cannot be discovered",
+        "url": "https://cymetica.com/api/v1/event-cards",
+        "wallet_address": "0xde9CeAaB301A9e47b1bAcd448B3DDbbA85e83398"
+      }
+    },
+    "headers": {
+      "accept": "application/json",
+      "accept-encoding": "gzip, deflate, zstd",
+      "connection": "keep-alive",
+      "content-length": "4626",
+      "content-type": "application/json",
+      "host": "cymetica.com",
+      "user-agent": "qa-cymetica/0.1 (independent QA; contact via vendor Telegram channel)"
+    },
+    "method": "POST",
+    "url": "https://cymetica.com/api/v1/bounty/reports"
+  },
+  "response": {
+    "body": {
+      "encoding": "json",
+      "truncated": false,
+      "value": {
+        "message": "Bug report submitted successfully. We'll review it within 48 hours.",
+        "report_id": 90,
+        "success": true
+      }
+    },
+    "elapsed_ms": 1910,
+    "headers": {
+      "cache-control": "no-store, no-cache, must-revalidate, max-age=0",
+      "connection": "keep-alive",
+      "content-encoding": "gzip",
+      "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests",
+      "content-security-policy-report-only": "default-src 'self'; script-src 'self' 'nonce-9t5aggeM9NF0FL/L4jWtBw==' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'",
+      "content-signal": "ai-train=no, search=yes, ai-input=yes",
+      "content-type": "application/json",
+      "cross-origin-opener-policy": "same-origin-allow-popups",
+      "cross-origin-resource-policy": "cross-origin",
+      "date": "Thu, 10 Sep 2026 21:47:01 GMT",
+      "permissions-policy": "geolocation=(), microphone=(), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=(), browsing-topics=(), attribution-reporting=()",
+      "pragma": "no-cache",
+      "referrer-policy": "strict-origin-when-cross-origin, strict-origin-when-cross-origin",
+      "server": "nginx",
+      "strict-transport-security": "max-age=31536000; includeSubDomains",
+      "transfer-encoding": "chunked",
+      "vary": "Accept-Encoding",
+      "x-ai-strongest-model": "Claude Fable 5",
+      "x-content-type-options": "nosniff, nosniff",
+      "x-dns-prefetch-control": "off",
+      "x-frame-options": "SAMEORIGIN, SAMEORIGIN",
+      "x-ratelimit-limit": "60",
+      "x-ratelimit-remaining": "56",
+      "x-ratelimit-reset": "1789077600",
+      "x-xss-protection": "0"
+    },
+    "reason": "OK",
+    "status_code": 200
+  },
+  "run_id": "script-submit",
+  "tier": "MUTATE"
+}

@@ -1703,6 +1703,96 @@ reports:
       clone -- PATCH /{instance_id}/settings -- is served and appears in no
       document. Even with funding solved, that step is undiscoverable.
 
+  - key: event-card-listing-cannot-reach-every-card
+    findings: [CYM-the_listing_returns_every_card_it_says_is_tradeable]
+    severity: high
+    category: api
+    url: https://cymetica.com/api/v1/event-cards
+    title: "The event-card listing caps at 200 and ignores offset/page/search, so tradeable cards cannot be discovered"
+    expected: >
+      An agent can enumerate the tradeable market. Either the listing returns
+      every card, or its paging parameters work, or the response says the
+      window is truncated.
+    actual: >
+      limit caps at 200 and 201 answers 422. offset, skip and page are
+      accepted and ignored — every call returns the identical window with the
+      same first id. q, search, query, symbol, status and tradeable_now are
+      accepted and ignored too; the response is the same unfiltered set. Card
+      a4a5b71e-de11-4805-b8a3-ed9c3f8f8161 answers 200 on
+      /api/v1/event-cards/{id} with status live and tradeable_now true, and
+      appears in no listing response.
+    steps:
+      - "GET /api/v1/event-cards -> 50 cards, count 50"
+      - "GET /api/v1/event-cards?limit=200 -> 200 cards; ?limit=201 -> 422"
+      - "GET /api/v1/event-cards?limit=50&offset=50 -> the same 50 ids as offset=0, same first id; skip= and page= behave identically"
+      - "GET /api/v1/event-cards?q=SpaceX and ?symbol=EVCDX-SPACEX-IPO-TOP-10-CR -> the unfiltered window, target absent"
+      - "GET /api/v1/event-cards/a4a5b71e-de11-4805-b8a3-ed9c3f8f8161 -> 200, status live, tradeable_now true, current_index 123.27"
+    body: >
+      The consequence is not a missing page of results. An agent that
+      enumerates the board and picks the best of what it sees is choosing over
+      a sample whose shape it cannot know, and nothing in the response says so
+      — `count` echoes the rows returned, not a total, so 200 looks like the
+      market. A strategy measured against "every live card" is silently
+      measured against a fixed window.
+
+      HOW WE FOUND IT, because it says something about the shape of the
+      problem: we asked NEXUS for an executable strategy and it named three
+      cards by id. Two of them are unreachable through the listing, and one of
+      those two is tradeable right now. So the ids your own AI hands out
+      include cards the public listing cannot produce — which means an agent
+      can only trade what it was told about, not what it can find.
+
+      If the 200 cap is deliberate, the fix is small: report the true total
+      alongside the window, and make one of offset or page work.
+
+  - key: nexus-recommends-a-card-that-does-not-exist
+    findings: [CYM-every_card_nexus_tells_an_agent_to_trade_exists]
+    severity: high
+    category: logic
+    url: https://cymetica.com/mcp/v1
+    title: "NEXUS recommended a 40%-of-bankroll position in an event card that returns 404, with a live index and full backtest metrics"
+    expected: >
+      Every card NEXUS tells an agent to trade resolves on the endpoint the
+      same answer tells the agent to trade it through.
+    actual: >
+      Asked for a concrete grounded strategy on a paper balance, NEXUS
+      returned a three-leg book. The largest leg — 40% of bankroll —
+      is 5bd86126-90eb-4ad8-8e55-909397dab402, ticker
+      EVCDX-POLYGON-LAYER-2-TRAN. It answers 404, and no card matching
+      Polygon or LAYER-2 appears anywhere in the listing.
+    steps:
+      - "MCP ask_nexus_deep: ask for a concrete event-card strategy with card ids, sides and notionals"
+      - "The answer names 5bd86126-... at 40%, a4a5b71e-... at 40%, b4091b9c-... at 8%"
+      - "GET /api/v1/event-cards/5bd86126-90eb-4ad8-8e55-909397dab402 -> 404"
+      - "GET /api/v1/event-cards/a4a5b71e-... -> 200, current_index 123.267 (NEXUS said 123.3)"
+      - "GET /api/v1/event-cards/b4091b9c-... -> 200, current_index 97.241 (NEXUS said 97.2)"
+      - "GET /api/v1/event-cards?limit=200 -> no card matching Polygon or LAYER-2"
+    body: >
+      For the card that does not exist NEXUS published a live index of 117.5
+      (+17.5% over base), a 90-day return of +42.5% at Sharpe 3.83, a 30-day
+      return of +25.4% at Sharpe 6.26, and basket weights of 95.7% ETH and
+      3.9% SOL. It offered these as grounded, distinguished them from figures
+      it declined to quote, and named the tools we could verify them with.
+
+      WHAT MAKES THIS A DEFECT RATHER THAN A STALE REFERENCE: its numbers for
+      the two legs that DO resolve are right to two decimals against your own
+      API. So an agent cannot tell the fabricated leg from the grounded ones —
+      same format, same precision, same sourcing, same confidence. Following
+      the advice as written sends 40% of the bankroll at a 404.
+
+      This is the third instance of one pattern we have seen today, which is
+      why we are reporting the class rather than the id. #85: NEXUS told an
+      agent to call MCP tools that tools/list does not serve. Earlier: it
+      recommended cloning "Hybrid 2 (Blue)", which is not a clonable species
+      at all — it explained why itself when asked. Now a market that is not
+      there. The common shape is that NEXUS's recommendations are not
+      validated against the surfaces an agent must execute them on.
+
+      A cheap invariant, offered as a suggestion rather than a demand: before
+      an answer goes out, resolve every card id, tool name and species id it
+      names against the live catalogue, and drop or mark the ones that do not
+      resolve. That converts this whole class into a non-event.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in
