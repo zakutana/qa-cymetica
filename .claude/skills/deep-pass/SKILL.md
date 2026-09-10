@@ -69,6 +69,7 @@ the file rather than remembering:
  "gaps": [
   {"id": "T01", "nodeid": "...", "claim": "...", "source": "audit|review",
    "votes": null, "verdict": null, "fixed": false, "commit": null}],
+ "next": ["one sentence per item, the same ones written into NEXT.md"],
  "retrospective": {"last": "2026-09-09", "done": false},
  "rule_changes": [
   {"id": "RC1", "what": "...", "why": "...",
@@ -99,6 +100,9 @@ the file rather than remembering:
   says something different and `tests/repo/test_deep_pass_finished.py` reads
   the difference.
 * **Step 10** writes `DEEP-PASS.md` from this file, not from recollection.
+* **Step 10b** writes `next` and `NEXT.md` together — the work the morning
+  carries on with. `[]` when there is none; leaving the key out says something
+  different, exactly as `rule_changes` does.
 * **Step 11** sets `retrospective.done`; **step 11b** sets `meta_tests.end`
   and `finished`, on every pass, and `finished` is what lets the guard tell
   a pass in flight from a pass that skipped its promises.
@@ -478,6 +482,54 @@ one written from memory at the end of a long night.
 hook prints the lead of every item under Čeká na tebe, Minority report,
 Změněná pravidla and Týden, and nothing else. Write the sentence that has to
 survive alone in bold, and put the argument under it.
+
+### 10b · `NEXT.md` — where tomorrow carries on
+
+[operator 2026-09-10] *"Nechci se starat o to ze pred deep passem ti mam pak po
+clearu rikat kde jsme skoncili a cim pokracovat."* And, the same evening:
+*"zahrn do do deep pass procesu za bude vedet pak kde pokracovat dalsi den po
+clearu."*
+
+Until this step, nothing carried it. `Čeká na tebe` is deliberately the other
+thing — what needs **their judgement** — and the agreed piece of work we simply
+had not got to was written nowhere a fresh session reads.
+
+So the two are split at this step, and the split is the point:
+
+| Where | What goes in it |
+|---|---|
+| **Čeká na tebe** (DEEP-PASS.md) | needs the operator to decide, or to do something only they can |
+| **NEXT.md** | decided already, ours to do, not done yet |
+
+Write NEXT.md by hand, one line per item, exactly this shape — the hook and
+`tests/repo/test_next_step.py` both parse it:
+
+```
+- [ ] YYYY-MM-DD  one sentence, in Czech, saying what to do
+```
+
+Then record the same sentences in `audits/deep-pass-progress.json` under
+`next`. A pass that left nothing writes `[]`; leaving the key out says
+something different and the guard reads the difference. Every entry is
+cross-checked against NEXT.md, because a next step recorded only in the
+notebook reaches nobody: the following pass overwrites that file and no hook
+loads it.
+
+**What this step may write, and what it may not.** Three sources, and nothing
+else:
+
+* what was open in NEXT.md and is still open — carried forward unchanged,
+  with its original date, so the fourteen-day staleness stays honest;
+* what this pass itself left unfinished and is **ours to finish** — a gap
+  marked `deferred_to_operator` is not this, it is `Čeká na tebe`;
+* nothing invented. **A new initiative is not a next step.** A pass that
+  writes "next: build X" has written the morning's work order with nobody
+  watching, and 2026-09-06 lost an hour to exactly that with somebody
+  watching. A proposal goes under `Čeká na tebe` where it can be vetoed
+  before it costs anything.
+
+Tick nothing here. The morning ticks what it does, and `[x]` lines stay in the
+file as history.
 
 ### 11 · Týden — the look back, when one is due
 

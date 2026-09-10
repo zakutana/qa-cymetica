@@ -99,6 +99,8 @@ def _text(rel: str) -> str:
 # words. Added to only when they make one; never edited to make a test pass.
 PINNED = {
     "CLAUDE.md": [
+        ("2026-09-10", "kde jsme skoncili a cim pokracovat",
+         "d16edd43a89832740f500affa759fdcf1a03417b2206cf043e1c4abadee6f200"),
         ("2026-09-10", "od toho tade je jejich AI NEXUS",
          "ce77fb690e8a55e7903aeab29fc6a678e9922c77ff798d57ba14c8fb712cd480"),
         ("2026-09-09", "ano 5. levny protoze jen cte",
@@ -133,6 +135,8 @@ PINNED = {
          "4d18272203a67eaede4d3380b022a4c03367dd846a2381893b1e44930c3b2117"),
     ],
     ".claude/skills/deep-pass/SKILL.md": [
+        ("2026-09-10", "zahrn do do deep pass procesu",
+         "c87cf5372cc63054d453a069d8922d430e8c2d2f1b396b4f17f0443cfa7fd166"),
         ("2026-09-07", "nechci behem dne ztracet cas",
          "99c552e7f54ed42777ce76d246f0d2038f0c49be80d8c10eaded976b5b2ae855"),
         ("2026-09-08", "the night loop may change the rules",

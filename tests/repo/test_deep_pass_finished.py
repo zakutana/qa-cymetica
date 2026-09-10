@@ -30,6 +30,14 @@ is a session that will have been compacted:
   * `meta_tests`     how many self-tests there were at the start and at the
                      end. Growth is reported, never forbidden.
 
+From 2026-09-10 there is a fourth, and it is the operator's:
+
+  * `next`           the work the pass left for the next morning, written into
+                     `NEXT.md` in the same breath. They asked for the deep pass
+                     to carry "where we continue tomorrow" itself, because
+                     until then the only thing carrying it was them saying it
+                     again after a /clear.
+
 **What these can and cannot do**, said plainly rather than discovered later:
 they check the FORM of what a pass wrote down, not that it wrote down
 everything it did. A pass that changes a rule and records nothing passes them
@@ -46,6 +54,7 @@ state written before the contract.
 from __future__ import annotations
 
 import datetime as _dt
+import importlib.util
 
 import json
 from datetime import date
@@ -61,6 +70,9 @@ PROGRESS = REPO / "audits" / "deep-pass-progress.json"
 
 # The pass that first writes the new keys. Before it, their absence is history.
 KEYS_FROM = "2026-09-09"
+# `next` arrived a day later and gets its own gate, so the 2026-09-09 report
+# is not retroactively failed for a key that did not exist when it was written.
+NEXT_FROM = "2026-09-10"
 WEEK = 7
 
 # How long a pass may be in flight before an unwritten `finished` stops
@@ -155,7 +167,8 @@ def _when(text: str):
     return None
 
 
-def problems(progress: dict, nodeids: set[str] | None = None) -> list[str]:
+def problems(progress: dict, nodeids: set[str] | None = None,
+             agreed_items: set[str] | None = None) -> list[str]:
     """Everything this pass promised and did not finish, in English.
 
     Pure, so the checks below can be shown to fire on a fixture rather than
@@ -284,7 +297,77 @@ def problems(progress: dict, nodeids: set[str] | None = None) -> list[str]:
             f"reason given. Growth is allowed and unexplained growth is not: "
             f"say which existing test was considered and why it would not hold "
             f"this")
+
+    if at[:10] >= NEXT_FROM:
+        out += _next_step_problems(progress, agreed_items)
     return out
+
+
+def _next_step_problems(progress: dict,
+                        agreed_items: set[str] | None = None) -> list[str]:
+    """Whether the pass handed the next morning the work it left.
+
+    [operator 2026-09-10] *"zahrn do do deep pass procesu za bude vedet pak kde
+    pokracovat dalsi den po clearu"* -- and the turn before it, the reason:
+    they do not want to be the one who remembers, before a deep pass, to say
+    afterwards where we stopped.
+
+    So step 10 writes the unfinished work into `NEXT.md`, where a SessionStart
+    hook reads it, and records the same sentences here. Two failures are
+    possible and both are silent, which is why they are checked rather than
+    trusted:
+
+      * the key is absent -- the pass never reached the step, and "nothing was
+        left over" is indistinguishable from "nobody asked". Same distinction
+        `rule_changes` draws one block up, and rule 8's.
+      * the sentence is in the notebook and not in `NEXT.md`. The notebook is
+        overwritten by the next pass and nothing loads it into a session; a
+        next step recorded only there reaches nobody, which is the exact hole
+        this was built to close.
+
+    The cross-check accepts an item **open or ticked**. A pass writes "clone
+    Hybrid 2", the morning does it and ticks the line, and the item is then
+    done -- not missing. Requiring it to be open would turn doing the work into
+    a red test.
+    """
+    out: list[str] = []
+    entries = progress.get("next")
+    if entries is None:
+        return ["no `next` key: a pass that left nothing for the morning "
+                "writes an empty list, and the difference between 'nothing "
+                "was left' and 'the step did not happen' is what the key is "
+                "for -- the morning cannot tell them apart from silence"]
+    if not isinstance(entries, list):
+        return [f"`next` is {type(entries).__name__}, not a list of the "
+                f"sentences written into NEXT.md"]
+
+    known = _next_items() if agreed_items is None else agreed_items
+    for entry in entries:
+        text = " ".join(str(entry or "").split())
+        if not text:
+            out.append("`next` carries an empty entry, which reaches the "
+                       "morning as a blank line and says nothing")
+            continue
+        if not any(text[:40].lower() in item for item in known):
+            out.append(
+                f"`next` names {text[:60]!r} and NEXT.md does not carry it. "
+                f"The notebook is overwritten by the following pass and no "
+                f"hook loads it, so a next step recorded only here is one "
+                f"nobody is handed")
+    return out
+
+
+def _next_items() -> set[str]:
+    """Every item in NEXT.md, open or ticked, lowercased for comparison."""
+    try:
+        spec = importlib.util.spec_from_file_location(
+            "next_step_hook", REPO / ".claude" / "hooks" / "next_step.py")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        text = (REPO / "NEXT.md").read_text(encoding="utf-8")
+        return {" ".join(i["what"].split()).lower() for i in module.parse(text)}
+    except Exception:
+        return set()
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -439,11 +522,62 @@ def test_an_unwritten_growth_count_is_not_a_count_of_zero():
 
 def _pass(**over) -> dict:
     base = {"run": "deep pass 2026-09-20", "at": "2026-09-20T02:00:00+00:00",
-            "gaps": [], "rule_changes": [],
+            "gaps": [], "rule_changes": [], "next": [],
             "retrospective": {"last": "2026-09-18", "done": False},
             "meta_tests": {"start": 200, "end": 200, "reason": None}}
     base.update(over)
     return base
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_next_morning_is_handed_the_work_and_not_only_the_notebook():
+    """[operator 2026-09-10] the deep pass carries where we continue tomorrow.
+
+    Three things could go wrong and each one is silent. The pass never reaches
+    the step, so nothing is handed over and the file cannot say whether that
+    means "nothing was left" -- the same distinction `rule_changes` draws. Or
+    it writes the sentence into its own notebook, which the next pass
+    overwrites and no hook loads, so it reaches nobody. Or the morning does the
+    work and ticks the line, which must not turn the guard red.
+    """
+    items = {"clone hybrid 2 (blue) in paper -- the bot nexus recommended"}
+
+    # Written in both places: nothing owed.
+    assert problems(_pass(next=["Clone Hybrid 2 (Blue) in paper -- the bot "
+                                "Nexus recommended"]), NODEIDS, items) == []
+
+    # In the notebook only. The morning is handed nothing.
+    orphan = problems(_pass(next=["Rewrite the fold's fingerprint pinning"]),
+                      NODEIDS, items)
+    assert orphan and "NEXT.md does not carry it" in orphan[0]
+
+    # Ticked overnight is done, not missing.
+    assert problems(_pass(next=["Clone Hybrid 2 (Blue) in paper -- the bot "
+                                "Nexus recommended"]), NODEIDS, items) == []
+
+    # The step never happened.
+    silent = _pass()
+    del silent["next"]
+    found = problems(silent, NODEIDS, items)
+    assert found and "no `next` key" in found[0]
+
+    # A pass that left nothing says so.
+    assert problems(_pass(next=[]), NODEIDS, items) == []
+
+    # An empty sentence reaches the morning as a blank line.
+    blank = problems(_pass(next=["   "]), NODEIDS, items)
+    assert blank and "empty entry" in blank[0]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_pass_from_before_next_existed_is_not_failed_for_lacking_it():
+    """`next` was built on 2026-09-10. The pass of 2026-09-09 wrote a full
+    notebook under the contract of its own day and is not judged against a key
+    that did not exist -- the courtesy the whole file already extends once."""
+    older = _pass(at="2026-09-09T02:00:00+00:00",
+                  retrospective={"last": "2026-09-09", "done": True})
+    del older["next"]
+    assert problems(older, NODEIDS, set()) == []
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

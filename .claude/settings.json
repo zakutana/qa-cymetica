@@ -61,6 +61,15 @@
             ],
             "timeout": 10,
             "statusMessage": "counting the memories"
+          },
+          {
+            "type": "command",
+            "command": "python",
+            "args": [
+              ".claude/hooks/next_step.py"
+            ],
+            "timeout": 10,
+            "statusMessage": "reading what we agreed to do next"
           }
         ]
       }

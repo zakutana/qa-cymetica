@@ -34,6 +34,18 @@ asked for it. So it is kept here.
   still learning how a thing works cannot weigh a choice about it, so the
   question is not a choice, it is homework. Decide, say what you decided and
   what it rests on, and leave the veto open.
+* **When a next step is agreed, write it to `NEXT.md` in that same turn.** Not
+  at the end of the session — the end of a session is the least reliable moment
+  there is, and this file says so two hundred lines further down about
+  memories. A SessionStart hook prints the open lines, so the agreement
+  survives a `/clear` without the operator repeating it.
+
+  [operator 2026-09-10] *"Nechci se starat o to ze pred deep passem ti mam pak
+  po clearu rikat kde jsme skoncili a cim pokracovat."*
+
+  What goes there is work already decided and ours to do. What needs **their**
+  judgement goes to `DEEP-PASS.md` under `Čeká na tebe` instead; the two are
+  different files because they are different questions.
 * Non-trivial work starts in plan mode. Ask for it; do not wait to be told.
 * Tests before implementation. A test written afterwards passes whatever the
   code does, including the mistake, and 21 commits here carry code with no
@@ -323,6 +335,16 @@ tests/repo/       repository consistency. Deliberately NOT in tests/meta:
                   that (a red suite catches a half-applied one) but the triage
                   verdicts would not, and a lost verdict is a finding that
                   silently never gets fixed.
+NEXT.md           what we agreed to do next and have not done. Plain markdown,
+                  one line per item, `- [ ] YYYY-MM-DD  sentence`; ticked
+                  items stay as history and stop being printed.
+                  `.claude/hooks/next_step.py` prints the open ones at every
+                  session start, the deep pass's step 10b writes it, and
+                  `tests/repo/test_next_step.py` fails on a line that does not
+                  parse and on anything open more than fourteen days. It holds
+                  work that is OURS and already decided; a thing needing the
+                  operator's judgement belongs under DEEP-PASS.md's Čeká na
+                  tebe.
 DEEP-PASS.md      what the last deep pass did, in Czech, overwritten each
                   run. **Read it at the start of any session that follows
                   one** -- five headings, and "Ceka na tebe" is the handover:
