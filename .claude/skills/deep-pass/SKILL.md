@@ -487,6 +487,7 @@ git log -p -- audits/deep-pass-progress.json   # every pass's own notebook
 git log --since='7 days ago' --stat --format='%h %ad %s%n%b%n%(trailers)'
 python -m pytest --collect-only -q | tail -1
 python scripts/never_fired.py --zeros | head -1
+python scripts/deep_pass_process.py          # what every past pass cost and caught
 ```
 
 The notebook and the commit BODIES are on that list because of a question
@@ -504,7 +505,7 @@ plus `audits/checks.json` (what was audited, when) and the memory directory
 (how many files, what was merged, what was retired). The transcripts are step
 1's material, not this one's — they are too large to sweep a week of.
 
-Three questions, answered in Czech under **Týden**, in that order:
+Four questions, answered in Czech under **Týden**, in that order:
 
 1. **What repeated?** The same class of defect in two passes, the same manual
    step done by hand twice, the same question asked of the vendor twice.
@@ -517,6 +518,24 @@ Three questions, answered in Czech under **Týden**, in that order:
    `Co-Authored-By` trailer, and the `Effort:` trailer where there is one. The
    evidence is not an opinion: whether reports filed by a Sonnet sweep were
    later corrected (`correction_owed`, `withdraw`) is in the ledger.
+
+4. **Was this pass's own process worth what it cost?** From
+   `python scripts/deep_pass_process.py`, which reads every past notebook out
+   of git history — the only place the series survives, since each run
+   overwrites the file. The column that decides anything is `over`: claims a
+   reader brought that the three triage agents rejected. That is the triad's
+   entire output, and if it is zero the second and third readers changed
+   nothing. The script prints the sentence when the condition is met — three
+   finished passes running, none of them rejecting anything — and that
+   sentence is a candidate for **1c**, not a licence: dropping the triad needs
+   three agents to agree, a test naming the incident, and a paragraph here.
+
+   The operator asked on 2026-09-10 whether the pass can work this out for
+   itself over time — whether it might one day find the triad unnecessary.
+   That is a question, not a decision, so it is not tagged; what it changed is
+   this step. The answer today is no: the triad removed 7 claims of 29 on
+   2026-09-08 and 3 of 20 on 2026-09-09, so it is still paying for itself, and
+   the number rather than the impression is what says so.
 
 **"Nic neměnit" is a complete answer** and is written as such. Then set
 `retrospective.last` to today and `done` to true.

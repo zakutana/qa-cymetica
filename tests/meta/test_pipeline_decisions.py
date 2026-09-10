@@ -147,6 +147,12 @@ EXCEPTIONS = {
     ("CLAUDE.md", "and that one is the operator's"),
     # Describes a flag's behaviour; the decision itself is tagged in the skill.
     ("CLAUDE.md", "the operator's condition, and"),
+    # A question they asked, and the step it produced. They wondered whether
+    # the pass could find the triage triad unnecessary over time; wondering is
+    # not deciding, and tagging it would put a decision in their mouth that
+    # the numbers -- not they -- will make when the condition is met.
+    (".claude/skills/deep-pass/SKILL.md",
+     "whether the pass can work this out for"),
 }
 
 
