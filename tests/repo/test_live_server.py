@@ -467,3 +467,62 @@ def test_a_client_hanging_up_is_not_reported_as_an_error():
         "a real handler exception was swallowed along with the client "
         "disconnects, which turns visible noise into an invisible failure"
     )
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_starting_the_server_does_not_rewrite_a_page_that_is_already_current(
+        tmp_path, monkeypatch, serve):
+    """Starting the console dirtied the tree, and a dirty tree refuses a run.
+
+    `rebuild()` compared the new digest against its OWN previous one, which is
+    the empty string on a fresh process -- so the first rebuild always wrote
+    dashboard/index.html, whatever was already there. The page it wrote was
+    byte-identical apart from `generated_at`, which is deliberately not in the
+    digest, so the write said nothing and cost everything: `git status` came
+    up dirty, `prereg.py` refuses a dirty tree, and the operator opened this
+    morning on a diff they had not made and could not explain.
+
+    The digest is already embedded in the page it describes. Comparing against
+    that answers the actual question -- is the file on disk this render? --
+    and the in-memory comparison stays exactly as it is, because it answers a
+    different one: has anything changed since the last tick, and should the
+    open tab be told.
+    """
+    state = tmp_path / "state"
+    shutil.copytree(REPO / "state", state)
+    monkeypatch.setenv("QA_STATE_DIR", str(state))
+
+    first = serve.Live()
+    page = first.render.out_path()
+    assert page.exists(), "the first start has to write the page"
+    written = page.stat().st_mtime_ns
+    body = page.read_text(encoding="utf-8")
+
+    # A second server over the same state: same payload, same template, same
+    # digest. Nothing about the page has changed, so nothing may be written.
+    second = serve.Live()
+    assert second.digest == first.digest
+    assert page.stat().st_mtime_ns == written, (
+        "starting the console rewrote a page that was already current, which "
+        "is what leaves an unexplained diff in the tree"
+    )
+    assert page.read_text(encoding="utf-8") == body
+
+    # And a real change still lands on disk, or the console would serve a page
+    # it never wrote.
+    inventory = state / "inventory.json"
+    data = json.loads(inventory.read_text(encoding="utf-8"))
+    data["sections"][0]["title"] = data["sections"][0]["title"] + " (moved)"
+    inventory.write_text(json.dumps(data), encoding="utf-8")
+
+    assert second.rebuild() is True
+    assert page.stat().st_mtime_ns != written, \
+        "a real change did not reach the file"
+    assert "(moved)" in page.read_text(encoding="utf-8")
+
+    conclude(Measurement(
+        verdict="passed",
+        reason=("starting the server over an already-current page wrote "
+                "nothing, and a real change still wrote"),
+        left=first.digest, right=second.digest,
+        sources={"module": "scripts/serve.py"}))

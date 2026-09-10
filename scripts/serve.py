@@ -26,6 +26,7 @@ import argparse
 import importlib.util
 import json
 import queue
+import re
 import sys
 import threading
 import time
@@ -68,6 +69,24 @@ def _escape(text) -> str:
     from html import escape
 
     return escape(str(text), quote=True)
+
+
+PAGE_DIGEST = re.compile(r"qa-payload-sha256: ([0-9a-f]{64})")
+
+
+def _page_digest(path: Path) -> str | None:
+    """The digest the page on disk was rendered from, or None.
+
+    render.py writes it as the file's last line. Reading it back is how this
+    process asks "is what is already there this render?" without holding an
+    opinion carried over from a previous one.
+    """
+    try:
+        tail = path.read_text(encoding="utf-8")[-200:]
+    except OSError:
+        return None
+    found = PAGE_DIGEST.search(tail)
+    return found.group(1) if found else None
 
 
 def _render_module():
@@ -176,7 +195,15 @@ class Live:
             # its own temp tree and can never overwrite the committed page.
             target = self.render.out_path()
             target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_text(html, encoding="utf-8")
+            # Against the page ON DISK, not against `changed`. `changed` asks
+            # whether the open tab should be told something, and on a fresh
+            # process the answer is always yes because self.digest starts
+            # empty -- so starting the console rewrote a byte-identical page
+            # with a new `generated_at`, git status came up dirty, and
+            # prereg.py refuses a dirty tree. The digest is embedded in the
+            # page it describes, so the file can answer for itself.
+            if _page_digest(target) != digest:
+                target.write_text(html, encoding="utf-8")
         return changed
 
     def serve_html(self) -> str:
