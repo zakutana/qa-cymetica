@@ -53,6 +53,49 @@ def _nexus():
     return mod
 
 
+# What a UUID is, when the words just before it say. An answer names more than
+# cards: NEX-0015 gives a species ("species id `23441934...`") and NEX-0010 a
+# backtest ("run_id 73b31f87..."), and until the deep pass of 2026-09-11 every
+# one of them was fetched as a card -- a 404 on a species id would have gone to
+# Cymetica as "Nexus tells an agent to trade" it. Triage 3/3. What no marker
+# precedes is read as a card, which keeps #91's witness: a card id in a table
+# row of NEX-0012, with nothing but the card's name before it.
+NOT_A_CARD = ("species", "run_id", "run id", "job", "instance", "position",
+              "bot", "order", "user", "wallet", "transaction", "tx")
+CONTEXT = 48
+# "A CURRENT recommendation", in the docstring's own words. A day-old answer
+# names cards that may since have resolved, and that is not a defect.
+MAX_AGE_HOURS = 24
+
+
+def card_ids_in(text: str) -> list[str]:
+    """The card ids an answer gives, in order, once each."""
+    from tests.rest.test_event_card_listing_reaches_them import UUID
+
+    out: list[str] = []
+    for match in UUID.finditer(text or ""):
+        before = text[max(0, match.start() - CONTEXT):match.start()].lower()
+        # Only the words on the same line: a table row or a sentence, not the
+        # paragraph above it.
+        before = before.rsplit("\n", 1)[-1]
+        if any(marker in before for marker in NOT_A_CARD):
+            continue
+        if match.group(0) not in out:
+            out.append(match.group(0))
+    return out
+
+
+def is_current(at, now) -> bool:
+    """Whether an answer given at `at` is still a recommendation for `now`."""
+    from datetime import datetime
+
+    try:
+        when = datetime.fromisoformat(str(at).replace("Z", "+00:00"))
+    except (TypeError, ValueError):
+        return False
+    return (now - when).total_seconds() <= MAX_AGE_HOURS * 3600
+
+
 def newest_answer_naming_cards(rows):
     """The last answer that named a card id, or None.
 
@@ -61,13 +104,12 @@ def newest_answer_naming_cards(rows):
     Inconclusive for a reason that is not about the vendor. The 2026-09-10
     sweep's lesson, applied here from the start -- judging the union across
     every answer ever recorded is a question no fix can change the answer to.
+    A card id, not any UUID: an answer naming only a species is not one.
     """
-    from tests.rest.test_event_card_listing_reaches_them import UUID
-
     answers = [r for r in rows if r.get("type") == "answer" and r.get("text")]
     answers.sort(key=lambda r: (r.get("at") or "", r.get("id") or ""))
     for row in reversed(answers):
-        if UUID.findall(row["text"]):
+        if card_ids_in(row["text"]):
             return row
     return None
 
@@ -75,18 +117,21 @@ def newest_answer_naming_cards(rows):
 @qa(component="mcp.tools_call", tier=SafetyTier.SAFE, surface="rest")
 def test_every_card_nexus_tells_an_agent_to_trade_exists(rest_trusted):
     """Guidance an agent cannot act on is guidance that does not work."""
-    from tests.rest.test_event_card_listing_reaches_them import UUID
+    from datetime import datetime, timezone
 
     latest = newest_answer_naming_cards(_nexus().load())
     if latest is None:
         raise Inconclusive(
             "no recorded Nexus answer names a card id, so there is nothing to "
             "look up; `python scripts/nexus.py ask \"...\"` records one")
+    if not is_current(latest.get("at"), datetime.now(timezone.utc)):
+        raise Inconclusive(
+            f"the newest answer naming a card, {latest['id']} "
+            f"({latest.get('at')}), is over {MAX_AGE_HOURS} h old: its cards "
+            f"may have resolved since, which is not a defect, and it is not a "
+            f"current recommendation")
 
-    named = []
-    for card_id in UUID.findall(latest["text"]):
-        if card_id not in named:
-            named.append(card_id)
+    named = card_ids_in(latest["text"])
 
     missing, found, unread = [], [], []
     for card_id in named:

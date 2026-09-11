@@ -57,19 +57,27 @@ def ungated_vendor_writes(source: str) -> list[tuple[str, int]]:
             continue
         posts, gates = [], []
         for node in ast.walk(fn):
+            # A gate is a branch on the gate's answer, not a call to it: a bare
+            # `may_write_to_vendor()` whose result is thrown away stops
+            # nothing, and until the deep pass of 2026-09-11 it counted.
+            if isinstance(node, ast.If) and any(
+                    isinstance(c, ast.Call) and isinstance(c.func, ast.Name)
+                    and c.func.id == GATE for c in ast.walk(node.test)):
+                gates.append(node.lineno)
             if not isinstance(node, ast.Call):
                 continue
-            if (isinstance(node.func, ast.Attribute) and node.func.attr == "post"
-                    and node.args):
-                first = node.args[0]
+            if isinstance(node.func, ast.Attribute) and node.func.attr == "post":
+                # The URL, positional or by keyword: `post(url=SEND)` was
+                # invisible while only node.args[0] was read.
+                first = (node.args[0] if node.args else
+                         next((k.value for k in node.keywords if k.arg == "url"),
+                              None))
                 target = (first.value if isinstance(first, ast.Constant)
                           and isinstance(first.value, str)
                           else consts.get(first.id)
                           if isinstance(first, ast.Name) else None)
                 if target and MARKER in target:
                     posts.append(node.lineno)
-            if isinstance(node.func, ast.Name) and node.func.id == GATE:
-                gates.append(node.lineno)
         for line in posts:
             if not any(g < line for g in gates):
                 offenders.append((fn.name, line))
@@ -112,3 +120,28 @@ def test_the_detector_sees_an_ungated_post():
     assert ungated_vendor_writes(gated) == []
     assert ungated_vendor_writes(late_gate) == [("test_x", 2)], (
         "a gate called after the post does not stop the post")
+
+    # T07, deep pass of 2026-09-11, triage 3/3. A gate whose answer is thrown
+    # away gates nothing, and a post that names its URL by keyword is still a
+    # post: the detector read only `node.args[0]` and any earlier gate call,
+    # so both of these were green.
+    ignored = (
+        'SEND = "/api/v1/bounty/a2a/send"\n'
+        'def test_x(client):\n'
+        '    may_write_to_vendor()\n'
+        '    client.post(SEND, json={})\n')
+    by_keyword = (
+        'SEND = "/api/v1/bounty/a2a/send"\n'
+        'def test_x(client):\n'
+        '    client.post(url=SEND, json={})\n')
+    by_keyword_gated = (
+        'SEND = "/api/v1/bounty/a2a/send"\n'
+        'def test_x(client):\n'
+        '    if not may_write_to_vendor():\n'
+        '        return\n'
+        '    client.post(url=SEND, json={})\n')
+    assert ungated_vendor_writes(ignored) == [("test_x", 4)], (
+        "a gate called and ignored does not stop the post")
+    assert ungated_vendor_writes(by_keyword) == [("test_x", 3)], (
+        "a post naming its URL by keyword is invisible to the detector")
+    assert ungated_vendor_writes(by_keyword_gated) == []

@@ -137,12 +137,35 @@ def latest_per_question(rows):
     to go to them on #86 would have said four of five had not answered when
     three had. A question given up on and answered later answered, late, so
     its last row is its verdict.
+
+    Ordered by when each question was ASKED -- its question row, or its first
+    finished row where the file holds no question -- and not by that last row.
+    Ordering by the last row put a re-polled old question at the newest end of
+    the window: the deep pass of 2026-09-11 found that the very re-poll this
+    docstring describes would push a recent answer out of the five. Triage 3/3.
     """
+    asked = {r["id"]: str(r.get("at") or "") for r in rows
+             if r.get("type") == "question" and r.get("id")}
+    first: dict[str, str] = {}
     last = {}
-    for index, row in enumerate(rows):
+    for row in rows:
         if row.get("type") in ("answer", "gave_up") and row.get("id"):
-            last[row["id"]] = (index, row)
-    return [row for _, row in sorted(last.values(), key=lambda pair: pair[0])]
+            first.setdefault(row["id"], str(row.get("at") or ""))
+            last[row["id"]] = row
+    return sorted(last.values(),
+                  key=lambda row: asked.get(row["id"]) or first[row["id"]])
+
+
+def did_not_answer(row) -> bool:
+    """Whether a finished row says THEIR channel failed to answer.
+
+    A give-up whose status is `failed` is their job ending without an answer.
+    One written after fifteen minutes of our own reads failing -- `unread:
+    ReadTimeout`, `unknown`, `error: ...` -- says nothing about their channel,
+    and until the deep pass of 2026-09-11 it counted as "did not answer".
+    """
+    return (row.get("type") == "gave_up"
+            and str(row.get("status") or "").startswith("failed"))
 
 
 @qa(component="mcp.tools_call", tier=SafetyTier.SAFE, surface="mcp")
@@ -270,7 +293,11 @@ def test_a_deep_investigation_answers_inside_the_window_it_publishes():
         key=lambda pair: pair[1], reverse=True)
     unmeasured = sorted(i for i, v in verdicts.items() if v == "unknown")
     failed = [(r["id"], (r.get("error") or r.get("status") or "")[:80])
-              for r in finished if r.get("type") == "gave_up"]
+              for r in finished if did_not_answer(r)]
+    # Give-ups that say our own reads failed: named in the population, never
+    # counted against their channel (V04, deep pass of 2026-09-11).
+    ours = [r["id"] for r in finished
+            if r.get("type") == "gave_up" and not did_not_answer(r)]
 
     trouble = []
     if failed:

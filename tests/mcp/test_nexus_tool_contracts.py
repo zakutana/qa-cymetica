@@ -68,6 +68,26 @@ def calls_with_arguments(text: str) -> dict[str, str]:
     return out
 
 
+def served_arguments(tool) -> list[str] | None:
+    """The arguments a served tool's schema takes, or None if it does not say.
+
+    None -- not [] -- for a listing with no schema at all, and for a schema
+    without `properties` that does not forbid them: neither says the tool
+    takes nothing. Only `properties: {}` (or a schema that sets
+    additionalProperties false with no properties) does. Until the deep pass
+    of 2026-09-11 `inputSchema or {}` read a missing or partial schema as a
+    tool that takes no arguments and would have filed it as their defect --
+    rule 8 inverted. Triage 3/3.
+    """
+    schema = tool.get("inputSchema", tool.get("input_schema"))
+    if not isinstance(schema, dict):
+        return None
+    props = schema.get("properties")
+    if props is None:
+        return [] if schema.get("additionalProperties") is False else None
+    return sorted(props) if isinstance(props, dict) else None
+
+
 @qa(component="mcp.tools_call", tier=SafetyTier.SAFE, surface="mcp")
 def test_a_tool_nexus_calls_with_arguments_takes_arguments(mcp_trusted):
     """Guidance that builds a safety control out of a static answer."""
@@ -91,8 +111,8 @@ def test_a_tool_nexus_calls_with_arguments_takes_arguments(mcp_trusted):
     served = {}
     for tool in mcp_trusted.tools_list():
         if "name" in tool:
-            schema = tool.get("inputSchema") or tool.get("input_schema") or {}
-            served[tool["name"]] = sorted((schema.get("properties") or {}))
+            # None when the schema does not say; only [] takes nothing.
+            served[tool["name"]] = served_arguments(tool)
     if not served:
         raise Inconclusive(
             "tools/list returned no schemas, so nothing could be compared -- "
@@ -104,7 +124,9 @@ def test_a_tool_nexus_calls_with_arguments_takes_arguments(mcp_trusted):
             # That a named tool does not exist is #85's question, not this
             # one, and reporting it here would double-count the same defect.
             continue
-        if not served[name]:
+        # [] only: None is a schema that does not say, and "takes no
+        # arguments" is a claim about a schema that does.
+        if served[name] == []:
             argless.append({"tool": name, "nexus_passed": args})
 
     conclude(Measurement(

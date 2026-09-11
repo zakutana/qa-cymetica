@@ -41,6 +41,35 @@ from qa.measure import Measurement, conclude
 
 SUMMARY = "/api/v1/portfolio/summary"
 POSITIONS = "/api/v1/event-cards/positions"
+# A sentence about the counters that says event cards are NOT in them is not
+# counting them, whatever words it shares with one that does.
+NEGATIONS = ("not ", "exclud", "except", "without")
+
+
+def accounts_for(scope) -> str | None:
+    """How the summary's scope accounts for the event-card positions held.
+
+    'counted' when counters_cover says the counters include them, 'named'
+    when counters_do_not_cover names them, None when it does neither. The
+    comment in the check has always allowed both ("either by counting it or
+    by naming it as excluded"); until the deep pass of 2026-09-11 only naming
+    passed, so folding event cards into the counters -- a fix -- would have
+    been filed as unaccounted positions, #83's shape on this same endpoint.
+    """
+    scope = scope if isinstance(scope, dict) else {}
+    covers = str(scope.get("counters_cover") or "").lower()
+    excluded = scope.get("counters_do_not_cover")
+    excluded = excluded if isinstance(excluded, list) else []
+    words = " ".join(str(item) for item in excluded).lower()
+
+    def mentions(text: str) -> bool:
+        return any(k in text for k in ("event-card", "event card", "event_card"))
+
+    if mentions(covers) and not any(n in covers for n in NEGATIONS):
+        return "counted"
+    if mentions(words):
+        return "named"
+    return None
 
 
 @qa(component="rest.account", tier=SafetyTier.SAFE, surface="rest")
@@ -84,8 +113,9 @@ def test_the_summary_says_which_populations_its_counters_leave_out(rest_trusted)
 
     # The population this account actually holds is event-card positions, so
     # that is the one the scope has to account for -- either by counting it or
-    # by naming it as excluded and saying where it is read.
-    named = "event-card" in words or "event card" in words
+    # by naming it as excluded and saying where it is read (accounts_for).
+    how = accounts_for(scope)
+    named = how is not None
 
     # WHERE IT IS READ, wherever the body says it. This looked only inside the
     # joined prose of `counters_do_not_cover`, and their captured fix carries
@@ -107,8 +137,9 @@ def test_the_summary_says_which_populations_its_counters_leave_out(rest_trusted)
                         "is still unsaid")
     if not named:
         problems.append(f"{len(held)} event-card position(s) are held and "
-                        f"nothing in counters_do_not_cover names them")
-    elif not points_at:
+                        f"the scope neither counts them in counters_cover "
+                        f"nor names them in counters_do_not_cover")
+    elif how == "named" and not points_at:
         problems.append("the excluded population is named but the reader is "
                         "not told which endpoint carries it")
 

@@ -803,6 +803,123 @@ def test_the_latency_window_counts_questions_not_rows():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_nexus_card_check_reads_only_ids_given_as_cards():
+    """V01, deep pass of 2026-09-11, triage 3/3. The check fetched every UUID
+    in the newest answer as a card, and the answers name UUIDs that are not
+    cards: NEX-0015 a species ("species id `23441934...`"), NEX-0010 a
+    backtest ("run_id 73b31f87..."). Either 404s on the card endpoint and
+    would have gone to Cymetica as "Nexus tells an agent to trade" it. The
+    #91 witness -- a card id in a table row of NEX-0012 -- must still count.
+    And an answer a day old is not a current recommendation."""
+    from datetime import datetime, timezone
+
+    from tests.rest.test_nexus_cards_exist import card_ids_in, is_current
+
+    species = "23441934-8475-4aa0-bbff-75c03ecd3284"
+    run = "73b31f87-8825-4e19-b103-5a93aa67ad21"
+    polygon = "5bd86126-90eb-4ad8-8e55-909397dab402"
+    btc = "d432f8cd-dc3f-4563-ab44-07e34dbd2a0a"
+    text = (f"read this session (species id `{species}`, strategy_type ...)\n"
+            f"(`source: backtest_results`, `run_id {run}`, ran 2026-03-15)\n"
+            f"| **Polygon Layer-2...** | `{polygon}` / EVCDX-POLYGON | 95.7% ETH |\n"
+            f"1) BTC card -- id {btc} (\"Bitcoin's latest hack...\")")
+    assert card_ids_in(text) == [polygon, btc], card_ids_in(text)
+
+    now = datetime(2026, 9, 11, 16, 0, tzinfo=timezone.utc)
+    assert is_current("2026-09-11T05:42:12+00:00", now)
+    assert not is_current("2026-09-10T15:59:00+00:00", now)
+    assert not is_current(None, now), "an answer with no moment is not current"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_latency_window_is_ordered_by_question_and_counts_only_their_failures():
+    """V04, deep pass of 2026-09-11, triage 3/3: two ways the #86 window,
+    repaired that afternoon, could still say something false. It ordered
+    questions by their LAST row, so re-polling an old failed question -- which
+    appends a give-up -- moved it into the newest five. And every give-up read
+    as "did not answer", including the fifteen-minute one written when OUR
+    reads failed ('unread: ReadTimeout', 'unknown')."""
+    from tests.mcp.test_nexus_channel import did_not_answer, latest_per_question
+
+    rows = [
+        {"id": "NEX-0005", "type": "question", "at": "2026-09-10T11:49:00+00:00"},
+        {"id": "NEX-0005", "type": "gave_up", "at": "2026-09-10T12:00:00+00:00",
+         "status": "failed"},
+        {"id": "NEX-0021", "type": "question", "at": "2026-09-11T14:25:29+00:00"},
+        {"id": "NEX-0021", "type": "gave_up", "at": "2026-09-11T14:26:53+00:00",
+         "status": "failed"},
+        {"id": "NEX-0022", "type": "question", "at": "2026-09-11T15:10:08+00:00"},
+        {"id": "NEX-0022", "type": "answer", "at": "2026-09-11T15:12:00+00:00"},
+        # a manual re-poll of the old question, appended last
+        {"id": "NEX-0005", "type": "gave_up", "at": "2026-09-11T16:00:00+00:00",
+         "status": "failed"},
+    ]
+    assert [r["id"] for r in latest_per_question(rows)] == [
+        "NEX-0005", "NEX-0021", "NEX-0022"], (
+        "a re-polled old question moved to the newest end of the window")
+
+    assert did_not_answer({"type": "gave_up", "status": "failed"})
+    assert not did_not_answer({"type": "gave_up", "status": "unread: ReadTimeout"}), (
+        "our own read failing for fifteen minutes is not their channel failing")
+    assert not did_not_answer({"type": "gave_up", "status": "unknown"})
+    assert not did_not_answer({"type": "answer"})
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_summary_may_account_for_positions_by_counting_them():
+    """V05, deep pass of 2026-09-11, triage 3/3. The check's own comment says
+    the scope must account for event-card positions "either by counting it or
+    by naming it as excluded", and only naming passed -- so a fix that folds
+    event cards INTO the counters would have been filed as unaccounted
+    positions, #83's shape on the same endpoint."""
+    from tests.rest.test_portfolio_summary import accounts_for
+
+    assert accounts_for({"counters_cover": "WTA bets and event-card positions",
+                         "counters_do_not_cover": []}) == "counted"
+    assert accounts_for({"counters_cover": "on-chain WTA bets",
+                         "counters_do_not_cover": [
+                             "event-card positions (GET /api/v1/event-cards/positions)"]}) == "named"
+    assert accounts_for({"counters_cover": "on-chain WTA bets, not event-card positions",
+                         "counters_do_not_cover": []}) is None, (
+        "a sentence that says event cards are NOT counted is not counting them")
+    assert accounts_for({"counters_cover": "on-chain WTA bets",
+                         "counters_do_not_cover": []}) is None
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_schema_we_could_not_read_is_not_a_tool_that_takes_nothing():
+    """V09, deep pass of 2026-09-11, triage 3/3. `inputSchema or {}` read a
+    listing with no schema -- or a permissive one without `properties` -- as a
+    tool that takes no arguments, and would have filed that as their defect.
+    Rule 8 inverted. Only a schema that says `properties: {}` takes nothing."""
+    from tests.mcp.test_nexus_tool_contracts import served_arguments
+
+    assert served_arguments({"name": "x"}) is None
+    assert served_arguments({"name": "x", "inputSchema": {
+        "type": "object", "additionalProperties": True}}) is None
+    assert served_arguments({"name": "x", "inputSchema": {
+        "type": "object", "properties": {}}}) == []
+    assert served_arguments({"name": "x", "inputSchema": {
+        "type": "object", "properties": {"b": {}, "a": {}}}}) == ["a", "b"]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_internal_module_path_counts_without_its_line_number():
+    """V12, deep pass of 2026-09-11, triage 2/3. #92's subject is internal
+    source paths, line numbers and code, and the check wanted `file.py:NNN`
+    only -- while NEX-0015 names src/api/routes/agent_species.py with no line
+    number. A fix that stripped `:NNN` and kept the paths would have read
+    VERIFIED FIXED. Our own scripts/... in a question must still not trip it."""
+    from tests.mcp.test_nexus_does_not_quote_source import source_locations
+
+    text = ("the schema carries it (`src/api/routes/agent_species.py`) and "
+            "src/services/wta_payout_service.py:272 computes it; our "
+            "scripts/paper.py records it")
+    assert source_locations(text) == ["src/api/routes/agent_species.py",
+                                      "src/services/wta_payout_service.py:272"]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_listing_check_walks_the_pages_it_is_now_allowed_to_walk():
     """#90 was fixed and our check could not have seen it.
 

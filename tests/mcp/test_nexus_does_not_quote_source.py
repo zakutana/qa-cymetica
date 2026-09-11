@@ -46,11 +46,15 @@ from qa.measure import Measurement, conclude
 
 REPO = Path(__file__).resolve().parent.parent.parent
 
-# A path into a source tree with a line number. Deliberately narrow: it wants
-# `dir/file.py:123`, not any mention of a filename, so our own docs quoting
-# "scripts/paper.py" in a question cannot trip it.
+# A path into an internal source tree, with or without its line number. Narrow
+# on the ROOT, not on the line: it wants `src/.../file.py` under one of their
+# tree's roots, so our own docs quoting "scripts/paper.py" in a question
+# cannot trip it. The line number was required until the deep pass of
+# 2026-09-11 (triage 2/3), while #92's subject is "internal source paths, line
+# numbers and code" and NEX-0015 names src/api/routes/agent_species.py with
+# none -- a fix that stripped `:NNN` and kept the paths read VERIFIED FIXED.
 SOURCE_LOCATION = re.compile(
-    r"\b(?:src|app|lib|services|api)/[\w./-]+\.(?:py|ts|js|go|rs):\d+")
+    r"\b(?:src|app|lib|services|api)/[\w./-]+\.(?:py|ts|js|go|rs)(?::\d+)?")
 
 
 def _nexus():
