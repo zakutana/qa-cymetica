@@ -143,6 +143,7 @@ its own setting does not fit the work in front of it.
 |---|---|
 | sweep, filing, verification (`qa-sweep`) | Sonnet 5 · high |
 | correspondence written to the vendor (`correspond.py`, `a2a.py send`) | Sonnet 5 · high |
+| a session with Nexus (`nexus-session`) | Sonnet 5 · high |
 | channel status (`/channels`) | Sonnet 5 · low — a status read, not correspondence |
 | writing a new check against their platform — a surface nothing tests yet | Opus 5 · high–xhigh |
 | `qa/state.py`, `qa/fold.py`, `qa/measure.py`, review | Opus 5 · high–xhigh |
@@ -350,6 +351,12 @@ tests/repo/       repository consistency. Deliberately NOT in tests/meta:
                   that (a red suite catches a half-applied one) but the triage
                   verdicts would not, and a lost verdict is a finding that
                   silently never gets fixed.
+.claude/skills/nexus-session/SKILL.md
+                  "zahaj session s Nexusem": the operator's feedback from the
+                  Nexus rooms first, one question to Nexus in General, a room
+                  and a paper order for each concrete proposal, follow-ups
+                  inside the rooms, a Czech note into every room it touched.
+                  Paper only; at most 8 questions and 3 new rooms a session.
 NEXT.md           what we agreed to do next and have not done. Plain markdown,
                   one line per item, `- [ ] YYYY-MM-DD  sentence`; ticked
                   items stay as history and stop being printed.
