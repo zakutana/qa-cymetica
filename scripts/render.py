@@ -2753,6 +2753,9 @@ function nxPost(room, text) {
                     : r.json().catch(() => ({})).then(b =>
                         Promise.reject(new Error(b.error || ("HTTP " + r.status)))));
 }
+// On window so a test can run the page's own send path over a stub fetch and
+// hold what it sends against what serve.py accepts.
+window.nxPost = nxPost;
 document.getElementById("nxDraft").addEventListener("input", e => {
   const room = document.getElementById("nxCompose").dataset.room;
   if (room) writeStore("qa.draft." + room, e.target.value);

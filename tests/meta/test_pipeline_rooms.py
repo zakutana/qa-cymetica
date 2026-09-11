@@ -379,3 +379,60 @@ def test_watch_names_a_new_note_from_the_operator_once():
     lines, seen = channels.room_lines(rows, set())
     assert len(lines) == 1 and "N-0001" in lines[0] and "general" in lines[0]
     assert channels.room_lines(rows, seen)[0] == [], "the same note woke the chat twice"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_page_sends_a_note_the_way_the_server_takes_one(tmp_path, monkeypatch):
+    """The two halves of the write path, held against each other.
+
+    Every door in test_pipeline_room_notes.py is the server's, and nothing
+    there runs the page. A header renamed on one side, or a body with a third
+    key, would leave every server test green and every note the operator sends
+    bouncing with a 403 or a 400. On 2026-09-11 the loop was walked end to end
+    over HTTP, but the Browser pane could not click while its window was
+    behind another, so the page's half went unexercised -- this is that half.
+    The page's own nxPost runs over a stub fetch, and what it sends is compared
+    with what serve.py accepts, read out of serve.py rather than retyped here.
+    """
+    import importlib.util
+
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("node is not installed, so the page cannot be run here")
+    if not (REPO / "state" / "ledger.json").exists():
+        pytest.skip("no committed ledger, so there is no page to run")
+    spec = importlib.util.spec_from_file_location(
+        "serve_contract", REPO / "scripts" / "serve.py")
+    serve = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(serve)
+
+    monkeypatch.delenv("QA_STATE_DIR", raising=False)
+    render = _render()
+    payload = _live_payload(render)
+    after = """
+const calls = [];
+globalThis.fetch = (url, opts) => {
+  calls.push({ url: url, opts: opts || {} });
+  const body = url === "/token" ? { token: "T-123" } : { id: "N-0001", at: "x" };
+  return Promise.resolve({ ok: true, status: url === "/token" ? 200 : 201,
+                           json: () => Promise.resolve(body) });
+};
+window.nxPost("general", "proč ne víc?").then(
+  () => { document.getElementById("__calls").innerHTML = JSON.stringify(calls); },
+  e => { document.getElementById("__calls").innerHTML = "ERR " + e.message; });
+"""
+    code, err, captured = _run_page(node, tmp_path / "send", payload, after=after)
+    assert code == 0, f"the page's send path throws:\n{err[:900]}"
+    raw = captured.get("__calls", "")
+    assert raw and not raw.startswith("ERR"), f"nxPost did not complete: {raw!r}"
+    calls = json.loads(raw)
+    assert [c["url"] for c in calls] == ["/token", "/notes"], (
+        "the page must ask for the token at the moment of sending, then post")
+    post = calls[1]["opts"]
+    assert post["method"] == "POST"
+    headers = post["headers"]
+    assert headers.get(serve.TOKEN_HEADER) == "T-123", (
+        f"the page sends its token under a header serve.py does not read: {headers}")
+    assert headers.get("Content-Type") == "application/json"
+    assert set(json.loads(post["body"])) == {"room", "text"}, (
+        "serve.py takes exactly {room, text} and refuses anything else with a 400")
