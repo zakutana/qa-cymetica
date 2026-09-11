@@ -671,6 +671,7 @@ def _lay_out(panel: dict, plan: dict, described: dict, index_points: dict,
     bankroll = _num(plan.get("bankroll"))
     legs: list[dict] = []
     by_card: dict[str, dict] = {}
+    live: dict[str, list] = {}
 
     def leg(card: str, planned: dict) -> dict:
         row = described.get(card) or {}
@@ -716,11 +717,20 @@ def _lay_out(panel: dict, plan: dict, described: dict, index_points: dict,
         view["state"] = "open"
         if trade["current_index"] is not None:
             view["current"] = trade["current_index"]
+            if trade["live_at"]:
+                live[trade["card"]] = [trade["live_at"], trade["current_index"]]
         if trade["unrealized"] is not None:
             view["pnl"] = round((view["pnl"] or 0.0) + trade["unrealized"], 6)
         if trade["live_value"] is not None:
             view["value"] = round((view["value"] or 0.0) + trade["live_value"], 6)
     for view in legs:
+        # A position's own reading, when it is newer than the card's last index
+        # point, ends the line -- so the chart's "now" is the table's.
+        reading = live.get(view["card"])
+        if reading and view["series"]:
+            newer, last = _moment(reading[0]), _moment(view["series"][-1][0])
+            if newer and last and newer > last:
+                view["series"].append(reading)
         if view["orders"]:
             view["state"] = "open" if view["state"] == "open" else "closed"
         elif view["card_status"] == "not_found":
@@ -740,6 +750,11 @@ def _lay_out(panel: dict, plan: dict, described: dict, index_points: dict,
     moves = [(v["share"], v["since_proposal"]) for v in legs
              if v["share"] and v["since_proposal"] is not None]
     weight = sum(share for share, _ in moves)
+    # The countdown is to the card that is held; with nothing held, to the
+    # first of the proposed ones to close.
+    held = [v["closes_at"] for v in legs if v["closes_at"] and v["state"] == "open"]
+    waiting = [v["closes_at"] for v in legs
+               if v["closes_at"] and v["state"] == "not bought"]
     invested = panel["staked"]
     pnl = round(sum(pnls), 2) if pnls else None
     value = round(sum(values), 2) if values else None
@@ -754,8 +769,7 @@ def _lay_out(panel: dict, plan: dict, described: dict, index_points: dict,
         invested=invested, pnl=pnl, value=value,
         pnl_pct=(round(pnl / invested * 100, 3) if pnl is not None and invested
                  else None),
-        closes_at=min((v["closes_at"] for v in legs if v["closes_at"]
-                       and v["state"] in ("open", "not bought")), default=None),
+        closes_at=min(held or waiting, default=None),
         if_bought_pct=(round(sum(s * m for s, m in moves) / weight, 4)
                        if weight else None))
 
@@ -1723,67 +1737,121 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:15.0px; max-wid
 .cov-cell.ok{background:var(--ok-bg);border-color:var(--ok)}
 .cov-cell.bad{background:var(--bad-bg);border-color:var(--bad)}
 .cov-cell.none{opacity:.5}
-/* The Nexus tab. Rooms on the left, the conversation in the middle, how it is
-   going on the right; one column on a narrow screen. Ours and the operator's
+/* The Nexus tab: a strip of named strategies across the top; under it the chat
+   with Nexus on the left and, beside it, the strategy's numbers, chart and
+   configuration. It takes the whole width while it is shown
+   (.wrap[data-tab="nexus"]), and both columns scroll on their own, so the
+   composer is always under the thread and never over it -- it once floated
+   over it, sticky, and the operator said so. Ours and the operator's messages
    sit on the right like any chat, Nexus on the left. Every class is nx- so
    nothing here can restyle the findings' own conversation. */
-.nx-rooms{display:grid;grid-template-columns:13rem minmax(0,1fr) 17rem;gap:14px;margin-top:14px;align-items:start}
-@media (max-width:1100px){.nx-rooms{grid-template-columns:1fr}}
-.nx-list{display:flex;flex-direction:column;gap:4px}
-.nx-room{display:flex;justify-content:space-between;align-items:center;gap:.5rem;text-align:left;padding:.5rem .6rem;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);color:var(--text);font:inherit;cursor:pointer}
-.nx-room.on{border-color:var(--accent);background:var(--accent-dim)}
-.nx-rt{font-weight:600}
-.nx-badge{background:var(--accent);color:var(--surface);border-radius:9px;padding:0 .45rem;font-size:.75em}
-.nx-chat{display:flex;flex-direction:column;gap:10px;min-width:0}
-.nx-title{margin:0 0 2px;font-size:15px}
-.nx-msg{border:1px solid var(--line);border-radius:10px;padding:.55rem .7rem;background:var(--surface);max-width:52rem;align-self:flex-start}
-.nx-msg.nx-ours{align-self:flex-end;background:var(--accent-dim);border-color:var(--accent)}
-.nx-msg.nx-op{align-self:flex-end;background:var(--wait-bg);border-color:var(--wait)}
-.nx-msg.nx-cl{background:var(--surface-2)}
-.nx-msg.nx-sys{align-self:center;border:none;background:none;color:var(--text-faint);font-size:.8em;padding:0}
-.nx-msg.nx-failed,.nx-msg.nx-refused{border-color:var(--bad)}
-.nx-msg.nx-partial,.nx-msg.nx-waiting{border-color:var(--warn)}
-.nx-h{font-size:.75em;color:var(--text-dim);margin-bottom:.3rem}
-.nx-s{font-size:.85em;color:var(--text-dim);font-style:italic}
-.nx-b{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.45}
-.nx-b.nx-clamp{max-height:9.5em;overflow:hidden;-webkit-mask-image:linear-gradient(#000 65%,transparent);mask-image:linear-gradient(#000 65%,transparent)}
-.nx-b code{font-family:var(--mono);font-size:.9em;background:var(--surface-2);padding:0 .2em;border-radius:3px}
-.nx-more{margin-top:.3rem;background:none;border:none;color:var(--accent);cursor:pointer;font:inherit;font-size:.8em;padding:0}
-.nx-tick{color:var(--ok);margin-left:.3rem}
-.nx-panel{border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);padding:.7rem .8rem}
-.nx-panel h4{margin:0 0 .4rem;font-size:13px}
-.nx-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:.4rem 0 .7rem}
-.nx-grid div{background:var(--surface-2);border-radius:6px;padding:.35rem .45rem}
-.nx-grid b{display:block;font-size:1.2em}
-.nx-grid span{font-size:.75em;opacity:.8}
-.nx-foot{font-size:.8em;color:var(--text-dim);margin:.7rem 0 0}
-.nx-note{margin-top:14px;padding:.7rem .9rem;border:1px dashed var(--line);border-radius:var(--radius);color:var(--text-dim)}
-.nx-mid{display:flex;flex-direction:column;gap:10px;min-width:0}
-.nx-compose{display:flex;flex-direction:column;gap:6px;border:1px solid var(--wait);border-radius:10px;padding:.55rem;background:var(--surface);position:sticky;bottom:8px}
-.nx-compose textarea{width:100%;box-sizing:border-box;resize:vertical;min-height:4.2em;font:inherit;color:var(--text);background:var(--surface-2);border:1px solid var(--line-soft);border-radius:6px;padding:.45rem .55rem}
+.wrap[data-tab="nexus"]{max-width:none;padding-left:28px;padding-right:28px}
+.nx-strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin:18px 0 16px}
+.nx-card{position:relative;display:flex;flex-direction:column;gap:5px;min-width:0;text-align:left;padding:12px 15px 13px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--text);font:inherit;cursor:pointer}
+.nx-card:hover{border-color:var(--text-faint)}
+.nx-card.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.nx-card-top{display:flex;align-items:center;gap:8px;min-width:0;font-size:12.5px;color:var(--text-dim);white-space:nowrap;overflow:hidden}
+.nx-card-name{font-size:17px;font-weight:600;line-height:1.25;overflow-wrap:anywhere}
+.nx-card-num{font-size:15px;font-weight:600;color:var(--text-dim)}
+.nx-badge{position:absolute;top:10px;right:12px;background:var(--accent);color:var(--surface);border-radius:9px;padding:0 .45rem;font-size:.75em;font-weight:600}
+.nx-main{display:grid;grid-template-columns:minmax(360px,2fr) minmax(0,3fr);gap:18px;height:calc(100vh - 48px);min-height:480px}
+.nx-chatcol{display:flex;flex-direction:column;min-width:0;min-height:0;border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow:hidden}
+.nx-chat{flex:1 1 auto;min-height:0;overflow-y:auto;padding:18px 18px 22px;display:flex;flex-direction:column;gap:14px}
+.nx-compose{flex:none;display:flex;flex-direction:column;gap:6px;padding:12px 14px;border-top:1px solid var(--line);background:var(--surface-2)}
+.nx-compose textarea{width:100%;box-sizing:border-box;resize:vertical;min-height:3.2em;font:inherit;color:var(--text);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:.5rem .65rem}
 .nx-send{display:flex;justify-content:space-between;align-items:center;gap:.6rem;font-size:.8em;color:var(--text-dim)}
 .nx-send button{font:inherit;font-size:1.15em;padding:.3rem .9rem;border-radius:6px;border:1px solid var(--wait);background:var(--wait);color:var(--surface);cursor:pointer}
 .nx-send button:disabled{opacity:.5;cursor:default}
-.nx-panel h4:not(:first-child){margin-top:.9rem}
+.nx-panel{min-width:0;min-height:0;overflow-y:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:22px 26px 26px}
+@media (max-width:1100px){.nx-main{grid-template-columns:1fr;height:auto}.nx-chatcol{height:75vh}.nx-panel{overflow:visible}}
+.nx-note{margin-top:14px;padding:.7rem .9rem;border:1px dashed var(--line);border-radius:var(--radius);color:var(--text-dim)}
+.nx-msg{border:1px solid var(--line);border-radius:14px;padding:.75rem .95rem;background:var(--surface);max-width:min(52rem,90%);align-self:flex-start}
+.nx-msg.nx-ours{align-self:flex-end;background:var(--accent-dim);border-color:var(--accent)}
+.nx-msg.nx-op{align-self:flex-end;background:var(--wait-bg);border-color:var(--wait)}
+.nx-msg.nx-cl{background:var(--surface-2)}
+.nx-msg.nx-sys{align-self:center;max-width:92%;border:none;background:none;padding:0 1rem;color:var(--text-faint);font-size:.8em;text-align:center}
+.nx-msg.nx-failed,.nx-msg.nx-refused{border-color:var(--bad)}
+.nx-msg.nx-partial,.nx-msg.nx-waiting{border-color:var(--warn)}
+.nx-h{font-size:.78em;color:var(--text-dim);margin-bottom:.4rem}
+.nx-h b{color:var(--text);font-weight:600}
+.nx-s{font-size:.85em;color:var(--text-dim);font-style:italic}
+.nx-b{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5}
+.nx-b.nx-clamp{max-height:9.5em;overflow:hidden;-webkit-mask-image:linear-gradient(#000 65%,transparent);mask-image:linear-gradient(#000 65%,transparent)}
+.nx-b code{font-family:var(--mono);font-size:.9em;background:var(--surface-2);padding:0 .2em;border-radius:3px}
+.nx-more{margin-top:.35rem;background:none;border:none;color:var(--accent);cursor:pointer;font:inherit;font-size:.82em;padding:0}
+.nx-tick{color:var(--ok);margin-left:.3rem}
 .nx-st{font-weight:700}
 .nx-st.nx-running{color:var(--ok)}
 .nx-st.nx-paused{color:var(--warn)}
 .nx-st.nx-stopped{color:var(--bad)}
 .nx-st.nx-proposed{color:var(--text-dim)}
-.nx-why{margin:.1rem 0 .2rem;font-size:.9em;line-height:1.4}
-.nx-gist{margin:.1rem 0 .45rem;padding:.35rem .55rem;border-left:3px solid var(--accent);background:var(--surface-2);border-radius:4px;font-size:.92em;line-height:1.4}
+.nx-gist{margin:.1rem 0 .5rem;padding:.45rem .65rem;border-left:3px solid var(--accent);background:var(--surface-2);border-radius:0 6px 6px 0;font-size:.95em;line-height:1.45}
 .nx-gist span{display:block;font-size:.72em;color:var(--text-dim);margin-bottom:.1rem}
 .nx-opened{margin-top:.35rem;font-size:.8em}
 .nx-goto{background:none;border:none;color:var(--accent);cursor:pointer;font:inherit;padding:0;text-decoration:underline}
 .nx-leg.nx-no{color:var(--bad)}
-.nx-row{border-top:1px solid var(--line-soft);padding:.35rem 0;font-size:.82em;line-height:1.4}
-.nx-row span{display:block;color:var(--text-dim)}
-.nx-spark{display:block;width:100%;height:48px;margin:.2rem 0}
-.nx-spark polyline{fill:none;stroke:var(--accent);stroke-width:1.6;vector-effect:non-scaling-stroke}
-.nx-spark line{stroke:var(--text-faint);stroke-width:1;stroke-dasharray:3 3;vector-effect:non-scaling-stroke}
+.nx-hero{display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px}
+.nx-hero h2{margin:0;font-size:26px;font-weight:600;letter-spacing:-.01em;line-height:1.2;overflow-wrap:anywhere}
+.nx-sub{margin:6px 0 0;font-size:13px;color:var(--text-faint)}
+.nx-pill{display:inline-flex;align-items:center;gap:6px;padding:3px 11px;border-radius:999px;background:var(--surface-2);color:var(--text-dim);font-size:13px;font-weight:600;white-space:nowrap}
+.nx-pill.nx-running{background:var(--ok-bg);color:var(--ok)}
+.nx-pill.nx-paused{background:var(--warn-bg);color:var(--warn)}
+.nx-pill.nx-stopped{background:var(--bad-bg);color:var(--bad)}
+.nx-card-top .nx-pill{padding:1px 8px;font-size:12px}
+.nx-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:20px 0 4px}
+.nx-tile{min-width:0;padding:13px 15px;border-radius:10px;background:var(--surface-2)}
+.nx-tile span{display:block;font-size:12.5px;color:var(--text-dim)}
+.nx-tile b{display:block;margin-top:2px;font-size:26px;font-weight:600;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nx-tile i{display:block;margin-top:2px;font-style:normal;font-size:12.5px;color:var(--text-faint)}
+.nx-up{color:var(--ok)}
+.nx-down{color:var(--bad)}
+.nx-sec{margin:28px 0 8px;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-faint)}
+.nx-table{font-size:14px}
+.nx-tr{display:grid;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line-soft)}
+.nx-tr > *{min-width:0;overflow-wrap:anywhere}
+.nx-tr small{display:block;font-size:12px;color:var(--text-faint)}
+.nx-th{border-top:none;padding-top:0;font-size:12.5px;color:var(--text-faint)}
+.nx-legs .nx-tr{grid-template-columns:minmax(0,2.3fr) .8fr 1.2fr 1.5fr 1.3fr 1fr}
+.nx-trades .nx-tr{grid-template-columns:minmax(0,1.4fr) .8fr .8fr 1.3fr 1.1fr}
+.nx-orders .nx-tr{grid-template-columns:.9fr 1.1fr minmax(0,2.2fr) 1fr}
+.nx-strats .nx-tr{grid-template-columns:minmax(0,2fr) .7fr 1.1fr 1fr 1.1fr}
+.nx-state{font-size:13px;font-weight:600;color:var(--text-dim)}
+.nx-state.nx-open{color:var(--ok)}
+.nx-state.nx-card-closed{color:var(--text-faint)}
+.nx-state.nx-card-not-found{color:var(--bad)}
+.nx-dim{color:var(--text-faint)}
+.nx-kv{display:flex;flex-wrap:wrap;gap:8px 28px;font-size:14px}
+.nx-kv span{margin-right:6px;color:var(--text-faint)}
+.nx-chips{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:10px}
+.nx-chips > span{min-width:5.5rem;margin-right:4px;font-size:12.5px;color:var(--text-faint)}
+.nx-chip{padding:3px 9px;border-radius:6px;border:1px solid var(--line-soft);background:var(--surface-2);font-family:var(--mono);font-size:12.5px}
+.nx-ct{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin:22px 0 4px;font-size:14px;font-weight:600}
+.nx-ct small{font-size:12.5px;font-weight:400;color:var(--text-faint)}
+.nx-chart{display:block;max-width:100%;height:auto;overflow:visible}
+.nx-chart text{font-size:12px;fill:var(--text-dim)}
+.nx-chart .nx-gl{stroke:var(--line-soft);stroke-width:1}
+.nx-chart .nx-area{fill:var(--accent-dim);stroke:none}
+.nx-chart .nx-line{fill:none;stroke:var(--accent);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.nx-chart .nx-ref{stroke-width:1.5;stroke-dasharray:6 4}
+.nx-chart .nx-ref-tp{stroke:var(--ok)}
+.nx-chart .nx-ref-sl{stroke:var(--bad)}
+.nx-chart .nx-ref-entry,.nx-chart .nx-ref-base{stroke:var(--text-dim);stroke-dasharray:2 4}
+.nx-chart .nx-tp{fill:var(--ok)}
+.nx-chart .nx-sl{fill:var(--bad)}
+.nx-chart .nx-now{fill:var(--text);font-weight:600}
+.nx-chart .nx-vl{stroke:var(--wait);stroke-width:1.5;stroke-dasharray:3 3}
+.nx-chart .nx-vt{fill:var(--wait)}
+.nx-chart .nx-dot{fill:var(--accent);stroke:var(--surface);stroke-width:2}
+.nx-chart .nx-dot-open{fill:var(--surface);stroke:var(--accent);stroke-width:2}
+.nx-chart .nx-dot-loss{fill:var(--bad);stroke:var(--surface);stroke-width:2}
+.nx-why{margin-top:26px;padding-top:12px;border-top:1px solid var(--line-soft)}
+.nx-why details{margin:4px 0}
+.nx-why summary{cursor:pointer;font-size:13.5px;color:var(--text-dim)}
+.nx-why details p{margin:.45rem 0 .2rem;font-size:13.5px;line-height:1.5;color:var(--text-dim);white-space:pre-wrap}
+.nx-foot{margin:12px 0 0;font-size:12.5px;color:var(--text-faint)}
 .nx-stale b{color:var(--bad)}
-.nx-pf{display:block;width:100%;text-align:left;margin:4px 0;padding:.4rem .5rem;border:1px solid var(--line);border-radius:6px;background:var(--surface-2);color:var(--text);font:inherit;font-size:.85em;cursor:pointer}
-.nx-pf span{display:block;color:var(--text-dim);font-size:.9em;margin-top:.1rem}
+.nx-pf{padding:0;border:none;background:none;color:var(--text);font:inherit;font-weight:600;text-align:left;cursor:pointer}
+.nx-pf:hover{color:var(--accent)}
 details.stat summary{cursor:pointer;font-weight:600}
 /* Theirs, and counted against them: a 5xx is an answer. */
 .seg-server_error{background:var(--bad);opacity:.65}
@@ -2301,7 +2369,7 @@ h4.sec {
 @media (prefers-reduced-motion: reduce) { * { transition:none!important; animation:none!important; } }
 </style>
 
-<div class="wrap">
+<div class="wrap" id="wrap">
   <header class="mast">
     <h1>Cymetica QA Console</h1>
     <button class="bell" id="bell" aria-label="Replies from Cymetica" aria-expanded="false">
@@ -2338,12 +2406,12 @@ h4.sec {
 
   <section class="panel" id="panel-nexus" hidden>
   <div class="nx-note" id="roomsNote" hidden></div>
-  <div class="nx-rooms">
-    <nav class="nx-list" id="roomList" aria-label="Rooms"></nav>
-    <div class="nx-mid">
+  <nav class="nx-strip" id="roomList" aria-label="Strategies"></nav>
+  <div class="nx-main" id="nxMain">
+    <div class="nx-chatcol">
       <div class="nx-chat" id="roomChat"></div>
       <form class="nx-compose" id="nxCompose" hidden>
-        <textarea id="nxDraft" rows="3" maxlength="4000"
+        <textarea id="nxDraft" rows="2" maxlength="4000"
           placeholder="Your feedback for this room. Claude reads it when you ask."></textarea>
         <div class="nx-send"><span id="nxSendNote">Ctrl+Enter sends</span>
           <button type="submit" id="nxSend">Send</button></div>
@@ -3155,7 +3223,7 @@ function nxBubble(nm, current) {
     const opened = (nm.opened || []).map(room => room === current
       ? '<span class="nx-s">this room was opened from this answer</span>'
       : nxGoto(room, "→ it opened " + room)).join(" ");
-    return '<div class="nx-msg nx-ours"><div class="nx-h">Claude → Nexus' + at +
+    return '<div class="nx-msg nx-ours"><div class="nx-h"><b>Claude → Nexus</b>' + at +
       " · " + esc(nm.id) + '</div><div class="nx-b">' + nxText(nm.text) + "</div>" +
       (opened ? '<div class="nx-opened">' + opened + "</div>" : "") + "</div>";
   }
@@ -3167,7 +3235,7 @@ function nxBubble(nm, current) {
     const long = text.length > 700;
     const label = "▾ whole answer (" + nxDigits(text.length) + " characters)";
     return '<div class="nx-msg nx-' + esc(nm.outcome || "answered") + '">' +
-      '<div class="nx-h">Nexus' + at + took + "</div>" +
+      '<div class="nx-h"><b>Nexus</b>' + at + took + "</div>" +
       (note ? '<div class="nx-s">' + esc(note) + "</div>" : "") +
       (nm.gist ? '<div class="nx-gist"><span>Claude · summary</span>' + nxText(nm.gist) +
                  "</div>" : "") +
@@ -3177,13 +3245,13 @@ function nxBubble(nm, current) {
       "</div>";
   }
   if (nm.kind === "operator_note") {
-    return '<div class="nx-msg nx-op"><div class="nx-h">You' + at +
+    return '<div class="nx-msg nx-op"><div class="nx-h"><b>You</b>' + at +
       ' <span class="nx-tick" title="' + (nm.read ? "read by Claude" : "saved, not read yet") +
       '">' + (nm.read ? "✓✓" : "✓") + '</span></div><div class="nx-b">' +
       nxText(nm.text) + "</div></div>";
   }
   if (nm.kind === "claude_note") {
-    return '<div class="nx-msg nx-cl"><div class="nx-h">Claude' +
+    return '<div class="nx-msg nx-cl"><div class="nx-h"><b>Claude</b>' +
       (nm.re ? " · on " + esc(nm.re) : "") + at + '</div><div class="nx-b">' +
       nxText(nm.text) + "</div></div>";
   }
@@ -3193,8 +3261,10 @@ function nxBubble(nm, current) {
       esc(nxShort(nm.text, 110)) + "</div>";
   }
   if (nm.kind === "status") {
-    return '<div class="nx-msg nx-sys">' + nxGlyph(nm.status) + " " +
-      esc(nm.status || "") + (nm.text ? " — " + esc(nm.text) : "") + at + "</div>";
+    // One line in the thread; the whole reason is in the panel, folded.
+    return '<div class="nx-msg nx-sys" title="' + esc(nm.text || "") + '">' +
+      nxGlyph(nm.status) + " " + esc(nm.status || "") +
+      (nm.text ? " — " + esc(nxShort(nm.text, 140)) : "") + at + "</div>";
   }
   if (nm.kind === "leg") {
     return '<div class="nx-msg nx-sys nx-leg' +
@@ -3203,39 +3273,72 @@ function nxBubble(nm, current) {
   return '<div class="nx-msg nx-sys">' + esc(nm.text || "") + "</div>";
 }
 
-function nxCells(cells) {
-  return '<div class="nx-grid">' + cells.map(([k, v]) =>
-    "<div><b>" + esc(v == null ? "—" : v) + "</b><span>" + esc(k) + "</span></div>").join("") +
-    "</div>";
+// Where a strategy stands, as a word beside its name; the thread's status
+// lines keep the bare glyph.
+const NX_WORD = { proposed: "Proposed", running: "Running", paused: "Paused",
+                  stopped: "Stopped" };
+const NX_HOLDS = { bot: "Bot", cards: "Cards" };
+function nxPill(status) {
+  const s = status || "proposed";
+  return '<span class="nx-pill nx-' + esc(s) + '">' + (NX_STATUS[s] || "○") + " " +
+    esc(NX_WORD[s] || s) + "</span>";
 }
-// One line per strategy in General's portfolio: its bot if it has one, else
-// the money in its card orders.
-function nxHeadline(np) {
-  const nc = (np.clones || [])[0];
-  if (nc) {
-    return "bot " + nxMoney(nc.balance != null ? nc.balance : nc.funded) + " USDC" +
-      (nc.pnl != null ? " · P&L " + nxMoney(nc.pnl) : "");
-  }
-  const orders = (np.trades || []).length;
-  return orders ? nxMoney(np.staked) + " USDC in " + orders + " order(s)" : "nothing done yet";
+// Signed money and percentages the way the operator reads them -- +14.48,
+// −50, +0.7 % -- and the class that colours them.
+function nxSigned(v) {
+  if (v == null || v === "" || isNaN(Number(v))) return "—";
+  const n = Number(v);
+  return (n > 0 ? "+" : "") + nxMoney(n);
 }
-// A bot's balance over its samples, as a line. No library: the Stats tab draws
-// its charts the same way.
-// `ref`, when given, is drawn as a dashed level -- a card's entry index, so
-// the line reads as above or below where the order went in.
-function nxSpark(values, ref) {
-  const pts = values.filter(v => typeof v === "number" && isFinite(v));
-  if (pts.length < 2) return "";
-  const level = typeof ref === "number" && isFinite(ref);
-  const all = level ? pts.concat([ref]) : pts;
-  const lo = Math.min(...all), hi = Math.max(...all), span = hi - lo || 1;
-  const w = 240, h = 48;
-  const y = v => (h - 4 - (v - lo) / span * (h - 8)).toFixed(1);
-  const xy = pts.map((v, i) => (i * w / (pts.length - 1)).toFixed(1) + "," + y(v)).join(" ");
-  return '<svg class="nx-spark" viewBox="0 0 ' + w + " " + h +
-    '" preserveAspectRatio="none" role="img" aria-label="readings over time">' +
-    (level ? '<line x1="0" x2="' + w + '" y1="' + y(ref) + '" y2="' + y(ref) + '"/>' : "") +
-    '<polyline points="' + xy + '"/></svg>';
+function nxTone(v) {
+  const n = Number(v);
+  return v == null || v === "" || isNaN(n) || n === 0 ? "" : n > 0 ? " nx-up" : " nx-down";
+}
+function nxPct(v, digits) {
+  if (v == null || v === "" || isNaN(Number(v))) return "—";
+  const n = Number(v);
+  const places = digits != null ? digits : Math.abs(n) >= 10 ? 0 : 1;
+  const s = Math.abs(n).toFixed(places);
+  return (Number(s) === 0 ? "" : n > 0 ? "+" : "−") + s + " %";
+}
+function nxShare(v) {
+  if (v == null || v === "" || isNaN(Number(v))) return "—";
+  const n = Number(v) * 100;
+  return (Math.abs(n - Math.round(n)) < 0.05 ? String(Math.round(n)) : n.toFixed(1)) + " %";
+}
+function nxLevel(v) {
+  return v == null || v === "" || isNaN(Number(v)) ? "—" : Number(v).toFixed(2);
+}
+const NX_MONTH = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep",
+                  "Oct", "Nov", "Dec"];
+// "11 Sep 10:25" -- UTC, like every other time on this page.
+function nxDay(iso) {
+  const d = new Date(iso || "");
+  if (isNaN(d.getTime())) return "";
+  return d.getUTCDate() + " " + NX_MONTH[d.getUTCMonth()] + " " +
+    String(d.getUTCHours()).padStart(2, "0") + ":" +
+    String(d.getUTCMinutes()).padStart(2, "0");
+}
+// How long until a card stops trading: "in 36 h", "in 3 d", "closed".
+function nxUntil(iso) {
+  const t = Date.parse(iso || "");
+  if (!t) return null;
+  const hours = (t - Date.now()) / 3600000;
+  if (hours <= 0) return "closed";
+  if (hours < 1) return "in " + Math.max(1, Math.round(hours * 60)) + " min";
+  if (hours < 48) return "in " + Math.round(hours) + " h";
+  return "in " + Math.round(hours / 24) + " d";
+}
+// Four big numbers, each with its label above it and one quiet line under it.
+function nxTiles(tiles) {
+  return '<div class="nx-tiles">' + tiles.map(([label, value, sub, tone]) =>
+    '<div class="nx-tile"><span>' + esc(label) + '</span><b class="' +
+    (tone || "").trim() + '">' + esc(value == null ? "—" : String(value)) + "</b>" +
+    (sub ? "<i>" + esc(String(sub)) + "</i>" : "") + "</div>").join("") + "</div>";
+}
+function nxHero(name, pills, sub) {
+  return '<div class="nx-hero"><h2>' + esc(name) + "</h2>" + pills + "</div>" +
+    (sub ? '<p class="nx-sub">' + sub + "</p>" : "");
 }
 // Where the console's sampler stands, said the same way in every panel: when
 // it last read their API, and "stale" once three rounds have gone by without one.
@@ -3247,107 +3350,429 @@ function nxSampler(np) {
   const failed = Object.entries(np.sampler_reads || {}).filter(([, verdict]) => verdict !== "ok");
   return '<p class="nx-foot' + (np.stale ? " nx-stale" : "") + '">' +
     (np.stale ? "<b>stale</b> — no round for over three intervals. " : "") +
-    "Last read " + esc(stamp(np.sampled_at)) + ", every " + esc(nxSecs(np.sampler_every)) +
+    "Read from their API " + esc(stamp(np.sampled_at)) + " UTC, every " +
+    esc(nxSecs(np.sampler_every)) +
     (np.sampler_ok === false ? " · failed: " +
       esc(failed.map(([door, verdict]) => door + " " + verdict).join(", ")) : "") + ".</p>";
 }
 function nxParams(params) {
-  const pairs = Object.entries(params || {}).map(([k, v]) => k + " " + v);
-  return pairs.length ? " (" + pairs.join(", ") + ")" : "";
+  return Object.entries(params || {}).map(([k, v]) => k + " " + v).join(", ");
 }
-// A bot's indicators as their API lists them, name and parameters, nothing added.
-function nxIndicators(list) {
-  return (list || []).map(ind => esc((ind && ind.name) || "?") +
-    esc(nxParams(ind && ind.params))).join(" · ");
+
+// Round numbers for an axis, three to five of them between lo and hi.
+function nxTicks(lo, hi) {
+  const raw = (hi - lo) / 4;
+  if (!(raw > 0)) return [lo];
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1, 2, 2.5, 5, 10].map(k => k * mag).find(s => s >= raw) || raw;
+  const out = [];
+  for (let v = Math.ceil(lo / step) * step; v <= hi + step * 1e-6; v += step) {
+    out.push(Number(v.toFixed(10)));
+  }
+  return out;
 }
-function nxGeneral(np) {
-  const strategies = ((NX && NX.rooms) || []).filter(nr => nr.kind === "strategy");
-  return "<h4>Nexus, every question so far</h4>" +
-    nxCells([["asked", np.asked], ["answered", np.answered],
-             ["typical", np.median_seconds != null ? nxSecs(np.median_seconds) : null],
-             ["cut short", np.partial], ["gave up", np.failed], ["refused", np.refused]]) +
-    '<div class="rely-strip">' + (np.strip || []).map(o =>
-      '<i class="sq ' + esc(o) + '"></i>').join("") + "</div>" +
-    (np.balance != null
-      ? "<h4>Paper account</h4>" +
-        nxCells([["USDC free", nxMoney(np.balance)], ["in cards", nxMoney(np.notional)],
-                 ["orders", np.book_trades]]) +
-        '<p class="nx-foot">As the last order of ours read it, ' +
-        esc(stamp(np.balance_at)) + ".</p>"
+// Labels down the right edge of a chart, pushed apart so no two overlap.
+function nxPlace(labels, top, bottom) {
+  const sorted = labels.slice().sort((a, b) => a.y - b.y);
+  let last = -Infinity;
+  sorted.forEach(label => { label.y = Math.max(label.y, last + 15); last = label.y; });
+  const over = sorted.length ? sorted[sorted.length - 1].y - bottom : 0;
+  if (over > 0) sorted.forEach(label => { label.y -= over; });
+  sorted.forEach(label => { label.y = Math.max(label.y, top); });
+  return sorted;
+}
+// A line over time with levels across it -- a card's entry, Nexus's
+// take-profit and stop -- each dashed and named at its right end, and the
+// moment something happened as a mark. Drawn at the width of the panel it
+// sits in, so its text is the size of the text around it. No library: the
+// Stats tab draws the same way.
+function nxChart(series, opts) {
+  const o = opts || {};
+  const pts = (series || []).map(p => [Date.parse(p[0]), Number(p[1])])
+    .filter(p => isFinite(p[0]) && isFinite(p[1]));
+  if (pts.length < 2) return "";
+  const refs = (o.refs || []).filter(r => r && r.v != null && isFinite(Number(r.v)));
+  const box = document.getElementById("roomPanel");
+  const W = Math.max(360, Math.round((box && box.clientWidth ? box.clientWidth : 700) - 54));
+  const H = 230, L = 52, R = 100, T = 14, B = 30;
+  const values = pts.map(p => p[1]).concat(refs.map(r => Number(r.v)));
+  let lo = Math.min(...values), hi = Math.max(...values);
+  if (hi - lo < 1e-9) { lo -= 1; hi += 1; }
+  const pad = (hi - lo) * 0.08;
+  lo -= pad; hi += pad;
+  const t0 = pts[0][0], t1 = pts[pts.length - 1][0], span = t1 - t0 || 1;
+  const x = t => L + (t - t0) / span * (W - L - R);
+  const y = v => T + (hi - v) / (hi - lo) * (H - T - B);
+  const fmt = o.format || nxLevel;
+  const r1 = n => n.toFixed(1);
+  let svg = '<svg class="nx-chart" viewBox="0 0 ' + W + " " + H + '" width="' + W +
+    '" height="' + H + '" role="img" aria-label="' + esc(o.label || "") + '">';
+  // An axis of whole numbers reads 105, not 105.00.
+  const ticks = nxTicks(lo, hi);
+  const whole = ticks.every(v => Math.abs(v - Math.round(v)) < 1e-9);
+  const tick = o.format ? fmt : v => (whole ? String(Math.round(v)) : nxLevel(v));
+  ticks.forEach(v => {
+    svg += '<line class="nx-gl" x1="' + L + '" x2="' + (W - R) + '" y1="' + r1(y(v)) +
+      '" y2="' + r1(y(v)) + '"/><text x="' + (L - 8) + '" y="' + r1(y(v) + 4) +
+      '" text-anchor="end">' + esc(tick(v)) + "</text>";
+  });
+  const line = pts.map(p => r1(x(p[0])) + "," + r1(y(p[1]))).join(" ");
+  svg += '<path class="nx-area" d="M' + r1(x(t0)) + "," + (H - B) + " L" +
+    line.split(" ").join(" L") + " L" + r1(x(t1)) + "," + (H - B) + ' Z"/>';
+  const labels = [];
+  refs.forEach(r => {
+    const at = y(Number(r.v));
+    svg += '<line class="nx-ref nx-ref-' + esc(r.kind) + '" data-ref="' + esc(r.kind) +
+      '" x1="' + L + '" x2="' + (W - R) + '" y1="' + r1(at) + '" y2="' + r1(at) + '"/>';
+    labels.push({ y: at + 4, text: r.label, cls: "nx-" + r.kind });
+  });
+  if (o.vline && isFinite(Date.parse(o.vline.t))) {
+    const at = Date.parse(o.vline.t);
+    if (at >= t0 && at <= t1) {
+      svg += '<line class="nx-vl" x1="' + r1(x(at)) + '" x2="' + r1(x(at)) + '" y1="' + T +
+        '" y2="' + (H - B) + '"/><text class="nx-vt" x="' +
+        r1(Math.min(x(at) + 5, W - R - 96)) + '" y="' + (T + 11) + '">' +
+        esc(o.vline.label || "") + "</text>";
+    }
+  }
+  svg += '<polyline class="nx-line" points="' + line + '"/>';
+  (o.marks || []).forEach(mark => {
+    const at = Date.parse(mark.t);
+    if (!isFinite(at) || at < t0 || at > t1 || mark.v == null) return;
+    svg += '<circle class="nx-dot-' + esc(mark.kind || "open") + '" cx="' + r1(x(at)) +
+      '" cy="' + r1(y(Number(mark.v))) + '" r="4.5"><title>' + esc(mark.title || "") +
+      "</title></circle>";
+  });
+  const last = pts[pts.length - 1];
+  svg += '<circle class="nx-dot" cx="' + r1(x(last[0])) + '" cy="' + r1(y(last[1])) +
+    '" r="5"/>';
+  labels.push({ y: y(last[1]) + 4, text: "now " + fmt(last[1]), cls: "nx-now" });
+  nxPlace(labels, T + 8, H - B).forEach(label => {
+    svg += '<text class="' + label.cls + '" x="' + (W - R + 8) + '" y="' + r1(label.y) +
+      '">' + esc(label.text) + "</text>";
+  });
+  [0, 1 / 3, 2 / 3, 1].forEach((k, i) => {
+    const at = t0 + span * k;
+    svg += '<text x="' + r1(x(at)) + '" y="' + (H - 8) + '" text-anchor="' +
+      (i === 0 ? "start" : i === 3 ? "end" : "middle") + '">' +
+      esc(nxDay(new Date(at).toISOString())) + "</text>";
+  });
+  return svg + "</svg>";
+}
+
+// A strategy's cards: Nexus's plan with what was done laid over it. A card is
+// named by what it holds; its own headline sits under that, quietly.
+function nxLegName(nl) {
+  return nl.label || nxShort(nl.card, 9);
+}
+function nxLegs(np) {
+  const legs = np.legs || [];
+  if (!legs.length) return "";
+  const rows = legs.map(nl => {
+    const share = nl.share != null
+      ? nxShare(nl.share) + (nl.usdc_proposed != null ? " · " + nxMoney(nl.usdc_proposed) : "")
+      : nl.invested ? nxMoney(nl.invested) + " USDC" : "—";
+    const moved = nl.entry != null
+      ? esc(nxLevel(nl.entry) + " → " + nxLevel(nl.current))
+      : nl.at_proposal != null
+        ? esc(nxLevel(nl.at_proposal) + " → " + nxLevel(nl.current)) +
+          "<small>since Nexus proposed it</small>"
+        : "—";
+    const exits = (nl.tp != null ? nxPct(nl.tp, nl.tp % 1 ? 1 : 0) : "—") + " / " +
+      (nl.sl != null ? nxPct(nl.sl, nl.sl % 1 ? 1 : 0) : "—");
+    const state = nl.state || "not bought";
+    return '<div class="nx-tr"><span><b>' + esc(nxLegName(nl)) + '</b><small title="' +
+      esc(nl.card_title || nl.card || "") + '">' +
+      esc(nxShort(nl.card_title || nl.card || "", 46)) + "</small></span><span>" +
+      (nl.side === "bear" ? "▼ bear" : nl.side ? "▲ " + esc(nl.side) : "—") + "</span><span>" +
+      esc(share) + "</span><span>" + moved + "</span><span>" + esc(exits) +
+      '</span><span class="nx-state nx-' + esc(state.split(" ").join("-")) + '">' +
+      esc(state) + "</span></div>";
+  }).join("");
+  return '<div class="nx-sec">Configuration</div><div class="nx-table nx-legs">' +
+    '<div class="nx-tr nx-th"><span>Card</span><span>Side</span><span>Share</span>' +
+    "<span>Entry → now</span><span>Take profit / stop</span><span>State</span></div>" +
+    rows + (np.reserve != null
+      ? '<div class="nx-tr nx-dim"><span>Reserve</span><span></span><span>' +
+        esc(nxShare(np.reserve)) + "</span><span></span><span></span><span></span></div>"
+      : "") + "</div>";
+}
+// One chart per card that has an index: the entry and Nexus's exits across it
+// when it was bought; when it was not, where it stood when Nexus proposed it
+// and how it moved since -- what would have happened, and said so.
+function nxLegCharts(np) {
+  return (np.legs || []).filter(nl => (nl.series || []).length >= 2).map(nl => {
+    const bought = nl.entry != null;
+    const refs = [];
+    if (bought) {
+      refs.push({ v: nl.entry, label: "entry " + nxLevel(nl.entry), kind: "entry" });
+    } else if (nl.at_proposal != null) {
+      refs.push({ v: nl.at_proposal, label: "proposed " + nxLevel(nl.at_proposal),
+                  kind: "base" });
+    }
+    if (nl.tp_level != null) {
+      refs.push({ v: nl.tp_level, label: "TP " + nxLevel(nl.tp_level), kind: "tp" });
+    }
+    if (nl.sl_level != null) {
+      refs.push({ v: nl.sl_level, label: "SL " + nxLevel(nl.sl_level), kind: "sl" });
+    }
+    const order = bought ? (np.trades || []).find(nt => nt.card === nl.card &&
+                                                        nt.outcome === "accepted") : null;
+    const head = nxLegName(nl) + (bought ? " index" : " index · not bought");
+    const note = bought
+      ? (nl.pnl != null ? "P&L " + nxSigned(nl.pnl) + " USDC" : "")
+      : "if bought when proposed: " + nxPct(nl.since_proposal, 2);
+    return '<div class="nx-ct"><span>' + esc(head) + "</span><small>" + esc(note) +
+      "</small></div>" + nxChart(nl.series, {
+        refs: refs, label: head,
+        vline: bought ? (order ? { t: order.at, label: "bought" } : null)
+                      : (np.proposed_at ? { t: np.proposed_at, label: "Nexus proposed" }
+                                        : null) });
+  }).join("");
+}
+function nxOrders(np) {
+  const orders = np.trades || [];
+  if (!orders.length) return "";
+  const legOf = card => (np.legs || []).find(nl => nl.card === card);
+  return '<div class="nx-sec">Orders</div><div class="nx-table nx-orders">' +
+    '<div class="nx-tr nx-th"><span>Order</span><span>When</span><span>What</span>' +
+    "<span>State</span></div>" + orders.map(nt => {
+      const leg = legOf(nt.card);
+      const state = nt.outcome !== "accepted" ? (nt.outcome || "no outcome recorded")
+        : nt.closed_by ? "closed " + nxSigned(nt.realized) + " USDC" : "open";
+      return '<div class="nx-tr"><span>' + esc(nt.id) + '</span><span class="nx-dim">' +
+        esc(nxDay(nt.at)) + "</span><span>" + esc((nt.side || "buy") + " · " +
+        nxMoney(nt.usdc) + " USDC · " + (leg ? nxLegName(leg) : nxShort(nt.card, 9))) +
+        '</span><span class="nx-state' + (state === "open" ? " nx-open"
+          : nt.outcome !== "accepted" ? " nx-card-not-found" : "") + '">' + esc(state) +
+        "</span></div>";
+    }).join("") + "</div>";
+}
+function nxCardTiles(np) {
+  const legs = np.legs || [];
+  const closes = np.closes_at ? nxDay(np.closes_at) + " UTC" : "";
+  // Every leg counted by where it stands, so a card they no longer have is
+  // counted too: "2 not bought · 1 card not found".
+  const states = {};
+  legs.forEach(nl => { states[nl.state] = (states[nl.state] || 0) + 1; });
+  const told = Object.entries(states).map(([word, n]) => n + " " + word).join(" · ");
+  if ((np.invested || 0) > 0) {
+    const proposed = np.proposed_share != null && np.bankroll
+      ? np.proposed_share * np.bankroll : null;
+    return nxTiles([
+      ["P&L", np.pnl != null ? nxSigned(np.pnl) + " USDC" : "—",
+       np.pnl_pct != null ? nxPct(np.pnl_pct, 2) + " on what went in" : "", nxTone(np.pnl)],
+      ["Invested", nxMoney(np.invested),
+       proposed != null ? "of " + nxMoney(proposed) + " proposed" : "USDC", ""],
+      ["Value now", np.value != null ? nxMoney(np.value) : "—", "USDC", ""],
+      ["Card closes", nxUntil(np.closes_at) || "—", closes, ""]]);
+  }
+  return nxTiles([
+    ["Proposed", np.proposed_share != null ? nxShare(np.proposed_share) : "—",
+     np.bankroll ? "of " + nxMoney(np.bankroll) + " USDC" : "of the account", ""],
+    ["If bought then", nxPct(np.if_bought_pct, 2), "since Nexus proposed it",
+     nxTone(np.if_bought_pct)],
+    ["Cards", legs.length, told, ""],
+    ["Closes first", nxUntil(np.closes_at) || "—", closes, ""]]);
+}
+// A bot: what it is, the indicators it trades on, its P&L with each of its
+// trades on the line, and the trades themselves.
+function nxBot(nc) {
+  const cfg = nc.config || {};
+  const chips = list => (list || []).map(ind => '<span class="nx-chip" title="' +
+    esc(nxParams(ind && ind.params)) + '">' + esc((ind && ind.name) || "?") +
+    "</span>").join("");
+  const mode = cfg.execution_class
+    ? String(cfg.execution_class).toLowerCase().split("_").join(" ")
+    : nc.paper === false ? "LIVE" : "paper";
+  const pairs = [["Bot", nc.name],
+                 ["Clone of", [nc.source, nc.symbol].filter(Boolean).join(" · ")],
+                 ["Strategy", cfg.strategy_type || nc.strategy],
+                 ["Risk", cfg.risk_profile || nc.risk], ["Mode", mode]]
+    .filter(([, v]) => v);
+  const acts = nc.activity || [];
+  const series = (nc.samples || []).filter(ns => ns.pnl != null).map(ns => [ns.at, ns.pnl]);
+  // Where the line stands at a trade's moment, between the two samples around
+  // it, so each dot sits on the line rather than above a drop it caused.
+  const valueAt = when => {
+    const t = Date.parse(when);
+    let prev = null;
+    for (const p of series) {
+      const at = Date.parse(p[0]);
+      if (at >= t) {
+        if (!prev || at === t) return p[1];
+        const from = Date.parse(prev[0]);
+        return prev[1] + (p[1] - prev[1]) * (t - from) / ((at - from) || 1);
+      }
+      prev = p;
+    }
+    return prev ? prev[1] : null;
+  };
+  const marks = acts.map(na => na.is_closed && na.closed_at
+    ? { t: na.closed_at, v: valueAt(na.closed_at),
+        kind: Number(na.profit_usdc) < 0 ? "loss" : "open",
+        title: (na.symbol || "?") + " " + (na.trade_type || "") + " closed " +
+               nxSigned(na.profit_usdc) + " USDC" }
+    : { t: na.executed_at, v: valueAt(na.executed_at), kind: "open",
+        title: (na.symbol || "?") + " " + (na.trade_type || "") + " " +
+               nxMoney(na.amount_usdc) + " USDC, open" });
+  return '<div class="nx-sec">Configuration</div><div class="nx-kv">' +
+    pairs.map(([k, v]) => "<div><span>" + esc(k) + "</span>" + esc(v) + "</div>").join("") +
+    "</div>" +
+    ((cfg.primary_indicators || []).length
+      ? '<div class="nx-chips"><span>Primary</span>' + chips(cfg.primary_indicators) +
+        "</div>" : "") +
+    ((cfg.secondary_indicators || []).length
+      ? '<div class="nx-chips"><span>Secondary</span>' + chips(cfg.secondary_indicators) +
+        "</div>" : "") +
+    (series.length >= 2
+      ? '<div class="nx-ct"><span>P&amp;L since it was switched on</span><small>' +
+        esc(nc.win_rate != null ? "win rate " + nc.win_rate + " %" : "") + "</small></div>" +
+        nxChart(series, { marks: marks, format: nxSigned, label: "The bot's P&L over time" })
       : "") +
-    "<h4>Strategies</h4>" +
-    (strategies.length
-      ? strategies.map(nr => '<button type="button" class="nx-pf" data-room="' +
-          esc(nr.id) + '">' + nxGlyph(nr.status) + " <b>" + esc(nr.id) + "</b> " +
-          esc(nr.title || "") + "<span>" + esc(nr.status || "") + " · " +
-          esc(nxHeadline(((NX && NX.panels) || {})[nr.id] || {})) + "</span></button>").join("")
-      : '<p class="nx-foot">A strategy Nexus proposes opens as a room of its own.</p>') +
-    "<h4>Their API</h4>" + nxSampler(np);
+    (acts.length
+      ? '<div class="nx-sec">Its trades</div><div class="nx-table nx-trades">' +
+        '<div class="nx-tr nx-th"><span>Symbol</span><span>Type</span><span>USDC</span>' +
+        "<span>Result</span><span>When</span></div>" + acts.map(na =>
+          '<div class="nx-tr"><span><b>' + esc(na.symbol || "?") + "</b> · " +
+          esc(na.side || "") + "</span><span>" + esc(na.trade_type || "") + "</span><span>" +
+          esc(nxMoney(na.amount_usdc)) + "</span>" + (na.is_closed
+            ? '<span class="' + nxTone(na.profit_usdc).trim() + '">' +
+              esc(nxSigned(na.profit_usdc)) + " · closed" +
+              (na.exit_reason ? "<small>" + esc(na.exit_reason) + "</small>" : "") + "</span>"
+            : '<span class="nx-dim">open</span>') +
+          '<span class="nx-dim">' + esc(nxDay(na.executed_at)) + "</span></div>").join("") +
+        "</div>"
+      : "");
 }
-function nxStrategy(np) {
-  const trades = np.trades || [], bots = np.clones || [], moves = np.history || [];
-  let html = "<h4>" + nxGlyph(np.status) + " " + esc(np.status || "proposed") + "</h4>" +
-    '<p class="nx-why">' + (np.why ? esc(np.why)
-      : "Nexus proposed it and nothing has been done about it yet.") + "</p>" +
-    '<p class="nx-foot">Since ' + esc(stamp(np.since)) + " · opened from " +
-    esc(np.origin || "") + "</p>";
-  if (trades.length) {
-    html += "<h4>Card orders</h4>" +
-      nxCells([["USDC in", nxMoney(np.staked)], ["no close", np.unclosed],
-               ["realized", np.realized == null ? null : nxMoney(np.realized)]]) +
-      trades.map(nt => '<div class="nx-row"><b>' + esc(nt.id) + "</b> · " +
-        esc(nt.side || "side unknown") + " · " + nxMoney(nt.usdc) + " USDC · card " +
-        esc(nxShort(nt.card, 9)) +
-        (nt.entry != null ? " · entry " + esc(Number(nt.entry).toFixed(2)) : "") +
-        "<span>" + (nt.outcome !== "accepted" ? esc(nt.outcome || "no outcome recorded")
-          : nt.closed_by ? "closed by " + esc(nt.closed_by) + ", realized " +
-                           nxMoney(nt.realized) + " USDC"
-          : "no close recorded") + "</span>" +
-        (nt.live_status ? "<span>Their side: " + esc(nt.live_status) +
-          (nt.current_index != null ? " · index " + esc(Number(nt.current_index).toFixed(2)) : "") +
-          (nt.unrealized != null ? " · unrealized " + nxMoney(nt.unrealized) + " USDC" : "") +
-          " · read " + esc(stamp(nt.live_at)) + "</span>" : "") +
-        nxSpark((nt.series || []).map(point => point[1]), nt.entry) + "</div>").join("");
+// Why a strategy stands where it does, and every time it moved: there, a click
+// away, and never the first thing on the screen.
+function nxFolded(np) {
+  const word = String(NX_WORD[np.status] || np.status || "proposed").toLowerCase();
+  const moves = np.history || [];
+  return '<div class="nx-why">' +
+    (np.why ? "<details><summary>Why it is " + esc(word) + "</summary><p>" +
+              esc(np.why) + "</p></details>" : "") +
+    (moves.length ? "<details><summary>How it moved · " + moves.length + " change" +
+      (moves.length === 1 ? "" : "s") + "</summary>" + moves.map(nh => "<p>" +
+        nxGlyph(nh.status) + " " + esc(nh.status || "") + " · " + esc(nxDay(nh.at)) +
+        (nh.why ? " — " + esc(nh.why) : "") + "</p>").join("") + "</details>" : "") +
+    nxSampler(np) + "</div>";
+}
+function nxStrategy(nr, np) {
+  const nc = (np.clones || [])[0] || null;
+  const pills = nxPill(np.status) +
+    (np.holds ? '<span class="nx-pill">' + esc(NX_HOLDS[np.holds] || np.holds) +
+                " · paper</span>" : "") +
+    (nc && nc.trading != null ? '<span class="nx-pill">' +
+      (nc.trading ? "trading" : "not trading") + "</span>" : "");
+  const sub = esc(nr.id) + " · proposed by Nexus in " + esc(np.origin || "—") +
+    (np.since ? " · since " + esc(nxDay(np.since)) : "");
+  let html = nxHero(np.title || nr.title || nr.id, pills, sub);
+  if (nc) {
+    const acts = nc.activity || [];
+    const closed = acts.filter(na => na.is_closed).length;
+    html += nxTiles([
+      ["P&L", nc.pnl != null ? nxSigned(nc.pnl) + " USDC" : "—",
+       nc.pnl != null && nc.funded ? nxPct(nc.pnl / nc.funded * 100) + " of what it was given"
+                                   : "", nxTone(nc.pnl)],
+      ["Balance", nxMoney(nc.balance), nc.locked != null
+        ? nxMoney(nc.locked) + " locked · " + nxMoney(nc.available) + " free" : "", ""],
+      ["Funded", nxMoney(nc.funded), "USDC", ""],
+      ["Trades", acts.length || nc.trades || 0,
+       acts.length ? closed + " closed · " + (acts.length - closed) + " open" : "", ""]]) +
+      nxBot(nc);
+  } else if ((np.legs || []).length) {
+    html += nxCardTiles(np);
   }
-  html += bots.map(nc => "<h4>Bot · " + esc(nc.name || nc.id) + "</h4>" +
-    '<p class="nx-foot">' + esc([nc.source, nc.symbol, nc.strategy,
-                                 nc.risk ? nc.risk + " risk" : "",
-                                 nc.paper === true ? "paper" : nc.paper === false ? "LIVE" : ""]
-                                .filter(Boolean).join(" · ")) + "</p>" +
-    nxCells([["balance", nxMoney(nc.balance)], ["P&L", nxMoney(nc.pnl)],
-             ["trades", nc.trades], ["funded", nxMoney(nc.funded)],
-             ["locked", nxMoney(nc.locked)], ["available", nxMoney(nc.available)],
-             ["trading", nc.trading == null ? null : (nc.trading ? "yes" : "no")],
-             ["win rate", nc.win_rate == null ? null : nc.win_rate + " %"]]) +
-    nxSpark((nc.samples || []).map(ns => ns.balance)) +
-    (nc.config ? '<p class="nx-foot">Indicators: ' +
-      nxIndicators(nc.config.primary_indicators) +
-      ((nc.config.secondary_indicators || []).length
-        ? " · also " + nxIndicators(nc.config.secondary_indicators) : "") +
-      (nc.config.execution_class ? " · " + esc(nc.config.execution_class) : "") + "</p>" : "") +
-    (nc.activity || []).slice(0, 8).map(na => '<div class="nx-row">' +
-      esc(na.symbol || "?") + " · " + esc(na.side || "") + " · " + esc(na.trade_type || "") +
-      " · " + nxMoney(na.amount_usdc) + " USDC<span>" +
-      (na.is_closed ? "closed, " + nxMoney(na.profit_usdc) + " USDC" +
-                      (na.exit_reason ? " (" + esc(na.exit_reason) + ")" : "")
-                    : "open since " + esc(stamp(na.executed_at))) + "</span></div>").join("") +
-    '<p class="nx-foot">' + (nc.sampled_at
-      ? "Last sample " + esc(stamp(nc.sampled_at)) + ", " + (nc.samples || []).length +
-        " in all."
-      : "Never sampled.") + "</p>").join("");
-  if (moves.length) {
-    html += "<h4>How it moved</h4>" + moves.map(nh => '<div class="nx-row">' +
-      nxGlyph(nh.status) + " " + esc(nh.status || "") + " · " + esc(stamp(nh.at)) +
-      "<span>" + esc(nh.why || "") + "</span></div>").join("");
+  if ((np.legs || []).length) {
+    html += nxLegs(np) + nxLegCharts(np) + nxOrders(np);
+  } else if (!nc) {
+    html += '<p class="nx-foot">Nothing bought yet, and no plan written down for it.</p>';
   }
-  return html + nxSampler(np);
+  return html + nxFolded(np);
+}
+function nxPanelOf(id) {
+  return ((NX && NX.panels) || {})[id] || {};
+}
+function nxBotValue(nr) {
+  const np = nxPanelOf(nr.id);
+  return np.value;
+}
+// The overview: the account, every strategy with where it stands, and how
+// Nexus has answered so far.
+function nxGeneral(np) {
+  const rooms = ((NX && NX.rooms) || []).filter(nr => nr.kind === "strategy");
+  const count = status => rooms.filter(nr => nr.status === status).length;
+  const bots = rooms.filter(nr => nr.holds === "bot");
+  const inBot = bots.reduce((sum, nr) => sum + (Number(nxBotValue(nr)) || 0), 0);
+  const quiet = (np.partial || 0) + (np.failed || 0) + (np.refused || 0);
+  const table = rooms.map(nr => '<div class="nx-tr"><span><button type="button" ' +
+    'class="nx-pf" data-room="' + esc(nr.id) + '">' + esc(nr.title || nr.id) +
+    "</button></span><span>" + esc(NX_HOLDS[nr.holds] || "—") + "</span><span>" +
+    nxPill(nr.status) + "</span><span>" + (nr.invested ? esc(nxMoney(nr.invested)) + " USDC"
+      : nr.proposed_share != null ? esc(nxShare(nr.proposed_share)) + " proposed" : "—") +
+    '</span><span class="' + nxTone(nr.pnl).trim() + '">' +
+    (nr.pnl != null ? esc(nxSigned(nr.pnl)) + " USDC"
+      : nr.if_bought_pct != null ? "if bought " + esc(nxPct(nr.if_bought_pct, 2)) : "—") +
+    "</span></div>").join("");
+  return nxHero("Overview", "", "Every question put to Nexus, and every strategy it proposed") +
+    nxTiles([
+      ["Free to trade", np.balance != null ? nxMoney(np.balance) : "—",
+       np.balance_at ? "USDC, as of " + nxDay(np.balance_at) : "USDC, paper", ""],
+      ["In cards", np.notional != null ? nxMoney(np.notional) : "—",
+       np.book_trades != null ? np.book_trades + " orders on the account" : "", ""],
+      ["In the bot", bots.length ? nxMoney(inBot) : "—",
+       bots.length ? bots.map(nr => nr.title || nr.id).join(", ") : "no bot", ""],
+      ["Strategies", rooms.length, count("running") + " running · " + count("proposed") +
+       " proposed" + (count("paused") ? " · " + count("paused") + " paused" : ""), ""]]) +
+    '<div class="nx-sec">Strategies</div>' + (rooms.length
+      ? '<div class="nx-table nx-strats"><div class="nx-tr nx-th"><span>Strategy</span>' +
+        "<span>Holds</span><span>State</span><span>In</span><span>P&amp;L</span></div>" +
+        table + "</div>"
+      : '<p class="nx-foot">A strategy Nexus proposes opens as a card of its own, above.</p>') +
+    '<div class="nx-sec">Nexus, every question so far</div>' +
+    nxTiles([
+      ["Asked", np.asked || 0, "", ""],
+      ["Answered", np.answered || 0,
+       np.asked ? Math.round((np.answered || 0) / np.asked * 100) + " % of them" : "", ""],
+      ["Typical answer", np.median_seconds != null ? nxSecs(np.median_seconds) : "—", "", ""],
+      ["No answer", quiet, (np.partial || 0) + " cut short · " + (np.failed || 0) +
+       " gave up · " + (np.refused || 0) + " refused", quiet ? " nx-down" : ""]]) +
+    '<div class="rely-strip">' + (np.strip || []).map(o =>
+      '<i class="sq ' + esc(o) + '" title="' + esc(o) + '"></i>').join("") + "</div>" +
+    '<p class="nx-foot rely-legend">' + [["answered", "answered"], ["partial", "cut short"],
+      ["failed", "gave up"], ["refused", "refused"], ["waiting", "waiting"]].map(
+      ([cls, word]) => '<i class="sq ' + cls + '"></i>' + word).join(" &nbsp; ") + "</p>" +
+    '<div class="nx-why">' + nxSampler(np) + "</div>";
 }
 function nxPanel(nr, np) {
-  return nr && nr.kind === "strategy" ? nxStrategy(np) : nxGeneral(np);
+  return nr && nr.kind === "strategy" ? nxStrategy(nr, np) : nxGeneral(np);
 }
-function nxHeader(nr) {
-  return '<h3 class="nx-title">' + (nr.kind === "strategy" ? esc(nr.id) + " · " : "") +
-    esc(nr.title || nr.id) + "</h3>";
+// One card per room across the top: where it stands, what it holds, its name,
+// and the one number that says how it is doing.
+function nxCard(nr, current) {
+  const fresh = nxFresh(nr.id);
+  const badge = fresh ? '<span class="nx-badge" title="new since you last looked">' +
+    fresh + "</span>" : "";
+  const on = nr.id === current ? " on" : "";
+  if (nr.kind !== "strategy") {
+    const np = nxPanelOf(nr.id);
+    return '<button type="button" class="nx-card' + on + '" data-room="' + esc(nr.id) + '">' +
+      '<span class="nx-card-top">Everything</span><span class="nx-card-name">Overview</span>' +
+      '<span class="nx-card-num">' + esc(String(np.asked || 0)) + " questions to Nexus</span>" +
+      badge + "</button>";
+  }
+  const number = nr.pnl != null
+    ? '<span class="nx-card-num' + nxTone(nr.pnl) + '">' + esc(nxSigned(nr.pnl)) +
+      " USDC</span>"
+    : '<span class="nx-card-num">' + (nr.proposed_share != null
+        ? esc(nxShare(nr.proposed_share)) + " of account" : "nothing bought") + "</span>";
+  return '<button type="button" class="nx-card' + on + '" data-room="' + esc(nr.id) +
+    '" title="' + esc(nr.id) + '"><span class="nx-card-top">' + nxPill(nr.status) +
+    (nr.holds ? "<span>" + esc(NX_HOLDS[nr.holds] || nr.holds) + "</span>" : "") +
+    '</span><span class="nx-card-name">' + esc(nr.title || nr.id) + "</span>" + number +
+    badge + "</button>";
 }
 
 // What arrived since the operator last looked at a room: Nexus's replies and
@@ -3360,6 +3785,21 @@ function nxFresh(id) {
     Date.parse(nm.at) > seen).length;
 }
 
+// The room drawn last, so a redraw can tell a switch of room -- which opens at
+// the newest message -- from a refresh, which leaves the reader where they
+// were. A redraw lands every few seconds while notes and samples arrive, and a
+// thread that jumped each time could not be read.
+let NX_SHOWN = null, nxResizing = null;
+// The two columns fill the window under the strip, so the composer sits at the
+// bottom of the screen and the thread scrolls above it.
+function nxFit() {
+  const main = document.getElementById("nxMain");
+  if (!main || !main.style || typeof main.getBoundingClientRect !== "function") return;
+  if ((window.innerWidth || 0) < 1100) { main.style.height = ""; return; }
+  const top = main.getBoundingClientRect().top + (window.scrollY || 0);
+  main.style.height = Math.max(480, Math.round((window.innerHeight || 0) - top - 18)) + "px";
+}
+
 function renderRooms(data) {
   NX = data || { rooms: [], threads: {}, panels: {} };
   const rooms = NX.rooms || [];
@@ -3370,28 +3810,35 @@ function renderRooms(data) {
     const newest = thread.reduce((n, nm) => Math.max(n, Date.parse(nm.at || "") || 0), 0);
     writeStore("qa.roomSeen." + current, newest);
   }
-  document.getElementById("roomList").innerHTML = rooms.map(nr => {
-    const fresh = nxFresh(nr.id);
-    const name = nr.kind === "strategy"
-      ? nxGlyph(nr.status) + " " + esc(nr.id) + " · " + esc(nr.title || "")
-      : esc(nr.title || nr.id);
-    return '<button type="button" class="nx-room' + (nr.id === current ? " on" : "") +
-      '" data-room="' + esc(nr.id) + '"><span class="nx-rt">' + name +
-      "</span>" + (fresh ? '<span class="nx-badge">' + fresh + "</span>" : "") + "</button>";
-  }).join("");
+  document.getElementById("roomList").innerHTML =
+    rooms.map(nr => nxCard(nr, current)).join("");
   const shown = rooms.find(nr => nr.id === current) ||
     { id: "general", title: "General", kind: "general" };
-  document.getElementById("roomChat").innerHTML = nxHeader(shown) +
-    (thread.length ? thread.map(nm => nxBubble(nm, current)).join("")
-                   : '<div class="empty">Nothing here yet.</div>');
-  document.getElementById("roomPanel").innerHTML =
-    nxPanel(shown, (NX.panels || {})[current] || {});
+  const chat = document.getElementById("roomChat");
+  const panel = document.getElementById("roomPanel");
+  const switched = NX_SHOWN !== current;
+  const atEnd = !chat.scrollHeight ||
+    chat.scrollHeight - chat.scrollTop - chat.clientHeight < 60;
+  const chatAt = chat.scrollTop, panelAt = panel.scrollTop;
+  nxFit();
+  chat.innerHTML = thread.length ? thread.map(nm => nxBubble(nm, current)).join("")
+                                 : '<div class="empty">Nothing here yet.</div>';
+  chat.scrollTop = switched || atEnd ? chat.scrollHeight : chatAt;
+  panel.innerHTML = nxPanel(shown, (NX.panels || {})[current] || {});
+  panel.scrollTop = switched ? 0 : panelAt || 0;
+  NX_SHOWN = current;
   const total = rooms.reduce((n, nr) => n + nxFresh(nr.id), 0);
   const badge = document.getElementById("nexusN");
   if (badge) { badge.textContent = total ? String(total) : ""; badge.hidden = !total; }
   nxBindComposer(current);
 }
 window.renderRooms = renderRooms;
+window.addEventListener("resize", () => {
+  clearTimeout(nxResizing);
+  nxResizing = setTimeout(() => {
+    if (NX && !document.getElementById("panel-nexus").hidden) renderRooms(NX);
+  }, 150);
+});
 
 // The one line the tab says about itself: why it is empty, or nothing. It is a
 // status, not a mark the operator can clear, so it shows exactly when there is
@@ -3539,9 +3986,14 @@ function showTab(name) {
   // mean" rather than becoming a fifth tab.
   const help = document.getElementById("panel-help");
   if (help) help.hidden = name !== "legend";
+  // The Nexus tab is a chat beside a dashboard and takes the whole width;
+  // every other tab keeps the column it reads best in.
+  const wrap = document.getElementById("wrap");
+  if (wrap) wrap.dataset.tab = name;
   writeStore("qa.tab", name);
-  if (name === "nexus") loadRooms();
+  if (name === "nexus") { NX_SHOWN = null; loadRooms(); }
 }
+window.showTab = showTab;
 document.getElementById("tabs").addEventListener("click", e => {
   const b = e.target.closest("button");
   if (b) showTab(b.dataset.tab);

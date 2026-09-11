@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "console-preview",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["scripts/serve.py", "--port", "8791"],
+      "port": 8791
+    }
+  ]
+}

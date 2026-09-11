@@ -213,8 +213,8 @@ def test_the_tab_reads_no_field_the_rooms_do_not_write(tmp_path, monkeypatch):
     that. The rooms arrive by fetch and never pass through that guard, so the
     tab names its own shapes -- `nm.` a message, `nr.` a room, `np.` a panel,
     and inside a strategy's panel `nt.` a trade, `nh.` a change of status,
-    `nc.` a bot and `ns.` one of its samples -- and this holds each against
-    what build_rooms() actually writes.
+    `nl.` a leg of its plan, `nc.` a bot and `ns.` one of its samples -- and
+    this holds each against what build_rooms() actually writes.
     """
     import re
 
@@ -256,6 +256,7 @@ def test_the_tab_reads_no_field_the_rooms_do_not_write(tmp_path, monkeypatch):
         "nc": {k for c in bots for k in c},
         "ns": {k for c in bots for s in c.get("samples") or [] for k in s},
         "na": {k for c in bots for a in c.get("activity") or [] for k in a},
+        "nl": {k for p in panels for leg in p.get("legs") or [] for k in leg},
     }
     for name, keys in written.items():
         read = set(re.findall(rf"\b{name}\.([a-z_]+)\b", render.TEMPLATE))
@@ -947,22 +948,22 @@ def test_a_strategy_room_draws_its_book_and_its_bot_and_general_the_portfolio(
 
     strategy = drawn("STR-0001")
     panel = strategy.get("roomPanel", "")
-    assert "running" in panel and "TRD-0001 koupil 10 000 USDC" in panel
-    assert "TRD-0001" in panel and "10 000" in panel and "no close recorded" in panel
+    assert "Running" in panel and "TRD-0001 koupil 10 000 USDC" in panel
+    assert "TRD-0001" in panel and "10 000" in panel
     assert "QA Perceptron paper" in panel and "<polyline" in panel, (
-        "the bot, or the line of its samples, is not in the panel")
+        "the bot, or the line of its P&L, is not in the panel")
     drawn_text = strategy.get("roomList", "") + strategy.get("roomChat", "")
     assert "&lt;script&gt;" in drawn_text and "<script" not in drawn_text.lower()
     # What the sampler read: the bot's indicators and its trades, what is
     # locked in them, and the card's index since the order went in.
-    assert "rsi" in panel and "ETH" in panel and "available" in panel, (
+    assert "rsi" in panel and "ETH" in panel and "locked" in panel, (
         "the bot's configuration, trades or balance split is not in the panel")
     assert panel.count("<polyline") >= 2, "the card's index line is not drawn"
 
     general = drawn("general").get("roomPanel", "")
-    assert "89 000.96" in general, "General does not show the paper account"
-    assert "STR-0001" in general and "running" in general, (
-        "General does not list the strategies and where each stands")
+    assert "89 000.96" in general, "the overview does not show the paper account"
+    assert 'data-room="STR-0001"' in general and "Running" in general, (
+        "the overview does not list the strategies and where each stands")
     assert "stale" in general, (
         "a sampler whose last round is hours old is not called stale on the page")
 
@@ -1128,6 +1129,142 @@ def test_a_plan_leg_meets_its_order_its_card_and_where_it_stood_when_proposed(
         "not bought", None, None, None), "a leg the sampler has not described is lost"
 
     assert (panel["holds"], panel["invested"], panel["pnl"]) == ("cards", 10000.0, 14.48)
-    assert panel["closes_at"] == "2026-09-12T07:44:00+00:00", (
-        "the card that closes first is not the one the panel counts down to")
+    # The countdown is to the card that is held, not to one nobody bought that
+    # happens to close first -- with nothing held, to the first proposed one.
+    assert panel["closes_at"] == "2026-09-12T23:14:22+00:00", (
+        "the panel counts down to a card that is not held")
     assert (panel["proposed_share"], panel["reserve"]) == (0.35, 0.65)
+
+
+# ---------------------------------------------------------------------------
+# The page: a strip of named strategies, the chat beside a panel of numbers
+# ---------------------------------------------------------------------------
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_composer_sits_under_the_thread_never_over_it():
+    """The first thing the operator said about the tab, 2026-09-11: the box they
+    write in covered the end of the conversation. It was `position: sticky` over
+    a thread that scrolled with the page. The thread now scrolls inside its own
+    column, and the composer is the next thing in that column."""
+    import re
+
+    template = _render().TEMPLATE
+    rules = re.findall(r"([^{}]*\.nx-compose[^{}]*)\{([^}]*)\}", template)
+    assert rules, "there is no rule for the composer at all"
+    for selector, body in rules:
+        assert not re.search(r"position\s*:\s*(sticky|fixed|absolute)", body), (
+            f"{selector.strip()} floats the composer over the thread: {body}")
+    chats = [body for selector, body in re.findall(r"([^{}]*)\{([^}]*)\}", template)
+             if selector.strip() == ".nx-chat"]
+    assert len(chats) == 1, f"the thread has {len(chats)} rules; one is its own"
+    assert re.search(r"overflow-y\s*:\s*auto", chats[0]), (
+        f"the thread does not scroll on its own, so the page does: {chats[0]}")
+    column = template.index('class="nx-chatcol"')
+    assert (column < template.index('id="roomChat"') < template.index('id="nxCompose"')
+            < template.index('id="roomPanel"')), (
+        "the thread and the composer are not one column with the panel beside it")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_nexus_tab_takes_the_whole_screen_and_the_others_keep_their_width(
+        tmp_path):
+    """The rest of the console reads best as a column. The Nexus tab is a chat
+    beside a dashboard, and on the operator's screen it had a third of the width
+    it could have had. The switch is the tab itself: showTab marks #wrap, and
+    one rule widens the page only while the Nexus tab is shown."""
+    import re
+
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("node is not installed, so the page cannot be run here")
+    if not (REPO / "state" / "ledger.json").exists():
+        pytest.skip("no committed ledger, so there is no page to run")
+    template = _render().TEMPLATE
+    # The harness makes any element it is asked for, so the markup is held too.
+    assert '<div class="wrap" id="wrap">' in template, (
+        "the page has no #wrap, so the tab has nothing to widen")
+    assert re.search(r'\.wrap\[data-tab="nexus"\]\s*\{[^}]*max-width\s*:\s*none',
+                     template), "no rule widens the page while the Nexus tab is shown"
+    code, err, captured = _run_page(
+        node, tmp_path, _live_payload(_render()),
+        after='window.showTab("nexus");\n'
+              'document.getElementById("probe-a").innerHTML = '
+              'document.getElementById("wrap").dataset.tab;\n'
+              'window.showTab("findings");\n'
+              'document.getElementById("probe-b").innerHTML = '
+              'document.getElementById("wrap").dataset.tab;')
+    assert code == 0, f"the page throws when the tab is switched:\n{err[:900]}"
+    assert (captured.get("probe-a"), captured.get("probe-b")) == ("nexus", "findings")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_strip_names_each_strategy_and_its_panel_leads_with_numbers(
+        tmp_path, monkeypatch):
+    """The operator's other two complaints: rooms named by number, and a panel
+    that had to be read. The strip gives a strategy's name, where it stands and
+    its one number. The panel opens on the name and four figures; the
+    configuration is a table; the chart draws the entry and Nexus's exits as
+    lines, and a leg nobody bought is labelled as what would have happened.
+    Why it stands where it does is a click away -- folded, never the first
+    thing on screen."""
+    import re
+
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("node is not installed, so the page cannot be run here")
+    if not (REPO / "state" / "ledger.json").exists():
+        pytest.skip("no committed ledger, so there is no page to run")
+    state = tmp_path / "state"
+    state.mkdir()
+    rooms = _rooms_at(state, monkeypatch)
+    _write(state / "nexus.jsonl", _answered("NEX-1", 0))
+    _write(state / "paper.jsonl", _buy("TRD-0001", 900, "NEX-1", usdc=10000.0,
+                                       card=CARD_A))
+    _write(state / "samples.jsonl", [
+        {"type": "tick", "at": _at(950), "every": 600, "ok": True, "reads": {}},
+        _card(CARD_A, 950, [("BCH", 0.685), ("OKB", 0.315)],
+              closes="2026-09-12T23:14:22+00:00"),
+        _card(CARD_B, 950, [("BTC", 0.996), ("ETH", 0.004)],
+              closes="2026-09-12T07:44:00+00:00"),
+        _index(CARD_A, 950, [(30, 99.0), (900, 92.3), (950, 92.42)]),
+        _index(CARD_B, 950, [(30, 97.0), (60, 97.36), (950, 98.0)]),
+        {"type": "sample", "kind": "position", "at": _at(950), "position_id": "P-1",
+         "card_id": CARD_A, "status": "open", "current_index": 92.42,
+         "current_value_usdc": 10014.48, "unrealized_pnl_usdc": 14.48,
+         "realized_pnl_usdc": 0.0},
+    ])
+    rooms.open_strategy("NEX-1", "BTC 20 % + BCH-blend 10 %")
+    rooms.set_title("STR-0001", "BTC + BCH blend")
+    rooms.set_plan("STR-0001", [
+        {"card": CARD_B, "side": "bull", "share": 0.2, "tp": 8.0, "sl": -5.0},
+        {"card": CARD_A, "side": "bull", "share": 0.1, "tp": 13.0, "sl": -9.0}],
+        reserve=0.7, bankroll=100000.0)
+    why = "Koupeno TRD-0001 za 10 000 USDC; Nexus dal TP +13 % a SL -9 %."
+    rooms.set_status("STR-0001", "running", why)
+    view = _render().build_rooms()
+    monkeypatch.delenv("QA_STATE_DIR", raising=False)
+    code, err, captured = _run_page(
+        node, tmp_path / "page", _live_payload(_render()),
+        after='localStorage.setItem("qa.room", "STR-0001");\n'
+              f"window.renderRooms({json.dumps(view)});")
+    assert code == 0, f"the page throws when it draws the strategy:\n{err[:900]}"
+
+    strip = re.sub(r"<[^>]+>", " ", captured.get("roomList", ""))
+    assert "BTC + BCH blend" in strip and "Running" in strip and "+14" in strip, strip
+    assert "STR-0001" not in strip, "the strip still names a strategy by its number"
+
+    panel = captured.get("roomPanel", "")
+    assert panel.index("BTC + BCH blend") < panel.index("nx-tile"), (
+        "the panel does not open on the strategy's name")
+    text = re.sub(r"<[^>]+>", " ", panel)
+    for figure in ("+14", "10 000", "68 % BCH · 32 % OKB", "BTC", "not bought",
+                   "92.28", "+13 %"):
+        assert figure in text, f"{figure!r} is not on the panel"
+    for ref in ("entry", "tp", "sl", "base"):
+        assert f'data-ref="{ref}"' in panel, f"the chart draws no {ref} line"
+    assert "if bought" in text, (
+        "a leg nobody bought is not labelled as what would have happened")
+    places = [m.start() for m in re.finditer(re.escape(why), panel)]
+    assert places, "why the strategy stands where it does is not on the panel at all"
+    for at in places:
+        assert panel.rfind("<details", 0, at) > panel.rfind("</details>", 0, at), (
+            "why the strategy stands where it does is on screen, not folded")
