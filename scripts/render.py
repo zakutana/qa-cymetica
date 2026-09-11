@@ -377,8 +377,14 @@ def _stats(ledger: dict, run: dict, events: list[dict]) -> dict:
         from qa import channels as channels_mod
 
         comparison = channels_mod.compare(events)
+        # One entry per question, oldest first, for the squares on the page.
+        strips: dict[str, list[dict]] = {}
+        for pair in channels_mod.pairs(events):
+            strips.setdefault(pair["channel"], []).append(
+                {"answered": pair["answer_id"] is not None,
+                 "minutes": pair["minutes"]})
     except Exception:  # noqa: BLE001 -- a channel we cannot read is not a page defect
-        comparison = {}
+        comparison, strips = {}, {}
 
     return {
         "rewards": rewards,
@@ -390,8 +396,106 @@ def _stats(ledger: dict, run: dict, events: list[dict]) -> dict:
         },
         "tests": counts,
         "channels": comparison,
+        "strips": strips,
+        "nexus": _nexus_channel(),
         "process": _process_rows(),
     }
+
+
+def _headline(row: dict) -> str:
+    """A finding's name in a few words: the check that found it, humanised.
+
+    The operator, 2026-09-11: every bug's name on the Findings tab was its
+    whole description, so nothing could be read at a glance. The name of the
+    check IS the invariant in a few words -- "a bot counts the stakes it has
+    open" -- which is what they asked to see. The measured sentence stays in
+    the row's body; the ledger's title is not touched.
+    """
+    checks = row.get("checks") or []
+    params = ""
+    if checks:
+        base, _, params = str(checks[0]).partition("[")
+        name = base.rsplit("::", 1)[-1]
+        name = name[5:] if name.startswith("test_") else name
+        params = params[:-1] if params.endswith("]") else params
+    else:
+        name = str(row.get("id") or "")
+        name = name[4:] if name.startswith("CYM-") else name
+    text = " ".join(name.replace("_", " ").replace("-", " ").split())
+    text = text[:1].upper() + text[1:]
+    if params:
+        text = f"{text}: {params}"
+    return text if len(text) <= 90 else text[:87].rstrip() + "..."
+
+
+def _nexus_channel() -> dict:
+    """Every question put to ask_nexus_deep, one entry each, by what happened.
+
+    Not on the page at all until 2026-09-11, when the operator asked whether
+    Nexus is reliable yet, next to Telegram. Outcomes: answered; partial --
+    finalised "done" with only an opening sentence, their NEX-0009, fixed
+    2026-09-10 21:22; failed -- our loop gave up or they said failed; refused
+    -- no investigation started, QUERY_RESTRICTED and the like; waiting.
+
+    The typical time is a median over questions we WATCHED from the start,
+    both bounds known, and nothing else. A question looked at once, late, has
+    only an upper bound, and counting it is how our pickup delay went out as
+    their latency once already.
+    """
+    import importlib.util
+
+    empty = {"asked": 0, "answered": 0, "partial": 0, "failed": 0,
+             "refused": 0, "waiting": 0, "measured": 0,
+             "median_seconds": None, "questions": []}
+    try:
+        spec = importlib.util.spec_from_file_location(
+            "nexus_stats", REPO_ROOT / "scripts" / "nexus.py")
+        nexus = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(nexus)
+        rows = nexus.load()
+    except Exception:  # noqa: BLE001 -- an unreadable record is not a page defect
+        return empty
+    questions = []
+    for question in rows:
+        if question.get("type") != "question":
+            continue
+        qid = question.get("id")
+        mine = [r for r in rows if r.get("id") == qid]
+        answer = next((r for r in mine if r.get("type") == "answer"), None)
+        if answer is not None:
+            outcome = ("answered" if len(answer.get("text") or "") >= 300
+                       else "partial")
+        elif any(r.get("type") == "gave_up" for r in mine):
+            outcome = "failed"
+        elif question.get("accepted") is False:
+            outcome = "refused"
+        else:
+            outcome = "waiting"
+        lower, upper = nexus.latency_bounds(rows, qid)
+        seconds = (round((lower + upper) / 2, 1)
+                   if lower is not None and upper is not None else None)
+        questions.append({"id": qid, "at": question.get("at"),
+                          "outcome": outcome, "seconds": seconds,
+                          "upper": upper})
+    if not questions:
+        return empty
+    watched = sorted(q["seconds"] for q in questions
+                     if q["seconds"] is not None
+                     and q["outcome"] in ("answered", "partial"))
+    median = None
+    if watched:
+        middle = len(watched) // 2
+        median = (watched[middle] if len(watched) % 2
+                  else round((watched[middle - 1] + watched[middle]) / 2, 1))
+
+    def count(outcome):
+        return sum(1 for q in questions if q["outcome"] == outcome)
+
+    return {"asked": len(questions), "answered": count("answered"),
+            "partial": count("partial"), "failed": count("failed"),
+            "refused": count("refused"), "waiting": count("waiting"),
+            "measured": len(watched), "median_seconds": median,
+            "questions": questions}
 
 
 def _rewards() -> dict:
@@ -667,6 +771,7 @@ def build_payload(ledger: dict | None = None, inventory: dict | None = None,
             # holds this list to that.
             "id": row["id"],
             "title": row.get("title"),
+            "headline": _headline(row),
             "severity": row.get("severity"),
             "tag": row.get("tag"),
             "note": row.get("note"),
@@ -976,6 +1081,27 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:15.0px; max-wid
 .seg-ok{background:var(--ok)} .seg-auth{background:var(--auth)}
 .seg-param{background:var(--auth);opacity:.6} .seg-method{background:var(--warn)}
 .seg-missing{background:var(--bad)}
+.rely{display:grid;gap:.55rem;margin:.5rem 0 .7rem}
+.rely-row{display:grid;grid-template-columns:8.5rem 1fr 5rem;align-items:center;gap:.8rem}
+.rely-name{font-weight:600}
+.rely-name span,.rely-n span{display:block;font-weight:400;font-size:.78em;opacity:.6}
+.rely-n{text-align:right;font-size:1.2em}
+.rely-strip{display:flex;flex-wrap:wrap;gap:3px}
+.sq{display:inline-block;width:14px;height:14px;border-radius:3px;background:var(--line)}
+.sq.answered{background:var(--ok)} .sq.partial{background:var(--warn)}
+.sq.failed{background:var(--bad)} .sq.refused{background:var(--line)}
+.sq.waiting{background:transparent;box-shadow:inset 0 0 0 2px var(--warn)}
+.rely-legend{display:flex;flex-wrap:wrap;gap:.3rem .9rem;align-items:center;font-size:.8em;opacity:.8}
+.rely-legend .sq{width:10px;height:10px;margin-right:.3rem;vertical-align:-1px}
+.rely-axis{width:100%;max-width:780px;display:block;margin:.4rem 0 .2rem}
+.cov{display:grid;grid-template-columns:repeat(auto-fill,minmax(8.5rem,1fr));gap:6px;margin-top:.7rem}
+.cov-cell{border-radius:6px;padding:.45rem .55rem;min-height:3.2rem;background:var(--surface-2);border:1px solid var(--line)}
+.cov-cell b{display:block;font-size:1.3em;min-height:1.2em}
+.cov-cell span{font-size:.78em;opacity:.8}
+.cov-cell.ok{background:var(--ok-bg);border-color:var(--ok)}
+.cov-cell.bad{background:var(--bad-bg);border-color:var(--bad)}
+.cov-cell.none{opacity:.5}
+details.stat summary{cursor:pointer;font-weight:600}
 /* Theirs, and counted against them: a 5xx is an answer. */
 .seg-server_error{background:var(--bad);opacity:.65}
 /* Ours, and counted against nobody: no answer came back at all, which is a
@@ -1978,7 +2104,7 @@ function finding(f) {
     <summary>
       <span class="sev ${f.severity.split("-")[0]}">${esc(f.severity.split("-")[0])}</span>
       <span>
-        <span class="f-title">${esc(f.title)}</span>
+        <span class="f-title">${esc(f.headline || f.title)}</span>
         <div class="f-sub">
           <span class="tagchip">${esc(f.tag)}</span>
           <span class="state ${stateClass(f.display_state)}">${esc(f.display_state)}</span>
@@ -2345,7 +2471,7 @@ function paintInbox() {
     + items.slice(0, 8).map(function (x) {
         const filed = (x.f.filed || []).map(r => "#" + r.report_id).join(", ");
         return '<button class="item" data-go="' + esc(x.f.id) + '">'
-             + '<span class="item-t">' + esc(x.f.title) + '</span>'
+             + '<span class="item-t">' + esc(x.f.headline || x.f.title) + '</span>'
              + '<span class="item-m">' + when(x.at)
              + (filed ? " &middot; " + filed : "")
              + " &middot; " + esc(x.f.display_state) + '</span></button>';
@@ -2525,38 +2651,83 @@ function statBlocks() {
     and they are our own bookkeeping, not their repairs.</p>
   </section>`);
 
-  out.push(`<section class="stat">
-    <h3>Checks written</h3>
-    <div class="hero">${ts.vendor_facing || 0} <span>measure them</span></div>
-    <dl class="figs">
-      <div><dt>measure us</dt><dd>${ts.self_tests || 0}</dd></div>
-      ${(ts.by_dir || []).map(d => `<div><dt>${esc(d.dir)}</dt><dd>${d.n}</dd></div>`).join("")}
-    </dl>
-    <p class="blurb">The second number is the machinery checking itself. It
-    should grow slower than the first, and has not.</p>
+  // Can we rely on them? One square per question, oldest first, coloured by
+  // what happened to it; then one shared clock so the typical answer times
+  // can be compared by eye. Drawn 2026-09-11 at the operator's word: they
+  // read pictures, not tables, and asked to see Nexus beside Telegram.
+  const nx = S.nexus || {}, strips = S.strips || {};
+  const human = (key, name, sub) => {
+    const c = ch[key] || {};
+    return {name: name, sub: sub,
+      squares: (strips[key] || []).map(r => ({c: r.answered ? "answered" : "waiting",
+        t: r.answered ? (r.minutes != null ? "answered in " + r.minutes + " min" : "answered") : "no answer yet"})),
+      minutes: c.median_minutes == null ? null : c.median_minutes,
+      answered: (c.asked || 0) - (c.unanswered || 0), asked: c.asked || 0};
+  };
+  const channelRows = [
+    {name: "Nexus", sub: "their AI, ask_nexus_deep",
+     squares: (nx.questions || []).map(q => ({c: q.outcome,
+       t: q.id + " - " + q.outcome + (q.seconds != null ? " - " + Math.round(q.seconds) + " s"
+          : (q.upper != null ? " - looked at only after " + Math.round(q.upper / 60) + " min" : ""))})),
+     minutes: nx.median_seconds == null ? null : nx.median_seconds / 60,
+     answered: nx.answered || 0, asked: nx.asked || 0},
+    human("telegram", "Telegram", "the operator's thread"),
+    human("a2a", "a2a", "bounty inbox"),
+  ];
+  const squaresOf = list => list.map(q => `<i class="sq ${esc(q.c)}" title="${esc(q.t)}"></i>`).join("");
+  const rowsHtml = channelRows.map(r => `<div class="rely-row">
+      <div class="rely-name">${esc(r.name)}<span>${esc(r.sub)}</span></div>
+      <div class="rely-strip">${r.squares.length ? squaresOf(r.squares) : '<span class="blurb">nothing asked yet</span>'}</div>
+      <div class="rely-n"><b>${r.answered}</b>/${r.asked}<span>answered</span></div>
+    </div>`).join("");
+  const LOGDAY = Math.log10(1440);
+  const X = m => 4 + 90 * Math.log10(Math.min(1440, Math.max(1, m))) / LOGDAY;
+  const dots = channelRows.filter(r => r.minutes != null);
+  const axis = `<svg class="rely-axis" viewBox="0 0 100 ${12 + dots.length * 7}" role="img"
+      aria-label="typical answer time by channel">
+    <line x1="4" y1="6" x2="94" y2="6" stroke="var(--line)" stroke-width="0.5"/>
+    ${[[1, "1 min"], [10, "10 min"], [60, "1 hour"], [1440, "1 day"]].map(([m, l]) =>
+      `<line x1="${X(m)}" y1="4.6" x2="${X(m)}" y2="7.4" stroke="currentColor" stroke-width="0.4" opacity="0.5"/>
+       <text x="${X(m)}" y="3" font-size="2.6" text-anchor="middle" fill="currentColor" opacity="0.6">${l}</text>`).join("")}
+    ${dots.map((r, i) => {
+      const x = X(r.minutes), right = x > 70, y = 12 + i * 7;
+      const shown = r.minutes < 1 ? "under 1 min" : r.minutes < 90 ? Math.round(r.minutes) + " min"
+                  : (r.minutes / 60).toFixed(1) + " h";
+      return `<line x1="${x}" y1="6" x2="${x}" y2="${y}" stroke="var(--accent)" stroke-width="0.3" opacity="0.5"/>
+        <circle cx="${x}" cy="${y}" r="1.7" fill="var(--accent)"/>
+        <text x="${right ? x - 2.8 : x + 2.8}" y="${y + 1}" font-size="3" text-anchor="${right ? "end" : "start"}"
+          fill="currentColor">${esc(r.name)}: ${esc(shown)}</text>`;
+    }).join("")}
+  </svg>`;
+  out.push(`<section class="stat wide">
+    <h3>Can we rely on them?</h3>
+    <div class="rely">${rowsHtml}</div>
+    ${dots.length ? axis : ""}
+    <div class="rely-legend"><span><i class="sq answered"></i>answered</span>
+      <span><i class="sq partial"></i>cut short</span><span><i class="sq failed"></i>failed</span>
+      <span><i class="sq refused"></i>refused to start</span><span><i class="sq waiting"></i>no answer yet</span></div>
+    <p class="blurb">One square per question, oldest first. The dots are each
+    channel's typical answer time; for Nexus only from ${nx.measured || 0}
+    question(s) watched from the start.</p>
   </section>`);
 
-  const rows = ["bug", "a2a", "telegram"].filter(k => ch[k]).map(k => {
-    const c = ch[k];
-    return `<tr><td>${esc(k)}</td><td>${c.asked ?? "&mdash;"}</td>
-      <td>${c.n ?? 0}</td>
-      <td>${c.median_minutes == null ? "&mdash;" : c.median_minutes + " min"}</td>
-      <td>${c.unanswered ?? 0}</td></tr>`;
-  }).join("");
+  // What we test: every part of the platform the inventory knows, green where
+  // checks run, red where one is failing, grey where nothing has been written.
+  const secs = D.sections || [];
+  const tested = secs.filter(s => s.checks && s.checks.total);
   out.push(`<section class="stat wide">
-    <h3>How fast they answer</h3>
-    ${rows ? `<table class="stat-t">
-      <thead><tr><th>channel</th><th>asked</th><th>timed</th>
-        <th>median</th><th>unanswered</th></tr></thead>
-      <tbody>${rows}</tbody></table>` : '<p class="blurb">Nothing recorded yet.</p>'}
-    <p class="blurb">${ch.conclusive
-      ? "Both channels have enough answered questions to compare."
-      : "Not a comparison yet: each channel needs five answered questions. A median over two is the impression wearing a number's clothes."}</p>
+    <h3>What we test</h3>
+    <div class="hero">${tested.length} <span>of ${secs.length} parts of the platform have checks</span></div>
+    <div class="cov">${secs.map(s => {
+      const n = (s.checks && s.checks.total) || 0, bad = (s.checks && s.checks.failed) || 0;
+      return `<div class="cov-cell ${n ? (bad ? "bad" : "ok") : "none"}"
+        title="${esc(s.title || s.id)}: ${n} check(s)${bad ? ", " + bad + " failing" : ""}">
+        <b>${n || ""}</b><span>${esc(s.title || s.id)}</span></div>`;
+    }).join("")}</div>
   </section>`);
 
   if (pr.length) {
-    out.push(`<section class="stat wide">
-      <h3>What the deep pass costs</h3>
+    out.push(`<details class="stat wide"><summary>For us: what the deep pass costs</summary>
       <table class="stat-t">
         <thead><tr><th>pass</th><th>claimed</th><th>real</th>
           <th>rejected by the readers</th><th>fixed</th><th>minutes</th></tr></thead>
@@ -2564,10 +2735,7 @@ function statBlocks() {
           <td>${p.claimed}</td><td>${p.real}</td><td>${p.overturned}</td>
           <td>${p.fixed}</td><td>${p.elapsed_min == null ? "&mdash;" : p.elapsed_min}</td></tr>`).join("")}</tbody>
       </table>
-      <p class="blurb">The fourth column is what the three independent readers
-      removed. While it is above zero they are earning their cost; three
-      passes of zero is the condition for asking whether they still are.</p>
-    </section>`);
+    </details>`);
   }
   return out.join("");
 }

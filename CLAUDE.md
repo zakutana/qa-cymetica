@@ -34,11 +34,16 @@ asked for it. So it is kept here.
   still learning how a thing works cannot weigh a choice about it, so the
   question is not a choice, it is homework. Decide, say what you decided and
   what it rests on, and leave the veto open.
-* **When a next step is agreed, write it to `NEXT.md` in that same turn.** Not
-  at the end of the session — the end of a session is the least reliable moment
-  there is, and this file says so two hundred lines further down about
-  memories. A SessionStart hook prints the open lines, so the agreement
-  survives a `/clear` without the operator repeating it.
+* **Work that will outlive this session goes to `NEXT.md`, in the turn it is
+  agreed.** Not work finished in the same session -- that belongs in the
+  commit, and a line for it is noise the SessionStart hook prints back at the
+  operator for days. Not at the end of the session either -- the end of a
+  session is the least reliable moment there is, and this file says so two
+  hundred lines further down about memories. A SessionStart hook prints the
+  open lines, so the agreement survives a `/clear` without the operator
+  repeating it. (Tightened 2026-09-11: sessions were writing a line for every
+  agreement, including ones done ten minutes later, and the operator asked why
+  NEXT.md kept growing when the context was right here.)
 
   [operator 2026-09-10] *"Nechci se starat o to ze pred deep passem ti mam pak
   po clearu rikat kde jsme skoncili a cim pokracovat."*

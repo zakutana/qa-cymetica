@@ -25,13 +25,13 @@
   "our_reports": {
     "endpoint": "GET /api/v1/bounty/my-reports?wallet_address=<addr>",
     "klass": "ok",
-    "read_at": "2026-09-11T05:52:33+00:00",
-    "evidence_id": "2adcf8893e4a8f7a70496ecdb06895f292e94195ffcd8b2b6845c1547d687b82",
-    "rows_returned": 51,
-    "server_total": 51,
-    "total": 51,
+    "read_at": "2026-09-11T06:07:37+00:00",
+    "evidence_id": "7adbe2c2f61aea92b6b044d5cf5e61496be47e8cfdb0cb7321e329c34658c106",
+    "rows_returned": 52,
+    "server_total": 52,
+    "total": 52,
     "statuses": {
-      "pending": 1,
+      "pending": 2,
       "paid": 43,
       "fixed": 5,
       "invalid": 2
@@ -879,7 +879,7 @@
         "fixed_at": "2026-09-11T04:47:06.210310",
         "validated_at": "2026-09-11T04:47:06.210310",
         "triaged_at": "2026-09-11T04:47:06.210310",
-        "status_notes": "[2026-09-11T04:47:06+00:00] Resolved via ticket ET-24574: Fixed: GET /api/v1/event-cards now honours offset (alias skip) and page (1-based), returns total (true count under the active filter) next to count (rows returned), and filters on symbol (exact, case-insensitive) and q/search (title or symbol substring); ORDER BY has a deterministic id tiebreaker so paging never skips or duplicates. a4a5b71e is reachable by paging and by ?symbol=. llms.txt documents the enumeration recipe. Reward-eligible (verified, non-duplicate).",
+        "status_notes": "[2026-09-11T04:47:06+00:00] Resolved via ticket ET-24574: Fixed: GET /api/v1/event-cards now honours offset (alias skip) and page (1-based), returns total (true count under the active filter) next to count (rows returned), and filters on symbol (exact, case-insensitive) and q/search (title or symbol substring); ORDER BY has a deterministic id tiebreaker so paging never skips or duplicates. a4a5b71e is reachable by paging and by ?symbol=. llms.txt documents the enumeration recipe. Reward-eligible (verified, non-duplicate).\n[reporter-verification PASS 2026-09-11 06:03 UTC by expire76 test_run=run-20260911T055512Z-0d595c5b]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/24574",
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -897,7 +897,7 @@
         "fixed_at": "2026-09-11T04:48:14.263578",
         "validated_at": "2026-09-11T04:48:14.263578",
         "triaged_at": "2026-09-11T04:48:14.263578",
-        "status_notes": "[2026-09-11T04:48:14+00:00] Resolved via ticket ET-24575: Fixed (release 9b1ab755c): 5bd86126 is a live but PRIVATE user-submitted card (visible only to its author), so it 404s publicly while NEXUS could still see it. Every served deep answer (MCP + REST + chat) now runs a surface resolver: card ids are checked against the caller's public visibility rule and unreachable ids are marked \"not available — do not trade it\" with the allocation withheld; tool names are checked against tools/list. Reward-eligible.",
+        "status_notes": "[2026-09-11T04:48:14+00:00] Resolved via ticket ET-24575: Fixed (release 9b1ab755c): 5bd86126 is a live but PRIVATE user-submitted card (visible only to its author), so it 404s publicly while NEXUS could still see it. Every served deep answer (MCP + REST + chat) now runs a surface resolver: card ids are checked against the caller's public visibility rule and unreachable ids are marked \"not available — do not trade it\" with the allocation withheld; tool names are checked against tools/list. Reward-eligible.\n[reporter-verification PASS 2026-09-11 06:01 UTC by expire76 test_run=run-20260911T055512Z-0d595c5b]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/24575",
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -915,7 +915,7 @@
         "fixed_at": "2026-09-11T04:48:06.573257",
         "validated_at": "2026-09-11T04:48:06.573257",
         "triaged_at": "2026-09-11T04:48:06.573257",
-        "status_notes": "[2026-09-11T04:48:06+00:00] Resolved via ticket ET-24578: Fixed (release 9b1ab755c): not deliberate. Every served NEXUS answer (deep answers on MCP + REST, chat, CentCom titles) is now scrubbed of repo paths, :line coordinates, \"(line N)\" forms and quoted source assignments/code fences before delivery, and the deep-answer policy prompt plus the deployed_code_search tool no longer ask for file:line citations. Reasoning is kept, coordinates dropped; curl/JSON examples, tool names, card ids and URLs are preserved. Pinned by tests. Reward-eligible.",
+        "status_notes": "[2026-09-11T04:48:06+00:00] Resolved via ticket ET-24578: Fixed (release 9b1ab755c): not deliberate. Every served NEXUS answer (deep answers on MCP + REST, chat, CentCom titles) is now scrubbed of repo paths, :line coordinates, \"(line N)\" forms and quoted source assignments/code fences before delivery, and the deep-answer policy prompt plus the deployed_code_search tool no longer ask for file:line citations. Reasoning is kept, coordinates dropped; curl/JSON examples, tool names, card ids and URLs are preserved. Pinned by tests. Reward-eligible.\n[reporter-verification PASS 2026-09-11 06:01 UTC by expire76 test_run=run-20260911T055512Z-0d595c5b]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/24578",
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -948,6 +948,24 @@
         "severity_confirmed": null,
         "category": "logic",
         "created_at": "2026-09-11T05:34:03.814882",
+        "fixed_at": null,
+        "validated_at": null,
+        "triaged_at": null,
+        "status_notes": null,
+        "ticket_url": null,
+        "fix_pr_url": null,
+        "reward_amount": 0.0
+      },
+      {
+        "id": 95,
+        "title": "A user-submitted card answers 200 with tradeable_now true to a non-author, though user submissions are described as visible only to their author",
+        "status": "pending",
+        "hunter_name": "expire76",
+        "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
+        "severity_reported": "medium",
+        "severity_confirmed": null,
+        "category": "api",
+        "created_at": "2026-09-11T06:01:17.748826",
         "fixed_at": null,
         "validated_at": null,
         "triaged_at": null,
@@ -1566,5 +1584,5 @@
       "reward_currency": "ET10"
     }
   ],
-  "our_reports_refreshed_at": "2026-09-11T05:52:33+00:00"
+  "our_reports_refreshed_at": "2026-09-11T06:07:37+00:00"
 }

@@ -1397,7 +1397,12 @@ def test_the_stats_panel_draws_without_throwing(tmp_path, monkeypatch):
     assert code == 0, f"the stats panel throws:\n{err[:900]}"
     panel = captured.get("stats", "")
     assert "Rewards" in panel and "Defects fixed" in panel
-    assert "Checks written" in panel and "How fast they answer" in panel
+    # Redrawn 2026-09-11 at the operator's word -- only Rewards and Defects
+    # fixed said anything at a glance, and they wanted to see how reliable
+    # Nexus is beside Telegram, in pictures. The two panels that replaced
+    # "Checks written" and the latency table are pinned here instead.
+    assert "Can we rely on them" in panel and "What we test" in panel
+    assert "Nexus" in panel, "the channel the operator asked about is on the panel"
 
     empty = json.loads(json.dumps(payload))
     empty["stats"] = {}
