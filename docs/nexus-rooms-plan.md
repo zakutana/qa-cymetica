@@ -22,13 +22,15 @@ Každý obchod a klon už nese, na kterou Nexusovu odpověď reaguje (`nexus.id`
 | NEX-0010 | CLN-0001, CLN-0002 |
 | NEX-0016 | TRD-0006 |
 
-První den tedy uvidíš **5 roomů**:
+První den tedy uvidíš **4 roomy** (plán původně počítal s pěti):
 
-- dva s obchody na kartách,
-- jeden s botem,
+- jeden s obchodem na kartě (NEX-0016),
+- jeden s botem (NEX-0010),
 - dva navržené (NEX-0012, NEX-0019).
 
-Všech pět výchozích otázek má odpověď (ověřeno).
+NEX-0002 room nemá. Při P3 jsem jeho odpověď přečetl celou: žádnou kartu ani stranu
+nenavrhl, jen postup, jak kartu vybrat. TRD-0001/0002 za 1 USDC byla měření vedle
+té odpovědi, ne jeho tip, a zůstávají v General jako systémové řádky.
 
 Celé to drží jedno pravidlo z CLAUDE.md (tvoje slova z 10. 9.): **strategii vymýšlí
 Nexus, my testujeme a vykonáváme.** Room proto jde otevřít jen z konkrétní
@@ -236,7 +238,7 @@ Každou fázi commitnu zvlášť na main, bez pushe.
 |---|---|---|
 | P1 | Záložka Nexus a General jen pro čtení (19 otázek), čtecí polovina `qa/rooms.py`, `/rooms.json`, SSE `rooms` | vidíš celou korespondenci s Nexusem |
 | P2 | Poznámky: zapisovače v `qa/rooms.py`, `POST /notes` a `/token`, `rooms.py`, 4. kanál, hook, watch, `.gitignore`, skill `channels`, řádky nových souborů v mapě CLAUDE.md | napíšeš poznámku, `/channels` ji ukáže a v konzoli naskočí ✓✓ |
-| P3 | Strategie: `open/status/link`, `nexus.py --room`, 5 roomů ze stávajících dat, panel z lokálních záznamů, česká shrnutí k 19 odpovědím | vidíš 5 roomů s obchody, klonem a stavem |
+| P3 | Strategie: `open/status/link`, `nexus.py --room`, 4 roomy ze stávajících dat, panel z lokálních záznamů, česká shrnutí k 19 odpovědím | vidíš 4 roomy s obchody, klonem a stavem |
 | P4 | Sampler a grafy: `samples.jsonl`, heartbeat, obchody z /activity, index karty, `--sample 10` v obou launcherech | grafy se hýbou každých 10 min a výpadek je vidět |
 | P5 | Skill `nexus-session`, zbytek mapy v CLAUDE.md | „zahaj session s Nexusem" projde celou smyčkou |
 
@@ -279,9 +281,12 @@ Do `tests/repo/test_live_server.py` přibude jen SSE událost `rooms`.
 
 **P3**
 
-- Room nejde otevřít bez odpovězené Nexusovy otázky.
-- Obchod najde svůj room podle `nexus.id`.
-- Otázka s `--room` jde do roomu, ne do General.
+- Room nejde otevřít bez celé Nexusovy odpovědi a jedna odpověď otevře jen jeden room.
+- Obchod najde svůj room podle `nexus.id`, uzavření podle obchodu, který pozici otevřel.
+- Klon a všechno, co se s ním pak dělo (nabití, zapnutí, vzorky), jde podle `instance_id`.
+- Otázka s `--room` jde do roomu a General na ni ukazuje. Na neexistující room se nic neodešle.
+- Moje shrnutí (`--gist`) je uvnitř odpovědi všude, kde se ta odpověď ukazuje.
+- Nejnovější stav vyhrává a každá změna říká proč.
 
 **P4**
 
@@ -345,7 +350,7 @@ Po P2 a po P4 je potřeba restartovat konzoli, protože běžící proces drží
 ## Ověření
 
 1. `python -m pytest tests/meta tests/repo -q` je zelené.
-2. Restartuješ `console.cmd` a v záložce Nexus je General s 19 otázkami a 5 roomů se stavem a čísly.
+2. Restartuješ `console.cmd` a v záložce Nexus je General s 19 otázkami a 4 roomy se stavem a čísly.
 3. Napíšeš poznámku do STR-0004 a hned u ní naskočí ✓. Tady řekneš „přečti si to", já ji vypíšu a v konzoli do 5 s naskočí ✓✓.
 4. Uděláš `/clear`, zatímco je nějaká poznámka nepřečtená, a při startu session se objeví připomínkový řádek.
 5. `git status` je po poznámce i po vzorku čistý. Mění se jen soubory v `.gitignore`, dashboard ne.

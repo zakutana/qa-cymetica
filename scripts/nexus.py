@@ -20,6 +20,7 @@ with no gate and no --confirm. Nothing in this repository had ever called
 either of them.
 
     python scripts/nexus.py ask "how should an agent size a first position?"
+    python scripts/nexus.py ask "and the stop?" --room STR-0003   # a follow-up
     python scripts/nexus.py answer NEX-0003      # poll an outstanding one
     python scripts/nexus.py list
     python scripts/nexus.py show NEX-0003
@@ -54,6 +55,8 @@ from qa.client import McpError, build_mcp_client  # noqa: E402
 from qa.config import identities, load_dotenv  # noqa: E402
 from qa.console import printable  # noqa: E402
 from qa.safety import CURRENT_TIER, EndpointRegistry, SafetyTier  # noqa: E402
+from qa.rooms import RoomError, known_rooms  # noqa: E402
+from qa.rooms import load as load_rooms  # noqa: E402
 from qa.state import file_lock, state_dir  # noqa: E402
 
 ASK = "ask_nexus_deep"
@@ -189,10 +192,20 @@ def _job_id_of(started) -> str | None:
     return None
 
 
-def ask(question: str, wait: bool = True) -> dict:
-    """Put the question, then poll until they answer or we give up."""
+def ask(question: str, wait: bool = True, room: str | None = None) -> dict:
+    """Put the question, then poll until they answer or we give up.
+
+    `room` files it under a strategy room -- a follow-up about something Nexus
+    proposed -- and is checked before the client is even built: a question
+    filed under a room that does not exist would be drawn in General, out of
+    the thread it continues, and by then it would already have been sent.
+    """
     entry = {"id": _next_id(load()), "type": "question", "at": _now(),
              "question": question, "tool": ASK}
+    if room is not None:
+        if room not in known_rooms(load_rooms()):
+            raise RoomError(f"there is no room {room!r}")
+        entry["room"] = room
     client = _client()
     token = CURRENT_TIER.set(SafetyTier.SAFE)
     try:
@@ -403,6 +416,8 @@ def main(argv: list[str] | None = None) -> int:
     ask_cmd.add_argument("question")
     ask_cmd.add_argument("--no-wait", action="store_true",
                          help="record the job id and stop; poll later")
+    ask_cmd.add_argument("--room", help="the strategy room it belongs to, e.g. "
+                         "STR-0003; checked before anything is sent")
 
     answer_cmd = sub.add_parser("answer", help="poll an outstanding question")
     answer_cmd.add_argument("question_id")
@@ -414,7 +429,11 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     if args.cmd == "ask":
-        ask(args.question, wait=not args.no_wait)
+        try:
+            ask(args.question, wait=not args.no_wait, room=args.room)
+        except RoomError as exc:
+            print(f"refused, nothing sent: {exc}", file=sys.stderr)
+            return 2
         return 0
     if args.cmd == "answer":
         answer(args.question_id)

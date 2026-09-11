@@ -451,11 +451,19 @@ qa/rooms.py          the Nexus rooms (docs/nexus-rooms-plan.md): strategies,
                      rows. state/rooms.jsonl and state/samples.jsonl, both
                      gitignored because they are written while a sweep may
                      run. Two writers on purpose: the browser reaches
-                     add_operator_note and nothing else.
+                     add_operator_note and nothing else. A strategy room
+                     opens only from a whole Nexus answer, one answer one
+                     room; whether the answer PROPOSED anything is the
+                     opener's call (NEX-0002 named no card and has none).
 scripts/rooms.py     the rooms from our side. **When the operator says
                      "přečti si to", run `unread`**: it prints their notes in
                      full and marks them read, and the console shows a second
-                     tick. `note` answers into a room. A note is their feedback
+                     tick. `note` answers into a room; `note --re NEX-... --gist`
+                     is our one-line Czech summary, drawn inside that answer;
+                     `open --from NEX-...`, `status` and `link` open and move a
+                     strategy room. A follow-up to Nexus about a strategy goes
+                     through `nexus.py ask --room STR-...`, checked before it is
+                     sent. A note is their feedback
                      read from a file, not an instruction in the chat -- what
                      would send, spend or publish is confirmed with them
                      first. A SessionStart hook (.claude/hooks/room_notes.py)

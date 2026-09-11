@@ -11,7 +11,9 @@ Three things are pinned here, because each is a way the page could lie.
     -- answered, cut short, given up on, refused, still waiting -- each reply
     straight after its question. A question with no answer is shown as
     unanswered, never dropped: an absence on this page would read as "nothing
-    was asked", which is the easiest thing to get wrong.
+    was asked", which is the easiest thing to get wrong. A question that
+    belongs to a strategy room is read there, and General keeps a pointer to
+    it, so General still names every one.
   * THE ROOMS ARE NOT IN THE PAYLOAD. Notes and samples land while a sweep may
     be running. If they moved the payload, every note would rewrite the
     committed dashboard, dirty the tree and cost the next run its level V --
@@ -206,25 +208,49 @@ def test_the_tab_reads_no_field_the_rooms_do_not_write(tmp_path, monkeypatch):
     against what the payload carries: JavaScript reading a missing property is
     undefined, not an error, and three visible breakages came from exactly
     that. The rooms arrive by fetch and never pass through that guard, so the
-    tab names its own shapes -- `nm.` a message, `nr.` a room, `np.` a panel --
-    and this holds each against what build_rooms() actually writes.
+    tab names its own shapes -- `nm.` a message, `nr.` a room, `np.` a panel,
+    and inside a strategy's panel `nt.` a trade, `nh.` a change of status,
+    `nc.` a bot and `ns.` one of its samples -- and this holds each against
+    what build_rooms() actually writes.
     """
     import re
 
     monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
-    _write(tmp_path / "nexus.jsonl", _five_questions())
+    # One of everything the tab draws: a strategy room with a trade, its close
+    # and a bot that was sampled, a follow-up asked inside the room, a status,
+    # a summary drawn inside its answer -- and one note of ours left standing
+    # on its own, because it names no question on record, so `nm.re` is
+    # written by something.
+    _write(tmp_path / "nexus.jsonl", [
+        *_five_questions(), *_answered("NEX-6", 600, "and the stop?", room="STR-0001")])
+    _write(tmp_path / "paper.jsonl", [
+        *_buy("TRD-0001", 700, "NEX-1"), *_close("TRD-0002", 800, "P-1", 0.5),
+        _snapshot("TRD-0002", 805)])
+    _write(tmp_path / "clones.jsonl", _bot_rows())
     _write(tmp_path / "rooms.jsonl", [
+        {"type": "strategy", "id": "STR-0001", "origin": "NEX-1", "title": "A",
+         "at": _at(650)},
+        {"type": "status", "room": "STR-0001", "status": "running", "why": "bought",
+         "at": _at(900)},
         {"type": "operator_note", "id": "N-0001", "room": "general", "at": _at(5),
          "text": "a"},
         {"type": "claude_note", "id": "N-0002", "room": "general", "at": _at(6),
-         "text": "b", "re": "NEX-1"},
+         "text": "b", "re": "NEX-9"},
+        {"type": "claude_note", "id": "N-0003", "room": "general", "at": _at(7),
+         "text": "c", "re": "NEX-1", "gist": True},
     ])
     render = _render()
     view = render.build_rooms()
+    panels = list(view["panels"].values())
+    bots = [c for p in panels for c in p.get("clones") or []]
     written = {
         "nm": {k for thread in view["threads"].values() for m in thread for k in m},
         "nr": {k for r in view["rooms"] for k in r},
-        "np": {k for p in view["panels"].values() for k in p},
+        "np": {k for p in panels for k in p},
+        "nt": {k for p in panels for t in p.get("trades") or [] for k in t},
+        "nh": {k for p in panels for h in p.get("history") or [] for k in h},
+        "nc": {k for c in bots for k in c},
+        "ns": {k for c in bots for s in c.get("samples") or [] for k in s},
     }
     for name, keys in written.items():
         read = set(re.findall(rf"\b{name}\.([a-z_]+)\b", render.TEMPLATE))
@@ -436,3 +462,465 @@ window.nxPost("general", "proč ne víc?").then(
     assert headers.get("Content-Type") == "application/json"
     assert set(json.loads(post["body"])) == {"room", "text"}, (
         "serve.py takes exactly {room, text} and refuses anything else with a 400")
+
+
+# ---------------------------------------------------------------------------
+# P3: a room per strategy Nexus proposed, and everything done about it
+# ---------------------------------------------------------------------------
+WHOLE = "y" * 400
+INSTANCE = "inst-0001"
+
+
+def _answered(qid: str, seconds: float, question: str = "which cards?",
+              **more) -> list[dict]:
+    """A question and a whole answer -- the only thing a room opens from."""
+    return [{"id": qid, "type": "question", "at": _at(seconds), "question": question,
+             "accepted": True, **more},
+            {"id": qid, "type": "answer", "text": WHOLE, "at": _at(seconds + 60)}]
+
+
+def _buy(tid: str, seconds: float, nexus_id, usdc: float = 10.0,
+         position: str = "P-1", outcome: str = "accepted") -> list[dict]:
+    """A paper buy the way scripts/paper.py records one: intent, then outcome."""
+    rows = [{"id": tid, "type": "intent", "at": _at(seconds), "card_id": "card-a-1111",
+             "usdc": usdc, "paper": True, "nexus": {"id": nexus_id}}]
+    if outcome == "accepted":
+        response = json.dumps({"position_id": position, "side": "bull",
+                               "notional_usdc": usdc, "entry_index": 92.28})
+        rows.append({"id": tid, "type": "outcome", "at": _at(seconds + 1),
+                     "outcome": "accepted", "http_status": 200,
+                     "position_id": position, "response": response})
+    else:
+        rows.append({"id": tid, "type": "outcome", "at": _at(seconds + 1),
+                     "outcome": outcome, "http_status": 400})
+    return rows
+
+
+def _close(tid: str, seconds: float, position: str, realized: float) -> list[dict]:
+    return [{"id": tid, "type": "intent", "at": _at(seconds), "kind": "close",
+             "card_id": "card-a-1111", "position_id": position, "paper": True},
+            {"id": tid, "type": "outcome", "at": _at(seconds + 1), "kind": "close",
+             "outcome": "accepted", "http_status": 200, "realized_pnl_usdc": realized}]
+
+
+def _snapshot(tid: str, seconds: float) -> dict:
+    """The paper account as the last order of ours read it afterwards."""
+    return {"id": tid, "type": "after", "at": _at(seconds),
+            "sim_balance_usdc": "89000.96", "notional_usdc": 12904.0,
+            "sim_total_trades": 4, "sim_total_pnl": "-0.04"}
+
+
+def _sample(seconds: float, balance: float, pnl: float, trades: int, trading: bool,
+            instance: str = INSTANCE) -> dict:
+    return {"id": "SAMPLE", "type": "sample", "kind": "sample", "at": _at(seconds),
+            "instance_id": instance, "is_trading": trading, "is_paper": True,
+            "balance_usdc": balance, "total_profit_usdc": pnl,
+            "trades_executed": trades, "win_rate": 0.0}
+
+
+def _bot_rows() -> list[dict]:
+    """The clone that followed NEX-0010, in miniature.
+
+    Refused by our own guard once, then cloned, funded twice -- one of them a
+    401 -- switched on, and sampled until it stopped itself. Last, one
+    operation on a bot no answer of ours opened.
+    """
+    made = json.dumps({"id": INSTANCE, "source_name": "Perceptron Oracle",
+                       "source_symbol": "PCPN", "name": "QA Perceptron paper",
+                       "strategy_type": "neural_ensemble", "risk_profile": "medium",
+                       "is_paper": True})
+    return [
+        {"id": "CLN-0001", "type": "intent", "at": _at(1000), "source_type": "wta_species",
+         "custom_name": "QA Perceptron paper", "paper": True, "nexus": {"id": "NEX-1"}},
+        {"id": "CLN-0001", "type": "outcome", "at": _at(1001), "outcome": "not_sent",
+         "error": "SafetyViolation: MUTATE against unlisted host"},
+        {"id": "CLN-0002", "type": "intent", "at": _at(1100), "source_type": "wta_species",
+         "custom_name": "QA Perceptron paper", "paper": True, "nexus": {"id": "NEX-1"}},
+        {"id": "CLN-0002", "type": "outcome", "at": _at(1101), "outcome": "accepted",
+         "http_status": 200, "clone_instance_id": INSTANCE, "is_paper": True,
+         "is_trading": False, "response": made},
+        {"id": "CLN-0003", "type": "intent", "at": _at(1200), "kind": "fund",
+         "instance_id": INSTANCE, "amount": 1.0},
+        {"id": "CLN-0003", "type": "outcome", "at": _at(1201), "kind": "fund",
+         "outcome": "rejected", "http_status": 401},
+        {"id": "CLN-0004", "type": "intent", "at": _at(1300), "kind": "fund",
+         "instance_id": INSTANCE, "amount": 999.0},
+        {"id": "CLN-0004", "type": "outcome", "at": _at(1301), "kind": "fund",
+         "outcome": "accepted", "http_status": 200,
+         "response": json.dumps({"success": True, "bot_balance": 999.0})},
+        {"id": "CLN-0005", "type": "intent", "at": _at(1400), "kind": "enable",
+         "instance_id": INSTANCE},
+        {"id": "CLN-0005", "type": "outcome", "at": _at(1401), "kind": "enable",
+         "outcome": "accepted", "http_status": 200},
+        _sample(1500, 999.0, 0.0, 0, True),
+        _sample(2100, 950.0, 0.0, 2, True),
+        _sample(2700, 950.0, -49.0, 2, False),
+        _sample(2800, 5.0, 0.0, 0, True, instance="inst-other"),
+        {"id": "CLN-0006", "type": "intent", "at": _at(2900), "kind": "fund",
+         "instance_id": "inst-other", "amount": 5.0},
+        {"id": "CLN-0006", "type": "outcome", "at": _at(2901), "kind": "fund",
+         "outcome": "accepted", "http_status": 200},
+    ]
+
+
+def _rooms_at(state_dir: Path, monkeypatch):
+    monkeypatch.setenv("QA_STATE_DIR", str(state_dir))
+    from qa import rooms
+
+    return rooms
+
+
+def _legs(view: dict, room: str) -> list[str]:
+    return [m["id"] for m in view["threads"][room] if m["kind"] == "leg"]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_room_opens_only_from_a_whole_answer_and_only_once(tmp_path, monkeypatch):
+    """CLAUDE.md, the operator's words of 2026-09-10: Nexus supplies the
+    guidance, we test and execute.
+
+    A room is where one of its proposals is followed, so a room opens from a
+    whole answer and from nothing else: not from a question cut short, given
+    up on, refused or still waiting, and not from an id nobody asked. One
+    answer opens one room, so an order that acts on an answer has exactly one
+    room to go to.
+    """
+    rooms = _rooms_at(tmp_path, monkeypatch)
+    _write(tmp_path / "nexus.jsonl", [*_five_questions(), *_answered("NEX-6", 600)])
+
+    for origin in ("NEX-2", "NEX-3", "NEX-4", "NEX-5", "NEX-404"):
+        with pytest.raises(rooms.RoomError):
+            rooms.open_strategy(origin, "a strategy")
+    with pytest.raises(rooms.RoomError):
+        rooms.open_strategy("NEX-1", "   ")
+    assert not (tmp_path / "rooms.jsonl").exists(), "a refused room was written anyway"
+
+    first = rooms.open_strategy("NEX-1", "Karta A")
+    assert (first["id"], first["origin"], first["title"]) == ("STR-0001", "NEX-1", "Karta A")
+    with pytest.raises(rooms.RoomError):
+        rooms.open_strategy("NEX-1", "the same answer again")
+
+    made = _run(["scripts/rooms.py", "open", "--from", "NEX-6", "--title", "Kniha B"],
+                tmp_path)
+    assert made.returncode == 0 and "STR-0002" in made.stdout, made.stderr
+    refused = _run(["scripts/rooms.py", "open", "--from", "NEX-2", "--title", "x"],
+                   tmp_path)
+    assert refused.returncode == 2
+    assert [r["id"] for r in _stored(tmp_path) if r["type"] == "strategy"] == [
+        "STR-0001", "STR-0002"]
+
+    # an opened room is a room: the operator can write into it
+    assert rooms.add_operator_note("STR-0002", "proč jen 10 %?")["room"] == "STR-0002"
+    view = _render().build_rooms()
+    assert [(r["id"], r["kind"], r["status"]) for r in view["rooms"]] == [
+        ("general", "general", None), ("STR-0001", "strategy", "proposed"),
+        ("STR-0002", "strategy", "proposed")]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_newest_status_wins_and_every_change_says_why(tmp_path, monkeypatch):
+    rooms = _rooms_at(tmp_path, monkeypatch)
+    _write(tmp_path / "nexus.jsonl", _answered("NEX-1", 0))
+    rooms.open_strategy("NEX-1", "Karta A")
+    before = len(_stored(tmp_path))
+    for room, status, why in (("STR-0001", "moon", "x"), ("STR-0001", "running", "  "),
+                              ("general", "running", "x"), ("STR-0404", "running", "x")):
+        with pytest.raises(rooms.RoomError):
+            rooms.set_status(room, status, why)
+    assert len(_stored(tmp_path)) == before, "a refused status was written anyway"
+
+    rooms.set_status("STR-0001", "running", "TRD-0001 bought 10 000 USDC")
+    rooms.set_status("STR-0001", "paused", "the bot stopped itself at -5 %")
+    view = _render().build_rooms()
+    room = next(r for r in view["rooms"] if r["id"] == "STR-0001")
+    panel = view["panels"]["STR-0001"]
+    assert room["status"] == panel["status"] == "paused"
+    assert panel["why"] == "the bot stopped itself at -5 %"
+    assert [(h["status"], h["why"]) for h in panel["history"]] == [
+        ("running", "TRD-0001 bought 10 000 USDC"),
+        ("paused", "the bot stopped itself at -5 %")]
+    assert [m["status"] for m in view["threads"]["STR-0001"]
+            if m["kind"] == "status"] == ["running", "paused"], (
+        "the room's own thread does not show how the strategy moved")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_link_names_only_what_is_on_record(tmp_path, monkeypatch):
+    rooms = _rooms_at(tmp_path, monkeypatch)
+    _write(tmp_path / "nexus.jsonl", [*_answered("NEX-1", 0), *_answered("NEX-7", 300)])
+    _write(tmp_path / "paper.jsonl", _buy("TRD-0001", 900, None))
+    _write(tmp_path / "clones.jsonl", _bot_rows())
+    rooms.open_strategy("NEX-1", "Karta A")
+    before = len(_stored(tmp_path))
+    for room, ref in (("STR-0001", "TRD-0404"), ("STR-0001", "CLN-0404"),
+                      ("STR-0001", "NEX-0404"), ("STR-0001", "SAMPLE"),
+                      ("general", "TRD-0001"), ("STR-0404", "TRD-0001")):
+        with pytest.raises(rooms.RoomError):
+            rooms.add_link(room, ref, "because")
+    with pytest.raises(rooms.RoomError):
+        rooms.add_link("STR-0001", "TRD-0001", " ")
+    assert len(_stored(tmp_path)) == before, "a refused link was written anyway"
+    for ref in ("TRD-0001", "CLN-0002", "NEX-7"):
+        assert rooms.add_link("STR-0001", ref, "it belongs here")["ref"] == ref
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_trade_finds_its_room_by_the_answer_it_acts_on(tmp_path, monkeypatch):
+    """By the Nexus id scripts/paper.py writes on every order.
+
+    A close carries no Nexus id; it follows the order that opened its
+    position. A close of a position nothing of ours opened, an order of our
+    own, and an order after an answer that opened no room all stay in
+    General, each saying which it is: a trade drawn inside a strategy it did
+    not come from would be our activity dressed as Nexus's guidance.
+    """
+    rooms = _rooms_at(tmp_path, monkeypatch)
+    _write(tmp_path / "nexus.jsonl", [
+        *_answered("NEX-1", 0),
+        {"id": "NEX-2", "type": "question", "at": _at(100), "question": "second?",
+         "accepted": True},
+        {"id": "NEX-2", "type": "answer", "text": "I'll verify first.", "at": _at(160)}])
+    _write(tmp_path / "paper.jsonl", [
+        *_buy("TRD-0001", 900, "NEX-1", usdc=10.0, position="P-1"),
+        *_buy("TRD-0002", 950, None, usdc=1.0, position="P-2"),
+        *_close("TRD-0003", 1000, "P-1", 0.5),
+        *_close("TRD-0004", 1050, "P-unknown", -0.04),
+        *_buy("TRD-0005", 1100, "NEX-2", usdc=1.0, position="P-5"),
+        *_buy("TRD-0006", 1150, "NEX-1", usdc=5.0, outcome="rejected")])
+    rooms.open_strategy("NEX-1", "Karta A")
+
+    view = _render().build_rooms()
+    assert _legs(view, "STR-0001") == ["TRD-0001", "TRD-0003", "TRD-0006"]
+    assert _legs(view, "general") == ["TRD-0002", "TRD-0004", "TRD-0005"]
+    said = {m["id"]: m["text"] for m in view["threads"]["general"] if m["kind"] == "leg"}
+    assert "no order of ours opened" in said["TRD-0004"]
+    assert "no Nexus answer" in said["TRD-0002"]
+    trades = {t["id"]: t for t in view["panels"]["STR-0001"]["trades"]}
+    assert sorted(trades) == ["TRD-0001", "TRD-0006"]
+    assert (trades["TRD-0001"]["closed_by"], trades["TRD-0001"]["realized"]) == (
+        "TRD-0003", 0.5)
+    assert trades["TRD-0006"]["outcome"] == "rejected"
+    panel = view["panels"]["STR-0001"]
+    assert (panel["staked"], panel["unclosed"], panel["realized"]) == (10.0, 0, 0.5), (
+        "a rejected order was counted as money in the strategy")
+
+    rooms.add_link("STR-0001", "TRD-0002", "measured beside this answer")
+    view = _render().build_rooms()
+    assert _legs(view, "STR-0001") == ["TRD-0001", "TRD-0002", "TRD-0003", "TRD-0006"]
+    assert "TRD-0002" not in _legs(view, "general")
+    assert view["panels"]["STR-0001"]["unclosed"] == 1
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_bot_and_everything_done_to_it_follow_its_instance(tmp_path, monkeypatch):
+    """A clone carries the Nexus id; what is done to it afterwards carries only
+    the bot's instance id -- funding it, switching it on, every sample.
+
+    So those follow the clone's outcome into its room, and a refused attempt
+    stays there as history rather than vanishing. The panel's state is the
+    newest reading: the bot was switched on at 1400 and a sample at 2700 says
+    it had stopped, and the later of the two is the one that is true.
+    """
+    rooms = _rooms_at(tmp_path, monkeypatch)
+    _write(tmp_path / "nexus.jsonl", _answered("NEX-1", 0))
+    _write(tmp_path / "clones.jsonl", _bot_rows())
+    rooms.open_strategy("NEX-1", "Perceptron Oracle bot")
+
+    view = _render().build_rooms()
+    assert _legs(view, "STR-0001") == [
+        "CLN-0001", "CLN-0002", "CLN-0003", "CLN-0004", "CLN-0005"]
+    assert _legs(view, "general") == ["CLN-0006"]
+    legs = {m["id"]: m for m in view["threads"]["STR-0001"] if m["kind"] == "leg"}
+    assert legs["CLN-0001"]["outcome"] == "not_sent"
+    assert "not sent" in legs["CLN-0001"]["text"]
+    assert "401" in legs["CLN-0003"]["text"]
+
+    (bot,) = view["panels"]["STR-0001"]["clones"]
+    assert (bot["id"], bot["name"], bot["source"], bot["symbol"]) == (
+        "CLN-0002", "QA Perceptron paper", "Perceptron Oracle", "PCPN")
+    assert bot["funded"] == 999.0, "a fund the server refused was counted"
+    assert (bot["trading"], bot["balance"], bot["pnl"], bot["trades"]) == (
+        False, 950.0, -49.0, 2)
+    assert [s["balance"] for s in bot["samples"]] == [999.0, 950.0, 950.0]
+    assert bot["sampled_at"] == _at(2700)
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_question_asked_in_a_room_is_read_there_and_general_points_to_it(
+        tmp_path, monkeypatch):
+    """General still names every question -- in full, or as a pointer to the
+    room that holds it -- so nothing asked goes missing from it. The answer a
+    room was opened from is in both: in General, where it was asked, and
+    first in the room it opened."""
+    rooms = _rooms_at(tmp_path, monkeypatch)
+    _write(tmp_path / "nexus.jsonl", [
+        *_answered("NEX-1", 0, "which card?"),
+        *_answered("NEX-6", 3000, "and the stop?", room="STR-0001"),
+        *_answered("NEX-7", 3100, "is this card still live?"),
+        *_answered("NEX-8", 3200, "how do I read a balance?")])
+    rooms.open_strategy("NEX-1", "Karta A")
+    rooms.add_link("STR-0001", "NEX-7", "it asks about this card")
+
+    view = _render().build_rooms()
+    assert [(m["kind"], m["id"]) for m in view["threads"]["general"]] == [
+        ("question", "NEX-1"), ("reply", "NEX-1"),
+        ("pointer", "NEX-6"), ("pointer", "NEX-7"),
+        ("question", "NEX-8"), ("reply", "NEX-8")]
+    pointers = [m for m in view["threads"]["general"] if m["kind"] == "pointer"]
+    assert {(m["room"], m["title"]) for m in pointers} == {("STR-0001", "Karta A")}
+    assert view["threads"]["general"][0]["opened"] == ["STR-0001"]
+    assert [(m["kind"], m["id"]) for m in view["threads"]["STR-0001"]] == [
+        ("question", "NEX-1"), ("reply", "NEX-1"),
+        ("question", "NEX-6"), ("reply", "NEX-6"),
+        ("question", "NEX-7"), ("reply", "NEX-7")]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_gist_rides_inside_its_answer_wherever_the_answer_is_drawn(
+        tmp_path, monkeypatch):
+    """Our one-line Czech summary of an English answer, written by the CLI.
+
+    It is drawn inside the answer -- in General and in the room that answer
+    opened -- and not as a bubble of its own. A plain note ABOUT an answer is
+    not a summary of it and stays a bubble. A second summary replaces the
+    first inside the answer, and the first stays on the page as a note:
+    nothing written disappears.
+    """
+    rooms = _rooms_at(tmp_path, monkeypatch)
+    _write(tmp_path / "nexus.jsonl", [*_answered("NEX-1", 0), *_answered("NEX-8", 500)])
+    rooms.open_strategy("NEX-1", "Karta A")
+    with pytest.raises(rooms.RoomError):
+        rooms.add_claude_note("general", "no question named", gist=True)
+    with pytest.raises(rooms.RoomError):
+        rooms.add_claude_note("general", "nobody asked it", about="NEX-404", gist=True)
+
+    rooms.add_claude_note("general", "Doporučil kartu A, bull, 10 %", about="NEX-1",
+                          gist=True)
+    rooms.add_claude_note("STR-0001", "Proč jsme nevzali víc", about="NEX-1")
+
+    def replies(view, room):
+        return {m["id"]: m for m in view["threads"][room] if m["kind"] == "reply"}
+
+    def bubbles(view, room):
+        return [m["text"] for m in view["threads"][room] if m["kind"] == "claude_note"]
+
+    view = _render().build_rooms()
+    for room in ("general", "STR-0001"):
+        assert replies(view, room)["NEX-1"]["gist"] == "Doporučil kartu A, bull, 10 %"
+    assert bubbles(view, "general") == [], "the summary was drawn as a bubble as well"
+    assert bubbles(view, "STR-0001") == ["Proč jsme nevzali víc"]
+    assert replies(view, "general")["NEX-8"]["gist"] is None
+
+    fixed = _run(["scripts/rooms.py", "note", "general", "Oprava: karta A, bull, 5 %",
+                  "--re", "NEX-1", "--gist"], tmp_path)
+    assert fixed.returncode == 0, fixed.stderr
+    view = _render().build_rooms()
+    assert replies(view, "STR-0001")["NEX-1"]["gist"] == "Oprava: karta A, bull, 5 %"
+    assert bubbles(view, "general") == ["Doporučil kartu A, bull, 10 %"]
+
+
+def _nexus_module(tmp_path, monkeypatch):
+    import importlib.util
+
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    spec = importlib.util.spec_from_file_location(
+        "nexus_rooms_under_test", REPO / "scripts" / "nexus.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_question_for_a_room_that_does_not_exist_is_never_sent(tmp_path, monkeypatch):
+    """--room is checked before the client is even built.
+
+    A negative control must not need the thing it tests: were the check to
+    break, `nexus.py ask --room STR-0404` would put a real question to Nexus.
+    So the client here is a tripwire, and no path through this test reaches
+    the network whichever way the check goes.
+    """
+    mod = _nexus_module(tmp_path, monkeypatch)
+    from qa.rooms import RoomError
+
+    def tripwire():
+        raise AssertionError("the client was built for a room that does not exist")
+
+    monkeypatch.setattr(mod, "_client", tripwire)
+    monkeypatch.setattr(mod, "printable", lambda: None)
+    with pytest.raises(RoomError):
+        mod.ask("and the stop?", wait=False, room="STR-0404")
+    assert mod.main(["ask", "and the stop?", "--room", "STR-0404", "--no-wait"]) == 2
+    assert not (tmp_path / "nexus.jsonl").exists(), "a refused question was written anyway"
+
+    _write(tmp_path / "nexus.jsonl", _answered("NEX-0001", 0))
+    _rooms_at(tmp_path, monkeypatch).open_strategy("NEX-0001", "Karta A")
+
+    class Http:
+        def close(self):
+            pass
+
+    class Client:
+        http = Http()
+
+        def call(self, tool, arguments):
+            return {"result": {"job_id": "J-1"}}
+
+    monkeypatch.setattr(mod, "_client", lambda: Client())
+    mod.ask("and the stop?", wait=False, room="STR-0001")
+    asked = [json.loads(line) for line in
+             (tmp_path / "nexus.jsonl").read_text(encoding="utf-8").splitlines()
+             if line.strip()]
+    assert (asked[-1]["type"], asked[-1]["id"], asked[-1]["room"]) == (
+        "question", "NEX-0002", "STR-0001")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_strategy_room_draws_its_book_and_its_bot_and_general_the_portfolio(
+        tmp_path, monkeypatch):
+    """The panel beside a strategy's chat, drawn by the page itself.
+
+    What the operator asked for on 2026-09-11: a room's chat on the left and,
+    beside it, how the strategy is doing -- its trades, its bot, where it
+    stands. General's panel carries the paper account and every strategy with
+    its state. A title is ours, but it is text, and is drawn as text.
+    """
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("node is not installed, so the page cannot be run here")
+    if not (REPO / "state" / "ledger.json").exists():
+        pytest.skip("no committed ledger, so there is no page to run")
+    state = tmp_path / "state"
+    state.mkdir()
+    rooms = _rooms_at(state, monkeypatch)
+    _write(state / "nexus.jsonl", _answered("NEX-1", 0))
+    _write(state / "paper.jsonl", [*_buy("TRD-0001", 900, "NEX-1", usdc=10000.0),
+                                   _snapshot("TRD-0001", 905)])
+    _write(state / "clones.jsonl", _bot_rows())
+    rooms.open_strategy("NEX-1", "<b>Karta</b> <script>alert(1)</script>")
+    rooms.set_status("STR-0001", "running", "TRD-0001 koupil 10 000 USDC")
+    view = _render().build_rooms()
+
+    monkeypatch.delenv("QA_STATE_DIR", raising=False)
+    payload = _live_payload(_render())
+
+    def drawn(room):
+        code, err, captured = _run_page(
+            node, tmp_path / room, payload,
+            after=f"localStorage.setItem(\"qa.room\", {json.dumps(room)});\n"
+                  f"window.renderRooms({json.dumps(view)});")
+        assert code == 0, f"the page throws when it draws {room}:\n{err[:900]}"
+        return captured
+
+    strategy = drawn("STR-0001")
+    panel = strategy.get("roomPanel", "")
+    assert "running" in panel and "TRD-0001 koupil 10 000 USDC" in panel
+    assert "TRD-0001" in panel and "10 000" in panel and "no close recorded" in panel
+    assert "QA Perceptron paper" in panel and "<polyline" in panel, (
+        "the bot, or the line of its samples, is not in the panel")
+    drawn_text = strategy.get("roomList", "") + strategy.get("roomChat", "")
+    assert "&lt;script&gt;" in drawn_text and "<script" not in drawn_text.lower()
+
+    general = drawn("general").get("roomPanel", "")
+    assert "89 000.96" in general, "General does not show the paper account"
+    assert "STR-0001" in general and "running" in general, (
+        "General does not list the strategies and where each stands")

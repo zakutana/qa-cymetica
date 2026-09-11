@@ -443,6 +443,8 @@ def _nexus_questions() -> list[dict] | None:
     """
     import importlib.util
 
+    from qa.rooms import ANSWERED_CHARS
+
     try:
         spec = importlib.util.spec_from_file_location(
             "nexus_stats", REPO_ROOT / "scripts" / "nexus.py")
@@ -460,8 +462,8 @@ def _nexus_questions() -> list[dict] | None:
         answer = next((r for r in mine if r.get("type") == "answer"), None)
         gave_up = next((r for r in mine if r.get("type") == "gave_up"), None)
         if answer is not None:
-            outcome = ("answered" if len(answer.get("text") or "") >= 300
-                       else "partial")
+            whole = len(answer.get("text") or "") >= ANSWERED_CHARS
+            outcome = "answered" if whole else "partial"
         elif gave_up is not None:
             outcome = "failed"
         elif question.get("accepted") is False:
@@ -523,6 +525,58 @@ def _nexus_channel() -> dict:
                                              "upper")} for q in derived]}
 
 
+def _response_of(outcome: dict | None) -> dict:
+    """The server's own reply stored inside an outcome row, parsed -- or {}."""
+    raw = (outcome or {}).get("response")
+    if isinstance(raw, dict):
+        return raw
+    try:
+        value = json.loads(raw) if isinstance(raw, str) else None
+    except ValueError:
+        return {}
+    return value if isinstance(value, dict) else {}
+
+
+def _num(value) -> float | None:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _amount(value) -> str:
+    """10000.0 -> '10 000', 0.00216 -> '0.00216': a figure as a sentence says it."""
+    number = _num(value)
+    if number is None:
+        return "?"
+    if number.is_integer():
+        return f"{int(number):,}".replace(",", " ")
+    if abs(number) >= 1:
+        return f"{number:,.2f}".replace(",", " ")
+    return f"{number:g}"
+
+
+def _said(outcome: dict | None) -> str:
+    """What became of an order, in its outcome row's own words."""
+    if not outcome:
+        return "no outcome recorded"
+    said = outcome.get("outcome") or "unknown"
+    status = outcome.get("http_status")
+    return f"{said} (HTTP {status})" if status and said != "accepted" else said
+
+
+def _orders(rows: list[dict]) -> list[tuple[str, dict, dict | None]]:
+    """(id, intent, outcome) for every order in a paper.py or clone.py record,
+    in the order the intents were written. A sample is not an order."""
+    parts: dict[str, dict] = {}
+    for row in rows:
+        rid, kind = row.get("id"), row.get("type")
+        if isinstance(rid, str) and kind in ("intent", "outcome"):
+            parts.setdefault(rid, {}).setdefault(kind, row)
+    return [(rid, p["intent"], p.get("outcome")) for rid, p in parts.items()
+            if "intent" in p]
+
+
 def build_rooms() -> dict:
     """The Nexus tab: every room, its thread, and its panel.
 
@@ -540,6 +594,16 @@ def build_rooms() -> dict:
     Each reply sits straight after its own question, whenever it arrived. A
     question given up on eighteen minutes later still belongs under the one
     it answers, not after the two that were asked in between.
+
+    A strategy room is opened from one whole Nexus answer (qa/rooms.py
+    refuses anything else) and draws what was done about it from records
+    that already say so: an order carries the Nexus id it acts on, a close
+    follows the order that opened its position, and everything done to a bot
+    afterwards -- funding it, switching it on, every sample -- carries the
+    bot's instance id. A `link` draws in what names nothing. What names no
+    room stays in General and says which it is: an order drawn inside a
+    strategy it did not come from would be our activity dressed as Nexus's
+    guidance.
     """
     from datetime import datetime, timezone
 
@@ -548,33 +612,213 @@ def build_rooms() -> dict:
     derived = _nexus_questions() or []
     stored = store.load()
     marks = store.read_marks(stored)
-    threads: dict[str, list[dict]] = {store.GENERAL: []}
+    opened = store.strategies(stored)
+    titles = {s["id"]: s.get("title") or s["id"] for s in opened}
+    by_origin = {s.get("origin"): s["id"] for s in opened}
+    linked: dict[str, str] = {}
+    history: dict[str, list[dict]] = {room: [] for room in titles}
+    for row in stored:
+        room = row.get("room")
+        if room not in titles:
+            continue
+        if row.get("type") == "link":
+            linked[row.get("ref")] = room
+        elif row.get("type") == "status":
+            history[room].append({"status": row.get("status"),
+                                  "why": row.get("why"), "at": row.get("at")})
+
+    threads: dict[str, list[dict]] = {store.GENERAL: [],
+                                      **{room: [] for room in titles}}
     order: dict[int, tuple] = {}
 
     def place(room: str, message: dict, at, rank: int) -> None:
-        thread = threads.setdefault(room, [])
+        thread = threads[room if room in threads else store.GENERAL]
         order[id(message)] = (str(at or ""), rank, len(thread))
         thread.append(message)
 
+    # Our summary of an answer is drawn inside it. The newest wins; one it
+    # replaced stays on the page as a note, so nothing written disappears.
+    asked = {q["id"] for q in derived}
+    gists = {row["re"]: row for row in stored
+             if row.get("type") == "claude_note" and row.get("gist") and row.get("re")}
+    inside = {row.get("id") for qid, row in gists.items() if qid in asked}
+
     for q in derived:
-        asked = q["question"]
-        place(store.GENERAL, {"kind": "question", "id": q["id"], "at": q["at"],
-                              "text": asked.get("question") or ""}, q["at"], 0)
-        reply = {"kind": "reply", "id": q["id"], "outcome": q["outcome"],
-                 "seconds": q["seconds"], "upper": q["upper"], "at": None,
-                 "text": None}
-        if q["answer"] is not None:
-            reply.update(at=q["answer"].get("at"),
-                         text=q["answer"].get("text") or "")
-        elif q["gave_up"] is not None:
-            reply["at"] = q["gave_up"].get("at")
-        elif q["outcome"] == "refused":
-            reply.update(at=q["at"], text=asked.get("error") or None)
-        place(store.GENERAL, reply, q["at"], 1)
+        question, qid = q["question"], q["id"]
+        home = (question.get("room") if question.get("room") in titles
+                else linked.get(qid, store.GENERAL))
+        opened_here = [s["id"] for s in opened if s.get("origin") == qid]
+        gist = gists.get(qid)
+        for room in [home] + [r for r in opened_here if r != home]:
+            place(room, {"kind": "question", "id": qid, "at": q["at"],
+                         "text": question.get("question") or "",
+                         "opened": opened_here}, q["at"], 0)
+            reply = {"kind": "reply", "id": qid, "outcome": q["outcome"],
+                     "seconds": q["seconds"], "upper": q["upper"], "at": None,
+                     "text": None, "gist": gist.get("text") if gist else None}
+            if q["answer"] is not None:
+                reply.update(at=q["answer"].get("at"),
+                             text=q["answer"].get("text") or "")
+            elif q["gave_up"] is not None:
+                reply["at"] = q["gave_up"].get("at")
+            elif q["outcome"] == "refused":
+                reply.update(at=q["at"], text=question.get("error") or None)
+            place(room, reply, q["at"], 1)
+        if home != store.GENERAL:
+            place(store.GENERAL, {"kind": "pointer", "id": qid, "at": q["at"],
+                                  "room": home, "title": titles[home],
+                                  "text": question.get("question") or ""},
+                  q["at"], 0)
+
+    panels: dict[str, dict] = {}
+    for s in opened:
+        changes = history[s["id"]]
+        now = changes[-1] if changes else {}
+        panels[s["id"]] = {
+            "kind": "strategy", "origin": s.get("origin"), "title": titles[s["id"]],
+            "opened_at": s.get("at"), "status": now.get("status") or "proposed",
+            "why": now.get("why"), "since": now.get("at") or s.get("at"),
+            "history": changes, "trades": [], "staked": 0.0, "unclosed": 0,
+            "realized": None, "clones": []}
+        for change in changes:
+            place(s["id"], {"kind": "status", "at": change["at"],
+                            "status": change["status"], "text": change["why"]},
+                  change["at"], 0)
+
+    paper = store.records("paper.jsonl")
+    opener_of: dict[str, dict] = {}
+    for tid, intent, outcome in _orders(paper):
+        said = (outcome or {}).get("outcome")
+        if intent.get("kind") == "close":
+            position = intent.get("position_id")
+            opener = opener_of.get(position)
+            room = linked.get(tid) or (opener["room"] if opener else store.GENERAL)
+            realized = _num((outcome or {}).get("realized_pnl_usdc"))
+            text = (f"{tid} · closed position {str(position)[:8]}"
+                    + (f", opened by {opener['trade']['id']}" if opener
+                       else ", which no order of ours opened")
+                    + (f" · realized {realized:+g} USDC" if realized is not None
+                       else "")
+                    + ("" if said == "accepted" else f" · {_said(outcome)}"))
+            if opener and said == "accepted":
+                opener["trade"].update(closed_by=tid, closed_at=intent.get("at"),
+                                       realized=realized)
+        else:
+            nexus_id = (intent.get("nexus") or {}).get("id")
+            room = linked.get(tid) or by_origin.get(nexus_id) or store.GENERAL
+            response = _response_of(outcome)
+            position = ((outcome or {}).get("position_id")
+                        or response.get("position_id"))
+            side = response.get("side")
+            text = (f"{tid} · paper buy{', ' + str(side) if side else ''}, "
+                    f"{_amount(intent.get('usdc'))} USDC on card "
+                    f"{str(intent.get('card_id'))[:8]}"
+                    + (f" · after {nexus_id}" if nexus_id
+                       else " · ours, no Nexus answer behind it")
+                    + (f" · position {str(position)[:8]}"
+                       if said == "accepted" and position else f" · {_said(outcome)}"))
+            trade = {"id": tid, "at": intent.get("at"), "card": intent.get("card_id"),
+                     "side": side, "usdc": _num(intent.get("usdc")), "outcome": said,
+                     "position": position, "entry": _num(response.get("entry_index")),
+                     "closed_by": None, "closed_at": None, "realized": None}
+            if said == "accepted" and position:
+                opener_of[position] = {"room": room, "trade": trade}
+            if room in panels:
+                panels[room]["trades"].append(trade)
+        place(room, {"kind": "leg", "id": tid, "at": intent.get("at"),
+                     "text": text, "outcome": said}, intent.get("at"), 0)
+    for panel in panels.values():
+        done = [t for t in panel["trades"] if t["outcome"] == "accepted"]
+        closed = [t["realized"] for t in done if t["realized"] is not None]
+        panel.update(staked=sum(t["usdc"] or 0.0 for t in done),
+                     unclosed=sum(1 for t in done if not t["closed_by"]),
+                     realized=round(sum(closed), 6) if closed else None)
+
+    clone_rows = store.records("clones.jsonl")
+    bots: dict[str, dict] = {}
+    for cid, intent, outcome in _orders(clone_rows):
+        said = (outcome or {}).get("outcome")
+        kind = intent.get("kind")
+        response = _response_of(outcome)
+        if not kind:
+            nexus_id = (intent.get("nexus") or {}).get("id")
+            room = linked.get(cid) or by_origin.get(nexus_id) or store.GENERAL
+            name = response.get("name") or intent.get("custom_name")
+            source = response.get("source_name") or intent.get("source_type")
+            if said == "accepted":
+                result = ""
+            elif said == "not_sent":
+                result = f" · not sent: {(outcome or {}).get('error')}"
+            else:
+                result = f" · {_said(outcome)}"
+            text = (f"{cid} · clone {source} as \"{name}\""
+                    + (", paper" if intent.get("paper") else "") + result)
+            instance = (outcome or {}).get("clone_instance_id")
+            if said == "accepted" and instance:
+                bot = {"id": cid, "at": intent.get("at"), "name": name,
+                       "source": response.get("source_name"),
+                       "symbol": response.get("source_symbol"),
+                       "strategy": response.get("strategy_type"),
+                       "risk": response.get("risk_profile"),
+                       "paper": (outcome or {}).get("is_paper", intent.get("paper")),
+                       "instance": instance, "funded": 0.0, "trading": None,
+                       "balance": None, "pnl": None, "trades": None,
+                       "win_rate": None, "sampled_at": None, "samples": []}
+                bots[instance] = {"room": room, "bot": bot, "marks": [
+                    (str(intent.get("at") or ""), (outcome or {}).get("is_trading"))]}
+                if room in panels:
+                    panels[room]["clones"].append(bot)
+        else:
+            owner = bots.get(intent.get("instance_id"))
+            room = linked.get(cid) or (owner["room"] if owner else store.GENERAL)
+            if kind == "fund":
+                balance = response.get("bot_balance")
+                text = f"{cid} · fund {_amount(intent.get('amount'))} USDC"
+                if said != "accepted":
+                    text += f" · {_said(outcome)}"
+                else:
+                    if balance is not None:
+                        text += f" · bot balance {_amount(balance)}"
+                    if owner:
+                        owner["bot"]["funded"] += _num(intent.get("amount")) or 0.0
+            elif kind in ("enable", "disable"):
+                switched = "on" if kind == "enable" else "off"
+                text = f"{cid} · trading switched {switched}"
+                if said != "accepted":
+                    text += f" · {_said(outcome)}"
+                elif owner:
+                    owner["marks"].append((str(intent.get("at") or ""),
+                                           kind == "enable"))
+            else:
+                text = f"{cid} · {kind} · {_said(outcome)}"
+        place(room, {"kind": "leg", "id": cid, "at": intent.get("at"),
+                     "text": text, "outcome": said}, intent.get("at"), 0)
+
+    for row in sorted((r for r in clone_rows if r.get("type") == "sample"),
+                      key=lambda r: str(r.get("at") or "")):
+        owner = bots.get(row.get("instance_id"))
+        if owner is None:
+            continue
+        reading = {"at": row.get("at"), "balance": _num(row.get("balance_usdc")),
+                   "pnl": _num(row.get("total_profit_usdc")),
+                   "trades": row.get("trades_executed"),
+                   "trading": row.get("is_trading")}
+        owner["bot"]["samples"].append(reading)
+        owner["bot"].update(balance=reading["balance"], pnl=reading["pnl"],
+                            trades=reading["trades"],
+                            win_rate=_num(row.get("win_rate")),
+                            sampled_at=reading["at"])
+        owner["marks"].append((str(row.get("at") or ""), row.get("is_trading")))
+    # Switched on at one moment and stopped by itself at a later one: the
+    # newest reading of whether it trades is the one that is true.
+    for owner in bots.values():
+        known = [mark for mark in owner["marks"] if mark[1] is not None]
+        if known:
+            owner["bot"]["trading"] = max(known, key=lambda mark: mark[0])[1]
 
     for row in stored:
         kind = row.get("type")
-        if kind not in ("operator_note", "claude_note"):
+        if kind not in store.NOTE_TYPES or row.get("id") in inside:
             continue
         message = {"kind": kind, "id": row.get("id"), "at": row.get("at"),
                    "text": row.get("text") or "", "re": row.get("re")}
@@ -586,18 +830,31 @@ def build_rooms() -> dict:
         thread.sort(key=lambda m: order[id(m)])
 
     waiting = store.unread(stored)
-    general = threads[store.GENERAL]
-    rooms = [{"id": store.GENERAL, "title": "General", "kind": "general",
-              "messages": len(general),
-              "last_at": max((m["at"] for m in general if m.get("at")),
-                             default=None),
-              "unread_by_claude": sum(
-                  1 for r in waiting
-                  if (r.get("room") or store.GENERAL) == store.GENERAL)}]
+
+    def entry(room: str, title: str, kind: str, origin, status) -> dict:
+        thread = threads[room]
+        return {"id": room, "title": title, "kind": kind, "origin": origin,
+                "status": status, "messages": len(thread),
+                "last_at": max((m["at"] for m in thread if m.get("at")),
+                               default=None),
+                "unread_by_claude": sum(
+                    1 for r in waiting if (r.get("room") or store.GENERAL) == room)}
+
+    # The paper account as the newest order of ours read it afterwards. Live
+    # figures are the sampler's (docs/nexus-rooms-plan.md, P4), not these.
+    book = max((r for r in paper if r.get("type") == "after"),
+               key=lambda r: str(r.get("at") or ""), default=None) or {}
+    general = {**_nexus_summary(derived), "strip": [q["outcome"] for q in derived],
+               "balance": _num(book.get("sim_balance_usdc")),
+               "notional": _num(book.get("notional_usdc")),
+               "book_trades": book.get("sim_total_trades"),
+               "balance_at": book.get("at")}
     return {"generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-            "rooms": rooms, "threads": threads,
-            "panels": {store.GENERAL: {**_nexus_summary(derived),
-                                       "strip": [q["outcome"] for q in derived]}}}
+            "rooms": [entry(store.GENERAL, "General", "general", None, None)]
+            + [entry(s["id"], titles[s["id"]], "strategy", s.get("origin"),
+                     panels[s["id"]]["status"]) for s in opened],
+            "threads": threads,
+            "panels": {store.GENERAL: general, **panels}}
 
 
 def _rewards() -> dict:
@@ -1244,6 +1501,24 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:15.0px; max-wid
 .nx-send{display:flex;justify-content:space-between;align-items:center;gap:.6rem;font-size:.8em;color:var(--text-dim)}
 .nx-send button{font:inherit;font-size:1.15em;padding:.3rem .9rem;border-radius:6px;border:1px solid var(--wait);background:var(--wait);color:var(--surface);cursor:pointer}
 .nx-send button:disabled{opacity:.5;cursor:default}
+.nx-panel h4:not(:first-child){margin-top:.9rem}
+.nx-st{font-weight:700}
+.nx-st.nx-running{color:var(--ok)}
+.nx-st.nx-paused{color:var(--warn)}
+.nx-st.nx-stopped{color:var(--bad)}
+.nx-st.nx-proposed{color:var(--text-dim)}
+.nx-why{margin:.1rem 0 .2rem;font-size:.9em;line-height:1.4}
+.nx-gist{margin:.1rem 0 .45rem;padding:.35rem .55rem;border-left:3px solid var(--accent);background:var(--surface-2);border-radius:4px;font-size:.92em;line-height:1.4}
+.nx-gist span{display:block;font-size:.72em;color:var(--text-dim);margin-bottom:.1rem}
+.nx-opened{margin-top:.35rem;font-size:.8em}
+.nx-goto{background:none;border:none;color:var(--accent);cursor:pointer;font:inherit;padding:0;text-decoration:underline}
+.nx-leg.nx-no{color:var(--bad)}
+.nx-row{border-top:1px solid var(--line-soft);padding:.35rem 0;font-size:.82em;line-height:1.4}
+.nx-row span{display:block;color:var(--text-dim)}
+.nx-spark{display:block;width:100%;height:48px;margin:.2rem 0}
+.nx-spark polyline{fill:none;stroke:var(--accent);stroke-width:1.6;vector-effect:non-scaling-stroke}
+.nx-pf{display:block;width:100%;text-align:left;margin:4px 0;padding:.4rem .5rem;border:1px solid var(--line);border-radius:6px;background:var(--surface-2);color:var(--text);font:inherit;font-size:.85em;cursor:pointer}
+.nx-pf span{display:block;color:var(--text-dim);font-size:.9em;margin-top:.1rem}
 details.stat summary{cursor:pointer;font-weight:600}
 /* Theirs, and counted against them: a 5xx is an answer. */
 .seg-server_error{background:var(--bad);opacity:.65}
@@ -2581,15 +2856,43 @@ const NX_OUTCOME = {
   waiting: "waiting for Nexus…",
 };
 
-// The tab names its own shapes -- `nm` a message, `nr` a room, `np` a panel --
-// because `f.` and `m.` belong to the payload's field guard, and these arrive by
-// fetch. tests/meta/test_pipeline_rooms.py holds each name against what
+// The tab names its own shapes -- `nm` a message, `nr` a room, `np` a panel,
+// and inside a strategy's panel `nt` a trade, `nh` a change of status, `nc` a
+// bot and `ns` one of its samples -- because `f.` and `m.` belong to the
+// payload's field guard, and these arrive by fetch.
+// tests/meta/test_pipeline_rooms.py holds each name against what
 // build_rooms() writes, the same way that guard holds the payload.
-function nxBubble(nm) {
+const NX_STATUS = { proposed: "○", running: "●", paused: "‖", stopped: "■" };
+function nxGlyph(status) {
+  return '<span class="nx-st nx-' + esc(status || "proposed") + '">' +
+    (NX_STATUS[status] || "○") + "</span>";
+}
+// Money the way the operator reads it: 10 000, 89 000.96, 0.00216, −50.
+function nxMoney(v) {
+  if (v == null || v === "" || isNaN(Number(v))) return "—";
+  const n = Number(v), a = Math.abs(n);
+  const parts = a.toFixed(a >= 1 || a === 0 ? 2 : 5).split(".");
+  const tail = Number(parts[1]) ? "." + parts[1].replace(/0+$/, "") : "";
+  return (n < 0 ? "−" : "") + nxDigits(parts[0]) + tail;
+}
+function nxShort(text, n) {
+  const s = String(text == null ? "" : text);
+  return s.length > n ? s.slice(0, n - 1) + "…" : s;
+}
+// A way into another room, from a line in this one.
+function nxGoto(room, label) {
+  return '<button type="button" class="nx-goto" data-room="' + esc(room) + '">' +
+    esc(label) + "</button>";
+}
+function nxBubble(nm, current) {
   const at = nm.at ? " · " + esc(stamp(nm.at)) : "";
   if (nm.kind === "question") {
+    const opened = (nm.opened || []).map(room => room === current
+      ? '<span class="nx-s">this room was opened from this answer</span>'
+      : nxGoto(room, "→ it opened " + room)).join(" ");
     return '<div class="nx-msg nx-ours"><div class="nx-h">Claude → Nexus' + at +
-      " · " + esc(nm.id) + '</div><div class="nx-b">' + nxText(nm.text) + "</div></div>";
+      " · " + esc(nm.id) + '</div><div class="nx-b">' + nxText(nm.text) + "</div>" +
+      (opened ? '<div class="nx-opened">' + opened + "</div>" : "") + "</div>";
   }
   if (nm.kind === "reply") {
     const text = nm.text || "";
@@ -2601,6 +2904,8 @@ function nxBubble(nm) {
     return '<div class="nx-msg nx-' + esc(nm.outcome || "answered") + '">' +
       '<div class="nx-h">Nexus' + at + took + "</div>" +
       (note ? '<div class="nx-s">' + esc(note) + "</div>" : "") +
+      (nm.gist ? '<div class="nx-gist"><span>Claude · summary</span>' + nxText(nm.gist) +
+                 "</div>" : "") +
       (text ? '<div class="nx-b' + (long ? " nx-clamp" : "") + '">' + nxText(text) + "</div>" : "") +
       (long ? '<button class="nx-more" type="button" data-label="' + esc(label) + '">' +
               esc(label) + "</button>" : "") +
@@ -2617,22 +2922,121 @@ function nxBubble(nm) {
       (nm.re ? " · on " + esc(nm.re) : "") + at + '</div><div class="nx-b">' +
       nxText(nm.text) + "</div></div>";
   }
+  if (nm.kind === "pointer") {
+    return '<div class="nx-msg nx-sys">' + esc(nm.id) + at + " · asked in " +
+      nxGoto(nm.room, nm.room + (nm.title ? " · " + nm.title : "")) + ": " +
+      esc(nxShort(nm.text, 110)) + "</div>";
+  }
+  if (nm.kind === "status") {
+    return '<div class="nx-msg nx-sys">' + nxGlyph(nm.status) + " " +
+      esc(nm.status || "") + (nm.text ? " — " + esc(nm.text) : "") + at + "</div>";
+  }
+  if (nm.kind === "leg") {
+    return '<div class="nx-msg nx-sys nx-leg' +
+      (nm.outcome === "accepted" ? "" : " nx-no") + '">' + esc(nm.text || "") + at + "</div>";
+  }
   return '<div class="nx-msg nx-sys">' + esc(nm.text || "") + "</div>";
 }
 
-function nxPanel(room, np) {
-  if (room !== "general") return "";
-  const cells = [["asked", np.asked], ["answered", np.answered],
-                 ["typical", np.median_seconds != null ? nxSecs(np.median_seconds) : null],
-                 ["cut short", np.partial], ["gave up", np.failed], ["refused", np.refused]];
+function nxCells(cells) {
+  return '<div class="nx-grid">' + cells.map(([k, v]) =>
+    "<div><b>" + esc(v == null ? "—" : v) + "</b><span>" + esc(k) + "</span></div>").join("") +
+    "</div>";
+}
+// One line per strategy in General's portfolio: its bot if it has one, else
+// the money in its card orders.
+function nxHeadline(np) {
+  const nc = (np.clones || [])[0];
+  if (nc) {
+    return "bot " + nxMoney(nc.balance != null ? nc.balance : nc.funded) + " USDC" +
+      (nc.pnl != null ? " · P&L " + nxMoney(nc.pnl) : "");
+  }
+  const orders = (np.trades || []).length;
+  return orders ? nxMoney(np.staked) + " USDC in " + orders + " order(s)" : "nothing done yet";
+}
+// A bot's balance over its samples, as a line. No library: the Stats tab draws
+// its charts the same way.
+function nxSpark(values) {
+  const pts = values.filter(v => typeof v === "number" && isFinite(v));
+  if (pts.length < 2) return "";
+  const lo = Math.min(...pts), hi = Math.max(...pts), span = hi - lo || 1;
+  const w = 240, h = 48;
+  const xy = pts.map((v, i) => (i * w / (pts.length - 1)).toFixed(1) + "," +
+    (h - 4 - (v - lo) / span * (h - 8)).toFixed(1)).join(" ");
+  return '<svg class="nx-spark" viewBox="0 0 ' + w + " " + h +
+    '" preserveAspectRatio="none" role="img" aria-label="balance, sample by sample">' +
+    '<polyline points="' + xy + '"/></svg>';
+}
+function nxGeneral(np) {
+  const strategies = ((NX && NX.rooms) || []).filter(nr => nr.kind === "strategy");
   return "<h4>Nexus, every question so far</h4>" +
-    '<div class="nx-grid">' + cells.map(([k, v]) =>
-      "<div><b>" + esc(v == null ? "—" : v) + "</b><span>" + esc(k) + "</span></div>").join("") +
-    "</div>" +
+    nxCells([["asked", np.asked], ["answered", np.answered],
+             ["typical", np.median_seconds != null ? nxSecs(np.median_seconds) : null],
+             ["cut short", np.partial], ["gave up", np.failed], ["refused", np.refused]]) +
     '<div class="rely-strip">' + (np.strip || []).map(o =>
       '<i class="sq ' + esc(o) + '"></i>').join("") + "</div>" +
-    '<p class="nx-foot">A strategy Nexus proposes opens as a room of its own, ' +
-    "with its trades and charts here.</p>";
+    (np.balance != null
+      ? "<h4>Paper account</h4>" +
+        nxCells([["USDC free", nxMoney(np.balance)], ["in cards", nxMoney(np.notional)],
+                 ["orders", np.book_trades]]) +
+        '<p class="nx-foot">As the last order of ours read it, ' +
+        esc(stamp(np.balance_at)) + ".</p>"
+      : "") +
+    "<h4>Strategies</h4>" +
+    (strategies.length
+      ? strategies.map(nr => '<button type="button" class="nx-pf" data-room="' +
+          esc(nr.id) + '">' + nxGlyph(nr.status) + " <b>" + esc(nr.id) + "</b> " +
+          esc(nr.title || "") + "<span>" + esc(nr.status || "") + " · " +
+          esc(nxHeadline(((NX && NX.panels) || {})[nr.id] || {})) + "</span></button>").join("")
+      : '<p class="nx-foot">A strategy Nexus proposes opens as a room of its own.</p>');
+}
+function nxStrategy(np) {
+  const trades = np.trades || [], bots = np.clones || [], moves = np.history || [];
+  let html = "<h4>" + nxGlyph(np.status) + " " + esc(np.status || "proposed") + "</h4>" +
+    '<p class="nx-why">' + (np.why ? esc(np.why)
+      : "Nexus proposed it and nothing has been done about it yet.") + "</p>" +
+    '<p class="nx-foot">Since ' + esc(stamp(np.since)) + " · opened from " +
+    esc(np.origin || "") + "</p>";
+  if (trades.length) {
+    html += "<h4>Card orders</h4>" +
+      nxCells([["USDC in", nxMoney(np.staked)], ["no close", np.unclosed],
+               ["realized", np.realized == null ? null : nxMoney(np.realized)]]) +
+      trades.map(nt => '<div class="nx-row"><b>' + esc(nt.id) + "</b> · " +
+        esc(nt.side || "side unknown") + " · " + nxMoney(nt.usdc) + " USDC · card " +
+        esc(nxShort(nt.card, 9)) +
+        (nt.entry != null ? " · entry " + esc(Number(nt.entry).toFixed(2)) : "") +
+        "<span>" + (nt.outcome !== "accepted" ? esc(nt.outcome || "no outcome recorded")
+          : nt.closed_by ? "closed by " + esc(nt.closed_by) + ", realized " +
+                           nxMoney(nt.realized) + " USDC"
+          : "no close recorded") + "</span></div>").join("");
+  }
+  html += bots.map(nc => "<h4>Bot · " + esc(nc.name || nc.id) + "</h4>" +
+    '<p class="nx-foot">' + esc([nc.source, nc.symbol, nc.strategy,
+                                 nc.risk ? nc.risk + " risk" : "",
+                                 nc.paper === true ? "paper" : nc.paper === false ? "LIVE" : ""]
+                                .filter(Boolean).join(" · ")) + "</p>" +
+    nxCells([["balance", nxMoney(nc.balance)], ["P&L", nxMoney(nc.pnl)],
+             ["trades", nc.trades], ["funded", nxMoney(nc.funded)],
+             ["trading", nc.trading == null ? null : (nc.trading ? "yes" : "no")],
+             ["win rate", nc.win_rate == null ? null : nc.win_rate + " %"]]) +
+    nxSpark((nc.samples || []).map(ns => ns.balance)) +
+    '<p class="nx-foot">' + (nc.sampled_at
+      ? "Last sample " + esc(stamp(nc.sampled_at)) + ", " + (nc.samples || []).length +
+        " in all."
+      : "Never sampled.") + "</p>").join("");
+  if (moves.length) {
+    html += "<h4>How it moved</h4>" + moves.map(nh => '<div class="nx-row">' +
+      nxGlyph(nh.status) + " " + esc(nh.status || "") + " · " + esc(stamp(nh.at)) +
+      "<span>" + esc(nh.why || "") + "</span></div>").join("");
+  }
+  return html;
+}
+function nxPanel(nr, np) {
+  return nr && nr.kind === "strategy" ? nxStrategy(np) : nxGeneral(np);
+}
+function nxHeader(nr) {
+  return '<h3 class="nx-title">' + (nr.kind === "strategy" ? esc(nr.id) + " · " : "") +
+    esc(nr.title || nr.id) + "</h3>";
 }
 
 // What arrived since the operator last looked at a room: Nexus's replies and
@@ -2657,17 +3061,20 @@ function renderRooms(data) {
   }
   document.getElementById("roomList").innerHTML = rooms.map(nr => {
     const fresh = nxFresh(nr.id);
+    const name = nr.kind === "strategy"
+      ? nxGlyph(nr.status) + " " + esc(nr.id) + " · " + esc(nr.title || "")
+      : esc(nr.title || nr.id);
     return '<button type="button" class="nx-room' + (nr.id === current ? " on" : "") +
-      '" data-room="' + esc(nr.id) + '"><span class="nx-rt">' + esc(nr.title || nr.id) +
+      '" data-room="' + esc(nr.id) + '"><span class="nx-rt">' + name +
       "</span>" + (fresh ? '<span class="nx-badge">' + fresh + "</span>" : "") + "</button>";
   }).join("");
-  const shown = rooms.find(nr => nr.id === current) || { title: "General" };
-  document.getElementById("roomChat").innerHTML =
-    '<h3 class="nx-title">' + esc(shown.title || current) + "</h3>" +
-    (thread.length ? thread.map(nxBubble).join("")
+  const shown = rooms.find(nr => nr.id === current) ||
+    { id: "general", title: "General", kind: "general" };
+  document.getElementById("roomChat").innerHTML = nxHeader(shown) +
+    (thread.length ? thread.map(nm => nxBubble(nm, current)).join("")
                    : '<div class="empty">Nothing here yet.</div>');
   document.getElementById("roomPanel").innerHTML =
-    nxPanel(current, (NX.panels || {})[current] || {});
+    nxPanel(shown, (NX.panels || {})[current] || {});
   const total = rooms.reduce((n, nr) => n + nxFresh(nr.id), 0);
   const badge = document.getElementById("nexusN");
   if (badge) { badge.textContent = total ? String(total) : ""; badge.hidden = !total; }
@@ -2703,7 +3110,18 @@ document.getElementById("roomList").addEventListener("click", e => {
   writeStore("qa.room", b.dataset.room);
   renderRooms(NX);
 });
+// A line naming another room -- a pointer, "it opened STR-0003", a strategy in
+// General's portfolio -- takes the operator there.
+function nxGoInto(e) {
+  const go = e.target.closest(".nx-goto, .nx-pf");
+  if (!go) return false;
+  writeStore("qa.room", go.dataset.room);
+  renderRooms(NX);
+  return true;
+}
+document.getElementById("roomPanel").addEventListener("click", nxGoInto);
 document.getElementById("roomChat").addEventListener("click", e => {
+  if (nxGoInto(e)) return;
   const b = e.target.closest(".nx-more");
   if (!b || !b.previousElementSibling) return;
   const body = b.previousElementSibling;
