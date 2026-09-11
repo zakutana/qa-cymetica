@@ -47,6 +47,10 @@ BALANCE = f"/api/v1/cloned-bots/{INSTANCE}/balance"
 ACTIVITY = f"/api/v1/cloned-bots/{INSTANCE}/activity"
 POSITIONS = "/api/v1/event-cards/positions"
 HISTORY = f"/api/v1/event-cards/{CARD}/index-history"
+CARD_PATH = f"/api/v1/event-cards/{CARD}"
+PLANNED = "d432f8cd-dc3f-4563-ab44-07e34dbd2a0a"
+GONE = "0ce239bf-2565-45b6-8eed-f9550646a1ca"
+ELSEWHERE = "8eaedadc-229b-4d1b-8d1e-7ea74ac5bae2"
 
 
 def _sampler(state_dir: Path, monkeypatch):
@@ -100,6 +104,14 @@ def _api(**over) -> dict:
         HISTORY: {"card_id": CARD, "interval": "5d", "points": [
             {"t": "2026-09-11T08:00:00+00:00", "index": 92.0, "share_price": 0.0092},
             {"t": "2026-09-11T09:00:00+00:00", "index": 93.0, "share_price": 0.0093}]},
+        CARD_PATH: {"id": CARD, "title": "Pepeto DeFi... Bitcoin $250,000",
+                    "evcdx_symbol": "EVCDX-PEPETO", "status": "live",
+                    "tradeable_now": True,
+                    "trading_closes_at": "2026-09-12T23:14:22+00:00",
+                    "index_base": 100.0, "current_index": 93.0,
+                    "basket": [{"symbol": "BCH", "name": "Bitcoin Cash",
+                                "weight": 0.685, "asset_type": "crypto"},
+                               {"symbol": "OKB", "weight": 0.315}]},
     }
     bodies.update(over)
     return bodies
@@ -138,7 +150,7 @@ def _ticks(state_dir: Path) -> int:
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_the_sampler_reads_its_five_doors_with_get_and_nothing_else(
+def test_the_sampler_reads_its_six_doors_with_get_and_nothing_else(
         tmp_path, monkeypatch):
     sampler = _sampler(tmp_path, monkeypatch)
     _ours(tmp_path)
@@ -147,8 +159,13 @@ def test_the_sampler_reads_its_five_doors_with_get_and_nothing_else(
 
     assert {method for method, _ in seen} == {"GET"}, f"the sampler sent {seen}"
     assert sorted(path for _, path in seen) == sorted(
-        [BOTS, BALANCE, ACTIVITY, POSITIONS, HISTORY]), (
-        f"it read something that is not ours, or missed one of its five: {seen}")
+        [BOTS, BALANCE, ACTIVITY, POSITIONS, CARD_PATH, HISTORY]), (
+        f"it read something that is not ours, or missed one of its six: {seen}")
+    (card,) = [r for r in rows if r["type"] == "card"]
+    assert (card["card_id"], card["status"], card["trading_closes_at"]) == (
+        CARD, "live", "2026-09-12T23:14:22+00:00")
+    assert card["basket"] == [{"symbol": "BCH", "weight": 0.685},
+                              {"symbol": "OKB", "weight": 0.315}]
     (tick,) = [r for r in rows if r["type"] == "tick"]
     assert tick["ok"] is True and tick["every"] == 600
     (bot,) = [r for r in rows if r.get("kind") == "bot"]
@@ -322,3 +339,60 @@ def test_both_launchers_start_the_sampler_and_the_old_watch_goes_through_it():
     assert "_append" not in called, (
         "clone.py watch still writes its samples into the committed clones.jsonl")
     assert "run" in called, "clone.py watch does not go through the sampler's round"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_card_nexus_proposed_is_followed_and_described_only_when_it_changes(
+        tmp_path, monkeypatch):
+    """A proposal's cards are ours to watch too: its plan names them, and the
+    panel shows how they moved since Nexus answered.
+
+    Each is described by its own door -- its name, its basket, when it closes
+    -- and that is written once and again only when it changes, never because
+    its index moved. A plan in a stopped room is not followed. A card they no
+    longer know is a row saying so, not a round that fails every ten minutes
+    for as long as the plan stands.
+    """
+    sampler = _sampler(tmp_path, monkeypatch)
+    _write(tmp_path / "nexus.jsonl", [*_answered("NEX-1", 0), *_answered("NEX-2", 100)])
+    from qa import rooms
+
+    rooms.open_strategy("NEX-1", "Proposed")
+    rooms.open_strategy("NEX-2", "Stopped")
+    rooms.set_plan("STR-0001", [{"card": PLANNED, "side": "bull", "share": 0.2},
+                                {"card": GONE, "side": "bull", "share": 0.1}])
+    rooms.set_plan("STR-0002", [{"card": ELSEWHERE, "side": "bull", "share": 0.1}])
+    rooms.set_status("STR-0002", "stopped", "closed out")
+    planned, history = (f"/api/v1/event-cards/{PLANNED}",
+                        f"/api/v1/event-cards/{PLANNED}/index-history")
+    described = {"id": PLANNED, "title": "Bitcoin's latest hack", "status": "live",
+                 "tradeable_now": True, "trading_closes_at": "2026-09-12T07:44:00+00:00",
+                 "index_base": 100.0, "current_index": 97.4,
+                 "basket": [{"symbol": "BTC", "weight": 0.996}]}
+    points = {"card_id": PLANNED,
+              "points": [{"t": "2026-09-11T08:00:00+00:00", "index": 97.36}]}
+
+    seen: list = []
+    first = sampler.tick(_client({planned: described, history: points}, seen), every=600)
+    paths = {path for _, path in seen}
+    assert {planned, history, f"/api/v1/event-cards/{GONE}"} <= paths, paths
+    assert not any(ELSEWHERE in path for path in paths), (
+        "a plan in a stopped room is still followed")
+    assert {method for method, _ in seen} == {"GET"}
+    cards = {r["card_id"]: r for r in first if r["type"] == "card"}
+    assert cards[PLANNED]["basket"] == [{"symbol": "BTC", "weight": 0.996}]
+    assert "current_index" not in cards[PLANNED], (
+        "the index is in the description, so every round would rewrite it")
+    assert cards[GONE]["status"] == "not_found"
+    (index,) = [r for r in first if r["type"] == "index"]
+    assert index["card_id"] == PLANNED
+    (tick,) = [r for r in first if r["type"] == "tick"]
+    assert tick["ok"] is True, f"a card they no longer know failed the round: {tick}"
+
+    moved = dict(described, current_index=99.0)
+    again = sampler.tick(_client({planned: moved, history: points}, []), every=600)
+    assert not [r for r in again if r["type"] in ("card", "index")], (
+        "a card was described again although only its index moved")
+    settled = dict(moved, status="settled", tradeable_now=False)
+    third = sampler.tick(_client({planned: settled, history: points}, []), every=600)
+    assert [r["status"] for r in third if r["type"] == "card"] == ["settled"]

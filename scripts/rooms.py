@@ -15,6 +15,16 @@ record is qa/rooms.py.
     python scripts/rooms.py open --from NEX-0016 --title "..."    a strategy room
     python scripts/rooms.py status STR-0003 running --why "..."   where it stands
     python scripts/rooms.py link STR-0003 TRD-0007 --why "..."    draw it in there
+    python scripts/rooms.py title STR-0003 "BTC + BCH blend"      its name on the page
+    python scripts/rooms.py plan STR-0003 --leg CARD:bull:20%:tp=8:sl=-5
+        --leg CARD:bull:10%:tp=13:sl=-9 --reserve 70% --bankroll 100000
+                                                 Nexus's proposal, leg by leg
+
+`plan` writes down what Nexus PROPOSED -- each card by its whole id, the side,
+the share of the bankroll, the take-profit and the stop -- so the tab can lay
+what was done over it and the sampler knows which cards to watch. What was
+done stays paper.py's record; `show` prints each leg with its levels, so a
+session can see whether an exit Nexus gave has been crossed.
 
 `unread` prints first and marks afterwards, and only through the last note it
 printed: a note that lands while it prints stays unread. The console shows the
@@ -74,6 +84,44 @@ def _refused(exc: Exception) -> int:
     return 2
 
 
+def _share(text) -> float:
+    """20% or 0.2 -- a share of the bankroll as Nexus says it, or as a fraction."""
+    s = str(text or "").strip()
+    try:
+        return float(s[:-1]) / 100 if s.endswith("%") else float(s)
+    except ValueError:
+        raise rooms.RoomError(f"{text!r} is not a share -- say 20% or 0.2") from None
+
+
+def _leg(text: str) -> dict:
+    """CARD:SIDE:SHARE, then tp=N and sl=N when Nexus gave them."""
+    parts = str(text or "").split(":")
+    if len(parts) < 3:
+        raise rooms.RoomError(f"{text!r}: a leg is CARD:SIDE:SHARE[:tp=N][:sl=N]")
+    leg: dict = {"card": parts[0], "side": parts[1], "share": _share(parts[2])}
+    for extra in parts[3:]:
+        key, _, value = extra.partition("=")
+        if key not in ("tp", "sl") or not value:
+            raise rooms.RoomError(f"{extra!r}: only tp=N and sl=N follow the share")
+        try:
+            leg[key] = float(value.rstrip("%"))
+        except ValueError:
+            raise rooms.RoomError(f"{extra!r}: {key} is a number of percent") from None
+    return leg
+
+
+def _leg_line(leg: dict) -> str:
+    def level(value) -> str:
+        return f"{value:.2f}" if isinstance(value, (int, float)) else "-"
+
+    share = f" {leg['share']:.0%}" if leg.get("share") else ""
+    return (f"[leg] {leg.get('label') or str(leg.get('card'))[:8]} "
+            f"{leg.get('side') or '?'}{share} · {leg.get('state')}"
+            f" · entry {level(leg.get('entry'))} · now {level(leg.get('current'))}"
+            f" · TP {level(leg.get('tp_level'))} · SL {level(leg.get('sl_level'))}"
+            + (f" · {', '.join(leg['orders'])}" if leg.get("orders") else ""))
+
+
 def cmd_unread(args) -> int:
     waiting = rooms.unread(rooms.load())
     if not waiting:
@@ -103,10 +151,18 @@ def cmd_list(args) -> int:
 
 
 def cmd_show(args) -> int:
-    thread = _view()["threads"].get(args.room)
+    view = _view()
+    thread = view["threads"].get(args.room)
     if thread is None:
         print(f"there is no room {args.room!r}", file=sys.stderr)
         return 2
+    # The plan first, each leg with where it stands: the exits Nexus gave are
+    # levels here, so whether one has been crossed is read, not worked out.
+    legs = (view["panels"].get(args.room) or {}).get("legs") or []
+    for leg in legs:
+        print(_leg_line(leg))
+    if legs:
+        print()
     for message in thread:
         kind = message["kind"]
         when = _when(message.get("at"))
@@ -167,6 +223,30 @@ def cmd_link(args) -> int:
     return 0
 
 
+def cmd_title(args) -> int:
+    try:
+        row = rooms.set_title(args.room, args.title)
+    except rooms.RoomError as exc:
+        return _refused(exc)
+    print(f"{row['room']} is called {row['title']}")
+    return 0
+
+
+def cmd_plan(args) -> int:
+    try:
+        legs = [_leg(text) for text in args.leg]
+        reserve = _share(args.reserve) if args.reserve is not None else None
+        row = rooms.set_plan(args.room, legs, reserve=reserve, bankroll=args.bankroll)
+    except rooms.RoomError as exc:
+        return _refused(exc)
+    print(f"{row['room']}: "
+          + ", ".join(f"{leg['card'][:8]} {leg['side']} {leg['share']:.0%}"
+                      for leg in row["legs"])
+          + (f", {row['reserve']:.0%} kept back" if row.get("reserve") is not None
+             else ""))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     printable()
 
@@ -196,10 +276,22 @@ def main(argv: list[str] | None = None) -> int:
     link.add_argument("room")
     link.add_argument("ref")
     link.add_argument("--why", required=True)
+    named = sub.add_parser("title", help="a strategy's name on the page, a few words")
+    named.add_argument("room")
+    named.add_argument("title")
+    plan = sub.add_parser("plan", help="Nexus's proposal for a strategy, leg by leg")
+    plan.add_argument("room")
+    plan.add_argument("--leg", action="append", required=True,
+                      help="CARD:SIDE:SHARE[:tp=N][:sl=N], the card by its whole "
+                           "id, e.g. e579581b-...:bull:10%%:tp=13:sl=-9")
+    plan.add_argument("--reserve", help="the share Nexus kept back, e.g. 70%%")
+    plan.add_argument("--bankroll", type=float,
+                      help="the sum Nexus sized the shares against")
     args = parser.parse_args(argv)
     return {"unread": cmd_unread, "list": cmd_list, "show": cmd_show,
             "note": cmd_note, "open": cmd_open, "status": cmd_status,
-            "link": cmd_link}[args.command](args)
+            "link": cmd_link, "title": cmd_title,
+            "plan": cmd_plan}[args.command](args)
 
 
 if __name__ == "__main__":

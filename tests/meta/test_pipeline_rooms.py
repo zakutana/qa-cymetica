@@ -485,9 +485,10 @@ def _answered(qid: str, seconds: float, question: str = "which cards?",
 
 
 def _buy(tid: str, seconds: float, nexus_id, usdc: float = 10.0,
-         position: str = "P-1", outcome: str = "accepted") -> list[dict]:
+         position: str = "P-1", outcome: str = "accepted",
+         card: str = "card-a-1111") -> list[dict]:
     """A paper buy the way scripts/paper.py records one: intent, then outcome."""
-    rows = [{"id": tid, "type": "intent", "at": _at(seconds), "card_id": "card-a-1111",
+    rows = [{"id": tid, "type": "intent", "at": _at(seconds), "card_id": card,
              "usdc": usdc, "paper": True, "nexus": {"id": nexus_id}}]
     if outcome == "accepted":
         response = json.dumps({"position_id": position, "side": "bull",
@@ -964,3 +965,169 @@ def test_a_strategy_room_draws_its_book_and_its_bot_and_general_the_portfolio(
         "General does not list the strategies and where each stands")
     assert "stale" in general, (
         "a sampler whose last round is hours old is not called stale on the page")
+
+
+# ---------------------------------------------------------------------------
+# A strategy's name, and Nexus's proposal written down as its plan
+# ---------------------------------------------------------------------------
+CARD_A = "e579581b-0ad3-463f-8c3d-e80bd2624d40"
+CARD_B = "d432f8cd-dc3f-4563-ab44-07e34dbd2a0a"
+CARD_C = "f197d20f-db76-431d-a10c-75a538ebe213"
+
+
+def _card(card: str, seconds: float, basket, closes=None, status="live") -> dict:
+    """A card as the sampler describes it: what is in its basket, when it closes."""
+    return {"type": "card", "at": _at(seconds), "card_id": card,
+            "title": f"card {card[:8]}", "evcdx_symbol": f"EVCDX-{card[:4].upper()}",
+            "status": status, "tradeable_now": status == "live",
+            "trading_closes_at": closes, "index_base": 100.0,
+            "basket": [{"symbol": s, "weight": w} for s, w in basket]}
+
+
+def _index(card: str, seconds: float, points) -> dict:
+    return {"type": "index", "at": _at(seconds), "card_id": card,
+            "points": [[_at(t), v] for t, v in points]}
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_name_and_a_plan_are_checked_before_anything_is_written(tmp_path, monkeypatch):
+    """Clear names for the strategies, and a panel that says at a glance what
+    each one holds -- the operator's two asks after the first version.
+
+    A name is ours and short. A plan is Nexus's proposal written down as legs:
+    the card by its whole id, because the sampler reads the card by it; the
+    side; the share of the bankroll; the take-profit and the stop Nexus gave.
+    Each is refused whole before anything is written, and the newest wins.
+    """
+    rooms = _rooms_at(tmp_path, monkeypatch)
+    _write(tmp_path / "nexus.jsonl", _answered("NEX-1", 0))
+    rooms.open_strategy("NEX-1", "BTC 20 % + BCH-blend 10 %")
+    before = _stored(tmp_path)
+
+    for bad in ("", " ", "x" * 41):
+        with pytest.raises(rooms.RoomError):
+            rooms.set_title("STR-0001", bad)
+    with pytest.raises(rooms.RoomError):
+        rooms.set_title("STR-0009", "Nowhere")
+    leg = {"card": CARD_A, "side": "bull", "share": 0.1, "tp": 13.0, "sl": -9.0}
+    for legs in ([], [dict(leg, card=CARD_A[:8])], [dict(leg, side="long")],
+                 [dict(leg, share=0)], [dict(leg, share=1.5)],
+                 [dict(leg, tp=-1.0)], [dict(leg, sl=2.0)], [dict(leg, tp="high")],
+                 [leg, dict(leg, share=0.2)],
+                 [dict(leg, share=0.7), dict(leg, card=CARD_B, share=0.4)]):
+        with pytest.raises(rooms.RoomError):
+            rooms.set_plan("STR-0001", legs)
+    with pytest.raises(rooms.RoomError):
+        rooms.set_plan("STR-0001", [leg], reserve=0.95)
+    with pytest.raises(rooms.RoomError):
+        rooms.set_plan("STR-0001", [leg], bankroll=0)
+    with pytest.raises(rooms.RoomError):
+        rooms.set_plan("STR-0009", [leg])
+    assert _stored(tmp_path) == before, "a refused name or plan still wrote something"
+
+    rooms.set_title("STR-0001", "BTC + BCH")
+    rooms.set_title("STR-0001", "  BTC +   BCH blend ")
+    rooms.set_plan("STR-0001", [dict(leg, card=CARD_B, share=0.3)])
+    rooms.set_plan("STR-0001", [dict(leg, card=CARD_B, share=0.2, tp=8.0, sl=-5.0), leg],
+                   reserve=0.7, bankroll=100000.0)
+    stored = rooms.load()
+    assert rooms.names(stored)["STR-0001"] == "BTC + BCH blend"
+    plan = rooms.plans(stored)["STR-0001"]
+    assert [(g["card"], g["share"], g["tp"], g["sl"]) for g in plan["legs"]] == [
+        (CARD_B, 0.2, 8.0, -5.0), (CARD_A, 0.1, 13.0, -9.0)]
+    assert (plan["reserve"], plan["bankroll"]) == (0.7, 100000.0)
+    (room,) = [r for r in _render().build_rooms()["rooms"] if r["id"] == "STR-0001"]
+    assert room["title"] == "BTC + BCH blend", (
+        "the tab still names the room by the title it was opened with")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_plan_is_written_from_the_command_line_the_way_nexus_gives_it(tmp_path):
+    """`--leg CARD:SIDE:SHARE:tp=N:sl=N`, the share as Nexus says it (20%) or as
+    a fraction. A leg that does not parse is refused and nothing is written."""
+    _write(tmp_path / "nexus.jsonl", _answered("NEX-1", 0))
+    opened = _run(["scripts/rooms.py", "open", "--from", "NEX-1", "--title", "A"],
+                  tmp_path)
+    assert opened.returncode == 0, opened.stderr
+    for leg in (f"{CARD_A}:bull:ten", f"{CARD_A}:bull", f"{CARD_A}:bull:10%:stop=4"):
+        bad = _run(["scripts/rooms.py", "plan", "STR-0001", "--leg", leg], tmp_path)
+        assert bad.returncode == 2 and "refused" in bad.stderr, (leg, bad.stderr)
+    assert not [r for r in _stored(tmp_path) if r["type"] == "plan"]
+
+    made = _run(["scripts/rooms.py", "plan", "STR-0001",
+                 "--leg", f"{CARD_B}:bull:20%:tp=8:sl=-5",
+                 "--leg", f"{CARD_A}:bull:0.1:tp=13:sl=-9",
+                 "--reserve", "70%", "--bankroll", "100000"], tmp_path)
+    assert made.returncode == 0, made.stderr
+    (plan,) = [r for r in _stored(tmp_path) if r["type"] == "plan"]
+    assert [(g["card"], g["side"], g["share"], g["tp"], g["sl"])
+            for g in plan["legs"]] == [(CARD_B, "bull", 0.2, 8.0, -5.0),
+                                       (CARD_A, "bull", 0.1, 13.0, -9.0)]
+    assert (plan["reserve"], plan["bankroll"]) == (0.7, 100000.0)
+    named = _run(["scripts/rooms.py", "title", "STR-0001", "BTC + BCH blend"], tmp_path)
+    assert named.returncode == 0, named.stderr
+    listed = _run(["scripts/rooms.py", "list"], tmp_path)
+    assert "BTC + BCH blend" in listed.stdout, listed.stdout
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_plan_leg_meets_its_order_its_card_and_where_it_stood_when_proposed(
+        tmp_path, monkeypatch):
+    """What the panel's configuration table is drawn from.
+
+    A leg that was bought carries its order, its entry, where the index stands,
+    and its take-profit and stop as index levels. A leg that was not carries
+    how its card moved since Nexus answered -- what would have happened, which
+    the page labels as such and never as ours. A card is named by what is in
+    its basket, and a leg the sampler has not described yet still shows, from
+    the plan alone: that is the page in the first minute after the console
+    starts.
+    """
+    rooms = _rooms_at(tmp_path, monkeypatch)
+    _write(tmp_path / "nexus.jsonl", _answered("NEX-1", 0))  # answered at 60 s
+    rooms.open_strategy("NEX-1", "A")
+    rooms.set_plan("STR-0001", [
+        {"card": CARD_B, "side": "bull", "share": 0.2, "tp": 8.0, "sl": -5.0},
+        {"card": CARD_A, "side": "bull", "share": 0.1, "tp": 13.0, "sl": -9.0},
+        {"card": CARD_C, "side": "bull", "share": 0.05}],
+        reserve=0.65, bankroll=100000.0)
+    _write(tmp_path / "paper.jsonl", _buy("TRD-0001", 900, "NEX-1", usdc=10000.0,
+                                          card=CARD_A))
+    _write(tmp_path / "samples.jsonl", [
+        _card(CARD_A, 950, [("BCH", 0.685), ("OKB", 0.315)],
+              closes="2026-09-12T23:14:22+00:00"),
+        _card(CARD_B, 950, [("BTC", 0.996), ("ETH", 0.004)],
+              closes="2026-09-12T07:44:00+00:00"),
+        _index(CARD_A, 950, [(30, 99.0), (900, 92.3), (950, 92.42)]),
+        _index(CARD_B, 950, [(30, 97.0), (60, 97.36), (950, 98.0)]),
+        {"type": "sample", "kind": "position", "at": _at(950), "position_id": "P-1",
+         "card_id": CARD_A, "status": "open", "current_index": 92.42,
+         "current_value_usdc": 10014.48, "unrealized_pnl_usdc": 14.48,
+         "realized_pnl_usdc": 0.0},
+    ])
+    panel = _render().build_rooms()["panels"]["STR-0001"]
+    legs = {leg["card"]: leg for leg in panel["legs"]}
+
+    bought = legs[CARD_A]
+    assert (bought["state"], bought["orders"], bought["label"]) == (
+        "open", ["TRD-0001"], "68 % BCH · 32 % OKB")
+    assert (bought["entry"], bought["current"], bought["pnl"]) == (92.28, 92.42, 14.48)
+    assert (round(bought["tp_level"], 2), round(bought["sl_level"], 2)) == (104.28, 83.97)
+    assert bought["closes_at"] == "2026-09-12T23:14:22+00:00"
+
+    waiting = legs[CARD_B]
+    assert (waiting["state"], waiting["orders"], waiting["label"]) == (
+        "not bought", [], "BTC"), "a card that is 99.6 % one coin is not named by it"
+    assert waiting["usdc_proposed"] == 20000.0
+    assert waiting["at_proposal"] == 97.36, (
+        "the index a leg moved from is not the one it stood at when Nexus answered")
+    assert round(waiting["since_proposal"], 2) == 0.66
+
+    bare = legs[CARD_C]
+    assert (bare["state"], bare["label"], bare["closes_at"], bare["since_proposal"]) == (
+        "not bought", None, None, None), "a leg the sampler has not described is lost"
+
+    assert (panel["holds"], panel["invested"], panel["pnl"]) == ("cards", 10000.0, 14.48)
+    assert panel["closes_at"] == "2026-09-12T07:44:00+00:00", (
+        "the card that closes first is not the one the panel counts down to")
+    assert (panel["proposed_share"], panel["reserve"]) == (0.35, 0.65)

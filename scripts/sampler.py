@@ -13,19 +13,22 @@ running (qa/rooms.py says the rest).
 
 SAFE, GET only, through the guarded client, and only about what is ours by our
 own records: the bots clones.jsonl says we cloned, the positions paper.jsonl
-says we opened and have not closed. Five doors:
+says we opened and have not closed, and the cards a strategy's plan names while
+that strategy is not stopped (qa/rooms.py). Six doors:
 
     my-clones              the bot's balance, P&L, trades, and its indicators
     {id}/balance           what is locked in open trades, and what is free
     {id}/activity          the bot's trades -- undocumented, read for display only
     event-cards/positions  each of our positions, live
+    event-cards/{card}     what a card holds, and when it closes
     {card}/index-history   the card's index, for the chart
 
 Every round writes a `tick`, including a round in which every read failed: on
 the night of 2026-09-10 a sampler hung for four hours behind `| tail` and
 nothing said so. Each read has a timeout and the round has a cap, and a stall
-costs a round, never the loop. A trade, the bot's configuration and an index
-point are written once, and again only when they change.
+costs a round, never the loop. A trade, the bot's configuration, a card's
+description and an index point are written once, and again only when they
+change.
 """
 
 from __future__ import annotations
@@ -53,6 +56,7 @@ BALANCE = "/api/v1/cloned-bots/{id}/balance"
 ACTIVITY = "/api/v1/cloned-bots/{id}/activity"
 POSITIONS = "/api/v1/event-cards/positions"
 HISTORY = "/api/v1/event-cards/{id}/index-history"
+CARD = "/api/v1/event-cards/{id}"
 TIMEOUT = 20.0
 # A whole round may take this long; what is left unread waits for the next
 # one. Five doors at a 20 s timeout each could otherwise hold a round for
@@ -66,6 +70,15 @@ CONFIG_FIELDS = ("strategy_type", "risk_profile", "primary_indicators",
                  "secondary_indicators", "execution_class")
 POSITION_FIELDS = ("status", "current_index", "current_value_usdc",
                    "unrealized_pnl_usdc", "realized_pnl_usdc")
+# What describes a card, written again only when it changes. Not its index:
+# that moves on every read and has a door of its own.
+CARD_FIELDS = ("title", "evcdx_symbol", "status", "tradeable_now",
+               "trading_closes_at", "index_base", "basket")
+BASKET_TOP = 5
+# What the card door returns for a 404: they no longer know the card. That is
+# a fact about the card, written as its status -- not a round that fails every
+# ten minutes for as long as a plan names it.
+MISSING = object()
 
 _SCRIPTS: dict = {}
 
@@ -86,8 +99,9 @@ def _now() -> str:
 
 
 def follow() -> dict:
-    """What is ours to follow, by our own records: the bots we cloned, and the
-    positions we opened and have not closed, each with its card."""
+    """What is ours to follow, by our own records: the bots we cloned, the
+    positions we opened and have not closed, each with its card, and the cards
+    a plan names in a room that is not stopped."""
     bots: list[str] = []
     for row in rooms.records("clones.jsonl"):
         instance = row.get("clone_instance_id")
@@ -106,8 +120,19 @@ def follow() -> dict:
             closed.add(intent.get("position_id"))
         elif row.get("position_id"):
             opened[row["position_id"]] = intent.get("card_id")
+    stored = rooms.load()
+    status = {row.get("room"): row.get("status") for row in stored
+              if row.get("type") == "status"}
+    proposed: list[str] = []
+    for room, plan in rooms.plans(stored).items():
+        if status.get(room) == "stopped":
+            continue
+        for leg in plan.get("legs") or []:
+            if leg.get("card") and leg["card"] not in proposed:
+                proposed.append(leg["card"])
     return {"bots": bots,
-            "positions": {p: c for p, c in opened.items() if p not in closed}}
+            "positions": {p: c for p, c in opened.items() if p not in closed},
+            "cards": proposed}
 
 
 def _signature(row: dict, fields) -> str:
@@ -119,6 +144,7 @@ def _seen(rows: list[dict]) -> dict:
     configuration, and the last index point on record for each card."""
     trades: dict[str, str] = {}
     configs: dict[str, str] = {}
+    cards: dict[str, str] = {}
     points: dict[str, str] = {}
     for row in rows:
         kind = row.get("type")
@@ -126,12 +152,14 @@ def _seen(rows: list[dict]) -> dict:
             trades[row.get("trade_id")] = _signature(row, TRADE_FIELDS)
         elif kind == "config":
             configs[row.get("instance_id")] = _signature(row, CONFIG_FIELDS)
+        elif kind == "card":
+            cards[row.get("card_id")] = _signature(row, CARD_FIELDS)
         elif kind == "index":
             card = row.get("card_id")
             for point in row.get("points") or []:
                 if isinstance(point, list) and point:
                     points[card] = max(points.get(card, ""), str(point[0]))
-    return {"trades": trades, "configs": configs, "points": points}
+    return {"trades": trades, "configs": configs, "cards": cards, "points": points}
 
 
 class _Reads:
@@ -148,7 +176,7 @@ class _Reads:
         if self.verdicts.get(name, "ok") == "ok":
             self.verdicts[name] = verdict
 
-    def get(self, client, name: str, path: str, **params):
+    def get(self, client, name: str, path: str, missing=None, **params):
         if time.monotonic() - self.started > ROUND_SECONDS:
             self.say(name, "skipped")
             return None
@@ -160,6 +188,9 @@ class _Reads:
         except httpx.HTTPError as exc:
             self.say(name, f"failed: {type(exc).__name__}")
             return None
+        if response.status_code == 404 and missing is not None:
+            self.say(name, "ok")
+            return missing
         if response.status_code != 200:
             self.say(name, f"HTTP {response.status_code}")
             return None
@@ -225,30 +256,66 @@ def _bots(client, reads: _Reads, instances: list[str], seen: dict, at: str) -> l
     return rows
 
 
-def _cards(client, reads: _Reads, positions: dict, seen: dict, at: str) -> list[dict]:
-    if not positions:
-        return []
-    rows: list[dict] = []
-    live: dict[str, dict] = {}
-    body = reads.get(client, "positions", POSITIONS)
-    if body is not None:
-        try:
-            listed = _script("paper").position_rows(body)
-        except Exception:  # noqa: BLE001 -- UnreadableBody, and whatever else
-            reads.say("positions", "unreadable")
-            listed = []
-        live = {r.get("position_id"): r for r in listed if isinstance(r, dict)}
-    cards: list[str] = []
-    for position, card in positions.items():
-        row = live.get(position)
-        if row is None:
+def _describe(card: str, body, at: str) -> dict:
+    """What a card is: its name, what its basket holds, when it closes."""
+    if body is MISSING:
+        return {"type": "card", "at": at, "card_id": card,
+                **{f: None for f in CARD_FIELDS}, "status": "not_found", "basket": []}
+    held = []
+    for item in body.get("basket") or []:
+        if not isinstance(item, dict) or not item.get("symbol"):
             continue
-        rows.append({"type": "sample", "kind": "position", "at": at,
-                     "position_id": position, "card_id": row.get("card_id") or card,
-                     **{f: row.get(f) for f in POSITION_FIELDS}})
-        if row.get("status") == "open" and card and card not in cards:
-            cards.append(card)
-    for card in cards:
+        try:
+            weight = float(item.get("weight"))
+        except (TypeError, ValueError):
+            continue
+        held.append({"symbol": item["symbol"], "weight": weight})
+    held.sort(key=lambda item: -item["weight"])
+    return {"type": "card", "at": at, "card_id": card,
+            **{f: body.get(f) for f in CARD_FIELDS}, "basket": held[:BASKET_TOP]}
+
+
+def _cards(client, reads: _Reads, positions: dict, proposed: list[str], seen: dict,
+           at: str) -> list[dict]:
+    rows: list[dict] = []
+    watched: list[str] = []
+    if positions:
+        live: dict[str, dict] = {}
+        body = reads.get(client, "positions", POSITIONS)
+        if body is not None:
+            try:
+                listed = _script("paper").position_rows(body)
+            except Exception:  # noqa: BLE001 -- UnreadableBody, and whatever else
+                reads.say("positions", "unreadable")
+                listed = []
+            live = {r.get("position_id"): r for r in listed if isinstance(r, dict)}
+        for position, card in positions.items():
+            row = live.get(position)
+            if row is None:
+                continue
+            rows.append({"type": "sample", "kind": "position", "at": at,
+                         "position_id": position, "card_id": row.get("card_id") or card,
+                         **{f: row.get(f) for f in POSITION_FIELDS}})
+            if row.get("status") == "open" and card and card not in watched:
+                watched.append(card)
+    # Every card of ours described -- the positions' and the plans' -- and a
+    # card they no longer know is not asked for its history.
+    gone: set[str] = set()
+    for card in dict.fromkeys([c for c in positions.values() if c] + list(proposed)):
+        body = reads.get(client, "card", CARD.format(id=card), missing=MISSING)
+        if body is None:
+            continue
+        if body is not MISSING and not isinstance(body, dict):
+            reads.say("card", "unreadable")
+            continue
+        if body is MISSING:
+            gone.add(card)
+        row = _describe(card, body, at)
+        if _signature(row, CARD_FIELDS) != seen["cards"].get(card):
+            rows.append(row)
+    for card in dict.fromkeys(watched + list(proposed)):
+        if card in gone:
+            continue
         history = reads.get(client, "history", HISTORY.format(id=card))
         found = history.get("points") if isinstance(history, dict) else None
         if history is not None and not isinstance(found, list):
@@ -271,7 +338,7 @@ def tick(client, every: float) -> list[dict]:
         ours = follow()
         seen = _seen(rooms.load_samples())
         rows += _bots(client, reads, ours["bots"], seen, at)
-        rows += _cards(client, reads, ours["positions"], seen, at)
+        rows += _cards(client, reads, ours["positions"], ours["cards"], seen, at)
     except Exception as exc:  # noqa: BLE001 -- a broken round is a failed round
         reads.say("round", f"broke: {type(exc).__name__}: {exc}"[:200])
     finally:

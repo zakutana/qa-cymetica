@@ -19,8 +19,8 @@ The console serves them at /rooms.json instead.
 
 The writers are two on purpose. The browser may write an operator's note and
 nothing else -- add_operator_note, the only one serve.py reaches -- and nothing
-the browser can reach writes ours: add_claude_note, mark_read and the three
-that open and move a strategy belong to scripts/rooms.py.
+the browser can reach writes ours: add_claude_note, mark_read and the writers
+that open, move, name and plan a strategy belong to scripts/rooms.py.
 tests/meta/test_pipeline_room_notes.py reads the writers out of this file and
 holds serve.py to the first.
 
@@ -33,11 +33,18 @@ CLAUDE.md's rule that Nexus supplies the guidance and we execute -- and one
 answer opens one room. Whether an answer PROPOSED anything is a judgement this
 module cannot make: NEX-0002 answered at length and named no card, so it has no
 room, and that call is the opener's.
+
+A strategy's name is ours -- a `title` row, the newest wins -- and short,
+because the tab leads with it. Its plan is Nexus's proposal written down as
+legs: a card by its whole id, a side, a share of the bankroll, the take-profit
+and stop Nexus gave. The tab lays what was done over it, and the sampler reads
+the cards it names.
 """
 
 from __future__ import annotations
 
 import json
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -48,6 +55,13 @@ NOTE_TYPES = ("operator_note", "claude_note")
 MAX_TEXT = 4000
 MAX_TITLE = 120
 STATUSES = ("proposed", "running", "paused", "stopped")
+# A strategy's name on the page: what it trades, in a few words.
+MAX_NAME = 40
+SIDES = ("bull", "bear")
+MAX_LEGS = 8
+# A card by the whole id their API names it with. The sampler reads the card
+# through it, and the eight-character prefix our own logs print reads nothing.
+CARD_ID = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
 # What the tab calls an answered question. render.py's _nexus_questions() reads
 # this same number, so a room opens only from an answer the tab shows as one.
 ANSWERED_CHARS = 300
@@ -141,6 +155,22 @@ def strategies(rows: list[dict]) -> list[dict]:
 def known_rooms(rows: list[dict]) -> set[str]:
     """General, and every strategy room that has been opened."""
     return {GENERAL} | {r["id"] for r in strategies(rows)}
+
+
+def names(rows: list[dict]) -> dict[str, str]:
+    """Each strategy's name: its newest `title`, else the title it opened with."""
+    out = {s["id"]: s.get("title") or s["id"] for s in strategies(rows)}
+    for row in rows:
+        if row.get("type") == "title" and row.get("room") in out and row.get("title"):
+            out[row["room"]] = row["title"]
+    return out
+
+
+def plans(rows: list[dict]) -> dict[str, dict]:
+    """Each strategy's newest plan -- Nexus's proposal, written down as legs."""
+    known = {s["id"] for s in strategies(rows)}
+    return {row["room"]: row for row in rows
+            if row.get("type") == "plan" and row.get("room") in known}
 
 
 def whole_answer(nexus_rows: list[dict], question_id) -> dict | None:
@@ -311,4 +341,81 @@ def add_link(room: str, ref: str, why: str) -> dict:
         _strategy(rows, room)
         return [{"type": "link", "room": room, "ref": ref, "why": reason,
                  "at": _now()}]
+    return _append(build)[0]
+
+
+def set_title(room: str, title: str) -> dict:
+    """What the tab calls a strategy -- what it trades, in a few words. The
+    newest wins; the title it opened with stays on its `strategy` row."""
+    name = " ".join(str(title or "").split())
+    if not name or len(name) > MAX_NAME:
+        raise RoomError(f"a name of 1 to {MAX_NAME} characters")
+
+    def build(rows: list[dict]) -> list[dict]:
+        _strategy(rows, room)
+        return [{"type": "title", "room": room, "title": name, "at": _now()}]
+    return _append(build)[0]
+
+
+def _number(value, what: str) -> float | None:
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        raise RoomError(f"{what} is a number, not {value!r}")
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        raise RoomError(f"{what} is a number, not {value!r}") from None
+
+
+def _leg(leg: dict) -> dict:
+    card = str(leg.get("card") or "").strip().lower()
+    if not CARD_ID.match(card):
+        raise RoomError(f"{card!r} is not a card id -- the whole id, the way "
+                        f"their API names the card")
+    side = str(leg.get("side") or "").strip().lower()
+    if side not in SIDES:
+        raise RoomError(f"a side is {' or '.join(SIDES)}, not {leg.get('side')!r}")
+    share = _number(leg.get("share"), "a share")
+    if share is None or not 0 < share <= 1:
+        raise RoomError("a share is over 0 and at most the whole bankroll")
+    tp = _number(leg.get("tp"), "a take-profit")
+    if tp is not None and tp <= 0:
+        raise RoomError("a take-profit is a rise, above 0 %")
+    sl = _number(leg.get("sl"), "a stop")
+    if sl is not None and sl >= 0:
+        raise RoomError("a stop is a fall, below 0 %")
+    return {"card": card, "side": side, "share": round(share, 6), "tp": tp, "sl": sl}
+
+
+def set_plan(room: str, legs: list[dict], reserve=None, bankroll=None) -> dict:
+    """Nexus's proposal for a strategy, written down as legs.
+
+    A leg is a card by its whole id, a side, the share of the bankroll Nexus
+    gave it, and the take-profit and stop it gave, in percent from the entry.
+    `reserve` is the share it kept back and `bankroll` the sum it sized
+    against. It records what was PROPOSED; what was done stays in paper.jsonl,
+    and the tab lays the one over the other. The newest plan wins.
+    """
+    clean = [_leg(leg if isinstance(leg, dict) else {}) for leg in legs or []]
+    if not clean or len(clean) > MAX_LEGS:
+        raise RoomError(f"a plan has 1 to {MAX_LEGS} legs")
+    cards = [leg["card"] for leg in clean]
+    if len(set(cards)) != len(cards):
+        raise RoomError("a card is named twice -- one leg per card")
+    kept = _number(reserve, "a reserve")
+    if kept is not None and not 0 <= kept < 1:
+        raise RoomError("a reserve is at least 0 and less than the whole bankroll")
+    total = sum(leg["share"] for leg in clean) + (kept or 0.0)
+    if total > 1.000001:
+        raise RoomError(f"the legs and the reserve come to {total:.0%} of the bankroll")
+    size = _number(bankroll, "a bankroll")
+    if size is not None and size <= 0:
+        raise RoomError("a bankroll is above 0")
+
+    def build(rows: list[dict]) -> list[dict]:
+        _strategy(rows, room)
+        return [{"type": "plan", "room": room, "legs": clean,
+                 "reserve": None if kept is None else round(kept, 6),
+                 "bankroll": size, "at": _now()}]
     return _append(build)[0]

@@ -602,6 +602,164 @@ def _sampler_state(tick: dict | None) -> dict:
             "sampler_reads": tick.get("reads")}
 
 
+# A card whose trading is over. A leg on one that was never bought is past
+# buying, not waiting for it.
+CARD_CLOSED = ("settled", "resolved", "closed", "expired")
+
+
+def _moment(text):
+    """An ISO time as an aware datetime, or None. Their API writes +00:00 and
+    so do we; a naive one is read as UTC."""
+    from datetime import datetime, timezone
+
+    try:
+        moment = datetime.fromisoformat(str(text).replace("Z", "+00:00"))
+    except (TypeError, ValueError):
+        return None
+    return moment if moment.tzinfo else moment.replace(tzinfo=timezone.utc)
+
+
+def _index_at(series: list, when) -> float | None:
+    """Where a card's index stood at `when`: the last point at or before it,
+    else the first after it -- the price a proposal would have been bought at."""
+    moment = _moment(when)
+    if moment is None:
+        return None
+    stood = None
+    for t, value in series:
+        at = _moment(t)
+        if at is None or value is None:
+            continue
+        if at <= moment:
+            stood = value
+        elif stood is None:
+            return value
+        else:
+            break
+    return stood
+
+
+def _label(card: dict) -> str | None:
+    """A card named by what it holds, which its headline does not say: "BTC"
+    when one coin is nearly all of it, else the two heaviest -- "68 % BCH ·
+    32 % OKB". None until the sampler has described the card."""
+    weighed = sorted(((b.get("symbol"), _num(b.get("weight")))
+                      for b in card.get("basket") or [] if isinstance(b, dict)),
+                     key=lambda pair: -(pair[1] or 0.0))
+    weighed = [(symbol, weight) for symbol, weight in weighed
+               if symbol and weight is not None]
+    if not weighed:
+        return None
+    if weighed[0][1] >= 0.95:
+        return str(weighed[0][0])
+    return " · ".join(f"{round(weight * 100)} % {symbol}"
+                      for symbol, weight in weighed[:2])
+
+
+def _lay_out(panel: dict, plan: dict, described: dict, index_points: dict,
+             proposed_at) -> None:
+    """A strategy's legs: Nexus's plan, with what was done laid over it.
+
+    An order finds its leg by the card it bought; an order on a card the plan
+    does not name becomes a leg of its own, so nothing that was done is left
+    off the table. A leg keeps where its card stood when Nexus answered, so an
+    unbought one can say how it moved since -- which the page labels as what
+    would have happened, never as ours. Its levels are the take-profit and
+    stop Nexus gave, in percent, from the entry -- or from that price while
+    nothing was bought.
+    """
+    bankroll = _num(plan.get("bankroll"))
+    legs: list[dict] = []
+    by_card: dict[str, dict] = {}
+
+    def leg(card: str, planned: dict) -> dict:
+        row = described.get(card) or {}
+        points = index_points.get(card) or {}
+        series = [[t, points[t]] for t in sorted(points)]
+        share = _num(planned.get("share"))
+        at_proposal = _index_at(series, proposed_at) if planned else None
+        last = series[-1][1] if series else None
+        view = {"card": card, "label": _label(row), "card_title": row.get("title"),
+                "symbol": row.get("evcdx_symbol"), "card_status": row.get("status"),
+                "closes_at": row.get("trading_closes_at"),
+                "planned": bool(planned), "side": planned.get("side"),
+                "share": share,
+                "usdc_proposed": (round(share * bankroll, 2)
+                                  if share is not None and bankroll else None),
+                "tp": _num(planned.get("tp")), "sl": _num(planned.get("sl")),
+                "orders": [], "state": "not bought", "entry": None,
+                "current": last, "invested": 0.0, "value": None, "pnl": None,
+                "tp_level": None, "sl_level": None, "at_proposal": at_proposal,
+                "since_proposal": (round((last / at_proposal - 1) * 100, 4)
+                                   if last is not None and at_proposal else None),
+                "series": series[-400:]}
+        by_card[card] = view
+        legs.append(view)
+        return view
+
+    for planned in plan.get("legs") or []:
+        if planned.get("card") and planned["card"] not in by_card:
+            leg(planned["card"], planned)
+    for trade in panel["trades"]:
+        if trade["outcome"] != "accepted" or not trade.get("card"):
+            continue
+        view = by_card.get(trade["card"]) or leg(trade["card"], {})
+        view["orders"].append(trade["id"])
+        view["invested"] += trade["usdc"] or 0.0
+        view["side"] = view["side"] or trade["side"]
+        if view["entry"] is None:
+            view["entry"] = trade["entry"]
+        if trade["closed_by"]:
+            if trade["realized"] is not None:
+                view["pnl"] = round((view["pnl"] or 0.0) + trade["realized"], 6)
+            continue
+        view["state"] = "open"
+        if trade["current_index"] is not None:
+            view["current"] = trade["current_index"]
+        if trade["unrealized"] is not None:
+            view["pnl"] = round((view["pnl"] or 0.0) + trade["unrealized"], 6)
+        if trade["live_value"] is not None:
+            view["value"] = round((view["value"] or 0.0) + trade["live_value"], 6)
+    for view in legs:
+        if view["orders"]:
+            view["state"] = "open" if view["state"] == "open" else "closed"
+        elif view["card_status"] == "not_found":
+            view["state"] = "card not found"
+        elif view["card_status"] in CARD_CLOSED:
+            view["state"] = "card closed"
+        base = view["entry"] or view["at_proposal"]
+        if base:
+            if view["tp"] is not None:
+                view["tp_level"] = base * (1 + view["tp"] / 100)
+            if view["sl"] is not None:
+                view["sl_level"] = base * (1 + view["sl"] / 100)
+
+    pnls = [v["pnl"] for v in legs if v["pnl"] is not None]
+    values = [v["value"] for v in legs if v["value"] is not None]
+    shares = [v["share"] for v in legs if v["share"]]
+    moves = [(v["share"], v["since_proposal"]) for v in legs
+             if v["share"] and v["since_proposal"] is not None]
+    weight = sum(share for share, _ in moves)
+    invested = panel["staked"]
+    pnl = round(sum(pnls), 2) if pnls else None
+    value = round(sum(values), 2) if values else None
+    bots = panel["clones"]
+    if bots:
+        invested, pnl, value = bots[0]["funded"], bots[0]["pnl"], bots[0]["balance"]
+    panel.update(
+        holds="bot" if bots else "cards" if legs else None,
+        legs=legs, reserve=_num(plan.get("reserve")), bankroll=bankroll,
+        proposed_at=proposed_at,
+        proposed_share=round(sum(shares), 6) if shares else None,
+        invested=invested, pnl=pnl, value=value,
+        pnl_pct=(round(pnl / invested * 100, 3) if pnl is not None and invested
+                 else None),
+        closes_at=min((v["closes_at"] for v in legs if v["closes_at"]
+                       and v["state"] in ("open", "not bought")), default=None),
+        if_bought_pct=(round(sum(s * m for s, m in moves) / weight, 4)
+                       if weight else None))
+
+
 def build_rooms() -> dict:
     """The Nexus tab: every room, its thread, and its panel.
 
@@ -634,6 +792,10 @@ def build_rooms() -> dict:
     it has locked, its indicators -- comes from state/samples.jsonl, which
     the console's sampler writes (scripts/sampler.py), and every panel says
     when that was last read.
+
+    A strategy is called by its newest `title`, and its plan -- Nexus's
+    proposal, leg by leg -- is laid under what was done (_lay_out), so a
+    panel can say what it holds before it says anything in words.
     """
     from datetime import datetime, timezone
 
@@ -646,7 +808,7 @@ def build_rooms() -> dict:
                                  key=lambda r: str(r.get("at") or ""), default=None))
     marks = store.read_marks(stored)
     opened = store.strategies(stored)
-    titles = {s["id"]: s.get("title") or s["id"] for s in opened}
+    titles = store.names(stored)
     by_origin = {s.get("origin"): s["id"] for s in opened}
     linked: dict[str, str] = {}
     history: dict[str, list[dict]] = {room: [] for room in titles}
@@ -902,6 +1064,17 @@ def build_rooms() -> dict:
             points = index_points.get(trade["card"]) or {}
             trade["series"] = [[t, points[t]] for t in sorted(points)][-400:]
 
+    # Nexus's proposal under what was done, and each card by what it holds.
+    plans = store.plans(stored)
+    described: dict[str, dict] = {}
+    for row in sampled:
+        if row.get("type") == "card" and row.get("card_id"):
+            described[row["card_id"]] = row
+    answered_at = {q["id"]: q["answer"].get("at") for q in derived if q.get("answer")}
+    for s in opened:
+        _lay_out(panels[s["id"]], plans.get(s["id"]) or {}, described, index_points,
+                 answered_at.get(s.get("origin")))
+
     for row in stored:
         kind = row.get("type")
         if kind not in store.NOTE_TYPES or row.get("id") in inside:
@@ -919,12 +1092,16 @@ def build_rooms() -> dict:
 
     def entry(room: str, title: str, kind: str, origin, status) -> dict:
         thread = threads[room]
+        panel = panels.get(room) or {}
         return {"id": room, "title": title, "kind": kind, "origin": origin,
                 "status": status, "messages": len(thread),
                 "last_at": max((m["at"] for m in thread if m.get("at")),
                                default=None),
                 "unread_by_claude": sum(
-                    1 for r in waiting if (r.get("room") or store.GENERAL) == room)}
+                    1 for r in waiting if (r.get("room") or store.GENERAL) == room),
+                # What the strip across the top says of it, at a glance.
+                **{k: panel.get(k) for k in ("holds", "pnl", "pnl_pct", "invested",
+                                             "proposed_share", "if_bought_pct")}}
 
     # The paper account as the newest order of ours read it afterwards. Live
     # figures are the sampler's (docs/nexus-rooms-plan.md, P4), not these.
