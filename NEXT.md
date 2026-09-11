@@ -207,6 +207,17 @@ to neodškrtl, nebo to nikdy nebylo další na řadě.
   bezpečně otestovat nejde. Jestli to má být otestované, je to **zpráva pro
   ně** — mají to zevnitř levnější a bezpečnější.
 
+- [ ] 2026-09-11  Fold nedluží pass po failu pod stejným otiskem — #85 tak zůstal u nich s naším posledním `fail`
+
+  #85 teď prochází (PASSING pod otiskem `c0260ccc`, na odpovědích NEX-0018 a
+  NEX-0019 po jejich opravě). Poslední verdikt, který od nás mají, je ale
+  `fail` z 2026-09-10 21:46 pod **stejným** otiskem — a řádek má
+  `verification_owed` i `correction_owed` prázdné, takže `verify.py` nepošle
+  nic. Oni si #85 mezitím zavřeli jako „passed" podle naší dřívější zprávy,
+  takže škoda žádná, ale mechanismus má díru: pass, který opravuje náš vlastní
+  fail, se nikde nedluží. Je to `qa/fold.py`, takže test první a před
+  commitem `/code-review` (CLAUDE.md).
+
 - [ ] 2026-09-10  Dát `nexus.py` způsob, jak zapsat odpověď, která nepřišla naším kanálem
 
   Web chat jde jenom přes prohlížeč, takže jeho odpovědi teď leží v `docs/` a

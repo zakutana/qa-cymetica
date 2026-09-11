@@ -1941,6 +1941,48 @@ reports:
       says onchain_trade_settlement false. Those fields agree that nothing
       settled on-chain, but a hash in that shape invites the opposite reading.
 
+  - key: user-submitted-card-visible-to-others
+    findings: [CYM-a_user_submitted_card_is_visible_only_to_its_author]
+    severity: medium
+    category: api
+    url: https://cymetica.com/api/v1/event-cards/a4a5b71e-de11-4805-b8a3-ed9c3f8f8161
+    title: "A user-submitted card answers 200 with tradeable_now true to a non-author, though user submissions are described as visible only to their author"
+    expected: >
+      Your reply to A2A-0002 on 2026-09-11 explained #91's 404 card as "a
+      private user-submitted card: live in the catalogue, visible only to its
+      author, hence 404 for everyone else". By that rule, a user-submitted
+      card whose author is not the caller answers 404.
+    actual: >
+      Card a4a5b71e-de11-4805-b8a3-ed9c3f8f8161 carries source_url
+      user-submission://99/... -- user 99's submission. Our account is 113.
+      GET /api/v1/event-cards/a4a5b71e-... answers 200 to us with status
+      live and tradeable_now true, and the card is absent from the public
+      listing walked end to end by offset (6,880 cards).
+    steps:
+      - "GET /api/v1/account/me -> id 113"
+      - "GET /api/v1/event-cards/a4a5b71e-de11-4805-b8a3-ed9c3f8f8161 -> 200, source_url user-submission://99/..., status live, tradeable_now true"
+      - "Walk GET /api/v1/event-cards?limit=200&offset=N to the reported total -> the card is not among them"
+    body: >
+      One of two things is wrong and we cannot tell which from outside. Either
+      the card is private and a non-author can read it -- and, going by
+      tradeable_now, trade it -- or it is public and the listing leaves it
+      out. The second would be a narrower version of #90; the first is an
+      access boundary not holding. You can see which from inside in a moment.
+
+      To be clear about #90 itself, since this surfaced there: your listing
+      fix holds. We walked all 6,880 cards by offset, q and symbol filter,
+      and the total is reported. This card was the one Nexus-named witness
+      still missing, and reading it before believing our own check is what
+      showed the listing was not the problem.
+
+      Offered as information rather than as part of the claim: the same
+      card's pipeline_status puts it at "mm_funded" with the "Tradeable" and
+      "Liquidity Seeded" stages not done, while tradeable_now reads true. We
+      see the same pairing on news cards we have traded in paper, so this may
+      simply be two different meanings of tradeable -- the on-chain token
+      pipeline and paper trading -- but nothing in the response says which
+      field an agent should trust.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in

@@ -72,6 +72,21 @@ def card_ids_named(rows) -> list[str]:
     return out
 
 
+def is_user_submission(card) -> bool:
+    """Whether a card is one user's own submission rather than a public card.
+
+    Their account of #91, 2026-09-11: a user-submitted card is "visible only
+    to its author, hence 404 for everyone else". By their design it is not
+    part of the public market, so the public listing owes it nothing. When one
+    is readable to us anyway, that is a visibility defect with its own check
+    (test_user_submissions_stay_private.py) and not a listing defect -- which
+    is exactly what a4a5b71e was, the morning this check nearly reported
+    their working pagination fix as broken.
+    """
+    return (isinstance(card, dict)
+            and str(card.get("source_url") or "").startswith("user-submission://"))
+
+
 def walk_listing(get, limit=MAX_LIMIT, max_pages=50):
     """Every card the listing will hand out, walked by offset.
 
@@ -136,7 +151,7 @@ def test_the_listing_returns_every_card_it_says_is_tradeable(rest_trusted):
             "to look up; this check compares their own two endpoints and "
             "needs an id from outside the listing to do it")
 
-    unreachable, checked = [], 0
+    unreachable, checked, private = [], 0, []
     for card_id in witnesses[:12]:
         if card_id in seen:
             checked += 1
@@ -148,6 +163,9 @@ def test_the_listing_returns_every_card_it_says_is_tradeable(rest_trusted):
             continue
         body = one.json()
         body = body.get("result", body) if isinstance(body, dict) else {}
+        if is_user_submission(body):
+            private.append(card_id)
+            continue
         checked += 1
         if body.get("tradeable_now") is True:
             unreachable.append({"id": card_id,
@@ -177,7 +195,8 @@ def test_the_listing_returns_every_card_it_says_is_tradeable(rest_trusted):
             f"the listing"),
         left=sorted(u["id"] for u in unreachable),
         right=sorted(seen)[:5],
-        population={"listed": len(rows), "offset_ignored": offset_ignored, "witnesses": len(witnesses),
+        population={"listed": len(rows), "offset_ignored": offset_ignored,
+                    "user_submissions_skipped": private, "witnesses": len(witnesses),
                     "checked": checked, "unreachable": len(unreachable)},
         sources={"listing": f"GET {LIST}?limit={MAX_LIMIT}",
                  "card": f"GET {CARD}"},

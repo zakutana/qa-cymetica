@@ -791,6 +791,31 @@ def test_the_listing_check_walks_the_pages_it_is_now_allowed_to_walk():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_listing_check_leaves_user_submissions_out_of_the_market():
+    """A card the platform says is private to its author is not one the
+    public listing owes anybody.
+
+    On 2026-09-11 the walked listing -- all 6,880 cards, offset fixed -- still
+    lacked one Nexus-named card, a4a5b71e, and verify.py was one command away
+    from telling them their pagination fix did not hold. That card's
+    source_url is user-submission://99/...; their own account of #91 is that a
+    user-submitted card is "visible only to its author". So its absence from
+    the listing is their design working. What is actually wrong about it --
+    that account 113 can read it at all -- is a different defect with its own
+    check, and blaming the listing for it would have been a false correction.
+    """
+    from tests.rest.test_event_card_listing_reaches_them import is_user_submission
+
+    assert is_user_submission(
+        {"source_url": "user-submission://99/37713611-70a3-40d6"}) is True
+    assert is_user_submission(
+        {"source_url": "https://www.globenewswire.com/news-release/x"}) is False
+    assert is_user_submission({"source_url": None}) is False
+    assert is_user_submission({}) is False
+    assert is_user_submission(None) is False
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_disclosure_check_judges_the_newest_answer():
     """#92 was fixed at serve time, and our stored copies cannot show it.
 
