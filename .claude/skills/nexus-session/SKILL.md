@@ -45,9 +45,10 @@ of the panels -- the bot, each card position, each card's index -- and says
 which reads failed. `book` is what the campaign has by our own reckoning, and
 the ceiling on anything this session may put in.
 
-Then read each running room (`python scripts/rooms.py show STR-...`). Its
-status says the exit rules Nexus gave. If the live index has crossed one,
-closing is carrying out Nexus's own rule:
+Then read each running room (`python scripts/rooms.py show STR-...`). It
+prints each leg of the plan with its entry, where the index stands now and
+its take-profit and stop levels. If the index has crossed one, closing is
+carrying out Nexus's own rule:
 
 ```bash
 python scripts/paper.py close --position-id ... --confirm
@@ -85,11 +86,18 @@ length and named no card, so it has no room.
 
 ```bash
 python scripts/rooms.py open --from NEX-... --title "..."
+python scripts/rooms.py title STR-... "BTC + BCH blend"
+python scripts/rooms.py plan STR-... --leg CARD:bull:20%:tp=8:sl=-5 --leg CARD:bull:10% --reserve 70% --bankroll 100000
 python scripts/rooms.py note general "..." --re NEX-... --gist
 ```
 
-The title is short and Czech. The gist is one Czech line saying what Nexus
-claimed -- labelled as ours by the tab, and a claim, not a result.
+The name is what the strategy trades, in two to four words -- the tab leads
+with it, so no sizes and no ids. The plan is Nexus's proposal as it gave it:
+each card by its whole id, copied from the answer (a prefix reads nothing),
+the side, the share of the bankroll, and the take-profit and stop in percent
+from the entry. The panel's table and charts are drawn from it, and the
+sampler watches every card it names. The gist is one Czech line saying what
+Nexus claimed -- labelled as ours by the tab, and a claim, not a result.
 
 Then execute it through the scripts that keep the record and hold the guards,
 never a hand-made request:
@@ -100,10 +108,10 @@ python scripts/clone.py clone --source-type ... --source-id ... --nexus NEX-... 
 python scripts/rooms.py status STR-... running --why "..."
 ```
 
-`--nexus` is what draws the order into its room. The `why` says what was done,
-by id and number, and the exit rules Nexus gave, because nothing else holds
-them yet. A proposal not executed this session stays `proposed`, with a why
-saying what Nexus proposed and why it was not done.
+`--nexus` is what draws the order into its room. The `why` is one line: what
+was done, by id and number. The exit rules live in the plan, and the panel
+folds the why away -- it leads with numbers. A proposal not executed this
+session stays `proposed`, with a one-line why saying why it was not done.
 
 ## 5. Follow-ups, inside the room
 

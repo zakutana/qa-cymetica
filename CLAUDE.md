@@ -354,7 +354,8 @@ tests/repo/       repository consistency. Deliberately NOT in tests/meta:
 .claude/skills/nexus-session/SKILL.md
                   "zahaj session s Nexusem": the operator's feedback from the
                   Nexus rooms first, one question to Nexus in General, a room
-                  and a paper order for each concrete proposal, follow-ups
+                  -- named, its plan written down -- and a paper order for
+                  each concrete proposal, follow-ups
                   inside the rooms, a Czech note into every room it touched.
                   Paper only; at most 8 questions and 3 new rooms a session.
 NEXT.md           what we agreed to do next and have not done. Plain markdown,
@@ -437,12 +438,14 @@ scripts/serve.py     the console on 127.0.0.1:8787. Polls local files once a
                      body -- and none at all when it listens beyond this
                      machine. The rooms are served at /rooms.json, outside the
                      payload, so a note never moves the dashboard.
-scripts/sampler.py   what their API says about our bot and our card positions,
-                     for the Nexus tab's panels. SAFE, GET only, five doors,
-                     and only what our own records say is ours. Every round
-                     writes a `tick` to state/samples.jsonl (gitignored), even
-                     a round whose every read failed, so a stall shows on the
-                     page as "stale" rather than as quiet. The console runs it
+scripts/sampler.py   what their API says about our bot, our card positions and
+                     the cards a strategy's plan names, for the Nexus tab's
+                     panels. SAFE, GET only, six doors, and only what our own
+                     records say is ours. Every round writes a `tick` to
+                     state/samples.jsonl (gitignored), even a round whose every
+                     read failed, so a stall shows on the page as "stale"
+                     rather than as quiet; a card they no longer know is a
+                     `not_found` row, not a failed round. The console runs it
                      with `--sample 10`; `clone.py watch` is one round of it.
 scripts/a2a.py       the third channel, from our side. `send` posts a question
                      and only on `--confirm` -- the operator's condition, and
@@ -471,13 +474,20 @@ qa/rooms.py          the Nexus rooms (docs/nexus-rooms-plan.md): strategies,
                      opens only from a whole Nexus answer, one answer one
                      room; whether the answer PROPOSED anything is the
                      opener's call (NEX-0002 named no card and has none).
+                     A room's name is its newest `title` row, and its `plan`
+                     is Nexus's proposal written down as legs -- a card by its
+                     whole id, a side, a share, TP/SL -- which the tab lays
+                     what was done over.
 scripts/rooms.py     the rooms from our side. **When the operator says
                      "přečti si to", run `unread`**: it prints their notes in
                      full and marks them read, and the console shows a second
                      tick. `note` answers into a room; `note --re NEX-... --gist`
                      is our one-line Czech summary, drawn inside that answer;
                      `open --from NEX-...`, `status` and `link` open and move a
-                     strategy room. A follow-up to Nexus about a strategy goes
+                     strategy room; `title` names it and `plan` writes Nexus's
+                     proposal down leg by leg (`--leg CARD:SIDE:SHARE:tp=N:sl=N`),
+                     which `show` prints with each leg's levels. A follow-up
+                     to Nexus about a strategy goes
                      through `nexus.py ask --room STR-...`, checked before it is
                      sent. A note is their feedback
                      read from a file, not an instruction in the chat -- what
