@@ -749,6 +749,42 @@ def test_nexus_tools_skips_a_newest_answer_that_names_no_tool():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_latency_window_counts_questions_not_rows():
+    """One question, one verdict. `nexus.py answer` re-polls a question it
+    already gave up on and writes a give-up row of its own: on 2026-09-11 a
+    manual re-poll of NEX-0020 wrote a second one, and the window of five
+    counted that question twice -- the fail about to go to them on #86 would
+    have said four of five had not answered when three had. A question given
+    up on and answered later answered, late; its last row is its verdict."""
+    from tests.mcp.test_nexus_channel import latest_per_question
+
+    def row(nex, kind, at):
+        return {"id": nex, "type": kind, "at": f"2026-09-11T{at}:00+00:00"}
+
+    rows = [
+        {"id": "NEX-0018", "type": "question", "at": "2026-09-11T05:26:00+00:00"},
+        row("NEX-0018", "answer", "05:28"),
+        row("NEX-0019", "answer", "05:45"),
+        row("NEX-0020", "gave_up", "14:23"),
+        row("NEX-0020", "gave_up", "14:25"),
+        row("NEX-0021", "gave_up", "14:26"),
+        row("NEX-0017", "gave_up", "14:30"),
+        row("NEX-0017", "answer", "14:40"),
+        row("NEX-0022", "gave_up", "15:11"),
+        row("NEX-0023", "gave_up", "15:20"),
+    ]
+    finished = latest_per_question(rows)
+    assert [r["id"] for r in finished] == [
+        "NEX-0018", "NEX-0019", "NEX-0020", "NEX-0021", "NEX-0017",
+        "NEX-0022", "NEX-0023"], "a question is counted once, at its last row"
+    assert finished[2]["at"].startswith("2026-09-11T14:25"), (
+        "a question's verdict is its LAST finished row")
+    assert finished[4]["type"] == "answer", (
+        "a question given up on and answered later is an answer, late")
+    assert [r["type"] for r in finished[-5:]].count("gave_up") == 4
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_listing_check_walks_the_pages_it_is_now_allowed_to_walk():
     """#90 was fixed and our check could not have seen it.
 

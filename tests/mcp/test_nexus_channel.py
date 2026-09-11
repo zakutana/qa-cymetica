@@ -127,6 +127,24 @@ def newest_answer_naming_tools(answers):
     return None
 
 
+def latest_per_question(rows):
+    """Every question's last finished row, in the order those rows were written.
+
+    One question, one verdict. `nexus.py answer` re-polls a question it has
+    already given up on and writes a give-up row of its own when the job is
+    still failed: on 2026-09-11 a manual re-poll of NEX-0020 wrote a second
+    one, and the window of five counted that question twice -- the fail about
+    to go to them on #86 would have said four of five had not answered when
+    three had. A question given up on and answered later answered, late, so
+    its last row is its verdict.
+    """
+    last = {}
+    for index, row in enumerate(rows):
+        if row.get("type") in ("answer", "gave_up") and row.get("id"):
+            last[row["id"]] = (index, row)
+    return [row for _, row in sorted(last.values(), key=lambda pair: pair[0])]
+
+
 @qa(component="mcp.tools_call", tier=SafetyTier.SAFE, surface="mcp")
 def test_every_tool_nexus_tells_an_agent_to_call_exists(mcp_trusted):
     """Guidance an agent cannot act on is guidance that does not work."""
@@ -215,7 +233,7 @@ def test_a_deep_investigation_answers_inside_the_window_it_publishes():
             return None
         return round((last - first).total_seconds(), 1)
 
-    finished = [r for r in rows if r.get("type") in ("answer", "gave_up")]
+    finished = latest_per_question(rows)
     if not finished:
         raise Inconclusive(
             "no investigation has finished, so its latency could not be read")
