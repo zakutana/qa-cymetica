@@ -428,25 +428,21 @@ def _headline(row: dict) -> str:
     return text if len(text) <= 90 else text[:87].rstrip() + "..."
 
 
-def _nexus_channel() -> dict:
-    """Every question put to ask_nexus_deep, one entry each, by what happened.
+def _nexus_questions() -> list[dict] | None:
+    """Every question put to ask_nexus_deep, once, with what happened to it.
 
-    Not on the page at all until 2026-09-11, when the operator asked whether
-    Nexus is reliable yet, next to Telegram. Outcomes: answered; partial --
-    finalised "done" with only an opening sentence, their NEX-0009, fixed
-    2026-09-10 21:22; failed -- our loop gave up or they said failed; refused
-    -- no investigation started, QUERY_RESTRICTED and the like; waiting.
+    One derivation for two readers -- the Stats row counts these and the Nexus
+    tab draws them -- so the two cannot disagree about which question was
+    answered. None when nexus.py's record cannot be read at all, which is not
+    the same thing as a record with nothing in it.
 
-    The typical time is a median over questions we WATCHED from the start,
-    both bounds known, and nothing else. A question looked at once, late, has
-    only an upper bound, and counting it is how our pickup delay went out as
-    their latency once already.
+    Outcomes: answered; partial -- finalised "done" with only an opening
+    sentence, their NEX-0009, fixed 2026-09-10 21:22; failed -- our loop gave
+    up; refused -- no investigation started, QUERY_RESTRICTED and the like;
+    waiting.
     """
     import importlib.util
 
-    empty = {"asked": 0, "answered": 0, "partial": 0, "failed": 0,
-             "refused": 0, "waiting": 0, "measured": 0,
-             "median_seconds": None, "questions": []}
     try:
         spec = importlib.util.spec_from_file_location(
             "nexus_stats", REPO_ROOT / "scripts" / "nexus.py")
@@ -454,7 +450,7 @@ def _nexus_channel() -> dict:
         spec.loader.exec_module(nexus)
         rows = nexus.load()
     except Exception:  # noqa: BLE001 -- an unreadable record is not a page defect
-        return empty
+        return None
     questions = []
     for question in rows:
         if question.get("type") != "question":
@@ -462,10 +458,11 @@ def _nexus_channel() -> dict:
         qid = question.get("id")
         mine = [r for r in rows if r.get("id") == qid]
         answer = next((r for r in mine if r.get("type") == "answer"), None)
+        gave_up = next((r for r in mine if r.get("type") == "gave_up"), None)
         if answer is not None:
             outcome = ("answered" if len(answer.get("text") or "") >= 300
                        else "partial")
-        elif any(r.get("type") == "gave_up" for r in mine):
+        elif gave_up is not None:
             outcome = "failed"
         elif question.get("accepted") is False:
             outcome = "refused"
@@ -476,9 +473,18 @@ def _nexus_channel() -> dict:
                    if lower is not None and upper is not None else None)
         questions.append({"id": qid, "at": question.get("at"),
                           "outcome": outcome, "seconds": seconds,
-                          "upper": upper})
-    if not questions:
-        return empty
+                          "upper": upper, "question": question,
+                          "answer": answer, "gave_up": gave_up})
+    return questions
+
+
+def _nexus_summary(questions: list[dict]) -> dict:
+    """The counts, and a typical time taken ONLY over questions we watched.
+
+    Watched means both bounds known. A question looked at once, late, has only
+    an upper bound, and counting it is how our pickup delay went out as their
+    latency once already.
+    """
     watched = sorted(q["seconds"] for q in questions
                      if q["seconds"] is not None
                      and q["outcome"] in ("answered", "partial"))
@@ -494,8 +500,104 @@ def _nexus_channel() -> dict:
     return {"asked": len(questions), "answered": count("answered"),
             "partial": count("partial"), "failed": count("failed"),
             "refused": count("refused"), "waiting": count("waiting"),
-            "measured": len(watched), "median_seconds": median,
-            "questions": questions}
+            "measured": len(watched), "median_seconds": median}
+
+
+def _nexus_channel() -> dict:
+    """Every question put to ask_nexus_deep, one entry each, by what happened.
+
+    Not on the page at all until 2026-09-11, when the operator asked whether
+    Nexus is reliable yet, next to Telegram. The outcomes are
+    _nexus_questions()'s and the typical time is _nexus_summary()'s.
+
+    The payload carries verdicts and times, never the words. The words are in
+    the Nexus tab, which is served beside the payload and not inside it.
+    """
+    derived = _nexus_questions()
+    if not derived:
+        return {"asked": 0, "answered": 0, "partial": 0, "failed": 0,
+                "refused": 0, "waiting": 0, "measured": 0,
+                "median_seconds": None, "questions": []}
+    return {**_nexus_summary(derived),
+            "questions": [{k: q[k] for k in ("id", "at", "outcome", "seconds",
+                                             "upper")} for q in derived]}
+
+
+def build_rooms() -> dict:
+    """The Nexus tab: every room, its thread, and its panel.
+
+    NOT part of build_payload(), and that is the design rather than an
+    omission. The rooms carry the operator's notes and, later, what the sampler
+    reads on a timer; both arrive while a sweep may be running. Anything in
+    the payload rewrites dashboard/index.html, which is committed, so a note
+    would dirty the tree mid-run and cost the run its level V -- the reason
+    state/nexus.jsonl is gitignored at all. serve.py answers /rooms.json from
+    this function instead and tells the open tab with an event of its own.
+
+    Texts are verbatim. Escaping happens once, in the page, where they are
+    drawn: a Nexus answer is data (CLAUDE.md), and the page treats it as text.
+
+    Each reply sits straight after its own question, whenever it arrived. A
+    question given up on eighteen minutes later still belongs under the one
+    it answers, not after the two that were asked in between.
+    """
+    from datetime import datetime, timezone
+
+    from qa import rooms as store
+
+    derived = _nexus_questions() or []
+    stored = store.load()
+    marks = store.read_marks(stored)
+    threads: dict[str, list[dict]] = {store.GENERAL: []}
+    order: dict[int, tuple] = {}
+
+    def place(room: str, message: dict, at, rank: int) -> None:
+        thread = threads.setdefault(room, [])
+        order[id(message)] = (str(at or ""), rank, len(thread))
+        thread.append(message)
+
+    for q in derived:
+        asked = q["question"]
+        place(store.GENERAL, {"kind": "question", "id": q["id"], "at": q["at"],
+                              "text": asked.get("question") or ""}, q["at"], 0)
+        reply = {"kind": "reply", "id": q["id"], "outcome": q["outcome"],
+                 "seconds": q["seconds"], "upper": q["upper"], "at": None,
+                 "text": None}
+        if q["answer"] is not None:
+            reply.update(at=q["answer"].get("at"),
+                         text=q["answer"].get("text") or "")
+        elif q["gave_up"] is not None:
+            reply["at"] = q["gave_up"].get("at")
+        elif q["outcome"] == "refused":
+            reply.update(at=q["at"], text=asked.get("error") or None)
+        place(store.GENERAL, reply, q["at"], 1)
+
+    for row in stored:
+        kind = row.get("type")
+        if kind not in ("operator_note", "claude_note"):
+            continue
+        message = {"kind": kind, "id": row.get("id"), "at": row.get("at"),
+                   "text": row.get("text") or "", "re": row.get("re")}
+        if kind == "operator_note":
+            message["read"] = store.is_read(row, marks)
+        place(row.get("room") or store.GENERAL, message, row.get("at"), 0)
+
+    for thread in threads.values():
+        thread.sort(key=lambda m: order[id(m)])
+
+    waiting = store.unread(stored)
+    general = threads[store.GENERAL]
+    rooms = [{"id": store.GENERAL, "title": "General", "kind": "general",
+              "messages": len(general),
+              "last_at": max((m["at"] for m in general if m.get("at")),
+                             default=None),
+              "unread_by_claude": sum(
+                  1 for r in waiting
+                  if (r.get("room") or store.GENERAL) == store.GENERAL)}]
+    return {"generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "rooms": rooms, "threads": threads,
+            "panels": {store.GENERAL: {**_nexus_summary(derived),
+                                       "strip": [q["outcome"] for q in derived]}}}
 
 
 def _rewards() -> dict:
@@ -1101,6 +1203,41 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:15.0px; max-wid
 .cov-cell.ok{background:var(--ok-bg);border-color:var(--ok)}
 .cov-cell.bad{background:var(--bad-bg);border-color:var(--bad)}
 .cov-cell.none{opacity:.5}
+/* The Nexus tab. Rooms on the left, the conversation in the middle, how it is
+   going on the right; one column on a narrow screen. Ours and the operator's
+   sit on the right like any chat, Nexus on the left. Every class is nx- so
+   nothing here can restyle the findings' own conversation. */
+.nx-rooms{display:grid;grid-template-columns:13rem minmax(0,1fr) 17rem;gap:14px;margin-top:14px;align-items:start}
+@media (max-width:1100px){.nx-rooms{grid-template-columns:1fr}}
+.nx-list{display:flex;flex-direction:column;gap:4px}
+.nx-room{display:flex;justify-content:space-between;align-items:center;gap:.5rem;text-align:left;padding:.5rem .6rem;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);color:var(--text);font:inherit;cursor:pointer}
+.nx-room.on{border-color:var(--accent);background:var(--accent-dim)}
+.nx-rt{font-weight:600}
+.nx-badge{background:var(--accent);color:var(--surface);border-radius:9px;padding:0 .45rem;font-size:.75em}
+.nx-chat{display:flex;flex-direction:column;gap:10px;min-width:0}
+.nx-title{margin:0 0 2px;font-size:15px}
+.nx-msg{border:1px solid var(--line);border-radius:10px;padding:.55rem .7rem;background:var(--surface);max-width:52rem;align-self:flex-start}
+.nx-msg.nx-ours{align-self:flex-end;background:var(--accent-dim);border-color:var(--accent)}
+.nx-msg.nx-op{align-self:flex-end;background:var(--wait-bg);border-color:var(--wait)}
+.nx-msg.nx-cl{background:var(--surface-2)}
+.nx-msg.nx-sys{align-self:center;border:none;background:none;color:var(--text-faint);font-size:.8em;padding:0}
+.nx-msg.nx-failed,.nx-msg.nx-refused{border-color:var(--bad)}
+.nx-msg.nx-partial,.nx-msg.nx-waiting{border-color:var(--warn)}
+.nx-h{font-size:.75em;color:var(--text-dim);margin-bottom:.3rem}
+.nx-s{font-size:.85em;color:var(--text-dim);font-style:italic}
+.nx-b{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.45}
+.nx-b.nx-clamp{max-height:9.5em;overflow:hidden;-webkit-mask-image:linear-gradient(#000 65%,transparent);mask-image:linear-gradient(#000 65%,transparent)}
+.nx-b code{font-family:var(--mono);font-size:.9em;background:var(--surface-2);padding:0 .2em;border-radius:3px}
+.nx-more{margin-top:.3rem;background:none;border:none;color:var(--accent);cursor:pointer;font:inherit;font-size:.8em;padding:0}
+.nx-tick{color:var(--ok);margin-left:.3rem}
+.nx-panel{border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);padding:.7rem .8rem}
+.nx-panel h4{margin:0 0 .4rem;font-size:13px}
+.nx-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:.4rem 0 .7rem}
+.nx-grid div{background:var(--surface-2);border-radius:6px;padding:.35rem .45rem}
+.nx-grid b{display:block;font-size:1.2em}
+.nx-grid span{font-size:.75em;opacity:.8}
+.nx-foot{font-size:.8em;color:var(--text-dim);margin:.7rem 0 0}
+.nx-note{margin-top:14px;padding:.7rem .9rem;border:1px dashed var(--line);border-radius:var(--radius);color:var(--text-dim)}
 details.stat summary{cursor:pointer;font-weight:600}
 /* Theirs, and counted against them: a 5xx is an answer. */
 .seg-server_error{background:var(--bad);opacity:.65}
@@ -1633,6 +1770,8 @@ h4.sec {
     <button data-tab="findings" aria-selected="false">Findings
       <span class="tab-n" id="tabN"></span></button>
     <button data-tab="stats" aria-selected="false">Stats</button>
+    <button data-tab="nexus" aria-selected="false">Nexus
+      <span class="tab-n" id="nexusN"></span></button>
     <button data-tab="legend" aria-selected="false">How to read this</button>
   </nav>
 
@@ -1649,6 +1788,15 @@ h4.sec {
 
   <section class="panel" id="panel-stats" hidden>
   <div class="stat-grid" id="stats"></div>
+  </section>
+
+  <section class="panel" id="panel-nexus" hidden>
+  <div class="nx-note" id="roomsNote" hidden></div>
+  <div class="nx-rooms">
+    <nav class="nx-list" id="roomList" aria-label="Rooms"></nav>
+    <div class="nx-chat" id="roomChat"></div>
+    <aside class="nx-panel" id="roomPanel"></aside>
+  </div>
   </section>
 
   <section class="panel" id="panel-help" hidden>
@@ -2386,9 +2534,173 @@ document.getElementById("filters").addEventListener("click", e => {
 sortRows();
 applyFilters();
 
+/* ---------- the Nexus tab: rooms, served beside the payload, never in it ----------
+   The operator's notes and the sampler's rows land while a sweep may be
+   running, and everything in D is written into the committed dashboard -- so
+   the console serves the rooms at /rooms.json and says when they move with an
+   event of its own. Opened as a file there is no console to ask, and the tab
+   says so rather than showing an empty room as if nobody had said anything. */
+const NX_LOCAL = ["127.0.0.1", "localhost", "[::1]"].includes(location.hostname);
+let NX = null;
+
+// Nexus writes markdown. Escape first, always, and only then turn a few marks
+// back into tags of our own -- so nothing the vendor wrote can become markup.
+function nxText(text) {
+  let s = esc(text == null ? "" : text);
+  s = s.replace(/`([^`\n]+)`/g, "<code>$1</code>");
+  s = s.replace(/\*\*([^*\n]+)\*\*/g, "<b>$1</b>");
+  s = s.replace(/^#{1,6} +(.+)$/gm, "<b>$1</b>");
+  s = s.replace(/^[ \t]*[-*] +/gm, "• ");
+  return s;
+}
+function nxSecs(s) {
+  if (s == null) return "";
+  if (s < 90) return Math.round(s) + " s";
+  if (s < 5400) return Math.round(s / 60) + " min";
+  return (s / 3600).toFixed(1) + " h";
+}
+const nxDigits = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+const NX_OUTCOME = {
+  partial: "cut short — only an opening line came back",
+  failed: "no answer — our loop gave up waiting",
+  refused: "refused before an investigation started",
+  waiting: "waiting for Nexus…",
+};
+
+// The tab names its own shapes -- `nm` a message, `nr` a room, `np` a panel --
+// because `f.` and `m.` belong to the payload's field guard, and these arrive by
+// fetch. tests/meta/test_pipeline_rooms.py holds each name against what
+// build_rooms() writes, the same way that guard holds the payload.
+function nxBubble(nm) {
+  const at = nm.at ? " · " + esc(stamp(nm.at)) : "";
+  if (nm.kind === "question") {
+    return '<div class="nx-msg nx-ours"><div class="nx-h">Claude → Nexus' + at +
+      " · " + esc(nm.id) + '</div><div class="nx-b">' + nxText(nm.text) + "</div></div>";
+  }
+  if (nm.kind === "reply") {
+    const text = nm.text || "";
+    const took = nm.seconds != null ? " · " + nxSecs(nm.seconds)
+               : (nm.upper != null && text ? " · ≤ " + nxSecs(nm.upper) : "");
+    const note = NX_OUTCOME[nm.outcome];
+    const long = text.length > 700;
+    const label = "▾ whole answer (" + nxDigits(text.length) + " characters)";
+    return '<div class="nx-msg nx-' + esc(nm.outcome || "answered") + '">' +
+      '<div class="nx-h">Nexus' + at + took + "</div>" +
+      (note ? '<div class="nx-s">' + esc(note) + "</div>" : "") +
+      (text ? '<div class="nx-b' + (long ? " nx-clamp" : "") + '">' + nxText(text) + "</div>" : "") +
+      (long ? '<button class="nx-more" type="button" data-label="' + esc(label) + '">' +
+              esc(label) + "</button>" : "") +
+      "</div>";
+  }
+  if (nm.kind === "operator_note") {
+    return '<div class="nx-msg nx-op"><div class="nx-h">You' + at +
+      ' <span class="nx-tick" title="' + (nm.read ? "read by Claude" : "saved, not read yet") +
+      '">' + (nm.read ? "✓✓" : "✓") + '</span></div><div class="nx-b">' +
+      nxText(nm.text) + "</div></div>";
+  }
+  if (nm.kind === "claude_note") {
+    return '<div class="nx-msg nx-cl"><div class="nx-h">Claude' +
+      (nm.re ? " · on " + esc(nm.re) : "") + at + '</div><div class="nx-b">' +
+      nxText(nm.text) + "</div></div>";
+  }
+  return '<div class="nx-msg nx-sys">' + esc(nm.text || "") + "</div>";
+}
+
+function nxPanel(room, np) {
+  if (room !== "general") return "";
+  const cells = [["asked", np.asked], ["answered", np.answered],
+                 ["typical", np.median_seconds != null ? nxSecs(np.median_seconds) : null],
+                 ["cut short", np.partial], ["gave up", np.failed], ["refused", np.refused]];
+  return "<h4>Nexus, every question so far</h4>" +
+    '<div class="nx-grid">' + cells.map(([k, v]) =>
+      "<div><b>" + esc(v == null ? "—" : v) + "</b><span>" + esc(k) + "</span></div>").join("") +
+    "</div>" +
+    '<div class="rely-strip">' + (np.strip || []).map(o =>
+      '<i class="sq ' + esc(o) + '"></i>').join("") + "</div>" +
+    '<p class="nx-foot">A strategy Nexus proposes opens as a room of its own, ' +
+    "with its trades and charts here.</p>";
+}
+
+// What arrived since the operator last looked at a room: Nexus's replies and
+// our notes, never their own. Kept in this browser only -- a convenience, not
+// state, like every other readStore on this page.
+function nxFresh(id) {
+  const seen = Number(readStore("qa.roomSeen." + id, "0")) || 0;
+  return ((NX && NX.threads && NX.threads[id]) || []).filter(nm =>
+    (nm.kind === "reply" || nm.kind === "claude_note") && nm.at &&
+    Date.parse(nm.at) > seen).length;
+}
+
+function renderRooms(data) {
+  NX = data || { rooms: [], threads: {}, panels: {} };
+  const rooms = NX.rooms || [];
+  let current = readStore("qa.room", "general");
+  if (!rooms.some(nr => nr.id === current)) current = rooms.length ? rooms[0].id : "general";
+  const thread = (NX.threads || {})[current] || [];
+  if (!document.getElementById("panel-nexus").hidden) {
+    const newest = thread.reduce((n, nm) => Math.max(n, Date.parse(nm.at || "") || 0), 0);
+    writeStore("qa.roomSeen." + current, newest);
+  }
+  document.getElementById("roomList").innerHTML = rooms.map(nr => {
+    const fresh = nxFresh(nr.id);
+    return '<button type="button" class="nx-room' + (nr.id === current ? " on" : "") +
+      '" data-room="' + esc(nr.id) + '"><span class="nx-rt">' + esc(nr.title || nr.id) +
+      "</span>" + (fresh ? '<span class="nx-badge">' + fresh + "</span>" : "") + "</button>";
+  }).join("");
+  const shown = rooms.find(nr => nr.id === current) || { title: "General" };
+  document.getElementById("roomChat").innerHTML =
+    '<h3 class="nx-title">' + esc(shown.title || current) + "</h3>" +
+    (thread.length ? thread.map(nxBubble).join("")
+                   : '<div class="empty">Nothing here yet.</div>');
+  document.getElementById("roomPanel").innerHTML =
+    nxPanel(current, (NX.panels || {})[current] || {});
+  const total = rooms.reduce((n, nr) => n + nxFresh(nr.id), 0);
+  const badge = document.getElementById("nexusN");
+  if (badge) badge.textContent = total ? String(total) : "";
+}
+window.renderRooms = renderRooms;
+
+// The one line the tab says about itself: why it is empty, or nothing. It is a
+// status, not a mark the operator can clear, so it shows exactly when there is
+// something to say and is never revealed unconditionally
+// (tests/repo/test_live_server.py counts those).
+function nxSay(message) {
+  const note = document.getElementById("roomsNote");
+  note.textContent = message || "";
+  note.hidden = !message;
+}
+
+function loadRooms() {
+  if (!NX_LOCAL || typeof fetch !== "function") {
+    nxSay("The rooms live in the running console, not in this file. " +
+          "Start console.cmd and open http://127.0.0.1:8787/.");
+    return;
+  }
+  fetch("/rooms.json", { cache: "no-store" })
+    .then(r => r.ok ? r.json() : Promise.reject(new Error("HTTP " + r.status)))
+    .then(data => { nxSay(""); renderRooms(data); })
+    .catch(e => nxSay("Could not load the rooms: " + e.message));
+}
+
+document.getElementById("roomList").addEventListener("click", e => {
+  const b = e.target.closest("[data-room]");
+  if (!b) return;
+  writeStore("qa.room", b.dataset.room);
+  renderRooms(NX);
+});
+document.getElementById("roomChat").addEventListener("click", e => {
+  const b = e.target.closest(".nx-more");
+  if (!b || !b.previousElementSibling) return;
+  const body = b.previousElementSibling;
+  body.classList.toggle("nx-clamp");
+  b.textContent = body.classList.contains("nx-clamp") ? b.dataset.label : "▴ less";
+});
+if (NX_LOCAL) loadRooms();
+
 /* ---------- two tabs ---------- */
 const PANELS = { overview: "panel-overview", findings: "panel-findings",
-                stats: "panel-stats", legend: "panel-legend" };
+                stats: "panel-stats", nexus: "panel-nexus",
+                legend: "panel-legend" };
 
 function showTab(name) {
   if (!PANELS[name]) name = "overview";
@@ -2404,6 +2716,7 @@ function showTab(name) {
   const help = document.getElementById("panel-help");
   if (help) help.hidden = name !== "legend";
   writeStore("qa.tab", name);
+  if (name === "nexus") loadRooms();
 }
 document.getElementById("tabs").addEventListener("click", e => {
   const b = e.target.closest("button");
@@ -2583,6 +2896,11 @@ paintVerdicts();
   // have, and treating it as merely a greeting is how the tab went stale.
   src.addEventListener("hello", catchUp);
   src.addEventListener("changed", catchUp);
+  // The rooms move on their own event and redraw in place: no reload, so a
+  // note being typed is never thrown away by somebody else's message. A hello
+  // after a dropped connection may have missed one, so it refreshes too.
+  src.addEventListener("rooms", () => loadRooms());
+  src.addEventListener("hello", () => loadRooms());
   src.onerror = () => say("off", "reconnecting");
   window.addEventListener("beforeunload", () => src.close());
 })();

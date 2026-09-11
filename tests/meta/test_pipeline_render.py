@@ -804,11 +804,13 @@ process.on("exit", () => {
 """
 
 
-def _run_page(node, workdir, payload):
+def _run_page(node, workdir, payload, after: str = ""):
     """Execute the page's own script over `payload`.
 
     Returns (returncode, stderr, captured), where `captured` maps element id
-    to the HTML the page wrote into it.
+    to the HTML the page wrote into it. `after` runs once the page has loaded,
+    so a test can call what the page exposes on `window` -- the Nexus rooms
+    arrive by fetch, which the harness never makes.
     """
     import subprocess
 
@@ -825,7 +827,8 @@ def _run_page(node, workdir, payload):
         + json.dumps(json.dumps(payload)) + ";\n", encoding="utf-8")
     (workdir / "page.js").write_text(script, encoding="utf-8")
     (workdir / "run.js").write_text(
-        'require("./harness.js");\nrequire("./page.js");\n', encoding="utf-8")
+        'require("./harness.js");\nrequire("./page.js");\n' + after + "\n",
+        encoding="utf-8")
 
     # encoding is named: the page carries the vendor's own text, and this
     # machine's console codepage is cp1250, which cannot decode it.

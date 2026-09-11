@@ -64,6 +64,34 @@ def live(tmp_path, monkeypatch, serve):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_note_reaches_an_open_tab_as_a_rooms_event_and_not_as_a_reload(live, serve):
+    """The Nexus tab redraws in place; the page does not reload under the operator.
+
+    The rooms live outside the payload (tests/meta/test_pipeline_rooms.py says
+    why), so the digest-driven `changed` event cannot carry them. They get their
+    own event, raised by a watcher over five small files -- and the half that
+    matters as much is the silence: nothing moved, nothing sent.
+    """
+    listener = live.subscribe()
+    last = serve.room_fingerprint()
+    assert serve.room_watch_once(live, last) == last
+    with pytest.raises(queue.Empty):
+        listener.get(timeout=0.3)
+
+    rooms = Path(os.environ["QA_STATE_DIR"]) / "rooms.jsonl"
+    with open(rooms, "a", encoding="utf-8") as handle:
+        handle.write(json.dumps({"type": "operator_note", "id": "N-0001",
+                                 "room": "general", "text": "hello",
+                                 "at": "2026-09-11T05:00:00+00:00"}) + "\n")
+    now = serve.room_watch_once(live, last)
+    assert now != last, "a line appended to rooms.jsonl did not move the fingerprint"
+    got = listener.get(timeout=5)
+    assert got.startswith("rooms:"), f"the tab was sent {got!r}, not a rooms event"
+    with pytest.raises(queue.Empty):
+        listener.get(timeout=0.3)
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_real_change_reaches_a_subscriber(live):
     """A changed payload wakes every open tab, exactly once."""
     first = live.digest

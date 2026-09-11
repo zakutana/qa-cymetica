@@ -234,3 +234,10 @@ to neodškrtl, nebo to nikdy nebylo další na řadě.
 
   Pozor na `WINDOW = 5` v `tests/mcp/test_nexus_channel.py`: záznam z web chatu
   nemá naše stopky, takže do měření doby odpovědi patřit **nesmí**.
+
+- [ ] 2026-09-11  Postavit Nexus rooms podle `docs/nexus-rooms-plan.md` — P1 až P5, každá fáze zvlášť
+
+  Schváleno 11. 9. Záložka Nexus v konzoli: General s celou korespondencí,
+  strategy roomy (chat vlevo, panel vpravo), tvoje poznámky, které čtu přes
+  `rooms.py unread`, a skill `nexus-session`. Pořadí a testy jsou v plánu;
+  každá fáze se commitne zvlášť, bez pushe, a po P2 a P4 se restartuje konzole.

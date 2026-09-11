@@ -18,6 +18,10 @@ from the ledger is the exact failure that guard exists to catch.
 
 Read-only with respect to state: it renders, and the only file it writes is
 dashboard/index.html, which is a projection and always was.
+
+The Nexus tab's rooms are served beside the page, at /rooms.json, and are not
+part of what it renders -- ROOM_FILES says why -- so a note or a sample never
+moves dashboard/index.html.
 """
 
 from __future__ import annotations
@@ -115,6 +119,64 @@ def _fingerprint() -> tuple:
             except OSError:
                 marks.append((rel, -1))
     return tuple(marks)
+
+
+# The Nexus rooms (docs/nexus-rooms-plan.md). Served on their own at
+# /rooms.json and NOT part of the payload: the operator's notes and the
+# sampler's rows land while a sweep may be running, and anything in the payload
+# rewrites the committed dashboard/index.html -- a dirty tree in the middle of
+# a run, and a run that can no longer reach level V. Five small files, looked
+# at every few seconds: what POLL_SECONDS guards against is stat-ing every run
+# record, and none of these is one.
+ROOM_FILES = ("rooms.jsonl", "nexus.jsonl", "paper.jsonl", "clones.jsonl",
+              "samples.jsonl")
+ROOM_POLL_SECONDS = 5.0
+ROOMS_EVENT = "rooms:"
+
+# The names this machine answers to. The rooms carry the operator's own notes,
+# and a page on any site can point a hostname of its own at 127.0.0.1 and then
+# read from it as if it were same-origin -- DNS rebinding. What that request
+# cannot fake is the Host header its browser sends.
+LOOPBACK_NAMES = ("127.0.0.1", "localhost", "[::1]")
+
+
+def room_fingerprint() -> tuple:
+    """Size and mtime of each room file -- size too, so an append always shows."""
+    from qa.state import state_dir
+
+    base = state_dir()
+    marks = []
+    for name in ROOM_FILES:
+        try:
+            stat = (base / name).stat()
+            marks.append((name, stat.st_mtime_ns, stat.st_size))
+        except OSError:
+            marks.append((name, -1, -1))
+    return tuple(marks)
+
+
+def room_watch_once(live, last: tuple) -> tuple:
+    """One tick of the rooms watcher, without the timer, so a test can run it."""
+    now = room_fingerprint()
+    if now != last:
+        live.notify_rooms()
+    return now
+
+
+def room_watcher(live, stop: threading.Event,
+                 every: float = ROOM_POLL_SECONDS) -> None:
+    last = room_fingerprint()
+    while not stop.wait(every):
+        try:
+            last = room_watch_once(live, last)
+        except Exception as exc:  # noqa: BLE001 -- a bad stat must not kill the thread
+            print(f"[rooms] watch failed: {type(exc).__name__}: {exc}",
+                  file=sys.stderr)
+
+
+def local_host(header, port: int) -> bool:
+    """Was this request addressed to this machine, by a loopback name and our port?"""
+    return (header or "").strip().lower() in {f"{n}:{port}" for n in LOOPBACK_NAMES}
 
 
 class SingleServer(ThreadingHTTPServer):
@@ -242,6 +304,14 @@ class Live:
             digest = self.digest
         for q in listeners:
             q.put(digest)
+
+    def notify_rooms(self) -> None:
+        """The rooms moved. Their own event: the tab redraws one panel, the page
+        does not reload, and a note being typed is not thrown away."""
+        with self.lock:
+            listeners = list(self.listeners)
+        for q in listeners:
+            q.put(ROOMS_EVENT + str(time.time_ns()))
 
     def subscribe(self) -> queue.Queue:
         q: queue.Queue = queue.Queue()
@@ -420,11 +490,30 @@ def make_handler(live: Live):
                 self._send(body, "application/json; charset=utf-8")
                 return
 
+            if path == "/rooms.json":
+                self.send_rooms()
+                return
+
             if path == "/events":
                 self.stream_events()
                 return
 
             self._send(b"not found", "text/plain; charset=utf-8", 404)
+
+        def send_rooms(self) -> None:
+            """The Nexus tab's data -- to this machine by name, to nothing else."""
+            if not local_host(self.headers.get("Host"),
+                              self.server.server_address[1]):
+                self._send(b'{"error": "the rooms are served to this machine only"}',
+                           "application/json; charset=utf-8", 403)
+                return
+            try:
+                body = json.dumps(live.render.build_rooms(), ensure_ascii=False)
+            except Exception as exc:  # noqa: BLE001 -- a broken view must not kill the server
+                self._send(json.dumps({"error": f"{type(exc).__name__}: {exc}"})
+                           .encode("utf-8"), "application/json; charset=utf-8", 500)
+                return
+            self._send(body.encode("utf-8"), "application/json; charset=utf-8")
 
         def stream_events(self) -> None:
             """Server-sent events. One line per change, plus a keepalive.
@@ -447,8 +536,12 @@ def make_handler(live: Live):
                 self.wfile.flush()
                 while True:
                     try:
-                        digest = q.get(timeout=15)
-                        payload = f"event: changed\ndata: {digest}\n\n"
+                        item = q.get(timeout=15)
+                        if item.startswith(ROOMS_EVENT):
+                            payload = (f"event: rooms\n"
+                                       f"data: {item[len(ROOMS_EVENT):]}\n\n")
+                        else:
+                            payload = f"event: changed\ndata: {item}\n\n"
                     except queue.Empty:
                         payload = ": keepalive\n\n"
                     self.wfile.write(payload.encode("utf-8"))
@@ -505,6 +598,7 @@ def main(argv: list[str] | None = None) -> int:
     stop = threading.Event()
     thread = threading.Thread(target=watcher, args=(live, stop, args.poll), daemon=True)
     thread.start()
+    threading.Thread(target=room_watcher, args=(live, stop), daemon=True).start()
 
     if args.ask:
         threading.Thread(target=asker, args=(stop, args.ask * 60),
