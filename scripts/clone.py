@@ -316,10 +316,10 @@ def clone(source_type: str, source_id: str, name: str | None,
         CURRENT_TIER.reset(token)
 
     evidence = _capture(response)
-    served = unwrap(response.json()) if response.status_code == 200 else {}
+    served, said = _served(response)
     outcome = {
         "id": clone_id, "type": "outcome", "at": _now(),
-        "outcome": "accepted" if response.status_code == 200 else "rejected",
+        "outcome": said,
         "http_status": response.status_code,
         "clone_instance_id": served.get("id"),
         # Theirs, not ours. We asked for paper twice; this is what they say
@@ -402,9 +402,9 @@ def fund(instance_id: str, amount: float, confirm: bool) -> dict:
         CURRENT_TIER.reset(token)
 
     evidence = _capture(response)
-    served = unwrap(response.json()) if response.status_code == 200 else {}
+    served, said = _served(response)
     _append({"id": fund_id, "type": "outcome", "at": _now(), "kind": "fund",
-             "outcome": "accepted" if response.status_code == 200 else "rejected",
+             "outcome": said,
              "http_status": response.status_code, "evidence_id": evidence,
              "response": json.dumps(served)[:2000]})
     after = _snapshot(client)
@@ -423,6 +423,25 @@ def fund(instance_id: str, amount: float, confirm: bool) -> dict:
     print(f"   real balance moved     {_delta('balance_usdc')}  "
           f"(their read was {before.get('balance_check_status')!r})")
     return served
+
+
+def _served(response) -> tuple[dict, str]:
+    """Their answer to a write, read once, and what it makes of the write.
+
+    `accepted` needs a 200 whose body we could read; a 200 whose body is not
+    JSON is `unknown` -- they answered, and we cannot say what they made --
+    and anything else is `rejected`. Never a raise: this runs after the
+    intent is on the record, and rule 9 says every path from there owes an
+    outcome. Until the deep pass of 2026-09-11 clone(), fund() and enable()
+    each read `response.json()` themselves, and a body that was not JSON left
+    the intent bare.
+    """
+    if response.status_code != 200:
+        return {}, "rejected"
+    try:
+        return unwrap(response.json()), "accepted"
+    except ValueError:
+        return {"unreadable_body": str(getattr(response, "text", ""))[:300]}, "unknown"
 
 
 def _instance(client, instance_id: str) -> dict:
@@ -500,19 +519,33 @@ def enable(instance_id: str, confirm: bool) -> dict:
     finally:
         CURRENT_TIER.reset(token)
 
-    served = unwrap(response.json()) if response.status_code == 200 else {}
+    served, said = _served(response)
     _append({"id": run_id, "type": "outcome", "at": _now(), "kind": "enable",
-             "outcome": "accepted" if response.status_code == 200 else "rejected",
+             "outcome": said,
              "http_status": response.status_code,
              "evidence_id": _capture(response),
              "response": json.dumps(served)[:1200]})
-    after_row = _instance(client, instance_id)
-    _append({"id": run_id, "type": "after", "at": _now(), "kind": "enable",
-             "their_is_trading": after_row.get("is_trading"),
-             "their_is_paper": after_row.get("is_paper"),
-             "bot_balance_usdc": after_row.get("current_balance_usdc"),
-             **_snapshot(client)})
-    client.close()
+    # The bot may be running by now, so a re-read that fails must not end
+    # the record: until the deep pass of 2026-09-11 it raised "Nothing is
+    # started on an unreadable answer" about a bot just started, and the
+    # after row and client.close() were skipped.
+    reread = "ok"
+    try:
+        after_row = _instance(client, instance_id)
+    except SystemExit as exc:
+        after_row, reread = {}, f"failed: {exc}"
+    try:
+        _append({"id": run_id, "type": "after", "at": _now(), "kind": "enable",
+                 "reread": reread,
+                 "their_is_trading": after_row.get("is_trading"),
+                 "their_is_paper": after_row.get("is_paper"),
+                 "bot_balance_usdc": after_row.get("current_balance_usdc"),
+                 **_snapshot(client)})
+    finally:
+        client.close()
+    if reread != "ok":
+        print(f"   WARNING: switched on, then {reread}. Read their my-clones "
+              f"before doing anything else with it.")
 
     print(f"{run_id}: HTTP {response.status_code}, "
           f"is_trading now {after_row.get('is_trading')!r}, "

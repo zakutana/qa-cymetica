@@ -242,13 +242,35 @@ def test_the_cap_is_not_advisory(tmp_path, monkeypatch):
             f"at {post}: the platform has already accepted it by the time our "
             f"own refusal is computed"
         )
+        # The refusal is the book's answer and nothing else: `if not can:` over
+        # a raise, where `can` is what affordable() returned. Until the deep
+        # pass of 2026-09-11 any statement holding a Raise counted, so
+        # `if not can and not confirm:` -- the cap gone advisory for every
+        # confirmed order -- stayed green, and so would any other raise that
+        # happens to sit between the two (buy() now has one, for an
+        # unreadable bot balance). Three readers reproduced it.
+        stmt = block[gate]
+        target = stmt.targets[0] if isinstance(stmt, ast.Assign) else None
+        answer = (target.elts[0] if isinstance(target, ast.Tuple) and target.elts
+                  else target)
+        assert isinstance(answer, ast.Name), (
+            "buy() does not keep affordable()'s verdict in a name, so what "
+            "refuses the order cannot be tied to the book's answer")
+
+        def refuses(s) -> bool:
+            return (isinstance(s, ast.If)
+                    and isinstance(s.test, ast.UnaryOp)
+                    and isinstance(s.test.op, ast.Not)
+                    and isinstance(s.test.operand, ast.Name)
+                    and s.test.operand.id == answer.id
+                    and any(isinstance(n, ast.Raise) for n in ast.walk(s)))
+
         refusal = next((i for i, s in enumerate(block)
-                        if i > gate and any(isinstance(n, ast.Raise)
-                                            for n in ast.walk(s))), None)
-        assert refusal is not None and refusal < post, (
-            "nothing between the book check and the POST raises, so the book's "
-            "answer decorates the order instead of stopping it"
-        )
+                        if gate < i < post and refuses(s)), None)
+        assert refusal is not None, (
+            f"nothing between the book check and the POST is `if not "
+            f"{answer.id}:` over a raise, so the book's answer decorates the "
+            f"order instead of stopping it -- or stops it only on some paths")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

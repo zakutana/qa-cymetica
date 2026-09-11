@@ -92,23 +92,132 @@ def test_my_clones_is_a_bare_list_and_an_empty_one_is_not_an_absent_one(
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_source_type_their_schema_does_not_publish_is_refused(
         tmp_path, monkeypatch):
-    """Before the request, so a typo is not spent as a 422 against them."""
+    """Before the request, so a typo is not spent as a 422 against them.
+
+    A negative control that must not need the thing it tests: until the deep
+    pass of 2026-09-11 a refusal that stopped raising let this test build a
+    mutate-enabled client and POST a real paper clone. The client it would get
+    now fails on being built, so a broken refusal fails here and sends nothing.
+    """
     mod = _clone(tmp_path, monkeypatch)
+    _no_client(mod, monkeypatch)
     with pytest.raises(SystemExit, match="source_type must be one of"):
         mod.clone("perpetual_agents", "e1251539", None, None, confirm=True)
+
+
+def _no_client(mod, monkeypatch):
+    """A second barrier for a negative control: building a client fails."""
+    def refuse(*args, **kwargs):
+        raise AssertionError("the refusal did not hold: a live client was built")
+    monkeypatch.setattr(mod, "build_client", refuse)
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_guidance_that_was_never_answered_is_refused(tmp_path, monkeypatch):
     """A clone naming a Nexus answer that does not exist claims their
-    guidance for our own decision. Marked ours is fine; borrowed is not."""
+    guidance for our own decision. Marked ours is fine; borrowed is not.
+    Behind the same second barrier as the source-type refusal."""
     mod = _clone(tmp_path, monkeypatch)
+    _no_client(mod, monkeypatch)
     (tmp_path / "nexus.jsonl").write_text("", encoding="utf-8")
     with pytest.raises(SystemExit, match="no recorded answer"):
         mod.clone("wta_species", "dd206f68", None, "NEX-9999", confirm=True)
 
     ours = mod._guidance(None)
     assert ours["id"] is None and "ours" in ours["note"]
+
+
+def _offline(mod, monkeypatch, client):
+    """clone.py with every door to their server replaced by `client`."""
+    for name, value in (("load_dotenv", lambda: None),
+                        ("install_client_guard", lambda: None),
+                        ("identities", lambda: {"trusted": None}),
+                        ("build_client", lambda *a, **k: client),
+                        ("_snapshot", lambda c: {}),
+                        ("_capture", lambda *a, **k: None)):
+        monkeypatch.setattr(mod, name, value)
+
+
+class _Response:
+    def __init__(self, status, body=None, readable=True):
+        self.status_code, self._body, self._readable = status, body, readable
+        self.text = "<html>bad gateway</html>"
+
+    def json(self):
+        if not self._readable:
+            raise ValueError("not JSON")
+        return self._body
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_200_we_cannot_read_still_gets_its_outcome(tmp_path, monkeypatch):
+    """R04, deep pass of 2026-09-11. Rule 9: the intent is written before the
+    POST, so every path after it owes an outcome. clone(), fund() and enable()
+    read `response.json()` on any 200, unguarded, so a 200 whose body is not
+    JSON raised after the intent and left it bare -- the shape the comment on
+    CLN-0001 in the same function says must not happen. It is `unknown` now:
+    they answered, and we cannot say what they made."""
+    import ast
+
+    mod = _clone(tmp_path, monkeypatch)
+
+    class Client:
+        def post(self, *args, **kwargs):
+            return _Response(200, readable=False)
+
+        def close(self):
+            pass
+
+    _offline(mod, monkeypatch, Client())
+    mod.clone("wta_species", "dd206f68", None, None, confirm=True)
+    rows = mod.load()
+    outcome = [r for r in rows if r.get("type") == "outcome"]
+    assert len(outcome) == 1, f"the intent was left without an outcome: {rows}"
+    assert (outcome[0]["outcome"], outcome[0]["http_status"]) == ("unknown", 200)
+
+    tree = ast.parse((REPO / "scripts" / "clone.py").read_text(encoding="utf-8"))
+    for fn in (n for n in ast.walk(tree)
+               if isinstance(n, ast.FunctionDef) and n.name in ("clone", "fund", "enable")):
+        direct = [c.lineno for c in ast.walk(fn) if isinstance(c, ast.Call)
+                  and getattr(c.func, "attr", None) == "json"
+                  and getattr(getattr(c.func, "value", None), "id", None) == "response"]
+        assert not direct, (
+            f"{fn.name}() reads response.json() itself at line(s) {direct}, after "
+            f"the POST; a body that is not JSON would leave its intent bare")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_bot_switched_on_keeps_its_record_when_the_reread_fails(tmp_path, monkeypatch):
+    """R05, deep pass of 2026-09-11. After toggle-trading answered 200, a
+    failed my-clones re-read raised "Nothing is started on an unreadable
+    answer" about a bot that had just been started, and the after row and
+    client.close() never ran -- on the one call that keeps spending after we
+    stop watching. The after row now says the re-read failed."""
+    mod = _clone(tmp_path, monkeypatch)
+    row = {"id": "b1", "is_paper": True, "is_trading": False,
+           "current_balance_usdc": 550.0,
+           "execution_economics": {"execution_class": "PAPER_SIMULATION"}}
+    seen = {"gets": 0, "closed": False}
+
+    class Client:
+        def get(self, path, params=None):
+            seen["gets"] += 1
+            return _Response(200, [row]) if seen["gets"] == 1 else _Response(503)
+
+        def post(self, *args, **kwargs):
+            return _Response(200, {"id": "b1", "is_trading": True})
+
+        def close(self):
+            seen["closed"] = True
+
+    _offline(mod, monkeypatch, Client())
+    mod.enable("b1", confirm=True)
+    rows = mod.load()
+    after = [r for r in rows if r.get("type") == "after"]
+    assert len(after) == 1, f"the switched-on bot has no after row: {rows}"
+    assert "failed" in str(after[0].get("reread")), after[0]
+    assert after[0].get("their_is_trading") is None
+    assert seen["closed"], "the client was left open"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

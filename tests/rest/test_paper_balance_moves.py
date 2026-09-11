@@ -100,11 +100,18 @@ def measurements(rows):
         if outcome.get("outcome") != "accepted":
             continue
         before = intent.get("before") or {}
+        # A balance that could not be read keeps the trade in the population,
+        # marked. _snapshot writes `sim_balance_usdc` only on a 200 from
+        # /account/me, and until the deep pass of 2026-09-11 this `continue`d
+        # on its absence: one failed account read on the newest buy handed the
+        # verdict to the buy before it, and the reason called that trade "the
+        # newest paper buy" -- a pre-fix row re-reported with today's date.
+        # Two auditors found it separately, three readers confirmed it.
         try:
-            was, now = (float(before.get("sim_balance_usdc")),
-                        float(after.get("sim_balance_usdc")))
+            moved = round(float(before.get("sim_balance_usdc"))
+                          - float(after.get("sim_balance_usdc")), 6)
         except (TypeError, ValueError):
-            continue
+            moved = None
         # `positions` is written by _snapshot ONLY on a 200. Absent means the
         # read failed, and `(x or 0)` turned that into 0 -- so a failed read
         # gave 0 - 39 = -39, the trade fell out of `landed`, the subject list
@@ -114,10 +121,12 @@ def measurements(rows):
         # a check-auditor 2026-09-10, confirmed 3/3.
         unread = [side for side, snap in (("before", before), ("after", after))
                   if snap.get("positions") is None]
+        if moved is None:
+            unread.append("balance")
         measured.append({
             "id": trade_id, "usdc": float(intent.get("usdc") or 0),
             "at": intent.get("at") or outcome.get("at") or "",
-            "moved": round(was - now, 6),
+            "moved": moved,
             "unread": unread,
             "positions_grew": (None if unread else
                                after["positions"] - before["positions"]),
@@ -156,10 +165,12 @@ def test_a_paper_buy_debits_the_paper_balance(rest_trusted):
     subject = newest(measured)
     if subject["unread"]:
         raise Inconclusive(
-            f"the newest trade {subject['id']} is missing a positions read on "
-            f"the {', '.join(subject['unread'])} side, so whether a position "
-            f"opened cannot be established -- and judging the trade before it "
-            f"instead would report a pre-fix trade with today's date on it")
+            f"the newest trade {subject['id']} is missing a read "
+            f"({', '.join(subject['unread'])}: 'balance' is /account/me, "
+            f"'before'/'after' are positions), so what it cost and whether a "
+            f"position opened cannot be established -- and judging the trade "
+            f"before it instead would report a pre-fix trade with today's "
+            f"date on it")
 
     # A buy that did not create a position is a different fault and not this
     # one. What is asserted here is a position opening and nothing paying, so

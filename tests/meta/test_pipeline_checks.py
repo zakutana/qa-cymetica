@@ -624,6 +624,24 @@ def test_paper_balance_newest_unreadable_never_falls_back_to_an_older_one():
         "and it must carry why it could not be read, so the check can say "
         "Inconclusive instead of counting a missing key as zero")
 
+    # The other read the same trade depends on: the BALANCE. _snapshot writes
+    # `sim_balance_usdc` only on a 200 from /account/me, and until the deep
+    # pass of 2026-09-11 measurements() dropped a trade without one, so a
+    # failed account read handed the verdict to the pre-fix TRD-0001 -- this
+    # test covered only the positions side. Two auditors found it separately.
+    rows = (_trade("TRD-0001", "2026-09-10T11:41:45+00:00",
+                   usdc=1.0, was=100000.0, now=100000.0, positions=(39, 40))
+            + _trade("TRD-0009", "2026-09-11T19:41:45+00:00",
+                     usdc=1.0, was=100000.0, now=99999.0, positions=(40, 41)))
+    for row in rows:
+        if row["id"] == "TRD-0009" and row.get("type") == "after":
+            row.pop("sim_balance_usdc", None)
+    subject = newest(measurements(rows))
+    assert subject is not None and subject["id"] == "TRD-0009", (
+        "a newest trade whose balance could not be read dropped out, and the "
+        "verdict went to the pre-fix trade before it")
+    assert "balance" in subject["unread"], subject
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_close_is_not_read_as_a_buy_that_debited_nothing():

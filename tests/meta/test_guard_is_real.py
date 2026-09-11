@@ -304,6 +304,11 @@ def test_the_money_loop_is_behind_the_probe_only_floor():
         "clob.orders", "clob.order_singular", "arena.order",
         "exchange.buy", "exchange.orders", "agents.clone", "bots.clone",
         "cloned_bots.clone",
+        # The event-card orders, which are the ones this repository actually
+        # places. Left out until the deep pass of 2026-09-11, so `named_wrong`
+        # never read their flag: `event_cards.short` standing on [confirm]
+        # passed a MUTATE POST with no `paper` and every guard stayed green.
+        "event_cards.buy", "event_cards.sell", "event_cards.short",
         "funding.deposit", "funding.withdraw",
     }
     by_id = {rule.id: rule for rule in registry.rules}
