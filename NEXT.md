@@ -252,6 +252,15 @@ to neodškrtl, nebo to nikdy nebylo další na řadě.
   nastavení nebo jiného bota, a to má říct Nexus. Otázka je v roomu, jen ji
   poslat znovu přes `nexus.py ask --room STR-0001` a podle odpovědi jednat.
 
+- [ ] 2026-09-11  Až Nexus zase odpovídá, pustit znovu session s Nexusem na nové strategie z karet podle zpráv
+
+  Operátor to chtěl 11. 9. po sweepu. Nešlo to: NEX-0020 až NEX-0023
+  (14:22–15:15 UTC) skončily všechny `failed` po 78–92 s, bez důvodu, a skill
+  dovoluje jen jedno přeformulování. Ráno NEX-0018 a NEX-0019 odpovídaly za
+  2–3 minuty. Že zase odpovídá, pozná kontrola #86 (poslední pětice otázek).
+  Otázka pro General je v NEX-0022: karty podle zprávy, ne podle mince, aspoň
+  48 hodin otevřené, z volných ~89 000.
+
 - [ ] 2026-09-11  `correction_owed` ve foldu přičítá jejich tvrzení o opravě i našemu novému reportu na stejném řádku
 
   Po sweepu `PRE-0097` jsme poslali `fail` na #94 (tvrdí opravu, kontrola
