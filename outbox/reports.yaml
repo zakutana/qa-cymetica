@@ -1983,6 +1983,53 @@ reports:
       pipeline and paper trading -- but nothing in the response says which
       field an agent should trust.
 
+  - key: bot-new-arena-leg-not-booked-after-fix
+    findings: [CYM-a_bot_counts_the_stakes_it_has_open]
+    severity: medium
+    category: logic
+    url: https://cymetica.com/api/v1/cloned-bots/{instance_id}/balance
+    title: "After the #94 fix, a new ARENA leg on a paper bot is still neither debited nor locked: 55 USDC open, balance unchanged at 550"
+    expected: >
+      Your resolution of #94 (ET-24612, fix @ed2f2e508, live) says each ARENA
+      leg is now booked atomically with its trade row: debit on entry, refund
+      on a failed leg. A leg the bot opens after that fix therefore leaves the
+      bot's balance at entry, or at least shows in locked_in_trades.
+    actual: >
+      Our paper clone d778102d stood at bot_balance 550.0 after your backfill,
+      with the four ARENA legs of 100 opened on 2026-09-10 taken out. We
+      switched it back on at 2026-09-11 14:29 UTC. At 14:30:15 it opened a new
+      ARENA long, TRX, 55.00 USDC, which /activity still lists with is_closed
+      false. At 14:52, 22 minutes later, GET /api/v1/cloned-bots/{id}/balance
+      reports bot_balance 550.0, locked_in_trades 0.0, available 550.0.
+      Against the 1,000 funded and -50.00 realized, 400.00 of the open stake
+      has left the balance -- exactly the backfilled legs -- and the 55.00
+      opened after the fix is neither debited nor locked.
+    steps:
+      - "Paper clone funded 1000; after the #94 backfill GET /api/v1/cloned-bots/{id}/balance -> bot_balance 550.0, locked_in_trades 0.0"
+      - "POST /api/v1/cloned-bots/{id}/toggle-trading?enabled=true (2026-09-11 14:29 UTC)"
+      - "GET /api/v1/cloned-bots/{id}/activity -> new item: arena TRX buy 55.000000, executed_at 2026-09-11T14:30:15, is_closed false"
+      - "GET /api/v1/cloned-bots/{id}/balance at 14:52 -> bot_balance 550.0, locked_in_trades 0.0, available 550.0"
+    body: >
+      A follow-up to #94, and narrower than it: the backfill holds, and the
+      four legs it covered are counted. What does not hold yet is the booking
+      of a new leg. The only ARENA leg our bot has opened since the fix went
+      live left the balance where it was, so the blind spot #94 described --
+      limits computed off a balance that still includes committed stake -- is
+      there for every leg opened from now on, not only for the old ones.
+
+      Two readings fit, and you can tell them apart from inside: either this
+      leg took a path that still debits at loop end, the cause #94's
+      resolution describes, or the leg failed and was refunded while
+      /activity still lists it as open. The first is the fix not covering
+      every path; the second is /activity reporting a position that does not
+      exist.
+
+      Our own check of this row was wrong until today, and we say so: it
+      accepted only a stake shown in locked_in_trades, so it read your
+      debit-on-entry fix as the defect. It now counts a stake as handled when
+      it is either locked or taken out of the balance, and fails only on the
+      remainder -- here, exactly this 55.00.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in
