@@ -145,7 +145,18 @@ PINNED = {
     # endpoint that spends. Deep-pass finding A06 said this test named "both
     # clone paths" and exercised one; this is the sharper version of the same
     # sentence.
-    "test_guard_is_real.py": "0a6ec25622e8d8f2e007ac40b17f75d6f781eb5dbf98316890964e82102cf86f",
+    #
+    # Re-derived a FIFTH time, deep pass of 2026-09-11, finding T03 (triage
+    # 3/3), and again only adding enforcement. The money-loop floor's `must`
+    # never named the event-card orders -- the ones this repository actually
+    # places -- so `named_wrong` never read their flag: event_cards.short
+    # moved to required_flags [confirm] passed a MUTATE POST with no `paper`
+    # and every guard stayed green. buy, sell and short are in `must` now; all
+    # three stand on [paper], and short on [confirm] is refused. The file
+    # differs from the pinned one by those five lines only. Changing a guard is
+    # a rule change for the pass, so three readers voted on it first: 3/3 that
+    # it weakens nothing and touches no operator decision (RC1, DEEP-PASS.md).
+    "test_guard_is_real.py": "85c6cc6f3f4b490254ecd72eddfb1af2558fe5ea06919229e463cf65878e75a3",
 }
 
 
