@@ -212,11 +212,11 @@
   },
   "tests/rest/test_qa_agent_channel.py::test_escalating_a_low_confidence_answer_does_not_return_the_same_advice": {
    "fingerprints": [
-    "a809cac3e28b22dd350beada74d4f2da14114f8bf6176f4a0c36aeca84ea2737"
+    "761dade798609b6cf2412f120b74f77629b766ce2cfa65c5df84cfcae50e7d55"
    ],
-   "at": "2026-09-07T20:50:41+00:00",
-   "run_id": "run-20260907T201230Z-7fee4cf",
-   "gap_claimed": false
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T055512Z-0d595c5b",
+   "gap_claimed": true
   },
   "tests/rest/test_qa_agent_channel.py::test_the_agent_can_report_a_value_it_publishes": {
    "fingerprints": [
@@ -228,10 +228,10 @@
   },
   "tests/rest/test_qa_agent_channel.py::test_the_async_first_pass_is_grounded_like_the_sync_channel": {
    "fingerprints": [
-    "d8c89bb5d9dfb6abe6d9f240604f15d80183028892047d05a574abc9740d5a4c"
+    "6a2909b5c4a1a7ba162c9f81c8c486dfeeadaf00a9650f97a40d045ffd891c23"
    ],
-   "at": "2026-09-07T20:50:41+00:00",
-   "run_id": "run-20260907T201230Z-7fee4cf",
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T055512Z-0d595c5b",
    "gap_claimed": false
   },
   "tests/rest/test_qa_agent_channel.py::test_the_automated_first_pass_is_tagged_as_they_documented": {
@@ -451,11 +451,11 @@
   },
   "tests/meta/test_guard_is_real.py::test_the_money_loop_is_behind_the_probe_only_floor": {
    "fingerprints": [
-    "853eef96f1e5f31d803b15e780379bc4bc5518917f677f65c2d42463dae5835e"
+    "e300c44eec8ded814b83a8973dd93ab83b159f90ba666927bf587b505c328311"
    ],
-   "at": "2026-09-07T20:50:41+00:00",
-   "run_id": "run-20260907T201230Z-7fee4cf",
-   "gap_claimed": false
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": true
   },
   "tests/meta/test_guard_is_real.py::test_unknown_mcp_tool_is_denied_at_safe": {
    "fingerprints": [
@@ -2128,10 +2128,10 @@
   },
   "tests/meta/test_pipeline_channels.py::test_the_state_names_all_three_channels": {
    "fingerprints": [
-    "bfe127c73e578452fca3733d2d2162b83009d43fcb72c9fb22b32e066575ceb0"
+    "f4cde6e16c60246f604baa2846e5123dca54fe9e3153382ad29f8f129fa1dd1e"
    ],
-   "at": "2026-09-08T15:18:57+00:00",
-   "run_id": "run-20260908T150954Z-95f0a70",
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
    "gap_claimed": false
   },
   "tests/meta/test_pipeline_channels.py::test_status_offline_makes_no_request": {
@@ -4548,6 +4548,1230 @@
    ],
    "at": "2026-09-09T22:07:14+00:00",
    "run_id": "run-20260905T190532Z-f233726"
+  },
+  "tests/meta/test_guard_is_real.py::test_an_order_without_its_paper_flag_never_leaves_this_machine": {
+   "fingerprints": [
+    "5d2b375f5b2a18a439251f496078bbaa7913de8f4fdf4462122bc0c6e0d62e03"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_guard_is_real.py::test_a_rule_that_requires_no_flag_is_unaffected": {
+   "fingerprints": [
+    "1f7f4e6d22d4584070dee48f0267f1eae60b7c3c3eb98c05511da2b9cc1595af"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_guard_is_real.py::test_a_money_tool_with_a_paper_flag_is_executable_only_with_it": {
+   "fingerprints": [
+    "57d537921e9ab6f9175a3f84542f7f5ac1b0b0c5c5b0bd508a34806b020c9a63"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_guard_is_real.py::test_a_tool_this_registry_has_never_heard_of_is_refused_at_mutate": {
+   "fingerprints": [
+    "0541eb3c139761e870b68e60c732743ab33ea60132383d26e41da4bd6da4c6d3"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_guard_is_real.py::test_a_paper_gated_tool_is_still_refused_below_mutate": {
+   "fingerprints": [
+    "c4f45f13377ad1d2a070fc5ef5f947f72317e2a87dd4a8c8484ae3d46c2238ae"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_guard_is_real.py::test_cloning_a_bot_needs_its_paper_flag_too": {
+   "fingerprints": [
+    "de9dbc5727115957d874a22be9c7faafc25919f4d1e3ce50c06fa00b19c346de"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_book.py::test_the_book_counts_what_is_deployed_and_what_it_is_worth": {
+   "fingerprints": [
+    "a565e199003449aa3e4095017ade34d1a03bd5637a1366117e00f1001de06052"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_book.py::test_a_closed_position_returns_its_money_to_the_book": {
+   "fingerprints": [
+    "4b160b32744dc0009c8c5c2f8ea797e7b2b22ec77a512e3a95eef5dd108f9967"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_book.py::test_capital_they_accepted_and_do_not_list_is_still_spent": {
+   "fingerprints": [
+    "91c72ae8f0c7943aa2f87a30a2ead8608da7a825d9ea993ebae6ecc9c414384e"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_book.py::test_an_order_the_book_cannot_pay_for_is_refused": {
+   "fingerprints": [
+    "daf48209d98c4a53638534cfe67749e78cfb535eed15b3c498b1473d50177c71"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_book.py::test_the_cap_is_not_advisory": {
+   "fingerprints": [
+    "69e7d15a8f5a674a346c5a06c256479720ff18d4541b6f77094bc45bb2d61324"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": true
+  },
+  "tests/meta/test_pipeline_book.py::test_capital_moved_into_a_bot_is_deployed_not_cash": {
+   "fingerprints": [
+    "b8ab387a48eed8beb0346df5d43a789ed5f69ea9d3afa4ffb40bd046c4235730"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": true
+  },
+  "tests/meta/test_pipeline_book.py::test_a_200_in_an_unexpected_wrapper_is_not_an_empty_book": {
+   "fingerprints": [
+    "fbb546f3e45d6c8d9fc51c17d2d165834fe69b3f2dc304c1866f53c79c18ecf1"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_channels.py::test_a_thread_is_reconstructed_from_their_reply_to_when_our_send_was_not_journalled": {
+   "fingerprints": [
+    "7fe3f203e4323fa898fb3869501b7b8430aeb983fbdb00c6982d2a431f63932e"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_channels.py::test_a_human_reply_is_real_even_when_nothing_classified_it": {
+   "fingerprints": [
+    "8b5ea7f393cd71a2df9ee7a0df288c30b1e292801efc43dc31ccb65400675244"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_channels.py::test_a_receipt_alone_is_a_question_they_have_not_answered": {
+   "fingerprints": [
+    "d4b7ed8ee689fbc66be68b0f4803105201b39a32ee1de777a0c30f6b808531d8"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_channels.py::test_the_discriminator_is_recorded_even_when_it_is_false": {
+   "fingerprints": [
+    "5ac6fc058cde0341a534b09be6a6b8b69a2dab2dcea8ce74221a267a2dc94d5e"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_checks.py::test_paper_balance_judges_the_newest_trade_not_the_whole_log": {
+   "fingerprints": [
+    "35bfaf005e3c2449a4b73cce7a412151055a9192295b05c9ca16a1651eafbffd"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_checks.py::test_paper_balance_newest_unreadable_never_falls_back_to_an_older_one": {
+   "fingerprints": [
+    "02e89b56c6fe7ac4c9535fcbd6e842733b77578c0732b3ef3a872a743fe0ec5d"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": true
+  },
+  "tests/meta/test_pipeline_checks.py::test_a_close_is_not_read_as_a_buy_that_debited_nothing": {
+   "fingerprints": [
+    "c88903c54941c7e285952708bee9a1573af94328a48b121a5ef9fe50039e52ed"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_checks.py::test_the_close_check_can_be_red_for_the_state_it_names": {
+   "fingerprints": [
+    "69d615703c7ce9bebdefd6d102c62a765dcbe11d04f928dc3ba645bcf9d1cf08"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": true
+  },
+  "tests/meta/test_pipeline_checks.py::test_nexus_tools_judges_the_newest_answer_that_names_any": {
+   "fingerprints": [
+    "3c2d22782139c20357d9975214aaa204f9b0c38bb7b749f3a8c88c15a50aa4ab"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_checks.py::test_nexus_tools_skips_a_newest_answer_that_names_no_tool": {
+   "fingerprints": [
+    "b597d2daec2e54b07971e6fb10876383c51412ef55c2d8b3b18675d70e75d547"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_checks.py::test_the_latency_window_counts_questions_not_rows": {
+   "fingerprints": [
+    "4cfe97e37bcb71c0351ccfb4c2fe3e4e8dd1d58e87b46f3f0dc547e8976db7cc"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_checks.py::test_the_listing_check_walks_the_pages_it_is_now_allowed_to_walk": {
+   "fingerprints": [
+    "56af67d46c251d035e9fdb5a0bf45293d6ba76bf5cd9999e9f820f649d9e05bc"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_checks.py::test_the_listing_check_leaves_user_submissions_out_of_the_market": {
+   "fingerprints": [
+    "01cb734ea486a0d34cad43826a52e0225e6ac85983af70e22e273c630f115a4a"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": true
+  },
+  "tests/meta/test_pipeline_checks.py::test_the_disclosure_check_judges_the_newest_answer": {
+   "fingerprints": [
+    "eaaf71c373014563b65e3793177e884ad92fc616bbccd64de70dd4cf678e7832"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_clone.py::test_source_type_comes_from_the_group_not_from_the_row": {
+   "fingerprints": [
+    "7fd1c968d6e04ee9e3f2ab4fde2148515d05d7cd2fb07b7c01b7be952f90c1ec"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_clone.py::test_my_clones_is_a_bare_list_and_an_empty_one_is_not_an_absent_one": {
+   "fingerprints": [
+    "0255e1f279300d3e1e80dc12c1abe3367cc25c85693825460b8fe8a39ecdcb4a"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_clone.py::test_a_source_type_their_schema_does_not_publish_is_refused": {
+   "fingerprints": [
+    "09fb6e68b8906b78dc07f3fd7b0b94cea9368fadd7e011844df1069c51885624"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": true
+  },
+  "tests/meta/test_pipeline_clone.py::test_guidance_that_was_never_answered_is_refused": {
+   "fingerprints": [
+    "89e623e7e018afd0fe78ba51cb773406380bf33d1da5760f8e57afd6a7e8ee2c"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": true
+  },
+  "tests/meta/test_pipeline_clone.py::test_only_a_405_counts_as_a_route_that_exists": {
+   "fingerprints": [
+    "39300535e7d81dfcf4ce54456774ad8c67d2dc34e51332b9f761a27a7208ca42"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_clone.py::test_funding_asks_the_platform_whether_the_bot_is_paper": {
+   "fingerprints": [
+    "1fb239741f97613b42213628149f56797c7a9b4857e2a92e78fa1176d7516544"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_clone.py::test_starting_a_bot_needs_both_of_their_paper_statements": {
+   "fingerprints": [
+    "93bc0b63376ca0270e85a9783c41e4ac240cc07b9fd37bc6c678e3c3ca8306c6"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_clone.py::test_the_clone_record_is_not_written_into_the_paper_trade_log": {
+   "fingerprints": [
+    "6845b77559068cd23dc17de52ce8ea0e3c2f12555269e0f981b2ec2c5b60ff5d"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_console.py::test_every_script_that_prints_stored_prose_reconfigures_its_output": {
+   "fingerprints": [
+    "4f8da0c0e2ba1a3c700fb14ece23072f25eb8eb86c128ba29598e4e29f0c2f98"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_console.py::test_the_helper_survives_a_stream_that_cannot_hold_the_character": {
+   "fingerprints": [
+    "984c51cef1819458cf79a487248897c474f7ccd49ced636d72017caa8573a281"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_console.py::test_memories_prints_a_body_carrying_a_character_cp1250_cannot_hold": {
+   "fingerprints": [
+    "c1a7eb3b74d2a8b58b80064d058266ef243412de4acbdbace7509ab05de090da"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_decisions.py::test_every_decision_the_operator_made_is_still_there": {
+   "fingerprints": [
+    "25024653ae3ed0ca220b6cfea2bfbef7df46d326167f00c41e8c45e5df1283d1"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_decisions.py::test_no_decision_was_added_or_reworded_without_the_operator": {
+   "fingerprints": [
+    "f0edd88534bf51ad49641ad59c9d5f0c5447cc0a501219371f77e601179ab181"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_decisions.py::test_nothing_quotes_the_operator_outside_a_tagged_decision": {
+   "fingerprints": [
+    "635693572497640cc015daa56cd4ce04f6a7413e5eeb8b303264d1d71db4bab9"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_nexus.py::test_elapsed_is_measured_from_the_question_not_from_this_poll_loop": {
+   "fingerprints": [
+    "b3f1f55dfcd92016132636e76a052f233f43acde33a75b1a45359fb6b3cdc6e8"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_nexus.py::test_a_first_look_that_finds_it_done_is_an_upper_bound_not_a_latency": {
+   "fingerprints": [
+    "7c905fe37fecb08d99fa063ffac195384e23311bd12fd1b7e8a7b5122ea514ef"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_render.py::test_the_page_runs_end_to_end_and_not_only_parses": {
+   "fingerprints": [
+    "92ec1a3a843e2aa429701e56e52fd3379589a59ce0b160b6279c237912562b2e"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": true
+  },
+  "tests/meta/test_pipeline_render.py::test_every_row_says_when_it_last_changed": {
+   "fingerprints": [
+    "354020ecdec543fe6047a43fc70b2e3afcdbbf078eab96518f13b77ff7caf3f8"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_render.py::test_the_page_opens_on_what_moved_and_says_it_in_one_line": {
+   "fingerprints": [
+    "759f7863626f6c1d979f484f4cd9b9b90729942dc398d2fcccff140e8bbba401"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": true
+  },
+  "tests/meta/test_pipeline_render.py::test_the_page_runs_with_the_new_filters": {
+   "fingerprints": [
+    "3742a694f591d5b15f86b90d2818d1dcdbd9526c1ab7219b77845831d67ce0a2"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_render.py::test_every_component_lands_on_a_tile_or_is_declared_a_self_test": {
+   "fingerprints": [
+    "77d466ff408ad31ab094f17cbb76e9b3d280e658ce0453f17936c3b3a5b72682"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_render.py::test_a_tile_lists_the_tests_behind_its_count": {
+   "fingerprints": [
+    "c1869177c07f2144f84d61cea52d15add73ef2c56d1b56c43f0fb172da76d3fa"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_render.py::test_the_stats_are_derived_and_a_re_pin_is_not_a_fix": {
+   "fingerprints": [
+    "9eb7633ad3abb5fc0700c0ed376c6ae1b5b78683d0f9135de09d5f423bd68642"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_render.py::test_the_rewards_come_from_their_tracker": {
+   "fingerprints": [
+    "f5a220c4cd1c664d82bd559a95dc6b7dfb5dbbe5434fab5ddce0013cf76f27c4"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_render.py::test_the_stats_panel_draws_without_throwing": {
+   "fingerprints": [
+    "7ce682845c61ebeec6c5322a64dd218bf9cafe8406874520aa5818ee99d3531d"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_render.py::test_the_model_table_on_the_page_is_the_one_in_the_operating_rules": {
+   "fingerprints": [
+    "5e6e3e29fe5131f5b62753b05fc315e36d9c490869718aa9da4e947b4b3d3274"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_render.py::test_the_help_panel_is_outside_the_legend_and_speaks_plainly": {
+   "fingerprints": [
+    "4bdd9b984e8635745013263372b8f33ff33f577d464210cdde7e44a937a45076"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_render.py::test_our_own_verifications_appear_in_the_conversation": {
+   "fingerprints": [
+    "ea989e6a0d183bdffb428f80b496360608f7ec3ee234cc4e0123ba19d40783ee"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_render_stats.py::test_the_nexus_row_counts_each_question_by_what_happened_to_it": {
+   "fingerprints": [
+    "78bd00ea1a98b82a9ef5a1e504b24a3cafe22519acee99feea73d60ca9bd4e44"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_render_stats.py::test_the_nexus_row_is_empty_not_invented_when_nothing_was_asked": {
+   "fingerprints": [
+    "7546e0d1e82789c8fb6cff1a43fbbe0b2a28d7add111a403bf96c975034f1834"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_render_stats.py::test_a_finding_headline_says_what_is_tested_in_a_few_words": {
+   "fingerprints": [
+    "fed00d9a1fb7ffb01530528636a62a4846d21b2589ed3b6c719d08bc2a8a6b78"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_render_stats.py::test_every_finding_on_the_page_has_a_short_headline": {
+   "fingerprints": [
+    "6dbe1bc840293e3361b324a0e6b1b8337ad402823e937b4f0bd654ad74d46f48"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": true
+  },
+  "tests/meta/test_pipeline_room_notes.py::test_the_rooms_are_served_to_this_machine_and_refused_to_any_other_name": {
+   "fingerprints": [
+    "c3f8d9f9d4fefa0693fd0d4fa89d70641832649c58005aa61aa2f7ebbfd154db"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_room_notes.py::test_a_note_at_any_shut_door_is_refused_and_nothing_is_written": {
+   "fingerprints": [
+    "9595a528950cff497717574ed375d48c95f510568874c7c17bb35eea75817716"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_room_notes.py::test_a_note_through_every_door_lands_once_and_as_the_operators": {
+   "fingerprints": [
+    "5279a5fd4a3fa401f72fb1220f505931fea75e96ad2fc971c9ba5b77e195bd51"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_room_notes.py::test_the_token_is_handed_only_to_this_machine_and_never_written": {
+   "fingerprints": [
+    "415c4b2987acf79269ecd1efff869d8d45ce63c2d22d09bd24df4731f5dabe95"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_room_notes.py::test_notes_are_off_when_the_console_listens_beyond_this_machine": {
+   "fingerprints": [
+    "2e77af463555664e0c4165ec9a18362b91c9de6fdc5fde7e097ef6d90e67fb40"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": true
+  },
+  "tests/meta/test_pipeline_room_notes.py::test_two_writers_at_once_never_share_a_note_id": {
+   "fingerprints": [
+    "9ce6688a64971bd2fe13f0bdf10e5a19288f32df5246018b13aa0a259fcf9f86"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_room_notes.py::test_the_browser_reaches_the_operators_writer_and_no_other": {
+   "fingerprints": [
+    "fe8b9557466935b893a53a17a25ceaada7d78cef2d3e89b09fdee46590cec531"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_room_notes.py::test_the_rooms_and_the_samples_stay_out_of_git": {
+   "fingerprints": [
+    "668be47d5a243852067b10c97a2c6835a68bf3fb2881499ead96c396e166ca4d"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_rooms.py::test_general_holds_every_question_and_what_happened_to_it": {
+   "fingerprints": [
+    "76145bea3f15e01a9950f43845b25814fad39f5c98375cdeed13f7c55042ae6e"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_rooms.py::test_a_note_or_a_sample_cannot_move_the_dashboard": {
+   "fingerprints": [
+    "d93623c3a5df0ad06c76760f6dd16dc6426d3edc1c13f4a1b7663c69802f8714"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_rooms.py::test_a_note_reads_as_read_only_up_to_the_mark": {
+   "fingerprints": [
+    "389759e3eb23969079b37cc41c519d3156ce0aebd40a52cc96fc4fbc5aeeaca3"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_rooms.py::test_a_nexus_answer_reaches_the_page_as_text_never_as_markup": {
+   "fingerprints": [
+    "d0bab6a9c5240bbdf4f60216c1ca384b14aa469530ac1bce2e6157a85b197002"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_rooms.py::test_the_tab_reads_no_field_the_rooms_do_not_write": {
+   "fingerprints": [
+    "e5db081edb2991788a22a35b9f1666eae1aaf20b7a23baab2b268c5122ec3d10"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": true
+  },
+  "tests/meta/test_pipeline_rooms.py::test_unread_prints_the_notes_then_marks_through_the_last_it_printed": {
+   "fingerprints": [
+    "0014889b1f38f2ee78b6520dfc67f6d67a058734e24536d56962b1f8f14331ae"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_rooms.py::test_our_note_is_written_by_the_cli_and_never_waits_on_us": {
+   "fingerprints": [
+    "102e2e6d3ec0419b890d36c30b41b6880943c0179ffe4e0626ceecf77392834b"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_rooms.py::test_the_hook_counts_unread_notes_in_one_line_and_is_silent_at_zero": {
+   "fingerprints": [
+    "ba5b2557de57527cf61f5a1163102fa50743c55c2b7bb0d322fdd2c516c10d61"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_rooms.py::test_the_room_hook_never_fails_a_session": {
+   "fingerprints": [
+    "e487f02c159b2970f0eb48b1240ce2b16b322eeff8ab8b7bf0d8977725c4c93b"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_rooms.py::test_the_rooms_are_a_fourth_channel_and_it_waits_on_us": {
+   "fingerprints": [
+    "c05b014e881c3f6f63778f2bb35235cb4832c1589958b3aaed1a06c8e37a948b"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_rooms.py::test_watch_names_a_new_note_from_the_operator_once": {
+   "fingerprints": [
+    "5e858b43deda647278b3b8285e048c541bca5c928ac38107abb582a38638d4be"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_rooms.py::test_the_page_sends_a_note_the_way_the_server_takes_one": {
+   "fingerprints": [
+    "9d1d6e6d16f614dccba6263cca10e10f6bdab82ec99e1478d363f9fc710ea61d"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_rooms.py::test_a_room_opens_only_from_a_whole_answer_and_only_once": {
+   "fingerprints": [
+    "d941189b7d0a31f9dba3c91945ac31c5c6cb3ca9927e244fff222aa7b0ea02ca"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_rooms.py::test_the_newest_status_wins_and_every_change_says_why": {
+   "fingerprints": [
+    "963735493a01a98c672ed780e57eef95d3b41785ea6322f3a291d089d56696af"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_rooms.py::test_a_link_names_only_what_is_on_record": {
+   "fingerprints": [
+    "9b440dd41f4446a82473b093c45a15a51735d6bd1fed923f4feda355bb442f5a"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_rooms.py::test_a_trade_finds_its_room_by_the_answer_it_acts_on": {
+   "fingerprints": [
+    "1da933843d41e697089dd6d3f18246c30762a67a7b8e57fa8e1ddd06971fcb04"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_rooms.py::test_a_bot_and_everything_done_to_it_follow_its_instance": {
+   "fingerprints": [
+    "e20c4409ba943264dcc893bc5e8b52d09dd8a1fe8b2dfa04751b240bef7580db"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_rooms.py::test_a_question_asked_in_a_room_is_read_there_and_general_points_to_it": {
+   "fingerprints": [
+    "ad9f229fe1633fe529ca6fca7a37e0e0e5619ac303c11362da7b2c46c2baf6ee"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_rooms.py::test_a_gist_rides_inside_its_answer_wherever_the_answer_is_drawn": {
+   "fingerprints": [
+    "cb231de27849c907790f13b451b9e77e20e8b704b32912d23a913337b8646de8"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_rooms.py::test_a_question_for_a_room_that_does_not_exist_is_never_sent": {
+   "fingerprints": [
+    "c0ad08153c5671fd619d3ee6e96f58eb2ad42899c45e26ac739c0486e0ab87f7"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_rooms.py::test_a_strategy_room_draws_its_book_and_its_bot_and_general_the_portfolio": {
+   "fingerprints": [
+    "1ca50c6592665d1ea4e074aeca26d77dfddf1d73fc224f819ef77b4d68af5a3f"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": true
+  },
+  "tests/meta/test_pipeline_rooms.py::test_a_name_and_a_plan_are_checked_before_anything_is_written": {
+   "fingerprints": [
+    "2150c08fd409317935ad1f9400cd9fee7ca2425b27df887dea534739a71ecdbf"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": true
+  },
+  "tests/meta/test_pipeline_rooms.py::test_a_plan_is_written_from_the_command_line_the_way_nexus_gives_it": {
+   "fingerprints": [
+    "e069f87bc0d9fd5c2fe934718d9c03a448aa8c2407ecd4e645710820c750f70f"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_rooms.py::test_a_plan_leg_meets_its_order_its_card_and_where_it_stood_when_proposed": {
+   "fingerprints": [
+    "2db97300611be5446808367337c585bd398bf165f4741691a99e5cc95ae01a50"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_rooms.py::test_the_composer_sits_under_the_thread_never_over_it": {
+   "fingerprints": [
+    "f1555a425521e050ad007a0a7c71e8ffe3acfcac05353ece06454191021f49c0"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": true
+  },
+  "tests/meta/test_pipeline_rooms.py::test_the_nexus_tab_takes_the_whole_screen_and_the_others_keep_their_width": {
+   "fingerprints": [
+    "21404db062ca4bc1c13b87383cbc6b2471981edc789d2a1e4bd62f04102a3e5c"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": true
+  },
+  "tests/meta/test_pipeline_rooms.py::test_the_strip_names_each_strategy_and_its_panel_leads_with_numbers": {
+   "fingerprints": [
+    "c589c3ad49fbd15216483fb3447ceb242522db3d6b83b4c12f80f4c55ed1b836"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": true
+  },
+  "tests/meta/test_pipeline_sampler.py::test_the_sampler_reads_its_six_doors_with_get_and_nothing_else": {
+   "fingerprints": [
+    "d12c23908b993869e9e891cca7d66ab61a2af14220a3cc4f36bad0aee30b4352"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": true
+  },
+  "tests/meta/test_pipeline_sampler.py::test_a_trade_is_written_once_and_again_only_when_it_changes": {
+   "fingerprints": [
+    "4aac18c79a8c6011cdb5362ac11581294b70c0f804fa7c6a38675dde3a586737"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_sampler.py::test_a_stalled_read_still_writes_a_tick_and_the_loop_goes_on": {
+   "fingerprints": [
+    "b1737f1c0acbfd134eda5d494db8d6f1d785bbf1ed2d12e0bc8205adf3b93ba8"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_sampler.py::test_the_panel_says_stale_after_three_intervals_without_a_tick": {
+   "fingerprints": [
+    "7b02895371c89804f1ad0192dfe9c5ad4a196bf1397d241fdf7b3eb5ae4d131a"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": true
+  },
+  "tests/meta/test_pipeline_sampler.py::test_a_bots_panel_carries_what_the_sampler_read_beside_the_old_samples": {
+   "fingerprints": [
+    "d3c49ee986757695bba172104a4198d1dd636a78b076768a900bfdb31e7fea88"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_sampler.py::test_both_launchers_start_the_sampler_and_the_old_watch_goes_through_it": {
+   "fingerprints": [
+    "d87c48461ef6c5a8f0ad9b12f491349d4cea22caae0fb41ded7281d7402ea6f2"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": true
+  },
+  "tests/meta/test_pipeline_sampler.py::test_a_card_nexus_proposed_is_followed_and_described_only_when_it_changes": {
+   "fingerprints": [
+    "43651652c5e9bb128c653ce239c8ea03ecb8cd14ec488745367b33c3eb83631b"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_tamper.py::test_a_refold_uses_the_inputs_that_produced_the_ledger": {
+   "fingerprints": [
+    "a90b7af6965c8434f6c42ddd804e42e343fbd5c7792cca5ac0c9106c7b08d418"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_vendor_writes.py::test_no_check_writes_to_the_vendor_channel_unless_asked_to": {
+   "fingerprints": [
+    "e126dc9995c794635526c6b6becd50d51048112448dd85cc6572d743b3a327e0"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": true
+  },
+  "tests/meta/test_pipeline_vendor_writes.py::test_the_detector_sees_an_ungated_post": {
+   "fingerprints": [
+    "4fe4b01e02aa673d60dc8dd4fb811c3e9e02aad4335e1f109fe1522648ebf74a"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": true
+  },
+  "tests/meta/test_pipeline_verify.py::test_the_evidence_does_not_describe_a_syntax_tree_hash_it_did_not_send": {
+   "fingerprints": [
+    "24997769cce728b69e0d203546e2d5b292f282d1a4c4b2c4cd4603840fdda54d"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_verify.py::test_we_never_send_them_to_a_repository_they_cannot_open": {
+   "fingerprints": [
+    "7c524d1ffdcfed23d1fcec7dea56d8229602ee82fba04864fb63f947d92f76e3"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_verify.py::test_the_paragraph_names_the_kind_of_fingerprint_the_run_produced": {
+   "fingerprints": [
+    "254065c1a6f8ddb164fd7afbb1dc5cbc977e53354c7061da9e01e9034e70b74f"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/meta/test_pipeline_verify.py::test_a_filed_report_says_the_same_thing": {
+   "fingerprints": [
+    "c34269a5d6efa996d401a1ed169426fa22934005cdfe9617aa2a2d688a777fc6"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": false
+  },
+  "tests/rest/test_clone_books_its_open_positions.py::test_a_bot_counts_the_stakes_it_has_open": {
+   "fingerprints": [
+    "ba5a6b6d4a3fff49c5137859016464865eedccd1ca0eaa8644a3aca334c9c50e"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": true
+  },
+  "tests/mcp/test_nexus_channel.py::test_a_deep_investigation_answers_inside_the_window_it_publishes": {
+   "fingerprints": [
+    "ce960765d70f2c13cca03880d70e9a1e7557a30f9c28dd61611e6c3252c489ed"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T151835Z-31ec9b3e",
+   "gap_claimed": true
+  },
+  "tests/rest/test_user_submissions_stay_private.py::test_a_user_submitted_card_is_visible_only_to_its_author": {
+   "fingerprints": [
+    "10ec450ca07517b3be8c124a760a8cadd875fecdfbccab58987caf49d2059484"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T150246Z-5dea5bec",
+   "gap_claimed": true
+  },
+  "tests/mcp/test_nexus_channel.py::test_every_tool_nexus_tells_an_agent_to_call_exists": {
+   "fingerprints": [
+    "c0260ccc81d31eed5db260e9aa71892030cef7ff5a089ba6d42a0dc52510983c"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T055512Z-0d595c5b",
+   "gap_claimed": true
+  },
+  "tests/mcp/test_nexus_does_not_quote_source.py::test_a_deep_answer_does_not_hand_out_internal_source_locations": {
+   "fingerprints": [
+    "baf436747483adfa85430a04b2119a0cc05ab880f86d558e2855580a2a9c2687"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T055512Z-0d595c5b",
+   "gap_claimed": true
+  },
+  "tests/mcp/test_nexus_tool_contracts.py::test_a_tool_nexus_calls_with_arguments_takes_arguments": {
+   "fingerprints": [
+    "b235cec749b786ffad0b8ceda0112c986d4434511e1f19b3b40743baeb3b89ac"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T055512Z-0d595c5b",
+   "gap_claimed": true
+  },
+  "tests/repo/test_audit_scope.py::test_a_partial_run_does_not_shrink_the_audit": {
+   "fingerprints": [
+    "de7cdd59cd4790eb9547a8ae7a352970d151c6b803f820e54d0624064332d789"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T055512Z-0d595c5b",
+   "gap_claimed": false
+  },
+  "tests/repo/test_audit_scope.py::test_a_deleted_test_is_not_sent_to_an_auditor": {
+   "fingerprints": [
+    "80d8e3784c47a9f47103646f685dd1810ffec2a2388d79f9f28a08bde4accc19"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T055512Z-0d595c5b",
+   "gap_claimed": false
+  },
+  "tests/repo/test_audit_scope.py::test_parametrised_ids_collapse_to_the_function_an_auditor_reads": {
+   "fingerprints": [
+    "f761fb4c4bbf5a252f6198090a10bb5a6634b28bd9d631e0f80c47ad6d4aa74f"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T055512Z-0d595c5b",
+   "gap_claimed": false
+  },
+  "tests/repo/test_audit_scope.py::test_the_scope_over_the_real_repository_names_only_live_functions": {
+   "fingerprints": [
+    "d727743e7202da7d573705df01ea6b3faf356b87b6b648cc873fb6ec76a429ce"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T055512Z-0d595c5b",
+   "gap_claimed": true
+  },
+  "tests/repo/test_deep_pass_finished.py::test_a_pass_still_running_is_not_a_pass_that_skipped_the_week": {
+   "fingerprints": [
+    "fcae5b7590c3d0e2fc3ba77b30d75dc2a12aef0aba01b493fec839ec9be17833"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T055512Z-0d595c5b",
+   "gap_claimed": false
+  },
+  "tests/repo/test_deep_pass_finished.py::test_a_pass_that_wrote_no_date_is_not_excused_as_ancient": {
+   "fingerprints": [
+    "b6d2730bdc6866508071aab6f807f7a5fa1f45fdfe32cd643e7accd5028f9156"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T055512Z-0d595c5b",
+   "gap_claimed": false
+  },
+  "tests/repo/test_deep_pass_finished.py::test_two_of_two_is_not_two_of_three": {
+   "fingerprints": [
+    "da411906b4ea55da1af85bfcc232bbf6ab00b7e50de98fadb6b57ac56a570926"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T055512Z-0d595c5b",
+   "gap_claimed": false
+  },
+  "tests/repo/test_deep_pass_finished.py::test_an_unwritten_growth_count_is_not_a_count_of_zero": {
+   "fingerprints": [
+    "c781d67e1bdfb01cd98d707667f4bcbe557b80cc4bc7b0541e98bc0520fd3d89"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T055512Z-0d595c5b",
+   "gap_claimed": false
+  },
+  "tests/repo/test_deep_pass_finished.py::test_the_next_morning_is_handed_the_work_and_not_only_the_notebook": {
+   "fingerprints": [
+    "ee115546593ee2ec4c086a51b949bb9f0da3d43f52bdff4aca4e1c6574b8fdf6"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T055512Z-0d595c5b",
+   "gap_claimed": false
+  },
+  "tests/repo/test_deep_pass_finished.py::test_a_pass_from_before_next_existed_is_not_failed_for_lacking_it": {
+   "fingerprints": [
+    "bdc5d72027f6d2e879bb3f1045b1537159daa654a27dd4cfb1f82048abfdc3ef"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T055512Z-0d595c5b",
+   "gap_claimed": false
+  },
+  "tests/repo/test_deep_pass_process.py::test_the_row_counts_the_notebook_rather_than_recalling_the_night": {
+   "fingerprints": [
+    "9d2030c7cd61175f3a692f161840d1096d71001e91ffc60d79de746739a5845a"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T055512Z-0d595c5b",
+   "gap_claimed": false
+  },
+  "tests/repo/test_deep_pass_process.py::test_the_triad_is_retired_only_after_three_quiet_passes": {
+   "fingerprints": [
+    "70e71010dfdd24d83059ad0d29c7ced68bfa4140f3d25addf6eb87d8e1320c3a"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T055512Z-0d595c5b",
+   "gap_claimed": false
+  },
+  "tests/repo/test_deep_pass_process.py::test_the_committed_history_reads": {
+   "fingerprints": [
+    "9dc9951744d0cb3fca2717e5da8d85cb8e298ee98c560c6c1da5facec4539be1"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T055512Z-0d595c5b",
+   "gap_claimed": true
+  },
+  "tests/repo/test_live_server.py::test_starting_the_server_does_not_rewrite_a_page_that_is_already_current": {
+   "fingerprints": [
+    "7d1df5f5b6f62166afed6a349c40d779d67aaea4c1fd22623ed5e7b843b9bd2f"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T055512Z-0d595c5b",
+   "gap_claimed": false
+  },
+  "tests/repo/test_memories.py::test_every_memory_is_classified_and_indexed": {
+   "fingerprints": [
+    "62b479f0d09ef872da9453cea5b1b431fe282f42ce503f71c799c11e7cc53a27"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T055512Z-0d595c5b",
+   "gap_claimed": false
+  },
+  "tests/repo/test_memories.py::test_a_class_prints_only_its_own": {
+   "fingerprints": [
+    "339742eca9fe877886eb541f5358f7ac882e017f9beeda85d98882bd2ad32dbb"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T055512Z-0d595c5b",
+   "gap_claimed": false
+  },
+  "tests/repo/test_memories.py::test_the_reader_accepts_every_shape_the_harness_actually_writes": {
+   "fingerprints": [
+    "fa06ecb190a4b936b7d01a545ef9ba6d6904465690e9574c8335ff51f9da6181"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T055512Z-0d595c5b",
+   "gap_claimed": false
+  },
+  "tests/repo/test_memories.py::test_a_memory_retired_on_purpose_is_not_a_memory_nobody_linked": {
+   "fingerprints": [
+    "48901a9028f321208c85c4847d9981948edd52c4cf24c585524e1b26a8d9b491"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T055512Z-0d595c5b",
+   "gap_claimed": false
+  },
+  "tests/repo/test_memories.py::test_an_unclassified_or_unlinked_memory_is_a_problem": {
+   "fingerprints": [
+    "44eb0d7d82c217f3672721a27bda5c838f9a684348854e66e8079ba2d4e6d76a"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T055512Z-0d595c5b",
+   "gap_claimed": false
+  },
+  "tests/repo/test_memories.py::test_the_hook_is_one_line_and_never_fails": {
+   "fingerprints": [
+    "ca13c933a56f79cf628096231e39771d2948b1116aa50d50974c43d107e93565"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T055512Z-0d595c5b",
+   "gap_claimed": false
+  },
+  "tests/repo/test_next_step.py::test_every_line_that_looks_like_an_item_is_one": {
+   "fingerprints": [
+    "7f8a10e4cc55609092fdee14ea98d67cf970dee44606981d868692cc1f451dd7"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T055512Z-0d595c5b",
+   "gap_claimed": false
+  },
+  "tests/repo/test_next_step.py::test_nothing_open_has_gone_stale": {
+   "fingerprints": [
+    "9d96a713700f660dae548549e70924f0ea6e79d6c7af0cb28bb942e247482c5f"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T055512Z-0d595c5b",
+   "gap_claimed": false
+  },
+  "tests/repo/test_next_step.py::test_the_hook_prints_the_open_items_and_nothing_else": {
+   "fingerprints": [
+    "58858657e6df1980ac32deb91cfc9bc5f56ef18fd15837fe81c777a4a472dec9"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T055512Z-0d595c5b",
+   "gap_claimed": false
+  },
+  "tests/repo/test_prune_runs.py::test_a_record_the_ledger_cites_is_never_a_victim": {
+   "fingerprints": [
+    "2201fedf77ae94cc3eb79ceb5e528860441536b45cadad6d7c5bc385efb854a8"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T055512Z-0d595c5b",
+   "gap_claimed": false
+  },
+  "tests/repo/test_prune_runs.py::test_a_young_record_and_a_tracked_one_both_survive": {
+   "fingerprints": [
+    "e514296779945dcacf12b41a28ef4c985ebe4f9533dd423cacaf8a61763d41b6"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T055512Z-0d595c5b",
+   "gap_claimed": false
+  },
+  "tests/repo/test_prune_runs.py::test_the_newest_definition_of_a_live_check_is_never_deleted": {
+   "fingerprints": [
+    "14c18ab1b29eca6e490cdf5c152ba7f5ff475fb267424d56b48f0d9ea23b3dd3"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T055512Z-0d595c5b",
+   "gap_claimed": false
+  },
+  "tests/repo/test_prune_runs.py::test_the_last_run_a_verdict_ever_occurred_in_survives": {
+   "fingerprints": [
+    "d5db051ee6b8c9830c69c47febe451e1297f8f090ce093571e81f948bc3b5447"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T055512Z-0d595c5b",
+   "gap_claimed": false
+  },
+  "tests/repo/test_prune_runs.py::test_a_record_that_cannot_be_read_is_never_a_victim": {
+   "fingerprints": [
+    "3e3b40c2bcbd8f2640f05056f3cb69829b181dd41c414b71ac58c6992adc602e"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T055512Z-0d595c5b",
+   "gap_claimed": false
+  },
+  "tests/repo/test_prune_runs.py::test_a_run_named_only_in_prose_is_still_cited": {
+   "fingerprints": [
+    "7f5443e8bea95339cdcecbb5526c529a686c48e3d93ca32d9d8752546cf584f4"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T055512Z-0d595c5b",
+   "gap_claimed": false
+  },
+  "tests/repo/test_prune_runs.py::test_a_dry_run_deletes_nothing_and_apply_deletes_only_the_victims": {
+   "fingerprints": [
+    "c124b96a294efe67329e14aa0ad47626686b2fd48a7168cfc90a721ac51afac4"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T055512Z-0d595c5b",
+   "gap_claimed": false
+  },
+  "tests/repo/test_repo_consistency.py::test_the_committed_section_map_holds_every_section_we_define": {
+   "fingerprints": [
+    "778ea869c417255a6ded93fd12bb339a3a507bcb84be26cd83e38eb718070daf"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T055512Z-0d595c5b",
+   "gap_claimed": false
+  },
+  "tests/rest/test_cloned_bots_surface.py::test_one_credential_carries_a_clone_from_creation_to_funding": {
+   "fingerprints": [
+    "af7841d8586fb0d1fb240121bf8302f368b2a676786ff878d7772e010337b439"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T055512Z-0d595c5b",
+   "gap_claimed": true
+  },
+  "tests/rest/test_cloned_bots_surface.py::test_every_cloned_bot_route_they_serve_is_one_they_document": {
+   "fingerprints": [
+    "6504c4fe272796285e5fd6cc5e12ea3e0b0337b554a0330f34ec2bf8c11f4868"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T055512Z-0d595c5b",
+   "gap_claimed": true
+  },
+  "tests/rest/test_documented_gets_accept_the_agent_key.py::test_every_documented_get_accepts_the_key_its_own_document_issues": {
+   "fingerprints": [
+    "b336927c694c0ad968b9678055feeec4e59093850ffbb71522eb3286c9165335"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T055512Z-0d595c5b",
+   "gap_claimed": false
+  },
+  "tests/rest/test_event_card_listing_reaches_them.py::test_the_listing_returns_every_card_it_says_is_tradeable": {
+   "fingerprints": [
+    "d5a555573847dbb9c8fc16c1be3ef16a7db237c924529c12a2cafaf5b9aa9139"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T055512Z-0d595c5b",
+   "gap_claimed": true
+  },
+  "tests/rest/test_nexus_cards_exist.py::test_every_card_nexus_tells_an_agent_to_trade_exists": {
+   "fingerprints": [
+    "12e21e5adba2b13e7ae6139f63bf9b40b3230a46650da559de6713bc3ef42af7"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T055512Z-0d595c5b",
+   "gap_claimed": true
+  },
+  "tests/rest/test_paper_balance_moves.py::test_a_paper_buy_debits_the_paper_balance": {
+   "fingerprints": [
+    "7dcd9033cdb238f87db6b90de77e643c894ae5e1823a16be6fc2372aa66e9cfa"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T055512Z-0d595c5b",
+   "gap_claimed": true
+  },
+  "tests/rest/test_paper_close_returns_the_money.py::test_closing_a_paper_position_returns_its_money": {
+   "fingerprints": [
+    "235eabfa63ef045775173d23316835a092a30bf7308e7f364696327b76253888"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T055512Z-0d595c5b",
+   "gap_claimed": true
+  },
+  "tests/rest/test_portfolio_summary.py::test_the_summary_says_which_populations_its_counters_leave_out": {
+   "fingerprints": [
+    "9e228b78ba3149277a8dfdecbc28044c258a4c0edf09622b70cdf4bb331f5961"
+   ],
+   "at": "2026-09-11T16:42:43+00:00",
+   "run_id": "run-20260911T055512Z-0d595c5b",
+   "gap_claimed": true
   }
  }
 }

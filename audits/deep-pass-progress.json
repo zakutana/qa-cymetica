@@ -1,149 +1,241 @@
 {
- "run": "deep-pass 2026-09-10",
- "at": "2026-09-10T13:42:51+00:00",
- "start_commit": "481958e51c4f27edec395f5f093fc2401c8ad608",
+ "run": "deep-pass 2026-09-11",
+ "at": "2026-09-11T16:25:00+00:00",
+ "start_commit": "0b610fb355fb39834e6300409da7df7a1d5d3c97",
  "gaps": [
   {
-   "id": "S1-01",
-   "nodeid": "scripts/memories.py",
-   "source": "step1",
-   "claim": "memories.py crashes with UnicodeEncodeError on a cp1250 console when a memory body carries U+2192; it is the last command of the pass's own step 0. Four scripts had each pasted the same three-line fix into their own main().",
-   "votes": null,
-   "verdict": "real",
-   "fixed": true,
-   "commit": "bae5e7d"
-  },
-  {
-   "id": "S1-02",
-   "nodeid": "scripts/memories.py::read",
-   "source": "step1",
-   "claim": "`^\\s*applies:\\s*(.+)$` matches the newline in multiline mode, so a YAML block list (which the memory harness rewrites inline lists into) reads as its first item. Two memories applied to a class named '- correspondence' and would never have been printed for anything.",
-   "votes": null,
-   "verdict": "real",
-   "fixed": true,
-   "commit": "4b62515"
-  },
-  {
    "id": "R01",
-   "nodeid": "scripts/prune_runs.py::_load",
+   "nodeid": "scripts/paper.py:362",
    "source": "review",
-   "claim": "An unreadable run record parses as {} and is then deleted: not young (started_at ''), no results so neither scope nor last-fired, and if untracked and uncited it is a victim. Rule 8 broken in the only script that deletes.",
+   "claim": "clone_capital() sums current_balance_usdc, which since their #94 fix excludes the bot's open stakes, so book() counts money committed inside the bot as free cash (400 now).",
    "votes": {
-    "t3": "real",
     "t1": "real",
-    "t2": "real"
+    "t2": "real",
+    "t3": "real"
    },
    "verdict": "real",
    "fixed": true,
-   "commit": "1491128"
+   "commit": "3afa50f3"
   },
   {
    "id": "R02",
-   "nodeid": "scripts/paper.py::book",
+   "nodeid": "scripts/paper.py:318",
    "source": "review",
-   "claim": "An accepted order whose position_id is absent from their positions endpoint is silently skipped, so its capital never counts as deployed and affordable() authorises spending it again. The comment says 'worth noticing' and nothing notices.",
+   "claim": "book() does float(clone_capital or 0): an unreadable bot balance is counted as zero, the direction clone_capital's docstring forbids.",
    "votes": {
-    "t3": "false",
     "t1": "real",
-    "t2": "real"
+    "t2": "real",
+    "t3": "real"
    },
    "verdict": "real",
    "fixed": true,
-   "commit": "a92236c"
+   "commit": "3afa50f3"
   },
   {
    "id": "R03",
-   "nodeid": "qa/channels.py::pairs",
+   "nodeid": "components.yaml:460",
    "source": "review",
-   "claim": "A thread reconstructed from their side alone gets asked_at_from None when no receipt timestamp is readable, and the row builder turns None into 'us' -- a proxy labelled as our own record, in the rows that feed the Stats tab.",
+   "claim": "cloned_bots.settings is declared executable with no required_flags and no script-level floor, unlike fund and toggle-trading.",
    "votes": {
-    "t3": "false",
     "t1": "false",
-    "t2": "false"
-   },
-   "verdict": "dropped",
-   "fixed": false,
-   "commit": null
-  },
-  {
-   "id": "R04",
-   "nodeid": "qa/safety.py::_check_rpc",
-   "source": "review",
-   "claim": "An MCP tool the registry does not classify falls off the end of the MUTATE branch and is permitted with full arguments. SAFE raises and PROBE forces empty args; MUTATE, the only tier that can spend, is default-allow.",
-   "votes": {
-    "t3": "real",
-    "t1": "real",
-    "t2": "real"
-   },
-   "verdict": "real",
-   "fixed": true,
-   "commit": "6d9ff3b"
-  },
-  {
-   "id": "R05",
-   "nodeid": "scripts/prune_runs.py::main",
-   "source": "review",
-   "claim": "The delete loop has no per-file error handling: one PermissionError (a record held open by a concurrent pytest on Windows) kills it after some files are gone and before anything is printed.",
-   "votes": {
-    "t3": "false",
-    "t1": "false",
-    "t2": "false"
-   },
-   "verdict": "dropped",
-   "fixed": false,
-   "commit": null
-  },
-  {
-   "id": "R06",
-   "nodeid": "scripts/render.py::_stats",
-   "source": "review",
-   "claim": "verified_by_us sums REPRODUCING->PASSING transitions rather than distinct findings, so a bug that regressed and was fixed again counts twice in the figure the operator asked for.",
-   "votes": {
-    "t3": "real",
-    "t1": "real",
-    "t2": "real"
-   },
-   "verdict": "real",
-   "fixed": true,
-   "commit": "081b742"
-  },
-  {
-   "id": "R07",
-   "nodeid": "scripts/paper.py::_positions",
-   "source": "review",
-   "claim": "A 200 whose body is not shaped {positions:[...]} reads as an empty holding and frees the whole bankroll. buy() in the same file unwraps payload['result']; this does not.",
-   "votes": {
-    "t3": "false",
-    "t1": "real",
-    "t2": "false"
+    "t2": "real",
+    "t3": "false"
    },
    "verdict": "minority",
    "fixed": false,
    "commit": null
   },
   {
-   "id": "R08",
-   "nodeid": "qa/channels.py::pairs",
+   "id": "R04",
+   "nodeid": "scripts/clone.py:319",
    "source": "review",
-   "claim": "min((str(r.get('at') or '') for r in receipts), default='') returns '' whenever any receipt lacks a timestamp, discarding a readable one from another receipt on the same thread.",
+   "claim": "clone()/fund()/enable() call response.json() after the POST unguarded; a 200 with a non-JSON body leaves an intent with no outcome (rule 9).",
    "votes": {
-    "t3": "false",
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
+   "fixed": true,
+   "commit": "5f74ec43"
+  },
+  {
+   "id": "R05",
+   "nodeid": "scripts/clone.py:509",
+   "source": "review",
+   "claim": "enable(): a failed my-clones re-read after a successful toggle raises SystemExit, so the after row is never written and the client is not closed.",
+   "votes": {
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
+   "fixed": true,
+   "commit": "5f74ec43"
+  },
+  {
+   "id": "R06",
+   "nodeid": "scripts/paper.py:572",
+   "source": "review",
+   "claim": "close() records a definite 4xx refusal as outcome 'unknown', and nothing ever settles an unknown close.",
+   "votes": {
     "t1": "false",
-    "t2": "false"
+    "t2": "false",
+    "t3": "false"
    },
    "verdict": "dropped",
    "fixed": false,
    "commit": null
   },
   {
-   "id": "R09",
-   "nodeid": "scripts/paper.py::buy",
+   "id": "R07",
+   "nodeid": "scripts/nexus.py:380",
    "source": "review",
-   "claim": "assert paper is True is documented as the barrier somebody must delete on purpose; python -O strips it. The docstring claims a protection this line does not give.",
+   "claim": "answer() appends a second gave_up row on re-poll; only the #86 reader was fixed, every other reader of nexus.jsonl still double-counts.",
    "votes": {
-    "t3": "false",
     "t1": "false",
-    "t2": "false"
+    "t2": "false",
+    "t3": "false"
+   },
+   "verdict": "dropped",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "R08",
+   "nodeid": "scripts/rooms.py:113",
+   "source": "review",
+   "claim": "rooms.py show names legs by basket label or card-id prefix, while the page names them by headline and never shows an id.",
+   "votes": {
+    "t1": "false",
+    "t2": "false",
+    "t3": "false"
+   },
+   "verdict": "dropped",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "T01",
+   "nodeid": "tests/meta/test_pipeline_book.py::test_capital_moved_into_a_bot_is_deployed_not_cash",
+   "source": "audit",
+   "claim": "Asserts book(clone_capital=None)['cash'] equals a baseline that is also None, pinning the permissive reading its docstring forbids; affordable(99000, in_bots=None) is True while in_bots=1000 is False. The test side of R02.",
+   "votes": {
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
+   "fixed": true,
+   "commit": "3afa50f3"
+  },
+  {
+   "id": "T02",
+   "nodeid": "tests/meta/test_pipeline_checks.py::test_paper_balance_newest_unreadable_never_falls_back_to_an_older_one",
+   "source": "audit",
+   "claim": "Covers only a failed positions read; measurements() in test_paper_balance_moves.py:103-107 drops a trade whose balance is unparseable with continue, so a failed /account/me read makes newest() judge an older, pre-fix trade. Raised independently by the vendor auditor against tests/rest/test_paper_balance_moves.py::test_a_paper_buy_debits_the_paper_balance (its V07, merged here).",
+   "votes": {
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
+   "fixed": true,
+   "commit": "5f74ec43"
+  },
+  {
+   "id": "T03",
+   "nodeid": "tests/meta/test_guard_is_real.py::test_the_money_loop_is_behind_the_probe_only_floor",
+   "source": "audit",
+   "claim": "`must` omits event_cards.buy/sell/short and named_wrong walks only `must`, so event_cards.short with required_flags [confirm] lets a MUTATE POST without paper reach the transport with every guard green.",
+   "votes": {
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
+   "fixed": true,
+   "commit": "5f74ec43"
+  },
+  {
+   "id": "T04",
+   "nodeid": "tests/meta/test_pipeline_clone.py::test_a_source_type_their_schema_does_not_publish_is_refused",
+   "source": "audit",
+   "claim": "Negative controls (this and test_guidance_that_was_never_answered_is_refused) call clone(confirm=True); if the refusal stops raising, the test builds a mutate-enabled trusted client and POSTs a real paper clone -- the control needs the thing it tests.",
+   "votes": {
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
+   "fixed": true,
+   "commit": "5f74ec43"
+  },
+  {
+   "id": "T05",
+   "nodeid": "tests/meta/test_pipeline_checks.py::test_the_close_check_can_be_red_for_the_state_it_names",
+   "source": "audit",
+   "claim": "Tests only closes(); the verdict logic inline at test_paper_close_returns_the_money.py:120-132 (the VISIBLE sub-cent condition) is untouched, so dropping it turns TRD-0004 into a false fail with the meta test green.",
+   "votes": {
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
+   "fixed": true,
+   "commit": "b6c4b946"
+  },
+  {
+   "id": "T06",
+   "nodeid": "tests/meta/test_pipeline_book.py::test_the_cap_is_not_advisory",
+   "source": "audit",
+   "claim": "Accepts any Raise between the gate and the POST, so `if not can and not confirm:` makes the cap advisory for every confirmed order while the test stays green.",
+   "votes": {
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
+   "fixed": true,
+   "commit": "5f74ec43"
+  },
+  {
+   "id": "T07",
+   "nodeid": "tests/meta/test_pipeline_vendor_writes.py::test_no_check_writes_to_the_vendor_channel_unless_asked_to",
+   "source": "audit",
+   "claim": "The detector wants only a gate call on an earlier line: a bare may_write_to_vendor() whose result is ignored passes, and client.post(url=SEND) is not seen at all (reads node.args[0] only). Latent today.",
+   "votes": {
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
+   "fixed": true,
+   "commit": "c1d1b544"
+  },
+  {
+   "id": "T08",
+   "nodeid": "tests/rest/test_event_card_listing_reaches_them.py::test_the_listing_returns_every_card_it_says_is_tradeable",
+   "source": "audit",
+   "claim": "walk_listing returns (cards, False) at max_pages exactly like a finished walk and the listing check has no cap guard, so beyond 10,000 cards (6,880 today) a Nexus-named card past the cap is reported missing from the whole listing.",
+   "votes": {
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
+   "fixed": true,
+   "commit": "8e4a5360"
+  },
+  {
+   "id": "T09",
+   "nodeid": "tests/meta/test_pipeline_checks.py::test_the_listing_check_leaves_user_submissions_out_of_the_market",
+   "source": "audit",
+   "claim": "This guard and is_user_submission's docstring still state 'visible only to its author' and that reading a submission is a visibility defect; their #95 resolution says visibility keys on is_public. Docstring only, nothing reaches the vendor.",
+   "votes": {
+    "t1": "false",
+    "t2": "false",
+    "t3": "false"
    },
    "verdict": "dropped",
    "fixed": false,
@@ -151,383 +243,412 @@
   },
   {
    "id": "P01",
-   "nodeid": "tests/repo/test_memories.py::test_every_memory_is_classified_and_indexed",
-   "source": "step1b",
-   "claim": "The deep pass's step 1b retires a memory by dropping its line from MEMORY.md and leaving the file. That guard then reports 'not linked from MEMORY.md, so no session knows it exists' -- so a retirement performed exactly as the skill prescribes turns tests/repo red, which step 6 runs and step 9 reverts a night over. The guard cannot tell a deliberate retirement from a forgotten file, and the skill's own procedure is the input that breaks it. Found by performing the procedure.",
-   "votes": {
-    "t3": "real",
-    "t1": "real",
-    "t2": "real"
-   },
-   "verdict": "real",
-   "fixed": true,
-   "commit": "081b742"
-  },
-  {
-   "id": "B01",
-   "nodeid": "tests/meta/test_pipeline_verify.py::test_a_filed_report_says_the_same_thing",
+   "nodeid": "tests/meta/test_pipeline_rooms.py::test_the_strip_names_each_strategy_and_its_panel_leads_with_numbers",
    "source": "audit",
-   "claim": "Greps the TEXT of scripts/submit.py for the literal 'public repo: github.com/zakutana' and for 'evidence retained'; the module is exec'd and never called, no payload composed. Rebuilding the line as \"(public repo: \" + REPO_URL + \")\" restores the private link with the check green; 'evidence retained' surviving only in a comment also passes. The sibling check for verify.py does it correctly -- it calls body() and greps the composed evidence.",
-   "severity": "sends-a-false-claim",
+   "claim": "Three of the seven figures cannot fail: '10 000' and '+13 %' are substrings of the why text the test itself requires, 'BTC' is a substring of the title; removing the invested tile, the TP column and the basket label stays green.",
    "votes": {
-    "t3": "real",
     "t1": "real",
-    "t2": "real"
+    "t2": "real",
+    "t3": "real"
    },
    "verdict": "real",
    "fixed": true,
-   "commit": "5f68c91"
+   "commit": "5cd8bbc0"
   },
   {
-   "id": "B02",
-   "nodeid": "tests/meta/test_pipeline_verify.py::test_the_evidence_does_not_describe_a_syntax_tree_hash_it_did_not_send",
+   "id": "P02",
+   "nodeid": "tests/meta/test_pipeline_rooms.py::test_a_strategy_room_draws_its_book_and_its_bot_and_general_the_portfolio",
    "source": "audit",
-   "claim": "The paragraph must describe the fingerprint IN THE SAME PAYLOAD. The check only asserts body() prints the sentence matching the `identity` the TEST hands it. verify.py sends row['check']['pinned_fingerprint'] but derives identity from the CURRENT run's measurement.fingerprint, so a row pinned to an AST-era value whose check now declares one gets the claims.yaml sentence beside an AST hash -- the named defect, recreated. identity_kind has no test anywhere.",
-   "severity": "sends-a-false-claim",
+   "claim": "'TRD-0001' and '10 000' are substrings of the status text required a line earlier, so dropping the trades list from the panel stays green.",
    "votes": {
-    "t3": "real",
     "t1": "real",
-    "t2": "real"
+    "t2": "real",
+    "t3": "real"
    },
    "verdict": "real",
    "fixed": true,
-   "commit": "5f68c91"
+   "commit": "5cd8bbc0"
   },
   {
-   "id": "B03",
-   "nodeid": "tests/meta/test_pipeline_render.py::test_the_rewards_come_from_their_tracker",
+   "id": "P03",
+   "nodeid": "tests/meta/test_pipeline_render_stats.py::test_every_finding_on_the_page_has_a_short_headline",
    "source": "audit",
-   "claim": "Contract: 'their figure, and ours must agree with it or say why.' Their figure sits in the same fixture (leaderboard total_paid) and is never compared; only reward_currency is read from it. _rewards() counts len(rows) and ignores our_reports.total (44) and total_paid (37000), so a windowed my-reports read prints 20000 beside their 37000 with nothing failing.",
-   "severity": "passes-on-a-live-defect",
+   "claim": "Claims a headline is shorter than the sentence it heads but only checks it exists and is <= 90 chars; live today: #86's headline is 59 chars over a 47-char summary.",
    "votes": {
-    "t3": "real",
     "t1": "real",
-    "t2": "real"
+    "t2": "real",
+    "t3": "real"
    },
    "verdict": "real",
    "fixed": true,
-   "commit": "081b742"
+   "commit": "5cd8bbc0"
   },
   {
-   "id": "B04",
+   "id": "P04",
+   "nodeid": "tests/meta/test_pipeline_render.py::test_the_page_runs_end_to_end_and_not_only_parses",
+   "source": "audit",
+   "claim": "Both 'when' marks get the same timestamp and one substring check covers both, so stale_from printing a bare date stays green.",
+   "votes": {
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
+   "fixed": true,
+   "commit": "ea7cc642"
+  },
+  {
+   "id": "P05",
+   "nodeid": "tests/meta/test_pipeline_rooms.py::test_the_composer_sits_under_the_thread_never_over_it",
+   "source": "audit",
+   "claim": "Only CSS rules whose selector contains .nx-compose are read; #nxCompose{position:sticky} or an inline style slips past.",
+   "votes": {
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
+   "fixed": true,
+   "commit": "5cd8bbc0"
+  },
+  {
+   "id": "P06",
+   "nodeid": "tests/meta/test_pipeline_rooms.py::test_the_nexus_tab_takes_the_whole_screen_and_the_others_keep_their_width",
+   "source": "audit",
+   "claim": "The 'others keep their width' half is never asserted: deleting .wrap{max-width:1240px} makes every tab full width and stays green.",
+   "votes": {
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
+   "fixed": true,
+   "commit": "5cd8bbc0"
+  },
+  {
+   "id": "P07",
+   "nodeid": "tests/meta/test_pipeline_rooms.py::test_a_name_and_a_plan_are_checked_before_anything_is_written",
+   "source": "audit",
+   "claim": "Every invalid-leg case is a one-leg list, so a set_plan that drops bad legs and writes the rest passes 'refused whole before anything is written'.",
+   "votes": {
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
+   "fixed": true,
+   "commit": "5cd8bbc0"
+  },
+  {
+   "id": "P08",
    "nodeid": "tests/meta/test_pipeline_render.py::test_the_page_opens_on_what_moved_and_says_it_in_one_line",
    "source": "audit",
-   "claim": "Contract: ONE read switch, bell and chip calling the same markRead 'or the two would drift'. Asserts template.count('markRead()') >= 2, which is 3 today only because the function DEFINITION contains the substring. A separate markChangedRead() with its own watermark still counts 2. Sorting oldest-first also leaves the marker untouched.",
-   "severity": "cosmetic",
+   "claim": "Only the data-sort='changed' attribute is checked, not the default readStore('qa.sort','changed') nor the order; a damage default stays green.",
    "votes": {
-    "t3": "real",
     "t1": "real",
-    "t2": "real"
+    "t2": "real",
+    "t3": "real"
    },
    "verdict": "real",
    "fixed": true,
-   "commit": "081b742"
+   "commit": "ea7cc642"
   },
   {
-   "id": "B05",
-   "nodeid": "tests/meta/test_pipeline_render.py::test_the_page_runs_with_the_new_filters",
+   "id": "P09",
+   "nodeid": "tests/meta/test_pipeline_sampler.py::test_the_sampler_reads_its_six_doors_with_get_and_nothing_else",
    "source": "audit",
-   "claim": "The docstring's whole claim is that this EXECUTES the sort and the chips. The harness stubs querySelectorAll() to [], so the comparator and changedSince(el.dataset.changedAt) never run over a single row. A typo in dataset.changedAt or in the row's data-changed-at attribute makes every row read as unchanged, exit 0, green.",
-   "severity": "cosmetic",
+   "claim": "The closed P-2 shares P-1's card and the mock does not list it, so a follow() that keeps closed positions changes no path and no row -- reproduced by running.",
    "votes": {
-    "t3": "real",
     "t1": "real",
-    "t2": "real"
+    "t2": "real",
+    "t3": "real"
    },
    "verdict": "real",
    "fixed": true,
-   "commit": "081b742"
+   "commit": "ea7cc642"
   },
   {
-   "id": "B06",
-   "nodeid": "tests/meta/test_pipeline_render.py::test_the_model_table_on_the_page_is_the_one_in_the_operating_rules",
+   "id": "P10",
+   "nodeid": "tests/meta/test_pipeline_sampler.py::test_both_launchers_start_the_sampler_and_the_old_watch_goes_through_it",
    "source": "audit",
-   "claim": "Contract: 'a row added to CLAUDE.md appears ON THE PAGE.' Both sides are Python parsers; neither touches TEMPLATE. Deleting the only site that reads D.help.models leaves both parsers agreeing and the page showing nothing.",
-   "severity": "cosmetic",
+   "claim": "'--sample 10' is found in the comment lines of console.cmd and console.sh, so removing it from the actual command stays green.",
    "votes": {
-    "t3": "real",
     "t1": "real",
-    "t2": "real"
+    "t2": "real",
+    "t3": "real"
    },
    "verdict": "real",
    "fixed": true,
-   "commit": "081b742"
+   "commit": "ea7cc642"
   },
   {
-   "id": "B07",
-   "nodeid": "tests/meta/test_pipeline_render.py::test_a_tile_lists_the_tests_behind_its_count",
+   "id": "P11",
+   "nodeid": "tests/meta/test_pipeline_room_notes.py::test_notes_are_off_when_the_console_listens_beyond_this_machine",
    "source": "audit",
-   "claim": "(a) the fixture's only self-test carries component=meta.pipeline, dropped at section=='_meta' BEFORE the SELF_TEST_DIRS filter, so removing that filter entirely keeps the assertion green. (b) the questions.get() substitution for parametrised reconciliation cases is asserted nowhere -- the live loop only checks doc is non-empty, so the wrong check's first line would pass.",
-   "severity": "cosmetic",
+   "claim": "Security: 'a token minted at launch' is checked only as two different hosts giving different tokens; a token derived from the host (same across restarts, predictable) passes. Fixtures pass a fixed TOKEN, so nothing else tests note_token_for.",
    "votes": {
-    "t3": "real",
     "t1": "real",
-    "t2": "real"
+    "t2": "real",
+    "t3": "real"
    },
    "verdict": "real",
    "fixed": true,
-   "commit": "e5701b6"
+   "commit": "5cd8bbc0"
   },
   {
-   "id": "B08",
-   "nodeid": "tests/meta/test_pipeline_channels.py::test_a_thread_is_reconstructed_from_their_reply_to_when_our_send_was_not_journalled",
+   "id": "P12",
+   "nodeid": "tests/meta/test_pipeline_sampler.py::test_the_panel_says_stale_after_three_intervals_without_a_tick",
    "source": "audit",
-   "claim": "Docstring promises 'a journalled intent still wins where one exists, so nothing about a2a.py's contract changes'. The fixture has no intent, so inverting the precedence is invisible here; the sibling with an intent cannot see it either (both timestamps round to 90 minutes and it never asserts asked_at_from == 'us').",
-   "severity": "cosmetic",
+   "claim": "Only 45 min stale and 2 min fresh at every=600; a fixed threshold ignoring `every` passes, the 3*every is not pinned.",
    "votes": {
-    "t3": "real",
     "t1": "real",
-    "t2": "real"
+    "t2": "real",
+    "t3": "real"
    },
    "verdict": "real",
    "fixed": true,
-   "commit": "e5701b6"
+   "commit": "ea7cc642"
   },
   {
-   "id": "A01",
-   "nodeid": "tests/rest/test_paper_balance_moves.py::test_a_paper_buy_debits_the_paper_balance",
+   "id": "P13",
+   "nodeid": "tests/meta/test_pipeline_rooms.py::test_the_tab_reads_no_field_the_rooms_do_not_write",
    "source": "audit",
-   "claim": "(a) FALSE PASS: positions_grew is (after['positions'] or 0) - (before['positions'] or 0), and _snapshot writes 'positions' only on a 200 -- a failed read gives 0-39 = -39, the trade drops out of `landed`, subject is empty and the verdict is 'passed' with the reason 'each buy debited the balance by its own notional' while nothing moved. Rule 8 inverted, on the row that would flip #87 to VERIFIED FIXED. (b) FALSE FAIL: silent is abs(moved-usdc)>0.01, so a 1.00 buy debited 0.97 files 'moved the paper balance by nothing' while quoting 'the balance moved 0.97'. The docstring's contract is 'costs something'; the assertion demands exactly-the-notional.",
-   "severity": "sends-a-false-claim",
+   "claim": "The regex \\b{name}\\.([a-z_]+)\\b gives no match for a camelCase read like np.samplerOk, which would render undefined unseen. None today.",
    "votes": {
-    "t3": "real",
     "t1": "real",
-    "t2": "real"
+    "t2": "real",
+    "t3": "real"
    },
    "verdict": "real",
    "fixed": true,
-   "commit": "a92236c"
+   "commit": "5cd8bbc0"
   },
   {
-   "id": "A02",
+   "id": "V01",
+   "nodeid": "tests/rest/test_nexus_cards_exist.py::test_every_card_nexus_tells_an_agent_to_trade_exists",
+   "source": "audit",
+   "claim": "Fetches every UUID in the newest answer as a card, but answers name non-card UUIDs (NEX-0015 a species id, NEX-0010 a backtest run_id), and there is no age limit, so a species id or a card resolved after the answer fails as 'Nexus tells an agent to trade'.",
+   "votes": {
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
+   "fixed": true,
+   "commit": "c1d1b544"
+  },
+  {
+   "id": "V02",
+   "nodeid": "tests/rest/test_user_submissions_stay_private.py::test_a_user_submitted_card_is_visible_only_to_its_author",
+   "source": "audit",
+   "claim": "Repaired today: nothing checks the include_user_submitted flag does anything (e.g. the flagged walk carries any user-submission card), and walk_listing stops on a short page even when total says more, so an ignored flag or a short page reads as a private card served to a non-owner.",
+   "votes": {
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
+   "fixed": true,
+   "commit": "8e4a5360"
+  },
+  {
+   "id": "V03",
+   "nodeid": "tests/rest/test_event_card_listing_reaches_them.py::test_the_listing_returns_every_card_it_says_is_tradeable",
+   "source": "audit",
+   "claim": "Asserts only tradeable_now is True while the fail text says 'answer status live', and the walk stops on a short page while the fail text says 'walked through all N cards it hands out'.",
+   "votes": {
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
+   "fixed": true,
+   "commit": "8e4a5360"
+  },
+  {
+   "id": "V04",
    "nodeid": "tests/mcp/test_nexus_channel.py::test_a_deep_investigation_answers_inside_the_window_it_publishes",
    "source": "audit",
-   "claim": "waited_seconds is not time since the question was asked: _poll sets started = time.monotonic() on entry and `nexus.py answer` calls _poll again, so the clock restarts on every pick-up. The recorded data proves it -- NEX-0001 asked 10:03:06, gave_up 10:28:33, waited_seconds 0.0. Ask at 10:00, give up at 10:15, re-poll at 11:00: an answer row lands with waited_seconds ~0 and five such rows slide the gave_up rows out of WINDOW=5, so the check reads 'all 5 answered inside the published 1-5 min' for a channel that took an hour. #86 is FIX_CLAIMED and verifications already go to their server on this nodeid. Secondary: `late` is unsorted and the filed reason renders late[0][1] as 'worst {n}s'.",
-   "severity": "sends-a-false-claim",
+   "claim": "Repaired today: every gave_up counts as 'did not answer', including the 15-minute give-up whose last status was our own unread/unknown read; and latest_per_question orders by the last row, so re-polling an old failed question moves it into the newest five.",
    "votes": {
-    "t3": "real",
     "t1": "real",
-    "t2": "real"
+    "t2": "real",
+    "t3": "real"
    },
    "verdict": "real",
    "fixed": true,
-   "commit": "c5410ce"
+   "commit": "c1d1b544"
   },
   {
-   "id": "A03",
-   "nodeid": "tests/mcp/test_nexus_channel.py::test_every_tool_nexus_tells_an_agent_to_call_exists",
-   "source": "audit",
-   "claim": "The extractor requires the literal 'MCP ' before the backticked name. Over the three recorded answers it finds three tools in NEX-0002 and ZERO in NEX-0007 and NEX-0008 -- both of which name tools in backticks without the prefix, including find_trade_path and place_order. The docstring says it must catch this on every future answer because the answer is generated per question; it currently sees nothing in two answers out of three.",
-   "severity": "passes-on-a-live-defect",
-   "votes": {
-    "t3": "real",
-    "t1": "real",
-    "t2": "real"
-   },
-   "verdict": "real",
-   "fixed": true,
-   "commit": "c5410ce"
-  },
-  {
-   "id": "A04",
+   "id": "V05",
    "nodeid": "tests/rest/test_portfolio_summary.py::test_the_summary_says_which_populations_its_counters_leave_out",
    "source": "audit",
-   "claim": "Asserts the literal '/api/v1/event-cards/positions' appears in the joined prose of scope.counters_do_not_cover. Their captured fix carries the pointer twice -- in the parenthetical AND in the machine-readable event_cards.rows field. Tidying the parenthetical while keeping the block files 'the reader is not told which endpoint carries it' against a body that says exactly that. Same shape as #83 on this same endpoint, which was withdrawn and cost a retraction.",
-   "severity": "sends-a-false-claim",
+   "claim": "Accepts only naming the excluded population though its own comment allows counting it; if they fold event cards into the counters, the check fails -- the #83 shape.",
    "votes": {
-    "t3": "real",
     "t1": "real",
-    "t2": "real"
+    "t2": "real",
+    "t3": "real"
    },
    "verdict": "real",
    "fixed": true,
-   "commit": "e5701b6"
+   "commit": "c1d1b544"
   },
   {
-   "id": "A05",
-   "nodeid": "tests/meta/test_guard_is_real.py::test_the_money_loop_is_behind_the_probe_only_floor",
+   "id": "V06",
+   "nodeid": "tests/rest/test_paper_close_returns_the_money.py::test_closing_a_paper_position_returns_its_money",
    "source": "audit",
-   "claim": "The contract names 'required_flags naming the platform's own paper control'. The assertion only checks the set is NON-EMPTY and never reads what is in it. Renaming agents.clone's required_flags from ['paper'] to ['confirm'] keeps this green, keeps test_a_rule_that_requires_no_flag_is_unaffected green (it pins rule IDs, not flag names) and keeps test_cloning_a_bot_needs_its_paper_flag_too green (it only posts to bots.clone) -- and a MUTATE POST to /api/v1/agents/clone with confirm:true then satisfies the guard with no paper key, which CloneBotRequest resolves against simulation_mode, and that is False.",
-   "severity": "passes-on-a-live-defect",
+   "claim": "Credit must equal notional + pre-close unrealized within 0.01, so a fee or a cent of index move fails as 'does not credit'; `booked` accepts a move of either sign; closes() drops a close whose balance read failed, so an older close becomes the newest.",
    "votes": {
-    "t3": "real",
     "t1": "real",
-    "t2": "real"
+    "t2": "real",
+    "t3": "real"
    },
    "verdict": "real",
    "fixed": true,
-   "commit": "6d9ff3b"
+   "commit": "b6c4b946"
   },
   {
-   "id": "A06",
-   "nodeid": "tests/meta/test_guard_is_real.py::test_cloning_a_bot_needs_its_paper_flag_too",
+   "id": "V08",
+   "nodeid": "tests/mcp/test_nexus_channel.py::test_every_tool_nexus_tells_an_agent_to_call_exists",
    "source": "audit",
-   "claim": "Docstring says '**Both** clone routes'. /api/v1/agents/clone is never posted to and its rule is never read, so any regression confined to that rule leaves the check green. Together with A05 these two are the only things between a MUTATE test and a live clone on agents/clone, and neither reads that rule's flag.",
-   "severity": "passes-on-a-live-defect",
+   "claim": "Calling verbs include with/via/through, so 'filter with `is_public`' or 'via `reward_amount`' becomes a tool that does not exist. No current answer triggers it.",
    "votes": {
-    "t3": "false",
     "t1": "real",
-    "t2": "false"
-   },
-   "verdict": "minority",
-   "fixed": false,
-   "commit": null
-  },
-  {
-   "id": "A07",
-   "nodeid": "tests/meta/test_pipeline_book.py::test_the_cap_is_not_advisory",
-   "source": "audit",
-   "claim": "The docstring says it reads the source rather than the behaviour precisely because 'behaviour can be preserved while the gate is moved somewhere it never runs' -- and the assertion is textual proximity (600 chars after the first 'affordable(' contains 'raise'), which cannot see a move. Relocating the affordable/raise block to just after the POST keeps both tokens in the window: green, and the book refuses an order the platform has already accepted. Cheaper still, a dead helper later in the file containing both tokens satisfies it with no gate in buy() at all. The auditor verified the naive mutation (raise -> print) does go red today.",
-   "severity": "passes-on-a-live-defect",
-   "votes": {
-    "t3": "real",
-    "t1": "real",
-    "t2": "real"
+    "t2": "real",
+    "t3": "real"
    },
    "verdict": "real",
    "fixed": true,
-   "commit": "a92236c"
+   "commit": "b6c4b946"
   },
   {
-   "id": "A08",
-   "nodeid": "tests/meta/test_pipeline_book.py::test_an_order_the_book_cannot_pay_for_is_refused",
+   "id": "V09",
+   "nodeid": "tests/mcp/test_nexus_tool_contracts.py::test_a_tool_nexus_calls_with_arguments_takes_arguments",
    "source": "audit",
-   "claim": "Contract: 'the refusal has to say what is actually left'. Asserts '5000' in why -- and the message also renders deployed 95000.00, which contains '5000'. True for cash 5000.00, 4999.50, 1.00 and 0.00. A refusal that omits the uncommitted figure entirely still passes.",
-   "severity": "cosmetic",
+   "claim": "A listing with no inputSchema key is read as {} and fails as 'empty inputSchema -- it takes no arguments', so a partial schema read is reported as a defect.",
    "votes": {
-    "t3": "real",
     "t1": "real",
-    "t2": "real"
+    "t2": "real",
+    "t3": "real"
    },
    "verdict": "real",
    "fixed": true,
-   "commit": "a92236c"
+   "commit": "c1d1b544"
   },
   {
-   "id": "C01",
-   "nodeid": "tests/repo/test_deep_pass_finished.py::test_a_pass_still_running_is_not_a_pass_that_skipped_the_week",
+   "id": "V10",
+   "nodeid": "tests/rest/test_cloned_bots_surface.py::test_one_credential_carries_a_clone_from_creation_to_funding",
    "source": "audit",
-   "claim": "Every fixture puts `today` AFTER `at`, and the one future-stamp case is +3 weeks, which blesses liveness()'s `0 <= now - stamped` lower bound as correct. An `at` ahead of the clock by HOURS -- clock skew, or a hand-written timestamp -- makes liveness() say 'abandoned' for a pass that is running. Not hypothetical: this pass wrote 21:40Z against a 14:58Z clock and test_no_confirmed_finding_was_left_unfixed_by_a_deep_pass went red mid-pass, which step 6 runs and step 9 reverts a night over. Third instance of this class after the calendar-day comparison and the week read as skipped.",
-   "severity": "passes-on-a-live-defect",
+   "claim": "The fail text states 'funding it with that key returns 401 with an empty body', which no branch measures; routes whose auth is declared via openapi security are skipped as public.",
    "votes": {
-    "t3": "real",
     "t1": "real",
-    "t2": "real"
+    "t2": "real",
+    "t3": "real"
    },
    "verdict": "real",
    "fixed": true,
-   "commit": "e5701b6"
+   "commit": "5cd8bbc0"
   },
   {
-   "id": "C02",
-   "nodeid": "tests/repo/test_next_step.py::test_nothing_open_has_gone_stale",
+   "id": "V11",
+   "nodeid": "tests/rest/test_cloned_bots_surface.py::test_every_cloned_bot_route_they_serve_is_one_they_document",
    "source": "audit",
-   "claim": "Inherits C01: _pass_in_flight() consults the same liveness(), so on a negative-elapsed stamp it returns None and the staleness assertion runs during the pass after all. Green today only because both NEXT.md items are dated today; a fifteen-day-old open line plus a running pass is a reverted night.",
-   "severity": "passes-on-a-live-defect",
+   "claim": "The fail text says an agent 'cannot start it through any documented endpoint' whichever path is hidden, e.g. an undocumented DELETE beside a documented /settings.",
    "votes": {
-    "t3": "real",
     "t1": "real",
-    "t2": "real"
+    "t2": "real",
+    "t3": "real"
    },
    "verdict": "real",
    "fixed": true,
-   "commit": "e5701b6"
+   "commit": "5cd8bbc0"
   },
   {
-   "id": "C03",
+   "id": "V12",
+   "nodeid": "tests/mcp/test_nexus_does_not_quote_source.py::test_a_deep_answer_does_not_hand_out_internal_source_locations",
+   "source": "audit",
+   "claim": "FIX_CLAIMED + PASSING: only dir/file.py:NNN counts, while recorded answers already name module paths without line numbers (NEX-0015 src/api/routes/agent_species.py, NEX-0011, NEX-0017); a fix stripping :NNN but leaving paths reads VERIFIED FIXED.",
+   "votes": {
+    "t1": "false",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
+   "fixed": true,
+   "commit": "c1d1b544"
+  },
+  {
+   "id": "V13",
+   "nodeid": "tests/rest/test_clone_books_its_open_positions.py::test_a_bot_counts_the_stakes_it_has_open",
+   "source": "audit",
+   "claim": "Repaired today: an open row with no amount field counts 0 stake, is_closed None counts neither, missing profit counts 0; a renamed amount field makes the 55.00 leg 'nothing open' and #94 passes to VERIFIED FIXED.",
+   "votes": {
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
+   "fixed": true,
+   "commit": "8e4a5360"
+  },
+  {
+   "id": "V14",
+   "nodeid": "tests/repo/test_deep_pass_finished.py::test_no_confirmed_finding_was_left_unfixed_by_a_deep_pass",
+   "source": "audit",
+   "claim": "owed counts only verdict == 'real', so a finished pass with gaps never voted on passes, with a pass text saying 'k of them still awaiting a vote'.",
+   "votes": {
+    "t1": "real",
+    "t2": "false",
+    "t3": "real"
+   },
+   "verdict": "real",
+   "fixed": true,
+   "commit": "ea7cc642"
+  },
+  {
+   "id": "V15",
    "nodeid": "tests/repo/test_deep_pass_process.py::test_the_committed_history_reads",
    "source": "audit",
-   "claim": "Docstring: 'a schema change here shows up as red.' All three assertions (claimed>=real, voted>=unanimous, header starts with 'pass') are true for ANY input -- each counts a subset of the other, and the header is a constant. The auditor renamed `gaps` and ran it against the real notebooks: every row went to zeros and every assertion still held. An all-zero row exists today and the guard says nothing. versions() also swallows JSONDecodeError and git failure, so unreadable drift ends Inconclusive rather than red.",
-   "severity": "passes-on-a-live-defect",
+   "claim": "with_work/voted are true if ANY committed version has claims or votes, so a writer-side rename of `gaps` keeps the test green while every new row is zeros.",
    "votes": {
-    "t3": "real",
     "t1": "real",
-    "t2": "real"
+    "t2": "real",
+    "t3": "real"
    },
    "verdict": "real",
    "fixed": true,
-   "commit": "e5701b6"
+   "commit": "ea7cc642"
   },
   {
-   "id": "C04",
-   "nodeid": "tests/repo/test_prune_runs.py::test_the_last_run_a_verdict_ever_occurred_in_survives",
+   "id": "V16",
+   "nodeid": "tests/repo/test_audit_scope.py::test_the_scope_over_the_real_repository_names_only_live_functions",
    "source": "audit",
-   "claim": "Asserts keep_set()[id] == 'last-fired', but 'last-fired' is ALSO the reason set by the refusals branch, and admissibility() on that fixture returns four unseen refusal reasons. The auditor deleted the verdict-tracking branch (prune_runs.py:131-134) and the record still came back 'last-fired'. Concrete deletion: a newer record with the same refusals and no measurements plus an older one holding the sole occurrence of a verdict -- the older is a victim, guard green.",
-   "severity": "passes-on-a-live-defect",
+   "claim": "audit_scope already filters by `live` and the test passes the same `live`, so `stray` is empty by construction.",
    "votes": {
-    "t3": "real",
     "t1": "real",
-    "t2": "real"
+    "t2": "real",
+    "t3": "real"
    },
    "verdict": "real",
    "fixed": true,
-   "commit": "1491128"
+   "commit": "ea7cc642"
   },
   {
-   "id": "C05",
-   "nodeid": "tests/repo/test_prune_runs.py::test_a_record_the_ledger_cites_is_never_a_victim",
+   "id": "V17",
+   "nodeid": "tests/rest/test_qa_agent_channel.py::test_escalating_a_low_confidence_answer_does_not_return_the_same_advice",
    "source": "audit",
-   "claim": "cited_run_ids() claims 'every run id anything in the repository still names' and walk() matches only the literal key `run_id`. The fixture only ever spells a citation that way. Real instance: run-20260908T150721Z-435ad0b is named inside a withdraw event's REASON TEXT as the capture proving their fix predated our fail verification -- the evidence for the retraction owed on #83. Structural walk returns 170 ids, a text scan 171. It survives today only as 'young' and becomes a victim in five days.",
-   "severity": "passes-on-a-live-defect",
+   "claim": "Every branch ends Inconclusive or role=evidence and none reads the async reply, so it can never fail and never measures its contract.",
    "votes": {
-    "t3": "real",
     "t1": "real",
-    "t2": "real"
+    "t2": "real",
+    "t3": "real"
    },
    "verdict": "real",
-   "fixed": true,
-   "commit": "1491128"
-  },
-  {
-   "id": "C06",
-   "nodeid": "tests/meta/test_pipeline_console.py::test_memories_prints_a_body_carrying_a_character_cp1250_cannot_hold",
-   "source": "audit",
-   "claim": "Asserts no UnicodeEncodeError and rc 0; nothing asserts a body was PRINTED or that it carried a character cp1250 cannot hold. With an empty QA_MEMORY_DIR the auditor got rc 0, empty stdout, 'no memories at ...' -- green having exercised nothing. That is the same machine state tests/repo/test_memories.py explicitly raises Inconclusive for. Written by this pass, tonight.",
-   "severity": "passes-on-a-live-defect",
-   "votes": {
-    "t3": "real",
-    "t1": "real",
-    "t2": "real"
-   },
-   "verdict": "real",
-   "fixed": true,
-   "commit": "e5701b6"
-  },
-  {
-   "id": "C07",
-   "nodeid": "tests/meta/test_pipeline_console.py::test_every_script_that_prints_stored_prose_reconfigures_its_output",
-   "source": "audit",
-   "claim": "Asserts the token `printable(` appears somewhere in the file's TEXT. A call moved into a branch that does not run -- or the token in a comment -- keeps it green while `--for` still tracebacks on a cp1250 console. Presence of a token against a contract about what happens before the first print. Written by this pass, tonight.",
-   "severity": "cosmetic",
-   "votes": {
-    "t3": "real",
-    "t1": "real",
-    "t2": "real"
-   },
-   "verdict": "real",
-   "fixed": true,
-   "commit": "e5701b6"
-  },
-  {
-   "id": "C08",
-   "nodeid": "tests/repo/test_next_step.py::test_every_line_that_looks_like_an_item_is_one",
-   "source": "audit",
-   "claim": "Only lines beginning exactly with '- [' are held to ITEM, so '* [ ] 2026-09-10 ...' or '-[ ] 2026-09-10 ...' in a hand-edited NEXT.md is an agreed next step to any reader, is never printed by the hook, and is not flagged -- precisely the state the docstring names. Written by this pass, tonight.",
-   "severity": "cosmetic",
-   "votes": {
-    "t3": "real",
-    "t1": "real",
-    "t2": "real"
-   },
-   "verdict": "real",
-   "fixed": true,
-   "commit": "e5701b6"
+   "fixed": false,
+   "commit": null,
+   "deferred_to_operator": true,
+   "why_deferred": "the contract -- the async reply must not restate the decision rule -- does not say what counts as restating, and no reader of the reply exists; two readings, so DEEP-PASS.md carries it with a recommendation"
   }
- ],
- "next": [
-  "Naklonovat Hybrid 2 (Blue) v paper režimu — bota, kterého Nexus sám doporučil",
-  "Až jim pojede web chat, dát operátorovi větu pro Nexus a zapsat, na co se zeptal",
-  "Doměřit Nexus kanál na větším vzorku, než z něj uděláme závěr pro Cymeticu"
  ],
  "retrospective": {
   "last": "2026-09-09",
@@ -536,22 +657,27 @@
  "rule_changes": [
   {
    "id": "RC1",
-   "what": "A memory is retired by marking its MEMORY.md line `RETIRED <date>: <reason>` and leaving both the line and the file, instead of deleting the line.",
-   "why": "Step 1b's own procedure -- drop the line, leave the file -- made problems() report the file as one nobody linked, which is tests/repo red at step 6 and a night reverted by step 9. Found by performing it. Two positional designs were voted down first (a `## Retired` heading sits where new lines are appended, so it swallowed them; a date rule patched that until a hook began with a date). The landed design uses no position at all, which is stricter than the one voted on and closes the residual both dissents named.",
+   "what": "tests/meta/test_guard_is_real.py::test_the_money_loop_is_behind_the_probe_only_floor names event_cards.buy, event_cards.sell and event_cards.short in `must` (T03), and tests/meta/test_pipeline_abort.py re-pins that file's hash 0a6ec25622e8 -> 85c6cc6f3f4b to accept the edit",
+   "why": "the money-loop guard never read the flag of the event-card orders this repository actually places: event_cards.short on required_flags [confirm] passed a MUTATE POST with no `paper` and every guard stayed green (triage 3/3)",
    "votes": {
-    "t1": "yes",
+    "t1": "no",
     "t2": "no",
     "t3": "no"
    },
-   "test": "tests/repo/test_memories.py::test_a_memory_retired_on_purpose_is_not_a_memory_nobody_linked",
-   "commit": "081b742",
+   "vote_why": {
+    "t1": "every assertion filters per id over `must`, so three ids add refusals and remove none; the old pin is the file at 5f74ec43^ and only this five-line hunk lies between; no CLAUDE.md, skill or decisions test touched",
+    "t3": "the only change between 0b610fb3 and HEAD is the five-line hunk; with event_cards.short on [confirm] the old `must` returned [] from named_wrong and the new one refuses it; conftest, CLAUDE.md, the decisions test and the abort test are untouched",
+    "t2": "the five lines add three ids that all stand on required_flags [paper], so the existing three checks cover more and refuse nothing new passes; 0b610fb3 hashes to the pinned value, the conftest sections did not drift, no [operator paragraph or decisions test touched (33 passed)"
+   },
+   "test": "tests/meta/test_guard_is_real.py::test_the_money_loop_is_behind_the_probe_only_floor",
+   "commit": "f6de492a",
    "handover": true
   }
  ],
  "meta_tests": {
-  "start": 254,
-  "end": 260,
-  "reason": "254 -> 260. Three are tests/meta/test_pipeline_console.py, a new file: the existing home considered was test_pipeline_adapters.py, where bounty._printable lives, but that tests TEXT transcoding while these test STREAM reconfiguration, and folding them together makes one file about two unrelated strategies for the same failure. The other three came from widening existing checks in test_guard_is_real.py, test_pipeline_book.py and test_pipeline_channels.py rather than adding files."
+  "start": 331,
+  "end": null,
+  "reason": "331 -> 346 (+15), every one the red-first test of a gap triage confirmed, and every one in an existing file: test_pipeline_checks.py +9 (T02 is an assertion added to an existing test; V01, V04, V05, V09, V12, V13, T08/V02, V08, T05/V06 each test a helper of a different vendor check -- folding them into one would make a test about nine unrelated contracts), test_pipeline_clone.py +4 (R04, R05, V10, V11: the existing clone tests exercise refusals before the POST, these exercise what happens after it and the surface check's helpers), test_pipeline_book.py +2 (R01's capital_in_bots is a new function; R02's refusal is in buy(), which no existing book test drives). T03, T04, T06, T07, P01-P13 and V14-V16 strengthened existing tests instead of adding any; tests/repo gained one (V14)."
  },
- "finished": true
+ "finished": false
 }
