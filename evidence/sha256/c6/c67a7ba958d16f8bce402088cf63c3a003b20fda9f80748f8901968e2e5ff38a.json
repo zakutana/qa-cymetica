@@ -1,0 +1,77 @@
+{
+  "captured_at": "2026-09-11T15:07:08+00:00",
+  "endpoint_rule": null,
+  "nodeid": null,
+  "request": {
+    "body": {
+      "encoding": "json",
+      "truncated": false,
+      "value": {
+        "actual_behavior": "Our paper clone d778102d stood at bot_balance 550.0 after your backfill, with\nthe four ARENA legs of 100 opened on 2026-09-10 taken out. We switched it back\non at 2026-09-11 14:29 UTC. At 14:30:15 it opened a new ARENA long, TRX, 55.00\nUSDC, which /activity still lists with is_closed false. At 14:52, 22 minutes\nlater, GET /api/v1/cloned-bots/{id}/balance reports bot_balance 550.0,\nlocked_in_trades 0.0, available 550.0. Against the 1,000 funded and -50.00\nrealized, 400.00 of the open stake has left the balance -- exactly the\nbackfilled legs -- and the 55.00 opened after the fix is neither debited nor\nlocked.",
+        "category": "logic",
+        "description": "A follow-up to #94, and narrower than it: the backfill holds, and the four\nlegs it covered are counted. What does not hold yet is the booking of a new\nleg. The only ARENA leg our bot has opened since the fix went live left the\nbalance where it was, so the blind spot #94 described -- limits computed off a\nbalance that still includes committed stake -- is there for every leg opened\nfrom now on, not only for the old ones. Two readings fit, and you can tell\nthem apart from inside: either this leg took a path that still debits at loop\nend, the cause #94's resolution describes, or the leg failed and was refunded\nwhile /activity still lists it as open. The first is the fix not covering\nevery path; the second is /activity reporting a position that does not exist.\nOur own check of this row was wrong until today, and we say so: it accepted\nonly a stake shown in locked_in_trades, so it read your debit-on-entry fix as\nthe defect. It now counts a stake as handled when it is either locked or taken\nout of the balance, and fails only on the remainder -- here, exactly this\n55.00.\n\nMEASURED VALUES (from the live service):\n\n  [CYM-a_bot_counts_the_stakes_it_has_open] bot d778102d has 5 open position(s) staking 455.00 USDC per /api/v1/cloned-bots/{id}/activity (arena TRX 55.00 since 2026-09-11T14:30:15, arena ABOS 100.00 since 2026-09-10T22:59:10, arena AIQUY 100.00 since 2026-09-10T22:41:43, arena ALIZY 100.00 since 2026-09-10T22:18:58, arena ADDYY 100.00 since 2026-09-10T22:06:01), while /api/v1/cloned-bots/{id}/balance reports bot_balance 550.00 and locked_in_trades 0.00. Against the 1000.00 we funded and -50.00 realized, 400.00 of the stake has left the balance and 0.00 is locked, so 55.00 is neither. An open stake that is neither locked nor taken out is money every limit computed off the balance -- stop-loss budget, max position -- still counts as free\n    left: [455.0]\n    right: [400.0]\n    sources: {'open': 'GET /api/v1/cloned-bots/{id}/activity (not in openapi)', 'locked': 'GET /api/v1/cloned-bots/{id}/balance', 'funded': 'accepted fund transfers in state/clones.jsonl (scripts/clone.py)'}\n    population: {'bots': 1, 'checked': 1, 'unread': [], 'unreconciled': [], 'mismatched': 1, 'nothing open': 0, 'locked': 0, 'counted': 0}\n\nREPRODUCE:\n  - Paper clone funded 1000; after the #94 backfill GET /api/v1/cloned-bots/{id}/balance -> bot_balance 550.0, locked_in_trades 0.0\n  - POST /api/v1/cloned-bots/{id}/toggle-trading?enabled=true (2026-09-11 14:29 UTC)\n  - GET /api/v1/cloned-bots/{id}/activity -> new item: arena TRX buy 55.000000, executed_at 2026-09-11T14:30:15, is_closed false\n  - GET /api/v1/cloned-bots/{id}/balance at 14:52 -> bot_balance 550.0, locked_in_trades 0.0, available 550.0\n\nAUTOMATED CHECKS (evidence retained; the request and response behind each are provided on request):\n  tests/rest/test_clone_books_its_open_positions.py::test_a_bot_counts_the_stakes_it_has_open\n\nReported by an independent QA agent. Scope of this work: verification of the\nREST API, MCP and machine-readable discovery surfaces, read-only except in\npaper mode. What we do execute is paper only and recorded: paper event-card\norders, and one paper bot clone. No live trading, no order against a real\nbook, no deposit or withdrawal, no cleanup, no duplicate tickets. UI defects\nare out of scope. Every figure above was measured directly against the live\nservice, not taken from a document, and each finding ships with the command\nthat reproduces it.",
+        "expected_behavior": "Your resolution of #94 (ET-24612, fix @ed2f2e508, live) says each ARENA leg is\nnow booked atomically with its trade row: debit on entry, refund on a failed\nleg. A leg the bot opens after that fix therefore leaves the bot's balance at\nentry, or at least shows in locked_in_trades.",
+        "hunter_name": "expire76",
+        "severity_reported": "medium",
+        "steps_to_reproduce": "Paper clone funded 1000; after the #94 backfill GET /api/v1/cloned-bots/{id}/balance -> bot_balance 550.0, locked_in_trades 0.0\nPOST /api/v1/cloned-bots/{id}/toggle-trading?enabled=true (2026-09-11 14:29 UTC)\nGET /api/v1/cloned-bots/{id}/activity -> new item: arena TRX buy 55.000000, executed_at 2026-09-11T14:30:15, is_closed false\nGET /api/v1/cloned-bots/{id}/balance at 14:52 -> bot_balance 550.0, locked_in_trades 0.0, available 550.0",
+        "title": "After the #94 fix, a new ARENA leg on a paper bot is still neither debited nor locked: 55 USDC open, balance unchanged at 550",
+        "url": "https://cymetica.com/api/v1/cloned-bots/{instance_id}/balance",
+        "wallet_address": "0xde9CeAaB301A9e47b1bAcd448B3DDbbA85e83398"
+      }
+    },
+    "headers": {
+      "accept": "application/json",
+      "accept-encoding": "gzip, deflate, zstd",
+      "connection": "keep-alive",
+      "content-length": "5281",
+      "content-type": "application/json",
+      "host": "cymetica.com",
+      "user-agent": "qa-cymetica/0.1 (independent QA; contact via vendor Telegram channel)"
+    },
+    "method": "POST",
+    "url": "https://cymetica.com/api/v1/bounty/reports"
+  },
+  "response": {
+    "body": {
+      "encoding": "json",
+      "truncated": false,
+      "value": {
+        "message": "Bug report submitted successfully. We'll review it within 48 hours.",
+        "report_id": 96,
+        "success": true
+      }
+    },
+    "elapsed_ms": 3093,
+    "headers": {
+      "cache-control": "no-store, no-cache, must-revalidate, max-age=0",
+      "connection": "keep-alive",
+      "content-encoding": "gzip",
+      "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests",
+      "content-security-policy-report-only": "default-src 'self'; script-src 'self' 'nonce-trxZCx5foBF3gX6ouXyL/A==' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'",
+      "content-signal": "ai-train=no, search=yes, ai-input=yes",
+      "content-type": "application/json",
+      "cross-origin-opener-policy": "same-origin-allow-popups",
+      "cross-origin-resource-policy": "cross-origin",
+      "date": "Fri, 11 Sep 2026 15:07:08 GMT",
+      "permissions-policy": "geolocation=(), microphone=(), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=(), browsing-topics=(), attribution-reporting=()",
+      "pragma": "no-cache",
+      "referrer-policy": "strict-origin-when-cross-origin, strict-origin-when-cross-origin",
+      "server": "nginx",
+      "strict-transport-security": "max-age=31536000; includeSubDomains",
+      "transfer-encoding": "chunked",
+      "vary": "Accept-Encoding",
+      "x-ai-strongest-model": "Claude Fable 5",
+      "x-content-type-options": "nosniff, nosniff",
+      "x-dns-prefetch-control": "off",
+      "x-frame-options": "SAMEORIGIN, SAMEORIGIN",
+      "x-ratelimit-limit": "60",
+      "x-ratelimit-remaining": "59",
+      "x-ratelimit-reset": "1789142400",
+      "x-xss-protection": "0"
+    },
+    "reason": "OK",
+    "status_code": 200
+  },
+  "run_id": "script-submit",
+  "tier": "MUTATE"
+}
