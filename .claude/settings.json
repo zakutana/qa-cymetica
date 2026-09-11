@@ -29,7 +29,8 @@
       "Bash(python scripts/memories.py:*)",
       "Bash(python scripts/prune_runs.py:*)",
       "Bash(python scripts/deep_pass_process.py:*)",
-      "Bash(python scripts/rooms.py:*)"
+      "Bash(python scripts/rooms.py:*)",
+      "Bash(python scripts/sampler.py:*)"
     ]
   },
   "hooks": {
