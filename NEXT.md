@@ -180,7 +180,14 @@ to neodškrtl, nebo to nikdy nebylo další na řadě.
 
 - [ ] 2026-09-11  Přečíst `docs/night-2026-09-11.md` — co se stalo v noci, čtyři nové nálezy a tři naše vlastní vady
 
-- [ ] 2026-09-11  Zjistit, jestli naklonovaný bot vůbec obchoduje
+- [x] 2026-09-11  Zjistit, jestli naklonovaný bot vůbec obchoduje
+
+  **Obchoduje — a tím se ukázala vada.** Za první hodinu otevřel 4 ARENA pozice
+  po 100 USDC a zavřel 2 pětiminutové WTA shorty po −25; ve 23:16 UTC narazil
+  na stop-loss 5 % a sám se zastavil. Jeho `/balance` přitom hlásí
+  `locked_in_trades: 0.0` a zůstatek 950, takže těch 400 v otevřených pozicích
+  nepočítá nikde — to je #94. Nexus sám potvrdil, že `locked_in_trades` má
+  sčítat otevřené pozice.
 
   `CLN-0002` běží v paperu s 1 000 USDC, `is_trading: true`, a za prvních
   40 minut udělal **nula obchodů**. `clone.py watch` vzorkuje každých deset
