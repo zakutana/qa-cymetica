@@ -272,9 +272,10 @@ def book(positions: list[dict], rows: list[dict] | None = None,
     `clone_capital` is money funded into paper bots, which is deployed and not
     cash: the bot spends it on its own schedule and we cannot recall it by
     deciding not to trade. It is passed in rather than read here because it
-    comes off THEIR my-clones rows, and `None` -- a balance we could not read
-    -- deliberately changes nothing, since the direction that frees money we
-    have already handed over is the dangerous one.
+    comes off THEIR my-clones rows (capital_in_bots). `None` means NOT GIVEN
+    -- a caller that holds no bot -- and changes nothing. It used to mean an
+    unreadable balance as well, which freed the money in bots; buy() now
+    refuses on that before asking the book.
     """
     rows = load() if rows is None else rows
     chains: dict[str, dict] = {}
@@ -330,14 +331,56 @@ def book(positions: list[dict], rows: list[dict] | None = None,
             "unaccounted_usdc": round(unaccounted_usdc, 6)}
 
 
-def clone_capital(client) -> float | None:
-    """USDC sitting in our paper bots, from THEIR my-clones rows.
+def capital_in_bots(rows, records) -> float | None:
+    """What is ours inside our paper bots: for each bot THEY list, what we
+    moved in -- our own accepted fund transfers in clones.jsonl -- plus what
+    it has made or lost, their `total_profit_usdc`.
 
-    None when the read failed or came back in a shape we do not know. A bot
-    balance we cannot read must not be counted as zero: that is the direction
-    that frees money we have already handed over, and `affordable` would then
-    authorise spending it a second time.
+    Not `current_balance_usdc`. Their fix of #94 (2026-09-11) debits a bot's
+    stake on entry, so that field stopped holding what sits in open positions:
+    our bot, funded 1,000, down 50, with 400 open, read 550, and the book
+    counted the other 400 as cash. What went in plus what it made does not
+    depend on how they book a stake.
+
+    None -- refused, never zero -- when a row cannot be read or names a bot we
+    hold no accepted transfer for: capital we cannot state is not capital we
+    have.
     """
+    if not isinstance(rows, list):
+        return None
+    asked = {r.get("id"): (r.get("instance_id"), r.get("amount")) for r in records
+             if r.get("type") == "intent" and r.get("kind") == "fund"}
+    moved: dict[str, float] = {}
+    for row in records:
+        if (row.get("type") == "outcome" and row.get("kind") == "fund"
+                and row.get("outcome") == "accepted" and row.get("id") in asked):
+            instance, amount = asked[row["id"]]
+            try:
+                moved[instance] = moved.get(instance, 0.0) + float(amount)
+            except (TypeError, ValueError):
+                return None
+    total = 0.0
+    for row in rows:
+        if not isinstance(row, dict) or row.get("id") not in moved:
+            return None
+        try:
+            total += moved[row["id"]] + float(row.get("total_profit_usdc") or 0)
+        except (TypeError, ValueError):
+            return None
+    return round(total, 6)
+
+
+def clone_capital(client) -> float | None:
+    """USDC that is ours inside our paper bots, from THEIR my-clones rows and
+    our own transfer records (capital_in_bots).
+
+    None when the read failed, came back in a shape we do not know, or names a
+    bot we cannot account for. A bot balance we cannot read must not be
+    counted as zero: that is the direction that frees money we have already
+    handed over, which is why buy() refuses the order on None.
+    """
+    from qa.rooms import records
+
     token = CURRENT_TIER.set(SafetyTier.SAFE)
     try:
         response = client.get("/api/v1/cloned-bots/my-clones",
@@ -352,17 +395,7 @@ def clone_capital(client) -> float | None:
         rows = response.json()
     except ValueError:
         return None
-    if not isinstance(rows, list):
-        return None
-    total = 0.0
-    for row in rows:
-        if not isinstance(row, dict):
-            return None
-        try:
-            total += float(row.get("current_balance_usdc") or 0)
-        except (TypeError, ValueError):
-            return None
-    return round(total, 6)
+    return capital_in_bots(rows, records("clones.jsonl"))
 
 
 def affordable(usdc: float, positions: list[dict],
@@ -414,8 +447,16 @@ def buy(card_id: str, usdc: float, nexus_id: str | None, confirm: bool) -> dict:
     try:
         before = _snapshot(client)
         held = _positions(client)
-        can, why = affordable(float(usdc), held,
-                              in_bots=clone_capital(client))
+        in_bots = clone_capital(client)
+        if in_bots is None:
+            # The book reads `None` as "no bots", which frees the money in
+            # them. An unreadable bot balance is refused like an unreadable
+            # book, before anything is written.
+            raise SystemExit(
+                "the money in our paper bots could not be read (my-clones "
+                "failed, or names a bot with no transfer of ours on record). "
+                "No order is sent on a book that cannot count what is in bots.")
+        can, why = affordable(float(usdc), held, in_bots=in_bots)
         print(f"[book] {why}")
         if not can:
             raise SystemExit(
@@ -690,8 +731,11 @@ def main(argv: list[str] | None = None) -> int:
         ids = identities()
         client = build_client(ids["trusted"], EndpointRegistry.load(), timeout=30.0)
         try:
-            state = book(_positions(client),
-                         clone_capital=clone_capital(client))
+            in_bots = clone_capital(client)
+            if in_bots is None:
+                print("  [book] the money in our paper bots could not be read; "
+                      "cash below leaves it out and buy() refuses until it can")
+            state = book(_positions(client), clone_capital=in_bots)
         finally:
             client.close()
         print(f"  bankroll   {state['bankroll']:>14,.2f}")

@@ -281,9 +281,77 @@ def test_capital_moved_into_a_bot_is_deployed_not_cash(tmp_path, monkeypatch):
     # Equity is unchanged: the money still exists, it is somewhere else.
     assert round(held["equity"], 6) == round(loose["equity"], 6)
 
-    # An unreadable clone balance must not read as zero -- that is the
-    # direction that frees money we have already handed over.
+    # `None` here is "not given" -- the default of every caller that holds no
+    # bot -- and changes nothing. An UNREADABLE bot balance is a different
+    # case, and until the deep pass of 2026-09-11 buy() passed it in as this
+    # one, freeing the money in bots. It is now refused before the book is
+    # asked: test_an_order_is_refused_when_the_money_in_bots_cannot_be_read.
     assert mod.book(positions, clone_capital=None)["cash"] == loose["cash"]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_capital_in_a_bot_is_what_went_in_and_what_it_made(tmp_path, monkeypatch):
+    """Not the bot's free balance.
+
+    2026-09-11: their fix of #94 debits a bot's stake on entry, so
+    `current_balance_usdc` stopped holding what sits in open positions. Our
+    bot was funded 1,000, lost 50 and had 400 open; my-clones said 550, the
+    book counted 550 in bots, and 400 committed inside the bot read as ours
+    to spend. What is ours in a bot does not depend on how they book a stake:
+    what we moved in, by our own accepted transfers, plus what it has made
+    or lost. A bot we hold no transfer for, or a row we cannot read, is not a
+    number -- the order is refused rather than the money freed.
+    """
+    mod = _paper(tmp_path, monkeypatch)
+    records = [
+        {"id": "CLN-0003", "type": "intent", "kind": "fund", "instance_id": "b1", "amount": 1.0},
+        {"id": "CLN-0003", "type": "outcome", "kind": "fund", "outcome": "rejected"},
+        {"id": "CLN-0004", "type": "intent", "kind": "fund", "instance_id": "b1", "amount": 1.0},
+        {"id": "CLN-0004", "type": "outcome", "kind": "fund", "outcome": "accepted"},
+        {"id": "CLN-0005", "type": "intent", "kind": "fund", "instance_id": "b1", "amount": 999.0},
+        {"id": "CLN-0005", "type": "outcome", "kind": "fund", "outcome": "accepted"},
+    ]
+    ours = {"id": "b1", "current_balance_usdc": 550.0, "total_profit_usdc": -50.0}
+    assert mod.capital_in_bots([ours], records) == 950.0, (
+        "the capital in a bot is what went in plus what it made, not the "
+        "balance left after its open stakes were taken out")
+    assert mod.capital_in_bots([], records) == 0.0
+    assert mod.capital_in_bots([dict(ours, id="b2")], records) is None, (
+        "a bot we never funded has no capital we can state")
+    assert mod.capital_in_bots([dict(ours, total_profit_usdc="n/a")], records) is None
+    assert mod.capital_in_bots(["not a row"], records) is None
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_order_is_refused_when_the_money_in_bots_cannot_be_read(tmp_path, monkeypatch):
+    """buy() handed an unreadable bot balance to the book as `None`, and the
+    book reads `None` as no bots: the money in them came back as cash. The
+    client here refuses every POST itself, so if the refusal ever breaks the
+    test fails on that and nothing leaves this machine."""
+    mod = _paper(tmp_path, monkeypatch)
+    posted = []
+
+    class Client:
+        def post(self, *args, **kwargs):
+            posted.append(args)
+            raise AssertionError("an order went out on an unreadable book")
+
+        def close(self):
+            pass
+
+    monkeypatch.setattr(mod, "install_client_guard", lambda: None)
+    monkeypatch.setattr(mod, "identities", lambda: {"trusted": None})
+    monkeypatch.setattr(mod, "build_client", lambda *a, **k: Client())
+    monkeypatch.setattr(mod, "_guidance", lambda nexus_id: {"id": None})
+    monkeypatch.setattr(mod, "_snapshot", lambda client: {})
+    monkeypatch.setattr(mod, "_positions", lambda client: [])
+    monkeypatch.setattr(mod, "clone_capital", lambda client: None)
+
+    with pytest.raises(SystemExit) as refused:
+        mod.buy("card-1", 10.0, None, confirm=True)
+    assert "bot" in str(refused.value), refused.value
+    assert posted == []
+    assert mod.load() == [], "an intent was written for an order that was refused"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
