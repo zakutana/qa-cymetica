@@ -676,8 +676,20 @@
  ],
  "meta_tests": {
   "start": 331,
-  "end": null,
+  "end": 346,
   "reason": "331 -> 346 (+15), every one the red-first test of a gap triage confirmed, and every one in an existing file: test_pipeline_checks.py +9 (T02 is an assertion added to an existing test; V01, V04, V05, V09, V12, V13, T08/V02, V08, T05/V06 each test a helper of a different vendor check -- folding them into one would make a test about nine unrelated contracts), test_pipeline_clone.py +4 (R04, R05, V10, V11: the existing clone tests exercise refusals before the POST, these exercise what happens after it and the surface check's helpers), test_pipeline_book.py +2 (R01's capital_in_bots is a new function; R02's refusal is in buy(), which no existing book test drives). T03, T04, T06, T07, P01-P13 and V14-V16 strengthened existing tests instead of adding any; tests/repo gained one (V14)."
  },
- "finished": false
+ "finished": true,
+ "next": [
+  "Zjistit, jestli je 401 na `/fund` záměr, a podle toho #89 upravit",
+  "Změřit, jestli se odměna připíše při resolve karty",
+  "Přečíst `docs/night-2026-09-11.md` — co se stalo v noci, čtyři nové nálezy a tři naše vlastní vady",
+  "Rozhodnout, co s `QUERY_RESTRICTED` u Nexuse",
+  "Dvě z Nexusových vlastních priorit jsme odmítli otestovat",
+  "Fold nedluží pass po failu pod stejným otiskem — #85 tak zůstal u nich s naším posledním `fail`",
+  "Dát `nexus.py` způsob, jak zapsat odpověď, která nepřišla naším kanálem",
+  "Až Nexus zase odpovídá, zeptat se ho v STR-0001, co bylo na Perceptron Oracle špatně a jestli ho nechat běžet, nebo nahradit",
+  "Až Nexus zase odpovídá, pustit znovu session s Nexusem na nové strategie z karet podle zpráv",
+  "`correction_owed` ve foldu přičítá jejich tvrzení o opravě i našemu novému reportu na stejném řádku"
+ ]
 }
