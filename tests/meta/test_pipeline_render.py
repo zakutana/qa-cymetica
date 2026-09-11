@@ -890,7 +890,11 @@ def test_the_page_runs_end_to_end_and_not_only_parses(tmp_path, monkeypatch):
     for row in narrow["findings"]:
         row["not_checked_in"] = "run-20260910T045212Z-de93be7"
         row["last_checked_at"] = "2026-09-09T22:13:39+00:00"
-        row["stale_from"] = "2026-09-09T22:13:39+00:00"
+        # A different moment from last_checked_at, so each mark has to print
+        # its own: with one timestamp for both, one mark covered for the
+        # other and `stale_from` printing a bare date stayed green (P04, deep
+        # pass of 2026-09-11).
+        row["stale_from"] = "2026-09-08T11:05:02+00:00"
 
     code, err, captured = _run_page(node, tmp_path / "narrow", narrow)
     assert code == 0, (
@@ -907,6 +911,9 @@ def test_the_page_runs_end_to_end_and_not_only_parses(tmp_path, monkeypatch):
         "the moment beside those marks is printed plainly; a relative age is "
         "what the wrong `when` was reaching for"
     )
+    assert "2026-09-08 11:05" in body, (
+        "the stale mark does not print its own moment plainly -- it was only "
+        "ever covered by the not-re-checked mark's timestamp (P04)")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -1031,6 +1038,11 @@ def test_the_page_opens_on_what_moved_and_says_it_in_one_line(tmp_path, monkeypa
         f"the bell and the chip must CALL the same read switch; found "
         f"{call_sites} call site(s) beside its definition")
     assert 'data-sort="changed"' in template and 'data-sort="damage"' in template
+    # The DEFAULT, which is the claim: the page opens sorted by what moved.
+    # Only the two buttons were asserted, so a "damage" default stayed green
+    # (P08, deep pass of 2026-09-11).
+    assert 'readStore("qa.sort", "changed")' in template, (
+        "the page no longer opens sorted by when each row last moved")
 
     # The header still says the two things the guards pin, and the run's own
     # moment is now in the payload rather than the render's clock.

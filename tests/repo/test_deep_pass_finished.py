@@ -203,6 +203,17 @@ def problems(progress: dict, nodeids: set[str] | None = None,
             f"{len(owed)} gap(s) confirmed real, fixed none of them and named "
             f"none for the operator: "
             + ", ".join(str(g.get("id") or g.get("nodeid")) for g in owed[:6]))
+    # A gap nobody voted on is a finding that silently never gets fixed --
+    # CLAUDE.md's own words for what this file guards. A FINISHED pass with
+    # one left unvoted and not handed over passed until the deep pass of
+    # 2026-09-11, with a message saying "still awaiting a vote" (V14, 2/3).
+    unvoted = [g for g in gaps if g.get("verdict") in (None, "")
+               and not g.get("deferred_to_operator")]
+    if unvoted and progress.get("finished"):
+        out.append(
+            f"{len(unvoted)} gap(s) claimed and never voted on by a finished "
+            f"pass, and not handed to the operator: "
+            + ", ".join(str(g.get("id") or g.get("nodeid")) for g in unvoted[:6]))
 
     at = str(progress.get("at") or "")
     if not at:
@@ -561,6 +572,25 @@ def _pass(**over) -> dict:
             "meta_tests": {"start": 200, "end": 200, "reason": None}}
     base.update(over)
     return base
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_finished_pass_leaves_no_gap_unvoted():
+    """V14, deep pass of 2026-09-11, triage 2/3. `owed` counted only gaps
+    voted real, so a pass that finished with a claimed gap nobody voted on
+    passed -- a lost verdict, "a finding that silently never gets fixed" in
+    CLAUDE.md's own words -- while the pass message said "still awaiting a
+    vote". A pass still running has not had its vote yet, and a gap handed
+    to the operator is handled."""
+    gap = {"id": "X1", "nodeid": "tests/meta/test_x.py::test_x",
+           "verdict": None, "fixed": False}
+    said = problems(_pass(finished=True, gaps=[gap]), NODEIDS)
+    assert any("never voted" in line for line in said), said
+    assert not any("never voted" in line
+                   for line in problems(_pass(finished=False, gaps=[gap]), NODEIDS))
+    handed = dict(gap, deferred_to_operator=True)
+    assert not any("never voted" in line
+                   for line in problems(_pass(finished=True, gaps=[handed]), NODEIDS))
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

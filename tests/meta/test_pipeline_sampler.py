@@ -173,6 +173,11 @@ def test_the_sampler_reads_its_six_doors_with_get_and_nothing_else(
             bot["available_usdc"]) == (INSTANCE, 950.0, 0.0, 550.0)
     assert [r["position_id"] for r in rows if r.get("kind") == "position"] == ["P-1"], (
         "a position that is not ours, or one we closed, was followed")
+    # Asked of follow() itself: the closed P-2 shares P-1's card and their
+    # mock does not list it, so a follow() that kept it changed no path and no
+    # row and the lines above stayed green (P09, deep pass of 2026-09-11).
+    assert list(sampler.follow()["positions"]) == ["P-1"], (
+        "follow() keeps a position we closed")
     assert [r["trade_id"] for r in rows if r["type"] == "trade"] == ["T-1"]
     (config,) = [r for r in rows if r["type"] == "config"]
     assert [i["name"] for i in config["primary_indicators"]] == ["rsi"]
@@ -294,6 +299,19 @@ def test_the_panel_says_stale_after_three_intervals_without_a_tick(tmp_path, mon
     assert (general["stale"], general["sampler_ok"]) == (False, False), (
         "a read that failed two minutes ago is fresh, and failed -- both must show")
 
+    # Three intervals, pinned against `every`: 45 and 2 minutes at every=600
+    # let any fixed threshold between them pass (P12, deep pass of 2026-09-11).
+    def tick_every(minutes_ago: float, every: int) -> dict:
+        return {"type": "tick", "at": (now - timedelta(minutes=minutes_ago)).isoformat(
+            timespec="seconds"), "every": every, "ok": True, "reads": {}}
+
+    for minutes, every, stale in ((4, 60, True), (2, 60, False),
+                                  (29, 600, False), (31, 600, True)):
+        _write(tmp_path / "samples.jsonl", [tick_every(minutes, every)])
+        assert _render().build_rooms()["panels"]["general"]["stale"] is stale, (
+            f"{minutes} min without a tick at every={every}s should read "
+            f"{'stale' if stale else 'fresh'}: stale is three intervals")
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_bots_panel_carries_what_the_sampler_read_beside_the_old_samples(
@@ -323,7 +341,13 @@ def test_a_bots_panel_carries_what_the_sampler_read_beside_the_old_samples(
 def test_both_launchers_start_the_sampler_and_the_old_watch_goes_through_it():
     for name in ("console.cmd", "console.sh"):
         text = (REPO / name).read_text(encoding="utf-8")
-        assert "--sample 10" in text, f"{name} starts the console without its sampler"
+        # The command, not the comment above it: both files say "--sample 10"
+        # in a rem/# line, so removing it from the real command stayed green
+        # (P10, deep pass of 2026-09-11).
+        commands = "\n".join(
+            line for line in text.splitlines()
+            if not line.strip().lower().startswith(("rem", "::", "#")))
+        assert "--sample 10" in commands, f"{name} starts the console without its sampler"
 
     serve = ast.parse((REPO / "scripts" / "serve.py").read_text(encoding="utf-8"))
     flags = {arg.value for node in ast.walk(serve) if isinstance(node, ast.Call)

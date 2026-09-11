@@ -137,18 +137,21 @@ def test_the_committed_history_reads():
     assert all(row["voted"] >= row["unanimous"] for row in rows)
     assert mod.render(rows).splitlines()[0].startswith("pass")
 
-    # The assertion a rename cannot survive.
-    with_work = [r for r in rows if r["claimed"] > 0]
-    assert with_work, (
-        f"every one of the {len(rows)} committed pass(es) reads as zero gaps "
+    # The assertion a rename cannot survive -- on the NEWEST committed pass.
+    # It asked whether ANY pass had claimed something, so a writer-side rename
+    # of `gaps` zeroed every new row while the older notebooks kept the test
+    # green (V15, deep pass of 2026-09-11, triage 3/3). passes() reads the
+    # history oldest first.
+    newest = rows[-1]
+    assert newest["claimed"] > 0, (
+        f"the newest committed pass, {newest['pass']}, reads as zero gaps "
         f"claimed. Passes do not run for hours and find nothing, so the reader "
         f"has stopped finding the field it counts -- which is exactly what this "
         f"test says it catches: {[r['pass'] for r in rows]}")
 
-    # And the votes, on any pass that recorded them. A schema change that left
-    # `gaps` intact but moved `votes` would slip past the line above.
-    voted = [r for r in rows if r["voted"] > 0]
-    assert voted, (
-        f"no committed pass records a single triage vote, so the column the "
-        f"whole tool is FOR -- claims the readers rejected -- is being read "
-        f"from nothing: {[r['pass'] for r in rows]}")
+    # And its votes. A schema change that left `gaps` intact but moved
+    # `votes` would slip past the line above.
+    assert newest["voted"] > 0, (
+        f"the newest committed pass, {newest['pass']}, records no triage vote, "
+        f"so the column the whole tool is FOR -- claims the readers rejected "
+        f"-- is being read from nothing: {[r['pass'] for r in rows]}")

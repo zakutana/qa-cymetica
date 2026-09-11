@@ -102,7 +102,25 @@ def test_the_scope_over_the_real_repository_names_only_live_functions():
 
     live = {f"{rel}::{name}" for rel, name, _ in nf._test_functions()}
     owed = nf.audit_scope(audited, runs, live)
-    stray = [n for n in owed if n not in live]
+    # Held against what pytest itself collects, not against `live`:
+    # audit_scope already drops anything outside `live`, so comparing with the
+    # same set was empty by construction (V16, deep pass of 2026-09-11,
+    # triage 3/3).
+    import subprocess
+    import sys
+
+    listing = subprocess.run(
+        [sys.executable, "-m", "pytest", "--collect-only", "-q",
+         "-p", "no:cacheprovider", "tests"],
+        cwd=REPO, capture_output=True, text=True, timeout=600).stdout
+    collected = {line.split("[", 1)[0] for line in listing.splitlines()
+                 if "::" in line}
+    if not collected:
+        conclude(Measurement(verdict="inconclusive",
+                             reason="pytest collected nothing, so which tests "
+                                    "exist could not be read"))
+        return
+    stray = [n for n in owed if n not in collected]
     conclude(Measurement(
         verdict="failed" if stray else "passed",
         reason=(f"{len(stray)} nodeid(s) in the audit scope name no test that "
