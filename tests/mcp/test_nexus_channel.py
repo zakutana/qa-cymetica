@@ -73,8 +73,7 @@ REPO = Path(__file__).resolve().parent.parent.parent
 # against the three recorded answers, that reads tools out of all three.
 NAME = r"([a-z][a-z0-9]*(?:_[a-z0-9]+)+)"
 CALLING_VERBS = ("call", "calls", "calling", "use", "uses", "using", "invoke",
-                 "invoking", "run", "running", "query", "querying", "hit",
-                 "with", "via", "through")
+                 "invoking", "run", "running", "query", "querying", "hit")
 TOOL_MENTIONS = (
     re.compile(r"MCP\s+`" + NAME + r"(?:\([^`]*\))?`"),
     re.compile(r"`" + NAME + r"\([^`]*\)`"),
@@ -86,10 +85,30 @@ TOOL_MENTIONS = (
 # check asserts that before relying on it. It is what keeps `status` and `bear`
 # -- both of which sit in a calling phrase in NEX-0007 -- out of a report as
 # tools that do not exist.
+#
+# with / via / through are how NEX-0008 named a real tool ("resolve the chain
+# with `find_trade_path`"), and also how an answer names a FIELD: "filter
+# with `is_public`" made is_public a tool that does not exist until the deep
+# pass of 2026-09-11 (V08, triage 3/3). After those three a name counts only
+# when it is shaped like a tool -- a verb first, as every tool they serve is.
+WEAK_VERBS = ("with", "via", "through")
+TOOL_VERBS = frozenset({
+    "get", "list", "find", "search", "lookup", "fetch", "place", "cancel",
+    "create", "update", "delete", "set", "start", "stop", "trade", "buy", "sell",
+    "open", "close", "clone", "fund", "toggle", "withdraw", "deposit",
+    "backtest", "simulate", "estimate", "quote", "preview", "compute",
+    "calculate", "analyze", "analyse", "compare", "scan", "track", "check",
+    "verify", "identify", "resolve", "describe", "explain", "ask", "send",
+    "submit", "register", "query", "run", "who"})
+WEAK_MENTION = re.compile(r"\b(?:" + "|".join(WEAK_VERBS) + r")\s+(?:the\s+)?`"
+                          + NAME + r"(?:\([^`]*\))?`", re.I)
 
 
 def tool_mentions(text: str) -> set[str]:
-    return {m for pattern in TOOL_MENTIONS for m in pattern.findall(text or "")}
+    found = {m for pattern in TOOL_MENTIONS for m in pattern.findall(text or "")}
+    found |= {m for m in WEAK_MENTION.findall(text or "")
+              if m.split("_", 1)[0] in TOOL_VERBS}
+    return found
 
 
 def _nexus():

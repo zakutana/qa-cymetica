@@ -60,7 +60,12 @@ def _paper():
 
 
 def closes(rows):
-    """Every recorded close that carries a balance read on both sides."""
+    """Every accepted close, and what could be read on it.
+
+    A close whose balance could not be read stays, with `credited` None:
+    until the deep pass of 2026-09-11 it was dropped, so a failed read on the
+    newest close handed the verdict to the one before it (V06).
+    """
     chains: dict[str, dict] = {}
     for row in rows:
         chains.setdefault(row["id"], {})[row.get("type")] = row
@@ -75,26 +80,70 @@ def closes(rows):
         if outcome.get("outcome") != "accepted":
             continue
         try:
-            was, now = (float(intent["before"]["sim_balance_usdc"]),
-                        float(after["sim_balance_usdc"]))
+            credited = round(float(after["sim_balance_usdc"])
+                             - float(intent["before"]["sim_balance_usdc"]), 6)
         except (KeyError, TypeError, ValueError):
-            continue
+            credited = None
         try:
             pnl_was, pnl_now = (float(intent["before"]["sim_total_pnl"]),
                                 float(after["sim_total_pnl"]))
         except (KeyError, TypeError, ValueError):
             pnl_was = pnl_now = None
+        try:
+            proceeds = float(outcome["proceeds_usdc"])
+        except (KeyError, TypeError, ValueError):
+            proceeds = None
         out.append({
             "id": trade_id,
             "at": intent.get("at") or "",
             "notional": float(intent.get("notional_usdc") or 0),
             "expected_pnl": intent.get("unrealized_pnl_usdc"),
-            "credited": round(now - was, 6),
+            "proceeds": proceeds,
+            "credited": credited,
             "pnl_booked": (None if pnl_was is None
                            else round(pnl_now - pnl_was, 6)),
         })
     out.sort(key=lambda c: (c["at"], c["id"]))
     return out
+
+
+# Without their own figure for the proceeds, what was due is our estimate from
+# the position row read BEFORE the close, and the index can move a cent or a
+# fee be taken in between; a tenth of a percent of the notional (0.001), never
+# less than their 2dp, is room for that and not for money that did not come
+# back.
+ESTIMATE_SLACK = 0.001
+
+
+def judge(subject: dict) -> dict:
+    """The verdict on one close, out of the check so it can be driven.
+
+    Until the deep pass of 2026-09-11 this was inline, and the only meta test
+    drove closes() -- dropping the sub-cent condition below turned TRD-0004
+    into a false fail with every guard green (T05). And it held the credit to
+    within a cent of our own pre-close estimate, so a two-cent fee failed as
+    "does not credit", and counted a P&L booked with the wrong sign as booked
+    (V06). Both triage 3/3.
+    """
+    estimate = subject["notional"] + float(subject["expected_pnl"] or 0)
+    if subject.get("proceeds") is not None:
+        expected, slack, basis = subject["proceeds"], VISIBLE, "their proceeds"
+    else:
+        expected = estimate
+        slack = max(VISIBLE, round(abs(subject["notional"]) * ESTIMATE_SLACK, 2))
+        basis = "our estimate"
+    off_by = round(subject["credited"] - expected, 2)
+    returned = subject["credited"] > 0 and abs(off_by) <= slack
+
+    # Only judged where their own precision could show it: TRD-0004 closed
+    # for +0.0022 and total_pnl stayed 0.00, which is right. And the same
+    # sign as the result -- a loss booked as a gain is not booked.
+    result = float(subject["expected_pnl"] or 0)
+    measurable = subject["pnl_booked"] is not None and abs(result) >= VISIBLE
+    booked = (not measurable) or (abs(subject["pnl_booked"]) >= VISIBLE
+                                  and (subject["pnl_booked"] > 0) == (result > 0))
+    return {"expected": round(expected, 2), "slack": slack, "basis": basis,
+            "returned": returned, "measurable": measurable, "booked": booked}
 
 
 @qa(component="rest.event_cards", tier=SafetyTier.SAFE, surface="rest")
@@ -114,18 +163,19 @@ def test_closing_a_paper_position_returns_its_money(rest_trusted):
             f"the newest close {subject['id']} records no notional, so what "
             f"should have come back cannot be established")
 
-    # The proceeds are the notional adjusted by what the position made or
-    # lost. Their published balance is 2dp, so the comparison is too: this
-    # asserts the money came back, not that it came back to the microcent.
-    expected = subject["notional"] + float(subject["expected_pnl"] or 0)
-    off_by = round(subject["credited"] - expected, 2)
-    returned = subject["credited"] > 0 and abs(off_by) <= VISIBLE
+    if subject["credited"] is None:
+        raise Inconclusive(
+            f"the newest close {subject['id']} has no balance read on one side "
+            f"of it, so what came back cannot be established -- and judging "
+            f"the close before it instead would report an older close with "
+            f"today's date on it")
 
-    # Only judged where their own precision could show it. TRD-0004 closed
-    # for +0.0022 and total_pnl stayed 0.00, which is right.
-    measurable = (subject["pnl_booked"] is not None
-                  and abs(float(subject["expected_pnl"] or 0)) >= VISIBLE)
-    booked = (not measurable) or abs(subject["pnl_booked"]) >= VISIBLE
+    # The proceeds are the notional adjusted by what the position made or
+    # lost, and judge() says against which figure: theirs when the close
+    # recorded it, our pre-close estimate otherwise.
+    verdict = judge(subject)
+    expected, returned = verdict["expected"], verdict["returned"]
+    measurable, booked = verdict["measurable"], verdict["booked"]
 
     conclude(Measurement(
         verdict="passed" if returned and booked else "failed",

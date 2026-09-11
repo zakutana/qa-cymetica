@@ -988,6 +988,75 @@ def test_the_listing_walk_says_when_it_did_not_reach_the_end():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_field_named_with_via_or_through_is_not_a_tool():
+    """V08, deep pass of 2026-09-11, triage 3/3. The calling verbs include
+    with, via and through, and anything with an underscore is a name, so
+    "filter with `is_public`" made is_public a tool Nexus told an agent to
+    call -- and one that does not exist, filed as such. Those three are how
+    NEX-0008 named a real tool ("resolve the chain with `find_trade_path`"),
+    so they stay, for a name that is shaped like a tool: a verb first."""
+    from tests.mcp.test_nexus_channel import tool_mentions
+
+    assert tool_mentions("filter with `is_public` and pay via `reward_amount`, "
+                         "read through `current_index`") == set()
+    assert tool_mentions("resolve the chain with `find_trade_path`") == {"find_trade_path"}
+    assert tool_mentions("call `update_bot_settings(instance_id)` to enable it") == {
+        "update_bot_settings"}
+    assert "get_event_card_info" in tool_mentions(
+        "look it up via the `get_event_card_info` tool")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_close_verdict_holds_its_own_contract():
+    """T05 and V06, deep pass of 2026-09-11, triage 3/3. The close check's
+    verdict lived inline, so the meta test above only ever drove closes():
+    dropping the sub-cent condition turned TRD-0004 into a false fail with
+    everything green. And the verdict itself: a two-cent fee failed as "does
+    not credit", a P&L booked with the wrong sign counted as booked, and a
+    close whose balance read failed dropped out and left an older close as
+    the subject. judge() is the verdict now, and this drives it."""
+    from tests.rest.test_paper_close_returns_the_money import closes, judge
+
+    # A two-cent fee, which their own proceeds say: 9.98 due, 9.98 back.
+    rows = _close("TRD-0010", "2026-09-11T10:00:00+00:00", notional=10.0,
+                  expected_pnl=0.0, credited=9.98, pnl_booked=0.0)
+    for row in rows:
+        if row["type"] == "outcome":
+            row["proceeds_usdc"] = 9.98
+    assert judge(closes(rows)[-1])["returned"] is True, (
+        "a close that returned exactly what they said it would is not a failure")
+
+    # TRD-0004: a sub-cent result their 2dp total_pnl cannot show.
+    sub = judge(closes(_close("TRD-0004", "2026-09-10T21:05:00+00:00", notional=1.0,
+                              expected_pnl=0.0021598811497629544, credited=1.0,
+                              pnl_booked=0.0))[-1])
+    assert (sub["measurable"], sub["booked"]) == (False, True), sub
+
+    # A -0.04 result booked as +0.04 is not booked.
+    wrong = judge(closes(_close("TRD-0011", "2026-09-11T10:30:00+00:00", notional=1.0,
+                                expected_pnl=-0.04, credited=0.96,
+                                pnl_booked=0.04))[-1])
+    assert wrong["booked"] is False, wrong
+
+    # Nothing came back: the state the check exists for, still red.
+    bad = judge(closes(_close("TRD-0006", "2026-09-10T21:08:00+00:00", notional=1.0,
+                              expected_pnl=-0.04, credited=0.0, pnl_booked=0.0))[-1])
+    assert bad["returned"] is False, bad
+
+    # The newest close whose balance read failed stays the subject, unread.
+    rows = (_close("TRD-0012", "2026-09-11T11:00:00+00:00", notional=1.0,
+                   expected_pnl=0.0, credited=1.0, pnl_booked=0.0)
+            + _close("TRD-0013", "2026-09-11T12:00:00+00:00", notional=1.0,
+                     expected_pnl=0.0, credited=1.0, pnl_booked=0.0))
+    for row in rows:
+        if row["id"] == "TRD-0013" and row["type"] == "after":
+            row.pop("sim_balance_usdc")
+    newest = closes(rows)[-1]
+    assert (newest["id"], newest["credited"]) == ("TRD-0013", None), (
+        "a newest close whose balance could not be read dropped out")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_listing_check_walks_the_pages_it_is_now_allowed_to_walk():
     """#90 was fixed and our check could not have seen it.
 
