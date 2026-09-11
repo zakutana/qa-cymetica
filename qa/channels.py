@@ -32,6 +32,7 @@ from qa.state import ledger_path, read_events
 A2A = "a2a"
 TELEGRAM = "telegram"
 BUG = "bug"
+ROOMS = "rooms"
 
 
 def _preview(text, width: int = 90) -> str:
@@ -101,6 +102,25 @@ def new_lines(events: list[dict], seen: set) -> tuple[list[str], set]:
         else:
             mark = row["kind"] or "kind unknown"
             lines.append(f"[a2a] {row['id']} ({mark}): \"{row['preview']}\"")
+    return lines, marked
+
+
+def room_lines(rows: list[dict], seen: set) -> tuple[list[str], set]:
+    """One line per new note from the operator in the Nexus rooms, and the
+    new watermark. Pure, like new_lines, and for the same reason.
+
+    Our own notes never wake anyone: the alert is for what waits on us.
+    """
+    lines, marked = [], set(seen)
+    for row in rows:
+        if row.get("type") != "operator_note":
+            continue
+        key = f"{ROOMS}|{row.get('id')}"
+        if key in marked:
+            continue
+        marked.add(key)
+        lines.append(f"[room] {row.get('id')} in {row.get('room') or 'general'} "
+                     f"from the operator: \"{_preview(row.get('text'))}\"")
     return lines, marked
 
 
@@ -292,22 +312,43 @@ def _bug(events: list[dict]) -> dict:
     return {"unanswered": owed, "reports": filed}
 
 
+def _rooms() -> dict:
+    """The operator's notes in the Nexus tab that no session has read yet.
+
+    Not a vendor channel -- the operator writes these in the console -- but it
+    is a place something waits for us, so it is reported with the rest.
+    """
+    from qa import rooms
+
+    rows = rooms.load()
+    notes = [r for r in rows if r.get("type") == "operator_note"]
+    return {"unanswered": [r.get("id") for r in rooms.unread(rows)],
+            "notes": len(notes),
+            "last_note_at": max((str(r.get("at")) for r in notes), default=None)}
+
+
 def state(events: list[dict] | None = None) -> dict:
-    """The three channels in one shape, so a report cannot quietly omit one."""
+    """The channels in one shape, so a report cannot quietly omit one.
+
+    Four since 2026-09-11: the operator's notes in the Nexus rooms wait on us
+    the way a bug obligation does, and a report that left them out would tell
+    the operator nothing was waiting while their feedback sat unread.
+    """
     events = read_events() if events is None else events
     heard = inbound(events)
     last = {}
     for row in heard:
         last[row["channel"]] = row["at"]
 
-    out = {BUG: _bug(events), TELEGRAM: _telegram(events), A2A: _a2a(events)}
+    out = {BUG: _bug(events), TELEGRAM: _telegram(events), A2A: _a2a(events),
+           ROOMS: _rooms()}
     # Which side the outstanding items sit on, per channel. On the two chat
     # channels `unanswered` means a message of OURS nobody has replied to, so
     # it waits on them. On the bug channel it means a row carrying an
     # obligation, which is a debt of ours. The first version of this printed
     # "waiting on us" over all three, and told the operator to act on a
     # telegram thread that was sitting with the vendor.
-    waiting = {BUG: "us", TELEGRAM: "them", A2A: "them"}
+    waiting = {BUG: "us", TELEGRAM: "them", A2A: "them", ROOMS: "us"}
     for name, channel in out.items():
         channel["last_from_them"] = last.get(name)
         channel["heard"] = sum(1 for row in heard if row["channel"] == name)

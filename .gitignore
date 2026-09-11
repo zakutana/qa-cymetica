@@ -61,3 +61,10 @@ state/nexus.jsonl
 # tree that is dirty during a run is a tree no run can reach level V from.
 # scripts/paper.py proof reads it from disk.
 state/paper.jsonl
+
+# The Nexus rooms: the operator's notes from the console and what the sampler
+# reads on a timer. The same reason again, only sharper -- a note is one click
+# away at any moment, including the middle of a sweep. qa/rooms.py reads both
+# from disk; docs/nexus-rooms-plan.md says why they exist.
+state/rooms.jsonl
+state/samples.jsonl

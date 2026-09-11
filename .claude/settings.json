@@ -28,7 +28,8 @@
       "Bash(git rev-parse:*)",
       "Bash(python scripts/memories.py:*)",
       "Bash(python scripts/prune_runs.py:*)",
-      "Bash(python scripts/deep_pass_process.py:*)"
+      "Bash(python scripts/deep_pass_process.py:*)",
+      "Bash(python scripts/rooms.py:*)"
     ]
   },
   "hooks": {
@@ -70,6 +71,15 @@
             ],
             "timeout": 10,
             "statusMessage": "reading what we agreed to do next"
+          },
+          {
+            "type": "command",
+            "command": "python",
+            "args": [
+              ".claude/hooks/room_notes.py"
+            ],
+            "timeout": 10,
+            "statusMessage": "counting unread notes in the Nexus rooms"
           }
         ]
       }

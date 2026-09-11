@@ -1238,6 +1238,12 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:15.0px; max-wid
 .nx-grid span{font-size:.75em;opacity:.8}
 .nx-foot{font-size:.8em;color:var(--text-dim);margin:.7rem 0 0}
 .nx-note{margin-top:14px;padding:.7rem .9rem;border:1px dashed var(--line);border-radius:var(--radius);color:var(--text-dim)}
+.nx-mid{display:flex;flex-direction:column;gap:10px;min-width:0}
+.nx-compose{display:flex;flex-direction:column;gap:6px;border:1px solid var(--wait);border-radius:10px;padding:.55rem;background:var(--surface);position:sticky;bottom:8px}
+.nx-compose textarea{width:100%;box-sizing:border-box;resize:vertical;min-height:4.2em;font:inherit;color:var(--text);background:var(--surface-2);border:1px solid var(--line-soft);border-radius:6px;padding:.45rem .55rem}
+.nx-send{display:flex;justify-content:space-between;align-items:center;gap:.6rem;font-size:.8em;color:var(--text-dim)}
+.nx-send button{font:inherit;font-size:1.15em;padding:.3rem .9rem;border-radius:6px;border:1px solid var(--wait);background:var(--wait);color:var(--surface);cursor:pointer}
+.nx-send button:disabled{opacity:.5;cursor:default}
 details.stat summary{cursor:pointer;font-weight:600}
 /* Theirs, and counted against them: a 5xx is an answer. */
 .seg-server_error{background:var(--bad);opacity:.65}
@@ -1771,7 +1777,7 @@ h4.sec {
       <span class="tab-n" id="tabN"></span></button>
     <button data-tab="stats" aria-selected="false">Stats</button>
     <button data-tab="nexus" aria-selected="false">Nexus
-      <span class="tab-n" id="nexusN"></span></button>
+      <span class="tab-n" id="nexusN" hidden></span></button>
     <button data-tab="legend" aria-selected="false">How to read this</button>
   </nav>
 
@@ -1794,7 +1800,15 @@ h4.sec {
   <div class="nx-note" id="roomsNote" hidden></div>
   <div class="nx-rooms">
     <nav class="nx-list" id="roomList" aria-label="Rooms"></nav>
-    <div class="nx-chat" id="roomChat"></div>
+    <div class="nx-mid">
+      <div class="nx-chat" id="roomChat"></div>
+      <form class="nx-compose" id="nxCompose" hidden>
+        <textarea id="nxDraft" rows="3" maxlength="4000"
+          placeholder="Your feedback for this room. Claude reads it when you ask."></textarea>
+        <div class="nx-send"><span id="nxSendNote">Ctrl+Enter sends</span>
+          <button type="submit" id="nxSend">Send</button></div>
+      </form>
+    </div>
     <aside class="nx-panel" id="roomPanel"></aside>
   </div>
   </section>
@@ -2656,7 +2670,8 @@ function renderRooms(data) {
     nxPanel(current, (NX.panels || {})[current] || {});
   const total = rooms.reduce((n, nr) => n + nxFresh(nr.id), 0);
   const badge = document.getElementById("nexusN");
-  if (badge) badge.textContent = total ? String(total) : "";
+  if (badge) { badge.textContent = total ? String(total) : ""; badge.hidden = !total; }
+  nxBindComposer(current);
 }
 window.renderRooms = renderRooms;
 
@@ -2694,6 +2709,83 @@ document.getElementById("roomChat").addEventListener("click", e => {
   const body = b.previousElementSibling;
   body.classList.toggle("nx-clamp");
   b.textContent = body.classList.contains("nx-clamp") ? b.dataset.label : "▴ less";
+});
+
+/* The composer: the operator's feedback for the room on screen. It is the
+   console's one write, so it goes through every door serve.py keeps -- a
+   token asked for at the moment of sending, a JSON body, this machine only. */
+let nxReloadWhenDone = false, nxSending = false;
+
+function nxTyping() {
+  const draft = document.getElementById("nxDraft");
+  return !!(draft && document.activeElement === draft &&
+            String(draft.value || "").trim());
+}
+// A page update never lands under a note being written. The draft would
+// survive -- it is stored as it is typed -- but the operator's cursor would not.
+function nxReloadIfDue() {
+  if (!nxReloadWhenDone || nxSending || nxTyping()) return;
+  writeStore("qa.scroll", window.scrollY);
+  location.reload();
+}
+function nxBindComposer(room) {
+  const form = document.getElementById("nxCompose");
+  const draft = document.getElementById("nxDraft");
+  form.hidden = !NX_LOCAL;
+  if (form.dataset.room === room) return;
+  if (form.dataset.room) writeStore("qa.draft." + form.dataset.room, draft.value || "");
+  form.dataset.room = room;
+  draft.value = readStore("qa.draft." + room, "");
+}
+// Asked for at the moment of sending, never baked into the page: a tab left
+// open across a console restart would otherwise hold a token the new process
+// never issued, and every note would bounce.
+function nxPost(room, text) {
+  return fetch("/token", { cache: "no-store" })
+    .then(r => r.ok ? r.json()
+                    : Promise.reject(new Error("the console gave no token (" + r.status + ")")))
+    .then(t => fetch("/notes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-QA-Token": t.token },
+      body: JSON.stringify({ room: room, text: text }),
+    }))
+    .then(r => r.ok ? r.json()
+                    : r.json().catch(() => ({})).then(b =>
+                        Promise.reject(new Error(b.error || ("HTTP " + r.status)))));
+}
+document.getElementById("nxDraft").addEventListener("input", e => {
+  const room = document.getElementById("nxCompose").dataset.room;
+  if (room) writeStore("qa.draft." + room, e.target.value);
+});
+document.getElementById("nxDraft").addEventListener("keydown", e => {
+  if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+    e.preventDefault();
+    document.getElementById("nxSend").click();
+  }
+});
+document.getElementById("nxDraft").addEventListener("blur",
+  () => setTimeout(nxReloadIfDue, 800));
+document.getElementById("nxCompose").addEventListener("submit", e => {
+  e.preventDefault();
+  const form = document.getElementById("nxCompose");
+  const draft = document.getElementById("nxDraft");
+  const button = document.getElementById("nxSend");
+  const status = document.getElementById("nxSendNote");
+  const room = form.dataset.room;
+  const text = String(draft.value || "").trim();
+  if (!room || !text || nxSending) return;
+  nxSending = true;
+  button.disabled = true;
+  status.textContent = "sending…";
+  nxPost(room, text)
+    .then(() => {
+      draft.value = "";
+      writeStore("qa.draft." + room, "");
+      status.textContent = "saved ✓ — Claude reads it when you ask";
+      loadRooms();
+    })
+    .catch(err => { status.textContent = "not sent: " + err.message; })
+    .finally(() => { nxSending = false; button.disabled = false; nxReloadIfDue(); });
 });
 if (NX_LOCAL) loadRooms();
 
@@ -2888,6 +2980,9 @@ paintVerdicts();
   const catchUp = e => {
     say("on", "live");
     if (!e.data || e.data === RENDERED_AS) return;
+    // Not under a note being written: the reload waits until the operator is
+    // done (nxReloadIfDue), and the draft is stored as it is typed anyway.
+    if (nxTyping() || nxSending) { nxReloadWhenDone = true; return; }
     writeStore("qa.scroll", window.scrollY);
     location.reload();
   };

@@ -16,8 +16,11 @@ from the ledger is the exact failure that guard exists to catch.
     python scripts/serve.py            # http://127.0.0.1:8787
     python scripts/serve.py --port 9000 --open
 
-Read-only with respect to state: it renders, and the only file it writes is
-dashboard/index.html, which is a projection and always was.
+What it writes, all of it. dashboard/index.html, which is a projection and
+always was. With `--ask`, what the bell needs -- see asker(). And one row in
+state/rooms.jsonl when the operator sends a note from the Nexus tab: through
+qa.rooms.add_operator_note, the only writer the page can reach, behind a token
+minted at launch, a Host and an Origin naming this machine, and a JSON body.
 
 The Nexus tab's rooms are served beside the page, at /rooms.json, and are not
 part of what it renders -- ROOM_FILES says why -- so a note or a sample never
@@ -27,6 +30,7 @@ moves dashboard/index.html.
 from __future__ import annotations
 
 import argparse
+import hmac
 import importlib.util
 import json
 import queue
@@ -40,6 +44,8 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
+
+from qa.rooms import RoomError, add_operator_note  # noqa: E402
 
 # What a change to the state means the page is out of date. Poll rather than
 # watch: a handful of directories on Windows, once a minute, needs no
@@ -177,6 +183,30 @@ def room_watcher(live, stop: threading.Event,
 def local_host(header, port: int) -> bool:
     """Was this request addressed to this machine, by a loopback name and our port?"""
     return (header or "").strip().lower() in {f"{n}:{port}" for n in LOOPBACK_NAMES}
+
+
+# The console's one write path: a note from the Nexus tab. Small, and JSON --
+# a cross-site form can send text/plain without asking, but not
+# application/json and not a header of our own; the browser asks first with an
+# OPTIONS preflight, which this server never answers.
+NOTE_MAX_BYTES = 8 * 1024
+TOKEN_HEADER = "X-QA-Token"
+
+
+def note_token_for(host: str) -> str | None:
+    """A token for this launch, or None when notes must stay off.
+
+    Minted fresh at every start, so one that leaked would die with the
+    process. None unless the console listens on this machine only: bound to
+    0.0.0.0, anything on the network could ask for /token with a loopback Host
+    header of its own choosing -- a Host check stops browsers, not curl -- so
+    there the console is read-only.
+    """
+    import secrets
+
+    if host not in ("127.0.0.1", "localhost", "::1"):
+        return None
+    return secrets.token_urlsafe(32)
 
 
 class SingleServer(ThreadingHTTPServer):
@@ -445,7 +475,8 @@ def watcher(live: Live, stop: threading.Event, every: float = POLL_SECONDS) -> N
             live.notify()
 
 
-def make_handler(live: Live):
+def make_handler(live: Live, note_token: str | None = None):
+    """The request handler. `note_token` None means the Nexus tab is read-only."""
     class Handler(BaseHTTPRequestHandler):
         protocol_version = "HTTP/1.1"
 
@@ -490,6 +521,10 @@ def make_handler(live: Live):
                 self._send(body, "application/json; charset=utf-8")
                 return
 
+            if path == "/token":
+                self.send_token()
+                return
+
             if path == "/rooms.json":
                 self.send_rooms()
                 return
@@ -499,6 +534,92 @@ def make_handler(live: Live):
                 return
 
             self._send(b"not found", "text/plain; charset=utf-8", 404)
+
+        def _json(self, payload: dict, status: int = 200) -> None:
+            body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+            self.send_response(status)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.send_header("Cache-Control", "no-store, must-revalidate")
+            # A page elsewhere could try <script src="/token">; nosniff stops
+            # the browser running JSON as script at all.
+            self.send_header("X-Content-Type-Options", "nosniff")
+            self.end_headers()
+            self.wfile.write(body)
+
+        def _refusal(self, need_origin: bool) -> tuple[int, str] | None:
+            """Why a token or a note is refused, or None. The doors, in order."""
+            if note_token is None:
+                return 403, "notes are off: this console listens beyond this machine"
+            host = (self.headers.get("Host") or "").strip().lower()
+            if not local_host(host, self.server.server_address[1]):
+                return 403, "not addressed to this machine"
+            origin = (self.headers.get("Origin") or "").strip().lower()
+            if need_origin and not origin:
+                return 403, "a note must say where it comes from"
+            if origin and origin != f"http://{host}":
+                return 403, "a note from another site"
+            return None
+
+        def send_token(self) -> None:
+            """This launch's token -- to a page on this machine, asked for by name.
+
+            Handed out rather than written into the page, so a tab left open
+            across a restart never holds one the new process did not issue.
+            Another site may make this request; it cannot read the answer.
+            """
+            refused = self._refusal(need_origin=False)
+            if refused:
+                self._json({"error": refused[1]}, refused[0])
+                return
+            self._json({"token": note_token})
+
+        def do_POST(self) -> None:  # noqa: N802 -- BaseHTTPRequestHandler's name
+            """A note from the operator. Every door is shut until proven open.
+
+            Refusals come before the body is read, so a refused body is never
+            parsed and the connection is not reused.
+            """
+            self.close_connection = True
+            if self.path.split("?", 1)[0] != "/notes":
+                self._json({"error": "not found"}, 404)
+                return
+            refused = self._refusal(need_origin=True)
+            if refused is None:
+                sent = (self.headers.get(TOKEN_HEADER) or "").encode("utf-8")
+                if not hmac.compare_digest(sent, note_token.encode("utf-8")):
+                    refused = (403, "no valid token")
+            if refused:
+                self._json({"error": refused[1]}, refused[0])
+                return
+            kind = (self.headers.get("Content-Type") or "").split(";", 1)[0]
+            if kind.strip().lower() != "application/json":
+                self._json({"error": "a note is sent as application/json"}, 415)
+                return
+            try:
+                length = int(self.headers.get("Content-Length") or "")
+            except ValueError:
+                self._json({"error": "a note says how long it is"}, 411)
+                return
+            if length < 0 or length > NOTE_MAX_BYTES:
+                self._json({"error": f"a note is at most {NOTE_MAX_BYTES} bytes"}, 413)
+                return
+            try:
+                body = json.loads(self.rfile.read(length).decode("utf-8"))
+            except (ValueError, UnicodeDecodeError):
+                self._json({"error": "a note is JSON"}, 400)
+                return
+            if (not isinstance(body, dict) or set(body) != {"room", "text"}
+                    or not all(isinstance(body[k], str) for k in body)):
+                self._json({"error": "a note is exactly {room, text}"}, 400)
+                return
+            try:
+                row = add_operator_note(body["room"], body["text"])
+            except RoomError as exc:
+                self._json({"error": str(exc)}, 400)
+                return
+            live.notify_rooms()
+            self._json({"id": row["id"], "at": row["at"]}, 201)
 
         def send_rooms(self) -> None:
             """The Nexus tab's data -- to this machine by name, to nothing else."""
@@ -605,6 +726,7 @@ def main(argv: list[str] | None = None) -> int:
                          daemon=True).start()
 
     url = f"http://{args.host}:{args.port}/"
+    note_token = note_token_for(args.host)
 
     # Asked BEFORE binding, not after a failed bind. ThreadingHTTPServer sets
     # allow_reuse_address, which on Windows lets a second process bind a port
@@ -618,7 +740,8 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     try:
-        server = SingleServer((args.host, args.port), make_handler(live))
+        server = SingleServer((args.host, args.port),
+                              make_handler(live, note_token=note_token))
     except OSError as exc:
         print(f"[serve] cannot listen on {args.host}:{args.port}: {exc}", file=sys.stderr)
         print("[serve] something else holds that port; try --port 8788",
@@ -627,6 +750,9 @@ def main(argv: list[str] | None = None) -> int:
     rows = sum(live.payload.get("display_counts", {}).values())
     print(f"[serve] {url}  {rows} rows, payload {live.digest[:16]}")
     print(f"[serve] watching {', '.join(WATCHED)} every {args.poll:g}s")
+    print("[serve] notes from the Nexus tab: "
+          + ("on, from this machine only" if note_token else
+             "OFF -- this console listens beyond this machine"))
     if args.ask:
         print(f"[serve] asking their tracker every {args.ask:g} min -- the bell "
               f"can light without you")

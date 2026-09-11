@@ -233,3 +233,149 @@ def test_the_tab_reads_no_field_the_rooms_do_not_write(tmp_path, monkeypatch):
         assert not missing, (
             f"the Nexus tab reads `{name}.` fields build_rooms() never writes, "
             f"and they would render as undefined: {missing}")
+
+
+# ---------------------------------------------------------------------------
+# P2: the operator's notes, and how the next session hears about them
+# ---------------------------------------------------------------------------
+HOOK = REPO / ".claude" / "hooks" / "room_notes.py"
+
+
+def _run(args, state_dir: Path, encoding: str = "utf-8"):
+    """The CLI or the hook as the operator's machine runs it."""
+    import os
+    import subprocess
+    import sys
+
+    env = dict(os.environ, QA_STATE_DIR=str(state_dir), PYTHONIOENCODING=encoding)
+    return subprocess.run([sys.executable, *args], cwd=str(REPO), env=env,
+                          capture_output=True, text=True, encoding="utf-8",
+                          errors="replace", timeout=120)
+
+
+def _stored(state_dir: Path) -> list[dict]:
+    target = state_dir / "rooms.jsonl"
+    if not target.exists():
+        return []
+    return [json.loads(line) for line in target.read_text(encoding="utf-8").splitlines()
+            if line.strip()]
+
+
+def _note(nid: str, text: str, room: str = "general", seconds: float = 0,
+          kind: str = "operator_note", **more) -> dict:
+    return {"type": kind, "id": nid, "room": room, "at": _at(seconds), "text": text,
+            **more}
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_unread_prints_the_notes_then_marks_through_the_last_it_printed(tmp_path):
+    """On the operator's own console, cp1250, where a Czech note is the norm.
+
+    The mark goes in AFTER the printing and reaches only the last note printed,
+    so a note that lands mid-print stays unread. Our own notes are not the
+    operator's feedback and are never printed as if they were.
+    """
+    _write(tmp_path / "rooms.jsonl", [
+        _note("N-0001", "Proč ne víc? → zkus 20 %"),
+        _note("N-0002", "our summary", kind="claude_note", seconds=5),
+        _note("N-0003", "a tohle taky", seconds=10),
+    ])
+    first = _run(["scripts/rooms.py", "unread"], tmp_path, encoding="cp1250")
+    assert first.returncode == 0, first.stderr
+    assert "N-0001" in first.stdout and "N-0003" in first.stdout
+    assert "Proč ne víc?" in first.stdout, "the note's own words must reach the session"
+    assert "our summary" not in first.stdout
+    marks = [r for r in _stored(tmp_path) if r["type"] == "read"]
+    assert [(m["room"], m["through"]) for m in marks] == [("general", "N-0003")]
+
+    again = _run(["scripts/rooms.py", "unread"], tmp_path)
+    assert again.returncode == 0 and "N-0001" not in again.stdout
+    assert "nothing" in again.stdout.lower()
+    assert len([r for r in _stored(tmp_path) if r["type"] == "read"]) == 1, (
+        "reading nothing wrote a mark anyway")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_our_note_is_written_by_the_cli_and_never_waits_on_us(tmp_path, monkeypatch):
+    proc = _run(["scripts/rooms.py", "note", "general", "Shrnutí: doporučil BCH",
+                 "--re", "NEX-0016"], tmp_path)
+    assert proc.returncode == 0, proc.stderr
+    rows = _stored(tmp_path)
+    assert [(r["type"], r["room"], r.get("re"), r["text"]) for r in rows] == [
+        ("claude_note", "general", "NEX-0016", "Shrnutí: doporučil BCH")]
+
+    refused = _run(["scripts/rooms.py", "note", "STR-9999", "x"], tmp_path)
+    assert refused.returncode != 0 and len(_stored(tmp_path)) == 1, (
+        "a note to a room that does not exist was written anyway")
+
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    from qa import rooms
+
+    assert rooms.unread(rooms.load()) == [], "our own note came back as feedback"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_hook_counts_unread_notes_in_one_line_and_is_silent_at_zero(tmp_path):
+    """Ids and counts, never the words.
+
+    The memory `a-mechanism-the-operator-must-run-is-not-a-mechanism` is both
+    halves: a session must KNOW a note is waiting without anyone running a
+    command, and it must not be handed the notes' text unasked.
+    """
+    silent = _run([str(HOOK)], tmp_path)
+    assert silent.returncode == 0 and silent.stdout.strip() == ""
+
+    _write(tmp_path / "rooms.jsonl", [
+        _note("N-0001", "first words"),
+        _note("N-0002", "second words", seconds=1),
+        _note("N-0003", "third words", room="STR-0004", seconds=2),
+        {"type": "read", "room": "general", "through": "N-0001", "at": _at(3)},
+    ])
+    said = _run([str(HOOK)], tmp_path)
+    assert said.returncode == 0, said.stderr
+    lines = [line for line in said.stdout.splitlines() if line.strip()]
+    assert len(lines) == 1, said.stdout
+    assert "2" in lines[0] and "general: 1" in lines[0] and "STR-0004: 1" in lines[0]
+    assert "rooms.py unread" in lines[0]
+    assert "words" not in lines[0], "the hook put the notes' text into context"
+
+    _write(tmp_path / "rooms.jsonl", [
+        _note("N-0001", "x"),
+        {"type": "read", "room": "general", "through": "N-0001", "at": _at(3)}])
+    assert _run([str(HOOK)], tmp_path).stdout.strip() == ""
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_room_hook_never_fails_a_session(tmp_path):
+    missing = _run([str(HOOK)], tmp_path / "nothing-here")
+    assert missing.returncode == 0 and missing.stdout.strip() == ""
+
+    (tmp_path / "rooms.jsonl").write_bytes(b'{"type":"operator_note","id":"N-00\xff\xfe')
+    broken = _run([str(HOOK)], tmp_path)
+    assert broken.returncode == 0, broken.stderr
+    assert "Traceback" not in broken.stderr
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_rooms_are_a_fourth_channel_and_it_waits_on_us(tmp_path, monkeypatch):
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    _write(tmp_path / "rooms.jsonl", [_note("N-0001", "hello")])
+    from qa import channels
+
+    state = channels.state(events=[])
+    assert state["rooms"]["unanswered"] == ["N-0001"]
+    assert state["rooms"]["waiting_on"] == "us"
+
+    printed = _run(["scripts/channels.py", "status", "--offline"], tmp_path)
+    assert printed.returncode == 0, printed.stderr
+    assert "ROOMS" in printed.stdout and "N-0001" in printed.stdout
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_watch_names_a_new_note_from_the_operator_once():
+    from qa import channels
+
+    rows = [_note("N-0001", "hello there"), _note("N-0002", "ours", kind="claude_note")]
+    lines, seen = channels.room_lines(rows, set())
+    assert len(lines) == 1 and "N-0001" in lines[0] and "general" in lines[0]
+    assert channels.room_lines(rows, seen)[0] == [], "the same note woke the chat twice"

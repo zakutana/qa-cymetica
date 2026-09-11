@@ -120,8 +120,8 @@ Testy napíšu dřív než kód.
 
 - **Jen na loopbacku.** Když server poslouchá jinde (`--host 0.0.0.0`), je konzole jen pro čtení.
 - **Host a Origin.** `Host` musí být 127.0.0.1, localhost nebo [::1] s naším portem (ochrana proti DNS rebindingu). `Origin` musí být `http://<Host>`.
-- **Token.** Vznikne při každém spuštění konzole (`secrets`). Do stránky ho vloží až `serve_html()` při servírování, stejně jako dnes vkládá pás o zamrzlé stránce. Do souboru na disku se nikdy nedostane. Porovnává se přes `hmac.compare_digest`.
-- **Starý token po restartu konzole.** Otevřená záložka restart přežije, ale drží starý token. Když digest stavu zůstal stejný, `hello` ji nenačte znovu. Proto se stránka při 403 jednou sama znovu načte a vezme si nový token. Rozepsaná poznámka je v `localStorage`, takže se neztratí. Když to selže podruhé, ukáže „konzole se restartovala — obnov stránku". Je to stejná rodina vad, jakou popisuje `render.py:2561`.
+- **Token.** Vznikne při každém spuštění konzole (`secrets`) a porovnává se přes `hmac.compare_digest`. Stránka si ho vyžádá z `/token` až ve chvíli odeslání. `/token` odpoví jen stránce na tomhle stroji (Host a Origin) a posílá `nosniff`. Cizí stránka ten požadavek poslat může, ale odpověď nepřečte. Token se tak nedostane do žádné stránky ani do souboru na disku.
+- **Restart konzole.** Token se bere až při odeslání, takže záložka otevřená přes restart nikdy nedrží starý. Tohle je změna proti první verzi plánu. Tam se token vkládal do stránky a ta se po 403 musela znovu načíst.
 - **Hlavičky.** `Content-Type: application/json` a vlastní hlavička s tokenem. Cizí stránka tak neprojde preflightem. OPTIONS neobsluhujeme.
 - **Tělo.** Nejvýš 8 KB a přesně klíče `{room, text}`. Room musí existovat, text má 1–4000 znaků.
 - **Účinek.** Volá jen `qa.rooms.add_operator_note()` a nic neposílá ven.
@@ -235,10 +235,10 @@ Každou fázi commitnu zvlášť na main, bez pushe.
 | Fáze | Co | Hotovo, když |
 |---|---|---|
 | P1 | Záložka Nexus a General jen pro čtení (19 otázek), čtecí polovina `qa/rooms.py`, `/rooms.json`, SSE `rooms` | vidíš celou korespondenci s Nexusem |
-| P2 | Poznámky: zapisovače v `qa/rooms.py`, `POST /notes`, `rooms.py`, 4. kanál, hook, watch, `.gitignore` | napíšeš poznámku, `/channels` ji ukáže a v konzoli naskočí ✓✓ |
+| P2 | Poznámky: zapisovače v `qa/rooms.py`, `POST /notes` a `/token`, `rooms.py`, 4. kanál, hook, watch, `.gitignore`, skill `channels`, řádky nových souborů v mapě CLAUDE.md | napíšeš poznámku, `/channels` ji ukáže a v konzoli naskočí ✓✓ |
 | P3 | Strategie: `open/status/link`, `nexus.py --room`, 5 roomů ze stávajících dat, panel z lokálních záznamů, česká shrnutí k 19 odpovědím | vidíš 5 roomů s obchody, klonem a stavem |
 | P4 | Sampler a grafy: `samples.jsonl`, heartbeat, obchody z /activity, index karty, `--sample 10` v obou launcherech | grafy se hýbou každých 10 min a výpadek je vidět |
-| P5 | Skill `nexus-session`, mapa v CLAUDE.md, úprava skillu `channels` | „zahaj session s Nexusem" projde celou smyčkou |
+| P5 | Skill `nexus-session`, zbytek mapy v CLAUDE.md | „zahaj session s Nexusem" projde celou smyčkou |
 
 ### Testy dřív než kód
 
@@ -268,8 +268,7 @@ Do `tests/repo/test_live_server.py` přibude jen SSE událost `rooms`.
   - s cizími klíči.
 
   Negativní kontrola tak nepotřebuje zapisovač, který testuje.
-- Token je na servírované stránce a nikdy v souboru na disku.
-- Stránka se starým tokenem se po 403 jednou znovu načte a rozepsaná poznámka přežije.
+- Token dostane jen tenhle stroj: `/token` s cizím Host nebo Origin vrátí 403. V servírované stránce ani v souboru na disku není.
 - Mimo loopback poznámky nejdou.
 - Nepřečtené se odvozuje z `read`. Poznámka napsaná po značce zůstane nepřečtená.
 - Dva souběžní zapisovatelé nedostanou stejné id.

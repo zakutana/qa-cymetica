@@ -35,7 +35,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
-from qa import channels  # noqa: E402
+from qa import channels, rooms  # noqa: E402
 from qa.console import printable  # noqa: E402
 from qa.state import read_events  # noqa: E402
 
@@ -108,6 +108,16 @@ def cmd_status(args) -> int:
               + (f": {', '.join(str(w) for w in waiting[:8])}" if waiting else ""))
         if name == "a2a" and channel.get("undelivered"):
             print(f"  never confirmed sent  {', '.join(channel['undelivered'])}")
+
+    # Not a vendor channel: the operator's own notes in the console's Nexus
+    # tab. Printed here because it is a place something waits on us, and a
+    # status that left it out would say nothing was waiting while it was.
+    waiting = state["rooms"].get("unanswered") or []
+    print("ROOMS (your notes in the console's Nexus tab)")
+    print(f"  {'waiting on us':20}  {len(waiting)}"
+          + (f": {', '.join(str(w) for w in waiting[:8])}" if waiting else ""))
+    if waiting:
+        print("  read them with       python scripts/rooms.py unread")
     return 0
 
 
@@ -140,6 +150,7 @@ def cmd_compare(args) -> int:
 def cmd_watch(args) -> int:
     """One line per new thing they said. Every line is a chat message."""
     seen: set = set()
+    noted: set = set()
     # The backlog is the watermark, not an alert: arming this must not replay
     # forty messages the operator has already dealt with.
     #
@@ -152,6 +163,9 @@ def cmd_watch(args) -> int:
     while True:
         try:
             lines, seen = channels.new_lines(read_events(), seen)
+            # The operator's notes in the Nexus rooms, the moment one lands.
+            notes, noted = channels.room_lines(rooms.load(), noted)
+            lines += notes
             if not primed:
                 lines, primed = [], True
         except Exception as exc:  # noqa: BLE001

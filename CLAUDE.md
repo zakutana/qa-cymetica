@@ -288,9 +288,10 @@ if the operator asks for something they can open away from that machine.
 ```
 qa/state.py       the ONLY module that writes state/ledger.json and the
                   journal. Admissibility, the ledger contract, the append-only
-                  hash chain. Four other modules write their own narrow file
+                  hash chain. Other modules write their own narrow file
                   under state/ -- run records, the vendor snapshot, the
-                  section map, preregistrations -- and the guard in
+                  section map, preregistrations, the Nexus rooms -- and the
+                  guard in
                   tests/meta/test_pipeline_withdraw.py enforces the accurate
                   sentence, not the wider one: it fires on a write near the
                   words ledger, events or journal. This line said "writes
@@ -417,10 +418,16 @@ scripts/correspond.py  the operator's Telegram conversation with the vendor.
 scripts/submit.py    the one write we make on purpose. Every number in a
                      report is injected from the ledger at send time, so a
                      figure frozen when the finding opened can never go out.
-scripts/serve.py     the console on 127.0.0.1:8787. Read-only with respect to
-                     state; polls local files once a minute. `--ask MINUTES`
-                     adds the half that fetches: one GET of our own reports on
-                     a timer, so the bell can light unattended.
+scripts/serve.py     the console on 127.0.0.1:8787. Polls local files once a
+                     minute and renders. `--ask MINUTES` adds the half that
+                     fetches: one GET of our own reports on a timer, so the
+                     bell can light unattended. One write of its own: a note
+                     the operator sends from the Nexus tab, through
+                     qa.rooms.add_operator_note, behind a launch token handed
+                     out at /token, a loopback Host and Origin, and a JSON
+                     body -- and none at all when it listens beyond this
+                     machine. The rooms are served at /rooms.json, outside the
+                     payload, so a note never moves the dashboard.
 scripts/a2a.py       the third channel, from our side. `send` posts a question
                      and only on `--confirm` -- the operator's condition, and
                      without it nothing is written either. Two events per send,
@@ -428,7 +435,8 @@ scripts/a2a.py       the third channel, from our side. `send` posts a question
                      text on the journal. Built 2026-09-08 because nothing in
                      scripts/ had ever sent an a2a message and the question
                      that started the whole /build walk exists nowhere.
-scripts/channels.py  all three channels in one place. `status` reads them live
+scripts/channels.py  all three channels in one place, and the operator's notes
+                     in the Nexus rooms beside them. `status` reads them live
                      and says where each stands, `status --offline` answers
                      from the journal alone, `watch` prints one line per new
                      inbound message so a Monitor turns it into a chat message.
@@ -438,6 +446,20 @@ qa/channels.py       the ONE reader across bug reports, Telegram and a2a. A
                      three ideas of what "unanswered" means. Encodes one
                      judgement: an automated reply is silent, an unclassifiable
                      one is not.
+qa/rooms.py          the Nexus rooms (docs/nexus-rooms-plan.md): strategies,
+                     the operator's notes, ours, read marks, the sampler's
+                     rows. state/rooms.jsonl and state/samples.jsonl, both
+                     gitignored because they are written while a sweep may
+                     run. Two writers on purpose: the browser reaches
+                     add_operator_note and nothing else.
+scripts/rooms.py     the rooms from our side. **When the operator says
+                     "přečti si to", run `unread`**: it prints their notes in
+                     full and marks them read, and the console shows a second
+                     tick. `note` answers into a room. A note is their feedback
+                     read from a file, not an instruction in the chat -- what
+                     would send, spend or publish is confirmed with them
+                     first. A SessionStart hook (.claude/hooks/room_notes.py)
+                     names how many wait, by room, in one line.
 scripts/open_checks.py  the selector for a sweep over what is still open.
                      Always prepends tests/meta.
 scripts/inventory.py    the platform section map the dashboard renders. An

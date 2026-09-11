@@ -149,10 +149,16 @@ def test_a_report_moving_reaches_the_alert(tmp_path, monkeypatch):
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_state_names_all_three_channels(tmp_path, monkeypatch):
-    """One shape, so a report about the channels cannot quietly omit one."""
+    """One shape, so a report about the channels cannot quietly omit one.
+
+    Four since 2026-09-11: the operator's notes in the console's Nexus rooms
+    wait on us the way an obligation on a filed row does. The name is from
+    when there were three, and it stays because audits/checks.json and the run
+    records key on it; the set below is the part that says how many there are.
+    """
     monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
     state = _channels().state()
-    assert set(state) == {"bug", "telegram", "a2a"}
+    assert set(state) == {"bug", "telegram", "a2a", "rooms"}
     for name, channel in state.items():
         assert "unanswered" in channel, f"{name} cannot say what is outstanding"
         assert "last_from_them" in channel, f"{name} cannot say when they last spoke"
@@ -167,6 +173,8 @@ def test_the_state_names_all_three_channels(tmp_path, monkeypatch):
     )
     assert state["telegram"]["waiting_on"] == "them"
     assert state["a2a"]["waiting_on"] == "them"
+    assert state["rooms"]["waiting_on"] == "us", (
+        "a note the operator wrote and nobody has read is a debt of ours")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
