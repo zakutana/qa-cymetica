@@ -1115,6 +1115,9 @@ def test_a_plan_leg_meets_its_order_its_card_and_where_it_stood_when_proposed(
     assert (bought["entry"], bought["current"], bought["pnl"]) == (92.28, 92.42, 14.48)
     assert (round(bought["tp_level"], 2), round(bought["sl_level"], 2)) == (104.28, 83.97)
     assert bought["closes_at"] == "2026-09-12T23:14:22+00:00"
+    # Their card page, the address their API gives as share_url, so the operator
+    # can open the card itself on cymetica.com.
+    assert bought["url"] == f"https://cymetica.com/events/{CARD_A}"
 
     waiting = legs[CARD_B]
     assert (waiting["state"], waiting["orders"], waiting["label"]) == (
@@ -1276,6 +1279,9 @@ def test_the_strip_names_each_strategy_and_its_panel_leads_with_numbers(
         "a leg is named by the coins in its basket, not by the news on its card")
     assert "does not exist" in text and gone[:8] not in text, (
         "a card their API does not know is shown as an id")
+    assert f'href="https://cymetica.com/events/{CARD_A}"' in panel, (
+        "a card cannot be opened on cymetica.com from the panel")
+    assert f"cymetica.com/events/{gone}" not in panel, "a card that does not exist is linked"
     for ref in ("entry", "tp", "sl", "base"):
         assert f'data-ref="{ref}"' in panel, f"the chart draws no {ref} line"
     assert "if bought" in text, (

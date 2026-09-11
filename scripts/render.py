@@ -680,7 +680,11 @@ def _lay_out(panel: dict, plan: dict, described: dict, index_points: dict,
         share = _num(planned.get("share"))
         at_proposal = _index_at(series, proposed_at) if planned else None
         last = series[-1][1] if series else None
-        view = {"card": card, "label": _label(row), "card_title": row.get("title"),
+        # Their page for the card -- the address their API returns as share_url
+        # -- and none for a card their API does not know.
+        view = {"card": card, "url": (None if row.get("status") == "not_found"
+                                      else "https://cymetica.com/events/" + card),
+                "label": _label(row), "card_title": row.get("title"),
                 "symbol": row.get("evcdx_symbol"), "card_status": row.get("status"),
                 "closes_at": row.get("trading_closes_at"),
                 "planned": bool(planned), "side": planned.get("side"),
@@ -1855,6 +1859,10 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:15.0px; max-wid
 .nx-moves{display:grid;gap:5px;margin:12px 0 0;padding-top:10px;border-top:1px solid var(--line-soft)}
 .nx-moves p{margin:0;font-size:13.5px;line-height:1.5;color:var(--text-dim)}
 .nx-moves b{font-weight:600}
+/* A card's name opens the card itself on cymetica.com. */
+.nx-link{color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-faint)}
+.nx-link:hover{color:var(--accent);border-bottom-color:var(--accent)}
+.nx-out{font-size:.8em;color:var(--accent)}
 .nx-foot{margin:12px 0 0;font-size:12.5px;color:var(--text-faint)}
 .nx-stale b{color:var(--bad)}
 .nx-pf{padding:0;border:none;background:none;color:var(--text);font:inherit;font-weight:600;text-align:left;cursor:pointer}
@@ -3479,6 +3487,13 @@ function nxLegNote(nl) {
   if (nl.state === "card not found") return "Nexus proposed it; their API answers 404";
   return nl.label ? "index: " + nl.label : "";
 }
+// A card's own page on cymetica.com, in a new tab, wherever the card is named;
+// plain text for a card their API does not know. `inner` is already escaped.
+function nxCardLink(nl, inner) {
+  return nl && nl.url ? '<a class="nx-link" href="' + esc(nl.url) +
+    '" target="_blank" rel="noopener" title="Open the card on cymetica.com">' + inner +
+    ' <span class="nx-out">↗</span></a>' : inner;
+}
 function nxLegs(np) {
   const legs = np.legs || [];
   if (!legs.length) return "";
@@ -3496,7 +3511,7 @@ function nxLegs(np) {
       (nl.sl != null ? nxPct(nl.sl, nl.sl % 1 ? 1 : 0) : "—");
     const state = nl.state || "not bought";
     return '<div class="nx-tr"><span><b title="' + esc(nl.card_title || "") + '">' +
-      esc(nxLegName(nl)) + "</b><small>" + esc(nxLegNote(nl)) + "</small></span><span>" +
+      nxCardLink(nl, esc(nxLegName(nl))) + "</b><small>" + esc(nxLegNote(nl)) + "</small></span><span>" +
       (nl.side === "bear" ? "▼ bear" : nl.side ? "▲ " + esc(nl.side) : "—") + "</span><span>" +
       esc(share) + "</span><span>" + moved + "</span><span>" + esc(exits) +
       '</span><span class="nx-state nx-' + esc(state.split(" ").join("-")) + '">' +
@@ -3535,7 +3550,8 @@ function nxLegCharts(np) {
     const note = bought
       ? (nl.pnl != null ? "P&L " + nxSigned(nl.pnl) + " USDC" : "")
       : "if bought when proposed: " + nxPct(nl.since_proposal, 2);
-    return '<div class="nx-ct"><span>' + esc(head) + "</span><small>" + esc(note) +
+    return '<div class="nx-ct"><span>' + nxCardLink(nl, esc(head)) + "</span><small>" +
+      esc(note) +
       "</small></div>" + nxChart(nl.series, {
         refs: refs, label: head,
         vline: bought ? (order ? { t: order.at, label: "bought" } : null)
@@ -3555,7 +3571,8 @@ function nxOrders(np) {
         : nt.closed_by ? "closed " + nxSigned(nt.realized) + " USDC" : "open";
       return '<div class="nx-tr"><span>' + esc(nt.id) + '</span><span class="nx-dim">' +
         esc(nxDay(nt.at)) + "</span><span>" + esc((nt.side || "buy") + " · " +
-        nxMoney(nt.usdc) + " USDC · " + (leg ? nxLegName(leg) : nxShort(nt.card, 9))) +
+        nxMoney(nt.usdc) + " USDC · ") + (leg ? nxCardLink(leg, esc(nxLegName(leg)))
+                                            : esc(nxShort(nt.card, 9))) +
         '</span><span class="nx-state' + (state === "open" ? " nx-open"
           : nt.outcome !== "accepted" ? " nx-card-not-found" : "") + '">' + esc(state) +
         "</span></div>";

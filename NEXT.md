@@ -241,3 +241,11 @@ to neodškrtl, nebo to nikdy nebylo další na řadě.
   strategy roomy (chat vlevo, panel vpravo), tvoje poznámky, které čtu přes
   `rooms.py unread`, a skill `nexus-session`. Pořadí a testy jsou v plánu;
   každá fáze se commitne zvlášť, bez pushe, a po P2 a P4 se restartuje konzole.
+
+- [ ] 2026-09-11  Až Nexus zase odpovídá, zeptat se ho v STR-0001, co bylo na Perceptron Oracle špatně a jestli ho nechat běžet, nebo nahradit
+
+  Operátor nechce pauznuté boty a chce, aby se se ztrátou naložilo podle
+  Nexuse. Bot stál po −50 USDC (−5 %) na dvou obchodech; obě otázky na to
+  (NEX-0020, NEX-0021) skončily u nich `failed` bez odpovědi, takže jsem ho
+  11. 9. znovu zapnul tak, jak je (CLN-0007). Otázka je v roomu, jen ji
+  poslat znovu přes `nexus.py ask --room STR-0001` a podle odpovědi jednat.
