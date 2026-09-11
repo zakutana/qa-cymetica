@@ -87,11 +87,19 @@ def is_user_submission(card) -> bool:
             and str(card.get("source_url") or "").startswith("user-submission://"))
 
 
-def walk_listing(get, limit=MAX_LIMIT, max_pages=50):
+def walk_listing(get, limit=MAX_LIMIT, max_pages=50, report=None):
     """Every card the listing will hand out, walked by offset.
 
     `get(params)` returns (status, body). The result is (cards,
     offset_ignored), or (None, False) when a page could not be read.
+
+    `report`, when given a dict, is told whether the walk reached the END:
+    `complete` is true only when it walked to `total`, or to a short page
+    with no `total` to say otherwise. A page cut short while `total` says
+    more, the page cap, an ignored offset and a failed read are not the end.
+    Until the deep pass of 2026-09-11 those returned exactly what a finished
+    walk returns, and both checks that walk this said a card was absent from
+    "all N cards it hands out" (T08, V02, triage 3/3).
 
     Until 2026-09-11 this check read ONE page, because on 2026-09-10 offset,
     skip and page were all ignored and one page was all there was. Their
@@ -101,27 +109,34 @@ def walk_listing(get, limit=MAX_LIMIT, max_pages=50):
     as broken. Where offset is still ignored the same first id comes back, and
     the walk stops and says so instead of looping.
     """
+    def done(result, complete: bool):
+        if isinstance(report, dict):
+            report["complete"] = complete
+        return result
+
     cards, seen, offset = [], set(), 0
     for _ in range(max_pages):
         status, body = get({"limit": limit, "offset": offset})
         if status != 200 or not isinstance(body, dict):
-            return None, False
+            return done((None, False), False)
         batch = body.get("cards")
         if not isinstance(batch, list):
-            return None, False
+            return done((None, False), False)
         fresh = [c for c in batch
                  if isinstance(c, dict) and c.get("id") not in seen]
         if batch and not fresh:
-            return cards, True
+            return done((cards, True), False)
         for card in fresh:
             seen.add(card.get("id"))
             cards.append(card)
         offset += len(batch)
         total = body.get("total")
-        if (not batch or len(batch) < limit
-                or (isinstance(total, int) and offset >= total)):
-            return cards, False
-    return cards, False
+        if isinstance(total, int) and offset >= total:
+            return done((cards, False), True)
+        if not batch or len(batch) < limit:
+            # The end, unless a total says there is more.
+            return done((cards, False), not isinstance(total, int))
+    return done((cards, False), False)
 
 
 @qa(component="rest.event_cards", tier=SafetyTier.SAFE, surface="rest")
@@ -135,13 +150,22 @@ def test_the_listing_returns_every_card_it_says_is_tradeable(rest_trusted):
             body = {}
         return response.status_code, body
 
-    rows, offset_ignored = walk_listing(page)
+    walked: dict = {}
+    rows, offset_ignored = walk_listing(page, report=walked)
     if rows is None:
         raise Inconclusive(
             f"{LIST} could not be read page by page; a failed read is not "
             f"an empty market")
     if not rows:
         raise Inconclusive(f"{LIST} returned no cards to compare against")
+    if not offset_ignored and not walked.get("complete"):
+        # T08, deep pass of 2026-09-11: the page cap, or a page cut short
+        # while `total` says more, is not the end of the listing, and a card
+        # beyond it is not absent from "all N cards it hands out".
+        raise Inconclusive(
+            f"the walk of {LIST} stopped at {len(rows)} cards without reaching "
+            f"the end the listing reports, so a card beyond it cannot be "
+            f"called unreachable")
     seen = {r.get("id") for r in rows if isinstance(r, dict)}
 
     witnesses = card_ids_named(_nexus().load())
@@ -167,7 +191,9 @@ def test_the_listing_returns_every_card_it_says_is_tradeable(rest_trusted):
             private.append(card_id)
             continue
         checked += 1
-        if body.get("tradeable_now") is True:
+        # Live AND tradeable, which is what the failure sentence says; it
+        # said "status live" while only tradeable_now was read (V03).
+        if body.get("tradeable_now") is True and body.get("status") == "live":
             unreachable.append({"id": card_id,
                                 "index": body.get("current_index"),
                                 "status": body.get("status")})

@@ -920,6 +920,74 @@ def test_an_internal_module_path_counts_without_its_line_number():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_open_stake_we_cannot_read_is_not_nothing_open():
+    """V13, deep pass of 2026-09-11, triage 3/3. The #94 check, repaired that
+    afternoon, read an open trade with no amount as a stake of 0 and an
+    is_closed of None as neither open nor closed -- so if their arena lane
+    renamed its amount field, the 55.00 leg would read "nothing open" and
+    #94 would pass to VERIFIED FIXED. Its own docstring: a read that fails
+    skips that bot rather than counting as zero."""
+    from tests.rest.test_clone_books_its_open_positions import open_stake
+
+    legs = [{"is_closed": False, "amount_usdc": "55.000000"},
+            {"is_closed": False, "amount_usdc": "100.000000"},
+            {"is_closed": True, "amount_usdc": "25.000000", "profit_usdc": "-25"}]
+    assert open_stake(legs) == 155.0
+    assert open_stake([{"is_closed": False}]) is None, (
+        "an open trade with no amount we can read is not a stake of zero")
+    assert open_stake([{"is_closed": None, "amount_usdc": "55"}]) is None, (
+        "a trade that is neither open nor closed cannot be summed either way")
+    assert open_stake([]) == 0.0
+
+    from tests.rest.test_clone_books_its_open_positions import realized
+
+    assert realized(legs) == -25.0
+    assert realized([{"is_closed": True}]) is None, (
+        "a closed trade whose result we cannot read did not make zero")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_listing_walk_says_when_it_did_not_reach_the_end():
+    """T08 and V02, deep pass of 2026-09-11, triage 3/3. walk_listing returned
+    the same thing for a finished walk and for one that stopped at its page
+    cap, or on a page cut short while `total` said more -- and both checks
+    that walk it then said a card was absent from "all N cards it hands out".
+    The walk now reports whether it reached the end; its return is unchanged."""
+    from tests.rest.test_event_card_listing_reaches_them import walk_listing
+
+    cards = [{"id": f"c{i}"} for i in range(7)]
+
+    def paged(params):
+        start, size = int(params["offset"]), int(params["limit"])
+        return 200, {"cards": cards[start:start + size], "total": len(cards)}
+
+    report = {}
+    seen, ignored = walk_listing(paged, limit=2, report=report)
+    assert len(seen) == 7 and ignored is False and report["complete"] is True
+
+    def cut_short(params):
+        start = int(params["offset"])
+        return 200, {"cards": cards[start:start + 1], "total": len(cards)}
+
+    report = {}
+    seen, ignored = walk_listing(cut_short, limit=2, report=report)
+    assert report["complete"] is False, (
+        "a page shorter than the limit while total says more is not the end")
+
+    report = {}
+    seen, ignored = walk_listing(paged, limit=2, max_pages=2, report=report)
+    assert len(seen) == 4 and report["complete"] is False, (
+        "a walk that stopped at its page cap did not reach the end")
+
+    def stuck(params):
+        return 200, {"cards": cards[:2]}
+
+    report = {}
+    walk_listing(stuck, limit=2, report=report)
+    assert report["complete"] is False
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_listing_check_walks_the_pages_it_is_now_allowed_to_walk():
     """#90 was fixed and our check could not have seen it.
 

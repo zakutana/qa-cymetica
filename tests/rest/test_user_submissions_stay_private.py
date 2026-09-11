@@ -126,20 +126,28 @@ def test_a_user_submitted_card_is_visible_only_to_its_author(rest_trusted):
 
     leaks, listed_count = [], None
     if others:
+        walked: dict = {}
         cards, offset_ignored = listing.walk_listing(
-            _flagged(rest_trusted), max_pages=MAX_PAGES)
-        if cards is None or offset_ignored:
+            _flagged(rest_trusted), max_pages=MAX_PAGES, report=walked)
+        if cards is None or not walked.get("complete"):
             raise Inconclusive(
                 f"{LIST}?{FLAG}=true could not be walked to its end -- "
                 + ("offset was ignored" if offset_ignored
-                   else "a page could not be read")
+                   else "a page could not be read" if cards is None
+                   else f"it stopped at {len(cards)} cards, short of the "
+                        f"listing's end")
                 + f" -- so whether the {len(others)} readable submission(s) of "
                   f"other users are public is unknown")
-        if len(cards) >= listing.MAX_LIMIT * MAX_PAGES:
+        # The flag has to be seen to do something before its absence means
+        # anything: if it were ignored, the walk would carry no submission at
+        # all and every public one would read as private. Deep pass of
+        # 2026-09-11, V02, triage 3/3.
+        if not any(listing.is_user_submission(c) for c in cards):
             raise Inconclusive(
-                f"the walk of {LIST}?{FLAG}=true stopped at {len(cards)} cards, "
-                f"its page cap, before the listing ended; a card beyond it "
-                f"could be public and unseen")
+                f"{LIST}?{FLAG}=true carries no user-submitted card at all in "
+                f"{len(cards)}, so whether the flag is honoured cannot be told "
+                f"-- and a card missing from a listing that ignores it is not "
+                f"a private card")
         listed = {c.get("id") for c in cards}
         listed_count = len(cards)
         leaks = [o for o in others if o["id"] not in listed]

@@ -110,21 +110,41 @@ def _activity(client, instance_id):
     return None
 
 
-def open_stake(items) -> float:
-    """USDC staked in trades the feed says are still open."""
+def _usdc(value) -> float | None:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def open_stake(items) -> float | None:
+    """USDC staked in trades the feed says are still open, or None when one
+    of them cannot be read: an open trade with no amount we can read, or a
+    trade that is neither open nor closed. Until the deep pass of 2026-09-11
+    both read as zero -- a renamed amount field would have turned the 55.00
+    leg into "nothing open" and passed #94 (V13, triage 3/3)."""
     total = 0.0
     for item in items:
+        if item.get("is_closed") not in (True, False):
+            return None
         if item.get("is_closed") is False:
-            total += float(item.get("amount_usdc") or item.get("usdc_amount") or 0)
+            amount = _usdc(item.get("amount_usdc", item.get("usdc_amount")))
+            if amount is None:
+                return None
+            total += amount
     return round(total, 6)
 
 
-def realized(items) -> float:
-    """What the trades the feed lists as closed made or lost, in USDC."""
+def realized(items) -> float | None:
+    """What the trades the feed lists as closed made or lost, in USDC, or
+    None when a closed trade's result cannot be read (it did not make zero)."""
     total = 0.0
     for item in items:
         if item.get("is_closed") is True:
-            total += float(item.get("profit_usdc") or 0)
+            profit = _usdc(item.get("profit_usdc"))
+            if profit is None:
+                return None
+            total += profit
     return round(total, 6)
 
 
@@ -186,6 +206,10 @@ def test_a_bot_counts_the_stakes_it_has_open(rest_trusted):
             unread.append(bot["id"])
             continue
         staked = open_stake(items)
+        if staked is None:
+            # A trade we cannot read is not a stake of zero (V13).
+            unread.append(bot["id"])
+            continue
         if staked <= CENT:
             checked += 1
             ways["nothing open"] += 1
@@ -202,6 +226,11 @@ def test_a_bot_counts_the_stakes_it_has_open(rest_trusted):
                 f"taken out")
             continue
         made = realized(items)
+        if made is None:
+            unreconciled.append(
+                f"{bot['id'][:8]}: a closed trade's result could not be read, "
+                f"so what left the balance cannot be worked out")
+            continue
         taken_out = round(put_in + made - held, 6)
         uncounted = round(staked - taken_out - locked, 6)
         if abs(uncounted) <= CENT:
