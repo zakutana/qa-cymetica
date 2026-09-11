@@ -251,3 +251,12 @@ to neodškrtl, nebo to nikdy nebylo další na řadě.
   do 14:35 se zastavil znovu. Prosté zapnutí tedy nestačí; chce to jiné
   nastavení nebo jiného bota, a to má říct Nexus. Otázka je v roomu, jen ji
   poslat znovu přes `nexus.py ask --room STR-0001` a podle odpovědi jednat.
+
+- [ ] 2026-09-11  `correction_owed` ve foldu přičítá jejich tvrzení o opravě i našemu novému reportu na stejném řádku
+
+  Po sweepu `PRE-0097` jsme poslali `fail` na #94 (tvrdí opravu, kontrola
+  pořád padá) a založili užší #96. Fold teď dluží `fail` i na #96, protože
+  `FIX_CLAIMED` je stav celého řádku, ne reportu, a #96 nikdo za opravený
+  neprohlásil. Poslat to by byl šum, před kterým komentář u
+  `correction_owed` sám varuje. Neposláno. Je to `qa/fold.py`, takže test
+  první a před commitem `/code-review` (CLAUDE.md).
