@@ -1890,6 +1890,57 @@ reports:
       that no CYM has been awarded. We could not check rewards/summary,
       because of the 401.
 
+  - key: bot-open-positions-not-locked
+    findings: [CYM-a_bot_counts_the_stakes_it_has_open]
+    severity: medium
+    category: logic
+    url: https://cymetica.com/api/v1/cloned-bots/{instance_id}/balance
+    title: "A paper bot's open ARENA positions are neither deducted nor locked: /balance reports 0 locked while /activity lists 400 USDC open"
+    expected: >
+      A bot's stake in an open position leaves its available balance, or at
+      least shows in locked_in_trades, so the bot's own limits see money it
+      has already committed.
+    actual: >
+      On our paper clone, GET /api/v1/cloned-bots/{id}/activity lists four
+      open ARENA longs of 100 USDC each (is_closed false). GET
+      /api/v1/cloned-bots/{id}/balance on the same bot, same minute, reports
+      bot_balance 950.0, locked_in_trades 0.0, available 950.0 -- the 1,000
+      funded less the 50 lost on two closed WTA trades. The 400 in open
+      positions is counted nowhere.
+
+      By your own stated contract it should be. Asked on 2026-09-11 where
+      locked_in_trades comes from, NEXUS answered that it is "computed live
+      at read time" and that "the server sums the committed notional/stake of
+      that clone's currently-open trades". On this bot that sum is 400.00.
+    steps:
+      - "POST /api/v1/cloned-bots/clone (paper), POST /{id}/fund 1000, POST /{id}/toggle-trading?enabled=true"
+      - "Let it run; ours opened four ARENA positions within the first hour"
+      - "GET /api/v1/cloned-bots/{id}/activity -> 6 items: 2 WTA closed at -25.00 each, 4 ARENA buys of 100.00 with is_closed false"
+      - "GET /api/v1/cloned-bots/{id}/balance -> bot_balance 950.0, locked_in_trades 0.0, available 950.0"
+    body: >
+      This is #87's shape on the bot's arena lane. #87 was a paper position
+      opening while the paper balance stayed where it was, and you fixed it
+      for event cards. It matters here for the same reason: the bot's
+      stop-loss budget and max-position limit are computed off its balance,
+      so a bot whose open stakes never leave the balance can commit more than
+      it holds, and a bot that has committed 40% of its capital looks, to
+      every limit guarding it, like one that has committed none.
+
+      We measured it on paper, so no real money was involved. If live bots
+      share the same balance accounting, the limits guarding real funds have
+      the same blind spot -- worth checking from inside, where it is cheaper
+      and safer than from outside.
+
+      Three smaller things from the same reads, offered as information:
+      /api/v1/cloned-bots/{id}/activity -- the route your bot page renders
+      its trade history from -- is not in openapi-public.json;
+      /api/v1/cloned-bots/{id}/asset-analytics answers 401 "Valid JWT token
+      required" to every API key we hold, the same shape as #93; and the
+      ARENA rows carry 0x-style tx_hash values with settlement_status
+      "broadcast" while is_onchain is false and the bot's execution_economics
+      says onchain_trade_settlement false. Those fields agree that nothing
+      settled on-chain, but a hash in that shape invites the opposite reading.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in

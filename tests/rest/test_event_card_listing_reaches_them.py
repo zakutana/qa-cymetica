@@ -72,18 +72,61 @@ def card_ids_named(rows) -> list[str]:
     return out
 
 
+def walk_listing(get, limit=MAX_LIMIT, max_pages=50):
+    """Every card the listing will hand out, walked by offset.
+
+    `get(params)` returns (status, body). The result is (cards,
+    offset_ignored), or (None, False) when a page could not be read.
+
+    Until 2026-09-11 this check read ONE page, because on 2026-09-10 offset,
+    skip and page were all ignored and one page was all there was. Their
+    release of ~04:35 that morning made offset work and added a total -- and a
+    one-page read cannot tell a card beyond the first window that is now
+    reachable from one that is not, so the check would have reported their fix
+    as broken. Where offset is still ignored the same first id comes back, and
+    the walk stops and says so instead of looping.
+    """
+    cards, seen, offset = [], set(), 0
+    for _ in range(max_pages):
+        status, body = get({"limit": limit, "offset": offset})
+        if status != 200 or not isinstance(body, dict):
+            return None, False
+        batch = body.get("cards")
+        if not isinstance(batch, list):
+            return None, False
+        fresh = [c for c in batch
+                 if isinstance(c, dict) and c.get("id") not in seen]
+        if batch and not fresh:
+            return cards, True
+        for card in fresh:
+            seen.add(card.get("id"))
+            cards.append(card)
+        offset += len(batch)
+        total = body.get("total")
+        if (not batch or len(batch) < limit
+                or (isinstance(total, int) and offset >= total)):
+            return cards, False
+    return cards, False
+
+
 @qa(component="rest.event_cards", tier=SafetyTier.SAFE, surface="rest")
 def test_the_listing_returns_every_card_it_says_is_tradeable(rest_trusted):
     """A card you cannot find is a card you cannot trade."""
-    listed = rest_trusted.get(LIST, params={"limit": MAX_LIMIT})
-    if listed.status_code != 200:
+    def page(params):
+        response = rest_trusted.get(LIST, params=params)
+        try:
+            body = response.json() if response.status_code == 200 else {}
+        except ValueError:
+            body = {}
+        return response.status_code, body
+
+    rows, offset_ignored = walk_listing(page)
+    if rows is None:
         raise Inconclusive(
-            f"{LIST} answered HTTP {listed.status_code}; a failed read is not "
+            f"{LIST} could not be read page by page; a failed read is not "
             f"an empty market")
-    rows = (listed.json() or {}).get("cards")
-    if not isinstance(rows, list) or not rows:
-        raise Inconclusive(
-            f"{LIST} returned no cards list to compare against")
+    if not rows:
+        raise Inconclusive(f"{LIST} returned no cards to compare against")
     seen = {r.get("id") for r in rows if isinstance(r, dict)}
 
     witnesses = card_ids_named(_nexus().load())
@@ -123,16 +166,18 @@ def test_the_listing_returns_every_card_it_says_is_tradeable(rest_trusted):
             f"{len(unreachable)} card(s) answer status live and "
             f"tradeable_now true on {CARD} and appear in no response from "
             f"{LIST}: " + ", ".join(u["id"] for u in unreachable)
-            + f". The listing caps at {MAX_LIMIT} rows and its offset, skip, "
-              f"page, search and status parameters are accepted and ignored, "
-              f"so an agent enumerating the market cannot reach them and "
-              f"nothing in the response says the window is truncated"
+            + (f". The listing caps at {MAX_LIMIT} rows a page and ignores offset, "
+               f"so an agent enumerating the market cannot reach them and "
+               f"nothing in the response says the window is truncated"
+               if offset_ignored else
+               f". The listing was walked by offset through all {len(rows)} "
+               f"cards it hands out, and they are not among them")
             if unreachable else
             f"every one of the {checked} tradeable card(s) checked appears in "
             f"the listing"),
         left=sorted(u["id"] for u in unreachable),
         right=sorted(seen)[:5],
-        population={"listed": len(rows), "witnesses": len(witnesses),
+        population={"listed": len(rows), "offset_ignored": offset_ignored, "witnesses": len(witnesses),
                     "checked": checked, "unreachable": len(unreachable)},
         sources={"listing": f"GET {LIST}?limit={MAX_LIMIT}",
                  "card": f"GET {CARD}"},

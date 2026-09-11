@@ -747,3 +747,72 @@ def test_nexus_tools_skips_a_newest_answer_that_names_no_tool():
     assert newest_answer_naming_tools(answers)["id"] == "NEX-0008"
     assert newest_answer_naming_tools([]) is None
 
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_listing_check_walks_the_pages_it_is_now_allowed_to_walk():
+    """#90 was fixed and our check could not have seen it.
+
+    The check read one page of GET /api/v1/event-cards at limit=200, because on
+    2026-09-10 offset, skip and page were all ignored and one page was all there
+    was. Their release of 2026-09-11 ~04:35 made offset work and added a
+    total -- and a check that reads one page cannot tell a card beyond the
+    first 200 that is now reachable from one that is not. It went on failing,
+    the fold opened correction_owed, and verify.py would have told them their
+    fix did not hold. A check encodes the fix its author imagined.
+
+    So the listing is walked by offset until `total` is reached. Where offset is
+    still ignored -- the same first id comes back -- the walk stops and says so
+    rather than looping, which is exactly what the check could see before.
+    """
+    from tests.rest.test_event_card_listing_reaches_them import walk_listing
+
+    cards = [{"id": f"c{i}"} for i in range(5)]
+
+    def paged(params):
+        start, size = int(params.get("offset", 0)), int(params.get("limit", 2))
+        return 200, {"cards": cards[start:start + size], "total": len(cards)}
+
+    seen, ignored = walk_listing(paged, limit=2)
+    assert [c["id"] for c in seen] == ["c0", "c1", "c2", "c3", "c4"]
+    assert ignored is False
+
+    def stuck(params):
+        return 200, {"cards": cards[:2], "count": 2}
+
+    seen, ignored = walk_listing(stuck, limit=2)
+    assert [c["id"] for c in seen] == ["c0", "c1"]
+    assert ignored is True, "an ignored offset must be named, not looped on"
+
+    def broken(params):
+        return 500, {}
+
+    assert walk_listing(broken, limit=2) == (None, False), (
+        "a failed read is not an empty market")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_disclosure_check_judges_the_newest_answer():
+    """#92 was fixed at serve time, and our stored copies cannot show it.
+
+    The check read every answer we had recorded and failed if any cited a
+    source location. The three that did are from 2026-09-10 and live in our
+    own nexus.jsonl; their fix scrubs an answer as it is SERVED, so it cannot
+    reach a copy we already hold. Judging them for ever is the growing-log
+    mistake this file already pins twice -- and here it would have sent a
+    `fail` correction on a fix that works. The newest answer is the subject;
+    the history stays in population.
+    """
+    from tests.mcp.test_nexus_does_not_quote_source import (
+        source_locations, subject_answer)
+
+    answers = [
+        {"id": "NEX-0011", "type": "answer", "at": "2026-09-10T21:18:00+00:00",
+         "text": "see src/api/dependencies.py:933 for the gate"},
+        {"id": "NEX-0018", "type": "answer", "at": "2026-09-11T05:40:00+00:00",
+         "text": "the withdrawal gate is fail-closed"},
+    ]
+    subject = subject_answer(answers)
+    assert subject["id"] == "NEX-0018"
+    assert source_locations(subject["text"]) == []
+    assert subject_answer([]) is None
+

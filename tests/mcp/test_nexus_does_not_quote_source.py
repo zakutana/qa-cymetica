@@ -70,6 +70,22 @@ def source_locations(text: str) -> list[str]:
     return out
 
 
+def subject_answer(answers):
+    """The newest recorded answer, or None.
+
+    Not every answer ever recorded, which is what this read until 2026-09-11.
+    The three that cited source locations are from 2026-09-10 and stay in our
+    own nexus.jsonl for ever; their fix scrubs an answer as it is SERVED, so it
+    cannot reach a copy we already hold. Judging those for ever is the
+    growing-log mistake, and here it would have sent a `fail` correction on a
+    fix that works.
+    """
+    dated = [r for r in answers if r.get("text")]
+    if not dated:
+        return None
+    return max(dated, key=lambda r: (r.get("at") or "", r.get("id") or ""))
+
+
 @qa(component="mcp.tools_call", tier=SafetyTier.SAFE, surface="mcp")
 def test_a_deep_answer_does_not_hand_out_internal_source_locations():
     """What an outside caller gets back should be behaviour, not the tree."""
@@ -80,31 +96,28 @@ def test_a_deep_answer_does_not_hand_out_internal_source_locations():
             "no Nexus answer has been recorded, so there is nothing to read; "
             "`python scripts/nexus.py ask \"...\"` records one")
 
-    leaking = []
-    for row in sorted(answers, key=lambda r: (r.get("at") or "", r.get("id"))):
-        found = source_locations(row["text"])
-        if found:
-            leaking.append({"id": row["id"], "at": row.get("at"),
-                            "locations": found})
+    subject = subject_answer(answers)
+    found = source_locations(subject["text"])
+    # History, not verdict: which older answers leaked travels with the result
+    # so nobody reads a clean newest answer as "it never happened".
+    earlier = [r["id"] for r in answers
+               if r is not subject and source_locations(r["text"])]
 
-    total = sum(len(x["locations"]) for x in leaking)
     conclude(Measurement(
-        verdict="failed" if leaking else "passed",
+        verdict="failed" if found else "passed",
         reason=(
-            f"{len(leaking)} of {len(answers)} recorded deep answers cite "
-            f"internal source locations, {total} of them, to an external "
-            f"bug-bounty caller holding an ordinary API key: "
-            + "; ".join(f"{x['id']} names {', '.join(x['locations'][:4])}"
-                        for x in leaking[:3])
-            + ". A few questions assemble a map of the private tree, which is "
-              "a different surface from the API they document"
-            if leaking else
-            f"none of the {len(answers)} recorded deep answers cites an "
-            f"internal source location"),
-        left=[loc for x in leaking for loc in x["locations"]][:20],
-        right=[],
-        population={"answers": len(answers), "answers_leaking": len(leaking),
-                    "locations": total},
+            f"the newest recorded deep answer, {subject['id']} "
+            f"({subject.get('at')}), cites {len(found)} internal source "
+            f"location(s) to an external bug-bounty caller holding an ordinary "
+            f"API key: {', '.join(found[:6])}. A few questions assemble a map "
+            f"of the private tree, which is a different surface from the API "
+            f"they document"
+            if found else
+            f"the newest recorded deep answer, {subject['id']} "
+            f"({subject.get('at')}), cites no internal source location"),
+        left=found[:20], right=[],
+        population={"answers": len(answers), "subject": subject["id"],
+                    "earlier_answers_that_leaked": earlier},
         sources={"answers": "state/nexus.jsonl",
                  "tool": "POST /mcp/v1 tools/call ask_nexus_deep"},
     ))
