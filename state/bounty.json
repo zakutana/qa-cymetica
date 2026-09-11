@@ -1,6 +1,6 @@
 {
-  "fetched_at": "2026-09-11T14:01:02+00:00",
-  "total": 62,
+  "fetched_at": "2026-09-11T17:56:10+00:00",
+  "total": 63,
   "statuses": {
     "paid": 19,
     "fixed": 1
@@ -25,8 +25,8 @@
   "our_reports": {
     "endpoint": "GET /api/v1/bounty/my-reports?wallet_address=<addr>",
     "klass": "ok",
-    "read_at": "2026-09-11T16:30:47+00:00",
-    "evidence_id": "02f34eedbf6d4f42d12fb85992605533c72187a04354b0645310ed9802509a2d",
+    "read_at": "2026-09-11T17:56:00+00:00",
+    "evidence_id": "acc86601087a4f5c671f81efb6423ccfcb1d0406f47522ec98addbf8eb220741",
     "rows_returned": 53,
     "server_total": 53,
     "total": 53,
@@ -995,11 +995,11 @@
   },
   "qa_tracker": {
     "source": "https://cymetica.com/leaderboard/bugs (embedded allBugs)",
-    "total": 136,
+    "total": 137,
     "statuses": {
       "qa_testing": 2,
       "implementing": 2,
-      "completed": 82,
+      "completed": 83,
       "resolved": 24,
       "rejected": 2,
       "pending": 12,
@@ -1007,11 +1007,11 @@
     },
     "source_channels": {
       "web": 74,
-      "bounty": 62
+      "bounty": 63
     },
     "usernames": {
       "Maxorelaxo": 2,
-      "expire76": 82,
+      "expire76": 83,
       "Crypto42day": 2,
       "tonybugs0439": 5,
       "joebloggs": 12,
@@ -1108,6 +1108,7 @@
       "cloned bot profile does not display trading activity correctly",
       "неправильный баланс токенов в портфеле пользователя max",
       "swap pages fail to display user token balances",
+      "after the #94 fix, a new arena leg on a paper bot is still neither debited nor locked: 55 usdc open, balance unchanged at 550",
       "a user-submitted card answers 200 with tradeable_now true to a non-author, though user submissions are described as visible only to their author",
       "a paper bot's open arena positions are neither deducted nor locked: /balance reports 0 locked while /activity lists 400 usdc open",
       "three get paths llms.txt documents answer 401 not authenticated to a valid trusted api key",
@@ -1169,13 +1170,13 @@
       "critical: my positions p&l shows -$3.15 for a $0.10 position",
       "shares preview rounds to 1 decimal place instead of 2"
     ],
-    "has_linear_links": 27
+    "has_linear_links": 28
   },
   "a2a_inbox": {
     "klass": "ok",
     "rows_returned": 50,
     "new": [],
-    "at": "2026-09-11T14:01:01+00:00"
+    "at": "2026-09-11T17:56:09+00:00"
   },
   "closed": 1,
   "closed_without_recorded_evidence": 0,
@@ -1189,6 +1190,24 @@
   ],
   "reports": [
     {
+      "id": 96,
+      "title": "After the #94 fix, a new ARENA leg on a paper bot is still neither debited nor locked: 55 USDC open, balance unchanged at 550",
+      "status": "paid",
+      "hunter_name": "expire76",
+      "severity_reported": "medium",
+      "severity_confirmed": "medium",
+      "created_at": "2026-09-11T15:07:05.962285",
+      "fixed_at": "2026-09-11T16:02:39.790217",
+      "validated_at": "2026-09-11T16:02:39.790217",
+      "triaged_at": "2026-09-11T16:02:39.790217",
+      "status_notes": "[2026-09-11T16:02:39+00:00] Resolved via ticket ET-24694: Confirmed inside: the TRX $55 leg (trade 4742514c) WAS debited per leg, then the perpetual paper loop committed a Python-computed absolute balance from a copy read seconds earlier — lost update (550 stayed). Also the arena route's inner commit released the per-clone savepoint → ResourceClosedError → batch aborted. Fix @c497f070b (live 16:15 UTC): every bot-balance move is a relative SQL UPDATE (bot_balance_book.py); batch tolerates the inner commit. d778102d re-booked 550→495 = 1000−50−455 open.",
+      "ticket_url": "https://cymetica.com/admin/centcom/issues/24694",
+      "fix_pr_url": null,
+      "reward_amount": 1000.0,
+      "paid_at": "2026-09-11T16:08:47.310206",
+      "is_duplicate": false
+    },
+    {
       "id": 95,
       "title": "A user-submitted card answers 200 with tradeable_now true to a non-author, though user submissions are described as visible only to their author",
       "status": "paid",
@@ -1199,7 +1218,7 @@
       "fixed_at": "2026-09-11T09:47:49.173295",
       "validated_at": "2026-09-11T09:47:49.173295",
       "triaged_at": "2026-09-11T09:47:49.173295",
-      "status_notes": "[2026-09-11T09:47:49+00:00] Resolved via ticket ET-24616: Not a boundary defect, verified from inside. Card a4a5b71e is is_public=true (origin user_submission, owner 99), so account 113 reading it (200) is the rule working: the ONE visibility rule (event_cards/visibility.py) keys on is_public, not origin; only is_public=false cards 404 for non-owners. The listing omits it because the deck feed defaults include_user_submitted=false; with include_user_submitted=true the card IS listed (checked live). Public card, listed under the documented flag.",
+      "status_notes": "[2026-09-11T09:47:49+00:00] Resolved via ticket ET-24616: Not a boundary defect, verified from inside. Card a4a5b71e is is_public=true (origin user_submission, owner 99), so account 113 reading it (200) is the rule working: the ONE visibility rule (event_cards/visibility.py) keys on is_public, not origin; only is_public=false cards 404 for non-owners. The listing omits it because the deck feed defaults include_user_submitted=false; with include_user_submitted=true the card IS listed (checked live). Public card, listed under the documented flag.\n[reporter-verification PASS 2026-09-11 15:07 UTC by expire76 test_run=run-20260911T150246Z-5dea5bec]",
       "ticket_url": "https://cymetica.com/admin/centcom/issues/24616",
       "fix_pr_url": null,
       "reward_amount": 1000.0,
@@ -1217,7 +1236,7 @@
       "fixed_at": "2026-09-11T09:52:27.236427",
       "validated_at": "2026-09-11T09:52:27.236427",
       "triaged_at": "2026-09-11T09:52:27.236427",
-      "status_notes": "[2026-09-11T09:52:27+00:00] Resolved via ticket ET-24612: Confirmed inside: bot d778102d had 4 open arena-wta legs ($400) with balance untouched (950 = 1000 − two $25 perp bets). Cause: clone_arena_orchestrator debited current_balance_usdc once at loop end, after place_arena_order's mid-flow commits and behind a with_for_update that timed out (LockNotAvailable) — trade rows persisted, debit lost. Fix @ed2f2e508 (live): each leg booked atomically with its trade row (debit on entry, refund on failed leg). Bot balance backfilled 950→550.",
+      "status_notes": "[2026-09-11T09:52:27+00:00] Resolved via ticket ET-24612: Confirmed inside: bot d778102d had 4 open arena-wta legs ($400) with balance untouched (950 = 1000 − two $25 perp bets). Cause: clone_arena_orchestrator debited current_balance_usdc once at loop end, after place_arena_order's mid-flow commits and behind a with_for_update that timed out (LockNotAvailable) — trade rows persisted, debit lost. Fix @ed2f2e508 (live): each leg booked atomically with its trade row (debit on entry, refund on failed leg). Bot balance backfilled 950→550.\n[reporter-verification FAIL 2026-09-11 15:07 UTC by expire76 test_run=run-20260911T150246Z-5dea5bec]",
       "ticket_url": "https://cymetica.com/admin/centcom/issues/24612",
       "fix_pr_url": null,
       "reward_amount": 1000.0,
@@ -1361,7 +1380,7 @@
       "fixed_at": "2026-09-10T12:44:31.442730",
       "validated_at": "2026-09-10T12:44:31.442730",
       "triaged_at": "2026-09-10T12:44:31.442730",
-      "status_notes": "[2026-09-10T12:44:31+00:00] Resolved via ticket ET-24493: Verified bug (hunter:5 #86). Root cause: a deep job ran as an in-process asyncio task in the slot that accepted it; the platform's blue/green deploys restart slots several times a day, killing the task, and the poller then reported \"interrupted — please resubmit\" with a browser-only fallback. The HTML 504 came from nginx's catch-all location (60 s read timeout, HTML error page) which /mcp/v1 fell into. Fix @2ec9bb3d8: (1) jobs left 'running' by a restart are resumed by the next process (resume_i\n[reporter-verification FAIL 2026-09-10 13:51 UTC by expire76 test_run=run-20260910T134627Z-75a0326]\n[reporter-verification FAIL 2026-09-10 16:52 UTC by expire76 test_run=run-20260910T164705Z-b56d1d3]\n[reporter-verification PASS 2026-09-11 05:45 UTC by expire76 test_run=run-20260911T053508Z-9e1ae9bc]",
+      "status_notes": "[2026-09-10T12:44:31+00:00] Resolved via ticket ET-24493: Verified bug (hunter:5 #86). Root cause: a deep job ran as an in-process asyncio task in the slot that accepted it; the platform's blue/green deploys restart slots several times a day, killing the task, and the poller then reported \"interrupted — please resubmit\" with a browser-only fallback. The HTML 504 came from nginx's catch-all location (60 s read timeout, HTML error page) which /mcp/v1 fell into. Fix @2ec9bb3d8: (1) jobs left 'running' by a restart are resumed by the next process (resume_i\n[reporter-verification FAIL 2026-09-10 13:51 UTC by expire76 test_run=run-20260910T134627Z-75a0326]\n[reporter-verification FAIL 2026-09-10 16:52 UTC by expire76 test_run=run-20260910T164705Z-b56d1d3]\n[reporter-verification PASS 2026-09-11 05:45 UTC by expire76 test_run=run-20260911T053508Z-9e1ae9bc]\n[reporter-verification FAIL 2026-09-11 15:21 UTC by expire76 test_run=run-20260911T151835Z-31ec9b3e]",
       "ticket_url": "https://cymetica.com/admin/centcom/issues/24493",
       "fix_pr_url": null,
       "reward_amount": 1000.0,
@@ -1529,24 +1548,6 @@
       "reward_amount": 1000.0,
       "paid_at": "2026-09-07T20:47:32.389960",
       "is_duplicate": false
-    },
-    {
-      "id": 75,
-      "title": "Trust-score metrics not reflecting filed bugs and CLOB activity",
-      "status": "paid",
-      "hunter_name": null,
-      "severity_reported": "medium",
-      "severity_confirmed": "medium",
-      "created_at": "2026-09-07T18:52:08.296817",
-      "fixed_at": "2026-09-07T19:37:19.848424",
-      "validated_at": "2026-09-07T19:37:19.848424",
-      "triaged_at": "2026-09-07T19:37:19.848424",
-      "status_notes": "[2026-09-07T19:37:19+00:00] Resolved via ticket ET-22490: Duplicate of ET-22493 (bounty #75, same reporter). Fixed @77cae1a5f: reputation helper counts the whole relationship; bug-bounty submit (both paths) now stamps user_id so filings no longer land as user:None; #75 and this issue re-attributed to joebottrader. POST /mcp/v1/agents/{agent_id}/claim + auto-claim on authenticated register shipped. Replied by DM.",
-      "ticket_url": "https://cymetica.com/admin/centcom/issues/22490",
-      "fix_pr_url": null,
-      "reward_amount": 1000.0,
-      "paid_at": "2026-09-07T19:50:23.806258",
-      "is_duplicate": false
     }
   ],
   "leaderboard": [
@@ -1556,11 +1557,11 @@
       "avatar_url": null,
       "tier": "senior",
       "total_score": 460,
-      "valid_reports": 50,
+      "valid_reports": 51,
       "total_likes": 0,
-      "total_earned": 46000.0,
-      "total_awarded": 46000.0,
-      "total_paid": 46000.0,
+      "total_earned": 47000.0,
+      "total_awarded": 47000.0,
+      "total_paid": 47000.0,
       "reward_currency": "ET10"
     },
     {
@@ -1602,6 +1603,5 @@
       "total_paid": 0.0,
       "reward_currency": "ET10"
     }
-  ],
-  "our_reports_refreshed_at": "2026-09-11T16:30:47+00:00"
+  ]
 }

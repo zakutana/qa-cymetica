@@ -1,0 +1,932 @@
+{
+  "captured_at": "2026-09-11T17:51:01+00:00",
+  "endpoint_rule": null,
+  "nodeid": "tests/rest/test_documented_gets_accept_the_agent_key.py::test_every_documented_get_accepts_the_key_its_own_document_issues",
+  "request": {
+    "body": {
+      "encoding": "empty",
+      "value": null
+    },
+    "headers": {
+      "accept": "application/json",
+      "accept-encoding": "gzip, deflate, zstd",
+      "connection": "keep-alive",
+      "host": "cymetica.com",
+      "user-agent": "qa-cymetica/0.1 (independent QA; contact via vendor Telegram channel)",
+      "x-api-key": "<redacted>"
+    },
+    "method": "GET",
+    "url": "https://cymetica.com/api/v1/vaix/orderbook"
+  },
+  "response": {
+    "body": {
+      "encoding": "json",
+      "truncated": false,
+      "value": {
+        "chain": "all",
+        "native_token": "MULTI",
+        "orderbook": {
+          "arbitrage": {
+            "buy_chain": "base",
+            "buy_price": "0.00100296",
+            "potential_profit_pct": "20.84",
+            "sell_chain": "solana",
+            "sell_price": "0.00122196",
+            "spread_pct": "21.84"
+          },
+          "asks": [
+            {
+              "chain": "arbitrum",
+              "dex": "camelot",
+              "impact_pct": "1.63",
+              "price": "0.00010600",
+              "size": "100",
+              "total": "100"
+            },
+            {
+              "chain": "arbitrum",
+              "dex": "camelot",
+              "impact_pct": "3.70",
+              "price": "0.00010816",
+              "size": "250",
+              "total": "350"
+            },
+            {
+              "chain": "arbitrum",
+              "dex": "camelot",
+              "impact_pct": "7.33",
+              "price": "0.00011195",
+              "size": "500",
+              "total": "850"
+            },
+            {
+              "chain": "arbitrum",
+              "dex": "camelot",
+              "impact_pct": "15.42",
+              "price": "0.00012039",
+              "size": "1000",
+              "total": "1850"
+            },
+            {
+              "chain": "arbitrum",
+              "dex": "camelot",
+              "impact_pct": "49.16",
+              "price": "0.00015558",
+              "size": "2500",
+              "total": "4350"
+            },
+            {
+              "chain": "arbitrum",
+              "dex": "camelot",
+              "impact_pct": "190.85",
+              "price": "0.00030336",
+              "size": "5000",
+              "total": "9350"
+            },
+            {
+              "chain": "base",
+              "dex": "aerodrome",
+              "impact_pct": "0.37",
+              "price": "0.00100666",
+              "size": "100",
+              "total": "9450"
+            },
+            {
+              "chain": "base",
+              "dex": "aerodrome",
+              "impact_pct": "0.47",
+              "price": "0.00100767",
+              "size": "250",
+              "total": "9700"
+            },
+            {
+              "chain": "base",
+              "dex": "aerodrome",
+              "impact_pct": "0.64",
+              "price": "0.00100936",
+              "size": "500",
+              "total": "10200"
+            },
+            {
+              "chain": "base",
+              "dex": "aerodrome",
+              "impact_pct": "0.98",
+              "price": "0.00101277",
+              "size": "1000",
+              "total": "11200"
+            },
+            {
+              "chain": "base",
+              "dex": "aerodrome",
+              "impact_pct": "2.01",
+              "price": "0.00102313",
+              "size": "2500",
+              "total": "13700"
+            },
+            {
+              "chain": "base",
+              "dex": "aerodrome",
+              "impact_pct": "3.78",
+              "price": "0.00104087",
+              "size": "5000",
+              "total": "18700"
+            },
+            {
+              "chain": "base",
+              "dex": "aerodrome",
+              "impact_pct": "7.51",
+              "price": "0.00107827",
+              "size": "10000",
+              "total": "28700"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v4_usdt_1",
+              "impact_pct": "5.27",
+              "price": "0.00120586",
+              "size": "100",
+              "total": "28800"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v4_usdt_1",
+              "impact_pct": "5.27",
+              "price": "0.00120591",
+              "size": "250",
+              "total": "29050"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v4_usdt_1",
+              "impact_pct": "5.28",
+              "price": "0.00120599",
+              "size": "500",
+              "total": "29550"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v4_usdt_1",
+              "impact_pct": "5.29",
+              "price": "0.00120616",
+              "size": "1000",
+              "total": "30550"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v4_usdt_1",
+              "impact_pct": "5.34",
+              "price": "0.00120667",
+              "size": "2500",
+              "total": "33050"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v4_usdt_1",
+              "impact_pct": "5.41",
+              "price": "0.00120751",
+              "size": "5000",
+              "total": "38050"
+            },
+            {
+              "chain": "base",
+              "dex": "aerodrome",
+              "impact_pct": "20.50",
+              "price": "0.00120853",
+              "size": "25000",
+              "total": "63050"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v4_usdt_1",
+              "impact_pct": "5.56",
+              "price": "0.00120920",
+              "size": "10000",
+              "total": "73050"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v4_usdt_1",
+              "impact_pct": "6.00",
+              "price": "0.00121431",
+              "size": "25000",
+              "total": "98050"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v4_usdt_1",
+              "impact_pct": "6.76",
+              "price": "0.00122292",
+              "size": "50000",
+              "total": "148050"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v4_usdt_1",
+              "impact_pct": "8.29",
+              "price": "0.00124051",
+              "size": "100000",
+              "total": "248050"
+            },
+            {
+              "chain": "solana",
+              "dex": "raydium",
+              "impact_pct": "2.20",
+              "price": "0.00124888",
+              "size": "100",
+              "total": "248150"
+            },
+            {
+              "chain": "solana",
+              "dex": "raydium",
+              "impact_pct": "5.28",
+              "price": "0.00128646",
+              "size": "250",
+              "total": "248400"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v4_usdt_2",
+              "impact_pct": "25.01",
+              "price": "0.00134179",
+              "size": "100",
+              "total": "248500"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v4_usdt_2",
+              "impact_pct": "25.04",
+              "price": "0.00134202",
+              "size": "250",
+              "total": "248750"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v4_usdt_2",
+              "impact_pct": "25.07",
+              "price": "0.00134241",
+              "size": "500",
+              "total": "249250"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v4_usdt_2",
+              "impact_pct": "25.14",
+              "price": "0.00134318",
+              "size": "1000",
+              "total": "250250"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v4_usdt_2",
+              "impact_pct": "25.36",
+              "price": "0.00134549",
+              "size": "2500",
+              "total": "252750"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v4_usdt_2",
+              "impact_pct": "25.72",
+              "price": "0.00134936",
+              "size": "5000",
+              "total": "257750"
+            },
+            {
+              "chain": "solana",
+              "dex": "raydium",
+              "impact_pct": "10.84",
+              "price": "0.00135438",
+              "size": "500",
+              "total": "258250"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v4_usdt_2",
+              "impact_pct": "26.45",
+              "price": "0.00135717",
+              "size": "10000",
+              "total": "268250"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v4_usdt_2",
+              "impact_pct": "28.68",
+              "price": "0.00138116",
+              "size": "25000",
+              "total": "293250"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v4_usdt_2",
+              "impact_pct": "32.59",
+              "price": "0.00142308",
+              "size": "50000",
+              "total": "343250"
+            },
+            {
+              "chain": "base",
+              "dex": "aerodrome",
+              "impact_pct": "50.87",
+              "price": "0.00151321",
+              "size": "50000",
+              "total": "393250"
+            },
+            {
+              "chain": "solana",
+              "dex": "raydium",
+              "impact_pct": "23.92",
+              "price": "0.00151429",
+              "size": "1000",
+              "total": "394250"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v4_usdt_2",
+              "impact_pct": "41.16",
+              "price": "0.00151504",
+              "size": "100000",
+              "total": "494250"
+            },
+            {
+              "chain": "solana",
+              "dex": "raydium",
+              "impact_pct": "91.89",
+              "price": "0.00234478",
+              "size": "2500",
+              "total": "496750"
+            },
+            {
+              "chain": "base",
+              "dex": "aerodrome",
+              "impact_pct": "204.31",
+              "price": "0.00305214",
+              "size": "100000",
+              "total": "596750"
+            },
+            {
+              "chain": "solana",
+              "dex": "raydium",
+              "impact_pct": "2132.95",
+              "price": "0.02728578",
+              "size": "5000",
+              "total": "601750"
+            }
+          ],
+          "bids": [
+            {
+              "chain": "solana",
+              "dex": "raydium",
+              "impact_pct": "2.12",
+              "price": "0.00119612",
+              "size": "100",
+              "total": "100"
+            },
+            {
+              "chain": "solana",
+              "dex": "raydium",
+              "impact_pct": "4.79",
+              "price": "0.00116348",
+              "size": "250",
+              "total": "350"
+            },
+            {
+              "chain": "solana",
+              "dex": "raydium",
+              "impact_pct": "8.93",
+              "price": "0.00111288",
+              "size": "500",
+              "total": "850"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v4_usdt_1",
+              "impact_pct": "5.00",
+              "price": "0.00108823",
+              "size": "100",
+              "total": "950"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v4_usdt_1",
+              "impact_pct": "5.01",
+              "price": "0.00108819",
+              "size": "250",
+              "total": "1200"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v4_usdt_1",
+              "impact_pct": "5.01",
+              "price": "0.00108811",
+              "size": "500",
+              "total": "1700"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v4_usdt_1",
+              "impact_pct": "5.03",
+              "price": "0.00108797",
+              "size": "1000",
+              "total": "2700"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v4_usdt_1",
+              "impact_pct": "5.06",
+              "price": "0.00108754",
+              "size": "2500",
+              "total": "5200"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v4_usdt_1",
+              "impact_pct": "5.13",
+              "price": "0.00108681",
+              "size": "5000",
+              "total": "10200"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v4_usdt_1",
+              "impact_pct": "5.25",
+              "price": "0.00108538",
+              "size": "10000",
+              "total": "20200"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v4_usdt_1",
+              "impact_pct": "5.63",
+              "price": "0.00108108",
+              "size": "25000",
+              "total": "45200"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v4_usdt_1",
+              "impact_pct": "6.24",
+              "price": "0.00107400",
+              "size": "50000",
+              "total": "95200"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v4_usdt_1",
+              "impact_pct": "7.46",
+              "price": "0.00106010",
+              "size": "100000",
+              "total": "195200"
+            },
+            {
+              "chain": "solana",
+              "dex": "raydium",
+              "impact_pct": "16.21",
+              "price": "0.00102383",
+              "size": "1000",
+              "total": "196200"
+            },
+            {
+              "chain": "base",
+              "dex": "aerodrome",
+              "impact_pct": "0.37",
+              "price": "0.00099929",
+              "size": "100",
+              "total": "196300"
+            },
+            {
+              "chain": "base",
+              "dex": "aerodrome",
+              "impact_pct": "0.47",
+              "price": "0.00099829",
+              "size": "250",
+              "total": "196550"
+            },
+            {
+              "chain": "base",
+              "dex": "aerodrome",
+              "impact_pct": "0.63",
+              "price": "0.00099662",
+              "size": "500",
+              "total": "197050"
+            },
+            {
+              "chain": "base",
+              "dex": "aerodrome",
+              "impact_pct": "0.96",
+              "price": "0.00099331",
+              "size": "1000",
+              "total": "198050"
+            },
+            {
+              "chain": "base",
+              "dex": "aerodrome",
+              "impact_pct": "1.94",
+              "price": "0.00098352",
+              "size": "2500",
+              "total": "200550"
+            },
+            {
+              "chain": "base",
+              "dex": "aerodrome",
+              "impact_pct": "3.52",
+              "price": "0.00096762",
+              "size": "5000",
+              "total": "205550"
+            },
+            {
+              "chain": "base",
+              "dex": "aerodrome",
+              "impact_pct": "6.55",
+              "price": "0.00093731",
+              "size": "10000",
+              "total": "215550"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v4_usdt_2",
+              "impact_pct": "20.01",
+              "price": "0.00085857",
+              "size": "100",
+              "total": "215650"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v4_usdt_2",
+              "impact_pct": "20.02",
+              "price": "0.00085845",
+              "size": "250",
+              "total": "215900"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v4_usdt_2",
+              "impact_pct": "20.04",
+              "price": "0.00085826",
+              "size": "500",
+              "total": "216400"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v4_usdt_2",
+              "impact_pct": "20.07",
+              "price": "0.00085786",
+              "size": "1000",
+              "total": "217400"
+            },
+            {
+              "chain": "base",
+              "dex": "aerodrome",
+              "impact_pct": "14.57",
+              "price": "0.00085679",
+              "size": "25000",
+              "total": "242400"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v4_usdt_2",
+              "impact_pct": "20.18",
+              "price": "0.00085669",
+              "size": "2500",
+              "total": "244900"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v4_usdt_2",
+              "impact_pct": "20.36",
+              "price": "0.00085474",
+              "size": "5000",
+              "total": "249900"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v4_usdt_2",
+              "impact_pct": "20.73",
+              "price": "0.00085086",
+              "size": "10000",
+              "total": "259900"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v4_usdt_2",
+              "impact_pct": "21.79",
+              "price": "0.00083943",
+              "size": "25000",
+              "total": "284900"
+            },
+            {
+              "chain": "solana",
+              "dex": "raydium",
+              "impact_pct": "32.44",
+              "price": "0.00082562",
+              "size": "2500",
+              "total": "287400"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v4_usdt_2",
+              "impact_pct": "23.50",
+              "price": "0.00082106",
+              "size": "50000",
+              "total": "337400"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v4_usdt_2",
+              "impact_pct": "26.71",
+              "price": "0.00078662",
+              "size": "100000",
+              "total": "437400"
+            },
+            {
+              "chain": "base",
+              "dex": "aerodrome",
+              "impact_pct": "25.27",
+              "price": "0.00074948",
+              "size": "50000",
+              "total": "487400"
+            },
+            {
+              "chain": "solana",
+              "dex": "raydium",
+              "impact_pct": "48.92",
+              "price": "0.00062421",
+              "size": "5000",
+              "total": "492400"
+            },
+            {
+              "chain": "base",
+              "dex": "aerodrome",
+              "impact_pct": "40.24",
+              "price": "0.00059935",
+              "size": "100000",
+              "total": "592400"
+            },
+            {
+              "chain": "solana",
+              "dex": "raydium",
+              "impact_pct": "65.67",
+              "price": "0.00041953",
+              "size": "10000",
+              "total": "602400"
+            },
+            {
+              "chain": "solana",
+              "dex": "raydium",
+              "impact_pct": "82.69",
+              "price": "0.00021148",
+              "size": "25000",
+              "total": "627400"
+            },
+            {
+              "chain": "solana",
+              "dex": "raydium",
+              "impact_pct": "90.52",
+              "price": "0.00011579",
+              "size": "50000",
+              "total": "677400"
+            },
+            {
+              "chain": "arbitrum",
+              "dex": "camelot",
+              "impact_pct": "1.59",
+              "price": "0.00010265",
+              "size": "100",
+              "total": "677500"
+            },
+            {
+              "chain": "arbitrum",
+              "dex": "camelot",
+              "impact_pct": "3.45",
+              "price": "0.00010070",
+              "size": "250",
+              "total": "677750"
+            },
+            {
+              "chain": "arbitrum",
+              "dex": "camelot",
+              "impact_pct": "6.41",
+              "price": "0.00009761",
+              "size": "500",
+              "total": "678250"
+            },
+            {
+              "chain": "arbitrum",
+              "dex": "camelot",
+              "impact_pct": "11.82",
+              "price": "0.00009197",
+              "size": "1000",
+              "total": "679250"
+            },
+            {
+              "chain": "arbitrum",
+              "dex": "camelot",
+              "impact_pct": "24.84",
+              "price": "0.00007839",
+              "size": "2500",
+              "total": "681750"
+            },
+            {
+              "chain": "arbitrum",
+              "dex": "camelot",
+              "impact_pct": "39.69",
+              "price": "0.00006290",
+              "size": "5000",
+              "total": "686750"
+            },
+            {
+              "chain": "solana",
+              "dex": "raydium",
+              "impact_pct": "95.03",
+              "price": "0.00006078",
+              "size": "100000",
+              "total": "786750"
+            },
+            {
+              "chain": "arbitrum",
+              "dex": "camelot",
+              "impact_pct": "56.77",
+              "price": "0.00004509",
+              "size": "10000",
+              "total": "796750"
+            },
+            {
+              "chain": "arbitrum",
+              "dex": "camelot",
+              "impact_pct": "76.63",
+              "price": "0.00002438",
+              "size": "25000",
+              "total": "821750"
+            },
+            {
+              "chain": "arbitrum",
+              "dex": "camelot",
+              "impact_pct": "86.76",
+              "price": "0.00001381",
+              "size": "50000",
+              "total": "871750"
+            },
+            {
+              "chain": "arbitrum",
+              "dex": "camelot",
+              "impact_pct": "92.91",
+              "price": "0.00000739",
+              "size": "100000",
+              "total": "971750"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v2",
+              "impact_pct": "100.00",
+              "price": "0E-8",
+              "size": "100",
+              "total": "971850"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v2",
+              "impact_pct": "100.00",
+              "price": "0E-8",
+              "size": "250",
+              "total": "972100"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v2",
+              "impact_pct": "100.00",
+              "price": "0E-8",
+              "size": "500",
+              "total": "972600"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v2",
+              "impact_pct": "100.00",
+              "price": "0E-8",
+              "size": "1000",
+              "total": "973600"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v2",
+              "impact_pct": "100.00",
+              "price": "0E-8",
+              "size": "2500",
+              "total": "976100"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v2",
+              "impact_pct": "100.00",
+              "price": "0E-8",
+              "size": "5000",
+              "total": "981100"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v2",
+              "impact_pct": "100.00",
+              "price": "0E-8",
+              "size": "10000",
+              "total": "991100"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v2",
+              "impact_pct": "100.00",
+              "price": "0E-8",
+              "size": "25000",
+              "total": "1016100"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v2",
+              "impact_pct": "100.00",
+              "price": "0E-8",
+              "size": "50000",
+              "total": "1066100"
+            },
+            {
+              "chain": "ethereum",
+              "dex": "uniswap_v2",
+              "impact_pct": "100.00",
+              "price": "0E-8",
+              "size": "100000",
+              "total": "1166100"
+            }
+          ],
+          "chains": {
+            "arbitrum": {
+              "liquidity_usd": "1.59",
+              "mid_price": "0.00010430",
+              "native_price_usd": "301.24",
+              "native_symbol": "ETH",
+              "reserve_native": "0.0026",
+              "reserve_vaix": "7631.92"
+            },
+            "base": {
+              "liquidity_usd": "299.21",
+              "mid_price": "0.00100296",
+              "native_price_usd": "2562.15",
+              "native_symbol": "ETH",
+              "reserve_native": "0.0584",
+              "reserve_vaix": "149164.36"
+            },
+            "ethereum": {
+              "liquidity_usd": "10070.26",
+              "mid_price": "0.00113208",
+              "native_price_usd": "2565.61",
+              "native_symbol": "ETH",
+              "reserve_native": "0.0000",
+              "reserve_vaix": "0.00"
+            },
+            "solana": {
+              "liquidity_usd": "12.79",
+              "mid_price": "0.00122196",
+              "native_price_usd": "102.00",
+              "native_symbol": "SOL",
+              "reserve_native": "0.0627",
+              "reserve_vaix": "5235.03"
+            }
+          },
+          "equilibrium_price": "0.00112831",
+          "mid_price": "0.00112831",
+          "spread_pct": "10.81",
+          "timestamp": "2026-09-11T17:51:00.261659+00:00",
+          "total_liquidity_usd": "10383.85"
+        }
+      }
+    },
+    "elapsed_ms": null,
+    "headers": {
+      "cache-control": "no-store, no-cache, must-revalidate, max-age=0",
+      "connection": "keep-alive",
+      "content-encoding": "gzip",
+      "content-length": "1750",
+      "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests",
+      "content-security-policy-report-only": "default-src 'self'; script-src 'self' 'nonce-ZWrKdwpaLRAtl/x7YU28aQ==' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'",
+      "content-signal": "ai-train=no, search=yes, ai-input=yes",
+      "content-type": "application/json",
+      "cross-origin-opener-policy": "same-origin-allow-popups",
+      "cross-origin-resource-policy": "cross-origin",
+      "date": "Fri, 11 Sep 2026 17:51:01 GMT",
+      "permissions-policy": "geolocation=(), microphone=(), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=(), browsing-topics=(), attribution-reporting=()",
+      "pragma": "no-cache",
+      "referrer-policy": "strict-origin-when-cross-origin, strict-origin-when-cross-origin",
+      "server": "nginx",
+      "strict-transport-security": "max-age=31536000; includeSubDomains",
+      "vary": "Accept-Encoding",
+      "x-ai-strongest-model": "Claude Fable 5",
+      "x-content-type-options": "nosniff, nosniff",
+      "x-dns-prefetch-control": "off",
+      "x-frame-options": "SAMEORIGIN, SAMEORIGIN",
+      "x-ratelimit-limit": "2000",
+      "x-ratelimit-remaining": "1993",
+      "x-ratelimit-reset": "1789149120",
+      "x-xss-protection": "0"
+    },
+    "reason": "OK",
+    "status_code": 200
+  },
+  "run_id": "run-20260911T174358Z-c0e379b9",
+  "tier": "SAFE"
+}
