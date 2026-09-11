@@ -15,6 +15,7 @@ of tone.
 
 from __future__ import annotations
 
+import os
 import re
 import time
 
@@ -43,6 +44,21 @@ ASYNC_PROBE = ("What currency does the bounty programme pay rewards in, and "
 # slack for a slow morning, not an expectation; polling stops at the reply, and
 # running out of it is inconclusive rather than a defect on their side.
 REPLY_WAIT_SECONDS = 25
+
+
+def may_write_to_vendor() -> bool:
+    """Whether this run may post to their a2a channel. Off unless asked.
+
+    Two checks in this file posted a real message to the vendor on every run
+    for five days -- 61 POSTs, the same currency question each time -- until
+    they wrote back on 2026-09-10 that "your agent re-sends" it. CLAUDE.md's
+    rule is that an a2a message goes through scripts/a2a.py on --confirm; a
+    check is not that, so it asks first. QA_ALLOW_A2A_SEND=1 is the operator
+    saying yes for one run -- to re-verify a claim about the async channel,
+    say -- and tests/meta/test_pipeline_vendor_writes.py fails on any post
+    that does not ask.
+    """
+    return os.environ.get("QA_ALLOW_A2A_SEND") == "1"
 
 
 @qa(component="rest.support", tier=SafetyTier.PROBE, surface="rest",
@@ -181,6 +197,22 @@ def test_escalating_a_low_confidence_answer_does_not_return_the_same_advice(rest
                     f"or above its own escalation floor of {CONFIDENCE_FLOOR}, "
                     f"so the escalation path was not exercised and this run "
                     f"establishes nothing about it"),
+            left=confidence, right=CONFIDENCE_FLOOR,
+            sources={"sync": ASK},
+            claim_id="qa-agent-escalation-is-a-loop"))
+        return
+
+    if not may_write_to_vendor():
+        # Below their floor, so the rule says escalate -- and escalating is a
+        # message to the vendor. Not sent without the operator's say-so for
+        # this run: evidence, which moves no state, saying what it did not do.
+        conclude(Measurement(
+            verdict="inconclusive",
+            role="evidence",
+            reason=(f"sync answered at confidence {confidence}, below the floor "
+                    f"of {CONFIDENCE_FLOOR}, so the rule says escalate -- not "
+                    f"sent, because writing to the vendor's a2a channel needs "
+                    f"QA_ALLOW_A2A_SEND=1 for the run"),
             left=confidence, right=CONFIDENCE_FLOOR,
             sources={"sync": ASK},
             claim_id="qa-agent-escalation-is-a-loop"))
@@ -395,6 +427,22 @@ def test_the_async_first_pass_is_grounded_like_the_sync_channel(rest_anon, rest_
     Two questions per sweep, one to each half. Measuring the comparison the
     finding is named after, on evidence this run produced, is worth two.
     """
+    if not may_write_to_vendor():
+        # This check judges a FRESH reply, so it has to ask -- and asking is a
+        # message to the vendor. It did that on every run for five days until
+        # they told us. Without the operator's say-so it asks nothing and
+        # records that it measured nothing: evidence, which moves no state, so
+        # the row keeps what the last permitted run established.
+        conclude(Measurement(
+            verdict="inconclusive",
+            role="evidence",
+            reason=("not asked: this check needs a fresh async reply, getting "
+                    "one means posting to the vendor's a2a channel, and that "
+                    "needs QA_ALLOW_A2A_SEND=1 for the run"),
+            sources={"async": SEND},
+            claim_id="a2a-first-pass-not-grounded"))
+        return
+
     sent = rest_anon.post(SEND, json={"from_agent_id": AGENT_ID,
                                       "content": ASYNC_PROBE})
     if sent.status_code != 200:

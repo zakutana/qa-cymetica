@@ -238,10 +238,19 @@ def test_a_deep_investigation_answers_inside_the_window_it_publishes():
 
     low, high = nexus.PUBLISHED_MINUTES
     ceiling = high * 60
+    # Bounds, not one number. The answer row's `at` is when WE looked, so a
+    # question asked with --no-wait and picked up fourteen minutes later
+    # "took" fourteen minutes by that reading -- which is how NEX-0009, done
+    # in 155 s by their job table, became a late answer we reported to them.
+    # A job is late only if a poll SAW it still running past the ceiling; a
+    # first look that finds it done proves only an upper bound.
+    verdicts = {r["id"]: nexus.bounds_verdict(*nexus.latency_bounds(rows, r["id"]))
+                for r in finished if r.get("type") == "answer"}
     late = sorted(
-        ((r["id"], elapsed(r)) for r in finished
-         if r.get("type") == "answer" and elapsed(r) > ceiling),
+        ((r["id"], nexus.latency_bounds(rows, r["id"])[0]) for r in finished
+         if r.get("type") == "answer" and verdicts.get(r["id"]) == "OVER"),
         key=lambda pair: pair[1], reverse=True)
+    unmeasured = sorted(i for i, v in verdicts.items() if v == "unknown")
     failed = [(r["id"], (r.get("error") or r.get("status") or "")[:80])
               for r in finished if r.get("type") == "gave_up"]
 
@@ -253,13 +262,22 @@ def test_a_deep_investigation_answers_inside_the_window_it_publishes():
         # Sorted, because this said "worst" while rendering whichever late
         # answer happened to come first in the file.
         trouble.append(f"{len(late)} answered later than the published "
-                       f"{high} min (worst {late[0][0]} at {late[0][1]:.0f}s)")
+                       f"{high} min (worst {late[0][0]} still running at {late[0][1]:.0f}s)")
+
+    if not trouble and verdicts and len(unmeasured) == len(verdicts):
+        raise Inconclusive(
+            f"every answer in the window ({', '.join(unmeasured)}) was first "
+            f"looked at after it had finished, so no latency was measured -- "
+            f"poll from the start, or this run proves nothing either way")
 
     conclude(Measurement(
         verdict="failed" if trouble else "passed",
         reason=("; ".join(trouble) if trouble else
-                f"all {len(finished)} investigation(s) answered inside the "
-                f"published {low}-{high} min, timed from the question"),
+                f"{len(verdicts) - len(unmeasured)} investigation(s) answered "
+                f"inside the published {low}-{high} min, bounded by polls"
+                + (f"; {len(unmeasured)} were only looked at after finishing "
+                   f"({', '.join(unmeasured)}), so their latency is an upper "
+                   f"bound and counts neither way" if unmeasured else "")),
         left=[elapsed(r) for r in finished],
         right=ceiling,
         population={"window": WINDOW, "finished": len(finished),

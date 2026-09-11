@@ -245,16 +245,56 @@ def elapsed_since_asked(rows, question_id: str, at: str) -> float | None:
     return (end - start).total_seconds()
 
 
-def window_verdict(elapsed: float | None) -> str:
-    """Their own published window, against the elapsed we can defend.
+RUNNING = frozenset({"running", "queued", "pending"})
 
-    `None` is "unknown", never "within": rows written before the question's
-    timestamp was recorded cannot be judged, and answering the reassuring half
-    of an unknown is the defect this module's docstring is about.
+
+def latency_bounds(rows, question_id: str) -> tuple[float | None, float | None]:
+    """What the poll record can PROVE about how long a job took.
+
+    lower: the latest poll that still found it running.
+    upper: the first poll that found it done.
+
+    Not one number, because the answer row's `at` is when WE looked. NEX-0009
+    was asked with --no-wait at 19:48:11 and polled once, at 20:02:32, and
+    that one poll already said done -- so 861 s is an upper bound, and their
+    job table says it finished in 155 s. Reporting the upper bound as the
+    latency sent them our own pickup delay as their slowness. An unreadable
+    poll is evidence of nothing and moves neither bound.
     """
-    if elapsed is None:
-        return "unknown"
-    return "within" if elapsed <= PUBLISHED_MINUTES[1] * 60 else "OVER"
+    asked = _moment(next((r.get("at") for r in rows
+                          if r.get("id") == question_id
+                          and r.get("type") == "question"), None))
+    if asked is None:
+        return None, None
+    lower = upper = None
+    for row in rows:
+        if row.get("id") != question_id or row.get("type") != "poll":
+            continue
+        when = _moment(row.get("at"))
+        if when is None:
+            continue
+        offset = round((when - asked).total_seconds(), 1)
+        status = str(row.get("status") or "")
+        if status in RUNNING:
+            lower = offset if lower is None else max(lower, offset)
+        elif status == "done":
+            upper = offset if upper is None else min(upper, offset)
+    return lower, upper
+
+
+def bounds_verdict(lower: float | None, upper: float | None) -> str:
+    """Their published window, against what the bounds can defend.
+
+    "within" only when the upper bound is inside it; "OVER" only when a poll
+    SAW the job still running past it; everything between is "unknown" --
+    never the reassuring half, and never the damning one either.
+    """
+    ceiling = PUBLISHED_MINUTES[1] * 60
+    if upper is not None and upper <= ceiling:
+        return "within"
+    if lower is not None and lower > ceiling:
+        return "OVER"
+    return "unknown"
 
 
 def _poll(client, entry: dict) -> dict:
@@ -285,14 +325,18 @@ def _poll(client, entry: dict) -> dict:
                     "polls": attempt, "text": _text_of(_inner(answer))}
             _append(done)
             low, high = PUBLISHED_MINUTES
-            # From the question's own moment, not from this loop's stopwatch.
-            # `answer` enters a second loop, so `waited` there is time since
-            # the pickup and printed 0.0 min for NEX-0009's 14.3.
-            since = elapsed_since_asked(load(), entry["id"], done["at"])
-            done["since_asked_seconds"] = since
-            shown = f"{since / 60:.1f}" if since is not None else "?"
-            print(f"\nanswered after {shown} min, {attempt} polls "
-                  f"-- {window_verdict(since)} their published "
+            lower, upper = latency_bounds(load(), entry["id"])
+            if lower is None and upper is not None:
+                timing = (f"done at the first look, {upper / 60:.1f} min after "
+                          f"asking -- it took at most that, and we did not "
+                          f"watch it run")
+            elif upper is not None:
+                timing = (f"finished between {lower / 60:.1f} and "
+                          f"{upper / 60:.1f} min after asking")
+            else:
+                timing = "timing unreadable"
+            print(f"\n{timing}, {attempt} polls -- "
+                  f"{bounds_verdict(lower, upper)} their published "
                   f"{low}-{high} min\n")
             print(done["text"])
             return done

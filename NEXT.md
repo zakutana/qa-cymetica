@@ -53,6 +53,11 @@ to neodškrtl, nebo to nikdy nebylo další na řadě.
 
   `python scripts/nexus.py ask "..."` je SAFE tier, nic nestojí a zapisuje se.
 
+  **Oprava 11. 9.:** ta čísla do latence počítala i dobu, než jsme se podívali.
+  Když první poll najde job už `done`, víme jen „nejvýš tolik". Podle jejich
+  tabulky jobů doběhly od 12:37 všechny naše dotazy za 79–155 s. Kontrola teď
+  soudí meze z pollů; viz paměť `a-first-look-is-an-upper-bound-not-a-latency`.
+
 - [x] 2026-09-10  Obě hromadící kontroly soudit v přítomném čase, ne přes celý log
 
   Sweep `PRE-0081`: #87 čte `state/paper.jsonl` a soudí **každý** obchod, #85
