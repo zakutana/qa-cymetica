@@ -354,11 +354,19 @@ def _poll(client, entry: dict) -> dict:
             print(done["text"])
             return done
         if status.startswith("failed"):
+            # Their failed answer says why, whether to retry, and after how
+            # long. On 2026-09-11 five failures in a row were recorded as the
+            # bare word, and the fail sent on #86 could only say "failed".
+            node = _inner(answer)
+            reason = ({key: node[key] for key in ("error", "retryable", "retry_after_s")
+                       if key in node} if isinstance(node, dict) else {})
             _append({"id": entry["id"], "type": "gave_up", "at": _now(),
                      "job_id": entry["job_id"], "waited_seconds": waited,
-                     "polls": attempt, "status": status})
+                     "polls": attempt, "status": status, **reason})
             print(f"\nthe investigation ended as {status} after {waited:.0f}s")
-            return {"status": status}
+            if reason.get("error"):
+                print(f"their reason: {reason['error']}")
+            return {"status": status, **reason}
         if time.monotonic() - started > GIVE_UP_SECONDS:
             _append({"id": entry["id"], "type": "gave_up", "at": _now(),
                      "job_id": entry["job_id"], "waited_seconds": waited,

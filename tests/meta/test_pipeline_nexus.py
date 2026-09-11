@@ -129,3 +129,34 @@ def test_a_first_look_that_finds_it_done_is_an_upper_bound_not_a_latency(
 
     # And nothing recorded at all is unknown, never the reassuring half.
     assert mod.bounds_verdict(None, None) == "unknown"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_failed_investigation_keeps_the_reason_they_gave(tmp_path, monkeypatch):
+    """Five deep investigations ended `failed` on 2026-09-11 afternoon, and our
+    timeline said only that word. Their poll answer carried the rest: an
+    error sentence, `retryable`, `retry_after_s` and a fallback -- read by hand
+    for NEX-0023, after the fail on #86 had already gone out saying "(NEX-0020:
+    failed)". The check reads `error` off the give-up row; nothing wrote it."""
+    mod = _nexus(tmp_path, monkeypatch)
+
+    class Failed:
+        def call(self, tool, arguments):
+            assert tool == mod.POLL
+            return {"success": True, "tool": "get_deep_answer", "result": {
+                "success": True, "job_id": arguments["job_id"], "status": "failed",
+                "error": "The deep-answer run could not be completed. Retry "
+                         "ask_nexus_deep after retry_after_s seconds, or POST "
+                         "https://cymetica.com/api/v1/bounty/qa-agent/ask for "
+                         "an immediate shallower answer.",
+                "retryable": True, "retry_after_s": 30,
+                "fallback": {"sync": "POST https://cymetica.com/api/v1/bounty/qa-agent/ask"}}}
+
+    mod._poll(Failed(), {"id": "NEX-9004", "job_id": "job-9004"})
+    gave_up = [r for r in mod.load() if r.get("type") == "gave_up"]
+    assert len(gave_up) == 1
+    assert gave_up[0]["status"] == "failed"
+    assert gave_up[0].get("error", "").startswith(
+        "The deep-answer run could not be completed"), (
+        "their reason for the failure is not on the give-up row")
+    assert (gave_up[0].get("retryable"), gave_up[0].get("retry_after_s")) == (True, 30)
