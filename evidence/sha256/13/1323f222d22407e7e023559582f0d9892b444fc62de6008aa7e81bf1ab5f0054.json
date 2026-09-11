@@ -1,0 +1,237 @@
+{
+  "captured_at": "2026-09-11T05:59:41+00:00",
+  "endpoint_rule": null,
+  "nodeid": "tests/rest/test_nexus_cards_exist.py::test_every_card_nexus_tells_an_agent_to_trade_exists",
+  "request": {
+    "body": {
+      "encoding": "empty",
+      "value": null
+    },
+    "headers": {
+      "accept": "application/json",
+      "accept-encoding": "gzip, deflate, zstd",
+      "connection": "keep-alive",
+      "host": "cymetica.com",
+      "user-agent": "qa-cymetica/0.1 (independent QA; contact via vendor Telegram channel)",
+      "x-api-key": "<redacted>"
+    },
+    "method": "GET",
+    "url": "https://cymetica.com/api/v1/event-cards/f197d20f-db76-431d-a10c-75a538ebe213"
+  },
+  "response": {
+    "body": {
+      "encoding": "json",
+      "truncated": false,
+      "value": {
+        "basket": [
+          {
+            "asset_type": "crypto",
+            "association_score": 1.0,
+            "image_url": "https://coin-images.coingecko.com/coins/images/780/large/bitcoin-cash-circle.png?1696501932",
+            "is_direct": null,
+            "market_cap_rank": 21,
+            "name": "Bitcoin Cash",
+            "symbol": "BCH",
+            "venue": "binance_ws",
+            "weight": 0.0029
+          },
+          {
+            "asset_type": "stock",
+            "association_score": 1.0,
+            "image_url": "https://financialmodelingprep.com/image-stock/BTCS.png",
+            "is_direct": null,
+            "market_cap_rank": null,
+            "name": "BTCS",
+            "symbol": "BTCS",
+            "venue": "finnhub",
+            "weight": 0.0
+          },
+          {
+            "asset_type": "crypto",
+            "association_score": 0.0798,
+            "image_url": "https://coin-images.coingecko.com/coins/images/1/large/bitcoin.png?1696501400",
+            "is_direct": null,
+            "market_cap_rank": 1,
+            "name": "Bitcoin",
+            "symbol": "BTC",
+            "venue": "binance_ws",
+            "weight": 0.9962
+          },
+          {
+            "asset_type": "stock",
+            "association_score": 0.0614,
+            "image_url": "https://financialmodelingprep.com/image-stock/BMNR.png",
+            "is_direct": null,
+            "market_cap_rank": null,
+            "name": "BMNR",
+            "symbol": "BMNR",
+            "venue": "finnhub",
+            "weight": 0.0003
+          },
+          {
+            "asset_type": "stock",
+            "association_score": 0.0575,
+            "image_url": "https://financialmodelingprep.com/image-stock/SBET.png",
+            "is_direct": null,
+            "market_cap_rank": null,
+            "name": "SBET",
+            "symbol": "SBET",
+            "venue": "finnhub",
+            "weight": 0.0001
+          },
+          {
+            "asset_type": "stock",
+            "association_score": 0.0472,
+            "image_url": "https://financialmodelingprep.com/image-stock/STKE.png",
+            "is_direct": null,
+            "market_cap_rank": null,
+            "name": "STKE",
+            "symbol": "STKE",
+            "venue": "finnhub",
+            "weight": 0.0
+          },
+          {
+            "asset_type": "stock",
+            "association_score": 0.0311,
+            "image_url": "https://financialmodelingprep.com/image-stock/FGNX.png",
+            "is_direct": null,
+            "market_cap_rank": null,
+            "name": "FGNX",
+            "symbol": "FGNX",
+            "venue": "finnhub",
+            "weight": 0.0001
+          },
+          {
+            "asset_type": "stock",
+            "association_score": 0.031,
+            "image_url": "https://financialmodelingprep.com/image-stock/FGNXP.png",
+            "is_direct": null,
+            "market_cap_rank": null,
+            "name": "FGNXP",
+            "symbol": "FGNXP",
+            "venue": "finnhub",
+            "weight": 0.0003
+          }
+        ],
+        "bear_notional_usdc": 0.0,
+        "bull_notional_usdc": 0.0,
+        "card_url": "/events/f197d20f-db76-431d-a10c-75a538ebe213",
+        "contract_spec": {
+          "appellate_body": "VAIX Trading Committee",
+          "dispute_window": "24h",
+          "fallback_source": "okx_ws",
+          "max_price_staleness": "30s",
+          "methodology": "last-tick",
+          "notes": "Auto-generated from headline 14d82980-5363-413a-bd37-92d4d77036c9",
+          "resolution_at_utc": "2026-09-11T16:34:18.343475+00:00",
+          "resolution_source": "binance_ws",
+          "version": 1
+        },
+        "created_at": "2026-09-10T16:34:18.353590+00:00",
+        "current_index": 100.342829,
+        "direction": null,
+        "evcdx_symbol": null,
+        "has_stock_legs": true,
+        "headline_impact_score": 7.5,
+        "headline_sentiment_score": 0.8,
+        "holdings": [],
+        "id": "f197d20f-db76-431d-a10c-75a538ebe213",
+        "image_url": "https://s.yimg.com/lo/mysterio/api/<redacted>/lightyear_networkapi/resizefill_w1200%3Bquality_80%3Bformat_webp/https%3A%2F%2Fmedia.zenfs.com%2Fen%2Fcryptoprowl_304%2Fc0b1f4ddb692af207ccfb0aa01e01fd6.jpg",
+        "index_base": 100.0,
+        "is_featured": false,
+        "perp_symbol": null,
+        "pipeline_status": {
+          "current_stage": "token_deployed",
+          "progress_pct": 16,
+          "stages": [
+            {
+              "done": true,
+              "id": "card_created",
+              "label": "Card Created"
+            },
+            {
+              "done": false,
+              "id": "token_deployed",
+              "label": "Token Deploying"
+            },
+            {
+              "done": false,
+              "id": "pair_registered",
+              "label": "Pair Registered"
+            },
+            {
+              "done": false,
+              "id": "mm_funded",
+              "label": "Liquidity Seeded"
+            },
+            {
+              "done": false,
+              "id": "mm_quoting",
+              "label": "Market Making"
+            },
+            {
+              "done": false,
+              "id": "tradeable",
+              "label": "Tradeable"
+            }
+          ]
+        },
+        "pons_coin": null,
+        "pro_terminal_url": null,
+        "published_at": "2026-09-10T15:49:00+00:00",
+        "pw_base": 9653.615,
+        "pw_index": 9686.710388,
+        "share_price_usd": null,
+        "share_url": "https://cymetica.com/events/f197d20f-db76-431d-a10c-75a538ebe213",
+        "short_execution": "spot_bear",
+        "source_url": "https://finance.yahoo.com/markets/crypto/articles/bitcoin-selling-pressure-drops-historic-154900460.html",
+        "status": "live",
+        "stock_tokenized_live": false,
+        "strategy_name": null,
+        "summary": "",
+        "title": "Bitcoin Selling Pressure Drops to Historic Lows Amid Rebound",
+        "tradeable_now": false,
+        "trading_blocked_reason": "US equity markets are closed — this card holds stocks and trades during US market hours (Mon–Fri, 9:30am–4:00pm ET). Crypto-only cards trade 24/7.",
+        "trading_closes_at": "2026-09-13T16:34:18.343594+00:00",
+        "upvoted_by_me": false,
+        "upvotes": 0,
+        "us_market_open": false,
+        "user_position": null,
+        "vehicle_structure": null,
+        "vehicle_structure_name": null
+      }
+    },
+    "elapsed_ms": null,
+    "headers": {
+      "cache-control": "no-store, no-cache, must-revalidate, max-age=0",
+      "connection": "keep-alive",
+      "content-encoding": "gzip",
+      "content-length": "1585",
+      "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests",
+      "content-security-policy-report-only": "default-src 'self'; script-src 'self' 'nonce-Jp9VOrcyjAOanM/I9NDCyw==' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'",
+      "content-signal": "ai-train=no, search=yes, ai-input=yes",
+      "content-type": "application/json",
+      "cross-origin-opener-policy": "same-origin-allow-popups",
+      "cross-origin-resource-policy": "cross-origin",
+      "date": "Fri, 11 Sep 2026 05:59:41 GMT",
+      "permissions-policy": "geolocation=(), microphone=(), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=(), browsing-topics=(), attribution-reporting=()",
+      "pragma": "no-cache",
+      "referrer-policy": "strict-origin-when-cross-origin, strict-origin-when-cross-origin",
+      "server": "nginx",
+      "strict-transport-security": "max-age=31536000; includeSubDomains",
+      "vary": "Accept-Encoding",
+      "x-ai-strongest-model": "Claude Fable 5",
+      "x-content-type-options": "nosniff, nosniff",
+      "x-dns-prefetch-control": "off",
+      "x-frame-options": "SAMEORIGIN, SAMEORIGIN",
+      "x-ratelimit-limit": "2000",
+      "x-ratelimit-remaining": "1994",
+      "x-ratelimit-reset": "1789106400",
+      "x-xss-protection": "0"
+    },
+    "reason": "OK",
+    "status_code": 200
+  },
+  "run_id": "run-20260911T055512Z-0d595c5b",
+  "tier": "SAFE"
+}

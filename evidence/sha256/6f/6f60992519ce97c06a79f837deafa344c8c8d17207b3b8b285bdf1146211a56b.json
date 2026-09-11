@@ -1,0 +1,320 @@
+{
+  "captured_at": "2026-09-11T05:57:41+00:00",
+  "endpoint_rule": null,
+  "nodeid": "tests/rest/test_build_recipes.py::test_the_asset_search_the_recipe_names_finds_a_major_asset",
+  "request": {
+    "body": {
+      "encoding": "empty",
+      "value": null
+    },
+    "headers": {
+      "accept": "application/json",
+      "accept-encoding": "gzip, deflate, zstd",
+      "connection": "keep-alive",
+      "host": "cymetica.com",
+      "user-agent": "qa-cymetica/0.1 (independent QA; contact via vendor Telegram channel)"
+    },
+    "method": "GET",
+    "url": "https://cymetica.com/api/v1/event-cards/symbols/search?q=BTC"
+  },
+  "response": {
+    "body": {
+      "encoding": "json",
+      "truncated": false,
+      "value": {
+        "results": [
+          {
+            "asset_type": "crypto-assets",
+            "coingecko_id": "bitcoin",
+            "image_url": "https://coin-images.coingecko.com/coins/images/1/large/bitcoin.png?1696501400",
+            "market_cap_rank": 1,
+            "name": "Bitcoin",
+            "price_usd": 76919.0,
+            "symbol": "BTC"
+          },
+          {
+            "asset_type": "memecoin",
+            "coingecko_id": null,
+            "image_url": null,
+            "market_cap_rank": null,
+            "name": "Bitcoin on Base",
+            "price_usd": null,
+            "symbol": "BTCB"
+          },
+          {
+            "asset_type": "memecoin",
+            "coingecko_id": null,
+            "image_url": null,
+            "market_cap_rank": null,
+            "name": "Bitcoin Bull",
+            "price_usd": null,
+            "symbol": "BTCBULL"
+          },
+          {
+            "asset_type": "etf",
+            "coingecko_id": null,
+            "image_url": null,
+            "market_cap_rank": null,
+            "name": "GRAYSCALE BTC COV CALL ETF",
+            "price_usd": null,
+            "symbol": "BTCC"
+          },
+          {
+            "asset_type": "etf",
+            "coingecko_id": null,
+            "image_url": null,
+            "market_cap_rank": null,
+            "name": "Grayscale Bitcoin Covered Call ETF",
+            "price_usd": null,
+            "symbol": "BTCC"
+          },
+          {
+            "asset_type": "common-stock",
+            "coingecko_id": null,
+            "image_url": null,
+            "market_cap_rank": null,
+            "name": "Purpose Bitcoin ETF",
+            "price_usd": null,
+            "symbol": "BTCC"
+          },
+          {
+            "asset_type": "common-stock",
+            "coingecko_id": null,
+            "image_url": null,
+            "market_cap_rank": null,
+            "name": "BITCOIN TREASURY CORP",
+            "price_usd": null,
+            "symbol": "BTCFF"
+          },
+          {
+            "asset_type": "etf",
+            "coingecko_id": null,
+            "image_url": null,
+            "market_cap_rank": null,
+            "name": "NEOS BITCOIN HIGH INCOME ETF",
+            "price_usd": null,
+            "symbol": "BTCI"
+          },
+          {
+            "asset_type": "etf",
+            "coingecko_id": null,
+            "image_url": null,
+            "market_cap_rank": null,
+            "name": "NEOS Bitcoin High Income ETF",
+            "price_usd": null,
+            "symbol": "BTCI"
+          },
+          {
+            "asset_type": "etf",
+            "coingecko_id": null,
+            "image_url": null,
+            "market_cap_rank": null,
+            "name": "7RCC Spot Bitcoin and Carbon Credit Futures ETF",
+            "price_usd": null,
+            "symbol": "BTCK"
+          },
+          {
+            "asset_type": "etf",
+            "coingecko_id": null,
+            "image_url": null,
+            "market_cap_rank": null,
+            "name": "7RCC BITCOIN AND CARBON ETF",
+            "price_usd": null,
+            "symbol": "BTCK"
+          },
+          {
+            "asset_type": "leveraged-etf",
+            "coingecko_id": null,
+            "image_url": null,
+            "market_cap_rank": null,
+            "name": "T-REX 2X LONG BITCOIN DAILY",
+            "price_usd": null,
+            "symbol": "BTCL"
+          },
+          {
+            "asset_type": "leveraged-etf",
+            "coingecko_id": null,
+            "image_url": null,
+            "market_cap_rank": null,
+            "name": "T-Rex 2X Long Bitcoin Daily Target ETF",
+            "price_usd": null,
+            "symbol": "BTCL"
+          },
+          {
+            "asset_type": "etf",
+            "coingecko_id": null,
+            "image_url": null,
+            "market_cap_rank": null,
+            "name": "Invesco Galaxy Bitcoin ETF",
+            "price_usd": null,
+            "symbol": "BTCO"
+          },
+          {
+            "asset_type": "etf",
+            "coingecko_id": null,
+            "image_url": null,
+            "market_cap_rank": null,
+            "name": "INVSCO GLXY BTCN ETF",
+            "price_usd": null,
+            "symbol": "BTCO"
+          },
+          {
+            "asset_type": "common-stock",
+            "coingecko_id": null,
+            "image_url": null,
+            "market_cap_rank": null,
+            "name": "Purpose Core Bitcoin ETF",
+            "price_usd": null,
+            "symbol": "BTCO.B"
+          },
+          {
+            "asset_type": "common-stock",
+            "coingecko_id": null,
+            "image_url": null,
+            "market_cap_rank": null,
+            "name": "3iQ Bitcoin ETF",
+            "price_usd": null,
+            "symbol": "BTCQ"
+          },
+          {
+            "asset_type": "etf",
+            "coingecko_id": null,
+            "image_url": null,
+            "market_cap_rank": null,
+            "name": "3IQ BITCOIN ETF",
+            "price_usd": null,
+            "symbol": "BTCQF"
+          }
+        ],
+        "unavailable": [
+          {
+            "name": "Bitcoin Pro",
+            "reason": "no_live_feed",
+            "symbol": "BTCP"
+          },
+          {
+            "name": "Bitcoin USD (BTCFi)",
+            "reason": "no_live_feed",
+            "symbol": "BTCUSD"
+          },
+          {
+            "name": "Bitcoin Limited Edition",
+            "reason": "no_live_feed",
+            "symbol": "BTCLE"
+          },
+          {
+            "name": "Minto",
+            "reason": "no_live_feed",
+            "symbol": "BTCMT"
+          },
+          {
+            "name": "Bitcoin Bull",
+            "reason": "no_live_feed",
+            "symbol": "BTCBULL"
+          },
+          {
+            "name": "Bitcoin.ℏ",
+            "reason": "no_live_feed",
+            "symbol": "BTC.ℏ"
+          },
+          {
+            "name": "BitcoinBam",
+            "reason": "no_live_feed",
+            "symbol": "BTCBAM"
+          },
+          {
+            "name": "Bitcoin 2",
+            "reason": "no_live_feed",
+            "symbol": "BTC2"
+          },
+          {
+            "name": "Bitcoin on Base",
+            "reason": "no_live_feed",
+            "symbol": "BTCB"
+          },
+          {
+            "name": "Bitcoin 2.0",
+            "reason": "no_live_feed",
+            "symbol": "BTC2.0"
+          },
+          {
+            "name": "BitcoinZ",
+            "reason": "no_live_feed",
+            "symbol": "BTCZ"
+          },
+          {
+            "name": "Bitcoin Silver",
+            "reason": "no_live_feed",
+            "symbol": "BTCS"
+          },
+          {
+            "name": "Bitcoin20",
+            "reason": "no_live_feed",
+            "symbol": "BTC20"
+          },
+          {
+            "name": "bitcoin (2015 Wrapper) (Meme)",
+            "reason": "no_live_feed",
+            "symbol": "BTCE"
+          },
+          {
+            "name": "BTC Standard Hashrate Token",
+            "reason": "no_live_feed",
+            "symbol": "BTCST"
+          },
+          {
+            "name": "BitSwagger (BTCSWAG)",
+            "reason": "no_live_feed",
+            "symbol": "BTCSWAG"
+          },
+          {
+            "name": "Bitcoin Inu",
+            "reason": "no_live_feed",
+            "symbol": "BTCINU"
+          },
+          {
+            "name": "BitCat",
+            "reason": "no_live_feed",
+            "symbol": "BTCAT"
+          },
+          {
+            "name": "BITCOIN Act",
+            "reason": "no_live_feed",
+            "symbol": "BTCACT"
+          }
+        ]
+      }
+    },
+    "elapsed_ms": null,
+    "headers": {
+      "cache-control": "public, max-age=300, stale-while-revalidate=600",
+      "connection": "keep-alive",
+      "content-encoding": "gzip",
+      "content-length": "783",
+      "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests",
+      "content-security-policy-report-only": "default-src 'self'; script-src 'self' 'nonce-kdF6CWVkAA/K0eZ4DLLIsQ==' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'",
+      "content-signal": "ai-train=no, search=yes, ai-input=yes",
+      "content-type": "application/json",
+      "cross-origin-opener-policy": "same-origin-allow-popups",
+      "cross-origin-resource-policy": "cross-origin",
+      "date": "Fri, 11 Sep 2026 05:57:41 GMT",
+      "permissions-policy": "geolocation=(), microphone=(), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=(), browsing-topics=(), attribution-reporting=()",
+      "referrer-policy": "strict-origin-when-cross-origin, strict-origin-when-cross-origin",
+      "server": "nginx",
+      "strict-transport-security": "max-age=31536000; includeSubDomains",
+      "vary": "Accept-Encoding",
+      "x-ai-strongest-model": "Claude Fable 5",
+      "x-content-type-options": "nosniff, nosniff",
+      "x-dns-prefetch-control": "off",
+      "x-frame-options": "SAMEORIGIN, SAMEORIGIN",
+      "x-ratelimit-limit": "300",
+      "x-ratelimit-remaining": "299",
+      "x-ratelimit-reset": "1789106280",
+      "x-xss-protection": "0"
+    },
+    "reason": "OK",
+    "status_code": 200
+  },
+  "run_id": "run-20260911T055512Z-0d595c5b",
+  "tier": "SAFE"
+}
