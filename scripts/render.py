@@ -1844,10 +1844,17 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:15.0px; max-wid
 .nx-chart .nx-dot{fill:var(--accent);stroke:var(--surface);stroke-width:2}
 .nx-chart .nx-dot-open{fill:var(--surface);stroke:var(--accent);stroke-width:2}
 .nx-chart .nx-dot-loss{fill:var(--bad);stroke:var(--surface);stroke-width:2}
-.nx-why{margin-top:26px;padding-top:12px;border-top:1px solid var(--line-soft)}
-.nx-why details{margin:4px 0}
-.nx-why summary{cursor:pointer;font-size:13.5px;color:var(--text-dim)}
-.nx-why details p{margin:.45rem 0 .2rem;font-size:13.5px;line-height:1.5;color:var(--text-dim);white-space:pre-wrap}
+/* Why a strategy stands where it does: under its name, above its numbers,
+   coloured by where it stands, and every earlier move under it. */
+.nx-status{margin:18px 0 4px;padding:14px 18px 13px;border-radius:10px;background:var(--surface-2);border-left:4px solid var(--accent)}
+.nx-status.nx-paused{border-left-color:var(--warn);background:var(--warn-bg)}
+.nx-status.nx-stopped{border-left-color:var(--bad);background:var(--bad-bg)}
+.nx-status.nx-proposed{border-left-color:var(--text-faint)}
+.nx-status h3{margin:0;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-dim)}
+.nx-status>p{margin:6px 0 0;font-size:16px;line-height:1.55;white-space:pre-wrap}
+.nx-moves{display:grid;gap:5px;margin:12px 0 0;padding-top:10px;border-top:1px solid var(--line-soft)}
+.nx-moves p{margin:0;font-size:13.5px;line-height:1.5;color:var(--text-dim)}
+.nx-moves b{font-weight:600}
 .nx-foot{margin:12px 0 0;font-size:12.5px;color:var(--text-faint)}
 .nx-stale b{color:var(--bad)}
 .nx-pf{padding:0;border:none;background:none;color:var(--text);font:inherit;font-weight:600;text-align:left;cursor:pointer}
@@ -3460,10 +3467,17 @@ function nxChart(series, opts) {
   return svg + "</svg>";
 }
 
-// A strategy's cards: Nexus's plan with what was done laid over it. A card is
-// named by what it holds; its own headline sits under that, quietly.
+// A strategy's cards: Nexus's plan with what was done laid over it. An event
+// card is a piece of news, so a leg is named by its headline, and the basket
+// its index tracks sits under that, quietly. A card their API does not know is
+// said to be one: an id means nothing to the operator.
 function nxLegName(nl) {
-  return nl.label || nxShort(nl.card, 9);
+  if (nl.state === "card not found") return "Card that does not exist";
+  return nl.card_title ? nxShort(nl.card_title, 64) : nl.label || "Card not read yet";
+}
+function nxLegNote(nl) {
+  if (nl.state === "card not found") return "Nexus proposed it; their API answers 404";
+  return nl.label ? "index: " + nl.label : "";
 }
 function nxLegs(np) {
   const legs = np.legs || [];
@@ -3481,9 +3495,8 @@ function nxLegs(np) {
     const exits = (nl.tp != null ? nxPct(nl.tp, nl.tp % 1 ? 1 : 0) : "—") + " / " +
       (nl.sl != null ? nxPct(nl.sl, nl.sl % 1 ? 1 : 0) : "—");
     const state = nl.state || "not bought";
-    return '<div class="nx-tr"><span><b>' + esc(nxLegName(nl)) + '</b><small title="' +
-      esc(nl.card_title || nl.card || "") + '">' +
-      esc(nxShort(nl.card_title || nl.card || "", 46)) + "</small></span><span>" +
+    return '<div class="nx-tr"><span><b title="' + esc(nl.card_title || "") + '">' +
+      esc(nxLegName(nl)) + "</b><small>" + esc(nxLegNote(nl)) + "</small></span><span>" +
       (nl.side === "bear" ? "▼ bear" : nl.side ? "▲ " + esc(nl.side) : "—") + "</span><span>" +
       esc(share) + "</span><span>" + moved + "</span><span>" + esc(exits) +
       '</span><span class="nx-state nx-' + esc(state.split(" ").join("-")) + '">' +
@@ -3518,7 +3531,7 @@ function nxLegCharts(np) {
     }
     const order = bought ? (np.trades || []).find(nt => nt.card === nl.card &&
                                                         nt.outcome === "accepted") : null;
-    const head = nxLegName(nl) + (bought ? " index" : " index · not bought");
+    const head = nxLegName(nl) + (bought ? "" : " · not bought");
     const note = bought
       ? (nl.pnl != null ? "P&L " + nxSigned(nl.pnl) + " USDC" : "")
       : "if bought when proposed: " + nxPct(nl.since_proposal, 2);
@@ -3645,19 +3658,21 @@ function nxBot(nc) {
         "</div>"
       : "");
 }
-// Why a strategy stands where it does, and every time it moved: there, a click
-// away, and never the first thing on the screen.
-function nxFolded(np) {
+// Why a strategy stands where it does, and every move before it, newest first:
+// under the name, above the numbers. It is the operator's first question about
+// a strategy, and folded at the bottom it was the one thing they could not find.
+// The current move is said once, as the why, not again in the list.
+function nxStatus(np) {
   const word = String(NX_WORD[np.status] || np.status || "proposed").toLowerCase();
-  const moves = np.history || [];
-  return '<div class="nx-why">' +
-    (np.why ? "<details><summary>Why it is " + esc(word) + "</summary><p>" +
-              esc(np.why) + "</p></details>" : "") +
-    (moves.length ? "<details><summary>How it moved · " + moves.length + " change" +
-      (moves.length === 1 ? "" : "s") + "</summary>" + moves.map(nh => "<p>" +
-        nxGlyph(nh.status) + " " + esc(nh.status || "") + " · " + esc(nxDay(nh.at)) +
-        (nh.why ? " — " + esc(nh.why) : "") + "</p>").join("") + "</details>" : "") +
-    nxSampler(np) + "</div>";
+  const moves = (np.history || []).filter(nh =>
+    !(nh.status === np.status && nh.why === np.why)).reverse();
+  if (!np.why && !moves.length) return "";
+  return '<div class="nx-status nx-' + esc(np.status || "proposed") + '"><h3>' +
+    (np.why ? "Why it is " + esc(word) : "How it moved") + "</h3>" +
+    (np.why ? "<p>" + esc(np.why) + "</p>" : "") +
+    (moves.length ? '<div class="nx-moves">' + moves.map(nh => "<p>" +
+      nxGlyph(nh.status) + " <b>" + esc(nh.status || "") + "</b> · " + esc(nxDay(nh.at)) +
+      (nh.why ? " — " + esc(nh.why) : "") + "</p>").join("") + "</div>" : "") + "</div>";
 }
 function nxStrategy(nr, np) {
   const nc = (np.clones || [])[0] || null;
@@ -3668,7 +3683,7 @@ function nxStrategy(nr, np) {
       (nc.trading ? "trading" : "not trading") + "</span>" : "");
   const sub = esc(nr.id) + " · proposed by Nexus in " + esc(np.origin || "—") +
     (np.since ? " · since " + esc(nxDay(np.since)) : "");
-  let html = nxHero(np.title || nr.title || nr.id, pills, sub);
+  let html = nxHero(np.title || nr.title || nr.id, pills, sub) + nxStatus(np);
   if (nc) {
     const acts = nc.activity || [];
     const closed = acts.filter(na => na.is_closed).length;
@@ -3690,7 +3705,7 @@ function nxStrategy(nr, np) {
   } else if (!nc) {
     html += '<p class="nx-foot">Nothing bought yet, and no plan written down for it.</p>';
   }
-  return html + nxFolded(np);
+  return html + nxSampler(np);
 }
 function nxPanelOf(id) {
   return ((NX && NX.panels) || {})[id] || {};

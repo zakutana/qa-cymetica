@@ -86,13 +86,16 @@ length and named no card, so it has no room.
 
 ```bash
 python scripts/rooms.py open --from NEX-... --title "..."
-python scripts/rooms.py title STR-... "BTC + BCH blend"
+python scripts/rooms.py title STR-... "Bitcoin hack + Pepeto launch"
 python scripts/rooms.py plan STR-... --leg CARD:bull:20%:tp=8:sl=-5 --leg CARD:bull:10% --reserve 70% --bankroll 100000
 python scripts/rooms.py note general "..." --re NEX-... --gist
 ```
 
-The name is what the strategy trades, in two to four words -- the tab leads
-with it, so no sizes and no ids. The plan is Nexus's proposal as it gave it:
+The name is what the strategy bets on, in two to four words: the news on its
+cards, or the bot's name. An event card is a headline, and its index tracks a
+basket of coins the platform ties to that headline -- so name the headline,
+not the coins; the table shows the basket under it. The tab leads with the
+name, so no sizes and no ids. The plan is Nexus's proposal as it gave it:
 each card by its whole id, copied from the answer (a prefix reads nothing),
 the side, the share of the bankroll, and the take-profit and stop in percent
 from the entry. The panel's table and charts are drawn from it, and the

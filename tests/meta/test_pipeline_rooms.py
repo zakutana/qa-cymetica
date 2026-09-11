@@ -1204,9 +1204,17 @@ def test_the_strip_names_each_strategy_and_its_panel_leads_with_numbers(
     its one number. The panel opens on the name and four figures; the
     configuration is a table; the chart draws the entry and Nexus's exits as
     lines, and a leg nobody bought is labelled as what would have happened.
-    Why it stands where it does is a click away -- folded, never the first
-    thing on screen."""
+
+    Then their next two, on the first version of this. Why a strategy stands
+    where it does was folded away at the bottom, and it was the thing they
+    most wanted: it sits under the name now, above the numbers, with every
+    earlier move beside it and the current one said once. And an event card is
+    a piece of news, not a coin: a leg is named by its headline, the basket it
+    tracks goes under it, and a card their API does not know is said to be
+    one, never shown as an id."""
     import re
+
+    gone = "5bd86126-90eb-4ad8-8e55-909397dab402"  # NEX-0012's Polygon card, a 404
 
     node = shutil.which("node")
     if not node:
@@ -1231,13 +1239,17 @@ def test_the_strip_names_each_strategy_and_its_panel_leads_with_numbers(
          "card_id": CARD_A, "status": "open", "current_index": 92.42,
          "current_value_usdc": 10014.48, "unrealized_pnl_usdc": 14.48,
          "realized_pnl_usdc": 0.0},
+        dict(_card(gone, 950, [], status="not_found"), title=None, index_base=None),
     ])
     rooms.open_strategy("NEX-1", "BTC 20 % + BCH-blend 10 %")
     rooms.set_title("STR-0001", "BTC + BCH blend")
     rooms.set_plan("STR-0001", [
         {"card": CARD_B, "side": "bull", "share": 0.2, "tp": 8.0, "sl": -5.0},
-        {"card": CARD_A, "side": "bull", "share": 0.1, "tp": 13.0, "sl": -9.0}],
-        reserve=0.7, bankroll=100000.0)
+        {"card": CARD_A, "side": "bull", "share": 0.1, "tp": 13.0, "sl": -9.0},
+        {"card": gone, "side": "bull", "share": 0.05}],
+        reserve=0.65, bankroll=100000.0)
+    before = "Čeká na nákup, Nexus navrhl tři karty."
+    rooms.set_status("STR-0001", "paused", before)
     why = "Koupeno TRD-0001 za 10 000 USDC; Nexus dal TP +13 % a SL -9 %."
     rooms.set_status("STR-0001", "running", why)
     view = _render().build_rooms()
@@ -1259,12 +1271,18 @@ def test_the_strip_names_each_strategy_and_its_panel_leads_with_numbers(
     for figure in ("+14", "10 000", "68 % BCH · 32 % OKB", "BTC", "not bought",
                    "92.28", "+13 %"):
         assert figure in text, f"{figure!r} is not on the panel"
+    table = panel[panel.index("nx-legs"):]
+    assert table.index("card e579581b") < table.index("68 % BCH · 32 % OKB"), (
+        "a leg is named by the coins in its basket, not by the news on its card")
+    assert "does not exist" in text and gone[:8] not in text, (
+        "a card their API does not know is shown as an id")
     for ref in ("entry", "tp", "sl", "base"):
         assert f'data-ref="{ref}"' in panel, f"the chart draws no {ref} line"
     assert "if bought" in text, (
         "a leg nobody bought is not labelled as what would have happened")
-    places = [m.start() for m in re.finditer(re.escape(why), panel)]
-    assert places, "why the strategy stands where it does is not on the panel at all"
-    for at in places:
-        assert panel.rfind("<details", 0, at) > panel.rfind("</details>", 0, at), (
-            "why the strategy stands where it does is on screen, not folded")
+    assert text.count(why) == 1, "why the strategy stands where it does is said twice"
+    for said in (why, before):
+        at = panel.index(said)
+        assert panel.rfind("<details", 0, at) <= panel.rfind("</details>", 0, at), (
+            f"{said!r} is folded away")
+        assert at < panel.index("nx-tile"), f"{said!r} sits under the numbers"
