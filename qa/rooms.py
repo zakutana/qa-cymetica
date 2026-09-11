@@ -103,6 +103,22 @@ def load_samples() -> list[dict]:
     return _rows(samples_path())
 
 
+def append_samples(rows: list[dict]) -> None:
+    """What the console's sampler read, appended in one step under the lock.
+
+    Not _append: that one is the rooms' own file. This is written by another
+    hand -- scripts/sampler.py, on a timer -- and no browser request reaches it.
+    """
+    if not rows:
+        return
+    target = samples_path()
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with file_lock(target):
+        with open(target, "a", encoding="utf-8") as handle:
+            for row in rows:
+                handle.write(json.dumps(row, ensure_ascii=False) + "\n")
+
+
 def records(name: str) -> list[dict]:
     """Another script's record under state/ -- nexus.jsonl, paper.jsonl,
     clones.jsonl -- read the way this one is. The rooms are drawn over them."""

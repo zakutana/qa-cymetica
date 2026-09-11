@@ -522,58 +522,28 @@ def enable(instance_id: str, confirm: bool) -> dict:
 
 
 def watch(instance_id: str, every: int, until: int) -> int:
-    """Sample a running bot on a timer, so the morning has a series.
+    """Sample our bot on a timer -- now one round of the console's sampler.
 
     A bot that is enabled and then read once tells you whether it was
-    enabled. Whether it TRADES is a different question and it needs more than
-    one reading -- `trades_executed`, its balance, and its profit, sampled
-    while nobody is watching. That is the whole point of leaving it running.
-
-    SAFE throughout: this reads `my-clones` and writes rows tagged
-    `kind: "sample"` into clones.jsonl. It sends nothing.
+    enabled; whether it TRADES needs a series. This wrote that series into
+    clones.jsonl until 2026-09-11, and that file is committed: every ten
+    minutes of a night's sampling dirtied the tree, and a run started in that
+    window could not reach level V. It goes through scripts/sampler.py now,
+    into the gitignored state/samples.jsonl beside the console's own samples
+    -- one series, one writer -- so it follows every bot our records say we
+    cloned, of which `instance_id` must be one. SAFE, GET only.
     """
-    import time
+    import importlib.util
 
-    load_dotenv()
-    install_client_guard()
-    client = build_client(identities()["trusted"],
-                          EndpointRegistry.load(), timeout=60.0)
-    deadline = time.monotonic() + until
-    taken = 0
-    while time.monotonic() < deadline:
-        try:
-            row = _instance(client, instance_id)
-            record = {
-                "id": "SAMPLE", "type": "sample", "kind": "sample",
-                "at": _now(), "instance_id": instance_id,
-                "is_trading": row.get("is_trading"),
-                "is_paper": row.get("is_paper"),
-                "balance_usdc": row.get("current_balance_usdc"),
-                "total_profit_usdc": row.get("total_profit_usdc"),
-                "trades_executed": row.get("trades_executed"),
-                "win_rate": row.get("win_rate"),
-                "owner_balance_usdc": row.get("owner_balance_usdc"),
-            }
-        except SystemExit as exc:
-            # A read we could not interpret is recorded as one. The series is
-            # more useful with a hole that says why than with a gap.
-            record = {"id": "SAMPLE", "type": "sample", "kind": "sample",
-                      "at": _now(), "instance_id": instance_id,
-                      "error": str(exc)[:200]}
-        except Exception as exc:  # noqa: BLE001
-            record = {"id": "SAMPLE", "type": "sample", "kind": "sample",
-                      "at": _now(), "instance_id": instance_id,
-                      "error": f"{type(exc).__name__}: {exc}"[:200]}
-        _append(record)
-        taken += 1
-        print(f"[{record['at']}] trades={record.get('trades_executed')} "
-              f"balance={record.get('balance_usdc')} "
-              f"pnl={record.get('total_profit_usdc')}"
-              f"{' ' + record['error'] if record.get('error') else ''}",
-              flush=True)
-        time.sleep(every)
-    client.close()
-    print(f"{taken} sample(s) taken")
+    spec = importlib.util.spec_from_file_location(
+        "sampler_for_watch", REPO_ROOT / "scripts" / "sampler.py")
+    sampler = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(sampler)
+    if instance_id not in sampler.follow()["bots"]:
+        raise SystemExit(f"{instance_id} is not a bot our records say we cloned; "
+                         f"the sampler follows only those.")
+    rounds = sampler.run(None, float(every), until=float(until))
+    print(f"{rounds} round(s) written to state/samples.jsonl")
     return 0
 
 

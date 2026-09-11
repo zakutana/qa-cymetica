@@ -119,7 +119,10 @@ def test_a_note_or_a_sample_cannot_move_the_dashboard(tmp_path, monkeypatch):
     ignored the file would keep the payload still too.
     """
     state = tmp_path / "state"
-    shutil.copytree(REPO / "state", state, ignore=shutil.ignore_patterns("*.lock"))
+    # The committed state, which the rooms' two files are not: they are
+    # gitignored, and this machine's are not what the test is about.
+    shutil.copytree(REPO / "state", state, ignore=shutil.ignore_patterns(
+        "*.lock", "rooms.jsonl", "samples.jsonl"))
     monkeypatch.setenv("QA_STATE_DIR", str(state))
     render = _render()
     before = render.payload_hash(render.build_payload())
@@ -227,6 +230,7 @@ def test_the_tab_reads_no_field_the_rooms_do_not_write(tmp_path, monkeypatch):
         *_buy("TRD-0001", 700, "NEX-1"), *_close("TRD-0002", 800, "P-1", 0.5),
         _snapshot("TRD-0002", 805)])
     _write(tmp_path / "clones.jsonl", _bot_rows())
+    _write(tmp_path / "samples.jsonl", _sampled_rows())
     _write(tmp_path / "rooms.jsonl", [
         {"type": "strategy", "id": "STR-0001", "origin": "NEX-1", "title": "A",
          "at": _at(650)},
@@ -251,6 +255,7 @@ def test_the_tab_reads_no_field_the_rooms_do_not_write(tmp_path, monkeypatch):
         "nh": {k for p in panels for h in p.get("history") or [] for k in h},
         "nc": {k for c in bots for k in c},
         "ns": {k for c in bots for s in c.get("samples") or [] for k in s},
+        "na": {k for c in bots for a in c.get("activity") or [] for k in a},
     }
     for name, keys in written.items():
         read = set(re.findall(rf"\b{name}\.([a-z_]+)\b", render.TEMPLATE))
@@ -560,6 +565,33 @@ def _bot_rows() -> list[dict]:
          "instance_id": "inst-other", "amount": 5.0},
         {"id": "CLN-0006", "type": "outcome", "at": _at(2901), "kind": "fund",
          "outcome": "accepted", "http_status": 200},
+    ]
+
+
+def _sampled_rows() -> list[dict]:
+    """One of each row the console's sampler writes, for the bot of _bot_rows()
+    and the position P-1 on card-a-1111 -- scripts/sampler.py is the writer."""
+    return [
+        {"type": "tick", "at": _at(950), "every": 600, "ok": True,
+         "reads": {"bots": "ok"}},
+        {"type": "sample", "kind": "bot", "at": _at(950), "instance_id": INSTANCE,
+         "is_trading": True, "is_paper": True, "balance_usdc": 950.0,
+         "total_profit_usdc": -50.0, "trades_executed": 2, "win_rate": 0.0,
+         "locked_usdc": 0.0, "available_usdc": 550.0},
+        {"type": "config", "at": _at(950), "instance_id": INSTANCE,
+         "strategy_type": "neural_ensemble", "risk_profile": "medium",
+         "primary_indicators": [{"name": "rsi", "params": {"period": 14}}],
+         "secondary_indicators": [{"name": "atr", "params": {"period": 14}}]},
+        {"type": "trade", "at": _at(950), "instance_id": INSTANCE, "trade_id": "T-1",
+         "symbol": "ETH", "side": "sell", "trade_type": "wta", "amount_usdc": "25",
+         "profit_usdc": None, "is_closed": False, "exit_reason": None,
+         "executed_at": _at(940), "closed_at": None},
+        {"type": "sample", "kind": "position", "at": _at(950), "position_id": "P-1",
+         "card_id": "card-a-1111", "status": "open", "current_index": 93.0,
+         "current_value_usdc": 10.08, "unrealized_pnl_usdc": 0.08,
+         "realized_pnl_usdc": 0.0},
+        {"type": "index", "at": _at(950), "card_id": "card-a-1111",
+         "points": [[_at(900), 92.0], [_at(950), 93.0]]},
     ]
 
 
@@ -896,6 +928,7 @@ def test_a_strategy_room_draws_its_book_and_its_bot_and_general_the_portfolio(
     _write(state / "paper.jsonl", [*_buy("TRD-0001", 900, "NEX-1", usdc=10000.0),
                                    _snapshot("TRD-0001", 905)])
     _write(state / "clones.jsonl", _bot_rows())
+    _write(state / "samples.jsonl", _sampled_rows())
     rooms.open_strategy("NEX-1", "<b>Karta</b> <script>alert(1)</script>")
     rooms.set_status("STR-0001", "running", "TRD-0001 koupil 10 000 USDC")
     view = _render().build_rooms()
@@ -919,8 +952,15 @@ def test_a_strategy_room_draws_its_book_and_its_bot_and_general_the_portfolio(
         "the bot, or the line of its samples, is not in the panel")
     drawn_text = strategy.get("roomList", "") + strategy.get("roomChat", "")
     assert "&lt;script&gt;" in drawn_text and "<script" not in drawn_text.lower()
+    # What the sampler read: the bot's indicators and its trades, what is
+    # locked in them, and the card's index since the order went in.
+    assert "rsi" in panel and "ETH" in panel and "available" in panel, (
+        "the bot's configuration, trades or balance split is not in the panel")
+    assert panel.count("<polyline") >= 2, "the card's index line is not drawn"
 
     general = drawn("general").get("roomPanel", "")
     assert "89 000.96" in general, "General does not show the paper account"
     assert "STR-0001" in general and "running" in general, (
         "General does not list the strategies and where each stands")
+    assert "stale" in general, (
+        "a sampler whose last round is hours old is not called stale on the page")

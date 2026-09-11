@@ -55,7 +55,9 @@ def serve(tmp_path, monkeypatch):
 def live(tmp_path, monkeypatch, serve):
     """A Live built over a copy of the committed state, writing nowhere real."""
     state = tmp_path / "state"
-    shutil.copytree(REPO / "state", state)
+    # rooms.jsonl and samples.jsonl are gitignored, so not committed state.
+    shutil.copytree(REPO / "state", state, ignore=shutil.ignore_patterns(
+        "rooms.jsonl", "samples.jsonl"))
     # QA_STATE_DIR alone is enough: render.out_path() follows it, so the only
     # file Live writes lands under the temp tree. REPO_ROOT stays real, because
     # that is how the server finds scripts/render.py.

@@ -294,6 +294,11 @@ Do `tests/repo/test_live_server.py` přibude jen SSE událost `rooms`.
 - Panel po třech intervalech bez vzorku ukáže stale.
 - Obchod se zapíše jednou a znovu jen při změně.
 - Sampler posílá jen GET.
+- Sampler čte jen svých pět adres a jen to, co je podle našich záznamů naše: bota z `clones.jsonl` a neuzavřené pozice z `paper.jsonl`.
+- Panel bota spojí staré vzorky z `clones.jsonl` se samplerovými do jedné řady.
+- Oba launchery spouštějí `--sample 10` a `clone.py watch` jde přes stejné kolo.
+
+Tvary jsem 11. 9. ověřil živým čtením. `index-history` vrací `points` s `t`, `index` a `share_price` (interval 5 dní, 212 bodů). `/activity` vrací `items` s obchody bota. Indikátory a typ strategie nese už `my-clones`, takže `/cloned-bots/available` sampler nečte.
 
 Po P2 a po P4 je potřeba restartovat konzoli, protože běžící proces drží starý `serve.py`.
 

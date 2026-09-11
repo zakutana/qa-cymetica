@@ -421,13 +421,22 @@ scripts/submit.py    the one write we make on purpose. Every number in a
 scripts/serve.py     the console on 127.0.0.1:8787. Polls local files once a
                      minute and renders. `--ask MINUTES` adds the half that
                      fetches: one GET of our own reports on a timer, so the
-                     bell can light unattended. One write of its own: a note
+                     bell can light unattended; `--sample MINUTES` runs
+                     scripts/sampler.py for the Nexus tab, into the gitignored
+                     state/samples.jsonl. One write of its own: a note
                      the operator sends from the Nexus tab, through
                      qa.rooms.add_operator_note, behind a launch token handed
                      out at /token, a loopback Host and Origin, and a JSON
                      body -- and none at all when it listens beyond this
                      machine. The rooms are served at /rooms.json, outside the
                      payload, so a note never moves the dashboard.
+scripts/sampler.py   what their API says about our bot and our card positions,
+                     for the Nexus tab's panels. SAFE, GET only, five doors,
+                     and only what our own records say is ours. Every round
+                     writes a `tick` to state/samples.jsonl (gitignored), even
+                     a round whose every read failed, so a stall shows on the
+                     page as "stale" rather than as quiet. The console runs it
+                     with `--sample 10`; `clone.py watch` is one round of it.
 scripts/a2a.py       the third channel, from our side. `send` posts a question
                      and only on `--confirm` -- the operator's condition, and
                      without it nothing is written either. Two events per send,

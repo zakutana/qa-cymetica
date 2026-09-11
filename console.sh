@@ -35,5 +35,6 @@ echo
 
 # --ask 15 is on; see the comment block in console.cmd for why, and for what
 # it costs. A later --ask on the command line wins, so `./console.sh --ask 0`
-# turns it off.
-exec $PY scripts/serve.py --open --ask 15 "$@"
+# turns it off. --sample 10 reads their API for the Nexus tab into the
+# gitignored state/samples.jsonl; `./console.sh --sample 0` turns that off.
+exec $PY scripts/serve.py --open --ask 15 --sample 10 "$@"

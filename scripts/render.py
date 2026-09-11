@@ -577,6 +577,31 @@ def _orders(rows: list[dict]) -> list[tuple[str, dict, dict | None]]:
             if "intent" in p]
 
 
+def _sampler_state(tick: dict | None) -> dict:
+    """Where the console's sampler stands: when it last went round, whether
+    that round read everything, and whether it has gone quiet.
+
+    Stale is three intervals without a round -- the plan's measure -- so one
+    slow round is not an alarm and a dead loop is. None when it never ran,
+    which is neither fresh nor stale.
+    """
+    from datetime import datetime, timezone
+
+    if not tick:
+        return {"sampled_at": None, "sampler_ok": None, "sampler_every": None,
+                "stale": None, "sampler_reads": None}
+    every = _num(tick.get("every")) or 600.0
+    try:
+        age = (datetime.now(timezone.utc)
+               - datetime.fromisoformat(str(tick.get("at")))).total_seconds()
+    except (TypeError, ValueError):
+        age = None
+    return {"sampled_at": tick.get("at"), "sampler_ok": tick.get("ok"),
+            "sampler_every": every,
+            "stale": None if age is None else age > 3 * every,
+            "sampler_reads": tick.get("reads")}
+
+
 def build_rooms() -> dict:
     """The Nexus tab: every room, its thread, and its panel.
 
@@ -604,6 +629,11 @@ def build_rooms() -> dict:
     room stays in General and says which it is: an order drawn inside a
     strategy it did not come from would be our activity dressed as Nexus's
     guidance.
+
+    What their API says since -- a card's index, the bot's own trades, what
+    it has locked, its indicators -- comes from state/samples.jsonl, which
+    the console's sampler writes (scripts/sampler.py), and every panel says
+    when that was last read.
     """
     from datetime import datetime, timezone
 
@@ -611,6 +641,9 @@ def build_rooms() -> dict:
 
     derived = _nexus_questions() or []
     stored = store.load()
+    sampled = store.load_samples()
+    sampler = _sampler_state(max((r for r in sampled if r.get("type") == "tick"),
+                                 key=lambda r: str(r.get("at") or ""), default=None))
     marks = store.read_marks(stored)
     opened = store.strategies(stored)
     titles = {s["id"]: s.get("title") or s["id"] for s in opened}
@@ -679,7 +712,7 @@ def build_rooms() -> dict:
             "opened_at": s.get("at"), "status": now.get("status") or "proposed",
             "why": now.get("why"), "since": now.get("at") or s.get("at"),
             "history": changes, "trades": [], "staked": 0.0, "unclosed": 0,
-            "realized": None, "clones": []}
+            "realized": None, "clones": [], **sampler}
         for change in changes:
             place(s["id"], {"kind": "status", "at": change["at"],
                             "status": change["status"], "text": change["why"]},
@@ -720,7 +753,9 @@ def build_rooms() -> dict:
             trade = {"id": tid, "at": intent.get("at"), "card": intent.get("card_id"),
                      "side": side, "usdc": _num(intent.get("usdc")), "outcome": said,
                      "position": position, "entry": _num(response.get("entry_index")),
-                     "closed_by": None, "closed_at": None, "realized": None}
+                     "closed_by": None, "closed_at": None, "realized": None,
+                     "live_status": None, "current_index": None, "unrealized": None,
+                     "live_value": None, "live_at": None, "series": []}
             if said == "accepted" and position:
                 opener_of[position] = {"room": room, "trade": trade}
             if room in panels:
@@ -763,7 +798,9 @@ def build_rooms() -> dict:
                        "paper": (outcome or {}).get("is_paper", intent.get("paper")),
                        "instance": instance, "funded": 0.0, "trading": None,
                        "balance": None, "pnl": None, "trades": None,
-                       "win_rate": None, "sampled_at": None, "samples": []}
+                       "win_rate": None, "sampled_at": None, "samples": [],
+                       "locked": None, "available": None, "config": None,
+                       "activity": []}
                 bots[instance] = {"room": room, "bot": bot, "marks": [
                     (str(intent.get("at") or ""), (outcome or {}).get("is_trading"))]}
                 if room in panels:
@@ -794,8 +831,11 @@ def build_rooms() -> dict:
         place(room, {"kind": "leg", "id": cid, "at": intent.get("at"),
                      "text": text, "outcome": said}, intent.get("at"), 0)
 
-    for row in sorted((r for r in clone_rows if r.get("type") == "sample"),
-                      key=lambda r: str(r.get("at") or "")):
+    # The bot's readings: the old ones clone.py watch left in clones.jsonl and
+    # the console sampler's in samples.jsonl, one series in time order.
+    readings = [r for r in clone_rows if r.get("type") == "sample"] + [
+        r for r in sampled if r.get("type") == "sample" and r.get("kind") == "bot"]
+    for row in sorted(readings, key=lambda r: str(r.get("at") or "")):
         owner = bots.get(row.get("instance_id"))
         if owner is None:
             continue
@@ -808,13 +848,59 @@ def build_rooms() -> dict:
                             trades=reading["trades"],
                             win_rate=_num(row.get("win_rate")),
                             sampled_at=reading["at"])
+        if "locked_usdc" in row:
+            owner["bot"].update(locked=_num(row.get("locked_usdc")),
+                                available=_num(row.get("available_usdc")))
         owner["marks"].append((str(row.get("at") or ""), row.get("is_trading")))
+    # What only the sampler reads: the bot's configuration and its own trades,
+    # each as the newest version on record.
+    newest_trade: dict[str, dict] = {}
+    for row in sampled:
+        owner = bots.get(row.get("instance_id"))
+        if owner is None:
+            continue
+        if row.get("type") == "config":
+            owner["bot"]["config"] = {k: row.get(k) for k in (
+                "strategy_type", "risk_profile", "primary_indicators",
+                "secondary_indicators", "execution_class")}
+        elif row.get("type") == "trade" and row.get("trade_id"):
+            newest_trade[row["trade_id"]] = row
+    for row in newest_trade.values():
+        bots[row["instance_id"]]["bot"]["activity"].append(
+            {k: row.get(k) for k in ("trade_id", "symbol", "side", "trade_type",
+                                     "amount_usdc", "profit_usdc", "is_closed",
+                                     "exit_reason", "executed_at", "closed_at")})
     # Switched on at one moment and stopped by itself at a later one: the
     # newest reading of whether it trades is the one that is true.
     for owner in bots.values():
         known = [mark for mark in owner["marks"] if mark[1] is not None]
         if known:
             owner["bot"]["trading"] = max(known, key=lambda mark: mark[0])[1]
+        owner["bot"]["activity"].sort(key=lambda a: str(a.get("executed_at") or ""),
+                                      reverse=True)
+
+    # Each of our positions as the sampler last read it, and its card's index.
+    live_positions: dict[str, dict] = {}
+    index_points: dict[str, dict] = {}
+    for row in sampled:
+        if row.get("type") == "sample" and row.get("kind") == "position":
+            live_positions[row.get("position_id")] = row
+        elif row.get("type") == "index" and row.get("card_id"):
+            points = index_points.setdefault(row["card_id"], {})
+            for point in row.get("points") or []:
+                if isinstance(point, list) and len(point) == 2:
+                    points[str(point[0])] = _num(point[1])
+    for panel in panels.values():
+        for trade in panel["trades"]:
+            live = live_positions.get(trade["position"])
+            if live:
+                trade.update(live_status=live.get("status"),
+                             current_index=_num(live.get("current_index")),
+                             unrealized=_num(live.get("unrealized_pnl_usdc")),
+                             live_value=_num(live.get("current_value_usdc")),
+                             live_at=live.get("at"))
+            points = index_points.get(trade["card"]) or {}
+            trade["series"] = [[t, points[t]] for t in sorted(points)][-400:]
 
     for row in stored:
         kind = row.get("type")
@@ -848,7 +934,7 @@ def build_rooms() -> dict:
                "balance": _num(book.get("sim_balance_usdc")),
                "notional": _num(book.get("notional_usdc")),
                "book_trades": book.get("sim_total_trades"),
-               "balance_at": book.get("at")}
+               "balance_at": book.get("at"), **sampler}
     return {"generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "rooms": [entry(store.GENERAL, "General", "general", None, None)]
             + [entry(s["id"], titles[s["id"]], "strategy", s.get("origin"),
@@ -1517,6 +1603,8 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:15.0px; max-wid
 .nx-row span{display:block;color:var(--text-dim)}
 .nx-spark{display:block;width:100%;height:48px;margin:.2rem 0}
 .nx-spark polyline{fill:none;stroke:var(--accent);stroke-width:1.6;vector-effect:non-scaling-stroke}
+.nx-spark line{stroke:var(--text-faint);stroke-width:1;stroke-dasharray:3 3;vector-effect:non-scaling-stroke}
+.nx-stale b{color:var(--bad)}
 .nx-pf{display:block;width:100%;text-align:left;margin:4px 0;padding:.4rem .5rem;border:1px solid var(--line);border-radius:6px;background:var(--surface-2);color:var(--text);font:inherit;font-size:.85em;cursor:pointer}
 .nx-pf span{display:block;color:var(--text-dim);font-size:.9em;margin-top:.1rem}
 details.stat summary{cursor:pointer;font-weight:600}
@@ -2956,16 +3044,44 @@ function nxHeadline(np) {
 }
 // A bot's balance over its samples, as a line. No library: the Stats tab draws
 // its charts the same way.
-function nxSpark(values) {
+// `ref`, when given, is drawn as a dashed level -- a card's entry index, so
+// the line reads as above or below where the order went in.
+function nxSpark(values, ref) {
   const pts = values.filter(v => typeof v === "number" && isFinite(v));
   if (pts.length < 2) return "";
-  const lo = Math.min(...pts), hi = Math.max(...pts), span = hi - lo || 1;
+  const level = typeof ref === "number" && isFinite(ref);
+  const all = level ? pts.concat([ref]) : pts;
+  const lo = Math.min(...all), hi = Math.max(...all), span = hi - lo || 1;
   const w = 240, h = 48;
-  const xy = pts.map((v, i) => (i * w / (pts.length - 1)).toFixed(1) + "," +
-    (h - 4 - (v - lo) / span * (h - 8)).toFixed(1)).join(" ");
+  const y = v => (h - 4 - (v - lo) / span * (h - 8)).toFixed(1);
+  const xy = pts.map((v, i) => (i * w / (pts.length - 1)).toFixed(1) + "," + y(v)).join(" ");
   return '<svg class="nx-spark" viewBox="0 0 ' + w + " " + h +
-    '" preserveAspectRatio="none" role="img" aria-label="balance, sample by sample">' +
+    '" preserveAspectRatio="none" role="img" aria-label="readings over time">' +
+    (level ? '<line x1="0" x2="' + w + '" y1="' + y(ref) + '" y2="' + y(ref) + '"/>' : "") +
     '<polyline points="' + xy + '"/></svg>';
+}
+// Where the console's sampler stands, said the same way in every panel: when
+// it last read their API, and "stale" once three rounds have gone by without one.
+function nxSampler(np) {
+  if (!np.sampled_at) {
+    return '<p class="nx-foot">Their API has not been read yet: the console reads it ' +
+      "when it runs with --sample.</p>";
+  }
+  const failed = Object.entries(np.sampler_reads || {}).filter(([, verdict]) => verdict !== "ok");
+  return '<p class="nx-foot' + (np.stale ? " nx-stale" : "") + '">' +
+    (np.stale ? "<b>stale</b> — no round for over three intervals. " : "") +
+    "Last read " + esc(stamp(np.sampled_at)) + ", every " + esc(nxSecs(np.sampler_every)) +
+    (np.sampler_ok === false ? " · failed: " +
+      esc(failed.map(([door, verdict]) => door + " " + verdict).join(", ")) : "") + ".</p>";
+}
+function nxParams(params) {
+  const pairs = Object.entries(params || {}).map(([k, v]) => k + " " + v);
+  return pairs.length ? " (" + pairs.join(", ") + ")" : "";
+}
+// A bot's indicators as their API lists them, name and parameters, nothing added.
+function nxIndicators(list) {
+  return (list || []).map(ind => esc((ind && ind.name) || "?") +
+    esc(nxParams(ind && ind.params))).join(" · ");
 }
 function nxGeneral(np) {
   const strategies = ((NX && NX.rooms) || []).filter(nr => nr.kind === "strategy");
@@ -2988,7 +3104,8 @@ function nxGeneral(np) {
           esc(nr.id) + '">' + nxGlyph(nr.status) + " <b>" + esc(nr.id) + "</b> " +
           esc(nr.title || "") + "<span>" + esc(nr.status || "") + " · " +
           esc(nxHeadline(((NX && NX.panels) || {})[nr.id] || {})) + "</span></button>").join("")
-      : '<p class="nx-foot">A strategy Nexus proposes opens as a room of its own.</p>');
+      : '<p class="nx-foot">A strategy Nexus proposes opens as a room of its own.</p>') +
+    "<h4>Their API</h4>" + nxSampler(np);
 }
 function nxStrategy(np) {
   const trades = np.trades || [], bots = np.clones || [], moves = np.history || [];
@@ -3008,7 +3125,12 @@ function nxStrategy(np) {
         "<span>" + (nt.outcome !== "accepted" ? esc(nt.outcome || "no outcome recorded")
           : nt.closed_by ? "closed by " + esc(nt.closed_by) + ", realized " +
                            nxMoney(nt.realized) + " USDC"
-          : "no close recorded") + "</span></div>").join("");
+          : "no close recorded") + "</span>" +
+        (nt.live_status ? "<span>Their side: " + esc(nt.live_status) +
+          (nt.current_index != null ? " · index " + esc(Number(nt.current_index).toFixed(2)) : "") +
+          (nt.unrealized != null ? " · unrealized " + nxMoney(nt.unrealized) + " USDC" : "") +
+          " · read " + esc(stamp(nt.live_at)) + "</span>" : "") +
+        nxSpark((nt.series || []).map(point => point[1]), nt.entry) + "</div>").join("");
   }
   html += bots.map(nc => "<h4>Bot · " + esc(nc.name || nc.id) + "</h4>" +
     '<p class="nx-foot">' + esc([nc.source, nc.symbol, nc.strategy,
@@ -3017,9 +3139,21 @@ function nxStrategy(np) {
                                 .filter(Boolean).join(" · ")) + "</p>" +
     nxCells([["balance", nxMoney(nc.balance)], ["P&L", nxMoney(nc.pnl)],
              ["trades", nc.trades], ["funded", nxMoney(nc.funded)],
+             ["locked", nxMoney(nc.locked)], ["available", nxMoney(nc.available)],
              ["trading", nc.trading == null ? null : (nc.trading ? "yes" : "no")],
              ["win rate", nc.win_rate == null ? null : nc.win_rate + " %"]]) +
     nxSpark((nc.samples || []).map(ns => ns.balance)) +
+    (nc.config ? '<p class="nx-foot">Indicators: ' +
+      nxIndicators(nc.config.primary_indicators) +
+      ((nc.config.secondary_indicators || []).length
+        ? " · also " + nxIndicators(nc.config.secondary_indicators) : "") +
+      (nc.config.execution_class ? " · " + esc(nc.config.execution_class) : "") + "</p>" : "") +
+    (nc.activity || []).slice(0, 8).map(na => '<div class="nx-row">' +
+      esc(na.symbol || "?") + " · " + esc(na.side || "") + " · " + esc(na.trade_type || "") +
+      " · " + nxMoney(na.amount_usdc) + " USDC<span>" +
+      (na.is_closed ? "closed, " + nxMoney(na.profit_usdc) + " USDC" +
+                      (na.exit_reason ? " (" + esc(na.exit_reason) + ")" : "")
+                    : "open since " + esc(stamp(na.executed_at))) + "</span></div>").join("") +
     '<p class="nx-foot">' + (nc.sampled_at
       ? "Last sample " + esc(stamp(nc.sampled_at)) + ", " + (nc.samples || []).length +
         " in all."
@@ -3029,7 +3163,7 @@ function nxStrategy(np) {
       nxGlyph(nh.status) + " " + esc(nh.status || "") + " · " + esc(stamp(nh.at)) +
       "<span>" + esc(nh.why || "") + "</span></div>").join("");
   }
-  return html;
+  return html + nxSampler(np);
 }
 function nxPanel(nr, np) {
   return nr && nr.kind === "strategy" ? nxStrategy(np) : nxGeneral(np);

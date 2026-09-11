@@ -55,7 +55,11 @@ def _serve_module():
 def _start(tmp_path, monkeypatch, note_token):
     """A real server on a free port, over a copy of the committed state."""
     state = tmp_path / "state"
-    shutil.copytree(REPO / "state", state, ignore=shutil.ignore_patterns("*.lock"))
+    # The committed state, which the rooms' two files are not. Copying this
+    # machine's rooms.jsonl too broke every assertion here the moment real
+    # rooms were written to it (2026-09-11): "nothing is written" found a file.
+    shutil.copytree(REPO / "state", state, ignore=shutil.ignore_patterns(
+        "*.lock", "rooms.jsonl", "samples.jsonl"))
     monkeypatch.setenv("QA_STATE_DIR", str(state))
     serve = _serve_module()
     live = serve.Live()

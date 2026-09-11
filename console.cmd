@@ -49,7 +49,12 @@ rem window cannot reach level V. That cost falls on the agent running sweeps,
 rem not on the person watching the page -- which is why it is on.
 rem
 rem Pass --ask 0 to turn it off:  console.cmd --ask 0
-%PY% scripts\serve.py --open --ask 15 %*
+rem
+rem --sample 10 is on too: every ten minutes the server reads their API for the
+rem Nexus tab -- our bot and our card positions, GET only -- into
+rem state/samples.jsonl. That file is gitignored, so unlike --ask it never
+rem dirties the tree. Pass --sample 0 to turn it off.
+%PY% scripts\serve.py --open --ask 15 --sample 10 %*
 
 rem Only pause on a failure; a clean Ctrl-C should just close.
 if errorlevel 1 (
