@@ -247,5 +247,7 @@ to neodškrtl, nebo to nikdy nebylo další na řadě.
   Operátor nechce pauznuté boty a chce, aby se se ztrátou naložilo podle
   Nexuse. Bot stál po −50 USDC (−5 %) na dvou obchodech; obě otázky na to
   (NEX-0020, NEX-0021) skončily u nich `failed` bez odpovědi, takže jsem ho
-  11. 9. znovu zapnul tak, jak je (CLN-0007). Otázka je v roomu, jen ji
+  11. 9. ve 14:30 znovu zapnul tak, jak je (CLN-0007) -- udělal 2 obchody a
+  do 14:35 se zastavil znovu. Prosté zapnutí tedy nestačí; chce to jiné
+  nastavení nebo jiného bota, a to má říct Nexus. Otázka je v roomu, jen ji
   poslat znovu přes `nexus.py ask --room STR-0001` a podle odpovědi jednat.
