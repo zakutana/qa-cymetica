@@ -259,7 +259,10 @@ def test_the_tab_reads_no_field_the_rooms_do_not_write(tmp_path, monkeypatch):
         "nl": {k for p in panels for leg in p.get("legs") or [] for k in leg},
     }
     for name, keys in written.items():
-        read = set(re.findall(rf"\b{name}\.([a-z_]+)\b", render.TEMPLATE))
+        # Any identifier, camelCase included: `[a-z_]+` then `\b` could not
+        # match `np.samplerOk` at all, so a camelCase read that renders
+        # undefined was never compared (P13, deep pass of 2026-09-11).
+        read = set(re.findall(rf"\b{name}\.([A-Za-z_][A-Za-z0-9_]*)", render.TEMPLATE))
         assert read, f"the tab reads no `{name}.` field at all, so this proves nothing"
         missing = sorted(read - keys)
         assert not missing, (
@@ -949,7 +952,13 @@ def test_a_strategy_room_draws_its_book_and_its_bot_and_general_the_portfolio(
     strategy = drawn("STR-0001")
     panel = strategy.get("roomPanel", "")
     assert "Running" in panel and "TRD-0001 koupil 10 000 USDC" in panel
-    assert "TRD-0001" in panel and "10 000" in panel
+    # In the orders table, not anywhere: the status text above already holds
+    # both strings, so dropping the trades list stayed green (P02, deep pass
+    # of 2026-09-11).
+    assert "nx-orders" in panel, "the strategy panel has no orders table"
+    orders = panel[panel.index("nx-orders"):]
+    assert "TRD-0001" in orders and "10 000" in orders, (
+        "the order is not in the panel's orders table")
     assert "QA Perceptron paper" in panel and "<polyline" in panel, (
         "the bot, or the line of its P&L, is not in the panel")
     drawn_text = strategy.get("roomList", "") + strategy.get("roomChat", "")
@@ -1015,7 +1024,11 @@ def test_a_name_and_a_plan_are_checked_before_anything_is_written(tmp_path, monk
                  [dict(leg, share=0)], [dict(leg, share=1.5)],
                  [dict(leg, tp=-1.0)], [dict(leg, sl=2.0)], [dict(leg, tp="high")],
                  [leg, dict(leg, share=0.2)],
-                 [dict(leg, share=0.7), dict(leg, card=CARD_B, share=0.4)]):
+                 [dict(leg, share=0.7), dict(leg, card=CARD_B, share=0.4)],
+                 # A good leg beside a bad one is refused whole: every bad case
+                 # above was a one-leg list, so a set_plan that dropped bad legs
+                 # and wrote the rest passed (P07, deep pass of 2026-09-11).
+                 [leg, dict(leg, card=CARD_B, side="long")]):
         with pytest.raises(rooms.RoomError):
             rooms.set_plan("STR-0001", legs)
     with pytest.raises(rooms.RoomError):
@@ -1151,11 +1164,19 @@ def test_the_composer_sits_under_the_thread_never_over_it():
     import re
 
     template = _render().TEMPLATE
-    rules = re.findall(r"([^{}]*\.nx-compose[^{}]*)\{([^}]*)\}", template)
+    # Every way to reach the composer: its class, its id, and a style on the
+    # element itself. Only `.nx-compose` was read, so `#nxCompose{position:
+    # sticky}` or an inline style floated it with the test green (P05, deep
+    # pass of 2026-09-11).
+    rules = re.findall(r"([^{}]*(?:\.nx-compose|#nxCompose)[^{}]*)\{([^}]*)\}", template)
     assert rules, "there is no rule for the composer at all"
     for selector, body in rules:
         assert not re.search(r"position\s*:\s*(sticky|fixed|absolute)", body), (
             f"{selector.strip()} floats the composer over the thread: {body}")
+    tag = re.search(r'<[^>]*id="nxCompose"[^>]*>', template)
+    assert tag, "the composer element is not in the page"
+    assert not re.search(r"position\s*:\s*(sticky|fixed|absolute)", tag.group(0)), (
+        f"the composer floats by an inline style: {tag.group(0)}")
     chats = [body for selector, body in re.findall(r"([^{}]*)\{([^}]*)\}", template)
              if selector.strip() == ".nx-chat"]
     assert len(chats) == 1, f"the thread has {len(chats)} rules; one is its own"
@@ -1187,6 +1208,11 @@ def test_the_nexus_tab_takes_the_whole_screen_and_the_others_keep_their_width(
         "the page has no #wrap, so the tab has nothing to widen")
     assert re.search(r'\.wrap\[data-tab="nexus"\]\s*\{[^}]*max-width\s*:\s*none',
                      template), "no rule widens the page while the Nexus tab is shown"
+    # The other half of the name: the other tabs keep their width. Only the
+    # widening was asserted, so deleting the base width made every tab full
+    # width with the test green (P06, deep pass of 2026-09-11).
+    assert re.search(r'\.wrap\s*\{[^}]*max-width\s*:\s*\d+px', template), (
+        "the page's own width is gone, so every tab is as wide as the Nexus one")
     code, err, captured = _run_page(
         node, tmp_path, _live_payload(_render()),
         after='window.showTab("nexus");\n'
@@ -1271,9 +1297,16 @@ def test_the_strip_names_each_strategy_and_its_panel_leads_with_numbers(
     assert panel.index("BTC + BCH blend") < panel.index("nx-tile"), (
         "the panel does not open on the strategy's name")
     text = re.sub(r"<[^>]+>", " ", panel)
-    for figure in ("+14", "10 000", "68 % BCH · 32 % OKB", "BTC", "not bought",
-                   "92.28", "+13 %"):
-        assert figure in text, f"{figure!r} is not on the panel"
+    # Each figure where it belongs, not anywhere on the panel: "10 000" and
+    # "+13 %" are also in the why above the tiles and "BTC" is in the title,
+    # so the tiles, the TP column and the basket label could all go with the
+    # test green (P01, deep pass of 2026-09-11).
+    tiles = re.sub(r"<[^>]+>", " ", panel[panel.index("nx-tiles"):panel.index("nx-legs")])
+    legs = re.sub(r"<[^>]+>", " ", panel[panel.index("nx-legs"):])
+    for figure in ("+14", "10 000"):
+        assert figure in tiles, f"{figure!r} is not in the tiles"
+    for figure in ("68 % BCH · 32 % OKB", "index: BTC", "not bought", "92.28", "+13 %"):
+        assert figure in legs, f"{figure!r} is not in the legs table"
     table = panel[panel.index("nx-legs"):]
     assert table.index("card e579581b") < table.index("68 % BCH · 32 % OKB"), (
         "a leg is named by the coins in its basket, not by the news on its card")

@@ -109,7 +109,14 @@ def test_a_finding_headline_says_what_is_tested_in_a_few_words():
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_every_finding_on_the_page_has_a_short_headline(monkeypatch):
-    """Shorter than the sentence it heads, or it is not a headline."""
+    """A name, not the whole description: at most 90 characters, every row.
+
+    This said "shorter than the sentence it heads", which the assertion never
+    checked and no rule could promise: the headline is the check's name and
+    the sentence under it is whatever the run measured -- #86's reads "4 of 5
+    did not answer at all" in 47 characters under a 59-character name. What
+    the page needs is a name that fits one line, and that is what is held
+    (P03, deep pass of 2026-09-11)."""
     monkeypatch.delenv("QA_STATE_DIR", raising=False)
     findings = _committed_payload(_render())["findings"]
     assert findings, "no committed rows, so this proves nothing"

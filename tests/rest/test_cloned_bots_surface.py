@@ -71,7 +71,25 @@ def served_but_undocumented(probed: dict, documented: set) -> list[dict]:
     return out
 
 
-def credential_gap(paths: dict) -> dict:
+def _credential_headers(op: dict, schemes: dict) -> set:
+    """The headers an operation authenticates with: its header parameters,
+    and the headers its `security` requirement resolves to. Until the deep
+    pass of 2026-09-11 only the parameters were read, so a route whose auth
+    is declared through `security` had none and was skipped as public (V10,
+    triage 3/3)."""
+    headers = {q.get("name") for q in (op.get("parameters") or [])
+               if q.get("in") == "header"}
+    for requirement in op.get("security") or []:
+        for name in (requirement or {}):
+            scheme = (schemes or {}).get(name) or {}
+            if scheme.get("type") == "apiKey" and scheme.get("in") == "header":
+                headers.add(scheme.get("name"))
+            elif scheme.get("type") in ("http", "oauth2", "openIdConnect"):
+                headers.add("authorization")
+    return {h for h in headers if h}
+
+
+def credential_gap(paths: dict, schemes: dict | None = None) -> dict:
     """Which cloned-bots routes accept the agent credential, and which do not.
 
     A comparison between their own routes, not an assertion that a header is
@@ -85,8 +103,7 @@ def credential_gap(paths: dict) -> dict:
         for method, op in sorted(ops.items()):
             if method.upper() not in ("GET", "POST", "PATCH", "DELETE"):
                 continue
-            headers = {q.get("name") for q in (op.get("parameters") or [])
-                       if q.get("in") == "header"}
+            headers = _credential_headers(op, schemes)
             if not headers:
                 continue  # public, and not part of the credential question
             (accepts if "x-api-key" in headers else refuses)[
@@ -123,7 +140,8 @@ def test_one_credential_carries_a_clone_from_creation_to_funding(rest_trusted):
     if not paths:
         raise Inconclusive(f"their openapi names no {PREFIX} path at all")
 
-    gap = credential_gap(paths)
+    schemes = (spec.json().get("components") or {}).get("securitySchemes") or {}
+    gap = credential_gap(paths, schemes)
     if not gap["accepts"]:
         raise Inconclusive(
             f"no {PREFIX} route documents x-api-key, so there is no agent "
@@ -136,10 +154,13 @@ def test_one_credential_carries_a_clone_from_creation_to_funding(rest_trusted):
             f"{len(gap['accepts'])} cloned-bots route(s) accept the agent's "
             f"x-api-key and {len(gap['refuses'])} do not: "
             + ", ".join(sorted(gap["refuses"]))
-            + ". A clone is created with a practice balance of 0.00, so an "
-              "agent that authenticates the documented way can create a bot "
-              "and cannot put money in it; funding it with that key returns "
-              "401 with an empty body"
+            # What their document says, and nothing this check did not read:
+            # the live 401 it used to assert here was never measured by any
+            # branch (V10, deep pass of 2026-09-11).
+            + ". A clone is created with a practice balance of 0.00, so where "
+              "the fund route is one of these, an agent that authenticates "
+              "the documented way can create a bot and, by their own "
+              "document, cannot put money in it"
             if gap["refuses"] else
             f"every one of the {len(gap['accepts'])} authenticated "
             f"cloned-bots routes accepts the same agent credential"),
@@ -198,14 +219,7 @@ def test_every_cloned_bot_route_they_serve_is_one_they_document(rest_trusted):
     conclude(Measurement(
         verdict="failed" if hidden else "passed",
         reason=(
-            "their server routes " + ", ".join(
-                f"{h['methods']} {h['path']}" for h in hidden)
-            + f", and none of those paths is in {OPENAPI}. A clone is created "
-              f"paused -- their own description says the user must enable "
-              f"trading -- so an agent that clones a bot through the "
-              f"documented endpoint cannot start it through any documented "
-              f"endpoint, while the one that would do it answers 405 to "
-              f"anything but the method it does not publish"
+            hidden_reason(hidden)
             if hidden else
             f"every {PREFIX} route that answered 405 with an Allow header is "
             f"one of the {len(documented)} they document"),
@@ -218,3 +232,29 @@ def test_every_cloned_bot_route_they_serve_is_one_they_document(rest_trusted):
                     "clone": clone_id},
         sources={"documented": OPENAPI, "served": f"GET {PREFIX}/... (405)"},
     ))
+
+
+# The routes that start or configure a bot. An agent that cannot find one of
+# THESE cannot start the clone it made; one that cannot find a DELETE can.
+STARTS = ("/settings", "/toggle-trading", "/go-live")
+
+
+def hidden_reason(hidden: list[dict]) -> str:
+    """The failure sentence for routes they serve and do not document.
+
+    "Cannot start it through any documented endpoint" only when a hidden
+    route is one that starts or configures the bot. Until the deep pass of
+    2026-09-11 every hidden route got that sentence, so an undocumented
+    DELETE beside a documented toggle would have sent a false claim about
+    starting (V11, triage 3/3).
+    """
+    listed = ", ".join(f"{h['methods']} {h['path']}" for h in hidden)
+    text = f"their server routes {listed}, and none of those paths is in {OPENAPI}"
+    if any(str(h.get("path", "")).endswith(STARTS) for h in hidden):
+        return text + (
+            ". A clone is created paused -- their own description says the "
+            "user must enable trading -- so an agent that clones a bot through "
+            "the documented endpoint cannot start it through any documented "
+            "endpoint, while the one that would do it answers 405 to anything "
+            "but the method it does not publish")
+    return text + ". An agent that reads their document cannot know these exist"

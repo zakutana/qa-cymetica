@@ -212,6 +212,13 @@ def test_notes_are_off_when_the_console_listens_beyond_this_machine(exposed):
     assert serve.note_token_for("192.168.1.5") is None
     one, two = serve.note_token_for("127.0.0.1"), serve.note_token_for("localhost")
     assert one and two and one != two, "a token must be minted fresh at each launch"
+    # The same host, twice: two launches on one machine. Comparing two HOSTS
+    # let a token derived from the host name pass -- identical across every
+    # restart and predictable -- which is the opposite of "minted fresh"
+    # (P11, deep pass of 2026-09-11, triage 3/3).
+    again = serve.note_token_for("127.0.0.1")
+    assert again != one, "the token is the same on the same host: it is not minted"
+    assert len(one) >= 32 and len(again) >= 32, "a short token can be guessed"
 
     port = exposed["port"]
     status, _ = _post_note(port, {"room": "general", "text": "hi"})

@@ -221,6 +221,60 @@ def test_a_bot_switched_on_keeps_its_record_when_the_reread_fails(tmp_path, monk
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_route_whose_credential_is_declared_by_security_is_not_public():
+    """V10, deep pass of 2026-09-11, triage 3/3. credential_gap() read only
+    header parameters, so a route whose auth is declared through openapi
+    `security` had none and was skipped as public -- move fund's credential
+    there without x-api-key and the check passes. The check's failure
+    sentence also asserted a live "401 with an empty body" that no branch
+    measures."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "cloned_surface", REPO / "tests" / "rest" / "test_cloned_bots_surface.py")
+    surface = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(surface)
+
+    schemes = {"APIKeyHeader": {"type": "apiKey", "in": "header", "name": "x-api-key"},
+               "HTTPBearer": {"type": "http", "scheme": "bearer"}}
+    paths = {
+        "/api/v1/cloned-bots/clone": {"post": {"security": [{"APIKeyHeader": []}]}},
+        "/api/v1/cloned-bots/{instance_id}/fund": {"post": {"security": [{"HTTPBearer": []}]}},
+        "/api/v1/cloned-bots/available": {"get": {}},
+    }
+    gap = surface.credential_gap(paths, schemes)
+    assert "POST /api/v1/cloned-bots/clone" in gap["accepts"]
+    assert "POST /api/v1/cloned-bots/{instance_id}/fund" in gap["refuses"], (
+        "a route authenticated through `security` without the api key was "
+        "read as public")
+    assert "GET /api/v1/cloned-bots/available" not in {**gap["accepts"], **gap["refuses"]}
+
+    source = (REPO / "tests" / "rest" / "test_cloned_bots_surface.py").read_text(encoding="utf-8")
+    assert "401 with an empty body\"" not in source.split("def test_one_credential")[1].split("conclude(")[1], (
+        "the failure sentence still asserts a live 401 the check never measures")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_hidden_route_says_cannot_start_only_when_it_is_the_one_that_starts():
+    """V11, deep pass of 2026-09-11, triage 3/3. Any undocumented route got
+    the sentence "an agent ... cannot start it through any documented
+    endpoint" -- an undocumented DELETE beside a documented toggle would have
+    sent that false claim about starting."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "cloned_surface_hidden", REPO / "tests" / "rest" / "test_cloned_bots_surface.py")
+    surface = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(surface)
+
+    delete = [{"path": "/api/v1/cloned-bots/{instance_id}", "methods": "DELETE"}]
+    settings = [{"path": "/api/v1/cloned-bots/{instance_id}/settings", "methods": "PATCH"}]
+    assert "cannot start" not in surface.hidden_reason(delete)
+    assert "DELETE /api/v1/cloned-bots/{instance_id}" in surface.hidden_reason(delete)
+    assert "cannot start" in surface.hidden_reason(settings)
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_only_a_405_counts_as_a_route_that_exists():
     """The check over their clone surface claims existence and never absence.
 
