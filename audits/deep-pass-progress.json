@@ -1,7 +1,7 @@
 {
  "run": "deep-pass 2026-09-12",
  "at": "2026-09-12T19:10:00+00:00",
- "at_finished": null,
+ "at_finished": "2026-09-12T21:07:13+00:00",
  "start_commit": "6ab6d36789a4ad3d9b0ff5af1c7ac2b15498ef39",
  "gaps": [
   {
@@ -427,7 +427,12 @@
    "commit": "a612367d"
   }
  ],
- "next": [],
+ "next": [
+  "Rozšířit `SOURCES` v `test_pipeline_decisions.py`: 27 odstavců `[operator ...]` leží v 18 souborech mimo `CLAUDE.md` a `*/SKILL.md`, takže je dnes nehlídá nic. Noční pass na ten test sahat nesmí — je to práce na den.",
+  "`audits/checks.json` zůstal po dnešním auditu neorazítkovaný, protože orazítkovat teď by znamenalo označit za auditované i definice, které pass v noci změnil. Příští audit tedy projde stejný rozsah znovu — stojí to tokeny, ale nezakryje to nález.",
+  "`verify.py` spadne celý, když `already_sent()` nepřečte report (jejich TLS timeout ve 20:55). Čtení před POSTem, takže nic neodešlo napůl — ale jeden neúspěšný read zabije i verdikty, které by prošly.",
+  "#91 je nerozhodnutelný, protože nejnovější Nexusova odpověď jmenující kartu je starší než 24 h. Fold kvůli tomu dluží `repair_check` — až Nexus zase odpovídá, jedna otázka to vyřeší."
+ ],
  "retrospective": {
   "last": "2026-09-09",
   "done": false
@@ -449,9 +454,9 @@
  ],
  "meta_tests": {
   "start": 416,
-  "end": null,
-  "reason": "One test added to tests/meta: test_a_window_is_read_for_its_value_and_beside_its_own_sharpe. Considered folding it into test_the_nexus_card_check_reads_only_ids_given_as_cards, which is the nearest neighbour -- both hold an extractor in a live check against what its docstring claims -- but that test pins a UUID blocklist in tests/rest/test_nexus_cards_exist.py and nothing about backtest windows; folding would have given it two subjects and one name. Everything else this pass found was folded: B04 into the same new test (the same defect, the sibling file), B01 and B03 into test_the_latency_window_is_ordered_by_question_and_counts_only_their_failures, C05 into test_a_night_still_inside_its_own_hours_is_not_a_forgotten_session. Net +1."
+  "end": 424,
+  "reason": "416 -> 424, net +8, and every one is named. SIX are the new file tests/meta/test_pipeline_night_spend.py: the night's launch path was broken six ways and nothing drove night_promote() end to end -- considered folding them into test_pipeline_lab.py, which holds the laboratory's brakes, but that file tests pure functions in qa/lab.py while these drive the real scripts/lab.py with paper.buy stubbed, and one file cannot be both without its name lying about half of it. ONE is test_a_window_is_read_for_its_value_and_beside_its_own_sharpe: considered folding it into test_the_nexus_card_check_reads_only_ids_given_as_cards, the nearest neighbour -- both hold a live check's extractor against its own docstring -- but that test pins a UUID blocklist and nothing about backtest windows. ONE is test_a_filter_that_separated_nothing_does_not_claim_it_predicted, for grade() claiming the ranking predicted when nothing survived. test_nothing_is_asked_while_a_deep_pass_is_running is a RENAME, not an addition (A04). Everything else this pass found was folded into an existing test: B04 into the new window test, B01/B03/B02 into the latency-window test, C05 and S02 into the reminders test, A07 into the lessons test, B10 into the page-opens test, C08 and C09 into their own files' existing guards. One assertion moved OUT of tests/meta on purpose -- whether their current tool label still matches our transcription now lives in tests/repo/test_surface_drift.py, because a red in tests/meta aborts the suite and a vendor rewording a sentence must not kill every live request."
  },
- "finished": false,
+ "finished": true,
  "previous_at": "2026-09-11T16:25:00+00:00"
 }
