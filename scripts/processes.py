@@ -52,7 +52,10 @@ MISSED_NIGHT_HOURS = 36
 WEEK_DAYS = 7
 NOTEBOOK = "audits/deep-pass-progress.json"
 
-PHASE_ROW = re.compile(r"^\|\s*\**\s*(F\d+)\b")
+# Any letter, not just F. The second plan of 2026-09-12 numbered its phases
+# N0..N5 and every one of them was invisible to this rule, which is the shape
+# of a watcher that only sees what it was written for.
+PHASE_ROW = re.compile(r"^\|\s*\**\s*([A-Z]\d+)\b")
 COMMIT_IN_STATUS = re.compile(r"\b([0-9a-f]{7,40})\b")
 
 

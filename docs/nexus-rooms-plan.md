@@ -234,13 +234,13 @@ s vendorem = Sonnet 5 · high.
 
 Každou fázi commitnu zvlášť na main, bez pushe.
 
-| Fáze | Co | Hotovo, když |
-|---|---|---|
-| P1 | Záložka Nexus a General jen pro čtení (19 otázek), čtecí polovina `qa/rooms.py`, `/rooms.json`, SSE `rooms` | vidíš celou korespondenci s Nexusem |
-| P2 | Poznámky: zapisovače v `qa/rooms.py`, `POST /notes` a `/token`, `rooms.py`, 4. kanál, hook, watch, `.gitignore`, skill `channels`, řádky nových souborů v mapě CLAUDE.md | napíšeš poznámku, `/channels` ji ukáže a v konzoli naskočí ✓✓ |
-| P3 | Strategie: `open/status/link`, `nexus.py --room`, 4 roomy ze stávajících dat, panel z lokálních záznamů, česká shrnutí k 19 odpovědím | vidíš 4 roomy s obchody, klonem a stavem |
-| P4 | Sampler a grafy: `samples.jsonl`, heartbeat, obchody z /activity, index karty, `--sample 10` v obou launcherech | grafy se hýbou každých 10 min a výpadek je vidět |
-| P5 | Skill `nexus-session`, zbytek mapy v CLAUDE.md | „zahaj session s Nexusem" projde celou smyčkou |
+| Fáze | Co | Hotovo, když | Stav |
+|---|---|---|---|
+| P1 | Záložka Nexus a General jen pro čtení (19 otázek), čtecí polovina `qa/rooms.py`, `/rooms.json`, SSE `rooms` | vidíš celou korespondenci s Nexusem | **hotovo `ad375223`** |
+| P2 | Poznámky: zapisovače v `qa/rooms.py`, `POST /notes` a `/token`, `rooms.py`, 4. kanál, hook, watch, `.gitignore`, skill `channels`, řádky nových souborů v mapě CLAUDE.md | napíšeš poznámku, `/channels` ji ukáže a v konzoli naskočí ✓✓ | **hotovo `9090da52`** |
+| P3 | Strategie: `open/status/link`, `nexus.py --room`, 4 roomy ze stávajících dat, panel z lokálních záznamů, česká shrnutí k 19 odpovědím | vidíš 4 roomy s obchody, klonem a stavem | **hotovo `2696554e`** |
+| P4 | Sampler a grafy: `samples.jsonl`, heartbeat, obchody z /activity, index karty, `--sample 10` v obou launcherech | grafy se hýbou každých 10 min a výpadek je vidět | **hotovo `e019ad7c`** |
+| P5 | Skill `nexus-session`, zbytek mapy v CLAUDE.md | „zahaj session s Nexusem" projde celou smyčkou | **hotovo `751ba953`** |
 
 ### Testy dřív než kód
 

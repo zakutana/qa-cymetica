@@ -150,6 +150,57 @@ def test_reading_a_shape_does_not_depend_on_how_many_rows_came_back():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_data_used_as_keys_is_not_a_field():
+    """Their `/headlines` answer keys a map by ticker: `items[].gains.EFOI`,
+    `.IBN`, `.PFH`. Those are DATA. Read as fields they drift on every poll,
+    and the stored shape grows by one path per ticker they have ever listed."""
+    from qa import surface
+
+    tickers = {"items": [{"gains": {"EFOI": 1.2, "IBN": 0.3, "PFH": -0.4,
+                                    "DVHGF": 2.0}}]}
+    paths = surface.fields(tickers)
+    assert "items[].gains{}" in paths, sorted(paths)
+    assert not [p for p in paths if "EFOI" in p or "DVHGF" in p], sorted(paths)
+
+    # A record is not a map: few keys, and they read like names.
+    record = {"bot": {"slug": "x", "sharpe_ratio": 1.0, "total_trades": 5}}
+    assert "bot.slug" in surface.fields(record)
+    assert "bot{}" not in surface.fields(record)
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_only_a_field_that_was_always_there_can_vanish():
+    """Their orderbook carries `arbitrage.buy_chain` when an arbitrage exists
+    and not otherwise. Comparing one capture against one capture calls that a
+    drift every time the market is quiet, and a warning that fires on the
+    weather is one nobody reads.
+
+    So a field has to have been in EVERY recent answer to count as vanished,
+    and in NONE of them to count as appeared."""
+    from qa import surface
+
+    stored = {"always": ["a", "b", "c"], "seen": ["a", "b", "c", "sometimes"]}
+
+    quiet = surface.shape_drift(stored, {"always": ["a", "b"],
+                                         "seen": ["a", "b", "sometimes"]})
+    assert quiet == {"appeared": [], "vanished": ["c"]}, quiet
+
+    flicker = surface.shape_drift(stored, {"always": ["a", "b", "c"],
+                                           "seen": ["a", "b", "c"]})
+    assert flicker == {"appeared": [], "vanished": []}, (
+        "an optional field going missing is the weather, not a change")
+
+    fixed = surface.shape_drift(stored, {
+        "always": ["a", "b", "c", "period"],
+        "seen": ["a", "b", "c", "sometimes", "period"]})
+    assert fixed == {"appeared": ["period"], "vanished": []}, fixed
+
+    # Never seen before is not a drift: it is a first sighting.
+    assert surface.shape_drift({}, {"always": ["a"], "seen": ["a"]}) == {
+        "appeared": [], "vanished": []}
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_before_snapshot_carries_the_schemas_it_is_compared_against():
     """`audits/nexus-baseline.json` is the "before" for an upgrade their CEO
     says lands within days. It held names and truncated descriptions, with the

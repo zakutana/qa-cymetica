@@ -34,6 +34,7 @@ mattered. That is exactly what had happened to the tool schemas in
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -106,12 +107,27 @@ def tools_drift(before: list[dict], now: list[dict]) -> dict:
             "changed": changed}
 
 
+# A key that is DATA, not a field name: a ticker, a chain, a hex id, a number.
+# Their /headlines answer keys a map by ticker -- items[].gains.EFOI, .IBN,
+# .PFH -- and read as fields those drift on every poll and grow the stored
+# shape by one path per ticker they have ever listed.
+DATA_KEY = re.compile(r"^([A-Z0-9][A-Z0-9.\-]{0,11}|[0-9a-f]{8,}|\d+)$")
+MAP_MIN_KEYS = 3
+
+
+def _is_map(node: dict) -> bool:
+    """A map keyed by data, rather than a record with named fields."""
+    keys = [str(k) for k in node]
+    return len(keys) >= MAP_MIN_KEYS and all(DATA_KEY.match(k) for k in keys)
+
+
 def fields(payload, depth: int = MAX_DEPTH) -> set[str]:
-    """Every named path in an answer, with list positions collapsed.
+    """Every named path in an answer, with list positions and data maps collapsed.
 
     Positions are collapsed because a listing that returns fourteen bots today
     and fifteen tomorrow has not changed shape; keyed on positions, every poll
-    would read as a drift and the whole mechanism would be noise.
+    would read as a drift and the whole mechanism would be noise. A map keyed
+    by data collapses for the same reason and to the same marker.
     """
     found: set[str] = set()
 
@@ -119,6 +135,12 @@ def fields(payload, depth: int = MAX_DEPTH) -> set[str]:
         if left <= 0:
             return
         if isinstance(node, dict):
+            if _is_map(node):
+                here = f"{path}{{}}" if path else "{}"
+                found.add(here)
+                for value in node.values():
+                    walk(value, here, left - 1)
+                return
             for key, value in node.items():
                 here = f"{path}.{key}" if path else str(key)
                 found.add(here)
@@ -129,6 +151,30 @@ def fields(payload, depth: int = MAX_DEPTH) -> set[str]:
 
     walk(payload, "", depth)
     return found
+
+
+def shape_drift(stored: dict, now: dict) -> dict:
+    """What their answer started or stopped carrying -- for good, not once.
+
+    Comparing one capture against one capture reports the weather: their
+    orderbook carries `arbitrage.buy_chain` when an arbitrage exists and not
+    otherwise, so a quiet market reads as a vanished field. A warning that
+    fires on the weather is one nobody reads.
+
+    So each side carries two sets: what EVERY recent answer had (`always`) and
+    what ANY of them had (`seen`). A field counts as vanished only if it was
+    always there and is now in none, and as appeared only if it is now always
+    there and was in none. Everything in between is a field that comes and
+    goes, which is their design and not their change.
+    """
+    was_always, was_seen = set(stored.get("always") or []), set(stored.get("seen") or [])
+    now_always, now_seen = set(now.get("always") or []), set(now.get("seen") or [])
+    if not was_seen:
+        # Never seen before is a first sighting, not a drift. Reporting it
+        # would make the first run after any new check shout.
+        return {"appeared": [], "vanished": []}
+    return {"appeared": sorted(now_always - was_seen),
+            "vanished": sorted(was_always - now_seen)}
 
 
 def fields_drift(before: set[str], now: set[str]) -> dict:
@@ -180,25 +226,36 @@ def _payload(record: dict):
 
 
 def shapes_since(hours: float = RECENT_HOURS, root: Path | None = None) -> dict:
-    """The shape of each call's newest recent answer, keyed the pruner's way.
+    """Each call's shape across EVERY recent answer, not just the newest one.
 
-    Newest wins, so one stale reply cannot look like a field that vanished.
-    Only 2xx answers: an error page has a shape of its own and comparing it
+    Two sets per call: what every answer carried (`always`) and what any of
+    them did (`seen`). One capture cannot tell an optional field from a removed
+    one, and `shape_drift` needs both sides to avoid reporting the weather.
+
+    Only 2xx answers: an error page has a shape of its own, and comparing it
     against a good one would report a drift every time their server hiccups.
     """
     from qa.evidence import call_key
 
-    seen: dict[str, dict] = {}
+    out: dict[str, dict] = {}
     for record in _captures_since(hours, root):
         status = (record.get("response") or {}).get("status_code")
         if not isinstance(status, int) or not 200 <= status < 300:
             continue
         key = call_key(record)
-        if key in seen:
+        here = fields(_payload(record))
+        held = out.get(key)
+        if held is None:
+            # Newest first, so the first one seen dates the entry.
+            out[key] = {"always": set(here), "seen": set(here),
+                        "at": record.get("captured_at"), "n": 1}
             continue
-        seen[key] = {"fields": sorted(fields(_payload(record))),
-                     "seen": record.get("captured_at")}
-    return seen
+        held["always"] &= here
+        held["seen"] |= here
+        held["n"] += 1
+    return {key: {"always": sorted(row["always"]), "seen": sorted(row["seen"]),
+                  "at": row["at"], "n": row["n"]}
+            for key, row in out.items()}
 
 
 def tools_seen(hours: float = RECENT_HOURS, root: Path | None = None):
@@ -241,18 +298,15 @@ def remember(shapes: dict, path: Path | None = None) -> Path:
     return target
 
 
-def drift_against(stored: dict, seen: dict) -> list[str]:
+def drift_against(stored: dict, now: dict) -> list[str]:
     """One line per call whose answer changed shape, ready for a reminder.
 
     A call we have never seen before is not a drift -- it is a first sighting,
     and reporting it would make the first run after any new check shout.
     """
     said = []
-    for call in sorted(seen):
-        before = set((stored.get(call) or {}).get("fields") or [])
-        if not before:
-            continue
-        moved = fields_drift(before, set(seen[call].get("fields") or []))
+    for call in sorted(now):
+        moved = shape_drift(stored.get(call) or {}, now[call])
         parts = ([f"+ {f}" for f in moved["appeared"][:4]]
                  + [f"- {f}" for f in moved["vanished"][:4]])
         if parts:

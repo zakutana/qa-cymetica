@@ -43,6 +43,32 @@ Stav se aktualizuje tady; dokud je fáze otevřená, má řádek v `NEXT.md`.
 | F6 | Konzole: verdikt v roomu, tabulka výsledků v General | screenshot v 2000 px, opravdu viděný | **hotovo `6b483385`** — a screenshot našel, co testy nevidí: věta „when the window closes" v místě pro číslo se ořízla; teď tam stojí, za jak dlouho verdikt padne |
 | F7 | Noc laboratoře: `lab.py night --until HH:MM` — jeden proces na povel operátora, v danou hodinu skončí, jen zkoumá | noc zapsaná, sondy ≥ 2 h od sebe, ráno ji `lab.py status` shrne | **hotovo `41a0a5e8`** — hodina se čte na tvých hodinách (ne UTC) a přes 14 h se odmítne; noc nemá ruku, která obchoduje, zakládá nebo commituje, a test to čte z jejího zdroje |
 
+## Druhý plán (12. 9. odpoledne): hledat strategie backtesty
+
+Schválen po dvou tvých námitkách, obě oprávněné: *„dyt jsem jasne na zacaktu
+rikal ze se v laboratori ma vest denik at vi co uz se testovalo"* a *„system ma
+byt self imprived… jak je mozne ze by sis toho nevsim?"*
+
+Co se změnilo v zadání: jejich `backtest_event_card_idea` bere **libovolný koš
+2–20 symbolů** s vahami a **explicitní okno** (7/30/90/180/365), limit 30/min.
+Sampler už ten tvar zapisuje. Vesmír tedy není šest konceptů, ale kombinatorický.
+Backtest je ale **buy-and-hold koše** — ne strategie s TP/SL — takže je to
+seřaďovač kandidátů, ne důkaz.
+
+**Pravidlo, které to drží pohromadě:** změřit cokoli je zadarmo a vždy dovolené;
+cesta z „backtest to našel" do „jde to do paperu" ale vede **přes otázku
+Nexusovi**. Room otevře až jeho odpověď (CLAUDE.md: naše strategie se nikdy
+nestane roomem).
+
+| # | Co | Hotovo, když | Stav |
+|---|---|---|---|
+| N0 | Hlídka nad **jejich** stranou: schémata nástrojů do snímku „před", `lab.py surface` porovnává parametry, tvar jejich odpovědí z captures, připomínka + `processes.py surface --update` | přejmenovaný parametr i nové pole se ohlásí při startu session | **hotovo `fbf40615`** — a k tomu druhý vzorek čistoty stromu na konci běhu, protože `git_dirty` se bral jen na startu |
+| N1 | Rejstřík zkoušeného: `qa/backtests.py`, `state/backtests.jsonl`, otisk koše, stárnutí podle okna | stejný koš v jiném pořadí = stejný otisk; zapsané se nevolá znovu | **hotovo `6b76d164`** — a při tom se našla a opravila vada konzole: odmítnutí se ke klientovi nedostalo |
+| N2 | Volání jejich backtestu: `lab.py backtest` na SAFE, koše ze sampleru, 30/min, chybějící symbol ≠ nula, evidence jen u povýšených | první volání vrátí čísla a zapíše otisk; druhé stejné neproběhne | otevřeno |
+| N3 | Hledání: semínka z karet a Nexusových plánů, tahy přes okna a váhy, pořadí podle Sharpe a DD; lepší než semínko jde Nexusovi jako otázka | okolí semínka deterministické; hledání nedosáhne na `buy` ani `open_strategy` | otevřeno |
+| N4 | Noc přestavěná na dvoje hodiny: backtesty souvisle, otázky když je na co; stropy 50 experimentů / 2 % / 60 % expozice | noc s mrtvým Nexusem udělá tisíce backtestů a nic netestuje dvakrát | otevřeno |
+| N5 | Sebehodnocení: `lab.py grade` — předpověděl náš žebříček verdikt? Pod hranicí dat řekne „málo dat" | n = 2 → „málo dat"; po 17. a 19. 9. řekne číslo | otevřeno |
+
 ## Laboratoř: smyčka
 
 `status` → `rooms.py unread` → `cycle` (dotáhne odpovědi, vzorky, TP/SL, verdikty)

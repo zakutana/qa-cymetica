@@ -128,6 +128,23 @@ def test_a_plan_phase_with_neither_a_commit_nor_a_line_is_named():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_phase_is_read_whatever_letter_it_was_numbered_with():
+    """The rule read `F\\d+` because the plan it was written for used F. The
+    second plan of the same day numbered its phases N0..N5, and every one of
+    them was invisible -- a watcher that sees only what it was written for."""
+    mod = _module()
+
+    rows = [line for line in [
+        "| **N0** | Hlídka nad jejich stranou | ... | **hotovo `deadbeef`** |",
+        "| N1 | Rejstřík | ... | otevřeno |",
+        "| **F7** | Noc | ... | otevřeno |",
+        "| not a phase | x | y | z |",
+    ]]
+    seen = [mod.PHASE_ROW.match(line) for line in rows]
+    assert [m.group(1) if m else None for m in seen] == ["N0", "N1", "F7", None]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_operator_s_messages_are_read_from_the_last_pass_not_from_today():
     """23:30Z yesterday and 00:30Z today are one evening to everybody except a
     date comparison."""
