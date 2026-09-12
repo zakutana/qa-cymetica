@@ -16,6 +16,15 @@
 #   * anything unexpected    exit 0 regardless. A bookkeeping hook may never be
 #                            the reason a commit cannot be made.
 #
+# WHY `git interpret-trailers` AND NOT `printf`. Appending the line put it in
+# the message; it did not make it a TRAILER. Git reads trailers out of the last
+# paragraph, so a one-line commit message ("console poll") became "console poll
+# Effort: max" -- the subject -- and a message whose last paragraph was prose
+# swallowed it the same way. 73 of 188 commits on 2026-09-12 carried the line
+# and git parsed none of them, which is a third of the evidence the week's
+# third question rests on. interpret-trailers puts it where git will find it,
+# inserting the blank line when one is needed.
+#
 # Installed with `git config core.hooksPath .githooks`, which lives in
 # .git/config and cannot be committed -- so a fresh clone does not have it and
 # tests/repo/test_commit_trailers.py reports that as inconclusive, not failed.
@@ -36,11 +45,6 @@ if grep -qiE '^Effort:[[:space:]]+[^[:space:]]+[[:space:]]*$' "$msg_file"; then
     exit 0
 fi
 
-# A message file whose last line has no newline would otherwise get the trailer
-# glued onto the end of it.
-if [ -s "$msg_file" ] && [ -n "$(tail -c 1 "$msg_file")" ]; then
-    printf '\n' >> "$msg_file"
-fi
-
-printf 'Effort: %s\n' "$CLAUDE_EFFORT" >> "$msg_file"
+git interpret-trailers --in-place --trailer "Effort: $CLAUDE_EFFORT" "$msg_file" \
+    || printf '\nEffort: %s\n' "$CLAUDE_EFFORT" >> "$msg_file"
 exit 0

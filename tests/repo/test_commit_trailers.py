@@ -132,6 +132,66 @@ def test_the_effort_trailer_hook_is_installed_or_honestly_absent():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_git_parses_the_trailer_the_hook_writes(tmp_path):
+    """Appending the line is not the same as writing a trailer.
+
+    The hook appended `Effort: ...` and the test above checked the text was
+    there -- which it always was. Git reads trailers out of the LAST paragraph,
+    so a one-line message became the subject "console poll Effort: max", and a
+    message ending in prose swallowed it the same way. 73 of 188 commits on
+    2026-09-12 carried the line and git parsed none of them, which is a third
+    of the evidence the week's third question rests on, invisible to the
+    question and to the check written to protect it.
+
+    Three shapes, because the failure was shape-dependent and the old test used
+    only the shape that worked.
+    """
+    import os
+
+    if not HOOK.is_file():
+        conclude(Measurement(verdict="inconclusive",
+                             reason="no hook to exercise yet"))
+        return
+
+    def written(text: str) -> str:
+        msg = tmp_path / "COMMIT_EDITMSG"
+        msg.write_text(text, encoding="utf-8")
+        env = {**os.environ, "CLAUDE_EFFORT": "probe-effort"}
+        subprocess.run(["sh", str(HOOK), str(msg), "message"], cwd=REPO,
+                       env=env, capture_output=True, text=True)
+        return msg.read_text(encoding="utf-8")
+
+    def parsed(message: str) -> str:
+        return subprocess.run(["git", "interpret-trailers", "--parse"],
+                              input=message, cwd=REPO, capture_output=True,
+                              text=True).stdout
+
+    shapes = {
+        "one line": "console poll\n",
+        "body ending in prose": "subject\n\nA paragraph that ends in prose.\n",
+        "already a trailer block":
+            "subject\n\nbody\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n",
+    }
+    try:
+        results = {name: parsed(written(text)) for name, text in shapes.items()}
+    except OSError as exc:
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason=f"no POSIX shell to run the hook with ({exc})"))
+        return
+
+    missed = [name for name, out in results.items()
+              if "Effort: probe-effort" not in out]
+    conclude(Measurement(
+        verdict="failed" if missed else "passed",
+        reason=(f"git does not read the effort as a trailer when the message is "
+                f"{', '.join(missed)}" if missed else
+                "git parses the trailer in all three message shapes"),
+        left={"shapes": sorted(shapes)}, right={"unparsed": missed},
+        sources={"hook": ".githooks/prepare-commit-msg"}))
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_hook_is_quiet_when_nobody_set_an_effort(tmp_path):
     """Run against a message file, twice, the way git runs it.
 

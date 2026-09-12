@@ -101,6 +101,406 @@ def _git(*args: str) -> str:
     return result.stdout.strip() if result.returncode == 0 else ""
 
 
+# --- the patrol -----------------------------------------------------------
+#
+# [operator 2026-09-11] asked for the self-improvement to be in the DNA -- a
+# part added in a month measures itself without anyone wiring it in. The first
+# design declared five keys in every SKILL.md; a reviewer named it for what it
+# was, a registry, and a registry is a thing to forget. So nothing is declared:
+# the parts are found, and what each did is read from what it left behind.
+
+# What a part leaves behind when it runs. The journal covers the scripts that
+# write it (by `source`), so only the narrow records need naming here.
+PART_RECORDS = {
+    "nexus.py": "nexus.jsonl",
+    "rooms.py": "rooms.jsonl",
+    "paper.py": "paper.jsonl",
+    "clone.py": "clones.jsonl",
+    "sampler.py": "samples.jsonl",
+    "lab.py": "lab.jsonl",
+}
+
+IDLE_DAYS = 14
+
+# Every ceiling sits ABOVE where the repository stood on 2026-09-12, and
+# tests/repo/test_process_dna.py holds them there: a warning that is on from
+# the first day is a warning nobody reads. Measured that day: evidence 290 MB,
+# pack 54 MiB, CLAUDE.md 658 lines, MEMORY.md 38, oldest open NEXT item 2 days.
+CEILINGS = {
+    "evidence_mb": 1000,
+    "claude_md_lines": 700,
+    "memory_lines": 45,
+    "next_oldest_days": 10,
+    "pack_growth_mb": 25,
+}
+
+BASH_SCRIPT = re.compile(r"python\s+scripts[/\\]([a-z_]+)\.py")
+SLASH = re.compile(r"^/([a-z][a-z0-9-]+)")
+
+
+def parts(root: Path | None = None) -> list[dict]:
+    """Every skill, agent, script and hook, found rather than registered."""
+    base = Path(root or REPO_ROOT)
+    found = []
+    for path in sorted((base / ".claude" / "skills").glob("*/SKILL.md")):
+        found.append({"name": path.parent.name, "kind": "skill",
+                      "path": path.relative_to(base).as_posix()})
+    for path in sorted((base / ".claude" / "agents").glob("*.md")):
+        found.append({"name": path.stem, "kind": "agent",
+                      "path": path.relative_to(base).as_posix()})
+    for path in sorted((base / "scripts").glob("*.py")):
+        found.append({"name": path.name, "kind": "script",
+                      "path": path.relative_to(base).as_posix()})
+    for path in sorted((base / ".claude" / "hooks").glob("*.py")):
+        found.append({"name": path.name, "kind": "hook",
+                      "path": path.relative_to(base).as_posix()})
+    return found
+
+
+def records_by_part(root: Path | None = None) -> dict[str, list[str]]:
+    """When each part last left something behind, from its own records.
+
+    The journal names its writer in `source`, which covers everything that
+    files, verifies, corresponds or polls. The narrow records under state/ are
+    mapped by name. Preregistrations are a sweep's own mark.
+    """
+    base = Path(root or REPO_ROOT)
+    state = base / "state"
+    out: dict[str, list[str]] = {}
+
+    def note(part: str, when):
+        if isinstance(when, str) and when:
+            out.setdefault(part, []).append(when)
+
+    for row in _jsonl(state / "journal" / "events.jsonl"):
+        source = str(row.get("source") or "")
+        if source.startswith("scripts/"):
+            # `scripts/bounty.py a2a-inbox` is the poller saying which door it
+            # read. The part is the script; the argument is not a second part,
+            # which is what the first version of this made of it.
+            note(Path(source.split()[0]).name, row.get("at"))
+    for part, name in PART_RECORDS.items():
+        for row in _jsonl(state / name):
+            note(part, row.get("at") or row.get("asked") or row.get("started"))
+    for path in sorted((state / "preregistrations").glob("*.json")):
+        try:
+            row = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        note("prereg.py", row.get("at") or row.get("created_at"))
+    return out
+
+
+def _jsonl(path: Path) -> list[dict]:
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return []
+    out = []
+    for line in text.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            row = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(row, dict):
+            out.append(row)
+    return out
+
+
+def runs_from_records(by_part: dict[str, list[str]]) -> dict[str, dict]:
+    """One run, not one record.
+
+    A poll of their tracker writes several events in the same second, and
+    counting rows made the console's fifteen-minute poller the busiest part of
+    the system by an order of magnitude -- 972 "runs" in eight days, which is
+    96 polls a day seen through the wrong lens. Distinct minutes is the honest
+    unit: nothing here runs twice in one.
+    """
+    out = {}
+    for part, stamps in by_part.items():
+        kept = sorted(s for s in stamps if s)
+        if kept:
+            out[part] = {"runs": len({s[:16] for s in kept}), "last": kept[-1]}
+    return out
+
+
+def runs_from_transcripts(rows, known: set[str] | None = None) -> dict[str, dict]:
+    """What was invoked, and what blew up, from the session transcripts.
+
+    Counted from the COMMAND, not only from a Skill call: sessions follow these
+    skills by reading them -- the Nexus session of 2026-09-11 called the Skill
+    tool zero times on the day it opened four rooms.
+    """
+    out: dict[str, dict] = {}
+    owner: dict[str, str] = {}
+
+    def note(part: str, when, key="runs"):
+        entry = out.setdefault(part, {"runs": 0, "errors": 0, "last": None})
+        entry[key] += 1
+        if when and (entry["last"] is None or str(when) > entry["last"]):
+            entry["last"] = str(when)
+
+    for row in rows:
+        when = row.get("timestamp")
+        content = (row.get("message") or {}).get("content")
+        if isinstance(content, str):
+            found = SLASH.match(content.strip())
+            # Only a name we know, or a plugin's `namespace:skill`. Anything
+            # else beginning with a slash is the operator typing -- "/btw" was
+            # counted as a part for exactly one run before this line existed.
+            if row.get("type") == "user" and found and (
+                    known is None or found.group(1) in known
+                    or ":" in found.group(1)):
+                note(found.group(1), when)
+            continue
+        for block in content or []:
+            if not isinstance(block, dict):
+                continue
+            if block.get("type") == "tool_use":
+                part = None
+                if block.get("name") == "Skill":
+                    part = (block.get("input") or {}).get("skill")
+                else:
+                    command = str((block.get("input") or {}).get("command") or "")
+                    hit = BASH_SCRIPT.search(command)
+                    part = f"{hit.group(1)}.py" if hit else None
+                if part:
+                    owner[str(block.get("id"))] = part
+                    note(part, when)
+            elif block.get("type") == "tool_result" and block.get("is_error"):
+                part = owner.get(str(block.get("tool_use_id")))
+                if part:
+                    note(part, when, key="errors")
+    return out
+
+
+EFFORT_LINE = re.compile(r"^Effort:\s*(\S+)\s*$", re.M)
+
+
+def effort_counts(limit: int = 200, trailers_only: bool = False) -> dict[str, int]:
+    """How many commits ran at each effort, read the lenient way.
+
+    `.githooks/prepare-commit-msg` appends the line and git's own parser reads
+    it -- unless the message is one line (subject and trailer become one
+    paragraph) or the agent wrote its own Effort paragraph above
+    Co-Authored-By. 73 of 188 commits were unreadable that way on 2026-09-12.
+    The hook is fixed for what comes next; the history cannot be, so the
+    reader takes the line wherever it stands and the week stops being blind to
+    a third of its own evidence.
+    """
+    out: dict[str, int] = {}
+    if trailers_only:
+        raw = _git("log", f"-{limit}",
+                   "--format=%(trailers:key=Effort,valueonly)%x00")
+        values = [v.strip() for v in raw.split("\0")]
+    else:
+        raw = _git("log", f"-{limit}", "--format=%B%x00")
+        values = [(EFFORT_LINE.search(block).group(1)
+                   if EFFORT_LINE.search(block) else "")
+                  for block in raw.split("\0")]
+    for value in values:
+        value = value.strip()
+        if value:
+            out[value] = out.get(value, 0) + 1
+    return out
+
+
+def sizes(root: Path | None = None) -> dict:
+    """The numbers a growing system has to be held to, measured now."""
+    base = Path(root or REPO_ROOT)
+    out: dict[str, float] = {}
+
+    store = base / "evidence"
+    if store.is_dir():
+        total = sum(p.stat().st_size for p in store.glob("sha256/*/*.json"))
+        out["evidence_mb"] = round(total / 1048576, 1)
+
+    for key, path in (("claude_md_lines", base / "CLAUDE.md"),):
+        try:
+            out[key] = len(path.read_text(encoding="utf-8").splitlines())
+        except OSError:
+            pass
+
+    index = Path.home() / ".claude" / "projects"
+    for candidate in index.glob("*cymetica*/memory/MEMORY.md"):
+        try:
+            out["memory_lines"] = len(
+                candidate.read_text(encoding="utf-8").splitlines())
+        except OSError:
+            pass
+        break
+
+    oldest = None
+    for path in (base / "NEXT.md",):
+        try:
+            source = base / ".claude" / "hooks" / "next_step.py"
+            spec = importlib.util.spec_from_file_location("next_for_sizes",
+                                                          source)
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            for item in module.parse(path.read_text(encoding="utf-8")):
+                if not item["done"] and (oldest is None or item["at"] < oldest):
+                    oldest = item["at"]
+        except Exception:  # noqa: BLE001
+            pass
+    if oldest:
+        age = _moment(oldest + "T00:00:00+00:00")
+        if age:
+            out["next_oldest_days"] = round(
+                (datetime.now(timezone.utc) - age).total_seconds() / 86400, 1)
+
+    pack = _git("count-objects", "-v")
+    for line in pack.splitlines():
+        if line.startswith("size-pack:"):
+            out["pack_mb"] = round(int(line.split()[1]) / 1024, 1)
+    return out
+
+
+def unwired_hooks(root: Path | None = None) -> list[str]:
+    """Hooks on disk that .claude/settings.json never names.
+
+    A hook leaves no record when it runs, so the patrol cannot count its runs
+    the way it counts a script's -- and the failure that matters is not "it ran
+    twice" anyway. It is a hook written, committed, and never fired because
+    nobody wired it, which is what "a mechanism nobody can reach" looks like
+    from the outside. That one is static, so it is asserted rather than
+    counted. Nothing had checked the SessionStart wiring before 2026-09-12;
+    tests/repo/test_state_guard.py checks the PreToolUse matcher and stops
+    there.
+    """
+    base = Path(root or REPO_ROOT)
+    settings = base / ".claude" / "settings.json"
+    try:
+        text = settings.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        # No settings file is not "nothing to report": it means no hook fires
+        # at all, which is the loudest form of the thing this looks for.
+        text = ""
+    except OSError:
+        # A read we could not make is not an empty read (rule 8), and here the
+        # safe direction is to say nothing rather than to name every hook.
+        return []
+    return [path.name for path in sorted((base / ".claude" / "hooks").glob("*.py"))
+            if path.name not in text]
+
+
+def flags(state: dict) -> list[str]:
+    """What is off, said in one line each. Never an exception, never a failure:
+    step 9 of the deep pass reverts a night on a red it cannot resolve, and a
+    script nobody ran for a fortnight is a question for the week."""
+    out = []
+    for name, seen in sorted((state.get("parts") or {}).items()):
+        idle = seen.get("idle_days")
+        if seen.get("runs", 0) == 0 and idle is not None and idle >= IDLE_DAYS:
+            out.append(f"{name}: nothing for {idle:.0f} days -- a candidate for "
+                       f"the prořez, or a mechanism nobody can reach")
+        if seen.get("errors") and seen.get("runs"):
+            share = seen["errors"] / max(seen["runs"], 1)
+            if share >= 0.5:
+                out.append(f"{name}: {seen['errors']} error(s) in "
+                           f"{seen['runs']} run(s)")
+    for name in state.get("unwired") or []:
+        out.append(f"{name}: a hook nothing in .claude/settings.json names, so "
+                   f"it has never fired")
+    measured = state.get("sizes") or {}
+    for key, ceiling in CEILINGS.items():
+        value = measured.get(key)
+        if value is not None and value > ceiling:
+            out.append(f"{key} is {value}, over the {ceiling} this was held to "
+                       f"on 2026-09-12")
+    return out
+
+
+def extract(root: Path | None, day: dict) -> None:
+    """Append one day's counts, once. The transcripts are kept about thirty
+    days and the laboratory will run for months, so the series lives in git."""
+    base = Path(root or REPO_ROOT)
+    target = base / "audits" / "processes.jsonl"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    rows = [r for r in _jsonl(target) if r.get("day") != day.get("day")]
+    rows.append(day)
+    rows.sort(key=lambda r: str(r.get("day")))
+    target.write_text(
+        "\n".join(json.dumps(r, ensure_ascii=False, sort_keys=True)
+                  for r in rows) + "\n", encoding="utf-8")
+
+
+def patrol(root: Path | None = None, since: str | None = None) -> dict:
+    """Every part, what it did, and the numbers the whole system is held to."""
+    base = Path(root or REPO_ROOT)
+    now = datetime.now(timezone.utc)
+    known = {part["name"] for part in parts(base)}
+    seen: dict[str, dict] = {}
+    left_records: set[str] = set()
+    for name, entry in runs_from_records(records_by_part(base)).items():
+        seen[name] = {"runs": entry["runs"], "last": entry["last"], "errors": 0}
+        left_records.add(name)
+    for name, entry in runs_from_transcripts(
+            messages_rows(since), known=known).items():
+        row = seen.setdefault(name, {"runs": 0, "last": None, "errors": 0})
+        row["runs"] += entry.get("runs", 0)
+        row["errors"] += entry.get("errors", 0)
+        if entry.get("last") and (row["last"] is None
+                                  or entry["last"] > row["last"]):
+            row["last"] = entry["last"]
+
+    out = {"at": now.isoformat(timespec="seconds"),
+           "day": now.date().isoformat(), "parts": {}, "sizes": sizes(base),
+           "unwired": unwired_hooks(base)}
+    for part in parts(base):
+        row = dict(seen.get(part["name"], {"runs": 0, "last": None,
+                                           "errors": 0}))
+        last = _moment(row.get("last"))
+        row["kind"] = part["kind"]
+        row["idle_days"] = round((now - last).total_seconds() / 86400, 1) \
+            if last else None
+        out["parts"][part["name"]] = row
+    # Two kinds of part that is not here, and they are not the same question.
+    # `gone` left records and no longer exists -- migrate_ledger.py, retired
+    # and still cited by three events. `invoked` is something we ran that was
+    # never ours: a built-in skill, a plugin. Reporting both as "gone" made the
+    # first list read like a graveyard of our own work.
+    for name, row in seen.items():
+        out["parts"].setdefault(
+            name, {**row, "idle_days": None,
+                   "kind": "gone" if name in left_records else "invoked"})
+    return out
+
+
+def messages_rows(since: str | None):
+    """Transcript rows since a moment, or an empty list when there are none."""
+    floor = _moment(since) if since else None
+    for row in transcript_rows():
+        stamp = _moment(row.get("timestamp"))
+        if floor is not None and (stamp is None or stamp < floor):
+            continue
+        yield row
+
+
+def render(state: dict) -> str:
+    lines = [f"{'part':26} {'kind':7} {'runs':>5} {'err':>4} {'idle':>6}  last"]
+    lines.append("-" * len(lines[0]))
+    for name, row in sorted(state["parts"].items(),
+                            key=lambda kv: (-kv[1]["runs"], kv[0])):
+        idle = "" if row.get("idle_days") is None else f"{row['idle_days']:.0f}d"
+        last = (row.get("last") or "-")[:16].replace("T", " ")
+        lines.append(f"{name[:26]:26} {row.get('kind', '?'):7} "
+                     f"{row.get('runs', 0):>5} {row.get('errors', 0):>4} "
+                     f"{idle:>6}  {last}")
+    lines.append("")
+    lines.append("a hook leaves no record when it runs, so its runs are not "
+                 "counted -- only its wiring")
+    lines.append("  ".join(f"{k}={v}" for k, v in sorted(
+        (state.get("sizes") or {}).items())))
+    warned = flags(state)
+    lines.append("")
+    lines.extend(warned or ["nothing over a ceiling, nothing idle"])
+    return "\n".join(lines)
+
+
 def _notebook() -> dict:
     try:
         return json.loads((REPO_ROOT / NOTEBOOK).read_text(encoding="utf-8"))
@@ -209,8 +609,14 @@ def transcript_rows():
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    sub = parser.add_subparsers(dest="cmd", required=True)
+    sub = parser.add_subparsers(dest="cmd")
     sub.add_parser("reminders", help="what is due, in the words that start it")
+    watch = sub.add_parser("patrol", help="every part, what it did, the ceilings")
+    watch.add_argument("--since", help="ISO; default: seven days back")
+    watch.add_argument("--extract", action="store_true",
+                       help="append today's counts to audits/processes.jsonl")
+    watch.add_argument("--flags", action="store_true",
+                       help="print only what is off")
     said = sub.add_parser("messages", help="what the operator said since when")
     said.add_argument("--since", help="ISO timestamp")
     said.add_argument("--since-last-pass", action="store_true",
@@ -226,6 +632,25 @@ def main(argv: list[str] | None = None) -> int:
     if args.cmd == "reminders":
         for line in reminders(facts(), datetime.now(timezone.utc)):
             print(line)
+        return 0
+
+    if args.cmd in (None, "patrol"):
+        # A week by default: reading every transcript is 200 MB, and the
+        # question the patrol answers is about the recent past.
+        floor = getattr(args, "since", None) or (
+            datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
+        state = patrol(since=floor)
+        if getattr(args, "extract", False):
+            extract(REPO_ROOT, {"at": state["at"], "day": state["day"],
+                                "parts": {k: {"runs": v["runs"],
+                                              "errors": v["errors"]}
+                                          for k, v in state["parts"].items()},
+                                "sizes": state["sizes"]})
+        if getattr(args, "flags", False):
+            for line in flags(state):
+                print(line)
+            return 0
+        print(render(state))
         return 0
 
     since = args.since
