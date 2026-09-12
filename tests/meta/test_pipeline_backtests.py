@@ -353,6 +353,60 @@ def test_the_search_holds_no_hand_that_trades_or_opens_a_room():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_laboratory_grades_its_own_filter_and_refuses_to_guess():
+    """The loop that makes this self-improving rather than merely busy.
+
+    We rank candidates by a backtest and then trade the top ones on paper. The
+    question nobody was asking is whether that ranking PREDICTS anything: does
+    a high backtest sharpe come back as a surviving verdict, or is the filter
+    noise we have been dressing up?
+
+    It cannot be answered yet -- as of 2026-09-12 not one verdict has closed,
+    the first two windows shut on the 17th and the 19th -- and the whole value
+    of the mechanism is that it says so instead of producing a correlation from
+    two points. Rule 10 turned on ourselves: inconclusive is never a defect,
+    and it is never a number either.
+    """
+    from qa import backtests
+
+    assert backtests.GRADE_FLOOR >= 5, "a handful of rooms is not evidence"
+
+    nothing = backtests.grade([], [])
+    assert nothing["verdict"] == "not enough data"
+    assert nothing["n"] == 0 and nothing.get("agreement") is None
+
+    pairs = [{"sharpe": 5.0, "verdict": "survived"},
+             {"sharpe": 4.0, "verdict": "survived"}]
+    thin = backtests.grade(pairs, [])
+    assert thin["verdict"] == "not enough data", thin
+    assert f"{backtests.GRADE_FLOOR}" in thin["why"], thin["why"]
+    assert thin.get("agreement") is None, (
+        "two points produced a correlation anyway")
+
+    # Above the floor, and the filter works: the ranked-high survived, the
+    # ranked-low did not.
+    works = backtests.grade(
+        [{"sharpe": s, "verdict": "survived"} for s in (5.0, 4.5, 4.0)]
+        + [{"sharpe": s, "verdict": "refuted"} for s in (0.5, 0.2, -1.0)], [])
+    assert works["verdict"] == "the ranking predicted", works
+    assert works["agreement"] == 1.0, works
+
+    # And when it does not, it says so rather than quietly carrying on.
+    noise = backtests.grade(
+        [{"sharpe": 5.0, "verdict": "refuted"}, {"sharpe": 4.5, "verdict": "refuted"},
+         {"sharpe": 4.0, "verdict": "refuted"}, {"sharpe": 0.5, "verdict": "survived"},
+         {"sharpe": 0.2, "verdict": "survived"}, {"sharpe": -1.0, "verdict": "survived"}],
+        [])
+    assert noise["verdict"] == "the ranking did not predict", noise
+    assert noise["agreement"] == 0.0
+
+    # An inconclusive verdict is not evidence either way and is not counted.
+    with_gaps = backtests.grade(
+        [{"sharpe": 5.0, "verdict": "inconclusive"}] * 9, [])
+    assert with_gaps["verdict"] == "not enough data" and with_gaps["n"] == 0
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_register_is_outside_git_and_inside_the_snapshot():
     """Months of work on one disk is the failure this guards. It lives beside
     the other diaries for the same reason they do -- it is appended to while a

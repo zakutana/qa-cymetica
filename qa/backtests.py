@@ -277,6 +277,59 @@ def neighbourhood(seed: dict, pool: list[str] | None = None,
     return moves[:cap]
 
 
+# How many closed verdicts before the laboratory will say anything about its
+# own filter. Rule 10, turned on ourselves: inconclusive is never a defect, and
+# it is never a number either. Nexus's own answer of 2026-09-12 makes the same
+# argument about ITS numbers -- 355 correlated bets in one day are one
+# regime-day, not 355 observations -- and it would be a poor laboratory that
+# accepted that reasoning about the vendor and not about itself.
+GRADE_FLOOR = 6
+
+
+def grade(pairs: list[dict], proposals: list[dict] | None = None) -> dict:
+    """Did our own ranking predict anything?
+
+    `pairs` is one entry per experiment whose window has CLOSED: the backtest
+    sharpe we ranked it on, and the verdict that came back. The measure is
+    deliberately crude -- of the experiments that closed, did the better-ranked
+    half survive more often than the worse-ranked half -- because a correlation
+    coefficient over eight points would be false precision dressed as rigour.
+
+    Four ways out and only one of them is a number, which is the point: a
+    laboratory that cannot yet say whether its filter works must say that.
+    """
+    scored = [p for p in (pairs or [])
+              if isinstance(p.get("sharpe"), (int, float))
+              and p.get("verdict") in ("survived", "refuted")]
+    if len(scored) < GRADE_FLOOR:
+        return {"verdict": "not enough data", "n": len(scored),
+                "agreement": None,
+                "why": (f"{len(scored)} closed verdict(s) and the floor is "
+                        f"{GRADE_FLOOR}. A filter judged on fewer is a story, "
+                        f"not a measurement -- and the first windows of this "
+                        f"laboratory close on 17 and 19 September")}
+
+    ranked = sorted(scored, key=lambda p: -float(p["sharpe"]))
+    half = len(ranked) // 2
+    top, bottom = ranked[:half], ranked[half:]
+    agreed = (sum(1 for p in top if p["verdict"] == "survived")
+              + sum(1 for p in bottom if p["verdict"] == "refuted"))
+    agreement = round(agreed / (len(top) + len(bottom)), 3)
+    works = agreement > 0.5
+    return {
+        "verdict": "the ranking predicted" if works else "the ranking did not predict",
+        "n": len(scored), "agreement": agreement,
+        "why": (f"of {len(scored)} closed verdicts, the better-ranked half "
+                f"survived and the worse-ranked half did not in "
+                f"{agreement * 100:.0f}% of cases"
+                + ("" if works else
+                   ". The backtest is not picking winners, and ranking by it "
+                   "is dressing a coin flip -- say so before the next room "
+                   "opens on it")),
+        "proposals": len(proposals or []),
+    }
+
+
 def best(rows: list[dict], now: datetime | None = None,
          limit: int = 20) -> list[dict]:
     """The clean, still-true readings, risk-adjusted, best first.

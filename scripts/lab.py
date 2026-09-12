@@ -459,6 +459,44 @@ def backtest(constituents, period_days: int = 30, *, why: str = "",
     return {"cached": False, **row}
 
 
+def graded_pairs() -> list[dict]:
+    """Every closed experiment beside the backtest number we ranked it on.
+
+    The link between the two is the room's own basket: its plan names cards,
+    each card's basket is in the sampler's rows, and the register holds what
+    that basket scored. Where the register never saw it, the pair is dropped
+    rather than filled with a zero -- the same rule as everywhere else here.
+    """
+    room_rows = rooms.load()
+    baskets = {seed["card"]: seed["legs"] for seed in card_baskets()}
+    register = qa_backtests.load()
+    out = []
+    for strategy in rooms.strategies(room_rows):
+        room = strategy["id"]
+        said = rooms.verdict_of(room_rows, room)
+        if not said:
+            continue
+        plan = (rooms.plans(room_rows).get(room) or {}).get("legs") or []
+        sharpes = []
+        for leg in plan:
+            legs = baskets.get(str(leg.get("card")))
+            if not legs:
+                continue
+            try:
+                fp = qa_backtests.fingerprint(legs, 30)
+            except qa_backtests.BacktestError:
+                continue
+            rows = [r for r in register if r.get("fp") == fp
+                    and r.get("s") is not None]
+            if rows:
+                sharpes.append(float(rows[-1]["s"]))
+        if not sharpes:
+            continue
+        out.append({"room": room, "sharpe": sum(sharpes) / len(sharpes),
+                    "verdict": said.get("verdict")})
+    return out
+
+
 def symbol_pool(seeds: list[dict]) -> list[str]:
     """Every coin their own cards are made of. Nothing from outside them."""
     return sorted({str(leg["symbol"]).upper() for seed in seeds
@@ -967,6 +1005,7 @@ def main(argv: list[str] | None = None) -> int:
                     help="their round-trip estimate: 2%% fee + 0.5%% slippage")
     bt.add_argument("--why", default="", help="what this reading is for")
     sub.add_parser("seeds", help="their cards, as the sampler recorded them")
+    sub.add_parser("grade", help="did our own ranking predict the verdicts?")
     walk = sub.add_parser("search", help="walk around their baskets, once each")
     walk.add_argument("--cap", type=int, default=12,
                       help="questions per seed; the space is combinatorial")
@@ -1025,6 +1064,24 @@ def main(argv: list[str] | None = None) -> int:
                   f"table sorts them together -- read the column.")
     elif args.cmd == "cycle":
         print(json.dumps(cycle(), ensure_ascii=False, indent=1, default=str))
+    elif args.cmd == "grade":
+        pairs = graded_pairs()
+        said = qa_backtests.grade(pairs)
+        print(f"  {said['verdict']}: {said['why']}")
+        for pair in pairs:
+            print(f"    {pair['room']}  ranked sharpe {pair['sharpe']:.2f}  "
+                  f"-> {pair['verdict']}")
+        # How Nexus's own proposals did is the other half of the same question,
+        # and the rooms already carry it: every one of them opened from an
+        # answer of his.
+        room_rows = rooms.load()
+        tally: dict[str, int] = {}
+        for strategy in rooms.strategies(room_rows):
+            said_room = rooms.verdict_of(room_rows, strategy["id"])
+            key = (said_room or {}).get("verdict") or "still open"
+            tally[key] = tally.get(key, 0) + 1
+        print("  his proposals so far: "
+              + ", ".join(f"{n} {k}" for k, n in sorted(tally.items())))
     elif args.cmd == "seeds":
         for seed in card_baskets():
             legs = " + ".join(f"{leg['symbol']} {leg['weight'] * 100:.1f}%"

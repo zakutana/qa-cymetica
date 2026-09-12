@@ -604,7 +604,14 @@ git log --since='7 days ago' --stat --format='%h %ad %s%n%b%n%(trailers)'
 python -m pytest --collect-only -q | tail -1
 python scripts/never_fired.py --zeros | head -1
 python scripts/deep_pass_process.py          # what every past pass cost and caught
+python scripts/lab.py grade                  # did our own ranking predict the verdicts?
 ```
+
+`lab.py grade` is the laboratory judging its own filter rather than its own
+activity. It will say "not enough data" until six windows have closed, and that
+is the answer, not a gap: a filter judged on fewer is a story. When it does
+speak and says the ranking did NOT predict, that is the week's first item --
+every room opened on that ranking was opened on a coin flip.
 
 The notebook and the commit BODIES are on that list because of a question
 put to a pass while it was running: would the week see the review that night

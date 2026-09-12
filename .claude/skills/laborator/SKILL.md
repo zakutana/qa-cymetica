@@ -180,6 +180,17 @@ because this is where the laboratory records what it learns:
   Verify every card id with `get_event_card_info` before buying.
 - **It quotes internal source paths** (#92). That is their disclosure problem,
   not a licence to read them.
+- **It will refuse its own best number, and the reasoning is good.** Asked on
+  2026-09-12 what breaks `stockbull-blue`, the top of their own leaderboard at
+  sharpe 5.11, it said to treat that number as unmeasured: 24 hours is one
+  regime-day, and 355 markets are cross-sectional breadth, not time-series
+  length. It ran a deflated-Sharpe check both ways and showed the significance
+  bar climbing as the honest sample shrank. **Do not assume its advice is
+  promotional.** It also named a leading indicator worth building:
+  `N_eff = N / (1 + (N-1)·rho)` over the open book -- when average pairwise
+  correlation crosses ~0.6-0.7 the breadth collapses and that precedes the
+  drawdown. And its own next-step advice is to backtest "over the longest
+  available history", which is the window #99 says is silently truncated.
 - **Its numbers come from `get_strategy_returns`,** not from the leaderboard --
   which is why it told the operator CryptoBull (Blue) was 5.16 when the
   leaderboard says 4.69.
