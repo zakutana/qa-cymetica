@@ -270,7 +270,7 @@ to neodškrtl, nebo to nikdy nebylo další na řadě.
   `correction_owed` sám varuje. Neposláno. Je to `qa/fold.py`, takže test
   první a před commitem `/code-review` (CLAUDE.md).
 
-- [ ] 2026-09-12  F1 z `docs/lab-plan.md`: evidence mimo git — držet jen citovanou, prořez po 3 dnech, sledovač při commitu, test maskování klíčů
+- [x] 2026-09-12  F1 z `docs/lab-plan.md`: evidence mimo git — držet jen citovanou, prořez po 3 dnech, sledovač při commitu, test maskování klíčů
 
 - [ ] 2026-09-12  F2 z `docs/lab-plan.md`: připomínky místo plánovačů — hook při startu session, pravidla v `processes.py`, `at_finished` a zprávy od minulého běhu v deep passu
 
