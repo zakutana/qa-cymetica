@@ -155,6 +155,11 @@ components:
     surface: rest
     criticality: medium
     staleness_hours: 48
+  rest.backtest:
+    title: Backtest surfaces and their metrics
+    surface: rest
+    criticality: high
+    staleness_hours: 48
   rest.arena:
     title: CyMetica-42 Arena
     surface: rest
