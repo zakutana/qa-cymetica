@@ -19,7 +19,9 @@ to be installed first.
 
 from __future__ import annotations
 
+import io
 import json
+import os
 import re
 import tarfile
 from pathlib import Path
@@ -68,27 +70,87 @@ def _id_of(raw: bytes) -> str | None:
     return content_id(record)
 
 
-def build(ids, path: Path, root: Path | None = None) -> tuple[int, list[str]]:
-    """Write the bundle. Returns (written, missing).
+def staged(path: Path) -> Path:
+    """Where a bundle is written before it has earned the real name."""
+    return path.with_name(path.name + ".new")
 
-    A body that is not on disk is REPORTED, never quietly dropped: bundling 900
-    of 1 178 and reporting success is how an archive comes to be trusted for
-    what it does not contain.
+
+def members(path: Path) -> set[str]:
+    """The ids a bundle holds, by name. Cheap: no hashing, no extraction."""
+    if not Path(path).is_file():
+        return set()
+    with tarfile.open(path, "r:xz") as bundle:
+        return {Path(m.name).name[:-5] if m.name.endswith(".json")
+                else Path(m.name).name
+                for m in bundle.getmembers() if m.isfile()}
+
+
+def build(ids, path: Path, root: Path | None = None,
+          carry: Path | None = None) -> tuple[int, list[str]]:
+    """Write the bundle BESIDE the real one. Returns (written, missing).
+
+    Never over the top of it. `tarfile` truncates and xz cannot append, so
+    writing straight to the target meant a second run in the same month
+    rebuilt it from whatever happened to be pending and dropped everything the
+    first run had put there -- while the manifest went on stamping the lost
+    ones as archived. Three independent reviewers reproduced that on
+    2026-09-12; `commit()` is the other half of the fix.
+
+    `carry` names an existing bundle to take a member from when its body is no
+    longer on disk. That case is the archive's whole purpose: once `must_keep`
+    stops citing a capture the pruner deletes the body, and rebuilding from
+    disk alone would drop exactly the old captures this exists to hold.
+
+    A body in neither place is REPORTED, never quietly skipped: bundling 900 of
+    1 178 and reporting success is how an archive comes to be trusted for what
+    it does not contain.
     """
-    wanted = list(ids)
-    missing: list[str] = []
-    path.parent.mkdir(parents=True, exist_ok=True)
-    written = 0
-    with tarfile.open(path, "w:xz") as bundle:
+    wanted, missing, written = list(ids), [], 0
+    held = {}
+    if carry is not None and Path(carry).is_file():
+        with tarfile.open(carry, "r:xz") as old:
+            for member in old.getmembers():
+                if not member.isfile():
+                    continue
+                name = Path(member.name).name
+                held[name[:-5] if name.endswith(".json") else name] = (
+                    member, old.extractfile(member).read())
+
+    target = staged(path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with tarfile.open(target, "w:xz") as bundle:
         for evidence_id in wanted:
             source = evidence_path(evidence_id, root)
-            if not source.is_file():
+            arcname = f"sha256/{evidence_id[:2]}/{evidence_id}.json"
+            if source.is_file():
+                bundle.add(source, arcname=arcname)
+            elif evidence_id in held:
+                member, raw = held[evidence_id]
+                info = tarfile.TarInfo(arcname)
+                info.size = len(raw)
+                info.mtime = member.mtime
+                bundle.addfile(info, io.BytesIO(raw))
+            else:
                 missing.append(evidence_id)
                 continue
-            bundle.add(source, arcname=f"sha256/{evidence_id[:2]}/"
-                                       f"{evidence_id}.json")
             written += 1
     return written, missing
+
+
+def commit(path: Path, releasable: bool) -> bool:
+    """Put the staged bundle in place, or throw it away. Never in between.
+
+    The bundle already there is what the vendor's "provided on request" rests
+    on, so a write that did not verify must cost nothing at all.
+    """
+    pending_path = staged(path)
+    if not pending_path.is_file():
+        return False
+    if not releasable:
+        pending_path.unlink()
+        return False
+    os.replace(pending_path, path)
+    return True
 
 
 def verify(path: Path, expected: set[str]) -> tuple[list[str], list[str]]:

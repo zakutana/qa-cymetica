@@ -25,6 +25,7 @@ classification would be the thing the classification exists to stop.
 from __future__ import annotations
 
 import json
+import textwrap
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -900,13 +901,39 @@ def test_the_night_holds_no_hand_that_trades_files_or_commits():
     """A negative control that does not need the thing it tests: the night is
     handed a fixed set of doors, and buying, filing and committing are not
     among them. Read off the source rather than performed."""
+    import ast
+
     source = (REPO / "scripts" / "lab.py").read_text(encoding="utf-8")
     night = source[source.index("\n# --- the night"):source.index("\ndef main(")]
     assert "def night(" in night and len(night) > 2000, "the slice moved"
 
-    for hand in ("buy(", "paper", "submit", "findings", "git ", "subprocess",
+    # The CODE, not the prose. A raw substring search read docstrings too, so
+    # explaining in words that the night must not reach paper was itself a
+    # failure -- and it fired that way on 2026-09-12. Reading identifiers and
+    # non-docstring strings is also STRICTER: it sees a call split over lines,
+    # which the substring never could.
+    tree = ast.parse(textwrap.dedent(night))
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef,
+                             ast.ClassDef, ast.Module)):
+            body = node.body
+            if (body and isinstance(body[0], ast.Expr)
+                    and isinstance(body[0].value, ast.Constant)
+                    and isinstance(body[0].value.value, str)):
+                node.body = body[1:]
+
+    reached = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Name):
+            reached.add(node.id)
+        elif isinstance(node, ast.Attribute):
+            reached.add(node.attr)
+        elif isinstance(node, ast.Constant) and isinstance(node.value, str):
+            reached.add(node.value)
+
+    for hand in ("buy", "paper", "submit", "findings", "subprocess",
                  "open_strategy", "set_status", "record_verdict"):
-        assert hand not in night, (
+        assert hand not in reached, (
             f"the night can reach {hand!r}: it researches, the morning acts")
 
 
@@ -939,3 +966,144 @@ def test_the_notebook_is_outside_git():
     ignored = (REPO / ".gitignore").read_text(encoding="utf-8")
     assert "state/lab.jsonl" in ignored, (
         "the laboratory's notebook would dirty the tree mid-run")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_night_keeps_searching_after_the_first_queue_runs_out(
+        tmp_path, monkeypatch):
+    """[operator] *"celou noc budete delat backtesty nonstop"* — and it did not.
+
+    `night_moves()` is built ONCE and only ever sliced. Measured on the real
+    repository: 168 moves, 30 a tick, a tick every two minutes — **six ticks,
+    twelve minutes** of a fourteen-hour night, and then `pending` sits at 0 and
+    `night_tick` stops scheduling `search` until dawn. The second night is
+    worse: the walk is deterministic, so it rebuilds the same 168 and the
+    register answers "already measured" for nearly all of them.
+
+    An independent reviewer found it; two others read "search runs every tick"
+    and called it delivered. The tick is uncapped, the SUPPLY was not, and the
+    queue length is what settles it.
+
+    The refill is also the better search. The first queue is the neighbourhood
+    of THEIR cards; a refill is the neighbourhood of whatever has actually
+    scored best so far, so each round climbs instead of restarting.
+    """
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    zone = timezone(timedelta(hours=2))
+    clock = _Clock(datetime(2026, 9, 12, 20, 0, tzinfo=zone))
+    walked, refills = [], []
+
+    def _search(bite):
+        walked.extend(bite)
+        return {"asked": len(bite), "known": 0}
+
+    def _refill():
+        refills.append(len(refills))
+        return [{"kind": "window", "period": 30, "legs": [], "why": f"r{n}"}
+                for n in range(40)]
+
+    did = scripts_lab.night(
+        "06:00", clock=clock, sleep=clock.sleep,
+        actions={"pass": lambda: False, "backoff": lambda: None,
+                 "cycle": lambda: {"polled": []}, "truth": lambda: [],
+                 "ask": lambda concept, question: {"id": "NEX-1"},
+                 "search": _search, "refill": _refill,
+                 "moves": lambda: [{"kind": "window", "period": 30,
+                                    "legs": [], "why": f"seed{n}"}
+                                   for n in range(30)]},
+        out=lambda *a: None)
+
+    assert refills, "the queue emptied and the night stopped searching"
+    assert len(walked) > 30 * 4, (
+        f"only {len(walked)} move(s) walked in a ten-hour night")
+    assert did["backtests"] == len(walked)
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_refill_climbs_from_what_scored_rather_than_from_where_we_started():
+    """Otherwise the night re-walks its own first queue for ever."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "lab_refill", REPO / "scripts" / "lab.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    rows = [{"fp": "a", "p": 30, "s": 9.0, "d": 1.0, "r": 5.0, "pts": 90,
+             "at": "2026-09-12T12:00:00+00:00", "why": "the good one",
+             "legs": [["BTC", 0.6], ["ETH", 0.4]]},
+            {"fp": "b", "p": 30, "s": 0.1, "d": 40.0, "r": 0.2, "pts": 90,
+             "at": "2026-09-12T12:00:00+00:00", "why": "the bad one",
+             "legs": [["DOGE", 0.9], ["SHIB", 0.1]]}]
+
+    moves = module.night_refill(rows=rows, limit=1, cap=8)
+
+    assert moves, "a refill from real readings produced nothing"
+    symbols = {leg["symbol"] for move in moves for leg in (move["legs"] or [])}
+    assert "BTC" in symbols, "the refill did not climb from the best reading"
+    assert "SHIB" not in symbols, (
+        "the refill seeded from the worst reading as well as the best")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_unreadable_pass_notebook_is_not_an_absent_pass(tmp_path,
+                                                           monkeypatch):
+    """Rule 8, on the interlock that stops us talking to Nexus mid-pass.
+
+    `_notebook()` mapped a half-read JSON to `{}`, and `pass_in_flight()` reads
+    `{}` as "no pass running". The deep pass rewrites that file repeatedly as it
+    goes, so a read landing mid-write turned the interlock OFF -- while the pass
+    was verifying #85, #86 and #87 over the very answers and trades a question
+    would then change.
+
+    `prune_runs._load` gets this right twenty files away: a failed read is not
+    an empty read.
+    """
+    import importlib.util
+
+    monkeypatch.setenv("QA_REPO_ROOT", str(tmp_path))
+    spec = importlib.util.spec_from_file_location(
+        "processes_rule8", REPO / "scripts" / "processes.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    notebook = tmp_path / "audits" / "deep-pass-progress.json"
+    notebook.parent.mkdir(parents=True, exist_ok=True)
+    notebook.write_text('{"run": "deep-pass", "at": "2026-09-12T1',
+                        encoding="utf-8")
+
+    assert module.pass_in_flight() is True, (
+        "a notebook we could not parse was read as no pass running, and the "
+        "laboratory would have asked Nexus straight through a deep pass")
+
+    notebook.unlink()
+    assert module.pass_in_flight() is False, (
+        "no notebook at all IS no pass; only an unreadable one is unknown")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_money_out_is_counted_even_when_they_name_it_oddly(tmp_path,
+                                                           monkeypatch):
+    """Understating what is deployed overstates the headroom under the ceiling.
+
+    Two shapes dropped an accepted order to zero: no `position_id`, and a
+    `usdc` given as one of their decimal strings. The second is the same defect
+    `_free_cash` was fixed for the same hour, twenty lines above. Both inflate
+    the room left under the 60% exposure cap, which is the brake that holds.
+    """
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    rows = [
+        {"type": "intent", "id": "TRD-0001", "usdc": 10_000.0},
+        {"type": "outcome", "id": "TRD-0001", "outcome": "accepted",
+         "position_id": "p1"},
+        {"type": "intent", "id": "TRD-0002", "usdc": "20000.00"},
+        {"type": "outcome", "id": "TRD-0002", "outcome": "accepted",
+         "position_id": "p2"},
+        {"type": "intent", "id": "TRD-0003", "usdc": 5_000.0},
+        {"type": "outcome", "id": "TRD-0003", "outcome": "accepted"},
+    ]
+    (tmp_path / "paper.jsonl").write_text(
+        "".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+
+    assert scripts_lab._deployed() == 35_000.0, (
+        "a string amount or a missing position id was counted as nothing out")

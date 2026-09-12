@@ -2750,18 +2750,28 @@ h4.sec {
     <h4>Data &mdash; kolik, kde a jak dlouho</h4>
 
     <p class="lead">Problém nikdy nebyl <em>kolik</em>, ale <b>kde</b> (v gitu)
-    a <b>jak dlouho</b> (navždy). Takže:</p>
+    a <b>jak dlouho</b> (navždy). První odpověď &mdash; git drží jen citované
+    &mdash; nestačila: i ta citovaná množina roste bez konce, a za osm hodin
+    práce přibylo 47 MB. Takže od 12. 9. <b>v gitu není ani jedna jejich
+    odpověď</b>:</p>
 
     <div class="rb-wrap"><table class="rb">
       <tr><th>Kde</th><th>Co tam je</th><th>Jak dlouho</th></tr>
       <tr><td>git</td>
-          <td>jen to, co něco <b>cituje</b>: jejich odpovědi, na kterých stojí
-          stav nálezů, a důkaz pod každým odeslaným verdiktem, reportem a paper
-          obchodem &mdash; v každém verdiktu jim píšeme, že ho na požádání vydáme</td>
-          <td class="dur">navždy; roste jen s tím, co cituje</td></tr>
+          <td><b>žádná jejich odpověď.</b> Jen kód, stav nálezů, žurnál, deníky
+          laboratoře &mdash; a <b>manifest</b>: u každé držené odpovědi její
+          hash, velikost, jaké volání zodpověděla a v jakém archivu leží</td>
+          <td class="dur">navždy; jsou to stovky kilobajtů, ne stovky megabajtů</td></tr>
+      <tr><td><code>archive/</code> mimo git</td>
+          <td>samotné odpovědi, měsíční balík. Hash <b>je</b> důkaz
+          neporušenosti, protože jsou adresované obsahem &mdash; a než se
+          originál pustí, přehashuje se každý člen zpátky z toho balíku</td>
+          <td class="dur">navždy; v každém verdiktu vendorovi píšeme, že ho na
+          požádání vydáme</td></tr>
       <tr><td><code>evidence/</code> na disku</td>
           <td>všechny jejich odpovědi, adresované obsahem</td>
-          <td class="dur">3 dny + nejnovější odpověď každého volání</td></tr>
+          <td class="dur">3 dny &mdash; ale co něco cituje, zůstává, dokud to
+          cituje</td></tr>
       <tr><td><code>state/runs</code></td>
           <td>záznamy běhů &mdash; vstupy, ze kterých se skládá stav nálezů</td>
           <td class="dur">7 dní, pokud na nich nic nestojí; na co se nahoře odkazuje,

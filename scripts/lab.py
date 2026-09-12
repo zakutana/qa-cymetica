@@ -171,10 +171,35 @@ def _deployed() -> float:
                     None)
             continue
         position = row.get("position_id") or intent.get("position_id")
-        usdc = intent.get("usdc")
-        if position and isinstance(usdc, (int, float)):
-            out[str(position)] = float(usdc)
+        usdc = _amount(intent.get("usdc"))
+        if usdc is None:
+            continue
+        # An accepted order with no position id is still money out. Keyed on
+        # the ORDER id when they gave us no position, because dropping it
+        # silently understates what is deployed and so overstates the headroom
+        # under the 60% ceiling. `paper.book()` had exactly this defect and its
+        # test records that a missing position_id happens three ways that are
+        # nothing to do with a bug on their side.
+        out[str(position or f"order:{row.get('id')}")] = usdc
     return sum(out.values())
+
+
+def _amount(value) -> float | None:
+    """Their money arrives as a decimal STRING as often as a number.
+
+    `_free_cash` was fixed for this on 2026-09-12 and this function, written
+    the same hour twenty lines below it, went on dropping string amounts to
+    zero. A value we cannot read is not zero -- it is skipped and the caller
+    keeps its own floor.
+    """
+    if isinstance(value, bool) or value is None:
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    try:
+        return float(str(value).strip())
+    except ValueError:
+        return None
 
 
 def _archive_diaries() -> list[str]:
@@ -861,6 +886,42 @@ def night_moves() -> list[dict]:
             for move in qa_backtests.neighbourhood(seed, pool, cap=24)]
 
 
+def night_refill(rows: list[dict] | None = None, limit: int = 8,
+                 cap: int = 24) -> list[dict]:
+    """The next round, seeded by what actually scored — not by where we began.
+
+    `night_moves()` is the neighbourhood of THEIR cards, and it is finite: 168
+    moves, 30 a tick, a tick every two minutes. Six ticks. Twelve minutes of a
+    fourteen-hour night, and then the night had nothing left to do but wait for
+    dawn — against the operator's *"celou noc backtesty nonstop"* and against
+    the phase's own written criterion of thousands.
+
+    A refill is not the same queue again. It takes the best readings the
+    register holds and walks THEIR neighbourhoods, so each round starts from
+    what measured well rather than from the card we happened to begin with.
+    That is the difference between a night that repeats itself and one that
+    climbs.
+
+    Nothing here proposes a trade. A basket is a question for their backtest,
+    and the road from "this measured well" to "this goes in paper" still runs
+    through Nexus -- CLAUDE.md, and the rule the whole laboratory is built on.
+    """
+    rows = qa_backtests.load() if rows is None else rows
+    seeds = []
+    for row in qa_backtests.best(rows, limit=limit):
+        legs = [{"symbol": str(pair[0]).upper(), "weight": float(pair[1])}
+                for pair in (row.get("legs") or [])
+                if isinstance(pair, (list, tuple)) and len(pair) == 2]
+        if len(legs) >= qa_backtests.MIN_LEGS:
+            seeds.append({"legs": legs,
+                          "title": str(row.get("why") or "")[:60]})
+    if not seeds:
+        return []
+    pool = symbol_pool(seeds)
+    return [move for seed in seeds
+            for move in qa_backtests.neighbourhood(seed, pool, cap=cap)]
+
+
 def _night_search(moves: list[dict]) -> dict:
     """One bite of the queue. The register answers what it already knows."""
     did = {"asked": 0, "known": 0, "failed": 0}
@@ -943,11 +1004,12 @@ def night(until: str, *, clock=None, sleep=None, actions=None, out=print) -> dic
         "pass": pass_in_flight, "backoff": _night_backoff, "cycle": cycle,
         "truth": functools.partial(truth, limit=8), "ask": _night_ask,
         "search": _night_search, "moves": night_moves,
+        "refill": night_refill,
     }
 
     session = lab.open_session(mode="night", until=due.isoformat())["session"]
     did = {"ticks": 0, "cycles": 0, "truths": 0, "asked": 0, "answered": 0,
-           "backtests": 0, "already_known": 0,
+           "backtests": 0, "already_known": 0, "refills": 0,
            "errors": [], "stopped": "deadline",
            "skipped": {"pass": 0, "backoff": 0, "cap": 0, "too soon": 0,
                        "nothing to ask about": 0},
@@ -986,6 +1048,16 @@ def night(until: str, *, clock=None, sleep=None, actions=None, out=print) -> dic
                         got = actions["search"](bite) or {}
                         did["backtests"] += got.get("asked", 0)
                         did["already_known"] += got.get("known", 0)
+                        if not queue:
+                            # The first queue is finite -- 168 moves, six ticks,
+                            # twelve minutes of a fourteen-hour night. Refill
+                            # from what has actually scored, so the night climbs
+                            # instead of stopping. An empty refill (nothing
+                            # measured yet, or nothing clean) ends the search
+                            # honestly rather than looping on nothing.
+                            queue = list((actions.get("refill")
+                                          or (lambda: []))())
+                            did["refills"] += 1 if queue else 0
                         state["pending"] = len(queue)
                         if got.get("asked") and out:
                             out(f"  {now.strftime('%H:%M')} {got['asked']} "

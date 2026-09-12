@@ -162,16 +162,24 @@ PART_RECORDS = {
 
 IDLE_DAYS = 14
 
-# Every ceiling sits ABOVE where the repository stood on 2026-09-12, and
+# Every ceiling sits ABOVE where the repository stood when it was set, and
 # tests/repo/test_process_dna.py holds them there: a warning that is on from
-# the first day is a warning nobody reads. Measured that day: evidence 290 MB,
-# pack 54 MiB, CLAUDE.md 658 lines, MEMORY.md 38, oldest open NEXT item 2 days.
+# the first day is a warning nobody reads. Re-measured at the end of 2026-09-12,
+# after the capture bodies left git: evidence 385 MB ON DISK (no longer in the
+# pack), pack 61.4 MiB, CLAUDE.md 700 lines, MEMORY.md 40, oldest open NEXT
+# item 2.7 days.
+#
+# The key was `pack_growth_mb` until three reviewers noticed `sizes()` emits
+# `pack_mb` -- so `flags()` looked up a key nothing produced and the one ceiling
+# aimed at the operator's actual question about GitHub could never fire, on the
+# day whose whole plan was the size of git. 150 is ~3 months at the ~1 MB/day
+# the repository now grows, and fires long before anyone finds gigabytes there.
 CEILINGS = {
     "evidence_mb": 1000,
     "claude_md_lines": 700,
     "memory_lines": 45,
     "next_oldest_days": 10,
-    "pack_growth_mb": 25,
+    "pack_mb": 150,
 }
 
 BASH_SCRIPT = re.compile(r"python\s+scripts[/\\]([a-z_]+)\.py")
@@ -247,6 +255,31 @@ def _jsonl(path: Path) -> list[dict]:
             continue
         if isinstance(row, dict):
             out.append(row)
+    return out
+
+
+def within(by_part: dict[str, list[str]], since) -> dict[str, list[str]]:
+    """The same stamps, bounded below. Pure, so the two passes share one read.
+
+    `patrol` needs both answers at once and they must not be the same walk:
+    the WINDOW says how much a part did lately, the WHOLE HISTORY says when it
+    was last seen at all. Collapse them and the fortnight warning goes out — a
+    part idle for sixty days would get `last = None`, `idle_days = None`, and
+    `flags()` skips exactly the part it exists to name.
+    """
+    # `since` arrives as a datetime from `patrol` and as an ISO STRING from the
+    # command line, which is how the first version of this crashed the CLI
+    # while its test passed -- the test handed it a datetime, so fixture and
+    # code shared one assumption. One coercion, both callers.
+    floor = since if isinstance(since, datetime) else _moment(since)
+    if floor is None:
+        return {part: list(stamps) for part, stamps in by_part.items()}
+    epoch = datetime.min.replace(tzinfo=timezone.utc)
+    out = {}
+    for part, stamps in by_part.items():
+        kept = [s for s in stamps if (_moment(s) or epoch) >= floor]
+        if kept:
+            out[part] = kept
     return out
 
 
@@ -473,11 +506,26 @@ def patrol(root: Path | None = None, since: str | None = None) -> dict:
     base = Path(root or REPO_ROOT)
     now = datetime.now(timezone.utc)
     known = {part["name"] for part in parts(base)}
+    # Two passes over ONE read. `runs` is what the part did inside the window;
+    # `last` is when it was last seen at all. Counting both from the same walk
+    # was the defect docs/data-plan.md named and did not fix: an unbounded
+    # record count was ADDED to a windowed transcript count, so ledger.py
+    # reported 419 runs over seven days. Windowing the records too would have
+    # been worse -- it takes `last` with it, and the fortnight warning then
+    # cannot fire on any part at all.
+    stamps = records_by_part(base)
     seen: dict[str, dict] = {}
     left_records: set[str] = set()
-    for name, entry in runs_from_records(records_by_part(base)).items():
+    lifetime = runs_from_records(stamps)
+    for name, entry in runs_from_records(within(stamps, since)).items():
         seen[name] = {"runs": entry["runs"], "last": entry["last"], "errors": 0}
         left_records.add(name)
+    for name, entry in lifetime.items():
+        row = seen.setdefault(name, {"runs": 0, "last": None, "errors": 0})
+        left_records.add(name)
+        if entry.get("last") and (row["last"] is None
+                                  or entry["last"] > row["last"]):
+            row["last"] = entry["last"]
     for name, entry in runs_from_transcripts(
             messages_rows(since), known=known).items():
         row = seen.setdefault(name, {"runs": 0, "last": None, "errors": 0})
@@ -541,11 +589,25 @@ def render(state: dict) -> str:
     return "\n".join(lines)
 
 
+UNREADABLE = {"__unreadable__": True}
+
+
 def _notebook() -> dict:
-    try:
-        return json.loads((REPO_ROOT / NOTEBOOK).read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+    """The deep pass's own notebook, or a value that says it could not be read.
+
+    NOT `{}` on a parse failure. The pass rewrites this file repeatedly as it
+    goes, so a read landing mid-write is ordinary -- and `{}` means "no pass is
+    running", which switches the interlock OFF at exactly the moment a pass IS
+    running. Rule 8: a failed read is not an empty read. A file that is simply
+    absent is a genuine `{}`.
+    """
+    path = REPO_ROOT / NOTEBOOK
+    if not path.is_file():
         return {}
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return dict(UNREADABLE)
 
 
 def pass_in_flight(now: datetime | None = None) -> bool:
@@ -560,6 +622,12 @@ def pass_in_flight(now: datetime | None = None) -> bool:
     draws, and for the same reason.
     """
     notebook = _notebook()
+    if notebook.get("__unreadable__"):
+        # Rule 8, and it lands on the safe side by itself: the file exists and
+        # we could not read it, which is what a pass writing to it looks like.
+        # Answering "no pass" here would open the interlock during the one
+        # event it exists to close it for.
+        return True
     if not notebook or notebook.get("finished"):
         return False
     started = _moment(notebook.get("at"))
@@ -648,6 +716,29 @@ def _lab_facts() -> dict:
     return out
 
 
+def merge_shapes(stored: dict | None, seen: dict) -> dict:
+    """Acknowledge a shape without forgetting what it used to carry.
+
+    `seen` is the memory -- every field a call has EVER carried -- and it is
+    what `shape_drift` uses to tell their DESIGN from their CHANGE. Replacing
+    it with a 48-hour sample made an intermittent field oscillate for ever:
+    vanished, acknowledged, appeared, acknowledged, in the first line of every
+    session start. So `seen` unions. `always` is a claim about the present and
+    takes the newest reading.
+
+    Pure, and its own function, because that is the half worth a test.
+    """
+    calls = dict(stored or {})
+    for call, shape in (seen or {}).items():
+        was = calls.get(call) or {}
+        calls[call] = {
+            "always": sorted(shape.get("always") or []),
+            "seen": sorted(set(was.get("seen") or [])
+                           | set(shape.get("seen") or [])),
+        }
+    return calls
+
+
 def surface_drift(update: bool = False) -> list[str]:
     """What moved on THEIR side since we last agreed what it looked like.
 
@@ -678,8 +769,13 @@ def surface_drift(update: bool = False) -> list[str]:
             said += [f"nástroj zmizel: {n}" for n in moved["gone"]]
 
     if update:
-        calls = dict(stored.get("calls") or {})
-        calls.update(seen)
+        # UNION the `seen` sets, replace `always`. `seen` is the memory -- every
+        # field this call has EVER carried -- and a plain `calls.update(seen)`
+        # overwrote it with a 48-hour sample, so an intermittent field
+        # oscillated: vanished, acknowledged, appeared, acknowledged, for ever,
+        # in the first line of every session start. `always` is the opposite: it
+        # is a claim about the present, so the newest reading replaces it.
+        calls = merge_shapes(stored.get("calls"), seen)
         surface.remember({"calls": calls,
                           "tools": listed if listed is not None
                                    else stored.get("tools") or [],

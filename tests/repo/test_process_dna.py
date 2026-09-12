@@ -33,6 +33,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from qa.marks import SafetyTier, qa
@@ -209,3 +210,76 @@ def test_the_deep_pass_reads_the_patrol_in_the_steps_that_look_back():
                 "steps 1, 1b and 11 all read scripts/processes.py"),
         left={"steps": ["1", "1b", "11"]}, right={"missing": missing},
         sources={"skill": ".claude/skills/deep-pass/SKILL.md"}))
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_every_ceiling_watches_something_that_is_actually_measured():
+    """A ceiling on a key nothing emits is a warning that can never fire.
+
+    `CEILINGS["pack_growth_mb"]` against `sizes()["pack_mb"]`: `flags()` does
+    `measured.get(key)`, gets None, and continues. So on 2026-09-12 -- the day
+    whose entire plan was the size of git -- **nothing watched the size of
+    git**, and the test that looks like it covers this only asserts "no flag
+    today", which a dead ceiling makes MORE likely to pass.
+
+    Stated over the whole set rather than that one key, because the defect is
+    the pairing, not the name.
+    """
+    module = _module()
+    measured = set(module.sizes())
+    dead = sorted(set(module.CEILINGS) - measured)
+
+    conclude(Measurement(
+        verdict="failed" if dead else "passed",
+        reason=(f"ceiling(s) on nothing: {', '.join(dead)} — sizes() emits "
+                f"{', '.join(sorted(measured))}" if dead else
+                f"all {len(module.CEILINGS)} ceiling(s) watch a measurement"),
+        left=sorted(module.CEILINGS), right=sorted(measured),
+        sources={"patrol": "scripts/processes.py::CEILINGS"}))
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_window_counts_runs_while_the_whole_history_keeps_the_last_seen(
+        tmp_path):
+    """Verification step 5 of docs/data-plan.md, which the plan claimed and
+    did not deliver.
+
+    `patrol(since=...)` bounded only the transcript half; `records_by_part()`
+    took no floor at all, so the printed `runs` was a lifetime count ADDED to a
+    windowed one — ledger.py read 419 over a seven-day window.
+
+    The trap in the obvious fix is the reason this test pins both halves: push
+    the window into the records and `last` goes with it, `idle_days` becomes
+    None, and `flags()` stops firing the fortnight warning on exactly the parts
+    it exists to find. Two passes over one read — the window counts, the whole
+    history remembers.
+    """
+    module = _module()
+    (tmp_path / "scripts").mkdir(parents=True)
+    (tmp_path / "scripts" / "quiet.py").write_text("", encoding="utf-8")
+    old = (datetime.now(timezone.utc) - timedelta(days=60)).isoformat()
+    (tmp_path / "state").mkdir(parents=True)
+    (tmp_path / "state" / "nexus.jsonl").write_text(
+        json.dumps({"at": old, "type": "question"}) + "\n", encoding="utf-8")
+
+    stamps = {"quiet.py": [old]}
+    since = datetime.now(timezone.utc) - timedelta(days=30)
+    windowed = module.runs_from_records(module.within(stamps, since))
+    lifetime = module.runs_from_records(stamps)
+
+    assert windowed.get("quiet.py", {}).get("runs", 0) == 0, (
+        "a record older than the window was counted inside it")
+    assert lifetime["quiet.py"]["last"] == old, (
+        "the window swallowed the last-seen, which is what lights the "
+        "fortnight warning")
+
+    # The CLI hands `since` in as an ISO STRING. The first version of `within`
+    # compared it to a datetime and crashed every `patrol --since` on the
+    # command line, while this test passed because it handed in a datetime.
+    assert module.within(stamps, since.isoformat()) ==         module.within(stamps, since), "a string floor is not the same floor"
+
+    state = {"parts": {"quiet.py": {"runs": 0, "errors": 0, "last": old,
+                                    "kind": "script", "idle_days": 60.0}},
+             "sizes": {}}
+    assert any("quiet.py" in line for line in module.flags(state)), (
+        "a part idle for 60 days lights no warning")

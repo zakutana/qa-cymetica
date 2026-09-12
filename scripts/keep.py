@@ -89,17 +89,28 @@ def _archive(month: str, release: bool) -> int:
         raise SystemExit(f"keep: {exc}")
 
     known = manifest.read()
-    ids = archive.pending(known)
+    stamp = target.name.split(".")[0]
+    # EVERYTHING this month's bundle should hold, not just what is new. A tar
+    # cannot be appended to, so a rebuild has to be complete or it is a
+    # deletion: `pending` alone rewrote the file with the new ids and dropped
+    # the rest, while the manifest went on stamping them as archived.
+    already = [key for key, row in known.items()
+               if (row or {}).get("archive") == stamp]
+    ids = sorted(set(archive.pending(known)) | set(already))
     if not ids:
         print("keep: nothing pending; every capture the manifest knows is "
               "already in an archive")
         return _release(month, known) if release else 0
 
-    written, missing = archive.build(ids, target)
-    good, bad = archive.verify(target, set(ids))
-    print(f"keep: {written} body(ies) into {target.name}, "
-          f"{target.stat().st_size / 1048576:.1f} MB; "
-          f"{len(good)} verified, {len(bad)} BAD, {len(missing)} not on disk")
+    written, missing = archive.build(ids, target, carry=target)
+    good, bad = archive.verify(archive.staged(target), set(ids))
+    kept = archive.commit(target, releasable=archive.releasable(good, bad))
+    size = target.stat().st_size / 1048576 if target.is_file() else 0.0
+    print(f"keep: {written} body(ies) into {target.name}, {size:.1f} MB; "
+          f"{len(good)} verified, {len(bad)} BAD, {len(missing)} nowhere"
+          + ("" if kept else " — the bundle already there was KEPT"))
+    if len(already) and written:
+        print(f"   {len(already)} carried forward from the existing bundle")
     if missing:
         print(f"   not on disk: {', '.join(m[:12] for m in missing[:5])}"
               + (" ..." if len(missing) > 5 else ""))

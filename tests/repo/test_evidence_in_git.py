@@ -30,7 +30,7 @@ import re
 import subprocess
 from pathlib import Path
 
-from qa import keepset, manifest
+from qa import archive, keepset, manifest
 from qa.marks import SafetyTier, qa
 from qa.measure import Measurement, conclude
 
@@ -55,9 +55,13 @@ def test_every_capture_the_committed_state_cites_can_still_be_produced():
     choice, and it changed.
 
     So the obligation is unchanged and the test now states it accurately: every
-    cited id is in the committed manifest, and its body is either stamped into
-    an archive or still on this disk. Losing one means losing the answer to a
+    cited id is in the committed manifest, and its body is **in a bundle this
+    test opens** or still on this disk. Losing one means losing the answer to a
     question the vendor is entitled to ask.
+
+    A machine with neither a store nor a bundle answers `inconclusive`. A clone
+    holds the manifest and nothing else, and "I cannot see the bodies from
+    here" is not "the bodies are gone" -- rule 8.
 
     Stated over the citation rather than over the tracker, as before: the
     mechanism that keeps a body reachable can be replaced without touching this.
@@ -71,20 +75,42 @@ def test_every_capture_the_committed_state_cites_can_still_be_produced():
         return
 
     known = manifest.read()
+    bundles = sorted((REPO / "archive").glob("evidence-*.tar.xz"))
+    held: set[str] = set()
+    for bundle in bundles:
+        held |= archive.members(bundle)
+    on_disk = keepset.evidence_path
+    store = (REPO / "evidence").is_dir()
+
+    if not bundles and not store:
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason="this machine holds neither an evidence store nor an "
+                   "archive, so reachability cannot be read here. The "
+                   "manifest is the proof and it is in git; rule 8 -- a read "
+                   "we could not make is not an empty read"))
+        return
+
     unproved, unreachable = [], []
     for evidence_id in sorted(needed):
         row = known.get(evidence_id)
         if row is None:
             unproved.append(evidence_id)
-        elif not row.get("archive") and not keepset.evidence_path(
-                evidence_id).is_file():
+        elif evidence_id not in held and not on_disk(evidence_id).is_file():
+            # NOT `row.get("archive")`. That stamp is a string the archive
+            # writes about itself, so the guard was reading its own writer --
+            # delete the bundle and it stayed green. Three independent
+            # reviewers said so on 2026-09-12, and the commit that introduced
+            # it claimed "both guards went UP" when this one had gone down:
+            # it replaced a physical check (a file git actually holds) with a
+            # self-report.
             unreachable.append(evidence_id)
 
     lost = unproved + unreachable
     conclude(Measurement(
         verdict="failed" if lost else "passed",
         reason=(f"{len(unproved)} cited capture(s) have no manifest line and "
-                f"{len(unreachable)} are in no archive and not on disk: "
+                f"{len(unreachable)} are in no bundle and not on disk: "
                 f"{', '.join(m[:12] for m in lost[:5])}"
                 if lost else
                 f"all {len(needed)} cited capture(s) are proved by the "

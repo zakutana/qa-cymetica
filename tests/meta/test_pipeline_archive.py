@@ -25,8 +25,10 @@ import lzma
 import tarfile
 from pathlib import Path
 
-from qa import archive, evidence, keepset
+from qa import archive, evidence, keepset, manifest
 from qa.marks import SafetyTier, qa
+
+REPO = Path(__file__).resolve().parent.parent.parent
 
 
 def _store(tmp_path: Path) -> Path:
@@ -74,6 +76,7 @@ def test_a_written_archive_verifies_against_the_names_of_its_members(
 
     written, missing = archive.build(ids, target, root=_store(tmp_path))
     assert written == 4 and missing == [], (written, missing)
+    assert archive.commit(target, releasable=True) is True
 
     good, bad = archive.verify(target, set(ids))
     assert sorted(good) == sorted(ids), "a member the archive holds did not verify"
@@ -93,6 +96,7 @@ def test_a_member_whose_content_moved_is_caught_and_nothing_is_released(
     ids = [_capture(tmp_path, {"n": n}) for n in range(3)]
     target = tmp_path / "archive" / "evidence-2026-09.tar.xz"
     archive.build(ids, target, root=_store(tmp_path))
+    archive.commit(target, releasable=True)
 
     def _respun(mutate) -> Path:
         with tarfile.open(target, "r:xz") as src:
@@ -141,6 +145,7 @@ def test_a_body_that_is_not_on_disk_is_reported_not_skipped(
     target = tmp_path / "archive" / "evidence-2026-09.tar.xz"
 
     written, missing = archive.build([here, gone], target, root=_store(tmp_path))
+    archive.commit(target, releasable=True)
 
     assert written == 1 and missing == [gone], (written, missing)
     good, bad = archive.verify(target, {here, gone})
@@ -180,9 +185,123 @@ def test_the_bundle_is_actually_compressed(tmp_path, monkeypatch):
     ids = [_capture(tmp_path, {"n": n, "pad": "x" * 4000}) for n in range(12)]
     target = tmp_path / "archive" / "evidence-2026-09.tar.xz"
     archive.build(ids, target, root=_store(tmp_path))
+    archive.commit(target, releasable=True)
 
     raw = sum(keepset.evidence_path(i, _store(tmp_path)).stat().st_size
               for i in ids)
     assert target.stat().st_size < raw / 2, (target.stat().st_size, raw)
     with lzma.open(target) as handle:
         assert handle.read(1), "the archive is empty"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_second_run_in_the_same_month_keeps_what_the_first_one_bundled(
+        tmp_path, monkeypatch):
+    """The loss path all three independent reviewers reproduced on 2026-09-12.
+
+    `tarfile` truncates and xz cannot append, while `pending()` returns only
+    rows with no stamp. So a second run in the same month rewrote the bundle
+    from the newly pending ids alone, over the top of one holding 1 178 -- and
+    the manifest went on stamping the lost ones as archived. Nothing could see
+    it: the guard read the stamp, which the archive writes to itself.
+
+    It is a loss path rather than a lost backup because `must_keep` can shrink
+    (115 captures lost their citation the same day, when the ledger folded onto
+    a new run) and `prune_runs` then deletes a body the archive was the only
+    remaining copy of.
+
+    Driven through the CLI, because the defect is in what the caller ASKS for:
+    `build` writes what it is given, and it was being given only the new ids.
+    """
+    # The CLI resolves captures through `evidence_root()`, which is
+    # QA_STATE_DIR/"evidence" -- so the fixture writes where the code will look
+    # rather than where an explicit `root=` would have put them.
+    state = tmp_path / "state"
+    monkeypatch.setenv("QA_STATE_DIR", str(state))
+    import importlib
+    import importlib.util
+
+    import qa.state
+    importlib.reload(qa.state)
+    spec = importlib.util.spec_from_file_location(
+        "keep_under_test", REPO / "scripts" / "keep.py")
+    keep = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(keep)
+
+    first = [_capture(state, {"n": n}) for n in range(3)]
+    manifest.write({i: {"id": i, "bytes": 1, "call": "GET /x", "why": "row",
+                        "archive": ""} for i in first})
+    assert keep.main(["archive", "--month", "2026-09"]) == 0
+
+    target = archive.archive_path("2026-09")
+    assert sorted(archive.members(target)) == sorted(first)
+
+    second = [_capture(state, {"n": n}) for n in range(10, 12)]
+    known = manifest.read()
+    known.update({i: {"id": i, "bytes": 1, "call": "GET /y", "why": "row",
+                      "archive": ""} for i in second})
+    manifest.write(known)
+    assert keep.main(["archive", "--month", "2026-09"]) == 0
+
+    held = archive.members(target)
+    assert sorted(held) == sorted(first + second), (
+        f"the second run lost {sorted(set(first) - held)} from the bundle")
+    good, bad = archive.verify(target, set(first + second))
+    assert bad == [] and sorted(good) == sorted(first + second)
+    assert not archive.staged(target).exists(), "a staged bundle was left behind"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_body_gone_from_disk_is_carried_out_of_the_old_bundle(
+        tmp_path, monkeypatch):
+    """The archive is the only copy once the pruner has been past.
+
+    Rebuilding from disk alone would drop exactly the captures the archive
+    exists for -- the old ones.
+    """
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path / "state"))
+    old = _capture(tmp_path, {"n": "old"})
+    target = tmp_path / "archive" / "evidence-2026-09.tar.xz"
+    archive.build([old], target, root=_store(tmp_path))
+    archive.commit(target, releasable=True)
+    keepset.evidence_path(old, _store(tmp_path)).unlink()
+
+    fresh = _capture(tmp_path, {"n": "fresh"})
+    written, missing = archive.build([old, fresh], target,
+                                     root=_store(tmp_path), carry=target)
+    archive.commit(target, releasable=True)
+
+    assert missing == [], f"a body the old bundle holds was reported missing: {missing}"
+    assert written == 2
+    good, bad = archive.verify(target, {old, fresh})
+    assert sorted(good) == sorted([old, fresh]) and bad == []
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_bundle_that_fails_to_verify_never_replaces_the_good_one(
+        tmp_path, monkeypatch):
+    """Write beside it, verify, then move. The order is the whole property.
+
+    A truncated or mangled write must cost nothing: the bundle that was already
+    there is the one the vendor's "provided on request" rests on.
+    """
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path / "state"))
+    ids = [_capture(tmp_path, {"n": n}) for n in range(3)]
+    target = tmp_path / "archive" / "evidence-2026-09.tar.xz"
+    archive.build(ids, target, root=_store(tmp_path))
+    archive.commit(target, releasable=True)
+    before = target.read_bytes()
+
+    # A body whose content no longer hashes to its name: the store was
+    # corrupted under us between one run and the next.
+    spoiled = keepset.evidence_path(ids[1], _store(tmp_path))
+    spoiled.write_text(json.dumps({"n": "tampered"}), encoding="utf-8")
+
+    written, missing = archive.build(ids, target, root=_store(tmp_path),
+                                     carry=target)
+    good, bad = archive.verify(archive.staged(target), set(ids))
+    assert bad == [ids[1]], bad
+    assert archive.commit(target, releasable=archive.releasable(good, bad)) is False
+
+    assert target.read_bytes() == before, (
+        "a bundle that did not verify replaced the one that did")

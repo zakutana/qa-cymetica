@@ -239,3 +239,32 @@ def test_the_reminder_names_a_drift_and_is_silent_without_one():
         "GET /api/v1/backtest/leaderboard: + bots[].headline_period"]}, now)
     said = " ".join(loud)
     assert "period_days" in said and "headline_period" in said, loud
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_acknowledging_a_shape_remembers_what_was_seen_before(tmp_path,
+                                                              monkeypatch):
+    """`--update` must not forget, or an intermittent field never settles.
+
+    `seen` is the memory: every field this call has EVER carried, and the thing
+    `shape_drift` uses to tell "their design" from "their change". A plain
+    `calls.update(seen)` replaced that memory with a 48-hour sample, so a field
+    that comes and goes oscillated for ever -- vanished, acknowledged,
+    appeared, acknowledged -- in the FIRST line of every session start, which
+    is the line the operator is told to trust.
+
+    `always` is the opposite kind of claim: it is about the present, so the
+    newest reading replaces it.
+    """
+    module = _processes()
+    stored = {"calls": {"GET /cards": {"always": ["id", "name"],
+                                       "seen": ["id", "name", "sometimes"]}}}
+    fresh = {"GET /cards": {"always": ["id", "name", "extra"],
+                            "seen": ["id", "name", "extra"]}}
+
+    merged = module.merge_shapes(stored.get("calls"), fresh)
+
+    assert merged["GET /cards"]["seen"] == ["extra", "id", "name", "sometimes"], (
+        "acknowledging a shape forgot a field the call had carried before")
+    assert merged["GET /cards"]["always"] == ["extra", "id", "name"], (
+        "always is a claim about the present and takes the newest reading")
