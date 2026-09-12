@@ -152,17 +152,16 @@ to neodškrtl, nebo to nikdy nebylo další na řadě.
 - [ ] 2026-09-12  `audits/checks.json` zůstal po dnešním auditu neorazítkovaný, protože orazítkovat teď by znamenalo označit za auditované i definice, které pass v noci změnil. Příští audit tedy projde stejný rozsah znovu — stojí to tokeny, ale nezakryje to nález.
 - [ ] 2026-09-12  `verify.py` spadne celý, když `already_sent()` nepřečte report (jejich TLS timeout ve 20:55). Čtení před POSTem, takže nic neodešlo napůl — ale jeden neúspěšný read zabije i verdikty, které by prošly.
 - [ ] 2026-09-12  #91 je nerozhodnutelný, protože nejnovější Nexusova odpověď jmenující kartu je starší než 24 h. Fold kvůli tomu dluží `repair_check` — až Nexus zase odpovídá, jedna otázka to vyřeší.
-- [ ] 2026-09-12  Pravidlo 12 je červené po každém commitu, co přidá test, a po každém deep passu — render patří do `.githooks/pre-commit`
+- [ ] 2026-09-12  Pravidlo 12 zčervená po každém commitu s testem i po každém deep passu — render do `.githooks/pre-commit`, a `stats.process` k tomu navíc
 
-  `payload_hash` zahrnuje i `stats.tests` (počty testů v repu) a
-  `stats.process` (řádky passů čtené z gitu), takže stránka nezastarává jen
-  změnou stavu. Dnes byla na `main` červená od 23:04 do teď a pass ji tak
-  pushnul: v 23:04 vyrendroval stránku a v 23:15 doplnil vlastní notebook,
-  takže `finished` a `elapsed_min` se v payloadu pohnuly až po renderu. Jeho
-  krok 9 to chytit nemůže — ověřuje dřív, než dopíše poslední commit. Render
-  trvá **1,6 s**, takže patří do pre-commit hooku vedle `keep.py track` a
-  stejně nefatálně (bookkeeping nesmí být důvod, proč nejde commitnout).
-  Test první. Stránku jsem dnes přerendroval, takže je zelená — ale rozejde se
-  znovu při prvním commitu, co přidá test.
+  `payload_hash` kryje `stats.tests` (počty testů v repu) i `stats.process`
+  (řádky passů z gitu), takže stránka zastarává i bez změny stavu. Dnes byla
+  na `main` červená od 23:04 (render) do 23:15 (notebook passu) a pass ji tak
+  pushnul; jeho krok 9 to chytit nemůže, ověřuje dřív než dopíše poslední
+  commit. Render trvá 1,6 s, takže hook vedle `keep.py track`, stejně
+  nefatálně. Ten ale spraví jen `stats.tests`: `versions()` čte
+  `git log -- audits/deep-pass-progress.json` a commit v letu tam ještě není,
+  takže chce navíc překrýt nejnovější verzi pracovním stromem (nebo dopsat
+  notebook dřív, než se rendruje). Test první. Dnes přerendrováno.
 
 - [ ] 2026-09-12  Krok 3 deep passu (code review) nemá v SKILL.md pokyn zapsat nález do notebooku, jak ho má krok 2 — takže když kompakce přijde mezi krokem 3 a 4, celá recenze zmizí beze stopy. Přesně se to dnes stalo: notebook má 27 tvrzení a všech 27 je z auditu. Oprava je změna páteře, takže chce vlastní tři čtenáře podle 1c.
