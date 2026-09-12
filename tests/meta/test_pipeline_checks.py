@@ -1508,7 +1508,24 @@ def test_the_clone_surface_reads_the_flow_and_not_their_spelling():
                             f"{PREFIX}/{{id}}/fund": {"post": key},
                             f"{PREFIX}/{{id}}": {"delete": auth}}, {})
     assert fixed["blocked"] == {}, (
-        "with funding fixed, a documented user-only DELETE is theirs to "
-        "decide and not a step of this flow")
+        "with funding fixed, a documented user-only DELETE is not a step that "
+        "moves the clone forward")
     assert sorted(fixed["refuses"]) == [f"DELETE {PREFIX}/{{id}}"], (
-        "it is still reported -- narrowed, not discarded")
+        "and it is still reported, because the VERDICT still reads refuses")
+
+    # The reason the verdict was NOT narrowed to `blocked`, learned the same
+    # night by running it: their /fund is fixed and publishes x-api-key, and
+    # the route still refusing the agent credential is
+    # GET /api/v1/cloned-bots/{instance_id}/activity -- which is what #89/#98
+    # is currently about. A verdict reading `blocked` turned that live, filed,
+    # twice-paid finding into `passed`, one fold away from verify.py sending
+    # the pass. An agent reading its own clone's activity is inside the flow by
+    # any honest reading; "moves the clone forward" was our boundary, not one
+    # their document draws.
+    live = credential_gap({f"{PREFIX}/clone": {"post": key},
+                           f"{PREFIX}/{{id}}/fund": {"post": key},
+                           f"{PREFIX}/{{id}}/activity": {"get": auth}}, {})
+    assert live["blocked"] == {} and sorted(live["refuses"]) == [
+        f"GET {PREFIX}/{{id}}/activity"], live
+    assert live["refuses"], (
+        "today's real shape must still be a finding, whatever `blocked` says")

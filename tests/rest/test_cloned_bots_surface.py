@@ -102,16 +102,22 @@ def _credential_headers(op: dict, schemes: dict) -> set:
     return {h for h in headers if h}
 
 
-# The steps of the flow this check is about: create a clone, then move it --
-# put money in it, start it. Matched on the path's last segment, because the id
-# in the middle is ours and their parameter name is theirs.
+# The steps that move a clone forward, reported separately so the reason can
+# say which refusal blocks the flow the docstring names. NOT the verdict.
 #
-# The check failed on ANY authenticated cloned-bots route that did not publish
-# `x-api-key`, while its docstring names one flow: "an agent that can clone a
-# bot can put money in it". So the day they fix funding and document, say, a
-# user-only `DELETE /api/v1/cloned-bots/{id}`, this would have sent them a
-# `fail` for a legitimate operation outside the flow -- on a row they have
-# already paid for twice. 3/3, deep pass of 2026-09-13.
+# C03 of the 2026-09-13 pass was right that the verdict should not fail on a
+# route outside the flow -- a documented user-only DELETE would have sent them
+# a `fail` on a row they have paid for twice. The fix that narrowed the VERDICT
+# to these two segments was wrong and the full run caught it within the hour:
+# their `/fund` is fixed and publishes `x-api-key`, and the route still
+# refusing it is `GET /api/v1/cloned-bots/{instance_id}/activity` -- which is
+# what #89/#98 is currently about. Narrowing to fund/go-live turned a live,
+# filed, twice-paid finding into `passed`, and `verify.py` would have sent that
+# pass. An agent reading its own clone's activity is inside the flow by any
+# honest reading; "moves the clone forward" was my boundary, not theirs.
+#
+# So the verdict reads `refuses` as it always did, and the narrower criterion
+# waits for one we can actually read off their document. See DEEP-PASS.md.
 MOVES_THE_CLONE = ("fund", "go-live")
 
 
@@ -184,11 +190,11 @@ def test_one_credential_carries_a_clone_from_creation_to_funding(rest_trusted):
     funds = [r for r in gap["blocked"] if r.rsplit("/", 1)[-1] == "fund"]
     aside = sorted(set(gap["refuses"]) - set(gap["blocked"]))
     conclude(Measurement(
-        verdict="failed" if gap["blocked"] else "passed",
+        verdict="failed" if gap["refuses"] else "passed",
         reason=(
             f"{len(gap['accepts'])} cloned-bots route(s) accept the agent's "
-            f"x-api-key and {len(gap['blocked'])} step(s) of the same flow do "
-            f"not: " + ", ".join(sorted(gap["blocked"]))
+            f"x-api-key and {len(gap['refuses'])} do not: "
+            + ", ".join(sorted(gap["refuses"]))
             # What their document says, and nothing this check did not read:
             # the live 401 it used to assert here was never measured by any
             # branch (V10, deep pass of 2026-09-11).
@@ -196,17 +202,18 @@ def test_one_credential_carries_a_clone_from_creation_to_funding(rest_trusted):
                "agent that authenticates the documented way can create a bot "
                "and, by their own document, cannot put money in it"
                if funds else
-               ". The funding route is not among them, so the clone can be "
-               "paid for; what it cannot do is the step named above")
-            + (f" (outside this flow, and not part of this finding: "
-               f"{', '.join(aside)})" if aside else "")
-            if gap["blocked"] else
+               ". The funding route is not among them, so a clone can be "
+               "created and paid for with the agent credential; what that "
+               "same credential cannot reach is the route named above")
+            + (f" ({len(gap['blocked'])} of them a step that moves the clone "
+               f"forward)" if gap["blocked"] else "")
+            if gap["refuses"] else
             f"every step of the clone-to-funding flow accepts the same agent "
             f"credential; {len(gap['accepts'])} route(s) publish it"
             + (f", and {len(aside)} authenticated route(s) outside the flow do "
                f"not, which is theirs to decide: {', '.join(aside)}"
                if aside else "")),
-        left=sorted(gap["blocked"]),
+        left=sorted(gap["refuses"]),
         right=sorted(gap["accepts"]),
         population={"authenticated_routes":
                     len(gap["accepts"]) + len(gap["refuses"]),
