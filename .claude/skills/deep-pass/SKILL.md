@@ -598,14 +598,26 @@ The material already exists. **Do not build an archive** — this step is the
 pointer nobody had:
 
 ```bash
+python scripts/review.py --all 7d     # the deep pass and the laboratory, windowed
 git log -p -- DEEP-PASS.md            # every past pass, in full
 git log -p -- audits/deep-pass-progress.json   # every pass's own notebook
 git log --since='7 days ago' --stat --format='%h %ad %s%n%b%n%(trailers)'
 python -m pytest --collect-only -q | tail -1
 python scripts/never_fired.py --zeros | head -1
-python scripts/deep_pass_process.py          # what every past pass cost and caught
-python scripts/lab.py grade                  # did our own ranking predict the verdicts?
 ```
+
+`review.py` is the same reading the operator can ask for at any time, over any
+window (`docs/data-plan.md`). It replaces the hand-run `deep_pass_process.py`
+and `lab.py grade` on this list -- those are what it reads -- so the week and an
+on-demand look back cannot drift into two answers. **Stamp it when the week is
+written, not before:** `python scripts/review.py checkpoint --area deep-pass
+--area lab`, and only for the areas this retrospective actually covered.
+
+The patrol below is NOT folded into it. `review.py` answers how the deep pass
+and the laboratory did; how WE work -- whether the TDD loop holds and which
+parts earn their keep -- stays this pass's own job. The operator settled that
+scope on 2026-09-12 and the tagged wording is in
+`.claude/skills/ohlednuti/SKILL.md`.
 
 `lab.py grade` is the laboratory judging its own filter rather than its own
 activity. It will say "not enough data" until six windows have closed, and that

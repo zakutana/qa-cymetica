@@ -146,6 +146,10 @@ PINNED = {
         ("2026-09-11", "budete skoumat same nove strategie",
          "4510b8cf12e72ee56b866aac91d4a984790023cc0f7140508a277a462b2a20c0"),
     ],
+    ".claude/skills/ohlednuti/SKILL.md": [
+        ("2026-09-12", "za tri tydny reknu at se ohledne zpet",
+         "9c69c567343ffdb50140f3345868612c1ae4385157f892018fcc748e319683b2"),
+    ],
     ".claude/skills/deep-pass/SKILL.md": [
         ("2026-09-10", "zahrn do do deep pass procesu",
          "c87cf5372cc63054d453a069d8922d430e8c2d2f1b396b4f17f0443cfa7fd166"),

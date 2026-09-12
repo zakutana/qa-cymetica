@@ -295,6 +295,6 @@ to neodškrtl, nebo to nikdy nebylo další na řadě.
 - [x] 2026-09-12  D2 z `docs/data-plan.md`: `keep.py archive --month` — zabalit těla, ověřit hash každého, teprve pak pustit z gitu
 - [x] 2026-09-12  D3 z `docs/data-plan.md`: odpojit `evidence/` od gitu; strom ze 229 MB na ~62 MB
 - [x] 2026-09-12  R1 z `docs/data-plan.md`: `scripts/review.py` — okno a oblast deep pass
-- [ ] 2026-09-12  R2 z `docs/data-plan.md`: oblast laboratoř, `checkpoint --area`, skill, přepis kroku 11 deep passu
+- [x] 2026-09-12  R2 z `docs/data-plan.md`: oblast laboratoř, `checkpoint --area`, skill, přepis kroku 11 deep passu
 - [ ] 2026-09-12  Hlášky strážce v `tests/repo/test_deep_pass_process.py` staví na klíči `pass`, ale `passes()` vydává `run` — ve chvíli, kdy má strážce vysvětlit, co je špatně, spadne na `KeyError`. Aserce samotné jsou správné, slepá je jen hláška.
 - [ ] 2026-09-12  Přeformulovat důvod v `test_one_credential_carries_a_clone_from_creation_to_funding`: větu o `/fund` říkat jen když `/fund` je mezi odmítajícími (šla ven v #98 jako podmíněná). Až se ta kontrola bude měnit tak jako tak — samotný pin cyklus za to nestojí.

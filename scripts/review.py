@@ -142,6 +142,116 @@ def area_deep_pass(since: datetime | None, passes=None, condition=None) -> dict:
             "condition": condition(every)}
 
 
+def _within(rows, since: datetime | None, field: str = "at") -> list[dict]:
+    if since is None:
+        return list(rows)
+    out = []
+    for row in rows:
+        when = _moment(row.get(field))
+        if when is not None and when >= since:
+            out.append(row)
+    return out
+
+
+def area_lab(since: datetime | None, lab=None, rooms=None, diaries=None,
+             grade=None) -> dict:
+    """What the laboratory did in the window, off its own append-only diaries.
+
+    No git archaeology. The deep pass's notebook is overwritten and survives
+    only as commits, which is why `deep_pass_process` walks git history -- the
+    laboratory's five files are appended to and every row carries `at`, so a
+    window is a filter. An earlier draft of this plan proposed `git log -p`
+    over the archive for this and it would have been wasted work.
+
+    `grade` is deliberately NOT windowed: it asks whether our ranking predicted
+    the verdicts, and thinning the sample to a window is how a filter gets
+    judged on four points. Its refusal below the floor is printed verbatim,
+    because that refusal is the answer.
+    """
+    if lab is None or rooms is None:
+        from qa import lab as qa_lab
+        from qa import rooms as qa_rooms
+        lab = lab or qa_lab.load
+        rooms = rooms or qa_rooms.load
+    if diaries is None:
+        def diaries(name):
+            try:
+                return [json.loads(line) for line
+                        in (state_dir() / name).read_text(
+                            encoding="utf-8").splitlines() if line.strip()]
+            except (OSError, json.JSONDecodeError):
+                return []
+    if grade is None:
+        def grade():
+            import importlib.util
+
+            spec = importlib.util.spec_from_file_location(
+                "lab_cli", REPO_ROOT / "scripts" / "lab.py")
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            from qa import backtests
+            return backtests.grade(module.graded_pairs())
+
+    lab_rows = list(lab())
+    room_rows = list(rooms())
+    sessions = _within([r for r in lab_rows if r.get("type") == "session"
+                        and r.get("state") == "closed"], since)
+    lessons = [line for row in sessions for line in (row.get("lessons") or [])]
+
+    oldest = min((str(r.get("at") or "") for r in lab_rows), default="")
+    gap = ""
+    if not sessions:
+        gap = (f"žádná uzavřená session v tomhle okně"
+               + (f"; deník začíná {oldest[:10]}" if oldest else ""))
+
+    try:
+        graded = grade()
+    except Exception as exc:  # noqa: BLE001 -- a reader that cannot run says so
+        graded = {"verdict": "unavailable", "why": str(exc)[:160]}
+
+    return {
+        "sessions": sessions, "lessons": lessons, "oldest": oldest[:10],
+        "rooms": _within([r for r in room_rows
+                          if r.get("type") == "strategy"], since),
+        "verdicts": _within([r for r in room_rows
+                             if r.get("type") == "verdict"], since),
+        # `question` / `answer` / `gave_up`, read off the diary rather than
+        # guessed: the first draft counted `type == "ask"`, found none, and
+        # printed "0 otázek Nexusovi" directly above a lesson saying one had
+        # been asked. A retrospective that under-reports silently is worse than
+        # one that refuses.
+        "asked": _within([r for r in diaries("nexus.jsonl")
+                          if r.get("type") == "question"], since),
+        "answered": _within([r for r in diaries("nexus.jsonl")
+                             if r.get("type") == "answer"], since),
+        "gave_up": _within([r for r in diaries("nexus.jsonl")
+                            if r.get("type") == "gave_up"], since),
+        "backtests": _within(diaries("backtests.jsonl"), since),
+        "orders": _within([r for r in diaries("paper.jsonl")
+                           if r.get("type") == "intent"], since),
+        "grade": graded, "gap": gap,
+    }
+
+
+def _render_lab(out: dict, said: str) -> str:
+    lines = [f"LABORATOŘ · {said}"]
+    if out["gap"]:
+        lines.append(f"  {out['gap']}")
+    lines.append(
+        f"  {len(out['sessions'])} session(í), {len(out['rooms'])} nových "
+        f"roomů, {len(out['verdicts'])} verdiktů, {len(out['backtests'])} "
+        f"backtestů, {len(out['orders'])} paper příkazů")
+    lines.append(
+        f"  Nexus: {len(out['asked'])} otázek, {len(out['answered'])} "
+        f"odpovědí, {len(out['gave_up'])} se vzdalo")
+    for lesson in out["lessons"]:
+        lines.append(f"  · {lesson}")
+    graded = out.get("grade") or {}
+    if graded.get("why"):
+        lines.append(f"  filtr: {graded.get('verdict', '?')} — {graded['why']}")
+    return "\n".join(lines)
+
+
 def _render_deep_pass(out: dict, said: str) -> str:
     lines = [f"DEEP PASS · {said}"]
     if out["gap"]:
@@ -166,15 +276,45 @@ def _n(value) -> str:
     return "-" if value is None else str(value)
 
 
+def stamp(areas, now: datetime | None = None) -> dict:
+    """Move the line, for the areas named and no others.
+
+    The only writer here, and it runs only when a review has actually been
+    WRITTEN -- the skill's last step. Stamping an area a review did not cover
+    would move the line the NEXT look back draws from, and the work in between
+    would never be read by anybody.
+    """
+    now = now or datetime.now(timezone.utc)
+    known = marks()
+    for area in areas:
+        known[area] = {"at": now.isoformat(timespec="seconds")}
+    path = marks_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(known, ensure_ascii=False, indent=1,
+                               sort_keys=True) + "\n", encoding="utf-8")
+    return known
+
+
 def main(argv: list[str] | None = None) -> int:
     printable()
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    sub = parser.add_subparsers(dest="cmd")
+    mark = sub.add_parser("checkpoint",
+                          help="record that these areas were just reviewed")
+    mark.add_argument("--area", action="append", default=[], choices=AREAS,
+                      required=True)
     for area in AREAS:
         parser.add_argument(f"--{area}", metavar="WINDOW",
                             help="all | 30d | last | YYYY-MM-DD")
     parser.add_argument("--all", metavar="WINDOW",
                         help="the same window for every area")
     args = parser.parse_args(argv)
+
+    if args.cmd == "checkpoint":
+        known = stamp(args.area)
+        print(f"review: {', '.join(sorted(args.area))} marked reviewed "
+              f"({len(known)} area(s) on record)")
+        return 0
 
     known = marks()
     now = datetime.now(timezone.utc)
@@ -192,7 +332,7 @@ def main(argv: list[str] | None = None) -> int:
         if area == "deep-pass":
             print(_render_deep_pass(area_deep_pass(since), said))
         else:
-            print(f"{area.upper()} · {said}\n  (R2)")
+            print(_render_lab(area_lab(since), said))
         print()
     return 0
 
