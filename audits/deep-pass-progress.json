@@ -1,462 +1,353 @@
 {
- "run": "deep-pass 2026-09-12",
- "at": "2026-09-12T19:10:00+00:00",
- "at_finished": "2026-09-12T21:07:13+00:00",
- "start_commit": "6ab6d36789a4ad3d9b0ff5af1c7ac2b15498ef39",
- "gaps": [
-  {
-   "id": "S01",
-   "nodeid": ".claude/skills/deep-pass/SKILL.md steps 0+1",
-   "claim": "Step 0 overwrites the progress file with this run's `at`, so step 1's `messages --since-last-pass` means 'since this pass started' and returned 0 messages tonight. The material step 1 exists for is invisible and nothing goes red.",
-   "source": "audit",
-   "votes": {
-    "t1": "reproduced by the pass itself",
-    "t2": "-",
-    "t3": "-"
-   },
-   "verdict": "real",
-   "fixed": true,
-   "commit": "a612367d",
-   "deferred_to_operator": false,
-   "how": "scripts/processes.py::messages_floor reads `previous_at` and names the floor it used; step 0 of the skill carries it forward; pinned in tests/repo/test_reminders.py"
+  "run": "deep-pass 2026-09-13",
+  "at": "2026-09-12T22:30:00+00:00",
+  "previous_at": "2026-09-12T19:10:00+00:00",
+  "at_finished": null,
+  "start_commit": "85143b9c",
+  "gaps": [
+    {
+      "id": "R01",
+      "nodeid": "tests/mcp/test_ground_truth_needs_no_key.py::test_the_ground_truth_tools_answer_without_a_key",
+      "claim": "A call that could not be read is counted as the promise kept. `unreadable` is in neither `walls` nor `answered`, and the Inconclusive branch fires only when ALL THREE are unreadable -- so one TLS timeout (they had one at 20:55 on 2026-09-12) and the check concludes `passed` for a claim about three tools from two readings. Rule 8, in the direction that sends a vendor a pass.",
+      "source": "review",
+      "votes": {
+        "t2": "real",
+        "t3": "real",
+        "t1": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "bde225e8"
+    },
+    {
+      "id": "R02",
+      "nodeid": "scripts/prune_runs.py::cited_run_ids",
+      "claim": "Tonight's refusal covers the ledger and stops there. `audits/checks.json` cites 607 run ids and is read the same blind way: `_load(...).get('audited') or {}` turns an unreadable file into one citing nothing, and the prose fallback's `except OSError: continue` drops it too. A checks.json caught mid-write makes every record cited only by it a victim of --apply. The identical defect, one file over, left in place by the fix for it.",
+      "source": "review",
+      "votes": {
+        "t2": "not-real",
+        "t3": "real",
+        "t1": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "8abf1dd0"
+    },
+    {
+      "id": "R03",
+      "nodeid": "scripts/lab.py::_deployed",
+      "claim": "Its docstring still calls itself \"the symmetric reading to `_free_cash`\" and that stopped being true tonight. `_deployed` now reads their position status; `_free_cash` still reads the newest `after` row of our own orders, which a website close never writes. After the 2026-09-12 close the two legs of `affordable()` describe one event differently -- conservative today, but the docstring asserts a symmetry the code no longer has.",
+      "source": "review",
+      "votes": {
+        "t2": "not-real",
+        "t3": "not-real",
+        "t1": "not-real"
+      },
+      "verdict": "dropped",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "R04",
+      "nodeid": "scripts/lab.py::_closed_on_their_side",
+      "claim": "Only the literal `closed` releases money, and no position has ever been observed resolving -- measuring a resolve is still open in NEXT.md. If a resolved position reads `resolved`/`settled`/`expired`, it is counted against the 60% ceiling forever and every resolved card ratchets the ceiling down until the lab cannot order at all. Nothing fails; it quietly stops trading. Note `scripts/paper.py:567` already keys on the same word, so this is the repository's existing assumption rather than a new one.",
+      "source": "review",
+      "votes": {
+        "t2": "not-real",
+        "t3": "not-real",
+        "t1": "not-real"
+      },
+      "verdict": "dropped",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "R05",
+      "nodeid": "tests/repo/test_prune_runs.py::test_a_ledger_that_cannot_be_read_is_not_a_ledger_citing_nothing",
+      "claim": "The record half asserts what the fix makes trivially true: once the refusal fires `keep_set` returns every record as `unreadable`, so `victims()` is empty and the assertion holds for any implementation that keeps everything unconditionally. The capture half has a real discriminator (a sibling capture takes `witness`, so losing `kept` is a deletion); the record half has none.",
+      "source": "review",
+      "votes": {
+        "t2": "not-real",
+        "t3": "not-real",
+        "t1": "not-real"
+      },
+      "verdict": "dropped",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "A01",
+      "nodeid": "tests/meta/test_pipeline_lab.py::test_a_refill_climbs_from_what_scored_rather_than_from_where_we_started",
+      "claim": "The assertion goes red on 2026-09-15 while the contract is fully honoured. Line 1201 calls night_refill(rows=...) with no `now`, so backtests.best() uses datetime.now() and the fixture rows (at 2026-09-12T12:00Z, p=30, stale_after 3.0 days) fall out of the window. Reproduced: best(rows, limit=1) -> 1 row today, 0 rows at 2026-09-15T16:00Z. Every sibling in test_pipeline_backtests.py pins now=NOW; this one does not. tests/meta, so the red aborts every session.",
+      "source": "audit",
+      "votes": {
+        "t2": "real",
+        "t3": "real",
+        "t1": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "bde225e8"
+    },
+    {
+      "id": "A02",
+      "nodeid": "tests/meta/test_pipeline_lab.py::test_the_night_keeps_searching_after_the_first_queue_runs_out",
+      "claim": "The docstring's contract is that the night does not stop searching when the first queue empties, quantifying the defect as 'six ticks, twelve minutes of a fourteen-hour night'. The assertion asks only len(walked) > 30*4. Gate the refill on did['refills'] < 3 and the walk reaches 150 over seven ticks, then searches nothing for the remaining ~293: all three assertions stay green on a night that searched fourteen minutes of ten hours.",
+      "source": "audit",
+      "votes": {
+        "t2": "real",
+        "t3": "real",
+        "t1": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "47b86e6b"
+    },
+    {
+      "id": "A03",
+      "nodeid": "tests/meta/test_pipeline_lab.py::test_the_night_launches_on_paper_from_a_nexus_answer_and_nothing_else",
+      "claim": "The name claims the road (a room opens from a whole Nexus answer, never from a basket of ours) and the brakes (affordable, paper only, nothing during a deep pass). The assertion measures neither: actions['promote'] is a stub that unconditionally returns {rooms:1, orders:1}, so a night_promote that opened a room from our own basket, skipped affordable and posted live would keep it green. The property is really held by test_pipeline_night_spend.py, which drives the real function. Same shape as A04 of 2026-09-12, ruled on in this file.",
+      "source": "audit",
+      "votes": {
+        "t2": "real",
+        "t3": "real",
+        "t1": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "47b86e6b"
+    },
+    {
+      "id": "A04",
+      "nodeid": "tests/meta/test_pipeline_night_spend.py::test_one_card_is_not_bought_once_per_answer_that_mentions_it",
+      "claim": "The contract is 'one card named in three answers is bought once'; the assertion len(sent) == len(set(sent)) is satisfied by sent == []. Any regression that places no order at all -- a _stake of 0.0, an affordable that refuses, an open_strategy that raises before the buy loop -- leaves the de-duplication it exists for unexercised. Non-vacuous today (book 100000 -> stake 2000 -> one order), so latent rather than live; every sibling in the file asserts on a non-empty sent.",
+      "source": "audit",
+      "votes": {
+        "t2": "real",
+        "t3": "not-real",
+        "t1": "not-real"
+      },
+      "verdict": "minority",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "B01",
+      "nodeid": "tests/repo/test_process_dna.py::test_every_ceiling_watches_something_that_is_actually_measured",
+      "claim": "The contract is a permanent pairing (a ceiling on a key nothing emits); the assertion compares CEILINGS against one machine's CURRENT sizes(), three keys of which are conditional. processes.py:384-432 emits evidence_mb only if <root>/evidence is a directory (gitignored since D3, absent in any clone), next_oldest_days only if NEXT.md has an open parseable item, memory_lines only if the memory index exists. Run against a clone-shaped root: dead == ['evidence_mb','next_oldest_days'] -> failed, while both ceilings are correctly paired.",
+      "source": "audit",
+      "votes": {
+        "t2": "real",
+        "t3": "real",
+        "t1": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "bde225e8"
+    },
+    {
+      "id": "B02",
+      "nodeid": "tests/repo/test_process_dna.py::test_the_effort_of_a_commit_is_read_even_when_git_will_not_parse_it",
+      "claim": "The docstring names the broken-reader state as lenient < strict; the verdict fails on lenient <= strict. Measured now: lenient 200 (saturated), strict 153. The 47 malformed messages are history and the hook is fixed, so once 200 well-formed commits sit on top, lenient == strict == 200 and the check goes red with the reader working perfectly. The same branch also fires when _git returns '' on a non-zero exit -- a failed read reported as a broken reader, rule 8.",
+      "source": "audit",
+      "votes": {
+        "t2": "real",
+        "t3": "real",
+        "t1": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "bde225e8"
+    },
+    {
+      "id": "B03",
+      "nodeid": "tests/repo/test_review.py::test_reading_the_real_repository_changes_not_one_byte",
+      "claim": "The contract is 'a read-only review writes nothing'; the assertion exercises one of the two areas with two instruments blind to where the other reads. main(['--deep-pass','all']) never reaches area_lab (review.py:156-233), which loads scripts/lab.py and calls graded_pairs(), qa.lab.load, qa.rooms.load and five diary readers. Every diary it touches is gitignored, so git status cannot see a write, and the mtime snapshot covers only audits/. Today --lab appends a row to state/backtests.jsonl on every run and the check stays green.",
+      "source": "audit",
+      "votes": {
+        "t2": "real",
+        "t3": "not-real",
+        "t1": "not-real"
+      },
+      "verdict": "minority",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "B04",
+      "nodeid": "tests/repo/test_reminders.py::test_the_hook_is_silent_when_nothing_is_due_and_never_fails",
+      "claim": "The silence half is asserted on a fixture where the mechanism cannot load. reminders.py:37-38 returns 0 when scripts/processes.py is absent, and the 'quiet' subprocess runs against a tmp_path without it -- so the empty stdout proves the early return, not that reminders() is quiet. The second subprocess does load it, prints 'Tydenni ohlednuti nikdy neprobehl', and only returncode == 0 is asserted. Set MISSED_NIGHT_HOURS = 0 and both assertions still hold.",
+      "source": "audit",
+      "votes": {
+        "t2": "real",
+        "t3": "real",
+        "t1": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "47b86e6b"
+    },
+    {
+      "id": "B05",
+      "nodeid": "tests/repo/test_process_dna.py::test_the_window_counts_runs_while_the_whole_history_keeps_the_last_seen",
+      "claim": "The docstring names a defect in patrol(since=...); the assertion drives within() and runs_from_records() in isolation and never calls patrol. Change processes.py:520 from runs_from_records(within(stamps, since)) to runs_from_records(stamps) -- the exact regression described -- and the test stays green because it calls within itself. The fixture writes tmp_path/scripts/quiet.py and tmp_path/state/nexus.jsonl and never passes tmp_path to anything that reads them.",
+      "source": "audit",
+      "votes": {
+        "t2": "real",
+        "t3": "real",
+        "t1": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "ddf01ec4"
+    },
+    {
+      "id": "B06",
+      "nodeid": "tests/repo/test_review.py::test_the_lab_area_filters_every_diary_on_its_own_clock",
+      "claim": "Docstring: 'Five diaries, one window'. The assertion exercises two. It passes diaries=lambda name: [], so the _within wrappers on asked, answered, gave_up, backtests and orders (review.py:223-231) all filter empty lists; only lab.jsonl sessions and rooms.jsonl rows are measured. Drop _within from line 229 and the retrospective reports every backtest ever run under a 'last 7 days' heading, still green.",
+      "source": "audit",
+      "votes": {
+        "t2": "real",
+        "t3": "real",
+        "t1": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "ddf01ec4"
+    },
+    {
+      "id": "B07",
+      "nodeid": "tests/repo/test_review.py::test_the_nexus_row_types_are_read_off_the_real_diary_not_guessed",
+      "claim": "The docstring pins the vocabulary THIS READER depends on against the data; the assertion pins only the data, with the reader's vocabulary as a literal in the test. It reads state/nexus.jsonl and never reads review.area_lab. Revert review.py:223-228 to the historical type == 'ask' and the check stays green while the retrospective again prints '0 otazek Nexusovi' -- the incident the docstring cites.",
+      "source": "audit",
+      "votes": {
+        "t2": "real",
+        "t3": "real",
+        "t1": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "ddf01ec4"
+    },
+    {
+      "id": "B08",
+      "nodeid": "tests/repo/test_surface_drift.py::test_a_field_that_appears_in_their_answer_is_how_a_fix_announces_itself",
+      "claim": "The docstring claims '#97, exactly' -- that the watcher would have announced the fix -- but the assertion drives surface.fields_drift, which no production path calls (grep returns qa/surface.py:180 and three lines of this test). The reminder path is processes.surface_drift -> drift_against -> shape_drift, whose criterion is stricter: a field counts as appeared only if it is in now['always'] (in EVERY 2xx capture of that call in 48h). A field present in some answers is `appeared` here and silent in the mechanism.",
+      "source": "audit",
+      "votes": {
+        "t2": "real",
+        "t3": "real",
+        "t1": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "47b86e6b"
+    },
+    {
+      "id": "C01",
+      "nodeid": "tests/rest/test_portfolio_summary.py::test_the_summary_says_which_populations_its_counters_leave_out",
+      "claim": "The contract is that a summary excluding a population it holds must say so and say where it can be read; the assertion accepts that statement only from `counters_do_not_cover`. An exclusion stated inside `counters_cover` is thrown away by the NEGATIONS filter and reported as an absence. Reproduced: accounts_for({counters_cover: '...event-card bull/bear positions are not counted here, see /api/v1/event-cards/positions', counters_do_not_cover: []}) -> None -> verdict failed, with a reason that is false of the body it just read. #83's shape on the same endpoint, which cost a retraction.",
+      "source": "audit",
+      "votes": {
+        "t2": "real",
+        "t3": "real",
+        "t1": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "8abf1dd0"
+    },
+    {
+      "id": "C02",
+      "nodeid": "tests/rest/test_cloned_bots_surface.py::test_every_cloned_bot_route_they_serve_is_one_they_document",
+      "claim": "The contract is 'a route their server serves is a route their documents name'; the assertion compares a path rewritten with the literal `{instance_id}` against their `paths` keys, so the real claim is '...under that exact parameter name'. Rename the parameter to `{clone_id}` in openapi -- a documentation-only change -- and served_but_undocumented reports a route they do document. Latent today.",
+      "source": "audit",
+      "votes": {
+        "t2": "real",
+        "t3": "real",
+        "t1": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "ddf01ec4"
+    },
+    {
+      "id": "C03",
+      "nodeid": "tests/rest/test_cloned_bots_surface.py::test_one_credential_carries_a_clone_from_creation_to_funding",
+      "claim": "The docstring's contract is one flow -- an agent that can clone a bot can fund it -- but the assertion fails on ANY authenticated /api/v1/cloned-bots operation that does not publish x-api-key. If they fix fund and document DELETE with `authorization` only (a legitimate user-only operation), credential_gap still returns a refusal and verdict is failed. The reason string hedges; the verdict does not, and the verdict is what moves the CHECK axis and what verify.py sends. This row is OPEN and filed as #89/#98.",
+      "source": "audit",
+      "votes": {
+        "t2": "real",
+        "t3": "real",
+        "t1": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "ddf01ec4"
+    },
+    {
+      "id": "C04",
+      "nodeid": "tests/mcp/test_ground_truth_needs_no_key.py::test_the_ground_truth_tools_answer_without_a_key",
+      "claim": "DUPLICATE of R01 -- found independently by an auditor who had not seen the review. Judged as R01.",
+      "source": "audit",
+      "votes": null,
+      "verdict": "duplicate",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "C05",
+      "nodeid": "tests/repo/test_evidence_in_git.py::test_every_capture_the_committed_state_cites_can_still_be_produced",
+      "claim": "The docstring's contract is 'every cited id is in the COMMITTED manifest', and the journal and ledger are read from HEAD for exactly that reason (lines 126-127) -- but manifest.read() reads audits/evidence-manifest.jsonl in the WORKING TREE. A fold cites a new capture, the ledger is committed with the hook not running (--no-verify, or a clone with no core.hooksPath -- the case step 0 of the deep pass exists to repair), and the citation is in HEAD while its manifest line is only on disk: guard green, clone holds no proof.",
+      "source": "audit",
+      "votes": {
+        "t2": "real",
+        "t3": "real",
+        "t1": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "8abf1dd0"
+    },
+    {
+      "id": "C06",
+      "nodeid": "tests/meta/test_pipeline_render.py::test_the_page_reads_no_field_the_payload_stops_writing",
+      "claim": "The extractor re.findall(r'\\bf\\.([a-z_]+)\\b') cannot match a camelCase or digit-bearing property, so a whole class of undefined reads is outside the population compared. Verified: over 'draw(f.displayState); x(f.a2a_id); y(f.title)' it returns ['title'] alone. The identical defect (P13) was fixed in the sibling guard in test_pipeline_rooms.py on 2026-09-11 by widening to [A-Za-z_][A-Za-z0-9_]*.",
+      "source": "audit",
+      "votes": {
+        "t2": "real",
+        "t3": "real",
+        "t1": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "bde225e8"
+    },
+    {
+      "id": "C07",
+      "nodeid": "tests/repo/test_deep_pass_finished.py::test_no_confirmed_finding_was_left_unfixed_by_a_deep_pass",
+      "claim": "_next_items() wraps the whole read in `except Exception: return set()`, so a read it could not make is scored as a NEXT.md carrying nothing, and every entry of the pass's `next` list is then reported as missing. A failed read rendered as an empty read -- rule 8 -- in the file whose red step 9 reverts a night over. Low confidence from the auditor.",
+      "source": "audit",
+      "votes": {
+        "t2": "not-real",
+        "t3": "real",
+        "t1": "not-real"
+      },
+      "verdict": "minority",
+      "fixed": false,
+      "commit": null
+    }
+  ],
+  "next": [],
+  "retrospective": {
+    "last": "2026-09-09",
+    "done": false
   },
-  {
-   "id": "A01",
-   "nodeid": "qa/backtests.py::grade",
-   "claim": "Counted 'top survived' plus 'bottom refuted', so when nothing survived the bottom half carried the score alone: 7 closed, all refuted, answered 'the ranking predicted' at 57%. `n // 2` makes that half the larger at odd n. Reproduced independently before fixing.",
-   "source": "audit",
-   "votes": {
-    "t1": "reproduced by the pass itself",
-    "t2": "-",
-    "t3": "-"
-   },
-   "verdict": "real",
-   "fixed": true,
-   "commit": "a612367d"
+  "rule_changes": [],
+  "meta_tests": {
+    "start": 426,
+    "end": null,
+    "reason": null
   },
-  {
-   "id": "A02",
-   "nodeid": "tests/meta/test_pipeline_lab.py::test_the_night_holds_no_hand_that_trades_files_or_commits",
-   "claim": "Docstring still claimed buying was not among the night's doors while the assertion required a buyer; and 'reaches the caps' was token presence, so moving `affordable` after `paper.buy` kept it green. Mutation-tested after the fix.",
-   "source": "audit",
-   "votes": {
-    "t1": "reproduced by the pass itself",
-    "t2": "-",
-    "t3": "-"
-   },
-   "verdict": "real",
-   "fixed": true,
-   "commit": "a612367d"
-  },
-  {
-   "id": "A03",
-   "nodeid": "tests/meta/test_pipeline_lab.py::test_the_ground_truth_tools_are_read_and_an_unknown_one_is_refused",
-   "claim": "`tool_class('definitely_not_a_tool') != 'unknown'` is unreachable — the function ends in `return 'unknown'`. The SAFE refusal in SafetyTransport.handle_request is never touched, and no other check covers the `unknown` class.",
-   "source": "audit",
-   "votes": {
-    "t1": "no",
-    "t2": "no",
-    "t3": "yes"
-   },
-   "verdict": "minority",
-   "fixed": false,
-   "commit": null
-  },
-  {
-   "id": "A04",
-   "nodeid": "tests/meta/test_pipeline_lab.py::test_nothing_is_asked_while_a_deep_pass_is_running",
-   "claim": "Name claims asked OR BOUGHT; body only exercises `may_ask`. The buying half is held elsewhere, not by the check that claims it.",
-   "source": "audit",
-   "votes": {
-    "t1": "yes",
-    "t2": "yes",
-    "t3": "yes"
-   },
-   "verdict": "real",
-   "fixed": true,
-   "commit": "a612367d",
-   "why": "three of three, each by mutation: deleting the buy interlock in scripts/lab.py leaves this test green. The behaviour IS held -- by test_the_buy_path_reads_what_is_already_deployed and test_pipeline_night_spend -- so what is wrong is a name that claims half a contract it never measures",
-   "how": "renamed to test_nothing_is_asked_while_a_deep_pass_is_running; the buying half stays where it is really held, and the name now claims only what it measures"
-  },
-  {
-   "id": "A05",
-   "nodeid": "tests/meta/test_pipeline_lab.py::test_the_notebook_is_outside_git + test_pipeline_backtests.py::test_the_register_is_outside_git_and_inside_the_snapshot",
-   "claim": "Both assert a path is a SUBSTRING of .gitignore rather than a fact about git. A comment satisfies it, a `!` negation defeats it, and a force-added file stays tracked regardless. `git check-ignore` is the measurement and is already used elsewhere.",
-   "source": "audit",
-   "votes": {
-    "t1": "no",
-    "t2": "yes",
-    "t3": "no"
-   },
-   "verdict": "minority",
-   "fixed": false,
-   "commit": null
-  },
-  {
-   "id": "A06",
-   "nodeid": "tests/meta/test_pipeline_lab.py::test_a_night_ends_at_its_deadline_paced_and_counted",
-   "claim": "Claims the night never exceeds its question cap; the fixture yields six concepts against a cap of twelve, so both cap assertions are vacuous.",
-   "source": "audit",
-   "votes": {
-    "t1": "yes",
-    "t2": "yes",
-    "t3": "yes"
-   },
-   "verdict": "real",
-   "fixed": true,
-   "commit": "a612367d"
-  },
-  {
-   "id": "A07",
-   "nodeid": "tests/meta/test_pipeline_lab.py::test_the_notebook_keeps_at_most_three_lessons...",
-   "claim": "Claims at most THREE; asserts four raise and one passes, never touching the boundary. MAX_LESSONS = 2 keeps it green and nothing pins the number three.",
-   "source": "audit",
-   "votes": {
-    "t1": "yes",
-    "t2": "yes",
-    "t3": "yes"
-   },
-   "verdict": "real",
-   "fixed": true,
-   "commit": "a612367d",
-   "why": "three of three, two of them by writing MAX_LESSONS = 2 to disk and watching the test pass. It proves only < 4; nothing in the repository pins three, and scripts/lab.py truncates by the same constant",
-   "how": "tests/meta/test_pipeline_lab.py: MAX_LESSONS == 3 pinned and a session closed with exactly three lessons; MAX_LESSONS = 2 now goes red"
-  },
-  {
-   "id": "B01",
-   "nodeid": "tests/mcp/test_nexus_channel.py::test_a_deep_investigation_answers_inside_the_window_it_publishes",
-   "claim": "TRACED: five questions each given up on at 900 s with status 'running'. `late` and `verdicts` iterate ANSWER rows only, so verdicts={}, the Inconclusive guard is skipped, and it reports PASSED — '0 investigation(s) answered inside the published 1-5 min' — while every question blew a 5-minute ceiling by 3x. This nodeid's verdicts go to their server (#86).",
-   "source": "audit",
-   "votes": {
-    "t1": "yes",
-    "t2": "yes",
-    "t3": "yes"
-   },
-   "verdict": "real",
-   "fixed": true,
-   "commit": "a612367d",
-   "why": "three of three: five questions abandoned at 900s each polled still running, verdicts empty, PASSED reported on #86",
-   "how": "tests/mcp/test_nexus_channel.py: read_the_window(); a window that measures nothing about their channel is Inconclusive, never a pass"
-  },
-  {
-   "id": "B02",
-   "nodeid": "tests/mcp/test_nexus_channel.py (the published window)",
-   "claim": "Cites 'the ask_nexus_deep tool description' as its source but compares against `nexus.PUBLISHED_MINUTES`, a constant transcribed into our own file. If they relabel the tool 5-15 min, a 7-minute answer fails and a FAIL verification goes to their server for behaviour inside their own published window.",
-   "source": "audit",
-   "votes": {
-    "t1": "yes",
-    "t2": "yes",
-    "t3": "yes"
-   },
-   "verdict": "real",
-   "fixed": true,
-   "commit": "a612367d",
-   "why": "three of three: the ceiling is nexus.PUBLISHED_MINUTES, transcribed into our file, while sources cites their tool description. qa/surface.py deliberately does not watch prose, so a relabel to 5-15 min would send a FAIL to their tracker on #86 for behaviour inside their own window",
-   "how": "tests/mcp/test_nexus_channel.py: their_published_window() re-reads their label from audits/surface.json; a disagreement is Inconclusive, never a FAIL and never silently adopted"
-  },
-  {
-   "id": "B03",
-   "nodeid": "tests/meta/test_pipeline_checks.py::test_the_latency_window_is_ordered_by_question_and_counts_only_their_failures",
-   "claim": "TRACED: the fixture supplies the four statuses the code already handles. The status nexus.py writes when THEIR job is still running at give-up is 'running', which `did_not_answer` returns False for — so their failure is filed as ours. This is what produces B01's false green.",
-   "source": "audit",
-   "votes": {
-    "t1": "yes",
-    "t2": "yes",
-    "t3": "yes"
-   },
-   "verdict": "real",
-   "fixed": true,
-   "commit": "a612367d",
-   "why": "three of three: 'running' is the status nexus.py writes at give-up; did_not_answer called it ours",
-   "how": "did_not_answer returns True for a give-up whose status is running/queued/pending"
-  },
-  {
-   "id": "B04",
-   "nodeid": "tests/mcp/test_backtest_window_is_real.py::test_a_backtest_says_the_window_it_actually_covered",
-   "claim": "Presence vs value: `NAMES_THE_WINDOW` matches a KEY NAME and the value is never read, so `effective_period_days: 365` wired to the request passes while 119 points wear a 365 label. Also needs BOTH windows to collapse to the same count, which calendar time will end.",
-   "source": "audit",
-   "votes": {
-    "t1": "yes",
-    "t2": "yes",
-    "t3": "yes"
-   },
-   "verdict": "real",
-   "fixed": true,
-   "commit": "a612367d",
-   "why": "three of three: key name only, and truncation the calendar will end reported as a pass",
-   "how": "tests/mcp/test_backtest_window_is_real.py: says_covered() reads the value and rejects the requested window echoed under a second name; no truncation in the basket is Inconclusive, not a pass"
-  },
-  {
-   "id": "B05",
-   "nodeid": "tests/meta/test_pipeline_vendor_writes.py::test_the_detector_sees_an_ungated_post",
-   "claim": "TRACED: the detector clears every later post in a function if any earlier gate exists (`if not any(g < line for g in gates)`). A gated post followed by an ungated one returns [] — which is the 2026-09-10 incident's own shape, two posts in one place, 61 real POSTs before the vendor told us.",
-   "source": "audit",
-   "votes": {
-    "t1": "yes",
-    "t2": "yes",
-    "t3": "no"
-   },
-   "verdict": "real",
-   "fixed": true,
-   "commit": "a612367d"
-  },
-  {
-   "id": "B06",
-   "nodeid": "tests/meta/test_pipeline_checks.py::test_paper_balance_newest_unreadable_never_falls_back_to_an_older_one",
-   "claim": "TRACED: the third read-failure path is the POST itself. paper.py records outcome 'unknown' when the order read raises and measurements() drops anything not 'accepted', so the newest buy vanishes and a pre-fix 2026-09-10 row is reported as today's newest — the exact fallback this check says it prevents. Honest answer is Inconclusive.",
-   "source": "audit",
-   "votes": {
-    "t1": "yes",
-    "t2": "yes",
-    "t3": "yes"
-   },
-   "verdict": "real",
-   "fixed": true,
-   "commit": "a612367d"
-  },
-  {
-   "id": "B07",
-   "nodeid": "tests/meta/test_pipeline_checks.py::test_the_close_verdict_holds_its_own_contract",
-   "claim": "TRACED: same filter. closes() drops any chain whose outcome is not 'accepted'; an unreadable newest close falls back to the previous one and the check reports 'the newest close TRD-0012 returned 0.00' with today's date.",
-   "source": "audit",
-   "votes": {
-    "t1": "yes",
-    "t2": "no",
-    "t3": "no"
-   },
-   "verdict": "minority",
-   "fixed": false,
-   "commit": null,
-   "why": "one of three; the other two traced closes() and found an unreadable newest close does not fall back silently"
-  },
-  {
-   "id": "B08",
-   "nodeid": "tests/meta/test_pipeline_decisions.py (SOURCES scope)",
-   "claim": "SOURCES is CLAUDE.md + .claude/skills/*/SKILL.md only, but 20+ tagged operator decisions now live outside it — scripts/lab.py, scripts/processes.py, qa/lab.py, qa/surface.py, .claude/hooks/reminders.py. Rewording any of them leaves all six decision tests green, in the files the unattended pass edits most.",
-   "source": "audit",
-   "votes": {
-    "t1": "yes",
-    "t2": "yes",
-    "t3": "yes"
-   },
-   "verdict": "real",
-   "fixed": false,
-   "commit": null,
-   "why": "three of three: 27 tagged decisions in 18 files outside SOURCES -- but CLAUDE.md forbids this pass from editing the test that pins their decisions",
-   "deferred_to_operator": true
-  },
-  {
-   "id": "B09",
-   "nodeid": "tests/meta/test_pipeline_checks.py::test_the_nexus_card_check_reads_only_ids_given_as_cards",
-   "claim": "TRACED: NOT_A_CARD is a twelve-word blocklist and anything unmarked is read as a card. 'strategy id', 'backtest', 'agent id', 'the epoch', 'session', 'the market' all come back as cards; each 404s and sends 'Nexus tells an agent to trade <uuid>' to the vendor.",
-   "source": "audit",
-   "votes": {
-    "t1": "no",
-    "t2": "yes",
-    "t3": "yes"
-   },
-   "verdict": "real",
-   "fixed": true,
-   "commit": "a612367d"
-  },
-  {
-   "id": "B10",
-   "nodeid": "tests/meta/test_pipeline_render.py::test_the_page_opens_on_what_moved_and_says_it_in_one_line",
-   "claim": "Asserts a literal source substring where a node harness (_run_page) already exists in the file. `let sort = readStore(...); if (!seen) sort = 'damage';` keeps the literal and opens on damage.",
-   "source": "audit",
-   "votes": {
-    "t1": "yes",
-    "t2": "yes",
-    "t3": "yes"
-   },
-   "verdict": "real",
-   "fixed": true,
-   "commit": "a612367d",
-   "why": "three of three, all by mutation: inserting a line that flips the default sort while leaving the pinned literal intact keeps the test green and opens the page on damage -- the operator's own complaint, with the guard for it green",
-   "how": "tests/meta/test_pipeline_render.py: the harness records appendChild order, and two rows whose severity and movement orders disagree pin which one the page opens on"
-  },
-  {
-   "id": "C01",
-   "nodeid": "tests/rest/test_backtest_metrics_agree.py::test_a_published_sharpe_says_what_period_it_covers",
-   "claim": "Presence vs value: any key NAME containing period/window/days/... satisfies it and the value is never read, so `{'sharpe': 5.16, 'period': null}` passes. The ledger has this row at VERIFIED FIXED, so a PASS verification already sent to the vendor rests on this line.",
-   "source": "audit",
-   "votes": {
-    "t1": "yes",
-    "t2": "yes",
-    "t3": "yes"
-   },
-   "verdict": "real",
-   "fixed": true,
-   "commit": "a612367d",
-   "why": "three of three: any key name anywhere in the payload, value never read, #97 verification about to rest on it",
-   "how": "tests/rest/test_backtest_metrics_agree.py: anchored NAMES_THE_WINDOW, _says_a_window reads the value, _sharpe_context requires the window beside its own Sharpe"
-  },
-  {
-   "id": "C02",
-   "nodeid": "tests/rest/test_nexus_cards_exist.py::test_every_card_nexus_tells_an_agent_to_trade_exists",
-   "claim": "Same blocklist extractor as B09, live against their server: an id introduced by any word not in the list 404s and a FAIL verification goes out for a defect that does not exist. The row is INCONCLUSIVE / FIX_CLAIMED, so the next current answer decides it.",
-   "source": "audit",
-   "votes": {
-    "t1": "no",
-    "t2": "yes",
-    "t3": "yes"
-   },
-   "verdict": "real",
-   "fixed": true,
-   "commit": "a612367d",
-   "why": "the same defect as B09 seen from the live side: the meta test imports card_ids_in from this check, so one extractor was judged once and repaired once",
-   "how": "tests/rest/test_nexus_cards_exist.py: NOT_A_CARD widened with the markers our own records prove, plus known_non_cards() -- every UUID our records hold under a key that is not card_id"
-  },
-  {
-   "id": "C03",
-   "nodeid": "tests/repo/test_reminders.py::test_the_deep_pass_is_named_only_when_a_night_was_missed",
-   "claim": "The silence half asserts `not _says(quiet, 'deep pass')` but reminders() only ever emits 'Deep pass' with a capital D, so both silence assertions are unfalsifiable. Verified by mutation: MISSED_NIGHT_HOURS = 0 — the nag at every session start — still passes.",
-   "source": "audit",
-   "votes": {
-    "t1": "yes",
-    "t2": "yes",
-    "t3": "yes"
-   },
-   "verdict": "real",
-   "fixed": true,
-   "commit": "a612367d"
-  },
-  {
-   "id": "C04",
-   "nodeid": "tests/repo/test_evidence_in_git.py::test_no_capture_in_the_repository_carries_a_real_key",
-   "claim": "`git ls-files evidence` returns 0 paths since D3, so the loop body never runs and it concludes PASSED over a population of zero. The subject moved to evidence/ on disk and archive/evidence-2026-09.tar.xz and the check did not follow it.",
-   "source": "audit",
-   "votes": {
-    "t1": "yes",
-    "t2": "yes",
-    "t3": "yes"
-   },
-   "verdict": "real",
-   "fixed": true,
-   "commit": "a612367d"
-  },
-  {
-   "id": "C05",
-   "nodeid": "tests/repo/test_reminders.py::test_a_night_still_inside_its_own_hours_is_not_a_forgotten_session",
-   "claim": "The fixture hands in `lab_open=[]`, which is the decision under test: the clause that excludes a running night lives in processes.py::_lab_facts and the test never calls it. Delete that clause and the hook nags all night while this stays green.",
-   "source": "audit",
-   "votes": {
-    "t1": "yes",
-    "t2": "yes",
-    "t3": "yes"
-   },
-   "verdict": "real",
-   "fixed": true,
-   "commit": "a612367d",
-   "why": "three of three: the fixture supplies the decision under test; the clause lives in _lab_facts and nothing called it",
-   "how": "scripts/processes.py: sessions_to_close(), asserted where the decision is made"
-  },
-  {
-   "id": "C06",
-   "nodeid": "tests/repo/test_process_dna.py::test_the_effort_of_a_commit_is_read_even_when_git_will_not_parse_it",
-   "claim": "No failed branch: a narrowed EFFORT_LINE gives lenient < strict -> 'inconclusive', which rule 10 says is never a defect, so the week goes blind to a third of its evidence with nothing red. And the relation measures the history rather than the reader.",
-   "source": "audit",
-   "votes": {
-    "t1": "yes",
-    "t2": "yes",
-    "t3": "yes"
-   },
-   "verdict": "real",
-   "fixed": true,
-   "commit": "a612367d"
-  },
-  {
-   "id": "C07",
-   "nodeid": "tests/repo/test_process_dna.py::test_a_hook_nobody_wired_is_named",
-   "claim": "`path.name not in text` over the whole settings.json: a hook named like an existing permissions entry reads as wired, a misspelled event key reads as wired, and an unreadable settings.json returns [] from the OSError branch — byte-identical to 'every hook is wired'.",
-   "source": "audit",
-   "votes": {
-    "t1": "no",
-    "t2": "no",
-    "t3": "no"
-   },
-   "verdict": "dropped",
-   "fixed": false,
-   "commit": null
-  },
-  {
-   "id": "C08",
-   "nodeid": "tests/repo/test_evidence_in_git.py::test_the_citations_that_are_not_captures_are_the_migration_s",
-   "claim": "read_events() returns [] when the journal is absent, so on a clone the check passes having read nothing and claims the 23 are accounted for. The number is never pinned either way.",
-   "source": "audit",
-   "votes": {
-    "t1": "yes",
-    "t2": "yes",
-    "t3": "yes"
-   },
-   "verdict": "real",
-   "fixed": true,
-   "commit": "a612367d",
-   "why": "three of three: with QA_STATE_DIR at an empty directory the check passes reporting '0 non-capture citations, all the migration's' while the real journal holds 23. One agent went further -- stubbing the citation reader blind also passes. Rule 8 inverted",
-   "how": "tests/repo/test_evidence_in_git.py: an empty read is Inconclusive, and the 23 the docstring names is pinned in both directions"
-  },
-  {
-   "id": "C09",
-   "nodeid": "tests/repo/test_deep_pass_finished.py::test_the_next_morning_is_handed_the_work_and_not_only_the_notebook",
-   "claim": "The 'ticked overnight is done, not missing' block is byte-identical to the 'written in both places' block — same input, same expectation — so nothing distinguishes them. Adding `if not i['done']` to _next_items() goes red the morning after the work is done, which is the failure the docstring says it prevents.",
-   "source": "audit",
-   "votes": {
-    "t1": "yes",
-    "t2": "yes",
-    "t3": "yes"
-   },
-   "verdict": "real",
-   "fixed": true,
-   "commit": "a612367d",
-   "why": "three of three: the 'ticked overnight' block is byte-identical to the block above it and every fixture passes agreed_items, so _next_items is never entered. Adding `if not i['done']` to it turns the deep pass's own guard red the morning after work is done",
-   "how": "tests/repo/test_deep_pass_finished.py: _next_items takes a text seam, and the ticked block reads a real `- [x]` line through it"
-  },
-  {
-   "id": "S02",
-   "nodeid": "scripts/processes.py::messages",
-   "claim": "The filter promises to drop 'the harness's own blocks' and drops only those opening with `<`. A compaction summary opens with a sentence, so three of the 23 messages step 1 read were walls of text I wrote myself.",
-   "source": "step 1",
-   "votes": {
-    "t1": "reproduced by the pass itself",
-    "t2": "-",
-    "t3": "-"
-   },
-   "verdict": "real",
-   "fixed": true,
-   "how": "HARNESS_WROTE_IT anchors on the harness's own opening sentence; pinned in tests/repo/test_reminders.py. 23 messages became 20.",
-   "commit": "a612367d"
-  }
- ],
- "next": [
-  "Rozšířit `SOURCES` v `test_pipeline_decisions.py`: 27 odstavců `[operator ...]` leží v 18 souborech mimo `CLAUDE.md` a `*/SKILL.md`, takže je dnes nehlídá nic. Noční pass na ten test sahat nesmí — je to práce na den.",
-  "`audits/checks.json` zůstal po dnešním auditu neorazítkovaný, protože orazítkovat teď by znamenalo označit za auditované i definice, které pass v noci změnil. Příští audit tedy projde stejný rozsah znovu — stojí to tokeny, ale nezakryje to nález.",
-  "`verify.py` spadne celý, když `already_sent()` nepřečte report (jejich TLS timeout ve 20:55). Čtení před POSTem, takže nic neodešlo napůl — ale jeden neúspěšný read zabije i verdikty, které by prošly.",
-  "#91 je nerozhodnutelný, protože nejnovější Nexusova odpověď jmenující kartu je starší než 24 h. Fold kvůli tomu dluží `repair_check` — až Nexus zase odpovídá, jedna otázka to vyřeší."
- ],
- "retrospective": {
-  "last": "2026-09-09",
-  "done": false
- },
- "rule_changes": [
-  {
-   "id": "RC1",
-   "what": "the deep pass's own spine: step 0 carries `previous_at` forward, and `messages --since-last-pass` reads that instead of this run's own `at`",
-   "why": "step 0 overwrites the progress file before step 1 reads it, so the floor was always 'a few minutes ago'. Step 1 read an empty window on an evening of 20 messages and nothing went red -- an empty window and a quiet evening are the same shape from there",
-   "votes": {
-    "t1": "no",
-    "t2": "no",
-    "t3": "no"
-   },
-   "test": "tests/repo/test_reminders.py::test_the_operator_s_messages_are_read_from_the_last_pass_not_from_today",
-   "commit": "a612367d",
-   "handover": true
-  }
- ],
- "meta_tests": {
-  "start": 416,
-  "end": 424,
-  "reason": "416 -> 424, net +8, and every one is named. SIX are the new file tests/meta/test_pipeline_night_spend.py: the night's launch path was broken six ways and nothing drove night_promote() end to end -- considered folding them into test_pipeline_lab.py, which holds the laboratory's brakes, but that file tests pure functions in qa/lab.py while these drive the real scripts/lab.py with paper.buy stubbed, and one file cannot be both without its name lying about half of it. ONE is test_a_window_is_read_for_its_value_and_beside_its_own_sharpe: considered folding it into test_the_nexus_card_check_reads_only_ids_given_as_cards, the nearest neighbour -- both hold a live check's extractor against its own docstring -- but that test pins a UUID blocklist and nothing about backtest windows. ONE is test_a_filter_that_separated_nothing_does_not_claim_it_predicted, for grade() claiming the ranking predicted when nothing survived. test_nothing_is_asked_while_a_deep_pass_is_running is a RENAME, not an addition (A04). Everything else this pass found was folded into an existing test: B04 into the new window test, B01/B03/B02 into the latency-window test, C05 and S02 into the reminders test, A07 into the lessons test, B10 into the page-opens test, C08 and C09 into their own files' existing guards. One assertion moved OUT of tests/meta on purpose -- whether their current tool label still matches our transcription now lives in tests/repo/test_surface_drift.py, because a red in tests/meta aborts the suite and a vendor rewording a sentence must not kill every live request."
- },
- "finished": true,
- "previous_at": "2026-09-11T16:25:00+00:00"
+  "finished": false
 }
