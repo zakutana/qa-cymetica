@@ -1,0 +1,181 @@
+"""What has already been tested, so it is never tested twice.
+
+[operator 2026-09-12] *"Coze? to jako nebylo osetreno? dyt jsem jasne na
+zacaktu rikal ze se v laboratori ma vest denik at vi co uz se testovalo atd ne,
+dyt to je kriticka cast."*
+
+They had said it at the start. What was built was a diary of SESSIONS -- opened,
+closed, what each one learned -- which is a record of our own activity and
+answers a question nobody asked. The question is about the subject: which
+basket, over which window, with what result. Without that, every night re-grinds
+the same candidates and the months of work they are paying for accumulate
+nothing.
+
+The register is keyed on the BASKET, not on the run that measured it:
+
+  * leg order cannot matter -- BTC+BCH and BCH+BTC are one basket;
+  * nor can the scale of the weights, because their own tool renormalises them,
+    so 1:1 and 0.5:0.5 are the same call with the same answer;
+  * the window and the fee toggle DO matter: the same basket over 7 days and
+    over 30 days answered -3.11% and +21.93% on 2026-09-12, which is the whole
+    reason #97 existed.
+
+And a result does not keep for ever, because the window slides: a 7-day
+backtest run yesterday covers a different week today. It keeps for a tenth of
+its own window, which is a day for a 7-day reading and a month for a yearly one.
+"""
+
+from __future__ import annotations
+
+import json
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+
+import pytest
+
+from qa.marks import SafetyTier, qa
+
+REPO = Path(__file__).resolve().parent.parent.parent
+
+BTC_BCH = [{"symbol": "BTC", "weight": 0.9962}, {"symbol": "BCH", "weight": 0.0038}]
+NOW = datetime(2026, 9, 12, 12, 0, tzinfo=timezone.utc)
+
+
+def _at(tmp_path, monkeypatch):
+    import importlib
+
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    import qa.state
+
+    importlib.reload(qa.state)
+    from qa import backtests
+
+    importlib.reload(backtests)
+    return backtests
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_one_basket_has_one_fingerprint_however_it_is_written():
+    from qa import backtests
+
+    straight = backtests.fingerprint(BTC_BCH, 30)
+    assert straight == backtests.fingerprint(list(reversed(BTC_BCH)), 30), (
+        "leg order is not part of a basket")
+    assert straight == backtests.fingerprint(
+        [{"symbol": "btc", "weight": 0.9962}, {"symbol": "bch", "weight": 0.0038}], 30)
+
+    doubled = [{"symbol": "BTC", "weight": 1.9924}, {"symbol": "BCH", "weight": 0.0076}]
+    assert straight == backtests.fingerprint(doubled, 30), (
+        "their tool renormalises the weights, so the scale is not the basket")
+
+    assert straight != backtests.fingerprint(BTC_BCH, 7), "the window is the basket"
+    assert straight != backtests.fingerprint(BTC_BCH, 30, include_fees=True)
+    assert straight != backtests.fingerprint(
+        [{"symbol": "BTC", "weight": 0.5}, {"symbol": "BCH", "weight": 0.5}], 30), (
+        "different proportions are a different basket")
+
+    with pytest.raises(backtests.BacktestError):
+        backtests.fingerprint([{"symbol": "BTC", "weight": 1.0}], 30)
+    with pytest.raises(backtests.BacktestError):
+        backtests.fingerprint(BTC_BCH, 45)
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_what_was_tested_is_never_tested_again(tmp_path, monkeypatch):
+    backtests = _at(tmp_path, monkeypatch)
+
+    assert backtests.already(backtests.fingerprint(BTC_BCH, 30), now=NOW) is None
+
+    row = backtests.record(BTC_BCH, 30, {
+        "total_return_pct": 21.93, "sharpe_ratio": 5.47,
+        "max_drawdown_pct": 4.82, "n_points": 29}, why="seed STR-0003", now=NOW)
+    assert row["fp"] == backtests.fingerprint(BTC_BCH, 30)
+
+    seen = backtests.already(row["fp"], now=NOW)
+    assert seen and seen["s"] == 5.47 and seen["r"] == 21.93
+    assert backtests.already(backtests.fingerprint(BTC_BCH, 7), now=NOW) is None, (
+        "another window is another question")
+
+    # The register is the memory, so it has to survive the process that wrote it.
+    again = _at(tmp_path, monkeypatch)
+    assert again.already(row["fp"], now=NOW), "the register did not survive a restart"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_result_keeps_for_a_tenth_of_its_own_window(tmp_path, monkeypatch):
+    """The window slides. A 7-day reading taken yesterday covers a different
+    week today; a 365-day reading barely moves. One rule for both, scaled, so
+    the register neither freezes us on stale numbers nor re-runs everything
+    every night."""
+    backtests = _at(tmp_path, monkeypatch)
+
+    week = backtests.record(BTC_BCH, 7, {"sharpe_ratio": -9.68}, now=NOW)
+    year = backtests.record(BTC_BCH, 365, {"sharpe_ratio": 1.2}, now=NOW)
+
+    later = NOW + timedelta(days=2)
+    assert backtests.already(week["fp"], now=later) is None, (
+        "a two-day-old seven-day reading is a different week")
+    assert backtests.already(year["fp"], now=later), (
+        "two days does not move a year")
+
+    assert backtests.already(year["fp"], now=NOW + timedelta(days=40)) is None
+    assert backtests.stale_after(7) == 1.0
+    assert backtests.stale_after(365) == 30.0, "capped, or nothing ever refreshes"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_symbol_they_could_not_resolve_is_not_a_clean_reading(tmp_path,
+                                                                monkeypatch):
+    """Their answer carries `unresolved_symbols` and `dropped_symbols`. A basket
+    measured without one of its legs is a measurement of a different basket, and
+    ranking it beside clean ones would be us fabricating what they refused to."""
+    backtests = _at(tmp_path, monkeypatch)
+
+    clean = backtests.record(BTC_BCH, 30, {
+        "sharpe_ratio": 5.47, "total_return_pct": 21.9, "n_points": 29}, now=NOW)
+    partial = backtests.record(
+        [{"symbol": "BTC", "weight": 0.5}, {"symbol": "NOSUCH", "weight": 0.5}], 30,
+        {"sharpe_ratio": 9.99, "total_return_pct": 80.0, "n_points": 29,
+         "unresolved_symbols": ["NOSUCH"]}, now=NOW)
+
+    assert partial["lost"] == ["NOSUCH"] and clean.get("lost") in (None, [])
+    ranked = backtests.best(backtests.load(), now=NOW)
+    assert [r["fp"] for r in ranked][0] == clean["fp"], (
+        "a 9.99 sharpe measured on half a basket outranked a real one")
+    assert all(r.get("lost") in (None, []) for r in ranked), (
+        "a partial reading is not a candidate at all")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_missing_number_is_missing_and_a_half_written_line_is_skipped(
+        tmp_path, monkeypatch):
+    backtests = _at(tmp_path, monkeypatch)
+
+    ran = backtests.record(BTC_BCH, 30, {"total_return_pct": 4.0}, now=NOW)
+    assert ran["s"] is None, "a sharpe they did not give is not a zero"
+    assert backtests.best(backtests.load(), now=NOW) == [] or all(
+        r["s"] is not None for r in backtests.best(backtests.load(), now=NOW)), (
+        "an unranked row cannot lead the table")
+
+    with open(backtests.path(), "a", encoding="utf-8") as handle:
+        handle.write('{"fp": "half-writ')
+    assert len(backtests.load()) == 1, "a torn line stopped the whole register"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_register_is_outside_git_and_inside_the_snapshot():
+    """Months of work on one disk is the failure this guards. It lives beside
+    the other diaries for the same reason they do -- it is appended to while a
+    run may be in flight, and a dirty tree costs a level-V run -- and
+    `keep.py snapshot` is what stops that meaning one disk."""
+    ignored = (REPO / ".gitignore").read_text(encoding="utf-8")
+    assert "state/backtests.jsonl" in ignored
+
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "keep_for_register", REPO / "scripts" / "keep.py")
+    keep = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(keep)
+    assert "backtests.jsonl" in keep.DIARIES, (
+        "the register would live on one disk and die with it")

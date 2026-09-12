@@ -41,7 +41,11 @@ from qa.state import state_dir  # noqa: E402
 
 # What has no copy anywhere else. Each is outside git because it is appended to
 # while a run is in flight, and a dirty tree costs a level-V run.
-DIARIES = ("rooms.jsonl", "nexus.jsonl", "paper.jsonl", "lab.jsonl")
+DIARIES = ("rooms.jsonl", "nexus.jsonl", "paper.jsonl", "lab.jsonl",
+           # The register of what the laboratory has already asked their
+           # backtest. It is the memory the whole search stands on, so of all
+           # of these it is the one that must not live on a single disk.
+           "backtests.jsonl")
 SNAPSHOT_DIR = REPO_ROOT / "audits" / "lab"
 
 

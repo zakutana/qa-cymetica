@@ -167,6 +167,39 @@ def test_a_note_at_any_shut_door_is_refused_and_nothing_is_written(console):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_big_body_is_refused_with_a_status_and_not_a_dropped_socket(console):
+    """A refusal the caller cannot read is a refusal that did not happen.
+
+    The test above used to fail about one run in six with
+    ConnectionAbortedError 10053 on the CLIENT's read -- no status at all --
+    because the handler refused before reading the body ("a refused body is
+    never parsed", its own docstring) and then closed, and Windows discards a
+    response when a socket closes with inbound bytes still pending. Draining
+    the body first fixed it: ten consecutive runs of the pair that used to
+    flake, clean. The proof it is the same path is an intermediate bug on the
+    way -- a drain that also ran after the body had ALREADY been read turned
+    the flake into a deterministic timeout, which nothing else in the handler
+    could have done.
+
+    What THIS test pins is narrower, and says so rather than claiming the
+    flake: a body far past the cap comes back as a status at every door and
+    none of it is written. It passes with the drain removed, so it is not the
+    guard for the drain; the guard for the drain is the test above no longer
+    flaking.
+    """
+    port, stored = console["port"], console["state"] / "rooms.jsonl"
+    big = {"room": "general", "text": "x" * 256_000}
+
+    status, _ = _post_note(port, big, **{"X-QA-Token": None})
+    assert status == 403, "the refusal never reached a caller mid-send"
+    status, _ = _post_note(port, big, **{"Origin": "http://evil.example"})
+    assert status == 403
+    status, _ = _post_note(port, big)
+    assert status == 413, "past the size cap, with the body still arriving"
+    assert not stored.exists(), "a drained body still reached rooms.jsonl"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_note_through_every_door_lands_once_and_as_the_operators(console):
     """The positive control. Without it every refusal above could be a 500."""
     port, stored = console["port"], console["state"] / "rooms.jsonl"

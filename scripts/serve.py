@@ -192,6 +192,10 @@ def local_host(header, port: int) -> bool:
 # application/json and not a header of our own; the browser asks first with an
 # OPTIONS preflight, which this server never answers.
 NOTE_MAX_BYTES = 8 * 1024
+# How much of a REFUSED body is read and thrown away before answering, so the
+# answer survives the close. Past this a caller pushing megabytes at a shut
+# door gets the connection dropped instead, which is the right answer to that.
+NOTE_DRAIN_MAX_BYTES = 1024 * 1024
 TOKEN_HEADER = "X-QA-Token"
 
 
@@ -558,6 +562,40 @@ def make_handler(live: Live, note_token: str | None = None):
 
             self._send(b"not found", "text/plain; charset=utf-8", 404)
 
+        def _drain(self) -> None:
+            """Swallow an unread request body so the answer can be read.
+
+            Closing a socket while the caller's bytes are still arriving makes
+            Windows discard the response and hand the CALLER
+            ConnectionAbortedError 10053 instead of our status -- a refusal
+            nobody can read is a refusal that did not happen. So a refused body
+            is read and thrown away. It is never decoded and never parsed,
+            which is what "a refused body is never parsed" was protecting;
+            reading bytes to drop them is not reading a note.
+
+            Bounded, because the length is the caller's claim: past the cap a
+            client pushing megabytes at a shut door gets its connection
+            dropped, which is the right answer to that.
+            """
+            if getattr(self, "_body_gone", False):
+                return
+            self._body_gone = True
+            try:
+                length = int(self.headers.get("Content-Length") or 0)
+            except ValueError:
+                return
+            left = min(max(length, 0), NOTE_DRAIN_MAX_BYTES)
+            while left > 0:
+                chunk = self.rfile.read(min(left, 64 * 1024))
+                if not chunk:
+                    return
+                left -= len(chunk)
+
+        def _refuse(self, payload: dict, status: int) -> None:
+            """A refusal that reaches the caller: drain first, then answer."""
+            self._drain()
+            self._json(payload, status)
+
         def _json(self, payload: dict, status: int = 200) -> None:
             body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
             self.send_response(status)
@@ -605,7 +643,7 @@ def make_handler(live: Live, note_token: str | None = None):
             """
             self.close_connection = True
             if self.path.split("?", 1)[0] != "/notes":
-                self._json({"error": "not found"}, 404)
+                self._refuse({"error": "not found"}, 404)
                 return
             refused = self._refusal(need_origin=True)
             if refused is None:
@@ -613,33 +651,39 @@ def make_handler(live: Live, note_token: str | None = None):
                 if not hmac.compare_digest(sent, note_token.encode("utf-8")):
                     refused = (403, "no valid token")
             if refused:
-                self._json({"error": refused[1]}, refused[0])
+                self._refuse({"error": refused[1]}, refused[0])
                 return
             kind = (self.headers.get("Content-Type") or "").split(";", 1)[0]
             if kind.strip().lower() != "application/json":
-                self._json({"error": "a note is sent as application/json"}, 415)
+                self._refuse({"error": "a note is sent as application/json"}, 415)
                 return
             try:
                 length = int(self.headers.get("Content-Length") or "")
             except ValueError:
-                self._json({"error": "a note says how long it is"}, 411)
+                self._refuse({"error": "a note says how long it is"}, 411)
                 return
             if length < 0 or length > NOTE_MAX_BYTES:
-                self._json({"error": f"a note is at most {NOTE_MAX_BYTES} bytes"}, 413)
+                self._refuse({"error": f"a note is at most {NOTE_MAX_BYTES} bytes"}, 413)
                 return
+            # Once this runs the body is consumed, and a later refusal must not
+            # try to drain it again: reading Content-Length more bytes that
+            # nobody is sending is a handler that hangs until the caller times
+            # out, which is how the first version of the drain turned a flake
+            # into a deterministic stall.
+            self._body_gone = True
             try:
                 body = json.loads(self.rfile.read(length).decode("utf-8"))
             except (ValueError, UnicodeDecodeError):
-                self._json({"error": "a note is JSON"}, 400)
+                self._refuse({"error": "a note is JSON"}, 400)
                 return
             if (not isinstance(body, dict) or set(body) != {"room", "text"}
                     or not all(isinstance(body[k], str) for k in body)):
-                self._json({"error": "a note is exactly {room, text}"}, 400)
+                self._refuse({"error": "a note is exactly {room, text}"}, 400)
                 return
             try:
                 row = add_operator_note(body["room"], body["text"])
             except RoomError as exc:
-                self._json({"error": str(exc)}, 400)
+                self._refuse({"error": str(exc)}, 400)
                 return
             live.notify_rooms()
             self._json({"id": row["id"], "at": row["at"]}, 201)
