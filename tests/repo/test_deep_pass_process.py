@@ -144,14 +144,88 @@ def test_the_committed_history_reads():
     # history oldest first.
     newest = rows[-1]
     assert newest["claimed"] > 0, (
-        f"the newest committed pass, {newest['pass']}, reads as zero gaps "
+        f"the newest committed pass, {newest['run']}, reads as zero gaps "
         f"claimed. Passes do not run for hours and find nothing, so the reader "
         f"has stopped finding the field it counts -- which is exactly what this "
-        f"test says it catches: {[r['pass'] for r in rows]}")
+        f"test says it catches: {[r['run'] for r in rows]}")
 
     # And its votes. A schema change that left `gaps` intact but moved
     # `votes` would slip past the line above.
     assert newest["voted"] > 0, (
-        f"the newest committed pass, {newest['pass']}, records no triage vote, "
+        f"the newest committed pass, {newest['run']}, records no triage vote, "
         f"so the column the whole tool is FOR -- claims the readers rejected "
-        f"-- is being read from nothing: {[r['pass'] for r in rows]}")
+        f"-- is being read from nothing: {[r['run'] for r in rows]}")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_notebook_on_disk_is_the_newest_state_of_its_own_run():
+    """A pass cannot be finished at the moment it renders the page about it.
+
+    The dashboard read `versions()`, which is COMMITTED states only, so the
+    newest row for the run in flight was always its second-to-last commit. The
+    Stats panel is built from these rows and `payload_hash` covers them, so on
+    2026-09-12 the pass rendered at 23:04 with `finished: false` and no
+    `elapsed_min`, finalised its notebook at 23:15, and left rule 12's guard --
+    `test_committed_dashboard_matches_the_committed_ledger` -- red on `main`
+    until the next session happened to run it. By construction every pass ends
+    that way: the row is about the run doing the rendering.
+
+    The file on disk is that run's newest state whether or not it has been
+    committed, so it goes on top. Both directions, because the unsafe one is
+    quiet: an unreadable or run-less working copy must leave the history alone
+    rather than shadow it.
+    """
+    mod = _module()
+    history = {"deep-pass 2026-09-11": _pass("deep-pass 2026-09-11", []),
+               "deep-pass 2026-09-12": _pass("deep-pass 2026-09-12", [],
+                                             finished=False, at_finished=None)}
+
+    same = mod.overlay_working(dict(history), None)
+    assert [d.get("finished") for d in same.values()] == [True, False], (
+        "a working copy that cannot be read is not a pass that never finished")
+    assert mod.overlay_working(dict(history), {"gaps": []}) == history, (
+        "a notebook naming no run cannot shadow one that does")
+
+    finished = _pass("deep-pass 2026-09-12", [], finished=True,
+                     at_finished="2026-09-12T23:15:00+00:00")
+    merged = mod.overlay_working(dict(history), finished)
+    assert len(merged) == 2, "the disk copy replaced its own run, not added one"
+    assert list(merged) == list(history), "and it kept its place in the series"
+
+    row = [r for r in mod.passes(list(merged.values()))
+           if r["run"] == "deep-pass 2026-09-12"][0]
+    assert row["finished"] is True and row["elapsed_min"] is not None, (
+        "the row the page renders is still the one from before the pass ended")
+
+    fresh = _pass("deep-pass 2026-09-13", [], finished=False, at_finished=None)
+    started = mod.overlay_working(dict(history), fresh)
+    assert list(started)[-1] == "deep-pass 2026-09-13", (
+        "a pass that has not committed its notebook at all belongs at the end")
+
+    # And the split that keeps the fix out of the series. `versions()` is the
+    # committed history the retrospective judges and
+    # `test_the_committed_history_reads` asserts against; only `series()` puts
+    # the working copy on top, and only the page reads `series()`. Two names
+    # rather than one flag: a default argument the test alone ever passes is
+    # how a brake ends up off on the one path that matters.
+    on_disk = mod.working_copy()
+    if isinstance(on_disk, dict) and mod._run_key(on_disk):
+        run = mod._run_key(on_disk)
+        assert run in {mod._run_key(d, "") for d in mod.series()}, (
+            "the page cannot see the pass that is rendering it")
+
+        # Driven through render itself, not asserted about `series()` and
+        # hoped for: the defect was never in this module, it was in which of
+        # the two answers the page asked for. A grep of render.py would pass
+        # on a call that had been commented out.
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location(
+            "render_for_process_rows", REPO / "scripts" / "render.py")
+        render = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(render)
+        drawn = {str(r.get("run") or "") for r in render._process_rows()}
+        assert run in drawn, (
+            f"the Stats panel draws {sorted(drawn)} and not {run}, the pass "
+            f"that is rendering it -- so the page it writes cannot match the "
+            f"payload the guard rebuilds one commit later")

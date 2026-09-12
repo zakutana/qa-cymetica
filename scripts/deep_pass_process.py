@@ -48,12 +48,54 @@ def _git(*args: str) -> str:
     return result.stdout if result.returncode == 0 else ""
 
 
+def _run_key(data: dict, fallback: str = "") -> str:
+    return str(data.get("run") or data.get("at") or fallback)
+
+
+def working_copy() -> dict | None:
+    """The notebook as it stands on disk, or None if it cannot be read."""
+    try:
+        return json.loads((REPO_ROOT / PROGRESS).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+
+
+def overlay_working(seen: dict[str, dict], working: dict | None) -> dict[str, dict]:
+    """The file on disk is the newest state of its run, committed or not.
+
+    Without this the series could only ever see a pass as it was at its
+    second-to-last commit, and the dashboard's Stats panel reads these rows.
+    On 2026-09-12 the pass rendered the page at 23:04 and finalised its own
+    notebook at 23:15, so the committed page said `finished: false` with no
+    `elapsed_min` -- and rule 12's guard, which rebuilds the payload and holds
+    it against the page, was red on `main` from then until somebody noticed.
+    Every pass ends that way by construction: the row is about the run that is
+    doing the rendering, and that run cannot be finished while it renders.
+
+    Replacing in place rather than appending: dicts keep insertion order, the
+    run is normally already the newest key, and a pass that has not committed
+    its notebook at all belongs at the end where it in fact is.
+    """
+    if not isinstance(working, dict):
+        return seen
+    run = _run_key(working)
+    if not run:
+        return seen
+    seen[run] = working
+    return seen
+
+
 def versions() -> list[dict]:
-    """Every committed state of the progress file, oldest first.
+    """Every COMMITTED state of the progress file, oldest first.
 
     Keyed on `run` and keeping the LAST version of each: a pass writes its
     notebook as it goes, so the same run appears in five or six commits and
     only the final one is complete.
+
+    Committed and nothing else, on purpose. This is the series -- what the
+    retrospective judges and what `test_the_committed_history_reads` holds its
+    assertions against -- and a run still being written is not yet part of it.
+    The page wants the other answer and asks `series()` for it.
     """
     seen: dict[str, dict] = {}
     for line in reversed(_git("log", "--format=%H", "--", PROGRESS).split()):
@@ -64,9 +106,19 @@ def versions() -> list[dict]:
             data = json.loads(blob)
         except json.JSONDecodeError:
             continue
-        run = str(data.get("run") or data.get("at") or line[:12])
-        seen[run] = data
+        seen[_run_key(data, line[:12])] = data
     return list(seen.values())
+
+
+def series() -> list[dict]:
+    """The committed history with the notebook on disk on top of its own run.
+
+    What the dashboard renders. Two named functions rather than one with a
+    flag, because a default argument only the test ever passes is how a brake
+    ends up switched off on the single path that matters.
+    """
+    seen = {_run_key(d, str(i)): d for i, d in enumerate(versions())}
+    return list(overlay_working(seen, working_copy()).values())
 
 
 def _moment(value) -> datetime | None:

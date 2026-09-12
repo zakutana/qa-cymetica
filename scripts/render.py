@@ -1270,7 +1270,12 @@ def _process_rows() -> list[dict]:
             "deep_pass_process", REPO_ROOT / "scripts" / "deep_pass_process.py")
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
-        return module.passes()
+        # `series()`, not `versions()`: the row this panel draws is about the
+        # pass that is doing the rendering, and that pass cannot have committed
+        # its own finish yet. Reading committed history alone is what left rule
+        # 12's guard red on `main` from 23:04 to 23:15 on 2026-09-12, and would
+        # do so after every pass.
+        return module.passes(module.series())
     except Exception:  # noqa: BLE001 -- no git, no history, no panel
         return []
 
