@@ -108,8 +108,21 @@ def test_a_night_still_inside_its_own_hours_is_not_a_forgotten_session():
     """The open-session rule was written before the night existed, and a night
     is an open session on purpose -- for up to fourteen hours, by their own
     command. Nagging "close it" at every session start while the thing is
-    doing exactly what it was told is how a reminder stops being read."""
+    doing exactly what it was told is how a reminder stops being read.
+
+    C05, deep pass of 2026-09-12, triage 3/3: the two assertions below hand
+    `lab_open` in ready-made, and `lab_open` without the night in it IS the
+    decision under test. The clause that takes it out lives in
+    `_lab_facts`, which nothing here called -- delete that line and the hook
+    nags about the night's own session every session start, all night, while
+    this test stays green. So the exclusion is now asserted where it is made.
+    """
     mod = _module()
+
+    assert mod.sessions_to_close(["LAB-0006", "LAB-0007"], "LAB-0007") == [
+        "LAB-0006"], "the night's own session is not a session to close"
+    assert mod.sessions_to_close(["LAB-0006"], None) == ["LAB-0006"]
+    assert mod.sessions_to_close([], "LAB-0007") == []
 
     running = mod.reminders(_facts(lab_open=[], night_running="LAB-0007",
                                    night_until=_ago(hours=-8)), NOW)
@@ -183,6 +196,48 @@ def test_the_operator_s_messages_are_read_from_the_last_pass_not_from_today():
     assert len(by_date) < len(texts), (
         "if every message is on today's date the fixture no longer covers the "
         "midnight case this test exists for")
+
+    # S01, deep pass of 2026-09-12: the window above was right and the FLOOR
+    # handed to it was this pass's own start. Step 0 opens the notebook by
+    # writing `at`, step 1 read it back, and the window was "since a few
+    # minutes ago" -- 0 messages on an evening of a dozen, with nothing red,
+    # because an empty window and a quiet evening are the same shape from
+    # here. Reproduced by the pass itself, on itself.
+    now = datetime(2026, 9, 12, 20, 0, tzinfo=timezone.utc)
+    since, whose = mod.messages_floor(
+        {"at": "2026-09-12T19:10:00+00:00",
+         "previous_at": "2026-09-11T17:43:00+00:00"}, now)
+    assert since == "2026-09-11T17:43:00+00:00" and whose == "the previous pass"
+
+    since, whose = mod.messages_floor({"at": "2026-09-12T19:10:00+00:00"}, now)
+    assert since == "2026-09-11T20:00:00+00:00", (
+        "with no previous pass named, a day back is a poor floor and this "
+        "pass's own start is no floor at all")
+    assert "no previous pass" in whose, (
+        "and it has to say which floor it used: wrong in this direction is "
+        "silent by construction")
+
+    since, whose = mod.messages_floor({}, now)
+    assert since == "2026-09-11T20:00:00+00:00" and "no pass" in whose
+
+    # S02, found by step 1 the first time the floor above let it see anything:
+    # a compaction summary arrives in the transcript with the operator's own
+    # role, and the filter that promises to drop "the harness's own blocks"
+    # only dropped ones opening with `<`. Three of the 23 messages read that
+    # night were walls of text I wrote myself, in the reader whose whole job
+    # is to find their short corrections.
+    injected = ("This session is being continued from a previous conversation "
+                "that ran out of context. The summary below covers ...")
+    mixed = [
+        {"type": "user", "timestamp": "2026-09-12T07:57:00.000Z",
+         "message": {"content": injected}},
+        {"type": "user", "timestamp": "2026-09-12T08:49:00.000Z",
+         "message": {"content": "takze jak to ted vypada?"}},
+        {"type": "user", "timestamp": "2026-09-12T09:00:00.000Z",
+         "message": {"content": "<command-name>/deep-pass</command-name>"}},
+    ]
+    said = [text for _, text in mod.messages(mixed, since=None)]
+    assert said == ["takze jak to ted vypada?"], said
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

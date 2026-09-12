@@ -35,6 +35,7 @@ import json
 from pathlib import Path
 
 from qa.marks import SafetyTier, qa
+from qa.measure import Measurement, conclude
 
 REPO = Path(__file__).resolve().parent.parent.parent
 BASELINE = REPO / "audits" / "nexus-baseline.json"
@@ -268,3 +269,52 @@ def test_acknowledging_a_shape_remembers_what_was_seen_before(tmp_path,
         "acknowledging a shape forgot a field the call had carried before")
     assert merged["GET /cards"]["always"] == ["extra", "id", "name"], (
         "always is a claim about the present and takes the newest reading")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_their_published_window_still_says_what_we_transcribed():
+    """Their label, against the number we judge #86 by.
+
+    `scripts/nexus.py::PUBLISHED_MINUTES` is `(1, 5)` because their
+    `ask_nexus_deep` description said "typically takes 1-5 minutes" on
+    2026-09-10, and the check that measures the channel quotes that sentence
+    to them as the contract they broke. Nothing reconciled the two:
+    `qa/surface.py` deliberately does not watch descriptions, because they
+    reword prose. So a relabel to 5-15 minutes would have sent a FAIL to their
+    tracker for an answer inside their own published window. B02, deep pass of
+    2026-09-12, triage 3/3.
+
+    Here rather than in tests/meta on purpose. A red there aborts the suite
+    and issues no live request, which would mean the vendor rewording a
+    sentence -- and the operator then doing exactly what the reminder tells
+    them, `processes.py surface --update` -- kills every check we run. This is
+    a disagreement between our transcription and their current words, which is
+    repository consistency, and it wants fixing rather than stopping.
+    """
+    from tests.mcp.test_nexus_channel import _nexus, their_published_window
+
+    theirs = their_published_window()
+    if theirs is None:
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason="audits/surface.json carries no readable window for "
+                   "ask_nexus_deep, and a label we could not read is not a "
+                   "label that moved",
+            sources={"surface": "audits/surface.json"}))
+        return
+
+    conclude(Measurement(
+        verdict="passed" if theirs == _nexus().PUBLISHED_MINUTES else "failed",
+        reason=(f"their tool publishes {theirs[0]}-{theirs[1]} min and "
+                f"scripts/nexus.py judges by "
+                f"{_nexus().PUBLISHED_MINUTES[0]}-"
+                f"{_nexus().PUBLISHED_MINUTES[1]}: re-transcribe "
+                f"PUBLISHED_MINUTES and re-pin the check, or a verdict on #86 "
+                f"quotes a window they no longer publish"
+                if theirs != _nexus().PUBLISHED_MINUTES else
+                f"their label and our transcription agree at "
+                f"{theirs[0]}-{theirs[1]} min"),
+        left={"their_label": list(theirs)},
+        right={"transcribed": list(_nexus().PUBLISHED_MINUTES)},
+        sources={"surface": "audits/surface.json",
+                 "transcription": "scripts/nexus.py::PUBLISHED_MINUTES"}))

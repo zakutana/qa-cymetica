@@ -682,6 +682,54 @@ def plan_phases() -> list[dict]:
     return found
 
 
+def messages_floor(notebook, now) -> tuple[str, str]:
+    """From when `messages --since-last-pass` should read, and whose moment it is.
+
+    THE PREVIOUS pass, not this one. Step 0 of the deep pass opens the progress
+    file by writing this run's own `at` into it, and step 1 then asks this
+    question -- so `notebook["at"]` was always "a few minutes ago", the window
+    was empty, and step 1 read nothing. It happened tonight, in the pass that
+    found it: 0 messages, on an evening of a dozen. Nothing went red, because
+    an empty window and a quiet evening look identical from here.
+
+    That is the whole value of step 1 -- the operator's short corrections are
+    the one record of which inference failed, and CLAUDE.md says so where it
+    tells a pass to run this. So step 0 now carries the moment of the pass it
+    is overwriting into `previous_at`, and this reads that.
+
+    The fallback stays a day back rather than nothing -- an empty floor prints
+    a month -- but it SAYS which of the three it used, because a floor that is
+    wrong in this direction is silent by construction. S01, deep pass of
+    2026-09-12.
+    """
+    previous = (notebook or {}).get("previous_at")
+    if previous:
+        return str(previous), "the previous pass"
+    mine = (notebook or {}).get("at")
+    day_back = (now - timedelta(days=1)).isoformat()
+    if mine:
+        # This pass's own moment would read zero minutes of the evening that
+        # produced the work it is reviewing. A day back is a worse floor than
+        # the real one and a far better one than that.
+        return day_back, ("a day back: the notebook names no previous pass, "
+                          "only this one")
+    return day_back, "a day back: no pass has written a notebook"
+
+
+def sessions_to_close(open_sessions, night_running) -> list:
+    """Open laboratory sessions worth a reminder: not the night's own.
+
+    One line, and its own function because it is a decision rather than
+    plumbing -- a night is an open session on purpose, for up to fourteen
+    hours. It lived inside `_lab_facts` until 2026-09-12, where nothing could
+    reach it: the test that names this rule handed `lab_open` in already
+    filtered, so deleting the clause left every reminder test green and the
+    hook nagging "close LAB-0007" all night about the night itself. C05,
+    triage 3/3.
+    """
+    return [session for session in open_sessions if session != night_running]
+
+
 def _lab_facts() -> dict:
     """What the laboratory is owed: an unfinished session, and a lane that may
     have come back. Both are read from files; a reminder that asked the vendor
@@ -695,8 +743,8 @@ def _lab_facts() -> dict:
         running = lab.night_running()
         if running:
             out["night_running"], out["night_until"] = running
-        out["lab_open"] = [session for session in lab.open_sessions()
-                           if session != out["night_running"]]
+        out["lab_open"] = sessions_to_close(lab.open_sessions(),
+                                            out["night_running"])
     except Exception:  # noqa: BLE001
         pass
 
@@ -807,11 +855,32 @@ def facts() -> dict:
     }
 
 
+def HARNESS_WROTE_IT(content: str) -> bool:
+    """A compaction summary, injected into the transcript as the operator.
+
+    One sentence, fixed by the harness and not something a person types, and
+    matched at the START so quoting it back in a real message does not vanish
+    the message. Narrow on purpose: everything this filter eats is something
+    the pass will never read, so a rule that is nearly right here is worse
+    than one that is small and certain.
+    """
+    return content.lstrip().startswith(
+        "This session is being continued from a previous conversation")
+
+
 def messages(rows, since: str | None) -> list[tuple[str, str]]:
     """What the operator said since a moment, oldest first.
 
     Theirs only, and never the harness's own blocks -- a summary injected after
     a compaction is typed by nobody and reads like a wall of instructions.
+
+    It filtered only blocks opening with `<`, and a compaction summary opens
+    with a sentence. So three of the 23 "messages from the operator" read on
+    2026-09-12 were walls of text I had written myself, each one longer than
+    everything they actually said that day put together -- in the one reader
+    whose whole job is to find the short Czech corrections. Anchored on the
+    harness's own opening sentence, which is fixed text and not something a
+    person types. S02, found by step 1 the first time it could see anything.
     """
     floor = _moment(since) if since else None
     out = []
@@ -824,7 +893,7 @@ def messages(rows, since: str | None) -> list[tuple[str, str]]:
         content = (row.get("message") or {}).get("content")
         if not isinstance(content, str) or not content.strip():
             continue
-        if content.lstrip().startswith("<"):
+        if content.lstrip().startswith("<") or HARNESS_WROTE_IT(content):
             continue
         out.append((str(row.get("timestamp")), " ".join(content.split())))
     return sorted(out)
@@ -907,16 +976,11 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     since = args.since
+    whose = "asked for"
     if args.since_last_pass and not since:
-        notebook = _notebook()
-        since = notebook.get("at")
-        # A pass that started this morning is the wrong floor for the pass that
-        # is about to read what happened since YESTERDAY's. Fall back a day
-        # rather than to nothing: an empty floor prints a month of messages.
-        if since is None:
-            since = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
+        since, whose = messages_floor(_notebook(), datetime.now(timezone.utc))
     found = messages(transcript_rows(), since)
-    print(f"# {len(found)} message(s) from the operator since {since}")
+    print(f"# {len(found)} message(s) from the operator since {since} ({whose})")
     for stamp, text in found[-args.limit:]:
         print(f"{stamp[11:16]}  {text[:300]}")
     return 0

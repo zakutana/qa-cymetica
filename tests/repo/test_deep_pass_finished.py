@@ -395,14 +395,25 @@ def _next_step_problems(progress: dict,
     return out
 
 
-def _next_items() -> set[str]:
-    """Every item in NEXT.md, open or ticked, lowercased for comparison."""
+def _next_items(text: str | None = None) -> set[str]:
+    """Every item in NEXT.md, open or TICKED, lowercased for comparison.
+
+    `text` is a seam, and it exists because of C09 (deep pass of 2026-09-12,
+    triage 3/3). The test that names the ticked rule handed `agreed_items` in
+    ready-made, so this function was never entered and its one judgement --
+    that a ticked line still counts as carried -- was pinned by nothing. All
+    three readers added `if not i["done"]` here and watched the test pass;
+    with the real NEXT.md that mutation turns the guard red the morning after
+    the work is done, which is the third failure the docstring below says it
+    prevents.
+    """
     try:
         spec = importlib.util.spec_from_file_location(
             "next_step_hook", REPO / ".claude" / "hooks" / "next_step.py")
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
-        text = (REPO / "NEXT.md").read_text(encoding="utf-8")
+        if text is None:
+            text = (REPO / "NEXT.md").read_text(encoding="utf-8")
         return {" ".join(i["what"].split()).lower() for i in module.parse(text)}
     except Exception:
         return set()
@@ -647,9 +658,21 @@ def test_the_next_morning_is_handed_the_work_and_not_only_the_notebook():
                       NODEIDS, items)
     assert orphan and "NEXT.md does not carry it" in orphan[0]
 
-    # Ticked overnight is done, not missing.
+    # Ticked overnight is done, not missing -- and read through the reader
+    # that makes that call, not handed in already decided. This block was
+    # byte-identical to the first one until 2026-09-12: same sentence, same
+    # items, same expectation, so the one judgement it exists for (a `- [x]`
+    # line still counts as carried) was asserted by nothing. C09, triage 3/3.
+    ticked = _next_items(
+        "# Next\n\n"
+        "- [x] 2026-09-10  Clone Hybrid 2 (Blue) in paper -- the bot Nexus "
+        "recommended\n"
+        "- [ ] 2026-09-11  Read docs/night-2026-09-11.md\n")
+    assert "clone hybrid 2 (blue) in paper -- the bot nexus recommended" in ticked, (
+        "a ticked line is history, and history is still carried: the morning "
+        "that does the work and ticks it must not turn this guard red")
     assert problems(_pass(next=["Clone Hybrid 2 (Blue) in paper -- the bot "
-                                "Nexus recommended"]), NODEIDS, items) == []
+                                "Nexus recommended"]), NODEIDS, ticked) == []
 
     # The step never happened.
     silent = _pass()

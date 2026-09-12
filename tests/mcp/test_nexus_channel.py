@@ -178,13 +178,120 @@ def latest_per_question(rows):
 def did_not_answer(row) -> bool:
     """Whether a finished row says THEIR channel failed to answer.
 
-    A give-up whose status is `failed` is their job ending without an answer.
-    One written after fifteen minutes of our own reads failing -- `unread:
-    ReadTimeout`, `unknown`, `error: ...` -- says nothing about their channel,
-    and until the deep pass of 2026-09-11 it counted as "did not answer".
+    Two shapes, and the difference is whose side broke.
+
+    THEIRS: a give-up whose status is `failed` -- their job ended without an
+    answer -- and a give-up whose status is `running`, `queued` or `pending`,
+    which is what `nexus.py` writes at GIVE_UP_SECONDS when their job is still
+    working. Fifteen minutes of still-running against a published ceiling of
+    five is their channel not answering, however politely the status reads.
+
+    OURS: `unread: ReadTimeout`, `unknown`, `error: ...`. A give-up written
+    because our own reads failed says nothing about their channel, and until
+    the deep pass of 2026-09-11 it counted as "did not answer".
+
+    The second clause was missing until 2026-09-12 and is the whole of B01:
+    with every stalled give-up filed as ours, five questions abandoned at 3x
+    the ceiling left nothing in the population at all and the check reported a
+    PASS to their server on #86. Triage 3/3.
     """
-    return (row.get("type") == "gave_up"
-            and str(row.get("status") or "").startswith("failed"))
+    if row.get("type") != "gave_up":
+        return False
+    status = str(row.get("status") or "")
+    return status.startswith("failed") or status in _nexus().RUNNING
+
+
+PUBLISHES_A_WINDOW = re.compile(r"(\d+)\s*[-–]\s*(\d+)\s*minute", re.IGNORECASE)
+
+
+def their_published_window(tools=None):
+    """The window THEY publish, read off their own tool description.
+
+    `(low, high)` in minutes, or None when their label cannot be read -- and a
+    label we could not read is not a label that moved (rule 8).
+
+    The ceiling this check judges against is `nexus.PUBLISHED_MINUTES`, the
+    numbers transcribed into our own file on 2026-09-10, while `sources` told
+    the vendor the contract was their tool description. Nothing reconciled the
+    two: `qa/surface.py` deliberately does not watch prose, because they
+    reword it. So if they relabel the tool 5-15 minutes, a seven-minute answer
+    reads as late and a FAIL goes to their tracker on #86 for behaviour inside
+    their own published window -- the false-claim-to-the-vendor class, with
+    their own words quoted as the thing they broke. Three readers, 2026-09-12.
+
+    Read from `audits/surface.json`, which is the newest acknowledged reading
+    of `tools/list`, so this costs no call and stays offline like the rest of
+    the check. A disagreement is INCONCLUSIVE, never a defect and never a
+    silent adoption: their number moving is our check changing (rule 5), and
+    that wants a transcription and a re-pin, not a comparison that quietly
+    re-aims itself.
+    """
+    import json
+
+    if tools is None:
+        path = REPO / "audits" / "surface.json"
+        if not path.is_file():
+            return None
+        try:
+            tools = (json.loads(path.read_text(encoding="utf-8")) or {}).get("tools")
+        except (OSError, json.JSONDecodeError):
+            return None
+    for tool in tools or []:
+        if not isinstance(tool, dict) or tool.get("name") != "ask_nexus_deep":
+            continue
+        found = PUBLISHES_A_WINDOW.search(str(tool.get("description") or ""))
+        if found:
+            return int(found.group(1)), int(found.group(2))
+    return None
+
+
+def read_the_window(rows, finished):
+    """What the polls can PROVE about the last few investigations.
+
+    Separate from the check body so the false green of 2026-09-12 has
+    something a meta test can hold. Every list here is evidence, never an
+    absence read as one:
+
+      failed   their job ended in failure
+      stalled  their job was still running past the ceiling when we stopped
+      late     an ANSWER whose polls saw it running past the ceiling
+      ours     a give-up our own reads produced -- named, never counted
+      measured the ids this window says anything about at all. Empty means
+               inconclusive, which is not a pass.
+    """
+    nexus = _nexus()
+    ceiling_verdict = {r["id"]: nexus.bounds_verdict(
+        *nexus.latency_bounds(rows, r["id"])) for r in finished
+        if r.get("type") == "answer" or did_not_answer(r)}
+
+    def over(rows_in):
+        return sorted(((r["id"], nexus.latency_bounds(rows, r["id"])[0] or 0.0)
+                       for r in rows_in if ceiling_verdict.get(r["id"]) == "OVER"),
+                      key=lambda pair: pair[1], reverse=True)
+
+    theirs = [r for r in finished if did_not_answer(r)]
+    read = {
+        "verdicts": ceiling_verdict,
+        "failed": [(r["id"], (r.get("error") or r.get("status") or "")[:80])
+                   for r in theirs
+                   if str(r.get("status") or "").startswith("failed")],
+        "stalled": over([r for r in theirs
+                         if not str(r.get("status") or "").startswith("failed")]),
+        "late": over([r for r in finished if r.get("type") == "answer"]),
+        # Give-ups that say our own reads failed: named in the population,
+        # never counted against their channel (V04, deep pass of 2026-09-11).
+        "ours": [r["id"] for r in finished
+                 if r.get("type") == "gave_up" and not did_not_answer(r)],
+        "measured": sorted(i for i, v in ceiling_verdict.items() if v != "unknown"),
+        "unmeasured": sorted(i for i, v in ceiling_verdict.items() if v == "unknown"),
+        "within": sorted(i for i, v in ceiling_verdict.items() if v == "within"),
+    }
+    # The decision, not the ingredients. It lives here rather than in the body
+    # because a test that asserts an ingredient leaves the branch free to move
+    # -- which is C05, found in the same hour and the same pass.
+    read["proves_nothing"] = not (read["failed"] or read["late"]
+                                  or read["stalled"] or read["measured"])
+    return read
 
 
 @qa(component="mcp.tools_call", tier=SafetyTier.SAFE, surface="mcp")
@@ -297,26 +404,26 @@ def test_a_deep_investigation_answers_inside_the_window_it_publishes():
     finished = finished[-WINDOW:]
 
     low, high = nexus.PUBLISHED_MINUTES
-    ceiling = high * 60
+    theirs = their_published_window()
+    if theirs is not None and theirs != (low, high):
+        # Their label moved. Rule 5: a moved ceiling is a changed check, not a
+        # missed deadline -- and the alternative, adopting their new number
+        # here, would re-aim the check without anybody deciding to.
+        raise Inconclusive(
+            f"their tool now publishes {theirs[0]}-{theirs[1]} minutes and "
+            f"this check judges against {low}-{high}, transcribed into "
+            f"scripts/nexus.py. Re-transcribe PUBLISHED_MINUTES and re-pin the "
+            f"check; until then a verdict here would quote their own words for "
+            f"a window they no longer publish")
     # Bounds, not one number. The answer row's `at` is when WE looked, so a
     # question asked with --no-wait and picked up fourteen minutes later
     # "took" fourteen minutes by that reading -- which is how NEX-0009, done
     # in 155 s by their job table, became a late answer we reported to them.
     # A job is late only if a poll SAW it still running past the ceiling; a
     # first look that finds it done proves only an upper bound.
-    verdicts = {r["id"]: nexus.bounds_verdict(*nexus.latency_bounds(rows, r["id"]))
-                for r in finished if r.get("type") == "answer"}
-    late = sorted(
-        ((r["id"], nexus.latency_bounds(rows, r["id"])[0]) for r in finished
-         if r.get("type") == "answer" and verdicts.get(r["id"]) == "OVER"),
-        key=lambda pair: pair[1], reverse=True)
-    unmeasured = sorted(i for i, v in verdicts.items() if v == "unknown")
-    failed = [(r["id"], (r.get("error") or r.get("status") or "")[:80])
-              for r in finished if did_not_answer(r)]
-    # Give-ups that say our own reads failed: named in the population, never
-    # counted against their channel (V04, deep pass of 2026-09-11).
-    ours = [r["id"] for r in finished
-            if r.get("type") == "gave_up" and not did_not_answer(r)]
+    read = read_the_window(rows, finished)
+    failed, late, stalled = read["failed"], read["late"], read["stalled"]
+    ours, unmeasured = read["ours"], read["unmeasured"]
 
     trouble = []
     if failed:
@@ -327,26 +434,45 @@ def test_a_deep_investigation_answers_inside_the_window_it_publishes():
         # answer happened to come first in the file.
         trouble.append(f"{len(late)} answered later than the published "
                        f"{high} min (worst {late[0][0]} still running at {late[0][1]:.0f}s)")
+    if stalled:
+        trouble.append(f"{len(stalled)} were still running past the published "
+                       f"{high} min when we stopped watching (worst "
+                       f"{stalled[0][0]} at {stalled[0][1]:.0f}s)")
 
-    if not trouble and verdicts and len(unmeasured) == len(verdicts):
+    if read["proves_nothing"]:
+        # Nothing about their channel was measured, and an unmeasured channel
+        # is not a channel inside its window. Two shapes reach here: every
+        # answer first looked at after it had finished, and a window of pure
+        # read failures -- which until 2026-09-12 slipped past a guard that
+        # required a non-empty verdict map, and reported "0 investigation(s)
+        # answered inside the published 1-5 min" as a PASS on #86.
         raise Inconclusive(
-            f"every answer in the window ({', '.join(unmeasured)}) was first "
-            f"looked at after it had finished, so no latency was measured -- "
-            f"poll from the start, or this run proves nothing either way")
+            f"nothing in the window ({', '.join(unmeasured + ours) or 'empty'}) "
+            f"measures their channel: an answer first looked at after it had "
+            f"finished proves only an upper bound, and a give-up our own reads "
+            f"produced proves nothing at all -- poll from the start, or this "
+            f"run proves nothing either way")
 
     conclude(Measurement(
         verdict="failed" if trouble else "passed",
         reason=("; ".join(trouble) if trouble else
-                f"{len(verdicts) - len(unmeasured)} investigation(s) answered "
+                f"{len(read['within'])} investigation(s) answered "
                 f"inside the published {low}-{high} min, bounded by polls"
                 + (f"; {len(unmeasured)} were only looked at after finishing "
                    f"({', '.join(unmeasured)}), so their latency is an upper "
                    f"bound and counts neither way" if unmeasured else "")),
         left=[elapsed(r) for r in finished],
-        right=ceiling,
+        right=high * 60,
         population={"window": WINDOW, "finished": len(finished),
                     "failed": len(failed), "late": len(late),
+                    "stalled": len(stalled), "our_read_failed": ours,
                     "timed_from": "question timestamp, not the poll stopwatch"},
-        sources={"contract": "ask_nexus_deep tool description",
+        sources={"contract": (
+                     f"ask_nexus_deep tool description, {low}-{high} min, "
+                     + ("re-read from audits/surface.json and agreeing with "
+                        "scripts/nexus.py::PUBLISHED_MINUTES"
+                        if theirs is not None else
+                        "transcribed as scripts/nexus.py::PUBLISHED_MINUTES; "
+                        "their label could not be re-read this run")),
                  "timeline": str(nexus.path().name)},
     ))

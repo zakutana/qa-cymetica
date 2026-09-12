@@ -738,6 +738,15 @@ def test_every_vendor_reply_carries_a_stable_date():
 HARNESS = """
 const captured = {};
 const nodes = {};
+// The ORDER the page re-appends its rows in. `sortRows()` sorts the nodes and
+// re-appends them, so this is where the effective sort becomes visible -- and
+// until 2026-09-12 `appendChild` was a no-op, so the page's opening order was
+// pinned by a string in the source instead. Three readers each inserted a line
+// that flipped the default to damage while leaving that string untouched, and
+// the guard stayed green (B10). It records the dataset rather than the node
+// so it survives JSON.
+const appended = {};
+function appendedTo(id) { return (appended[id] = appended[id] || []); }
 function node(id) {
   if (nodes[id]) return nodes[id];
   const el = {
@@ -746,7 +755,8 @@ function node(id) {
     get innerHTML() { return captured[id] || ""; },
     set innerHTML(v) { captured[id] = String(v); },
     addEventListener() {}, insertAdjacentHTML() {}, setAttribute() {},
-    appendChild() {}, scrollIntoView() {}, closest() { return null; },
+    appendChild(child) { appendedTo(id).push((child && child.dataset) || {}); },
+    scrollIntoView() {}, closest() { return null; },
     querySelector() { return null; },
     // Rows PARSED OUT OF THE HTML THIS ELEMENT WAS GIVEN, not invented. This
     // returned [] until 2026-09-10, so the sort comparator and changedSince
@@ -799,9 +809,16 @@ globalThis.localStorage = {
 globalThis.location = { hostname: "test-harness", host: "test-harness" };
 globalThis.window = { addEventListener() {}, scrollY: 0, scrollTo() {} };
 process.on("exit", () => {
-  process.stdout.write("CAPTURED-JSON:" + JSON.stringify(captured));
+  process.stdout.write("CAPTURED-JSON:"
+    + JSON.stringify(Object.assign({}, captured, {"__appended__": appended})));
 });
 """
+
+
+class _Captured(dict):
+    """id -> the HTML the page wrote, with the append ORDER on the side."""
+
+    appended: dict = {}
 
 
 def _run_page(node, workdir, payload, after: str = ""):
@@ -836,8 +853,14 @@ def _run_page(node, workdir, payload, after: str = ""):
                             text=True, encoding="utf-8", errors="replace",
                             timeout=60, cwd=str(workdir))
     marker = "CAPTURED-JSON:"
-    captured = (json.loads(result.stdout.split(marker, 1)[1])
-                if marker in result.stdout else {})
+    raw = (json.loads(result.stdout.split(marker, 1)[1])
+           if marker in result.stdout else {})
+    # The append order rides out of the page beside the markup, but NOT inside
+    # the same mapping: `captured` is id -> HTML and two tests join its values
+    # into one string. So it comes back as an attribute.
+    captured = _Captured(
+        (key, value) for key, value in raw.items() if key != "__appended__")
+    captured.appended = raw.get("__appended__") or {}
     return result.returncode, result.stderr, captured
 
 
@@ -1043,6 +1066,36 @@ def test_the_page_opens_on_what_moved_and_says_it_in_one_line(tmp_path, monkeypa
     # (P08, deep pass of 2026-09-11).
     assert 'readStore("qa.sort", "changed")' in template, (
         "the page no longer opens sorted by when each row last moved")
+
+    # And the order the page actually opens in, which is the claim. The line
+    # above pins a string, and a string is not an order: all three readers of
+    # 2026-09-12 added `if (!seen) sortBy = "damage";` a few lines below the
+    # declaration, left that literal untouched, and watched the page open on
+    # damage with this green (B10, triage 3/3). `sortRows()` re-appends the
+    # nodes it sorted, so the harness records that order and it is read here.
+    import shutil
+
+    node = shutil.which("node")
+    if node:
+        # Two rows whose two orders DISAGREE: the one that moved today is the
+        # least damaging. Newest-movement-first opens on the S4; damage-first
+        # opens on the S0. Built here rather than borrowed from the live
+        # payload, which this test's own monkeypatched QA_STATE_DIR empties.
+        def moved(fid, severity, at):
+            return _row(fid, severity=severity, transitions=[
+                {"at": at, "axis": "check", "from": "UNVERIFIED",
+                 "to": "REPRODUCING", "cause": {"run_id": "run-x"}}])
+
+        payload = render.build_payload(ledger=_ledger(
+            moved("cosmetic-today", "S4-COSMETIC", "2026-09-12T18:00:00+00:00"),
+            moved("custody-old", "S0-CUSTODY", "2026-09-01T08:00:00+00:00")))
+        code, err, captured = _run_page(node, tmp_path / "sortorder", payload)
+        assert code == 0, f"the page throws:\n{err[:600]}"
+        order = [row.get("sev") for row in captured.appended.get("findings", [])]
+        assert order == ["S4-COSMETIC", "S0-CUSTODY"], (
+            f"the page opened in {order}; the S4 row moved today and the S0 "
+            f"row moved eleven days ago, so newest-movement-first puts S4 on "
+            f"top and this opened in damage order instead")
 
     # The header still says the two things the guards pin, and the run's own
     # moment is now in the payload rather than the render's clock.

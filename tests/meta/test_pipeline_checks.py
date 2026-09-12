@@ -888,8 +888,25 @@ def test_the_latency_window_is_ordered_by_question_and_counts_only_their_failure
     questions by their LAST row, so re-polling an old failed question -- which
     appends a give-up -- moved it into the newest five. And every give-up read
     as "did not answer", including the fifteen-minute one written when OUR
-    reads failed ('unread: ReadTimeout', 'unknown')."""
-    from tests.mcp.test_nexus_channel import did_not_answer, latest_per_question
+    reads failed ('unread: ReadTimeout', 'unknown').
+
+    B01/B03, deep pass of 2026-09-12, triage 3/3: the repair went one status
+    too far. `nexus.py` writes a give-up at 900 s carrying the status its last
+    poll saw, and when THEIR job is still working that status is `running` --
+    not `failed`. So five questions each abandoned at fifteen times three the
+    published ceiling were filed as our own read failures, `verdicts` held no
+    answer at all, the Inconclusive guard needed a non-empty one to fire, and
+    the check reported PASSED: "0 investigation(s) answered inside the
+    published 1-5 min". That verdict goes to their server on #86.
+
+    Both halves are asserted here because either alone leaves the false green:
+    counting a stalled give-up as theirs is what makes the window red, and
+    refusing to conclude from nothing is what stops a window of pure read
+    failures reporting a working channel."""
+    from tests.mcp.test_nexus_channel import (did_not_answer,
+                                              latest_per_question,
+                                              read_the_window,
+                                              their_published_window)
 
     rows = [
         {"id": "NEX-0005", "type": "question", "at": "2026-09-10T11:49:00+00:00"},
@@ -909,10 +926,66 @@ def test_the_latency_window_is_ordered_by_question_and_counts_only_their_failure
         "a re-polled old question moved to the newest end of the window")
 
     assert did_not_answer({"type": "gave_up", "status": "failed"})
+    assert did_not_answer({"type": "gave_up", "status": "running"}), (
+        "a job still running when we stopped waiting did not answer either -- "
+        "that is the status nexus.py writes at GIVE_UP_SECONDS")
+    assert did_not_answer({"type": "gave_up", "status": "queued"})
     assert not did_not_answer({"type": "gave_up", "status": "unread: ReadTimeout"}), (
         "our own read failing for fifteen minutes is not their channel failing")
     assert not did_not_answer({"type": "gave_up", "status": "unknown"})
     assert not did_not_answer({"type": "answer"})
+
+    # B01: a window in which nothing about THEIR channel was measured.
+    def window(status, stopped_at="2026-09-12T10:15:00+00:00"):
+        rows = []
+        for n in range(1, 6):
+            qid = f"NEX-01{n:02d}"
+            rows += [{"id": qid, "type": "question", "at": "2026-09-12T10:00:00+00:00"},
+                     {"id": qid, "type": "poll", "at": "2026-09-12T10:14:30+00:00",
+                      "status": "running" if status in ("running", "queued") else status},
+                     {"id": qid, "type": "gave_up", "at": stopped_at, "status": status}]
+        return rows, latest_per_question(rows)
+
+    read = read_the_window(*window("running"))
+    assert read["stalled"], (
+        "five questions abandoned at 15 min, each polled still running at "
+        "14.5 min against a published 5, and the check found no trouble")
+    assert not read["ours"]
+    assert not read["proves_nothing"]
+
+    read = read_the_window(*window("unread: ReadTimeout"))
+    assert not read["stalled"] and not read["failed"] and not read["late"]
+    assert len(read["ours"]) == 5
+    # The decision itself, not the ingredient: nothing here measures their
+    # channel, so the run is inconclusive -- and it reported a PASS.
+    assert read["proves_nothing"], (
+        "a window of nothing but our own failed reads is not a channel "
+        "answering inside its published window")
+
+    # B02, same pass, triage 3/3: the ceiling is ours, transcribed, while the
+    # check told the vendor the contract was their own tool description. A
+    # relabel to 5-15 min would have sent a FAIL on #86 for behaviour inside
+    # their published window. Their label is now re-read from the newest
+    # acknowledged tools/list, and a disagreement is inconclusive -- never a
+    # defect, and never adopted silently either (rule 5).
+    from tests.mcp.test_nexus_channel import _nexus
+
+    labelled = "Starts an investigation that typically takes {}."
+    assert their_published_window(
+        [{"name": "ask_nexus_deep", "description": labelled.format("5-15 minutes")}]
+    ) == (5, 15)
+    assert their_published_window(
+        [{"name": "other", "description": labelled.format("1-5 minutes")}]) is None
+    assert their_published_window([{"name": "ask_nexus_deep",
+                                    "description": "no window here"}]) is None, (
+        "a label we could not read is not a label that moved")
+    # Whether their CURRENT label still agrees with our transcription is a
+    # question about the repository against their platform, so it is asserted
+    # in tests/repo/test_surface_drift.py, not here. A red test in this
+    # directory aborts the whole suite -- so putting it here would mean that
+    # the vendor rewording a sentence, and the operator doing exactly what the
+    # reminder tells them (`processes.py surface --update`), kills every live
+    # request until somebody edits a constant.
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -1199,3 +1272,58 @@ def test_the_disclosure_check_judges_the_newest_answer():
     assert source_locations(subject["text"]) == []
     assert subject_answer([]) is None
 
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_window_is_read_for_its_value_and_beside_its_own_sharpe():
+    """#97's check was about to verify a fix on a key name alone.
+
+    It collected every key ANYWHERE in the payload whose text contained one of
+    twelve words, and never read the value. Three readers reproduced three ways
+    through it on 2026-09-12, and the row was PASSING beside FIX_CLAIMED with
+    `verification_owed: [97]` and nothing sent -- so the next verify run would
+    have told Cymetica #97 was fixed on that assertion. This is the 2026-09-07
+    class, in the hour before the claim went out.
+
+    Three properties, and the third is the one a looser reading loses: the
+    window must be NAMED as a whole key, must CARRY something, and must sit
+    with the Sharpe it describes rather than in a neighbouring block about a
+    different measurement.
+    """
+    from tests.rest.test_backtest_metrics_agree import (
+        NAMES_THE_WINDOW, _says_a_window, _sharpe_context)
+
+    def said(payload):
+        return [k for node in _sharpe_context(payload)
+                for k in _says_a_window(node)]
+
+    assert not NAMES_THE_WINDOW.match("starting_capital_usdc"), (
+        "a substring match on 'start' is what the sibling check already "
+        "recorded making and fixing")
+
+    assert said({"latest_metrics": {"sharpe_ratio": 5.16, "period": None}}) == [], (
+        "a null window is the absence with a label on it")
+    assert said({"latest_metrics": {"sharpe_ratio": 5.16},
+                 "leaderboard": {"headline_period": "48h / 354 markets"}}) == [], (
+        "a window on the leaderboard block is not a window on the tool's "
+        "Sharpe -- that pairing IS the filed defect")
+    assert said({"latest_metrics": {"sharpe_ratio": 5.16,
+                                    "period": {"label": "30d"}}}) == ["period"]
+    assert said({"metrics": {"period_days": 30, "rows": [{"sharpe": 1.2}]}})         == ["period_days"], "a window one level up answers for the number under it"
+
+    # B04, the same hour, the same class, the sibling file. Its own docstring
+    # says "a loose match on a field NAME is the same mistake as reading a
+    # number without its units", and it was making it: `says_covered` collected
+    # key names and never looked at what they carried, so echoing the REQUESTED
+    # window under a second name -- `effective_period_days: 365` beside 119
+    # points -- would have read as the fix.
+    from tests.mcp.test_backtest_window_is_real import says_covered
+
+    assert says_covered({"period_days": 365, "effective_period_days": 365}, 365) == [], (
+        "the requested window echoed under a second name is the defect "
+        "restated, not the window actually covered")
+    assert says_covered({"period_days": 365, "covered_days": None}, 365) == []
+    assert says_covered({"period_days": 365, "covered_days": 119}, 365) == ["covered_days"]
+    assert says_covered({"period_days": 365, "first_point": "2026-05-16"},
+                        365) == ["first_point"], (
+        "a date the points begin at reads the coverage even though it is not "
+        "a number of days")

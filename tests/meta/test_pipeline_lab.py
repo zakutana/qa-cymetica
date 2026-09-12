@@ -93,6 +93,16 @@ def test_the_notebook_keeps_at_most_three_lessons_and_knows_an_open_session(
     importlib.reload(qa.state)
     importlib.reload(lab)
 
+    # The number, not just "fewer than four". A07, deep pass of 2026-09-12,
+    # triage 3/3: two of the three readers wrote MAX_LESSONS = 2 to disk and
+    # watched this test pass. Everything else reads the constant --
+    # scripts/lab.py truncates a night's lessons by it, and the assertion
+    # further down this file says `<= lab.MAX_LESSONS` -- so a silent drop to
+    # two was invisible while the name, close_session's docstring and
+    # CLAUDE.md all said three, and a night would have lost a third of what
+    # it learned. The same pattern as `running_experiments == 50` above.
+    assert lab.MAX_LESSONS == 3
+
     opened = lab.open_session(mode="session")
     assert lab.open_sessions() == [opened["session"]]
 
@@ -102,14 +112,30 @@ def test_the_notebook_keeps_at_most_three_lessons_and_knows_an_open_session(
     with pytest.raises(lab.LabError):
         lab.close_session("LAB-9999", lessons=[], nextup=[])
 
-    lab.close_session(opened["session"], lessons=["one"],
+    # THREE is the boundary and the boundary is what a cap is. `> MAX_LESSONS`
+    # read as `>=` refuses a night that produced exactly three, with a message
+    # that contradicts itself -- "at most 3 lessons per session, not 3" -- and
+    # the session stays open. Only four-raises and one-passes were asserted.
+    lab.close_session(opened["session"], lessons=["one", "two", "three"],
                       nextup=["ask Nexus about STR-0001"])
     assert lab.open_sessions() == []
     assert lab.last_close()["next"] == ["ask Nexus about STR-0001"]
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_nothing_is_asked_or_bought_while_a_deep_pass_is_running():
+def test_nothing_is_asked_while_a_deep_pass_is_running():
+    """The asking half, and it says so in its name.
+
+    It was `..._asked_or_bought_...` and exercised only `may_ask`. All three
+    readers of 2026-09-12 deleted the buy interlock in `scripts/lab.py` and
+    watched this stay green. No behaviour was unguarded -- the buying half is
+    held by `test_the_buy_path_reads_what_is_already_deployed` below, by the
+    AST guard that requires every spender to name `pass_in_flight`, and by
+    `test_pipeline_night_spend.py::test_nothing_is_launched_while_a_deep_pass_is_running`
+    -- so this is renamed rather than widened. A second assertion of the same
+    interlock buys nothing; a name that claims one it does not make costs a
+    reader their trust in every other name here. A04, triage 3/3.
+    """
     may, why = lab.may_ask(asked=0, pass_running=True)
     assert not may and "deep pass" in why.lower(), why
 

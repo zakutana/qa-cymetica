@@ -48,16 +48,56 @@ Two smaller things this check records but does not judge:
 
 from __future__ import annotations
 
+import re
+
 from qa.marks import Inconclusive, SafetyTier, qa
 from qa.measure import Measurement, conclude
 
 LEADERBOARD = "/api/v1/backtest/leaderboard"
 TOOL = "get_strategy_returns"
 
-# What would say which period a number covers. Any one of them is enough; the
-# claim is that NONE of them is there.
-WINDOW_KEYS = ("period", "window", "horizon", "days", "hours", "from", "since",
-               "start", "timeframe", "lookback", "interval", "range")
+# What would say which period a number covers. ANCHORED, and read for its
+# VALUE, beside the Sharpe it is supposed to describe.
+#
+# It was a substring list read over every key anywhere in the payload, and the
+# value was never touched. So `starting_capital_usdc` satisfied it -- it
+# contains "start" -- and so did `{"sharpe_ratio": 5.16, "period": null}`, and
+# so did a `leaderboard.headline_period` block sitting beside a
+# `latest_metrics.sharpe_ratio` that still carried no window, which is the
+# filed defect verbatim. Three readers reproduced all three on 2026-09-12.
+#
+# It matters more here than anywhere: this row is PASSING beside FIX_CLAIMED
+# with `verification_owed: [97]` and nothing sent yet, so the next verify run
+# claims #97 fixed on whatever this says. The sibling check in
+# tests/mcp/test_backtest_window_is_real.py records making and fixing exactly
+# this mistake -- "a loose match on a field NAME is the same mistake as
+# reading a number without its units" -- and this one had not learned it.
+NAMES_THE_WINDOW = re.compile(
+    r"^(actual|covered|effective|real|headline)?_?"
+    r"(period|window|horizon|timeframe|lookback|interval|range|span)"
+    r"(_days|_hours|_label)?$"
+    r"|^(period|window)$|^(from|to|since|until|start|end)_(date|time|day)$"
+    r"|^(first|last|earliest|latest)_(point|date|day)$", re.IGNORECASE)
+
+
+def _says_a_window(node) -> list[str]:
+    """Keys in THIS dict that name a window and carry something to read.
+
+    Not anywhere in the payload: the claim is that the SHARPE says what period
+    it covers, so a window in a neighbouring block about a different
+    measurement is not an answer. Not a bare name either -- `period: null` is
+    the absence with a label on it.
+    """
+    if not isinstance(node, dict):
+        return []
+    out = []
+    for key, value in node.items():
+        if not NAMES_THE_WINDOW.match(str(key)):
+            continue
+        if value is None or value == "" or value == {} or value == []:
+            continue
+        out.append(str(key).lower())
+    return sorted(out)
 
 
 def _unwrap(payload):
@@ -79,6 +119,31 @@ def _keys(node, found: set[str]) -> set[str]:
         for item in node:
             _keys(item, found)
     return found
+
+
+def _sharpe_context(payload) -> list[dict]:
+    """The dict holding the Sharpe, and the dicts holding that -- outermost
+    last. A window one level up ("these metrics are all 30-day") answers for
+    it; a window in a sibling block about the leaderboard does not."""
+    trail: list[dict] = []
+
+    def walk(node, chain):
+        if isinstance(node, dict):
+            for key, value in node.items():
+                if (str(key).lower() in ("sharpe_ratio", "sharpe")
+                        and isinstance(value, (int, float))):
+                    trail.extend(reversed(chain + [node]))
+                    return True
+                if walk(value, chain + [node]):
+                    return True
+        elif isinstance(node, list):
+            for item in node:
+                if walk(item, chain):
+                    return True
+        return False
+
+    walk(payload, [])
+    return trail
 
 
 def _sharpe(payload) -> float | None:
@@ -146,9 +211,8 @@ def test_a_published_sharpe_says_what_period_it_covers(rest_anon, mcp_anon):
             continue
 
         compared.append(slug)
-        keys = _keys(payload, set())
-        says_when = [key for key in keys
-                     if any(word in key for word in WINDOW_KEYS)]
+        says_when = [key for node in _sharpe_context(payload)
+                     for key in _says_a_window(node)]
         if not says_when:
             windowless.append({
                 "strategy": bot.get("name") or slug,
@@ -160,7 +224,7 @@ def test_a_published_sharpe_says_what_period_it_covers(rest_anon, mcp_anon):
                 "leaderboard_sharpe": round(float(theirs), 4),
                 "leaderboard_trades": bot.get("total_trades"),
                 "leaderboard_period": periods[slug],
-                "keys_the_tool_returned": sorted(keys)[:14],
+                "keys_the_tool_returned": sorted(_keys(payload, set()))[:14],
             })
 
     if not compared:

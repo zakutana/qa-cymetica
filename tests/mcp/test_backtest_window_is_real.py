@@ -45,6 +45,39 @@ NAMES_THE_WINDOW = re.compile(
     r"(_days|_hours)?$|^(first|last|earliest|latest)_(point|date|day)$"
     r"|^(from|to|since|until|start|end)_(date|time|day)$", re.IGNORECASE)
 
+
+def says_covered(answer, requested) -> list[str]:
+    """Keys that say what window the answer ACTUALLY covered.
+
+    The comment above was already right and this function was not: it collected
+    key names and never read what they carried. Two values satisfy a name and
+    answer nothing.
+
+    `covered_days: null` is the absence with a label on it. And
+    `effective_period_days: 365`, returned for a 365-day request that produced
+    119 points, is the argument echoed under a second name -- the filed defect
+    restated, which would have read here as the fix to it. So a number equal to
+    what we asked for is not a reading of what we got; 119, or a date the
+    points begin at, is.
+
+    B04, deep pass of 2026-09-12, triage 3/3, the same hour as the same defect
+    in tests/rest/test_backtest_metrics_agree.py.
+    """
+    out = []
+    for key, value in answer.items():
+        if key == "period_days" or not NAMES_THE_WINDOW.match(str(key)):
+            # `period_days` itself is excluded: echoing the argument is the
+            # claim under question, not an answer to it.
+            continue
+        if value is None or value == "" or value == [] or value == {}:
+            continue
+        if isinstance(value, bool):
+            continue
+        if isinstance(value, (int, float)) and abs(float(value) - requested) < 1e-9:
+            continue
+        out.append(str(key))
+    return sorted(out)
+
 # Two of their own cards' baskets, as the sampler recorded them. The first is
 # expected to be short of history (2026 coins), the second to have it.
 SHORT_HISTORY = [{"symbol": "WIF", "weight": 0.735}, {"symbol": "PNUT", "weight": 0.174},
@@ -84,12 +117,9 @@ def test_a_backtest_says_the_window_it_actually_covered(mcp_trusted):
                 "total_return_pct": answer.get("total_return_pct"),
                 "sharpe_ratio": answer.get("sharpe_ratio"),
                 # Anything that already names the truth would make this check
-                # wrong, so it is read rather than assumed absent -- and
-                # `period_days` itself is excluded, because echoing the
-                # argument is the claim under question, not an answer to it.
-                "says_covered": sorted(
-                    key for key in answer
-                    if key != "period_days" and NAMES_THE_WINDOW.match(key)),
+                # wrong, so it is read rather than assumed absent -- for its
+                # VALUE, which is where this went wrong until 2026-09-12.
+                "says_covered": says_covered(answer, period),
             }
 
     control = readings[("long", LONG)], readings[("long", LONGER)]
@@ -103,8 +133,24 @@ def test_a_backtest_says_the_window_it_actually_covered(mcp_trusted):
     truncated = short[0]["n_points"] == short[1]["n_points"]
     named = bool(short[1]["says_covered"])
 
+    if not truncated:
+        # The subject is a window that was truncated and labelled anyway. WIF,
+        # PNUT, GOAT and ACT are 2026 coins: every day that passes lengthens
+        # their history, and the day it reaches past 180 days the two requests
+        # stop agreeing and there is no truncation here to mislabel. That is
+        # the calendar moving, not their fix landing -- and this branch read
+        # "passed" until 2026-09-12, which on a filed row is a verification
+        # sent for something nobody repaired. Rule 10, inverted: what cannot be
+        # measured is not a pass any more than it is a defect. B04, triage 3/3.
+        raise Inconclusive(
+            f"{LONG} and {LONGER} days now return different readings for the "
+            f"short basket ({short[0]['n_points']:.0f} vs "
+            f"{short[1]['n_points']:.0f} points), so its legs have grown the "
+            f"history and there is no truncated window here to be mislabelled "
+            f"-- pick a younger basket, or this run proves nothing either way")
+
     conclude(Measurement(
-        verdict="failed" if truncated and not named else "passed",
+        verdict="failed" if not named else "passed",
         reason=(
             f"asked for {LONGER} days and given {short[1]['n_points']:.0f} "
             f"points -- the same reading as {LONG} days, to the decimal -- "
@@ -116,11 +162,9 @@ def test_a_backtest_says_the_window_it_actually_covered(mcp_trusted):
             f"the argument. An agent ranking by Sharpe, which your guidance "
             f"asks for, compares a real {LONGER}-day figure with a "
             f"{short[1]['n_points']:.0f}-day one wearing the same label"
-            if truncated and not named else
+            if not named else
             f"the {LONGER}-day answer names the window it covered "
-            f"({', '.join(short[1]['says_covered'])})" if named else
-            f"{LONG} and {LONGER} days returned different readings "
-            f"({short[0]['n_points']:.0f} vs {short[1]['n_points']:.0f} points)"),
+            f"({', '.join(short[1]['says_covered'])})"),
         left={"asked_365": short[1], "asked_180": short[0]},
         right={"control_365": control[1], "control_180": control[0]},
         population={"basket": [leg["symbol"] for leg in SHORT_HISTORY],

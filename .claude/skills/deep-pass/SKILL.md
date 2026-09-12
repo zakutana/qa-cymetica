@@ -65,7 +65,8 @@ So each step writes its own result as it produces it, and the next step reads
 the file rather than remembering:
 
 ```json
-{"run": "...", "at": "...", "at_finished": "...", "start_commit": "...",
+{"run": "...", "at": "...", "previous_at": "...", "at_finished": "...",
+ "start_commit": "...",
  "gaps": [
   {"id": "T01", "nodeid": "...", "claim": "...", "source": "audit|review",
    "votes": null, "verdict": null, "fixed": false, "commit": null}],
@@ -79,9 +80,19 @@ the file rather than remembering:
  "finished": true}
 ```
 
-* **Step 0** carries `retrospective.last` forward from the previous run's file
-  and counts `meta_tests.start`. Both at the start, so a compaction cannot
-  lose the fact that a week was owed.
+* **Step 0** carries `retrospective.last` **and `previous_at`** forward from
+  the previous run's file — `previous_at` being that file's `at`, the moment
+  the last pass started — and counts `meta_tests.start`. All at the start, so
+  a compaction cannot lose the fact that a week was owed.
+
+  `previous_at` exists because step 0 overwrites this file and step 1 then
+  asked it when the last pass was. The answer was "a few minutes ago", so
+  `messages --since-last-pass` read an empty window and step 1 learned
+  nothing — on an evening of a dozen messages, with nothing red, because an
+  empty window and a quiet evening are the same shape from there. The pass of
+  2026-09-12 found it in itself (S01). `scripts/processes.py::messages_floor`
+  reads `previous_at`, falls back a day when no pass is named, and says which
+  of the three floors it used.
 * **Step 2** appends a gap the moment an auditor returns it. `votes` and
   `verdict` stay null.
 * **Step 4** fills `votes` and `verdict` per gap, one at a time.
@@ -164,10 +175,17 @@ python scripts/memories.py --for deep-pass
 * **Record the starting commit.** Step 9 needs it.
 * **Open the progress file with what the last pass left.** Carry
   `retrospective.last` forward from the previous run's file (absent → `null`,
-  which means the week is due), and write `meta_tests.start` as
-  `grep -c "^def test_" tests/meta/*.py` summed. Both now, at the start: a
-  compaction in the middle must not be able to erase the fact that a week was
-  owed, which is precisely the failure mode the file exists for.
+  which means the week is due) **and `previous_at`, that file's own `at`**;
+  then write `meta_tests.start` as `grep -c "^def test_" tests/meta/*.py`
+  summed. All now, at the start: a compaction in the middle must not be able
+  to erase the fact that a week was owed, which is precisely the failure mode
+  the file exists for.
+
+  `previous_at` is read back one step below, by
+  `messages --since-last-pass`. Overwriting this file is what destroyed that
+  answer — step 1 asked when the last pass was and got "a few minutes ago", so
+  it read an empty window on an evening of 23 messages, and nothing went red.
+  Carry it here, before the overwrite, or step 1 has nothing to read.
 
 ### 1 · What the work so far taught
 

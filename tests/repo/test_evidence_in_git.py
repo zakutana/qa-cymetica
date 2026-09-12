@@ -40,6 +40,12 @@ REPO = Path(__file__).resolve().parent.parent.parent
 # evidence store existed: each names a source file and a key inside it, not a
 # capture. They are not missing evidence and never were.
 LEGACY_PREFIXES = ("submissions.json#", "bounty.json#", "archive#")
+# What the 2026-09-04 migration left, counted. A floor and a ceiling at once:
+# the journal is append-only and migrate_ledger.py was retired 2026-09-09, so
+# nothing can add to this set and nothing can take from it -- a different
+# number means a reader went blind or the journal was rewritten, and both are
+# louder than the "0, all the migration's" this guard used to report.
+LEGACY_COUNT = 23
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -415,12 +421,48 @@ def test_the_citations_that_are_not_captures_are_the_migration_s():
     Without this the first guard would report them as missing files forever,
     and the honest sentence -- the store did not exist yet -- would have to be
     remembered instead of asserted.
+
+    It asserted only that none of them is a stray, which an EMPTY set satisfies
+    perfectly. `read_events()` honours QA_STATE_DIR and returns [] for a
+    missing journal, so all three readers of 2026-09-12 got a green "0
+    non-capture citation(s), all written by the 2026-09-04 migration" -- a
+    sentence about 23 ids, said over nothing. One went further and stubbed the
+    citation reader itself blind; that passed too. Rule 8 inverted, in the
+    guard that exists to keep one sentence honest. So the number is pinned:
+    the journal is append-only and the migration is retired, so 23 can only
+    move if something stopped reading, and that is the failure worth hearing
+    about. C08, triage 3/3.
     """
     from qa.state import read_events
 
-    legacy = sorted(keepset.legacy_citations(read_events()))
+    events = read_events()
+    legacy = sorted(keepset.legacy_citations(events))
+    if not events or not legacy:
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason=(f"read {len(events)} journal event(s) and "
+                    f"{len(legacy)} pre-contract citation(s) where "
+                    f"{LEGACY_COUNT} are recorded -- a citation we could not "
+                    f"read is not a citation that is not there, and nothing "
+                    f"here can be said about a population nobody saw"),
+            sources={"journal": "state/journal/events.jsonl"}))
+        return
+
     strays = [item for item in legacy
               if not item.startswith(LEGACY_PREFIXES)]
+    if len(legacy) != LEGACY_COUNT:
+        conclude(Measurement(
+            verdict="failed",
+            reason=(f"{len(legacy)} pre-contract citation(s) where "
+                    f"{LEGACY_COUNT} were recorded on 2026-09-04. The journal "
+                    f"is append-only and the migration is retired, so this "
+                    f"number does not move on its own: either the reader "
+                    f"stopped reading or the journal was rewritten"),
+            left={"legacy": len(legacy)}, right={"recorded": LEGACY_COUNT},
+            population={"examples": legacy[:3]},
+            sources={"journal": "state/journal/events.jsonl"}))
+        return
+
     conclude(Measurement(
         verdict="failed" if strays else "passed",
         reason=(f"citation(s) that are neither a sha256 nor the migration's "
