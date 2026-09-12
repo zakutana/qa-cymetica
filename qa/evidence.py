@@ -8,8 +8,13 @@ content, and cited by id from the ticket that depends on it. That is what makes
 
 mechanically true rather than a form of words.
 
-Secrets never reach disk. Redaction happens here, before write, and
-tests/meta/test_no_secrets_leak.py greps the tree to prove it.
+Secrets never reach disk. Redaction happens here, before write, and two tests
+prove it rather than the docstring promising it: tests/meta/test_pipeline_secrets.py
+captures a request carrying a key through every door one travels through, and
+tests/repo/test_evidence_in_git.py reads the whole tracked store against the
+keys on this machine. Until 2026-09-12 this line named a file that did not
+exist -- and could not, under that name: tests/meta/test_pipeline_abort.py
+requires every file there but the guard's own to be `test_pipeline_*`.
 """
 
 from __future__ import annotations

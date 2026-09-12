@@ -61,6 +61,113 @@ def _state(tmp_path, monkeypatch, ledger=None, tracked=()):
     return state, mod
 
 
+def _capture(state, digest, *, url="https://cymetica.com/api/v1/thing",
+             method="GET", rpc=None, age_days=0):
+    """One capture on disk, with a timestamp we control.
+
+    `rpc` makes it an MCP call: every one of those goes to the same path, so
+    the JSON-RPC method and tool are what tell two of them apart.
+    """
+    import os
+
+    path = state / "evidence" / "sha256" / digest[:2] / f"{digest}.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    body = {"encoding": "empty", "value": None}
+    if rpc:
+        body = {"encoding": "json", "value": {
+            "jsonrpc": "2.0", "method": "tools/call",
+            "params": {"name": rpc, "arguments": {}}}}
+    path.write_text(json.dumps({
+        "captured_at": _ago(age_days), "run_id": "run-whatever", "nodeid": None,
+        "request": {"method": method, "url": url, "headers": {}, "body": body},
+        "response": {"status_code": 200, "headers": {},
+                     "body": {"encoding": "json", "value": {}}},
+    }), encoding="utf-8")
+    stamp = (datetime.now(timezone.utc) - timedelta(days=age_days)).timestamp()
+    os.utime(path, (stamp, stamp))
+    return path
+
+
+def _no_git(monkeypatch):
+    """git holds nothing in a temporary repository, and saying so is the point:
+    otherwise `tracked` would keep every capture and no reason could be told
+    from any other."""
+    from qa import keepset
+
+    monkeypatch.setattr(keepset, "tracked_evidence", lambda: set())
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_capture_a_row_stands_on_is_never_a_victim(tmp_path, monkeypatch):
+    """What a verdict cited is what we promised them "on request"."""
+    run_id = "run-20260901T000000Z-stood"
+    ledger = {"schema": 2, "findings": {"CYM-a": {
+        "checks": ["tests/x.py::test_y"],
+        "check": {"adjudicated_by": {"run_id": run_id}},
+    }}}
+    state, mod = _state(tmp_path, monkeypatch, ledger=ledger)
+    _no_git(monkeypatch)
+    stood, newer, older = "a" * 64, "b" * 64, "c" * 64
+    _write(state, run_id, _ago(30), results=[
+        {"nodeid": "tests/x.py::test_y", "evidence_ids": [stood]}])
+    _capture(state, stood, age_days=30)
+    # Same call twice, both old: one of them is the last answer that surface
+    # ever gave us, and the other is nothing to anybody.
+    _capture(state, newer, url="https://cymetica.com/api/v1/cards", age_days=20)
+    _capture(state, older, url="https://cymetica.com/api/v1/cards", age_days=25)
+
+    keep = mod.evidence_keep_set()
+    assert keep.get(stood) == "kept", keep
+    assert keep.get(newer) == "witness", keep
+    assert older not in keep, "an old capture nothing stands on is a victim"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_capture_is_as_young_as_the_newest_run_that_cites_it(tmp_path,
+                                                               monkeypatch):
+    """The store dedupes by content, so the file's own date is the FIRST
+    sighting. Five captures were cited by runs four days younger than
+    themselves on the day this was written; deleting one of those would have
+    cut the evidence under a run somebody may still fold."""
+    state, mod = _state(tmp_path, monkeypatch)
+    _no_git(monkeypatch)
+    revisited, stale = "d" * 64, "e" * 64
+    _write(state, "run-20260910T000000Z-fresh", _ago(1), results=[
+        {"nodeid": "tests/x.py::test_y", "evidence_ids": [revisited]}])
+    _capture(state, revisited, url="https://cymetica.com/api/v1/same",
+             age_days=30)
+    _capture(state, stale, url="https://cymetica.com/api/v1/same", age_days=29)
+
+    keep = mod.evidence_keep_set()
+    assert keep.get(revisited) == "young", keep
+    assert keep.get(stale) == "witness", (
+        "the newest capture of a call survives even when a younger sibling is "
+        "kept for another reason -- that is one file per call, by design")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_two_mcp_tools_are_two_calls_even_on_one_path(tmp_path, monkeypatch):
+    """All 812 MCP calls on this machine go to `/mcp/v1/`. Keyed on the path
+    alone, the newest capture of the whole endpoint would be the only one kept
+    -- and the tool catalogue the laboratory compares Nexus against, before and
+    after their upgrade, is one of those calls."""
+    state, mod = _state(tmp_path, monkeypatch)
+    _no_git(monkeypatch)
+    catalogue, returns, older_returns = "1" * 64, "2" * 64, "3" * 64
+    mcp = "https://cymetica.com/mcp/v1/"
+    _capture(state, catalogue, url=mcp, method="POST", rpc="tools/list",
+             age_days=20)
+    _capture(state, returns, url=mcp, method="POST",
+             rpc="get_strategy_returns", age_days=20)
+    _capture(state, older_returns, url=mcp, method="POST",
+             rpc="get_strategy_returns", age_days=25)
+
+    keep = mod.evidence_keep_set()
+    assert keep.get(catalogue) == "witness", keep
+    assert keep.get(returns) == "witness", keep
+    assert older_returns not in keep
+
+
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_record_the_ledger_cites_is_never_a_victim(tmp_path, monkeypatch):
     ledger = {"schema": 2, "findings": {"CYM-a": {

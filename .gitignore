@@ -68,3 +68,17 @@ state/paper.jsonl
 # from disk; docs/nexus-rooms-plan.md says why they exist.
 state/rooms.jsonl
 state/samples.jsonl
+
+# Captured requests and responses. 7 747 files and 469 MB by 2026-09-12,
+# growing 40-170 MB a day -- 120 MB of one day's 170 written by two checks that
+# walk the event-card listing page by page on every run -- and nothing in the
+# pipeline reads the store by machine.
+#
+# What a clone still has to be able to open is force-added and stays tracked:
+# their answers the ledger stands on, and the request and response behind every
+# verdict and report we have sent, which scripts/verify.py promises them
+# "provided on request". qa/keepset.py names that set, .githooks/pre-commit
+# adds it in the commit that cites it, scripts/prune_runs.py cuts the rest
+# after three days, and tests/repo/test_evidence_in_git.py holds both
+# directions -- cited is tracked, and nothing else is.
+evidence/

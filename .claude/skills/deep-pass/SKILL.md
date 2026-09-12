@@ -127,6 +127,7 @@ or at 90%, once, in the evening, by somebody who is going to bed.
 git status --short
 git log --oneline @{upstream}..HEAD
 python -m pytest tests/meta -q
+python scripts/keep.py track
 python scripts/prune_runs.py --apply
 python scripts/memories.py --for deep-pass
 ```
@@ -139,7 +140,16 @@ python scripts/memories.py --for deep-pass
   tree. That trap was built on 2026-09-07 by turning `--ask` on; the answer is
   a `console poll` commit here, and another immediately before step 6's
   preregistration. The window between prereg and run is ~3 minutes against 15.
-* **Prune the run records.** `prune_runs.py --apply` removes records older
+* **Track what the day's verdicts cited.** `keep.py track` force-adds the
+  captures behind them; `evidence/` is gitignored and every verification we
+  send tells the vendor those are "provided on request". `.githooks/pre-commit`
+  does this at each commit, so normally it adds nothing -- but the hook lives
+  in `.git/config`, which a fresh clone does not have, and this is the step
+  that repairs that machine before the pruner runs.
+* **Prune the run records and the captures.** `prune_runs.py --apply` removes
+  captures older than three days that nothing stands on and that are not the
+  newest answer of their call -- 4 814 files and 172 MB the first time it ran.
+  For records it removes those older
   than a week that nothing cites, nothing tracks, and that are not the newest
   witness to a check's definition or to a symbol's last occurrence -- by name,
   printing the reason each survivor was kept. It is here rather than at the
@@ -460,7 +470,17 @@ CLAUDE.md uses for when to propose `/code-review` at all.
 
 ### 8 · Commit
 
-Commit everything the pass touched. **The push waits for step 11**, which is
+```bash
+python scripts/keep.py snapshot
+```
+
+first, then commit everything the pass touched. The snapshot copies the diaries
+that live outside git -- the rooms, what Nexus was asked, the paper orders, the
+laboratory's notebook -- into `audits/lab/`. They are gitignored because they
+are appended to while a run is in flight, which means months of them sit on one
+disk and nothing else; tens of kilobytes a night is what that costs to fix.
+
+**The push waits for step 11**, which is
 the pass's last action — the report, the progress file and the week are part of
 what gets pushed, not a tail left behind after it. Splitting them would leave
 commits after the push that become the next pass's review scope by accident,

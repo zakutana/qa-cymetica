@@ -34,6 +34,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import findings as findings_mod  # noqa: E402
 
+from qa import keepset  # noqa: E402
 from qa.fold import display_state, fold  # noqa: E402
 from qa.state import (  # noqa: E402
     RunIntegrityError,
@@ -412,6 +413,13 @@ def main(argv: list[str] | None = None) -> int:
     # cites it -- not here, where a refused write skips it.
     write_ledger(load_previous(), ledger)
     print(f"-> {ledger_path()}")
+
+    # A fold is when a row starts standing on a new run, and what a row stands
+    # on is what our next verdict will tell them is "provided on request".
+    # evidence/ is gitignored, so those captures have to be force-added: the
+    # commit hook does it for every commit, and this does it at the moment the
+    # citation is made, so the commit that follows finds them staged already.
+    keepset.track(quiet=True)
     if ledger.get("run_carried"):
         # Say which it was. "composed" would claim this fold judged something,
         # and the whole point of --events-only is that it judged nothing.

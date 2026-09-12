@@ -215,48 +215,197 @@ def victims(older_than_days: int = 7) -> list[Path]:
     return [p for p in records_on_disk() if p.stem not in keep]
 
 
+# --- captures -------------------------------------------------------------
+#
+# The same job over `evidence/`, added 2026-09-12 when the store passed 469 MB
+# and 170 MB a day. Three days rather than seven: a capture is worth having
+# while somebody is investigating the surface it came from, and the store grows
+# an order of magnitude faster than the records do.
+
+EVIDENCE_DAYS = 3
+
+
+def evidence_files() -> list[Path]:
+    from qa.evidence import evidence_root
+
+    root = evidence_root() / "sha256"
+    return sorted(root.glob("*/*.json")) if root.is_dir() else []
+
+
+def _cited_by_run(records: dict[str, dict]) -> dict[str, str]:
+    """capture id -> when the newest run citing it started.
+
+    Age cannot be read off the file. The store is content-addressed and
+    `EvidenceStore.write` skips a digest it already has, so the timestamp on
+    disk is the FIRST time that response was seen -- five captures cited by
+    runs four days younger than themselves on the day this was written. A
+    capture is as young as the newest run that stands on it.
+    """
+    newest: dict[str, str] = {}
+    for record in records.values():
+        when = _started(record)
+        for result in record.get("results") or []:
+            for item in result.get("evidence_ids") or []:
+                digest = str(item).split(":")[-1]
+                if when > newest.get(digest, ""):
+                    newest[digest] = when
+    return newest
+
+
+def _call_key(record: dict) -> str:
+    """What makes two captures the same CALL, so one of them can be the witness.
+
+    Method and path are not enough. Every MCP call goes to `/mcp/v1/` -- 812 of
+    them on this machine -- so keyed on the path alone the newest capture of
+    the whole endpoint would be the only one kept, and the tool catalogue we
+    compare Nexus against before and after their upgrade would be gone. The
+    JSON-RPC method and tool name are part of the key.
+    Query VALUES are not: `?offset=7400` would otherwise make every page of a
+    listing its own call, and the witness set would grow with the vendor's
+    catalogue rather than with our own surface.
+    """
+    request = record.get("request") or {}
+    method = str(request.get("method") or "")
+    url = str(request.get("url") or "")
+    path, _, query = url.partition("?")
+    keys = ",".join(sorted({p.split("=")[0] for p in query.split("&") if p}))
+    rpc = ""
+    body = request.get("body") or {}
+    value = body.get("value") if isinstance(body, dict) else None
+    if isinstance(value, dict):
+        rpc = str(value.get("method") or "")
+        params = value.get("params") or {}
+        if isinstance(params, dict) and params.get("name"):
+            rpc = f"{rpc}:{params['name']}"
+    return f"{method} {path}?{keys} {rpc}".strip()
+
+
+def evidence_keep_set(older_than_days: int = EVIDENCE_DAYS,
+                      records: dict[str, dict] | None = None) -> dict[str, str]:
+    """capture id -> the reason it survives. Absence is the only licence.
+
+        kept       something stands on it: qa/keepset.py names which
+        tracked    git has it, so somebody committed it on purpose
+        young      a run newer than the cutoff still cites it, or it is newer
+        witness    the newest capture of its call, so the last answer of every
+                   surface we touch is always on disk
+        unreadable it could not be parsed, so nothing shows it is safe to go
+
+    `witness` is decided among the CANDIDATES -- what is old and otherwise
+    unwanted -- not over the whole store. Reading 7 747 files to rank them
+    costs half a minute, and a capture kept as the witness of a call that also
+    has a young one is one file, not a leak.
+    """
+    from qa import keepset
+
+    files = evidence_files()
+    if records is None:
+        records = {p.stem: _load(p) for p in records_on_disk()}
+    cutoff = (datetime.now(timezone.utc)
+              - timedelta(days=older_than_days)).isoformat()
+    cited_at = _cited_by_run(records)
+
+    keep: dict[str, str] = {}
+    try:
+        for digest, reason in keepset.must_keep().items():
+            keep.setdefault(digest, "kept")
+    except Exception as exc:  # noqa: BLE001 -- a reader we cannot run keeps all
+        # Loud, because the safe direction here is also the direction in which
+        # the pile grows: a keep set nobody could compute means every capture
+        # survives, and a silent "kept everything" is how 469 MB happened.
+        print(f"  WARNING: could not work out what to keep ({exc}); "
+              f"keeping every capture")
+        return {p.stem: "unreadable" for p in files}
+    tracked = keepset.tracked_evidence()
+    if tracked is None:
+        print("  WARNING: git could not be read; keeping every capture")
+        return {p.stem: "unreadable" for p in files}
+    for digest in tracked:
+        keep.setdefault(digest, "tracked")
+
+    candidates = []
+    for path in files:
+        if path.stem in keep:
+            continue
+        seen = datetime.fromtimestamp(path.stat().st_mtime,
+                                      timezone.utc).isoformat()
+        age = max(seen, cited_at.get(path.stem, ""))
+        if age >= cutoff:
+            keep[path.stem] = "young"
+        else:
+            candidates.append((age, path))
+
+    seen_calls: set[str] = set()
+    for age, path in sorted(candidates, reverse=True):
+        record = _load(path)
+        if record.get(UNREADABLE):
+            keep[path.stem] = "unreadable"
+            continue
+        call = _call_key(record)
+        if call and call not in seen_calls:
+            seen_calls.add(call)
+            keep[path.stem] = "witness"
+    return keep
+
+
+def evidence_victims(older_than_days: int = EVIDENCE_DAYS) -> list[Path]:
+    keep = evidence_keep_set(older_than_days)
+    return [p for p in evidence_files() if p.stem not in keep]
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--apply", action="store_true",
                         help="actually delete; without it nothing is touched")
     parser.add_argument("--older-than", type=int, default=7, metavar="DAYS",
                         help="keep everything newer than this (default 7)")
+    parser.add_argument("--captures-older-than", type=int, default=EVIDENCE_DAYS,
+                        metavar="DAYS",
+                        help=f"the same for evidence/ (default {EVIDENCE_DAYS})")
     args = parser.parse_args(argv)
 
-    on_disk = records_on_disk()
-    keep = keep_set(args.older_than)
-    doomed = [p for p in on_disk if p.stem not in keep]
+    records = {p.stem: _load(p) for p in records_on_disk()}
+    _sweep("record", records_on_disk(), keep_set(args.older_than), args.apply)
+    _sweep("capture", evidence_files(),
+           evidence_keep_set(args.captures_older_than, records), args.apply)
+    return 0
 
-    # Counted over what is actually here. The keep set legitimately names run
-    # ids no longer on disk -- the ledger cites two that were lost before the
-    # guard existed -- and reporting those as "kept" would be a number about
-    # nothing.
+
+def _sweep(kind: str, on_disk: list[Path], keep: dict[str, str],
+           apply: bool) -> int:
+    """Say what survives and why, then remove the rest -- by name, never a glob.
+
+    Counted over what is actually here. A keep set legitimately names ids no
+    longer on disk -- the ledger cites two records lost before the guard
+    existed -- and reporting those as "kept" would be a number about nothing.
+    """
+    doomed = [p for p in on_disk if p.stem not in keep]
     reasons: dict[str, int] = {}
     for path in on_disk:
         reason = keep.get(path.stem)
         if reason:
             reasons[reason] = reasons.get(reason, 0) + 1
-    print(f"{len(on_disk)} record(s) on disk; keeping {sum(reasons.values())} "
+    print(f"{len(on_disk)} {kind}(s) on disk; keeping {sum(reasons.values())} "
           f"({', '.join(f'{n} {r}' for r, n in sorted(reasons.items()))})")
 
     if not doomed:
-        print("nothing to remove")
+        print("  nothing to remove")
         return 0
 
     freed = sum(p.stat().st_size for p in doomed if p.exists())
-    if not args.apply:
-        for path in doomed[:10]:
+    if not apply:
+        for path in doomed[:5]:
             print(f"  would delete {path.name}")
-        if len(doomed) > 10:
-            print(f"  ... and {len(doomed) - 10} more")
-        print(f"would free {freed / 1048576:.1f} MB. Nothing deleted "
+        if len(doomed) > 5:
+            print(f"  ... and {len(doomed) - 5} more")
+        print(f"  would free {freed / 1048576:.1f} MB. Nothing deleted "
               f"(--apply to do it).")
         return 0
 
     for path in doomed:
         path.unlink()
-    print(f"deleted {len(doomed)} record(s), freed {freed / 1048576:.1f} MB")
-    return 0
+    print(f"  deleted {len(doomed)} {kind}(s), freed {freed / 1048576:.1f} MB")
+    return len(doomed)
 
 
 if __name__ == "__main__":

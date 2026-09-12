@@ -513,10 +513,21 @@ scripts/open_checks.py  the selector for a sweep over what is still open.
                      Always prepends tests/meta.
 scripts/inventory.py    the platform section map the dashboard renders. An
                      inventory, not a test suite. SAFE tier, never a POST.
-state/thread.json    dead. A projection from 2026-09-04 that nothing reads;
-                     render.py says so in as many words. It sits under state/
-                     where the hook protects it, so it stays -- do not build
-                     anything on it.
+qa/keepset.py        which captures have to survive, and why: their answers the
+                     ledger stands on, and the request and response behind
+                     every verdict and report we have sent -- verify.py tells
+                     them those are "provided on request". One reader for the
+                     tracker, the pruner and the guard, so the three cannot
+                     grow three ideas of "cited".
+scripts/keep.py      `track` force-adds that set (evidence/ is gitignored since
+                     2026-09-12); `snapshot` copies the diaries that live
+                     outside git into audits/lab/. `.githooks/pre-commit` calls
+                     track at every commit, the fold calls it when a row starts
+                     standing on a new run, and the deep pass calls it for a
+                     machine whose clone has no hooksPath.
+scripts/prune_runs.py  run records older than a week and captures older than
+                     three days that nothing stands on, by name, with the
+                     reason each survivor was kept printed.
 ```
 
 ## Reading the numbers honestly
@@ -539,7 +550,11 @@ same bytes; what was wrong is **where** (git, forever) and **how long** (forever
 So: git keeps only what something cites — their answers the ledger stands on, and
 the evidence every verdict, report and paper order promises them "on request" —
 and the disk keeps the rest for three days plus the newest capture of each call.
-`docs/lab-plan.md` F1 is where that lands.
+`qa/keepset.py` names that set, `.githooks/pre-commit` adds it in the commit
+that cites it, `scripts/prune_runs.py` cuts the rest, and
+`tests/repo/test_evidence_in_git.py` holds both directions: cited is tracked,
+and nothing else is. First run: 6 737 files out of git, 4 814 off the disk,
+172 MB freed.
 
 ## Read the memories before the work, not after it
 

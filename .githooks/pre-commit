@@ -1,0 +1,30 @@
+#!/bin/sh
+# Bring the captures this commit's own state cites.
+#
+# evidence/ is gitignored since 2026-09-12: 7 747 files and 469 MB of it, of
+# which 1 010 were cited by anything. What still has to be in the repository is
+# what a clone needs to check us -- their answers the ledger stands on, and the
+# request and response behind every verdict and report we have sent, which
+# scripts/verify.py promises them "provided on request".
+#
+# Here rather than in the console's poller, which appends those events: the
+# poller is a timer, and a timer writing .git/index races every commit a
+# session makes. Here it runs inside the commit that records the event, which
+# is the one moment the two cannot disagree.
+#
+# Silent unless it adds something or something goes wrong, and it can never be
+# the reason a commit fails: tests/repo/test_evidence_in_git.py says the same
+# thing afterwards, where somebody is looking. Installed with
+# `git config core.hooksPath .githooks`, which a fresh clone does not have --
+# the deep pass repairs that case in step 0.
+
+if command -v python >/dev/null 2>&1; then
+    PY="python"
+elif command -v py >/dev/null 2>&1; then
+    PY="py -3"
+else
+    exit 0
+fi
+
+$PY scripts/keep.py track || true
+exit 0
