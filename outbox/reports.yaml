@@ -2030,6 +2030,63 @@ reports:
       it is either locked or taken out of the balance, and fails only on the
       remainder -- here, exactly this 55.00.
 
+  - key: sharpe-without-a-window
+    findings: [CYM-a_published_sharpe_says_what_period_it_covers]
+    severity: medium
+    category: api
+    url: https://cymetica.com/mcp/v1
+    title: "get_strategy_returns publishes Sharpe with no period, so an agent ranking strategies the way your guide asks compares a March backtest with a 48-hour window"
+    expected: >
+      Your instruction to agents (Telegram, 2026-09-11) is to pull the backtest
+      surfaces first and "rank strategies by Sharpe and max-drawdown, not raw
+      return". For that to be possible, a published risk-adjusted metric has to
+      say what period it covers -- either in the payload, or by the surfaces
+      that publish it sharing one window.
+    actual: >
+      They do not, and the two doors your own map names answer differently
+      about the same strategy. Read at 2026-09-12 07:11 UTC, GET
+      /api/v1/backtest/leaderboard gives CryptoBull Bot (Blue) sharpe_ratio
+      4.6907 with headline_period "48h / 354 markets" over 82 trades -- a
+      figure that moves, since the window rolls.
+      get_strategy_returns("bt-cryptobull-blue") gives 5.1594 over 275 trades,
+      stamped ran_at 2026-03-15, and its payload carries no period at all:
+      strategy, slug, latest_metrics{ran_at, run_id, source, win_rate,
+      sharpe_ratio, total_trades, max_drawdown_pct, total_return_pct}, note.
+      StockBot (Blue) the same minute: 5.11 over "24h / 355 markets" on the
+      leaderboard, 2.70 over 667 trades from the tool. The leaderboard itself
+      sorts rows whose headline_period spans 24h, 48h, 72h, 120h, 30 days and
+      6 months into one ranking by that column.
+    steps:
+      - "GET /api/v1/backtest/leaderboard -> bots[].sharpe_ratio beside bots[].headline_period"
+      - "POST /mcp/v1 tools/call get_strategy_returns {\"strategy\": \"bt-cryptobull-blue\"} -> latest_metrics.sharpe_ratio 5.1594, total_trades 275, ran_at 2026-03-15, no period field"
+      - "POST /mcp/v1 tools/call get_strategy_returns {\"strategy\": \"cryptobull-blue\"} -> {\"error\": \"unknown strategy 'cryptobull-blue'\"}"
+    body: >
+      The two numbers are not contradictory and we are not reporting them as
+      such: they are different measurements of the same strategy. That is the
+      defect. Nothing in either answer says which window it covers, so a caller
+      doing exactly what your guide asks puts 5.1594 and 4.6907 in one column
+      and ranks them.
+
+      The cheapest fix is one field: give get_strategy_returns the same
+      period the leaderboard already publishes -- window, or from/to beside
+      ran_at. A second, on the page: a Sharpe over 24 hours and a Sharpe over
+      six months in one sorted list are not comparable, whatever the column
+      header says.
+
+      Two smaller things on the same path, reported here rather than
+      separately because they are one fix's worth of work. The leaderboard's
+      own slug is rejected by the tool: "cryptobull-blue" answers "unknown
+      strategy" and "bt-cryptobull-blue" is what it wants, so an agent walking
+      your map from one door to the other has to guess the prefix. And ten of
+      the fourteen leaderboard rows (the bot-* species) do not resolve in the
+      tool at all, so most of the ranking cannot be cross-read.
+
+      Context rather than a claim: NEXUS quoted the tool's numbers to our
+      operator as the grounded ranking (CryptoBull Blue 5.16, StockBull Red
+      0.28) while the page ranks StockBull Red second. Whichever is the real
+      one, an agent gets a different shortlist depending on which of your
+      surfaces it read.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in
