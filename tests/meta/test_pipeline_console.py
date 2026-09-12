@@ -43,7 +43,7 @@ REPO = Path(__file__).resolve().parent.parent.parent
 
 # Every CLI that prints prose it did not author in ASCII.
 GUARDED = ("a2a.py", "channels.py", "correspond.py", "memories.py", "nexus.py",
-           "rooms.py")
+           "review.py", "rooms.py")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
