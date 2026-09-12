@@ -60,6 +60,21 @@ asked for it. So it is kept here.
   read as a rule about sweeps and stopped applying the moment the finding turned
   up anywhere else. It applies wherever the bug is found. Asking is the veto
   handed back, the same defect as a list of open decisions.
+* [operator 2026-09-12] *"ne zadene schedulery automaticke nechci, deep pasy si
+  chci poustet sam vzyd jak jdu spat jak jsme to delal doted. Pak treba jak mam
+  neco mam spustit tydne mi to pripomenes. Proste mibudes jen pripominat co mam
+  kdy delat alke vse si chci spoustet sam"*
+
+  **Nothing here starts by itself.** No scheduled task, no `/loop`, no timer that
+  begins work — they launch every run, as they have all along. What replaces the
+  scheduler is a reminder: what is due, and the words that start it, in one line
+  at the start of a session, repeated to them in the first answer because hook
+  output is not something they read.
+
+  Said to a plan that offered them a nightly scheduled deep pass. They had asked
+  in the same conversation not to have to think about what is due, and the
+  session heard "run it without me" in a sentence that meant "remind me". The
+  distance between those two is the whole of this rule.
 * Non-trivial work starts in plan mode. Ask for it; do not wait to be told.
 * Tests before implementation. A test written afterwards passes whatever the
   code does, including the mistake, and 21 commits here carry code with no
@@ -511,6 +526,20 @@ correct. Nothing counts as verified until an admissible run says so, and none
 of the 13 pre-hardening run records is admissible — each names its own reason.
 A zero here is not a regression to be fixed; it is the difference between
 "we checked" and "they said".
+
+## What we keep, and what we let go
+
+[operator 2026-09-12] *"a vyresil si taky to rychle hromadeni MB nekde na disku
+enbo v gitu? nechci za mesic zjistit ze v githubu je par giga dat. to radeji
+zalozime nejakou databzi nebo neco ne?"*
+
+Measured that hour: GitHub 54 MB, `evidence/` 469 MB on disk growing 40–170 MB a
+day, two paging checks writing 120 MB of one day's 170. A database would hold the
+same bytes; what was wrong is **where** (git, forever) and **how long** (forever).
+So: git keeps only what something cites — their answers the ledger stands on, and
+the evidence every verdict, report and paper order promises them "on request" —
+and the disk keeps the rest for three days plus the newest capture of each call.
+`docs/lab-plan.md` F1 is where that lands.
 
 ## Read the memories before the work, not after it
 

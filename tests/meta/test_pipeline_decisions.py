@@ -99,6 +99,10 @@ def _text(rel: str) -> str:
 # words. Added to only when they make one; never edited to make a test pass.
 PINNED = {
     "CLAUDE.md": [
+        ("2026-09-12", "ne zadene schedulery automaticke",
+         "414477775223dde3619b3647031988fa6fdaaac3a5c04f0f7ac04451dcbd19fa"),
+        ("2026-09-12", "nechci za mesic zjistit ze v githubu",
+         "f04881f6d4780e403c5ce74c6313abba17fd2de5dff818d30ca979aeefcdf296"),
         ("2026-09-10", "a proc nezakladas nalezy sam od sebe",
          "eb6c1d842415ae5685ec1d1ccbf9665cbf32503c62ba03f76f64bfc9207629b0"),
         ("2026-09-10", "kde jsme skoncili a cim pokracovat",

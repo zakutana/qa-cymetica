@@ -1,0 +1,69 @@
+# Laboratoř, DNA a data pod kontrolou — plán schválený 12. 9. 2026
+
+Plán, který operátor schválil 12. 9. v 7:48. Nezávisle ho ověřili dva recenzenti
+(Fable 5.1 a Opus 5, oba na max) a jejich připomínky jsou zapracované.
+
+## Tři věci, o které jde
+
+1. **Data pod kontrolou.** GitHub 54 MB, `evidence/` 469 MB a 40–170 MB denně;
+   11. 9. udělaly dvě kontroly procházející výpis karet 120 MB ze 170. Do gitu
+   půjde jen to, co něco cituje (~120 MB, už tam je); zbytek žije na disku tři dny.
+2. **Připomínky místo plánovačů.** Nic se nespouští samo (rozhodnutí operátora,
+   CLAUDE.md). Hook při startu session řekne, co je na řadě a jakým povelem; session
+   ten řádek zopakuje v první odpovědi.
+3. **Laboratoř s Nexusem a hlídka nad každou součástí.** Jeden povel „jdi do
+   laboratoře"; Nexus vede, my měříme. Hlídka najde každou součást sama a deep
+   pass její čísla čte denně, týden je porovnává.
+
+## Co musíme držet navždy
+
+| důvod | přibližně |
+|---|---|
+| jejich odpovědi, na kterých stojí ledger | 211 souborů, 15 MB |
+| evidence, kterou citují naše odeslané verdikty, reporty a paper obchody | ~700 souborů, ~105 MB |
+
+Vendorovi v každém verdiktu píšeme, že ji na požádání vydáme (`scripts/verify.py`),
+takže se maže jen to, co necituje nic. **Žádný strop u zdroje** — zahodil by právě
+tu stránku, kterou slibujeme. **Žádná databáze** — držela by stejné bajty; problém
+byl kde (git navždy) a jak dlouho. **Historie se nepřepisuje** — rozbila by
+preregistrace i commity, které verdikty vendorovi citovaly.
+
+## Fáze
+
+Každá: testy napřed (červené), pak kód, pak commit na `main`, bez pushe.
+Stav se aktualizuje tady; dokud je fáze otevřená, má řádek v `NEXT.md`.
+
+| # | Co | Hotovo, když | Stav |
+|---|---|---|---|
+| F1 | Data: `evidence/` do `.gitignore`; sledovač citované evidence volaný z `.githooks/pre-commit`, z foldu a z deep passu; seznam ztrát (23 id z migrace 4. 9.); prořez evidence v `prune_runs.py` (3 dny od posledního citujícího běhu, navždy-množina, nejnovější odpověď každého volání — u MCP podle nástroje); `tests/meta/test_no_secrets_leak.py`; `git rm --cached` zbytku; záloha deníků laboratoře do `audits/lab/` | `git ls-files evidence` ≈ 900 souborů, ne 7 747; po sweepu a pollu konzole nic nového necitovaného v gitu; `evidence/` po prořezu ~0,5 GB | otevřeno |
+| F2 | Připomínky: `processes.py reminders` (vypadlá noc, týden, laboratoř, plán), hook `.claude/hooks/reminders.py` (offline), pravidlo v CLAUDE.md; deep pass: `at_finished`, krok 1 čte zprávy od minulého běhu, krok 0 „jen týden" | čerstvá session vypíše správné připomínky a session je zopakuje | otevřeno |
+| F3 | Hlídka: `processes.py` nad skilly, agenty, skripty a hooky; `--extract` do `audits/processes.jsonl`; `--flags` se stropy nad dnešní úrovní; skóre deep passu a sweepu; deep pass kroky 1, 1b, 11; `Effort:` pro oba tvary commitu; sekce DNA v CLAUDE.md | `processes.py` vypíše každou součást s běhy, chybami a posledním během | otevřeno |
+| F4 | Laboratoř v1: `list_backtest_surfaces` a `get_backtest_models` do `mcp_tools.read`; `scripts/lab.py` (`status`, `truth`, `cycle`, `ask`, `buy`, `open`, `close`); `state/lab.jsonl`; skill `laborator` (z `nexus-session`); „Co víme o Nexusovi"; porovnání katalogu se snímkem `audits/nexus-baseline.json` | „jdi do laboratoře" projde celou smyčkou i s mrtvým Nexusem; další session vidí poučení a frontu | otevřeno |
+| F5 | Experimenty: změřit hloubku jejich historie indexu; `set_claim`, `set_acceptance`, `record_verdict`, `running` jen s kritériem; `lab.py adopt`; verdikt jako čistá funkce s otiskem vzorce | po převzetí STR-0003 `lab.py status` ukáže okno, výnos, DD, BTC a pokrytí | otevřeno |
+| F6 | Konzole: verdikt v roomu, tabulka výsledků v General | screenshot v 2000 px, opravdu viděný | otevřeno |
+| F7 | Noc laboratoře: `lab.py night --until HH:MM` — jeden proces na povel operátora, v danou hodinu skončí, jen zkoumá | noc zapsaná, sondy ≥ 2 h od sebe, ráno ji `lab.py status` shrne | otevřeno |
+
+## Laboratoř: smyčka
+
+`status` → `rooms.py unread` → `cycle` (dotáhne odpovědi, vzorky, TP/SL, verdikty)
+→ `truth` (backtesty, pořadí podle Sharpe a max DD) → otázka Nexusovi na pozadí
+(s tabulkou, jak dopadly jeho minulé návrhy) → room jen z konkrétní odpovědi, plán,
+jeho čísla doslova, **kritérium předem**, paper obchod → `close` (≤ 3 poučení,
+fronta „příště", česká poznámka do roomů).
+
+Brzdy v kódu: jen paper; ≤ 8 otázek a ≤ 3 nové roomy za session; ≤ 6 běžících
+experimentů, každý ≤ 15 % volných peněz; žádná otázka ani nákup, když běží deep
+pass (měří kontroly #85, #86 a #87 nad jejími odpověďmi a obchody).
+
+## Co tam schválně nebude
+
+- Naplánované úlohy, `/loop`, ani nic, co se spustí samo.
+- Live obchod. Naše vlastní strategie (nápad jde Nexusovi jako otázka).
+- Obchody a zakládání nálezů v noci — noc zkoumá, ráno se jedná.
+- Tlačítko obchodu v prohlížeči.
+
+## Ověření
+
+`pytest tests/meta tests/repo` po každé fázi; `git ls-files evidence` a
+`du -sh evidence` po F1; čerstvá session pro připomínky; `processes.py` pro hlídku;
+`lab.py truth` a „jdi do laboratoře" pro laboratoř; screenshot konzole v 2000 px.
