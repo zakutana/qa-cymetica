@@ -7327,6 +7327,10 @@
           {
             "report_id": 89,
             "status": "paid"
+          },
+          {
+            "report_id": 98,
+            "status": "pending"
           }
         ],
         "refused": [],
@@ -7466,12 +7470,14 @@
         "reverify": true,
         "repair_check": false,
         "reopen": [
-          89
+          89,
+          98
         ],
         "retractions": [],
         "verification_owed": [],
         "correction_owed": [
-          89
+          89,
+          98
         ],
         "disputed": []
       }
@@ -8514,7 +8520,7 @@
     "OUR CHECK CANNOT TELL": 1
   },
   "events_head": {
-    "seq": 1835,
-    "chain": "dbfd4d14ba5599a5b683d954c0e6c438e77c890ffef493ffac57c065a53a7782"
+    "seq": 1837,
+    "chain": "648a26bc9dbe5805564a15b188a50856792512aa4571284567b05c93c5cf8460"
   }
 }

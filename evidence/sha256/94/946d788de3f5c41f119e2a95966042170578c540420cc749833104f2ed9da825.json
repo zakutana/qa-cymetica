@@ -1,0 +1,77 @@
+{
+  "captured_at": "2026-09-12T10:35:38+00:00",
+  "endpoint_rule": null,
+  "nodeid": null,
+  "request": {
+    "body": {
+      "encoding": "json",
+      "truncated": false,
+      "value": {
+        "actual_behavior": "Ten of the eleven authenticated cloned-bots routes in your published document\naccept x-api-key. GET /api/v1/cloned-bots/{instance_id}/activity publishes\nauthorization only, and it was added after the fix.",
+        "category": "api",
+        "description": "This is a follow-up to #89, which you fixed faster than anything else we have\nfiled, and it is not a complaint that the fix broke. It is about the shape of\nthe fix.\nThree readings of your own openapi-public.json, all captured:\n2026-09-07 20:13 to 2026-09-10 20:49 -- 2 of 4 authenticated cloned-bots\nroutes accept x-api-key; /fund and /go-live do not. That is #89, which we\nfiled at 20:52.\n2026-09-10 21:40, forty-eight minutes later -- 9 accept, 0 refuse. Fixed.\n2026-09-12 10:05 -- 11 authenticated routes now, 10 accept, and one does not:\nGET /api/v1/cloned-bots/{instance_id}/activity, which was not in the\nauthenticated set before.\nSo the gap did not come back on a route you repaired. It arrived with a route\nadded afterwards, which is what a per-route fix looks like two days on. If\nx-api-key were the default security for /api/v1/cloned-bots/** with exceptions\ndeclared rather than inclusions, a new route could not reintroduce it, and\nneither of us would have to re-check the surface after every release. That is\nthe actual ask here; the single route is the smaller half.\nWe did not call the route. This is read off your published document, the same\nway #89 was, so what we are reporting is what an agent is told -- and an agent\nthat authenticates the documented way can clone a bot, fund it, take it live\nand read its balance, then cannot read what it did. The activity list is how\nan agent judges its own bot.\n\nMEASURED VALUES (from the live service):\n\n  [CYM-one_credential_carries_a_clone_from_creation_to_funding] 10 cloned-bots route(s) accept the agent's x-api-key and 1 do not: GET /api/v1/cloned-bots/{instance_id}/activity. A clone is created with a practice balance of 0.00, so where the fund route is one of these, an agent that authenticates the documented way can create a bot and, by their own document, cannot put money in it\n    left: ['GET /api/v1/cloned-bots/{instance_id}/activity']\n    right: ['DELETE /api/v1/cloned-bots/{instance_id}', 'GET /api/v1/cloned-bots/my-clones', 'GET /api/v1/cloned-bots/{instance_id}/asset-analytics', 'GET /api/v1/cloned-bots/{instance_id}/balance', 'PATCH /api/v1/cloned-bots/{instance_id}/settings', 'POST /api/v1/cloned-bots/clone', 'POST /api/v1/cloned-bots/{instance_id}/fund', 'POST /api/v1/cloned-bots/{instance_id}/go-live', 'POST /api/v1/cloned-bots/{instance_id}/toggle-trading', 'POST /api/v1/cloned-bots/{instance_id}/withdraw']\n    sources: {'documented': '/openapi-public.json'}\n    population: {'authenticated_routes': 11, 'accept_api_key': 10, 'authorization_only': 1}\n\nREPRODUCE:\n  - curl -s https://cymetica.com/openapi-public.json | jq '.paths | to_entries[] | select(.key | startswith(\"/api/v1/cloned-bots\")) | {path: .key, ops: (.value | to_entries | map({verb: .key, security: .value.security}))}'\n  - Compare with the same document captured 2026-09-10 21:40 UTC, when the same query returned nine routes and every one of them listed x-api-key.\n\nAUTOMATED CHECKS (evidence retained; the request and response behind each are provided on request):\n  tests/rest/test_cloned_bots_surface.py::test_one_credential_carries_a_clone_from_creation_to_funding\n\nReported by an independent QA agent. Scope of this work: verification of the\nREST API, MCP and machine-readable discovery surfaces, read-only except in\npaper mode. What we do execute is paper only and recorded: paper event-card\norders, and one paper bot clone. No live trading, no order against a real\nbook, no deposit or withdrawal, no cleanup, no duplicate tickets. UI defects\nare out of scope. Every figure above was measured directly against the live\nservice, not taken from a document, and each finding ships with the command\nthat reproduces it.",
+        "expected_behavior": "Every authenticated route on one surface takes the same agent credential. #89\nwas exactly this and you fixed it inside an hour.",
+        "hunter_name": "expire76",
+        "severity_reported": "medium",
+        "steps_to_reproduce": "curl -s https://cymetica.com/openapi-public.json | jq '.paths | to_entries[] | select(.key | startswith(\"/api/v1/cloned-bots\")) | {path: .key, ops: (.value | to_entries | map({verb: .key, security: .value.security}))}'\nCompare with the same document captured 2026-09-10 21:40 UTC, when the same query returned nine routes and every one of them listed x-api-key.",
+        "title": "You fixed #89 in 48 minutes and a new cloned-bots route has brought the same gap back: GET /{instance_id}/activity documents authorization only",
+        "url": "https://cymetica.com/openapi-public.json",
+        "wallet_address": "0xde9CeAaB301A9e47b1bAcd448B3DDbbA85e83398"
+      }
+    },
+    "headers": {
+      "accept": "application/json",
+      "accept-encoding": "gzip, deflate, zstd",
+      "connection": "keep-alive",
+      "content-length": "4850",
+      "content-type": "application/json",
+      "host": "cymetica.com",
+      "user-agent": "qa-cymetica/0.1 (independent QA; contact via vendor Telegram channel)"
+    },
+    "method": "POST",
+    "url": "https://cymetica.com/api/v1/bounty/reports"
+  },
+  "response": {
+    "body": {
+      "encoding": "json",
+      "truncated": false,
+      "value": {
+        "message": "Bug report submitted successfully. We'll review it within 48 hours.",
+        "report_id": 98,
+        "success": true
+      }
+    },
+    "elapsed_ms": 4329,
+    "headers": {
+      "cache-control": "no-store, no-cache, must-revalidate, max-age=0",
+      "connection": "keep-alive",
+      "content-encoding": "gzip",
+      "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests",
+      "content-security-policy-report-only": "default-src 'self'; script-src 'self' 'nonce-f2yF+Vw4wdEsUQ4IZ9yYgg==' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'",
+      "content-signal": "ai-train=no, search=yes, ai-input=yes",
+      "content-type": "application/json",
+      "cross-origin-opener-policy": "same-origin-allow-popups",
+      "cross-origin-resource-policy": "cross-origin",
+      "date": "Sat, 12 Sep 2026 10:35:37 GMT",
+      "permissions-policy": "geolocation=(), microphone=(), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=(), browsing-topics=(), attribution-reporting=()",
+      "pragma": "no-cache",
+      "referrer-policy": "strict-origin-when-cross-origin, strict-origin-when-cross-origin",
+      "server": "nginx",
+      "strict-transport-security": "max-age=31536000; includeSubDomains",
+      "transfer-encoding": "chunked",
+      "vary": "Accept-Encoding",
+      "x-ai-strongest-model": "Claude Fable 5",
+      "x-content-type-options": "nosniff, nosniff",
+      "x-dns-prefetch-control": "off",
+      "x-frame-options": "SAMEORIGIN, SAMEORIGIN",
+      "x-ratelimit-limit": "60",
+      "x-ratelimit-remaining": "59",
+      "x-ratelimit-reset": "1789210800",
+      "x-xss-protection": "0"
+    },
+    "reason": "OK",
+    "status_code": 200
+  },
+  "run_id": "script-submit",
+  "tier": "MUTATE"
+}

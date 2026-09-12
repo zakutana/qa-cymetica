@@ -283,3 +283,4 @@ to neodškrtl, nebo to nikdy nebylo další na řadě.
 - [x] 2026-09-12  F6 z `docs/lab-plan.md`: konzole — verdikt v roomu a tabulka výsledků v General
 
 - [x] 2026-09-12  F7 z `docs/lab-plan.md`: noc laboratoře — `lab.py night --until`, jen zkoumání, ráno konec
+- [ ] 2026-09-12  Přeformulovat důvod v `test_one_credential_carries_a_clone_from_creation_to_funding`: větu o `/fund` říkat jen když `/fund` je mezi odmítajícími (šla ven v #98 jako podmíněná). Až se ta kontrola bude měnit tak jako tak — samotný pin cyklus za to nestojí.

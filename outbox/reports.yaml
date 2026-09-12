@@ -2087,6 +2087,61 @@ reports:
       one, an agent gets a different shortlist depending on which of your
       surfaces it read.
 
+  - key: the-api-key-gap-came-back-on-a-new-route
+    findings: [CYM-one_credential_carries_a_clone_from_creation_to_funding]
+    severity: medium
+    category: api
+    url: https://cymetica.com/openapi-public.json
+    title: >-
+      You fixed #89 in 48 minutes and a new cloned-bots route has brought the
+      same gap back: GET /{instance_id}/activity documents authorization only
+    expected: >
+      Every authenticated route on one surface takes the same agent credential.
+      #89 was exactly this and you fixed it inside an hour.
+    actual: >
+      Ten of the eleven authenticated cloned-bots routes in your published
+      document accept x-api-key. GET /api/v1/cloned-bots/{instance_id}/activity
+      publishes authorization only, and it was added after the fix.
+    body: >
+      This is a follow-up to #89, which you fixed faster than anything else we
+      have filed, and it is not a complaint that the fix broke. It is about the
+      shape of the fix.
+
+
+      Three readings of your own openapi-public.json, all captured:
+
+
+      2026-09-07 20:13 to 2026-09-10 20:49 -- 2 of 4 authenticated cloned-bots
+      routes accept x-api-key; /fund and /go-live do not. That is #89, which we
+      filed at 20:52.
+
+
+      2026-09-10 21:40, forty-eight minutes later -- 9 accept, 0 refuse. Fixed.
+
+
+      2026-09-12 10:05 -- 11 authenticated routes now, 10 accept, and one does
+      not: GET /api/v1/cloned-bots/{instance_id}/activity, which was not in the
+      authenticated set before.
+
+
+      So the gap did not come back on a route you repaired. It arrived with a
+      route added afterwards, which is what a per-route fix looks like two days
+      on. If x-api-key were the default security for /api/v1/cloned-bots/**
+      with exceptions declared rather than inclusions, a new route could not
+      reintroduce it, and neither of us would have to re-check the surface after
+      every release. That is the actual ask here; the single route is the
+      smaller half.
+
+
+      We did not call the route. This is read off your published document, the
+      same way #89 was, so what we are reporting is what an agent is told --
+      and an agent that authenticates the documented way can clone a bot, fund
+      it, take it live and read its balance, then cannot read what it did.
+      The activity list is how an agent judges its own bot.
+    steps:
+      - 'curl -s https://cymetica.com/openapi-public.json | jq ''.paths | to_entries[] | select(.key | startswith("/api/v1/cloned-bots")) | {path: .key, ops: (.value | to_entries | map({verb: .key, security: .value.security}))}'''
+      - 'Compare with the same document captured 2026-09-10 21:40 UTC, when the same query returned nine routes and every one of them listed x-api-key.'
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in
