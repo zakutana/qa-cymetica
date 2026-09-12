@@ -8383,9 +8383,17 @@
         "pinned_fingerprint": "a47c31b2f48478acc9bfeb9d167cfa9327b9e812f5787d0fc9076f6eb8274a40"
       },
       "filing": {
-        "state": "NOT_RAISED",
-        "adjudicated_by": null,
-        "reports": [],
+        "state": "RAISED",
+        "adjudicated_by": {
+          "event_id": "20bcb7482769396e5e08a780dbcbc7d8b287266324e5c82d443d9db41298380d",
+          "at": "2026-09-12T07:22:55+00:00"
+        },
+        "reports": [
+          {
+            "report_id": 97,
+            "status": "pending"
+          }
+        ],
         "refused": [],
         "verifications": []
       },
@@ -8398,6 +8406,15 @@
             "run_id": "run-20260912T071855Z-89e486f6"
           },
           "at": "2026-09-12T07:20:59+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "NOT_RAISED",
+          "to": "RAISED",
+          "cause": {
+            "event_id": "20bcb7482769396e5e08a780dbcbc7d8b287266324e5c82d443d9db41298380d"
+          },
+          "at": "2026-09-12T07:22:55+00:00"
         }
       ],
       "regressions": [],
@@ -8521,14 +8538,15 @@
   "run_id": "run-20260912T071855Z-89e486f6",
   "run_level": "V",
   "updated_at": "2026-09-12T07:20:59+00:00",
+  "run_carried": true,
   "counts": {
     "WITHDRAWN": 10,
     "VERIFIED FIXED": 41,
     "STILL REPRODUCIBLE": 1,
-    "NOT RAISED YET": 1
+    "RAISED": 1
   },
   "events_head": {
-    "seq": 1828,
-    "chain": "83a5e7eca0fb540e9c346f04700516e66818e05288e4137bb405e9d67b735cea"
+    "seq": 1830,
+    "chain": "dab0bc75e76e0673da5eeb7cdb169d48fab84ea432e3aa287bf85d8bf74cdaae"
   }
 }

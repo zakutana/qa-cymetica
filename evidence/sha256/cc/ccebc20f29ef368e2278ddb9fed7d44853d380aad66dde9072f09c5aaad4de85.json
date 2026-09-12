@@ -1,0 +1,77 @@
+{
+  "captured_at": "2026-09-12T07:22:55+00:00",
+  "endpoint_rule": null,
+  "nodeid": null,
+  "request": {
+    "body": {
+      "encoding": "json",
+      "truncated": false,
+      "value": {
+        "actual_behavior": "They do not, and the two doors your own map names answer differently about the\nsame strategy. Read at 2026-09-12 07:11 UTC, GET /api/v1/backtest/leaderboard\ngives CryptoBull Bot (Blue) sharpe_ratio 4.6907 with headline_period \"48h /\n354 markets\" over 82 trades -- a figure that moves, since the window rolls.\nget_strategy_returns(\"bt-cryptobull-blue\") gives 5.1594 over 275 trades,\nstamped ran_at 2026-03-15, and its payload carries no period at all: strategy,\nslug, latest_metrics{ran_at, run_id, source, win_rate, sharpe_ratio,\ntotal_trades, max_drawdown_pct, total_return_pct}, note. StockBot (Blue) the\nsame minute: 5.11 over \"24h / 355 markets\" on the leaderboard, 2.70 over 667\ntrades from the tool. The leaderboard itself sorts rows whose headline_period\nspans 24h, 48h, 72h, 120h, 30 days and 6 months into one ranking by that\ncolumn.",
+        "category": "api",
+        "description": "The two numbers are not contradictory and we are not reporting them as such:\nthey are different measurements of the same strategy. That is the defect.\nNothing in either answer says which window it covers, so a caller doing\nexactly what your guide asks puts 5.1594 and 4.6907 in one column and ranks\nthem. The cheapest fix is one field: give get_strategy_returns the same period\nthe leaderboard already publishes -- window, or from/to beside ran_at. A\nsecond, on the page: a Sharpe over 24 hours and a Sharpe over six months in\none sorted list are not comparable, whatever the column header says. Two\nsmaller things on the same path, reported here rather than separately because\nthey are one fix's worth of work. The leaderboard's own slug is rejected by\nthe tool: \"cryptobull-blue\" answers \"unknown strategy\" and \"bt-cryptobull-\nblue\" is what it wants, so an agent walking your map from one door to the\nother has to guess the prefix. And ten of the fourteen leaderboard rows (the\nbot-* species) do not resolve in the tool at all, so most of the ranking\ncannot be cross-read. Context rather than a claim: NEXUS quoted the tool's\nnumbers to our operator as the grounded ranking (CryptoBull Blue 5.16,\nStockBull Red 0.28) while the page ranks StockBull Red second. Whichever is\nthe real one, an agent gets a different shortlist depending on which of your\nsurfaces it read.\n\nMEASURED VALUES (from the live service):\n\n  [CYM-a_published_sharpe_says_what_period_it_covers] 2 of 2 strategies come back from get_strategy_returns with a Sharpe and no period, while the same strategy on /api/v1/backtest/leaderboard carries one -- so ranking them together, which your own guide asks an agent to do, compares windows nothing names. The leaderboard alone spans 120h / 352 markets, 24h / 355 markets, 30 days, 48h / 354 markets, 6 months, 72h / 354 markets\n    left: {'windowless': ['StockBot (Blue)', 'CryptoBull Bot (Red)']}\n    right: {'periods_on_the_leaderboard': ['120h / 352 markets', '24h / 355 markets', '30 days', '48h / 354 markets', '6 months', '72h / 354 markets']}\n    sources: {'ranking': '/api/v1/backtest/leaderboard', 'tool': 'POST /mcp/v1 tools/call get_strategy_returns', 'their_guide': 'Telegram ET-24713, 2026-09-11'}\n    population: {'detail': [{'strategy': 'StockBot (Blue)', 'slug_the_tool_took': 'bt-stockbull-blue', 'slug_on_the_leaderboard': 'stockbull-blue', 'tool_sharpe': 2.7, 'tool_trades': 667, 'leaderboard_sharpe': 5.11, 'leaderboard_trades': 191, 'leaderboard_period': '24h / 355 markets', 'keys_the_tool_returned': ['latest_metrics', 'max_drawdown_pct', 'note', 'ran_at', 'run_id', 'sharpe_ratio', 'slug', 'source', 'strategy', 'total_return_pct', 'total_trades', 'win_rate']}, {'strategy': 'CryptoBull Bot (Red)', 'slug_the_tool_took': 'bt-cryptobull-red', 'slug_on_the_leaderboard': 'cryptobull-red', 'tool_sharpe': 1.6656, 'tool_trades': 209, 'leaderboard_sharpe': 2.9159, 'leaderboard_trades': 80, 'leaderboard_period': '120h / 352 markets', 'keys_the_tool_returned': ['latest_metrics', 'max_drawdown_pct', 'note', 'ran_at', 'run_id', 'sharpe_ratio', 'slug', 'source', 'strategy', 'total_return_pct', 'total_trades', 'win_rate']}], 'not_in_the_tool': ['bot-multi-indicator-ensemble', 'bot-hybrid-rsi-ml', 'bot-gradient-boost-classifier', 'bot-bollinger-breakout', 'bot-hybrid-macd-boost', 'bot-rsi-mean-reversion', 'bot-macd-momentum', 'bot-trend-following-sma', 'bot-volume-surge', 'bot-logistic-signal'], 'read_failed': [], 'compared': 2}\n\nREPRODUCE:\n  - GET /api/v1/backtest/leaderboard -> bots[].sharpe_ratio beside bots[].headline_period\n  - POST /mcp/v1 tools/call get_strategy_returns {\"strategy\": \"bt-cryptobull-blue\"} -> latest_metrics.sharpe_ratio 5.1594, total_trades 275, ran_at 2026-03-15, no period field\n  - POST /mcp/v1 tools/call get_strategy_returns {\"strategy\": \"cryptobull-blue\"} -> {\"error\": \"unknown strategy 'cryptobull-blue'\"}\n\nAUTOMATED CHECKS (evidence retained; the request and response behind each are provided on request):\n  tests/rest/test_backtest_metrics_agree.py::test_a_published_sharpe_says_what_period_it_covers\n\nReported by an independent QA agent. Scope of this work: verification of the\nREST API, MCP and machine-readable discovery surfaces, read-only except in\npaper mode. What we do execute is paper only and recorded: paper event-card\norders, and one paper bot clone. No live trading, no order against a real\nbook, no deposit or withdrawal, no cleanup, no duplicate tickets. UI defects\nare out of scope. Every figure above was measured directly against the live\nservice, not taken from a document, and each finding ships with the command\nthat reproduces it.",
+        "expected_behavior": "Your instruction to agents (Telegram, 2026-09-11) is to pull the backtest\nsurfaces first and \"rank strategies by Sharpe and max-drawdown, not raw\nreturn\". For that to be possible, a published risk-adjusted metric has to say\nwhat period it covers -- either in the payload, or by the surfaces that\npublish it sharing one window.",
+        "hunter_name": "expire76",
+        "severity_reported": "medium",
+        "steps_to_reproduce": "GET /api/v1/backtest/leaderboard -> bots[].sharpe_ratio beside bots[].headline_period\nPOST /mcp/v1 tools/call get_strategy_returns {\"strategy\": \"bt-cryptobull-blue\"} -> latest_metrics.sharpe_ratio 5.1594, total_trades 275, ran_at 2026-03-15, no period field\nPOST /mcp/v1 tools/call get_strategy_returns {\"strategy\": \"cryptobull-blue\"} -> {\"error\": \"unknown strategy 'cryptobull-blue'\"}",
+        "title": "get_strategy_returns publishes Sharpe with no period, so an agent ranking strategies the way your guide asks compares a March backtest with a 48-hour window",
+        "url": "https://cymetica.com/mcp/v1",
+        "wallet_address": "0xde9CeAaB301A9e47b1bAcd448B3DDbbA85e83398"
+      }
+    },
+    "headers": {
+      "accept": "application/json",
+      "accept-encoding": "gzip, deflate, zstd",
+      "connection": "keep-alive",
+      "content-length": "6700",
+      "content-type": "application/json",
+      "host": "cymetica.com",
+      "user-agent": "qa-cymetica/0.1 (independent QA; contact via vendor Telegram channel)"
+    },
+    "method": "POST",
+    "url": "https://cymetica.com/api/v1/bounty/reports"
+  },
+  "response": {
+    "body": {
+      "encoding": "json",
+      "truncated": false,
+      "value": {
+        "message": "Bug report submitted successfully. We'll review it within 48 hours.",
+        "report_id": 97,
+        "success": true
+      }
+    },
+    "elapsed_ms": 3301,
+    "headers": {
+      "cache-control": "no-store, no-cache, must-revalidate, max-age=0",
+      "connection": "keep-alive",
+      "content-encoding": "gzip",
+      "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests",
+      "content-security-policy-report-only": "default-src 'self'; script-src 'self' 'nonce-3usZhbeRi7bQhT1BoPS9Aw==' cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdn.jsdelivr.net unpkg.com code.highcharts.com cdnjs.cloudflare.com accounts.google.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' wss://*.cymetica.com https://*.cymetica.com https://accounts.google.com https://cdn.jsdelivr.net https://mainnet.base.org https://*.publicnode.com https://*.chain.robinhood.com https://*.llamarpc.com https://*.arbitrum.io https://*.alchemy.com wss://api.hyperliquid.xyz wss://api.hyperliquid-testnet.xyz; frame-src 'self' https://dexscreener.com https://accounts.google.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'",
+      "content-signal": "ai-train=no, search=yes, ai-input=yes",
+      "content-type": "application/json",
+      "cross-origin-opener-policy": "same-origin-allow-popups",
+      "cross-origin-resource-policy": "cross-origin",
+      "date": "Sat, 12 Sep 2026 07:22:55 GMT",
+      "permissions-policy": "geolocation=(), microphone=(), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=(), browsing-topics=(), attribution-reporting=()",
+      "pragma": "no-cache",
+      "referrer-policy": "strict-origin-when-cross-origin, strict-origin-when-cross-origin",
+      "server": "nginx",
+      "strict-transport-security": "max-age=31536000; includeSubDomains",
+      "transfer-encoding": "chunked",
+      "vary": "Accept-Encoding",
+      "x-ai-strongest-model": "Claude Fable 5",
+      "x-content-type-options": "nosniff, nosniff",
+      "x-dns-prefetch-control": "off",
+      "x-frame-options": "SAMEORIGIN, SAMEORIGIN",
+      "x-ratelimit-limit": "60",
+      "x-ratelimit-remaining": "59",
+      "x-ratelimit-reset": "1789200000",
+      "x-xss-protection": "0"
+    },
+    "reason": "OK",
+    "status_code": 200
+  },
+  "run_id": "script-submit",
+  "tier": "MUTATE"
+}
