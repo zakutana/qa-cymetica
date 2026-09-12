@@ -278,8 +278,8 @@ to neodškrtl, nebo to nikdy nebylo další na řadě.
 
 - [x] 2026-09-12  F4 z `docs/lab-plan.md`: laboratoř v1 — `lab.py`, skill `laborator`, pravda z backtestů, porovnání katalogu se snímkem
 
-- [ ] 2026-09-12  F5 z `docs/lab-plan.md`: experimenty — kritérium předem, verdikt z jejich historie indexu, převzetí rozjetých roomů
+- [x] 2026-09-12  F5 z `docs/lab-plan.md`: experimenty — kritérium předem, verdikt z jejich historie indexu, převzetí rozjetých roomů
 
-- [ ] 2026-09-12  F6 z `docs/lab-plan.md`: konzole — verdikt v roomu a tabulka výsledků v General
+- [x] 2026-09-12  F6 z `docs/lab-plan.md`: konzole — verdikt v roomu a tabulka výsledků v General
 
 - [ ] 2026-09-12  F7 z `docs/lab-plan.md`: noc laboratoře — `lab.py night --until`, jen zkoumání, ráno konec

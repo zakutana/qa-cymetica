@@ -887,12 +887,33 @@ def build_rooms() -> dict:
     for s in opened:
         changes = history[s["id"]]
         now = changes[-1] if changes else {}
+        # What it was accepted on, and what the numbers said at the end of the
+        # window. A room with neither is one nobody could score afterwards,
+        # and the panel says so rather than leaving the space blank.
+        accepted = store.acceptance_of(stored, s["id"])
+        decided = store.verdict_of(stored, s["id"])
         panels[s["id"]] = {
             "kind": "strategy", "origin": s.get("origin"), "title": titles[s["id"]],
             "opened_at": s.get("at"), "status": now.get("status") or "proposed",
             "why": now.get("why"), "since": now.get("at") or s.get("at"),
             "history": changes, "trades": [], "staked": 0.0, "unclosed": 0,
-            "realized": None, "clones": [], **sampler}
+            "realized": None, "clones": [],
+            "criterion": ({"window_days": accepted.get("window_days"),
+                           "stop_pct": accepted.get("stop_pct"),
+                           "adopted": bool(accepted.get("adopted")),
+                           "benchmark": accepted.get("benchmark_card"),
+                           "at": accepted.get("at"), "why": accepted.get("why")}
+                          if accepted else None),
+            "verdict": ({"verdict": decided.get("verdict"),
+                         "why": decided.get("why"),
+                         "return_pct": decided.get("return_pct"),
+                         "max_drawdown_pct": decided.get("max_drawdown_pct"),
+                         "benchmark_pct": decided.get("benchmark_pct"),
+                         "coverage": decided.get("coverage"),
+                         "at": decided.get("at")}
+                        if decided else None),
+            "claim": (store.claim_of(stored, s["id"]) or {}).get("numbers") or None,
+            **sampler}
         for change in changes:
             place(s["id"], {"kind": "status", "at": change["at"],
                             "status": change["status"], "text": change["why"]},
@@ -1119,17 +1140,39 @@ def build_rooms() -> dict:
                     1 for r in waiting if (r.get("room") or store.GENERAL) == room),
                 # What the strip across the top says of it, at a glance.
                 **{k: panel.get(k) for k in ("holds", "pnl", "pnl_pct", "invested",
-                                             "proposed_share", "if_bought_pct")}}
+                                             "proposed_share", "if_bought_pct",
+                                             "criterion", "verdict")}}
 
     # The paper account as the newest order of ours read it afterwards. Live
     # figures are the sampler's (docs/nexus-rooms-plan.md, P4), not these.
     book = max((r for r in paper if r.get("type") == "after"),
                key=lambda r: str(r.get("at") or ""), default=None) or {}
+    # The scoreboard: every experiment, best first, with what it was accepted
+    # on and what it came to. This is the answer to "which of his strategies
+    # actually made money", which is the whole question the laboratory exists
+    # to answer -- and nothing on this page said it before 2026-09-12.
+    scoreboard = []
+    for s in opened:
+        panel = panels[s["id"]]
+        said = panel.get("verdict") or {}
+        scoreboard.append({
+            "room": s["id"], "title": titles[s["id"]],
+            "status": panel.get("status"),
+            "verdict": said.get("verdict"),
+            "return_pct": said.get("return_pct"),
+            "benchmark_pct": said.get("benchmark_pct"),
+            "drawdown_pct": said.get("max_drawdown_pct"),
+            "pnl": panel.get("pnl"), "pnl_pct": panel.get("pnl_pct"),
+            "criterion": panel.get("criterion"),
+            "claim": panel.get("claim")})
+    scoreboard.sort(key=lambda row: (
+        row["return_pct"] is None, -(row["return_pct"] or 0)))
+
     general = {**_nexus_summary(derived), "strip": [q["outcome"] for q in derived],
                "balance": _num(book.get("sim_balance_usdc")),
                "notional": _num(book.get("notional_usdc")),
                "book_trades": book.get("sim_total_trades"),
-               "balance_at": book.get("at"), **sampler}
+               "balance_at": book.get("at"), "scoreboard": scoreboard, **sampler}
     return {"generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "rooms": [entry(store.GENERAL, "General", "general", None, None)]
             + [entry(s["id"], titles[s["id"]], "strategy", s.get("origin"),
@@ -1809,6 +1852,7 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:15.0px; max-wid
 .nx-tile i{display:block;margin-top:2px;font-style:normal;font-size:12.5px;color:var(--text-faint)}
 .nx-up{color:var(--ok)}
 .nx-down{color:var(--bad)}
+.nx-warn{color:var(--warn)}
 .nx-sec{margin:28px 0 8px;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-faint)}
 .nx-table{font-size:14px}
 .nx-tr{display:grid;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line-soft)}
@@ -1818,7 +1862,7 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:15.0px; max-wid
 .nx-legs .nx-tr{grid-template-columns:minmax(0,2.3fr) .8fr 1.2fr 1.5fr 1.3fr 1fr}
 .nx-trades .nx-tr{grid-template-columns:minmax(0,1.4fr) .8fr .8fr 1.3fr 1.1fr}
 .nx-orders .nx-tr{grid-template-columns:.9fr 1.1fr minmax(0,2.2fr) 1fr}
-.nx-strats .nx-tr{grid-template-columns:minmax(0,2fr) .7fr 1.1fr 1fr 1.1fr}
+.nx-strats .nx-tr{grid-template-columns:minmax(0,1.8fr) .6fr 1fr .9fr 1fr 1.2fr}
 .nx-state{font-size:13px;font-weight:600;color:var(--text-dim)}
 .nx-state.nx-open{color:var(--ok)}
 .nx-state.nx-card-closed{color:var(--text-faint)}
@@ -3691,6 +3735,60 @@ function nxStatus(np) {
       nxGlyph(nh.status) + " <b>" + esc(nh.status || "") + "</b> · " + esc(nxDay(nh.at)) +
       (nh.why ? " — " + esc(nh.why) : "") + "</p>").join("") + "</div>" : "") + "</div>";
 }
+// What a room was accepted on, and what the numbers said at the end of its
+// window. A room with neither is one nobody could score afterwards, so the
+// panel says that first rather than leaving the space blank.
+const NX_SAID = {survived: ["Survived", " nx-up"], refuted: ["Refuted", " nx-down"],
+                 inconclusive: ["Inconclusive", ""], open: ["Still running", ""]};
+// When the verdict becomes computable: the moment it was accepted plus its
+// window, which is the arithmetic qa/lab.py:verdict does -- it starts the
+// window at acceptance["at"], never at the moment the room went running. A
+// window already past says "due now", because then nobody has run the verdict
+// yet and that is the one state worth noticing on this page.
+function nxDue(c) {
+  const t = Date.parse(c.at || ""), d = Number(c.window_days);
+  if (!t || !(d > 0)) return ["—", "no window to close"];
+  const end = new Date(t + d * 86400000).toISOString(), left = nxUntil(end);
+  return left === "closed" ? ["due now", "window closed " + nxDay(end), " nx-warn"]
+                           : [left, "window closes " + nxDay(end), ""];
+}
+function nxVerdict(np) {
+  const c = np.criterion, v = np.verdict;
+  if (!c && !v) {
+    return '<div class="nx-sec">Criterion</div><p class="nx-foot">' +
+      "None written, so nothing could say afterwards whether it worked." +
+      " <code>lab.py adopt</code> writes one, and a room cannot run without it.</p>";
+  }
+  let html = '<div class="nx-sec">Criterion and verdict</div>';
+  if (v) {
+    const said = NX_SAID[v.verdict] || [v.verdict, ""];
+    html += nxTiles([
+      [said[0], v.return_pct != null ? nxPct(v.return_pct, 2) : "—",
+       v.why || "", said[1]],
+      ["Drawdown", v.max_drawdown_pct != null ? nxPct(v.max_drawdown_pct, 2) : "—",
+       c && c.stop_pct != null ? "accepted with a " + nxPct(c.stop_pct, 0) + " stop" : "",
+       ""],
+      ["Benchmark", v.benchmark_pct != null ? nxPct(v.benchmark_pct, 2) : "—",
+       v.benchmark_pct != null ? "a BTC-dominated card, same window" : "none", ""],
+      ["Coverage", v.coverage != null ? Math.round(v.coverage * 100) + " %" : "—",
+       "of the window carries index points",
+       v.coverage != null && v.coverage < 0.8 ? " nx-down" : ""]]);
+  } else {
+    const due = nxDue(c);
+    html += nxTiles([
+      ["Window", (c.window_days != null ? c.window_days : "—") + " d",
+       c.adopted ? "adopted: it started when this was written" : "written before it ran", ""],
+      ["Stop", c.stop_pct != null ? nxPct(c.stop_pct, 0) : "—", "from the entry", ""],
+      ["Benchmark", c.benchmark ? String(c.benchmark).slice(0, 8) : "none",
+       c.benchmark ? "BTC-dominated card" : "nothing to beat", ""],
+      ["Verdict", due[0], due[1], due[2]]]);
+  }
+  if (np.claim) {
+    html += '<p class="nx-foot">Nexus claimed: ' + Object.keys(np.claim).map(
+      k => esc(k) + " " + esc(String(np.claim[k]))).join(" · ") + "</p>";
+  }
+  return html;
+}
 function nxStrategy(nr, np) {
   const nc = (np.clones || [])[0] || null;
   const pills = nxPill(np.status) +
@@ -3700,7 +3798,8 @@ function nxStrategy(nr, np) {
       (nc.trading ? "trading" : "not trading") + "</span>" : "");
   const sub = esc(nr.id) + " · proposed by Nexus in " + esc(np.origin || "—") +
     (np.since ? " · since " + esc(nxDay(np.since)) : "");
-  let html = nxHero(np.title || nr.title || nr.id, pills, sub) + nxStatus(np);
+  let html = nxHero(np.title || nr.title || nr.id, pills, sub) + nxStatus(np) +
+    nxVerdict(np);
   if (nc) {
     const acts = nc.activity || [];
     const closed = acts.filter(na => na.is_closed).length;
@@ -3733,6 +3832,22 @@ function nxBotValue(nr) {
 }
 // The overview: the account, every strategy with where it stands, and how
 // Nexus has answered so far.
+// One cell per strategy: what it came to, or when it will be known, or that
+// nobody wrote down what would count. The operator reads this column to find
+// out which of Nexus's ideas made money, which is the whole question.
+function nxScore(nr) {
+  const v = nr.verdict, c = nr.criterion;
+  if (v) {
+    const said = NX_SAID[v.verdict] || [v.verdict, ""];
+    return '<b class="' + said[1].trim() + '">' + esc(said[0]) + "</b>" +
+      (v.return_pct != null ? " " + esc(nxPct(v.return_pct, 2)) : "");
+  }
+  if (c) {
+    return '<span class="nx-state">' + (c.window_days != null ? c.window_days : "?") +
+      " d window" + (c.adopted ? ", adopted" : "") + "</span>";
+  }
+  return '<span class="nx-state">no criterion</span>';
+}
 function nxGeneral(np) {
   const rooms = ((NX && NX.rooms) || []).filter(nr => nr.kind === "strategy");
   const count = status => rooms.filter(nr => nr.status === status).length;
@@ -3747,7 +3862,7 @@ function nxGeneral(np) {
     '</span><span class="' + nxTone(nr.pnl).trim() + '">' +
     (nr.pnl != null ? esc(nxSigned(nr.pnl)) + " USDC"
       : nr.if_bought_pct != null ? "if bought " + esc(nxPct(nr.if_bought_pct, 2)) : "—") +
-    "</span></div>").join("");
+    "</span><span>" + nxScore(nr) + "</span></div>").join("");
   return nxHero("Overview", "", "Every question put to Nexus, and every strategy it proposed") +
     nxTiles([
       ["Free to trade", np.balance != null ? nxMoney(np.balance) : "—",
@@ -3760,7 +3875,8 @@ function nxGeneral(np) {
        " proposed" + (count("paused") ? " · " + count("paused") + " paused" : ""), ""]]) +
     '<div class="nx-sec">Strategies</div>' + (rooms.length
       ? '<div class="nx-table nx-strats"><div class="nx-tr nx-th"><span>Strategy</span>' +
-        "<span>Holds</span><span>State</span><span>In</span><span>P&amp;L</span></div>" +
+        "<span>Holds</span><span>State</span><span>In</span><span>P&amp;L</span>" +
+        "<span>Verdict</span></div>" +
         table + "</div>"
       : '<p class="nx-foot">A strategy Nexus proposes opens as a card of its own, above.</p>') +
     '<div class="nx-sec">Nexus, every question so far</div>' +

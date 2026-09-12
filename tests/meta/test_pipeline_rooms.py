@@ -687,6 +687,43 @@ def test_the_newest_status_wins_and_every_change_says_why(tmp_path, monkeypatch)
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_panel_and_the_overview_carry_the_criterion_and_the_verdict(
+        tmp_path, monkeypatch):
+    """The operator watches the rooms, so the question the laboratory exists to
+    answer -- which of his ideas made money -- has to be readable there. Before
+    2026-09-12 nothing on the page said it: a room showed a status and a P&L
+    and nothing about what it had been accepted on."""
+    rooms = _rooms_at(tmp_path, monkeypatch)
+    _write(tmp_path / "nexus.jsonl", _answered("NEX-1", 0))
+    rooms.open_strategy("NEX-1", "Karta A")
+    rooms.set_acceptance("STR-0001", window_days=7, stop_pct=5.0,
+                         why="his own stop over his own horizon")
+    rooms.set_status("STR-0001", "running", "TRD-0001 bought 10 000 USDC")
+    rooms.record_verdict("STR-0001", {
+        "verdict": "survived", "why": "it returned +4.20% inside a 1.10% drawdown",
+        "return_pct": 4.2, "max_drawdown_pct": 1.1, "benchmark_pct": 2.0,
+        "coverage": 1.0, "formula": "abc123"})
+
+    view = _render().build_rooms()
+    panel = view["panels"]["STR-0001"]
+    assert panel["criterion"]["window_days"] == 7
+    assert panel["criterion"]["stop_pct"] == 5.0
+    assert panel["criterion"]["at"], (
+        "the page says when the verdict comes due by adding the window to this "
+        "moment, the same arithmetic qa.lab.verdict does; without it the tile "
+        "goes quiet instead of red")
+    assert panel["verdict"]["verdict"] == "survived"
+    assert panel["verdict"]["return_pct"] == 4.2
+
+    board = view["panels"]["general"]["scoreboard"]
+    assert [row["room"] for row in board] == ["STR-0001"]
+    assert board[0]["verdict"] == "survived" and board[0]["return_pct"] == 4.2
+    listed = next(r for r in view["rooms"] if r["id"] == "STR-0001")
+    assert listed["verdict"]["verdict"] == "survived", (
+        "the overview's table reads the room rows, not the panels")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_link_names_only_what_is_on_record(tmp_path, monkeypatch):
     rooms = _rooms_at(tmp_path, monkeypatch)
     _write(tmp_path / "nexus.jsonl", [*_answered("NEX-1", 0), *_answered("NEX-7", 300)])
