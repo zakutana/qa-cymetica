@@ -43,7 +43,8 @@
           "run_id": "run-20260912T204351Z-3bc5adff",
           "at": "2026-09-12T20:52:09+00:00"
         },
-        "pinned_fingerprint": "a00fa16074a898173577cb72f9e863a691aa4bfdb20c43a2d1476189800850ff"
+        "pinned_fingerprint": "a00fa16074a898173577cb72f9e863a691aa4bfdb20c43a2d1476189800850ff",
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -58,8 +59,7 @@
           }
         ],
         "refused": [],
-        "verifications": [],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        "verifications": []
       },
       "transitions": [
         {
@@ -169,7 +169,8 @@
           "run_id": "run-20260912T204351Z-3bc5adff",
           "at": "2026-09-12T20:52:09+00:00"
         },
-        "pinned_fingerprint": "c128bb487c196aee5ab6a08c9bfedce70d99544cab71152a482c5530ad93b4a7"
+        "pinned_fingerprint": "c128bb487c196aee5ab6a08c9bfedce70d99544cab71152a482c5530ad93b4a7",
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -206,8 +207,7 @@
             "verdict": "pass",
             "at": "2026-09-07T21:46:26+00:00"
           }
-        ],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        ]
       },
       "transitions": [
         {
@@ -372,7 +372,8 @@
           "run_id": "run-20260912T204351Z-3bc5adff",
           "at": "2026-09-12T20:52:09+00:00"
         },
-        "pinned_fingerprint": "2150b030a8e4860cf7a2480bc36a2ae989dae3d032e200d87b5667f27c8c236f"
+        "pinned_fingerprint": "2150b030a8e4860cf7a2480bc36a2ae989dae3d032e200d87b5667f27c8c236f",
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -395,8 +396,7 @@
             "verdict": "pass",
             "at": "2026-09-07T13:54:37+00:00"
           }
-        ],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        ]
       },
       "transitions": [
         {
@@ -603,7 +603,8 @@
           "run_id": "run-20260912T204351Z-3bc5adff",
           "at": "2026-09-12T20:52:09+00:00"
         },
-        "pinned_fingerprint": null
+        "pinned_fingerprint": null,
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -613,8 +614,7 @@
         },
         "reports": [],
         "refused": [],
-        "verifications": [],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        "verifications": []
       },
       "transitions": [
         {
@@ -776,7 +776,8 @@
           "at": "2026-09-05T19:56:34+00:00"
         },
         "pinned_fingerprint": "76f53745c4961b0f0a6076e33cd1d16173f41f802d404fbbb746923be506797e",
-        "evidence_only": "run-20260912T204351Z-3bc5adff"
+        "evidence_only": "run-20260912T204351Z-3bc5adff",
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -791,8 +792,7 @@
           }
         ],
         "refused": [],
-        "verifications": [],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        "verifications": []
       },
       "transitions": [
         {
@@ -938,7 +938,8 @@
           "run_id": "run-20260912T204351Z-3bc5adff",
           "at": "2026-09-12T20:52:09+00:00"
         },
-        "pinned_fingerprint": "sha256:9e5564057407dd11f05887c86b3b9017"
+        "pinned_fingerprint": "sha256:9e5564057407dd11f05887c86b3b9017",
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -968,8 +969,7 @@
             "verdict": "pass",
             "at": "2026-09-10T05:09:02+00:00"
           }
-        ],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        ]
       },
       "transitions": [
         {
@@ -1085,7 +1085,8 @@
           "run_id": "run-20260912T204351Z-3bc5adff",
           "at": "2026-09-12T20:52:09+00:00"
         },
-        "pinned_fingerprint": "5ec2ad807e24bbd1d7b1426ec466461d8cacd67ff55a809ed16b497f18351a97"
+        "pinned_fingerprint": "5ec2ad807e24bbd1d7b1426ec466461d8cacd67ff55a809ed16b497f18351a97",
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -1115,8 +1116,7 @@
             "verdict": "pass",
             "at": "2026-09-07T17:42:51+00:00"
           }
-        ],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        ]
       },
       "transitions": [
         {
@@ -1228,7 +1228,8 @@
           "run_id": "run-20260912T204351Z-3bc5adff",
           "at": "2026-09-12T20:52:09+00:00"
         },
-        "pinned_fingerprint": "aee41113b423d34dbb0fb7a237f679ec142e320ffd706e3a3645b1a3b80b4cd5"
+        "pinned_fingerprint": "aee41113b423d34dbb0fb7a237f679ec142e320ffd706e3a3645b1a3b80b4cd5",
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -1251,8 +1252,7 @@
             "verdict": "pass",
             "at": "2026-09-07T13:32:26+00:00"
           }
-        ],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        ]
       },
       "transitions": [
         {
@@ -1371,7 +1371,8 @@
           "run_id": "run-20260912T204351Z-3bc5adff",
           "at": "2026-09-12T20:52:09+00:00"
         },
-        "pinned_fingerprint": "sha256:480bd5eb9d55f9495ccad7c95a78bea9"
+        "pinned_fingerprint": "sha256:480bd5eb9d55f9495ccad7c95a78bea9",
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -1401,8 +1402,7 @@
             "verdict": "pass",
             "at": "2026-09-10T05:08:33+00:00"
           }
-        ],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        ]
       },
       "transitions": [
         {
@@ -1514,7 +1514,8 @@
           "run_id": "run-20260912T204351Z-3bc5adff",
           "at": "2026-09-12T20:52:09+00:00"
         },
-        "pinned_fingerprint": "sha256:6156cefe281b0c01af3a3391dce65475"
+        "pinned_fingerprint": "sha256:6156cefe281b0c01af3a3391dce65475",
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -1537,8 +1538,7 @@
             "verdict": "pass",
             "at": "2026-09-07T13:33:53+00:00"
           }
-        ],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        ]
       },
       "transitions": [
         {
@@ -1619,11 +1619,7 @@
         "state": "UNVERIFIABLE",
         "adjudicated_by": null,
         "pinned_fingerprint": null,
-        "not_checked_in": "run-20260912T120008Z-46a6f7d0",
-        "missing_checks": [
-          "tests/reconciliation/test_reconcile.py::test_sources_agree[chain_count::live_chains-vs-mcp_json]"
-        ],
-        "unverifiable_reason": "check_missing"
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -1638,8 +1634,7 @@
           }
         ],
         "refused": [],
-        "verifications": [],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        "verifications": []
       },
       "transitions": [
         {
@@ -1722,7 +1717,8 @@
           "run_id": "run-20260912T204351Z-3bc5adff",
           "at": "2026-09-12T20:52:09+00:00"
         },
-        "pinned_fingerprint": "7d407afa861e77a3cf508bd4322059dcb57278fd95b3e61c32246e840a94b4ee"
+        "pinned_fingerprint": "7d407afa861e77a3cf508bd4322059dcb57278fd95b3e61c32246e840a94b4ee",
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -1756,8 +1752,7 @@
             "verdict": "pass",
             "at": "2026-09-07T13:54:19+00:00"
           }
-        ],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        ]
       },
       "transitions": [
         {
@@ -1866,7 +1861,8 @@
           "run_id": "run-20260912T204351Z-3bc5adff",
           "at": "2026-09-12T20:52:09+00:00"
         },
-        "pinned_fingerprint": "sha256:f3d9b4a71fbf227f926c530f5d62476d"
+        "pinned_fingerprint": "sha256:f3d9b4a71fbf227f926c530f5d62476d",
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -1903,8 +1899,7 @@
             "verdict": "pass",
             "at": "2026-09-10T05:08:39+00:00"
           }
-        ],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        ]
       },
       "transitions": [
         {
@@ -2042,7 +2037,8 @@
           "run_id": "run-20260912T204351Z-3bc5adff",
           "at": "2026-09-12T20:52:09+00:00"
         },
-        "pinned_fingerprint": "b29402efa7bf2470bde86d34d23e67843ebdc1e6f2fcb235b26081136d119299"
+        "pinned_fingerprint": "b29402efa7bf2470bde86d34d23e67843ebdc1e6f2fcb235b26081136d119299",
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -2126,8 +2122,7 @@
             "verdict": "pass",
             "at": "2026-09-07T17:43:30+00:00"
           }
-        ],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        ]
       },
       "transitions": [
         {
@@ -2328,7 +2323,8 @@
           "run_id": "run-20260912T204351Z-3bc5adff",
           "at": "2026-09-12T20:52:09+00:00"
         },
-        "pinned_fingerprint": "sha256:c92311ababf484c409f09471d3d2b835"
+        "pinned_fingerprint": "sha256:c92311ababf484c409f09471d3d2b835",
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -2376,8 +2372,7 @@
             "verdict": "pass",
             "at": "2026-09-07T21:46:59+00:00"
           }
-        ],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        ]
       },
       "transitions": [
         {
@@ -2525,13 +2520,7 @@
         "state": "UNVERIFIABLE",
         "adjudicated_by": null,
         "pinned_fingerprint": null,
-        "not_checked_in": "run-20260912T120008Z-46a6f7d0",
-        "missing_checks": [
-          "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_count::llms_txt-vs-mcp_anon]",
-          "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_count::llms_txt-vs-mcp_json]",
-          "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_count::llms_txt-vs-mcp_trusted]"
-        ],
-        "unverifiable_reason": "check_missing"
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -2546,8 +2535,7 @@
           }
         ],
         "refused": [],
-        "verifications": [],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        "verifications": []
       },
       "transitions": [
         {
@@ -2717,7 +2705,8 @@
           "run_id": "run-20260912T204351Z-3bc5adff",
           "at": "2026-09-12T20:52:09+00:00"
         },
-        "pinned_fingerprint": "sha256:3bd11ec340a31060a08d40b5e9a262d7"
+        "pinned_fingerprint": "sha256:3bd11ec340a31060a08d40b5e9a262d7",
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -2747,8 +2736,7 @@
             "verdict": "pass",
             "at": "2026-09-10T05:08:47+00:00"
           }
-        ],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        ]
       },
       "transitions": [
         {
@@ -2917,7 +2905,8 @@
           "run_id": "run-20260912T204351Z-3bc5adff",
           "at": "2026-09-12T20:52:09+00:00"
         },
-        "pinned_fingerprint": "sha256:9e5564057407dd11f05887c86b3b9017"
+        "pinned_fingerprint": "sha256:9e5564057407dd11f05887c86b3b9017",
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -2947,8 +2936,7 @@
             "verdict": "pass",
             "at": "2026-09-10T05:08:52+00:00"
           }
-        ],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        ]
       },
       "transitions": [
         {
@@ -3090,7 +3078,8 @@
           "run_id": "run-20260912T204351Z-3bc5adff",
           "at": "2026-09-12T20:52:09+00:00"
         },
-        "pinned_fingerprint": "sha256:9e5564057407dd11f05887c86b3b9017"
+        "pinned_fingerprint": "sha256:9e5564057407dd11f05887c86b3b9017",
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -3120,8 +3109,7 @@
             "verdict": "pass",
             "at": "2026-09-10T05:08:57+00:00"
           }
-        ],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        ]
       },
       "transitions": [
         {
@@ -3245,8 +3233,7 @@
         },
         "reports": [],
         "refused": [],
-        "verifications": [],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        "verifications": []
       },
       "transitions": [
         {
@@ -3298,7 +3285,8 @@
           "run_id": "run-20260912T204351Z-3bc5adff",
           "at": "2026-09-12T20:52:09+00:00"
         },
-        "pinned_fingerprint": "7e9fa3b315c02dbafde5c9fd268cdc7c32c6019c6dbfe7476611705cb1c95608"
+        "pinned_fingerprint": "7e9fa3b315c02dbafde5c9fd268cdc7c32c6019c6dbfe7476611705cb1c95608",
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -3321,8 +3309,7 @@
             "verdict": "pass",
             "at": "2026-09-07T13:34:15+00:00"
           }
-        ],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        ]
       },
       "transitions": [
         {
@@ -3456,7 +3443,8 @@
           "run_id": "run-20260912T204351Z-3bc5adff",
           "at": "2026-09-12T20:52:09+00:00"
         },
-        "pinned_fingerprint": null
+        "pinned_fingerprint": null,
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -3466,8 +3454,7 @@
         },
         "reports": [],
         "refused": [],
-        "verifications": [],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        "verifications": []
       },
       "transitions": [
         {
@@ -3556,7 +3543,8 @@
           "run_id": "run-20260912T204351Z-3bc5adff",
           "at": "2026-09-12T20:52:09+00:00"
         },
-        "pinned_fingerprint": null
+        "pinned_fingerprint": null,
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -3566,8 +3554,7 @@
         },
         "reports": [],
         "refused": [],
-        "verifications": [],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        "verifications": []
       },
       "transitions": [
         {
@@ -3637,11 +3624,7 @@
           "at": "2026-09-07T17:40:13+00:00"
         },
         "pinned_fingerprint": "5e9d6943c1eaf398d598a59460e9acdf2a187f99ecb323ce600818b417cefeae",
-        "not_checked_in": "run-20260912T120008Z-46a6f7d0",
-        "missing_checks": [
-          "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/vaix/prices]"
-        ],
-        "unverifiable_reason": "check_missing"
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -3651,8 +3634,7 @@
         },
         "reports": [],
         "refused": [],
-        "verifications": [],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        "verifications": []
       },
       "transitions": [
         {
@@ -3754,7 +3736,8 @@
           "run_id": "run-20260912T204351Z-3bc5adff",
           "at": "2026-09-12T20:52:09+00:00"
         },
-        "pinned_fingerprint": "63b5af80410517bcd0f649fe3bfddfbb4986eb2d467a60c979a1bc66dc452220"
+        "pinned_fingerprint": "63b5af80410517bcd0f649fe3bfddfbb4986eb2d467a60c979a1bc66dc452220",
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -3784,8 +3767,7 @@
             "verdict": "pass",
             "at": "2026-09-07T21:46:31+00:00"
           }
-        ],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        ]
       },
       "transitions": [
         {
@@ -3909,7 +3891,8 @@
           "run_id": "run-20260912T204351Z-3bc5adff",
           "at": "2026-09-12T20:52:09+00:00"
         },
-        "pinned_fingerprint": "4eab7cd9650f8ced35800751c28bd5162702733480316dfc25703dba65a04397"
+        "pinned_fingerprint": "4eab7cd9650f8ced35800751c28bd5162702733480316dfc25703dba65a04397",
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -3987,8 +3970,7 @@
             "verdict": "pass",
             "at": "2026-09-08T15:15:56+00:00"
           }
-        ],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        ]
       },
       "transitions": [
         {
@@ -4176,7 +4158,8 @@
           "run_id": "run-20260912T204351Z-3bc5adff",
           "at": "2026-09-12T20:52:09+00:00"
         },
-        "pinned_fingerprint": "bbdc1d54bf684a9e645532950d2a04740ef9083655d287ae7dd192a9d16dfab5"
+        "pinned_fingerprint": "bbdc1d54bf684a9e645532950d2a04740ef9083655d287ae7dd192a9d16dfab5",
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -4199,8 +4182,7 @@
             "verdict": "pass",
             "at": "2026-09-07T13:33:48+00:00"
           }
-        ],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        ]
       },
       "transitions": [
         {
@@ -4295,7 +4277,8 @@
           "run_id": "run-20260912T204351Z-3bc5adff",
           "at": "2026-09-12T20:52:09+00:00"
         },
-        "pinned_fingerprint": "fab9ea34aa0eefe65a940f193a856ca6e13426fdee9c14c85bd53118a81b3ba5"
+        "pinned_fingerprint": "fab9ea34aa0eefe65a940f193a856ca6e13426fdee9c14c85bd53118a81b3ba5",
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -4325,8 +4308,7 @@
             "verdict": "pass",
             "at": "2026-09-07T17:42:57+00:00"
           }
-        ],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        ]
       },
       "transitions": [
         {
@@ -4486,7 +4468,8 @@
           "run_id": "run-20260912T204351Z-3bc5adff",
           "at": "2026-09-12T20:52:09+00:00"
         },
-        "pinned_fingerprint": "04cf163554964f44f24aae44e443668700ca69347c90e518ffd3a2cff7d10810"
+        "pinned_fingerprint": "04cf163554964f44f24aae44e443668700ca69347c90e518ffd3a2cff7d10810",
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -4523,8 +4506,7 @@
             "verdict": "pass",
             "at": "2026-09-07T14:27:11+00:00"
           }
-        ],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        ]
       },
       "transitions": [
         {
@@ -4663,7 +4645,8 @@
           "at": "2026-09-10T21:43:39+00:00"
         },
         "pinned_fingerprint": "d8c89bb5d9dfb6abe6d9f240604f15d80183028892047d05a574abc9740d5a4c",
-        "evidence_only": "run-20260912T204351Z-3bc5adff"
+        "evidence_only": "run-20260912T204351Z-3bc5adff",
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -4697,8 +4680,7 @@
             "verdict": "pass",
             "at": "2026-09-07T13:33:44+00:00"
           }
-        ],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        ]
       },
       "transitions": [
         {
@@ -4835,7 +4817,8 @@
           "run_id": "run-20260912T204351Z-3bc5adff",
           "at": "2026-09-12T20:52:09+00:00"
         },
-        "pinned_fingerprint": "e8b6dc45879b9d4219d1818f07ca3b841ece9be3f5c8752248b97cea47b22833"
+        "pinned_fingerprint": "e8b6dc45879b9d4219d1818f07ca3b841ece9be3f5c8752248b97cea47b22833",
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -4911,8 +4894,7 @@
             "verdict": "pass",
             "at": "2026-09-08T15:15:46+00:00"
           }
-        ],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        ]
       },
       "transitions": [
         {
@@ -5073,7 +5055,8 @@
           "run_id": "run-20260912T204351Z-3bc5adff",
           "at": "2026-09-12T20:52:09+00:00"
         },
-        "pinned_fingerprint": "ada0068b55c66e5e02f8048f4302d1077cf6a57c4527faa3e8dc4abe6bc5a1fd"
+        "pinned_fingerprint": "ada0068b55c66e5e02f8048f4302d1077cf6a57c4527faa3e8dc4abe6bc5a1fd",
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -5117,8 +5100,7 @@
             "verdict": "pass",
             "at": "2026-09-08T15:16:05+00:00"
           }
-        ],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        ]
       },
       "transitions": [
         {
@@ -5313,7 +5295,8 @@
           "run_id": "run-20260912T204351Z-3bc5adff",
           "at": "2026-09-12T20:52:09+00:00"
         },
-        "pinned_fingerprint": "b5ad3dc6a3b54e17185484837e8bac5bef42f551adedbe435b807c3a0d81945b"
+        "pinned_fingerprint": "b5ad3dc6a3b54e17185484837e8bac5bef42f551adedbe435b807c3a0d81945b",
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -5350,8 +5333,7 @@
             "verdict": "pass",
             "at": "2026-09-08T15:16:00+00:00"
           }
-        ],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        ]
       },
       "transitions": [
         {
@@ -5481,7 +5463,8 @@
           "run_id": "run-20260912T204351Z-3bc5adff",
           "at": "2026-09-12T20:52:09+00:00"
         },
-        "pinned_fingerprint": "0760ba619fbd7a06945b43cc499e2a739d906a4deb8ebe97cd3dbd484d066d37"
+        "pinned_fingerprint": "0760ba619fbd7a06945b43cc499e2a739d906a4deb8ebe97cd3dbd484d066d37",
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -5504,8 +5487,7 @@
             "verdict": "pass",
             "at": "2026-09-07T21:47:03+00:00"
           }
-        ],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        ]
       },
       "transitions": [
         {
@@ -5619,7 +5601,8 @@
           "run_id": "run-20260912T204351Z-3bc5adff",
           "at": "2026-09-12T20:52:09+00:00"
         },
-        "pinned_fingerprint": "92c230648502812ed80e88cfba49ef71ca8303fae2f1ac8a4ea40bb2bb1a90d1"
+        "pinned_fingerprint": "92c230648502812ed80e88cfba49ef71ca8303fae2f1ac8a4ea40bb2bb1a90d1",
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -5642,8 +5625,7 @@
             "verdict": "pass",
             "at": "2026-09-07T21:47:46+00:00"
           }
-        ],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        ]
       },
       "transitions": [
         {
@@ -5754,7 +5736,8 @@
           "run_id": "run-20260912T204351Z-3bc5adff",
           "at": "2026-09-12T20:52:09+00:00"
         },
-        "pinned_fingerprint": "490328669c50d9e10b4917f7d34e5974d460a08e4aa608ac77a148651c77c6d8"
+        "pinned_fingerprint": "490328669c50d9e10b4917f7d34e5974d460a08e4aa608ac77a148651c77c6d8",
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -5784,8 +5767,7 @@
             "verdict": "pass",
             "at": "2026-09-08T15:16:09+00:00"
           }
-        ],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        ]
       },
       "transitions": [
         {
@@ -5908,7 +5890,8 @@
           "run_id": "run-20260912T204351Z-3bc5adff",
           "at": "2026-09-12T20:52:09+00:00"
         },
-        "pinned_fingerprint": "236c68e92be50b732a7a4ae6b4890fbf1213c7cd4cae533b240ad125fcc15d25"
+        "pinned_fingerprint": "236c68e92be50b732a7a4ae6b4890fbf1213c7cd4cae533b240ad125fcc15d25",
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -5938,8 +5921,7 @@
             "verdict": "pass",
             "at": "2026-09-08T13:25:44+00:00"
           }
-        ],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        ]
       },
       "transitions": [
         {
@@ -6044,7 +6026,8 @@
           "run_id": "run-20260912T204351Z-3bc5adff",
           "at": "2026-09-12T20:52:09+00:00"
         },
-        "pinned_fingerprint": "ba32011ff9878149115a486791636008104e030dc9216745a19505bade147ba4"
+        "pinned_fingerprint": "ba32011ff9878149115a486791636008104e030dc9216745a19505bade147ba4",
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -6074,8 +6057,7 @@
             "verdict": "pass",
             "at": "2026-09-08T15:16:14+00:00"
           }
-        ],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        ]
       },
       "transitions": [
         {
@@ -6191,7 +6173,8 @@
           "run_id": "run-20260912T204351Z-3bc5adff",
           "at": "2026-09-12T20:52:09+00:00"
         },
-        "pinned_fingerprint": "c07738dfe41ae11926fab9b971579f7d72aac31b8f06b734755cb384f8c8786c"
+        "pinned_fingerprint": "c07738dfe41ae11926fab9b971579f7d72aac31b8f06b734755cb384f8c8786c",
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -6221,8 +6204,7 @@
             "verdict": "pass",
             "at": "2026-09-08T15:16:24+00:00"
           }
-        ],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        ]
       },
       "transitions": [
         {
@@ -6355,7 +6337,8 @@
           "run_id": "run-20260912T204351Z-3bc5adff",
           "at": "2026-09-12T20:52:09+00:00"
         },
-        "pinned_fingerprint": "c504687a8affa03c127572e1fea10a615c12e3d943b6f886dc29b745c94664f0"
+        "pinned_fingerprint": "c504687a8affa03c127572e1fea10a615c12e3d943b6f886dc29b745c94664f0",
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -6378,8 +6361,7 @@
             "verdict": "pass",
             "at": "2026-09-08T15:15:32+00:00"
           }
-        ],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        ]
       },
       "transitions": [
         {
@@ -6484,11 +6466,7 @@
           "at": "2026-09-10T04:56:30+00:00"
         },
         "pinned_fingerprint": "05d129030ccb0a67babee3e9b1383e236e0bc719fd5e42f532cb727b83375d1a",
-        "not_checked_in": "run-20260912T120008Z-46a6f7d0",
-        "missing_checks": [
-          "tests/rest/test_portfolio_summary.py::test_the_summary_does_not_report_a_history_the_positions_contradict"
-        ],
-        "unverifiable_reason": "check_missing"
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -6511,8 +6489,7 @@
             "verdict": "fail",
             "at": "2026-09-08T15:16:18+00:00"
           }
-        ],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        ]
       },
       "transitions": [
         {
@@ -6609,14 +6586,14 @@
           "run_id": "run-20260910T110122Z-44e2cd2"
         }
       },
-      "reproductions": 14,
+      "reproductions": 15,
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20260912T204351Z-3bc5adff",
-          "at": "2026-09-12T20:52:09+00:00"
+          "run_id": "run-20260912T215105Z-67792f88",
+          "at": "2026-09-12T21:54:02+00:00"
         },
-        "pinned_fingerprint": "ce960765d70f2c13cca03880d70e9a1e7557a30f9c28dd61611e6c3252c489ed"
+        "pinned_fingerprint": "c14ac1067a61705f52744e4ce05e91c8bc10ace80cbb3e0f4d331c601164ba17"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -6674,8 +6651,7 @@
             "verdict": "fail",
             "at": "2026-09-12T21:02:39+00:00"
           }
-        ],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        ]
       },
       "transitions": [
         {
@@ -6756,7 +6732,8 @@
         "run-20260911T151835Z-31ec9b3e",
         "run-20260911T174358Z-c0e379b9",
         "run-20260912T102120Z-8f82b723",
-        "run-20260912T204351Z-3bc5adff"
+        "run-20260912T204351Z-3bc5adff",
+        "run-20260912T215105Z-67792f88"
       ],
       "component": "mcp.tools_call",
       "section": "tools_call",
@@ -6790,8 +6767,8 @@
         "reason": "4 of 5 did not answer at all (NEX-0022: failed)"
       },
       "provenance": {
-        "run_id": "run-20260912T204351Z-3bc5adff",
-        "measured_at": "2026-09-12T20:52:09+00:00"
+        "run_id": "run-20260912T215105Z-67792f88",
+        "measured_at": "2026-09-12T21:54:02+00:00"
       },
       "obligations": {
         "reverify": true,
@@ -6820,7 +6797,8 @@
           "run_id": "run-20260912T204351Z-3bc5adff",
           "at": "2026-09-12T20:52:09+00:00"
         },
-        "pinned_fingerprint": "c0260ccc81d31eed5db260e9aa71892030cef7ff5a089ba6d42a0dc52510983c"
+        "pinned_fingerprint": "c0260ccc81d31eed5db260e9aa71892030cef7ff5a089ba6d42a0dc52510983c",
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -6864,8 +6842,7 @@
             "verdict": "fail",
             "at": "2026-09-10T21:46:08+00:00"
           }
-        ],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        ]
       },
       "transitions": [
         {
@@ -7027,7 +7004,8 @@
           "run_id": "run-20260912T204351Z-3bc5adff",
           "at": "2026-09-12T20:52:09+00:00"
         },
-        "pinned_fingerprint": "683fdd876eb2d0049f2a12a2c627bce72b54436c423dc695b21442e4f885f7a5"
+        "pinned_fingerprint": "683fdd876eb2d0049f2a12a2c627bce72b54436c423dc695b21442e4f885f7a5",
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -7064,8 +7042,7 @@
             "verdict": "pass",
             "at": "2026-09-11T17:58:54+00:00"
           }
-        ],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        ]
       },
       "transitions": [
         {
@@ -7212,7 +7189,8 @@
           "run_id": "run-20260912T204351Z-3bc5adff",
           "at": "2026-09-12T20:52:09+00:00"
         },
-        "pinned_fingerprint": "a5a96d23baa537c0c4212d80006a05d6e37e3ae7f3e65f0e512dfd35bea7630b"
+        "pinned_fingerprint": "a5a96d23baa537c0c4212d80006a05d6e37e3ae7f3e65f0e512dfd35bea7630b",
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -7242,8 +7220,7 @@
             "verdict": "pass",
             "at": "2026-09-11T17:59:16+00:00"
           }
-        ],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        ]
       },
       "transitions": [
         {
@@ -7365,12 +7342,12 @@
           "run_id": "run-20260910T205116Z-80ff405"
         }
       },
-      "reproductions": 3,
+      "reproductions": 4,
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20260912T204351Z-3bc5adff",
-          "at": "2026-09-12T20:52:09+00:00"
+          "run_id": "run-20260912T215105Z-67792f88",
+          "at": "2026-09-12T21:54:02+00:00"
         },
         "pinned_fingerprint": "97e5b904e1094ff2b00f2375482cff9fc5fc53a2daab4c47aa343d8ee2c0f3cb"
       },
@@ -7420,8 +7397,7 @@
             "verdict": "fail",
             "at": "2026-09-12T21:02:53+00:00"
           }
-        ],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        ]
       },
       "transitions": [
         {
@@ -7500,7 +7476,8 @@
       "reproduced_in": [
         "run-20260910T205116Z-80ff405",
         "run-20260912T102120Z-8f82b723",
-        "run-20260912T204351Z-3bc5adff"
+        "run-20260912T204351Z-3bc5adff",
+        "run-20260912T215105Z-67792f88"
       ],
       "component": "rest.agents",
       "section": "agents",
@@ -7536,8 +7513,8 @@
         "reason": "10 cloned-bots route(s) accept the agent's x-api-key and 1 do not: GET /api/v1/cloned-bots/{instance_id}/activity. A clone is created with a practice balance of 0.00, so where the fund route is one of these, an agent that authenticates the documented way can create a bot and, by their own document, cannot put money in it"
       },
       "provenance": {
-        "run_id": "run-20260912T204351Z-3bc5adff",
-        "measured_at": "2026-09-12T20:52:09+00:00"
+        "run_id": "run-20260912T215105Z-67792f88",
+        "measured_at": "2026-09-12T21:54:02+00:00"
       },
       "obligations": {
         "reverify": true,
@@ -7564,8 +7541,8 @@
       "check": {
         "state": "INCONCLUSIVE",
         "adjudicated_by": {
-          "run_id": "run-20260912T204351Z-3bc5adff",
-          "at": "2026-09-12T20:52:09+00:00"
+          "run_id": "run-20260912T215105Z-67792f88",
+          "at": "2026-09-12T21:54:02+00:00"
         },
         "pinned_fingerprint": "4cf270aecd9b272a50054b663b6672676af031bac03800b29766f654b9112a0e"
       },
@@ -7597,8 +7574,7 @@
             "verdict": "pass",
             "at": "2026-09-11T17:59:06+00:00"
           }
-        ],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        ]
       },
       "transitions": [
         {
@@ -7699,8 +7675,8 @@
         "reason": "every one of the 2 card(s) named in NEX-0019 resolves"
       },
       "provenance": {
-        "run_id": "run-20260912T204351Z-3bc5adff",
-        "measured_at": "2026-09-12T20:52:09+00:00"
+        "run_id": "run-20260912T215105Z-67792f88",
+        "measured_at": "2026-09-12T21:54:02+00:00"
       },
       "obligations": {
         "reverify": true,
@@ -7727,7 +7703,8 @@
           "run_id": "run-20260912T204351Z-3bc5adff",
           "at": "2026-09-12T20:52:09+00:00"
         },
-        "pinned_fingerprint": "f10984755a3fc80f40bb0b3a95098751d68b43fa5d8026e16a66405692f0bd97"
+        "pinned_fingerprint": "f10984755a3fc80f40bb0b3a95098751d68b43fa5d8026e16a66405692f0bd97",
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -7757,8 +7734,7 @@
             "verdict": "pass",
             "at": "2026-09-11T18:00:18+00:00"
           }
-        ],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        ]
       },
       "transitions": [
         {
@@ -7894,7 +7870,8 @@
           "run_id": "run-20260912T204351Z-3bc5adff",
           "at": "2026-09-12T20:52:09+00:00"
         },
-        "pinned_fingerprint": "baf436747483adfa85430a04b2119a0cc05ab880f86d558e2855580a2a9c2687"
+        "pinned_fingerprint": "baf436747483adfa85430a04b2119a0cc05ab880f86d558e2855580a2a9c2687",
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -7917,8 +7894,7 @@
             "verdict": "pass",
             "at": "2026-09-11T06:01:13+00:00"
           }
-        ],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        ]
       },
       "transitions": [
         {
@@ -8028,7 +8004,8 @@
           "run_id": "run-20260912T204351Z-3bc5adff",
           "at": "2026-09-12T20:52:09+00:00"
         },
-        "pinned_fingerprint": "b336927c694c0ad968b9678055feeec4e59093850ffbb71522eb3286c9165335"
+        "pinned_fingerprint": "b336927c694c0ad968b9678055feeec4e59093850ffbb71522eb3286c9165335",
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -8051,8 +8028,7 @@
             "verdict": "pass",
             "at": "2026-09-11T05:45:30+00:00"
           }
-        ],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        ]
       },
       "transitions": [
         {
@@ -8152,7 +8128,8 @@
           "run_id": "run-20260912T204351Z-3bc5adff",
           "at": "2026-09-12T20:52:09+00:00"
         },
-        "pinned_fingerprint": "4f6665a41151d607e31b19cc0950ae341cf1b49e38add9846f613d1a1181f84d"
+        "pinned_fingerprint": "4f6665a41151d607e31b19cc0950ae341cf1b49e38add9846f613d1a1181f84d",
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -8193,8 +8170,7 @@
             "verdict": "pass",
             "at": "2026-09-11T17:58:43+00:00"
           }
-        ],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        ]
       },
       "transitions": [
         {
@@ -8310,7 +8286,8 @@
           "run_id": "run-20260912T204351Z-3bc5adff",
           "at": "2026-09-12T20:52:09+00:00"
         },
-        "pinned_fingerprint": "f6206c3e45fa527784fe102e6836979651737e448416a238fb2b70ef8bd23eb0"
+        "pinned_fingerprint": "f6206c3e45fa527784fe102e6836979651737e448416a238fb2b70ef8bd23eb0",
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -8340,8 +8317,7 @@
             "verdict": "pass",
             "at": "2026-09-11T17:58:59+00:00"
           }
-        ],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        ]
       },
       "transitions": [
         {
@@ -8469,7 +8445,8 @@
           "run_id": "run-20260912T204351Z-3bc5adff",
           "at": "2026-09-12T20:52:09+00:00"
         },
-        "pinned_fingerprint": "d350e3be5dd059a7593e42828f974edae44589a4ad2ba75eadddd73e8dd7dc5b"
+        "pinned_fingerprint": "d350e3be5dd059a7593e42828f974edae44589a4ad2ba75eadddd73e8dd7dc5b",
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -8492,8 +8469,7 @@
             "verdict": "pass",
             "at": "2026-09-12T21:02:44+00:00"
           }
-        ],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        ]
       },
       "transitions": [
         {
@@ -8620,7 +8596,8 @@
           "run_id": "run-20260912T204351Z-3bc5adff",
           "at": "2026-09-12T20:52:09+00:00"
         },
-        "pinned_fingerprint": "d914e6a67a81c1a3ad533530f2fb30b7e58f4924bedcf1c341324e490c4c3947"
+        "pinned_fingerprint": "d914e6a67a81c1a3ad533530f2fb30b7e58f4924bedcf1c341324e490c4c3947",
+        "not_checked_in": "run-20260912T215105Z-67792f88"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -8643,8 +8620,7 @@
             "verdict": "pass",
             "at": "2026-09-12T21:02:34+00:00"
           }
-        ],
-        "stale_from": "2026-09-12T21:01:06+00:00"
+        ]
       },
       "transitions": [
         {
@@ -8784,10 +8760,9 @@
       }
     }
   },
-  "run_id": "run-20260912T204351Z-3bc5adff",
+  "run_id": "run-20260912T215105Z-67792f88",
   "run_level": "V",
-  "updated_at": "2026-09-12T20:52:09+00:00",
-  "run_carried": true,
+  "updated_at": "2026-09-12T21:54:02+00:00",
   "counts": {
     "WITHDRAWN": 10,
     "VERIFIED FIXED": 41,
@@ -8795,7 +8770,7 @@
     "OUR CHECK CANNOT TELL": 1
   },
   "events_head": {
-    "seq": 1860,
-    "chain": "4988ade927eb2815ffbbec765d2dcbabe6feb622605f8c4263f568b613faf14c"
+    "seq": 1863,
+    "chain": "560a099d3632491eced1e1eadcb0128ba410e95b1041e0fdf831be0148e7cbe0"
   }
 }
