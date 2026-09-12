@@ -130,7 +130,7 @@ to neodškrtl, nebo to nikdy nebylo další na řadě.
 - [x] 2026-09-12  N3 z `docs/lab-plan.md`: hledání — semínka z karet a Nexusových plánů, okolí přes okna a váhy
 - [x] 2026-09-12  N4 z `docs/lab-plan.md`: noc na dvoje hodiny a stropy experimentů 50 / 2 % / 60 %
 - [x] 2026-09-12  N5 z `docs/lab-plan.md`: `lab.py grade` — předpověděl náš žebříček verdikt?
-- [ ] 2026-09-12  Prořez nemá odmítnutí na prázdný keep-set, které `keepset.untrackable` má: `_ledger_as_written` je schválně shovívavý, takže nečitelný ledger dá `must_keep() == {}` bez výjimky a `prune_runs --apply` pak smaže citované captures. Reprodukováno v tempu: zdravý ledger → 0 obětí, useknutý → 2 citované mezi oběťmi.
+- [x] 2026-09-12  Prořez nemá odmítnutí na prázdný keep-set, které `keepset.untrackable` má: `_ledger_as_written` je schválně shovívavý, takže nečitelný ledger dá `must_keep() == {}` bez výjimky a `prune_runs --apply` pak smaže citované captures. Reprodukováno v tempu: zdravý ledger → 0 obětí, useknutý → 2 citované mezi oběťmi.
 - [ ] 2026-09-12  `review.py` čte deníky comprehension s `json.loads` uvnitř, takže **jeden half-written řádek vynuluje celý soubor** — 26 otázek Nexusovi spadne na 0 a nic to neřekne. `qa/lab.py:83` to dělá správně (`continue` na jednom řádku).
 - [ ] 2026-09-12  Kontrola tajemství v `test_evidence_in_git.py` po D3 čte **nula souborů** a hlásí „passed" — sledovaných captures už není žádná. Nezávislá kontrola nad 3 663 těly na disku a 1 178 v archivu je čistá, takže je to rozbitý strážce, ne únik.
 - [ ] 2026-09-12  `keep.py archive` nemá spouštěč: deep pass volá `track` a `snapshot`, archiv nikdy. Balík tedy zůstane snímkem 12. 9., zatímco nové řádky manifestu přibývají s `archive: ""`.
@@ -152,4 +152,17 @@ to neodškrtl, nebo to nikdy nebylo další na řadě.
 - [ ] 2026-09-12  `audits/checks.json` zůstal po dnešním auditu neorazítkovaný, protože orazítkovat teď by znamenalo označit za auditované i definice, které pass v noci změnil. Příští audit tedy projde stejný rozsah znovu — stojí to tokeny, ale nezakryje to nález.
 - [ ] 2026-09-12  `verify.py` spadne celý, když `already_sent()` nepřečte report (jejich TLS timeout ve 20:55). Čtení před POSTem, takže nic neodešlo napůl — ale jeden neúspěšný read zabije i verdikty, které by prošly.
 - [ ] 2026-09-12  #91 je nerozhodnutelný, protože nejnovější Nexusova odpověď jmenující kartu je starší než 24 h. Fold kvůli tomu dluží `repair_check` — až Nexus zase odpovídá, jedna otázka to vyřeší.
+- [ ] 2026-09-12  Pravidlo 12 je červené po každém commitu, co přidá test, a po každém deep passu — render patří do `.githooks/pre-commit`
+
+  `payload_hash` zahrnuje i `stats.tests` (počty testů v repu) a
+  `stats.process` (řádky passů čtené z gitu), takže stránka nezastarává jen
+  změnou stavu. Dnes byla na `main` červená od 23:04 do teď a pass ji tak
+  pushnul: v 23:04 vyrendroval stránku a v 23:15 doplnil vlastní notebook,
+  takže `finished` a `elapsed_min` se v payloadu pohnuly až po renderu. Jeho
+  krok 9 to chytit nemůže — ověřuje dřív, než dopíše poslední commit. Render
+  trvá **1,6 s**, takže patří do pre-commit hooku vedle `keep.py track` a
+  stejně nefatálně (bookkeeping nesmí být důvod, proč nejde commitnout).
+  Test první. Stránku jsem dnes přerendroval, takže je zelená — ale rozejde se
+  znovu při prvním commitu, co přidá test.
+
 - [ ] 2026-09-12  Krok 3 deep passu (code review) nemá v SKILL.md pokyn zapsat nález do notebooku, jak ho má krok 2 — takže když kompakce přijde mezi krokem 3 a 4, celá recenze zmizí beze stopy. Přesně se to dnes stalo: notebook má 27 tvrzení a všech 27 je z auditu. Oprava je změna páteře, takže chce vlastní tři čtenáře podle 1c.
