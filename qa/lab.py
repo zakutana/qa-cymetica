@@ -48,8 +48,16 @@ CAPS = {
     "questions_per_session": 8,
     "questions_per_night": 12,
     "new_rooms_per_session": 3,
-    "running_experiments": 6,
-    "share_of_free_cash": 0.15,
+    # [operator 2026-09-12] *"musime testvoat aspon 50 strategii najednou"*.
+    # Raised from 6 at 15% on 2026-09-12, and their reason is right for a
+    # reason they did not give: a verdict takes a five-to-seven-day window, so
+    # six at a time is six verdicts a week and knowing which of Nexus's ideas
+    # pay needs dozens. The count is the weaker brake -- fifty at 2% is the
+    # whole book -- so what actually holds is the ceiling on what may be
+    # deployed at once: always dry powder, and one bad night cannot take it all.
+    "running_experiments": 50,
+    "share_of_free_cash": 0.02,
+    "total_exposure": 0.60,
 }
 
 
@@ -239,13 +247,16 @@ def may_ask(asked: int, pass_running: bool, mode: str = "session") -> tuple[bool
     return True, ""
 
 
-def affordable(usdc: float, free_cash: float | None,
-               running: int) -> tuple[bool, str]:
-    """Whether one experiment may take this much, and how many may run at once.
+def affordable(usdc: float, free_cash: float | None, running: int,
+               deployed: float = 0.0) -> tuple[bool, str]:
+    """Whether one experiment may take this much, and how much may be out at once.
 
     A share of what is FREE, not of the bankroll: the book already knows what
     is deployed. An unreadable book refuses -- rule 8, and the same refusal
     paper.py makes when it cannot read what is in the bots.
+
+    The total is the brake that matters now that fifty may run. Fifty at 2% is
+    the whole book, so without a ceiling the count would be no limit at all.
     """
     if free_cash is None:
         return False, ("the book could not be read, and an unreadable book is "
@@ -261,7 +272,14 @@ def affordable(usdc: float, free_cash: float | None,
                        f"{free_cash:.0f} free ({ceiling:.0f}). Percentages are "
                        f"what a verdict compares, so a smaller stake measures "
                        f"the same strategy")
-    return True, f"{usdc:.0f} of {free_cash:.0f} free, {running} running"
+    limit = CAPS["total_exposure"]
+    if (deployed + usdc) > free_cash * limit:
+        return False, (f"{deployed:.0f} is already out and {usdc:.0f} more "
+                       f"would pass {limit * 100:.0f}% of the {free_cash:.0f} "
+                       f"free. There is always dry powder, so one bad night "
+                       f"cannot take the book")
+    return True, (f"{usdc:.0f} of {free_cash:.0f} free, {running} running, "
+                  f"{deployed + usdc:.0f} out of {free_cash * limit:.0f} allowed")
 
 
 POLLABLE_HOURS = 24
@@ -310,11 +328,24 @@ def outstanding(nexus_rows: list[dict], now: datetime | None = None,
 # one. Their own guide is the source of the pace: an open-ended loop "drifts,
 # burns calls, and gives you no way to judge what it found".
 NIGHT = {
-    "tick_seconds": 600,          # how often it looks at the clock
+    "tick_seconds": 120,          # how often it looks at the clock
     "cycle_seconds": 1800,        # pick answers up, sample, compare the catalogue
     "truth_seconds": 6 * 3600,    # re-rank their backtests when the snapshot ages
-    "ask_seconds": 2 * 3600,      # two hours between questions, and the floor
-                                  # under a backoff their failure did not size
+    # Two clocks, because a backtest is free and a question is not. The search
+    # runs on EVERY tick, bounded by their 30/min and by nothing of ours:
+    # [operator 2026-09-12] *"celou noc budete delat backtesty nonstop"*, said
+    # about a night that ran them twice. The question floor came down from two
+    # hours to twenty minutes at the same time -- their own `retry_after` sets
+    # the pace when they are down, and when they are up we should not be
+    # throttling ourselves on top of a cap that already binds.
+    "search_batch": 30,           # backtests per tick; their limit per minute
+    "ask_seconds": 20 * 60,
+    # And when their side refuses without saying when to come back, the wait
+    # DOUBLES per refusal in the streak, up to this. Flat is wrong both ways:
+    # twenty minutes spends a whole night's cap inside an outage like the one
+    # of 2026-09-12 (six refusals over seventeen hours), and two hours
+    # throttles a Nexus that is merely having a moment.
+    "backoff_max_seconds": 4 * 3600,
     "max_hours": 14,              # `--until` further out than this is a typo
 }
 HHMM = re.compile(r"^([01]\d|2[0-3]):([0-5]\d)$")
@@ -356,20 +387,27 @@ def backoff_until(nexus_rows: list[dict], now: datetime | None = None):
     is nothing to wait for.
     """
     moment = now or datetime.now(timezone.utc)
-    failed, answered = None, None
+    failed, answered, streak = None, None, 0
     for row in nexus_rows:
         when = _at(row.get("at"))
         if when is None:
             continue
         if row.get("type") == "gave_up":
             failed = (when, row)
+            streak += 1
         elif row.get("type") == "answer":
-            answered = when
+            answered, streak = when, 0
     if failed is None or (answered is not None and answered > failed[0]):
         return None
     seconds = failed[1].get("retry_after_s")
-    wait = float(seconds) if isinstance(seconds, (int, float)) and seconds > 0 \
-        else NIGHT["ask_seconds"]
+    if isinstance(seconds, (int, float)) and seconds > 0:
+        wait = float(seconds)
+    else:
+        # Theirs first, always. Ours only when they did not say, and then it
+        # doubles per refusal so a long outage is waited out rather than
+        # hammered through a night's whole question budget.
+        wait = min(NIGHT["ask_seconds"] * (2 ** max(streak - 1, 0)),
+                   NIGHT["backoff_max_seconds"])
     until = failed[0] + timedelta(seconds=wait)
     return until if until > moment else None
 
@@ -393,6 +431,12 @@ def night_tick(state: dict, now: datetime) -> dict:
         return last is None or (now - last).total_seconds() >= seconds
 
     do = []
+    # The search is on its own clock -- every tick, while there is anything
+    # left to walk -- because a backtest is a read that costs nothing but their
+    # rate limit. A backoff their side asked for is about QUESTIONS; it may not
+    # stop us reading.
+    if state.get("pending"):
+        do.append("search")
     if _stale("last_cycle", NIGHT["cycle_seconds"]):
         do.append("cycle")
     if _stale("last_truth", NIGHT["truth_seconds"]):

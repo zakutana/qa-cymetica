@@ -518,7 +518,8 @@ def status() -> str:
             # through is distinguishable from a night that found nothing.
             did = last.get("did") or {}
             skipped = did.get("skipped") or {}
-            out.append(f"  the night: {did.get('asked', 0)} asked, "
+            out.append(f"  the night: {did.get('backtests', 0)} backtest(s), "
+                       f"{did.get('asked', 0)} asked, "
                        f"{did.get('answered', 0)} answered, "
                        f"{did.get('cycles', 0)} cycle(s) over "
                        f"{did.get('ticks', 0)} tick(s); ended "
@@ -750,6 +751,34 @@ def _night_backoff():
     return lab.backoff_until(_nexus_rows(), _now())
 
 
+def night_moves() -> list[dict]:
+    """Everything worth asking their backtest tonight, in one flat queue.
+
+    Built once, deterministically, so a night that ends mid-queue is a night
+    the next one resumes rather than restarts -- and so a tick can take a
+    bounded bite without holding the walk's state in its head.
+    """
+    seeds = card_baskets()
+    pool = symbol_pool(seeds)
+    return [move for seed in seeds
+            for move in qa_backtests.neighbourhood(seed, pool, cap=24)]
+
+
+def _night_search(moves: list[dict]) -> dict:
+    """One bite of the queue. The register answers what it already knows."""
+    did = {"asked": 0, "known": 0, "failed": 0}
+    for move in moves:
+        try:
+            said = backtest(move["legs"], move["period"], why=move["why"])
+        except qa_backtests.BacktestError:
+            continue
+        except (Exception, SystemExit):  # noqa: BLE001
+            did["failed"] += 1
+            continue
+        did["known" if said["cached"] else "asked"] += 1
+    return did
+
+
 def _night_ask(slug: str, question: str) -> dict:
     """One question, put down and left with their side.
 
@@ -765,6 +794,9 @@ def _night_ask(slug: str, question: str) -> dict:
 def _lessons(did: dict, ranked: list[dict]) -> list[str]:
     """At most three, drawn from what was counted rather than from opinion."""
     out = []
+    if did.get("backtests"):
+        out.append(f"walked {did['backtests']} backtest(s), "
+                   f"{did.get('already_known', 0)} already in the register")
     if did["asked"]:
         out.append(f"asked Nexus {did['asked']} question(s); "
                    f"{did['answered']} came back by dawn")
@@ -813,15 +845,19 @@ def night(until: str, *, clock=None, sleep=None, actions=None, out=print) -> dic
     actions = actions or {
         "pass": pass_in_flight, "backoff": _night_backoff, "cycle": cycle,
         "truth": functools.partial(truth, limit=8), "ask": _night_ask,
+        "search": _night_search, "moves": night_moves,
     }
 
     session = lab.open_session(mode="night", until=due.isoformat())["session"]
     did = {"ticks": 0, "cycles": 0, "truths": 0, "asked": 0, "answered": 0,
+           "backtests": 0, "already_known": 0,
            "errors": [], "stopped": "deadline",
            "skipped": {"pass": 0, "backoff": 0, "cap": 0, "too soon": 0,
                        "nothing to ask about": 0},
            "questions": []}
-    state: dict = {"asked": 0, "candidates": [], "hold_until": None}
+    queue = list((actions.get("moves") or (lambda: []))())
+    state: dict = {"asked": 0, "candidates": [], "hold_until": None,
+                   "pending": len(queue)}
     ranked: list[dict] = []
     asked_about: set[str] = set()
 
@@ -829,8 +865,9 @@ def night(until: str, *, clock=None, sleep=None, actions=None, out=print) -> dic
     out(f"  started {started.isoformat(timespec='minutes')}")
     out(f"  ends    {due.isoformat(timespec='minutes')} "
         f"({(due - started).total_seconds() / 3600:.1f} h from now)")
-    out(f"  at most {lab.CAPS['questions_per_night']} questions, "
-        f"{lab.NIGHT['ask_seconds'] // 3600} h apart. Ctrl-C stops it.")
+    out(f"  at most {lab.CAPS['questions_per_night']} questions, at least "
+        f"{lab.NIGHT['ask_seconds'] // 60} min apart, and their own backoff "
+        f"on top. Ctrl-C stops it.")
 
     crashed: BaseException | None = None
     try:
@@ -846,7 +883,17 @@ def night(until: str, *, clock=None, sleep=None, actions=None, out=print) -> dic
 
             for step in plan["do"]:
                 try:
-                    if step == "cycle":
+                    if step == "search":
+                        size = lab.NIGHT["search_batch"]
+                        bite, queue = queue[:size], queue[size:]
+                        got = actions["search"](bite) or {}
+                        did["backtests"] += got.get("asked", 0)
+                        did["already_known"] += got.get("known", 0)
+                        state["pending"] = len(queue)
+                        if got.get("asked") and out:
+                            out(f"  {now.strftime('%H:%M')} {got['asked']} "
+                                f"backtest(s), {len(queue)} left to walk")
+                    elif step == "cycle":
                         done = actions["cycle"]() or {}
                         state["last_cycle"] = now
                         did["cycles"] += 1

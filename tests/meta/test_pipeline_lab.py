@@ -122,20 +122,73 @@ def test_nothing_is_asked_or_bought_while_a_deep_pass_is_running():
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_an_order_is_capped_at_a_share_of_what_is_free():
+    """Raised 2026-09-12 from 6 experiments at 15% each to 50 at 2%.
+
+    [operator 2026-09-12] *"musime testvoat aspon 50 strategii najednou"*. The
+    reason is theirs and it is right for a reason they did not give: a verdict
+    takes a five-to-seven-day window, so six at a time is six verdicts a week,
+    and knowing which of Nexus's ideas pay needs dozens.
+
+    The count is the weaker brake. Fifty at 2% is 100% of the book on paper, so
+    a ceiling on what may be deployed AT ONCE is what actually holds -- there is
+    always dry powder, and one bad night cannot take the whole book.
+    """
     free = 89_000.0
-    ok, why = lab.affordable(10_000, free_cash=free, running=2)
+    ok, why = lab.affordable(1_500, free_cash=free, running=2)
     assert ok, why
 
-    ok, why = lab.affordable(20_000, free_cash=free, running=2)
-    assert not ok and "15" in why, why
+    ok, why = lab.affordable(10_000, free_cash=free, running=2)
+    assert not ok and "2" in why, why
 
     ok, why = lab.affordable(1_000, free_cash=free,
                              running=lab.CAPS["running_experiments"])
     assert not ok and "running" in why.lower(), why
+    assert lab.CAPS["running_experiments"] == 50
+
+    ok, why = lab.affordable(1_000, free_cash=free, running=5,
+                             deployed=free * 0.62)
+    assert not ok and "60" in why, why
+    ok, why = lab.affordable(1_000, free_cash=free, running=5,
+                             deployed=free * 0.30)
+    assert ok, why
 
     ok, why = lab.affordable(1_000, free_cash=None, running=0)
     assert not ok and "could not" in why.lower(), (
         "an unreadable book is not an empty one -- rule 8")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_night_searches_on_its_own_clock_not_the_question_clock():
+    """Two clocks, because a backtest is free and a question is not.
+
+    The night ran backtests every six hours -- twice a night -- and asked every
+    two. That is the timidity the operator went after: *"celou noc budete delat
+    backtesty nonstop"*. A search tick is bounded by their 30/min and by
+    nothing else; only a deep pass stops it, for the reason every other tick
+    stops.
+    """
+    now = datetime(2026, 9, 13, 2, 0, tzinfo=timezone.utc)
+    state = {"asked": 0, "candidates": ["bt-x"], "pending": 40,
+             "last_cycle": now, "last_truth": now, "last_ask": now}
+
+    plan = lab.night_tick(state, now)
+    assert "search" in plan["do"], (
+        "nothing else was due and the search sat idle anyway")
+
+    held = lab.night_tick({**state, "hold_until": now + timedelta(hours=3)}, now)
+    assert "search" in held["do"], "their backoff is about questions, not reads"
+
+    passing = lab.night_tick({**state, "pass_running": True}, now)
+    assert passing["do"] == [] and passing["skipped"] == "pass"
+
+    done = lab.night_tick({**state, "pending": 0}, now)
+    assert "search" not in done["do"], "nothing left to walk"
+
+    # The question floor is no longer two hours: their side sets the pace when
+    # it is down, and when it is up we should not be throttling ourselves.
+    assert lab.NIGHT["ask_seconds"] <= 20 * 60
+    soon = lab.night_tick({**state, "last_ask": now - timedelta(minutes=25)}, now)
+    assert "ask" in soon["do"], soon
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -412,9 +465,12 @@ def test_a_tick_while_a_deep_pass_runs_does_nothing_at_all():
     assert plan["do"] == ["cycle", "truth", "ask"], (
         "the first tick of a night has never cycled, ranked or asked")
 
+    # Inside every floor: five minutes since the last question (the floor came
+    # down to twenty on 2026-09-12), five since the last cycle, an hour since
+    # the ranking, and nothing left to walk.
     fresh = {**state, "last_cycle": now - timedelta(minutes=5),
              "last_truth": now - timedelta(hours=1),
-             "last_ask": now - timedelta(minutes=30)}
+             "last_ask": now - timedelta(minutes=5)}
     plan = lab.night_tick(fresh, now)
     assert plan["do"] == [] and plan["skipped"] == "too soon"
 
@@ -441,11 +497,27 @@ def test_the_night_waits_the_hour_their_own_failure_asked_for():
              "retryable": True, "retry_after_s": 900}]
     assert lab.backoff_until(said, now) == now + timedelta(minutes=5)
 
-    quiet = [{"id": "NEX-1", "type": "gave_up", "status": "failed",
-              "at": (now - timedelta(minutes=10)).isoformat()}]
-    assert lab.backoff_until(quiet, now) == now + timedelta(hours=2) - timedelta(minutes=10)
+    # Without a number of theirs, the wait GROWS with the streak. Flat is wrong
+    # both ways: twenty minutes would spend a whole night's cap inside an
+    # outage like the one running on 2026-09-12 (six refusals, seventeen
+    # hours), and two hours throttles a Nexus that is merely having a moment.
+    def _failed(count, ago):
+        return [{"id": f"NEX-{n}", "type": "gave_up", "status": "failed",
+                 "at": (now - timedelta(minutes=ago)).isoformat()}
+                for n in range(count)]
 
-    answered = [*quiet, {"id": "NEX-2", "type": "answer",
+    one = lab.backoff_until(_failed(1, 10), now)
+    assert one == now + timedelta(seconds=lab.NIGHT["ask_seconds"]) - timedelta(minutes=10)
+
+    three = lab.backoff_until(_failed(3, 10), now)
+    assert three > one, "three refusals in a row is not one refusal"
+    assert (three - now).total_seconds() <= lab.NIGHT["backoff_max_seconds"]
+
+    many = lab.backoff_until(_failed(9, 10), now)
+    assert (many - now).total_seconds() <= lab.NIGHT["backoff_max_seconds"], (
+        "an outage cannot push the next try past the end of the night")
+
+    answered = [*_failed(1, 10), {"id": "NEX-2", "type": "answer",
                          "at": (now - timedelta(minutes=1)).isoformat()}]
     assert lab.backoff_until(answered, now) is None, (
         "one answer since the failure means the lane is open again")
@@ -507,6 +579,39 @@ def test_a_night_ends_at_its_deadline_paced_and_counted(tmp_path, monkeypatch):
 
     summary = scripts_lab.status()
     assert "night" in summary.lower() and str(len(asked)) in summary, summary
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_night_with_nexus_dead_still_searches_all_night(tmp_path, monkeypatch):
+    """The acceptance for the rebuilt night: their side being down stops the
+    questions and nothing else. Backtests are reads, they cost only their rate
+    limit, and a night that stops walking because Nexus is quiet is the night
+    the operator went after."""
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    zone = timezone(timedelta(hours=2))
+    clock = _Clock(datetime(2026, 9, 12, 23, 30, tzinfo=zone))
+    walked, asked = [], []
+    moves = [{"legs": [], "period": 30, "why": f"m{n}"} for n in range(400)]
+
+    def _search(bite):
+        walked.extend(bite)
+        return {"asked": len(bite), "known": 0, "failed": 0}
+
+    did = scripts_lab.night(
+        "07:00", clock=clock, sleep=clock.sleep,
+        actions={"pass": lambda: False,
+                 # Their side down, and it never comes back tonight.
+                 "backoff": lambda: clock() + timedelta(hours=9),
+                 "cycle": lambda: {}, "truth": lambda: [],
+                 "ask": lambda slug, question: asked.append(slug),
+                 "search": _search, "moves": lambda: list(moves)},
+        out=lambda *a: None)
+
+    assert asked == [], "it asked while their own failure said to wait"
+    assert did["skipped"]["backoff"] > 0, did["skipped"]
+    assert len(walked) == len(moves), (
+        f"only {len(walked)} of {len(moves)} moves were walked in eight hours")
+    assert did["backtests"] == len(moves)
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
