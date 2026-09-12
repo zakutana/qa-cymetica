@@ -1155,7 +1155,10 @@ def test_the_night_keeps_searching_after_the_first_queue_runs_out(
     clock = _Clock(datetime(2026, 9, 12, 20, 0, tzinfo=zone))
     walked, refills = [], []
 
+    searched_at = []
+
     def _search(bite):
+        searched_at.append(clock.now)
         walked.extend(bite)
         return {"asked": len(bite), "known": 0}
 
@@ -1179,6 +1182,21 @@ def test_the_night_keeps_searching_after_the_first_queue_runs_out(
     assert len(walked) > 30 * 4, (
         f"only {len(walked)} move(s) walked in a ten-hour night")
     assert did["backtests"] == len(walked)
+
+    # WHEN, not only how many. `len(walked) > 120` is satisfied by a night that
+    # refills three times and then stops: 30 + 3x40 = 150 over about seven
+    # ticks, and nothing for the remaining ten hours. All three assertions above
+    # stay green on exactly the defect this docstring quantifies -- "twelve
+    # minutes of a fourteen-hour night". So the last search has to land near the
+    # end of the night, which is the property, and it is the one a cap on
+    # refills breaks. 3/3, deep pass of 2026-09-13.
+    assert searched_at, "the night never searched at all"
+    started, ended = searched_at[0], clock.now
+    span = (ended - started).total_seconds()
+    idle = (ended - searched_at[-1]).total_seconds()
+    assert span > 0 and idle <= span * 0.1, (
+        f"the night's last search was {idle / 3600:.1f} h before dawn, out of "
+        f"{span / 3600:.1f} h -- it walked {len(walked)} moves and then waited")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -1313,18 +1331,24 @@ def test_an_answer_that_names_no_card_is_left_for_the_morning():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_the_night_launches_on_paper_from_a_nexus_answer_and_nothing_else(
-        tmp_path, monkeypatch):
+def test_the_night_reaches_the_launch_step_at_all(tmp_path, monkeypatch):
     """[operator 2026-09-12] *"Jasne ze v noci muze spoustet."*
 
     The night researched all night and placed nothing, which was a narrowing I
-    put in a plan they do not read. It launches now -- and only down the one
-    road CLAUDE.md allows: a room opens from a whole Nexus answer, never from a
-    basket of our own, however well it backtested.
+    put in a plan they do not read. This is the wiring: `night()` reaches the
+    promote step and counts what it returns.
 
-    The brakes are the day's brakes, unchanged: `affordable` (2% of free, 60%
-    of the book, 50 running), paper only, and nothing at all while a deep pass
-    runs.
+    **Renamed 2026-09-13 (3/3), and the old name is the finding.** It read
+    `..._on_paper_from_a_nexus_answer_and_nothing_else`, claiming the road (a
+    room opens from a whole Nexus answer, never from a basket of ours) and the
+    brakes (`affordable`, paper only, nothing while a deep pass runs) -- and
+    `promote` here is a stub that returns `{"rooms": 1, "orders": 1}` whatever
+    it is handed. A `night_promote` that opened a room from our own basket,
+    skipped `affordable` and posted live would have kept every assertion below
+    green. The road and the brakes are really held by
+    tests/meta/test_pipeline_night_spend.py, which drives the real function;
+    this name was borrowing their credit. Same shape as A04 of the 2026-09-12
+    pass, which was ruled real and fixed by a rename.
     """
     scripts_lab = _scripts_lab(tmp_path, monkeypatch)
     bought, rooms_opened = [], []

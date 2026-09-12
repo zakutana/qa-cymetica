@@ -260,14 +260,53 @@ def test_the_hook_is_silent_when_nothing_is_due_and_never_fails(tmp_path,
         assert forbidden not in source, (
             f"{forbidden} in a SessionStart hook: it must answer from files")
 
-    # Nothing due, in an empty repository: it must print nothing and exit 0.
-    # QA_REPO_ROOT is how the hooks here are pointed at a fixture, the same
-    # way next_step.py takes QA_NEXT_FILE.
+    # SILENCE, from the mechanism rather than from its absence. This ran the
+    # hook against an empty tmp_path, where `reminders.py` returns 0 at line 37
+    # because `scripts/processes.py` is not there -- so the empty stdout proved
+    # the early return and nothing about whether a day with nothing due is
+    # quiet. Inserting an unconditional print after the load left all seven
+    # tests in this file green while the hook spoke at every session start.
+    # 3/3, deep pass of 2026-09-13.
+    #
+    # `reminders()` is pure over its facts, so the day with nothing due can be
+    # stated exactly: every rule satisfied, and not one line out.
+    mod = _module()
+    now = datetime(2026, 9, 13, 8, 0, tzinfo=timezone.utc)
+    settled = {
+        "surface_drift": [],
+        "unpushed": 0,
+        "last_pass": (now - timedelta(hours=1)).isoformat(),
+        "week_last": (now - timedelta(days=1)).isoformat(),
+        "lab_open": [],
+        "night_running": None,
+        "nexus_down": 0,
+        "nexus_last_try": (now - timedelta(minutes=10)).isoformat(),
+        "open_next": [],
+        "plan_phases": [],
+    }
+    assert mod.reminders(settled, now) == [], (
+        f"a day with every rule satisfied still spoke: "
+        f"{mod.reminders(settled, now)} -- a line printed every evening is one "
+        f"the operator stops reading, which is the mechanism this replaced")
+
+    # And each rule still fires on its own, or the silence above is silence
+    # about nothing.
+    # Unpushed commits alone are not a reminder -- a pass an hour ago is
+    # SUPPOSED to leave some. It is unpushed work plus a pass that has not run.
+    assert mod.reminders({**settled, "unpushed": 9}, now) == [], (
+        "commits waiting an hour after a pass are the normal state")
+    assert mod.reminders({**settled, "unpushed": 9, "last_pass": None}, now), \
+        "unpushed"
+    assert mod.reminders({**settled, "week_last": None}, now), "the week"
+    assert mod.reminders({**settled, "lab_open": ["LAB-0003"]}, now), "lab"
+    assert mod.reminders({**settled, "surface_drift": ["x moved"]}, now), "drift"
+
+    # The hook itself must still never be the reason a session does not start,
+    # in an empty repository and with the files it reads broken.
     env = {**os.environ, "QA_REPO_ROOT": str(tmp_path)}
     quiet = subprocess.run([sys.executable, str(hook)], cwd=tmp_path, env=env,
                            capture_output=True, text=True, timeout=30)
     assert quiet.returncode == 0, quiet.stderr
-    assert quiet.stdout.strip() == "", quiet.stdout
 
     # And with the files it reads broken rather than missing.
     (tmp_path / "scripts").mkdir()

@@ -107,7 +107,17 @@ def test_a_parameter_that_moved_is_named_not_just_a_tool_that_vanished():
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_field_that_appears_in_their_answer_is_how_a_fix_announces_itself():
     """#97, exactly: `period` and `headline_period` appeared in answers we had
-    already captured, and nothing looked."""
+    already captured, and nothing looked.
+
+    Driven through `shape_drift`, which is what the reminder actually runs
+    (`processes.surface_drift` -> `drift_against` -> here). It used to drive
+    `fields_drift`, a helper with no caller anywhere outside this file -- so
+    gutting the appeared half of the mechanism left the check that claims "#97,
+    exactly" green, and `shape_drift`'s criterion is the stricter one: a field
+    counts as appeared only if EVERY recent answer now carries it and none did
+    before. Asserting the loose helper while the strict one ships is a claim
+    about a path the announcement never takes. 3/3, deep pass of 2026-09-13.
+    """
     from qa import surface
 
     before = {"strategy": "x", "latest_metrics": {"sharpe_ratio": 5.1}}
@@ -116,19 +126,36 @@ def test_a_field_that_appears_in_their_answer_is_how_a_fix_announces_itself():
                                 "period": {"hours": 476, "label": "19.8 days"}},
              "leaderboard": {"headline_period": "48h"}}
 
-    drift = surface.fields_drift(surface.fields(before), surface.fields(after))
+    was, now = surface.fields(before), surface.fields(after)
+    stored = {"always": sorted(was), "seen": sorted(was)}
+    current = {"always": sorted(now), "seen": sorted(now)}
+
+    drift = surface.shape_drift(stored, current)
     appeared = " ".join(drift["appeared"])
     assert "latest_metrics.period.label" in appeared, drift
     assert "leaderboard.headline_period" in appeared, drift
     assert drift["vanished"] == []
 
-    back = surface.fields_drift(surface.fields(after), surface.fields(before))
+    # One line per call, which is the form the reminder prints.
+    said = surface.drift_against({"get_strategy_returns": stored},
+                                 {"get_strategy_returns": current})
+    assert said and "get_strategy_returns" in said[0], said
+    assert "period" in " ".join(said), said
+
+    back = surface.shape_drift(current, stored)
     assert back["vanished"] and not back["appeared"], (
         "a field that stops being sent is a check that starts measuring nothing")
 
-    assert surface.fields_drift(surface.fields(after),
-                                surface.fields(after)) == {
-        "appeared": [], "vanished": []}
+    assert surface.shape_drift(current, current) == {"appeared": [],
+                                                     "vanished": []}
+
+    # A field that comes and goes is their design, not their change -- the
+    # distinction `fields_drift` cannot make and the reminder depends on.
+    sometimes = {"always": sorted(was), "seen": sorted(now)}
+    assert surface.shape_drift(stored, sometimes) == {"appeared": [],
+                                                      "vanished": []}, (
+        "a field present in only some answers is weather, and a warning that "
+        "fires on the weather is one nobody reads")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
