@@ -86,7 +86,9 @@ venku najednou**; žádná otázka ani nákup, když běží deep pass (měří 
 
 - Naplánované úlohy, `/loop`, ani nic, co se spustí samo.
 - Live obchod. Naše vlastní strategie (nápad jde Nexusovi jako otázka).
-- Obchody a zakládání nálezů v noci — noc zkoumá, ráno se jedná.
+- **Zakládání nálezů** v noci — vendorovi se hlásí ráno, ne ve tři.
+  (Obchody v noci **ano**, od 12. 9. večer: *„Jasne ze v noci muze spoustet."*
+  Jen paper, jen z konkrétní Nexusovy odpovědi, pod stejnými stropy jako ve dne.)
 - Tlačítko obchodu v prohlížeči.
 
 ## Ověření

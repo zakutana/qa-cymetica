@@ -648,3 +648,30 @@ def rank(rows: list[dict]) -> list[dict]:
     scored.sort(key=lambda r: (-float(r["sharpe"]),
                                float(r.get("max_drawdown") or 0)))
     return scored + unscored
+
+
+CARD_ID = re.compile(
+    r"\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b")
+
+
+def proposed_cards(text: str, known) -> dict[str, list[str]]:
+    """The cards an answer names, split by whether they actually exist.
+
+    Pure, and deliberately dull: it reads ids, it does not read intent. An
+    answer that names no card proposes nothing to buy -- NEX-0018 and NEX-0026
+    both named none, and NEX-0026 was the most useful answer Nexus has given
+    us. "It said something wise" is not "it told us to buy something".
+
+    `known` is the set of cards we have actually seen come back from their API.
+    Nexus naming one is not evidence it exists: #91 is a card it invented, with
+    a live-looking index and 90-day metrics, sitting beside two real ones whose
+    numbers were right to six decimals. So an id it names and we have never
+    seen is reported, never acted on.
+    """
+    seen: list[str] = []
+    for found in CARD_ID.findall(str(text or "").lower()):
+        if found not in seen:
+            seen.append(found)
+    have = {str(k).lower() for k in (known or ())}
+    return {"actionable": [c for c in seen if c in have],
+            "unknown": [c for c in seen if c not in have]}

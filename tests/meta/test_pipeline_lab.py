@@ -922,19 +922,44 @@ def test_the_night_holds_no_hand_that_trades_files_or_commits():
                     and isinstance(body[0].value.value, str)):
                 node.body = body[1:]
 
-    reached = set()
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Name):
-            reached.add(node.id)
-        elif isinstance(node, ast.Attribute):
-            reached.add(node.attr)
-        elif isinstance(node, ast.Constant) and isinstance(node.value, str):
-            reached.add(node.value)
+    def _names(node) -> set:
+        out = set()
+        for child in ast.walk(node):
+            if isinstance(child, ast.Name):
+                out.add(child.id)
+            elif isinstance(child, ast.Attribute):
+                out.add(child.attr)
+            elif isinstance(child, ast.Constant) and isinstance(child.value, str):
+                out.add(child.value)
+        return out
 
-    for hand in ("buy", "paper", "submit", "findings", "subprocess",
-                 "open_strategy", "set_status", "record_verdict"):
+    reached = _names(tree)
+
+    # [operator 2026-09-12] *"Jasne ze v noci muze spoustet."* So this stopped
+    # being "no hand at all" and became "only the braked one". Filing and
+    # committing are still out: the night finds, the morning tells the vendor.
+    for hand in ("submit", "findings", "subprocess", "withdraw", "prereg"):
         assert hand not in reached, (
-            f"the night can reach {hand!r}: it researches, the morning acts")
+            f"the night can reach {hand!r}: it researches and launches on "
+            f"paper, it does not talk to the vendor")
+
+    # Every function in the night that can spend must itself reach the caps and
+    # the deep-pass interlock. Stated per function rather than over the slice,
+    # because "the word affordable appears somewhere in this file" is exactly
+    # the kind of proof that passes while the brake sits in the wrong branch.
+    spenders = [node for node in ast.walk(tree)
+                if isinstance(node, ast.FunctionDef) and "buy" in _names(node)]
+    assert spenders, "nothing in the night can launch; the operator asked for it"
+    for node in spenders:
+        names = _names(node)
+        assert "affordable" in names, (
+            f"{node.name} spends without reaching the caps")
+        assert "pass_in_flight" in names, (
+            f"{node.name} spends without checking for a running deep pass, "
+            f"which is verifying #85/#86/#87 over these very trades")
+        assert "open_strategy" in names, (
+            f"{node.name} spends without opening a room from a Nexus answer -- "
+            f"CLAUDE.md: a strategy of ours never becomes a room")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -1107,3 +1132,70 @@ def test_money_out_is_counted_even_when_they_name_it_oddly(tmp_path,
 
     assert scripts_lab._deployed() == 35_000.0, (
         "a string amount or a missing position id was counted as nothing out")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_card_nexus_invented_is_not_bought():
+    """#91: it named a card that does not exist, with a live-looking index and
+    90-day metrics beside two cards whose numbers were right to six decimals.
+
+    So a proposal is only actionable for cards we have actually seen come back
+    from their API. Nexus naming one is not evidence it exists -- that is the
+    finding, and this is the brake it earned.
+    """
+    known = {"30408a4b-8717-4fc7-a91a-9a6724cadd7e",
+             "e579581b-0ad3-463f-8c3d-e80bd2624d40"}
+    text = ("Buy 30408a4b-8717-4fc7-a91a-9a6724cadd7e bull, and also "
+            "deadbeef-0000-0000-0000-000000000000 which looks strong.")
+
+    found = lab.proposed_cards(text, known)
+
+    assert found["actionable"] == ["30408a4b-8717-4fc7-a91a-9a6724cadd7e"]
+    assert found["unknown"] == ["deadbeef-0000-0000-0000-000000000000"]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_answer_that_names_no_card_is_left_for_the_morning():
+    """NEX-0018 and NEX-0026 named none. NEX-0026 was the best answer Nexus has
+    given us -- it refused its own top-ranked strategy and handed us a leading
+    indicator -- and it proposes nothing to buy. An answer is not a proposal."""
+    assert lab.proposed_cards("treat that number as unmeasured", {"a"}) == {
+        "actionable": [], "unknown": []}
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_night_launches_on_paper_from_a_nexus_answer_and_nothing_else(
+        tmp_path, monkeypatch):
+    """[operator 2026-09-12] *"Jasne ze v noci muze spoustet."*
+
+    The night researched all night and placed nothing, which was a narrowing I
+    put in a plan they do not read. It launches now -- and only down the one
+    road CLAUDE.md allows: a room opens from a whole Nexus answer, never from a
+    basket of our own, however well it backtested.
+
+    The brakes are the day's brakes, unchanged: `affordable` (2% of free, 60%
+    of the book, 50 running), paper only, and nothing at all while a deep pass
+    runs.
+    """
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    bought, rooms_opened = [], []
+
+    def _promote():
+        rooms_opened.append("STR-0001")
+        bought.append({"card": "c1", "usdc": 1700.0})
+        return {"rooms": 1, "orders": 1, "held": []}
+
+    zone = timezone(timedelta(hours=2))
+    clock = _Clock(datetime(2026, 9, 12, 22, 0, tzinfo=zone))
+    did = scripts_lab.night(
+        "23:00", clock=clock, sleep=clock.sleep,
+        actions={"pass": lambda: False, "backoff": lambda: None,
+                 "cycle": lambda: {"polled": []}, "truth": lambda: [],
+                 "ask": lambda concept, question: {"id": "NEX-1"},
+                 "search": lambda bite: {"asked": len(bite), "known": 0},
+                 "refill": list, "moves": list, "promote": _promote},
+        out=lambda *a: None)
+
+    assert did["orders"] >= 1, "the night launched nothing"
+    assert did["rooms"] >= 1
+    assert bought, "no paper order was placed"

@@ -236,8 +236,12 @@ clocks**, because a backtest is free and a question is not:
   the fastest, twelve at most, none at all while a deep pass is running, and
   after a failure it waits as long as their own `retry_after` asks.
 
-**It does not trade, file or commit.** The morning acts on what it found; the
-night only finds it.
+**It launches, on paper, and files nothing.** A concrete Nexus answer opens a
+room and places a paper order under the day's own brakes -- `affordable`, paper
+only, nothing while a deep pass runs -- and a card it names that we have never
+seen from their API is reported and NOT bought (#91). An answer naming no card
+proposes nothing and waits for the morning. Findings wait for the morning too:
+the vendor is told at a civilised hour, by somebody who read it.
 
 In the morning `lab.py status` prints what the night did before anything else:
 what it asked, what came back, how many ticks were held off and by what. Ticks

@@ -922,6 +922,73 @@ def night_refill(rows: list[dict] | None = None, limit: int = 8,
             for move in qa_backtests.neighbourhood(seed, pool, cap=cap)]
 
 
+def night_promote(since: datetime | None = None) -> dict:
+    """Launch what Nexus endorsed tonight, on paper, under the day's brakes.
+
+    [operator 2026-09-12] *"Jasne ze v noci muze spoustet."* The night used to
+    research and place nothing -- a narrowing that lived in a plan they do not
+    read, and three reviewers said so on the same day.
+
+    It launches down ONE road, the only one CLAUDE.md allows: a room opens from
+    a whole Nexus answer, never from a basket of ours, however well it
+    backtested. The search finds candidates; the question makes them his; his
+    answer is what may be acted on.
+
+    Four refusals, each one a finding we already paid for:
+
+      * a card Nexus named that we have never seen from their API is reported
+        and not bought (#91 -- it invented one, with a live-looking index);
+      * an answer that names no card proposes nothing (NEX-0026 was the best
+        answer we have had and named none);
+      * `affordable` decides the size and whether there is room at all;
+      * nothing at all while a deep pass runs, because it is verifying #85,
+        #86 and #87 over these very trades.
+
+    Returns what it did and, for everything it did not, why -- so the morning
+    reads a reason rather than a silence.
+    """
+    if pass_in_flight():
+        return {"rooms": 0, "orders": 0, "held": ["a deep pass is running"]}
+
+    answers = [row for row in _nexus_rows() if row.get("type") == "answer"
+               and (since is None or (_moment(row.get("at")) or _now()) >= since)]
+    if not answers:
+        return {"rooms": 0, "orders": 0, "held": []}
+
+    known = {str(seed.get("card")).lower() for seed in card_baskets()
+             if seed.get("card")}
+    linked = {str(row.get("origin")) for row in rooms.load()
+              if row.get("type") == "strategy"}
+    paper = _sibling("paper")
+    opened, placed, held = 0, 0, []
+
+    for answer in answers:
+        origin = str(answer.get("id") or "")
+        if not origin or origin in linked:
+            continue
+        found = lab.proposed_cards(answer.get("text"), known)
+        for ghost in found["unknown"]:
+            held.append(f"{origin}: {ghost[:8]} is a card we have never seen "
+                        f"(#91) — not bought")
+        if not found["actionable"]:
+            held.append(f"{origin}: names no card we can act on; the morning "
+                        f"reads it")
+            continue
+
+        room = rooms.open_strategy(origin, f"{origin}: {found['actionable'][0][:8]}")
+        opened += 1
+        for card in found["actionable"]:
+            stake = round((_free_cash() or 0.0) * lab.CAPS["share_of_free_cash"], 2)
+            ok, why = lab.affordable(stake, _free_cash(), _running_experiments(),
+                                     deployed=_deployed())
+            if not ok:
+                held.append(f"{origin}/{card[:8]}: {why}")
+                break
+            paper.buy(card, stake, origin, True)
+            placed += 1
+    return {"rooms": opened, "orders": placed, "held": held}
+
+
 def _night_search(moves: list[dict]) -> dict:
     """One bite of the queue. The register answers what it already knows."""
     did = {"asked": 0, "known": 0, "failed": 0}
@@ -1005,11 +1072,13 @@ def night(until: str, *, clock=None, sleep=None, actions=None, out=print) -> dic
         "truth": functools.partial(truth, limit=8), "ask": _night_ask,
         "search": _night_search, "moves": night_moves,
         "refill": night_refill,
+        "promote": functools.partial(night_promote, since=started),
     }
 
     session = lab.open_session(mode="night", until=due.isoformat())["session"]
     did = {"ticks": 0, "cycles": 0, "truths": 0, "asked": 0, "answered": 0,
            "backtests": 0, "already_known": 0, "refills": 0,
+           "rooms": 0, "orders": 0, "held": [],
            "errors": [], "stopped": "deadline",
            "skipped": {"pass": 0, "backoff": 0, "cap": 0, "too soon": 0,
                        "nothing to ask about": 0},
@@ -1066,6 +1135,17 @@ def night(until: str, *, clock=None, sleep=None, actions=None, out=print) -> dic
                         done = actions["cycle"]() or {}
                         state["last_cycle"] = now
                         did["cycles"] += 1
+                        # A cycle is what brings an answer back, so launching
+                        # is checked straight after one and nowhere else.
+                        launched = (actions.get("promote")
+                                    or (lambda: {}))() or {}
+                        did["rooms"] += launched.get("rooms", 0)
+                        did["orders"] += launched.get("orders", 0)
+                        did["held"].extend(launched.get("held", [])[:3])
+                        if launched.get("orders"):
+                            out(f"  {now.strftime('%H:%M')} "
+                                f"{launched['orders']} paper order(s) from "
+                                f"{launched['rooms']} new room(s)")
                         did["answered"] = sum(
                             1 for row in _nexus_rows()
                             if row.get("type") == "answer"
