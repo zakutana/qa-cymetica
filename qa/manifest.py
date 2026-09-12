@@ -78,14 +78,16 @@ def merge(known: dict[str, dict], fresh: dict[str, dict]) -> dict[str, dict]:
     return out
 
 
-def read(path: Path | None = None) -> dict[str, dict]:
-    """Every line we have. A half-written line is skipped, never guessed at."""
-    target = path or manifest_path()
+def parse(text: str) -> dict[str, dict]:
+    """id -> line, from the text of a manifest wherever it came from.
+
+    Separate from `read` so a caller can hand it the COMMITTED manifest. The
+    guard in tests/repo/test_evidence_in_git.py promises "every cited id is in
+    the committed manifest" and reads its citations out of HEAD for exactly
+    that reason -- and then read the manifest from the working tree, where a
+    line staged but not committed is indistinguishable from one a clone holds.
+    """
     out: dict[str, dict] = {}
-    try:
-        text = target.read_text(encoding="utf-8")
-    except OSError:
-        return out
     for line in text.splitlines():
         line = line.strip()
         if not line:
@@ -97,6 +99,15 @@ def read(path: Path | None = None) -> dict[str, dict]:
         if isinstance(row, dict) and row.get("id"):
             out[str(row["id"])] = row
     return out
+
+
+def read(path: Path | None = None) -> dict[str, dict]:
+    """Every line we have. A half-written line is skipped, never guessed at."""
+    target = path or manifest_path()
+    try:
+        return parse(target.read_text(encoding="utf-8"))
+    except OSError:
+        return {}
 
 
 def write(entries: dict[str, dict], path: Path | None = None) -> int:

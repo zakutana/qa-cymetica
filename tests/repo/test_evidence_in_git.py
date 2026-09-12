@@ -80,7 +80,20 @@ def test_every_capture_the_committed_state_cites_can_still_be_produced():
                    "not an empty read"))
         return
 
-    known = manifest.read()
+    # From HEAD, like the citations above it. This read the working tree, so a
+    # manifest line written but not committed -- `git commit --no-verify`, or a
+    # clone with no `core.hooksPath`, which is the case the deep pass's step 0
+    # exists to repair -- proved a citation that a clone would find bare. The
+    # docstring says "committed manifest"; now both halves come from the same
+    # place. 3/3 on triage, 2026-09-13.
+    raw = keepset._committed("audits/evidence-manifest.jsonl")
+    if raw is None:
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason="the committed manifest could not be read from git, and a "
+                   "read we could not make is not an empty read"))
+        return
+    known = manifest.parse(raw)
     bundles = sorted((REPO / "archive").glob("evidence-*.tar.xz"))
     held: set[str] = set()
     for bundle in bundles:
@@ -125,7 +138,7 @@ def test_every_capture_the_committed_state_cites_can_still_be_produced():
         population={"lost": lost[:20]},
         sources={"journal": "HEAD:state/journal/events.jsonl",
                  "ledger": "HEAD:state/ledger.json",
-                 "manifest": manifest.manifest_path().name}))
+                 "manifest": "HEAD:audits/evidence-manifest.jsonl"}))
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

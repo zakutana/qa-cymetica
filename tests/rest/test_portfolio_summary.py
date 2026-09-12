@@ -55,6 +55,11 @@ def accounts_for(scope) -> str | None:
     by naming it as excluded"); until the deep pass of 2026-09-11 only naming
     passed, so folding event cards into the counters -- a fix -- would have
     been filed as unaccounted positions, #83's shape on this same endpoint.
+
+    None for a sentence in `counters_cover` that says they are NOT counted:
+    that is not counting them, and V05 of 2026-09-11 pinned it 3/3. Whether
+    such a sentence nonetheless STATES the exclusion is a different question
+    and `states_exclusion` below answers it -- kept apart so that pin holds.
     """
     scope = scope if isinstance(scope, dict) else {}
     covers = str(scope.get("counters_cover") or "").lower()
@@ -70,6 +75,32 @@ def accounts_for(scope) -> str | None:
     if mentions(words):
         return "named"
     return None
+
+
+def states_exclusion(scope) -> bool:
+    """Does the scope say ANYWHERE that this population is left out?
+
+    Separate from `accounts_for`, which answers the narrower question of how
+    the population is accounted for and whose three returns are pinned by
+    `test_the_summary_may_account_for_positions_by_counting_them` (V05, deep
+    pass of 2026-09-11, 3/3). That pin is right: a sentence saying event cards
+    are NOT counted is not counting them, so `accounts_for` must go on
+    answering None for it.
+
+    What was missing is that such a sentence is still the exclusion being
+    STATED, and the contract at the top of this file is "must say so, and say
+    where that population can be read" -- which does not say in which field. A
+    scope reading `counters_cover: "...event-card bull/bear positions are not
+    counted here, see /api/v1/event-cards/positions"` with an empty
+    `counters_do_not_cover` does exactly what is asked, and the check reported
+    it as a scope that "neither counts them nor names them". That is #83's
+    shape for the third time on this endpoint, and #83 cost a retraction.
+    Three readers, 3/3, deep pass of 2026-09-13.
+    """
+    scope = scope if isinstance(scope, dict) else {}
+    covers = str(scope.get("counters_cover") or "").lower()
+    return (any(k in covers for k in ("event-card", "event card", "event_card"))
+            and any(n in covers for n in NEGATIONS))
 
 
 @qa(component="rest.account", tier=SafetyTier.SAFE, surface="rest")
@@ -115,7 +146,9 @@ def test_the_summary_says_which_populations_its_counters_leave_out(rest_trusted)
     # that is the one the scope has to account for -- either by counting it or
     # by naming it as excluded and saying where it is read (accounts_for).
     how = accounts_for(scope)
-    named = how is not None
+    # Or stated as an exclusion anywhere in the scope -- see states_exclusion.
+    stated = states_exclusion(scope)
+    named = how is not None or stated
 
     # WHERE IT IS READ, wherever the body says it. This looked only inside the
     # joined prose of `counters_do_not_cover`, and their captured fix carries
@@ -137,9 +170,9 @@ def test_the_summary_says_which_populations_its_counters_leave_out(rest_trusted)
                         "is still unsaid")
     if not named:
         problems.append(f"{len(held)} event-card position(s) are held and "
-                        f"the scope neither counts them in counters_cover "
-                        f"nor names them in counters_do_not_cover")
-    elif how == "named" and not points_at:
+                        f"the scope neither counts them nor says anywhere "
+                        f"that it leaves them out")
+    elif (how == "named" or stated) and not points_at:
         problems.append("the excluded population is named but the reader is "
                         "not told which endpoint carries it")
 

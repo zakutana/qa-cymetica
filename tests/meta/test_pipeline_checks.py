@@ -1423,3 +1423,44 @@ def test_a_call_that_could_not_be_read_is_not_three_tools_that_answered():
               a("get_backtest_models", "answered"),
               a("get_strategy_returns", "failed_on_its_own_terms")]
     assert decide(theirs)[0] == "passed"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_exclusion_counts_wherever_their_scope_states_it():
+    """#83's shape, caught a third time on the same endpoint before it went out.
+
+    The contract this check states is that a summary excluding a population it
+    holds "must say so, and say where that population can be read". It does not
+    say in which FIELD. `accounts_for` read `counters_do_not_cover` for the
+    statement and threw away any sentence in `counters_cover` that carried a
+    negation -- so a scope saying "event-card bull/bear positions are not
+    counted here, see /api/v1/event-cards/positions" with an empty
+    `counters_do_not_cover` was reported as a scope that "neither counts them
+    nor names them", about a body that had just named them.
+
+    #83 was filed on this endpoint on a misreading of the same kind, withdrawn,
+    and cost a retraction. Three readers, 3/3, 2026-09-13.
+    """
+    from tests.rest.test_portfolio_summary import accounts_for
+
+    from tests.rest.test_portfolio_summary import states_exclusion
+
+    theirs = {"counters_cover": "on-chain WTA bets from this user's swarm "
+                                "wallet; event-card bull/bear positions are "
+                                "not counted here, see "
+                                "/api/v1/event-cards/positions",
+              "counters_do_not_cover": []}
+    assert accounts_for(theirs) is None, (
+        "V05's pin stands: a sentence saying event cards are NOT counted is "
+        "still not counting them")
+    assert states_exclusion(theirs), (
+        "but it IS the exclusion stated, which is what the contract asks for "
+        "-- and reading only counters_do_not_cover called this body silent")
+
+    # The direction that must still fail, or the reader above is a hole: a
+    # scope that says nothing about the population at all.
+    silent = {"counters_cover": "on-chain WTA bets only",
+              "counters_do_not_cover": []}
+    assert accounts_for(silent) is None and not states_exclusion(silent), (
+        "a scope silent about the population held is the defect this check "
+        "was written for")

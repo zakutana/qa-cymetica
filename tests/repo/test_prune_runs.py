@@ -378,3 +378,50 @@ def test_a_dry_run_deletes_nothing_and_apply_deletes_only_the_victims(
     assert mod.main(["--apply"]) == 0
     left = {p.name for p in (state / "runs").glob("*.json")}
     assert left == {"run-20260909T000000Z-fresh.json"}
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_unreadable_audit_file_is_not_an_audit_file_citing_nothing(
+        tmp_path, monkeypatch):
+    """The same refusal, over the OTHER file `cited_run_ids` opens.
+
+    The first version of this guard covered `state/ledger.json` and left
+    `audits/checks.json` one line below it reading `.get("audited") or {}` --
+    so an unreadable one cited nothing and every record it alone cites went
+    into `victims()`. Two readers of the 2026-09-13 pass reproduced the loss by
+    simulation: four records, among them
+    run-20260907T175903Z-c4b34d4, moved from kept to doomed. The claim that
+    reached them said checks.json cites 607 run ids; it cites twelve. The
+    number was wrong and the deletion was real, which is why a claim is
+    reproduced rather than believed.
+
+    `_live_nodeids` is stubbed because the refusal returns before it is
+    reached, and with REPO_ROOT moved it would look for never_fired.py in the
+    temporary tree.
+    """
+    state, mod = _state(tmp_path, monkeypatch)
+    monkeypatch.setattr(mod, "REPO_ROOT", tmp_path)
+    monkeypatch.setattr(mod, "_live_nodeids", lambda: set())
+    cited = "run-20260801T000000Z-audited"
+    _write(state, cited, _ago(30), results=[])
+
+    audits = tmp_path / "audits"
+    audits.mkdir(parents=True, exist_ok=True)
+    (audits / "checks.json").write_text(json.dumps(
+        {"audited": {"tests/x.py::test_y": {"run_id": cited,
+                                            "fingerprint": "sha256:a"}}}),
+        encoding="utf-8")
+    assert mod.keep_set().get(cited) == "cited", (
+        "a record named only by audits/checks.json is cited; without that the "
+        "truncated half below proves nothing")
+
+    (audits / "checks.json").write_text('{"audited": {"tests/x.py::test_',
+                                        encoding="utf-8")
+    assert mod.keep_set().get(cited) == "unreadable", (
+        "a checks.json that cannot be parsed is not one that cites nothing")
+    assert mod.victims() == []
+
+    # Absent is still empty: a clone that has never run an audit has no such
+    # file, and refusing there would mean nothing is ever pruned on it.
+    (audits / "checks.json").unlink()
+    assert mod.keep_set().get(cited) != "unreadable"

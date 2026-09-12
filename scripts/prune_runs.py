@@ -142,15 +142,24 @@ def _started(record: dict) -> str:
 
 def keep_set(older_than_days: int = 7) -> dict[str, str]:
     """run_id -> the reason it survives. Absence from this is the only licence."""
-    # The same refusal `evidence_keep_set` makes two ways below, over the file
-    # `cited_run_ids` reads first. `_load` answers an unreadable ledger with a
-    # marker nothing downstream inspects, so the structural walk found no run id
-    # at all and every record the ledger cites became a victim. A failed read is
+    # The same refusal `evidence_keep_set` makes two ways below, over EVERY
+    # file `cited_run_ids` reads. `_load` answers an unreadable one with a
+    # marker nothing downstream inspects, so the structural walk finds no run id
+    # in it and every record it alone cites becomes a victim. A failed read is
     # not an empty read -- here too, and this is the sweep that deletes.
-    ledger_file = state_dir() / "ledger.json"
-    if ledger_file.exists() and _load(ledger_file).get(UNREADABLE):
-        print("  WARNING: the ledger could not be read; keeping every record")
-        return {p.stem: "unreadable" for p in records_on_disk()}
+    #
+    # Both files, not just the ledger. The first version of this guard covered
+    # `ledger.json` and left `audits/checks.json` reading `.get("audited") or
+    # {}` one line below, which is the identical hole: simulated with
+    # --older-than 0, four records cited only through checks.json went from
+    # kept to victims. Anything `cited_run_ids` opens belongs on this list, so
+    # it is a list.
+    for cites in (state_dir() / "ledger.json",
+                  REPO_ROOT / "audits" / "checks.json"):
+        if cites.exists() and _load(cites).get(UNREADABLE):
+            print(f"  WARNING: {cites.name} could not be read; "
+                  f"keeping every record")
+            return {p.stem: "unreadable" for p in records_on_disk()}
 
     records = {p.stem: _load(p) for p in records_on_disk()}
     order = sorted(records, key=lambda r: _started(records[r]), reverse=True)
