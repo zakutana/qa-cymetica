@@ -54,6 +54,18 @@ def _at(tmp_path, monkeypatch):
     return backtests
 
 
+def _scripts_lab(tmp_path, monkeypatch):
+    """scripts/lab.py with its state under tmp_path; scripts/ is not a package."""
+    import importlib.util
+
+    _at(tmp_path, monkeypatch)
+    spec = importlib.util.spec_from_file_location(
+        "scripts_lab_backtest", REPO / "scripts" / "lab.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_one_basket_has_one_fingerprint_however_it_is_written():
     from qa import backtests
@@ -160,6 +172,85 @@ def test_a_missing_number_is_missing_and_a_half_written_line_is_skipped(
     with open(backtests.path(), "a", encoding="utf-8") as handle:
         handle.write('{"fp": "half-writ')
     assert len(backtests.load()) == 1, "a torn line stopped the whole register"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_their_thirty_a_minute_is_ours_to_keep():
+    """Their own document: "30/min per IP". Kept on our side of the wire, so a
+    night that searches hard is refused by nobody -- and so the pace is a
+    number in one place rather than a habit."""
+    from qa import backtests
+
+    start = 1_000_000.0
+    assert backtests.next_slot([], start) == 0.0
+    assert backtests.next_slot([start - 1] * 29, start) == 0.0
+
+    full = [start - 10] * 30
+    wait = backtests.next_slot(full, start)
+    assert 49.0 <= wait <= 50.0, wait
+
+    stale = [start - 120] * 30
+    assert backtests.next_slot(stale, start) == 0.0, (
+        "calls that fell out of the window still counted against us")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_basket_the_register_knows_is_not_asked_again(tmp_path, monkeypatch):
+    """The whole point, end to end: the call is not made."""
+    backtests = _at(tmp_path, monkeypatch)
+    lab = _scripts_lab(tmp_path, monkeypatch)
+    asked = []
+
+    def _call(constituents, period_days, **_):
+        asked.append((len(constituents), period_days))
+        return {"total_return_pct": 21.93, "sharpe_ratio": 5.47,
+                "max_drawdown_pct": 4.82, "n_points": 29}
+
+    first = lab.backtest(BTC_BCH, 30, call=_call, now=NOW)
+    assert first["cached"] is False and len(asked) == 1
+
+    again = lab.backtest(list(reversed(BTC_BCH)), 30, call=_call, now=NOW)
+    assert again["cached"] is True, "it asked them the same question twice"
+    assert len(asked) == 1
+    assert again["s"] == 5.47
+
+    other = lab.backtest(BTC_BCH, 7, call=_call, now=NOW)
+    assert other["cached"] is False and len(asked) == 2, "a window is a question"
+
+    later = lab.backtest(BTC_BCH, 7, call=_call,
+                         now=NOW + timedelta(days=3))
+    assert later["cached"] is False and len(asked) == 3, (
+        "a three-day-old seven-day reading is a different week")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_seeds_are_their_own_cards_as_the_sampler_recorded_them(tmp_path,
+                                                                    monkeypatch):
+    """The sampler already writes each card's basket in exactly the shape their
+    backtest takes -- `basket: [{"symbol": "BTC", "weight": 0.9962}]` -- so the
+    search starts from their cards rather than from anything we invented."""
+    lab = _scripts_lab(tmp_path, monkeypatch)
+    rows = [
+        {"type": "card", "card_id": "c-1", "title": "Bitcoin hack",
+         "basket": [{"symbol": "BTC", "weight": 0.9962},
+                    {"symbol": "BCH", "weight": 0.0038}]},
+        {"type": "card", "card_id": "c-2", "title": "One leg only",
+         "basket": [{"symbol": "ETH", "weight": 1.0}]},
+        {"type": "tick", "at": "2026-09-12T00:00:00+00:00"},
+        {"type": "card", "card_id": "c-1", "title": "Bitcoin hack, later",
+         "basket": [{"symbol": "BTC", "weight": 0.5},
+                    {"symbol": "OKB", "weight": 0.5}]},
+    ]
+    (tmp_path / "samples.jsonl").write_text(
+        "\n".join(json.dumps(r) for r in rows) + "\n", encoding="utf-8")
+
+    seeds = lab.card_baskets()
+    assert [s["card"] for s in seeds] == ["c-1"], (
+        "a one-leg card is not a basket their tool accepts, and a card's "
+        "newest basket is the one it has")
+    assert seeds[0]["legs"][0]["symbol"] in ("BTC", "OKB")
+    assert len(seeds[0]["legs"]) == 2
+    assert "later" in seeds[0]["title"]
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

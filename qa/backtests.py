@@ -48,8 +48,28 @@ STALE_FRACTION = 0.1
 STALE_MIN_DAYS, STALE_MAX_DAYS = 1.0, 30.0
 
 
+# Theirs: "30/min per IP", from the backtest API document. Kept on our side of
+# the wire, so a night that searches hard is refused by nobody, and so the pace
+# is a number in one place rather than a habit.
+PER_MINUTE = 30
+WINDOW_SECONDS = 60.0
+
+
 class BacktestError(ValueError):
     """A basket the register refuses before anything is called or written."""
+
+
+def next_slot(recent: list[float], now: float, limit: int = PER_MINUTE,
+              window: float = WINDOW_SECONDS) -> float:
+    """Seconds to wait before the next call, given when the recent ones went.
+
+    Monotonic seconds, not wall clock: a night runs for hours and a clock that
+    steps backwards would hand out a free burst.
+    """
+    inside = sorted(t for t in recent if now - t < window)
+    if len(inside) < limit:
+        return 0.0
+    return max(0.0, window - (now - inside[-limit]))
 
 
 def path() -> Path:

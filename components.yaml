@@ -598,7 +598,12 @@ mcp_tools:
      # Served from their 2026-09-10 12:37 release, after they fixed #85.
      # Both read: one looks a card up, the other backtests a basket and
      # NEXUS describes it as free and read-only.
-     get_event_card_info, backtest_event_card_idea]
+     get_event_card_info, backtest_event_card_idea,
+     # Classified 2026-09-12. The search seeds itself from their cards, and
+     # without this we can only ever see the ones the sampler happened to walk
+     # past -- twelve of them. A listing is the plainest read there is; the
+     # sibling that explains ONE card has been read since 2026-09-10.
+     list_event_cards]
   contribute:
     [submit_observation, submit_feedback, request_feature, submit_signal]
   trade:

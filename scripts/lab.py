@@ -44,6 +44,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
+from qa import backtests as qa_backtests  # noqa: E402
 from qa import lab, rooms  # noqa: E402
 from qa.console import printable  # noqa: E402
 
@@ -356,6 +357,106 @@ def surface() -> dict:
         pass
     moved = shapes.tools_drift(before, listed)
     return {"now": names, **moved}
+
+
+# --- their backtest, asked once ---------------------------------------------
+
+BACKTEST_TOOL = "backtest_event_card_idea"
+_PACE: list[float] = []
+
+
+def card_baskets() -> list[dict]:
+    """Their own cards as the sampler recorded them, newest basket each.
+
+    The sampler already writes `basket: [{"symbol": "BTC", "weight": 0.9962}]`
+    for every card it sees, which is exactly the shape their backtest takes --
+    so the search starts from THEIR cards rather than from anything of ours,
+    which is also what CLAUDE.md requires of where a strategy comes from.
+
+    A card whose basket is a single coin is dropped: their tool takes two legs
+    at least, and a one-coin card IS that coin, which the index history already
+    tells us about.
+    """
+    newest: dict[str, dict] = {}
+    for row in _samples():
+        if row.get("type") != "card" or not row.get("card_id"):
+            continue
+        legs = [leg for leg in (row.get("basket") or [])
+                if isinstance(leg, dict) and leg.get("symbol")]
+        if len(legs) < qa_backtests.MIN_LEGS:
+            continue
+        newest[str(row["card_id"])] = {
+            "card": str(row["card_id"]), "title": row.get("title") or "",
+            "legs": legs}
+    return list(newest.values())
+
+
+def _samples() -> list[dict]:
+    """The sampler's rows, read straight off the file it appends to."""
+    from qa.state import state_dir
+
+    target = state_dir() / "samples.jsonl"
+    if not target.is_file():
+        return []
+    out = []
+    for line in target.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            row = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(row, dict):
+            out.append(row)
+    return out
+
+
+def _backtest_call(constituents, period_days: int, include_fees: bool = False,
+                   starting_capital: float = 1000.0) -> dict:
+    """One call to their tool, at SAFE, at their own pace.
+
+    No evidence capture: a search makes thousands of these and the store keeps
+    one witness per tool whatever we do, so capturing them all would cost a
+    gigabyte to keep one file. A candidate that gets PROMOTED -- one we put to
+    Nexus or trade on -- is re-run through `backtest_cited` instead, where the
+    bytes are worth keeping because a verdict may one day cite them.
+    """
+    import time as _time
+
+    wait = qa_backtests.next_slot(_PACE, _time.monotonic())
+    if wait:
+        _time.sleep(wait)
+    _PACE.append(_time.monotonic())
+    del _PACE[:-qa_backtests.PER_MINUTE]
+
+    nexus, mcp, token = _reader()
+    try:
+        return nexus._inner(mcp.call(BACKTEST_TOOL, {
+            "constituents": [{"symbol": leg["symbol"], "weight": leg["weight"]}
+                             for leg in constituents],
+            "period_days": int(period_days),
+            "include_fees": bool(include_fees),
+            "starting_capital": float(starting_capital)})) or {}
+    finally:
+        _done(mcp, token)
+
+
+def backtest(constituents, period_days: int = 30, *, why: str = "",
+             call=None, now=None) -> dict:
+    """Their answer for one basket over one window, asked at most once.
+
+    The register is consulted BEFORE the call, which is the whole of
+    [operator 2026-09-12] *"at se netestuje to co uz bylo"*: a question already
+    answered recently enough to still be true is answered from the file.
+    """
+    fp = qa_backtests.fingerprint(constituents, period_days)
+    known = qa_backtests.already(fp, now=now)
+    if known:
+        return {"cached": True, **known}
+    answer = (call or _backtest_call)(constituents, period_days) or {}
+    row = qa_backtests.record(constituents, period_days, answer, why=why, now=now)
+    return {"cached": False, **row}
 
 
 # --- the loop --------------------------------------------------------------
@@ -773,6 +874,15 @@ def main(argv: list[str] | None = None) -> int:
     truth_cmd = sub.add_parser("truth", help="their backtests, ranked")
     truth_cmd.add_argument("--limit", type=int, default=12)
     sub.add_parser("cycle", help="finish what is in flight, sample, compare")
+    bt = sub.add_parser("backtest", help="their backtest for one basket, once")
+    bt.add_argument("--card", help="seed from a card the sampler has seen")
+    bt.add_argument("--legs", help="SYMBOL:WEIGHT,SYMBOL:WEIGHT (2-20)")
+    bt.add_argument("--period", type=int, default=30,
+                    choices=qa_backtests.PERIODS)
+    bt.add_argument("--fees", action="store_true",
+                    help="their round-trip estimate: 2%% fee + 0.5%% slippage")
+    bt.add_argument("--why", default="", help="what this reading is for")
+    sub.add_parser("seeds", help="their cards, as the sampler recorded them")
     adopt_cmd = sub.add_parser("adopt", help="take over a room already running")
     adopt_cmd.add_argument("room")
     adopt_cmd.add_argument("--window-days", type=float, default=7.0)
@@ -825,6 +935,38 @@ def main(argv: list[str] | None = None) -> int:
                   f"table sorts them together -- read the column.")
     elif args.cmd == "cycle":
         print(json.dumps(cycle(), ensure_ascii=False, indent=1, default=str))
+    elif args.cmd == "seeds":
+        for seed in card_baskets():
+            legs = " + ".join(f"{leg['symbol']} {leg['weight'] * 100:.1f}%"
+                              for leg in seed["legs"])
+            print(f"  {seed['card'][:8]}  {seed['title'][:52]:54} {legs}")
+    elif args.cmd == "backtest":
+        if args.card:
+            seed = next((s for s in card_baskets()
+                         if s["card"].startswith(args.card)), None)
+            if seed is None:
+                raise SystemExit(f"no card starting {args.card}; `lab.py seeds`")
+            legs, why = seed["legs"], args.why or f"card {seed['title'][:60]}"
+        elif args.legs:
+            legs = []
+            for part in args.legs.split(","):
+                symbol, _, weight = part.partition(":")
+                legs.append({"symbol": symbol.strip(),
+                             "weight": float(weight or 1)})
+            why = args.why
+        else:
+            raise SystemExit("--card or --legs")
+        try:
+            said = backtest(legs, args.period, why=why)
+        except qa_backtests.BacktestError as exc:
+            raise SystemExit(str(exc))
+        where = "from the register" if said["cached"] else "asked just now"
+        print(f"  {said['fp']}  over {said['p']} d, {where}")
+        print(f"    return {said['r']}%  sharpe {said['s']}  "
+              f"drawdown {said['d']}%  points {said['pts']}")
+        if said.get("lost"):
+            print(f"    they could not price: {', '.join(said['lost'])} -- "
+                  f"this is a different basket from the one asked for")
     elif args.cmd == "adopt":
         record = adopt(args.room, window_days=args.window_days,
                        stop_pct=args.stop_pct,
