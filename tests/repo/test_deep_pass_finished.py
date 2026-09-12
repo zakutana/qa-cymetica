@@ -73,6 +73,11 @@ KEYS_FROM = "2026-09-09"
 # `next` arrived a day later and gets its own gate, so the 2026-09-09 report
 # is not retroactively failed for a key that did not exist when it was written.
 NEXT_FROM = "2026-09-10"
+# `at_finished` has been read by scripts/deep_pass_process.py since it was
+# written and was never in the template, so the cost of three of the four
+# passes on record is `?` -- the one number "was this worth what it cost" is
+# about. Gated too, so those three stay green: they could not have written it.
+COST_FROM = "2026-09-12"
 WEEK = 7
 
 # How long a pass may be in flight before an unwritten `finished` stops
@@ -324,6 +329,13 @@ def problems(progress: dict, nodeids: set[str] | None = None,
             f"say which existing test was considered and why it would not hold "
             f"this")
 
+    if (at[:10] >= COST_FROM and progress.get("finished")
+            and not progress.get("at_finished")):
+        out.append(
+            "`at_finished` was never written, so this pass cost `?` minutes and "
+            "the week cannot say whether the process was worth it. Step 11b "
+            "writes it beside `finished`")
+
     if at[:10] >= NEXT_FROM:
         out += _next_step_problems(progress, agreed_items)
     return out
@@ -572,6 +584,26 @@ def _pass(**over) -> dict:
             "meta_tests": {"start": 200, "end": 200, "reason": None}}
     base.update(over)
     return base
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_finished_pass_records_when_it_finished():
+    """`elapsed_min` was `?` for three of the four passes on record, because the
+    notebook template never had the key the reader has always read. A pass that
+    cannot say what it cost is a pass the week cannot weigh -- and weighing the
+    process is what the week is for."""
+    silent = problems(_pass(finished=True), NODEIDS, set())
+    assert any("at_finished" in line for line in silent), silent
+
+    said = problems(_pass(finished=True,
+                          at_finished="2026-09-20T04:10:00+00:00"),
+                    NODEIDS, set())
+    assert not any("at_finished" in line for line in said), said
+
+    # The three passes that could not have written it are not failed for it.
+    ancient = problems(_pass(finished=True, at="2026-09-11T17:00:00+00:00"),
+                       NODEIDS, set())
+    assert not any("at_finished" in line for line in ancient), ancient
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

@@ -75,6 +75,12 @@ asked for it. So it is kept here.
   in the same conversation not to have to think about what is due, and the
   session heard "run it without me" in a sentence that meant "remind me". The
   distance between those two is the whole of this rule.
+
+  **The reminder is for them, so say it to them.** `.claude/hooks/reminders.py`
+  prints what is due and the words that start it; if it printed anything,
+  repeat that line in your first answer, in Czech. Hook output arrives in your
+  context, not on their screen, and a reminder they never see is the mechanism
+  this rule replaced.
 * Non-trivial work starts in plan mode. Ask for it; do not wait to be told.
 * Tests before implementation. A test written afterwards passes whatever the
   code does, including the mistake, and 21 commits here carry code with no
@@ -528,6 +534,16 @@ scripts/keep.py      `track` force-adds that set (evidence/ is gitignored since
 scripts/prune_runs.py  run records older than a week and captures older than
                      three days that nothing stands on, by name, with the
                      reason each survivor was kept printed.
+scripts/processes.py  what is due, and what the operator said since the last
+                     pass. `reminders` is the whole of the scheduler they
+                     refused: a few lines naming what is on the table and the
+                     words that start it, printed by
+                     .claude/hooks/reminders.py and repeated to them in the
+                     first answer. Each rule is a fixture in
+                     tests/repo/test_reminders.py in both directions, because a
+                     line that appears every evening is one they stop reading.
+                     `messages --since-last-pass` is the deep pass's step 1
+                     reader -- since the last pass, not since midnight UTC.
 ```
 
 ## Reading the numbers honestly

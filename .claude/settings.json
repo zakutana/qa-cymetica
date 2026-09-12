@@ -30,7 +30,9 @@
       "Bash(python scripts/prune_runs.py:*)",
       "Bash(python scripts/deep_pass_process.py:*)",
       "Bash(python scripts/rooms.py:*)",
-      "Bash(python scripts/sampler.py:*)"
+      "Bash(python scripts/sampler.py:*)",
+      "Bash(python scripts/processes.py:*)",
+      "Bash(python scripts/keep.py:*)"
     ]
   },
   "hooks": {
@@ -81,6 +83,15 @@
             ],
             "timeout": 10,
             "statusMessage": "counting unread notes in the Nexus rooms"
+          },
+          {
+            "type": "command",
+            "command": "python",
+            "args": [
+              ".claude/hooks/reminders.py"
+            ],
+            "timeout": 15,
+            "statusMessage": "working out what is due"
           }
         ]
       }
