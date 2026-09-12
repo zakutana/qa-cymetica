@@ -12,6 +12,13 @@ Strom čistý, 47 commitů k pushnutí.
 |---|---|---|---|---|
 | audit kontraktů (3 auditoři) | 27 | 23 | 1 | 3 |
 | krok 1 (co jsi řekl od minula) | 1 | 1 | — | — |
+| code review xhigh | — | — | — | — |
+
+Řádek s code review je prázdný schválně a je to vada tohohle běhu, ne nula
+nálezů: krok 3 proběhl před kompakcí a **žádný jeho nález se do notebooku
+nezapsal**, takže po kompakci po něm nezbylo nic. Notebook má 27 tvrzení a
+všech 27 je z auditu. Přesně ta ztráta, kvůli které ten soubor existuje —
+jen o krok dřív, než ho pass začal plnit.
 
 Triáž: tři čtenáři bez sdíleného kontextu, **každý nález reprodukovaný mutací**
 — ne přečtením. Dvanáct tvrzení šlo přes triáž dnes v noci a devatenáct z
