@@ -1327,3 +1327,51 @@ def test_a_window_is_read_for_its_value_and_beside_its_own_sharpe():
                         365) == ["first_point"], (
         "a date the points begin at reads the coverage even though it is not "
         "a number of days")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_refusal_is_read_off_the_failure_and_not_off_the_body():
+    """The fourth mechanism again, on a check written the day the guide landed.
+
+    `/guides/nexus-lab-loop` (2026-09-12) promises "The ground-truth tools need
+    no key", so a check asked all three anonymously and looked for the
+    vocabulary of authentication in what came back. Both
+    `list_backtest_surfaces` and `get_backtest_models` answered `success: true`
+    and were classified as refusing us -- because a surface's row names its own
+    `auth`, which is precisely what their table says it will carry ("the
+    question each answers, its API and auth"). The vocabulary of authentication
+    is the SUBJECT of those two tools, so a body-wide match could only ever
+    accuse them of what they were describing.
+
+    It failed loudly, one command short of `submit.py`. This pins the shape:
+    the words are read only once the structure says the call failed, and the
+    body that fooled it is the first case below, verbatim in shape.
+    """
+    from tests.mcp.test_ground_truth_needs_no_key import failure_text
+
+    def answer(inner):
+        """Their envelope: a tool's payload, double-encoded inside content."""
+        return {"jsonrpc": "2.0", "id": 1, "result": {
+            "content": [{"type": "text", "text": json.dumps(inner)}]}}
+
+    surfaces = answer({"success": True, "tool": "list_backtest_surfaces",
+                       "result": {"surfaces": [
+                           {"id": "bots", "page": "/backtest",
+                            "api": "/api/v1/backtest/bots",
+                            "auth": "none -- no API key required"}]}})
+    assert failure_text(surfaces) is None, (
+        "a tool that answered success: true has not refused anybody, however "
+        "much of its own subject matter is the word auth")
+
+    assert failure_text({"jsonrpc": "2.0", "id": 1, "error": {
+        "code": -32601, "message": "Method not found"}}) is not None
+    assert failure_text({"jsonrpc": "2.0", "id": 1, "result": {
+        "isError": True,
+        "content": [{"type": "text", "text": "unauthorized: send X-API-Key"}]}
+    }) == "unauthorized: send X-API-Key"
+    assert failure_text(answer({"success": False,
+                                "error": "API key required"})) is not None, (
+        "their tool-level failure lives inside the double encoding, and a "
+        "check that only reads isError never sees it"
+    )
+    assert failure_text({"jsonrpc": "2.0", "id": 1, "result": "plain"}) is None
