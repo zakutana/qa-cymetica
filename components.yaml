@@ -582,6 +582,14 @@ mcp_tools:
      list_ontology_dimensions, browse_ontology, resolve_ontology_concept,
      search_ontology, find_trade_path, get_strategy_returns,
      get_deep_answer, ask_nexus_deep,
+     # The ground-truth lane of the overnight loop Cymetica themselves told us
+     # to run (Telegram, 2026-09-11): surfaces, then models, then the metrics.
+     # Both take no arguments and return a catalogue; both are served to an
+     # anonymous caller, which is the vendor's own statement that they read
+     # nothing of ours. Classified 2026-09-12 -- before it, the transport
+     # refused them, which is why the store holds 0 calls to the first step of
+     # the loop.
+     list_backtest_surfaces, get_backtest_models,
      # Served from their 2026-09-10 12:37 release, after they fixed #85.
      # Both read: one looks a card up, the other backtests a basket and
      # NEXUS describes it as free and read-only.

@@ -40,6 +40,11 @@ from pathlib import Path
 
 REPO_ROOT = Path(os.environ.get("QA_REPO_ROOT")
                  or Path(__file__).resolve().parent.parent)
+# Where the code lives, which is not where the DATA lives when a test points
+# QA_REPO_ROOT at a fixture. Importing `qa` from a fixture would import nothing.
+CODE_ROOT = Path(__file__).resolve().parent.parent
+if str(CODE_ROOT) not in sys.path:
+    sys.path.insert(0, str(CODE_ROOT))
 
 # A pass runs every evening they are working, so 36 hours means a night went by
 # without one -- not "they are late", which they never are.
@@ -81,6 +86,18 @@ def reminders(facts: dict, now: datetime) -> list[str]:
         out.append(
             f"Týdenní ohlédnutí {due} — příští „jdu spat\" ho udělá i s týdnem, "
             f"i když nebude co kontrolovat.")
+
+    for session in facts.get("lab_open") or []:
+        out.append(
+            f"Laboratoř má otevřenou session {session} — zavře ji „jdi do "
+            f"laboratoře\", a do té doby neví další session, kde jste skončili.")
+
+    retry = _hours_since(facts.get("nexus_last_try"), now)
+    if facts.get("nexus_down") and retry is not None and retry >= 2:
+        out.append(
+            f"Nexus neodpověděl {facts['nexus_down']}× za sebou a od posledního "
+            f"pokusu je {retry:.0f} h — je čas zkusit ho znovu: „jdi do "
+            f"laboratoře\".")
 
     carried = " ".join(facts.get("open_next") or [])
     for phase in facts.get("plan_phases") or []:
@@ -508,6 +525,26 @@ def _notebook() -> dict:
         return {}
 
 
+def pass_in_flight(now: datetime | None = None) -> bool:
+    """Whether a deep pass is running right now, from its own notebook.
+
+    One reader, because three things need the answer and none of them may
+    disagree: the laboratory (which must not ask Nexus or trade while the pass
+    verifies #85, #86 and #87 over those very answers), the reminder rules, and
+    the guard in tests/repo. `finished` is the last thing a pass writes; a
+    notebook without it that is older than a day is a pass that died, not one
+    that is running -- the same window tests/repo/test_deep_pass_finished.py
+    draws, and for the same reason.
+    """
+    notebook = _notebook()
+    if not notebook or notebook.get("finished"):
+        return False
+    started = _moment(notebook.get("at"))
+    if started is None:
+        return False
+    return (now or datetime.now(timezone.utc)) - started < timedelta(hours=24)
+
+
 def _open_next() -> list[str]:
     """The open lines, through the hook's own parser: one reader, one format."""
     path = REPO_ROOT / ".claude" / "hooks" / "next_step.py"
@@ -554,8 +591,37 @@ def plan_phases() -> list[dict]:
     return found
 
 
+def _lab_facts() -> dict:
+    """What the laboratory is owed: an unfinished session, and a lane that may
+    have come back. Both are read from files; a reminder that asked the vendor
+    would itself be counted by the check that measures how often we ask."""
+    out: dict[str, object] = {"lab_open": [], "nexus_down": 0,
+                              "nexus_last_try": None}
+    try:
+        from qa import lab
+
+        out["lab_open"] = lab.open_sessions()
+    except Exception:  # noqa: BLE001
+        pass
+
+    rows = _jsonl(REPO_ROOT / "state" / "nexus.jsonl")
+    asked = [r for r in rows if r.get("type") == "question"]
+    finished = {r.get("id"): r.get("type") for r in rows
+                if r.get("type") in ("answer", "gave_up")}
+    streak = 0
+    for row in reversed(asked):
+        outcome = finished.get(row.get("id"))
+        if outcome == "answer":
+            break
+        streak += 1
+    out["nexus_down"] = streak if streak >= 3 else 0
+    if asked:
+        out["nexus_last_try"] = asked[-1].get("at")
+    return out
+
+
 def facts() -> dict:
-    """The impure half: git, the notebook, NEXT.md, the phase tables."""
+    """The impure half: git, the notebook, NEXT.md, the phase tables, the lab."""
     notebook = _notebook()
     unpushed = _git("rev-list", "--count", "@{upstream}..HEAD")
     return {
@@ -564,6 +630,7 @@ def facts() -> dict:
         "week_last": (notebook.get("retrospective") or {}).get("last"),
         "open_next": _open_next(),
         "plan_phases": plan_phases(),
+        **_lab_facts(),
     }
 
 

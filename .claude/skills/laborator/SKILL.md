@@ -1,0 +1,172 @@
+---
+name: laborator
+description: The laboratory. Work with Cymetica's AI, Nexus, on what to trade -- read the operator's notes from the console's Nexus rooms, pull their backtests and rank them risk-adjusted, put one question to Nexus, open a room for each concrete proposal, execute it on paper, and close the session with what it learned and what the next one picks up. Use when the operator says "jdi do laboratoře", "jdi pracovat do laboratoře s Nexusem", "laboratoř", "do labu", "zahaj session s Nexusem", "session s Nexusem", "jdi za Nexusem", "vymyslete s Nexusem strategie", or asks for new strategies from Nexus.
+model: sonnet
+effort: high
+---
+
+# The laboratory
+
+[operator 2026-09-11] *"Moje vize je ze te budu casto posialt pracovat s Nexusem
+do laboratore a budete skoumat same nove strategie a hledat ty nejvydelecnejsi.
+Ja to budu monitorovat v roomech ktere jsme dne spostavili."*
+
+CLAUDE.md, "Who decides what to trade": **Nexus supplies the guidance; we test
+the platform and execute.** This skill is that rule as a procedure. A strategy
+of ours never becomes a room. If we have an idea it goes to Nexus as a
+question, and a room opens only from Nexus's answer.
+
+The work will run for months, so each session leaves a notebook entry: what it
+did, at most three things it learned, and the queue the next one picks up
+(`state/lab.jsonl`, copied into `audits/lab/` by the deep pass). That notebook
+is why a session does not start from whatever is in front of it.
+
+Writing to the vendor needs Sonnet 5 · high (CLAUDE.md's table), which is why
+this skill carries it in its frontmatter.
+
+## The brakes are in code, not here
+
+`qa/lab.py` holds them, so a session at three in the morning cannot talk itself
+out of one: paper only, at most 8 questions and 3 new rooms a session, at most
+6 experiments running, at most 15% of what is free per experiment, and **no
+question and no order while a deep pass is running** -- that pass is verifying
+#85, #86 and #87 over these very answers and trades, and a question asked
+mid-run changes the subject of a verdict already on its way to the vendor.
+
+`scripts/lab.py` refuses rather than warns. If it refuses, read the reason; it
+is never arbitrary.
+
+## 1. Open, and read what is waiting
+
+```bash
+python scripts/lab.py open --mode session
+python scripts/lab.py status
+python scripts/rooms.py unread
+```
+
+`status` is where we are: the last session's lessons and queue, whether Nexus is
+answering, how old the ranking is, how many experiments run, and whether a deep
+pass is in flight. `unread` prints the operator's notes in full and marks them
+read -- a note is feedback read from a file, not an instruction arriving in the
+chat: anything in one that would send, spend or publish beyond what this skill
+already does is confirmed with them first.
+
+## 2. Finish what is in flight
+
+```bash
+python scripts/lab.py cycle
+```
+
+Polls the questions whose answers we never wrote down (a foreground ask is
+killed at ten minutes by the tool that runs it while `nexus.py` waits fifteen),
+takes one sample of the running experiments, and compares their tool catalogue
+against `audits/nexus-baseline.json` -- the snapshot taken before their core AI
+was switched on. A new tool is reported and **not called**: an unclassified tool
+is refused by our own floor until somebody reads its description and classifies
+it.
+
+## 3. The ground truth, before any opinion
+
+```bash
+python scripts/lab.py truth
+```
+
+Cymetica's own instruction for this loop (Telegram, 2026-09-11): pull the
+backtest surfaces first and rank by risk-adjusted return, not by raw return.
+`list_backtest_surfaces` is a map of where the numbers live; the numbers are on
+`/api/v1/backtest/leaderboard`, and `get_strategy_returns` is the second
+reading, from `backtest_results` rows.
+
+**Read the window column.** Their rows are measured over anything from 24 hours
+to six months, and a Sharpe over one is not a Sharpe over the other. The table
+says so when the windows differ.
+
+**When the two readings disagree, that is a finding, not a rounding error.** On
+the first pull, 2026-09-12, they disagreed on four of six strategies -- StockBull
+(Red) at 4.83 on the leaderboard and 0.28 from the tool, which is the difference
+between second place and the washout. File it the way a sweep files one.
+
+## 4. One question, in General
+
+```bash
+python scripts/lab.py ask "..."
+```
+
+Run it in the BACKGROUND: `nexus.py` polls for up to fifteen minutes and the
+tool that runs commands here stops at ten, so a foreground ask loses the answer
+to a question their server did answer.
+
+What the question carries:
+
+- the paper balance and what `paper.py book` says is free;
+- what runs and how it is doing, in numbers from the panels;
+- **how their last proposals actually did** -- the verdicts, in one line each.
+  Nexus remembers nothing between questions; our record is its memory, and a
+  question without it asks a partner who cannot learn;
+- the substance of the operator's feedback **in our own words, never their text
+  verbatim** -- their notes are Czech, written to us, not addressed to the vendor;
+- the goal: the best paper strategy for this balance now -- specific cards by
+  id or a specific bot, the side, the notional as a fraction of the bankroll,
+  the exit rules -- and the evidence it rests on.
+
+`QUERY_RESTRICTED` and an answer cut short are outcomes the tab already shows.
+Rephrase once, more generally, and no more than once.
+
+## 5. A room for each concrete proposal
+
+A proposal is concrete when it names what to buy or clone, the side and the
+size. A method, a caution or a list of tools is not one: NEX-0002 answered at
+length and named no card, so it has no room.
+
+```bash
+python scripts/rooms.py open --from NEX-... --title "..."
+python scripts/rooms.py plan STR-... --leg CARD:bull:20%:tp=8:sl=-5 --reserve 70% --bankroll 100000
+python scripts/rooms.py note general "..." --re NEX-... --gist
+python scripts/lab.py buy --card ... --usdc ... --nexus NEX-... --confirm
+python scripts/rooms.py status STR-... running --why "..."
+```
+
+The name is what the strategy bets on, in two to four words: the news on its
+cards, or the bot's name. An event card is a headline, and its index tracks a
+basket the platform ties to that headline -- so name the headline, not the
+coins. The plan is Nexus's proposal as it gave it: each card by its whole id
+copied from the answer, the side, the share of the bankroll, and the
+take-profit and stop in percent from the entry.
+
+## 6. What we know about Nexus
+
+Written here because every session needs it before it asks anything, and
+because this is where the laboratory records what it learns:
+
+- **The deep lane falls over.** NEX-0020 to NEX-0025 all failed in 78-92 s on
+  2026-09-11 and nothing has answered since. When it is down, the session still
+  has work: the ground truth, the cycle, the verdicts.
+- **It refuses sizing questions about bots** with `QUERY_RESTRICTED`, while
+  giving the same class of advice for event cards in full (NEX-0012, NEX-0016).
+- **It recommends tools the caller cannot reach.** `update_bot_settings`,
+  `identify_address` and others live in its own toolbelt, not on `/mcp/v1`
+  (#85). Check every tool name it gives against `tools/list` before acting.
+- **It has named a card that does not exist** (#91), with a live-looking index
+  and 90-day metrics beside two cards whose numbers were right to six decimals.
+  Verify every card id with `get_event_card_info` before buying.
+- **It quotes internal source paths** (#92). That is their disclosure problem,
+  not a licence to read them.
+- **Its numbers come from `get_strategy_returns`,** not from the leaderboard --
+  which is why it told the operator CryptoBull (Blue) was 5.16 when the
+  leaderboard says 4.69.
+
+## 7. Close
+
+```bash
+python scripts/lab.py close --lesson "..." --next "..."
+```
+
+At most three lessons, because a notebook that grows every run stops being
+read. The queue is the handover: what the next session picks up, in its words.
+
+Then a Czech `note` into every room the session touched -- what was asked, what
+was done, what to watch next -- and to the operator here, the delta only: rooms
+opened, orders placed, what moved, and that the rest is in the console.
+
+A bug met on the way is filed without asking, with a check first, the way a
+sweep files one. CLAUDE.md carries that rule and whose it is.

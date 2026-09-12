@@ -32,7 +32,8 @@
       "Bash(python scripts/rooms.py:*)",
       "Bash(python scripts/sampler.py:*)",
       "Bash(python scripts/processes.py:*)",
-      "Bash(python scripts/keep.py:*)"
+      "Bash(python scripts/keep.py:*)",
+      "Bash(python scripts/lab.py:*)"
     ]
   },
   "hooks": {

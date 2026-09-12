@@ -274,7 +274,7 @@ to neodškrtl, nebo to nikdy nebylo další na řadě.
 
 - [x] 2026-09-12  F2 z `docs/lab-plan.md`: připomínky místo plánovačů — hook při startu session, pravidla v `processes.py`, `at_finished` a zprávy od minulého běhu v deep passu
 
-- [ ] 2026-09-12  F3 z `docs/lab-plan.md`: hlídka `processes.py` nad všemi součástmi, `--flags`, a sekce DNA v CLAUDE.md
+- [x] 2026-09-12  F3 z `docs/lab-plan.md`: hlídka `processes.py` nad všemi součástmi, `--flags`, a sekce DNA v CLAUDE.md
 
 - [ ] 2026-09-12  F4 z `docs/lab-plan.md`: laboratoř v1 — `lab.py`, skill `laborator`, pravda z backtestů, porovnání katalogu se snímkem
 

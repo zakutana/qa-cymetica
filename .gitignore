@@ -69,6 +69,12 @@ state/paper.jsonl
 state/rooms.jsonl
 state/samples.jsonl
 
+# The laboratory's own notebook: what a session did, what it learned, what the
+# next one should pick up. Outside git for the reason the four above are --
+# it is appended to while a run may be in flight -- and copied into audits/lab/
+# by `scripts/keep.py snapshot`, so months of it are not on one disk.
+state/lab.jsonl
+
 # Captured requests and responses. 7 747 files and 469 MB by 2026-09-12,
 # growing 40-170 MB a day -- 120 MB of one day's 170 written by two checks that
 # walk the event-card listing page by page on every run -- and nothing in the

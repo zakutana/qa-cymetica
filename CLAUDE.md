@@ -180,7 +180,7 @@ its own setting does not fit the work in front of it.
 |---|---|
 | sweep, filing, verification (`qa-sweep`) | Sonnet 5 · high |
 | correspondence written to the vendor (`correspond.py`, `a2a.py send`) | Sonnet 5 · high |
-| a session with Nexus (`nexus-session`) | Sonnet 5 · high |
+| a session in the laboratory (`laborator`) | Sonnet 5 · high |
 | channel status (`/channels`) | Sonnet 5 · low — a status read, not correspondence |
 | writing a new check against their platform — a surface nothing tests yet | Opus 5 · high–xhigh |
 | `qa/state.py`, `qa/fold.py`, `qa/measure.py`, review | Opus 5 · high–xhigh |
@@ -388,13 +388,25 @@ tests/repo/       repository consistency. Deliberately NOT in tests/meta:
                   that (a red suite catches a half-applied one) but the triage
                   verdicts would not, and a lost verdict is a finding that
                   silently never gets fixed.
-.claude/skills/nexus-session/SKILL.md
-                  "zahaj session s Nexusem": the operator's feedback from the
-                  Nexus rooms first, one question to Nexus in General, a room
-                  -- named, its plan written down -- and a paper order for
-                  each concrete proposal, follow-ups
-                  inside the rooms, a Czech note into every room it touched.
-                  Paper only; at most 8 questions and 3 new rooms a session.
+.claude/skills/laborator/SKILL.md
+                  "jdi do laboratoře" (and every phrase that used to open a
+                  Nexus session): the operator's notes first, then what is in
+                  flight, then their backtests ranked risk-adjusted, then ONE
+                  question to Nexus carrying how his last proposals actually
+                  did -- he remembers nothing between questions, so our record
+                  is his memory -- a room and a paper order for each concrete
+                  proposal, and a close with at most three lessons and the
+                  queue the next session picks up. What it knows about Nexus
+                  lives in section 6 of that file and grows there.
+qa/lab.py         the laboratory's notebook and its brakes, in code rather
+                  than in prose: sessions, ranked snapshots, the catalogue it
+                  compares against the baseline, and the caps -- paper only,
+                  8 questions and 3 rooms a session, 6 experiments, 15% of
+                  what is free each, nothing at all while a deep pass runs.
+scripts/lab.py    that loop from our side: `status`, `truth` (their surfaces
+                  map, the leaderboard, then get_strategy_returns as a second
+                  reading), `cycle`, `ask`, `buy`, `open`/`close`. It refuses
+                  rather than warns.
 NEXT.md           what we agreed to do next and have not done. Plain markdown,
                   one line per item, `- [ ] YYYY-MM-DD  sentence`; ticked
                   items stay as history and stop being printed.
@@ -594,7 +606,7 @@ Only `MEMORY.md` is loaded for you: one line each, no bodies. **Read the ones
 that apply to the work in front of you, before the first substantive step:**
 
 ```bash
-python scripts/memories.py --for <sweep|fold|console|correspondence|deep-pass|plan>
+python scripts/memories.py --for <sweep|fold|console|correspondence|deep-pass|plan|lab>
 ```
 
 Each memory declares which of those it applies to, `--check` fails on one that

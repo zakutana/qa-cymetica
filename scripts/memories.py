@@ -32,7 +32,8 @@ sys.path.insert(0, str(REPO_ROOT))
 
 from qa.console import printable  # noqa: E402
 
-CLASSES = ("sweep", "fold", "console", "correspondence", "deep-pass", "plan")
+CLASSES = ("sweep", "fold", "console", "correspondence", "deep-pass",
+           "plan", "lab")
 
 FRONT = re.compile(r"^---\n(.*?)\n---\n", re.S)
 
