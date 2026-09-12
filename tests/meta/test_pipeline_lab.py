@@ -251,6 +251,12 @@ def test_the_buy_path_reads_what_is_already_deployed(tmp_path, monkeypatch):
                         lambda name: paper if name == "paper"
                         else real_sibling(name))
 
+    # The pass notebook is REPO_ROOT/audits, not state_dir, so without this the
+    # money assertions below would read a real deep pass and get its refusal
+    # instead -- turning tests/meta red mid-pass, which aborts the pass. The
+    # interlock gets its own assertion at the end rather than being lost here.
+    monkeypatch.setattr(scripts_lab, "pass_in_flight", lambda: False)
+
     with pytest.raises(SystemExit) as refused:
         scripts_lab.buy("c4", 500.0, nexus_id=None, confirm=True)
     assert "60" in str(refused.value), str(refused.value)
@@ -268,6 +274,15 @@ def test_the_buy_path_reads_what_is_already_deployed(tmp_path, monkeypatch):
     assert scripts_lab._deployed() == 29_900.0, "a closed position is not out"
     scripts_lab.buy("c4", 500.0, nexus_id=None, confirm=True)
     assert len(sent) == 1, "room under the ceiling and it still refused"
+
+    # The same defect this test exists for, one line up the same function:
+    # `may_ask(pass_running=...)` is tested as a pure function and nothing
+    # checked that `buy` consults the interlock at all.
+    monkeypatch.setattr(scripts_lab, "pass_in_flight", lambda: True)
+    with pytest.raises(SystemExit) as held:
+        scripts_lab.buy("c4", 500.0, nexus_id=None, confirm=True)
+    assert "deep pass" in str(held.value), str(held.value)
+    assert len(sent) == 1, "a deep pass was running and the order went anyway"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

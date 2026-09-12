@@ -288,4 +288,5 @@ to neodškrtl, nebo to nikdy nebylo další na řadě.
 - [x] 2026-09-12  N4 z `docs/lab-plan.md`: noc na dvoje hodiny a stropy experimentů 50 / 2 % / 60 %
 - [x] 2026-09-12  N5 z `docs/lab-plan.md`: `lab.py grade` — předpověděl náš žebříček verdikt?
 - [ ] 2026-09-12  Postavit `N_eff` z NEX-0026: průměrná párová korelace otevřené knihy jako varování dřív než drawdown. Nexusův vlastní ukazatel, ne náš nápad.
+- [ ] 2026-09-12  `_deployed()` v `scripts/lab.py` počítá i pozice, které simulace už nemá: TRD-0001 a TRD-0002 (11:41 a 11:59) jsou starší než `sim_started_at` 13:31, a `sim_total_trades` je 4, ne 6. Dnes jsou to 2 USDC z 99 000, ale každý reset simulace přidá další duchy, kteří se nikdy nezavřou, a ti nafukují čitatele stropu expozice. Ignorovat přijaté nákupy starší než nejnovější `sim_started_at`, s testem.
 - [ ] 2026-09-12  Přeformulovat důvod v `test_one_credential_carries_a_clone_from_creation_to_funding`: větu o `/fund` říkat jen když `/fund` je mezi odmítajícími (šla ven v #98 jako podmíněná). Až se ta kontrola bude měnit tak jako tak — samotný pin cyklus za to nestojí.
