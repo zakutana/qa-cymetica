@@ -459,6 +459,43 @@ def backtest(constituents, period_days: int = 30, *, why: str = "",
     return {"cached": False, **row}
 
 
+def symbol_pool(seeds: list[dict]) -> list[str]:
+    """Every coin their own cards are made of. Nothing from outside them."""
+    return sorted({str(leg["symbol"]).upper() for seed in seeds
+                   for leg in seed.get("legs") or [] if leg.get("symbol")})
+
+
+def search(seeds: list[dict], pool: list[str] | None = None, cap: int = 12,
+           *, call=None, now=None, out=None) -> dict:
+    """Walk the neighbourhood of each of their baskets, asking each thing once.
+
+    This composes baskets, and composing is where the rule bites: a basket we
+    put together is a MEASUREMENT, never a proposal. The road from "the
+    backtest found it" to "it is on paper" runs through a question to Nexus and
+    a room opened from his answer -- CLAUDE.md, and the reason nothing in here
+    can reach an order or a room.
+    """
+    did = {"asked": 0, "from_register": 0, "failed": 0, "seeds": len(seeds)}
+    for seed in seeds:
+        for move in qa_backtests.neighbourhood(seed, pool, cap):
+            try:
+                said = backtest(move["legs"], move["period"], why=move["why"],
+                                call=call, now=now)
+            except qa_backtests.BacktestError:
+                # A basket their tool would refuse is not a failed reading; it
+                # is a question that was never a question.
+                continue
+            except (Exception, SystemExit) as exc:  # noqa: BLE001
+                did["failed"] += 1
+                if out:
+                    out(f"  {move['why']}: {exc}")
+                continue
+            did["from_register" if said["cached"] else "asked"] += 1
+            if out and not said["cached"]:
+                out(f"  {move['why']:56} sharpe {said['s']}  ret {said['r']}%")
+    return did
+
+
 # --- the loop --------------------------------------------------------------
 
 def status() -> str:
@@ -883,6 +920,12 @@ def main(argv: list[str] | None = None) -> int:
                     help="their round-trip estimate: 2%% fee + 0.5%% slippage")
     bt.add_argument("--why", default="", help="what this reading is for")
     sub.add_parser("seeds", help="their cards, as the sampler recorded them")
+    walk = sub.add_parser("search", help="walk around their baskets, once each")
+    walk.add_argument("--cap", type=int, default=12,
+                      help="questions per seed; the space is combinatorial")
+    walk.add_argument("--card", help="one card only, by the start of its id")
+    walk.add_argument("--top", type=int, default=8,
+                      help="how many of the best readings to print at the end")
     adopt_cmd = sub.add_parser("adopt", help="take over a room already running")
     adopt_cmd.add_argument("room")
     adopt_cmd.add_argument("--window-days", type=float, default=7.0)
@@ -940,6 +983,23 @@ def main(argv: list[str] | None = None) -> int:
             legs = " + ".join(f"{leg['symbol']} {leg['weight'] * 100:.1f}%"
                               for leg in seed["legs"])
             print(f"  {seed['card'][:8]}  {seed['title'][:52]:54} {legs}")
+    elif args.cmd == "search":
+        seeds = card_baskets()
+        if args.card:
+            seeds = [s for s in seeds if s["card"].startswith(args.card)]
+            if not seeds:
+                raise SystemExit(f"no card starting {args.card}; `lab.py seeds`")
+        did = search(seeds, symbol_pool(card_baskets()), args.cap, out=print)
+        print(f"\n{did['seeds']} seed(s): {did['asked']} asked, "
+              f"{did['from_register']} already known, {did['failed']} failed")
+        ranked = qa_backtests.best(qa_backtests.load())[:args.top]
+        if ranked:
+            print("\nbest readings held, risk-adjusted:")
+        for row in ranked:
+            legs = " + ".join(f"{s} {w * 100:.0f}%" for s, w in row["legs"])
+            print(f"  sharpe {row['s']:>7}  ret {row['r']:>8}%  "
+                  f"dd {row['d']:>7}%  {row['p']:>3} d  {legs[:46]:48} "
+                  f"{(row.get('why') or '')[:34]}")
     elif args.cmd == "backtest":
         if args.card:
             seed = next((s for s in card_baskets()

@@ -2142,6 +2142,70 @@ reports:
       - 'curl -s https://cymetica.com/openapi-public.json | jq ''.paths | to_entries[] | select(.key | startswith("/api/v1/cloned-bots")) | {path: .key, ops: (.value | to_entries | map({verb: .key, security: .value.security}))}'''
       - 'Compare with the same document captured 2026-09-10 21:40 UTC, when the same query returned nine routes and every one of them listed x-api-key.'
 
+  - key: a-year-that-is-four-months
+    findings: [CYM-a_backtest_says_the_window_it_actually_covered]
+    severity: medium
+    category: api
+    url: https://cymetica.com/mcp/v1
+    title: >-
+      backtest_event_card_idea reports period_days 365 for a window that covered
+      120 points, so two different windows come back identical and labelled
+      differently
+    expected: >
+      A risk-adjusted number says what period it covers. You fixed exactly this
+      on get_strategy_returns today (#97); this is the sibling tool.
+    actual: >
+      Asked for 180 and then 365 days over the same basket, the answers are
+      identical to the decimal -- and each reports the period_days it was asked
+      for.
+    body: >
+      Same basket, two windows, read 2026-09-12 at 11:53 UTC through
+      tools/call backtest_event_card_idea, starting_capital 1000:
+
+
+      WIF 73.5% + PNUT 17.4% + GOAT 5.5% + ACT 3.6%
+
+        period_days 180 -> n_points 120, total_return_pct -13.9703, sharpe -0.2948
+        period_days 365 -> n_points 120, total_return_pct -13.9703, sharpe -0.2948
+
+
+      The control, a basket whose legs have the history:
+
+
+      BCH 68.5% + OKB 31.5%
+
+        period_days 180 -> n_points 177, total_return_pct -52.4258, sharpe -1.2860
+        period_days 365 -> n_points 362, total_return_pct -61.9291, sharpe -1.2684
+
+
+      So the tool is not ignoring the argument. The first basket's legs are 2026
+      coins and roughly four months of history is all there is, which is correct
+      and unavoidable. What we are reporting is that the answer does not say so:
+      it echoes period_days 365, carries no field naming the window actually
+      covered, and is byte-identical to the 180-day answer it is supposed to
+      differ from.
+
+
+      n_points is the only clue, and it is a count of observations rather than a
+      statement of the span -- a caller has to know your sampling interval to
+      turn one into the other.
+
+
+      The harm is the one you accepted and fixed on get_strategy_returns this
+      afternoon. Your guidance to agents is to rank strategies by Sharpe and max
+      drawdown. An agent doing that with period_days 365 puts a real 365-day
+      figure (362 points) beside a 120-day figure wearing the same label, and
+      nothing in either answer lets it tell them apart.
+
+
+      The repair looks small from outside: a covered_days or a first/last point
+      date beside n_points, or capping period_days to what exists and saying
+      which. We would rather read it than infer it.
+    steps:
+      - 'tools/call backtest_event_card_idea {"constituents": [{"symbol":"WIF","weight":0.735},{"symbol":"PNUT","weight":0.174},{"symbol":"GOAT","weight":0.055},{"symbol":"ACT","weight":0.036}], "period_days": 180, "starting_capital": 1000}'
+      - 'The same call with period_days 365. Compare n_points, total_return_pct and sharpe_ratio: identical.'
+      - 'Repeat both with constituents [{"symbol":"BCH","weight":0.685},{"symbol":"OKB","weight":0.315}] -- 177 and 362 points, so the window argument does work where the data exists.'
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in

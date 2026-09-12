@@ -254,6 +254,105 @@ def test_the_seeds_are_their_own_cards_as_the_sampler_recorded_them(tmp_path,
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_search_walks_around_their_idea_and_never_away_from_it():
+    """What the search is allowed to vary, and in what order.
+
+    Every move is a question about THEIR basket: does it hold over another
+    window, does the weighting carry it, does it stand on one leg. None of them
+    invents a strategy -- CLAUDE.md: a strategy of ours never becomes a room --
+    and the order is cheapest-question-first so a night cut short still
+    answered the useful ones.
+    """
+    from qa import backtests
+
+    seed = {"card": "c-1", "title": "Bitcoin hack",
+            "legs": [{"symbol": "BTC", "weight": 0.7},
+                     {"symbol": "BCH", "weight": 0.2},
+                     {"symbol": "OKB", "weight": 0.1}]}
+    moves = backtests.neighbourhood(seed, pool=["ETH", "SOL"], cap=40)
+    kinds = [m["kind"] for m in moves]
+
+    assert kinds[:5] == ["window"] * 5, kinds[:8]
+    assert {m["period"] for m in moves if m["kind"] == "window"} == set(
+        backtests.PERIODS)
+    assert "equal" in kinds and "drop" in kinds and "add" in kinds
+    assert kinds.index("equal") < kinds.index("drop") < kinds.index("add")
+
+    dropped = [m for m in moves if m["kind"] == "drop"]
+    assert len(dropped) == 3, "one move per leg, so a basket cannot hide a leg"
+    assert all(len(m["legs"]) == 2 for m in dropped)
+
+    added = [m for m in moves if m["kind"] == "add"]
+    assert {leg["symbol"] for m in added for leg in m["legs"]} >= {"ETH", "SOL"}
+
+    # Deterministic, or a night cannot resume where the last one stopped.
+    assert moves == backtests.neighbourhood(seed, pool=["SOL", "ETH"], cap=40)
+
+    # A two-leg basket has no leg to drop: their tool takes two at least.
+    small = {"card": "c-2", "legs": [{"symbol": "BTC", "weight": 1},
+                                     {"symbol": "ETH", "weight": 1}]}
+    assert not [m for m in backtests.neighbourhood(small, pool=[], cap=40)
+                if m["kind"] == "drop"]
+
+    assert len(backtests.neighbourhood(seed, pool=["ETH", "SOL"], cap=7)) == 7
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_seed_already_answered_is_not_walked_again(tmp_path, monkeypatch):
+    backtests = _at(tmp_path, monkeypatch)
+    lab = _scripts_lab(tmp_path, monkeypatch)
+
+    seed = {"card": "c-1", "title": "x",
+            "legs": [{"symbol": "BTC", "weight": 0.7},
+                     {"symbol": "BCH", "weight": 0.3}]}
+    asked = []
+
+    def _call(constituents, period_days, **_):
+        asked.append(period_days)
+        return {"sharpe_ratio": 1.0, "total_return_pct": 2.0, "n_points": 29}
+
+    first = lab.search([seed], pool=[], cap=5, call=_call, now=NOW)
+    assert first["asked"] == 5 and len(asked) == 5
+
+    again = lab.search([seed], pool=[], cap=5, call=_call, now=NOW)
+    assert again["asked"] == 0 and again["from_register"] == 5, again
+    assert len(asked) == 5, "the second walk re-asked what the register held"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_search_holds_no_hand_that_trades_or_opens_a_room():
+    """A basket the search composed is a MEASUREMENT. The road from "the
+    backtest found it" to "it is on paper" runs through a question to Nexus,
+    and a room opens only from his answer -- so the search itself cannot reach
+    the doors that would shortcut that."""
+    import ast
+
+    source = (REPO / "scripts" / "lab.py").read_text(encoding="utf-8")
+    wanted = {"search", "backtest", "_backtest_call", "card_baskets",
+              "symbol_pool", "_samples"}
+    found = []
+    for node in ast.parse(source).body:
+        if not isinstance(node, ast.FunctionDef) or node.name not in wanted:
+            continue
+        # Read the CODE, not the prose. A guard that fires on a docstring is
+        # one somebody gets past by rewording, which teaches the wrong lesson
+        # -- and this one did exactly that on its first run, over the sentence
+        # explaining why the search may not trade.
+        body = list(node.body)
+        if (body and isinstance(body[0], ast.Expr)
+                and isinstance(body[0].value, ast.Constant)
+                and isinstance(body[0].value.value, str)):
+            body = body[1:]
+        found.append(node.name)
+        code = "\n".join(ast.unparse(stmt) for stmt in body)
+        for hand in ("buy", "open_strategy", "set_status", "set_acceptance",
+                     "paper", "place_order", "record_verdict", "submit"):
+            assert hand not in code, (
+                f"{node.name} can reach {hand!r}: it measures, Nexus proposes")
+    assert wanted <= set(found), f"the slice moved: {sorted(set(wanted) - set(found))}"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_register_is_outside_git_and_inside_the_snapshot():
     """Months of work on one disk is the failure this guards. It lives beside
     the other diaries for the same reason they do -- it is appended to while a

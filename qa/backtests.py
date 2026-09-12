@@ -225,6 +225,58 @@ def already(fp: str, rows: list[dict] | None = None,
     return newest if age <= stale_after(newest.get("p") or 30) else None
 
 
+def neighbourhood(seed: dict, pool: list[str] | None = None,
+                  cap: int = 40) -> list[dict]:
+    """The questions worth asking about ONE of their baskets, cheapest first.
+
+    Every move is a question about THEIR idea, not a strategy of ours:
+
+        window  does it hold over another look-back? Their own 7-day and
+                30-day answers for one basket were -3.11% and +21.93%.
+        equal   does the weighting carry it, or would any split do?
+        drop    does it stand on one leg? A basket that is really one coin is
+                that coin, and the index history already says how it moved.
+        add     does one more of their coins change it?
+
+    Ordered, and deterministic, so a night cut short answered the useful ones
+    and the next one resumes rather than restarts. Capped, because the space is
+    combinatorial and an uncapped walk is the open-ended loop Cymetica's own
+    guide warns about.
+    """
+    legs = [{"symbol": str(leg["symbol"]).upper(), "weight": float(leg["weight"])}
+            for leg in (seed.get("legs") or []) if leg.get("symbol")]
+    if len(legs) < MIN_LEGS:
+        return []
+    here = {leg["symbol"] for leg in legs}
+    title = (seed.get("title") or seed.get("card") or "")[:60]
+
+    moves = [{"kind": "window", "period": period, "legs": legs,
+              "why": f"{title}: over {period} d"}
+             for period in PERIODS]
+
+    even = [{"symbol": leg["symbol"], "weight": 1.0} for leg in legs]
+    moves += [{"kind": "equal", "period": period, "legs": even,
+               "why": f"{title}: equal weights over {period} d"}
+              for period in (30, 90)]
+
+    if len(legs) > MIN_LEGS:
+        for leg in legs:
+            moves.append({
+                "kind": "drop", "period": 30,
+                "legs": [other for other in legs if other is not leg],
+                "why": f"{title}: without {leg['symbol']}"})
+
+    for symbol in sorted(set(pool or []) - here)[:MAX_LEGS]:
+        if len(legs) >= MAX_LEGS:
+            break
+        moves.append({
+            "kind": "add", "period": 30,
+            "legs": legs + [{"symbol": symbol, "weight": 1.0 / len(legs)}],
+            "why": f"{title}: plus {symbol}"})
+
+    return moves[:cap]
+
+
 def best(rows: list[dict], now: datetime | None = None,
          limit: int = 20) -> list[dict]:
     """The clean, still-true readings, risk-adjusted, best first.
