@@ -333,6 +333,67 @@ def track(quiet: bool = False) -> int:
     return added
 
 
+def untrackable(keep: dict, held: set[str] | None) -> tuple[list[str], str]:
+    """Which tracked captures nothing stands on any more, and why not to guess.
+
+    Pure, and separate from the command that acts on it, because the refusals
+    matter more than the list. `track` only ever added, so the keep set could
+    only grow: folding the ledger onto a fresh verification run on 2026-09-12
+    left 115 captures from the previous run in git with nothing citing them,
+    the guard went red, and no mechanism could clear it.
+
+    Two refusals, both one command away from deleting what every verdict we
+    have sent promises the vendor on request:
+
+      * an EMPTY keep set is never a licence to drop everything. It is what a
+        lenient parse, a half-written row or an unreadable file looks like.
+      * git unreadable is not "git holds nothing".
+    """
+    if not keep:
+        return [], ("the keep set came back empty, which is what an unreadable "
+                    "record looks like; nothing is dropped on it")
+    if held is None:
+        return [], "git could not be read; nothing is dropped"
+    return sorted(held - set(keep)), ""
+
+
+def untrack(quiet: bool = False) -> int:
+    """Let go of tracked captures nothing cites. They stay on disk.
+
+    `git rm --cached` only: the bytes remain in the working tree until the
+    pruner's own three-day rule reaches them, and they remain in history
+    either way, so nothing a verdict cited becomes unrecoverable.
+    """
+    try:
+        keep, held = must_keep(), tracked_evidence()
+    except Exception as exc:  # noqa: BLE001
+        if not quiet:
+            print(f"keep: could not work out what to keep: {exc}")
+        return 0
+
+    dropping, why = untrackable(keep, held)
+    if why and not quiet:
+        print(f"keep: {why}")
+    paths = []
+    for evidence_id in dropping:
+        path = evidence_path(evidence_id)
+        paths.append(str(path.relative_to(REPO_ROOT)).replace("\\", "/"))
+
+    gone = 0
+    for start in range(0, len(paths), GIT_BATCH):
+        chunk = paths[start:start + GIT_BATCH]
+        result = subprocess.run(["git", "rm", "--cached", "-q", "--", *chunk],
+                                cwd=REPO_ROOT, capture_output=True, text=True)
+        if result.returncode == 0:
+            gone += len(chunk)
+        elif not quiet:
+            print(f"keep: WARNING could not untrack {len(chunk)} capture(s): "
+                  f"{result.stderr.strip()[:200]}")
+    if gone and not quiet:
+        print(f"keep: untracked {gone} capture(s) nothing cites any more")
+    return gone
+
+
 def tracked_evidence() -> set[str] | None:
     """Evidence ids git currently holds, or None when git cannot be read."""
     result = subprocess.run(["git", "ls-files", "evidence"], cwd=REPO_ROOT,

@@ -64,11 +64,18 @@ def main(argv: list[str] | None = None) -> int:
     track_cmd = sub.add_parser("track", help="add the captures that must survive")
     track_cmd.add_argument("--quiet", action="store_true",
                            help="say nothing unless something goes wrong")
+    drop_cmd = sub.add_parser(
+        "untrack", help="let go of tracked captures nothing cites any more")
+    drop_cmd.add_argument("--quiet", action="store_true")
     sub.add_parser("snapshot", help="copy the diaries into audits/lab/")
     args = parser.parse_args(argv)
 
     if args.cmd == "track":
         keepset.track(quiet=args.quiet)
+        return 0
+
+    if args.cmd == "untrack":
+        keepset.untrack(quiet=args.quiet)
         return 0
 
     copied = snapshot()

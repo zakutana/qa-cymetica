@@ -122,6 +122,45 @@ def _env_secrets() -> dict[str, str]:
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_tracker_lets_go_of_what_stopped_being_cited():
+    """`track` only ever added, so the keep set could only grow.
+
+    The day it bit: 2026-09-12, folding the ledger onto a fresh verification
+    run left 115 captures from the previous run tracked in git and cited by
+    nothing, and the guard above went red with no mechanism able to clear it --
+    somebody had to run `git rm --cached` by hand. A mechanism a person must
+    run is not one.
+
+    The refusal is the important half. `must_keep` reading empty -- a lenient
+    parse that found nothing, git unreadable, a half-written row -- must never
+    be taken as "nothing is cited, drop it all", because that is one command
+    away from deleting the evidence every verdict we have sent promises the
+    vendor on request.
+    """
+    from qa import keepset
+
+    dropped, why = keepset.untrackable(keep={}, held={"aaa", "bbb"})
+    assert dropped == [] and "empty" in why.lower(), why
+
+    dropped, why = keepset.untrackable(keep={"aaa": "row"}, held=None)
+    assert dropped == [] and "git" in why.lower(), why
+
+    keep = {"aaa": "row", "bbb": "their-words"}
+    dropped, why = keepset.untrackable(keep=keep, held={"aaa", "bbb", "ccc"})
+    assert dropped == ["ccc"], dropped
+
+    dropped, why = keepset.untrackable(keep=keep, held={"aaa", "bbb"})
+    assert dropped == [] and not why, why
+
+    # A migration citation names no capture on disk; it must not be read as a
+    # tracked file to drop, and it must not be read as a reason to keep one.
+    keep_with_lost = {**keep, "0" * 64: "row"}
+    dropped, _ = keepset.untrackable(keep=keep_with_lost, held={"aaa", "bbb"})
+    assert dropped == []
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_no_capture_in_the_repository_carries_a_real_key():
     """The store we push, read whole, against the keys this machine holds.
 

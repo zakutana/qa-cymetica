@@ -420,6 +420,12 @@ def main(argv: list[str] | None = None) -> int:
     # commit hook does it for every commit, and this does it at the moment the
     # citation is made, so the commit that follows finds them staged already.
     keepset.track(quiet=True)
+    # And let go of what the PREVIOUS run's rows cited and these no longer do.
+    # The fold is the only moment the keep set shrinks, and until 2026-09-12
+    # nothing shrank it: folding onto a fresh verification run left 115
+    # captures tracked with nothing standing on them, the guard went red, and
+    # the only cure was `git rm --cached` by hand.
+    keepset.untrack(quiet=True)
     if ledger.get("run_carried"):
         # Say which it was. "composed" would claim this fold judged something,
         # and the whole point of --events-only is that it judged nothing.
