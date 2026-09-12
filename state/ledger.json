@@ -58,7 +58,8 @@
           }
         ],
         "refused": [],
-        "verifications": []
+        "verifications": [],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -205,7 +206,8 @@
             "verdict": "pass",
             "at": "2026-09-07T21:46:26+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -393,7 +395,8 @@
             "verdict": "pass",
             "at": "2026-09-07T13:54:37+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -610,7 +613,8 @@
         },
         "reports": [],
         "refused": [],
-        "verifications": []
+        "verifications": [],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -787,7 +791,8 @@
           }
         ],
         "refused": [],
-        "verifications": []
+        "verifications": [],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -963,7 +968,8 @@
             "verdict": "pass",
             "at": "2026-09-10T05:09:02+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -1109,7 +1115,8 @@
             "verdict": "pass",
             "at": "2026-09-07T17:42:51+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -1244,7 +1251,8 @@
             "verdict": "pass",
             "at": "2026-09-07T13:32:26+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -1393,7 +1401,8 @@
             "verdict": "pass",
             "at": "2026-09-10T05:08:33+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -1528,7 +1537,8 @@
             "verdict": "pass",
             "at": "2026-09-07T13:33:53+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -1628,7 +1638,8 @@
           }
         ],
         "refused": [],
-        "verifications": []
+        "verifications": [],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -1745,7 +1756,8 @@
             "verdict": "pass",
             "at": "2026-09-07T13:54:19+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -1891,7 +1903,8 @@
             "verdict": "pass",
             "at": "2026-09-10T05:08:39+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -2113,7 +2126,8 @@
             "verdict": "pass",
             "at": "2026-09-07T17:43:30+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -2362,7 +2376,8 @@
             "verdict": "pass",
             "at": "2026-09-07T21:46:59+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -2531,7 +2546,8 @@
           }
         ],
         "refused": [],
-        "verifications": []
+        "verifications": [],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -2731,7 +2747,8 @@
             "verdict": "pass",
             "at": "2026-09-10T05:08:47+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -2930,7 +2947,8 @@
             "verdict": "pass",
             "at": "2026-09-10T05:08:52+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -3102,7 +3120,8 @@
             "verdict": "pass",
             "at": "2026-09-10T05:08:57+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -3226,7 +3245,8 @@
         },
         "reports": [],
         "refused": [],
-        "verifications": []
+        "verifications": [],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -3301,7 +3321,8 @@
             "verdict": "pass",
             "at": "2026-09-07T13:34:15+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -3445,7 +3466,8 @@
         },
         "reports": [],
         "refused": [],
-        "verifications": []
+        "verifications": [],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -3544,7 +3566,8 @@
         },
         "reports": [],
         "refused": [],
-        "verifications": []
+        "verifications": [],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -3628,7 +3651,8 @@
         },
         "reports": [],
         "refused": [],
-        "verifications": []
+        "verifications": [],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -3760,7 +3784,8 @@
             "verdict": "pass",
             "at": "2026-09-07T21:46:31+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -3962,7 +3987,8 @@
             "verdict": "pass",
             "at": "2026-09-08T15:15:56+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -4173,7 +4199,8 @@
             "verdict": "pass",
             "at": "2026-09-07T13:33:48+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -4298,7 +4325,8 @@
             "verdict": "pass",
             "at": "2026-09-07T17:42:57+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -4495,7 +4523,8 @@
             "verdict": "pass",
             "at": "2026-09-07T14:27:11+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -4668,7 +4697,8 @@
             "verdict": "pass",
             "at": "2026-09-07T13:33:44+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -4881,7 +4911,8 @@
             "verdict": "pass",
             "at": "2026-09-08T15:15:46+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -5086,7 +5117,8 @@
             "verdict": "pass",
             "at": "2026-09-08T15:16:05+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -5318,7 +5350,8 @@
             "verdict": "pass",
             "at": "2026-09-08T15:16:00+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -5471,7 +5504,8 @@
             "verdict": "pass",
             "at": "2026-09-07T21:47:03+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -5608,7 +5642,8 @@
             "verdict": "pass",
             "at": "2026-09-07T21:47:46+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -5749,7 +5784,8 @@
             "verdict": "pass",
             "at": "2026-09-08T15:16:09+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -5902,7 +5938,8 @@
             "verdict": "pass",
             "at": "2026-09-08T13:25:44+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -6037,7 +6074,8 @@
             "verdict": "pass",
             "at": "2026-09-08T15:16:14+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -6183,7 +6221,8 @@
             "verdict": "pass",
             "at": "2026-09-08T15:16:24+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -6339,7 +6378,8 @@
             "verdict": "pass",
             "at": "2026-09-08T15:15:32+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -6471,7 +6511,8 @@
             "verdict": "fail",
             "at": "2026-09-08T15:16:18+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -6575,7 +6616,7 @@
           "run_id": "run-20260912T204351Z-3bc5adff",
           "at": "2026-09-12T20:52:09+00:00"
         },
-        "pinned_fingerprint": "c14ac1067a61705f52744e4ce05e91c8bc10ace80cbb3e0f4d331c601164ba17"
+        "pinned_fingerprint": "ce960765d70f2c13cca03880d70e9a1e7557a30f9c28dd61611e6c3252c489ed"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -6625,8 +6666,16 @@
             "run_id": "run-20260911T174358Z-c0e379b9",
             "verdict": "fail",
             "at": "2026-09-11T17:58:48+00:00"
+          },
+          {
+            "report_id": 86,
+            "fingerprint": "c14ac1067a61705f52744e4ce05e91c8bc10ace80cbb3e0f4d331c601164ba17",
+            "run_id": "run-20260912T204351Z-3bc5adff",
+            "verdict": "fail",
+            "at": "2026-09-12T21:02:39+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -6752,9 +6801,7 @@
         ],
         "retractions": [],
         "verification_owed": [],
-        "correction_owed": [
-          86
-        ],
+        "correction_owed": [],
         "disputed": []
       }
     },
@@ -6817,7 +6864,8 @@
             "verdict": "fail",
             "at": "2026-09-10T21:46:08+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -7016,7 +7064,8 @@
             "verdict": "pass",
             "at": "2026-09-11T17:58:54+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -7193,7 +7242,8 @@
             "verdict": "pass",
             "at": "2026-09-11T17:59:16+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -7355,8 +7405,23 @@
             "run_id": "run-20260911T174358Z-c0e379b9",
             "verdict": "pass",
             "at": "2026-09-11T17:59:23+00:00"
+          },
+          {
+            "report_id": 89,
+            "fingerprint": "97e5b904e1094ff2b00f2375482cff9fc5fc53a2daab4c47aa343d8ee2c0f3cb",
+            "run_id": "run-20260912T204351Z-3bc5adff",
+            "verdict": "fail",
+            "at": "2026-09-12T21:02:48+00:00"
+          },
+          {
+            "report_id": 98,
+            "fingerprint": "97e5b904e1094ff2b00f2375482cff9fc5fc53a2daab4c47aa343d8ee2c0f3cb",
+            "run_id": "run-20260912T204351Z-3bc5adff",
+            "verdict": "fail",
+            "at": "2026-09-12T21:02:53+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -7483,10 +7548,7 @@
         ],
         "retractions": [],
         "verification_owed": [],
-        "correction_owed": [
-          89,
-          98
-        ],
+        "correction_owed": [],
         "disputed": []
       }
     },
@@ -7535,7 +7597,8 @@
             "verdict": "pass",
             "at": "2026-09-11T17:59:06+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -7694,7 +7757,8 @@
             "verdict": "pass",
             "at": "2026-09-11T18:00:18+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -7853,7 +7917,8 @@
             "verdict": "pass",
             "at": "2026-09-11T06:01:13+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -7986,7 +8051,8 @@
             "verdict": "pass",
             "at": "2026-09-11T05:45:30+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -8127,7 +8193,8 @@
             "verdict": "pass",
             "at": "2026-09-11T17:58:43+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -8273,7 +8340,8 @@
             "verdict": "pass",
             "at": "2026-09-11T17:58:59+00:00"
           }
-        ]
+        ],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -8416,7 +8484,16 @@
           }
         ],
         "refused": [],
-        "verifications": []
+        "verifications": [
+          {
+            "report_id": 97,
+            "fingerprint": "d350e3be5dd059a7593e42828f974edae44589a4ad2ba75eadddd73e8dd7dc5b",
+            "run_id": "run-20260912T204351Z-3bc5adff",
+            "verdict": "pass",
+            "at": "2026-09-12T21:02:44+00:00"
+          }
+        ],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -8523,9 +8600,7 @@
         "repair_check": false,
         "reopen": [],
         "retractions": [],
-        "verification_owed": [
-          97
-        ],
+        "verification_owed": [],
         "correction_owed": [],
         "disputed": []
       }
@@ -8560,7 +8635,16 @@
           }
         ],
         "refused": [],
-        "verifications": []
+        "verifications": [
+          {
+            "report_id": 99,
+            "fingerprint": "d914e6a67a81c1a3ad533530f2fb30b7e58f4924bedcf1c341324e490c4c3947",
+            "run_id": "run-20260912T204351Z-3bc5adff",
+            "verdict": "pass",
+            "at": "2026-09-12T21:02:34+00:00"
+          }
+        ],
+        "stale_from": "2026-09-12T21:01:06+00:00"
       },
       "transitions": [
         {
@@ -8694,9 +8778,7 @@
         "repair_check": false,
         "reopen": [],
         "retractions": [],
-        "verification_owed": [
-          99
-        ],
+        "verification_owed": [],
         "correction_owed": [],
         "disputed": []
       }
@@ -8705,6 +8787,7 @@
   "run_id": "run-20260912T204351Z-3bc5adff",
   "run_level": "V",
   "updated_at": "2026-09-12T20:52:09+00:00",
+  "run_carried": true,
   "counts": {
     "WITHDRAWN": 10,
     "VERIFIED FIXED": 41,
@@ -8712,7 +8795,7 @@
     "OUR CHECK CANNOT TELL": 1
   },
   "events_head": {
-    "seq": 1848,
-    "chain": "00ffb415ab96f9ff5286e73f9f6d36af91802f3a2f2a4b9416bf31570a5e1668"
+    "seq": 1860,
+    "chain": "4988ade927eb2815ffbbec765d2dcbabe6feb622605f8c4263f568b613faf14c"
   }
 }
