@@ -66,8 +66,8 @@ nestane roomem).
 | N1 | Rejstřík zkoušeného: `qa/backtests.py`, `state/backtests.jsonl`, otisk koše, stárnutí podle okna | stejný koš v jiném pořadí = stejný otisk; zapsané se nevolá znovu | **hotovo `6b76d164`** — a při tom se našla a opravila vada konzole: odmítnutí se ke klientovi nedostalo |
 | N2 | Volání jejich backtestu: `lab.py backtest` na SAFE, koše ze sampleru, 30/min, chybějící symbol ≠ nula, evidence jen u povýšených | první volání vrátí čísla a zapíše otisk; druhé stejné neproběhne | **hotovo `a6af2fff`** — STR-0003 koš: 30 d +10,4 % (sharpe 1,77), 90 d +12,4 % (DD 21,5 %) |
 | N3 | Hledání: semínka z karet a Nexusových plánů, tahy přes okna a váhy, pořadí podle Sharpe a DD; lepší než semínko jde Nexusovi jako otázka | okolí semínka deterministické; hledání nedosáhne na `buy` ani `open_strategy` | **hotovo `46a6f7d0`** — a první procházka našla nález #99 (`6242bcdf`): okno 365 d, které pokrylo 120 bodů, a nic to neřekne |
-| N4 | Noc přestavěná na dvoje hodiny: backtesty souvisle, otázky když je na co; stropy 50 experimentů / 2 % / 60 % expozice | noc s mrtvým Nexusem udělá tisíce backtestů a nic netestuje dvakrát | otevřeno |
-| N5 | Sebehodnocení: `lab.py grade` — předpověděl náš žebříček verdikt? Pod hranicí dat řekne „málo dat" | n = 2 → „málo dat"; po 17. a 19. 9. řekne číslo | otevřeno |
+| N4 | Noc přestavěná na dvoje hodiny: backtesty souvisle, otázky když je na co; stropy 50 experimentů / 2 % / 60 % expozice | noc s mrtvým Nexusem udělá tisíce backtestů a nic netestuje dvakrát | **hotovo `28b82f9d`** — skutečná noc: 47 backtestů za dva tiky, 108 tahů ve frontě, a Nexus po 20 h přijal otázku |
+| N5 | Sebehodnocení: `lab.py grade` — předpověděl náš žebříček verdikt? Pod hranicí dat řekne „málo dat" | n = 2 → „málo dat"; po 17. a 19. 9. řekne číslo | **hotovo `91acb3a8`** — dnes říká „0 verdiktů, práh je 6"; čte to týden v deep passu |
 
 ## Laboratoř: smyčka
 

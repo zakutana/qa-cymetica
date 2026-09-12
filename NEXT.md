@@ -285,7 +285,7 @@ to neodškrtl, nebo to nikdy nebylo další na řadě.
 - [x] 2026-09-12  F7 z `docs/lab-plan.md`: noc laboratoře — `lab.py night --until`, jen zkoumání, ráno konec
 - [x] 2026-09-12  N2 z `docs/lab-plan.md`: `lab.py backtest` — volat jejich backtest přes rejstřík, 30/min, evidence jen u povýšených
 - [x] 2026-09-12  N3 z `docs/lab-plan.md`: hledání — semínka z karet a Nexusových plánů, okolí přes okna a váhy
-- [ ] 2026-09-12  N4 z `docs/lab-plan.md`: noc na dvoje hodiny a stropy experimentů 50 / 2 % / 60 %
-- [ ] 2026-09-12  N5 z `docs/lab-plan.md`: `lab.py grade` — předpověděl náš žebříček verdikt?
+- [x] 2026-09-12  N4 z `docs/lab-plan.md`: noc na dvoje hodiny a stropy experimentů 50 / 2 % / 60 %
+- [x] 2026-09-12  N5 z `docs/lab-plan.md`: `lab.py grade` — předpověděl náš žebříček verdikt?
 - [ ] 2026-09-12  Postavit `N_eff` z NEX-0026: průměrná párová korelace otevřené knihy jako varování dřív než drawdown. Nexusův vlastní ukazatel, ne náš nápad.
 - [ ] 2026-09-12  Přeformulovat důvod v `test_one_credential_carries_a_clone_from_creation_to_funding`: větu o `/fund` říkat jen když `/fund` je mezi odmítajícími (šla ven v #98 jako podmíněná). Až se ta kontrola bude měnit tak jako tak — samotný pin cyklus za to nestojí.
