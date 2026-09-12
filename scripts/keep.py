@@ -46,18 +46,28 @@ DIARIES = ("rooms.jsonl", "nexus.jsonl", "paper.jsonl", "lab.jsonl",
            # backtest. It is the memory the whole search stands on, so of all
            # of these it is the one that must not live on a single disk.
            "backtests.jsonl")
-SNAPSHOT_DIR = REPO_ROOT / "audits" / "lab"
+def snapshot_dir() -> Path:
+    """Beside the state it archives, not beside the repository.
+
+    `REPO_ROOT / "audits" / "lab"` for the real state dir, because that is its
+    parent -- and under QA_STATE_DIR for anything else. Computed per call, not
+    at import: as a constant it archived whatever state a test was pointing at
+    INTO the repository, and one suite run overwrote the committed archive with
+    a tmp_path's empty diaries. Found the hour the first caller was added.
+    """
+    return state_dir().parent / "audits" / "lab"
 
 
 def snapshot() -> list[str]:
     """Copy the diaries into audits/, where git can hold them."""
-    SNAPSHOT_DIR.mkdir(parents=True, exist_ok=True)
+    target = snapshot_dir()
+    target.mkdir(parents=True, exist_ok=True)
     copied = []
     for name in DIARIES:
         source = state_dir() / name
         if not source.is_file():
             continue
-        shutil.copyfile(source, SNAPSHOT_DIR / name)
+        shutil.copyfile(source, target / name)
         copied.append(name)
     return copied
 
@@ -82,9 +92,13 @@ def main(argv: list[str] | None = None) -> int:
         keepset.untrack(quiet=args.quiet)
         return 0
 
+    target = snapshot_dir()
     copied = snapshot()
-    print(f"keep: copied {len(copied)} diary file(s) into "
-          f"{SNAPSHOT_DIR.relative_to(REPO_ROOT).as_posix()}"
+    try:
+        where = target.relative_to(REPO_ROOT).as_posix()
+    except ValueError:          # a state dir outside the repo: say where it went
+        where = str(target)
+    print(f"keep: copied {len(copied)} diary file(s) into {where}"
           + (f": {', '.join(copied)}" if copied else " (none on disk yet)"))
     return 0
 

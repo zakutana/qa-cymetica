@@ -184,6 +184,98 @@ def test_the_exposure_ceiling_is_a_share_of_the_book_not_of_the_remainder():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_closing_a_session_puts_the_diaries_where_git_can_hold_them(
+        tmp_path, monkeypatch):
+    """The laboratory's five diaries are gitignored, so the copy in audits/lab/
+    is the only one that survives this machine.
+
+    `keep.py snapshot` was written 2026-09-12 08:19 and its only caller was the
+    deep pass, whose trigger is the operator saying "jdu spat". So a whole day
+    of laboratory work -- on 2026-09-12, every row the laboratory had -- sat on
+    one untracked disk until they happened to go to bed. That is not a broken
+    mechanism; it is a mechanism with one trigger, in the wrong place for data
+    that finalises at the end of a session.
+
+    Both ends are checked: the `close` subcommand and the night's own close.
+    The night matters more -- it runs unattended for hours and writes the most.
+
+    The archive is stubbed here so the assertion is about the CALL. That it
+    writes beside the state it archives, rather than into this repository, is
+    test_the_archive_follows_the_state_it_archives below -- which is the bug
+    this very call introduced: the suite ran, night() archived a tmp_path, and
+    the committed audits/lab/lab.jsonl came back modified.
+    """
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    calls = []
+    real_sibling = scripts_lab._sibling
+
+    class _Keep:
+        @staticmethod
+        def snapshot():
+            calls.append("snapshot")
+            return ["lab.jsonl"]
+
+    monkeypatch.setattr(scripts_lab, "_sibling",
+                        lambda name: _Keep if name == "keep"
+                        else real_sibling(name))
+
+    lab.open_session(mode="session")
+    scripts_lab.main(["close", "--lesson", "one", "--next", "two"])
+    assert calls == ["snapshot"], (
+        "the session closed and its diaries stayed on a single disk")
+
+    calls.clear()
+    zone = timezone(timedelta(hours=2))
+    clock = _Clock(datetime(2026, 9, 12, 23, 30, tzinfo=zone))
+    scripts_lab.night(
+        "23:45", clock=clock, sleep=clock.sleep,
+        actions={"pass": lambda: False, "backoff": lambda: None,
+                 "cycle": lambda: {"polled": []}, "truth": lambda: [],
+                 "ask": lambda concept, question: {"id": "NEX-1"}},
+        out=lambda *a: None)
+    assert calls == ["snapshot"], (
+        "a night wrote all night and archived none of it")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_archive_follows_the_state_it_archives(tmp_path, monkeypatch):
+    """A test run must never be able to overwrite the committed archive.
+
+    `SNAPSHOT_DIR` was `REPO_ROOT / "audits" / "lab"`, fixed at import, while
+    the source was `state_dir()`, which every test redirects. The hour a caller
+    was added to `lab.py close`, the suite ran, the night test closed its
+    session, and the repository's own audits/lab/lab.jsonl came back holding a
+    tmp_path's rows. The archive of the laboratory's whole history is exactly
+    the file that must not be writable by a passing test.
+
+    So it is derived from the state it copies: the real state dir's parent IS
+    the repository, and anything else lands beside itself.
+    """
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    import importlib
+    import importlib.util
+
+    import qa.state
+    importlib.reload(qa.state)
+    spec = importlib.util.spec_from_file_location(
+        "scripts_keep_under_test", REPO / "scripts" / "keep.py")
+    keep = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(keep)
+
+    (tmp_path / "lab.jsonl").write_text('{"type":"open"}\n', encoding="utf-8")
+    copied = keep.snapshot()
+
+    assert copied == ["lab.jsonl"], copied
+    target = keep.snapshot_dir()
+    assert target == tmp_path.parent / "audits" / "lab", (
+        f"the archive went to {target}, not beside the state it archives")
+    assert REPO not in target.parents and target != REPO / "audits" / "lab", (
+        "a test just wrote into the repository's committed archive")
+    assert (target / "lab.jsonl").read_text(encoding="utf-8").strip() == \
+        '{"type":"open"}'
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_free_cash_reader_takes_their_decimal_strings(tmp_path, monkeypatch):
     """Their balances arrive as strings, and this reader demanded numbers.
 

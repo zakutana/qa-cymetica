@@ -177,6 +177,25 @@ def _deployed() -> float:
     return sum(out.values())
 
 
+def _archive_diaries() -> list[str]:
+    """Put the laboratory's diaries where git can hold them.
+
+    All five are gitignored -- they are written while a sweep may run -- so the
+    copy keep.py makes in audits/lab/ is the only one that survives this
+    machine. The deep pass calls it too, but its trigger is the operator saying
+    "jdu spat", and the data finalises when a session ends, not when they go to
+    bed. On 2026-09-12 that gap was every row the laboratory had.
+
+    Best effort on purpose: a failed copy says so and does not take down the
+    close that ends the session. A session left open stops the next one.
+    """
+    try:
+        return _sibling("keep").snapshot()
+    except Exception as exc:  # noqa: BLE001 -- an archive is not a brake
+        print(f"[lab] the diaries were NOT archived: {exc}")
+        return []
+
+
 def _running_experiments() -> int:
     rows = rooms.load()
     states = {}
@@ -1021,6 +1040,7 @@ def night(until: str, *, clock=None, sleep=None, actions=None, out=print) -> dic
     queue =[f"{q['id']}: worth a room if the answer is concrete ({q['about']})"
              for q in did["questions"] if q.get("id")][:lab.MAX_NEXT]
     lab.close_session(session, _lessons(did, ranked), queue, did=did)
+    _archive_diaries()
     out(f"\n{session} closed after {did['ticks']} tick(s): {did['asked']} "
         f"asked, {did['answered']} answered, {did['cycles']} cycle(s). "
         f"`lab.py status` has it in the morning.")
@@ -1209,8 +1229,9 @@ def main(argv: list[str] | None = None) -> int:
         if session is None:
             raise SystemExit("no session is open")
         record = lab.close_session(session, args.lesson, args.nextup)
+        archived = _archive_diaries()
         print(f"{record['session']} closed: {len(args.lesson)} lesson(s), "
-              f"{len(args.nextup)} next")
+              f"{len(args.nextup)} next, {len(archived)} diary file(s) archived")
     return 0
 
 
