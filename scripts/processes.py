@@ -92,6 +92,15 @@ def reminders(facts: dict, now: datetime) -> list[str]:
             f"Laboratoř má otevřenou session {session} — zavře ji „jdi do "
             f"laboratoře\", a do té doby neví další session, kde jste skončili.")
 
+    # A night is an open session ON PURPOSE, until the hour it was given. Only
+    # a session left open past that is something to close.
+    if facts.get("night_running"):
+        until = str(facts.get("night_until") or "")[:16].replace("T", " ")
+        out.append(
+            f"Laboratoř právě běží v noci jako {facts['night_running']}"
+            + (f" do {until}" if until else "")
+            + " — neptej se Nexuse souběžně, ráno ji shrne `lab.py status`.")
+
     retry = _hours_since(facts.get("nexus_last_try"), now)
     if facts.get("nexus_down") and retry is not None and retry >= 2:
         out.append(
@@ -596,11 +605,16 @@ def _lab_facts() -> dict:
     have come back. Both are read from files; a reminder that asked the vendor
     would itself be counted by the check that measures how often we ask."""
     out: dict[str, object] = {"lab_open": [], "nexus_down": 0,
-                              "nexus_last_try": None}
+                              "nexus_last_try": None, "night_running": None,
+                              "night_until": None}
     try:
         from qa import lab
 
-        out["lab_open"] = lab.open_sessions()
+        running = lab.night_running()
+        if running:
+            out["night_running"], out["night_until"] = running
+        out["lab_open"] = [session for session in lab.open_sessions()
+                           if session != out["night_running"]]
     except Exception:  # noqa: BLE001
         pass
 

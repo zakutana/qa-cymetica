@@ -533,6 +533,41 @@ def test_an_interrupted_night_still_closes_its_session(tmp_path, monkeypatch):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_night_that_crashes_still_closes_its_session(tmp_path, monkeypatch):
+    """Ctrl-C is not the only way a night ends early. Every tick reads files
+    another process writes -- the deep pass's own notebook, nexus.jsonl -- and
+    one half-written line at three in the morning is a raised exception, not a
+    keyboard. Left open, the morning's `status` says OPEN, the reminder nags
+    about a night that is long over, and `lab.py night` refuses to start the
+    next one. The traceback still reaches their terminal; the session does not
+    stay open to buy it.
+    """
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    zone = timezone(timedelta(hours=2))
+    clock = _Clock(datetime(2026, 9, 12, 23, 30, tzinfo=zone))
+    looks = {"n": 0}
+
+    def _pass():
+        looks["n"] += 1
+        if looks["n"] >= 3:
+            raise RuntimeError("deep-pass-progress.json was half written")
+        return False
+
+    with pytest.raises(RuntimeError):
+        scripts_lab.night(
+            "07:00", clock=clock, sleep=clock.sleep,
+            actions={"pass": _pass, "backoff": lambda: None,
+                     "cycle": lambda: {}, "truth": lambda: [],
+                     "ask": lambda slug, question: {}},
+            out=lambda *a: None)
+
+    assert lab.open_sessions() == [], "the crash left the night open"
+    closed = lab.last_close()
+    assert closed["did"]["stopped"].startswith("crashed"), closed["did"]
+    assert "half written" in closed["did"]["stopped"]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_night_holds_no_hand_that_trades_files_or_commits():
     """A negative control that does not need the thing it tests: the night is
     handed a fixed set of doors, and buying, filing and committing are not

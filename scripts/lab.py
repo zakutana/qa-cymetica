@@ -452,7 +452,10 @@ def cycle() -> dict:
         try:
             result = nexus.answer(question_id)
             finished.append({question_id: result.get("status")})
-        except Exception as exc:  # noqa: BLE001 -- one bad poll is not the cycle
+        except (Exception, SystemExit) as exc:  # one bad poll is not the cycle
+            # SystemExit included: nexus.answer raises it for a question it
+            # cannot find or one already answered, and a night must survive
+            # both.
             finished.append({question_id: f"poll failed: {exc}"})
     did["polled"] = finished
 
@@ -666,7 +669,7 @@ def night(until: str, *, clock=None, sleep=None, actions=None, out=print) -> dic
         "truth": functools.partial(truth, limit=8), "ask": _night_ask,
     }
 
-    session = lab.open_session(mode="night")["session"]
+    session = lab.open_session(mode="night", until=due.isoformat())["session"]
     did = {"ticks": 0, "cycles": 0, "truths": 0, "asked": 0, "answered": 0,
            "errors": [], "stopped": "deadline",
            "skipped": {"pass": 0, "backoff": 0, "cap": 0, "too soon": 0,
@@ -683,6 +686,7 @@ def night(until: str, *, clock=None, sleep=None, actions=None, out=print) -> dic
     out(f"  at most {lab.CAPS['questions_per_night']} questions, "
         f"{lab.NIGHT['ask_seconds'] // 3600} h apart. Ctrl-C stops it.")
 
+    crashed: BaseException | None = None
     try:
         while clock() < due:
             now = clock()
@@ -723,7 +727,7 @@ def night(until: str, *, clock=None, sleep=None, actions=None, out=print) -> dic
                              "about": slug, "id": said.get("id")})
                         out(f"  {now.strftime('%H:%M')} asked about {slug} "
                             f"({said.get('id') or 'no id'})")
-                except Exception as exc:  # noqa: BLE001 -- one bad step is not the night
+                except (Exception, SystemExit) as exc:  # one bad step is not the night
                     did["errors"].append(f"{step}: {exc}")
                     out(f"  {now.strftime('%H:%M')} {step} failed: {exc}")
 
@@ -734,13 +738,23 @@ def night(until: str, *, clock=None, sleep=None, actions=None, out=print) -> dic
     except KeyboardInterrupt:
         did["stopped"] = "interrupted"
         out("\n  stopped by hand; closing the session so the morning is clean")
+    except (Exception, SystemExit) as exc:  # noqa: BLE001
+        # A tick reads files another process writes, so a half-written line is
+        # an exception rather than a keyboard. The session is closed either
+        # way -- one left open makes the morning refuse to start the next
+        # night -- and the traceback still reaches their terminal below.
+        did["stopped"] = f"crashed: {exc}"
+        crashed = exc
+        out(f"\n  the night stopped on an error: {exc}")
 
-    queue = [f"{q['id']}: worth a room if the answer is concrete ({q['about']})"
+    queue =[f"{q['id']}: worth a room if the answer is concrete ({q['about']})"
              for q in did["questions"] if q.get("id")][:lab.MAX_NEXT]
     lab.close_session(session, _lessons(did, ranked), queue, did=did)
     out(f"\n{session} closed after {did['ticks']} tick(s): {did['asked']} "
         f"asked, {did['answered']} answered, {did['cycles']} cycle(s). "
         f"`lab.py status` has it in the morning.")
+    if crashed is not None:
+        raise crashed
     return did
 
 

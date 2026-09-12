@@ -99,14 +99,40 @@ def _next_id(rows: list[dict]) -> str:
     return f"LAB-{max(used, default=0) + 1:04d}"
 
 
-def open_session(mode: str = "session", note: str | None = None) -> dict:
-    """Start one, and say which kind it is: a session, or a night."""
+def open_session(mode: str = "session", note: str | None = None,
+                 until: str | None = None) -> dict:
+    """Start one, and say which kind it is: a session, or a night.
+
+    A night carries the hour it will end. Without it an open night looks
+    exactly like a session somebody forgot to close, and the reminder would nag
+    at every session start for the fourteen hours the thing is doing precisely
+    what it was told.
+    """
     rows = load()
     record = {"type": "session", "state": "open", "at": _now(),
               "session": _next_id(rows), "mode": mode}
     if note:
         record["note"] = note
+    if until:
+        record["until"] = until
     return _append(record)
+
+
+def night_running(rows: list[dict] | None = None,
+                  now: datetime | None = None) -> tuple[str, str] | None:
+    """An open night still inside the hours it was given, and until when."""
+    rows = load() if rows is None else rows
+    moment = now or datetime.now(timezone.utc)
+    until = {}
+    for row in rows:
+        if (row.get("type") == "session" and row.get("mode") == "night"
+                and row.get("until")):
+            until[str(row.get("session"))] = str(row["until"])
+    for session in open_sessions(rows):
+        due = _at(until.get(session))
+        if due and moment < due:
+            return session, until[session]
+    return None
 
 
 def open_sessions(rows: list[dict] | None = None) -> list[str]:

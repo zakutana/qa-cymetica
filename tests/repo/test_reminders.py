@@ -93,6 +93,24 @@ def test_the_week_is_named_when_it_is_due_even_with_nothing_to_review():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_night_still_inside_its_own_hours_is_not_a_forgotten_session():
+    """The open-session rule was written before the night existed, and a night
+    is an open session on purpose -- for up to fourteen hours, by their own
+    command. Nagging "close it" at every session start while the thing is
+    doing exactly what it was told is how a reminder stops being read."""
+    mod = _module()
+
+    running = mod.reminders(_facts(lab_open=[], night_running="LAB-0007",
+                                   night_until=_ago(hours=-8)), NOW)
+    assert not _says(running, "zavře"), running
+    assert _says(running, "LAB-0007"), (
+        "say it is running, so a night nobody remembers starting is visible")
+
+    forgotten = mod.reminders(_facts(lab_open=["LAB-0006"]), NOW)
+    assert _says(forgotten, "LAB-0006", "laborato"), forgotten
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_plan_phase_with_neither_a_commit_nor_a_line_is_named():
     """The incident this rule is named for: `docs/UPGRADE-PLAN.md` decided on
     2026-09-09 to stop committing captures, nobody built it, and the store grew
