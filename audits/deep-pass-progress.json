@@ -16,7 +16,7 @@
    },
    "verdict": "real",
    "fixed": true,
-   "commit": "pending",
+   "commit": "a612367d",
    "deferred_to_operator": false,
    "how": "scripts/processes.py::messages_floor reads `previous_at` and names the floor it used; step 0 of the skill carries it forward; pinned in tests/repo/test_reminders.py"
   },
@@ -32,7 +32,7 @@
    },
    "verdict": "real",
    "fixed": true,
-   "commit": "pending"
+   "commit": "a612367d"
   },
   {
    "id": "A02",
@@ -46,7 +46,7 @@
    },
    "verdict": "real",
    "fixed": true,
-   "commit": "pending"
+   "commit": "a612367d"
   },
   {
    "id": "A03",
@@ -74,7 +74,7 @@
    },
    "verdict": "real",
    "fixed": true,
-   "commit": null,
+   "commit": "a612367d",
    "why": "three of three, each by mutation: deleting the buy interlock in scripts/lab.py leaves this test green. The behaviour IS held -- by test_the_buy_path_reads_what_is_already_deployed and test_pipeline_night_spend -- so what is wrong is a name that claims half a contract it never measures",
    "how": "renamed to test_nothing_is_asked_while_a_deep_pass_is_running; the buying half stays where it is really held, and the name now claims only what it measures"
   },
@@ -104,7 +104,7 @@
    },
    "verdict": "real",
    "fixed": true,
-   "commit": "pending"
+   "commit": "a612367d"
   },
   {
    "id": "A07",
@@ -118,7 +118,7 @@
    },
    "verdict": "real",
    "fixed": true,
-   "commit": null,
+   "commit": "a612367d",
    "why": "three of three, two of them by writing MAX_LESSONS = 2 to disk and watching the test pass. It proves only < 4; nothing in the repository pins three, and scripts/lab.py truncates by the same constant",
    "how": "tests/meta/test_pipeline_lab.py: MAX_LESSONS == 3 pinned and a session closed with exactly three lessons; MAX_LESSONS = 2 now goes red"
   },
@@ -134,7 +134,7 @@
    },
    "verdict": "real",
    "fixed": true,
-   "commit": null,
+   "commit": "a612367d",
    "why": "three of three: five questions abandoned at 900s each polled still running, verdicts empty, PASSED reported on #86",
    "how": "tests/mcp/test_nexus_channel.py: read_the_window(); a window that measures nothing about their channel is Inconclusive, never a pass"
   },
@@ -150,7 +150,7 @@
    },
    "verdict": "real",
    "fixed": true,
-   "commit": null,
+   "commit": "a612367d",
    "why": "three of three: the ceiling is nexus.PUBLISHED_MINUTES, transcribed into our file, while sources cites their tool description. qa/surface.py deliberately does not watch prose, so a relabel to 5-15 min would send a FAIL to their tracker on #86 for behaviour inside their own window",
    "how": "tests/mcp/test_nexus_channel.py: their_published_window() re-reads their label from audits/surface.json; a disagreement is Inconclusive, never a FAIL and never silently adopted"
   },
@@ -166,7 +166,7 @@
    },
    "verdict": "real",
    "fixed": true,
-   "commit": null,
+   "commit": "a612367d",
    "why": "three of three: 'running' is the status nexus.py writes at give-up; did_not_answer called it ours",
    "how": "did_not_answer returns True for a give-up whose status is running/queued/pending"
   },
@@ -182,7 +182,7 @@
    },
    "verdict": "real",
    "fixed": true,
-   "commit": null,
+   "commit": "a612367d",
    "why": "three of three: key name only, and truncation the calendar will end reported as a pass",
    "how": "tests/mcp/test_backtest_window_is_real.py: says_covered() reads the value and rejects the requested window echoed under a second name; no truncation in the basket is Inconclusive, not a pass"
   },
@@ -198,7 +198,7 @@
    },
    "verdict": "real",
    "fixed": true,
-   "commit": "pending"
+   "commit": "a612367d"
   },
   {
    "id": "B06",
@@ -212,7 +212,7 @@
    },
    "verdict": "real",
    "fixed": true,
-   "commit": "pending"
+   "commit": "a612367d"
   },
   {
    "id": "B07",
@@ -257,7 +257,7 @@
    },
    "verdict": "real",
    "fixed": true,
-   "commit": "pending"
+   "commit": "a612367d"
   },
   {
    "id": "B10",
@@ -271,7 +271,7 @@
    },
    "verdict": "real",
    "fixed": true,
-   "commit": null,
+   "commit": "a612367d",
    "why": "three of three, all by mutation: inserting a line that flips the default sort while leaving the pinned literal intact keeps the test green and opens the page on damage -- the operator's own complaint, with the guard for it green",
    "how": "tests/meta/test_pipeline_render.py: the harness records appendChild order, and two rows whose severity and movement orders disagree pin which one the page opens on"
   },
@@ -287,7 +287,7 @@
    },
    "verdict": "real",
    "fixed": true,
-   "commit": null,
+   "commit": "a612367d",
    "why": "three of three: any key name anywhere in the payload, value never read, #97 verification about to rest on it",
    "how": "tests/rest/test_backtest_metrics_agree.py: anchored NAMES_THE_WINDOW, _says_a_window reads the value, _sharpe_context requires the window beside its own Sharpe"
   },
@@ -303,7 +303,7 @@
    },
    "verdict": "real",
    "fixed": true,
-   "commit": null,
+   "commit": "a612367d",
    "why": "the same defect as B09 seen from the live side: the meta test imports card_ids_in from this check, so one extractor was judged once and repaired once",
    "how": "tests/rest/test_nexus_cards_exist.py: NOT_A_CARD widened with the markers our own records prove, plus known_non_cards() -- every UUID our records hold under a key that is not card_id"
   },
@@ -319,7 +319,7 @@
    },
    "verdict": "real",
    "fixed": true,
-   "commit": "pending"
+   "commit": "a612367d"
   },
   {
    "id": "C04",
@@ -333,7 +333,7 @@
    },
    "verdict": "real",
    "fixed": true,
-   "commit": "pending"
+   "commit": "a612367d"
   },
   {
    "id": "C05",
@@ -347,7 +347,7 @@
    },
    "verdict": "real",
    "fixed": true,
-   "commit": null,
+   "commit": "a612367d",
    "why": "three of three: the fixture supplies the decision under test; the clause lives in _lab_facts and nothing called it",
    "how": "scripts/processes.py: sessions_to_close(), asserted where the decision is made"
   },
@@ -363,7 +363,7 @@
    },
    "verdict": "real",
    "fixed": true,
-   "commit": "pending"
+   "commit": "a612367d"
   },
   {
    "id": "C07",
@@ -391,7 +391,7 @@
    },
    "verdict": "real",
    "fixed": true,
-   "commit": null,
+   "commit": "a612367d",
    "why": "three of three: with QA_STATE_DIR at an empty directory the check passes reporting '0 non-capture citations, all the migration's' while the real journal holds 23. One agent went further -- stubbing the citation reader blind also passes. Rule 8 inverted",
    "how": "tests/repo/test_evidence_in_git.py: an empty read is Inconclusive, and the 23 the docstring names is pinned in both directions"
   },
@@ -407,7 +407,7 @@
    },
    "verdict": "real",
    "fixed": true,
-   "commit": null,
+   "commit": "a612367d",
    "why": "three of three: the 'ticked overnight' block is byte-identical to the block above it and every fixture passes agreed_items, so _next_items is never entered. Adding `if not i['done']` to it turns the deep pass's own guard red the morning after work is done",
    "how": "tests/repo/test_deep_pass_finished.py: _next_items takes a text seam, and the ticked block reads a real `- [x]` line through it"
   },
@@ -424,7 +424,7 @@
    "verdict": "real",
    "fixed": true,
    "how": "HARNESS_WROTE_IT anchors on the harness's own opening sentence; pinned in tests/repo/test_reminders.py. 23 messages became 20.",
-   "commit": "pending"
+   "commit": "a612367d"
   }
  ],
  "next": [],
@@ -443,7 +443,7 @@
     "t3": "no"
    },
    "test": "tests/repo/test_reminders.py::test_the_operator_s_messages_are_read_from_the_last_pass_not_from_today",
-   "commit": "pending",
+   "commit": "a612367d",
    "handover": true
   }
  ],
