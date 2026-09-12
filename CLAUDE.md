@@ -347,20 +347,12 @@ scripts/never_fired.py  which of our mechanisms have never once occurred in
                      sweep. Each zero now names the test that exercises it, or
                      says nothing does -- so the line to act on is "never fired
                      AND never exercised", the shape all three dead mechanisms
-                     had on 2026-09-06. The seven standing on 2026-09-09 are
-                     all exercised, so none is broken; what is left of them is
-                     a judgement about whether we should have met the condition
-                     by now, and that one is the operator's. Read the count off
-                     the tool, never off this line -- it said five while the
-                     tool said seven, and the SessionStart handover said seven
-                     in the same context.
-(migration)       the one-shot that brought the ledger under the contract ran
-                  2026-09-05; scripts/migrate_ledger.py was retired 2026-09-09,
-                  spent and unrunnable (it refused on any non-empty journal). The
-                  record it left is three `migrated` events in the journal.
-                  The seed it started from was state/ledger.seed.json; git
-                  history keeps that whether or not the file is still in the
-                  tree, so removing it loses nothing.
+                     had on 2026-09-06. One exercised and never fired is a
+                     judgement, and that one is the operator's. **Read the
+                     count off the tool, never off prose** -- this line said
+                     five while the tool said seven.
+(migration)       three `migrated` events in the journal are what the one-shot
+                  left; scripts/migrate_ledger.py was retired 2026-09-09, spent.
 tests/meta/       self-tests. Run FIRST and abort the session on failure, so
                   a broken guard stops every live request.
 tests/repo/       repository consistency. Deliberately NOT in tests/meta:
@@ -401,8 +393,18 @@ tests/repo/       repository consistency. Deliberately NOT in tests/meta:
 qa/lab.py         the laboratory's notebook and its brakes, in code rather
                   than in prose: sessions, ranked snapshots, the catalogue it
                   compares against the baseline, and the caps -- paper only,
-                  8 questions and 3 rooms a session, 6 experiments, 15% of
-                  what is free each, nothing at all while a deep pass runs.
+                  8 questions and 3 rooms a session (12 in a night), 50
+                  experiments, 2% of what is free each and 60% of the BOOK out
+                  at once -- fifty at 2% is the whole book, so the total is
+                  what holds -- and nothing at all while a deep pass runs.
+qa/backtests.py   the register of what has already been measured: a basket's
+                  fingerprint (sorted legs, window, fees) against what it
+                  returned, so no night pays for the same backtest twice.
+                  state/backtests.jsonl, gitignored like the other diaries.
+qa/surface.py     the watch over THEIR side, mirroring the DNA patrol: their
+                  tool schemas and the shape of their REST answers, read from
+                  captures we already make. `headline_period` appeared in our
+                  own data and we heard of it from their Telegram instead.
 scripts/lab.py    that loop from our side: `status`, `truth` (their surfaces
                   map, the leaderboard, then get_strategy_returns as a second
                   reading), `cycle`, `ask`, `buy`, `open`/`close`. It refuses

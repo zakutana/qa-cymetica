@@ -146,7 +146,7 @@ def test_an_order_is_capped_at_a_share_of_what_is_free():
     assert lab.CAPS["running_experiments"] == 50
 
     ok, why = lab.affordable(1_000, free_cash=free, running=5,
-                             deployed=free * 0.62)
+                             deployed=free * 2.0)
     assert not ok and "60" in why, why
     ok, why = lab.affordable(1_000, free_cash=free, running=5,
                              deployed=free * 0.30)
@@ -155,6 +155,119 @@ def test_an_order_is_capped_at_a_share_of_what_is_free():
     ok, why = lab.affordable(1_000, free_cash=None, running=0)
     assert not ok and "could not" in why.lower(), (
         "an unreadable book is not an empty one -- rule 8")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_exposure_ceiling_is_a_share_of_the_book_not_of_the_remainder():
+    """60% of total exposure is 60% of the book, not 60% of what is left.
+
+    Measured against what is still free, the ceiling walks down as we deploy:
+    `d <= 0.6*(free)` with `free = B - d` solves to `d <= 0.375*B`, so a limit
+    written as 60% bound at 37.5% and the refusal said "60% of the 89000 free"
+    while meaning something else. The plan the operator approved says *max 60 %
+    celkove expozice* -- exposure is what is out over the whole book.
+
+    The case below separates the two: 55k out of a 100k book is under the
+    ceiling and over 60% of the 45k that remains.
+    """
+    book, deployed = 100_000.0, 55_000.0
+    ok, why = lab.affordable(500, free_cash=book - deployed, running=2,
+                             deployed=deployed)
+    assert ok, why
+    assert "100000" in why.replace(",", ""), (
+        f"the reason has to name the book it measured against: {why}")
+
+    deployed = 59_800.0
+    ok, why = lab.affordable(500, free_cash=book - deployed, running=2,
+                             deployed=deployed)
+    assert not ok and "60" in why, why
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_free_cash_reader_takes_their_decimal_strings(tmp_path, monkeypatch):
+    """Their balances arrive as strings, and this reader demanded numbers.
+
+    `sim_balance_usdc` is `"89000.96"` -- a string -- in every `after` row we
+    have ever written, while `_free_cash` accepted only int or float. So it
+    returned None every time, `affordable` refused with "the book could not be
+    read", and `lab.py buy` has never once placed an order. The trades on the
+    book came through `paper.py` directly, before the lab existed.
+
+    Failing closed is why nobody noticed, and no test of the caps ever read a
+    real row: they all called the pure function with a float. `paper.py` has
+    coerced this same field with `float()` since it was written.
+    """
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    book = tmp_path / "paper.jsonl"
+
+    book.write_text(json.dumps(
+        {"type": "after", "id": "TRD-0001",
+         "sim_balance_usdc": "89000.96"}) + "\n", encoding="utf-8")
+    assert scripts_lab._free_cash() == pytest.approx(89_000.96)
+
+    book.write_text(json.dumps(
+        {"type": "after", "id": "TRD-0001",
+         "sim_balance_usdc": "not a number"}) + "\n", encoding="utf-8")
+    assert scripts_lab._free_cash() is None, (
+        "an unparseable balance is unreadable, never a zero -- rule 8")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_buy_path_reads_what_is_already_deployed(tmp_path, monkeypatch):
+    """The ceiling has to hold where the order actually goes out.
+
+    `deployed` reached `affordable` only from the unit test: `buy()` left it at
+    its default of zero, so the brake N4's commit called the one that actually
+    holds was dead on the single path that spends. Review found it after the
+    commit; nothing in the suite could, because every test of the ceiling called
+    the pure function directly.
+
+    The order is stubbed rather than allowed to go out: a negative control that
+    needs the refusal to work is not a control.
+    """
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    rows = [
+        {"type": "intent", "id": "TRD-0001", "card_id": "c1", "usdc": 29_900.0},
+        {"type": "outcome", "id": "TRD-0001", "outcome": "accepted",
+         "position_id": "p1"},
+        {"type": "intent", "id": "TRD-0002", "card_id": "c2", "usdc": 29_900.0},
+        {"type": "outcome", "id": "TRD-0002", "outcome": "accepted",
+         "position_id": "p2"},
+        {"type": "intent", "id": "TRD-0003", "card_id": "c3", "usdc": 5_000.0},
+        {"type": "outcome", "id": "TRD-0003", "outcome": "refused"},
+        {"type": "after", "id": "TRD-0003", "sim_balance_usdc": "40200.00"},
+    ]
+    book = tmp_path / "paper.jsonl"
+    book.write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+
+    assert scripts_lab._deployed() == 29_900.0 * 2, (
+        "a refused order was never out; two accepted ones are")
+
+    sent = []
+    real_sibling = scripts_lab._sibling
+    paper = real_sibling("paper")
+    paper.buy = lambda *a, **k: sent.append(a) or {"stub": True}
+    monkeypatch.setattr(scripts_lab, "_sibling",
+                        lambda name: paper if name == "paper"
+                        else real_sibling(name))
+
+    with pytest.raises(SystemExit) as refused:
+        scripts_lab.buy("c4", 500.0, nexus_id=None, confirm=True)
+    assert "60" in str(refused.value), str(refused.value)
+    assert sent == [], "it refused and sent the order anyway"
+
+    with book.open("a", encoding="utf-8") as handle:
+        for row in ({"type": "intent", "id": "TRD-0004", "kind": "close",
+                     "position_id": "p2", "notional_usdc": 29_900.0},
+                    {"type": "outcome", "id": "TRD-0004", "kind": "close",
+                     "outcome": "accepted"},
+                    {"type": "after", "id": "TRD-0004",
+                     "sim_balance_usdc": "70100.00"}):
+            handle.write(json.dumps(row) + "\n")
+
+    assert scripts_lab._deployed() == 29_900.0, "a closed position is not out"
+    scripts_lab.buy("c4", 500.0, nexus_id=None, confirm=True)
+    assert len(sent) == 1, "room under the ceiling and it still refused"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -560,7 +673,10 @@ def test_a_night_ends_at_its_deadline_paced_and_counted(tmp_path, monkeypatch):
         "it ran past the hour they named")
     assert 0 < len(asked) <= lab.CAPS["questions_per_night"]
     gaps = [(b[0] - a[0]).total_seconds() for a, b in zip(asked, asked[1:])]
-    assert all(gap >= lab.NIGHT["ask_seconds"] for gap in gaps), gaps
+    assert all(gap >= 20 * 60 for gap in gaps), gaps
+    assert did["ticks"] > 200 and len(asked) < 10, (
+        f"{len(asked)} questions over {did['ticks']} ticks: the pace is the "
+        f"question clock, not the tick")
     assert len({concept for _, concept, _ in asked}) == len(asked), (
         "it asked about the same concept twice")
     assert all(q.strip().endswith("?") or "?" in q for _, _, q in asked)

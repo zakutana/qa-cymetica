@@ -27,9 +27,11 @@ this skill carries it in its frontmatter.
 ## The brakes are in code, not here
 
 `qa/lab.py` holds them, so a session at three in the morning cannot talk itself
-out of one: paper only, at most 8 questions and 3 new rooms a session, at most
-6 experiments running, at most 15% of what is free per experiment, and **no
-question and no order while a deep pass is running** -- that pass is verifying
+out of one: paper only, at most 8 questions and 3 new rooms a session (12
+questions in a night), at most 50 experiments running, at most 2% of what is
+free per experiment, **at most 60% of the book out at once** -- fifty at 2% is
+the whole book, so the count alone is no limit -- and **no question and no
+order while a deep pass is running** -- that pass is verifying
 #85, #86 and #87 over these very answers and trades, and a question asked
 mid-run changes the subject of a verdict already on its way to the vendor.
 
@@ -223,12 +225,19 @@ python scripts/lab.py night --until 07:00
 ```
 
 The hour is **their** clock, not UTC, and the process refuses anything more
-than 14 hours out. It prints the resolved deadline, then works: picks up
-answers still in flight, samples the running experiments, re-ranks their
-backtests when the snapshot goes stale, and asks Nexus what breaks the best
-candidates -- one question, two hours apart, twelve at most, and none at all
-while a deep pass is running. **It does not trade, file or commit.** The
-morning acts on what it found; the night only finds it.
+than 14 hours out. It prints the resolved deadline, then works on **two
+clocks**, because a backtest is free and a question is not:
+
+- **the search runs continuously** -- baskets off the cards and off Nexus's own
+  plans, walked through windows and weights, thirty a batch and paced only by
+  their 30/min. Every result goes to `state/backtests.jsonl` first, so nothing
+  is measured twice, tonight or next week.
+- **a question goes out when there is something to ask** -- 20 minutes apart at
+  the fastest, twelve at most, none at all while a deep pass is running, and
+  after a failure it waits as long as their own `retry_after` asks.
+
+**It does not trade, file or commit.** The morning acts on what it found; the
+night only finds it.
 
 In the morning `lab.py status` prints what the night did before anything else:
 what it asked, what came back, how many ticks were held off and by what. Ticks

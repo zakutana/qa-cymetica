@@ -77,9 +77,10 @@ nestane roomem).
 jeho čísla doslova, **kritérium předem**, paper obchod → `close` (≤ 3 poučení,
 fronta „příště", česká poznámka do roomů).
 
-Brzdy v kódu: jen paper; ≤ 8 otázek a ≤ 3 nové roomy za session; ≤ 6 běžících
-experimentů, každý ≤ 15 % volných peněz; žádná otázka ani nákup, když běží deep
-pass (měří kontroly #85, #86 a #87 nad jejími odpověďmi a obchody).
+Brzdy v kódu: jen paper; ≤ 8 otázek a ≤ 3 nové roomy za session (v noci 12);
+≤ 50 běžících experimentů, každý ≤ 2 % volných peněz a **nejvýš 60 % knihy
+venku najednou**; žádná otázka ani nákup, když běží deep pass (měří kontroly
+#85, #86 a #87 nad jejími odpověďmi a obchody).
 
 ## Co tam schválně nebude
 

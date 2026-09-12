@@ -121,6 +121,11 @@ def _free_cash() -> float | None:
     pay for and refuses outright when the money in the bots cannot be read.
     This is the lab's policy cap on top of it, so the last recorded number is
     the honest input: it is what we know without asking them again.
+
+    Their balances are decimal STRINGS ("89000.96"). This demanded int or
+    float until 2026-09-12, so it returned None on every real row and the cap
+    above it refused every order the lab ever tried to place. A string that is
+    not a number is still unreadable, never a zero.
     """
     paper = _sibling("paper")
     newest = None
@@ -133,9 +138,43 @@ def _free_cash() -> float | None:
         return None
     for key in ("sim_balance_usdc", "balance_usdc", "free_usdc"):
         value = newest.get(key)
+        if isinstance(value, bool) or value is None:
+            continue
         if isinstance(value, (int, float)):
             return float(value)
+        if isinstance(value, str):
+            try:
+                return float(value.strip())
+            except ValueError:
+                return None
     return None
+
+
+def _deployed() -> float:
+    """What our own record says is still out in open positions.
+
+    The symmetric reading to `_free_cash`: our records rather than a fresh call
+    to them, so the cap does not depend on their API answering. A buy is out
+    from the moment its outcome is `accepted` until an accepted close names its
+    position; an order they refused was never out at all.
+    """
+    rows = _sibling("paper").load()
+    intents = {row["id"]: row for row in rows
+               if row.get("type") == "intent" and row.get("id")}
+    out: dict[str, float] = {}
+    for row in rows:
+        if row.get("type") != "outcome" or row.get("outcome") != "accepted":
+            continue
+        intent = intents.get(row.get("id"), {})
+        if row.get("kind") == "close" or intent.get("kind") == "close":
+            out.pop(str(intent.get("position_id") or row.get("position_id")),
+                    None)
+            continue
+        position = row.get("position_id") or intent.get("position_id")
+        usdc = intent.get("usdc")
+        if position and isinstance(usdc, (int, float)):
+            out[str(position)] = float(usdc)
+    return sum(out.values())
 
 
 def _running_experiments() -> int:
@@ -748,7 +787,8 @@ def buy(card_id: str, usdc: float, nexus_id: str | None, confirm: bool) -> dict:
         raise SystemExit(
             "not buying: a deep pass is running and #87 judges the newest "
             "trade. Wait for it to finish")
-    ok, why = lab.affordable(usdc, _free_cash(), _running_experiments())
+    ok, why = lab.affordable(usdc, _free_cash(), _running_experiments(),
+                             deployed=_deployed())
     if not ok:
         raise SystemExit(f"not buying: {why}")
     print(f"[lab] {why}")

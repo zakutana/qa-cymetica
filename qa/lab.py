@@ -257,6 +257,9 @@ def affordable(usdc: float, free_cash: float | None, running: int,
 
     The total is the brake that matters now that fifty may run. Fifty at 2% is
     the whole book, so without a ceiling the count would be no limit at all.
+    It is measured against the BOOK -- free plus what is out -- because that is
+    what exposure means. Against the remainder it would walk down as we deploy
+    and bind at 37.5%, under a number written as 60%.
     """
     if free_cash is None:
         return False, ("the book could not be read, and an unreadable book is "
@@ -273,13 +276,15 @@ def affordable(usdc: float, free_cash: float | None, running: int,
                        f"what a verdict compares, so a smaller stake measures "
                        f"the same strategy")
     limit = CAPS["total_exposure"]
-    if (deployed + usdc) > free_cash * limit:
+    book = free_cash + deployed
+    if (deployed + usdc) > book * limit:
         return False, (f"{deployed:.0f} is already out and {usdc:.0f} more "
-                       f"would pass {limit * 100:.0f}% of the {free_cash:.0f} "
-                       f"free. There is always dry powder, so one bad night "
-                       f"cannot take the book")
+                       f"would pass {limit * 100:.0f}% of the {book:.0f} book "
+                       f"(free plus deployed). There is always dry powder, so "
+                       f"one bad night cannot take the book")
     return True, (f"{usdc:.0f} of {free_cash:.0f} free, {running} running, "
-                  f"{deployed + usdc:.0f} out of {free_cash * limit:.0f} allowed")
+                  f"{deployed + usdc:.0f} out of the {book * limit:.0f} "
+                  f"allowed on a {book:.0f} book")
 
 
 POLLABLE_HOURS = 24
