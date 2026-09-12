@@ -43,6 +43,26 @@ def evidence_root() -> Path:
     return Path(override) / "evidence" if override else EVIDENCE_DIR
 
 
+# What the id is NOT taken over: the three fields that say when and by whom a
+# capture was made, so the same response re-observed later dedupes to one id.
+VOLATILE = ("captured_at", "run_id", "nodeid")
+
+
+def content_id(record: dict) -> str:
+    """The evidence id of a record: sha256 over its content minus VOLATILE.
+
+    A function rather than four lines inside `write`, because the archive has
+    to recompute it to prove a bundled body is what its name says. The id is
+    emphatically NOT the sha256 of the FILE -- the file is written with
+    `indent=2` and keeps the volatile fields -- and on 2026-09-12 an archive
+    verifier assumed otherwise and condemned all 1 178 captures. It refused to
+    release anything, which is why that assumption cost nothing.
+    """
+    stable = {k: v for k, v in record.items() if k not in VOLATILE}
+    blob = json.dumps(stable, sort_keys=True, ensure_ascii=False).encode("utf-8")
+    return hashlib.sha256(blob).hexdigest()
+
+
 def call_key(record: dict) -> str:
     """What makes two captures the same CALL.
 
@@ -172,11 +192,7 @@ class EvidenceStore:
         return self.write(record)
 
     def write(self, record: dict[str, Any]) -> str:
-        # Hash over the content minus the capture timestamp, so an identical
-        # response re-observed later dedupes to the same id.
-        stable = {k: v for k, v in record.items() if k not in ("captured_at", "run_id", "nodeid")}
-        blob = json.dumps(stable, sort_keys=True, ensure_ascii=False).encode("utf-8")
-        digest = hashlib.sha256(blob).hexdigest()
+        digest = content_id(record)
 
         path = self.root / digest[:2] / f"{digest}.json"
         path.parent.mkdir(parents=True, exist_ok=True)

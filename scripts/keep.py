@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import argparse
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -72,6 +73,70 @@ def snapshot() -> list[str]:
     return copied
 
 
+def _archive(month: str, release: bool) -> int:
+    """Bundle, verify, and only then let go. Dry about the last step by default.
+
+    The order is the safety property: a bundle is read back off disk and every
+    member hashed against its own name before a single original is released.
+    Reversed, a truncated write would take the evidence with it -- and every
+    verdict we have sent says these are "provided on request".
+    """
+    from qa import archive, manifest
+
+    try:
+        target = archive.archive_path(month)
+    except ValueError as exc:
+        raise SystemExit(f"keep: {exc}")
+
+    known = manifest.read()
+    ids = archive.pending(known)
+    if not ids:
+        print("keep: nothing pending; every capture the manifest knows is "
+              "already in an archive")
+        return 0
+
+    written, missing = archive.build(ids, target)
+    good, bad = archive.verify(target, set(ids))
+    print(f"keep: {written} body(ies) into {target.name}, "
+          f"{target.stat().st_size / 1048576:.1f} MB; "
+          f"{len(good)} verified, {len(bad)} BAD, {len(missing)} not on disk")
+    if missing:
+        print(f"   not on disk: {', '.join(m[:12] for m in missing[:5])}"
+              + (" ..." if len(missing) > 5 else ""))
+
+    if not archive.releasable(good, bad):
+        print("   nothing released: " + (
+            "a member did not hash to its own name, so the whole bundle is "
+            f"untrusted ({', '.join(b[:12] for b in bad[:5])})" if bad
+            else "the bundle holds nothing"))
+        return 1
+
+    stamp = target.name.split(".")[0]
+    manifest.write(manifest.merge(
+        known, {i: {**known.get(i, {"id": i}), "archive": stamp}
+                for i in good}))
+    print(f"   manifest stamped: {len(good)} now in {stamp}")
+
+    if not release:
+        print("   originals left in git (--release to let go of them)")
+        return 0
+
+    rel = [str(keepset.evidence_path(i).relative_to(REPO_ROOT)).replace("\\", "/")
+           for i in good]
+    dropped = 0
+    for start in range(0, len(rel), keepset.GIT_BATCH):
+        chunk = rel[start:start + keepset.GIT_BATCH]
+        done = subprocess.run(["git", "rm", "--cached", "--quiet", *chunk],
+                              cwd=REPO_ROOT, capture_output=True, text=True)
+        if done.returncode == 0:
+            dropped += len(chunk)
+        else:
+            print(f"   WARNING could not release {len(chunk)}: "
+                  f"{done.stderr.strip()[:160]}")
+    print(f"   released {dropped} original(s) from git; the bodies stay on disk")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -82,6 +147,11 @@ def main(argv: list[str] | None = None) -> int:
         "untrack", help="let go of tracked captures nothing cites any more")
     drop_cmd.add_argument("--quiet", action="store_true")
     sub.add_parser("snapshot", help="copy the diaries into audits/lab/")
+    arch = sub.add_parser(
+        "archive", help="bundle the capture bodies, verified, into archive/")
+    arch.add_argument("--month", required=True, help="YYYY-MM")
+    arch.add_argument("--release", action="store_true",
+                      help="after verifying, let git go of the originals")
     args = parser.parse_args(argv)
 
     if args.cmd == "track":
@@ -91,6 +161,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.cmd == "untrack":
         keepset.untrack(quiet=args.quiet)
         return 0
+
+    if args.cmd == "archive":
+        return _archive(args.month, args.release)
 
     target = snapshot_dir()
     copied = snapshot()

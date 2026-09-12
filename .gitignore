@@ -93,3 +93,7 @@ state/backtests.jsonl
 # after three days, and tests/repo/test_evidence_in_git.py holds both
 # directions -- cited is tracked, and nothing else is.
 evidence/
+
+# The monthly evidence bundles (docs/data-plan.md D2). The MANIFEST is in git
+# and proves what each one holds; the bodies themselves are what left.
+archive/
