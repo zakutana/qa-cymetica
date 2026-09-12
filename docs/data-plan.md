@@ -59,7 +59,7 @@ Každá: testy napřed (červené), pak kód, commit na `main`, bez pushe.
 | D2 | `keep.py archive --month YYYY-MM`: zabalí těla do `archive/`, **ověří hash každého** a teprve pak je pustí z gitu | archiv se rozbalí a hashe sedí; `git rm --cached` až po ověření | **hotovo `ac1e2fba`** — 167 MB → 10,1 MB (16,5:1), 1 178 ověřeno, 0 vadných; a hned první běh odmítl pustit cokoli, protože id není sha256 souboru |
 | D3 | Odpojení: `evidence/` ven ze sledovaných cest, `keep.py track` už těla nepřidává | strom spadne ze 229 MB na ~62 MB; oba strážce **povýšené**, ne uvolněné | **hotovo `ecbe511e`** — strom 229 → **63,8 MB**, 1 843 → 673 souborů, v `evidence/` nula |
 | R1 | `scripts/review.py`: okno (`all`/`30d`/`last`/ISO), oblast deep pass nad `deep_pass_process.passes()` | pět tvarů okna projde; `last` bez checkpointu vypíše řádek o mezeře, ne tiché `all`; `condition()` nad **všemi** passy | **hotovo `ce4e21bd`** — a čtení nad ostrým repem nezmění ani bajt, což hlídá test |
-| R2 | Oblast laboratoř, `checkpoint --area`, skill `ohlednuti`, krok 11 deep passu | DNA strážce se **nemusel měnit** — hlídka zůstává v kroku 11, škrtla se oblast vývoje z revize, ne čtení hlídky z passu | **hotovo** |
+| R2 | Oblast laboratoř, `checkpoint --area`, skill `ohlednuti`, krok 11 deep passu | DNA strážce se **nemusel měnit** — hlídka zůstává v kroku 11, škrtla se oblast vývoje z revize, ne čtení hlídky z passu | **hotovo `b5d798f6`** |
 
 ## Jedna vada, co se opraví po cestě
 
