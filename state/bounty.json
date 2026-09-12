@@ -25,13 +25,13 @@
   "our_reports": {
     "endpoint": "GET /api/v1/bounty/my-reports?wallet_address=<addr>",
     "klass": "ok",
-    "read_at": "2026-09-11T17:56:00+00:00",
-    "evidence_id": "acc86601087a4f5c671f81efb6423ccfcb1d0406f47522ec98addbf8eb220741",
-    "rows_returned": 53,
-    "server_total": 53,
-    "total": 53,
+    "read_at": "2026-09-12T09:05:16+00:00",
+    "evidence_id": "640722504bd47fb882a99ec70adcc6e22ead3c09788e9a06c535edda554da858",
+    "rows_returned": 54,
+    "server_total": 54,
+    "total": 54,
     "statuses": {
-      "paid": 46,
+      "paid": 47,
       "fixed": 5,
       "invalid": 2
     },
@@ -806,7 +806,7 @@
         "fixed_at": "2026-09-10T12:44:31.442730",
         "validated_at": "2026-09-10T12:44:31.442730",
         "triaged_at": "2026-09-10T12:44:31.442730",
-        "status_notes": "[2026-09-10T12:44:31+00:00] Resolved via ticket ET-24493: Verified bug (hunter:5 #86). Root cause: a deep job ran as an in-process asyncio task in the slot that accepted it; the platform's blue/green deploys restart slots several times a day, killing the task, and the poller then reported \"interrupted — please resubmit\" with a browser-only fallback. The HTML 504 came from nginx's catch-all location (60 s read timeout, HTML error page) which /mcp/v1 fell into. Fix @2ec9bb3d8: (1) jobs left 'running' by a restart are resumed by the next process (resume_i\n[reporter-verification FAIL 2026-09-10 13:51 UTC by expire76 test_run=run-20260910T134627Z-75a0326]\n[reporter-verification FAIL 2026-09-10 16:52 UTC by expire76 test_run=run-20260910T164705Z-b56d1d3]\n[reporter-verification PASS 2026-09-11 05:45 UTC by expire76 test_run=run-20260911T053508Z-9e1ae9bc]\n[reporter-verification FAIL 2026-09-11 15:21 UTC by expire76 test_run=run-20260911T151835Z-31ec9b3e]",
+        "status_notes": "[2026-09-10T12:44:31+00:00] Resolved via ticket ET-24493: Verified bug (hunter:5 #86). Root cause: a deep job ran as an in-process asyncio task in the slot that accepted it; the platform's blue/green deploys restart slots several times a day, killing the task, and the poller then reported \"interrupted — please resubmit\" with a browser-only fallback. The HTML 504 came from nginx's catch-all location (60 s read timeout, HTML error page) which /mcp/v1 fell into. Fix @2ec9bb3d8: (1) jobs left 'running' by a restart are resumed by the next process (resume_i\n[reporter-verification FAIL 2026-09-10 13:51 UTC by expire76 test_run=run-20260910T134627Z-75a0326]\n[reporter-verification FAIL 2026-09-10 16:52 UTC by expire76 test_run=run-20260910T164705Z-b56d1d3]\n[reporter-verification PASS 2026-09-11 05:45 UTC by expire76 test_run=run-20260911T053508Z-9e1ae9bc]\n[reporter-verification FAIL 2026-09-11 15:21 UTC by expire76 test_run=run-20260911T151835Z-31ec9b3e]\n[reporter-verification FAIL 2026-09-11 17:58 UTC by expire76 test_run=run-20260911T174358Z-c0e379b9]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/24493",
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -824,7 +824,7 @@
         "fixed_at": "2026-09-10T16:08:23.323462",
         "validated_at": "2026-09-10T16:08:23.323462",
         "triaged_at": "2026-09-10T16:08:23.323462",
-        "status_notes": "Fixed @0ec6e5e62-era release 16:06 UTC: paper event-card buy/short debits the paper USDC balance, increments sim total_trades, writes a paper fill; reporter measured 100000.00 -> 99999.00 and trades 0 -> 1 after a 1 USDC paper buy at 20:05 UTC and confirmed fixed.\n[2026-09-10T21:27:41+00:00] Resolved via ticket ET-24512: Fixed and reporter-confirmed (20:05 UTC paper buy: sim_balance 100000 -> 99999, sim_total_trades 0 -> 1). Paper buy/short debits paper USDC, writes paper fill, close returns proceeds. Reply sent on Telegram (General, reply to msg 216578).",
+        "status_notes": "Fixed @0ec6e5e62-era release 16:06 UTC: paper event-card buy/short debits the paper USDC balance, increments sim total_trades, writes a paper fill; reporter measured 100000.00 -> 99999.00 and trades 0 -> 1 after a 1 USDC paper buy at 20:05 UTC and confirmed fixed.\n[2026-09-10T21:27:41+00:00] Resolved via ticket ET-24512: Fixed and reporter-confirmed (20:05 UTC paper buy: sim_balance 100000 -> 99999, sim_total_trades 0 -> 1). Paper buy/short debits paper USDC, writes paper fill, close returns proceeds. Reply sent on Telegram (General, reply to msg 216578).\n[reporter-verification PASS 2026-09-11 17:58 UTC by expire76 test_run=run-20260911T174358Z-c0e379b9]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/24512",
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -842,7 +842,7 @@
         "fixed_at": "2026-09-10T21:27:37.092853",
         "validated_at": "2026-09-10T21:28:01.330843",
         "triaged_at": "2026-09-10T21:28:01.330843",
-        "status_notes": "Fixed @f56f7b086 (live 20:53 UTC) + @4d645d961 (live 21:22 UTC): MCP now serves toggle_bot_trading / update_bot_settings / fund_clone_bot / get_clone_balance / get_my_clones / clone_bot / list_clonable_bots / get_bot_indicators / update_bot_indicators; /openapi-public.json publishes POST {id}/toggle-trading, PATCH {id}/settings, GET {id}/balance, POST {id}/withdraw, DELETE {id}; deep answers receive the served catalogue. PATCH /settings with is_trading was the intended route.\n[2026-09-10T21:28:01+00:00] Resolved via ticket ET-24562: Fixed @f56f7b086 + @4d645d961: clone lifecycle served on MCP (toggle_bot_trading, update_bot_settings, fund_clone_bot, get_clone_balance, get_my_clones, clone_bot, list_clonable_bots, indicators); openapi-public publishes toggle-trading/settings/balance/withdraw/DELETE; deep answers get the served catalogue. Live-verified. Telegram reply sent.\n[reporter-verification PASS 2026-09-10 21:46 UTC by expire76 test_run=run-20260910T213841Z-adc2783]",
+        "status_notes": "Fixed @f56f7b086 (live 20:53 UTC) + @4d645d961 (live 21:22 UTC): MCP now serves toggle_bot_trading / update_bot_settings / fund_clone_bot / get_clone_balance / get_my_clones / clone_bot / list_clonable_bots / get_bot_indicators / update_bot_indicators; /openapi-public.json publishes POST {id}/toggle-trading, PATCH {id}/settings, GET {id}/balance, POST {id}/withdraw, DELETE {id}; deep answers receive the served catalogue. PATCH /settings with is_trading was the intended route.\n[2026-09-10T21:28:01+00:00] Resolved via ticket ET-24562: Fixed @f56f7b086 + @4d645d961: clone lifecycle served on MCP (toggle_bot_trading, update_bot_settings, fund_clone_bot, get_clone_balance, get_my_clones, clone_bot, list_clonable_bots, indicators); openapi-public publishes toggle-trading/settings/balance/withdraw/DELETE; deep answers get the served catalogue. Live-verified. Telegram reply sent.\n[reporter-verification PASS 2026-09-10 21:46 UTC by expire76 test_run=run-20260910T213841Z-adc2783]\n[reporter-verification PASS 2026-09-11 17:59 UTC by expire76 test_run=run-20260911T174358Z-c0e379b9]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/24562",
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -860,7 +860,7 @@
         "fixed_at": "2026-09-10T21:27:38.905293",
         "validated_at": "2026-09-10T21:28:02.263936",
         "triaged_at": "2026-09-10T21:28:02.263936",
-        "status_notes": "Fixed @4d645d961 (live 21:22 UTC): fund, balance, withdraw, settings, toggle-trading, go-live, go-live-all and DELETE /{id} now take get_current_user_or_api_key (same as /clone); verified with X-API-Key only on a test account: clone -> fund -> enable -> balance -> settings -> pause -> withdraw -> delete, all 200. Paper clone funds from sim_balance_usdc.\n[2026-09-10T21:28:02+00:00] Resolved via ticket ET-24565: Fixed @4d645d961 (live 21:22 UTC): fund/balance/withdraw/settings/toggle-trading/go-live/go-live-all/DELETE accept the same X-API-Key as /clone. Verified API-key-only lifecycle on a test account, all 200; paper clone funds from the simulated balance. Telegram reply sent.\n[reporter-verification PASS 2026-09-10 21:46 UTC by expire76 test_run=run-20260910T213841Z-adc2783]",
+        "status_notes": "Fixed @4d645d961 (live 21:22 UTC): fund, balance, withdraw, settings, toggle-trading, go-live, go-live-all and DELETE /{id} now take get_current_user_or_api_key (same as /clone); verified with X-API-Key only on a test account: clone -> fund -> enable -> balance -> settings -> pause -> withdraw -> delete, all 200. Paper clone funds from sim_balance_usdc.\n[2026-09-10T21:28:02+00:00] Resolved via ticket ET-24565: Fixed @4d645d961 (live 21:22 UTC): fund/balance/withdraw/settings/toggle-trading/go-live/go-live-all/DELETE accept the same X-API-Key as /clone. Verified API-key-only lifecycle on a test account, all 200; paper clone funds from the simulated balance. Telegram reply sent.\n[reporter-verification PASS 2026-09-10 21:46 UTC by expire76 test_run=run-20260910T213841Z-adc2783]\n[reporter-verification PASS 2026-09-11 17:59 UTC by expire76 test_run=run-20260911T174358Z-c0e379b9]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/24565",
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -878,7 +878,7 @@
         "fixed_at": "2026-09-11T04:47:06.210310",
         "validated_at": "2026-09-11T04:47:06.210310",
         "triaged_at": "2026-09-11T04:47:06.210310",
-        "status_notes": "[2026-09-11T04:47:06+00:00] Resolved via ticket ET-24574: Fixed: GET /api/v1/event-cards now honours offset (alias skip) and page (1-based), returns total (true count under the active filter) next to count (rows returned), and filters on symbol (exact, case-insensitive) and q/search (title or symbol substring); ORDER BY has a deterministic id tiebreaker so paging never skips or duplicates. a4a5b71e is reachable by paging and by ?symbol=. llms.txt documents the enumeration recipe. Reward-eligible (verified, non-duplicate).\n[reporter-verification PASS 2026-09-11 06:03 UTC by expire76 test_run=run-20260911T055512Z-0d595c5b]",
+        "status_notes": "[2026-09-11T04:47:06+00:00] Resolved via ticket ET-24574: Fixed: GET /api/v1/event-cards now honours offset (alias skip) and page (1-based), returns total (true count under the active filter) next to count (rows returned), and filters on symbol (exact, case-insensitive) and q/search (title or symbol substring); ORDER BY has a deterministic id tiebreaker so paging never skips or duplicates. a4a5b71e is reachable by paging and by ?symbol=. llms.txt documents the enumeration recipe. Reward-eligible (verified, non-duplicate).\n[reporter-verification PASS 2026-09-11 06:03 UTC by expire76 test_run=run-20260911T055512Z-0d595c5b]\n[reporter-verification PASS 2026-09-11 17:59 UTC by expire76 test_run=run-20260911T174358Z-c0e379b9]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/24574",
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -896,7 +896,7 @@
         "fixed_at": "2026-09-11T04:48:14.263578",
         "validated_at": "2026-09-11T04:48:14.263578",
         "triaged_at": "2026-09-11T04:48:14.263578",
-        "status_notes": "[2026-09-11T04:48:14+00:00] Resolved via ticket ET-24575: Fixed (release 9b1ab755c): 5bd86126 is a live but PRIVATE user-submitted card (visible only to its author), so it 404s publicly while NEXUS could still see it. Every served deep answer (MCP + REST + chat) now runs a surface resolver: card ids are checked against the caller's public visibility rule and unreachable ids are marked \"not available — do not trade it\" with the allocation withheld; tool names are checked against tools/list. Reward-eligible.\n[reporter-verification PASS 2026-09-11 06:01 UTC by expire76 test_run=run-20260911T055512Z-0d595c5b]",
+        "status_notes": "[2026-09-11T04:48:14+00:00] Resolved via ticket ET-24575: Fixed (release 9b1ab755c): 5bd86126 is a live but PRIVATE user-submitted card (visible only to its author), so it 404s publicly while NEXUS could still see it. Every served deep answer (MCP + REST + chat) now runs a surface resolver: card ids are checked against the caller's public visibility rule and unreachable ids are marked \"not available — do not trade it\" with the allocation withheld; tool names are checked against tools/list. Reward-eligible.\n[reporter-verification PASS 2026-09-11 06:01 UTC by expire76 test_run=run-20260911T055512Z-0d595c5b]\n[reporter-verification PASS 2026-09-11 17:59 UTC by expire76 test_run=run-20260911T174358Z-c0e379b9]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/24575",
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -950,7 +950,7 @@
         "fixed_at": "2026-09-11T09:52:27.236427",
         "validated_at": "2026-09-11T09:52:27.236427",
         "triaged_at": "2026-09-11T09:52:27.236427",
-        "status_notes": "[2026-09-11T09:52:27+00:00] Resolved via ticket ET-24612: Confirmed inside: bot d778102d had 4 open arena-wta legs ($400) with balance untouched (950 = 1000 − two $25 perp bets). Cause: clone_arena_orchestrator debited current_balance_usdc once at loop end, after place_arena_order's mid-flow commits and behind a with_for_update that timed out (LockNotAvailable) — trade rows persisted, debit lost. Fix @ed2f2e508 (live): each leg booked atomically with its trade row (debit on entry, refund on failed leg). Bot balance backfilled 950→550.\n[reporter-verification FAIL 2026-09-11 15:07 UTC by expire76 test_run=run-20260911T150246Z-5dea5bec]",
+        "status_notes": "[2026-09-11T09:52:27+00:00] Resolved via ticket ET-24612: Confirmed inside: bot d778102d had 4 open arena-wta legs ($400) with balance untouched (950 = 1000 − two $25 perp bets). Cause: clone_arena_orchestrator debited current_balance_usdc once at loop end, after place_arena_order's mid-flow commits and behind a with_for_update that timed out (LockNotAvailable) — trade rows persisted, debit lost. Fix @ed2f2e508 (live): each leg booked atomically with its trade row (debit on entry, refund on failed leg). Bot balance backfilled 950→550.\n[reporter-verification FAIL 2026-09-11 15:07 UTC by expire76 test_run=run-20260911T150246Z-5dea5bec]\n[reporter-verification PASS 2026-09-11 17:58 UTC by expire76 test_run=run-20260911T174358Z-c0e379b9]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/24612",
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -968,7 +968,7 @@
         "fixed_at": "2026-09-11T09:47:49.173295",
         "validated_at": "2026-09-11T09:47:49.173295",
         "triaged_at": "2026-09-11T09:47:49.173295",
-        "status_notes": "[2026-09-11T09:47:49+00:00] Resolved via ticket ET-24616: Not a boundary defect, verified from inside. Card a4a5b71e is is_public=true (origin user_submission, owner 99), so account 113 reading it (200) is the rule working: the ONE visibility rule (event_cards/visibility.py) keys on is_public, not origin; only is_public=false cards 404 for non-owners. The listing omits it because the deck feed defaults include_user_submitted=false; with include_user_submitted=true the card IS listed (checked live). Public card, listed under the documented flag.\n[reporter-verification PASS 2026-09-11 15:07 UTC by expire76 test_run=run-20260911T150246Z-5dea5bec]",
+        "status_notes": "[2026-09-11T09:47:49+00:00] Resolved via ticket ET-24616: Not a boundary defect, verified from inside. Card a4a5b71e is is_public=true (origin user_submission, owner 99), so account 113 reading it (200) is the rule working: the ONE visibility rule (event_cards/visibility.py) keys on is_public, not origin; only is_public=false cards 404 for non-owners. The listing omits it because the deck feed defaults include_user_submitted=false; with include_user_submitted=true the card IS listed (checked live). Public card, listed under the documented flag.\n[reporter-verification PASS 2026-09-11 15:07 UTC by expire76 test_run=run-20260911T150246Z-5dea5bec]\n[reporter-verification PASS 2026-09-11 17:58 UTC by expire76 test_run=run-20260911T174358Z-c0e379b9]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/24616",
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -986,8 +986,26 @@
         "fixed_at": "2026-09-11T16:02:39.790217",
         "validated_at": "2026-09-11T16:02:39.790217",
         "triaged_at": "2026-09-11T16:02:39.790217",
-        "status_notes": "[2026-09-11T16:02:39+00:00] Resolved via ticket ET-24694: Confirmed inside: the TRX $55 leg (trade 4742514c) WAS debited per leg, then the perpetual paper loop committed a Python-computed absolute balance from a copy read seconds earlier — lost update (550 stayed). Also the arena route's inner commit released the per-clone savepoint → ResourceClosedError → batch aborted. Fix @c497f070b (live 16:15 UTC): every bot-balance move is a relative SQL UPDATE (bot_balance_book.py); batch tolerates the inner commit. d778102d re-booked 550→495 = 1000−50−455 open.",
+        "status_notes": "[2026-09-11T16:02:39+00:00] Resolved via ticket ET-24694: Confirmed inside: the TRX $55 leg (trade 4742514c) WAS debited per leg, then the perpetual paper loop committed a Python-computed absolute balance from a copy read seconds earlier — lost update (550 stayed). Also the arena route's inner commit released the per-clone savepoint → ResourceClosedError → batch aborted. Fix @c497f070b (live 16:15 UTC): every bot-balance move is a relative SQL UPDATE (bot_balance_book.py); batch tolerates the inner commit. d778102d re-booked 550→495 = 1000−50−455 open.\n[reporter-verification PASS 2026-09-11 17:58 UTC by expire76 test_run=run-20260911T174358Z-c0e379b9]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/24694",
+        "fix_pr_url": null,
+        "reward_amount": 1000.0
+      },
+      {
+        "id": 97,
+        "title": "get_strategy_returns publishes Sharpe with no period, so an agent ranking strategies the way your guide asks compares a March backtest with a 48-hour window",
+        "status": "paid",
+        "hunter_name": "expire76",
+        "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
+        "severity_reported": "medium",
+        "severity_confirmed": "medium",
+        "category": "api",
+        "created_at": "2026-09-12T07:22:52.416610",
+        "fixed_at": "2026-09-12T08:19:06.408419",
+        "validated_at": "2026-09-12T08:19:06.408419",
+        "triaged_at": "2026-09-12T08:19:06.408419",
+        "status_notes": "[2026-09-12T08:19:06+00:00] Resolved via ticket ET-24784: Fixed, live @b38f3a67a. get_strategy_returns now names the window behind every Sharpe: latest_metrics.period = the run's own time range (live from backtest_results) + top-level period; `leaderboard` = the /api/v1/backtest/leaderboard figures for the same bot WITH headline_period(_hours) + a comparability note; accepts cryptobull-blue / cryptobull_blue / bt-cryptobull-blue; bot-* species resolve to their published figures + period. Verified live on all 3 repro calls.",
+        "ticket_url": "https://cymetica.com/admin/centcom/issues/24784",
         "fix_pr_url": null,
         "reward_amount": 1000.0
       }
@@ -1603,5 +1621,6 @@
       "total_paid": 0.0,
       "reward_currency": "ET10"
     }
-  ]
+  ],
+  "our_reports_refreshed_at": "2026-09-12T09:05:16+00:00"
 }
