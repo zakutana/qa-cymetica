@@ -7353,7 +7353,7 @@
           },
           {
             "report_id": 98,
-            "status": "pending"
+            "status": "paid"
           }
         ],
         "refused": [],
@@ -8557,15 +8557,15 @@
         "pinned_fingerprint": "3a642c9c05f3db445740d3bd67ca8e0d507c5bb3e102421f54faa543cb1c44a9"
       },
       "filing": {
-        "state": "RAISED",
+        "state": "FIX_CLAIMED",
         "adjudicated_by": {
-          "event_id": "ba64d8b9d489fcc49f7ea298e2d21773cfcaaf43bed14647f38bceb31d7f5fda",
-          "at": "2026-09-12T12:02:52+00:00"
+          "event_id": "f182166edfdb87d1b05ad748004e1a6eb66174d1838b488695f98e6ac2eb5dcd",
+          "at": "2026-09-12T15:18:19+00:00"
         },
         "reports": [
           {
             "report_id": 99,
-            "status": "pending"
+            "status": "paid"
           }
         ],
         "refused": [],
@@ -8589,6 +8589,15 @@
             "event_id": "ba64d8b9d489fcc49f7ea298e2d21773cfcaaf43bed14647f38bceb31d7f5fda"
           },
           "at": "2026-09-12T12:02:52+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "RAISED",
+          "to": "FIX_CLAIMED",
+          "cause": {
+            "event_id": "f182166edfdb87d1b05ad748004e1a6eb66174d1838b488695f98e6ac2eb5dcd"
+          },
+          "at": "2026-09-12T15:18:19+00:00"
         }
       ],
       "regressions": [],
@@ -8660,12 +8669,14 @@
         "measured_at": "2026-09-12T12:02:19+00:00"
       },
       "obligations": {
-        "reverify": false,
+        "reverify": true,
         "repair_check": false,
         "reopen": [],
         "retractions": [],
         "verification_owed": [],
-        "correction_owed": [],
+        "correction_owed": [
+          99
+        ],
         "disputed": []
       }
     }
@@ -8676,12 +8687,11 @@
   "counts": {
     "WITHDRAWN": 10,
     "VERIFIED FIXED": 40,
-    "STILL REPRODUCIBLE": 2,
-    "OUR CHECK CANNOT TELL": 1,
-    "RAISED": 1
+    "STILL REPRODUCIBLE": 3,
+    "OUR CHECK CANNOT TELL": 1
   },
   "events_head": {
-    "seq": 1840,
-    "chain": "a36022a8fdfdaf407fcbb942af85dcbacbd1e7390ca039e79c559da4035b9f1a"
+    "seq": 1845,
+    "chain": "155fae7a718086665482ef32d848b6f3a6bfd462387462aac055592793f182fa"
   }
 }

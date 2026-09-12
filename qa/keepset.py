@@ -310,7 +310,24 @@ def track(quiet: bool = False) -> int:
             print("keep: git could not be read; nothing added")
         return 0
 
-    wanted, reasons = [], {}
+    # The manifest first, and over the WHOLE keep set rather than only what git
+    # is missing: it is written while the bodies are readable, because
+    # `call_key` needs the body and the archive will take it. A capture already
+    # tracked still needs its line -- the proof has to exist before the move,
+    # not after it. Imported here, not at module scope: qa.manifest reads
+    # `evidence_path` from this module.
+    from qa import manifest as _manifest
+
+    try:
+        _manifest.refresh(keep)
+        wanted_extra = [str(_manifest.manifest_path().relative_to(REPO_ROOT))
+                        .replace("\\", "/")]
+    except Exception as exc:  # noqa: BLE001 -- same rule as above: never block
+        if not quiet:
+            print(f"keep: WARNING the manifest was not written: {exc}")
+        wanted_extra = []
+
+    wanted, reasons = list(wanted_extra), {}
     for evidence_id in sorted(set(keep) - held):
         path = evidence_path(evidence_id)
         if path.is_file():

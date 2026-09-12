@@ -289,4 +289,12 @@ to neodškrtl, nebo to nikdy nebylo další na řadě.
 - [x] 2026-09-12  N5 z `docs/lab-plan.md`: `lab.py grade` — předpověděl náš žebříček verdikt?
 - [ ] 2026-09-12  Postavit `N_eff` z NEX-0026: průměrná párová korelace otevřené knihy jako varování dřív než drawdown. Nexusův vlastní ukazatel, ne náš nápad.
 - [ ] 2026-09-12  `_deployed()` v `scripts/lab.py` počítá i pozice, které simulace už nemá: TRD-0001 a TRD-0002 (11:41 a 11:59) jsou starší než `sim_started_at` 13:31, a `sim_total_trades` je 4, ne 6. Dnes jsou to 2 USDC z 99 000, ale každý reset simulace přidá další duchy, kteří se nikdy nezavřou, a ti nafukují čitatele stropu expozice. Ignorovat přijaté nákupy starší než nejnovější `sim_started_at`, s testem.
+- [ ] 2026-09-12  `ledger.py` bez `--run` vzal jako běh záznamu můj vlastní běh `tests/meta tests/repo` — ten neměřil z jejich platformy nic, a protože stránka popisuje běh, ze kterého byl ledger složen, vyprázdnily se dlaždice sekcí. Stavy řádků to neohrozilo (fold nezavírá, co neproběhlo), ale strážce `test_a_tile_lists_the_tests_behind_its_count` prošel před tím o **jedinou** kontrolu (1 → 0). Default by měl preferovat běh, který něco z ledgeru rozsoudil, nebo aspoň odmítnout, když nerozsoudil nic.
+- [ ] 2026-09-12  Ověřit #98 a #99 během úrovně V: zaplatili obě a tvrdí opravu, naše kontroly je pořád reprodukují — fold hlásí `reverify` a `correction_owed` u obou
+- [ ] 2026-09-12  D1 z `docs/data-plan.md`: manifest `audits/evidence-manifest.jsonl` — hash, bajty, `call_key`, důvod, archiv
+- [ ] 2026-09-12  D2 z `docs/data-plan.md`: `keep.py archive --month` — zabalit těla, ověřit hash každého, teprve pak pustit z gitu
+- [ ] 2026-09-12  D3 z `docs/data-plan.md`: odpojit `evidence/` od gitu; strom ze 229 MB na ~62 MB
+- [ ] 2026-09-12  R1 z `docs/data-plan.md`: `scripts/review.py` — okno a oblast deep pass
+- [ ] 2026-09-12  R2 z `docs/data-plan.md`: oblast laboratoř, `checkpoint --area`, skill, přepis kroku 11 deep passu
+- [ ] 2026-09-12  Hlášky strážce v `tests/repo/test_deep_pass_process.py` staví na klíči `pass`, ale `passes()` vydává `run` — ve chvíli, kdy má strážce vysvětlit, co je špatně, spadne na `KeyError`. Aserce samotné jsou správné, slepá je jen hláška.
 - [ ] 2026-09-12  Přeformulovat důvod v `test_one_credential_carries_a_clone_from_creation_to_funding`: větu o `/fund` říkat jen když `/fund` je mezi odmítajícími (šla ven v #98 jako podmíněná). Až se ta kontrola bude měnit tak jako tak — samotný pin cyklus za to nestojí.

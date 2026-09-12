@@ -30,7 +30,7 @@ import re
 import subprocess
 from pathlib import Path
 
-from qa import keepset
+from qa import keepset, manifest
 from qa.marks import SafetyTier, qa
 from qa.measure import Measurement, conclude
 
@@ -122,6 +122,39 @@ def _env_secrets() -> dict[str, str]:
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_every_capture_we_keep_is_proved_by_the_manifest():
+    """The proof that outlives the body.
+
+    167 MB of capture bodies are in git and the tree grew 47 MB in the eight
+    hours after the prune of 2026-09-12. They are leaving for a monthly archive,
+    and the manifest is what makes that safe: evidence is addressed by the
+    sha256 of its content, so id + size + the call it answered proves what we
+    had and that it has not changed.
+
+    This runs BESIDE the two git assertions above rather than replacing them.
+    The bodies are still tracked today; the tracked-ness rule goes when D3
+    actually moves them, not before. A guard relaxed ahead of its replacement is
+    a window with nothing watching, and this file exists because of one.
+
+    `call_key` reads the body, so an entry can only be written while the capture
+    is on this disk. A capture in the keep set with no manifest line is one we
+    would lose the proof of the moment it is archived.
+    """
+    keep = keepset.must_keep()
+    known = manifest.read()
+    missing = sorted(set(keep) - set(known))
+
+    conclude(Measurement(
+        verdict="failed" if missing else "passed",
+        reason=(f"{len(missing)} of {len(keep)} kept capture(s) have no "
+                f"manifest line, so archiving them would lose what they were: "
+                f"{', '.join(m[:12] for m in missing[:5])}"
+                if missing else
+                f"all {len(keep)} kept capture(s) are in the manifest"),
+        left=len(missing), right=0,
+        sources=[manifest.manifest_path().name]))
+
+
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_tracker_lets_go_of_what_stopped_being_cited():
     """`track` only ever added, so the keep set could only grow.

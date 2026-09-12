@@ -25,13 +25,13 @@
   "our_reports": {
     "endpoint": "GET /api/v1/bounty/my-reports?wallet_address=<addr>",
     "klass": "ok",
-    "read_at": "2026-09-12T09:05:16+00:00",
-    "evidence_id": "640722504bd47fb882a99ec70adcc6e22ead3c09788e9a06c535edda554da858",
-    "rows_returned": 54,
-    "server_total": 54,
-    "total": 54,
+    "read_at": "2026-09-12T15:18:19+00:00",
+    "evidence_id": "09329b9d60dcbf4820779182df941b330796de471e1b941d38d099a04cf4ecbd",
+    "rows_returned": 56,
+    "server_total": 56,
+    "total": 56,
     "statuses": {
-      "paid": 47,
+      "paid": 49,
       "fixed": 5,
       "invalid": 2
     },
@@ -1008,6 +1008,42 @@
         "ticket_url": "https://cymetica.com/admin/centcom/issues/24784",
         "fix_pr_url": null,
         "reward_amount": 1000.0
+      },
+      {
+        "id": 98,
+        "title": "You fixed #89 in 48 minutes and a new cloned-bots route has brought the same gap back: GET /{instance_id}/activity documents authorization only",
+        "status": "paid",
+        "hunter_name": "expire76",
+        "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
+        "severity_reported": "medium",
+        "severity_confirmed": "medium",
+        "category": "api",
+        "created_at": "2026-09-12T10:35:35.568878",
+        "fixed_at": "2026-09-12T11:07:11.631211",
+        "validated_at": "2026-09-12T11:07:11.631211",
+        "triaged_at": "2026-09-12T11:07:11.631211",
+        "status_notes": "[2026-09-12T11:07:11+00:00] Resolved via ticket ET-24791: Verified live: GET /cloned-bots/{id}/activity returns 200 with no credential, with an X-API-Key and with a Bearer — security:[] means \"no credential required\", not \"key refused\"; keys work on all 10 lifecycle routes. The builder already is default-plus-declared-exceptions; now pinned by construction: a test derives each cloned-bots route's class from its auth dependency and fails on drift. It caught /cloned-bots/available (no auth, over-declared as keyed) — fixed.",
+        "ticket_url": "https://cymetica.com/admin/centcom/issues/24791",
+        "fix_pr_url": null,
+        "reward_amount": 1000.0
+      },
+      {
+        "id": 99,
+        "title": "backtest_event_card_idea reports period_days 365 for a window that covered 120 points, so two different windows come back identical and labelled differently",
+        "status": "paid",
+        "hunter_name": "expire76",
+        "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
+        "severity_reported": "medium",
+        "severity_confirmed": "medium",
+        "category": "api",
+        "created_at": "2026-09-12T12:02:47.636771",
+        "fixed_at": "2026-09-12T12:56:46.371047",
+        "validated_at": "2026-09-12T12:56:46.371047",
+        "triaged_at": "2026-09-12T12:56:46.371047",
+        "status_notes": "[2026-09-12T12:56:46+00:00] Resolved via ticket ET-24802: Accepted, fixed @e3babc5cb, live-verified on your repro via MCP: every basket backtest (backtest_event_card_idea, REST /backtest-idea, card backtest) now returns covered_days + window{requested_days, requested/covered start-end, truncated}; period_days still echoes the request. WIF basket: 180 and 365 both say covered_days 120, truncated true, note leads with the span; control 365 → 364 days, not truncated. Tests pin it.",
+        "ticket_url": "https://cymetica.com/admin/centcom/issues/24802",
+        "fix_pr_url": null,
+        "reward_amount": 1000.0
       }
     ]
   },
@@ -1622,5 +1658,5 @@
       "reward_currency": "ET10"
     }
   ],
-  "our_reports_refreshed_at": "2026-09-12T09:05:16+00:00"
+  "our_reports_refreshed_at": "2026-09-12T15:18:20+00:00"
 }
