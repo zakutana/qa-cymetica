@@ -1464,3 +1464,51 @@ def test_an_exclusion_counts_wherever_their_scope_states_it():
     assert accounts_for(silent) is None and not states_exclusion(silent), (
         "a scope silent about the population held is the defect this check "
         "was written for")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_clone_surface_reads_the_flow_and_not_their_spelling():
+    """Two ways this pair could send Cymetica a false claim about #89/#98.
+
+    C02 -- `served_but_undocumented` built the templated path with the literal
+    `{instance_id}` and compared it to their path keys verbatim, so renaming
+    the parameter in openapi, which changes nothing a caller can see, would
+    have reported routes they DO document as served-but-undocumented.
+
+    C03 -- `credential_gap`'s verdict failed on any authenticated cloned-bots
+    route without `x-api-key`, while the docstring names one flow: "an agent
+    that can clone a bot can put money in it". The day they fix funding and
+    document a user-only `DELETE`, that would have been a `fail` for an
+    operation outside the flow, on a row they have already paid for twice.
+
+    Both 3/3, deep pass of 2026-09-13. The direction that must still work is
+    pinned beside each, because a check that cannot fail is the other defect.
+    """
+    from tests.rest.test_cloned_bots_surface import (PREFIX, credential_gap,
+                                                     served_but_undocumented)
+
+    renamed = served_but_undocumented({f"{PREFIX}/abc/fund": ["POST"]},
+                                      {PREFIX + "/{clone_id}/fund"})
+    assert renamed == [], (
+        "their parameter name is not part of the contract; the route is")
+    hidden = served_but_undocumented({f"{PREFIX}/abc/secret": ["POST"]},
+                                     {PREFIX + "/{clone_id}/fund"})
+    assert [r["path"] for r in hidden] == [PREFIX + "/{instance_id}/secret"], (
+        "a route they really do not document must still be reported")
+
+    key = {"parameters": [{"in": "header", "name": "x-api-key"}]}
+    auth = {"parameters": [{"in": "header", "name": "authorization"}]}
+
+    today = credential_gap({f"{PREFIX}/clone": {"post": key},
+                            f"{PREFIX}/{{id}}/fund": {"post": auth}}, {})
+    assert sorted(today["blocked"]) == [f"POST {PREFIX}/{{id}}/fund"], (
+        "the funding step refusing the agent credential IS the finding")
+
+    fixed = credential_gap({f"{PREFIX}/clone": {"post": key},
+                            f"{PREFIX}/{{id}}/fund": {"post": key},
+                            f"{PREFIX}/{{id}}": {"delete": auth}}, {})
+    assert fixed["blocked"] == {}, (
+        "with funding fixed, a documented user-only DELETE is theirs to "
+        "decide and not a step of this flow")
+    assert sorted(fixed["refuses"]) == [f"DELETE {PREFIX}/{{id}}"], (
+        "it is still reported -- narrowed, not discarded")

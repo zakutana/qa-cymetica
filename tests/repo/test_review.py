@@ -199,13 +199,40 @@ def test_the_lab_area_filters_every_diary_on_its_own_clock():
          "verdict": "survived"},
     ]
 
+    # Five diaries, and the stub used to hand every one of them `[]` -- so the
+    # `_within` wrappers on asked / answered / gave_up / backtests / orders
+    # filtered empty lists and only the two above were ever measured. Dropping
+    # `_within` from the backtests line left this green while the retrospective
+    # reported every backtest ever run under a "last 7 days" heading. Each
+    # diary now carries one row inside the window and one before it, so every
+    # wrapper has something to cut. 3/3, deep pass of 2026-09-13.
+    old, new = "2026-09-01T09:00:00+00:00", "2026-09-12T09:00:00+00:00"
+    diary = {
+        "nexus.jsonl": [
+            {"type": "question", "at": old}, {"type": "question", "at": new},
+            {"type": "answer", "at": old}, {"type": "answer", "at": new},
+            {"type": "gave_up", "at": old}, {"type": "gave_up", "at": new},
+        ],
+        "backtests.jsonl": [{"at": old}, {"at": new}],
+        "paper.jsonl": [{"type": "intent", "at": old},
+                        {"type": "intent", "at": new},
+                        {"type": "outcome", "at": new}],
+    }
+
     out = review.area_lab(since, lab=lambda: lab_rows, rooms=lambda: room_rows,
-                          diaries=lambda name: [], grade=lambda: None)
+                          diaries=lambda name: diary.get(name, []),
+                          grade=lambda: None)
 
     assert [s["session"] for s in out["sessions"]] == ["LAB-0002"], out["sessions"]
     assert out["lessons"] == ["new one", "new two"], out["lessons"]
     assert [r["room"] for r in out["rooms"]] == ["STR-0002"], out["rooms"]
     assert len(out["verdicts"]) == 1
+
+    for key in ("asked", "answered", "gave_up", "backtests", "orders"):
+        assert len(out[key]) == 1, (
+            f"{key} carries {len(out[key])} row(s): one is inside the window "
+            f"and one is eleven days before it, so anything but 1 means that "
+            f"diary is not being filtered on the window at all")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -266,3 +293,24 @@ def test_the_nexus_row_types_are_read_off_the_real_diary_not_guessed():
     assert {"question", "answer", "gave_up"} <= types, (
         f"review.area_lab counts question/answer/gave_up; the diary holds "
         f"{sorted(t for t in types if t)}")
+
+    # Through the READER, not against a literal. The three words above were
+    # written twice -- once here and once in scripts/review.py -- so reverting
+    # the reader to the historical `type == "ask"` left this green while the
+    # retrospective printed "0 otázek Nexusovi" again, which is the incident
+    # this docstring cites. Now the diary's own rows go through `area_lab` and
+    # the counts have to be non-zero. 3/3, deep pass of 2026-09-13.
+    rows = [_json.loads(line)
+            for line in path.read_text(encoding="utf-8").splitlines()
+            if line.strip()]
+    review = _module()
+    out = review.area_lab(datetime(2020, 1, 1, tzinfo=timezone.utc),
+                          lab=list, rooms=list,
+                          diaries=lambda name: rows if name == "nexus.jsonl"
+                          else [],
+                          grade=lambda: None)
+    empty = [k for k in ("asked", "answered", "gave_up") if not out[k]]
+    assert not empty, (
+        f"the diary holds {sorted(t for t in types if t)} and area_lab counted "
+        f"nothing for {empty} -- the reader and this test are naming different "
+        f"words for the same rows")

@@ -38,6 +38,8 @@ SAFE. GET only, and against a clone we already own.
 
 from __future__ import annotations
 
+import re
+
 from qa.marks import Inconclusive, SafetyTier, qa
 from qa.measure import Measurement, conclude
 
@@ -57,15 +59,26 @@ def served_but_undocumented(probed: dict, documented: set) -> list[dict]:
     templated form is what is compared: their documents write `{instance_id}`
     where we send a uuid.
     """
+    # Their parameter NAME is not part of the contract. The templated form was
+    # built with the literal `{instance_id}` and compared against their path
+    # keys verbatim, so renaming the parameter to `{clone_id}` in openapi -- a
+    # documentation-only change -- would have made two routes they document
+    # read as served-but-undocumented, and this check sends that to them. What
+    # is being asserted is that the ROUTE is documented, so both sides are
+    # normalised to one placeholder first. 3/3, deep pass of 2026-09-13.
+    def shape(route: str) -> str:
+        return re.sub(r"\{[^}]*\}", "{}", route)
+
+    by_shape = {shape(route): route for route in documented}
     out = []
     for path, allow in sorted(probed.items()):
         if not allow:
             continue
         tail = path[len(PREFIX):].lstrip("/")
         rest = tail.split("/", 1)[1:]
-        template = "/".join(["{instance_id}", *rest])
-        if f"{PREFIX}/{template}" not in documented:
-            out.append({"path": f"{PREFIX}/{template}",
+        template = f"{PREFIX}/" + "/".join(["{instance_id}", *rest])
+        if shape(template) not in by_shape:
+            out.append({"path": template,
                         "methods": allow,
                         "probed_as": path})
     return out
@@ -89,6 +102,19 @@ def _credential_headers(op: dict, schemes: dict) -> set:
     return {h for h in headers if h}
 
 
+# The steps of the flow this check is about: create a clone, then move it --
+# put money in it, start it. Matched on the path's last segment, because the id
+# in the middle is ours and their parameter name is theirs.
+#
+# The check failed on ANY authenticated cloned-bots route that did not publish
+# `x-api-key`, while its docstring names one flow: "an agent that can clone a
+# bot can put money in it". So the day they fix funding and document, say, a
+# user-only `DELETE /api/v1/cloned-bots/{id}`, this would have sent them a
+# `fail` for a legitimate operation outside the flow -- on a row they have
+# already paid for twice. 3/3, deep pass of 2026-09-13.
+MOVES_THE_CLONE = ("fund", "go-live")
+
+
 def credential_gap(paths: dict, schemes: dict | None = None) -> dict:
     """Which cloned-bots routes accept the agent credential, and which do not.
 
@@ -97,6 +123,11 @@ def credential_gap(paths: dict, schemes: dict | None = None) -> dict:
     `authorization`; `fund` and `go-live` document only `authorization`. Those
     four are steps of one flow, so the difference is the finding, and it is
     stated as a difference rather than as an absence.
+
+    `blocked` is the subset of `refuses` that is a step of that flow, and it is
+    what the verdict reads. Everything else stays in `refuses` and is reported,
+    because a route outside the flow refusing the agent credential is worth
+    seeing and is not worth a `fail`.
     """
     accepts, refuses = {}, {}
     for path, ops in sorted(paths.items()):
@@ -108,7 +139,9 @@ def credential_gap(paths: dict, schemes: dict | None = None) -> dict:
                 continue  # public, and not part of the credential question
             (accepts if "x-api-key" in headers else refuses)[
                 f"{method.upper()} {path}"] = sorted(headers)
-    return {"accepts": accepts, "refuses": refuses}
+    blocked = {route: headers for route, headers in refuses.items()
+               if route.rsplit("/", 1)[-1] in MOVES_THE_CLONE}
+    return {"accepts": accepts, "refuses": refuses, "blocked": blocked}
 
 
 @qa(component="rest.agents", tier=SafetyTier.SAFE, surface="rest")
@@ -148,28 +181,39 @@ def test_one_credential_carries_a_clone_from_creation_to_funding(rest_trusted):
             f"credential on this surface to be inconsistent with -- a "
             f"different fault, and not the one this check reads")
 
+    funds = [r for r in gap["blocked"] if r.rsplit("/", 1)[-1] == "fund"]
+    aside = sorted(set(gap["refuses"]) - set(gap["blocked"]))
     conclude(Measurement(
-        verdict="failed" if gap["refuses"] else "passed",
+        verdict="failed" if gap["blocked"] else "passed",
         reason=(
             f"{len(gap['accepts'])} cloned-bots route(s) accept the agent's "
-            f"x-api-key and {len(gap['refuses'])} do not: "
-            + ", ".join(sorted(gap["refuses"]))
+            f"x-api-key and {len(gap['blocked'])} step(s) of the same flow do "
+            f"not: " + ", ".join(sorted(gap["blocked"]))
             # What their document says, and nothing this check did not read:
             # the live 401 it used to assert here was never measured by any
             # branch (V10, deep pass of 2026-09-11).
-            + ". A clone is created with a practice balance of 0.00, so where "
-              "the fund route is one of these, an agent that authenticates "
-              "the documented way can create a bot and, by their own "
-              "document, cannot put money in it"
-            if gap["refuses"] else
-            f"every one of the {len(gap['accepts'])} authenticated "
-            f"cloned-bots routes accepts the same agent credential"),
-        left=sorted(gap["refuses"]),
+            + (". A clone is created with a practice balance of 0.00, so an "
+               "agent that authenticates the documented way can create a bot "
+               "and, by their own document, cannot put money in it"
+               if funds else
+               ". The funding route is not among them, so the clone can be "
+               "paid for; what it cannot do is the step named above")
+            + (f" (outside this flow, and not part of this finding: "
+               f"{', '.join(aside)})" if aside else "")
+            if gap["blocked"] else
+            f"every step of the clone-to-funding flow accepts the same agent "
+            f"credential; {len(gap['accepts'])} route(s) publish it"
+            + (f", and {len(aside)} authenticated route(s) outside the flow do "
+               f"not, which is theirs to decide: {', '.join(aside)}"
+               if aside else "")),
+        left=sorted(gap["blocked"]),
         right=sorted(gap["accepts"]),
         population={"authenticated_routes":
                     len(gap["accepts"]) + len(gap["refuses"]),
                     "accept_api_key": len(gap["accepts"]),
-                    "authorization_only": len(gap["refuses"])},
+                    "authorization_only": len(gap["refuses"]),
+                    "blocked_flow_steps": sorted(gap["blocked"]),
+                    "outside_the_flow": aside},
         sources={"documented": OPENAPI},
     ))
 

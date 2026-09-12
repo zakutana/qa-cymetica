@@ -296,7 +296,7 @@ def test_every_ceiling_watches_something_that_is_actually_measured():
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_window_counts_runs_while_the_whole_history_keeps_the_last_seen(
-        tmp_path):
+        tmp_path, monkeypatch):
     """Verification step 5 of docs/data-plan.md, which the plan claimed and
     did not deliver.
 
@@ -339,3 +339,19 @@ def test_the_window_counts_runs_while_the_whole_history_keeps_the_last_seen(
              "sizes": {}}
     assert any("quiet.py" in line for line in module.flags(state)), (
         "a part idle for 60 days lights no warning")
+
+    # Through `patrol` itself. Everything above composes `within` and
+    # `runs_from_records` in the TEST, so reverting scripts/processes.py's own
+    # line to `runs_from_records(stamps)` -- the exact regression this
+    # docstring names -- left all of it green: no test in the repository called
+    # `patrol` at all, and the two fixture files written above were handed to
+    # nothing. 3/3, deep pass of 2026-09-13.
+    monkeypatch.setattr(module, "records_by_part", lambda base: stamps)
+    walked = module.patrol(root=tmp_path, since=since)
+    row = walked["parts"].get("quiet.py")
+    assert row is not None, f"patrol did not find quiet.py: {sorted(walked['parts'])}"
+    assert row["runs"] == 0, (
+        f"patrol counted {row['runs']} run(s) inside a thirty-day window for a "
+        f"record sixty days old -- the lifetime count added to the windowed one")
+    assert row["last"] == old, (
+        "patrol lost the last-seen, and the fortnight warning reads it")
