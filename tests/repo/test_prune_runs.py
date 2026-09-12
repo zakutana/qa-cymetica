@@ -307,6 +307,62 @@ def test_a_run_named_only_in_prose_is_still_cited(tmp_path, monkeypatch):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_ledger_that_cannot_be_read_is_not_a_ledger_citing_nothing(
+        tmp_path, monkeypatch):
+    """Rule 8 over the other two files the keep set is built from.
+
+    The journal already refuses: `qa.state.read_events` raises on a truncated
+    line, and both sweeps here then keep everything, loudly. The ledger read
+    beside it did not -- `keepset._ledger_as_written` swallowed the
+    JSONDecodeError and returned `{}` on purpose, so a file caught mid-write
+    left `must_keep` silently thin instead of raising, and `--apply` deleted
+    captures a row stands on: the request and response every verdict we have
+    sent promises the vendor "on request". The record sweep had the same hole
+    through `_load`, where an unreadable ledger cites no run at all.
+
+    Reproduced against the same fixture healthy and truncated: 0 victims,
+    then the cited capture and the cited record among them.
+    """
+    run_id = "run-20260901T000000Z-stood"
+    ledger = {"schema": 2, "findings": {"CYM-a": {
+        "checks": ["tests/x.py::test_y"],
+        "check": {"adjudicated_by": {"run_id": run_id}},
+    }}}
+    state, mod = _state(tmp_path, monkeypatch, ledger=ledger)
+    _no_git(monkeypatch)
+    stood, sibling = "a" * 64, "b" * 64
+    _write(state, run_id, _ago(30), results=[
+        {"nodeid": "tests/x.py::test_y", "evidence_ids": [stood]}])
+    capture = _capture(state, stood, age_days=30)
+    # A younger capture of the SAME call, so `witness` is already spoken for
+    # and losing `kept` really does mean deletion rather than a changed label.
+    _capture(state, sibling, age_days=20)
+
+    assert mod.evidence_keep_set().get(stood) == "kept"
+    assert mod.keep_set().get(run_id) == "cited"
+    assert mod.evidence_victims() == [] and mod.victims() == [], (
+        "the healthy half of this test must have nothing to delete, or the "
+        "truncated half proves nothing")
+
+    # Truncated before the run id, so the prose scan cannot rescue it either.
+    (state / "ledger.json").write_text('{"schema": 2, "findings": {"CYM-a": {"ch',
+                                       encoding="utf-8")
+
+    assert mod.evidence_keep_set().get(stood) == "unreadable", (
+        "a ledger that cannot be parsed is not a ledger that cites nothing; "
+        "the capture behind a verdict we sent went into the victims")
+    assert capture not in mod.evidence_victims()
+    assert mod.keep_set().get(run_id) == "unreadable"
+    assert state / "runs" / f"{run_id}.json" not in mod.victims()
+
+    # And a ledger that is simply not there yet is still an empty one: a fresh
+    # state directory has no rows, and refusing to prune there would mean the
+    # pile only ever grows on the machine that has never folded anything.
+    (state / "ledger.json").unlink()
+    assert mod.evidence_keep_set().get(stood) != "unreadable"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_dry_run_deletes_nothing_and_apply_deletes_only_the_victims(
         tmp_path, monkeypatch, capsys):
     state, mod = _state(tmp_path, monkeypatch)

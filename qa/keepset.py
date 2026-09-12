@@ -226,19 +226,39 @@ def _load_run_from_disk(run_id: str) -> dict | None:
         return None
 
 
+class UnreadableLedger(Exception):
+    """The ledger is on disk and will not parse. Not a ledger citing nothing."""
+
+
 def _ledger_as_written() -> dict:
     """The rows as they are on disk, not as the contract wants them.
 
     `qa.state.load_ledger` validates and raises on a row missing a field, and a
-    keep set that inherits that refuses to name anything -- which the pruner
-    reads as "keep everything", quietly, exactly when the ledger is broken and
-    somebody is about to repair it. What this needs from the ledger is which
-    runs a row has stood on; a row too malformed to say loses nothing else.
+    keep set that inherits that refuses to name anything. What this needs from
+    the ledger is which runs a row has stood on, so the parse stays lenient
+    about the SHAPE of a row: one too malformed to say loses nothing else.
+
+    It was lenient about the FILE as well, and that is a different thing. A
+    ledger caught mid-write returned `{}` from here without raising, `must_keep`
+    came back silently thin instead of refusing, and `prune_runs --apply` then
+    deleted captures a row stands on -- the request and response every verdict
+    we have sent promises the vendor "on request". The journal read one line
+    above has always refused: `read_events` raises on a truncated line, and both
+    sweeps in the pruner then keep everything and print why. This is rule 8 over
+    the second of the two files, and the safe direction is the same: a pile that
+    grows beats evidence that is gone.
+
+    Absent is still empty, as it is for the journal. A state directory that has
+    never been folded has no rows, and refusing there would mean nothing is ever
+    pruned on it.
     """
-    try:
-        return json.loads(ledger_path().read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+    path = ledger_path()
+    if not path.exists():
         return {}
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise UnreadableLedger(f"{path.name}: {exc}") from exc
 
 
 def must_keep() -> dict[str, str]:

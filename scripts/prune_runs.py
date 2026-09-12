@@ -142,6 +142,16 @@ def _started(record: dict) -> str:
 
 def keep_set(older_than_days: int = 7) -> dict[str, str]:
     """run_id -> the reason it survives. Absence from this is the only licence."""
+    # The same refusal `evidence_keep_set` makes two ways below, over the file
+    # `cited_run_ids` reads first. `_load` answers an unreadable ledger with a
+    # marker nothing downstream inspects, so the structural walk found no run id
+    # at all and every record the ledger cites became a victim. A failed read is
+    # not an empty read -- here too, and this is the sweep that deletes.
+    ledger_file = state_dir() / "ledger.json"
+    if ledger_file.exists() and _load(ledger_file).get(UNREADABLE):
+        print("  WARNING: the ledger could not be read; keeping every record")
+        return {p.stem: "unreadable" for p in records_on_disk()}
+
     records = {p.stem: _load(p) for p in records_on_disk()}
     order = sorted(records, key=lambda r: _started(records[r]), reverse=True)
     cutoff = (datetime.now(timezone.utc)
