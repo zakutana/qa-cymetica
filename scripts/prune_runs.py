@@ -41,6 +41,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
+from qa import evidence  # noqa: E402
 from qa.state import journal_path, read_events, runs_dir, state_dir  # noqa: E402
 
 
@@ -252,32 +253,11 @@ def _cited_by_run(records: dict[str, dict]) -> dict[str, str]:
     return newest
 
 
-def _call_key(record: dict) -> str:
-    """What makes two captures the same CALL, so one of them can be the witness.
-
-    Method and path are not enough. Every MCP call goes to `/mcp/v1/` -- 812 of
-    them on this machine -- so keyed on the path alone the newest capture of
-    the whole endpoint would be the only one kept, and the tool catalogue we
-    compare Nexus against before and after their upgrade would be gone. The
-    JSON-RPC method and tool name are part of the key.
-    Query VALUES are not: `?offset=7400` would otherwise make every page of a
-    listing its own call, and the witness set would grow with the vendor's
-    catalogue rather than with our own surface.
-    """
-    request = record.get("request") or {}
-    method = str(request.get("method") or "")
-    url = str(request.get("url") or "")
-    path, _, query = url.partition("?")
-    keys = ",".join(sorted({p.split("=")[0] for p in query.split("&") if p}))
-    rpc = ""
-    body = request.get("body") or {}
-    value = body.get("value") if isinstance(body, dict) else None
-    if isinstance(value, dict):
-        rpc = str(value.get("method") or "")
-        params = value.get("params") or {}
-        if isinstance(params, dict) and params.get("name"):
-            rpc = f"{rpc}:{params['name']}"
-    return f"{method} {path}?{keys} {rpc}".strip()
+# What makes two captures the same CALL, so one of them can be the witness.
+# The reasoning lives with the store that writes them (qa/evidence.py), because
+# since 2026-09-12 the shape watch keys on the same thing and the two may not
+# drift apart: what the pruner keeps one of is what the watch compares across.
+_call_key = evidence.call_key
 
 
 def evidence_keep_set(older_than_days: int = EVIDENCE_DAYS,

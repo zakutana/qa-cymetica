@@ -43,6 +43,37 @@ def evidence_root() -> Path:
     return Path(override) / "evidence" if override else EVIDENCE_DIR
 
 
+def call_key(record: dict) -> str:
+    """What makes two captures the same CALL.
+
+    Method and path are not enough. Every MCP call goes to `/mcp/v1/` -- 812 of
+    them on this machine -- so keyed on the path alone the newest capture of the
+    whole endpoint would stand for all of them. The JSON-RPC method and tool
+    name are part of the key. Query VALUES are not: `?offset=7400` would
+    otherwise make every page of a listing its own call.
+
+    Lives here, beside the store that writes the captures, because two readers
+    need it and they may not disagree: `scripts/prune_runs.py` decides which
+    capture survives a prune by this key, and `qa/surface.py` decides which
+    answers to compare shapes across by the same one. It was the pruner's
+    private helper until 2026-09-12.
+    """
+    request = record.get("request") or {}
+    method = str(request.get("method") or "")
+    url = str(request.get("url") or "")
+    path, _, query = url.partition("?")
+    keys = ",".join(sorted({p.split("=")[0] for p in query.split("&") if p}))
+    rpc = ""
+    body = request.get("body") or {}
+    value = body.get("value") if isinstance(body, dict) else None
+    if isinstance(value, dict):
+        rpc = str(value.get("method") or "")
+        params = value.get("params") or {}
+        if isinstance(params, dict) and params.get("name"):
+            rpc = f"{rpc}:{params['name']}"
+    return f"{method} {path}?{keys} {rpc}".strip()
+
+
 REDACTED = "<redacted>"
 
 # Header names whose values never reach disk.

@@ -118,6 +118,41 @@ def test_run_is_selected_by_id_not_filename_order(tmp_path):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_tree_that_moved_during_the_run_is_not_a_verification():
+    """`git_dirty` is sampled once, at pytest_sessionstart. So a run can record
+    a clean tree and then have the code edited under it while it runs, and the
+    record still says level V.
+
+    That happened on 2026-09-12, to this session, during a seven-minute
+    verification: `qa/evidence.py` at 10:09:00 and `scripts/prune_runs.py` at
+    10:09:19, inside a run that started 10:03:39 and finished 10:10:33. The
+    record said `git_dirty: false` and meant it -- at 10:03:39 it was true.
+
+    Rule 6 says verification is a clean tree. A tree that is clean only at the
+    starting pistol is not one, so the second sample is what makes the rule
+    executable. It is scoped to the code because a run legitimately writes
+    tracked state under itself -- a repo-wide sample at the end would refuse
+    every verification we have ever made.
+    """
+    from qa.state import admissibility
+
+    clean = admissibility(_admissible("r", "2026-09-05T00:00:00+00:00",
+                                      code_dirty_after=False))
+    assert (clean.level, clean.reasons) == ("V", [])
+
+    moved = admissibility(_admissible("r", "2026-09-05T00:00:00+00:00",
+                                      code_dirty_after=True))
+    assert moved.level == "R", moved.reasons
+    assert "code_moved_during_run" in moved.reasons, moved.reasons
+
+    # Silence is not innocence, but an old record cannot be judged by a field
+    # that did not exist when it was written: absent stays admissible, and the
+    # runs already in the ledger keep the level they were folded at.
+    old = admissibility(_admissible("r", "2026-09-05T00:00:00+00:00"))
+    assert old.level == "V", old.reasons
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_two_levels_reproduce_vs_verify():
     """R may open a defect; V may also verify a fix. Reasons are named."""
     from qa.state import admissibility

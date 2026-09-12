@@ -73,6 +73,17 @@ def reminders(facts: dict, now: datetime) -> list[str]:
     """At most a few lines: what is due, and the words that start it."""
     out: list[str] = []
 
+    # First, because it is the only line about a change we did not make. The
+    # patrol below measures OUR parts; this one says their side moved under us.
+    # [operator 2026-09-12] asked how it was possible we would not notice --
+    # and the answer that day was that nothing looked. It keeps saying it until
+    # `processes.py surface --update` acknowledges the new shape.
+    drift = facts.get("surface_drift") or []
+    if drift:
+        out.append(f"Cymetica změnila povrch od minule ({len(drift)}):")
+        out.extend(f"  {line}" for line in drift[:5])
+        out.append("  potvrď příkazem `python scripts/processes.py surface --update`")
+
     since = _hours_since(facts.get("last_pass"), now)
     if facts.get("unpushed") and (since is None or since > MISSED_NIGHT_HOURS):
         waited = f"{since:.0f} h" if since is not None else "neznámo jak dlouho"
@@ -634,6 +645,54 @@ def _lab_facts() -> dict:
     return out
 
 
+def surface_drift(update: bool = False) -> list[str]:
+    """What moved on THEIR side since we last agreed what it looked like.
+
+    Read from captures we already make, so it costs no request of its own and
+    works with the network down. Two references on purpose:
+    `audits/surface.json` is what we have acknowledged and is what this
+    compares against, while `audits/nexus-baseline.json` stays frozen as the
+    before-the-upgrade marker `lab.py surface` reads. Acknowledging here must
+    not quietly move that marker.
+
+    `update` writes the seen shape back, which is how a drift stops being
+    reported -- a reminder that cannot be cleared is one nobody reads.
+    """
+    from qa import surface
+
+    stored = surface.remembered()
+    seen = surface.shapes_since()
+    said = surface.drift_against(stored.get("calls") or {}, seen)
+
+    listed = surface.tools_seen()
+    if listed is not None:
+        known = stored.get("tools") or []
+        if known:
+            moved = surface.tools_drift(known, listed)
+            said += [f"{c['tool']}: {'; '.join(c['what'][:2])}"
+                     for c in moved["changed"]]
+            said += [f"nový nástroj {n}" for n in moved["new"]]
+            said += [f"nástroj zmizel: {n}" for n in moved["gone"]]
+
+    if update:
+        calls = dict(stored.get("calls") or {})
+        calls.update(seen)
+        surface.remember({"calls": calls,
+                          "tools": listed if listed is not None
+                                   else stored.get("tools") or [],
+                          "agreed_at": datetime.now(timezone.utc).isoformat(
+                              timespec="seconds")})
+    return said
+
+
+def _surface_facts() -> dict:
+    """Never raises: a session start is not the place to die on a stray file."""
+    try:
+        return {"surface_drift": surface_drift()}
+    except Exception:  # noqa: BLE001
+        return {"surface_drift": []}
+
+
 def facts() -> dict:
     """The impure half: git, the notebook, NEXT.md, the phase tables, the lab."""
     notebook = _notebook()
@@ -645,6 +704,7 @@ def facts() -> dict:
         "open_next": _open_next(),
         "plan_phases": plan_phases(),
         **_lab_facts(),
+        **_surface_facts(),
     }
 
 
@@ -698,6 +758,9 @@ def main(argv: list[str] | None = None) -> int:
                        help="append today's counts to audits/processes.jsonl")
     watch.add_argument("--flags", action="store_true",
                        help="print only what is off")
+    shape = sub.add_parser("surface", help="what moved on THEIR side")
+    shape.add_argument("--update", action="store_true",
+                       help="agree to the shape seen now, so it stops being reported")
     said = sub.add_parser("messages", help="what the operator said since when")
     said.add_argument("--since", help="ISO timestamp")
     said.add_argument("--since-last-pass", action="store_true",
@@ -713,6 +776,16 @@ def main(argv: list[str] | None = None) -> int:
     if args.cmd == "reminders":
         for line in reminders(facts(), datetime.now(timezone.utc)):
             print(line)
+        return 0
+
+    if args.cmd == "surface":
+        moved = surface_drift(update=args.update)
+        for line in moved:
+            print(f"  {line}")
+        if not moved:
+            print("their surface reads the same as the shape we agreed")
+        if args.update:
+            print(f"agreed; {len(moved)} change(s) now the reference")
         return 0
 
     if args.cmd in (None, "patrol"):

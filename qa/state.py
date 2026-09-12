@@ -150,6 +150,14 @@ def admissibility(run: dict) -> Verdict:
 
     if run.get("git_dirty"):
         blocks_v.append("git_dirty")
+    # Clean at the starting pistol is not clean. `git_dirty` is sampled once,
+    # at pytest_sessionstart, so a run can record a clean tree and have the
+    # code edited under it while it runs -- which happened to a seven-minute
+    # verification on 2026-09-12, two of the edited files being ones the suite
+    # imports. Absent means the record predates the second sample and keeps the
+    # level it was folded at; only an explicit True blocks.
+    if run.get("code_dirty_after") is True:
+        blocks_v.append("code_moved_during_run")
     if not run.get("prereg_id"):
         blocks_v.append("no_prereg")
     elif not run.get("prereg_commit") or not run.get("git_head"):

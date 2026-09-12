@@ -331,7 +331,16 @@ def truth(limit: int = 12) -> list[dict]:
 
 
 def surface() -> dict:
-    """Their tool catalogue now, against the snapshot taken before the upgrade."""
+    """Their tool catalogue now, against the snapshot taken before the upgrade.
+
+    `changed` is new on 2026-09-12. This compared `t["name"]` and nothing else,
+    so every change that keeps a tool's name -- a renamed parameter, a new
+    required one, a moved default -- left it silent, and the operator asked
+    outright how it was possible we would not notice. The comparison is
+    `qa/surface.py`, one reader shared with the patrol.
+    """
+    from qa import surface as shapes
+
     _nexus, client, token = _reader()
     try:
         listed = client.tools_list()
@@ -342,12 +351,11 @@ def surface() -> dict:
     lab.note_surface(names)
     before = []
     try:
-        before = [t["name"] for t in
-                  json.loads(BASELINE.read_text(encoding="utf-8"))["tools"]]
+        before = json.loads(BASELINE.read_text(encoding="utf-8"))["tools"]
     except (OSError, KeyError, json.JSONDecodeError, TypeError):
         pass
-    return {"now": names, "new": sorted(set(names) - set(before)),
-            "gone": sorted(set(before) - set(names))}
+    moved = shapes.tools_drift(before, listed)
+    return {"now": names, **moved}
 
 
 # --- the loop --------------------------------------------------------------

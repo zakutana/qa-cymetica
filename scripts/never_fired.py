@@ -56,6 +56,9 @@ BLOCK_REASONS = (
     "legacy_schema", "no_fingerprint", "fingerprint_drifted",
     "results_not_collected", "exit_status_disagrees",
     "git_dirty", "no_prereg", "prereg_commit_mismatch",
+    # Added 2026-09-12: git_dirty is sampled once, at the starting pistol, so a
+    # run could record a clean tree and be edited under it while it ran.
+    "code_moved_during_run",
 )
 OBLIGATIONS = ("reverify", "repair_check", "reopen", "retractions", "disputed",
                "verification_owed", "correction_owed")

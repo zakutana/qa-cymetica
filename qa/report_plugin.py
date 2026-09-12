@@ -47,6 +47,11 @@ _TRANSPORT_ERRORS = (
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SCHEMA = 2
 
+# What a run MEASURES. Sampled again at the end so a tree that was clean only
+# at the starting pistol cannot pass for a verification; `state/`, `dashboard/`
+# and `audits/` are left out because a run writes those under itself on purpose.
+CODE_PATHS = ("qa", "scripts", "tests", "components.yaml", ".claude")
+
 
 def _utc() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
@@ -384,6 +389,13 @@ def pytest_sessionfinish(session, exitstatus):
     changed = diff(before, after)
 
     run["finished_at"] = _utc()
+    # The tree, sampled a SECOND time. `git_dirty` above is taken at
+    # sessionstart, so without this a run records a clean tree and can still
+    # have had the code edited under it for the next seven minutes -- which is
+    # exactly what happened on 2026-09-12. Scoped to the code, because a run
+    # legitimately writes tracked state under itself and a repo-wide sample
+    # here would refuse every verification we make.
+    run["code_dirty_after"] = bool(_git("status", "--porcelain", "--", *CODE_PATHS))
     run["fingerprint_after"] = after.get("fingerprint")
     run["fingerprint_drifted"] = bool(changed)
     run["fingerprint_changed_parts"] = changed

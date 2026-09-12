@@ -565,6 +565,14 @@ scripts/keep.py      `track` force-adds that set (evidence/ is gitignored since
 scripts/prune_runs.py  run records older than a week and captures older than
                      three days that nothing stands on, by name, with the
                      reason each survivor was kept printed.
+qa/surface.py        THEIR side, watched. The patrol below measures our parts;
+                     this one reads captures we already make and says when a
+                     tool's PARAMETERS moved or a response started or stopped
+                     carrying a field. `processes.py surface --update` agrees
+                     to a new shape (audits/surface.json); the frozen
+                     before-the-upgrade marker stays audits/nexus-baseline.json.
+                     Written after #97 was fixed and the proof sat unread in our
+                     own captures for a day.
 scripts/processes.py  what is due, and what the operator said since the last
                      pass. `reminders` is the whole of the scheduler they
                      refused: a few lines naming what is on the table and the
