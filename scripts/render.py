@@ -2298,6 +2298,35 @@ h4.sec {
   font-size:12.0px; text-transform:uppercase; letter-spacing:.1em; font-weight:700;
   color:var(--text-faint); margin:18px 0 8px;
 }
+
+/* ---------- the runbook, at the foot of the legend ----------
+   Czech, and the only half of this page written for the person who RUNS the
+   commands rather than for whoever reads a badge. It carries thresholds and
+   mechanisms, never a measured number: a figure frozen into the page is the
+   defect CLAUDE.md names twice -- read the count off the tool, not off prose. */
+.rb-wrap { overflow-x:auto; margin:10px 0 20px; }
+/* min-width so a narrow window makes the wrapper SCROLL rather than crushing
+   three columns into two words a line -- at a 320px pane the columns came out
+   131/91/94. max-width keeps it from sprawling on a wide one. */
+.rb { border-collapse:collapse; width:100%; min-width:640px; max-width:100ch; font-size:14.4px; }
+.rb th {
+  text-align:left; font-size:11.5px; text-transform:uppercase; letter-spacing:.07em;
+  color:var(--text-faint); font-weight:600; padding:0 16px 7px 0;
+  border-bottom:1px solid var(--line); white-space:nowrap;
+}
+.rb td {
+  padding:9px 16px 9px 0; vertical-align:top; line-height:1.5;
+  border-bottom:1px solid var(--line-soft);
+}
+.rb tr:last-child td { border-bottom:none; }
+.rb td:first-child { color:var(--text); font-weight:600; min-width:13ch; }
+/* .when is nowrap on purpose -- a two-word "kdy" column should never wrap.
+   .dur is the same colour and WRAPS: used on the retention column, whose
+   values are sentences. Screenshotting found that one: nowrap there held the
+   column open and squeezed the middle one down to two words a line. */
+.rb .when { color:var(--text-faint); white-space:nowrap; }
+.rb .dur { color:var(--text-faint); }
+.rb code { white-space:nowrap; }
 .msg { border:1px solid var(--line-soft); border-radius:6px; margin-bottom:8px; overflow:hidden; }
 .msg-head {
   display:flex; flex-wrap:wrap; gap:4px 10px; align-items:center; padding:8px 11px;
@@ -2620,6 +2649,148 @@ h4.sec {
     own API, so it can only ever show something they actually said. That read
     happens on a sweep, not when this page redraws: the page is where an answer
     is delivered, never where one is discovered.</p>
+
+    <h3 style="margin-top:34px">Jak to celé běží</h3>
+
+    <p class="lead">Nahoře je, jak číst tuhle stránku. Tady je, jak funguje
+    systém za ní: co pouštíš ty, co se zlepšuje samo, a kolik dat se kde drží.</p>
+
+    <h4>Co pouštíš ty &mdash; a kdy</h4>
+
+    <p class="lead"><b>Nic se nespouští samo.</b> Žádný plánovač, žádný časovač.
+    Na začátku každé session se vypíše, co je na řadě a jakým povelem &mdash;
+    a spustíš to ty.</p>
+
+    <div class="rb-wrap"><table class="rb">
+      <tr><th>Řekneš nebo spustíš</th><th>Kdy</th><th>Co se stane</th></tr>
+      <tr><td>„projdi bugy&ldquo;</td><td class="when">kdykoliv</td>
+          <td>Přeověří otevřené nálezy, podá nové, pošle verdikty. Každý nález
+          má napřed kontrolu, teprve pak report.</td></tr>
+      <tr><td>„jdi do laboratoře&ldquo;</td><td class="when">když chceš nové strategie</td>
+          <td>Session s Nexusem: co je nového &rarr; jejich backtesty &rarr;
+          jedna otázka &rarr; room a paper obchod &rarr; poučení pro příště.</td></tr>
+      <tr><td><code>lab.py night --until 07:00</code></td><td class="when">večer</td>
+          <td>Celou noc backtesty, ráno souhrn. Neobchoduje, nezakládá nálezy,
+          necommituje &mdash; noc hledá, ráno se jedná.</td></tr>
+      <tr><td>„jdu spat&ldquo;</td><td class="when">než jdeš spát</td>
+          <td>Deep pass přes všechno nepushnuté. Jediná věc, která pushuje.</td></tr>
+      <tr><td>„přečti si to&ldquo;</td><td class="when">když jsi psal do roomu</td>
+          <td>Přečte tvoje poznámky celé, označí je a odpoví do nich.</td></tr>
+      <tr><td><code>console.cmd</code></td><td class="when">ráno</td>
+          <td>Tahle stránka na 127.0.0.1:8787. Sama se obnovuje do vteřiny.</td></tr>
+    </table></div>
+
+    <h4>Laboratoř</h4>
+
+    <p class="lead"><b>Nexus radí, my měříme a vykonáváme.</b> Naše vlastní
+    strategie se nikdy nestane roomem &mdash; jde Nexusovi jako otázka a room
+    otevře až jeho odpověď.</p>
+
+    <div class="rb-wrap"><table class="rb">
+      <tr><td>den</td><td>Co je nového, doběhnuté otázky, jejich backtesty
+          seřazené podle rizika (ne podle výnosu), jedna otázka Nexusovi
+          s tabulkou, jak dopadly jeho minulé návrhy &mdash; mezi otázkami si
+          nic nepamatuje, náš záznam je jeho paměť.</td></tr>
+      <tr><td>noc</td><td>Dvoje hodiny: backtesty souvisle (brzdí je jen jejich
+          limit 30 volání za minutu), otázka jen když je na co se ptát &mdash;
+          nejdřív 20 minut od sebe, nejvýš 12 za noc.</td></tr>
+      <tr><td>rozhodnutí</td><td>Room jen z konkrétní odpovědi. <b>Kritérium se
+          píše předem</b> a nejde s ním hnout, dokud okno běží &mdash; kritérium
+          přepsané v půlce je kritérium ušité na čísla. Verdikt se počítá z jejich
+          vlastní historie indexu; pod 80 % pokrytí je nerozhodnuto, nikdy ztráta.</td></tr>
+      <tr><td>brzdy</td><td>V kódu, ne v textu, aby si je session ve tři ráno
+          nerozmluvila: jen paper, 50 běžících experimentů, 2 % volných peněz na
+          jeden, nejvýš 60 % knihy venku najednou, a nic, když běží deep pass.</td></tr>
+      <tr><td>paměť</td><td>Každý backtest má otisk: koš, okno, poplatky. Co už
+          bylo změřeno, se nezměří znovu &mdash; ani dnes, ani za týden.</td></tr>
+    </table></div>
+
+    <h4>Deep pass</h4>
+
+    <p class="lead">Třináct kroků, doběhne bez tebe. Rozsah je <b>všechno
+    nepushnuté</b>, proto se pouští, než jdeš spát.</p>
+
+    <div class="rb-wrap"><table class="rb">
+      <tr><td>audit kontrol</td><td>Tři nezávislí auditoři drží tvrzení každé
+          kontroly proti smlouvě, kterou jmenuje její vlastní docstring. Tahle
+          třída vad nastala 7. 9. pětkrát za den, všechny testy zelené, a jedna
+          z nich poslala vendorovi nepravdivé tvrzení.</td></tr>
+      <tr><td>review a triage</td><td>Celý diff na nejvyšší úrovni, pak tři
+          nezávislé triage bez sdíleného kontextu. Nález projde, jen když
+          souhlasí aspoň dva ze tří.</td></tr>
+      <tr><td>oprava a ověření</td><td>Opraví, co přežilo, a ověří podle pravidel
+          repa: čistý strom, zapnutá preregistrace, celý selektor.</td></tr>
+      <tr><td>zápis</td><td><code>DEEP-PASS.md</code> česky (včetně „Čeká na
+          tebe&ldquo;), <code>NEXT.md</code> pro zítřek, a jednou týdně ohlédnutí
+          za celým týdnem.</td></tr>
+    </table></div>
+
+    <h4>Co se zlepšuje samo</h4>
+
+    <div class="rb-wrap"><table class="rb">
+      <tr><td>hlídka nad námi</td><td>Najde globem každý skill, agenta, skript
+          a hook a přečte z jejich vlastních záznamů, co dělaly. Nic se
+          neregistruje &mdash; registrace je věc, na kterou se zapomene. Týden se
+          u každé součásti ptá, jestli stála za to, co stála.</td></tr>
+      <tr><td>hlídka nad nimi</td><td>Když Cymetica přejmenuje parametr nástroje
+          nebo přidá pole do odpovědi, řekne se to při startu session. Postaveno
+          potom, co důkaz o jejich opravě ležel den v našich vlastních datech
+          a dozvěděli jsme se ho z Telegramu.</td></tr>
+      <tr><td>sebehodnocení</td><td><code>lab.py grade</code>: předpověděl náš
+          backtestový žebříček skutečný verdikt? Pod šesti uzavřenými verdikty
+          odpoví „málo dat&ldquo; místo vymyšlené korelace.</td></tr>
+      <tr><td>co nikdy neproběhlo</td><td><code>never_fired.py</code>: mechanismy,
+          které jsou v testech zelené a v datech ani jednou nenastaly. Zelený
+          test říká, že by fungoval; tohle říká, jestli někdy fungoval.</td></tr>
+      <tr><td>paměť</td><td>Soubory o tom, jak jsem se spletl &mdash; ne co jsem
+          našel, to stojí v nálezech nahoře. Píšou se, když se to stane, a čtou
+          se před prací, ne po ní.</td></tr>
+    </table></div>
+
+    <h4>Data &mdash; kolik, kde a jak dlouho</h4>
+
+    <p class="lead">Problém nikdy nebyl <em>kolik</em>, ale <b>kde</b> (v gitu)
+    a <b>jak dlouho</b> (navždy). Takže:</p>
+
+    <div class="rb-wrap"><table class="rb">
+      <tr><th>Kde</th><th>Co tam je</th><th>Jak dlouho</th></tr>
+      <tr><td>git</td>
+          <td>jen to, co něco <b>cituje</b>: jejich odpovědi, na kterých stojí
+          stav nálezů, a důkaz pod každým odeslaným verdiktem, reportem a paper
+          obchodem &mdash; v každém verdiktu jim píšeme, že ho na požádání vydáme</td>
+          <td class="dur">navždy; roste jen s tím, co cituje</td></tr>
+      <tr><td><code>evidence/</code> na disku</td>
+          <td>všechny jejich odpovědi, adresované obsahem</td>
+          <td class="dur">3 dny + nejnovější odpověď každého volání</td></tr>
+      <tr><td><code>state/runs</code></td>
+          <td>záznamy běhů &mdash; vstupy, ze kterých se skládá stav nálezů</td>
+          <td class="dur">7 dní, pokud na nich nic nestojí; na co se nahoře odkazuje,
+          je v gitu</td></tr>
+      <tr><td><code>state/*.jsonl</code></td>
+          <td>deníky: laboratoř, rejstřík backtestů, roomy, obchody, vzorky</td>
+          <td class="dur">navždy, ale jsou to kilobajty</td></tr>
+    </table></div>
+
+    <p class="example"><b>Kolik je toho dnes, vypíše</b>
+    <code>python scripts/prune_runs.py</code> &mdash; kolik záznamů a odpovědí
+    leží na disku, co by se smazalo, a u každého přeživšího důvod, proč zůstal.
+    Čísla čti z něj, ne odsud: stránka by je měla zmrazené, a přesně takhle už
+    tady jednou jedno číslo lhalo.</p>
+
+    <h4>Pět vět, které platí všude</h4>
+
+    <div class="rb-wrap"><table class="rb">
+      <tr><td>jen paper</td><td>Live se netestuje, dokud neřekneš jinak.</td></tr>
+      <tr><td>nic se nespouští samo</td><td>Připomínka ano, plánovač ne.</td></tr>
+      <tr><td>commit ano, push ne</td><td>Výjimka je deep pass, nebo když to
+          řekneš ty v té zprávě. Push totiž smaže rozsah review.</td></tr>
+      <tr><td>červený test v <code>tests/meta</code></td><td>je systém, který
+          funguje. Neopravuje se uvolněním pravidla &mdash; zastaví session dřív,
+          než půjde ven jediný požadavek.</td></tr>
+      <tr><td>„VERIFIED FIXED&ldquo;</td><td>je naše měření: naše kontrola prošla
+          pod otiskem, pod kterým padala. Ne že to oni řekli &mdash; jejich
+          „opraveno&ldquo; je tvrzení, které si teprve ověřujeme.</td></tr>
+    </table></div>
 
   </div>
   </section>
