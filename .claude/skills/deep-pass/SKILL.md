@@ -557,10 +557,8 @@ So the two are split at this step, and the split is the point:
 | **Čeká na tebe** (DEEP-PASS.md) | needs the operator to decide, or to do something only they can |
 | **NEXT.md** | decided already, ours to do, not done yet |
 
-**Prune it here too.** The operator asked on 2026-09-12 whether NEXT.md can
-simply be cleared at the start of a pass. Half of that is right, and the halves
-go opposite ways. **Open items are never cleared** — they are the agreements, and
-after a `/clear` nothing else remembers them. **Finished ones lose their
+**Prune it here too**, and the two halves go opposite ways. **Open items are never cleared** — they are the agreements, and after a
+`/clear` nothing else remembers them, which is what this file is for. **Finished ones lose their
 prose**: on 2026-09-12 the file was 307 lines of which 255 were explanation
 beneath work already done. Drop the paragraphs under `- [x]` items, keep the
 one-line record, and drop the item itself once it has been ticked a week. Git
