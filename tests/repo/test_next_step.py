@@ -26,14 +26,36 @@ from __future__ import annotations
 import importlib.util
 import json
 import os
+import re
 import subprocess
 import sys
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
 from qa.marks import Inconclusive, SafetyTier, qa
+from qa.measure import Measurement, conclude
 
 REPO = Path(__file__).resolve().parent.parent.parent
+
+# Ticked work stays readable for a week, then git keeps it and the handover
+# drops it. The line budget is what the operator actually reads at a session
+# start: 307 lines on 2026-09-12, of which 255 were explanation under FINISHED
+# work. Pruning that prose left 141, so 170 is the ceiling -- above where we
+# stand, like every other ceiling here, and about six new items of room.
+DONE_KEPT_DAYS = 7
+MAX_LINES = 170
+ITEM_DATE = re.compile(r"^- \[[ x]\]\s+(\d{4}-\d{2}-\d{2})")
+
+
+def _date(line: str):
+    """The day an item was written, or None if the line is not one."""
+    found = ITEM_DATE.match(line)
+    if not found:
+        return None
+    try:
+        return date.fromisoformat(found.group(1))
+    except ValueError:
+        return None
 NEXT = REPO / "NEXT.md"
 HOOK = REPO / ".claude" / "hooks" / "next_step.py"
 PROGRESS = REPO / "audits" / "deep-pass-progress.json"
@@ -176,3 +198,40 @@ def test_the_hook_prints_the_open_items_and_nothing_else(tmp_path):
         env={**os.environ, "QA_NEXT_FILE": str(empty)})
     assert quiet.returncode == 0
     assert not quiet.stdout.strip(), "silent when there is nothing open"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_handover_does_not_carry_months_of_finished_work():
+    """[operator 2026-09-12] asked whether NEXT.md can just be cleared.
+
+    Half right, and the halves go opposite ways. **Open items are never
+    cleared** — they are the agreements, and a session after a /clear has
+    nothing else that remembers them; that is the whole reason the file exists.
+    **Ticked ones are pruned**, with the prose under them: on 2026-09-12 the
+    file was 307 lines of which 24 were open, 28 were ticked and 255 were
+    explanation beneath finished work. Git holds every version, so pruning
+    loses nothing — unlike `outbox/reports.yaml`, whose lesson about deleting
+    records is about the only copy of what we SENT the vendor.
+
+    A handover nobody can read in one screen is not a handover.
+    """
+    text = (REPO / "NEXT.md").read_text(encoding="utf-8")
+    lines = text.splitlines()
+    done = [l for l in lines if l.startswith("- [x]")]
+    stale = []
+    for line in done:
+        when = _date(line)
+        if when and (date.today() - when).days > DONE_KEPT_DAYS:
+            stale.append(line[:70])
+
+    conclude(Measurement(
+        verdict="failed" if stale or len(lines) > MAX_LINES else "passed",
+        reason=(f"{len(stale)} ticked item(s) older than {DONE_KEPT_DAYS} days "
+                f"and {len(lines)} line(s) against {MAX_LINES}: the handover "
+                f"has become an archive" if stale or len(lines) > MAX_LINES
+                else f"{len(lines)} line(s), {len(done)} ticked, none older "
+                     f"than {DONE_KEPT_DAYS} days"),
+        left={"lines": len(lines), "stale_done": len(stale)},
+        right={"max_lines": MAX_LINES, "kept_days": DONE_KEPT_DAYS},
+        population={"stale": stale[:5]},
+        sources={"handover": "NEXT.md"}))
