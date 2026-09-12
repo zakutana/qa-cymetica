@@ -423,3 +423,58 @@ def test_the_register_is_outside_git_and_inside_the_snapshot():
     spec.loader.exec_module(keep)
     assert "backtests.jsonl" in keep.DIARIES, (
         "the register would live on one disk and die with it")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_filter_that_separated_nothing_does_not_claim_it_predicted():
+    """The laboratory's self-assessment, telling the operator the truth.
+
+    `agreed` counted "top survived" plus "bottom refuted", so when NOTHING
+    survives the bottom half carries the score on its own. Seven closed
+    experiments, every one refuted — nothing worked at all — and it answered
+    **"the ranking predicted", 57%**. The bottom half failing is the base rate,
+    not evidence that the ranking separated anything, and `half = n // 2` makes
+    that half the larger one at odd n. Every fixture in the sibling check is
+    even-sized, so the branch was unreachable from the tests.
+
+    The measure is now the survival RATE of each half, which normalises the
+    uneven split and is what "survived more often than" meant all along. Two
+    halves that behaved identically — including both at zero — separated
+    nothing, and that is said rather than scored.
+
+    Found by an audit agent on 2026-09-12 and reproduced before it was fixed.
+    """
+    def _pairs(verdicts):
+        return [{"room": f"STR-{n}", "sharpe": 10.0 - n, "verdict": v}
+                for n, v in enumerate(verdicts)]
+
+    from qa import backtests
+
+    nothing = backtests.grade(_pairs(["refuted"] * 7))
+    assert nothing["verdict"] != "the ranking predicted", (
+        f"nothing survived and it claimed a prediction: {nothing}")
+    assert nothing["verdict"] == "the ranking separated nothing", nothing
+    assert nothing["agreement"] is None, (
+        "a number here would dress the absence of a result as a result")
+
+    everything = backtests.grade(_pairs(["survived"] * 7))
+    assert everything["verdict"] != "the ranking predicted", (
+        "everything survived, so the ranking chose nothing")
+
+    perfect = backtests.grade(_pairs(["survived"] * 3 + ["refuted"] * 4))
+    assert perfect["verdict"] == "the ranking predicted", perfect
+    assert perfect["agreement"] == 1.0, perfect
+
+    inverted = backtests.grade(_pairs(["refuted"] * 3 + ["survived"] * 4))
+    assert inverted["verdict"] == "the ranking did not predict", inverted
+
+    # The odd-n split itself: three above, four below, and a genuine
+    # difference must still be read correctly rather than swamped by the
+    # larger half.
+    uneven = backtests.grade(_pairs(["survived", "survived", "refuted",
+                                     "refuted", "refuted", "survived",
+                                     "refuted"]))
+    assert uneven["verdict"] == "the ranking predicted", uneven
+
+    assert backtests.grade(_pairs(["refuted"] * 3))["verdict"] == \
+        "not enough data"

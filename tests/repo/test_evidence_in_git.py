@@ -250,13 +250,22 @@ def test_the_tracker_lets_go_of_what_stopped_being_cited():
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_no_capture_in_the_repository_carries_a_real_key():
-    """The store we push, read whole, against the keys this machine holds.
+    """The store, read whole, against the keys this machine holds.
 
     `tests/meta/test_pipeline_secrets.py` proves the redactor works on a capture
     built for it. This is the other question -- whether a key ever did reach
-    disk by a path nobody modelled -- and it is a fact about the repository, so
-    it is here and not there: it reads every tracked capture, and tests/meta
-    runs at the start of every session.
+    disk by a path nobody modelled.
+
+    It read `git ls-files evidence` until 2026-09-12, which is the day the
+    bodies LEFT git. From that hour it iterated zero paths and reported
+    "passed" over a population of nothing, in the guard that exists to catch a
+    leaked key -- rule 10's "an empty measurement is not a pass", in the worst
+    possible place. Its siblings in this file were rewritten for that move and
+    this one was not: the caller of a changed storage decision was missed.
+
+    So it follows the bodies. Everything under `evidence/` on this disk, and
+    every member of every bundle in `archive/`, which between them are where a
+    capture can now be. Nothing to read at all is inconclusive, not passed.
 
     Names only in the failure message. A guard that printed the value it found
     would put the key in the run record, the terminal and the transcript.
@@ -268,25 +277,48 @@ def test_no_capture_in_the_repository_carries_a_real_key():
             reason="no .env on this machine, so there is no key to look for"))
         return
 
-    listed = subprocess.run(["git", "ls-files", "evidence"], cwd=REPO,
-                            capture_output=True, text=True)
-    if listed.returncode != 0:
-        conclude(Measurement(
-            verdict="inconclusive", reason="git could not list evidence/"))
-        return
-
     needles = {name: value.encode("utf-8") for name, value in secrets.items()}
     hits: dict[str, int] = {}
     read = 0
-    for line in listed.stdout.split():
+
+    for body in (REPO / "evidence").rglob("*.json"):
         try:
-            blob = (REPO / line.strip()).read_bytes()
+            blob = body.read_bytes()
         except OSError:
             continue
         read += 1
         for name, needle in needles.items():
             if needle in blob:
                 hits[name] = hits.get(name, 0) + 1
+
+    import tarfile
+
+    for bundle in sorted((REPO / "archive").glob("evidence-*.tar.xz")):
+        try:
+            with tarfile.open(bundle, "r:xz") as held:
+                for member in held.getmembers():
+                    source = held.extractfile(member) if member.isfile() else None
+                    if source is None:
+                        continue
+                    blob = source.read()
+                    read += 1
+                    for name, needle in needles.items():
+                        if needle in blob:
+                            hits[name] = hits.get(name, 0) + 1
+        except (OSError, tarfile.TarError):
+            conclude(Measurement(
+                verdict="inconclusive",
+                reason=f"{bundle.name} could not be opened, and a bundle we "
+                       f"cannot read is not a bundle with no key in it"))
+            return
+
+    if not read:
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason="this machine holds no capture, on disk or in a bundle, so "
+                   "there was nothing to search -- rule 10, an empty "
+                   "measurement is not a pass"))
+        return
 
     conclude(Measurement(
         verdict="failed" if hits else "passed",

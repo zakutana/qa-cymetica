@@ -312,16 +312,43 @@ def grade(pairs: list[dict], proposals: list[dict] | None = None) -> dict:
     ranked = sorted(scored, key=lambda p: -float(p["sharpe"]))
     half = len(ranked) // 2
     top, bottom = ranked[:half], ranked[half:]
-    agreed = (sum(1 for p in top if p["verdict"] == "survived")
-              + sum(1 for p in bottom if p["verdict"] == "refuted"))
-    agreement = round(agreed / (len(top) + len(bottom)), 3)
-    works = agreement > 0.5
+
+    # RATES, not a mixed count. The first version added "top survived" to
+    # "bottom refuted", so when nothing survived at all the bottom half carried
+    # the score alone: seven experiments, every one refuted, answered "the
+    # ranking predicted" at 57%. A bottom half that failed is the base rate,
+    # not evidence the ranking separated anything -- and `n // 2` makes that
+    # half the larger one at odd n, which is where the 57% came from. Rates
+    # normalise the uneven split and are what "survived more often than"
+    # always meant.
+    lived = lambda rows: (sum(1 for p in rows if p["verdict"] == "survived")
+                          / len(rows)) if rows else 0.0
+    above, below = lived(top), lived(bottom)
+
+    if above == below:
+        # Includes the two cases that look like answers and are not: nothing
+        # survived, and everything did. A ranking that put the same outcome on
+        # both sides chose nothing, whatever the outcome was.
+        return {
+            "verdict": "the ranking separated nothing", "n": len(scored),
+            "agreement": None,
+            "why": (f"of {len(scored)} closed verdicts the better-ranked half "
+                    f"and the worse-ranked half survived at the same rate "
+                    f"({above * 100:.0f}%), so the ranking told us nothing "
+                    f"either way -- it is not a result about the filter, it is "
+                    f"the absence of one"),
+            "proposals": len(proposals or []),
+        }
+
+    works = above > below
+    agreement = round(above - below, 3) if works else round(
+        max(0.0, above - below), 3)
     return {
         "verdict": "the ranking predicted" if works else "the ranking did not predict",
-        "n": len(scored), "agreement": agreement,
+        "n": len(scored), "agreement": round(above, 3) if works else 0.0,
         "why": (f"of {len(scored)} closed verdicts, the better-ranked half "
-                f"survived and the worse-ranked half did not in "
-                f"{agreement * 100:.0f}% of cases"
+                f"survived {above * 100:.0f}% of the time against "
+                f"{below * 100:.0f}% for the worse-ranked half"
                 + ("" if works else
                    ". The backtest is not picking winners, and ranking by it "
                    "is dressing a coin flip -- say so before the next room "

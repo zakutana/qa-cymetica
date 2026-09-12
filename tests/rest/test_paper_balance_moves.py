@@ -97,7 +97,19 @@ def measurements(rows):
         intent, outcome, after = (chain.get("intent") or {},
                                   chain.get("outcome") or {},
                                   chain.get("after") or {})
-        if outcome.get("outcome") != "accepted":
+        # The THIRD read-failure path, and the same defect as the two below it.
+        # `paper.py` writes `outcome: "unknown"` when the POST times out, when
+        # it answers 2xx carrying no position id, or on any non-2xx -- and its
+        # own message says "the order may have landed". Dropping those handed
+        # the verdict to the previous accepted trade exactly as the balance and
+        # positions paths used to: today that would call TRD-0006 of 2026-09-10
+        # "the newest paper buy" under a run dated now, which is the pre-fix row
+        # with today's date on it that this function exists to prevent.
+        #
+        # A REFUSED order genuinely did not happen and is correctly excluded.
+        # An unknown one stays, marked, so the verdict is Inconclusive.
+        landed = outcome.get("outcome")
+        if landed not in ("accepted", "unknown"):
             continue
         before = intent.get("before") or {}
         # A balance that could not be read keeps the trade in the population,
@@ -123,6 +135,8 @@ def measurements(rows):
                   if snap.get("positions") is None]
         if moved is None:
             unread.append("balance")
+        if landed == "unknown":
+            unread.append("outcome")
         measured.append({
             "id": trade_id, "usdc": float(intent.get("usdc") or 0),
             "at": intent.get("at") or outcome.get("at") or "",

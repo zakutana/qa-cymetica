@@ -343,15 +343,14 @@ scripts/prereg.py    freeze and tag a run's configuration
 scripts/never_fired.py  which of our mechanisms have never once occurred in
                      the data. A green guard says a mechanism WOULD work; this
                      says whether it ever has. Read `--zeros` at the end of a
-                     sweep. Each zero now names the test that exercises it, or
-                     says nothing does -- so the line to act on is "never fired
-                     AND never exercised", the shape all three dead mechanisms
-                     had on 2026-09-06. One exercised and never fired is a
-                     judgement, and that one is the operator's. **Read the
-                     count off the tool, never off prose** -- this line said
-                     five while the tool said seven.
-(migration)       three `migrated` events in the journal are what the one-shot
-                  left; scripts/migrate_ledger.py was retired 2026-09-09, spent.
+                     sweep. Each zero names the test that exercises it, or says
+                     nothing does -- so the line to act on is "never fired AND
+                     never exercised", the shape all three dead mechanisms had
+                     on 2026-09-06. One exercised and never fired is the
+                     operator's judgement. **Read the count off the tool, never
+                     off prose** -- this line said five while the tool said seven.
+(migration)       the journal's three `migrated` events; migrate_ledger.py was
+                  retired 2026-09-09, spent.
 tests/meta/       self-tests. Run FIRST and abort the session on failure, so
                   a broken guard stops every live request.
 tests/repo/       repository consistency. Deliberately NOT in tests/meta:
@@ -406,8 +405,10 @@ scripts/lab.py    that loop from our side: `status`, `truth` (their surfaces
                   reading), `cycle`, `ask`, `buy`, `open`/`close`. It refuses
                   rather than warns. `night --until HH:MM` is the one long
                   form: a process THEY start that ends at an hour on their own
-                  clock, researching only -- it holds no hand that trades,
-                  files or commits, and a test reads that off its source.
+                  clock. It searches all night, asks when there is something to
+                  ask, and LAUNCHES on paper from a concrete Nexus answer --
+                  under the day's caps, the gate an earlier statement of the
+                  same block, read off the source by a test. Files nothing.
 NEXT.md           what we agreed to do next and have not done. Plain markdown,
                   one line per item, `- [ ] YYYY-MM-DD  sentence`; ticked
                   items stay as history and stop being printed.
@@ -431,10 +432,9 @@ DEEP-PASS.md      what the last deep pass did, in Czech, overwritten each
                   OWN model or effort; that stays /model and /effort, and
                   stays the operator's.
 audits/checks.json
-                  nodeid -> the fingerprint last audited. What keeps the
-                  contract audit from re-reading 50 unchanged checks every
-                  run, the same way verification_owed is keyed on the
-                  fingerprint rather than the run.
+                  nodeid -> the fingerprint last audited, so the contract audit
+                  re-reads only what moved -- keyed on the fingerprint rather
+                  than the run, like verification_owed.
 ```
 
 The scripts a session actually spends its time in. Missing until 2026-09-06,

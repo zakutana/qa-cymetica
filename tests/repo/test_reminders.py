@@ -58,7 +58,18 @@ def _facts(**over):
 
 
 def _says(lines, *words):
-    return [line for line in lines if all(w in line for w in words)]
+    """Case-INSENSITIVELY, which is the whole of a fix from 2026-09-12.
+
+    It was case-sensitive, and every silence assertion in this file is written
+    in lower case while `reminders()` starts its sentences with a capital. So
+    `not _says(quiet, "deep pass")` could never fail: three readers each set
+    MISSED_NIGHT_HOURS to 0 -- the nag firing at every single session start,
+    which the module docstring calls the thing that must not happen -- and the
+    assertion still held. The half this file says is the one worth writing
+    down was guarding nothing.
+    """
+    low = [w.lower() for w in words]
+    return [line for line in lines if all(w in line.lower() for w in low)]
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

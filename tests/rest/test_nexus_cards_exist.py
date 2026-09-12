@@ -61,7 +61,67 @@ def _nexus():
 # precedes is read as a card, which keeps #91's witness: a card id in a table
 # row of NEX-0012, with nothing but the card's name before it.
 NOT_A_CARD = ("species", "run_id", "run id", "job", "instance", "position",
-              "bot", "order", "user", "wallet", "transaction", "tx")
+              "bot", "order", "user", "wallet", "transaction", "tx",
+              # Added 2026-09-12 with evidence rather than after an incident:
+              # these keys carry UUIDs in our OWN records -- trade_id 9 times
+              # in samples.jsonl, source_id and clone_instance_id in
+              # clones.jsonl -- so they are ids their platform really issues
+              # and an answer can really mention.
+              "trade", "clone", "source", "backtest", "strategy")
+
+
+def known_non_cards() -> set[str]:
+    """UUIDs our own records show are NOT cards, whatever a sentence calls them.
+
+    The marker list above is vocabulary, and vocabulary is a blocklist: it can
+    only ever name what has already gone wrong once. This is evidence. Every
+    UUID we have recorded under a key that is not `card_id` is an id their
+    platform issued for something else, and it cannot become a card by being
+    mentioned without a marker.
+
+    It exists because the failure it prevents is expensive and one-directional:
+    a 404 on a non-card sends Cymetica "Nexus tells an agent to trade <uuid>"
+    about something that was never a card. Three readers reproduced that on
+    2026-09-12, two of three voting it real.
+
+    Never the other way round -- an id we have never recorded is NOT evidence
+    of anything, and the default stays "a UUID with no marker is a card",
+    because that default is what kept #91's witness: a card id in a NEX-0012
+    table row with nothing but the card's name before it.
+    """
+    import json
+    import re
+
+    from qa.state import state_dir
+
+    shape = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-"
+                       r"[0-9a-f]{4}-[0-9a-f]{12}$")
+    out: set[str] = set()
+
+    def walk(node) -> None:
+        if isinstance(node, dict):
+            for key, value in node.items():
+                if (isinstance(value, str) and shape.match(value)
+                        and "card" not in str(key).lower()):
+                    out.add(value.lower())
+                else:
+                    walk(value)
+        elif isinstance(node, list):
+            for value in node:
+                walk(value)
+
+    for name in ("samples.jsonl", "clones.jsonl", "paper.jsonl"):
+        path = state_dir() / name
+        if not path.is_file():
+            continue
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            try:
+                walk(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+    return out
 CONTEXT = 48
 # "A CURRENT recommendation", in the docstring's own words. A day-old answer
 # names cards that may since have resolved, and that is not a defect.
@@ -131,7 +191,10 @@ def test_every_card_nexus_tells_an_agent_to_trade_exists(rest_trusted):
             f"may have resolved since, which is not a defect, and it is not a "
             f"current recommendation")
 
-    named = card_ids_in(latest["text"])
+    # Vocabulary first, then evidence: an id our own records show is a trade,
+    # a clone or a position is not a card however the sentence introduced it.
+    ours = known_non_cards()
+    named = [c for c in card_ids_in(latest["text"]) if c.lower() not in ours]
 
     missing, found, unread = [], [], []
     for card_id in named:

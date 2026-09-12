@@ -922,6 +922,35 @@ def night_refill(rows: list[dict] | None = None, limit: int = 8,
             for move in qa_backtests.neighbourhood(seed, pool, cap=cap)]
 
 
+# What the night writes as a criterion when it opens a room unattended. Ours,
+# not Nexus's: his answers rarely carry a machine-readable window or stop, and
+# a room with no criterion is one no verdict can ever reach. Written with
+# `adopted=True` so nobody reads them as numbers he gave.
+NIGHT_WINDOW_DAYS = 5.0
+NIGHT_STOP_PCT = -10.0
+
+
+def _stake(free: float | None) -> float:
+    """One experiment's size, FLOORED to the cent.
+
+    `round()` was the first version and it rounds UP: on the balance actually
+    in state/paper.jsonl -- 89000.96 -- it produced 1780.02 against a ceiling of
+    1780.0192, so `affordable` refused, and the refusal read "1780 is more than
+    2% of the 89001 free (1780)" because both sides round for display. Every
+    order of every night, deterministically, since `_free_cash` does not move
+    while nothing is bought. Only a balance whose 2% lands exactly on a cent
+    escaped it, and 100000.00 does, which is why no fixture saw it.
+
+    A stake is money. Asking for a cent more than the cap allows is asking for
+    more than the cap allows.
+    """
+    import math
+
+    if not free or free <= 0:
+        return 0.0
+    return math.floor(free * lab.CAPS["share_of_free_cash"] * 100) / 100
+
+
 def night_promote(since: datetime | None = None) -> dict:
     """Launch what Nexus endorsed tonight, on paper, under the day's brakes.
 
@@ -961,31 +990,76 @@ def night_promote(since: datetime | None = None) -> dict:
               if row.get("type") == "strategy"}
     paper = _sibling("paper")
     opened, placed, held = 0, 0, []
+    bought: set[str] = set()
 
     for answer in answers:
         origin = str(answer.get("id") or "")
         if not origin or origin in linked:
             continue
+        if opened >= lab.CAPS["new_rooms_per_session"]:
+            held.append(f"{origin}: {opened} room(s) opened already and the cap "
+                        f"is {lab.CAPS['new_rooms_per_session']} — the morning "
+                        f"takes the rest")
+            break
         found = lab.proposed_cards(answer.get("text"), known)
         for ghost in found["unknown"]:
             held.append(f"{origin}: {ghost[:8]} is a card we have never seen "
                         f"(#91) — not bought")
-        if not found["actionable"]:
-            held.append(f"{origin}: names no card we can act on; the morning "
-                        f"reads it")
+        # Nexus repeats its favourite card across answers, and "fifty
+        # experiments at 2%" meant fifty different things.
+        wanted = [c for c in found["actionable"] if c not in bought]
+        if not wanted:
+            held.append(f"{origin}: names no card we can act on tonight; the "
+                        f"morning reads it")
             continue
 
-        room = rooms.open_strategy(origin, f"{origin}: {found['actionable'][0][:8]}")
+        # MONEY FIRST, and nothing consumed before it answers. Opening the room
+        # ahead of this put the origin in `linked` on a refusal, which meant a
+        # night that could afford nothing still spent every answer it touched --
+        # `open_strategy` then refuses the morning too.
+        free = _free_cash()
+        stake = _stake(free)
+        ok, why = lab.affordable(stake, free, _running_experiments(),
+                                 deployed=_deployed())
+        if not ok:
+            held.append(f"{origin}: {why} — left whole for the morning")
+            continue
+
+        try:
+            room = rooms.open_strategy(
+                origin, f"{origin}: {wanted[0][:8]}")["id"]
+            # A room with no criterion is one no verdict can ever reach:
+            # `verdicts()` skips it and `_running_experiments()` cannot see it,
+            # so the position would never be graded and never close. The window
+            # and the stop are OURS, not his -- `adopted` says so on the row.
+            rooms.set_acceptance(
+                room, window_days=NIGHT_WINDOW_DAYS, stop_pct=NIGHT_STOP_PCT,
+                why=(f"opened unattended from {origin}; the window and the stop "
+                     f"are the laboratory's standing defaults, not numbers "
+                     f"Nexus gave"),
+                adopted=True)
+        except rooms.RoomError as exc:
+            held.append(f"{origin}: {exc}")
+            continue
         opened += 1
-        for card in found["actionable"]:
-            stake = round((_free_cash() or 0.0) * lab.CAPS["share_of_free_cash"], 2)
-            ok, why = lab.affordable(stake, _free_cash(), _running_experiments(),
+
+        for card in wanted:
+            free = _free_cash()
+            stake = _stake(free)
+            ok, why = lab.affordable(stake, free, _running_experiments(),
                                      deployed=_deployed())
             if not ok:
                 held.append(f"{origin}/{card[:8]}: {why}")
                 break
             paper.buy(card, stake, origin, True)
+            bought.add(card)
             placed += 1
+        if placed:
+            try:
+                rooms.set_status(room, "running",
+                                 why=f"opened by the night from {origin}")
+            except rooms.RoomError as exc:
+                held.append(f"{room}: {exc}")
     return {"rooms": opened, "orders": placed, "held": held}
 
 

@@ -169,8 +169,17 @@ def test_the_effort_of_a_commit_is_read_even_when_git_will_not_parse_it():
     lenient = mod.effort_counts(limit=200)
     strict = mod.effort_counts(limit=200, trailers_only=True)
     conclude(Measurement(
+        # FAILED, not inconclusive. The lenient reader is a superset of git's
+        # trailer parser by construction -- same commits, a looser regex over
+        # the whole body -- so `lenient < strict` cannot mean "could not
+        # measure". It can only mean the reader broke, and reporting that as
+        # inconclusive made this check green-or-skipped with no red state at
+        # all: three readers each broke EFFORT_LINE and watched the suite stay
+        # green while the week went blind to a third of its own evidence.
+        # Rule 10's "inconclusive is never a defect" is about THEIR surfaces,
+        # not about our own reader refuting itself.
         verdict="passed" if sum(lenient.values()) > sum(strict.values())
-        else "inconclusive",
+        else "failed",
         reason=(f"the lenient reader finds {sum(lenient.values())} efforts "
                 f"where git's trailer parser finds {sum(strict.values())}"),
         left=lenient, right=strict,

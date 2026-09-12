@@ -47,6 +47,70 @@ def _string_constants(tree: ast.Module) -> dict[str, str]:
     return out
 
 
+def _tests_the_gate(node) -> bool:
+    """An `if` branching on the gate's ANSWER, not a bare call to it.
+
+    A `may_write_to_vendor()` whose result is thrown away stops nothing, and
+    until the deep pass of 2026-09-11 it counted as a gate.
+    """
+    return isinstance(node, ast.If) and any(
+        isinstance(c, ast.Call) and isinstance(c.func, ast.Name)
+        and c.func.id == GATE for c in ast.walk(node.test))
+
+
+def _leaves(block: list) -> bool:
+    """Whether a block cannot fall through -- return, raise, skip, continue."""
+    return any(isinstance(s, (ast.Return, ast.Raise, ast.Continue, ast.Break))
+               for s in block)
+
+
+def _guarded_nodes(fn) -> set[int]:
+    """Every node the gate actually protects, by STRUCTURE not by line order.
+
+    Two shapes are real gates and both are in the tree:
+
+        if may_write_to_vendor():        # everything in the body
+            client.post(SEND, ...)
+
+        if not may_write_to_vendor():    # everything AFTER it in the block,
+            return                       # because the block cannot fall through
+
+    `any(gate_line < post_line)` was neither. It let ONE gate anywhere earlier
+    in a function clear EVERY later post -- so a gated post followed by an
+    unconditional one read as clean, which is this module's own incident: the
+    grounding question and then the escalation question, two posts in one
+    place, 61 real POSTs before the vendor told us. Three independent readers
+    reproduced it on 2026-09-12, and the 2026-09-11 fix that required an
+    `ast.If` had still never asked what was inside it.
+    """
+    guarded: set[int] = set()
+
+    def walk(block: list, inherited: bool) -> None:
+        protected = inherited
+        for statement in block:
+            if protected:
+                for child in ast.walk(statement):
+                    guarded.add(id(child))
+            if _tests_the_gate(statement):
+                for inner in statement.body:
+                    for child in ast.walk(inner):
+                        guarded.add(id(child))
+                # `if not gate(): return` protects the rest of this block.
+                if _leaves(statement.body):
+                    protected = True
+                walk(statement.orelse, protected)
+                continue
+            for name in ("body", "orelse", "finalbody"):
+                nested = getattr(statement, name, None)
+                if isinstance(nested, list):
+                    walk(nested, protected)
+            for handler in getattr(statement, "handlers", []) or []:
+                walk(handler.body, protected)
+
+    walk(fn.body, False)
+    return guarded
+
+
 def ungated_vendor_writes(source: str) -> list[tuple[str, int]]:
     """(function, line) for every a2a post not preceded by the gate."""
     tree = ast.parse(source)
@@ -55,15 +119,9 @@ def ungated_vendor_writes(source: str) -> list[tuple[str, int]]:
     for fn in ast.walk(tree):
         if not isinstance(fn, (ast.FunctionDef, ast.AsyncFunctionDef)):
             continue
-        posts, gates = [], []
+        guarded = _guarded_nodes(fn)
+        posts = []
         for node in ast.walk(fn):
-            # A gate is a branch on the gate's answer, not a call to it: a bare
-            # `may_write_to_vendor()` whose result is thrown away stops
-            # nothing, and until the deep pass of 2026-09-11 it counted.
-            if isinstance(node, ast.If) and any(
-                    isinstance(c, ast.Call) and isinstance(c.func, ast.Name)
-                    and c.func.id == GATE for c in ast.walk(node.test)):
-                gates.append(node.lineno)
             if not isinstance(node, ast.Call):
                 continue
             if isinstance(node.func, ast.Attribute) and node.func.attr == "post":
@@ -77,9 +135,9 @@ def ungated_vendor_writes(source: str) -> list[tuple[str, int]]:
                           else consts.get(first.id)
                           if isinstance(first, ast.Name) else None)
                 if target and MARKER in target:
-                    posts.append(node.lineno)
-        for line in posts:
-            if not any(g < line for g in gates):
+                    posts.append((node.lineno, id(node) in guarded))
+        for line, gated in posts:
+            if not gated:
                 offenders.append((fn.name, line))
     return offenders
 

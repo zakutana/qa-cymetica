@@ -562,7 +562,8 @@ def test_pinned_and_bounty_checks_are_collectible():
 # failed. Rule 8, on the row that decides #87.
 
 
-def _trade(trade_id, at, *, usdc, was, now, positions, unread_after=False):
+def _trade(trade_id, at, *, usdc, was, now, positions, unread_after=False,
+           outcome="accepted"):
     """One paper trade as scripts/paper.py records it: three rows, one id."""
     before = {"at": at, "sim_balance_usdc": f"{was:.2f}",
               "sim_total_trades": 0, "positions": positions[0]}
@@ -573,7 +574,7 @@ def _trade(trade_id, at, *, usdc, was, now, positions, unread_after=False):
     return [
         {"id": trade_id, "type": "intent", "at": at, "usdc": usdc,
          "paper": True, "before": before},
-        {"id": trade_id, "type": "outcome", "at": at, "outcome": "accepted",
+        {"id": trade_id, "type": "outcome", "at": at, "outcome": outcome,
          "http_status": 200},
         {"id": trade_id, "type": "after", **after},
     ]
@@ -623,6 +624,34 @@ def test_paper_balance_newest_unreadable_never_falls_back_to_an_older_one():
     assert subject["unread"] == ["after"], (
         "and it must carry why it could not be read, so the check can say "
         "Inconclusive instead of counting a missing key as zero")
+
+    # The THIRD path, found 2026-09-12 and voted real by two of three readers.
+    # `paper.py` writes outcome "unknown" on a timeout, on a non-2xx, and on a
+    # 2xx carrying no position id -- its own message says "the order may have
+    # landed". Dropping those handed the verdict to the previous ACCEPTED
+    # trade, which today is TRD-0006 of 2026-09-10: a pre-fix row published
+    # under a run dated now, the exact sentence this function prevents on the
+    # other two paths.
+    rows = (_trade("TRD-0001", "2026-09-10T11:41:45+00:00",
+                   usdc=1.0, was=100000.0, now=100000.0, positions=(39, 40))
+            + _trade("TRD-0010", "2026-09-12T19:41:45+00:00",
+                     usdc=1.0, was=100000.0, now=99999.0, positions=(40, 41),
+                     outcome="unknown"))
+
+    subject = newest(measurements(rows))
+    assert subject["id"] == "TRD-0010", (
+        "an order whose outcome we could not read is not an order that did "
+        "not happen; dropping it re-reports a pre-fix trade as today's newest")
+    assert "outcome" in subject["unread"], subject
+
+    # A REFUSED order genuinely did not happen and stays out.
+    rows = (_trade("TRD-0001", "2026-09-10T11:41:45+00:00",
+                   usdc=1.0, was=100000.0, now=100000.0, positions=(39, 40))
+            + _trade("TRD-0011", "2026-09-12T20:41:45+00:00",
+                     usdc=1.0, was=100000.0, now=100000.0, positions=(40, 40),
+                     outcome="refused"))
+    assert newest(measurements(rows))["id"] == "TRD-0001", (
+        "a refused order is not an unreadable one")
 
     # The other read the same trade depends on: the BALANCE. _snapshot writes
     # `sim_balance_usdc` only on a 200 from /account/me, and until the deep
@@ -830,6 +859,27 @@ def test_the_nexus_card_check_reads_only_ids_given_as_cards():
     assert not is_current("2026-09-10T15:59:00+00:00", now)
     assert not is_current(None, now), "an answer with no moment is not current"
 
+
+    # Evidence, not vocabulary. A blocklist can only name what has already gone
+    # wrong once, and two of three readers reproduced the next one on
+    # 2026-09-12: "trade_id `<uuid>`" and "clone `<uuid>`" both came back as
+    # cards, and both are ids their platform really issues -- trade_id appears
+    # nine times in our own samples.jsonl. A 404 on one of those sends Cymetica
+    # "Nexus tells an agent to trade" something that was never a card.
+    from tests.rest.test_nexus_cards_exist import known_non_cards
+
+    for phrase in ("trade_id `085f1969-cd9e-449b-990a-3f7731b9a309`",
+                   "your clone `d778102d-cd9e-449b-990a-3f7731b9a309`",
+                   "backtest `085f1969-cd9e-449b-990a-3f7731b9a30a`",
+                   "strategy id `085f1969-cd9e-449b-990a-3f7731b9a30b`"):
+        assert card_ids_in(phrase) == [], (
+            f"{phrase.split()[0]!r} reads as a card, and a 404 on it would go "
+            f"to the vendor as guidance they failed to serve")
+
+    # And the default is untouched: no marker still means a card, which is what
+    # keeps #91's witness alive.
+    assert card_ids_in("EVCDX-POLYGON `5bd86126-90eb-4ad8-8e55-909397dab402`")         == ["5bd86126-90eb-4ad8-8e55-909397dab402"]
+    assert isinstance(known_non_cards(), set)
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_latency_window_is_ordered_by_question_and_counts_only_their_failures():

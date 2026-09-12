@@ -762,8 +762,14 @@ def test_a_night_ends_at_its_deadline_paced_and_counted(tmp_path, monkeypatch):
 
     def _truth():
         truths.append(clock())
+        # MORE concepts than the cap allows. Six was the fixture until
+        # 2026-09-12 and `_candidates` drops anything already asked, so the
+        # night ran out of subjects at six against a cap of twelve -- both cap
+        # assertions below were satisfied by the fixture rather than by the
+        # cap, and three readers each deleted the cap branch from `night_tick`
+        # and watched this stay green.
         return [{"strategy": f"bt-{n}", "sharpe": 5 - n, "max_drawdown": 1.0 + n,
-                 "total_return": 12.0, "over": "48h"} for n in range(6)]
+                 "total_return": 12.0, "over": "48h"} for n in range(30)]
 
     def _ask(concept, question):
         asked.append((clock(), concept, question))
@@ -779,10 +785,22 @@ def test_a_night_ends_at_its_deadline_paced_and_counted(tmp_path, monkeypatch):
     assert clock() >= datetime(2026, 9, 13, 7, 0, tzinfo=zone), "it stopped early"
     assert clock() < datetime(2026, 9, 13, 7, 30, tzinfo=zone), (
         "it ran past the hour they named")
-    assert 0 < len(asked) <= lab.CAPS["questions_per_night"]
+    assert len(asked) == lab.CAPS["questions_per_night"], (
+        f"{len(asked)} questions against a cap of "
+        f"{lab.CAPS['questions_per_night']}: with thirty concepts on offer the "
+        f"cap is the only thing that can stop it, so this is the cap measured "
+        f"rather than the fixture running dry")
+    assert did["skipped"]["cap"] > 0, (
+        "the night never once refused a question for the cap, so the branch "
+        "that enforces it was never reached")
     gaps = [(b[0] - a[0]).total_seconds() for a, b in zip(asked, asked[1:])]
     assert all(gap >= 20 * 60 for gap in gaps), gaps
-    assert did["ticks"] > 200 and len(asked) < 10, (
+    # One ask per ten ticks at the very most: 20 minutes against a 2-minute
+    # tick. Stated as a RATIO rather than a count, because the count is now
+    # the cap's and this assertion is the pace's -- two different claims that
+    # were sharing one number before.
+    assert did["ticks"] > 200, did["ticks"]
+    assert len(asked) * 10 <= did["ticks"], (
         f"{len(asked)} questions over {did['ticks']} ticks: the pace is the "
         f"question clock, not the tick")
     assert len({concept for _, concept, _ in asked}) == len(asked), (
@@ -898,9 +916,15 @@ def test_a_night_that_crashes_still_closes_its_session(tmp_path, monkeypatch):
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_night_holds_no_hand_that_trades_files_or_commits():
-    """A negative control that does not need the thing it tests: the night is
-    handed a fixed set of doors, and buying, filing and committing are not
-    among them. Read off the source rather than performed."""
+    """A negative control that does not need the thing it tests: read off the
+    source rather than performed.
+
+    It said "buying, filing and committing are not among the night's doors"
+    until 2026-09-12, when the operator said the night may launch. Buying is a
+    door now; filing and committing are not, and the buying door has the day's
+    brakes wired in front of it. An audit agent caught the docstring still
+    claiming the old rule while the assertion below required the new one --
+    the two halves of this check disagreeing about what it was for."""
     import ast
 
     source = (REPO / "scripts" / "lab.py").read_text(encoding="utf-8")
@@ -943,21 +967,43 @@ def test_the_night_holds_no_hand_that_trades_files_or_commits():
             f"the night can reach {hand!r}: it researches and launches on "
             f"paper, it does not talk to the vendor")
 
-    # Every function in the night that can spend must itself reach the caps and
-    # the deep-pass interlock. Stated per function rather than over the slice,
-    # because "the word affordable appears somewhere in this file" is exactly
-    # the kind of proof that passes while the brake sits in the wrong branch.
+    # Every function in the night that can spend must reach the caps BEFORE it
+    # spends, and the interlock at all. Read as a tree, not as token presence:
+    # an audit agent defeated the first version of this in one line by moving
+    # `affordable` after `paper.buy`, which is the exact move the comment
+    # claimed word-presence could not see. The idiom is
+    # test_pipeline_book.py::test_the_cap_is_not_advisory's -- the gate and the
+    # spend must be statements of ONE block, in that order, which a relocation
+    # into another branch cannot preserve.
+    def _calls(node, name: str) -> bool:
+        return any(isinstance(c, ast.Call) and (
+                   getattr(c.func, "id", None) == name
+                   or getattr(c.func, "attr", None) == name)
+                   for c in ast.walk(node))
+
+    def _gate_then_spend(node) -> bool:
+        for block in [b for n in ast.walk(node)
+                      for b in (getattr(n, "body", []), getattr(n, "orelse", []))
+                      if isinstance(b, list)]:
+            gate = next((i for i, s in enumerate(block)
+                         if _calls(s, "affordable")), None)
+            spend = next((i for i, s in enumerate(block)
+                          if _calls(s, "buy")), None)
+            if gate is not None and spend is not None and gate < spend:
+                return True
+        return False
+
     spenders = [node for node in ast.walk(tree)
-                if isinstance(node, ast.FunctionDef) and "buy" in _names(node)]
+                if isinstance(node, ast.FunctionDef) and _calls(node, "buy")]
     assert spenders, "nothing in the night can launch; the operator asked for it"
     for node in spenders:
-        names = _names(node)
-        assert "affordable" in names, (
-            f"{node.name} spends without reaching the caps")
-        assert "pass_in_flight" in names, (
+        assert _gate_then_spend(node), (
+            f"{node.name} spends without the caps as an earlier statement of "
+            f"the same block -- a gate in another branch is not a gate")
+        assert "pass_in_flight" in _names(node), (
             f"{node.name} spends without checking for a running deep pass, "
             f"which is verifying #85/#86/#87 over these very trades")
-        assert "open_strategy" in names, (
+        assert "open_strategy" in _names(node), (
             f"{node.name} spends without opening a room from a Nexus answer -- "
             f"CLAUDE.md: a strategy of ours never becomes a room")
 
