@@ -140,8 +140,14 @@ def close_session(session: str, lessons: list[str], nextup: list[str],
     rows = load()
     if session not in open_sessions(rows):
         raise LabError(f"{session} is not an open session")
+    # The mode is carried over from the row that opened it, so the morning can
+    # read "was that a night?" off the close alone.
+    mode = "session"
+    for row in rows:
+        if row.get("type") == "session" and row.get("session") == session:
+            mode = str(row.get("mode") or mode)
     return _append({"type": "session", "state": "closed", "at": _now(),
-                    "session": session, "lessons": list(lessons),
+                    "session": session, "mode": mode, "lessons": list(lessons),
                     "next": list(nextup), "did": did or {}})
 
 
@@ -183,7 +189,7 @@ def note_cycle(did: dict) -> dict:
     return _append({"type": "cycle", "at": _now(), "did": did})
 
 
-def may_ask(asked: int, pass_running: bool) -> tuple[bool, str]:
+def may_ask(asked: int, pass_running: bool, mode: str = "session") -> tuple[bool, str]:
     """Whether another question may go to Nexus now.
 
     Not while a deep pass is running. That pass verifies #85 (the newest answer
@@ -191,11 +197,15 @@ def may_ask(asked: int, pass_running: bool) -> tuple[bool, str]:
     trade) -- so a question asked mid-run changes the subject the pass is
     measuring, and the verdict it sends the vendor is then about something
     else. Ours to wait; theirs to receive one true answer.
+
+    A night gets the larger cap because it is hours long and paced two hours
+    apart; a session gets eight because a person is waiting through them.
     """
     if pass_running:
         return False, ("a deep pass is running: it is verifying #85, #86 and "
                        "#87 over these very answers. Ask after it finishes")
-    cap = CAPS["questions_per_session"]
+    cap = CAPS["questions_per_night" if mode == "night"
+               else "questions_per_session"]
     if asked >= cap:
         return False, (f"{asked} questions already this session, and the cap is "
                        f"{cap}: an open-ended loop drifts and burns calls, "
@@ -264,6 +274,120 @@ def outstanding(nexus_rows: list[dict], now: datetime | None = None,
         elif kind in ("answer", "gave_up", "refused", "failed"):
             finished.add(ident)
     return [ident for ident in asked if ident not in finished]
+
+
+# --- the night -------------------------------------------------------------
+#
+# [operator 2026-09-12] No scheduler, ever: they start everything themselves.
+# A night is therefore one process with an end written into it, not a task that
+# comes back tomorrow -- and these numbers are what keep it from behaving like
+# one. Their own guide is the source of the pace: an open-ended loop "drifts,
+# burns calls, and gives you no way to judge what it found".
+NIGHT = {
+    "tick_seconds": 600,          # how often it looks at the clock
+    "cycle_seconds": 1800,        # pick answers up, sample, compare the catalogue
+    "truth_seconds": 6 * 3600,    # re-rank their backtests when the snapshot ages
+    "ask_seconds": 2 * 3600,      # two hours between questions, and the floor
+                                  # under a backoff their failure did not size
+    "max_hours": 14,              # `--until` further out than this is a typo
+}
+HHMM = re.compile(r"^([01]\d|2[0-3]):([0-5]\d)$")
+
+
+def deadline(text: str, now: datetime | None = None) -> datetime:
+    """The hour the operator will wake up, on the operator's own clock.
+
+    Everything else in this repository is UTC, and this is the one place where
+    it must not be: they type the time they will get up. `now` carries the zone
+    -- the CLI passes the machine's, a test passes a fixed one -- so the hour
+    means the same thing to both. Refused rather than guessed: anything that is
+    not HH:MM, and anything more than half a day out, which is what a mistyped
+    hour looks like and would run the machine through the next day.
+    """
+    moment = now or datetime.now().astimezone()
+    match = HHMM.match(str(text).strip())
+    if not match:
+        raise LabError(f"--until wants HH:MM on your own clock, not {text!r}")
+    due = moment.replace(hour=int(match.group(1)), minute=int(match.group(2)),
+                         second=0, microsecond=0)
+    if due <= moment:
+        due += timedelta(days=1)
+    hours = (due - moment).total_seconds() / 3600
+    if hours > NIGHT["max_hours"]:
+        raise LabError(
+            f"{text} resolves to {due.isoformat(timespec='minutes')}, "
+            f"{hours:.1f} hours away, and a night stops at "
+            f"{NIGHT['max_hours']} hours. Name an hour before then")
+    return due
+
+
+def backoff_until(nexus_rows: list[dict], now: datetime | None = None):
+    """When the lane may be tried again, after their side gave up on us.
+
+    Their failures carry `retry_after_s` when they know; six in a row on
+    2026-09-11 did. Without one, two hours -- the same pace the night keeps
+    anyway. One answer since the last failure means the lane is open and there
+    is nothing to wait for.
+    """
+    moment = now or datetime.now(timezone.utc)
+    failed, answered = None, None
+    for row in nexus_rows:
+        when = _at(row.get("at"))
+        if when is None:
+            continue
+        if row.get("type") == "gave_up":
+            failed = (when, row)
+        elif row.get("type") == "answer":
+            answered = when
+    if failed is None or (answered is not None and answered > failed[0]):
+        return None
+    seconds = failed[1].get("retry_after_s")
+    wait = float(seconds) if isinstance(seconds, (int, float)) and seconds > 0 \
+        else NIGHT["ask_seconds"]
+    until = failed[0] + timedelta(seconds=wait)
+    return until if until > moment else None
+
+
+def night_tick(state: dict, now: datetime) -> dict:
+    """What this tick of the night may do, and if nothing, which nothing.
+
+    Pure, so the whole night can be replayed in a test in milliseconds. A deep
+    pass stops the tick whole rather than only its question: picking an answer
+    up WRITES it down, and #86 counts the last five questions over that very
+    file -- a read that writes is a writer, and that mistake has been made here
+    before. The skip reasons are counted and printed at dawn, because a night
+    that was blocked for eight hours and a night that found nothing look
+    identical without them.
+    """
+    if state.get("pass_running"):
+        return {"do": [], "skipped": "pass"}
+
+    def _stale(key: str, seconds: float) -> bool:
+        last = state.get(key)
+        return last is None or (now - last).total_seconds() >= seconds
+
+    do = []
+    if _stale("last_cycle", NIGHT["cycle_seconds"]):
+        do.append("cycle")
+    if _stale("last_truth", NIGHT["truth_seconds"]):
+        do.append("truth")
+
+    # The skip reason is the ASK's, whatever else the tick did. A tick that
+    # cycled but could not ask is exactly the one worth counting: without it a
+    # night held off by a backoff all night reads as a night with nothing to say.
+    hold = state.get("hold_until")
+    if not _stale("last_ask", NIGHT["ask_seconds"]):
+        skipped = "too soon"
+    elif hold is not None and now < hold:
+        skipped = "backoff"
+    elif state.get("asked", 0) >= CAPS["questions_per_night"]:
+        skipped = "cap"
+    elif not state.get("candidates"):
+        skipped = "nothing to ask about"
+    else:
+        do.append("ask")
+        skipped = ""
+    return {"do": do, "skipped": skipped}
 
 
 COVERAGE_FLOOR = 0.8

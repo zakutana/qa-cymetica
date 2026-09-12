@@ -406,7 +406,10 @@ qa/lab.py         the laboratory's notebook and its brakes, in code rather
 scripts/lab.py    that loop from our side: `status`, `truth` (their surfaces
                   map, the leaderboard, then get_strategy_returns as a second
                   reading), `cycle`, `ask`, `buy`, `open`/`close`. It refuses
-                  rather than warns.
+                  rather than warns. `night --until HH:MM` is the one long
+                  form: a process THEY start that ends at an hour on their own
+                  clock, researching only -- it holds no hand that trades,
+                  files or commits, and a test reads that off its source.
 NEXT.md           what we agreed to do next and have not done. Plain markdown,
                   one line per item, `- [ ] YYYY-MM-DD  sentence`; ticked
                   items stay as history and stop being printed.

@@ -199,3 +199,31 @@ opened, orders placed, what moved, and that the rest is in the console.
 
 A bug met on the way is filed without asking, with a check first, the way a
 sweep files one. CLAUDE.md carries that rule and whose it is.
+
+## 9. The night, when they ask for one
+
+"jdi do laboratoře na noc" is **not** something to start on their behalf in the
+background. It is one process on their machine, started by them, that ends at
+an hour they name. Hand them the command in its own block and say what it will
+do -- PowerShell, one command, no `&&`:
+
+```bash
+python scripts/lab.py night --until 07:00
+```
+
+The hour is **their** clock, not UTC, and the process refuses anything more
+than 14 hours out. It prints the resolved deadline, then works: picks up
+answers still in flight, samples the running experiments, re-ranks their
+backtests when the snapshot goes stale, and asks Nexus what breaks the best
+candidates -- one question, two hours apart, twelve at most, and none at all
+while a deep pass is running. **It does not trade, file or commit.** The
+morning acts on what it found; the night only finds it.
+
+In the morning `lab.py status` prints what the night did before anything else:
+what it asked, what came back, how many ticks were held off and by what. Ticks
+held off "by pass" for a whole night mean a deep pass died without finishing,
+not that Nexus was quiet. The queue it leaves names the `NEX-` ids worth a
+room, so step 6 opens them without re-reading the night.
+
+If they ask for a night and the laboratory has a session open, close it first:
+the night would otherwise inherit its counters.

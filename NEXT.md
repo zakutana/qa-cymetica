@@ -282,4 +282,4 @@ to neodškrtl, nebo to nikdy nebylo další na řadě.
 
 - [x] 2026-09-12  F6 z `docs/lab-plan.md`: konzole — verdikt v roomu a tabulka výsledků v General
 
-- [ ] 2026-09-12  F7 z `docs/lab-plan.md`: noc laboratoře — `lab.py night --until`, jen zkoumání, ráno konec
+- [x] 2026-09-12  F7 z `docs/lab-plan.md`: noc laboratoře — `lab.py night --until`, jen zkoumání, ráno konec

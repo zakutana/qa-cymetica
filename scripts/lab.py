@@ -33,9 +33,11 @@ a check, spending without `paper` -- is quoted to them and not acted on.
 from __future__ import annotations
 
 import argparse
+import functools
 import importlib.util
 import json
 import sys
+import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -362,7 +364,28 @@ def status() -> str:
     last = lab.last_close(rows)
     if last:
         when = str(last.get("at"))[:16].replace("T", " ")
-        out.append(f"last session {last.get('session')} closed {when}")
+        kind = "night" if last.get("mode") == "night" else "session"
+        out.append(f"last {kind} {last.get('session')} closed {when}")
+        if kind == "night":
+            # What the night did, in the morning, before anything else is read:
+            # this is the only place a night that was blocked all the way
+            # through is distinguishable from a night that found nothing.
+            did = last.get("did") or {}
+            skipped = did.get("skipped") or {}
+            out.append(f"  the night: {did.get('asked', 0)} asked, "
+                       f"{did.get('answered', 0)} answered, "
+                       f"{did.get('cycles', 0)} cycle(s) over "
+                       f"{did.get('ticks', 0)} tick(s); ended "
+                       f"{did.get('stopped', '?')}")
+            for reason in ("pass", "backoff", "cap"):
+                if skipped.get(reason):
+                    out.append(f"  held off:  {skipped[reason]} tick(s) by "
+                               f"{reason}")
+            for question in did.get("questions") or []:
+                out.append(f"  asked:   {question.get('id')} about "
+                           f"{question.get('about')}")
+            for problem in (did.get("errors") or [])[:3]:
+                out.append(f"  failed:  {problem}")
         for lesson in last.get("lessons") or []:
             out.append(f"  learned: {lesson}")
         for item in last.get("next") or []:
@@ -544,6 +567,183 @@ def buy(card_id: str, usdc: float, nexus_id: str | None, confirm: bool) -> dict:
     return _sibling("paper").buy(card_id, usdc, nexus_id, confirm)
 
 
+# --- the night -------------------------------------------------------------
+
+BREAKS_IT = (
+    "Their own backtest ranks {slug} at Sharpe {sharpe} with a max drawdown of "
+    "{dd}% over {over}. What BREAKS it? Name the market condition it fails in, "
+    "the kind of event card that would make it fail fastest, and one number we "
+    "could watch that turns bad BEFORE the drawdown does. If the ranking "
+    "itself is measured over too short a window to mean anything, say that "
+    "instead -- we would rather drop a candidate than trade a statistic."
+)
+
+
+def _candidates(ranked: list[dict], already: set[str]) -> list[str]:
+    """The ranked concepts we have not asked about tonight, best first."""
+    out = []
+    for row in ranked:
+        slug = str(row.get("strategy") or "").strip()
+        if slug and slug not in already and slug not in out:
+            out.append(slug)
+    return out
+
+
+def _night_question(ranked: list[dict], slug: str) -> str:
+    row = next((r for r in ranked if r.get("strategy") == slug), {})
+    return BREAKS_IT.format(slug=slug, sharpe=row.get("sharpe", "?"),
+                            dd=row.get("max_drawdown", "?"),
+                            over=row.get("over", "an unstated window"))
+
+
+def _night_backoff():
+    """How long their own failure asked us to stay away."""
+    return lab.backoff_until(_nexus_rows(), _now())
+
+
+def _night_ask(slug: str, question: str) -> dict:
+    """One question, put down and left with their side.
+
+    `wait=False` on purpose: waiting blocks for up to fifteen minutes, which
+    would carry a tick past both the deadline and the deep-pass check it made
+    on the way in. The next cycle picks the answer up. The one straddle left --
+    a poll in flight when a pass starts -- is under a minute wide and not worth
+    a lock.
+    """
+    return _sibling("nexus").ask(question, wait=False)
+
+
+def _lessons(did: dict, ranked: list[dict]) -> list[str]:
+    """At most three, drawn from what was counted rather than from opinion."""
+    out = []
+    if did["asked"]:
+        out.append(f"asked Nexus {did['asked']} question(s); "
+                   f"{did['answered']} came back by dawn")
+    if did["skipped"]["pass"]:
+        out.append(f"{did['skipped']['pass']} of {did['ticks']} ticks did "
+                   f"nothing: a deep pass was in flight")
+    if did["skipped"]["backoff"]:
+        out.append(f"{did['skipped']['backoff']} tick(s) waited out a backoff "
+                   f"their own failure asked for")
+    if ranked and len(out) < lab.MAX_LESSONS:
+        best = ranked[0]
+        out.append(f"their best-ranked concept was {best.get('strategy')} "
+                   f"(sharpe {best.get('sharpe')}, over {best.get('over')})")
+    if not out:
+        out.append("the night ran and found nothing worth a line")
+    return out[:lab.MAX_LESSONS]
+
+
+def night(until: str, *, clock=None, sleep=None, actions=None, out=print) -> dict:
+    """Research until an hour the operator names, then stop.
+
+    One process, started by them, with its end written into it -- not a
+    scheduler. [operator 2026-09-12] *"ne zadene schedulery automaticke
+    nechci"*. Nothing here trades, files or commits: the night measures and
+    asks, the morning acts on what it found. That is not only prose -- the
+    doors it can reach are the four in `actions`, and none of them is a hand
+    that spends.
+
+    What it does with the hours: picks up answers that are still in flight,
+    samples the running experiments, re-ranks their backtests when the snapshot
+    goes stale, and asks Nexus what breaks the best candidates -- one question
+    at a time, two hours apart, twelve at most. `--no-wait` on the ask is
+    deliberate: waiting on their side blocks for up to fifteen minutes, which
+    would carry a tick past both the deadline and the deep-pass check it made
+    on the way in. The next tick picks the answer up.
+
+    The clock is read every loop rather than counted down, so a laptop that
+    slept still stops at the hour it was given.
+    """
+    clock = clock or (lambda: datetime.now().astimezone())
+    sleep = sleep or time.sleep
+    started = clock()
+    due = lab.deadline(until, started)
+    # Every door is a name resolved here, not inside a lambda: a mistyped
+    # default would otherwise surface at three in the morning, on their machine.
+    actions = actions or {
+        "pass": pass_in_flight, "backoff": _night_backoff, "cycle": cycle,
+        "truth": functools.partial(truth, limit=8), "ask": _night_ask,
+    }
+
+    session = lab.open_session(mode="night")["session"]
+    did = {"ticks": 0, "cycles": 0, "truths": 0, "asked": 0, "answered": 0,
+           "errors": [], "stopped": "deadline",
+           "skipped": {"pass": 0, "backoff": 0, "cap": 0, "too soon": 0,
+                       "nothing to ask about": 0},
+           "questions": []}
+    state: dict = {"asked": 0, "candidates": [], "hold_until": None}
+    ranked: list[dict] = []
+    asked_about: set[str] = set()
+
+    out(f"laboratory night {session}: research only, no orders, no filings.")
+    out(f"  started {started.isoformat(timespec='minutes')}")
+    out(f"  ends    {due.isoformat(timespec='minutes')} "
+        f"({(due - started).total_seconds() / 3600:.1f} h from now)")
+    out(f"  at most {lab.CAPS['questions_per_night']} questions, "
+        f"{lab.NIGHT['ask_seconds'] // 3600} h apart. Ctrl-C stops it.")
+
+    try:
+        while clock() < due:
+            now = clock()
+            did["ticks"] += 1
+            state["pass_running"] = bool(actions["pass"]())
+            state["hold_until"] = actions["backoff"]()
+            plan = lab.night_tick(state, now)
+            if plan["skipped"]:
+                did["skipped"][plan["skipped"]] = \
+                    did["skipped"].get(plan["skipped"], 0) + 1
+
+            for step in plan["do"]:
+                try:
+                    if step == "cycle":
+                        done = actions["cycle"]() or {}
+                        state["last_cycle"] = now
+                        did["cycles"] += 1
+                        did["answered"] = sum(
+                            1 for row in _nexus_rows()
+                            if row.get("type") == "answer"
+                            and (_moment(row.get("at")) or started) >= started)
+                    elif step == "truth":
+                        ranked = actions["truth"]() or ranked
+                        state["last_truth"] = now
+                        did["truths"] += 1
+                        state["candidates"] = _candidates(ranked, asked_about)
+                    elif step == "ask":
+                        slug = state["candidates"][0]
+                        said = actions["ask"](
+                            slug, _night_question(ranked, slug)) or {}
+                        asked_about.add(slug)
+                        state["candidates"] = state["candidates"][1:]
+                        state["last_ask"] = now
+                        state["asked"] += 1
+                        did["asked"] += 1
+                        did["questions"].append(
+                            {"at": now.isoformat(timespec="minutes"),
+                             "about": slug, "id": said.get("id")})
+                        out(f"  {now.strftime('%H:%M')} asked about {slug} "
+                            f"({said.get('id') or 'no id'})")
+                except Exception as exc:  # noqa: BLE001 -- one bad step is not the night
+                    did["errors"].append(f"{step}: {exc}")
+                    out(f"  {now.strftime('%H:%M')} {step} failed: {exc}")
+
+            remaining = (due - clock()).total_seconds()
+            if remaining <= 0:
+                break
+            sleep(min(lab.NIGHT["tick_seconds"], remaining))
+    except KeyboardInterrupt:
+        did["stopped"] = "interrupted"
+        out("\n  stopped by hand; closing the session so the morning is clean")
+
+    queue = [f"{q['id']}: worth a room if the answer is concrete ({q['about']})"
+             for q in did["questions"] if q.get("id")][:lab.MAX_NEXT]
+    lab.close_session(session, _lessons(did, ranked), queue, did=did)
+    out(f"\n{session} closed after {did['ticks']} tick(s): {did['asked']} "
+        f"asked, {did['answered']} answered, {did['cycles']} cycle(s). "
+        f"`lab.py status` has it in the morning.")
+    return did
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -566,6 +766,10 @@ def main(argv: list[str] | None = None) -> int:
     buy_cmd.add_argument("--usdc", type=float, required=True)
     buy_cmd.add_argument("--nexus", help="the answer it acts on, NEX-NNNN")
     buy_cmd.add_argument("--confirm", action="store_true")
+    night_cmd = sub.add_parser(
+        "night", help="research until an hour you name, then stop")
+    night_cmd.add_argument("--until", required=True, metavar="HH:MM",
+                           help="on YOUR clock, not UTC; at most 14 h away")
     open_cmd = sub.add_parser("open", help="start a session")
     open_cmd.add_argument("--mode", default="session",
                           choices=["session", "night"])
@@ -620,6 +824,15 @@ def main(argv: list[str] | None = None) -> int:
     elif args.cmd == "buy":
         print(json.dumps(buy(args.card, args.usdc, args.nexus, args.confirm),
                          ensure_ascii=False, indent=1, default=str)[:2000])
+    elif args.cmd == "night":
+        if lab.open_sessions():
+            raise SystemExit(
+                f"{lab.open_sessions()[-1]} is still open: close it first, or "
+                f"the night inherits somebody else's counters")
+        try:
+            night(args.until)
+        except lab.LabError as exc:  # a bad hour is a typo, not a traceback
+            raise SystemExit(str(exc))
     elif args.cmd == "open":
         record = lab.open_session(mode=args.mode)
         print(f"{record['session']} open ({record['mode']})")

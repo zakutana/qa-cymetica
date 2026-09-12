@@ -25,6 +25,7 @@ classification would be the thing the classification exists to stop.
 from __future__ import annotations
 
 import json
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
@@ -312,6 +313,258 @@ def test_a_room_goes_running_only_with_a_criterion_written_first(tmp_path,
     claim = [r for r in rows if r["type"] == "claim"][-1]
     assert claim["quoted"]["sharpe"] == "5.16"
     assert claim["numbers"]["sharpe"] == 5.16
+
+
+# --- the night -------------------------------------------------------------
+#
+# One process the operator starts before going to bed, which ends by itself at
+# an hour they name. Everything below is what keeps it from becoming a
+# scheduler: it holds no hand that trades, it paces itself, and it stops.
+
+
+def _scripts_lab(tmp_path, monkeypatch):
+    """scripts/lab.py with its state under tmp_path. Imported by path because
+    scripts/ is not a package; the same route tests/mcp uses."""
+    import importlib
+    import importlib.util
+
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    import qa.state
+
+    importlib.reload(qa.state)
+    importlib.reload(lab)
+    spec = importlib.util.spec_from_file_location(
+        "scripts_lab_under_test", REPO / "scripts" / "lab.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+class _Clock:
+    """Wall time the test moves. A night paced by a fake clock runs in
+    milliseconds; a night paced by the real one could not be tested at all."""
+
+    def __init__(self, start):
+        self.now = start
+
+    def __call__(self):
+        return self.now
+
+    def sleep(self, seconds):
+        self.now += timedelta(seconds=seconds)
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_night_may_ask_more_than_a_session_and_still_stops():
+    """Two caps, because the night is longer and cheaper per question. Until
+    the night existed `may_ask` read the session's cap whatever it was asked
+    about, so a twelve-question night would have stopped at eight and nobody
+    would have seen why."""
+    may, why = lab.may_ask(asked=9, pass_running=False, mode="night")
+    assert may, why
+
+    may, why = lab.may_ask(asked=lab.CAPS["questions_per_night"],
+                           pass_running=False, mode="night")
+    assert not may and "12" in why, why
+
+    may, why = lab.may_ask(asked=9, pass_running=False)
+    assert not may and "8" in why, "a session is still eight"
+
+    may, why = lab.may_ask(asked=0, pass_running=True, mode="night")
+    assert not may and "deep pass" in why.lower(), why
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_deadline_is_read_on_the_operators_own_clock():
+    """They type the hour they will wake up, not a UTC offset. Everything else
+    here is UTC, so the one place a local hour is meant has to say so -- and a
+    mistyped one must not run the machine for a day."""
+    zone = timezone(timedelta(hours=2))  # what their clock says in September
+    night = datetime(2026, 9, 12, 23, 30, tzinfo=zone)
+
+    due = lab.deadline("07:00", night)
+    assert (due.hour, due.minute) == (7, 0)
+    assert due.date() == datetime(2026, 9, 13).date()
+    assert (due - night).total_seconds() == 7.5 * 3600
+
+    with pytest.raises(lab.LabError) as refused:
+        lab.deadline("07:00", datetime(2026, 9, 12, 7, 30, tzinfo=zone))
+    assert "07:00" in str(refused.value) and "14" in str(refused.value), (
+        "a refusal has to name what it resolved to, or it reads as a bug")
+    for bad in ("7", "25:00", "07:60", "morning"):
+        with pytest.raises(lab.LabError):
+            lab.deadline(bad, night)
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_tick_while_a_deep_pass_runs_does_nothing_at_all():
+    """Not just "asks nothing". A poll writes the answer down, and #86 counts
+    the last five questions over exactly that file -- a read that writes is a
+    writer. So the whole tick waits, and says which kind of wait it was, or a
+    night that produced nothing looks the same as a night that was blocked."""
+    now = datetime(2026, 9, 13, 2, 0, tzinfo=timezone.utc)
+    state = {"asked": 0, "candidates": ["bt-cryptobull-blue"]}
+
+    plan = lab.night_tick({**state, "pass_running": True}, now)
+    assert plan["do"] == [] and plan["skipped"] == "pass"
+
+    plan = lab.night_tick(state, now)
+    assert plan["do"] == ["cycle", "truth", "ask"], (
+        "the first tick of a night has never cycled, ranked or asked")
+
+    fresh = {**state, "last_cycle": now - timedelta(minutes=5),
+             "last_truth": now - timedelta(hours=1),
+             "last_ask": now - timedelta(minutes=30)}
+    plan = lab.night_tick(fresh, now)
+    assert plan["do"] == [] and plan["skipped"] == "too soon"
+
+    plan = lab.night_tick({**fresh, "last_ask": now - timedelta(hours=3)}, now)
+    assert plan["do"] == ["ask"]
+
+    plan = lab.night_tick({**fresh, "last_ask": now - timedelta(hours=3),
+                           "asked": lab.CAPS["questions_per_night"]}, now)
+    assert plan["do"] == [] and plan["skipped"] == "cap"
+
+    plan = lab.night_tick({**fresh, "last_ask": now - timedelta(hours=3),
+                           "candidates": []}, now)
+    assert plan["do"] == [] and plan["skipped"] == "nothing to ask about"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_night_waits_the_hour_their_own_failure_asked_for():
+    """Their failed investigations carry `retry_after_s`. Six in a row on
+    2026-09-11 said retryable; a night that ignored the number would have spent
+    all twelve questions inside the outage."""
+    now = datetime(2026, 9, 13, 2, 0, tzinfo=timezone.utc)
+    said = [{"id": "NEX-1", "type": "gave_up", "status": "failed",
+             "at": (now - timedelta(minutes=10)).isoformat(),
+             "retryable": True, "retry_after_s": 900}]
+    assert lab.backoff_until(said, now) == now + timedelta(minutes=5)
+
+    quiet = [{"id": "NEX-1", "type": "gave_up", "status": "failed",
+              "at": (now - timedelta(minutes=10)).isoformat()}]
+    assert lab.backoff_until(quiet, now) == now + timedelta(hours=2) - timedelta(minutes=10)
+
+    answered = [*quiet, {"id": "NEX-2", "type": "answer",
+                         "at": (now - timedelta(minutes=1)).isoformat()}]
+    assert lab.backoff_until(answered, now) is None, (
+        "one answer since the failure means the lane is open again")
+
+    held = lab.night_tick({"asked": 0, "candidates": ["bt-x"],
+                           "hold_until": now + timedelta(hours=1)}, now)
+    assert "ask" not in held["do"] and held["skipped"] == "backoff", (
+        "a backoff holds the question, not the whole tick -- answers already "
+        "in flight are still picked up while their side is down")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_night_ends_at_its_deadline_paced_and_counted(tmp_path, monkeypatch):
+    """The whole of F7 in one run: it stops by itself, it asks at their pace,
+    it never exceeds the night's cap, and what it did is on the record for the
+    morning."""
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    zone = timezone(timedelta(hours=2))
+    clock = _Clock(datetime(2026, 9, 12, 23, 30, tzinfo=zone))
+    asked, cycles, truths = [], [], []
+
+    def _truth():
+        truths.append(clock())
+        return [{"strategy": f"bt-{n}", "sharpe": 5 - n, "max_drawdown": 1.0 + n,
+                 "total_return": 12.0, "over": "48h"} for n in range(6)]
+
+    def _ask(concept, question):
+        asked.append((clock(), concept, question))
+        return {"id": f"NEX-{len(asked)}", "status": "queued"}
+
+    did = scripts_lab.night(
+        "07:00", clock=clock, sleep=clock.sleep,
+        actions={"pass": lambda: False, "backoff": lambda: None,
+                 "cycle": lambda: cycles.append(clock()) or {"polled": []},
+                 "truth": _truth, "ask": _ask},
+        out=lambda *a: None)
+
+    assert clock() >= datetime(2026, 9, 13, 7, 0, tzinfo=zone), "it stopped early"
+    assert clock() < datetime(2026, 9, 13, 7, 30, tzinfo=zone), (
+        "it ran past the hour they named")
+    assert 0 < len(asked) <= lab.CAPS["questions_per_night"]
+    gaps = [(b[0] - a[0]).total_seconds() for a, b in zip(asked, asked[1:])]
+    assert all(gap >= lab.NIGHT["ask_seconds"] for gap in gaps), gaps
+    assert len({concept for _, concept, _ in asked}) == len(asked), (
+        "it asked about the same concept twice")
+    assert all(q.strip().endswith("?") or "?" in q for _, _, q in asked)
+    assert len(cycles) > len(asked), "answers are picked up between questions"
+    assert 1 <= len(truths) <= 3, truths
+
+    assert did["asked"] == len(asked) and did["ticks"] > 0
+    assert did["skipped"]["pass"] == 0
+    assert lab.open_sessions() == [], "the night left its session open"
+    closed = lab.last_close()
+    assert closed["mode"] == "night"
+    assert closed["did"]["asked"] == len(asked)
+    assert 0 < len(closed["lessons"]) <= lab.MAX_LESSONS
+    assert closed["next"], "the morning needs the ids worth a room"
+    assert any("NEX-" in item for item in closed["next"])
+
+    summary = scripts_lab.status()
+    assert "night" in summary.lower() and str(len(asked)) in summary, summary
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_interrupted_night_still_closes_its_session(tmp_path, monkeypatch):
+    """Ctrl-C is how the operator stops it. A session left open makes the next
+    laboratory inherit an unfinished night, and the reminder rule then nags
+    about a night that is long over."""
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    zone = timezone(timedelta(hours=2))
+    clock = _Clock(datetime(2026, 9, 12, 23, 30, tzinfo=zone))
+
+    def _stop():
+        raise KeyboardInterrupt
+
+    did = scripts_lab.night(
+        "07:00", clock=clock, sleep=clock.sleep,
+        actions={"pass": lambda: False, "backoff": lambda: None,
+                 "cycle": _stop, "truth": lambda: [], "ask": lambda c, q: {}},
+        out=lambda *a: None)
+
+    assert did["stopped"] == "interrupted"
+    assert lab.open_sessions() == []
+    assert lab.last_close()["did"]["stopped"] == "interrupted"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_night_holds_no_hand_that_trades_files_or_commits():
+    """A negative control that does not need the thing it tests: the night is
+    handed a fixed set of doors, and buying, filing and committing are not
+    among them. Read off the source rather than performed."""
+    source = (REPO / "scripts" / "lab.py").read_text(encoding="utf-8")
+    night = source[source.index("\n# --- the night"):source.index("\ndef main(")]
+    assert "def night(" in night and len(night) > 2000, "the slice moved"
+
+    for hand in ("buy(", "paper", "submit", "findings", "git ", "subprocess",
+                 "open_strategy", "set_status", "record_verdict"):
+        assert hand not in night, (
+            f"the night can reach {hand!r}: it researches, the morning acts")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_nights_own_doors_are_the_real_ones(tmp_path, monkeypatch):
+    """The loop above is driven with fakes, which leaves the wiring untested --
+    and a mistyped default would surface at three in the morning on their
+    machine, hours into a night that then does nothing. A clock already past
+    the deadline builds the real doors and runs no tick, so this reaches
+    nothing over the network."""
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    zone = timezone(timedelta(hours=2))
+    start = datetime(2026, 9, 12, 23, 30, tzinfo=zone)
+    readings = iter([start, start + timedelta(hours=9)])
+
+    did = scripts_lab.night("07:00", clock=lambda: next(readings),
+                            sleep=lambda seconds: None, out=lambda *a: None)
+
+    assert did["ticks"] == 0, "a tick ran and would have called their API"
+    assert lab.open_sessions() == []
+    assert lab.last_close()["mode"] == "night"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
