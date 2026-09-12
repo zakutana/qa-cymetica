@@ -292,8 +292,8 @@ to neodškrtl, nebo to nikdy nebylo další na řadě.
 - [ ] 2026-09-12  `ledger.py` bez `--run` vzal jako běh záznamu můj vlastní běh `tests/meta tests/repo` — ten neměřil z jejich platformy nic, a protože stránka popisuje běh, ze kterého byl ledger složen, vyprázdnily se dlaždice sekcí. Stavy řádků to neohrozilo (fold nezavírá, co neproběhlo), ale strážce `test_a_tile_lists_the_tests_behind_its_count` prošel před tím o **jedinou** kontrolu (1 → 0). Default by měl preferovat běh, který něco z ledgeru rozsoudil, nebo aspoň odmítnout, když nerozsoudil nic.
 - [ ] 2026-09-12  Ověřit #98 a #99 během úrovně V: zaplatili obě a tvrdí opravu, naše kontroly je pořád reprodukují — fold hlásí `reverify` a `correction_owed` u obou
 - [x] 2026-09-12  D1 z `docs/data-plan.md`: manifest `audits/evidence-manifest.jsonl` — hash, bajty, `call_key`, důvod, archiv
-- [ ] 2026-09-12  D2 z `docs/data-plan.md`: `keep.py archive --month` — zabalit těla, ověřit hash každého, teprve pak pustit z gitu
-- [ ] 2026-09-12  D3 z `docs/data-plan.md`: odpojit `evidence/` od gitu; strom ze 229 MB na ~62 MB
+- [x] 2026-09-12  D2 z `docs/data-plan.md`: `keep.py archive --month` — zabalit těla, ověřit hash každého, teprve pak pustit z gitu
+- [x] 2026-09-12  D3 z `docs/data-plan.md`: odpojit `evidence/` od gitu; strom ze 229 MB na ~62 MB
 - [ ] 2026-09-12  R1 z `docs/data-plan.md`: `scripts/review.py` — okno a oblast deep pass
 - [ ] 2026-09-12  R2 z `docs/data-plan.md`: oblast laboratoř, `checkpoint --area`, skill, přepis kroku 11 deep passu
 - [ ] 2026-09-12  Hlášky strážce v `tests/repo/test_deep_pass_process.py` staví na klíči `pass`, ale `passes()` vydává `run` — ve chvíli, kdy má strážce vysvětlit, co je špatně, spadne na `KeyError`. Aserce samotné jsou správné, slepá je jen hláška.

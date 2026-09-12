@@ -43,44 +43,72 @@ LEGACY_PREFIXES = ("submissions.json#", "bounty.json#", "archive#")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_every_capture_the_committed_state_cites_is_in_the_repository():
-    """A verdict we sent them names ids; a clone must be able to open them.
+def test_every_capture_the_committed_state_cites_can_still_be_produced():
+    """A verdict we sent them names ids; we must still be able to produce them.
 
-    Stated over the citation rather than over the tracker, like the sister
-    guard for run records: the mechanism that puts a file there can be
-    replaced without touching this test.
+    Until 2026-09-12 this said "is in the repository", and that was the right
+    shape while the bodies were in git. They are not any more (D3 of
+    docs/data-plan.md): 167 MB of them, growing 47 MB on a working day, against
+    16.5 MB of actual code. What we promised the vendor is that a capture is
+    "retained and provided on request" -- `verify.py`'s own note adds that the
+    repository is private, so a clone was never the offer. Git was our storage
+    choice, and it changed.
+
+    So the obligation is unchanged and the test now states it accurately: every
+    cited id is in the committed manifest, and its body is either stamped into
+    an archive or still on this disk. Losing one means losing the answer to a
+    question the vendor is entitled to ask.
+
+    Stated over the citation rather than over the tracker, as before: the
+    mechanism that keeps a body reachable can be replaced without touching this.
     """
     needed = keepset.must_be_tracked()
-    tracked = keepset.tracked_evidence()
-    if needed is None or tracked is None:
+    if needed is None:
         conclude(Measurement(
             verdict="inconclusive",
             reason="git could not be read, and a read we could not make is "
                    "not an empty read"))
         return
 
-    missing = sorted(set(needed) - tracked)
+    known = manifest.read()
+    unproved, unreachable = [], []
+    for evidence_id in sorted(needed):
+        row = known.get(evidence_id)
+        if row is None:
+            unproved.append(evidence_id)
+        elif not row.get("archive") and not keepset.evidence_path(
+                evidence_id).is_file():
+            unreachable.append(evidence_id)
+
+    lost = unproved + unreachable
     conclude(Measurement(
-        verdict="failed" if missing else "passed",
-        reason=(f"{len(missing)} capture(s) the committed state cites are not "
-                f"in the repository: {', '.join(m[:12] for m in missing[:5])}"
-                if missing else
-                f"all {len(needed)} capture(s) the committed journal and ledger "
-                f"cite are tracked"),
-        left={"cited": len(needed)}, right={"tracked": len(tracked)},
-        population={"missing": missing[:20]},
+        verdict="failed" if lost else "passed",
+        reason=(f"{len(unproved)} cited capture(s) have no manifest line and "
+                f"{len(unreachable)} are in no archive and not on disk: "
+                f"{', '.join(m[:12] for m in lost[:5])}"
+                if lost else
+                f"all {len(needed)} cited capture(s) are proved by the "
+                f"manifest and reachable in an archive or on disk"),
+        left={"cited": len(needed)}, right={"lost": len(lost)},
+        population={"lost": lost[:20]},
         sources={"journal": "HEAD:state/journal/events.jsonl",
-                 "ledger": "HEAD:state/ledger.json"}))
+                 "ledger": "HEAD:state/ledger.json",
+                 "manifest": manifest.manifest_path().name}))
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_git_holds_no_capture_nothing_stands_on():
+def test_git_holds_no_capture_body_at_all():
     """The other direction, and the one that keeps the repository small.
 
-    `must_keep` is the wider set -- it also covers what our own paper orders
-    and clones were recorded against, which no clone needs but the pruner must
-    not delete. Anything tracked beyond it is a capture that got committed
-    because a `git add -A` swept it up.
+    It used to read "no capture nothing stands on", which allowed the cited set
+    -- 1 178 files and 167 MB by 2026-09-12, growing 47 MB on a working day
+    against 16.5 MB of actual code. Since D3 the answer is simply none: the
+    proof is the manifest, the bodies are in `archive/`, and git carries 228 KB
+    where it carried 167 MB.
+
+    Stronger than what it replaced, which is the only direction a guard may be
+    rewritten. "Nothing beyond the cited set" could not notice the cited set
+    itself growing without bound; this cannot miss anything.
     """
     tracked = keepset.tracked_evidence()
     if tracked is None:
@@ -88,17 +116,18 @@ def test_git_holds_no_capture_nothing_stands_on():
             verdict="inconclusive", reason="git could not list evidence/"))
         return
 
-    keep = keepset.must_keep()
-    extra = sorted(tracked - set(keep))
+    extra = sorted(tracked)
     conclude(Measurement(
         verdict="failed" if extra else "passed",
-        reason=(f"{len(extra)} tracked capture(s) nothing stands on -- "
-                f"`git rm --cached` them; evidence/ is gitignored"
+        reason=(f"{len(extra)} capture body(ies) are still tracked -- "
+                f"`keep.py archive --month YYYY-MM --release` moves them; "
+                f"evidence/ is gitignored: {', '.join(e[:12] for e in extra[:5])}"
                 if extra else
-                f"all {len(tracked)} tracked capture(s) are cited"),
-        left={"tracked": len(tracked)}, right={"kept": len(keep)},
+                "git holds no capture body; the manifest proves them and "
+                "archive/ holds them"),
+        left={"tracked": len(extra)}, right={"allowed": 0},
         population={"extra": extra[:10]},
-        sources={"keepset": "qa/keepset.py::must_keep"}))
+        sources={"keepset": "qa/keepset.py::tracked_evidence"}))
 
 
 SECRET_NAME = re.compile(r"KEY|TOKEN|SECRET|PASS|AUTH", re.I)

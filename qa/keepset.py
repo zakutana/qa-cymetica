@@ -310,44 +310,35 @@ def track(quiet: bool = False) -> int:
             print("keep: git could not be read; nothing added")
         return 0
 
-    # The manifest first, and over the WHOLE keep set rather than only what git
-    # is missing: it is written while the bodies are readable, because
-    # `call_key` needs the body and the archive will take it. A capture already
-    # tracked still needs its line -- the proof has to exist before the move,
-    # not after it. Imported here, not at module scope: qa.manifest reads
-    # `evidence_path` from this module.
+    # Since D3 the manifest is the ONLY thing this adds. The bodies stay on
+    # disk and go to `archive/` monthly; git holds 228 KB of proof where it
+    # held 167 MB of JSON, and `tracked_evidence()` is expected to be empty.
+    # `call_key` reads the body, so the line has to be written while the
+    # capture is still here -- which is exactly when this runs. Imported inside
+    # the function, not at module scope: qa.manifest reads `evidence_path`
+    # from this module.
     from qa import manifest as _manifest
 
     try:
-        _manifest.refresh(keep)
-        wanted_extra = [str(_manifest.manifest_path().relative_to(REPO_ROOT))
-                        .replace("\\", "/")]
+        added_lines, total = _manifest.refresh(keep)
+        wanted = [str(_manifest.manifest_path().relative_to(REPO_ROOT))
+                  .replace("\\", "/")]
     except Exception as exc:  # noqa: BLE001 -- same rule as above: never block
         if not quiet:
             print(f"keep: WARNING the manifest was not written: {exc}")
-        wanted_extra = []
+        return 0
 
-    wanted, reasons = list(wanted_extra), {}
-    for evidence_id in sorted(set(keep) - held):
-        path = evidence_path(evidence_id)
-        if path.is_file():
-            wanted.append(str(path.relative_to(REPO_ROOT)).replace("\\", "/"))
-            reasons[keep[evidence_id]] = reasons.get(keep[evidence_id], 0) + 1
-
-    added = 0
-    for start in range(0, len(wanted), GIT_BATCH):
-        chunk = wanted[start:start + GIT_BATCH]
-        result = subprocess.run(["git", "add", "-f", *chunk], cwd=REPO_ROOT,
-                                capture_output=True, text=True)
-        if result.returncode == 0:
-            added += len(chunk)
-        elif not quiet:
-            print(f"keep: WARNING could not add {len(chunk)} capture(s): "
+    result = subprocess.run(["git", "add", "-f", *wanted], cwd=REPO_ROOT,
+                            capture_output=True, text=True)
+    if result.returncode != 0:
+        if not quiet:
+            print(f"keep: WARNING could not add the manifest: "
                   f"{result.stderr.strip()[:200]}")
-    if added and not quiet:
-        print(f"keep: added {added} capture(s) "
-              f"({', '.join(f'{n} {r}' for r, n in sorted(reasons.items()))})")
-    return added
+        return 0
+    if added_lines and not quiet:
+        print(f"keep: {added_lines} new capture(s) proved, {total} in the "
+              f"manifest; bodies stay on disk for `keep.py archive`")
+    return added_lines
 
 
 def untrackable(keep: dict, held: set[str] | None) -> tuple[list[str], str]:

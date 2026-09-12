@@ -328,13 +328,12 @@ qa/state.py       the ONLY module that writes state/ledger.json and the
                   journal. Admissibility, the ledger contract, the append-only
                   hash chain. Other modules write their own narrow file
                   under state/ -- run records, the vendor snapshot, the
-                  section map, preregistrations, the Nexus rooms -- and the
-                  guard in
+                  section map, preregistrations, the Nexus rooms. The guard in
                   tests/meta/test_pipeline_withdraw.py enforces the accurate
                   sentence, not the wider one: it fires on a write near the
-                  words ledger, events or journal. This line said "writes
-                  state/" until 2026-09-09 and a session reading it would file
-                  bounty.py as a violation.
+                  words ledger, events or journal. (This said "writes state/"
+                  until 2026-09-09, and a session reading it filed bounty.py
+                  as a violation.)
 qa/fold.py        pure: ledger = f(previous rows, one run, the journal)
 qa/measure.py     Measurement + conclude(): a check's verdict and pytest's
                   outcome are one value
@@ -373,13 +372,10 @@ tests/repo/       repository consistency. Deliberately NOT in tests/meta:
                   five times on 2026-09-07, every guard green throughout, and
                   one of them sent a false claim to the vendor. Named for
                   what it does, not for the night -- the operator runs it in
-                  the day too. It writes its own progress to
-                  audits/deep-pass-progress.json as it goes, because it is
-                  started once from a session that has already spent most of
-                  its context and will be compacted mid-run: the fixes survive
-                  that (a red suite catches a half-applied one) but the triage
-                  verdicts would not, and a lost verdict is a finding that
-                  silently never gets fixed.
+                  the day too. Its progress goes to
+                  audits/deep-pass-progress.json as it goes: the run is
+                  compacted mid-flight, and a triage verdict lost that way is a
+                  finding that silently never gets fixed.
 .claude/skills/laborator/SKILL.md
                   "jdi do laboratoře" (and every phrase that used to open a
                   Nexus session): the operator's notes first, then what is in
@@ -417,21 +413,18 @@ NEXT.md           what we agreed to do next and have not done. Plain markdown,
                   items stay as history and stop being printed.
                   `.claude/hooks/next_step.py` prints the open ones at every
                   session start, the deep pass's step 10b writes it, and
-                  `tests/repo/test_next_step.py` fails on a line that does not
-                  parse and on anything open more than fourteen days. It holds
-                  work that is OURS and already decided; a thing needing the
-                  operator's judgement belongs under DEEP-PASS.md's Čeká na
-                  tebe.
+                  `tests/repo/test_next_step.py` fails on an unparsable line
+                  and on anything open over fourteen days. It holds work that
+                  is OURS and already decided; what needs the operator's
+                  judgement goes under DEEP-PASS.md's Čeká na tebe.
 DEEP-PASS.md      what the last deep pass did, in Czech, overwritten each
                   run. **Read it at the start of any session that follows
                   one** -- five headings, and "Ceka na tebe" is the handover:
                   what the pass could not finish and what needs the
                   operator's judgement. Nothing else loads it, so a session
-                  that does not open it will answer "how did the deep pass
-                  go" out of nothing. That happened on 2026-09-08; the skill
-                  had said since it was written that this file carries what
-                  survives a /clear, but the pointer to it lived only in the
-                  skill, which a fresh session has no reason to read.
+                  that does not open it answers "how did the deep pass go" out
+                  of nothing -- which happened on 2026-09-08, because the
+                  pointer to this file lived only inside the skill.
 .claude/agents/   model and effort per role, in frontmatter. So neither the
                   operator nor a session has to choose one per task -- the
                   task carries its own. A session still cannot change its
@@ -444,10 +437,9 @@ audits/checks.json
                   fingerprint rather than the run.
 ```
 
-The scripts a session actually spends its time in. This half of the map was
-missing until 2026-09-06, and its absence cost a session an hour: with nothing
-here to navigate by, it navigated by docstrings, and one of those described a
-workflow that had been dead since round one.
+The scripts a session actually spends its time in. Missing until 2026-09-06,
+which cost a session an hour: with nothing here to navigate by it navigated by
+docstrings, and one described a workflow dead since round one.
 
 ```
 scripts/findings.py  what a run turns into a finding. Title and severity are
@@ -459,9 +451,8 @@ scripts/bounty.py    their tracker -> state/bounty.json. The inbound channel
                      we FETCH, and the only thing that lights the console's
                      bell. Records CHANGES, not polls -- one vendor_read per
                      run, a vendor_status only when a status actually moved.
-                     It is no longer the only correspondence: since 2026-09-08
-                     the operator's Telegram thread is recorded too, by
-                     correspond.py, and the bell does not cover it.
+                     Not the only correspondence: the Telegram thread is
+                     recorded by correspond.py, which the bell does NOT cover.
 scripts/correspond.py  the operator's Telegram conversation with the vendor.
                      `sent` records a message once THEY confirm they sent it,
                      `reply` files the answer they paste back, `list` and
@@ -471,12 +462,11 @@ scripts/correspond.py  the operator's Telegram conversation with the vendor.
                      own: a chat is not a filing, so it moves neither axis and
                      the fold does not read it -- `--findings` is advisory.
                      **When the operator says they sent something, or pastes
-                     an answer, put it through here** rather than replying into
-                     a conversation that ends at the next /clear. A
-                     SessionStart hook (.claude/hooks/open_threads.py) names
-                     the unanswered ids in one line; the texts stay on disk
-                     until `show` is asked for one. Written because ET-22498
-                     set off the /build walk and what we asked in it is gone.
+                     an answer, put it through here** rather than into a
+                     conversation that ends at the next /clear -- ET-22498 set
+                     off the whole /build walk and what we asked in it is gone.
+                     A SessionStart hook (.claude/hooks/open_threads.py) names
+                     the unanswered ids in one line.
 scripts/submit.py    the one write we make on purpose. Every number in a
                      report is injected from the ledger at send time, so a
                      figure frozen when the finding opened can never go out.
@@ -485,40 +475,38 @@ scripts/serve.py     the console on 127.0.0.1:8787. Polls local files once a
                      fetches: one GET of our own reports on a timer, so the
                      bell can light unattended; `--sample MINUTES` runs
                      scripts/sampler.py for the Nexus tab, into the gitignored
-                     state/samples.jsonl. One write of its own: a note
-                     the operator sends from the Nexus tab, through
-                     qa.rooms.add_operator_note, behind a launch token handed
-                     out at /token, a loopback Host and Origin, and a JSON
-                     body -- and none at all when it listens beyond this
-                     machine. The rooms are served at /rooms.json, outside the
-                     payload, so a note never moves the dashboard.
+                     state/samples.jsonl. One write of its own: a note the
+                     operator sends from the Nexus tab, through
+                     qa.rooms.add_operator_note, behind a launch token, a
+                     loopback Host and Origin and a JSON body -- and none at
+                     all when it listens beyond this machine. Rooms are served
+                     at /rooms.json, outside the payload, so a note never moves
+                     the dashboard.
 scripts/sampler.py   what their API says about our bot, our card positions and
                      the cards a strategy's plan names, for the Nexus tab's
                      panels. SAFE, GET only, six doors, and only what our own
                      records say is ours. Every round writes a `tick` to
                      state/samples.jsonl (gitignored), even a round whose every
-                     read failed, so a stall shows on the page as "stale"
-                     rather than as quiet; a card they no longer know is a
-                     `not_found` row, not a failed round. The console runs it
-                     with `--sample 10`; `clone.py watch` is one round of it.
+                     read failed, so a stall reads as "stale" rather than as
+                     quiet; a card they no longer know is a `not_found` row,
+                     not a failed round. `clone.py watch` is one round of it.
 scripts/a2a.py       the third channel, from our side. `send` posts a question
                      and only on `--confirm` -- the operator's condition, and
                      without it nothing is written either. Two events per send,
                      keyed on OUR id, so a POST that times out still leaves the
-                     text on the journal. Built 2026-09-08 because nothing in
-                     scripts/ had ever sent an a2a message and the question
-                     that started the whole /build walk exists nowhere.
+                     text on the journal. Built because nothing in scripts/ had
+                     ever sent one, and the question that started the /build
+                     walk exists nowhere.
 scripts/channels.py  all three channels in one place, and the operator's notes
                      in the Nexus rooms beside them. `status` reads them live
                      and says where each stands, `status --offline` answers
                      from the journal alone, `watch` prints one line per new
                      inbound message so a Monitor turns it into a chat message.
                      Everything it knows comes from qa/channels.py.
-qa/channels.py       the ONE reader across bug reports, Telegram and a2a. A
-                     library, so the CLI, the alert and the skill cannot grow
-                     three ideas of what "unanswered" means. Encodes one
-                     judgement: an automated reply is silent, an unclassifiable
-                     one is not.
+qa/channels.py       the ONE reader across bug reports, Telegram and a2a, so
+                     the CLI, the alert and the skill cannot grow three ideas
+                     of "unanswered". One judgement: an automated reply is
+                     silent, an unclassifiable one is not.
 qa/rooms.py          the Nexus rooms (docs/nexus-rooms-plan.md): strategies,
                      the operator's notes, ours, read marks, the sampler's
                      rows. state/rooms.jsonl and state/samples.jsonl, both
@@ -528,10 +516,8 @@ qa/rooms.py          the Nexus rooms (docs/nexus-rooms-plan.md): strategies,
                      opens only from a whole Nexus answer, one answer one
                      room; whether the answer PROPOSED anything is the
                      opener's call (NEX-0002 named no card and has none).
-                     A room's name is its newest `title` row, and its `plan`
-                     is Nexus's proposal written down as legs -- a card by its
-                     whole id, a side, a share, TP/SL -- which the tab lays
-                     what was done over.
+                     A room's name is its newest `title` row; its `plan` is
+                     Nexus's proposal as legs -- card id, side, share, TP/SL.
 scripts/rooms.py     the rooms from our side. **When the operator says
                      "přečti si to", run `unread`**: it prints their notes in
                      full and marks them read, and the console shows a second
@@ -541,11 +527,9 @@ scripts/rooms.py     the rooms from our side. **When the operator says
                      strategy room; `title` names it and `plan` writes Nexus's
                      proposal down leg by leg (`--leg CARD:SIDE:SHARE:tp=N:sl=N`),
                      which `show` prints with each leg's levels. A follow-up
-                     to Nexus about a strategy goes
-                     through `nexus.py ask --room STR-...`, checked before it is
-                     sent. A note is their feedback
-                     read from a file, not an instruction in the chat -- what
-                     would send, spend or publish is confirmed with them
+                     goes through `nexus.py ask --room STR-...`. A note is their
+                     feedback read from a file, not an instruction in the chat
+                     -- what would send, spend or publish is confirmed with them
                      first. A SessionStart hook (.claude/hooks/room_notes.py)
                      names how many wait, by room, in one line.
 scripts/open_checks.py  the selector for a sweep over what is still open.
@@ -553,17 +537,22 @@ scripts/open_checks.py  the selector for a sweep over what is still open.
 scripts/inventory.py    the platform section map the dashboard renders. An
                      inventory, not a test suite. SAFE tier, never a POST.
 qa/keepset.py        which captures have to survive, and why: their answers the
-                     ledger stands on, and the request and response behind
-                     every verdict and report we have sent -- verify.py tells
-                     them those are "provided on request". One reader for the
-                     tracker, the pruner and the guard, so the three cannot
-                     grow three ideas of "cited".
-scripts/keep.py      `track` force-adds that set (evidence/ is gitignored since
-                     2026-09-12); `snapshot` copies the diaries that live
-                     outside git into audits/lab/. `.githooks/pre-commit` calls
-                     track at every commit, the fold calls it when a row starts
-                     standing on a new run, and the deep pass calls it for a
-                     machine whose clone has no hooksPath.
+                     ledger stands on, and what every verdict and report we
+                     sent promises "on request". One reader for the tracker,
+                     the pruner and the guard, so the three cannot grow three
+                     ideas of "cited".
+qa/manifest.py       the proof that outlives the body -- accumulates, and a
+                     thinner entry never replaces a fuller one, because an
+                     archived capture's call key can never be recomputed.
+qa/archive.py        the monthly bundle, and the check before the move: build,
+                     read back off disk, hash every member, THEN release.
+scripts/keep.py      `track` writes the manifest (bodies stay on disk since
+                     D3); `archive --month [--release]` bundles and lets go;
+                     `snapshot` copies the lab diaries into audits/lab/.
+                     `.githooks/pre-commit` calls track at every commit, the
+                     fold when a row starts standing on a new run, the deep
+                     pass for a clone with no hooksPath, and `lab.py close`
+                     snapshots when a session ends.
 scripts/prune_runs.py  run records older than a week and captures older than
                      three days that nothing stands on, by name, with the
                      reason each survivor was kept printed.
@@ -578,11 +567,11 @@ qa/surface.py        THEIR side, watched. The patrol below measures our parts;
 scripts/processes.py  what is due, and what the operator said since the last
                      pass. `reminders` is the whole of the scheduler they
                      refused: a few lines naming what is on the table and the
-                     words that start it, printed by
-                     .claude/hooks/reminders.py and repeated to them in the
-                     first answer. Each rule is a fixture in
-                     tests/repo/test_reminders.py in both directions, because a
-                     line that appears every evening is one they stop reading.
+                     words that start it, printed by .claude/hooks/reminders.py
+                     and repeated to them in the first answer. Each rule is a
+                     fixture in tests/repo/test_reminders.py in both
+                     directions, because a line that appears every evening is
+                     one they stop reading.
                      `messages --since-last-pass` is the deep pass's step 1
                      reader -- since the last pass, not since midnight UTC.
 ```
@@ -604,14 +593,26 @@ zalozime nejakou databzi nebo neco ne?"*
 Measured that hour: GitHub 54 MB, `evidence/` 469 MB on disk growing 40–170 MB a
 day, two paging checks writing 120 MB of one day's 170. A database would hold the
 same bytes; what was wrong is **where** (git, forever) and **how long** (forever).
-So: git keeps only what something cites — their answers the ledger stands on, and
-the evidence every verdict, report and paper order promises them "on request" —
-and the disk keeps the rest for three days plus the newest capture of each call.
-`qa/keepset.py` names that set, `.githooks/pre-commit` adds it in the commit
-that cites it, `scripts/prune_runs.py` cuts the rest, and
-`tests/repo/test_evidence_in_git.py` holds both directions: cited is tracked,
-and nothing else is. First run: 6 737 files out of git, 4 814 off the disk,
-172 MB freed.
+First answer: git keeps what something cites, the disk keeps the rest three days.
+That freed 172 MB and was not enough — the cited set is itself unbounded. It
+reached 1 178 files and **167 MB**, and the tree grew **47 MB in the eight hours
+after** that prune, against 16.5 MB of code. A prune governs the disk; git never
+forgets. So since 2026-09-12 (`docs/data-plan.md`) **no capture body is in git**:
+
+* `audits/evidence-manifest.jsonl` — id, bytes, the call it answered, why it is
+  held, which archive has it. 228 KB standing for 167 MB, written by
+  `qa/manifest.py` while the bodies are readable, because `call_key` needs one.
+* `archive/evidence-YYYY-MM.tar.xz`, gitignored, 16.5:1. `keep.py archive`
+  **hashes every member back out of the written file before releasing a single
+  original**, and one bad member condemns the bundle.
+* `qa/evidence.py::content_id` is the ONE computation of an id: the record minus
+  `captured_at`, `run_id`, `nodeid`. Not the sha256 of the file — that is
+  indented and keeps all three, and assuming otherwise called all 1 178 corrupt.
+
+`verify.py` promises the vendor a capture is "retained and provided on request"
+and notes the repository is private, so a clone was never the offer: git was our
+storage choice, not part of the promise. `test_evidence_in_git.py` holds both
+ends — every cited id is proved and reachable, and git holds **no** body.
 
 ## Read the memories before the work, not after it
 

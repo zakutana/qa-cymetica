@@ -56,8 +56,8 @@ Každá: testy napřed (červené), pak kód, commit na `main`, bez pushe.
 | # | Co | Hotovo, když | Stav |
 |---|---|---|---|
 | D1 | Manifest `audits/evidence-manifest.jsonl`: hash, bajty, `call_key`, důvod, archiv. Píše se tam, kde dnes `keep.py track` přidává do gitu | manifest pokrývá všech 1 178 držených captures; nový strážce běží **vedle** dvou stávajících gitových, ne místo nich — sledovanost padá až v D3, a strážce uvolněný dřív než jeho náhrada je okno, kde nehlídá nic | **hotovo `8f842524`** — 1 178 řádků, 228 kB za 167 MB těl (730:1) |
-| D2 | `keep.py archive --month YYYY-MM`: zabalí těla do `archive/`, **ověří hash každého** a teprve pak je pustí z gitu | archiv se rozbalí a hashe sedí; `git rm --cached` až po ověření; součet velikostí v manifestu == v archivu | otevřená |
-| D3 | Odpojení: `evidence/` ven ze sledovaných cest, `keep.py track` už těla nepřidává | strom spadne ze 229 MB na ~62 MB; `pytest tests/meta tests/repo` zelené; hlídka povrchu pořád vidí posledních pár hodin | otevřená |
+| D2 | `keep.py archive --month YYYY-MM`: zabalí těla do `archive/`, **ověří hash každého** a teprve pak je pustí z gitu | archiv se rozbalí a hashe sedí; `git rm --cached` až po ověření | **hotovo `ac1e2fba`** — 167 MB → 10,1 MB (16,5:1), 1 178 ověřeno, 0 vadných; a hned první běh odmítl pustit cokoli, protože id není sha256 souboru |
+| D3 | Odpojení: `evidence/` ven ze sledovaných cest, `keep.py track` už těla nepřidává | strom spadne ze 229 MB na ~62 MB; oba strážce **povýšené**, ne uvolněné | **hotovo** — 1 178 těl pustěno z indexu, v `evidence/` nula sledovaných |
 | R1 | `scripts/review.py`: okno (`all`/`30d`/`last`/ISO), oblast deep pass nad `deep_pass_process.passes()` | pět tvarů okna projde; `last` bez checkpointu vypíše řádek o mezeře, ne tiché `all`; `condition()` nad **všemi** passy | otevřená |
 | R2 | Oblast laboratoř, `checkpoint --area`, skill, přepis kroku 11 deep passu | DNA strážce se povýší, ne uvolní; `review.py` nad ostrým repem nezmění ani bajt | otevřená |
 

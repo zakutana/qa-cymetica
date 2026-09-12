@@ -93,7 +93,7 @@ def _archive(month: str, release: bool) -> int:
     if not ids:
         print("keep: nothing pending; every capture the manifest knows is "
               "already in an archive")
-        return 0
+        return _release(month, known) if release else 0
 
     written, missing = archive.build(ids, target)
     good, bad = archive.verify(target, set(ids))
@@ -120,12 +120,57 @@ def _archive(month: str, release: bool) -> int:
     if not release:
         print("   originals left in git (--release to let go of them)")
         return 0
+    return _release(month, manifest.read())
 
-    rel = [str(keepset.evidence_path(i).relative_to(REPO_ROOT)).replace("\\", "/")
-           for i in good]
+
+def _release(month: str, known: dict) -> int:
+    """Let git go of bodies this month's archive demonstrably holds.
+
+    Separate and re-runnable, because bundling and releasing are different
+    decisions and the second one has to be repeatable: the first real run
+    archived 1 178 captures and released none, and a release driven by "what
+    was pending" would then have had nothing left to act on for ever.
+
+    It re-verifies the archive rather than trusting the manifest's stamp. The
+    stamp says we once believed it; the check says the bundle on this disk
+    still holds what it claims, and that belief is what the vendor's "provided
+    on request" rests on.
+    """
+    from qa import archive
+
+    target = archive.archive_path(month)
+    if not target.is_file():
+        raise SystemExit(f"keep: {target.name} is not here; nothing released")
+
+    stamp = target.name.split(".")[0]
+    claimed = {key for key, row in known.items()
+               if (row or {}).get("archive") == stamp}
+    tracked = keepset.tracked_evidence()
+    if tracked is None:
+        raise SystemExit("keep: git could not list evidence/; nothing released")
+
+    good, bad = archive.verify(target, claimed)
+    if not archive.releasable(good, bad):
+        print(f"keep: {target.name} did not verify ({len(bad)} bad); "
+              f"nothing released")
+        return 1
+
+    holds = set(good)
+    rel = sorted(tracked & claimed & holds)
+    unproved = sorted(tracked - holds)
+    print(f"keep: {target.name} verified, {len(good)} member(s); "
+          f"{len(rel)} tracked body(ies) to release")
+    if unproved:
+        print(f"   {len(unproved)} tracked capture(s) this archive does NOT "
+              f"hold are left alone: {', '.join(u[:12] for u in unproved[:5])}")
+    if not rel:
+        print("   nothing to release")
+        return 0
+
     dropped = 0
     for start in range(0, len(rel), keepset.GIT_BATCH):
-        chunk = rel[start:start + keepset.GIT_BATCH]
+        chunk = [str(keepset.evidence_path(i).relative_to(REPO_ROOT))
+                 .replace("\\", "/") for i in rel[start:start + keepset.GIT_BATCH]]
         done = subprocess.run(["git", "rm", "--cached", "--quiet", *chunk],
                               cwd=REPO_ROOT, capture_output=True, text=True)
         if done.returncode == 0:
