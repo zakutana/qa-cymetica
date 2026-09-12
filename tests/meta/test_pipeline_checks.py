@@ -1375,3 +1375,51 @@ def test_a_refusal_is_read_off_the_failure_and_not_off_the_body():
         "check that only reads isError never sees it"
     )
     assert failure_text({"jsonrpc": "2.0", "id": 1, "result": "plain"}) is None
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_call_that_could_not_be_read_is_not_three_tools_that_answered():
+    """The pass of 2026-09-13 found this in a check written eight hours earlier.
+
+    `/guides/nexus-lab-loop` promises three named tools need no key. The check
+    asks all three, and with one call unreadable -- a TLS handshake they dropped
+    at 20:55 the night before -- `walls` was empty, the Inconclusive branch
+    wanted ALL THREE unreadable, and it concluded `passed` with a reason reading
+    "all three ground-truth tools answered an unauthenticated caller: [two
+    names]". A pass here is what `verify.py` sends.
+
+    Rule 8 in the direction that talks to the vendor. A wall still fails -- a
+    refusal is a refusal however many other calls were lost -- so both branches
+    are pinned, not just the new one.
+    """
+    from tests.mcp.test_ground_truth_needs_no_key import decide
+
+    def a(tool, outcome):
+        return {"tool": tool, "outcome": outcome, "detail": "..."}
+
+    three = [a("list_backtest_surfaces", "answered"),
+             a("get_backtest_models", "answered"),
+             a("get_strategy_returns", "answered")]
+    assert decide(three)[0] == "passed"
+
+    lost = [a("list_backtest_surfaces", "unreadable"),
+            a("get_backtest_models", "answered"),
+            a("get_strategy_returns", "answered")]
+    verdict, reason = decide(lost)
+    assert verdict == "inconclusive", (
+        "two readings cannot answer a claim about three tools")
+    assert "list_backtest_surfaces" in reason and "2 of the 3" in reason
+
+    # A refusal outranks a lost reading: we were turned away, and that is
+    # measured whatever else failed.
+    both = [a("list_backtest_surfaces", "unreadable"),
+            a("get_backtest_models", "refused"),
+            a("get_strategy_returns", "answered")]
+    assert decide(both)[0] == "failed"
+
+    # Their own error is not a wall -- being told our argument is wrong means
+    # we were let in, which is the whole of what the guide promises.
+    theirs = [a("list_backtest_surfaces", "answered"),
+              a("get_backtest_models", "answered"),
+              a("get_strategy_returns", "failed_on_its_own_terms")]
+    assert decide(theirs)[0] == "passed"

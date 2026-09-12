@@ -391,11 +391,15 @@ def sizes(root: Path | None = None) -> dict:
         total = sum(p.stat().st_size for p in store.glob("sha256/*/*.json"))
         out["evidence_mb"] = round(total / 1048576, 1)
 
-    for key, path in (("claude_md_lines", base / "CLAUDE.md"),):
-        try:
-            out[key] = len(path.read_text(encoding="utf-8").splitlines())
-        except OSError:
-            pass
+    # Spelled as a literal subscript, not through a one-element loop: the
+    # ceiling guard reads the keys this function can emit off its own source,
+    # because a list of them beside it is a thing to forget, and a loop
+    # variable is a key no reader can see.
+    try:
+        out["claude_md_lines"] = len(
+            (base / "CLAUDE.md").read_text(encoding="utf-8").splitlines())
+    except OSError:
+        pass
 
     index = Path.home() / ".claude" / "projects"
     for candidate in index.glob("*cymetica*/memory/MEMORY.md"):

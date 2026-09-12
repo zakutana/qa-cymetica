@@ -1183,7 +1183,18 @@ def test_the_night_keeps_searching_after_the_first_queue_runs_out(
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_refill_climbs_from_what_scored_rather_than_from_where_we_started():
-    """Otherwise the night re-walks its own first queue for ever."""
+    """Otherwise the night re-walks its own first queue for ever.
+
+    The readings are stamped RELATIVE to now. They were absolute --
+    2026-09-12T12:00Z -- and `night_refill` has no `now` seam, so
+    `backtests.best()` reads the wall clock: `stale_after(30)` is 3.0 days, and
+    on 2026-09-15 `best()` would have returned nothing, `moves` would have been
+    empty and this test would have gone red in `tests/meta` with the refill
+    entirely correct. A red there aborts every session, so it would have taken
+    the vendor checks down with it three days after it was written. Every
+    sibling in test_pipeline_backtests.py pins `now=NOW`; this one cannot, so
+    the fixture moves with the clock instead.
+    """
     import importlib.util
 
     spec = importlib.util.spec_from_file_location(
@@ -1191,11 +1202,12 @@ def test_a_refill_climbs_from_what_scored_rather_than_from_where_we_started():
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
 
+    fresh = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
     rows = [{"fp": "a", "p": 30, "s": 9.0, "d": 1.0, "r": 5.0, "pts": 90,
-             "at": "2026-09-12T12:00:00+00:00", "why": "the good one",
+             "at": fresh, "why": "the good one",
              "legs": [["BTC", 0.6], ["ETH", 0.4]]},
             {"fp": "b", "p": 30, "s": 0.1, "d": 40.0, "r": 0.2, "pts": 90,
-             "at": "2026-09-12T12:00:00+00:00", "why": "the bad one",
+             "at": fresh, "why": "the bad one",
              "legs": [["DOGE", 0.9], ["SHIB", 0.1]]}]
 
     moves = module.night_refill(rows=rows, limit=1, cap=8)

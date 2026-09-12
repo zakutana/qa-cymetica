@@ -156,22 +156,18 @@ def _attempt(mcp, tool: str, arguments: dict) -> dict:
     return out
 
 
-@qa(component="mcp.tools_call", tier=SafetyTier.SAFE, surface="mcp",
-    claim="ground_truth_needs_no_key")
-def test_the_ground_truth_tools_answer_without_a_key(mcp_anon):
-    """`/guides/nexus-lab-loop`: "The ground-truth tools need no key."
+def decide(attempts: list[dict]) -> tuple[str, str]:
+    """verdict, reason. Pure, so the one branch that sends a vendor a pass can
+    be held against its own inputs without calling their server.
 
-    Measured as the guide's own reader would meet it: three anonymous
-    tools/call requests, in the order its step-1 table lists them.
+    A wall is a wall whatever else happened, so a refusal still fails. But with
+    no wall and a call we could not read, only some of the tools were measured
+    and the claim is about all of them -- that concluded `passed`, with a reason
+    that named two tools in a sentence beginning "all three". Their API dropped
+    a TLS handshake at 20:55 on 2026-09-12, so the input is not hypothetical,
+    and a pass from here is what a verification sends. Rule 8: a failed read is
+    not an empty read, and it is not a clean bill of health either.
     """
-    attempts = [_attempt(mcp_anon, tool, args) for tool, args in GROUND_TRUTH]
-
-    unreadable = [a for a in attempts if a["outcome"] == "unreadable"]
-    if len(unreadable) == len(attempts):
-        raise Inconclusive(
-            "not one of the three calls could be read, so whether a key is "
-            f"needed was not measured: {[a['detail'] for a in unreadable]}")
-
     walls = [a for a in attempts if a["outcome"] in ("refused", "not_served")]
     answered = [a["tool"] for a in attempts
                 if a["outcome"] in ("answered", "failed_on_its_own_terms")]
@@ -184,17 +180,40 @@ def test_the_ground_truth_tools_answer_without_a_key(mcp_anon):
             parts.append(f"{refused} refused an unauthenticated caller")
         if missing:
             parts.append(f"{missing} is not on the anonymous tool surface")
-        reason = (
-            f"/guides/nexus-lab-loop says \"The ground-truth tools need no "
-            f"key\" and heads its step 1 \"Ground truth first (no key)\", but "
+        return "failed", (
+            '/guides/nexus-lab-loop says "The ground-truth tools need no key" '
+            'and heads its step 1 "Ground truth first (no key)", but '
             + " and ".join(parts)
             + f"; {answered or 'none'} did answer")
-    else:
-        reason = (f"all three ground-truth tools answered an unauthenticated "
-                  f"caller: {answered}")
+
+    unreadable = [a for a in attempts if a["outcome"] == "unreadable"]
+    if unreadable:
+        return "inconclusive", (
+            f"{[a['tool'] for a in unreadable]} could not be read "
+            f"({[a['detail'] for a in unreadable]}), so a key was measured for "
+            f"only {len(answered)} of the {len(attempts)} tools the guide names")
+
+    return "passed", (
+        f"all {len(answered)} ground-truth tools answered an unauthenticated "
+        f"caller: {answered}")
+
+
+@qa(component="mcp.tools_call", tier=SafetyTier.SAFE, surface="mcp",
+    claim="ground_truth_needs_no_key")
+def test_the_ground_truth_tools_answer_without_a_key(mcp_anon):
+    """`/guides/nexus-lab-loop`: "The ground-truth tools need no key."
+
+    Measured as the guide's own reader would meet it: three anonymous
+    tools/call requests, in the order its step-1 table lists them.
+    """
+    attempts = [_attempt(mcp_anon, tool, args) for tool, args in GROUND_TRUTH]
+    verdict, reason = decide(attempts)
+    if verdict == "inconclusive":
+        raise Inconclusive(reason)
+    walls = [a for a in attempts if a["outcome"] in ("refused", "not_served")]
 
     conclude(Measurement(
-        verdict="failed" if walls else "passed",
+        verdict=verdict,
         reason=reason,
         left=sorted(a["tool"] for a in walls),
         right={"promised": "no key", "tools": [t for t, _ in GROUND_TRUTH]},

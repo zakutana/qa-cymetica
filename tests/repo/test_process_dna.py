@@ -178,9 +178,25 @@ def test_the_effort_of_a_commit_is_read_even_when_git_will_not_parse_it():
         # green while the week went blind to a third of its own evidence.
         # Rule 10's "inconclusive is never a defect" is about THEIR surfaces,
         # not about our own reader refuting itself.
-        verdict="passed" if sum(lenient.values()) > sum(strict.values())
-        else "failed",
-        reason=(f"the lenient reader finds {sum(lenient.values())} efforts "
+        #
+        # `>=`, not `>`. The comment above states the broken-reader condition
+        # as `lenient < strict`, and the verdict asked for `lenient > strict` --
+        # so EQUALITY read as a broken reader. The 47 malformed messages in the
+        # window are history and the hook that made them is fixed, so the day
+        # 200 well-formed commits sit on top, lenient == strict == 200 and this
+        # goes red with the reader perfect. It is a window sliding over a
+        # repaired past, which is the same shape as a check over a growing log.
+        #
+        # And zero is not equality. `_git` returns "" on a non-zero exit, which
+        # gives 0 >= 0 -- a read that never happened reported as a reader that
+        # works. Rule 8, so that case is inconclusive and says which.
+        verdict=("inconclusive" if not sum(lenient.values())
+                 else "passed" if sum(lenient.values()) >= sum(strict.values())
+                 else "failed"),
+        reason=(f"no commit in the window carries an effort at all, so the "
+                f"reader was not exercised -- git may not have answered"
+                if not sum(lenient.values()) else
+                f"the lenient reader finds {sum(lenient.values())} efforts "
                 f"where git's trailer parser finds {sum(strict.values())}"),
         left=lenient, right=strict,
         sources={"history": "git log --format=%B"}))
@@ -233,17 +249,48 @@ def test_every_ceiling_watches_something_that_is_actually_measured():
 
     Stated over the whole set rather than that one key, because the defect is
     the pairing, not the name.
-    """
-    module = _module()
-    measured = set(module.sizes())
-    dead = sorted(set(module.CEILINGS) - measured)
 
+    **Read from what `sizes()` CAN emit, not from what it did.** Three of its
+    keys are conditional: `evidence_mb` only when `<root>/evidence` is a
+    directory -- gitignored since D3, so absent in any clone -- `memory_lines`
+    only when the memory index exists, and `next_oldest_days` only when NEXT.md
+    has an open item, which is the state we are trying to reach. So on a clone,
+    or on a day with nothing open, this reported two correctly-paired ceilings
+    as watching nothing. A machine's momentary emission is not the pairing.
+
+    Taken off the source with `ast` rather than from a list beside it: a
+    declaration of what `sizes()` emits is a thing to forget, and CLAUDE.md's
+    DNA rule is that every part is found rather than registered.
+    """
+    import ast
+
+    module = _module()
+    tree = ast.parse((REPO / "scripts" / "processes.py").read_text(
+        encoding="utf-8"))
+    emits: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef) and node.name == "sizes":
+            for inner in ast.walk(node):
+                if not isinstance(inner, ast.Subscript):
+                    continue
+                if not (isinstance(inner.value, ast.Name)
+                        and inner.value.id == "out"):
+                    continue
+                key = inner.slice
+                if isinstance(key, ast.Constant) and isinstance(key.value, str):
+                    emits.add(key.value)
+    assert emits, (
+        "no `out[...]` assignment was found in sizes(), so this check read "
+        "nothing and could not have failed -- the reader, not the pairing")
+
+    dead = sorted(set(module.CEILINGS) - emits)
     conclude(Measurement(
         verdict="failed" if dead else "passed",
-        reason=(f"ceiling(s) on nothing: {', '.join(dead)} — sizes() emits "
-                f"{', '.join(sorted(measured))}" if dead else
-                f"all {len(module.CEILINGS)} ceiling(s) watch a measurement"),
-        left=sorted(module.CEILINGS), right=sorted(measured),
+        reason=(f"ceiling(s) on nothing: {', '.join(dead)} — sizes() can emit "
+                f"{', '.join(sorted(emits))}" if dead else
+                f"all {len(module.CEILINGS)} ceiling(s) watch a measurement "
+                f"sizes() can emit"),
+        left=sorted(module.CEILINGS), right=sorted(emits),
         sources={"patrol": "scripts/processes.py::CEILINGS"}))
 
 

@@ -332,7 +332,14 @@ def test_the_page_reads_no_field_the_payload_stops_writing(tmp_path, monkeypatch
     payload = _live_payload(render)
     present = {k for f in payload["findings"] for k in f}
 
-    read = {m for m in re.findall(r"\bf\.([a-z_]+)\b", render.TEMPLATE)}
+    # `[A-Za-z_][A-Za-z0-9_]*`, not `[a-z_]+`: the narrow class cannot match a
+    # camelCase or digit-bearing property at all, so `f.displayState` and
+    # `f.a2a_id` were outside the population this compares and would have
+    # rendered as `undefined` with the guard green. The sibling in
+    # test_pipeline_rooms.py was widened for the identical defect (P13) on
+    # 2026-09-11 and this one was not.
+    read = {m for m in re.findall(r"\bf\.([A-Za-z_][A-Za-z0-9_]*)\b",
+                                  render.TEMPLATE)}
     missing = sorted(read - present)
     assert not missing, (
         "the page reads fields no payload row carries, and JavaScript will "
@@ -343,7 +350,8 @@ def test_the_page_reads_no_field_the_payload_stops_writing(tmp_path, monkeypatch
     # "see undefined" on the page, inside a message quoted to the operator.
     threaded = {k for f in payload["findings"] for m in f["thread"] for k in m}
     if threaded:
-        read_m = {m for m in re.findall(r"\bm\.([a-z_]+)\b", render.TEMPLATE)}
+        read_m = {m for m in re.findall(r"\bm\.([A-Za-z_][A-Za-z0-9_]*)\b",
+                                        render.TEMPLATE)}
         missing_m = sorted(read_m - threaded)
         assert not missing_m, (
             f"the page reads message fields no thread entry carries: {missing_m}"
