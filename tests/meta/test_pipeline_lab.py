@@ -159,6 +159,161 @@ def test_a_question_with_no_answer_is_what_the_next_cycle_finishes():
     assert lab.outstanding(rows, now=now) == ["NEX-0031"]
 
 
+def _series(start: str, values, hours: float = 1.0):
+    """A card's index history: their shape, `[{t, index}, ...]`."""
+    from datetime import datetime, timedelta, timezone
+
+    first = datetime.fromisoformat(start.replace("Z", "+00:00"))
+    if first.tzinfo is None:
+        first = first.replace(tzinfo=timezone.utc)
+    return [{"t": (first + timedelta(hours=hours * i)).isoformat(),
+             "index": float(value)} for i, value in enumerate(values)]
+
+
+def _acceptance(**over):
+    base = {
+        "at": "2026-09-05T00:00:00+00:00",
+        "window_days": 2,
+        "stop_pct": 5.0,
+        "legs": [{"card": "card-a", "side": "bull", "share": 1.0,
+                  "tp": 8.0, "sl": -5.0}],
+        "benchmark_card": None,
+    }
+    base.update(over)
+    return base
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_strategy_that_made_money_inside_its_stop_survives():
+    now = "2026-09-07T01:00:00+00:00"
+    series = {"card-a": _series("2026-09-05T00:00:00+00:00",
+                                [100, 101, 102, 103, 104], hours=12)}
+    said = lab.verdict(_acceptance(), series, now)
+    assert said["verdict"] == "survived", said
+    # Five points twelve hours apart over a two-day window: the last one falls
+    # exactly on the closing edge and is inside it. This test said 3.0 first,
+    # from counting four steps and assuming the edge was exclusive -- the code
+    # was right and the expectation was not.
+    assert round(said["return_pct"], 2) == 4.0, said
+    assert said["max_drawdown_pct"] <= 5.0
+    assert said["formula"], "a verdict records the formula that produced it"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_strategy_that_lost_is_refuted_and_says_by_how_much():
+    now = "2026-09-07T01:00:00+00:00"
+    series = {"card-a": _series("2026-09-05T00:00:00+00:00",
+                                [100, 99, 97, 96, 95], hours=12)}
+    said = lab.verdict(_acceptance(), series, now)
+    assert said["verdict"] == "refuted", said
+    assert said["return_pct"] < 0
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_stop_nexus_named_is_taken_when_the_index_crosses_it():
+    """His own exit rule, applied to his own proposal. A strategy that would
+    have been stopped out on day one is not rescued by the index coming back
+    -- reading only the last point is how a backtest flatters itself."""
+    now = "2026-09-07T01:00:00+00:00"
+    series = {"card-a": _series("2026-09-05T00:00:00+00:00",
+                                [100, 94, 97, 103, 104], hours=12)}
+    said = lab.verdict(_acceptance(), series, now)
+    assert said["legs"][0]["exit"] == "sl", said
+    assert said["return_pct"] < 0, said
+    assert said["verdict"] == "refuted"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_gap_in_the_data_is_inconclusive_and_never_a_loss():
+    """Rule 8 in the laboratory: the console stopped sampling, so we do not
+    know -- and "we do not know" may not be written into the record as a
+    strategy that failed."""
+    now = "2026-09-07T01:00:00+00:00"
+    series = {"card-a": _series("2026-09-05T00:00:00+00:00", [100, 101],
+                                hours=1)}
+    said = lab.verdict(_acceptance(), series, now)
+    assert said["verdict"] == "inconclusive", said
+    assert said["coverage"] < 0.8
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_beating_nothing_is_not_beating_the_benchmark():
+    """Cymetica's own guide asks whether a strategy beats BTC, not whether it
+    is positive. A card that rose 1% while the benchmark rose 4% is refuted."""
+    now = "2026-09-07T01:00:00+00:00"
+    series = {
+        "card-a": _series("2026-09-05T00:00:00+00:00",
+                          [100, 100.25, 100.5, 100.75, 101], hours=12),
+        "btc-card": _series("2026-09-05T00:00:00+00:00",
+                            [100, 101, 102, 103, 104], hours=12),
+    }
+    said = lab.verdict(_acceptance(benchmark_card="btc-card"), series, now)
+    assert said["benchmark_pct"] is not None and said["benchmark_pct"] > 3
+    assert said["verdict"] == "refuted", said
+    assert "benchmark" in said["why"].lower()
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_window_that_has_not_closed_has_no_verdict_yet():
+    now = "2026-09-05T06:00:00+00:00"
+    series = {"card-a": _series("2026-09-05T00:00:00+00:00", [100, 101])}
+    said = lab.verdict(_acceptance(), series, now)
+    assert said["verdict"] == "open", said
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_room_goes_running_only_with_a_criterion_written_first(tmp_path,
+                                                                 monkeypatch):
+    """Preregistration, in the laboratory. A criterion written after the
+    numbers are in is a criterion that fits them -- which is the whole reason
+    this repository preregisters a run before it measures anything."""
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    import importlib
+
+    import qa.rooms
+    import qa.state
+
+    importlib.reload(qa.state)
+    rooms = importlib.reload(qa.rooms)
+
+    # Long enough that the tab would call it answered, which is the same bar a
+    # room opens on (qa/rooms.py::ANSWERED_CHARS).
+    answer = ("Buy card-a, bull, 20% of the bankroll, take profit at 8%, stop "
+              "at -5%. Backtest Sharpe 5.16 over 90 days, with a max drawdown "
+              "of 1.8% and 275 trades. The basket is dominated by one asset, "
+              "so size it against the headline rather than the coins, and do "
+              "not add to it while the index is inside the stop. Reassess when "
+              "the card resolves or the window closes, whichever is first.")
+    (tmp_path / "nexus.jsonl").write_text(json.dumps({
+        "type": "answer", "id": "NEX-1", "at": "2026-09-05T00:00:00+00:00",
+        "text": answer}) + "\n", encoding="utf-8")
+
+    room = rooms.open_strategy("NEX-1", "Karta A")["id"]
+    with pytest.raises(rooms.RoomError):
+        rooms.set_status(room, "running", "bought it")
+
+    # A claim may only carry numbers his answer actually says.
+    with pytest.raises(rooms.RoomError):
+        rooms.set_claim(room, {"sharpe": "7.77"})
+    rooms.set_claim(room, {"sharpe": "5.16", "take_profit": "8%"})
+
+    rooms.set_acceptance(room, window_days=7, stop_pct=5.0,
+                         why="his own stop, over his own horizon")
+    rooms.set_status(room, "running", "TRD-0001 placed")
+
+    # And it cannot be moved while it runs.
+    with pytest.raises(rooms.RoomError):
+        rooms.set_acceptance(room, window_days=30, stop_pct=20.0,
+                             why="it would look better over a month")
+
+    rows = rooms.load()
+    kinds = [r["type"] for r in rows]
+    assert "claim" in kinds and "acceptance" in kinds
+    claim = [r for r in rows if r["type"] == "claim"][-1]
+    assert claim["quoted"]["sharpe"] == "5.16"
+    assert claim["numbers"]["sharpe"] == 5.16
+
+
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_notebook_is_outside_git():
     """It is appended to while a run may be in flight, and a dirty tree is a

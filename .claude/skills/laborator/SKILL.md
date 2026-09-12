@@ -81,10 +81,15 @@ reading, from `backtest_results` rows.
 to six months, and a Sharpe over one is not a Sharpe over the other. The table
 says so when the windows differ.
 
-**When the two readings disagree, that is a finding, not a rounding error.** On
-the first pull, 2026-09-12, they disagreed on four of six strategies -- StockBull
-(Red) at 4.83 on the leaderboard and 0.28 from the tool, which is the difference
-between second place and the washout. File it the way a sweep files one.
+**When the two readings differ, read both payloads whole before calling it
+anything.** On the first pull, 2026-09-12, they differed on four of six
+strategies -- StockBull (Red) at 4.83 on the leaderboard against 0.28 from the
+tool. That looked like a contradiction and is not one: the leaderboard's row is
+a rolling 24-to-120-hour window and the tool's is a backtest run stamped in
+March, with a different trade count. The defect, filed as #97, is that the
+tool's payload names no period at all, so an agent ranking them as their guide
+asks cannot see that they are different measurements. The first draft of that
+report claimed the contradiction; reading the whole payloads is what caught it.
 
 ## 4. One question, in General
 
@@ -133,7 +138,31 @@ coins. The plan is Nexus's proposal as it gave it: each card by its whole id
 copied from the answer, the side, the share of the bankroll, and the
 take-profit and stop in percent from the entry.
 
-## 6. What we know about Nexus
+## 6. The criterion, and the verdict
+
+A room goes `running` only once a criterion is written -- `qa/rooms.py` refuses
+otherwise. The criterion is the window, the stop, the legs as Nexus gave them
+and a benchmark card; it cannot be moved while its window is open, because a
+criterion rewritten halfway is one fitted to the numbers.
+
+```bash
+python scripts/lab.py adopt STR-0003 --window-days 5   # a room already running
+python scripts/lab.py verdicts                          # close what came due
+```
+
+The verdict is computed by `qa/lab.py::verdict` from **their own index
+history** (`/api/v1/event-cards/{id}/index-history` -- 239 points over five
+days at half-hour intervals, measured 2026-09-12), so it does not depend on the
+console having been left running. It applies Nexus's own take-profit and stop
+to the series rather than reading only the last point, compares against the
+benchmark card, and reports coverage: under 80% it is **inconclusive, never a
+loss**. Every verdict carries the fingerprint of the formula that produced it,
+so improving the formula later is visible instead of retroactive.
+
+Adoption is never retroactive: the window starts the moment it is written, and
+the row says `adopted` so nobody reads it as a criterion set in advance.
+
+## 7. What we know about Nexus
 
 Written here because every session needs it before it asks anything, and
 because this is where the laboratory records what it learns:
@@ -155,7 +184,7 @@ because this is where the laboratory records what it learns:
   which is why it told the operator CryptoBull (Blue) was 5.16 when the
   leaderboard says 4.69.
 
-## 7. Close
+## 8. Close
 
 ```bash
 python scripts/lab.py close --lesson "..." --next "..."

@@ -31,7 +31,7 @@ from __future__ import annotations
 
 import json
 import re
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from qa.state import file_lock, state_dir
@@ -264,6 +264,170 @@ def outstanding(nexus_rows: list[dict], now: datetime | None = None,
         elif kind in ("answer", "gave_up", "refused", "failed"):
             finished.add(ident)
     return [ident for ident in asked if ident not in finished]
+
+
+COVERAGE_FLOOR = 0.8
+
+
+def _at(value) -> datetime | None:
+    try:
+        stamp = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except (TypeError, ValueError):
+        return None
+    return stamp if stamp.tzinfo else stamp.replace(tzinfo=timezone.utc)
+
+
+def _points(rows) -> list[tuple[datetime, float]]:
+    """Their index history, in the shape they publish: [{t, index}, ...]."""
+    out = []
+    for row in rows or []:
+        if isinstance(row, dict):
+            when, value = _at(row.get("t") or row.get("at")), row.get("index")
+        elif isinstance(row, (list, tuple)) and len(row) >= 2:
+            when, value = _at(row[0]), row[1]
+        else:
+            continue
+        if when is not None and isinstance(value, (int, float)):
+            out.append((when, float(value)))
+    return sorted(out)
+
+
+def formula_fingerprint() -> str:
+    """The hash of the verdict's own source.
+
+    Improving a derivation rewrites the past: a verdict recorded last week was
+    produced by last week's formula, and a better one silently re-judging it is
+    the defect `improving-a-derivation-rewrites-the-past` names. Every verdict
+    carries the fingerprint of the code that made it, so a change is visible
+    rather than retroactive.
+    """
+    import hashlib
+    import inspect
+
+    try:
+        source = inspect.getsource(verdict)
+    except (OSError, TypeError):  # pragma: no cover -- frozen or stripped
+        return "unknown"
+    return hashlib.sha256(source.encode("utf-8")).hexdigest()[:12]
+
+
+def verdict(acceptance: dict, series: dict, now) -> dict:
+    """Did the strategy do what it was accepted on? Numbers only, no opinion.
+
+    The acceptance is written BEFORE the room goes running, so nothing here can
+    be fitted to what happened. What it holds: the window, the stop, the legs
+    as Nexus gave them (card, side, share, take-profit, stop), and optionally a
+    benchmark card -- their own guide asks whether a strategy beats BTC, not
+    whether it is merely positive.
+
+    Four ways out, and three of them are not "it lost":
+
+        open           the window has not closed yet
+        inconclusive   the data does not cover the window (rule 8: a gap is
+                       not a loss) or a leg never had an entry price
+        refuted        it lost, or it lost to the benchmark, or its drawdown
+                       went past the stop it was accepted with
+        survived       none of the above
+    """
+    start = _at(acceptance.get("at"))
+    days = float(acceptance.get("window_days") or 0)
+    if start is None or days <= 0:
+        return {"verdict": "inconclusive", "why": "the acceptance names no window",
+                "coverage": 0.0, "formula": formula_fingerprint()}
+    end = start + timedelta(days=days)
+    moment = _at(now) or datetime.now(timezone.utc)
+    if moment < end:
+        return {"verdict": "open", "why": f"the window closes {end.isoformat()}",
+                "closes_at": end.isoformat(), "coverage": None,
+                "formula": formula_fingerprint()}
+
+    legs, covered = [], []
+    for leg in acceptance.get("legs") or []:
+        inside = [(t, v) for t, v in _points(series.get(leg.get("card")))
+                  if start <= t <= end]
+        if len(inside) < 2:
+            legs.append({**leg, "exit": None, "return_pct": None,
+                         "why": "no index inside the window"})
+            covered.append(0.0)
+            continue
+        span = (inside[-1][0] - inside[0][0]).total_seconds()
+        covered.append(min(span / (end - start).total_seconds(), 1.0))
+        entry = inside[0][1]
+        way = -1.0 if str(leg.get("side")).lower() == "bear" else 1.0
+        take, stop = leg.get("tp"), leg.get("sl")
+        exit_kind, exit_value, curve = "window", inside[-1][1], []
+        for when, value in inside:
+            moved = way * (value / entry - 1.0) * 100.0
+            curve.append((when, moved))
+            if take is not None and moved >= float(take):
+                exit_kind, exit_value = "tp", value
+                break
+            if stop is not None and moved <= float(stop):
+                exit_kind, exit_value = "sl", value
+                break
+        legs.append({**leg, "exit": exit_kind, "entry_index": entry,
+                     "exit_index": exit_value,
+                     "return_pct": way * (exit_value / entry - 1.0) * 100.0,
+                     "curve": curve})
+
+    coverage = min(covered) if covered else 0.0
+    scored = [leg for leg in legs if leg.get("return_pct") is not None]
+    if not scored or coverage < COVERAGE_FLOOR:
+        return {"verdict": "inconclusive", "legs": legs, "coverage": coverage,
+                "why": (f"the index covers {coverage * 100:.0f}% of the window, "
+                        f"under the {COVERAGE_FLOOR * 100:.0f}% a verdict needs "
+                        f"-- a gap is not a loss"),
+                "formula": formula_fingerprint()}
+
+    weight = sum(float(leg.get("share") or 1.0) for leg in scored) or 1.0
+    ret = sum(float(leg.get("share") or 1.0) * leg["return_pct"]
+              for leg in scored) / weight
+
+    # The portfolio's own path, so the drawdown is the one a holder felt: each
+    # leg holds its last value between its own points, and a leg that exited
+    # holds its exit.
+    stamps = sorted({when for leg in scored for when, _ in leg["curve"]})
+    running, drawdown, peak = [], 0.0, None
+    for stamp in stamps:
+        total = 0.0
+        for leg in scored:
+            moved = [m for w, m in leg["curve"] if w <= stamp]
+            total += float(leg.get("share") or 1.0) * (
+                moved[-1] if moved else 0.0)
+        value = total / weight
+        running.append(value)
+        peak = value if peak is None else max(peak, value)
+        drawdown = max(drawdown, peak - value)
+
+    benchmark = None
+    card = acceptance.get("benchmark_card")
+    if card:
+        marks = [(t, v) for t, v in _points(series.get(card))
+                 if start <= t <= end]
+        if len(marks) >= 2:
+            benchmark = (marks[-1][1] / marks[0][1] - 1.0) * 100.0
+
+    stop_pct = float(acceptance.get("stop_pct") or 0) or None
+    if ret <= 0:
+        why, ok = f"it returned {ret:+.2f}%", False
+    elif benchmark is not None and ret <= benchmark:
+        why, ok = (f"it returned {ret:+.2f}% against the benchmark's "
+                   f"{benchmark:+.2f}%"), False
+    elif stop_pct is not None and drawdown > stop_pct:
+        why, ok = (f"its drawdown reached {drawdown:.2f}%, past the "
+                   f"{stop_pct:.2f}% it was accepted with"), False
+    else:
+        why, ok = (f"it returned {ret:+.2f}% inside a {drawdown:.2f}% drawdown"
+                   + (f", against the benchmark's {benchmark:+.2f}%"
+                      if benchmark is not None else "")), True
+
+    return {"verdict": "survived" if ok else "refuted", "why": why,
+            "return_pct": ret, "max_drawdown_pct": drawdown,
+            "benchmark_pct": benchmark, "coverage": coverage,
+            "legs": [{k: v for k, v in leg.items() if k != "curve"}
+                     for leg in legs],
+            "window": {"from": start.isoformat(), "to": end.isoformat()},
+            "formula": formula_fingerprint()}
 
 
 def rank(rows: list[dict]) -> list[dict]:

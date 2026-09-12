@@ -389,6 +389,27 @@ def status() -> str:
         out.append(f"their catalogue: {len(known.get('tools') or [])} tools at "
                    f"{str(known.get('at'))[:16].replace('T', ' ')}")
 
+    room_rows = rooms.load()
+    for strategy in rooms.strategies(room_rows):
+        room = strategy["id"]
+        acceptance = rooms.acceptance_of(room_rows, room)
+        said = rooms.verdict_of(room_rows, room)
+        name = rooms.names(room_rows).get(room, room)
+        if said:
+            out.append(f"{room} {name}: {said['verdict']} "
+                       f"({said.get('why', '')[:70]})")
+        elif acceptance:
+            state = lab.verdict(acceptance, {}, _now())
+            when = state.get("closes_at") or "now"
+            out.append(f"{room} {name}: criterion {acceptance['window_days']}d"
+                       + (" (adopted)" if acceptance.get("adopted") else "")
+                       + (f", window closes {when[:16].replace('T', ' ')}"
+                          if state["verdict"] == "open"
+                          else " -- VERDICT DUE: `lab.py verdicts`"))
+        else:
+            out.append(f"{room} {name}: no criterion -- `lab.py adopt {room}` "
+                       f"before it can run")
+
     out.append(f"{_running_experiments()} experiment(s) running, "
                f"{lab.CAPS['running_experiments']} is the cap")
     if pass_in_flight():
@@ -427,6 +448,83 @@ def cycle() -> dict:
     return did
 
 
+INDEX_HISTORY = "/api/v1/event-cards/{card}/index-history"
+# A card whose basket is one coin is that coin's index. Their own sampler rows
+# name the basket; these three were >= 99% BTC on 2026-09-11, and the
+# acceptance records WHICH was used, so a verdict can be re-read later.
+BTC_PROXY = "a4a5b71e-de11-4805-b8a3-ed9c3f8f8161"
+
+
+def _history(client, card: str) -> list[dict]:
+    response = client.get(INDEX_HISTORY.format(card=card))
+    if response.status_code != 200:
+        return []
+    body = response.json() or {}
+    return body.get("points") or body.get("history") or []
+
+
+def adopt(room: str, window_days: float = 7.0, stop_pct: float = 5.0,
+          benchmark: str | None = BTC_PROXY) -> dict:
+    """Take over a room that was already running, from now on.
+
+    Nothing retroactive. A criterion written today cannot judge a week that has
+    already happened -- it would be a criterion fitted to the numbers, which is
+    the one thing preregistration exists to prevent. So the window starts now,
+    the verdict reads only what comes after, and the row says `adopted` so
+    nobody later mistakes it for a criterion written in advance.
+    """
+    return rooms.set_acceptance(
+        room, window_days=window_days, stop_pct=stop_pct, benchmark_card=benchmark,
+        adopted=True,
+        why=(f"adopted {_now().isoformat(timespec='minutes')}: the room was "
+             f"already running, so the window starts now and nothing before it "
+             f"is judged"))
+
+
+def verdicts(now=None) -> list[dict]:
+    """Every room whose window has closed and has no verdict yet."""
+    from qa.client import build_client
+    from qa.config import identities, load_dotenv
+    from qa.safety import CURRENT_TIER, EndpointRegistry, SafetyTier
+
+    rows = rooms.load()
+    due = []
+    for strategy in rooms.strategies(rows):
+        room = strategy["id"]
+        acceptance = rooms.acceptance_of(rows, room)
+        if acceptance is None or rooms.verdict_of(rows, room) is not None:
+            continue
+        said = lab.verdict(acceptance, {}, now or _now())
+        if said["verdict"] == "open":
+            continue
+        due.append((room, acceptance))
+    if not due:
+        return []
+
+    load_dotenv()
+    ids = identities()
+    identity = ids["trusted"] if ids["trusted"].present else ids["anon"]
+    client = build_client(identity, EndpointRegistry.load(), timeout=30.0)
+    token = CURRENT_TIER.set(SafetyTier.SAFE)
+    out = []
+    try:
+        for room, acceptance in due:
+            cards = [leg.get("card") for leg in acceptance.get("legs") or []]
+            if acceptance.get("benchmark_card"):
+                cards.append(acceptance["benchmark_card"])
+            series = {card: _history(client, card) for card in cards if card}
+            said = lab.verdict(acceptance, series, now or _now())
+            rooms.record_verdict(room, said)
+            rooms.set_status(
+                room, "stopped",
+                f"verdict: {said['verdict']} -- {said.get('why', '')}"[:400])
+            out.append({"room": room, **said})
+    finally:
+        client.close()
+        CURRENT_TIER.reset(token)
+    return out
+
+
 def ask(question: str, wait: bool = True) -> dict:
     may, why = lab.may_ask(_asked_this_session(), pass_in_flight())
     if not may:
@@ -453,6 +551,12 @@ def main(argv: list[str] | None = None) -> int:
     truth_cmd = sub.add_parser("truth", help="their backtests, ranked")
     truth_cmd.add_argument("--limit", type=int, default=12)
     sub.add_parser("cycle", help="finish what is in flight, sample, compare")
+    adopt_cmd = sub.add_parser("adopt", help="take over a room already running")
+    adopt_cmd.add_argument("room")
+    adopt_cmd.add_argument("--window-days", type=float, default=7.0)
+    adopt_cmd.add_argument("--stop-pct", type=float, default=5.0)
+    adopt_cmd.add_argument("--no-benchmark", action="store_true")
+    sub.add_parser("verdicts", help="close every window that has come due")
     sub.add_parser("surface", help="their catalogue against the baseline")
     ask_cmd = sub.add_parser("ask", help="one question to Nexus, with brakes")
     ask_cmd.add_argument("question")
@@ -495,6 +599,19 @@ def main(argv: list[str] | None = None) -> int:
                   f"table sorts them together -- read the column.")
     elif args.cmd == "cycle":
         print(json.dumps(cycle(), ensure_ascii=False, indent=1, default=str))
+    elif args.cmd == "adopt":
+        record = adopt(args.room, window_days=args.window_days,
+                       stop_pct=args.stop_pct,
+                       benchmark=None if args.no_benchmark else BTC_PROXY)
+        print(f"{args.room}: criterion written, window {record['window_days']} "
+              f"day(s), stop {record['stop_pct']}%, benchmark "
+              f"{record.get('benchmark_card') or 'none'}")
+    elif args.cmd == "verdicts":
+        said = verdicts()
+        if not said:
+            print("no window has come due")
+        for row in said:
+            print(f"  {row['room']}: {row['verdict']} -- {row.get('why', '')}")
     elif args.cmd == "surface":
         print(json.dumps(surface(), ensure_ascii=False, indent=1))
     elif args.cmd == "ask":

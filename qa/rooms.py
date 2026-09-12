@@ -45,7 +45,7 @@ from __future__ import annotations
 
 import json
 import re
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from qa.state import file_lock, state_dir
@@ -317,15 +317,140 @@ def open_strategy(origin: str, title: str) -> dict:
 
 
 def set_status(room: str, status: str, why: str) -> dict:
-    """Where a strategy stands now, and why it moved. The newest row wins."""
+    """Where a strategy stands now, and why it moved. The newest row wins.
+
+    `running` needs a criterion first. A room that starts trading before
+    anybody wrote down what would count as success is a room whose result can
+    be read as whatever it turned out to be -- the reason every run in this
+    repository is preregistered, applied to the thing the runs are for.
+    """
     if status not in STATUSES:
         raise RoomError(f"a status is one of: {', '.join(STATUSES)}")
     reason = _reason(why)
 
     def build(rows: list[dict]) -> list[dict]:
         _strategy(rows, room)
+        if status == "running" and acceptance_of(rows, room) is None:
+            raise RoomError(
+                f"{room} has no criterion yet, so nothing could say afterwards "
+                f"whether it worked. Write one first (rooms.set_acceptance, or "
+                f"`lab.py adopt {room}` for a room that was already running)")
         return [{"type": "status", "room": room, "status": status, "why": reason,
                  "at": _now()}]
+    return _append(build)[0]
+
+
+# What a number may look like inside his prose: 5.16, +9,7, -5%.
+CLAIM_NUMBER = re.compile(r"[-+]?\d+(?:[.,]\d+)?")
+
+
+def claim_of(rows: list[dict], room: str) -> dict | None:
+    """The newest set of Nexus's own numbers for this room."""
+    seen = [r for r in rows if r.get("type") == "claim" and r.get("room") == room]
+    return seen[-1] if seen else None
+
+
+def acceptance_of(rows: list[dict], room: str) -> dict | None:
+    seen = [r for r in rows
+            if r.get("type") == "acceptance" and r.get("room") == room]
+    return seen[-1] if seen else None
+
+
+def verdict_of(rows: list[dict], room: str) -> dict | None:
+    seen = [r for r in rows
+            if r.get("type") == "verdict" and r.get("room") == room]
+    return seen[-1] if seen else None
+
+
+def set_claim(room: str, quoted: dict) -> dict:
+    """His numbers, and only the ones his answer actually says.
+
+    Every value is a substring of the whole answer the room opened from, and
+    the check is not a formality: on 2026-09-11 a plan promised the operator
+    five rooms because our own records credited orders to an answer that named
+    no card. A number we typed is our reading; a number we can point to in his
+    text is his claim, and only his claim may be scored against later.
+    """
+    if not quoted:
+        raise RoomError("a claim with no numbers is not a claim")
+
+    def build(rows: list[dict]) -> list[dict]:
+        _strategy(rows, room)
+        origin = next((r.get("origin") for r in strategies(rows)
+                       if r.get("id") == room), None)
+        answer = whole_answer(records("nexus.jsonl"), origin) if origin else None
+        text = str((answer or {}).get("text") or "")
+        if not text:
+            raise RoomError(
+                f"{room} has no whole answer to quote from, so there is no "
+                f"claim of his to record")
+        numbers = {}
+        for name, written in quoted.items():
+            if str(written) not in text:
+                raise RoomError(
+                    f"{name}={written!r} does not appear in {origin}'s answer. "
+                    f"A claim is his words, not our reading of them")
+            found = CLAIM_NUMBER.search(str(written))
+            if not found:
+                raise RoomError(f"{name}={written!r} carries no number")
+            numbers[name] = float(found.group(0).replace(",", "."))
+        return [{"type": "claim", "room": room, "origin": origin,
+                 "quoted": {k: str(v) for k, v in quoted.items()},
+                 "numbers": numbers, "at": _now()}]
+    return _append(build)[0]
+
+
+def set_acceptance(room: str, window_days: float, stop_pct: float, why: str,
+                   legs: list[dict] | None = None,
+                   benchmark_card: str | None = None,
+                   adopted: bool = False) -> dict:
+    """What would count as success, written before the room runs.
+
+    It cannot be moved while its window is open. A criterion rewritten halfway
+    is a criterion fitted to the numbers, which is the one thing a
+    preregistration exists to prevent -- and the repository already refuses
+    exactly that for its own runs.
+    """
+    reason = _reason(why)
+    days = _number(window_days, "window_days")
+    if not days or days <= 0:
+        raise RoomError("a window of at least a fraction of a day")
+    stop = _number(stop_pct, "stop_pct")
+
+    def build(rows: list[dict]) -> list[dict]:
+        _strategy(rows, room)
+        current = acceptance_of(rows, room)
+        if current is not None:
+            started = datetime.fromisoformat(
+                str(current["at"]).replace("Z", "+00:00"))
+            closes = started + timedelta(days=float(current["window_days"]))
+            if datetime.now(timezone.utc) < closes:
+                raise RoomError(
+                    f"{room} already has a criterion, and its window closes "
+                    f"{closes.isoformat(timespec='minutes')}. Stop the room "
+                    f"and write a new one rather than moving this one")
+        chosen = legs
+        if chosen is None:
+            chosen = (plans(rows).get(room) or {}).get("legs") or []
+        return [{"type": "acceptance", "room": room, "window_days": float(days),
+                 "stop_pct": float(stop) if stop is not None else None,
+                 "legs": chosen, "benchmark_card": benchmark_card,
+                 "adopted": bool(adopted), "why": reason, "at": _now()}]
+    return _append(build)[0]
+
+
+def record_verdict(room: str, said: dict) -> dict:
+    """What the numbers said at the end of the window, and which formula said it."""
+    if not isinstance(said, dict) or not said.get("verdict"):
+        raise RoomError("a verdict says what it decided")
+
+    def build(rows: list[dict]) -> list[dict]:
+        _strategy(rows, room)
+        if acceptance_of(rows, room) is None:
+            raise RoomError(f"{room} has no criterion, so nothing can be a "
+                            f"verdict on it")
+        return [{"type": "verdict", "room": room, "at": _now(),
+                 **{k: v for k, v in said.items() if k != "at"}}]
     return _append(build)[0]
 
 

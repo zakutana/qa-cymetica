@@ -666,6 +666,11 @@ def test_the_newest_status_wins_and_every_change_says_why(tmp_path, monkeypatch)
             rooms.set_status(room, status, why)
     assert len(_stored(tmp_path)) == before, "a refused status was written anyway"
 
+    # Since 2026-09-12 a room may only start running once somebody has written
+    # down what would count as success -- the laboratory's preregistration.
+    # Refused above for the same reason the four cases before it are.
+    rooms.set_acceptance("STR-0001", window_days=7, stop_pct=5.0,
+                         why="his own stop over his own horizon")
     rooms.set_status("STR-0001", "running", "TRD-0001 bought 10 000 USDC")
     rooms.set_status("STR-0001", "paused", "the bot stopped itself at -5 %")
     view = _render().build_rooms()
@@ -935,6 +940,9 @@ def test_a_strategy_room_draws_its_book_and_its_bot_and_general_the_portfolio(
     _write(state / "clones.jsonl", _bot_rows())
     _write(state / "samples.jsonl", _sampled_rows())
     rooms.open_strategy("NEX-1", "<b>Karta</b> <script>alert(1)</script>")
+    # A room runs only once its criterion is written (2026-09-12).
+    rooms.set_acceptance("STR-0001", window_days=7, stop_pct=5.0,
+                         why="his own stop over his own horizon")
     rooms.set_status("STR-0001", "running", "TRD-0001 koupil 10 000 USDC")
     view = _render().build_rooms()
 
@@ -1280,6 +1288,9 @@ def test_the_strip_names_each_strategy_and_its_panel_leads_with_numbers(
     before = "Čeká na nákup, Nexus navrhl tři karty."
     rooms.set_status("STR-0001", "paused", before)
     why = "Koupeno TRD-0001 za 10 000 USDC; Nexus dal TP +13 % a SL -9 %."
+    # A room runs only once its criterion is written (2026-09-12).
+    rooms.set_acceptance("STR-0001", window_days=7, stop_pct=5.0,
+                         why="his own stop over his own horizon")
     rooms.set_status("STR-0001", "running", why)
     view = _render().build_rooms()
     monkeypatch.delenv("QA_STATE_DIR", raising=False)
