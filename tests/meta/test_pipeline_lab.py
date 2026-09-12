@@ -405,6 +405,71 @@ def test_the_buy_path_reads_what_is_already_deployed(tmp_path, monkeypatch):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_position_they_say_is_closed_is_not_still_deployed(tmp_path,
+                                                             monkeypatch):
+    """Our book is not the only way a position closes.
+
+    2026-09-12: the operator closed a paper card on their website by hand -- a
+    10 000 USDC position, +85.76 realised. Nothing wrote that to `paper.jsonl`,
+    because `paper.jsonl` records OUR orders, so `_deployed` went on counting
+    10 000 USDC as out and the 60% ceiling was measured against money that had
+    already come home. The memory is
+    `the-journal-records-our-pipeline-not-the-operator`; this is the same
+    sentence about the book.
+
+    The sampler already reads their side every ten minutes and writes the
+    answer down, so the closure is on this machine -- it was simply never read.
+
+    Both directions, because the safe one is not obvious: an explicit `closed`
+    from them releases the money, and NO row at all does not. A position they
+    have not described is one we know nothing new about, and rule 8 says a
+    reading we did not take is not a reading of zero -- keeping it counted
+    understates our headroom, which is the direction that cannot overspend.
+    """
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    rows = [
+        {"type": "intent", "id": "TRD-0001", "card_id": "c1", "usdc": 10_000.0},
+        {"type": "outcome", "id": "TRD-0001", "outcome": "accepted",
+         "position_id": "p1"},
+        {"type": "intent", "id": "TRD-0002", "card_id": "c2", "usdc": 1_000.0},
+        {"type": "outcome", "id": "TRD-0002", "outcome": "accepted",
+         "position_id": "p2"},
+    ]
+    (tmp_path / "paper.jsonl").write_text(
+        "".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+
+    assert scripts_lab._deployed() == 11_000.0, (
+        "with nothing read from their side, both positions are still out")
+
+    samples = [
+        # Their first look: both open. Then p1 closes on the website.
+        {"type": "sample", "kind": "position", "at": "2026-09-12T20:00:00+00:00",
+         "position_id": "p1", "card_id": "c1", "status": "open"},
+        {"type": "sample", "kind": "position", "at": "2026-09-12T20:00:00+00:00",
+         "position_id": "p2", "card_id": "c2", "status": "open"},
+        {"type": "sample", "kind": "position", "at": "2026-09-12T22:00:00+00:00",
+         "position_id": "p1", "card_id": "c1", "status": "closed",
+         "realized_pnl_usdc": 85.75958},
+    ]
+    (tmp_path / "samples.jsonl").write_text(
+        "".join(json.dumps(r) + "\n" for r in samples), encoding="utf-8")
+
+    assert scripts_lab._deployed() == 1_000.0, (
+        "their own record says p1 is closed and ours never heard about it")
+
+    # The newest row wins, not any row: a position that closed and was opened
+    # again is out again, and reading "closed" anywhere in the history would
+    # release money that is genuinely at risk.
+    with (tmp_path / "samples.jsonl").open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(
+            {"type": "sample", "kind": "position",
+             "at": "2026-09-12T23:00:00+00:00", "position_id": "p1",
+             "card_id": "c1", "status": "open"}) + "\n")
+    assert scripts_lab._deployed() == 11_000.0, (
+        "the newest reading of a position is the one that counts")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_night_searches_on_its_own_clock_not_the_question_clock():
     """Two clocks, because a backtest is free and a question is not.
 

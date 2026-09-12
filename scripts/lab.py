@@ -150,13 +150,50 @@ def _free_cash() -> float | None:
     return None
 
 
-def _deployed() -> float:
-    """What our own record says is still out in open positions.
+def _closed_on_their_side() -> set[str]:
+    """Positions their own record says are no longer open.
 
-    The symmetric reading to `_free_cash`: our records rather than a fresh call
-    to them, so the cap does not depend on their API answering. A buy is out
-    from the moment its outcome is `accepted` until an accepted close names its
-    position; an order they refused was never out at all.
+    `paper.jsonl` holds OUR orders, so a position closed any other way never
+    reaches it. On 2026-09-12 the operator closed a 10 000 USDC paper card on
+    their website by hand and `_deployed` went on counting it for the rest of
+    the day. The sampler had already written the closure down ten minutes
+    later -- nothing read it.
+
+    Read from the sampler's rows on this machine, not from a call: the cap may
+    not depend on their API answering. Newest row per position, and only an
+    explicit `closed` releases anything. A position with no row is one we have
+    learned nothing about, and rule 8's safe direction here is to keep counting
+    it -- that understates our headroom, which cannot overspend.
+    """
+    try:
+        from qa.rooms import load_samples
+
+        rows = load_samples()
+    except Exception:  # noqa: BLE001 -- unreadable is not "everything closed"
+        return set()
+
+    newest: dict[str, tuple[str, str]] = {}
+    for row in rows:
+        if not isinstance(row, dict) or row.get("kind") != "position":
+            continue
+        position = row.get("position_id")
+        status, at = row.get("status"), str(row.get("at") or "")
+        if not isinstance(position, str) or not isinstance(status, str):
+            continue
+        if at >= newest.get(position, ("", ""))[0]:
+            newest[position] = (at, status)
+    return {p for p, (_, status) in newest.items() if status == "closed"}
+
+
+def _deployed() -> float:
+    """What is still out in open positions.
+
+    The symmetric reading to `_free_cash`: records on this machine rather than
+    a fresh call to them, so the cap does not depend on their API answering. A
+    buy is out from the moment its outcome is `accepted` until an accepted
+    close names its position -- or until THEIR record says it closed, which is
+    the only way a close made anywhere but here becomes visible. An order they
+    refused was never out at all.
     """
     rows = _sibling("paper").load()
     intents = {row["id"]: row for row in rows
@@ -181,6 +218,8 @@ def _deployed() -> float:
         # test records that a missing position_id happens three ways that are
         # nothing to do with a bug on their side.
         out[str(position or f"order:{row.get('id')}")] = usdc
+    for position in _closed_on_their_side():
+        out.pop(position, None)
     return sum(out.values())
 
 
