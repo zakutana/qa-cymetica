@@ -380,7 +380,16 @@ def test_marking_read_is_the_only_switch_and_it_hides_every_mark():
     # m.hidden = false)` -- captures "false)" and would not compare equal to
     # "false". That is the likeliest shape a reveal would take, and the first
     # draft of this assertion missed exactly it.
-    unconditional = re.findall(r"\.hidden\s*=\s*(false|!1)\b", template)
+    #
+    # One receiver is named out of it, with its reason: `tip` is the memecoin
+    # hover bubble (2026-09-13). It appears on mousemove and hides on leave,
+    # carries no mark and no state the operator can clear, and is drawn from
+    # the cursor rather than from the data -- so it cannot reveal anything
+    # that was already read. Named rather than counted, because raising the
+    # number to two would silently license the next reveal as well.
+    unconditional = [name for name in
+                     re.findall(r"(\w+)\.hidden\s*=\s*(?:false|!1)\b", template)
+                     if name != "tip"]
     assert len(unconditional) == 1, (
         f"{len(unconditional)} places set .hidden = false unconditionally; each "
         f"one can reveal something the operator already cleared, so a new one "
