@@ -46,7 +46,30 @@ NAMES_THE_WINDOW = re.compile(
     r"|^(from|to|since|until|start|end)_(date|time|day)$", re.IGNORECASE)
 
 
-def says_covered(answer, requested) -> list[str]:
+# How far a label may sit from the window the points support before it stops
+# being a reading of them. Their sampling is not exactly daily and a boundary
+# point can go either way, so this is generous -- the defect it must catch is
+# 180 against 120, not 122 against 120.
+LABEL_SLACK = 0.25
+
+
+def _implied_days(value) -> float | None:
+    """What a label claims, in days: a number as it stands, a date as the span
+    back to today. Anything else is unreadable, which is not a claim."""
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    from datetime import date, datetime
+
+    try:
+        when = datetime.fromisoformat(str(value).replace("Z", "+00:00")).date()
+    except (TypeError, ValueError):
+        return None
+    return float((date.today() - when).days)
+
+
+def says_covered(answer, requested, per_day: float | None = None) -> list[str]:
     """Keys that say what window the answer ACTUALLY covered.
 
     The comment above was already right and this function was not: it collected
@@ -75,6 +98,27 @@ def says_covered(answer, requested) -> list[str]:
             continue
         if isinstance(value, (int, float)) and abs(float(value) - requested) < 1e-9:
             continue
+
+        # And the value has to AGREE with the points it arrived with. B04
+        # stopped the echoed argument; any OTHER number still passed, and a
+        # date was exempt from the value test entirely -- so `covered_days:
+        # 180` beside 120 points, and the requested range echoed as
+        # `start_date`, both read as "the window it actually covered". V03,
+        # deep pass of 2026-09-13, triage 3/3. The control basket gives the
+        # points-per-day, so this is checkable rather than assumed.
+        claimed = _implied_days(value)
+        if claimed is None:
+            continue
+        points = answer.get("n_points")
+        if per_day and isinstance(points, (int, float)) and per_day > 0:
+            supported = float(points) / per_day
+            if abs(claimed - supported) > max(1.0, supported * LABEL_SLACK):
+                continue
+        # With no control there is nothing to check the label against, and a
+        # claim we cannot refute is not a claim we may call false -- rule 8 in
+        # its own shape. The live check always HAS a control (it raises
+        # Inconclusive when the two windows cannot be told apart), so this
+        # branch is the offline callers only.
         out.append(str(key))
     return sorted(out)
 
@@ -119,7 +163,7 @@ def test_a_backtest_says_the_window_it_actually_covered(mcp_trusted):
                 # Anything that already names the truth would make this check
                 # wrong, so it is read rather than assumed absent -- for its
                 # VALUE, which is where this went wrong until 2026-09-12.
-                "says_covered": says_covered(answer, period),
+                "answer": answer,
             }
 
     control = readings[("long", LONG)], readings[("long", LONGER)]
@@ -128,6 +172,14 @@ def test_a_backtest_says_the_window_it_actually_covered(mcp_trusted):
             "both windows returned the same number of points for the control "
             "basket too, so this run cannot tell a truncated window from a "
             "tool that ignores period_days")
+
+    # The control basket is what makes a label checkable: it has the history,
+    # so its points over its window are the sampling rate, and a label that
+    # disagrees with the points is not a reading of them. V03, 2026-09-13.
+    per_day = control[1]["n_points"] / float(LONGER)
+    for reading in readings.values():
+        reading["says_covered"] = says_covered(
+            reading.pop("answer"), reading["period_days"] or LONGER, per_day)
 
     short = readings[("short", LONG)], readings[("short", LONGER)]
     truncated = short[0]["n_points"] == short[1]["n_points"]

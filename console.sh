@@ -37,4 +37,13 @@ echo
 # it costs. A later --ask on the command line wins, so `./console.sh --ask 0`
 # turns it off. --sample 10 reads their API for the Nexus tab into the
 # gitignored state/samples.jsonl; `./console.sh --sample 0` turns that off.
-exec $PY scripts/serve.py --open --ask 15 --sample 10 "$@"
+#
+# --fomo 20 feeds the memecoin measurement: one capture-and-resolve round
+# every twenty minutes, which is well inside the 45-minute window a checkpoint
+# may still be taken in. Added 2026-09-13 because the hourly curve shipped
+# unfed -- the flag defaults to 0 and neither launcher passed it, so the
+# hours went by, each one past its tolerance by the time anything looked, and
+# the measurement filled only when a round was run by hand. Three of the
+# first day's twenty-four hours were captured. `./console.sh --fomo 0` turns
+# it off.
+exec $PY scripts/serve.py --open --ask 15 --sample 10 --fomo 20 "$@"

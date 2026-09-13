@@ -125,6 +125,22 @@ def judge(subject: dict) -> dict:
     "does not credit", and counted a P&L booked with the wrong sign as booked
     (V06). Both triage 3/3.
     """
+    # Both of these come off THEIR payloads -- `proceeds_usdc` from the close
+    # response and `unrealized_pnl_usdc` from the position row -- and both were
+    # read with a default. With the pnl absent the "estimate" became the bare
+    # notional, so a CORRECT close of a position that lost 0.05 on a 1.00
+    # notional credited 0.95 and read `failed`: "A book that debits on the way
+    # in and does not credit on the way out reads every strategy as losing
+    # money", sent as a new report. And the same None made `result` 0, so the
+    # P&L half was silently waived in the same run. V08, deep pass of
+    # 2026-09-13, triage 3/3 -- `qa/measure.py::required` exists for this.
+    if subject.get("expected_pnl") is None and subject.get("proceeds") is None:
+        raise Inconclusive(
+            "their close response carries no proceeds_usdc and the position "
+            "row no unrealized_pnl_usdc, so there is nothing to judge the "
+            "credit against -- a missing field is not a zero result, and "
+            "guessing one turns a correct close into an accusation")
+
     estimate = subject["notional"] + float(subject["expected_pnl"] or 0)
     if subject.get("proceeds") is not None:
         expected, slack, basis = subject["proceeds"], VISIBLE, "their proceeds"

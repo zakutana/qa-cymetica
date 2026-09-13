@@ -172,9 +172,20 @@ def test_the_summary_says_which_populations_its_counters_leave_out(rest_trusted)
         problems.append(f"{len(held)} event-card position(s) are held and "
                         f"the scope neither counts them nor says anywhere "
                         f"that it leaves them out")
-    elif (how == "named" or stated) and not points_at:
-        problems.append("the excluded population is named but the reader is "
-                        "not told which endpoint carries it")
+    elif not points_at:
+        # Whenever the scope MENTIONS the population at all, the reader has to
+        # be told where to read it. The condition used to require `how ==
+        # "named"` or an explicit negation, so a scope saying "event-card
+        # activity is summarized elsewhere" -- which carries none of the
+        # negation words -- returned `counted`, skipped this branch entirely,
+        # and passed while the reason claimed the populations were named
+        # "with the endpoint that carries them". Presence of a mention read as
+        # a full disclosure. V09, deep pass of 2026-09-13, triage 3/3, on the
+        # endpoint that already cost the #83 retraction for reading this same
+        # scope block wrongly in the other direction.
+        problems.append(
+            f"the scope mentions the {len(held)} event-card position(s) "
+            f"({how}) but the reader is not told which endpoint carries them")
 
     conclude(Measurement(
         verdict="failed" if problems else "passed",

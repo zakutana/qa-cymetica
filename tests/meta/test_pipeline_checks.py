@@ -916,6 +916,97 @@ def test_the_nexus_card_check_reads_only_ids_given_as_cards():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_close_with_no_vendor_figures_is_not_a_close_that_paid_nothing():
+    """V08, deep pass of 2026-09-13, triage 3/3. Two `.get` defaults on fields
+    only the vendor controls.
+
+    `proceeds_usdc` comes off their close response and `unrealized_pnl_usdc`
+    off their position row. With the pnl absent, `float(... or 0)` made the
+    estimate the bare notional -- so a CORRECT close of a position that lost
+    0.05 on a 1.00 notional credited 0.95 and read `failed`, with the reason
+    "a book that debits on the way in and does not credit on the way out reads
+    every strategy as losing money". There is no filed row on this check, so
+    that is a NEW report, about a defect that does not exist. The same None
+    also made `result` 0, so `measurable` went False and the P&L half was
+    silently waived in the same run.
+
+    A missing field is not a zero result. `qa/measure.py::required` exists for
+    exactly this, and rule 8 is the same sentence about reads.
+    """
+    from qa.marks import Inconclusive as Inc
+    from tests.rest.test_paper_close_returns_the_money import judge
+
+    honest = {"notional": 1.00, "expected_pnl": -0.05, "proceeds": None,
+              "credited": 0.95, "pnl_booked": -0.05}
+    assert judge(honest)["returned"], judge(honest)
+
+    # The same close, with their two fields gone.
+    blind = {**honest, "expected_pnl": None, "proceeds": None}
+    try:
+        judge(blind)
+    except Inc as stopped:
+        assert "not a zero" in str(stopped) or "nothing to judge" in str(stopped)
+    else:
+        raise AssertionError(
+            "a close whose vendor figures are absent was judged anyway, and "
+            "0.95 against a bare 1.00 notional is a fail sent about nothing")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_window_label_is_checked_against_the_points_it_came_with():
+    """V03, deep pass of 2026-09-13, triage 3/3. "Not the number we asked for"
+    was being read as "a reading of what we got".
+
+    B04 fixed the first half on 2026-09-12: a key name is not an answer, and
+    `effective_period_days: 365` echoed back for a 365-day request is the
+    defect restated. What it left standing is that ANY other number passed,
+    and a date was exempted from the value test entirely -- while `n_points`
+    sat unused in the same dict. Two inputs that violate the contract and
+    passed:
+
+        {"n_points": 120, "period_days": 365, "covered_days": 180}
+        {"n_points": 120, "period_days": 365, "start_date": "2025-09-13"}
+
+    The first names a window twice what the points support; the second echoes
+    the requested range as dates. A pass on #99 has already been sent.
+
+    The control basket gives the points-per-day, so the claim is checkable:
+    a label that disagrees with the points is not a reading of them.
+    """
+    from tests.mcp.test_backtest_window_is_real import says_covered
+
+    # One point a day, from a control that returned 362 points for 365 days.
+    per_day = 362 / 365
+
+    assert says_covered({"n_points": 120, "period_days": 365,
+                         "covered_days": 120}, 365, per_day) == ["covered_days"]
+    assert says_covered({"n_points": 120, "period_days": 365,
+                         "covered_days": 180}, 365, per_day) == [], (
+        "a window twice what the points support is not a reading of them")
+    assert says_covered({"n_points": 120, "period_days": 365,
+                         "effective_period_days": 365}, 365, per_day) == [], (
+        "the echoed argument must still be refused")
+
+    # A date is read the same way: the span it implies against the points.
+    from datetime import date, timedelta
+
+    honest = (date.today() - timedelta(days=120)).isoformat()
+    stale = (date.today() - timedelta(days=365)).isoformat()
+    assert says_covered({"n_points": 120, "start_date": honest},
+                        365, per_day) == ["start_date"]
+    assert says_covered({"n_points": 120, "start_date": stale},
+                        365, per_day) == [], (
+        "the requested range echoed as dates is the same defect in another "
+        "type, and was exempted from the value test entirely")
+
+    # Without a control there is nothing to check the label against, and a
+    # claim we cannot refute is not one we may call false (rule 8). The LIVE
+    # check always has a control -- it raises Inconclusive when the two
+    # windows cannot be told apart -- so this path is the offline callers.
+    assert says_covered({"n_points": 120, "covered_days": 180}, 365, None)         == ["covered_days"]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_nexus_card_check_claims_only_that_the_card_was_named():
     """V07, deep pass of 2026-09-13, triage 3/3. The reason said more than the
     extractor read.
