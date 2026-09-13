@@ -1861,16 +1861,20 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:15.0px; max-wid
 .mc-figs dt{font-size:12px;color:var(--text-dim);margin:0}
 .mc-figs dd{margin:2px 0 0;font-size:19px;font-weight:600}
 
-.mc-curves{display:grid;gap:14px;margin:0 0 30px;
-  grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}
-.mc-curve{background:var(--surface);border:1px solid var(--line);
-  border-radius:var(--radius);padding:14px 16px 10px}
-.mc-cn{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
-.mc-cn b{font-size:17px;font-weight:700}
-.mc-cn .mc-now{font-size:19px;font-variant-numeric:tabular-nums}
-.mc-cmeta{font-size:12px;color:var(--text-dim);margin:2px 0 8px}
-.mc-curve svg{display:block;width:100%;height:84px;overflow:visible}
-.mc-ax{font-size:10px;fill:var(--text-faint)}
+.mc-figs .mc-of{font-size:12px;color:var(--text-dim);font-weight:400}
+.mc-list{width:100%;border-collapse:collapse;background:var(--surface);
+  border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.mc-list th{text-align:left;font-size:12px;text-transform:uppercase;
+  letter-spacing:.5px;color:var(--text-dim);font-weight:600;
+  padding:11px 16px;border-bottom:1px solid var(--line)}
+.mc-list th:nth-child(3),.mc-list th:nth-child(4){text-align:right}
+.mc-list td{padding:10px 16px;border-bottom:1px solid var(--line-soft);
+  font-size:16px;vertical-align:middle}
+.mc-list tr:last-child td{border-bottom:0}
+.mc-list tr:hover td{background:var(--surface-2)}
+.mc-g{width:170px;padding-right:18px!important}
+.mc-spark{display:block;width:150px;height:30px;overflow:visible}
+.mc-spark g{cursor:crosshair}
 .mc-table{margin:0 0 26px}
 .mc-table h3{font-size:15px;margin:0 0 10px;color:var(--text-dim);
   font-weight:600}
@@ -4657,122 +4661,85 @@ function pct(v) {
    would say the coin sat still when the truth is that nobody could price it.
    Drawn as inline SVG -- no library reaches this page and none is needed. */
 function curveSvg(points) {
-  const W = 300, H = 84, PAD = 4;
+  // The 24h shape, inline in a table cell. Hovering a point names the hour
+  // and what it was worth then -- a native <title>, so it needs no script
+  // and works the moment the page opens.
+  const W = 150, H = 30, PAD = 3;
   const read = points.filter(p => p[1] != null);
-  if (!read.length) return "";
+  if (!read.length) return `<span class="mc-flat">&mdash;</span>`;
   const vals = read.map(p => p[1]);
   const hi = Math.max(...vals, 0), lo = Math.min(...vals, 0);
   const span = (hi - lo) || 1;
-  const hours = points.length || 1;
-  const x = h => PAD + ((h - 1) / Math.max(hours - 1, 1)) * (W - 2 * PAD);
+  const x = h => PAD + ((h - 1) / 23) * (W - 2 * PAD);   // always 24 hours wide
   const y = v => PAD + (1 - (v - lo) / span) * (H - 2 * PAD);
+  const fmt = v => (v > 0 ? "+" : "") + v.toFixed(1) + "%";
 
-  // Two strokes, and the difference between them is the honesty. A SOLID
-  // segment joins two hours we actually read back to back. A DASHED one
-  // spans hours nobody priced -- the shape is a guess there, and it should
-  // look like one. Both are drawn, because an all-dots chart (which is what
-  // a break-the-line rule produced on 2026-09-13 with 1h/4h/8h recorded and
-  // everything between missing) shows no trajectory at all.
-  const seg = (a, b, dashed) =>
-    `<line x1="${x(a[0]).toFixed(1)}" y1="${y(a[1]).toFixed(1)}"
-       x2="${x(b[0]).toFixed(1)}" y2="${y(b[1]).toFixed(1)}"
-       stroke="var(${b[1] >= a[1] ? "--ok" : "--bad"})" stroke-width="2"
-       stroke-linecap="round"${dashed ? ' stroke-dasharray="3 4" opacity=".5"' : ""}/>`;
-
-  const lines = read.slice(1).map((p, i) =>
-    seg(read[i], p, p[0] - read[i][0] > 1)).join("");
+  // Solid between two hours read back to back, dashed across hours nobody
+  // priced -- the shape is a guess there and should look like one.
+  const lines = read.slice(1).map((p, i) => {
+    const a = read[i];
+    return `<line x1="${x(a[0]).toFixed(1)}" y1="${y(a[1]).toFixed(1)}"
+      x2="${x(p[0]).toFixed(1)}" y2="${y(p[1]).toFixed(1)}"
+      stroke="var(${p[1] >= a[1] ? "--ok" : "--bad"})" stroke-width="1.6"
+      stroke-linecap="round"${p[0] - a[0] > 1 ? ' stroke-dasharray="2 3" opacity=".55"' : ""}/>`;
+  }).join("");
   const dots = read.map(p =>
-    `<circle cx="${x(p[0]).toFixed(1)}" cy="${y(p[1]).toFixed(1)}" r="2.6"
-      fill="var(${p[1] >= 0 ? "--ok" : "--bad"})"/>`).join("");
+    `<g><title>${p[0]}h: ${fmt(p[1])}</title>
+      <circle cx="${x(p[0]).toFixed(1)}" cy="${y(p[1]).toFixed(1)}" r="5"
+        fill="transparent"/>
+      <circle cx="${x(p[0]).toFixed(1)}" cy="${y(p[1]).toFixed(1)}" r="2"
+        fill="var(${p[1] >= 0 ? "--ok" : "--bad"})"/></g>`).join("");
   const zero = y(0);
 
-  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"
-    role="img" aria-label="hourly return since the signal">
+  return `<svg class="mc-spark" viewBox="0 0 ${W} ${H}" role="img"
+    aria-label="return by hour since the signal">
     <line x1="${PAD}" x2="${W - PAD}" y1="${zero.toFixed(1)}" y2="${zero.toFixed(1)}"
-      stroke="var(--line)" stroke-width="1" stroke-dasharray="3 3"/>
+      stroke="var(--line)" stroke-width="1" stroke-dasharray="2 3"/>
     ${lines}${dots}
   </svg>`;
 }
 
-function curveCards(list) {
-  if (!list || !list.length) return "";
-  return `<section class="mc-table"><h3>Hour by hour since the signal &mdash;
-    ${list.length} token(s)</h3></section>
-    <div class="mc-curves">${list.map(c => {
-      const hours = c.points.length;
-      const read = c.points.filter(p => p[1] != null).length;
-      return `<article class="mc-curve">
-        <div class="mc-cn"><b>${esc(c.symbol || "?")}</b>
-          <span class="mc-now">${pct(c.last)}</span></div>
-        <div class="mc-cmeta">conviction ${c.conviction == null ? "&mdash;" : c.conviction}
-          &middot; peak ${c.peak == null ? "&mdash;" : c.peak.toFixed(0) + "%"}
-          &middot; ${read} of ${hours} h priced</div>
-        ${curveSvg(c.points)}
-      </article>`;
-    }).join("")}</div>`;
-}
-
 function memecoinPanel() {
-  // `S` is local to statBlocks(), so this reads the payload itself rather
-  // than borrowing a name that happens to exist one function along.
   const fm = (D.stats || {}).fomo;
-  // null means the diary was never written. "never watched" and "watched,
-  // nothing hit yet" must not look the same.
   if (!fm) return `<p class="blurb">No memecoin signals have been captured
     yet. <code>python scripts/fomo_watch.py capture</code> starts it.</p>`;
 
   const thr = fm.hit_threshold != null ? fm.hit_threshold : 20;
-  const horizons = Object.keys(fm.horizons || {}).sort(
-    (a, b) => parseFloat(a) - parseFloat(b));
+  const day = (fm.horizons || {})["24h"] || {};
+  const first = (fm.horizons || {})["1h"] || {};
+  const rows = (fm.curves || []).map(c => `<tr>
+      <td class="mc-sym">${esc(c.symbol || "?")}</td>
+      <td class="mc-conv">${c.conviction == null ? "&mdash;" : c.conviction}</td>
+      <td class="mc-ret">${pct(c.last)}</td>
+      <td class="mc-ret">${pct(c.peak)}</td>
+      <td class="mc-g">${curveSvg(c.points)}</td>
+    </tr>`).join("");
 
-  const cards = horizons.map(h => {
-    const r = fm.horizons[h];
-    const hit = r.hit_rate == null ? null : Math.round(r.hit_rate * 100);
-    const med = r.median_pct;
-    const medCls = med == null ? "mc-flat" : (med > 0 ? "mc-up" : (med < 0 ? "mc-down" : "mc-flat"));
-    return `<div class="mc-card">
-      <div class="mc-h">${esc(h)} after the signal</div>
-      <div class="mc-big ${medCls}">${med == null ? "&mdash;"
-        : (med > 0 ? "+" : "") + med.toFixed(1) + "%"}</div>
-      <div class="mc-sub">median of ${r.resolved} resolved signal(s)</div>
-      <dl class="mc-figs">
-        <div><dt>hit rate &ge;&nbsp;${thr}%</dt>
-          <dd class="${hit != null && hit >= 50 ? "mc-up" : "mc-flat"}">${
-            hit == null ? "&mdash;" : hit + "%"}</dd></div>
-        <div><dt>mean</dt><dd>${pct(r.mean_pct)}</dd></div>
-      </dl>
-    </div>`;
-  }).join("");
-
-  const tables = horizons.filter(h => (fm.horizons[h].top || []).length
-                                   || (fm.horizons[h].bottom || []).length)
-    .map(h => {
-      const r = fm.horizons[h];
-      const rows = [].concat(r.top || [], r.bottom || [])
-        .map(c => `<tr>
-          <td class="mc-sym">${esc(c.symbol || "?")}</td>
-          <td class="mc-conv">${c.conviction == null ? "&mdash;" : c.conviction}</td>
-          <td class="mc-ret">${pct(c.return_pct)}</td></tr>`).join("");
-      return `<section class="mc-table">
-        <h3>${esc(h)} after the signal &mdash; best and worst</h3>
-        <table><thead><tr><th>token</th><th>conviction when it fired</th>
-          <th>return since the signal</th></tr></thead>
-          <tbody>${rows}</tbody></table>
-      </section>`;
-    }).join("");
+  const fig = (label, row) => {
+    const hit = row.hit_rate == null ? null : Math.round(row.hit_rate * 100);
+    return `<div><dt>${label}</dt><dd>${hit == null ? "&mdash;" : hit + "%"}
+      <span class="mc-of">of ${row.resolved || 0}</span></dd></div>`;
+  };
 
   return `<header class="mc-top">
       <h2>Does FOMO Radar's <code>hot</code> signal predict a move?</h2>
       <div class="mc-count">${fm.tracked || 0}<span>signal(s) tracked</span></div>
-      <p class="blurb">Every return here is <strong>ours</strong>: the price at
-      the moment the signal fired against the price at that checkpoint. Not
-      their rolling %-change window, which is measured relative to whenever we
-      happen to ask. A hit is a return at or above ${thr}%.</p>
+      <dl class="mc-figs">
+        ${fig(`hit &ge;&nbsp;${thr}% at 1 h`, first)}
+        ${fig(`hit &ge;&nbsp;${thr}% at 24 h`, day)}
+        <div><dt>median at 1 h</dt><dd>${pct(first.median_pct)}</dd></div>
+      </dl>
+      <p class="blurb">Return is <strong>ours</strong>: the price when the
+      signal fired against the price at each hour after it &mdash; not their
+      rolling %-change window. Hover a point on the graph for that hour.
+      A dashed stretch is an hour nobody could price.</p>
     </header>
-    ${horizons.length ? `<div class="mc-grid">${cards}</div>` : `<p class="blurb">
-      Tracking signals; none has reached its first checkpoint (1h) yet.</p>`}
-    ${curveCards(fm.curves)}
-    ${tables}`;
+    ${rows ? `<table class="mc-list"><thead><tr>
+        <th>token</th><th>conviction</th><th>now</th><th>peak</th>
+        <th>first 24 hours</th></tr></thead>
+      <tbody>${rows}</tbody></table>`
+    : `<p class="blurb">Tracking signals; none has reached its first
+       checkpoint (1h) yet.</p>`}`;
 }
 
 function statBlocks() {

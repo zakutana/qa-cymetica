@@ -340,14 +340,41 @@ def test_the_memecoin_section_renders_with_and_without_a_diary(tmp_path,
             "24h": {"resolved": 0, "hit_rate": None, "mean_pct": None,
                    "median_pct": None, "top": [], "bottom": []},
         },
+        # One row per token, which is what the single list draws. The gap at
+        # hour 3 is deliberate: it must render as a dashed stretch, not as a
+        # point at zero.
+        "curves": [
+            {"token": "0xa", "symbol": "DOGEX", "conviction": 0.9,
+             "points": [[1, 38.5], [2, 41.0], [3, None], [4, 12.0]],
+             "last": 12.0, "peak": 41.0, "trough": 12.0},
+            {"token": "0xb", "symbol": "PEPEX", "conviction": 0.1,
+             "points": [[1, -30.5]], "last": -30.5, "peak": -30.5,
+             "trough": -30.5},
+        ],
     }
     code, err, captured = _run_page(node, tmp_path / "withfomo", payload)
     assert code == 0, f"the page throws with a real diary:\n{err[:900]}"
     panel = captured.get("memecoins", "")
     assert "hot" in panel, "the tab must say what is being measured"
-    assert "3" in panel and "50%" in panel
-    assert "DOGEX" in panel and "38.5" in panel
-    assert "PEPEX" in panel and "-30.5" in panel
+    assert "DOGEX" in panel and "PEPEX" in panel
+
+    # ONE list, with the graph as a COLUMN of it. [operator 2026-09-13]:
+    # "mel to byt jen 1 senzam porad jako predtim jen nova kolumna s grafem".
+    # The first attempt put 24 separate cards under the table instead.
+    assert panel.count("<table") == 1, (
+        f"one list, not several: {panel.count('<table')} tables")
+    assert "mc-spark" in panel, "the graph column is missing"
+    assert "mc-curve\"" not in panel and "mc-curves" not in panel, (
+        "the per-token cards came back; the graph belongs in the row")
+
+    # Hovering a point names the hour and what it was worth then.
+    assert "<title>1h: +38.5%</title>" in panel, panel[:400]
+    assert "<title>4h: +12.0%</title>" in panel
+    assert "<title>2h" in panel
+
+    # A gap is drawn as a dashed stretch, never as a point at zero.
+    assert "stroke-dasharray" in panel
+    assert "<title>3h" not in panel, "an unpriced hour must not get a point"
 
     # Green for a gain, red for a loss -- the operator reads pictures, and
     # asked for this twice. Asserted on the classes rather than eyeballed.
@@ -358,9 +385,9 @@ def test_the_memecoin_section_renders_with_and_without_a_diary(tmp_path,
     down = panel[panel.index("PEPEX"):]
     assert "mc-down" in down[:400], "the -30.5% row is not red"
 
-    # And the headline is the MEDIAN, not the mean: one token at +1262% drags
+    # The summary reports the MEDIAN, not the mean: one token at +1262% drags
     # the mean to +46% while half the signals are under water.
-    assert "median of" in panel, "the hero figure must be the median"
+    assert "median at 1&nbsp;h" in panel or "median at 1 h" in panel, panel[:600]
     assert "Memecoiny" not in captured.get("stats", ""), (
         "drawn twice -- the operator then has to guess which one is live")
 
