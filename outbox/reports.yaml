@@ -2206,6 +2206,78 @@ reports:
       - 'The same call with period_days 365. Compare n_points, total_return_pct and sharpe_ratio: identical.'
       - 'Repeat both with constituents [{"symbol":"BCH","weight":0.685},{"symbol":"OKB","weight":0.315}] -- 177 and 362 points, so the window argument does work where the data exists.'
 
+  - key: house-row-is-a-backtest
+    findings: [CYM-the_house_row_says_whether_it_ever_traded_forward]
+    severity: medium
+    category: api
+    url: https://cymetica.com/api/v1/universe/movers/tournament
+    title: >-
+      The Movers Tournament leaderboard ranks the NEXUS screen #1 against live
+      entrants using its backtested record, and the payload does not say so
+    expected: >
+      A leaderboard that places a house row beside human entries says what kind
+      of record that row is. You already draw this distinction yourselves, and
+      carefully, one endpoint away.
+    actual: >
+      The is_house row's figures are the backtest half of your own published
+      track record, matching on every shared quantity, while the live half of
+      that same record reports scored 0.
+    body: >
+      Found while entering a round ourselves, not while looking for it.
+
+
+      /api/v1/universe/movers/tournament, leaderboard, the is_house row:
+
+
+        handle "NEXUS screen", rank 1, picks 250, rounds 12,
+        avg_pct 29.92, median_pct -2.87, doublers 17, hit50 31
+
+
+      /api/v1/universe/movers/potential, track_record:
+
+
+        backtest  scored 250, runs_scored 12, mean_pct 29.92, median_pct -2.87,
+                  hit100 17, hit50 31, anchors 2026-06-19 to 2026-09-04
+        live      scored 0, runs_scored 0, first_anchor null
+
+
+      Every quantity the two payloads share is equal, to the decimal, on the
+      backtest side; none matches the live side, which is zero throughout.
+
+
+      We want to be fair about what is and is not wrong here. The separation is
+      yours and it is good: /potential splits live from backtest explicitly and
+      its disclaimer is honest about what a hit rate measured after the fact
+      means. Nothing is being hidden at the level of the platform.
+
+
+      What we are reporting is narrower: the distinction is dropped on the one
+      endpoint where the comparison against people actually happens. The
+      leaderboard row's fields are handle, picks, rounds, avg_pct, median_pct,
+      best_pct, doublers, hit50, rank and is_house -- and is_house says who owns
+      the row, not what kind of measurement produced it. A trader reading the
+      leaderboard, or an agent reading it through the API, sees a 29.92% average
+      at rank 1 with nothing to distinguish it from a record earned forward.
+
+
+      This is the same shape as #97, which you fixed: a number whose kind is not
+      stated in the payload that carries it, so a caller ranking two of them
+      cannot see they are different measurements.
+
+
+      Either repair reads fine from here, and we are not asking for a specific
+      one: a field on the row naming the basis, or the word backtest in the
+      handle, or scoring the screen forward and showing that record instead. Our
+      check accepts any of them -- it looks for a disclosure of any shape rather
+      than one field name, and it stops having an opinion entirely if the
+      figures are restated.
+    steps:
+      - 'GET https://cymetica.com/api/v1/universe/movers/tournament (keyless) and take the leaderboard entry where is_house is true'
+      - 'GET https://cymetica.com/api/v1/universe/movers/potential (keyless) and read track_record.backtest and track_record.live'
+      - 'Compare: picks/scored 250, rounds/runs_scored 12, avg_pct/mean_pct 29.92, median_pct -2.87, doublers/hit100 17, hit50 31 -- all six equal on the backtest half'
+      - 'track_record.live reports scored 0 and runs_scored 0, so none of the leaderboard figures came from a forward-scored round'
+      - 'List the keys of the leaderboard row: no field states the basis of the record'
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in
