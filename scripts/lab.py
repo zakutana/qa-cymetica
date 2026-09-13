@@ -745,6 +745,26 @@ def status() -> str:
     if pass_in_flight():
         out.append("a deep pass is running: no questions and no orders until "
                    "it finishes")
+
+    # Cached, not recomputed: N_eff needs one live call per open leg, and
+    # `status` stays a local read like the rest of this function. `cycle`
+    # refreshes it; this shows the newest reading and its age.
+    said = lab.last_n_eff(rows)
+    if said and "n_eff" in said:
+        age = (_now() - (_moment(said.get("at")) or _now())).total_seconds()
+        out.append(f"N_eff {said['n_eff']:.1f} of {said['n']} open "
+                   f"(⍴={said['rho']:.2f}), {age / 3600:.0f} h old")
+
+    # Purely local: paper.jsonl and the sampler's own samples, both diaries
+    # already on this disk. The last unmeasured link of "bet -> resolves ->
+    # paid" -- a card resolving on its own, never through our `close`.
+    from qa.rooms import load_samples
+
+    resolved = lab.resolved_without_us(_sibling("paper").load(), load_samples())
+    for row in resolved:
+        out.append(f"RESOLVED WITHOUT US: {row['position_id']} "
+                   f"({row['card_id']}), {row['realized_pnl_usdc']} USDC, "
+                   f"{str(row['resolved_at'])[:16].replace('T', ' ')}")
     return "\n".join(out)
 
 
@@ -777,6 +797,11 @@ def cycle() -> dict:
     except Exception as exc:  # noqa: BLE001
         did["catalogue"] = f"failed: {exc}"
 
+    try:
+        did["n_eff"] = book_correlation()
+    except Exception as exc:  # noqa: BLE001
+        did["n_eff"] = f"failed: {exc}"
+
     lab.note_cycle(did)
     return did
 
@@ -794,6 +819,86 @@ def _history(client, card: str) -> list[dict]:
         return []
     body = response.json() or {}
     return body.get("points") or body.get("history") or []
+
+
+def _basket_returns(points: list[tuple], since) -> list[float]:
+    """Daily % change of one card's index, from `since` on. `points` is
+    already `_at`/float pairs, sorted, from `qa.lab._points`."""
+    inside = [(t, v) for t, v in points if t >= since]
+    if len(inside) < 2:
+        return []
+    out = []
+    for (t0, v0), (t1, v1) in zip(inside, inside[1:]):
+        if v0:
+            out.append((v1 / v0 - 1.0) * 100.0)
+    return out
+
+
+def open_book_returns(now=None, history=None, window_days: float = 14.0
+                      ) -> dict[str, list[float]]:
+    """One aligned return series per RUNNING room, weighted across its legs.
+
+    `history` is `(card) -> list[dict]`, injectable so this needs no network
+    to test; the real caller (`book_correlation`) binds it to a live client
+    the same way `verdicts()` does. Each room's legs are combined into one
+    basket return series -- share-weighted, side-flipped for a bear leg -- so
+    two rooms betting the same basket through different legs still read as
+    correlated, which is the point of `qa.lab.n_eff`.
+    """
+    since = (now or _now()) - timedelta(days=window_days)
+    rows = rooms.load()
+    out: dict[str, list[float]] = {}
+    for strategy in rooms.strategies(rows):
+        room = strategy["id"]
+        if rooms.status_of(rows, room) != "running":
+            continue
+        plan = (rooms.plans(rows).get(room) or {}).get("legs") or []
+        if not plan:
+            continue
+        per_leg = []
+        for leg in plan:
+            card = leg.get("card")
+            if not card:
+                continue
+            points = lab._points(history(card) if history else [])
+            returns = _basket_returns(points, since)
+            if not returns:
+                continue
+            way = -1.0 if str(leg.get("side")).lower() == "bear" else 1.0
+            share = float(leg.get("share") or 1.0)
+            per_leg.append((share, [way * r for r in returns]))
+        if not per_leg:
+            continue
+        length = min(len(r) for _, r in per_leg)
+        if length == 0:
+            continue
+        total_share = sum(share for share, _ in per_leg) or 1.0
+        out[room] = [sum(share * r[i] for share, r in per_leg) / total_share
+                     for i in range(length)]
+    return out
+
+
+def book_correlation(now=None) -> dict:
+    """`lab.n_eff` over the real open book -- one live call per open leg."""
+    from qa.client import build_client
+    from qa.config import identities, load_dotenv
+    from qa.safety import CURRENT_TIER, EndpointRegistry, SafetyTier
+
+    load_dotenv()
+    ids = identities()
+    identity = ids["trusted"] if ids["trusted"].present else ids["anon"]
+    client = build_client(identity, EndpointRegistry.load(), timeout=30.0)
+    token = CURRENT_TIER.set(SafetyTier.SAFE)
+    try:
+        returns = open_book_returns(
+            now=now, history=lambda card: _history(client, card))
+    finally:
+        CURRENT_TIER.reset(token)
+        client.close()
+    said = lab.n_eff(returns)
+    if "n_eff" in said:
+        lab.note_n_eff(said)
+    return said
 
 
 def adopt(room: str, window_days: float = 7.0, stop_pct: float = 5.0,

@@ -37,7 +37,7 @@ from pathlib import Path
 from qa.state import file_lock, state_dir
 
 NOTEBOOK = "lab.jsonl"
-KINDS = ("session", "truth", "surface", "cycle")
+KINDS = ("session", "truth", "surface", "cycle", "n_eff")
 MAX_LESSONS = 3
 MAX_NEXT = 8
 ID = re.compile(r"^LAB-(\d{4})$")
@@ -221,6 +221,18 @@ def last_surface(rows: list[dict] | None = None) -> dict | None:
 
 def note_cycle(did: dict) -> dict:
     return _append({"type": "cycle", "at": _now(), "did": did})
+
+
+def note_n_eff(said: dict) -> dict:
+    """One reading of `n_eff` over the real open book, so the reminder can
+    read it back without touching the network itself."""
+    return _append({"type": "n_eff", "at": _now(), **said})
+
+
+def last_n_eff(rows: list[dict] | None = None) -> dict | None:
+    rows = load() if rows is None else rows
+    seen = [r for r in rows if r.get("type") == "n_eff"]
+    return seen[-1] if seen else None
 
 
 def may_ask(asked: int, pass_running: bool, mode: str = "session") -> tuple[bool, str]:
@@ -650,6 +662,73 @@ def rank(rows: list[dict]) -> list[dict]:
     return scored + unscored
 
 
+def _pearson(a: list[float], b: list[float]) -> float | None:
+    """None when the correlation is undefined -- too short, or either series
+    is flat -- rather than a fabricated 0.0 or 1.0. A flat series (a card that
+    has not moved) has no variance to correlate against anything."""
+    n = min(len(a), len(b))
+    if n < 3:
+        return None
+    a, b = a[:n], b[:n]
+    ma, mb = sum(a) / n, sum(b) / n
+    cov = sum((x - ma) * (y - mb) for x, y in zip(a, b))
+    va = sum((x - ma) ** 2 for x in a)
+    vb = sum((y - mb) ** 2 for y in b)
+    if va <= 0 or vb <= 0:
+        return None
+    return cov / (va * vb) ** 0.5
+
+
+def n_eff(returns: dict[str, list[float]]) -> dict:
+    """The effective number of independent bets in the open book.
+
+        n_eff = N / (1 + (N-1)*rho)
+
+    Nexus's own leading indicator, offered unprompted on 2026-09-12 when asked
+    what breaks its own top-ranked strategy: average pairwise correlation of
+    the open book as a warning that arrives BEFORE the drawdown does -- "when
+    average pairwise correlation crosses ~0.6-0.7 the breadth collapses". It
+    is the only thing Nexus has told us about risk in the whole book rather
+    than in one card, and until now nothing built it.
+
+    `returns` is one aligned series of period returns per open position,
+    however the caller built the alignment -- this function does not fetch
+    anything and does not know what a "room" or a "card" is, so it can be
+    tested without a network and reused if the book is ever priced some other
+    way.
+
+    Fewer than two positions, or too few pairs to correlate (a flat series, or
+    series too short), is inconclusive -- never a fabricated 1.0, and never
+    the crash a real book would eventually cause. A gap here is the same kind
+    of gap `qa.rooms.verdict` already refuses to read as a loss.
+    """
+    names = sorted(returns)
+    if len(names) < 2:
+        return {"verdict": "inconclusive", "why": "fewer than two open positions"}
+
+    correlations = []
+    for i, a in enumerate(names):
+        for b in names[i + 1:]:
+            rho_ab = _pearson(returns[a], returns[b])
+            if rho_ab is not None:
+                correlations.append(rho_ab)
+
+    if not correlations:
+        return {"verdict": "inconclusive",
+                "why": "every pair was too short or too flat to correlate"}
+
+    n = len(names)
+    rho = sum(correlations) / len(correlations)
+    denom = 1 + (n - 1) * rho
+    if denom <= 0:
+        # Only reachable with a strongly negative average correlation, which
+        # is the opposite of the risk this indicator watches for -- report the
+        # book as maximally diversified rather than divide by zero or go
+        # negative.
+        return {"n": n, "rho": rho, "n_eff": float(n)}
+    return {"n": n, "rho": rho, "n_eff": n / denom}
+
+
 CARD_ID = re.compile(
     r"\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b")
 
@@ -675,3 +754,95 @@ def proposed_cards(text: str, known) -> dict[str, list[str]]:
     have = {str(k).lower() for k in (known or ())}
     return {"actionable": [c for c in seen if c in have],
             "unknown": [c for c in seen if c not in have]}
+
+
+def resolved_without_us(paper_rows: list[dict],
+                        sample_rows: list[dict]) -> list[dict]:
+    """A card that resolved on its own -- the last unmeasured link of "bet ->
+    resolves -> paid".
+
+    A close WE sent is already measured (#87 debits the buy, TRD-0005 measured
+    the return on our own close). What nothing has ever caught is a card
+    resolving BY ITSELF: we hold no close intent for it, and the sampler's own
+    reading of the position flips from `open` to `closed` with a realised
+    P&L. That flip is on this machine already -- the sampler polls their API
+    every ten minutes -- it was simply never read against our own book.
+
+    Pure over two already-loaded diaries, so it costs nothing to call from
+    `lab.py status` on every run. Newest sample per position wins, the same
+    rule `scripts/lab.py::_closed_on_their_side` uses.
+    """
+    # The close outcome itself often carries no position_id -- only its
+    # intent does (`_deployed` in scripts/lab.py reads the same pair the same
+    # way) -- so an accepted close is recognised from either row and the id
+    # is read from whichever one has it.
+    intents = {row["id"]: row for row in paper_rows
+              if row.get("type") == "intent" and row.get("id")}
+    closed_by_us: set[str] = set()
+    for row in paper_rows:
+        if row.get("type") != "outcome" or row.get("outcome") != "accepted":
+            continue
+        intent = intents.get(row.get("id"), {})
+        if row.get("kind") == "close" or intent.get("kind") == "close":
+            position = row.get("position_id") or intent.get("position_id")
+            if position:
+                closed_by_us.add(str(position))
+
+    newest: dict[str, dict] = {}
+    for row in sample_rows:
+        if row.get("kind") != "position":
+            continue
+        position = row.get("position_id")
+        at = str(row.get("at") or "")
+        if not isinstance(position, str):
+            continue
+        if at >= str(newest.get(position, {}).get("at") or ""):
+            newest[position] = row
+
+    found = []
+    for position, row in sorted(newest.items()):
+        if row.get("status") != "closed" or position in closed_by_us:
+            continue
+        found.append({"position_id": position, "card_id": row.get("card_id"),
+                      "realized_pnl_usdc": row.get("realized_pnl_usdc"),
+                      "resolved_at": row.get("at")})
+    return found
+
+
+THEIR_GIVE_UP = re.compile(r"^(failed|running|queued|pending)")
+
+
+def their_down_streak(rows: list[dict]) -> int:
+    """How many of the newest questions in a row THEIR channel failed to
+    answer -- duplicated from, not sharing, #86's own live-check classifier
+    (`tests/mcp/test_nexus_channel.py::did_not_answer`). That function's
+    fingerprint may not move for a reminder-side refactor (rule 5), so this is
+    the same distinction over the same two fields, kept independent on
+    purpose: their `status: failed`, or a give-up still `running`/`queued`/
+    `pending` at their own five-minute ceiling, counts; our own `unread:
+    ReadTimeout` or `unknown` does not -- that is a failure of OUR reading,
+    not of their channel.
+
+    `scripts/processes.py::_lab_facts` had a looser version of this (any
+    give-up counted, ours included) until this function replaced it.
+    """
+    asked = {r.get("id"): r for r in rows if r.get("type") == "question"}
+    finished: dict[str, dict] = {}
+    for row in rows:
+        if row.get("type") in ("answer", "gave_up") and row.get("id") in asked:
+            finished[row["id"]] = row
+
+    streak = 0
+    for question_id in reversed(list(asked)):
+        row = finished.get(question_id)
+        if row is None:
+            continue
+        if row.get("type") == "answer":
+            break
+        status = str(row.get("status") or "")
+        if THEIR_GIVE_UP.match(status):
+            streak += 1
+        # else: a give-up on OUR side (a read failure) says nothing about
+        # their channel -- skip it and keep reading backward, rather than
+        # letting our own flaky read either inflate or erase the streak.
+    return streak

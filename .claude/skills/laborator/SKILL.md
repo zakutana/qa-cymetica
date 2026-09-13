@@ -93,7 +93,16 @@ tool's payload names no period at all, so an agent ranking them as their guide
 asks cannot see that they are different measurements. The first draft of that
 report claimed the contradiction; reading the whole payloads is what caught it.
 
-## 4. One question, in General
+## 4. One question, in General -- when the channel is worth spending it on
+
+**Check first, spend second.** `qa.lab.their_down_streak(nexus_rows) >= 3`
+means the deep lane has failed three times running on ITS side, not ours (the
+same distinction #86's own check makes). When that is true, skip `ask` for
+this session, run one extra `truth`/`search` pass instead, and say so at
+`close --lesson` -- a question spent on a channel that has not answered in a
+row is not evidence of anything, and the 8-per-session cap is real. `night()`
+already searches continuously regardless of a question's outcome, so nothing
+changes there.
 
 ```bash
 python scripts/lab.py ask "..."
@@ -163,6 +172,18 @@ so improving the formula later is visible instead of retroactive.
 
 Adoption is never retroactive: the window starts the moment it is written, and
 the row says `adopted` so nobody reads it as a criterion set in advance.
+
+**The book, not just the room.** `cycle` (step 2) also refreshes `N_eff` --
+Nexus's own leading indicator (2026-09-12, unprompted): average pairwise
+correlation of the open book, `n_eff = N / (1 + (N-1)*rho)`, warning before a
+correlated book draws down all at once rather than after. `status` shows the
+newest cached reading; a live one costs one call per open leg
+(`scripts/lab.py::book_correlation`).
+
+`status` also reports any position that resolved **without us** -- a card
+settling on its own, never through our `close`. Read purely from the sampler's
+own diary against our own book (`qa.lab.resolved_without_us`); the last
+unmeasured link of "bet -> resolves -> paid", and has never yet fired.
 
 ## 7. What we know about Nexus
 

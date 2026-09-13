@@ -321,3 +321,66 @@ def test_the_hook_is_silent_when_nothing_is_due_and_never_fails(tmp_path,
                             capture_output=True, text=True, timeout=30)
     assert broken.returncode == 0, broken.stderr
     assert socket is not None  # the import above is the guard's own subject
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_lab_facts_counts_only_their_side_of_the_streak(tmp_path, monkeypatch):
+    """`_lab_facts()` had its own looser streak: any `gave_up` counted,
+    including our own read failures (`unread: ReadTimeout`, `unknown`). A
+    session that failed to read three answers in a row would have reported
+    Nexus as down when nothing was wrong with their channel. Now it calls
+    `qa.lab.their_down_streak`, the same distinction #86's own check makes.
+
+    `QA_STATE_DIR` isolated too: `_lab_facts()` also reads `qa.lab.last_n_eff`,
+    which follows `qa.state.state_dir()` rather than this module's own
+    `REPO_ROOT` -- without this the test would read whatever `state/lab.jsonl`
+    happens to hold on the real machine.
+    """
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    mod = _module()
+    mod.REPO_ROOT = tmp_path
+    (tmp_path / "state").mkdir(parents=True, exist_ok=True)
+    rows = [
+        {"type": "question", "id": "NEX-1", "at": _ago(hours=3)},
+        {"type": "gave_up", "id": "NEX-1", "status": "failed"},
+        {"type": "question", "id": "NEX-2", "at": _ago(hours=2)},
+        {"type": "gave_up", "id": "NEX-2", "status": "running"},
+        {"type": "question", "id": "NEX-3", "at": _ago(hours=1)},
+        {"type": "gave_up", "id": "NEX-3", "status": "unknown: ReadTimeout"},
+    ]
+    (tmp_path / "state" / "nexus.jsonl").write_text(
+        "".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+
+    facts = mod._lab_facts()
+    assert facts["nexus_down"] == 0, (
+        f"the newest give-up is OUR read failure, not their channel, and it "
+        f"is below the 3-streak floor either way: {facts}")
+
+    # Three of THEIRS in a row is the real thing this exists to catch.
+    theirs_only = rows[:4] + [
+        {"type": "question", "id": "NEX-3", "at": _ago(hours=1)},
+        {"type": "gave_up", "id": "NEX-3", "status": "queued"}]
+    (tmp_path / "state" / "nexus.jsonl").write_text(
+        "".join(json.dumps(r) + "\n" for r in theirs_only), encoding="utf-8")
+    assert mod._lab_facts()["nexus_down"] == 3
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_n_eff_is_named_only_past_nexus_own_collapse_threshold():
+    """"when average pairwise correlation crosses ~0.6-0.7 the breadth
+    collapses" -- Nexus's own words, 2026-09-12, about its own top strategy.
+    Below that, a correlated pair of positions is the ordinary state of a
+    small book and not worth a line every session."""
+    mod = _module()
+
+    calm = mod.reminders(_facts(n_eff={"n": 3, "rho": 0.2, "n_eff": 2.5}), NOW)
+    assert not _says(calm, "koreluje", "korelac"), calm
+
+    collapsing = mod.reminders(_facts(n_eff={"n": 4, "rho": 0.7, "n_eff": 1.3}),
+                               NOW)
+    assert _says(collapsing, "1.3") and _says(collapsing, "4"), collapsing
+
+    # No reading at all (never run, or the book was too thin to correlate) is
+    # silence, not a nag about a number nobody has.
+    assert not _says(mod.reminders(_facts(n_eff=None), NOW),
+                     "koreluje", "korelac")

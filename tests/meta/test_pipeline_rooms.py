@@ -1373,3 +1373,18 @@ def test_the_strip_names_each_strategy_and_its_panel_leads_with_numbers(
         assert panel.rfind("<details", 0, at) <= panel.rfind("</details>", 0, at), (
             f"{said!r} is folded away")
         assert at < panel.index("nx-tile"), f"{said!r} sits under the numbers"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_status_of_reads_the_newest_row_and_nothing_for_a_proposed_room():
+    from qa import rooms
+
+    assert rooms.status_of([], "STR-0001") is None, (
+        "a room nobody has moved out of proposed writes no status row at all")
+    moved = [
+        {"type": "status", "room": "STR-0001", "status": "running", "at": "t1"},
+        {"type": "status", "room": "STR-0002", "status": "running", "at": "t1"},
+        {"type": "status", "room": "STR-0001", "status": "paused", "at": "t2"},
+    ]
+    assert rooms.status_of(moved, "STR-0001") == "paused"
+    assert rooms.status_of(moved, "STR-0002") == "running"

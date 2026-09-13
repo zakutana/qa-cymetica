@@ -115,6 +115,17 @@ def reminders(facts: dict, now: datetime) -> list[str]:
             + (f" do {until}" if until else "")
             + " — neptej se Nexuse souběžně, ráno ji shrne `lab.py status`.")
 
+    # Nexus's own leading indicator (2026-09-12, unprompted, about its own top
+    # strategy): "when average pairwise correlation crosses ~0.6-0.7 the
+    # breadth collapses and that precedes the drawdown." Below that threshold
+    # a correlated pair is the ordinary state of a small book.
+    n_eff = facts.get("n_eff")
+    if isinstance(n_eff, dict) and (n_eff.get("rho") or 0) >= 0.6:
+        out.append(
+            f"Kniha je moc korelovaná (N_eff {n_eff['n_eff']:.1f} z "
+            f"{n_eff['n']}, ⍴={n_eff['rho']:.2f}) — drawdown by mohl přijít "
+            f"najednou.")
+
     retry = _hours_since(facts.get("nexus_last_try"), now)
     if facts.get("nexus_down") and retry is not None and retry >= 2:
         out.append(
@@ -744,7 +755,7 @@ def _lab_facts() -> dict:
     would itself be counted by the check that measures how often we ask."""
     out: dict[str, object] = {"lab_open": [], "nexus_down": 0,
                               "nexus_last_try": None, "night_running": None,
-                              "night_until": None}
+                              "night_until": None, "n_eff": None}
     try:
         from qa import lab
 
@@ -753,19 +764,25 @@ def _lab_facts() -> dict:
             out["night_running"], out["night_until"] = running
         out["lab_open"] = sessions_to_close(lab.open_sessions(),
                                             out["night_running"])
+        # The newest READING, not computed here -- this function stays a
+        # local-file read, same as the rest of it. `book_correlation` does the
+        # one live call, per lab session, and logs it; this reads that log
+        # back, so a reminder never itself touches the network.
+        out["n_eff"] = lab.last_n_eff()
     except Exception:  # noqa: BLE001
         pass
 
     rows = _jsonl(REPO_ROOT / "state" / "nexus.jsonl")
     asked = [r for r in rows if r.get("type") == "question"]
-    finished = {r.get("id"): r.get("type") for r in rows
-                if r.get("type") in ("answer", "gave_up")}
-    streak = 0
-    for row in reversed(asked):
-        outcome = finished.get(row.get("id"))
-        if outcome == "answer":
-            break
-        streak += 1
+    # Counted only from THEIR side breaking -- any gave-up used to count here,
+    # including our own read failures (`unread: ReadTimeout`, `unknown`), so a
+    # session that merely failed to read three answers reported Nexus as down.
+    # qa.lab.their_down_streak makes the same "theirs, not ours" distinction
+    # #86's own check does, duplicated rather than shared so that check's
+    # fingerprint never moves for a reminder-side fix (rule 5).
+    from qa.lab import their_down_streak
+
+    streak = their_down_streak(rows)
     out["nexus_down"] = streak if streak >= 3 else 0
     if asked:
         out["nexus_last_try"] = asked[-1].get("at")

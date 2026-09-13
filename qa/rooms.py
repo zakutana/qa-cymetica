@@ -362,6 +362,15 @@ def verdict_of(rows: list[dict], room: str) -> dict | None:
     return seen[-1] if seen else None
 
 
+def status_of(rows: list[dict], room: str) -> str | None:
+    """Where a strategy stands now -- the newest `status` row, or None for a
+    room nobody has ever moved out of `proposed` (which writes no row at all;
+    `open_strategy` names no starting status)."""
+    seen = [r for r in rows
+            if r.get("type") == "status" and r.get("room") == room]
+    return seen[-1]["status"] if seen else None
+
+
 def set_claim(room: str, quoted: dict) -> dict:
     """His numbers, and only the ones his answer actually says.
 

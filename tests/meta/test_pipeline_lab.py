@@ -83,6 +83,130 @@ def test_a_missing_sharpe_is_not_a_zero():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_n_eff_collapses_toward_one_as_the_book_correlates():
+    """Nexus's own leading indicator (2026-09-12, unprompted): "N_eff = N /
+    (1 + (N-1)*rho) over the open book -- when average pairwise correlation
+    crosses ~0.6-0.7 the breadth collapses and that precedes the drawdown."
+    It is the only thing Nexus has told us about risk in the whole BOOK rather
+    than in one card, and nothing built it. This is the pure formula; the
+    laboratory's own wiring reads it off real index-history separately.
+    """
+    identical = {"a": [1.0, 2.0, 3.0, 4.0, 5.0],
+                "b": [2.0, 4.0, 6.0, 8.0, 10.0]}
+    said = lab.n_eff(identical)
+    assert said["n"] == 2
+    assert abs(said["rho"] - 1.0) < 1e-9
+    assert abs(said["n_eff"] - 1.0) < 1e-9, (
+        "two perfectly correlated positions are one position's worth of risk")
+
+    orthogonal = {"a": [1.0, -1.0, 1.0, -1.0, 1.0],
+                 "b": [1.0, 1.0, -1.0, -1.0, 1.0]}
+    said = lab.n_eff(orthogonal)
+    assert said["n"] == 2
+    assert abs(said["rho"]) < 0.3, said
+    assert said["n_eff"] > 1.7, (
+        "near-uncorrelated positions should read as close to their own count")
+
+    # Nexus's stated collapse zone: rho crossing ~0.6-0.7 halves the breadth
+    # of a five-position book toward two, not five.
+    mixed = {"a": [1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
+             "b": [1.1, 2.2, 2.9, 4.3, 4.8, 6.4],
+             "c": [1.2, 1.9, 3.3, 3.8, 5.2, 5.9],
+             "d": [5.0, 4.0, 3.0, 2.0, 1.0, 0.5],
+             "e": [4.9, 4.1, 2.8, 2.2, 0.9, 0.6]}
+    said = lab.n_eff(mixed)
+    assert said["n"] == 5
+    n = said["n"]
+    expected = n / (1 + (n - 1) * said["rho"])
+    assert abs(said["n_eff"] - expected) < 1e-9, "the formula is exactly this"
+
+    # A gap is not a loss: fewer than two rooms, or a series too short to
+    # correlate, is inconclusive -- never a fabricated 1.0 or a crash.
+    assert lab.n_eff({}) == {
+        "verdict": "inconclusive", "why": "fewer than two open positions"}
+    assert lab.n_eff({"a": [1.0, 2.0, 3.0, 4.0, 5.0]}) == {
+        "verdict": "inconclusive", "why": "fewer than two open positions"}
+    short = lab.n_eff({"a": [1.0, 2.0], "b": [2.0, 4.0]})
+    assert short["verdict"] == "inconclusive"
+    assert "short" in short["why"] or "point" in short["why"], short
+
+    # A perfectly flat series has no correlation to compute -- not an error,
+    # not a fabricated 1.0 either.
+    flat = lab.n_eff({"a": [3.0, 3.0, 3.0, 3.0, 3.0], "b": [1.0, 2.0, 3.0, 4.0, 5.0]})
+    assert flat["verdict"] == "inconclusive", flat
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_position_resolved_without_us_is_read_from_the_samples(tmp_path):
+    """The last unmeasured link: 'bet -> resolves -> paid'. A close WE sent is
+    already measured (#87, TRD-0005); a card that resolves on its own has
+    never been caught, because nothing compared what our book says is open
+    against what their own sampled position status says.
+    """
+    paper_rows = [
+        {"type": "intent", "id": "TRD-1", "card_id": "c1", "usdc": 10.0},
+        {"type": "outcome", "id": "TRD-1", "outcome": "accepted",
+         "position_id": "p1"},
+        # p2 we closed ourselves -- must NOT be reported as resolved without us.
+        {"type": "intent", "id": "TRD-2", "card_id": "c2", "usdc": 10.0},
+        {"type": "outcome", "id": "TRD-2", "outcome": "accepted",
+         "position_id": "p2"},
+        {"type": "intent", "id": "TRD-3", "kind": "close", "position_id": "p2"},
+        {"type": "outcome", "id": "TRD-3", "kind": "close", "outcome": "accepted"},
+    ]
+    sample_rows = [
+        {"kind": "position", "at": "2026-09-13T10:00:00+00:00",
+         "position_id": "p1", "card_id": "c1", "status": "open"},
+        {"kind": "position", "at": "2026-09-13T10:00:00+00:00",
+         "position_id": "p2", "card_id": "c2", "status": "open"},
+        # p1 flips to closed with realised P&L and NO close event of ours.
+        {"kind": "position", "at": "2026-09-13T16:00:00+00:00",
+         "position_id": "p1", "card_id": "c1", "status": "closed",
+         "realized_pnl_usdc": 4.2},
+        {"kind": "position", "at": "2026-09-13T16:00:00+00:00",
+         "position_id": "p2", "card_id": "c2", "status": "closed",
+         "realized_pnl_usdc": -1.0},
+    ]
+    found = lab.resolved_without_us(paper_rows, sample_rows)
+    assert [r["position_id"] for r in found] == ["p1"], found
+    assert found[0]["card_id"] == "c1"
+    assert found[0]["realized_pnl_usdc"] == 4.2
+    assert found[0]["resolved_at"] == "2026-09-13T16:00:00+00:00"
+
+    # Nothing yet closed: nothing to report, not an error.
+    assert lab.resolved_without_us(paper_rows, sample_rows[:2]) == []
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_their_down_streak_counts_only_their_side_breaking():
+    """Duplicated from -- not sharing -- #86's own classifier
+    (tests/mcp/test_nexus_channel.py::did_not_answer), on purpose: that
+    function's fingerprint must not move for a reminder-side refactor (rule
+    5). Same distinction, independent fixtures.
+    """
+    rows = [
+        {"type": "question", "id": "NEX-1", "at": "2026-09-13T10:00:00+00:00"},
+        {"type": "gave_up", "id": "NEX-1", "status": "failed"},
+        {"type": "question", "id": "NEX-2", "at": "2026-09-13T11:00:00+00:00"},
+        {"type": "gave_up", "id": "NEX-2", "status": "running"},
+        {"type": "question", "id": "NEX-3", "at": "2026-09-13T12:00:00+00:00"},
+        {"type": "gave_up", "id": "NEX-3", "status": "unknown: ReadTimeout"},
+    ]
+    assert lab.their_down_streak(rows) == 2, (
+        "the newest give-up is OURS (a read failure), not theirs -- the "
+        "streak is read from the tail and must not count it")
+
+    rows[-1] = {"type": "gave_up", "id": "NEX-3", "status": "queued"}
+    assert lab.their_down_streak(rows) == 3, (
+        "a still-queued give-up at their own ceiling is their channel, not ours")
+
+    answered = rows + [
+        {"type": "question", "id": "NEX-4", "at": "2026-09-13T13:00:00+00:00"},
+        {"type": "answer", "id": "NEX-4"}]
+    assert lab.their_down_streak(answered) == 0, "one answer resets the streak"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_notebook_keeps_at_most_three_lessons_and_knows_an_open_session(
         tmp_path, monkeypatch):
     monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
@@ -678,6 +802,77 @@ def test_a_room_goes_running_only_with_a_criterion_written_first(tmp_path,
     claim = [r for r in rows if r["type"] == "claim"][-1]
     assert claim["quoted"]["sharpe"] == "5.16"
     assert claim["numbers"]["sharpe"] == 5.16
+
+
+# --- N_eff -------------------------------------------------------------
+#
+# The wiring around the pure formula: turning running rooms into one aligned
+# return series each, live-history injected so this needs no network.
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_open_book_returns_reads_only_running_rooms_weighted_by_leg(
+        tmp_path, monkeypatch):
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    now = datetime(2026, 9, 13, 12, 0, tzinfo=timezone.utc)
+    rows = [
+        {"type": "strategy", "id": "STR-0001", "origin": "NEX-1", "at": "t0"},
+        {"type": "plan", "room": "STR-0001", "at": "t1",
+         "legs": [{"card": "c1", "side": "bull", "share": 1.0}]},
+        {"type": "status", "room": "STR-0001", "status": "running", "at": "t2"},
+        # A second room, never set running -- must not appear at all.
+        {"type": "strategy", "id": "STR-0002", "origin": "NEX-2", "at": "t0"},
+        {"type": "plan", "room": "STR-0002", "at": "t1",
+         "legs": [{"card": "c2", "side": "bull", "share": 1.0}]},
+    ]
+    (tmp_path / "rooms.jsonl").write_text(
+        "".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+
+    history = {"c1": [{"t": (now - timedelta(days=d)).isoformat(), "index": v}
+                      for d, v in [(3, 100.0), (2, 110.0), (1, 121.0), (0, 133.1)]][::-1]}
+    returns = scripts_lab.open_book_returns(
+        now=now, history=lambda card: history.get(card, []))
+
+    assert list(returns) == ["STR-0001"], (
+        "a room never set running is not part of the open book")
+    assert all(abs(r - 10.0) < 1e-6 for r in returns["STR-0001"]), returns
+
+    # A bear leg's return is flipped, and a two-leg room is share-weighted.
+    rows.append({"type": "plan", "room": "STR-0001", "at": "t3",
+                "legs": [{"card": "c1", "side": "bear", "share": 0.5},
+                         {"card": "c2", "side": "bull", "share": 0.5}]})
+    (tmp_path / "rooms.jsonl").write_text(
+        "".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+    history["c2"] = history["c1"]  # identical series, opposite leg side
+    mixed = scripts_lab.open_book_returns(
+        now=now, history=lambda card: history.get(card, []))
+    assert all(abs(r) < 1e-6 for r in mixed["STR-0001"]), (
+        f"+10% bull and -10% (flipped bear) at equal share should cancel: "
+        f"{mixed}")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_book_correlation_writes_a_reading_only_when_one_was_taken(
+        tmp_path, monkeypatch):
+    """The wiring, not the formula: `book_correlation` calls `lab.n_eff` on
+    whatever `open_book_returns` produced and only appends a notebook row when
+    the result actually carries a reading -- an inconclusive book (fewer than
+    two open positions, which is the ordinary daytime state) writes nothing."""
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    monkeypatch.setattr(scripts_lab, "open_book_returns", lambda **k: {})
+
+    said = scripts_lab.book_correlation()
+    assert said["verdict"] == "inconclusive"
+    assert lab.last_n_eff() is None, "an inconclusive reading must not be logged"
+
+    monkeypatch.setattr(
+        scripts_lab, "open_book_returns",
+        lambda **k: {"a": [1.0, 2.0, 3.0, 4.0, 5.0],
+                    "b": [2.0, 4.0, 6.0, 8.0, 10.0]})
+    said = scripts_lab.book_correlation()
+    assert said["n_eff"] == pytest.approx(1.0)
+    logged = lab.last_n_eff()
+    assert logged is not None and logged["n_eff"] == pytest.approx(1.0)
 
 
 # --- the night -------------------------------------------------------------
@@ -1372,3 +1567,35 @@ def test_the_night_reaches_the_launch_step_at_all(tmp_path, monkeypatch):
     assert did["orders"] >= 1, "the night launched nothing"
     assert did["rooms"] >= 1
     assert bought, "no paper order was placed"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_status_shows_the_cached_n_eff_and_a_resolve_nobody_caught(
+        tmp_path, monkeypatch):
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+
+    (tmp_path / "lab.jsonl").write_text(json.dumps(
+        {"type": "n_eff", "at": "2026-09-13T10:00:00+00:00",
+         "n": 4, "rho": 0.72, "n_eff": 1.4}) + "\n", encoding="utf-8")
+
+    paper = [
+        {"type": "intent", "id": "TRD-1", "card_id": "c1", "usdc": 10.0},
+        {"type": "outcome", "id": "TRD-1", "outcome": "accepted",
+         "position_id": "p1"},
+    ]
+    (tmp_path / "paper.jsonl").write_text(
+        "".join(json.dumps(r) + "\n" for r in paper), encoding="utf-8")
+    samples = [
+        {"kind": "position", "at": "2026-09-13T09:00:00+00:00",
+         "position_id": "p1", "card_id": "c1", "status": "open"},
+        {"kind": "position", "at": "2026-09-13T15:00:00+00:00",
+         "position_id": "p1", "card_id": "c1", "status": "closed",
+         "realized_pnl_usdc": 7.5},
+    ]
+    (tmp_path / "samples.jsonl").write_text(
+        "".join(json.dumps(r) + "\n" for r in samples), encoding="utf-8")
+
+    out = scripts_lab.status()
+    assert "N_eff 1.4 of 4" in out, out
+    assert "0.72" in out, out
+    assert "RESOLVED WITHOUT US: p1 (c1), 7.5 USDC" in out, out
