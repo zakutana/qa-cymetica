@@ -1288,9 +1288,12 @@ def _fomo_stats() -> dict | None:
         if isinstance(row, dict):
             rows.append(row)
 
-    from qa.fomo import stats
+    from qa.fomo import curves, stats
 
-    return stats(rows)
+    # The curves are what the page DRAWS; the stats are what it concludes.
+    # Both, because a hit rate without the shape hides a coin that ran 900%
+    # in hour three and gave it back by six.
+    return {**stats(rows), "curves": curves(rows)}
 
 
 def _process_rows() -> list[dict]:
@@ -1858,6 +1861,16 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:15.0px; max-wid
 .mc-figs dt{font-size:12px;color:var(--text-dim);margin:0}
 .mc-figs dd{margin:2px 0 0;font-size:19px;font-weight:600}
 
+.mc-curves{display:grid;gap:14px;margin:0 0 30px;
+  grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}
+.mc-curve{background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 16px 10px}
+.mc-cn{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.mc-cn b{font-size:17px;font-weight:700}
+.mc-cn .mc-now{font-size:19px;font-variant-numeric:tabular-nums}
+.mc-cmeta{font-size:12px;color:var(--text-dim);margin:2px 0 8px}
+.mc-curve svg{display:block;width:100%;height:84px;overflow:visible}
+.mc-ax{font-size:10px;fill:var(--text-faint)}
 .mc-table{margin:0 0 26px}
 .mc-table h3{font-size:15px;margin:0 0 10px;color:var(--text-dim);
   font-weight:600}
@@ -4639,6 +4652,66 @@ function pct(v) {
   return `<span class="${cls}">${sign}${v.toFixed(1)}%</span>`;
 }
 
+/* One token, one hourly curve. A gap is a BREAK in the line, never a point
+   at zero: half these tokens are too new for any DEX pool, and a flat line
+   would say the coin sat still when the truth is that nobody could price it.
+   Drawn as inline SVG -- no library reaches this page and none is needed. */
+function curveSvg(points) {
+  const W = 300, H = 84, PAD = 4;
+  const read = points.filter(p => p[1] != null);
+  if (!read.length) return "";
+  const vals = read.map(p => p[1]);
+  const hi = Math.max(...vals, 0), lo = Math.min(...vals, 0);
+  const span = (hi - lo) || 1;
+  const hours = points.length || 1;
+  const x = h => PAD + ((h - 1) / Math.max(hours - 1, 1)) * (W - 2 * PAD);
+  const y = v => PAD + (1 - (v - lo) / span) * (H - 2 * PAD);
+
+  // Two strokes, and the difference between them is the honesty. A SOLID
+  // segment joins two hours we actually read back to back. A DASHED one
+  // spans hours nobody priced -- the shape is a guess there, and it should
+  // look like one. Both are drawn, because an all-dots chart (which is what
+  // a break-the-line rule produced on 2026-09-13 with 1h/4h/8h recorded and
+  // everything between missing) shows no trajectory at all.
+  const seg = (a, b, dashed) =>
+    `<line x1="${x(a[0]).toFixed(1)}" y1="${y(a[1]).toFixed(1)}"
+       x2="${x(b[0]).toFixed(1)}" y2="${y(b[1]).toFixed(1)}"
+       stroke="var(${b[1] >= a[1] ? "--ok" : "--bad"})" stroke-width="2"
+       stroke-linecap="round"${dashed ? ' stroke-dasharray="3 4" opacity=".5"' : ""}/>`;
+
+  const lines = read.slice(1).map((p, i) =>
+    seg(read[i], p, p[0] - read[i][0] > 1)).join("");
+  const dots = read.map(p =>
+    `<circle cx="${x(p[0]).toFixed(1)}" cy="${y(p[1]).toFixed(1)}" r="2.6"
+      fill="var(${p[1] >= 0 ? "--ok" : "--bad"})"/>`).join("");
+  const zero = y(0);
+
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"
+    role="img" aria-label="hourly return since the signal">
+    <line x1="${PAD}" x2="${W - PAD}" y1="${zero.toFixed(1)}" y2="${zero.toFixed(1)}"
+      stroke="var(--line)" stroke-width="1" stroke-dasharray="3 3"/>
+    ${lines}${dots}
+  </svg>`;
+}
+
+function curveCards(list) {
+  if (!list || !list.length) return "";
+  return `<section class="mc-table"><h3>Hour by hour since the signal &mdash;
+    ${list.length} token(s)</h3></section>
+    <div class="mc-curves">${list.map(c => {
+      const hours = c.points.length;
+      const read = c.points.filter(p => p[1] != null).length;
+      return `<article class="mc-curve">
+        <div class="mc-cn"><b>${esc(c.symbol || "?")}</b>
+          <span class="mc-now">${pct(c.last)}</span></div>
+        <div class="mc-cmeta">conviction ${c.conviction == null ? "&mdash;" : c.conviction}
+          &middot; peak ${c.peak == null ? "&mdash;" : c.peak.toFixed(0) + "%"}
+          &middot; ${read} of ${hours} h priced</div>
+        ${curveSvg(c.points)}
+      </article>`;
+    }).join("")}</div>`;
+}
+
 function memecoinPanel() {
   // `S` is local to statBlocks(), so this reads the payload itself rather
   // than borrowing a name that happens to exist one function along.
@@ -4698,6 +4771,7 @@ function memecoinPanel() {
     </header>
     ${horizons.length ? `<div class="mc-grid">${cards}</div>` : `<p class="blurb">
       Tracking signals; none has reached its first checkpoint (1h) yet.</p>`}
+    ${curveCards(fm.curves)}
     ${tables}`;
 }
 

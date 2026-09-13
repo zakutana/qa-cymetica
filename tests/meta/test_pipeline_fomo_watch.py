@@ -165,9 +165,18 @@ def test_resolve_checkpoints_only_what_is_due_and_computes_our_own_return(
         f"OUR return from 0.002 to 0.003 is +50%%, not their own 999%% "
         f"rolling window: {checkpoint}")
 
-    # The same horizon is not checkpointed twice.
-    again = mod.resolve(_client(handler), now=T0 + timedelta(hours=2))
+    # The same horizon is not checkpointed twice. Read between two marks --
+    # since 2026-09-13 every hour is a horizon, so at exactly +2h the SECOND
+    # hour is legitimately ripe and this would be measuring that instead.
+    again = mod.resolve(_client(handler), now=T0 + timedelta(hours=1, minutes=45))
     assert again["checked"] == 0
+
+    # And an hour whose moment has passed is never filled in later: at +5h
+    # hours 2, 3 and 4 are gone, and only hour 5 is offered.
+    late = mod.resolve(_client(handler), now=T0 + timedelta(hours=5, minutes=5))
+    assert late["checked"] == 1, late
+    assert late["checkpoints"][0]["horizon"] == "5h", (
+        "a stale hour was filled with a five-hour-old signal's current price")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

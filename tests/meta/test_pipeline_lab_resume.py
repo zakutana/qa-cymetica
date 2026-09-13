@@ -34,13 +34,20 @@ def _signal(key: str, hours_ago: float) -> dict:
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_ripe_checkpoint_is_the_first_thing_a_tick_is_told():
     """The only work here that expires. Everything else waits."""
-    rows = [_signal("0xa:2026-09-13T06", hours_ago=6.5)]
+    # Just past its sixth hour, so hour 6 is ripe and the five before it are
+    # gone for good -- since 2026-09-13 a horizon is offered only while it is
+    # still near, or resolve() would file the current price under an hour it
+    # was never read at.
+    rows = [_signal("0xa:2026-09-13T06", hours_ago=6.2)]
     out = lab.due(now=NOW, fomo_rows=rows, tournament={}, open_findings=0)
     assert out, "a ripe checkpoint produced no item at all"
     assert "fomo_watch" in out[0]["run"], out
-    # Both 1h and 6h are past for a signal 6.5 hours old and neither is
-    # recorded, so it is two checkpoints, not one. The first draft said one.
-    assert out[0]["why"].startswith("2 memecoin"), out[0]["why"]
+    assert out[0]["why"].startswith("1 memecoin"), out[0]["why"]
+
+    # And a signal whose marks have all gone by is not endless work.
+    stale = [_signal("0xb:2026-09-13T00", hours_ago=12.9)]
+    out = lab.due(now=NOW, fomo_rows=stale, tournament={}, open_findings=0)
+    assert not any("fomo_watch" in i["run"] for i in out), out
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

@@ -140,3 +140,127 @@ def test_one_token_appears_once_in_best_and_worst():
     # The RATE still counts both signals -- it is a rate over signals fired,
     # and collapsing them would quietly change what the number means.
     assert one["resolved"] == 3, one["resolved"]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_every_hour_of_the_first_day_is_a_checkpoint():
+    """[operator 2026-09-13] *"chci videt proswte graf vyvoje ceny po hodinach
+    pro kazdy. staci pristich 24h vyvoje"*.
+
+    Three readings (1h, 6h, 24h) cannot draw a curve; they draw two line
+    segments, and a memecoin that went up 900% in hour three and gave it all
+    back by hour six looks identical to one that did nothing. So the whole
+    first day is sampled hour by hour.
+
+    24 checkpoints per signal against their memecoin-terminal, whose own
+    server cache is 180s -- spread across a day this is nothing, and the
+    register is what stops any hour being asked twice.
+    """
+    assert fomo.HORIZONS_HOURS == tuple(float(h) for h in range(1, 25)), (
+        fomo.HORIZONS_HOURS)
+
+    t0 = T0
+    signal = {"key": "0xabc:2026-09-13T12", "at": t0.isoformat()}
+
+    # Just after each mark, that hour and only that hour is offered. Hours 1
+    # and 2 are not back-offered at 3.1h -- their prices are gone, and taking
+    # them now would file the 3h price under 1h. See the tolerance test below.
+    due = fomo.due_checkpoints([signal], {}, now=t0 + timedelta(hours=3.1))
+    assert [label for _, label in due] == ["3h"], due
+
+    # Nothing is asked twice: an hour already recorded drops out and the tick
+    # then has nothing to do for this signal until the next mark.
+    done = {"0xabc:2026-09-13T12": {"3h"}}
+    due = fomo.due_checkpoints([signal], done, now=t0 + timedelta(hours=3.1))
+    assert due == [], due
+
+    # And the day ends: hour 25 is not a horizon, however long we wait.
+    due = fomo.due_checkpoints([signal], {}, now=t0 + timedelta(hours=24.1))
+    assert [label for _, label in due] == ["24h"], due
+    assert fomo.due_checkpoints([signal], {},
+                                now=t0 + timedelta(hours=100)) == []
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_each_token_gets_its_own_hourly_curve():
+    """What the console draws: one series per token, hour by hour.
+
+    `stats()` answers "did the signal work" in aggregate; a curve is a
+    different question and needs the points, not the summary. Gaps are real
+    -- a token unpriced at hour 4 is a hole, not a zero -- so the series
+    carries None there rather than closing over it, and the page can then
+    draw a break instead of a straight line through nothing.
+    """
+    rows = []
+    key = "0xabc:2026-09-13T12"
+    rows.append({"type": "signal", "key": key, "token_address": "0xabc",
+                 "symbol": "DOGEX", "conviction": 71.0, "price_usd": 1.0})
+    for hour, ret in ((1, 10.0), (2, 40.0), (4, None), (5, -12.0)):
+        rows.append({"type": "checkpoint", "key": key, "horizon": f"{hour}h",
+                     "price_usd": None if ret is None else 1 + ret / 100,
+                     "return_pct": ret})
+
+    series = fomo.curves(rows)
+    assert len(series) == 1
+    curve = series[0]
+    assert curve["symbol"] == "DOGEX" and curve["conviction"] == 71.0
+    assert curve["points"][:2] == [(1, 10.0), (2, 40.0)]
+    assert (3, None) in curve["points"], "an hour never sampled is a gap"
+    assert (4, None) in curve["points"], "an unpriced hour is a gap, not a 0"
+    assert (5, -12.0) in curve["points"]
+    assert curve["last"] == -12.0, "the newest reading, for sorting"
+    assert curve["peak"] == 40.0, "the best it ever got, which is the story"
+
+    # Curves are ordered so the reader meets the big movers first.
+    more = rows + [
+        {"type": "signal", "key": "0xbbb:2026-09-13T12", "token_address":
+         "0xbbb", "symbol": "TINY", "conviction": 20.0, "price_usd": 1.0},
+        {"type": "checkpoint", "key": "0xbbb:2026-09-13T12", "horizon": "1h",
+         "price_usd": 1.01, "return_pct": 1.0}]
+    assert [c["symbol"] for c in fomo.curves(more)] == ["DOGEX", "TINY"]
+
+    # A signal with no checkpoint at all draws nothing rather than a flat line
+    # at zero, which would read as "the signal did nothing".
+    only = [{"type": "signal", "key": "0xccc:2026-09-13T12",
+             "token_address": "0xccc", "symbol": "NEW", "price_usd": 1.0}]
+    assert fomo.curves(only) == []
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_hour_missed_is_never_filled_with_a_later_price():
+    """The worst thing this module could do, and it nearly did it.
+
+    `resolve()` reads the price NOW and files it under whichever horizon is
+    due. That is correct when the horizon just came round and a lie when it
+    did not: on 2026-09-13 the horizons went from (1, 6, 24) to every hour,
+    and 85 signals seven hours old suddenly had hours 2, 3, 4 and 5 "due".
+    Resolving them would have written the seven-hour price into the two-hour
+    slot, hundreds of times, and drawn the curve the operator had just asked
+    for out of numbers that were never observed.
+
+    So a horizon is only due while it is still NEAR -- `DUE_TOLERANCE_HOURS`
+    after it comes round. Past that the hour is gone and stays a gap, which
+    `curves()` already draws as a break in the line. A hole in a measurement
+    is honest; a fabricated point is not, and a fabricated point that looks
+    plausible is the worst of the three.
+    """
+    t0 = T0
+    signal = {"key": "0xabc:2026-09-13T12", "at": t0.isoformat()}
+
+    # Just past the first hour: due, obviously.
+    due = fomo.due_checkpoints([signal], {}, now=t0 + timedelta(hours=1.1))
+    assert [l for _, l in due] == ["1h"], due
+
+    # Seven hours later with only 1h and 6h recorded: the hours in between
+    # are NOT offered, because their prices are gone.
+    done = {"0xabc:2026-09-13T12": {"1h", "6h"}}
+    due = fomo.due_checkpoints([signal], done, now=t0 + timedelta(hours=7.0))
+    assert [l for _, l in due] == ["7h"], (
+        f"a stale hour was offered for filling with a later price: {due}")
+
+    # The boundary itself, both sides of it.
+    late = t0 + timedelta(hours=2 + fomo.DUE_TOLERANCE_HOURS - 0.01)
+    assert "2h" in [l for _, l in fomo.due_checkpoints([signal], {}, now=late)]
+    later = t0 + timedelta(hours=2 + fomo.DUE_TOLERANCE_HOURS + 0.01)
+    assert "2h" not in [l for _, l in fomo.due_checkpoints([signal], {},
+                                                           now=later)]

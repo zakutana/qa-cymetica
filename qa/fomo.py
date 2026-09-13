@@ -34,7 +34,19 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from statistics import median
 
-HORIZONS_HOURS = (1.0, 6.0, 24.0)
+# Every hour of the first day. [operator 2026-09-13] asked to SEE the curve
+# rather than read a hit rate, and three readings draw two line segments: a
+# coin that ran 900% in hour three and gave it all back by hour six is
+# indistinguishable from one that never moved. A day is where it stops --
+# these are bonding-curve launches, and what happens after 24h is a different
+# question from whether the signal called the move.
+HORIZONS_HOURS = tuple(float(h) for h in range(1, 25))
+
+# How late a checkpoint may still be taken. The loop ticks every twenty
+# minutes and their memecoin-terminal caches for three, so an hour is either
+# caught close to its mark or not at all -- filling it later would file a
+# price under a time it was not read at. Deliberately not generous.
+DUE_TOLERANCE_HOURS = 0.75
 DEFAULT_HIT_THRESHOLD = 20.0
 
 
@@ -86,6 +98,15 @@ def due_checkpoints(signals: list[dict], done: dict[str, set[str]], now=None,
 
     A gap is not a loss: a signal whose `at` cannot be read is skipped, never
     treated as overdue.
+
+    **And an hour that has gone is gone.** `resolve()` reads the price NOW and
+    files it under the horizon it is handed, so offering a horizon that came
+    round hours ago would write today's price into a slot it was never
+    measured in. A horizon is due only while it is still within
+    `DUE_TOLERANCE_HOURS`; after that it stays an unfilled gap, which
+    `curves()` draws as a break in the line. Found 2026-09-13 when the
+    horizons went hourly and 85 seven-hour-old signals suddenly had hours
+    2 to 5 "due".
     """
     moment = now or datetime.now(timezone.utc)
     out = []
@@ -99,7 +120,8 @@ def due_checkpoints(signals: list[dict], done: dict[str, set[str]], now=None,
             label = f"{hours:g}h"
             if label in recorded:
                 continue
-            if moment >= when + timedelta(hours=hours):
+            ripe = when + timedelta(hours=hours)
+            if ripe <= moment < ripe + timedelta(hours=DUE_TOLERANCE_HOURS):
                 out.append((signal, label))
     return out
 
@@ -181,3 +203,63 @@ def stats(rows: list[dict], hit_threshold: float = DEFAULT_HIT_THRESHOLD,
                        if len(ranked_tokens) > top else []),
         }
     return out
+
+
+def curves(rows: list[dict], limit: int = 40) -> list[dict]:
+    """One hourly series per token, for the console to draw.
+
+    `stats()` answers whether the signal worked, in aggregate. A curve is a
+    different question -- what the coin actually DID -- and needs the points
+    rather than the summary. [operator 2026-09-13] asked to see the shape.
+
+    Gaps stay gaps. An hour never sampled and an hour whose price could not be
+    read are both `None`, never 0: half of these tokens are too new for any
+    DEX pool, and a zero there would draw a coin sitting still when the truth
+    is that nobody knows. The page can break the line instead.
+
+    Newest signal wins per token, the same rule `stats()` uses for its tables,
+    so a coin hot in two consecutive hours is one curve and not two.
+    """
+    newest: dict[str, dict] = {}
+    for row in rows or []:
+        if row.get("type") != "signal" or not row.get("key"):
+            continue
+        token = str(row["key"]).rsplit(":", 1)[0]
+        if str(row["key"]) >= str(newest.get(token, {}).get("key", "")):
+            newest[token] = row
+
+    seen: dict[str, dict[int, float | None]] = {}
+    for row in rows or []:
+        if row.get("type") != "checkpoint" or not row.get("key"):
+            continue
+        token = str(row["key"]).rsplit(":", 1)[0]
+        if str(row["key"]) != str(newest.get(token, {}).get("key")):
+            continue
+        label = str(row.get("horizon") or "")
+        try:
+            hour = int(float(label.rstrip("h")))
+        except ValueError:
+            continue
+        seen.setdefault(token, {})[hour] = row.get("return_pct")
+
+    out = []
+    for token, by_hour in seen.items():
+        if not any(v is not None for v in by_hour.values()):
+            continue
+        signal = newest.get(token) or {}
+        highest = max(h for h in by_hour)
+        points = [(h, by_hour.get(h)) for h in range(1, highest + 1)]
+        read = [v for _, v in points if v is not None]
+        out.append({
+            "token": token,
+            "symbol": signal.get("symbol") or "?",
+            "conviction": signal.get("conviction"),
+            "points": points,
+            "last": read[-1] if read else None,
+            "peak": max(read) if read else None,
+            "trough": min(read) if read else None,
+        })
+    # Biggest mover first: the reader meets the story, not the alphabet.
+    out.sort(key=lambda c: (c["peak"] if c["peak"] is not None else -1e9),
+             reverse=True)
+    return out[:limit]
