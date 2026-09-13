@@ -214,6 +214,35 @@ was invisible, nothing went red, and the pass simply learned nothing. Fixed
 Those files are 20–30 MB, so never read one whole; that command is the whole of
 the access.
 
+**Then the other side of the same transcript,** which `messages` cannot show:
+
+```bash
+python scripts/processes.py trail --since-last-pass
+```
+
+[operator 2026-09-13] *"a proc ne z contextoveho okna?> dyt tady je nejvetsi
+value prece z celeho dne ne"* — and they were right. This pass HAS the context
+window, being invoked in the session that did the day's work; what it cannot
+do is rely on it, because it is compacted somewhere in the middle of itself.
+The transcript survives that, and 5 MB of this session's own 13 MB is the
+assistant's side — every correction, every thing that broke — which
+`messages` drops on the floor by keeping only `type == "user"`.
+
+`trail` interleaves three kinds in time: **THEY** what the operator said,
+**WRONG** a moment the session said it had been wrong, **RED** breakage in
+something that was meant to already work. The order is the finding: a
+correction following their message is being caught, one following a red test
+is catching yourself, and the second kind is what step 1 is for.
+
+It deliberately does NOT show a plain pytest failure. The test comes first
+here, so every new check is red once on purpose, and a reader whose loudest
+signal is the rule being followed buries the line worth reading.
+
+**Read it before writing any memory.** The two memories this step is allowed
+are drawn from these entries, not from recollection: on 2026-09-13 the session
+wrote three memories across a fourteen-hour day and the trail shows fourteen
+corrections.
+
 Then the patrol, which answers the other half -- what every part of the system
 actually did:
 

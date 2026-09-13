@@ -163,6 +163,8 @@ PINNED = {
          "9c69c567343ffdb50140f3345868612c1ae4385157f892018fcc748e319683b2"),
     ],
     ".claude/skills/deep-pass/SKILL.md": [
+        ("2026-09-13", "a proc ne z contextoveho okna",
+         "f18fcc72f5b8fbc5edefc55a88d016ee8d8f8a9653d17048268b646c0bf98ef4"),
         ("2026-09-10", "zahrn do do deep pass procesu",
          "c87cf5372cc63054d453a069d8922d430e8c2d2f1b396b4f17f0443cfa7fd166"),
         ("2026-09-07", "nechci behem dne ztracet cas",
