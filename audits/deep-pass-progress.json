@@ -418,7 +418,7 @@
    },
    "verdict": "real",
    "fixed": true,
-   "commit": null,
+   "commit": "476d4d23",
    "why": "2/3 real. Two readers ran the mutation: replacing house_row's body with `rows[0] if rows else None` leaves tests/meta green, because the fixture's house row is index 0, rank 1, handle 'nexus' and is_house at once, so a test named '...and nothing else' cannot discriminate the selector. Both noted the consequence is bounded -- only cmd_status reads it, and the filed check inlines its own is_house filter -- which is why the third reader voted no.",
    "how": "the house_row pin now discriminates by is_house: a leaderboard with a human entrant first, and one with no house row at all"
   },
@@ -434,7 +434,7 @@
    },
    "verdict": "real",
    "fixed": true,
-   "commit": null,
+   "commit": "476d4d23",
    "why": "2/3 real. The test's name and docstring claim no MUTATE goes out without --allow-mutate, and nothing on movers' real path reads it: cmd_enter builds its own registry with mutate_enabled=True and the host hardcoded, and its argparse has no such flag. One reader put a recording transport under the real guard and got the POST on the wire with --allow-mutate never given. The third reader voted no on the ground that deleting the components.yaml rule turns the test red, so it pins something real -- true, and the reason the fix is a NEW test beside it plus a corrected docstring, not a rewrite.",
    "how": "a new test drives the real cmd_enter with confirm=False and asserts no POST, plus the frozen host set in its source; the overstating docstring on the neighbouring test corrected"
   },
@@ -450,7 +450,7 @@
    },
    "verdict": "real",
    "fixed": true,
-   "commit": null,
+   "commit": "476d4d23",
    "why": "2/3 real. `len(sent) == len(set(sent))` is satisfied by sent == []. One reader reintroduced the file's own documented round-up defect at the inner call site (stake = _stake(free) + 0.01): zero orders are placed, affordable refuses every buy, and all of tests/meta stays green. The sibling test anchors itself with `assert opened`; this one anchors nothing.",
    "how": "the dedup test now anchors on sent == [CARD]: an empty list is a failure, not a pass"
   }
@@ -474,7 +474,7 @@
     "t3": "no"
    },
    "test": "tests/repo/test_no_heredoc_writes.py::test_widening_the_scan_did_not_drop_what_the_narrow_one_caught",
-   "commit": null,
+   "commit": "010b5f9d",
    "handover": true
   }
  ],
