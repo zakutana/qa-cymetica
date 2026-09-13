@@ -1,158 +1,189 @@
-# Deep pass — 2026-09-12
+# Deep pass — 2026-09-13
 
-Běh `deep-pass 2026-09-12`, start na commitu `6ab6d367`, preregistrace
-**PRE-0103**, běh **run-20260912T204351Z-3bc5adff**, level V.
-Strom čistý, 47 commitů k pushnutí.
+Běh `deep-pass 2026-09-13`, start na commitu `85143b9c`, preregistrace
+**PRE-0106**, běh **run-20260912T234148Z-cbf5e9f9**, level V.
+Strom čistý, 20 commitů k pushnutí.
 
 ## Co se stalo
 
-**28 tvrzení, 24 potvrzených, 23 opravených, 1 odložený na tebe (B08).**
+**23 tvrzení, 17 potvrzených, 17 opravených, 3 menšinová, 3 zamítnutá.**
 
-| odkud | tvrzení | potvrzeno | zamítnuto | menšinových |
+| odkud | tvrzení | potvrzeno | menšinových | zamítnuto |
 |---|---|---|---|---|
-| audit kontraktů (3 auditoři) | 27 | 23 | 1 | 3 |
-| krok 1 (co jsi řekl od minula) | 1 | 1 | — | — |
-| code review xhigh | — | — | — | — |
+| audit kontraktů (3 auditoři, 186 kontrol) | 18 | 15 | 3 | 0 |
+| code review xhigh | 5 | 2 | 0 | 3 |
 
-Řádek s code review je prázdný schválně a je to vada tohohle běhu, ne nula
-nálezů: krok 3 proběhl před kompakcí a **žádný jeho nález se do notebooku
-nezapsal**, takže po kompakci po něm nezbylo nic. Notebook má 27 tvrzení a
-všech 27 je z auditu. Přesně ta ztráta, kvůli které ten soubor existuje —
-jen o krok dřív, než ho pass začal plnit.
+Triáž: tři čtenáři bez sdíleného kontextu, každý dostal seznam v jiném pořadí,
+každý nález reprodukovaný ze zdroje. **19 z 23 jednomyslných.**
 
-Triáž: tři čtenáři bez sdíleného kontextu, **každý nález reprodukovaný mutací**
-— ne přečtením. Dvanáct tvrzení šlo přes triáž dnes v noci a devatenáct z
-jednadvaceti hlasů bylo jednomyslných.
+Tři z pěti mých vlastních nálezů z review triáž zamítla — a každý zamítla
+reprodukcí, ne názorem. R05 dva čtenáři vyvrátili tak, že v kopii repozitáře
+mou opravu odstranili a ukázali, že test zčervená; R03 tím, že si přečetli
+docstring, který jsem si sám špatně přečetl. To je ta triáda, jak má fungovat.
 
-Konec: **823 prošlo, 3 selhala, 5 neprůkazných.** Obě skutečná selhání jsou
-jejich: **#86** (4 z posledních 5 hlubokých dotazů vůbec neodpovědělo) a
-**#89/#98** (`/activity` pořád odmítá dokumentovaný klíč, na reportu, který
-zaplatili dvakrát).
+Konec: **832 prošlo, 3 selhala, 6 neprůkazných.** Jedno z těch tří selhání byl
+strážce ledgeru, červený proto, že fold ještě neproběhl. Obě skutečná jsou
+jejich.
 
 Po foldu **41 VERIFIED FIXED, 2 STILL REPRODUCIBLE, 1 nerozhodnutelný (#91 —
-nejnovější Nexusova odpověď jmenující kartu je starší než 24 h, což není
-vada).** Odešlo 5 verdiktů: `pass` na **#97** a **#99**, `fail` na #86, #89,
-#98.
+Nexus neodpovídá, takže nejnovější odpověď jmenující kartu je starší než 24 h).**
+
+**Odešlo nic**, a je to schválně — viz *Čeká na tebe*.
+
+**Dobrá zpráva z jejich strany: `/fund` je opravený.** Klíč agenta teď přijímá
+**10 z 11** jejich autentizovaných `cloned-bots` cest. Jediná, která ho pořád
+odmítá, je `GET /api/v1/cloned-bots/{instance_id}/activity`. A jejich povrch
+vyrostl: `DELETE`, `withdraw`, `toggle-trading`, `asset-analytics` a `settings`
+jsou cesty, které při psaní té kontroly neexistovaly.
 
 ## Opraveno
 
-**Kontrola, která měla za hodinu poslat Cymetice `pass` na #97, hledala jen
-jméno klíče.** Brala jakýkoli klíč kdekoli v odpovědi, jehož text obsahoval
-`period`/`window`/`days`, a hodnotu nepřečetla nikdy — takže ji uspokojilo
-`starting_capital_usdc` i `{"sharpe": 5.16, "period": null}` i okno v sousedním
-bloku vedle Sharpeho, který žádné nemá. To poslední **je ta nahlášená vada
-doslova**. `verify.py --dry-run` v tu chvíli skládal `pass` opřený přesně o
-tenhle řádek. Teď čte hodnotu, ukotveným jménem, a jen vedle toho Sharpeho,
-který popisuje. (C01, 3/3)
+**Kontrola, kterou jsem napsal v osm večer, by jim byla poslala `pass`, který
+jsem neměřil.** Ta nová k jejich průvodci `/guides/nexus-lab-loop` se ptá tří
+nástrojů, jestli fungují bez klíče. Když jeden z nich neodpoví — a jim ve
+20:55 spadl TLS handshake, takže to není hypotéza — nebyl ani ve `walls`, ani
+v `answered`, a větev „neprůkazné" chtěla všechny tři. Verdikt: `passed`, s
+odůvodněním „všechny tři nástroje odpověděly: [dvě jména]". Věta si odporovala
+sama se sebou a `pass` odsud je to, co posílá `verify.py`. Našel to code review
+i jeden auditor nezávisle. (R01, 3/3)
 
-**A tady je pointa téhle noci:** pod zpřísněnou kontrolou **#97 i #99 stejně
-prošly** — „všech 16 odpovědí jmenuje období, které pokrývají", „365denní
-odpověď jmenuje `covered_days` a `window`". Jejich opravy jsou skutečné. Co
-bylo špatně, bylo naše čtení: tvrdili bychom totéž, ale z kontroly, která
-neuměla rozeznat opravu od `period: null`.
+**A pointa téhle noci: opravu, kterou jsem napsal ve tři ráno, chytil až ostrý
+běh — hodinu předtím, než by odešla.** C03 říkal správně, že kontrola na
+#89/#98 nesmí padat na cestě mimo tok, který popisuje její vlastní docstring.
+Zúžil jsem verdikt na cesty končící `fund` a `go-live`. Jenže **jejich `/fund`
+je opravený** a ta, co klíč pořád odmítá, je `/activity` — přesně to, o čem ten
+řádek dneska je. Kontrola zezelenala na živém, nahlášeném, dvakrát zaplaceném
+nálezu, jeden fold od toho, aby `verify.py` poslal `pass`. „Posouvá klon dál"
+byla moje hranice, ne jejich; agent, který čte aktivitu vlastního klonu, je v
+tom toku podle každého poctivého čtení. Verdikt čte `refuses` jako předtím,
+`blocked` se jen hlásí, a `tests/meta` teď připíná dnešní skutečný tvar.
 
-**Noční kanál mohl nahlásit „prošlo" na pěti dotazech, které nikdy
-neodpověděly.** `nexus.py` zapisuje při vzdání se stav, který viděl poslední
-poll — a když jejich úloha pořád běží, je to `running`, ne `failed`. Funkce
-`did_not_answer` to četla jako selhání **našeho** čtení, takže pět otázek
-opuštěných po 15 minutách proti publikovaným 5 nechalo populaci prázdnou a
-kontrola ohlásila PASSED na #86. Nově je jejich a okno, které o jejich kanálu
-nic nezměří, je neprůkazné, ne průchod. (B01+B03, 3/3)
+**Test v `tests/meta`, který by 15. září shodil každou session.** Fixture
+orazítkovaná `2026-09-12T12:00Z`, `night_refill` bez švu na `now`, takže
+`best()` čte hodiny a `stale_after(30)` jsou tři dny. Červená v `tests/meta`
+přerušuje celou sadu — vzalo by to s sebou i kontroly proti jejich platformě,
+tři dny po tom, co ten test vznikl. (A01, 3/3)
 
-**Strop 1–5 minut je náš přepis, ale reportu jsme psali, že je to jejich
-popisek.** Kdyby Cymetica přeznačila nástroj na 5–15 min, sedmiminutová
-odpověď by u nich vyvolala `fail` za chování uvnitř jejich vlastního okna.
-Teď se jejich popisek znovu čte z `audits/surface.json`; neshoda je
-neprůkazná — nikdy `fail` a nikdy tiché převzetí jejich čísla. (B02, 3/3)
+**Čtyři strážci, kteří poháněli pomocné funkce místo toho, co jmenují.**
+`patrol()` nevolal v celém repozitáři nikdo — test si `within()` a
+`runs_from_records()` skládal sám, takže regrese „419 běhů za sedm dní" prošla
+(B05). Pět ze sedmi deníků v ohlédnutí bylo zastubováno na `[]` (B06). Slovník,
+na kterém `review.area_lab` stojí, byl napsaný dvakrát — jednou ve čtečce,
+jednou jako literál v testu (B07). A kontrola, co tvrdí „#97, přesně", poháněla
+`fields_drift`, funkci, kterou mimo ten test nikdo nevolá; připomínka jede
+`shape_drift` s přísnějším kritériem (B08).
 
-**Dál:** backtest, kde se okno četlo taky jen podle jména klíče a kde „obě
-okna vrátila stejný počet bodů" je berlička, kterou kalendář vypne (B04);
-`MAX_LESSONS = 2` nechávalo strážce zelený (A07); jméno kontroly slibovalo
-„asked **or bought**" a měřilo jen `may_ask` (A04); výchozí řazení stránky
-drželo jen jako řetězec ve zdroji, takže mutace, co stránku otevře podle
-škody, procházela (B10); prázdný žurnál procházel jako „všech 23 citací
-sedí" (C08); blok „odškrtnuto přes noc" byl byte za bytem stejný jako ten nad
-ním (C09); a fixture v připomínkách podstrčila právě to rozhodnutí, které měl
-test hlídat (C05).
+**Hook, jehož „mlčí, když nic nehrozí" se měřilo na fixture, kde se nemůže ani
+načíst.** `reminders.py` se v prázdném `tmp_path` vrátí dřív, než `reminders()`
+vůbec spustí, takže prázdný výstup dokazoval ten návrat a nic o tichu.
+Bezpodmínečný `print` po načtení nechal všech sedm testů zelených. (B04, 3/3)
+
+**Dál:** strop se porovnával s tím, co `sizes()` na tomhle stroji zrovna vydalo,
+a tři z těch klíčů jsou podmíněné — v klonu dva správně spárované stropy četly
+jako „hlídá nic" (B01); `lenient > strict` u čtečky effortu znamenalo, že
+**rovnost** = rozbitá čtečka, což je stav, do kterého repozitář míří (B02);
+`\bf\.([a-z_]+)\b` neumí chytit `f.displayState` vůbec (C06); `accounts_for`
+zahodilo větu, kterou Cymetica napsala do `counters_cover` místo do
+`counters_do_not_cover` — to je tvar #83, potřetí na stejném endpointu (C01);
+prořez odmítal nečitelný ledger a nechal `audits/checks.json` o řádek níž
+(R02); manifest se četl z pracovního stromu u strážce, který slibuje
+„v commitnutém manifestu" (C05); jméno cesty v jejich openapi se bralo doslova,
+takže přejmenování parametru by jim ohlásilo cestu, kterou dokumentují (C02);
+noční hledání se měřilo počtem, ne časem (A02); a jeden test si přisvojoval
+jméno vlastností, které drží jiný soubor (A03, přejmenován).
 
 ## Prořezáno
 
-Nic. `never_fired.py --zeros` hlásí 4 nikdy nespuštěné mechanismy a **všechny
-čtyři mají test**, který je aspoň jednou schválně vyvolal — žádný nemá tvar
-„nikdy nespuštěno a nikdy nevyzkoušeno", který opravňuje smazání.
-`patrol --flags` nevypsal nic: žádná součást není 14 dní nečinná a žádný strop
-nebyl překročen.
+**Paměti: dvě retirované**, obě proto, že je dnes drží CLAUDE.md, který se čte
+vždycky. `a-mechanism-the-operator-must-run-is-not-a-mechanism` → CLAUDE.md:633
+nese tu větu doslova; `not-thinking-about-it-is-not-permission-to-run-alone` →
+stalo se z toho tvoje vlastní rozhodnutí na CLAUDE.md:76, připnuté testem, což
+je silnější než paměť. Značka `RETIRED` v `MEMORY.md`, soubory zůstávají — a
+byl to **první případ, kdy ten mechanismus vůbec jednou proběhl**.
 
-Do `tests/meta` přibyl **jeden** test (`test_a_window_is_read_for_its_value_
-and_beside_its_own_sharpe`). Všechno ostatní jsem zahnul do existujících:
-B04 do téhož nového testu (stejná vada, sesterský soubor), B01+B03+B02 do
-testu okna latence, C05 a S02 do testu připomínek. Čistý přírůstek +1.
+**Součásti:** `patrol --flags` nevypsal nic. Nic není 14 dní nečinné, nic není
+nad stropem. `CLAUDE.md` sedí přesně na 700 řádcích, tedy nula rezervy.
 
-Jedno tvrzení jsem **přesunul z `tests/meta` do `tests/repo`**: jestli jejich
-současný popisek pořád souhlasí s naším přepisem. Červená v `tests/meta`
-shodí celou sadu — takže by stačilo, aby Cymetica přepsala větu a ty udělal
-přesně to, co ti připomínka říká (`processes.py surface --update`), a zabil
-bys tím každý živý požadavek.
+**Mechanismy:** `never_fired --zeros` hlásí 4 nikdy nespuštěné a **všechny čtyři
+mají test**, který je aspoň jednou schválně vyvolal. Žádný nemá tvar „nikdy
+nespuštěno a nikdy nevyzkoušeno", který opravňuje smazání.
+
+**Testy:** `tests/meta` 426 → **429, čistý přírůstek +3**. Všechny tři jsou
+kontrakty živých kontrol a všechny šly do `test_pipeline_checks.py`, souboru,
+který přesně tohle drží: rozhodnutí `decide()` u nové kontroly bez klíče (R01),
+`states_exclusion` u portfolia (C01) a dvojice `credential_gap`/
+`served_but_undocumented` u klonů (C02+C03 v jednom testu). Zvažoval jsem
+přidat je k sousedům — `test_a_window_is_read_for_its_value...` u prvního,
+`test_the_summary_may_account_for_positions_by_counting_them` u druhého — a ani
+jeden by je neunesl: první připíná sémantiku backtestových oken, druhý je
+**připnutí z minulého passu, které jsem schválně nechal platit** (viz níž).
+Všechno ostatní z dnešní noci se vešlo do existujících testů.
 
 ## Minority report
 
-- **A03 — `tool_class('definitely_not_a_tool') != 'unknown'` je nedosažitelné**,
-  protože funkce končí `return 'unknown'`. Jeden hlas ze tří. Dva čtenáři: ta
-  větev SAFE odmítnutí je krytá jinde.
-- **A05 — dva testy tvrdí, že soubor je mimo git, tím že hledají podřetězec
-  v `.gitignore`.** Jeden hlas ze tří. Komentář to splní, `!` negace to
-  obejde, a force-added soubor zůstane sledovaný tak jako tak. Měřením je
-  `git check-ignore`, který se jinde v repu už používá.
-- **B07 — filtr `closes()` zahodí řetěz, jehož výsledek není `accepted`**, a
-  nečitelné poslední zavření tiše spadne na předchozí. Jeden hlas ze tří; dva
-  čtenáři to vystopovali a tichý fallback nenašli.
+- **A04 — `len(sent) == len(set(sent))` je splněno prázdným `sent`.** Jeden hlas
+  ze tří. Dva čtenáři to reprodukovali obráceně: když se odstraní deduplikace,
+  `sent == [CARD]*3` a test zčervená, takže vada, kvůli které existuje, chycená
+  je. Prázdné `sent` vyžaduje druhou, nesouvisející regresi, kterou hlídá
+  sousední aserce ve stejném souboru.
+- **B03 — `--deep-pass all` nikdy nedojde do `area_lab`, a nástroje by tam zápis
+  neviděly.** Jeden hlas ze tří. Dva čtenáři pustili `review.py --lab all`
+  proti kopii `state/` a **nezměnil se ani bajt** — tvrzení „`--lab` přidá řádek
+  do `state/backtests.jsonl` při každém běhu" je prostě nepravda. Zbývá
+  neprocvičená větev, ne strážce mlčící nad živým zápisem.
+- **C07 — `_next_items()` má `except Exception: return set()`.** Jeden hlas ze
+  tří. Dva čtenáři: `parse()` na obsahu nikdy nevyhodí výjimku, takže tam vede
+  jen chybějící nebo nečitelné `NEXT.md` — stav, který stejně dělá červenou, a
+  směr je hlasitý, ne tichý.
 
 ## Změněná pravidla
 
-- **RC1 — deep pass neuměl přečíst vlastní večer.** Krok 0 přepíše notebook
-  svým `at` dřív, než se ho krok 1 zeptá, kdy byl minulý pass — takže podlaha
-  byla vždycky „před pár minutami". Krok 1 přečetl **0 zpráv ve večeru, kdy
-  jsi jich napsal 20**, a nic nezčervenalo, protože prázdné okno a tichý večer
-  vypadají odsud stejně. Nově se přenáší `previous_at` a `messages_floor` říká,
-  kterou ze tří podlah použil. Tři čtenáři bez sdíleného kontextu: **3/3, že
-  nic neoslabuje a nesahá na žádné tvoje rozhodnutí** — podlaha se může posunout
-  jen dřív, nikdy později. Test:
-  `test_the_operator_s_messages_are_read_from_the_last_pass_not_from_today`.
-  A hned to našlo druhou vadu (S02): filtr, který slibuje vyhazovat bloky psané
-  harnessem, vyhazoval jen ty začínající `<` — tři z těch 23 zpráv byly zdi
-  textu, které jsem napsal já sám, v jediném čtenáři, jehož celá práce je najít
-  tvoje krátké opravy. Po opravě 20.
+**Žádné.** A stojí za zmínku, kde jsem jedno málem změnil: oprava C01 chtěla,
+aby `accounts_for` vracelo nový stav pro větu o vyloučení v `counters_cover` —
+jenže přesně tuhle návratovou hodnotu připíná `test_the_summary_may_account_for_
+positions_by_counting_them`, tvoje... ne tvoje, smyčkou schválený závěr passu
+z 11. 9. (3/3). To připnutí je správné: věta, že se karty **ne**počítají, je
+nepočítá. Takže jsem místo přepsání přidal druhou čtečku `states_exclusion`,
+která odpovídá na jinou otázku, a staré připnutí platí dál.
 
 ## Čeká na tebe
 
-- **B08 — strážce tvých rozhodnutí hlídá dva soubory a rozhodnutí jsou v
-  dvaceti.** `SOURCES` v `test_pipeline_decisions.py` je `CLAUDE.md` plus
-  `*/SKILL.md`, ale **27 odstavců `[operator ...]` dnes leží v 18 dalších
-  souborech** — `scripts/lab.py` (4), `qa/lab.py` (3), `scripts/processes.py`
-  (3), `qa/surface.py`, `qa/keepset.py`, `.claude/hooks/reminders.py` a další.
-  Přeformulovat kterékoli z nich nechá všech šest testů zelených, a to zrovna
-  v souborech, které noční pass mění nejčastěji. **Neopravil jsem to schválně:
-  CLAUDE.md říká, že tenhle pass na test, který připíná tvoje rozhodnutí,
-  nesahá.** Rozšíření `SOURCES` je práce na den, ne rozhodnutí — jen ne moje
-  v noci.
-- **Nexus deep kanál pořád nejede**, teď už měřitelně: 4 z 5 posledních dotazů
-  neodpovědělo vůbec. Zpráva na Telegram z minula (`outbox/telegram-nexus-deep-down.md`)
-  pořád platí a `fail` na #86 jim dnes odešel.
-- **Jejich API mělo kolem 20:55 několikaminutový výpadek** — TLS handshake
-  timeout. Verdikty prošly na třetí pokus. Není to vada k nahlášení (výpadek
-  není defekt), ale stojí za zmínku, kdyby se opakoval.
+- **Oprava na #89/#98 se dluží, a neodeslal jsem ji, protože ta zpráva by
+  lhala.** Fold dluží `correction_owed`, protože se dnes v noci pohnul otisk
+  kontroly. Zpráva, kterou `verify.py` pro ten případ skládá, začíná: *„This
+  corrects the record: either a fix was claimed and our re-check does not
+  agree, or we sent you a pass we can no longer stand behind."* Náš poslední
+  verdikt na obou reportech byl **taky `fail`** — neplatí ani jedna z těch dvou
+  možností a neopravuje se nic, jen se pohnula definice. Pravdivý verdikt
+  v nepravdivém rámci je pořád nepravdivé tvrzení. Šablona potřebuje třetí
+  hlavičku („definice se pohnula, verdikt se nezměnil"), a je to `qa/fold.py`
+  plus `scripts/verify.py`, takže test první a `/code-review` — ne ve čtyři ráno
+  bez triáže.
+- **Kritérium, které jsem na klonech nenašel.** C03 má pravdu, že verdikt nemá
+  padat na cestě mimo tok — jen to potřebuje hranici čitelnou z **jejich**
+  dokumentu, ne seznam segmentů, který si vyberu já. Dnes v noci to stálo
+  málem falešný `pass`. Až budou mít `DELETE`/`withdraw` v openapi popsané
+  jako uživatelské, bude podle čeho.
+- **Nexus deep kanál pořád nejede** — 1 z 5 posledních dotazů odpovězena. Drží
+  tím #86 i #91, a `outbox/telegram-nexus-deep-down.md` z minula pořád platí.
+- **`/activity` je poslední cesta, co odmítá klíč agenta.** `/fund` opravili.
+  Jestli je to u `/activity` záměr, je otázka na ně — a je to zúžení #89/#98,
+  které by stálo za zprávu, až budeš psát.
 
 ## Co mě to naučilo
 
-**Přepsal jsem tělo kontroly, otestoval pomocné funkce a nechal v něm nevázané
-jméno.** `sorted(keys)[:14]` na větvi selhání — přesně té, kvůli které
-kontrola existuje. 759 zelených testů to nevidělo, protože všechny volaly
-pomocné funkce a žádný nevolal tu funkci. Na živém běhu by to byl ERROR, tedy
-nepřípustný běh a krok 9, který zahazuje celou noc. Paměť
-`driving-the-helper-is-not-running-the-check`: po přepsání kontroly ji
-spusť — obě větve, klidně se stubem místo klienta.
+**Notebook téhle noci přestal být platný JSON a já si toho všiml jen proto, že
+mi prošel negativní kontrolní test, který měl spadnout.** Tři appendy nechaly
+mezi objekty chybět čárku, `working_copy()` vracel `None`, a strážce, co jsem
+zrovna psal, mlčky přeskočil celé tělo. Kdyby ta kontrola nebyla, ztratil bych
+všech 24 nálezů — soubor existuje přesně proto, aby se to nestalo.
 
-**Spustil jsem `verify.py --confirm` šestkrát, abych si výstup přečetl dvěma
-způsoby.** Příkaz, který POSTuje verdikty na jejich tracker. Duplikát neodešel
-jen proto, že `already_sent()` čte report předem. Mechanismus mě zachránil, což
-není totéž jako že jsem byl opatrný.
+**A první mutace, kterou jsem na to pustil, se nikdy neaplikovala.** Skript
+vytiskl „mutated" bez toho, aby ověřil, že se text změnil, a já to přečetl jako
+důkaz. Pak jsem operátorovi napsal, že render není deterministický — nebyl to
+render, byl to můj vlastní nový test, který jsem si mezi těmi dvěma běhy sám
+stashnul.
+
+Obojí je jedna věc: **tvrdil jsem, že kontrola funguje, místo abych to dokázal.**
+Každá oprava dnešní noci má proto mutaci, která ji shodí, a každá mutace
+kontroluje, že se vůbec aplikovala.

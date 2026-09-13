@@ -2,7 +2,7 @@
   "run": "deep-pass 2026-09-13",
   "at": "2026-09-12T22:30:00+00:00",
   "previous_at": "2026-09-12T19:10:00+00:00",
-  "at_finished": null,
+  "at_finished": "2026-09-12T23:58:20+00:00",
   "start_commit": "85143b9c",
   "gaps": [
     {
@@ -338,7 +338,9 @@
       "commit": null
     }
   ],
-  "next": [],
+  "next": [
+    "`verify.py` má pro `correction_owed` jen hlavičku „this corrects the record“ — když se pohnul jen otisk a verdikt zůstal `fail`, je ta věta nepravdivá a zpráva se proto neodeslala. Chce třetí hlavičku; `qa/fold.py` + `scripts/verify.py`, test první a `/code-review`."
+  ],
   "retrospective": {
     "last": "2026-09-09",
     "done": false
@@ -346,8 +348,8 @@
   "rule_changes": [],
   "meta_tests": {
     "start": 426,
-    "end": null,
-    "reason": null
+    "end": 429,
+    "reason": "426 -> 429, net +3, and all three are contracts of LIVE checks that went into tests/meta/test_pipeline_checks.py, the file whose whole subject is holding a check's assertion against the claim its docstring makes. (1) the `decide()` of the new no-key check written this evening (R01): one unreadable call concluded `passed` with a reason naming two tools in a sentence beginning 'all three', and a pass from there is what verify.py sends -- considered folding it into test_a_window_is_read_for_its_value_and_beside_its_own_sharpe, the nearest neighbour, which pins backtest-window semantics and could not carry a verdict rule. (2) `states_exclusion` on the portfolio summary (C01) -- the obvious host was test_the_summary_may_account_for_positions_by_counting_them, and that test is the 2026-09-11 pass's 3/3 pin on `accounts_for` which this fix deliberately leaves standing, so putting the new reader's assertions inside it would have meant editing the pin. (3) the clone surface pair, C02 and C03 in ONE test rather than two, because both are the same defect class on the same file and the second's lesson -- today's real shape, /fund accepted and /activity refused -- only means anything beside the first. Everything else tonight was folded into tests that already existed: A01 into the refill test, A02 into the night-search test, A03 a rename, B01/B02/B05 into test_process_dna.py, B04 into the reminders test, B06/B07 into test_review.py, B08 into test_surface_drift.py, C05 into test_evidence_in_git.py, C06 into test_pipeline_render.py, and R02 into test_prune_runs.py."
   },
-  "finished": false
+  "finished": true
 }
