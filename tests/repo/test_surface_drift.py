@@ -311,6 +311,16 @@ def test_their_published_window_still_says_what_we_transcribed():
     tracker for an answer inside their own published window. B02, deep pass of
     2026-09-12, triage 3/3.
 
+    And it reads THEIR words, not our copy of them. It took the description
+    out of `audits/surface.json`, which is rewritten only when the operator
+    runs `surface --update`, which is only prompted by `tools_drift`, which
+    compares parameter shape and deliberately not descriptions -- so the
+    relabel this test exists to catch produced no drift, no update, no change
+    to the file, and a green here. The same incident, one level further back.
+    A01, deep pass of 2026-09-13, triage 3/3: it now reads the newest capture
+    of tools/list and falls back to the acknowledged copy only when there is
+    no recent capture at all.
+
     Here rather than in tests/meta on purpose. A red there aborts the suite
     and issues no live request, which would mean the vendor rewording a
     sentence -- and the operator then doing exactly what the reminder tells
@@ -324,10 +334,11 @@ def test_their_published_window_still_says_what_we_transcribed():
     if theirs is None:
         conclude(Measurement(
             verdict="inconclusive",
-            reason="audits/surface.json carries no readable window for "
-                   "ask_nexus_deep, and a label we could not read is not a "
-                   "label that moved",
-            sources={"surface": "audits/surface.json"}))
+            reason="no capture of tools/list and no acknowledged copy "
+                   "carries a readable window for ask_nexus_deep, and a label "
+                   "we could not read is not a label that moved",
+            sources={"live": "the newest captured tools/list",
+                     "fallback": "audits/surface.json"}))
         return
 
     conclude(Measurement(

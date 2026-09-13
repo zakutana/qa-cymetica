@@ -48,6 +48,88 @@ def _gap(anonymous: int, named: int) -> dict:
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_what_counts_as_anonymous_is_read_from_their_real_rows():
+    """L03, deep pass of 2026-09-13, triage 3/3. The function that decides
+    what the whole check MEANS was exercised nowhere.
+
+    Every other test in this file builds the gap dict itself, with the share
+    already computed -- so `identity_gap`, which decides that their placeholder
+    `name: "Unnamed launch"` is not an identity, had no caller but the live
+    check. Drop that one rule and the real 09:52 outage rows classify as
+    NAMED, share 0.0, `decide` returns `passed`, and all four tests stayed
+    green on the live defect they were written for. The mirror is worse: make
+    it count a row that has a symbol but no address and an ordinary day
+    crosses THRESHOLD, sending a false accusation to their tracker.
+
+    The rows below are the shapes actually served, on both sides.
+    """
+    mod = _check()
+
+    # Their outage, verbatim: conviction real, every identity field blank or
+    # the placeholder.
+    outage = [{"conviction": 68.5, "token_address": "", "symbol": "",
+               "name": "Unnamed launch", "hot": True} for _ in range(40)]
+    gap = mod.identity_gap(outage)
+    assert gap["total"] == 40 and len(gap["anonymous"]) == 40, gap
+    assert gap["share"] == 1.0
+
+    # A healthy Robinhood row, and a Solana row: both name the token.
+    healthy = [{"conviction": 88.3, "token_address": "0xabc", "symbol": "NIU",
+                "name": "Niu Lai"},
+               {"conviction": 12.0, "token_address": "SoL111", "symbol": "POK",
+                "name": "Pokemon"}]
+    gap = mod.identity_gap(healthy)
+    assert len(gap["named"]) == 2 and gap["share"] == 0.0, gap
+
+    # A row with a symbol and no address is still RESOLVABLE, so it is not
+    # anonymous -- counting it would make an ordinary day cross the threshold
+    # and send them a finding about nothing.
+    partial = [{"conviction": 50.0, "token_address": "", "symbol": "ASTRO",
+                "name": "Astro"}]
+    assert len(mod.identity_gap(partial)["named"]) == 1
+
+    # And a row with no conviction is not a signal at all, so it is neither.
+    assert mod.identity_gap([{"token_address": "", "symbol": ""}])["total"] == 0
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_their_own_counter_cannot_excuse_the_whole_feed_for_ever():
+    """V06, deep pass of 2026-09-13, triage 3/3. A threshold taken from their
+    side, with no bound.
+
+    `identities_pending > 0` ended the measurement before Solana was even
+    consulted -- so `identities_pending: 1` served permanently, beside 40 of 40
+    Robinhood rows anonymous and 40 of 40 Solana rows named, was inconclusive
+    for ever. Rule 10 means an inconclusive is never filed, so one stuck
+    counter would have made the defect this check was written for this morning
+    unreportable. Nothing in the branch distinguished self-healing from stuck.
+
+    A pending count excuses the rows it can account for, not all of them.
+    """
+    mod = _check()
+
+    # Catching up: as many pending as there are anonymous rows. Still theirs.
+    assert mod.decide(_gap(40, 0), _gap(0, 40), pending=40)[0] == "inconclusive"
+    assert mod.decide(_gap(40, 0), _gap(0, 40), pending=38)[0] == "inconclusive"
+
+    # One pending identity cannot account for forty anonymous rows.
+    verdict, why = mod.decide(_gap(40, 0), _gap(0, 40), pending=1)
+    assert verdict == "failed", why
+    assert "1" in why and "40" in why, why
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_both_chains_anonymous_is_their_indexer_whatever_the_counter_says():
+    """The other half of V06. Both docstrings say a day when both chains are
+    empty reads as their indexer being down -- a different fault, inconclusive
+    -- and the `pending=None` path honoured that while the `pending=0` path
+    returned `failed` and would have filed it."""
+    mod = _check()
+    assert mod.decide(_gap(40, 0), _gap(40, 0), pending=None)[0] == "inconclusive"
+    assert mod.decide(_gap(40, 0), _gap(40, 0), pending=0)[0] == "inconclusive"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_feed_still_catching_up_after_a_restart_is_not_a_defect():
     """Their disclosed transient. `identities_pending` above zero beside
     anonymous rows is the feed saying so itself, and rule 10 holds: an empty

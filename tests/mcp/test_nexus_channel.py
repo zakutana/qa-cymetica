@@ -229,13 +229,33 @@ def their_published_window(tools=None):
     import json
 
     if tools is None:
-        path = REPO / "audits" / "surface.json"
-        if not path.is_file():
-            return None
+        # THEIR words, from a capture of tools/list, not from our own
+        # acknowledgement file. `audits/surface.json` is only rewritten when
+        # the operator runs `surface --update`, and that is only prompted by
+        # `tools_drift`, which compares parameter SHAPE and deliberately not
+        # descriptions -- so a relabel to "typically 5-15 minutes" produces no
+        # drift, no update, and this check keeps reading the 1-5 we
+        # transcribed while quoting it to them on #86. That is the incident
+        # this docstring says it prevents, one level further back. A01, deep
+        # pass of 2026-09-13, triage 3/3.
         try:
-            tools = (json.loads(path.read_text(encoding="utf-8")) or {}).get("tools")
-        except (OSError, json.JSONDecodeError):
-            return None
+            from qa.surface import tools_seen
+
+            tools = tools_seen()
+        except Exception:  # noqa: BLE001 -- a failed read is not an answer
+            tools = None
+        if tools is None:
+            # Nothing captured recently. Fall back to the acknowledged copy,
+            # which is at least a reading of their words rather than a guess,
+            # and which the caller treats as inconclusive when it disagrees.
+            path = REPO / "audits" / "surface.json"
+            if not path.is_file():
+                return None
+            try:
+                tools = (json.loads(path.read_text(encoding="utf-8"))
+                         or {}).get("tools")
+            except (OSError, json.JSONDecodeError):
+                return None
     for tool in tools or []:
         if not isinstance(tool, dict) or tool.get("name") != "ask_nexus_deep":
             continue

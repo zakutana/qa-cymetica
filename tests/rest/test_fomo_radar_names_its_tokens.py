@@ -55,6 +55,13 @@ DOCS = "/api/v1/clones/fomo-radar/docs"
 # that is ordinary in any new-pair feed.
 THRESHOLD = 0.66
 
+# How much of the anonymity their own `identities_pending` has to account for
+# before it excuses the feed. Below this, the counter is describing a backlog
+# far smaller than the hole, and the hole is the finding. Not 1.0: a row can
+# resolve between the count and the rows being serialised, so a little slack
+# is honest. V06, deep pass of 2026-09-13.
+ACCOUNTED_FOR = 0.9
+
 
 def identity_gap(rows: list[dict]) -> dict:
     """How many rows carry a conviction and no way to identify the token.
@@ -110,13 +117,32 @@ def decide(robinhood: dict, solana: dict, pending) -> tuple[str, str]:
                 f"rows name the token they are about, and "
                 f"{len(solana['named'])} of {solana['total']} on solana")
 
-    if isinstance(pending, int) and pending > 0:
+    # Their counter excuses the rows it can ACCOUNT FOR, not all of them.
+    # `pending > 0` alone ended the measurement, so `identities_pending: 1`
+    # served permanently beside forty anonymous rows was inconclusive for
+    # ever -- and rule 10 means an inconclusive is never filed, so one stuck
+    # counter would have made this defect unreportable. Nothing in that branch
+    # told self-healing from stuck. V06, deep pass of 2026-09-13, triage 3/3.
+    anonymous_rows = len(robinhood["anonymous"])
+    if isinstance(pending, int) and pending >= anonymous_rows * ACCOUNTED_FOR:
         return ("inconclusive",
-                f"{len(robinhood['anonymous'])} of {robinhood['total']} "
-                f"robinhood rows carry no identity, and their own payload "
-                f"says identities_pending={pending} -- the feed is still "
-                f"resolving curve->token after a restart, which is the "
-                f"transient they disclosed on 2026-09-13, not a defect")
+                f"{anonymous_rows} of {robinhood['total']} robinhood rows "
+                f"carry no identity, and their own payload says "
+                f"identities_pending={pending} -- enough to account for them, "
+                f"so the feed is still resolving curve->token after a "
+                f"restart, which is the transient they disclosed on "
+                f"2026-09-13 and not a defect")
+
+    # Both chains anonymous is their token indexer, not one chain's identity
+    # resolution -- the same judgement the no-counter path below makes, and
+    # both docstrings say so. It used to be made only when they served no
+    # counter, so `pending: 0` filed it.
+    if solana["share"] > THRESHOLD:
+        return ("inconclusive",
+                f"both chains are anonymous ({robinhood['share']:.0%} and "
+                f"{solana['share']:.0%}), which reads as their token indexer "
+                f"being down rather than as one chain having stopped "
+                f"resolving identity -- a different fault from this one")
 
     if isinstance(pending, int):
         return ("failed",
