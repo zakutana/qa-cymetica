@@ -111,6 +111,20 @@
             "statusMessage": "checking state/ guard"
           }
         ]
+      },
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python",
+            "args": [
+              ".claude/hooks/no_heredoc_writes.py"
+            ],
+            "timeout": 15,
+            "statusMessage": "checking no heredoc writes a file"
+          }
+        ]
       }
     ]
   }

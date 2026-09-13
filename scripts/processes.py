@@ -930,6 +930,126 @@ def messages(rows, since: str | None) -> list[tuple[str, str]]:
     return sorted(out)
 
 
+
+# How much of one entry the trail keeps. The source is tens of megabytes and
+# the point is a few readable pages, not a second copy of the day.
+TRAIL_CHARS = 400
+
+# A sentence in which the assistant says it had been wrong. Czech and English,
+# because the thinking is English and the answers to the operator are Czech.
+# Deliberately narrow: "I was wrong" is evidence, "this is wrong" is a bug
+# report about something else, and a list that matches both is a list that
+# matches everything.
+_ADMITS = re.compile(
+    r"\b(?:"
+    r"m[yý]lil jsem se|m[aá][sš] pravdu|m[aá]te pravdu|to bylo [sš]patn[eě]"
+    r"|opravuj[iu]|opravil jsem|mus[ií]m (?:se )?opravit|p[rř]izn[aá]v[aá]m"
+    r"|odbyl jsem|to je m[aá] chyba|moje (?:vina|chyba)"
+    r"|i was wrong|i got (?:this|that|it) wrong|my (?:mistake|error)"
+    r"|correcting myself|i overstated|that was wrong of me"
+    r")\b", re.I)
+
+# Breakage in something that was supposed to already work. NOT a pytest
+# failure: CLAUDE.md requires the test before the implementation, so every new
+# check is red once on purpose. Over three hours of 2026-09-13 the first draft
+# of this reader returned eight "errors" of which nearly all were the workflow
+# working, against one correction -- a reader whose loudest signal is the rule
+# being followed buries the one line worth reading.
+_WENT_RED = re.compile(
+    r"\bTraceback \(most recent"
+    r"|\b(?:Syntax|Type|Key|Name|Value|Attribute|Index)Error\b"
+    r"|\bUnicode\w*Error\b")
+
+# Broke because a machine was busy, not because anything was inferred wrongly.
+# Three screenshot timeouts landed in the first run of this reader.
+_JUST_THE_MACHINE = re.compile(
+    r"screenshot failed|did not finish rendering|timed out after"
+    r"|ECONNREFUSED|Read timed out|was denied or failed", re.I)
+
+# pytest's own banners. An exception raised INSIDE a test run is the
+# test-first rule working -- a new check names a function nobody has written
+# and fails with AttributeError -- while the same exception from a probe
+# script is a real mistake. Told apart by where it happened, not by what it
+# says, because the words are identical.
+_A_TEST_RUN = re.compile(r"short test summary info|=+ FAILURES =+|"
+                         r"\d+ (?:passed|failed)[,.]")
+
+# A block the harness injects into the user's side. `messages()` learned this
+# on compaction summaries; the skill-reinvocation notice has the same shape and
+# leaked straight through the first run of the trail.
+_HARNESS_BLOCK = re.compile(
+    r"^(?:Skill /\S+ was loaded earlier|This session is being continued"
+    r"|Caveat: The messages below|<)")
+
+
+def _blocks(row) -> list:
+    content = (row.get("message") or {}).get("content")
+    return content if isinstance(content, list) else []
+
+
+def trail(rows, since: str | None, limit: int = 120) -> list[dict]:
+    """The day as the transcript remembers it: theirs, ours, and what broke.
+
+    [operator 2026-09-13] asked why the whole context is not kept for the deep
+    pass. It already is -- the harness writes every row of every session to
+    disk, and this session's own file is 13 MB of which 5 MB is the
+    assistant's side. What was missing was a reader: `messages()` keeps
+    `type == "user"` and drops the rest, so step 1's question -- which
+    inference failed -- could see the correction and never the thing corrected.
+
+    Three kinds, interleaved by time, because the ORDER carries the finding: a
+    correction after an operator message is being caught, and one after a red
+    test is catching yourself. Grouped by kind that distinction is gone.
+
+    Bounded twice, per entry and in total. A reader that has to be skimmed is
+    one nobody runs, which is the failure this whole file exists to name.
+    """
+    floor = _moment(since) if since else None
+    out: list[dict] = []
+    for row in rows:
+        stamp = _moment(row.get("timestamp"))
+        if stamp is None or (floor is not None and stamp < floor):
+            continue
+        at = str(row.get("timestamp"))
+        kind = row.get("type")
+
+        if kind == "user":
+            content = (row.get("message") or {}).get("content")
+            if isinstance(content, str) and content.strip():
+                if (_HARNESS_BLOCK.match(content.lstrip())
+                        or HARNESS_WROTE_IT(content)):
+                    continue
+                out.append({"at": at, "kind": "operator",
+                            "text": " ".join(content.split())[:TRAIL_CHARS]})
+                continue
+            for block in _blocks(row):
+                if not isinstance(block, dict):
+                    continue
+                if block.get("type") != "tool_result":
+                    continue
+                body = block.get("content")
+                if isinstance(body, list):
+                    body = " ".join(str(b.get("text", "")) for b in body
+                                    if isinstance(b, dict))
+                body = str(body or "")
+                if _JUST_THE_MACHINE.search(body) or _A_TEST_RUN.search(body):
+                    continue
+                if block.get("is_error") or _WENT_RED.search(body):
+                    out.append({"at": at, "kind": "error",
+                                "text": " ".join(body.split())[:TRAIL_CHARS]})
+
+        elif kind == "assistant":
+            for block in _blocks(row):
+                if not isinstance(block, dict) or block.get("type") != "text":
+                    continue
+                text = str(block.get("text") or "")
+                if _ADMITS.search(text):
+                    out.append({"at": at, "kind": "correction",
+                                "text": " ".join(text.split())[:TRAIL_CHARS]})
+
+    out.sort(key=lambda r: r["at"])
+    return out[-limit:]
+
 def transcript_rows():
     """Every line of this project's transcripts. 20-30 MB each, so the caller
     filters; nothing here holds a file open longer than one pass over it."""
@@ -965,6 +1085,12 @@ def main(argv: list[str] | None = None) -> int:
     said.add_argument("--since-last-pass", action="store_true",
                       help="since the deep pass's own notebook says it started")
     said.add_argument("--limit", type=int, default=60)
+    walk = sub.add_parser("trail", help="theirs, our corrections, and what "
+                                        "went red -- interleaved in time")
+    walk.add_argument("--since", help="ISO timestamp")
+    walk.add_argument("--since-last-pass", action="store_true",
+                      help="since the deep pass's own notebook says it started")
+    walk.add_argument("--limit", type=int, default=120)
     args = parser.parse_args(argv)
 
     try:
@@ -1010,6 +1136,18 @@ def main(argv: list[str] | None = None) -> int:
     whose = "asked for"
     if args.since_last_pass and not since:
         since, whose = messages_floor(_notebook(), datetime.now(timezone.utc))
+
+    if args.cmd == "trail":
+        walked = trail(transcript_rows(), since, limit=args.limit)
+        counts = {k: sum(1 for r in walked if r["kind"] == k)
+                  for k in ("operator", "correction", "error")}
+        print(f"# {len(walked)} entr(ies) since {since} ({whose}) -- "
+              + ", ".join(f"{v} {k}" for k, v in counts.items()))
+        mark = {"operator": "THEY", "correction": "WRONG", "error": "RED "}
+        for row in walked:
+            print(f"{row['at'][11:16]}  {mark[row['kind']]}  {row['text']}")
+        return 0
+
     found = messages(transcript_rows(), since)
     print(f"# {len(found)} message(s) from the operator since {since} ({whose})")
     for stamp, text in found[-args.limit:]:
