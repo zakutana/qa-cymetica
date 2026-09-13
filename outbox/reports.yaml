@@ -2278,6 +2278,72 @@ reports:
       - 'track_record.live reports scored 0 and runs_scored 0, so none of the leaderboard figures came from a forward-scored round'
       - 'List the keys of the leaderboard row: no field states the basis of the record'
 
+  - key: late-entry-prices-at-the-anchor
+    findings: [CYM-a_round_open_after_its_anchor_says_when_entries_close]
+    severity: medium
+    category: logic
+    url: https://cymetica.com/api/v1/universe/movers/tournament
+    title: >-
+      A Movers round stays open days after its anchor and still prices entries
+      at the anchor close, so a late pick is scored on a return it can already
+      see
+    expected: >
+      Either entries close on the anchor day, or a pick made later is priced at
+      the close of the day it was made, or the payload says when entries stop.
+    actual: >
+      We entered on 2026-09-13 into the round anchored 2026-09-11 and were
+      given the 2026-09-11 closes. Nothing in round or rules names a cutoff.
+    body: >
+      This one we found by using the tournament rather than by testing it, and
+      we should say plainly that this round it works in our favour. We are
+      reporting it anyway.
+
+
+      Your rules text: "Each pick locks the stored close on the round day and
+      is scored a week later on its real 7-day return."
+
+
+      On 2026-09-13 we POSTed five symbols to
+      /api/v1/universe/movers/tournament/enter. The round was anchored
+      2026-09-11, scores_after 2026-09-18, and the entry came back priced at the
+      2026-09-11 closes:
+
+
+        AAPL 335.799987793   GOOGL 341.51001   PLTR 166.639999
+        SPCX 146.949997      COIN  181.005005
+
+
+      Two of the seven days had already happened when we chose those five, and
+      the price we were scored from could not move. An entrant joining on day
+      six would have one day of seven left unknown.
+
+
+      We looked for a cutoff and did not find one. `round` carries
+      round_anchor, entries, traders and scores_after; `rules` carries
+      max_picks, window_days and text. Nothing names a deadline, and the entry
+      was accepted two days in without complaint.
+
+
+      Where it bites is the comparison the tournament exists for. The
+      leaderboard ranks by avg_pct and nothing on a row says when its picks
+      were committed, so a pick made on the anchor day and one made the day
+      before scoring sit in the same column. That includes the NEXUS screen
+      row, and its own /movers/potential is stamped as_of the anchor -- so the
+      house commits on day 0 while a human entrant need not.
+
+
+      Three repairs and we are not asking for a particular one: close entries at
+      the anchor, price a late entry at the close of the day it is made, or
+      simply publish the deadline. Our check accepts any of the three, and it
+      stays quiet on the anchor day itself and on a round that has already
+      scored.
+    steps:
+      - 'GET https://cymetica.com/api/v1/universe/movers/tournament (keyless) and read round.round_anchor and round.scores_after'
+      - 'Observe that the anchor is in the past while scores_after is in the future, and that neither round nor rules carries any field naming when entries close'
+      - 'POST /api/v1/universe/movers/tournament/enter with {"symbols": [...]} on any day after the anchor -- it is accepted'
+      - 'Read the entry back: entry_price_usd is the anchor-day close, not the close of the day the entry was made'
+      - 'Our own entry, made 2026-09-13 into the 2026-09-11 round: AAPL 335.799987793, GOOGL 341.51001, PLTR 166.639999, SPCX 146.949997, COIN 181.005005'
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in
