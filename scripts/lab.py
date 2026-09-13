@@ -635,24 +635,37 @@ def search(seeds: list[dict], pool: list[str] | None = None, cap: int = 12,
     a room opened from his answer -- CLAUDE.md, and the reason nothing in here
     can reach an order or a room.
     """
-    did = {"asked": 0, "from_register": 0, "failed": 0, "seeds": len(seeds)}
-    for seed in seeds:
-        for move in qa_backtests.neighbourhood(seed, pool, cap):
-            try:
-                said = backtest(move["legs"], move["period"], why=move["why"],
-                                call=call, now=now)
-            except qa_backtests.BacktestError:
-                # A basket their tool would refuse is not a failed reading; it
-                # is a question that was never a question.
-                continue
-            except (Exception, SystemExit) as exc:  # noqa: BLE001
-                did["failed"] += 1
-                if out:
-                    out(f"  {move['why']}: {exc}")
-                continue
-            did["from_register" if said["cached"] else "asked"] += 1
-            if out and not said["cached"]:
-                out(f"  {move['why']:56} sharpe {said['s']}  ret {said['r']}%")
+    moves = [move for seed in seeds
+             for move in qa_backtests.neighbourhood(seed, pool, cap)]
+    return {**search_moves(moves, call=call, now=now, out=out),
+            "seeds": len(seeds)}
+
+
+def search_moves(moves: list[dict], *, call=None, now=None, out=None) -> dict:
+    """Ask each prepared basket once, whatever assembled the queue.
+
+    Split out of `search` so the hand-run command can walk a queue that is
+    their cards PLUS the climb from the register (`search_queue`), rather than
+    only the cards. The walking itself never differed between the two callers;
+    only what they were willing to put in front of it did.
+    """
+    did = {"asked": 0, "from_register": 0, "failed": 0, "seeds": 0}
+    for move in moves or []:
+        try:
+            said = backtest(move["legs"], move["period"], why=move["why"],
+                            call=call, now=now)
+        except qa_backtests.BacktestError:
+            # A basket their tool would refuse is not a failed reading; it is
+            # a question that was never a question.
+            continue
+        except (Exception, SystemExit) as exc:  # noqa: BLE001
+            did["failed"] += 1
+            if out:
+                out(f"  {move['why']}: {exc}")
+            continue
+        did["from_register" if said["cached"] else "asked"] += 1
+        if out and not said["cached"]:
+            out(f"  {move['why']:56} sharpe {said['s']}  ret {said['r']}%")
     return did
 
 
@@ -1028,6 +1041,35 @@ def night_moves() -> list[dict]:
     pool = symbol_pool(seeds)
     return [move for seed in seeds
             for move in qa_backtests.neighbourhood(seed, pool, cap=24)]
+
+
+def search_queue(seeds: list[dict], rows: list[dict] | None = None,
+                 cap: int = 12, limit: int = 8) -> list[dict]:
+    """Every basket worth asking about: their cards, AND what scored well.
+
+    The one place both callers take their moves from. `night()` already
+    climbed -- it refills from the register the moment its first queue empties
+    -- but the hand-run `lab.py search` walked only `card_baskets()`, which is
+    finite and small (seven cards the sampler has seen with two legs or more).
+    So the second sweep of 2026-09-13 came back **0 asked, 32 already known**,
+    which looks identical to a finished search and is really a queue nobody
+    refilled. The operator asked that afternoon why so few backtests had run.
+
+    Order matters: the cards first, because they are THEIR baskets and
+    CLAUDE.md says a strategy starts from their side, then the climb from what
+    measured well. A register with nothing in it yet leaves just the cards,
+    which is what a first run should be.
+    """
+    queue = [move for seed in seeds
+             for move in qa_backtests.neighbourhood(seed, symbol_pool(seeds),
+                                                    cap)]
+    seen = {move.get("fp") for move in queue if move.get("fp")}
+    for move in night_refill(rows=rows, limit=limit, cap=cap):
+        if move.get("fp") and move["fp"] in seen:
+            continue
+        seen.add(move.get("fp"))
+        queue.append(move)
+    return queue
 
 
 def night_refill(rows: list[dict] | None = None, limit: int = 8,
@@ -1523,9 +1565,14 @@ def main(argv: list[str] | None = None) -> int:
             seeds = [s for s in seeds if s["card"].startswith(args.card)]
             if not seeds:
                 raise SystemExit(f"no card starting {args.card}; `lab.py seeds`")
-        did = search(seeds, symbol_pool(card_baskets()), args.cap, out=print)
-        print(f"\n{did['seeds']} seed(s): {did['asked']} asked, "
-              f"{did['from_register']} already known, {did['failed']} failed")
+        # Their cards AND the climb from what has already scored. Without the
+        # second half this command goes permanently quiet after one pass --
+        # every later sweep asks only what the register already holds.
+        queue = search_queue(seeds, cap=args.cap)
+        did = search_moves(queue, out=print)
+        print(f"\n{len(seeds)} card seed(s), {len(queue)} basket(s) walked: "
+              f"{did['asked']} asked, {did['from_register']} already known, "
+              f"{did['failed']} failed")
         ranked = qa_backtests.best(qa_backtests.load())[:args.top]
         if ranked:
             print("\nbest readings held, risk-adjusted:")

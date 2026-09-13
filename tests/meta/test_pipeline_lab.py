@@ -1433,6 +1433,54 @@ def test_a_refill_climbs_from_what_scored_rather_than_from_where_we_started():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_hand_run_search_refills_the_same_way_the_night_does():
+    """`night` climbs; `lab.py search` did not, and went silently empty.
+
+    The night refills its queue from what has actually scored the moment the
+    first one runs out (test above). The hand-run `search` command had no such
+    step: it walked `card_baskets()`' neighbourhood once and, from then on,
+    every invocation asked for baskets the register already held. Measured
+    2026-09-13 -- two consecutive sweeps, the second returning **0 asked, 32
+    already known**, which reads exactly like a finished search rather than
+    like a queue nobody refilled. The operator's question that afternoon was
+    why so few backtests had been run.
+
+    So `search_queue` is the one place both callers get their moves from, and
+    what is asserted here is that it does NOT stop at the cards: when the
+    register holds good readings, they are in the queue too.
+    """
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "lab_search_queue", REPO / "scripts" / "lab.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    fresh = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
+    scored = [{"fp": "a", "p": 30, "s": 9.0, "d": 1.0, "r": 5.0, "pts": 90,
+               "at": fresh, "why": "the good one",
+               "legs": [["KSM", 0.6], ["ZEN", 0.4]]}]
+    seeds = [{"card": "c1", "title": "a card the sampler saw",
+              "legs": [{"symbol": "BTC", "weight": 0.6},
+                       {"symbol": "ETH", "weight": 0.4}]}]
+
+    queue = module.search_queue(seeds, rows=scored, cap=6)
+
+    symbols = {leg["symbol"] for move in queue for leg in (move["legs"] or [])}
+    assert "BTC" in symbols, "the card neighbourhood must still be walked"
+    assert "KSM" in symbols, (
+        "a hand-run search must also climb from what scored, or it goes empty "
+        "after one pass and every later sweep asks only what is already known")
+
+    # With nothing scored yet, it is still exactly the card neighbourhood --
+    # a first run on an empty register must not be broken by the refill.
+    first = module.search_queue(seeds, rows=[], cap=6)
+    assert first, "an empty register must not empty the queue"
+    assert {leg["symbol"] for move in first
+            for leg in (move["legs"] or [])} <= {"BTC", "ETH"}
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_an_unreadable_pass_notebook_is_not_an_absent_pass(tmp_path,
                                                            monkeypatch):
     """Rule 8, on the interlock that stops us talking to Nexus mid-pass.
