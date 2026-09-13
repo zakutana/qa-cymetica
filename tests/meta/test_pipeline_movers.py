@@ -124,13 +124,60 @@ def test_enter_refuses_before_the_network_and_only_the_flag_lets_it_through():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_enter_is_registered_probe_only_until_the_shape_is_confirmed():
-    """The one write this module can make is gated at the SAFETY floor, not
-    just by this module's own argument checks -- a wrong body their server
-    happened to accept would lock a real week-long round on garbage picks,
-    with no way back before it scores. Driven through the REAL registry and
-    the REAL SafetyTransport at MUTATE tier (where a live `enter()` would
-    actually run), not asserted about the yaml file's text.
+def test_enter_posts_the_shape_their_docs_name_and_not_the_one_we_guessed():
+    """Cymetica documented the submission on 2026-09-13, in the new "Clone
+    Tools & Tournaments" section, after the operator relayed MSG-0011:
+
+        POST /api/v1/universe/movers/tournament/enter
+        Body: {"symbols": ["AAPL", "NVDA"]} (1-5 symbols)
+
+    This module had guessed the POST went to the tournament path ITSELF, and
+    that guess was wrong -- which is the whole reason `movers.enter` was
+    registered `probe_only` until the shape was confirmed rather than tried
+    against a round that locks for a week. The test names both halves: the
+    path is the documented one, and the body is `{"symbols": [...]}` with the
+    symbols upper-cased as their universe writes them.
+    """
+    from qa.client import build_mock_client
+    from qa.safety import EndpointRegistry
+
+    from tests.meta.test_guard_is_real import as_mutate_tier
+
+    mod = _module()
+    sent = []
+
+    def handler(request):
+        sent.append(request)
+        return httpx.Response(200, json={"ok": True})
+
+    # At the tier a real submission runs at -- the guard refuses a POST from a
+    # SAFE test, which is exactly what it is for, and the first draft of this
+    # test tripped over it.
+    registry = EndpointRegistry.load()
+    registry.mutate_enabled = True
+    registry.mutate_allowed_hosts = frozenset({"cymetica.com"})
+    client = build_mock_client(handler, registry=registry)
+    try:
+        with as_mutate_tier():
+            mod.enter(client, ["aapl", " googl "], confirm=True)
+    finally:
+        client.close()
+
+    assert len(sent) == 1
+    assert sent[0].url.path == "/api/v1/universe/movers/tournament/enter", (
+        "the POST must go to the documented /enter, not to the tournament "
+        "path itself -- that was the guess, and it was wrong")
+    assert json.loads(sent[0].content) == {"symbols": ["AAPL", "GOOGL"]}
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_enter_still_needs_allow_mutate_now_that_probe_only_is_gone():
+    """`probe_only` came off once their docs named the shape (2026-09-13), so
+    what has to still stand is the floor UNDER it: a POST is a MUTATE, and no
+    MUTATE goes out without `--allow-mutate` having been turned on for that
+    host on purpose. Driven through the REAL registry and the REAL
+    SafetyTransport, not asserted about the yaml file's text -- if this ever
+    goes green by default, an ordinary SAFE session could lock a round.
     """
     from qa.client import build_mock_client
     from qa.safety import EndpointRegistry, SafetyViolation
@@ -144,16 +191,12 @@ def test_enter_is_registered_probe_only_until_the_shape_is_confirmed():
         sent.append(request)
         return httpx.Response(200, json={})
 
-    # --allow-mutate itself, so what is left standing is the probe_only floor
-    # specifically -- the same setup test_probe_only_endpoints_refuse_mutate_
-    # even_when_enabled uses for the money-moving endpoints.
-    registry = EndpointRegistry.load()
-    registry.mutate_enabled = True
-    registry.mutate_allowed_hosts = frozenset({"cymetica.com"})
+    registry = EndpointRegistry.load()          # mutate_enabled stays False
     client = build_mock_client(handler, registry=registry)
     try:
-        with as_mutate_tier(), pytest.raises(SafetyViolation, match="probe_only"):
+        with as_mutate_tier(), pytest.raises(SafetyViolation,
+                                             match="allow-mutate"):
             mod.enter(client, ["BTC"], confirm=True)
     finally:
         client.close()
-    assert sent == [], "probe_only means execution never reaches the network"
+    assert sent == [], "the MUTATE floor must refuse before the network"

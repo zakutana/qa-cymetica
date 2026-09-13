@@ -57,6 +57,7 @@ COMPONENT_TO_SECTION = {
     "funding.withdraw": "funding", "funding.deposit": "funding",
     "platform.ai_native_proof": "provenance", "platform.status": "swaps",
     "rest.support": "support", "rest.movers": "movers",
+    "rest.clones": "clones",
     "meta.guard": "_meta", "meta.classifier": "_meta",
     "meta.pipeline": "_meta",
 }

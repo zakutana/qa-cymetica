@@ -204,6 +204,14 @@ SECTIONS: list[dict] = [
         "blast": "measurement",
     },
     {
+        "id": "clones",
+        "title": "Public clone tools",
+        "blurb": "FOMO Radar, Memecoin Terminal, Social Pulse, Protocol Revenue, Stable Pools -- built from /duplicate requests, keyless, each with its own /docs contract. Documented 2026-09-13 after we reported that four of them answered live and appeared nowhere in /api-docs.",
+        "patterns": [r"^/api/v1/clones/"],
+        "tools": [],
+        "blast": "measurement",
+    },
+    {
         "id": "provenance",
         "title": "AI-native provenance",
         "blurb": "Build stats, AI authorship proof, due-diligence scoring. The platform's central marketing claim.",

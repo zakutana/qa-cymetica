@@ -12,14 +12,22 @@ holds here exactly as it holds everywhere else. `enter()` takes the symbols as
 an argument rather than choosing them, so the caller (the laboratory's `ask`
 step) is where a Nexus answer becomes a submission.
 
-**The submission shape is unconfirmed.** `/api-docs` names nothing under
-`/universe/movers`, and the GET response says an entry exists (`my_entries`)
-without ever saying how one is written. `movers.enter` is registered
-`probe_only` in components.yaml for exactly this reason: a wrong body their
-server happened to accept would lock a real round on garbage picks, with no
-way back before it scores in a week. Calling `enter()` for real refuses at the
-safety floor until that flag is removed on purpose, by someone who has
-confirmed the shape.
+**The submission shape is theirs, published 2026-09-13** in the new "Clone
+Tools & Tournaments" section of `/api-docs`, after the operator relayed the
+gap over Telegram (MSG-0011):
+
+    POST /api/v1/universe/movers/tournament/enter
+    Body: {"symbols": ["AAPL", "NVDA"]}  (1-5 symbols)
+    "Requires a session or API key. Unknown or unpriced symbols are rejected
+     with a plain 422 reason."
+
+Until that morning this module guessed the POST went to the tournament path
+itself, and `movers.enter` was registered `probe_only` because a wrong body
+their server happened to accept would lock a real week-long round on garbage
+picks. **The guess was wrong** -- the documented path is one segment longer --
+so the flag is the reason a wrong submission never reached a live round. It
+came off once their document named the shape; the MUTATE floor under it did
+not.
 """
 
 from __future__ import annotations
@@ -32,6 +40,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
 TOURNAMENT = "/api/v1/universe/movers/tournament"
+ENTER = f"{TOURNAMENT}/enter"   # their document, 2026-09-13; not the guess
 MAX_PICKS = 5
 
 
@@ -83,10 +92,12 @@ def house_row(state: dict) -> dict | None:
 
 
 def enter(client, symbols: list[str], confirm: bool) -> dict:
-    """Submit up to five picks. Refuses over the limit before anything is
-    sent; the live POST itself refuses at the safety floor until
-    `movers.enter`'s `probe_only` flag is confirmed and removed -- see the
-    module docstring for why that flag is there on purpose.
+    """Submit up to five picks, to the path and body their document names.
+
+    Refuses over the limit, on no symbol, and without `confirm`, all before
+    anything reaches the network. The POST itself is still a MUTATE and needs
+    `--allow-mutate` turned on for their host on purpose -- a round locks for
+    a week once entered.
     """
     cleaned = [str(s).strip().upper() for s in symbols if str(s).strip()]
     if not cleaned:
@@ -96,8 +107,10 @@ def enter(client, symbols: list[str], confirm: bool) -> dict:
             f"{len(cleaned)} symbols, and the rules allow at most {MAX_PICKS}")
     if not confirm:
         raise MoversError("pass confirm=True to actually submit")
-    response = client.post(TOURNAMENT, json={"symbols": cleaned})
+    response = client.post(ENTER, json={"symbols": cleaned})
     if response.status_code not in (200, 201):
+        # Their own note: "Unknown or unpriced symbols are rejected with a
+        # plain 422 reason" -- so the body is worth printing, not swallowing.
         raise MoversError(
             f"entry refused: HTTP {response.status_code} {response.text[:200]!r}")
     try:
@@ -145,10 +158,19 @@ def cmd_status(_args) -> int:
 
 
 def cmd_enter(args) -> int:
-    from qa.safety import CURRENT_TIER, SafetyTier
+    """A round locks for seven days, so the two brakes are both deliberate:
+    `--confirm` here, and `--allow-mutate` turned on for their host below --
+    the same shape `paper.py` uses for an order."""
+    from qa.client import build_client
+    from qa.config import identities, load_dotenv
+    from qa.safety import CURRENT_TIER, EndpointRegistry, SafetyTier
 
-    client = _client()
-    token = CURRENT_TIER.set(SafetyTier.SAFE)
+    load_dotenv()
+    registry = EndpointRegistry.load()
+    registry.mutate_enabled = True
+    registry.mutate_allowed_hosts = frozenset({"cymetica.com"})
+    client = build_client(identities()["trusted"], registry, timeout=30.0)
+    token = CURRENT_TIER.set(SafetyTier.MUTATE)
     try:
         try:
             result = enter(client, args.symbols, args.confirm)

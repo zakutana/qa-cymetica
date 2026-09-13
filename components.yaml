@@ -185,6 +185,11 @@ components:
     surface: rest
     criticality: low
     staleness_hours: 168
+  rest.clones:
+    title: Public clone tools (FOMO Radar, Memecoin Terminal, Social Pulse)
+    surface: rest
+    criticality: medium
+    staleness_hours: 24
 
   funding.deposit:
     title: Deposit addresses
@@ -376,20 +381,28 @@ endpoints:
 
   # The GET is unregistered on purpose -- reads are default-allowed at SAFE,
   # and this one moves no money at all ("no prizes are attached and nothing
-  # moves money"). The POST shape that submits a pick is undocumented
-  # anywhere: /api-docs names nothing under /universe/movers, and the GET
-  # response (rules/round/leaderboard/my_entries) does not say how an entry
-  # is written, only that it exists ("Enter up to 5 universe symbols per
-  # round"). Path is a guess at the RESTful form; probe_only until it is
-  # confirmed, because a wrong body accepted by their server would lock a
-  # real week-long round on garbage picks with no way back -- "Each pick
-  # locks the stored close on the round day". 2026-09-13.
+  # moves money").
+  #
+  # The POST was probe_only from 2026-09-13 morning until that afternoon,
+  # because its shape was undocumented and a wrong body their server happened
+  # to accept would lock a real week-long round on garbage picks -- "Each pick
+  # locks the stored close on the round day", with no way back before it
+  # scores. The operator relayed that gap to Cymetica (MSG-0011) and they
+  # published it the same day, in a new "Clone Tools & Tournaments" section:
+  #
+  #   POST /api/v1/universe/movers/tournament/enter
+  #   Body: {"symbols": ["AAPL", "NVDA"]} (1-5 symbols)
+  #   "Requires a session or API key. Unknown or unpriced symbols are
+  #    rejected with a plain 422 reason."
+  #
+  # Worth keeping: the path we had guessed was the tournament path itself, and
+  # it was wrong. The flag is what stopped that guess reaching a live round.
+  # Still MUTATE, so it needs --allow-mutate on purpose.
   - id: movers.enter
-    path: /api/v1/universe/movers/tournament
+    path: /api/v1/universe/movers/tournament/enter
     methods: [POST]
     component: rest.movers
     executable_params: [symbols]
-    probe_only: true   # unconfirmed shape against a round that locks; see above
 
   - id: arena.order
     path: /api/v1/arena/order
