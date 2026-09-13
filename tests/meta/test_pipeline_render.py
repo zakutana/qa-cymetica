@@ -302,6 +302,51 @@ def test_the_pages_javascript_parses(tmp_path, monkeypatch):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_memecoin_section_renders_with_and_without_a_diary(tmp_path,
+                                                                monkeypatch):
+    """The one branch nothing else here exercises. Every other test in this
+    file runs against `stats.fomo == null` -- the real state on a fresh
+    checkout, since `state/fomo_signals.jsonl` is gitignored -- so the whole
+    body of statBlocks()'s `if (fm) {...}` had never once actually run in
+    Node before this test.
+    """
+    import shutil
+
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("node is not installed, so the page cannot be run here")
+
+    render = _render()
+    payload = render.build_payload()
+    payload["stats"] = {**payload.get("stats", {}), "fomo": None}
+    code, err, captured = _run_page(node, tmp_path / "nofomo", payload)
+    assert code == 0, f"the page throws with no diary:\n{err[:900]}"
+    assert "Memecoiny" not in captured.get("stats", ""), (
+        "no diary means no section, not an empty one")
+
+    payload["stats"]["fomo"] = {
+        "tracked": 3, "hit_threshold": 20.0,
+        "horizons": {
+            "1h": {"resolved": 2, "hit_rate": 0.5, "mean_pct": 4.0,
+                  "median_pct": 4.0,
+                  "top": [{"symbol": "DOGEX", "conviction": 0.9,
+                          "return_pct": 38.5}],
+                  "bottom": [{"symbol": "PEPEX", "conviction": 0.1,
+                             "return_pct": -30.5}]},
+            "24h": {"resolved": 0, "hit_rate": None, "mean_pct": None,
+                   "median_pct": None, "top": [], "bottom": []},
+        },
+    }
+    code, err, captured = _run_page(node, tmp_path / "withfomo", payload)
+    assert code == 0, f"the page throws with a real diary:\n{err[:900]}"
+    stats_html = captured.get("stats", "")
+    assert "Memecoiny" in stats_html
+    assert "3" in stats_html and "50%" in stats_html
+    assert "DOGEX" in stats_html and "38.5" in stats_html
+    assert "PEPEX" in stats_html and "-30.5" in stats_html
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_page_reads_no_field_the_payload_stops_writing(tmp_path, monkeypatch):
     """The class of defect behind three separate visible breakages.
 

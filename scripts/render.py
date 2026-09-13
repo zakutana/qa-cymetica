@@ -400,6 +400,7 @@ def _stats(ledger: dict, run: dict, events: list[dict]) -> dict:
         "strips": strips,
         "nexus": _nexus_channel(),
         "process": _process_rows(),
+        "fomo": _fomo_stats(),
     }
 
 
@@ -1262,6 +1263,33 @@ def _test_counts() -> dict:
             theirs += n
     return {"vendor_facing": theirs, "self_tests": ours,
             "by_dir": [{"dir": d, "n": n} for d, n in sorted(by_dir.items())]}
+
+
+def _fomo_stats() -> dict | None:
+    """FOMO Radar's `hot` signal, measured: does it predict a memecoin
+    moving? Local diary only -- `scripts/fomo_watch.py` is what calls their
+    API. None when the diary has never been written, so the page can tell
+    "never watched" from "watched and found nothing"."""
+    from qa.state import state_dir
+
+    path = state_dir() / "fomo_signals.jsonl"
+    if not path.is_file():
+        return None
+    rows = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            row = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(row, dict):
+            rows.append(row)
+
+    from qa.fomo import stats
+
+    return stats(rows)
 
 
 def _process_rows() -> list[dict]:
@@ -4668,6 +4696,46 @@ function statBlocks() {
           <td>${p.fixed}</td><td>${p.elapsed_min == null ? "&mdash;" : p.elapsed_min}</td></tr>`).join("")}</tbody>
       </table>
     </details>`);
+  }
+
+  // Memecoiny: does FOMO Radar's `hot` field actually predict a move? Read
+  // 2026-09-13. `S.fomo` is null when the diary has never been written --
+  // "never watched" and "watched, nothing hit yet" must not look the same.
+  const fm = S.fomo;
+  if (fm) {
+    const horizons = Object.keys(fm.horizons || {}).sort();
+    out.push(`<section class="stat wide">
+      <h3>Memecoiny &mdash; FOMO Radar's "hot" signal</h3>
+      <div class="hero">${fm.tracked || 0} <span>signal(s) tracked</span></div>
+      ${horizons.length ? `<dl class="figs">
+        ${horizons.map(h => {
+          const row = fm.horizons[h];
+          const hit = row.hit_rate == null ? "&mdash;" : Math.round(row.hit_rate * 100) + "%";
+          const mean = row.mean_pct == null ? "&mdash;" : row.mean_pct.toFixed(1) + "%";
+          return `<div><dt>${esc(h)}</dt><dd>${row.resolved} resolved,
+            ${hit} hit rate, ${mean} avg return</dd></div>`;
+        }).join("")}
+      </dl>` : `<p class="blurb">Tracking signals; none has reached its first
+        checkpoint (1h) yet.</p>`}
+      ${horizons.filter(h => (fm.horizons[h].top || []).length).map(h => {
+        const row = fm.horizons[h];
+        return `<details><summary>${esc(h)}: best and worst since signal</summary>
+          <table class="stat-t"><thead><tr><th>symbol</th><th>conviction at signal</th>
+            <th>return</th></tr></thead><tbody>
+            ${row.top.map(c => `<tr><td>${esc(c.symbol || "?")}</td>
+              <td>${c.conviction == null ? "&mdash;" : c.conviction}</td>
+              <td>${c.return_pct.toFixed(1)}%</td></tr>`).join("")}
+            ${row.bottom.map(c => `<tr><td>${esc(c.symbol || "?")}</td>
+              <td>${c.conviction == null ? "&mdash;" : c.conviction}</td>
+              <td>${c.return_pct.toFixed(1)}%</td></tr>`).join("")}
+          </tbody></table>
+        </details>`;
+      }).join("")}
+      <p class="blurb">Return is ours, computed from the price at the moment
+      the signal fired to the price at each checkpoint &mdash; not their own
+      rolling %-change window, which is relative to whenever we happen to ask.
+      A hit is a return at or above ${fm.hit_threshold != null ? fm.hit_threshold : 20}%.</p>
+    </section>`);
   }
   return out.join("");
 }

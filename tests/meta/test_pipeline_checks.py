@@ -391,6 +391,39 @@ def test_trust_ladder_no_longer_greps_for_a_phrase():
 # INV / PIN404 -- the denominator is pinned
 # ---------------------------------------------------------------------------
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_section_with_nothing_documented_still_gets_a_row():
+    """`buckets` is a defaultdict populated only by appending to it, so a
+    section matching zero documented paths and naming zero tools got no
+    bucket at all and `assemble()` skipped it outright -- exactly the state
+    of the Movers Tournament, registered in components.yaml since
+    2026-09-13 but named nowhere in /api-docs. A section this empty is the
+    one most worth a row, not the one most worth hiding.
+
+    FALLBACK is the one exception: "everything we could not classify" earns
+    a row only once something has actually landed there.
+    """
+    inventory = _module("scripts/inventory.py", "inv_mod")
+
+    result = inventory.assemble(documented={}, tools={
+        "declared": {}, "served_anon": [], "served_trusted": []})
+    ids = {s["id"] for s in result["sections"]}
+
+    assert set(inventory.SECTIONS[0].keys()) & {"id"}, "sanity: SECTIONS is real"
+    empty_sections = {s["id"] for s in inventory.SECTIONS}
+    assert empty_sections <= ids, (
+        f"every declared section must appear even with nothing found: "
+        f"missing {empty_sections - ids}")
+    assert inventory.FALLBACK["id"] not in ids, (
+        "the fallback bucket is not a section in its own right until "
+        "something actually lands there")
+
+    movers = next(s for s in result["sections"] if s["id"] == "movers")
+    assert movers["population"]["documented"] == 0
+    assert movers["reachable_pct"] is None, (
+        "zero probed endpoints is unmeasured, not 0% reachable")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_inventory_population_pinned():
     """compare() on the two real captures: not one path was fixed in place.
 

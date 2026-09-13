@@ -1,14 +1,15 @@
 {
-  "generated_at": "2026-09-10T21:34:49+00:00",
+  "generated_at": "2026-09-13T07:26:21+00:00",
   "totals": {
-    "paths_documented": 171,
-    "tools_declared": 74,
-    "tools_served_anon": 42,
-    "tools_served_trusted": 74
+    "paths_documented": 173,
+    "tools_declared": 75,
+    "tools_served_anon": 43,
+    "tools_served_trusted": 75
   },
   "tools": {
     "declared": {
       "get_trust_signal": "unknown",
+      "ceo_ai_index_get": "unknown",
       "get_bug_bounty_program": "unknown",
       "list_backtest_surfaces": "unknown",
       "get_backtest_models": "unknown",
@@ -95,6 +96,7 @@
       "board_subscribe",
       "board_threads",
       "browse_ontology",
+      "ceo_ai_index_get",
       "find_trade_path",
       "get_ai_native_proof",
       "get_backtest_models",
@@ -141,6 +143,7 @@
       "board_subscribe",
       "board_threads",
       "browse_ontology",
+      "ceo_ai_index_get",
       "clone_bot",
       "create_aib_fund",
       "edit_aib_fund_basket",
@@ -270,9 +273,9 @@
             "GET"
           ],
           "status_anon": 200,
-          "bytes_anon": 17095,
+          "bytes_anon": 18970,
           "status_trusted": 200,
-          "bytes_trusted": 17095,
+          "bytes_trusted": 18970,
           "probe": "done",
           "section": "discovery",
           "verdict": "ok"
@@ -334,9 +337,9 @@
             "GET"
           ],
           "status_anon": 200,
-          "bytes_anon": 4646,
+          "bytes_anon": 5149,
           "status_trusted": 200,
-          "bytes_trusted": 4646,
+          "bytes_trusted": 5149,
           "probe": "done",
           "section": "discovery",
           "verdict": "ok"
@@ -350,9 +353,9 @@
             "GET"
           ],
           "status_anon": 200,
-          "bytes_anon": 23392,
+          "bytes_anon": 24516,
           "status_trusted": 200,
-          "bytes_trusted": 23392,
+          "bytes_trusted": 24516,
           "probe": "done",
           "section": "discovery",
           "verdict": "ok"
@@ -462,9 +465,9 @@
             "GET"
           ],
           "status_anon": 200,
-          "bytes_anon": 63996,
+          "bytes_anon": 71126,
           "status_trusted": 200,
-          "bytes_trusted": 63996,
+          "bytes_trusted": 71126,
           "probe": "done",
           "section": "discovery",
           "verdict": "ok"
@@ -478,9 +481,9 @@
             "GET"
           ],
           "status_anon": 200,
-          "bytes_anon": 47605,
+          "bytes_anon": 54735,
           "status_trusted": 200,
-          "bytes_trusted": 47605,
+          "bytes_trusted": 54735,
           "probe": "done",
           "section": "discovery",
           "verdict": "ok"
@@ -494,9 +497,9 @@
             "GET"
           ],
           "status_anon": 200,
-          "bytes_anon": 116766,
+          "bytes_anon": 123835,
           "status_trusted": 200,
-          "bytes_trusted": 116766,
+          "bytes_trusted": 123835,
           "probe": "done",
           "section": "discovery",
           "verdict": "ok"
@@ -751,8 +754,7 @@
       "endpoints_unprobeable": 1,
       "verdicts": {
         "unprobed": 1,
-        "ok": 5,
-        "auth": 1
+        "ok": 6
       },
       "reachable_pct": 100,
       "tools_declared": 2,
@@ -771,7 +773,7 @@
           "status_anon": 401,
           "bytes_anon": 79,
           "status_trusted": 200,
-          "bytes_trusted": 1623,
+          "bytes_trusted": 1622,
           "probe": "done",
           "section": "account",
           "verdict": "ok"
@@ -787,7 +789,7 @@
           "status_anon": 401,
           "bytes_anon": 79,
           "status_trusted": 200,
-          "bytes_trusted": 881,
+          "bytes_trusted": 854,
           "probe": "done",
           "section": "account",
           "verdict": "ok"
@@ -805,7 +807,7 @@
           "status_anon": 401,
           "bytes_anon": 79,
           "status_trusted": 200,
-          "bytes_trusted": 4784,
+          "bytes_trusted": 4825,
           "probe": "done",
           "section": "account",
           "verdict": "ok"
@@ -837,7 +839,7 @@
           "status_anon": 401,
           "bytes_anon": 79,
           "status_trusted": 200,
-          "bytes_trusted": 1300,
+          "bytes_trusted": 1299,
           "probe": "done",
           "section": "account",
           "verdict": "ok"
@@ -851,12 +853,12 @@
             "GET"
           ],
           "status_anon": 401,
-          "bytes_anon": 30,
-          "status_trusted": 401,
-          "bytes_trusted": 30,
+          "bytes_anon": 79,
+          "status_trusted": 200,
+          "bytes_trusted": 153,
           "probe": "done",
           "section": "account",
-          "verdict": "auth"
+          "verdict": "ok"
         },
         {
           "path": "/auth/login",
@@ -930,9 +932,9 @@
             "GET"
           ],
           "status_anon": 200,
-          "bytes_anon": 11109,
+          "bytes_anon": 11325,
           "status_trusted": 200,
-          "bytes_trusted": 11109,
+          "bytes_trusted": 11325,
           "probe": "done",
           "section": "clob",
           "verdict": "ok"
@@ -1051,9 +1053,9 @@
             "GET"
           ],
           "status_anon": 200,
-          "bytes_anon": 12492,
+          "bytes_anon": 12493,
           "status_trusted": 200,
-          "bytes_trusted": 12492,
+          "bytes_trusted": 12493,
           "probe": "done",
           "section": "clob",
           "verdict": "ok"
@@ -1067,9 +1069,9 @@
             "GET"
           ],
           "status_anon": 200,
-          "bytes_anon": 311,
+          "bytes_anon": 156,
           "status_trusted": 200,
-          "bytes_trusted": 311,
+          "bytes_trusted": 156,
           "probe": "done",
           "section": "clob",
           "verdict": "ok"
@@ -1083,9 +1085,9 @@
             "GET"
           ],
           "status_anon": 200,
-          "bytes_anon": 642,
+          "bytes_anon": 114,
           "status_trusted": 200,
-          "bytes_trusted": 642,
+          "bytes_trusted": 114,
           "probe": "done",
           "section": "clob",
           "verdict": "ok"
@@ -1134,9 +1136,8 @@
       "endpoints_reachable": 7,
       "endpoints_unprobeable": 5,
       "verdicts": {
-        "ok": 6,
-        "unprobed": 5,
-        "auth": 1
+        "ok": 7,
+        "unprobed": 5
       },
       "reachable_pct": 100,
       "tools_declared": 6,
@@ -1195,9 +1196,9 @@
             "GET"
           ],
           "status_anon": 200,
-          "bytes_anon": 28911,
+          "bytes_anon": 28910,
           "status_trusted": 200,
-          "bytes_trusted": 28911,
+          "bytes_trusted": 28910,
           "probe": "done",
           "section": "markets",
           "verdict": "ok"
@@ -1315,12 +1316,12 @@
             "GET"
           ],
           "status_anon": 401,
-          "bytes_anon": 30,
-          "status_trusted": 401,
-          "bytes_trusted": 30,
+          "bytes_anon": 79,
+          "status_trusted": 200,
+          "bytes_trusted": 334,
           "probe": "done",
           "section": "markets",
-          "verdict": "auth"
+          "verdict": "ok"
         }
       ],
       "tool_detail": [
@@ -1394,9 +1395,9 @@
             "GET"
           ],
           "status_anon": 200,
-          "bytes_anon": 158751,
+          "bytes_anon": 170586,
           "status_trusted": 200,
-          "bytes_trusted": 158751,
+          "bytes_trusted": 170586,
           "probe": "done",
           "section": "event_cards",
           "verdict": "ok"
@@ -1428,7 +1429,7 @@
           "status_anon": 401,
           "bytes_anon": 79,
           "status_trusted": 200,
-          "bytes_trusted": 21199,
+          "bytes_trusted": 21710,
           "probe": "done",
           "section": "event_cards",
           "verdict": "ok"
@@ -1562,9 +1563,9 @@
             "GET"
           ],
           "status_anon": 200,
-          "bytes_anon": 7067,
+          "bytes_anon": 7075,
           "status_trusted": 200,
-          "bytes_trusted": 7067,
+          "bytes_trusted": 7077,
           "probe": "done",
           "section": "arena",
           "verdict": "ok"
@@ -1748,7 +1749,7 @@
           "status_anon": 401,
           "bytes_anon": 92,
           "status_trusted": 200,
-          "bytes_trusted": 2107,
+          "bytes_trusted": 2150,
           "probe": "done",
           "section": "agents",
           "verdict": "ok"
@@ -1926,9 +1927,9 @@
             "GET"
           ],
           "status_anon": 200,
-          "bytes_anon": 25678,
+          "bytes_anon": 25914,
           "status_trusted": 200,
-          "bytes_trusted": 25678,
+          "bytes_trusted": 25914,
           "probe": "done",
           "section": "agentbook",
           "verdict": "ok"
@@ -1942,9 +1943,9 @@
             "GET"
           ],
           "status_anon": 200,
-          "bytes_anon": 16211,
+          "bytes_anon": 25565,
           "status_trusted": 200,
-          "bytes_trusted": 16211,
+          "bytes_trusted": 25565,
           "probe": "done",
           "section": "agentbook",
           "verdict": "ok"
@@ -1984,9 +1985,9 @@
             "GET"
           ],
           "status_anon": 200,
-          "bytes_anon": 2577,
+          "bytes_anon": 2578,
           "status_trusted": 200,
-          "bytes_trusted": 2577,
+          "bytes_trusted": 2578,
           "probe": "done",
           "section": "agentbook",
           "verdict": "ok"
@@ -2066,10 +2067,9 @@
       "endpoints_reachable": 2,
       "endpoints_unprobeable": 2,
       "verdicts": {
-        "ok": 1,
+        "ok": 2,
         "unprobed": 1,
-        "method": 1,
-        "auth": 1
+        "method": 1
       },
       "reachable_pct": 100,
       "tools_declared": 0,
@@ -2118,12 +2118,12 @@
             "GET"
           ],
           "status_anon": 401,
-          "bytes_anon": 81,
-          "status_trusted": 401,
-          "bytes_trusted": 81,
+          "bytes_anon": 92,
+          "status_trusted": 200,
+          "bytes_trusted": 12,
           "probe": "done",
           "section": "swaps",
-          "verdict": "auth"
+          "verdict": "ok"
         },
         {
           "path": "/api/v1/swap/tokens/{chain_id}",
@@ -2194,9 +2194,9 @@
             "GET"
           ],
           "status_anon": 200,
-          "bytes_anon": 75421,
+          "bytes_anon": 75628,
           "status_trusted": 200,
-          "bytes_trusted": 75421,
+          "bytes_trusted": 75628,
           "probe": "done",
           "section": "launchpad",
           "verdict": "ok"
@@ -2735,9 +2735,9 @@
             "GET"
           ],
           "status_anon": 200,
-          "bytes_anon": 114945,
+          "bytes_anon": 131656,
           "status_trusted": 200,
-          "bytes_trusted": 114945,
+          "bytes_trusted": 131656,
           "probe": "done",
           "section": "support",
           "verdict": "ok"
@@ -2866,13 +2866,35 @@
       ]
     },
     {
+      "id": "movers",
+      "title": "Movers Tournament",
+      "blurb": "A free, scored stock-picking competition over their own universe. No prizes, no money moves. Read 2026-09-13, alongside their new memecoin surfaces.",
+      "blast": "measurement",
+      "population": {
+        "documented": 0,
+        "probed": 0,
+        "paths": []
+      },
+      "endpoints_documented": 0,
+      "endpoints_probed": 0,
+      "endpoints_reachable": 0,
+      "endpoints_unprobeable": 0,
+      "verdicts": {},
+      "reachable_pct": null,
+      "tools_declared": 0,
+      "tools_anon": 0,
+      "tools_trusted": 0,
+      "endpoint_detail": [],
+      "tool_detail": []
+    },
+    {
       "id": "provenance",
       "title": "AI-native provenance",
       "blurb": "Build stats, AI authorship proof, due-diligence scoring. The platform's central marketing claim.",
       "blast": "measurement",
       "population": {
         "documented": 5,
-        "probed": 4,
+        "probed": 5,
         "paths": [
           "/api/v1/ai-due-diligence",
           "/api/v1/build-stats",
@@ -2882,13 +2904,12 @@
         ]
       },
       "endpoints_documented": 5,
-      "endpoints_probed": 4,
-      "endpoints_reachable": 4,
-      "endpoints_unprobeable": 1,
+      "endpoints_probed": 5,
+      "endpoints_reachable": 5,
+      "endpoints_unprobeable": 0,
       "verdicts": {
-        "ok": 3,
-        "param": 1,
-        "method": 1
+        "ok": 4,
+        "param": 1
       },
       "reachable_pct": 100,
       "tools_declared": 2,
@@ -2904,13 +2925,13 @@
           "methods": [
             "GET"
           ],
-          "status_anon": 405,
-          "bytes_anon": 31,
-          "status_trusted": 405,
-          "bytes_trusted": 31,
+          "status_anon": 200,
+          "bytes_anon": 1114,
+          "status_trusted": 200,
+          "bytes_trusted": 1114,
           "probe": "done",
           "section": "provenance",
-          "verdict": "method"
+          "verdict": "ok"
         },
         {
           "path": "/api/v1/build-stats",
@@ -2921,9 +2942,9 @@
             "GET"
           ],
           "status_anon": 200,
-          "bytes_anon": 30405,
+          "bytes_anon": 30707,
           "status_trusted": 200,
-          "bytes_trusted": 30405,
+          "bytes_trusted": 30707,
           "probe": "done",
           "section": "provenance",
           "verdict": "ok"
@@ -2953,9 +2974,9 @@
             "GET"
           ],
           "status_anon": 200,
-          "bytes_anon": 180385,
+          "bytes_anon": 179890,
           "status_trusted": 200,
-          "bytes_trusted": 180385,
+          "bytes_trusted": 179890,
           "probe": "done",
           "section": "provenance",
           "verdict": "ok"
@@ -3346,8 +3367,8 @@
       "blurb": "Documented endpoints that fit no section yet.",
       "blast": "measurement",
       "population": {
-        "documented": 26,
-        "probed": 15,
+        "documented": 28,
+        "probed": 16,
         "paths": [
           "/api/v1/agent-board/channels",
           "/api/v1/agent-board/posts",
@@ -3356,6 +3377,8 @@
           "/api/v1/agent-board/subscriptions",
           "/api/v1/agent-board/threads",
           "/api/v1/agent-board/threads/{key}",
+          "/api/v1/ceo-ai-leaderboard/score",
+          "/api/v1/clone-requests;",
           "/api/v1/discover/url",
           "/api/v1/headlines",
           "/api/v1/macromarket/backtest",
@@ -3377,21 +3400,21 @@
           "/mcp/v1/agents/{agent_id}/fund"
         ]
       },
-      "endpoints_documented": 26,
-      "endpoints_probed": 15,
+      "endpoints_documented": 28,
+      "endpoints_probed": 16,
       "endpoints_reachable": 12,
-      "endpoints_unprobeable": 11,
+      "endpoints_unprobeable": 12,
       "verdicts": {
         "ok": 11,
         "unprobed": 8,
-        "method": 3,
-        "missing": 3,
+        "method": 4,
+        "missing": 4,
         "param": 1
       },
-      "reachable_pct": 80,
-      "tools_declared": 28,
-      "tools_anon": 17,
-      "tools_trusted": 28,
+      "reachable_pct": 75,
+      "tools_declared": 29,
+      "tools_anon": 18,
+      "tools_trusted": 29,
       "endpoint_detail": [
         {
           "path": "/api/v1/agent-board/channels",
@@ -3500,6 +3523,38 @@
           "verdict": "unprobed"
         },
         {
+          "path": "/api/v1/ceo-ai-leaderboard/score",
+          "sources": [
+            "udc.json"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 405,
+          "bytes_anon": 31,
+          "status_trusted": 405,
+          "bytes_trusted": 31,
+          "probe": "done",
+          "section": "unmapped",
+          "verdict": "method"
+        },
+        {
+          "path": "/api/v1/clone-requests;",
+          "sources": [
+            "llms.txt"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "status_anon": 404,
+          "bytes_anon": 22,
+          "status_trusted": 404,
+          "bytes_trusted": 22,
+          "probe": "done",
+          "section": "unmapped",
+          "verdict": "missing"
+        },
+        {
           "path": "/api/v1/discover/url",
           "sources": [
             "agent-skills.json"
@@ -3524,9 +3579,9 @@
             "GET"
           ],
           "status_anon": 200,
-          "bytes_anon": 137017,
+          "bytes_anon": 154387,
           "status_trusted": 200,
-          "bytes_trusted": 137017,
+          "bytes_trusted": 154387,
           "probe": "done",
           "section": "unmapped",
           "verdict": "ok"
@@ -3697,9 +3752,9 @@
             "GET"
           ],
           "status_anon": 200,
-          "bytes_anon": 66592,
+          "bytes_anon": 46807,
           "status_trusted": 200,
-          "bytes_trusted": 66590,
+          "bytes_trusted": 46807,
           "probe": "done",
           "section": "unmapped",
           "verdict": "ok"
@@ -3829,6 +3884,10 @@
         },
         {
           "name": "board_threads",
+          "declared_tier": "unknown"
+        },
+        {
+          "name": "ceo_ai_index_get",
           "declared_tier": "unknown"
         },
         {

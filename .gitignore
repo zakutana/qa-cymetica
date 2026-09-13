@@ -80,6 +80,11 @@ state/lab.jsonl
 # pass copies it into audits/lab/ so months of search do not live on one disk.
 state/backtests.jsonl
 
+# FOMO Radar's `hot` signals, tracked to measure whether they actually predict
+# a memecoin moving -- scripts/fomo_watch.py. Same reason as the diaries
+# above: appended to by a running poller, snapshotted by the deep pass.
+state/fomo_signals.jsonl
+
 # Captured requests and responses. 7 747 files and 469 MB by 2026-09-12,
 # growing 40-170 MB a day -- 120 MB of one day's 170 written by two checks that
 # walk the event-card listing page by page on every run -- and nothing in the

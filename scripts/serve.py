@@ -490,6 +490,23 @@ def sampler_loop(stop: threading.Event, every: float) -> None:
     sampler.run(stop, every)
 
 
+def fomo_loop(stop: threading.Event, every: float) -> None:
+    """The other half of the memecoin measurement: scripts/fomo_watch.py, one
+    round every `every` seconds, GET only, into state/fomo_signals.jsonl.
+    Same shape as `sampler_loop` above, for the same reason: the loop outlives
+    every round, and only a script that cannot even load stops the thread."""
+    try:
+        spec = importlib.util.spec_from_file_location(
+            "fomo_watch_serve", REPO_ROOT / "scripts" / "fomo_watch.py")
+        fomo_watch = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(fomo_watch)
+    except Exception as exc:  # noqa: BLE001 -- say it, do not take the server down
+        print(f"[fomo] did not load, so nothing is watched: "
+             f"{type(exc).__name__}: {exc}", file=sys.stderr)
+        return
+    fomo_watch.run(stop, every)
+
+
 def watcher(live: Live, stop: threading.Event, every: float = POLL_SECONDS) -> None:
     last = _fingerprint()
     while not stop.wait(every):
@@ -777,6 +794,12 @@ def main(argv: list[str] | None = None) -> int:
                              "(e.g. --sample 10): our bot and our card "
                              "positions, GET only, into the gitignored "
                              "state/samples.jsonl; off by default")
+    parser.add_argument("--fomo", type=float, default=0, metavar="MINUTES",
+                        help="also watch FOMO Radar's `hot` signal this often "
+                             "(e.g. --fomo 10): capture new signals and "
+                             "checkpoint due ones, GET only, into the "
+                             "gitignored state/fomo_signals.jsonl; off by "
+                             "default")
     args = parser.parse_args(argv)
     if args.poll <= 0:
         parser.error("--poll must be greater than zero")
@@ -784,6 +807,8 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("--ask is in minutes; anything under 1 is hammering them")
     if args.sample and args.sample < 1:
         parser.error("--sample is in minutes; anything under 1 is hammering them")
+    if args.fomo and args.fomo < 1:
+        parser.error("--fomo is in minutes; anything under 1 is hammering them")
 
     live = Live()
     if live.error:
@@ -827,6 +852,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.sample:
         threading.Thread(target=sampler_loop, args=(stop, args.sample * 60),
                          daemon=True).start()
+    if args.fomo:
+        threading.Thread(target=fomo_loop, args=(stop, args.fomo * 60),
+                         daemon=True).start()
     rows = sum(live.payload.get("display_counts", {}).values())
     print(f"[serve] {url}  {rows} rows, payload {live.digest[:16]}")
     print(f"[serve] watching {', '.join(WATCHED)} every {args.poll:g}s")
@@ -842,6 +870,9 @@ def main(argv: list[str] | None = None) -> int:
     print(f"[serve] reading their API for the Nexus tab every {args.sample:g} min"
           if args.sample else
           "[serve] not reading their API for the Nexus tab (--sample 10 to change that)")
+    print(f"[serve] watching FOMO Radar's hot signal every {args.fomo:g} min"
+          if args.fomo else
+          "[serve] not watching FOMO Radar (--fomo 10 to change that)")
     print("[serve] the open tab reloads itself when the state moves. Ctrl-C to stop.")
     if args.open:
         webbrowser.open(url)

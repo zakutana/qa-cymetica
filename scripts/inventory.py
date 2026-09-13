@@ -443,11 +443,24 @@ def assemble(documented: dict, tools: dict) -> dict:
     for name in tools["served_trusted"]:
         buckets[classify_tool(name)]["tools_trusted"].append(name)
 
+    # A section with nothing documented and no tools got no bucket at all --
+    # `buckets` is a defaultdict populated only by appending to it -- so it
+    # silently vanished from the page rather than showing zero. That is
+    # exactly the state of a surface Cymetica has not documented anywhere but
+    # that we track anyway (the Movers Tournament, registered in
+    # components.yaml since 2026-09-13): the section a reader most needs to
+    # see is the one this used to make disappear. FALLBACK is exempt --
+    # "everything we could not classify" is only worth a row once something
+    # actually lands there.
+    EMPTY_BUCKET = {"endpoints": [], "tools_declared": [], "tools_anon": [],
+                    "tools_trusted": []}
     sections = []
     for meta in SECTIONS + [FALLBACK]:
         bucket = buckets.get(meta["id"])
         if not bucket:
-            continue
+            if meta is FALLBACK:
+                continue
+            bucket = EMPTY_BUCKET
         endpoints = bucket["endpoints"]
         for entry in endpoints:
             entry["verdict"] = verdict(entry)

@@ -46,7 +46,10 @@ DIARIES = ("rooms.jsonl", "nexus.jsonl", "paper.jsonl", "lab.jsonl",
            # The register of what the laboratory has already asked their
            # backtest. It is the memory the whole search stands on, so of all
            # of these it is the one that must not live on a single disk.
-           "backtests.jsonl")
+           "backtests.jsonl",
+           # FOMO Radar's hot signals and their return-since-signal --
+           # scripts/fomo_watch.py, added 2026-09-13.
+           "fomo_signals.jsonl")
 def snapshot_dir() -> Path:
     """Beside the state it archives, not beside the repository.
 
