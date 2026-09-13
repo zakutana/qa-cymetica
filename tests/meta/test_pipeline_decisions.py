@@ -148,6 +148,12 @@ PINNED = {
         ("2026-09-10", "Ano, jen čísla",
          "4d18272203a67eaede4d3380b022a4c03367dd846a2381893b1e44930c3b2117"),
     ],
+    ".claude/skills/pokracuj/SKILL.md": [
+        ("2026-09-13", "chci at je genericky",
+         "be2533bc09dfcb673a7fb8d7c50b2c42ea1df305c36bea50cad83aa3e5c068d4"),
+        ("2026-09-13", "does not read long answers",
+         "e994b217789eb581924c033f2c0f37023a9470382a15936ac364993e59ae88fa"),
+    ],
     ".claude/skills/laborator/SKILL.md": [
         ("2026-09-11", "budete skoumat same nove strategie",
          "4510b8cf12e72ee56b866aac91d4a984790023cc0f7140508a277a462b2a20c0"),

@@ -1473,10 +1473,71 @@ def night(until: str, *, clock=None, sleep=None, actions=None, out=print) -> dic
     return did
 
 
+
+def cmd_resume() -> int:
+    """Everything a loop tick needs, in one call, so the prompt never has to
+    name a session or a task.
+
+    [operator 2026-09-13] the command they type is always the same; the tick
+    works out for itself where it stopped. `status` already says where we are;
+    what it does not say is what has gone RIPE since, which is the half a tick
+    acts on.
+    """
+    from qa.state import state_dir
+
+    print(status())
+    print()
+
+    fomo_rows = []
+    try:
+        fomo_path = state_dir() / "fomo_signals.jsonl"
+        if fomo_path.exists():
+            fomo_rows = [json.loads(line) for line in
+                         fomo_path.read_text(encoding="utf-8").splitlines()
+                         if line.strip()]
+    except (OSError, ValueError) as exc:
+        # Rule 8 in miniature: say the diary could not be read rather than
+        # letting a tick treat it as a diary with nothing in it.
+        print(f"  WARNING: the fomo diary could not be read ({exc}); "
+              f"treating its checkpoints as UNKNOWN, not as none")
+
+    tournament = {}
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "movers_for_resume", REPO_ROOT / "scripts" / "movers.py")
+        movers = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(movers)
+        from qa.safety import CURRENT_TIER, SafetyTier
+        client = movers._client()
+        token = CURRENT_TIER.set(SafetyTier.SAFE)
+        try:
+            tournament = movers.round_state(client)
+        finally:
+            CURRENT_TIER.reset(token)
+            client.close()
+    except Exception as exc:  # noqa: BLE001 -- one dead read is not the tick
+        print(f"  WARNING: the tournament could not be read ({exc})")
+
+    try:
+        register = len(qa_backtests.load())
+    except Exception:  # noqa: BLE001
+        register = None
+    print(f"backtest register: {register} reading(s)")
+
+    print()
+    print("reach for, most perishable first:")
+    for item in lab.due(fomo_rows=fomo_rows, tournament=tournament):
+        print(f"  {item['run']}")
+        print(f"      {item['why']}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = parser.add_subparsers(dest="cmd", required=True)
     sub.add_parser("status", help="where we are, and what is due")
+    sub.add_parser("resume", help="one call: where we stopped and what to reach for first -- what a loop tick reads")
     truth_cmd = sub.add_parser("truth", help="their backtests, ranked")
     truth_cmd.add_argument("--limit", type=int, default=12)
     sub.add_parser("cycle", help="finish what is in flight, sample, compare")
@@ -1525,6 +1586,8 @@ def main(argv: list[str] | None = None) -> int:
 
     printable()
 
+    if args.cmd == "resume":
+        return cmd_resume()
     if args.cmd == "status":
         print(status())
     elif args.cmd == "truth":

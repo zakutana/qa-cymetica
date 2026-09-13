@@ -846,3 +846,71 @@ def their_down_streak(rows: list[dict]) -> int:
         # their channel -- skip it and keep reading backward, rather than
         # letting our own flaky read either inflate or erase the streak.
     return streak
+
+
+def due(now=None, fomo_rows: list[dict] | None = None,
+        tournament: dict | None = None, open_findings: int = 0) -> list[dict]:
+    """What a loop tick should reach for, most perishable first.
+
+    [operator 2026-09-13] the loop prompt never names a session and never
+    changes; the tick works out for itself where it stopped. This is the part
+    that can be wrong invisibly -- a tick told nothing is due does nothing,
+    which looks exactly like a tick with nothing left to do.
+
+    The order is by what EXPIRES, not by what is interesting:
+
+    1. a memecoin checkpoint past its horizon. The only work here that cannot
+       be done later: the price at +6h is gone at +7h, and the hole in the
+       measurement is permanent.
+    2. a finding waiting on a level-V verification. Their fix is a claim until
+       a run says otherwise (rule 7), and the delay is ours, not theirs.
+    3. an open tournament round we have not entered. Perishable weekly, and
+       free.
+    4. the search. Never urgent, never finished, and the reason a quiet tick
+       is still a working tick.
+
+    Pure: every input is passed in, so a tick's plan can be tested without a
+    diary, a network or a clock.
+    """
+    from qa import fomo
+
+    moment = now or datetime.now(timezone.utc)
+    items: list[dict] = []
+
+    rows = fomo_rows or []
+    signals = [r for r in rows if r.get("type") == "signal" and r.get("key")]
+    done: dict[str, set[str]] = {}
+    for row in rows:
+        if row.get("type") == "checkpoint" and row.get("key"):
+            done.setdefault(row["key"], set()).add(row.get("horizon", "?"))
+    ripe = fomo.due_checkpoints(signals, done, now=moment)
+    if ripe:
+        items.append({
+            "run": "python scripts/fomo_watch.py resolve",
+            "why": f"{len(ripe)} memecoin checkpoint(s) past their horizon; "
+                   f"the price that answers them is gone in an hour"})
+
+    if open_findings:
+        items.append({
+            "run": "python scripts/verify.py",
+            "why": f"{open_findings} finding(s) with a fix claimed and no "
+                   f"level-V run behind it yet (rule 7)"})
+
+    round_ = (tournament or {}).get("round") or {}
+    anchor = round_.get("round_anchor")
+    entered = any(e.get("round_anchor") == anchor
+                  for e in (tournament or {}).get("my_entries") or []
+                  if isinstance(e, dict))
+    if anchor and round_.get("entries_open") and not entered:
+        items.append({
+            "run": "python scripts/movers.py status",
+            "why": f"round {anchor} is open and we have not entered; picks "
+                   f"come from Nexus, not from us"})
+
+    # Always last and always present. A tick with nothing perishable still
+    # has the exploration the operator asked the loop to continue, and a tick
+    # that is handed an empty list stops for the wrong reason.
+    items.append({
+        "run": "python scripts/lab.py search --cap 8",
+        "why": "standing work: walk their baskets and climb from what scored"})
+    return items
