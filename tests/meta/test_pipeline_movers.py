@@ -89,11 +89,40 @@ def test_already_entered_is_keyed_on_the_current_round_not_any_ever():
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_house_row_is_the_nexus_reference_and_nothing_else():
+    """Selected by `is_house`, not by position, rank or handle.
+
+    Until the deep pass of 2026-09-13 this asserted only against STATE, whose
+    house row is index 0, rank 1, handle "nexus" AND `is_house` all at once --
+    so `return leaderboard[0] if leaderboard else None` passed every assertion
+    and the test's own name ("and nothing else") was the part that was false.
+    Two readers of three ran that mutation and got tests/meta green. The house
+    is not always first: their leaderboard is ordered by `avg_pct` and a good
+    week from a human entrant is the ordinary case, not a contrived one. M05,
+    triage 2/3.
+    """
     mod = _module()
 
     house = mod.house_row(STATE)
     assert house is not None and house["handle"] == "nexus"
     assert house["avg_pct"] == pytest.approx(29.92)
+
+    # A human entrant ahead of the house -- the case the fixture above cannot
+    # tell apart from "take the first row".
+    outranked = {**STATE, "leaderboard": [
+        {**STATE["leaderboard"][1], "rank": 1, "avg_pct": 51.0},
+        {**STATE["leaderboard"][0], "rank": 2},
+    ]}
+    picked = mod.house_row(outranked)
+    assert picked is not None and picked["is_house"] is True, (
+        "the house row was second and was not found: house_row is selecting "
+        "by position, not by is_house")
+    assert picked["handle"] == "nexus"
+
+    # And no house row at all is None, not "whatever was first".
+    humans = {**STATE, "leaderboard": [
+        {**row, "is_house": False} for row in STATE["leaderboard"]]}
+    assert mod.house_row(humans) is None, (
+        "a leaderboard with no house row must answer None, not the top entrant")
 
     assert mod.house_row({**STATE, "leaderboard": []}) is None
 
@@ -278,13 +307,90 @@ def test_a_submitted_round_is_recorded_even_when_their_reply_is_thin(
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_command_that_locks_a_round_honours_its_own_brakes(tmp_path,
+                                                                monkeypatch):
+    """M06, deep pass of 2026-09-13, triage 2/3 -- and worse than claimed.
+
+    The sibling below says "no MUTATE goes out without --allow-mutate having
+    been turned on for that host on purpose", and nothing on this path reads
+    `--allow-mutate`: it is a pytest option, while `cmd_enter` builds its own
+    registry with `mutate_enabled = True` hardcoded and has no such flag in
+    its argparse. So that docstring names a floor the real command does not
+    stand on -- the 2026-09-07 shape, a true assertion under a false claim.
+
+    Measured while repairing it: hardcode `enter(client, args.symbols, True)`
+    so `--confirm` is ignored, AND widen `mutate_allowed_hosts` to an
+    arbitrary host, and all 41 tests of this file plus test_guard_is_real
+    stayed green. Nothing pinned ANY brake on the one command in this
+    repository that POSTs into a round which locks for seven days.
+
+    Two brakes, both driven through the real command.
+    """
+    import argparse
+    import importlib
+
+    import qa.state
+
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    importlib.reload(qa.state)
+
+    mod = _module()
+    sent = []
+
+    def handler(request):
+        sent.append(request)
+        return httpx.Response(200, json={"round": {"round_anchor": "2026-09-11"},
+                                         "rules": {}, "leaderboard": [],
+                                         "my_entries": [], "ok": True})
+
+    from qa.client import build_mock_client
+    from qa.safety import EndpointRegistry
+
+    registry = EndpointRegistry.load()
+    registry.mutate_enabled = True
+    registry.mutate_allowed_hosts = frozenset({"cymetica.com"})
+    client = build_mock_client(handler, registry=registry)
+
+    import qa.client as qa_client
+    monkeypatch.setattr(qa_client, "build_client", lambda *a, **k: client)
+
+    # Without --confirm nothing may be POSTed. A GET to read the round is
+    # fine; the submission is not.
+    assert mod.cmd_enter(argparse.Namespace(
+        symbols=["AAPL"], confirm=False, nexus=None)) == 1
+    assert not [r for r in sent if r.method == "POST"], (
+        "--confirm is the operative brake on a round that locks for a week, "
+        "and the command placed the entry without it")
+
+    # And the host list is exactly theirs. Widening it is how a MUTATE
+    # reaches somewhere nobody meant.
+    import inspect
+
+    source = inspect.getsource(mod.cmd_enter)
+    assert 'frozenset({"cymetica.com"})' in source, (
+        "cmd_enter enables MUTATE for whatever hosts this line names, so the "
+        "line is the floor -- it must name theirs and nothing else")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_enter_still_needs_allow_mutate_now_that_probe_only_is_gone():
     """`probe_only` came off once their docs named the shape (2026-09-13), so
-    what has to still stand is the floor UNDER it: a POST is a MUTATE, and no
-    MUTATE goes out without `--allow-mutate` having been turned on for that
-    host on purpose. Driven through the REAL registry and the REAL
-    SafetyTransport, not asserted about the yaml file's text -- if this ever
-    goes green by default, an ordinary SAFE session could lock a round.
+    what has to still stand is the floor UNDER it: a POST through `enter()` is
+    a MUTATE, and a registry that has not enabled MUTATE for that host refuses
+    it. Driven through the REAL registry and the REAL SafetyTransport, not
+    asserted about the yaml file's text -- so it also pins that `movers.enter`
+    is a DECLARED endpoint, since an undeclared one is refused for a different
+    reason and with a different message.
+
+    **What this does not say**, because it said it until the deep pass of
+    2026-09-13 and it was false: this is not a claim about `scripts/movers.py
+    enter`. That command builds its own registry with `mutate_enabled = True`
+    and has no `--allow-mutate` flag -- that flag is a pytest option and
+    nothing on the command's path reads it. The brakes on the real path are
+    `--confirm` and the host list, and both are pinned by
+    `test_the_command_that_locks_a_round_honours_its_own_brakes` above, which
+    exists because removing them both left every test here green. M06, triage
+    2/3: a true assertion under a false claim is the 2026-09-07 shape.
     """
     from qa.client import build_mock_client
     from qa.safety import EndpointRegistry, SafetyViolation

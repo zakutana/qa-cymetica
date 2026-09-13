@@ -187,7 +187,17 @@ def test_a_night_room_carries_a_criterion_and_the_room_cap_holds(
 def test_one_card_is_not_bought_once_per_answer_that_mentions_it(
         tmp_path, monkeypatch):
     """Nexus repeats its favourite card across answers. "Fifty experiments at
-    2% each" assumed fifty different things, not one thing fifty times."""
+    2% each" assumed fifty different things, not one thing fifty times.
+
+    **Bought ONCE, not "at most once".** `len(sent) == len(set(sent))` alone is
+    satisfied by `sent == []`, so anything that stops the night buying at all
+    turns this green while saying nothing about the defect the file records --
+    a reader reintroduced the round-up at the inner call site
+    (`stake = _stake(free) + 0.01`), `affordable` then refused every buy, and
+    the whole of tests/meta stayed green with Nexus's most-repeated pick bought
+    zero times. The sibling above anchors itself with `assert opened`; this had
+    no anchor. M07, triage 2/3, deep pass of 2026-09-13.
+    """
     scripts_lab = _scripts_lab(tmp_path, monkeypatch)
     _answers(tmp_path, [
         {"type": "answer", "id": f"NEX-000{n}",
@@ -198,8 +208,13 @@ def test_one_card_is_not_bought_once_per_answer_that_mentions_it(
 
     scripts_lab.night_promote()
 
+    assert sent, (
+        "nothing was bought at all on a book of 100 000 USDC and three answers "
+        "naming a real card: the dedup cannot be measured on an empty list")
     assert len(sent) == len(set(sent)), (
         f"{CARD[:8]} was bought {len(sent)} times in one call")
+    assert sent == [CARD], (
+        f"expected exactly one order for {CARD[:8]}, got {sent}")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
