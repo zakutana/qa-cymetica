@@ -133,9 +133,42 @@ def test_capture_survives_a_price_lookup_that_fails(tmp_path, monkeypatch):
         return httpx.Response(500)
 
     result = mod.capture(_client(handler), now=T0)
-    assert result["added"] == 2
+    # Both halves used to be blind at once. `added` counted error rows beside
+    # signals, so "2" was satisfied by two failed chains and zero signals; and
+    # `all(...)` over an empty list is vacuously true. The signal count is now
+    # a count of SIGNALS, and the list is required to be non-empty before its
+    # members are judged. L01, deep pass of 2026-09-13, triage 2/3.
+    assert result["added"] == 2, result
+    assert result["errors"] == [], result
     signals = [r for r in mod.load() if r["type"] == "signal"]
+    assert len(signals) == 2, "the signal must survive a failed price lookup"
     assert all(s["price_usd"] is None for s in signals)
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_feed_that_is_down_is_not_a_feed_with_nothing_hot(tmp_path,
+                                                             monkeypatch):
+    """Rule 8, one level up from the row.
+
+    `_hot_rows` returned [] on any non-200, so a 503 and an hour with nothing
+    hot produced byte-identical results -- {added: 0, unidentified: 0}, no
+    error anywhere. capture() wraps the call in try/except, but _hot_rows did
+    not raise on an HTTP error, so that branch could not fire for one. Measured
+    side by side on 2026-09-13, in the module where `unidentified` had been
+    added the same day for the identical reason one level down.
+    """
+    mod = _module(tmp_path, monkeypatch)
+
+    dead = mod.capture(_client(lambda r: httpx.Response(503, json={"d": 1})),
+                       now=T0)
+    quiet = mod.capture(_client(lambda r: httpx.Response(200, json={"rows": []})),
+                        now=T0)
+
+    assert quiet["added"] == 0 and quiet["errors"] == [], quiet
+    assert dead["added"] == 0, dead
+    assert len(dead["errors"]) == 2, (
+        "a dead feed must say so, once per chain, not read as a quiet market")
+    assert all("503" in str(e.get("error")) for e in dead["errors"]), dead
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -189,16 +222,25 @@ def test_run_survives_a_round_that_raises_and_stops_on_the_event(tmp_path,
     import threading
 
     mod = _module(tmp_path, monkeypatch)
-    calls = []
 
-    def handler(request):
-        calls.append(str(request.url))
-        if len(calls) == 2:
-            raise RuntimeError("their API is briefly unreachable")
-        return httpx.Response(200, json={"rows": []})
+    # The exception has to reach run()'s OWN guard. Raising it from the HTTP
+    # handler does not: it surfaces inside `_hot_rows`, which capture() already
+    # swallows per chain, so the guard this test is named for was never
+    # exercised -- deleting run()'s whole try/except left the test green.
+    # L02, deep pass of 2026-09-13, triage 3/3. So the round itself raises.
+    rounds_seen = []
 
-    client = _client(handler)
-    stop = threading.Event()
+    def exploding_capture(client, now=None):
+        rounds_seen.append(1)
+        if len(rounds_seen) == 2:
+            raise RuntimeError("the diary could not be written")
+        return {"added": 0, "signals": [], "errors": [], "unidentified": 0}
+
+    monkeypatch.setattr(mod, "capture", exploding_capture)
+    monkeypatch.setattr(mod, "resolve",
+                        lambda client, now=None: {"checked": 0,
+                                                  "checkpoints": []})
+    client = _client(lambda r: httpx.Response(200, json={"rows": []}))
 
     class _CountingEvent(threading.Event):
         def wait(self, timeout=None):  # noqa: D102 -- stand-in for real time
@@ -210,3 +252,6 @@ def test_run_survives_a_round_that_raises_and_stops_on_the_event(tmp_path,
     fast_stop = _CountingEvent()
     rounds = mod.run(fast_stop, every=0, client=client)
     assert rounds == 3, "a round that raised must not end the loop early"
+    assert len(rounds_seen) == 3, (
+        "the round that raised must have been REACHED three times; if the "
+        "exception never got past capture() this test proves nothing")

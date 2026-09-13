@@ -238,6 +238,44 @@ def test_the_deep_pass_reads_the_patrol_in_the_steps_that_look_back():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_memory_ceiling_counts_what_can_actually_be_brought_down():
+    """P01, deep pass of 2026-09-13, triage 2/3.
+
+    `memory_lines` counted RAW LINES of MEMORY.md, and step 1b of the deep
+    pass requires a retired memory to keep its line for ever -- marked
+    `RETIRED`, never removed, because that index is the only history the
+    directory has outside git. So a retirement could not reduce the number it
+    was supposed to reduce, every pass that retired anything pushed it up, and
+    the only available response was to raise the ceiling: 45 -> 48 earlier the
+    same day, and red again at 49 by the evening.
+
+    A ceiling on a monotone number is the same defect as a check over a
+    growing log that can never go green. What it watches now is the count of
+    LIVE pointers -- the thing prořez can actually reduce, by merging.
+    """
+    module = _module()
+    measured = module.sizes()
+    live = measured.get("memory_lines")
+    if live is None:
+        pytest.skip("no memory index on this machine, so nothing to count")
+
+    index = next(iter((Path.home() / ".claude" / "projects").glob(
+        "*cymetica*/memory/MEMORY.md")), None)
+    assert index is not None
+    text = index.read_text(encoding="utf-8")
+    raw = len(text.splitlines())
+    retired = len([l for l in text.splitlines() if "RETIRED" in l])
+
+    assert live < raw, (
+        f"the ceiling still counts every line ({live} of {raw}); a retired "
+        f"line can never be removed, so the number can only grow")
+    assert live == raw - retired - len(
+        [l for l in text.splitlines() if not l.strip().startswith("- [")]), (
+        f"live={live}, raw={raw}, retired={retired}: the count should be the "
+        f"pointers that are still in force")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_every_ceiling_watches_something_that_is_actually_measured():
     """A ceiling on a key nothing emits is a warning that can never fire.
 

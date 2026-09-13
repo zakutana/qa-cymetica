@@ -70,10 +70,24 @@ def _now() -> datetime:
     return datetime.now(timezone.utc)
 
 
+class FeedError(RuntimeError):
+    """Their signals endpoint did not answer. NOT an hour with nothing hot.
+
+    It returned `[]` on any non-200 until the deep pass of 2026-09-13, so a
+    503 and a quiet market were byte-identical in `capture()`'s result -- no
+    error row, added 0, unidentified 0 -- and the per-chain `except` could
+    never fire, because nothing raised. Rule 8 one level up from the row,
+    in the module where `unidentified` had been added the same day for the
+    identical reason one level down.
+    """
+
+
 def _hot_rows(client, chain: str) -> list[dict]:
     response = client.get(SIGNALS_PATH, params={"chain": chain, "filter": "hot"})
     if response.status_code != 200:
-        return []
+        raise FeedError(
+            f"{SIGNALS_PATH} (chain={chain}) answered HTTP "
+            f"{response.status_code}; a failed read is not an empty feed")
     body = response.json() or {}
     return body.get("rows") or []
 
@@ -111,11 +125,17 @@ def capture(client, now=None) -> dict:
     # minutes) indistinguishable from an hour when nothing went hot. Rule 8,
     # on a row rather than on a read: count what could not be identified.
     unidentified = 0
+    # Errors have their OWN list. They used to go into `added` beside the
+    # signals, so `added: 2` was satisfied by two failed chains and zero
+    # signals written -- and the test that exists to prove a signal survives a
+    # failed price lookup asserted exactly that number. L01, deep pass of
+    # 2026-09-13. A count of signals counts signals.
+    errors: list[dict] = []
     for chain in CHAINS:
         try:
             hot_rows = _hot_rows(client, chain)
         except Exception as exc:  # noqa: BLE001 -- one chain failing is not the round
-            added.append({"chain": chain, "error": str(exc)[:200]})
+            errors.append({"chain": chain, "error": str(exc)[:200]})
             continue
         unidentified += sum(
             1 for row in hot_rows or []
@@ -136,7 +156,7 @@ def capture(client, now=None) -> dict:
             })
             tracked.add(key)
             added.append(signal)
-    return {"added": len(added), "signals": added,
+    return {"added": len(added), "signals": added, "errors": errors,
             "unidentified": unidentified}
 
 

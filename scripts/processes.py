@@ -192,12 +192,15 @@ CEILINGS = {
     # trim something else just to keep a number where it was. Room to grow,
     # not a promise it will.
     "claude_md_lines": 750,
-    # Raised 2026-09-13 from 45 by one session's one memory. Two of the 46
-    # lines are already marked RETIRED and still counted, which is deliberate
-    # -- MEMORY.md is the only history this directory has outside git -- so
-    # the live number is 44. The merge that would bring it back down is the
-    # deep pass's prořez (1b), not something to do mid-session to keep a
-    # number still.
+    # LIVE pointers now, not raw lines -- see sizes(). Raised 45 -> 48 twice in
+    # one day while it was counting lines, which is what exposed it: retired
+    # lines stay for ever, so the measured number could only grow and the only
+    # response to the warning was to raise it again. Against the live count
+    # the deep pass's prořez (1b) can actually bring it down by merging, which
+    # it did on 2026-09-13: 49 raw lines, 45 in force. Left at 48 rather than
+    # lowered to 45 -- a ceiling set flush against today is one that fires on
+    # the next honest memory, and CLAUDE.md says a warning on from the first
+    # day is a warning nobody reads.
     "memory_lines": 48,
     "next_oldest_days": 10,
     "pack_mb": 150,
@@ -422,13 +425,24 @@ def sizes(root: Path | None = None) -> dict:
     except OSError:
         pass
 
+    # LIVE pointers, not raw lines. Step 1b of the deep pass requires a retired
+    # memory to keep its line for ever -- marked RETIRED, never removed,
+    # because MEMORY.md is the only history that directory has outside git --
+    # so a raw line count is monotone: a retirement could not reduce the number
+    # it was meant to reduce, and the only response to the warning was to raise
+    # the ceiling, twice in one day (45 -> 48 -> red at 49). A ceiling on a
+    # number that can only grow is a warning that can never be cleared, which
+    # is the same defect as a check over a growing log. What prořez CAN reduce
+    # is the count of pointers still in force, by merging one into another.
     index = Path.home() / ".claude" / "projects"
     for candidate in index.glob("*cymetica*/memory/MEMORY.md"):
         try:
-            out["memory_lines"] = len(
-                candidate.read_text(encoding="utf-8").splitlines())
+            lines = candidate.read_text(encoding="utf-8").splitlines()
         except OSError:
-            pass
+            break
+        out["memory_lines"] = len(
+            [line for line in lines
+             if line.strip().startswith("- [") and "RETIRED" not in line])
         break
 
     oldest = None
@@ -886,17 +900,31 @@ def facts() -> dict:
     }
 
 
-def HARNESS_WROTE_IT(content: str) -> bool:
-    """A compaction summary, injected into the transcript as the operator.
+# A block the harness injects into the user's side. `messages()` learned this
+# on compaction summaries; the skill-reinvocation notice has the same shape and
+# leaked straight through the first run of the trail.
+_HARNESS_BLOCK = re.compile(
+    r"^(?:Skill /\S+ was loaded earlier|This session is being continued"
+    r"|Caveat: The messages below|<)")
 
-    One sentence, fixed by the harness and not something a person types, and
-    matched at the START so quoting it back in a real message does not vanish
-    the message. Narrow on purpose: everything this filter eats is something
-    the pass will never read, so a rule that is nearly right here is worse
-    than one that is small and certain.
+
+def HARNESS_WROTE_IT(content: str) -> bool:
+    """A block the harness injected into the transcript as the operator.
+
+    Matched at the START so quoting one back in a real message does not vanish
+    the message, and each opener is fixed text rather than something a person
+    types. Narrow on purpose: everything this filter eats is something the
+    pass will never read, so a rule that is nearly right here is worse than
+    one that is small and certain.
+
+    It knew only the compaction summary until the deep pass of 2026-09-13,
+    when `trail()` was given a wider version and this one was not -- so the
+    two readers disagreed about what the operator said, and the skill
+    re-invocation notice appeared as two of the 38 "messages from the
+    operator" in that pass's own step 1, in the reader whose entire job is
+    finding their short Czech corrections. One list, both readers.
     """
-    return content.lstrip().startswith(
-        "This session is being continued from a previous conversation")
+    return bool(_HARNESS_BLOCK.match(content.lstrip()))
 
 
 def messages(rows, since: str | None) -> list[tuple[str, str]]:
@@ -974,14 +1002,6 @@ _JUST_THE_MACHINE = re.compile(
 _A_TEST_RUN = re.compile(r"short test summary info|=+ FAILURES =+|"
                          r"\d+ (?:passed|failed)[,.]")
 
-# A block the harness injects into the user's side. `messages()` learned this
-# on compaction summaries; the skill-reinvocation notice has the same shape and
-# leaked straight through the first run of the trail.
-_HARNESS_BLOCK = re.compile(
-    r"^(?:Skill /\S+ was loaded earlier|This session is being continued"
-    r"|Caveat: The messages below|<)")
-
-
 def _blocks(row) -> list:
     content = (row.get("message") or {}).get("content")
     return content if isinstance(content, list) else []
@@ -1032,11 +1052,28 @@ def trail(rows, since: str | None, limit: int = 120) -> list[dict]:
                     body = " ".join(str(b.get("text", "")) for b in body
                                     if isinstance(b, dict))
                 body = str(body or "")
-                if _JUST_THE_MACHINE.search(body) or _A_TEST_RUN.search(body):
+                # The harness's own flag is the signal. Until the deep pass of
+                # 2026-09-13 a SUCCESSFUL result was kept whenever its text
+                # matched _WENT_RED, so a Read of qa/lab.py or of NEXT.md, or
+                # grep output, was filed as breakage because the word
+                # "TypeError" appeared in it -- 35 of 48 error rows over
+                # 2026-09-12 (A02, 3/3). And _A_TEST_RUN was applied to the
+                # whole result, so one Bash call running a probe and then
+                # pytest lost the probe's traceback to the green half that
+                # followed it (R04, 3/3). Both go away by reading the flag:
+                # a result that did not fail is not breakage, and a pytest
+                # failure alone does not set the flag.
+                if not block.get("is_error"):
                     continue
-                if block.get("is_error") or _WENT_RED.search(body):
-                    out.append({"at": at, "kind": "error",
-                                "text": " ".join(body.split())[:TRAIL_CHARS]})
+                if _JUST_THE_MACHINE.search(body):
+                    continue
+                # A red test run and nothing else is the test-first rule
+                # working; a red run whose output ALSO carries a traceback
+                # from something that was meant to work is not.
+                if _A_TEST_RUN.search(body) and not _WENT_RED.search(body):
+                    continue
+                out.append({"at": at, "kind": "error",
+                            "text": " ".join(body.split())[:TRAIL_CHARS]})
 
         elif kind == "assistant":
             for block in _blocks(row):

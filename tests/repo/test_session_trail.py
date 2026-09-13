@@ -103,8 +103,11 @@ def test_the_three_kinds_are_interleaved_in_time_not_grouped():
     rows = [
         _assistant("2026-09-13T09:00:00Z", "Opravuji, to bylo spatne."),
         _operator("2026-09-13T09:30:00Z", "zase si to odbyl"),
-        _tool_ok("2026-09-13T09:15:00Z",
-                 "Traceback (most recent call last): KeyError: 'legs'"),
+        # is_error, because that is what a Bash call raising a traceback
+        # actually produces -- a successful tool result is not breakage,
+        # whatever its text says (A02, deep pass 2026-09-13).
+        _tool_error("2026-09-13T09:15:00Z",
+                    "Traceback (most recent call last): KeyError: 'legs'"),
     ]
     trail = mod.trail(rows, since=None)
     assert [r["kind"] for r in trail] == ["correction", "error", "operator"]
@@ -151,9 +154,9 @@ def test_a_test_written_red_on_purpose_is_not_a_failed_inference():
         _tool_ok("2026-09-13T12:00:00Z",
                  "FAILED tests/meta/test_new_thing.py::test_it "
                  "1 failed, 5 passed"),
-        _tool_ok("2026-09-13T12:01:00Z",
-                 "Traceback (most recent call last): TypeError: "
-                 "'module' object is not iterable"),
+        _tool_error("2026-09-13T12:01:00Z",
+                    "Traceback (most recent call last): TypeError: "
+                    "'module' object is not iterable"),
         _tool_error("2026-09-13T12:02:00Z", "SyntaxError: unterminated string"),
     ]
     trail = mod.trail(rows, since=None)
@@ -187,6 +190,62 @@ def test_a_harness_block_is_never_read_as_the_operator():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_read_that_merely_contains_the_word_is_not_breakage():
+    """A02, deep pass of 2026-09-13, triage 3/3. Two thirds of the loudest
+    signal in this reader was breakage that never happened.
+
+    `_WENT_RED` was matched against the body of ANY tool result, successful or
+    not -- so a Read of `qa/lab.py`, a Read of NEXT.md or grep output that
+    merely contains the word `TypeError` was filed as an error. Measured over
+    the real 2026-09-12 transcripts: 48 error rows of which only 13 were
+    `is_error`; the other 35 were reads that worked.
+
+    A tool result that SUCCEEDED is not breakage, whatever its text says. The
+    harness flags the ones that failed, and that flag is the signal; the regex
+    now only sharpens it.
+    """
+    mod = _mod()
+    a_read = {"type": "user", "timestamp": "2026-09-13T12:00:00Z",
+              "message": {"content": [{"type": "tool_result", "content":
+                  "def _at(value):\n    except (TypeError, ValueError):\n"
+                  "        return None"}]}}
+    assert mod.trail([a_read], since=None) == [], (
+        "a successful Read of source that mentions TypeError is not an error")
+
+    really_broke = {"type": "user", "timestamp": "2026-09-13T12:01:00Z",
+                    "message": {"content": [{"type": "tool_result",
+                        "is_error": True, "content":
+                        "Traceback (most recent call last): TypeError: x"}]}}
+    assert [r["kind"] for r in mod.trail([really_broke], since=None)] == ["error"]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_probe_and_a_test_run_in_one_command_keep_the_probes_failure():
+    """R04, deep pass of 2026-09-13, triage 3/3.
+
+    `_A_TEST_RUN` dropped a result if a pytest banner appeared anywhere in it,
+    and the filter runs per tool RESULT while the shape used all day is one
+    Bash call that runs a probe and then pytest. So a real traceback from the
+    probe half was swallowed whole by the green half that followed it.
+
+    Told apart by the flag rather than by the banner: the harness marks a
+    result that failed, and a test run that merely went red is not a failed
+    inference -- the test comes first here, so every new check is red once on
+    purpose.
+    """
+    mod = _mod()
+    mixed = {"type": "user", "timestamp": "2026-09-13T12:00:00Z",
+             "message": {"content": [{"type": "tool_result", "is_error": True,
+                 "content": "Traceback (most recent call last):\n"
+                            "KeyError: 'legs'\n"
+                            "=== short test summary info ===\n"
+                            "683 passed, 1 skipped in 136.38s"}]}}
+    kept = mod.trail([mixed], since=None)
+    assert [r["kind"] for r in kept] == ["error"], kept
+    assert "KeyError" in kept[0]["text"]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_an_exception_inside_a_pytest_run_is_still_the_test_being_written():
     """The second half of the test-first problem.
 
@@ -203,7 +262,7 @@ def test_an_exception_inside_a_pytest_run_is_still_the_test_being_written():
         "FAILURES tests/meta/test_x.py:196: AttributeError: module "
         "'movers_mod' has no attribute 'note_entry' "
         "=========================== short test summary info ===========")
-    from_a_probe = _tool_ok(
+    from_a_probe = _tool_error(
         "2026-09-13T12:01:00Z",
         "Traceback (most recent call last): File \"<string>\", line 10, in "
         "<module> TypeError: 'module' object is not iterable")
