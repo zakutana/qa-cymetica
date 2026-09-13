@@ -47,17 +47,25 @@ REMEDY = (
     "that only reads and prints."
 )
 
-# The heredoc itself: `<<EOF`, `<<'EOF'`, `<<-"EOF"`, and its body.
-HEREDOC = re.compile(r"<<-?\s*[\"']?(\w+)[\"']?\n(.*?)\n\1\b", re.DOTALL)
+# The heredoc itself: `<<EOF`, `<<'EOF'`, `<<-"EOF"`, and its body. The rest
+# of the line after the terminator belongs to the command, NOT to the body --
+# `cat <<'EOF' > f` is the POSIX-canonical order and the first version of this
+# pattern demanded a newline straight after the word, so it did not recognise
+# that as a heredoc at all. A03, deep pass of 2026-09-13: the guard caught one
+# shape of five, and the one it caught was the one its author happened to type.
+HEREDOC = re.compile(r"<<-?\s*[\"']?(\w+)[\"']?([^\n]*)\n(.*?)\n\1\b", re.DOTALL)
 
-# A redirect into a path, on the same command as the heredoc. The gap stops
-# at a pipe or a newline so a later command's redirect is not attributed here.
+# A redirect into a path, or a tee, on the same command as the heredoc.
 REDIRECT = re.compile(r">>?\s*[\"']?([^\s\"'|;&<>]+)")
+TEE = re.compile(r"\btee\b(?:\s+-\w+)*\s+[\"']?([^\s\"'|;&<>]+)")
 
-# A python body that opens something for writing. `open(p, "w")`,
-# `io.open(p, "w")`, `Path(p).write_text(...)`, `.write_bytes(`.
+# A python body that writes a file. Both spellings, and the path may sit on
+# either side of the call: `open(p, "w")` carries it inside the parentheses,
+# `Path(p).write_text(s)` carries it before them -- the first version scanned
+# only forward and so missed `write_text`, which its own docstring named.
 OPENS_FOR_WRITING = re.compile(
     r"open\(\s*[^)]*?[\"'][arwx+b]*[aw][arwx+b]*[\"']"
+    r"|[\w.]*\([^)]*\)\s*\.\s*write_(?:text|bytes)\s*\("
     r"|\.write_(?:text|bytes)\s*\(")
 
 # A path we are responsible for: inside the repository, and not the temp
@@ -86,18 +94,28 @@ def writes_a_file(command: str) -> bool:
     if not command:
         return False
     for match in HEREDOC.finditer(command):
-        body = match.group(2)
-        # The segment of the command line that carries this heredoc, up to
-        # the operator that starts it -- that is where its redirect lives.
+        after, body = match.group(2), match.group(3)
+        # The segment of the command line that carries this heredoc -- what
+        # comes BEFORE the `<<` up to the operator that starts the command,
+        # and what comes AFTER the terminator word on the same line. A
+        # redirect may sit on either side: `cat > f <<EOF` and `cat <<EOF > f`
+        # are the same command, and only the first was seen until 2026-09-13.
         head = command[:match.start()].rsplit("|", 1)[-1]
         head = head.rsplit(";", 1)[-1].rsplit("&&", 1)[-1]
-        for target in REDIRECT.findall(head):
-            if target != "-" and _ours(target):
-                return True
-        # A python body that opens a repository path for writing.
+        for segment in (head, after):
+            for target in REDIRECT.findall(segment):
+                if target != "-" and _ours(target):
+                    return True
+            for target in TEE.findall(segment):
+                if _ours(target):
+                    return True
+        # A python body that writes a repository path. Read the whole
+        # statement the call sits in, not only what follows it -- `Path(p)
+        # .write_text(s)` carries its path in front of the call.
         for opened in OPENS_FOR_WRITING.finditer(body):
-            tail = body[opened.start():opened.start() + 300]
-            for quoted in re.findall(r"[\"']([^\"']{2,200})[\"']", tail):
+            line_start = body.rfind("\n", 0, opened.start()) + 1
+            around = body[line_start:opened.end() + 300]
+            for quoted in re.findall(r"[\"']([^\"']{2,200})[\"']", around):
                 if ("/" in quoted or "\\" in quoted) and _ours(quoted):
                     return True
     return False

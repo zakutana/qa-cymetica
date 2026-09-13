@@ -76,6 +76,39 @@ def test_the_two_shapes_that_actually_broke_files_are_refused():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_four_shapes_the_first_guard_let_straight_through():
+    """A03, deep pass of 2026-09-13, triage 3/3. It caught one of five.
+
+    Measured against the hook as first written: `cat >> f <<EOF` refused, and
+    then `cat <<EOF > f`, `cat <<EOF >> f`, `cat <<EOF | tee f` and a heredoc
+    whose python body calls `Path(p).write_text(s)` all ALLOWED. The first two
+    are the POSIX-canonical order and were not even recognised as heredocs --
+    the pattern demanded a newline straight after the terminator word. The
+    write_text one is named in the hook's own docstring and missed because the
+    scan ran forward from the call while the path sat behind it.
+
+    A guard written because a rule was broken four times in one day was one
+    keyboard habit from not applying.
+    """
+    mod = _hook()
+    for command, what in (
+        ("cat <<'EOF' > tests/meta/test_x.py\ndef t(): pass\nEOF",
+         "heredoc first, then the redirect -- the canonical order"),
+        ("cat <<'EOF' >> tests/meta/test_x.py\ndef t(): pass\nEOF",
+         "the same, appending"),
+        ("cat <<'EOF' | tee tests/meta/test_x.py\ndef t(): pass\nEOF",
+         "piped into tee"),
+        ("python - <<'EOF'\nfrom pathlib import Path\n"
+         "Path('scripts/render.py').write_text(s)\nEOF",
+         "write_text, which the hook's own docstring names"),
+        ("python - <<'EOF'\nimport io\n"
+         "io.open('qa/lab.py', 'w').write(s)\nEOF",
+         "open(path, 'w') with the path before the call"),
+    ):
+        assert mod.writes_a_file(command), what
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_heredoc_that_is_consumed_rather_than_stored_is_fine():
     """The refusal is about content landing in a file, not about heredocs.
 
