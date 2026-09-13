@@ -331,7 +331,13 @@ def test_the_memecoin_section_renders_with_and_without_a_diary(tmp_path,
     payload["stats"]["fomo"] = {
         "tracked": 3, "hit_threshold": 20.0,
         "horizons": {
-            "1h": {"resolved": 2, "hit_rate": 0.5, "mean_pct": 4.0,
+            # mean and median DIFFER, so an assertion about the median
+            # cannot be satisfied by the mean. They were both 4.0 until the
+            # deep pass of 2026-09-13, which made the label the only thing
+            # under test -- rendering ${pct(first.mean_pct)} beneath the word
+            # "median" kept it green, and the page would have shown +46% as a
+            # median while half the signals were under water. M03.
+            "1h": {"resolved": 2, "hit_rate": 0.5, "mean_pct": 46.0,
                   "median_pct": 4.0,
                   "top": [{"symbol": "DOGEX", "conviction": 0.9,
                           "return_pct": 38.5}],
@@ -393,6 +399,12 @@ def test_the_memecoin_section_renders_with_and_without_a_diary(tmp_path,
     # The summary reports the MEDIAN, not the mean: one token at +1262% drags
     # the mean to +46% while half the signals are under water.
     assert "median at 1&nbsp;h" in panel or "median at 1 h" in panel, panel[:600]
+    # The VALUE, not only the label: 4.0 is the median and 46.0 is the mean,
+    # and the summary must be showing the first.
+    tail = panel[panel.index("median at 1"):]
+    assert "+4.0%" in tail[:200], tail[:200]
+    assert "+46.0%" not in tail[:200], (
+        "the summary is showing the mean under the word median")
     assert "Memecoiny" not in captured.get("stats", ""), (
         "drawn twice -- the operator then has to guess which one is live")
 
@@ -1802,3 +1814,49 @@ def test_the_memecoin_measurement_is_its_own_tab_not_the_last_block_of_stats():
     stats_fn = stats_fn[:stats_fn.index("\n}")]
     assert "Memecoiny" not in stats_fn, (
         "still drawn inside statBlocks as well -- one measurement, one place")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_pressing_the_memecoin_tab_actually_opens_its_panel(tmp_path,
+                                                             monkeypatch):
+    """M04, deep pass of 2026-09-13. Reading the map is not pressing the button.
+
+    Its sibling above asserts that the button exists, the panel exists, a
+    writer targets it and `memecoins:` appears in PANELS -- and every one of
+    those holds while PANELS points at a panel id that does not exist. A typo
+    or a renamed panel (`memecoins: "panel-memecoin"`) satisfies the lot,
+    `showTab`'s forEach finds no element for that id, and clicking the tab
+    hides everything and shows nothing. I verified that by mutation, and it is
+    the bug that actually shipped for a few minutes this afternoon.
+
+    The file two doors down has proved exactly this for the Nexus tab since
+    2026-09-11, by running `showTab` in node and reading back what the page
+    did. Using it here is the whole repair.
+    """
+    import shutil
+
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("node is not installed, so the page cannot be run here")
+
+    render = _render()
+    payload = render.build_payload()
+    code, err, captured = _run_page(
+        node, tmp_path / "opens", payload,
+        # The panel is hidden FIRST, because the harness builds every element
+        # with `hidden: false` whatever the markup says -- so reading it after
+        # showTab proves nothing unless showTab had to change it. The first
+        # version of this probe was green against a PANELS map pointing at a
+        # panel that does not exist, which is the whole defect.
+        after='document.getElementById("panel-memecoins").hidden = true;\n'
+              'window.showTab("memecoins");\n'
+              'document.getElementById("probe-a").innerHTML = '
+              'String(document.getElementById("panel-memecoins").hidden);\n'
+              'document.getElementById("probe-b").innerHTML = '
+              'String(document.getElementById("panel-findings").hidden);')
+    assert code == 0, f"the page throws when the tab is opened:\n{err[:900]}"
+    assert captured.get("probe-a") == "false", (
+        "pressing Memecoiny leaves its own panel hidden -- a dead tab, which "
+        "every assertion in the sibling test above is blind to")
+    assert captured.get("probe-b") == "true", (
+        "opening one tab must hide the others, or two panels draw at once")

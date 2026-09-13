@@ -213,6 +213,71 @@ def test_an_entry_is_written_down_with_the_day_it_was_made(tmp_path,
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_submitted_round_is_recorded_even_when_their_reply_is_thin(
+        tmp_path, monkeypatch):
+    """R05, deep pass of 2026-09-13, triage 3/3. The whole command, not the
+    helper -- `cmd_enter` had no test anywhere.
+
+    `note_entry` was called AFTER the `finally` that closes the client and
+    resets the tier, and its anchor fell back to `round_state(client)` on that
+    closed client. So a reply without `round_anchor` meant the POST had really
+    locked a week-long round and the recording died with `RuntimeError:
+    Cannot send a request, as the client has been closed` -- the exact defect
+    note_entry was written that afternoon to prevent, reintroduced by its own
+    call site. It worked on the day only because their reply carried the field.
+
+    Their documented reply shape names no success body at all, so a thin one
+    is the case to build for, not the surprising one.
+    """
+    import argparse
+    import importlib
+
+    import qa.state
+
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    importlib.reload(qa.state)
+    import qa.lab
+    importlib.reload(qa.lab)
+
+    mod = _module()
+    seen = []
+
+    def handler(request):
+        seen.append(request)
+        if request.method == "POST":
+            return httpx.Response(200, json={"ok": True})   # no round_anchor
+        return httpx.Response(200, json={"round": {"round_anchor": "2026-09-11"},
+                                         "rules": {}, "leaderboard": [],
+                                         "my_entries": []})
+
+    from qa.client import build_mock_client
+    from qa.safety import EndpointRegistry
+
+    registry = EndpointRegistry.load()
+    registry.mutate_enabled = True
+    registry.mutate_allowed_hosts = frozenset({"cymetica.com"})
+    client = build_mock_client(handler, registry=registry)
+    monkeypatch.setattr(mod, "build_client", lambda *a, **k: client,
+                        raising=False)
+    monkeypatch.setattr(mod, "_client", lambda: client, raising=False)
+
+    import qa.client as qa_client
+    monkeypatch.setattr(qa_client, "build_client", lambda *a, **k: client)
+
+    args = argparse.Namespace(symbols=["aapl", " googl "], confirm=True,
+                              nexus="NEX-0027")
+    assert mod.cmd_enter(args) == 0
+
+    rows = [r for r in qa.lab.load() if r.get("type") == "tournament"]
+    assert len(rows) == 1, "a locked round with no record is the whole defect"
+    assert rows[0]["round_anchor"] == "2026-09-11", (
+        "the anchor must come from the GET taken before the POST, not from a "
+        "fallback on a client that is already closed")
+    assert rows[0]["symbols"] == ["AAPL", "GOOGL"], (
+        "the record must carry what was SENT, not the raw arguments")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_enter_still_needs_allow_mutate_now_that_probe_only_is_gone():
     """`probe_only` came off once their docs named the shape (2026-09-13), so
     what has to still stand is the floor UNDER it: a POST is a MUTATE, and no

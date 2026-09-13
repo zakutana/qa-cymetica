@@ -200,19 +200,32 @@ def cmd_enter(args) -> int:
     client = build_client(identities()["trusted"], registry, timeout=30.0)
     token = CURRENT_TIER.set(SafetyTier.MUTATE)
     try:
+        # The anchor is read BEFORE the POST, while the client is open and the
+        # tier is in scope, so the row that records the entry never depends on
+        # their response carrying a field. It used to fall back to
+        # `round_state(client)` AFTER the finally block -- on a closed client,
+        # outside the tier -- so a reply without `round_anchor` meant the round
+        # was really locked for a week and the recording died with a
+        # RuntimeError. That is the defect `note_entry` was written the same
+        # afternoon to prevent, reintroduced by its own call site. R05, deep
+        # pass of 2026-09-13, triage 3/3.
+        anchor = (round_state(client).get("round") or {}).get("round_anchor")
         try:
             result = enter(client, args.symbols, args.confirm)
         except Exception as exc:  # noqa: BLE001 -- a refusal, printed plainly
             print(f"movers: {exc}")
             return 1
+        # Written inside the try, so nothing between the POST and the record
+        # can drop it -- and `cleaned` rather than `args.symbols`, because what
+        # went out was upper-cased and stripped.
+        note_entry(anchor=result.get("round_anchor") or anchor,
+                   symbols=[str(s).strip().upper() for s in args.symbols
+                            if str(s).strip()],
+                   entries=result.get("entries") or [],
+                   nexus_id=args.nexus)
     finally:
         CURRENT_TIER.reset(token)
         client.close()
-    note_entry(anchor=(result.get("round_anchor")
-                       or round_state(client).get("round", {}).get("round_anchor")),
-               symbols=args.symbols,
-               entries=result.get("entries") or [],
-               nexus_id=args.nexus)
     print(f"entered: {result}")
     return 0
 

@@ -175,8 +175,8 @@
     "t1": "yes"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "a4d0b582"
   },
   {
    "id": "L01",
@@ -231,8 +231,8 @@
     "t1": "yes"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "7435b51b"
   },
   {
    "id": "L05",
@@ -245,8 +245,8 @@
     "t1": "yes"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "7435b51b"
   },
   {
    "id": "L06",
@@ -259,8 +259,8 @@
     "t1": "yes"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "7435b51b"
   },
   {
    "id": "V01",
