@@ -115,6 +115,17 @@ def return_since_signal(signal_price, checkpoint_price) -> float | None:
     return (checkpoint_price / signal_price - 1.0) * 100.0
 
 
+
+def c_token(checkpoint: dict) -> str:
+    """The token a checkpoint belongs to, off its key.
+
+    `signal_key` is `<token>:<hour>`, so the token is everything before the
+    last colon -- an address never contains one, and rsplit keeps this right
+    if the hour format ever grows.
+    """
+    return str(checkpoint.get("key") or "").rsplit(":", 1)[0]
+
+
 def stats(rows: list[dict], hit_threshold: float = DEFAULT_HIT_THRESHOLD,
          top: int = 5) -> dict:
     """Per horizon: how many resolved, hit rate, mean/median return, the best
@@ -144,12 +155,29 @@ def stats(rows: list[dict], hit_threshold: float = DEFAULT_HIT_THRESHOLD,
         returns = [c["return_pct"] for c in checkpoints]
         hits = sum(1 for r in returns if r >= hit_threshold)
         ranked = sorted(checkpoints, key=lambda c: c["return_pct"], reverse=True)
+        # One ROW per token in best-and-worst. A coin still hot an hour later
+        # is a second tracked signal -- right for the rate, which is a rate
+        # over signals fired, and wrong for a list a reader takes as tokens:
+        # the console showed the same coin twice at +1262.3% on 2026-09-13 and
+        # five rows carried three coins. Newest signal per token wins, its
+        # return being the one measured from the freshest entry price.
+        seen, unique = set(), []
+        for row in sorted(checkpoints, key=lambda c: str(c.get("key")),
+                          reverse=True):
+            token = str(c_token(row))
+            if token in seen:
+                continue
+            seen.add(token)
+            unique.append(row)
+        ranked_tokens = sorted(unique, key=lambda c: c["return_pct"],
+                               reverse=True)
         out["horizons"][label] = {
             "resolved": len(returns),
             "hit_rate": hits / len(returns) if returns else None,
             "mean_pct": sum(returns) / len(returns) if returns else None,
             "median_pct": median(returns) if returns else None,
-            "top": ranked[:top],
-            "bottom": list(reversed(ranked[-top:])) if len(ranked) > top else [],
+            "top": ranked_tokens[:top],
+            "bottom": (list(reversed(ranked_tokens[-top:]))
+                       if len(ranked_tokens) > top else []),
         }
     return out

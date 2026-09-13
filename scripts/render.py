@@ -1828,6 +1828,50 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:15.0px; max-wid
    sit on the right like any chat, Nexus on the left. Every class is nx- so
    nothing here can restyle the findings' own conversation. */
 .wrap[data-tab="nexus"]{max-width:none;padding-left:28px;padding-right:28px}
+
+/* ---------- the Memecoiny tab ----------------------------------------
+   Green up, red down, and big enough to read from across the desk. The
+   operator asked twice; the first answer was the last block of another tab
+   in the same grey as everything else. */
+.mc-up{color:var(--ok);font-weight:700}
+.mc-down{color:var(--bad);font-weight:700}
+.mc-flat{color:var(--text-faint)}
+
+.mc-top{margin:4px 0 26px}
+.mc-top h2{margin:0 0 6px;font-size:26px;letter-spacing:-.2px}
+.mc-top .blurb{max-width:70ch;margin-top:10px}
+.mc-count{font-size:40px;font-weight:700;line-height:1.1;color:var(--text)}
+.mc-count span{font-size:14px;font-weight:400;color:var(--text-dim);
+  margin-left:10px;letter-spacing:0}
+
+.mc-grid{display:grid;gap:16px;margin-bottom:30px;
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.mc-card{background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--radius);padding:20px 22px}
+.mc-h{font-size:13px;text-transform:uppercase;letter-spacing:.6px;
+  color:var(--text-dim)}
+.mc-big{font-size:48px;font-weight:800;line-height:1.15;margin:8px 0 2px;
+  letter-spacing:-1px}
+.mc-sub{font-size:13px;color:var(--text-dim)}
+.mc-figs{display:flex;gap:26px;margin:16px 0 0;padding-top:14px;
+  border-top:1px solid var(--line-soft)}
+.mc-figs dt{font-size:12px;color:var(--text-dim);margin:0}
+.mc-figs dd{margin:2px 0 0;font-size:19px;font-weight:600}
+
+.mc-table{margin:0 0 26px}
+.mc-table h3{font-size:15px;margin:0 0 10px;color:var(--text-dim);
+  font-weight:600}
+.mc-table table{width:100%;border-collapse:collapse;background:var(--surface);
+  border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.mc-table th{text-align:left;font-size:12px;text-transform:uppercase;
+  letter-spacing:.5px;color:var(--text-dim);font-weight:600;
+  padding:11px 16px;border-bottom:1px solid var(--line)}
+.mc-table td{padding:12px 16px;border-bottom:1px solid var(--line-soft);
+  font-size:16px}
+.mc-table tr:last-child td{border-bottom:0}
+.mc-sym{font-weight:600}
+.mc-conv{color:var(--text-dim);font-variant-numeric:tabular-nums}
+.mc-ret{text-align:right;font-size:20px;font-variant-numeric:tabular-nums}
 .nx-strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin:18px 0 16px}
 .nx-card{position:relative;display:flex;flex-direction:column;gap:5px;min-width:0;text-align:left;padding:12px 15px 13px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--text);font:inherit;cursor:pointer}
 .nx-card:hover{border-color:var(--text-faint)}
@@ -2507,6 +2551,7 @@ h4.sec {
     <button data-tab="findings" aria-selected="false">Findings
       <span class="tab-n" id="tabN"></span></button>
     <button data-tab="stats" aria-selected="false">Stats</button>
+    <button data-tab="memecoins" aria-selected="false">Memecoiny</button>
     <button data-tab="nexus" aria-selected="false">Nexus
       <span class="tab-n" id="nexusN" hidden></span></button>
     <button data-tab="legend" aria-selected="false">How to read this</button>
@@ -2525,6 +2570,10 @@ h4.sec {
 
   <section class="panel" id="panel-stats" hidden>
   <div class="stat-grid" id="stats"></div>
+  </section>
+
+  <section class="panel" id="panel-memecoins" hidden>
+  <div id="memecoins"></div>
   </section>
 
   <section class="panel" id="panel-nexus" hidden>
@@ -4334,8 +4383,8 @@ if (NX_LOCAL) loadRooms();
 
 /* ---------- two tabs ---------- */
 const PANELS = { overview: "panel-overview", findings: "panel-findings",
-                stats: "panel-stats", nexus: "panel-nexus",
-                legend: "panel-legend" };
+                stats: "panel-stats", memecoins: "panel-memecoins",
+                nexus: "panel-nexus", legend: "panel-legend" };
 
 function showTab(name) {
   if (!PANELS[name]) name = "overview";
@@ -4572,6 +4621,86 @@ function bars(rows, label) {
   <div class="bars-x">${rows.map(r => `<span>${esc(r.k.slice(5))}</span>`).join("")}</div>`;
 }
 
+
+/* ---------- the Memecoiny tab ------------------------------------------
+   Its own tab since 2026-09-13, after the operator asked for a section just
+   for memecoins, got the last block of Stats, and could not find it.
+
+   Green is a gain and red is a loss, everywhere, including the summary --
+   they read pictures rather than tables. The MEDIAN is the headline and the
+   mean is beside it in small text, because one token returning +1262% drags
+   the mean to +46% while half the signals are under water: a hero number that
+   says +46% would be a lie told with a true figure.
+*/
+function pct(v) {
+  if (v == null) return `<span class="mc-flat">&mdash;</span>`;
+  const cls = v > 0 ? "mc-up" : (v < 0 ? "mc-down" : "mc-flat");
+  const sign = v > 0 ? "+" : "";
+  return `<span class="${cls}">${sign}${v.toFixed(1)}%</span>`;
+}
+
+function memecoinPanel() {
+  // `S` is local to statBlocks(), so this reads the payload itself rather
+  // than borrowing a name that happens to exist one function along.
+  const fm = (D.stats || {}).fomo;
+  // null means the diary was never written. "never watched" and "watched,
+  // nothing hit yet" must not look the same.
+  if (!fm) return `<p class="blurb">No memecoin signals have been captured
+    yet. <code>python scripts/fomo_watch.py capture</code> starts it.</p>`;
+
+  const thr = fm.hit_threshold != null ? fm.hit_threshold : 20;
+  const horizons = Object.keys(fm.horizons || {}).sort(
+    (a, b) => parseFloat(a) - parseFloat(b));
+
+  const cards = horizons.map(h => {
+    const r = fm.horizons[h];
+    const hit = r.hit_rate == null ? null : Math.round(r.hit_rate * 100);
+    const med = r.median_pct;
+    const medCls = med == null ? "mc-flat" : (med > 0 ? "mc-up" : (med < 0 ? "mc-down" : "mc-flat"));
+    return `<div class="mc-card">
+      <div class="mc-h">${esc(h)} after the signal</div>
+      <div class="mc-big ${medCls}">${med == null ? "&mdash;"
+        : (med > 0 ? "+" : "") + med.toFixed(1) + "%"}</div>
+      <div class="mc-sub">median of ${r.resolved} resolved signal(s)</div>
+      <dl class="mc-figs">
+        <div><dt>hit rate &ge;&nbsp;${thr}%</dt>
+          <dd class="${hit != null && hit >= 50 ? "mc-up" : "mc-flat"}">${
+            hit == null ? "&mdash;" : hit + "%"}</dd></div>
+        <div><dt>mean</dt><dd>${pct(r.mean_pct)}</dd></div>
+      </dl>
+    </div>`;
+  }).join("");
+
+  const tables = horizons.filter(h => (fm.horizons[h].top || []).length
+                                   || (fm.horizons[h].bottom || []).length)
+    .map(h => {
+      const r = fm.horizons[h];
+      const rows = [].concat(r.top || [], r.bottom || [])
+        .map(c => `<tr>
+          <td class="mc-sym">${esc(c.symbol || "?")}</td>
+          <td class="mc-conv">${c.conviction == null ? "&mdash;" : c.conviction}</td>
+          <td class="mc-ret">${pct(c.return_pct)}</td></tr>`).join("");
+      return `<section class="mc-table">
+        <h3>${esc(h)} after the signal &mdash; best and worst</h3>
+        <table><thead><tr><th>token</th><th>conviction when it fired</th>
+          <th>return since the signal</th></tr></thead>
+          <tbody>${rows}</tbody></table>
+      </section>`;
+    }).join("");
+
+  return `<header class="mc-top">
+      <h2>Does FOMO Radar's <code>hot</code> signal predict a move?</h2>
+      <div class="mc-count">${fm.tracked || 0}<span>signal(s) tracked</span></div>
+      <p class="blurb">Every return here is <strong>ours</strong>: the price at
+      the moment the signal fired against the price at that checkpoint. Not
+      their rolling %-change window, which is measured relative to whenever we
+      happen to ask. A hit is a return at or above ${thr}%.</p>
+    </header>
+    ${horizons.length ? `<div class="mc-grid">${cards}</div>` : `<p class="blurb">
+      Tracking signals; none has reached its first checkpoint (1h) yet.</p>`}
+    ${tables}`;
+}
+
 function statBlocks() {
   const S = D.stats || {};
   const rw = S.rewards || {}, fx = S.fixes || {}, ts = S.tests || {};
@@ -4699,48 +4828,10 @@ function statBlocks() {
     </details>`);
   }
 
-  // Memecoiny: does FOMO Radar's `hot` field actually predict a move? Read
-  // 2026-09-13. `S.fomo` is null when the diary has never been written --
-  // "never watched" and "watched, nothing hit yet" must not look the same.
-  const fm = S.fomo;
-  if (fm) {
-    const horizons = Object.keys(fm.horizons || {}).sort();
-    out.push(`<section class="stat wide">
-      <h3>Memecoiny &mdash; FOMO Radar's "hot" signal</h3>
-      <div class="hero">${fm.tracked || 0} <span>signal(s) tracked</span></div>
-      ${horizons.length ? `<dl class="figs">
-        ${horizons.map(h => {
-          const row = fm.horizons[h];
-          const hit = row.hit_rate == null ? "&mdash;" : Math.round(row.hit_rate * 100) + "%";
-          const mean = row.mean_pct == null ? "&mdash;" : row.mean_pct.toFixed(1) + "%";
-          return `<div><dt>${esc(h)}</dt><dd>${row.resolved} resolved,
-            ${hit} hit rate, ${mean} avg return</dd></div>`;
-        }).join("")}
-      </dl>` : `<p class="blurb">Tracking signals; none has reached its first
-        checkpoint (1h) yet.</p>`}
-      ${horizons.filter(h => (fm.horizons[h].top || []).length).map(h => {
-        const row = fm.horizons[h];
-        return `<details><summary>${esc(h)}: best and worst since signal</summary>
-          <table class="stat-t"><thead><tr><th>symbol</th><th>conviction at signal</th>
-            <th>return</th></tr></thead><tbody>
-            ${row.top.map(c => `<tr><td>${esc(c.symbol || "?")}</td>
-              <td>${c.conviction == null ? "&mdash;" : c.conviction}</td>
-              <td>${c.return_pct.toFixed(1)}%</td></tr>`).join("")}
-            ${row.bottom.map(c => `<tr><td>${esc(c.symbol || "?")}</td>
-              <td>${c.conviction == null ? "&mdash;" : c.conviction}</td>
-              <td>${c.return_pct.toFixed(1)}%</td></tr>`).join("")}
-          </tbody></table>
-        </details>`;
-      }).join("")}
-      <p class="blurb">Return is ours, computed from the price at the moment
-      the signal fired to the price at each checkpoint &mdash; not their own
-      rolling %-change window, which is relative to whenever we happen to ask.
-      A hit is a return at or above ${fm.hit_threshold != null ? fm.hit_threshold : 20}%.</p>
-    </section>`);
-  }
   return out.join("");
 }
 document.getElementById("stats").innerHTML = statBlocks();
+document.getElementById("memecoins").innerHTML = memecoinPanel();
 
 // The table the operator sets /model and /effort from, drawn from the
 // operating rules rather than retyped beside them.

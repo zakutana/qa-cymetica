@@ -107,3 +107,36 @@ def test_stats_reads_the_hit_threshold_as_a_parameter_not_a_constant():
 
     assert fomo.stats([]) == {
         "tracked": 0, "hit_threshold": fomo.DEFAULT_HIT_THRESHOLD, "horizons": {}}
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_one_token_appears_once_in_best_and_worst():
+    """A token still hot at 06:00 and again at 07:00 is two tracked signals --
+    correct, and right for the hit rate, which is a rate over signals.
+
+    It is wrong for "best and worst", which a reader takes as a list of
+    TOKENS. Seen on the console 2026-09-13: the same coin twice at the top
+    with the identical +1262.3%, and ASTRO twice below it, so five rows showed
+    three coins and the page looked broken to the one person reading it.
+
+    The newest signal for a token wins, because that is the one whose return
+    is measured over the freshest entry price.
+    """
+    rows = []
+    for hour, ret in (("06", 1262.3), ("07", 1262.3), ("06", 40.5)):
+        token = "0xaaa" if ret > 100 else "0xbbb"
+        key = f"{token}:2026-09-13T{hour}"
+        rows.append({"type": "signal", "key": key, "token_address": token,
+                     "symbol": "NIU" if ret > 100 else "POK",
+                     "conviction": 88.3, "price_usd": 1.0})
+        rows.append({"type": "checkpoint", "key": key, "horizon": "1h",
+                     "price_usd": 2.0, "return_pct": ret})
+
+    one = fomo.stats(rows)["horizons"]["1h"]
+    shown = [c["symbol"] for c in one["top"]] + [c["symbol"] for c in one["bottom"]]
+    assert len(shown) == len(set(shown)), f"a token listed twice: {shown}"
+    assert set(shown) == {"NIU", "POK"}
+
+    # The RATE still counts both signals -- it is a rate over signals fired,
+    # and collapsing them would quietly change what the number means.
+    assert one["resolved"] == 3, one["resolved"]

@@ -322,7 +322,11 @@ def test_the_memecoin_section_renders_with_and_without_a_diary(tmp_path,
     code, err, captured = _run_page(node, tmp_path / "nofomo", payload)
     assert code == 0, f"the page throws with no diary:\n{err[:900]}"
     assert "Memecoiny" not in captured.get("stats", ""), (
-        "no diary means no section, not an empty one")
+        "the measurement moved to its own tab; it must not be drawn in the "
+        "stats grid as well -- one measurement, one place")
+    assert "No memecoin signals" in captured.get("memecoins", ""), (
+        "with no diary the tab says so rather than opening blank: never "
+        "watched and watched-with-nothing-yet must not look the same")
 
     payload["stats"]["fomo"] = {
         "tracked": 3, "hit_threshold": 20.0,
@@ -339,11 +343,26 @@ def test_the_memecoin_section_renders_with_and_without_a_diary(tmp_path,
     }
     code, err, captured = _run_page(node, tmp_path / "withfomo", payload)
     assert code == 0, f"the page throws with a real diary:\n{err[:900]}"
-    stats_html = captured.get("stats", "")
-    assert "Memecoiny" in stats_html
-    assert "3" in stats_html and "50%" in stats_html
-    assert "DOGEX" in stats_html and "38.5" in stats_html
-    assert "PEPEX" in stats_html and "-30.5" in stats_html
+    panel = captured.get("memecoins", "")
+    assert "hot" in panel, "the tab must say what is being measured"
+    assert "3" in panel and "50%" in panel
+    assert "DOGEX" in panel and "38.5" in panel
+    assert "PEPEX" in panel and "-30.5" in panel
+
+    # Green for a gain, red for a loss -- the operator reads pictures, and
+    # asked for this twice. Asserted on the classes rather than eyeballed.
+    assert "mc-up" in panel and "mc-down" in panel, (
+        "a gain and a loss must be coloured differently, not both grey")
+    up = panel[panel.index("DOGEX"):]
+    assert "mc-up" in up[:up.index("PEPEX")], "the +38.5% row is not green"
+    down = panel[panel.index("PEPEX"):]
+    assert "mc-down" in down[:400], "the -30.5% row is not red"
+
+    # And the headline is the MEDIAN, not the mean: one token at +1262% drags
+    # the mean to +46% while half the signals are under water.
+    assert "median of" in panel, "the hero figure must be the median"
+    assert "Memecoiny" not in captured.get("stats", ""), (
+        "drawn twice -- the operator then has to guess which one is live")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -1698,3 +1717,50 @@ def test_our_own_verifications_appear_in_the_conversation(tmp_path, monkeypatch)
 
     # The template has to draw it, or the payload grew a field nobody reads.
     assert "m.verdict" in render.TEMPLATE
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_memecoin_measurement_is_its_own_tab_not_the_last_block_of_stats():
+    """[operator 2026-09-13] they asked for "separatni sekci jen pro
+    memecoiny" and then could not find it.
+
+    It shipped as the fifth and last block of the Stats tab, which is a
+    section only in the sense that a paragraph is one. They were on Findings,
+    looked, and said it was not there -- the same class of miss as
+    `look-at-the-page-before-calling-it-done`: every test green, the data
+    present, and nobody had checked whether a person could reach it.
+
+    Asserted here rather than eyeballed, because "is it findable" is exactly
+    the property that quietly regresses. Three things: the tab button exists,
+    it has a panel to draw into, and the drawing function targets that panel
+    rather than the stats grid.
+    """
+    render = _render()
+    page = render.TEMPLATE
+
+    assert 'data-tab="memecoins"' in page, (
+        "no tab button -- the measurement is reachable only by scrolling "
+        "another tab to its end")
+    assert 'id="panel-memecoins"' in page, "a tab button with no panel"
+    assert 'id="memecoins"' in page, "a panel with nothing to draw into"
+    assert 'getElementById("memecoins")' in page, (
+        "nothing writes the panel, so the tab opens empty")
+
+    # And the tab actually OPENS. showTab() ignores any name not in PANELS
+    # and silently falls back to overview, so a button can exist, a panel can
+    # exist, the data can be right -- and clicking it does nothing at all.
+    # That is what shipped for a few minutes on 2026-09-13 and it is only
+    # visible by pressing the button, which is the whole lesson of
+    # `look-at-the-page-before-calling-it-done`.
+    panels = page[page.index("const PANELS"):]
+    panels = panels[:panels.index("};") + 2]
+    assert "memecoins:" in panels, (
+        "the tab is not in PANELS, so showTab falls back to overview and the "
+        "button is dead")
+
+    # And the block must no longer be appended to the stats grid, or it shows
+    # up twice and the operator has to guess which one is live.
+    stats_fn = page[page.index("function statBlocks()"):]
+    stats_fn = stats_fn[:stats_fn.index("\n}")]
+    assert "Memecoiny" not in stats_fn, (
+        "still drawn inside statBlocks as well -- one measurement, one place")
