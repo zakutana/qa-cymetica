@@ -893,6 +893,42 @@ def test_the_nexus_card_check_reads_only_ids_given_as_cards():
     assert not is_current(None, now), "an answer with no moment is not current"
 
 
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_nexus_card_check_claims_only_that_the_card_was_named():
+    """V07, deep pass of 2026-09-13, triage 3/3. The reason said more than the
+    extractor read.
+
+    `card_ids_in` and `known_non_cards` both answer "is this a card id". Neither
+    answers "was it offered as a trade", and the reason asserted the second:
+    "Nexus answer NEX-xxxx **tells an agent to trade** <uuid>". NEX-0027 is a
+    live instance -- it says *"skip it as a long this week"* immediately before
+    `09a41890-51c2-4fa9-8bb8-43e7f9bf4930`, so a 404 on that card would have
+    gone to #91 quoting them as telling an agent to trade a card they told it
+    to skip.
+
+    The repair is the claim, not the extractor. A card id that a current
+    recommendation NAMES and that does not exist is a defect whichever side of
+    the sentence it was on -- an agent cannot tell the avoided card from the
+    recommended one if neither resolves. Adding a negation vocabulary would be
+    the same blocklist the file's own `known_non_cards` docstring warns about:
+    it can only ever name what has already gone wrong once.
+    """
+    import inspect
+
+    from tests.rest import test_nexus_cards_exist as check
+
+    source = inspect.getsource(
+        check.test_every_card_nexus_tells_an_agent_to_trade_exists)
+    # Comments out, because the comment that RECORDS this repair quotes the
+    # old wording -- the first draft of this assertion was defeated by the
+    # very sentence explaining it.
+    code = "\n".join(line for line in source.splitlines()
+                     if not line.lstrip().startswith("#"))
+    assert "tells an agent to trade" not in code, (
+        "the reason still asserts trade-ness, which nothing in the check reads")
+    assert "names " in code, "the reason must say what was actually read"
+
+
     # Evidence, not vocabulary. A blocklist can only name what has already gone
     # wrong once, and two of three readers reproduced the next one on
     # 2026-09-12: "trade_id `<uuid>`" and "clone `<uuid>`" both came back as

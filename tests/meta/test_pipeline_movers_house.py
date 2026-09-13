@@ -96,11 +96,51 @@ def test_a_house_row_that_matches_neither_half_reports_nothing():
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_house_row_showing_the_live_record_passes():
-    """The other real fix: score the screen forward and show that instead."""
+    """The other real fix: score the screen forward and show that instead.
+
+    The live half is a DIFFERENT record, not a copy of the backtest with one
+    field changed. The first version of this fixture was `{**BACKTEST,
+    "scored": 250}`, which cannot distinguish the passing branch from the
+    failing one -- both halves were the same numbers, so `matches` agreed with
+    each equally. Deep pass 2026-09-13.
+    """
     mod = _check()
-    live = {**BACKTEST, "scored": 250}          # the same record, but LIVE
-    verdict, why = mod.decide(HOUSE, live, BACKTEST)
+    live = {"scored": 250, "runs_scored": 12, "mean_pct": 12.0,
+            "median_pct": 1.0, "hit100": 5, "hit50": 10,
+            "first_anchor": "2026-06-19", "last_anchor": "2026-09-04"}
+    row = {**HOUSE, "avg_pct": 12.0, "median_pct": 1.0,
+           "doublers": 5, "hit50": 10}
+    verdict, why = mod.decide(row, live, BACKTEST)
     assert verdict == "passed", why
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_basis_field_is_read_for_its_value_and_not_for_its_presence():
+    """The 2026-09-07 `metadata.is_answer` shape, on the row that ranks #1.
+
+    `discloses_its_basis` short-circuited on the NAME of a key, before the
+    figures were compared with either half -- so `basis: "live"` beside a row
+    that is one hundred percent the backtest half, with `live.scored == 0`,
+    returned `passed` and would have sent that verification on #100. Their own
+    rules text now defines what the two values mean ("'live' means
+    forward-scored rounds; 'backtest' means the screen's record reconstructed
+    over stored closes"), so the contract is about the value.
+
+    Three shapes of the same lie are pinned: the word that contradicts the
+    figures, an empty value, and a null one.
+    """
+    mod = _check()
+    for basis in ("live", "", None):
+        verdict, why = mod.decide({**HOUSE, "basis": basis}, LIVE, BACKTEST)
+        assert verdict == "failed", (basis, why)
+        assert "backtest" in why.lower(), why
+
+    # And the honest label still clears it, whichever way it is spelled.
+    for basis in ("backtest", "BACKTEST", "reconstructed backtest"):
+        assert mod.decide({**HOUSE, "basis": basis},
+                          LIVE, BACKTEST)[0] == "passed", basis
+    assert mod.decide({**HOUSE, "handle": "NEXUS screen (backtest)"},
+                      LIVE, BACKTEST)[0] == "passed"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

@@ -118,6 +118,39 @@ def test_any_declared_deadline_clears_it_whatever_it_is_called():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_field_saying_entries_are_still_open_is_not_a_deadline():
+    """The filed defect, restated in their own payload, was clearing itself.
+
+    `declares_a_deadline` tested `is not None`, and `entries_closed` is one of
+    the fields it looks for -- so `{"entries_closed": false}`, which says in
+    so many words that entries are STILL OPEN, returned `passed` with the
+    reason "the round declares when entries stop being accepted". That is the
+    PASS verification on #101. Presence against a contract about a value, the
+    same shape as the house row's `basis` on the sibling check.
+    """
+    mod = _check()
+    verdict, why = mod.decide({**ROUND, "entries_closed": False}, RULES,
+                              date(2026, 9, 13))
+    assert verdict == "failed", why
+    verdict, why = mod.decide({**ROUND, "entries_open": True}, RULES,
+                              date(2026, 9, 13))
+    assert verdict == "failed", why
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_their_own_word_that_entries_are_shut_is_believed():
+    """The other half of the same field. They serve `entries_open` now, and
+    the check's own docstring says it reads whether the round is still
+    accepting entries -- while `decide` never touched it, so a round they had
+    closed still failed with the reason "the round is still open"."""
+    mod = _check()
+    shut = {**ROUND, "entries_open": False}
+    verdict, why = mod.decide(shut, RULES, date(2026, 9, 13))
+    assert verdict == "inconclusive", why
+    assert "no longer accepting" in why or "closed" in why, why
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_round_with_no_anchor_is_not_a_finding():
     mod = _check()
     assert mod.decide({"scores_after": "2026-09-18"}, RULES,

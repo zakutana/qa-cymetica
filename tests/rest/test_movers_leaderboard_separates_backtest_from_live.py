@@ -59,15 +59,27 @@ SAME_QUANTITY = {
 
 # Any of these appearing as a key on the row, or as a word inside one of its
 # string values, is the disclosure this check is asking for.
-DISCLOSES = ("backtest", "back-test", "simulated", "simulation", "basis",
-             "measurement", "hypothetical")
+DISCLOSES = ("backtest", "back-test", "simulated", "simulation",
+             "hypothetical", "reconstructed")
 
 
 def discloses_its_basis(row: dict) -> bool:
-    """Does the row itself say what kind of record it is, in any form?"""
-    for key, value in (row or {}).items():
-        if any(word in str(key).lower() for word in DISCLOSES):
-            return True
+    """Does the row SAY, in words, that its record is a backtest?
+
+    Values only. Until the deep pass of 2026-09-13 this also returned True for
+    a KEY whose name contained "basis" or "measurement", whatever the value --
+    so `{"basis": "live"}` beside a row that is one hundred percent the
+    backtest half returned `passed`, and would have sent that verification on
+    #100. Presence against a contract about a value, which is the 2026-09-07
+    `metadata.is_answer` shape.
+
+    A key name says nothing about what the row is; the word does. Every one of
+    the four repair shapes this check was written to accept -- `basis:
+    "backtest"`, a renamed handle, `measurement_kind: "simulated"`, a note
+    about hypothetical results -- carries the word in its VALUE, so nothing
+    honest is lost by reading only those.
+    """
+    for value in (row or {}).values():
         if isinstance(value, str) and any(w in value.lower() for w in DISCLOSES):
             return True
     return False
@@ -100,29 +112,35 @@ def decide(row: dict, live: dict, backtest: dict) -> tuple[str, str]:
                 "their leaderboard carries no is_house row, so there is no "
                 "house record here to be one kind or the other")
 
-    if discloses_its_basis(row):
-        return ("passed",
-                "the house row says what kind of record it is, so a reader "
-                "ranked against it can see what they are being compared with")
-
     on_backtest = matches(row, backtest)
     on_live = matches(row, live)
     comparable = [f for f in SAME_QUANTITY
                   if row.get(f) is not None
                   and (backtest or {}).get(SAME_QUANTITY[f]) is not None]
 
+    # The figures come FIRST, and the label second. Reading the label first is
+    # what let `basis: "live"` pass beside a row that was entirely the backtest
+    # half; a label is a claim about the record, so it is checked against the
+    # record rather than instead of it. Deep pass 2026-09-13.
+    if len(on_live) >= 3 and len(on_live) > len(on_backtest) and (live or {}).get("scored"):
+        return ("passed",
+                f"the house row matches the live half of their own track "
+                f"record on {len(on_live)} shared quantities, which is what a "
+                f"leaderboard beside live entrants should show")
+
     if len(on_backtest) < 3 or len(on_backtest) < len(comparable):
         return ("inconclusive",
                 f"the house row agrees with the published backtest record on "
-                f"{len(on_backtest)} of {len(comparable)} shared quantities, "
-                f"so this check cannot say which record it is showing. "
-                f"Reporting nothing rather than guessing")
+                f"{len(on_backtest)} of {len(comparable)} shared quantities "
+                f"and with the live half on {len(on_live)}, so this check "
+                f"cannot say which record it is showing. Reporting nothing "
+                f"rather than guessing")
 
-    if len(on_live) >= len(on_backtest) and (live or {}).get("scored"):
+    if discloses_its_basis(row):
         return ("passed",
-                "the house row matches the live half of their own track "
-                "record, which is what a leaderboard beside live entrants "
-                "should show")
+                "the house row is the backtest record and says so in words, "
+                "so a reader ranked against it can see what they are being "
+                "compared with")
 
     scored = (live or {}).get("scored")
     first, last = (backtest or {}).get("first_anchor"), (backtest or {}).get("last_anchor")

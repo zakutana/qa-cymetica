@@ -1,355 +1,453 @@
 {
-  "run": "deep-pass 2026-09-13",
-  "at": "2026-09-12T22:30:00+00:00",
-  "previous_at": "2026-09-12T19:10:00+00:00",
-  "at_finished": "2026-09-12T23:58:20+00:00",
-  "start_commit": "85143b9c",
-  "gaps": [
-    {
-      "id": "R01",
-      "nodeid": "tests/mcp/test_ground_truth_needs_no_key.py::test_the_ground_truth_tools_answer_without_a_key",
-      "claim": "A call that could not be read is counted as the promise kept. `unreadable` is in neither `walls` nor `answered`, and the Inconclusive branch fires only when ALL THREE are unreadable -- so one TLS timeout (they had one at 20:55 on 2026-09-12) and the check concludes `passed` for a claim about three tools from two readings. Rule 8, in the direction that sends a vendor a pass.",
-      "source": "review",
-      "votes": {
-        "t2": "real",
-        "t3": "real",
-        "t1": "real"
-      },
-      "verdict": "real",
-      "fixed": true,
-      "commit": "bde225e8"
-    },
-    {
-      "id": "R02",
-      "nodeid": "scripts/prune_runs.py::cited_run_ids",
-      "claim": "Tonight's refusal covers the ledger and stops there. `audits/checks.json` cites 607 run ids and is read the same blind way: `_load(...).get('audited') or {}` turns an unreadable file into one citing nothing, and the prose fallback's `except OSError: continue` drops it too. A checks.json caught mid-write makes every record cited only by it a victim of --apply. The identical defect, one file over, left in place by the fix for it.",
-      "source": "review",
-      "votes": {
-        "t2": "not-real",
-        "t3": "real",
-        "t1": "real"
-      },
-      "verdict": "real",
-      "fixed": true,
-      "commit": "8abf1dd0"
-    },
-    {
-      "id": "R03",
-      "nodeid": "scripts/lab.py::_deployed",
-      "claim": "Its docstring still calls itself \"the symmetric reading to `_free_cash`\" and that stopped being true tonight. `_deployed` now reads their position status; `_free_cash` still reads the newest `after` row of our own orders, which a website close never writes. After the 2026-09-12 close the two legs of `affordable()` describe one event differently -- conservative today, but the docstring asserts a symmetry the code no longer has.",
-      "source": "review",
-      "votes": {
-        "t2": "not-real",
-        "t3": "not-real",
-        "t1": "not-real"
-      },
-      "verdict": "dropped",
-      "fixed": false,
-      "commit": null
-    },
-    {
-      "id": "R04",
-      "nodeid": "scripts/lab.py::_closed_on_their_side",
-      "claim": "Only the literal `closed` releases money, and no position has ever been observed resolving -- measuring a resolve is still open in NEXT.md. If a resolved position reads `resolved`/`settled`/`expired`, it is counted against the 60% ceiling forever and every resolved card ratchets the ceiling down until the lab cannot order at all. Nothing fails; it quietly stops trading. Note `scripts/paper.py:567` already keys on the same word, so this is the repository's existing assumption rather than a new one.",
-      "source": "review",
-      "votes": {
-        "t2": "not-real",
-        "t3": "not-real",
-        "t1": "not-real"
-      },
-      "verdict": "dropped",
-      "fixed": false,
-      "commit": null
-    },
-    {
-      "id": "R05",
-      "nodeid": "tests/repo/test_prune_runs.py::test_a_ledger_that_cannot_be_read_is_not_a_ledger_citing_nothing",
-      "claim": "The record half asserts what the fix makes trivially true: once the refusal fires `keep_set` returns every record as `unreadable`, so `victims()` is empty and the assertion holds for any implementation that keeps everything unconditionally. The capture half has a real discriminator (a sibling capture takes `witness`, so losing `kept` is a deletion); the record half has none.",
-      "source": "review",
-      "votes": {
-        "t2": "not-real",
-        "t3": "not-real",
-        "t1": "not-real"
-      },
-      "verdict": "dropped",
-      "fixed": false,
-      "commit": null
-    },
-    {
-      "id": "A01",
-      "nodeid": "tests/meta/test_pipeline_lab.py::test_a_refill_climbs_from_what_scored_rather_than_from_where_we_started",
-      "claim": "The assertion goes red on 2026-09-15 while the contract is fully honoured. Line 1201 calls night_refill(rows=...) with no `now`, so backtests.best() uses datetime.now() and the fixture rows (at 2026-09-12T12:00Z, p=30, stale_after 3.0 days) fall out of the window. Reproduced: best(rows, limit=1) -> 1 row today, 0 rows at 2026-09-15T16:00Z. Every sibling in test_pipeline_backtests.py pins now=NOW; this one does not. tests/meta, so the red aborts every session.",
-      "source": "audit",
-      "votes": {
-        "t2": "real",
-        "t3": "real",
-        "t1": "real"
-      },
-      "verdict": "real",
-      "fixed": true,
-      "commit": "bde225e8"
-    },
-    {
-      "id": "A02",
-      "nodeid": "tests/meta/test_pipeline_lab.py::test_the_night_keeps_searching_after_the_first_queue_runs_out",
-      "claim": "The docstring's contract is that the night does not stop searching when the first queue empties, quantifying the defect as 'six ticks, twelve minutes of a fourteen-hour night'. The assertion asks only len(walked) > 30*4. Gate the refill on did['refills'] < 3 and the walk reaches 150 over seven ticks, then searches nothing for the remaining ~293: all three assertions stay green on a night that searched fourteen minutes of ten hours.",
-      "source": "audit",
-      "votes": {
-        "t2": "real",
-        "t3": "real",
-        "t1": "real"
-      },
-      "verdict": "real",
-      "fixed": true,
-      "commit": "47b86e6b"
-    },
-    {
-      "id": "A03",
-      "nodeid": "tests/meta/test_pipeline_lab.py::test_the_night_launches_on_paper_from_a_nexus_answer_and_nothing_else",
-      "claim": "The name claims the road (a room opens from a whole Nexus answer, never from a basket of ours) and the brakes (affordable, paper only, nothing during a deep pass). The assertion measures neither: actions['promote'] is a stub that unconditionally returns {rooms:1, orders:1}, so a night_promote that opened a room from our own basket, skipped affordable and posted live would keep it green. The property is really held by test_pipeline_night_spend.py, which drives the real function. Same shape as A04 of 2026-09-12, ruled on in this file.",
-      "source": "audit",
-      "votes": {
-        "t2": "real",
-        "t3": "real",
-        "t1": "real"
-      },
-      "verdict": "real",
-      "fixed": true,
-      "commit": "47b86e6b"
-    },
-    {
-      "id": "A04",
-      "nodeid": "tests/meta/test_pipeline_night_spend.py::test_one_card_is_not_bought_once_per_answer_that_mentions_it",
-      "claim": "The contract is 'one card named in three answers is bought once'; the assertion len(sent) == len(set(sent)) is satisfied by sent == []. Any regression that places no order at all -- a _stake of 0.0, an affordable that refuses, an open_strategy that raises before the buy loop -- leaves the de-duplication it exists for unexercised. Non-vacuous today (book 100000 -> stake 2000 -> one order), so latent rather than live; every sibling in the file asserts on a non-empty sent.",
-      "source": "audit",
-      "votes": {
-        "t2": "real",
-        "t3": "not-real",
-        "t1": "not-real"
-      },
-      "verdict": "minority",
-      "fixed": false,
-      "commit": null
-    },
-    {
-      "id": "B01",
-      "nodeid": "tests/repo/test_process_dna.py::test_every_ceiling_watches_something_that_is_actually_measured",
-      "claim": "The contract is a permanent pairing (a ceiling on a key nothing emits); the assertion compares CEILINGS against one machine's CURRENT sizes(), three keys of which are conditional. processes.py:384-432 emits evidence_mb only if <root>/evidence is a directory (gitignored since D3, absent in any clone), next_oldest_days only if NEXT.md has an open parseable item, memory_lines only if the memory index exists. Run against a clone-shaped root: dead == ['evidence_mb','next_oldest_days'] -> failed, while both ceilings are correctly paired.",
-      "source": "audit",
-      "votes": {
-        "t2": "real",
-        "t3": "real",
-        "t1": "real"
-      },
-      "verdict": "real",
-      "fixed": true,
-      "commit": "bde225e8"
-    },
-    {
-      "id": "B02",
-      "nodeid": "tests/repo/test_process_dna.py::test_the_effort_of_a_commit_is_read_even_when_git_will_not_parse_it",
-      "claim": "The docstring names the broken-reader state as lenient < strict; the verdict fails on lenient <= strict. Measured now: lenient 200 (saturated), strict 153. The 47 malformed messages are history and the hook is fixed, so once 200 well-formed commits sit on top, lenient == strict == 200 and the check goes red with the reader working perfectly. The same branch also fires when _git returns '' on a non-zero exit -- a failed read reported as a broken reader, rule 8.",
-      "source": "audit",
-      "votes": {
-        "t2": "real",
-        "t3": "real",
-        "t1": "real"
-      },
-      "verdict": "real",
-      "fixed": true,
-      "commit": "bde225e8"
-    },
-    {
-      "id": "B03",
-      "nodeid": "tests/repo/test_review.py::test_reading_the_real_repository_changes_not_one_byte",
-      "claim": "The contract is 'a read-only review writes nothing'; the assertion exercises one of the two areas with two instruments blind to where the other reads. main(['--deep-pass','all']) never reaches area_lab (review.py:156-233), which loads scripts/lab.py and calls graded_pairs(), qa.lab.load, qa.rooms.load and five diary readers. Every diary it touches is gitignored, so git status cannot see a write, and the mtime snapshot covers only audits/. Today --lab appends a row to state/backtests.jsonl on every run and the check stays green.",
-      "source": "audit",
-      "votes": {
-        "t2": "real",
-        "t3": "not-real",
-        "t1": "not-real"
-      },
-      "verdict": "minority",
-      "fixed": false,
-      "commit": null
-    },
-    {
-      "id": "B04",
-      "nodeid": "tests/repo/test_reminders.py::test_the_hook_is_silent_when_nothing_is_due_and_never_fails",
-      "claim": "The silence half is asserted on a fixture where the mechanism cannot load. reminders.py:37-38 returns 0 when scripts/processes.py is absent, and the 'quiet' subprocess runs against a tmp_path without it -- so the empty stdout proves the early return, not that reminders() is quiet. The second subprocess does load it, prints 'Tydenni ohlednuti nikdy neprobehl', and only returncode == 0 is asserted. Set MISSED_NIGHT_HOURS = 0 and both assertions still hold.",
-      "source": "audit",
-      "votes": {
-        "t2": "real",
-        "t3": "real",
-        "t1": "real"
-      },
-      "verdict": "real",
-      "fixed": true,
-      "commit": "47b86e6b"
-    },
-    {
-      "id": "B05",
-      "nodeid": "tests/repo/test_process_dna.py::test_the_window_counts_runs_while_the_whole_history_keeps_the_last_seen",
-      "claim": "The docstring names a defect in patrol(since=...); the assertion drives within() and runs_from_records() in isolation and never calls patrol. Change processes.py:520 from runs_from_records(within(stamps, since)) to runs_from_records(stamps) -- the exact regression described -- and the test stays green because it calls within itself. The fixture writes tmp_path/scripts/quiet.py and tmp_path/state/nexus.jsonl and never passes tmp_path to anything that reads them.",
-      "source": "audit",
-      "votes": {
-        "t2": "real",
-        "t3": "real",
-        "t1": "real"
-      },
-      "verdict": "real",
-      "fixed": true,
-      "commit": "ddf01ec4"
-    },
-    {
-      "id": "B06",
-      "nodeid": "tests/repo/test_review.py::test_the_lab_area_filters_every_diary_on_its_own_clock",
-      "claim": "Docstring: 'Five diaries, one window'. The assertion exercises two. It passes diaries=lambda name: [], so the _within wrappers on asked, answered, gave_up, backtests and orders (review.py:223-231) all filter empty lists; only lab.jsonl sessions and rooms.jsonl rows are measured. Drop _within from line 229 and the retrospective reports every backtest ever run under a 'last 7 days' heading, still green.",
-      "source": "audit",
-      "votes": {
-        "t2": "real",
-        "t3": "real",
-        "t1": "real"
-      },
-      "verdict": "real",
-      "fixed": true,
-      "commit": "ddf01ec4"
-    },
-    {
-      "id": "B07",
-      "nodeid": "tests/repo/test_review.py::test_the_nexus_row_types_are_read_off_the_real_diary_not_guessed",
-      "claim": "The docstring pins the vocabulary THIS READER depends on against the data; the assertion pins only the data, with the reader's vocabulary as a literal in the test. It reads state/nexus.jsonl and never reads review.area_lab. Revert review.py:223-228 to the historical type == 'ask' and the check stays green while the retrospective again prints '0 otazek Nexusovi' -- the incident the docstring cites.",
-      "source": "audit",
-      "votes": {
-        "t2": "real",
-        "t3": "real",
-        "t1": "real"
-      },
-      "verdict": "real",
-      "fixed": true,
-      "commit": "ddf01ec4"
-    },
-    {
-      "id": "B08",
-      "nodeid": "tests/repo/test_surface_drift.py::test_a_field_that_appears_in_their_answer_is_how_a_fix_announces_itself",
-      "claim": "The docstring claims '#97, exactly' -- that the watcher would have announced the fix -- but the assertion drives surface.fields_drift, which no production path calls (grep returns qa/surface.py:180 and three lines of this test). The reminder path is processes.surface_drift -> drift_against -> shape_drift, whose criterion is stricter: a field counts as appeared only if it is in now['always'] (in EVERY 2xx capture of that call in 48h). A field present in some answers is `appeared` here and silent in the mechanism.",
-      "source": "audit",
-      "votes": {
-        "t2": "real",
-        "t3": "real",
-        "t1": "real"
-      },
-      "verdict": "real",
-      "fixed": true,
-      "commit": "47b86e6b"
-    },
-    {
-      "id": "C01",
-      "nodeid": "tests/rest/test_portfolio_summary.py::test_the_summary_says_which_populations_its_counters_leave_out",
-      "claim": "The contract is that a summary excluding a population it holds must say so and say where it can be read; the assertion accepts that statement only from `counters_do_not_cover`. An exclusion stated inside `counters_cover` is thrown away by the NEGATIONS filter and reported as an absence. Reproduced: accounts_for({counters_cover: '...event-card bull/bear positions are not counted here, see /api/v1/event-cards/positions', counters_do_not_cover: []}) -> None -> verdict failed, with a reason that is false of the body it just read. #83's shape on the same endpoint, which cost a retraction.",
-      "source": "audit",
-      "votes": {
-        "t2": "real",
-        "t3": "real",
-        "t1": "real"
-      },
-      "verdict": "real",
-      "fixed": true,
-      "commit": "8abf1dd0"
-    },
-    {
-      "id": "C02",
-      "nodeid": "tests/rest/test_cloned_bots_surface.py::test_every_cloned_bot_route_they_serve_is_one_they_document",
-      "claim": "The contract is 'a route their server serves is a route their documents name'; the assertion compares a path rewritten with the literal `{instance_id}` against their `paths` keys, so the real claim is '...under that exact parameter name'. Rename the parameter to `{clone_id}` in openapi -- a documentation-only change -- and served_but_undocumented reports a route they do document. Latent today.",
-      "source": "audit",
-      "votes": {
-        "t2": "real",
-        "t3": "real",
-        "t1": "real"
-      },
-      "verdict": "real",
-      "fixed": true,
-      "commit": "ddf01ec4"
-    },
-    {
-      "id": "C03",
-      "nodeid": "tests/rest/test_cloned_bots_surface.py::test_one_credential_carries_a_clone_from_creation_to_funding",
-      "claim": "The docstring's contract is one flow -- an agent that can clone a bot can fund it -- but the assertion fails on ANY authenticated /api/v1/cloned-bots operation that does not publish x-api-key. If they fix fund and document DELETE with `authorization` only (a legitimate user-only operation), credential_gap still returns a refusal and verdict is failed. The reason string hedges; the verdict does not, and the verdict is what moves the CHECK axis and what verify.py sends. This row is OPEN and filed as #89/#98.",
-      "source": "audit",
-      "votes": {
-        "t2": "real",
-        "t3": "real",
-        "t1": "real"
-      },
-      "verdict": "real",
-      "fixed": true,
-      "commit": "ddf01ec4"
-    },
-    {
-      "id": "C04",
-      "nodeid": "tests/mcp/test_ground_truth_needs_no_key.py::test_the_ground_truth_tools_answer_without_a_key",
-      "claim": "DUPLICATE of R01 -- found independently by an auditor who had not seen the review. Judged as R01.",
-      "source": "audit",
-      "votes": null,
-      "verdict": "duplicate",
-      "fixed": false,
-      "commit": null
-    },
-    {
-      "id": "C05",
-      "nodeid": "tests/repo/test_evidence_in_git.py::test_every_capture_the_committed_state_cites_can_still_be_produced",
-      "claim": "The docstring's contract is 'every cited id is in the COMMITTED manifest', and the journal and ledger are read from HEAD for exactly that reason (lines 126-127) -- but manifest.read() reads audits/evidence-manifest.jsonl in the WORKING TREE. A fold cites a new capture, the ledger is committed with the hook not running (--no-verify, or a clone with no core.hooksPath -- the case step 0 of the deep pass exists to repair), and the citation is in HEAD while its manifest line is only on disk: guard green, clone holds no proof.",
-      "source": "audit",
-      "votes": {
-        "t2": "real",
-        "t3": "real",
-        "t1": "real"
-      },
-      "verdict": "real",
-      "fixed": true,
-      "commit": "8abf1dd0"
-    },
-    {
-      "id": "C06",
-      "nodeid": "tests/meta/test_pipeline_render.py::test_the_page_reads_no_field_the_payload_stops_writing",
-      "claim": "The extractor re.findall(r'\\bf\\.([a-z_]+)\\b') cannot match a camelCase or digit-bearing property, so a whole class of undefined reads is outside the population compared. Verified: over 'draw(f.displayState); x(f.a2a_id); y(f.title)' it returns ['title'] alone. The identical defect (P13) was fixed in the sibling guard in test_pipeline_rooms.py on 2026-09-11 by widening to [A-Za-z_][A-Za-z0-9_]*.",
-      "source": "audit",
-      "votes": {
-        "t2": "real",
-        "t3": "real",
-        "t1": "real"
-      },
-      "verdict": "real",
-      "fixed": true,
-      "commit": "bde225e8"
-    },
-    {
-      "id": "C07",
-      "nodeid": "tests/repo/test_deep_pass_finished.py::test_no_confirmed_finding_was_left_unfixed_by_a_deep_pass",
-      "claim": "_next_items() wraps the whole read in `except Exception: return set()`, so a read it could not make is scored as a NEXT.md carrying nothing, and every entry of the pass's `next` list is then reported as missing. A failed read rendered as an empty read -- rule 8 -- in the file whose red step 9 reverts a night over. Low confidence from the auditor.",
-      "source": "audit",
-      "votes": {
-        "t2": "not-real",
-        "t3": "real",
-        "t1": "not-real"
-      },
-      "verdict": "minority",
-      "fixed": false,
-      "commit": null
-    }
-  ],
-  "next": [
-    "`verify.py` má pro `correction_owed` jen hlavičku „this corrects the record“ — když se pohnul jen otisk a verdikt zůstal `fail`, je ta věta nepravdivá a zpráva se proto neodeslala. Chce třetí hlavičku; `qa/fold.py` + `scripts/verify.py`, test první a `/code-review`."
-  ],
-  "retrospective": {
-    "last": "2026-09-09",
-    "done": false
+ "run": "deep-pass-2026-09-13",
+ "at": "2026-09-13T17:05:00+00:00",
+ "previous_at": "2026-09-12T22:30:00+00:00",
+ "at_finished": null,
+ "start_commit": "c8e5dc32",
+ "gaps": [
+  {
+   "id": "P01",
+   "nodeid": "scripts/processes.py::sizes",
+   "claim": "CEILINGS['memory_lines'] watches the size of the memory index, but it counts RAW LINES of MEMORY.md while step 1b of the deep pass requires a retired memory to KEEP its line for ever (marked RETIRED, never removed). So the measured number can only grow, every pass that retires anything pushes it up, and the only way to stay under is to raise the ceiling -- which this session already did once today, 45 -> 48. A ceiling that can never go green is the same defect as a check over a growing log, applied to our own warning.",
+   "source": "audit",
+   "votes": {
+    "t2": "no",
+    "t3": "yes",
+    "t1": "yes"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
   },
-  "rule_changes": [],
-  "meta_tests": {
-    "start": 426,
-    "end": 429,
-    "reason": "426 -> 429, net +3, and all three are contracts of LIVE checks that went into tests/meta/test_pipeline_checks.py, the file whose whole subject is holding a check's assertion against the claim its docstring makes. (1) the `decide()` of the new no-key check written this evening (R01): one unreadable call concluded `passed` with a reason naming two tools in a sentence beginning 'all three', and a pass from there is what verify.py sends -- considered folding it into test_a_window_is_read_for_its_value_and_beside_its_own_sharpe, the nearest neighbour, which pins backtest-window semantics and could not carry a verdict rule. (2) `states_exclusion` on the portfolio summary (C01) -- the obvious host was test_the_summary_may_account_for_positions_by_counting_them, and that test is the 2026-09-11 pass's 3/3 pin on `accounts_for` which this fix deliberately leaves standing, so putting the new reader's assertions inside it would have meant editing the pin. (3) the clone surface pair, C02 and C03 in ONE test rather than two, because both are the same defect class on the same file and the second's lesson -- today's real shape, /fund accepted and /activity refused -- only means anything beside the first. Everything else tonight was folded into tests that already existed: A01 into the refill test, A02 into the night-search test, A03 a rename, B01/B02/B05 into test_process_dna.py, B04 into the reminders test, B06/B07 into test_review.py, B08 into test_surface_drift.py, C05 into test_evidence_in_git.py, C06 into test_pipeline_render.py, and R02 into test_prune_runs.py."
+  {
+   "id": "P02",
+   "nodeid": "scripts/processes.py::messages",
+   "claim": "`messages()` filters harness-injected blocks with HARNESS_WROTE_IT, which matches only a compaction summary's opening sentence. The skill-reinvocation block ('Skill /qa-sweep was loaded earlier ...') has the same shape and is not matched: it appeared as a 37th operator message in this pass's own step 1, in the reader whose entire job is finding the operator's short Czech corrections. `trail()` got the wider _HARNESS_BLOCK filter today and `messages()` did not, so the two now disagree about what the operator said.",
+   "source": "audit",
+   "votes": {
+    "t2": "yes",
+    "t3": "yes",
+    "t1": "yes"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
   },
-  "finished": true
+  {
+   "id": "R01",
+   "nodeid": "qa/fomo.py::stats",
+   "claim": "`top` and `bottom` OVERLAP whenever top < n <= 2*top: top is ranked[:5] and bottom is ranked[-5:], so with n=7 the rows at index 2, 3 and 4 appear in BOTH lists. The console concatenates them into one table, so those tokens are drawn twice -- the same duplicate-row defect the operator reported this afternoon (the dedup fixed same-token-twice from two signals; this reproduces it from one). Live at this moment: the 7h horizon has 7 priced tokens and 3 are duplicated on the page the operator is looking at.",
+   "source": "review",
+   "votes": {
+    "t2": "no",
+    "t3": "no",
+    "mine": "no",
+    "t1": "yes"
+   },
+   "verdict": "minority",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "R02",
+   "nodeid": "qa/fomo.py::_at",
+   "claim": "`_at` returns a NAIVE datetime for a timestamp written without a timezone, and `due_checkpoints` then compares it against a tz-aware `now` and raises TypeError, killing the whole resolve round. The repository's own `processes.py::_moment` coerces exactly this case (`stamp if stamp.tzinfo else stamp.replace(tzinfo=timezone.utc)`) and `qa/fomo.py` omits it. The consequence is silent: a crashed round takes no checkpoints, every hour it would have caught is past tolerance by the next tick, and the curve simply has holes nobody can explain.",
+   "source": "review",
+   "votes": {
+    "t2": "no",
+    "t3": "no",
+    "t1": "no"
+   },
+   "verdict": "dropped",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "R03",
+   "nodeid": "scripts/fomo_watch.py::_hot_rows",
+   "claim": "A non-200 from their signals endpoint returns an EMPTY LIST, so a 503 and a quiet market are byte-identical in capture()'s result: both give {added: 0, unidentified: 0} with no error row. capture() wraps the call in try/except, but _hot_rows does not raise on an HTTP error, so the except branch never fires for one. Measured side by side. This is rule 8 -- a failed read is not an empty read -- in the module where the `unidentified` counter was added TODAY for the identical reason one level down: an unidentifiable row is not an absent row. The consequence is a hole in the measurement that reads as an uneventful hour.",
+   "source": "review",
+   "votes": {
+    "t2": "yes",
+    "t3": "yes",
+    "mine": "yes",
+    "t1": "yes"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "R04",
+   "nodeid": "scripts/processes.py::trail",
+   "claim": "`_A_TEST_RUN` drops a tool result if a pytest banner appears ANYWHERE in it -- but the filter runs per tool RESULT, not per command, and the shape used all day is one Bash call that runs a probe and then pytest. Measured: a result carrying a real `KeyError` traceback from the probe half plus '683 passed' from the pytest half is swallowed entirely, while the same traceback alone is kept. So the reader the deep pass now depends on loses precisely the entries it exists to surface, and loses them silently.",
+   "source": "review",
+   "votes": {
+    "t2": "yes",
+    "t3": "yes",
+    "mine": "yes",
+    "t1": "yes"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "R05",
+   "nodeid": "scripts/movers.py::cmd_enter",
+   "claim": "`note_entry(...)` is called AFTER the `finally` block that closes the client and resets the safety tier, and its `anchor` argument falls back to `round_state(client)` when the POST response carries no `round_anchor`. That fallback is dead code in the worst way: a closed httpx client raises RuntimeError ('Cannot send a request, as the client has been closed'), and the tier is out of scope so the guard would refuse it anyway. So if their response ever omits round_anchor, the submission SUCCEEDS -- a real round locked for seven days -- and the recording raises, which is exactly the defect note_entry was written this afternoon to prevent, reintroduced by its own call site. It worked today only because their response happened to include the field.",
+   "source": "review",
+   "votes": {
+    "t2": "yes",
+    "t3": "yes",
+    "mine": "yes",
+    "t1": "yes"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "R06",
+   "nodeid": "scripts/serve.py::main",
+   "claim": "The hourly memecoin curve the operator asked for depends on `fomo_watch` running every hour, and nothing runs it. `--fomo` defaults to 0 (correctly opt-in, the same shape as --sample/--ask), and the console this session started for them runs `--ask 15 --sample 10` with no --fomo. So every hour that passes is past DUE_TOLERANCE_HOURS by the time anything looks, and the curve fills only when a checkpoint happens to be taken by hand. The feature is built, tested, rendered -- and unfed. Not a code defect: an operational gap, and the operator asked this session not to have to think about starting scripts.",
+   "source": "review",
+   "votes": {
+    "t2": "yes",
+    "t3": "no",
+    "t1": "yes"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "R07",
+   "nodeid": "scripts/inventory.py::assemble",
+   "claim": "`EMPTY_BUCKET` is one mutable dict handed to every section that has no endpoints, so all of them share the same four lists. Nothing mutates them today -- the loop only sets `entry['verdict']` on members, and an empty list has none -- so there is no failure now. It is a trap for the next writer: a single `bucket['endpoints'].append(...)` would leak one section's endpoint into every empty section on the page. Minor, and recorded as such.",
+   "source": "review",
+   "votes": {
+    "t2": "no",
+    "t3": "no",
+    "t1": "no"
+   },
+   "verdict": "dropped",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "A01",
+   "nodeid": "tests/repo/test_surface_drift.py::test_their_published_window_still_says_what_we_transcribed",
+   "claim": "The check holds scripts/nexus.py PUBLISHED_MINUTES against audits/surface.json -- OUR OWN acknowledgement file, written only when the operator runs surface --update -- not against their live words. qa/surface.py::tools_drift compares parameter SHAPE and deliberately not descriptions, so Cymetica relabelling ask_nexus_deep to \"typically 5-15 minutes\" produces no drift, no --update, no change to surface.json, and this check stays green while the #86 verdict on their tracker quotes a window they no longer publish. That is the B02 incident verbatim, the one the docstring says it prevents. SEVERITY: sends-a-false-claim.",
+   "source": "audit",
+   "votes": {
+    "t2": "yes",
+    "t3": "yes",
+    "t1": "yes"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "A02",
+   "nodeid": "scripts/processes.py::trail",
+   "claim": "_WENT_RED is matched against the body TEXT of ANY tool result, successful or not, so a plain Read or Grep whose output merely contains the word TypeError is filed as breakage. Measured over the real transcripts for 2026-09-12: 69 error rows, of which only 23 are is_error and 46 are kept by the regex alone -- reads of qa/lab.py, scripts/ledger.py, qa/evidence.py and grep output. Two thirds of the loudest signal in the reader step 1 now depends on is breakage that never happened, which is exactly what its sibling test says buries the line worth reading. Same root as R04 and fixed together.",
+   "source": "audit",
+   "votes": {
+    "t2": "yes",
+    "t3": "yes",
+    "t1": "yes"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "A03",
+   "nodeid": ".claude/hooks/no_heredoc_writes.py::writes_a_file",
+   "claim": "The guard catches one shape of five. Measured against the hook: 'cat >> f <<EOF' REFUSED, but 'cat <<EOF > f' ALLOWED, 'cat <<EOF >> f' ALLOWED, 'python - <<EOF ... Path(p).write_text(s)' ALLOWED and 'cat <<EOF | tee f' ALLOWED. The second and third are the POSIX-canonical order and are not even recognised as heredocs (HEREDOC requires a newline straight after the terminator word); the fourth is named in the hook's own docstring and misses because OPENS_FOR_WRITING scans forward from .write_text( while the path sits behind it. A guard written because a rule was broken four times in one day is one keyboard habit from not applying. AND a sibling hole found while writing this notebook: the hook watches heredocs only, so 'python -c \"...open(p, chr(39)w chr(39))...\"' is unguarded -- and bash command substitution inside such a double-quoted argument silently deleted four of this pass's own finding texts before they were repaired.",
+   "source": "audit",
+   "votes": {
+    "t2": "yes",
+    "t3": "yes",
+    "mine": "yes",
+    "t1": "yes"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "L01",
+   "nodeid": "tests/meta/test_pipeline_fomo_watch.py::test_capture_survives_a_price_lookup_that_fails",
+   "claim": "Both assertions are blind at once. capture() appends a per-chain ERROR dict to the same  list it appends signals to, so added == 2 is satisfied by two failed chains and zero signals written; and all(price is None) over an empty list is vacuously true. Confirmed by mutation: remove the try/except around _price and make the search endpoint RAISE -- added == 2, signals written == 0, both assertions green, and the signal the docstring says must survive is gone.",
+   "source": "audit",
+   "votes": {
+    "t2": "yes",
+    "t3": "yes",
+    "t1": "no"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "L02",
+   "nodeid": "tests/meta/test_pipeline_fomo_watch.py::test_run_survives_a_round_that_raises_and_stops_on_the_event",
+   "claim": "The RuntimeError the fixture raises never reaches run()'s guard -- it is raised inside _hot_rows, which capture() already swallows per chain. Confirmed by mutation: delete the whole try/except from run() and the test still returns 3 and passes. The loop survival guard, the thing the test is named for, is unexercised.",
+   "source": "audit",
+   "votes": {
+    "t2": "yes",
+    "t3": "yes",
+    "t1": "yes"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "L03",
+   "nodeid": "tests/meta/test_pipeline_fomo_identity.py",
+   "claim": "identity_gap() -- the function that decides what \"anonymous\" MEANS, including the rule that their placeholder name \"Unnamed launch\" is not an identity -- is exercised nowhere in the repository. All four tests build the gap dict themselves with the share precomputed. Drop that one line and the real 09:52 outage rows classify as NAMED, share 0, decide() returns passed, and all four stay green on the live defect they were written for. The mirror is worse: make identity_gap count a row with a symbol but no address and an ordinary day crosses THRESHOLD, sending a false accusation to their tracker. SEVERITY: sends-a-false-claim.",
+   "source": "audit",
+   "votes": {
+    "t2": "yes",
+    "t3": "yes",
+    "t1": "yes"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "L04",
+   "nodeid": "tests/meta/test_pipeline_lab.py::test_an_order_is_capped_at_a_share_of_what_is_free",
+   "claim": "The 2% per-experiment cap is nowhere pinned. Measured: CAPS[\"share_of_free_cash\"] = 0.03, 0.07 or 0.08 leaves this test AND the exposure-ceiling test green. At 0.08 a night stakes 7120 USDC where the operator agreed to 1780 -- four times over -- and it stays green only because the digit 2 happens to appear inside \"(7120)\". 0.04 and 0.05 go red; 0.07 and 0.08 do not. What the check pins is the rendering, not the cap. The file already pins MAX_LESSONS == 3 and 50 experiments by name for exactly this incident; this is the one money cap of the four left unpinned.",
+   "source": "audit",
+   "votes": {
+    "t2": "yes",
+    "t3": "yes",
+    "t1": "yes"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "L05",
+   "nodeid": "tests/meta/test_pipeline_lab.py::test_the_climb_can_reach_symbols_the_best_baskets_do_not_contain",
+   "claim": "The final assertion cannot see the pool it exists to test. BCH comes from the card neighbourhood and KSM from the refill seeds own legs whichever pool is used. Confirmed by mutation: revert search_queue to night_refill(rows, limit, cap) -- the exact KSM collapse the docstring quantifies -- and the symbols are still {BCH, KSM, SOL, ZEN} and the test is green. It needs a symbol reachable ONLY through the wide pool. Mine, written this afternoon.",
+   "source": "audit",
+   "votes": {
+    "t2": "yes",
+    "t3": "yes",
+    "t1": "yes"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "L06",
+   "nodeid": "qa/lab.py::due",
+   "claim": "The ORDERING of due() is its contract, and no fixture ever supplies a ripe checkpoint AND a competitor at the same time. Confirmed by mutation: swap the fomo block and the open_findings block in due() and every test in the file stays green -- this one has no findings, the verification test has no fomo rows, and the third uses a 25-hour-old signal that produces no fomo item at all. The one pair that matters, perishable checkpoint against owed verification, is never put to it.",
+   "source": "audit",
+   "votes": {
+    "t2": "yes",
+    "t3": "yes",
+    "t1": "yes"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "V01",
+   "nodeid": "tests/rest/test_cloned_bots_surface.py::test_one_credential_carries_a_clone_from_creation_to_funding",
+   "claim": "ALREADY SENT. One measurement produces one verdict for a row carrying two reports with different subjects. The current reading says 10 routes accept x-api-key and 1 does not (GET /{instance_id}/activity) and that the FUNDING route is not among them -- so creation-to-funding, which is what #89 is titled about, holds. But verify.py fans one verdict over every report_id in , and filing.verifications records : a statement on their tracker that a defect they fixed still reproduces. obligations.correction_owed already lists [89, 98] under the new pin. The C03 comment in the file defends #98 going red and never considers #89 going red with it. SEVERITY: sends-a-false-claim, and it is not latent.",
+   "source": "audit",
+   "votes": {
+    "t2": "yes",
+    "t3": "yes",
+    "mine": "yes"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null,
+   "deferred_to_operator": true,
+   "why_deferred": "The repair is structural, not a narrowing. One ledger row carries two reports with different subjects (#89 fund/go-live, #98 activity) and the fold gives a row one verdict, which verify.py then fans over both ids. Narrowing the verdict to the flow sends a false PASS on #98 -- tried this morning as C03 and caught within the hour; leaving it wide sends a false FAIL on #89, which is what is already on their tracker. Both directions are wrong because the structure is. Splitting the row so each report gets a verdict about its own subject changes the filing axis, and doing that unattended on the one row that already carries a false statement to a third party is how a bad night becomes a worse one. Tonight: nothing is sent on this row in step 6, and the choice is the operator s."
+  },
+  {
+   "id": "V02",
+   "nodeid": "tests/rest/test_movers_leaderboard_separates_backtest_from_live.py::test_the_house_row_says_whether_it_ever_traded_forward",
+   "claim": "discloses_its_basis() short-circuits to 'passed' on the PRESENCE of a key or word, before matches(row, backtest) or matches(row, live) is ever computed -- presence against a contract about a value, the 2026-09-07 metadata.is_answer shape. Concrete input: {\"is_house\": true, \"basis\": \"live\", \"picks\": 250, \"rounds\": 12, \"avg_pct\": 29.92} beside track_record.live.scored = 0. The row is still one hundred percent the backtest half, the check passes, and verification_owed [100] sends that pass. Their own new rules text defines what the two values mean, so the contract is now about the value and not the field. Mine, written today.",
+   "source": "audit",
+   "votes": {
+    "t2": "yes",
+    "t3": "yes"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "V03",
+   "nodeid": "tests/mcp/test_backtest_window_is_real.py::test_a_backtest_says_the_window_it_actually_covered",
+   "claim": "The line 'named = bool(short[1][\"says_covered\"])' treats \"a number that is not the one we asked for\" as \"a reading of what we got\", and exempts dates from the value test entirely, while n_points sits unused in the same dict. Two passing inputs that violate the contract: {n_points 120, period_days 365, covered_days 180} -- a wrong non-echoed number -- and {n_points 120, period_days 365, start_date \"2025-09-13\"} -- the requested range echoed as dates. A pass on #99 has already been sent.",
+   "source": "audit",
+   "votes": {
+    "t2": "yes",
+    "t3": "yes"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "V04",
+   "nodeid": "tests/rest/test_user_submissions_stay_private.py::test_a_user_submitted_card_is_visible_only_to_its_author",
+   "claim": "The variable 'leaks' is computed only inside 'if others:', so with no other-user witnesses the listing is never walked and the verdict is 'passed' -- while the same function two branches earlier calls the identical epistemic state Inconclusive (\"their rule could not be exercised either way\"). Witnesses are card_ids_named(...)[:20], newest answer first, so twenty newer UUIDs push the one other-user card out of the slice and the check reports a pass on #95 while a private card is being served to us. Today not_ours is 1, so it is not yet firing. SEVERITY: sends-a-false-claim.",
+   "source": "audit",
+   "votes": {
+    "t2": "no",
+    "t3": "yes"
+   },
+   "verdict": "minority",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "V05",
+   "nodeid": "tests/rest/test_movers_round_prices_a_late_entry.py::test_a_round_open_after_its_anchor_says_when_entries_close",
+   "claim": "Three divergences from its own docstring. (a) The second named repair is invisible: if they reprice a late entry at the day it was made and drop the field, the check fails with a reason asserting the entry \"is priced at the anchor close\" -- which it never measured; population.our_entry_prices_are_anchor_dated is a hardcoded True, not a reading. (b) The docstring says it reads that the round is open; their payload now serves entries_open and decide() never touches it, so entries_open false with no deadline field fails saying \"the round is still open\" against their own field. (c) declares_a_deadline tests , and entries_closed is in the list -- {\"entries_closed\": false} passes as \"the round declares when entries stop\". A pass on #101 is owed. Mine, written today.",
+   "source": "audit",
+   "votes": {
+    "t2": "yes",
+    "t3": "yes"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "V06",
+   "nodeid": "tests/rest/test_fomo_radar_names_its_tokens.py::test_a_hot_signal_names_the_token_it_is_a_signal_about",
+   "claim": "The identities_pending branch takes an unbounded threshold from THEIR side: any non-zero integer, at any magnitude, ends the measurement before Solana is consulted. identities_pending 1 served permanently, with 40 of 40 Robinhood rows anonymous and all 40 Solana rows named, is inconclusive for ever -- and rule 10 means an inconclusive is never filed, so the defect this check was written for this morning can never reach the tracker again. Nothing distinguishes self-healing from stuck. Secondary: with pending 0 it returns failed WITHOUT consulting Solana, though both docstrings say both-chains-anonymous is inconclusive. Mine, written today.",
+   "source": "audit",
+   "votes": {
+    "t2": "yes",
+    "t3": "yes"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "V07",
+   "nodeid": "tests/rest/test_nexus_cards_exist.py::test_every_card_nexus_tells_an_agent_to_trade_exists",
+   "claim": "The extractor reads card-ness and never trade-ness: NOT_A_CARD and known_non_cards both answer \"is this a card id\", neither answers \"was it offered as a trade\". An answer saying \"avoid 5bd86126-..., it resolved yesterday -- take these instead\" puts an unmarked card UUID in the newest text; it 404s, and a fail goes to #91 quoting them as telling an agent to trade a card they told it not to. A pass on #91 is owed under the pin made this afternoon. SEVERITY: sends-a-false-claim.",
+   "source": "audit",
+   "votes": {
+    "t2": "yes",
+    "t3": "yes"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "V08",
+   "nodeid": "tests/rest/test_paper_close_returns_the_money.py::test_closing_a_paper_position_returns_its_money",
+   "claim": "Two .get-defaults on vendor-controlled fields, the shape qa/measure.py::required() exists to stop. proceeds_usdc comes from their close response and unrealized_pnl_usdc from their position row; rename or drop both and the estimate becomes the bare notional, so a CORRECT close of a position that lost 0.05 on a 1.00 notional credits 0.95 and reads failed: \"A book that debits on the way in and does not credit on the way out reads every strategy as losing money.\" The same None also makes result 0, so measurable is False and the P&L half is silently waived in the same run. No filed row, so a fail opens a NEW report.",
+   "source": "audit",
+   "votes": {
+    "t2": "yes",
+    "t3": "yes"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "V09",
+   "nodeid": "tests/rest/test_portfolio_summary.py::test_the_summary_says_which_populations_its_counters_leave_out",
+   "claim": "The points_at requirement is reached only through the branch 'elif (how == \"named\" or stated)'. When counters_cover mentions event cards with none of (\"not \", \"exclud\", \"except\", \"without\"), accounts_for returns \"counted\", stated is False, and the endpoint requirement is skipped entirely -- while the reason still claims the summary names the populations \"with the endpoint that carries them\", which was never checked. This endpoint has already cost one retraction (#83) for reading its scope block wrongly in the other direction.",
+   "source": "audit",
+   "votes": {
+    "t2": "yes",
+    "t3": "yes"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "M03",
+   "nodeid": "tests/meta/test_pipeline_render.py::test_the_memecoin_section_renders_with_and_without_a_diary",
+   "claim": "A value contract asserted on a label. The docstring says the summary reports the MEDIAN, not the mean, because one token at +1262% drags the mean to +46% while half the signals are under water -- and the assertion checks only that the string 'median at 1 h' appears. The fixture's 1h horizon carries mean_pct 4.0 AND median_pct 4.0, so the number cannot discriminate: rendering ${pct(first.mean_pct)} under the unchanged label keeps it green. Concrete input: 1h with mean_pct 46.0 and median_pct 4.0 -- the page shows +46% labelled 'median' and every assertion holds. Mine, written today.",
+   "source": "audit",
+   "votes": {
+    "mine": "yes"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "M04",
+   "nodeid": "tests/meta/test_pipeline_render.py::test_the_memecoin_measurement_is_its_own_tab_not_the_last_block_of_stats",
+   "claim": "The docstring names the failure exactly -- 'a button can exist, a panel can exist, the data can be right, and clicking it does nothing at all' -- and the assertion cannot see it. PANELS mapping memecoins to a panel id that does not exist (a typo, or a renamed panel: memecoins -> 'panel-memecoin') satisfies every assertion in the test, while showTab's forEach finds no element for that id and the panel never unhides. That is the bug that actually shipped for several minutes today. The file's own _run_page(..., after='window.showTab(\"memecoins\")') harness -- used two tests away in test_pipeline_rooms.py to prove exactly this for the nexus tab -- is not used here. Mine, written today.",
+   "source": "audit",
+   "votes": {
+    "mine": "yes"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "M05",
+   "nodeid": "scripts/movers.py::house_row",
+   "claim": "`house_row` is contracted to select by `is_house` and by nothing else, and the fixture's house row is index 0, rank 1 and handle 'nexus' all at once -- so `return leaderboard[0] if leaderboard else None` would pass all three assertions. Input: a human entrant first and the house row second, and the wrong row comes back green. Minor: house_row feeds only cmd_status, and the filed check inlines its own is_house filter rather than calling this.",
+   "source": "audit",
+   "votes": null,
+   "verdict": null,
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "M06",
+   "nodeid": "tests/meta/test_pipeline_movers.py::test_enter_still_needs_allow_mutate_now_that_probe_only_is_gone",
+   "claim": "The test's own name and docstring claim 'no MUTATE goes out without --allow-mutate having been turned on for that host on purpose', and nothing on movers' real path ever reads --allow-mutate: it is a pytest option, while cmd_enter builds its own registry with mutate_enabled = True and mutate_allowed_hosts hardcoded, and has no such flag in its argparse. So `python scripts/movers.py enter --symbols BTC --confirm` reaches the network with --allow-mutate never given, and this test is green -- what it actually asserts is EndpointRegistry's default, already pinned in test_guard_is_real.py. The operative brake on the real path is --confirm alone, which the sibling test does pin. I wrote that docstring this afternoon and it overstates the floor.",
+   "source": "audit",
+   "votes": null,
+   "verdict": null,
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "M07",
+   "nodeid": "tests/meta/test_pipeline_night_spend.py::test_one_card_is_not_bought_once_per_answer_that_mentions_it",
+   "claim": "`len(sent) == len(set(sent))` is satisfied by `sent == []`. The control is live today -- night_promote does place exactly one order on this fixture -- but unlike its sibling, which asserts `opened`, nothing here requires that anything was bought at all, so any drift in the answer format or in card_baskets turns it permanently green and silent on the defect the file's own docstring records as having been live.",
+   "source": "audit",
+   "votes": null,
+   "verdict": null,
+   "fixed": false,
+   "commit": null
+  }
+ ],
+ "next": [],
+ "retrospective": {
+  "last": "2026-09-09",
+  "done": false
+ },
+ "rule_changes": [],
+ "meta_tests": {
+  "start": 484,
+  "end": null,
+  "reason": null
+ },
+ "finished": false,
+ "note_before_step_6": "Three rows owe a verification -- #91, #100, #101 -- and V07, V02 and V05 each claim the very check that would send it passes for the wrong reason. Step 6 runs verify.py --confirm on whatever the fold says is owed, so those three fixes come FIRST in step 5, before any preregistration. One row owes a correction (#89, #98) and that one is already wrong on their tracker: V01."
 }

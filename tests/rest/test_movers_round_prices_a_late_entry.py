@@ -101,9 +101,23 @@ def trading_sessions(anchor: date, today: date) -> int:
 
 
 def declares_a_deadline(round_: dict, rules: dict) -> bool:
+    """Whether a cutoff for entries is actually STATED.
+
+    Read for the value, not the presence. Until the deep pass of 2026-09-13
+    this was `is not None`, and `entries_closed` is one of the fields it looks
+    for -- so `{"entries_closed": false}`, which says in so many words that
+    entries are still open, cleared the finding and would have sent the PASS
+    verification on #101. A boolean is a deadline only when it is True; a
+    timestamp or a sentence is one whenever it is not empty.
+    """
     for source in (round_ or {}), (rules or {}):
         for field in DEADLINE_FIELDS:
-            if source.get(field) is not None:
+            value = source.get(field)
+            if isinstance(value, bool):
+                if value:                      # entries_closed: true
+                    return True
+                continue                       # entries_closed: false
+            if value not in (None, ""):
                 return True
     return False
 
@@ -121,6 +135,17 @@ def decide(round_: dict, rules: dict, today: date) -> tuple[str, str]:
         return ("passed",
                 "the round declares when entries stop being accepted, so the "
                 "window a late entry could exploit is at least stated")
+
+    # Their own word that the round is shut. The docstring has always said
+    # this check reads whether entries are still being accepted, and until the
+    # deep pass of 2026-09-13 `decide` never touched the field -- so a round
+    # they had closed still failed with the reason "the round is still open",
+    # against their own payload saying otherwise.
+    if (round_ or {}).get("entries_open") is False:
+        return ("inconclusive",
+                f"the round anchored {anchor} is no longer accepting entries "
+                f"(entries_open is false), so there is no late entry to be "
+                f"priced at a stale close")
 
     if anchor >= today:
         return ("inconclusive",
@@ -140,8 +165,10 @@ def decide(round_: dict, rules: dict, today: date) -> tuple[str, str]:
             f"the round anchored {anchor} is still open -- it does not score "
             f"until {scores_after} and nothing in its payload names a cutoff "
             f"for entries -- while their own rules price every pick at 'the "
-            f"stored close on the round day'. An entry made today is priced "
-            f"at the {anchor} close with {sessions} trading session(s) of the "
+            f"stored close on the round day'. By that rule an entry made "
+            f"today is priced at the {anchor} close, which is how our own "
+            f"entry of 2026-09-13 came back, with {sessions} trading "
+            f"session(s) of the "
             f"window already run ({elapsed} calendar day(s)), so that much of "
             f"the return it will be scored on is already observable while the "
             f"price it is scored from cannot move. The leaderboard ranks by "
@@ -188,7 +215,14 @@ def test_a_round_open_after_its_anchor_says_when_entries_close(rest_anon):
             "declares_a_deadline": declares_a_deadline(round_, rules),
             "round_fields": sorted(round_),
             "rules_fields": sorted(rules),
-            "our_entry_prices_are_anchor_dated": True,
+            # NOT a measurement of this run. Our own entry of 2026-09-13 came
+            # back priced at the 2026-09-11 closes, which is what first showed
+            # the pricing rule, and it lives in state/lab.jsonl as a
+            # `tournament` row. It was a hardcoded `True` here until the deep
+            # pass of 2026-09-13 and read as though this check had measured
+            # it -- the same defect as a reason asserting what no branch ran.
+            "our_entry_priced_at_anchor": "recorded once, state/lab.jsonl "
+                                          "type=tournament 2026-09-13",
         },
         sources={"tournament": TOURNAMENT,
                  "our_entry": "state/lab.jsonl type=tournament"},

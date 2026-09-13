@@ -215,10 +215,18 @@ def test_every_card_nexus_tells_an_agent_to_trade_exists(rest_trusted):
 
     conclude(Measurement(
         verdict="failed" if missing else "passed",
+        # What the extractor actually read, and nothing more. It said "tells
+        # an agent to trade" until the deep pass of 2026-09-13, and neither
+        # `card_ids_in` nor `known_non_cards` reads trade-ness -- both answer
+        # "is this a card id". NEX-0027 names a card immediately after "skip
+        # it as a long this week", so that wording would have quoted them as
+        # recommending a card they told an agent to avoid. The defect is
+        # unchanged either way: a card the answer NAMES and that does not
+        # exist is one an agent cannot tell from the ones that do.
         reason=(
-            f"Nexus answer {latest['id']} tells an agent to trade "
-            f"{', '.join(missing)}, and {CARD} answers 404 for it while "
-            f"answering 200 for {len(found)} other card(s) in the same "
+            f"Nexus answer {latest['id']} names "
+            f"{', '.join(missing)} as a card, and {CARD} answers 404 for it "
+            f"while answering 200 for {len(found)} other card(s) in the same "
             f"recommendation. An agent following the platform's own guidance "
             f"cannot act on it, and cannot tell the leg that does not exist "
             f"from the ones that do -- they carry the same format, the same "
