@@ -104,12 +104,23 @@ def capture(client, now=None) -> dict:
     rows = load()
     tracked = {r["key"] for r in rows if r.get("type") == "signal" and r.get("key")}
     added = []
+    # A hot row carrying no token_address cannot be tracked -- `signal_key`
+    # returns None and `new_signals` drops it, which is right: forty anonymous
+    # curves must not collapse into one key. But dropping it silently makes
+    # their outage of 2026-09-13 11:52 (every Robinhood row anonymous for six
+    # minutes) indistinguishable from an hour when nothing went hot. Rule 8,
+    # on a row rather than on a read: count what could not be identified.
+    unidentified = 0
     for chain in CHAINS:
         try:
             hot_rows = _hot_rows(client, chain)
         except Exception as exc:  # noqa: BLE001 -- one chain failing is not the round
             added.append({"chain": chain, "error": str(exc)[:200]})
             continue
+        unidentified += sum(
+            1 for row in hot_rows or []
+            if isinstance(row, dict) and row.get("hot")
+            and not str(row.get("token_address") or "").strip())
         for row in fomo.new_signals(hot_rows, tracked, at=now):
             key = fomo.signal_key(row.get("token_address"), now)
             price = None
@@ -125,7 +136,8 @@ def capture(client, now=None) -> dict:
             })
             tracked.add(key)
             added.append(signal)
-    return {"added": len(added), "signals": added}
+    return {"added": len(added), "signals": added,
+            "unidentified": unidentified}
 
 
 def resolve(client, now=None) -> dict:

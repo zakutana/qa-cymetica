@@ -79,6 +79,46 @@ def test_capture_writes_one_signal_per_token_with_its_price(tmp_path,
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_row_with_no_identity_is_counted_not_silently_dropped(tmp_path,
+                                                                monkeypatch):
+    """A hot signal naming no token is not a quiet market.
+
+    Measured 2026-09-13 11:52 UTC: every Robinhood-chain row came back with
+    `token_address: ""` and `symbol: ""` for about six minutes. `signal_key`
+    returns None for a blank address and `new_signals` skips it, so nothing
+    was corrupted -- forty curves did NOT collapse into one key, which is the
+    failure that mattered.
+
+    But `capture()` reported `added: 0`, which is exactly what a quiet hour
+    looks like. Rule 8's shape: a row we cannot identify is not a row that was
+    not there, and the difference has to survive into the round's own result
+    or the gap in the measurement is invisible afterwards.
+    """
+    mod = _module(tmp_path, monkeypatch)
+
+    def handler(request):
+        if "fomo-radar/signals" in str(request.url):
+            return httpx.Response(200, json={"rows": [
+                # Their outage shape, verbatim: conviction and hot are real,
+                # every identity field is blank.
+                {"token_address": "", "symbol": "", "name": "Unnamed launch",
+                 "hot": True, "conviction": 68.5, "usd_invested": 12108.07},
+                {"token_address": "", "symbol": "", "name": "Unnamed launch",
+                 "hot": True, "conviction": 66.5, "usd_invested": 4300.97},
+            ]})
+        return httpx.Response(404)
+
+    result = mod.capture(_client(handler), now=T0)
+
+    assert result["added"] == 0, "nothing identifiable, so nothing tracked"
+    assert result.get("unidentified") == 4, (
+        "two anonymous hot rows on each of the two chains have to be COUNTED "
+        "-- otherwise their outage and a quiet market are the same result")
+    assert [r for r in mod.load() if r["type"] == "signal"] == [], (
+        "an unidentifiable row must never reach the diary")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_capture_survives_a_price_lookup_that_fails(tmp_path, monkeypatch):
     """A signal is still tracked even when the price call fails -- rule 8: a
     failed read is not an empty read, and it must not cost us the signal
