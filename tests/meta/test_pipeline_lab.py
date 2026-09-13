@@ -296,6 +296,23 @@ def test_an_order_is_capped_at_a_share_of_what_is_free():
     assert not ok and "running" in why.lower(), why
     assert lab.CAPS["running_experiments"] == 50
 
+    # THE CAP ITSELF, by name and by boundary. L04, deep pass of 2026-09-13,
+    # triage 3/3: this test used to pin only the rendering. Three readers set
+    # `share_of_free_cash` to 0.03, 0.07 and 0.08 in turn and every test in
+    # this file stayed green, because `"2" in why` is satisfied by the digit
+    # inside "(7120)" -- at 0.08 a night would stake 7 120 USDC of 89 000 free
+    # where the operator agreed to 1 780. The file already pins MAX_LESSONS
+    # and running_experiments by name for exactly this reason; this was the
+    # one cap of the four that moves money and it was the one left loose.
+    assert lab.CAPS["share_of_free_cash"] == 0.02, (
+        "the per-experiment share is the operator's own number (2% of what is "
+        "free); changing it is a conversation, not an edit")
+
+    # And the boundary is measured, not inferred from the constant: 2% of
+    # 89 000 is 1 780, so 1 780 is affordable and one cent more is not.
+    assert lab.affordable(1_780.0, free_cash=free, running=2)[0]
+    assert not lab.affordable(1_780.01, free_cash=free, running=2)[0]
+
     ok, why = lab.affordable(1_000, free_cash=free, running=5,
                              deployed=free * 2.0)
     assert not ok and "60" in why, why
@@ -1525,14 +1542,43 @@ def test_the_climb_can_reach_symbols_the_best_baskets_do_not_contain():
     assert reached - {"KSM", "ZEN"}, (
         "a refill given a wider pool never left the winners' own symbols")
 
-    # And the hand-run queue supplies that pool from THEIR cards, so an
-    # under-measured symbol on one of their cards is reachable.
+    # And the hand-run queue supplies that pool from THEIR cards. The symbol
+    # that proves it has to be reachable ONLY through the wide pool: BCH comes
+    # from the card's own legs and KSM from the scored row's, so asserting
+    # those two could not see the pool at all -- reverting search_queue to
+    # `night_refill(rows, limit, cap)`, the exact collapse this test is named
+    # for, left it green. L05, deep pass of 2026-09-13, triage 3/3.
+    #
+    # ACT is on one of their cards and in none of the winners, so it can only
+    # enter a CLIMB move by being substituted in from the card universe. It is
+    # chosen to sort early, because `neighbourhood` walks the pool in order and
+    # a cap of 8 does not reach the end of it -- a symbol that sorts late would
+    # make this test about the cap rather than about the pool.
     seeds = [{"card": "c1", "title": "theirs",
               "legs": [{"symbol": "BCH", "weight": 0.5},
-                       {"symbol": "SOL", "weight": 0.5}]}]
+                       {"symbol": "SOL", "weight": 0.5}]},
+             {"card": "c2", "title": "theirs too",
+              "legs": [{"symbol": "ACT", "weight": 0.5},
+                       {"symbol": "BCH", "weight": 0.5}]}]
     queue = module.search_queue(seeds, rows=scored, cap=8)
-    symbols = {leg["symbol"] for move in queue for leg in (move["legs"] or [])}
-    assert {"KSM", "BCH"} <= symbols, symbols
+
+    # A climb move is one seeded from a scored basket, so it carries KSM or
+    # ZEN; the card neighbourhoods never do.
+    climbs = [m for m in queue
+              if {"KSM", "ZEN"} & {leg["symbol"] for leg in (m["legs"] or [])}]
+    assert climbs, "the queue carries no climb at all"
+    reached = {leg["symbol"] for m in climbs for leg in (m["legs"] or [])}
+    assert "ACT" in reached, (
+        f"no climb move reached a symbol outside the winners, so the wide "
+        f"pool is not being used: {sorted(reached)}")
+
+    narrow = module.search_queue(seeds, rows=scored, cap=8, pool_from_cards=False)
+    narrow_climbs = {leg["symbol"] for m in narrow
+                     for leg in (m["legs"] or [])
+                     if {"KSM", "ZEN"} & {l["symbol"] for l in (m["legs"] or [])}}
+    assert "ACT" not in narrow_climbs, (
+        "the control failed: without the card pool the climb reaches ACT "
+        "anyway, so the assertion above proves nothing")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

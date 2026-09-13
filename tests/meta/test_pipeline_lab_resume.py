@@ -81,6 +81,40 @@ def test_an_unentered_open_round_is_named_and_an_entered_one_is_not():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_perishable_one_wins_when_both_are_waiting():
+    """L06, deep pass of 2026-09-13, triage 3/3. The ordering IS the contract
+    of `due()`, and no fixture ever put two claimants in front of it at once.
+
+    Every test in this file supplied exactly one kind of work -- the ordering
+    test passed `open_findings=0`, the verification test passed `fomo_rows=[]`,
+    and the third used a signal too old to produce a fomo item at all. So
+    swapping the two blocks in `qa/lab.py::due` left all five green, and the
+    only thing the file actually proved was that each item can appear.
+
+    The pair that matters is a ripe checkpoint against an owed verification: a
+    checkpoint missed at its horizon is a hole that cannot be filled later,
+    and a verification is late rather than lost.
+    """
+    rows = [_signal("0xa:2026-09-13T06", hours_ago=6.2)]
+    out = lab.due(now=NOW, fomo_rows=rows, tournament={}, open_findings=3)
+    kinds = [item["run"] for item in out]
+    assert "fomo_watch" in kinds[0], kinds
+    assert any("verify" in k for k in kinds), kinds
+    assert kinds.index(next(k for k in kinds if "verify" in k)) > 0, kinds
+
+    # And all three at once, so the whole order is asserted rather than one
+    # pair of it: checkpoint, then verification, then the round, then search.
+    live = {"round": {"round_anchor": "2026-09-11", "entries_open": True},
+            "my_entries": []}
+    out = lab.due(now=NOW, fomo_rows=rows, tournament=live, open_findings=1)
+    order = [item["run"] for item in out]
+    assert "fomo_watch" in order[0], order
+    assert "verify" in order[1], order
+    assert "movers" in order[2], order
+    assert "search" in order[-1], order
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_finding_owed_a_verification_outranks_exploration():
     """Their fix is a claim until a level-V run says otherwise (rule 7), and
     a claim left unverified is the one thing here with a deadline of theirs

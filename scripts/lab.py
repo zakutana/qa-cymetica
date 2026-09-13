@@ -1044,6 +1044,7 @@ def night_moves() -> list[dict]:
 
 
 def search_queue(seeds: list[dict], rows: list[dict] | None = None,
+                 *, pool_from_cards: bool = True,
                  cap: int = 12, limit: int = 8) -> list[dict]:
     """Every basket worth asking about: their cards, AND what scored well.
 
@@ -1067,7 +1068,13 @@ def search_queue(seeds: list[dict], rows: list[dict] | None = None,
     # THEIR whole card universe, not just the symbols already winning -- see
     # night_refill on why the pool is the difference between a climb and a
     # collapse.
-    for move in night_refill(rows=rows, limit=limit, cap=cap, pool=universe):
+    # `pool_from_cards=False` is the NEGATIVE CONTROL, not an option anything
+    # calls: a test that shows the wide pool reaches a symbol has to show the
+    # narrow one does not, or it is asserting a coincidence. L05, deep pass of
+    # 2026-09-13 -- the first version of that test could not see the pool at
+    # all, and reverting the fix left it green.
+    for move in night_refill(rows=rows, limit=limit, cap=cap,
+                             pool=universe if pool_from_cards else None):
         if move.get("fp") and move["fp"] in seen:
             continue
         seen.add(move.get("fp"))
