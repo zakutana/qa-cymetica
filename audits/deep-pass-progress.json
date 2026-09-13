@@ -2,7 +2,7 @@
  "run": "deep-pass-2026-09-13",
  "at": "2026-09-13T17:05:00+00:00",
  "previous_at": "2026-09-12T22:30:00+00:00",
- "at_finished": "2026-09-13T18:53:26+00:00",
+ "at_finished": "2026-09-13T19:49:34+00:00",
  "start_commit": "c8e5dc32",
  "gaps": [
   {
@@ -411,47 +411,77 @@
    "nodeid": "scripts/movers.py::house_row",
    "claim": "`house_row` is contracted to select by `is_house` and by nothing else, and the fixture's house row is index 0, rank 1 and handle 'nexus' all at once -- so `return leaderboard[0] if leaderboard else None` would pass all three assertions. Input: a human entrant first and the house row second, and the wrong row comes back green. Minor: house_row feeds only cmd_status, and the filed check inlines its own is_house filter rather than calling this.",
    "source": "audit",
-   "votes": null,
-   "verdict": null,
-   "fixed": false,
-   "commit": null
+   "votes": {
+    "t1": "no",
+    "t2": "yes",
+    "t3": "yes"
+   },
+   "verdict": "real",
+   "fixed": true,
+   "commit": null,
+   "why": "2/3 real. Two readers ran the mutation: replacing house_row's body with `rows[0] if rows else None` leaves tests/meta green, because the fixture's house row is index 0, rank 1, handle 'nexus' and is_house at once, so a test named '...and nothing else' cannot discriminate the selector. Both noted the consequence is bounded -- only cmd_status reads it, and the filed check inlines its own is_house filter -- which is why the third reader voted no.",
+   "how": "the house_row pin now discriminates by is_house: a leaderboard with a human entrant first, and one with no house row at all"
   },
   {
    "id": "M06",
    "nodeid": "tests/meta/test_pipeline_movers.py::test_enter_still_needs_allow_mutate_now_that_probe_only_is_gone",
    "claim": "The test's own name and docstring claim 'no MUTATE goes out without --allow-mutate having been turned on for that host on purpose', and nothing on movers' real path ever reads --allow-mutate: it is a pytest option, while cmd_enter builds its own registry with mutate_enabled = True and mutate_allowed_hosts hardcoded, and has no such flag in its argparse. So `python scripts/movers.py enter --symbols BTC --confirm` reaches the network with --allow-mutate never given, and this test is green -- what it actually asserts is EndpointRegistry's default, already pinned in test_guard_is_real.py. The operative brake on the real path is --confirm alone, which the sibling test does pin. I wrote that docstring this afternoon and it overstates the floor.",
    "source": "audit",
-   "votes": null,
-   "verdict": null,
-   "fixed": false,
-   "commit": null
+   "votes": {
+    "t1": "yes",
+    "t2": "yes",
+    "t3": "no"
+   },
+   "verdict": "real",
+   "fixed": true,
+   "commit": null,
+   "why": "2/3 real. The test's name and docstring claim no MUTATE goes out without --allow-mutate, and nothing on movers' real path reads it: cmd_enter builds its own registry with mutate_enabled=True and the host hardcoded, and its argparse has no such flag. One reader put a recording transport under the real guard and got the POST on the wire with --allow-mutate never given. The third reader voted no on the ground that deleting the components.yaml rule turns the test red, so it pins something real -- true, and the reason the fix is a NEW test beside it plus a corrected docstring, not a rewrite.",
+   "how": "a new test drives the real cmd_enter with confirm=False and asserts no POST, plus the frozen host set in its source; the overstating docstring on the neighbouring test corrected"
   },
   {
    "id": "M07",
    "nodeid": "tests/meta/test_pipeline_night_spend.py::test_one_card_is_not_bought_once_per_answer_that_mentions_it",
    "claim": "`len(sent) == len(set(sent))` is satisfied by `sent == []`. The control is live today -- night_promote does place exactly one order on this fixture -- but unlike its sibling, which asserts `opened`, nothing here requires that anything was bought at all, so any drift in the answer format or in card_baskets turns it permanently green and silent on the defect the file's own docstring records as having been live.",
    "source": "audit",
-   "votes": null,
-   "verdict": null,
-   "fixed": false,
-   "commit": null
+   "votes": {
+    "t1": "no",
+    "t2": "yes",
+    "t3": "yes"
+   },
+   "verdict": "real",
+   "fixed": true,
+   "commit": null,
+   "why": "2/3 real. `len(sent) == len(set(sent))` is satisfied by sent == []. One reader reintroduced the file's own documented round-up defect at the inner call site (stake = _stake(free) + 0.01): zero orders are placed, affordable refuses every buy, and all of tests/meta stays green. The sibling test anchors itself with `assert opened`; this one anchors nothing.",
+   "how": "the dedup test now anchors on sent == [CARD]: an empty list is a failure, not a pass"
   }
  ],
  "next": [
-  "house_row() v scripts/movers.py se da splnit leaderboard[0] -- pin, ktery nic nedrzi",
-  "Docstring test_enter_still_needs_allow_mutate tvrdi vic, nez na te ceste plati",
-  "test_one_card_is_not_bought_once_per_answer splni sent == []",
-  "qa/fomo.py::stats vraci stejny token v top i bottom mezi 6 a 10 tokeny (minority)"
+  "Heredoc hook odmítá commit message, která sama cituje zápis do souboru: větev pro python tělo neověřuje, že ten heredoc vůbec python spouští, takže `git commit -F - <<EOF` se zprávou obsahující `p.write_text(...)` a cestu do repa je `deny`. Změřeno dnes večer a nezávisle potvrzeno dvěma čtenáři (2 z 33 commitů v transkriptech). Oprava je jedna podmínka na hlavu příkazu, stejného tvaru jako `SHELL_FED` — ale je to změna hooku, takže chce vlastní tři čtenáře podle 1c. Do té doby: `git commit -F <soubor>`.",
+  "`qa/fomo.py::stats` vrací stejný token v `top` i `bottom`, když je tokenů mezi 6 a 10 (`ranked[:5]` a `ranked[-5:]` se překrývají). Živé na 7h horizontu. Konzole to nekreslí (od `df5bf7af` staví z `fm.curves`), takže se to k operátorovi nedostane — ale je to rozpor s vlastním komentářem té funkce a její test to nevidí, protože fixture má dva tokeny a `bottom` je prázdný. Minority report z 13. 9., jeden hlas ze tří."
  ],
  "retrospective": {
   "last": "2026-09-09",
   "done": false
  },
- "rule_changes": [],
+ "rule_changes": [
+  {
+   "id": "RC1",
+   "what": "`.claude/hooks/no_heredoc_writes.py` refuses considerably more. A python heredoc body is now read whole as well as line-locally (the two scans OR-ed, never swapped), paths are found by shape so a bare `NEXT.md` counts, `<<\\EOF` is recognised as a heredoc, a shell-fed body's own redirects are read, and `git apply`/`patch` from a heredoc is refused.",
+   "why": "The hook was built this afternoon after the operator asked why I keep using heredocs. It was widened once during this pass (A03), and then at 21:40 I ran `python - <<'PY'` with `p.write_text(...)` through it to mutate scripts/movers.py -- allowed, because the path was bound to a name four lines above the write call. \n\nTHE FIRST TRIAD REJECTED THE FIRST FIX, 2-1. It replaced the line-local scan with a whole-body one, and two readers independently drove both versions over the ~1 500 heredoc commands in this project's transcripts: 497 newly refused, and THREE that the old scan caught and the new one let through, two of them writing audits/_scope.json. One apostrophe in a comment shifts re.findall's quote pairing and the real path is never produced as a token. I had measured one direction only. \n\nThe reworked change OR-s the two scans and adds a shape-based path finder. Re-measured: 633 newly refused, 0 regressions over 2 108 commands (reader B), 617/0 over 2 068 (reader A), and my own 522/0 over 1 502. Reader B read 14 newly-refused commands in full: 11 were genuine writes of a repository source file through a heredoc. About 9% of refusals are over-broad (a scratchpad clone under a repo-shaped path, a body that only names one), roughly 5 a day against ~58 true catches. \n\nReader C voted no and still named two weaknesses in the tests I wrote to pin the fix: deleting the line-local scan left all 8 green, and the `if n > 0:` negative was green for a reason its own comment did not name. Both fixed before this landed and both now verified by the mutation that exposed them -- a named input is a fact, not something a majority overrules.",
+   "votes": {
+    "t1": "no",
+    "t2": "no",
+    "t3": "no"
+   },
+   "test": "tests/repo/test_no_heredoc_writes.py::test_widening_the_scan_did_not_drop_what_the_narrow_one_caught",
+   "commit": null,
+   "handover": true
+  }
+ ],
  "meta_tests": {
   "start": 484,
-  "end": 497,
-  "reason": "484 -> 497. Every added assertion is a pin on a finding this pass triaged, and each went into the file that already holds its class of defect: the contracts of live checks into tests/meta/test_pipeline_checks.py (V03, V07, V08), the laboratory brakes into test_pipeline_lab.py (L04, L05) and test_pipeline_lab_resume.py (L06), the memecoin readers into test_pipeline_fomo_identity.py (L03, V06) and test_pipeline_fomo_watch.py (R03, L01, L02), the movers command into test_pipeline_movers.py (R05) and the page into test_pipeline_render.py (M03, M04). Considered folding M04 into its sibling test_the_memecoin_measurement_is_its_own_tab: that test reads the template as text and this one has to RUN the page in node, which needs a different fixture and a different failure mode, so joining them would have hidden the second behind the first. One new file only, tests/repo/test_no_heredoc_writes.py, for a hook that did not exist before today."
+  "end": 498,
+  "reason": "484 -> 498. Every added assertion is a pin on a finding this pass triaged, and each went into the file that already holds its class of defect: the contracts of live checks into tests/meta/test_pipeline_checks.py (V03, V07, V08), the laboratory brakes into test_pipeline_lab.py (L04, L05) and test_pipeline_lab_resume.py (L06), the memecoin readers into test_pipeline_fomo_identity.py (L03, V06) and test_pipeline_fomo_watch.py (R03, L01, L02), the movers command into test_pipeline_movers.py (R05, and M06's own test_the_command_that_locks_a_round_honours_its_own_brakes, which drives the real cmd_enter because nothing else did) and the page into test_pipeline_render.py (M03, M04). M05 and M07 added assertions to existing tests rather than new ones. Considered folding M04 into its sibling test_the_memecoin_measurement_is_its_own_tab: that test reads the template as text and this one has to RUN the page in node, which needs a different fixture and a different failure mode, so joining them would have hidden the second behind the first. Same question for M06: the sibling asserts about the registry and the yaml declaration, this one drives the command -- removing both brakes left the sibling green, which is what says they are different tests. One new file only, tests/repo/test_no_heredoc_writes.py, for a hook that did not exist before today."
  },
  "finished": true,
  "note_before_step_6": "Three rows owe a verification -- #91, #100, #101 -- and V07, V02 and V05 each claim the very check that would send it passes for the wrong reason. Step 6 runs verify.py --confirm on whatever the fold says is owed, so those three fixes come FIRST in step 5, before any preregistration. One row owes a correction (#89, #98) and that one is already wrong on their tracker: V01."
