@@ -171,6 +171,48 @@ def test_enter_posts_the_shape_their_docs_name_and_not_the_one_we_guessed():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_entry_is_written_down_with_the_day_it_was_made(tmp_path,
+                                                            monkeypatch):
+    """A pick locks for seven days, and nothing recorded that we made it.
+
+    The five picks entered on 2026-09-13 went into a round anchored
+    2026-09-11 and came back priced at the anchor's close. That gap between
+    WHEN we entered and WHICH close we got is the whole of the second Movers
+    finding -- and after the POST it existed only in a terminal, because this
+    module wrote nothing anywhere. `qa.lab` is where the laboratory's own
+    diary lives, so the row goes there, carrying the moment of the entry
+    beside the round it entered and the prices it was given.
+    """
+    import importlib
+
+    import qa.state
+
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    importlib.reload(qa.state)
+    import qa.lab
+    importlib.reload(qa.lab)
+
+    mod = _module()
+    row = mod.note_entry(
+        anchor="2026-09-11",
+        symbols=["AAPL", "GOOGL"],
+        entries=[{"symbol": "AAPL", "entry_price_usd": 335.799987793},
+                 {"symbol": "GOOGL", "entry_price_usd": 341.51001}],
+        nexus_id="NEX-0027")
+
+    assert row["type"] == "tournament"
+    assert row["round_anchor"] == "2026-09-11"
+    assert row["symbols"] == ["AAPL", "GOOGL"]
+    assert row["nexus_id"] == "NEX-0027", "picks come from Nexus; say which answer"
+    assert row["entry_prices"] == {"AAPL": 335.799987793, "GOOGL": 341.51001}
+    assert row["at"], "the moment of the entry is the point of the row"
+
+    # And it is really on disk, readable by the next session.
+    back = [r for r in qa.lab.load() if r.get("type") == "tournament"]
+    assert len(back) == 1 and back[0]["round_anchor"] == "2026-09-11"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_enter_still_needs_allow_mutate_now_that_probe_only_is_gone():
     """`probe_only` came off once their docs named the shape (2026-09-13), so
     what has to still stand is the floor UNDER it: a POST is a MUTATE, and no

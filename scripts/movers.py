@@ -119,6 +119,34 @@ def enter(client, symbols: list[str], confirm: bool) -> dict:
         return {"status_code": response.status_code}
 
 
+def note_entry(anchor: str, symbols: list[str], entries: list[dict],
+               nexus_id: str | None = None, note: str | None = None) -> dict:
+    """Write the entry into the laboratory's own diary.
+
+    A pick locks for seven days and their `my_entries` carries no timestamp,
+    so without this row nothing anywhere records the DAY we entered -- only
+    which round. That difference is the whole of the second Movers finding:
+    we entered on 2026-09-13 into a round anchored 2026-09-11 and were priced
+    at the anchor's close. A finding whose evidence is a terminal is not
+    evidence, which this repository learned twice on 2026-09-13 alone.
+    """
+    from qa import lab
+
+    prices = {}
+    for entry in entries or []:
+        if isinstance(entry, dict) and entry.get("symbol") is not None:
+            prices[str(entry["symbol"])] = entry.get("entry_price_usd")
+    record = {"type": "tournament", "at": lab._now(),
+              "round_anchor": anchor,
+              "symbols": [str(s) for s in symbols or []],
+              "entry_prices": prices}
+    if nexus_id:
+        record["nexus_id"] = nexus_id
+    if note:
+        record["note"] = note
+    return lab._append(record)
+
+
 def _client():
     from qa.client import build_client
     from qa.config import identities, load_dotenv
@@ -180,6 +208,11 @@ def cmd_enter(args) -> int:
     finally:
         CURRENT_TIER.reset(token)
         client.close()
+    note_entry(anchor=(result.get("round_anchor")
+                       or round_state(client).get("round", {}).get("round_anchor")),
+               symbols=args.symbols,
+               entries=result.get("entries") or [],
+               nexus_id=args.nexus)
     print(f"entered: {result}")
     return 0
 
@@ -193,6 +226,7 @@ def main(argv: list[str] | None = None) -> int:
     enter_p = sub.add_parser("enter", help="submit up to 5 picks (probe_only until confirmed)")
     enter_p.add_argument("--symbols", nargs="+", required=True)
     enter_p.add_argument("--confirm", action="store_true")
+    enter_p.add_argument("--nexus", help="the NEX- answer the picks came from")
 
     args = parser.parse_args(argv)
     if args.cmd == "status":

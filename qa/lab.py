@@ -37,7 +37,7 @@ from pathlib import Path
 from qa.state import file_lock, state_dir
 
 NOTEBOOK = "lab.jsonl"
-KINDS = ("session", "truth", "surface", "cycle", "n_eff")
+KINDS = ("session", "truth", "surface", "cycle", "n_eff", "tournament")
 MAX_LESSONS = 3
 MAX_NEXT = 8
 ID = re.compile(r"^LAB-(\d{4})$")
