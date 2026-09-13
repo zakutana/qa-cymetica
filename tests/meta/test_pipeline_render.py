@@ -367,14 +367,19 @@ def test_the_memecoin_section_renders_with_and_without_a_diary(tmp_path,
     assert "mc-curve\"" not in panel and "mc-curves" not in panel, (
         "the per-token cards came back; the graph belongs in the row")
 
-    # Hovering a point names the hour and what it was worth then.
-    assert "<title>1h: +38.5%</title>" in panel, panel[:400]
-    assert "<title>4h: +12.0%</title>" in panel
-    assert "<title>2h" in panel
+    # Hovering a point names the hour and what it was worth then -- through
+    # our OWN bubble, not the browser's native <title>, which renders as a
+    # small grey OS tooltip with no colour and a half-second delay.
+    # [operator 2026-09-13] "je to male a skarede, ma to byt vetsi ta bubble
+    # a pekne barevne zobrazit".
+    assert "<title>" not in panel, (
+        "the native tooltip is back; it cannot be styled or coloured")
+    assert 'data-h="1"' in panel and 'data-v="38.5"' in panel, panel[:500]
+    assert 'data-h="4"' in panel and 'data-v="12"' in panel
+    assert 'data-h="3"' not in panel, "an unpriced hour must not get a point"
 
     # A gap is drawn as a dashed stretch, never as a point at zero.
     assert "stroke-dasharray" in panel
-    assert "<title>3h" not in panel, "an unpriced hour must not get a point"
 
     # Green for a gain, red for a loss -- the operator reads pictures, and
     # asked for this twice. Asserted on the classes rather than eyeballed.
@@ -1772,6 +1777,12 @@ def test_the_memecoin_measurement_is_its_own_tab_not_the_last_block_of_stats():
     assert 'id="memecoins"' in page, "a panel with nothing to draw into"
     assert 'getElementById("memecoins")' in page, (
         "nothing writes the panel, so the tab opens empty")
+
+    # The hover bubble is ours: an element to draw into and a handler that
+    # follows the cursor. Without both, the graph has no readable labels at
+    # all now that the native <title> is gone.
+    assert 'id="mcTip"' in page, "no bubble element"
+    assert "mousemove" in page and "mcTip" in page, "nothing shows the bubble"
 
     # And the tab actually OPENS. showTab() ignores any name not in PANELS
     # and silently falls back to overview, so a button can exist, a panel can

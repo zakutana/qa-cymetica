@@ -1874,7 +1874,15 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:15.0px; max-wid
 .mc-list tr:hover td{background:var(--surface-2)}
 .mc-g{width:170px;padding-right:18px!important}
 .mc-spark{display:block;width:150px;height:30px;overflow:visible}
-.mc-spark g{cursor:crosshair}
+.mc-spark .mc-pt{cursor:crosshair}
+.mc-tip{position:fixed;z-index:60;pointer-events:none;
+  background:var(--surface);border:1px solid var(--line);
+  border-radius:10px;padding:8px 14px;
+  box-shadow:0 8px 26px rgba(0,0,0,.45);white-space:nowrap}
+.mc-tip .mc-th{font-size:12px;color:var(--text-dim);letter-spacing:.4px;
+  text-transform:uppercase}
+.mc-tip .mc-tv{font-size:26px;font-weight:800;line-height:1.15;
+  font-variant-numeric:tabular-nums}
 .mc-table{margin:0 0 26px}
 .mc-table h3{font-size:15px;margin:0 0 10px;color:var(--text-dim);
   font-weight:600}
@@ -2591,6 +2599,7 @@ h4.sec {
 
   <section class="panel" id="panel-memecoins" hidden>
   <div id="memecoins"></div>
+  <div id="mcTip" class="mc-tip" hidden></div>
   </section>
 
   <section class="panel" id="panel-nexus" hidden>
@@ -4672,7 +4681,6 @@ function curveSvg(points) {
   const span = (hi - lo) || 1;
   const x = h => PAD + ((h - 1) / 23) * (W - 2 * PAD);   // always 24 hours wide
   const y = v => PAD + (1 - (v - lo) / span) * (H - 2 * PAD);
-  const fmt = v => (v > 0 ? "+" : "") + v.toFixed(1) + "%";
 
   // Solid between two hours read back to back, dashed across hours nobody
   // priced -- the shape is a guess there and should look like one.
@@ -4683,11 +4691,14 @@ function curveSvg(points) {
       stroke="var(${p[1] >= a[1] ? "--ok" : "--bad"})" stroke-width="1.6"
       stroke-linecap="round"${p[0] - a[0] > 1 ? ' stroke-dasharray="2 3" opacity=".55"' : ""}/>`;
   }).join("");
+  // Our own bubble, not the browser's <title>: that one is small, grey,
+  // half a second late and cannot be coloured. The wide transparent circle
+  // is the hit area -- a 2px dot is not something anyone can aim at.
   const dots = read.map(p =>
-    `<g><title>${p[0]}h: ${fmt(p[1])}</title>
-      <circle cx="${x(p[0]).toFixed(1)}" cy="${y(p[1]).toFixed(1)}" r="5"
+    `<g class="mc-pt" data-h="${p[0]}" data-v="${p[1]}">
+      <circle cx="${x(p[0]).toFixed(1)}" cy="${y(p[1]).toFixed(1)}" r="7"
         fill="transparent"/>
-      <circle cx="${x(p[0]).toFixed(1)}" cy="${y(p[1]).toFixed(1)}" r="2"
+      <circle cx="${x(p[0]).toFixed(1)}" cy="${y(p[1]).toFixed(1)}" r="2.4"
         fill="var(${p[1] >= 0 ? "--ok" : "--bad"})"/></g>`).join("");
   const zero = y(0);
 
@@ -4873,6 +4884,33 @@ function statBlocks() {
 }
 document.getElementById("stats").innerHTML = statBlocks();
 document.getElementById("memecoins").innerHTML = memecoinPanel();
+
+/* The hover bubble. Delegated, so it keeps working after a re-render, and
+   positioned in viewport coordinates because the panel scrolls. */
+(function () {
+  const tip = document.getElementById("mcTip");
+  const host = document.getElementById("memecoins");
+  if (!tip || !host) return;
+  const place = e => {
+    const w = tip.offsetWidth, h = tip.offsetHeight;
+    let left = e.clientX + 16, top = e.clientY - h - 12;
+    if (left + w > innerWidth - 8) left = e.clientX - w - 16;
+    if (top < 8) top = e.clientY + 18;
+    tip.style.left = left + "px";
+    tip.style.top = top + "px";
+  };
+  host.addEventListener("mousemove", e => {
+    const pt = e.target.closest(".mc-pt");
+    if (!pt) { tip.hidden = true; return; }
+    const v = Number(pt.dataset.v);
+    tip.innerHTML = `<div class="mc-th">hour ${esc(pt.dataset.h)} after the signal</div>
+      <div class="mc-tv ${v > 0 ? "mc-up" : (v < 0 ? "mc-down" : "mc-flat")}">${
+        (v > 0 ? "+" : "") + v.toFixed(1)}%</div>`;
+    tip.hidden = false;
+    place(e);
+  });
+  host.addEventListener("mouseleave", () => { tip.hidden = true; });
+})();
 
 // The table the operator sets /model and /effort from, drawn from the
 // operating rules rather than retyped beside them.
