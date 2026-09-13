@@ -74,6 +74,20 @@ asked for it. So it is kept here.
   separate channel from filing a formal report -- "File without asking",
   above -- and it does not replace it: a confirmed defect still goes through
   `submit.py` on its own.
+* [operator 2026-09-13] *"vzdy jak generujes zpravu na telegram tak na zacatek
+  dej @EventTraderQABot"*
+
+  **Every message we write for them to send to Cymetica opens with
+  `@EventTraderQABot`.** It is our handle in their thread, and it is what
+  makes an answer land on us rather than on whoever spoke last -- the operator
+  pastes what we write, verbatim, so a handle we leave off is one they have to
+  add. Ours had been inconsistent: MSG-0009 opens `@cymetica`, MSG-0010 and
+  MSG-0011 open with neither.
+
+  `scripts/correspond.py sent` says so when it records a message that does not
+  carry it. It records it anyway -- the journal's job is what actually went
+  out, not what should have -- and `tests/repo/test_correspond_handle.py`
+  holds both halves.
 * [operator 2026-09-12] *"ne zadene schedulery automaticke nechci, deep pasy si
   chci poustet sam vzyd jak jdu spat jak jsme to delal doted. Pak treba jak mam
   neco mam spustit tydne mi to pripomenes. Proste mibudes jen pripominat co mam

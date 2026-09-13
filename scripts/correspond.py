@@ -43,6 +43,20 @@ from qa.state import append_event, journal_path, read_events  # noqa: E402
 SOURCE = "scripts/correspond.py"
 CHANNEL = "telegram"
 
+# [operator 2026-09-13] every message we draft for them opens with our handle,
+# because they paste what we write verbatim and an answer has to land on us.
+HANDLE = "@EventTraderQABot"
+
+
+def opens_with_handle(text: str) -> bool:
+    """Whether a message OPENS with our handle, not whether it mentions it.
+
+    A report that names the bot three paragraphs down is not a message
+    addressed to us, so the check is anchored at the start. Leading
+    whitespace is forgiven; anything else before it is not.
+    """
+    return str(text or "").lstrip().lower().startswith(HANDLE.lower())
+
 # Ids are allocated over EVERY event, whatever its type: MSG-0000..0002 and
 # REPLY-0001 are already taken by round one, migrated in as `message`/`reply`.
 # The natural key would let a telegram_sent reuse MSG-0001 without complaint,
@@ -198,6 +212,13 @@ def cmd_sent(args) -> int:
           + (f" (their ref {event['via']})" if event.get("via") else ""))
     print(f"  journal  {journal_path()}")
     print("  the fold does not read this; there is nothing to re-fold")
+    if not opens_with_handle(text):
+        # Recorded regardless: this command records what the operator has
+        # ALREADY sent, and a journal tidied to match the rule would no
+        # longer match the thread. The notice is for the next message.
+        print(f"  NOTE: this message does not open with {HANDLE}, which is "
+              f"what [operator 2026-09-13] asks of every message we draft. "
+              f"Recorded as sent, because it was.")
     return 0
 
 

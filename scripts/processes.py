@@ -192,7 +192,13 @@ CEILINGS = {
     # trim something else just to keep a number where it was. Room to grow,
     # not a promise it will.
     "claude_md_lines": 750,
-    "memory_lines": 45,
+    # Raised 2026-09-13 from 45 by one session's one memory. Two of the 46
+    # lines are already marked RETIRED and still counted, which is deliberate
+    # -- MEMORY.md is the only history this directory has outside git -- so
+    # the live number is 44. The merge that would bring it back down is the
+    # deep pass's prořez (1b), not something to do mid-session to keep a
+    # number still.
+    "memory_lines": 48,
     "next_oldest_days": 10,
     "pack_mb": 150,
 }

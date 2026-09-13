@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-13T07:26:21+00:00",
+  "generated_at": "2026-09-13T10:23:02+00:00",
   "totals": {
     "paths_documented": 173,
     "tools_declared": 75,
@@ -789,7 +789,7 @@
           "status_anon": 401,
           "bytes_anon": 79,
           "status_trusted": 200,
-          "bytes_trusted": 854,
+          "bytes_trusted": 844,
           "probe": "done",
           "section": "account",
           "verdict": "ok"
@@ -807,7 +807,7 @@
           "status_anon": 401,
           "bytes_anon": 79,
           "status_trusted": 200,
-          "bytes_trusted": 4825,
+          "bytes_trusted": 4823,
           "probe": "done",
           "section": "account",
           "verdict": "ok"
@@ -932,9 +932,9 @@
             "GET"
           ],
           "status_anon": 200,
-          "bytes_anon": 11325,
+          "bytes_anon": 11322,
           "status_trusted": 200,
-          "bytes_trusted": 11325,
+          "bytes_trusted": 11322,
           "probe": "done",
           "section": "clob",
           "verdict": "ok"
@@ -1053,9 +1053,9 @@
             "GET"
           ],
           "status_anon": 200,
-          "bytes_anon": 12493,
+          "bytes_anon": 12491,
           "status_trusted": 200,
-          "bytes_trusted": 12493,
+          "bytes_trusted": 11454,
           "probe": "done",
           "section": "clob",
           "verdict": "ok"
@@ -1395,9 +1395,9 @@
             "GET"
           ],
           "status_anon": 200,
-          "bytes_anon": 170586,
+          "bytes_anon": 169319,
           "status_trusted": 200,
-          "bytes_trusted": 170586,
+          "bytes_trusted": 169319,
           "probe": "done",
           "section": "event_cards",
           "verdict": "ok"
@@ -1429,7 +1429,7 @@
           "status_anon": 401,
           "bytes_anon": 79,
           "status_trusted": 200,
-          "bytes_trusted": 21710,
+          "bytes_trusted": 21704,
           "probe": "done",
           "section": "event_cards",
           "verdict": "ok"
@@ -1563,9 +1563,9 @@
             "GET"
           ],
           "status_anon": 200,
-          "bytes_anon": 7075,
+          "bytes_anon": 7067,
           "status_trusted": 200,
-          "bytes_trusted": 7077,
+          "bytes_trusted": 7075,
           "probe": "done",
           "section": "arena",
           "verdict": "ok"
@@ -1927,9 +1927,9 @@
             "GET"
           ],
           "status_anon": 200,
-          "bytes_anon": 25914,
+          "bytes_anon": 26948,
           "status_trusted": 200,
-          "bytes_trusted": 25914,
+          "bytes_trusted": 26948,
           "probe": "done",
           "section": "agentbook",
           "verdict": "ok"
@@ -1943,9 +1943,9 @@
             "GET"
           ],
           "status_anon": 200,
-          "bytes_anon": 25565,
+          "bytes_anon": 26567,
           "status_trusted": 200,
-          "bytes_trusted": 25565,
+          "bytes_trusted": 26567,
           "probe": "done",
           "section": "agentbook",
           "verdict": "ok"
@@ -2194,9 +2194,9 @@
             "GET"
           ],
           "status_anon": 200,
-          "bytes_anon": 75628,
+          "bytes_anon": 75948,
           "status_trusted": 200,
-          "bytes_trusted": 75628,
+          "bytes_trusted": 75948,
           "probe": "done",
           "section": "launchpad",
           "verdict": "ok"
@@ -2685,8 +2685,8 @@
           "methods": [
             "GET"
           ],
-          "status_anon": 200,
-          "bytes_anon": 496641,
+          "status_anon": 0,
+          "error_anon": "ReadTimeout",
           "status_trusted": 200,
           "bytes_trusted": 496641,
           "probe": "done",
@@ -2888,6 +2888,28 @@
       "tool_detail": []
     },
     {
+      "id": "clones",
+      "title": "Public clone tools",
+      "blurb": "FOMO Radar, Memecoin Terminal, Social Pulse, Protocol Revenue, Stable Pools -- built from /duplicate requests, keyless, each with its own /docs contract. Documented 2026-09-13 after we reported that four of them answered live and appeared nowhere in /api-docs.",
+      "blast": "measurement",
+      "population": {
+        "documented": 0,
+        "probed": 0,
+        "paths": []
+      },
+      "endpoints_documented": 0,
+      "endpoints_probed": 0,
+      "endpoints_reachable": 0,
+      "endpoints_unprobeable": 0,
+      "verdicts": {},
+      "reachable_pct": null,
+      "tools_declared": 0,
+      "tools_anon": 0,
+      "tools_trusted": 0,
+      "endpoint_detail": [],
+      "tool_detail": []
+    },
+    {
       "id": "provenance",
       "title": "AI-native provenance",
       "blurb": "Build stats, AI authorship proof, due-diligence scoring. The platform's central marketing claim.",
@@ -2942,9 +2964,9 @@
             "GET"
           ],
           "status_anon": 200,
-          "bytes_anon": 30707,
+          "bytes_anon": 30708,
           "status_trusted": 200,
-          "bytes_trusted": 30707,
+          "bytes_trusted": 30708,
           "probe": "done",
           "section": "provenance",
           "verdict": "ok"
@@ -3579,9 +3601,9 @@
             "GET"
           ],
           "status_anon": 200,
-          "bytes_anon": 154387,
+          "bytes_anon": 155800,
           "status_trusted": 200,
-          "bytes_trusted": 154387,
+          "bytes_trusted": 155800,
           "probe": "done",
           "section": "unmapped",
           "verdict": "ok"
@@ -3752,9 +3774,9 @@
             "GET"
           ],
           "status_anon": 200,
-          "bytes_anon": 46807,
+          "bytes_anon": 116758,
           "status_trusted": 200,
-          "bytes_trusted": 46807,
+          "bytes_trusted": 116758,
           "probe": "done",
           "section": "unmapped",
           "verdict": "ok"
