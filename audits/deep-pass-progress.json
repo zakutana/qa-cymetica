@@ -2,7 +2,7 @@
  "run": "deep-pass-2026-09-13",
  "at": "2026-09-13T17:05:00+00:00",
  "previous_at": "2026-09-12T22:30:00+00:00",
- "at_finished": null,
+ "at_finished": "2026-09-13T18:53:26+00:00",
  "start_commit": "c8e5dc32",
  "gaps": [
   {
@@ -437,7 +437,12 @@
    "commit": null
   }
  ],
- "next": [],
+ "next": [
+  "house_row() v scripts/movers.py se da splnit leaderboard[0] -- pin, ktery nic nedrzi",
+  "Docstring test_enter_still_needs_allow_mutate tvrdi vic, nez na te ceste plati",
+  "test_one_card_is_not_bought_once_per_answer splni sent == []",
+  "qa/fomo.py::stats vraci stejny token v top i bottom mezi 6 a 10 tokeny (minority)"
+ ],
  "retrospective": {
   "last": "2026-09-09",
   "done": false
@@ -445,9 +450,9 @@
  "rule_changes": [],
  "meta_tests": {
   "start": 484,
-  "end": null,
-  "reason": null
+  "end": 497,
+  "reason": "484 -> 497. Every added assertion is a pin on a finding this pass triaged, and each went into the file that already holds its class of defect: the contracts of live checks into tests/meta/test_pipeline_checks.py (V03, V07, V08), the laboratory brakes into test_pipeline_lab.py (L04, L05) and test_pipeline_lab_resume.py (L06), the memecoin readers into test_pipeline_fomo_identity.py (L03, V06) and test_pipeline_fomo_watch.py (R03, L01, L02), the movers command into test_pipeline_movers.py (R05) and the page into test_pipeline_render.py (M03, M04). Considered folding M04 into its sibling test_the_memecoin_measurement_is_its_own_tab: that test reads the template as text and this one has to RUN the page in node, which needs a different fixture and a different failure mode, so joining them would have hidden the second behind the first. One new file only, tests/repo/test_no_heredoc_writes.py, for a hook that did not exist before today."
  },
- "finished": false,
+ "finished": true,
  "note_before_step_6": "Three rows owe a verification -- #91, #100, #101 -- and V07, V02 and V05 each claim the very check that would send it passes for the wrong reason. Step 6 runs verify.py --confirm on whatever the fold says is owed, so those three fixes come FIRST in step 5, before any preregistration. One row owes a correction (#89, #98) and that one is already wrong on their tracker: V01."
 }

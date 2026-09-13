@@ -31,94 +31,17 @@ to neodškrtl, nebo to nikdy nebylo další na řadě.
 - [x] 2026-09-10  Naklonovaného bota nejde spustit — napsat na to kontrolu a založit nález
 - [x] 2026-09-10  Klon nejde nabít agentním klíčem — #89
 - [ ] 2026-09-10  Zjistit, jestli je 401 na `/fund` záměr, a podle toho #89 upravit
-
-  V reportu je to napsané jako otázka: kdyby chtěli na pohyb peněz silnější
-  credential než API klíč, je to obhajitelný návrh a #89 se stáhne a přepodá
-  jako dokumentace. Do té doby je to blokátor kampaně — klon vzniká s 0.00 a
-  bez nabití neobchoduje.
-
 - [ ] 2026-09-10  Změřit, jestli se odměna připíše při resolve karty
-
-  Poslední netestovaná věta z jejich zprávy v 18:06: *„Reward is credited on
-  the resolve."* Nákup odečítá (#87), close vrací a účtuje P&L (změřeno
-  TRD-0005) — resolve nikdo neviděl, a vynutit se nedá: karta se musí vyřešit
-  sama. Držíme dvě otevřené paper pozice na živých kartách, takže to chce
-  počkat a pak přečíst zůstatek a `total_pnl` kolem toho okamžiku.
-
-  Bez toho je poslední článek řetězce „vsadíme → vyřeší se → dostaneme
-  zaplaceno" nezměřený, a je to ten, na kterém kampaň vydělá.
-
 - [ ] 2026-09-11  Přečíst `docs/night-2026-09-11.md` — co se stalo v noci, čtyři nové nálezy a tři naše vlastní vady
-
 - [x] 2026-09-11  Zjistit, jestli naklonovaný bot vůbec obchoduje
 - [ ] 2026-09-11  Rozhodnout, co s `QUERY_RESTRICTED` u Nexuse
-
-  Na otázku „kolik nabít a jaké stop-lossy nastavit" odpovídá
-  `{'error': 'QUERY_RESTRICTED'}` — dvakrát, s id instance i bez něj. Tu samou
-  třídu rady pro event cards dá v plném rozsahu (NEX-0012, NEX-0016). Může to
-  být záměr; co záměr být nemůže, je odmítnutí bez důvodu, protože agent nemá
-  jak otázku přeformulovat. Nezaloženo — chce to tvůj úsudek, jestli to je
-  vada nebo jejich politika.
-
 - [ ] 2026-09-11  Dvě z Nexusových vlastních priorit jsme odmítli otestovat
-
-  Chtěl po nás poslat `mode=live` na `place_order` a překlopit klon
-  paper→live→paper, abychom ověřili, že server vynutí paper zpátky. Kdyby to
-  nevynutil, je to reálný obchod za reálné peníze; CLAUDE.md říká, že jejich
-  rada nesmí utrácet bez paperu, a tohle je přesně ten případ. Zvenčí to
-  bezpečně otestovat nejde. Jestli to má být otestované, je to **zpráva pro
-  ně** — mají to zevnitř levnější a bezpečnější.
-
 - [ ] 2026-09-11  Fold nedluží pass po failu pod stejným otiskem — #85 tak zůstal u nich s naším posledním `fail`
-
-  #85 teď prochází (PASSING pod otiskem `c0260ccc`, na odpovědích NEX-0018 a
-  NEX-0019 po jejich opravě). Poslední verdikt, který od nás mají, je ale
-  `fail` z 2026-09-10 21:46 pod **stejným** otiskem — a řádek má
-  `verification_owed` i `correction_owed` prázdné, takže `verify.py` nepošle
-  nic. Oni si #85 mezitím zavřeli jako „passed" podle naší dřívější zprávy,
-  takže škoda žádná, ale mechanismus má díru: pass, který opravuje náš vlastní
-  fail, se nikde nedluží. Je to `qa/fold.py`, takže test první a před
-  commitem `/code-review` (CLAUDE.md).
-
 - [ ] 2026-09-10  Dát `nexus.py` způsob, jak zapsat odpověď, která nepřišla naším kanálem
-
-  Web chat jde jenom přes prohlížeč, takže jeho odpovědi teď leží v `docs/` a
-  ne v `state/nexus.jsonl`. Dvě místa pro jeden záznam je přesně to, na co je
-  paměť `moving-a-record-means-reading-the-writer`. Až `record` bude, přeložit
-  ten soubor do `nexus.jsonl` a v `docs/` nechat jen ukazatel.
-
-  Pozor na `WINDOW = 5` v `tests/mcp/test_nexus_channel.py`: záznam z web chatu
-  nemá naše stopky, takže do měření doby odpovědi patřit **nesmí**.
-
 - [x] 2026-09-11  Postavit Nexus rooms podle `docs/nexus-rooms-plan.md` — P1 až P5, každá fáze zvlášť
 - [ ] 2026-09-11  Až Nexus zase odpovídá, zeptat se ho v STR-0001, co bylo na Perceptron Oracle špatně a jestli ho nechat běžet, nebo nahradit
-
-  Operátor nechce pauznuté boty a chce, aby se se ztrátou naložilo podle
-  Nexuse. Bot stál po −50 USDC (−5 %) na dvou obchodech; obě otázky na to
-  (NEX-0020, NEX-0021) skončily u nich `failed` bez odpovědi, takže jsem ho
-  11. 9. ve 14:30 znovu zapnul tak, jak je (CLN-0007) -- udělal 2 obchody a
-  do 14:35 se zastavil znovu. Prosté zapnutí tedy nestačí; chce to jiné
-  nastavení nebo jiného bota, a to má říct Nexus. Otázka je v roomu, jen ji
-  poslat znovu přes `nexus.py ask --room STR-0001` a podle odpovědi jednat.
-
 - [ ] 2026-09-11  Až Nexus zase odpovídá, pustit znovu session s Nexusem na nové strategie z karet podle zpráv
-
-  Operátor to chtěl 11. 9. po sweepu. Nešlo to: NEX-0020 až NEX-0023
-  (14:22–15:15 UTC) skončily všechny `failed` po 78–92 s, bez důvodu, a skill
-  dovoluje jen jedno přeformulování. Ráno NEX-0018 a NEX-0019 odpovídaly za
-  2–3 minuty. Že zase odpovídá, pozná kontrola #86 (poslední pětice otázek).
-  Otázka pro General je v NEX-0022: karty podle zprávy, ne podle mince, aspoň
-  48 hodin otevřené, z volných ~89 000.
-
 - [ ] 2026-09-11  `correction_owed` ve foldu přičítá jejich tvrzení o opravě i našemu novému reportu na stejném řádku
-
-  Po sweepu `PRE-0097` jsme poslali `fail` na #94 (tvrdí opravu, kontrola
-  pořád padá) a založili užší #96. Fold teď dluží `fail` i na #96, protože
-  `FIX_CLAIMED` je stav celého řádku, ne reportu, a #96 nikdo za opravený
-  neprohlásil. Poslat to by byl šum, před kterým komentář u
-  `correction_owed` sám varuje. Neposláno. Je to `qa/fold.py`, takže test
-  první a před commitem `/code-review` (CLAUDE.md).
-
 - [x] 2026-09-12  F1 z `docs/lab-plan.md`: evidence mimo git — držet jen citovanou, prořez po 3 dnech, sledovač při commitu, test maskování klíčů
 - [x] 2026-09-12  F2 z `docs/lab-plan.md`: připomínky místo plánovačů — hook při startu session, pravidla v `processes.py`, `at_finished` a zprávy od minulého běhu v deep passu
 - [x] 2026-09-12  F3 z `docs/lab-plan.md`: hlídka `processes.py` nad všemi součástmi, `--flags`, a sekce DNA v CLAUDE.md
@@ -136,8 +59,8 @@ to neodškrtl, nebo to nikdy nebylo další na řadě.
 - [ ] 2026-09-12  `keep.py archive` nemá spouštěč: deep pass volá `track` a `snapshot`, archiv nikdy. Balík tedy zůstane snímkem 12. 9., zatímco nové řádky manifestu přibývají s `archive: ""`.
 - [ ] 2026-09-12  Hlídka povrchu mlčí u **prvního** spatření volání — a jediné nebaselinované je `backtest_event_card_idea`, na kterém stojí celé noční hledání. Souvisí: `scripts/lab.py` jmenuje v docstringu `backtest_cited`, funkci, která neexistuje, takže hledání nezachytává evidence vůbec.
 - [ ] 2026-09-12  `call_key` bere do klíče id zdrojů (report id, UUID karet), takže `audits/surface.json` roste v gitu navždy — 58 ze 135 klíčů, ~3 kB na kartu. Sbírání klíčů podle datového klíče už pro JSON mapy umí, na segmenty URL se nepoužilo.
-- [ ] 2026-09-12  CLAUDE.md je přesně na stropu 700 řádků (`>`, tedy nula rezervy). Příští přidaný řádek shodí `test_no_ceiling_is_set_below_where_we_already_stand` — buď prořezat, nebo rozhodnout, že strop má jít nahoru.
-- [ ] 2026-09-12  Postavit `N_eff` z NEX-0026: průměrná párová korelace otevřené knihy jako varování dřív než drawdown. Nexusův vlastní ukazatel, ne náš nápad.
+- [x] 2026-09-12  CLAUDE.md je přesně na stropu 700 řádků (`>`, tedy nula rezervy). Příští přidaný řádek shodí `test_no_ceiling_is_set_below_where_we_already_stand` — buď prořezat, nebo rozhodnout, že strop má jít nahoru.  — strop zvednut na 750 dne 2026-09-13 (commit 5e2dd808)
+- [x] 2026-09-12  Postavit `N_eff` z NEX-0026: průměrná párová korelace otevřené knihy jako varování dřív než drawdown. Nexusův vlastní ukazatel, ne náš nápad.  — postaveno 2026-09-13, qa/lab.py::n_eff a scripts/lab.py::book_correlation
 - [ ] 2026-09-12  `_deployed()` v `scripts/lab.py` počítá i pozice, které simulace už nemá: TRD-0001 a TRD-0002 (11:41 a 11:59) jsou starší než `sim_started_at` 13:31, a `sim_total_trades` je 4, ne 6. Dnes jsou to 2 USDC z 99 000, ale každý reset simulace přidá další duchy, kteří se nikdy nezavřou, a ti nafukují čitatele stropu expozice. Ignorovat přijaté nákupy starší než nejnovější `sim_started_at`, s testem.
 - [ ] 2026-09-12  `ledger.py` bez `--run` vzal jako běh záznamu můj vlastní běh `tests/meta tests/repo` — ten neměřil z jejich platformy nic, a protože stránka popisuje běh, ze kterého byl ledger složen, vyprázdnily se dlaždice sekcí. Stavy řádků to neohrozilo (fold nezavírá, co neproběhlo), ale strážce `test_a_tile_lists_the_tests_behind_its_count` prošel před tím o **jedinou** kontrolu (1 → 0). Default by měl preferovat běh, který něco z ledgeru rozsoudil, nebo aspoň odmítnout, když nerozsoudil nic.
 - [ ] 2026-09-12  Ověřit #98 a #99 během úrovně V: zaplatili obě a tvrdí opravu, naše kontroly je pořád reprodukují — fold hlásí `reverify` a `correction_owed` u obou
@@ -152,7 +75,7 @@ to neodškrtl, nebo to nikdy nebylo další na řadě.
 - [ ] 2026-09-12  Rozšířit `SOURCES` v `test_pipeline_decisions.py`: 27 odstavců `[operator ...]` leží v 18 souborech mimo `CLAUDE.md` a `*/SKILL.md`, takže je dnes nehlídá nic. Noční pass na ten test sahat nesmí — je to práce na den.
 - [ ] 2026-09-12  `audits/checks.json` zůstal po dnešním auditu neorazítkovaný, protože orazítkovat teď by znamenalo označit za auditované i definice, které pass v noci změnil. Příští audit tedy projde stejný rozsah znovu — stojí to tokeny, ale nezakryje to nález.
 - [ ] 2026-09-12  `verify.py` spadne celý, když `already_sent()` nepřečte report (jejich TLS timeout ve 20:55). Čtení před POSTem, takže nic neodešlo napůl — ale jeden neúspěšný read zabije i verdikty, které by prošly.
-- [ ] 2026-09-12  #91 je nerozhodnutelný, protože nejnovější Nexusova odpověď jmenující kartu je starší než 24 h. Fold kvůli tomu dluží `repair_check` — až Nexus zase odpovídá, jedna otázka to vyřeší.
+- [x] 2026-09-12  #91 je nerozhodnutelný, protože nejnovější Nexusova odpověď jmenující kartu je starší než 24 h. Fold kvůli tomu dluží `repair_check` — až Nexus zase odpovídá, jedna otázka to vyřeší.  — NEX-0027 přišla 2026-09-13, #91 ověřen jako opravený a pass odeslán
 - [ ] 2026-09-12  Pravidlo 12 zčervená po každém commitu s testem i po každém deep passu — render do `.githooks/pre-commit`, a `stats.process` k tomu navíc
 
   `payload_hash` kryje `stats.tests` (počty testů v repu) i `stats.process`
@@ -166,3 +89,11 @@ to neodškrtl, nebo to nikdy nebylo další na řadě.
   notebook dřív, než se rendruje). Test první. Dnes přerendrováno.
 
 - [ ] 2026-09-12  Krok 3 deep passu (code review) nemá v SKILL.md pokyn zapsat nález do notebooku, jak ho má krok 2 — takže když kompakce přijde mezi krokem 3 a 4, celá recenze zmizí beze stopy. Přesně se to dnes stalo: notebook má 27 tvrzení a všech 27 je z auditu. Oprava je změna páteře, takže chce vlastní tři čtenáře podle 1c.
+
+- [ ] 2026-09-13  `house_row()` v `scripts/movers.py` se dá splnit `leaderboard[0]`: fixture má dům na indexu 0, rank 1 a handle „nexus" zároveň, takže vrátit první řádek projde. Lidský hráč na prvním místě a dům na druhém = špatný řádek a zelený test. Dnes to nikomu neublíží (funkci volá jen `cmd_status` a filed check si `is_house` filtruje sám), ale je to pin, co nic nedrží. Nálezce sám označil za kosmetické, takže bez triády.
+
+- [ ] 2026-09-13  Docstring `test_enter_still_needs_allow_mutate_now_that_probe_only_is_gone` tvrdí víc, než na té cestě platí: `--allow-mutate` je pytest volba a `cmd_enter` si registry staví sám s `mutate_enabled = True` napevno, takže `movers.py enter --confirm` jde na síť bez ní. Skutečná brzda na té cestě je `--confirm`, a tu sourozenecký test drží. Buď docstring opravit na to, co platí, nebo dát `cmd_enter` vlastní flag. Moje vlastní formulace z 13. 9.
+
+- [ ] 2026-09-13  `test_one_card_is_not_bought_once_per_answer_that_mentions_it` splní `sent == []`. Dnes kontrola žije (night_promote na té fixture jednu objednávku opravdu položí), ale nic nevyžaduje, že se vůbec něco koupilo — na rozdíl od sourozence, který kontroluje `opened`. Jakýkoli posun ve formátu odpovědi nebo v `card_baskets` z toho udělá navždy zelený a němý test.
+
+- [ ] 2026-09-13  `qa/fomo.py::stats` vrací stejný token v `top` i `bottom`, když je tokenů mezi 6 a 10 (`ranked[:5]` a `ranked[-5:]` se překrývají). Živé na 7h horizontu. Konzole to nekreslí (od `df5bf7af` staví z `fm.curves`), takže se to k operátorovi nedostane — ale je to rozpor s vlastním komentářem té funkce a její test to nevidí, protože fixture má dva tokeny a `bottom` je prázdný. Minority report z 13. 9., jeden hlas ze tří.
