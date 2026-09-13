@@ -36,11 +36,40 @@ def _check():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_the_day_we_actually_entered_reproduces_the_finding():
+def test_a_weekend_entry_gains_nothing_and_the_reason_must_say_so():
+    """The first version of this check overstated its own evidence.
+
+    The anchor is Friday 2026-09-11 and we entered Sunday 2026-09-13, so the
+    reason said "2 of its 7 days have already happened, at a price that cannot
+    move" -- and that went to Cymetica in report #101. Between a Friday close
+    and a Sunday, US equities hold **no sessions at all**: four of our five
+    picks are asset_class equity, their own listing was answering
+    `us_market_open: false`, and the information we could have had was zero.
+
+    The structural defect is untouched -- an entry on Thursday 2026-09-17 gets
+    three real sessions of hindsight at Friday's price. What was wrong was
+    counting calendar days and calling them observable. So the count is
+    sessions, and a window with none reports the opening honestly instead of
+    claiming an advantage that a closed market could not give.
+    """
     mod = _check()
     verdict, why = mod.decide(ROUND, RULES, date(2026, 9, 13))
+    assert verdict == "failed", "the window being open is still the finding"
+    assert "0 trading session" in why, why
+    assert "2 of its 7 days" not in why, (
+        "calendar days must not be presented as observable return")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_late_weekday_entry_is_where_the_hindsight_actually_is():
+    """Thursday of the round week: three sessions run, price still Friday's."""
+    mod = _check()
+    verdict, why = mod.decide(ROUND, RULES, date(2026, 9, 17))
     assert verdict == "failed", why
-    assert "2 of its 7 days" in why, why
+    # Mon 14, Tue 15, Wed 16 closed; Thu itself has not. Three, not four --
+    # the first draft of this assertion said four and the guard caught it,
+    # which is the same arithmetic that went wrong in the filed report.
+    assert "3 trading session" in why, why
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -62,12 +91,15 @@ def test_a_round_already_scored_is_not_one_that_can_be_entered_late():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_the_gap_grows_and_the_reason_says_by_how_much():
-    """Day six is the case worth naming: one day of seven left unknown."""
+def test_sessions_are_counted_from_the_day_after_the_anchor_close():
+    """The anchor price is that day's CLOSE, so the anchor day itself is not
+    hindsight -- it is already spent when the price is struck. Off by one here
+    is off by one in a number we send them."""
     mod = _check()
-    verdict, why = mod.decide(ROUND, RULES, date(2026, 9, 17))
-    assert verdict == "failed"
-    assert "6 of its 7 days" in why, why
+    # Monday: Friday's close struck, then Mon has not closed -> 0 sessions.
+    assert "0 trading session" in mod.decide(ROUND, RULES, date(2026, 9, 14))[1]
+    # Tuesday: Monday ran.
+    assert "1 trading session" in mod.decide(ROUND, RULES, date(2026, 9, 15))[1]
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

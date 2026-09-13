@@ -8,13 +8,23 @@ Their rules, verbatim from `/api/v1/universe/movers/tournament`:
 
 We entered on 2026-09-13 into the round anchored **2026-09-11** and the five
 picks came back priced at the 2026-09-11 closes (AAPL 335.80, GOOGL 341.51,
-PLTR 166.64, SPCX 146.95, COIN 181.01). Two of the seven days had already
-happened. Entering on day six would leave one.
+PLTR 166.64, SPCX 146.95, COIN 181.01).
 
-So the later an entry is made, the more of the return it is scored on is
-already observable when it is made, at a price that does not move. The
-leaderboard that ranks entrants by `avg_pct` has no way to tell a pick
-committed on the anchor day from one committed the day before scoring.
+**Our own entry is the weakest possible instance of it, and the first version
+of this check said otherwise.** The anchor was a Friday and we entered on the
+Sunday, so between the close we were priced at and the moment we chose, US
+equities held **no sessions at all** -- four of the five picks are
+`asset_class: equity` and their listing was answering `us_market_open: false`.
+The reason line called it "two of the seven days", that went to them in
+report #100's sibling, and it claimed an advantage a shut market could not
+give. Corrected to count sessions.
+
+The defect is unchanged: an entry made on the Thursday of the round week is
+priced at Friday's close with three sessions already run. So the later an
+entry is made, the more of the return it is scored on is already observable,
+at a price that does not move -- and the leaderboard that ranks entrants by
+`avg_pct` has no way to tell a pick committed on the anchor day from one
+committed the day before scoring.
 
 It matters most for the row this tournament exists to be measured against.
 The NEXUS screen's `/movers/potential` is stamped `as_of` the anchor, so the
@@ -43,7 +53,7 @@ evidence was made once, on purpose, and is recorded in `state/lab.jsonl`.
 
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 
 from qa.marks import Inconclusive, SafetyTier, qa
 from qa.measure import Measurement, conclude
@@ -65,6 +75,29 @@ def _day(value) -> date | None:
             return date.fromisoformat(str(value)[:10])
         except (TypeError, ValueError):
             return None
+
+
+def trading_sessions(anchor: date, today: date) -> int:
+    """US sessions that have CLOSED between the anchor's close and today.
+
+    Counted rather than assumed, because assuming cost us a number in a filed
+    report. The anchor price is that day's close, so the anchor day itself is
+    already spent when the price is struck and does not count; nor does today,
+    which has not closed. What is left is the weekdays strictly between them.
+
+    Weekends only -- market holidays are not modelled, so this can overstate
+    by a day around one, never understate. A number we send them should err
+    towards claiming less. Their own event-card listing carries
+    `us_market_open`, which is the live version of the same question.
+    """
+    if today <= anchor:
+        return 0
+    day, sessions = anchor + timedelta(days=1), 0
+    while day < today:
+        if day.weekday() < 5:
+            sessions += 1
+        day += timedelta(days=1)
+    return sessions
 
 
 def declares_a_deadline(round_: dict, rules: dict) -> bool:
@@ -101,22 +134,21 @@ def decide(round_: dict, rules: dict, today: date) -> tuple[str, str]:
                 f"scores_after of {scores_after}, so it is not open to be "
                 f"entered late")
 
+    sessions = trading_sessions(anchor, today)
     elapsed = (today - anchor).days
-    window = (rules or {}).get("window_days")
-    fraction = (f"{elapsed} of its {window} days" if window
-                else f"{elapsed} day(s)")
     return ("failed",
             f"the round anchored {anchor} is still open -- it does not score "
             f"until {scores_after} and nothing in its payload names a cutoff "
             f"for entries -- while their own rules price every pick at 'the "
-            f"stored close on the round day'. An entry made today is "
-            f"therefore scored over a window of which {fraction} have already "
-            f"happened, at a price that cannot move. We entered this round on "
-            f"2026-09-13 and were given the {anchor} closes, which is how "
-            f"this was found. The leaderboard ranks by avg_pct and carries "
-            f"nothing to tell a pick committed on the anchor day from one "
-            f"committed the day before scoring -- including the NEXUS screen "
-            f"row, whose own /movers/potential is stamped as_of the anchor")
+            f"stored close on the round day'. An entry made today is priced "
+            f"at the {anchor} close with {sessions} trading session(s) of the "
+            f"window already run ({elapsed} calendar day(s)), so that much of "
+            f"the return it will be scored on is already observable while the "
+            f"price it is scored from cannot move. The leaderboard ranks by "
+            f"avg_pct and carries nothing to tell a pick committed on the "
+            f"anchor day from one committed the day before scoring -- "
+            f"including the NEXUS screen row, whose own /movers/potential is "
+            f"stamped as_of the anchor")
 
 
 @qa(component="rest.movers", tier=SafetyTier.SAFE, surface="rest")
