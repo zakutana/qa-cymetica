@@ -103,6 +103,8 @@ PINNED = {
          "01a5de12e6b84cbc9976edfe0a33a2b3cf64fcac9e40b6566f256c9f2703c08f"),
         ("2026-09-13", "kdykoliv dej vedet a ja to hned napisu",
          "78a386cca5a693309b723e034eccc5ac075a45fe4a45bc0d51727209569991e1"),
+        ("2026-09-13", "nemam rad cteni",
+         "efa0a09b444a4947db604e6e48086ee536c4b2c6882aeead70b2041ce9c52e30"),
         ("2026-09-13", "vzdy jak generujes zpravu na telegram",
          "cbc6e7a36fa90f59701a36317dda5258f88dc3a1e8a972ba8e1f37ba0814e845"),
         ("2026-09-12", "ne zadene schedulery automaticke",

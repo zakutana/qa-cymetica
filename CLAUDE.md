@@ -74,6 +74,24 @@ asked for it. So it is kept here.
   separate channel from filing a formal report -- "File without asking",
   above -- and it does not replace it: a confirmed defect still goes through
   `submit.py` on its own.
+* [operator 2026-09-13] *"ja totiz jak napises moc textu to ani nectu bo nemam
+  rad cteni"*
+
+  **A long answer is an unread answer.** Not a style note -- a statement that
+  past some length the reply does not get read at all, so everything in it is
+  wasted including the part that mattered. Default: a few lines. The number
+  and the decision, and stop.
+
+  A table only when it is genuinely a table of numbers. No recap of what was
+  just done, no restating their question back, no listing of what I considered
+  and rejected. If something really needs length -- a report to the vendor, a
+  handover -- it goes in a file and the chat gets one line pointing at it.
+
+  This was already `[[give-the-delta-not-the-narration]]` and
+  `[[cut-the-prose-not-the-answer]]` in memory and it kept happening anyway,
+  which is why it is here instead. They said it after an afternoon of answers
+  that were three times too long, ending with a page about how the laboratory
+  is not a running process.
 * [operator 2026-09-13] *"vzdy jak generujes zpravu na telegram tak na zacatek
   dej @EventTraderQABot"*
 
