@@ -176,7 +176,11 @@ IDLE_DAYS = 14
 # the repository now grows, and fires long before anyone finds gigabytes there.
 CEILINGS = {
     "evidence_mb": 1000,
-    "claude_md_lines": 700,
+    # Raised 2026-09-13 from 700, which the file sat exactly on with zero
+    # room -- the deep pass of 2026-09-13 named this in NEXT.md rather than
+    # trim something else just to keep a number where it was. Room to grow,
+    # not a promise it will.
+    "claude_md_lines": 750,
     "memory_lines": 45,
     "next_oldest_days": 10,
     "pack_mb": 150,

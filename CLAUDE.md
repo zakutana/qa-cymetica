@@ -60,6 +60,20 @@ asked for it. So it is kept here.
   read as a rule about sweeps and stopped applying the moment the finding turned
   up anywhere else. It applies wherever the bug is found. Asking is the veto
   handed back, the same defect as a list of open decisions.
+* [operator 2026-09-13] *"jinak a to si zapamatuj jak je nekde dira ze treba
+  neni neco v api docs, nebo nekde neco chybi tak kdykoliv dej vedet a ja to
+  hned napisu na telegram."*
+
+  Said while looking at four new surfaces (`/social-pulse`,
+  `/memecoin-terminal`, `/fomo-radar`, the movers tournament) that answer live
+  and appear nowhere in `/api-docs` -- a gap I had filed away as worth
+  checking later, the deferral rule 10 already warns against for our own
+  checks. **A gap noticed in conversation is said in the conversation, the
+  moment it is noticed.** Not held for a sweep, not folded into a report
+  first: they relay it to Cymetica over Telegram themselves, on the spot. A
+  separate channel from filing a formal report -- "File without asking",
+  above -- and it does not replace it: a confirmed defect still goes through
+  `submit.py` on its own.
 * [operator 2026-09-12] *"ne zadene schedulery automaticke nechci, deep pasy si
   chci poustet sam vzyd jak jdu spat jak jsme to delal doted. Pak treba jak mam
   neco mam spustit tydne mi to pripomenes. Proste mibudes jen pripominat co mam
