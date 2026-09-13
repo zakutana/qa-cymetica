@@ -180,6 +180,11 @@ components:
     surface: rest
     criticality: medium
     staleness_hours: 48
+  rest.movers:
+    title: Movers Tournament (no money moves)
+    surface: rest
+    criticality: low
+    staleness_hours: 168
 
   funding.deposit:
     title: Deposit addresses
@@ -368,6 +373,23 @@ endpoints:
     executable_params: [amount_usdc]
     inert_params: [paper]
     required_flags: [paper]
+
+  # The GET is unregistered on purpose -- reads are default-allowed at SAFE,
+  # and this one moves no money at all ("no prizes are attached and nothing
+  # moves money"). The POST shape that submits a pick is undocumented
+  # anywhere: /api-docs names nothing under /universe/movers, and the GET
+  # response (rules/round/leaderboard/my_entries) does not say how an entry
+  # is written, only that it exists ("Enter up to 5 universe symbols per
+  # round"). Path is a guess at the RESTful form; probe_only until it is
+  # confirmed, because a wrong body accepted by their server would lock a
+  # real week-long round on garbage picks with no way back -- "Each pick
+  # locks the stored close on the round day". 2026-09-13.
+  - id: movers.enter
+    path: /api/v1/universe/movers/tournament
+    methods: [POST]
+    component: rest.movers
+    executable_params: [symbols]
+    probe_only: true   # unconfirmed shape against a round that locks; see above
 
   - id: arena.order
     path: /api/v1/arena/order

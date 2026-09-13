@@ -56,7 +56,8 @@ COMPONENT_TO_SECTION = {
     "chain.launchpad": "launchpad",
     "funding.withdraw": "funding", "funding.deposit": "funding",
     "platform.ai_native_proof": "provenance", "platform.status": "swaps",
-    "rest.support": "support", "meta.guard": "_meta", "meta.classifier": "_meta",
+    "rest.support": "support", "rest.movers": "movers",
+    "meta.guard": "_meta", "meta.classifier": "_meta",
     "meta.pipeline": "_meta",
 }
 SELF_TEST_DIRS = ("tests/meta/", "tests/repo/")

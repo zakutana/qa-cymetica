@@ -196,6 +196,14 @@ SECTIONS: list[dict] = [
         "blast": "measurement",
     },
     {
+        "id": "movers",
+        "title": "Movers Tournament",
+        "blurb": "A free, scored stock-picking competition over their own universe. No prizes, no money moves. Read 2026-09-13, alongside their new memecoin surfaces.",
+        "patterns": [r"^/api/v1/universe/movers"],
+        "tools": [],
+        "blast": "measurement",
+    },
+    {
         "id": "provenance",
         "title": "AI-native provenance",
         "blurb": "Build stats, AI authorship proof, due-diligence scoring. The platform's central marketing claim.",
