@@ -892,6 +892,28 @@ def test_the_nexus_card_check_reads_only_ids_given_as_cards():
     assert not is_current("2026-09-10T15:59:00+00:00", now)
     assert not is_current(None, now), "an answer with no moment is not current"
 
+    # Evidence, not vocabulary. A blocklist can only name what has already gone
+    # wrong once, and two of three readers reproduced the next one on
+    # 2026-09-12: "trade_id `<uuid>`" and "clone `<uuid>`" both came back as
+    # cards, and both are ids their platform really issues -- trade_id appears
+    # nine times in our own samples.jsonl. A 404 on one of those sends Cymetica
+    # a claim about something that was never a card.
+    from tests.rest.test_nexus_cards_exist import known_non_cards
+
+    for phrase in ("trade_id `085f1969-cd9e-449b-990a-3f7731b9a309`",
+                   "your clone `d778102d-cd9e-449b-990a-3f7731b9a309`",
+                   "backtest `085f1969-cd9e-449b-990a-3f7731b9a30a`",
+                   "strategy id `085f1969-cd9e-449b-990a-3f7731b9a30b`"):
+        assert card_ids_in(phrase) == [], (
+            f"{phrase.split()[0]!r} reads as a card, and a 404 on it would go "
+            f"to the vendor as guidance they failed to serve")
+
+    # And the default is untouched: no marker still means a card, which is what
+    # keeps #91's witness alive.
+    assert card_ids_in("EVCDX-POLYGON `5bd86126-90eb-4ad8-8e55-909397dab402`") \
+        == ["5bd86126-90eb-4ad8-8e55-909397dab402"]
+    assert isinstance(known_non_cards(), set)
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_nexus_card_check_claims_only_that_the_card_was_named():
@@ -928,27 +950,6 @@ def test_the_nexus_card_check_claims_only_that_the_card_was_named():
         "the reason still asserts trade-ness, which nothing in the check reads")
     assert "names " in code, "the reason must say what was actually read"
 
-
-    # Evidence, not vocabulary. A blocklist can only name what has already gone
-    # wrong once, and two of three readers reproduced the next one on
-    # 2026-09-12: "trade_id `<uuid>`" and "clone `<uuid>`" both came back as
-    # cards, and both are ids their platform really issues -- trade_id appears
-    # nine times in our own samples.jsonl. A 404 on one of those sends Cymetica
-    # "Nexus tells an agent to trade" something that was never a card.
-    from tests.rest.test_nexus_cards_exist import known_non_cards
-
-    for phrase in ("trade_id `085f1969-cd9e-449b-990a-3f7731b9a309`",
-                   "your clone `d778102d-cd9e-449b-990a-3f7731b9a309`",
-                   "backtest `085f1969-cd9e-449b-990a-3f7731b9a30a`",
-                   "strategy id `085f1969-cd9e-449b-990a-3f7731b9a30b`"):
-        assert card_ids_in(phrase) == [], (
-            f"{phrase.split()[0]!r} reads as a card, and a 404 on it would go "
-            f"to the vendor as guidance they failed to serve")
-
-    # And the default is untouched: no marker still means a card, which is what
-    # keeps #91's witness alive.
-    assert card_ids_in("EVCDX-POLYGON `5bd86126-90eb-4ad8-8e55-909397dab402`")         == ["5bd86126-90eb-4ad8-8e55-909397dab402"]
-    assert isinstance(known_non_cards(), set)
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_latency_window_is_ordered_by_question_and_counts_only_their_failures():
