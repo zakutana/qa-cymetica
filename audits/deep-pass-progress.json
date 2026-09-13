@@ -104,8 +104,8 @@
     "t1": "yes"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "1e774429"
   },
   {
    "id": "R06",
@@ -118,8 +118,8 @@
     "t1": "yes"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "92071ce9"
   },
   {
    "id": "R07",
@@ -146,8 +146,8 @@
     "t1": "yes"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "e0abe124"
   },
   {
    "id": "A02",
@@ -217,8 +217,8 @@
     "t1": "yes"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "e0abe124"
   },
   {
    "id": "L04",
@@ -301,8 +301,8 @@
     "t3": "yes"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "92071ce9"
   },
   {
    "id": "V04",
@@ -340,8 +340,8 @@
     "t3": "yes"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "e0abe124"
   },
   {
    "id": "V07",
@@ -366,8 +366,8 @@
     "t3": "yes"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "92071ce9"
   },
   {
    "id": "V09",
@@ -379,8 +379,8 @@
     "t3": "yes"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "92071ce9"
   },
   {
    "id": "M03",
@@ -391,8 +391,8 @@
     "mine": "yes"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "1e774429"
   },
   {
    "id": "M04",
@@ -403,8 +403,8 @@
     "mine": "yes"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "1e774429"
   },
   {
    "id": "M05",
