@@ -1481,6 +1481,61 @@ def test_a_hand_run_search_refills_the_same_way_the_night_does():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_climb_can_reach_symbols_the_best_baskets_do_not_contain():
+    """A refill that draws its pool from the winners only collapses onto them.
+
+    Measured 2026-09-13, within an hour of the refill being wired into the
+    hand-run search: **all 20 of the top 20 readings contained KSM**, and the
+    share of new readings containing it went from 27 of 65 the day before to
+    49 of 69 that day. 134 backtests across 21 distinct symbols.
+
+    The mechanism was `night_refill` taking its substitution pool from the
+    seeds it had just built out of the best rows -- so `add` and `drop` could
+    only ever shuffle symbols that were already winning. The more baskets get
+    tested around one symbol, the more surely the best observed Sharpe is that
+    symbol's noise: the deflated-Sharpe point Nexus itself made to us about
+    stockbull-blue, arriving on our own side of the glass.
+
+    So the pool is an argument, and `search_queue` passes THEIR whole card
+    universe. The climb still starts from what scored; what it may reach is no
+    longer limited to what has already scored.
+    """
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "lab_refill_pool", REPO / "scripts" / "lab.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    fresh = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
+    scored = [{"fp": "a", "p": 30, "s": 9.0, "d": 1.0, "r": 5.0, "pts": 90,
+               "at": fresh, "why": "the winner",
+               "legs": [["KSM", 0.6], ["ZEN", 0.4]]}]
+
+    narrow = module.night_refill(rows=scored, limit=1, cap=24)
+    assert {leg["symbol"] for move in narrow
+            for leg in (move["legs"] or [])} <= {"KSM", "ZEN"}, (
+        "without a pool the refill can only shuffle the winners -- this is "
+        "the collapse, pinned so the fix below is visibly a fix")
+
+    wide = module.night_refill(rows=scored, limit=1, cap=24,
+                               pool=["KSM", "ZEN", "BCH", "SOL", "NEO"])
+    reached = {leg["symbol"] for move in wide for leg in (move["legs"] or [])}
+    assert "KSM" in reached, "it must still climb from what scored"
+    assert reached - {"KSM", "ZEN"}, (
+        "a refill given a wider pool never left the winners' own symbols")
+
+    # And the hand-run queue supplies that pool from THEIR cards, so an
+    # under-measured symbol on one of their cards is reachable.
+    seeds = [{"card": "c1", "title": "theirs",
+              "legs": [{"symbol": "BCH", "weight": 0.5},
+                       {"symbol": "SOL", "weight": 0.5}]}]
+    queue = module.search_queue(seeds, rows=scored, cap=8)
+    symbols = {leg["symbol"] for move in queue for leg in (move["legs"] or [])}
+    assert {"KSM", "BCH"} <= symbols, symbols
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_an_unreadable_pass_notebook_is_not_an_absent_pass(tmp_path,
                                                            monkeypatch):
     """Rule 8, on the interlock that stops us talking to Nexus mid-pass.

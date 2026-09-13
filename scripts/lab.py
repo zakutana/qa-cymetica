@@ -1060,11 +1060,14 @@ def search_queue(seeds: list[dict], rows: list[dict] | None = None,
     measured well. A register with nothing in it yet leaves just the cards,
     which is what a first run should be.
     """
+    universe = symbol_pool(seeds)
     queue = [move for seed in seeds
-             for move in qa_backtests.neighbourhood(seed, symbol_pool(seeds),
-                                                    cap)]
+             for move in qa_backtests.neighbourhood(seed, universe, cap)]
     seen = {move.get("fp") for move in queue if move.get("fp")}
-    for move in night_refill(rows=rows, limit=limit, cap=cap):
+    # THEIR whole card universe, not just the symbols already winning -- see
+    # night_refill on why the pool is the difference between a climb and a
+    # collapse.
+    for move in night_refill(rows=rows, limit=limit, cap=cap, pool=universe):
         if move.get("fp") and move["fp"] in seen:
             continue
         seen.add(move.get("fp"))
@@ -1073,7 +1076,7 @@ def search_queue(seeds: list[dict], rows: list[dict] | None = None,
 
 
 def night_refill(rows: list[dict] | None = None, limit: int = 8,
-                 cap: int = 24) -> list[dict]:
+                 cap: int = 24, pool: list[str] | None = None) -> list[dict]:
     """The next round, seeded by what actually scored — not by where we began.
 
     `night_moves()` is the neighbourhood of THEIR cards, and it is finite: 168
@@ -1103,9 +1106,18 @@ def night_refill(rows: list[dict] | None = None, limit: int = 8,
                           "title": str(row.get("why") or "")[:60]})
     if not seeds:
         return []
-    pool = symbol_pool(seeds)
+    # The pool is what `add` and `drop` may substitute FROM. Left to the seeds
+    # alone it is the winners' own symbols, and the climb can then only
+    # reshuffle them: on 2026-09-13 all twenty of the top twenty readings
+    # contained KSM, and its share of new readings went 27/65 -> 49/69 in the
+    # hours after this refill was first wired in. The more baskets tested
+    # around one symbol, the more surely the best observed Sharpe is that
+    # symbol's noise -- the deflated-Sharpe argument Nexus made to us about
+    # stockbull-blue, on our own side of the glass. A caller that knows the
+    # wider universe (their cards) passes it.
     return [move for seed in seeds
-            for move in qa_backtests.neighbourhood(seed, pool, cap=cap)]
+            for move in qa_backtests.neighbourhood(
+                seed, pool or symbol_pool(seeds), cap=cap)]
 
 
 # What the night writes as a criterion when it opens a room unattended. Ours,
