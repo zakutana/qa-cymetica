@@ -127,6 +127,21 @@ asked for it. So it is kept here.
   repeat that line in your first answer, in Czech. Hook output arrives in your
   context, not on their screen, and a reminder they never see is the mechanism
   this rule replaced.
+* [operator 2026-09-14] *"odstrat to rpavidlo at muzu nmormalne loop
+  spoustet"*
+
+  **`/loop` is exempted from the rule above.** They still launch every run —
+  `/loop` only fires because they typed it — and what happens after that
+  first keystroke, a fixed-interval tick or a self-paced `ScheduleWakeup`, is
+  `/loop` working as designed, not the unattended scheduler the 2026-09-12
+  rule barred. What still does not start on its own: a `CronCreate` nobody in
+  the room asked for, a nightly deep-pass timer, anything whose first run
+  they did not launch themselves.
+
+  A session on 2026-09-13 read the older rule as covering this too and
+  refused to let `/loop` re-arm itself. That reading was more careful than
+  wrong, but it was still wrong: the operator is the one who gets to say
+  which of their own past decisions a new one narrows, and they just did.
 * Non-trivial work starts in plan mode. Ask for it; do not wait to be told.
 * Tests before implementation. A test written afterwards passes whatever the
   code does, including the mistake, and 21 commits here carry code with no
