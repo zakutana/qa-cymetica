@@ -34,11 +34,18 @@ have refused many times over. It never asserts a field is absent from a
 schema -- a chain that simply does not serve `liquidity_usd` is inconclusive,
 not a finding.
 
-The margin is deliberately wide. `BREACH_FRACTION` is a twentieth of their own
-floor, so a row has to be two orders of magnitude thin before it counts: a
-pool that drained between their gate and the response being serialised is
-ordinary, and this check must not report it. And one row is not a finding --
-`MIN_BREACHES` distinct tokens are needed, for the same reason.
+HOW OFTEN, NOT WHETHER. One thin row is a screenshot. Sampled every thirty
+seconds for ten minutes on 2026-09-14: **five distinct Solana tokens** under
+their floor, against **zero** of 134 hot Robinhood rows; the thinnest,
+`tothemoon`, held a $344.81 pool -- $17.24 of max buy -- and stayed hot across
+seven consecutive reads. Every one of the five was 83 to 181 seconds old and
+served `max_buy_5pct_usd`, `hot_pressure` and `thin` as null.
+
+Their gated chain is what carries the caution. A pool draining between their
+gate and the response would happen on Robinhood too, and over those same ten
+minutes it never did, so `BREACH_FRACTION` is serialisation noise rather than
+a guess. And one row is still not a finding: `MIN_BREACHES` distinct tokens
+must breach in a single read.
 
 SAFE. Keyless GETs on the endpoint the tool publishes.
 """
@@ -53,10 +60,18 @@ SIGNALS = "/api/v1/clones/fomo-radar/signals"
 # Their floor, in their own unit, from their own message.
 FLOOR_MAX_BUY_USD = 500.0
 
-# How far below the floor a row must sit before it is this finding rather than
-# a pool that moved between the gate and the response. A twentieth: $25 of max
-# buy against their $500, which on the ratio their rows publish is a $500 pool.
-BREACH_FRACTION = 0.05
+# How far below the floor a row must sit before it counts. Set at a twentieth
+# of the floor when this check was written -- out of caution about a pool
+# draining between their gate and the response -- and that was measuring a
+# strawman: over ten minutes and 320 hot solana rows, five distinct tokens sat
+# under their $500 and only ONE of them was under $25, so the check passed
+# while the gap it exists for was in front of it.
+#
+# What answers the caution is not a margin, it is their own gated chain. If a
+# pool could drain between gate and serialisation it would do it on Robinhood
+# too, and over the same ten minutes NONE of 134 hot Robinhood rows was under
+# the floor. So the margin is now only serialisation noise.
+BREACH_FRACTION = 0.9
 
 # One thin row mid-index is ordinary in a new-pair feed. Two distinct tokens
 # in one read is a gate that is not running.

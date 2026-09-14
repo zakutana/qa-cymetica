@@ -90,6 +90,13 @@ def test_one_thin_row_is_not_a_finding_and_a_gated_control_is_required():
     verdict, reason = mod.decide(one_thin, gated)
     assert verdict == "passed", (verdict, reason)
 
+    # And a row a hair under the floor is serialisation noise, not a breach:
+    # $450 of max buy against their $500 is a pool that moved, and two of
+    # those must not file anything.
+    hair = mod._chain([_row("A", 9000.0), _row("B", 9200.0)], 0.05)
+    assert mod.decide(hair, gated)[0] == "passed", (
+        "the check is firing on rounding, not on a gate that is not running")
+
     # No control: their gated chain quiet this read.
     quiet = mod._chain([_row("RH", 200000.0, max_buy=10000.0, hot=False)], 0.05)
     thin_two = mod._chain([_row("CHADSTER", 75.16), _row("speed", 423.77)], 0.05)
@@ -116,9 +123,13 @@ def test_two_thin_tokens_beside_a_gated_chain_is_the_finding():
     the wrong place.
     """
     mod = _check()
+    # The three that were live in one read at 11:06 CEST: MOON, Zeno and snek,
+    # at $1 645, $2 901 and $3 859 of pool. None of them is under a twentieth
+    # of the floor, which is what the first version of this check demanded --
+    # it passed with these in front of it.
     solana = mod._chain(
-        [_row("CHADSTER", 75.16), _row("$speed", 423.77),
-         _row("OTC", 620579.53)], 0.05)
+        [_row("CHADSTER", 75.16), _row("MOON", 1644.60), _row("Zeno", 2901.15),
+         _row("snek", 3859.00), _row("OTC", 620579.53)], 0.05)
     gated = mod._chain([_row("RH", 200000.0, max_buy=10000.0)], 0.05)
 
     verdict, reason = mod.decide(solana, gated)
