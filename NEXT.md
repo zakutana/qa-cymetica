@@ -31,6 +31,7 @@ to neodškrtl, nebo to nikdy nebylo další na řadě.
 - [x] 2026-09-10  Naklonovaného bota nejde spustit — napsat na to kontrolu a založit nález
 - [x] 2026-09-10  Klon nejde nabít agentním klíčem — #89
 - [x] 2026-09-14  Až bude v deníku den hloubky, přidat do košíku P&L jen přes páry nad prahem `liquidity_usd` (bez toho drží headline pár, co nešel prodat)
+- [ ] 2026-09-14  CLAUDE.md má 761 řádků proti stropu 750 (a proti 200 doporučeným). Strop už jednou zvednut (700→750, 2026-09-13) — podruhé ne. Prořezat, ne přestěhovat: `.claude/rules/` bez `paths:` neušetří kontext vůbec, s `paths:` se načte až po prvním čtení odpovídajícího souboru. Největší kandidát je „Where things live" (255 ř., třetina, nula odstavců `[operator]`). Patří to do deep passu, vlastním commitem.
 - [ ] 2026-09-10  Zjistit, jestli je 401 na `/fund` záměr, a podle toho #89 upravit
 - [ ] 2026-09-10  Změřit, jestli se odměna připíše při resolve karty
 - [ ] 2026-09-11  Přečíst `docs/night-2026-09-11.md` — co se stalo v noci, čtyři nové nálezy a tři naše vlastní vady
