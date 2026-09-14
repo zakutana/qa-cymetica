@@ -1,0 +1,172 @@
+{
+  "schema": 2,
+  "run_id": "run-20260914T092324Z-e0938721",
+  "started_at": "2026-09-14T09:23:28+00:00",
+  "finished_at": "2026-09-14T09:24:54+00:00",
+  "git_head": "e0938721bea97d262945ac9838b7ef3744293667",
+  "git_short": "e0938721",
+  "git_dirty": false,
+  "prereg_id": "PRE-0115",
+  "prereg_tag_sha": "51970a7354e86173c2f52fafc8326ddc02511a41",
+  "prereg_commit": "e0938721bea97d262945ac9838b7ef3744293667",
+  "platform_fingerprint": "sha256:38add2e49144657cb6c1e57cafc670b1c894d965c70632589e910ed89cab82e8",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "e89210ec70181a7dfa8eeaa2169a9536d8b956fc497327cdf296d9ba14b135cd",
+    "/.well-known/agent-card.json": "0d025529067afeeec58d0f8d49f9a7d1c8ec45b6ee1398ac573b9bf7d2b31457",
+    "/.well-known/agent-skills.json": "3ee22148aea8e6314344f5675c7a51d4800a25b674c7dbcca1babecdda04c7c4",
+    "/.well-known/ai-plugin.json": "648e9e1e79bbe5178e571f84e2fbb736311ef94295aa704621193be8d5bcc9be",
+    "/.well-known/udc.json": "4c5d54d7d0462a44ad80d7a4dbdc5c68ab7563abdb3a81737bb6eadc8bdec127",
+    "/openapi.json": "f0cccb1f06ec266d303b1c7ab8e23f4af29a3c43106027595c95c1449fa1b2cf",
+    "/openapi-public.json": "752f7f6748aa42dd32c49ce8e070ec744bf298103ee8c8955ce04787da8c448a",
+    "/llms.txt": "722780a7ae8dd59d37d9af4ae6f6881c45ec9c0fa5fd0161f0ca7291dd1ddb59",
+    "mcp:tools/list:none": "ffd58a5746b4fdc9627c3b57210c1d52b1dab20789aa234d10e6818421031627"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/rest/test_fomo_radar_hot_clears_its_tradeability_floor.py --prereg PRE-0115",
+  "selector_full": false,
+  "allow_mutate": false,
+  "collected": [
+    "tests/rest/test_fomo_radar_hot_clears_its_tradeability_floor.py::test_a_hot_signal_clears_the_tradeability_floor_they_shipped"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/rest/test_fomo_radar_hot_clears_its_tradeability_floor.py::test_a_hot_signal_clears_the_tradeability_floor_they_shipped",
+      "component": "rest.clones",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 81183,
+      "evidence_ids": [
+        "d1074da4c336a27870cae45d666231f53986e449a0209df6ece6bef70bb31269",
+        "3c343077dd45610528903895f05f5f5b7e014f791f0077a0fa464c798bf1a07f",
+        "80c6a292f4573340bd558dec1f7cb28c8c35e06902769954fa5e9457c977b7c5",
+        "62fcdbf5ac08c470af8640fba125fa737a14a39fcdabaacfcf5cafa3ff860a63",
+        "947b0202fd853c0d8821d1ce7337e8972da5ffcb87f0a753612b3b3544f4c4b0",
+        "8881268154f0f598316f59f51322186aee866b9da375c6dbb078c269e824e5a7",
+        "30799a4cb2c599fe2f012acb5cb7f00d0f6a0348f5dd9ff94f8e4d07d70fbf01",
+        "eb030bec55bf28799de4e73fd38265d9f5248a7cba9cc4f7ef196a8c32db23a5",
+        "c25dc29983799d68f216a218160b500a05a95da41c5eb314553a4ca7b74f4f62",
+        "950740b8327edf21b0d3decc000edaa64cc4d26e801003a240327a4475530098"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "the gate is served on one chain and not the other: 14 of 14 robinhood rows carry max_buy_5pct_usd and every one of their 4 hot rows clears the $500 floor, while NO solana row carries the field and 5 hot solana token(s) in this window sit under it -- thinnest HMnicoffGH4y... at $3.94 of 5%-slippage max buy",
+        "left": [
+          {
+            "chain": "solana",
+            "symbol": "TEST",
+            "token_address": "68pm5RUgERsGo3QJhRr2YqMhRFMEDd1iCKYpGymZpump",
+            "liquidity_usd": 7454.74,
+            "conviction": 56.1,
+            "token_age_seconds": 118.0,
+            "max_buy_5pct_usd": 372.7370804266006
+          },
+          {
+            "chain": "solana",
+            "symbol": "clarity",
+            "token_address": "CMPLnnZTSfAmULcAhRdGkNmz5y54yNAZRXY2aitvpump",
+            "liquidity_usd": 4085.37,
+            "conviction": 29.2,
+            "token_age_seconds": 79.0,
+            "max_buy_5pct_usd": 204.26854407563795
+          },
+          {
+            "chain": "solana",
+            "symbol": "Supercycle",
+            "token_address": "5x7E9JyZMYM7FpeAPnUA4wL9b5EYGeqba5bLg9cbpump",
+            "liquidity_usd": 4219.83,
+            "conviction": 24.3,
+            "token_age_seconds": 89.0,
+            "max_buy_5pct_usd": 210.9915455262802
+          },
+          {
+            "chain": "solana",
+            "symbol": "Supercycle",
+            "token_address": "FWrNhPFsCS3W8scEQ92huxHjwzaqnGUrphLDwRdmpump",
+            "liquidity_usd": 4208.21,
+            "conviction": 24.2,
+            "token_age_seconds": 62.0,
+            "max_buy_5pct_usd": 210.41054540091605
+          },
+          {
+            "chain": "solana",
+            "symbol": "RICK",
+            "token_address": "HMnicoffGH4yA9JnyW3DFheo7x94K1pFWC2Nq2Jzpump",
+            "liquidity_usd": 78.86,
+            "conviction": 14.9,
+            "token_age_seconds": 83.0,
+            "max_buy_5pct_usd": 3.9430008507931493
+          }
+        ],
+        "right": [
+          {
+            "chain": "robinhood",
+            "hot_rows": 4,
+            "thinnest_max_buy_usd": 629.42,
+            "serves_gate_fields": true
+          }
+        ],
+        "sources": {
+          "signals": "/api/v1/clones/fomo-radar/signals"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": null,
+        "role": "verdict",
+        "population": {
+          "floor_max_buy_usd": 500.0,
+          "breach_fraction": 0.9,
+          "min_breaches": 2,
+          "published_ratio": 0.05000001078865267,
+          "reads": 5,
+          "spacing_seconds": 18.0,
+          "solana_rows": 79,
+          "solana_hot": 20,
+          "solana_breaches": 5,
+          "solana_rows_serving_gate": 0,
+          "robinhood_rows": 14,
+          "robinhood_hot": 4,
+          "robinhood_breaches": 0,
+          "robinhood_rows_serving_gate": 14
+        }
+      },
+      "check_fingerprint": "a1a873397e838fe901d175f165a39b0c09685430ae6cb657c4daa0d0318b0642",
+      "reason": null,
+      "failure_repr": "tests\\rest\\test_fomo_radar_hot_clears_its_tradeability_floor.py:294: in test_a_hot_signal_clears_the_tradeability_floor_they_shipped\n    conclude(Measurement(\nqa\\measure.py:165: in conclude\n    raise AssertionError(explain(m))\nE   AssertionError: the gate is served on one chain and not the other: 14 of 14 robinhood rows carry max_buy_5pct_usd and every one of their 4 hot rows clears the $500 floor, while NO solana row carries the field and 5 hot solana token(s) in this window sit under it -- thinnest HMnicoffGH4y... at $3.94 of 5%-slippage max buy\nE     left  = [{'chain': 'solana', 'symbol': 'TEST', 'token_address': '68pm5RUgERsGo3QJhRr2YqMhRFMEDd1iCKYpGymZpump', 'liquidity_usd': 7454.74, 'conviction': 56.1, 'token_age_seconds': 118.0, 'max_buy_5pct_usd': 372.7370804266006}, {'chain': 'solana', 'symbol': 'clarity', 'token_address': 'CMPLnnZTSfAmULcAhRdGkNmz5y54yNAZRXY2aitvpump', 'liquidity_usd': 4085.37, 'conviction': 29.2, 'token_age_seconds': 79.0, 'max_buy_5pct_usd': 204.26854407563795}, {'chain': 'solana', 'symbol': 'Supercycle', 'token_address': '5x7E9JyZMYM7FpeAPnUA4wL9b5EYGeqba5bLg9cbpump', 'liquidity_usd': 4219.83, 'conviction': 24.3, 'token_age_seconds': 89.0, 'max_buy_5pct_usd': 210.9915455262802}, {'chain': 'solana', 'symbol': 'Supercycle', 'token_address': 'FWrNhPFsCS3W8scEQ92huxHjwzaqnGUrphLDwRdmpump', 'liquidity_usd': 4208.21, 'conviction': 24.2, 'token_age_seconds': 62.0, 'max_buy_5pct_usd': 210.41054540091605}, {'chain': 'solana', 'symbol': 'RICK', 'token_address': 'HMnicoffGH4yA9JnyW3DFheo7x94K1pFWC2Nq2Jzpump', 'liquidity_usd': 78.86, 'conviction': 14.9, 'token_age_seconds': 83.0, 'max_buy_5pct_usd': 3.9430008507931493}]\nE     right = [{'chain': 'robinhood', 'hot_rows': 4, 'thinnest_max_buy_usd': 629.42, 'serves_gate_fields': True}]"
+    }
+  ],
+  "totals": {
+    "failed": 1
+  },
+  "ratelimit": {
+    "requests": 10,
+    "limit": 2000,
+    "remaining": 1994,
+    "fraction_used": 0.003,
+    "exhausted": false
+  },
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "code_dirty_after": false,
+  "fingerprint_after": "sha256:38add2e49144657cb6c1e57cafc670b1c894d965c70632589e910ed89cab82e8",
+  "exit_status": 1
+}

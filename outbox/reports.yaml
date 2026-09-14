@@ -2344,6 +2344,82 @@ reports:
       - 'Read the entry back: entry_price_usd is the anchor-day close, not the close of the day the entry was made'
       - 'Our own entry, made 2026-09-13 into the 2026-09-11 round: AAPL 335.799987793, GOOGL 341.51001, PLTR 166.639999, SPCX 146.949997, COIN 181.005005'
 
+  - key: hot-floor-not-applied-on-solana
+    findings:
+      - CYM-a_hot_signal_clears_the_tradeability_floor_they_shipped
+    severity: high
+    category: logic
+    url: https://cymetica.com/api/v1/clones/fomo-radar/signals
+    title: The tradeability floor on `hot` is live on Robinhood Chain and is not applied on Solana, where hot rows are still served on pools far below it
+    expected: >
+      A row is served `hot: true` only when it is also tradeable, on both
+      chains the endpoint serves -- or the payload says which chain the floor
+      applies to.
+    actual: >
+      Every Robinhood row carries `max_buy_5pct_usd`, `hot_pressure` and
+      `thin`, and no hot Robinhood row was ever under the floor. No Solana row
+      carries any of the three, and hot Solana rows are served continuously on
+      pools far below it.
+    body: >
+      You told us on 2026-09-14 that the floor had shipped: *"a row is only HOT
+      now if it's also TRADEABLE -- its 5%-slippage max buy (max_buy_5pct_usd)
+      is at least $500. A burst on a thin curve is no longer hot; an unreadable
+      reserve fails closed to not-hot. The raw burst is still on the row as
+      hot_pressure."* We measured it before using it, as usual, and it is live
+      on one of the two chains.
+
+
+      On Robinhood Chain it is exactly as described and it works. Every row
+      carries `max_buy_5pct_usd`, `hot_pressure` and `thin`; across ten minutes
+      of sampling every thirty seconds, not one hot row was under the floor,
+      and rows that failed it were serving `hot: false` beside
+      `hot_pressure: true`. Nothing below is about that chain.
+
+
+      On Solana no row carries any of the three fields, and hot rows are served
+      continuously on pools that would not survive the floor. Sampling the same
+      ten minutes gave five distinct tokens under $500 of 5%-slippage max buy
+      while your Robinhood listing gave none. They are not edge cases at the
+      boundary: the thinnest held a 344-dollar pool, about 17 dollars of max
+      buy, and stayed `hot: true` across seven consecutive reads.
+
+
+      The unit is yours, not ours. We did not assume how a 5% max buy is
+      computed -- on every row that serves both numbers,
+      `max_buy_5pct_usd / liquidity_usd` is 0.0500 to four decimal places,
+      minimum, median and maximum alike. So your $500 is a $10,000 pool, and
+      `liquidity_usd` is served on 40 of 40 Solana rows: the floor is
+      computable on that chain from what you already publish.
+
+
+      Whether the gate is absent there or present with another threshold we
+      cannot tell from outside, and it does not change the reading a caller
+      gets. What we can say is that the sentence "a burst on a thin curve is no
+      longer hot" is not true of Solana rows today.
+
+
+      One note on the alternative you raised, indexing the floor to a multiple
+      of the median qualified buy size on the curve. On Solana that input does
+      not exist: `qualified_buyers`, `new_qualified_buyers_15m`,
+      `effective_qualified_buyers` and `credible_wallet_share` are null on all
+      40 rows, with `credibility_available: false`. An indexed floor would fail
+      open on exactly the chain where the flat one is currently not applied,
+      unless it falls back to something the chain does serve.
+
+
+      We are not asking for a particular repair. Applying the floor to Solana,
+      or publishing which chain it covers so a caller can apply it themselves,
+      both satisfy our check -- it compares the two chains and stays quiet when
+      your gated chain is the one breaching, when neither chain serves the gate
+      field at all, and when a row sits within serialisation noise of the
+      floor.
+    steps:
+      - 'GET https://cymetica.com/api/v1/clones/fomo-radar/signals?chain=robinhood&filter=hot (keyless): every row carries max_buy_5pct_usd, hot_pressure and thin'
+      - 'GET the same path with chain=solana: no row carries any of the three; liquidity_usd is present on all of them'
+      - 'On the Solana rows compute liquidity_usd * 0.05 -- the ratio your own Robinhood rows publish -- and compare with 500'
+      - 'Repeat every 30 seconds for ten minutes: the tokens under the floor are 60 to 180 seconds old and rotate, so a single read can miss them. Ours samples five reads eighteen seconds apart for this reason'
+      - 'On the same Solana rows read qualified_buyers, new_qualified_buyers_15m, effective_qualified_buyers and credible_wallet_share: null on all 40, credibility_available false'
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in
