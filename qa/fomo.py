@@ -138,6 +138,49 @@ def return_since_signal(signal_price, checkpoint_price) -> float | None:
 
 
 
+def _hours(label) -> float | None:
+    try:
+        return float(str(label or "").rstrip("h"))
+    except ValueError:
+        return None
+
+
+def read_late(signal: dict | None, checkpoint: dict,
+              tolerance: float = DUE_TOLERANCE_HOURS) -> bool:
+    """Was this checkpoint read further from its own label than the writer
+    would ever have allowed?
+
+    `due_checkpoints` has refused to back-fill a stale hour since 2026-09-13.
+    The 85 rows written before it did are still in the diary and cannot be
+    taken out of it -- rule 4 -- and the biggest of them, +1262.3%, is a price
+    read 2.61 hours after its signal and filed under `1h`. Both timestamps are
+    on the rows, so the reader can drop what the writer now refuses.
+
+    A row whose timestamps cannot be read is NOT late: nothing here can tell,
+    and a gap is not a loss.
+    """
+    hours = _hours(checkpoint.get("horizon"))
+    taken = _at(checkpoint.get("at"))
+    fired = _at((signal or {}).get("at"))
+    if hours is None or taken is None or fired is None:
+        return False
+    return abs((taken - fired).total_seconds() / 3600.0 - hours) > tolerance
+
+
+def _signals(rows: list[dict]) -> dict[str, dict]:
+    return {r["key"]: r for r in rows or []
+            if r.get("type") == "signal" and r.get("key")}
+
+
+def in_time(rows: list[dict]) -> list[dict]:
+    """`rows` without the checkpoints filed under an hour they were not read
+    in. Everything downstream reads this, never the raw diary."""
+    signals = _signals(rows)
+    return [r for r in rows or []
+            if r.get("type") != "checkpoint"
+            or not read_late(signals.get(r.get("key")), r)]
+
+
 def c_token(checkpoint: dict) -> str:
     """The token a checkpoint belongs to, off its key.
 
@@ -155,6 +198,7 @@ def stats(rows: list[dict], hit_threshold: float = DEFAULT_HIT_THRESHOLD,
     baked into the read -- what counts as "it worked" is the operator's call,
     not a number this function assumes silently.
     """
+    rows = in_time(rows)
     signals = {r["key"]: r for r in rows
               if r.get("type") == "signal" and r.get("key")}
     by_horizon: dict[str, list[dict]] = {}
@@ -205,7 +249,140 @@ def stats(rows: list[dict], hit_threshold: float = DEFAULT_HIT_THRESHOLD,
     return out
 
 
-def curves(rows: list[dict], limit: int = 40) -> list[dict]:
+def _positions(rows: list[dict]) -> tuple[dict, dict]:
+    """Every signal that had a price when it fired, marked at its newest
+    reading, plus what had to be set aside to get there.
+
+    One position per signal, not per token: a coin that goes hot in two
+    consecutive hours was two entries at two prices, and a basket that bought
+    both holds both. (`stats()` and `curves()` collapse to one row per token
+    for the opposite reason -- a reader takes THOSE for a list of coins.)
+    """
+    rows = list(rows or [])
+    signals = _signals(rows)
+    late = sum(1 for r in rows
+               if r.get("type") == "checkpoint"
+               and read_late(signals.get(r.get("key")), r))
+
+    per: dict[str, list[dict]] = {}
+    for row in in_time(rows):
+        if row.get("type") == "checkpoint" and row.get("key") in signals:
+            per.setdefault(row["key"], []).append(row)
+
+    stale = fresh = 0
+    held: dict[str, dict] = {}
+    for key, checkpoints in per.items():
+        signal = signals[key]
+        entry = signal.get("price_usd")
+        if not isinstance(entry, (int, float)) or entry <= 0:
+            continue  # never bought: nothing to mark, and never a 0% return
+        previous = entry
+        for row in sorted(checkpoints,
+                          key=lambda c: _hours(c.get("horizon")) or 0.0):
+            price, ret = row.get("price_usd"), row.get("return_pct")
+            if not isinstance(ret, (int, float)):
+                continue
+            # A repeat is a price nobody traded at since we last looked, not a
+            # coin standing still -- 304 of these read exactly 0.00% and set
+            # the console's median at 1h to 0.0%.
+            if price == previous:
+                stale += 1
+            else:
+                fresh += 1
+            previous = price
+            held[key] = {"key": key, "symbol": signal.get("symbol"),
+                         "conviction": signal.get("conviction"),
+                         "chain": signal.get("chain"), "entry_price": entry,
+                         "price_usd": price, "return_pct": ret,
+                         "hours": _hours(row.get("horizon")),
+                         "horizon": row.get("horizon")}
+    return held, {"late_readings": late, "stale_readings": stale,
+                  "fresh_readings": fresh, "tracked": len(signals)}
+
+
+def _spread(returns: list[float], top: int) -> dict:
+    """Mean, median, and the mean once the best `top` are taken out.
+
+    The third is the one that matters and the reason the other two never ship
+    alone. An equal-weight mean over memecoins is a single row: the live diary
+    reads +494.7%, and -1.5% without its best five.
+    """
+    if not returns:
+        return {"pnl_pct": None, "median_pct": None,
+                "pnl_without_top_pct": None, "n": 0}
+    ordered = sorted(returns)
+    rest = ordered[:-top] if top and len(ordered) > top else []
+    return {
+        "n": len(ordered),
+        "pnl_pct": sum(ordered) / len(ordered),
+        "median_pct": median(ordered),
+        "pnl_without_top_pct": sum(rest) / len(rest) if rest else None,
+    }
+
+
+DEFAULT_CONVICTION_MIN = 70.0
+
+
+def basket(rows: list[dict], top: int = 5,
+           conviction_min: float = DEFAULT_CONVICTION_MIN) -> dict:
+    """What an equal stake in every signal, bought at the moment it fired,
+    would be worth now.
+
+    [operator 2026-09-14] asked for exactly this, big, on the console, and in
+    the same breath to check whether the numbers hold -- *"vypadaji az moc
+    slibne"*. They do look promising and they are not: the headline is a mean,
+    a mean over memecoins is one row, and the biggest row in the live diary
+    (+73848%) sits in a pool carrying two cents of liquidity. So everything
+    that qualifies it is computed here rather than left to whoever draws it --
+    the mean without the best few, the median, how many signals had no price
+    at all, and how many readings were the same number twice.
+    """
+    held, counts = _positions(rows)
+    marks = list(held.values())
+    out = {**counts, **_spread([m["return_pct"] for m in marks], top),
+           "top": top,
+           "n_priced": len(marks),
+           "n_unpriced": counts["tracked"] - len(marks),
+           "winners": sum(1 for m in marks if m["return_pct"] > 0),
+           "losers": sum(1 for m in marks if m["return_pct"] < 0),
+           "best": max(marks, key=lambda m: m["return_pct"]) if marks else None,
+           "worst": min(marks, key=lambda m: m["return_pct"]) if marks else None,
+           "by_horizon": []}
+
+    # The same basket, entered only where THEIR own conviction score was high.
+    # [operator 2026-09-14] *"a zopbraz tam jeste P&L jen kdyubychom
+    # vstupovali do Conviction 70 a vic"* -- which is the question the whole
+    # tab is for: their number is either worth something or it is decoration,
+    # and the two baskets side by side answer it. A signal carrying no
+    # conviction at all is not a low one and is not counted either way.
+    picked = [m for m in marks
+              if isinstance(m.get("conviction"), (int, float))
+              and m["conviction"] >= conviction_min]
+    out["high_conviction"] = {
+        "min": conviction_min, **_spread([m["return_pct"] for m in picked], top),
+        "winners": sum(1 for m in picked if m["return_pct"] > 0),
+        "losers": sum(1 for m in picked if m["return_pct"] < 0),
+        "unscored": sum(1 for m in marks
+                        if not isinstance(m.get("conviction"), (int, float))),
+    }
+
+    # The same basket at each hour of the day, so the page can show whether
+    # holding is what costs -- which it is: the median goes from -0.7% at an
+    # hour to -24.7% at twenty-three.
+    at_hour: dict[str, list[float]] = {}
+    for row in in_time(rows):
+        if row.get("type") != "checkpoint":
+            continue
+        if isinstance(row.get("return_pct"), (int, float)):
+            at_hour.setdefault(str(row.get("horizon")), []).append(
+                row["return_pct"])
+    out["by_horizon"] = [
+        {"horizon": label, **_spread(at_hour[label], top)}
+        for label in sorted(at_hour, key=lambda h: _hours(h) or 0.0)]
+    return out
+
+
+def curves(rows: list[dict], limit: int | None = 40) -> list[dict]:
     """One hourly series per token, for the console to draw.
 
     `stats()` answers whether the signal worked, in aggregate. A curve is a
@@ -220,6 +397,7 @@ def curves(rows: list[dict], limit: int = 40) -> list[dict]:
     Newest signal wins per token, the same rule `stats()` uses for its tables,
     so a coin hot in two consecutive hours is one curve and not two.
     """
+    rows = in_time(rows)
     newest: dict[str, dict] = {}
     for row in rows or []:
         if row.get("type") != "signal" or not row.get("key"):
@@ -229,6 +407,10 @@ def curves(rows: list[dict], limit: int = 40) -> list[dict]:
             newest[token] = row
 
     seen: dict[str, dict[int, float | None]] = {}
+    # The price each hour, beside the return: a percentage cannot be checked
+    # against anything, and "a memecoin" at 5.561e-06 and at 0.0452 are not
+    # the same object. [operator 2026-09-14] asked to see what was bought.
+    priced: dict[str, dict[int, float]] = {}
     for row in rows or []:
         if row.get("type") != "checkpoint" or not row.get("key"):
             continue
@@ -241,6 +423,8 @@ def curves(rows: list[dict], limit: int = 40) -> list[dict]:
         except ValueError:
             continue
         seen.setdefault(token, {})[hour] = row.get("return_pct")
+        if isinstance(row.get("price_usd"), (int, float)):
+            priced.setdefault(token, {})[hour] = row["price_usd"]
 
     out = []
     for token, by_hour in seen.items():
@@ -250,11 +434,21 @@ def curves(rows: list[dict], limit: int = 40) -> list[dict]:
         highest = max(h for h in by_hour)
         points = [(h, by_hour.get(h)) for h in range(1, highest + 1)]
         read = [v for _, v in points if v is not None]
+        prices = priced.get(token) or {}
         out.append({
             "token": token,
             "symbol": signal.get("symbol") or "?",
             "conviction": signal.get("conviction"),
             "points": points,
+            # The price the signal fired at, and the newest one actually READ
+            # -- never the last slot in the series, since an hour nobody could
+            # price is a gap. [operator 2026-09-14] asked for both as columns,
+            # looked at them and had them taken out again ("sou zbytecne"), so
+            # nothing draws these. They stay because a return is a ratio and
+            # cannot be checked against anything on its own: this is what the
+            # +73848% row turns out to be $0.00006 into a two-cent pool.
+            "entry_price": signal.get("price_usd"),
+            "last_price": prices[max(prices)] if prices else None,
             "last": read[-1] if read else None,
             "peak": max(read) if read else None,
             "trough": min(read) if read else None,
@@ -262,4 +456,4 @@ def curves(rows: list[dict], limit: int = 40) -> list[dict]:
     # Biggest mover first: the reader meets the story, not the alphabet.
     out.sort(key=lambda c: (c["peak"] if c["peak"] is not None else -1e9),
              reverse=True)
-    return out[:limit]
+    return out if limit is None else out[:limit]

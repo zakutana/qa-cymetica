@@ -1288,12 +1288,20 @@ def _fomo_stats() -> dict | None:
         if isinstance(row, dict):
             rows.append(row)
 
-    from qa.fomo import curves, stats
+    from qa.fomo import basket, curves, stats
 
     # The curves are what the page DRAWS; the stats are what it concludes.
     # Both, because a hit rate without the shape hides a coin that ran 900%
     # in hour three and gave it back by six.
-    return {**stats(rows), "curves": curves(rows)}
+    #
+    # And the basket, which is what the operator asked the page to lead with:
+    # what an equal stake in every signal would be worth. `curves` is trimmed
+    # HERE rather than inside, so the page can say how many it is not showing
+    # -- it draws the forty biggest movers, and a table of winners that does
+    # not say it is a table of winners is the whole of "looks too promising".
+    drawn = curves(rows, limit=None)
+    return {**stats(rows), "basket": basket(rows), "curves": drawn[:40],
+            "curves_total": len(drawn)}
 
 
 def _process_rows() -> list[dict]:
@@ -4718,6 +4726,7 @@ function memecoinPanel() {
   const thr = fm.hit_threshold != null ? fm.hit_threshold : 20;
   const day = (fm.horizons || {})["24h"] || {};
   const first = (fm.horizons || {})["1h"] || {};
+  const b = fm.basket || {};
   const rows = (fm.curves || []).map(c => `<tr>
       <td class="mc-sym">${esc(c.symbol || "?")}</td>
       <td class="mc-conv">${c.conviction == null ? "&mdash;" : c.conviction}</td>
@@ -4726,29 +4735,68 @@ function memecoinPanel() {
       <td class="mc-g">${curveSvg(c.points)}</td>
     </tr>`).join("");
 
+  // "-- of 0" is what the operator saw and read as broken. It was not: no
+  // signal had lived a whole day yet. A figure that cannot exist yet says so.
   const fig = (label, row) => {
     const hit = row.hit_rate == null ? null : Math.round(row.hit_rate * 100);
-    return `<div><dt>${label}</dt><dd>${hit == null ? "&mdash;" : hit + "%"}
-      <span class="mc-of">of ${row.resolved || 0}</span></dd></div>`;
+    return `<div><dt>${label}</dt><dd>${hit == null
+      ? `<span class="mc-flat">not yet</span>` : hit + "%"}
+      <span class="mc-of">${hit == null ? "no signal is that old"
+        : "of " + (row.resolved || 0)}</span></dd></div>`;
   };
+  const card = (head, value, sub, cls) => `<div class="mc-card">
+      <div class="mc-h">${head}</div>
+      <div class="mc-big ${cls || ""}">${value}</div>
+      <div class="mc-sub">${sub}</div></div>`;
+  const big = v => v == null ? `<span class="mc-flat">&mdash;</span>`
+    : `<span class="${v > 0 ? "mc-up" : (v < 0 ? "mc-down" : "mc-flat")}">${
+       v > 0 ? "+" : ""}${v.toFixed(1)}%</span>`;
 
+  const best = b.best || {}, worst = b.worst || {}, hc = b.high_conviction || {};
   return `<header class="mc-top">
-      <h2>Does FOMO Radar's <code>hot</code> signal predict a move?</h2>
-      <div class="mc-count">${fm.tracked || 0}<span>signal(s) tracked</span></div>
+      <h2>Bought every <code>hot</code> signal the moment it fired &mdash;
+        what would it be worth?</h2>
+      <div class="mc-grid">
+        ${card("P&amp;L, equal stake in every signal", big(b.pnl_pct),
+          `${b.n_priced || 0} signals bought, marked at the newest price each
+           one has`)}
+        ${card("without the best " + (b.top || 5),
+          big(b.pnl_without_top_pct),
+          `the headline above is ${b.top || 5} rows &mdash; best
+           ${esc(best.symbol || "?")} ${pct(best.return_pct)}`)}
+        ${card("the median signal", big(b.median_pct),
+          `${b.winners || 0} up, ${b.losers || 0} down &mdash; worst
+           ${esc(worst.symbol || "?")} ${pct(worst.return_pct)}`)}
+        ${card(`conviction &ge;&nbsp;${hc.min != null ? hc.min : 70} only`,
+          big(hc.pnl_pct),
+          `${hc.n || 0} of those signals &mdash; ${pct(hc.median_pct)} median,
+           ${hc.pnl_without_top_pct == null ? "&mdash;"
+             : pct(hc.pnl_without_top_pct)} without its best ${b.top || 5}`)}
+      </div>
       <dl class="mc-figs">
+        <div><dt>signals tracked</dt><dd>${fm.tracked || 0}</dd></div>
+        <div><dt>no price when it fired</dt><dd>${b.n_unpriced || 0}
+          <span class="mc-of">never in any figure</span></dd></div>
+        <div><dt>same price read twice</dt><dd>${b.stale_readings || 0}
+          <span class="mc-of">of ${(b.stale_readings || 0) + (b.fresh_readings || 0)} readings</span></dd></div>
         ${fig(`hit &ge;&nbsp;${thr}% at 1 h`, first)}
         ${fig(`hit &ge;&nbsp;${thr}% at 24 h`, day)}
         <div><dt>median at 1 h</dt><dd>${pct(first.median_pct)}</dd></div>
       </dl>
-      <p class="blurb">Return is <strong>ours</strong>: the price when the
-      signal fired against the price at each hour after it &mdash; not their
-      rolling %-change window. Hover a point on the graph for that hour.
-      A dashed stretch is an hour nobody could price.</p>
+      <p class="blurb"><strong>Read the cards together.</strong> The
+      headline is five rows, and the biggest of them quotes a pool holding
+      two cents &mdash; a price nobody could have sold at. Return is
+      <strong>ours</strong>: the signal's own price against each hour after
+      it, never their rolling window.</p>
     </header>
-    ${rows ? `<table class="mc-list"><thead><tr>
-        <th>token</th><th>conviction</th><th>now</th><th>peak</th>
+    ${rows ? `<div class="mc-table"><h3>The ${
+        (fm.curves || []).length} biggest movers of ${fm.curves_total || 0}
+        curves &mdash; by peak, so this table is winners by construction.</h3>
+      <table class="mc-list"><thead><tr>
+        <th>token</th><th>conviction</th>
+        <th>now</th><th>peak after signal</th>
         <th>first 24 hours</th></tr></thead>
-      <tbody>${rows}</tbody></table>`
+      <tbody>${rows}</tbody></table></div>`
     : `<p class="blurb">Tracking signals; none has reached its first
        checkpoint (1h) yet.</p>`}`;
 }

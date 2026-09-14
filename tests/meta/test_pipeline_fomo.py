@@ -264,3 +264,193 @@ def test_an_hour_missed_is_never_filled_with_a_later_price():
     later = t0 + timedelta(hours=2 + fomo.DUE_TOLERANCE_HOURS + 0.01)
     assert "2h" not in [l for _, l in fomo.due_checkpoints([signal], {},
                                                            now=later)]
+
+
+def _diary(entry, prices, at=T0, key="0xabc:2026-09-13T12", symbol="DOGEX",
+           taken_at=None):
+    """A signal and one checkpoint per (hour, price) pair, the way the diary
+    holds them: the price is what was read, `return_pct` is what
+    `fomo_watch.resolve()` computed from it at the time.
+
+    `taken_at` overrides when a checkpoint was actually taken, for the rows
+    that were filed under an hour they were not read in.
+    """
+    rows = [{"type": "signal", "at": at.isoformat(), "key": key,
+             "token_address": key.rsplit(":", 1)[0], "symbol": symbol,
+             "chain": "solana", "conviction": 70.0, "price_usd": entry}]
+    for hour, price in prices:
+        rows.append({
+            "type": "checkpoint", "key": key, "horizon": f"{hour}h",
+            "at": ((taken_at or {}).get(hour)
+                   or (at + timedelta(hours=hour))).isoformat(),
+            "price_usd": price,
+            "return_pct": fomo.return_since_signal(entry, price)})
+    return rows
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_price_that_never_moved_is_a_repeated_read_not_a_flat_coin():
+    """304 checkpoints in the live diary returned exactly 0.00%, and every one
+    of them carried a price byte-identical to the price at the signal. 63
+    signals reported ONE price across every checkpoint they ever had -- ASTRO
+    sat at 2.872e-05 for hours 1, 8, 9, 10, 11 and 12.
+
+    Read live 2026-09-14: ASTRO's pair carries `liquidity_usd: 0.0` against
+    `volume_h24: 243951`, and MelonMusk -- the +73848% that is the single
+    biggest number on the page -- carries `liquidity_usd: 0.02` and
+    `volume_h24: 0.25`. So the frozen price is not their bug: it is the last
+    print of a pool nobody can trade in, and DexScreener repeats it until
+    somebody trades again.
+
+    It is OUR bug to show it as a measurement. The median at 1h read
+    **0.0%** on the console for that reason alone, and a reader takes that
+    for "the typical signal goes nowhere" rather than "the typical price we
+    read was the one we already had". So a repeat is counted and named.
+    """
+    rows = _diary(1.0e-05, [(1, 1.0e-05), (2, 1.0e-05), (3, 2.0e-05)])
+    b = fomo.basket(rows)
+    assert b["stale_readings"] == 2, b
+    assert b["fresh_readings"] == 1, b
+
+    # It is still the mark: a position in a pool that has not traded is worth
+    # its last print, and pretending otherwise would be the opposite lie.
+    assert b["pnl_pct"] == 100.0, b
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_checkpoint_read_hours_after_its_label_is_not_that_hour():
+    """`due_checkpoints` has refused to back-fill a stale hour since
+    2026-09-13. The 85 rows written BEFORE it did are still in the diary, and
+    the biggest of them -- +1262.3% -- is filed as `1h` from a price read
+    2.61 hours after the signal.
+
+    A rule enforced at write time does not clean what was written before it,
+    and rule 4 forbids editing the diary. So the reader drops them, by the
+    same tolerance the writer uses, off the two timestamps the rows already
+    carry. A row whose `at` cannot be read is NOT dropped -- a gap is not a
+    loss, and the fixtures above carry no timestamps at all.
+    """
+    t0 = T0
+    late = {1: t0 + timedelta(hours=2.61)}
+    rows = _diary(1.0e-05, [(1, 1.4e-04), (3, 9.0e-06)], taken_at=late)
+
+    b = fomo.basket(rows)
+    assert b["late_readings"] == 1, b
+    assert round(b["pnl_pct"], 6) == -10.0, (
+        "the 1h row was read at 2.61h and is not 1h")
+
+    by_h = {h["horizon"]: h for h in b["by_horizon"]}
+    assert "1h" not in by_h, by_h
+    assert by_h["3h"]["n"] == 1
+
+    # And the same row is gone from the hit rate, which is the figure that
+    # went on the page.
+    assert "1h" not in fomo.stats(rows)["horizons"]
+
+    # Unreadable timestamps are not late. Nothing here can tell.
+    blind = [dict(r, at=None) for r in rows]
+    assert fomo.basket(blind)["late_readings"] == 0
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_basket_is_an_equal_stake_in_every_signal_and_says_what_it_skipped():
+    """[operator 2026-09-14] *"ma to byt vetsi ten celkovy P&L kdybychom vse
+    nakoupili v moment singnalu a over jeslti fakt vsechna cisla sedi bo
+    vypadaji az moc slibne"*.
+
+    Equal money into every signal at the price when it fired, marked at the
+    newest reading each one has. Which makes the headline the mean return --
+    and a mean over memecoins is one row, not a portfolio: the live diary
+    reads +494.7%, and **-1.5%** once the best five are removed.
+
+    So the figure never ships alone. `pnl_without_top_pct` and `median_pct`
+    are computed here, beside it, and so is what the headline is silent
+    about: 448 of 826 signals had no price at the moment they fired and are
+    in no figure at all.
+    """
+    rows = []
+    # Four signals: two losers, one small winner, one that ran 100x.
+    for i, (entry, last) in enumerate([(1.0, 0.5), (1.0, 0.9),
+                                       (1.0, 1.2), (1.0, 100.0)]):
+        rows += _diary(entry, [(1, last)], key=f"0x{i}:2026-09-13T12",
+                       symbol=f"T{i}")
+    # And one their terminal could not price when it fired.
+    rows += _diary(None, [(1, 5.0)], key="0x9:2026-09-13T12", symbol="BLIND")
+
+    b = fomo.basket(rows, top=1)
+    assert b["tracked"] == 5 and b["n_priced"] == 4 and b["n_unpriced"] == 1
+    # (-50 - 10 + 20 + 9900) / 4
+    assert round(b["pnl_pct"], 6) == 2465.0, b
+    assert round(b["pnl_without_top_pct"], 6) == -13.333333, b
+    assert b["top"] == 1, "the page has to say how many were removed"
+    assert round(b["median_pct"], 6) == 5.0
+    assert b["winners"] == 2 and b["losers"] == 2
+    assert b["best"]["symbol"] == "T3" and b["worst"]["symbol"] == "T0"
+
+    # An empty diary is not a 0% return.
+    assert fomo.basket([])["pnl_pct"] is None
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_basket_can_be_entered_on_their_conviction_alone():
+    """[operator 2026-09-14] *"a zopbraz tam jeste P&L jen kdyubychom
+    vstupovali do Conviction 70 a vic"*.
+
+    Which is the question this whole tab exists to answer: `conviction` is
+    their own score on their own signal, and either it separates the winners
+    from the rest or it is decoration. So the same basket, entered only where
+    they were confident, beside the one that took everything.
+
+    A signal carrying no conviction is not a low-conviction signal. It is
+    counted as neither, and said out loud, because silently dropping it would
+    make the filtered basket look like a choice nobody could have made.
+    """
+    rows = []
+    for i, (conviction, last) in enumerate([(88.3, 2.0), (70.0, 1.5),
+                                            (69.9, 100.0), (12.0, 0.1)]):
+        diary = _diary(1.0, [(1, last)], key=f"0x{i}:2026-09-13T12",
+                       symbol=f"T{i}")
+        diary[0]["conviction"] = conviction
+        rows += diary
+    blind = _diary(1.0, [(1, 50.0)], key="0x9:2026-09-13T12", symbol="NOSCORE")
+    blind[0]["conviction"] = None
+    rows += blind
+
+    hc = fomo.basket(rows)["high_conviction"]
+    assert hc["min"] == 70.0, "the threshold is the operator's, not a constant"
+    assert hc["n"] == 2, "70.0 is >= 70; 69.9 is not"
+    assert round(hc["pnl_pct"], 6) == 75.0, hc  # (+100 + 50) / 2
+    assert hc["winners"] == 2 and hc["losers"] == 0
+    assert hc["unscored"] == 1, "an unscored signal is in neither basket"
+
+    # The unfiltered basket still holds all five, +9880% and dragged there by
+    # the one signal they were NOT confident about.
+    whole = fomo.basket(rows)
+    assert whole["n_priced"] == 5
+    assert whole["pnl_pct"] > hc["pnl_pct"]
+
+    # A threshold nothing reaches is not a 0% return.
+    assert fomo.basket(rows, conviction_min=99.0)["high_conviction"][
+        "pnl_pct"] is None
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_curve_carries_the_price_the_signal_fired_at():
+    """[operator 2026-09-14] *"pridej novy sloupec at jde videt cena hned v
+    moment signalu"*.
+
+    The return is a ratio and says nothing about what was bought: 5.561e-06
+    and 0.0452 are both "a memecoin" and are not the same object. The entry
+    price is on the signal row, so the curve carries it and the console has a
+    column to put it in -- with the newest price beside it, since a percentage
+    alone cannot be checked against anything.
+    """
+    rows = _diary(2.5e-06, [(1, 5.0e-06), (2, None), (3, 7.5e-06)])
+    curve = fomo.curves(rows)[0]
+    assert curve["entry_price"] == 2.5e-06
+    assert curve["last_price"] == 7.5e-06, "the newest price actually read"
+    assert curve["last"] == 200.0
+
+    # An hour nobody could price does not become the last price.
+    gap = fomo.curves(_diary(2.5e-06, [(1, 5.0e-06), (2, None)]))[0]
+    assert gap["last_price"] == 5.0e-06

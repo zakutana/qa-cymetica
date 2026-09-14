@@ -352,11 +352,29 @@ def test_the_memecoin_section_renders_with_and_without_a_diary(tmp_path,
         "curves": [
             {"token": "0xa", "symbol": "DOGEX", "conviction": 0.9,
              "points": [[1, 38.5], [2, 41.0], [3, None], [4, 12.0]],
-             "last": 12.0, "peak": 41.0, "trough": 12.0},
+             "last": 12.0, "peak": 41.0, "trough": 12.0,
+             "entry_price": 5.561e-06, "last_price": 6.228e-06},
             {"token": "0xb", "symbol": "PEPEX", "conviction": 0.1,
              "points": [[1, -30.5]], "last": -30.5, "peak": -30.5,
-             "trough": -30.5},
+             "trough": -30.5, "entry_price": 0.0452, "last_price": 0.0314},
         ],
+        "curves_total": 9,
+        # The shape `qa.fomo.basket` returns. The mean and the mean without
+        # the best few DIFFER by three orders of magnitude here on purpose:
+        # that gap is the finding the panel exists to show, and an assertion
+        # about one cannot be satisfied by the other.
+        "basket": {"pnl_pct": 494.7, "pnl_without_top_pct": -1.5,
+                   "median_pct": -0.5, "top": 5, "n_priced": 378,
+                   "n_unpriced": 448, "tracked": 826, "winners": 136,
+                   "losers": 242, "stale_readings": 914,
+                   "fresh_readings": 2319, "late_readings": 85,
+                   "best": {"symbol": "MelonMusk", "return_pct": 73848.0},
+                   "worst": {"symbol": "RUGME", "return_pct": -100.0},
+                   "high_conviction": {"min": 70, "n": 96, "pnl_pct": 12.4,
+                                       "median_pct": -3.3,
+                                       "pnl_without_top_pct": -9.1,
+                                       "winners": 30, "losers": 66,
+                                       "unscored": 0}},
     }
     code, err, captured = _run_page(node, tmp_path / "withfomo", payload)
     assert code == 0, f"the page throws with a real diary:\n{err[:900]}"
@@ -407,6 +425,48 @@ def test_the_memecoin_section_renders_with_and_without_a_diary(tmp_path,
         "the summary is showing the mean under the word median")
     assert "Memecoiny" not in captured.get("stats", ""), (
         "drawn twice -- the operator then has to guess which one is live")
+
+    # [operator 2026-09-14] *"ma to byt vetsi ten celkovy P&L kdybychom vse
+    # nakoupili v moment singnalu"*. The headline, and -- never apart from it
+    # -- what the headline is made of: it is +494.7% and -1.5% without its
+    # best five, and a page showing only the first is a lie told with a true
+    # figure. Same defect as M03 above, one figure up.
+    assert "+494.7%" in panel, "the P&L of buying every signal is missing"
+    assert "-1.5%" in panel, (
+        "the mean without the best rows is missing; the headline is 5 rows")
+    head = panel[:panel.index("mc-figs")]
+    assert head.index("+494.7%") < head.index("-1.5%") < head.index("-0.5%"), (
+        "P&L, then what it rests on, then the median -- in that order")
+    assert "MelonMusk" in panel and "73848" in panel, (
+        "the row that IS the headline must be named beside it")
+
+    # And what the headline is silent about: 448 of 826 signals had no price
+    # when they fired, so they are in no figure on this page.
+    assert "448" in panel, "the signals with no entry price are not shown"
+    assert "914" in panel, "the repeated price reads are not shown"
+
+    # [operator 2026-09-14] asked for a price-at-signal column, looked at it
+    # and had it taken out again -- *"ty dve kolumny smaz sou zbytecne"*. The
+    # numbers stay in the payload, where the P&L is computed from them; the
+    # table is back to five columns.
+    assert "price at signal" not in panel and "price now" not in panel
+    assert panel.count("<th>") == 5, panel[panel.index("<thead"):][:400]
+
+    # [operator 2026-09-14] *"P&L jen kdyubychom vstupovali do Conviction 70 a
+    # vic"*: their own score, tested against the basket that took everything.
+    assert "conviction &ge;&nbsp;70 only" in panel
+    assert "+12.4%" in panel, "the high-conviction basket is not drawn"
+
+    # A figure that cannot exist yet says so. "-- of 0" beside the 24h hit
+    # rate is what the operator read as the panel being broken; no signal had
+    # lived a whole day.
+    assert "not yet" in panel and "no signal is that old" in panel
+
+    # The table is sorted by peak and cut at 40, so it is winners by
+    # construction. The page has to say so rather than let it read as a
+    # sample.
+    assert "of 9" in panel and "by construction" in panel, (
+        "the table does not say it is showing the biggest movers only")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

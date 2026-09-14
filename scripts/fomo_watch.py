@@ -92,7 +92,7 @@ def _hot_rows(client, chain: str) -> list[dict]:
     return body.get("rows") or []
 
 
-def _price(client, token_address: str) -> float | None:
+def _quote(client, token_address: str) -> dict | None:
     """`search?q=<address>` -- confirmed live 2026-09-13: `{"rows": [{"address",
     "price_usd", ...}]}`. Matched on `address` because a symbol/name search
     can answer with more than one token; an address search should not, but a
@@ -101,13 +101,35 @@ def _price(client, token_address: str) -> float | None:
     response = client.get(SEARCH_PATH, params={"q": token_address})
     if response.status_code != 200:
         return None
-    body = response.json() or {}
     wanted = str(token_address or "").lower()
-    for row in body.get("rows") or []:
+    for row in (response.json() or {}).get("rows") or []:
         if isinstance(row, dict) and str(row.get("address", "")).lower() == wanted:
-            price = row.get("price_usd")
-            return float(price) if isinstance(price, (int, float)) else None
+            return row
     return None
+
+
+# What a price has to carry to be a price somebody could have traded at.
+# Read live 2026-09-14: MelonMusk, the single biggest return in the whole
+# diary at +73848%, quotes a pair holding `liquidity_usd: 0.02` against
+# `volume_h24: 0.25` -- two cents of depth and a quarter of a dollar traded
+# all day. ASTRO, frozen at one price across six checkpoints, quotes
+# `liquidity_usd: 0.0`. Neither is their defect: DexScreener repeats the last
+# print until somebody trades again, and their terminal passes it through.
+# It is ours, because we wrote the print down as a return and drew it. We had
+# these fields in the same response the price came out of and kept only the
+# price, so a year of diary cannot be re-judged. Kept from now on.
+DEPTH_FIELDS = ("liquidity_usd", "volume_h24", "market_cap", "buys_h24",
+                "sells_h24", "age_seconds", "dex")
+
+
+def _depth(quote: dict | None) -> dict:
+    return {k: (quote or {}).get(k) for k in DEPTH_FIELDS
+            if (quote or {}).get(k) is not None}
+
+
+def _price(client, token_address: str) -> float | None:
+    price = (_quote(client, token_address) or {}).get("price_usd")
+    return float(price) if isinstance(price, (int, float)) else None
 
 
 def capture(client, now=None) -> dict:
@@ -143,16 +165,19 @@ def capture(client, now=None) -> dict:
             and not str(row.get("token_address") or "").strip())
         for row in fomo.new_signals(hot_rows, tracked, at=now):
             key = fomo.signal_key(row.get("token_address"), now)
-            price = None
+            quote = None
             try:
-                price = _price(client, row.get("token_address"))
+                quote = _quote(client, row.get("token_address"))
             except Exception:  # noqa: BLE001 -- price stays None, not a crash
                 pass
+            price = (quote or {}).get("price_usd")
+            price = float(price) if isinstance(price, (int, float)) else None
             signal = _append({
                 "type": "signal", "at": now.isoformat(), "key": key,
                 "token_address": row.get("token_address"),
                 "symbol": row.get("symbol"), "chain": chain,
                 "conviction": row.get("conviction"), "price_usd": price,
+                **_depth(quote),
             })
             tracked.add(key)
             added.append(signal)
@@ -173,15 +198,18 @@ def resolve(client, now=None) -> dict:
     written = []
     for signal, horizon in fomo.due_checkpoints(signals, done, now=now):
         try:
-            price = _price(client, signal.get("token_address"))
+            quote = _quote(client, signal.get("token_address"))
         except Exception as exc:  # noqa: BLE001
             written.append({"key": signal["key"], "horizon": horizon,
                             "error": str(exc)[:200]})
             continue
+        price = (quote or {}).get("price_usd")
+        price = float(price) if isinstance(price, (int, float)) else None
         ret = fomo.return_since_signal(signal.get("price_usd"), price)
         written.append(_append({
             "type": "checkpoint", "at": now.isoformat(), "key": signal["key"],
             "horizon": horizon, "price_usd": price, "return_pct": ret,
+            **_depth(quote),
         }))
     return {"checked": len(written), "checkpoints": written}
 

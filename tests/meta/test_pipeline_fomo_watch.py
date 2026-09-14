@@ -255,3 +255,66 @@ def test_run_survives_a_round_that_raises_and_stops_on_the_event(tmp_path,
     assert len(rounds_seen) == 3, (
         "the round that raised must have been REACHED three times; if the "
         "exception never got past capture() this test proves nothing")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_price_is_written_with_the_depth_it_was_quoted_at(tmp_path,
+                                                            monkeypatch):
+    """The single biggest number this diary holds is +73848%, MelonMusk, and
+    read live on 2026-09-14 its pair quotes `liquidity_usd: 0.02` against
+    `volume_h24: 0.25`. Two cents of depth. The return is arithmetically
+    right and could not have been taken by anybody.
+
+    That is not their defect -- DexScreener repeats the last print until
+    somebody trades again and their terminal passes it through -- and it was
+    in the SAME response the price came out of. We kept the price and dropped
+    the rest, so nine hundred signals of history cannot now be re-judged
+    against what was tradeable. Kept from here on, on both row types.
+    """
+    mod = _module(tmp_path, monkeypatch)
+    quote = {"price_usd": 0.002, "liquidity_usd": 0.02, "volume_h24": 0.25,
+             "market_cap": 45160641.0, "buys_h24": 23, "sells_h24": 11,
+             "age_seconds": 46877, "dex": "meteora", "name": "Melon Musk"}
+
+    def handler(request):
+        url = str(request.url)
+        if "fomo-radar/signals" in url:
+            if request.url.params.get("chain") != "solana":
+                return httpx.Response(200, json={"rows": []})
+            return httpx.Response(200, json={"rows": [_fomo_row("SoL1")]})
+        if "memecoin-terminal/search" in url:
+            return httpx.Response(200, json={"rows": [
+                {**quote, "address": request.url.params.get("q")}]})
+        return httpx.Response(404)
+
+    client = _client(handler)
+    mod.capture(client, now=T0)
+    signal = [r for r in mod.load() if r["type"] == "signal"][0]
+    assert signal["price_usd"] == 0.002
+    assert signal["liquidity_usd"] == 0.02 and signal["volume_h24"] == 0.25
+    assert signal["dex"] == "meteora" and signal["buys_h24"] == 23
+    assert "name" not in signal, "only the fields we named, not the whole row"
+
+    mod.resolve(client, now=T0 + timedelta(hours=1, minutes=1))
+    check = [r for r in mod.load() if r["type"] == "checkpoint"][0]
+    assert check["horizon"] == "1h"
+    assert check["liquidity_usd"] == 0.02, (
+        "depth on the signal alone cannot say whether the EXIT was tradeable")
+
+    # A quote that carries none of it still writes the price. Their rows are
+    # not all the same shape and a missing field is not a failed read.
+    def bare(request):
+        url = str(request.url)
+        if "fomo-radar/signals" in url:
+            if request.url.params.get("chain") != "solana":
+                return httpx.Response(200, json={"rows": []})
+            return httpx.Response(200, json={"rows": [_fomo_row("SoL2")]})
+        if "memecoin-terminal/search" in url:
+            return httpx.Response(200, json={"rows": [
+                {"address": request.url.params.get("q"), "price_usd": 9.0}]})
+        return httpx.Response(404)
+
+    mod.capture(_client(bare), now=T0 + timedelta(hours=2))
+    second = [r for r in mod.load()
+              if r["type"] == "signal" and r["token_address"] == "SoL2"][0]
+    assert second["price_usd"] == 9.0 and "liquidity_usd" not in second
