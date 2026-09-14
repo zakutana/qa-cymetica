@@ -117,6 +117,14 @@ def published_ratio(rows: list[dict]) -> float | None:
     The median over every row serving both, so one odd row cannot move it.
     None when no row serves both, and the caller then has nothing to hold the
     other chain against -- inconclusive, not a finding.
+
+    **Per chain, never pooled.** It was pooled across both until 2026-09-14,
+    when Cymetica said the two chains derive the figure differently: a
+    Robinhood curve reads a single reserve and Solana has only a two-sided
+    pool, so `max_buy = 0.05 x TVL/2` there against `0.05 x TVL` here. A
+    median over the union would then be neither, and would be applied to
+    both -- one name for two measurements, which is how a figure ends up
+    compared with itself.
     """
     seen = []
     for row in rows:
@@ -280,12 +288,17 @@ def test_a_hot_signal_clears_the_tradeability_floor_they_shipped(rest_anon):
         robinhood_rows += _rows(rest_anon, "robinhood")
         solana_rows += _rows(rest_anon, "solana")
 
-    # Read off the gated chain, on every run. Their $500 is stated in max-buy
-    # and Solana serves only a pool, so the conversion has to come from their
-    # own rows rather than from arithmetic we believe about AMMs.
-    ratio = published_ratio(robinhood_rows + solana_rows)
+    # Each chain's own ratio, and the gated chain's as the fallback for a
+    # chain that publishes none. Their $500 is stated in max-buy and a chain
+    # may serve only a pool, so the conversion comes from their rows rather
+    # than from arithmetic we believe about AMMs -- and the fallback is the
+    # CONSERVATIVE direction: Robinhood's 0.05 makes a Solana pool look richer
+    # than their own 0.025 would, so a row it still calls thin is thin either
+    # way.
+    ratio = published_ratio(robinhood_rows)
+    solana_ratio = published_ratio(solana_rows) or ratio
     robinhood = _chain(robinhood_rows, ratio)
-    solana = _chain(solana_rows, ratio)
+    solana = _chain(solana_rows, solana_ratio)
 
     verdict, reason = decide(solana, robinhood)
     if verdict == "inconclusive":
@@ -310,7 +323,7 @@ def test_a_hot_signal_clears_the_tradeability_floor_they_shipped(rest_anon):
             "floor_max_buy_usd": FLOOR_MAX_BUY_USD,
             "breach_fraction": BREACH_FRACTION,
             "min_breaches": MIN_BREACHES,
-            "published_ratio": ratio,
+            "published_ratio": ratio, "solana_ratio": solana_ratio,
             "reads": READS, "spacing_seconds": SPACING_SECONDS,
             "solana_rows": solana["rows"], "solana_hot": solana["hot"],
             "solana_breaches": len(solana["breaches"]),

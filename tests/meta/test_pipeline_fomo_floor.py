@@ -72,6 +72,20 @@ def test_the_unit_conversion_comes_off_their_rows_not_off_our_arithmetic():
     # No row serves both -> no bridge, and the caller must not invent one.
     assert mod.published_ratio([_row("C", 1000.0)]) is None
 
+    # Per chain, never pooled. Cymetica said on 2026-09-14 that a Robinhood
+    # curve reads a single reserve while Solana has only a two-sided pool, so
+    # max buy is 0.05 x TVL there and 0.05 x TVL/2 on Solana. A median over
+    # the union is neither, and would then be applied to both.
+    rh = [_row("RH", 10000.0, max_buy=500.0)] * 3
+    sol = [_row("SOL", 10000.0, max_buy=250.0)] * 3
+    assert abs(mod.published_ratio(rh) - 0.05) < 1e-9
+    assert abs(mod.published_ratio(sol) - 0.025) < 1e-9
+    pooled = mod.published_ratio(rh + sol)
+    assert pooled != mod.published_ratio(sol), (
+        f"pooling gives {pooled}, which is then applied to a chain whose own "
+        f"rows say {mod.published_ratio(sol)} -- every solana pool would be "
+        f"read as twice the max buy it carries")
+
     # Their own field wins wherever it is served; the pool is the fallback.
     assert mod.max_buy(_row("D", 1000.0, max_buy=7.0), 0.05) == 7.0
     assert mod.max_buy(_row("E", 1000.0), 0.05) == 50.0
