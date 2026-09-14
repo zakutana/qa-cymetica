@@ -4758,12 +4758,15 @@ function memecoinPanel() {
         what would it be worth?</h2>
       <div class="mc-grid">
         ${card("P&amp;L, equal stake in every signal", big(b.pnl_pct),
-          `${b.n_priced || 0} signals bought, marked at the newest price each
-           one has`)}
-        ${card("without the best " + (b.top || 5),
-          big(b.pnl_without_top_pct),
-          `the headline above is ${b.top || 5} rows &mdash; best
-           ${esc(best.symbol || "?")} ${pct(best.return_pct)}`)}
+          // [operator 2026-09-14] *"to me nezjaima bez top 5 nechapu proc by
+          // to tam melo byt"*. It had a card of its own, which was mine and
+          // not asked for. It stays as one line here because it is the only
+          // thing on the page that says whether the headline is the signal
+          // or one lucky row -- demoted, not deleted.
+          `${b.n_priced || 0} signals bought &mdash;
+           ${b.pnl_without_top_pct == null ? "&mdash;"
+             : pct(b.pnl_without_top_pct)} without the best ${b.top || 5},
+           of which ${esc(best.symbol || "?")} ${pct(best.return_pct)}`)}
         ${card("the median signal", big(b.median_pct),
           `${b.winners || 0} up, ${b.losers || 0} down &mdash; worst
            ${esc(worst.symbol || "?")} ${pct(worst.return_pct)}`)}

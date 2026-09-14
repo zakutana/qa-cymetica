@@ -434,8 +434,13 @@ def test_the_memecoin_section_renders_with_and_without_a_diary(tmp_path,
     # best five, and a page showing only the first is a lie told with a true
     # figure. Same defect as M03 above, one figure up.
     assert "+494.7%" in panel, "the P&L of buying every signal is missing"
+    # [operator 2026-09-14] took the "without the best 5" card out; the figure
+    # stays as one line under the headline, because nothing else on the page
+    # says whether that headline is the signal or one lucky row.
     assert "-1.5%" in panel, (
         "the mean without the best rows is missing; the headline is 5 rows")
+    assert 'mc-h">without the best' not in panel, (
+        "it has a card of its own again; it was ours, not theirs")
     head = panel[:panel.index("mc-figs")]
     assert head.index("+494.7%") < head.index("-1.5%") < head.index("-0.5%"), (
         "P&L, then what it rests on, then the median -- in that order")
