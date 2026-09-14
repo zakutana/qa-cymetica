@@ -370,6 +370,8 @@ def test_the_memecoin_section_renders_with_and_without_a_diary(tmp_path,
                    "fresh_readings": 2319, "late_readings": 85,
                    "best": {"symbol": "MelonMusk", "return_pct": 73848.0},
                    "worst": {"symbol": "RUGME", "return_pct": -100.0},
+                   "n_tradeable": 188, "n_untradeable": 332,
+                   "n_depth_unknown": 58, "min_liquidity": 1000.0,
                    "high_conviction": {"min": 70, "n": 96, "pnl_pct": 12.4,
                                        "median_pct": -3.3,
                                        "pnl_without_top_pct": -9.1,
@@ -444,6 +446,14 @@ def test_the_memecoin_section_renders_with_and_without_a_diary(tmp_path,
     # when they fired, so they are in no figure on this page.
     assert "448" in panel, "the signals with no entry price are not shown"
     assert "914" in panel, "the repeated price reads are not shown"
+
+    # [operator 2026-09-14] *"proc to zobrazuje coiny co se neda obchodvat
+    # nebo prodavat? ty jsou uplne zbytecne"*. They are dropped -- and a
+    # filter the page does not name is worse than no filter, because the
+    # reader cannot tell the population from the finding.
+    assert "dropped as untradeable" in panel and "332" in panel
+    assert "58" in panel, "the tokens of unknown depth are kept and uncounted"
+    assert "$1000" in panel, "the threshold itself must be on the page"
 
     # [operator 2026-09-14] asked for a price-at-signal column, looked at it
     # and had it taken out again -- *"ty dve kolumny smaz sou zbytecne"*. The

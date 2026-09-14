@@ -4774,7 +4774,11 @@ function memecoinPanel() {
              : pct(hc.pnl_without_top_pct)} without its best ${b.top || 5}`)}
       </div>
       <dl class="mc-figs">
-        <div><dt>signals tracked</dt><dd>${fm.tracked || 0}</dd></div>
+        <div><dt>signals tracked</dt><dd>${b.tracked || fm.tracked || 0}</dd></div>
+        <div><dt>dropped as untradeable</dt><dd>${b.n_untradeable || 0}
+          <span class="mc-of">pool under $${b.min_liquidity || 0}</span></dd></div>
+        <div><dt>depth not known</dt><dd>${b.n_depth_unknown || 0}
+          <span class="mc-of">kept; never quoted</span></dd></div>
         <div><dt>no price when it fired</dt><dd>${b.n_unpriced || 0}
           <span class="mc-of">never in any figure</span></dd></div>
         <div><dt>same price read twice</dt><dd>${b.stale_readings || 0}
@@ -4783,11 +4787,12 @@ function memecoinPanel() {
         ${fig(`hit &ge;&nbsp;${thr}% at 24 h`, day)}
         <div><dt>median at 1 h</dt><dd>${pct(first.median_pct)}</dd></div>
       </dl>
-      <p class="blurb"><strong>Read the cards together.</strong> The
-      headline is five rows, and the biggest of them quotes a pool holding
-      two cents &mdash; a price nobody could have sold at. Return is
-      <strong>ours</strong>: the signal's own price against each hour after
-      it, never their rolling window.</p>
+      <p class="blurb">Only coins somebody could actually buy and sell are
+      counted &mdash; a pair needs $${b.min_liquidity || 0} of liquidity and
+      as much traded in a day, or it is dropped. Half the tokens their signal
+      flags are dust ($0.00 to $15 a pool) and they carried the whole of the
+      good news. Return is <strong>ours</strong>: the signal's own price
+      against each hour after it, never their rolling window.</p>
     </header>
     ${rows ? `<div class="mc-table"><h3>The ${
         (fm.curves || []).length} biggest movers of ${fm.curves_total || 0}

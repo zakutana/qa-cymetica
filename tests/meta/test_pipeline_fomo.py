@@ -379,6 +379,7 @@ def test_the_basket_is_an_equal_stake_in_every_signal_and_says_what_it_skipped()
 
     b = fomo.basket(rows, top=1)
     assert b["tracked"] == 5 and b["n_priced"] == 4 and b["n_unpriced"] == 1
+    assert b["in_play"] == 5, "nothing was filtered here, so the two agree"
     # (-50 - 10 + 20 + 9900) / 4
     assert round(b["pnl_pct"], 6) == 2465.0, b
     assert round(b["pnl_without_top_pct"], 6) == -13.333333, b
@@ -432,6 +433,109 @@ def test_the_basket_can_be_entered_on_their_conviction_alone():
     # A threshold nothing reaches is not a 0% return.
     assert fomo.basket(rows, conviction_min=99.0)["high_conviction"][
         "pnl_pct"] is None
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_pool_nobody_can_trade_in_is_not_a_position():
+    """[operator 2026-09-14] *"tak proc to zobrazuje coiny co se neda
+    obchodvat nebo prodavat? ty jsou uplne zbytecne"*.
+
+    Sixty of the tokens we had already measured, re-quoted live that morning:
+    the deciles of `liquidity_usd` run 0.00, 0.29, 0.64, 0.79, 4.17, 15.20 and
+    then jump to 1953, 5197, 8981, 68933. Half of them are dust and the other
+    half are pools, with nothing in between -- which is why the threshold can
+    be $1000 without the answer depending on it: at $100 twenty-one tokens
+    survive and at $1000 twenty do.
+
+    What the filter changes is the whole finding. Over that sample the median
+    goes from **+0.0%** to **-22.8%**, and the mean from +766% to +15%. The
+    coins that cannot be sold ARE the good news.
+
+    Three states, not two. A token whose pool is dust is excluded; a token
+    their terminal no longer lists at all is excluded; a token we have never
+    quoted is **kept**, and counted separately. Unknown is not a verdict --
+    every fixture in this file predates the depth fields, and a filter that
+    treats silence as guilt empties the page the day a join goes wrong.
+    """
+    deep = {"liquidity_usd": 68933.4, "volume_h24": 21000.0}
+    dust = {"liquidity_usd": 0.02, "volume_h24": 0.25}
+
+    assert fomo.tradeable(deep) is True
+    assert fomo.tradeable(dust) is False
+    assert fomo.tradeable(None) is None, "never quoted is not a verdict"
+    assert fomo.tradeable({"listed": False}) is False, "they delisted it"
+    assert fomo.tradeable({"liquidity_usd": 68933.4}) is None, (
+        "depth is both sides: a pool with no volume cannot be got out of")
+    # Drained after the fact: real volume all day, nothing left in the pool.
+    # It could not be SOLD now, which is what a mark is worth.
+    assert fomo.tradeable({"liquidity_usd": 0.0, "volume_h24": 243951.0}) is False
+
+    rows = []
+    for i, (symbol, last) in enumerate([("DEEP", 1.5), ("DUST", 100.0),
+                                        ("GONE", 50.0), ("NEW", 0.8)]):
+        rows += _diary(1.0, [(1, last)], key=f"0x{i}:2026-09-13T12",
+                       symbol=symbol)
+    rows += [
+        {"type": "depth", "at": T0.isoformat(), "token_address": "0x0", **deep},
+        {"type": "depth", "at": T0.isoformat(), "token_address": "0x1", **dust},
+        {"type": "depth", "at": T0.isoformat(), "token_address": "0x2",
+         "listed": False},
+    ]
+
+    b = fomo.basket(rows)
+    assert b["n_tradeable"] == 1 and b["n_untradeable"] == 2
+    assert b["n_depth_unknown"] == 1, "NEW was never quoted and is kept"
+    assert b["tracked"] == 4 and b["in_play"] == 2, (
+        "a total that shrinks when the filter bites is not a total")
+    assert b["n_priced"] == 2, "DEEP and NEW; the dust and the delisting are out"
+    assert round(b["pnl_pct"], 6) == 15.0, b  # (+50 - 20) / 2
+
+    # And the same population everywhere: a hit rate over one set of coins
+    # beside a P&L over another describes nothing.
+    assert [c["symbol"] for c in fomo.curves(rows)] == ["DEEP", "NEW"]
+    assert fomo.stats(rows)["horizons"]["1h"]["resolved"] == 2
+
+    # Dropping the threshold to zero lets the dust back in -- but not the
+    # delisting. A threshold is a judgement about how thin is too thin; a
+    # token their terminal will not quote at all has no price to trade on and
+    # is out at any threshold.
+    loose = fomo.basket(rows, min_liquidity=0, min_volume=0)
+    assert loose["n_priced"] == 3 and loose["n_untradeable"] == 1
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_depth_is_joined_case_blind_and_the_newest_reading_wins():
+    """Two ways this join fails silently, and both end with every token
+    reading "unknown" while the filter looks like it is working.
+
+    `signal_key` lowercases the address and `c_token` reads it back
+    lowercased. A Solana address is case-sensitive base58 -- the diary holds
+    `DE3hyVdxdk8Ehd...` on the signal row and `de3hyvdxdk8ehd...` in the key
+    -- so the join has to be blind to case on both sides.
+
+    And depth arrives from two places now: `fomo_watch.py depth` seeds a
+    token once, and every checkpoint from 2026-09-14 carries the same fields
+    hourly. The newest reading wins whichever row type it came on, or a
+    one-off seed would outrank an hour-old truth for a day.
+    """
+    mixed = "DE3hyVdxdk8EhdDPUAKwGjNrMWrHHQ9NHcq4FBTaWmD1"
+    key = f"{mixed.lower()}:2026-09-13T12"
+    rows = _diary(1.0, [(1, 2.0)], key=key, symbol="ASTRO")
+    rows[0]["token_address"] = mixed
+    rows.append({"type": "depth", "at": T0.isoformat(), "token_address": mixed,
+                 "liquidity_usd": 68933.4, "volume_h24": 21000.0})
+
+    assert fomo.basket(rows)["n_tradeable"] == 1, (
+        "the depth row did not join: a case-sensitive key matches nothing")
+
+    # An hour later the pool is drained, and the checkpoint says so. The seed
+    # must not outvote it.
+    rows.append({"type": "checkpoint", "key": key, "horizon": "2h",
+                 "at": (T0 + timedelta(hours=2)).isoformat(),
+                 "price_usd": 3.0, "return_pct": 200.0,
+                 "liquidity_usd": 0.01, "volume_h24": 0.2})
+    assert fomo.basket(rows)["n_untradeable"] == 1, (
+        "a stale seed outranked a fresh reading on the checkpoint")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

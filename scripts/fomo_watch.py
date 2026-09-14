@@ -92,6 +92,27 @@ def _hot_rows(client, chain: str) -> list[dict]:
     return body.get("rows") or []
 
 
+class QuoteError(RuntimeError):
+    """Their search endpoint did not answer. NOT a token they have stopped
+    listing -- rule 8, one surface along from `FeedError`."""
+
+
+def _listing(client, token_address: str) -> dict | None:
+    """The matched row, or None when they answered 200 and did not know the
+    token. Raises `QuoteError` on anything that is not a 200, because a 503
+    and a delisting must never write the same row."""
+    response = client.get(SEARCH_PATH, params={"q": token_address})
+    if response.status_code != 200:
+        raise QuoteError(f"{SEARCH_PATH} (q={token_address}) answered HTTP "
+                         f"{response.status_code}; a failed read is not a "
+                         f"token they have dropped")
+    wanted = str(token_address or "").lower()
+    for row in (response.json() or {}).get("rows") or []:
+        if isinstance(row, dict) and str(row.get("address", "")).lower() == wanted:
+            return row
+    return None
+
+
 def _quote(client, token_address: str) -> dict | None:
     """`search?q=<address>` -- confirmed live 2026-09-13: `{"rows": [{"address",
     "price_usd", ...}]}`. Matched on `address` because a symbol/name search
@@ -214,6 +235,47 @@ def resolve(client, now=None) -> dict:
     return {"checked": len(written), "checkpoints": written}
 
 
+def depth(client, now=None, only_missing: bool = True) -> dict:
+    """One round: read what each tracked token's pair is worth trading in.
+
+    [operator 2026-09-14] *"proc to zobrazuje coiny co se neda obchodvat nebo
+    prodavat? ty jsou uplne zbytecne"*. `resolve()` carries the same fields on
+    every checkpoint from 2026-09-14, so a signal still inside its first day
+    answers this by itself within the hour. This round is for the rest: the
+    tokens whose 24h is over and which nothing will ever read again, and the
+    first seeding of a diary written before the fields existed.
+
+    `only_missing` keeps it cheap and repeatable -- a token that already has
+    depth from a checkpoint or an earlier seed is not asked about again.
+    """
+    now = now or _now()
+    rows = load()
+    signals = {}
+    for row in rows:
+        if row.get("type") == "signal" and row.get("token_address"):
+            signals[str(row["token_address"])] = row
+
+    from qa import fomo
+
+    known = fomo._depth_by_token(rows) if only_missing else {}
+    written = failed = 0
+    for address in sorted(signals):
+        if address.lower() in known:
+            continue
+        try:
+            quote = _listing(client, address)
+        except Exception as exc:  # noqa: BLE001 -- rule 8: write nothing
+            failed += 1
+            print(f"[fomo] depth {address[:12]}: {exc}", file=sys.stderr)
+            continue
+        _append({"type": "depth", "at": now.isoformat(),
+                 "token_address": address, "listed": quote is not None,
+                 **_depth(quote)})
+        written += 1
+    return {"written": written, "failed": failed, "known": len(known),
+            "tokens": len(signals)}
+
+
 def tick(client) -> dict:
     """One round: capture, then resolve whatever is due. Capture first, so a
     signal that just crossed 1h in the same round it was caught still has to
@@ -287,9 +349,11 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="cmd", required=True)
     sub.add_parser("capture", help="poll hot signals, track the new ones")
     sub.add_parser("resolve", help="checkpoint whatever crossed a horizon")
+    sub.add_parser("depth", help="what each tracked token can be traded in")
 
     args = parser.parse_args(argv)
-    return _run(capture) if args.cmd == "capture" else _run(resolve)
+    return _run({"capture": capture, "resolve": resolve,
+                 "depth": depth}[args.cmd])
 
 
 if __name__ == "__main__":

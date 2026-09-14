@@ -181,6 +181,117 @@ def in_time(rows: list[dict]) -> list[dict]:
             or not read_late(signals.get(r.get("key")), r)]
 
 
+# What a pair has to hold before a return measured on it is a return anybody
+# could have taken. Sixty of our own measured tokens, re-quoted live on
+# 2026-09-14: the deciles of `liquidity_usd` run 0.00, 0.29, 0.64, 0.79, 4.17,
+# 15.20 and then jump straight to 1953, 5197, 8981, 68933. Half dust, half
+# pool, and nothing in between -- so the threshold sits in the empty band and
+# the answer does not depend on where exactly in it. $100 keeps 21 of the 49
+# quoted, $1000 keeps 20.
+MIN_LIQUIDITY_USD = 1000.0
+MIN_VOLUME_H24 = 1000.0
+
+
+def tradeable(depth: dict | None, min_liquidity: float = MIN_LIQUIDITY_USD,
+              min_volume: float = MIN_VOLUME_H24) -> bool | None:
+    """Could this pair be bought and sold? True, False, or **None** for never
+    quoted -- three states, because unknown is not a verdict.
+
+    Both sides of the trade: a pool with depth and no volume cannot be got
+    out of, and a pool drained after a day of real volume (ASTRO, live:
+    `liquidity_usd 0.0` against `volume_h24 243951`) cannot be got out of
+    either. A mark is what somebody would pay now.
+    """
+    if depth is None:
+        return None
+    if depth.get("listed") is False:
+        return False  # their terminal does not know the token any more
+    liquidity, volume = depth.get("liquidity_usd"), depth.get("volume_h24")
+    if not isinstance(liquidity, (int, float)) or not isinstance(volume, (int, float)):
+        return None
+    return liquidity >= min_liquidity and volume >= min_volume
+
+
+def _depth_by_token(rows: list[dict]) -> dict[str, dict]:
+    """Token -> the newest row that says anything about its depth, over both
+    the `depth` seeds and the checkpoints, which have carried the same fields
+    hourly since 2026-09-14. Lowercased on both sides: a Solana address is
+    case-sensitive base58 and `signal_key` lowercases it, so a join that is
+    not blind to case matches nothing and reads as "never quoted".
+    """
+    newest: dict[str, dict] = {}
+    for row in rows or []:
+        kind = row.get("type")
+        if kind == "depth":
+            token = str(row.get("token_address") or "").lower()
+        elif kind == "checkpoint":
+            token = str(row.get("key") or "").rsplit(":", 1)[0].lower()
+        else:
+            continue
+        if not token or ("liquidity_usd" not in row and "listed" not in row):
+            continue
+        if str(row.get("at") or "") >= str(newest.get(token, {}).get("at") or ""):
+            newest[token] = row
+    return newest
+
+
+def sellable(rows: list[dict], min_liquidity: float = MIN_LIQUIDITY_USD,
+             min_volume: float = MIN_VOLUME_H24) -> tuple[list[dict], dict]:
+    """`rows` without every token nobody could trade, and the three counts.
+
+    [operator 2026-09-14] *"proc to zobrazuje coiny co se neda obchodvat nebo
+    prodavat? ty jsou uplne zbytecne"*. They are worse than useless: over a
+    live sample they carry the entire good news, taking the median from
+    -22.8% to +0.0% and the mean from +15% to +766%.
+
+    Applied here, once, upstream of everything -- a hit rate over one
+    population beside a P&L over another describes nothing.
+    """
+    depth = _depth_by_token(rows)
+    verdicts = {token: tradeable(row, min_liquidity, min_volume)
+                for token, row in depth.items()}
+
+    def token_of(row: dict) -> str | None:
+        if row.get("type") == "depth":
+            return str(row.get("token_address") or "").lower() or None
+        key = row.get("key")
+        return str(key).rsplit(":", 1)[0].lower() if key else None
+
+    kept = [row for row in rows or []
+            if verdicts.get(token_of(row) or "", None) is not False]
+    seen = {token_of(r) for r in rows or [] if r.get("type") == "signal"}
+    seen.discard(None)
+    counts = {
+        "n_tradeable": sum(1 for t in seen if verdicts.get(t) is True),
+        "n_untradeable": sum(1 for t in seen if verdicts.get(t) is False),
+        "n_depth_unknown": sum(1 for t in seen if verdicts.get(t) is None),
+        "min_liquidity": min_liquidity, "min_volume": min_volume,
+    }
+    return kept, counts
+
+
+def usable(rows: list[dict], min_liquidity: float = MIN_LIQUIDITY_USD,
+           min_volume: float = MIN_VOLUME_H24) -> tuple[list[dict], dict]:
+    """The one door every reader here comes through: checkpoints filed under
+    an hour they were not read in are dropped, then tokens nobody could trade
+    in.
+
+    The late count is taken HERE, before the drop -- `_positions` used to take
+    it and now receives rows this function has already cleaned, which would
+    read as "none were late".
+    """
+    signals = _signals(rows)
+    late = sum(1 for r in rows or []
+               if r.get("type") == "checkpoint"
+               and read_late(signals.get(r.get("key")), r))
+    kept, counts = sellable(in_time(rows), min_liquidity, min_volume)
+    # `tracked` is how many signals there ARE, counted before the drop. Taken
+    # after it, the page's "signals tracked" would shrink every time the
+    # filter bit -- a total that moves with a filter is not a total.
+    return kept, {**counts, "late_readings": late,
+                  "tracked": len(_signals(rows))}
+
+
 def c_token(checkpoint: dict) -> str:
     """The token a checkpoint belongs to, off its key.
 
@@ -192,13 +303,14 @@ def c_token(checkpoint: dict) -> str:
 
 
 def stats(rows: list[dict], hit_threshold: float = DEFAULT_HIT_THRESHOLD,
-         top: int = 5) -> dict:
+         top: int = 5, min_liquidity: float = MIN_LIQUIDITY_USD,
+         min_volume: float = MIN_VOLUME_H24) -> dict:
     """Per horizon: how many resolved, hit rate, mean/median return, the best
     and worst performers. `hit_threshold` is a parameter, not a constant
     baked into the read -- what counts as "it worked" is the operator's call,
     not a number this function assumes silently.
     """
-    rows = in_time(rows)
+    rows, _ = usable(rows, min_liquidity, min_volume)
     signals = {r["key"]: r for r in rows
               if r.get("type") == "signal" and r.get("key")}
     by_horizon: dict[str, list[dict]] = {}
@@ -260,10 +372,6 @@ def _positions(rows: list[dict]) -> tuple[dict, dict]:
     """
     rows = list(rows or [])
     signals = _signals(rows)
-    late = sum(1 for r in rows
-               if r.get("type") == "checkpoint"
-               and read_late(signals.get(r.get("key")), r))
-
     per: dict[str, list[dict]] = {}
     for row in in_time(rows):
         if row.get("type") == "checkpoint" and row.get("key") in signals:
@@ -296,8 +404,8 @@ def _positions(rows: list[dict]) -> tuple[dict, dict]:
                          "price_usd": price, "return_pct": ret,
                          "hours": _hours(row.get("horizon")),
                          "horizon": row.get("horizon")}
-    return held, {"late_readings": late, "stale_readings": stale,
-                  "fresh_readings": fresh, "tracked": len(signals)}
+    return held, {"stale_readings": stale, "fresh_readings": fresh,
+                  "in_play": len(signals)}
 
 
 def _spread(returns: list[float], top: int) -> dict:
@@ -324,7 +432,9 @@ DEFAULT_CONVICTION_MIN = 70.0
 
 
 def basket(rows: list[dict], top: int = 5,
-           conviction_min: float = DEFAULT_CONVICTION_MIN) -> dict:
+           conviction_min: float = DEFAULT_CONVICTION_MIN,
+           min_liquidity: float = MIN_LIQUIDITY_USD,
+           min_volume: float = MIN_VOLUME_H24) -> dict:
     """What an equal stake in every signal, bought at the moment it fired,
     would be worth now.
 
@@ -337,12 +447,13 @@ def basket(rows: list[dict], top: int = 5,
     the mean without the best few, the median, how many signals had no price
     at all, and how many readings were the same number twice.
     """
+    rows, filtered = usable(rows, min_liquidity, min_volume)
     held, counts = _positions(rows)
     marks = list(held.values())
-    out = {**counts, **_spread([m["return_pct"] for m in marks], top),
+    out = {**counts, **filtered, **_spread([m["return_pct"] for m in marks], top),
            "top": top,
            "n_priced": len(marks),
-           "n_unpriced": counts["tracked"] - len(marks),
+           "n_unpriced": counts["in_play"] - len(marks),
            "winners": sum(1 for m in marks if m["return_pct"] > 0),
            "losers": sum(1 for m in marks if m["return_pct"] < 0),
            "best": max(marks, key=lambda m: m["return_pct"]) if marks else None,
@@ -382,7 +493,9 @@ def basket(rows: list[dict], top: int = 5,
     return out
 
 
-def curves(rows: list[dict], limit: int | None = 40) -> list[dict]:
+def curves(rows: list[dict], limit: int | None = 40,
+           min_liquidity: float = MIN_LIQUIDITY_USD,
+           min_volume: float = MIN_VOLUME_H24) -> list[dict]:
     """One hourly series per token, for the console to draw.
 
     `stats()` answers whether the signal worked, in aggregate. A curve is a
@@ -397,7 +510,7 @@ def curves(rows: list[dict], limit: int | None = 40) -> list[dict]:
     Newest signal wins per token, the same rule `stats()` uses for its tables,
     so a coin hot in two consecutive hours is one curve and not two.
     """
-    rows = in_time(rows)
+    rows, _ = usable(rows, min_liquidity, min_volume)
     newest: dict[str, dict] = {}
     for row in rows or []:
         if row.get("type") != "signal" or not row.get("key"):

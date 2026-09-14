@@ -258,6 +258,62 @@ def test_run_survives_a_round_that_raises_and_stops_on_the_event(tmp_path,
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_failed_read_never_writes_a_delisting(tmp_path, monkeypatch):
+    """Rule 8, on the round that seeds depth for tokens whose 24h of
+    checkpoints is over.
+
+    `depth()` has to tell two things apart that `_quote()` returns
+    identically: a 200 carrying no matching row, which means their terminal
+    has stopped listing the token, and a 503, which means nothing at all. The
+    first is a fact worth writing (`listed: false`, and the filter drops the
+    token); the second must write NOTHING, or a bad ten minutes on their side
+    marks a hundred live coins delisted and takes them off the page for good.
+
+    Written before `depth()` existed, so the branch cannot be shaped by what
+    the code happens to do.
+    """
+    mod = _module(tmp_path, monkeypatch)
+
+    def handler(request):
+        url = str(request.url)
+        if "fomo-radar/signals" in url:
+            if request.url.params.get("chain") != "solana":
+                return httpx.Response(200, json={"rows": []})
+            return httpx.Response(200, json={"rows": [
+                _fomo_row("SoLfine"), _fomo_row("SoLgone"), _fomo_row("SoL503")]})
+        wanted = request.url.params.get("q")
+        if wanted == "SoL503":
+            return httpx.Response(503, json={"detail": "upstream"})
+        if wanted == "SoLgone":
+            return httpx.Response(200, json={"rows": []})
+        return httpx.Response(200, json={"rows": [
+            {"address": wanted, "price_usd": 0.002, "liquidity_usd": 9000.0,
+             "volume_h24": 4000.0}]})
+
+    client = _client(handler)
+    mod.capture(client, now=T0)
+    result = mod.depth(client, now=T0 + timedelta(minutes=5))
+
+    written = {r["token_address"]: r for r in mod.load() if r["type"] == "depth"}
+    assert set(written) == {"SoLfine", "SoLgone"}, (
+        f"a failed read wrote a depth row: {sorted(written)}")
+    assert written["SoLfine"]["listed"] is True
+    assert written["SoLfine"]["liquidity_usd"] == 9000.0
+    assert written["SoLgone"]["listed"] is False, (
+        "a 200 with no matching row IS a delisting and must be recorded")
+    assert result["failed"] == 1 and result["written"] == 2, result
+
+    # And the filter believes it: the token they still quote survives, the
+    # one they dropped does not, and the one whose read failed is unknown --
+    # which keeps it, because unknown is not a verdict.
+    from qa import fomo
+
+    counts = fomo.basket(mod.load())
+    assert counts["n_tradeable"] == 1 and counts["n_untradeable"] == 1
+    assert counts["n_depth_unknown"] == 1
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_price_is_written_with_the_depth_it_was_quoted_at(tmp_path,
                                                             monkeypatch):
     """The single biggest number this diary holds is +73848%, MelonMusk, and
