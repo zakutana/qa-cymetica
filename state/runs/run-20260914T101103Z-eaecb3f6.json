@@ -1,0 +1,127 @@
+{
+  "schema": 2,
+  "run_id": "run-20260914T101103Z-eaecb3f6",
+  "started_at": "2026-09-14T10:11:09+00:00",
+  "finished_at": "2026-09-14T10:12:41+00:00",
+  "git_head": "eaecb3f645c8ae58f081172fc629ec826bf8c54c",
+  "git_short": "eaecb3f6",
+  "git_dirty": false,
+  "prereg_id": "PRE-0116",
+  "prereg_tag_sha": "530bc0f47733c23b018266e7993c4d653b79c44a",
+  "prereg_commit": "eaecb3f645c8ae58f081172fc629ec826bf8c54c",
+  "platform_fingerprint": "sha256:38add2e49144657cb6c1e57cafc670b1c894d965c70632589e910ed89cab82e8",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "e89210ec70181a7dfa8eeaa2169a9536d8b956fc497327cdf296d9ba14b135cd",
+    "/.well-known/agent-card.json": "0d025529067afeeec58d0f8d49f9a7d1c8ec45b6ee1398ac573b9bf7d2b31457",
+    "/.well-known/agent-skills.json": "3ee22148aea8e6314344f5675c7a51d4800a25b674c7dbcca1babecdda04c7c4",
+    "/.well-known/ai-plugin.json": "648e9e1e79bbe5178e571f84e2fbb736311ef94295aa704621193be8d5bcc9be",
+    "/.well-known/udc.json": "4c5d54d7d0462a44ad80d7a4dbdc5c68ab7563abdb3a81737bb6eadc8bdec127",
+    "/openapi.json": "f0cccb1f06ec266d303b1c7ab8e23f4af29a3c43106027595c95c1449fa1b2cf",
+    "/openapi-public.json": "752f7f6748aa42dd32c49ce8e070ec744bf298103ee8c8955ce04787da8c448a",
+    "/llms.txt": "722780a7ae8dd59d37d9af4ae6f6881c45ec9c0fa5fd0161f0ca7291dd1ddb59",
+    "mcp:tools/list:none": "ffd58a5746b4fdc9627c3b57210c1d52b1dab20789aa234d10e6818421031627"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/rest/test_fomo_radar_hot_clears_its_tradeability_floor.py --prereg PRE-0116",
+  "selector_full": false,
+  "allow_mutate": false,
+  "collected": [
+    "tests/rest/test_fomo_radar_hot_clears_its_tradeability_floor.py::test_a_hot_signal_clears_the_tradeability_floor_they_shipped"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/rest/test_fomo_radar_hot_clears_its_tradeability_floor.py::test_a_hot_signal_clears_the_tradeability_floor_they_shipped",
+      "component": "rest.clones",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 87210,
+      "evidence_ids": [
+        "3e350110d748f93a3db225dac95628a368364c2db1929f97e4539d0409bc42c6",
+        "bb3ff343ff63b6a41268d2a98dca1ec0eb6b3a91145077e643fae4377ae62b7e",
+        "9358e96ce7c34d1428702d6751ca4fd1432cbf6d3f5cf6462bfde043b8615626",
+        "cc0d2a1c1f77946855431c0a08483afee1ecdbe6f9b5d4a5092d4ca4236894af",
+        "145d0201345d8cd7acae4ddae8479820cda741f7d25168cc4a16bed34cc4a774",
+        "116b0365c25c1c1006af3efe4d1f6ca344bc74a9c7e8ed69a0bf8ae1e3afe89b",
+        "1740e9cb68c86ec123d7b992c200c01414e3e374f126b2490e106e6a41e83f73",
+        "42a08ab54fd58f2906a50ca339cf84ccbe68f1076007e513869d135c775f33c7",
+        "1be7f647fe31adfbaf15ce7cb5b515ddb8c85c77f7dd2284aca6ba76828d0f21",
+        "044c196da9ad7444f81c6d2d1987d40e7d1213501f8af5a451e39a5e8d81924a"
+      ],
+      "measurement": {
+        "verdict": "passed",
+        "reason": "every hot row on both chains clears the floor: 6 robinhood and 12 solana hot rows, the thinnest allowing $521 of max buy against a $500 floor",
+        "left": [],
+        "right": [
+          {
+            "chain": "robinhood",
+            "hot_rows": 6,
+            "thinnest_max_buy_usd": 521.29,
+            "serves_gate_fields": true
+          }
+        ],
+        "sources": {
+          "signals": "/api/v1/clones/fomo-radar/signals"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": null,
+        "role": "verdict",
+        "population": {
+          "floor_max_buy_usd": 500.0,
+          "breach_fraction": 0.9,
+          "min_breaches": 2,
+          "published_ratio": 0.050000032353206804,
+          "solana_ratio": 0.025000001745662064,
+          "reads": 5,
+          "spacing_seconds": 18.0,
+          "solana_rows": 65,
+          "solana_hot": 12,
+          "solana_breaches": 0,
+          "solana_rows_serving_gate": 65,
+          "robinhood_rows": 30,
+          "robinhood_hot": 6,
+          "robinhood_breaches": 0,
+          "robinhood_rows_serving_gate": 30
+        }
+      },
+      "check_fingerprint": "ab1e6991f72a8b12afb0c91444709dfe45e71ff4d6cd4ba7d3d7f8d94cf9b33d",
+      "reason": null,
+      "failure_repr": null
+    }
+  ],
+  "totals": {
+    "passed": 1
+  },
+  "ratelimit": {
+    "requests": 10,
+    "limit": 2000,
+    "remaining": 1991,
+    "fraction_used": 0.0045,
+    "exhausted": false
+  },
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "code_dirty_after": false,
+  "fingerprint_after": "sha256:38add2e49144657cb6c1e57cafc670b1c894d965c70632589e910ed89cab82e8",
+  "exit_status": 0
+}
