@@ -487,6 +487,9 @@ def test_a_pool_nobody_can_trade_in_is_not_a_position():
     assert b["n_depth_unknown"] == 1, "NEW was never quoted and is kept"
     assert b["tracked"] == 4 and b["in_play"] == 2, (
         "a total that shrinks when the filter bites is not a total")
+    assert (b["n_tradeable"] + b["n_untradeable"] + b["n_depth_unknown"]
+            == b["tracked"]), (
+        "the three counts are in signals, like the total they sit beside")
     assert b["n_priced"] == 2, "DEEP and NEW; the dust and the delisting are out"
     assert round(b["pnl_pct"], 6) == 15.0, b  # (+50 - 20) / 2
 

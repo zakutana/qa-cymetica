@@ -467,6 +467,20 @@ def test_the_memecoin_section_renders_with_and_without_a_diary(tmp_path,
     assert "conviction &ge;&nbsp;70 only" in panel
     assert "+12.4%" in panel, "the high-conviction basket is not drawn"
 
+    # Below ten signals that basket is noise, and a hero number off four rows
+    # is the defect the whole panel was rewritten to stop.
+    thin = json.loads(json.dumps(payload))
+    thin["stats"]["fomo"]["basket"]["high_conviction"] = {
+        "min": 70, "n": 4, "pnl_pct": 291.7, "median_pct": 304.5,
+        "pnl_without_top_pct": None, "winners": 2, "losers": 2, "unscored": 0}
+    code, err, thin_cap = _run_page(node, tmp_path / "thinconv", thin)
+    assert code == 0, err[:900]
+    thin_panel = thin_cap.get("memecoins", "")
+    assert "too few to mean anything" in thin_panel
+    head = thin_panel[:thin_panel.index("mc-figs")]
+    assert "+291.7%" in head and "n&nbsp;=&nbsp;4" in head, (
+        "the count must take the hero slot, with the figure demoted")
+
     # A figure that cannot exist yet says so. "-- of 0" beside the 24h hit
     # rate is what the operator read as the panel being broken; no signal had
     # lived a whole day.

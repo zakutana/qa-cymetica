@@ -259,12 +259,16 @@ def sellable(rows: list[dict], min_liquidity: float = MIN_LIQUIDITY_USD,
 
     kept = [row for row in rows or []
             if verdicts.get(token_of(row) or "", None) is not False]
-    seen = {token_of(r) for r in rows or [] if r.get("type") == "signal"}
-    seen.discard(None)
+    # Counted in SIGNALS, not tokens, because they are printed on one strip
+    # beside "signals tracked" and a coin can go hot more than once. Three
+    # counts in tokens under a total in signals is two units in one row, and
+    # the reader has no way to see it.
+    signals = [r for r in rows or [] if r.get("type") == "signal"]
+    verdict_of = [verdicts.get(token_of(r) or "") for r in signals]
     counts = {
-        "n_tradeable": sum(1 for t in seen if verdicts.get(t) is True),
-        "n_untradeable": sum(1 for t in seen if verdicts.get(t) is False),
-        "n_depth_unknown": sum(1 for t in seen if verdicts.get(t) is None),
+        "n_tradeable": sum(1 for v in verdict_of if v is True),
+        "n_untradeable": sum(1 for v in verdict_of if v is False),
+        "n_depth_unknown": sum(1 for v in verdict_of if v is None),
         "min_liquidity": min_liquidity, "min_volume": min_volume,
     }
     return kept, counts

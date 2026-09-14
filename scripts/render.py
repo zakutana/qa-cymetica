@@ -4768,10 +4768,18 @@ function memecoinPanel() {
           `${b.winners || 0} up, ${b.losers || 0} down &mdash; worst
            ${esc(worst.symbol || "?")} ${pct(worst.return_pct)}`)}
         ${card(`conviction &ge;&nbsp;${hc.min != null ? hc.min : 70} only`,
-          big(hc.pnl_pct),
-          `${hc.n || 0} of those signals &mdash; ${pct(hc.median_pct)} median,
-           ${hc.pnl_without_top_pct == null ? "&mdash;"
-             : pct(hc.pnl_without_top_pct)} without its best ${b.top || 5}`)}
+          // Once only tradeable coins count, their own high-conviction
+          // signals are a handful. A hero number off four rows is the
+          // defect this whole panel was rewritten to stop, so below ten it
+          // is drawn grey and the count takes its place.
+          (hc.n || 0) < 10 ? `<span class="mc-flat">n&nbsp;=&nbsp;${hc.n || 0}</span>`
+                           : big(hc.pnl_pct),
+          (hc.n || 0) < 10
+            ? `too few to mean anything &mdash; they would have returned
+               ${pct(hc.pnl_pct)}`
+            : `${hc.n} of those signals &mdash; ${pct(hc.median_pct)} median,
+               ${hc.pnl_without_top_pct == null ? "&mdash;"
+                 : pct(hc.pnl_without_top_pct)} without its best ${b.top || 5}`)}
       </div>
       <dl class="mc-figs">
         <div><dt>signals tracked</dt><dd>${b.tracked || fm.tracked || 0}</dd></div>
