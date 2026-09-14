@@ -134,9 +134,13 @@ def test_two_thin_tokens_beside_a_gated_chain_is_the_finding():
 
     verdict, reason = mod.decide(solana, gated)
     assert verdict == "failed", (verdict, reason)
-    assert "solana" in reason and "CHADSTER" in reason, reason
-    assert "75.16" in reason and "500" in reason, reason
+    assert "solana" in reason and "75.16" in reason and "500" in reason, reason
     assert "not applied to this chain" in reason, reason
+    # The token is named by ADDRESS: this sentence is quoted into a report
+    # that goes to them, a symbol is not unique, and the thinnest row on
+    # 2026-09-14 was a memecoin whose chosen name is a racial slur.
+    assert "chadster" in reason, reason
+    assert "CHADSTER" not in reason, reason
 
     both = mod._chain([_row("RH1", 75.0, max_buy=3.75),
                        _row("RH2", 420.0, max_buy=21.0)], 0.05)

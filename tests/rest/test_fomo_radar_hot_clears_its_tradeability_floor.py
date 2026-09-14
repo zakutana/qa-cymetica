@@ -173,10 +173,14 @@ def decide(solana: dict, robinhood: dict) -> tuple[str, str]:
 
     worst = min(solana["breaches"],
                 key=lambda r: max_buy(r, robinhood["ratio"]) or 0.0)
+    # By ADDRESS, not symbol. An address is what they can look the row up by
+    # and a symbol is not unique -- and this sentence is quoted into a report
+    # that goes to them, where a memecoin's chosen name is noise at best. The
+    # symbols stay in the evidence rows, which is where the raw read belongs.
     return ("failed",
             f"{thin_here} of {solana['hot']} hot solana tokens are served "
             f"hot: true on a pool their own robinhood gate would refuse: the "
-            f"thinnest is {worst.get('symbol') or '?'} at "
+            f"thinnest is {str(worst.get('token_address') or '?')[:12]}... at "
             f"${worst.get('liquidity_usd', 0):,.2f} of liquidity, about "
             f"${max_buy(worst, robinhood['ratio']) or 0:,.2f} of 5%-slippage "
             f"max buy against the ${FLOOR_MAX_BUY_USD:,.0f} floor. On the same "
