@@ -258,6 +258,75 @@ def test_run_survives_a_round_that_raises_and_stops_on_the_event(tmp_path,
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_radars_own_gate_fields_are_kept_beside_our_reading(tmp_path,
+                                                                monkeypatch):
+    """Cymetica shipped a tradeability gate on 2026-09-14 and told us its
+    unit: `max_buy_5pct_usd >= 500`, with the refused burst left on the row as
+    `hot_pressure` and a `thin` flag beside it.
+
+    Their gate reads THEIR number at the moment it fires. Ours is a separate
+    quote from memecoin-terminal, taken a second later against a different
+    source, and the two will not always agree -- so a signal has to carry both
+    or we can never say whether a row that got through was mis-gated or just
+    moved. Prefixed `radar_`, because `liquidity_usd` already means our own
+    reading on these rows and one name for two measurements is how a figure
+    ends up compared with itself.
+
+    This is the same lesson as the depth fields one commit earlier: what is in
+    the response at capture time is the only chance to keep it.
+    """
+    mod = _module(tmp_path, monkeypatch)
+    radar = {"token_address": "SoL1", "hot": True, "symbol": "OTC",
+             "conviction": 75.8, "conviction_kind": "buy-pressure",
+             "signal_type": "hot", "liquidity_usd": 620579.53,
+             "max_buy_5pct_usd": 31028.98, "hot_pressure": True,
+             "thin": False, "token_age_seconds": 100.0,
+             "usd_invested": 302307.38, "page_url": "https://example.invalid"}
+
+    def handler(request):
+        url = str(request.url)
+        if "fomo-radar/signals" in url:
+            if request.url.params.get("chain") != "solana":
+                return httpx.Response(200, json={"rows": []})
+            return httpx.Response(200, json={"rows": [radar]})
+        return httpx.Response(200, json={"rows": [
+            {"address": request.url.params.get("q"), "price_usd": 0.054,
+             "liquidity_usd": 618000.0, "volume_h24": 302307.38}]})
+
+    mod.capture(_client(handler), now=T0)
+    signal = [r for r in mod.load() if r["type"] == "signal"][0]
+
+    assert signal["radar_liquidity_usd"] == 620579.53
+    assert signal["radar_max_buy_5pct_usd"] == 31028.98
+    assert signal["radar_hot_pressure"] is True and signal["radar_thin"] is False
+    assert signal["radar_signal_type"] == "hot"
+    assert signal["radar_token_age_seconds"] == 100.0
+
+    # Ours is still ours, under its own name, from the other source.
+    assert signal["liquidity_usd"] == 618000.0 and signal["price_usd"] == 0.054
+    assert "page_url" not in signal, "only the fields we named"
+
+    # A chain that serves none of the gate fields -- solana on the day they
+    # shipped -- writes the signal without inventing them.
+    def ungated(request):
+        url = str(request.url)
+        if "fomo-radar/signals" in url:
+            if request.url.params.get("chain") != "solana":
+                return httpx.Response(200, json={"rows": []})
+            return httpx.Response(200, json={"rows": [
+                {"token_address": "SoL2", "hot": True, "symbol": "CHADSTER",
+                 "conviction": 18.1, "liquidity_usd": 75.16}]})
+        return httpx.Response(200, json={"rows": []})
+
+    mod.capture(_client(ungated), now=T0 + timedelta(hours=1))
+    second = [r for r in mod.load()
+              if r["type"] == "signal" and r["token_address"] == "SoL2"][0]
+    assert second["radar_liquidity_usd"] == 75.16
+    assert "radar_max_buy_5pct_usd" not in second
+    assert "radar_hot_pressure" not in second
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_failed_read_never_writes_a_delisting(tmp_path, monkeypatch):
     """Rule 8, on the round that seeds depth for tokens whose 24h of
     checkpoints is over.

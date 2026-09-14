@@ -148,6 +148,23 @@ def _depth(quote: dict | None) -> dict:
             if (quote or {}).get(k) is not None}
 
 
+# What the RADAR itself said when it fired, kept under its own prefix beside
+# our reading of the same thing. Their tradeability gate (shipped 2026-09-14:
+# hot only if `max_buy_5pct_usd` >= 500, the refused burst left as
+# `hot_pressure`, `thin` beside it) reads their number at their moment; ours
+# is a second quote from memecoin-terminal against another source. Without
+# both, a row that got through the gate can never be told from one that
+# simply moved between the two reads.
+RADAR_FIELDS = ("liquidity_usd", "max_buy_5pct_usd", "hot_pressure", "thin",
+                "signal_type", "conviction_kind", "token_age_seconds",
+                "usd_invested", "qualified_buyers", "new_qualified_buyers_15m")
+
+
+def _radar(row: dict | None) -> dict:
+    return {f"radar_{k}": (row or {})[k] for k in RADAR_FIELDS
+            if (row or {}).get(k) is not None}
+
+
 def _price(client, token_address: str) -> float | None:
     price = (_quote(client, token_address) or {}).get("price_usd")
     return float(price) if isinstance(price, (int, float)) else None
@@ -198,7 +215,7 @@ def capture(client, now=None) -> dict:
                 "token_address": row.get("token_address"),
                 "symbol": row.get("symbol"), "chain": chain,
                 "conviction": row.get("conviction"), "price_usd": price,
-                **_depth(quote),
+                **_depth(quote), **_radar(row),
             })
             tracked.add(key)
             added.append(signal)
