@@ -75,7 +75,23 @@ BREACH_FRACTION = 0.9
 
 # One thin row mid-index is ordinary in a new-pair feed. Two distinct tokens
 # in one read is a gate that is not running.
+#
+# Read over a WINDOW rather than an instant, because the population is not
+# static: every token caught below the floor was 83 to 181 seconds old, and
+# one read at 08:20 passed eight minutes after two of them, while 09:04 caught
+# two and 09:08 caught none. The rows are the same rows; the check was
+# sampling. Five reads across a minute and a quarter is shorter than the two
+# to three and a half minutes a thin row was observed to stay hot.
+READS = 5
+SPACING_SECONDS = 18.0
 MIN_BREACHES = 2
+
+# How many rows the GATED chain must serve before its silence counts as a
+# control. One clean row proves nothing; over ten minutes their Robinhood
+# listing carried the field on every one of 40 rows a read and never once put
+# a hot row under the floor, and that is what lets a single thin solana token
+# be a finding rather than a pool that drained after the gate ran.
+MIN_CONTROL_ROWS = 10
 
 
 def max_buy(row: dict, ratio: float) -> float | None:
@@ -156,6 +172,30 @@ def decide(solana: dict, robinhood: dict) -> tuple[str, str]:
 
     thin_here = len(solana["breaches"])
     thin_control = len(robinhood["breaches"])
+
+    # The stable half of the finding, and the one that decides WHERE they
+    # should look: the gate field is on every row of one chain and on no row
+    # of the other. Counting thin rows alone made the verdict a coin flip,
+    # because the tokens that breach are two minutes old and age out between
+    # reads. Absence alone is not the finding either -- another chain could
+    # be gated by something that publishes nothing -- so both halves are
+    # required, and the thin rows are what show the absence costs something.
+    gate_here = any("max_buy_5pct_usd" in r for r in solana["rows_seen"])
+    control_is_clean = (robinhood["serving"] >= MIN_CONTROL_ROWS
+                        and not robinhood["breaches"] and robinhood["hot"])
+    if not gate_here and thin_here and control_is_clean:
+        return ("failed",
+                f"the gate is served on one chain and not the other: "
+                f"{robinhood['serving']} of {robinhood['rows']} robinhood rows "
+                f"carry max_buy_5pct_usd and every one of their "
+                f"{robinhood['hot']} hot rows clears the "
+                f"${FLOOR_MAX_BUY_USD:,.0f} floor, while NO solana row carries "
+                f"the field and {thin_here} hot solana token(s) in this window "
+                f"sit under it -- thinnest "
+                f"{str(min(solana['breaches'], key=lambda r: max_buy(r, robinhood['ratio']) or 0.0).get('token_address') or '?')[:12]}"
+                f"... at ${min(max_buy(r, robinhood['ratio']) or 0.0 for r in solana['breaches']):,.2f} "
+                f"of 5%-slippage max buy")
+
     if thin_control >= MIN_BREACHES:
         return ("failed",
                 f"the floor is not running on either chain: {thin_control} "
@@ -202,10 +242,21 @@ def _rows(client, chain: str) -> list[dict]:
 
 
 def _chain(rows: list[dict], ratio: float | None) -> dict:
-    hot = [r for r in rows if isinstance(r, dict) and r.get("hot")]
+    hot, seen = [], set()
+    for row in rows:
+        if not isinstance(row, dict) or not row.get("hot"):
+            continue
+        token = str(row.get("token_address") or "")
+        if token and token in seen:
+            continue
+        seen.add(token)
+        hot.append(row)
     measured = [m for m in (max_buy(r, ratio or 0.0) for r in hot)
                 if m is not None]
     return {"rows": len(rows), "hot": len(hot), "ratio": ratio,
+            "rows_seen": list(rows),
+            "serving": sum(1 for r in rows
+                           if isinstance(r, dict) and "max_buy_5pct_usd" in r),
             "breaches": breaches(rows, ratio or 0.0),
             "thinnest": min(measured) if measured else float("inf")}
 
@@ -218,8 +269,16 @@ def test_a_hot_signal_clears_the_tradeability_floor_they_shipped(rest_anon):
     floor not running at all, which is also a finding but a different
     sentence; neither thin is a pass.
     """
-    robinhood_rows = _rows(rest_anon, "robinhood")
-    solana_rows = _rows(rest_anon, "solana")
+    import time
+
+    # A window, not an instant. Both chains on every read, so the control is
+    # always the same minute as the thing it controls.
+    robinhood_rows, solana_rows = [], []
+    for read in range(READS):
+        if read:
+            time.sleep(SPACING_SECONDS)
+        robinhood_rows += _rows(rest_anon, "robinhood")
+        solana_rows += _rows(rest_anon, "solana")
 
     # Read off the gated chain, on every run. Their $500 is stated in max-buy
     # and Solana serves only a pool, so the conversion has to come from their
@@ -252,11 +311,14 @@ def test_a_hot_signal_clears_the_tradeability_floor_they_shipped(rest_anon):
             "breach_fraction": BREACH_FRACTION,
             "min_breaches": MIN_BREACHES,
             "published_ratio": ratio,
+            "reads": READS, "spacing_seconds": SPACING_SECONDS,
             "solana_rows": solana["rows"], "solana_hot": solana["hot"],
             "solana_breaches": len(solana["breaches"]),
+            "solana_rows_serving_gate": solana["serving"],
             "robinhood_rows": robinhood["rows"],
             "robinhood_hot": robinhood["hot"],
             "robinhood_breaches": len(robinhood["breaches"]),
+            "robinhood_rows_serving_gate": robinhood["serving"],
         },
         sources={"signals": SIGNALS},
     ))

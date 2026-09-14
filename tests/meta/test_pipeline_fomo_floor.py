@@ -44,6 +44,14 @@ def _row(symbol, pool, hot=True, max_buy=None, token=None):
     return row
 
 
+def _gated(n=12, hot=True):
+    """A control the size of a real listing: their Robinhood chain serves the
+    gate field on every row of forty. One clean row is not a control, and
+    `MIN_CONTROL_ROWS` is what says so."""
+    return [_row(f"RH{i}", 200000.0, max_buy=10000.0, hot=hot and i < 3)
+            for i in range(n)]
+
+
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_unit_conversion_comes_off_their_rows_not_off_our_arithmetic():
     """Their floor is stated in max-buy and one chain serves only a pool.
@@ -84,21 +92,25 @@ def test_one_thin_row_is_not_a_finding_and_a_gated_control_is_required():
     a defect.
     """
     mod = _check()
-    gated = mod._chain([_row("RH", 200000.0, max_buy=10000.0)], 0.05)
+    gated = mod._chain(_gated(), 0.05)
 
-    one_thin = mod._chain([_row("CHADSTER", 75.16), _row("OK", 90000.0)], 0.05)
-    verdict, reason = mod.decide(one_thin, gated)
+    # A control of ONE clean row is not a control. With a thin solana token
+    # in front of it the answer is still the old, cautious path: one row is
+    # not a finding.
+    thin_one = mod._chain([_row("CHADSTER", 75.16), _row("OK", 90000.0)], 0.05)
+    tiny_control = mod._chain([_row("RH", 200000.0, max_buy=10000.0)], 0.05)
+    verdict, reason = mod.decide(thin_one, tiny_control)
     assert verdict == "passed", (verdict, reason)
 
     # And a row a hair under the floor is serialisation noise, not a breach:
     # $450 of max buy against their $500 is a pool that moved, and two of
-    # those must not file anything.
+    # those must not file anything even against a full control.
     hair = mod._chain([_row("A", 9000.0), _row("B", 9200.0)], 0.05)
     assert mod.decide(hair, gated)[0] == "passed", (
         "the check is firing on rounding, not on a gate that is not running")
 
-    # No control: their gated chain quiet this read.
-    quiet = mod._chain([_row("RH", 200000.0, max_buy=10000.0, hot=False)], 0.05)
+    # No control: their gated chain quiet this window.
+    quiet = mod._chain(_gated(hot=False), 0.05)
     thin_two = mod._chain([_row("CHADSTER", 75.16), _row("speed", 423.77)], 0.05)
     assert mod.decide(thin_two, quiet)[0] == "inconclusive"
 
@@ -130,12 +142,12 @@ def test_two_thin_tokens_beside_a_gated_chain_is_the_finding():
     solana = mod._chain(
         [_row("CHADSTER", 75.16), _row("MOON", 1644.60), _row("Zeno", 2901.15),
          _row("snek", 3859.00), _row("OTC", 620579.53)], 0.05)
-    gated = mod._chain([_row("RH", 200000.0, max_buy=10000.0)], 0.05)
+    gated = mod._chain(_gated(), 0.05)
 
     verdict, reason = mod.decide(solana, gated)
     assert verdict == "failed", (verdict, reason)
-    assert "solana" in reason and "75.16" in reason and "500" in reason, reason
-    assert "not applied to this chain" in reason, reason
+    assert "solana" in reason and "500" in reason, reason
+    assert "served on one chain and not the other" in reason, reason
     # The token is named by ADDRESS: this sentence is quoted into a report
     # that goes to them, a symbol is not unique, and the thinnest row on
     # 2026-09-14 was a memecoin whose chosen name is a racial slur.
@@ -162,5 +174,12 @@ def test_a_token_hot_twice_in_one_read_is_one_breach():
     twice = [_row("CHADSTER", 75.16, token="0xchad"),
              _row("CHADSTER", 75.16, token="0xchad")]
     assert len(mod.breaches(twice, 0.05)) == 1
-    gated = mod._chain([_row("RH", 200000.0, max_buy=10000.0)], 0.05)
-    assert mod.decide(mod._chain(twice, 0.05), gated)[0] == "passed"
+    gated = mod._chain(_gated(), 0.05)
+    verdict, reason = mod.decide(mod._chain(twice, 0.05), gated)
+    assert verdict == "failed", "one token is a finding against a real control"
+    assert "1 hot solana token(s)" in reason, (
+        f"one coin in two listings was counted as two: {reason}")
+
+    # Without a control that size, one token is not a finding at all.
+    tiny = mod._chain([_row("RH", 200000.0, max_buy=10000.0)], 0.05)
+    assert mod.decide(mod._chain(twice, 0.05), tiny)[0] == "passed"
