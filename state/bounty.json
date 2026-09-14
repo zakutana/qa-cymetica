@@ -25,12 +25,13 @@
   "our_reports": {
     "endpoint": "GET /api/v1/bounty/my-reports?wallet_address=<addr>",
     "klass": "ok",
-    "read_at": "2026-09-14T09:21:39+00:00",
-    "evidence_id": "4c9c4d972939017667b91e80a8ff0667e5ec3b0fb4c18c6a81ad2cfbeb276171",
-    "rows_returned": 58,
-    "server_total": 58,
-    "total": 58,
+    "read_at": "2026-09-14T09:36:45+00:00",
+    "evidence_id": "4d395718f4bbf7fd4c6a857b8e2f22e7ef6d29776b0949a32f7112e64a50c4f9",
+    "rows_returned": 59,
+    "server_total": 59,
+    "total": 59,
     "statuses": {
+      "pending": 1,
       "paid": 51,
       "fixed": 5,
       "invalid": 2
@@ -1080,6 +1081,24 @@
         "ticket_url": "https://cymetica.com/admin/centcom/issues/25035",
         "fix_pr_url": null,
         "reward_amount": 1000.0
+      },
+      {
+        "id": 102,
+        "title": "The tradeability floor on `hot` is live on Robinhood Chain and is not applied on Solana, where hot rows are still served on pools far below it",
+        "status": "pending",
+        "hunter_name": "expire76",
+        "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
+        "severity_reported": "high",
+        "severity_confirmed": null,
+        "category": "logic",
+        "created_at": "2026-09-14T09:30:31.442520",
+        "fixed_at": null,
+        "validated_at": null,
+        "triaged_at": null,
+        "status_notes": null,
+        "ticket_url": null,
+        "fix_pr_url": null,
+        "reward_amount": 0.0
       }
     ]
   },
@@ -1699,5 +1718,5 @@
       "reward_currency": "ET10"
     }
   ],
-  "our_reports_refreshed_at": "2026-09-14T09:21:39+00:00"
+  "our_reports_refreshed_at": "2026-09-14T09:36:45+00:00"
 }
