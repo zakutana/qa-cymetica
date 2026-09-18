@@ -744,6 +744,49 @@ def test_a_gap_in_the_data_is_inconclusive_and_never_a_loss():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_inconclusive_verdict_is_still_writable_to_the_diary():
+    """`verdict()` is never called for its own sake -- `record_verdict()`
+    immediately `json.dumps`s whatever it returns into `state/rooms.jsonl`.
+    Every test above calls `verdict()` and inspects the dict; none of them
+    write it, which is the shape `driving-the-helper-is-not-running-the-check`
+    names -- the helper was exercised, the path that actually runs in
+    production was not.
+
+    STR-0003 hit exactly this live on 2026-09-18: `lab.py verdicts` crashed
+    inside `json.dumps` with "Object of type datetime is not JSON
+    serializable". The final SURVIVED/REFUTED return already strips each
+    leg's internal `curve` -- a list of `(datetime, float)` points used only
+    to compute the portfolio drawdown -- but the earlier INCONCLUSIVE-on-
+    coverage return, a few lines above it, does not: it returns `legs`
+    exactly as the loop built them, curve included, for any leg that scored
+    at all before the window's overall coverage came up short.
+    """
+    now = "2026-09-07T01:00:00+00:00"
+    # Two legs: one long enough to score (and so build a `curve`), one too
+    # short -- coverage is dragged under the floor by the second leg, and the
+    # verdict comes back inconclusive with the first leg's curve still in it.
+    series = {
+        "card-a": _series("2026-09-05T00:00:00+00:00",
+                          [100, 101, 102, 103, 104], hours=12),
+        "card-b": _series("2026-09-05T00:00:00+00:00", [100, 101], hours=1),
+    }
+    acceptance = _acceptance(legs=[
+        {"card": "card-a", "side": "bull", "share": 1.0, "tp": 8.0, "sl": -5.0},
+        {"card": "card-b", "side": "bull", "share": 1.0, "tp": 8.0, "sl": -5.0},
+    ])
+    said = lab.verdict(acceptance, series, now)
+    assert said["verdict"] == "inconclusive", said
+    assert any(leg.get("card") == "card-a" and leg.get("return_pct") is not None
+              for leg in said["legs"]), (
+        "the fixture must exercise a SCORED leg, or this proves nothing")
+
+    json.dumps(said)  # must not raise TypeError: Object of type datetime ...
+    for leg in said["legs"]:
+        assert "curve" not in leg, (
+            "an internal field leaked into what gets written to the diary")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_beating_nothing_is_not_beating_the_benchmark():
     """Cymetica's own guide asks whether a strategy beats BTC, not whether it
     is positive. A card that rose 1% while the benchmark rose 4% is refuted."""

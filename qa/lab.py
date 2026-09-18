@@ -584,7 +584,15 @@ def verdict(acceptance: dict, series: dict, now) -> dict:
     coverage = min(covered) if covered else 0.0
     scored = [leg for leg in legs if leg.get("return_pct") is not None]
     if not scored or coverage < COVERAGE_FLOOR:
-        return {"verdict": "inconclusive", "legs": legs, "coverage": coverage,
+        # `curve` is a list of (datetime, float) points, kept only to compute
+        # the portfolio drawdown below -- a leg that scored before overall
+        # coverage came up short still carries one here, and record_verdict()
+        # json.dumps this dict straight into the diary. Found live 2026-09-18
+        # when STR-0003's verdict crashed on exactly this branch.
+        return {"verdict": "inconclusive",
+                "legs": [{k: v for k, v in leg.items() if k != "curve"}
+                        for leg in legs],
+                "coverage": coverage,
                 "why": (f"the index covers {coverage * 100:.0f}% of the window, "
                         f"under the {COVERAGE_FLOOR * 100:.0f}% a verdict needs "
                         f"-- a gap is not a loss"),
