@@ -9209,15 +9209,15 @@
         "pinned_fingerprint": "ab1e6991f72a8b12afb0c91444709dfe45e71ff4d6cd4ba7d3d7f8d94cf9b33d"
       },
       "filing": {
-        "state": "RAISED",
+        "state": "FIX_CLAIMED",
         "adjudicated_by": {
-          "event_id": "311f3dab2d243169c94805c1da8488e7781cd474d4292c4f43bda7198a26e80b",
-          "at": "2026-09-14T09:30:35+00:00"
+          "event_id": "96ae4019953f7f39d7eb77004ce14b2c1c990c5de08e1a31a331bc7f2e1441de",
+          "at": "2026-09-18T14:10:23+00:00"
         },
         "reports": [
           {
             "report_id": 102,
-            "status": "pending"
+            "status": "paid"
           }
         ],
         "refused": [],
@@ -9267,6 +9267,15 @@
             "run_id": "run-20260914T101103Z-eaecb3f6"
           },
           "at": "2026-09-14T10:12:41+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "RAISED",
+          "to": "FIX_CLAIMED",
+          "cause": {
+            "event_id": "96ae4019953f7f39d7eb77004ce14b2c1c990c5de08e1a31a331bc7f2e1441de"
+          },
+          "at": "2026-09-18T14:10:23+00:00"
         }
       ],
       "regressions": [],
@@ -9340,7 +9349,7 @@
     "OUR CHECK CANNOT TELL": 1
   },
   "events_head": {
-    "seq": 2120,
-    "chain": "352cb35463fbde03f38d147239544335462e868c12c790180a0c22185f303892"
+    "seq": 2126,
+    "chain": "7196b5210c18142841d440966f40fad834cb2e1438af96269dbc23f5b0cf2878"
   }
 }
