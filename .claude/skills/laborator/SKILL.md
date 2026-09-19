@@ -85,6 +85,13 @@ python scripts/lab.py brief
 python scripts/lab.py ask --no-wait "..."
 ```
 
+Then **don't wait for the next tick to hear back**: start
+`python scripts/nexus.py answer NEX-...` in the BACKGROUND (it polls until he
+answers, one to five minutes), and when it finishes run `lab.py tick` at once
+-- the launch looks at every answer on every tick. If he refused at capacity
+("retry after N s"), ask again as soon as `ask` allows: their wait replaces
+our twenty-minute floor.
+
 `brief` is his memory, because Nexus remembers nothing between questions: what
 the day may still spend, how every proposal of his did (the board, best earner
 first, the rejected ones with their numbers), their own ranking, what measured

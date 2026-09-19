@@ -124,6 +124,55 @@ def test_a_question_waits_for_the_last_one_the_floor_and_their_backoff():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_question_their_side_turned_away_does_not_hold_our_floor():
+    """NEX-0029, 2026-09-19 14:30: their deep lane answered "at capacity,
+    retry after 30 s" in no time at all, and our twenty-minute floor then
+    held the same question for eighteen minutes more. [operator 2026-09-19]
+    *"Tak to ke trapny ne? Zbytecne cekame 20 min."* A question they refused
+    outright took nothing from them, so their wait replaces ours."""
+    asked = NOW - timedelta(minutes=2)
+    refused = {"type": "gave_up", "id": "NEX-1", "status": "failed",
+               "retry_after_s": 30,
+               "at": (asked + timedelta(seconds=5)).isoformat()}
+
+    may, why = lab.may_ask_now([_question("NEX-1", asked), refused], NOW)
+    assert may, why
+
+    longer = {**refused, "retry_after_s": 600}
+    may, why = lab.may_ask_now([_question("NEX-1", asked), longer], NOW)
+    assert not may and "wait" in why, why
+
+    # An ANSWERED question still holds the floor: that one they worked on.
+    answered = {"type": "answer", "id": "NEX-1",
+                "at": (asked + timedelta(minutes=1)).isoformat()}
+    may, why = lab.may_ask_now([_question("NEX-1", asked), answered], NOW)
+    assert not may and "20" in why, why
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_tick_picks_up_a_question_in_flight_whatever_the_clock_says(
+        tmp_path, monkeypatch):
+    """The answers were picked up every half hour, so an answer that took
+    three minutes waited up to thirty more before anything could launch from
+    it. A question in flight is polled on every tick, and the launch is
+    looked at on every tick: an answer that came back through a poll of its
+    own is launched by the next tick, not the next half hour."""
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    doors, calls = _doors()
+    real_now = datetime.now(timezone.utc)
+
+    _tick(scripts_lab, real_now, doors)
+    _write(tmp_path, "nexus.jsonl", [
+        _question("NEX-0031", real_now + timedelta(minutes=1))])
+    _tick(scripts_lab, real_now + timedelta(minutes=5), doors)
+
+    assert len(calls["cycle"]) == 2, (
+        "a question in flight waited for the half-hour clock")
+    _tick(scripts_lab, real_now + timedelta(minutes=10), doors)
+    assert len(calls["promote"]) == 3, "the launch is looked at every tick"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_new_session_does_not_reset_what_was_asked_today(tmp_path, monkeypatch):
     """The reset, through the real reader. `_asked_this_session` counted from
     the moment the open session began, so a question at nine and a session
@@ -306,8 +355,9 @@ def test_a_tick_keeps_the_nights_clocks(tmp_path, monkeypatch):
         _tick(scripts_lab, NOW + timedelta(minutes=20 * n), doors)
 
     assert len(calls["cycle"]) == 2, calls["cycle"]
-    assert len(calls["promote"]) == len(calls["cycle"]), (
-        "a cycle is what brings an answer back, so launching follows it")
+    assert len(calls["promote"]) == 4, (
+        "the launch is looked at on every tick -- an answer can come back "
+        "through its own poll between two cycles")
     assert len(calls["truth"]) == 1
     assert len(calls["fomo"]) == 4, "a memecoin checkpoint is perishable"
     assert len(calls["verdicts"]) == 4

@@ -1924,7 +1924,13 @@ def tick(*, now: datetime | None = None, actions: dict | None = None,
     clocks = {"last_cycle": lab._at(state.get("last_cycle")),
               "last_truth": lab._at(state.get("last_truth")),
               "pending": len(queue), "candidates": [], "asked": 0}
-    for step in lab.night_tick(clocks, moment)["do"]:
+    steps = list(lab.night_tick(clocks, moment)["do"])
+    # A question in flight is polled on every tick, not on the half-hour
+    # clock: an answer that took three minutes used to wait up to thirty more
+    # before anything could launch from it.
+    if "cycle" not in steps and lab.outstanding(_nexus_rows(), moment):
+        steps.insert(0, "cycle")
+    for step in steps:
         if step == "search":
             bite = TICK["search_bite"]
             chunk, queue = queue[:bite], queue[bite:]
@@ -1938,14 +1944,19 @@ def tick(*, now: datetime | None = None, actions: dict | None = None,
             attempt("cycle", doors["cycle"])
             state["last_cycle"] = moment.isoformat()
             said["cycled"] = True
-            launched = attempt("promote", doors["promote"]) or {}
-            said["rooms"] += launched.get("rooms", 0)
-            said["orders"] += launched.get("orders", 0)
-            said["held"] = list(launched.get("held") or [])[:6]
         elif step == "truth":
             attempt("truth", doors["truth"])
             state["last_truth"] = moment.isoformat()
             said["truth"] = True
+
+    # The launch is looked at on EVERY tick, not only after a cycle: an answer
+    # can come back through its own poll (`nexus.py answer`) between two
+    # cycles, and it is launched by the next tick rather than the next half
+    # hour. Cheap when nothing is new -- decided answers are skipped.
+    launched = attempt("promote", doors["promote"]) or {}
+    said["rooms"] += launched.get("rooms", 0)
+    said["orders"] += launched.get("orders", 0)
+    said["held"] = list(launched.get("held") or [])[:6]
 
     said["verdicts"] = len(attempt("verdicts", doors["verdicts"]) or [])
     said["resolved"] = len(attempt("resolved", _record_resolved) or [])

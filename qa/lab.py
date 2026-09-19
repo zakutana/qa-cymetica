@@ -387,7 +387,17 @@ def may_ask_now(nexus_rows: list[dict], now: datetime | None = None
     if waiting:
         return False, (f"{waiting[-1]} is still being answered; the next tick "
                        f"picks it up first")
-    stamps = [_at(r.get("at")) for r in nexus_rows if r.get("type") == "question"]
+    # The floor runs from the last question their side actually TOOK ON. One
+    # they turned away outright -- failed, with a retry_after of their own --
+    # spent nothing of theirs, and their wait replaces ours: NEX-0029 was
+    # refused "at capacity, retry after 30 s" and our floor then held the
+    # same question for eighteen minutes.
+    refused = {r.get("id") for r in nexus_rows
+               if r.get("type") == "gave_up"
+               and str(r.get("status") or "").startswith("failed")
+               and isinstance(r.get("retry_after_s"), (int, float))}
+    stamps = [_at(r.get("at")) for r in nexus_rows
+              if r.get("type") == "question" and r.get("id") not in refused]
     last = max((s for s in stamps if s is not None), default=None)
     floor = NIGHT["ask_seconds"]
     if last is not None and (moment - last).total_seconds() < floor:
