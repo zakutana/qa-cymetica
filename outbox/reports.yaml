@@ -2498,6 +2498,42 @@ reports:
       them either. If the sleeves are deliberately a different shape, saying
       so in the skill is enough.
 
+  - key: openapi-documents-disagree
+    findings: [CYM-published-openapi-documents-agree]
+    severity: low
+    category: documentation
+    url: https://cymetica.com/openapi-public.json
+    title: "Three public GETs are in /openapi.json but missing from /openapi-public.json, the schema llms.txt tells agent builders to import"
+    expected: >
+      llms.txt links two machine-readable schemas for the same API -- the
+      curated https://cymetica.com/openapi-public.json ("importable by ChatGPT
+      Custom-GPT Actions and schema-driven tool layers") and /openapi.json
+      ("Machine-readable API schema") -- so an endpoint that is public and
+      declared in one is declared in the other.
+    actual: >
+      /openapi.json declares 13 paths, /openapi-public.json 109, and only 5
+      are in both. Eight are in the small document alone. Five of those may
+      fairly be absent from a public schema (401 on /api/v1/account/me/balances
+      and /api/v1/account/me/portfolio; GET 405 on /api/v1/agents/clone,
+      /api/v1/backtest/bots/{slug}/run-backtest and /api/v1/funding/withdraw).
+      Three answer 200 to an anonymous GET and are still missing:
+      /api/v1/prices, /api/v1/arena/market and /api/v1/clob/book/hybrid.
+    steps:
+      - 'GET https://cymetica.com/openapi.json and collect paths (13)'
+      - 'GET https://cymetica.com/openapi-public.json and collect paths (109); the intersection is 5'
+      - 'For each path in the first and not the second, GET it with no credentials'
+      - '/api/v1/prices, /api/v1/arena/market and /api/v1/clob/book/hybrid answer 200'
+    body: >
+      Small, and only in one direction: we are not asking why the curated
+      document has 104 paths the other lacks -- that is a curated list doing
+      its job. The asymmetry that costs a caller something is the other way
+      round, because an agent framework importing the file you recommend does
+      not get /api/v1/prices.
+      Either adding those three to the curated schema or dropping them from
+      /openapi.json satisfies our check. It skips templated paths, and it
+      counts nothing that answers 401, 403, 404 or 405 -- a private endpoint
+      is allowed to be absent from a public schema.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in
