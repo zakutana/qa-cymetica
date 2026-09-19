@@ -115,6 +115,33 @@ def test_any_declared_deadline_clears_it_whatever_it_is_called():
         ROUND, {**RULES, "entry_deadline": "anchor day, 21:00 UTC"},
         date(2026, 9, 13))
     assert verdict == "passed", why
+    # V07, deep pass of 2026-09-19 (3/3): "whatever it is called" was six
+    # names, so a deadline under a seventh FAILED their repair.
+    for extra in ({"entry_cutoff": "2026-09-11T21:00:00Z"},
+                  {"entries_close_time": "21:00 UTC"},
+                  {"submissions_lock_at": "2026-09-11"}):
+        verdict, why = mod.decide({**ROUND, **extra}, RULES, date(2026, 9, 13))
+        assert verdict == "passed", (extra, why)
+    # And a field that is about something else is not a deadline for entries.
+    verdict, why = mod.decide({**ROUND, "trading_closes_at": "2026-09-11"},
+                              RULES, date(2026, 9, 13))
+    assert verdict == "failed", why
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_rules_that_no_longer_price_at_the_round_day_are_not_failed():
+    """V07 (3/3), the second repair the module docstring accepts: a late entry
+    priced at its OWN day. It shows only in the rules text -- this check never
+    enters a round -- and `decide` never read that text, so their rules
+    reworded to price each pick when it is entered still FAILED, quoting the
+    old rule back to them."""
+    mod = _check()
+    repaired = {**RULES, "text": ("Enter up to 5 universe symbols per round. "
+                                  "Each pick locks the close of the day it is "
+                                  "entered and is scored on its 7-day return.")}
+    verdict, why = mod.decide(ROUND, repaired, date(2026, 9, 13))
+    assert verdict == "inconclusive", why
+    assert "round day" in why, why
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

@@ -914,6 +914,20 @@ def test_the_nexus_card_check_reads_only_ids_given_as_cards():
         == ["5bd86126-90eb-4ad8-8e55-909397dab402"]
     assert isinstance(known_non_cards(), set)
 
+    # V08, deep pass of 2026-09-19 (3/3): the markers were SUBSTRINGS anywhere
+    # in the 48 characters before the id, so the very words that introduce a
+    # recommended card dropped it -- "Trade this card", "Buy both" (b-o-t),
+    # "open a position in", a backtest figure in the same table row -- and an
+    # invented card named that way was never checked. A marker labels the id:
+    # it is the word right before it (or before its "id").
+    card = "30408a4b-8717-4fc7-a91a-9a6724cadd7e"
+    for phrase in (f"Trade this card: {card}",
+                   f"Buy both {card} and hold",
+                   f"open a position in {card}",
+                   f"| backtest +42.5% | `{card}` |",
+                   f"the strategy I would run: `{card}`"):
+        assert card_ids_in(phrase) == [card], phrase
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_close_with_no_vendor_figures_is_not_a_close_that_paid_nothing():
@@ -950,6 +964,20 @@ def test_a_close_with_no_vendor_figures_is_not_a_close_that_paid_nothing():
         raise AssertionError(
             "a close whose vendor figures are absent was judged anyway, and "
             "0.95 against a bare 1.00 notional is a fail sent about nothing")
+
+    # V09, deep pass of 2026-09-19 (3/3): with THEIR proceeds present and only
+    # the P&L field gone, the result was taken as 0 and the P&L half waived --
+    # the waiver the docstring above calls a defect, left in this branch. Their
+    # proceeds against the notional ARE the result: a 2.00 loss that total_pnl
+    # never booked must not pass.
+    lost = {"notional": 10.00, "expected_pnl": None, "proceeds": 8.00,
+            "credited": 8.00, "pnl_booked": 0.00}
+    said = judge(lost)
+    assert said["returned"] and said["measurable"], said
+    assert not said["booked"], (
+        "a 2.00 loss their total_pnl never moved for was counted as booked")
+    booked = judge({**lost, "pnl_booked": -2.00})
+    assert booked["booked"], booked
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -994,6 +1022,27 @@ def test_a_window_label_is_checked_against_the_points_it_came_with():
     stale = (date.today() - timedelta(days=365)).isoformat()
     assert says_covered({"n_points": 120, "start_date": honest},
                         365, per_day) == ["start_date"]
+
+    # V02, deep pass of 2026-09-19 (3/3): their own house style is words and
+    # blocks -- the leaderboard serves "48h" and "6 months", and #97's fix
+    # arrived as `period: {start, end, hours, label: "19.8 days"}`. A correct
+    # repair of #99 in any of these shapes read None, and the check FAILED on
+    # a fixed defect.
+    assert says_covered({"n_points": 120, "actual_window": "121 days"},
+                        365, per_day) == ["actual_window"]
+    assert says_covered({"n_points": 120, "days_covered": 120},
+                        365, per_day) == ["days_covered"]
+    assert says_covered({"n_points": 120, "window": {
+        "start": honest, "end": date.today().isoformat()}},
+        365, per_day) == ["window"]
+    assert says_covered({"n_points": 120, "period": {
+        "hours": 120 * 24, "label": "120 days"}}, 365, per_day) == ["period"]
+    # And the same shapes still have to agree with the points.
+    assert says_covered({"n_points": 120, "actual_window": "365 days"},
+                        365, per_day) == [], "the request echoed in words"
+    assert says_covered({"n_points": 120, "window": {"start": None,
+                                                    "end": None}},
+                        365, per_day) == [], "an empty block is not a window"
     assert says_covered({"n_points": 120, "start_date": stale},
                         365, per_day) == [], (
         "the requested range echoed as dates is the same defect in another "
@@ -1123,6 +1172,29 @@ def test_the_latency_window_is_ordered_by_question_and_counts_only_their_failure
         "a window of nothing but our own failed reads is not a channel "
         "answering inside its published window")
 
+    # V01, deep pass of 2026-09-19 (3/3). Since their deep lane QUEUES at
+    # capacity (REPLY-0019) the loop looks once per tick and writes no
+    # give-up, so a question still queued had no finishing row and never
+    # entered the window -- which then judged the five before it and could
+    # PASS while a poll had seen the job waiting far past their ceiling.
+    from tests.mcp.test_nexus_channel import open_past_the_ceiling
+
+    queued = [{"id": "NEX-0200", "type": "question",
+               "at": "2026-09-19T15:00:00+00:00"},
+              {"id": "NEX-0200", "type": "poll", "at": "2026-09-19T15:40:00+00:00",
+               "status": "queued"},
+              {"id": "NEX-0201", "type": "question",
+               "at": "2026-09-19T15:38:00+00:00"},
+              {"id": "NEX-0201", "type": "poll", "at": "2026-09-19T15:40:00+00:00",
+               "status": "queued"}]
+    open_rows = open_past_the_ceiling(queued, 5 * 60)
+    assert [r["id"] for r in open_rows] == ["NEX-0200"], (
+        "only a job SEEN still waiting past the ceiling counts; two minutes in "
+        "is merely early")
+    read = read_the_window(queued + open_rows,
+                           latest_per_question(queued + open_rows))
+    assert [qid for qid, _ in read["stalled"]] == ["NEX-0200"], read
+
     # B02, same pass, triage 3/3: the ceiling is ours, transcribed, while the
     # check told the vendor the contract was their own tool description. A
     # relabel to 5-15 min would have sent a FAIL on #86 for behaviour inside
@@ -1137,9 +1209,16 @@ def test_the_latency_window_is_ordered_by_question_and_counts_only_their_failure
     ) == (5, 15)
     assert their_published_window(
         [{"name": "other", "description": labelled.format("1-5 minutes")}]) is None
+    # A label READ that no longer states an N-M window is not a label we
+    # failed to read: it moved to a shape we do not parse. Returning None for
+    # it let #86 carry on with the transcribed 1-5 and send a 7-minute answer
+    # to their tracker as a FAIL (C01, deep pass of 2026-09-19, 2/3).
     assert their_published_window([{"name": "ask_nexus_deep",
-                                    "description": "no window here"}]) is None, (
-        "a label we could not read is not a label that moved")
+                                    "description": "usually completes in under "
+                                                   "10 minutes"}]) == "unstated"
+    assert their_published_window([{"name": "ask_nexus_deep"}]) == "unstated"
+    assert their_published_window([]) is None, (
+        "no reading of the tool at all is still a read that failed")
     # Whether their CURRENT label still agrees with our transcription is a
     # question about the repository against their platform, so it is asserted
     # in tests/repo/test_surface_drift.py, not here. A red test in this
@@ -1169,6 +1248,25 @@ def test_the_summary_may_account_for_positions_by_counting_them():
     assert accounts_for({"counters_cover": "on-chain WTA bets",
                          "counters_do_not_cover": []}) is None
 
+    # V10, deep pass of 2026-09-19 (3/3): and a scope that COUNTS them was
+    # then failed for not saying where else to read them -- a pointer is owed
+    # for a population left OUT, and nothing is left out. #83's shape again.
+    from tests.rest.test_portfolio_summary import scope_problems
+
+    counted = {"counters_cover": "trades, bots and event-card positions",
+               "counters_do_not_cover": []}
+    assert scope_problems(counted, {"scope": counted}, 3) == []
+    # Vague is not counted: "summarized elsewhere" leaves them out, and the
+    # reader is owed the endpoint (V09 of 2026-09-13 stands).
+    elsewhere = {"counters_cover": "WTA bets; event-card activity is "
+                                   "summarized elsewhere",
+                 "counters_do_not_cover": []}
+    assert scope_problems(elsewhere, {"scope": elsewhere}, 3), (
+        "a population summarized elsewhere without saying where passed")
+    named = {"counters_cover": "WTA bets",
+             "counters_do_not_cover": ["event-card positions"]}
+    assert scope_problems(named, {"scope": named}, 3)
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_schema_we_could_not_read_is_not_a_tool_that_takes_nothing():
@@ -1185,6 +1283,20 @@ def test_a_schema_we_could_not_read_is_not_a_tool_that_takes_nothing():
         "type": "object", "properties": {}}}) == []
     assert served_arguments({"name": "x", "inputSchema": {
         "type": "object", "properties": {"b": {}, "a": {}}}}) == ["a", "b"]
+
+    # V11, deep pass of 2026-09-19 (3/3): the check then PASSED over nothing.
+    # Every tool the answer calls unserved (#85's case), or served with a
+    # schema that does not say, left nothing measured -- and the reason said
+    # "every one of the N tool(s) declares parameters".
+    from tests.mcp.test_nexus_tool_contracts import argless_among
+
+    described = {"foo_bar": "x=1", "baz_qux": "y=2"}
+    argless, measured = argless_among(described, {"baz_qux": None})
+    assert argless == [] and measured == [], "nothing here was measured"
+    argless, measured = argless_among(described, {"foo_bar": ["x"],
+                                                  "baz_qux": []})
+    assert [a["tool"] for a in argless] == ["baz_qux"]
+    assert measured == ["baz_qux", "foo_bar"]
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -1469,6 +1581,19 @@ def test_a_window_is_read_for_its_value_and_beside_its_own_sharpe():
         "Sharpe -- that pairing IS the filed defect")
     assert said({"latest_metrics": {"sharpe_ratio": 5.16,
                                     "period": {"label": "30d"}}}) == ["period"]
+    # V03, deep pass of 2026-09-19 (3/3): "carries something" was any
+    # non-empty value, so a block with nothing in it passed, and so did the
+    # size of a BAR -- which says nothing about the period a Sharpe covers.
+    assert said({"latest_metrics": {"sharpe_ratio": 1.2, "period": {
+        "start": None, "end": None}}}) == [], "an empty block is not a window"
+    assert said({"latest_metrics": {"sharpe_ratio": 1.2,
+                                    "interval": "1h"}}) == [], "a bar size"
+    assert said({"latest_metrics": {"sharpe_ratio": 1.2,
+                                    "timeframe": "1d"}}) == [], "a bar size"
+    assert said({"latest_metrics": {"sharpe_ratio": 1.2, "period": {
+        "start": "2026-08-31T00:00:00Z", "end": "2026-09-19T20:00:00Z",
+        "hours": 476, "label": "19.8 days"}}}) == ["period"], (
+        "their shipped fix for #97, verbatim in shape")
     assert said({"metrics": {"period_days": 30, "rows": [{"sharpe": 1.2}]}})         == ["period_days"], "a window one level up answers for the number under it"
 
     # B04, the same hour, the same class, the sibling file. Its own docstring
@@ -1536,6 +1661,21 @@ def test_a_refusal_is_read_off_the_failure_and_not_off_the_body():
         "check that only reads isError never sees it"
     )
     assert failure_text({"jsonrpc": "2.0", "id": 1, "result": "plain"}) is None
+
+    # V12, deep pass of 2026-09-19 (2/3): a login wall in common words
+    # matched neither pattern, was classed "failed on its own terms" -- we
+    # were let in -- and the check PASSED "needs no key" on a tool that
+    # turned an anonymous caller away.
+    from tests.mcp.test_ground_truth_needs_no_key import REFUSED_FOR_AUTH
+
+    for wall in ("Login required", "Please log in to continue",
+                 "Sign in to access strategy returns", "missing credentials",
+                 "credentials required", "authentication required"):
+        assert REFUSED_FOR_AUTH.search(wall), wall
+    for theirs in ("invalid strategy slug", "unknown strategy 'x'",
+                   "strategy_not_found"):
+        assert not REFUSED_FOR_AUTH.search(theirs), (
+            f"{theirs!r} is being told our argument is wrong -- we were let in")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

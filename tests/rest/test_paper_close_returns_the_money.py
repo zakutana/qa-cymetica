@@ -154,7 +154,16 @@ def judge(subject: dict) -> dict:
     # Only judged where their own precision could show it: TRD-0004 closed
     # for +0.0022 and total_pnl stayed 0.00, which is right. And the same
     # sign as the result -- a loss booked as a gain is not booked.
-    result = float(subject["expected_pnl"] or 0)
+    #
+    # The result is their own P&L figure when they gave one, and otherwise
+    # their PROCEEDS against the notional. `or 0` made a close whose position
+    # row lacked unrealized_pnl_usdc a zero result, which waived the P&L half:
+    # a 2.00 loss total_pnl never booked passed as "under a cent" (V09, deep
+    # pass of 2026-09-19, 3/3).
+    if subject.get("expected_pnl") is not None:
+        result = float(subject["expected_pnl"])
+    else:
+        result = float(subject["proceeds"]) - subject["notional"]
     measurable = subject["pnl_booked"] is not None and abs(result) >= VISIBLE
     booked = (not measurable) or (abs(subject["pnl_booked"]) >= VISIBLE
                                   and (subject["pnl_booked"] > 0) == (result > 0))

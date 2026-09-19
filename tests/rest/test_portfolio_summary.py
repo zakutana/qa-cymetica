@@ -43,7 +43,11 @@ SUMMARY = "/api/v1/portfolio/summary"
 POSITIONS = "/api/v1/event-cards/positions"
 # A sentence about the counters that says event cards are NOT in them is not
 # counting them, whatever words it shares with one that does.
-NEGATIONS = ("not ", "exclud", "except", "without")
+NEGATIONS = ("not ", "exclud", "except", "without",
+             # "summarized elsewhere" leaves the population out as surely as
+             # "not counted" -- it is what made V09 of 2026-09-13 read a vague
+             # mention as counting (V10, deep pass of 2026-09-19).
+             "elsewhere", "separately")
 
 
 def accounts_for(scope) -> str | None:
@@ -103,6 +107,48 @@ def states_exclusion(scope) -> bool:
             and any(n in covers for n in NEGATIONS))
 
 
+def scope_problems(scope: dict, body: dict, held: int) -> list[str]:
+    """What the scope still fails to say about `held` event-card positions.
+
+    Out of the check so it can be driven. The pointer -- WHERE the population
+    is read -- is owed for a population the counters leave OUT. It was owed
+    whenever the scope mentioned them at all, so a scope that COUNTS them, the
+    fix the comment below allows, was failed for not saying where else to read
+    them (V10, deep pass of 2026-09-19, 3/3). A vague mention ("summarized
+    elsewhere") is not counting, and still owes it (V09 of 2026-09-13).
+    """
+    covers = str((scope or {}).get("counters_cover") or "")
+    how = accounts_for(scope)
+    stated = states_exclusion(scope)
+    named = how is not None or stated
+
+    # WHERE IT IS READ, wherever the body says it. This looked only inside the
+    # joined prose of `counters_do_not_cover`, and their captured fix carries
+    # the pointer twice: in that parenthetical AND in the body's own
+    # `event_cards.rows` field. Tidying the parenthetical while keeping the
+    # machine-readable field would have filed "the reader is not told which
+    # endpoint carries it" against a body that tells the reader exactly that --
+    # the #83 shape, on this same endpoint, which was withdrawn and cost a
+    # retraction. Found by a check-auditor 2026-09-10, 3/3 on triage.
+    everywhere = json.dumps(body, ensure_ascii=False).lower()
+    points_at = POSITIONS in everywhere or "event-cards/positions" in everywhere
+
+    problems = []
+    if not covers:
+        problems.append("counters_cover is empty, so what the counters count "
+                        "is still unsaid")
+    if not named:
+        problems.append(f"{held} event-card position(s) are held and the "
+                        f"scope neither counts them nor says anywhere that it "
+                        f"leaves them out")
+    elif how != "counted" and not points_at:
+        problems.append(
+            f"the scope mentions the {held} event-card position(s) "
+            f"({how or 'left out'}) but the reader is not told which endpoint "
+            f"carries them")
+    return problems
+
+
 @qa(component="rest.account", tier=SafetyTier.SAFE, surface="rest")
 def test_the_summary_says_which_populations_its_counters_leave_out(rest_trusted):
     """Zero counters are honest when the reader is told what they count."""
@@ -144,48 +190,9 @@ def test_the_summary_says_which_populations_its_counters_leave_out(rest_trusted)
 
     # The population this account actually holds is event-card positions, so
     # that is the one the scope has to account for -- either by counting it or
-    # by naming it as excluded and saying where it is read (accounts_for).
-    how = accounts_for(scope)
-    # Or stated as an exclusion anywhere in the scope -- see states_exclusion.
-    stated = states_exclusion(scope)
-    named = how is not None or stated
-
-    # WHERE IT IS READ, wherever the body says it. This looked only inside the
-    # joined prose of `counters_do_not_cover`, and their captured fix carries
-    # the pointer twice: in that parenthetical AND in the body's own
-    # `event_cards.rows` field. Tidying the parenthetical while keeping the
-    # machine-readable field would have filed "the reader is not told which
-    # endpoint carries it" against a body that tells the reader exactly that --
-    # the #83 shape, on this same endpoint, which was withdrawn and cost a
-    # retraction. Found by a check-auditor 2026-09-10, 3/3 on triage.
-    #
-    # Their whole answer is the subject, because "does the body say where to
-    # read it" is a question about the body, not about one field of it.
-    everywhere = json.dumps(body, ensure_ascii=False).lower()
-    points_at = POSITIONS in everywhere or "event-cards/positions" in everywhere
-
-    problems = []
-    if not covers:
-        problems.append("counters_cover is empty, so what the counters count "
-                        "is still unsaid")
-    if not named:
-        problems.append(f"{len(held)} event-card position(s) are held and "
-                        f"the scope neither counts them nor says anywhere "
-                        f"that it leaves them out")
-    elif not points_at:
-        # Whenever the scope MENTIONS the population at all, the reader has to
-        # be told where to read it. The condition used to require `how ==
-        # "named"` or an explicit negation, so a scope saying "event-card
-        # activity is summarized elsewhere" -- which carries none of the
-        # negation words -- returned `counted`, skipped this branch entirely,
-        # and passed while the reason claimed the populations were named
-        # "with the endpoint that carries them". Presence of a mention read as
-        # a full disclosure. V09, deep pass of 2026-09-13, triage 3/3, on the
-        # endpoint that already cost the #83 retraction for reading this same
-        # scope block wrongly in the other direction.
-        problems.append(
-            f"the scope mentions the {len(held)} event-card position(s) "
-            f"({how}) but the reader is not told which endpoint carries them")
+    # by naming it as excluded and saying where it is read. The judgement is
+    # scope_problems() above, so a meta test can drive it (V10).
+    problems = scope_problems(scope, body, len(held))
 
     conclude(Measurement(
         verdict="failed" if problems else "passed",

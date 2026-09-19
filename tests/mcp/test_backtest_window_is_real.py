@@ -43,7 +43,18 @@ LONG, LONGER = 180, 365
 NAMES_THE_WINDOW = re.compile(
     r"^(actual|covered|effective|real)?_?(period|window|days|span|range)"
     r"(_days|_hours)?$|^(first|last|earliest|latest)_(point|date|day)$"
-    r"|^(from|to|since|until|start|end)_(date|time|day)$", re.IGNORECASE)
+    r"|^(from|to|since|until|start|end)_(date|time|day)$"
+    # The word order the other way round, `days_covered` (V02, 2026-09-19).
+    r"|^(days|hours|window|period|span)_(covered|actual|effective)$",
+    re.IGNORECASE)
+
+# A span in words, the way their own surfaces write one: "119 days", "48h",
+# "6 months". Months are read as 30.44 days -- a label this check compares
+# against the points with 25% of slack, not a calendar.
+IN_WORDS = re.compile(
+    r"^\s*(\d+(?:\.\d+)?)\s*(d|days?|h|hrs?|hours?|w|wks?|weeks?|mo|months?)"
+    r"\s*$", re.IGNORECASE)
+_UNIT_DAYS = {"d": 1.0, "h": 1 / 24, "w": 7.0, "m": 30.44}
 
 
 # How far a label may sit from the window the points support before it stops
@@ -55,18 +66,42 @@ LABEL_SLACK = 0.25
 
 def _implied_days(value) -> float | None:
     """What a label claims, in days: a number as it stands, a date as the span
-    back to today. Anything else is unreadable, which is not a claim."""
-    if isinstance(value, bool):
+    back to today, a span in words ("119 days", "48h"), or a block carrying
+    one of those ({start, end}, {days}, {hours}, {label}). Anything else is
+    unreadable, which is not a claim.
+
+    Numbers and dates only until V02 (deep pass of 2026-09-19, 3/3): their own
+    house style is words and blocks, so a correct repair of #99 written the
+    way #97's was -- `period: {start, end, hours, label: "19.8 days"}` -- read
+    None and the check FAILED on a fixed defect.
+    """
+    if isinstance(value, bool) or value is None:
         return None
     if isinstance(value, (int, float)):
         return float(value)
     from datetime import date, datetime
 
-    try:
-        when = datetime.fromisoformat(str(value).replace("Z", "+00:00")).date()
-    except (TypeError, ValueError):
-        return None
-    return float((date.today() - when).days)
+    def when(text):
+        try:
+            return datetime.fromisoformat(
+                str(text).replace("Z", "+00:00")).date()
+        except (TypeError, ValueError):
+            return None
+
+    if isinstance(value, dict):
+        start, end = when(value.get("start")), when(value.get("end"))
+        if start is not None:
+            return float(((end or date.today()) - start).days)
+        for key, per in (("days", 1.0), ("hours", 1 / 24)):
+            number = value.get(key)
+            if isinstance(number, (int, float)) and not isinstance(number, bool):
+                return float(number) * per
+        return _implied_days(value.get("label"))
+    words = IN_WORDS.match(str(value))
+    if words:
+        return float(words.group(1)) * _UNIT_DAYS[words.group(2)[0].lower()]
+    start = when(value)
+    return None if start is None else float((date.today() - start).days)
 
 
 def says_covered(answer, requested, per_day: float | None = None) -> list[str]:

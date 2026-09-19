@@ -90,6 +90,26 @@ def identity_gap(rows: list[dict]) -> dict:
             "share": (len(anonymous) / total) if total else 0.0}
 
 
+# The fewest hot rows a share is judged on. Below it, every row with a
+# conviction is measured, as before -- a share of three rows is noise.
+MIN_HOT = 5
+
+
+def measured_rows(rows: list[dict]) -> tuple[str, list[dict]]:
+    """The rows the verdict is about: the HOT ones, when there are enough.
+
+    The contract is a hot signal naming its token, and every row with a
+    conviction was measured -- so seventeen hot rows all anonymous beside
+    twenty-three cold ones named came to 43% and a PASS (V06, deep pass of
+    2026-09-19, 3/3).
+    """
+    hot = [r for r in rows if isinstance(r, dict) and r.get("hot")
+           and r.get("conviction") is not None]
+    if len(hot) >= MIN_HOT:
+        return "hot", hot
+    return "all", [r for r in rows if isinstance(r, dict)]
+
+
 def decide(robinhood: dict, solana: dict, pending) -> tuple[str, str]:
     """The verdict, as a function of the two chains and their own counter.
 
@@ -145,14 +165,20 @@ def decide(robinhood: dict, solana: dict, pending) -> tuple[str, str]:
                 f"resolving identity -- a different fault from this one")
 
     if isinstance(pending, int):
+        # What their counter SAYS, and no more: "nothing left to resolve" was
+        # written for every pending value, 5 included -- a sentence their
+        # payload did not say, on its way to their tracker (V06, deep pass of
+        # 2026-09-19, 3/3).
+        said = ("-- the feed says it has nothing left to resolve"
+                if pending == 0 else
+                f"-- which accounts for at most {pending} of them")
         return ("failed",
                 f"{len(robinhood['anonymous'])} of {robinhood['total']} "
                 f"robinhood rows carry a conviction and no identity at all, "
                 f"while the same payload reports identities_pending={pending} "
-                f"-- the feed says it has nothing left to resolve and is "
-                f"serving rows no reader can act on. Their own Memecoin "
-                f"Terminal searches by symbol, name or address, so these "
-                f"signals cannot be priced or looked up anywhere on the "
+                f"{said}, and is serving rows no reader can act on. Their own "
+                f"Memecoin Terminal searches by symbol, name or address, so "
+                f"these signals cannot be priced or looked up anywhere on the "
                 f"platform that raised them")
 
     # No counter served: back to the evidence the check had before the field
@@ -200,7 +226,10 @@ def test_a_hot_signal_names_the_token_it_is_a_signal_about(rest_anon):
             f"contract there is nothing to hold the rows against")
 
     rh_payload = _payload(rest_anon, "robinhood")
-    robinhood = identity_gap(list(rh_payload.get("rows") or []))
+    # Robinhood's HOT rows when there are enough of them (V06); Solana is the
+    # yardstick of what naming looks like on the same endpoint, all rows.
+    basis, measured = measured_rows(list(rh_payload.get("rows") or []))
+    robinhood = identity_gap(measured)
     solana = identity_gap(list(_payload(rest_anon, "solana").get("rows") or []))
 
     # Their own counter, added 2026-09-13 at their initiative after they
@@ -227,6 +256,7 @@ def test_a_hot_signal_names_the_token_it_is_a_signal_about(rest_anon):
         right=[{"chain": "solana", "anonymous": len(solana["anonymous"]),
                 "named": len(solana["named"])}],
         population={
+            "robinhood_measured": basis,
             "robinhood_rows": robinhood["total"],
             "robinhood_anonymous": len(robinhood["anonymous"]),
             "robinhood_anonymous_hot": len(hot),

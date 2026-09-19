@@ -262,7 +262,45 @@ def their_published_window(tools=None):
         found = PUBLISHES_A_WINDOW.search(str(tool.get("description") or ""))
         if found:
             return int(found.group(1)), int(found.group(2))
+        # The tool WAS read and its label states no N-M window. That is not a
+        # read that failed -- it is their label having moved to a shape we do
+        # not parse ("usually under 10 minutes"), and returning None for it
+        # let #86 judge by the transcribed 1-5 and send a FAIL for an answer
+        # their new words may allow (C01, deep pass of 2026-09-19, 2/3).
+        return "unstated"
     return None
+
+
+def open_past_the_ceiling(rows, ceiling_s: float) -> list[dict]:
+    """Questions with no answer and no give-up whose own polls SAW them still
+    waiting past the ceiling -- as a give-up row carrying the status seen.
+
+    Since their deep lane queues at capacity (REPLY-0019) the laboratory looks
+    once per tick and writes no give-up while a job waits, so such a question
+    had no finishing row, never entered the window, and the window judged the
+    five before it (V01, deep pass of 2026-09-19, 3/3). Only a poll past the
+    ceiling counts: a job two minutes in is early, not late.
+    """
+    running = _nexus().RUNNING
+    asked = {r["id"]: r.get("at") for r in rows
+             if r.get("type") == "question" and r.get("id")}
+    done = {r["id"] for r in rows
+            if r.get("type") in ("answer", "gave_up") and r.get("id")}
+    newest: dict[str, dict] = {}
+    for row in rows:
+        qid = row.get("id")
+        if row.get("type") == "poll" and qid in asked and qid not in done:
+            newest[qid] = row
+    out = []
+    for qid, poll in newest.items():
+        status = str(poll.get("status") or "")
+        first, seen = _moment(asked[qid]), _moment(poll.get("at"))
+        if status not in running or first is None or seen is None:
+            continue
+        if (seen - first).total_seconds() > ceiling_s:
+            out.append({"id": qid, "type": "gave_up", "status": status,
+                        "at": poll.get("at"), "still_open": True})
+    return out
 
 
 def read_the_window(rows, finished):
@@ -402,6 +440,10 @@ def test_a_deep_investigation_answers_inside_the_window_it_publishes():
             return None
         return round((last - first).total_seconds(), 1)
 
+    low, high = nexus.PUBLISHED_MINUTES
+    # A question still waiting past their ceiling, seen by a poll, is in the
+    # window as what it is -- unanswered -- rather than left out of it (V01).
+    rows = rows + open_past_the_ceiling(rows, high * 60)
     finished = latest_per_question(rows)
     if not finished:
         raise Inconclusive(
@@ -423,8 +465,14 @@ def test_a_deep_investigation_answers_inside_the_window_it_publishes():
     WINDOW = 5
     finished = finished[-WINDOW:]
 
-    low, high = nexus.PUBLISHED_MINUTES
     theirs = their_published_window()
+    if theirs == "unstated":
+        raise Inconclusive(
+            f"their ask_nexus_deep label no longer states an N-M minute window "
+            f"this check can read, and it judges against {low}-{high} "
+            f"transcribed into scripts/nexus.py. Re-read their label, "
+            f"re-transcribe PUBLISHED_MINUTES and re-pin; until then a verdict "
+            f"here would quote a window they may no longer publish (C01)")
     if theirs is not None and theirs != (low, high):
         # Their label moved. Rule 5: a moved ceiling is a changed check, not a
         # missed deadline -- and the alternative, adopting their new number
@@ -455,9 +503,14 @@ def test_a_deep_investigation_answers_inside_the_window_it_publishes():
         trouble.append(f"{len(late)} answered later than the published "
                        f"{high} min (worst {late[0][0]} still running at {late[0][1]:.0f}s)")
     if stalled:
-        trouble.append(f"{len(stalled)} were still running past the published "
-                       f"{high} min when we stopped watching (worst "
-                       f"{stalled[0][0]} at {stalled[0][1]:.0f}s)")
+        # "still unfinished", not "still running": since REPLY-0019 a job at
+        # capacity is QUEUED, and the status seen is on each row (V01).
+        seen = sorted({str(r.get("status")) for r in finished
+                       if r.get("id") in {qid for qid, _ in stalled}})
+        trouble.append(f"{len(stalled)} were still unfinished "
+                       f"({'/'.join(seen)}) past the published {high} min at "
+                       f"our last look (worst {stalled[0][0]} at "
+                       f"{stalled[0][1]:.0f}s)")
 
     if read["proves_nothing"]:
         # Nothing about their channel was measured, and an unmeasured channel

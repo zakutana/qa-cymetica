@@ -307,6 +307,18 @@ def test_only_a_405_counts_as_a_route_that_exists():
         "against their {instance_id} template without being normalised")
     assert [h["methods"] for h in hidden] == ["DELETE", "PATCH"]
 
+    # V04, deep pass of 2026-09-19 (2/3): a documented PATH was the end of the
+    # question, so an undocumented METHOD on it -- PATCH served where their
+    # document names only GET -- passed. Read against their methods when the
+    # document gives them.
+    with_methods = {"/api/v1/cloned-bots/{instance_id}/settings": {"GET"},
+                    "/api/v1/cloned-bots/{instance_id}/fund": {"POST"}}
+    hidden = served_but_undocumented(
+        {"/api/v1/cloned-bots/abc/settings": "GET, PATCH",
+         "/api/v1/cloned-bots/abc/fund": "POST"}, with_methods)
+    assert [(h["path"], h["methods"]) for h in hidden] == [
+        ("/api/v1/cloned-bots/{instance_id}/settings", "PATCH")], hidden
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_funding_asks_the_platform_whether_the_bot_is_paper(tmp_path, monkeypatch):

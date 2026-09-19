@@ -53,6 +53,7 @@ evidence was made once, on purpose, and is recorded in `state/lab.jsonl`.
 
 from __future__ import annotations
 
+import re
 from datetime import date, datetime, timedelta, timezone
 
 from qa.marks import Inconclusive, SafetyTier, qa
@@ -64,6 +65,19 @@ TOURNAMENT = "/api/v1/universe/movers/tournament"
 # the window is declared, which is the weakest of the three honest repairs.
 DEADLINE_FIELDS = ("entries_close", "entries_close_at", "closes_at",
                    "entry_deadline", "locks_at", "entries_closed")
+# And any field that names a cutoff FOR ENTRIES in its own words. Six names
+# were the whole of "whatever it is called", so `entry_cutoff` or
+# `entries_close_time` FAILED a repair (V07, deep pass of 2026-09-19, 3/3).
+# Anchored to entries/submissions/picks, so a market's `trading_closes_at` is
+# not read as a deadline for entering the round.
+DEADLINE_NAMED = re.compile(
+    r"^(entr(y|ies)|submissions?|picks?)_?"
+    r"(close[sd]?|closing|cutoff|deadline|locks?|locked)(_at|_time|_utc)?$",
+    re.IGNORECASE)
+# Their rule that a pick is priced at the ROUND DAY's close -- the defect. When
+# the rules text stops saying so, a late entry may be priced at its own day,
+# which is the second repair, and only an entry can show it.
+PRICES_AT_THE_ROUND_DAY = re.compile(r"round day", re.IGNORECASE)
 
 
 def _day(value) -> date | None:
@@ -111,7 +125,9 @@ def declares_a_deadline(round_: dict, rules: dict) -> bool:
     timestamp or a sentence is one whenever it is not empty.
     """
     for source in (round_ or {}), (rules or {}):
-        for field in DEADLINE_FIELDS:
+        named = [key for key in source
+                 if isinstance(key, str) and DEADLINE_NAMED.match(key)]
+        for field in dict.fromkeys([*DEADLINE_FIELDS, *named]):
             value = source.get(field)
             if isinstance(value, bool):
                 if value:                      # entries_closed: true
@@ -158,6 +174,18 @@ def decide(round_: dict, rules: dict, today: date) -> tuple[str, str]:
                 f"the round anchored {anchor} is already past its "
                 f"scores_after of {scores_after}, so it is not open to be "
                 f"entered late")
+
+    # The second repair: their rules stop pricing a pick at the round day's
+    # close. That shows only in the rules text -- this check never enters a
+    # round -- and the text was never read, so reworded rules still FAILED,
+    # quoting the old rule back to them (V07, deep pass of 2026-09-19, 3/3).
+    text = str((rules or {}).get("text") or "")
+    if text and not PRICES_AT_THE_ROUND_DAY.search(text):
+        return ("inconclusive",
+                f"their rules no longer say a pick locks the close on the "
+                f"round day ({text[:120]!r}), so a late entry may now be "
+                f"priced at its own day -- which only an entry can show, and "
+                f"our one entry (2026-09-13) predates the wording")
 
     sessions = trading_sessions(anchor, today)
     elapsed = (today - anchor).days

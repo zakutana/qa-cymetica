@@ -128,17 +128,51 @@ CONTEXT = 48
 MAX_AGE_HOURS = 24
 
 
+# "run" labels an id only as run_id / "run id": on its own it is a verb
+# ("the strategy I would run: <card>").
+ONLY_WITH_ID = ("run",)
+
+
+def _labelled_as_not_a_card(before: str) -> bool:
+    """Whether the words right before an id LABEL it as something else.
+
+    The label is the word immediately before the id -- or before its "id"
+    (`species id`, `run_id`, `trade_id`). Until V08 (deep pass of 2026-09-19,
+    3/3) any marker ANYWHERE in the 48 characters before it counted, as a
+    substring: "Trade this card", "Buy both" (b-o-t), "open a position in",
+    a backtest figure in the same table row -- the words that introduce a
+    recommended card dropped it, and an invented card named that way was
+    never checked.
+    """
+    import re
+
+    words = re.findall(r"[a-z0-9_]+", before.lower())
+    if not words:
+        return False
+    last = words[-1]
+    if last in ("id", "ids") and len(words) >= 2:
+        label, with_id = words[-2], True
+    elif last.endswith("_id"):
+        label, with_id = last[:-3], True
+    else:
+        label, with_id = last, False
+    labels = {m.replace(" ", "_").removesuffix("_id") for m in NOT_A_CARD}
+    if label in ONLY_WITH_ID:
+        return with_id
+    return label in labels
+
+
 def card_ids_in(text: str) -> list[str]:
     """The card ids an answer gives, in order, once each."""
     from tests.rest.test_event_card_listing_reaches_them import UUID
 
     out: list[str] = []
     for match in UUID.finditer(text or ""):
-        before = text[max(0, match.start() - CONTEXT):match.start()].lower()
+        before = text[max(0, match.start() - CONTEXT):match.start()]
         # Only the words on the same line: a table row or a sentence, not the
         # paragraph above it.
         before = before.rsplit("\n", 1)[-1]
-        if any(marker in before for marker in NOT_A_CARD):
+        if _labelled_as_not_a_card(before):
             continue
         if match.group(0) not in out:
             out.append(match.group(0))

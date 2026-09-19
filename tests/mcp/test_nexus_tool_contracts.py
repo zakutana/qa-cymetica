@@ -68,6 +68,27 @@ def calls_with_arguments(text: str) -> dict[str, str]:
     return out
 
 
+def argless_among(described: dict, served: dict) -> tuple[list[dict], list[str]]:
+    """The tools an answer calls with arguments that the server serves with
+    NO parameters, and every tool that could be measured at all.
+
+    Measured means served with a schema that says (`served_arguments` not
+    None). That a named tool does not exist is #85's question, not this one,
+    and a schema that does not say is not a tool that takes nothing -- so
+    both are left out of `measured`, which is what lets the caller tell a
+    pass from a run that read nothing (V11, deep pass of 2026-09-19).
+    """
+    argless, measured = [], []
+    for name, args in sorted(described.items()):
+        if name not in served or served[name] is None:
+            continue
+        measured.append(name)
+        # [] only: "takes no arguments" is a claim about a schema that says.
+        if served[name] == []:
+            argless.append({"tool": name, "nexus_passed": args})
+    return argless, measured
+
+
 def served_arguments(tool) -> list[str] | None:
     """The arguments a served tool's schema takes, or None if it does not say.
 
@@ -118,16 +139,16 @@ def test_a_tool_nexus_calls_with_arguments_takes_arguments(mcp_trusted):
             "tools/list returned no schemas, so nothing could be compared -- "
             "a failed read is not an empty catalogue")
 
-    argless = []
-    for name, args in sorted(described.items()):
-        if name not in served:
-            # That a named tool does not exist is #85's question, not this
-            # one, and reporting it here would double-count the same defect.
-            continue
-        # [] only: None is a schema that does not say, and "takes no
-        # arguments" is a claim about a schema that does.
-        if served[name] == []:
-            argless.append({"tool": name, "nexus_passed": args})
+    argless, measured = argless_among(described, served)
+    if not measured:
+        # V11, deep pass of 2026-09-19 (3/3): nothing here was measured --
+        # every tool the answer calls is unserved or has a schema that does
+        # not say -- and the check PASSED with "every one of the N tool(s)
+        # declares parameters".
+        raise Inconclusive(
+            f"none of the {len(described)} tool(s) {latest['id']} calls with "
+            f"an argument is served with a readable schema, so whether any "
+            f"takes arguments could not be read")
 
     conclude(Measurement(
         verdict="failed" if argless else "passed",
@@ -140,8 +161,9 @@ def test_a_tool_nexus_calls_with_arguments_takes_arguments(mcp_trusted):
               f"not exist fails loudly; this one returns success and a "
               f"plausible payload for any input"
             if argless else
-            f"every one of the {len(described)} tool(s) {latest['id']} calls "
-            f"with an argument declares parameters"),
+            f"every one of the {len(measured)} tool(s) {latest['id']} calls "
+            f"with an argument that the server serves with a readable schema "
+            f"declares parameters"),
         left=sorted(a["tool"] for a in argless),
         right=sorted(n for n in described if n in served),
         population={"answer": latest["id"], "described": len(described),

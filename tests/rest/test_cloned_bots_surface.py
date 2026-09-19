@@ -70,6 +70,13 @@ def served_but_undocumented(probed: dict, documented: set) -> list[dict]:
         return re.sub(r"\{[^}]*\}", "{}", route)
 
     by_shape = {shape(route): route for route in documented}
+    # And the METHODS, when their document gives them. A documented path was
+    # the end of the question, so PATCH served where they document only GET
+    # passed (V04, deep pass of 2026-09-19, 2/3). HEAD and OPTIONS come with
+    # any route and document nothing.
+    methods_of = ({shape(route): {str(m).upper() for m in methods}
+                   for route, methods in documented.items()}
+                  if isinstance(documented, dict) else {})
     out = []
     for path, allow in sorted(probed.items()):
         if not allow:
@@ -81,6 +88,14 @@ def served_but_undocumented(probed: dict, documented: set) -> list[dict]:
             out.append({"path": template,
                         "methods": allow,
                         "probed_as": path})
+            continue
+        if shape(template) in methods_of:
+            served = {m.strip().upper() for m in str(allow).split(",")
+                      if m.strip()} - {"HEAD", "OPTIONS"}
+            extra = sorted(served - methods_of[shape(template)])
+            if extra:
+                out.append({"path": template, "methods": ", ".join(extra),
+                            "probed_as": path})
     return out
 
 
@@ -233,8 +248,12 @@ def test_every_cloned_bot_route_they_serve_is_one_they_document(rest_trusted):
         raise Inconclusive(
             f"{OPENAPI} answered HTTP {spec.status_code}, so what they "
             f"document could not be read -- a failed read is not an empty one")
-    documented = {p for p in (spec.json().get("paths") or {})
-                  if p.startswith(PREFIX)}
+    # Route -> the methods they document on it (V04): the path alone let an
+    # undocumented method on a documented route pass.
+    documented = {p: {m.upper() for m in (ops or {})
+                      if m.lower() in ("get", "post", "put", "patch", "delete")}
+                  for p, ops in (spec.json().get("paths") or {}).items()
+                  if p.startswith(PREFIX) and isinstance(ops, dict)}
     if not documented:
         raise Inconclusive(
             f"their openapi names no {PREFIX} path at all, which is a "

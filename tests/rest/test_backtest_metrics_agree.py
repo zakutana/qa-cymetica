@@ -74,10 +74,36 @@ TOOL = "get_strategy_returns"
 # reading a number without its units" -- and this one had not learned it.
 NAMES_THE_WINDOW = re.compile(
     r"^(actual|covered|effective|real|headline)?_?"
-    r"(period|window|horizon|timeframe|lookback|interval|range|span)"
+    r"(period|window|horizon|lookback|range|span)"
     r"(_days|_hours|_label)?$"
     r"|^(period|window)$|^(from|to|since|until|start|end)_(date|time|day)$"
     r"|^(first|last|earliest|latest)_(point|date|day)$", re.IGNORECASE)
+# `interval` and `timeframe` are gone from the words above: in a market
+# payload they are the size of a BAR ("1h", "1d"), which says nothing about the
+# period a Sharpe covers (V03, deep pass of 2026-09-19, 3/3).
+
+
+def _readable(value) -> bool:
+    """Whether a window's VALUE says something: a number above zero, a label
+    with a number in it ("48h / 354 markets", "19.8 days", an ISO date), or a
+    block carrying a start and an end, a span, or such a label. A block of
+    nulls passed until V03 because it was not literally empty."""
+    if value is None or isinstance(value, bool):
+        return False
+    if isinstance(value, (int, float)):
+        return value > 0
+    if isinstance(value, str):
+        return bool(re.search(r"\d", value))
+    if isinstance(value, dict):
+        if value.get("start") and value.get("end"):
+            return True
+        for key in ("days", "hours"):
+            span = value.get(key)
+            if (isinstance(span, (int, float)) and not isinstance(span, bool)
+                    and span > 0):
+                return True
+        return _readable(value.get("label"))
+    return False
 
 
 def _says_a_window(node) -> list[str]:
@@ -86,7 +112,7 @@ def _says_a_window(node) -> list[str]:
     Not anywhere in the payload: the claim is that the SHARPE says what period
     it covers, so a window in a neighbouring block about a different
     measurement is not an answer. Not a bare name either -- `period: null` is
-    the absence with a label on it.
+    the absence with a label on it, and so is a block of nulls (V03).
     """
     if not isinstance(node, dict):
         return []
@@ -94,7 +120,7 @@ def _says_a_window(node) -> list[str]:
     for key, value in node.items():
         if not NAMES_THE_WINDOW.match(str(key)):
             continue
-        if value is None or value == "" or value == {} or value == []:
+        if not _readable(value):
             continue
         out.append(str(key).lower())
     return sorted(out)

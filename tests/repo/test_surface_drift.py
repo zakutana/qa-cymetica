@@ -340,6 +340,20 @@ def test_their_published_window_still_says_what_we_transcribed():
             sources={"live": "the newest captured tools/list",
                      "fallback": "audits/surface.json"}))
         return
+    if theirs == "unstated":
+        # Read, and no N-M window in it. That is their label having MOVED --
+        # not a read that failed -- and it was inconclusive until C01 (deep
+        # pass of 2026-09-19, 2/3), while #86 went on quoting 1-5 to them.
+        conclude(Measurement(
+            verdict="failed",
+            reason="their ask_nexus_deep label no longer states an N-M minute "
+                   "window at all; read it, re-transcribe PUBLISHED_MINUTES "
+                   "and re-pin #86's check -- until then #86 holds its verdict",
+            left={"their_label": "no window stated"},
+            right={"transcribed": list(_nexus().PUBLISHED_MINUTES)},
+            sources={"live": "the newest captured tools/list",
+                     "transcription": "scripts/nexus.py::PUBLISHED_MINUTES"}))
+        return
 
     conclude(Measurement(
         verdict="passed" if theirs == _nexus().PUBLISHED_MINUTES else "failed",

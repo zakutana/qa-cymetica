@@ -72,7 +72,12 @@ GROUND_TRUTH = (
 REFUSED_FOR_AUTH = re.compile(
     r"\b(unauthori[sz]ed|unauthenticated|authentication|api[_ -]?key|"
     r"forbidden|requires? (?:a )?(?:key|credential|token)|"
-    r"permission denied|not authori[sz]ed)\b", re.I)
+    r"permission denied|not authori[sz]ed|"
+    # A login wall in common words (V12, deep pass of 2026-09-19, 2/3):
+    # these matched nothing, read as "we were let in", and passed.
+    r"log(?:ged)?[ -]?in (?:required|to)|login required|please log ?in|"
+    r"sign(?:ed)?[ -]?in (?:required|to)|missing credentials?|"
+    r"credentials? (?:are )?required)\b", re.I)
 
 # What their surface says when a name is not one of its tools. Matched on the
 # SHAPE of the word, not on a whole message, because the message is theirs.

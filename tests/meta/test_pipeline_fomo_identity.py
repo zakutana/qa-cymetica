@@ -116,6 +116,32 @@ def test_their_own_counter_cannot_excuse_the_whole_feed_for_ever():
     verdict, why = mod.decide(_gap(40, 0), _gap(0, 40), pending=1)
     assert verdict == "failed", why
     assert "1" in why and "40" in why, why
+    # And the reason may not put words in their payload: a counter of 5 is
+    # not "nothing left to resolve" (V06, deep pass of 2026-09-19, 3/3). That
+    # sentence goes to their tracker.
+    verdict, why = mod.decide(_gap(30, 0), _gap(0, 40), pending=5)
+    assert verdict == "failed" and "nothing left" not in why, why
+    verdict, why = mod.decide(_gap(30, 0), _gap(0, 40), pending=0)
+    assert verdict == "failed" and "nothing left" in why, why
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_hot_rows_are_the_ones_measured_when_there_are_enough():
+    """V06 (3/3): the check is about a HOT signal naming its token, and it
+    measured every row with a conviction. Seventeen hot rows all anonymous
+    beside twenty-three cold ones named came to 43% and a PASS."""
+    mod = _check()
+    hot = [{"hot": True, "conviction": 80, "token_address": ""}] * 17
+    cold = [{"hot": False, "conviction": 20, "token_address": f"0x{n}"}
+            for n in range(23)]
+
+    basis, rows = mod.measured_rows(hot + cold)
+
+    assert basis == "hot" and len(rows) == 17
+    assert mod.identity_gap(rows)["share"] == 1.0
+    # Too few hot rows to judge a share on: every row with a conviction.
+    basis, rows = mod.measured_rows(hot[:2] + cold)
+    assert basis == "all" and len(rows) == 25
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
