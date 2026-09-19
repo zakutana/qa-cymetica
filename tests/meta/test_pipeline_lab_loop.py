@@ -411,6 +411,93 @@ def test_a_position_that_resolved_without_us_is_written_down_once(
     assert first["resolved"] == 1 and second["resolved"] == 0
 
 
+# --- the board and the brief: what earned, and what to ask next -------------
+
+def _intent(ident, card, usdc, origin):
+    return {"type": "intent", "id": ident, "card_id": card, "usdc": usdc,
+            "nexus": {"id": origin}}
+
+
+def _accepted(ident, position):
+    return {"type": "outcome", "id": ident, "outcome": "accepted",
+            "position_id": position}
+
+
+def _position(position, card, status, pnl, at="2026-09-19T12:00:00+00:00"):
+    key = "realized_pnl_usdc" if status == "closed" else "unrealized_pnl_usdc"
+    return {"type": "sample", "kind": "position", "at": at,
+            "position_id": position, "card_id": card, "status": status,
+            key: pnl}
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_board_ranks_his_proposals_by_what_they_earned():
+    """[operator 2026-09-19] the goal is the strategies that earn the most. So
+    every proposal is followed to the money: the stake our orders credited to
+    his answer, the newest reading of each position, realised once closed --
+    and a proposal the backtest turned away is on the board too, with its
+    numbers, because "what has been tested" is half of what they asked for."""
+    answers = [{"type": "answer", "id": f"NEX-000{n}",
+                "at": f"2026-09-19T0{n}:00:00+00:00", "text": "..."}
+               for n in range(1, 5)]
+    notebook = [
+        {"type": "gate", "origin": "NEX-0001", "card": "c1", "verdict": "pass",
+         "why": "+6.5% at Sharpe 1.30 over 90 days after fees"},
+        {"type": "gate", "origin": "NEX-0003", "card": "c3",
+         "verdict": "reject", "why": "-4.0% over 90 days after fees"}]
+    room_rows = [
+        {"type": "strategy", "id": "STR-0001", "origin": "NEX-0001",
+         "title": "Fed cut", "at": "2026-09-19T01:10:00+00:00"},
+        {"type": "status", "room": "STR-0001", "status": "running"},
+        {"type": "strategy", "id": "STR-0002", "origin": "NEX-0002",
+         "title": "SOL memes", "at": "2026-09-19T02:10:00+00:00"},
+        {"type": "status", "room": "STR-0002", "status": "running"}]
+    paper_rows = [
+        _intent("TRD-1", "c1", 600.0, "NEX-0001"), _accepted("TRD-1", "p1"),
+        _intent("TRD-2", "c1b", 600.0, "NEX-0001"), _accepted("TRD-2", "p2"),
+        _intent("TRD-3", "c2", 1200.0, "NEX-0002"), _accepted("TRD-3", "p3")]
+    samples = [
+        _position("p1", "c1", "open", 10.0, at="2026-09-19T10:00:00+00:00"),
+        _position("p1", "c1", "open", 40.0, at="2026-09-19T12:00:00+00:00"),
+        _position("p2", "c1b", "closed", 20.0),
+        _position("p3", "c2", "open", -30.0)]
+
+    rows = lab.board(answers, notebook, room_rows, paper_rows, samples)
+
+    assert [r["origin"] for r in rows] == ["NEX-0001", "NEX-0002", "NEX-0003"], rows
+    best = rows[0]
+    assert best["room"] == "STR-0001" and best["stake_usdc"] == 1200.0
+    assert best["pnl_usdc"] == 60.0, "the newest reading, realised once closed"
+    assert round(best["pnl_pct"], 6) == 5.0
+    assert rows[1]["pnl_pct"] < 0
+    assert rows[2]["room"] is None and "-4.0" in rows[2]["gates"][0]["why"]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_brief_carries_his_track_record_into_the_next_question(
+        tmp_path, monkeypatch):
+    """Nexus remembers nothing between questions; the brief is his memory.
+    It has to say what the day may still spend, how his last proposals did --
+    including the ones the gate turned away, with the numbers -- and what
+    measured well on our side, as a question for him and never a proposal."""
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    real_now = datetime.now(timezone.utc)
+    _write(tmp_path, "nexus.jsonl", [
+        _question("NEX-0001", real_now - timedelta(hours=3)),
+        {"type": "answer", "id": "NEX-0001",
+         "at": (real_now - timedelta(hours=2)).isoformat(), "text": "..."}])
+    _write(tmp_path, "paper.jsonl", [{"type": "after", "id": "TRD-0001",
+                                      "sim_balance_usdc": "98800"}])
+    lab.note_gate("NEX-0001", _card(0xC), {
+        "verdict": "reject", "why": "-4.0% over 90 days after fees"})
+
+    text = scripts_lab.brief()
+
+    assert "1 of 24" in text, text
+    assert "NEX-0001" in text and "-4.0%" in text, text
+    assert "never a proposal" in text.lower(), text
+
+
 # --- the gate: a backtest before a room ------------------------------------
 
 def _reading(period, r, s, d=3.0, lost=None):

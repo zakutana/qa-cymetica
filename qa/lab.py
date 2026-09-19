@@ -1001,6 +1001,119 @@ def resolved_without_us(paper_rows: list[dict],
     return found
 
 
+def _money(value) -> float | None:
+    """Their amounts arrive as numbers or decimal strings; neither is zero
+    when unreadable."""
+    if isinstance(value, bool) or value is None:
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def board(answers: list[dict], notebook: list[dict], room_rows: list[dict],
+          paper_rows: list[dict], sample_rows: list[dict]) -> list[dict]:
+    """Every Nexus proposal that came to anything, and what it earned.
+
+    [operator 2026-09-19] the goal is the strategies that earn the most, so
+    each answer is followed to the money: the stake our paper orders credited
+    to it (`intent.nexus.id`), the NEWEST reading of each of those positions --
+    realised once closed, unrealised while open -- and the room's status and
+    verdict. An answer the gate turned away is on the board with its numbers:
+    "what has been tested" was the other half of what they asked for.
+
+    Best earner first, by return on the stake; then the rooms nothing has
+    priced yet; then what the gate rejected. Pure over five loaded diaries.
+    """
+    gates_by: dict[str, list[dict]] = {}
+    for row in notebook:
+        if row.get("type") == "gate":
+            gates_by.setdefault(str(row.get("origin")), []).append(row)
+    rooms_by = {str(r.get("origin")): r for r in room_rows
+                if r.get("type") == "strategy"}
+    status, verdicts = {}, {}
+    for row in room_rows:
+        if row.get("type") == "status":
+            status[row.get("room")] = row.get("status")
+        elif row.get("type") == "verdict":
+            verdicts[row.get("room")] = row
+
+    intents = {r.get("id"): r for r in paper_rows
+               if r.get("type") == "intent" and r.get("kind") != "close"}
+    held: dict[str, tuple[str, float]] = {}
+    for row in paper_rows:
+        if (row.get("type") != "outcome" or row.get("outcome") != "accepted"
+                or row.get("kind") == "close"):
+            continue
+        intent = intents.get(row.get("id"))
+        if not intent:
+            continue
+        nexus = intent.get("nexus")
+        origin = nexus.get("id") if isinstance(nexus, dict) else nexus
+        position = row.get("position_id") or intent.get("position_id")
+        stake = _money(intent.get("usdc"))
+        if origin and position and stake is not None:
+            held[str(position)] = (str(origin), stake)
+
+    newest: dict[str, dict] = {}
+    for row in sample_rows:
+        if row.get("kind") != "position":
+            continue
+        position = str(row.get("position_id") or "")
+        if position in held and str(row.get("at") or "") >= str(
+                newest.get(position, {}).get("at") or ""):
+            newest[position] = row
+
+    money: dict[str, dict] = {}
+    for position, (origin, stake) in held.items():
+        book = money.setdefault(origin, {"stake": 0.0, "pnl": 0.0,
+                                         "priced": 0, "positions": 0})
+        book["stake"] += stake
+        book["positions"] += 1
+        reading = newest.get(position) or {}
+        pnl = _money(reading.get("realized_pnl_usdc"
+                                 if reading.get("status") == "closed"
+                                 else "unrealized_pnl_usdc"))
+        if pnl is not None:
+            book["pnl"] += pnl
+            book["priced"] += 1
+
+    out = []
+    for answer in answers:
+        if answer.get("type") != "answer":
+            continue
+        origin = str(answer.get("id") or "")
+        room = rooms_by.get(origin)
+        cash = money.get(origin)
+        gated = gates_by.get(origin, [])
+        if not (room or cash or gated):
+            continue
+        room_id = room.get("id") if room else None
+        priced = bool(cash and cash["priced"])
+        said = verdicts.get(room_id) or {}
+        out.append({
+            "origin": origin, "at": answer.get("at"), "room": room_id,
+            "title": (room or {}).get("title"),
+            "status": status.get(room_id) if room_id else None,
+            "stake_usdc": cash["stake"] if cash else 0.0,
+            "pnl_usdc": cash["pnl"] if priced else None,
+            "pnl_pct": (cash["pnl"] / cash["stake"] * 100.0
+                        if priced and cash["stake"] else None),
+            "verdict": said.get("verdict"),
+            "verdict_return_pct": said.get("return_pct"),
+            "gates": [{"card": g.get("card"), "verdict": g.get("verdict"),
+                       "why": g.get("why")} for g in gated]})
+
+    def order(row):
+        if row["pnl_pct"] is not None:
+            return (0, -row["pnl_pct"])
+        if row["room"]:
+            return (1, 0.0)
+        return (2, 0.0)
+    return sorted(out, key=order)
+
+
 THEIR_GIVE_UP = re.compile(r"^(failed|running|queued|pending)")
 
 

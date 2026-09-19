@@ -1948,6 +1948,94 @@ def tick(*, now: datetime | None = None, actions: dict | None = None,
     return said
 
 
+def board_rows() -> list[dict]:
+    """`qa.lab.board` over the diaries on this machine -- no call to them, so
+    it answers while their API is down, from the sampler's newest readings."""
+    from qa.rooms import load_samples
+
+    return lab.board(_nexus_rows(), lab.load(), rooms.load(),
+                     _sibling("paper").load(), load_samples())
+
+
+def _board_line(row: dict) -> str:
+    if row["pnl_pct"] is not None:
+        money = (f"{row['pnl_pct']:+6.1f}%  {row['pnl_usdc']:+.2f} on "
+                 f"{row['stake_usdc']:.0f} USDC")
+    elif row["room"]:
+        money = "  not priced yet"
+    else:
+        money = "  no room"
+    room = row["room"] or "-"
+    title = (row.get("title") or "")[:34]
+    said = f", verdict {row['verdict']}" if row.get("verdict") else ""
+    gates = "; ".join(f"{str(g['card'])[:8]} {g['verdict']}: {g.get('why')}"
+                      for g in row["gates"] if g.get("verdict") != "pass")
+    return (f"  {money:32} {room:9} {row['origin']:9} {title:34} "
+            f"{row.get('status') or ''}{said}" + (f"\n      {gates}" if gates
+                                                 else ""))
+
+
+def brief() -> str:
+    """Everything a question to Nexus should carry, in one read.
+
+    Nexus remembers nothing between questions (laborator, section 7), so our
+    record is his memory: what the day may still spend, how his proposals did
+    -- the rejected ones with the numbers that rejected them -- what their own
+    ranking says, and what measured well on our side. The last is a QUESTION
+    for him and never a proposal: CLAUDE.md, who decides what to trade.
+    """
+    now = _now()
+    nexus_rows = _nexus_rows()
+    asked = lab.asked_within(nexus_rows, now)
+    free, deployed = _free_cash(), _deployed()
+    today = lab.rooms_within(rooms.load(), now)
+    may, why = lab.may_ask(asked, pass_in_flight())
+    if may:
+        may, why = lab.may_ask_now(nexus_rows, now)
+    out = [f"questions: {asked} of {lab.CAPS['questions_per_day']} in the last "
+           f"24 h -- " + ("the next may go now" if may else f"not now: {why}")]
+    if free is None:
+        out.append("book: unreadable -- nothing can be launched on it")
+    else:
+        book = free + deployed
+        out.append(f"book: {free:.0f} USDC free, {deployed:.0f} out "
+                   f"({deployed / book * 100 if book else 0:.1f}% of "
+                   f"{book:.0f}; the ceiling is "
+                   f"{lab.CAPS['total_exposure'] * 100:.0f}%), "
+                   f"{_running_experiments()} of "
+                   f"{lab.CAPS['running_experiments']} experiments running, "
+                   f"{today} of {lab.CAPS['new_rooms_per_day']} new rooms today")
+
+    rows = board_rows()
+    out.append("")
+    out.append("his proposals, best earner first (what to tell him):")
+    for row in rows[:12]:
+        out.append(_board_line(row))
+    if not rows:
+        out.append("  none has come to anything yet")
+
+    last = lab.last_truth()
+    if last and last.get("ranked"):
+        out.append("")
+        out.append(f"their own ranking, {str(last.get('at'))[:16]} (read the "
+                   f"window before comparing):")
+        for row in last["ranked"][:5]:
+            out.append(f"  {str(row.get('strategy')):24} sharpe "
+                       f"{row.get('sharpe')}  over {row.get('over')}")
+
+    best = qa_backtests.best(qa_backtests.load())[:5]
+    out.append("")
+    out.append("what measured well on OUR side -- a question for him, never a "
+               "proposal:")
+    for row in best:
+        legs = " + ".join(f"{s} {w * 100:.0f}%" for s, w in row["legs"])
+        out.append(f"  sharpe {row['s']}  ret {row['r']}%  over {row['p']} "
+                   f"d  {legs[:60]}")
+    if not best:
+        out.append("  nothing in the register yet")
+    return "\n".join(out)
+
+
 def cmd_resume() -> int:
     """Everything a loop tick needs, in one call, so the prompt never has to
     name a session or a task.
@@ -2059,6 +2147,10 @@ def main(argv: list[str] | None = None) -> int:
     buy_cmd.add_argument("--nexus", help="the answer it acts on, NEX-NNNN")
     buy_cmd.add_argument("--confirm", action="store_true")
     sub.add_parser("tick", help="one step of the laboratory -- what a /loop runs")
+    sub.add_parser("brief", help="what the next question to Nexus should carry")
+    board_cmd = sub.add_parser(
+        "board", help="his proposals and what each earned, best first")
+    board_cmd.add_argument("--top", type=int, default=20)
     log_cmd = sub.add_parser(
         "log", help="one line of today's diary: done, learned (--lesson) or "
                     "to pick up (--next)")
@@ -2201,6 +2293,14 @@ def main(argv: list[str] | None = None) -> int:
                          ensure_ascii=False, indent=1, default=str)[:2000])
     elif args.cmd == "tick":
         tick()
+    elif args.cmd == "brief":
+        print(brief())
+    elif args.cmd == "board":
+        rows = board_rows()
+        for row in rows[:args.top]:
+            print(_board_line(row))
+        if not rows:
+            print("no proposal of his has come to anything yet")
     elif args.cmd == "log":
         session = _day_session(_now())
         record = lab.note_entry(session, args.text, kind=args.kind or "log")
