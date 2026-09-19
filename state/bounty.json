@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-09-19T20:00:49+00:00",
+  "fetched_at": "2026-09-19T22:22:34+00:00",
   "total": 69,
   "statuses": {
     "paid": 19,
@@ -25,12 +25,13 @@
   "our_reports": {
     "endpoint": "GET /api/v1/bounty/my-reports?wallet_address=<addr>",
     "klass": "ok",
-    "read_at": "2026-09-19T20:00:39+00:00",
-    "evidence_id": "af9ad20f71fa7b1d6678840f9aba43e0f8f0343ce0c4011e8dd252fb36287706",
-    "rows_returned": 59,
-    "server_total": 59,
-    "total": 59,
+    "read_at": "2026-09-19T22:22:30+00:00",
+    "evidence_id": "5fa1d1dcce58450186824a078112d6004c7678ca74a390f7fdd5537d46a30ecb",
+    "rows_returned": 61,
+    "server_total": 61,
+    "total": 61,
     "statuses": {
+      "pending": 2,
       "paid": 52,
       "fixed": 5,
       "invalid": 2
@@ -806,7 +807,7 @@
         "fixed_at": "2026-09-10T12:44:31.442730",
         "validated_at": "2026-09-10T12:44:31.442730",
         "triaged_at": "2026-09-10T12:44:31.442730",
-        "status_notes": "[2026-09-10T12:44:31+00:00] Resolved via ticket ET-24493: Verified bug (hunter:5 #86). Root cause: a deep job ran as an in-process asyncio task in the slot that accepted it; the platform's blue/green deploys restart slots several times a day, killing the task, and the poller then reported \"interrupted — please resubmit\" with a browser-only fallback. The HTML 504 came from nginx's catch-all location (60 s read timeout, HTML error page) which /mcp/v1 fell into. Fix @2ec9bb3d8: (1) jobs left 'running' by a restart are resumed by the next process (resume_i\n[reporter-verification FAIL 2026-09-10 13:51 UTC by expire76 test_run=run-20260910T134627Z-75a0326]\n[reporter-verification FAIL 2026-09-10 16:52 UTC by expire76 test_run=run-20260910T164705Z-b56d1d3]\n[reporter-verification PASS 2026-09-11 05:45 UTC by expire76 test_run=run-20260911T053508Z-9e1ae9bc]\n[reporter-verification FAIL 2026-09-11 15:21 UTC by expire76 test_run=run-20260911T151835Z-31ec9b3e]\n[reporter-verification FAIL 2026-09-11 17:58 UTC by expire76 test_run=run-20260911T174358Z-c0e379b9]\n[reporter-verification FAIL 2026-09-12 21:02 UTC by expire76 test_run=run-20260912T204351Z-3bc5adff]",
+        "status_notes": "[2026-09-10T12:44:31+00:00] Resolved via ticket ET-24493: Verified bug (hunter:5 #86). Root cause: a deep job ran as an in-process asyncio task in the slot that accepted it; the platform's blue/green deploys restart slots several times a day, killing the task, and the poller then reported \"interrupted — please resubmit\" with a browser-only fallback. The HTML 504 came from nginx's catch-all location (60 s read timeout, HTML error page) which /mcp/v1 fell into. Fix @2ec9bb3d8: (1) jobs left 'running' by a restart are resumed by the next process (resume_i\n[reporter-verification FAIL 2026-09-10 13:51 UTC by expire76 test_run=run-20260910T134627Z-75a0326]\n[reporter-verification FAIL 2026-09-10 16:52 UTC by expire76 test_run=run-20260910T164705Z-b56d1d3]\n[reporter-verification PASS 2026-09-11 05:45 UTC by expire76 test_run=run-20260911T053508Z-9e1ae9bc]\n[reporter-verification FAIL 2026-09-11 15:21 UTC by expire76 test_run=run-20260911T151835Z-31ec9b3e]\n[reporter-verification FAIL 2026-09-11 17:58 UTC by expire76 test_run=run-20260911T174358Z-c0e379b9]\n[reporter-verification FAIL 2026-09-12 21:02 UTC by expire76 test_run=run-20260912T204351Z-3bc5adff]\n[reporter-verification FAIL 2026-09-19 20:02 UTC by expire76 test_run=run-20260919T195623Z-54909d8b]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/24493",
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -1098,6 +1099,42 @@
         "ticket_url": "https://cymetica.com/admin/centcom/issues/25200",
         "fix_pr_url": null,
         "reward_amount": 1000.0
+      },
+      {
+        "id": 103,
+        "title": "get_fund_history defaults to the last 80 points, so the chart your advisor skill tells assistants to draw starts days after inception",
+        "status": "pending",
+        "hunter_name": "expire76",
+        "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
+        "severity_reported": "medium",
+        "severity_confirmed": null,
+        "category": "api",
+        "created_at": "2026-09-19T21:19:34.072327",
+        "fixed_at": null,
+        "validated_at": null,
+        "triaged_at": null,
+        "status_notes": null,
+        "ticket_url": null,
+        "fix_pr_url": null,
+        "reward_amount": 0.0
+      },
+      {
+        "id": 104,
+        "title": "get_fund carries no profile_url for four of the 24 funds, the field your advisor skill tells an assistant to cite",
+        "status": "pending",
+        "hunter_name": "expire76",
+        "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
+        "severity_reported": "low",
+        "severity_confirmed": null,
+        "category": "documentation",
+        "created_at": "2026-09-19T22:22:11.377137",
+        "fixed_at": null,
+        "validated_at": null,
+        "triaged_at": null,
+        "status_notes": null,
+        "ticket_url": null,
+        "fix_pr_url": null,
+        "reward_amount": 0.0
       }
     ]
   },
@@ -1290,7 +1327,7 @@
     "klass": "ok",
     "rows_returned": 50,
     "new": [],
-    "at": "2026-09-19T20:00:48+00:00"
+    "at": "2026-09-19T22:22:33+00:00"
   },
   "closed": 1,
   "closed_without_recorded_evidence": 0,
@@ -1602,7 +1639,7 @@
       "fixed_at": "2026-09-10T12:44:31.442730",
       "validated_at": "2026-09-10T12:44:31.442730",
       "triaged_at": "2026-09-10T12:44:31.442730",
-      "status_notes": "[2026-09-10T12:44:31+00:00] Resolved via ticket ET-24493: Verified bug (hunter:5 #86). Root cause: a deep job ran as an in-process asyncio task in the slot that accepted it; the platform's blue/green deploys restart slots several times a day, killing the task, and the poller then reported \"interrupted — please resubmit\" with a browser-only fallback. The HTML 504 came from nginx's catch-all location (60 s read timeout, HTML error page) which /mcp/v1 fell into. Fix @2ec9bb3d8: (1) jobs left 'running' by a restart are resumed by the next process (resume_i\n[reporter-verification FAIL 2026-09-10 13:51 UTC by expire76 test_run=run-20260910T134627Z-75a0326]\n[reporter-verification FAIL 2026-09-10 16:52 UTC by expire76 test_run=run-20260910T164705Z-b56d1d3]\n[reporter-verification PASS 2026-09-11 05:45 UTC by expire76 test_run=run-20260911T053508Z-9e1ae9bc]\n[reporter-verification FAIL 2026-09-11 15:21 UTC by expire76 test_run=run-20260911T151835Z-31ec9b3e]\n[reporter-verification FAIL 2026-09-11 17:58 UTC by expire76 test_run=run-20260911T174358Z-c0e379b9]\n[reporter-verification FAIL 2026-09-12 21:02 UTC by expire76 test_run=run-20260912T204351Z-3bc5adff]",
+      "status_notes": "[2026-09-10T12:44:31+00:00] Resolved via ticket ET-24493: Verified bug (hunter:5 #86). Root cause: a deep job ran as an in-process asyncio task in the slot that accepted it; the platform's blue/green deploys restart slots several times a day, killing the task, and the poller then reported \"interrupted — please resubmit\" with a browser-only fallback. The HTML 504 came from nginx's catch-all location (60 s read timeout, HTML error page) which /mcp/v1 fell into. Fix @2ec9bb3d8: (1) jobs left 'running' by a restart are resumed by the next process (resume_i\n[reporter-verification FAIL 2026-09-10 13:51 UTC by expire76 test_run=run-20260910T134627Z-75a0326]\n[reporter-verification FAIL 2026-09-10 16:52 UTC by expire76 test_run=run-20260910T164705Z-b56d1d3]\n[reporter-verification PASS 2026-09-11 05:45 UTC by expire76 test_run=run-20260911T053508Z-9e1ae9bc]\n[reporter-verification FAIL 2026-09-11 15:21 UTC by expire76 test_run=run-20260911T151835Z-31ec9b3e]\n[reporter-verification FAIL 2026-09-11 17:58 UTC by expire76 test_run=run-20260911T174358Z-c0e379b9]\n[reporter-verification FAIL 2026-09-12 21:02 UTC by expire76 test_run=run-20260912T204351Z-3bc5adff]\n[reporter-verification FAIL 2026-09-19 20:02 UTC by expire76 test_run=run-20260919T195623Z-54909d8b]",
       "ticket_url": "https://cymetica.com/admin/centcom/issues/24493",
       "fix_pr_url": null,
       "reward_amount": 1000.0,

@@ -2465,6 +2465,39 @@ reports:
       history series for this sleeve here" for FTA-STOCKS and EVENT-CARD,
       which the skill itself lists as symbols to call it with.
 
+  - key: fund-profile-link
+    findings: [CYM-fund-profile-link-where-the-skill-says]
+    severity: low
+    category: documentation
+    url: https://cymetica.com/mcp/v1
+    title: "get_fund carries no profile_url for four of the 24 funds, the field your advisor skill tells an assistant to cite"
+    expected: >
+      The skill shipped with the advisor connector ends with "Links to cite"
+      and says, for a single fund: "One fund: `profile_url` from `get_fund`".
+      So every symbol list_funds hands out has a profile_url on get_fund.
+    actual: >
+      Twenty of twenty-four do. The four sleeves that are not AIB baskets --
+      MA-RIPPLE, FTA-STOCKS, FTA-CRYPTOS and EVENT-CARD -- come back with a
+      different field set: a `url` instead of `profile_url`, and no
+      `inception_index_price_usd`. An assistant following the skill has no
+      link for them, and one of them (MA-RIPPLE) is live and takes real USDC.
+      FTA-STOCKS's `url` is https://cymetica.com/fund-performance, the index
+      page rather than that sleeve's own.
+    steps:
+      - 'POST https://cymetica.com/mcp/v1 tools/call list_funds {"limit":100} (no key)'
+      - 'For each symbol: tools/call get_fund {"symbol":...} and read profile_url'
+      - 'MA-RIPPLE, FTA-STOCKS, FTA-CRYPTOS and EVENT-CARD return no profile_url at all'
+    body: >
+      Small and easy to miss because the link does exist under another name.
+      We are not asking for a particular repair: adding profile_url to those
+      four, or changing that line of the skill to name url for the sleeves,
+      both satisfy our check. It reads the field and nothing else -- it does
+      not fetch the links or assert which URL is right.
+      The same four are the ones with no inception level, which is why our
+      other finding on this connector (the history default) cannot measure
+      them either. If the sleeves are deliberately a different shape, saying
+      so in the skill is enough.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in
