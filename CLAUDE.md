@@ -297,11 +297,6 @@ anything. Who gets the credit stays inside the row. The one case held apart is
 `PASSING, NEVER RAISED` — it passes and they were never told, so there is no
 conversation to read.
 
-(This paragraph said "exactly one cell … beside their claim of a fix" until
-2026-09-07. The code had said otherwise since the display states were
-collapsed, and every session read the wrong sentence first. Found by an agent
-drawing the state grid from `qa/fold.py` rather than from here.)
-
 ## Run admissibility
 
 | Level | Requires | May |
@@ -392,9 +387,7 @@ qa/state.py       the ONLY module that writes state/ledger.json and the
                   section map, preregistrations, the Nexus rooms. The guard in
                   tests/meta/test_pipeline_withdraw.py enforces the accurate
                   sentence, not the wider one: it fires on a write near the
-                  words ledger, events or journal. (This said "writes state/"
-                  until 2026-09-09, and a session reading it filed bounty.py
-                  as a violation.)
+                  words ledger, events or journal.
 qa/fold.py        pure: ledger = f(previous rows, one run, the journal)
 qa/measure.py     Measurement + conclude(): a check's verdict and pytest's
                   outcome are one value
@@ -410,8 +403,6 @@ scripts/never_fired.py  which of our mechanisms have never once occurred in
                      on 2026-09-06. One exercised and never fired is the
                      operator's judgement. **Read the count off the tool, never
                      off prose** -- this line said five while the tool said seven.
-(migration)       the journal's three `migrated` events; migrate_ledger.py was
-                  retired 2026-09-09, spent.
 tests/meta/       self-tests. Run FIRST and abort the session on failure, so
                   a broken guard stops every live request.
 tests/repo/       repository consistency. Deliberately NOT in tests/meta:
@@ -491,9 +482,7 @@ audits/checks.json
                   than the run, like verification_owed.
 ```
 
-The scripts a session actually spends its time in. Missing until 2026-09-06,
-which cost a session an hour: with nothing here to navigate by it navigated by
-docstrings, and one described a workflow dead since round one.
+The scripts a session actually spends its time in.
 
 ```
 scripts/findings.py  what a run turns into a finding. Title and severity are
@@ -644,14 +633,10 @@ A zero here is not a regression to be fixed; it is the difference between
 enbo v gitu? nechci za mesic zjistit ze v githubu je par giga dat. to radeji
 zalozime nejakou databzi nebo neco ne?"*
 
-Measured that hour: GitHub 54 MB, `evidence/` 469 MB on disk growing 40–170 MB a
-day, two paging checks writing 120 MB of one day's 170. A database would hold the
-same bytes; what was wrong is **where** (git, forever) and **how long** (forever).
-First answer: git keeps what something cites, the disk keeps the rest three days.
-That freed 172 MB and was not enough — the cited set is itself unbounded. It
-reached 1 178 files and **167 MB**, and the tree grew **47 MB in the eight hours
-after** that prune, against 16.5 MB of code. A prune governs the disk; git never
-forgets. So since 2026-09-12 (`docs/data-plan.md`) **no capture body is in git**:
+A database would hold the same bytes; what was wrong is **where** (git, forever)
+and **how long** (forever). A prune governs the disk; git never forgets, and the
+cited set alone reached 167 MB. So since 2026-09-12 (`docs/data-plan.md`) **no
+capture body is in git**:
 
 * `audits/evidence-manifest.jsonl` — id, bytes, the call it answered, why it is
   held, which archive has it. 228 KB standing for 167 MB, written by
@@ -681,9 +666,6 @@ Each memory declares which of those it applies to, `--check` fails on one that
 declares nothing, and a SessionStart hook prints the count and this command. It
 costs a single call and it is the whole point of the directory.
 
-Asked on 2026-09-10 whether the memories load themselves, the answer was no,
-and the session had read none until the question came. The four it then opened
-were what caught a false sentence in `verify.py` before it reached the vendor.
 The index is auto-loaded context; reading is a step, and a step nobody takes is
 not a mechanism.
 
