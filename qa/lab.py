@@ -38,7 +38,7 @@ from qa.state import file_lock, state_dir
 
 NOTEBOOK = "lab.jsonl"
 KINDS = ("session", "truth", "surface", "cycle", "n_eff", "tournament",
-         "gate", "tick")
+         "gate", "tick", "entry", "resolved")
 MAX_LESSONS = 3
 MAX_NEXT = 8
 ID = re.compile(r"^LAB-(\d{4})$")
@@ -118,13 +118,14 @@ def _next_id(rows: list[dict]) -> str:
 
 
 def open_session(mode: str = "session", note: str | None = None,
-                 until: str | None = None) -> dict:
-    """Start one, and say which kind it is: a session, or a night.
+                 until: str | None = None, day: str | None = None) -> dict:
+    """Start one, and say which kind it is: a session, a night, or a loop's day.
 
     A night carries the hour it will end. Without it an open night looks
     exactly like a session somebody forgot to close, and the reminder would nag
     at every session start for the fourteen hours the thing is doing precisely
-    what it was told.
+    what it was told. A loop's session carries the UTC DAY it stands for: a
+    loop has no last tick to close it with, so the next day's first tick does.
     """
     rows = load()
     record = {"type": "session", "state": "open", "at": _now(),
@@ -133,7 +134,69 @@ def open_session(mode: str = "session", note: str | None = None,
         record["note"] = note
     if until:
         record["until"] = until
+    if day:
+        record["day"] = day
     return _append(record)
+
+
+ENTRY_KINDS = ("log", "lesson", "next")
+
+
+def note_entry(session: str, text: str, kind: str = "log") -> dict:
+    """One line of the laboratory's diary, in whoever-ran-the-tick's words.
+
+    [operator 2026-09-19] asked for a laboratory that keeps a diary -- where it
+    stopped, what it has tested. The counts are written by the tick itself;
+    this is the other half, the judgement: what a question was for, what an
+    answer changed, what to try next. `lesson` and `next` are what the day's
+    close carries forward, at most three and eight of them.
+    """
+    if kind not in ENTRY_KINDS:
+        raise LabError(f"an entry is one of {', '.join(ENTRY_KINDS)}, not {kind!r}")
+    words = " ".join(str(text or "").split())
+    if not words:
+        raise LabError("an empty diary line says nothing")
+    return _append({"type": "entry", "at": _now(), "session": session,
+                    "kind": kind, "text": words[:600]})
+
+
+def entries(rows: list[dict] | None = None, session: str | None = None,
+            kind: str | None = None) -> list[dict]:
+    rows = load() if rows is None else rows
+    return [r for r in rows if r.get("type") == "entry"
+            and (session is None or r.get("session") == session)
+            and (kind is None or r.get("kind") == kind)]
+
+
+def note_tick(said: dict) -> dict:
+    """What one loop tick did, in counts -- the half of the diary no judgement
+    is needed for, so the next tick can read where this one stopped."""
+    return _append({"type": "tick", "at": _now(), **said})
+
+
+def last_tick(rows: list[dict] | None = None) -> dict | None:
+    rows = load() if rows is None else rows
+    seen = [r for r in rows if r.get("type") == "tick"]
+    return seen[-1] if seen else None
+
+
+def note_resolved(found: list[dict], rows: list[dict] | None = None) -> list[dict]:
+    """Positions that resolved on their own, each written ONCE.
+
+    `resolved_without_us` only reports; before 2026-09-19 nothing wrote what it
+    found, so the same position was printed on every status and counted in no
+    ledger of what the laboratory earned.
+    """
+    rows = load() if rows is None else rows
+    seen = {str(r.get("position_id")) for r in rows if r.get("type") == "resolved"}
+    written = []
+    for row in found or []:
+        position = str(row.get("position_id") or "")
+        if not position or position in seen:
+            continue
+        seen.add(position)
+        written.append(_append({"type": "resolved", "at": _now(), **row}))
+    return written
 
 
 def night_running(rows: list[dict] | None = None,
@@ -995,8 +1058,12 @@ def due(now=None, fomo_rows: list[dict] | None = None,
        a run says otherwise (rule 7), and the delay is ours, not theirs.
     3. an open tournament round we have not entered. Perishable weekly, and
        free.
-    4. the search. Never urgent, never finished, and the reason a quiet tick
-       is still a working tick.
+    4. the tick. Never urgent, never finished, and the reason a quiet tick
+       is still a working tick. It was `search --cap 8` until 2026-09-19,
+       which recombined the same seven cards until it ran dry and never once
+       asked Nexus; `lab.py tick` is the whole laboratory's step -- answers,
+       launches, the search, the verdicts -- and says whether a question may
+       go.
 
     Pure: every input is passed in, so a tick's plan can be tested without a
     diary, a network or a clock.
@@ -1040,6 +1107,8 @@ def due(now=None, fomo_rows: list[dict] | None = None,
     # has the exploration the operator asked the loop to continue, and a tick
     # that is handed an empty list stops for the wrong reason.
     items.append({
-        "run": "python scripts/lab.py search --cap 8",
-        "why": "standing work: walk their baskets and climb from what scored"})
+        "run": "python scripts/lab.py tick",
+        "why": "standing work: pick answers up, launch what passes the gate, "
+               "walk the search, close due verdicts -- and whether a question "
+               "to Nexus may go"})
     return items

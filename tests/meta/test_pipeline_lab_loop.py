@@ -229,6 +229,188 @@ def test_fifty_rooms_fit_under_the_ceiling(tmp_path, monkeypatch):
         "an unreadable book is not a stake")
 
 
+# --- the tick: one step, and where it stopped --------------------------------
+
+def _doors(**over):
+    """Every door a tick reaches, stubbed and counted. Nothing here touches
+    their API; the real doors are named in `_tick_doors` and checked apart."""
+    calls = {k: [] for k in ("fomo", "sample", "cycle", "promote", "truth",
+                             "search", "verdicts", "refill", "moves")}
+
+    def door(name, value):
+        return lambda *a: calls[name].append(a) or value
+
+    doors = {
+        "pass": lambda: False, "night": lambda: False,
+        "asked_today": lambda: 0,
+        "fomo": door("fomo", {"added": 2}),
+        "sample": door("sample", {"rows": 3}),
+        "cycle": door("cycle", {"polled": []}),
+        "promote": door("promote", {"rooms": 0, "orders": 0, "held": []}),
+        "truth": door("truth", []),
+        "verdicts": door("verdicts", []),
+        "moves": door("moves", [{"legs": [], "period": 30, "why": f"m{n}"}
+                                for n in range(150)]),
+        "refill": door("refill", [{"legs": [], "period": 90, "why": f"r{n}"}
+                                  for n in range(10)]),
+    }
+
+    def search(bite):
+        calls["search"].append([move["why"] for move in bite])
+        return {"asked": len(bite), "known": 0}
+    doors["search"] = search
+    doors.update(over)
+    return doors, calls
+
+
+def _tick(scripts_lab, when, doors):
+    return scripts_lab.tick(now=when, actions=doors, out=lambda *a: None)
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_tick_carries_on_the_walk_where_the_last_one_stopped(
+        tmp_path, monkeypatch):
+    """A tick is a fresh process every twenty minutes. The night held its
+    queue in memory for fourteen hours; a tick that started the walk again
+    each time would re-read the same first bite forever and call it work."""
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    doors, calls = _doors()
+    bite = scripts_lab.TICK["search_bite"]
+
+    _tick(scripts_lab, NOW, doors)
+    _tick(scripts_lab, NOW + timedelta(minutes=20), doors)
+
+    assert len(calls["moves"]) == 1, "the walk was seeded twice"
+    assert calls["search"][0][0] == "m0"
+    assert calls["search"][1][0] == f"m{bite}", (
+        f"the second tick began at {calls['search'][1][0]}, not where the "
+        f"first stopped")
+
+    for n in range(2, 6):
+        _tick(scripts_lab, NOW + timedelta(minutes=20 * n), doors)
+    assert calls["refill"], "the first queue ran out and nothing refilled it"
+    walked = [why for bite_ in calls["search"] for why in bite_]
+    assert walked[:150] == [f"m{n}" for n in range(150)], "a move was skipped"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_tick_keeps_the_nights_clocks(tmp_path, monkeypatch):
+    """Answers are picked up every half hour and the ranking every six --
+    the night's own pace, carried between processes."""
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    doors, calls = _doors()
+
+    for n in range(4):  # 0, 20, 40, 60 minutes
+        _tick(scripts_lab, NOW + timedelta(minutes=20 * n), doors)
+
+    assert len(calls["cycle"]) == 2, calls["cycle"]
+    assert len(calls["promote"]) == len(calls["cycle"]), (
+        "a cycle is what brings an answer back, so launching follows it")
+    assert len(calls["truth"]) == 1
+    assert len(calls["fomo"]) == 4, "a memecoin checkpoint is perishable"
+    assert len(calls["verdicts"]) == 4
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_first_tick_of_a_day_closes_yesterday_and_opens_today(
+        tmp_path, monkeypatch):
+    """A loop has no last tick to close a session with, so the day is the
+    session: the first tick after midnight UTC closes yesterday's with what
+    it counted and what was written as a lesson, and opens today's. LAB-0004
+    was opened by hand on 2026-09-13 and left open for six days."""
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    yesterday = NOW - timedelta(days=1)
+    lab._append({"type": "session", "state": "open", "session": "LAB-0004",
+                 "mode": "session", "at": yesterday.isoformat()})
+    lab.note_entry("LAB-0004", "Nexus names SOL cards when asked for crypto",
+                   kind="lesson")
+    lab.note_entry("LAB-0004", "retry STR-0005 at the US open", kind="next")
+    doors, _ = _doors()
+
+    did = _tick(scripts_lab, NOW, doors)
+    again = _tick(scripts_lab, NOW + timedelta(minutes=20), doors)
+
+    closed = lab.last_close()
+    assert closed["session"] == "LAB-0004"
+    assert any("SOL" in lesson for lesson in closed["lessons"]), closed
+    assert len(closed["lessons"]) <= lab.MAX_LESSONS
+    assert closed["next"] == ["retry STR-0005 at the US open"]
+    (today,) = lab.open_sessions()
+    assert today != "LAB-0004" and did["session"] == today
+    assert again["session"] == today, "a second tick opened a second session"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_tick_during_a_deep_pass_or_a_night_only_reads_the_memecoins(
+        tmp_path, monkeypatch):
+    """The pass verifies #85-#87 over the very answers and trades a tick
+    would write, and a night is another process walking the same queue. The
+    memecoin checkpoints are neither -- and they are the one thing that is
+    gone if a tick skips them."""
+    for blocker in ("pass", "night"):
+        (tmp_path / blocker).mkdir()
+        scripts_lab = _scripts_lab(tmp_path / blocker, monkeypatch)
+        doors, calls = _doors(**{blocker: lambda: True})
+
+        did = _tick(scripts_lab, NOW, doors)
+
+        assert did["skipped"] == blocker
+        assert len(calls["fomo"]) == 1
+        for door in ("sample", "cycle", "promote", "search", "verdicts"):
+            assert not calls[door], f"{door} ran while a {blocker} was on"
+        assert did["may_ask"] is False
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_tick_writes_down_what_it_did_and_whether_a_question_may_go(
+        tmp_path, monkeypatch):
+    """The diary is what tells the next tick where this one stopped, and the
+    question is the agent's to write -- so the tick says whether one may go
+    and why not, and asks nothing itself."""
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    real_now = datetime.now(timezone.utc)
+    _write(tmp_path, "nexus.jsonl", [
+        _question("NEX-0031", real_now - timedelta(minutes=5))])
+    doors, _ = _doors()
+
+    did = _tick(scripts_lab, real_now, doors)
+
+    assert did["may_ask"] is False and "NEX-0031" in did["why"], did
+    ticks = [r for r in lab.load() if r.get("type") == "tick"]
+    assert len(ticks) == 1 and ticks[0]["session"] == did["session"]
+    assert ticks[0]["backtests"] == scripts_lab.TICK["search_bite"]
+    assert "ask" not in scripts_lab._tick_doors(), (
+        "the tick holds a door that asks Nexus; the question is composed "
+        "from the diary by whoever runs the tick")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_position_that_resolved_without_us_is_written_down_once(
+        tmp_path, monkeypatch):
+    """`resolved_without_us` reported the same position on every status and
+    wrote nothing -- 85.76 USDC on e579581b, 2026-09-19 12:40, printed on
+    every tick. A tick records it once, and the book of what the laboratory
+    earned can then count it."""
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    _write(tmp_path, "paper.jsonl", [
+        {"type": "intent", "id": "TRD-1", "card_id": "c1", "usdc": 10.0},
+        {"type": "outcome", "id": "TRD-1", "outcome": "accepted",
+         "position_id": "p1"}])
+    _write(tmp_path, "samples.jsonl", [
+        {"type": "sample", "kind": "position", "at": "2026-09-19T12:40:00+00:00",
+         "position_id": "p1", "card_id": "c1", "status": "closed",
+         "realized_pnl_usdc": 85.76}])
+    doors, _ = _doors()
+
+    first = _tick(scripts_lab, NOW, doors)
+    second = _tick(scripts_lab, NOW + timedelta(minutes=20), doors)
+
+    written = [r for r in lab.load() if r.get("type") == "resolved"]
+    assert [r["position_id"] for r in written] == ["p1"]
+    assert written[0]["realized_pnl_usdc"] == 85.76
+    assert first["resolved"] == 1 and second["resolved"] == 0
+
+
 # --- the gate: a backtest before a room ------------------------------------
 
 def _reading(period, r, s, d=3.0, lost=None):

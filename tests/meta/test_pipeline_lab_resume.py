@@ -58,7 +58,10 @@ def test_nothing_ripe_is_not_nothing_to_do():
     rows = [_signal("0xa:2026-09-13T12", hours_ago=0.2)]
     out = lab.due(now=NOW, fomo_rows=rows, tournament={}, open_findings=0)
     assert out, "a quiet tick must still be handed the standing work"
-    assert any("search" in item["run"] for item in out), out
+    # The standing work was `search --cap 8` until 2026-09-19 -- the loop
+    # that never asked Nexus and ran dry on seven cards. It is the whole
+    # laboratory's step now.
+    assert any("lab.py tick" in item["run"] for item in out), out
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -103,7 +106,7 @@ def test_the_perishable_one_wins_when_both_are_waiting():
     assert kinds.index(next(k for k in kinds if "verify" in k)) > 0, kinds
 
     # And all three at once, so the whole order is asserted rather than one
-    # pair of it: checkpoint, then verification, then the round, then search.
+    # pair of it: checkpoint, then verification, then the round, then the tick.
     live = {"round": {"round_anchor": "2026-09-11", "entries_open": True},
             "my_entries": []}
     out = lab.due(now=NOW, fomo_rows=rows, tournament=live, open_findings=1)
@@ -111,7 +114,7 @@ def test_the_perishable_one_wins_when_both_are_waiting():
     assert "fomo_watch" in order[0], order
     assert "verify" in order[1], order
     assert "movers" in order[2], order
-    assert "search" in order[-1], order
+    assert "lab.py tick" in order[-1], order
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

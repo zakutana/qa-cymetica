@@ -75,6 +75,11 @@ state/samples.jsonl
 # by `scripts/keep.py snapshot`, so months of it are not on one disk.
 state/lab.jsonl
 
+# Where the loop's last tick stopped: the search queue and the clocks. Rewritten
+# every twenty minutes while a /loop runs, and rebuilt from the diaries if it is
+# lost -- a cache of the walk, not a record of anything.
+state/lab_tick.json
+
 # What the laboratory has already asked their backtest, keyed on the basket.
 # Appended to while a run may be in flight, like the diaries above; the deep
 # pass copies it into audits/lab/ so months of search do not live on one disk.
