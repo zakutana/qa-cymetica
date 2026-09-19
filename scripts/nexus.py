@@ -196,28 +196,40 @@ def ask_shallow(question: str) -> dict:
     entry = {"id": _next_id(load_all()), "type": "question", "at": _now(),
              "question": question, "tool": SHALLOW, "lane": "shallow"}
     _append_shallow(entry)
-    client = _rest_client()
-    token = CURRENT_TIER.set(SafetyTier.PROBE)
+    # The question row is on the diary now, so EVERYTHING after it closes it:
+    # a question left with no answer and no give-up is one lab.outstanding
+    # reads as in flight, and while it is, nothing may be asked -- for a day
+    # (R03, deep pass of 2026-09-19). Our own failure is written as ours.
     try:
+        client = _rest_client()
+        token = CURRENT_TIER.set(SafetyTier.PROBE)
         try:
-            response = client.post(SHALLOW, json={"question": question})
-        except TRANSPORT_ERRORS as exc:
-            response, failure = None, f"unread: {type(exc).__name__}"
-    finally:
-        client.close()
-        CURRENT_TIER.reset(token)
-
-    body, text = {}, ""
-    if response is not None:
-        failure = f"HTTP {response.status_code}"
-        if response.status_code == 200:
             try:
-                body = response.json() or {}
-            except ValueError:
-                body = {}
-            text = str(body.get("answer") or "").strip() \
-                if isinstance(body, dict) else ""
-            failure = "" if text else "HTTP 200 with no answer text"
+                response = client.post(SHALLOW, json={"question": question})
+            except TRANSPORT_ERRORS as exc:
+                response, failure = None, f"unread: {type(exc).__name__}"
+        finally:
+            client.close()
+            CURRENT_TIER.reset(token)
+
+        body, text = {}, ""
+        if response is not None:
+            failure = f"HTTP {response.status_code}"
+            if response.status_code == 200:
+                try:
+                    body = response.json() or {}
+                except ValueError:
+                    body = {}
+                if not isinstance(body, dict):
+                    body = {}
+                text = str(body.get("answer") or "").strip()
+                failure = "" if text else "HTTP 200 with no answer text"
+    except BaseException as exc:
+        _append_shallow({"id": entry["id"], "type": "gave_up", "at": _now(),
+                         "lane": "shallow",
+                         "status": f"error: {type(exc).__name__}: "
+                                   f"{str(exc)[:160]}"})
+        raise
     if not text:
         record = {"id": entry["id"], "type": "gave_up", "at": _now(),
                   "lane": "shallow", "status": f"failed: {failure}"}

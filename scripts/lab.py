@@ -1352,6 +1352,16 @@ def night_promote(since: datetime | None = None) -> dict:
     paper = _sibling("paper")
     opened, placed, held = 0, 0, []
     bought: set[str] = set()
+    # Cards a room not yet stopped already holds. `bought` alone lasted one
+    # call, so the next tick bought a card a running room held -- two
+    # experiments that are one (R09, deep pass of 2026-09-19).
+    held_by: dict[str, str] = {}
+    for room_id, plan in rooms.plans(stored).items():
+        if rooms.status_of(stored, room_id) == "stopped":
+            continue
+        for leg in plan.get("legs") or []:
+            if leg.get("card"):
+                held_by.setdefault(str(leg["card"]).lower(), room_id)
 
     for answer in answers:
         origin = str(answer.get("id") or "")
@@ -1381,6 +1391,10 @@ def night_promote(since: datetime | None = None) -> dict:
             # experiments" meant fifty different things.
             if card in bought:
                 continue
+            if card in held_by:
+                held.append(f"{origin}/{card[:8]}: already held in "
+                            f"{held_by[card]} -- not a second experiment")
+                continue
             prior = decided.get((origin, card))
             if prior and prior.get("verdict") in spent:
                 continue
@@ -1392,11 +1406,19 @@ def night_promote(since: datetime | None = None) -> dict:
                 waiting = True
                 continue
             if live is None:
+                # Which of the two a 404 was cannot be told from here: a card
+                # Nexus invented (#91), or the id of something that is not a
+                # card -- his answers carry run ids and species ids too
+                # (NEX-0010, NEX-0015). R06, deep pass of 2026-09-19: this
+                # used to say "invented", and the brief reads it back to him.
                 said = {"verdict": "unknown_card",
-                        "why": "their API does not know this card (#91)"}
+                        "why": ("their API knows no card by this id: a card "
+                                "Nexus invented (#91), or an id of something "
+                                "that is not a card")}
                 decided[(origin, card)] = lab.note_gate(origin, card, said)
-                held.append(f"{origin}: {card[:8]} is a card their API does "
-                            f"not know (#91) — not bought")
+                held.append(f"{origin}: {card[:8]} -- their API knows no card "
+                            f"by this id (invented, #91, or not a card at "
+                            f"all) -- not bought")
                 continue
             if live.get("tradeable") is False:
                 held.append(f"{origin}/{card[:8]}: not tradeable now — the next "
@@ -1426,6 +1448,14 @@ def night_promote(since: datetime | None = None) -> dict:
         # `open_strategy` then refuses the morning too. The room's stakes are
         # fixed here, from the book as it stands when the room opens.
         cards = list(chosen)
+        # A plan holds at most rooms.MAX_LEGS cards, and set_plan refused the
+        # rest AFTER open_strategy had written the room -- a room with no plan
+        # and no criterion, its answer spent (R02). Keep the first ones.
+        if len(cards) > rooms.MAX_LEGS:
+            left = cards[rooms.MAX_LEGS:]
+            cards = cards[:rooms.MAX_LEGS]
+            held.append(f"{origin}: a plan holds {rooms.MAX_LEGS} cards; "
+                        f"left out {', '.join(c[:8] for c in left)}")
         free, deployed = _free_cash(), _deployed()
         whole = _leg_stakes(free, deployed, len(cards))
         halved = _leg_stakes(free, deployed, len(cards), half=True)
@@ -1468,7 +1498,7 @@ def night_promote(since: datetime | None = None) -> dict:
             continue
         opened += 1
 
-        in_room = 0
+        in_room, refused = 0, None
         for card, stake in zip(cards, stakes):
             free = _free_cash()
             ok, why = lab.affordable(stake, free, _running_experiments(),
@@ -1476,16 +1506,32 @@ def night_promote(since: datetime | None = None) -> dict:
             if not ok or stake <= 0:
                 held.append(f"{origin}/{card[:8]}: {why or 'no stake'}")
                 break
-            paper.buy(card, stake, origin, True)
+            # paper.py refuses with SystemExit (its books unreadable, their
+            # side refusing). Uncaught, it left the room with a criterion and
+            # no position and took every later answer of the call with it
+            # (R01, deep pass of 2026-09-19).
+            try:
+                paper.buy(card, stake, origin, True)
+            except (Exception, SystemExit) as exc:  # noqa: BLE001
+                refused = str(exc)[:200]
+                held.append(f"{origin}/{card[:8]}: the paper order was "
+                            f"refused ({refused})")
+                break
             bought.add(card)
             placed += 1
             in_room += 1
-        if in_room:
-            try:
+        try:
+            if in_room:
                 rooms.set_status(room, "running",
                                  why=f"opened by the laboratory from {origin}")
-            except rooms.RoomError as exc:
-                held.append(f"{room}: {exc}")
+            elif refused is not None:
+                rooms.set_status(
+                    room, "stopped",
+                    why=(f"the paper order was refused ({refused}), so "
+                         f"nothing is at stake here; the criterion still "
+                         f"judges his idea on the index"))
+        except rooms.RoomError as exc:
+            held.append(f"{room}: {exc}")
     return {"rooms": opened, "orders": placed, "held": held}
 
 

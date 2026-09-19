@@ -130,7 +130,13 @@ def _note_claim(rows: list[dict], chain: str, calibration, now) -> bool:
     for row in rows:
         if row.get("type") == "calibration" and row.get("chain") == chain:
             last = row
-    if last is not None and all(last.get(k) == v for k, v in claim.items()):
+    # Unchanged only when the two claims are EQUAL, both ways. Compared one
+    # way -- every field of the new one matching the stored row -- a version
+    # that stopped publishing a field matched on what was left and was never
+    # written (L04, deep pass of 2026-09-19).
+    stored = ({k: v for k, v in last.items()
+               if k not in ("type", "at", "chain")} if last else None)
+    if stored == claim:
         return False
     rows.append(_append({"type": "calibration", "at": now.isoformat(),
                          "chain": chain, **claim}))
@@ -282,7 +288,8 @@ def capture(client, now=None) -> dict:
                 errors.append({"chain": chain, "control": True,
                                "error": str(exc)[:200]})
                 listed = []
-            for row in fomo.pick_control(listed, called, controlled, at=now):
+            for row in fomo.pick_control(listed, called, controlled, at=now,
+                                         hot_keys=tracked):
                 key = fomo.control_key(row.get("token_address"), now)
                 quote = None
                 try:

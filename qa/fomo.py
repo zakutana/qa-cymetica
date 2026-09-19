@@ -607,7 +607,7 @@ def control_key(token_address: str, at) -> str | None:
 
 
 def pick_control(listed: list[dict], how_many: int, tracked_keys,
-                 at=None) -> list[dict]:
+                 at=None, hot_keys=()) -> list[dict]:
     """The coins a round listed and did not call hot, `how_many` of them.
 
     Chosen by the hash of the address, not by where they sit in the list:
@@ -618,12 +618,18 @@ def pick_control(listed: list[dict], how_many: int, tracked_keys,
     import hashlib
 
     tracked = set(tracked_keys or ())
+    # A coin the radar called hot EARLIER this hour is a signal already, and
+    # drawing it as a control put the same coin at the same hour in both arms
+    # (R08, deep pass of 2026-09-19). `hot_keys` are the signal keys tracked.
+    hot = set(hot_keys or ())
     pool = []
     for row in listed or []:
         if not isinstance(row, dict) or row.get("hot"):
             continue
         key = control_key(row.get("token_address"), at)
         if key is None or key in tracked:
+            continue
+        if signal_key(row.get("token_address"), at) in hot:
             continue
         digest = hashlib.sha256(
             str(row["token_address"]).lower().encode("utf-8")).hexdigest()
@@ -689,15 +695,19 @@ def compare(rows: list[dict], multiple: float = 3.0, within_hours: float = 72.0,
     out = {"multiple": multiple, "within_hours": within_hours}
     for group, signals in entries.items():
         n = hits = 0
-        excluded = {"untradeable": 0, "window_open": 0, "unpriced": 0,
-                    "unread": 0}
+        excluded = {"untradeable": 0, "depth_unknown": 0, "window_open": 0,
+                    "unpriced": 0, "unread": 0}
         for key, signal in signals.items():
             fired = _at(signal.get("at"))
             if fired is None or fired + timedelta(hours=within_hours) > moment:
                 excluded["window_open"] += 1
                 continue
-            if tradeable(signal, min_liquidity, min_volume) is not True:
-                excluded["untradeable"] += 1
+            # Three states, as tradeable() says: never quoted for depth is
+            # unknown, not untradeable (R07, deep pass of 2026-09-19).
+            can = tradeable(signal, min_liquidity, min_volume)
+            if can is not True:
+                excluded["untradeable" if can is False
+                         else "depth_unknown"] += 1
                 continue
             entry = signal.get("price_usd")
             if not isinstance(entry, (int, float)) or entry <= 0:

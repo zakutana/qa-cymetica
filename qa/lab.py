@@ -383,7 +383,11 @@ def may_ask_now(nexus_rows: list[dict], now: datetime | None = None,
       * the wait their own failure asked for (`backoff_until`).
     """
     moment = now or datetime.now(timezone.utc)
-    waiting = outstanding(nexus_rows, moment)
+    # In flight for PACING only while it is recent. A job their side lost, or
+    # one whose every poll errors, is still polled for a late answer over
+    # POLLABLE_HOURS -- but it held the lane for that whole day, sync door
+    # included (R04, deep pass of 2026-09-19).
+    waiting = outstanding(nexus_rows, moment, within_hours=IN_FLIGHT_HOURS)
     if waiting:
         return False, (f"{waiting[-1]} is still being answered; the next tick "
                        f"picks it up first")
@@ -456,6 +460,10 @@ def affordable(usdc: float, free_cash: float | None, running: int,
 
 
 POLLABLE_HOURS = 24
+# How long one question may hold the next one back. Their deep investigations
+# take one to five minutes by their own contract and queue when the lane is
+# full (REPLY-0019); two hours is far past both, and short of a lost day.
+IN_FLIGHT_HOURS = 2
 
 
 def outstanding(nexus_rows: list[dict], now: datetime | None = None,

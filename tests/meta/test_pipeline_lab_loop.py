@@ -276,6 +276,20 @@ def test_a_shallow_answer_is_written_where_every_answer_is(tmp_path,
     assert last["type"] == "gave_up" and "503" in last["status"], last
     assert last["id"] != said["id"], "one NEX sequence across both diaries"
 
+    # R03 (3/3): the question row is written before the call, so a failure
+    # that is not a transport error must still close it -- or lab.outstanding
+    # reads it as in flight and nothing may be asked for a day.
+    def _broken():
+        raise RuntimeError("the registry refused the door")
+    monkeypatch.setattr(nexus, "_rest_client", _broken)
+    with __import__("pytest").raises(RuntimeError):
+        nexus.ask_shallow("third?")
+    closed = nexus.load_shallow()[-1]
+    assert closed["type"] == "gave_up" and closed["status"].startswith("error"), (
+        closed)
+    assert lab.outstanding(nexus.load_all()) == [], (
+        "a question our own side failed to send is still 'being answered'")
+
     # And a room can open from a shallow answer: the room checks for a whole
     # answer across both diaries.
     import qa.rooms as qa_rooms
@@ -309,6 +323,20 @@ def test_a_queued_deep_job_is_still_in_flight_after_our_give_up():
     may, why = lab.may_ask_now(rows, NOW)
     assert not may and "NEX-1" in why, (
         "one outstanding deep job at a time is their condition for a slot")
+
+    # R04 (3/3): but not for a day. A job their side lost -- or one whose
+    # every poll errors -- used to hold the lane for POLLABLE_HOURS, the sync
+    # door included. It is still polled for a late answer; after
+    # IN_FLIGHT_HOURS it no longer stops the next question.
+    old = NOW - timedelta(hours=lab.IN_FLIGHT_HOURS, minutes=10)
+    stale = [_question("NEX-1", old),
+             {"type": "gave_up", "id": "NEX-1", "status": "queued",
+              "at": (old + timedelta(minutes=15)).isoformat()},
+             _question("NEX-2", old - timedelta(minutes=30))]
+    assert lab.outstanding(stale, NOW) == ["NEX-1", "NEX-2"], (
+        "a late answer to either must still be picked up")
+    may, why = lab.may_ask_now(stale, NOW)
+    assert may, why
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -798,9 +826,11 @@ def test_the_gate_reads_the_longest_window_their_backtest_priced_whole():
     assert lab.gate([{"p": 90, "r": None, "s": None}])["verdict"] == "unbacktestable"
 
 
-def _launchpad(scripts_lab, tmp_path, monkeypatch, answers, live, readings):
+def _launchpad(scripts_lab, tmp_path, monkeypatch, answers, live, readings,
+               refuse=()):
     """night_promote with their card door and their backtest stubbed, the
-    sender stubbed, and everything else real."""
+    sender stubbed, and everything else real. A card in `refuse` is refused
+    by the sender the way paper.py refuses: SystemExit."""
     _write(tmp_path, "nexus.jsonl", answers)
     _write(tmp_path, "paper.jsonl", [{"type": "after", "id": "TRD-0001",
                                       "sim_balance_usdc": "100000"}])
@@ -827,7 +857,13 @@ def _launchpad(scripts_lab, tmp_path, monkeypatch, answers, live, readings):
     sent = []
     real = scripts_lab._sibling
     paper = real("paper")
-    paper.buy = lambda card, usdc, *a, **k: sent.append((card, usdc)) or {}
+
+    def _buy(card, usdc, *a, **k):
+        if card in refuse:
+            raise SystemExit("the money in our paper bots could not be read")
+        sent.append((card, usdc))
+        return {}
+    paper.buy = _buy
     monkeypatch.setattr(scripts_lab, "_sibling",
                         lambda n: paper if n == "paper" else real(n))
     return sent, calls
@@ -955,10 +991,127 @@ def test_a_card_their_backtest_cannot_price_goes_to_paper_at_half(
 
     assert calls == [], "a one-leg basket was sent to a tool that takes two"
     assert did["rooms"] == 1 and len(sent) == 1, did
-    full = scripts_lab._leg_stakes(100000.0, 0.0, 1)[0]
-    assert sent[0][1] <= full / 2 + 0.01, sent
+    # EXACTLY half, not "at most half": an upper bound was satisfied by a
+    # quarter stake or by one cent (L05, deep pass of 2026-09-19, 3/3).
+    half = scripts_lab._leg_stakes(100000.0, 0.0, 1, half=True)[0]
+    assert sent[0][1] == half and half > 0, (sent, half)
     import qa.rooms as qa_rooms
     rows = qa_rooms.load()
     (room,) = qa_rooms.strategies(rows)
     criterion = qa_rooms.acceptance_of(rows, room["id"])
-    assert "backtest" in criterion["why"].lower(), criterion["why"]
+    # The clause that says so, not the word "backtest" -- that one is in every
+    # room's why ("Backtest: ..."), so removing the clause stayed green.
+    assert "not backtested" in criterion["why"].lower(), criterion["why"]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_refused_paper_order_does_not_stop_the_launch_or_strand_the_room(
+        tmp_path, monkeypatch):
+    """R01, deep pass of 2026-09-19 (3/3). paper.py refuses with SystemExit
+    -- the money in the bots unreadable, their book not answering -- AFTER the
+    room was opened with its criterion. The exception escaped night_promote:
+    every later answer in the call was skipped, and the room sat with no
+    position and no word on it. The refusal is held, the room says it holds
+    nothing, and the next answer is launched."""
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    a, b = _card(0xA), _card(0xB)
+    answers = [{"type": "answer", "id": f"NEX-000{n}",
+                "at": (NOW - timedelta(minutes=30)).isoformat(),
+                "text": _whole(card)} for n, card in enumerate((a, b), 1)]
+    sent, _ = _launchpad(
+        scripts_lab, tmp_path, monkeypatch, answers,
+        live={a: _basket("BTC", "ETH"), b: _basket("SOL", "DOGE")},
+        readings={("BTC", "ETH"): (6.5, 1.3), ("DOGE", "SOL"): (5.0, 1.1)},
+        refuse={a})
+
+    did = scripts_lab.night_promote()
+
+    assert [card for card, _ in sent] == [b], (
+        "the refusal on the first answer stopped the second one")
+    assert any("NEX-0001" in h and "refused" in h for h in did["held"]), did
+    import qa.rooms as qa_rooms
+    rows = qa_rooms.load()
+    first = next(r for r in qa_rooms.strategies(rows)
+                 if r["origin"] == "NEX-0001")
+    assert qa_rooms.status_of(rows, first["id"]) == "stopped", (
+        "a room with no position reads as an experiment in flight")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_answer_naming_more_cards_than_a_plan_holds_still_gets_a_whole_room(
+        tmp_path, monkeypatch):
+    """R02 (3/3): a plan holds at most rooms.MAX_LEGS cards, and set_plan
+    refused a ninth AFTER open_strategy had written the room -- a room with no
+    plan and no criterion, its answer spent for good. The launch keeps the
+    first MAX_LEGS and says what it left out."""
+    import qa.rooms as qa_rooms
+
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    cards = [_card(0x100 + n) for n in range(qa_rooms.MAX_LEGS + 1)]
+    text = "Buy " + ", ".join(cards) + " bull. " + "why. " * 60
+    answers = [{"type": "answer", "id": "NEX-0001",
+                "at": (NOW - timedelta(minutes=30)).isoformat(), "text": text}]
+    sent, _ = _launchpad(scripts_lab, tmp_path, monkeypatch, answers,
+                         live={c: _basket("BTC", "ETH") for c in cards},
+                         readings={("BTC", "ETH"): (6.5, 1.3)})
+
+    did = scripts_lab.night_promote()
+
+    rows = qa_rooms.load()
+    (room,) = qa_rooms.strategies(rows)
+    criterion = qa_rooms.acceptance_of(rows, room["id"])
+    assert criterion and len(criterion["legs"]) == qa_rooms.MAX_LEGS, criterion
+    assert len(sent) == qa_rooms.MAX_LEGS
+    assert any(cards[-1][:8] in h for h in did["held"]), did["held"]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_card_already_held_is_not_launched_again_by_a_later_answer(
+        tmp_path, monkeypatch):
+    """R09 (3/3): `bought` lasted one call, so the next tick bought a card a
+    running room already held -- two experiments that are one, and double the
+    exposure to one card. Nexus repeats his favourites across answers."""
+    import qa.rooms as qa_rooms
+
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    a = _card(0xA)
+    answers = [{"type": "answer", "id": f"NEX-000{n}",
+                "at": (NOW - timedelta(minutes=30)).isoformat(),
+                "text": _whole(a)} for n in (1, 2)]
+    sent, _ = _launchpad(scripts_lab, tmp_path, monkeypatch, answers[:1],
+                         live={a: _basket("BTC", "ETH")},
+                         readings={("BTC", "ETH"): (6.5, 1.3)})
+    scripts_lab.night_promote()
+    _write(tmp_path, "nexus.jsonl", answers)
+
+    again = scripts_lab.night_promote()
+
+    assert [card for card, _ in sent] == [a], sent
+    assert len(qa_rooms.strategies(qa_rooms.load())) == 1
+    assert any("NEX-0002" in h and "STR-0001" in h for h in again["held"]), (
+        again["held"])
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_id_their_api_does_not_know_is_not_called_an_invented_card(
+        tmp_path, monkeypatch):
+    """R06 (2/3): every UUID in an answer is read as a card, and his answers
+    also carry run ids and species ids (NEX-0010, NEX-0015). A 404 on one of
+    those was written down as a card Nexus invented -- #91 -- and the brief
+    reads the gate back to him as his record. The 404 still means nothing is
+    bought; what it may not do is claim which of the two it was."""
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    c = _card(0xC)
+    answers = [{"type": "answer", "id": "NEX-0001",
+                "at": (NOW - timedelta(minutes=30)).isoformat(),
+                "text": _whole(c)}]
+    sent, _ = _launchpad(scripts_lab, tmp_path, monkeypatch, answers,
+                         live={c: None}, readings={})
+
+    did = scripts_lab.night_promote()
+
+    assert sent == []
+    (gate,) = [r for r in lab.load() if r.get("type") == "gate"]
+    for said in (gate["why"], " ".join(did["held"])):
+        assert "no card" in said and "not a card" in said, said
+        assert "invented" not in said or "or" in said, said

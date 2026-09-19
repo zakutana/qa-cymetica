@@ -124,6 +124,64 @@ def test_capture_tracks_a_matched_control_from_the_same_feed(tmp_path,
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_control_is_chosen_by_the_hash_and_not_by_their_order():
+    """L03 (3/3): the capture test showed only that the pick is DETERMINISTIC
+    -- taking the first N cold rows in their order is deterministic too, and
+    samples whatever their sort favours. Here the list order and the hash
+    order disagree, and the hash has to win."""
+    import hashlib
+
+    listed = [{"token_address": f"tok{n}", "hot": False} for n in range(12)]
+    by_hash = sorted(listed, key=lambda r: hashlib.sha256(
+        r["token_address"].encode("utf-8")).hexdigest())
+    assert by_hash[:3] != listed[:3], "the fixture cannot tell the two apart"
+
+    picked = fomo.pick_control(listed, 3, set(), at=T0)
+
+    assert [r["token_address"] for r in picked] == [
+        r["token_address"] for r in by_hash[:3]]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_coin_called_hot_earlier_this_hour_is_not_its_own_control(
+        tmp_path, monkeypatch):
+    """R08 (3/3): the pick skipped only rows hot in THIS listing, so a coin
+    hot at 12:05 and cooled by 12:25 could be drawn as a control at 12:25 --
+    the same coin at the same hour in both arms, pulling the lift toward 1."""
+    mod = _module(tmp_path, monkeypatch)
+    for chain in ("robinhood", "solana"):
+        address = f"{chain}-COLD1"
+        mod._append({"type": "signal", "at": T0.isoformat(),
+                     "key": fomo.signal_key(address, T0),
+                     "token_address": address, "chain": chain,
+                     "price_usd": 1.0})
+    handler, _ = _feed({}, hot=("HOT1",), cold=("COLD1",))
+
+    said = mod.capture(_client(handler), now=T0 + timedelta(minutes=20))
+
+    assert said["added"] == 2 and said["control"] == 0, said
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_calibration_that_drops_a_field_is_a_new_version(tmp_path,
+                                                            monkeypatch):
+    """L04 (3/3): 'unchanged' was checked one way -- every field of the NEW
+    block equal to the stored row -- so a version that stopped publishing its
+    hot precision matched on what was left and was never written, and the
+    brief went on quoting a claim they had withdrawn."""
+    mod = _module(tmp_path, monkeypatch)
+    handler, _ = _feed({})
+    mod.capture(_client(handler), now=T0)
+    fewer = {k: v for k, v in CALIBRATION.items() if k != "type_precision"}
+    handler, _ = _feed({}, calibration=fewer)
+    mod.capture(_client(handler), now=T0 + timedelta(minutes=20))
+
+    kept = [r for r in mod.load() if r["type"] == "calibration"
+            and r["chain"] == "solana"]
+    assert len(kept) == 2 and "hot_precision" not in kept[-1], kept
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_round_that_called_nothing_hot_tracks_no_control(tmp_path,
                                                            monkeypatch):
     """Matched in time as well as in number: a control from a quiet hour
@@ -240,6 +298,11 @@ def test_a_pump_is_its_peak_inside_a_window_that_has_passed():
         _row("signal", "h2:T", T0), _read("checkpoint", "h2:T", 5, 1.4),
         _row("signal", "thin:T", T0, liquidity_usd=0.02, volume_h24=0.25),
         _read("checkpoint", "thin:T", 3, 40.0),
+        # Never quoted for depth (every signal before 2026-09-14): unknown,
+        # which is not untradeable (R07, 2/3).
+        {"type": "signal", "key": "nodepth:T", "at": T0.isoformat(),
+         "price_usd": 1.0},
+        _read("checkpoint", "nodepth:T", 3, 40.0),
         _row("signal", "young:T", T0 + timedelta(hours=10)),
         _read("checkpoint", "young:T", 12, 5.0),
         _row("control", "control:c1:T", T0),
@@ -260,6 +323,7 @@ def test_a_pump_is_its_peak_inside_a_window_that_has_passed():
     assert said["hot"]["rate"] == 0.5 and said["control"]["rate"] == 0.25
     assert said["lift"] == 2.0
     assert said["hot"]["excluded"]["untradeable"] == 1
+    assert said["hot"]["excluded"]["depth_unknown"] == 1
     assert said["hot"]["excluded"]["window_open"] == 1
     low, high = said["hot"]["ci"]
     assert 0.0 < low < 0.5 < high < 1.0, "two coins are not a measurement"
