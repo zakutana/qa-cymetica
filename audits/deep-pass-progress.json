@@ -2,7 +2,7 @@
  "run": "deep-pass-2026-09-19",
  "at": "2026-09-19T16:02:11+00:00",
  "previous_at": "2026-09-13T17:05:00+00:00",
- "at_finished": null,
+ "at_finished": "2026-09-19T17:44:10+00:00",
  "start_commit": "abaa7e94",
  "gaps": [
   {
@@ -678,16 +678,18 @@
    "commit": null
   }
  ],
- "next": null,
+ "next": [
+  "Rozdělit řádek `CYM-one_credential_carries_a_clone_from_creation_to_funding` na dva — #89 (`/fund`, `/go-live`) a #98 (`/activity`) — aby každý report dostal vlastní verdikt; do té doby na ten řádek `verify.py` nic neposílá (deep pass 2026-09-19 ho podruhé zadržel)."
+ ],
  "retrospective": {
-  "last": "2026-09-09",
-  "done": false
+  "last": "2026-09-19",
+  "done": true
  },
- "rule_changes": null,
+ "rule_changes": [],
  "meta_tests": {
   "start": 543,
-  "end": null,
-  "reason": null
+  "end": 555,
+  "reason": "+12: lab_loop 5, fomo_control 3, admissibility 1, secrets 1, movers_late_entry 1, fomo_identity 1. Each holds an input no existing test had (another order, another window, another key shape); the other 25 fixes strengthened existing tests instead of adding one."
  },
- "finished": false
+ "finished": true
 }
