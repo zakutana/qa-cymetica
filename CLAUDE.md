@@ -437,15 +437,12 @@ tests/repo/       repository consistency. Deliberately NOT in tests/meta:
                   compacted mid-flight, and a triage verdict lost that way is a
                   finding that silently never gets fixed.
 .claude/skills/laborator/SKILL.md
-                  "jdi do laboratoře" (and every phrase that used to open a
-                  Nexus session): the operator's notes first, then what is in
-                  flight, then their backtests ranked risk-adjusted, then ONE
-                  question to Nexus carrying how his last proposals actually
-                  did -- he remembers nothing between questions, so our record
-                  is his memory -- a room and a paper order for each concrete
-                  proposal, and a close with at most three lessons and the
-                  queue the next session picks up. What it knows about Nexus
-                  lives in section 6 of that file and grows there.
+                  "/loop 20m jdi do laborky": one tick of a laboratory that
+                  runs all day -- `lab.py tick`, then a question to Nexus when
+                  one may go, composed from `lab.py brief` (he remembers
+                  nothing, so our record is his memory), then a line of the
+                  diary (`lab.py log`). `pokracuj` is the same tick by its old
+                  name. What it knows about Nexus grows in that file.
 qa/lab.py         the laboratory's notebook and its brakes, in code rather
                   than in prose: sessions, ranked snapshots, the catalogue it
                   compares against the baseline, and the caps -- paper only,
@@ -460,15 +457,12 @@ qa/surface.py     the watch over THEIR side, mirroring the DNA patrol: their
                   tool schemas and the shape of their REST answers, read from
                   captures we already make. `headline_period` appeared in our
                   own data and we heard of it from their Telegram instead.
-scripts/lab.py    that loop from our side: `status`, `truth` (their surfaces
-                  map, the leaderboard, then get_strategy_returns as a second
-                  reading), `cycle`, `ask`, `buy`, `open`/`close`. It refuses
-                  rather than warns. `night --until HH:MM` is the one long
-                  form: a process THEY start that ends at an hour on their own
-                  clock. It searches all night, asks when there is something to
-                  ask, and LAUNCHES on paper from a concrete Nexus answer --
-                  under the day's caps, the gate an earlier statement of the
-                  same block, read off the source by a test. Files nothing.
+scripts/lab.py    that loop from our side: `tick` (the day's session, answers
+                  picked up, a card read live and backtested before a paper
+                  room, the search, verdicts; state in state/lab_tick.json),
+                  `brief`, `board` (his proposals by what they earned), `log`,
+                  `ask`, `truth`, `buy`. It refuses rather than warns. `night
+                  --until HH:MM` is the same work as one process THEY start.
 NEXT.md           what we agreed to do next and have not done. Plain markdown,
                   one line per item, `- [ ] YYYY-MM-DD  sentence`; ticked
                   items stay as history and stop being printed.
