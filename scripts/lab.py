@@ -82,7 +82,11 @@ def pass_in_flight() -> bool:
 
 
 def _nexus_rows() -> list[dict]:
-    return _sibling("nexus").load()
+    """Both lanes -- deep (nexus.jsonl) and the sync door (nexus_shallow.jsonl)
+    -- because the laboratory acts on an answer whichever door it came
+    through. The checks behind #85 and #86 read the deep diary alone."""
+    nexus = _sibling("nexus")
+    return nexus.load_all() if hasattr(nexus, "load_all") else nexus.load()
 
 
 def _session_now() -> str | None:
@@ -976,13 +980,38 @@ def verdicts(now=None) -> list[dict]:
     return out
 
 
-def ask(question: str, wait: bool = True) -> dict:
+def _lane(rows: list[dict], lane: str = "auto") -> tuple[str | None, str]:
+    """Which lane a question may take now, or None and why not.
+
+    [operator 2026-09-19] said yes to the fallback Cymetica advised in
+    REPLY-0018: while their deep lane is at capacity, ask the sync door
+    (POST /api/v1/bounty/qa-agent/ask) instead of stalling the loop. Same
+    day's cap, same one-in-flight and twenty-minute pace; only their deep
+    lane's own wait is lifted for it.
+    """
+    moment = _now()
+    may, why = lab.may_ask_now(rows, moment)
+    if may and lane != "shallow":
+        return "deep", ""
+    if lane == "deep":
+        return None, why
+    shallow, why_not = lab.may_ask_now(rows, moment, ignore_backoff=True)
+    if not shallow:
+        return None, why_not
+    return "shallow", (why or "asked for by name")
+
+
+def ask(question: str, wait: bool = True, lane: str = "auto") -> dict:
     rows = _nexus_rows()
     may, why = lab.may_ask(_asked_today(rows), pass_in_flight())
-    if may:
-        may, why = lab.may_ask_now(rows, _now())
     if not may:
         raise SystemExit(f"not asking: {why}")
+    chosen, why = _lane(rows, lane)
+    if chosen is None:
+        raise SystemExit(f"not asking: {why}")
+    if chosen == "shallow":
+        print(f"[lab] deep lane: {why} -- asking through qa-agent/ask instead")
+        return _sibling("nexus").ask_shallow(question)
     return _sibling("nexus").ask(question, wait=wait)
 
 
@@ -1971,7 +2000,11 @@ def tick(*, now: datetime | None = None, actions: dict | None = None,
 
     may, why = lab.may_ask(int(doors["asked_today"]() or 0), False)
     if may:
-        may, why = lab.may_ask_now(_nexus_rows(), moment)
+        rows = _nexus_rows()
+        may, why = lab.may_ask_now(rows, moment)
+        if not may and lab.may_ask_now(rows, moment, ignore_backoff=True)[0]:
+            may, why = True, (f"through the shallow lane -- the deep one is "
+                              f"held: {why}")
     said.update(may_ask=may, why=why)
     state["queue"] = queue
     _save_tick_state(state)
@@ -2182,6 +2215,9 @@ def main(argv: list[str] | None = None) -> int:
     ask_cmd = sub.add_parser("ask", help="one question to Nexus, with brakes")
     ask_cmd.add_argument("question")
     ask_cmd.add_argument("--no-wait", action="store_true")
+    ask_cmd.add_argument("--lane", default="auto",
+                         choices=["auto", "deep", "shallow"],
+                         help="auto: deep, or qa-agent/ask while deep is full")
     buy_cmd = sub.add_parser("buy", help="one paper order, with brakes")
     buy_cmd.add_argument("--card", required=True)
     buy_cmd.add_argument("--usdc", type=float, required=True)
@@ -2327,7 +2363,8 @@ def main(argv: list[str] | None = None) -> int:
     elif args.cmd == "surface":
         print(json.dumps(surface(), ensure_ascii=False, indent=1))
     elif args.cmd == "ask":
-        print(json.dumps(ask(args.question, wait=not args.no_wait),
+        print(json.dumps(ask(args.question, wait=not args.no_wait,
+                             lane=args.lane),
                          ensure_ascii=False, indent=1, default=str)[:2000])
     elif args.cmd == "buy":
         print(json.dumps(buy(args.card, args.usdc, args.nexus, args.confirm),

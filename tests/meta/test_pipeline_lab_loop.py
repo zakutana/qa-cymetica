@@ -149,6 +149,141 @@ def test_a_question_their_side_turned_away_does_not_hold_our_floor():
     assert not may and "20" in why, why
 
 
+def _refused(ident, asked, retry):
+    return [_question(ident, asked),
+            {"type": "gave_up", "id": ident, "status": "failed",
+             "retry_after_s": retry,
+             "at": (asked + timedelta(seconds=30)).isoformat()}]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_while_the_deep_lane_is_full_the_question_goes_the_shallow_way(
+        tmp_path, monkeypatch):
+    """[operator 2026-09-19] said yes to the fallback Cymetica advised in
+    REPLY-0018: when the deep lane is at capacity, the question goes through
+    POST /api/v1/bounty/qa-agent/ask at once instead of stalling the loop --
+    under the same day's cap and the same one-in-flight pace. Without the
+    backoff, the deep lane; asked for the deep lane by name, it still waits."""
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    monkeypatch.setattr(scripts_lab, "pass_in_flight", lambda: False)
+    sent = []
+
+    class _Nexus:
+        @staticmethod
+        def ask(question, wait=True):
+            sent.append(("deep", question))
+            return {"id": "NEX-9"}
+
+        @staticmethod
+        def ask_shallow(question):
+            sent.append(("shallow", question))
+            return {"id": "NEX-9"}
+
+    real = scripts_lab._sibling
+    _Nexus.load = staticmethod(lambda: real("nexus").load())
+    monkeypatch.setattr(scripts_lab, "_sibling",
+                        lambda n: _Nexus if n == "nexus" else real(n))
+    real_now = datetime.now(timezone.utc)
+
+    _write(tmp_path, "nexus.jsonl",
+           _refused("NEX-0031", real_now - timedelta(minutes=2), 877))
+    scripts_lab.ask("five cards?", wait=False)
+    assert sent == [("shallow", "five cards?")], sent
+
+    with __import__("pytest").raises(SystemExit) as held:
+        scripts_lab.ask("five cards?", wait=False, lane="deep")
+    assert "wait" in str(held.value), held.value
+
+    _write(tmp_path, "nexus.jsonl",
+           _refused("NEX-0031", real_now - timedelta(hours=2), 30))
+    scripts_lab.ask("five cards?", wait=False)
+    assert sent[-1] == ("deep", "five cards?"), sent
+
+    # The pace still holds on the shallow lane: one in flight, 20 minutes.
+    _write(tmp_path, "nexus.jsonl",
+           [*_refused("NEX-0031", real_now - timedelta(minutes=9), 877),
+            _question("NEX-0032", real_now - timedelta(minutes=3)),
+            {"type": "answer", "id": "NEX-0032", "lane": "shallow",
+             "at": (real_now - timedelta(minutes=3)).isoformat()}])
+    with __import__("pytest").raises(SystemExit) as paced:
+        scripts_lab.ask("again?", wait=False)
+    assert "20" in str(paced.value), paced.value
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_tick_says_the_shallow_way_is_open_while_the_deep_one_waits(
+        tmp_path, monkeypatch):
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    real_now = datetime.now(timezone.utc)
+    _write(tmp_path, "nexus.jsonl",
+           _refused("NEX-0031", real_now - timedelta(minutes=2), 877))
+    doors, _ = _doors()
+
+    did = _tick(scripts_lab, real_now, doors)
+
+    assert did["may_ask"] is True and "shallow" in did["why"], did
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_shallow_answer_is_written_where_every_answer_is(tmp_path,
+                                                           monkeypatch):
+    """Their sync door answers in seconds, so the question and the answer are
+    both on the diary before the call returns -- the launch, the board and
+    the brief then read it like any answer of his, and the row says which
+    lane and what confidence it came with. A door that fails is a give-up,
+    never an empty answer (rule 8)."""
+    import importlib.util as util
+
+    import httpx
+
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    import qa.state
+    importlib.reload(qa.state)
+    spec = util.spec_from_file_location("nexus_shallow",
+                                        REPO / "scripts" / "nexus.py")
+    nexus = util.module_from_spec(spec)
+    spec.loader.exec_module(nexus)
+    from qa.client import build_mock_client
+
+    bodies = []
+
+    def handler(request):
+        bodies.append(json.loads(request.content))
+        return httpx.Response(200, json={
+            "answer": "Buy " + _card(0xA) + " bull. " + "why. " * 60,
+            "confidence": 0.8, "sources": ["x"]})
+    monkeypatch.setattr(nexus, "_rest_client",
+                        lambda: build_mock_client(handler, timeout=5.0))
+
+    said = nexus.ask_shallow("five cards?")
+
+    # Its own diary: #85 and #86 measure the DEEP channel off nexus.jsonl,
+    # and a sync answer counted there would pass #86 on a door it is not
+    # about -- a false verdict on its way to the vendor.
+    assert nexus.load() == [], "a shallow row landed in the deep channel's diary"
+    rows = nexus.load_shallow()
+    assert [r["id"] for r in nexus.load_all()] == [r["id"] for r in rows]
+    assert bodies == [{"question": "five cards?"}]
+    assert [r["type"] for r in rows] == ["question", "answer"]
+    assert rows[1]["id"] == said["id"] == rows[0]["id"]
+    assert rows[1]["lane"] == "shallow" and rows[1]["confidence"] == 0.8
+    assert _card(0xA) in rows[1]["text"]
+
+    monkeypatch.setattr(nexus, "_rest_client", lambda: build_mock_client(
+        lambda r: httpx.Response(503, json={}), timeout=5.0))
+    nexus.ask_shallow("again?")
+    last = nexus.load_shallow()[-1]
+    assert last["type"] == "gave_up" and "503" in last["status"], last
+    assert last["id"] != said["id"], "one NEX sequence across both diaries"
+
+    # And a room can open from a shallow answer: the room checks for a whole
+    # answer across both diaries.
+    import qa.rooms as qa_rooms
+    importlib.reload(qa_rooms)
+    room = qa_rooms.open_strategy(said["id"], "from the sync door")
+    assert room["origin"] == said["id"]
+
+
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_tick_picks_up_a_question_in_flight_whatever_the_clock_says(
         tmp_path, monkeypatch):

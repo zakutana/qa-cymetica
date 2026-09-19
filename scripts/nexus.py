@@ -104,6 +104,46 @@ def _append(record: dict) -> None:
             handle.write(json.dumps(record, ensure_ascii=False) + "\n")
 
 
+SHALLOW_DIARY = "nexus_shallow.jsonl"
+
+
+def shallow_path() -> Path:
+    """The sync door's own diary. NOT nexus.jsonl: #85 and #86 measure the
+    DEEP channel off that file, and a sync answer counted there would pass
+    #86 on a door the finding is not about."""
+    return state_dir() / SHALLOW_DIARY
+
+
+def load_shallow() -> list[dict]:
+    target = shallow_path()
+    if not target.is_file():
+        return []
+    out = []
+    for line in target.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            out.append(json.loads(line))
+        except json.JSONDecodeError:
+            continue
+    return out
+
+
+def load_all() -> list[dict]:
+    """Both diaries, in the order things happened -- what the laboratory
+    reads. The checks read `load()` alone."""
+    return sorted(load() + load_shallow(), key=lambda r: str(r.get("at") or ""))
+
+
+def _append_shallow(record: dict) -> None:
+    target = shallow_path()
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with file_lock(target):
+        with open(target, "a", encoding="utf-8") as handle:
+            handle.write(json.dumps(record, ensure_ascii=False) + "\n")
+
+
 def _next_id(existing: list[dict]) -> str:
     used = [int(r["id"].split("-")[1]) for r in existing
             if isinstance(r.get("id"), str) and r["id"].startswith("NEX-")]
@@ -125,6 +165,73 @@ def _client():
     client = build_mcp_client(identity, EndpointRegistry.load())
     client.http.timeout = httpx.Timeout(READ_TIMEOUT)
     return client
+
+
+SHALLOW = "/api/v1/bounty/qa-agent/ask"
+
+
+def _rest_client():
+    from qa.client import build_client
+
+    load_dotenv()
+    return build_client(identities()["anon"], EndpointRegistry.load(),
+                        timeout=60.0)
+
+
+def ask_shallow(question: str) -> dict:
+    """The same question through their SYNC door, answered in seconds.
+
+    [operator 2026-09-19] said yes to the fallback Cymetica advised in
+    REPLY-0018 -- the deep lane is a shared capacity window, and while it is
+    full they tell an agent to ask POST /api/v1/bounty/qa-agent/ask rather
+    than stall. Written to this same diary under the same NEX id sequence, so
+    the launch, the board and the brief read it like any answer of his; the
+    rows say `lane: shallow` and carry their confidence, because on
+    2026-09-10 this door answered a trading question with an onboarding
+    brochure at confidence 0.95 and the next reader should be able to tell.
+
+    A door that does not answer 200 with text is a give-up, never an empty
+    answer (rule 8).
+    """
+    entry = {"id": _next_id(load_all()), "type": "question", "at": _now(),
+             "question": question, "tool": SHALLOW, "lane": "shallow"}
+    _append_shallow(entry)
+    client = _rest_client()
+    token = CURRENT_TIER.set(SafetyTier.PROBE)
+    try:
+        try:
+            response = client.post(SHALLOW, json={"question": question})
+        except TRANSPORT_ERRORS as exc:
+            response, failure = None, f"unread: {type(exc).__name__}"
+    finally:
+        client.close()
+        CURRENT_TIER.reset(token)
+
+    body, text = {}, ""
+    if response is not None:
+        failure = f"HTTP {response.status_code}"
+        if response.status_code == 200:
+            try:
+                body = response.json() or {}
+            except ValueError:
+                body = {}
+            text = str(body.get("answer") or "").strip() \
+                if isinstance(body, dict) else ""
+            failure = "" if text else "HTTP 200 with no answer text"
+    if not text:
+        record = {"id": entry["id"], "type": "gave_up", "at": _now(),
+                  "lane": "shallow", "status": f"failed: {failure}"}
+        _append_shallow(record)
+        print(f"{entry['id']}: {SHALLOW} gave no answer ({failure})")
+        return record
+    record = {"id": entry["id"], "type": "answer", "at": _now(),
+              "lane": "shallow", "text": text,
+              "confidence": body.get("confidence"),
+              "sources": body.get("sources")}
+    _append_shallow(record)
+    print(f"{entry['id']}: answered through {SHALLOW} "
+          f"(confidence {body.get('confidence')}, {len(text)} chars)")
+    return record
 
 
 def _inner(payload):
@@ -200,7 +307,7 @@ def ask(question: str, wait: bool = True, room: str | None = None) -> dict:
     filed under a room that does not exist would be drawn in General, out of
     the thread it continues, and by then it would already have been sent.
     """
-    entry = {"id": _next_id(load()), "type": "question", "at": _now(),
+    entry = {"id": _next_id(load_all()), "type": "question", "at": _now(),
              "question": question, "tool": ASK}
     if room is not None:
         if room not in known_rooms(load_rooms()):

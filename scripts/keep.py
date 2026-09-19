@@ -43,6 +43,8 @@ from qa.state import state_dir  # noqa: E402
 # What has no copy anywhere else. Each is outside git because it is appended to
 # while a run is in flight, and a dirty tree costs a level-V run.
 DIARIES = ("rooms.jsonl", "nexus.jsonl", "paper.jsonl", "lab.jsonl",
+           # His answers through the sync door, while the deep lane is full.
+           "nexus_shallow.jsonl",
            # The register of what the laboratory has already asked their
            # backtest. It is the memory the whole search stands on, so of all
            # of these it is the one that must not live on a single disk.

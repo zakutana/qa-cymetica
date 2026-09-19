@@ -370,8 +370,8 @@ def may_ask(asked: int, pass_running: bool) -> tuple[bool, str]:
     return True, ""
 
 
-def may_ask_now(nexus_rows: list[dict], now: datetime | None = None
-                ) -> tuple[bool, str]:
+def may_ask_now(nexus_rows: list[dict], now: datetime | None = None,
+                ignore_backoff: bool = False) -> tuple[bool, str]:
     """The pace under the cap, for a question asked by hand or by a loop tick.
 
     The night held these three in its own loop state; a tick is a fresh
@@ -404,7 +404,11 @@ def may_ask_now(nexus_rows: list[dict], now: datetime | None = None
         minutes = int((moment - last).total_seconds() // 60)
         return False, (f"the last question went {minutes} min ago and the "
                        f"floor is {floor // 60}")
-    hold = backoff_until(nexus_rows, moment)
+    # `ignore_backoff` is for the SHALLOW lane: the wait their deep lane
+    # asked for is about the deep lane (REPLY-0018: a shared capacity window
+    # on deep investigations), and their own advice is to ask the sync door
+    # meanwhile. The pace above still holds on it.
+    hold = None if ignore_backoff else backoff_until(nexus_rows, moment)
     if hold is not None:
         return False, (f"their side failed and asked for a wait until "
                        f"{hold.isoformat(timespec='minutes')}")
@@ -558,6 +562,11 @@ def backoff_until(nexus_rows: list[dict], now: datetime | None = None):
     moment = now or datetime.now(timezone.utc)
     failed, answered, streak = None, None, 0
     for row in nexus_rows:
+        # The wait is the DEEP lane's (REPLY-0018: a shared capacity window on
+        # deep investigations). The sync door failing or answering says
+        # nothing about it either way.
+        if row.get("lane") == "shallow":
+            continue
         when = _at(row.get("at"))
         if when is None:
             continue

@@ -88,9 +88,20 @@ python scripts/lab.py ask --no-wait "..."
 Then **don't wait for the next tick to hear back**: start
 `python scripts/nexus.py answer NEX-...` in the BACKGROUND (it polls until he
 answers, one to five minutes), and when it finishes run `lab.py tick` at once
--- the launch looks at every answer on every tick. If he refused at capacity
-("retry after N s"), ask again as soon as `ask` allows: their wait replaces
-our twenty-minute floor.
+-- the launch looks at every answer on every tick.
+
+[operator 2026-09-19] *"Ano"* -- to whether the laboratory may, on its own,
+send its question through their sync door (`POST /api/v1/bounty/qa-agent/ask`)
+while the deep lane is at capacity, as Cymetica advised in REPLY-0018. The
+a2a `--confirm` condition still holds for everything else.
+
+So a refusal at capacity does not stall the loop: ask again right away and
+`lab.py ask` takes the sync door by itself while their deep lane waits. The
+answer is on the diary in seconds (`state/nexus_shallow.jsonl`, `lane:
+shallow`, with their confidence) -- run `lab.py tick` straight after. Read it
+before believing it names anything: on 2026-09-10 that door answered a trading
+question with an onboarding brochure at confidence 0.95. The gate reads every
+card it names regardless.
 
 `brief` is his memory, because Nexus remembers nothing between questions: what
 the day may still spend, how every proposal of his did (the board, best earner

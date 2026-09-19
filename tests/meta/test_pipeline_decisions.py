@@ -163,6 +163,8 @@ PINNED = {
          "66a5684c5763c57c211fc808a4f44c9771dd28bc4061ec3bf7225fd1beb094a8"),
         ("2026-09-19", "eskalovat nevo zpravou na telegram",
          "d53f5ff46901b4b89d3bd03d693358a45cffcd510e2e058046819129f3c820ca"),
+        ("2026-09-19", "while the deep lane is at capacity",
+         "40313867a490f1b62a286a12f00e18a7d458a388ef9515506d3c4b2d69130c09"),
     ],
     ".claude/skills/ohlednuti/SKILL.md": [
         ("2026-09-12", "za tri tydny reknu at se ohledne zpet",

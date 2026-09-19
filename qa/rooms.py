@@ -173,6 +173,14 @@ def plans(rows: list[dict]) -> dict[str, dict]:
             if row.get("type") == "plan" and row.get("room") in known}
 
 
+def nexus_answers() -> list[dict]:
+    """His answers from both doors: the deep lane's diary and, since
+    2026-09-19, the sync door's (scripts/nexus.py::ask_shallow), which the
+    laboratory falls back to while the deep lane is at capacity. A room opens
+    from either; the checks behind #85 and #86 read the deep one alone."""
+    return records("nexus.jsonl") + records("nexus_shallow.jsonl")
+
+
 def whole_answer(nexus_rows: list[dict], question_id) -> dict | None:
     """Nexus's answer to one question, if the tab would call it answered."""
     return next((r for r in nexus_rows
@@ -301,7 +309,7 @@ def open_strategy(origin: str, title: str) -> dict:
     name = " ".join(str(title or "").split())
     if not name or len(name) > MAX_TITLE:
         raise RoomError(f"a title of 1 to {MAX_TITLE} characters")
-    if whole_answer(records("nexus.jsonl"), origin) is None:
+    if whole_answer(nexus_answers(), origin) is None:
         raise RoomError(f"{origin} has no whole answer from Nexus, and a room "
                         f"opens only from one")
 
@@ -387,7 +395,7 @@ def set_claim(room: str, quoted: dict) -> dict:
         _strategy(rows, room)
         origin = next((r.get("origin") for r in strategies(rows)
                        if r.get("id") == room), None)
-        answer = whole_answer(records("nexus.jsonl"), origin) if origin else None
+        answer = whole_answer(nexus_answers(), origin) if origin else None
         text = str((answer or {}).get("text") or "")
         if not text:
             raise RoomError(
