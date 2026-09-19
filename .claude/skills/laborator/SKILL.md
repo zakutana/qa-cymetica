@@ -95,13 +95,14 @@ send its question through their sync door (`POST /api/v1/bounty/qa-agent/ask`)
 while the deep lane is at capacity, as Cymetica advised in REPLY-0018. The
 a2a `--confirm` condition still holds for everything else.
 
-So a refusal at capacity does not stall the loop: ask again right away and
-`lab.py ask` takes the sync door by itself while their deep lane waits. The
-answer is on the diary in seconds (`state/nexus_shallow.jsonl`, `lane:
-shallow`, with their confidence) -- run `lab.py tick` straight after. Read it
-before believing it names anything: on 2026-09-10 that door answered a trading
-question with an onboarding brochure at confidence 0.95. The gate reads every
-card it names regardless.
+Since REPLY-0019 a deep question at capacity is **queued, not refused**: it
+stays in flight until their window frees, the tick looks at it once per tick
+(`nexus.py poll_once`, honouring their `poll_after_s`), and no second deep
+question goes while it waits -- one outstanding job is their condition for a
+slot. If deep ever refuses again with a `retry_after`, `lab.py ask` takes the
+sync door by itself (`state/nexus_shallow.jsonl`, `lane: shallow`). Expect
+little from it on strategy: NEX-0034, the five-card question, got a generic
+menu at confidence 0.48 and no card.
 
 `brief` is his memory, because Nexus remembers nothing between questions: what
 the day may still spend, how every proposal of his did (the board, best earner

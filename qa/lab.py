@@ -473,7 +473,7 @@ def outstanding(nexus_rows: list[dict], now: datetime | None = None,
     which is the shape of the checks this repository spent a day repairing.
     """
     moment = now or datetime.now(timezone.utc)
-    asked, finished = [], set()
+    asked, last = [], {}
     for row in nexus_rows:
         kind, ident = row.get("type"), str(row.get("id") or "")
         if not ident:
@@ -489,8 +489,24 @@ def outstanding(nexus_rows: list[dict], now: datetime | None = None,
             if (moment - stamp).total_seconds() <= within_hours * 3600:
                 asked.append(ident)
         elif kind in ("answer", "gave_up", "refused", "failed"):
-            finished.add(ident)
-    return [ident for ident in asked if ident not in finished]
+            last[ident] = row
+
+    def finished(ident: str) -> bool:
+        # REPLY-0019: at capacity their deep lane QUEUES a job and runs it
+        # when the window frees. Our give-up at fifteen minutes stays on the
+        # record -- #86 measures their published window with it -- but a job
+        # still queued or running then is theirs still working, and its
+        # answer has to be picked up when it lands.
+        row = last.get(ident)
+        if row is None:
+            return False
+        if row.get("type") == "gave_up":
+            return str(row.get("status") or "") not in STILL_WORKING
+        return True
+    return [ident for ident in asked if not finished(ident)]
+
+
+STILL_WORKING = frozenset({"running", "queued", "pending"})
 
 
 # --- the night -------------------------------------------------------------

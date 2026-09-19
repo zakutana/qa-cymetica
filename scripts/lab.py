@@ -794,7 +794,10 @@ def cycle() -> dict:
     finished = []
     for question_id in waiting:
         try:
-            result = nexus.answer(question_id)
+            # ONE look per cycle. Since REPLY-0019 a deep job at capacity
+            # queues for as long as their window stays hot, and `answer`
+            # waited fifteen minutes on each -- past the ten a tick may take.
+            result = nexus.poll_once(question_id)
             finished.append({question_id: result.get("status")})
         except (Exception, SystemExit) as exc:  # one bad poll is not the cycle
             # SystemExit included: nexus.answer raises it for a question it

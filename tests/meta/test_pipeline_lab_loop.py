@@ -285,6 +285,74 @@ def test_a_shallow_answer_is_written_where_every_answer_is(tmp_path,
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_queued_deep_job_is_still_in_flight_after_our_give_up():
+    """REPLY-0019: at capacity their deep lane now QUEUES a job and runs it
+    when the window frees, instead of failing it. `nexus.py answer` still
+    writes a give-up at fifteen minutes -- #86 measures their published
+    window with it -- but a job that is queued or running then is theirs
+    still working, and the answer that lands later must be picked up. A
+    failed one is finished."""
+    asked = NOW - timedelta(minutes=40)
+    rows = [_question("NEX-1", asked),
+            {"type": "gave_up", "id": "NEX-1", "status": "queued",
+             "at": (asked + timedelta(minutes=15)).isoformat()},
+            _question("NEX-2", asked),
+            {"type": "gave_up", "id": "NEX-2", "status": "failed",
+             "at": (asked + timedelta(minutes=1)).isoformat()},
+            _question("NEX-3", asked),
+            {"type": "gave_up", "id": "NEX-3", "status": "running",
+             "at": (asked + timedelta(minutes=15)).isoformat()},
+            {"type": "answer", "id": "NEX-3",
+             "at": (asked + timedelta(minutes=30)).isoformat()}]
+
+    assert lab.outstanding(rows, NOW) == ["NEX-1"]
+    may, why = lab.may_ask_now(rows, NOW)
+    assert not may and "NEX-1" in why, (
+        "one outstanding deep job at a time is their condition for a slot")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_cycle_looks_once_and_does_not_wait_on_a_queued_job(
+        tmp_path, monkeypatch):
+    """A queued job can sit for as long as their window stays hot; the cycle
+    polling it through `nexus.answer` blocked for fifteen minutes each, past
+    the ten a tick's command may take. It looks once per tick instead."""
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    real_now = datetime.now(timezone.utc)
+    _write(tmp_path, "nexus.jsonl", [
+        _question("NEX-0035", real_now - timedelta(minutes=5))])
+    looked, waited = [], []
+
+    class _Nexus:
+        @staticmethod
+        def load():
+            return real("nexus").load()
+
+        @staticmethod
+        def poll_once(question_id):
+            looked.append(question_id)
+            return {"status": "queued"}
+
+        @staticmethod
+        def answer(question_id):
+            waited.append(question_id)
+            return {"status": "done"}
+
+    real = scripts_lab._sibling
+    monkeypatch.setattr(scripts_lab, "_sibling",
+                        lambda n: _Nexus if n == "nexus" else
+                        type("_", (), {"main": staticmethod(lambda a: 0)})
+                        if n == "sampler" else real(n))
+    monkeypatch.setattr(scripts_lab, "surface", lambda: {})
+    monkeypatch.setattr(scripts_lab, "book_correlation", lambda: {})
+
+    did = scripts_lab.cycle()
+
+    assert looked == ["NEX-0035"] and waited == [], (looked, waited)
+    assert did["polled"] == [{"NEX-0035": "queued"}]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_tick_picks_up_a_question_in_flight_whatever_the_clock_says(
         tmp_path, monkeypatch):
     """The answers were picked up every half hour, so an answer that took

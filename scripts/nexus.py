@@ -417,8 +417,22 @@ def bounds_verdict(lower: float | None, upper: float | None) -> str:
     return "unknown"
 
 
-def _poll(client, entry: dict) -> dict:
-    """Poll on their cadence, recording every attempt with its moment."""
+def _poll_after(answer) -> float | None:
+    """Their suggested gap before the next poll (REPLY-0019: a queued job
+    carries `poll_after_s`, to be honoured like retry_after)."""
+    node = _inner(answer) if answer is not None else None
+    value = node.get("poll_after_s") if isinstance(node, dict) else None
+    return float(value) if isinstance(value, (int, float)) and value > 0 else None
+
+
+def _poll(client, entry: dict, once: bool = False) -> dict:
+    """Poll on their cadence, recording every attempt with its moment.
+
+    `once` looks a single time and leaves a job that is still queued or
+    running as it is -- no give-up written. That is what a loop tick does:
+    since REPLY-0019 a deep job at capacity queues for as long as their window
+    stays hot, and a tick that waited on it would outlive its ten minutes.
+    """
     started = time.monotonic()
     attempt = 0
     while True:
@@ -474,6 +488,8 @@ def _poll(client, entry: dict) -> dict:
             if reason.get("error"):
                 print(f"their reason: {reason['error']}")
             return {"status": status, **reason}
+        if once:
+            return {"status": status, "poll_after_s": _poll_after(answer)}
         if time.monotonic() - started > GIVE_UP_SECONDS:
             _append({"id": entry["id"], "type": "gave_up", "at": _now(),
                      "job_id": entry["job_id"], "waited_seconds": waited,
@@ -481,10 +497,14 @@ def _poll(client, entry: dict) -> dict:
             print(f"\nstill {status} after {waited / 60:.0f} min; stopping. "
                   f"`nexus.py answer {entry['id']}` picks it up again.")
             return {"status": status}
-        time.sleep(POLL_SECONDS)
+        # Their suggested gap when they give one, never faster than our own
+        # floor, and never past the point we stop waiting.
+        gap = max(POLL_SECONDS, _poll_after(answer) or 0.0)
+        left = GIVE_UP_SECONDS - (time.monotonic() - started)
+        time.sleep(max(1.0, min(gap, left + 1.0)))
 
 
-def answer(question_id: str) -> dict:
+def answer(question_id: str, once: bool = False) -> dict:
     """Pick an outstanding question back up. The record is the cursor."""
     rows = load()
     asked = [r for r in rows if r.get("id") == question_id and r.get("type") == "question"]
@@ -495,10 +515,17 @@ def answer(question_id: str) -> dict:
     client = _client()
     token = CURRENT_TIER.set(SafetyTier.SAFE)
     try:
-        return _poll(client, asked[-1])
+        return _poll(client, asked[-1], once=once)
     finally:
         client.http.close()
         CURRENT_TIER.reset(token)
+
+
+def poll_once(question_id: str) -> dict:
+    """One look at a question in flight, for a loop tick: done writes the
+    answer, failed writes the give-up, queued or running leaves it for the
+    next tick."""
+    return answer(question_id, once=True)
 
 
 def _summary() -> list[dict]:
