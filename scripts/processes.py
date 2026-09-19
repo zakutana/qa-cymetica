@@ -360,6 +360,10 @@ def runs_from_transcripts(rows, known: set[str] | None = None) -> dict[str, dict
                 part = None
                 if block.get("name") == "Skill":
                     part = (block.get("input") or {}).get("skill")
+                elif block.get("name") in ("Agent", "Task"):
+                    # An agent is spawned, not invoked or run from a shell;
+                    # without this the deep pass's auditors read 0 runs.
+                    part = (block.get("input") or {}).get("subagent_type") or None
                 else:
                     command = str((block.get("input") or {}).get("command") or "")
                     hit = BASH_SCRIPT.search(command)

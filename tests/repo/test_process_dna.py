@@ -105,6 +105,32 @@ def test_a_run_is_credited_from_what_it_left_behind(tmp_path):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_agent_is_credited_from_its_spawn():
+    """The deep pass of 2026-09-19 spawned check-auditor six times and
+    finding-triage six times, and the patrol printed 0 runs for both: it read
+    Skill calls and Bash commands, and an agent is neither. A part the patrol
+    cannot see run is one the week can never judge worth its cost."""
+    mod = _module()
+    rows = [
+        {"type": "assistant", "timestamp": "2026-09-19T16:10:00Z",
+         "message": {"content": [
+             {"type": "tool_use", "id": "a1", "name": "Agent",
+              "input": {"subagent_type": "check-auditor", "prompt": "..."}},
+             {"type": "tool_use", "id": "a2", "name": "Task",
+              "input": {"subagent_type": "finding-triage", "prompt": "..."}},
+             {"type": "tool_use", "id": "a3", "name": "Agent",
+              "input": {"prompt": "no type named"}}]}},
+        {"type": "user", "timestamp": "2026-09-19T16:20:00Z",
+         "message": {"content": [
+             {"type": "tool_result", "tool_use_id": "a2", "is_error": True}]}},
+    ]
+    seen = mod.runs_from_transcripts(rows)
+    assert seen.get("check-auditor", {}).get("runs") == 1, seen
+    assert seen.get("finding-triage", {}).get("errors") == 1, seen
+    assert None not in seen and "" not in seen, seen
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_extract_is_idempotent_and_outlives_the_transcripts(tmp_path):
     """Transcripts are kept about thirty days; the laboratory runs for months.
     The counts are appended to audits/ so the series survives, and appending
