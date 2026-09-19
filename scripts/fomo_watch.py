@@ -82,14 +82,59 @@ class FeedError(RuntimeError):
     """
 
 
-def _hot_rows(client, chain: str) -> list[dict]:
-    response = client.get(SIGNALS_PATH, params={"chain": chain, "filter": "hot"})
+def _feed(client, chain: str, hot_only: bool = True) -> dict:
+    """One read of their signals feed. `hot_only=False` is everything the
+    round lists -- the pool the control group is drawn from (2026-09-19: 40
+    rows on Solana, 11 of them hot)."""
+    params = {"chain": chain, "filter": "hot"} if hot_only else {"chain": chain}
+    response = client.get(SIGNALS_PATH, params=params)
     if response.status_code != 200:
         raise FeedError(
             f"{SIGNALS_PATH} (chain={chain}) answered HTTP "
             f"{response.status_code}; a failed read is not an empty feed")
     body = response.json() or {}
-    return body.get("rows") or []
+    return body if isinstance(body, dict) else {}
+
+
+def _hot_rows(client, chain: str) -> list[dict]:
+    return _feed(client, chain).get("rows") or []
+
+
+# Their own claim, kept each time it changes: the number our measurement of
+# hot-against-control is held to (qa/fomo.py, the study).
+CALIBRATION_FIELDS = ("target_multiple", "horizon_hours", "base_rate", "brier",
+                      "brier_base", "n_samples", "sufficient", "method")
+
+
+def _claim(calibration) -> dict | None:
+    if not isinstance(calibration, dict):
+        return None
+    claim = {k: calibration.get(k) for k in CALIBRATION_FIELDS
+             if calibration.get(k) is not None}
+    hot = ((calibration.get("type_precision") or {}).get("hot")
+           if isinstance(calibration.get("type_precision"), dict) else None)
+    if isinstance(hot, dict):
+        for ours, theirs in (("hot_precision", "precision"), ("hot_n", "n"),
+                             ("hot_hits", "hits"), ("hot_ci_low", "ci_low"),
+                             ("hot_ci_high", "ci_high")):
+            if hot.get(theirs) is not None:
+                claim[ours] = hot[theirs]
+    return claim or None
+
+
+def _note_claim(rows: list[dict], chain: str, calibration, now) -> bool:
+    claim = _claim(calibration)
+    if claim is None:
+        return False
+    last = None
+    for row in rows:
+        if row.get("type") == "calibration" and row.get("chain") == chain:
+            last = row
+    if last is not None and all(last.get(k) == v for k, v in claim.items()):
+        return False
+    rows.append(_append({"type": "calibration", "at": now.isoformat(),
+                         "chain": chain, **claim}))
+    return True
 
 
 class QuoteError(RuntimeError):
@@ -191,16 +236,22 @@ def capture(client, now=None) -> dict:
     # failed price lookup asserted exactly that number. L01, deep pass of
     # 2026-09-13. A count of signals counts signals.
     errors: list[dict] = []
+    controlled = {r["key"] for r in rows if r.get("type") == "control"
+                  and r.get("key")}
+    control = 0
     for chain in CHAINS:
         try:
-            hot_rows = _hot_rows(client, chain)
+            body = _feed(client, chain)
         except Exception as exc:  # noqa: BLE001 -- one chain failing is not the round
             errors.append({"chain": chain, "error": str(exc)[:200]})
             continue
+        hot_rows = body.get("rows") or []
+        _note_claim(rows, chain, body.get("calibration"), now)
         unidentified += sum(
             1 for row in hot_rows or []
             if isinstance(row, dict) and row.get("hot")
             and not str(row.get("token_address") or "").strip())
+        before = len(added)
         for row in fomo.new_signals(hot_rows, tracked, at=now):
             key = fomo.signal_key(row.get("token_address"), now)
             quote = None
@@ -219,8 +270,38 @@ def capture(client, now=None) -> dict:
             })
             tracked.add(key)
             added.append(signal)
+        # The control group, matched to this chain's round in number and in
+        # time: as many coins the same feed listed and did NOT call hot as it
+        # did call, right now. A round that called nothing draws nothing -- a
+        # control from a quiet hour measures a different market.
+        called = len(added) - before
+        if called:
+            try:
+                listed = _feed(client, chain, hot_only=False).get("rows") or []
+            except Exception as exc:  # noqa: BLE001 -- the study, not the signal
+                errors.append({"chain": chain, "control": True,
+                               "error": str(exc)[:200]})
+                listed = []
+            for row in fomo.pick_control(listed, called, controlled, at=now):
+                key = fomo.control_key(row.get("token_address"), now)
+                quote = None
+                try:
+                    quote = _quote(client, row.get("token_address"))
+                except Exception:  # noqa: BLE001 -- price stays None
+                    pass
+                price = (quote or {}).get("price_usd")
+                price = float(price) if isinstance(price, (int, float)) else None
+                _append({
+                    "type": "control", "at": now.isoformat(), "key": key,
+                    "token_address": row.get("token_address"),
+                    "symbol": row.get("symbol"), "chain": chain,
+                    "conviction": row.get("conviction"), "price_usd": price,
+                    **_depth(quote), **_radar(row),
+                })
+                controlled.add(key)
+                control += 1
     return {"added": len(added), "signals": added, "errors": errors,
-            "unidentified": unidentified}
+            "unidentified": unidentified, "control": control}
 
 
 def resolve(client, now=None) -> dict:
@@ -249,7 +330,40 @@ def resolve(client, now=None) -> dict:
             "horizon": horizon, "price_usd": price, "return_pct": ret,
             **_depth(quote),
         }))
-    return {"checked": len(written), "checkpoints": written}
+
+    # The study (qa/fomo.py): hot signals past their first day, and the
+    # control group at every hour a hot signal is read. Its own row type, so
+    # the memecoin tab above never reads it.
+    studied: dict[str, set[str]] = {}
+    for row in rows:
+        if row.get("type") == "study" and row.get("key"):
+            studied.setdefault(row["key"], set()).add(row.get("horizon", "?"))
+    controls = [r for r in rows if r.get("type") == "control" and r.get("key")]
+    study = [(pair, "hot") for pair in fomo.due_checkpoints(
+                 signals, studied, now=now,
+                 horizons=fomo.STUDY_HORIZONS_HOURS)]
+    study += [(pair, "control") for pair in fomo.due_checkpoints(
+                  controls, studied, now=now,
+                  horizons=fomo.CONTROL_HORIZONS_HOURS)]
+    readings = []
+    for (signal, horizon), group in study:
+        try:
+            quote = _quote(client, signal.get("token_address"))
+        except Exception as exc:  # noqa: BLE001
+            readings.append({"key": signal["key"], "horizon": horizon,
+                             "error": str(exc)[:200]})
+            continue
+        price = (quote or {}).get("price_usd")
+        price = float(price) if isinstance(price, (int, float)) else None
+        readings.append(_append({
+            "type": "study", "group": group, "at": now.isoformat(),
+            "key": signal["key"], "horizon": horizon, "price_usd": price,
+            "return_pct": fomo.return_since_signal(signal.get("price_usd"),
+                                                   price),
+            **_depth(quote),
+        }))
+    return {"checked": len(written), "checkpoints": written,
+            "studied": len(readings)}
 
 
 def depth(client, now=None, only_missing: bool = True) -> dict:
@@ -361,14 +475,64 @@ def _run(cmd) -> int:
     return 0
 
 
+# The three questions the study asks, slowest first: their own label (3x in
+# 72 h), and two that answer sooner while the 72-hour windows fill.
+READOUTS = ((3.0, 72.0), (2.0, 24.0), (1.5, 6.0))
+
+
+def reading(rows: list[dict] | None = None, now=None) -> dict:
+    """Hot against control at each readout, and their newest claim per chain.
+    Reads the diary only -- no call."""
+    rows = load() if rows is None else rows
+    claims: dict[str, dict] = {}
+    for row in rows:
+        if row.get("type") == "calibration" and row.get("chain"):
+            claims[row["chain"]] = row
+    return {"readouts": [fomo.compare(rows, multiple=m, within_hours=h, now=now)
+                         for m, h in READOUTS],
+            "claims": claims}
+
+
+def _pct(value) -> str:
+    return "-" if value is None else f"{value * 100:.1f}%"
+
+
+def say_reading(said: dict) -> list[str]:
+    lines = []
+    for out in said["readouts"]:
+        hot, control = out["hot"], out["control"]
+        ci = hot.get("ci")
+        lift = out.get("lift")
+        lines.append(
+            f"{out['multiple']:g}x inside {out['within_hours']:g} h: hot "
+            f"{hot['hits']}/{hot['n']} ({_pct(hot['rate'])}"
+            + (f", 95% {_pct(ci[0])}-{_pct(ci[1])}" if ci else "")
+            + f"), control {control['hits']}/{control['n']} "
+              f"({_pct(control['rate'])}), lift "
+            + (f"{lift:.1f}x" if lift is not None else "-"))
+    for chain, claim in sorted(said["claims"].items()):
+        lines.append(
+            f"their claim ({chain}, {str(claim.get('at'))[:10]}): hot "
+            f"{_pct(claim.get('hot_precision'))} of {claim.get('hot_n')} "
+            f"reached {claim.get('target_multiple')}x inside "
+            f"{claim.get('horizon_hours')} h, base rate "
+            f"{_pct(claim.get('base_rate'))}")
+    return lines
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = parser.add_subparsers(dest="cmd", required=True)
     sub.add_parser("capture", help="poll hot signals, track the new ones")
     sub.add_parser("resolve", help="checkpoint whatever crossed a horizon")
     sub.add_parser("depth", help="what each tracked token can be traded in")
+    sub.add_parser("report", help="hot against control: does hot predict a pump")
 
     args = parser.parse_args(argv)
+    if args.cmd == "report":
+        for line in say_reading(reading()):
+            print(line)
+        return 0
     return _run({"capture": capture, "resolve": resolve,
                  "depth": depth}[args.cmd])
 

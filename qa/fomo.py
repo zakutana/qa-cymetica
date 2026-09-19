@@ -574,3 +574,143 @@ def curves(rows: list[dict], limit: int | None = 40,
     out.sort(key=lambda c: (c["peak"] if c["peak"] is not None else -1e9),
              reverse=True)
     return out if limit is None else out[:limit]
+
+
+# --- the study: does `hot` predict a pump, against a control ---------------
+#
+# [operator 2026-09-19] asked the laboratory whether the radar can predict the
+# memecoins that pump. A hit rate over the coins it called hot cannot answer
+# that alone; their own feed's `calibration` block answers it with a number
+# we can test -- `hot` reached 3x inside 72 h for 9.5% of 169, base rate 3.4%
+# (read 2026-09-19). So the diary gains three row types, none of which any
+# reader above looks at, so the memecoin tab is untouched:
+#
+#     control   a coin the same feed listed in the same round and did NOT
+#               call hot, as many as it did call, keyed `control:<token>:<hour>`
+#     study     a reading at a horizon, `group` hot or control: hot signals
+#               from 30 h to 72 h (their hourly checkpoints stop at 24), and
+#               controls at every horizon a hot signal is read at
+#     calibration   their own claim, each time it changes
+#
+# Hourly sampling misses an intra-hour peak that their OHLCV labels catch, so
+# our absolute rates run low against theirs. Both groups are sampled the same
+# way, which is what makes the comparison between them fair.
+
+STUDY_HORIZONS_HOURS = tuple(float(h) for h in range(30, 73, 6))
+CONTROL_HORIZONS_HOURS = HORIZONS_HOURS + STUDY_HORIZONS_HOURS
+CONTROL_PREFIX = "control:"
+
+
+def control_key(token_address: str, at) -> str | None:
+    key = signal_key(token_address, at)
+    return f"{CONTROL_PREFIX}{key}" if key else None
+
+
+def pick_control(listed: list[dict], how_many: int, tracked_keys,
+                 at=None) -> list[dict]:
+    """The coins a round listed and did not call hot, `how_many` of them.
+
+    Chosen by the hash of the address, not by where they sit in the list:
+    their order is theirs (by activity, by age -- whatever they sort by), and
+    the first N of a sorted list is a sample of whatever the sort favours.
+    A hash has no opinion, and the same round always picks the same coins.
+    """
+    import hashlib
+
+    tracked = set(tracked_keys or ())
+    pool = []
+    for row in listed or []:
+        if not isinstance(row, dict) or row.get("hot"):
+            continue
+        key = control_key(row.get("token_address"), at)
+        if key is None or key in tracked:
+            continue
+        digest = hashlib.sha256(
+            str(row["token_address"]).lower().encode("utf-8")).hexdigest()
+        pool.append((digest, key, row))
+    pool.sort(key=lambda item: item[0])
+    out, seen = [], set()
+    for _, key, row in pool:
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(row)
+        if len(out) >= max(int(how_many), 0):
+            break
+    return out
+
+
+def _wilson(hits: int, n: int, z: float = 1.96) -> tuple[float, float] | None:
+    """95% interval on a rate. Two coins are not a measurement, and the
+    interval is what says so."""
+    if n <= 0:
+        return None
+    p = hits / n
+    centre = (p + z * z / (2 * n)) / (1 + z * z / n)
+    half = (z * ((p * (1 - p) + z * z / (4 * n)) / n) ** 0.5) / (1 + z * z / n)
+    return max(0.0, centre - half), min(1.0, centre + half)
+
+
+def compare(rows: list[dict], multiple: float = 3.0, within_hours: float = 72.0,
+            now=None, min_liquidity: float = MIN_LIQUIDITY_USD,
+            min_volume: float = MIN_VOLUME_H24) -> dict:
+    """Hot against control: how many reached `multiple` x their entry inside
+    `within_hours`, judged on the PEAK -- their label is "reached 3x inside
+    72 h", so a coin that tripled at hour twenty and died by seventy-two did
+    pump.
+
+    Only windows that have fully passed: a hit can be seen early and a miss
+    cannot, so counting open windows counts the early hits alone. Only coins
+    somebody could have bought, judged on the depth read when the signal
+    fired. A signal nothing was read for is unread, not a miss.
+    """
+    moment = now or datetime.now(timezone.utc)
+    entries = {"hot": {}, "control": {}}
+    for row in rows or []:
+        kind, key = row.get("type"), row.get("key")
+        if key and kind == "signal":
+            entries["hot"][key] = row
+        elif key and kind == "control":
+            entries["control"][key] = row
+
+    peaks: dict[str, float] = {}
+    for row in in_time(rows):
+        kind, key = row.get("type"), row.get("key")
+        if kind == "checkpoint" or kind == "study":
+            hours = _hours(row.get("horizon"))
+            price = row.get("price_usd")
+            if (hours is None or hours > within_hours
+                    or not isinstance(price, (int, float))):
+                continue
+            if kind == "study" and row.get("group") not in ("hot", "control"):
+                continue
+            peaks[key] = max(peaks.get(key, price), price)
+
+    out = {"multiple": multiple, "within_hours": within_hours}
+    for group, signals in entries.items():
+        n = hits = 0
+        excluded = {"untradeable": 0, "window_open": 0, "unpriced": 0,
+                    "unread": 0}
+        for key, signal in signals.items():
+            fired = _at(signal.get("at"))
+            if fired is None or fired + timedelta(hours=within_hours) > moment:
+                excluded["window_open"] += 1
+                continue
+            if tradeable(signal, min_liquidity, min_volume) is not True:
+                excluded["untradeable"] += 1
+                continue
+            entry = signal.get("price_usd")
+            if not isinstance(entry, (int, float)) or entry <= 0:
+                excluded["unpriced"] += 1
+                continue
+            if key not in peaks:
+                excluded["unread"] += 1
+                continue
+            n += 1
+            hits += 1 if peaks[key] / entry >= multiple else 0
+        out[group] = {"n": n, "hits": hits,
+                      "rate": hits / n if n else None,
+                      "ci": _wilson(hits, n), "excluded": excluded}
+    hot, control = out["hot"]["rate"], out["control"]["rate"]
+    out["lift"] = (hot / control) if hot is not None and control else None
+    return out

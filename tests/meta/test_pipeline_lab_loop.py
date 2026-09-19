@@ -235,7 +235,8 @@ def _doors(**over):
     """Every door a tick reaches, stubbed and counted. Nothing here touches
     their API; the real doors are named in `_tick_doors` and checked apart."""
     calls = {k: [] for k in ("fomo", "sample", "cycle", "promote", "truth",
-                             "search", "verdicts", "refill", "moves")}
+                             "search", "verdicts", "refill", "moves",
+                             "fomo_reading")}
 
     def door(name, value):
         return lambda *a: calls[name].append(a) or value
@@ -253,6 +254,7 @@ def _doors(**over):
                                 for n in range(150)]),
         "refill": door("refill", [{"legs": [], "period": 90, "why": f"r{n}"}
                                   for n in range(10)]),
+        "fomo_reading": door("fomo_reading", {"readouts": [], "claims": {}}),
     }
 
     def search(bite):
@@ -309,6 +311,14 @@ def test_a_tick_keeps_the_nights_clocks(tmp_path, monkeypatch):
     assert len(calls["truth"]) == 1
     assert len(calls["fomo"]) == 4, "a memecoin checkpoint is perishable"
     assert len(calls["verdicts"]) == 4
+
+    # Hot against control is written into the diary every six hours: often
+    # enough to watch it move, rarely enough that the diary stays readable.
+    assert len(calls["fomo_reading"]) == 1
+    _tick(scripts_lab, NOW + timedelta(hours=6, minutes=10), doors)
+    assert len(calls["fomo_reading"]) == 2
+    kept = [r for r in lab.load() if r.get("type") == "fomo_reading"]
+    assert len(kept) == 2 and "readouts" in kept[0]
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

@@ -1683,6 +1683,8 @@ TICK = {
     # about a market that has moved on, and the six-day-old ones in the diary
     # would otherwise all be launched by the first tick.
     "answers_hours": 24,
+    # Hot against control (fomo_watch.py report), into the diary this often.
+    "fomo_reading_hours": 6,
 }
 TICK_STATE = "lab_tick.json"
 
@@ -1831,6 +1833,7 @@ def _tick_doors() -> dict:
         "moves": night_moves,
         "refill": night_refill,
         "verdicts": verdicts,
+        "fomo_reading": lambda: _sibling("fomo_watch").reading(),
     }
 
 
@@ -1937,6 +1940,14 @@ def tick(*, now: datetime | None = None, actions: dict | None = None,
     said["verdicts"] = len(attempt("verdicts", doors["verdicts"]) or [])
     said["resolved"] = len(attempt("resolved", _record_resolved) or [])
 
+    last_reading = lab._at(state.get("last_fomo_reading"))
+    if last_reading is None or (moment - last_reading).total_seconds() >= \
+            TICK["fomo_reading_hours"] * 3600:
+        reading = attempt("fomo_reading", doors["fomo_reading"])
+        if reading is not None:
+            lab.note_fomo_reading(reading)
+            state["last_fomo_reading"] = moment.isoformat()
+
     may, why = lab.may_ask(int(doors["asked_today"]() or 0), False)
     if may:
         may, why = lab.may_ask_now(_nexus_rows(), moment)
@@ -2033,6 +2044,15 @@ def brief() -> str:
                    f"d  {legs[:60]}")
     if not best:
         out.append("  nothing in the register yet")
+
+    reading = lab.last_fomo_reading()
+    if reading:
+        out.append("")
+        out.append(f"memecoins -- does their `hot` predict a pump? "
+                   f"({str(reading.get('at'))[:16]}, hot against a control "
+                   f"from the same feed):")
+        for line in _sibling("fomo_watch").say_reading(reading):
+            out.append(f"  {line}")
     return "\n".join(out)
 
 

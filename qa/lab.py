@@ -38,7 +38,7 @@ from qa.state import file_lock, state_dir
 
 NOTEBOOK = "lab.jsonl"
 KINDS = ("session", "truth", "surface", "cycle", "n_eff", "tournament",
-         "gate", "tick", "entry", "resolved")
+         "gate", "tick", "entry", "resolved", "fomo_reading")
 MAX_LESSONS = 3
 MAX_NEXT = 8
 ID = re.compile(r"^LAB-(\d{4})$")
@@ -172,6 +172,19 @@ def note_tick(said: dict) -> dict:
     """What one loop tick did, in counts -- the half of the diary no judgement
     is needed for, so the next tick can read where this one stopped."""
     return _append({"type": "tick", "at": _now(), **said})
+
+
+def note_fomo_reading(said: dict) -> dict:
+    """Hot against control, as `fomo_watch.py report` computed it -- written
+    every few hours, so whether the radar predicts a pump can be watched
+    moving rather than recomputed from a diary nobody keeps."""
+    return _append({"type": "fomo_reading", "at": _now(), **said})
+
+
+def last_fomo_reading(rows: list[dict] | None = None) -> dict | None:
+    rows = load() if rows is None else rows
+    seen = [r for r in rows if r.get("type") == "fomo_reading"]
+    return seen[-1] if seen else None
 
 
 def last_tick(rows: list[dict] | None = None) -> dict | None:
