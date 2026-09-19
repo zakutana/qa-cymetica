@@ -1796,3 +1796,10 @@ def test_status_shows_the_cached_n_eff_and_a_resolve_nobody_caught(
     assert "N_eff 1.4 of 4" in out, out
     assert "0.72" in out, out
     assert "RESOLVED WITHOUT US: p1 (c1), 7.5 USDC" in out, out
+
+    # Written down once (a tick does it), it stops being news: the same line
+    # on every status for ever was the defect the writer closed, 2026-09-19.
+    lab.note_resolved(lab.resolved_without_us(paper, samples))
+    out = scripts_lab.status()
+    assert "RESOLVED WITHOUT US" not in out, out
+    assert "written down: 1" in out, out

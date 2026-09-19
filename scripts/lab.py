@@ -764,10 +764,20 @@ def status() -> str:
     from qa.rooms import load_samples
 
     resolved = lab.resolved_without_us(_sibling("paper").load(), load_samples())
+    # Once a tick has written one down it is in the board's money, and
+    # printing it on every status forever was the defect the writer closed.
+    recorded = {str(r.get("position_id")) for r in rows
+                if r.get("type") == "resolved"}
     for row in resolved:
+        if str(row["position_id"]) in recorded:
+            continue
         out.append(f"RESOLVED WITHOUT US: {row['position_id']} "
                    f"({row['card_id']}), {row['realized_pnl_usdc']} USDC, "
                    f"{str(row['resolved_at'])[:16].replace('T', ' ')}")
+    written = sum(1 for row in resolved if str(row["position_id"]) in recorded)
+    if written:
+        out.append(f"resolved without us and written down: {written} "
+                   f"(`lab.py board` counts them)")
     return "\n".join(out)
 
 
