@@ -1,6 +1,6 @@
 {
-  "fetched_at": "2026-09-13T18:48:38+00:00",
-  "total": 68,
+  "fetched_at": "2026-09-19T17:35:11+00:00",
+  "total": 69,
   "statuses": {
     "paid": 19,
     "fixed": 1
@@ -25,8 +25,8 @@
   "our_reports": {
     "endpoint": "GET /api/v1/bounty/my-reports?wallet_address=<addr>",
     "klass": "ok",
-    "read_at": "2026-09-19T12:35:35+00:00",
-    "evidence_id": "1121f80ab98a462924f3a274f19eb29a82ee5c82577543f483c15e7ee2d815e9",
+    "read_at": "2026-09-19T17:35:00+00:00",
+    "evidence_id": "ee2a159d66dc29b06bf69fffea7a8ae670c38f96231ad1777ce06468ae2104e8",
     "rows_returned": 59,
     "server_total": 59,
     "total": 59,
@@ -1103,11 +1103,11 @@
   },
   "qa_tracker": {
     "source": "https://cymetica.com/leaderboard/bugs (embedded allBugs)",
-    "total": 142,
+    "total": 143,
     "statuses": {
       "qa_testing": 2,
       "implementing": 2,
-      "completed": 88,
+      "completed": 89,
       "resolved": 24,
       "rejected": 2,
       "pending": 12,
@@ -1115,11 +1115,11 @@
     },
     "source_channels": {
       "web": 74,
-      "bounty": 68
+      "bounty": 69
     },
     "usernames": {
       "Maxorelaxo": 2,
-      "expire76": 88,
+      "expire76": 89,
       "Crypto42day": 2,
       "tonybugs0439": 5,
       "joebloggs": 12,
@@ -1216,6 +1216,7 @@
       "cloned bot profile does not display trading activity correctly",
       "неправильный баланс токенов в портфеле пользователя max",
       "swap pages fail to display user token balances",
+      "the tradeability floor on `hot` is live on robinhood chain and is not applied on solana, where hot rows are still served on pools far below it",
       "a movers round stays open days after its anchor and still prices entries at the anchor close, so a late pick is scored on a return it can already see",
       "the movers tournament leaderboard ranks the nexus screen #1 against live entrants using its backtested record, and the payload does not say so",
       "backtest_event_card_idea reports period_days 365 for a window that covered 120 points, so two different windows come back identical and labelled differently",
@@ -1283,13 +1284,13 @@
       "critical: my positions p&l shows -$3.15 for a $0.10 position",
       "shares preview rounds to 1 decimal place instead of 2"
     ],
-    "has_linear_links": 33
+    "has_linear_links": 34
   },
   "a2a_inbox": {
     "klass": "ok",
     "rows_returned": 50,
     "new": [],
-    "at": "2026-09-13T18:48:38+00:00"
+    "at": "2026-09-19T17:35:10+00:00"
   },
   "closed": 1,
   "closed_without_recorded_evidence": 0,
@@ -1302,6 +1303,24 @@
     "status_notes"
   ],
   "reports": [
+    {
+      "id": 102,
+      "title": "The tradeability floor on `hot` is live on Robinhood Chain and is not applied on Solana, where hot rows are still served on pools far below it",
+      "status": "paid",
+      "hunter_name": "expire76",
+      "severity_reported": "high",
+      "severity_confirmed": "high",
+      "created_at": "2026-09-14T09:30:31.442520",
+      "fixed_at": "2026-09-14T10:01:25.251851",
+      "validated_at": "2026-09-14T10:01:25.251851",
+      "triaged_at": "2026-09-14T10:01:25.251851",
+      "status_notes": "[2026-09-14T10:01:25+00:00] Resolved via ticket ET-25200: Confirmed and FIXED live @bf6d0fbb3a. The hot tradeability floor was chain-4663-only; Solana _sol_row set hot on raw buy pressure with no max_buy field, so sub-$500 pools served hot (your repro exact: thinnest a $344 pool). Solana rows now carry max_buy_5pct_usd, thin and hot_pressure, and hot is gated on max_buy>=$500, fail-closed to not-hot when reserve_in_usd is unread. Verified live: 13 hot Solana rows, 0 under the floor (lowest hot = $855). ONE UNIT DIFFERENCE to reconcile on your re-measur\n[reporter-verification PASS 2026-09-14 10:16 UTC by expire76 test_run=run-20260914T101103Z-eaecb3f6]",
+      "ticket_url": "https://cymetica.com/admin/centcom/issues/25200",
+      "fix_pr_url": null,
+      "reward_amount": 1000.0,
+      "paid_at": "2026-09-14T10:39:24.124396",
+      "is_duplicate": false
+    },
     {
       "id": 101,
       "title": "A Movers round stays open days after its anchor and still prices entries at the anchor close, so a late pick is scored on a return it can already see",
@@ -1643,24 +1662,6 @@
       "reward_amount": 1000.0,
       "paid_at": "2026-09-08T14:50:20.383823",
       "is_duplicate": false
-    },
-    {
-      "id": 81,
-      "title": "GET /api/v1/trades answers 200 with zero trades on an account your own endpoints credit with 142 predictions and $3,582 of volume",
-      "status": "paid",
-      "hunter_name": "expire76",
-      "severity_reported": "high",
-      "severity_confirmed": "high",
-      "created_at": "2026-09-08T11:26:06.151332",
-      "fixed_at": "2026-09-08T12:25:24.131416",
-      "validated_at": "2026-09-08T12:25:24.131416",
-      "triaged_at": "2026-09-08T12:25:24.131416",
-      "status_notes": "[2026-09-08T12:25:24+00:00] Resolved via ticket ET-22657: Confirmed and fixed @b168180d9 (live). GET /api/v1/trades is scoped to the caller's own user AND one product (filled orders placed via POST /api/v1/orders), so an empty 200 read as 'never traded'. Every response now carries a scope block (identity, covers, does_not_cover, see_also: event-cards/positions, portfolio/positions + summary, CLOB tape) and llms.txt states the coverage next to the link. Auth is unchanged (401 without a valid key).\n[reporter-verification PASS 2026-09-08 13:25 UTC by expire76 test_run=run-20260908T132240Z-a0ff5fe]\n[reporter-verification PASS 2026-09-08 15:16 UTC by expire76 test_run=run-20260908T150954Z-95f0a70]",
-      "ticket_url": "https://cymetica.com/admin/centcom/issues/22657",
-      "fix_pr_url": null,
-      "reward_amount": 1000.0,
-      "paid_at": "2026-09-08T13:05:54.587395",
-      "is_duplicate": false
     }
   ],
   "leaderboard": [
@@ -1670,11 +1671,11 @@
       "avatar_url": null,
       "tier": "senior",
       "total_score": 460,
-      "valid_reports": 56,
+      "valid_reports": 57,
       "total_likes": 0,
-      "total_earned": 52000.0,
-      "total_awarded": 52000.0,
-      "total_paid": 52000.0,
+      "total_earned": 53000.0,
+      "total_awarded": 53000.0,
+      "total_paid": 53000.0,
       "reward_currency": "ET10"
     },
     {
@@ -1716,6 +1717,5 @@
       "total_paid": 0.0,
       "reward_currency": "ET10"
     }
-  ],
-  "our_reports_refreshed_at": "2026-09-19T12:35:35+00:00"
+  ]
 }
