@@ -240,6 +240,12 @@ today, anything no check covers yet. SAFE reads unless the operator says
 otherwise in that turn. A bug found there gets a check and a report, filed,
 exactly as anywhere else, and the tick's two lines say what was looked at.
 
+A standing wait -- a vendor ticket until its spec or stage moves, an answer
+still owed -- is re-read by the tick as well, with a NEXT.md line so it
+survives a `/clear`. Not a Monitor, not a new timer: the tick is already
+running because they started it. (Praised the evening this was first done,
+over the Build it Better ticket ET-26036.)
+
 ## The night
 
 `python scripts/lab.py night --until 07:00` still exists: one process on their
