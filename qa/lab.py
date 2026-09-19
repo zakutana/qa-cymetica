@@ -37,17 +37,27 @@ from pathlib import Path
 from qa.state import file_lock, state_dir
 
 NOTEBOOK = "lab.jsonl"
-KINDS = ("session", "truth", "surface", "cycle", "n_eff", "tournament")
+KINDS = ("session", "truth", "surface", "cycle", "n_eff", "tournament",
+         "gate", "tick")
 MAX_LESSONS = 3
 MAX_NEXT = 8
 ID = re.compile(r"^LAB-(\d{4})$")
 
-# What one session may spend. Nexus's own guide is explicit that an open-ended
-# night "drifts, burns calls, and gives you no way to judge what it found".
+# What the laboratory may spend, per ROLLING DAY. Nexus's own guide is explicit
+# that an open-ended night "drifts, burns calls, and gives you no way to judge
+# what it found" -- so there is a ceiling, and a pace under it (NIGHT below).
+#
+# Per session until 2026-09-19: eight questions and three rooms a session,
+# twelve questions a night. Then the operator made the laboratory a /loop that
+# ticks every twenty minutes all day, and a per-session count either stopped
+# it before lunch or reset whenever a session opened -- five rooms in six days
+# against their fifty. The two numbers below are ours, not theirs: fifty
+# running over a five-day window is ten new rooms a day, and a question an
+# hour on average keeps a question in flight for most of the day without
+# spending one on every tick.
 CAPS = {
-    "questions_per_session": 8,
-    "questions_per_night": 12,
-    "new_rooms_per_session": 3,
+    "questions_per_day": 24,
+    "new_rooms_per_day": 10,
     # [operator 2026-09-12] *"musime testvoat aspon 50 strategii najednou"*.
     # Raised from 6 at 15% on 2026-09-12, and their reason is right for a
     # reason they did not give: a verdict takes a five-to-seven-day window, so
@@ -235,27 +245,83 @@ def last_n_eff(rows: list[dict] | None = None) -> dict | None:
     return seen[-1] if seen else None
 
 
-def may_ask(asked: int, pass_running: bool, mode: str = "session") -> tuple[bool, str]:
-    """Whether another question may go to Nexus now.
+DAY_HOURS = 24
+
+
+def asked_within(nexus_rows: list[dict], now: datetime | None = None,
+                 hours: float = DAY_HOURS) -> int:
+    """Questions put to Nexus in the last `hours`, whoever asked them.
+
+    Counted off the diary rather than off a session, because a session is
+    whatever was opened last: `_asked_this_session` read a question at nine
+    and a session opened at ten as nothing asked.
+    """
+    moment = now or datetime.now(timezone.utc)
+    since = moment - timedelta(hours=hours)
+    return sum(1 for row in nexus_rows
+               if row.get("type") == "question"
+               and (_at(row.get("at")) or since) > since)
+
+
+def rooms_within(room_rows: list[dict], now: datetime | None = None,
+                 hours: float = DAY_HOURS) -> int:
+    """Strategy rooms opened in the last `hours` -- the day's room count."""
+    moment = now or datetime.now(timezone.utc)
+    since = moment - timedelta(hours=hours)
+    return sum(1 for row in room_rows
+               if row.get("type") == "strategy"
+               and (_at(row.get("at")) or since) > since)
+
+
+def may_ask(asked: int, pass_running: bool) -> tuple[bool, str]:
+    """Whether another question may go to Nexus now, given how many went in
+    the last twenty-four hours.
 
     Not while a deep pass is running. That pass verifies #85 (the newest answer
     that names a tool), #86 (the last five questions) and #87 (the newest
     trade) -- so a question asked mid-run changes the subject the pass is
     measuring, and the verdict it sends the vendor is then about something
     else. Ours to wait; theirs to receive one true answer.
-
-    A night gets the larger cap because it is hours long and paced two hours
-    apart; a session gets eight because a person is waiting through them.
     """
     if pass_running:
         return False, ("a deep pass is running: it is verifying #85, #86 and "
                        "#87 over these very answers. Ask after it finishes")
-    cap = CAPS["questions_per_night" if mode == "night"
-               else "questions_per_session"]
+    cap = CAPS["questions_per_day"]
     if asked >= cap:
-        return False, (f"{asked} questions already this session, and the cap is "
+        return False, (f"{asked} questions in the last 24 h, and the cap is "
                        f"{cap}: an open-ended loop drifts and burns calls, "
                        f"which is Cymetica's own warning about the night")
+    return True, ""
+
+
+def may_ask_now(nexus_rows: list[dict], now: datetime | None = None
+                ) -> tuple[bool, str]:
+    """The pace under the cap, for a question asked by hand or by a loop tick.
+
+    The night held these three in its own loop state; a tick is a fresh
+    process every twenty minutes, so they are read off the diary instead:
+
+      * one question in flight at a time -- a second one splits the pick-up
+        and Nexus answers the older context;
+      * twenty minutes since the last one, the night's own floor;
+      * the wait their own failure asked for (`backoff_until`).
+    """
+    moment = now or datetime.now(timezone.utc)
+    waiting = outstanding(nexus_rows, moment)
+    if waiting:
+        return False, (f"{waiting[-1]} is still being answered; the next tick "
+                       f"picks it up first")
+    stamps = [_at(r.get("at")) for r in nexus_rows if r.get("type") == "question"]
+    last = max((s for s in stamps if s is not None), default=None)
+    floor = NIGHT["ask_seconds"]
+    if last is not None and (moment - last).total_seconds() < floor:
+        minutes = int((moment - last).total_seconds() // 60)
+        return False, (f"the last question went {minutes} min ago and the "
+                       f"floor is {floor // 60}")
+    hold = backoff_until(nexus_rows, moment)
+    if hold is not None:
+        return False, (f"their side failed and asked for a wait until "
+                       f"{hold.isoformat(timespec='minutes')}")
     return True, ""
 
 
@@ -467,7 +533,7 @@ def night_tick(state: dict, now: datetime) -> dict:
         skipped = "too soon"
     elif hold is not None and now < hold:
         skipped = "backoff"
-    elif state.get("asked", 0) >= CAPS["questions_per_night"]:
+    elif state.get("asked", 0) >= CAPS["questions_per_day"]:
         skipped = "cap"
     elif not state.get("candidates"):
         skipped = "nothing to ask about"
@@ -762,6 +828,61 @@ def proposed_cards(text: str, known) -> dict[str, list[str]]:
     have = {str(k).lower() for k in (known or ())}
     return {"actionable": [c for c in seen if c in have],
             "unknown": [c for c in seen if c not in have]}
+
+
+# What "promising" means before a room opens. [operator 2026-09-19] asked for
+# the promising ones as rooms, after a proper backtest; the bar itself is ours.
+# Their own backtest of the card's basket, AFTER FEES, over the longest window
+# it priced whole: positive, and at a Sharpe of at least half. Deliberately a
+# low bar -- the room's own window is the real test, and this only keeps out
+# what already lost money on their own numbers.
+GATE = {"periods": (30, 90), "min_sharpe": 0.5, "min_return_pct": 0.0}
+
+
+def gate(readings: list[dict]) -> dict:
+    """Pass, reject, or unbacktestable -- from register rows (p, r, s, d, lost).
+
+    The LONGEST window decides, because a good month inside a bad quarter is
+    the quarter's result. A reading that lost a leg priced some other basket
+    (`qa.backtests.record`) and is not read at all. Nothing priced whole is
+    "unbacktestable" -- the absence of a test, not a failed one.
+    """
+    whole = [row for row in readings or []
+             if isinstance(row, dict) and not row.get("lost")
+             and isinstance(row.get("r"), (int, float))
+             and isinstance(row.get("s"), (int, float))]
+    if not whole:
+        return {"verdict": "unbacktestable",
+                "why": "their backtest priced no window of this basket whole"}
+    longest = max(whole, key=lambda row: float(row.get("p") or 0))
+    period, ret, sharpe = int(longest.get("p") or 0), longest["r"], longest["s"]
+    said = {"period": period, "return_pct": ret, "sharpe": sharpe,
+            "drawdown_pct": longest.get("d")}
+    if ret <= GATE["min_return_pct"]:
+        return {"verdict": "reject", **said,
+                "why": f"{ret:+.1f}% over {period} days after fees"}
+    if sharpe < GATE["min_sharpe"]:
+        return {"verdict": "reject", **said,
+                "why": (f"Sharpe {sharpe:.2f} over {period} days, under "
+                        f"{GATE['min_sharpe']}")}
+    return {"verdict": "pass", **said,
+            "why": f"{ret:+.1f}% at Sharpe {sharpe:.2f} over {period} days "
+                   f"after fees"}
+
+
+def note_gate(origin: str, card: str, said: dict) -> dict:
+    """What the launch path decided about one card of one answer -- written
+    ONCE, so the next tick reads the decision instead of re-making it, and so
+    the next question can tell Nexus how his idea measured."""
+    return _append({"type": "gate", "at": _now(), "origin": origin,
+                    "card": card, **said})
+
+
+def gates(rows: list[dict] | None = None) -> dict[tuple[str, str], dict]:
+    """(origin, card) -> the decision, newest wins."""
+    rows = load() if rows is None else rows
+    return {(str(r.get("origin")), str(r.get("card"))): r
+            for r in rows if r.get("type") == "gate"}
 
 
 def resolved_without_us(paper_rows: list[dict],

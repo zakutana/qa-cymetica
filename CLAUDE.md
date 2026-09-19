@@ -449,10 +449,9 @@ tests/repo/       repository consistency. Deliberately NOT in tests/meta:
 qa/lab.py         the laboratory's notebook and its brakes, in code rather
                   than in prose: sessions, ranked snapshots, the catalogue it
                   compares against the baseline, and the caps -- paper only,
-                  8 questions and 3 rooms a session (12 in a night), 50
-                  experiments, 2% of what is free each and 60% of the BOOK out
-                  at once -- fifty at 2% is the whole book, so the total is
-                  what holds -- and nothing at all while a deep pass runs.
+                  24 questions and 10 rooms a rolling day, 50 experiments at
+                  1.2% of the book each under a 60% ceiling, a backtest before
+                  a room, and nothing at all while a deep pass runs.
 qa/backtests.py   the register of what has already been measured: a basket's
                   fingerprint (sorted legs, window, fees) against what it
                   returned, so no night pays for the same backtest twice.

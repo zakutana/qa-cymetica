@@ -263,9 +263,9 @@ def test_nothing_is_asked_while_a_deep_pass_is_running():
     may, why = lab.may_ask(asked=0, pass_running=True)
     assert not may and "deep pass" in why.lower(), why
 
-    may, why = lab.may_ask(asked=lab.CAPS["questions_per_session"],
+    may, why = lab.may_ask(asked=lab.CAPS["questions_per_day"],
                            pass_running=False)
-    assert not may and "8" in why, why
+    assert not may and str(lab.CAPS["questions_per_day"]) in why, why
 
     may, _ = lab.may_ask(asked=1, pass_running=False)
     assert may
@@ -975,22 +975,20 @@ class _Clock:
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_a_night_may_ask_more_than_a_session_and_still_stops():
-    """Two caps, because the night is longer and cheaper per question. Until
-    the night existed `may_ask` read the session's cap whatever it was asked
-    about, so a twelve-question night would have stopped at eight and nobody
-    would have seen why."""
-    may, why = lab.may_ask(asked=9, pass_running=False, mode="night")
+def test_the_night_and_the_loop_share_one_cap_per_day():
+    """There were two caps until 2026-09-19 -- eight a session, twelve a
+    night -- because a night was long and a session had a person waiting
+    through it. A loop that ticks all day is neither, and the arithmetic of a
+    rolling day covers both: whatever asked a question in the last 24 hours,
+    it counts."""
+    cap = lab.CAPS["questions_per_day"]
+    may, why = lab.may_ask(asked=cap - 1, pass_running=False)
     assert may, why
 
-    may, why = lab.may_ask(asked=lab.CAPS["questions_per_night"],
-                           pass_running=False, mode="night")
-    assert not may and "12" in why, why
+    may, why = lab.may_ask(asked=cap, pass_running=False)
+    assert not may and str(cap) in why, why
 
-    may, why = lab.may_ask(asked=9, pass_running=False)
-    assert not may and "8" in why, "a session is still eight"
-
-    may, why = lab.may_ask(asked=0, pass_running=True, mode="night")
+    may, why = lab.may_ask(asked=0, pass_running=True)
     assert not may and "deep pass" in why.lower(), why
 
 
@@ -1045,7 +1043,7 @@ def test_a_tick_while_a_deep_pass_runs_does_nothing_at_all():
     assert plan["do"] == ["ask"]
 
     plan = lab.night_tick({**fresh, "last_ask": now - timedelta(hours=3),
-                           "asked": lab.CAPS["questions_per_night"]}, now)
+                           "asked": lab.CAPS["questions_per_day"]}, now)
     assert plan["do"] == [] and plan["skipped"] == "cap"
 
     plan = lab.night_tick({**fresh, "last_ask": now - timedelta(hours=3),
@@ -1121,21 +1119,28 @@ def test_a_night_ends_at_its_deadline_paced_and_counted(tmp_path, monkeypatch):
         asked.append((clock(), concept, question))
         return {"id": f"NEX-{len(asked)}", "status": "queued"}
 
+    # The cap is per rolling day since 2026-09-19, and a day's questions asked
+    # BEFORE the night count against it -- so the day arrives with all but
+    # eight spent, and eight is what the night may still ask. Without the
+    # preload a 7.5-hour night at the 20-minute floor asks 23 against 24 and
+    # the cap is never what stops it.
+    already = lab.CAPS["questions_per_day"] - 8
     did = scripts_lab.night(
         "07:00", clock=clock, sleep=clock.sleep,
         actions={"pass": lambda: False, "backoff": lambda: None,
                  "cycle": lambda: cycles.append(clock()) or {"polled": []},
-                 "truth": _truth, "ask": _ask},
+                 "truth": _truth, "ask": _ask,
+                 "asked_today": lambda: already},
         out=lambda *a: None)
 
     assert clock() >= datetime(2026, 9, 13, 7, 0, tzinfo=zone), "it stopped early"
     assert clock() < datetime(2026, 9, 13, 7, 30, tzinfo=zone), (
         "it ran past the hour they named")
-    assert len(asked) == lab.CAPS["questions_per_night"], (
-        f"{len(asked)} questions against a cap of "
-        f"{lab.CAPS['questions_per_night']}: with thirty concepts on offer the "
-        f"cap is the only thing that can stop it, so this is the cap measured "
-        f"rather than the fixture running dry")
+    assert len(asked) == lab.CAPS["questions_per_day"] - already, (
+        f"{len(asked)} questions on top of {already} already asked today, "
+        f"against a cap of {lab.CAPS['questions_per_day']}: with thirty "
+        f"concepts on offer the cap is the only thing that can stop it, so "
+        f"this is the cap measured rather than the fixture running dry")
     assert did["skipped"]["cap"] > 0, (
         "the night never once refused a question for the cap, so the branch "
         "that enforces it was never reached")

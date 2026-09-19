@@ -73,10 +73,26 @@ def _whole(card):
 
 
 def _wire(scripts_lab, monkeypatch, cards):
-    """A night that can see those cards, with the sender stubbed."""
+    """A night that can see those cards, with the sender stubbed.
+
+    Since 2026-09-19 a card is read from their API and backtested before a
+    room opens (`_card_live`, `_gate`), so both are stubbed here to a card
+    that exists and a basket that measured well -- the brakes this file holds
+    are the ones AFTER the gate. The gate itself is tests/meta/
+    test_pipeline_lab_loop.py's.
+    """
     monkeypatch.setattr(scripts_lab, "pass_in_flight", lambda: False)
     monkeypatch.setattr(scripts_lab, "card_baskets",
                         lambda: [{"card": c, "legs": []} for c in cards])
+    basket = {"legs": [{"symbol": "BTC", "weight": 0.5},
+                       {"symbol": "ETH", "weight": 0.5}],
+              "tradeable": True, "title": "a card"}
+    monkeypatch.setattr(scripts_lab, "_card_live",
+                        lambda card: basket if card in cards else None)
+    monkeypatch.setattr(scripts_lab, "backtest",
+                        lambda legs, period_days=30, **_: {
+                            "cached": True, "p": period_days, "r": 6.0,
+                            "s": 1.2, "d": 2.0})
     sent = []
     real = scripts_lab._sibling
     paper = real("paper")
@@ -157,14 +173,17 @@ def test_a_night_room_carries_a_criterion_and_the_room_cap_holds(
     counted none of them and `_deployed` ratcheted up for every later session.
 
     `new_rooms_per_session` was enforced nowhere: its own definition was the
-    only reference to it in the repository.
+    only reference to it in the repository. It became `new_rooms_per_day` on
+    2026-09-19, and the fixture offers MORE answers than the cap, or the cap
+    is never what stops it.
     """
     scripts_lab = _scripts_lab(tmp_path, monkeypatch)
-    cards = [f"3040{n}04b-8717-4fc7-a91a-9a6724cadd7e" for n in range(6)]
+    count = lab.CAPS["new_rooms_per_day"] + 2
+    cards = [f"3040{n:04x}-8717-4fc7-a91a-9a6724cadd7e" for n in range(count)]
     _answers(tmp_path, [
-        {"type": "answer", "id": f"NEX-000{n}",
+        {"type": "answer", "id": f"NEX-{n:04d}",
          "at": "2026-09-12T22:00:00+00:00", "text": _whole(cards[n])}
-        for n in range(6)])
+        for n in range(count)])
     _book(tmp_path, 100000.0)
     _wire(scripts_lab, monkeypatch, cards)
 
@@ -173,9 +192,9 @@ def test_a_night_room_carries_a_criterion_and_the_room_cap_holds(
     import qa.rooms as qa_rooms
     rows = qa_rooms.load()
     opened = qa_rooms.strategies(rows)
-    assert len(opened) <= lab.CAPS["new_rooms_per_session"], (
+    assert len(opened) == lab.CAPS["new_rooms_per_day"], (
         f"{len(opened)} rooms against a cap of "
-        f"{lab.CAPS['new_rooms_per_session']}")
+        f"{lab.CAPS['new_rooms_per_day']} a day")
     assert did["rooms"] == len(opened)
     assert opened, "nothing launched on a book that can clearly afford it"
     for room in opened:

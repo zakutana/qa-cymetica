@@ -90,28 +90,14 @@ def _session_now() -> str | None:
     return open_now[-1] if open_now else None
 
 
-def _asked_this_session(rows: list[dict] | None = None) -> int:
-    """Questions since this session opened -- the cap is per session, and a
-    count over the whole file would close the laboratory after eight questions
-    for ever."""
-    notebook = lab.load()
-    session = _session_now()
-    if session is None:
-        return 0
-    opened = None
-    for row in notebook:
-        if row.get("type") == "session" and row.get("session") == session:
-            opened = _moment(row.get("at"))
-    if opened is None:
-        return 0
-    asked = 0
-    for row in rows if rows is not None else _nexus_rows():
-        if row.get("type") != "question":
-            continue
-        when = _moment(row.get("at"))
-        if when and when >= opened:
-            asked += 1
-    return asked
+def _asked_today(rows: list[dict] | None = None) -> int:
+    """Questions in the last twenty-four hours, whichever session asked them.
+
+    Counted from the moment the open session began until 2026-09-19, so a new
+    session reset the cap -- harmless while a person opened one a day, and the
+    whole cap the moment the laboratory became a loop.
+    """
+    return lab.asked_within(rows if rows is not None else _nexus_rows(), _now())
 
 
 def _free_cash() -> float | None:
@@ -565,19 +551,23 @@ def _backtest_call(constituents, period_days: int, include_fees: bool = False,
 
 
 def backtest(constituents, period_days: int = 30, *, why: str = "",
-             call=None, now=None) -> dict:
+             include_fees: bool = False, call=None, now=None) -> dict:
     """Their answer for one basket over one window, asked at most once.
 
     The register is consulted BEFORE the call, which is the whole of
     [operator 2026-09-12] *"at se netestuje to co uz bylo"*: a question already
     answered recently enough to still be true is answered from the file.
+    `include_fees` is part of the fingerprint, so a reading after fees is a
+    different question from one before them, and neither answers the other.
     """
-    fp = qa_backtests.fingerprint(constituents, period_days)
+    fp = qa_backtests.fingerprint(constituents, period_days, include_fees)
     known = qa_backtests.already(fp, now=now)
     if known:
         return {"cached": True, **known}
-    answer = (call or _backtest_call)(constituents, period_days) or {}
-    row = qa_backtests.record(constituents, period_days, answer, why=why, now=now)
+    answer = (call or _backtest_call)(constituents, period_days,
+                                      include_fees=include_fees) or {}
+    row = qa_backtests.record(constituents, period_days, answer, why=why,
+                              include_fees=include_fees, now=now)
     return {"cached": False, **row}
 
 
@@ -977,7 +967,10 @@ def verdicts(now=None) -> list[dict]:
 
 
 def ask(question: str, wait: bool = True) -> dict:
-    may, why = lab.may_ask(_asked_this_session(), pass_in_flight())
+    rows = _nexus_rows()
+    may, why = lab.may_ask(_asked_today(rows), pass_in_flight())
+    if may:
+        may, why = lab.may_ask_now(rows, _now())
     if not may:
         raise SystemExit(f"not asking: {why}")
     return _sibling("nexus").ask(question, wait=wait)
@@ -1131,8 +1124,14 @@ def night_refill(rows: list[dict] | None = None, limit: int = 8,
 # not Nexus's: his answers rarely carry a machine-readable window or stop, and
 # a room with no criterion is one no verdict can ever reach. Written with
 # `adopted=True` so nobody reads them as numbers he gave.
+#
+# The stop is a DRAWDOWN, so it is positive: `qa.lab.verdict` compares it with
+# `peak - value`. It was -10.0 until 2026-09-19, which every drawdown of zero
+# or more exceeds -- every room the night ever opened would have been refuted
+# at its first verdict, whatever it earned. It never fired only because the
+# night never launched anything.
 NIGHT_WINDOW_DAYS = 5.0
-NIGHT_STOP_PCT = -10.0
+NIGHT_STOP_PCT = 10.0
 
 
 def _stake(free: float | None) -> float:
@@ -1156,6 +1155,111 @@ def _stake(free: float | None) -> float:
     return math.floor(free * lab.CAPS["share_of_free_cash"] * 100) / 100
 
 
+def _leg_stakes(free: float | None, deployed: float, legs: int,
+                half: bool = False) -> list[float]:
+    """What each card of ONE room takes, floored to the cent.
+
+    [operator 2026-09-12] fifty at once, under a ceiling of 60% of the book --
+    so a room may take the book's 60/50 = 1.2%, split evenly across its cards.
+    Until 2026-09-19 every CARD took 2% of what was free, so a three-card room
+    took six per cent and the ceiling stopped the laboratory near a dozen
+    rooms, with thirty-odd experiments still owed.
+
+    The per-order ceiling (`_stake`, 2% of what is free) still caps each leg:
+    near the end of the book, free is 40% of it and 2% of that is less than a
+    one-card room's 1.2%. `half` is for a card nobody could backtest.
+    """
+    import math
+
+    count = max(int(legs), 0)
+    if free is None or free <= 0 or count == 0:
+        return [0.0] * count
+    book = free + max(deployed or 0.0, 0.0)
+    share = lab.CAPS["total_exposure"] / lab.CAPS["running_experiments"]
+    each = min(book * share / count, _stake(free))
+    if half:
+        each /= 2
+    return [math.floor(each * 100) / 100] * count
+
+
+CARD_PATH = "/api/v1/event-cards/{card}"
+
+
+def _card_live(card: str) -> dict | None:
+    """What their API says a card holds, right now -- or None if it does not
+    know the card at all.
+
+    #91 was a card Nexus invented; its door answered 404. So a card an answer
+    names is read here before anything is backtested or bought, and a 404 is
+    the ONLY thing read as "does not exist". Any other failure raises: a card
+    we could not read is not a card that is missing (rule 8), and the next tick
+    reads it again.
+    """
+    from qa.client import build_client
+    from qa.config import identities, load_dotenv
+    from qa.safety import CURRENT_TIER, EndpointRegistry, SafetyTier
+
+    load_dotenv()
+    ids = identities()
+    identity = ids["trusted"] if ids["trusted"].present else ids["anon"]
+    client = build_client(identity, EndpointRegistry.load(), timeout=20.0)
+    token = CURRENT_TIER.set(SafetyTier.SAFE)
+    try:
+        response = client.get(CARD_PATH.format(card=card))
+        if response.status_code == 404:
+            return None
+        if response.status_code != 200:
+            raise RuntimeError(f"HTTP {response.status_code}")
+        body = response.json()
+    finally:
+        client.close()
+        CURRENT_TIER.reset(token)
+    if not isinstance(body, dict):
+        raise RuntimeError("the card's body is not an object")
+    legs = []
+    for item in body.get("basket") or []:
+        if not isinstance(item, dict) or not item.get("symbol"):
+            continue
+        try:
+            weight = float(item.get("weight"))
+        except (TypeError, ValueError):
+            continue
+        if weight > 0:
+            legs.append({"symbol": str(item["symbol"]).upper(),
+                         "weight": weight})
+    legs.sort(key=lambda leg: -leg["weight"])
+    tradeable = body.get("tradeable_now")
+    return {"legs": legs[:qa_backtests.MAX_LEGS],
+            "tradeable": tradeable if isinstance(tradeable, bool) else None,
+            "title": str(body.get("title") or "")}
+
+
+def _gate(card: str, legs: list[dict]) -> dict:
+    """Their backtest of one card's basket, after fees, over the gate's
+    windows -- read through the register, so a card is never priced twice --
+    and the verdict `qa.lab.gate` draws from it.
+
+    "unread" when their backtest did not answer: that is neither a pass nor a
+    rejection, and the caller leaves the answer for the next tick.
+    """
+    readings = []
+    basket = [leg for leg in legs or [] if leg.get("symbol")]
+    if len(basket) >= qa_backtests.MIN_LEGS:
+        total = sum(float(leg["weight"]) for leg in basket) or 1.0
+        basket = [{"symbol": leg["symbol"],
+                   "weight": float(leg["weight"]) / total} for leg in basket]
+        for period in lab.GATE["periods"]:
+            try:
+                readings.append(backtest(basket, period, include_fees=True,
+                                         why=f"gate {card[:8]}"))
+            except qa_backtests.BacktestError:
+                continue
+            except (Exception, SystemExit) as exc:  # noqa: BLE001
+                return {"verdict": "unread",
+                        "why": f"their backtest did not answer ({exc})"}
+    return lab.gate(readings)
+
+
 def night_promote(since: datetime | None = None) -> dict:
     """Launch what Nexus endorsed tonight, on paper, under the day's brakes.
 
@@ -1168,15 +1272,23 @@ def night_promote(since: datetime | None = None) -> dict:
     backtested. The search finds candidates; the question makes them his; his
     answer is what may be acted on.
 
-    Four refusals, each one a finding we already paid for:
+    The refusals, each one a finding we already paid for:
 
-      * a card Nexus named that we have never seen from their API is reported
-        and not bought (#91 -- it invented one, with a live-looking index);
+      * a card their API does not know is reported and not bought (#91 --
+        Nexus invented one, with a live-looking index; its door said 404);
+      * a card their own backtest prices at a loss after fees, or at a Sharpe
+        under half, gets no room (`qa.lab.gate`) -- [operator 2026-09-19], the
+        promising ones become rooms. The numbers go on the record, so the next
+        question can tell Nexus how his idea measured;
       * an answer that names no card proposes nothing (NEX-0026 was the best
         answer we have had and named none);
-      * `affordable` decides the size and whether there is room at all;
+      * ten new rooms a rolling day, and `affordable` decides the size and
+        whether there is room at all;
       * nothing at all while a deep pass runs, because it is verifying #85,
         #86 and #87 over these very trades.
+
+    A card that could not be READ, or cannot be traded right now, decides
+    nothing: the answer waits for the next tick whole.
 
     Returns what it did and, for everything it did not, why -- so the morning
     reads a reason rather than a silence.
@@ -1189,10 +1301,12 @@ def night_promote(since: datetime | None = None) -> dict:
     if not answers:
         return {"rooms": 0, "orders": 0, "held": []}
 
-    known = {str(seed.get("card")).lower() for seed in card_baskets()
-             if seed.get("card")}
-    linked = {str(row.get("origin")) for row in rooms.load()
+    stored = rooms.load()
+    linked = {str(row.get("origin")) for row in stored
               if row.get("type") == "strategy"}
+    today = lab.rooms_within(stored, _now())
+    cap = lab.CAPS["new_rooms_per_day"]
+    decided = lab.gates()
     paper = _sibling("paper")
     opened, placed, held = 0, 0, []
     bought: set[str] = set()
@@ -1201,68 +1315,133 @@ def night_promote(since: datetime | None = None) -> dict:
         origin = str(answer.get("id") or "")
         if not origin or origin in linked:
             continue
-        if opened >= lab.CAPS["new_rooms_per_session"]:
-            held.append(f"{origin}: {opened} room(s) opened already and the cap "
-                        f"is {lab.CAPS['new_rooms_per_session']} — the morning "
-                        f"takes the rest")
+        # Every id the answer names; whether it EXISTS is asked of their API
+        # below, not of what our own sampler happened to have seen.
+        named = lab.proposed_cards(answer.get("text"), ())["unknown"]
+        if not named:
+            held.append(f"{origin}: names no card we can act on; the morning "
+                        f"reads it")
+            continue
+        spent = ("reject", "unknown_card")
+        if all(decided.get((origin, card), {}).get("verdict") in spent
+               for card in named):
+            continue  # decided on an earlier tick, and nothing in it may run
+        if today + opened >= cap:
+            held.append(f"{origin}: {today + opened} room(s) opened in the last "
+                        f"24 h and the cap is {cap} a day — the next day takes "
+                        f"the rest")
             break
-        found = lab.proposed_cards(answer.get("text"), known)
-        for ghost in found["unknown"]:
-            held.append(f"{origin}: {ghost[:8]} is a card we have never seen "
-                        f"(#91) — not bought")
-        # Nexus repeats its favourite card across answers, and "fifty
-        # experiments at 2%" meant fifty different things.
-        wanted = [c for c in found["actionable"] if c not in bought]
-        if not wanted:
-            held.append(f"{origin}: names no card we can act on tonight; the "
-                        f"morning reads it")
+
+        chosen: dict[str, dict] = {}
+        waiting = False
+        for card in named:
+            # Nexus repeats its favourite card across answers, and "fifty
+            # experiments" meant fifty different things.
+            if card in bought:
+                continue
+            prior = decided.get((origin, card))
+            if prior and prior.get("verdict") in spent:
+                continue
+            try:
+                live = _card_live(card)
+            except Exception as exc:  # noqa: BLE001 -- unread is not absent
+                held.append(f"{origin}/{card[:8]}: the card could not be read "
+                            f"({exc}) — the next tick tries again")
+                waiting = True
+                continue
+            if live is None:
+                said = {"verdict": "unknown_card",
+                        "why": "their API does not know this card (#91)"}
+                decided[(origin, card)] = lab.note_gate(origin, card, said)
+                held.append(f"{origin}: {card[:8]} is a card their API does "
+                            f"not know (#91) — not bought")
+                continue
+            if live.get("tradeable") is False:
+                held.append(f"{origin}/{card[:8]}: not tradeable now — the next "
+                            f"tick tries again")
+                waiting = True
+                continue
+            if prior is None:
+                said = _gate(card, live.get("legs") or [])
+                if said["verdict"] == "unread":
+                    held.append(f"{origin}/{card[:8]}: {said['why']} — the next "
+                                f"tick tries again")
+                    waiting = True
+                    continue
+                prior = decided[(origin, card)] = lab.note_gate(
+                    origin, card, said)
+            if prior["verdict"] == "reject":
+                held.append(f"{origin}/{card[:8]}: their backtest rejects it — "
+                            f"{prior.get('why')}")
+                continue
+            chosen[card] = {**prior, "title": live.get("title") or ""}
+        if waiting or not chosen:
             continue
 
         # MONEY FIRST, and nothing consumed before it answers. Opening the room
         # ahead of this put the origin in `linked` on a refusal, which meant a
         # night that could afford nothing still spent every answer it touched --
-        # `open_strategy` then refuses the morning too.
-        free = _free_cash()
-        stake = _stake(free)
-        ok, why = lab.affordable(stake, free, _running_experiments(),
-                                 deployed=_deployed())
-        if not ok:
-            held.append(f"{origin}: {why} — left whole for the morning")
+        # `open_strategy` then refuses the morning too. The room's stakes are
+        # fixed here, from the book as it stands when the room opens.
+        cards = list(chosen)
+        free, deployed = _free_cash(), _deployed()
+        whole = _leg_stakes(free, deployed, len(cards))
+        halved = _leg_stakes(free, deployed, len(cards), half=True)
+        untested = [c for c in cards if chosen[c]["verdict"] == "unbacktestable"]
+        stakes = [halved[i] if card in untested else whole[i]
+                  for i, card in enumerate(cards)]
+        ok, why = lab.affordable(stakes[0], free, _running_experiments(),
+                                 deployed=deployed)
+        if not ok or stakes[0] <= 0:
+            held.append(f"{origin}: {why or 'no stake'} — left whole for the "
+                        f"morning")
             continue
 
+        tested = "; ".join(f"{c[:8]} {chosen[c].get('why')}" for c in cards)
+        name = (chosen[cards[0]]["title"] or f"{origin}: {cards[0][:8]}")
         try:
-            room = rooms.open_strategy(
-                origin, f"{origin}: {wanted[0][:8]}")["id"]
+            room = rooms.open_strategy(origin, name[:rooms.MAX_TITLE])["id"]
+            # The legs are the laboratory's READING of his answer -- every card
+            # it names, bull, evenly -- because his answers carry no machine-
+            # readable split. The criterion takes them, or `qa.lab.verdict` has
+            # nothing to score and every room ends inconclusive.
+            plan = rooms.set_plan(
+                room, [{"card": c, "side": "bull",
+                        "share": round(1.0 / len(cards), 6)} for c in cards])
             # A room with no criterion is one no verdict can ever reach:
             # `verdicts()` skips it and `_running_experiments()` cannot see it,
             # so the position would never be graded and never close. The window
             # and the stop are OURS, not his -- `adopted` says so on the row.
             rooms.set_acceptance(
                 room, window_days=NIGHT_WINDOW_DAYS, stop_pct=NIGHT_STOP_PCT,
-                why=(f"opened unattended from {origin}; the window and the stop "
-                     f"are the laboratory's standing defaults, not numbers "
-                     f"Nexus gave"),
+                legs=plan["legs"], benchmark_card=BTC_PROXY,
+                why=(f"opened unattended from {origin}; the window, the stop "
+                     f"and the even split are the laboratory's defaults, not "
+                     f"numbers Nexus gave. Backtest: {tested}"
+                     + (f". NOT backtested: {', '.join(c[:8] for c in untested)}"
+                        f" -- half stake" if untested else ""))[:900],
                 adopted=True)
         except rooms.RoomError as exc:
             held.append(f"{origin}: {exc}")
             continue
         opened += 1
 
-        for card in wanted:
+        in_room = 0
+        for card, stake in zip(cards, stakes):
             free = _free_cash()
-            stake = _stake(free)
             ok, why = lab.affordable(stake, free, _running_experiments(),
                                      deployed=_deployed())
-            if not ok:
-                held.append(f"{origin}/{card[:8]}: {why}")
+            if not ok or stake <= 0:
+                held.append(f"{origin}/{card[:8]}: {why or 'no stake'}")
                 break
             paper.buy(card, stake, origin, True)
             bought.add(card)
             placed += 1
-        if placed:
+            in_room += 1
+        if in_room:
             try:
                 rooms.set_status(room, "running",
-                                 why=f"opened by the night from {origin}")
+                                 why=f"opened by the laboratory from {origin}")
             except rooms.RoomError as exc:
                 held.append(f"{room}: {exc}")
     return {"rooms": opened, "orders": placed, "held": held}
@@ -1352,6 +1531,7 @@ def night(until: str, *, clock=None, sleep=None, actions=None, out=print) -> dic
         "search": _night_search, "moves": night_moves,
         "refill": night_refill,
         "promote": functools.partial(night_promote, since=started),
+        "asked_today": _asked_today,
     }
 
     session = lab.open_session(mode="night", until=due.isoformat())["session"]
@@ -1363,7 +1543,11 @@ def night(until: str, *, clock=None, sleep=None, actions=None, out=print) -> dic
                        "nothing to ask about": 0},
            "questions": []}
     queue = list((actions.get("moves") or (lambda: []))())
-    state: dict = {"asked": 0, "candidates": [], "hold_until": None,
+    # The cap is a rolling day's, so what the day already asked counts: a
+    # night started after a day of loop ticks does not get a fresh 24.
+    state: dict = {"asked": int((actions.get("asked_today")
+                                 or (lambda: 0))() or 0),
+                   "candidates": [], "hold_until": None,
                    "pending": len(queue)}
     ranked: list[dict] = []
     asked_about: set[str] = set()
@@ -1372,9 +1556,10 @@ def night(until: str, *, clock=None, sleep=None, actions=None, out=print) -> dic
     out(f"  started {started.isoformat(timespec='minutes')}")
     out(f"  ends    {due.isoformat(timespec='minutes')} "
         f"({(due - started).total_seconds() / 3600:.1f} h from now)")
-    out(f"  at most {lab.CAPS['questions_per_night']} questions, at least "
-        f"{lab.NIGHT['ask_seconds'] // 60} min apart, and their own backoff "
-        f"on top. Ctrl-C stops it.")
+    out(f"  at most {lab.CAPS['questions_per_day'] - state['asked']} more "
+        f"question(s) today ({lab.CAPS['questions_per_day']} a rolling day), "
+        f"at least {lab.NIGHT['ask_seconds'] // 60} min apart, and their own "
+        f"backoff on top. Ctrl-C stops it.")
 
     crashed: BaseException | None = None
     try:
