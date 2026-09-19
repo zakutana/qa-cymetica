@@ -49,6 +49,7 @@ COMPONENT_TO_SECTION = {
     "discovery.llmstxt": "discovery", "discovery.openapi": "discovery",
     "discovery.onboarding": "discovery",
     "mcp.tools_list": "mcp", "mcp.protocol": "mcp", "mcp.tools_call": "mcp",
+    "mcp.fund_research": "mcp",
     "mcp.trust_ladder": "identity_trust", "rest.agents": "agents",
     "rest.clob": "clob", "rest.markets": "markets", "rest.account": "account",
     "rest.arena": "arena", "rest.backtest": "backtest",

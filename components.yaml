@@ -127,6 +127,11 @@ components:
     surface: mcp
     criticality: high
     staleness_hours: 24
+  mcp.fund_research:
+    title: Fund research tools for advisor assistants (list_funds, get_fund, get_fund_history)
+    surface: mcp
+    criticality: high
+    staleness_hours: 24
   mcp.trust_ladder:
     title: Trust tier gating
     surface: mcp
@@ -638,7 +643,11 @@ mcp_tools:
      # without this we can only ever see the ones the sampler happened to walk
      # past -- twelve of them. A listing is the plainest read there is; the
      # sibling that explains ONE card has been read since 2026-09-10.
-     list_event_cards]
+     list_event_cards,
+     # Classified 2026-09-19. Their advisor connector (mcp.json
+     # advisor_connector) names these four as "read-only fund research ...
+     # No key needed", and each tool's own description says "Read-only".
+     list_funds, get_fund, get_fund_history, get_fund_methodology]
   contribute:
     [submit_observation, submit_feedback, request_feature, submit_signal]
   trade:
