@@ -71,12 +71,20 @@ def test_a_message_without_the_handle_is_recorded_and_said_out_loud(tmp_path):
     assert HANDLE in result.stdout, (
         "the operator has to be told the handle was missing, by name")
 
-    # And the journal holds what was really sent, not a tidied version.
-    events = (tmp_path / "journal" / "events.jsonl").read_text(encoding="utf-8")
-    assert "Hi team -- one more gap in the docs." in events
-    assert f"\\\"text\\\": \\\"{HANDLE}" not in events, (
-        "the handle must never be prepended into the record -- the journal is "
-        "what went out, not what should have")
+    # And the journal holds what was really sent, not a tidied version -- read
+    # as the VALUE of the recorded text. The negative used to look for a
+    # spaced '"text": "@EventTraderQABot' in a journal written compact, a
+    # string that could never occur, so a prepended handle passed (C02, deep
+    # pass of 2026-09-19, 3/3).
+    import json as _json
+
+    lines = (tmp_path / "journal" / "events.jsonl").read_text(
+        encoding="utf-8").splitlines()
+    texts = [event.get("text") for event in map(_json.loads, filter(None, lines))
+             if isinstance(event.get("text"), str)]
+    assert texts == ["Hi team -- one more gap in the docs."], (
+        f"the handle must never be prepended into the record -- the journal is "
+        f"what went out, not what should have: {texts}")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

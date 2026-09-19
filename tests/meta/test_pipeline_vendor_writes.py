@@ -47,15 +47,33 @@ def _string_constants(tree: ast.Module) -> dict[str, str]:
     return out
 
 
-def _tests_the_gate(node) -> bool:
-    """An `if` branching on the gate's ANSWER, not a bare call to it.
+def _is_gate(expr) -> bool:
+    return (isinstance(expr, ast.Call) and isinstance(expr.func, ast.Name)
+            and expr.func.id == GATE)
+
+
+def _gate_polarity(node) -> str | None:
+    """"yes" when an `if` takes its BODY on the gate's yes, "no" when it takes
+    it on the gate's no, None when it is not a gate we can read.
 
     A `may_write_to_vendor()` whose result is thrown away stops nothing, and
-    until the deep pass of 2026-09-11 it counted as a gate.
+    until the deep pass of 2026-09-11 it counted as a gate. And the answer's
+    DIRECTION counts: until V14 (2026-09-19, 3/3) any `if` whose test called
+    the gate was one, so `if not gate(): post` -- a post that goes exactly when
+    the gate says no -- read as gated.
     """
-    return isinstance(node, ast.If) and any(
-        isinstance(c, ast.Call) and isinstance(c.func, ast.Name)
-        and c.func.id == GATE for c in ast.walk(node.test))
+    if not isinstance(node, ast.If):
+        return None
+    test = node.test
+    if _is_gate(test):
+        return "yes"
+    if (isinstance(test, ast.UnaryOp) and isinstance(test.op, ast.Not)
+            and _is_gate(test.operand)):
+        return "no"
+    if (isinstance(test, ast.BoolOp) and isinstance(test.op, ast.And)
+            and any(_is_gate(v) for v in test.values)):
+        return "yes"
+    return None
 
 
 def _leaves(block: list) -> bool:
@@ -85,20 +103,33 @@ def _guarded_nodes(fn) -> set[int]:
     """
     guarded: set[int] = set()
 
+    def guard(block: list) -> None:
+        for inner in block:
+            for child in ast.walk(inner):
+                guarded.add(id(child))
+
     def walk(block: list, inherited: bool) -> None:
         protected = inherited
         for statement in block:
             if protected:
                 for child in ast.walk(statement):
                     guarded.add(id(child))
-            if _tests_the_gate(statement):
-                for inner in statement.body:
-                    for child in ast.walk(inner):
-                        guarded.add(id(child))
-                # `if not gate(): return` protects the rest of this block.
+            polarity = _gate_polarity(statement)
+            if polarity == "yes":
+                # The body runs on the gate's yes; the else on its no. An
+                # `if gate(): return` protects nothing after it -- what follows
+                # runs precisely when the gate said no.
+                guard(statement.body)
+                walk(statement.orelse, protected)
+                continue
+            if polarity == "no":
+                # The body runs on the gate's no, so it is guarded by nothing;
+                # the else runs on its yes. `if not gate(): return` protects
+                # the rest of this block, because it cannot fall through.
+                walk(statement.body, protected)
+                guard(statement.orelse)
                 if _leaves(statement.body):
                     protected = True
-                walk(statement.orelse, protected)
                 continue
             for name in ("body", "orelse", "finalbody"):
                 nested = getattr(statement, name, None)
@@ -178,6 +209,33 @@ def test_the_detector_sees_an_ungated_post():
     assert ungated_vendor_writes(gated) == []
     assert ungated_vendor_writes(late_gate) == [("test_x", 2)], (
         "a gate called after the post does not stop the post")
+
+    # V14, deep pass of 2026-09-19 (3/3): the gate was recognised in either
+    # POLARITY. A post inside `if not gate():` runs exactly when the gate
+    # says no, and `if gate(): return` leaves the posts after it running
+    # only when the gate says no -- both read as gated.
+    inverted = (
+        'SEND = "/api/v1/bounty/a2a/send"\n'
+        'def test_x(client):\n'
+        '    if not may_write_to_vendor():\n'
+        '        client.post(SEND, json={})\n')
+    leaves_when_allowed = (
+        'SEND = "/api/v1/bounty/a2a/send"\n'
+        'def test_x(client):\n'
+        '    if may_write_to_vendor():\n'
+        '        return\n'
+        '    client.post(SEND, json={})\n')
+    in_the_else = (
+        'SEND = "/api/v1/bounty/a2a/send"\n'
+        'def test_x(client):\n'
+        '    if not may_write_to_vendor():\n'
+        '        pass\n'
+        '    else:\n'
+        '        client.post(SEND, json={})\n')
+    assert ungated_vendor_writes(inverted) == [("test_x", 4)]
+    assert ungated_vendor_writes(leaves_when_allowed) == [("test_x", 5)]
+    assert ungated_vendor_writes(in_the_else) == [], (
+        "the else of a negated gate runs only when the gate says yes")
 
     # T07, deep pass of 2026-09-11, triage 3/3. A gate whose answer is thrown
     # away gates nothing, and a post that names its URL by keyword is still a

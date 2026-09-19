@@ -67,6 +67,9 @@ from qa.measure import Measurement, conclude
 
 REPO = Path(__file__).resolve().parent.parent.parent
 PROGRESS = REPO / "audits" / "deep-pass-progress.json"
+# A `next` entry is a sentence the morning is handed; below this it is a
+# fragment that can match almost any longer line (C06).
+MIN_NEXT_CHARS = 20
 
 # The pass that first writes the new keys. Before it, their absence is history.
 KEYS_FROM = "2026-09-09"
@@ -386,7 +389,14 @@ def _next_step_problems(progress: dict,
             out.append("`next` carries an empty entry, which reaches the "
                        "morning as a blank line and says nothing")
             continue
-        if not any(text[:40].lower() in item for item in known):
+        # The whole sentence, and a sentence rather than a fragment. The
+        # first forty characters used to be enough, so an entry sharing a
+        # prefix with an old ticked line was "carried" while the new work was
+        # written nowhere (C06, deep pass of 2026-09-19, 3/3). Containment
+        # rather than equality, because the morning may annotate a line when
+        # it ticks it -- and must not turn this red by doing so (C09).
+        if len(text) < MIN_NEXT_CHARS or not any(
+                text.lower() in item for item in known):
             out.append(
                 f"`next` names {text[:60]!r} and NEXT.md does not carry it. "
                 f"The notebook is overwritten by the following pass and no "
@@ -686,6 +696,17 @@ def test_the_next_morning_is_handed_the_work_and_not_only_the_notebook():
     # An empty sentence reaches the morning as a blank line.
     blank = problems(_pass(next=["   "]), NODEIDS, items)
     assert blank and "empty entry" in blank[0]
+
+    # The WHOLE sentence has to be carried, not its first forty characters:
+    # an entry that shares a prefix with an old ticked line matched it while
+    # the new work was written nowhere (C06, deep pass of 2026-09-19, 3/3).
+    shared = problems(_pass(next=["Clone Hybrid 2 (Blue) in paper -- the bot "
+                                  "Nexus recommended, and then Hybrid 3"]),
+                      NODEIDS, items)
+    assert shared and "NEXT.md does not carry it" in shared[0], shared
+    # And a fragment is not a sentence anybody can be handed.
+    stub = problems(_pass(next=["Clone Hybrid"]), NODEIDS, items)
+    assert stub, "a two-word entry matched a longer item and passed"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

@@ -153,6 +153,48 @@ def test_a_tree_that_moved_during_the_run_is_not_a_verification():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_writer_sees_a_commit_made_during_the_run(monkeypatch):
+    """V16, deep pass of 2026-09-19 (3/3). The test above feeds admissibility
+    a record that already carries the flag; nothing drove the WRITER, so
+    deleting it stayed green. And the writer sampled `git status` only -- an
+    edit COMMITTED mid-run leaves the tree clean at the end and HEAD was read
+    once, at the start, so the run stayed level V over code that moved.
+
+    Driven through the writer, with git answering from a script: HEAD moved
+    and the move touched code -> moved; HEAD moved over tracked state only (a
+    console poll during the run) -> not; porcelain dirty -> moved.
+    """
+    import qa.report_plugin as plugin
+
+    def git(answers):
+        def _git(*args):
+            return answers.get(args[0], "")
+        return _git
+
+    monkeypatch.setattr(plugin, "_git", git(
+        {"status": "", "rev-parse": "bbb", "diff": "qa/evidence.py\n"}))
+    assert plugin.code_moved_since("aaa") is True
+
+    monkeypatch.setattr(plugin, "_git", git(
+        {"status": "", "rev-parse": "bbb", "diff": ""}))
+    assert plugin.code_moved_since("aaa") is False, (
+        "a commit of tracked state during the run is not the code moving")
+
+    monkeypatch.setattr(plugin, "_git", git(
+        {"status": " M qa/fold.py", "rev-parse": "aaa", "diff": ""}))
+    assert plugin.code_moved_since("aaa") is True
+
+    monkeypatch.setattr(plugin, "_git", git(
+        {"status": "", "rev-parse": "aaa", "diff": "qa/fold.py\n"}))
+    assert plugin.code_moved_since("aaa") is False, "HEAD did not move"
+
+    import inspect
+    source = inspect.getsource(plugin)
+    assert 'run["code_dirty_after"] = code_moved_since(' in source, (
+        "the session's end no longer asks the writer this test drives")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_two_levels_reproduce_vs_verify():
     """R may open a defect; V may also verify a fix. Reasons are named."""
     from qa.state import admissibility

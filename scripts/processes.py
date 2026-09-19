@@ -1001,6 +1001,9 @@ _JUST_THE_MACHINE = re.compile(
 # says, because the words are identical.
 _A_TEST_RUN = re.compile(r"short test summary info|=+ FAILURES =+|"
                          r"\d+ (?:passed|failed)[,.]")
+# A traceback printed by Python itself -- a probe script or a crash -- and not
+# by pytest's report, which never prints this header.
+_A_PROBE_TRACEBACK = re.compile(r"\bTraceback \(most recent call last\)")
 
 def _blocks(row) -> list:
     content = (row.get("message") or {}).get("content")
@@ -1069,8 +1072,14 @@ def trail(rows, since: str | None, limit: int = 120) -> list[dict]:
                     continue
                 # A red test run and nothing else is the test-first rule
                 # working; a red run whose output ALSO carries a traceback
-                # from something that was meant to work is not.
-                if _A_TEST_RUN.search(body) and not _WENT_RED.search(body):
+                # from something that was meant to work is not. Told apart by
+                # the traceback's own header, which pytest's report does not
+                # print: an `AttributeError` INSIDE the run is the test naming
+                # a function not yet written, and matching _WENT_RED on it
+                # kept every test-first run as breakage (C05, deep pass of
+                # 2026-09-19, 3/3).
+                if (_A_TEST_RUN.search(body)
+                        and not _A_PROBE_TRACEBACK.search(body)):
                     continue
                 out.append({"at": at, "kind": "error",
                             "text": " ".join(body.split())[:TRAIL_CHARS]})

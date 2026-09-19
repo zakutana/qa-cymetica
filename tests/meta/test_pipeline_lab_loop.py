@@ -439,6 +439,17 @@ def test_the_room_cap_is_a_rolling_day_and_counts_rooms_opened_earlier(
     import qa.rooms as qa_rooms
     for n in range(earlier):
         qa_rooms.open_strategy(f"NEX-{n:04d}", f"earlier {n}")
+    # And rooms from BEFORE the day, which must not count. Every room above is
+    # minutes old, so a rooms_within that ignored `hours` passed -- and would
+    # have stopped the laboratory for good after its tenth room (L02, 3/3).
+    long_ago = datetime.now(timezone.utc) - timedelta(hours=30)
+    with open(tmp_path / "rooms.jsonl", "a", encoding="utf-8") as handle:
+        for n in range(5):
+            handle.write(json.dumps({
+                "type": "strategy", "id": f"STR-09{n:02d}",
+                "origin": f"NEX-OLD{n}", "title": "yesterday",
+                "at": long_ago.isoformat()}) + "\n")
+    assert lab.rooms_within(qa_rooms.load()) == earlier
 
     did = scripts_lab.night_promote()
 
@@ -446,7 +457,7 @@ def test_the_room_cap_is_a_rolling_day_and_counts_rooms_opened_earlier(
     assert did["rooms"] == cap - earlier, (
         f"{did['rooms']} opened on top of {earlier} earlier today, against a "
         f"cap of {cap} a day")
-    assert len(opened) == cap
+    assert len(opened) == cap + 5
     assert any("a day" in line for line in did["held"]), did["held"]
 
 
@@ -676,6 +687,47 @@ def test_a_tick_writes_down_what_it_did_and_whether_a_question_may_go(
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_tick_that_may_ask_still_sends_nothing(tmp_path, monkeypatch):
+    """The key name above is a name. L07 (2/3): a door under another name, or
+    a direct call inside tick(), would have asked and stayed green -- and in
+    that test a question could not go anyway. Here one may, and every way
+    into Nexus the tick could reach is watched."""
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    sent = []
+    real = scripts_lab._sibling
+
+    class _Nexus:
+        @staticmethod
+        def load():
+            return []
+
+        @staticmethod
+        def load_all():
+            return []
+
+        @staticmethod
+        def ask(*a, **k):
+            sent.append(("ask", a))
+
+        @staticmethod
+        def ask_shallow(*a, **k):
+            sent.append(("ask_shallow", a))
+
+        @staticmethod
+        def poll_once(*a, **k):
+            return {"status": "done"}
+
+    monkeypatch.setattr(scripts_lab, "_sibling",
+                        lambda n: _Nexus if n == "nexus" else real(n))
+    doors, _ = _doors()
+
+    did = _tick(scripts_lab, datetime.now(timezone.utc), doors)
+
+    assert did["may_ask"] is True, did
+    assert sent == [], f"the tick asked Nexus by itself: {sent}"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_position_that_resolved_without_us_is_written_down_once(
         tmp_path, monkeypatch):
     """`resolved_without_us` reported the same position on every status and
@@ -753,7 +805,11 @@ def test_the_board_ranks_his_proposals_by_what_they_earned():
         _position("p2", "c1b", "closed", 20.0),
         _position("p3", "c2", "open", -30.0)]
 
-    rows = lab.board(answers, notebook, room_rows, paper_rows, samples)
+    # Handed newest first, so the order that comes out is the board's own:
+    # in file order the best earner was also the earliest, and a board that
+    # never sorted passed (L01, deep pass of 2026-09-19, 3/3).
+    rows = lab.board(list(reversed(answers)), notebook, room_rows,
+                     paper_rows, samples)
 
     assert [r["origin"] for r in rows] == ["NEX-0001", "NEX-0002", "NEX-0003"], rows
     best = rows[0]
@@ -781,12 +837,31 @@ def test_the_brief_carries_his_track_record_into_the_next_question(
                                       "sim_balance_usdc": "98800"}])
     lab.note_gate("NEX-0001", _card(0xC), {
         "verdict": "reject", "why": "-4.0% over 90 days after fees"})
+    from qa import backtests as qa_backtests
+    qa_backtests.record(
+        [{"symbol": "SOL", "weight": 0.5}, {"symbol": "ZEC", "weight": 0.5}],
+        30, {"total_return_pct": 91.98, "sharpe_ratio": 9.05,
+             "max_drawdown_pct": 12.0, "n_points": 30}, why="search")
 
     text = scripts_lab.brief()
 
     assert "1 of 24" in text, text
     assert "NEX-0001" in text and "-4.0%" in text, text
-    assert "never a proposal" in text.lower(), text
+    # The section's CONTENT, not its header: the register was empty, so the
+    # header was all there was to find, and a brief that listed our baskets
+    # as buy calls under it passed (L06, deep pass of 2026-09-19, 3/3).
+    lines = text.splitlines()
+    header = next(n for n, line in enumerate(lines)
+                  if "never a proposal" in line.lower())
+    section = []
+    for line in lines[header + 1:]:
+        if not line.startswith("  "):
+            break
+        section.append(line)
+    assert any("SOL 50%" in line and "ZEC 50%" in line and "sharpe" in line
+               for line in section), section
+    assert not any(word in line.lower() for line in section
+                   for word in ("buy", "trade this", "go long")), section
 
 
 # --- the gate: a backtest before a room ------------------------------------

@@ -352,7 +352,16 @@ def test_the_command_that_locks_a_round_honours_its_own_brakes(tmp_path,
     client = build_mock_client(handler, registry=registry)
 
     import qa.client as qa_client
-    monkeypatch.setattr(qa_client, "build_client", lambda *a, **k: client)
+    # The registry the COMMAND builds is kept, so its host list is read as a
+    # value. It was a substring of cmd_enter's source, which
+    # `frozenset({"cymetica.com"}) | EXTRA` still contains (V13, deep pass of
+    # 2026-09-19, 3/3).
+    built = []
+
+    def _build(identity, registry, *a, **k):
+        built.append(registry)
+        return client
+    monkeypatch.setattr(qa_client, "build_client", _build)
 
     # Without --confirm nothing may be POSTed. A GET to read the round is
     # fine; the submission is not.
@@ -364,12 +373,12 @@ def test_the_command_that_locks_a_round_honours_its_own_brakes(tmp_path,
 
     # And the host list is exactly theirs. Widening it is how a MUTATE
     # reaches somewhere nobody meant.
-    import inspect
-
-    source = inspect.getsource(mod.cmd_enter)
-    assert 'frozenset({"cymetica.com"})' in source, (
-        "cmd_enter enables MUTATE for whatever hosts this line names, so the "
-        "line is the floor -- it must name theirs and nothing else")
+    assert built, "the command built no client of its own, so nothing was read"
+    assert all(r.mutate_allowed_hosts == frozenset({"cymetica.com"})
+               for r in built), (
+        f"cmd_enter enabled MUTATE for "
+        f"{[sorted(r.mutate_allowed_hosts) for r in built]} -- the list is the "
+        f"floor, and it must name theirs and nothing else")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

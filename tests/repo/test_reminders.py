@@ -373,14 +373,20 @@ def test_n_eff_is_named_only_past_nexus_own_collapse_threshold():
     small book and not worth a line every session."""
     mod = _module()
 
-    calm = mod.reminders(_facts(n_eff={"n": 3, "rho": 0.2, "n_eff": 2.5}), NOW)
-    assert not _says(calm, "koreluje", "korelac"), calm
-
+    # Words the line actually carries. The silence was asserted with
+    # "koreluje" and "korelac", which "Kniha je moc korelovaná" contains
+    # neither of, so the threshold set to 0 printed the nag and stayed green
+    # (C04, deep pass of 2026-09-19, 3/3). The positive case below proves the
+    # words match the real line before the negatives lean on them.
     collapsing = mod.reminders(_facts(n_eff={"n": 4, "rho": 0.7, "n_eff": 1.3}),
                                NOW)
     assert _says(collapsing, "1.3") and _says(collapsing, "4"), collapsing
+    assert _says(collapsing, "N_eff", "korelovan"), collapsing
+
+    calm = mod.reminders(_facts(n_eff={"n": 3, "rho": 0.2, "n_eff": 2.5}), NOW)
+    assert not _says(calm, "N_eff"), calm
+    assert not _says(calm, "korelovan"), calm
 
     # No reading at all (never run, or the book was too thin to correlate) is
     # silence, not a nag about a number nobody has.
-    assert not _says(mod.reminders(_facts(n_eff=None), NOW),
-                     "koreluje", "korelac")
+    assert not _says(mod.reminders(_facts(n_eff=None), NOW), "N_eff")

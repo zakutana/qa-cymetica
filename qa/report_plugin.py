@@ -57,6 +57,24 @@ def _utc() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
+def code_moved_since(head_before: str | None) -> bool:
+    """Whether the code under CODE_PATHS moved between the run's start and now.
+
+    Two ways, and until V16 (deep pass of 2026-09-19, 3/3) only the first was
+    read: an edit still uncommitted at the end (`git status`), and an edit
+    COMMITTED mid-run -- which leaves the tree clean and HEAD somewhere else,
+    and kept the run at level V over code that changed under it. A commit of
+    tracked state only (a console poll during the run) is not the code moving.
+    """
+    if _git("status", "--porcelain", "--", *CODE_PATHS):
+        return True
+    head_after = _git("rev-parse", "HEAD")
+    if not head_before or not head_after or head_after == head_before:
+        return False
+    return bool(_git("diff", "--name-only", head_before, head_after,
+                     "--", *CODE_PATHS))
+
+
 def _git(*args: str) -> str:
     """git stdout, or "" if the command failed.
 
@@ -395,7 +413,7 @@ def pytest_sessionfinish(session, exitstatus):
     # exactly what happened on 2026-09-12. Scoped to the code, because a run
     # legitimately writes tracked state under itself and a repo-wide sample
     # here would refuse every verification we make.
-    run["code_dirty_after"] = bool(_git("status", "--porcelain", "--", *CODE_PATHS))
+    run["code_dirty_after"] = code_moved_since(run.get("git_head"))
     run["fingerprint_after"] = after.get("fingerprint")
     run["fingerprint_drifted"] = bool(changed)
     run["fingerprint_changed_parts"] = changed

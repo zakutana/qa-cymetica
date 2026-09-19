@@ -257,7 +257,11 @@ def test_an_exception_inside_a_pytest_run_is_still_the_test_being_written():
     apart by where they happened rather than by what they say.
     """
     mod = _mod()
-    inside_pytest = _tool_ok(
+    # FLAGGED, as a real red pytest run is (it exits non-zero). With the flag
+    # unset the row was dropped by the flag gate before the banner rule ever
+    # ran, so this passed for the wrong reason while a real test-first run
+    # was kept as breakage (C05, deep pass of 2026-09-19, 3/3).
+    inside_pytest = _tool_error(
         "2026-09-13T12:00:00Z",
         "FAILURES tests/meta/test_x.py:196: AttributeError: module "
         "'movers_mod' has no attribute 'note_entry' "

@@ -37,6 +37,11 @@ REPO = Path(__file__).resolve().parent.parent.parent
 # Shaped like the platform's own keys (`evt_` + hex), long enough to match the
 # generic high-entropy pattern too.
 FAKE_KEY = "evt_" + "a1b2c3d4" * 6
+# Shaped like NOTHING in SECRET_PATTERNS -- no evt_, no hex run, no Bearer, no
+# JWT. FAKE_KEY is stripped by value redaction at every door, so it could not
+# tell whether the header NAMES were known: x-api-key taken out of
+# SECRET_HEADERS stayed green (V15, deep pass of 2026-09-19, 3/3).
+PLAIN_KEY = "plain-Secret-Qz-Kx-Wv-Jm"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -77,3 +82,29 @@ def test_a_capture_never_writes_the_key_it_travelled_with(tmp_path):
         right={"redactions": written.count(REDACTED)},
         population={"where": found[:6]},
         sources={"redactor": "qa/evidence.py::redact"}))
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_key_no_pattern_recognises_is_still_kept_off_disk_by_its_header(
+        tmp_path):
+    """The header door on its own. A key in a shape the value patterns miss is
+    stopped only because the redactor knows the header's NAME -- so this is
+    what goes red when a name falls out of SECRET_HEADERS."""
+    request = httpx.Request(
+        "GET", "https://cymetica.com/api/v1/thing",
+        headers={"x-api-key": PLAIN_KEY,
+                 "authorization": f"Token {PLAIN_KEY}",
+                 "x-hmac-signature": PLAIN_KEY,
+                 "cookie": f"session={PLAIN_KEY}"})
+    response = httpx.Response(
+        200, headers={"set-cookie": f"session={PLAIN_KEY}"},
+        content=b"{}", request=request)
+
+    store = EvidenceStore("run-secrets-headers", root=tmp_path)
+    evidence_id = store.capture(request, response, SafetyTier.SAFE, "test.rule")
+    written = (tmp_path / "sha256" / evidence_id[:2] /
+               f"{evidence_id}.json").read_text(encoding="utf-8")
+
+    assert PLAIN_KEY not in written, (
+        "a key reached disk through a header the redactor does not name")
+    assert written.count(REDACTED) >= 5, written

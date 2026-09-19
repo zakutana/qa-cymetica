@@ -36,6 +36,8 @@ import json
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+import pytest
+
 from qa.marks import SafetyTier, qa
 from qa.measure import Measurement, conclude
 
@@ -190,12 +192,19 @@ def test_the_effort_of_a_commit_is_read_even_when_git_will_not_parse_it():
         # And zero is not equality. `_git` returns "" on a non-zero exit, which
         # gives 0 >= 0 -- a read that never happened reported as a reader that
         # works. Rule 8, so that case is inconclusive and says which.
+        #
+        # But only when git found none EITHER. Strict above zero proves git
+        # answered, so a lenient zero beside it is the broken reader itself --
+        # the mutation of EFFORT_LINE the paragraph above names read
+        # inconclusive until C03, deep pass of 2026-09-19 (3/3).
         verdict=("inconclusive" if not sum(lenient.values())
+                 and not sum(strict.values())
                  else "passed" if sum(lenient.values()) >= sum(strict.values())
                  else "failed"),
         reason=(f"no commit in the window carries an effort at all, so the "
                 f"reader was not exercised -- git may not have answered"
-                if not sum(lenient.values()) else
+                if not sum(lenient.values()) and not sum(strict.values())
+                else
                 f"the lenient reader finds {sum(lenient.values())} efforts "
                 f"where git's trailer parser finds {sum(strict.values())}"),
         left=lenient, right=strict,
