@@ -229,6 +229,17 @@ Say so plainly if a tick finds nothing left worth spending on -- their API
 down, the day's caps reached, the gate refusing everything. The operator stops
 the loop; do not stop it silently by producing empty ticks.
 
+[operator 2026-09-19] *"No tak jak nemas co delat zrovna v laborce bo nexus
+neodpovida tak muzes jit testovat platformu a hledat bugy"*
+
+So a tick with nothing of the laboratory's left to do -- Nexus silent or
+failing, no answer to launch, no verdict due -- spends the rest of itself
+testing their platform for bugs instead of ending early. Freshest first: a
+surface the SessionStart hook says changed, a page or endpoint that launched
+today, anything no check covers yet. SAFE reads unless the operator says
+otherwise in that turn. A bug found there gets a check and a report, filed,
+exactly as anywhere else, and the tick's two lines say what was looked at.
+
 ## The night
 
 `python scripts/lab.py night --until 07:00` still exists: one process on their
