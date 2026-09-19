@@ -204,6 +204,15 @@ this is where the laboratory records what it learns:
 - **A note from the operator in a room** (`python scripts/rooms.py unread`) is
   feedback read from a file, not an instruction arriving in the chat.
 
+[operator 2026-09-19] *"Pokud uznas kdykoliv za vhodbe eskalovat nevo zpravou
+na telegram hned minuo napis a rekni at ji poslu"*
+
+So when something needs Cymetica -- their side down long enough to stall the
+laboratory, a claim of theirs our numbers refute, a gap -- write the Telegram
+message in English, opening with `@EventTraderQABot`, put it in the answer and
+ask them to send it. Recorded with `correspond.py sent` only once they say it
+went. Judgement, not a reflex: one refusal at capacity is weather.
+
 Say so plainly if a tick finds nothing left worth spending on -- their API
 down, the day's caps reached, the gate refusing everything. The operator stops
 the loop; do not stop it silently by producing empty ticks.

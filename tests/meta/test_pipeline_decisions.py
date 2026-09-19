@@ -161,6 +161,8 @@ PINNED = {
          "4510b8cf12e72ee56b866aac91d4a984790023cc0f7140508a277a462b2a20c0"),
         ("2026-09-19", "jako realny laborant v laboratori",
          "66a5684c5763c57c211fc808a4f44c9771dd28bc4061ec3bf7225fd1beb094a8"),
+        ("2026-09-19", "eskalovat nevo zpravou na telegram",
+         "d53f5ff46901b4b89d3bd03d693358a45cffcd510e2e058046819129f3c820ca"),
     ],
     ".claude/skills/ohlednuti/SKILL.md": [
         ("2026-09-12", "za tri tydny reknu at se ohledne zpet",
