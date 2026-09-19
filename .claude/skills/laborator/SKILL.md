@@ -61,7 +61,9 @@ python scripts/lab.py resume
 python scripts/lab.py tick
 ```
 
-It does, in order of what expires: the memecoin checkpoints (hot signals and
+It takes minutes, not seconds -- the first live one took eight and a half,
+most of it memecoin quotes after a gap -- so give the command the full
+ten-minute timeout. It does, in order of what expires: the memecoin checkpoints (hot signals and
 their control group), a sampler round, answers picked up every half hour with
 the launch straight after (live card read, backtest gate, room, plan,
 criterion, paper order), their ranking every six hours, a bite of the search,

@@ -314,10 +314,29 @@ def resolve(client, now=None) -> dict:
         if row.get("type") == "checkpoint" and row.get("key"):
             done.setdefault(row["key"], set()).add(row.get("horizon", "?"))
 
+    # One quote per coin per round. A coin hot in consecutive hours is several
+    # signals due at the same moment, and the price is the same for all of
+    # them: 262 quotes for 89 coins in one round of 2026-09-19, which was most
+    # of the loop's first live tick. A failed read is remembered as failed for
+    # the round too -- asking again a second later is not a second opinion.
+    quoted: dict[str, object] = {}
+
+    def quote_once(address):
+        token = str(address or "").lower()
+        if token not in quoted:
+            try:
+                quoted[token] = _quote(client, address)
+            except Exception as exc:  # noqa: BLE001 -- re-raised per reading
+                quoted[token] = exc
+        said = quoted[token]
+        if isinstance(said, Exception):
+            raise said
+        return said
+
     written = []
     for signal, horizon in fomo.due_checkpoints(signals, done, now=now):
         try:
-            quote = _quote(client, signal.get("token_address"))
+            quote = quote_once(signal.get("token_address"))
         except Exception as exc:  # noqa: BLE001
             written.append({"key": signal["key"], "horizon": horizon,
                             "error": str(exc)[:200]})
@@ -348,7 +367,7 @@ def resolve(client, now=None) -> dict:
     readings = []
     for (signal, horizon), group in study:
         try:
-            quote = _quote(client, signal.get("token_address"))
+            quote = quote_once(signal.get("token_address"))
         except Exception as exc:  # noqa: BLE001
             readings.append({"key": signal["key"], "horizon": horizon,
                              "error": str(exc)[:200]})

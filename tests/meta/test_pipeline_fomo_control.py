@@ -186,6 +186,33 @@ def test_both_groups_are_read_out_to_72_hours_and_the_tab_sees_neither(
     assert tab_before[0]["tracked"] == fomo.basket(rows)["tracked"]
 
 
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_one_round_quotes_each_coin_once(tmp_path, monkeypatch):
+    """A coin hot in two consecutive hours is two signals, and both come due in
+    the same round -- two quotes of one coin at one moment, the same price
+    twice. Measured on the live diary 2026-09-19: 262 quotes for 89 coins in
+    one round, and the first live tick of the loop spent seven of its eight
+    and a half minutes there. The control group doubles the coins; without
+    this the tick would outrun the ten minutes a command may take."""
+    mod = _module(tmp_path, monkeypatch)
+    for hour in (10, 11):
+        mod._append({"type": "signal", "key": f"0xabc:2026-09-19T{hour}",
+                     "at": T0.replace(hour=hour).isoformat(),
+                     "token_address": "0xabc", "price_usd": 1.0})
+    mod._append({"type": "control", "key": "control:0xdef:2026-09-19T11",
+                 "at": T0.replace(hour=11).isoformat(),
+                 "token_address": "0xdef", "price_usd": 1.0})
+    handler, requests = _feed({"0xabc": 2.0, "0xdef": 1.5})
+
+    said = mod.resolve(_client(handler), now=T0.replace(hour=13, minute=5))
+
+    quotes = [u for u in requests if "memecoin-terminal/search" in u]
+    assert said["checked"] == 2 and said["studied"] == 1, said
+    assert len(quotes) == 2, f"{len(quotes)} quotes for two coins: {quotes}"
+    written = [r for r in mod.load() if r["type"] in ("checkpoint", "study")]
+    assert {r["price_usd"] for r in written if "0xabc" in r["key"]} == {2.0}
+
+
 def _row(kind, key, at, price=1.0, **extra):
     return {"type": kind, "key": key, "at": at.isoformat(), "price_usd": price,
             **DEEP, **extra}
