@@ -2420,6 +2420,51 @@ reports:
       - 'Repeat every 30 seconds for ten minutes: the tokens under the floor are 60 to 180 seconds old and rotate, so a single read can miss them. Ours samples five reads eighteen seconds apart for this reason'
       - 'On the same Solana rows read qualified_buyers, new_qualified_buyers_15m, effective_qualified_buyers and credible_wallet_share: null on all 40, credibility_available false'
 
+  - key: fund-history-inception
+    findings: [CYM-fund-history-starts-at-inception]
+    severity: medium
+    category: api
+    url: https://cymetica.com/mcp/v1
+    title: "get_fund_history defaults to the last 80 points, so the chart your advisor skill tells assistants to draw starts days after inception"
+    expected: >
+      Called the way your own advisor skill instructs -- step 4 of
+      /static/plugins/eventtrader-funds/skills/fund-research/SKILL.md: "For a
+      chart or a trend question, call get_fund_history with the symbol" -- the
+      series begins at the fund's inception level, the one get_fund publishes
+      as inception_index_price_usd and the one the public profile page's own
+      chart starts from.
+    actual: >
+      It begins wherever the last 80 stored points happen to begin. The AIB
+      series are 81 points long, so the default drops the oldest one, which is
+      inception. On AIB-SPACE the returned series starts at 59.3413
+      (2026-08-25) against an inception level of 64.162 (2026-08-14): an
+      advisor charting it sees the fund rising about 5% while the same
+      response set reports -5.17% since inception. Passing points=200 returns
+      all 81 points and starts at 64.162, so nothing is missing from your
+      store -- only from the default.
+    steps:
+      - 'POST https://cymetica.com/mcp/v1 tools/call list_funds {"limit":100} (no key) and take the symbols'
+      - 'For each symbol: tools/call get_fund {"symbol":...} and read inception_index_price_usd'
+      - 'tools/call get_fund_history {"symbol":...} with NO points argument, as your skill instructs, and read points[0]'
+      - 'Compare points[0].v with inception_index_price_usd'
+      - 'Repeat with {"symbol":"AIB-SPACE","points":200}: 81 points, the first at 2026-08-14T16:55, v 64.162'
+    body: >
+      This is about the audience you named for the connector rather than about
+      the data: mcp.json advertises advisor_connector as read-only fund
+      research for financial-advisor assistants, and the skill shipped with it
+      is what such an assistant will follow. Following it produces a chart
+      whose direction can contradict the return figure quoted beside it.
+      We are not asking for a particular repair. Returning the whole series by
+      default, keeping the oldest point whatever the limit, or having the
+      skill pass points explicitly would each satisfy our check, which
+      compares only the first point against your own published inception
+      level and stays quiet for funds that publish none.
+      Two smaller things seen in the same reads, not filed separately: the
+      response labels sampling "hourly" while the returned points are spaced
+      between 34 minutes and 45 hours apart; and get_fund_history answers "No
+      history series for this sleeve here" for FTA-STOCKS and EVENT-CARD,
+      which the skill itself lists as symbols to call it with.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in

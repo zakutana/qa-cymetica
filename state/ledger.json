@@ -44,7 +44,7 @@
           "at": "2026-09-19T17:28:09+00:00"
         },
         "pinned_fingerprint": "a00fa16074a898173577cb72f9e863a691aa4bfdb20c43a2d1476189800850ff",
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -170,7 +170,7 @@
           "at": "2026-09-19T17:28:09+00:00"
         },
         "pinned_fingerprint": "c128bb487c196aee5ab6a08c9bfedce70d99544cab71152a482c5530ad93b4a7",
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -373,7 +373,7 @@
           "at": "2026-09-19T17:28:09+00:00"
         },
         "pinned_fingerprint": "2150b030a8e4860cf7a2480bc36a2ae989dae3d032e200d87b5667f27c8c236f",
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -615,7 +615,7 @@
           "at": "2026-09-19T17:28:09+00:00"
         },
         "pinned_fingerprint": null,
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -791,7 +791,7 @@
         },
         "pinned_fingerprint": "76f53745c4961b0f0a6076e33cd1d16173f41f802d404fbbb746923be506797e",
         "evidence_only": "run-20260919T171917Z-2c3f7c91",
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -955,7 +955,7 @@
           "at": "2026-09-19T17:28:09+00:00"
         },
         "pinned_fingerprint": "sha256:9e5564057407dd11f05887c86b3b9017",
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -1102,7 +1102,7 @@
           "at": "2026-09-19T17:28:09+00:00"
         },
         "pinned_fingerprint": "5ec2ad807e24bbd1d7b1426ec466461d8cacd67ff55a809ed16b497f18351a97",
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -1245,7 +1245,7 @@
           "at": "2026-09-19T17:28:09+00:00"
         },
         "pinned_fingerprint": "aee41113b423d34dbb0fb7a237f679ec142e320ffd706e3a3645b1a3b80b4cd5",
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -1388,7 +1388,7 @@
           "at": "2026-09-19T17:28:09+00:00"
         },
         "pinned_fingerprint": "sha256:480bd5eb9d55f9495ccad7c95a78bea9",
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -1531,7 +1531,7 @@
           "at": "2026-09-19T17:28:09+00:00"
         },
         "pinned_fingerprint": "sha256:6156cefe281b0c01af3a3391dce65475",
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -1635,7 +1635,7 @@
         "state": "UNVERIFIABLE",
         "adjudicated_by": null,
         "pinned_fingerprint": null,
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -1734,7 +1734,7 @@
           "at": "2026-09-19T17:28:09+00:00"
         },
         "pinned_fingerprint": "7d407afa861e77a3cf508bd4322059dcb57278fd95b3e61c32246e840a94b4ee",
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -1877,7 +1877,8 @@
           "run_id": "run-20260919T195623Z-54909d8b",
           "at": "2026-09-19T20:00:17+00:00"
         },
-        "pinned_fingerprint": "sha256:f3d9b4a71fbf227f926c530f5d62476d"
+        "pinned_fingerprint": "sha256:f3d9b4a71fbf227f926c530f5d62476d",
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -2081,7 +2082,7 @@
           "at": "2026-09-19T17:28:09+00:00"
         },
         "pinned_fingerprint": "b29402efa7bf2470bde86d34d23e67843ebdc1e6f2fcb235b26081136d119299",
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -2367,7 +2368,7 @@
           "at": "2026-09-19T17:28:09+00:00"
         },
         "pinned_fingerprint": "sha256:c92311ababf484c409f09471d3d2b835",
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -2563,7 +2564,7 @@
         "state": "UNVERIFIABLE",
         "adjudicated_by": null,
         "pinned_fingerprint": null,
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -2760,7 +2761,7 @@
           "at": "2026-09-19T17:28:09+00:00"
         },
         "pinned_fingerprint": "sha256:3bd11ec340a31060a08d40b5e9a262d7",
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -2962,7 +2963,7 @@
           "at": "2026-09-19T17:28:09+00:00"
         },
         "pinned_fingerprint": "sha256:9e5564057407dd11f05887c86b3b9017",
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -3137,7 +3138,7 @@
           "at": "2026-09-19T17:28:09+00:00"
         },
         "pinned_fingerprint": "sha256:9e5564057407dd11f05887c86b3b9017",
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -3344,7 +3345,7 @@
           "at": "2026-09-19T17:28:09+00:00"
         },
         "pinned_fingerprint": "7e9fa3b315c02dbafde5c9fd268cdc7c32c6019c6dbfe7476611705cb1c95608",
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -3502,7 +3503,7 @@
           "at": "2026-09-19T17:28:09+00:00"
         },
         "pinned_fingerprint": null,
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -3602,7 +3603,7 @@
           "at": "2026-09-19T17:28:09+00:00"
         },
         "pinned_fingerprint": null,
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -3682,7 +3683,7 @@
           "at": "2026-09-07T17:40:13+00:00"
         },
         "pinned_fingerprint": "5e9d6943c1eaf398d598a59460e9acdf2a187f99ecb323ce600818b417cefeae",
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -3795,7 +3796,7 @@
           "at": "2026-09-19T17:28:09+00:00"
         },
         "pinned_fingerprint": "63b5af80410517bcd0f649fe3bfddfbb4986eb2d467a60c979a1bc66dc452220",
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -3950,7 +3951,7 @@
           "at": "2026-09-19T17:28:09+00:00"
         },
         "pinned_fingerprint": "4eab7cd9650f8ced35800751c28bd5162702733480316dfc25703dba65a04397",
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -4217,7 +4218,7 @@
           "at": "2026-09-19T17:28:09+00:00"
         },
         "pinned_fingerprint": "bbdc1d54bf684a9e645532950d2a04740ef9083655d287ae7dd192a9d16dfab5",
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -4336,7 +4337,7 @@
           "at": "2026-09-19T17:28:09+00:00"
         },
         "pinned_fingerprint": "fab9ea34aa0eefe65a940f193a856ca6e13426fdee9c14c85bd53118a81b3ba5",
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -4527,7 +4528,7 @@
           "at": "2026-09-19T17:28:09+00:00"
         },
         "pinned_fingerprint": "04cf163554964f44f24aae44e443668700ca69347c90e518ffd3a2cff7d10810",
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -4704,7 +4705,7 @@
         },
         "pinned_fingerprint": "d8c89bb5d9dfb6abe6d9f240604f15d80183028892047d05a574abc9740d5a4c",
         "evidence_only": "run-20260919T171917Z-2c3f7c91",
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -4876,7 +4877,7 @@
           "at": "2026-09-19T17:28:09+00:00"
         },
         "pinned_fingerprint": "e8b6dc45879b9d4219d1818f07ca3b841ece9be3f5c8752248b97cea47b22833",
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -5114,7 +5115,7 @@
           "at": "2026-09-19T17:28:09+00:00"
         },
         "pinned_fingerprint": "ada0068b55c66e5e02f8048f4302d1077cf6a57c4527faa3e8dc4abe6bc5a1fd",
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -5354,7 +5355,7 @@
           "at": "2026-09-19T17:28:09+00:00"
         },
         "pinned_fingerprint": "b5ad3dc6a3b54e17185484837e8bac5bef42f551adedbe435b807c3a0d81945b",
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -5522,7 +5523,7 @@
           "at": "2026-09-19T17:28:09+00:00"
         },
         "pinned_fingerprint": "0760ba619fbd7a06945b43cc499e2a739d906a4deb8ebe97cd3dbd484d066d37",
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -5660,7 +5661,7 @@
           "at": "2026-09-19T17:28:09+00:00"
         },
         "pinned_fingerprint": "92c230648502812ed80e88cfba49ef71ca8303fae2f1ac8a4ea40bb2bb1a90d1",
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -5795,7 +5796,7 @@
           "at": "2026-09-19T17:28:09+00:00"
         },
         "pinned_fingerprint": "490328669c50d9e10b4917f7d34e5974d460a08e4aa608ac77a148651c77c6d8",
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -5949,7 +5950,7 @@
           "at": "2026-09-19T17:28:09+00:00"
         },
         "pinned_fingerprint": "236c68e92be50b732a7a4ae6b4890fbf1213c7cd4cae533b240ad125fcc15d25",
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -6085,7 +6086,7 @@
           "at": "2026-09-19T17:28:09+00:00"
         },
         "pinned_fingerprint": "ba32011ff9878149115a486791636008104e030dc9216745a19505bade147ba4",
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -6232,7 +6233,7 @@
           "at": "2026-09-19T17:28:09+00:00"
         },
         "pinned_fingerprint": "c07738dfe41ae11926fab9b971579f7d72aac31b8f06b734755cb384f8c8786c",
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -6396,7 +6397,7 @@
           "at": "2026-09-19T17:28:09+00:00"
         },
         "pinned_fingerprint": "c504687a8affa03c127572e1fea10a615c12e3d943b6f886dc29b745c94664f0",
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -6524,7 +6525,7 @@
           "at": "2026-09-10T04:56:30+00:00"
         },
         "pinned_fingerprint": "05d129030ccb0a67babee3e9b1383e236e0bc719fd5e42f532cb727b83375d1a",
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -6651,7 +6652,8 @@
           "run_id": "run-20260919T195623Z-54909d8b",
           "at": "2026-09-19T20:00:17+00:00"
         },
-        "pinned_fingerprint": "84885322a72b7450579e6de4f695e915fe4f4d6a9eccac0e0f54fbaec3e20ee8"
+        "pinned_fingerprint": "ce960765d70f2c13cca03880d70e9a1e7557a30f9c28dd61611e6c3252c489ed",
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -6868,7 +6870,7 @@
           "at": "2026-09-19T17:28:09+00:00"
         },
         "pinned_fingerprint": "c0260ccc81d31eed5db260e9aa71892030cef7ff5a089ba6d42a0dc52510983c",
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -7076,7 +7078,8 @@
           "run_id": "run-20260919T195623Z-54909d8b",
           "at": "2026-09-19T20:00:17+00:00"
         },
-        "pinned_fingerprint": "683fdd876eb2d0049f2a12a2c627bce72b54436c423dc695b21442e4f885f7a5"
+        "pinned_fingerprint": "683fdd876eb2d0049f2a12a2c627bce72b54436c423dc695b21442e4f885f7a5",
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -7270,7 +7273,7 @@
           "at": "2026-09-19T17:28:09+00:00"
         },
         "pinned_fingerprint": "6c12eca17dbd1a0ca3cf1206232cf860df96c098543eb44a0fe4e3295892b993",
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -7454,7 +7457,8 @@
           "run_id": "run-20260919T195623Z-54909d8b",
           "at": "2026-09-19T20:00:17+00:00"
         },
-        "pinned_fingerprint": "4d7dd0f1952c6ea876b8f03aea300fb99f89e1be901dccb238f3d462aecef9cf"
+        "pinned_fingerprint": "97e5b904e1094ff2b00f2375482cff9fc5fc53a2daab4c47aa343d8ee2c0f3cb",
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -7639,10 +7643,7 @@
         ],
         "retractions": [],
         "verification_owed": [],
-        "correction_owed": [
-          89,
-          98
-        ],
+        "correction_owed": [],
         "disputed": []
       }
     },
@@ -7661,7 +7662,8 @@
           "run_id": "run-20260919T195623Z-54909d8b",
           "at": "2026-09-19T20:00:17+00:00"
         },
-        "pinned_fingerprint": "7a52ceff1e585acf3435b70f322e83c344d04b06af6d7ae07370c50f443e6fd0"
+        "pinned_fingerprint": "7a52ceff1e585acf3435b70f322e83c344d04b06af6d7ae07370c50f443e6fd0",
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -7874,7 +7876,7 @@
           "at": "2026-09-19T17:28:09+00:00"
         },
         "pinned_fingerprint": "f10984755a3fc80f40bb0b3a95098751d68b43fa5d8026e16a66405692f0bd97",
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -8041,7 +8043,7 @@
           "at": "2026-09-19T17:28:09+00:00"
         },
         "pinned_fingerprint": "baf436747483adfa85430a04b2119a0cc05ab880f86d558e2855580a2a9c2687",
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -8175,7 +8177,7 @@
           "at": "2026-09-19T17:28:09+00:00"
         },
         "pinned_fingerprint": "b336927c694c0ad968b9678055feeec4e59093850ffbb71522eb3286c9165335",
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -8299,7 +8301,7 @@
           "at": "2026-09-19T17:28:09+00:00"
         },
         "pinned_fingerprint": "4f6665a41151d607e31b19cc0950ae341cf1b49e38add9846f613d1a1181f84d",
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -8457,7 +8459,7 @@
           "at": "2026-09-19T17:28:09+00:00"
         },
         "pinned_fingerprint": "f6206c3e45fa527784fe102e6836979651737e448416a238fb2b70ef8bd23eb0",
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -8616,7 +8618,7 @@
           "at": "2026-09-19T17:28:09+00:00"
         },
         "pinned_fingerprint": "d350e3be5dd059a7593e42828f974edae44589a4ad2ba75eadddd73e8dd7dc5b",
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -8771,7 +8773,7 @@
           "at": "2026-09-19T17:28:09+00:00"
         },
         "pinned_fingerprint": "d00642e279528c5554bd095096c397de4d570788310ce0933c092d320dc11053",
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -8970,7 +8972,7 @@
           "at": "2026-09-19T17:28:09+00:00"
         },
         "pinned_fingerprint": "4ea140bbefcea8ace32cd5461dfc2018ae877bd18e510bf6b33c39605bc9bd4c",
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -9144,7 +9146,7 @@
           "at": "2026-09-19T17:28:09+00:00"
         },
         "pinned_fingerprint": "187de3341ad1873eb9c2968e1a79e5cda3fb2d5c7e29ff46066f602403df0422",
-        "not_checked_in": "run-20260919T195623Z-54909d8b"
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -9306,7 +9308,8 @@
           "run_id": "run-20260919T195623Z-54909d8b",
           "at": "2026-09-19T20:00:17+00:00"
         },
-        "pinned_fingerprint": "ab1e6991f72a8b12afb0c91444709dfe45e71ff4d6cd4ba7d3d7f8d94cf9b33d"
+        "pinned_fingerprint": "ab1e6991f72a8b12afb0c91444709dfe45e71ff4d6cd4ba7d3d7f8d94cf9b33d",
+        "not_checked_in": "run-20260919T211126Z-507a7113"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -9454,19 +9457,249 @@
         "correction_owed": [],
         "disputed": []
       }
+    },
+    "CYM-fund-history-starts-at-inception": {
+      "id": "CYM-fund-history-starts-at-inception",
+      "first_seen": {
+        "at": "2026-09-19T21:17:58+00:00",
+        "cause": {
+          "run_id": "run-20260919T211126Z-507a7113"
+        }
+      },
+      "reproductions": 1,
+      "check": {
+        "state": "REPRODUCING",
+        "adjudicated_by": {
+          "run_id": "run-20260919T211126Z-507a7113",
+          "at": "2026-09-19T21:17:58+00:00"
+        },
+        "pinned_fingerprint": "4e20d9ebfd70f3e0cd3e778f8f0fd9d6bdde4e3b5e3d2cde024b168bcc03cea8"
+      },
+      "filing": {
+        "state": "RAISED",
+        "adjudicated_by": {
+          "event_id": "d718c221a77fdeb1f0f475df5ebb32b5c00d8dc52056c5e0f281d24288a419de",
+          "at": "2026-09-19T21:19:38+00:00"
+        },
+        "reports": [
+          {
+            "report_id": 103,
+            "status": "pending"
+          }
+        ],
+        "refused": [],
+        "verifications": []
+      },
+      "transitions": [
+        {
+          "axis": "check",
+          "from": "UNVERIFIED",
+          "to": "REPRODUCING",
+          "cause": {
+            "run_id": "run-20260919T211126Z-507a7113"
+          },
+          "at": "2026-09-19T21:17:58+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "NOT_RAISED",
+          "to": "RAISED",
+          "cause": {
+            "event_id": "d718c221a77fdeb1f0f475df5ebb32b5c00d8dc52056c5e0f281d24288a419de"
+          },
+          "at": "2026-09-19T21:19:38+00:00"
+        }
+      ],
+      "regressions": [],
+      "severity": "S3-CONTRACT",
+      "title": "8 of 19 fund histories, fetched as their advisor skill says (symbol only), start more than 2% away from the fund's own inception level -- worst AIB-C71BAD8B: first point 5.5754 at 2026-08-20T01:19 against inception 4.833164 (+15.36%), while it reports -68.03% since inception",
+      "reproduced_in": [
+        "run-20260919T211126Z-507a7113"
+      ],
+      "component": "mcp.fund_research",
+      "section": "fund_research",
+      "tag": "DOCS",
+      "kind": "check_failure",
+      "checks": [
+        "tests/mcp/test_fund_history_starts_at_inception.py::test_a_fund_history_fetched_as_their_skill_says_starts_at_inception"
+      ],
+      "detail": {
+        "left": [
+          15.36,
+          9.75,
+          -7.57,
+          7.06,
+          -6.11,
+          -5.94,
+          5.54,
+          -2.63
+        ],
+        "right": 2.0,
+        "sources": {
+          "contract": "https://cymetica.com/static/plugins/eventtrader-funds/skills/fund-research/SKILL.md step 4, and get_fund_history's own description ('hourly since inception')",
+          "inception": "get_fund.inception_index_price_usd",
+          "history": "get_fund_history(symbol), no points argument"
+        },
+        "population": {
+          "clipped": [
+            {
+              "symbol": "AIB-C71BAD8B",
+              "inception": 4.833164,
+              "first_t": "2026-08-20T01:19",
+              "first_v": 5.5754,
+              "off_pct": 15.36,
+              "returned": 80,
+              "return_since_inception_pct": -68.03
+            },
+            {
+              "symbol": "AIB-8830DFE9",
+              "inception": 69.429629,
+              "first_t": "2026-08-22T01:41",
+              "first_v": 76.2004,
+              "off_pct": 9.75,
+              "returned": 80,
+              "return_since_inception_pct": 111.51
+            },
+            {
+              "symbol": "AIB-SPACE",
+              "inception": 64.162,
+              "first_t": "2026-08-25T12:30",
+              "first_v": 59.303,
+              "off_pct": -7.57,
+              "returned": 80,
+              "return_since_inception_pct": -5.17
+            },
+            {
+              "symbol": "AIB-MOLECULAR",
+              "inception": 54.83072,
+              "first_t": "2026-08-25T12:30",
+              "first_v": 58.7008,
+              "off_pct": 7.06,
+              "returned": 80,
+              "return_since_inception_pct": 10.21
+            },
+            {
+              "symbol": "AIB-COMPUTE",
+              "inception": 185.9205,
+              "first_t": "2026-08-25T12:36",
+              "first_v": 174.5616,
+              "off_pct": -6.11,
+              "returned": 80,
+              "return_since_inception_pct": -5.72
+            },
+            {
+              "symbol": "AIB-DEFENSE",
+              "inception": 291.3007,
+              "first_t": "2026-08-25T12:30",
+              "first_v": 273.9907,
+              "off_pct": -5.94,
+              "returned": 80,
+              "return_since_inception_pct": -10.14
+            },
+            {
+              "symbol": "AIB-BIOSCIENCES",
+              "inception": 79.49038,
+              "first_t": "2026-08-25T12:36",
+              "first_v": 83.8924,
+              "off_pct": 5.54,
+              "returned": 80,
+              "return_since_inception_pct": 7.42
+            },
+            {
+              "symbol": "AIB-ROBOTICS",
+              "inception": 4.24809,
+              "first_t": "2026-08-25T08:25",
+              "first_v": 4.1362,
+              "off_pct": -2.63,
+              "returned": 80,
+              "return_since_inception_pct": -3.52
+            }
+          ],
+          "unseparated": [
+            {
+              "symbol": "AIB-B9A9BE83",
+              "inception": 313.79066,
+              "first_t": "2026-08-30T19:22",
+              "first_v": 317.1661,
+              "off_pct": 1.08,
+              "returned": 80,
+              "return_since_inception_pct": 5.22
+            },
+            {
+              "symbol": "AIB-3DBEA91C",
+              "inception": 188.976429,
+              "first_t": "2026-09-14T21:43",
+              "first_v": 190.4186,
+              "off_pct": 0.76,
+              "returned": 80,
+              "return_since_inception_pct": 5.13
+            },
+            {
+              "symbol": "AIB-C4B13E1B",
+              "inception": 0.355772,
+              "first_t": "2026-09-19T08:11",
+              "first_v": 0.3575,
+              "off_pct": 0.49,
+              "returned": 11,
+              "return_since_inception_pct": 2.6
+            },
+            {
+              "symbol": "AIB-QUANTUM",
+              "inception": 47.07935,
+              "first_t": "2026-08-20T01:19",
+              "first_v": 47.3348,
+              "off_pct": 0.54,
+              "returned": 80,
+              "return_since_inception_pct": -1.95
+            }
+          ],
+          "within": [
+            "AIB-DA16D8CF",
+            "AIB-DCA251C8",
+            "AIB-POWER",
+            "AMF-BLACKSWAN",
+            "AMF-WHITESWAN",
+            "AIB-DATA-CENTERS",
+            "AIB-07E46605"
+          ],
+          "unmeasured": [
+            "MA-RIPPLE: no inception_index_price_usd",
+            "AIB-CYBERSECURITY: history has no readable point (empty)",
+            "FTA-STOCKS: read failed (tool error: {'error': 'No history series for this sleeve here — see its page URL)",
+            "FTA-CRYPTOS: no inception_index_price_usd",
+            "EVENT-CARD: read failed (tool error: {'error': 'No history series for this sleeve here — see its page URL)"
+          ],
+          "roster": 24
+        },
+        "reason": "8 of 19 fund histories, fetched as their advisor skill says (symbol only), start more than 2% away from the fund's own inception level -- worst AIB-C71BAD8B: first point 5.5754 at 2026-08-20T01:19 against inception 4.833164 (+15.36%), while it reports -68.03% since inception"
+      },
+      "provenance": {
+        "run_id": "run-20260919T211126Z-507a7113",
+        "measured_at": "2026-09-19T21:17:58+00:00"
+      },
+      "obligations": {
+        "reverify": false,
+        "repair_check": false,
+        "reopen": [],
+        "retractions": [],
+        "verification_owed": [],
+        "correction_owed": [],
+        "disputed": []
+      }
     }
   },
-  "run_id": "run-20260919T195623Z-54909d8b",
+  "run_id": "run-20260919T211126Z-507a7113",
   "run_level": "V",
-  "updated_at": "2026-09-19T20:00:17+00:00",
+  "updated_at": "2026-09-19T21:17:58+00:00",
   "counts": {
     "WITHDRAWN": 10,
     "VERIFIED FIXED": 42,
     "STILL REPRODUCIBLE": 3,
-    "OUR CHECK CANNOT TELL": 2
+    "OUR CHECK CANNOT TELL": 2,
+    "RAISED": 1
   },
   "events_head": {
-    "seq": 2335,
-    "chain": "cec8e24d32c0a4a06b4de7602c23caa7fcdf4e366b7492da79899cc3239e4f30"
+    "seq": 2338,
+    "chain": "b783b07a4da3e01bc5ffb7d7f5c80b697de8e0d2e15d39c6df3ee9a9328c3795"
   }
 }
