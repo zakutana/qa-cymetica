@@ -413,13 +413,26 @@ def settle(item: dict, evidence_id: str | None) -> bool:
     return wrote == "appended"
 
 
-def already_sent(client, report_id: int) -> tuple[set, str | None]:
-    """(fingerprint, verdict) pairs their server holds, and the read's evidence.
+def already_sent(client, report_id: int) -> tuple[dict, str | None]:
+    """Their LAST word per fingerprint, and the read's evidence.
 
     Rule 8, and the reason submit.py reads the tracker before filing: a read
     that failed is not a server with nothing on it. Refusing here costs one
     verification; guessing costs a duplicate that neither side can tell from a
     real second opinion.
+
+    It used to return the SET of (fingerprint, verdict) pairs they hold, and
+    `partition_by_what_they_hold` skipped anything in it. That makes a verdict
+    unrepeatable: #85 held a pass at 20:08 and a fail at 21:46 under one
+    definition, so when our check passed again the pass was "already held" --
+    three hours older than the correction that had superseded it -- and their
+    tracker kept the fail as the final reading for ten days. What matters is
+    what a reader of their report sees last, so this ranks the rows.
+
+    Ranked by `created_at`, then by numeric id. A row carrying neither cannot
+    be ranked and never displaces a dated one; if NO row can be ranked, every
+    verdict they hold is kept, which degrades to the old, duplicate-averse
+    behaviour rather than to a re-send.
     """
     response = client.get(f"/api/v1/bounty/reports/{report_id}/verifications")
     evidence_id = None
@@ -436,7 +449,7 @@ def already_sent(client, report_id: int) -> tuple[set, str | None]:
     if response.status_code == 404:
         # No verifications yet is a legitimate shape for a report nobody has
         # verified, and it is distinguishable from a failed read.
-        return set(), evidence_id
+        return {}, evidence_id
     if response.status_code != 200:
         raise SystemExit(
             f"  ! verifications for #{report_id} answered HTTP "
@@ -448,8 +461,38 @@ def already_sent(client, report_id: int) -> tuple[set, str | None]:
     except ValueError:
         raise SystemExit(f"  ! verifications for #{report_id} was not JSON")
     rows = payload.get("verifications") if isinstance(payload, dict) else payload
-    return ({((r or {}).get("fingerprint"), (r or {}).get("verdict"))
-             for r in (rows or [])}, evidence_id)
+    return _newest_per_fingerprint(rows or []), evidence_id
+
+
+def _rank(row: dict):
+    """(created_at, numeric id) -- or None when the row carries neither."""
+    at = str((row or {}).get("created_at") or "")
+    raw = str((row or {}).get("id") or "")
+    number = int(raw) if raw.isdigit() else None
+    if not at and number is None:
+        return None
+    return (at, number if number is not None else -1)
+
+
+def _newest_per_fingerprint(rows: list) -> dict:
+    newest: dict = {}
+    ranks: dict = {}
+    for row in rows:
+        fingerprint = (row or {}).get("fingerprint")
+        verdict = (row or {}).get("verdict")
+        rank = _rank(row)
+        if fingerprint not in newest:
+            newest[fingerprint] = verdict
+            ranks[fingerprint] = rank
+            continue
+        if rank is None:
+            # Undatable: it cannot claim to be the last word, and it must not
+            # silently make an older dated row disappear either.
+            continue
+        if ranks[fingerprint] is None or rank > ranks[fingerprint]:
+            newest[fingerprint] = verdict
+            ranks[fingerprint] = rank
+    return newest
 
 
 def send(client, items: list[dict], pause: int = PAUSE_SECONDS) -> list[dict]:
@@ -550,7 +593,11 @@ def partition_by_what_they_hold(work, held):
     """
     fresh, duplicates = [], []
     for item in work:
-        if (item["fingerprint"], item["verdict"]) in held[item["report_id"]]:
+        # Their newest word under this definition. Membership over everything
+        # they hold made a verdict unrepeatable -- see already_sent -- so a
+        # pass superseded by a fail could never be restored.
+        theirs = held[item["report_id"]].get(item["fingerprint"])
+        if theirs == item["verdict"]:
             duplicates.append(item)
         else:
             fresh.append(item)

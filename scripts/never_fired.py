@@ -322,9 +322,19 @@ def guards_for(symbol: str) -> list[str]:
     A test FUNCTION only. A module-level fixture carrying the word in a dict is
     not a guard, and crediting one would let this report say a mechanism is
     exercised when nothing exercises it.
+
+    A test whose NAME carries the symbol comes first. The order used to be
+    whatever `_test_functions()` walked, which is alphabetical by path -- so
+    on 2026-09-20 a comment in test_pipeline_adapters.py that used the word
+    "superseded" in passing displaced the test that actually drives a
+    supersede event, and a guard asserting on the first entry went red over a
+    choice of words. The report is read by a person looking for the test that
+    exercises the mechanism; put that one at the top.
     """
-    return [f"{rel}::{name}" for rel, name, source in _test_functions()
-            if symbol in source]
+    found = [(rel, name) for rel, name, source in _test_functions()
+             if symbol in source]
+    found.sort(key=lambda pair: (symbol not in pair[1], pair[0], pair[1]))
+    return [f"{rel}::{name}" for rel, name in found]
 
 
 def render(vocabs: list[dict], zeros_only: bool = False) -> str:

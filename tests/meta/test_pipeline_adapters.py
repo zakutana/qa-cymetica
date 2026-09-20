@@ -661,15 +661,31 @@ def test_verifications_they_already_hold_are_not_sent_again(tmp_path, monkeypatc
     verify = _module("scripts/verify.py")
 
     held = _client(lambda r: httpx.Response(
-        200, json={"verifications": [{"fingerprint": "fp-1", "verdict": "pass"},
-                                     {"fingerprint": "fp-old", "verdict": "fail"}]}))
-    pairs, evidence_id = verify.already_sent(held, 46)
-    assert pairs == {("fp-1", "pass"), ("fp-old", "fail")}
+        200, json={"verifications": [
+            {"fingerprint": "fp-1", "verdict": "pass", "id": "1",
+             "created_at": "2026-09-10T20:08:29"},
+            {"fingerprint": "fp-old", "verdict": "fail", "id": "2",
+             "created_at": "2026-09-10T16:52:51"}]}))
+    newest, evidence_id = verify.already_sent(held, 46)
+    assert newest == {"fp-1": "pass", "fp-old": "fail"}
     assert evidence_id,         "the read that deduplicates is also the read that settles, so it has "         "to hand back what it can be stood on"
+
+    # Their LAST word under a fingerprint, not every word they hold. #85 held
+    # a pass at 20:08 and a fail at 21:46 under one definition; membership
+    # said "they already have this pass", so the correction could never be
+    # made and their tracker kept the fail as the final reading for ten days
+    # while our check passed. Architecture audit, 2026-09-20.
+    both = _client(lambda r: httpx.Response(
+        200, json={"verifications": [
+            {"fingerprint": "fp-1", "verdict": "fail", "id": "90",
+             "created_at": "2026-09-10T21:46:08"},
+            {"fingerprint": "fp-1", "verdict": "pass", "id": "88",
+             "created_at": "2026-09-10T20:08:29"}]}))
+    assert verify.already_sent(both, 46)[0] == {"fp-1": "fail"}
 
     # No verifications yet is a real answer; a failed read is not.
     empty = _client(lambda r: httpx.Response(404, text="not found"))
-    assert verify.already_sent(empty, 46)[0] == set()
+    assert verify.already_sent(empty, 46)[0] == {}
 
     for status in (401, 500, 503):
         broken = _client(lambda r, s=status: httpx.Response(s, text="nope"))
@@ -715,14 +731,21 @@ def test_what_their_server_already_holds_is_dropped_before_sending():
         # information and must go, or we can never take a claim back.
         {"finding_id": "CYM-c", "report_id": 59, "fingerprint": "fp-1",
          "verdict": "fail"},
+        # And the other direction, which is what #85 needed: their newest word
+        # under this definition is a fail, ours passes now. Membership said
+        # "they already hold a pass for fp-3" -- true, and three hours older
+        # than the fail that superseded it -- so the pass could never be
+        # re-sent and their tracker kept the wrong final reading.
+        {"finding_id": "CYM-d", "report_id": 85, "fingerprint": "fp-3",
+         "verdict": "pass"},
     ]
-    held = {49: {("fp-1", "pass")}, 59: {("fp-1", "pass")}}
+    held = {49: {"fp-1": "pass"}, 59: {"fp-1": "pass"}, 85: {"fp-3": "fail"}}
 
     fresh, duplicates = verify.partition_by_what_they_hold(work, held)
 
     assert [i["finding_id"] for i in duplicates] == ["CYM-a"], \
         "a verification their server already holds was queued for sending again"
-    assert [i["finding_id"] for i in fresh] == ["CYM-b", "CYM-c"], \
+    assert [i["finding_id"] for i in fresh] == ["CYM-b", "CYM-c", "CYM-d"], \
         "a verification they do not hold was dropped, so the debt cannot be paid"
 
 
