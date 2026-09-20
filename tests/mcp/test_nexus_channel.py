@@ -352,6 +352,30 @@ def read_the_window(rows, finished):
     return read
 
 
+def labelled(text: str, tool: str) -> bool:
+    """Does their own marker follow this tool's name?
+
+    REPLY-0034, 2026-09-20: a chat-lane answer that tells the reader to call a
+    tool living only in NEXUS's own toolbelt now carries
+    `[NEXUS runs this for you on request; it is not an MCP tool]` after the
+    name. Their fix does not stop NEXUS recommending those tools -- they said
+    so plainly -- so the label is the whole of what changed, and an
+    unreachable name that carries it is the fix working rather than the
+    defect it repairs.
+
+    Read within a short window after the name and not anywhere in the answer:
+    one label at the bottom of a page must not excuse every mention above it.
+    Matched on the two halves that carry the meaning rather than the sentence
+    verbatim, so their punctuation may move without this going red.
+    """
+    window = 220
+    for match in re.finditer(re.escape(tool), text or ""):
+        tail = (text or "")[match.end():match.end() + window].lower()
+        if "not an mcp tool" in tail and "nexus runs this" in tail:
+            return True
+    return False
+
+
 @qa(component="mcp.tools_call", tier=SafetyTier.SAFE, surface="mcp")
 def test_every_tool_nexus_tells_an_agent_to_call_exists(mcp_trusted):
     """Guidance an agent cannot act on is guidance that does not work."""
@@ -386,7 +410,18 @@ def test_every_tool_nexus_tells_an_agent_to_call_exists(mcp_trusted):
             f"which the mention extractor deliberately does not match -- it "
             f"would collect field names. Widen it before trusting this result")
 
-    missing = sorted(name for name in named if name not in served)
+    # Their fix of 2026-09-20 (REPLY-0034) does not stop NEXUS naming a tool
+    # of its own; it LABELS one the reader cannot call. So an unreachable name
+    # is only a defect when it is unlabelled -- and a check that did not know
+    # that would read their fix as the defect it repairs, which is the
+    # `a-check-encodes-the-fix-its-author-imagined` failure, three times in
+    # one day on 2026-09-07. Labelled names are counted and named in the
+    # reason instead, because a label appearing at all is what their fix
+    # working looks like from outside.
+    missing = sorted(name for name in named
+                     if name not in served and not labelled(latest["text"], name))
+    marked = sorted(name for name in named
+                    if name not in served and labelled(latest["text"], name))
 
     conclude(Measurement(
         verdict="failed" if missing else "passed",
@@ -395,7 +430,10 @@ def test_every_tool_nexus_tells_an_agent_to_call_exists(mcp_trusted):
                 f"name: an agent following the platform's own guidance cannot "
                 f"act on it"
                 if missing else
-                f"every one of the {len(named)} tool(s) Nexus named is served"),
+                f"every one of the {len(named)} tool(s) Nexus named is served"
+                + (f"; {len(marked)} it names are not on MCP and each carries "
+                   f"their label saying so ({', '.join(marked)})"
+                   if marked else "")),
         # Not the same list twice: what Nexus named, against the ones of
         # those the server actually serves -- which is the empty set, and
         # saying so is the finding.

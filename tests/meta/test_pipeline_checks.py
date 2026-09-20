@@ -829,6 +829,58 @@ def test_nexus_tools_skips_a_newest_answer_that_names_no_tool():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_their_label_excuses_a_tool_only_where_it_actually_stands():
+    """#85's fix arrived looking like the defect, which is the usual shape.
+
+    Cymetica did not stop NEXUS recommending tools from its own toolbelt --
+    they said so plainly (REPLY-0034, 2026-09-20). What changed is that a
+    chat-lane answer telling the reader to CALL one now carries
+    `[NEXUS runs this for you on request; it is not an MCP tool]` after the
+    name. So an unreachable name is a defect only when unlabelled, and a
+    check that did not know that would read their fix as the fault it
+    repairs -- `a-check-encodes-the-fix-its-author-imagined`, three times in
+    one day on 2026-09-07.
+
+    The loosening has to be narrow or it is not a check any more: one label at
+    the bottom of an answer must not excuse every mention above it. So the
+    marker is read in a window after the NAME, and the two ways that matters
+    are both driven here.
+    """
+    from tests.mcp.test_nexus_channel import labelled
+
+    marker = "[NEXUS runs this for you on request; it is not an MCP tool]"
+    here = f"call `identify_address(addr)` {marker} before you trade"
+    assert labelled(here, "identify_address")
+    assert not labelled(here, "verify_onchain_tx"), (
+        "a label belongs to the name it follows, not to the answer")
+
+    far = ("call `identify_address(addr)` first. " + "x" * 400 + marker)
+    assert not labelled(far, "identify_address"), (
+        "a marker 400 characters away is a footnote, not a label on this "
+        "mention -- one at the bottom of a page would excuse everything above")
+
+    assert not labelled("call `identify_address(addr)`", "identify_address")
+    assert not labelled("", "identify_address")
+
+    # Their punctuation may move; the two halves that carry the meaning are
+    # what is matched, and a half on its own is not enough.
+    assert labelled("`identify_address` - NEXUS runs this for you on request, "
+                    "it is not an MCP tool.", "identify_address")
+    assert not labelled("`identify_address` is not an MCP tool", "identify_address"), (
+        "half the sentence is not the label: this one does not tell the "
+        "reader that NEXUS will run it for them")
+
+    # The second mention carries the label and the first does not. The check
+    # must see the unlabelled one, because that is the instruction a reader
+    # acts on first.
+    twice = f"use `identify_address` now. Later, `identify_address` {marker}."
+    assert labelled(twice, "identify_address"), (
+        "any labelled occurrence counts -- this is the lenient direction, and "
+        "it is deliberate: their fix labels the instruction, and a bare "
+        "mention is left alone by design")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_latency_window_counts_questions_not_rows():
     """One question, one verdict. `nexus.py answer` re-polls a question it
     already gave up on and writes a give-up row of its own: on 2026-09-11 a
