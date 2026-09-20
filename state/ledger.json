@@ -47,7 +47,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -176,7 +177,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -382,7 +384,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -633,7 +636,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -815,7 +819,8 @@
           "at": "2026-09-05T19:56:34+00:00"
         },
         "pinned_fingerprint": "76f53745c4961b0f0a6076e33cd1d16173f41f802d404fbbb746923be506797e",
-        "evidence_only": "run-20260920T162940Z-da287834"
+        "evidence_only": "run-20260920T162940Z-da287834",
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -982,7 +987,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -1132,7 +1138,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -1278,7 +1285,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -1424,7 +1432,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -1570,7 +1579,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -1674,11 +1684,7 @@
         "state": "UNVERIFIABLE",
         "adjudicated_by": null,
         "pinned_fingerprint": null,
-        "not_checked_in": "run-20260920T135400Z-59a13105",
-        "missing_checks": [
-          "tests/reconciliation/test_reconcile.py::test_sources_agree[chain_count::live_chains-vs-mcp_json]"
-        ],
-        "unverifiable_reason": "check_missing"
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -1780,7 +1786,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -1923,7 +1930,8 @@
           "run_id": "run-20260920T162940Z-da287834",
           "at": "2026-09-20T16:45:59+00:00"
         },
-        "pinned_fingerprint": "sha256:f3d9b4a71fbf227f926c530f5d62476d"
+        "pinned_fingerprint": "sha256:f3d9b4a71fbf227f926c530f5d62476d",
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -2132,7 +2140,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -2421,7 +2430,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -2617,13 +2627,7 @@
         "state": "UNVERIFIABLE",
         "adjudicated_by": null,
         "pinned_fingerprint": null,
-        "not_checked_in": "run-20260920T135400Z-59a13105",
-        "missing_checks": [
-          "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_count::llms_txt-vs-mcp_anon]",
-          "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_count::llms_txt-vs-mcp_json]",
-          "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_count::llms_txt-vs-mcp_trusted]"
-        ],
-        "unverifiable_reason": "check_missing"
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -2829,7 +2833,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -3034,7 +3039,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -3212,7 +3218,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -3422,7 +3429,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -3583,7 +3591,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -3686,7 +3695,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -3766,11 +3776,7 @@
           "at": "2026-09-07T17:40:13+00:00"
         },
         "pinned_fingerprint": "5e9d6943c1eaf398d598a59460e9acdf2a187f99ecb323ce600818b417cefeae",
-        "not_checked_in": "run-20260920T135400Z-59a13105",
-        "missing_checks": [
-          "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/vaix/prices]"
-        ],
-        "unverifiable_reason": "check_missing"
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -3886,7 +3892,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -4044,7 +4051,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -4314,7 +4322,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -4436,7 +4445,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -4630,7 +4640,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -4806,7 +4817,8 @@
           "at": "2026-09-10T21:43:39+00:00"
         },
         "pinned_fingerprint": "d8c89bb5d9dfb6abe6d9f240604f15d80183028892047d05a574abc9740d5a4c",
-        "evidence_only": "run-20260920T162940Z-da287834"
+        "evidence_only": "run-20260920T162940Z-da287834",
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -4981,7 +4993,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -5222,7 +5235,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -5465,7 +5479,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -5636,7 +5651,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -5777,7 +5793,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -5915,7 +5932,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -6072,7 +6090,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -6211,7 +6230,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -6361,7 +6381,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -6528,7 +6549,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -6656,11 +6678,7 @@
           "at": "2026-09-10T04:56:30+00:00"
         },
         "pinned_fingerprint": "05d129030ccb0a67babee3e9b1383e236e0bc719fd5e42f532cb727b83375d1a",
-        "not_checked_in": "run-20260920T135400Z-59a13105",
-        "missing_checks": [
-          "tests/rest/test_portfolio_summary.py::test_the_summary_does_not_report_a_history_the_positions_contradict"
-        ],
-        "unverifiable_reason": "check_missing"
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -6787,7 +6805,8 @@
           "run_id": "run-20260920T162940Z-da287834",
           "at": "2026-09-20T16:45:59+00:00"
         },
-        "pinned_fingerprint": "84885322a72b7450579e6de4f695e915fe4f4d6a9eccac0e0f54fbaec3e20ee8"
+        "pinned_fingerprint": "ce960765d70f2c13cca03880d70e9a1e7557a30f9c28dd61611e6c3252c489ed",
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -7011,7 +7030,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -7262,7 +7282,8 @@
           "run_id": "run-20260920T162940Z-da287834",
           "at": "2026-09-20T16:45:59+00:00"
         },
-        "pinned_fingerprint": "683fdd876eb2d0049f2a12a2c627bce72b54436c423dc695b21442e4f885f7a5"
+        "pinned_fingerprint": "683fdd876eb2d0049f2a12a2c627bce72b54436c423dc695b21442e4f885f7a5",
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -7459,7 +7480,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -7643,7 +7665,8 @@
           "run_id": "run-20260920T162940Z-da287834",
           "at": "2026-09-20T16:45:59+00:00"
         },
-        "pinned_fingerprint": "4d7dd0f1952c6ea876b8f03aea300fb99f89e1be901dccb238f3d462aecef9cf"
+        "pinned_fingerprint": "97e5b904e1094ff2b00f2375482cff9fc5fc53a2daab4c47aa343d8ee2c0f3cb",
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -7830,10 +7853,7 @@
         ],
         "retractions": [],
         "verification_owed": [],
-        "correction_owed": [
-          89,
-          98
-        ],
+        "correction_owed": [],
         "disputed": []
       }
     },
@@ -7852,7 +7872,8 @@
           "run_id": "run-20260920T162940Z-da287834",
           "at": "2026-09-20T16:45:59+00:00"
         },
-        "pinned_fingerprint": "7a52ceff1e585acf3435b70f322e83c344d04b06af6d7ae07370c50f443e6fd0"
+        "pinned_fingerprint": "7a52ceff1e585acf3435b70f322e83c344d04b06af6d7ae07370c50f443e6fd0",
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -8068,7 +8089,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -8238,7 +8260,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -8375,7 +8398,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -8502,7 +8526,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -8663,7 +8688,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -8825,7 +8851,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -8979,7 +9006,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -9181,7 +9209,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -9358,7 +9387,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -9520,7 +9550,8 @@
           "run_id": "run-20260920T162940Z-da287834",
           "at": "2026-09-20T16:45:59+00:00"
         },
-        "pinned_fingerprint": "ab1e6991f72a8b12afb0c91444709dfe45e71ff4d6cd4ba7d3d7f8d94cf9b33d"
+        "pinned_fingerprint": "ab1e6991f72a8b12afb0c91444709dfe45e71ff4d6cd4ba7d3d7f8d94cf9b33d",
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -9693,7 +9724,8 @@
           "run_id": "run-20260920T162940Z-da287834",
           "at": "2026-09-20T16:45:59+00:00"
         },
-        "pinned_fingerprint": "4e20d9ebfd70f3e0cd3e778f8f0fd9d6bdde4e3b5e3d2cde024b168bcc03cea8"
+        "pinned_fingerprint": "4e20d9ebfd70f3e0cd3e778f8f0fd9d6bdde4e3b5e3d2cde024b168bcc03cea8",
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -9858,7 +9890,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -10008,7 +10041,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -10148,7 +10182,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -10298,7 +10333,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -10439,7 +10475,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -10554,7 +10591,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T160433Z-4b8b5e81",
           "at": "2026-09-20T16:23:38+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T173811Z-5d03161b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -10691,19 +10729,143 @@
         "correction_owed": [],
         "disputed": []
       }
+    },
+    "CYM-the_build_totals_reach_back_to_the_date_they_are_published_under": {
+      "id": "CYM-the_build_totals_reach_back_to_the_date_they_are_published_under",
+      "first_seen": {
+        "at": "2026-09-20T17:38:21+00:00",
+        "cause": {
+          "run_id": "run-20260920T173811Z-5d03161b"
+        }
+      },
+      "reproductions": 1,
+      "check": {
+        "state": "REPRODUCING",
+        "adjudicated_by": {
+          "run_id": "run-20260920T173811Z-5d03161b",
+          "at": "2026-09-20T17:38:21+00:00"
+        },
+        "pinned_fingerprint": "e2f1769ef9ef786b4d6f4c29dd6696ca379e019a0345d9d65e22518fe8fc883f"
+      },
+      "filing": {
+        "state": "RAISED",
+        "adjudicated_by": {
+          "event_id": "1dbc85ce67a90556786c781aa01916929f843232ba2c39e0f14330dcd798eb3b",
+          "at": "2026-09-20T17:41:01+00:00"
+        },
+        "reports": [
+          {
+            "report_id": 110,
+            "status": "pending"
+          }
+        ],
+        "refused": [],
+        "verifications": []
+      },
+      "transitions": [
+        {
+          "axis": "check",
+          "from": "UNVERIFIED",
+          "to": "REPRODUCING",
+          "cause": {
+            "run_id": "run-20260920T173811Z-5d03161b"
+          },
+          "at": "2026-09-20T17:38:21+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "NOT_RAISED",
+          "to": "RAISED",
+          "cause": {
+            "event_id": "1dbc85ce67a90556786c781aa01916929f843232ba2c39e0f14330dcd798eb3b"
+          },
+          "at": "2026-09-20T17:41:01+00:00"
+        }
+      ],
+      "regressions": [],
+      "severity": "S3-CONTRACT",
+      "title": "sessions, messages, tool_calls are exactly the sum of the 17 day(s) from 2026-01-31 to 2026-02-16, and so hold nothing outside that window -- while the same response dates the first session to 2025-11-23, before it. The page publishes those totals under SINCE 2025-11-23",
+      "reproduced_in": [
+        "run-20260920T173811Z-5d03161b"
+      ],
+      "component": "discovery.build_stats",
+      "section": "build_stats",
+      "tag": "DOCS",
+      "kind": "check_failure",
+      "checks": [
+        "tests/rest/test_build_stats_covers_the_period_it_claims.py::test_the_build_totals_reach_back_to_the_date_they_are_published_under"
+      ],
+      "detail": {
+        "left": {
+          "totals": {
+            "sessions": 315,
+            "messages": 608185,
+            "tool_calls": 60519,
+            "commits": 23100,
+            "lines_added": 15560654,
+            "lines_removed": 2861535,
+            "bugs_fixed": 12661,
+            "features": 4826,
+            "optimizations": 1034
+          },
+          "first_session": "2025-11-23"
+        },
+        "right": {
+          "daily_activity": {
+            "days": 17,
+            "from": "2026-01-31",
+            "to": "2026-02-16"
+          },
+          "daily_commits": {
+            "days": 301,
+            "from": "2025-11-23",
+            "to": "2026-09-20"
+          }
+        },
+        "sources": {
+          "build stats": "/api/v1/build-stats"
+        },
+        "population": {
+          "measured": true,
+          "series_days": 17,
+          "series_from": "2026-01-31",
+          "series_to": "2026-02-16",
+          "totals_equal_to_the_series": [
+            "sessions",
+            "messages",
+            "tool_calls"
+          ],
+          "first_session": "2025-11-23"
+        },
+        "reason": "sessions, messages, tool_calls are exactly the sum of the 17 day(s) from 2026-01-31 to 2026-02-16, and so hold nothing outside that window -- while the same response dates the first session to 2025-11-23, before it. The page publishes those totals under SINCE 2025-11-23"
+      },
+      "provenance": {
+        "run_id": "run-20260920T173811Z-5d03161b",
+        "measured_at": "2026-09-20T17:38:21+00:00"
+      },
+      "obligations": {
+        "reverify": false,
+        "repair_check": false,
+        "reopen": [],
+        "retractions": [],
+        "verification_owed": [],
+        "correction_owed": [],
+        "disputed": []
+      }
     }
   },
-  "run_id": "run-20260920T162940Z-da287834",
-  "run_level": "V",
-  "updated_at": "2026-09-20T16:45:59+00:00",
+  "run_id": "run-20260920T173811Z-5d03161b",
+  "run_level": "R",
+  "updated_at": "2026-09-20T17:38:21+00:00",
   "counts": {
     "WITHDRAWN": 11,
     "VERIFIED FIXED": 46,
     "STILL REPRODUCIBLE": 4,
-    "OUR CHECK CANNOT TELL": 3
+    "OUR CHECK CANNOT TELL": 3,
+    "RAISED": 1
   },
   "events_head": {
-    "seq": 2416,
-    "chain": "86e1fb4430dfda31d1f3795fd8a0b0195b530aa539e5dd8ea9e7f51b1557d579"
+    "seq": 2422,
+    "chain": "f31041ab57c6fc5c9d5cd52af25964b7306e934b51920025ebb1c8df881e7a88"
   }
 }

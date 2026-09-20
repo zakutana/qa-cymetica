@@ -2702,6 +2702,55 @@ reports:
       description of /ws/backtest/{instance_id}. Say if you would like that
       separately.
 
+  - key: build-stats-window
+    findings: [CYM-the_build_totals_reach_back_to_the_date_they_are_published_under]
+    severity: low
+    category: logic
+    url: https://cymetica.com/build-stats
+    title: >-
+      /build-stats publishes SINCE 2025-11-23 over session totals that hold
+      only 17 days of February 2026
+    expected: >
+      A total shown under a start date should cover the period from that date.
+      Your own page pairs them: the header reads SINCE 2025-11-23, the tiles
+      read SESSIONS 315 / "301 days active", MESSAGES 608.2K / "1.9K/session",
+      TOOL CALLS 60.5K, and under RECORDS, First Session 2025-11-23. The
+      commit half of the same response does exactly that -- daily_commits runs
+      2025-11-23 to today, 301 days, and sums to totals.commits.
+    actual: >
+      The session half does not. In the same GET /api/v1/build-stats,
+      daily_activity carries 17 rows, 2026-01-31 to 2026-02-16, and
+      totals.sessions, totals.messages and totals.tool_calls are each EXACTLY
+      the sum of those 17 rows (315, 608185 and 60519). A total that equals
+      the sum of its own series holds nothing outside it, so those three
+      figures cannot include the session your own first_session field dates to
+      2025-11-23 -- nor anything in the seven months since 2026-02-16, while
+      the commit series beside them reaches today. Measured 2026-09-20.
+    steps:
+      - 'GET https://cymetica.com/api/v1/build-stats -> daily_activity has 17 rows, first date 2026-01-31, last date 2026-02-16'
+      - 'Same response: sum of daily_activity sessions = 315 = totals.sessions; messages = 608185 = totals.messages; tool_calls = 60519 = totals.tool_calls'
+      - 'Same response: first_session = "2025-11-23", which is before the first row of daily_activity'
+      - 'Same response: daily_commits has 301 rows, 2025-11-23 to 2026-09-20, and sums to totals.commits (23100) -- so the commit series is current and the session series is not'
+      - 'Open https://cymetica.com/build-stats -> the header renders SINCE 2025-11-23 and SESSIONS 315 / 301 days active over those figures. This is where it is visible, not where it is wrong: the defect is in the payload above, and the page renders it faithfully'
+    body: >
+      Filed because the page is a claim about your own build, made to a reader
+      who cannot check it, and the two halves of it are measured over
+      different periods without saying so. A visitor divides 608.2K messages
+      by 301 days, or reads "315 sessions since 2025-11-23", and gets a rate
+      for a period the data does not cover.
+      We cannot tell from outside which end is wrong, and the report does not
+      guess: either the session feed stopped on 2026-02-16 and the page still
+      labels it as the whole history, or the history exists and the totals
+      leave it out. Either fix closes this.
+      Low severity by your own bar: nothing is lost and no API consumer
+      breaks -- a reader is misled about a number on a page about
+      trustworthiness.
+      Our check asserts only what the response says about itself: totals that
+      equal the sum of their series are that series, so first_session must
+      fall inside it. It says nothing when a total is LARGER than its series,
+      which is the normal shape of a lifetime total over a recent window, and
+      it does not require the series to reach today.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in
