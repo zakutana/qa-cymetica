@@ -36,8 +36,13 @@ SAFE. Two GETs and no key: the board is public, which is the point of it.
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 from qa.marks import Inconclusive, SafetyTier, qa
 from qa.measure import Measurement, conclude
+
+REPO = Path(__file__).resolve().parents[2]
 
 BOARD = "/api/v1/build-it-better/requests"
 
@@ -46,6 +51,26 @@ BOARD = "/api/v1/build-it-better/requests"
 # on passing through a rewording that kept the false promise.
 GATE_SENTENCE = ("The 24-hour clock starts when this spec is accepted AND "
                  "the $100 MicroFund gate is filled (or waived).")
+
+
+def _our_token() -> str:
+    """Our own request_token, if this machine holds one.
+
+    `build-it-better.key` is the SAVED RESPONSE, not a bare token -- and the
+    first version of the leak scan compared the whole 5 847-character file
+    against the payload, a comparison that could never match and reported "no
+    leak" on the strength of it. The field is read by name, and a value that
+    is not token-shaped is treated as no token rather than as a needle.
+    """
+    path = REPO / "build-it-better.key"
+    if not path.is_file():
+        return ""
+    try:
+        held = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return ""
+    value = (held or {}).get("request_token")
+    return value if isinstance(value, str) and 8 <= len(value) <= 64 else ""
 
 
 def lines_of(improvements: str) -> list[str]:
@@ -184,6 +209,103 @@ def test_the_spec_s_funding_gate_is_the_one_the_build_actually_waits_on(
             f"on {len(read)} request(s) the clock starts only once the gate "
             f"is filled or waived, as the spec says it does"),
         left={"clock_running_unfunded": len(wrong)}, right={"expected": 0},
+        sources={"board": BOARD}))
+
+
+def token_fields(node, path="") -> list[str]:
+    """Every key anywhere in a payload whose NAME promises a credential.
+
+    `token_address` is a coin's contract address and is not one, so the match
+    is on the word standing alone or ending the key.
+    """
+    out = []
+    if isinstance(node, dict):
+        for key, value in node.items():
+            low = str(key).lower()
+            if low in ("token", "request_token", "secret") or low.endswith("_secret"):
+                out.append(f"{path}.{key}".lstrip("."))
+            out += token_fields(value, f"{path}.{key}")
+    elif isinstance(node, list):
+        for i, value in enumerate(node):
+            out += token_fields(value, f"{path}[{i}]")
+    return out
+
+
+@qa(component="rest.build_it_better", tier=SafetyTier.SAFE, surface="rest")
+def test_a_public_read_of_a_build_does_not_carry_the_token_that_controls_it(
+        rest_anon):
+    """The board is public and the build is not: one token separates them.
+
+    `bb_file_request` returns a one-time `request_token` and says "STORE the
+    token, it is the only key to accept the scope and post the verdict".
+    Every write tool -- bb_accept_spec, bb_request_change, bb_post_verdict --
+    requires it, and its own schema says "only its holder may act". The read
+    side is deliberately open: `bb_get_request` and the REST twin are
+    "Read-only, no auth", and they return the whole record, messages
+    included. So the entire holder rule rests on that one field never
+    appearing in a read that needs no key.
+
+    Measured with no credential at all, on both doors, over every request the
+    board lists: 47 distinct keys come back and none of them is a token. The
+    only match for the word is `coin.token_address`, a contract address.
+
+    Where we hold our own token on this disk, the payload is searched for it
+    VERBATIM as well, because a leak could rename the field. The value is
+    never put in the reason, the left/right or the sources: a check that
+    proves a secret is exposed must not be the thing that publishes it.
+
+    It passes today. It is here because if it ever fails, a stranger can
+    accept someone else's scope, rewrite it, or post a verdict on their build.
+    """
+    board = rest_anon.get(BOARD)
+    if board.status_code != 200:
+        raise Inconclusive(
+            f"{BOARD} answered HTTP {board.status_code}; a failed read is not "
+            f"a read that carried no token")
+    try:
+        items = (board.json() or {}).get("items") or []
+    except ValueError:
+        raise Inconclusive(f"{BOARD} answered 200 with a body that is not JSON")
+    if not items:
+        raise Inconclusive("the board holds no request, so no public read of "
+                           "one can be made")
+
+    ours = _our_token()
+    read, named, verbatim = [], [], []
+    for item in items:
+        ticket = str(item.get("ticket") or "")
+        if not ticket:
+            continue
+        one = rest_anon.get(f"{BOARD}/{ticket}")
+        if one.status_code != 200:
+            continue
+        try:
+            record = one.json() or {}
+        except ValueError:
+            continue
+        read.append(ticket)
+        named += [f"{ticket}:{f}" for f in token_fields(record)]
+        if ours and ours in (one.text or ""):
+            verbatim.append(ticket)
+
+    if not read:
+        raise Inconclusive("no request on the board could be read, so nothing "
+                           "was measured")
+
+    conclude(Measurement(
+        verdict="failed" if (named or verbatim) else "passed",
+        reason=(
+            f"a read that needs no credential carries the token that controls "
+            f"the build: field(s) {sorted(set(named))}" if named else
+            f"a read that needs no credential contains our own request_token "
+            f"verbatim for {verbatim}, under a field name that does not say so"
+            if verbatim else
+            f"{len(read)} request(s) read anonymously and none carries a "
+            f"request_token or any other credential field"
+            + ("; our own token was searched for verbatim and is absent"
+               if ours else "; no token of ours is on this disk to search for")),
+        left={"requests_read": len(read), "token_fields": len(set(named))},
+        right={"token_fields": 0},
         sources={"board": BOARD}))
 
 

@@ -166,3 +166,37 @@ def test_a_waived_gate_is_the_spec_working_as_written():
         "a gate that IS filled is the spec working as written")
     assert bb.clock_runs_unfunded({**neither, "funding": None}) is None, (
         "no funding block is no reading, not a reading of zero -- rule 8")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_token_scan_would_find_a_token_and_not_a_coin_address():
+    """A guard over a boundary that currently holds has to be shown working.
+
+    The public read of a build carries 47 keys and none is a credential, so
+    the check passes and will go on passing until the day it matters. The two
+    ways it could be useless are both driven here: a word that LOOKS like a
+    credential and is not (`token_address`, a coin's contract address, which
+    is in every one of these payloads), and a real one nested where a shallow
+    scan would miss it.
+    """
+    bb = _check()
+
+    real = {"ticket": "ET-26036", "coin": {"token_address": None},
+            "messages": [{"kind": "BB-SPEC", "body": "..."}]}
+    assert bb.token_fields(real) == [], (
+        "token_address is a contract address; flagging it would make the "
+        "check cry wolf on every single request")
+
+    leaked = {"ticket": "ET-1", "messages": [{"kind": "BB-REQUEST",
+                                              "request_token": "bb_abc123"}]}
+    assert bb.token_fields(leaked) == ["messages[0].request_token"], (
+        bb.token_fields(leaked))
+    assert bb.token_fields({"secret": "x"}) == ["secret"]
+    assert bb.token_fields({"a": {"b": {"token": "x"}}}) == ["a.b.token"]
+
+    # And the needle: the key file is a saved RESPONSE, so a scan that used
+    # the whole file could never match. It reads the field or reports none.
+    held = bb._our_token()
+    assert held == "" or 8 <= len(held) <= 64, (
+        f"the needle is not token-shaped: {len(held)} chars -- this is the "
+        f"comparison that reported 'no leak' without ever being able to match")

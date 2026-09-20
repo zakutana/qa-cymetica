@@ -659,7 +659,16 @@ mcp_tools:
      # Classified 2026-09-19. Their advisor connector (mcp.json
      # advisor_connector) names these four as "read-only fund research ...
      # No key needed", and each tool's own description says "Read-only".
-     list_funds, get_fund, get_fund_history, get_fund_methodology]
+     list_funds, get_fund, get_fund_history, get_fund_methodology,
+     # Classified 2026-09-20, the two read halves of Build it Better -- their
+     # own first priority for outside QA (REPLY-0031). Each description ends
+     # "Read-only, no auth": one searches the rebuilt-app directory, the other
+     # reads one build and its BB-* message log. The four that WRITE --
+     # bb_file_request, bb_accept_spec, bb_request_change, bb_post_verdict --
+     # are deliberately left unclassified: each needs the one-time
+     # request_token, and filing a second ticket by accident would spend a
+     # build slot and put a stranger's name on a request.
+     bb_search_rebuilt_apps, bb_get_request]
   contribute:
     [submit_observation, submit_feedback, request_feature, submit_signal]
   trade:
