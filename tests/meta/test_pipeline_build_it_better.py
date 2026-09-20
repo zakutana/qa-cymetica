@@ -225,3 +225,45 @@ def test_the_counters_are_counted_from_the_stage_field():
     # A request with no stage is counted in `total` and in no stage, which is
     # what the check compares: len(items) against total, stages separately.
     assert sum(bb.stage_counts(many).values()) == 4 and len(many) == 6
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_late_means_past_the_deadline_with_nothing_shipped():
+    """Written while the one live build is still inside its window.
+
+    ET-26036's deadline is 2026-09-20T20:25:59Z and this was written that
+    morning, so the live check can only pass today whatever it does. The
+    reading therefore has to be driven here, at both a before and an after,
+    or the guard is one nobody has seen work until the night it matters.
+
+    Three ways a build stops being late, because reading only `our_url` would
+    call a finished build overdue: a shipped url, a resolution time, or a
+    verdict already posted.
+    """
+    from datetime import datetime, timedelta, timezone
+
+    bb = _check()
+    deadline = datetime(2026, 9, 20, 20, 25, 59, tzinfo=timezone.utc)
+    live = {"ticket": "ET-26036", "deadline_at": deadline.isoformat(),
+            "stage": "funded", "our_url": None, "resolved_at": None,
+            "verdict": None}
+
+    inside = deadline - timedelta(hours=9)
+    assert bb.overdue(live, inside) is None, "nine hours early is not late"
+
+    after = deadline + timedelta(hours=2, minutes=30)
+    said = bb.overdue(live, after)
+    assert said and said["ticket"] == "ET-26036", said
+    assert said["over_by_hours"] == 2.5, said["over_by_hours"]
+
+    for key, value in (("our_url", "https://cymetica.com/tools/signal9"),
+                       ("resolved_at", "2026-09-20T19:00:00+00:00"),
+                       ("verdict", "pass")):
+        assert bb.overdue({**live, key: value}, after) is None, (
+            f"a build with {key} set has shipped; late is about what did not "
+            f"arrive, not about which field proves it did")
+
+    assert bb.overdue({**live, "deadline_at": None}, after) is None, (
+        "no published deadline is no promise to hold them to")
+    assert bb.overdue({**live, "deadline_at": "not a date"}, after) is None, (
+        "a deadline we cannot read is not a deadline that passed -- rule 8")

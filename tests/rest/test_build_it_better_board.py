@@ -212,6 +212,94 @@ def test_the_spec_s_funding_gate_is_the_one_the_build_actually_waits_on(
         sources={"board": BOARD}))
 
 
+def overdue(item: dict, now) -> dict | None:
+    """A build past its own published deadline with nothing shipped.
+
+    Their promise is the product's headline: 24 hours from acceptance. The
+    record publishes the clock itself -- `deadline_at`, and `our_url` once
+    shipped -- so this asks nothing they have not already said.
+
+    A request with no deadline, or one still inside it, is not evidence.
+    `resolved_at` counts as shipped too: a build can finish without our_url
+    being the thing that proves it, and reading only our_url would call a
+    finished build late.
+    """
+    from datetime import datetime, timezone
+
+    deadline = item.get("deadline_at")
+    if not deadline:
+        return None
+    if item.get("our_url") or item.get("resolved_at") or item.get("verdict"):
+        return None
+    try:
+        when = datetime.fromisoformat(str(deadline).replace("Z", "+00:00"))
+    except (TypeError, ValueError):
+        return None
+    if when.tzinfo is None:
+        when = when.replace(tzinfo=timezone.utc)
+    if when >= now:
+        return None
+    return {"ticket": item.get("ticket"), "deadline_at": deadline,
+            "stage": item.get("stage"), "over_by_hours":
+                round((now - when).total_seconds() / 3600.0, 1)}
+
+
+@qa(component="rest.build_it_better", tier=SafetyTier.SAFE, surface="rest")
+def test_a_build_ships_inside_the_24_hours_it_publishes(rest_anon):
+    """The product's headline promise, read off the clock it publishes itself.
+
+    Every accepted request carries `clock_started_at` and `deadline_at`, and
+    the board's own stats carry `on_time` and `median_build_seconds`. So the
+    promise is measurable without asking them anything: a request whose
+    deadline has passed with no `our_url`, no `resolved_at` and no `verdict`
+    is a build that did not ship in the window they published for it.
+
+    Written on 2026-09-20 at 11:05 UTC, while ET-26036 sits inside its window
+    -- deadline 2026-09-20T20:25:59Z, nine hours out. That is the point of
+    writing it now rather than tonight: a check put in place before the event
+    it measures cannot be shaped by knowing the answer, which is the whole of
+    why this repository preregisters anything at all.
+    """
+    from datetime import datetime, timezone
+
+    board = rest_anon.get(BOARD)
+    if board.status_code != 200:
+        raise Inconclusive(
+            f"{BOARD} answered HTTP {board.status_code}; a failed read is not "
+            f"a board of builds that shipped on time")
+    try:
+        items = (board.json() or {}).get("items") or []
+    except ValueError:
+        raise Inconclusive(f"{BOARD} answered 200 with a body that is not JSON")
+
+    now = datetime.now(timezone.utc)
+    dated = [i for i in items if i.get("deadline_at")]
+    if not dated:
+        raise Inconclusive(
+            "no request on the board publishes a deadline, so there is no "
+            "promise of theirs to hold them to")
+
+    late = [o for o in (overdue(i, now) for i in dated) if o]
+    waiting = [i.get("ticket") for i in dated
+               if not (i.get("our_url") or i.get("resolved_at")
+                       or i.get("verdict"))
+               and str(i.get("deadline_at")) > now.isoformat()]
+
+    conclude(Measurement(
+        verdict="failed" if late else "passed",
+        reason=("; ".join(
+            f"{o['ticket']} passed its own deadline {str(o['deadline_at'])[:19]} "
+            f"{o['over_by_hours']}h ago and has shipped nothing "
+            f"(stage {o['stage']})" for o in late)
+            if late else
+            f"no request on the board is past the 24-hour deadline it "
+            f"publishes; {len(dated)} carry one"
+            + (f", and {len(waiting)} are still inside their window: "
+               f"{', '.join(str(t) for t in waiting)}" if waiting else "")),
+        left={"overdue": len(late)}, right={"overdue": 0},
+        sources={"board": BOARD}))
+
+
 def stage_counts(items: list) -> dict:
     """The board's own list, counted by the stage each request is in."""
     out: dict[str, int] = {}
