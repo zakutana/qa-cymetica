@@ -261,6 +261,15 @@ def test_a_room_that_cannot_open_does_not_discard_what_was_already_placed(
 
     did = scripts_lab.night_promote()
 
+    # `assert sent` FIRST, because without it the whole judgement is
+    # `0 == 0`: reintroduce anything that stops the night buying -- an
+    # unreadable book, a stake of zero, a brake at the inner call site -- and
+    # both assertions below hold while the check says nothing about the
+    # discard it is named for. The sibling above carries this line; this one
+    # was left without it. M07 again, found by three readers on 2026-09-20.
+    assert sent, (
+        "nothing was bought at all, so 'what was already placed' is the "
+        "empty set and this check cannot see the defect it exists for")
     assert did["orders"] == len(sent), (
         f"{len(sent)} order(s) placed and {did['orders']} reported")
     assert any("NEX-0002" in line for line in did["held"]), did["held"]

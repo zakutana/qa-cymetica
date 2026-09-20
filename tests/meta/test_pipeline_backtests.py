@@ -355,6 +355,59 @@ def test_the_gate_keeps_the_bytes_and_the_search_does_not(tmp_path, monkeypatch)
     assert seen and set(seen) == {None}, (
         f"the search captured a call it makes thousands of times: {seen}")
 
+    # AND THE CAPTURE ITSELF. Everything above stubs `_backtest_call`, which
+    # is the one place the EvidenceStore block lives -- so deleting that block
+    # and keeping the `cite` parameter left this green while no capture of
+    # backtest_event_card_idea was ever written, the exact state the docstring
+    # says was live until today. Nothing else in tests/ asserted a capture row
+    # existed. Found by three readers on 2026-09-20.
+    monkeypatch.undo()
+    _at(tmp_path, monkeypatch)
+    lab2 = _scripts_lab(tmp_path, monkeypatch)
+    captured = []
+
+    class _Store:
+        def __init__(self, *a, **k):
+            pass
+
+        def capture(self, request, response, tier, call=None):
+            captured.append(call)
+            return "evidence-id"
+
+    import qa.evidence
+    monkeypatch.setattr(qa.evidence, "EvidenceStore", _Store)
+
+    class _Mcp:
+        http = type("H", (), {"close": lambda self: None})()
+
+        def rpc(self, method, params):
+            import httpx
+            body = {"result": {"content": [{"type": "text", "text": json.dumps(
+                {"sharpe_ratio": 1.0, "total_return_pct": 2.0,
+                 "n_points": 29})}]}}
+            return httpx.Response(
+                200, json=body, request=httpx.Request("POST", "https://x/mcp"))
+
+        @staticmethod
+        def unwrap(payload):
+            import json as _json
+            text = payload["result"]["content"][0]["text"]
+            return _json.loads(text)
+
+    class _Nexus:
+        @staticmethod
+        def _inner(payload):
+            return payload
+
+    monkeypatch.setattr(lab2, "_reader", lambda: (_Nexus(), _Mcp(), None))
+    monkeypatch.setattr(lab2, "_done", lambda client, token: None)
+    lab2._backtest_call(legs, 30, include_fees=True,
+                        cite="backtest.event_card_idea")
+    assert captured == ["backtest.event_card_idea"], (
+        f"the cited path wrote no capture at all: {captured}. The parameter "
+        f"reaching the function is not the same as the bytes being kept, and "
+        f"this test asserted only the first for a whole afternoon")
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_search_holds_no_hand_that_trades_or_opens_a_room():

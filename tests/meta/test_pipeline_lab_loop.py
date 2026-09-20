@@ -658,8 +658,17 @@ def test_a_tick_during_a_deep_pass_or_a_night_only_reads_the_memecoins(
 
         assert did["skipped"] == blocker
         assert len(calls["fomo"]) == 1
-        for door in ("sample", "cycle", "promote", "search", "verdicts"):
-            assert not calls[door], f"{door} ran while a {blocker} was on"
+        # EVERY door but the memecoin one, read off `calls` rather than from
+        # a list written by hand. The list named five of ten, so `truth` -- a
+        # live read of their ground-truth tools -- and `moves`, `refill` and
+        # `fomo_reading` could all have run under a name that says "only
+        # reads the memecoins". Enumerating what you expect is how a check
+        # stops covering what you did not think of; found by three readers on
+        # 2026-09-20.
+        for door, made in sorted(calls.items()):
+            if door == "fomo":
+                continue
+            assert not made, f"{door} ran while a {blocker} was on"
         assert did["may_ask"] is False
 
 
@@ -1068,7 +1077,19 @@ def test_a_card_their_backtest_cannot_price_goes_to_paper_at_half(
     assert did["rooms"] == 1 and len(sent) == 1, did
     # EXACTLY half, not "at most half": an upper bound was satisfied by a
     # quarter stake or by one cent (L05, deep pass of 2026-09-19, 3/3).
+    #
+    # And half OF THE WHOLE, which is the half L05's fix missed: comparing
+    # the order against `_leg_stakes(..., half=True)` pins the call site to
+    # the function and leaves the function free to mean anything. Changing
+    # `each /= 2` to `each /= 4` kept this green and kept the only other
+    # reference green too, that one being an upper bound. So the definition
+    # is pinned here, against the full stake, and the call site against the
+    # definition. Found by three readers on 2026-09-20.
+    whole = scripts_lab._leg_stakes(100000.0, 0.0, 1)[0]
     half = scripts_lab._leg_stakes(100000.0, 0.0, 1, half=True)[0]
+    assert abs(half - whole / 2) <= 0.01, (
+        f"half is {half} against a whole stake of {whole}: 'half' has to mean "
+        f"half, or the word in the docstring is the only thing that says so")
     assert sent[0][1] == half and half > 0, (sent, half)
     import qa.rooms as qa_rooms
     rows = qa_rooms.load()

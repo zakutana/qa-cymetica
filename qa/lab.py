@@ -324,6 +324,18 @@ def last_n_eff(rows: list[dict] | None = None) -> dict | None:
 DAY_HOURS = 24
 
 
+def _within(value, since: datetime) -> bool:
+    """Is this row inside the window? An unreadable moment says YES.
+
+    One reader for both caps, because they had the same inverted default in
+    two places and a fix to one would have left the other. A moment we cannot
+    read is not a moment outside the window -- it is a reading we did not
+    take, and on a brake the safe answer is the one that keeps it on.
+    """
+    when = _at(value)
+    return True if when is None else when > since
+
+
 def asked_within(nexus_rows: list[dict], now: datetime | None = None,
                  hours: float = DAY_HOURS) -> int:
     """Questions put to Nexus in the last `hours`, whoever asked them.
@@ -334,9 +346,14 @@ def asked_within(nexus_rows: list[dict], now: datetime | None = None,
     """
     moment = now or datetime.now(timezone.utc)
     since = moment - timedelta(hours=hours)
+    # An unreadable stamp COUNTS. `(_at(...) or since) > since` compared false
+    # for one, so a row whose moment we cannot read quietly admitted a 25th
+    # question -- rule 8 inverted, on the side that spends. `nexus.py record
+    # --at` takes the operator's free text straight into the diary, so it
+    # needs no bug to produce one.
     return sum(1 for row in nexus_rows
                if row.get("type") == "question"
-               and (_at(row.get("at")) or since) > since)
+               and _within(row.get("at"), since))
 
 
 def rooms_within(room_rows: list[dict], now: datetime | None = None,
@@ -346,7 +363,7 @@ def rooms_within(room_rows: list[dict], now: datetime | None = None,
     since = moment - timedelta(hours=hours)
     return sum(1 for row in room_rows
                if row.get("type") == "strategy"
-               and (_at(row.get("at")) or since) > since)
+               and _within(row.get("at"), since))
 
 
 def may_ask(asked: int, pass_running: bool) -> tuple[bool, str]:

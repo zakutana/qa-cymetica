@@ -83,6 +83,40 @@ def test_a_missing_sharpe_is_not_a_zero():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_stamp_we_cannot_read_is_counted_against_the_cap():
+    """Rule 8, on the side that spends.
+
+    Both caps read `(_at(row["at"]) or since) > since`, so a row whose
+    timestamp will not parse falls back to `since`, compares false, and is
+    NOT counted -- an unreadable stamp quietly admitted a 25th question and
+    an 11th room. `nexus.py record --at` takes the operator's free text
+    straight into the diary, so producing one needs no bug at all.
+
+    The safe direction here is the opposite of `_closed_on_their_side`: there
+    a reading we did not take leaves money counted, and here it must leave a
+    question counted. Both keep the brake on when we cannot see.
+    """
+    now = datetime(2026, 9, 20, 12, 0, tzinfo=timezone.utc)
+    rows = [{"type": "question", "at": (now - timedelta(hours=1)).isoformat()},
+            {"type": "question", "at": "not a timestamp"},
+            {"type": "question", "at": None},
+            {"type": "question"}]
+    assert lab.asked_within(rows, now) == 4, (
+        "three of these carry no readable moment, and a cap that cannot see "
+        "a question must assume it was asked inside the window")
+
+    # A stamp that IS readable and outside the window still does not count.
+    old = [{"type": "question", "at": (now - timedelta(hours=30)).isoformat()}]
+    assert lab.asked_within(old, now) == 0
+
+    rooms = [{"type": "strategy", "at": "nope"},
+             {"type": "strategy", "at": (now - timedelta(hours=30)).isoformat()},
+             {"type": "strategy", "at": (now - timedelta(hours=2)).isoformat()}]
+    assert lab.rooms_within(rooms, now) == 2, (
+        "the unreadable one and the recent one; the 30-hour-old one is out")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_n_eff_collapses_toward_one_as_the_book_correlates():
     """Nexus's own leading indicator (2026-09-12, unprompted): "N_eff = N /
     (1 + (N-1)*rho) over the open book -- when average pairwise correlation
@@ -107,18 +141,47 @@ def test_n_eff_collapses_toward_one_as_the_book_correlates():
     assert said["n_eff"] > 1.7, (
         "near-uncorrelated positions should read as close to their own count")
 
-    # Nexus's stated collapse zone: rho crossing ~0.6-0.7 halves the breadth
-    # of a five-position book toward two, not five.
-    mixed = {"a": [1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
-             "b": [1.1, 2.2, 2.9, 4.3, 4.8, 6.4],
-             "c": [1.2, 1.9, 3.3, 3.8, 5.2, 5.9],
-             "d": [5.0, 4.0, 3.0, 2.0, 1.0, 0.5],
-             "e": [4.9, 4.1, 2.8, 2.2, 0.9, 0.6]}
-    said = lab.n_eff(mixed)
+    # Nexus's stated collapse zone, and this fixture was NOT in it: five
+    # series, three rising and two falling, average pairwise rho -0.1966 and
+    # n_eff 23.43 -- twenty-three independent bets out of five positions,
+    # which is not a reading of anything. And `expected` was computed from
+    # the function's OWN returned rho, so a rho that is not the average
+    # pairwise correlation (the first pair only, say) passed unchanged.
+    # Found by three readers on 2026-09-20.
+    #
+    # So: rho is computed here, independently, from the pairs; and a fixture
+    # that really is in the zone is the one the collapse is read off.
+    from itertools import combinations
+    from statistics import correlation
+
+    together = {"a": [1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
+                "b": [1.1, 2.2, 2.9, 4.3, 4.8, 6.4],
+                "c": [1.2, 1.9, 3.3, 3.8, 5.2, 5.9],
+                "d": [0.9, 2.1, 3.1, 3.9, 5.1, 6.1],
+                "e": [1.3, 2.0, 3.2, 4.1, 4.9, 6.2]}
+    said = lab.n_eff(together)
     assert said["n"] == 5
-    n = said["n"]
-    expected = n / (1 + (n - 1) * said["rho"])
-    assert abs(said["n_eff"] - expected) < 1e-9, "the formula is exactly this"
+
+    pairs = [correlation(together[x], together[y])
+             for x, y in combinations(sorted(together), 2)]
+    mine = sum(pairs) / len(pairs)
+    assert abs(said["rho"] - mine) < 1e-9, (
+        f"rho has to be the AVERAGE PAIRWISE correlation Nexus named: the "
+        f"ten pairs here average {mine:.4f} and the function said "
+        f"{said['rho']:.4f}")
+    assert mine > 0.6, (
+        f"this fixture is supposed to sit in the collapse zone Nexus quoted, "
+        f"and its average pairwise correlation is {mine:.4f}")
+    assert said["n_eff"] < 2.0, (
+        f"five positions correlated at {mine:.2f} are worth fewer than two "
+        f"independent bets, which is the whole of what the indicator says; "
+        f"n_eff read {said['n_eff']:.2f}")
+    assert abs(said["n_eff"] - 5 / (1 + 4 * mine)) < 1e-9, "the formula"
+
+    # And the other direction, computed the same way: a book that is not
+    # correlated must not read as collapsed.
+    apart = lab.n_eff(orthogonal)
+    assert apart["n_eff"] > 1.7 > apart["rho"]
 
     # A gap is not a loss: fewer than two rooms, or a series too short to
     # correlate, is inconclusive -- never a fabricated 1.0 or a crash.
