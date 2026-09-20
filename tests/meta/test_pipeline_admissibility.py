@@ -223,3 +223,79 @@ def test_two_levels_reproduce_vs_verify():
 
     none = admissibility(_admissible("r", "2026-09-05T00:00:00+00:00", platform_fingerprint=None))
     assert none.level == "none" and "no_fingerprint" in none.reasons
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_default_run_has_to_have_judged_something_in_the_ledger(tmp_path):
+    """Admissible is not the same as relevant.
+
+    On 2026-09-12 `ledger.py` with no `--run` took my own `tests/meta
+    tests/repo` run: admissible, newest, and it measured nothing from their
+    platform at all. No row moved -- the fold never closes what it did not
+    run -- but the page describes the run the ledger was composed from, so
+    every section tile emptied, and `test_a_tile_lists_the_tests_behind_its_count`
+    passed by a single check (1 -> 0).
+
+    So the default walks back to the newest admissible run that settled at
+    least one row: every check a row declares, present in what the run
+    collected. A partial overlap is not enough -- that is rule 1, and a run
+    that collected half a row's checks adjudicates none of it. When nothing
+    qualifies it returns None and the caller refuses rather than composing
+    from a run about something else.
+    """
+    import importlib.util
+
+    path = Path(__file__).resolve().parents[2] / "scripts" / "ledger.py"
+    spec = importlib.util.spec_from_file_location("ledger_pick", path)
+    ledger_mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(ledger_mod)
+
+    prev = {"findings": {
+        "CYM-a": {"checks": ["tests/rest/test_a.py::test_one",
+                             "tests/rest/test_a.py::test_two"]},
+        "CYM-b": {"checks": ["tests/mcp/test_b.py::test_three"]},
+    }}
+
+    runs = tmp_path / "runs"
+    runs.mkdir()
+    def _write(name, run):
+        (runs / f"{name}.json").write_text(json.dumps(run), encoding="utf-8")
+
+    def _over(run_id, at, collected):
+        return _admissible(
+            run_id, at, collected=collected,
+            results=[{"nodeid": n, "outcome": "passed"} for n in collected])
+
+    _write("a", _over("run-platform", "2026-09-12T10:00:00+00:00",
+                      ["tests/mcp/test_b.py::test_three"]))
+    # Newest, admissible, and about us rather than about them.
+    _write("b", _over("run-ourselves", "2026-09-12T18:00:00+00:00",
+                      ["tests/meta/test_pipeline_fold.py::test_x"]))
+
+    assert ledger_mod._run_that_adjudicates(prev, runs=runs) == "run-platform", (
+        "the newest admissible run judged nothing in the ledger and was taken "
+        "anyway")
+
+    # Half a row is none of it: rule 1.
+    _write("c", _over("run-half", "2026-09-12T20:00:00+00:00",
+                      ["tests/rest/test_a.py::test_one"]))
+    assert ledger_mod._run_that_adjudicates(prev, runs=runs) == "run-platform"
+
+    _write("d", _over("run-whole", "2026-09-12T21:00:00+00:00",
+                      ["tests/rest/test_a.py::test_one",
+                       "tests/rest/test_a.py::test_two"]))
+    assert ledger_mod._run_that_adjudicates(prev, runs=runs) == "run-whole"
+
+    # Nothing qualifies -> None, so the caller can refuse with a reason
+    # instead of composing from a run about something else.
+    empty = tmp_path / "none"
+    empty.mkdir()
+    _write_only = _over("run-ourselves", "2026-09-12T18:00:00+00:00",
+                        ["tests/meta/test_pipeline_fold.py::test_x"])
+    (empty / "b.json").write_text(json.dumps(_write_only), encoding="utf-8")
+    assert ledger_mod._run_that_adjudicates(prev, runs=empty) is None
+
+    # An empty ledger has no rows to judge, so the newest admissible run is
+    # the only sensible answer -- the first fold must not be unfoldable.
+    assert ledger_mod._run_that_adjudicates({"findings": {}}, runs=empty) \
+        == "run-ourselves"

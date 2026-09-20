@@ -147,6 +147,52 @@ def _no_admissible_run_message() -> str:
     return "\n".join(lines)
 
 
+def _run_that_adjudicates(prev: dict, runs: Path | None = None) -> str | None:
+    """The newest admissible run that settled at least one row of the ledger.
+
+    Admissible is not the same as relevant. On 2026-09-12 a fold with no
+    `--run` took a `tests/meta tests/repo` run of my own -- admissible,
+    newest, and measuring nothing from their platform. No row moved, because
+    the fold never closes what it did not run, but the page describes the run
+    the ledger was composed from, so every section tile emptied.
+
+    "Settled" is rule 1: EVERY check the row declares, present in what the run
+    collected. Half a row's checks adjudicates none of it. An empty ledger has
+    no rows to judge, so there the newest admissible run is the answer -- the
+    first fold must not be unfoldable.
+    """
+    declared = [set(row.get("checks") or [])
+                for row in (prev.get("findings") or {}).values()]
+    declared = [checks for checks in declared if checks]
+    admissible = [run for run in list_runs(runs=runs)
+                  if admissibility(run).level in {"R", "V"}]
+    if not admissible:
+        return None
+    if not declared:
+        return admissible[-1]["run_id"]
+    for run in reversed(admissible):  # list_runs is sorted ascending
+        collected = set(run.get("collected") or [])
+        if any(checks <= collected for checks in declared):
+            return run["run_id"]
+    return None
+
+
+def _nothing_adjudicating_message(prev: dict) -> str:
+    rows = len([row for row in (prev.get("findings") or {}).values()
+                if row.get("checks")])
+    newest = latest_admissible_run_id("R")
+    return "\n".join([
+        f"the newest admissible run ({newest}) settled none of the {rows} "
+        "row(s) the ledger declares checks for, and neither did any older "
+        "one.",
+        "Composing from it would describe the page with a run that measured "
+        "something else.",
+        "",
+        "Run the checks first (see the qa-sweep skill), or name the run you "
+        "mean with --run <id>.",
+    ])
+
+
 def compose(run_id: str | None = None, events_only: bool = False,
             attest: bool = False) -> dict:
     """Fold one run and the whole journal onto the previous ledger.
@@ -171,9 +217,11 @@ def compose(run_id: str | None = None, events_only: bool = False,
     run = None
     if not events_only:
         if run_id is None:
-            run_id = latest_admissible_run_id("R")
-            if run_id is None:
+            if latest_admissible_run_id("R") is None:
                 raise SystemExit(_no_admissible_run_message())
+            run_id = _run_that_adjudicates(prev)
+            if run_id is None:
+                raise SystemExit(_nothing_adjudicating_message(prev))
         run = load_run(run_id)
 
         # Gap 1: corroborate the record against things it does not control,
