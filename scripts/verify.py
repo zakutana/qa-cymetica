@@ -639,12 +639,30 @@ def main(argv: list[str] | None = None) -> int:
     try:
         token = CURRENT_TIER.set(SafetyTier.SAFE)
         try:
-            held: dict[int, set] = {}
+            held: dict[int, dict] = {}
             evidence: dict[int, str | None] = {}
+            unreadable: list[int] = []
             for item in work:
                 rid = item["report_id"]
-                if rid not in held:
+                if rid in held or rid in unreadable:
+                    continue
+                try:
                     held[rid], evidence[rid] = already_sent(client, rid)
+                except SystemExit as refusal:
+                    # One report we cannot read is one report we may not send
+                    # blind -- not a run that stops. Their TLS timed out on a
+                    # single report at 20:55 on 2026-09-12 and took every
+                    # other verdict of that run with it, including ones whose
+                    # own read had already succeeded. The refusal is per
+                    # report, so the loss should be too.
+                    print(str(refusal))
+                    unreadable.append(rid)
+            if unreadable:
+                print(f"  skipping {len(unreadable)} report(s) whose record "
+                      f"could not be read: {unreadable}")
+                work = [i for i in work if i["report_id"] not in unreadable]
+                if not work:
+                    return 1
         finally:
             CURRENT_TIER.reset(token)
 

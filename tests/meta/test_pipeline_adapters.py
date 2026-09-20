@@ -707,6 +707,65 @@ def _msg(msg_id, at, content="hello", auto=False, thread="th-1"):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_one_unreadable_report_does_not_take_the_whole_run_with_it(
+        tmp_path, monkeypatch):
+    """VER: refusing to send blind is per report, so the loss must be too.
+
+    `already_sent` raises rather than guess -- correct, and rule 8. But the
+    raise crossed the loop that reads every report in the run, so their TLS
+    timing out on ONE report at 20:55 on 2026-09-12 took every other verdict
+    with it, including ones whose own read had already come back fine. A
+    refusal about one report is not evidence about another.
+    """
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    verify = _module("scripts/verify.py")
+
+    work = [{"finding_id": "CYM-a", "report_id": 46, "fingerprint": "fp-1",
+             "verdict": "pass", "run_id": "run-1", "tree_sha": "t",
+             "checked_at": "2026-09-12T20:00:00+00:00", "checks": ["x::y"],
+             "evidence_ids": [], "pin": None, "prereg_id": "PRE-0001",
+             "title": "a", "level": "V"},
+            {"finding_id": "CYM-b", "report_id": 47, "fingerprint": "fp-2",
+             "verdict": "pass", "run_id": "run-1", "tree_sha": "t",
+             "checked_at": "2026-09-12T20:00:00+00:00", "checks": ["x::z"],
+             "evidence_ids": [], "pin": None, "prereg_id": "PRE-0001",
+             "title": "b", "level": "V"}]
+    monkeypatch.setattr(verify, "owed", lambda ledger, only: list(work))
+    monkeypatch.setattr(verify, "load_ledger", lambda: {"findings": {}})
+    monkeypatch.setattr(verify, "load_dotenv", lambda *a, **k: None)
+    monkeypatch.setattr(verify, "install_client_guard", lambda: None)
+    monkeypatch.setattr(verify, "identities", lambda: {"trusted": None})
+
+    posted = []
+
+    def handle(request):
+        if request.url.path.endswith("/verifications"):
+            # #46's record is unreadable; #47's is fine and empty.
+            if "/46/" in str(request.url):
+                return httpx.Response(503, text="gateway timeout")
+            return httpx.Response(200, json={"verifications": []})
+        posted.append(str(request.url))
+        return httpx.Response(200, json={"id": 1})
+
+    def _sender(*a, **k):
+        client = _client(handle)
+        client._transport.registry.mutate_enabled = True
+        client._transport.registry.mutate_allowed_hosts = frozenset(
+            {"cymetica.com"})
+        return client
+
+    monkeypatch.setattr(verify, "build_client", _sender)
+    monkeypatch.setattr(verify, "settle", lambda *a, **k: True)
+
+    verify.main(["--confirm"])
+    assert any("/47/" in url for url in posted), (
+        f"the readable report's verification was dropped because another "
+        f"report could not be read: {posted}")
+    assert not any("/46/" in url for url in posted), (
+        "a report we could not read was sent blind")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_what_their_server_already_holds_is_dropped_before_sending():
     """VER: the sibling above tests the READ; this tests that anything acts on it.
 
