@@ -105,7 +105,8 @@ asked for it. So it is kept here.
   `scripts/correspond.py sent` says so when it records a message that does not
   carry it. It records it anyway -- the journal's job is what actually went
   out, not what should have -- and `tests/repo/test_correspond_handle.py`
-  holds both halves.
+  holds both halves. **And it goes in a fenced code block, never a `>`
+  quote** -- only the block carries a copy button (asked 2026-09-20).
 * [operator 2026-09-12] *"ne zadene schedulery automaticke nechci, deep pasy si
   chci poustet sam vzyd jak jdu spat jak jsme to delal doted. Pak treba jak mam
   neco mam spustit tydne mi to pripomenes. Proste mibudes jen pripominat co mam
