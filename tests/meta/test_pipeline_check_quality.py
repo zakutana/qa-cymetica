@@ -694,3 +694,56 @@ def test_the_traffic_invariants_can_actually_fail():
         "a board figure outside the bracket read as the counter moving"
     assert _agrees({**row, "likes": 9}, _app(), _app(), "/x"), \
         "a like count the app does not report read as agreement"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_build_stats_window_reading_can_be_wrong_in_both_directions():
+    """The contradiction on /build-stats, and the three innocent shapes it
+    must not call one.
+
+    The reading is narrow on purpose: a total that equals the sum of its own
+    series holds nothing outside that series, so a `first_session` before the
+    series begins cannot be in it. Every step of that rests on their own
+    fields -- but each step is also a way to be wrong, and the live response
+    today satisfies all of them, so only a fixture can show the check has a
+    negative side at all.
+    """
+    from tests.rest.test_build_stats_covers_the_period_it_claims import (
+        window_problems)
+
+    def _body(**kw):
+        body = {"totals": {"sessions": 6, "messages": 60, "tool_calls": 12},
+                "daily_activity": [
+                    {"date": "2026-02-01", "sessions": 3, "messages": 30,
+                     "tool_calls": 6},
+                    {"date": "2026-02-02", "sessions": 3, "messages": 30,
+                     "tool_calls": 6}],
+                "first_session": "2025-11-23"}
+        body.update(kw)
+        return body
+
+    # The live shape, 2026-09-20: totals ARE the window, and the first session
+    # is before it.
+    problems, facts = window_problems(_body())
+    assert problems, "a total published under a date it does not reach passed"
+    assert "2025-11-23" in problems[0] and "2026-02-01" in problems[0], problems
+    assert facts["totals_equal_to_the_series"] == ["sessions", "messages",
+                                                   "tool_calls"], facts
+
+    # A first session inside the window is no contradiction at all.
+    assert window_problems(_body(first_session="2026-02-01"))[0] == []
+    assert window_problems(_body(first_session="2026-02-02T09:00:00Z"))[0] == []
+
+    # Totals LARGER than the series hold something the series does not, and
+    # this check has nothing to say about them -- the honest half. Without
+    # this the check would fire on every platform that publishes a recent
+    # window under a true lifetime total, which is normal and not a defect.
+    bigger = _body(totals={"sessions": 900, "messages": 9000,
+                           "tool_calls": 1800})
+    problems, facts = window_problems(bigger)
+    assert problems == [] and facts["totals_equal_to_the_series"] == [], facts
+
+    # Rule 8: a field that is not there is not a field that reads early.
+    assert window_problems(_body(first_session=None))[0] == []
+    empty = window_problems({"totals": {"sessions": 1}, "daily_activity": []})
+    assert empty == ([], {"measured": False}), empty
