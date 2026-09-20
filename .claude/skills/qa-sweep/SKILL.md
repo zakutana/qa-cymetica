@@ -17,6 +17,45 @@ impression.
 Work in the repository root. The skill used to say `../qa-cymetica`, from
 when it lived in a sibling project that has since been deleted.
 
+## What Cymetica asked us to look at
+
+We asked them what they wanted from an outside QA agent, and on 2026-09-20
+they answered (REPLY-0031 in `correspond.py`; the question was MSG-0028). It
+is their list, so it decides what a sweep spends its time on when nothing
+else is pressing — and it is theirs to change, not ours.
+
+**In the order they gave:**
+
+1. **Build it Better, end to end** — the page, the API, the MCP tools, the
+   SDK, the holder rule, the board and its socket. *"Your findings there have
+   each turned into a same-day fix."*
+2. **Fund Launcher and the fund pages** — every number a visitor sees. Does
+   it reconcile with the API, and does it survive a sanity check?
+3. **The advisor connector and the discovery documents** — do the docs match
+   what the endpoints really do?
+4. **Anywhere a page, its markdown view and its API disagree.**
+
+**Leave alone**, in their words: load or volume testing of any kind; the deep
+lane while it is short of capacity; anything that writes outside paper mode;
+anything involving real deposits or withdrawals.
+
+**Depth, not breadth.** *"One surface taken all the way through as a stranger
+is worth more to us than a pass over ten."* That is a change to how a sweep
+chooses its next target: finish a surface before starting another.
+
+**What is worth filing at low severity:** anything where a stranger would be
+misled — a wrong number, a wrong instruction, a dead link, documentation that
+contradicts behaviour. Pure style or wording goes into **one report per
+surface**, not a ticket each.
+
+**There is no staging.** Paper mode is the sanctioned place for anything that
+writes, which is what this repository already does.
+
+This lives here rather than in `NEXT.md` because it is not a task that gets
+ticked. It was written there first, on the day they answered, and `NEXT.md`
+fails anything open more than fourteen days — a standing constraint would
+have expired for being obeyed.
+
 ## Two widths, and which one you were asked for
 
 | The operator said | Selector | Cost |

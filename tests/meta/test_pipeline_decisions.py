@@ -123,6 +123,8 @@ PINNED = {
          "bf3b0779a1ff08ab06e6619df7be54265601746348e15345fc35db7fbdb8b9ea"),
         ("2026-09-09", "nechtel po me zadna takova rozhnodnuti",
          "c96da38a0cbea54eaae8ddc2c7eefce96f57a580915164d23f9c876edde987dc"),
+        ("2026-09-20", "od jejich bota nexuse",
+         "75ad341ae9cacb56a4f6db1c271dc9a8504c728e6155ee8946f79c5482a63eff"),
         ("2026-09-07", "both halves of this are their instruction",
          "73951f58e15c2865c681eaa9b432c84453ac399c1d7c6e01056a1779c7df6b2f"),
         ("2026-09-08", "pushovat se bude jen v deep pasu",
@@ -201,6 +203,20 @@ EXCEPTIONS = {
     # the numbers -- not they -- will make when the condition is met.
     (".claude/skills/deep-pass/SKILL.md",
      "whether the pass can work this out for"),
+    # The three lines below quote CYMETICA, not the operator. Their answer of
+    # 2026-09-20 to our question about what outside QA should focus on
+    # (MSG-0028 -> REPLY-0031) is quoted in their own words, because a
+    # paraphrase of a vendor's priorities is how they quietly become ours.
+    # The guard cannot tell one speaker from the other -- it matches an
+    # italic quotation and a dated attribution -- and it should not be taught
+    # to, because "it's only the vendor" is exactly the excuse that would
+    # smuggle an untagged operator decision past it. Three named lines with
+    # the reason, rather than a rule with a hole in it.
+    (".claude/skills/qa-sweep/SKILL.md",
+     "what they wanted from an outside QA agent"),
+    (".claude/skills/qa-sweep/SKILL.md",
+     "the holder rule, the board and its socket"),
+    (".claude/skills/qa-sweep/SKILL.md", "Depth, not breadth"),
 }
 
 
