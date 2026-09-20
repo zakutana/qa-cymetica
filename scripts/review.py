@@ -142,6 +142,36 @@ def area_deep_pass(since: datetime | None, passes=None, condition=None) -> dict:
             "condition": condition(every)}
 
 
+def _diaries_default():
+    """Read a diary a line at a time, so one torn line costs one line.
+
+    It used to parse the whole file in a comprehension inside a single
+    `except json.JSONDecodeError: return []`, which meant a line caught
+    mid-append cost the FILE: the retrospective then reported "0 questions to
+    Nexus" over a diary holding hundreds, in the same voice as a true zero.
+    The diaries are appended to by a laboratory tick that may be running right
+    now, so a half-written last line is the normal case, not the exception --
+    which is why `qa/lab.py::load` has always read them this way.
+    """
+    def diaries(name):
+        try:
+            text = (state_dir() / name).read_text(encoding="utf-8")
+        except OSError:
+            return []
+        out = []
+        for line in text.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                out.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+        return out
+
+    return diaries
+
+
 def _within(rows, since: datetime | None, field: str = "at") -> list[dict]:
     if since is None:
         return list(rows)
@@ -174,13 +204,7 @@ def area_lab(since: datetime | None, lab=None, rooms=None, diaries=None,
         lab = lab or qa_lab.load
         rooms = rooms or qa_rooms.load
     if diaries is None:
-        def diaries(name):
-            try:
-                return [json.loads(line) for line
-                        in (state_dir() / name).read_text(
-                            encoding="utf-8").splitlines() if line.strip()]
-            except (OSError, json.JSONDecodeError):
-                return []
+        diaries = _diaries_default()
     if grade is None:
         def grade():
             import importlib.util

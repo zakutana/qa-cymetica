@@ -314,3 +314,29 @@ def test_the_nexus_row_types_are_read_off_the_real_diary_not_guessed():
         f"the diary holds {sorted(t for t in types if t)} and area_lab counted "
         f"nothing for {empty} -- the reader and this test are naming different "
         f"words for the same rows")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_one_half_written_line_does_not_empty_a_diary(tmp_path, monkeypatch):
+    """A diary is appended to while this reads it, so the last line may be torn.
+
+    The reader parsed the whole file in one comprehension inside a single
+    `except json.JSONDecodeError: return []`, so a line caught mid-append did
+    not cost that line -- it cost the file. The retrospective would then say
+    "0 questions to Nexus" over a diary holding hundreds, and say it with the
+    same confidence as a true zero. `qa/lab.py::load` has always done this
+    correctly, one line at a time, with the reason in its own comment: "a
+    half-written line is normal while another process appends".
+    """
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    good = [{"type": "question", "id": "NEX-1"},
+            {"type": "answer", "id": "NEX-1"},
+            {"type": "question", "id": "NEX-2"}]
+    (tmp_path / "nexus.jsonl").write_text(
+        "".join(json.dumps(r) + "\n" for r in good) + '{"type": "quest',
+        encoding="utf-8")
+
+    review = _module()
+    rows = review._diaries_default()("nexus.jsonl")
+    assert len(rows) == len(good), (
+        f"one torn line emptied a diary of {len(good)} rows: got {rows}")
