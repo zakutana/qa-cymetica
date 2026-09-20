@@ -200,8 +200,8 @@ def decide(solana: dict, robinhood: dict) -> tuple[str, str]:
                 f"${FLOOR_MAX_BUY_USD:,.0f} floor, while NO solana row carries "
                 f"the field and {thin_here} hot solana token(s) in this window "
                 f"sit under it -- thinnest "
-                f"{str(min(solana['breaches'], key=lambda r: max_buy(r, robinhood['ratio']) or 0.0).get('token_address') or '?')[:12]}"
-                f"... at ${min(max_buy(r, robinhood['ratio']) or 0.0 for r in solana['breaches']):,.2f} "
+                f"{str(min(solana['breaches'], key=lambda r: max_buy(r, solana['ratio'] or robinhood['ratio']) or 0.0).get('token_address') or '?')[:12]}"
+                f"... at ${min(max_buy(r, solana['ratio'] or robinhood['ratio']) or 0.0 for r in solana['breaches']):,.2f} "
                 f"of 5%-slippage max buy")
 
     if thin_control >= MIN_BREACHES:
@@ -212,15 +212,38 @@ def decide(solana: dict, robinhood: dict) -> tuple[str, str]:
                 f"${FLOOR_MAX_BUY_USD * BREACH_FRACTION:,.0f}, against the "
                 f"${FLOOR_MAX_BUY_USD:,.0f} floor they stated on 2026-09-14")
     if thin_here < MIN_BREACHES:
+        # The sentence has to survive its own numbers. This branch fires when
+        # FEWER THAN MIN_BREACHES rows are under the floor -- which includes
+        # one that is -- and the old wording said "every hot row on both
+        # chains clears the floor ... the thinnest allowing $4 against a $500
+        # floor", refuting itself in one line. A passing run rewrites
+        # detail.reason on a filed row, so that sentence reached the ledger
+        # and the page.
+        thinnest = min(solana["thinnest"], robinhood["thinnest"])
         return ("passed",
-                f"every hot row on both chains clears the floor: "
-                f"{robinhood['hot']} robinhood and {solana['hot']} solana hot "
-                f"rows, the thinnest allowing "
-                f"${min(solana['thinnest'], robinhood['thinnest']):,.0f} of "
-                f"max buy against a ${FLOOR_MAX_BUY_USD:,.0f} floor")
+                (f"{robinhood['hot']} robinhood and {solana['hot']} solana "
+                 f"hot rows; {thin_here} under the "
+                 f"${FLOOR_MAX_BUY_USD:,.0f} floor, which is fewer than the "
+                 f"{MIN_BREACHES} this files on -- a single thin pool mid-index "
+                 f"is ordinary in a new-pair feed. Thinnest "
+                 f"${thinnest:,.0f} of max buy"
+                 if thin_here else
+                 f"every hot row on both chains clears the floor: "
+                 f"{robinhood['hot']} robinhood and {solana['hot']} solana hot "
+                 f"rows, the thinnest allowing ${thinnest:,.0f} of "
+                 f"max buy against a ${FLOOR_MAX_BUY_USD:,.0f} floor"))
 
+    # SOLANA's own ratio, for a sentence about a solana pool. Robinhood
+    # computes 0.05 x TVL and solana 0.05 x TVL/2, which `published_ratio`
+    # reads per chain and never pools -- and then every sentence naming the
+    # offending pool computed its figure with the OTHER chain's. A $75.16
+    # pool judged at 0.025 is $1.88 of max buy and was quoted to them as
+    # $3.76: judged at one number, reported at another, on the row filed as
+    # #102. Latent until solana partly serves the gate, and invisible to
+    # every fixture because each passed 0.05 to both chains.
+    here = solana["ratio"] or robinhood["ratio"]
     worst = min(solana["breaches"],
-                key=lambda r: max_buy(r, robinhood["ratio"]) or 0.0)
+                key=lambda r: max_buy(r, here) or 0.0)
     # By ADDRESS, not symbol. An address is what they can look the row up by
     # and a symbol is not unique -- and this sentence is quoted into a report
     # that goes to them, where a memecoin's chosen name is noise at best. The
@@ -230,7 +253,7 @@ def decide(solana: dict, robinhood: dict) -> tuple[str, str]:
             f"hot: true on a pool their own robinhood gate would refuse: the "
             f"thinnest is {str(worst.get('token_address') or '?')[:12]}... at "
             f"${worst.get('liquidity_usd', 0):,.2f} of liquidity, about "
-            f"${max_buy(worst, robinhood['ratio']) or 0:,.2f} of 5%-slippage "
+            f"${max_buy(worst, here) or 0:,.2f} of 5%-slippage "
             f"max buy against the ${FLOOR_MAX_BUY_USD:,.0f} floor. On the same "
             f"endpoint in the same read, {robinhood['hot']} robinhood hot rows "
             f"carry max_buy_5pct_usd and all clear it, so the gate exists and "

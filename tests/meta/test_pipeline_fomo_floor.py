@@ -136,6 +136,51 @@ def test_one_thin_row_is_not_a_finding_and_a_gated_control_is_required():
     assert mod.decide(mod._chain([], 0.05), mod._chain([], 0.05))[0] == (
         "inconclusive")
 
+    # The passing sentence must not describe a row it just excused. With one
+    # row under the floor and a control too small to file on, the old wording
+    # read "every hot row on both chains clears the floor ... the thinnest
+    # allowing $4 of max buy against a $500 floor" -- a sentence that refutes
+    # itself, and a passing run writes it into detail.reason on a filed row.
+    assert "clears the floor" not in reason or "under" not in reason, reason
+    thinnest = min(thin_one["thinnest"], tiny_control["thinnest"])
+    if thinnest < 500:
+        assert "every hot row on both chains clears the floor" not in reason, (
+            f"the reason says every row clears a $500 floor while naming "
+            f"${thinnest:,.0f} as the thinnest: {reason}")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_figure_quoted_to_them_is_measured_on_the_chain_it_names(
+        tmp_path, monkeypatch):
+    """One name for two measurements is how a figure is compared with itself.
+
+    `published_ratio` is read per chain and never pooled, because Robinhood
+    computes 0.05 x TVL and Solana 0.05 x TVL/2 -- the module says so in those
+    words. `_chain(solana_rows, solana_ratio)` judges the breach at Solana's
+    ratio, and then every sentence that names the offending pool computed its
+    figure with `robinhood["ratio"]`: judged at one number, quoted at another.
+
+    Measured on the shape that reaches it: a Solana pool of $75.16 judged at
+    0.025 is $1.88 of max buy and was quoted to the vendor as $3.76 -- twice
+    what was measured, on the row filed as #102. Latent until Solana partly
+    serves the gate, which is why no fixture caught it: every one of them
+    passed 0.05 to both chains, so none could tell the two apart.
+    """
+    mod = _check()
+    solana = mod._chain([_row("CHADSTER", 75.16), _row("SPEED", 423.77),
+                         _row("THIN", 900.0)], 0.025)
+    robinhood = mod._chain([_row("RH1", 200000.0, max_buy=10000.0),
+                            _row("RH2", 300000.0, max_buy=15000.0),
+                            _row("RH3", 250000.0, max_buy=12500.0)], 0.05)
+
+    verdict, reason = mod.decide(solana, robinhood)
+    assert verdict == "failed", (verdict, reason)
+    assert "$1.88" in reason, (
+        f"the pool is $75.16 and solana's own ratio is 0.025, so its max buy "
+        f"is $1.88; quoting robinhood's 0.05 makes it $3.76, which is twice "
+        f"what the breach was judged at: {reason}")
+    assert "$3.76" not in reason, reason
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_two_thin_tokens_beside_a_gated_chain_is_the_finding():
