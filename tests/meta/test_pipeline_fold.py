@@ -1110,6 +1110,96 @@ def test_a_pass_we_sent_that_stopped_being_true_owes_a_correction():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_pass_after_a_fail_under_one_definition_is_owed_again():
+    """VER: the last thing they heard is what counts, not everything we said.
+
+    `_told` asks whether a verdict was EVER sent for this report under this
+    fingerprint. So pass -> fail -> our check passes again leaves the row
+    owing nothing: the pass is "already told", and the last word on their
+    server stays our `fail`. That is #85 today -- a pass at 20:08, a fail at
+    21:46 on 2026-09-10, our check PASSING under the same pinned definition
+    ever since, and `verification_owed` empty.
+
+    The debt has to key on the NEWEST mark for the pair, not on membership.
+    The dedup guard above (`sent.append`) matches the same triple, so both
+    move together or the owed pass is minted and then dropped on arrival --
+    the badge nobody can clear, from the other side.
+    """
+    from qa.fold import fold
+
+    filed = _filed(status="fixed")
+    told_pass = _verification(verdict="pass", at="2026-09-10T20:08:29+00:00")
+    told_fail = _verification(verdict="fail", at="2026-09-10T21:46:08+00:00")
+
+    passing = fold(ledger(_verified_row()),
+                   events=filed + [told_pass, told_fail])
+    owed = passing["findings"]["CYM-a"]["obligations"]["verification_owed"]
+    assert owed == [46], (
+        f"our check passes under the pinned definition and the last thing "
+        f"they heard is a fail, so a pass is owed: {owed}")
+
+    # And it clears once the newer pass is sent, rather than re-firing daily.
+    again = _verification(verdict="pass", at="2026-09-11T06:00:00+00:00")
+    cleared = fold(ledger(_verified_row()),
+                   events=filed + [told_pass, told_fail, again])
+    assert cleared["findings"]["CYM-a"]["obligations"]["verification_owed"] == []
+
+    # One second holds both. Their timestamps are truncated to the second, so
+    # a pass and the correction that follows it can share one -- and taking
+    # the maximum by `at` alone returns the FIRST of them, which is the older
+    # mark. That reads their last word as a pass while the fail sits on their
+    # server: the same inversion, one tie-break down. Found by review.
+    same_breath = "2026-09-10T21:46:08+00:00"
+    tied = fold(ledger(_verified_row()),
+                events=filed + [_verification(verdict="pass", at=same_breath),
+                                _verification(verdict="fail", at=same_breath)])
+    assert tied["findings"]["CYM-a"]["obligations"]["verification_owed"] == [46], (
+        "the fail was recorded after the pass in the same second, so a pass "
+        "is still owed")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_correction_is_owed_per_report_not_per_row():
+    """VER: one row can carry two reports at different statuses.
+
+    `correction_owed` read the ROW's filing state -- the maximum over its
+    reports -- and then charged the debt to every report id on the row. So a
+    row where they claimed a fix on #89 and we filed #108 last night, still
+    failing, owes a correction on #108 too: "this corrects the record" sent
+    about a report nobody has claimed fixed, whose record says exactly what we
+    would be correcting it to. `disputed` right below it already reads each
+    report's own status; this is the same reading, applied one obligation up.
+    """
+    from qa.fold import fold
+
+    filed = _filed(report_id=89, status="fixed")
+    # Filed later, never claimed fixed by them.
+    fresh = _filed(report_id=108, status="pending", at="2026-09-19T09:00:00+00:00")
+    reproducing = row("CYM-a", check_state="REPRODUCING", pinned=FP)
+
+    ob = fold(ledger(reproducing), events=filed + fresh)["findings"]["CYM-a"]
+    owed = ob["obligations"]["correction_owed"]
+    assert owed == [89], (
+        f"only the report they called fixed is owed a correction; #108 was "
+        f"filed as failing and saying so again is noise: {owed}")
+
+    # A terminal row owes a RETRACTION, never a correction. The row-level
+    # read excluded this by accident -- WITHDRAWN is not FIX_CLAIMED -- and
+    # reading each report's own status brought it back: #53's report is
+    # `paid`, so the recomposed ledger asked us to "correct the record" on a
+    # finding we had already taken back. Caught by refolding before anything
+    # was sent, which is what the refold is for.
+    withdrawn = fold(ledger(row("CYM-a", check_state="REPRODUCING", pinned=FP)),
+                     events=filed + [event("withdraw", at="2026-09-19T10:00:00+00:00",
+                                           source="scripts/withdraw.py",
+                                           finding_id="CYM-a", reason="not a defect")])
+    wob = withdrawn["findings"]["CYM-a"]["obligations"]
+    assert wob["correction_owed"] == [], (
+        f"a withdrawn row owes a retraction, not a correction: {wob}")
+    assert wob["retractions"] == [89]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_correction_under_the_same_definition_is_recorded():
     """VER: the collision the first version of this file did not test.
 

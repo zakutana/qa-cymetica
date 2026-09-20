@@ -536,11 +536,26 @@ def _apply_events(rows: dict, events: Iterable[dict]) -> None:
                 # Found by all three triage agents on 2026-09-07; the test
                 # above it had exercised only the repaired-check case, where
                 # the two carry different fingerprints.
-                if not any(v["report_id"] == mark["report_id"]
-                           and v["fingerprint"] == mark["fingerprint"]
-                           and v.get("verdict") == mark["verdict"]
-                           for v in sent):
+                #
+                # Re-sending the same verdict under the same definition keeps
+                # ONE mark, whose `at` moves to the newer send. Dropping the
+                # newer one outright was safe while `_told` asked whether a
+                # verdict had ever gone; it stopped being safe when `_told`
+                # started reading the newest mark, because pass -> fail ->
+                # pass then left `fail` as the newest thing on record and the
+                # row went on owing a pass it had just sent.
+                #
+                # What this projection therefore cannot answer is how MANY
+                # times a verdict went out; the journal holds every send and
+                # is where that question belongs.
+                same = next((v for v in sent
+                             if v["report_id"] == mark["report_id"]
+                             and v["fingerprint"] == mark["fingerprint"]
+                             and v.get("verdict") == mark["verdict"]), None)
+                if same is None:
                     sent.append(mark)
+                elif str(mark.get("at") or "") > str(same.get("at") or ""):
+                    same.update(mark)
 
     for fid, row in rows.items():
         row["_retracted"] = sorted(r for r in retracted.get(fid, set()) if r is not None)
@@ -550,16 +565,34 @@ def _apply_events(rows: dict, events: Iterable[dict]) -> None:
 # Obligations -- what each row still owes somebody
 # ---------------------------------------------------------------------------
 def _told(verified: list, report_id, fingerprint, verdict: str) -> bool:
-    """Have we already told them this verdict, for this check definition?
+    """Is this verdict the LAST thing they heard, for this check definition?
 
     Keyed on the FINGERPRINT and never on the run: every sweep re-adjudicates
     every row, so a run-keyed debt would come due after each one and send the
     same verifications daily -- a badge that clears itself into spam.
+
+    Newest mark wins, and that is not a detail. This asked whether the verdict
+    had EVER been sent, so a pass followed by a fail under one definition left
+    the row owing nothing in either direction: the pass was "already told" and
+    their server kept our fail as the last word. #85 sat that way from
+    2026-09-10 -- a pass at 20:08, a fail at 21:46, our check passing under
+    the same pinned definition ever since, and `verification_owed` empty.
+    What a debt has to compare is the newest thing we said, because that is
+    what a reader of their tracker sees.
     """
-    return any(v["report_id"] == report_id
-               and v["fingerprint"] == fingerprint
-               and v.get("verdict") == verdict
-               for v in verified)
+    marks = [(i, v) for i, v in enumerate(verified)
+             if v["report_id"] == report_id and v["fingerprint"] == fingerprint]
+    if not marks:
+        return False
+    # (at, position) and not `at` alone. Their timestamps are truncated to the
+    # second, so a pass and the correction that follows it can share one --
+    # and `max` returns the FIRST maximal element, which is the older mark in
+    # journal order. That would have read the pass as their last word while
+    # the fail sat on their server, the exact inversion this function was
+    # being repaired for. Journal order breaks the tie, the way
+    # qa/channels.py treats two events recorded in one breath.
+    _, newest = max(marks, key=lambda pair: (str(pair[1].get("at") or ""), pair[0]))
+    return newest.get("verdict") == verdict
 
 
 def _obligations(row: dict) -> dict:
@@ -606,13 +639,28 @@ def _obligations(row: dict) -> dict:
         # sent a pass under any definition. NOT on a row that is merely filed
         # and failing -- we said that when we filed it, and repeating it down
         # a second channel is noise rather than news.
-        "correction_owed": ([r for r in filed
-                             if not _told(verified, r, pinned, "fail")
-                             and (filing == "FIX_CLAIMED"
-                                  or any(v["report_id"] == r
+        # Read per REPORT, not per row. `filing` is the row's state, which is
+        # the maximum over its reports, and this then charged the debt to
+        # every id on the row: a row where they claimed a fix on one report
+        # and we filed a second last night, still failing, owed "this
+        # corrects the record" on the second -- about a report whose record
+        # already says exactly that. `disputed` below has always read each
+        # report's own status; this is the same reading one obligation up.
+        # `filing not in _TERMINAL` is not decoration. The row-level read
+        # excluded a withdrawn row by accident, because WITHDRAWN is not
+        # FIX_CLAIMED; reading each report's own status brought it back, and
+        # the recomposed ledger promptly asked us to "correct the record" on
+        # #53 -- a finding we had already taken back, whose report is `paid`.
+        # What a withdrawn row owes is the retraction above.
+        "correction_owed": ([r["report_id"] for r in row["filing"]["reports"]
+                             if not _told(verified, r["report_id"], pinned, "fail")
+                             and ((r.get("status") or "").lower()
+                                  in _FIX_CLAIMED_STATUSES
+                                  or any(v["report_id"] == r["report_id"]
                                          and v.get("verdict") == "pass"
                                          for v in verified))]
-                            if check == "REPRODUCING" and pinned else []),
+                            if check == "REPRODUCING" and pinned
+                            and filing not in _TERMINAL else []),
         # They read the report and said no, and our check still fails. One of
         # the two has to give -- we withdraw because they are right, or we
         # answer because we are -- and neither happens on its own. Nothing is

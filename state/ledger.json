@@ -7058,7 +7058,9 @@
         "repair_check": false,
         "reopen": [],
         "retractions": [],
-        "verification_owed": [],
+        "verification_owed": [
+          85
+        ],
         "correction_owed": [],
         "disputed": []
       }
@@ -10263,7 +10265,7 @@
     "RAISED": 5
   },
   "events_head": {
-    "seq": 2360,
-    "chain": "45868b3037744ee657bb73d05010e1d38c24d13e018b0a2626af0beb887b8203"
+    "seq": 2364,
+    "chain": "387769802bf0d8906c2553ba2b847eb09023f1dc621ba8c1f92f53afafb74000"
   }
 }
