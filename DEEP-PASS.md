@@ -53,6 +53,34 @@ Všech 28, každé s testem napřed a commitem, který ho jmenuje. Tři nejváž
   `(_at(...) or since) > since`, takže řádek, jehož čas nejde přečíst, se
   nepočítal — pravidlo 8 obrácené směrem, který utrácí.
 
+## Co odešlo Cymetice
+
+Ověřovací běh `run-20260920T162940Z-da287834`, prereg `PRE-0129`, **úroveň V**,
+1062 kontrol: 1048 prošlo, 4 spadly, 10 inconclusive. Ledger je teď
+**46 VERIFIED FIXED**, 4 STILL REPRODUCIBLE, 3 „naše kontrola nerozhodne",
+11 WITHDRAWN.
+
+Odesláno **šest verdiktů**: pass na #104, #105, #106, #107 a #109, korekce
+(`fail`) na #103.
+
+**A jeden verdikt jsem zadržel.** Na #89 by `fail` byla nepravda — dnes ráno
+jsem změřil, že `/fund` i `/go-live` agentní klíč přijímají a odmítá jediná
+routa, `/activity`, což je #98. Jenže jeden řádek nese oba reporty a jeden
+verdikt jde na oba. Je to nerozdělený řádek z NEXT.md a drželi ho tak i dva
+passy přede mnou.
+
+**První běh musel jít znovu.** Vrátil se jako úroveň **R** s důvodem
+`code_moved_during_run` — psal jsem zprávu, zatímco devatenáctiminutová suita
+běžela. To je přesně incident z 12. 9., kvůli kterému se git vzorkuje i na
+konci. Kdybych vzal krok 6 doslova, odešly by **čtyři korekce tvrdící „kontrola
+pořád padá"** na #104, #105, #106 a #107 — jejichž kontroly v tomtéž běhu
+prošly. Řádky četly REPRODUCING jen proto, že běh úrovně R smí vadu otevřít a
+nesmí ji zavřít. Na čistém stromě z nich byly passy.
+
+Tři řádky po dnešních opravách četly CHECK CHANGED (#85, #106, #109) a nesou
+`pin-fingerprint` s odůvodněním: u #85 je nová definice **přísnější** než
+připnutá, u #106 **širší**, u #109 se změnila jen věta v důvodu.
+
 ## Prořezáno
 
 * **Paměť:** 54 souborů, 48 živých, přesně na stropu. Zvažoval jsem sloučit

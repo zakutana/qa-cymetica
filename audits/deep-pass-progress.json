@@ -2,7 +2,7 @@
   "run": "deep-pass-2026-09-20",
   "at": "2026-09-20T14:12:00+00:00",
   "previous_at": "2026-09-19T16:02:11+00:00",
-  "at_finished": null,
+  "at_finished": "2026-09-20T16:50:26+00:00",
   "start_commit": "17c98be7",
   "gaps": [
     {
@@ -511,7 +511,7 @@
     }
   ],
   "next": [
-    "Opravit krok 10b v deep-pass/SKILL.md: \"zahoď položku odškrtnutou týden\" se nedá přečíst z řádku, protože datum na něm je den DOHODY, ne odškrtnutí. Je to zásah do páteře, takže to chce tři čtenáře podle 1c, test a odstavec v Změněná pravidla."
+    "Opravit krok 10b v `deep-pass/SKILL.md`: „zahoď položku odškrtnutou týden\" se nedá přečíst z řádku, protože datum na něm je den DOHODY, ne odškrtnutí. Dnes mělo 24 odškrtnutých položek datum z 10.–12. září a poznámku o dokončení z dneška; slepý prořez by smazal celý dnešní záznam (52 vypadalo starých, skutečně starých bylo 34). Je to zásah do páteře, takže to chce tři čtenáře podle 1c, test a odstavec v `Změněná pravidla`."
   ],
   "retrospective": {
     "last": "2026-09-19",
@@ -537,5 +537,5 @@
     "end": 581,
     "reason": "+5 on 576. Each new test carries an input no existing test held: a label that excuses nothing (the vendor's own withdrawal of the sentence it was built on), a --collect-only run record, a transport timeout where the old fixture used a 503, an unreadable timestamp on a day cap, a per-chain ratio where every fixture had passed one number to both chains, three spellings of an httpx import, and a settle() whose newest mark disagrees with an older one. The other twenty-odd fixes strengthened existing tests rather than adding a file."
   },
-  "finished": false
+  "finished": true
 }
