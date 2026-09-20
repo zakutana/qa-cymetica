@@ -2609,6 +2609,54 @@ reports:
       no chain_name. A caller iterating the list has to branch on which half
       it is in.
 
+  - key: bb-spec-funding-gate
+    findings: [CYM-the_spec_s_funding_gate_is_the_one_the_build_actually_waits_on]
+    severity: medium
+    category: api
+    url: https://cymetica.com/api/v1/build-it-better/requests/ET-26036
+    title: >-
+      Every BB-SPEC says the 24-hour clock waits for a $100 MicroFund gate; your
+      tools say there is nothing to fund, and your board agrees with the tools
+    expected: >
+      The scope a requester is asked to lock should describe what actually
+      starts the build. Your MCP tool descriptions say it twice:
+      bb_file_request -- "nothing is charged or locked; there is no fee and
+      nothing to fund. The 24-hour clock starts when you accept the scope" --
+      and bb_accept_spec -- "BB-ACCEPT - lock the proposed scope. This starts
+      the 24-hour clock; there is nothing to fund."
+    actual: >
+      Every generated BB-SPEC ends with a different rule: "The 24-hour clock
+      starts when this spec is accepted AND the $100 MicroFund gate is filled
+      (or waived)." On ET-26036 the gate is neither filled nor waived -- the
+      record shows funding.raised_usd 0.0 against goal_usd 100.0, funded
+      false, status open, backers 0 -- and the clock started anyway at
+      2026-09-19T20:25:59Z, one hour and 33 minutes after BB-ACCEPT, with
+      deadline_at 2026-09-20T20:25:59Z, stage "funded", queue_status "queued"
+      and ready_to_build true. So the sentence in the spec is not describing a
+      waiver; it names a gate nothing is waiting on.
+    steps:
+      - 'GET https://cymetica.com/api/v1/build-it-better/requests/ET-26036 -> spec_text ends with the $100 MicroFund sentence'
+      - 'Same response: funding.funded false, funding.raised_usd 0.0, funding.goal_usd 100.0, funding.status "open"'
+      - 'Same response: clock_started_at 2026-09-19T20:25:59Z, deadline_at 2026-09-20T20:25:59Z, stage "funded", ready_to_build true'
+      - 'GET https://cymetica.com/.well-known/mcp.json -> bb_accept_spec description: "This starts the 24-hour clock; there is nothing to fund"'
+    body: >
+      Filed because it costs the requester in both directions, and we paid it
+      ourselves: our own notes recorded this build as blocked on a $100 gate
+      we had decided not to pay, while it had been queued and ready to build
+      since the evening before. A requester who believes the spec either sends
+      a hundred dollars they do not owe or walks away from a build that is
+      already running.
+      The fix is one sentence in the spec generator, since the behaviour is
+      the documented one and only the spec disagrees with it. Our check reads
+      four facts from the single request payload -- the spec makes the claim,
+      the gate is unfilled, the clock has started, the build is queued -- and
+      goes quiet if any one of them is absent, so a genuinely waived gate or a
+      clock that has not started is not a failure.
+      Separately and not filed: your REST routes under
+      /api/v1/build-it-better are in mcp.json and in no OpenAPI document, so
+      an agent reading openapi-public.json cannot find the board at all. Say
+      if you would like that as its own report.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in
