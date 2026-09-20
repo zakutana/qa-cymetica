@@ -59,6 +59,7 @@ COMPONENT_TO_SECTION = {
     "platform.ai_native_proof": "provenance", "platform.status": "swaps",
     "rest.support": "support", "rest.movers": "movers",
     "rest.clones": "clones",
+    "rest.build_it_better": "build_it_better",
     "meta.guard": "_meta", "meta.classifier": "_meta",
     "meta.pipeline": "_meta",
 }

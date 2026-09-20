@@ -226,6 +226,15 @@ SECTIONS: list[dict] = [
         "blast": "measurement",
     },
     {
+        "id": "build_it_better",
+        "title": "Build it Better",
+        "blurb": "Name a financial app, say what it should do better, and their pipeline rebuilds it on EventTrader inside 24 hours. Six MCP tools and a public board. Their own first priority for outside QA (REPLY-0030, 2026-09-20); its REST routes are in mcp.json and in no OpenAPI document.",
+        "patterns": [r"^/api/v1/build-it-better"],
+        "tools": ["bb_search_rebuilt_apps", "bb_file_request", "bb_get_request",
+                  "bb_accept_spec", "bb_request_change", "bb_post_verdict"],
+        "blast": "measurement",
+    },
+    {
         "id": "provenance",
         "title": "AI-native provenance",
         "blurb": "Build stats, AI authorship proof, due-diligence scoring. The platform's central marketing claim.",

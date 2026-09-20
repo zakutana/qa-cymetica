@@ -202,6 +202,11 @@ components:
     surface: rest
     criticality: medium
     staleness_hours: 24
+  rest.build_it_better:
+    title: Build it Better (the rebuild board and its request records)
+    surface: rest
+    criticality: medium
+    staleness_hours: 24
 
   funding.deposit:
     title: Deposit addresses
