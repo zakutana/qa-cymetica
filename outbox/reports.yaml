@@ -2534,6 +2534,44 @@ reports:
       counts nothing that answers 401, 403, 404 or 405 -- a private endpoint
       is allowed to be absent from a public schema.
 
+  - key: coin-outlook-missing-btc
+    findings: [CYM-coin-outlook-answers-for-its-own-roster]
+    severity: medium
+    category: api
+    url: https://cymetica.com/api/v1/crypto-outlook/BTC.txt
+    title: "Coin Outlook answers 404 for BTC, the first coin on its own roster, on both the text and JSON views"
+    expected: >
+      Your published schema describes GET /api/v1/crypto-outlook/{symbol}.txt
+      as "Plain text for chat assistants. Always 200 for a known coin: a cold
+      coin is waited on briefly, then answered with a come-back line." A
+      symbol taken from your own roster at
+      /api/v1/crypto-outlook/coins is a known coin, so it answers 200 -- a
+      come-back line included.
+    actual: >
+      BTC, the first entry of that roster, answers {"detail":"Not Found"} with
+      HTTP 404 on the text view and on the JSON view, every time we look. RAIN
+      does the same, having answered 200 on an earlier pass. The other ten
+      coins we sampled from the head of the roster (ETH, BNB, XRP, SOL, TRX,
+      ZEC, HYPE, XMR, WBT, LINK) answer 200.
+    steps:
+      - 'GET https://cymetica.com/api/v1/crypto-outlook/coins -- 147 coins, BTC first'
+      - 'GET https://cymetica.com/api/v1/crypto-outlook/BTC.txt -> 404 {"detail":"Not Found"}'
+      - 'GET https://cymetica.com/api/v1/crypto-outlook/BTC -> 404, the same body'
+      - 'Wait 15 s and repeat both: still 404'
+      - 'GET https://cymetica.com/api/v1/crypto-outlook/ETH.txt -> 200, so the route itself works'
+    body: >
+      The text view is the one you wrote for chat assistants, and the coin an
+      assistant is most likely to be asked about is the one that does not
+      answer. Worth saying plainly: we do not know whether BTC is missing from
+      the outlook's own universe or whether the lookup fails for it -- the 404
+      carries no reason and the roster still lists it. Either the roster and
+      the outlook should agree, or an unavailable coin should come back with
+      the documented come-back line rather than a not-found.
+      Our check looks at the head of the roster, not all 147, and only counts
+      a symbol that answers 404 twice 15 seconds apart -- RAIN flickered
+      between the two passes, and a cold coin being computed is exactly what
+      your description says may happen.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in
