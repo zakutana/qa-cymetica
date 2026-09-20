@@ -16,8 +16,12 @@ Guarantees:
   * the rate-limit budget is read from the response headers and the run stops
     before exhausting it -- the vendor said 20/hour, the header advertises 60,
     and that is unresolved, so we use the smaller number
-  * every submission is appended to state/submissions.json with the id the
-    server assigned, which is what later lets us poll for status changes
+  * every submission is two journal events, intent before the POST and
+    outcome after, so a timeout leaves the text on disk with the id the
+    server assigned where one came back. It used to be appended to
+    state/submissions.json as well; that file stopped being written when
+    filing became two events, ends at #56, and the last read of it was
+    deleted on 2026-09-20
 """
 
 from __future__ import annotations
@@ -42,7 +46,6 @@ from qa.state import journal_path  # noqa: E402
 import os  # noqa: E402
 
 SPEC = REPO_ROOT / "outbox" / "reports.yaml"
-SUBMISSIONS = REPO_ROOT / "state" / "submissions.json"
 
 ENDPOINT = "/api/v1/bounty/reports"
 # The vendor said 20 reports/hour (ET-21999); the response header advertises
@@ -228,12 +231,6 @@ def existing_titles(client) -> set[str]:
     except Exception as exc:  # noqa: BLE001
         print(f"  ! could not read the tracker first ({exc}); refusing to file blind")
         raise SystemExit(1)
-
-
-def load_submissions() -> dict:
-    if SUBMISSIONS.exists():
-        return json.loads(SUBMISSIONS.read_text(encoding="utf-8"))
-    return {"submissions": []}
 
 
 # ---------------------------------------------------------------------------

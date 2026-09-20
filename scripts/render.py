@@ -34,7 +34,6 @@ sys.path.insert(0, str(REPO_ROOT))
 
 from scripts.findings import TAG_ORDER, TAGS  # noqa: E402
 
-STATE = REPO_ROOT / "state"
 OUT = REPO_ROOT / "dashboard" / "index.html"
 
 # Every component in components.yaml, which is the registry conftest.py

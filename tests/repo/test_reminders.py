@@ -331,15 +331,16 @@ def test_lab_facts_counts_only_their_side_of_the_streak(tmp_path, monkeypatch):
     Nexus as down when nothing was wrong with their channel. Now it calls
     `qa.lab.their_down_streak`, the same distinction #86's own check makes.
 
-    `QA_STATE_DIR` isolated too: `_lab_facts()` also reads `qa.lab.last_n_eff`,
-    which follows `qa.state.state_dir()` rather than this module's own
-    `REPO_ROOT` -- without this the test would read whatever `state/lab.jsonl`
-    happens to hold on the real machine.
+    One seam, not two. Until 2026-09-20 this function read the questions
+    behind its own `REPO_ROOT` while the three lab readings beside it followed
+    `qa.state.state_dir()`, so the test had to set both and write its fixture
+    into `<tmp>/state/`. The architecture audit called that what it was -- one
+    function answering from two state directories -- and the fixture now goes
+    where `state_dir()` points, which is the whole of the isolation.
     """
     monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
     mod = _module()
     mod.REPO_ROOT = tmp_path
-    (tmp_path / "state").mkdir(parents=True, exist_ok=True)
     rows = [
         {"type": "question", "id": "NEX-1", "at": _ago(hours=3)},
         {"type": "gave_up", "id": "NEX-1", "status": "failed"},
@@ -348,7 +349,7 @@ def test_lab_facts_counts_only_their_side_of_the_streak(tmp_path, monkeypatch):
         {"type": "question", "id": "NEX-3", "at": _ago(hours=1)},
         {"type": "gave_up", "id": "NEX-3", "status": "unknown: ReadTimeout"},
     ]
-    (tmp_path / "state" / "nexus.jsonl").write_text(
+    (tmp_path / "nexus.jsonl").write_text(
         "".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
 
     facts = mod._lab_facts()
@@ -360,7 +361,7 @@ def test_lab_facts_counts_only_their_side_of_the_streak(tmp_path, monkeypatch):
     theirs_only = rows[:4] + [
         {"type": "question", "id": "NEX-3", "at": _ago(hours=1)},
         {"type": "gave_up", "id": "NEX-3", "status": "queued"}]
-    (tmp_path / "state" / "nexus.jsonl").write_text(
+    (tmp_path / "nexus.jsonl").write_text(
         "".join(json.dumps(r) + "\n" for r in theirs_only), encoding="utf-8")
     assert mod._lab_facts()["nexus_down"] == 3
 

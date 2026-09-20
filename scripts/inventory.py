@@ -32,7 +32,21 @@ from qa.client import build_client, build_mcp_client  # noqa: E402
 from qa.config import identities  # noqa: E402
 from qa.safety import CURRENT_TIER, EndpointRegistry, SafetyTier  # noqa: E402
 
-OUT = REPO_ROOT / "state" / "inventory.json"
+def out_path() -> Path:
+    """The section map, resolved through the QA_STATE_DIR seam at call time.
+
+    It was `REPO_ROOT / "state" / "inventory.json"`, bound at import, which is
+    the shape `scripts/bounty.py::out_path` records an incident for: a test
+    setting QA_STATE_DIR was handed the committed file, and one of them wrote
+    its fixture over the real snapshot. The exposure here was narrower -- the
+    write sits under `__main__` and the tests import `build`/`compare` -- but
+    the committed map is what `tests/repo/test_repo_consistency.py` holds our
+    section list against, so an overwrite would be quiet and load-bearing.
+    Architecture audit, 2026-09-20.
+    """
+    from qa.state import state_dir
+
+    return state_dir() / "inventory.json"
 
 # ---------------------------------------------------------------------------
 # The platform section map.
@@ -582,9 +596,16 @@ def compare(before: dict, after: dict) -> dict[str, list[str]]:
 
 if __name__ == "__main__":
     inventory = build()
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(json.dumps(inventory, indent=2, ensure_ascii=False), encoding="utf-8")
-    print(f"\n-> {OUT.relative_to(REPO_ROOT)}")
+    out = out_path()
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(inventory, indent=2, ensure_ascii=False), encoding="utf-8")
+    try:
+        shown = out.relative_to(REPO_ROOT)
+    except ValueError:
+        # Under an override the target is outside the repository, and
+        # relative_to raises rather than returning something useful.
+        shown = out
+    print(f"\n-> {shown}")
     for section in inventory["sections"]:
         pct = section["reachable_pct"]
         print(f"  {section['title']:<34} "

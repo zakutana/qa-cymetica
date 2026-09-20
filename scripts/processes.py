@@ -796,7 +796,14 @@ def _lab_facts() -> dict:
     except Exception:  # noqa: BLE001
         pass
 
-    rows = _jsonl(REPO_ROOT / "state" / "nexus.jsonl")
+    # Through the state seam, not this module's REPO_ROOT: the three lab
+    # readings above already follow qa.state.state_dir(), so reading the
+    # questions behind QA_REPO_ROOT made one function answer from two
+    # different state directories -- which tests/repo/test_reminders.py works
+    # around by setting both. Architecture audit, 2026-09-20.
+    from qa.state import state_dir
+
+    rows = _jsonl(state_dir() / "nexus.jsonl")
     asked = [r for r in rows if r.get("type") == "question"]
     # Counted only from THEIR side breaking -- any gave-up used to count here,
     # including our own read failures (`unread: ReadTimeout`, `unknown`), so a
