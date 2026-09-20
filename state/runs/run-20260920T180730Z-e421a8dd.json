@@ -1,0 +1,130 @@
+{
+  "schema": 2,
+  "run_id": "run-20260920T180730Z-e421a8dd",
+  "started_at": "2026-09-20T18:07:33+00:00",
+  "finished_at": "2026-09-20T18:07:38+00:00",
+  "git_head": "e421a8dde9c9c5d919ddcb9d9ce0dc0ddbb5afc9",
+  "git_short": "e421a8dd",
+  "git_dirty": false,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": "sha256:b64844650c52a90dafafb134868a7dcdc4c0b0ead35382bb9f47a5b7a4de5831",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "912a38a1b5aa7494039c11aa6f917423850bd53982418854b8c3240cec4f9434",
+    "/.well-known/agent-card.json": "352d3ced5a51e6ec89adb1f78e2674982b2c9b0a669929715c1a547099bbb532",
+    "/.well-known/agent-skills.json": "3ee22148aea8e6314344f5675c7a51d4800a25b674c7dbcca1babecdda04c7c4",
+    "/.well-known/ai-plugin.json": "209acf05d36b71a3f52e4b1bbd5ee6bb07722f5370367dae2a43d29a6b82def4",
+    "/.well-known/udc.json": "0434acb59b66dac0e55635c5cd1808e2ea22fdc3da71de638086455eb6eb68e3",
+    "/openapi.json": "9a810321e9618b4a0caf351c4297beca7b4131a7437da045f4ecd3e6efdf646f",
+    "/openapi-public.json": "cde41015eff023c4a9169dffcf7565b180f2f64af57a820966bdfcfdd36ba521",
+    "/llms.txt": "7ec6b5939f9503cfe19187fea624097d7730961378d36241a50d221e54213851",
+    "mcp:tools/list:none": "b20cc32177b039b829d379a4fcdd1c6d4a552f6af64ac07e3d78d7931a806db6"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/rest/test_build_stats_covers_the_period_it_claims.py -q",
+  "selector_full": false,
+  "allow_mutate": false,
+  "collected": [
+    "tests/rest/test_build_stats_covers_the_period_it_claims.py::test_the_build_totals_reach_back_to_the_date_they_are_published_under"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/rest/test_build_stats_covers_the_period_it_claims.py::test_the_build_totals_reach_back_to_the_date_they_are_published_under",
+      "component": "platform.ai_native_proof",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 844,
+      "evidence_ids": [
+        "8d84145f7d2395bbe818831c662e879bb6c71fe93c9ef00f449f14af1e65d9e6"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "sessions, messages, tool_calls are exactly the sum of the 17 day(s) from 2026-01-31 to 2026-02-16, and so hold nothing outside that window -- while the same response dates the first session to 2025-11-23, before it. The page publishes those totals under SINCE 2025-11-23",
+        "left": {
+          "totals": {
+            "sessions": 315,
+            "messages": 608185,
+            "tool_calls": 60519,
+            "commits": 23102,
+            "lines_added": 15563291,
+            "lines_removed": 2861540,
+            "bugs_fixed": 12661,
+            "features": 4826,
+            "optimizations": 1034
+          },
+          "first_session": "2025-11-23"
+        },
+        "right": {
+          "daily_activity": {
+            "days": 17,
+            "from": "2026-01-31",
+            "to": "2026-02-16"
+          },
+          "daily_commits": {
+            "days": 301,
+            "from": "2025-11-23",
+            "to": "2026-09-20"
+          }
+        },
+        "sources": {
+          "build stats": "/api/v1/build-stats"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": null,
+        "role": "verdict",
+        "population": {
+          "measured": true,
+          "series_days": 17,
+          "series_from": "2026-01-31",
+          "series_to": "2026-02-16",
+          "totals_equal_to_the_series": [
+            "sessions",
+            "messages",
+            "tool_calls"
+          ],
+          "first_session": "2025-11-23"
+        }
+      },
+      "check_fingerprint": "d25597a35ad54da592bda0162a337d542c12dbf9b0418a00a465dd59c3037187",
+      "reason": null,
+      "failure_repr": "tests\\rest\\test_build_stats_covers_the_period_it_claims.py:158: in test_the_build_totals_reach_back_to_the_date_they_are_published_under\n    conclude(Measurement(\nqa\\measure.py:165: in conclude\n    raise AssertionError(explain(m))\nE   AssertionError: sessions, messages, tool_calls are exactly the sum of the 17 day(s) from 2026-01-31 to 2026-02-16, and so hold nothing outside that window -- while the same response dates the first session to 2025-11-23, before it. The page publishes those totals under SINCE 2025-11-23\nE     left  = {'totals': {'sessions': 315, 'messages': 608185, 'tool_calls': 60519, 'commits': 23102, 'lines_added': 15563291, 'lines_removed': 2861540, 'bugs_fixed': 12661, 'features': 4826, 'optimizations': 1034}, 'first_session': '2025-11-23'}\nE     right = {'daily_activity': {'days': 17, 'from': '2026-01-31', 'to': '2026-02-16'}, 'daily_commits': {'days': 301, 'from': '2025-11-23', 'to': '2026-09-20'}}"
+    }
+  ],
+  "totals": {
+    "failed": 1
+  },
+  "ratelimit": {
+    "requests": 1,
+    "limit": 2000,
+    "remaining": 1995,
+    "fraction_used": 0.0025,
+    "exhausted": false
+  },
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "code_dirty_after": false,
+  "fingerprint_after": "sha256:b64844650c52a90dafafb134868a7dcdc4c0b0ead35382bb9f47a5b7a4de5831",
+  "exit_status": 1
+}
