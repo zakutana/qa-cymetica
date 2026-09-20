@@ -254,8 +254,8 @@
         "t1": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "4006cd67"
     },
     {
       "id": "A09",
@@ -282,8 +282,8 @@
         "t1": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "4006cd67"
     },
     {
       "id": "A11",
