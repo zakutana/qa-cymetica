@@ -60,6 +60,8 @@ import argparse
 import json
 import sys
 import time
+
+import httpx
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -522,6 +524,17 @@ def _rank(row: dict):
 
 
 def _newest_per_fingerprint(rows: list) -> dict:
+    """fingerprint -> the set of verdicts that count as theirs.
+
+    One verdict where the rows can be ranked: their last word, which is the
+    whole of #85's repair. A SET rather than a value because of the other
+    half of the docstring above -- when no row under a fingerprint can be
+    ranked, every verdict they hold is kept, and a dict of one could not say
+    that. The first version returned whichever row happened to come first in
+    their list and called the other one fresh, so with neither `created_at`
+    nor a numeric id a pass and a fail under one definition meant re-POSTing
+    one of them. Found by two readers on 2026-09-20.
+    """
     newest: dict = {}
     ranks: dict = {}
     for row in rows:
@@ -529,15 +542,19 @@ def _newest_per_fingerprint(rows: list) -> dict:
         verdict = (row or {}).get("verdict")
         rank = _rank(row)
         if fingerprint not in newest:
-            newest[fingerprint] = verdict
+            newest[fingerprint] = {verdict}
             ranks[fingerprint] = rank
             continue
         if rank is None:
-            # Undatable: it cannot claim to be the last word, and it must not
-            # silently make an older dated row disappear either.
+            if ranks[fingerprint] is None:
+                # Neither can be ranked, so neither is the last word: keep
+                # both, which is the duplicate-averse reading this promises.
+                newest[fingerprint].add(verdict)
+            # Undatable against a dated row: it cannot claim to be the last
+            # word, and it must not make the dated one disappear either.
             continue
         if ranks[fingerprint] is None or rank > ranks[fingerprint]:
-            newest[fingerprint] = verdict
+            newest[fingerprint] = {verdict}
             ranks[fingerprint] = rank
     return newest
 
@@ -643,8 +660,8 @@ def partition_by_what_they_hold(work, held):
         # Their newest word under this definition. Membership over everything
         # they hold made a verdict unrepeatable -- see already_sent -- so a
         # pass superseded by a fail could never be restored.
-        theirs = held[item["report_id"]].get(item["fingerprint"])
-        if theirs == item["verdict"]:
+        theirs = held[item["report_id"]].get(item["fingerprint"]) or set()
+        if item["verdict"] in theirs:
             duplicates.append(item)
         else:
             fresh.append(item)
@@ -695,14 +712,26 @@ def main(argv: list[str] | None = None) -> int:
                     continue
                 try:
                     held[rid], evidence[rid] = already_sent(client, rid)
-                except SystemExit as refusal:
+                except (SystemExit, httpx.HTTPError) as refusal:
                     # One report we cannot read is one report we may not send
                     # blind -- not a run that stops. Their TLS timed out on a
                     # single report at 20:55 on 2026-09-12 and took every
                     # other verdict of that run with it, including ones whose
                     # own read had already succeeded. The refusal is per
                     # report, so the loss should be too.
-                    print(str(refusal))
+                    #
+                    # BOTH shapes, because the first version of this caught
+                    # only SystemExit -- which `already_sent` raises on a bad
+                    # status or an unreadable body -- while a TIMEOUT, the
+                    # thing the paragraph above names, arrives as
+                    # httpx.TransportError straight through SafetyTransport,
+                    # which delegates without wrapping. The test used a 503,
+                    # so it was green over the one path that already worked.
+                    # Two readers found that on 2026-09-20, the same evening.
+                    print(f"  ! {type(refusal).__name__} reading what they "
+                          f"hold for #{rid}: {str(refusal)[:160]}"
+                          if not isinstance(refusal, SystemExit)
+                          else str(refusal))
                     unreadable.append(rid)
             if unreadable:
                 print(f"  skipping {len(unreadable)} report(s) whose record "

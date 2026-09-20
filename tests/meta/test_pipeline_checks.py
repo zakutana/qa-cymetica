@@ -829,66 +829,46 @@ def test_nexus_tools_skips_a_newest_answer_that_names_no_tool():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_their_label_excuses_a_tool_only_where_it_actually_stands():
-    """#85's fix arrived looking like the defect, which is the usual shape.
+def test_a_label_does_not_excuse_a_tool_the_reader_cannot_call():
+    """The carve-out this replaces was built on a sentence they withdrew.
 
-    Cymetica did not stop NEXUS recommending tools from its own toolbelt --
-    they said so plainly (REPLY-0034, 2026-09-20). What changed is that a
-    chat-lane answer telling the reader to CALL one now carries
-    `[NEXUS runs this for you on request; it is not an MCP tool]` after the
-    name. So an unreachable name is a defect only when unlabelled, and a
-    check that did not know that would read their fix as the fault it
-    repairs -- `a-check-encodes-the-fix-its-author-imagined`, three times in
-    one day on 2026-09-07.
+    REPLY-0034 at 12:55 on 2026-09-20 shipped a label -- `[NEXUS runs this for
+    you on request; it is not an MCP tool]` -- and closed: *"If you see one
+    named as something to call and UNLABELLED, that is a defect."* So the
+    check learned to accept a labelled unreachable name.
 
-    The loosening has to be narrow or it is not a check any more: one label at
-    the bottom of an answer must not excuse every mention above it. So the
-    marker is read in a window after the NAME, and the two ways that matters
-    are both driven here.
+    REPLY-0035 at 13:49, fifty-four minutes later, shipped the fix at the
+    source and closed: *"If NEXUS recommends a tool you cannot call, LABELLED
+    OR NOT, that is a defect: send me the text."* I had read point 4 of that
+    message and not the sentence after it. Both are in the journal, so this
+    was not information we lacked -- it was information we did not read.
+
+    Two of three triage readers called the carve-out real, and the third only
+    disagreed about whether the trust-level half survives. It does not either:
+    a tool above our level is a tool we cannot call, which is the sentence
+    verbatim.
+
+    So there is no label case, the helper is gone, and this test exists to
+    stop it coming back. Every shape they have shipped is listed and every one
+    of them still fails.
     """
-    from tests.mcp.test_nexus_channel import labelled
+    from tests.mcp import test_nexus_channel
+    from tests.mcp.test_nexus_channel import tool_mentions
+
+    assert not hasattr(test_nexus_channel, "labelled"), (
+        "the carve-out is back. Their own resolution is that a labelled tool "
+        "the reader cannot call is still a defect (REPLY-0035); a label "
+        "changes what THEY owe, not what we measure")
 
     marker = "[NEXUS runs this for you on request; it is not an MCP tool]"
-    here = f"call `identify_address(addr)` {marker} before you trade"
-    assert labelled(here, "identify_address")
-    assert not labelled(here, "verify_onchain_tx"), (
-        "a label belongs to the name it follows, not to the answer")
-
-    far = ("call `identify_address(addr)` first. " + "x" * 400 + marker)
-    assert not labelled(far, "identify_address"), (
-        "a marker 400 characters away is a footnote, not a label on this "
-        "mention -- one at the bottom of a page would excuse everything above")
-
-    assert not labelled("call `identify_address(addr)`", "identify_address")
-    assert not labelled("", "identify_address")
-
-    # Their punctuation may move; the two halves that carry the meaning are
-    # what is matched, and a half on its own is not enough.
-    assert labelled("`identify_address` - NEXUS runs this for you on request, "
-                    "it is not an MCP tool.", "identify_address")
-    assert not labelled("`identify_address` is not an MCP tool", "identify_address"), (
-        "half the sentence is not the label: this one does not tell the "
-        "reader that NEXUS will run it for them")
-
-    # The second mention carries the label and the first does not. The check
-    # must see the unlabelled one, because that is the instruction a reader
-    # acts on first.
-    twice = f"use `identify_address` now. Later, `identify_address` {marker}."
-    assert labelled(twice, "identify_address"), (
-        "any labelled occurrence counts -- this is the lenient direction, and "
-        "it is deliberate: their fix labels the instruction, and a bare "
-        "mention is left alone by design")
-
-    # The second label shape, from the source-level fix later the same day. A
-    # tool that IS on MCP but above the reader's level is absent from OUR
-    # tools/list, so without this it reads as missing -- the same trap one
-    # layer on, and the only one we were warned about before it bit.
-    tiered = "call `update_bot_settings(id)` [needs MCP trust level: recognized]"
-    assert labelled(tiered, "update_bot_settings")
-    assert not labelled("call `update_bot_settings(id)` to enable trading",
-                        "update_bot_settings"), (
-        "the unlabelled instruction is the defect #85 is about, and it has to "
-        "stay one")
+    tiered = "[needs MCP trust level: recognized]"
+    for text in (f"call `identify_address(addr)` {marker} before you trade",
+                 f"call `update_bot_settings(id)` {tiered}",
+                 "call `identify_address(addr)` to check the counterparty"):
+        assert "identify_address" in tool_mentions(text) or \
+               "update_bot_settings" in tool_mentions(text), (
+            f"the name must still be COLLECTED whatever follows it, or the "
+            f"check cannot hold it against the served list: {text[:60]}")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

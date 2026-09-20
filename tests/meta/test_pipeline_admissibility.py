@@ -266,6 +266,25 @@ def test_the_default_run_has_to_have_judged_something_in_the_ledger(tmp_path):
             run_id, at, collected=collected,
             results=[{"nodeid": n, "outcome": "passed"} for n in collected])
 
+    # A COLLECTED nodeid is not an adjudicated one. `pytest --collect-only`
+    # writes a schema-2 record with every nodeid in `collected`, zero results
+    # and exit 0 -- admissible by every rule in qa/state.py. On 2026-09-20
+    # there were 113 such records of 496 and the default selection took one:
+    # 1053 collected, 0 results, 59 of 63 rows passing `checks <= collected`
+    # and not one of them adjudicated. So the first version of this walked
+    # back from one empty run to another and changed nothing, which is the
+    # 2026-09-12 defect it was written to close, still open.
+    _write("z", {**_admissible("run-collect-only", "2026-09-12T23:00:00+00:00",
+                               collected=["tests/rest/test_a.py::test_one",
+                                          "tests/rest/test_a.py::test_two",
+                                          "tests/mcp/test_b.py::test_three"]),
+                 "results": []})
+    # And a run that COLLECTED the row but skipped every one of its checks.
+    _write("y", {**_admissible("run-all-skipped", "2026-09-12T22:00:00+00:00",
+                               collected=["tests/mcp/test_b.py::test_three"]),
+                 "results": [{"nodeid": "tests/mcp/test_b.py::test_three",
+                              "outcome": "skipped"}]})
+
     _write("a", _over("run-platform", "2026-09-12T10:00:00+00:00",
                       ["tests/mcp/test_b.py::test_three"]))
     # Newest, admissible, and about us rather than about them.
@@ -274,7 +293,8 @@ def test_the_default_run_has_to_have_judged_something_in_the_ledger(tmp_path):
 
     assert ledger_mod._run_that_adjudicates(prev, runs=runs) == "run-platform", (
         "the newest admissible run judged nothing in the ledger and was taken "
-        "anyway")
+        "anyway -- either the `--collect-only` record, which collected every "
+        "check and ran none, or the one that collected a row and skipped it")
 
     # Half a row is none of it: rule 1.
     _write("c", _over("run-half", "2026-09-12T20:00:00+00:00",

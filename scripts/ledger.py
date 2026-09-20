@@ -147,6 +147,28 @@ def _no_admissible_run_message() -> str:
     return "\n".join(lines)
 
 
+def _settled(run: dict) -> set:
+    """The checks this run actually ADJUDICATED.
+
+    Not `collected`. A nodeid is in `collected` whether it ran, was skipped,
+    errored, or was never executed at all -- `pytest --collect-only` writes a
+    schema-2 record with every nodeid collected, zero results and exit 0,
+    which passes every rule in qa/state.py. On 2026-09-20 there were 113 such
+    records of 496 on disk, 111 of them from a collection, and the first
+    version of this function walked back from one empty run to another and
+    picked one: 1053 collected, 0 results, 59 of 63 rows satisfying
+    `checks <= collected` and not one of them adjudicated.
+
+    So this is the same condition `qa/fold.py::_apply_run` uses before it
+    moves anything: a result exists and its outcome is neither skipped nor an
+    error. Two readers found the gap from different angles, which is what it
+    took -- the docstring said "settled" and the code said "collected" for
+    the whole of the day it was written in.
+    """
+    return {r["nodeid"] for r in (run.get("results") or [])
+            if r.get("nodeid") and r.get("outcome") not in ("skipped", "error")}
+
+
 def _run_that_adjudicates(prev: dict, runs: Path | None = None) -> str | None:
     """The newest admissible run that settled at least one row of the ledger.
 
@@ -156,9 +178,9 @@ def _run_that_adjudicates(prev: dict, runs: Path | None = None) -> str | None:
     the fold never closes what it did not run, but the page describes the run
     the ledger was composed from, so every section tile emptied.
 
-    "Settled" is rule 1: EVERY check the row declares, present in what the run
-    collected. Half a row's checks adjudicates none of it. An empty ledger has
-    no rows to judge, so there the newest admissible run is the answer -- the
+    "Settled" is rule 1: EVERY check the row declares, adjudicated by this
+    run. Half a row's checks adjudicates none of it. An empty ledger has no
+    rows to judge, so there the newest admissible run is the answer -- the
     first fold must not be unfoldable.
     """
     declared = [set(row.get("checks") or [])
@@ -171,8 +193,8 @@ def _run_that_adjudicates(prev: dict, runs: Path | None = None) -> str | None:
     if not declared:
         return admissible[-1]["run_id"]
     for run in reversed(admissible):  # list_runs is sorted ascending
-        collected = set(run.get("collected") or [])
-        if any(checks <= collected for checks in declared):
+        settled = _settled(run)
+        if any(checks <= settled for checks in declared):
             return run["run_id"]
     return None
 

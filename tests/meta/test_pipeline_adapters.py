@@ -667,7 +667,7 @@ def test_verifications_they_already_hold_are_not_sent_again(tmp_path, monkeypatc
             {"fingerprint": "fp-old", "verdict": "fail", "id": "2",
              "created_at": "2026-09-10T16:52:51"}]}))
     newest, evidence_id = verify.already_sent(held, 46)
-    assert newest == {"fp-1": "pass", "fp-old": "fail"}
+    assert newest == {"fp-1": {"pass"}, "fp-old": {"fail"}}
     assert evidence_id,         "the read that deduplicates is also the read that settles, so it has "         "to hand back what it can be stood on"
 
     # Their LAST word under a fingerprint, not every word they hold. #85 held
@@ -681,7 +681,31 @@ def test_verifications_they_already_hold_are_not_sent_again(tmp_path, monkeypatc
              "created_at": "2026-09-10T21:46:08"},
             {"fingerprint": "fp-1", "verdict": "pass", "id": "88",
              "created_at": "2026-09-10T20:08:29"}]}))
-    assert verify.already_sent(both, 46)[0] == {"fp-1": "fail"}
+    assert verify.already_sent(both, 46)[0] == {"fp-1": {"fail"}}
+
+    # And the promise the other way, which the first version made in its
+    # docstring and did not keep: when NO row under a fingerprint can be
+    # ranked, every verdict they hold stays, degrading to the old
+    # duplicate-averse reading. It kept whichever row came first in their
+    # list instead and called the other one fresh, i.e. re-sent it.
+    unrankable = _client(lambda r: httpx.Response(
+        200, json={"verifications": [
+            {"fingerprint": "fp-1", "verdict": "fail"},
+            {"fingerprint": "fp-1", "verdict": "pass"}]}))
+    assert verify.already_sent(unrankable, 46)[0] == {"fp-1": {"fail", "pass"}}, (
+        "neither row can claim to be the last word, so neither may be "
+        "discarded -- and nothing they hold may be re-sent")
+
+    # A dated row still wins over an undatable one, in both orders.
+    for rows in ([{"fingerprint": "fp-1", "verdict": "pass"},
+                  {"fingerprint": "fp-1", "verdict": "fail", "id": "90",
+                   "created_at": "2026-09-10T21:46:08"}],
+                 [{"fingerprint": "fp-1", "verdict": "fail", "id": "90",
+                   "created_at": "2026-09-10T21:46:08"},
+                  {"fingerprint": "fp-1", "verdict": "pass"}]):
+        mixed = _client(lambda r, rs=rows: httpx.Response(
+            200, json={"verifications": rs}))
+        assert verify.already_sent(mixed, 46)[0] == {"fp-1": {"fail"}}, rows
 
     # No verifications yet is a real answer; a failed read is not.
     empty = _client(lambda r: httpx.Response(404, text="not found"))
@@ -825,9 +849,15 @@ def test_one_unreadable_report_does_not_take_the_whole_run_with_it(
 
     def handle(request):
         if request.url.path.endswith("/verifications"):
-            # #46's record is unreadable; #47's is fine and empty.
+            # #46's record is unreadable and this is the shape that actually
+            # happened: their TLS timed out at 20:55 on 2026-09-12. A timeout
+            # surfaces as httpx.TransportError, NOT as the SystemExit
+            # `already_sent` raises on a bad status -- and the first version of
+            # this test used a 503, which takes the SystemExit path. So it was
+            # green while the scenario its own comment named still aborted the
+            # whole run. Found by two readers on 2026-09-20.
             if "/46/" in str(request.url):
-                return httpx.Response(503, text="gateway timeout")
+                raise httpx.ReadTimeout("their TLS timed out", request=request)
             return httpx.Response(200, json={"verifications": []})
         posted.append(str(request.url))
         return httpx.Response(200, json={"id": 1})
