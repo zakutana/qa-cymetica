@@ -359,8 +359,11 @@ def stats(rows: list[dict], hit_threshold: float = DEFAULT_HIT_THRESHOLD,
             "mean_pct": sum(returns) / len(returns) if returns else None,
             "median_pct": median(returns) if returns else None,
             "top": ranked_tokens[:top],
-            "bottom": (list(reversed(ranked_tokens[-top:]))
-                       if len(ranked_tokens) > top else []),
+            # The worst are taken from what the best did not already claim.
+            # Two slices of one ranking overlap whenever the ranking is
+            # shorter than both together: at seven tokens, three of the five
+            # "worst" were also among the five "best", live on 7h.
+            "bottom": list(reversed(ranked_tokens[top:][-top:])),
         }
     return out
 

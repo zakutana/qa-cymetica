@@ -143,6 +143,38 @@ def test_one_token_appears_once_in_best_and_worst():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_best_and_worst_do_not_share_a_token_when_the_list_is_short():
+    """Two slices of one ranking overlap whenever the ranking is shorter than
+    both of them together.
+
+    `top` is the first five and `bottom` the last five, so between six and ten
+    tokens the middle ones are in BOTH -- at seven, three of the five "worst"
+    are also among the five "best", with the same number beside them. Live on
+    the 7h horizon on 2026-09-13. The sibling above fixed the same visual
+    defect for a token that fired twice and left this one, because its fixture
+    holds two tokens and `bottom` is therefore empty.
+
+    The worst are taken from what the best did not already claim.
+    """
+    rows = []
+    for i in range(7):
+        token = f"0x{i:03d}"
+        key = f"{token}:2026-09-13T06"
+        rows.append({"type": "signal", "key": key, "token_address": token,
+                     "symbol": f"T{i}", "conviction": 50.0, "price_usd": 1.0})
+        rows.append({"type": "checkpoint", "key": key, "horizon": "7h",
+                     "price_usd": 1.0 + i, "return_pct": float(i * 10)})
+
+    one = fomo.stats(rows)["horizons"]["7h"]
+    shown = [c["symbol"] for c in one["top"]] + [c["symbol"] for c in one["bottom"]]
+    assert len(shown) == len(set(shown)), \
+        f"a token is both among the best and among the worst: {shown}"
+    assert len(one["top"]) == 5 and len(one["bottom"]) == 2, \
+        f"{len(one['top'])} best and {len(one['bottom'])} worst out of seven"
+    assert [c["symbol"] for c in one["bottom"]] == ["T0", "T1"], one["bottom"]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_every_hour_of_the_first_day_is_a_checkpoint():
     """[operator 2026-09-13] *"chci videt proswte graf vyvoje ceny po hodinach
     pro kazdy. staci pristich 24h vyvoje"*.
