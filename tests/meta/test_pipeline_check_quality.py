@@ -643,30 +643,37 @@ def test_the_traffic_invariants_can_actually_fail():
         "a seven-day figure above the thirty-day one read as agreement"
     assert _nests(_app(all_time={"views": 9, "visitors": 6, "uses": 4}), "/x"), \
         "a thirty-day figure above all_time read as agreement"
-    assert _nests(_app(last_30d={"views": 4, "visitors": 6, "uses": 9},
-                       all_time={"views": 40, "visitors": 60, "uses": 90},
+    assert _nests(_app(last_30d={"views": 4, "visitors": 4, "uses": 9},
+                       all_time={"views": 40, "visitors": 40, "uses": 90},
                        last_7d={"views": 1, "visitors": 1, "uses": 1}), "/x"), \
         "uses above the page loads they are counted out of read as agreement"
+    # And NOT visitors above views. Their definitions say where views come
+    # from and not where visitors do, so that comparison would be our unit
+    # against their figure -- deliberately absent, and it stays absent.
+    assert _nests(_app(last_7d={"views": 4, "visitors": 9, "uses": 4},
+                       last_30d={"views": 4, "visitors": 9, "uses": 4},
+                       all_time={"views": 4, "visitors": 9, "uses": 4}),
+                  "/x") == [], \
+        "a claim we cannot source to their words became a defect we would file"
     # Rule 8 one layer down: a window that does not carry a metric is not a
     # window that reads zero.
     assert _nests(_app(last_7d={}), "/x") == []
 
     # Claim 2: a range is the sum of its days -- their own definition.
-    problems, moved = _series(_app(), "/x", "2026-09-20", "2026-09-20")
+    problems, moved = _series(_app(), "/x", "2026-09-20")
     assert problems == [] and moved, (problems, moved)
     short = _app(daily=[{"day": "2026-09-20", "views": 3, "visitors": 3,
                          "uses": 3}])
-    assert _series(short, "/x", "2026-09-20", "2026-09-20")[0], \
+    assert _series(short, "/x", "2026-09-20")[0], \
         "a thirty-day total unrelated to the days under it read as agreement"
 
     # Claim 4: nothing earlier than the day counting started was recorded.
     earlier = _app(daily=[{"day": "2026-09-19", "views": 10, "visitors": 6,
                            "uses": 4}])
     assert any("2026-09-19" in p
-               for p in _series(earlier, "/x", "2026-09-20", "2026-09-20")[0]), \
+               for p in _series(earlier, "/x", "2026-09-20")[0]), \
         "traffic dated before counting began read as history they do not have"
-    assert _series(_app(first_counted="2026-09-18"), "/x", "2026-09-20",
-                   "2026-09-20")[0], \
+    assert _series(_app(first_counted="2026-09-18"), "/x", "2026-09-20")[0], \
         "an app disagreeing with the board about when counting started passed"
     # An all-zero series makes the sum vacuous, and the caller is told so.
     quiet = _app(all_time={"views": 0, "visitors": 0, "uses": 0},
@@ -674,7 +681,7 @@ def test_the_traffic_invariants_can_actually_fail():
                  last_30d={"views": 0, "visitors": 0, "uses": 0},
                  daily=[{"day": "2026-09-20", "views": 0, "visitors": 0,
                          "uses": 0}])
-    assert _series(quiet, "/x", "2026-09-20", "2026-09-20") == ([], False)
+    assert _series(quiet, "/x", "2026-09-20") == ([], False)
 
     # Claim 1: the board's row is the app's own figure, bracketed against the
     # counters moving between the two reads.

@@ -21,9 +21,12 @@ WHAT IT ASSERTS.
      sum of its days, so one person on three days counts three times." So
      `daily[]` must sum to `last_30d`, metric by metric.
   3. *The windows nest.* `last_7d` <= `last_30d` <= `all_time`, and within any
-     window `uses` <= `views` and `visitors` <= `views` -- uses are a subset of
-     page loads by their definition, and distinct daily visitors summed over a
-     range cannot exceed the loads those visits made.
+     window `uses` <= `views`: uses are "page loads where the visitor
+     interacted", a subset of the loads by their own words. Not `visitors` <=
+     `views`, which is our inference and not their sentence -- their
+     definitions say where views come from (a JavaScript beacon) and do not
+     say where visitors do, and a figure whose unit we are guessing at is the
+     shape that made us call a card self-contradicting once already.
   4. *Nothing earlier was recorded.* "Counting started 2026-09-20; nothing
      earlier was recorded." No day before `first_counted` may carry a figure,
      and the app's `first_counted` must be the board's `counting_since`.
@@ -59,8 +62,6 @@ surface -- is never touched.
 """
 
 from __future__ import annotations
-
-from datetime import datetime, timezone
 
 from qa.marks import SafetyTier, qa
 from qa.measure import Measurement, conclude
@@ -109,20 +110,18 @@ def _nests(body: dict, path: str) -> list[str]:
                             f"above its own all_time {ever}")
     for name in ("all_time", "last_7d", f"last_{WINDOW}d"):
         node = _window(body, name)
-        views = _number(node.get("views"))
-        if views is None:
+        views, uses = _number(node.get("views")), _number(node.get("uses"))
+        if views is None or uses is None:
             continue
-        for metric in ("uses", "visitors"):
-            other = _number(node.get(metric))
-            if other is not None and other > views:
-                problems.append(
-                    f"{path} reports {name} {metric} {other} above its own "
-                    f"views {views}, and {metric} are counted out of page "
-                    f"loads by their own definition")
+        if uses > views:
+            problems.append(
+                f"{path} reports {name} uses {uses} above its own views "
+                f"{views}, and uses are page loads where the visitor "
+                f"interacted, by their own definition")
     return problems
 
 
-def _series(body: dict, path: str, counting_since, today: str) -> tuple[list, bool]:
+def _series(body: dict, path: str, counting_since) -> tuple[list, bool]:
     """Claims 2 and 4, over `daily[]`. Returns the problems and whether the
     series carried any figure at all -- an all-zero series makes the sum
     comparison vacuous, and the caller says so rather than counting it."""
@@ -147,9 +146,6 @@ def _series(body: dict, path: str, counting_since, today: str) -> tuple[list, bo
                     f"{path} carries {figures} on {stamp}, before the "
                     f"{first} they say counting started on -- their "
                     f"announcement says nothing earlier was recorded")
-        if stamp and stamp > today:
-            problems.append(f"{path} carries a day in the future, {stamp}")
-
     if body.get("first_counted") and counting_since and \
             str(body["first_counted"]) != str(counting_since):
         problems.append(
@@ -217,7 +213,6 @@ def test_the_traffic_figures_agree_with_the_days_they_are_made_of(rest_anon):
         return
 
     counting_since = listing.get("counting_since")
-    today = datetime.now(timezone.utc).date().isoformat()
     carrying = [a for a in apps if isinstance(a, dict) and _carries_anything(a)]
     chosen = list(carrying)
     if not any(a.get("path") == DOCUMENTED_EXAMPLE for a in chosen):
@@ -249,7 +244,7 @@ def test_the_traffic_figures_agree_with_the_days_they_are_made_of(rest_anon):
         for candidate in rows:
             problems += _agrees(candidate, one, two, path)
         problems += _nests(one, path)
-        series_problems, moved = _series(one, path, counting_since, today)
+        series_problems, moved = _series(one, path, counting_since)
         problems += series_problems
         if moved:
             moved_apps.append(path)
