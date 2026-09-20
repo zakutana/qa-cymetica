@@ -117,6 +117,51 @@ def test_a_stamp_we_cannot_read_is_counted_against_the_cap():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_answer_they_gave_the_operator_does_not_pace_our_door():
+    """Writing down what he said elsewhere must not arm a brake about them.
+
+    `nexus.py record` exists so an answer the operator got on their website
+    survives the next /clear. It writes a `question` row, and both the
+    twenty-minute floor and the in-flight rule read every question row in the
+    diary -- so recording one at 14:00 silently stopped the laboratory asking
+    anything until 14:20, for a question that never used their door.
+
+    The floor is about THEIR side: one question in flight so the pick-up is
+    not split, and a pace their rate limit can carry. Neither is true of a
+    conversation that happened in a browser. The day's CAP is the other way
+    round and stays -- `asked_within` counts "whoever asked them", which is
+    deliberate and documented, because the cap is about how much of their
+    time we take in a day and the operator's questions take some of it.
+
+    Found by three readers on 2026-09-20, the day the command was written.
+    """
+    now = datetime(2026, 9, 20, 14, 0, tzinfo=timezone.utc)
+    recorded = [{"type": "question", "id": "NEX-0100", "lane": "operator",
+                 "at": now.isoformat()},
+                {"type": "answer", "id": "NEX-0100", "lane": "operator",
+                 "at": now.isoformat(), "text": "..."}]
+
+    may, why = lab.may_ask_now(recorded, now)
+    assert may, (
+        f"an answer the operator pasted in put our own door behind a "
+        f"twenty-minute floor: {why}")
+
+    # The cap is the other half and it still counts it.
+    assert lab.asked_within(recorded, now) == 1, (
+        "the day's cap is about how much of their time we take, and a "
+        "question the operator put to them takes some of it")
+
+    # A question of OURS at the same moment still holds the floor shut --
+    # answered, so it is the FLOOR refusing and not the in-flight rule, which
+    # fires one step earlier and would have hidden this.
+    ours = [{"type": "question", "id": "NEX-0101", "at": now.isoformat()},
+            {"type": "answer", "id": "NEX-0101", "at": now.isoformat(),
+             "text": "..."}]
+    may, why = lab.may_ask_now(ours, now)
+    assert not may and "floor" in why, why
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_n_eff_collapses_toward_one_as_the_book_correlates():
     """Nexus's own leading indicator (2026-09-12, unprompted): "N_eff = N /
     (1 + (N-1)*rho) over the open book -- when average pairwise correlation

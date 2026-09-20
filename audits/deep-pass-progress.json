@@ -72,8 +72,8 @@
         "t1": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "5e64fe2c"
     },
     {
       "id": "B02",
@@ -86,8 +86,8 @@
         "t1": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "5e64fe2c"
     },
     {
       "id": "B03",
@@ -100,8 +100,8 @@
         "t1": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "5e64fe2c"
     },
     {
       "id": "B04",
@@ -114,8 +114,8 @@
         "t1": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "5e64fe2c"
     },
     {
       "id": "B05",
@@ -128,8 +128,8 @@
         "t1": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "5e64fe2c"
     },
     {
       "id": "B06",
@@ -142,8 +142,8 @@
         "t1": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "5e64fe2c"
     },
     {
       "id": "A01",

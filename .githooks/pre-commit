@@ -36,6 +36,23 @@ fi
 
 $PY scripts/keep.py track || true
 
+# Only when the state going INTO this commit is the state on disk.
+#
+# The render reads the working tree. If state/ledger.json is modified and not
+# staged -- commit a code change first, fold second, which is the ordinary
+# order here -- then staging the page attaches a render of a ledger that is
+# not in the commit. tests/repo also reads the working tree, so it stays
+# green locally and rule 12 goes red on a fresh clone, where the working tree
+# IS the commit. A pathspec-restricted commit does the same thing.
+#
+# So: if any state/ file differs between the index and the working tree, do
+# nothing. The page is then stale in the commit, which the next full render
+# fixes loudly, rather than wrong in a way only a clone can see.
+if git diff --name-only -- state/ | grep -q .; then
+    echo "pre-commit: state/ has unstaged changes; not touching the page" >&2
+    exit 0
+fi
+
 # Staged only when the render succeeded: a stale page staged after a failed
 # render is exactly what turns rule 12's guard red.
 if $PY scripts/render.py --if-stale; then

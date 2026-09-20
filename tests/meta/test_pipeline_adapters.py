@@ -731,6 +731,54 @@ def _msg(msg_id, at, content="hello", auto=False, thread="th-1"):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_settle_reads_the_newest_mark_the_way_the_fold_does(tmp_path,
+                                                            monkeypatch):
+    """Two readers of "already told", and they stopped agreeing.
+
+    `settle()` refuses to write when ANY accepted outcome for this
+    (finding, report, fingerprint, verdict) exists, with no time bound. That
+    matched `_told` while `_told` asked whether a verdict had EVER been sent.
+    Since 2026-09-20 `_told` reads the NEWEST mark -- the #85 repair -- and
+    the two now disagree on exactly one path:
+
+      pass at T1, fail at T2, our check passes again, so a pass is owed. The
+      POST is accepted and `_capture` raises, so the outcome is recorded as
+      `unknown` and no mark is written. Every later run then sees their
+      server's newest is a pass, calls the item a duplicate, and settle finds
+      the accepted pass from T1 and writes nothing. The obligation can never
+      clear -- which is the badge settle() exists to prevent.
+
+    So settle asks the same question the fold asks: is this verdict the last
+    accepted word for that definition?
+    """
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    verify = _module("scripts/verify.py")
+    from qa.state import append_event
+
+    item = {"finding_id": "CYM-a", "report_id": 46, "fingerprint": "fp-1",
+            "verdict": "pass", "run_id": "run-1", "tree_sha": "t",
+            "checked_at": "2026-09-20T09:00:00+00:00"}
+
+    def mark(verdict, at):
+        append_event({"type": "verification_outcome", "at": at, "by": "agent",
+                      "source": "scripts/verify.py", "finding_id": "CYM-a",
+                      "report_id": 46, "fingerprint": "fp-1",
+                      "verdict": verdict, "outcome": "accepted",
+                      "run_id": "run-0", "tree_sha": "t",
+                      "checked_at": at, "evidence_id": "e"})
+
+    mark("pass", "2026-09-10T20:08:29+00:00")
+    mark("fail", "2026-09-10T21:46:08+00:00")
+
+    assert verify.settle(dict(item), "evidence-1") is True, (
+        "their last accepted word is the fail, so the pass is owed and has "
+        "to be recordable -- this is #85's shape one reader down")
+
+    # And once it IS the last word, a second send writes nothing.
+    assert verify.settle(dict(item), "evidence-2") is False
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_correction_we_send_says_which_of_the_three_things_happened():
     """The fold tells the three apart; this is the half that goes out.
 

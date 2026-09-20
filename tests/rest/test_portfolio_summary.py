@@ -194,9 +194,20 @@ def test_the_summary_says_which_populations_its_counters_leave_out(rest_trusted)
     # scope_problems() above, so a meta test can drive it (V10).
     problems = scope_problems(scope, body, len(held))
 
+    # WHICH of the two ways, because the pass reason was written for one of
+    # them and printed on both. `accounts_for` returns "counted" when the
+    # scope says the counters include the positions and "named" when it lists
+    # them as excluded -- and the sentence said "name the N positions they do
+    # NOT, with the endpoint that carries them" either way, which is the
+    # opposite of what the counted branch read and mentions an endpoint that
+    # branch never looked for. Found by two readers on 2026-09-20.
+    how = accounts_for(scope)
     conclude(Measurement(
         verdict="failed" if problems else "passed",
         reason=("; ".join(problems) if problems else
+                f"the counters state what they cover and say they INCLUDE "
+                f"the {len(held)} event-card position(s) this account holds"
+                if how == "counted" else
                 f"the counters state what they cover, and name the "
                 f"{len(held)} event-card position(s) they do not, with the "
                 f"endpoint that carries them"),

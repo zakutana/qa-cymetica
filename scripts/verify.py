@@ -442,13 +442,27 @@ def settle(item: dict, evidence_id: str | None) -> bool:
     # settlements a second apart are two events unless something looks. The
     # first version relied on append_event's dedup and its test passed only
     # because both calls fell inside one wall-clock second.
-    for event in read_events():
-        if (event.get("type") == "verification_outcome"
-                and event.get("outcome") == "accepted"
-                and event.get("finding_id") == item["finding_id"]
-                and event.get("report_id") == item["report_id"]
-                and event.get("fingerprint") == item["fingerprint"]
-                and event.get("verdict") == item["verdict"]):
+    # THE NEWEST accepted word for this definition, not any of them. Matching
+    # every mark ever was consistent with `_told` while `_told` asked whether
+    # a verdict had EVER been sent; since the #85 repair it reads the newest,
+    # and the two disagreed on one path: pass at T1, fail at T2, then a
+    # re-sent pass whose POST was accepted and whose `_capture` raised, so the
+    # outcome went down as `unknown` and no mark was written. Every later run
+    # saw their server's newest was a pass, called it a duplicate, and settle
+    # found the T1 pass and wrote nothing -- an obligation that can never
+    # clear, which is the badge settle() exists to prevent.
+    marks = [e for e in read_events()
+             if e.get("type") == "verification_outcome"
+             and e.get("outcome") == "accepted"
+             and e.get("finding_id") == item["finding_id"]
+             and e.get("report_id") == item["report_id"]
+             and e.get("fingerprint") == item["fingerprint"]]
+    if marks:
+        # Journal order breaks a tie, as it does in the fold: their
+        # timestamps are truncated to the second.
+        newest = max(enumerate(marks), key=lambda p: (str(p[1].get("at") or ""),
+                                                      p[0]))[1]
+        if newest.get("verdict") == item["verdict"]:
             return False
     wrote = append_event({
         "type": "verification_outcome", "at": _now(), "by": "agent",

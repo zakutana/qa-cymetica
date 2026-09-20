@@ -107,14 +107,27 @@ def test_the_commit_hook_renders_the_page_it_commits():
             "core.hooksPath is not set in this clone, so the hook does not "
             "run here -- not installed is not broken (rule 8)")
     body = HOOK.read_text(encoding="utf-8")
+    renders = "--if-stale" in body and "dashboard" in body
+    # And only from state that is going into the commit. The render reads the
+    # WORKING TREE, so with state/ modified-but-unstaged -- commit a code
+    # change first, fold second, which is the ordinary order here -- staging
+    # the page attaches a render of a ledger the commit does not carry.
+    # tests/repo reads the working tree too, so it stays green locally and
+    # rule 12 goes red on a fresh clone, where the working tree IS the
+    # commit. Found by three readers on 2026-09-20.
+    guarded = "git diff --name-only -- state/" in body
     conclude(Measurement(
-        verdict="passed" if "--if-stale" in body and "dashboard" in body
-        else "failed",
-        reason=("the pre-commit hook re-renders the dashboard and stages it"
-                if "--if-stale" in body else
+        verdict="passed" if renders and guarded else "failed",
+        reason=("the pre-commit hook re-renders the dashboard and stages it, "
+                "and only when state/ has nothing unstaged"
+                if renders and guarded else
                 "the pre-commit hook does not render, so rule 12's guard is "
-                "left to memory again"),
-        left=["--if-stale" in body, "dashboard" in body], right=[True, True],
+                "left to memory again"
+                if not renders else
+                "the hook renders from the working tree and stages the page "
+                "without checking that state/ is what the commit carries, so "
+                "a page from an unstaged ledger reaches the history"),
+        left=[renders, guarded], right=[True, True],
         population={"hook": HOOK.relative_to(REPO).as_posix()},
         sources={"rule": "CLAUDE.md rule 12 and 'After any change to state'"},
     ))

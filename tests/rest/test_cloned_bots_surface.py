@@ -167,22 +167,32 @@ def credential_gap(paths: dict, schemes: dict | None = None) -> dict:
 
 @qa(component="rest.agents", tier=SafetyTier.SAFE, surface="rest")
 def test_one_credential_carries_a_clone_from_creation_to_funding(rest_trusted):
-    """An agent that can clone a bot can put money in it.
+    """One credential carries a clone through every step of its own flow.
 
-    Measured 2026-09-10, with the API key their own documents tell an agent to
-    use: `POST /api/v1/cloned-bots/clone` returned 200 and created
-    d778102d in paper; `POST /api/v1/cloned-bots/d778102d/fund` with
-    {"amount": 1.0} returned **401 with an empty body**.
+    The claim is a comparison between THEIR ROUTES, read off their own
+    document rather than off any one status code: a `cloned-bots` route that
+    is authenticated at all must publish the credential their documents tell
+    an agent to use. Whichever route fails that is the finding, and the
+    headline moves with it.
 
-    The clone arrives with a practice balance of 0.00 -- their own UI card
-    shows it beside a Fund button -- so a bot that cannot be funded cannot
-    trade. An agent following the documented path therefore gets a bot it
-    owns, can see, and can never start.
+    WHAT IT WAS, 2026-09-10 (#89): `POST /clone` returned 200 and created
+    d778102d in paper; `POST /{id}/fund` with {"amount": 1.0} returned 401
+    with an empty body, and `/go-live` published only `authorization`. A clone
+    arrives with a practice balance of 0.00 -- their own UI shows it beside a
+    Fund button -- so an agent following the documented path got a bot it
+    owned, could see, and could never start. They fixed it in 48 minutes and
+    paid it.
 
-    This reads the credential question off their own document rather than off
-    the 401, so it is a comparison between their routes: two steps of one flow
-    publish `x-api-key`, two do not. The live 401 is what makes the difference
-    consequential rather than cosmetic, and it is in the report.
+    WHAT IT IS, 2026-09-20: ten of eleven routes accept the agent key and one
+    does not, `GET /{instance_id}/activity` (#98) -- so the funding flow now
+    holds and what is left is the reading of it. The reason line says which
+    it is, and the `funds` branch below exists so this docstring's old
+    headline cannot be quoted back on a read where /fund is not among the
+    refusers.
+
+    DO NOT NARROW THE ASSERTION to /fund and /go-live. That was tried on
+    2026-09-13 and turned a live, twice-paid finding into a pass within the
+    hour; the comment block above `credential_gap` holds the detail.
     """
     spec = rest_trusted.get(OPENAPI)
     if spec.status_code != 200:

@@ -417,8 +417,17 @@ def may_ask_now(nexus_rows: list[dict], now: datetime | None = None,
                if r.get("type") == "gave_up"
                and str(r.get("status") or "").startswith("failed")
                and isinstance(r.get("retry_after_s"), (int, float))}
+    # Not a question the operator asked them in a browser. `nexus.py record`
+    # writes one so the answer survives a /clear, and the floor read it as
+    # traffic of ours: recording at 14:00 stopped the laboratory asking
+    # anything until 14:20, for a question that never used their door. The
+    # floor is about THEIR side -- one in flight so the pick-up is not split,
+    # and a pace their limit can carry -- and neither holds for a
+    # conversation that happened on their website. The day's CAP still counts
+    # it, deliberately: that one is about how much of their time we take.
     stamps = [_at(r.get("at")) for r in nexus_rows
-              if r.get("type") == "question" and r.get("id") not in refused]
+              if r.get("type") == "question" and r.get("id") not in refused
+              and r.get("lane") != "operator"]
     last = max((s for s in stamps if s is not None), default=None)
     floor = NIGHT["ask_seconds"]
     if last is not None and (moment - last).total_seconds() < floor:
