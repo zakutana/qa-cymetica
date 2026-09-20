@@ -537,14 +537,20 @@ def _samples() -> list[dict]:
 
 
 def _backtest_call(constituents, period_days: int, include_fees: bool = False,
-                   starting_capital: float = 1000.0) -> dict:
+                   starting_capital: float = 1000.0,
+                   cite: str | None = None) -> dict:
     """One call to their tool, at SAFE, at their own pace.
 
-    No evidence capture: a search makes thousands of these and the store keeps
-    one witness per tool whatever we do, so capturing them all would cost a
-    gigabyte to keep one file. A candidate that gets PROMOTED -- one we put to
-    Nexus or trade on -- is re-run through `backtest_cited` instead, where the
-    bytes are worth keeping because a verdict may one day cite them.
+    A search makes thousands of these and the store keeps one witness per tool
+    whatever we do, so capturing them all would cost a gigabyte to keep one
+    file -- hence `cite`, which is off by default and passed only where the
+    bytes may one day be cited: the gate that stands between a card and a
+    room.
+
+    Until 2026-09-20 this said the promoted case was "re-run through
+    `backtest_cited` instead". No such function has ever existed, so nothing
+    captured this tool at all: `backtest_event_card_idea` is the one call the
+    surface watch has no baseline for, and the whole search rests on it.
     """
     import time as _time
 
@@ -555,19 +561,33 @@ def _backtest_call(constituents, period_days: int, include_fees: bool = False,
     del _PACE[:-qa_backtests.PER_MINUTE]
 
     nexus, mcp, token = _reader()
+    arguments = {
+        "constituents": [{"symbol": leg["symbol"], "weight": leg["weight"]}
+                         for leg in constituents],
+        "period_days": int(period_days),
+        "include_fees": bool(include_fees),
+        "starting_capital": float(starting_capital)}
     try:
-        return nexus._inner(mcp.call(BACKTEST_TOOL, {
-            "constituents": [{"symbol": leg["symbol"], "weight": leg["weight"]}
-                             for leg in constituents],
-            "period_days": int(period_days),
-            "include_fees": bool(include_fees),
-            "starting_capital": float(starting_capital)})) or {}
+        if cite is None:
+            return nexus._inner(mcp.call(BACKTEST_TOOL, arguments)) or {}
+        response = mcp.rpc("tools/call",
+                           {"name": BACKTEST_TOOL, "arguments": arguments})
+        try:
+            from qa.evidence import EvidenceStore
+            from qa.safety import SafetyTier
+
+            EvidenceStore("script-lab").capture(
+                response.request, response, SafetyTier.SAFE, cite)
+        except Exception:  # noqa: BLE001 -- a capture we could not write is
+            pass             # not a read we did not make
+        return nexus._inner(type(mcp).unwrap(response.json())) or {}
     finally:
         _done(mcp, token)
 
 
 def backtest(constituents, period_days: int = 30, *, why: str = "",
-             include_fees: bool = False, call=None, now=None) -> dict:
+             include_fees: bool = False, call=None, now=None,
+             cite: str | None = None) -> dict:
     """Their answer for one basket over one window, asked at most once.
 
     The register is consulted BEFORE the call, which is the whole of
@@ -581,7 +601,8 @@ def backtest(constituents, period_days: int = 30, *, why: str = "",
     if known:
         return {"cached": True, **known}
     answer = (call or _backtest_call)(constituents, period_days,
-                                      include_fees=include_fees) or {}
+                                      include_fees=include_fees,
+                                      cite=cite) or {}
     row = qa_backtests.record(constituents, period_days, answer, why=why,
                               include_fees=include_fees, now=now)
     return {"cached": False, **row}
@@ -1305,7 +1326,8 @@ def _gate(card: str, legs: list[dict]) -> dict:
         for period in lab.GATE["periods"]:
             try:
                 readings.append(backtest(basket, period, include_fees=True,
-                                         why=f"gate {card[:8]}"))
+                                         why=f"gate {card[:8]}",
+                                         cite="backtest.event_card_idea"))
             except qa_backtests.BacktestError:
                 continue
             except (Exception, SystemExit) as exc:  # noqa: BLE001

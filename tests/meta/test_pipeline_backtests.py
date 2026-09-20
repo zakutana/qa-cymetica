@@ -320,6 +320,43 @@ def test_a_seed_already_answered_is_not_walked_again(tmp_path, monkeypatch):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_gate_keeps_the_bytes_and_the_search_does_not(tmp_path, monkeypatch):
+    """`backtest_event_card_idea` is the one tool of theirs nothing captures.
+
+    `_backtest_call`'s docstring said a promoted candidate was "re-run through
+    `backtest_cited`, where the bytes are worth keeping". That function has
+    never existed -- the memory is
+    `verify-a-workflow-is-live-before-building-for-it` -- so no capture of
+    this tool was ever written, the surface watch has no baseline for the one
+    call the whole search rests on, and a room's gate verdict cites nothing.
+
+    Both directions, because capturing everything is the defect the docstring
+    was guarding against: the search asks thousands of times and keeps
+    nothing, the gate asks twice per card and keeps both.
+    """
+    _at(tmp_path, monkeypatch)
+    lab = _scripts_lab(tmp_path, monkeypatch)
+    seen = []
+
+    def _call(constituents, period_days, **kw):
+        seen.append(kw.get("cite"))
+        return {"sharpe_ratio": 1.0, "total_return_pct": 2.0, "n_points": 29}
+
+    monkeypatch.setattr(lab, "_backtest_call", _call)
+
+    legs = [{"symbol": "BTC", "weight": 0.7}, {"symbol": "BCH", "weight": 0.3}]
+    lab._gate("0123456789abcdef", legs)
+    assert seen and all(c == "backtest.event_card_idea" for c in seen), (
+        f"the gate asked and kept nothing: {seen}")
+
+    seen.clear()
+    lab.search([{"card": "c-2", "title": "x", "legs": legs}], pool=[], cap=3,
+               now=NOW)
+    assert seen and set(seen) == {None}, (
+        f"the search captured a call it makes thousands of times: {seen}")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_search_holds_no_hand_that_trades_or_opens_a_room():
     """A basket the search composed is a MEASUREMENT. The road from "the
     backtest found it" to "it is on paper" runs through a question to Nexus,
