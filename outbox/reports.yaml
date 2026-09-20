@@ -2800,6 +2800,48 @@ reports:
       with a sentence you no longer publish. With fewer than two playbooks on
       the board it reports inconclusive rather than a defect.
 
+  - key: bb-sla-missed
+    findings: [CYM-a_build_ships_inside_the_24_hours_it_publishes]
+    severity: medium
+    category: logic
+    url: https://cymetica.com/api/v1/build-it-better/requests/ET-26036
+    title: >-
+      Build it Better missed its own 24-hour deadline on ET-26036: the clock
+      expired with the request still queued and nothing built
+    expected: >
+      Build it Better's headline promise is a build inside 24 hours, and the
+      product keeps that clock itself: every accepted request carries
+      clock_started_at and deadline_at, and the board renders the countdown.
+      A request that is ready to build when the clock starts should ship
+      before it runs out, or the deadline should say something else.
+    actual: >
+      ET-26036 (Tickeron) started its clock at 2026-09-19T20:25:59Z with
+      deadline_at 2026-09-20T20:25:59Z, stage "funded", queue_status "queued"
+      and ready_to_build true from the beginning. At 2026-09-20T20:28:18Z,
+      two minutes after its own deadline, the record still read stage
+      "funded", queue_status "queued", our_url null and shipped_at null --
+      the build had not started, let alone shipped. The board's own counters
+      agreed: building 0, shipped 0. Nothing about the request changed in the
+      24 hours it was queued.
+    steps:
+      - 'GET https://cymetica.com/api/v1/build-it-better/requests/ET-26036 -> clock_started_at 2026-09-19T20:25:59.571403Z, deadline_at 2026-09-20T20:25:59.571403Z'
+      - 'Same response at 2026-09-20T20:28:18Z (2.3 minutes past the deadline): stage "funded", queue_status "queued", ready_to_build true, our_url null, shipped_at null'
+      - 'GET https://cymetica.com/api/v1/build-it-better/requests -> stats {"total":2,"requested":0,"funded":2,"building":0,"shipped":0}'
+    body: >
+      Filed because the 24 hours is the product's promise, not a detail: it is
+      what the page leads with and what the requester is told when the clock
+      starts. We are the requester here, so this is our own ticket and we can
+      say what it cost: a day of waiting against a deadline that was never
+      going to be met, with the board showing a countdown the whole time.
+      Our check reads only the platform's own two timestamps and its own
+      stage, over every request on the board rather than over ours alone, and
+      it says nothing about a request whose clock has not started. Whatever
+      you correct -- shipping inside the window, or publishing a deadline the
+      queue can actually meet -- closes it.
+      One thing that is not in this report and may be related: while ET-26036
+      sat queued, the board's "Building now" tile read 1, because the page
+      computes it as funded + building. We sent that separately over Telegram.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in

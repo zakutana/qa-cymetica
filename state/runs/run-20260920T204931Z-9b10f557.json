@@ -1,0 +1,275 @@
+{
+  "schema": 2,
+  "run_id": "run-20260920T204931Z-9b10f557",
+  "started_at": "2026-09-20T20:49:49+00:00",
+  "finished_at": "2026-09-20T20:49:59+00:00",
+  "git_head": "9b10f55783d9c2eef49529190dbea977c20719fb",
+  "git_short": "9b10f557",
+  "git_dirty": false,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": "sha256:f0b425b2ea7c697bbedcc02039bcf46f3f74dc08d4a76c32d0faf05de589cdf2",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "49a2811758011790d64fa30a20a820a5e1db91a04465a2d718b29d3335104d35",
+    "/.well-known/agent-card.json": "352d3ced5a51e6ec89adb1f78e2674982b2c9b0a669929715c1a547099bbb532",
+    "/.well-known/agent-skills.json": "3ee22148aea8e6314344f5675c7a51d4800a25b674c7dbcca1babecdda04c7c4",
+    "/.well-known/ai-plugin.json": "209acf05d36b71a3f52e4b1bbd5ee6bb07722f5370367dae2a43d29a6b82def4",
+    "/.well-known/udc.json": "0434acb59b66dac0e55635c5cd1808e2ea22fdc3da71de638086455eb6eb68e3",
+    "/openapi.json": "9a810321e9618b4a0caf351c4297beca7b4131a7437da045f4ecd3e6efdf646f",
+    "/openapi-public.json": "cde41015eff023c4a9169dffcf7565b180f2f64af57a820966bdfcfdd36ba521",
+    "/llms.txt": "7ec6b5939f9503cfe19187fea624097d7730961378d36241a50d221e54213851",
+    "mcp:tools/list:none": "8b098b929744471c24ee978efbfe4031674b7fae16da582d492f96bca10ed042"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/rest/test_build_it_better_board.py -q",
+  "selector_full": false,
+  "allow_mutate": false,
+  "collected": [
+    "tests/rest/test_build_it_better_board.py::test_the_spec_s_funding_gate_is_the_one_the_build_actually_waits_on",
+    "tests/rest/test_build_it_better_board.py::test_a_build_ships_inside_the_24_hours_it_publishes",
+    "tests/rest/test_build_it_better_board.py::test_the_board_s_headline_numbers_are_the_list_underneath_them",
+    "tests/rest/test_build_it_better_board.py::test_a_public_read_of_a_build_does_not_carry_the_token_that_controls_it",
+    "tests/rest/test_build_it_better_board.py::test_a_spec_carries_every_line_of_the_request_it_answers"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/rest/test_build_it_better_board.py::test_the_spec_s_funding_gate_is_the_one_the_build_actually_waits_on",
+      "component": "rest.build_it_better",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 2496,
+      "evidence_ids": [
+        "5f3ba369d548ac59ed6f8d7e83cd55063d497bbc6bcdad76a184d8c9ee83b3e7",
+        "837a3cb166b402b7aeca227e3fe7166533009e401fdfe94d66d5b3122ee21a21",
+        "9bbb2781830e2a223252bbd9f07a8ff9e2dfaf54d2cf413cace528b6e0b6e5c5"
+      ],
+      "measurement": {
+        "verdict": "passed",
+        "reason": "on 1 request(s) the clock starts only once the gate is filled or waived, and never before it",
+        "left": {
+          "clock_before_gate": 0,
+          "read": 1,
+          "unread": 0
+        },
+        "right": {
+          "clock_before_gate": 0
+        },
+        "sources": {
+          "board": "/api/v1/build-it-better/requests"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": null,
+        "role": "verdict",
+        "population": null
+      },
+      "check_fingerprint": "c4e818e72572ac27307f9f44e6c28ad6fd69278aebe246d5c654fd30b069af04",
+      "reason": null,
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/rest/test_build_it_better_board.py::test_a_build_ships_inside_the_24_hours_it_publishes",
+      "component": "rest.build_it_better",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 522,
+      "evidence_ids": [
+        "60061fb15642442e53881fb1dd3342d3a404efdc6e0c8483896a450e2a04270e"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "ET-26036 passed its own deadline 2026-09-20T20:25:59 0.4h ago and has shipped nothing (stage funded)",
+        "left": {
+          "overdue": 1
+        },
+        "right": {
+          "overdue": 0
+        },
+        "sources": {
+          "board": "/api/v1/build-it-better/requests"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": null,
+        "role": "verdict",
+        "population": null
+      },
+      "check_fingerprint": "dd76e7540a52e3577170f57c43645391d159f8434e245087aad3d6f5369ff2b9",
+      "reason": null,
+      "failure_repr": "tests\\rest\\test_build_it_better_board.py:400: in test_a_build_ships_inside_the_24_hours_it_publishes\n    conclude(Measurement(\nqa\\measure.py:165: in conclude\n    raise AssertionError(explain(m))\nE   AssertionError: ET-26036 passed its own deadline 2026-09-20T20:25:59 0.4h ago and has shipped nothing (stage funded)\nE     left  = {'overdue': 1}\nE     right = {'overdue': 0}"
+    },
+    {
+      "nodeid": "tests/rest/test_build_it_better_board.py::test_the_board_s_headline_numbers_are_the_list_underneath_them",
+      "component": "rest.build_it_better",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 400,
+      "evidence_ids": [
+        "dbb95145f09f7022306df8b912fefae51d31e72e13067a0b64e345dabd7be791"
+      ],
+      "measurement": {
+        "verdict": "passed",
+        "reason": "the counters and the 2 listed request(s) agree: funded 2",
+        "left": {
+          "stats": {
+            "total": 2,
+            "requested": 0,
+            "funded": 2,
+            "building": 0,
+            "shipped": 0
+          },
+          "counted": {
+            "funded": 2
+          }
+        },
+        "right": {
+          "disagreements": 0
+        },
+        "sources": {
+          "board": "/api/v1/build-it-better/requests"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": null,
+        "role": "verdict",
+        "population": null
+      },
+      "check_fingerprint": "4488e3f84ea009813facf471728b00a3ace0a2afcf64f7e8133607b843989f51",
+      "reason": null,
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/rest/test_build_it_better_board.py::test_a_public_read_of_a_build_does_not_carry_the_token_that_controls_it",
+      "component": "rest.build_it_better",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 1204,
+      "evidence_ids": [
+        "577554a623af17b0e6132930ed71e36e5a5ee4d7a987a0b064c0b2190f37c18f",
+        "2caf77eb4143e8d750907f1d9b808c9292064a959e89bbc278eb12eeca6bda1d",
+        "2bd8f042a32d87978fce99be9de28e7449ecf8a36a2cbe979eaff9a9a73c38aa"
+      ],
+      "measurement": {
+        "verdict": "passed",
+        "reason": "2 request(s) read anonymously and none carries a request_token or any other credential field; our own token was searched for verbatim and is absent",
+        "left": {
+          "requests_read": 2,
+          "token_fields": 0
+        },
+        "right": {
+          "token_fields": 0
+        },
+        "sources": {
+          "board": "/api/v1/build-it-better/requests"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": null,
+        "role": "verdict",
+        "population": null
+      },
+      "check_fingerprint": "1cb1a2506b7ef9aec6dd15db363bee31a943b8efa23fe33ba4c28165ed75dc0b",
+      "reason": null,
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/rest/test_build_it_better_board.py::test_a_spec_carries_every_line_of_the_request_it_answers",
+      "component": "rest.build_it_better",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 1010,
+      "evidence_ids": [
+        "26f7b74586627fb44be1f0df95dd8362060ca2e04c5339eca48f1319f7516f59",
+        "1617af9bdae40443639f5b841591970ce3e802179e3ab14f184562ec1c5fb103",
+        "dca17a85c54a5bd04b88acfc143c7072972f486bc5cf09f9ec3e7ba3f7f99102"
+      ],
+      "measurement": {
+        "verdict": "passed",
+        "reason": "every improvement line of 2 request(s) appears whole in the spec that request was asked to lock",
+        "left": {
+          "requests_read": 2,
+          "dropped": 0
+        },
+        "right": {
+          "dropped": 0
+        },
+        "sources": {
+          "board": "/api/v1/build-it-better/requests"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": null,
+        "role": "verdict",
+        "population": null
+      },
+      "check_fingerprint": "db5b7b315735c496674e82bdc768e9ae1aad4993c50120b7fe4dfd12c3633e28",
+      "reason": null,
+      "failure_repr": null
+    }
+  ],
+  "totals": {
+    "passed": 4,
+    "failed": 1
+  },
+  "ratelimit": {
+    "requests": 11,
+    "limit": 2000,
+    "remaining": 1984,
+    "fraction_used": 0.008,
+    "exhausted": false
+  },
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "code_dirty_after": false,
+  "fingerprint_after": "sha256:f0b425b2ea7c697bbedcc02039bcf46f3f74dc08d4a76c32d0faf05de589cdf2",
+  "exit_status": 1
+}
