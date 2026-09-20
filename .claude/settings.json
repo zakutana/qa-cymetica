@@ -33,7 +33,12 @@
       "Bash(python scripts/sampler.py:*)",
       "Bash(python scripts/processes.py:*)",
       "Bash(python scripts/keep.py:*)",
-      "Bash(python scripts/lab.py:*)"
+      "Bash(python scripts/lab.py:*)",
+      "Bash(python scripts/channels.py:*)",
+      "Bash(python scripts/nexus.py:*)",
+      "Bash(python scripts/fomo_watch.py:*)",
+      "Bash(python scripts/review.py:*)",
+      "Bash(python scripts/a2a.py:*)"
     ]
   },
   "hooks": {
