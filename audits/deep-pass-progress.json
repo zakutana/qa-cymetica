@@ -212,8 +212,8 @@
         "t1": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "50030b03"
     },
     {
       "id": "A06",
@@ -226,8 +226,8 @@
         "t1": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "50030b03"
     },
     {
       "id": "A07",
@@ -240,8 +240,8 @@
         "t1": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "50030b03"
     },
     {
       "id": "A08",

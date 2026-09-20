@@ -72,7 +72,15 @@ def test_every_coin_on_the_roster_answers_on_the_text_view(rest_anon):
         code = rest_anon.get(TEXT.format(symbol=symbol)).status_code
         if code == 200:
             answered.append(symbol)
-        elif code == 404:
+        elif code == 404 or 500 <= code < 600:
+            # A 5xx BREAKS "always 200 for a known coin" exactly as a 404
+            # does, and it is theirs, not ours. It used to go to `unmeasured`
+            # -- a bucket this file's own docstring defines as "a read that
+            # fails for OUR reasons" -- so six of twelve roster coins
+            # answering 500 read as "all 6 coins on the roster answered".
+            # Found by two readers on 2026-09-20. Both shapes get the second
+            # look, because a cold cache and a restarting worker are the same
+            # kind of transient.
             first_fail.append(symbol)
         else:
             unmeasured.append(f"{symbol}: HTTP {code}")
@@ -99,14 +107,15 @@ def test_every_coin_on_the_roster_answers_on_the_text_view(rest_anon):
                       for m in missing)
     conclude(Measurement(
         verdict="failed" if missing else "passed",
-        reason=(f"{len(missing)} of {measured} coins on their own roster answer "
-                f"404 on the text outlook their schema says is always 200 for a "
-                f"known coin, twice {SECOND_LOOK_S:.0f}s apart: {named}"
+        reason=(f"{len(missing)} of {measured} coins on their own roster do not "
+                f"answer 200 on the text outlook their schema says is always "
+                f"200 for a known coin, twice {SECOND_LOOK_S:.0f}s apart: "
+                f"{named}"
                 if missing else
                 f"all {measured} coins on the roster answered the text outlook"),
         left=[m["symbol"] for m in missing], right=[],
         population={"roster": len(symbols), "tried": tried,
-                    "first_look_404": first_fail, "missing": missing,
+                    "first_look_not_200": first_fail, "missing": missing,
                     "answered": len(answered), "unmeasured": unmeasured},
         sources={"contract": "openapi-public.json, GET /api/v1/crypto-outlook/"
                              "{symbol}.txt: 'Always 200 for a known coin'",

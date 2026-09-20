@@ -114,11 +114,32 @@ def test_a_restricted_query_says_which_rule_it_tripped(mcp_anon):
 
     reason = body.get("reason")
     missing = [k for k in ("reason", "parameter", "hint") if not body.get(k)]
-    loose = (isinstance(reason, str)
-             and (" " in reason.strip() or reason != reason.upper()))
+    # A non-string reason is neither missing nor loose, and passed as "a bare
+    # label": {"code": 7} is truthy and has no space.
+    loose = (not isinstance(reason, str)
+             or " " in reason.strip() or reason != reason.upper())
+
+    # THE HINT'S CONTENT, not its presence. The whole point of this check is
+    # the distinction the hint draws -- wording, not identity or trust level,
+    # which is #93's argument in the other direction -- and the first version
+    # asserted only that the key was truthy while the pass reason claimed "a
+    # hint saying it is about the wording". A regression to "Your trust level
+    # does not permit this query" would have kept all three keys truthy and
+    # passed, sending that claim to the vendor. Presence versus value, the
+    # 2026-09-07 shape exactly, in a check written to guard against it.
+    hint = str(body.get("hint") or "").lower()
+    says_wording = "wording" in hint
+    denies_identity = ("not your identity" in hint or "not about your identity"
+                       in hint or "not a" in hint and "trust level" in hint)
+    # `parameter` names the field that tripped, which is the other half of
+    # what makes the refusal actionable: without it there is nothing to
+    # reword.
+    names_field = str(body.get("parameter") or "") in (
+        "query", "question", "text", "prompt")
 
     conclude(Measurement(
-        verdict="failed" if (missing or loose) else "passed",
+        verdict="failed" if (missing or loose or not says_wording
+                             or not names_field) else "passed",
         reason=(
             f"QUERY_RESTRICTED carries no {', '.join(missing)}, so a caller "
             f"cannot tell 'you may not' from 'ask this a different way'"
@@ -126,13 +147,27 @@ def test_a_restricted_query_says_which_rule_it_tripped(mcp_anon):
             f"the reason is free text rather than a label ({reason!r}), which "
             f"is what keeps internal wording from riding out with a refusal"
             if loose else
+            f"the hint does not say the refusal is about the WORDING, which "
+            f"is the whole distinction it was added to draw: "
+            f"{str(body.get('hint'))[:140]!r}"
+            if not says_wording else
+            f"the refusal names no field a caller could reword: parameter is "
+            f"{body.get('parameter')!r}"
+            if not names_field else
             f"the refusal names reason {reason!r} on parameter "
-            f"{body.get('parameter')!r} and a hint saying it is about the "
+            f"{body.get('parameter')!r}, and its hint says it is about the "
             f"wording"
+            + ("" if denies_identity else
+               "; it no longer says this is not about identity or trust "
+               "level, which is the half that told an agent not to go "
+               "looking for a credential")
             + ("" if reason in KNOWN else
                f"; {reason!r} is not one of the five labels they published, "
                f"which is theirs to extend and not a defect")),
         left={"fields": sorted(k for k in ("reason", "parameter", "hint")
-                               if body.get(k))},
-        right={"fields": ["hint", "parameter", "reason"]},
+                               if body.get(k)),
+              "hint_says_wording": says_wording,
+              "parameter": body.get("parameter")},
+        right={"fields": ["hint", "parameter", "reason"],
+               "hint_says_wording": True},
         sources={"tool": "search_markets"}))
