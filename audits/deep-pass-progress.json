@@ -510,16 +510,32 @@
       "commit": null
     }
   ],
-  "next": [],
+  "next": [
+    "Opravit krok 10b v deep-pass/SKILL.md: \"zahoď položku odškrtnutou týden\" se nedá přečíst z řádku, protože datum na něm je den DOHODY, ne odškrtnutí. Je to zásah do páteře, takže to chce tři čtenáře podle 1c, test a odstavec v Změněná pravidla."
+  ],
   "retrospective": {
     "last": "2026-09-19",
     "done": false
   },
-  "rule_changes": [],
+  "rule_changes": [
+    {
+      "id": "RC1",
+      "what": "New PreToolUse hook .claude/hooks/no_backtick_commit.py: a `git commit -m` whose command line carries a backtick outside single quotes is refused.",
+      "why": "Inside double quotes a backtick is a command substitution: the shell runs what is between the pair and drops its OUTPUT into the message. Three commit messages lost a phrase on 2026-09-20 and git exited 0 each time, so the failure is silent and lands on whoever reads the history -- which is this pass's own retrospective. The memory a-rule-i-keep-breaking-needs-a-hook-not-a-reminder says a rule broken this often needs a mechanism. `-F <file>` stays open, or the hook would close the way out of itself.",
+      "votes": {
+        "t1": "no",
+        "t2": "no",
+        "t3": "no"
+      },
+      "test": "tests/repo/test_no_backtick_commit.py::test_the_three_messages_that_lost_a_word_today_are_refused",
+      "commit": "3b808ba0",
+      "handover": true
+    }
+  ],
   "meta_tests": {
     "start": 576,
-    "end": null,
-    "reason": null
+    "end": 581,
+    "reason": "+5 on 576. Each new test carries an input no existing test held: a label that excuses nothing (the vendor's own withdrawal of the sentence it was built on), a --collect-only run record, a transport timeout where the old fixture used a 503, an unreadable timestamp on a day cap, a per-chain ratio where every fixture had passed one number to both chains, three spellings of an httpx import, and a settle() whose newest mark disagrees with an older one. The other twenty-odd fixes strengthened existing tests rather than adding a file."
   },
   "finished": false
 }

@@ -1,165 +1,130 @@
-# Deep pass — 2026-09-19
+# Deep pass — 2026-09-20
 
-Běh `deep-pass-2026-09-19` začal na commitu `abaa7e94`. Ve scope bylo 47 commitů
-a 4 592 řádků Pythonu, skoro všechno z předělávky laboratoře na tick.
-
-Ověřovací běh měl prereg `PRE-0117` a run `run-20260919T171917Z-2c3f7c91`,
-level V. Celá suita: **994 prošlo, 4 spadly**. Tři pády jsou už podané nálezy
-(#52, #86, #89/#98). Čtvrtý byl dashboard, který spravil render.
+Spuštěn v 14:12 UTC na tvůj návrh („nedáme předtím deep pass?"), ne v noci.
+Start commit `17c98be7`, 87 commitů nepushnutých, `tests/meta` zelená na vstupu.
 
 ## Co se stalo
 
-Tři auditoři prošli checky s pohnutým otiskem. Code review prošlo diff
-laboratoře: tick, sync door a kontrolní skupinu FOMO. Dohromady **48 tvrzení**,
-33 z auditu a 15 z review.
+Pět nezávislých čtenářů: tři auditoři nad **132 kontrolami**, jejichž otisk se
+od posledního auditu pohnul, a dva recenzenti nad 13 041 řádky skutečného kódu
+(bez generovaného stavu). Dohromady **36 tvrzení**.
 
-Každé tvrzení posoudili tři nezávislí čtenáři: **37 reálných, 2 minority,
-9 zamítnutých**. Zamítli tak 11 tvrzení ze 48, víc než kterýkoli pass předtím.
+Tři triážní agenti bez sdíleného kontextu, každý v jiném pořadí, každý musel
+nález **reprodukovat ze zdroje**, než ho uznal:
 
-**Opraveno 37 z 37.** Opravy jsou ve třech commitech:
+| | |
+|---|---|
+| skutečných (≥2 ze 3) | **28** — všech 28 opraveno |
+| minority report (1 ze 3) | 4 |
+| zahozeno (0 ze 3) | 4 |
 
-- `fd5e4c08` — kód laboratoře;
-- `de45fb7d` — vendor checky;
-- `2119ec95` — naše stráže.
+Triáda tedy odstranila **8 z 36**. U tří z nich jsem si sám myslel, že jsou
+skutečné — bez ní bych zbytečně měkčil kontroly, které jsou správně přísné.
 
-Odesláno Cymetice: **pass na #88 a oprava (`fail`) na #52.** Nic jiného ven
-nešlo.
+**Nejdražší nález mířil na moji vlastní dnešní práci.** `--collect-only`
+zapisuje **přípustný záznam běhu** s nula výsledky; takových je na disku 113
+z 496. Ranní oprava výběru default běhu četla `collected` místo rozsouzeného,
+takže si jeden z nich vybrala — 1053 sebraných, 0 výsledků, 59 z 63 řádků
+formálně „pokrytých" a ani jeden rozsouzený. Přesně ta vada z 12. 9., kterou
+měla podle vlastního docstringu zavřít. Teď čte totéž co `_apply_run`, než
+něčím pohne; živě to skočilo na běh s 65 rozsouzenými.
+
+**Druhý mířil na větu, kterou jsem odpoledne postavil na odvolané zprávě.**
+Ústupek se štítkem u #85 stál na jejich REPLY-0034 z 12:55; ve 13:49 ji sami
+přepsali — *„labelled or not, that is a defect"*. Přečetl jsem bod 4 a ne větu
+za ním, a obě jsou v našem žurnálu. Ústupek šel celý pryč.
 
 ## Opraveno
 
-**Laboratoř mohla otevřít room bez pozice a koupit tutéž kartu dvakrát.**
-Tři cesty (R01, R02, R09):
+Všech 28, každé s testem napřed a commitem, který ho jmenuje. Tři nejvážnější:
 
-- odmítnutý paper nákup nechal otevřený room s kritériem, ale bez pozice;
-- odpověď s víc než osmi kartami nechala room bez plánu;
-- další tick mohl koupit kartu, kterou už drží jiný běžící room.
-
-Teď se room zavře, nohy se ořežou na osm a držené karty se přeskočí.
-
-**Otázka na Nexus mohla viset „v letu" celých 24 hodin.** (R03, R04) Chyba
-jiná než síťová nezapsala give-up. Zaseknutý job ve frontě tak blokoval další
-otázku. Teď každá chyba zapíše give-up a strop jsou 2 hodiny.
-
-**Kontrolní skupina memecoinů mohla obsahovat coin, který byl tu samou hodinu
-hot.** (R08) K tomu se coiny s nepřečtenou hloubkou počítaly jako
-neobchodovatelné (R07). Teď mají vlastní kolonku.
-
-**Jedenáct vendor checků tvrdilo méně, než slibuje jejich docstring.**
-(V01–V04, V06–V12) Příklady:
-
-- #88 porovnával jen cesty, ne HTTP metody;
-- #86 nikdy nevypršel u otázky, která zůstala ve frontě;
-- nástroj bez čitelného schématu prošel jako „bere parametry";
-- „Login required" se nepočítalo jako zeď.
-
-**Run mohl dostat úroveň V, i když se kód během běhu změnil a commitnul.**
-(V16) `code_dirty_after` četl jen `git status`. Teď porovná i HEAD na
-začátku a na konci.
-
-**Sedmnáct našich stráží a testů procházelo díky tvaru fixture, ne díky
-kódu.** (C01–C06, C08, L01–L07, V13–V15) Fixture byla už seřazená, všechny
-roomy padly do poslední hodiny, klíč se schoval za vlastní vzor redakce.
-Každá oprava je ověřená mutací produkčního kódu.
-
-**Patrol neviděl agenty.** Počítal volání skillů a Bash příkazy, ale spuštění
-agenta není ani jedno. `check-auditor` a `finding-triage` proto ukazovaly
-0 běhů. Teď ukazují 13 a 30 (`0d0950b4`, test napřed).
+* **Dvě věty pro vendora tvrdily víc, než kontrola měřila.** FOMO podlaha
+  soudila solanový průlom solanovým poměrem a citovala jim ho poměrem
+  Robinhoodu — pool 75,16 $ souzený na 1,88 $ hlášený jako 3,76 $, na řádku
+  založeném jako **#102**. A passující verdikt říkal *„každý řádek čistí
+  podlahu"* vedle čísla, které ji nečistí.
+* **Čtyři testy nemohly selhat.** Strážce „archiv má volajícího" hlídal
+  řetězec, který je v obou souborech i v próze — smazal jsem oba skutečné
+  volající a zůstal zelený. „Polovina" se porovnávala s toutéž funkcí, co ji
+  spočítala, takže čtvrtinový vklad prošel. Fixture pro `n_eff` ležela mimo
+  pásmo, které cituje z Nexuse (rho −0,20, n_eff 23,4 z pěti pozic). Noční
+  kontrola soudila `0 == 0`.
+* **Nečitelné razítko pouštělo 25. otázku.** Oba denní stropy četly
+  `(_at(...) or since) > since`, takže řádek, jehož čas nejde přečíst, se
+  nepočítal — pravidlo 8 obrácené směrem, který utrácí.
 
 ## Prořezáno
 
-- **Paměť:**
-  - 2 soubory vyřazeny. `give-the-delta-not-the-narration` drží CLAUDE.md
-    ([operator 2026-09-13] „A long answer is an unread answer").
-    `the-operator-does-not-review-documents` drží sekce „How to work with
-    me".
-  - 0 sloučení.
-  - 2 nové, viz Co mě to naučilo.
-- **Součásti:** patrol hlásí nic nad stropem a nic nečinného.
-- **Mechanismy:** 4 z 55 nikdy nenastaly (`SUPERSEDED`, `supersede`,
-  `results_not_collected`, `prereg_commit_mismatch`). Všechny čtyři ale
-  cvičí nějaký test, takže není co odstranit.
-- **Testy:** `tests/meta` vzrostly ze 543 na 555 (+12):
-  - lab_loop 5;
-  - fomo_control 3;
-  - po jednom admissibility, secrets, movers a fomo_identity.
-
-  Každý hlídá vstup, který dosavadní test neměl: jiné pořadí, jiné okno nebo
-  jiný tvar klíče. Zbylých 25 oprav jen zpřísnilo existující testy.
-- **CLAUDE.md:** 754 → 736 řádků, škrtnuty jen historické odbočky
-  (`2fd422be`).
-- **NEXT.md:** nic nesmazáno. Nejstarší otevřená položka má 9,7 dne, limit
-  je 14.
-
-## Minority report
-
-- **R05 — řádek „Nexus: X z posledních N odpovědělo" teď započítává i
-  okamžité odpovědi sync door.** Reálné to označil jeden čtenář ze tří.
-  - Reprodukce: `_nexus_rows()` čte `load_all()`, tedy oba deníky.
-  - Nechávám to tak. Je to jen řádek ve `status` a nic na něm nestojí.
-    Backoff tick čte jen z deep lane (`backoff_until` řádky `shallow`
-    přeskočí).
-- **V05 — FOMO check projde hot coin, u kterého nejde přečíst ani rezervu,
-  ani likviditu.** Reálné to označil jeden čtenář ze tří.
-  - Reprodukce: hot řádek s `max_buy_5pct_usd: null` a `liquidity_usd: null`
-    funkce `breaches()` přeskočí a `decide()` vrátí pass.
-  - Jejich vlastní slova přitom říkají, že nepřečtená rezerva má skončit
-    jako not-hot.
-  - Nechávám to být, dokud se takový řádek neobjeví v datech. Pak se z toho
-    stane nález.
+* **Paměť:** 54 souborů, 48 živých, přesně na stropu. Zvažoval jsem sloučit
+  „docstring je slib" s „ověř, že workflow existuje" a **neudělal to**: první
+  je o čtení *vlastní* prózy proti kódu, druhá o nedůvěře k *cizí*. Nic
+  sloučeno, nic retirováno; dvě lekce přidány jako přípisky k existujícím.
+* **Součásti:** hlídka hlásí nic přes strop, nic nečinné.
+* **Mechanismy:** `never_fired --zeros` je 4 z 55 a **všechny čtyři jsou
+  cvičené testem** — žádný mrtvý mechanismus, nic k odstranění.
+* **Testy:** `tests/meta` 576 → **581** (+5). Každý nový nese vstup, který
+  žádný existující neměl: štítek, co nic neomlouvá; `--collect-only` záznam
+  běhu; timeout tam, kde stará fixture měla 503; nečitelné razítko na denním
+  stropu; poměr per řada tam, kde všechny fixtures posílaly jedno číslo oběma.
+  Zbylých dvacet oprav posílilo existující testy místo přidání souboru — to je
+  ten poměr, který krok 1b hlídá.
 
 ## Změněná pravidla
 
-Žádné. Pravidla v CLAUDE.md, odstavce `[operator …]` ani páteř skillu tento
-pass neměnil. `rule_changes` je `[]`.
+**Nový hook: backtick v `git commit -m` je odmítnut.** Uvnitř dvojitých
+uvozovek backtick spustí příkaz a jeho *výstup* vloží do zprávy — dneska mi
+třikrát vypadla fráze z commit hlášky a git pokaždé skončil nulou. Selhání je
+tiché a dopadá na toho, kdo čte historii, což je tenhle pass sám. Paměť o tom
+mluví od 14. 9.; teď je to mechanismus. `-F soubor` zůstává otevřený, jinak by
+hook zavřel i cestu ven ze sebe. Test jmenuje všechny tři dnešní příkazy.
+**Veto tvoje** — stačí říct a hook zmizí.
+
+## Minority report
+
+Čtyři nálezy s jedním hlasem ze tří. Nezahazuji je, protože nejdůležitější
+nález 7. 9. měl taky jeden hlas:
+
+* **T06 — deep pass přebaluje celý měsíční archiv při každém běhu.**
+  `keep.py` bere `pending ∪ already`, takže jakmile balík existuje, každý pass
+  ho komprimuje znovu celý. Dva čtenáři to nazvali nákladem, ne vadou.
+  Sledovat, až měsíc povyroste.
+* **T02 — test startu session může projít naprázdno**, když `state()` vrátí
+  prázdné seznamy. Dnes má zuby; sourozenec v témže souboru ho kryje.
+* **T04 — fixture v testu výběru běhu jsou všechny přípustné**, takže slovo
+  „admissible" v tvrzení nemá vyvracející případ.
+* **T03 — sweep skill dával vendorovi autoritu nad tím, co sweep dělá.**
+  Dva čtenáři to nazvali formulací. **Ale třetí našel v téže větě věcnou
+  chybu:** citoval jsem REPLY-0031, což je odpověď na jinou otázku; priority
+  nese REPLY-0030. Opraveno, a věta teď říká, že je následujeme na **tvůj**
+  pokyn, ne na jejich.
 
 ## Čeká na tebe
 
-- **Na #86 a #89/#98 jsem nic neposlal. Rozhodnutí je moje, veto tvoje.**
-  - #86: pět odpovědí, podle kterých check soudí, jsou odmítnutí pro
-    kapacitu. Všechna přišla dřív, než Cymetica spustila frontu
-    (REPLY-0019), takže `fail` by popisoval starý stav. Nové odpovědi z
-    laborky ho přeměří samy.
-  - #89/#98: jeden verdikt pokrývá dva reporty o různých routách. `fail`
-    na #89 by zopakoval nepravdu, kterou pass 2026-09-13 odmítl poslat.
-    Řádek rozdělím na dva. Je to v NEXT.md a do té doby na něj nejde nic.
+* **Nový hook na backticky je na tvoje veto.** Nic jiného v tomhle passu
+  nemění pravidlo.
+* **Dnes ve 20:25:59 UTC vyprší jejich vlastní 24h lhůta na ET-26036.**
+  Kontrola je napsaná a sedí; stačí po té hodině pustit
+  `python -m pytest tests/rest/test_build_it_better_board.py -q`. Když
+  shipnou, projdu `our_url` proti specu a pošle se BB-VERDICT.
+* **#102 (FOMO podlaha) leží u nich se souzeným číslem, které se lišilo od
+  citovaného.** Dnes je řádek Inconclusive (nikdo neservíruje `max_buy_5pct_usd`),
+  takže se nic neposílá — ale až se to rozjede, stojí za zvážení, jestli jim
+  ten rozdíl neříct sami.
 
 ## Týden
 
-1. **Co se opakovalo: check slabší než jeho vlastní docstring, třetí pass po
-   sobě.** Tentokrát 11 z 37. Druhá opakovaná třída je test, který projde
-   díky fixture (17). A #89/#98 visel v „Čeká na tebe" podruhé, takže teď je
-   rozhodnutý a v NEXT.md.
-2. **941 testů hlídá nás, 66 měří jejich platformu.** Minulý týden
-   (2026-09-09) to bylo 419 a 54.
-   - Poměr posunula laboratoř: přinesla stráže, ne měření.
-   - Incidenty tohoto passu dopadly 11× na vendor checky a 8× na kód
-     laboratoře. Tam verdikt odchází ven, nebo se utrácí paper.
-   - Stráže nechyběly. Byly slabé.
-3. **Model: 108 commitů Opus 5, 11 Sonnet 5. Tabulka sedí, nic neměnit.**
-   Sonnet dělal console polly, ověření REPLY-0017 a session laborky. Žádný
-   report ze Sonnet sweepu nebyl tento týden stažen ani opraven (0 `withdraw`
-   v žurnálu).
-4. **Triáda zamítla 11 z 48 tvrzení, nejvíc zatím. Pořád se vyplácí.**
-   - Laboratoř za týden:
-     - 1 nový room a 2 verdikty;
-     - 269 backtestů;
-     - 7 otázek na Nexus, z toho 5 vzdaných kvůli kapacitě.
-
-     Odpovědí je dnešní tick spolu s jejich frontou.
-   - Filtr: málo dat, 0 uzavřených verdiktů z potřebných 6.
-   - Patrol: nic nečinného. Jediná slepá skvrna (agenti) je opravená.
+Nebyl na řadě: poslední proběhl 19. 9., tedy před jedním dnem.
 
 ## Co mě to naučilo
 
-**Brzda přenesená jinam si nese číslo, ne důvod.** Do celodenní smyčky jsem
-převzal konstanty z noci:
+**Dvě opravy z dneška neopravovaly nic a obě vypadaly hotově.** Výběr běhu
+četl `collected` místo rozsouzeného; `except SystemExit` nechytal timeout,
+který jmenoval ve vlastním komentáři, protože test používal 503. V obou
+případech byl test zelený nad tou jedinou cestou, která už fungovala.
 
-- 20 minut čekání, i když Cymetica řekla „zkus za 30 s";
-- vyzvedávání odpovědí po 30 minutách;
-- stop-loss se špatným znaménkem.
-
-U každé konstanty se musím znovu zeptat, co chránila.
-
-**Smyčka, která k cíli nemá cestu, vypadá jako vyčerpaný prostor.** Hlásil
-jsem „laborka vyschla", ale ta smyčka se Nexusu zeptat vůbec neuměla. Než
-čtu ticho jako zprávu o trhu, spočítám, co tick vůbec dokáže udělat.
+**A jedna past je v tomhle skillu samotném.** Krok 10b říká „zahoď položku
+odškrtnutou týden" — jenže datum na řádku NEXT.md je den *dohody*, ne
+odškrtnutí. Dnes má 24 odškrtnutých položek datum z 10.–12. září a poznámku o
+dokončení z dneška; slepý prořez by smazal celý dnešní záznam. Změřeno: 52
+vypadá starých, skutečně starých je 34. Dneska jsem to udělal ručně správně;
+změna té věty je zásah do páteře a jde na tři čtenáře v příštím passu.

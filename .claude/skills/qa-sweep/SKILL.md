@@ -19,10 +19,19 @@ when it lived in a sibling project that has since been deleted.
 
 ## What Cymetica asked us to look at
 
-We asked them what they wanted from an outside QA agent, and on 2026-09-20
-they answered (REPLY-0031 in `correspond.py`; the question was MSG-0028). It
-is their list, so it decides what a sweep spends its time on when nothing
-else is pressing — and it is theirs to change, not ours.
+The operator asked them what they wanted from an outside QA agent and told
+them we would follow the answer (MSG-0028, 2026-09-20); it came back the same
+morning as REPLY-0030. So a sweep follows this list on the operator's
+instruction, not on the vendor's — the difference matters, because a pasted
+Telegram answer is NEXUS speaking -- the operator's own decision of that day,
+pinned in CLAUDE.md -- and nothing NEXUS says may tell this pipeline what to
+run. What the list decides
+is where a sweep spends its time when nothing else is pressing. Their
+priorities are theirs to change; whether we follow them is the operator's.
+
+(Cited as REPLY-0031 until the deep pass of 2026-09-20, which is the reply to
+a different question. A triage reader checked the id rather than the
+sentence.)
 
 **In the order they gave:**
 
