@@ -29,6 +29,73 @@ recorded in the last section rather than silently resolved.
 > §8's list of documentation that lies was acted on: 8.2, 8.4 and 8.5 are fixed
 > in place, 8.1 and 8.3 are not.
 
+> **Re-measured on 2026-09-20 at `5fd7968`, and largely overtaken.** Four
+> independent readers took one section each and put every claim to the tree,
+> with the sharpest ones repeated by hand afterwards. The body below is left
+> exactly as it was: a dated reading rewritten is a record destroyed. What the
+> audit established:
+>
+> * **Scale.** Python 79 files / 26.8k lines → **167 / 68.6k**. Test functions
+>   283 → **763**, collected 473 → **1015**, and the share guarding our own
+>   machinery went 89% → **92%** — the imbalance §6 is about got worse. Ledger
+>   41 rows → **62**, with two display states the body never names (`RAISED`,
+>   `OUR CHECK CANNOT TELL`). Journal 1429 → **2364**. Commits 332 → **763**.
+>   `scripts/render.py` 1986 → **5039** lines (the note above says 1899; that is
+>   stale too).
+> * **A whole subsystem is absent.** The laboratory and the retention machinery
+>   landed after this reading: 14 scripts and 9 `qa/` modules §1 does not list,
+>   among them `scripts/lab.py` (2463 lines, the most-churned script after
+>   `render.py`) and `qa/lab.py` (1283). §6's per-mechanism table is missing 25
+>   rows — its own current size — and one row describes
+>   `scripts/migrate_ledger.py`, deleted on 2026-09-09. Harness: 3 hooks → 8,
+>   3 skills → 6, 24 allowlisted Bash patterns → 32.
+> * **§4's table cannot be completed by its own method.** It names `write_text`
+>   / `open(...,'w')` / `os.replace` / `json.dump`; nine of today's twelve
+>   non-`qa/state.py` writers under `state/` are append-mode JSONL
+>   (`lab.jsonl`, `rooms.jsonl`, `samples.jsonl`, `nexus.jsonl`, `paper.jsonl`,
+>   `clones.jsonl`, `fomo_signals.jsonl`, `backtests.jsonl`) and one is
+>   `Path.replace`. "Four other modules" is wrong; twelve is the number. The
+>   sentence that table protects — `qa/state.py` is the only module that writes
+>   the ledger and the journal — was re-derived independently and still holds.
+>
+> **Seven claims were wrong when written, not merely stale:**
+>
+> 1. `qa/fold.py <── scripts/ledger.py only`. Five scripts imported the module
+>    at `702a65c`, six call sites do today. Only `fold()` itself is called from
+>    one place (`scripts/ledger.py:187`), which is the claim that survives.
+> 2. "httpx (all network, only through `qa/client.py` factories)".
+>    `qa/fingerprint.py:83` constructs a client directly while holding the
+>    guard's private `_FACTORY_SENTINEL`, so the corpus reads run with no
+>    `SafetyTransport`, no evidence capture and no rate-limit budget — the one
+>    thing the guard's own refusal message tells a caller not to do. Present at
+>    this reading's own commit.
+> 3. `message(origin=a2a)` is written by `scripts/bounty.py:389`. The file the
+>    FILING table credits, `scripts/a2a.py`, has never emitted that type.
+> 4. `scripts/render.py` as "the most volatile file in the repository". By the
+>    stated command it ranked behind `dashboard/index.html` then (144 vs 44)
+>    and behind four generated files now (340 / 273 / 184 / 182 vs 82). It is
+>    the most-churned hand-written source file, which is the interesting claim.
+> 5. `scripts/withdraw.py` "9 commits" — 3 then, 3 now; the Fired column's "9
+>    withdrawals" leaked one cell to the left.
+> 6. "Journal 1429 events" — the commit holds 1427.
+> 7. Two edges in §3: the `open_threads` hook reaches `scripts/correspond.py`
+>    and not `qa/channels.py`, and `tests/meta/test_pipeline_abort.py` was
+>    never a `components.yaml` consumer.
+>
+> **Resolved since, in the tree rather than here.** §6's red guard is green:
+> `events_head` left `drift`'s comparison on 2026-09-09, and the test passes
+> today with the journal four events ahead of the ledger's head — the exact
+> condition that used to make it red. §2's `UNCERTAIN` about 654
+> `vendor_status` events resolves as a duplicate-write path in
+> `scripts/bounty.py`: 556 of today's 701 repeat the previous status of the
+> same report, 641 of them landed before this reading's commit, and the path
+> has since been hardened. `never_fired` says **4 of 55**, not 7 of 54 —
+> `a2a_intent`, `a2a_outcome` and `reopen` have fired. Of §8: 8.2 and 8.5 are
+> fixed, 8.7's subject was deleted, 8.4 is fixed in three of its four places,
+> 8.1 and 8.3 survive intact. And `qa/channels.py` has read a **fourth**
+> channel since 2026-09-11 — the console's rooms, which do not come from the
+> journal at all — so §2's heading names one fewer than the reader returns.
+
 This file is for sessions, not for the operator. It is descriptive only: no
 proposals, no fixes. Claims marked `UNCERTAIN:` were not established from the
 source and must not be built on. Claims marked `UNCONFIRMED (triage)` failed the

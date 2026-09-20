@@ -40,8 +40,10 @@ Two things make the narrow default safe, and both are load-bearing:
   bare selector of two nodeids does not collect them — that happened once
   while measuring, and live requests went out with the guard unproven.
 * **The fold will not close a row it did not run,** and the page says so. The
-  29 untouched rows keep their state, their numbers and the timestamp of the
-  run that last adjudicated them, and each card prints "not re-checked, last
+  untouched rows — every row the selector did not name, which is most of the
+  ledger on a narrow sweep — keep their state, their numbers and the
+  timestamp of the run that last adjudicated them, and each card prints
+  "not re-checked, last
   &lt;when&gt;". Never present a narrow sweep as if it had re-verified
   everything, and never remove that marker to tidy the page.
 
@@ -157,9 +159,9 @@ judgement, one row at a time. Read the states off the folded ledger.
 Short. Four parts, no preamble:
 
 1. **Ran** — width (open-only or full), prereg id, run id, level, pass/fail
-   counts. Say the width in the first line: on a narrow sweep the operator is
-   entitled to know that 29 rows were not looked at, without opening the page
-   to find out.
+   counts. Say the width in the first line, with the number of rows the
+   selector did not name: on a narrow sweep the operator is entitled to know
+   how many rows were not looked at, without opening the page to find out.
 2. **Changed** — only rows whose displayed state moved, `old -> new`, one line
    each. If nothing moved, say so in one sentence.
 3. **Needs you** — anything waiting on a decision: reports drafted but not
