@@ -200,3 +200,28 @@ def test_the_token_scan_would_find_a_token_and_not_a_coin_address():
     assert held == "" or 8 <= len(held) <= 64, (
         f"the needle is not token-shaped: {len(held)} chars -- this is the "
         f"comparison that reported 'no leak' without ever being able to match")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_counters_are_counted_from_the_stage_field():
+    """One request, one stage, and a board that today has a single item.
+
+    With one item every counter is trivially satisfiable, so the reading is
+    driven over a board that does not exist yet: several requests across
+    several stages, and one carrying no stage at all. A counter that agreed
+    with the list by accident would be a guard that goes green for years and
+    then says nothing on the day the numbers drift.
+    """
+    bb = _check()
+
+    assert bb.stage_counts([]) == {}
+    assert bb.stage_counts(None) == {}
+    assert bb.stage_counts([{"stage": "funded"}]) == {"funded": 1}
+
+    many = [{"stage": "funded"}, {"stage": "funded"}, {"stage": "shipped"},
+            {"stage": "requested"}, {"stage": None}, {}]
+    assert bb.stage_counts(many) == {"funded": 2, "shipped": 1,
+                                     "requested": 1}, bb.stage_counts(many)
+    # A request with no stage is counted in `total` and in no stage, which is
+    # what the check compares: len(items) against total, stages separately.
+    assert sum(bb.stage_counts(many).values()) == 4 and len(many) == 6

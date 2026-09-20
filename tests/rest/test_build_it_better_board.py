@@ -212,6 +212,79 @@ def test_the_spec_s_funding_gate_is_the_one_the_build_actually_waits_on(
         sources={"board": BOARD}))
 
 
+def stage_counts(items: list) -> dict:
+    """The board's own list, counted by the stage each request is in."""
+    out: dict[str, int] = {}
+    for item in items or []:
+        stage = str((item or {}).get("stage") or "")
+        if stage:
+            out[stage] = out.get(stage, 0) + 1
+    return out
+
+
+@qa(component="rest.build_it_better", tier=SafetyTier.SAFE, surface="rest")
+def test_the_board_s_headline_numbers_are_the_list_underneath_them(rest_anon):
+    """A visitor reads the counters; the list is right below them.
+
+    `stats` gives total, requested, funded, building, shipped. The items array
+    gives every request and its `stage`. They are the same facts twice, in one
+    response, and the counters are what a stranger quotes -- so a drift
+    between them is the page telling them something the data does not.
+
+    Deliberately NOT compared, because they are different quantities and
+    reading them as one is how #108 happened:
+
+      `stats.on_time` counts SHIPPED builds that beat the deadline (0 today,
+      because nothing has shipped), while an item's own `on_time` says the
+      request is still inside its window -- ET-26036 has `on_time: true` and
+      has not shipped. Same word, two meanings.
+
+      `rebuilt_apps` (113) is not a count of anything in this response. It is
+      the size of the /tools directory their bb_search_rebuilt_apps searches,
+      not the board, and nothing here can check it -- so nothing here claims
+      anything about it.
+    """
+    board = rest_anon.get(BOARD)
+    if board.status_code != 200:
+        raise Inconclusive(
+            f"{BOARD} answered HTTP {board.status_code}; a failed read is not "
+            f"a board whose numbers agree")
+    try:
+        payload = board.json() or {}
+    except ValueError:
+        raise Inconclusive(f"{BOARD} answered 200 with a body that is not JSON")
+    stats, items = payload.get("stats"), payload.get("items")
+    if not isinstance(stats, dict) or not isinstance(items, list):
+        raise Inconclusive(
+            "the board carries no stats block or no items array, so there are "
+            "not two readings of the same fact to compare")
+
+    counted = stage_counts(items)
+    wrong = []
+    if stats.get("total") != len(items):
+        wrong.append(f"total says {stats.get('total')} and the list holds "
+                     f"{len(items)}")
+    for stage in ("requested", "funded", "building", "shipped"):
+        if stage not in stats:
+            continue
+        if stats.get(stage) != counted.get(stage, 0):
+            wrong.append(f"{stage} says {stats.get(stage)} and "
+                         f"{counted.get(stage, 0)} item(s) are in that stage")
+
+    conclude(Measurement(
+        verdict="failed" if wrong else "passed",
+        reason=("the board's counters disagree with the list under them: "
+                + "; ".join(wrong) if wrong else
+                f"the counters and the {len(items)} listed request(s) agree: "
+                + ", ".join(f"{k} {v}" for k, v in sorted(counted.items()))),
+        left={"stats": {k: stats.get(k) for k in
+                        ("total", "requested", "funded", "building", "shipped")
+                        if k in stats},
+              "counted": counted},
+        right={"disagreements": 0},
+        sources={"board": BOARD}))
+
+
 def token_fields(node, path="") -> list[str]:
     """Every key anywhere in a payload whose NAME promises a credential.
 
