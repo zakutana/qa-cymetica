@@ -1,0 +1,112 @@
+{
+  "schema": 2,
+  "run_id": "run-20260920T210001Z-7a5e51dd",
+  "started_at": "2026-09-20T21:00:05+00:00",
+  "finished_at": "2026-09-20T21:00:11+00:00",
+  "git_head": "7a5e51dda25da0ca559638f6a11a9fe5ed65dcd8",
+  "git_short": "7a5e51dd",
+  "git_dirty": false,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": "sha256:f0b425b2ea7c697bbedcc02039bcf46f3f74dc08d4a76c32d0faf05de589cdf2",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "49a2811758011790d64fa30a20a820a5e1db91a04465a2d718b29d3335104d35",
+    "/.well-known/agent-card.json": "352d3ced5a51e6ec89adb1f78e2674982b2c9b0a669929715c1a547099bbb532",
+    "/.well-known/agent-skills.json": "3ee22148aea8e6314344f5675c7a51d4800a25b674c7dbcca1babecdda04c7c4",
+    "/.well-known/ai-plugin.json": "209acf05d36b71a3f52e4b1bbd5ee6bb07722f5370367dae2a43d29a6b82def4",
+    "/.well-known/udc.json": "0434acb59b66dac0e55635c5cd1808e2ea22fdc3da71de638086455eb6eb68e3",
+    "/openapi.json": "9a810321e9618b4a0caf351c4297beca7b4131a7437da045f4ecd3e6efdf646f",
+    "/openapi-public.json": "cde41015eff023c4a9169dffcf7565b180f2f64af57a820966bdfcfdd36ba521",
+    "/llms.txt": "7ec6b5939f9503cfe19187fea624097d7730961378d36241a50d221e54213851",
+    "mcp:tools/list:none": "8b098b929744471c24ee978efbfe4031674b7fae16da582d492f96bca10ed042"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/rest/test_the_build_board_counts_building_as_building.py -q",
+  "selector_full": false,
+  "allow_mutate": false,
+  "collected": [
+    "tests/rest/test_the_build_board_counts_building_as_building.py::test_the_boards_building_tile_counts_only_what_is_building"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/rest/test_the_build_board_counts_building_as_building.py::test_the_boards_building_tile_counts_only_what_is_building",
+      "component": "rest.build_it_better",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 1996,
+      "evidence_ids": [
+        "bc192d7bd8b4c0e4ada632825bd4defa031036e779d1dfcabb3bd3b4c40e9286",
+        "1242a40ec78cf535bb2d027d85819f2afb42c185f32c25aa6e2fae25638d7f31"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "the board's Building now tile is computed as '(s.funded || 0) + (s.building || 0)', so a request that is only funded is displayed as building. The column under it filters stage == 'building' and does not, and the API agrees with the column: stats building 0, funded 2",
+        "left": {
+          "tile_expression": "(s.funded || 0) + (s.building || 0)",
+          "adds": [
+            "funded"
+          ]
+        },
+        "right": {
+          "stats": {
+            "total": 2,
+            "requested": 0,
+            "funded": 2,
+            "building": 0,
+            "shipped": 0,
+            "on_time": 0,
+            "median_build_seconds": null
+          }
+        },
+        "sources": {
+          "board": "/build-it-better",
+          "api": "/api/v1/build-it-better/requests"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": null,
+        "role": "verdict",
+        "population": null
+      },
+      "check_fingerprint": "ade089953eb20f391ca9cba5a481bda4bfd3dff41bb42ba049f3b294bd6733a6",
+      "reason": null,
+      "failure_repr": "tests\\rest\\test_the_build_board_counts_building_as_building.py:103: in test_the_boards_building_tile_counts_only_what_is_building\n    conclude(Measurement(\nqa\\measure.py:165: in conclude\n    raise AssertionError(explain(m))\nE   AssertionError: the board's Building now tile is computed as '(s.funded || 0) + (s.building || 0)', so a request that is only funded is displayed as building. The column under it filters stage == 'building' and does not, and the API agrees with the column: stats building 0, funded 2\nE     left  = {'tile_expression': '(s.funded || 0) + (s.building || 0)', 'adds': ['funded']}\nE     right = {'stats': {'total': 2, 'requested': 0, 'funded': 2, 'building': 0, 'shipped': 0, 'on_time': 0, 'median_build_seconds': None}}"
+    }
+  ],
+  "totals": {
+    "failed": 1
+  },
+  "ratelimit": {
+    "requests": 2,
+    "limit": 2000,
+    "remaining": 1987,
+    "fraction_used": 0.0065,
+    "exhausted": false
+  },
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "code_dirty_after": false,
+  "fingerprint_after": "sha256:f0b425b2ea7c697bbedcc02039bcf46f3f74dc08d4a76c32d0faf05de589cdf2",
+  "exit_status": 1
+}

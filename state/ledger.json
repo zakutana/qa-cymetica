@@ -48,7 +48,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -178,7 +178,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -385,7 +385,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -641,7 +641,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -826,7 +826,7 @@
         },
         "pinned_fingerprint": "76f53745c4961b0f0a6076e33cd1d16173f41f802d404fbbb746923be506797e",
         "evidence_only": "run-20260920T202827Z-34a2af16",
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -994,7 +994,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -1145,7 +1145,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -1292,7 +1292,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -1439,7 +1439,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -1586,7 +1586,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -1690,7 +1690,7 @@
         "state": "UNVERIFIABLE",
         "adjudicated_by": null,
         "pinned_fingerprint": null,
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -1793,7 +1793,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -1937,7 +1937,7 @@
           "at": "2026-09-20T20:44:56+00:00"
         },
         "pinned_fingerprint": "sha256:f3d9b4a71fbf227f926c530f5d62476d",
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -2149,7 +2149,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -2439,7 +2439,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -2635,7 +2635,7 @@
         "state": "UNVERIFIABLE",
         "adjudicated_by": null,
         "pinned_fingerprint": null,
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -2846,7 +2846,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -3052,7 +3052,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -3231,7 +3231,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -3442,7 +3442,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -3606,7 +3606,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -3710,7 +3710,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -3790,7 +3790,7 @@
           "at": "2026-09-07T17:40:13+00:00"
         },
         "pinned_fingerprint": "5e9d6943c1eaf398d598a59460e9acdf2a187f99ecb323ce600818b417cefeae",
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -3907,7 +3907,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -4066,7 +4066,7 @@
           "run_id": "run-20260920T180830Z-e421a8dd",
           "at": "2026-09-20T18:23:39+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -4346,7 +4346,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -4469,7 +4469,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -4664,7 +4664,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -4841,7 +4841,7 @@
         },
         "pinned_fingerprint": "d8c89bb5d9dfb6abe6d9f240604f15d80183028892047d05a574abc9740d5a4c",
         "evidence_only": "run-20260920T202827Z-34a2af16",
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -5017,7 +5017,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -5259,7 +5259,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -5503,7 +5503,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -5675,7 +5675,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -5817,7 +5817,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -5956,7 +5956,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -6114,7 +6114,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -6254,7 +6254,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -6405,7 +6405,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -6573,7 +6573,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -6701,7 +6701,7 @@
           "at": "2026-09-10T04:56:30+00:00"
         },
         "pinned_fingerprint": "05d129030ccb0a67babee3e9b1383e236e0bc719fd5e42f532cb727b83375d1a",
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -6829,7 +6829,7 @@
           "at": "2026-09-20T20:44:56+00:00"
         },
         "pinned_fingerprint": "ce960765d70f2c13cca03880d70e9a1e7557a30f9c28dd61611e6c3252c489ed",
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -7056,7 +7056,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -7308,7 +7308,7 @@
           "at": "2026-09-20T20:44:56+00:00"
         },
         "pinned_fingerprint": "683fdd876eb2d0049f2a12a2c627bce72b54436c423dc695b21442e4f885f7a5",
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -7506,7 +7506,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -7691,7 +7691,7 @@
           "at": "2026-09-20T20:44:56+00:00"
         },
         "pinned_fingerprint": "97e5b904e1094ff2b00f2375482cff9fc5fc53a2daab4c47aa343d8ee2c0f3cb",
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -7900,7 +7900,7 @@
           "at": "2026-09-20T20:44:56+00:00"
         },
         "pinned_fingerprint": "7a52ceff1e585acf3435b70f322e83c344d04b06af6d7ae07370c50f443e6fd0",
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -8117,7 +8117,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -8288,7 +8288,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -8426,7 +8426,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -8554,7 +8554,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -8716,7 +8716,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -8879,7 +8879,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -9040,7 +9040,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -9243,7 +9243,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -9421,7 +9421,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -9588,7 +9588,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -9762,7 +9762,7 @@
           "at": "2026-09-20T20:44:56+00:00"
         },
         "pinned_fingerprint": "4e20d9ebfd70f3e0cd3e778f8f0fd9d6bdde4e3b5e3d2cde024b168bcc03cea8",
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -9930,7 +9930,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -10081,7 +10081,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -10222,7 +10222,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -10373,7 +10373,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -10514,7 +10514,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T204931Z-9b10f557",
           "at": "2026-09-20T20:49:59+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -10630,7 +10631,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -10784,7 +10785,7 @@
           "at": "2026-09-20T20:44:56+00:00"
         },
         "pinned_fingerprint": "d25597a35ad54da592bda0162a337d542c12dbf9b0418a00a465dd59c3037187",
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "RAISED",
@@ -10911,7 +10912,7 @@
           "at": "2026-09-20T20:44:56+00:00"
         },
         "pinned_fingerprint": "630f7fd9309ad348f60509c7ecad4788a719e0fc5ebcc42c6f02fbf05db3db98",
-        "not_checked_in": "run-20260920T204931Z-9b10f557"
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "RAISED",
@@ -11048,7 +11049,8 @@
           "run_id": "run-20260920T204931Z-9b10f557",
           "at": "2026-09-20T20:49:59+00:00"
         },
-        "pinned_fingerprint": "dd76e7540a52e3577170f57c43645391d159f8434e245087aad3d6f5369ff2b9"
+        "pinned_fingerprint": "dd76e7540a52e3577170f57c43645391d159f8434e245087aad3d6f5369ff2b9",
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "RAISED",
@@ -11144,7 +11146,8 @@
         "last_exploratory_pass": {
           "run_id": "run-20260920T204931Z-9b10f557",
           "at": "2026-09-20T20:49:59+00:00"
-        }
+        },
+        "not_checked_in": "run-20260920T210001Z-7a5e51dd"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -11215,21 +11218,124 @@
         "correction_owed": [],
         "disputed": []
       }
+    },
+    "CYM-the_boards_building_tile_counts_only_what_is_building": {
+      "id": "CYM-the_boards_building_tile_counts_only_what_is_building",
+      "first_seen": {
+        "at": "2026-09-20T21:00:11+00:00",
+        "cause": {
+          "run_id": "run-20260920T210001Z-7a5e51dd"
+        }
+      },
+      "reproductions": 1,
+      "check": {
+        "state": "REPRODUCING",
+        "adjudicated_by": {
+          "run_id": "run-20260920T210001Z-7a5e51dd",
+          "at": "2026-09-20T21:00:11+00:00"
+        },
+        "pinned_fingerprint": "ade089953eb20f391ca9cba5a481bda4bfd3dff41bb42ba049f3b294bd6733a6"
+      },
+      "filing": {
+        "state": "RAISED",
+        "adjudicated_by": {
+          "event_id": "f9bda11c3affcdf4661f34995e2fa11e01e7eb66a79817256c61b2e25545b5d6",
+          "at": "2026-09-20T21:01:16+00:00"
+        },
+        "reports": [
+          {
+            "report_id": 113,
+            "status": "pending"
+          }
+        ],
+        "refused": [],
+        "verifications": []
+      },
+      "transitions": [
+        {
+          "axis": "check",
+          "from": "UNVERIFIED",
+          "to": "REPRODUCING",
+          "cause": {
+            "run_id": "run-20260920T210001Z-7a5e51dd"
+          },
+          "at": "2026-09-20T21:00:11+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "NOT_RAISED",
+          "to": "RAISED",
+          "cause": {
+            "event_id": "f9bda11c3affcdf4661f34995e2fa11e01e7eb66a79817256c61b2e25545b5d6"
+          },
+          "at": "2026-09-20T21:01:16+00:00"
+        }
+      ],
+      "regressions": [],
+      "severity": "S3-CONTRACT",
+      "title": "the board's Building now tile is computed as '(s.funded || 0) + (s.building || 0)', so a request that is only funded is displayed as building. The column under it filters stage == 'building' and does not, and the API agrees with the column: stats building 0, funded 2",
+      "reproduced_in": [
+        "run-20260920T210001Z-7a5e51dd"
+      ],
+      "component": "rest.build_it_better",
+      "section": "build_it_better",
+      "tag": "DOCS",
+      "kind": "check_failure",
+      "checks": [
+        "tests/rest/test_the_build_board_counts_building_as_building.py::test_the_boards_building_tile_counts_only_what_is_building"
+      ],
+      "detail": {
+        "left": {
+          "tile_expression": "(s.funded || 0) + (s.building || 0)",
+          "adds": [
+            "funded"
+          ]
+        },
+        "right": {
+          "stats": {
+            "total": 2,
+            "requested": 0,
+            "funded": 2,
+            "building": 0,
+            "shipped": 0,
+            "on_time": 0,
+            "median_build_seconds": null
+          }
+        },
+        "sources": {
+          "board": "/build-it-better",
+          "api": "/api/v1/build-it-better/requests"
+        },
+        "reason": "the board's Building now tile is computed as '(s.funded || 0) + (s.building || 0)', so a request that is only funded is displayed as building. The column under it filters stage == 'building' and does not, and the API agrees with the column: stats building 0, funded 2"
+      },
+      "provenance": {
+        "run_id": "run-20260920T210001Z-7a5e51dd",
+        "measured_at": "2026-09-20T21:00:11+00:00"
+      },
+      "obligations": {
+        "reverify": false,
+        "repair_check": false,
+        "reopen": [],
+        "retractions": [],
+        "verification_owed": [],
+        "correction_owed": [],
+        "disputed": []
+      }
     }
   },
-  "run_id": "run-20260920T204931Z-9b10f557",
+  "run_id": "run-20260920T210001Z-7a5e51dd",
   "run_level": "R",
-  "updated_at": "2026-09-20T20:49:59+00:00",
+  "updated_at": "2026-09-20T21:00:11+00:00",
   "run_carried": true,
   "counts": {
     "WITHDRAWN": 12,
     "VERIFIED FIXED": 45,
     "STILL REPRODUCIBLE": 4,
     "OUR CHECK CANNOT TELL": 4,
-    "RAISED": 3
+    "RAISED": 4
   },
   "events_head": {
-    "seq": 2436,
-    "chain": "c94c39912f16dae4269edf44c2fdb36b00975a23fe98151c6e5021a859d17988"
+    "seq": 2440,
+    "chain": "f2fdf9da5b5970c3230ca0cdcb25220e5541070d12e566146ebc9e9453cee45d"
   }
 }

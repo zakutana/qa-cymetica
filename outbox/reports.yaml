@@ -2842,6 +2842,50 @@ reports:
       sat queued, the board's "Building now" tile read 1, because the page
       computes it as funded + building. We sent that separately over Telegram.
 
+  - key: bb-building-tile
+    findings: [CYM-the_boards_building_tile_counts_only_what_is_building]
+    severity: low
+    category: logic
+    url: https://cymetica.com/build-it-better
+    title: >-
+      The live build board's "Building now" tile counts queued requests, so it
+      contradicts the BUILDING column directly beneath it
+    expected: >
+      The board opens with five counters and puts four columns immediately
+      under them -- REQUESTED, QUEUED, BUILDING, SHIPPED -- fed by the same
+      data and read in one glance. "Building now" should be the number of
+      builds that are running, which is what the column beneath it shows and
+      what your API calls `stats.building`.
+    actual: >
+      Measured 2026-09-20 at 20:13 UTC, twelve minutes before ET-26036's
+      24-hour deadline expired: the tile read 1 while the BUILDING column read
+      0 and the only request sat in QUEUED. GET
+      /api/v1/build-it-better/requests returned stats {"total":1,
+      "requested":0,"funded":1,"building":0,"shipped":0} with the item at
+      stage "funded", queue_status "queued", shipped_at null -- so the API
+      agrees with the column, not with the tile. The page's own script is
+      where the two part: `text($('bs-building'), (s.funded || 0) +
+      (s.building || 0));`. Funded is added to building, so a request that is
+      only accepted and queued is displayed as running. The column next to it
+      filters `b.stage === 'building'` and does not.
+    steps:
+      - "GET https://cymetica.com/build-it-better -> the script contains text($('bs-building'), (s.funded || 0) + (s.building || 0));"
+      - 'Same page: the BUILDING column is built from all.filter(b => b.stage === "building")'
+      - 'GET https://cymetica.com/api/v1/build-it-better/requests -> stats.building 0 while stats.funded is non-zero'
+      - 'Open the page with one funded, queued request -> the tile reads 1 and the column reads 0'
+    body: >
+      Filed low, and not as a UI defect: the number is wrong about your own
+      state on the surface the product leads with, and it is wrong in one
+      line of arithmetic rather than in a stylesheet. We normally leave the
+      front end alone -- it is outside the scope we published -- and this one
+      is here because a requester waiting on the 24-hour clock reads that tile
+      to find out whether their build has started. On ET-26036 it said the
+      build was running for the whole day it spent in the queue.
+      Our check reads the assignment out of the served page and fails only
+      when it adds another stage to building. If it cannot find the assignment
+      at all it reports inconclusive rather than a fix, so a rewrite of the
+      front end will not be mistaken for a correction.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in
