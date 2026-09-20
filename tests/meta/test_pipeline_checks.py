@@ -879,6 +879,17 @@ def test_their_label_excuses_a_tool_only_where_it_actually_stands():
         "it is deliberate: their fix labels the instruction, and a bare "
         "mention is left alone by design")
 
+    # The second label shape, from the source-level fix later the same day. A
+    # tool that IS on MCP but above the reader's level is absent from OUR
+    # tools/list, so without this it reads as missing -- the same trap one
+    # layer on, and the only one we were warned about before it bit.
+    tiered = "call `update_bot_settings(id)` [needs MCP trust level: recognized]"
+    assert labelled(tiered, "update_bot_settings")
+    assert not labelled("call `update_bot_settings(id)` to enable trading",
+                        "update_bot_settings"), (
+        "the unlabelled instruction is the defect #85 is about, and it has to "
+        "stay one")
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_latency_window_counts_questions_not_rows():

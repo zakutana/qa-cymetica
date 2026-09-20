@@ -373,6 +373,14 @@ def labelled(text: str, tool: str) -> bool:
         tail = (text or "")[match.end():match.end() + window].lower()
         if "not an mcp tool" in tail and "nexus runs this" in tail:
             return True
+        # The second shape, from the source-level fix later the same day: a
+        # tool that IS on MCP but above the reader's trust level carries
+        # "[needs MCP trust level: X]". Our `served` set is tools/list AT OUR
+        # LEVEL, so such a tool is absent from it and would read as missing --
+        # the same trap as the first label, one layer on, and this one we were
+        # told about in advance rather than after.
+        if "trust level" in tail and "needs" in tail:
+            return True
     return False
 
 
