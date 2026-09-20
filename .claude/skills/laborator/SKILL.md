@@ -246,6 +246,22 @@ survives a `/clear`. Not a Monitor, not a new timer: the tick is already
 running because they started it. (Praised the evening this was first done,
 over the Build it Better ticket ET-26036.)
 
+[operator 2026-09-20] *"Jo to taky delej v laborce jak se nudis"*
+
+Said of the sweep, after a night of idle ticks that hunted new surfaces while
+the open findings went unmeasured. **An idle tick may run the sweep too** --
+the `qa-sweep` skill, narrow width, which re-measures every open row, files
+what is still unreported and sends a verification for what now passes. It is
+the standing work the loop can always fall back on, and unlike a bug hunt it
+has a fixed end.
+
+Not every tick: a sweep costs a preregistered run and a minute of their
+server, and nothing it measures moves that fast. Once a night is the shape it
+has had so far, or when a row's subject has visibly changed. What the hunt
+covers, rotate: their newest surfaces first, then the ones the sweep's own
+rows touch -- bots and clones, skills, event cards -- so a defect there is
+found by looking, not only when an existing check happens to fail.
+
 ## The night
 
 `python scripts/lab.py night --until 07:00` still exists: one process on their

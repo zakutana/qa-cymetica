@@ -167,6 +167,8 @@ PINNED = {
          "40313867a490f1b62a286a12f00e18a7d458a388ef9515506d3c4b2d69130c09"),
         ("2026-09-19", "muzes jit testovat platformu a hledat bugy",
          "8db9b81b5e64007479f9c472f9233445c3d7c9a19fb8732bbc502de09d745987"),
+        ("2026-09-20", "to taky delej v laborce jak se nudis",
+         "6bcc9e3d19ab3a107d1dde286472574e640a5c23de34717057018d2726272d8b"),
     ],
     ".claude/skills/ohlednuti/SKILL.md": [
         ("2026-09-12", "za tri tydny reknu at se ohledne zpet",
