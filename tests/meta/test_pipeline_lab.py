@@ -611,6 +611,65 @@ def test_a_position_they_say_is_closed_is_not_still_deployed(tmp_path,
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_simulation_reset_takes_our_older_positions_with_it(tmp_path,
+                                                             monkeypatch):
+    """Their simulation can be restarted, and a restart is not a close.
+
+    `sim_balance.started_at` moved to 13:31:55 on 2026-09-10, after TRD-0001
+    (11:41) and TRD-0002 (11:59) were accepted. Their own `total_trades` read
+    4 where our book held 6: the two older orders do not exist on their side
+    any more. Nothing ever closes them -- no close of ours, no `closed` row
+    from the sampler, because the positions are gone rather than closed -- so
+    they sit in `_deployed()` for ever and every later reset adds two more.
+    Today that is 2 USDC of a 99 000 book; the defect is that it only grows,
+    and it inflates the numerator of the 60% exposure ceiling.
+
+    The safe direction is the opposite one from `_closed_on_their_side`: there,
+    silence keeps money counted. Here we have a POSITIVE reading from their
+    side -- a start time after the order -- so dropping it is reading what they
+    said, not assuming. With no `sim_started_at` anywhere, nothing is dropped.
+    """
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    rows = [
+        {"type": "intent", "id": "TRD-0001", "card_id": "c1", "usdc": 1.0,
+         "at": "2026-09-10T11:41:45+00:00"},
+        {"type": "outcome", "id": "TRD-0001", "outcome": "accepted",
+         "position_id": "p1", "at": "2026-09-10T11:41:48+00:00"},
+        {"type": "intent", "id": "TRD-0002", "card_id": "c2", "usdc": 1.0,
+         "at": "2026-09-10T11:59:32+00:00"},
+        {"type": "outcome", "id": "TRD-0002", "outcome": "accepted",
+         "position_id": "p2", "at": "2026-09-10T11:59:35+00:00"},
+        {"type": "intent", "id": "TRD-0003", "card_id": "c3", "usdc": 500.0,
+         "at": "2026-09-10T20:06:05+00:00"},
+        {"type": "outcome", "id": "TRD-0003", "outcome": "accepted",
+         "position_id": "p3", "at": "2026-09-10T20:06:08+00:00"},
+    ]
+    book = tmp_path / "paper.jsonl"
+    book.write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+
+    assert scripts_lab._deployed() == 502.0, (
+        "with no start time read from them, every accepted order is still out")
+
+    with book.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(
+            {"type": "after", "id": "TRD-0003",
+             "at": "2026-09-10T20:06:11+00:00",
+             "sim_started_at": "2026-09-10T13:31:55.163793+00:00"}) + "\n")
+
+    assert scripts_lab._deployed() == 500.0, (
+        "the two orders older than their own simulation are ghosts")
+
+    # An unreadable start time is not a start time. It must not release
+    # anything, the way an unreadable sample does not.
+    book.write_text("".join(json.dumps(r) + "\n" for r in rows)
+                    + json.dumps({"type": "after", "id": "TRD-0003",
+                                  "sim_started_at": "not a date"}) + "\n",
+                    encoding="utf-8")
+    assert scripts_lab._deployed() == 502.0, (
+        "a start time we could not read released money anyway")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_night_searches_on_its_own_clock_not_the_question_clock():
     """Two clocks, because a backtest is free and a question is not.
 

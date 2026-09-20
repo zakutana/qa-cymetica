@@ -188,11 +188,23 @@ def _deployed() -> float:
     rows = _sibling("paper").load()
     intents = {row["id"]: row for row in rows
                if row.get("type") == "intent" and row.get("id")}
+    # Their simulation can be RESTARTED, and a restart is not a close: the
+    # positions are gone rather than closed, so no close of ours and no
+    # `closed` row from the sampler will ever release them. On 2026-09-10 the
+    # start time moved to 13:31:55 and their own total_trades read 4 against
+    # our 6. Read from the snapshots we already take on both sides of every
+    # order; an unreadable or absent value releases nothing.
+    started = max((moment for moment in
+                   (_moment(row.get("sim_started_at")) for row in rows)
+                   if moment is not None), default=None)
     out: dict[str, float] = {}
     for row in rows:
         if row.get("type") != "outcome" or row.get("outcome") != "accepted":
             continue
         intent = intents.get(row.get("id"), {})
+        when = _moment(row.get("at")) or _moment(intent.get("at"))
+        if started is not None and when is not None and when < started:
+            continue
         if row.get("kind") == "close" or intent.get("kind") == "close":
             out.pop(str(intent.get("position_id") or row.get("position_id")),
                     None)
