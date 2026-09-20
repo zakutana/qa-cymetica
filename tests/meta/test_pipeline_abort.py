@@ -156,7 +156,21 @@ PINNED = {
     # differs from the pinned one by those five lines only. Changing a guard is
     # a rule change for the pass, so three readers voted on it first: 3/3 that
     # it weakens nothing and touches no operator decision (RC1, DEEP-PASS.md).
-    "test_guard_is_real.py": "85c6cc6f3f4b490254ecd72eddfb1af2558fe5ea06919229e463cf65878e75a3",
+    #
+    # Re-derived a SIXTH time, 2026-09-20, and again only adding enforcement.
+    # The architecture audit found the one call site in the tree that built an
+    # httpx client outside qa/client.py, holding the guard's private sentinel:
+    # qa/fingerprint.py, so the platform corpus was read every session with no
+    # SafetyTransport under it. The fix is a factory
+    # (qa/client.py::build_fingerprint_client); the new test here proves the
+    # transport is really underneath it -- no tier in scope must still refuse
+    # -- and pins the two request properties the factory may not normalise,
+    # Accept: */* and follow_redirects, because the fingerprint is a hash of
+    # response bytes and tidying either one would demote every GREEN row to
+    # AMBER. Nothing existing was weakened: the file differs by one added
+    # test. Measured after the change: 9 of 9 corpus parts hash exactly as the
+    # last run record holds them.
+    "test_guard_is_real.py": "4e03f3fb20b9475b446447a3559ead36b70ade5e34d9bcbb09745a6f931406aa",
 }
 
 

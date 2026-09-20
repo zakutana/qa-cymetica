@@ -19,9 +19,7 @@ import os
 from datetime import datetime, timezone
 from typing import Any
 
-import httpx
-
-from qa.config import USER_AGENT, base_urls
+from qa.config import base_urls
 from qa.safety import CURRENT_TIER, EndpointRegistry, SafetyTier
 
 
@@ -77,14 +75,14 @@ def compute(registry: EndpointRegistry | None = None, timeout: float = 20.0) -> 
     # Session-level reads happen outside any test, so grant SAFE explicitly.
     token = CURRENT_TIER.set(SafetyTier.SAFE)
     try:
-        from qa.client import _FACTORY_SENTINEL
+        # Through the factory, not around the guard: this used to build its
+        # own client with the guard's private sentinel, so the corpus was read
+        # with no SafetyTransport under it. The factory keeps the request
+        # shape byte-for-byte -- Accept, redirects, timeout -- because the
+        # fingerprint is a hash of what comes back.
+        from qa.client import build_fingerprint_client
 
-        client = httpx.Client(
-            _qa_factory=_FACTORY_SENTINEL,
-            headers={"User-Agent": USER_AGENT, "Accept": "*/*"},
-            timeout=timeout,
-            follow_redirects=True,
-        )
+        client = build_fingerprint_client(registry=registry, timeout=timeout)
         try:
             for part in spec.get("parts", []):
                 kind = part.get("kind")

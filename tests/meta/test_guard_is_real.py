@@ -135,6 +135,44 @@ def test_unknown_write_path_is_default_denied(evidence_store):
 
 
 @qa(component="meta.guard", tier=SafetyTier.SAFE, surface="meta")
+def test_the_fingerprint_client_is_wrapped_and_keeps_the_corpus_shape():
+    """The session's own reads go through the guard, and unchanged.
+
+    `qa/fingerprint.py` built its own client with the guard's private
+    sentinel until 2026-09-20, so the corpus was read every session with no
+    SafetyTransport under it -- the one thing the guard's refusal message
+    forbids. `build_fingerprint_client` closed that, and this proves the
+    transport is really underneath: with no tier in scope the request must be
+    refused, which only the wrapper can do.
+
+    The second half pins what the factory may NOT normalise. The fingerprint
+    is a hash of response bytes, so moving `Accept` to application/json or
+    turning redirects off would change the corpus and demote every GREEN row
+    to AMBER -- a tidy-up that would look like the platform shipping.
+    """
+    from qa.client import build_fingerprint_client
+
+    client = build_fingerprint_client(inner=_Unsendable())
+    token = CURRENT_TIER.set(None)
+    try:
+        with pytest.raises(SafetyViolation, match="No safety tier is in scope"):
+            client.get("https://cymetica.com/llms.txt")
+    finally:
+        CURRENT_TIER.reset(token)
+        client.close()
+
+    client = build_fingerprint_client(inner=_Unsendable())
+    try:
+        assert client.headers["Accept"] == "*/*", (
+            "the corpus is read with Accept: */* and the fingerprint is a "
+            "hash of what comes back")
+        assert client.follow_redirects is True, (
+            "the recorded fingerprints were taken with redirects followed")
+    finally:
+        client.close()
+
+
+@qa(component="meta.guard", tier=SafetyTier.SAFE, surface="meta")
 def test_request_without_tier_context_is_denied(registry, evidence_store):
     """A request issued outside any test must be refused, not silently allowed."""
     # Deaf like the rest: if the `tier is None` branch goes, this is a READ and

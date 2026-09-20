@@ -284,6 +284,57 @@ def build_mock_client(
     return httpx.Client(**kwargs)
 
 
+def build_fingerprint_client(
+    registry: EndpointRegistry | None = None,
+    timeout: float = 20.0,
+    inner: httpx.BaseTransport | None = None,
+) -> httpx.Client:
+    """The client `qa/fingerprint.py` reads the platform corpus with.
+
+    It exists because that module used to import `_FACTORY_SENTINEL` and build
+    its own `httpx.Client`, which is exactly what the guard's refusal message
+    tells a caller not to do -- so the corpus was read every session with no
+    SafetyTransport under it. The reads are SAFE GETs of public documents and
+    the tier is granted by hand in `compute()`, so nothing was at risk; what
+    was missing was the guard. Architecture audit, 2026-09-20.
+
+    Three arguments are deliberate and none of them is a default to tidy up:
+
+    * **The request shape is the corpus's shape.** `Accept: */*`,
+      `follow_redirects=True` and a 20 s timeout are what the recorded
+      fingerprints were taken under, and the hash is over response bytes --
+      normalising any of them to `build_client`'s values would move the
+      fingerprint and demote every GREEN row to AMBER on the next run
+      (`qa/fold.py` pins rows to `pinned_fingerprint`).
+    * **`evidence=None`.** `EvidenceStore` is keyed by run id, and
+      `session.qa_run_id` is assigned two lines AFTER `compute()` runs at
+      `qa/report_plugin.py:118-120`. There is no store to write into yet.
+    * **`budget=None`.** A budget here would register itself as the session's
+      active one and overwrite what `run["ratelimit"]` means; and an exhausted
+      budget raises inside `compute()`, whose per-part handler swallows it --
+      so every part would become an error, the fingerprint would come back
+      None, and `fingerprint_drifted` would read False on a run that measured
+      nothing at all.
+
+    `inner` is for the negative controls, the same as `build_client`'s.
+    """
+    transport = SafetyTransport(
+        inner=inner if inner is not None else httpx.HTTPTransport(retries=0),
+        registry=registry if registry is not None else EndpointRegistry.load(),
+        evidence=None,
+        budget=None,
+    )
+    kwargs = dict(
+        headers={"User-Agent": USER_AGENT, "Accept": "*/*"},
+        transport=transport,
+        timeout=timeout,
+        follow_redirects=True,
+    )
+    if _GUARD_INSTALLED:
+        kwargs["_qa_factory"] = _FACTORY_SENTINEL
+    return httpx.Client(**kwargs)
+
+
 class McpError(RuntimeError):
     """A JSON-RPC or tool-level error. Carries the raw payload for evidence."""
 
