@@ -1,10 +1,17 @@
 # components.yaml -- SINGLE SOURCE OF TRUTH
 #
-# Consumed by:
-#   qa/safety.py      -- endpoint rules, executable_params, probe_only floors
-#   qa/components.py  -- the component registry the dashboard renders
-#   qa/fingerprint.py -- the discovery corpus that stands in for a build version
-#   tests/conftest.py -- collection-time tag validation
+# Consumed by, established by grep on 2026-09-20 rather than by memory:
+#   qa/safety.py         -- endpoint rules, executable_params, probe_only floors
+#   qa/config.py         -- base_urls()
+#   qa/fingerprint.py    -- the discovery corpus (through registry.raw)
+#   qa/report_plugin.py  -- hashed into a run's tree fingerprint
+#   tests/conftest.py    -- collection-time tag validation
+#
+# This list said `qa/components.py -- the component registry the dashboard
+# renders` from the day it was written until 2026-09-20. No such module has
+# ever existed in this tree, and the two modules that do read the file were
+# not named. A header that invents its own consumer is the sharpest kind of
+# stale: it is the first thing a reader believes about the file.
 #
 # Rules of the file:
 #   * An endpoint with no rule is DENIED for any non-read method. Default-deny.

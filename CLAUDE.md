@@ -509,7 +509,9 @@ scripts/correspond.py  the operator's Telegram conversation with the vendor.
                      conversation that ends at the next /clear -- ET-22498 set
                      off the whole /build walk and what we asked in it is gone.
                      A SessionStart hook (.claude/hooks/open_threads.py) names
-                     the unanswered ids in one line.
+                     the unanswered ids in one line -- through qa/channels.py
+                     since 2026-09-20, so it covers every channel waiting on
+                     them, not Telegram alone.
 scripts/submit.py    the one write we make on purpose. Every number in a
                      report is injected from the ledger at send time, so a
                      figure frozen when the finding opened can never go out.

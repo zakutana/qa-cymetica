@@ -48,7 +48,7 @@ is imported by five scripts — `ledger.py`, `never_fired.py`, `open_checks.py`,
 | Module | Lines | Responsibility |
 |---|---|---|
 | `qa/safety.py` | 508 | `SafetyTier` (SAFE/PROBE/MUTATE), `EndpointRegistry` loaded from `components.yaml`, `SafetyTransport` enforcing tier at the transport layer, `RateLimitBudget`. Default-deny: an endpoint with no rule refuses any non-read method. |
-| `qa/client.py` | 395 | The sanctioned constructor of HTTP and MCP clients. `install_client_guard` makes constructing an `httpx` client outside these factories raise; `assert_client_guard_blocks` is the negative control. One module holds the private sentinel and builds a client directly — see §8.3. |
+| `qa/client.py` | 446 | The only constructor of HTTP and MCP clients. `install_client_guard` makes constructing an `httpx` client outside these factories raise; `assert_client_guard_blocks` is the negative control. Four factories: `build_client`, `build_mock_client`, `build_mcp_client`, `build_fingerprint_client`. |
 | `qa/report_plugin.py` | 475 | First-party pytest plugin, registered by `-p qa.report_plugin` in `pyproject.toml`. Turns a session into a schema-2 run record under `state/runs/`. Classification is a `tryfirst` hookwrapper so it runs last. |
 | `qa/fingerprint.py` | 161 | The platform fingerprint: a hash over documents that change when the vendor ships. Corpus spec from `components.yaml` via `registry.raw["fingerprint"]`. `QA_OFFLINE=1` short-circuits it to `None`. |
 | `qa/evidence.py` | 230 | Content-addressed request/response capture under `evidence/sha256/`, with redaction before write. `content_id` is the one computation of an id. |
@@ -176,8 +176,9 @@ never stored, so it cannot be assigned.
 `qa/fold.py` contains no occurrence of `telegram` or `a2a`. `qa/channels.py` is
 the only module that reads all four, and it is a library: the CLI
 (`scripts/channels.py`) and the dashboard (`scripts/render.py:380`) go through
-it. The `open_threads` SessionStart hook does **not** — it reaches
-`scripts/correspond.py` and sees Telegram only (§9.7).
+it, and so does the `open_threads` SessionStart hook, which names the
+unanswered ids of every channel whose `waiting_on` is "them". It read
+`scripts/correspond.py` and saw Telegram alone until 2026-09-20.
 
 Journal composition today (2364 events):
 
@@ -202,8 +203,9 @@ wrote it down", not as "their side changed".
 
 ## 3. Dependencies
 
-**External:** `httpx` (all network — through `qa/client.py` factories, with one
-exception at §8.3), `pytest` 8 + the first-party plugin, `PyYAML`
+**External:** `httpx` (all network — through `qa/client.py` factories, with no
+exception since 2026-09-20, and a static guard saying so), `pytest` 8 + the
+first-party plugin, `PyYAML`
 (`components.yaml`, `claims.yaml`, `reports.yaml`), `Jinja2` (declared in
 `pyproject.toml`, imported by nothing). No jsonpath library, by decision
 (`qa/extractors.py`). No database — every store is a JSON or JSONL file under
@@ -227,10 +229,12 @@ qa/lab.py    <── scripts/lab.py, scripts/nexus.py, scripts/paper.py
 
 **The `QA_STATE_DIR` seam.** Every read and write of `state/` is supposed to
 resolve through `qa.state.state_dir()` at call time, so a test can redirect the
-whole store to a tmp tree. Honoured by 22 modules today, including every
-laboratory writer. **Not honoured** by three, all of which bind a path from
-`REPO_ROOT` at import time: `scripts/inventory.py:35` (§8.2),
-`scripts/submit.py:44-45`, `scripts/processes.py:799`.
+whole store to a tmp tree. Honoured by every module that reads or writes
+state as of 2026-09-20; the three that bound a path from `REPO_ROOT` at import
+time were repaired that day, and `tests/repo/test_state_seam.py` refuses the
+fourth. Two exemptions stand by name: `qa/state.py`, which is the seam, and
+`.claude/hooks/protect_state.py`, which must mean the committed directory
+whatever the environment says.
 
 ---
 
@@ -437,37 +441,7 @@ nights; it does not record what a pass decided or why.
 
 ## 8. Where the documentation lies
 
-### 8.1 `components.yaml` names a consumer that does not exist
-
-> `components.yaml:5` — "`qa/components.py` — the component registry the dashboard renders"
-
-`ls qa/components.py` → no such file, and nothing imports `qa.components`. The
-header of the file called SINGLE SOURCE OF TRUTH names a consumer that has
-never existed in this tree, and omits `qa/config.py:95` and
-`qa/report_plugin.py:53`, which do read it. Standing since 2026-09-08.
-
-### 8.2 `scripts/inventory.py` ignores the `QA_STATE_DIR` seam
-
-`scripts/inventory.py:35` is `OUT = REPO_ROOT / "state" / "inventory.json"`,
-bound at import time. The exposure stays narrow: the write at `:586` sits under
-`if __name__ == "__main__":` and the tests import `build`/`compare` rather than
-running the module. `scripts/submit.py:44-45` and `scripts/processes.py:799`
-have the same shape. Latent, not active.
-
-### 8.3 `qa/fingerprint.py` holds the guard's key and builds its own client
-
-> `qa/client.py:38-42`, the guard's refusal — "Every request must go through SafetyTransport … add a factory to `qa/client.py` rather than bypassing the guard."
-
-`qa/fingerprint.py:80-83` imports the private `_FACTORY_SENTINEL` and
-constructs `httpx.Client` directly, so the corpus reads run with no
-`SafetyTransport`, no evidence capture and no rate-limit budget. It sets
-`CURRENT_TIER` to SAFE by hand first, and the reads are GETs of public
-documents, so nothing is at risk today — but it is the one call site in the
-tree that does what the guard's own message forbids, and it has been there
-since before the first reading. Either a factory or a named exception would
-turn it back into a decision. (In `NEXT.md` since 2026-09-20.)
-
-### 8.4 A skill named in git history no longer exists
+### 8.1 A skill named in git history no longer exists
 
 `.claude/skills/night-shift/SKILL.md` appears in `git log --name-only`; the
 directory today holds `channels`, `deep-pass`, `laborator`, `ohlednuti`,
@@ -477,11 +451,44 @@ not for the night"), not a lie — recorded so the next reader does not chase it
 ### Fixed since the first reading
 
 `CLAUDE.md`'s "the ONLY module that writes `state/`" now says ledger and
-journal and lists the narrow writers (was 8.2). Its never-fired count is gone,
-replaced by "read the count off the tool, never off prose" (was 8.5).
-`state/thread.json` and `qa/messages.py` were deleted (was 8.7).
-`scripts/open_checks.py` and the `qa-sweep` skill no longer carry "31 rows" or
-"29 settled rows" (was 8.4; the last two survivors were removed on 2026-09-20).
+journal and lists the narrow writers. Its never-fired count is gone, replaced
+by "read the count off the tool, never off prose". `state/thread.json` and
+`qa/messages.py` were deleted. `scripts/open_checks.py` and the `qa-sweep`
+skill no longer carry "31 rows" or "29 settled rows" (the last two survivors
+were removed on 2026-09-20).
+
+### Fixed by the work this reading prompted, 2026-09-20
+
+Each of these was a numbered hole in the first draft of this section a few
+hours ago; each is closed in the tree, and each closure carries a guard, so
+the entry here is a record rather than a warning.
+
+* **`components.yaml` named `qa/components.py`**, a module that has never
+  existed, and omitted the two modules that do read the file. The header now
+  lists what a grep finds, and says what it used to claim.
+* **Three modules bound a path under `state/` at import time**
+  (`inventory.py`, `submit.py`, `processes.py`), so a test redirecting
+  `QA_STATE_DIR` was handed the committed files. Resolved at call time;
+  `submit.py`'s was deleted outright as a dead read.
+  Guard: `tests/repo/test_state_seam.py`.
+* **`qa/fingerprint.py` held the guard's private sentinel** and built its own
+  client, so the corpus was read with no `SafetyTransport` under it. Replaced
+  by `qa/client.py::build_fingerprint_client`, which keeps the request shape
+  byte-for-byte — the fingerprint is a hash of response bytes. Guards:
+  `tests/repo/test_client_construction.py` and a behavioural one in
+  `tests/meta/test_guard_is_real.py`.
+* **`qa/channels.py` had two readers of "unanswered" on a2a** and `state()`
+  used the blind one, so the session-start line and every status report said
+  nothing was open while five threads were. Guard:
+  `test_the_two_a2a_readers_cannot_disagree`.
+* **The session-start hook read Telegram only.** It now reads the channels
+  module and names every channel that waits on them. Guard: a test that runs
+  the hook and requires each such channel to appear.
+* **Rule 12 depended on remembering to render.** `.githooks/pre-commit` runs
+  `render.py --if-stale`, which writes only when the page would change.
+  Guard: `tests/repo/test_render_if_stale.py`.
+* **Five scripts our own instructions name were not allowlisted**, so each
+  invocation cost a prompt. Guard: `tests/repo/test_allowlist.py`.
 
 ---
 
@@ -493,8 +500,9 @@ section each, with the sharpest repeated by hand.
 
 1. **`qa/fold.py <── scripts/ledger.py only`.** Five scripts imported the
    module at `702a65c`. Only `fold()` itself is called from one place.
-2. **"httpx … only through `qa/client.py` factories."** See §8.3; true of every
-   module but one, and that one was already there.
+2. **"httpx … only through `qa/client.py` factories."** True of every module
+   but `qa/fingerprint.py`, which was already holding the guard's sentinel
+   when the sentence was written. True without exception since 2026-09-20.
 3. **`message(origin=a2a)` attributed to `scripts/a2a.py`.** It is written by
    `scripts/bounty.py:389`, which reads the a2a inbox.
 4. **`scripts/render.py` as "the most volatile file in the repository".** By
@@ -503,9 +511,10 @@ section each, with the sharpest repeated by hand.
 5. **`scripts/withdraw.py` "9 commits".** It had 3 then and has 3 now; the
    Fired column's "9 withdrawals" leaked one cell to the left.
 6. **"Journal 1429 events".** The commit holds 1427.
-7. **Two edges in §3.** The `open_threads` hook reaches `scripts/correspond.py`,
-   not `qa/channels.py`; and `tests/meta/test_pipeline_abort.py` was never a
-   `components.yaml` consumer.
+7. **Two edges in §3.** The `open_threads` hook reached `scripts/correspond.py`,
+   not `qa/channels.py` — true when written, and repaired on 2026-09-20 by
+   making the hook read the channels module; and
+   `tests/meta/test_pipeline_abort.py` was never a `components.yaml` consumer.
 
 Everything else in that reading was exact for the day it was made — all 26
 named functions, every module responsibility, every line count, the ledger and
