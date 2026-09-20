@@ -747,3 +747,56 @@ def test_the_build_stats_window_reading_can_be_wrong_in_both_directions():
     assert window_problems(_body(first_session=None))[0] == []
     empty = window_problems({"totals": {"sessions": 1}, "daily_activity": []})
     assert empty == ([], {"measured": False}), empty
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_requirement_split_into_numbered_items_is_not_a_dropped_one():
+    """The first stranger's request on Build it Better nearly became a false
+    report against them.
+
+    ET-26171 arrived 2026-09-20 as one paragraph of three sentences, and the
+    generator wrote it into the spec as three numbered items -- every sentence
+    whole, nothing lost, which is the generator working. `dropped()` looked
+    for the whole PARAGRAPH as one substring, could not find it across the
+    numbering, and reported it as a requirement in the request and in no spec.
+    The row opened NOT RAISED and was one sweep away from being filed.
+
+    The original defect this check exists for is the opposite shape: on
+    ET-26036 the generator kept the first eight sentences and lost the last
+    line entirely, and cut another line at the full stop inside "(e.g.
+    Bollinger Bands, MACD, RSI)". Both must still be caught, so the repair is
+    to fall back to SENTENCES of a line rather than to similarity: a line is
+    carried when every sentence of it appears whole, and a sentence that was
+    cut or lost is still missing.
+    """
+    from tests.rest.test_build_it_better_board import dropped
+
+    paragraph = ("It is necessary to remove all news functions and focus "
+                 "exclusively on token information. Keep the TradingView "
+                 "charts. It is also necessary to add AI information.")
+    numbered = ("BB-SPEC\n"
+                "  1. It is necessary to remove all news functions and focus "
+                "exclusively on token information.\n"
+                "  2. Keep the TradingView charts.\n"
+                "  3. It is also necessary to add AI information.\n")
+    assert dropped(paragraph, numbered) == [], (
+        "a paragraph the generator split into numbered items, losing nothing, "
+        "reads as a dropped requirement")
+
+    # ET-26036's own defect: the last sentence never arrives.
+    lost = ("BB-SPEC\n"
+            "  1. It is necessary to remove all news functions and focus "
+            "exclusively on token information.\n"
+            "  2. Keep the TradingView charts.\n")
+    assert dropped(paragraph, lost), "a sentence that is in no spec passed"
+
+    # And the cut: the sentence is there up to a full stop inside it.
+    cut_request = "Add indicators (e.g. Bollinger Bands, MACD, RSI) to the chart."
+    cut_spec = "BB-SPEC\n  1. Add indicators (e.g.\n  2. Bollinger Bands, MACD, RSI) to the chart.\n"
+    assert dropped(cut_request, cut_spec), (
+        "a requirement cut at the full stop inside e.g. passed, which is the "
+        "defect the whole check was written for")
+
+    # A line that is carried verbatim is still carried.
+    assert dropped("Export any screen to CSV without a paid tier.",
+                   "BB-SPEC\n  1. Export any screen to CSV without a paid tier.\n") == []

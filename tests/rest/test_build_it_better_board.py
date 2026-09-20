@@ -37,6 +37,7 @@ SAFE. Two GETs and no key: the board is public, which is the point of it.
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 from qa.marks import Inconclusive, SafetyTier, qa
@@ -84,6 +85,30 @@ def lines_of(improvements: str) -> list[str]:
             if line.strip()]
 
 
+# A full stop ends a sentence only when a capital follows AND it is not the
+# stop inside an abbreviation. Without the exclusions, "(e.g. Bollinger Bands,
+# MACD, RSI)" splits in two and a spec that cut the line exactly there passes
+# -- which is the ET-26036 defect handing itself an excuse. The fixture in
+# tests/meta/test_pipeline_check_quality.py holds that case by name.
+SENTENCE_END = re.compile(
+    r"(?<!\be\.g\.)(?<!\bi\.e\.)(?<!\betc\.)(?<!\bvs\.)(?<=[.!?])\s+(?=[A-Z])")
+
+
+def sentences_of(line: str) -> list[str]:
+    """A line's sentences, split on a full stop that ends one.
+
+    Their generator numbers what it writes, so a requester who files a
+    paragraph gets it back as several items and the paragraph is then in no
+    spec as one string -- ET-26171, 2026-09-20, the first request a stranger
+    filed, which this check called a dropped requirement. Splitting on ". "
+    alone would cut "(e.g. Bollinger Bands...)" in half and hand the generator
+    the very excuse the check exists to refuse, so a full stop only ends a
+    sentence when a capital letter starts the next one.
+    """
+    parts = re.split(SENTENCE_END, line.strip())
+    return [p.strip() for p in parts if p.strip()]
+
+
 def dropped(improvements: str, spec: str) -> list[str]:
     """Improvement lines that appear nowhere whole in the spec.
 
@@ -91,8 +116,24 @@ def dropped(improvements: str, spec: str) -> list[str]:
     survive into the thing they are asked to sign. A spec that paraphrases a
     requirement has changed it, and a requester diffing by eye would not see
     that either.
+
+    A line the generator SPLIT is not a line it dropped. When the whole line
+    is not in the spec, each of its sentences must be, whole and separately --
+    so numbering a paragraph into items passes, while a sentence that never
+    arrived (ET-26036's last line) or one cut at the full stop inside "e.g."
+    still fails. The unit of the claim moved from the line to the sentence;
+    nothing about "whole, not paraphrased" moved with it.
     """
-    return [line for line in lines_of(improvements) if line not in (spec or "")]
+    text = spec or ""
+    missing = []
+    for line in lines_of(improvements):
+        if line in text:
+            continue
+        pieces = sentences_of(line)
+        if len(pieces) > 1 and all(piece in text for piece in pieces):
+            continue
+        missing.append(line)
+    return missing
 
 
 def gate_state(record: dict) -> str:
