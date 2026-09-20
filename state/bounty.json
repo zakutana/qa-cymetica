@@ -24,12 +24,13 @@
   "our_reports": {
     "endpoint": "GET /api/v1/bounty/my-reports?wallet_address=<addr>",
     "klass": "ok",
-    "read_at": "2026-09-20T16:24:24+00:00",
-    "evidence_id": "aaee0934a5cf22dee23f124e1e8ed37d1e3b6d351854f928b822b8271f9b05c1",
-    "rows_returned": 66,
-    "server_total": 66,
-    "total": 66,
+    "read_at": "2026-09-20T21:48:00+00:00",
+    "evidence_id": "5e38ff9d02aa2546a9fa397caf45a758791a938b347a541ac2f24fd2a1f8c8eb",
+    "rows_returned": 70,
+    "server_total": 70,
+    "total": 70,
     "statuses": {
+      "pending": 4,
       "paid": 59,
       "fixed": 5,
       "invalid": 2
@@ -1111,7 +1112,7 @@
         "fixed_at": "2026-09-20T03:16:55.358303",
         "validated_at": "2026-09-20T03:16:55.358303",
         "triaged_at": "2026-09-20T03:16:55.358303",
-        "status_notes": "[2026-09-20T03:16:55+00:00] Resolved via ticket ET-26058: Fixed, live @d440404e0. get_fund_history tail-sliced to the default 80 points, dropping the inception point (AIB-SPACE has 81). Points are now fitted so points[0] is always the series start and the last point its latest. Verified anonymously over MCP: AIB-SPACE default call returns 80 points starting 2026-08-14T16:55 v=64.162 = inception_index_price_usd. Regression test added.",
+        "status_notes": "[2026-09-20T03:16:55+00:00] Resolved via ticket ET-26058: Fixed, live @d440404e0. get_fund_history tail-sliced to the default 80 points, dropping the inception point (AIB-SPACE has 81). Points are now fitted so points[0] is always the series start and the last point its latest. Verified anonymously over MCP: AIB-SPACE default call returns 80 points starting 2026-08-14T16:55 v=64.162 = inception_index_price_usd. Regression test added.\n[reporter-verification FAIL 2026-09-20 16:47 UTC by expire76 test_run=run-20260920T162940Z-da287834]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/26058",
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -1129,7 +1130,7 @@
         "fixed_at": "2026-09-20T03:16:56.671648",
         "validated_at": "2026-09-20T03:16:56.671648",
         "triaged_at": "2026-09-20T03:16:56.671648",
-        "status_notes": "[2026-09-20T03:16:56+00:00] Resolved via ticket ET-26064: Fixed, live @d440404e0. The four deployment sleeves (MA-RIPPLE, FTA-STOCKS, FTA-CRYPTOS, EVENT-CARD) returned url but no profile_url; get_fund now returns profile_url for every fund. Verified anonymously over MCP: MA-RIPPLE -> /ma-fund, EVENT-CARD -> its card page. Regression test covers all sleeve and roster funds.",
+        "status_notes": "[2026-09-20T03:16:56+00:00] Resolved via ticket ET-26064: Fixed, live @d440404e0. The four deployment sleeves (MA-RIPPLE, FTA-STOCKS, FTA-CRYPTOS, EVENT-CARD) returned url but no profile_url; get_fund now returns profile_url for every fund. Verified anonymously over MCP: MA-RIPPLE -> /ma-fund, EVENT-CARD -> its card page. Regression test covers all sleeve and roster funds.\n[reporter-verification PASS 2026-09-20 16:47 UTC by expire76 test_run=run-20260920T162940Z-da287834]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/26064",
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -1147,7 +1148,7 @@
         "fixed_at": "2026-09-20T03:16:58.467953",
         "validated_at": "2026-09-20T03:16:58.467953",
         "triaged_at": "2026-09-20T03:16:58.467953",
-        "status_notes": "[2026-09-20T03:16:58+00:00] Resolved via ticket ET-26069: Fixed, live @d440404e0. /api/v1/prices, /api/v1/arena/market and /api/v1/clob/book/hybrid (unauthenticated GETs advertised in /openapi.json) are now in the curated /openapi-public.json with security: []. Verified against the live document. New test pins the two documents in lockstep so a public GET in one cannot be missing from the other.",
+        "status_notes": "[2026-09-20T03:16:58+00:00] Resolved via ticket ET-26069: Fixed, live @d440404e0. /api/v1/prices, /api/v1/arena/market and /api/v1/clob/book/hybrid (unauthenticated GETs advertised in /openapi.json) are now in the curated /openapi-public.json with security: []. Verified against the live document. New test pins the two documents in lockstep so a public GET in one cannot be missing from the other.\n[reporter-verification PASS 2026-09-20 16:48 UTC by expire76 test_run=run-20260920T162940Z-da287834]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/26069",
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -1165,7 +1166,7 @@
         "fixed_at": "2026-09-20T03:05:41.986650",
         "validated_at": "2026-09-20T03:05:41.986650",
         "triaged_at": "2026-09-20T03:05:41.986650",
-        "status_notes": "[2026-09-20T03:05:41+00:00] Resolved via ticket ET-26076: Fixed, live @7356874ed. A known coin never answers a bare 404: text view is always 200 (come-back line), JSON is a typed OUTLOOK_UNAVAILABLE distinct from UNKNOWN_COIN. Roster now uses the same 4-day freshness as pricing, so RAIN is no longer advertised. Root data cause fixed too: daily price refresh failing since 09-13 + prune deleting deep history. Verified anonymously: BTC 200 text+JSON; first 25 roster coins all 200.",
+        "status_notes": "[2026-09-20T03:05:41+00:00] Resolved via ticket ET-26076: Fixed, live @7356874ed. A known coin never answers a bare 404: text view is always 200 (come-back line), JSON is a typed OUTLOOK_UNAVAILABLE distinct from UNKNOWN_COIN. Roster now uses the same 4-day freshness as pricing, so RAIN is no longer advertised. Root data cause fixed too: daily price refresh failing since 09-13 + prune deleting deep history. Verified anonymously: BTC 200 text+JSON; first 25 roster coins all 200.\n[reporter-verification PASS 2026-09-20 16:47 UTC by expire76 test_run=run-20260920T162940Z-da287834]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/26076",
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -1183,7 +1184,7 @@
         "fixed_at": "2026-09-20T04:36:33.973903",
         "validated_at": "2026-09-20T04:36:33.973903",
         "triaged_at": "2026-09-20T04:36:33.973903",
-        "status_notes": "[2026-09-20T04:36:33+00:00] Resolved via ticket ET-26089: Fixed, live @6df0fd38f. The screener's limit bounded each source separately, so limit=5 answered 10 rows. It now bounds the whole response: external rows take up to half, the platform's launches the rest; a chain filter other than 4663 excludes external rows. Verified anonymously on the live API: limit 5 -> 5 rows, 50 -> 50, 500 -> 500. The screener page asks for 400 so it still shows 200 from each source. Regression test added.",
+        "status_notes": "[2026-09-20T04:36:33+00:00] Resolved via ticket ET-26089: Fixed, live @6df0fd38f. The screener's limit bounded each source separately, so limit=5 answered 10 rows. It now bounds the whole response: external rows take up to half, the platform's launches the rest; a chain filter other than 4663 excludes external rows. Verified anonymously on the live API: limit 5 -> 5 rows, 50 -> 50, 500 -> 500. The screener page asks for 400 so it still shows 200 from each source. Regression test added.\n[reporter-verification PASS 2026-09-20 16:48 UTC by expire76 test_run=run-20260920T162940Z-da287834]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/26089",
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -1219,10 +1220,82 @@
         "fixed_at": "2026-09-20T13:39:46.695601",
         "validated_at": "2026-09-20T13:39:46.695601",
         "triaged_at": "2026-09-20T13:39:46.695601",
-        "status_notes": "[2026-09-20T13:39:46+00:00] Resolved via ticket ET-26122: Fixed and live @bc5946639 (first pass 32839220d). wss://cymetica.com/ws/build-it-better is named in llms.txt (new Build it Better section), .well-known/mcp.json, openapi-public.json (GET /api/v1/build-it-better/requests description) and agent-card.json; the placeholder-host ws URL in the backtest description now carries the real host. Verified anonymously: all four live documents name the socket, and the socket sends hello and answers ping. Reporter told in TG msg 235040 (topic 234611).\n[reporter-verification PASS 2026-09-20 13:57 UTC by expire76 test_run=run-20260920T135400Z-59a13105]",
+        "status_notes": "[2026-09-20T13:39:46+00:00] Resolved via ticket ET-26122: Fixed and live @bc5946639 (first pass 32839220d). wss://cymetica.com/ws/build-it-better is named in llms.txt (new Build it Better section), .well-known/mcp.json, openapi-public.json (GET /api/v1/build-it-better/requests description) and agent-card.json; the placeholder-host ws URL in the backtest description now carries the real host. Verified anonymously: all four live documents name the socket, and the socket sends hello and answers ping. Reporter told in TG msg 235040 (topic 234611).\n[reporter-verification PASS 2026-09-20 13:57 UTC by expire76 test_run=run-20260920T135400Z-59a13105]\n[reporter-verification PASS 2026-09-20 16:47 UTC by expire76 test_run=run-20260920T162940Z-da287834]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/26122",
         "fix_pr_url": null,
         "reward_amount": 1000.0
+      },
+      {
+        "id": 110,
+        "title": "/build-stats publishes SINCE 2025-11-23 over session totals that hold only 17 days of February 2026",
+        "status": "pending",
+        "hunter_name": "expire76",
+        "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
+        "severity_reported": "low",
+        "severity_confirmed": null,
+        "category": "logic",
+        "created_at": "2026-09-20T17:40:40.369702",
+        "fixed_at": null,
+        "validated_at": null,
+        "triaged_at": null,
+        "status_notes": null,
+        "ticket_url": null,
+        "fix_pr_url": null,
+        "reward_amount": 0.0
+      },
+      {
+        "id": 111,
+        "title": "llms.txt says the Agent Returns Board is ranked by verified return x replications; it is ranked by age, and nothing on it is verified",
+        "status": "pending",
+        "hunter_name": "expire76",
+        "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
+        "severity_reported": "low",
+        "severity_confirmed": null,
+        "category": "documentation",
+        "created_at": "2026-09-20T19:23:48.722461",
+        "fixed_at": null,
+        "validated_at": null,
+        "triaged_at": null,
+        "status_notes": null,
+        "ticket_url": null,
+        "fix_pr_url": null,
+        "reward_amount": 0.0
+      },
+      {
+        "id": 112,
+        "title": "Build it Better missed its own 24-hour deadline on ET-26036: the clock expired with the request still queued and nothing built",
+        "status": "pending",
+        "hunter_name": "expire76",
+        "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
+        "severity_reported": "medium",
+        "severity_confirmed": null,
+        "category": "logic",
+        "created_at": "2026-09-20T20:51:06.011549",
+        "fixed_at": null,
+        "validated_at": null,
+        "triaged_at": null,
+        "status_notes": null,
+        "ticket_url": null,
+        "fix_pr_url": null,
+        "reward_amount": 0.0
+      },
+      {
+        "id": 113,
+        "title": "The live build board's \"Building now\" tile counts queued requests, so it contradicts the BUILDING column directly beneath it",
+        "status": "pending",
+        "hunter_name": "expire76",
+        "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
+        "severity_reported": "low",
+        "severity_confirmed": null,
+        "category": "logic",
+        "created_at": "2026-09-20T21:00:56.127622",
+        "fixed_at": null,
+        "validated_at": null,
+        "triaged_at": null,
+        "status_notes": null,
+        "ticket_url": null,
+        "fix_pr_url": null,
+        "reward_amount": 0.0
       }
     ]
   },
@@ -1849,5 +1922,6 @@
       "total_paid": 0.0,
       "reward_currency": "ET10"
     }
-  ]
+  ],
+  "our_reports_refreshed_at": "2026-09-20T21:48:00+00:00"
 }
