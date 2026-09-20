@@ -120,7 +120,7 @@ def window_problems(body: dict) -> tuple[list[str], dict]:
              f"those totals under SINCE {first_session[:10]}"], facts)
 
 
-@qa(component="discovery.build_stats", tier=SafetyTier.SAFE, surface="rest")
+@qa(component="platform.ai_native_proof", tier=SafetyTier.SAFE, surface="rest")
 def test_the_build_totals_reach_back_to_the_date_they_are_published_under(
         rest_anon):
     """One read of their own proof page's numbers."""

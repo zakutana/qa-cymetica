@@ -824,6 +824,12 @@ def build_rooms() -> dict:
 
     from qa import rooms as store
 
+    try:
+        from qa.lab import gates as lab_gates
+    except Exception:  # the laboratory's diary is gitignored; a clone has none
+        def lab_gates():
+            return {}
+
     derived = _nexus_questions() or []
     stored = store.load()
     sampled = store.load_samples()
@@ -1115,9 +1121,26 @@ def build_rooms() -> dict:
         if row.get("type") == "card" and row.get("card_id"):
             described[row["card_id"]] = row
     answered_at = {q["id"]: q["answer"].get("at") for q in derived if q.get("answer")}
+    # [operator 2026-09-20, N-0035] "kde je prehled vubec o nejakych
+    # backtestech? prece nez se spusti strategie tak se rikalo ze backtstry
+    # maji byt slibne". The decision exists per (answer, card) as a `gate`
+    # row -- qa.lab.note_gate -- so the room can show what was measured before
+    # it opened, or say plainly that nothing was. Today nothing was: the
+    # register holds 334 backtests and not one gate row, because every room
+    # here was opened before that brake existed.
+    decided = lab_gates()
     for s in opened:
         _lay_out(panels[s["id"]], plans.get(s["id"]) or {}, described, index_points,
                  answered_at.get(s.get("origin")))
+        panel = panels[s["id"]]
+        origin = str(s.get("origin") or "")
+        panel["backtests"] = [
+            {"card": leg.get("card"), "title": leg.get("card_title"),
+             **{k: decided[(origin, str(leg.get("card")))].get(k)
+                for k in ("verdict", "period", "return_pct", "sharpe",
+                          "drawdown_pct", "why")}}
+            for leg in panel.get("legs") or []
+            if (origin, str(leg.get("card"))) in decided]
 
     for row in stored:
         kind = row.get("type")
@@ -1958,6 +1981,23 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:15.0px; max-wid
 .nx-pill.nx-running{background:var(--ok-bg);color:var(--ok)}
 .nx-pill.nx-paused{background:var(--warn-bg);color:var(--warn)}
 .nx-pill.nx-stopped{background:var(--bad-bg);color:var(--bad)}
+/* [operator 2026-09-20, N-0035] "Vice barev pouyivej pro tagz jako Bot Cards":
+   what a room HOLDS is the thing they scan the strip for, and it was the one
+   pill with no colour at all. */
+.nx-pill.nx-holds-bot{background:rgba(139,111,232,.20);color:#c3b4ff}
+.nx-pill.nx-holds-cards{background:rgba(72,150,232,.20);color:#9ecbff}
+.nx-pill.nx-trading-on{background:var(--ok-bg);color:var(--ok)}
+.nx-pill.nx-trading-off{background:var(--surface-2);color:var(--text-dim)}
+.nx-gist{margin:0;font-size:16px;line-height:1.45;font-weight:600}
+.nx-more{margin-top:8px}
+.nx-more>summary{cursor:pointer;color:var(--text-dim);font-size:13px;
+  font-weight:600;list-style:none;user-select:none}
+.nx-more>summary::-webkit-details-marker{display:none}
+.nx-more>summary::before{content:"▸ ";color:var(--text-dim)}
+.nx-more[open]>summary::before{content:"▾ "}
+.nx-more>summary:hover{color:var(--text)}
+.nx-cap{margin:-2px 0 10px}
+.nx-table.nx-bt .nx-tr{grid-template-columns:2fr 1.2fr .8fr .8fr .8fr}
 .nx-card-top .nx-pill{padding:1px 8px;font-size:12px}
 .nx-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:20px 0 4px}
 .nx-tile{min-width:0;padding:13px 15px;border-radius:10px;background:var(--surface-2)}
@@ -3635,9 +3675,14 @@ function nxBubble(nm, current) {
 
 // Where a strategy stands, as a word beside its name; the thread's status
 // lines keep the bare glyph.
-const NX_WORD = { proposed: "Proposed", running: "Running", paused: "Paused",
-                  stopped: "Stopped" };
-const NX_HOLDS = { bot: "Bot", cards: "Cards" };
+// [operator 2026-09-20, N-0034] "vubec se v tom detialu nevyznam, ma to byt
+// uplne jednoduche pro degeny z co nejmin ctenim". So the words on this tab
+// are Czech and short: it is the one surface in this console written for the
+// operator rather than for the vendor, and they read Czech. Ids, card
+// symbols and numbers are untouched -- those are the same in both languages.
+const NX_WORD = { proposed: "Návrh", running: "Běží", paused: "Pauza",
+                  stopped: "Stojí" };
+const NX_HOLDS = { bot: "Bot", cards: "Karty" };
 function nxPill(status) {
   const s = status || "proposed";
   return '<span class="nx-pill nx-' + esc(s) + '">' + (NX_STATUS[s] || "○") + " " +
@@ -3684,10 +3729,10 @@ function nxUntil(iso) {
   const t = Date.parse(iso || "");
   if (!t) return null;
   const hours = (t - Date.now()) / 3600000;
-  if (hours <= 0) return "closed";
-  if (hours < 1) return "in " + Math.max(1, Math.round(hours * 60)) + " min";
-  if (hours < 48) return "in " + Math.round(hours) + " h";
-  return "in " + Math.round(hours / 24) + " d";
+  if (hours <= 0) return "skončila";
+  if (hours < 1) return "za " + Math.max(1, Math.round(hours * 60)) + " min";
+  if (hours < 48) return "za " + Math.round(hours) + " h";
+  return "za " + Math.round(hours / 24) + " d";
 }
 // Four big numbers, each with its label above it and one quiet line under it.
 function nxTiles(tiles) {
@@ -3806,7 +3851,7 @@ function nxChart(series, opts) {
   const last = pts[pts.length - 1];
   svg += '<circle class="nx-dot" cx="' + r1(x(last[0])) + '" cy="' + r1(y(last[1])) +
     '" r="5"/>';
-  labels.push({ y: y(last[1]) + 4, text: "now " + fmt(last[1]), cls: "nx-now" });
+  labels.push({ y: y(last[1]) + 4, text: "teď " + fmt(last[1]), cls: "nx-now" });
   nxPlace(labels, T + 8, H - B).forEach(label => {
     svg += '<text class="' + label.cls + '" x="' + (W - R + 8) + '" y="' + r1(label.y) +
       '">' + esc(label.text) + "</text>";
@@ -3825,13 +3870,18 @@ function nxChart(series, opts) {
 // its index tracks sits under that, quietly. A card their API does not know is
 // said to be one: an id means nothing to the operator.
 function nxLegName(nl) {
-  if (nl.state === "card not found") return "Card that does not exist";
-  return nl.card_title ? nxShort(nl.card_title, 64) : nl.label || "Card not read yet";
+  if (nl.state === "card not found") return "Karta, která neexistuje";
+  return nl.card_title ? nxShort(nl.card_title, 64) : nl.label || "Kartu jsme ještě nečetli";
 }
 function nxLegNote(nl) {
-  if (nl.state === "card not found") return "Nexus proposed it; their API answers 404";
-  return nl.label ? "index: " + nl.label : "";
+  if (nl.state === "card not found") return "Nexus si ji vymyslel, jejich API na ni vrací 404";
+  return nl.label ? "sleduje: " + nl.label : "";
 }
+// The payload keeps its English states -- the guards pin those names -- and
+// the page says them in the operator's words. N-0031: "to ma tento room 2
+// cards co testvoal? proc jsou obe not bought".
+const NX_LEG = {"not bought": "nekoupeno", "card not found": "karta neexistuje",
+                bought: "koupeno", closed: "zavřeno", open: "drží se"};
 // A card's own page on cymetica.com, in a new tab, wherever the card is named;
 // plain text for a card their API does not know. `inner` is already escaped.
 function nxCardLink(nl, inner) {
@@ -3850,7 +3900,7 @@ function nxLegs(np) {
       ? esc(nxLevel(nl.entry) + " → " + nxLevel(nl.current))
       : nl.at_proposal != null
         ? esc(nxLevel(nl.at_proposal) + " → " + nxLevel(nl.current)) +
-          "<small>since Nexus proposed it</small>"
+          "<small>od chvíle, co to Nexus navrhl</small>"
         : "—";
     const exits = (nl.tp != null ? nxPct(nl.tp, nl.tp % 1 ? 1 : 0) : "—") + " / " +
       (nl.sl != null ? nxPct(nl.sl, nl.sl % 1 ? 1 : 0) : "—");
@@ -3860,13 +3910,13 @@ function nxLegs(np) {
       (nl.side === "bear" ? "▼ bear" : nl.side ? "▲ " + esc(nl.side) : "—") + "</span><span>" +
       esc(share) + "</span><span>" + moved + "</span><span>" + esc(exits) +
       '</span><span class="nx-state nx-' + esc(state.split(" ").join("-")) + '">' +
-      esc(state) + "</span></div>";
+      esc(NX_LEG[state] || state) + "</span></div>";
   }).join("");
-  return '<div class="nx-sec">Configuration</div><div class="nx-table nx-legs">' +
-    '<div class="nx-tr nx-th"><span>Card</span><span>Side</span><span>Share</span>' +
-    "<span>Entry → now</span><span>Take profit / stop</span><span>State</span></div>" +
+  return '<div class="nx-sec">Karty téhle strategie</div><div class="nx-table nx-legs">' +
+    '<div class="nx-tr nx-th"><span>Karta</span><span>Sázka</span><span>Podíl</span>' +
+    "<span>Vstup → teď</span><span>Zisk / stopka</span><span>Stav</span></div>" +
     rows + (np.reserve != null
-      ? '<div class="nx-tr nx-dim"><span>Reserve</span><span></span><span>' +
+      ? '<div class="nx-tr nx-dim"><span>Rezerva</span><span></span><span>' +
         esc(nxShare(np.reserve)) + "</span><span></span><span></span><span></span></div>"
       : "") + "</div>";
 }
@@ -3880,7 +3930,7 @@ function nxLegCharts(np) {
     if (bought) {
       refs.push({ v: nl.entry, label: "entry " + nxLevel(nl.entry), kind: "entry" });
     } else if (nl.at_proposal != null) {
-      refs.push({ v: nl.at_proposal, label: "proposed " + nxLevel(nl.at_proposal),
+      refs.push({ v: nl.at_proposal, label: "navrženo " + nxLevel(nl.at_proposal),
                   kind: "base" });
     }
     if (nl.tp_level != null) {
@@ -3891,16 +3941,16 @@ function nxLegCharts(np) {
     }
     const order = bought ? (np.trades || []).find(nt => nt.card === nl.card &&
                                                         nt.outcome === "accepted") : null;
-    const head = nxLegName(nl) + (bought ? "" : " · not bought");
+    const head = nxLegName(nl) + (bought ? "" : " · nekoupeno");
     const note = bought
-      ? (nl.pnl != null ? "P&L " + nxSigned(nl.pnl) + " USDC" : "")
-      : "if bought when proposed: " + nxPct(nl.since_proposal, 2);
+      ? (nl.pnl != null ? "zisk " + nxSigned(nl.pnl) + " USDC" : "")
+      : "kdybychom koupili, když to navrhl: " + nxPct(nl.since_proposal, 2);
     return '<div class="nx-ct"><span>' + nxCardLink(nl, esc(head)) + "</span><small>" +
       esc(note) +
       "</small></div>" + nxChart(nl.series, {
         refs: refs, label: head,
-        vline: bought ? (order ? { t: order.at, label: "bought" } : null)
-                      : (np.proposed_at ? { t: np.proposed_at, label: "Nexus proposed" }
+        vline: bought ? (order ? { t: order.at, label: "koupeno" } : null)
+                      : (np.proposed_at ? { t: np.proposed_at, label: "Nexus navrhl" }
                                         : null) });
   }).join("");
 }
@@ -3930,25 +3980,26 @@ function nxCardTiles(np) {
   // counted too: "2 not bought · 1 card not found".
   const states = {};
   legs.forEach(nl => { states[nl.state] = (states[nl.state] || 0) + 1; });
-  const told = Object.entries(states).map(([word, n]) => n + " " + word).join(" · ");
+  const told = Object.entries(states).map(
+    ([word, n]) => n + " " + (NX_LEG[word] || word)).join(" · ");
   if ((np.invested || 0) > 0) {
     const proposed = np.proposed_share != null && np.bankroll
       ? np.proposed_share * np.bankroll : null;
     return nxTiles([
-      ["P&L", np.pnl != null ? nxSigned(np.pnl) + " USDC" : "—",
-       np.pnl_pct != null ? nxPct(np.pnl_pct, 2) + " on what went in" : "", nxTone(np.pnl)],
-      ["Invested", nxMoney(np.invested),
-       proposed != null ? "of " + nxMoney(proposed) + " proposed" : "USDC", ""],
-      ["Value now", np.value != null ? nxMoney(np.value) : "—", "USDC", ""],
-      ["Card closes", nxUntil(np.closes_at) || "—", closes, ""]]);
+      ["Zisk", np.pnl != null ? nxSigned(np.pnl) + " USDC" : "—",
+       np.pnl_pct != null ? nxPct(np.pnl_pct, 2) + " z vloženého" : "", nxTone(np.pnl)],
+      ["Vloženo", nxMoney(np.invested),
+       proposed != null ? "z " + nxMoney(proposed) + " navržených" : "USDC", ""],
+      ["Teď to má cenu", np.value != null ? nxMoney(np.value) : "—", "USDC", ""],
+      ["Karta končí", nxUntil(np.closes_at) || "—", closes, ""]]);
   }
   return nxTiles([
-    ["Proposed", np.proposed_share != null ? nxShare(np.proposed_share) : "—",
-     np.bankroll ? "of " + nxMoney(np.bankroll) + " USDC" : "of the account", ""],
-    ["If bought then", nxPct(np.if_bought_pct, 2), "since Nexus proposed it",
+    ["Navrhl vsadit", np.proposed_share != null ? nxShare(np.proposed_share) : "—",
+     np.bankroll ? "z " + nxMoney(np.bankroll) + " USDC" : "z účtu", ""],
+    ["Kdybychom koupili", nxPct(np.if_bought_pct, 2), "tolik by to dělalo dneska",
      nxTone(np.if_bought_pct)],
-    ["Cards", legs.length, told, ""],
-    ["Closes first", nxUntil(np.closes_at) || "—", closes, ""]]);
+    ["Karet", legs.length, told, ""],
+    ["První končí", nxUntil(np.closes_at) || "—", closes, ""]]);
 }
 // A bot: what it is, the indicators it trades on, its P&L with each of its
 // trades on the line, and the trades themselves.
@@ -3991,31 +4042,31 @@ function nxBot(nc) {
     : { t: na.executed_at, v: valueAt(na.executed_at), kind: "open",
         title: (na.symbol || "?") + " " + (na.trade_type || "") + " " +
                nxMoney(na.amount_usdc) + " USDC, open" });
-  return '<div class="nx-sec">Configuration</div><div class="nx-kv">' +
+  return '<div class="nx-sec">Jak je bot nastavený</div><div class="nx-kv">' +
     pairs.map(([k, v]) => "<div><span>" + esc(k) + "</span>" + esc(v) + "</div>").join("") +
     "</div>" +
     ((cfg.primary_indicators || []).length
-      ? '<div class="nx-chips"><span>Primary</span>' + chips(cfg.primary_indicators) +
+      ? '<div class="nx-chips"><span>Hlavní</span>' + chips(cfg.primary_indicators) +
         "</div>" : "") +
     ((cfg.secondary_indicators || []).length
-      ? '<div class="nx-chips"><span>Secondary</span>' + chips(cfg.secondary_indicators) +
+      ? '<div class="nx-chips"><span>Vedlejší</span>' + chips(cfg.secondary_indicators) +
         "</div>" : "") +
     (series.length >= 2
-      ? '<div class="nx-ct"><span>P&amp;L since it was switched on</span><small>' +
-        esc(nc.win_rate != null ? "win rate " + nc.win_rate + " %" : "") + "</small></div>" +
-        nxChart(series, { marks: marks, format: nxSigned, label: "The bot's P&L over time" })
+      ? '<div class="nx-ct"><span>Zisk od zapnutí</span><small>' +
+        esc(nc.win_rate != null ? "úspěšnost " + nc.win_rate + " %" : "") + "</small></div>" +
+        nxChart(series, { marks: marks, format: nxSigned, label: "Zisk bota v čase" })
       : "") +
     (acts.length
-      ? '<div class="nx-sec">Its trades</div><div class="nx-table nx-trades">' +
-        '<div class="nx-tr nx-th"><span>Symbol</span><span>Type</span><span>USDC</span>' +
-        "<span>Result</span><span>When</span></div>" + acts.map(na =>
+      ? '<div class="nx-sec">Jeho obchody</div><div class="nx-table nx-trades">' +
+        '<div class="nx-tr nx-th"><span>Mince</span><span>Typ</span><span>USDC</span>' +
+        "<span>Výsledek</span><span>Kdy</span></div>" + acts.map(na =>
           '<div class="nx-tr"><span><b>' + esc(na.symbol || "?") + "</b> · " +
           esc(na.side || "") + "</span><span>" + esc(na.trade_type || "") + "</span><span>" +
           esc(nxMoney(na.amount_usdc)) + "</span>" + (na.is_closed
             ? '<span class="' + nxTone(na.profit_usdc).trim() + '">' +
-              esc(nxSigned(na.profit_usdc)) + " · closed" +
+              esc(nxSigned(na.profit_usdc)) + " · zavřeno" +
               (na.exit_reason ? "<small>" + esc(na.exit_reason) + "</small>" : "") + "</span>"
-            : '<span class="nx-dim">open</span>') +
+            : '<span class="nx-dim">drží se</span>') +
           '<span class="nx-dim">' + esc(nxDay(na.executed_at)) + "</span></div>").join("") +
         "</div>"
       : "");
@@ -4024,23 +4075,45 @@ function nxBot(nc) {
 // under the name, above the numbers. It is the operator's first question about
 // a strategy, and folded at the bottom it was the one thing they could not find.
 // The current move is said once, as the why, not again in the list.
+// One line, derived from the fields -- not the stored `why`, which is a
+// paragraph written for a reader who is not there. N-0032 and N-0034 are the
+// same complaint twice: "kdo to ma cist". The paragraph and the whole history
+// are one click away and nothing is thrown out.
+function nxGist(np) {
+  const v = np.verdict, why = String(np.why || "");
+  if (np.status === "proposed") return "Jen návrh. Nekoupili jsme nic.";
+  if (v && v.verdict === "inconclusive") {
+    const cov = v.coverage != null ? Math.round(v.coverage * 100) + " %" : "málo";
+    return "Nedá se říct, jestli to vyšlo: karta hlásila cenu jen " + cov +
+           " okna. Chybí data, ne peníze.";
+  }
+  if (v && v.verdict === "survived") return "Vyšlo to.";
+  if (v && v.verdict === "refuted") return "Nevyšlo to.";
+  if (/drop\b/i.test(why) && /^NEX-/.test(why)) return "Nexus to sám odvolal.";
+  if (np.status === "paused") return "Zastavilo se to samo.";
+  if (np.status === "running") return "Běží, verdikt ještě není.";
+  return "";
+}
 function nxStatus(np) {
-  const word = String(NX_WORD[np.status] || np.status || "proposed").toLowerCase();
   const moves = (np.history || []).filter(nh =>
     !(nh.status === np.status && nh.why === np.why)).reverse();
-  if (!np.why && !moves.length) return "";
-  return '<div class="nx-status nx-' + esc(np.status || "proposed") + '"><h3>' +
-    (np.why ? "Why it is " + esc(word) : "How it moved") + "</h3>" +
-    (np.why ? "<p>" + esc(np.why) + "</p>" : "") +
+  const gist = nxGist(np);
+  if (!np.why && !moves.length && !gist) return "";
+  const long = (np.why ? "<p>" + esc(np.why) + "</p>" : "") +
     (moves.length ? '<div class="nx-moves">' + moves.map(nh => "<p>" +
-      nxGlyph(nh.status) + " <b>" + esc(nh.status || "") + "</b> · " + esc(nxDay(nh.at)) +
-      (nh.why ? " — " + esc(nh.why) : "") + "</p>").join("") + "</div>" : "") + "</div>";
+      nxGlyph(nh.status) + " <b>" + esc(NX_WORD[nh.status] || nh.status || "") + "</b> · " +
+      esc(nxDay(nh.at)) + (nh.why ? " — " + esc(nh.why) : "") + "</p>").join("") +
+      "</div>" : "");
+  return '<div class="nx-status nx-' + esc(np.status || "proposed") + '">' +
+    (gist ? '<p class="nx-gist">' + esc(gist) + "</p>" : "") +
+    (long ? "<details class=\"nx-more\"><summary>víc</summary>" + long + "</details>" : "") +
+    "</div>";
 }
 // What a room was accepted on, and what the numbers said at the end of its
 // window. A room with neither is one nobody could score afterwards, so the
 // panel says that first rather than leaving the space blank.
-const NX_SAID = {survived: ["Survived", " nx-up"], refuted: ["Refuted", " nx-down"],
-                 inconclusive: ["Inconclusive", ""], open: ["Still running", ""]};
+const NX_SAID = {survived: ["Vyšlo", " nx-up"], refuted: ["Nevyšlo", " nx-down"],
+                 inconclusive: ["Nedá se říct", ""], open: ["Ještě běží", ""]};
 // When the verdict becomes computable: the moment it was accepted plus its
 // window, which is the arithmetic qa/lab.py:verdict does -- it starts the
 // window at acceptance["at"], never at the moment the room went running. A
@@ -4048,57 +4121,88 @@ const NX_SAID = {survived: ["Survived", " nx-up"], refuted: ["Refuted", " nx-dow
 // yet and that is the one state worth noticing on this page.
 function nxDue(c) {
   const t = Date.parse(c.at || ""), d = Number(c.window_days);
-  if (!t || !(d > 0)) return ["—", "no window to close"];
+  if (!t || !(d > 0)) return ["—", "není okno, které by skončilo"];
   const end = new Date(t + d * 86400000).toISOString(), left = nxUntil(end);
-  return left === "closed" ? ["due now", "window closed " + nxDay(end), " nx-warn"]
-                           : [left, "window closes " + nxDay(end), ""];
+  return left === "closed" ? ["čeká se na něj", "okno skončilo " + nxDay(end), " nx-warn"]
+                           : [left, "okno končí " + nxDay(end), ""];
 }
 function nxVerdict(np) {
   const c = np.criterion, v = np.verdict;
   if (!c && !v) {
-    return '<div class="nx-sec">Criterion</div><p class="nx-foot">' +
-      "None written, so nothing could say afterwards whether it worked." +
-      " <code>lab.py adopt</code> writes one, and a room cannot run without it.</p>";
+    return '<div class="nx-sec">Jak se pozná úspěch</div><p class="nx-foot">' +
+      "Nikdo to dopředu nenapsal, takže se po skončení nedá říct, jestli to vyšlo." +
+      " Píše to <code>lab.py adopt</code> a bez toho už room běžet nesmí.</p>";
   }
-  let html = '<div class="nx-sec">Criterion and verdict</div>';
+  let html = '<div class="nx-sec">Jak to dopadlo</div>';
   if (v) {
     const said = NX_SAID[v.verdict] || [v.verdict, ""];
     html += nxTiles([
       [said[0], v.return_pct != null ? nxPct(v.return_pct, 2) : "—",
-       v.why || "", said[1]],
-      ["Drawdown", v.max_drawdown_pct != null ? nxPct(v.max_drawdown_pct, 2) : "—",
-       c && c.stop_pct != null ? "accepted with a " + nxPct(c.stop_pct, 0) + " stop" : "",
+       "tolik to vydělalo za okno", said[1]],
+      ["Největší propad", v.max_drawdown_pct != null ? nxPct(v.max_drawdown_pct, 2) : "—",
+       c && c.stop_pct != null ? "brali jsme to se stopkou " + nxPct(c.stop_pct, 0) : "",
        ""],
-      ["Benchmark", v.benchmark_pct != null ? nxPct(v.benchmark_pct, 2) : "—",
-       v.benchmark_pct != null ? "a BTC-dominated card, same window" : "none", ""],
-      ["Coverage", v.coverage != null ? Math.round(v.coverage * 100) + " %" : "—",
-       "of the window carries index points",
+      ["Pro srovnání", v.benchmark_pct != null ? nxPct(v.benchmark_pct, 2) : "—",
+       v.benchmark_pct != null ? "BTC karta za stejnou dobu" : "není s čím srovnat", ""],
+      ["Kolik dat", v.coverage != null ? Math.round(v.coverage * 100) + " %" : "—",
+       "okna má vůbec cenu karty",
        v.coverage != null && v.coverage < 0.8 ? " nx-down" : ""]]);
   } else {
     const due = nxDue(c);
     html += nxTiles([
-      ["Window", (c.window_days != null ? c.window_days : "—") + " d",
-       c.adopted ? "adopted: it started when this was written" : "written before it ran", ""],
-      ["Stop", c.stop_pct != null ? nxPct(c.stop_pct, 0) : "—", "from the entry", ""],
-      ["Benchmark", c.benchmark ? String(c.benchmark).slice(0, 8) : "none",
-       c.benchmark ? "BTC-dominated card" : "nothing to beat", ""],
-      ["Verdict", due[0], due[1], due[2]]]);
+      ["Okno", (c.window_days != null ? c.window_days : "—") + " d",
+       c.adopted ? "běží od chvíle, kdy se to napsalo" : "napsáno dřív, než se spustilo", ""],
+      ["Stopka", c.stop_pct != null ? nxPct(c.stop_pct, 0) : "—", "od vstupu", ""],
+      ["Pro srovnání", c.benchmark ? String(c.benchmark).slice(0, 8) : "nic",
+       c.benchmark ? "BTC karta" : "není s čím srovnat", ""],
+      ["Verdikt", due[0], due[1], due[2]]]);
   }
   if (np.claim) {
-    html += '<p class="nx-foot">Nexus claimed: ' + Object.keys(np.claim).map(
+    html += '<p class="nx-foot">Nexus sliboval: ' + Object.keys(np.claim).map(
       k => esc(k) + " " + esc(String(np.claim[k]))).join(" · ") + "</p>";
   }
   return html;
 }
+// What their own backtest said about each card BEFORE the room opened, or
+// that nothing was measured. The second case is the true one for every room
+// on this page and the panel says it in one sentence rather than leaving the
+// space blank -- an absent brake that looks like a blank is how a brake stays
+// absent.
+function nxBacktest(np) {
+  const rows = np.backtests || [];
+  if (!rows.length) {
+    return '<div class="nx-sec">Backtest před spuštěním</div>' +
+      '<p class="nx-foot">Žádný. Tenhle room vznikl dřív, než jsme si dali ' +
+      "pravidlo backtestovat každou kartu předem (12. 9.). Od té doby se " +
+      "každé kartě měří návratnost a Sharpe na jejich vlastním backtestu a " +
+      "room se bez toho neotevře.</p>";
+  }
+  const word = {pass: ["prošlo", " nx-up"], reject: ["neprošlo", " nx-down"],
+                unbacktestable: ["nešlo změřit", ""]};
+  return '<div class="nx-sec">Backtest před spuštěním</div>' +
+    '<div class="nx-table nx-bt"><div class="nx-tr nx-th"><span>Karta</span>' +
+    "<span>Výsledek</span><span>Výnos</span><span>Sharpe</span><span>Propad</span></div>" +
+    rows.map(b => {
+      const said = word[b.verdict] || [b.verdict || "—", ""];
+      return '<div class="nx-tr"><span><b>' +
+        esc(String(b.title || b.card || "?").slice(0, 34)) + "</b></span>" +
+        '<span class="' + said[1].trim() + '">' + esc(said[0]) +
+        (b.period ? ' <small>' + esc(b.period) + " d</small>" : "") + "</span><span>" +
+        esc(b.return_pct != null ? nxPct(b.return_pct, 1) : "—") + "</span><span>" +
+        esc(b.sharpe != null ? Number(b.sharpe).toFixed(2) : "—") + "</span><span>" +
+        esc(b.drawdown_pct != null ? nxPct(b.drawdown_pct, 1) : "—") + "</span></div>";
+    }).join("") + "</div>";
+}
 function nxStrategy(nr, np) {
   const nc = (np.clones || [])[0] || null;
   const pills = nxPill(np.status) +
-    (np.holds ? '<span class="nx-pill">' + esc(NX_HOLDS[np.holds] || np.holds) +
-                " · paper</span>" : "") +
-    (nc && nc.trading != null ? '<span class="nx-pill">' +
-      (nc.trading ? "trading" : "not trading") + "</span>" : "");
-  const sub = esc(nr.id) + " · proposed by Nexus in " + esc(np.origin || "—") +
-    (np.since ? " · since " + esc(nxDay(np.since)) : "");
+    (np.holds ? '<span class="nx-pill nx-holds-' + esc(np.holds) + '">' +
+                esc(NX_HOLDS[np.holds] || np.holds) + " · papír</span>" : "") +
+    (nc && nc.trading != null ? '<span class="nx-pill nx-trading-' +
+      (nc.trading ? "on" : "off") + '">' +
+      (nc.trading ? "obchoduje" : "neobchoduje") + "</span>" : "");
+  const sub = esc(nr.id) + " · navrhl Nexus v " + esc(np.origin || "—") +
+    (np.since ? " · od " + esc(nxDay(np.since)) : "");
   let html = nxHero(np.title || nr.title || nr.id, pills, sub) + nxStatus(np) +
     nxVerdict(np);
   if (nc) {
@@ -4117,10 +4221,11 @@ function nxStrategy(nr, np) {
   } else if ((np.legs || []).length) {
     html += nxCardTiles(np);
   }
+  html += nxBacktest(np);
   if ((np.legs || []).length) {
     html += nxLegs(np) + nxLegCharts(np) + nxOrders(np);
   } else if (!nc) {
-    html += '<p class="nx-foot">Nothing bought yet, and no plan written down for it.</p>';
+    html += '<p class="nx-foot">Nic nekoupeno a žádný plán k tomu napsaný není.</p>';
   }
   return html + nxSampler(np);
 }
@@ -4144,10 +4249,10 @@ function nxScore(nr) {
       (v.return_pct != null ? " " + esc(nxPct(v.return_pct, 2)) : "");
   }
   if (c) {
-    return '<span class="nx-state">' + (c.window_days != null ? c.window_days : "?") +
-      " d window" + (c.adopted ? ", adopted" : "") + "</span>";
+    return '<span class="nx-state">čeká ' + (c.window_days != null ? c.window_days : "?") +
+      " d</span>";
   }
-  return '<span class="nx-state">no criterion</span>';
+  return '<span class="nx-state">nikdo nenapsal, co je úspěch</span>';
 }
 function nxGeneral(np) {
   const rooms = ((NX && NX.rooms) || []).filter(nr => nr.kind === "strategy");
@@ -4162,36 +4267,42 @@ function nxGeneral(np) {
       : nr.proposed_share != null ? esc(nxShare(nr.proposed_share)) + " proposed" : "—") +
     '</span><span class="' + nxTone(nr.pnl).trim() + '">' +
     (nr.pnl != null ? esc(nxSigned(nr.pnl)) + " USDC"
-      : nr.if_bought_pct != null ? "if bought " + esc(nxPct(nr.if_bought_pct, 2)) : "—") +
+      : nr.if_bought_pct != null
+        ? '<span class="nx-dim">nekoupeno</span> ' + esc(nxPct(nr.if_bought_pct, 2))
+        : "—") +
     "</span><span>" + nxScore(nr) + "</span></div>").join("");
-  return nxHero("Overview", "", "Every question put to Nexus, and every strategy it proposed") +
+  return nxHero("Přehled", "", "Každá otázka na Nexuse a každá strategie, co navrhl") +
     nxTiles([
-      ["Free to trade", np.balance != null ? nxMoney(np.balance) : "—",
-       np.balance_at ? "USDC, as of " + nxDay(np.balance_at) : "USDC, paper", ""],
-      ["In cards", np.notional != null ? nxMoney(np.notional) : "—",
-       np.book_trades != null ? np.book_trades + " orders on the account" : "", ""],
-      ["In the bot", bots.length ? nxMoney(inBot) : "—",
-       bots.length ? bots.map(nr => nr.title || nr.id).join(", ") : "no bot", ""],
-      ["Strategies", rooms.length, count("running") + " running · " + count("proposed") +
-       " proposed" + (count("paused") ? " · " + count("paused") + " paused" : ""), ""]]) +
-    '<div class="nx-sec">Strategies</div>' + (rooms.length
-      ? '<div class="nx-table nx-strats"><div class="nx-tr nx-th"><span>Strategy</span>' +
-        "<span>Holds</span><span>State</span><span>In</span><span>P&amp;L</span>" +
-        "<span>Verdict</span></div>" +
+      ["Volné peníze", np.balance != null ? nxMoney(np.balance) : "—",
+       np.balance_at ? "USDC, stav k " + nxDay(np.balance_at) : "USDC, papír", ""],
+      ["V kartách", np.notional != null ? nxMoney(np.notional) : "—",
+       np.book_trades != null ? np.book_trades + " objednávek na účtu" : "", ""],
+      ["V botovi", bots.length ? nxMoney(inBot) : "—",
+       bots.length ? bots.map(nr => nr.title || nr.id).join(", ") : "žádný bot", ""],
+      ["Strategie", rooms.length, count("running") + " běží · " + count("proposed") +
+       " jen návrh" + (count("paused") ? " · " + count("paused") + " pauza" : ""), ""]]) +
+    '<div class="nx-sec">Strategie</div>' + (rooms.length
+      ? '<p class="nx-foot nx-cap">Co Nexus navrhl. <b>Nekoupeno</b> = jen návrh, ' +
+        "číslo za tím je, kolik by to dělalo, kdybychom ho koupili. " +
+        "<b>Nedá se říct</b> = karta přestala hlásit cenu, takže se nedá spočítat, " +
+        "jestli to vyšlo.</p>" +
+        '<div class="nx-table nx-strats"><div class="nx-tr nx-th"><span>Strategie</span>' +
+        "<span>Drží</span><span>Stav</span><span>Vloženo</span><span>Zisk</span>" +
+        "<span>Jak dopadla</span></div>" +
         table + "</div>"
-      : '<p class="nx-foot">A strategy Nexus proposes opens as a card of its own, above.</p>') +
-    '<div class="nx-sec">Nexus, every question so far</div>' +
+      : '<p class="nx-foot">Každá strategie, co Nexus navrhne, dostane vlastní kartu nahoře.</p>') +
+    '<div class="nx-sec">Nexus, všechny otázky</div>' +
     nxTiles([
-      ["Asked", np.asked || 0, "", ""],
-      ["Answered", np.answered || 0,
-       np.asked ? Math.round((np.answered || 0) / np.asked * 100) + " % of them" : "", ""],
-      ["Typical answer", np.median_seconds != null ? nxSecs(np.median_seconds) : "—", "", ""],
-      ["No answer", quiet, (np.partial || 0) + " cut short · " + (np.failed || 0) +
-       " gave up · " + (np.refused || 0) + " refused", quiet ? " nx-down" : ""]]) +
+      ["Zeptali jsme se", np.asked || 0, "", ""],
+      ["Odpověděl", np.answered || 0,
+       np.asked ? Math.round((np.answered || 0) / np.asked * 100) + " % z toho" : "", ""],
+      ["Obvykle to trvá", np.median_seconds != null ? nxSecs(np.median_seconds) : "—", "", ""],
+      ["Bez odpovědi", quiet, (np.partial || 0) + " useklých · " + (np.failed || 0) +
+       " vzdal · " + (np.refused || 0) + " odmítl", quiet ? " nx-down" : ""]]) +
     '<div class="rely-strip">' + (np.strip || []).map(o =>
       '<i class="sq ' + esc(o) + '" title="' + esc(o) + '"></i>').join("") + "</div>" +
-    '<p class="nx-foot rely-legend">' + [["answered", "answered"], ["partial", "cut short"],
-      ["failed", "gave up"], ["refused", "refused"], ["waiting", "waiting"]].map(
+    '<p class="nx-foot rely-legend">' + [["answered", "odpověděl"], ["partial", "useklé"],
+      ["failed", "vzdal to"], ["refused", "odmítl"], ["waiting", "čeká se"]].map(
       ([cls, word]) => '<i class="sq ' + cls + '"></i>' + word).join(" &nbsp; ") + "</p>" +
     '<div class="nx-why">' + nxSampler(np) + "</div>";
 }

@@ -112,15 +112,6 @@ components:
     surface: discovery
     criticality: high
     staleness_hours: 24
-  discovery.build_stats:
-    # /build-stats and the GET behind it: the figures they publish as proof of
-    # how the platform was built. The same kind of contract as /build -- a
-    # claim made to a reader who cannot ask a follow-up -- and read the same
-    # way, off the API the page renders from.
-    title: Build Stats page (/build-stats)
-    surface: discovery
-    criticality: medium
-    staleness_hours: 24
 
   reconciliation:
     title: Cross-source contradiction sweep

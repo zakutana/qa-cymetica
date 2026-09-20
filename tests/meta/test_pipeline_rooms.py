@@ -996,7 +996,7 @@ def test_a_strategy_room_draws_its_book_and_its_bot_and_general_the_portfolio(
 
     strategy = drawn("STR-0001")
     panel = strategy.get("roomPanel", "")
-    assert "Running" in panel and "TRD-0001 koupil 10 000 USDC" in panel
+    assert "Běží" in panel and "TRD-0001 koupil 10 000 USDC" in panel
     # In the orders table, not anywhere: the status text above already holds
     # both strings, so dropping the trades list stayed green (P02, deep pass
     # of 2026-09-11).
@@ -1016,7 +1016,7 @@ def test_a_strategy_room_draws_its_book_and_its_bot_and_general_the_portfolio(
 
     general = drawn("general").get("roomPanel", "")
     assert "89 000.96" in general, "the overview does not show the paper account"
-    assert 'data-room="STR-0001"' in general and "Running" in general, (
+    assert 'data-room="STR-0001"' in general and "Běží" in general, (
         "the overview does not list the strategies and where each stands")
     assert "stale" in general, (
         "a sampler whose last round is hours old is not called stale on the page")
@@ -1338,7 +1338,7 @@ def test_the_strip_names_each_strategy_and_its_panel_leads_with_numbers(
     assert code == 0, f"the page throws when it draws the strategy:\n{err[:900]}"
 
     strip = re.sub(r"<[^>]+>", " ", captured.get("roomList", ""))
-    assert "BTC + BCH blend" in strip and "Running" in strip and "+14" in strip, strip
+    assert "BTC + BCH blend" in strip and "Běží" in strip and "+14" in strip, strip
     assert "STR-0001" not in strip, "the strip still names a strategy by its number"
 
     panel = captured.get("roomPanel", "")
@@ -1353,26 +1353,39 @@ def test_the_strip_names_each_strategy_and_its_panel_leads_with_numbers(
     legs = re.sub(r"<[^>]+>", " ", panel[panel.index("nx-legs"):])
     for figure in ("+14", "10 000"):
         assert figure in tiles, f"{figure!r} is not in the tiles"
-    for figure in ("68 % BCH · 32 % OKB", "index: BTC", "not bought", "92.28", "+13 %"):
+    for figure in ("68 % BCH · 32 % OKB", "sleduje: BTC", "nekoupeno", "92.28", "+13 %"):
         assert figure in legs, f"{figure!r} is not in the legs table"
     table = panel[panel.index("nx-legs"):]
     assert table.index("card e579581b") < table.index("68 % BCH · 32 % OKB"), (
         "a leg is named by the coins in its basket, not by the news on its card")
-    assert "does not exist" in text and gone[:8] not in text, (
+    assert "neexistuje" in text and gone[:8] not in text, (
         "a card their API does not know is shown as an id")
     assert f'href="https://cymetica.com/events/{CARD_A}"' in panel, (
         "a card cannot be opened on cymetica.com from the panel")
     assert f"cymetica.com/events/{gone}" not in panel, "a card that does not exist is linked"
     for ref in ("entry", "tp", "sl", "base"):
         assert f'data-ref="{ref}"' in panel, f"the chart draws no {ref} line"
-    assert "if bought" in text, (
+    assert "kdybychom koupili" in text.lower(), (
         "a leg nobody bought is not labelled as what would have happened")
     assert text.count(why) == 1, "why the strategy stands where it does is said twice"
+    # [operator 2026-09-20, N-0032 and N-0034] The paragraph itself may now be
+    # folded -- "zase uplne megadlouhy 'Why it is stopped', kdo to ma cist" --
+    # but the ANSWER may not be. What replaced it is one derived line, and
+    # this guard moved with it rather than being dropped: the short line is
+    # visible and above the numbers, and the full text is still on the page.
+    #
+    # The older rule (2026-09-11) was that `why` itself must not be folded,
+    # because folded at the bottom it was the one thing they could not find.
+    # That reason is served by the line; it was never served by the paragraph.
+    gist = "Běží, verdikt ještě není."
+    at = panel.index(gist)
+    assert panel.rfind("<details", 0, at) <= panel.rfind("</details>", 0, at), (
+        "the one-line answer is folded away, which is the 2026-09-11 defect")
+    assert at < panel.index("nx-tile"), "the one-line answer sits under the numbers"
     for said in (why, before):
-        at = panel.index(said)
-        assert panel.rfind("<details", 0, at) <= panel.rfind("</details>", 0, at), (
-            f"{said!r} is folded away")
-        assert at < panel.index("nx-tile"), f"{said!r} sits under the numbers"
+        assert said in panel, f"{said!r} is no longer on the page at all"
+    assert "<details" in panel and "víc" in panel, (
+        "the full text has no way to be opened")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
