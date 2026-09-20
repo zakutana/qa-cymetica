@@ -71,18 +71,29 @@ def dropped(improvements: str, spec: str) -> list[str]:
 
 
 def clock_runs_unfunded(record: dict) -> dict | None:
-    """A request whose spec makes the clock wait on money nothing waited on.
+    """A request whose clock runs with the gate neither filled NOR waived.
 
-    Positive readings only, all four from the same payload: the spec says the
-    clock starts when the gate is filled, the gate is not filled, the clock
-    has a start time, and the build is queued as ready. A record missing any
-    of them says nothing and is skipped rather than counted.
+    The spec says "filled (or waived)", and the first version of this read
+    only `funded`. ET-26036 carries, in the same block, `waived: true`,
+    `waived_at` equal to `clock_started_at` to the microsecond, and
+    `waiver_reason: "Build it Better: requester holds 100+ ET10"` -- so the
+    sentence was true, the product did exactly what it documents, and the
+    contradiction was mine. #108 went to the vendor on the strength of it and
+    was withdrawn the same hour.
+
+    What made it possible: a probe that printed the funding block truncated to
+    200 characters, which cut it three keys before `waived`. The reading was
+    then built on the truncation. `waived` is therefore read FIRST here, and
+    every key this judgement rests on is named in the returned dict so the
+    report quotes what was actually read.
     """
     spec = str(record.get("spec_text") or "")
     if GATE_SENTENCE not in spec:
         return None
     funding = record.get("funding")
-    if not isinstance(funding, dict) or funding.get("funded") is not False:
+    if not isinstance(funding, dict):
+        return None
+    if funding.get("waived") is not False or funding.get("funded") is not False:
         return None
     started = record.get("clock_started_at")
     if not started:
@@ -90,6 +101,7 @@ def clock_runs_unfunded(record: dict) -> dict | None:
     return {"ticket": record.get("ticket"), "clock_started_at": started,
             "raised_usd": funding.get("raised_usd"),
             "goal_usd": funding.get("goal_usd"),
+            "waived": funding.get("waived"),
             "stage": record.get("stage"),
             "ready_to_build": record.get("ready_to_build")}
 
@@ -97,28 +109,27 @@ def clock_runs_unfunded(record: dict) -> dict | None:
 @qa(component="rest.build_it_better", tier=SafetyTier.SAFE, surface="rest")
 def test_the_spec_s_funding_gate_is_the_one_the_build_actually_waits_on(
         rest_anon):
-    """The scope a requester signs says what starts the 24-hour clock.
+    """The clock may start when the gate is filled, or waived, and not before.
 
     Every BB-SPEC ends: *"The 24-hour clock starts when this spec is accepted
-    AND the $100 MicroFund gate is filled (or waived)."* Their own MCP tool
-    descriptions say the opposite in two places -- `bb_file_request`: "there
-    is no fee and nothing to fund", `bb_accept_spec`: "This starts the
-    24-hour clock; there is nothing to fund" -- and the board agrees with the
-    tools, not with the spec.
+    AND the $100 MicroFund gate is filled (or waived)."* There are two
+    hundreds in this product and they are easy to conflate: **100 ET10 HELD**
+    in the requester's account, which is what `bb_file_request` means by
+    "nothing is charged or locked; there is no fee and nothing to fund", and a
+    **$100 MicroFund raised**, which is the gate the spec names.
 
-    Read off ET-26036 on 2026-09-20: `funding.raised_usd` 0.0 against a
-    `goal_usd` of 100.0 with `funded: false`, and the clock started anyway at
-    2026-09-19T20:25:59Z, `stage: funded`, `ready_to_build: true`. So the
-    sentence is not a description of a gate that was waived; it is a gate
-    nothing was waiting on.
+    On ET-26036 they meet: the holding waives the raise. `funding.waived` is
+    true, `waived_at` equals `clock_started_at` to the microsecond, and
+    `waiver_reason` reads "Build it Better: requester holds 100+ ET10". The
+    product did exactly what it documents.
 
-    This is the requester's cost, not a typo: we read that line as "the build
-    has not started and is waiting on $100 we will not pay", and it had been
-    building all along. A requester who believes it either pays a hundred
-    dollars they do not owe or walks away from a build already queued.
-
-    It asserts only what the payload says, in four positive readings, and a
-    record missing any of them is skipped rather than counted.
+    This check was written the other way round and filed #108 against it, on a
+    reading that had `funded: false` and `raised_usd: 0.0` and had never seen
+    `waived` -- a probe printed the funding block truncated to 200 characters,
+    three keys short of it. Withdrawn the same hour. What survives is the
+    reading itself, now correct and worth keeping: a clock that starts while
+    the gate is neither filled nor waived would be a real defect, and nothing
+    else watches for it.
     """
     board = rest_anon.get(BOARD)
     if board.status_code != 200:
@@ -162,18 +173,16 @@ def test_the_spec_s_funding_gate_is_the_one_the_build_actually_waits_on(
         reason=(
             f"{len(wrong)} of {len(read)} request(s) have the 24-hour clock "
             f"running while the gate their own spec says it waits for is "
-            f"unfilled: "
+            f"neither filled nor waived: "
             + "; ".join(
                 f"{w['ticket']} clock from {str(w['clock_started_at'])[:19]}, "
                 f"{w['raised_usd']} of {w['goal_usd']} USD raised, "
-                f"stage {w['stage']}, ready_to_build {w['ready_to_build']}"
+                f"waived {w['waived']}, stage {w['stage']}, "
+                f"ready_to_build {w['ready_to_build']}"
                 for w in wrong[:3])
-            + ". Their MCP tool descriptions say the opposite of the spec "
-              "(bb_accept_spec: \"there is nothing to fund\"), so the spec is "
-              "the document that is wrong"
             if wrong else
-            f"on {len(read)} request(s) the clock and the funding gate agree "
-            f"with what the spec says starts the build"),
+            f"on {len(read)} request(s) the clock starts only once the gate "
+            f"is filled or waived, as the spec says it does"),
         left={"clock_running_unfunded": len(wrong)}, right={"expected": 0},
         sources={"board": BOARD}))
 
