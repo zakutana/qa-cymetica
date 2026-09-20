@@ -2572,6 +2572,43 @@ reports:
       between the two passes, and a cold coin being computed is exactly what
       your description says may happen.
 
+  - key: launchpad-screener-limit
+    findings: [CYM-launchpad-screener-honours-its-limit]
+    severity: low
+    category: api
+    url: https://cymetica.com/api/v1/launchpad/onchain/screener
+    title: "The launchpad screener returns twice its own limit: limit=5 answers 10 rows, limit=500 answers 1000"
+    expected: >
+      Your published schema declares limit on GET
+      /api/v1/launchpad/onchain/screener as an integer with default 200 and
+      maximum 500, so a caller asking for N rows receives at most N.
+    actual: >
+      With include_external left at its documented default of true, the limit
+      is applied to each source separately and the two lists are
+      concatenated: limit=5 returns 10 rows, limit=50 returns 100, the default
+      returns 400, and limit=500 -- your documented maximum -- returns 1000
+      rows, about 2 MB. With include_external=false, limit=5 returns exactly
+      5, so the external half is added on top of the limit rather than
+      counted in it.
+    steps:
+      - 'GET https://cymetica.com/api/v1/launchpad/onchain/screener?limit=5 -> 10 rows'
+      - 'GET ...?limit=50 -> 100 rows; ...?limit=500 -> 1000 rows'
+      - 'GET ...?limit=5&include_external=false -> 5 rows'
+      - 'In the doubled response, half the rows carry source "eventtrader" and the full field set, half carry source "pons" or "pools_trade" and fifteen fields'
+    body: >
+      Low, and easy to miss from inside: the page presumably wants both
+      halves. It costs a caller that sizes a buffer or a page by the limit,
+      and at the documented maximum it doubles a two-megabyte response.
+      Either counting external rows toward the limit or documenting that the
+      limit is per source satisfies our check -- it compares the row count
+      with the limit it asked for and nothing else.
+      One observation we are NOT filing, because your schema declares the
+      items only as "type: object": the two halves are different shapes. The
+      EventTrader rows carry current_price, market_cap, total_supply and
+      holder_count; the external ones carry fifteen fields, several null, and
+      no chain_name. A caller iterating the list has to branch on which half
+      it is in.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in
