@@ -104,6 +104,33 @@ def test_the_week_is_named_when_it_is_due_even_with_nothing_to_review():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_archive_is_named_once_there_is_a_bundle_s_worth_to_carry():
+    """`keep.py archive` had no trigger at all.
+
+    The deep pass calls `keep.py track` and `keep.py snapshot`; nothing has
+    ever called `archive`. So the bundle stayed the snapshot of the day it was
+    first built -- 2026-09-12 -- while the manifest went on adding rows with
+    `archive: ""`, and 1 145 bodies sat on disk that nothing would ever let go
+    of. That is the half of the data plan that governs the disk, quietly not
+    running.
+
+    Both directions. Rebuilding the month's xz costs minutes, so a line at
+    every session start over a handful of new captures is the nag that gets
+    the whole reminder ignored -- and this one would fire every single day,
+    because a sweep writes captures every time.
+    """
+    mod = _module()
+
+    due = mod.reminders(_facts(evidence_unarchived=1145), NOW)
+    assert _says(due, "keep.py archive"), due
+    assert _says(due, "2026-09"), "the line has to name the month it would bundle"
+
+    quiet = mod.reminders(_facts(evidence_unarchived=40), NOW)
+    assert not _says(quiet, "archiv"), quiet
+    assert not _says(mod.reminders(_facts(), NOW), "archiv")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_night_still_inside_its_own_hours_is_not_a_forgotten_session():
     """The open-session rule was written before the night existed, and a night
     is an open session on purpose -- for up to fourteen hours, by their own

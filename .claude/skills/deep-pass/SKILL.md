@@ -139,6 +139,7 @@ git status --short
 git log --oneline @{upstream}..HEAD
 python -m pytest tests/meta -q
 python scripts/keep.py track
+python scripts/keep.py archive --month $(date -u +%Y-%m) --release
 python scripts/prune_runs.py --apply
 python scripts/memories.py --for deep-pass
 ```
@@ -163,6 +164,14 @@ python scripts/memories.py --for deep-pass
   does this at each commit, so normally it adds nothing -- but the hook lives
   in `.git/config`, which a fresh clone does not have, and this is the step
   that repairs that machine before the pruner runs.
+* **Bundle the month, and only then let go.** `keep.py archive` had no caller
+  at all until 2026-09-20: `track` and `snapshot` ran here every pass and the
+  bundle stayed the snapshot of the day it was first built, while the manifest
+  added rows with `archive: ""` -- 1 145 bodies nothing would ever release.
+  It reads the bundle back off disk and hashes every member before `--release`
+  touches a single original, so a truncated write cannot take the evidence
+  with it. Before the pruner, because a capture inside a bundle is one the
+  pruner may let go of.
 * **Prune the run records and the captures.** `prune_runs.py --apply` removes
   captures older than three days that nothing stands on and that are not the
   newest answer of their call -- 4 814 files and 172 MB the first time it ran.

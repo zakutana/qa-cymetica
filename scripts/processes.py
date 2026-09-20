@@ -50,6 +50,9 @@ if str(CODE_ROOT) not in sys.path:
 # without one -- not "they are late", which they never are.
 MISSED_NIGHT_HOURS = 36
 WEEK_DAYS = 7
+# Rebuilding the month's xz costs minutes, so the line waits until there is a
+# bundle's worth to carry. 1 145 stood unarchived the day this was set.
+UNARCHIVED_CAPTURES = 400
 NOTEBOOK = "audits/deep-pass-progress.json"
 
 # Any letter, not just F. The second plan of 2026-09-12 numbered its phases
@@ -132,6 +135,18 @@ def reminders(facts: dict, now: datetime) -> list[str]:
             f"Nexus neodpověděl {facts['nexus_down']}× za sebou a od posledního "
             f"pokusu je {retry:.0f} h — je čas zkusit ho znovu: „jdi do "
             f"laboratoře\".")
+
+    # `keep.py archive` has no trigger of its own: the deep pass calls `track`
+    # and `snapshot`, never this. So the bundle stayed a snapshot of the day it
+    # was first built while the manifest went on adding rows with `archive: ""`
+    # -- bodies on disk that nothing will ever let go of. This is the trigger,
+    # and it stays quiet until there is enough to be worth an xz rebuild.
+    pending = facts.get("evidence_unarchived") or 0
+    if pending >= UNARCHIVED_CAPTURES:
+        month = now.strftime("%Y-%m")
+        out.append(
+            f"{pending} captures není v žádném archivu — zabalí je `python "
+            f"scripts/keep.py archive --month {month} --release`.")
 
     carried = " ".join(facts.get("open_next") or [])
     for phase in facts.get("plan_phases") or []:
@@ -896,6 +911,21 @@ def _surface_facts() -> dict:
         return {"surface_drift": []}
 
 
+def _unarchived() -> int:
+    """How many captures the manifest knows and no bundle holds.
+
+    Read rather than counted from disk: `archive.pending` is the same reader
+    `keep.py archive` uses to decide what to bundle, so the reminder cannot
+    name a number the command would disagree with.
+    """
+    try:
+        from qa import archive, manifest
+
+        return len(archive.pending(manifest.read()))
+    except Exception:  # noqa: BLE001 -- a reminder never fails a session
+        return 0
+
+
 def facts() -> dict:
     """The impure half: git, the notebook, NEXT.md, the phase tables, the lab."""
     notebook = _notebook()
@@ -906,6 +936,7 @@ def facts() -> dict:
         "week_last": (notebook.get("retrospective") or {}).get("last"),
         "open_next": _open_next(),
         "plan_phases": plan_phases(),
+        "evidence_unarchived": _unarchived(),
         **_lab_facts(),
         **_surface_facts(),
     }

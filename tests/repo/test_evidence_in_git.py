@@ -230,6 +230,32 @@ def test_every_capture_we_keep_is_proved_by_the_manifest():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_archive_has_a_caller():
+    """D2 of the data plan built the bundle and nothing ever called it again.
+
+    `keep.py track` and `keep.py snapshot` run in the deep pass every time;
+    `archive` ran once, by hand, on 2026-09-12. So the bundle stayed that
+    day's snapshot while the manifest went on adding rows with `archive: ""`,
+    and by 2026-09-20 there were 1 145 bodies on disk that nothing would ever
+    let go of -- the half of the data plan that governs the disk, quietly not
+    running. A mechanism nobody calls is not a mechanism, the same sentence as
+    the sibling below.
+
+    Two callers, because they answer different questions: the deep pass does
+    the work, and `processes.py reminders` tells the operator when it is worth
+    doing by hand.
+    """
+    skill = (REPO / ".claude" / "skills" / "deep-pass" / "SKILL.md").read_text(
+        encoding="utf-8")
+    assert "keep.py archive" in skill, (
+        "the deep pass tracks and snapshots and never bundles")
+
+    processes = (REPO / "scripts" / "processes.py").read_text(encoding="utf-8")
+    assert "keep.py archive" in processes, (
+        "nothing tells the operator the bundle is owed")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_tracker_lets_go_of_what_stopped_being_cited():
     """`track` only ever added, so the keep set could only grow.
 
