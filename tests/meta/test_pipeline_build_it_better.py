@@ -169,6 +169,50 @@ def test_a_waived_gate_is_the_spec_working_as_written():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_request_whose_gate_was_never_read_is_not_evidence_either_way():
+    """Absence was read as compliance, and the sentence said otherwise.
+
+    `clock_runs_unfunded` returns None when `waived` is absent or the funding
+    block is missing entirely -- correct, rule 8 -- but the ticket was still
+    counted into `read`, so the PASS sentence "on N request(s) the clock
+    starts only once the gate is filled or waived" covered requests whose
+    funding state had never been read. A key emitted only when a waiver
+    exists is the natural shape, so this is not a hypothetical.
+
+    And the docstring's own headline, "and NOT BEFORE", was never measured:
+    the evidence it quotes is a TIMESTAMP -- waived_at equal to
+    clock_started_at to the microsecond -- while only the booleans were read.
+    A clock that started thirty minutes before the waiver passed.
+    """
+    bb = _check()
+    base = {"ticket": "ET-1", "spec_text": "... " + bb.GATE_SENTENCE,
+            "clock_started_at": "2026-09-19T20:25:59.571403+00:00",
+            "stage": "funded", "ready_to_build": True}
+
+    for missing in ({"goal_usd": 100.0, "raised_usd": 0.0, "funded": False},
+                    None, {}, "not a block"):
+        assert bb.gate_state({**base, "funding": missing}) == "unread", (
+            f"a funding block that never says whether the gate was waived is "
+            f"a reading we did not take: {missing}")
+
+    waived = {"goal_usd": 100.0, "raised_usd": 0.0, "funded": False,
+              "waived": True, "waived_at": "2026-09-19T20:25:59.571403+00:00"}
+    assert bb.gate_state({**base, "funding": waived}) == "honoured"
+
+    early = {**waived, "waived_at": "2026-09-19T20:55:59.571403+00:00"}
+    assert bb.gate_state({**base, "funding": early}) == "clock_ran_early", (
+        "the clock started thirty minutes before the gate opened, which is "
+        "the 'and not before' half of the sentence they ask us to lock")
+
+    neither = {**waived, "waived": False, "waived_at": None}
+    assert bb.gate_state({**base, "funding": neither}) == "clock_ran_unopened"
+
+    assert bb.gate_state({**base, "funding": waived,
+                          "clock_started_at": None}) == "not_started"
+    assert bb.gate_state({**base, "spec_text": "no promise"}) == "no_claim"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_token_scan_would_find_a_token_and_not_a_coin_address():
     """A guard over a boundary that currently holds has to be shown working.
 
@@ -193,6 +237,21 @@ def test_the_token_scan_would_find_a_token_and_not_a_coin_address():
         bb.token_fields(leaked))
     assert bb.token_fields({"secret": "x"}) == ["secret"]
     assert bb.token_fields({"a": {"b": {"token": "x"}}}) == ["a.b.token"]
+
+    # A leak under another name. The docstring promised "the word standing
+    # alone or ENDING the key" and the code implemented the suffix for
+    # `_secret` alone, so all four of these passed the scan that exists to
+    # catch them -- and the verbatim fallback it names as the backstop does
+    # not run at all on a machine with no key file.
+    for key in ("owner_token", "access_token", "api_key", "build_password",
+                "auth_bearer"):
+        assert bb.token_fields({key: "bb_live_x"}) == [key], (
+            f"{key} is a credential by its own name and passed the scan")
+
+    # And the one that is not, which must stay out or the check cries wolf on
+    # every single request: a coin's contract address.
+    assert bb.token_fields({"coin": {"token_address": None}}) == []
+    assert bb.token_fields({"public_key": "0xabc"}) == []
 
     # And the needle: the key file is a saved RESPONSE, so a scan that used
     # the whole file could never match. It reads the field or reports none.

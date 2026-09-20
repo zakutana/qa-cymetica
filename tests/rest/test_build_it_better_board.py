@@ -95,6 +95,62 @@ def dropped(improvements: str, spec: str) -> list[str]:
     return [line for line in lines_of(improvements) if line not in (spec or "")]
 
 
+def gate_state(record: dict) -> str:
+    """Which of five things this request's clock and gate actually say.
+
+    Five, because the first version had two and the three it was missing all
+    read as "the gate was honoured":
+
+      no_claim            its spec does not make the promise at all
+      unread              the funding block never says whether it was waived,
+                          so we have taken no reading -- rule 8, and NOT
+                          compliance. A key emitted only when a waiver exists
+                          is the natural shape, and counting those tickets
+                          into the pass made its sentence cover requests whose
+                          gate nobody had looked at.
+      not_started         the clock has not started; the spec is working
+      clock_ran_early     the clock started BEFORE the gate was filled or
+                          waived. This is the docstring's own headline, "and
+                          not before", and it was never measured: the
+                          evidence quoted for it is a timestamp -- waived_at
+                          equal to clock_started_at to the microsecond -- and
+                          only the booleans were read.
+      clock_ran_unopened  the clock is running with the gate neither filled
+                          nor waived
+
+    Found by two readers on 2026-09-20, the day the check was written.
+    """
+    from datetime import datetime, timezone
+
+    if GATE_SENTENCE not in str(record.get("spec_text") or ""):
+        return "no_claim"
+    funding = record.get("funding")
+    if not isinstance(funding, dict) or "waived" not in funding \
+            or "funded" not in funding:
+        return "unread"
+    started = record.get("clock_started_at")
+    if not started:
+        return "not_started"
+    opened = funding.get("funded") is True or funding.get("waived") is True
+    if not opened:
+        return "clock_ran_unopened"
+
+    def _moment(value):
+        try:
+            when = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        except (TypeError, ValueError):
+            return None
+        return when if when.tzinfo else when.replace(tzinfo=timezone.utc)
+
+    began = _moment(started)
+    # Whichever of the two opened it. `funded_at` is theirs too, and a gate
+    # filled rather than waived carries that one instead.
+    opened_at = _moment(funding.get("waived_at") or funding.get("funded_at"))
+    if began and opened_at and began < opened_at:
+        return "clock_ran_early"
+    return "honoured"
+
+
 def clock_runs_unfunded(record: dict) -> dict | None:
     """A request whose clock runs with the gate neither filled NOR waived.
 
@@ -169,7 +225,7 @@ def test_the_spec_s_funding_gate_is_the_one_the_build_actually_waits_on(
         raise Inconclusive("the board holds no request, so no spec makes the "
                            "claim this reads")
 
-    read, wrong = [], []
+    read, wrong, unread = [], [], []
     for item in items:
         ticket = str(item.get("ticket") or "")
         if not ticket:
@@ -181,34 +237,49 @@ def test_the_spec_s_funding_gate_is_the_one_the_build_actually_waits_on(
             record = one.json() or {}
         except ValueError:
             continue
-        if GATE_SENTENCE not in str(record.get("spec_text") or ""):
+        state = gate_state(record)
+        if state == "no_claim":
+            continue
+        if state == "unread":
+            # Named, never counted. A request whose funding block does not say
+            # whether the gate was waived is one we have taken no reading of,
+            # and the first version folded those into the passing population
+            # so its sentence covered them.
+            unread.append(ticket)
             continue
         read.append(ticket)
-        contradiction = clock_runs_unfunded(record)
-        if contradiction:
-            wrong.append(contradiction)
+        if state in ("clock_ran_unopened", "clock_ran_early"):
+            wrong.append({**(clock_runs_unfunded(record) or
+                             {"ticket": ticket}), "state": state})
 
     if not read:
         raise Inconclusive(
-            "no request on the board carries a spec that makes the funding "
-            "claim, so there is nothing to hold their behaviour against")
+            "no request on the board carries both a spec that makes the "
+            "funding claim and a funding block that says whether the gate was "
+            "waived, so there is nothing to hold their behaviour against"
+            + (f" ({len(unread)} carry the claim and no reading)"
+               if unread else ""))
 
     conclude(Measurement(
         verdict="failed" if wrong else "passed",
         reason=(
-            f"{len(wrong)} of {len(read)} request(s) have the 24-hour clock "
-            f"running while the gate their own spec says it waits for is "
-            f"neither filled nor waived: "
+            f"{len(wrong)} of {len(read)} request(s) started the 24-hour "
+            f"clock before the gate their own spec says it waits for: "
             + "; ".join(
-                f"{w['ticket']} clock from {str(w['clock_started_at'])[:19]}, "
-                f"{w['raised_usd']} of {w['goal_usd']} USD raised, "
-                f"waived {w['waived']}, stage {w['stage']}, "
-                f"ready_to_build {w['ready_to_build']}"
+                f"{w['ticket']} ({w['state']}) clock from "
+                f"{str(w.get('clock_started_at'))[:19]}, "
+                f"{w.get('raised_usd')} of {w.get('goal_usd')} USD raised, "
+                f"waived {w.get('waived')}, stage {w.get('stage')}"
                 for w in wrong[:3])
             if wrong else
             f"on {len(read)} request(s) the clock starts only once the gate "
-            f"is filled or waived, as the spec says it does"),
-        left={"clock_running_unfunded": len(wrong)}, right={"expected": 0},
+            f"is filled or waived, and never before it"
+            + (f"; {len(unread)} more carry the claim and no reading of the "
+               f"gate, and are counted neither way ({', '.join(unread[:3])})"
+               if unread else "")),
+        left={"clock_before_gate": len(wrong), "read": len(read),
+              "unread": len(unread)},
+        right={"clock_before_gate": 0},
         sources={"board": BOARD}))
 
 
@@ -373,17 +444,27 @@ def test_the_board_s_headline_numbers_are_the_list_underneath_them(rest_anon):
         sources={"board": BOARD}))
 
 
-def token_fields(node, path="") -> list[str]:
-    """Every key anywhere in a payload whose NAME promises a credential.
+# Keys whose name promises a credential, as a suffix rule with one carve-out.
+# `token_address` is a coin's contract address and is public; every other key
+# ending in `token`, `secret` or `key` is not. The first version implemented
+# the suffix for `_secret` alone and matched `token` only standing alone, so
+# `owner_token`, `access_token` and `api_key` all passed the scan whose own
+# docstring promised "the word standing alone or ENDING the key" -- and the
+# verbatim fallback it names as the backstop does not run at all on a machine
+# with no key file. Found by two readers on 2026-09-20.
+CREDENTIAL_TAIL = ("token", "secret", "key", "password", "bearer")
+NOT_A_CREDENTIAL = ("token_address", "token_addresses", "public_key")
 
-    `token_address` is a coin's contract address and is not one, so the match
-    is on the word standing alone or ending the key.
-    """
+
+def token_fields(node, path="") -> list[str]:
+    """Every key anywhere in a payload whose NAME promises a credential."""
     out = []
     if isinstance(node, dict):
         for key, value in node.items():
             low = str(key).lower()
-            if low in ("token", "request_token", "secret") or low.endswith("_secret"):
+            if low not in NOT_A_CREDENTIAL and any(
+                    low == tail or low.endswith("_" + tail)
+                    for tail in CREDENTIAL_TAIL):
                 out.append(f"{path}.{key}".lstrip("."))
             out += token_fields(value, f"{path}.{key}")
     elif isinstance(node, list):
@@ -424,15 +505,25 @@ def test_a_public_read_of_a_build_does_not_carry_the_token_that_controls_it(
             f"{BOARD} answered HTTP {board.status_code}; a failed read is not "
             f"a read that carried no token")
     try:
-        items = (board.json() or {}).get("items") or []
+        payload = board.json() or {}
     except ValueError:
         raise Inconclusive(f"{BOARD} answered 200 with a body that is not JSON")
+    items = payload.get("items") or []
     if not items:
         raise Inconclusive("the board holds no request, so no public read of "
                            "one can be made")
 
     ours = _our_token()
     read, named, verbatim = [], [], []
+
+    # THE LIST RESPONSE TOO. The first version scanned only the per-ticket
+    # reads, so a board that returned each item with its request_token while
+    # the detail door stayed clean would have passed the check whose whole
+    # subject is that field never appearing in a keyless read.
+    named += [f"board:{f}" for f in token_fields(payload)]
+    if ours and ours in (board.text or ""):
+        verbatim.append("board")
+
     for item in items:
         ticket = str(item.get("ticket") or "")
         if not ticket:

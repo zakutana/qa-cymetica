@@ -408,8 +408,8 @@
         "t1": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "ee4782be"
     },
     {
       "id": "T02",
@@ -464,8 +464,8 @@
         "t1": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "ee4782be"
     },
     {
       "id": "T06",

@@ -86,8 +86,14 @@ def test_a_socket_a_page_advertises_is_named_where_a_machine_reads(rest_anon):
     conclude(Measurement(
         verdict="failed" if hidden else "passed",
         reason=(
-            f"{len(hidden)} live channel(s) are advertised to a reader and "
-            f"named in none of {', '.join(DOCUMENTS)}: "
+            # "advertised", not "live". This check opens no socket -- its own
+            # docstring says so in those words -- and the failure sentence
+            # goes on their tracker, where "live" is a claim about their
+            # server that no branch here measured. A stale wss URL left in a
+            # page that the documents correctly omit would have been filed as
+            # a channel they serve and do not.
+            f"{len(hidden)} channel(s) are advertised to a reader on their "
+            f"own pages and named in none of {', '.join(DOCUMENTS)}: "
             + "; ".join(f"{url} (on {advertised[url]})" for url in hidden)
             if hidden else
             f"all {len(advertised)} advertised channel(s) are named in a "
