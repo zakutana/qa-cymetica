@@ -25,6 +25,7 @@ from __future__ import annotations
 import ast
 import importlib.util
 import json
+import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -5022,17 +5023,55 @@ def render(payload: dict | None = None) -> str:
             + f"\n<!-- qa-payload-sha256: {digest} -->\n")
 
 
+PAGE_DIGEST = re.compile(r"qa-payload-sha256: ([0-9a-f]{64})")
+
+
+def page_digest(path: Path) -> str | None:
+    """The digest the page on disk was rendered from, or None.
+
+    `render()` writes it as the file's last line, so the file can answer for
+    itself: "is what is already there this render?" -- without an opinion
+    carried over from a previous process. It lived in `scripts/serve.py`,
+    where the console needed it so that starting up did not rewrite a
+    byte-identical page with a fresh `generated_at` and leave the tree dirty;
+    it moved here on 2026-09-20 when the pre-commit hook needed the same
+    question answered, because two implementations of "is the page current"
+    is how the two answers start to differ.
+    """
+    try:
+        tail = path.read_text(encoding="utf-8")[-200:]
+    except OSError:
+        return None
+    found = PAGE_DIGEST.search(tail)
+    return found.group(1) if found else None
+
+
 if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--if-stale", action="store_true",
+        help="write only when the page on disk is not this render, and say "
+             "nothing when it already is. What the pre-commit hook runs.")
+    args = parser.parse_args()
+
     target = out_path()
     target.parent.mkdir(parents=True, exist_ok=True)
     payload = build_payload()
+    digest = payload_hash(payload)
+    # `generated_at` moves on every render and is excluded from the hash, so
+    # without this a hook would rewrite 684 KB on every commit and dirty the
+    # tree -- which prereg.py then refuses.
+    if args.if_stale and page_digest(target) == digest:
+        raise SystemExit(0)
     target.write_text(render(payload), encoding="utf-8")
     try:
         shown = target.relative_to(REPO_ROOT)
     except ValueError:
         shown = target
     print(f"-> {shown}  ({target.stat().st_size // 1024} KB)")
-    print(f"   payload sha256 {payload_hash(payload)[:16]}  "
+    print(f"   payload sha256 {digest[:16]}  "
           f"{sum(payload['display_counts'].values())} rows  "
           f"run {payload['run_id'] or '(none admissible)'} "
           f"at level {payload['run_level']}")

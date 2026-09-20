@@ -17,6 +17,14 @@
 # thing afterwards, where somebody is looking. Installed with
 # `git config core.hooksPath .githooks`, which a fresh clone does not have --
 # the deep pass repairs that case in step 0.
+#
+# Since 2026-09-20 it also renders the dashboard the commit is about to carry.
+# Rule 12 says the committed page must be a render of the committed state, and
+# tests/repo/test_repo_consistency.py checks it -- but nothing PRODUCED that
+# state, so the rule reduced to "the operator remembers" and broke three times
+# in one session: twice on correspondence commits, once because adding a test
+# moves the suite counts the page shows. `--if-stale` writes only when the
+# page would change, so an ordinary commit stages nothing extra.
 
 if command -v python >/dev/null 2>&1; then
     PY="python"
@@ -27,4 +35,10 @@ else
 fi
 
 $PY scripts/keep.py track || true
+
+# Staged only when the render succeeded: a stale page staged after a failed
+# render is exactly what turns rule 12's guard red.
+if $PY scripts/render.py --if-stale; then
+    git add dashboard/index.html || true
+fi
 exit 0

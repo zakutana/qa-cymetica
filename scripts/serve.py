@@ -83,22 +83,14 @@ def _escape(text) -> str:
     return escape(str(text), quote=True)
 
 
-PAGE_DIGEST = re.compile(r"qa-payload-sha256: ([0-9a-f]{64})")
-
-
 def _page_digest(path: Path) -> str | None:
     """The digest the page on disk was rendered from, or None.
 
-    render.py writes it as the file's last line. Reading it back is how this
-    process asks "is what is already there this render?" without holding an
-    opinion carried over from a previous one.
+    One implementation, in render.py, since 2026-09-20: the pre-commit hook
+    asks the same question through `render.py --if-stale`, and two readings of
+    "is the page current" is how the two start to differ.
     """
-    try:
-        tail = path.read_text(encoding="utf-8")[-200:]
-    except OSError:
-        return None
-    found = PAGE_DIGEST.search(tail)
-    return found.group(1) if found else None
+    return _render_module().page_digest(path)
 
 
 def _render_module():
