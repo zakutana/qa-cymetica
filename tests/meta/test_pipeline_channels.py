@@ -178,6 +178,63 @@ def test_the_state_names_all_three_channels(tmp_path, monkeypatch):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_two_a2a_readers_cannot_disagree(tmp_path, monkeypatch):
+    """One module, one answer to "unanswered". It held two.
+
+    `state()` asked `scripts/a2a.py::open_threads`, which keys on our own
+    `a2a_intent` -- and that script has sent two questions in its life. So
+    over the real journal `state()["a2a"]["unanswered"]` was EMPTY while
+    `compare()["a2a"]` reported five open threads from the same events, and
+    the empty one was the shape the session-start hook and every status
+    report read. A module whose whole purpose is that the CLI, the alert and
+    the skills cannot grow three ideas of "unanswered" had grown two of its
+    own. Architecture audit, 2026-09-20.
+
+    The third thread below is the shape that made the difference: a question
+    that exists only in THEIR reply_to, because the send was made by hand and
+    never journalled. Eight of those sit in the journal today.
+    """
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    from qa.state import append_event, read_events
+
+    # 1. Journalled, and answered.
+    append_event({"type": "a2a_intent", "at": AT, "by": "operator",
+                  "source": "scripts/a2a.py", "msg_id": "A2A-0001",
+                  "text": "answered question", "origin": "a2a"})
+    append_event({"type": "a2a_outcome", "at": AT, "by": "agent",
+                  "source": "scripts/a2a.py", "msg_id": "A2A-0001",
+                  "outcome": "accepted", "via": "theirs-1"})
+    append_event(_vendor_a2a("reply-1", at=LATER, text="here you go",
+                             kind="human", answers="theirs-1"))
+    # 2. Journalled, nothing back.
+    append_event({"type": "a2a_intent", "at": AT, "by": "operator",
+                  "source": "scripts/a2a.py", "msg_id": "A2A-0002",
+                  "text": "open question", "origin": "a2a"})
+    append_event({"type": "a2a_outcome", "at": AT, "by": "agent",
+                  "source": "scripts/a2a.py", "msg_id": "A2A-0002",
+                  "outcome": "accepted", "via": "theirs-2"})
+    # 3. Not journalled: only their receipt says the question was ever asked.
+    append_event(_vendor_a2a("receipt-3", at=AT, text="queued for review",
+                             auto=True, kind="first_pass", answers="theirs-3"))
+
+    channels = _channels()
+    events = read_events()
+    # Different units on purpose: `state` names the ids, `compare` counts
+    # them. The invariant is that they count the same threads.
+    from_state = set(channels.state(events)["a2a"]["unanswered"])
+    from_compare = channels.compare(events)["a2a"]["unanswered"]
+
+    assert len(from_state) == from_compare, (
+        f"the two readers disagree: state names {sorted(from_state)} "
+        f"while compare counts {from_compare}")
+    assert "theirs-3" in from_state, (
+        "a question that exists only in their reply_to is still unanswered; "
+        "reading our own a2a_intent events is what made it invisible")
+    assert "A2A-0002" in from_state
+    assert "A2A-0001" not in from_state, "an answered thread is not open"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_receipt_is_not_the_answer_when_timing_a_channel(tmp_path, monkeypatch):
     """The whole side quest turns on this one line.
 

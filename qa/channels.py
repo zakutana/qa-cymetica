@@ -278,6 +278,21 @@ def _telegram(events: list[dict]) -> dict:
 
 
 def _a2a(events: list[dict]) -> dict:
+    """What is open on a2a, counted the way `pairs()` counts it.
+
+    `unanswered` used to come from `scripts/a2a.py::open_threads`, which keys
+    on our own `a2a_intent` -- and that script has sent two questions in its
+    life. So this returned an empty list while `compare()`, reading the same
+    journal through `pairs()`, reported five open threads: one module, two
+    answers to "unanswered", and the blind one was the shape the session-start
+    hook and every status report read. The eight threads it could not see
+    exist only in THEIR `reply_to`, because the send was made by hand.
+    Architecture audit, 2026-09-20.
+
+    `undelivered` still comes from the journalled sends, because that is the
+    only place delivery is recorded at all -- a thread reconstructed from
+    their receipt says nothing about whether ours landed.
+    """
     import importlib.util
     from pathlib import Path
 
@@ -286,9 +301,11 @@ def _a2a(events: list[dict]) -> dict:
     a2a = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(a2a)
     threads = a2a.threads(events)
+    rows = [row for row in pairs(events) if row["channel"] == A2A]
     return {
-        "unanswered": [t["msg_id"] for t in a2a.open_threads(events)],
-        "threads": len(threads),
+        "unanswered": [row["question_id"] for row in rows
+                       if not row.get("answer_id")],
+        "threads": len(rows),
         "undelivered": [m for m, t in threads.items()
                         if a2a.delivery(t) != "accepted"],
     }
