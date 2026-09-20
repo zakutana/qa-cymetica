@@ -2751,6 +2751,55 @@ reports:
       which is the normal shape of a lifetime total over a recent window, and
       it does not require the series to reach today.
 
+  - key: agent-board-ranking
+    findings: [CYM-the_board_is_ranked_by_the_key_its_own_document_publishes]
+    severity: low
+    category: documentation
+    url: https://cymetica.com/api/v1/agent-board/search
+    title: >-
+      llms.txt says the Agent Returns Board is ranked by verified return x
+      replications; it is ranked by age, and nothing on it is verified
+    expected: >
+      llms.txt is the document an agent reads instead of asking, and it makes
+      exactly one statement about how the board is ordered: "GET
+      /api/v1/agent-board/search: Search playbooks (ranked by verified return
+      x replications)". An agent that trusts it reads the first row as the
+      playbook with the best proven record -- a return somebody verified,
+      multiplied by the number of agents who reproduced it.
+    actual: >
+      Measured 2026-09-20 over all three playbooks the board serves. Every one
+      has replications {confirmed 0, failed 0}, evidence_verified false and
+      pnl_usdc null, so the published key is nil for all of them and orders
+      nothing. `rank` comes back as the same value for the same row under
+      q= and q=agent (0.3637, 0.1488, 0.0798), so it is not a relevance score
+      for the query either. The order is exactly newest first -- 2026-09-19,
+      2026-09-13, 2026-09-05 -- and the value drifts down by about a
+      millionth between two calls seconds apart, which is a time decay. So
+      the board is ranked by age and its readers are told it is ranked by
+      proof.
+    steps:
+      - 'GET https://cymetica.com/llms.txt -> "[GET /api/v1/agent-board/search](/api/v1/agent-board/search): Search playbooks (ranked by verified return × replications)"'
+      - 'GET https://cymetica.com/api/v1/agent-board/search?q= -> 3 rows, ranks 0.3637 / 0.1488 / 0.0798, each with replications.confirmed 0, evidence_verified false, pnl_usdc null'
+      - 'GET https://cymetica.com/api/v1/agent-board/search?q=agent -> the same three ranks to five decimals, so rank does not depend on the query'
+      - 'Same rows: created_at 2026-09-19, 2026-09-13, 2026-09-05 -- the rank order is exactly the recency order'
+      - 'Repeat either call a few seconds later -> every rank is slightly lower (0.363741 -> 0.363627), a decay over time'
+    body: >
+      Filed because the board is built for agents and this is the one line
+      that tells an agent what the top of it means. Following it the way it is
+      written sends a copier to the newest playbook believing it is the
+      best-proven one, on a board where nothing is proven at all.
+      We are not saying the ordering is wrong -- recency is a reasonable
+      default for a board with no verified returns yet. What cannot both be
+      true is the ordering and the sentence describing it. Publishing what
+      `rank` is would close this; so would ranking by the key you published.
+      Our check opens this only when three things hold together: no row
+      carries a confirmed replication or verified evidence, `rank` is
+      unchanged across two different queries, and the order is exactly
+      recency. It reads the claim out of llms.txt live rather than quoting it,
+      so rewording that line stops the check instead of leaving it arguing
+      with a sentence you no longer publish. With fewer than two playbooks on
+      the board it reports inconclusive rather than a defect.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in
