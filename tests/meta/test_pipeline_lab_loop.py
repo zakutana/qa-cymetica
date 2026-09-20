@@ -340,6 +340,52 @@ def test_a_queued_deep_job_is_still_in_flight_after_our_give_up():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_our_own_outstanding_jobs_stay_under_their_reserved_bound():
+    """REPLY-0037: the deep lane now holds a slot for us, and with it a bound
+    of SIX outstanding jobs of our own. The same answer says a queued job of
+    ours keeps its place for twenty-four hours instead of the one that ended
+    be99d6d8 at sixty-seven minutes.
+
+    Those two together broke a brake that used to be safe by accident. The
+    in-flight window is two hours (R04, 2026-09-19): a job older than that
+    stops holding the next question back, because their side had lost it. It
+    HAD lost it -- an unanswered job was dead at an hour, so two hours always
+    covered everything they still held. Now it does not: a job of ours can sit
+    queued for a day while our pacing forgets it after two, which is one new
+    question every two hours against jobs that never finish -- twelve of our
+    own in a day, against their six.
+
+    So the pacing window stays at two hours, and the BOUND is counted over
+    the window their side actually keeps: POLLABLE_HOURS, the same twenty-four
+    they now promise. It is not a pace, so `ignore_backoff` does not lift it.
+    """
+    old = NOW - timedelta(hours=lab.IN_FLIGHT_HOURS, minutes=10)
+    stale = []
+    for n in range(lab.OUTSTANDING_BOUND):
+        stale.append(_question(f"NEX-{n}", old - timedelta(minutes=n)))
+
+    assert len(lab.outstanding(stale, NOW)) == lab.OUTSTANDING_BOUND, (
+        "every one is still pollable: none carries an answer or a give-up")
+    may, why = lab.may_ask_now(stale, NOW)
+    assert not may, (
+        "the six are past the in-flight window, so only the bound can stop a "
+        "seventh -- and without it the loop asks one every two hours for ever")
+    assert str(lab.OUTSTANDING_BOUND) in why, why
+    may, why = lab.may_ask_now(stale, NOW, ignore_backoff=True)
+    assert not may, "their bound is not a pace and is not ours to skip"
+
+    # One short of it goes, or the reserved slot buys us nothing.
+    may, why = lab.may_ask_now(stale[:-1], NOW)
+    assert may, why
+
+    # And a finished job does not count against it, however old.
+    answered = stale + [{"type": "answer", "id": "NEX-0",
+                         "at": (old + timedelta(minutes=5)).isoformat()}]
+    may, why = lab.may_ask_now(answered, NOW)
+    assert may, why
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_cycle_looks_once_and_does_not_wait_on_a_queued_job(
         tmp_path, monkeypatch):
     """A queued job can sit for as long as their window stays hot; the cycle

@@ -400,6 +400,15 @@ def may_ask_now(nexus_rows: list[dict], now: datetime | None = None,
       * the wait their own failure asked for (`backoff_until`).
     """
     moment = now or datetime.now(timezone.utc)
+    # Their bound before our pace: six outstanding of our own (REPLY-0037),
+    # over the day they keep a queued job. Not a pace, so --now does not lift
+    # it -- a seventh would be refused by them, and asking is what spends the
+    # slot they reserved.
+    held = outstanding(nexus_rows, moment, within_hours=POLLABLE_HOURS)
+    if len(held) >= OUTSTANDING_BOUND:
+        return False, (f"{len(held)} of our questions are outstanding on their "
+                       f"side and their reserved lane bounds us at "
+                       f"{OUTSTANDING_BOUND}: {', '.join(held[-3:])} first")
     # In flight for PACING only while it is recent. A job their side lost, or
     # one whose every poll errors, is still polled for a late answer over
     # POLLABLE_HOURS -- but it held the lane for that whole day, sync door
@@ -490,6 +499,12 @@ POLLABLE_HOURS = 24
 # take one to five minutes by their own contract and queue when the lane is
 # full (REPLY-0019); two hours is far past both, and short of a lost day.
 IN_FLIGHT_HOURS = 2
+# How many jobs of ours may be outstanding on their side at once. Theirs, not
+# ours: REPLY-0037 reserves a lane slot for this agent and bounds it at six.
+# Counted over POLLABLE_HOURS because that is the window the same answer says
+# they now hold a queued job for -- the pacing window above is shorter on
+# purpose and no longer covers what their side still has.
+OUTSTANDING_BOUND = 6
 
 
 def outstanding(nexus_rows: list[dict], now: datetime | None = None,
