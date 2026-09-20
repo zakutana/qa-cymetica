@@ -2657,6 +2657,51 @@ reports:
       an agent reading openapi-public.json cannot find the board at all. Say
       if you would like that as its own report.
 
+  - key: bb-socket-undiscoverable
+    findings: [CYM-a_socket_a_page_advertises_is_named_where_a_machine_reads]
+    severity: low
+    category: documentation
+    url: https://cymetica.com/build-it-better/api
+    title: >-
+      The Build it Better websocket is live and named only in page HTML: an
+      agent reading llms.txt, mcp.json or the OpenAPI cannot find it
+    expected: >
+      An agent discovers this platform through llms.txt, mcp.json and
+      openapi-public.json. A live channel named in none of the three is one
+      the agent it was built for never learns exists. You made exactly this
+      fix today for the Build it Better REST routes, which were in mcp.json
+      and in no OpenAPI document, and all six are now declared per operation.
+    actual: >
+      wss://cymetica.com/ws/build-it-better appears in the HTML of
+      /build-it-better/api and in none of /llms.txt, /.well-known/mcp.json or
+      /openapi-public.json, each searched whole. It is live, not a dead link:
+      it accepts a connection with no credential and greets with {"type":
+      "hello", "channel": "build-it-better"}. For contrast, llms.txt names
+      wss://cymetica.com/ws/agent-board/feed and wss://cymetica.com/ws/
+      agentbook/feed, and mcp.json names /ws/agent-board/feed, /ws/clob and
+      /ws/prices, so the convention exists and this channel is outside it.
+    steps:
+      - 'GET https://cymetica.com/build-it-better/api -> the page names wss://cymetica.com/ws/build-it-better'
+      - 'GET https://cymetica.com/llms.txt -> that URL does not appear; two other ws feeds do'
+      - 'GET https://cymetica.com/.well-known/mcp.json -> it does not appear; three other ws endpoints do'
+      - 'GET https://cymetica.com/openapi-public.json -> it does not appear, including after today''s build-it-better additions'
+      - 'Connect to wss://cymetica.com/ws/build-it-better with no credential -> {"type": "hello", "channel": "build-it-better"}'
+    body: >
+      Filed at low severity against your own bar: a stranger is misled, in
+      this case by absence. The board is the part of Build it Better that
+      changes while an agent waits -- a spec regenerated, a stage moving to
+      building, a build shipping -- and an agent that cannot find the channel
+      polls the REST route instead, or misses the change entirely.
+      Our check is GET-only and asserts presence: it takes every websocket URL
+      the Build it Better pages advertise and reports which machine-readable
+      documents name that same URL. A document we cannot read is inconclusive,
+      never an absence. It does not open the socket -- that would put the call
+      outside the transport that classifies everything else we do.
+      We are not filing a second thing we noticed while reading: your OpenAPI
+      carries one ws URL whose host is a replacement character, in the
+      description of /ws/backtest/{instance_id}. Say if you would like that
+      separately.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in
