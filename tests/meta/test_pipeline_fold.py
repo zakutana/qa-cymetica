@@ -1200,6 +1200,51 @@ def test_a_correction_is_owed_per_report_not_per_row():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_correction_says_which_of_the_three_things_happened():
+    """There are three reasons a correction is owed, and two sentences for them.
+
+    `verify.py` said, on every correction: "either a fix was claimed and our
+    re-check does not agree, or we sent you a pass we can no longer stand
+    behind". Neither half is true of a report they ACCEPTED AND PAID without
+    ever claiming a fix -- and `paid` is in _FIX_CLAIMED_STATUSES because
+    paying is engaging with a report, not because it says the defect is gone.
+    #89 and #98 are both paid, both still failing, and a sentence we cannot
+    stand behind is one that does not get sent, which is how they came to sit
+    with the vendor under nothing at all.
+
+    The reason has to come from the same reading as the obligation, or the
+    two drift the way the two a2a readers did.
+    """
+    from qa.fold import correction_reason, fold
+
+    paid = {"report_id": 89, "status": "paid"}
+    fixed = {"report_id": 90, "status": "fixed"}
+    pending = {"report_id": 91, "status": "pending"}
+    passed = [{"report_id": 89, "verdict": "pass"}]
+
+    assert correction_reason(paid, []) == "accepted"
+    assert correction_reason(fixed, []) == "fix_claimed"
+    assert correction_reason(pending, []) is None, (
+        "a report they have not engaged with owes nothing: we said it was "
+        "failing when we filed it")
+
+    # A pass of OURS being withdrawn outranks their claim: it is the more
+    # serious of the two and the one they cannot work out for themselves.
+    assert correction_reason(paid, passed) == "our_pass"
+    assert correction_reason({"report_id": 90, "status": "fixed"},
+                             [{"report_id": 90, "verdict": "pass"}]) == "our_pass"
+    assert correction_reason(pending, [{"report_id": 91, "verdict": "pass"}]) \
+        == "our_pass", "a pass we sent is a debt whatever they said"
+
+    # And the obligation itself still reads the same three.
+    filed = _filed(report_id=89, status="paid")
+    reproducing = row("CYM-a", check_state="REPRODUCING", pinned=FP)
+    owed = fold(ledger(reproducing),
+                events=filed)["findings"]["CYM-a"]["obligations"]
+    assert owed["correction_owed"] == [89], owed["correction_owed"]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_correction_under_the_same_definition_is_recorded():
     """VER: the collision the first version of this file did not test.
 

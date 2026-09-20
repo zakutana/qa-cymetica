@@ -68,6 +68,7 @@ sys.path.insert(0, str(REPO_ROOT))
 
 from qa.client import build_client, install_client_guard  # noqa: E402
 from qa.config import identities, load_dotenv  # noqa: E402
+from qa.fold import correction_reason as fold_correction_reason  # noqa: E402
 from qa.safety import CURRENT_TIER, EndpointRegistry, SafetyTier  # noqa: E402
 from qa.state import (admissibility, append_event, journal_path,  # noqa: E402
                       load_ledger, load_run, read_events)
@@ -161,11 +162,21 @@ def owed(ledger: dict, only: list[str] | None) -> list[dict]:
                 f"Nothing sent."
             )
 
+        by_id = {r.get("report_id"): r for r in row["filing"]["reports"]}
         for report_id, verdict in due:
             work.append({
                 "finding_id": fid,
                 "report_id": report_id,
                 "verdict": verdict,
+                # Why a correction is owed, read from the fold rather than
+                # worked out again here: the obligation and the sentence that
+                # carries it have to come from one reading, or they drift the
+                # way the two a2a readers did.
+                "correction_reason": (
+                    fold_correction_reason(by_id.get(report_id) or {},
+                                           row["filing"].get("verifications")
+                                           or [])
+                    if verdict == "fail" else None),
                 "fingerprint": row["check"]["pinned_fingerprint"],
                 "run_id": run_id,
                 "checked_at": adjudicated.get("at"),
@@ -278,13 +289,49 @@ def body(item: dict) -> dict:
             "Because it matches the one recorded at the failure, this is the "
             "same test, not a rewritten one that happens to pass."
         )
+    elif item.get("correction_reason") == "accepted":
+        # The third case, and the reason two paid reports sat with them under
+        # nothing at all. The two sentences below are both false of a report
+        # they accepted and PAID without claiming a fix, and a sentence we
+        # cannot stand behind does not get sent. `qa.fold.correction_reason`
+        # is the one reader that tells the three apart.
+        headline = (
+            "VERDICT fail -- you accepted and paid this report, and the check "
+            "that recorded the defect still fails under the definition now "
+            "pinned for it. This is not a response to a claim of yours: it is "
+            "our own re-reading, sent so your record shows where the defect "
+            "actually stands."
+        )
+    elif item.get("correction_reason") == "our_pass":
+        headline = (
+            "VERDICT fail -- we sent you a pass on this report and can no "
+            "longer stand behind it: the check that recorded the defect fails "
+            "again. Read the run below rather than the earlier verification."
+        )
+    elif item.get("correction_reason") == "fix_claimed":
+        headline = (
+            "VERDICT fail -- the check that recorded this defect still fails, "
+            "and a fix was claimed for it. This corrects the record: our "
+            "re-check does not agree. Read the run below rather than the "
+            "earlier verification."
+        )
     else:
+        # No reason recorded. The three sentences above each assert something
+        # specific about what YOU did, and the narrowest of them is the wrong
+        # default: the old disjunction is true whichever of the three it was,
+        # so an unknown reason says less rather than saying something false.
         headline = (
             "VERDICT fail -- the check that recorded this defect still fails. "
             "This corrects the record: either a fix was claimed and our re-check "
             "does not agree, or we sent you a pass we can no longer stand behind. "
             "Read the run below rather than the earlier verification."
         )
+    if verdict != "pass":
+        # One paragraph for all three corrections. It lived inside the last
+        # branch, so adding the other two left it unbound and `body()` raised
+        # before a single byte was composed -- caught by the test that drives
+        # the wording, which is the sibling of the UnboundLocalError of
+        # 2026-09-07 one function along.
         why_fingerprint = (
             "It is quoted so you can tell a check we repaired from one we did "
             "not: if this differs from a fingerprint we sent you before, the "

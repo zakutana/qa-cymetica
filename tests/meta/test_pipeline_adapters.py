@@ -707,6 +707,91 @@ def _msg(msg_id, at, content="hello", auto=False, thread="th-1"):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_correction_we_send_says_which_of_the_three_things_happened():
+    """The fold tells the three apart; this is the half that goes out.
+
+    A correction said, on every one of them, "either a fix was claimed and our
+    re-check does not agree, or we sent you a pass we can no longer stand
+    behind". Both halves are false of a report they accepted and PAID without
+    claiming a fix -- #89 and #98 -- and a sentence we cannot stand behind is
+    one that does not get sent, which is how those two came to sit with them
+    under nothing at all.
+
+    Each sentence has to be checkable against the reason beside it, so this
+    asserts on what the wording CLAIMS, not on its prose.
+    """
+    verify = _module("scripts/verify.py")
+    base = {"finding_id": "CYM-a", "report_id": 89, "fingerprint": "fp",
+            "verdict": "fail", "run_id": "r", "tree_sha": "t", "pin": None,
+            "checked_at": "2026-09-20T09:00:00+00:00", "checks": ["x::y"],
+            "evidence_ids": [], "prereg_id": "PRE-0001", "title": "t",
+            "level": "R"}
+
+    accepted = verify.body({**base, "correction_reason": "accepted"})["evidence"]
+    assert "accepted and paid" in accepted, accepted
+    assert "claim of yours" in accepted, (
+        "it has to say it is NOT answering a claim of theirs")
+    for wrong in ("a fix was claimed", "sent you a pass"):
+        assert wrong not in accepted, f"still says {wrong!r}: {accepted[:400]}"
+
+    ours = verify.body({**base, "correction_reason": "our_pass"})["evidence"]
+    assert "we sent you a pass" in ours.lower(), ours
+    assert "a fix was claimed" not in ours, ours
+
+    claimed = verify.body({**base, "correction_reason": "fix_claimed"})["evidence"]
+    assert "a fix was claimed" in claimed, claimed
+    assert "accepted and paid" not in claimed, claimed
+
+    # No reason recorded says LESS, not something false. Each sentence above
+    # asserts a specific thing about what they did, so the narrowest of them
+    # is the wrong default; the old disjunction is true whichever it was.
+    unknown = verify.body({**base})["evidence"]
+    assert "either a fix was claimed" in unknown, unknown
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_reason_reaches_the_message_from_the_ledger():
+    """The two halves above are each tested and the seam between them is not.
+
+    `correction_reason` is driven directly in the fold's tests and `body()` is
+    driven with a hand-built item here, so a typo in the key, an inverted
+    `if verdict == "fail"`, or a `by_id` built from the wrong list would leave
+    every correction falling to the default while both files stayed green.
+    That is `driving-the-helper-is-not-running-the-check`, which this session
+    wrote down about a different function an hour earlier.
+    """
+    verify = _module("scripts/verify.py")
+    ledger = {"findings": {"CYM-a": {
+        "title": "t",
+        "checks": ["tests/rest/test_x.py::test_y"],
+        "provenance": {"measured_at": "2026-09-20T09:00:00+00:00"},
+        "check": {"pinned_fingerprint": "fp",
+                  "adjudicated_by": {"run_id": "run-1",
+                                     "at": "2026-09-20T09:00:00+00:00"}},
+        "filing": {"reports": [{"report_id": 89, "status": "paid"},
+                               {"report_id": 90, "status": "fixed"}],
+                   "verifications": []},
+        "obligations": {"correction_owed": [89, 90], "verification_owed": []},
+    }}}
+
+    run = {"run_id": "run-1", "git_head": "abc", "prereg_id": "PRE-0001",
+           "results": [], "schema": 2, "git_dirty": False,
+           "prereg_tag_sha": "t", "prereg_commit": "abc",
+           "platform_fingerprint": "sha256:f", "fingerprint_drifted": False,
+           "collected": [], "exit_status": 0,
+           "record_integrity": {"consistent": True},
+           "started_at": "2026-09-20T09:00:00+00:00"}
+    verify.load_run = lambda *a, **k: run
+
+    reasons = {item["report_id"]: item["correction_reason"]
+               for item in verify.owed(ledger, None)}
+    assert reasons == {89: "accepted", 90: "fix_claimed"}, reasons
+    assert "accepted and paid" in verify.body(
+        next(i for i in verify.owed(ledger, None)
+             if i["report_id"] == 89))["evidence"]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_one_unreadable_report_does_not_take_the_whole_run_with_it(
         tmp_path, monkeypatch):
     """VER: refusing to send blind is per report, so the loss must be too.

@@ -564,6 +564,44 @@ def _apply_events(rows: dict, events: Iterable[dict]) -> None:
 # ---------------------------------------------------------------------------
 # Obligations -- what each row still owes somebody
 # ---------------------------------------------------------------------------
+def correction_reason(report: dict, verified: list) -> str | None:
+    """WHY this report is owed a correction, or None if it is owed none.
+
+    The obligation and the sentence we send have to come from one reading.
+    `verify.py` had two headlines for three cases and said, on every one of
+    them, "either a fix was claimed and our re-check does not agree, or we
+    sent you a pass we can no longer stand behind". Neither half is true of a
+    report they ACCEPTED AND PAID without ever claiming a fix -- #89 and #98
+    are both `paid`, both still failing -- and a sentence we cannot stand
+    behind is one that does not get sent, which is how those two came to sit
+    with the vendor under nothing at all.
+
+    `paid` is in _FIX_CLAIMED_STATUSES because paying is engaging with the
+    report; it is not a claim that the defect is gone, and this is where the
+    difference is finally written down.
+
+      fix_claimed  they said fixed, and our check does not agree
+      our_pass     we sent a pass for this report that we can no longer stand
+                   behind
+      accepted     they accepted and paid it and said nothing about a fix; our
+                   check still fails under the definition now pinned
+
+    `our_pass` wins over `fix_claimed` when both hold: a pass of OURS being
+    withdrawn is the more serious of the two, and it is the one they cannot
+    work out for themselves.
+    """
+    report_id = report.get("report_id")
+    if any(v.get("report_id") == report_id and v.get("verdict") == "pass"
+           for v in verified):
+        return "our_pass"
+    status = (report.get("status") or "").lower()
+    if status == "fixed":
+        return "fix_claimed"
+    if status in _FIX_CLAIMED_STATUSES:
+        return "accepted"
+    return None
+
+
 def _told(verified: list, report_id, fingerprint, verdict: str) -> bool:
     """Is this verdict the LAST thing they heard, for this check definition?
 
@@ -654,11 +692,7 @@ def _obligations(row: dict) -> dict:
         # What a withdrawn row owes is the retraction above.
         "correction_owed": ([r["report_id"] for r in row["filing"]["reports"]
                              if not _told(verified, r["report_id"], pinned, "fail")
-                             and ((r.get("status") or "").lower()
-                                  in _FIX_CLAIMED_STATUSES
-                                  or any(v["report_id"] == r["report_id"]
-                                         and v.get("verdict") == "pass"
-                                         for v in verified))]
+                             and correction_reason(r, verified) is not None]
                             if check == "REPRODUCING" and pinned
                             and filing not in _TERMINAL else []),
         # They read the report and said no, and our check still fails. One of
