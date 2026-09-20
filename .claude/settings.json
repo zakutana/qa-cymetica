@@ -47,7 +47,7 @@
               ".claude/hooks/open_threads.py"
             ],
             "timeout": 10,
-            "statusMessage": "reading open telegram threads"
+            "statusMessage": "reading the threads waiting on them"
           },
           {
             "type": "command",

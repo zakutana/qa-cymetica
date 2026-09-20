@@ -178,6 +178,46 @@ def test_the_state_names_all_three_channels(tmp_path, monkeypatch):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_every_channel_waiting_on_them_is_named_at_session_start(
+        tmp_path, monkeypatch):
+    """A fifth channel must break this test, not drop out of the greeting.
+
+    `state()` names four channels and says which side each waits on. The two
+    that wait on THEM -- a message of ours nobody has answered -- are the ones
+    a session cannot look up, because it does not know the thread exists. The
+    ones waiting on US have their own line: the rooms hook for notes, and the
+    dashboard for filed obligations.
+
+    Until 2026-09-20 the session-start hook read Telegram alone, so a2a was
+    missing from the greeting for the ten days its threads sat open.
+    """
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    from qa.state import append_event, read_events
+
+    append_event({"type": "telegram_sent", "at": AT, "by": "operator",
+                  "source": "scripts/correspond.py", "msg_id": "MSG-0009",
+                  "text": "a question", "origin": "telegram"})
+    append_event(_vendor_a2a("receipt-9", at=AT, text="queued for review",
+                             auto=True, kind="first_pass", answers="theirs-9"))
+
+    hook = REPO / ".claude" / "hooks" / "open_threads.py"
+    env = dict(os.environ, QA_STATE_DIR=str(tmp_path),
+               PYTHONPATH=str(REPO), PYTHONIOENCODING="utf-8")
+    proc = subprocess.run([sys.executable, str(hook)], capture_output=True,
+                          text=True, cwd=str(REPO), env=env)
+    assert proc.returncode == 0, proc.stderr
+
+    state = _channels().state(read_events())
+    for name, channel in state.items():
+        if channel["waiting_on"] != "them":
+            continue
+        for msg_id in channel["unanswered"]:
+            assert msg_id in proc.stdout, (
+                f"{name} waits on them and {msg_id} is not named at session "
+                f"start: {proc.stdout!r}")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_two_a2a_readers_cannot_disagree(tmp_path, monkeypatch):
     """One module, one answer to "unanswered". It held two.
 

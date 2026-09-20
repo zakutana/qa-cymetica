@@ -263,6 +263,22 @@ def compare(events: list[dict] | None = None) -> dict:
     return report
 
 
+def labels(events: list[dict]) -> dict[str, str]:
+    """Their id for a message of ours, where the record carries one.
+
+    A display detail with one job: the session-start line says `MSG-0003
+    (ET-22498)` because ET-22498 is what the operator says out loud, and a
+    line that names only our own id sends them to grep. Kept here rather than
+    in the hook so that naming a thread and deciding it is open come from the
+    same module -- the drift this file exists to prevent.
+    """
+    out: dict[str, str] = {}
+    for event in events:
+        if event.get("type") == "telegram_sent" and event.get("via"):
+            out[str(event.get("msg_id"))] = str(event["via"])
+    return out
+
+
 def _telegram(events: list[dict]) -> dict:
     import importlib.util
     from pathlib import Path

@@ -333,6 +333,36 @@ def test_the_hook_names_an_open_thread_by_both_ids(tmp_path, monkeypatch):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_hook_names_an_open_a2a_thread_too(tmp_path, monkeypatch):
+    """Telegram is not the only channel that waits on them.
+
+    The hook read scripts/correspond.py, so an a2a question nobody had
+    answered was invisible at session start -- and a2a is the channel a
+    session is least likely to remember on its own, because `scripts/a2a.py`
+    has sent two questions in its life while eleven threads exist. Found by
+    the architecture audit, 2026-09-20, in the same hour as the two readers
+    of `unanswered` (tests/meta/test_pipeline_channels.py).
+
+    The a2a thread below is the shape that only THEIR receipt records: the
+    send was made by hand, so no a2a_intent of ours exists for it.
+    """
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    from qa.state import append_event
+
+    append_event({"type": "message", "at": AT, "by": "vendor",
+                  "source": "scripts/bounty.py a2a-inbox", "msg_id": "a2a_r1",
+                  "text": "queued for review", "origin": "a2a", "auto": True,
+                  "kind": "first_pass", "reply_to": "a2a_ours_1"})
+
+    proc = _run([str(HOOK)], tmp_path)
+    assert proc.returncode == 0, proc.stderr
+    assert "a2a_ours_1" in proc.stdout, (
+        f"the open a2a thread is not named at session start: {proc.stdout!r}")
+    assert "queued for review" not in proc.stdout, (
+        "ids only -- the hook must not put their text into the context")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_hook_is_silent_when_nothing_is_open(tmp_path, monkeypatch):
     """No open thread means no output at all -- not a heading saying zero.
 
