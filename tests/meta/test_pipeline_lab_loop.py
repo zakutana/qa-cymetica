@@ -1190,3 +1190,58 @@ def test_an_id_their_api_does_not_know_is_not_called_an_invented_card(
     for said in (gate["why"], " ".join(did["held"])):
         assert "no card" in said and "not a card" in said, said
         assert "invented" not in said or "or" in said, said
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_answer_he_gave_elsewhere_is_his_guidance_not_his_latency(
+        tmp_path, monkeypatch):
+    """The operator talks to Nexus on their website, and had nowhere to put it.
+
+    What he says there is guidance like any other: the brief should hold it,
+    the board should be able to score it, the next tick should not ask it
+    again. Until `record` there was nowhere to write it down, so it lived in a
+    conversation that ends at the next /clear -- the same loss as ET-22498.
+
+    It must NOT reach `load()`. #85 and #86 measure their channel from that
+    file, and a row we typed in has no poll behind it and no latency to read:
+    counting it would be a verdict about their availability drawn from our own
+    keyboard. That is `a-read-that-writes-is-a-writer`, and `lane: shallow`
+    already exists for exactly this separation.
+    """
+    import importlib
+    import importlib.util as util
+
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    import qa.state
+    importlib.reload(qa.state)
+    spec = util.spec_from_file_location("nexus_record",
+                                        REPO / "scripts" / "nexus.py")
+    nexus = util.module_from_spec(spec)
+    spec.loader.exec_module(nexus)
+
+    said = nexus.record_answer("what breaks stockbull-blue?",
+                               "  Treat 24 hours as one regime-day.  ",
+                               at="2026-09-19T21:00:00+00:00")
+
+    assert nexus.load() == [], (
+        "a pasted answer landed in the diary the channel checks measure")
+    rows = nexus.load_shallow()
+    assert [r["type"] for r in rows] == ["question", "answer"]
+    assert rows[0]["id"] == rows[1]["id"] == said["id"]
+    assert said["text"] == "Treat 24 hours as one regime-day."
+    assert said["at"] == "2026-09-19T21:00:00+00:00", (
+        "the diary is a timeline: it records when HE said it")
+    assert said["via"] == "web chat" and said["lane"] == "operator"
+    assert [r["id"] for r in nexus.load_all()] == [r["id"] for r in rows], (
+        "the laboratory reads load_all, and his guidance is not in it")
+
+    # An id is never reused across the two diaries.
+    again = nexus.record_answer("and the drawdown?", "watch N_eff")
+    assert again["id"] != said["id"]
+
+    try:
+        nexus.record_answer("nothing", "   ")
+    except SystemExit as refused:
+        assert "not an answer" in str(refused), str(refused)
+    else:  # pragma: no cover -- the assertion is the point
+        raise AssertionError("an empty answer was written down as one")

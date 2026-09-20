@@ -246,6 +246,39 @@ def ask_shallow(question: str) -> dict:
     return record
 
 
+def record_answer(question: str, text: str, *, at: str | None = None,
+                  where: str = "web chat") -> dict:
+    """An answer of his that did NOT come through a door of ours.
+
+    The operator talks to Nexus on their website, and what he says there is
+    guidance like any other -- the brief should hold it, the board should be
+    able to score it, and the next tick should not ask the same thing again.
+    Until now there was nowhere to put it, so it lived in a chat that ends at
+    the next /clear.
+
+    It goes in the shallow diary, not the deep one, for the reason `lane:
+    shallow` exists: #85 and #86 measure THEIR channel off `load()`, and a row
+    we typed in has no poll behind it and no latency to read. Counting it
+    there would be a verdict about their availability drawn from our own
+    keyboard -- the defect the memory `a-read-that-writes-is-a-writer`
+    records. `load_all()` is what the laboratory reads, and it sees this.
+
+    `at` is when HE said it, not when we typed it: the diary is a timeline.
+    """
+    text = (text or "").strip()
+    if not text:
+        raise SystemExit("refused: an answer with no text is not an answer")
+    qid = _next_id(load_all())
+    said = at or _now()
+    _append_shallow({"id": qid, "type": "question", "at": said,
+                     "question": question, "lane": "operator",
+                     "via": where})
+    row = {"id": qid, "type": "answer", "at": said, "lane": "operator",
+           "via": where, "text": text}
+    _append_shallow(row)
+    return row
+
+
 def _inner(payload):
     """Their envelope is {success, tool, result:{...}}; the answer is inside.
 
@@ -576,6 +609,16 @@ def main(argv: list[str] | None = None) -> int:
     answer_cmd = sub.add_parser("answer", help="poll an outstanding question")
     answer_cmd.add_argument("question_id")
 
+    record_cmd = sub.add_parser(
+        "record", help="write down an answer that came another way")
+    record_cmd.add_argument("--question", required=True,
+                            help="what he was asked, in our own words")
+    record_cmd.add_argument("--file", help="a file holding the answer text")
+    record_cmd.add_argument("--text", help="the answer itself, if it is short")
+    record_cmd.add_argument("--at", help="when HE said it, ISO 8601")
+    record_cmd.add_argument("--where", default="web chat",
+                            help="where it was said (default: web chat)")
+
     sub.add_parser("list", help="every question, with how long it took")
     show_cmd = sub.add_parser("show", help="one question and its answer")
     show_cmd.add_argument("question_id")
@@ -591,6 +634,17 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.cmd == "answer":
         answer(args.question_id)
+        return 0
+    if args.cmd == "record":
+        if bool(args.file) == bool(args.text):
+            print("give exactly one of --file or --text", file=sys.stderr)
+            return 2
+        text = (Path(args.file).read_text(encoding="utf-8") if args.file
+                else args.text)
+        row = record_answer(args.question, text, at=args.at, where=args.where)
+        print(f"{row['id']}: {len(row['text'])} chars recorded from "
+              f"{row['via']} -- it is HIS guidance, and it is not a reading "
+              f"of their channel")
         return 0
     if args.cmd == "list":
         rows = _summary()
