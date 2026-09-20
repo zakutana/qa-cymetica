@@ -30,8 +30,8 @@
         "t1": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "787bbb49"
     },
     {
       "id": "C03",
@@ -58,8 +58,8 @@
         "t1": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "787bbb49"
     },
     {
       "id": "B01",

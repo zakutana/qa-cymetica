@@ -25,14 +25,26 @@ cannot grow three ideas of what "cited" means.
 
 from __future__ import annotations
 
+import importlib.util
 import os
 import re
 import subprocess
+from datetime import datetime, timezone
 from pathlib import Path
 
 from qa import archive, keepset, manifest
 from qa.marks import SafetyTier, qa
 from qa.measure import Measurement, conclude
+
+
+def _reminders():
+    """scripts/processes.py, loaded so the reminder can be RUN rather than
+    grepped for -- the difference this file learned on 2026-09-20."""
+    path = Path(__file__).resolve().parents[2] / "scripts" / "processes.py"
+    spec = importlib.util.spec_from_file_location("processes_archive", path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
 
 REPO = Path(__file__).resolve().parent.parent.parent
 
@@ -245,14 +257,31 @@ def test_the_archive_has_a_caller():
     the work, and `processes.py reminders` tells the operator when it is worth
     doing by hand.
     """
+    # The CALL, not the words. The first version of this asserted that the
+    # string "keep.py archive" appeared in each file -- and it appears in
+    # prose in both, in the skill's own explanatory bullet and in two
+    # comments in processes.py. Deleting both real callers left it green:
+    # a test written to guard "the archive has a caller" that was independent
+    # of whether one existed. Found by two readers on 2026-09-20.
     skill = (REPO / ".claude" / "skills" / "deep-pass" / "SKILL.md").read_text(
         encoding="utf-8")
-    assert "keep.py archive" in skill, (
-        "the deep pass tracks and snapshots and never bundles")
+    called = [line for line in skill.splitlines()
+              if line.strip().startswith(("python scripts/keep.py archive",
+                                          "$PY scripts/keep.py archive"))]
+    assert called, (
+        "the deep pass tracks and snapshots and never bundles: no line of "
+        "the skill RUNS keep.py archive, whatever its prose says about it")
 
     processes = (REPO / "scripts" / "processes.py").read_text(encoding="utf-8")
-    assert "keep.py archive" in processes, (
-        "nothing tells the operator the bundle is owed")
+    mod = _reminders()
+    due = mod.reminders({"unpushed": 0, "last_pass": None, "week_last": None,
+                         "open_next": [], "plan_phases": [],
+                         "evidence_unarchived": 10_000},
+                        datetime(2026, 9, 20, tzinfo=timezone.utc))
+    assert any("keep.py archive" in line for line in due), (
+        f"nothing tells the operator the bundle is owed: reminders() over "
+        f"10 000 unarchived captures printed {due}")
+    assert "keep.py archive" in processes
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

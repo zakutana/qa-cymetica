@@ -48,15 +48,36 @@ def _offenders() -> list[str]:
             continue
         source = path.read_text(encoding="utf-8")
         tree = ast.parse(source)
+
+        # HOW THIS MODULE SPELLS ITS IMPORT, read rather than assumed. The
+        # first version required `func.value.id == "httpx"`, so
+        # `import httpx as hx; hx.Client()` and `from httpx import Client;
+        # Client()` were both invisible -- two spellings of the one thing the
+        # guard exists to catch, in a guard whose own comment said it caught
+        # the call however the import was spelled. Found by two readers on
+        # 2026-09-20.
+        aliases = {"httpx"}          # names bound to the httpx MODULE
+        direct = set()               # names bound to Client/AsyncClient
         for node in ast.walk(tree):
-            # `httpx.Client(...)` / `httpx.AsyncClient(...)`, however the
-            # module spells its import.
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    if alias.name == "httpx":
+                        aliases.add(alias.asname or "httpx")
+            if isinstance(node, ast.ImportFrom) and node.module == "httpx":
+                for alias in node.names:
+                    if alias.name in CLIENTS:
+                        direct.add(alias.asname or alias.name)
+
+        for node in ast.walk(tree):
             if isinstance(node, ast.Call):
                 func = node.func
                 if isinstance(func, ast.Attribute) and func.attr in CLIENTS:
-                    owner = getattr(func.value, "id", None)
-                    if owner == "httpx":
-                        found.append(f"{rel}:{node.lineno}: httpx.{func.attr}(...)")
+                    if getattr(func.value, "id", None) in aliases:
+                        found.append(f"{rel}:{node.lineno}: "
+                                     f"{func.value.id}.{func.attr}(...)")
+                if isinstance(func, ast.Name) and func.id in direct:
+                    found.append(f"{rel}:{node.lineno}: {func.id}(...) "
+                                 f"imported from httpx")
             # The key itself, imported or referenced under any name.
             if isinstance(node, ast.Name) and node.id == "_FACTORY_SENTINEL":
                 found.append(f"{rel}:{node.lineno}: _FACTORY_SENTINEL")
@@ -81,3 +102,63 @@ def test_only_the_client_module_builds_a_client_or_holds_its_key():
         sources={"contract": "qa/client.py::install_client_guard's refusal "
                              "message -- add a factory rather than bypass"},
     ))
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_scan_reads_every_spelling_of_the_import(tmp_path):
+    """A guard that catches one of three spellings is a guard with a door in it.
+
+    The scan required `httpx.Client(...)` written exactly that way, while its
+    own comment said it caught the call "however the module spells its
+    import". `import httpx as hx; hx.Client()` and `from httpx import Client;
+    Client()` were both invisible -- and either is what the next
+    fingerprint.py-shaped bypass would look like, since that one was written
+    by somebody who knew the guard existed.
+
+    Driven over real source rather than over the AST by hand, because the
+    thing that was wrong was which node shape the walk accepted.
+    """
+    import ast as _ast
+
+    def offenders_in(source: str) -> list[str]:
+        tree = _ast.parse(source)
+        aliases, direct = {"httpx"}, set()
+        for node in _ast.walk(tree):
+            if isinstance(node, _ast.Import):
+                for alias in node.names:
+                    if alias.name == "httpx":
+                        aliases.add(alias.asname or "httpx")
+            if isinstance(node, _ast.ImportFrom) and node.module == "httpx":
+                for alias in node.names:
+                    if alias.name in CLIENTS:
+                        direct.add(alias.asname or alias.name)
+        hits = []
+        for node in _ast.walk(tree):
+            if not isinstance(node, _ast.Call):
+                continue
+            func = node.func
+            if isinstance(func, _ast.Attribute) and func.attr in CLIENTS:
+                if getattr(func.value, "id", None) in aliases:
+                    hits.append("attribute")
+            if isinstance(func, _ast.Name) and func.id in direct:
+                hits.append("direct")
+        return hits
+
+    assert offenders_in("import httpx\nhttpx.Client()\n") == ["attribute"]
+    assert offenders_in("import httpx as hx\nhx.Client()\n") == ["attribute"], (
+        "an aliased module import is the same construction under another name")
+    assert offenders_in("from httpx import Client\nClient()\n") == ["direct"], (
+        "importing the class and calling it bare is the same construction")
+    assert offenders_in(
+        "from httpx import AsyncClient as AC\nAC()\n") == ["direct"]
+
+    # And the shapes that must NOT be flagged, or the guard cries wolf and
+    # stops being read: somebody else's Client, and a mere import.
+    assert offenders_in("import httpx\n") == []
+    assert offenders_in("from mylib import Client\nClient()\n") == []
+    assert offenders_in("class Client: pass\nClient()\n") == []
+    assert offenders_in("import other\nother.Client()\n") == []
+
+    # The scan as it actually runs must agree with the walk above on the
+    # tree as it stands: the repository is clean right now.
+    assert _offenders() == [], _offenders()
