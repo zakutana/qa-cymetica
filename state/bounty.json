@@ -1,6 +1,6 @@
 {
-  "fetched_at": "2026-09-21T11:49:14+00:00",
-  "total": 80,
+  "fetched_at": "2026-09-21T13:57:40+00:00",
+  "total": 81,
   "statuses": {
     "paid": 20
   },
@@ -24,14 +24,14 @@
   "our_reports": {
     "endpoint": "GET /api/v1/bounty/my-reports?wallet_address=<addr>",
     "klass": "ok",
-    "read_at": "2026-09-21T11:49:03+00:00",
-    "evidence_id": "01bdd15165cf73439154631c59a59c72e68bc1c9c95bd8e4c1b1693432d05052",
-    "rows_returned": 71,
-    "server_total": 71,
-    "total": 71,
+    "read_at": "2026-09-21T13:57:33+00:00",
+    "evidence_id": "0da20e326a232e6af6c155809ce2953090854fd91d6a8c47408a90a224a93455",
+    "rows_returned": 72,
+    "server_total": 72,
+    "total": 72,
     "statuses": {
+      "paid": 64,
       "pending": 1,
-      "paid": 63,
       "fixed": 5,
       "invalid": 2
     },
@@ -1314,16 +1314,34 @@
         "ticket_url": null,
         "fix_pr_url": null,
         "reward_amount": 0.0
+      },
+      {
+        "id": 115,
+        "title": "Product Trend Radar ranks the same product on two rows, splitting its mentions between them",
+        "status": "paid",
+        "hunter_name": "expire76",
+        "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
+        "severity_reported": "low",
+        "severity_confirmed": "low",
+        "category": "logic",
+        "created_at": "2026-09-21T11:50:31.060808",
+        "fixed_at": "2026-09-21T13:19:53.967606",
+        "validated_at": "2026-09-21T13:19:53.967606",
+        "triaged_at": "2026-09-21T13:19:53.967606",
+        "status_notes": "[2026-09-21T13:19:53+00:00] Resolved via ticket ET-26281: Fixed, live 6b484b414. Cause: a product was keyed by its site when a sighting had a link and by its name when it did not; subdomains and shorteners (t.co) made more rows. Now: registrable site first, else the row of the same name; two differently named products on one site stay two. 14 duplicate groups merged (mentions moved), own products and bot handle removed and skipped at ingest. Live 7/14/30-day boards: no name on two rows (admin route; viewer route shares the code). Reply msg 236496.",
+        "ticket_url": "https://cymetica.com/admin/centcom/issues/26281",
+        "fix_pr_url": null,
+        "reward_amount": 1000.0
       }
     ]
   },
   "qa_tracker": {
     "source": "https://cymetica.com/leaderboard/bugs (embedded allBugs)",
-    "total": 154,
+    "total": 155,
     "statuses": {
       "qa_testing": 2,
       "implementing": 2,
-      "completed": 100,
+      "completed": 101,
       "resolved": 24,
       "rejected": 2,
       "pending": 12,
@@ -1331,11 +1349,11 @@
     },
     "source_channels": {
       "web": 74,
-      "bounty": 80
+      "bounty": 81
     },
     "usernames": {
       "Maxorelaxo": 2,
-      "expire76": 100,
+      "expire76": 101,
       "Crypto42day": 2,
       "tonybugs0439": 5,
       "joebloggs": 12,
@@ -1432,6 +1450,7 @@
       "cloned bot profile does not display trading activity correctly",
       "неправильный баланс токенов в портфеле пользователя max",
       "swap pages fail to display user token balances",
+      "product trend radar ranks the same product on two rows, splitting its mentions between them",
       "the live build board's \"building now\" tile counts queued requests, so it contradicts the building column directly beneath it",
       "build it better missed its own 24-hour deadline on et-26036: the clock expired with the request still queued and nothing built",
       "llms.txt says the agent returns board is ranked by verified return x replications; it is ranked by age, and nothing on it is verified",
@@ -1511,13 +1530,13 @@
       "critical: my positions p&l shows -$3.15 for a $0.10 position",
       "shares preview rounds to 1 decimal place instead of 2"
     ],
-    "has_linear_links": 45
+    "has_linear_links": 46
   },
   "a2a_inbox": {
     "klass": "ok",
     "rows_returned": 50,
     "new": [],
-    "at": "2026-09-21T11:49:13+00:00"
+    "at": "2026-09-21T13:57:39+00:00"
   },
   "closed": 0,
   "closed_without_recorded_evidence": 0,
@@ -1530,6 +1549,24 @@
     "status_notes"
   ],
   "reports": [
+    {
+      "id": 115,
+      "title": "Product Trend Radar ranks the same product on two rows, splitting its mentions between them",
+      "status": "paid",
+      "hunter_name": "expire76",
+      "severity_reported": "low",
+      "severity_confirmed": "low",
+      "created_at": "2026-09-21T11:50:31.060808",
+      "fixed_at": "2026-09-21T13:19:53.967606",
+      "validated_at": "2026-09-21T13:19:53.967606",
+      "triaged_at": "2026-09-21T13:19:53.967606",
+      "status_notes": "[2026-09-21T13:19:53+00:00] Resolved via ticket ET-26281: Fixed, live 6b484b414. Cause: a product was keyed by its site when a sighting had a link and by its name when it did not; subdomains and shorteners (t.co) made more rows. Now: registrable site first, else the row of the same name; two differently named products on one site stay two. 14 duplicate groups merged (mentions moved), own products and bot handle removed and skipped at ingest. Live 7/14/30-day boards: no name on two rows (admin route; viewer route shares the code). Reply msg 236496.",
+      "ticket_url": "https://cymetica.com/admin/centcom/issues/26281",
+      "fix_pr_url": null,
+      "reward_amount": 1000.0,
+      "paid_at": "2026-09-21T13:22:30.244218",
+      "is_duplicate": false
+    },
     {
       "id": 113,
       "title": "The live build board's \"Building now\" tile counts queued requests, so it contradicts the BUILDING column directly beneath it",
@@ -1871,24 +1908,6 @@
       "reward_amount": 1000.0,
       "paid_at": "2026-09-11T09:54:47.089552",
       "is_duplicate": false
-    },
-    {
-      "id": 94,
-      "title": "A paper bot's open ARENA positions are neither deducted nor locked: /balance reports 0 locked while /activity lists 400 USDC open",
-      "status": "paid",
-      "hunter_name": "expire76",
-      "severity_reported": "medium",
-      "severity_confirmed": "medium",
-      "created_at": "2026-09-11T05:34:03.814882",
-      "fixed_at": "2026-09-11T09:52:27.236427",
-      "validated_at": "2026-09-11T09:52:27.236427",
-      "triaged_at": "2026-09-11T09:52:27.236427",
-      "status_notes": "[2026-09-11T09:52:27+00:00] Resolved via ticket ET-24612: Confirmed inside: bot d778102d had 4 open arena-wta legs ($400) with balance untouched (950 = 1000 − two $25 perp bets). Cause: clone_arena_orchestrator debited current_balance_usdc once at loop end, after place_arena_order's mid-flow commits and behind a with_for_update that timed out (LockNotAvailable) — trade rows persisted, debit lost. Fix @ed2f2e508 (live): each leg booked atomically with its trade row (debit on entry, refund on failed leg). Bot balance backfilled 950→550.\n[reporter-verification FAIL 2026-09-11 15:07 UTC by expire76 test_run=run-20260911T150246Z-5dea5bec]\n[reporter-verification PASS 2026-09-11 17:58 UTC by expire76 test_run=run-20260911T174358Z-c0e379b9]",
-      "ticket_url": "https://cymetica.com/admin/centcom/issues/24612",
-      "fix_pr_url": null,
-      "reward_amount": 1000.0,
-      "paid_at": "2026-09-11T09:54:47.089552",
-      "is_duplicate": false
     }
   ],
   "leaderboard": [
@@ -1898,11 +1917,11 @@
       "avatar_url": null,
       "tier": "senior",
       "total_score": 460,
-      "valid_reports": 68,
+      "valid_reports": 69,
       "total_likes": 0,
-      "total_earned": 64000.0,
-      "total_awarded": 64000.0,
-      "total_paid": 64000.0,
+      "total_earned": 65000.0,
+      "total_awarded": 65000.0,
+      "total_paid": 65000.0,
       "reward_currency": "ET10"
     },
     {
