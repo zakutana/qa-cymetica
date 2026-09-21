@@ -2923,6 +2923,46 @@ reports:
       answers, a flag in the result (truncated: true, or the full length)
       would let a caller know to ask again, and would satisfy us as well.
 
+  - key: product-radar-duplicate-rows
+    findings: [CYM-the_product_radar_lists_each_product_once]
+    severity: low
+    category: logic
+    url: https://cymetica.com/api/v1/product-radar/leaderboard
+    title: "Product Trend Radar ranks the same product on two rows, splitting its mentions between them"
+    expected: >
+      The leaderboard -- "which apps, products and services are gaining
+      attention, ranked" (llms.txt) -- lists each product once, so its score
+      carries all of its mentions and it holds one place in the ranking.
+    actual: >
+      Measured 2026-09-21 with our key, the day the API opened to keys: Hylo
+      Protocol is on two rows (ids 3048 and 50379) and Gains Network on two
+      (3056 and 3019) in every window -- 7, 14 and 30 days -- and EventTrader
+      on two in the 30-day window (9513 "product" at rank 1, 28370 "app" at
+      rank 6). Each pair has the same kind and category; one row carries the
+      project URL and the other none, which looks like one product recorded
+      once from chat and once from a web source.
+    steps:
+      - 'GET https://cymetica.com/api/v1/product-radar/leaderboard?window=7&limit=500 with an X-API-Key'
+      - 'Group items by name: "Hylo Protocol" and "Gains Network" each appear twice with different ids'
+      - 'Repeat with window=30: "EventTrader" also appears twice (ids 9513 and 28370)'
+      - 'GET /api/v1/product-radar/products/3048 and /50379 -> the same project'
+    body: >
+      Thank you for opening the radar to API keys the same morning we asked --
+      it answers 200 with our key, the window and limit bounds hold (6 and 31,
+      0 and 501 are all refused with 422), and chat links and handles are
+      absent from the mentions as llms.txt says.
+      This one is about the ranking itself: a product split over two rows
+      shows up twice and scores lower than it should on each, and the top of
+      the 30-day board is one of those pairs. Our check groups the leaderboard
+      by name and fails only when a name is on two rows, so merging the
+      duplicates satisfies it. If any pair really is two different products,
+      tell us which and we will withdraw that part.
+      Related, and not part of this finding: in the 30-day window the top row,
+      EventTrader, draws 28 of its mentions from CyMetica's own community, and
+      rank 10 is "EventTraderQABot" -- our own Telegram handle, counted as a
+      product from your chat. You may want own-community mentions weighted
+      differently on a board that says "not an endorsement".
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in
