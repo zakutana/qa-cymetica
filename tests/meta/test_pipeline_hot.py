@@ -115,7 +115,13 @@ def test_follow_counts_unobserved_apart_from_the_measured():
     said = hot.follow(hot.entries(rounds, heads), rounds, horizons=(20 / 60, 6))
     short, long_ = said["crypto"]
     assert short["n"] == 1 and short["mean"] == 4.0
-    assert long_["n"] == 0 and long_["unobserved"] == 1
+    # Six hours after entry has not happened yet in this diary: open, not
+    # unobserved. Only a horizon the rounds have passed can be missed.
+    assert long_["n"] == 0 and long_["unobserved"] == 0 and long_["open"] == 1
+
+    later = rounds + [_round(T0 + timedelta(hours=8))]
+    long_ = hot.follow(hot.entries(later, heads), later, horizons=(6,))["crypto"][0]
+    assert long_["unobserved"] == 1 and long_["open"] == 0
 
 
 # NEX-0055, verbatim in the parts that are tested: crypto only, ret_24h >= 6,

@@ -259,7 +259,8 @@ def say_reading(said: dict) -> list[str]:
         for mine, base in zip(said["follow"][cls], said["control"][cls]):
             lines.append(
                 f"  {cls:6} +{mine['hours']:.0f}h: entered {_pct(mine['mean'])} mean, "
-                f"{mine['up']}/{mine['n']} up ({mine['unobserved']} unseen) | "
+                f"{mine['up']}/{mine['n']} up ({mine.get('open', 0)} still open, "
+                f"{mine['unobserved']} unseen) | "
                 f"not in Hot {_pct(base['mean'])}, {base['up']}/{base['n']} up")
     for h, c in (said.get("cards") or {}).items():
         lines.append(f"  card   +{float(h):.0f}h: {_pct(c['mean'])} mean over {c['n']}")

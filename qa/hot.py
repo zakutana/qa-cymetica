@@ -166,36 +166,44 @@ def forward(rows, row_id, cls: str, t0, px0: float, hours: float,
     return round((best[1] / float(px0) - 1.0) * 100.0, 6)
 
 
-def _summary(values: list[float], unobserved: int) -> dict:
+def _summary(values: list[float], unobserved: int, open_: int = 0) -> dict:
     n = len(values)
     if not n:
-        return {"n": 0, "unobserved": unobserved, "mean": None, "median": None,
-                "up": 0, "up_ci": None}
+        return {"n": 0, "unobserved": unobserved, "open": open_, "mean": None,
+                "median": None, "up": 0, "up_ci": None}
     ordered = sorted(values)
     mid = n // 2
     median = ordered[mid] if n % 2 else (ordered[mid - 1] + ordered[mid]) / 2
     up = sum(1 for v in values if v > 0)
-    return {"n": n, "unobserved": unobserved,
+    return {"n": n, "unobserved": unobserved, "open": open_,
             "mean": round(sum(values) / n, 6), "median": round(median, 6),
             "up": up, "up_ci": _wilson(up, n)}
+
+
+def _horizon(rows, items, cls: str, hours: float) -> dict:
+    """`items` = [(row, at, px)]. A horizon the rounds have not reached yet is
+    open; one they passed without pricing the row is unobserved."""
+    rounds = _rounds(rows)
+    last = _at(rounds[-1]["at"]) if rounds else None
+    values, missing, open_ = [], 0, 0
+    for row, at, px in items:
+        r = forward(rows, row, cls, at, px, hours)
+        if r is not None:
+            values.append(r)
+        elif last is None or _at(at) + timedelta(
+                hours=hours, minutes=TOLERANCE_MINUTES) > last:
+            open_ += 1
+        else:
+            missing += 1
+    return {"hours": hours, **_summary(values, missing, open_)}
 
 
 def follow(found: list[dict], rows, horizons=(6.0, 24.0)) -> dict:
     """Per class, per horizon: the index's return after entry."""
     out = {}
     for cls in CLASSES:
-        mine = [e for e in found if e["cls"] == cls]
-        per = []
-        for h in horizons:
-            values, missing = [], 0
-            for e in mine:
-                r = forward(rows, e["row"], cls, e["at"], e["px"], h)
-                if r is None:
-                    missing += 1
-                else:
-                    values.append(r)
-            per.append({"hours": h, **_summary(values, missing)})
-        out[cls] = per
+        mine = [(e["row"], e["at"], e["px"]) for e in found if e["cls"] == cls]
+        out[cls] = [_horizon(rows, mine, cls, h) for h in horizons]
     return out
 
 
@@ -217,17 +225,8 @@ def control(rows, found: list[dict], horizons=(6.0, 24.0), headlines=None) -> di
                 px = _px_at({"wire": [w]}, w[0], cls)
                 if fp and px and fp not in in_hot and (fp, e["at"]) not in picked:
                     picked[(fp, e["at"])] = (w[0], px)
-        per = []
-        for h in horizons:
-            values, missing = [], 0
-            for (fp, at), (row, px) in picked.items():
-                r = forward(rows, row, cls, at, px, h)
-                if r is None:
-                    missing += 1
-                else:
-                    values.append(r)
-            per.append({"hours": h, **_summary(values, missing)})
-        out[cls] = per
+        items = [(row, at, px) for (_, at), (row, px) in picked.items()]
+        out[cls] = [_horizon(rows, items, cls, h) for h in horizons]
     return out
 
 
