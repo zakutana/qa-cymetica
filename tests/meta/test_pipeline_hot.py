@@ -35,13 +35,13 @@ def _round(when, hot_rows=(), wire=()):
             "hot": [list(r) for r in hot_rows], "wire": [list(w) for w in wire]}
 
 
-def _path(hid, start, pxs, every=20, rank=1, in_hot=True):
+def _path(hid, start, pxs, every=20, rank=1, in_hot=True, ret=7.0):
     """Rounds every `every` min; the row sits in hot (crypto) at each px."""
     out = []
     for i, px in enumerate(pxs):
         when = start + timedelta(minutes=every * i)
-        hot_rows = [(hid, rank, 7.0, "crypto", px, 7.0)] if in_hot else []
-        out.append(_round(when, hot_rows, [(hid, 10.0, px, 0.1, 7.0)]))
+        hot_rows = [(hid, rank, ret, "crypto", px, ret)] if in_hot else []
+        out.append(_round(when, hot_rows, [(hid, 10.0, px, 0.1, ret)]))
     return out
 
 
@@ -124,6 +124,13 @@ def test_a_basket_is_priced_through_another_headline_when_its_own_row_is_gone():
     (six,) = hot.follow([entry], heads + rounds, horizons=(6,))["crypto"]
     assert six["n"] == 1 and six["mean"] == 6.0
 
+    # B02, deep pass of 2026-09-21: the rule's exits read the basket the same
+    # way. Before, a trade whose own row had left the wire never exited.
+    ruled = ([_round(T0)] + _path(1, T0 + timedelta(minutes=20), [100])
+             + [_round(T0 + timedelta(minutes=40), [], [(2, 1.0, 109, 0.1, 3.0)])])
+    (trade,) = hot.nexus_rule(heads + ruled)["trades"]
+    assert trade["exit"] == "take_profit" and trade["gross"] == 9.0
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_readings_sort_the_diary_once_not_once_per_basket(monkeypatch):
@@ -172,7 +179,8 @@ def test_follow_counts_unobserved_apart_from_the_measured():
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_control_holds_no_basket_that_was_in_hot_during_the_last_day():
     """A basket that dropped out of Hot three hours ago is the tail of what
-    is being measured, not a basket that was never called."""
+    is being measured, not a basket that was never called -- and a day with
+    a failed hot read in it cannot say which baskets were never called."""
     heads = [_headline(1), _headline(2, crypto=("DDD", "EEE", "FFF")),
              _headline(3, crypto=("GGG", "HHH", "III"))]
     was_hot = _round(T0, [(2, 1, 5.0, "crypto", 10, 5.0)],
@@ -189,6 +197,23 @@ def test_the_control_holds_no_basket_that_was_in_hot_during_the_last_day():
     assert [e["row"] for e in found] == [1]
     (short,) = hot.control(rows, found, horizons=(20 / 60,))["crypto"]
     assert short["n"] == 1 and short["mean"] == 5.0, "row 3 only, not row 2"
+
+    # B06, deep pass of 2026-09-21, rule 8: a round whose hot read failed is
+    # not a round that saw nothing hot. Row 3 is not on that round's wire
+    # either (its wire read failed too), so only the conservative reading --
+    # a blind round in the look-back proves no basket absent -- keeps it out.
+    blind = {"type": "round", "at": _iso(T0 + timedelta(hours=1)), "ok": False,
+             "errors": ["hot: HTTP 503", "wire: HTTP 503"], "hot": None, "wire": []}
+    rows = heads + [was_hot, blind, before, entry, later]
+    found = hot.entries(rows)
+    assert [e["row"] for e in found] == [1]
+    (short,) = hot.control(rows, found, horizons=(20 / 60,))["crypto"]
+    assert short["n"] == 0, "a basket hot only while we were blind is not a control"
+    # A blind round older than the day before the entry is outside the question.
+    old = {**blind, "at": _iso(T0 + timedelta(hours=3, minutes=20) - timedelta(hours=25))}
+    rows = heads + [old, was_hot, before, entry, later]
+    (short,) = hot.control(rows, hot.entries(rows), horizons=(20 / 60,))["crypto"]
+    assert short["n"] == 1 and short["mean"] == 5.0
 
 
 # NEX-0055, verbatim in the parts that are tested: crypto only, ret_24h >= 6,
@@ -210,26 +235,50 @@ def test_the_rule_takes_profit_at_the_first_round_past_eight_percent():
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_rule_ignores_a_stale_headline_and_a_stock_basket():
+    """B04, deep pass of 2026-09-21: the stock basket had two members and no
+    round after its entry, so it traded nothing with the class gate deleted.
+    Each fixture now trades once the one gate under test is relaxed."""
     old = _headline(1, published=T0 - timedelta(hours=3))
     rounds = [_round(T0)] + _path(1, T0 + timedelta(minutes=20), [100, 120])
     assert hot.nexus_rule(rounds, [old])["trades"] == []
+    assert len(hot.nexus_rule(rounds, [old], {"max_age_minutes": 240})["trades"]) == 1
 
-    fresh = _headline(2, published=T0)
-    stock = [_round(T0), _round(T0 + timedelta(minutes=20),
-                                [(2, 1, 7.0, "stocks", 50, 7.0)],
-                                [(2, 50, 1.0, 7.0, 0.1)])]
+    fresh = _headline(2, stock=("XX", "YY", "ZZ"), published=T0)
+    stock = [_round(T0)] + [
+        _round(T0 + timedelta(minutes=20 * i), [(2, 1, 7.0, "stocks", px, 7.0)],
+               [(2, px, 1.0, 7.0, 0.1)])
+        for i, px in ((1, 50.0), (2, 55.0))]
     assert hot.nexus_rule(stock, [fresh])["trades"] == []
+    (trade,) = hot.nexus_rule(stock, [fresh], {"hot_class": "stocks"})["trades"]
+    assert trade["exit"] == "take_profit", "the class gate alone kept it out"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_rule_needs_its_own_threshold_and_rank():
+    """B03, deep pass of 2026-09-21: the low-return fixture had no round after
+    its entry, so it traded nothing whatever the threshold. Both fixtures now
+    run to a take-profit, and trade once the gate under test is relaxed."""
     heads = [_headline(1, published=T0)]
-    low = [_round(T0), _round(T0 + timedelta(minutes=20),
-                              [(1, 1, 5.0, "crypto", 100, 5.0)],
-                              [(1, 10.0, 100, 0.1, 5.0)])]
+    low = [_round(T0)] + _path(1, T0 + timedelta(minutes=20), [100, 120], ret=5.0)
     assert hot.nexus_rule(low, heads)["trades"] == []
+    assert len(hot.nexus_rule(low, heads, {"min_ret_24h": 5.0})["trades"]) == 1
     deep = [_round(T0)] + _path(1, T0 + timedelta(minutes=20), [100, 120], rank=4)
     assert hot.nexus_rule(deep, heads)["trades"] == []
+    assert len(hot.nexus_rule(deep, heads, {"max_rank": 4})["trades"]) == 1
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_rule_ignores_a_basket_that_may_have_sat_in_hot_past_thirty_minutes():
+    """B05, deep pass of 2026-09-21: NEX-0055's second clock, time in Hot
+    <= 30 min, was declared and never read. The diary proves only an upper
+    bound -- the entry round minus the last covered round that saw the basket
+    absent -- and GAP_MINUTES lets that be 40. Past his 30 it is still an
+    entry, just not one under his rule."""
+    heads = [_headline(1, published=T0)]
+    late = [_round(T0)] + _path(1, T0 + timedelta(minutes=35), [100, 120])
+    assert len(hot.entries(late, heads)) == 1
+    assert hot.nexus_rule(late, heads)["trades"] == []
+    assert len(hot.nexus_rule(late, heads, {"max_minutes_in_hot": 40})["trades"]) == 1
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -264,20 +313,51 @@ def test_the_volatility_stop_widens_with_the_basket_and_never_tightens_past_four
     few = _path(1, T0, [100])
     assert hot.vol_stop(few, 1, "crypto", T0) == -4.0, "no history, the floor"
 
+    # B08, deep pass of 2026-09-21: NEX-0057d run through the rule. The basket
+    # swings 3 % a round before it enters, so its stop is wider than -4 and
+    # the target twice that: a -5 % dip does not stop it and +10 % does not
+    # take profit -- the first round past the widened target does.
+    heads = [_headline(1, published=T0)]
+    before = [_round(T0 + timedelta(minutes=20 * i), [], [(1, 10.0, px, 0.1, 7.0)])
+              for i, px in enumerate([100, 103])]
+    rounds = before + _path(1, T0 + timedelta(minutes=40),
+                            [100, 103, 97.85, 113.3, 117.42], rank=40)
+    stop = hot.vol_stop(rounds, 1, "crypto", T0 + timedelta(minutes=60))
+    assert 10.0 < -2.0 * stop < 14.0 and stop < -5.0, "the fixture spans both levels"
+    (trade,) = hot.nexus_rule(rounds, heads, hot.VARIANTS["NEX-0057d"])["trades"]
+    assert trade["at"] == _iso(T0 + timedelta(minutes=60))
+    assert trade["exit"] == "take_profit"
+    assert abs(trade["gross"] - (117.42 / 103 - 1) * 100) < 1e-6, "target = 2 x stop"
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_trade_whose_time_stop_was_never_seen_is_open_not_a_result():
+    """Open while the rounds have not reached its end; unobserved once they
+    passed it without pricing the basket (B02, deep pass of 2026-09-21: it
+    stayed open for ever, where follow() already said unobserved)."""
     heads = [_headline(1, published=T0)]
     rounds = [_round(T0)] + _path(1, T0 + timedelta(minutes=20), [100, 101])
     said = hot.nexus_rule(rounds, heads)
     assert said["trades"] == []
-    assert said["open"] == 1
+    assert said["open"] == 1 and said["unobserved"] == 0
+
+    later = rounds + [_round(T0 + timedelta(hours=26))]
+    said = hot.nexus_rule(later, heads)
+    assert said["trades"] == []
+    assert said["open"] == 0 and said["unobserved"] == 1
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_verdict_waits_for_a_hundred_and_then_reads_the_t_stat():
+    """Each of his three rejections is its own gate (B09, deep pass of
+    2026-09-21: no sample had a positive mean below his t, so the t gate
+    could be deleted green)."""
     losers = [{"net": -1.0}] * 60 + [{"net": 0.5}] * 40
     assert hot.rule_verdict(losers[:99])["verdict"].startswith("not yet")
     assert hot.rule_verdict(losers)["verdict"].startswith("rejected")
     winners = [{"net": 2.0}] * 70 + [{"net": -1.0}] * 30
     assert hot.rule_verdict(winners)["verdict"].startswith("not rejected")
+    faint = [{"net": 1.0}] * 50 + [{"net": -0.9}] * 50
+    said = hot.rule_verdict(faint)
+    assert said["mean_net"] > 0 and said["expectancy"] > 0 and said["t"] < 1.65
+    assert said["verdict"].startswith("rejected"), "the t-stat alone rejects it"

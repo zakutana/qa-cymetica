@@ -134,7 +134,8 @@ def test_a_read_that_outlives_its_deadline_is_a_failed_read_not_a_hung_tick(
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_card_is_priced_afterwards_from_its_own_history(tmp_path, monkeypatch):
     """The card behind an entry is read once its day has passed, from
-    index-history -- never sampled on the way."""
+    index-history -- never sampled on the way. A card it could not price is
+    counted as unobserved, never dropped."""
     mod = _module(tmp_path, monkeypatch)
     wire = [_item(1)]
     mod.capture(_client(_handler([], wire)), now=T0)
@@ -166,3 +167,17 @@ def test_the_card_is_priced_afterwards_from_its_own_history(tmp_path, monkeypatc
     said = mod.card_follow(mod.load(), horizons=(6.0, 40.0))
     assert said[6.0]["n"] == 1 and said[6.0]["mean"] == 6.0
     assert said[40.0]["n"] == 0
+
+    # B07, deep pass of 2026-09-21: a card whose read failed, or whose history
+    # stops short of the horizon, was dropped -- `unobserved` was a hard 0.
+    # Both are counted now; a horizon the diary has not reached yet is open.
+    entry_at = (T0 + timedelta(minutes=20)).isoformat()
+    base = {"type": "card", "at": (T0 + timedelta(hours=25)).isoformat(),
+            "fp": "crypto:DDD,EEE,FFF", "entry_at": entry_at}
+    failed = {**base, "card_id": "card-2", "ok": False, "status": 503, "points": []}
+    short = {**base, "card_id": "card-3", "ok": True, "status": 200,
+             "points": [[T0.isoformat(), 100], [(T0 + timedelta(hours=1)).isoformat(), 101]]}
+    said = mod.card_follow(mod.load() + [failed, short], horizons=(6.0, 40.0))
+    assert said[6.0]["n"] == 1 and said[6.0]["unobserved"] == 2
+    assert said[6.0]["open"] == 0
+    assert said[40.0]["n"] == 0 and said[40.0]["open"] == 3

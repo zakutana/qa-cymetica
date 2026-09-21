@@ -234,22 +234,33 @@ def tick(client) -> dict:
 
 
 def card_follow(rows, horizons=(6.0, 24.0)) -> dict:
-    """The card's own return over the same horizons, from its history."""
+    """The card's own return over the same horizons, from its history.
+
+    B07, deep pass of 2026-09-21: a card whose read failed, or whose history
+    has no point near the entry or the horizon, was dropped and `unobserved`
+    was a hard 0. It is unobserved now -- counted, never a zero -- unless the
+    diary has not reached the horizon yet, which is open, as in hot.follow."""
+    cards = [r for r in rows if r.get("type") == "card" and _at(r.get("entry_at"))]
+    stamps = [t for t in (_at(r.get("at")) for r in rows) if t]
+    last = max(stamps, default=None)
+    slack = timedelta(minutes=hot.TOLERANCE_MINUTES)
     out = {}
     for h in horizons:
-        values = []
-        for r in rows:
-            if r.get("type") != "card" or not r.get("ok"):
-                continue
+        values, missing, open_ = [], 0, 0
+        for r in cards:
             t0 = _at(r["entry_at"])
-            pts = [(_at(t), v) for t, v in r.get("points") or []]
+            target = t0 + timedelta(hours=h)
+            pts = [(_at(t), v) for t, v in r.get("points") or []] if r.get("ok") else []
             start = min(pts, key=lambda p: abs(p[0] - t0), default=None)
-            end = min(pts, key=lambda p: abs(p[0] - (t0 + timedelta(hours=h))), default=None)
+            end = min(pts, key=lambda p: abs(p[0] - target), default=None)
             if (start and end and start[1]
-                    and abs(start[0] - t0) <= timedelta(minutes=30)
-                    and abs(end[0] - (t0 + timedelta(hours=h))) <= timedelta(minutes=30)):
+                    and abs(start[0] - t0) <= slack and abs(end[0] - target) <= slack):
                 values.append(round((end[1] / start[1] - 1) * 100, 6))
-        out[h] = hot._summary(values, 0)
+            elif last is None or target + slack > last:
+                open_ += 1
+            else:
+                missing += 1
+        out[h] = hot._summary(values, missing, open_)
     return out
 
 
@@ -288,11 +299,13 @@ def say_reading(said: dict) -> list[str]:
                 f"{mine['unobserved']} unseen) | "
                 f"not in Hot {_pct(base['mean'])}, {base['up']}/{base['n']} up")
     for h, c in (said.get("cards") or {}).items():
-        lines.append(f"  card   +{float(h):.0f}h: {_pct(c['mean'])} mean over {c['n']}")
+        lines.append(f"  card   +{float(h):.0f}h: {_pct(c['mean'])} mean over {c['n']} "
+                     f"({c.get('open', 0)} still open, {c.get('unobserved', 0)} unseen)")
     rules = said.get("rules") or {"NEX-0055": said.get("rule") or {}}
     for name, rule in rules.items():
         lines.append(f"  {name}: {rule.get('entries', 0)} qualifying entr(ies), "
-                     f"{rule.get('open', 0)} open -- {rule.get('verdict')}")
+                     f"{rule.get('open', 0)} open, {rule.get('unobserved', 0)} unseen "
+                     f"-- {rule.get('verdict')}")
     return lines
 
 

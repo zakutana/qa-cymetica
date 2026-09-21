@@ -132,7 +132,9 @@ def covered(prev: dict | None, cur: dict, gap_minutes: float = GAP_MINUTES) -> b
 def entries(rows, headlines=None) -> list[dict]:
     """Baskets that appeared in the hot top 100 at a round whose previous round
     (within GAP_MINUTES) did not have them. One per basket per ONCE_HOURS; the
-    best-ranked row stands for the basket."""
+    best-ranked row stands for the basket. `absent_at` is that previous round:
+    the entry came in after it, so `at - absent_at` is the most the diary can
+    prove about how long the basket has been in Hot."""
     rounds = _rounds(rows)
     heads = _headlines(headlines if headlines is not None else rows)
     last_entry: dict[str, datetime] = {}
@@ -159,7 +161,8 @@ def entries(rows, headlines=None) -> list[dict]:
                 last_entry[fp] = when
                 head = heads.get(h["row"]) or {}
                 out.append({"fp": fp, "row": h["row"], "cls": h["cls"],
-                            "at": rnd["at"], "rank": h["rank"], "hot": h["hot"],
+                            "at": rnd["at"], "absent_at": prev["at"],
+                            "rank": h["rank"], "hot": h["hot"],
                             "px": h["px"], "ret": h["ret"],
                             "published_at": head.get("published_at"),
                             "members": head.get(f"{_cls_key(h['cls'])}_members") or [],
@@ -199,6 +202,19 @@ class _Index:
     def last(self):
         return self.times[-1] if self.times else None
 
+    def after(self, t0: datetime) -> int:
+        """The position of the first round strictly after `t0`."""
+        return self._bisect.bisect_right(self.times, t0)
+
+    def price(self, i: int, cls: str, row_id, siblings=()) -> float | None:
+        """The basket's price at round `i`: the row's own, else any sibling's."""
+        here = self.prices[i]
+        px = here.get((cls, row_id))
+        if not px:
+            px = next((here[(cls, s)] for s in siblings
+                       if here.get((cls, s))), None)
+        return px
+
     def forward(self, row_id, cls: str, t0, px0: float, hours: float,
                 tolerance_minutes: float = TOLERANCE_MINUTES,
                 siblings=()) -> float | None:
@@ -209,11 +225,7 @@ class _Index:
         hi = self._bisect.bisect_right(self.times, target + slack)
         best = None
         for i in range(lo, hi):
-            here = self.prices[i]
-            px = here.get((cls, row_id))
-            if not px:
-                px = next((here[(cls, s)] for s in siblings
-                           if here.get((cls, s))), None)
+            px = self.price(i, cls, row_id, siblings)
             off = abs(self.times[i] - target)
             if px and (best is None or off < best[0]):
                 best = (off, px)
@@ -291,21 +303,29 @@ def control(rows, found: list[dict], horizons=(6.0, 24.0), headlines=None) -> di
     basket nobody called did meanwhile. Every such basket, not a sample of
     equal size -- a larger control costs nothing here, since no leg is priced.
     One that left Hot hours ago is excluded: it is the tail of the thing
-    measured, not its absence."""
+    measured, not its absence. So is a day in which a hot read failed: what
+    was in Hot then is unknown, and an unknown is not "not in Hot" (rule 8),
+    so an entry with one in the day before it brings no control at all."""
     index = _Index(rows)
     ordered = index.rounds
     rounds = {r["at"]: r for r in ordered}
     heads = _headlines(headlines if headlines is not None else rows)
     seen_hot: dict[str, list[datetime]] = {}
+    blind: list[datetime] = []
     for rnd in ordered:
+        if rnd.get("hot") is None:
+            blind.append(_at(rnd["at"]))
+            continue
         for h in _hot_rows(rnd):
             fp = _fp(heads.get(h["row"]), h["cls"])
             if fp:
                 seen_hot.setdefault(fp, []).append(_at(rnd["at"]))
 
+    def lately(times, when: datetime) -> bool:
+        return any(when - timedelta(hours=ONCE_HOURS) <= t <= when for t in times)
+
     def lately_hot(fp: str, when: datetime) -> bool:
-        return any(when - timedelta(hours=ONCE_HOURS) <= t <= when
-                   for t in seen_hot.get(fp, ()))
+        return lately(seen_hot.get(fp, ()), when)
 
     out = {}
     for cls in CLASSES:
@@ -315,6 +335,15 @@ def control(rows, found: list[dict], horizons=(6.0, 24.0), headlines=None) -> di
             if not rnd:
                 continue
             when = _at(e["at"])
+            # B06, deep pass of 2026-09-21: a failed hot read added nothing to
+            # seen_hot, so a basket hot only while we were blind joined the
+            # control. The conservative variant: a failed hot read in the look-
+            # back leaves EVERY basket unproven, not only those on that round's
+            # wire -- measured the same day, 2056 of 2600 hot rows (79 %) had
+            # their basket on the same round's wire, so the narrower reading
+            # would still count a fifth of the unknowns as not-hot.
+            if lately(blind, when):
+                continue
             for w in rnd.get("wire") or []:
                 fp = _fp(heads.get(w[0]), cls)
                 px = _px_at({"wire": [w]}, w[0], cls)
@@ -336,6 +365,15 @@ def _qualifies(e: dict, rule: dict) -> bool:
     if rule.get("max_rank") is not None and (
             not isinstance(e.get("rank"), int) or e["rank"] > rule["max_rank"]):
         return False
+    # B05, deep pass of 2026-09-21: his second clock, time in Hot, was declared
+    # and never read. The diary proves only an upper bound on it -- the entry
+    # round minus the last covered round that saw the basket absent -- and
+    # GAP_MINUTES lets that reach 40. Past his limit it is not his entry.
+    limit = rule.get("max_minutes_in_hot")
+    if limit is not None:
+        absent = _at(e.get("absent_at"))
+        if absent is None or _at(e["at"]) - absent > timedelta(minutes=limit):
+            return False
     published = _at(e.get("published_at"))
     if published is None:
         return False
@@ -395,18 +433,34 @@ def _overlap(a, b) -> float:
 
 
 def nexus_rule(rows, headlines=None, rule: dict | None = None) -> dict:
-    """NEX-0055, run over the diary. Entries are ours (an entry is at most one
-    round, GAP_MINUTES, into Hot -- inside his 30 minutes); exits are read at
-    the first ROUND past a level, at the price that round saw, never at the
-    level itself: we see the path only every tick."""
+    """NEX-0055, run over the diary. Entries are ours, and qualify only if
+    the last covered round that saw the basket absent is within his
+    `max_minutes_in_hot` of the entry -- the one bound on time in Hot the
+    diary proves. A `confirm_rounds` variant (NEX-0057, which keeps that
+    clock and adds the persistence check) then trades one round later, so its
+    trade can start up to one more round into Hot. Exits are read at the
+    first ROUND past a level, at the price that round saw, never at the level
+    itself: we see the path only every tick. The price is the basket's,
+    through any headline on it, as `follow` reads it. A trade no round priced
+    to an exit is open while the rounds have not passed its end, and
+    unobserved once they have."""
     rule = {**RULE, **(rule or {})}
-    rounds = _rounds(rows)
+    index = _Index(rows)
+    rounds = index.rounds
+    last = index.last()
+    slack = timedelta(minutes=TOLERANCE_MINUTES)
     heads = _headlines(headlines if headlines is not None else rows)
+    by_fp: dict[str, list] = {}
+    for hid, head in heads.items():
+        for cls in CLASSES:
+            fp = _fp(head, cls)
+            if fp:
+                by_fp.setdefault(fp, []).append(hid)
     found = [e for e in entries(rows, headlines) if _qualifies(e, rule)]
     if rule.get("confirm_rounds"):
         found = [c for c in (_confirmed(e, rounds, heads, rule["confirm_rounds"])
                              for e in found) if c]
-    trades, open_, skipped, held_rows = [], 0, 0, set()
+    trades, open_, missing, skipped, held_rows = [], 0, 0, 0, set()
     holding: list[tuple[datetime, list]] = []
     for e in found:
         t0 = _at(e["at"])
@@ -422,14 +476,16 @@ def nexus_rule(rows, headlines=None, rule: dict | None = None) -> dict:
         if rule.get("vol_stop"):
             stop = vol_stop(rows, e["row"], e["cls"], t0, floor=rule["stop"])
             target = -2.0 * stop
+        # B02, deep pass of 2026-09-21: exits read the entry's own row only, so
+        # a trade whose row left the wire never exited and stayed open for
+        # ever, where follow() read the same basket through a sibling.
+        siblings = [h for h in by_fp.get(e["fp"], ()) if h != e["row"]]
         exit_, gross, closed_at = None, None, None
-        for rnd in rounds:
-            when = _at(rnd["at"])
-            if when <= t0:
-                continue
-            if when > end + timedelta(minutes=TOLERANCE_MINUTES):
+        for i in range(index.after(t0), len(rounds)):
+            when = index.times[i]
+            if when > end + slack:
                 break
-            px = _px_at(rnd, e["row"], e["cls"])
+            px = index.price(i, e["cls"], e["row"], siblings)
             if not px:
                 continue
             move = (px / float(e["px"]) - 1.0) * 100.0
@@ -439,21 +495,25 @@ def nexus_rule(rows, headlines=None, rule: dict | None = None) -> dict:
             if move <= stop:
                 exit_, gross, closed_at = "stop", move, when
                 break
-            if when >= end - timedelta(minutes=TOLERANCE_MINUTES):
+            if when >= end - slack:
                 exit_, gross, closed_at = "time", move, when
                 break
         held_rows.add(e["row"])
         holding.append((end, e["members"]))
         if exit_ is None:
-            open_ += 1
+            if last is None or end + slack > last:
+                open_ += 1
+            else:
+                missing += 1
             continue
         gross = round(gross, 6)
         trades.append({"row": e["row"], "fp": e["fp"], "at": e["at"],
                        "closed_at": closed_at.isoformat(timespec="seconds"),
                        "exit": exit_, "gross": gross,
                        "net": round(gross - rule["cost_round_trip"], 6)})
-    return {"entries": len(found), "open": open_, "skipped_overlap": skipped,
-            "trades": trades, **rule_verdict(trades, rule)}
+    return {"entries": len(found), "open": open_, "unobserved": missing,
+            "skipped_overlap": skipped, "trades": trades,
+            **rule_verdict(trades, rule)}
 
 
 def rule_verdict(trades: list[dict], rule: dict | None = None) -> dict:
