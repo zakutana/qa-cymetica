@@ -1260,8 +1260,12 @@ def board(answers: list[dict], notebook: list[dict], room_rows: list[dict],
     for row in notebook:
         if row.get("type") == "gate":
             gates_by.setdefault(str(row.get("origin")), []).append(row)
-    rooms_by = {str(r.get("origin")): r for r in room_rows
-                if r.get("type") == "strategy"}
+    # One answer may open several rooms (one per card, 2026-09-21); keeping
+    # only the last hid a refuted room behind a running one (R05).
+    rooms_by: dict[str, list[dict]] = {}
+    for r in room_rows:
+        if r.get("type") == "strategy":
+            rooms_by.setdefault(str(r.get("origin")), []).append(r)
     status, verdicts = {}, {}
     for row in room_rows:
         if row.get("type") == "status":
@@ -1314,24 +1318,34 @@ def board(answers: list[dict], notebook: list[dict], room_rows: list[dict],
         if answer.get("type") != "answer":
             continue
         origin = str(answer.get("id") or "")
-        room = rooms_by.get(origin)
+        opened = rooms_by.get(origin) or []
         cash = money.get(origin)
         gated = gates_by.get(origin, [])
-        if not (room or cash or gated):
+        if not (opened or cash or gated):
             continue
-        room_id = room.get("id") if room else None
+        each = [{"id": r.get("id"), "card": r.get("card"),
+                 "title": r.get("title"), "status": status.get(r.get("id")),
+                 "verdict": (verdicts.get(r.get("id")) or {}).get("verdict"),
+                 "verdict_return_pct": (verdicts.get(r.get("id")) or {}).get(
+                     "return_pct")} for r in opened]
+        room_id = ", ".join(str(r["id"]) for r in each) if each else None
         priced = bool(cash and cash["priced"])
-        said = verdicts.get(room_id) or {}
+        statuses = sorted({r["status"] for r in each if r["status"]})
+        said = [r["verdict"] for r in each if r["verdict"]]
         out.append({
             "origin": origin, "at": answer.get("at"), "room": room_id,
-            "title": (room or {}).get("title"),
-            "status": status.get(room_id) if room_id else None,
+            "rooms": each,
+            "title": each[0]["title"] if each else None,
+            "status": (statuses[0] if len(statuses) == 1
+                       else " / ".join(statuses) if statuses else None),
             "stake_usdc": cash["stake"] if cash else 0.0,
             "pnl_usdc": cash["pnl"] if priced else None,
             "pnl_pct": (cash["pnl"] / cash["stake"] * 100.0
                         if priced and cash["stake"] else None),
-            "verdict": said.get("verdict"),
-            "verdict_return_pct": said.get("return_pct"),
+            "verdict": (said[0] if len(each) == 1 and said
+                        else ", ".join(said) if said else None),
+            "verdict_return_pct": (each[0]["verdict_return_pct"]
+                                   if len(each) == 1 else None),
             "gates": [{"card": g.get("card"), "verdict": g.get("verdict"),
                        "why": g.get("why")} for g in gated]})
 

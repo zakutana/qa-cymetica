@@ -964,6 +964,32 @@ def test_the_board_ranks_his_proposals_by_what_they_earned():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_board_shows_every_room_an_answer_opened(tmp_path, monkeypatch):
+    """R05, deep pass of 2026-09-21 (3/3): with one room per card an answer
+    opens several, and the board kept only the last -- a refuted room hidden
+    behind a running one of the same answer. Every room is named, with its
+    own status and verdict; the row's status says they differ."""
+    answers = [{"type": "answer", "id": "NEX-0001",
+                "at": "2026-09-19T01:00:00+00:00", "text": "..."}]
+    room_rows = [
+        {"type": "strategy", "id": "STR-0001", "origin": "NEX-0001",
+         "card": "c1", "title": "A", "at": "2026-09-19T01:10:00+00:00"},
+        {"type": "status", "room": "STR-0001", "status": "stopped"},
+        {"type": "verdict", "room": "STR-0001", "verdict": "refuted",
+         "early": True},
+        {"type": "strategy", "id": "STR-0002", "origin": "NEX-0001",
+         "card": "c2", "title": "B", "at": "2026-09-19T01:11:00+00:00"},
+        {"type": "status", "room": "STR-0002", "status": "running"}]
+
+    (row,) = lab.board(answers, [], room_rows, [], [])
+
+    assert [r["id"] for r in row["rooms"]] == ["STR-0001", "STR-0002"]
+    assert [r["verdict"] for r in row["rooms"]] == ["refuted", None]
+    assert row["status"] != "running", "a refuted room read as running"
+    assert "refuted" in str(row["verdict"])
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_brief_carries_his_track_record_into_the_next_question(
         tmp_path, monkeypatch):
     """Nexus remembers nothing between questions; the brief is his memory.
