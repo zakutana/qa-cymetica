@@ -3011,6 +3011,44 @@ reports:
       going live it is up about 6.4 %. If the pre-live stretch is a model
       track rather than held positions, the same sentence applies to it.
 
+  - key: tradeable-card-buy-500
+    findings: [CYM-a_card_that_reads_tradeable_now_takes_a_paper_buy]
+    severity: medium
+    category: api
+    url: https://cymetica.com/api/v1/event-cards/a4a5b71e-de11-4805-b8a3-ed9c3f8f8161/buy
+    title: "A card reading tradeable_now true answers a paper buy with HTTP 500 \"Buy failed\""
+    expected: >
+      The card's own tradeability block: tradeable_now is "True when a
+      position can be opened on this card RIGHT NOW via POST /buy, /sell or
+      /short (paper or live per your account mode); False carries
+      trading_blocked_reason. This is the only trade gate." So a paper buy on
+      a card reading true opens a position, or is refused with a reason.
+    actual: >
+      Card a4a5b71e-de11-4805-b8a3-ed9c3f8f8161 ("SpaceX IPO: Top 10 Crypto
+      Plays") reads status live, tradeable_now true, trading_blocked_reason
+      null, pw_live true. A paper POST /buy of 1,189.04 USDC answered HTTP 500
+      {"detail": "Buy failed"} twice, at 17:01:28 and 17:04:10 UTC on
+      2026-09-21. No position was created and the account did not change. The
+      same account's buys on two other cards were accepted earlier the same
+      day, and when a buy is refused for a reason the platform names it (a 400
+      "This card's price is not currently available" on 2026-09-13).
+    steps:
+      - 'GET https://cymetica.com/api/v1/event-cards/a4a5b71e-de11-4805-b8a3-ed9c3f8f8161 -> tradeable_now true, trading_blocked_reason null'
+      - 'POST /api/v1/event-cards/a4a5b71e-de11-4805-b8a3-ed9c3f8f8161/buy with an X-API-Key, paper, 1189.04 USDC -> HTTP 500 {"detail":"Buy failed"}'
+      - 'Repeat three minutes later -> the same 500; GET the account and positions -> unchanged'
+    body: >
+      Your own Nexus picked this card for us, confirming tradeable_now itself
+      before naming it, so an agent following Nexus's advice to the letter
+      hits a 500 with nothing to act on. A guess at the cause, clearly
+      labelled as one: six of the card's ten legs carry weight 0.0 (NEO, CKB,
+      BANANA, ANKR, FIL, ONT), which is the one thing unusual about its basket
+      next to the cards that bought fine.
+      Our check places no order: it reads the outcome of our newest paper buy,
+      and fails only when that buy got a 5xx on a card still reading
+      tradeable_now true. So it goes green the next time a buy we place is
+      accepted, or is refused with a 4xx that names its reason -- either
+      satisfies us.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in
