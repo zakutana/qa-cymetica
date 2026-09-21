@@ -306,9 +306,11 @@ def test_the_memecoin_section_renders_with_and_without_a_diary(tmp_path,
                                                                 monkeypatch):
     """The one branch nothing else here exercises. Every other test in this
     file runs against `stats.fomo == null` -- the real state on a fresh
-    checkout, since `state/fomo_signals.jsonl` is gitignored -- so the whole
-    body of statBlocks()'s `if (fm) {...}` had never once actually run in
-    Node before this test.
+    checkout, since `state/fomo_signals.jsonl` is gitignored -- so the
+    memecoin panel with a diary behind it had never once actually run in
+    Node before this test. It lived in statBlocks()'s `if (fm) {...}` when
+    this was written; it is memecoinPanel() on its own tab now, and the stats
+    grid must not draw it a second time.
     """
     import shutil
 

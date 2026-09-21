@@ -517,10 +517,11 @@ def test_a_new_session_does_not_reset_what_was_asked_today(tmp_path, monkeypatch
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_room_cap_is_a_rolling_day_and_counts_rooms_opened_earlier(
         tmp_path, monkeypatch):
-    """Ten new rooms a day: fifty running over a five-day window is ten a day.
+    """A day's cap of new rooms: 125 running over a five-day window is 25 a
+    day (CAPS, since 2026-09-21; ten and fifty before).
 
-    The rooms opened earlier TODAY count, or every tick would get ten of its
-    own -- the per-session cap's reset, one level down.
+    The rooms opened earlier TODAY count, or every tick would get a day's cap
+    of its own -- the per-session cap's reset, one level down.
     """
     scripts_lab = _scripts_lab(tmp_path, monkeypatch)
     cap = lab.CAPS["new_rooms_per_day"]
@@ -579,9 +580,12 @@ def _fill(stakes_for, rooms_wanted=70, book=100000.0):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_fifty_rooms_fit_under_the_ceiling(tmp_path, monkeypatch):
+def test_every_running_room_fits_under_the_ceiling(tmp_path, monkeypatch):
     """[operator 2026-09-12] fifty at once. The ceiling is 60% of the book, so a
     room may take 1.2% of it, split across its cards.
+
+    Fifty was their floor; the cap has been 125 since 2026-09-21 (RC1), so a
+    room takes 0.48% -- and the assertions read CAPS, not a number.
 
     The negative control is the stake it replaces: 2% of what is free for EACH
     card, which runs a mix of one-, two- and three-card rooms into the 60%
@@ -738,6 +742,25 @@ def test_a_tick_that_finds_another_one_running_does_nothing(tmp_path, monkeypatc
     assert not said.get("busy") and calls["fomo"], "a stale marker is taken over"
     assert not marker.exists(), "and removed when this tick ends"
 
+    # C01, deep pass of 2026-09-21: everything above ran against a marker this
+    # test wrote, so a tick that never wrote its own passed. The marker has to
+    # be there WHILE a tick runs, and the command a /loop runs has to be the
+    # exclusive one.
+    seen = []
+    doors["fomo"] = lambda *a: seen.append(marker.exists()) or {"added": 0}
+    scripts_lab.tick_exclusive(now=NOW + timedelta(hours=2), actions=doors,
+                               out=lambda *a: None)
+    assert seen == [True], "a running tick holds its own marker"
+    assert not marker.exists()
+
+    routed = []
+    monkeypatch.setattr(scripts_lab, "tick_exclusive",
+                        lambda **kw: routed.append("exclusive") or {})
+    monkeypatch.setattr(scripts_lab, "tick",
+                        lambda **kw: routed.append("bare") or {})
+    scripts_lab.main(["tick"])
+    assert routed == ["exclusive"], "`lab.py tick` is the exclusive tick"
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_first_tick_of_a_day_closes_yesterday_and_opens_today(
@@ -769,12 +792,13 @@ def test_the_first_tick_of_a_day_closes_yesterday_and_opens_today(
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_a_tick_during_a_deep_pass_or_a_night_only_reads_the_memecoins(
+def test_a_tick_during_a_deep_pass_or_a_night_only_reads_memecoins_and_hot(
         tmp_path, monkeypatch):
     """The pass verifies #85-#87 over the very answers and trades a tick
     would write, and a night is another process walking the same queue. The
-    memecoin checkpoints are neither -- and they are the one thing that is
-    gone if a tick skips them."""
+    memecoin checkpoints and the Hot round are neither -- read-only, each into
+    its own diary -- and they are what is gone for good if a tick skips them
+    (the Hot round since 2026-09-21, RC3)."""
     for blocker in ("pass", "night"):
         (tmp_path / blocker).mkdir()
         scripts_lab = _scripts_lab(tmp_path / blocker, monkeypatch)
@@ -1106,7 +1130,8 @@ def _launchpad(scripts_lab, tmp_path, monkeypatch, answers, live, readings,
         if card in refuse:
             raise SystemExit("the money in our paper bots could not be read")
         sent.append((card, usdc))
-        return {}
+        return {"outcome": "accepted", "http_status": 200,
+                "position_id": f"pos-{card[:8]}"}
     paper.buy = _buy
     monkeypatch.setattr(scripts_lab, "_sibling",
                         lambda n: paper if n == "paper" else real(n))

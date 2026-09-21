@@ -618,9 +618,11 @@ def test_a_room_opens_only_from_a_whole_answer_and_only_once(tmp_path, monkeypat
 
     A room is where one of its proposals is followed, so a room opens from a
     whole answer and from nothing else: not from a question cut short, given
-    up on, refused or still waiting, and not from an id nobody asked. One
-    answer opens one room, so an order that acts on an answer has exactly one
-    room to go to.
+    up on, refused or still waiting, and not from an id nobody asked. Without
+    a card, one answer opens one room, so an order that acts on it has exactly
+    one room to go to; with cards (since 2026-09-21) it opens one room per
+    card, which test_one_answer_opens_one_room_per_card_and_each_card_once
+    holds.
     """
     rooms = _rooms_at(tmp_path, monkeypatch)
     _write(tmp_path / "nexus.jsonl", [*_five_questions(), *_answered("NEX-6", 600)])

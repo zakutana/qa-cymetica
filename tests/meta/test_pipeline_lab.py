@@ -621,7 +621,8 @@ def test_the_buy_path_reads_what_is_already_deployed(tmp_path, monkeypatch):
     sent = []
     real_sibling = scripts_lab._sibling
     paper = real_sibling("paper")
-    paper.buy = lambda *a, **k: sent.append(a) or {"stub": True}
+    paper.buy = lambda *a, **k: sent.append(a) or {
+        "outcome": "accepted", "http_status": 200, "position_id": "pos-stub"}
     monkeypatch.setattr(scripts_lab, "_sibling",
                         lambda name: paper if name == "paper"
                         else real_sibling(name))
@@ -1198,21 +1199,51 @@ class _Clock:
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_the_night_and_the_loop_share_one_cap_per_day():
+def test_the_night_and_the_loop_share_one_cap_per_day(tmp_path, monkeypatch):
     """There were two caps until 2026-09-19 -- eight a session, twelve a
     night -- because a night was long and a session had a person waiting
     through it. A loop that ticks all day is neither, and the arithmetic of a
     rolling day covers both: whatever asked a question in the last 24 hours,
-    it counts."""
+    it counts.
+
+    Until the deep pass of 2026-09-21 (C09) this called the pure `may_ask`
+    three times, as its sibling above does, so a night or a hand-asked
+    question counting on its own would have stayed green. Now: one counter,
+    read by the night, the tick and `ask` alike, over whoever asked."""
+    import ast
+
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    now = datetime.now(timezone.utc)
+    rows = ([{"type": "question", "id": f"NEX-N{n}", "session": "LAB-0009",
+              "at": (now - timedelta(hours=n + 1)).isoformat()} for n in range(3)]
+            + [{"type": "question", "id": f"NEX-T{n}", "session": "LAB-0010",
+                "at": (now - timedelta(minutes=10 * n + 5)).isoformat()}
+               for n in range(2)]
+            + [{"type": "question", "id": f"NEX-O{n}", "session": "LAB-0008",
+                "at": (now - timedelta(hours=30 + n)).isoformat()}
+               for n in range(4)])
+    monkeypatch.setattr(scripts_lab, "_nexus_rows", lambda: rows)
+    assert scripts_lab._asked_today() == 5, "the night's three and the loop's two"
+    assert scripts_lab._tick_doors()["asked_today"] is scripts_lab._asked_today
+
+    tree = ast.parse((REPO / "scripts" / "lab.py").read_text(encoding="utf-8"))
+    night = next(n for n in tree.body
+                 if isinstance(n, ast.FunctionDef) and n.name == "night")
+    doors = {k.value: v.id for d in ast.walk(night) if isinstance(d, ast.Dict)
+             for k, v in zip(d.keys, d.values)
+             if isinstance(k, ast.Constant) and isinstance(v, ast.Name)}
+    assert doors.get("asked_today") == "_asked_today", doors
+
     cap = lab.CAPS["questions_per_day"]
-    may, why = lab.may_ask(asked=cap - 1, pass_running=False)
-    assert may, why
-
-    may, why = lab.may_ask(asked=cap, pass_running=False)
-    assert not may and str(cap) in why, why
-
-    may, why = lab.may_ask(asked=0, pass_running=True)
-    assert not may and "deep pass" in why.lower(), why
+    monkeypatch.setattr(scripts_lab, "pass_in_flight", lambda: False)
+    monkeypatch.setattr(scripts_lab, "_nexus_rows", lambda: [
+        {"type": "question", "id": f"NEX-{n}", "session": f"LAB-{n % 3}",
+         "at": (now - timedelta(minutes=30 * n + 1)).isoformat()}
+        for n in range(cap)])
+    # The cap's own refusal, by its words: "24" alone also matches the hours
+    # and the pace's reasons, which is how the first draft passed a mutation.
+    with pytest.raises(SystemExit, match=f"the cap is {cap}"):
+        scripts_lab.ask("one more", wait=False)
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

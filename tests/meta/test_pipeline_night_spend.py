@@ -96,7 +96,8 @@ def _wire(scripts_lab, monkeypatch, cards):
     sent = []
     real = scripts_lab._sibling
     paper = real("paper")
-    paper.buy = lambda *a, **k: sent.append(a[0]) or {"stub": True}
+    paper.buy = lambda *a, **k: sent.append(a[0]) or {
+        "outcome": "accepted", "http_status": 200, "position_id": "pos-stub"}
     monkeypatch.setattr(scripts_lab, "_sibling",
                         lambda n: paper if n == "paper" else real(n))
     return sent

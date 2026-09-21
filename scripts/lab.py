@@ -1684,9 +1684,10 @@ def night_promote(since: datetime | None = None) -> dict:
                 result, refused = {}, str(exc)[:200]
             # An order counts only when it was ACCEPTED: TRD-0010 came back
             # HTTP 500 "Buy failed" with no position (#117), and the tick said
-            # "1 order" all the same.
-            if result.get("outcome") == "accepted" or (
-                    refused is None and "outcome" not in result):
+            # "1 order" all the same. paper.buy always names an outcome; a
+            # result without one is not an accepted order either (C04, deep
+            # pass of 2026-09-21: only the test stubs ever omitted it).
+            if result.get("outcome") == "accepted":
                 bought.add(card)
                 placed += 1
                 status, why_status = "running", f"opened by the laboratory from {origin}"
