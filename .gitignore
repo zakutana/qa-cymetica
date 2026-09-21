@@ -84,6 +84,9 @@ state/lab.jsonl
 # every twenty minutes while a /loop runs, and rebuilt from the diaries if it is
 # lost -- a cache of the walk, not a record of anything.
 state/lab_tick.json
+# Present only while a tick runs (scripts/lab.py tick_exclusive). Committed
+# mid-tick it would make a clean tree dirty, and a level-V run impossible.
+state/lab_tick.running
 
 # What the laboratory has already asked their backtest, keyed on the basket.
 # Appended to while a run may be in flight, like the diaries above; the deep
