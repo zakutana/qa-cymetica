@@ -58,6 +58,7 @@ def _day(value):
 
 @qa(component="mcp.fund_research", tier=SafetyTier.SAFE, surface="mcp")
 def test_the_fta_crypto_return_starts_where_its_own_record_does(mcp_anon, rest_anon):
+    """get_fund's FTA-CRYPTOS inception against its own history's, under 'nothing backfilled'."""
     try:
         methodology = _body(mcp_anon.call("get_fund_methodology", {})).get("methodology") or {}
         fund = _body(mcp_anon.call("get_fund", {"symbol": SYMBOL})).get("fund") or {}
