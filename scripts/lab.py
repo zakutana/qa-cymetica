@@ -2177,8 +2177,15 @@ def brief() -> str:
                "proposal:")
     for row in best:
         legs = " + ".join(f"{s} {w * 100:.0f}%" for s, w in row["legs"])
+        # Say the unit. The search asks with include_fees FALSE (backtest()'s
+        # default; only the gate passes True), so these are gross. On
+        # 2026-09-21 they went to Nexus unlabelled beside the sentence "no
+        # room opens without your own backtest after fees", he reproduced the
+        # same basket after fees at half the return, and wrote a section of
+        # his answer about two engines disagreeing. They did not disagree.
+        fees = "after fees" if row.get("fees") else "FEES OFF (gross)"
         out.append(f"  sharpe {row['s']}  ret {row['r']}%  over {row['p']} "
-                   f"d  {legs[:60]}")
+                   f"d  {fees}  {legs[:60]}")
     if not best:
         out.append("  nothing in the register yet")
 

@@ -3283,6 +3283,7 @@
 {"archive": "", "bytes": 5551, "call": "POST https://cymetica.com/mcp/v1/? tools/call:get_fund", "id": "cbed8dabd2304bd52bdb8b9b7904190875cb4421dbddba275cf06af203248fa7", "why": "promised"}
 {"archive": "evidence-2026-09", "bytes": 38645, "call": "GET https://cymetica.com/api/v1/clones/fomo-radar/signals?chain,filter,limit", "id": "cc0d2a1c1f77946855431c0a08483afee1ecdbe6f9b5d4a5092d4ca4236894af", "why": "promised"}
 {"archive": "evidence-2026-09", "bytes": 47962, "call": "GET https://cymetica.com/api/v1/perpetual/assets?", "id": "cc157ecddba44d49ce774b38ed763739953f3416f3deba462c4438379d9cdd3e", "why": "row"}
+{"archive": "", "bytes": 5300, "call": "POST https://cymetica.com/api/v1/event-cards/30015006-abff-44b6-bdb0-f659faf4f3f4/buy?", "id": "cc1781aa2efb75d293f03a056e2ec187ac91875af6df72e5e3180a817f995c0f", "why": "trade"}
 {"archive": "evidence-2026-09", "bytes": 4162, "call": "GET https://cymetica.com/api/v1/cloned-bots/d778102d-cf3f-4d86-ad1e-2d8511b345dc/balance?", "id": "cc1dcbf30478088b980e25a909c20d8fc5a276c973db391b0d5e7c2e2c2a03f8", "why": "row"}
 {"archive": "", "bytes": 39133, "call": "GET https://cymetica.com/api/v1/clones/fomo-radar/signals?chain,filter,limit", "id": "cc34572c2bcfaf4d81f6edbbfbd1f9dbd0b86847fc09d6517a0a82fe5f4fa4e6", "why": "row"}
 {"archive": "", "bytes": 560922, "call": "GET https://cymetica.com/api/v1/event-cards?limit,offset", "id": "cc406442628bdb8020ab4265ba877b685d4e0d83e9b67f084ecc13452c7b884d", "why": "row"}
