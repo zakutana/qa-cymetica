@@ -41,6 +41,7 @@ HISTORY = "/api/v1/event-cards/{card}/index-history"
 HOT_LIMIT = 100
 WIRE_LIMIT = 500
 CARDS_PER_RESOLVE = 20
+READ_DEADLINE_S = 90.0
 CARD_WINDOW_HOURS = (-1.0, 25.0)
 
 
@@ -86,14 +87,27 @@ def _num(value, digits: int = 6):
 
 
 def _read(client, params: dict) -> tuple[list | None, str | None]:
+    """One read with a deadline for the WHOLE answer. httpx's timeout is
+    between bytes, and on 2026-09-21 a `limit=500` answer trickling in hung a
+    tick for fifteen minutes without ever tripping it."""
+    import time
+
+    started = time.monotonic()
     try:
-        response = client.get(HEADLINES, params=params)
+        with client.stream("GET", HEADLINES, params=params) as response:
+            if response.status_code != 200:
+                return None, f"{params}: HTTP {response.status_code}"
+            chunks = []
+            for chunk in response.iter_bytes():
+                chunks.append(chunk)
+                if time.monotonic() - started > READ_DEADLINE_S:
+                    return None, (f"{params}: past the {READ_DEADLINE_S:g}s "
+                                  f"deadline for the whole answer")
+            body = b"".join(chunks)
     except Exception as exc:  # noqa: BLE001 -- an unreadable answer is data
         return None, f"{params}: {type(exc).__name__}: {exc}"[:200]
-    if response.status_code != 200:
-        return None, f"{params}: HTTP {response.status_code}"
     try:
-        items = response.json().get("items")
+        items = json.loads(body).get("items")
     except (ValueError, AttributeError):
         return None, f"{params}: not JSON"
     if not isinstance(items, list):

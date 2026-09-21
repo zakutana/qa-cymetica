@@ -97,6 +97,20 @@ def test_a_failed_hot_read_is_written_as_none_not_as_an_empty_tab(tmp_path,
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_read_that_outlives_its_deadline_is_a_failed_read_not_a_hung_tick(
+        tmp_path, monkeypatch):
+    """2026-09-21 18:06: the `limit=500` wire read hung a tick for 15 minutes.
+    httpx's timeout is between bytes, so an answer that trickles never trips
+    it. A read now has a deadline for the WHOLE answer, and past it the round
+    is written with that read failed -- the hot rows still land."""
+    mod = _module(tmp_path, monkeypatch)
+    monkeypatch.setattr(mod, "READ_DEADLINE_S", 0.0)
+    said = mod.capture(_client(_handler([_item(1)], [_item(1)])), now=T0)
+    assert said["ok"] is False
+    assert any("deadline" in e for e in said["errors"]), said["errors"]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_card_is_priced_afterwards_from_its_own_history(tmp_path, monkeypatch):
     """The card behind an entry is read once its day has passed, from
     index-history -- never sampled on the way."""
