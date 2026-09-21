@@ -2886,6 +2886,43 @@ reports:
       at all it reports inconclusive rather than a fix, so a rewrite of the
       front end will not be mistaken for a correction.
 
+  - key: deep-answer-arrives-cut
+    findings: [CYM-a_deep_answer_arrives_whole]
+    severity: medium
+    category: api
+    url: https://cymetica.com/mcp/v1
+    title: "get_deep_answer serves a finished investigation with its start cut off, mid-word"
+    expected: >
+      A finished ask_nexus_deep job returns the whole answer in result.answer
+      -- the tool's own description tells the caller to poll get_deep_answer
+      with the job_id, and that field is the only copy the caller gets.
+    actual: >
+      Job bfb44eb7-1d12-4e78-abdb-67ddcc4d52d3, asked 2026-09-21 07:36 UTC,
+      finished in about five minutes with status "done". Its result.answer
+      begins, verbatim, "...ols with the hot basket is the predicted outcome"
+      -- mid-word -- and runs 1665 characters. No other field of the result
+      holds the rest, and re-reading the job returns the same text, so it is
+      what the server stores. The question asked three things, (a) to (c);
+      what survives is the tail of the last one and a closing list. The one
+      concrete rule the question asked for is in the part that was cut.
+    steps:
+      - 'POST https://cymetica.com/mcp/v1 tools/call get_deep_answer {"job_id":"bfb44eb7-1d12-4e78-abdb-67ddcc4d52d3"} with our key'
+      - 'Read result.content[0].text -> {"result": {"status": "done", "answer": "...ols with the hot basket is ..."}}'
+      - 'Our other deep answers of the same week begin normally and run up to 7416 characters, so this is not a uniform length cap'
+    body: >
+      Filed medium because nothing tells the caller the answer was cut: the
+      status is "done", the text reads fluently from the second sentence on,
+      and an agent that does not notice the leading ellipsis acts on the
+      closing advice with the reasoning it rested on missing. A deep
+      investigation is also the expensive lane -- a retry costs another slot
+      in your capacity window.
+      Our check re-reads, live, every deep job we asked in the last 72 hours
+      and fails only on an answer that begins with an ellipsis, so it goes
+      green once the window holds none -- whether you repair stored answers or
+      only new ones. If the cut is a deliberate tail-truncation for long
+      answers, a flag in the result (truncated: true, or the full length)
+      would let a caller know to ask again, and would satisfy us as well.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in
