@@ -46,8 +46,9 @@ the memecoin and Hot readings while a deep pass runs** -- that pass verifies
 **One room per card, and the caps are ceilings, not a quota** (2026-09-21).
 An answer naming five cards is five strategies: each card that passes the gate
 opens its own room, and a card that cannot trade yet is tried again next tick
-without holding the others back. A room whose own index crosses its stop is
-stopped early (read once an hour) and its paper position closed. The operator,
+without holding the others back. A room whose own index crosses its stop, or
+whose every leg is out at a net loss, is stopped early (read once an hour) and
+its paper position closed; a win waits for the window to close. The operator,
 on the plan: a room still needs a promising theory or backtest, so a question
 asks for *up to* five cards, each with its thesis: `python scripts/lab.py
 ask-cards` composes it from the diary (held cards by whole id, what the gate

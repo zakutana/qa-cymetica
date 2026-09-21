@@ -1010,8 +1010,9 @@ def _room_positions(paper_rows: list[dict], origin: str, cards) -> list[str]:
 def verdicts(now=None) -> list[dict]:
     """Every room whose window has closed and has no verdict yet -- and, once
     an hour, every running room whose own index already settled it early
-    (`qa.lab._early`): past its stop, or every leg at its level. An early
-    verdict stops the room and closes the paper position it holds."""
+    (`qa.lab._early`): past its stop, or every leg out at a net loss. Only a
+    refutation settles early; an early verdict stops the room and closes the
+    paper position it holds."""
     from qa.client import build_client
     from qa.config import identities, load_dotenv
     from qa.safety import CURRENT_TIER, EndpointRegistry, SafetyTier
