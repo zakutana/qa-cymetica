@@ -33,7 +33,10 @@ assignment, and it is deliberately narrow:
     read at all -- a rewritten front end is not evidence of a fix, and rule 8
     says a failed read is not an empty one. The same day this was written, a
     sibling check nearly filed a false report by treating "I could not find
-    it" as "it is not there".
+    it" as "it is not there". Also inconclusive when the tile is handed
+    something that names no stage: a bare name is followed once to its
+    assignment, and one that leads nowhere, or a call whose body is
+    elsewhere, is not read (deep pass of 2026-09-21, A15 -- `nb` passed).
 
 WHY IT IS READ OFF THE SCRIPT. The tile's value is computed in the browser,
 so the number itself is not in the HTML and no GET can see it. What IS in the
@@ -66,6 +69,32 @@ TILE = re.compile(
     r"""\$\(\s*['"]bs-building['"]\s*\)\s*,\s*(.{0,160}?)\s*\)\s*;""", re.S)
 # Any stage name other than `building` appearing inside that expression.
 OTHER_STAGES = ("funded", "requested", "queued", "shipped", "total")
+# The one stage the tile may count, as a word: `s.building`, `s['building']`.
+BUILDING = re.compile(r"\bbuilding\b")
+# A bare name, which says nothing about what it holds until it is followed.
+NAME = re.compile(r"[A-Za-z_$][\w$]*")
+
+
+def resolve(page: str, expression: str, before: int) -> str | None:
+    """The expression the tile actually shows, or None if it cannot be read.
+
+    Deep pass of 2026-09-21, A15. Written as `const nb = s.funded +
+    s.building; text($('bs-building'), nb);` the tile's argument is `nb`: no
+    stage word in it, and the check passed on the very arithmetic it exists
+    to catch. So a bare name is followed ONE step, to its nearest assignment
+    earlier in the page. A name with no such assignment, or one that leads
+    only to another name, is not read -- and an unread tile is inconclusive,
+    never a pass.
+    """
+    if not NAME.fullmatch(expression):
+        return expression
+    assigned = list(re.finditer(
+        r"(?<![\w$.])" + re.escape(expression) + r"\s*=(?![=>])\s*([^;]{1,160}?)\s*;",
+        page[:before], re.S))
+    if not assigned:
+        return None
+    value = " ".join(assigned[-1].group(1).split())
+    return None if NAME.fullmatch(value) else value
 
 
 @qa(component="rest.build_it_better", tier=SafetyTier.SAFE, surface="rest")
@@ -90,8 +119,28 @@ def test_the_boards_building_tile_counts_only_what_is_building(rest_anon):
             sources={"board": BOARD_PAGE}))
         return
 
-    expression = " ".join(found.group(1).split())
+    tile = " ".join(found.group(1).split())
+    expression = resolve(page.text, tile, found.start())
+    if expression is None or (not BUILDING.search(expression) and not any(
+            stage in expression for stage in OTHER_STAGES)):
+        # A pass is promised only for a tile that IS the building count, so
+        # an argument that names no stage at all -- an unfollowed name, a
+        # call whose body is elsewhere -- has not been read.
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason=(f"the board's Building now tile is computed as {tile!r}"
+                    + (f", which is {expression!r}" if expression
+                       and expression != tile else "")
+                    + ", which names no stage this check can read, so what "
+                      "the tile counts could not be established from the "
+                      "served HTML"),
+            left={"tile_expression": tile, "resolved": expression},
+            sources={"board": BOARD_PAGE}))
+        return
     added = [stage for stage in OTHER_STAGES if stage in expression]
+    # Quoted as the page wrote it, and through the name when it used one.
+    shown = (repr(expression) if expression == tile
+             else f"{tile!r}, which is {expression!r}")
     # What the platform says about itself, quoted beside the arithmetic so a
     # reader of the verdict can see both halves.
     stats = {}
@@ -103,20 +152,20 @@ def test_the_boards_building_tile_counts_only_what_is_building(rest_anon):
         conclude(Measurement(
             verdict="failed",
             reason=(f"the board's Building now tile is computed as "
-                    f"{expression!r}, so a request that is only "
+                    f"{shown}, so a request that is only "
                     f"{', '.join(added)} is displayed as building. The column "
                     f"under it filters stage == 'building' and does not, and "
                     f"the API agrees with the column: stats building "
                     f"{stats.get('building')}, funded {stats.get('funded')}"),
-            left={"tile_expression": expression, "adds": added},
+            left={"tile_expression": expression, "tile": tile, "adds": added},
             right={"stats": stats},
             sources={"board": BOARD_PAGE, "api": API}))
         return
 
     conclude(Measurement(
         verdict="passed",
-        reason=(f"the Building now tile is computed as {expression!r}, which "
+        reason=(f"the Building now tile is computed as {shown}, which "
                 f"counts nothing but what is building"),
-        left={"tile_expression": expression},
+        left={"tile_expression": expression, "tile": tile},
         right={"stats": stats},
         sources={"board": BOARD_PAGE, "api": API}))

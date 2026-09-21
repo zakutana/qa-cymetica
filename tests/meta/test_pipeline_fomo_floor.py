@@ -20,6 +20,7 @@ every way it could report without it is pinned here.
 from __future__ import annotations
 
 import importlib.util
+import types
 from pathlib import Path
 
 from qa.marks import SafetyTier, qa
@@ -180,6 +181,50 @@ def test_the_figure_quoted_to_them_is_measured_on_the_chain_it_names(
         f"is $1.88; quoting robinhood's 0.05 makes it $3.76, which is twice "
         f"what the breach was judged at: {reason}")
     assert "$3.76" not in reason, reason
+
+    # B13, deep pass of 2026-09-21: the reason was fixed and the EVIDENCE
+    # ROWS were not. `left=` still computed each breach's max buy with
+    # robinhood's ratio, so the row recorded beside that sentence said $3.76.
+    # Only the whole check reaches those rows, so it is run whole: solana
+    # partly serving the gate (one deep row at 0.025), the thin pools not.
+    import contextvars
+
+    from qa.measure import CURRENT_MEASUREMENT
+
+    monkeypatch.setattr("time.sleep", lambda seconds: None)
+    served = {"robinhood": _gated(),
+              "solana": [_row("CHADSTER", 75.16), _row("SPEED", 423.77),
+                         _row("DEEP", 100000.0, max_buy=2500.0)]}
+
+    class _Answer:
+        status_code = 200
+
+        def __init__(self, rows):
+            self.rows = rows
+
+        def json(self):
+            return {"rows": self.rows}
+
+    client = types.SimpleNamespace(get=lambda path, **kw: _Answer(
+        served["solana" if "chain=solana" in path else "robinhood"]))
+
+    def run():
+        try:
+            mod.test_a_hot_signal_clears_the_tradeability_floor_they_shipped(
+                client)
+        except AssertionError:
+            pass
+        return CURRENT_MEASUREMENT.get()
+
+    m = contextvars.copy_context().run(run)
+    assert m is not None and m.verdict == "failed", m
+    assert "$1.88" in m.reason, m.reason
+    quoted = {row["symbol"]: row["max_buy_5pct_usd"] for row in m.left}
+    assert set(quoted) == {"CHADSTER", "SPEED"}, quoted
+    assert abs(quoted["CHADSTER"] - 75.16 * 0.025) < 1e-9, (
+        f"the evidence row beside a breach judged at solana's 0.025 records "
+        f"${quoted['CHADSTER']:.2f} -- robinhood's 0.05, twice what was judged")
+    assert abs(quoted["SPEED"] - 423.77 * 0.025) < 1e-9, quoted
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

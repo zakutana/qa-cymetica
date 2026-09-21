@@ -28,10 +28,13 @@ would drown the finding. This check asks one thing -- if your own small
 schema declares a GET and that GET is public, is it in the document you tell
 agent builders to import?
 
-A path that needs a key (401/403), that is not a GET (405), or that we cannot
-read at all is not counted: a private endpoint is allowed to be absent from a
-public schema, and a failed read is not an empty read (rule 8). Path
-templates carrying `{...}` are skipped rather than guessed at.
+A path that needs a key (401/403) or that is not a GET (405) is not counted:
+a private endpoint is allowed to be absent from a public schema. A path we
+cannot read at all (429, 5xx) is not counted either way -- a failed read is
+not an empty read (rule 8) -- so while one is unread the check cannot say
+every public GET agrees, and reads Inconclusive unless another path has
+already answered 200 and failed it. Path templates carrying `{...}` are
+skipped rather than guessed at.
 """
 
 from __future__ import annotations
@@ -84,13 +87,22 @@ def test_a_public_get_in_openapi_json_is_in_the_curated_schema_too(rest_anon):
         else:
             unreadable.append(f"{path} ({code})")
 
+    # A path that answered 429 or 5xx was not read, and "every public GET is
+    # also in curated" is then a claim about it (rule 8). It passed until the
+    # deep pass of 2026-09-21 (A17). A 200 elsewhere is evidence regardless.
     conclude(Measurement(
-        verdict="failed" if public_and_absent else "passed",
+        verdict=("failed" if public_and_absent else
+                 "inconclusive" if unreadable else "passed"),
         reason=(f"{len(public_and_absent)} path(s) answer an anonymous GET and "
                 f"are declared in {SMALL} but not in {CURATED}, the schema "
                 f"llms.txt tells agent builders to import: "
                 f"{', '.join(public_and_absent)}"
                 if public_and_absent else
+                f"{len(unreadable)} of the {len(only_small)} path(s) declared "
+                f"only in {SMALL} could not be read anonymously "
+                f"({', '.join(unreadable)}), so whether they are public GETs "
+                f"missing from {CURATED} was not measured"
+                if unreadable else
                 f"every public GET declared in {SMALL} is also in {CURATED} "
                 f"({len(small)} vs {len(curated)} paths, "
                 f"{len(not_public)} of the difference private or not a GET)"),

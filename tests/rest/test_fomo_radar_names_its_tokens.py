@@ -132,10 +132,14 @@ def decide(robinhood: dict, solana: dict, pending) -> tuple[str, str]:
 
     anonymous = robinhood["share"] > THRESHOLD
     if not anonymous:
+        # A pass stands on robinhood's own rows; solana is only the yardstick
+        # of the failing direction, and an empty one is not quoted as "0 of 0".
         return ("passed",
                 f"{len(robinhood['named'])} of {robinhood['total']} robinhood "
                 f"rows name the token they are about, and "
-                f"{len(solana['named'])} of {solana['total']} on solana")
+                + (f"{len(solana['named'])} of {solana['total']} on solana"
+                   if solana["total"] else
+                   "solana served no row carrying a conviction this read"))
 
     # Their counter excuses the rows it can ACCOUNT FOR, not all of them.
     # `pending > 0` alone ended the measurement, so `identities_pending: 1`
@@ -152,6 +156,20 @@ def decide(robinhood: dict, solana: dict, pending) -> tuple[str, str]:
                 f"so the feed is still resolving curve->token after a "
                 f"restart, which is the transient they disclosed on "
                 f"2026-09-13 and not a defect")
+
+    # Every failing branch below rests on solana NAMING what robinhood does
+    # not -- the docstring's comparison. An empty solana feed has share 0.0,
+    # which read as "not anonymous", so the fallback filed "fills 0 of 0
+    # solana rows ... one chain's identity resolution": a comparison with
+    # nothing on one side (A08, deep pass of 2026-09-21). No yardstick, no
+    # finding -- rule 10.
+    if not solana["total"]:
+        return ("inconclusive",
+                f"{len(robinhood['anonymous'])} of {robinhood['total']} "
+                f"robinhood rows carry no identity, and their solana feed "
+                f"returned no row carrying a conviction -- so there is no "
+                f"named chain to hold them against, and nothing to tell one "
+                f"chain's identity resolution from their indexer being down")
 
     # Both chains anonymous is their token indexer, not one chain's identity
     # resolution -- the same judgement the no-counter path below makes, and

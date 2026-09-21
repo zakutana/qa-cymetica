@@ -53,7 +53,10 @@ counters move underneath them, so a plain comparison would call a real visit a
 contradiction. Each app is read BEFORE and AFTER the leaderboard, and the
 leaderboard figure must lie between the two. Counters only grow within a day,
 so a figure outside that bracket is theirs disagreeing with itself, not
-someone arriving.
+someone arriving. Only the leaderboard read taken INSIDE an app's bracket is
+judged: the first ranking, read before any app, chooses which apps to read
+and nothing more (deep pass of 2026-09-21 -- held against the bracket, one
+visit in the minutes between read as a contradiction).
 
 SAFE. Three GETs per app and no key: "No key, no account" is the claim under
 test. Views are counted by an in-page JavaScript beacon, so these reads do not
@@ -222,6 +225,7 @@ def test_the_traffic_figures_agree_with_the_days_they_are_made_of(rest_anon):
 
     problems: list[str] = []
     read, moved_apps, unreadable = [], [], []
+    bracketed, unbracketed = [], []
     for row in chosen:
         path = str(row.get("path") or "")
         if not path:
@@ -236,11 +240,26 @@ def test_the_traffic_figures_agree_with_the_days_they_are_made_of(rest_anon):
         one, two = before.json(), after.json()
         read.append(path)
 
-        # The row is re-read with the app so the bracket closes around the
-        # same moment; the original ranking is what the visitor sees, and
-        # either row disagreeing with the app is the defect.
-        rows = [r for r in (fresh.json().get("apps") or []) + [row]
-                if isinstance(r, dict) and r.get("path") == path]
+        # Only the row re-read INSIDE the bracket is judged. The original
+        # ranking was read before the first app's `before`, minutes earlier
+        # for the last app, so a real visit in between put it below the
+        # floor and read as their board disagreeing with itself -- deep pass
+        # of 2026-09-21, A07. A board that could not be re-read, or no longer
+        # lists the app, leaves claim 1 unmeasured for it (rule 8), never
+        # judged against the stale row.
+        rows = []
+        if fresh.status_code == 200:
+            try:
+                rows = [r for r in (fresh.json() or {}).get("apps") or []
+                        if isinstance(r, dict) and r.get("path") == path]
+            except (ValueError, AttributeError):
+                rows = []
+        if rows:
+            bracketed.append(path)
+        else:
+            unbracketed.append(f"{path} (HTTP {fresh.status_code})"
+                               if fresh.status_code != 200 else
+                               f"{path} (not on the board re-read)")
         for candidate in rows:
             problems += _agrees(candidate, one, two, path)
         problems += _nests(one, path)
@@ -262,7 +281,14 @@ def test_the_traffic_figures_agree_with_the_days_they_are_made_of(rest_anon):
     # started this is nearly all of it, and a pass that did not say so would
     # be the `0 == 0` verdict the deep pass found the same morning.
     held = [f"{len(read)} app(s) of the {len(apps)} on the board were read "
-            f"one by one and every figure on the board is the app's own"]
+            f"one by one"
+            + (f", and for {len(bracketed)} of them every figure on the "
+               f"board re-read between the app's two reads is the app's own"
+               if bracketed else "")]
+    if unbracketed:
+        held.append(f"NOT measured against the board for "
+                    f"{len(unbracketed)} app(s), whose row could not be "
+                    f"re-read inside the bracket: {', '.join(unbracketed)}")
     if moved_apps:
         held.append(f"the daily series sums to last_{WINDOW}d for "
                     f"{len(moved_apps)} app(s) that have moved at all "
@@ -286,4 +312,5 @@ def test_the_traffic_figures_agree_with_the_days_they_are_made_of(rest_anon):
         population={"apps_listed": len(apps),
                     "apps_carrying_a_figure": len(carrying),
                     "apps_read": len(read),
+                    "apps_bracketed": len(bracketed),
                     "apps_with_a_non_zero_day": len(moved_apps)}))

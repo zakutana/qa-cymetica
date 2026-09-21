@@ -36,6 +36,8 @@ call as the control, both read-only and both anonymous.
 
 from __future__ import annotations
 
+import re
+
 from qa.client import McpError
 from qa.marks import Inconclusive, SafetyTier, qa
 from qa.measure import Measurement, conclude
@@ -86,7 +88,8 @@ def refusal_of(error: McpError) -> dict:
 
 @qa(component="mcp.tools_call", tier=SafetyTier.SAFE, surface="mcp")
 def test_a_restricted_query_says_which_rule_it_tripped(mcp_anon):
-    """The refusal names its reason, the field, and that it is about wording."""
+    """The refusal names its reason, the field, and that it is about wording,
+    not identity or trust level."""
     try:
         answer = mcp_anon.call("search_markets", {"query": ORDINARY})
     except McpError as exc:
@@ -129,8 +132,19 @@ def test_a_restricted_query_says_which_rule_it_tripped(mcp_anon):
     # 2026-09-07 shape exactly, in a check written to guard against it.
     hint = str(body.get("hint") or "").lower()
     says_wording = "wording" in hint
-    denies_identity = ("not your identity" in hint or "not about your identity"
-                       in hint or "not a" in hint and "trust level" in hint)
+    # A DENIAL of identity or trust level, not the words beside a "not". The
+    # old arm read `"not a" in hint and "trust level" in hint`, and "not
+    # allowed at your trust level" contains both -- the very attribution this
+    # comment calls the defect, read as its denial (A16, deep pass of
+    # 2026-09-21). And it is in the verdict now: outside it, "The wording of
+    # this query is not permitted at your trust level" passed with a suffix.
+    denies_identity = re.search(
+        r"\bnot\s+(?:about\s+|related\s+to\s+|due\s+to\s+|based\s+on\s+"
+        r"|a\s+(?:matter|question)\s+of\s+)?(?:your\s+|the\s+|a\s+)?"
+        r"(?:identity|trust[\s-]level)"
+        r"|\bnothing\s+to\s+do\s+with\s+(?:your\s+)?(?:identity|trust[\s-]level)"
+        r"|\bregardless\s+of\s+(?:your\s+)?(?:identity|trust[\s-]level)",
+        hint) is not None
     # `parameter` names the field that tripped, which is the other half of
     # what makes the refusal actionable: without it there is nothing to
     # reword.
@@ -139,7 +153,8 @@ def test_a_restricted_query_says_which_rule_it_tripped(mcp_anon):
 
     conclude(Measurement(
         verdict="failed" if (missing or loose or not says_wording
-                             or not names_field) else "passed",
+                             or not names_field or not denies_identity)
+        else "passed",
         reason=(
             f"QUERY_RESTRICTED carries no {', '.join(missing)}, so a caller "
             f"cannot tell 'you may not' from 'ask this a different way'"
@@ -154,20 +169,22 @@ def test_a_restricted_query_says_which_rule_it_tripped(mcp_anon):
             f"the refusal names no field a caller could reword: parameter is "
             f"{body.get('parameter')!r}"
             if not names_field else
+            f"the hint says the refusal is about the wording but no longer "
+            f"says it is not about identity or trust level, which is the half "
+            f"that told an agent not to go looking for a credential: "
+            f"{str(body.get('hint'))[:140]!r}"
+            if not denies_identity else
             f"the refusal names reason {reason!r} on parameter "
             f"{body.get('parameter')!r}, and its hint says it is about the "
-            f"wording"
-            + ("" if denies_identity else
-               "; it no longer says this is not about identity or trust "
-               "level, which is the half that told an agent not to go "
-               "looking for a credential")
+            f"wording and not identity or trust level"
             + ("" if reason in KNOWN else
                f"; {reason!r} is not one of the five labels they published, "
                f"which is theirs to extend and not a defect")),
         left={"fields": sorted(k for k in ("reason", "parameter", "hint")
                                if body.get(k)),
               "hint_says_wording": says_wording,
+              "hint_denies_identity": denies_identity,
               "parameter": body.get("parameter")},
         right={"fields": ["hint", "parameter", "reason"],
-               "hint_says_wording": True},
+               "hint_says_wording": True, "hint_denies_identity": True},
         sources={"tool": "search_markets"}))

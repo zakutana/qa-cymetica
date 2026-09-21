@@ -330,12 +330,16 @@ def test_a_hot_signal_clears_the_tradeability_floor_they_shipped(rest_anon):
     conclude(Measurement(
         verdict=verdict,
         reason=reason,
+        # At the ratio each breach was JUDGED at -- solana's own, with the
+        # gated chain's only as its fallback. These rows used robinhood's,
+        # so a $75.16 pool judged at 0.025 was recorded at $3.76 beside a
+        # reason quoting $1.88 (B13, deep pass of 2026-09-21).
         left=[{"chain": "solana", "symbol": r.get("symbol"),
                "token_address": r.get("token_address"),
                "liquidity_usd": r.get("liquidity_usd"),
                "conviction": r.get("conviction"),
                "token_age_seconds": r.get("token_age_seconds"),
-               "max_buy_5pct_usd": max_buy(r, ratio or 0.0)}
+               "max_buy_5pct_usd": max_buy(r, solana["ratio"] or 0.0)}
               for r in solana["breaches"]],
         right=[{"chain": "robinhood", "hot_rows": robinhood["hot"],
                 "thinnest_max_buy_usd": (

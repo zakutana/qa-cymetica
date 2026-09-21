@@ -192,6 +192,66 @@ def test_without_their_field_it_falls_back_to_comparing_the_two_chains():
     verdict, why = mod.decide(_gap(40, 0), _gap(40, 0), pending=None)
     assert verdict == "inconclusive", why
 
+    # A08, deep pass of 2026-09-21: a solana feed with NO rows has share 0.0,
+    # which is "not anonymous", so the fallback filed "fills 0 of 0 solana
+    # rows ... one chain's identity resolution" -- a comparison with nothing
+    # on one side. The same with their counter at 0, which the both-chains
+    # guard excuses only when solana is anonymous, not when it is empty.
+    for pending in (None, 0):
+        verdict, why = mod.decide(_gap(40, 0), _gap(0, 0), pending=pending)
+        assert verdict == "inconclusive", (pending, why)
+        assert "0 of 0" not in why, why
+    # An empty yardstick takes nothing from a feed that names its tokens:
+    # that pass stands on robinhood's own rows, and says no "0 of 0".
+    verdict, why = mod.decide(_gap(0, 40), _gap(0, 0), pending=0)
+    assert verdict == "passed" and "0 of 0" not in why, why
+    # And the finding is still made when there IS a yardstick.
+    assert mod.decide(_gap(40, 0), _gap(0, 1), pending=None)[0] == "failed"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_identity_check_run_whole_on_an_empty_solana_feed(monkeypatch):
+    """A08 through the check itself, not only through `decide`: their docs,
+    forty anonymous robinhood rows and a solana feed serving none. The finding
+    rests on solana naming what robinhood does not, and there is no solana."""
+    import contextvars
+    import types
+
+    from qa.marks import Inconclusive
+
+    mod = _check()
+    anonymous = [{"conviction": 68.5, "token_address": "", "symbol": "",
+                  "name": "Unnamed launch", "hot": True} for _ in range(40)]
+
+    class _Answer:
+        status_code = 200
+
+        def __init__(self, body):
+            self.body = body
+
+        def json(self):
+            return self.body
+
+    def get(path, **kw):
+        if path == mod.DOCS:
+            return _Answer({"summary": "which tokens credible wallets buy"})
+        if "chain=solana" in path:
+            return _Answer({"rows": []})
+        return _Answer({"rows": anonymous})
+
+    def run():
+        try:
+            mod.test_a_hot_signal_names_the_token_it_is_a_signal_about(
+                types.SimpleNamespace(get=get))
+        except Inconclusive as exc:
+            return "inconclusive", str(exc)
+        except AssertionError as exc:
+            return "failed", str(exc)
+        return "passed", ""
+
+    verdict, why = contextvars.copy_context().run(run)
+    assert verdict == "inconclusive", (verdict, why)
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_healthy_feed_passes_and_one_stray_unnamed_launch_does_not_fire():

@@ -38,6 +38,8 @@ expectation of ours mixed in:
     more -- their own framing on the sibling traffic surface, "a range is the
     sum of its days";
   * and `first_session` must then fall inside the range that series covers.
+    A `first_session` that is absent, renamed or not a day was never read,
+    so the verdict is inconclusive -- never a pass on "(None) falls inside".
 
 It does NOT assert that the series must reach today. A feed may legitimately
 stop; that is their operational business. The defect is a total published
@@ -53,10 +55,14 @@ SAFE. One GET and no key.
 
 from __future__ import annotations
 
+import re
+
 from qa.marks import SafetyTier, qa
 from qa.measure import Measurement, conclude
 
 STATS = "/api/v1/build-stats"
+# The one shape a date is compared in: an ISO day, perhaps with a time after.
+ISO_DAY = re.compile(r"\d{4}-\d{2}-\d{2}(?![\d])")
 # The three totals that have a daily series of their own underneath them.
 SERIES = {"sessions": "sessions", "messages": "messages",
           "tool_calls": "tool_calls"}
@@ -107,8 +113,13 @@ def window_problems(body: dict) -> tuple[list[str], dict]:
         return [], facts
 
     first_session = body.get("first_session")
-    if not isinstance(first_session, str) or not first_session:
-        return [], facts
+    # Absent, renamed or not a day, it is the date nothing was read from
+    # (rule 8). Until the deep pass of 2026-09-21 (A18) this returned no
+    # problem with `measured` still True, and the verdict passed on "the
+    # first session they record (None) falls inside that window".
+    if not isinstance(first_session, str) or not ISO_DAY.match(first_session):
+        return [], {**facts, "measured": False,
+                    "why": f"first_session reads {first_session!r}, not a day"}
     # Their own dates, compared as their own strings: both are ISO days.
     if first_session[:10] >= first:
         return [], facts
@@ -135,6 +146,17 @@ def test_the_build_totals_reach_back_to_the_date_they_are_published_under(
 
     body = response.json()
     problems, facts = window_problems(body)
+    if not facts.get("measured") and "why" in facts:
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason=(f"{', '.join(facts['totals_equal_to_the_series'])} sum "
+                    f"the {facts['series_days']} day(s) from "
+                    f"{facts['series_from']} to {facts['series_to']}, but "
+                    f"{facts['why']}, so the date the page publishes them "
+                    f"under could not be read"),
+            sources={"build stats": STATS},
+            population=facts))
+        return
     if not facts.get("measured"):
         conclude(Measurement(
             verdict="inconclusive",

@@ -14,6 +14,10 @@ written afterwards is for.
 
 from __future__ import annotations
 
+import json
+
+import pytest
+
 from qa.marks import SafetyTier, qa
 
 # The seven lines as filed, from the BB-REQUEST message of 18:29:58 UTC.
@@ -69,16 +73,44 @@ Your changes (BB-CHANGE) are part of the scope and override the list above:
 """
 
 
-def _check():
+def _load(filename: str, name: str):
     import importlib.util
     from pathlib import Path
 
-    path = (Path(__file__).resolve().parents[1] / "rest"
-            / "test_build_it_better_board.py")
-    spec = importlib.util.spec_from_file_location("bb_board", path)
+    path = Path(__file__).resolve().parents[1] / "rest" / filename
+    spec = importlib.util.spec_from_file_location(name, path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def _check():
+    return _load("test_build_it_better_board.py", "bb_board")
+
+
+class _Answer:
+    """One response, as much of it as these checks read."""
+
+    def __init__(self, status, body=None, text=None):
+        self.status_code, self._body = status, body
+        self.text = text if text is not None else json.dumps(body)
+
+    def json(self):
+        if self._body is None:
+            raise ValueError("not JSON")
+        return self._body
+
+
+class _Board:
+    """A `rest_anon` that answers from a dict keyed by path and has no
+    network behind it at all: a path it was not given is a 404, so a check
+    driven through it can never reach their server."""
+
+    def __init__(self, answers: dict):
+        self.answers = answers
+
+    def get(self, path, params=None):
+        return self.answers.get(path) or _Answer(404, {"detail": "not here"})
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -211,6 +243,59 @@ def test_a_request_whose_gate_was_never_read_is_not_evidence_either_way():
                           "clock_started_at": None}) == "not_started"
     assert bb.gate_state({**base, "spec_text": "no promise"}) == "no_claim"
 
+    # The same defect one field over (deep pass of 2026-09-21, A19). A gate
+    # that says it opened and not WHEN, or a clock whose start cannot be
+    # read, gave `opened_at` or `began` None -- and the comparison then fell
+    # through to "honoured". A missing time is not a time that was not
+    # before; "and not before" is exactly what nobody measured.
+    for funding, clock in (
+            ({**waived, "waived_at": None}, base["clock_started_at"]),
+            ({k: v for k, v in waived.items() if k != "waived_at"},
+             base["clock_started_at"]),
+            ({**waived, "waived_at": "not a time"}, base["clock_started_at"]),
+            ({**neither, "funded": True}, base["clock_started_at"]),
+            ({**neither, "funded": True, "funded_at": ""},
+             base["clock_started_at"]),
+            (waived, "not a time")):
+        assert bb.gate_state({**base, "funding": funding,
+                              "clock_started_at": clock}) == "unread", (
+            f"a gate that opened at no readable moment, or a clock that "
+            f"started at none, read as honoured: {funding}, clock {clock}")
+
+    # Filled rather than waived carries `funded_at`, and that one is read.
+    filled = {**neither, "funded": True,
+              "funded_at": "2026-09-19T20:00:00+00:00"}
+    assert bb.gate_state({**base, "funding": filled}) == "honoured"
+    assert bb.gate_state({**base, "funding": {
+        **filled, "funded_at": "2026-09-19T21:00:00+00:00"}}) == \
+        "clock_ran_early"
+
+    # And through the check itself, because a state the helper returns is
+    # only a claim until the verdict is seen to follow it: one request,
+    # waived at no stated moment, has to leave the check with nothing to say.
+    from qa.marks import Inconclusive
+
+    record = {**base, "funding": {**waived, "waived_at": None}}
+    board = _Board({bb.BOARD: _Answer(200, {"items": [{"ticket": "ET-1"}]}),
+                    f"{bb.BOARD}/ET-1": _Answer(200, record)})
+    with pytest.raises(Inconclusive, match="no reading"):
+        bb.test_the_spec_s_funding_gate_is_the_one_the_build_actually_waits_on(
+            board)
+
+    # And the verdict the check exists for quotes what it read. The row for
+    # an early clock came from clock_runs_unfunded(), which answers only for a
+    # gate neither filled nor waived, so it rendered "clock from None, None of
+    # None USD raised, waived None" about a request whose record says waived.
+    record = {**base, "funding": early}
+    board = _Board({bb.BOARD: _Answer(200, {"items": [{"ticket": "ET-1"}]}),
+                    f"{bb.BOARD}/ET-1": _Answer(200, record)})
+    with pytest.raises(AssertionError) as said:
+        bb.test_the_spec_s_funding_gate_is_the_one_the_build_actually_waits_on(
+            board)
+    for read in ("clock_ran_early", "2026-09-19T20:25:59", "waived True",
+                 "2026-09-19T20:55:59"):
+        assert read in str(said.value), (read, str(said.value))
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_token_scan_would_find_a_token_and_not_a_coin_address():
@@ -295,9 +380,12 @@ def test_late_means_past_the_deadline_with_nothing_shipped():
     reading therefore has to be driven here, at both a before and an after,
     or the guard is one nobody has seen work until the night it matters.
 
-    Three ways a build stops being late, because reading only `our_url` would
-    call a finished build overdue: a shipped url, a resolution time, or a
-    verdict already posted.
+    One way a build stops being late: a resolution time at or before its
+    deadline. Until #112 a shipped url or a posted verdict did it too, and
+    ET-26036 read as on time four hours after it missed its window. Since
+    then a url or a verdict with no readable finish time proves only that
+    something arrived, never when, so it reads `unreadable` -- neither late
+    nor on time -- and a resolution after the deadline is `shipped_late`.
     """
     from datetime import datetime, timedelta, timezone
 
@@ -344,3 +432,190 @@ def test_late_means_past_the_deadline_with_nothing_shipped():
         "no published deadline is no promise to hold them to")
     assert bb.overdue({**live, "deadline_at": "not a date"}, after) is None, (
         "a deadline we cannot read is not a deadline that passed -- rule 8")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_build_that_shipped_late_once_does_not_hold_the_verdict_red_for_good():
+    """A10, deep pass of 2026-09-21: the board is a log that only grows.
+
+    The 24-hour check judged every dated request the board has ever held.
+    ET-26036 shipped four hours late and its record says so for good, so the
+    check could never pass again whatever they ship on time from now on --
+    "has a build ever been late" answered under a docstring that asks "does a
+    build ship inside 24 hours". The shape of the two logs repaired on
+    2026-09-10 (a-check-over-a-growing-log-can-never-go-green).
+
+    A build shipped late is a finished event; a build past its deadline with
+    nothing shipped is a live one, and they can still change it. So the
+    verdict judges what settled inside the last day, and every request that
+    is still overdue however old; what shipped before that is history, named
+    in the population and never the verdict. A window with nothing settled in
+    it is nothing measured (rule 10), not a promise kept.
+
+    Considered folding this into `test_late_means_past_the_deadline_with_
+    nothing_shipped`: it drives `overdue()` over one request at a time, and
+    this defect is in which requests the check function hands to it, so it
+    needs a board and the function itself.
+    """
+    from datetime import datetime, timedelta, timezone
+
+    from qa.marks import Inconclusive
+    from qa.measure import CURRENT_MEASUREMENT
+
+    bb = _check()
+    now = datetime.now(timezone.utc)
+
+    def at(hours):
+        return (now + timedelta(hours=hours)).isoformat()
+
+    def run(*items):
+        bb.test_a_build_ships_inside_the_24_hours_it_publishes(
+            _Board({bb.BOARD: _Answer(200, {"items": list(items)})}))
+        return CURRENT_MEASUREMENT.get()
+
+    # ET-26036 as it stands a day on: missed its deadline, shipped late, and
+    # the shipping was over a day ago. Beside it a build that shipped on time
+    # this morning -- the promise, kept, inside the window.
+    old_late = {"ticket": "ET-26036", "deadline_at": at(-30), "stage": "shipped",
+                "our_url": "/weekly-signal", "resolved_at": at(-26),
+                "on_time": False}
+    on_time = {"ticket": "ET-2", "deadline_at": at(10), "stage": "shipped",
+               "our_url": "/x", "resolved_at": at(-2), "on_time": True}
+    said = run(old_late, on_time)
+    assert said.verdict == "passed", said.reason
+    assert "ET-26036" in said.reason, (
+        "the late build left the verdict without being named as history: "
+        + said.reason)
+    assert "ET-26036" in str(said.population), said.population
+
+    # History alone is nothing measured about the promise now.
+    with pytest.raises(Inconclusive):
+        run(old_late)
+    # Neither is a board where nothing has reached its deadline yet, nor a
+    # deadline that cannot be read as a date (rule 8).
+    with pytest.raises(Inconclusive):
+        run({"ticket": "ET-3", "deadline_at": at(5), "stage": "funded"})
+    with pytest.raises(Inconclusive):
+        run({"ticket": "ET-6", "deadline_at": "not a date", "stage": "funded"})
+
+    # A build that shipped late inside the window still fails ...
+    with pytest.raises(AssertionError, match="ET-4"):
+        run({"ticket": "ET-4", "deadline_at": at(-6), "stage": "shipped",
+             "our_url": "/y", "resolved_at": at(-2), "on_time": False},
+            on_time)
+    # ... and one past its deadline with nothing shipped fails however old
+    # it is: that breach is still happening, it is not history.
+    with pytest.raises(AssertionError, match="ET-5"):
+        run({"ticket": "ET-5", "deadline_at": at(-72), "stage": "funded"},
+            old_late, on_time)
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_building_tile_is_judged_by_the_arithmetic_behind_its_name():
+    """A15, deep pass of 2026-09-21: `nb` has no stage in it.
+
+    The tile check reads the expression handed to `text($('bs-building'),
+    ...)` and fails when it names a stage other than `building`. Written as
+    `const nb = s.funded + s.building; text($('bs-building'), nb);` -- the
+    same arithmetic, one line up -- it captured `nb`, found no stage word in
+    it, and PASSED, while its docstring promises a pass only when the tile is
+    `s.building` alone.
+
+    So a bare name is followed once to its assignment, and whatever still
+    cannot be read -- a name with no assignment, a second name, a call --
+    is inconclusive: a rewritten front end is not evidence of a fix (its own
+    docstring, and rule 8). No meta test drove this check before; there was
+    nothing to fold it into.
+    """
+    from qa.marks import Inconclusive
+
+    tile = _load("test_the_build_board_counts_building_as_building.py",
+                 "bb_tile")
+
+    def run(script):
+        page = f"<html><body><script>{script}</script></body></html>"
+        tile.test_the_boards_building_tile_counts_only_what_is_building(_Board({
+            tile.BOARD_PAGE: _Answer(200, text=page),
+            tile.API: _Answer(200, {"stats": {"building": 0, "funded": 1}})}))
+
+    # The defect as measured, and the fix it asks for.
+    with pytest.raises(AssertionError, match="funded"):
+        run("function paint(s){ text($('bs-building'), "
+            "(s.funded || 0) + (s.building || 0)); }")
+    run("function paint(s){ text($('bs-building'), s.building || 0); }")
+
+    # The same two, one name removed.
+    with pytest.raises(AssertionError, match="funded"):
+        run("function paint(s){ const nb = s.funded + s.building; "
+            "text($('bs-building'), nb); }")
+    run("function paint(s){ const nb = (s.building || 0); "
+        "text($('bs-building'), nb); }")
+
+    # And what cannot be read is not a pass.
+    for script in (
+            "function paint(s){ text($('bs-building'), nb); }",
+            "function paint(s){ const a = s.funded + s.building; "
+            "const nb = a; text($('bs-building'), nb); }",
+            "function paint(s){ text($('bs-building'), countOf(s)); }"):
+        with pytest.raises(Inconclusive):
+            run(script)
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_socket_named_by_its_path_or_with_a_trailing_slash_is_named():
+    """A12, deep pass of 2026-09-21. The socket check wanted the page's
+    absolute URL as a substring of each document, so a page writing
+    `wss://cymetica.com/ws/build-it-better/` or a document naming
+    `/ws/build-it-better` relative to the server it is served from read as a
+    channel named nowhere -- a failure sentence about their documents that
+    their documents contradict. No meta test drove this check before; there
+    was nothing to fold it into.
+    """
+    import httpx
+
+    from qa.marks import Inconclusive
+    from qa.measure import CURRENT_MEASUREMENT
+
+    sock = _load("test_socket_is_discoverable.py", "bb_socket")
+    check = sock.test_a_socket_a_page_advertises_is_named_where_a_machine_reads
+
+    def run(page_url, llms="", mcp="{}", openapi="{}"):
+        board = _Board({
+            "/build-it-better/api": _Answer(
+                200, text=f'<script>new WebSocket("{page_url}")</script>'),
+            "/llms.txt": _Answer(200, text=llms),
+            "/.well-known/mcp.json": _Answer(200, text=mcp),
+            "/openapi-public.json": _Answer(200, text=openapi)})
+        board.base_url = httpx.URL("https://cymetica.com")
+        CURRENT_MEASUREMENT.set(None)
+        try:
+            check(board)
+            return "passed"
+        except AssertionError:
+            return "failed"
+        finally:
+            CURRENT_MEASUREMENT.set(None)  # not this meta test's own record
+
+    live = "wss://cymetica.com/ws/build-it-better"
+    # Named relative to the server the document is served from.
+    assert run(live, llms="- Live feed: `/ws/build-it-better` (websocket)") == "passed"
+    assert run(live, openapi='{"paths": {"/ws/build-it-better": {}}}') == "passed"
+    # A trailing slash on either side is the same channel.
+    assert run(live + "/", llms=f"- Live feed: `{live}`") == "passed"
+    assert run(live, llms=f"- Live feed: {live}/ (websocket)") == "passed"
+    assert run(live, llms=f"- Live feed: {live}.") == "passed"
+
+    # And what is not the same channel is still not it.
+    assert run(live, llms="- `/ws/build-it-better-v2`") == "failed"
+    assert run(live, llms="- `/ws/build-it-better/admin`") == "failed"
+    assert run(live, llms="- wss://elsewhere.example/ws/build-it-better") == "failed"
+    assert run(live, llms="nothing about sockets") == "failed"
+    # A socket on another host is not named by a bare path on this one.
+    assert run("wss://other.example/ws/build-it-better",
+               llms="- `/ws/build-it-better`") == "failed"
+
+    # Rule 8 still holds: an unread document is not an omission.
+    board = _Board({"/build-it-better/api": _Answer(200, text=live)})
+    board.base_url = httpx.URL("https://cymetica.com")
+    with pytest.raises(Inconclusive):
+        check(board)

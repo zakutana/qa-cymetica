@@ -17,11 +17,17 @@ they put all six in openapi-public.json within the hour. This check is the
 standing version of that conversation.
 
 WHAT IT ASSERTS. Only presence: a socket URL found in a page, and the
-documents in which that same URL is or is not named. The search over each
+documents in which that same channel is or is not named. The search over each
 document is exhaustive -- the whole body, as bytes -- so "not named" is a
 complete reading of that document rather than an inference. A page with no
 socket at all is nothing to say, and an unreadable document is Inconclusive,
 never an absence (rule 8).
+
+"The same channel" is the same host and path, a trailing slash aside, named
+either absolutely or as the bare path relative to the server the document is
+served from -- which is how an OpenAPI `paths` key and most of llms.txt name
+things. A longer path (`/ws/build-it-better-v2`, `/ws/build-it-better/admin`)
+or the same path on another host is not it.
 
 SAFE. Four GETs and no websocket: opening one would take this outside the
 transport that classifies every other call we make, and that is a decision
@@ -31,6 +37,7 @@ about the safety model rather than a line in a check.
 from __future__ import annotations
 
 import re
+from urllib.parse import urlsplit
 
 from qa.marks import Inconclusive, SafetyTier, qa
 from qa.measure import Measurement, conclude
@@ -55,6 +62,34 @@ def sockets_in(text: str) -> set[str]:
     return {m.group(0).rstrip("`'\"),.") for m in SOCKET.finditer(text or "")}
 
 
+# What may follow a path that is the whole path: one optional slash, then
+# anything that cannot continue it. A full stop ends a sentence, not a path.
+_ENDS = r"/?(?![A-Za-z0-9_~/-])"
+
+
+def names_socket(body: str, url: str, server_host: str | None) -> bool:
+    """Does this document name the channel at `url`?
+
+    Until the deep pass of 2026-09-21 (A12) the page's absolute URL had to be
+    a substring of the body, so a page writing the URL with a trailing slash,
+    or a document naming `/ws/build-it-better` relative to its own server,
+    read as a channel named nowhere -- and that sentence goes to them.
+    """
+    parts = urlsplit(url)
+    path = parts.path.rstrip("/")
+    if not path:
+        return False
+    if re.search(r"\b[A-Za-z][A-Za-z0-9+.-]*://" + re.escape(parts.netloc)
+                 + re.escape(path) + _ENDS, body or ""):
+        return True
+    # A bare path names a channel on the server the document came from, and
+    # on no other: a socket on another host is not named by it.
+    if not server_host or parts.hostname != server_host:
+        return False
+    return re.search(r"(?<![A-Za-z0-9._~/:-])" + re.escape(path) + _ENDS,
+                     body or "") is not None
+
+
 @qa(component="rest.build_it_better", tier=SafetyTier.SAFE, surface="rest")
 def test_a_socket_a_page_advertises_is_named_where_a_machine_reads(rest_anon):
     """Every live channel on a page is findable in at least one document."""
@@ -64,12 +99,17 @@ def test_a_socket_a_page_advertises_is_named_where_a_machine_reads(rest_anon):
         if page.status_code != 200:
             continue
         for url in sockets_in(page.text):
-            advertised.setdefault(url, path)
+            # One channel, however many slashes a page ends it with.
+            advertised.setdefault(url.rstrip("/"), path)
     if not advertised:
         raise Inconclusive(
             f"no page of {', '.join(PAGES)} names a websocket, so there is no "
             f"advertised channel whose discoverability could be read")
 
+    # Every document is fetched through this client, so its server is the
+    # client's host.
+    base = getattr(rest_anon, "base_url", None)
+    server_host = getattr(base, "host", None) or None
     documented: dict[str, list[str]] = {}
     for path in DOCUMENTS:
         doc = rest_anon.get(path)
@@ -79,7 +119,7 @@ def test_a_socket_a_page_advertises_is_named_where_a_machine_reads(rest_anon):
                 f"not read is not a document that omits something")
         body = doc.text or ""
         for url in advertised:
-            if url in body:
+            if names_socket(body, url, server_host):
                 documented.setdefault(url, []).append(path)
 
     hidden = sorted(url for url in advertised if url not in documented)

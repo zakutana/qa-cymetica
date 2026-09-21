@@ -155,13 +155,18 @@ def test_the_radars_published_hit_rate_reproduces_on_its_own_signals(rest_anon):
                            min_liquidity=0, min_volume=0)
         hot = out.get("hot") or {}
         n, hits = int(hot.get("n") or 0), int(hot.get("hits") or 0)
-        facts[chain] = {"published_rate": claim["rate"], "their_n": claim["sample"],
-                        "our_windows": n, "our_hits": hits}
         if n < MIN_SIGNALS:
             said.append(f"{chain}: only {n} window(s) of theirs have fully "
                         f"passed, under the {MIN_SIGNALS} a zero would mean "
                         f"anything at")
             continue
+        # Only a chain that was JUDGED enters `facts`: it is what the
+        # inconclusive branch below counts as measured, and it was written
+        # before this skip, so two chains under the minimum concluded
+        # `passed` over nothing (A04, deep pass of 2026-09-21). A skipped
+        # chain's count stays in the reason.
+        facts[chain] = {"published_rate": claim["rate"], "their_n": claim["sample"],
+                        "our_windows": n, "our_hits": hits}
         p = improbability(hits, n, claim["rate"])
         facts[chain]["improbability"] = round(p, 6)
         if p < REJECT_AT:

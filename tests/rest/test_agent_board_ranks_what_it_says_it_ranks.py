@@ -51,11 +51,15 @@ would close it; so would ranking by the key they published.
 
 INCONCLUSIVE, not a defect, when the board has fewer than two playbooks: one
 row has no order, and a rule over one row is not a measurement (rule 10).
+Likewise when the two queries share no row by id: condition 2 was then read
+over nothing, in either direction.
 
 SAFE. Three GETs and no key: the board is public, which is the point of it.
 """
 
 from __future__ import annotations
+
+import re
 
 from qa.marks import SafetyTier, qa
 from qa.measure import Measurement, conclude
@@ -77,7 +81,17 @@ PLACES = 5
 # this one. Added 2026-09-21 after Cymetica fixed #111 exactly this way --
 # they published what `rank` is, which the report named as one of the two
 # closes, and the check would otherwise have gone on failing a fixed report.
-RECENCY = ("newest first", "recency", "most recent")
+#
+# A STATEMENT that the order is recency, not the word. Any recency word beside
+# any unproven word counted, so "ranked by verified return x replications;
+# unverified rows are badged; recency decay applied" -- the sentence filed
+# against, plus a decay and a badge -- read as disclosed and would have sent
+# #111 a pass (B10, deep pass of 2026-09-21). "Decayed by recency" is a factor
+# of the score; "ordered by recency" and "newest first" are the order.
+ORDERED_BY_AGE = re.compile(
+    r"\b(?:newest|most[- ]recent|latest)[- ]first\b"
+    r"|\b(?:order|ordered|orders|sorted|sorts|ranked|ranks)\s+(?:is\s+)?"
+    r"(?:simply\s+)?(?:by\s+)?(?:recency|age|creation (?:date|time))\b")
 UNPROVEN = ("no row has verified", "nothing is verified", "unverified",
             "no verified", "without verified")
 
@@ -86,7 +100,7 @@ def discloses_recency(claim_lines: list[str]) -> bool:
     """Does their own description admit the ordering this check measures?"""
     for line in claim_lines:
         low = line.lower()
-        if any(word in low for word in RECENCY) and any(
+        if ORDERED_BY_AGE.search(low) and any(
                 word in low for word in UNPROVEN):
             return True
     return False
@@ -167,8 +181,12 @@ def test_the_board_is_ranked_by_the_key_its_own_document_publishes(rest_anon):
     ranked = sorted(rows, key=lambda r: -(r.get("rank") or 0))
     proved = [r for r in rows if not _nil_key(r)]
     # Same row, other query: is `rank` a property of the row or of the search?
-    other = {r.get("id"): r.get("rank") for r in _rows(narrow)}
-    shared = [r for r in rows if r.get("id") in other]
+    # Only rows that carry an id can be the same row. Keyed on r.get("id"),
+    # every id-less row became None and was compared with the LAST id-less row
+    # of the other query (A14, deep pass of 2026-09-21).
+    other = {r["id"]: r.get("rank") for r in _rows(narrow)
+             if r.get("id") is not None}
+    shared = [r for r in rows if r.get("id") is not None and r["id"] in other]
     fixed = [r for r in shared
              if round(float(r.get("rank") or 0), PLACES)
              == round(float(other[r.get("id")] or 0), PLACES)]
@@ -190,7 +208,21 @@ def test_the_board_is_ranked_by_the_key_its_own_document_publishes(rest_anon):
             sources={"document": LLMS, "board": SEARCH}, population=facts))
         return
 
-    if not shared or len(fixed) != len(shared):
+    # No row in both answers is no comparison, and "moves with the query on 0
+    # of 0 row(s)" was a relevance claim over nothing (rule 10; A14, deep
+    # pass of 2026-09-21).
+    if not shared:
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason=(f"no playbook carries a verified return or a replication, "
+                    f"but the {len(rows)} row(s) under q={QUERIES[0]!r} and "
+                    f"the {len(_rows(narrow))} under q={QUERIES[1]!r} share no "
+                    f"row by id, so whether `rank` moves with the query was "
+                    f"not measured"),
+            sources={"document": LLMS, "board": SEARCH}, population=facts))
+        return
+
+    if len(fixed) != len(shared):
         conclude(Measurement(
             verdict="passed",
             reason=(f"no playbook carries a verified return or a replication, "

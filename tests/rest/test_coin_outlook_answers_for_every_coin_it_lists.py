@@ -96,8 +96,13 @@ def test_every_coin_on_the_roster_answers_on_the_text_view(rest_anon):
                 # Cold on the first pass, answered on the second: their own
                 # documented behaviour, not a defect.
                 answered.append(symbol)
-            else:
+            elif again == 404 or 500 <= again < 600:
                 missing.append({"symbol": symbol, "text": again, "json": as_json})
+            else:
+                # Triaged exactly as the first look triages: a 429 the second
+                # time is our budget, not a coin without an outlook. It went
+                # to `missing` (A05, deep pass of 2026-09-21).
+                unmeasured.append(f"{symbol}: HTTP {again} on the second look")
 
     measured = len(answered) + len(missing)
     if not measured:

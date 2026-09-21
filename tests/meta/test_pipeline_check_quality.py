@@ -695,6 +695,45 @@ def test_the_traffic_invariants_can_actually_fail():
     assert _agrees({**row, "likes": 9}, _app(), _app(), "/x"), \
         "a like count the app does not report read as agreement"
 
+    # And through the check itself (deep pass of 2026-09-21, A07): `_agrees`
+    # was right and the loop was not. It held the ORIGINAL board row, read
+    # before any app, against a bracket opened minutes later -- so one real
+    # visit in between read as their board contradicting itself. Only a row
+    # read inside the bracket may be judged.
+    from types import SimpleNamespace
+
+    from qa.measure import CURRENT_MEASUREMENT
+    from tests.rest import test_build_it_better_traffic_agrees as traffic
+
+    def _reply(status, body):
+        return SimpleNamespace(status_code=status, json=lambda: body)
+
+    def _drive(first_row, fresh, app_body):
+        boards = iter([_reply(200, {"counting_since": "2026-09-20",
+                                    "apps": [first_row]}), fresh])
+
+        class _Anon:
+            def get(self, path, params=None):
+                return next(boards) if path == traffic.BOARD \
+                    else _reply(200, app_body)
+
+        traffic.test_the_traffic_figures_agree_with_the_days_they_are_made_of(
+            _Anon())
+        return CURRENT_MEASUREMENT.get()
+
+    one_more = {"views": 11, "visitors": 6, "uses": 4}
+    visited = _app(all_time=one_more, last_7d=one_more, last_30d=one_more,
+                   daily=[{"day": "2026-09-20", **one_more}])
+    said = _drive(row, _reply(200, {"apps": [{**row, "views": 11}]}), visited)
+    assert said.verdict == "passed", said.reason
+    with pytest.raises(AssertionError, match="99 views"):
+        _drive(row, _reply(200, {"apps": [{**row, "views": 99}]}), visited)
+    # A board that could not be re-read inside the bracket leaves claim 1
+    # unmeasured for that app -- said, not held against the stale row.
+    said = _drive(row, _reply(503, {"detail": "unavailable"}), visited)
+    assert said.verdict == "passed" and "NOT measured" in said.reason \
+        and "/x" in said.reason, said.reason
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_build_stats_window_reading_can_be_wrong_in_both_directions():
@@ -747,6 +786,32 @@ def test_the_build_stats_window_reading_can_be_wrong_in_both_directions():
     assert window_problems(_body(first_session=None))[0] == []
     empty = window_problems({"totals": {"sessions": 1}, "daily_activity": []})
     assert empty == ([], {"measured": False}), empty
+
+    # Nor is it a field that reads INSIDE the window (deep pass of
+    # 2026-09-21, A18). Absent, renamed or not a date, first_session gave no
+    # problem with `measured` still True, and the verdict PASSED on "the first
+    # session they record (None) falls inside that window". Driven through
+    # the check itself, both ways, because that sentence is the function's.
+    from types import SimpleNamespace
+
+    from qa.marks import Inconclusive
+    from tests.rest import test_build_stats_covers_the_period_it_claims as page
+
+    def _drive(body):
+        reply = SimpleNamespace(status_code=200, json=lambda: body)
+        page.test_the_build_totals_reach_back_to_the_date_they_are_published_under(
+            SimpleNamespace(get=lambda path, params=None: reply))
+
+    absent = {k: v for k, v in _body().items() if k != "first_session"}
+    for unread in (absent, {**absent, "first_session_at": "2025-11-23"},
+                   _body(first_session=None), _body(first_session=""),
+                   _body(first_session="unknown")):
+        assert window_problems(unread)[1]["measured"] is False, unread
+        with pytest.raises(Inconclusive, match="first_session"):
+            _drive(unread)
+    with pytest.raises(AssertionError, match="2025-11-23"):
+        _drive(_body())
+    _drive(_body(first_session="2026-02-01"))
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -803,7 +868,8 @@ def test_a_requirement_split_into_numbered_items_is_not_a_dropped_one():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_a_route_their_ai_names_is_matched_against_the_template_not_the_text():
+def test_a_route_their_ai_names_is_matched_against_the_template_not_the_text(
+        monkeypatch):
     """The third check of the #85 family, refuted before it is trusted.
 
     It passed on its first run, which proves nothing on its own: NEX-0049
@@ -811,6 +877,12 @@ def test_a_route_their_ai_names_is_matched_against_the_template_not_the_text():
     can still say no, and that it does not say no for the wrong reason --
     `{instance_id}` against `{id}` is the same segment, and a full stop at the
     end of a sentence is not part of a path.
+
+    A06, deep pass of 2026-09-21, in both directions. A `<id>` placeholder
+    stopped the extractor at the `<`, so `/api/v1/cloned-bots/<id>/settings`
+    became `/api/v1/cloned-bots/` and FAILED as unpublished. And a template
+    slot took any word at all, so `/api/v1/cloned-bots/start-trading` matched
+    `{instance_id}` and PASSED.
     """
     from tests.rest.test_nexus_routes_exist import _matches, routes_named
 
@@ -840,6 +912,207 @@ def test_a_route_their_ai_names_is_matched_against_the_template_not_the_text():
         "a longer path matched a shorter template"
     )
     assert routes_named("no routes here, only prose about fees") == set()
+
+    # A06 (1): `<name>` is a path parameter too. Both spellings are verbatim
+    # from our own diary of their answers, the second with a space inside.
+    said = routes_named(
+        "PATCH `/api/v1/cloned-bots/<id>/settings`, or REST `POST "
+        "https://cymetica.com/api/v1/exchange/<EVCDX-SYMBOL>/orders` or "
+        "`POST /api/v1/exchange/<EVCDX symbol>/orders` once its index token "
+        "is queried.")
+    assert said == {"/api/v1/cloned-bots/<id>/settings",
+                    "/api/v1/exchange/<EVCDX-SYMBOL>/orders",
+                    "/api/v1/exchange/<EVCDX symbol>/orders"}, said
+    assert _matches("/api/v1/cloned-bots/<id>/settings", published)
+    # Markup after a path is not a placeholder of it.
+    assert routes_named("<code>/api/v1/cloned-bots/available</code>") == {
+        "/api/v1/cloned-bots/available"}
+
+    # A06 (2): the prefixes as their openapi-public.json served them on
+    # 2026-09-21 -- /cloned-bots/ publishes literal route words BESIDE its id
+    # slot; /protocols/ publishes a slot and nothing else; /crypto-outlook/
+    # puts `coins` beside a slot that holds a NAME, not an id.
+    live = {"/api/v1/cloned-bots/{instance_id}",
+            "/api/v1/cloned-bots/{instance_id}/settings",
+            "/api/v1/cloned-bots/available", "/api/v1/cloned-bots/clone",
+            "/api/v1/cloned-bots/my-clones",
+            "/api/v1/clones/protocol-revenue/protocols/{slug}",
+            "/api/v1/crypto-outlook/{symbol}", "/api/v1/crypto-outlook/coins",
+            "/api/v1/exchange/{symbol}/orders", "/api/v1/exchange/pairs"}
+    assert not _matches("/api/v1/cloned-bots/start-trading", live), (
+        "a route word nobody publishes filled the id slot beside the route "
+        "words they do publish")
+    # A literal they publish at that position is that route, whatever the
+    # slot beside it is named.
+    assert not _matches("/api/v1/exchange/pairs/orders", live)
+    assert _matches("/api/v1/exchange/EVCDX-THE-NUCLEAR-REVIVAL/orders", live)
+    assert not _matches("/api/v1/cloned-bots/available/settings", live), (
+        "their own `available` route word was read as a bot's id")
+    # ... and every shape that must still match.
+    assert _matches("/api/v1/cloned-bots/available", live)
+    assert _matches("/api/v1/cloned-bots/d778102d-cf3f-4d86-ad1e-2d8511b345dc",
+                    live), "a real instance id no longer fills its slot"
+    assert _matches(
+        "/api/v1/cloned-bots/d778102d-cf3f-4d86-ad1e-2d8511b345dc/settings", live)
+    assert _matches("/api/v1/clones/protocol-revenue/protocols/aave-dao", live), (
+        "a slug is a word, and a slot with no route words beside it takes one")
+    assert _matches("/api/v1/crypto-outlook/btc", live), (
+        "a symbol slot takes a name; only an id slot refuses a word")
+
+    # Run whole, both directions, against a fresh answer in a stub diary.
+    import contextvars
+    import types
+    from datetime import datetime, timezone
+
+    from tests.rest import test_nexus_routes_exist as check
+
+    def _run(text):
+        answer = {"type": "answer", "id": "NEX-9999", "text": text,
+                  "at": datetime.now(timezone.utc).isoformat()}
+        monkeypatch.setattr(check, "_nexus", lambda: types.SimpleNamespace(
+            load=lambda: [answer]))
+        document = types.SimpleNamespace(status_code=200,
+                                         json=lambda: {"paths": dict.fromkeys(live)})
+        # A copied context, so the check's measurement stays out of this meta
+        # test's own run record.
+        contextvars.copy_context().run(
+            check.test_every_route_nexus_tells_an_agent_to_call_is_published,
+            types.SimpleNamespace(get=lambda path, **kw: document))
+
+    _run("Tighten it with `PATCH /api/v1/cloned-bots/<id>/settings`.")
+    with pytest.raises(AssertionError, match="start-trading"):
+        _run("Then `POST /api/v1/cloned-bots/start-trading` to begin.")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_coin_the_second_look_could_not_read_is_not_a_missing_coin(
+        monkeypatch):
+    """A05, deep pass of 2026-09-21. The two looks triaged differently.
+
+    The first look sends a 404 or a 5xx on to the second -- theirs, "always
+    200 for a known coin" broken -- and anything else to `unmeasured`, rule
+    8. The second look counted ANY non-200 as missing, so a coin cold on the
+    first pass and rate-limited on the second was filed as a coin with no
+    outlook, on the strength of our own request budget.
+
+    Run whole with a stub client, on both sides of the line.
+    """
+    import contextvars
+    from types import SimpleNamespace
+
+    from qa.marks import Inconclusive
+    from qa.measure import CURRENT_MEASUREMENT
+    from tests.rest import test_coin_outlook_answers_for_every_coin_it_lists as outlook
+
+    monkeypatch.setattr(outlook.time, "sleep", lambda seconds: None)
+
+    def drive(looks):
+        """`looks`: symbol -> the text view's status on each look, in order.
+        Returns what the check ended on and the measurement it emitted."""
+        queue = {symbol: list(codes) for symbol, codes in looks.items()}
+        roster = {"coins": [{"symbol": symbol} for symbol in looks]}
+
+        def get(path, **kw):
+            if path == outlook.ROSTER:
+                return SimpleNamespace(status_code=200, json=lambda: roster)
+            last = path.rsplit("/", 1)[1]
+            if last.endswith(".txt"):
+                return SimpleNamespace(status_code=queue[last[:-4]].pop(0))
+            return SimpleNamespace(status_code=404)
+
+        def run():
+            try:
+                outlook.test_every_coin_on_the_roster_answers_on_the_text_view(
+                    SimpleNamespace(get=get))
+            except (Inconclusive, AssertionError) as exc:
+                return type(exc).__name__, CURRENT_MEASUREMENT.get()
+            return "passed", CURRENT_MEASUREMENT.get()
+
+        # A copied context, so the check's measurement stays out of this
+        # meta test's own run record.
+        return contextvars.copy_context().run(run)
+
+    ended, m = drive({"BTC": [404, 429], "ETH": [404, 404], "SOL": [200]})
+    assert ended == "AssertionError" and m.left == ["ETH"], (ended, m and m.left)
+    assert "1 of 2" in m.reason, (
+        f"a coin we could not read the second time was counted as measured: "
+        f"{m.reason}")
+    assert any(u.startswith("BTC") for u in m.population["unmeasured"]), m.population
+
+    # A 5xx the second time is theirs, exactly as it is the first time.
+    ended, m = drive({"BTC": [404, 503], "SOL": [200]})
+    assert ended == "AssertionError" and m.left == ["BTC"], (ended, m and m.left)
+
+    # Cold, then answered: their documented behaviour, a pass.
+    assert drive({"BTC": [404, 200], "SOL": [200]})[0] == "passed"
+
+    # The only coin unreadable the second time: nothing was measured at all.
+    ended, _ = drive({"BTC": [404, 429]})
+    assert ended == "Inconclusive", ended
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_startup_call_that_could_not_be_read_is_not_one_that_demands_a_key():
+    """A09, deep pass of 2026-09-21. Every non-200 on a public call was the
+    credential defect.
+
+    The page marks /startups/terms and /startups/line as needing no account,
+    and the check's own docstring names what breaks that: a call the page calls
+    public that DEMANDS A KEY. A 429 or a 503 went out as "marked as needing
+    no account, and it answered HTTP 429 to a client carrying no credential",
+    and a 503 on /startups/mine as the wrong refusal -- our budget and their
+    restart, each filed as a door that will not open.
+
+    Run whole, per subject: 401/403 on a public call is the defect, 404 is its
+    own defect (the route the page documents is not there -- the docstring
+    draws that line for `mine`), and anything else is unread. Unread with no
+    defect is inconclusive; a defect is measured whatever else was lost.
+    """
+    import contextvars
+    from types import SimpleNamespace
+
+    from qa.marks import Inconclusive
+    from tests.rest import test_startup_line_is_reachable_as_documented as startup
+
+    path_of = {"terms": startup.TERMS, "line": startup.LINE, "mine": startup.MINE}
+
+    def drive(**status):
+        served = {
+            startup.TERMS: (200, {"statuses": dict.fromkeys(startup.PAGE_STATUSES, "."),
+                                  "token_chains": {"solana": "SOL"}}),
+            startup.LINE: (200, {"line": [], "count": 0,
+                                 "rules": "Highest bid first, ties by arrival."}),
+            startup.MINE: (401, {"detail": "Not authenticated"})}
+        for name, code in status.items():
+            served[path_of[name]] = (code, {"detail": "."})
+
+        def get(path, **kw):
+            code, body = served[path]
+            return SimpleNamespace(status_code=code, json=lambda: body)
+
+        # A copied context, so the check's measurement stays out of this meta
+        # test's own run record.
+        contextvars.copy_context().run(
+            startup.test_the_startup_calls_answer_the_reader_their_own_page_promises,
+            SimpleNamespace(get=get))
+
+    drive()
+    for name, code in (("terms", 429), ("line", 503), ("mine", 503),
+                       ("terms", 500)):
+        with pytest.raises(Inconclusive, match=f"HTTP {code}"):
+            drive(**{name: code})
+
+    # The defect the docstring names, and the two it keeps apart from it.
+    with pytest.raises(AssertionError, match="needing no account"):
+        drive(terms=401)
+    with pytest.raises(AssertionError, match="needing no account"):
+        drive(line=403, terms=429)
+    with pytest.raises(AssertionError, match="does not exist"):
+        drive(line=404)
+    with pytest.raises(AssertionError, match="not theirs"):
+        drive(mine=200)
+    with pytest.raises(AssertionError, match="HTTP 404"):
+        drive(mine=404)
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -947,3 +1220,296 @@ def test_a_published_ranking_that_admits_recency_is_not_the_defect():
         ["- [GET /api/v1/agent-board/search](...): ranked by verified return "
          "x replications",
          "- [GET /api/v1/feed](...): sorted by recency, newest first"])
+    # B10, deep pass of 2026-09-21. A line that still claims the verified
+    # ordering and merely MENTIONS a decay and an unverified badge is not a
+    # disclosure: any recency word beside any unproven word passed it, so #111
+    # would have read as fixed on a sentence that says what it always said.
+    assert not discloses_recency(
+        ["- [GET /api/v1/agent-board/search](...): ranked by verified return "
+         "x replications; unverified rows are badged; recency decay applied"]), (
+        "a decay factor named beside an unverified badge read as a published "
+        "statement that the order is recency")
+    assert not discloses_recency(
+        ["- [GET /api/v1/agent-board/search](...): ranked by verified return "
+         "x replications x decayed by recency; unverified rows get half weight"])
+    # The statement itself, in the other words it could come in.
+    assert discloses_recency(
+        ["- [GET /api/v1/agent-board/search](...): while nothing is verified "
+         "the board is ordered by recency"])
+
+
+# ---------------------------------------------------------------------------
+# Whole vendor checks, driven over stub clients. Added by the deep pass of
+# 2026-09-21 for checks no meta test drove before (A11, A14, A16, A17): each
+# gap sat on a branch the helpers alone never reach.
+# ---------------------------------------------------------------------------
+def _check_module(relpath: str, name: str):
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(name, REPO / relpath)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _drive_check(check, *clients) -> tuple[str, str]:
+    """Run one vendor check end to end; return (verdict, reason).
+
+    The check's own `conclude` runs, so the branch that decides is the real
+    one. Its measurement is taken back off this meta test afterwards: left in
+    place, the recorder would file this meta result under the vendor claim.
+    """
+    from qa.marks import Inconclusive
+    from qa.measure import CURRENT_MEASUREMENT
+
+    CURRENT_MEASUREMENT.set(None)
+    try:
+        check(*clients)
+        verdict, reason = "passed", ""
+    except AssertionError as exc:
+        verdict, reason = "failed", str(exc)
+    except Inconclusive as exc:
+        verdict, reason = "inconclusive", str(exc)
+    finally:
+        measured = CURRENT_MEASUREMENT.get()
+        CURRENT_MEASUREMENT.set(None)
+    if measured is not None:
+        assert measured.verdict == verdict, (measured.verdict, verdict)
+        reason = measured.reason or reason
+    return verdict, reason
+
+
+class _Reply:
+    """One HTTP answer, as much of it as these checks read."""
+
+    def __init__(self, status, body=None, text=None, headers=None):
+        self.status_code, self._body = status, body
+        self.text = text if text is not None else json.dumps(body)
+        self.headers = headers or {}
+
+    def json(self):
+        if self._body is None:
+            raise ValueError("not JSON")
+        return self._body
+
+
+class _Rest:
+    """A `rest_anon` with no network behind it: answers keyed by path, or by
+    (path, q) where the query matters, and a 404 for anything not given."""
+
+    def __init__(self, answers: dict):
+        self.answers = answers
+
+    def get(self, path, params=None):
+        q = (params or {}).get("q")
+        return (self.answers.get((path, q)) or self.answers.get(path)
+                or _Reply(404, {"detail": "not here"}))
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_profile_link_check_reads_the_skill_it_says_either_fix_satisfies(
+        monkeypatch):
+    """A11, deep pass of 2026-09-21. The docstring -- and the report we sent
+    -- says the fix is theirs to pick: add `profile_url` to the four sleeves,
+    or change the skill's line. But SKILL was only a string in `sources`,
+    never fetched, so a skill that now says "`profile_url` or `url`" still
+    read as the defect. The skill is read now, and when funds lack the field
+    it is the deciding half: an unread skill is Inconclusive (rule 8). No
+    meta test drove this check before; there was nothing to fold it into."""
+    mod = _check_module("tests/mcp/test_fund_profile_link_is_where_the_skill_says.py",
+                        "fund_profile_link_m")
+    monkeypatch.setattr(mod, "PAUSE_S", 0.0)
+
+    funds = {"AIB-POWER": {"symbol": "AIB-POWER",
+                           "profile_url": "https://cymetica.com/fund/AIB-POWER"},
+             "MA-RIPPLE": {"symbol": "MA-RIPPLE",
+                           "url": "https://cymetica.com/ma-fund"}}
+
+    class _Http:
+        def __init__(self, answer):
+            self.answer = answer
+
+        def get(self, url, **kwargs):
+            assert url == mod.SKILL, url
+            return self.answer
+
+    class _Mcp:
+        def __init__(self, skill, roster=funds):
+            self.roster, self.http = roster, _Http(skill)
+
+        def call(self, tool, args):
+            if tool == "list_funds":
+                return {"success": True, "result": {
+                    "funds": [{"symbol": s} for s in self.roster]}}
+            return {"success": True,
+                    "result": {"fund": self.roster[args["symbol"]]}}
+
+    def skill(line):
+        return _Reply(200, text="# Fund research\n\n...\n\n## Links to cite\n\n"
+                                f"{line}\n- The whole range: `list_funds`\n")
+
+    check = mod.test_every_listed_fund_carries_the_profile_link_the_skill_names
+
+    # The skill as it stood: a sleeve with only `url` is the defect.
+    verdict, reason = _drive_check(
+        check, _Mcp(skill("- One fund: `profile_url` from `get_fund`")))
+    assert verdict == "failed" and "MA-RIPPLE" in reason, (verdict, reason)
+
+    # Their second option, taken: the skill names `url` for the sleeves.
+    verdict, reason = _drive_check(check, _Mcp(skill(
+        "- One fund: `profile_url` from `get_fund` (the M&A, FTA and event "
+        "card sleeves carry `url` instead)")))
+    assert verdict == "passed", (
+        f"the skill fix the docstring and the report both call sufficient "
+        f"still read as the defect: {reason}")
+    # And said as a sub-item under the line rather than on it.
+    verdict, _ = _drive_check(check, _Mcp(skill(
+        "- One fund: `profile_url` from `get_fund`\n"
+        "  - for MA-RIPPLE, FTA-* and EVENT-CARD: `url`")))
+    assert verdict == "passed"
+
+    # The skill unread while a fund lacks the field: the half that decides was
+    # not measured.
+    verdict, reason = _drive_check(check, _Mcp(_Reply(503, text="busy")))
+    assert verdict == "inconclusive", (verdict, reason)
+    # A skill that no longer says what to cite for one fund leaves nothing to
+    # hold a missing field against.
+    verdict, reason = _drive_check(check, _Mcp(_Reply(200, text="# moved\n")))
+    assert verdict == "inconclusive", (verdict, reason)
+
+    # Every fund carrying profile_url is the fund-side fix, whatever the skill
+    # read did: the line they published names it.
+    only_aib = {"AIB-POWER": funds["AIB-POWER"]}
+    assert _drive_check(check, _Mcp(_Reply(503, text="busy"), only_aib))[0] == "passed"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_board_compared_over_no_shared_row_is_not_a_relevance_score():
+    """A14, deep pass of 2026-09-21. When the two queries shared no row --
+    `data: []` under the second, or rows with no `id` -- the board check
+    passed "`rank` moves with the query on 0 of 0 row(s)", a relevance claim
+    over nothing (rule 10). Rows without an id were worse: every one keyed to
+    None, so each was compared with the LAST row of the other query. Both are
+    Inconclusive now, and the defect the check was written for still fails.
+
+    Considered folding into test_a_published_ranking_that_admits_recency_is_
+    not_the_defect; that one reads the disclosure predicate alone, and this is
+    the comparison branch, which only a whole run reaches.
+    """
+    mod = _check_module("tests/rest/test_agent_board_ranks_what_it_says_it_ranks.py",
+                        "agent_board_m")
+    llms = _Reply(200, text=(
+        "- [GET /api/v1/agent-board/search](/api/v1/agent-board/search): "
+        "Search playbooks (ranked by verified return x replications)\n"))
+
+    def rows(ids=True, ranks=(0.36374, 0.14878, 0.07984)):
+        made = []
+        for n, (rank, day) in enumerate(zip(ranks, ("19", "13", "05"))):
+            row = {"title": f"p{n}", "rank": rank,
+                   "created_at": f"2026-09-{day}T00:00:00Z",
+                   "replications": {"confirmed": 0, "claimed": 0},
+                   "evidence_verified": False, "pnl_usdc": None}
+            if ids:
+                row["id"] = f"pb-{n}"
+            made.append(row)
+        return made
+
+    def board(broad, narrow):
+        return _Rest({mod.LLMS: llms,
+                      (mod.SEARCH, mod.QUERIES[0]): _Reply(200, {"data": broad}),
+                      (mod.SEARCH, mod.QUERIES[1]): _Reply(200, {"data": narrow})})
+
+    check = mod.test_the_board_is_ranked_by_the_key_its_own_document_publishes
+
+    verdict, reason = _drive_check(check, board(rows(), []))
+    assert verdict == "inconclusive", (
+        f"a second query sharing no row with the first read as a relevance "
+        f"score: {verdict}: {reason}")
+    verdict, reason = _drive_check(
+        check, board(rows(ids=False), rows(ids=False, ranks=(0.5, 0.4, 0.3))))
+    assert verdict == "inconclusive", (
+        f"rows with no id were compared against whichever row came last: "
+        f"{verdict}: {reason}")
+
+    # The defect as filed, and the relevance score that is not it.
+    assert _drive_check(check, board(rows(), rows()))[0] == "failed"
+    assert _drive_check(
+        check, board(rows(), rows(ranks=(0.9, 0.1, 0.05))))[0] == "passed"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_refusal_that_blames_trust_level_for_a_wording_is_the_defect():
+    """A16, deep pass of 2026-09-21. The check's own comment names the
+    regression it exists for -- a refusal of a WORDING attributed to trust
+    level -- but `denies_identity` sat outside the verdict, so "The wording of
+    this query is not permitted at your trust level" passed with a suffix. And
+    the predicate read "not a" anywhere beside "trust level", so "not allowed
+    at your trust level" counted as a denial of it. No meta test drove this
+    check before; there was nothing to fold it into."""
+    from qa.client import McpError
+
+    mod = _check_module("tests/mcp/test_restricted_query_says_why.py",
+                        "restricted_query_m")
+
+    class _Mcp:
+        def __init__(self, hint):
+            self.refusal = {"error": "QUERY_RESTRICTED",
+                            "reason": "OTHER_USERS_DATA",
+                            "parameter": "query", "hint": hint}
+
+        def call(self, tool, args):
+            if args.get("query") == mod.ORDINARY:
+                return {"markets": [{"id": 1}]}
+            raise McpError("tool error", payload={"result": {"content": [
+                {"type": "text", "text": json.dumps(self.refusal)}]}})
+
+    check = mod.test_a_restricted_query_says_which_rule_it_tripped
+
+    # Their hint as shipped on 2026-09-20.
+    live = ("The wording of this parameter matched a restricted-topic filter. "
+            "It is about the wording, not your identity or trust level. "
+            "Rephrase the question.")
+    assert _drive_check(check, _Mcp(live))[0] == "passed"
+    assert _drive_check(check, _Mcp(
+        "It is the wording that tripped this, not a trust-level decision."))[0] == "passed"
+
+    for blamed in ("The wording of this query is not permitted at your trust level",
+                   "The wording of this query is not allowed at your trust level",
+                   "This wording needs a higher trust level"):
+        verdict, reason = _drive_check(check, _Mcp(blamed))
+        assert verdict == "failed", (
+            f"a wording refusal attributed to trust level passed: {blamed!r}: "
+            f"{reason}")
+        assert "trust level" in reason or "identity" in reason, reason
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_unreadable_probe_is_not_a_public_get_that_agrees():
+    """A17, deep pass of 2026-09-21. A 429 or 5xx on a path only /openapi.json
+    declares went to `unreadable`, and the verdict still said "every public
+    GET declared in /openapi.json is also in /openapi-public.json" -- a claim
+    about the one path nobody read (rule 8). A 200 is still the defect, with
+    or without an unreadable path beside it. No meta test drove this check
+    before; there was nothing to fold it into."""
+    mod = _check_module("tests/discovery/test_the_two_openapi_documents_agree.py",
+                        "openapi_agree_m")
+    check = mod.test_a_public_get_in_openapi_json_is_in_the_curated_schema_too
+
+    def documents(**probes):
+        answers = {mod.SMALL: _Reply(200, {"paths": {"/api/v1/shared": {},
+                                                     "/api/v1/prices": {},
+                                                     "/api/v1/arena/market": {}}}),
+                   mod.CURATED: _Reply(200, {"paths": {"/api/v1/shared": {}}})}
+        answers.update({path: _Reply(code, {}) for path, code in probes.items()})
+        return _Rest(answers)
+
+    for code in (429, 503):
+        verdict, reason = _drive_check(check, documents(**{
+            "/api/v1/prices": code, "/api/v1/arena/market": 401}))
+        assert verdict == "inconclusive", (
+            f"a probe answering {code} passed as agreement: {reason}")
+
+    assert _drive_check(check, documents(**{
+        "/api/v1/prices": 401, "/api/v1/arena/market": 405}))[0] == "passed"
+    assert _drive_check(check, documents(**{
+        "/api/v1/prices": 200, "/api/v1/arena/market": 503}))[0] == "failed"

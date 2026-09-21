@@ -33,7 +33,18 @@ check makes is a claim that something IS served, never that something is not.
 That direction is deliberate: of the audit claims this repository has had
 rejected at triage, every one asserted an absence.
 
-SAFE. GET only, and against a clone we already own.
+A path whose GET is served answers 200 and names no other method, so where
+the GET named nothing the same path is asked OPTIONS, whose 405 is the same
+router evidence. Nothing that writes is ever sent to learn what a path serves.
+
+DELIBERATELY NOT ASSERTED: that every method a path serves has been seen.
+`Allow` on a 405 names the methods of one route -- in FastAPI (Starlette's
+router) the first route whose path matched -- so a second route declared on
+the same path for another method can stay unseen, and a path whose OPTIONS
+carries no 405 with `Allow` is not compared beyond its documented GET. An
+unseen method is not a finding; this check only names what was seen.
+
+SAFE. GET and OPTIONS, both read methods, and against a clone we already own.
 """
 
 from __future__ import annotations
@@ -94,8 +105,12 @@ def served_but_undocumented(probed: dict, documented: set) -> list[dict]:
                       if m.strip()} - {"HEAD", "OPTIONS"}
             extra = sorted(served - methods_of[shape(template)])
             if extra:
+                # The path IS documented, and the reason has to say so
+                # (A13, deep pass of 2026-09-21).
                 out.append({"path": template, "methods": ", ".join(extra),
-                            "probed_as": path})
+                            "probed_as": path,
+                            "documented_methods":
+                                sorted(methods_of[shape(template)])})
     return out
 
 
@@ -280,14 +295,25 @@ def test_every_cloned_bot_route_they_serve_is_one_they_document(rest_trusted):
             "one, and a paper clone is free")
     clone_id = rows[0].get("id")
 
-    probed = {}
+    probed, asked_options = {}, 0
     for shape in PROBES:
         path = f"{PREFIX}/{shape.format(id=clone_id)}"
         response = rest_trusted.get(path)
         # The Allow header IS the evidence. A 405 without one proves the path
         # is routed but names nothing, and is not usable as a finding.
-        probed[path] = (response.headers.get("allow")
-                        if response.status_code == 405 else None)
+        allow = (response.headers.get("allow")
+                 if response.status_code == 405 else None)
+        if not allow:
+            # A path whose GET is served answers 200 and names nothing, so a
+            # PATCH beside a documented GET was never compared (A13, deep pass
+            # of 2026-09-21). OPTIONS is a read method at every tier, and its
+            # 405 is the same router evidence as GET's -- only a 405, since a
+            # 2xx OPTIONS may be a CORS or edge layer answering for any path.
+            asked_options += 1
+            asked = rest_trusted.options(path)
+            allow = (asked.headers.get("allow")
+                     if asked.status_code == 405 else None)
+        probed[path] = allow
 
     if not any(probed.values()):
         raise Inconclusive(
@@ -307,10 +333,13 @@ def test_every_cloned_bot_route_they_serve_is_one_they_document(rest_trusted):
         right=sorted(documented),
         population={"probed": len(probed),
                     "routed": sum(1 for a in probed.values() if a),
+                    "asked_options": asked_options,
                     "documented": len(documented),
                     "undocumented": len(hidden),
                     "clone": clone_id},
-        sources={"documented": OPENAPI, "served": f"GET {PREFIX}/... (405)"},
+        sources={"documented": OPENAPI,
+                 "served": f"GET {PREFIX}/... (405), then OPTIONS where the "
+                           f"GET named no method (405)"},
     ))
 
 
@@ -327,10 +356,33 @@ def hidden_reason(hidden: list[dict]) -> str:
     2026-09-11 every hidden route got that sentence, so an undocumented
     DELETE beside a documented toggle would have sent a false claim about
     starting (V11, triage 3/3).
+
+    And "none of those paths is in openapi" only of paths that are not. V04
+    made a method missing from a DOCUMENTED path a finding, and it went out
+    under the path sentence -- false of a path their document lists (A13,
+    deep pass of 2026-09-21). Such a route says which methods they do
+    document there, and never earns the sentence about starting: that path is
+    published, so whether the clone can be started through it is not what was
+    measured.
     """
-    listed = ", ".join(f"{h['methods']} {h['path']}" for h in hidden)
-    text = f"their server routes {listed}, and none of those paths is in {OPENAPI}"
-    if any(str(h.get("path", "")).endswith(STARTS) for h in hidden):
+    # By the key's presence: a path they list with no method on it is still a
+    # path they list.
+    paths = [h for h in hidden if "documented_methods" not in h]
+    methods = [h for h in hidden if "documented_methods" in h]
+    said = []
+    if paths:
+        listed = ", ".join(f"{h['methods']} {h['path']}" for h in paths)
+        said.append(f"their server routes {listed}, and none of those paths "
+                    f"is in {OPENAPI}")
+    if methods:
+        listed = "; ".join(
+            f"{h['methods']} on {h['path']}, a path {OPENAPI} documents only "
+            f"for {', '.join(h['documented_methods']) or 'no method'}"
+            for h in methods)
+        said.append(f"their server also answers {listed}" if paths else
+                    f"their server answers {listed}")
+    text = "; ".join(said)
+    if any(str(h.get("path", "")).endswith(STARTS) for h in paths):
         return text + (
             ". A clone is created paused -- their own description says the "
             "user must enable trading -- so an agent that clones a bot through "

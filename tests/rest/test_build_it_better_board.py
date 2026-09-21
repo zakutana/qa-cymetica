@@ -136,6 +136,17 @@ def dropped(improvements: str, spec: str) -> list[str]:
     return missing
 
 
+def _moment(value):
+    """An aware datetime, or None for anything that does not read as one."""
+    from datetime import datetime, timezone
+
+    try:
+        when = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except (TypeError, ValueError):
+        return None
+    return when if when.tzinfo else when.replace(tzinfo=timezone.utc)
+
+
 def gate_state(record: dict) -> str:
     """Which of five things this request's clock and gate actually say.
 
@@ -148,7 +159,11 @@ def gate_state(record: dict) -> str:
                           compliance. A key emitted only when a waiver exists
                           is the natural shape, and counting those tickets
                           into the pass made its sentence cover requests whose
-                          gate nobody had looked at.
+                          gate nobody had looked at. Also unread: a gate that
+                          says it opened and not when, and a clock whose start
+                          cannot be read -- until the deep pass of 2026-09-21
+                          (A19) either one fell through to "honoured", a
+                          missing time read as a time that was not before.
       not_started         the clock has not started; the spec is working
       clock_ran_early     the clock started BEFORE the gate was filled or
                           waived. This is the docstring's own headline, "and
@@ -161,8 +176,6 @@ def gate_state(record: dict) -> str:
 
     Found by two readers on 2026-09-20, the day the check was written.
     """
-    from datetime import datetime, timezone
-
     if GATE_SENTENCE not in str(record.get("spec_text") or ""):
         return "no_claim"
     funding = record.get("funding")
@@ -176,20 +189,22 @@ def gate_state(record: dict) -> str:
     if not opened:
         return "clock_ran_unopened"
 
-    def _moment(value):
-        try:
-            when = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
-        except (TypeError, ValueError):
-            return None
-        return when if when.tzinfo else when.replace(tzinfo=timezone.utc)
-
     began = _moment(started)
-    # Whichever of the two opened it. `funded_at` is theirs too, and a gate
-    # filled rather than waived carries that one instead.
-    opened_at = _moment(funding.get("waived_at") or funding.get("funded_at"))
-    if began and opened_at and began < opened_at:
-        return "clock_ran_early"
-    return "honoured"
+    # Whichever of the two opened it: `funded_at` is theirs too, and a gate
+    # filled rather than waived carries that one instead. Each flag that is
+    # true is read with its OWN time, so a stale `waived_at` beside
+    # `waived: false` cannot date a gate that was filled.
+    opened_at = [_moment(funding.get(f"{how}_at"))
+                 for how in ("waived", "funded") if funding.get(how) is True]
+    known = [when for when in opened_at if when is not None]
+    if began is not None and known and min(known) <= began:
+        # Open by the time the clock started, whatever else is unreadable.
+        return "honoured"
+    if began is None or len(known) < len(opened_at):
+        # A gate that opened at no readable moment, or a clock that started
+        # at none, is no reading of "and not before" either way (rule 8).
+        return "unread"
+    return "clock_ran_early"
 
 
 def clock_runs_unfunded(record: dict) -> dict | None:
@@ -283,21 +298,38 @@ def test_the_spec_s_funding_gate_is_the_one_the_build_actually_waits_on(
             continue
         if state == "unread":
             # Named, never counted. A request whose funding block does not say
-            # whether the gate was waived is one we have taken no reading of,
-            # and the first version folded those into the passing population
-            # so its sentence covered them.
+            # whether the gate was waived -- or when it opened, or when the
+            # clock started -- is one we have taken no reading of, and the
+            # first version folded those into the passing population so its
+            # sentence covered them.
             unread.append(ticket)
             continue
         read.append(ticket)
         if state in ("clock_ran_unopened", "clock_ran_early"):
-            wrong.append({**(clock_runs_unfunded(record) or
-                             {"ticket": ticket}), "state": state})
+            # clock_runs_unfunded() answers only for a gate neither filled
+            # nor waived, so an early clock used to be quoted as "clock from
+            # None ... waived None" about a request whose own record says
+            # waived. Whatever it does not cover is read off the record, with
+            # the moment the gate opened beside the moment the clock started.
+            funding = record["funding"]
+            wrong.append({
+                **(clock_runs_unfunded(record) or {
+                    "ticket": ticket,
+                    "clock_started_at": record.get("clock_started_at"),
+                    "raised_usd": funding.get("raised_usd"),
+                    "goal_usd": funding.get("goal_usd"),
+                    "waived": funding.get("waived"),
+                    "stage": record.get("stage")}),
+                "state": state,
+                "opened_at": funding.get("waived_at")
+                if funding.get("waived") is True else funding.get("funded_at")})
 
     if not read:
         raise Inconclusive(
             "no request on the board carries both a spec that makes the "
-            "funding claim and a funding block that says whether the gate was "
-            "waived, so there is nothing to hold their behaviour against"
+            "funding claim and a funding block that says whether, and when, "
+            "the gate opened, so there is nothing to hold their behaviour "
+            "against"
             + (f" ({len(unread)} carry the claim and no reading)"
                if unread else ""))
 
@@ -309,7 +341,9 @@ def test_the_spec_s_funding_gate_is_the_one_the_build_actually_waits_on(
             + "; ".join(
                 f"{w['ticket']} ({w['state']}) clock from "
                 f"{str(w.get('clock_started_at'))[:19]}, "
-                f"{w.get('raised_usd')} of {w.get('goal_usd')} USD raised, "
+                + (f"gate opened {str(w['opened_at'])[:19]}, "
+                   if w.get("opened_at") else "")
+                + f"{w.get('raised_usd')} of {w.get('goal_usd')} USD raised, "
                 f"waived {w.get('waived')}, stage {w.get('stage')}"
                 for w in wrong[:3])
             if wrong else
@@ -387,6 +421,49 @@ def overdue(item: dict, now) -> dict | None:
             round((now - when).total_seconds() / 3600.0, 1)}
 
 
+# How far back a SETTLED build is still the verdict rather than history. The
+# length of their own promise, and FRESH_HOURS on the sibling Nexus check.
+# Deep pass of 2026-09-21, A10: see settled_before().
+SETTLED_WITHIN_HOURS = 24
+
+
+def _shipped(item: dict) -> bool:
+    """Something arrived: the same three fields overdue() reads as shipped."""
+    return bool(item.get("our_url") or item.get("resolved_at")
+                or item.get("verdict"))
+
+
+def settled_before(item: dict, since) -> bool | None:
+    """Whether this request's outcome was settled before `since`.
+
+    The board is a log that only grows, and a build that shipped late stays
+    late in it for good. Judging every request it ever listed answered "has a
+    build ever been late", so ET-26036 -- four hours late on 2026-09-20 --
+    would have held the verdict red whatever they shipped on time after it:
+    the growing-log defect the 2026-09-10 sweep repaired twice.
+
+      True   shipped, and finished before `since`: history, never the verdict
+      False  not shipped -- a build past its deadline with nothing shipped is
+             a breach still happening, however old, and one inside its window
+             is waiting -- or shipped at or after `since`
+      None   the deadline does not read as a date, or it shipped with no
+             readable finish time and a deadline before `since`, so when it
+             settled cannot be placed (rule 8: named, never counted)
+    """
+    deadline = _moment(item.get("deadline_at"))
+    if deadline is None:
+        return None
+    if not _shipped(item):
+        return False
+    finished = _moment(item.get("resolved_at") or item.get("shipped_at"))
+    if finished is not None:
+        return finished < since
+    # No finish time. A deadline inside the window bounds a late build's
+    # settling from below, so it is not history; under an older deadline,
+    # when it settled cannot be placed at all.
+    return False if deadline >= since else None
+
+
 @qa(component="rest.build_it_better", tier=SafetyTier.SAFE, surface="rest")
 def test_a_build_ships_inside_the_24_hours_it_publishes(rest_anon):
     """The product's headline promise, read off the clock it publishes itself.
@@ -394,16 +471,25 @@ def test_a_build_ships_inside_the_24_hours_it_publishes(rest_anon):
     Every accepted request carries `clock_started_at` and `deadline_at`, and
     the board's own stats carry `on_time` and `median_build_seconds`. So the
     promise is measurable without asking them anything: a request whose
-    deadline has passed with no `our_url`, no `resolved_at` and no `verdict`
-    is a build that did not ship in the window they published for it.
+    deadline has passed with nothing shipped, or that shipped after it, is a
+    build that did not ship in the window they published for it.
 
     Written on 2026-09-20 at 11:05 UTC, while ET-26036 sits inside its window
     -- deadline 2026-09-20T20:25:59Z, nine hours out. That is the point of
     writing it now rather than tonight: a check put in place before the event
     it measures cannot be shaped by knowing the answer, which is the whole of
     why this repository preregisters anything at all.
+
+    WHAT IS JUDGED, AND WHAT IS HISTORY (deep pass of 2026-09-21, A10). The
+    verdict reads every build that settled in the last SETTLED_WITHIN_HOURS,
+    and every request past its deadline with nothing shipped however old,
+    because that breach is still happening. A build that shipped before the
+    window is named in the population as history and is never the verdict --
+    until then ET-26036 held this red for good, "does a build ship inside 24
+    hours" answered as "has one ever been late". A window in which nothing
+    settled is nothing measured (rule 10): inconclusive, not a promise kept.
     """
-    from datetime import datetime, timezone
+    from datetime import datetime, timedelta, timezone
 
     board = rest_anon.get(BOARD)
     if board.status_code != 200:
@@ -422,16 +508,32 @@ def test_a_build_ships_inside_the_24_hours_it_publishes(rest_anon):
             "no request on the board publishes a deadline, so there is no "
             "promise of theirs to hold them to")
 
-    late = [o for o in (overdue(i, now) for i in dated) if o]
-    waiting = [i.get("ticket") for i in dated
-               if not (i.get("our_url") or i.get("resolved_at")
-                       or i.get("verdict"))
-               and str(i.get("deadline_at")) > now.isoformat()]
+    since = now - timedelta(hours=SETTLED_WITHIN_HOURS)
+    judged, history, unplaced = [], [], []
+    for item in dated:
+        placed = settled_before(item, since)
+        if placed is None:
+            unplaced.append(str(item.get("ticket")))
+        elif placed:
+            history.append(item)
+        else:
+            judged.append(item)
 
     # A shipped build whose finish time nobody publishes is neither a breach
     # nor compliance, so it is said out loud and kept out of the verdict.
-    unreadable = [o for o in late if o.get("unreadable")]
-    breaches = [o for o in late if not o.get("unreadable")]
+    breaches, unreadable, waiting, met = [], [], [], []
+    for item in judged:
+        said = overdue(item, now)
+        if said and said.get("unreadable"):
+            unreadable.append(said)
+        elif said:
+            breaches.append(said)
+        elif not _shipped(item):
+            waiting.append(str(item.get("ticket")))
+        else:
+            met.append(str(item.get("ticket")))
+    history_late = [str(i.get("ticket")) for i in history if overdue(i, now)]
+    not_placed = [str(o["ticket"]) for o in unreadable] + unplaced
 
     def _said(o):
         if o.get("shipped_late"):
@@ -444,21 +546,45 @@ def test_a_build_ships_inside_the_24_hours_it_publishes(rest_anon):
                 f"{str(o['deadline_at'])[:19]} {o['over_by_hours']}h ago and "
                 f"has shipped nothing (stage {o['stage']})")
 
+    if breaches:
+        verdict, said = "failed", "; ".join(_said(o) for o in breaches)
+    elif not met:
+        verdict = "inconclusive"
+        said = (f"no build on the board settled in the last "
+                f"{SETTLED_WITHIN_HOURS} h and none is past its deadline with "
+                f"nothing shipped, so the 24-hour promise was not put to the "
+                f"test: {len(waiting)} still inside their window"
+                + (f" ({', '.join(waiting)})" if waiting else ""))
+    else:
+        verdict = "passed"
+        said = (f"every build that settled in the last "
+                f"{SETTLED_WITHIN_HOURS} h met the 24-hour deadline it "
+                f"publishes ({', '.join(met)}), and none is past its deadline "
+                f"with nothing shipped"
+                + (f"; {len(waiting)} still inside their window: "
+                   f"{', '.join(waiting)}" if waiting else ""))
+    if history:
+        said += (f". NOT in the verdict: {len(history)} request(s) settled "
+                 f"more than {SETTLED_WITHIN_HOURS} h ago and are history: "
+                 + ", ".join(str(i.get("ticket"))
+                             + (" (shipped late)"
+                                if str(i.get("ticket")) in history_late else "")
+                             for i in history))
+    if not_placed:
+        said += (f". NOT measured: {len(not_placed)} request(s) publish no "
+                 f"finish time or no readable deadline, so whether or when "
+                 f"they met it cannot be read: {', '.join(not_placed)}")
+
     conclude(Measurement(
-        verdict="failed" if breaches else "passed",
-        reason=("; ".join(_said(o) for o in breaches)
-                if breaches else
-                f"every request on the board met the 24-hour deadline it "
-                f"publishes; {len(dated)} carry one"
-                + (f", and {len(waiting)} are still inside their window: "
-                   f"{', '.join(str(t) for t in waiting)}" if waiting else ""))
-               + (f". NOT measured: {len(unreadable)} shipped request(s) "
-                  f"publish no finish time, so whether they met it cannot be "
-                  f"read: {', '.join(str(o['ticket']) for o in unreadable)}"
-                  if unreadable else ""),
-        left={"overdue": len(breaches), "unreadable": len(unreadable)},
+        verdict=verdict,
+        reason=said,
+        left={"overdue": len(breaches), "unreadable": len(not_placed)},
         right={"overdue": 0},
-        population={"with_a_deadline": len(dated), "late": len(breaches)},
+        population={"with_a_deadline": len(dated), "judged": len(judged),
+                    "late": len(breaches), "met": met, "waiting": waiting,
+                    "history": [str(i.get("ticket")) for i in history],
+                    "history_late": history_late,
+                    "settled_within_hours": SETTLED_WITHIN_HOURS},
         sources={"board": BOARD}))
 
 

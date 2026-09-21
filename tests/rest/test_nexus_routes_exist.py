@@ -22,8 +22,9 @@ nobody whether the fix held.
 
 WHAT IT ASSERTS. Every concrete `/api/v1/...` path named in the newest answer
 that names one appears in `openapi-public.json`. Concrete only -- a path with
-a `{placeholder}` is matched against the template, and a path we cannot parse
-is not evidence of anything.
+a `{placeholder}` or `<placeholder>` is matched against the template, a
+concrete segment fills a template's slot as `_fills` says, and a path we
+cannot parse is not evidence of anything.
 
 The NEWEST answer that names a route, not every answer ever recorded, for the
 reason #85's own docstring gives: a union over the whole history can only
@@ -56,7 +57,15 @@ OPENAPI = "/openapi-public.json"
 REPO = Path(__file__).resolve().parent.parent.parent
 # `/api/v1/...` as it appears in prose: inside backticks, after a verb, or
 # bare. Trailing punctuation is not part of a path.
-ROUTE = re.compile(r"/api/v1/[A-Za-z0-9_\-/{}]+")
+#
+# Segment by segment, and a segment may be a `<placeholder>` as well as a
+# `{placeholder}`: their AI writes both, and the character class stopped at
+# the `<`, so `/api/v1/cloned-bots/<id>/settings` was read as
+# `/api/v1/cloned-bots/` and failed as a route nobody publishes (A06, deep
+# pass of 2026-09-21). A space is allowed only INSIDE the angle brackets --
+# our diary holds `<EVCDX symbol>` -- and the bracket must open a segment, so
+# a `</code>` after a path is markup rather than a parameter of it.
+ROUTE = re.compile(r"/api/v1(?:/(?:<[A-Za-z_][^<>/`\n]*>|[A-Za-z0-9_\-{}]+))+")
 FRESH_HOURS = 24
 
 
@@ -82,22 +91,65 @@ def _templates(document: dict) -> set[str]:
     return {p for p in (document.get("paths") or {})}
 
 
+# A bare lowercase word, hyphens allowed, no digit: the shape of every route
+# word they publish (`toggle-trading`, `my-clones`) and of none of the ids
+# their router takes (UUIDs, integers, `EVCDX-...` tickers).
+WORD = re.compile(r"[a-z]+(?:-[a-z]+)*")
+SLOT = re.compile(r"\{([^}]*)\}")
+
+
+def _fills(value: str, slot: str, at: int, template: list[str],
+           published: list[list[str]]) -> bool:
+    """Whether a concrete segment can stand in a template's `{slot}`.
+
+    A slot took ANY segment, so `/api/v1/cloned-bots/start-trading` matched
+    `/api/v1/cloned-bots/{instance_id}` and passed as published (A06, deep
+    pass of 2026-09-21). Two refusals, both read off their own document:
+
+    * A literal they publish at this position, under the same prefix, is that
+      route and not a value -- `/exchange/pairs/orders` is not an order book
+      for a symbol called `pairs`.
+    * A word is refused only where three readings agree: the slot is named as
+      an id (`id`, `*_id`); the same prefix publishes literal route words at
+      that position, so their router tells words from ids there (`/cloned-
+      bots/` has `available`, `clone`, `my-clones` beside `{instance_id}`);
+      and the segment has the WORD shape above.
+
+    THE ASSUMPTION, ours and conservative on purpose: short of all three the
+    segment still fills the slot -- a `{slug}` takes `aave-dao`, a `{symbol}`
+    beside `coins` takes `btc`, an id slot with no route words beside it takes
+    whatever it is given. A false "unpublished" is an accusation sent to their
+    tracker, so this may let a word through; it may not refuse a real value.
+    """
+    siblings = {t[at] for t in published
+                if len(t) > at and t[:at] == template[:at]
+                and not t[at].startswith("{")}
+    if value in siblings:
+        return False
+    named = SLOT.match(slot)
+    name = named.group(1).lower() if named else ""
+    is_id = name == "id" or name.endswith("_id")
+    return not (is_id and siblings and WORD.fullmatch(value))
+
+
 def _matches(path: str, templates: set[str]) -> bool:
     """A path matches a published template when the fixed parts line up.
 
     `{instance_id}` in one and `{id}` in the other are the same segment: the
     name inside the braces is theirs to choose and an agent copying the route
-    keeps whatever was written.
+    keeps whatever was written. `<id>` is their AI's other spelling of it.
+    A concrete segment fills a slot only as `_fills` allows.
     """
     if path in templates:
         return True
     parts = path.strip("/").split("/")
-    for template in templates:
-        candidate = template.strip("/").split("/")
+    published = [t.strip("/").split("/") for t in templates]
+    for candidate in published:
         if len(candidate) != len(parts):
             continue
-        if all(c.startswith("{") or p.startswith("{") or c == p
-               for c, p in zip(candidate, parts)):
+        if all(p.startswith(("{", "<")) or c == p
+               or (c.startswith("{") and _fills(p, c, at, candidate, published))
+               for at, (c, p) in enumerate(zip(candidate, parts))):
             return True
     return False
 

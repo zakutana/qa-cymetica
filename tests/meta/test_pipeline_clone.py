@@ -321,6 +321,103 @@ def test_only_a_405_counts_as_a_route_that_exists():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_undocumented_method_on_a_documented_path_is_reported_as_what_it_is():
+    """A13, deep pass of 2026-09-21, driven through the whole check.
+
+    (1) V04 made an undocumented METHOD on a documented path a finding, but
+    the sentence stayed the one written for paths: "none of those paths is in
+    /openapi-public.json" -- false of a path their document lists, and it goes
+    on their tracker. (2) The probe is a GET, so a path whose GET is served
+    answers 200, names nothing, and a PATCH beside it was never compared.
+    OPTIONS is a read method at every tier; its 405 is the same router
+    evidence, so it is asked when the GET named nothing. Nothing but GET and
+    OPTIONS may leave this stub -- it has no other verb.
+
+    Considered folding into test_only_a_405_counts_as_a_route_that_exists;
+    that one drives served_but_undocumented() alone, and neither half of this
+    is reachable without the probe loop and the reason together.
+    """
+    from qa.marks import Inconclusive
+    from qa.measure import CURRENT_MEASUREMENT
+
+    spec = importlib.util.spec_from_file_location(
+        "cloned_surface_methods", REPO / "tests" / "rest" / "test_cloned_bots_surface.py")
+    surface = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(surface)
+
+    class _Answer:
+        def __init__(self, status, body=None, allow=None):
+            self.status_code, self._body = status, body
+            self.headers = {"allow": allow} if allow else {}
+
+        def json(self):
+            return self._body
+
+    class _Rest:
+        def __init__(self, documented, gets, options):
+            self.documented, self.gets, self.options_ = documented, gets, options
+            self.asked = []
+
+        def get(self, path, params=None):
+            self.asked.append(("GET", path))
+            if path == surface.OPENAPI:
+                return _Answer(200, {"paths": self.documented})
+            if path.endswith("/my-clones"):
+                return _Answer(200, [{"id": "abc"}])
+            return self.gets.get(path) or _Answer(404)
+
+        def options(self, path, **kwargs):
+            self.asked.append(("OPTIONS", path))
+            return self.options_.get(path) or _Answer(404)
+
+    def run(rest):
+        CURRENT_MEASUREMENT.set(None)
+        try:
+            surface.test_every_cloned_bot_route_they_serve_is_one_they_document(rest)
+            verdict = "passed"
+        except AssertionError:
+            verdict = "failed"
+        except Inconclusive:
+            verdict = "inconclusive"
+        measured = CURRENT_MEASUREMENT.get()
+        CURRENT_MEASUREMENT.set(None)  # not this meta test's own record
+        return verdict, (measured.reason if measured else "")
+
+    base = "/api/v1/cloned-bots/abc"
+    # (1) Their document lists POST on /fund; the router also names DELETE.
+    rest = _Rest({"/api/v1/cloned-bots/{instance_id}/fund": {"post": {}}},
+                 {f"{base}/fund": _Answer(405, allow="POST, DELETE")}, {})
+    verdict, reason = run(rest)
+    assert verdict == "failed", (verdict, reason)
+    assert "none of those paths" not in reason, (
+        f"a path their document lists was reported as missing from it: {reason}")
+    assert "DELETE" in reason and "POST" in reason, reason
+    assert "cannot start" not in reason, reason
+
+    # (2) A served GET on /settings answers 200; the PATCH beside it is only
+    # seen by asking OPTIONS.
+    rest = _Rest({"/api/v1/cloned-bots/{instance_id}/settings": {"get": {}}},
+                 {f"{base}/settings": _Answer(200, {"is_trading": False})},
+                 {f"{base}/settings": _Answer(405, allow="PATCH")})
+    verdict, reason = run(rest)
+    assert verdict == "failed" and "PATCH" in reason, (verdict, reason)
+    assert {verb for verb, _ in rest.asked} <= {"GET", "OPTIONS"}, rest.asked
+
+    # A path absent from their document still reads as one.
+    rest = _Rest({"/api/v1/cloned-bots/{instance_id}/fund": {"post": {}}},
+                 {f"{base}/settings": _Answer(405, allow="PATCH")}, {})
+    verdict, reason = run(rest)
+    assert verdict == "failed" and "none of those paths" in reason, reason
+    assert "cannot start" in reason, reason
+
+    # And an OPTIONS that names nothing leaves the check where it was.
+    rest = _Rest({"/api/v1/cloned-bots/{instance_id}/settings": {"get": {}}},
+                 {f"{base}/settings": _Answer(200, {})},
+                 {f"{base}/settings": _Answer(200)})
+    assert run(rest)[0] == "inconclusive"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_funding_asks_the_platform_whether_the_bot_is_paper(tmp_path, monkeypatch):
     """The floor for `fund` cannot be a flag, because there is no flag.
 

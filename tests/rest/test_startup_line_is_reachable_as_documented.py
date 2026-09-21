@@ -45,7 +45,7 @@ measures -- a surface being undiscoverable does not make it wrong.
 
 from __future__ import annotations
 
-from qa.marks import SafetyTier, qa
+from qa.marks import Inconclusive, SafetyTier, qa
 from qa.measure import Measurement, conclude
 
 TERMS = "/api/v1/build-it-better/startups/terms"
@@ -63,24 +63,40 @@ def test_the_startup_calls_answer_the_reader_their_own_page_promises(rest_anon):
     line = rest_anon.get(LINE)
     mine = rest_anon.get(MINE)
 
+    # Each status is triaged for what it SAYS. A public call that demands a
+    # key is the defect the Auth column names; a 404 is the other one the
+    # docstring keeps apart from it, a route the page documents and nobody
+    # serves. Anything else -- a 429 of our budget, a 5xx of their restart --
+    # is a read that failed, and went out as "answered HTTP 429 to a client
+    # carrying no credential" (A09, deep pass of 2026-09-21). Rule 8.
     problems: list[str] = []
+    unread: list[str] = []
     for name, path, response in (("terms", TERMS, terms), ("the line", LINE, line)):
-        if response.status_code != 200:
+        code = response.status_code
+        if code in REFUSALS:
             problems.append(
                 f"the page marks {path} as needing no account, and it answered "
-                f"HTTP {response.status_code} to a client carrying no "
-                f"credential")
+                f"HTTP {code} to a client carrying no credential")
+        elif code == 404:
+            problems.append(
+                f"the page documents {path} as a call needing no account, and "
+                f"it answered HTTP 404: the route it sends a reader to does "
+                f"not exist")
+        elif code != 200:
+            unread.append(f"{name} ({path}) answered HTTP {code}")
 
     if mine.status_code == 200:
         problems.append(
             f"{MINE} is marked as needing an account and answered 200 to a "
             f"client carrying no credential, so one reader can see "
             f"applications that are not theirs")
-    elif mine.status_code not in REFUSALS:
+    elif mine.status_code == 404:
         problems.append(
             f"{MINE} is marked as needing an account and answered HTTP "
             f"{mine.status_code}, which is neither the refusal the page "
             f"implies nor the 200 it promises a signed-in caller")
+    elif mine.status_code not in REFUSALS:
+        unread.append(f"/startups/mine ({MINE}) answered HTTP {mine.status_code}")
 
     served, listed, counted = None, None, None
     if terms.status_code == 200:
@@ -117,6 +133,14 @@ def test_the_startup_calls_answer_the_reader_their_own_page_promises(rest_anon):
                 "the line carries no `rules` text, which is where the auction "
                 "states what a bid buys")
 
+    # A defect measured on one call stands whatever else was lost; with none,
+    # an unread call leaves the claim about all three unanswered -- and the
+    # passing sentence below would say it was read.
+    if unread and not problems:
+        raise Inconclusive(
+            "; ".join(unread) + " -- a failed read is neither a call that "
+            "demands a key nor one that refuses a stranger")
+
     held = ["terms and the line answer a reader with no credential, and "
             f"/startups/mine refuses one with HTTP {mine.status_code}"]
     if served:
@@ -135,4 +159,4 @@ def test_the_startup_calls_answer_the_reader_their_own_page_promises(rest_anon):
         right={"statuses_served": served, "page_statuses": list(PAGE_STATUSES),
                "line_rows": listed, "line_count": counted},
         sources={"terms": TERMS, "line": LINE, "mine": MINE},
-        population={"applications_in_the_line": listed}))
+        population={"applications_in_the_line": listed, "unread": unread}))
