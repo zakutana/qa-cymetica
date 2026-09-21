@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -35,6 +36,33 @@ from qa.marks import SafetyTier, qa
 
 REPO = Path(__file__).resolve().parents[2]
 HOOK = REPO / ".claude" / "hooks" / "no_backtick_commit.py"
+SETTINGS = REPO / ".claude" / "settings.json"
+
+
+def _covers_bash(matcher) -> bool:
+    """A matcher is a pattern over the tool's name; none, "" and "*" are every tool."""
+    if matcher in (None, "", "*"):
+        return True
+    try:
+        return re.fullmatch(matcher, "Bash") is not None
+    except re.error:
+        return False
+
+
+def _runs_before_bash(settings: dict) -> bool:
+    """A PreToolUse entry whose matcher covers Bash runs the hook.
+
+    Anywhere else it is wired to nothing that matters: under PostToolUse the
+    command has already run, and under a matcher Bash never meets it never
+    fires at all.
+    """
+    for entry in (settings.get("hooks") or {}).get("PreToolUse") or []:
+        if not _covers_bash(entry.get("matcher")):
+            continue
+        for hook in entry.get("hooks") or []:
+            if "no_backtick_commit.py" in json.dumps(hook):
+                return True
+    return False
 
 
 def _decide(command: str) -> str:
@@ -90,11 +118,24 @@ def test_it_refuses_nothing_it_was_not_written_for():
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_hook_is_wired_and_cannot_block_by_crashing():
     """Wired into settings.json, and silent on anything it cannot parse."""
-    settings = json.loads((REPO / ".claude" / "settings.json").read_text(
-        encoding="utf-8"))
-    wired = json.dumps(settings)
-    assert "no_backtick_commit.py" in wired, (
-        "the hook exists and nothing runs it")
+    settings = json.loads(SETTINGS.read_text(encoding="utf-8"))
+    # Wired means BEFORE a Bash command runs. "Named anywhere in the file" was
+    # the whole assertion, so the entry moved under PostToolUse -- where the
+    # commit has already landed with its word missing -- or under a matcher
+    # Bash never meets stayed green. Deep pass of 2026-09-21, C11.
+    assert _runs_before_bash(settings), (
+        "the hook is not under hooks.PreToolUse with a matcher covering Bash, "
+        "so nothing runs it before the commit it exists to refuse")
+    block = {"matcher": "Bash|PowerShell", "hooks": [
+        {"type": "command", "command": "python",
+         "args": [".claude/hooks/no_backtick_commit.py"]}]}
+    assert _runs_before_bash({"hooks": {"PreToolUse": [block]}})
+    assert _runs_before_bash({"hooks": {"PreToolUse": [
+        {"hooks": block["hooks"]}]}}), "no matcher is every tool"
+    assert not _runs_before_bash({"hooks": {"PostToolUse": [block]}}), (
+        "after the command is too late to refuse it")
+    assert not _runs_before_bash({"hooks": {"PreToolUse": [
+        {**block, "matcher": "Write|Edit"}]}}), "a matcher Bash never meets"
 
     said = subprocess.run([sys.executable, str(HOOK)], input="not json",
                           capture_output=True, text=True, timeout=20)

@@ -33,6 +33,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import subprocess
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -235,6 +236,59 @@ def test_the_effort_of_a_commit_is_read_even_when_git_will_not_parse_it():
                 f"where git's trailer parser finds {sum(strict.values())}"),
         left=lenient, right=strict,
         sources={"history": "git log --format=%B"}))
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_lenient_reader_reads_the_two_shapes_git_will_not(tmp_path,
+                                                              monkeypatch):
+    """The two malformed shapes, committed to a fixture history and read.
+
+    The test above compares the readers over OUR history, where the malformed
+    commits have slid out of the window: on 2026-09-21 lenient and strict both
+    read 200, so collapsing the lenient branch onto git's trailer parser --
+    the exact regression it guards -- still passed its `>=`. A comparison
+    over a repaired past cannot tell a reader that reads the malformed shapes
+    from one that never could; a history that holds them can. Deep pass of
+    2026-09-21, C08.
+    """
+    mod = _module()
+    repo, no_hooks = tmp_path / "history", tmp_path / "no-hooks"
+    repo.mkdir()
+    no_hooks.mkdir()
+
+    def git(*args: str) -> None:
+        # No hooks: ours would append a well-formed Effort line of its own.
+        subprocess.run(["git", "-c", "user.name=fixture",
+                        "-c", "user.email=fixture@example.invalid",
+                        "-c", f"core.hooksPath={no_hooks}",
+                        "-c", "commit.gpgsign=false", *args],
+                       cwd=repo, check=True, capture_output=True)
+
+    git("init", "-q")
+    for i, text in enumerate((
+            # Well formed: git reads this one too.
+            "well formed\n\nbody\n\nEffort: medium\n"
+            "Co-Authored-By: X <x@example.invalid>\n",
+            # One line: subject and trailer become one paragraph.
+            "one line\nEffort: high\n",
+            # An Effort paragraph written above Co-Authored-By.
+            "above the trailer\n\nbody\n\nEffort: high\n\n"
+            "Co-Authored-By: X <x@example.invalid>\n")):
+        message = tmp_path / f"message-{i}.txt"
+        message.write_text(text, encoding="utf-8")
+        git("commit", "-q", "--allow-empty", "-F", str(message))
+
+    monkeypatch.setattr(mod, "REPO_ROOT", repo)
+    strict = mod.effort_counts(limit=200, trailers_only=True)
+    lenient = mod.effort_counts(limit=200)
+    # The premise first: if git ever learns to read these, the fixture no
+    # longer holds the shape this test is about, and says so.
+    assert strict == {"medium": 1}, (
+        f"git's trailer parser read {strict}; the fixture was meant to hold "
+        "two commits it cannot parse")
+    assert lenient == {"medium": 1, "high": 2}, (
+        f"the lenient reader read {lenient}: it missed an Effort line git's "
+        "parser also misses, which is the third of the history it exists for")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

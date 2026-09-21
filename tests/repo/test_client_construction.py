@@ -40,10 +40,10 @@ OWNER = "qa/client.py"
 CLIENTS = {"Client", "AsyncClient"}
 
 
-def _offenders() -> list[str]:
+def _offenders(repo: Path = REPO) -> list[str]:
     found = []
-    for path in sorted({p for root in ROOTS for p in REPO.glob(root)}):
-        rel = path.relative_to(REPO).as_posix()
+    for path in sorted({p for root in ROOTS for p in repo.glob(root)}):
+        rel = path.relative_to(repo).as_posix()
         if rel == OWNER:
             continue
         source = path.read_text(encoding="utf-8")
@@ -116,49 +116,40 @@ def test_the_scan_reads_every_spelling_of_the_import(tmp_path):
     by somebody who knew the guard existed.
 
     Driven over real source rather than over the AST by hand, because the
-    thing that was wrong was which node shape the walk accepted.
+    thing that was wrong was which node shape the walk accepted -- and driven
+    through `_offenders()` itself, over a fixture tree. The previous version
+    drove a local copy of the walk, so reverting the real scan to
+    `func.value.id == "httpx"` left this green while the guard went blind
+    again. Deep pass of 2026-09-21, C06.
     """
-    import ast as _ast
+    fixtures = {
+        "qa/plain.py": "import httpx\nhttpx.Client()\n",
+        # An aliased module import is the same construction under another name.
+        "scripts/aliased.py": "import httpx as hx\nhx.Client()\n",
+        # Importing the class and calling it bare is the same construction.
+        ".claude/hooks/direct.py": "from httpx import Client\nClient()\n",
+        "qa/renamed.py": "from httpx import AsyncClient as AC\nAC()\n",
+        "qa/key.py": "from qa.client import _FACTORY_SENTINEL\n",
+        # The owner builds clients by design.
+        "qa/client.py": "import httpx\nhttpx.Client()\n",
+        # And the shapes that must NOT be flagged, or the guard cries wolf and
+        # stops being read: somebody else's Client, and a mere import.
+        "qa/only_import.py": "import httpx\n",
+        "qa/their_lib.py": "from mylib import Client\nClient()\n",
+        "qa/own_class.py": "class Client: pass\nClient()\n",
+        "qa/other.py": "import other\nother.Client()\n",
+    }
+    for rel, source in fixtures.items():
+        (tmp_path / rel).parent.mkdir(parents=True, exist_ok=True)
+        (tmp_path / rel).write_text(source, encoding="utf-8")
 
-    def offenders_in(source: str) -> list[str]:
-        tree = _ast.parse(source)
-        aliases, direct = {"httpx"}, set()
-        for node in _ast.walk(tree):
-            if isinstance(node, _ast.Import):
-                for alias in node.names:
-                    if alias.name == "httpx":
-                        aliases.add(alias.asname or "httpx")
-            if isinstance(node, _ast.ImportFrom) and node.module == "httpx":
-                for alias in node.names:
-                    if alias.name in CLIENTS:
-                        direct.add(alias.asname or alias.name)
-        hits = []
-        for node in _ast.walk(tree):
-            if not isinstance(node, _ast.Call):
-                continue
-            func = node.func
-            if isinstance(func, _ast.Attribute) and func.attr in CLIENTS:
-                if getattr(func.value, "id", None) in aliases:
-                    hits.append("attribute")
-            if isinstance(func, _ast.Name) and func.id in direct:
-                hits.append("direct")
-        return hits
+    assert _offenders(tmp_path) == sorted([
+        "qa/plain.py:2: httpx.Client(...)",
+        "scripts/aliased.py:2: hx.Client(...)",
+        ".claude/hooks/direct.py:2: Client(...) imported from httpx",
+        "qa/renamed.py:2: AC(...) imported from httpx",
+        "qa/key.py: imports _FACTORY_SENTINEL",
+    ]), _offenders(tmp_path)
 
-    assert offenders_in("import httpx\nhttpx.Client()\n") == ["attribute"]
-    assert offenders_in("import httpx as hx\nhx.Client()\n") == ["attribute"], (
-        "an aliased module import is the same construction under another name")
-    assert offenders_in("from httpx import Client\nClient()\n") == ["direct"], (
-        "importing the class and calling it bare is the same construction")
-    assert offenders_in(
-        "from httpx import AsyncClient as AC\nAC()\n") == ["direct"]
-
-    # And the shapes that must NOT be flagged, or the guard cries wolf and
-    # stops being read: somebody else's Client, and a mere import.
-    assert offenders_in("import httpx\n") == []
-    assert offenders_in("from mylib import Client\nClient()\n") == []
-    assert offenders_in("class Client: pass\nClient()\n") == []
-    assert offenders_in("import other\nother.Client()\n") == []
-
-    # The scan as it actually runs must agree with the walk above on the
-    # tree as it stands: the repository is clean right now.
+    # The same scan on the tree as it stands: the repository is clean.
     assert _offenders() == [], _offenders()

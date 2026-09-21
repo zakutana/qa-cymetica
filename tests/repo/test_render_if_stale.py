@@ -29,6 +29,7 @@ not broken).
 
 from __future__ import annotations
 
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -45,6 +46,34 @@ def _hooks_path() -> str | None:
     proc = subprocess.run(["git", "config", "--get", "core.hooksPath"],
                           cwd=str(REPO), capture_output=True, text=True)
     return proc.stdout.strip() or None
+
+
+def _executable(body: str) -> str:
+    """The hook with its comments gone: what sh would actually run."""
+    code = []
+    for line in body.splitlines():
+        line = re.sub(r"(^|\s)#.*$", "", line)
+        if line.strip():
+            code.append(line)
+    return "\n".join(code)
+
+
+def _hook_reads(body: str) -> tuple[bool, bool]:
+    """(renders the page and stages it, only once state/ is known staged).
+
+    Read over the executable lines only. The first version asked whether
+    "--if-stale" and "dashboard" appeared anywhere in the file, and both are in
+    the hook's own comment block -- so deleting the render and its `git add`
+    left the guard green, reading the paragraph that explains them. Deep pass
+    of 2026-09-21, C05.
+    """
+    code = _executable(body)
+    render = re.search(r"scripts/render\.py\s+--if-stale", code)
+    stage = re.search(r"git add\s+dashboard/index\.html", code)
+    guard = code.find("git diff --name-only -- state/")
+    renders = bool(render and stage and render.start() < stage.start())
+    guarded = render is not None and -1 < guard < render.start()
+    return renders, guarded
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -102,12 +131,21 @@ def test_if_stale_rewrites_when_the_payload_moved(tmp_path):
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_commit_hook_renders_the_page_it_commits():
     """The rule that used to be "the operator remembers"."""
+    # The reader may not be satisfied by the hook's prose: a render, a `git
+    # add` and a guard that exist only in comments are absent. Above the gate,
+    # so a clone without the hook installed still exercises the reader.
+    assert _hook_reads(
+        "# renders the dashboard with --if-stale, once\n"
+        "# git diff --name-only -- state/ is empty\n"
+        "#$PY scripts/render.py --if-stale\n"
+        "#    git add dashboard/index.html\n"
+        "exit 0\n") == (False, False)
     if _hooks_path() is None:
         raise Inconclusive(
             "core.hooksPath is not set in this clone, so the hook does not "
             "run here -- not installed is not broken (rule 8)")
     body = HOOK.read_text(encoding="utf-8")
-    renders = "--if-stale" in body and "dashboard" in body
+    renders, guarded = _hook_reads(body)
     # And only from state that is going into the commit. The render reads the
     # WORKING TREE, so with state/ modified-but-unstaged -- commit a code
     # change first, fold second, which is the ordinary order here -- staging
@@ -115,14 +153,13 @@ def test_the_commit_hook_renders_the_page_it_commits():
     # tests/repo reads the working tree too, so it stays green locally and
     # rule 12 goes red on a fresh clone, where the working tree IS the
     # commit. Found by three readers on 2026-09-20.
-    guarded = "git diff --name-only -- state/" in body
     conclude(Measurement(
         verdict="passed" if renders and guarded else "failed",
         reason=("the pre-commit hook re-renders the dashboard and stages it, "
                 "and only when state/ has nothing unstaged"
                 if renders and guarded else
-                "the pre-commit hook does not render, so rule 12's guard is "
-                "left to memory again"
+                "the pre-commit hook does not render and stage the page, so "
+                "rule 12's guard is left to memory again"
                 if not renders else
                 "the hook renders from the working tree and stages the page "
                 "without checking that state/ is what the commit carries, so "
