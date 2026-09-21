@@ -1,6 +1,6 @@
 {
-  "fetched_at": "2026-09-21T17:17:17+00:00",
-  "total": 81,
+  "fetched_at": "2026-09-21T20:33:51+00:00",
+  "total": 82,
   "statuses": {
     "paid": 20
   },
@@ -24,14 +24,14 @@
   "our_reports": {
     "endpoint": "GET /api/v1/bounty/my-reports?wallet_address=<addr>",
     "klass": "ok",
-    "read_at": "2026-09-21T17:17:08+00:00",
-    "evidence_id": "c283eaa533c1a4487ae7139513e91432c0402215d7965bfc5be424e04f05d322",
-    "rows_returned": 73,
-    "server_total": 73,
-    "total": 73,
+    "read_at": "2026-09-21T20:33:47+00:00",
+    "evidence_id": "c7179542eccd1366d777d2413cc577ccb2652f36142fbecf8aed77f7cdc1c4a5",
+    "rows_returned": 74,
+    "server_total": 74,
+    "total": 74,
     "statuses": {
       "pending": 2,
-      "paid": 64,
+      "paid": 65,
       "fixed": 5,
       "invalid": 2
     },
@@ -1336,13 +1336,31 @@
       {
         "id": 116,
         "title": "FTA Fund -- Cryptos publishes a return from before it held anything, while the methodology says nothing is backfilled",
+        "status": "paid",
+        "hunter_name": "expire76",
+        "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
+        "severity_reported": "medium",
+        "severity_confirmed": "medium",
+        "category": "logic",
+        "created_at": "2026-09-21T14:49:56.342787",
+        "fixed_at": "2026-09-21T19:32:35.452339",
+        "validated_at": "2026-09-21T19:32:35.452339",
+        "triaged_at": "2026-09-21T19:32:35.452339",
+        "status_notes": "[2026-09-21T19:32:35+00:00] Resolved via ticket ET-26316: Confirmed. The figure is today's composition applied back to inception (the page says so) but get_fund gave no basis and the methodology said \"nothing backfilled\". Live @036bd1aae: get_fund FTA-CRYPTOS carries return_basis=pro_forma_current_composition plus a note; methodology.returns names the exception; /api/v1/fta-fund/history keeps `inception` (chart marker) and adds inception_meaning + fund_inception. Verified anonymously via /mcp/v1. M&A Ripple pre-live stretch: not verified, unchanged.",
+        "ticket_url": "https://cymetica.com/admin/centcom/issues/26316",
+        "fix_pr_url": null,
+        "reward_amount": 1000.0
+      },
+      {
+        "id": 117,
+        "title": "A card reading tradeable_now true answers a paper buy with HTTP 500 \"Buy failed\"",
         "status": "pending",
         "hunter_name": "expire76",
         "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
         "severity_reported": "medium",
         "severity_confirmed": null,
-        "category": "logic",
-        "created_at": "2026-09-21T14:49:56.342787",
+        "category": "api",
+        "created_at": "2026-09-21T17:17:44.111402",
         "fixed_at": null,
         "validated_at": null,
         "triaged_at": null,
@@ -1355,11 +1373,11 @@
   },
   "qa_tracker": {
     "source": "https://cymetica.com/leaderboard/bugs (embedded allBugs)",
-    "total": 155,
+    "total": 156,
     "statuses": {
       "qa_testing": 2,
       "implementing": 2,
-      "completed": 101,
+      "completed": 102,
       "resolved": 24,
       "rejected": 2,
       "pending": 12,
@@ -1367,11 +1385,11 @@
     },
     "source_channels": {
       "web": 74,
-      "bounty": 81
+      "bounty": 82
     },
     "usernames": {
       "Maxorelaxo": 2,
-      "expire76": 101,
+      "expire76": 102,
       "Crypto42day": 2,
       "tonybugs0439": 5,
       "joebloggs": 12,
@@ -1468,6 +1486,7 @@
       "cloned bot profile does not display trading activity correctly",
       "неправильный баланс токенов в портфеле пользователя max",
       "swap pages fail to display user token balances",
+      "fta fund -- cryptos publishes a return from before it held anything, while the methodology says nothing is backfilled",
       "product trend radar ranks the same product on two rows, splitting its mentions between them",
       "the live build board's \"building now\" tile counts queued requests, so it contradicts the building column directly beneath it",
       "build it better missed its own 24-hour deadline on et-26036: the clock expired with the request still queued and nothing built",
@@ -1548,13 +1567,13 @@
       "critical: my positions p&l shows -$3.15 for a $0.10 position",
       "shares preview rounds to 1 decimal place instead of 2"
     ],
-    "has_linear_links": 46
+    "has_linear_links": 47
   },
   "a2a_inbox": {
     "klass": "ok",
     "rows_returned": 50,
     "new": [],
-    "at": "2026-09-21T17:17:16+00:00"
+    "at": "2026-09-21T20:33:50+00:00"
   },
   "closed": 0,
   "closed_without_recorded_evidence": 0,
@@ -1567,6 +1586,24 @@
     "status_notes"
   ],
   "reports": [
+    {
+      "id": 116,
+      "title": "FTA Fund -- Cryptos publishes a return from before it held anything, while the methodology says nothing is backfilled",
+      "status": "paid",
+      "hunter_name": "expire76",
+      "severity_reported": "medium",
+      "severity_confirmed": "medium",
+      "created_at": "2026-09-21T14:49:56.342787",
+      "fixed_at": "2026-09-21T19:32:35.452339",
+      "validated_at": "2026-09-21T19:32:35.452339",
+      "triaged_at": "2026-09-21T19:32:35.452339",
+      "status_notes": "[2026-09-21T19:32:35+00:00] Resolved via ticket ET-26316: Confirmed. The figure is today's composition applied back to inception (the page says so) but get_fund gave no basis and the methodology said \"nothing backfilled\". Live @036bd1aae: get_fund FTA-CRYPTOS carries return_basis=pro_forma_current_composition plus a note; methodology.returns names the exception; /api/v1/fta-fund/history keeps `inception` (chart marker) and adds inception_meaning + fund_inception. Verified anonymously via /mcp/v1. M&A Ripple pre-live stretch: not verified, unchanged.",
+      "ticket_url": "https://cymetica.com/admin/centcom/issues/26316",
+      "fix_pr_url": null,
+      "reward_amount": 1000.0,
+      "paid_at": "2026-09-21T19:35:24.254795",
+      "is_duplicate": false
+    },
     {
       "id": 115,
       "title": "Product Trend Radar ranks the same product on two rows, splitting its mentions between them",
@@ -1908,24 +1945,6 @@
       "reward_amount": 1000.0,
       "paid_at": "2026-09-11T16:08:47.310206",
       "is_duplicate": false
-    },
-    {
-      "id": 95,
-      "title": "A user-submitted card answers 200 with tradeable_now true to a non-author, though user submissions are described as visible only to their author",
-      "status": "paid",
-      "hunter_name": "expire76",
-      "severity_reported": "medium",
-      "severity_confirmed": "medium",
-      "created_at": "2026-09-11T06:01:17.748826",
-      "fixed_at": "2026-09-11T09:47:49.173295",
-      "validated_at": "2026-09-11T09:47:49.173295",
-      "triaged_at": "2026-09-11T09:47:49.173295",
-      "status_notes": "[2026-09-11T09:47:49+00:00] Resolved via ticket ET-24616: Not a boundary defect, verified from inside. Card a4a5b71e is is_public=true (origin user_submission, owner 99), so account 113 reading it (200) is the rule working: the ONE visibility rule (event_cards/visibility.py) keys on is_public, not origin; only is_public=false cards 404 for non-owners. The listing omits it because the deck feed defaults include_user_submitted=false; with include_user_submitted=true the card IS listed (checked live). Public card, listed under the documented flag.\n[reporter-verification PASS 2026-09-11 15:07 UTC by expire76 test_run=run-20260911T150246Z-5dea5bec]\n[reporter-verification PASS 2026-09-11 17:58 UTC by expire76 test_run=run-20260911T174358Z-c0e379b9]",
-      "ticket_url": "https://cymetica.com/admin/centcom/issues/24616",
-      "fix_pr_url": null,
-      "reward_amount": 1000.0,
-      "paid_at": "2026-09-11T09:54:47.089552",
-      "is_duplicate": false
     }
   ],
   "leaderboard": [
@@ -1935,11 +1954,11 @@
       "avatar_url": null,
       "tier": "senior",
       "total_score": 460,
-      "valid_reports": 69,
+      "valid_reports": 70,
       "total_likes": 0,
-      "total_earned": 65000.0,
-      "total_awarded": 65000.0,
-      "total_paid": 65000.0,
+      "total_earned": 66000.0,
+      "total_awarded": 66000.0,
+      "total_paid": 66000.0,
       "reward_currency": "ET10"
     },
     {
