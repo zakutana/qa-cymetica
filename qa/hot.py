@@ -209,9 +209,25 @@ def follow(found: list[dict], rows, horizons=(6.0, 24.0)) -> dict:
 
 def control(rows, found: list[dict], horizons=(6.0, 24.0), headlines=None) -> dict:
     """The same horizons for baskets of the same class that were on the wire
-    at an entry's round and NOT in hot: what any basket did meanwhile."""
-    rounds = {r["at"]: r for r in _rounds(rows)}
+    at an entry's round and had NOT been in hot in the day before it: what a
+    basket nobody called did meanwhile. Every such basket, not a sample of
+    equal size -- a larger control costs nothing here, since no leg is priced.
+    One that left Hot hours ago is excluded: it is the tail of the thing
+    measured, not its absence."""
+    ordered = _rounds(rows)
+    rounds = {r["at"]: r for r in ordered}
     heads = _headlines(headlines if headlines is not None else rows)
+    seen_hot: dict[str, list[datetime]] = {}
+    for rnd in ordered:
+        for h in _hot_rows(rnd):
+            fp = _fp(heads.get(h["row"]), h["cls"])
+            if fp:
+                seen_hot.setdefault(fp, []).append(_at(rnd["at"]))
+
+    def lately_hot(fp: str, when: datetime) -> bool:
+        return any(when - timedelta(hours=ONCE_HOURS) <= t <= when
+                   for t in seen_hot.get(fp, ()))
+
     out = {}
     for cls in CLASSES:
         picked: dict[tuple, tuple] = {}
@@ -219,11 +235,12 @@ def control(rows, found: list[dict], horizons=(6.0, 24.0), headlines=None) -> di
             rnd = rounds.get(e["at"])
             if not rnd:
                 continue
-            in_hot = {_fp(heads.get(h["row"]), h["cls"]) for h in _hot_rows(rnd)}
+            when = _at(e["at"])
             for w in rnd.get("wire") or []:
                 fp = _fp(heads.get(w[0]), cls)
                 px = _px_at({"wire": [w]}, w[0], cls)
-                if fp and px and fp not in in_hot and (fp, e["at"]) not in picked:
+                if (fp and px and not lately_hot(fp, when)
+                        and (fp, e["at"]) not in picked):
                     picked[(fp, e["at"])] = (w[0], px)
         items = [(row, at, px) for (_, at), (row, px) in picked.items()]
         out[cls] = [_horizon(rows, items, cls, h) for h in horizons]

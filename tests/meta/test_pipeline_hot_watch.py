@@ -124,3 +124,10 @@ def test_the_card_is_priced_afterwards_from_its_own_history(tmp_path, monkeypatc
 
     mod.resolve(_client(history), now=T0 + timedelta(hours=26))
     assert len(asked) == 1, "a card is read once"
+
+    # Entry at T0+20 min; the history's points are hourly, so the entry point
+    # is T0 (20 min off, inside the 30 allowed) at index 100, and +6 h is T0+6h
+    # at 106. A horizon with no point near it is not a result.
+    said = mod.card_follow(mod.load(), horizons=(6.0, 40.0))
+    assert said[6.0]["n"] == 1 and said[6.0]["mean"] == 6.0
+    assert said[40.0]["n"] == 0

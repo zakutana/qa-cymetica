@@ -124,6 +124,28 @@ def test_follow_counts_unobserved_apart_from_the_measured():
     assert long_["unobserved"] == 1 and long_["open"] == 0
 
 
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_control_holds_no_basket_that_was_in_hot_during_the_last_day():
+    """A basket that dropped out of Hot three hours ago is the tail of what
+    is being measured, not a basket that was never called."""
+    heads = [_headline(1), _headline(2, crypto=("DDD", "EEE", "FFF")),
+             _headline(3, crypto=("GGG", "HHH", "III"))]
+    was_hot = _round(T0, [(2, 1, 5.0, "crypto", 10, 5.0)],
+                     [(2, 1.0, 10, 0.1, 5.0)])
+    before = _round(T0 + timedelta(hours=3), [], [])
+    entry = _round(T0 + timedelta(hours=3, minutes=20),
+                   [(1, 1, 7.0, "crypto", 100, 7.0)],
+                   [(1, 1.0, 100, 0.1, 7.0), (2, 1.0, 10, 0.1, 1.0),
+                    (3, 1.0, 20, 0.1, 1.0)])
+    later = _round(T0 + timedelta(hours=3, minutes=40), [],
+                   [(2, 1.0, 11, 0.1, 1.0), (3, 1.0, 21, 0.1, 1.0)])
+    rows = heads + [was_hot, before, entry, later]
+    found = hot.entries(rows)
+    assert [e["row"] for e in found] == [1]
+    (short,) = hot.control(rows, found, horizons=(20 / 60,))["crypto"]
+    assert short["n"] == 1 and short["mean"] == 5.0, "row 3 only, not row 2"
+
+
 # NEX-0055, verbatim in the parts that are tested: crypto only, ret_24h >= 6,
 # >= 3 members, rank <= 3, published <= 60 min, in Hot <= 30 min; TP +8 %,
 # stop -4 %, 24 h time stop; ~0.20 % round trip; N >= 100 before a verdict.
