@@ -2963,6 +2963,54 @@ reports:
       product from your chat. You may want own-community mentions weighted
       differently on a board that says "not an endorsement".
 
+  - key: fta-crypto-return-backfilled
+    findings: [CYM-the_fta_crypto_return_starts_where_its_own_record_does]
+    severity: medium
+    category: logic
+    url: https://cymetica.com/fund-performance
+    title: "FTA Fund -- Cryptos publishes a return from before it held anything, while the methodology says nothing is backfilled"
+    expected: >
+      get_fund_methodology, the text your advisor connector hands to
+      assistants: "Return is measured since the fund's own inception from real
+      market prices with timestamped entries -- nothing backfilled, no
+      backtest." So a fund's return since inception starts where its own
+      record starts.
+    actual: >
+      get_fund FTA-CRYPTOS (a LIVE fund, taking real USDC) publishes
+      inception_date 2026-07-26 and return_since_inception_pct around -19 %,
+      with last_composition_change 2026-08-17. The fund's own history,
+      GET /api/v1/fta-fund/history, says inception 2026-08-09 and its first
+      point is 2026-08-21. /fund-performance shows the same figure as
+      "Return since inception (short)" and says why, under the tile: "Short
+      return of the index since 2026-07-26 (inception) -- today's composition
+      applied across the full period, matching the chart." The page's own
+      script comments that the period before the first held position "is
+      pro-forma (today's composition applied to past closes) and must NOT
+      feed the headline change". The headline is exactly the figure that it
+      feeds.
+    steps:
+      - 'POST https://cymetica.com/mcp/v1 tools/call get_fund_methodology {} -> methodology.returns: "... nothing backfilled, no backtest."'
+      - 'tools/call get_fund {"symbol":"FTA-CRYPTOS"} -> inception_date 2026-07-26, last_composition_change 2026-08-17'
+      - 'GET https://cymetica.com/api/v1/fta-fund/history -> inception 2026-08-09, points[0].t 2026-08-21'
+      - 'GET https://cymetica.com/fund-performance -> "today''s composition applied across the full period" under Return since inception (short)'
+    body: >
+      Filed medium because of who reads it: the advisor connector exists so an
+      assistant can brief a client, and the one sentence it is given about
+      returns is the one this contradicts, on a fund that takes deposits.
+      Your page is honest about it in small print, and your chart code already
+      separates the pro-forma stretch from the held one -- the headline tile
+      and get_fund just do not use that separation.
+      Our check compares the inception get_fund publishes with the one the
+      fund's own history publishes, while the methodology says nothing is
+      backfilled. Either fix satisfies it: start the published return where
+      the record starts, or say in the methodology that a short book's early
+      stretch is pro-forma. We are not asking for either one in particular.
+      Related, and not part of this finding: M&A Ripple, also LIVE, is live
+      since 2026-08-11 by its own history, and 10.0 of its roughly 17 points
+      since inception accrued before that date (index 100 to 110.0); since
+      going live it is up about 6.4 %. If the pre-live stretch is a model
+      track rather than held positions, the same sentence applies to it.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in
