@@ -803,6 +803,46 @@ def test_a_requirement_split_into_numbered_items_is_not_a_dropped_one():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_route_their_ai_names_is_matched_against_the_template_not_the_text():
+    """The third check of the #85 family, refuted before it is trusted.
+
+    It passed on its first run, which proves nothing on its own: NEX-0049
+    named two routes and both are published. What has to be shown is that it
+    can still say no, and that it does not say no for the wrong reason --
+    `{instance_id}` against `{id}` is the same segment, and a full stop at the
+    end of a sentence is not part of a path.
+    """
+    from tests.rest.test_nexus_routes_exist import _matches, routes_named
+
+    published = {"/api/v1/cloned-bots/{instance_id}/settings",
+                 "/api/v1/cloned-bots/{instance_id}/toggle-trading",
+                 "/api/v1/event-cards/{card_id}"}
+
+    said = routes_named(
+        "Use `PATCH /api/v1/cloned-bots/{instance_id}/settings` first, then "
+        "POST /api/v1/cloned-bots/{id}/toggle-trading?enabled=true. "
+        "Read the card at /api/v1/event-cards/30015006.")
+    assert "/api/v1/cloned-bots/{instance_id}/settings" in said, said
+    assert "/api/v1/event-cards/30015006" in said, (
+        "a trailing full stop was taken as part of the path")
+    assert all(p in published or _matches(p, published) for p in said), said
+
+    # Their placeholder name is theirs to choose; the segment is the same one.
+    assert _matches("/api/v1/cloned-bots/{id}/toggle-trading", published)
+    # A concrete id fills a template segment.
+    assert _matches("/api/v1/event-cards/30015006", published)
+
+    # And the two ways it must still say no.
+    assert not _matches("/api/v1/cloned-bots/{id}/rebalance", published), (
+        "a route nobody publishes matched a published template"
+    )
+    assert not _matches("/api/v1/cloned-bots/{id}/settings/advanced", published), (
+        "a longer path matched a shorter template"
+    )
+    assert routes_named("no routes here, only prose about fees") == set()
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_build_that_shipped_late_is_not_a_build_that_shipped_on_time():
     """The pass verdict this check was about to send to #112.
 
