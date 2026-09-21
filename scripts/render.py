@@ -3706,6 +3706,17 @@ function nxPct(v, digits) {
   const s = Math.abs(n).toFixed(places);
   return (Number(s) === 0 ? "" : n > 0 ? "+" : "−") + s + " %";
 }
+// A drawdown and a stop are magnitudes, not directions: their sign is in the
+// word, not the number. nxPct puts a + in front of any positive figure, so
+// "Propad +10.5 %" said a loss had gained, and "Stopka +10 %" said a stop-loss
+// was a profit. Seen on the page 2026-09-21, the first night a room carried a
+// backtest at all.
+function nxMag(v, digits) {
+  if (v == null || v === "" || isNaN(Number(v))) return "—";
+  const n = Math.abs(Number(v));
+  const places = digits != null ? digits : n >= 10 ? 0 : 1;
+  return n.toFixed(places) + " %";
+}
 function nxShare(v) {
   if (v == null || v === "" || isNaN(Number(v))) return "—";
   const n = Number(v) * 100;
@@ -4139,8 +4150,8 @@ function nxVerdict(np) {
     html += nxTiles([
       [said[0], v.return_pct != null ? nxPct(v.return_pct, 2) : "—",
        "tolik to vydělalo za okno", said[1]],
-      ["Největší propad", v.max_drawdown_pct != null ? nxPct(v.max_drawdown_pct, 2) : "—",
-       c && c.stop_pct != null ? "brali jsme to se stopkou " + nxPct(c.stop_pct, 0) : "",
+      ["Největší propad", v.max_drawdown_pct != null ? nxMag(v.max_drawdown_pct, 2) : "—",
+       c && c.stop_pct != null ? "brali jsme to se stopkou " + nxMag(c.stop_pct, 0) : "",
        ""],
       ["Pro srovnání", v.benchmark_pct != null ? nxPct(v.benchmark_pct, 2) : "—",
        v.benchmark_pct != null ? "BTC karta za stejnou dobu" : "není s čím srovnat", ""],
@@ -4152,7 +4163,7 @@ function nxVerdict(np) {
     html += nxTiles([
       ["Okno", (c.window_days != null ? c.window_days : "—") + " d",
        c.adopted ? "běží od chvíle, kdy se to napsalo" : "napsáno dřív, než se spustilo", ""],
-      ["Stopka", c.stop_pct != null ? nxPct(c.stop_pct, 0) : "—", "od vstupu", ""],
+      ["Stopka", c.stop_pct != null ? nxMag(c.stop_pct, 0) : "—", "od vstupu", ""],
       ["Pro srovnání", c.benchmark ? String(c.benchmark).slice(0, 8) : "nic",
        c.benchmark ? "BTC karta" : "není s čím srovnat", ""],
       ["Verdikt", due[0], due[1], due[2]]]);
@@ -4190,7 +4201,7 @@ function nxBacktest(np) {
         (b.period ? ' <small>' + esc(b.period) + " d</small>" : "") + "</span><span>" +
         esc(b.return_pct != null ? nxPct(b.return_pct, 1) : "—") + "</span><span>" +
         esc(b.sharpe != null ? Number(b.sharpe).toFixed(2) : "—") + "</span><span>" +
-        esc(b.drawdown_pct != null ? nxPct(b.drawdown_pct, 1) : "—") + "</span></div>";
+        esc(b.drawdown_pct != null ? nxMag(b.drawdown_pct, 1) : "—") + "</span></div>";
     }).join("") + "</div>";
 }
 function nxStrategy(nr, np) {
