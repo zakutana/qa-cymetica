@@ -437,6 +437,19 @@ def may_ask_now(nexus_rows: list[dict], now: datetime | None = None,
     stamps = [_at(r.get("at")) for r in nexus_rows
               if r.get("type") == "question" and r.get("id") not in refused
               and r.get("lane") != "operator"]
+    # Every ask inside the last hour, refused or not: a refusal turns out to
+    # cost them something, which is what their own hourly limit says.
+    hour_ago = moment - timedelta(hours=1)
+    recent = [s for s in (_at(r.get("at")) for r in nexus_rows
+                          if r.get("type") == "question"
+                          and r.get("lane") != "operator")
+              if s is not None and s > hour_ago]
+    if len(recent) >= ASKS_PER_HOUR:
+        return False, (f"{len(recent)} question(s) went in the last hour and "
+                       f"the cap is {ASKS_PER_HOUR}: their deep lane has an "
+                       f"hourly limit of its own and a refusal counts against "
+                       f"it")
+
     last = max((s for s in stamps if s is not None), default=None)
     floor = NIGHT["ask_seconds"]
     if last is not None and (moment - last).total_seconds() < floor:
@@ -505,6 +518,13 @@ IN_FLIGHT_HOURS = 2
 # they now hold a queued job for -- the pacing window above is shorter on
 # purpose and no longer covers what their side still has.
 OUTSTANDING_BOUND = 6
+# Deep questions we may ASK in a rolling hour, refused ones included. Theirs
+# is undocumented: on 2026-09-21 at 01:25 UTC the fourth question of an hour
+# came back "Hourly deep-answer limit reached", after three refusals had each
+# reset our twenty-minute floor to their own 30-second retry_after. Three is
+# the twenty-minute cadence the loop actually runs at, and the cadence
+# REPLY-0037 said would never reach a bound.
+ASKS_PER_HOUR = 3
 
 
 def outstanding(nexus_rows: list[dict], now: datetime | None = None,

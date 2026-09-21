@@ -340,6 +340,56 @@ def test_a_queued_deep_job_is_still_in_flight_after_our_give_up():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_refused_question_still_counts_against_the_hour():
+    """2026-09-21, 01:25 UTC: "Hourly deep-answer limit reached."
+
+    The twenty-minute floor runs from the last question their side TOOK ON,
+    because a refusal at capacity "spent nothing of theirs" and their own
+    retry_after replaces our wait -- NEX-0029's reasoning, and right as far as
+    it went. Four questions went inside one hour that night: one answered,
+    then three that failed at 7, 6 and 2 minutes, each resetting the floor to
+    their 30-second retry_after. The fourth came back saying we had reached an
+    hourly limit nobody had published, and which REPLY-0037 had implied we
+    could not reach at one question every twenty minutes.
+
+    So a refusal costs them something after all. The floor keeps its reading
+    -- their wait replaces ours when they ask for one -- and a second brake
+    counts ASKS, refused or not, over a rolling hour. At the twenty-minute
+    cadence the operator's loop runs, three fit and the fourth waits, which
+    is exactly the cadence that was never supposed to reach a bound.
+    """
+    asked = NOW - timedelta(minutes=50)
+    rows = []
+    for n in range(lab.ASKS_PER_HOUR):
+        ident = f"NEX-90{n}"
+        at = asked + timedelta(minutes=n * 10)
+        rows.append(_question(ident, at))
+        rows.append({"type": "gave_up", "id": ident, "status": "failed",
+                     "retry_after_s": 30,
+                     "at": (at + timedelta(minutes=2)).isoformat()})
+
+    may, why = lab.may_ask_now(rows, NOW)
+    assert not may, (
+        "every one of these was refused, so the floor lets the next go at "
+        "once -- and their hourly limit is what stops it instead of us")
+    assert "hour" in why.lower(), why
+
+    # One fewer inside the hour, and the newest refusal old enough that their
+    # own retry_after has passed: it goes.
+    may, why = lab.may_ask_now(rows[:-2], NOW)
+    assert may, why
+
+    # An ask that fell out of the window does not count against it.
+    old = [r for r in rows]
+    old[0] = _question("NEX-900", NOW - timedelta(minutes=75))
+    old[1] = {"type": "gave_up", "id": "NEX-900", "status": "failed",
+              "retry_after_s": 30,
+              "at": (NOW - timedelta(minutes=73)).isoformat()}
+    may, why = lab.may_ask_now(old, NOW)
+    assert may, why
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_our_own_outstanding_jobs_stay_under_their_reserved_bound():
     """REPLY-0037: the deep lane now holds a slot for us, and with it a bound
     of SIX outstanding jobs of our own. The same answer says a queued job of
