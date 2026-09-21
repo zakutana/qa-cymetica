@@ -1337,12 +1337,6 @@ def _gate(card: str, legs: list[dict]) -> dict:
     return lab.gate(readings)
 
 
-# How long an answer waits whole for a leg that cannot be read or traded yet.
-# NEX-0052 named its pick beside two counterexamples, one `pw_live: false`,
-# and the counterexample parked the pick for 27 ticks (2026-09-21).
-WAIT_FOR_LEGS_HOURS = 2.0
-
-
 def night_promote(since: datetime | None = None) -> dict:
     """Launch what Nexus endorsed tonight, on paper, under the day's brakes.
 
@@ -1365,16 +1359,19 @@ def night_promote(since: datetime | None = None) -> dict:
         question can tell Nexus how his idea measured;
       * an answer that names no card proposes nothing (NEX-0026 was the best
         answer we have had and named none);
-      * ten new rooms a rolling day, and `affordable` decides the size and
-        whether there is room at all;
+      * `CAPS["new_rooms_per_day"]` new rooms a rolling day, counted per room,
+        and `affordable` decides the size and whether there is room at all;
       * nothing at all while a deep pass runs, because it is verifying #85,
         #86 and #87 over these very trades.
 
-    A card that could not be READ, or cannot be traded right now, decides
-    nothing: the answer waits for the next tick whole -- for
-    WAIT_FOR_LEGS_HOURS. After that the cards that passed open their room and
-    the rest are named, so a counterexample Nexus mentioned beside his pick
-    cannot hold the pick back for ever.
+    ONE ROOM PER CARD (2026-09-21). An answer naming five cards is five
+    strategies; each card that passes the gate opens its own room, plan,
+    criterion and order. The operator, on the plan: a room is still only for
+    a promising theory or backtest -- so the gate above is the bar, and the
+    caps are ceilings, never a quota. A card that could not be READ, or cannot
+    be traded right now, decides nothing and holds nothing back: it is tried
+    again on the next tick, and the answer's other cards open meanwhile (NEX-
+    0052's counterexample once parked its pick for 27 ticks).
 
     Returns what it did and, for everything it did not, why -- so the morning
     reads a reason rather than a silence.
@@ -1388,8 +1385,6 @@ def night_promote(since: datetime | None = None) -> dict:
         return {"rooms": 0, "orders": 0, "held": []}
 
     stored = rooms.load()
-    linked = {str(row.get("origin")) for row in stored
-              if row.get("type") == "strategy"}
     today = lab.rooms_within(stored, _now())
     cap = lab.CAPS["new_rooms_per_day"]
     decided = lab.gates()
@@ -1407,9 +1402,21 @@ def night_promote(since: datetime | None = None) -> dict:
             if leg.get("card"):
                 held_by.setdefault(str(leg["card"]).lower(), room_id)
 
+    # A room opened from a whole answer (before 2026-09-21) spends the answer;
+    # a room opened for one card spends that card of it, and its other cards
+    # may still open their own.
+    whole_linked = {str(row.get("origin")) for row in stored
+                    if row.get("type") == "strategy" and not row.get("card")}
+    card_linked = {(str(row.get("origin")), str(row.get("card")).lower())
+                   for row in stored
+                   if row.get("type") == "strategy" and row.get("card")}
+    capped = False
+
     for answer in answers:
+        if capped:
+            break
         origin = str(answer.get("id") or "")
-        if not origin or origin in linked:
+        if not origin or origin in whole_linked:
             continue
         # Every id the answer names; whether it EXISTS is asked of their API
         # below, not of what our own sampler happened to have seen.
@@ -1419,17 +1426,12 @@ def night_promote(since: datetime | None = None) -> dict:
                         f"reads it")
             continue
         spent = ("reject", "unknown_card")
+        named = [c for c in named if (origin, c) not in card_linked]
         if all(decided.get((origin, card), {}).get("verdict") in spent
                for card in named):
             continue  # decided on an earlier tick, and nothing in it may run
-        if today + opened >= cap:
-            held.append(f"{origin}: {today + opened} room(s) opened in the last "
-                        f"24 h and the cap is {cap} a day — the next day takes "
-                        f"the rest")
-            break
 
         chosen: dict[str, dict] = {}
-        waiting = False
         for card in named:
             # Nexus repeats its favourite card across answers, and "fifty
             # experiments" meant fifty different things.
@@ -1447,7 +1449,6 @@ def night_promote(since: datetime | None = None) -> dict:
             except Exception as exc:  # noqa: BLE001 -- unread is not absent
                 held.append(f"{origin}/{card[:8]}: the card could not be read "
                             f"({exc}) — the next tick tries again")
-                waiting = True
                 continue
             if live is None:
                 # Which of the two a 404 was cannot be told from here: a card
@@ -1467,14 +1468,12 @@ def night_promote(since: datetime | None = None) -> dict:
             if live.get("tradeable") is False:
                 held.append(f"{origin}/{card[:8]}: not tradeable now — the next "
                             f"tick tries again")
-                waiting = True
                 continue
             if prior is None:
                 said = _gate(card, live.get("legs") or [])
                 if said["verdict"] == "unread":
                     held.append(f"{origin}/{card[:8]}: {said['why']} — the next "
                                 f"tick tries again")
-                    waiting = True
                     continue
                 prior = decided[(origin, card)] = lab.note_gate(
                     origin, card, said)
@@ -1483,106 +1482,87 @@ def night_promote(since: datetime | None = None) -> dict:
                             f"{prior.get('why')}")
                 continue
             chosen[card] = {**prior, "title": live.get("title") or ""}
-        if not chosen:
-            continue
-        if waiting:
-            age = _now() - (_moment(answer.get("at")) or _now())
-            if age < timedelta(hours=WAIT_FOR_LEGS_HOURS):
-                continue
-            held.append(f"{origin}: opened with {len(chosen)} card(s) after "
-                        f"{WAIT_FOR_LEGS_HOURS:g} h -- the rest could not be "
-                        f"read or traded (named above)")
-
-        # MONEY FIRST, and nothing consumed before it answers. Opening the room
-        # ahead of this put the origin in `linked` on a refusal, which meant a
-        # night that could afford nothing still spent every answer it touched --
-        # `open_strategy` then refuses the morning too. The room's stakes are
-        # fixed here, from the book as it stands when the room opens.
-        cards = list(chosen)
-        # A plan holds at most rooms.MAX_LEGS cards, and set_plan refused the
-        # rest AFTER open_strategy had written the room -- a room with no plan
-        # and no criterion, its answer spent (R02). Keep the first ones.
-        if len(cards) > rooms.MAX_LEGS:
-            left = cards[rooms.MAX_LEGS:]
-            cards = cards[:rooms.MAX_LEGS]
-            held.append(f"{origin}: a plan holds {rooms.MAX_LEGS} cards; "
-                        f"left out {', '.join(c[:8] for c in left)}")
-        free, deployed = _free_cash(), _deployed()
-        whole = _leg_stakes(free, deployed, len(cards))
-        halved = _leg_stakes(free, deployed, len(cards), half=True)
-        untested = [c for c in cards if chosen[c]["verdict"] == "unbacktestable"]
-        stakes = [halved[i] if card in untested else whole[i]
-                  for i, card in enumerate(cards)]
-        ok, why = lab.affordable(stakes[0], free, _running_experiments(),
-                                 deployed=deployed)
-        if not ok or stakes[0] <= 0:
-            held.append(f"{origin}: {why or 'no stake'} — left whole for the "
-                        f"morning")
-            continue
-
-        tested = "; ".join(f"{c[:8]} {chosen[c].get('why')}" for c in cards)
-        name = (chosen[cards[0]]["title"] or f"{origin}: {cards[0][:8]}")
-        try:
-            room = rooms.open_strategy(origin, name[:rooms.MAX_TITLE])["id"]
-            # The legs are the laboratory's READING of his answer -- every card
-            # it names, bull, evenly -- because his answers carry no machine-
-            # readable split. The criterion takes them, or `qa.lab.verdict` has
-            # nothing to score and every room ends inconclusive.
-            plan = rooms.set_plan(
-                room, [{"card": c, "side": "bull",
-                        "share": round(1.0 / len(cards), 6)} for c in cards])
-            # A room with no criterion is one no verdict can ever reach:
-            # `verdicts()` skips it and `_running_experiments()` cannot see it,
-            # so the position would never be graded and never close. The window
-            # and the stop are OURS, not his -- `adopted` says so on the row.
-            rooms.set_acceptance(
-                room, window_days=NIGHT_WINDOW_DAYS, stop_pct=NIGHT_STOP_PCT,
-                legs=plan["legs"], benchmark_card=BTC_PROXY,
-                why=(f"opened unattended from {origin}; the window, the stop "
-                     f"and the even split are the laboratory's defaults, not "
-                     f"numbers Nexus gave. Backtest: {tested}"
-                     + (f". NOT backtested: {', '.join(c[:8] for c in untested)}"
-                        f" -- half stake" if untested else ""))[:900],
-                adopted=True)
-        except rooms.RoomError as exc:
-            held.append(f"{origin}: {exc}")
-            continue
-        opened += 1
-
-        in_room, refused = 0, None
-        for card, stake in zip(cards, stakes):
-            free = _free_cash()
-            ok, why = lab.affordable(stake, free, _running_experiments(),
-                                     deployed=_deployed())
-            if not ok or stake <= 0:
-                held.append(f"{origin}/{card[:8]}: {why or 'no stake'}")
+        # One room per card that passed (2026-09-21). A card that is waiting --
+        # unreadable, not tradeable yet -- no longer holds the others back:
+        # each is its own room now, so there are no legs to keep together, and
+        # it is tried again on the next tick under the same answer.
+        for card, gate_row in chosen.items():
+            if today + opened >= cap:
+                held.append(f"{origin}: {today + opened} room(s) opened in the "
+                            f"last 24 h and the cap is {cap} a day — the next "
+                            f"day takes the rest")
+                capped = True
                 break
+            # MONEY FIRST, and nothing consumed before it answers: a room opened
+            # ahead of a refusal spends its card for the morning too.
+            free, deployed = _free_cash(), _deployed()
+            untested = gate_row["verdict"] == "unbacktestable"
+            stake = _leg_stakes(free, deployed, 1, half=untested)[0]
+            ok, why = lab.affordable(stake, free, _running_experiments(),
+                                     deployed=deployed)
+            if not ok or stake <= 0:
+                held.append(f"{origin}/{card[:8]}: {why or 'no stake'} — left "
+                            f"for the morning")
+                capped = True
+                break
+            name = gate_row["title"] or f"{origin}: {card[:8]}"
+            try:
+                room = rooms.open_strategy(origin, name[:rooms.MAX_TITLE],
+                                           card=card)["id"]
+                # The leg is the laboratory's READING of his answer -- bull --
+                # because his answers carry no machine-readable side. The
+                # criterion takes it, or `qa.lab.verdict` has nothing to score.
+                plan = rooms.set_plan(room, [{"card": card, "side": "bull",
+                                              "share": 1.0}])
+                # A room with no criterion is one no verdict can ever reach.
+                # The window and the stop are OURS, not his -- `adopted` says so.
+                rooms.set_acceptance(
+                    room, window_days=NIGHT_WINDOW_DAYS, stop_pct=NIGHT_STOP_PCT,
+                    legs=plan["legs"], benchmark_card=BTC_PROXY,
+                    why=(f"opened unattended from {origin}, one room for this "
+                         f"card; the window and the stop are the laboratory's "
+                         f"defaults, not numbers Nexus gave. Backtest: "
+                         f"{card[:8]} {gate_row.get('why')}"
+                         + (" -- NOT backtested, half stake" if untested
+                            else ""))[:900],
+                    adopted=True)
+            except rooms.RoomError as exc:
+                held.append(f"{origin}/{card[:8]}: {exc}")
+                continue
+            opened += 1
+            card_linked.add((origin, card))
+
             # paper.py refuses with SystemExit (its books unreadable, their
             # side refusing). Uncaught, it left the room with a criterion and
             # no position and took every later answer of the call with it
             # (R01, deep pass of 2026-09-19).
             try:
-                paper.buy(card, stake, origin, True)
+                result = paper.buy(card, stake, origin, True) or {}
+                refused = None
             except (Exception, SystemExit) as exc:  # noqa: BLE001
-                refused = str(exc)[:200]
+                result, refused = {}, str(exc)[:200]
+            # An order counts only when it was ACCEPTED: TRD-0010 came back
+            # HTTP 500 "Buy failed" with no position (#117), and the tick said
+            # "1 order" all the same.
+            if result.get("outcome") == "accepted" or (
+                    refused is None and "outcome" not in result):
+                bought.add(card)
+                placed += 1
+                status, why_status = "running", f"opened by the laboratory from {origin}"
+            else:
+                reason = refused or (f"HTTP {result.get('http_status')}, no "
+                                     f"position returned")
                 held.append(f"{origin}/{card[:8]}: the paper order was "
-                            f"refused ({refused})")
-                break
-            bought.add(card)
-            placed += 1
-            in_room += 1
-        try:
-            if in_room:
-                rooms.set_status(room, "running",
-                                 why=f"opened by the laboratory from {origin}")
-            elif refused is not None:
-                rooms.set_status(
-                    room, "stopped",
-                    why=(f"the paper order was refused ({refused}), so "
-                         f"nothing is at stake here; the criterion still "
-                         f"judges his idea on the index"))
-        except rooms.RoomError as exc:
-            held.append(f"{room}: {exc}")
+                            f"{'refused' if refused else 'not accepted'} "
+                            f"({reason})")
+                status = "stopped"
+                why_status = (f"the paper order did not land ({reason}), so "
+                              f"nothing is at stake here; the criterion still "
+                              f"judges his idea on the index")
+            try:
+                rooms.set_status(room, status, why=why_status)
+            except rooms.RoomError as exc:
+                held.append(f"{room}: {exc}")
     return {"rooms": opened, "orders": placed, "held": held}
 
 

@@ -523,7 +523,11 @@ def buy(card_id: str, usdc: float, nexus_id: str | None, confirm: bool) -> dict:
         print(f"   paper balance {before.get('sim_balance_usdc')} -> "
               f"{after.get('sim_balance_usdc')}  (moved {moved})")
         print(f"   positions {before.get('positions')} -> {after.get('positions')}")
-        return entry
+        # The outcome rides back with the intent: the laboratory counted a
+        # 500 "Buy failed" as a placed order (TRD-0010, 2026-09-21), because
+        # all it was handed was the intent.
+        return {**entry, "outcome": "accepted" if accepted else "unknown",
+                "http_status": response.status_code, "position_id": position_id}
     finally:
         client.close()
 

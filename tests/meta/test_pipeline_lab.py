@@ -402,7 +402,9 @@ def test_an_order_is_capped_at_a_share_of_what_is_free():
     ok, why = lab.affordable(1_000, free_cash=free,
                              running=lab.CAPS["running_experiments"])
     assert not ok and "running" in why.lower(), why
-    assert lab.CAPS["running_experiments"] == 50
+    # "Aspoň 50" is a floor: 125 since 2026-09-21 (25 new rooms a day over a
+    # five-day window). Below 50 is the operator's number broken.
+    assert lab.CAPS["running_experiments"] >= 50
 
     # THE CAP ITSELF, by name and by boundary. L04, deep pass of 2026-09-13,
     # triage 3/3: this test used to pin only the rendering. Three readers set

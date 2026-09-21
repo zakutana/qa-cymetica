@@ -57,7 +57,12 @@ ID = re.compile(r"^LAB-(\d{4})$")
 # spending one on every tick.
 CAPS = {
     "questions_per_day": 24,
-    "new_rooms_per_day": 10,
+    # 10 -> 25 on 2026-09-21, with one room per card. Ten was fifty over a
+    # five-day window, and it never bound -- eight rooms in eleven days, held
+    # back by one room per ANSWER. It is a ceiling, not a quota: the operator,
+    # on the plan, "pořád by room měl vzniknout jen na základě slibné teorie
+    # nebo backtestu" -- the gate is the bar.
+    "new_rooms_per_day": 25,
     # [operator 2026-09-12] *"musime testvoat aspon 50 strategii najednou"*.
     # Raised from 6 at 15% on 2026-09-12, and their reason is right for a
     # reason they did not give: a verdict takes a five-to-seven-day window, so
@@ -65,7 +70,11 @@ CAPS = {
     # pay needs dozens. The count is the weaker brake -- fifty at 2% is the
     # whole book -- so what actually holds is the ceiling on what may be
     # deployed at once: always dry powder, and one bad night cannot take it all.
-    "running_experiments": 50,
+    # 50 -> 125 on 2026-09-21: 25 a day over the five-day window. "Aspoň 50" is
+    # a floor, so this keeps it; the per-room stake follows by itself
+    # (total_exposure / running_experiments, 0.48% of the book) under the same
+    # 60% ceiling, and share_of_free_cash stays the operator's 2%.
+    "running_experiments": 125,
     "share_of_free_cash": 0.02,
     "total_exposure": 0.60,
 }

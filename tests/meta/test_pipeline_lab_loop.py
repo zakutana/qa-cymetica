@@ -590,7 +590,8 @@ def test_fifty_rooms_fit_under_the_ceiling(tmp_path, monkeypatch):
     """
     scripts_lab = _scripts_lab(tmp_path, monkeypatch)
 
-    placed, deployed = _fill(scripts_lab._leg_stakes)
+    placed, deployed = _fill(scripts_lab._leg_stakes,
+                             rooms_wanted=lab.CAPS["running_experiments"] + 5)
     assert placed == lab.CAPS["running_experiments"], (
         f"{placed} rooms fit, against the {lab.CAPS['running_experiments']} "
         f"the operator asked for")
@@ -1267,16 +1268,18 @@ def test_a_refused_paper_order_does_not_stop_the_launch_or_strand_the_room(
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_an_answer_naming_more_cards_than_a_plan_holds_still_gets_a_whole_room(
+def test_an_answer_naming_many_cards_opens_a_room_for_each_under_the_day_cap(
         tmp_path, monkeypatch):
-    """R02 (3/3): a plan holds at most rooms.MAX_LEGS cards, and set_plan
-    refused a ninth AFTER open_strategy had written the room -- a room with no
-    plan and no criterion, its answer spent for good. The launch keeps the
-    first MAX_LEGS and says what it left out."""
+    """2026-09-21: one room per card. An answer naming nine cards used to open
+    ONE room of MAX_LEGS legs (R02 kept it from being stranded); now every card
+    that passes the gate is its own strategy -- its own plan of one leg, its
+    own criterion, its own order -- until the day cap, which is counted per
+    room and says what it left for the next day."""
     import qa.rooms as qa_rooms
 
     scripts_lab = _scripts_lab(tmp_path, monkeypatch)
-    cards = [_card(0x100 + n) for n in range(qa_rooms.MAX_LEGS + 1)]
+    cap = lab.CAPS["new_rooms_per_day"]
+    cards = [_card(0x100 + n) for n in range(cap + 2)]
     text = "Buy " + ", ".join(cards) + " bull. " + "why. " * 60
     answers = [{"type": "answer", "id": "NEX-0001",
                 "at": (NOW - timedelta(minutes=30)).isoformat(), "text": text}]
@@ -1287,11 +1290,14 @@ def test_an_answer_naming_more_cards_than_a_plan_holds_still_gets_a_whole_room(
     did = scripts_lab.night_promote()
 
     rows = qa_rooms.load()
-    (room,) = qa_rooms.strategies(rows)
-    criterion = qa_rooms.acceptance_of(rows, room["id"])
-    assert criterion and len(criterion["legs"]) == qa_rooms.MAX_LEGS, criterion
-    assert len(sent) == qa_rooms.MAX_LEGS
-    assert any(cards[-1][:8] in h for h in did["held"]), did["held"]
+    opened = qa_rooms.strategies(rows)
+    assert len(opened) == cap and did["rooms"] == cap, did
+    assert [r["card"] for r in opened] == cards[:cap]
+    for room in opened:
+        criterion = qa_rooms.acceptance_of(rows, room["id"])
+        assert criterion and [leg["card"] for leg in criterion["legs"]] == [room["card"]]
+    assert [card for card, _ in sent] == cards[:cap]
+    assert any("a day" in h for h in did["held"]), did["held"]
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

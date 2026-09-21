@@ -241,10 +241,10 @@ def test_a_card_that_cannot_trade_does_not_park_the_cards_that_can_for_ever(
         tmp_path, monkeypatch):
     """NEX-0052 named its recommendation beside two counterexamples, one of
     them `pw_live: false`, and the untradeable one parked the whole answer
-    for 27 ticks. A fresh answer still waits whole -- the plan keeps its legs
-    together while there is a chance they all open -- but past
-    WAIT_FOR_LEGS_HOURS the cards that pass open their room, and the one that
-    cannot trade is named rather than waited for."""
+    for 27 ticks. Since rooms are one per card (2026-09-21) there are no legs
+    to keep together: the card that passes opens its room at once, the one
+    that cannot trade is named and tried again next tick -- and once it can
+    trade, it opens its own room under the same answer."""
     other = "7764668a-0000-4000-8000-000000000000"
     scripts_lab = _scripts_lab(tmp_path, monkeypatch)
     _book(tmp_path, 100000.0)
@@ -259,15 +259,42 @@ def test_a_card_that_cannot_trade_does_not_park_the_cards_that_can_for_ever(
     _answers(tmp_path, [{"type": "answer", "id": "NEX-0001", "at": fresh,
                          "text": text}])
     said = scripts_lab.night_promote()
-    assert not sent and said["rooms"] == 0, "a fresh answer waits whole"
-
-    old = (datetime.now(timezone.utc) - timedelta(
-        hours=scripts_lab.WAIT_FOR_LEGS_HOURS + 1)).isoformat()
-    _answers(tmp_path, [{"type": "answer", "id": "NEX-0001", "at": old,
-                         "text": text}])
-    said = scripts_lab.night_promote()
-    assert sent == [CARD] and said["rooms"] == 1
+    assert sent == [CARD] and said["rooms"] == 1, "the tradeable card opens now"
     assert any(other[:8] in line for line in said["held"])
+
+    # The other card becomes tradeable: its own room, the same answer.
+    monkeypatch.setattr(scripts_lab, "_card_live", lambda card: basket)
+    said = scripts_lab.night_promote()
+    assert sent == [CARD, other] and said["rooms"] == 1
+    import qa.rooms as qa_rooms
+    cards = [r.get("card") for r in qa_rooms.strategies(qa_rooms.load())]
+    assert cards == [CARD, other], "one room per card, each under NEX-0001"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_order_their_side_did_not_accept_is_not_counted_as_placed(
+        tmp_path, monkeypatch):
+    """TRD-0010, 2026-09-21: HTTP 500 "Buy failed", no position (#117) -- and
+    the tick said "1 room / 1 order". paper.buy raises nothing on a 5xx, it
+    records the outcome as unknown; the launch now reads that outcome."""
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    _answers(tmp_path, [{"type": "answer", "id": "NEX-0001",
+                         "at": datetime.now(timezone.utc).isoformat(),
+                         "text": _whole(CARD)}])
+    _book(tmp_path, 100000.0)
+    _wire(scripts_lab, monkeypatch, [CARD])
+    paper = scripts_lab._sibling("paper")
+    paper.buy = lambda *a, **k: {"outcome": "unknown", "http_status": 500,
+                                 "position_id": None}
+
+    said = scripts_lab.night_promote()
+
+    assert said["rooms"] == 1 and said["orders"] == 0, said
+    assert any("not accepted" in h and "500" in h for h in said["held"]), said
+    import qa.rooms as qa_rooms
+    rows = qa_rooms.load()
+    (room,) = qa_rooms.strategies(rows)
+    assert qa_rooms.status_of(rows, room["id"]) == "stopped"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

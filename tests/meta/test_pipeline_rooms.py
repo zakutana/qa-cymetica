@@ -648,6 +648,25 @@ def test_a_room_opens_only_from_a_whole_answer_and_only_once(tmp_path, monkeypat
 
     # an opened room is a room: the operator can write into it
     assert rooms.add_operator_note("STR-0002", "proč jen 10 %?")["room"] == "STR-0002"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_one_answer_opens_one_room_per_card_and_each_card_once(tmp_path, monkeypatch):
+    """2026-09-21: an answer naming five cards is five strategies, and it used
+    to open one room holding them all -- or, since the day cap was per answer,
+    one room a day. A room per card keeps every order drawable in exactly one
+    room, now keyed by the answer AND the card it bought."""
+    rooms = _rooms_at(tmp_path, monkeypatch)
+    _write(tmp_path / "nexus.jsonl", [*_five_questions()])
+
+    a = rooms.open_strategy("NEX-1", "Karta A", card="aaaaaaaa-0000")
+    b = rooms.open_strategy("NEX-1", "Karta B", card="bbbbbbbb-0000")
+    assert (a["id"], b["id"]) == ("STR-0001", "STR-0002")
+    assert (a["card"], b["card"]) == ("aaaaaaaa-0000", "bbbbbbbb-0000")
+    with pytest.raises(rooms.RoomError):
+        rooms.open_strategy("NEX-1", "A again", card="aaaaaaaa-0000")
+    with pytest.raises(rooms.RoomError):
+        rooms.open_strategy("NEX-1", "the whole answer, on top of its cards")
     view = _render().build_rooms()
     assert [(r["id"], r["kind"], r["status"]) for r in view["rooms"]] == [
         ("general", "general", None), ("STR-0001", "strategy", "proposed"),
@@ -788,6 +807,24 @@ def test_a_trade_finds_its_room_by_the_answer_it_acts_on(tmp_path, monkeypatch):
     assert _legs(view, "STR-0001") == ["TRD-0001", "TRD-0002", "TRD-0003", "TRD-0006"]
     assert "TRD-0002" not in _legs(view, "general")
     assert view["panels"]["STR-0001"]["unclosed"] == 1
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_two_card_rooms_from_one_answer_each_draw_their_own_trade(tmp_path, monkeypatch):
+    """One room per card (2026-09-21): both orders carry the same Nexus id, so
+    the answer alone cannot place them -- by origin, both landed in whichever
+    room was opened last. The card each order bought decides."""
+    rooms = _rooms_at(tmp_path, monkeypatch)
+    _write(tmp_path / "nexus.jsonl", [*_answered("NEX-1", 0)])
+    _write(tmp_path / "paper.jsonl", [
+        *_buy("TRD-0001", 900, "NEX-1", position="P-1", card="card-a-1111"),
+        *_buy("TRD-0002", 950, "NEX-1", position="P-2", card="card-b-2222")])
+    rooms.open_strategy("NEX-1", "Karta A", card="card-a-1111")
+    rooms.open_strategy("NEX-1", "Karta B", card="card-b-2222")
+
+    view = _render().build_rooms()
+    assert _legs(view, "STR-0001") == ["TRD-0001"]
+    assert _legs(view, "STR-0002") == ["TRD-0002"]
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

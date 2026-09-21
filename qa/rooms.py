@@ -300,11 +300,15 @@ def _strategy(rows: list[dict], room: str) -> None:
         raise RoomError(f"there is no strategy room {room!r}")
 
 
-def open_strategy(origin: str, title: str) -> dict:
+def open_strategy(origin: str, title: str, card: str | None = None) -> dict:
     """A room for a strategy Nexus proposed, opened from its whole answer.
 
-    One answer opens one room, so every order and clone that acts on an
-    answer has exactly one room to be drawn in.
+    One answer opens one room -- or, when `card` is given, one room per card
+    it names (2026-09-21: an answer naming five cards is five strategies, and
+    folding them into one room also made the day cap count answers rather
+    than strategies). Either way every order and clone that acts on an
+    answer has exactly one room to be drawn in: by the answer, or by the
+    answer and the card it bought.
     """
     name = " ".join(str(title or "").split())
     if not name or len(name) > MAX_TITLE:
@@ -313,14 +317,24 @@ def open_strategy(origin: str, title: str) -> dict:
         raise RoomError(f"{origin} has no whole answer from Nexus, and a room "
                         f"opens only from one")
 
+    wanted = str(card).lower() if card else None
+
     def build(rows: list[dict]) -> list[dict]:
+        # A whole-answer room (no card) excludes every other room from that
+        # answer, and a card room excludes a second room for the same card.
         taken = next((r["id"] for r in strategies(rows)
-                      if r.get("origin") == origin), None)
+                      if r.get("origin") == origin
+                      and (wanted is None or not r.get("card")
+                           or str(r.get("card")).lower() == wanted)), None)
         if taken:
-            raise RoomError(f"{origin} already opened {taken}")
+            raise RoomError(f"{origin} already opened {taken}"
+                            + (f" for {wanted[:8]}" if wanted else ""))
         used = [number(r["id"]) for r in strategies(rows)]
-        return [{"type": "strategy", "id": f"STR-{max(used, default=0) + 1:04d}",
-                 "origin": origin, "title": name, "at": _now()}]
+        row = {"type": "strategy", "id": f"STR-{max(used, default=0) + 1:04d}",
+               "origin": origin, "title": name, "at": _now()}
+        if wanted:
+            row["card"] = wanted
+        return [row]
     return _append(build)[0]
 
 

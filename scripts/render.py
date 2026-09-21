@@ -839,6 +839,10 @@ def build_rooms() -> dict:
     opened = store.strategies(stored)
     titles = store.names(stored)
     by_origin = {s.get("origin"): s["id"] for s in opened}
+    # One room per card since 2026-09-21: every order from one answer carries
+    # the same Nexus id, so the card it bought is what picks its room.
+    by_card = {(s.get("origin"), str(s.get("card")).lower()): s["id"]
+               for s in opened if s.get("card")}
     linked: dict[str, str] = {}
     history: dict[str, list[dict]] = {room: [] for room in titles}
     for row in stored:
@@ -950,7 +954,9 @@ def build_rooms() -> dict:
                                        realized=realized)
         else:
             nexus_id = (intent.get("nexus") or {}).get("id")
-            room = linked.get(tid) or by_origin.get(nexus_id) or store.GENERAL
+            room = (linked.get(tid)
+                    or by_card.get((nexus_id, str(intent.get("card_id")).lower()))
+                    or by_origin.get(nexus_id) or store.GENERAL)
             response = _response_of(outcome)
             position = ((outcome or {}).get("position_id")
                         or response.get("position_id"))
