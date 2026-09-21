@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-09-21T08:36:24+00:00",
+  "fetched_at": "2026-09-21T11:49:14+00:00",
   "total": 80,
   "statuses": {
     "paid": 20
@@ -24,12 +24,13 @@
   "our_reports": {
     "endpoint": "GET /api/v1/bounty/my-reports?wallet_address=<addr>",
     "klass": "ok",
-    "read_at": "2026-09-21T08:36:14+00:00",
-    "evidence_id": "440f2a11fa1df2ad09124915e598fcf0ae577a0eff629c0ea79bfbb71eae8c82",
-    "rows_returned": 70,
-    "server_total": 70,
-    "total": 70,
+    "read_at": "2026-09-21T11:49:03+00:00",
+    "evidence_id": "01bdd15165cf73439154631c59a59c72e68bc1c9c95bd8e4c1b1693432d05052",
+    "rows_returned": 71,
+    "server_total": 71,
+    "total": 71,
     "statuses": {
+      "pending": 1,
       "paid": 63,
       "fixed": 5,
       "invalid": 2
@@ -1295,6 +1296,24 @@
         "ticket_url": "https://cymetica.com/admin/centcom/issues/26175",
         "fix_pr_url": null,
         "reward_amount": 1000.0
+      },
+      {
+        "id": 114,
+        "title": "get_deep_answer serves a finished investigation with its start cut off, mid-word",
+        "status": "pending",
+        "hunter_name": "expire76",
+        "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
+        "severity_reported": "medium",
+        "severity_confirmed": null,
+        "category": "api",
+        "created_at": "2026-09-21T08:39:41.454706",
+        "fixed_at": null,
+        "validated_at": null,
+        "triaged_at": null,
+        "status_notes": null,
+        "ticket_url": null,
+        "fix_pr_url": null,
+        "reward_amount": 0.0
       }
     ]
   },
@@ -1498,7 +1517,7 @@
     "klass": "ok",
     "rows_returned": 50,
     "new": [],
-    "at": "2026-09-21T08:36:23+00:00"
+    "at": "2026-09-21T11:49:13+00:00"
   },
   "closed": 0,
   "closed_without_recorded_evidence": 0,
