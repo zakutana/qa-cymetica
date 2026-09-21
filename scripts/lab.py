@@ -36,6 +36,7 @@ import argparse
 import functools
 import importlib.util
 import json
+import os
 import sys
 import time
 from datetime import datetime, timedelta, timezone
@@ -1813,6 +1814,45 @@ TICK = {
 TICK_STATE = "lab_tick.json"
 
 
+# A tick that catches up after a pause takes more than ten minutes (the
+# first after 1.5 h took over ten), and a /loop at ten fires again meanwhile.
+# Past this, a marker is a tick that died, not one still working.
+TICK_STALE_MINUTES = 45
+
+
+def _tick_marker() -> Path:
+    from qa.state import state_dir
+
+    return state_dir() / "lab_tick.running"
+
+
+def tick_exclusive(*, now: datetime | None = None, actions: dict | None = None,
+                   out=print) -> dict:
+    """`tick`, unless another one is still running. Two ticks walk the same
+    answers and would place two paper orders for one proposal."""
+    moment = now or _now()
+    marker = _tick_marker()
+    marker.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        held = json.loads(marker.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        held = None
+    since = lab._at((held or {}).get("at"))
+    if since is not None and moment - since < timedelta(minutes=TICK_STALE_MINUTES):
+        out(f"tick skipped -- another tick is running since {since.isoformat()[11:16]} "
+            f"(pid {held.get('pid')}); it will finish the work")
+        return {"busy": True, "since": since.isoformat()}
+    marker.write_text(json.dumps({"pid": os.getpid(), "at": moment.isoformat()}),
+                      encoding="utf-8")
+    try:
+        return tick(now=now, actions=actions, out=out)
+    finally:
+        try:
+            marker.unlink()
+        except OSError:
+            pass
+
+
 def _tick_state_path() -> Path:
     from qa.state import state_dir
 
@@ -2506,7 +2546,7 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(buy(args.card, args.usdc, args.nexus, args.confirm),
                          ensure_ascii=False, indent=1, default=str)[:2000])
     elif args.cmd == "tick":
-        tick()
+        tick_exclusive()
     elif args.cmd == "brief":
         print(brief())
     elif args.cmd == "board":

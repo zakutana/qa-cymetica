@@ -716,6 +716,29 @@ def test_a_tick_keeps_the_nights_clocks(tmp_path, monkeypatch):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_tick_that_finds_another_one_running_does_nothing(tmp_path, monkeypatch):
+    """A /loop at ten minutes fires again while a tick that caught up after a
+    pause is still inside its launch. Two ticks walking the same answers is
+    two paper orders for one proposal. The second one steps aside -- unless
+    the first has been gone so long it must have died."""
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    doors, calls = _doors()
+    marker = scripts_lab._tick_marker()
+    marker.write_text(json.dumps({"pid": 1, "at": NOW.isoformat()}), encoding="utf-8")
+
+    said = scripts_lab.tick_exclusive(now=NOW + timedelta(minutes=10),
+                                      actions=doors, out=lambda *a: None)
+    assert said["busy"] and not any(calls.values()), "the running tick owns the work"
+    assert marker.exists(), "and its marker is left for it to remove"
+
+    said = scripts_lab.tick_exclusive(
+        now=NOW + timedelta(minutes=scripts_lab.TICK_STALE_MINUTES + 1),
+        actions=doors, out=lambda *a: None)
+    assert not said.get("busy") and calls["fomo"], "a stale marker is taken over"
+    assert not marker.exists(), "and removed when this tick ends"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_first_tick_of_a_day_closes_yesterday_and_opens_today(
         tmp_path, monkeypatch):
     """A loop has no last tick to close a session with, so the day is the
