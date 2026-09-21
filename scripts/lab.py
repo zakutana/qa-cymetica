@@ -868,7 +868,10 @@ BTC_PROXY = "a4a5b71e-de11-4805-b8a3-ed9c3f8f8161"
 
 
 def _history(client, card: str) -> list[dict]:
-    response = client.get(INDEX_HISTORY.format(card=card))
+    # Without `interval` they answer the last five days, and a verdict is read
+    # after its window closed: STR-0005 lost two days of its seven that way.
+    response = client.get(INDEX_HISTORY.format(card=card),
+                          params={"interval": "all"})
     if response.status_code != 200:
         return []
     body = response.json() or {}

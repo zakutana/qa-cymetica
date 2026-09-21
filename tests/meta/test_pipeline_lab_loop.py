@@ -1590,3 +1590,36 @@ def test_an_answer_he_gave_elsewhere_is_his_guidance_not_his_latency(
         assert "not an answer" in str(refused), str(refused)
     else:  # pragma: no cover -- the assertion is the point
         raise AssertionError("an empty answer was written down as one")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_verdict_reads_the_whole_index_history_not_the_last_five_days(
+        tmp_path, monkeypatch):
+    """`index-history` with no `interval` answers the last five days only.
+
+    A verdict is read after its window closes, so five days back from then
+    starts inside the window, or past it: STR-0005 (a 7-day window read 10 h
+    after it closed) came back inconclusive at 65% coverage with its entry
+    taken two days late. The operator was told the holes were in their
+    history; that one was in our request.
+    """
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    asked = []
+
+    class Response:
+        status_code = 200
+
+        def json(self):
+            return {"interval": "all", "points": []}
+
+    class Client:
+        def get(self, path, **kwargs):
+            asked.append((path, kwargs))
+            return Response()
+
+    scripts_lab._history(Client(), "2a6f5562-01f2-4522-ae8a-eb355e74be94")
+    ((path, kwargs),) = asked
+    interval = (kwargs.get("params") or {}).get("interval")
+    if interval is None and "interval=" in path:
+        interval = path.split("interval=", 1)[1].split("&", 1)[0]
+    assert interval == "all", (path, kwargs)

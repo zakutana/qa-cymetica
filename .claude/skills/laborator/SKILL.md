@@ -115,15 +115,25 @@ sync door by itself (`state/nexus_shallow.jsonl`, `lane: shallow`). Expect
 little from it on strategy: NEX-0034, the five-card question, got a generic
 menu at confidence 0.48 and no card.
 
+[operator 2026-09-21] *"tak snad nexusovi rikej ze muze doporucovat jen veci co
+jdou v papiru jen spustit ne"* -- said when NEX-0056 proposed an AIB fund the
+laboratory had no paper road for. **Every question tells him what a room can
+hold: an event card, by its whole UUID, live and tradeable now.** A proposal
+of anything else is a slot and a question spent on nothing we can measure.
+The rotation below picks the theme; the answer is still cards.
+
+[operator 2026-09-21] *"bod 2 nesouhlasim"* -- to a control group of random
+cards beside every Nexus room. Not built, and not proposed again.
+
 `brief` is his memory, because Nexus remembers nothing between questions: what
 the day may still spend, how every proposal of his did (the board, best earner
 first, the rejected ones with their numbers), their own ranking, what measured
 well on our side, and the memecoin study. Rotate by what the diary shows is
 least explored:
 
-- **a new concrete strategy** in a product we have tested least -- event
-  cards, bots and clones, funds, the movers tournament, memecoins -- by card
-  id or bot, side, share of the bankroll, exit rules, and what it rests on;
+- **a new concrete strategy** on a theme we have tested least -- the cards
+  that ride on bots, funds, the movers, memecoins -- by whole card id, side,
+  share of the bankroll, exit rules, and what it rests on;
 - **what breaks** their own best-ranked strategy, and what to watch before
   the drawdown;
 - **one of our well-measured baskets, as a question** -- would he trade it,
