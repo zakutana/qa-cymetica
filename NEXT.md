@@ -116,4 +116,5 @@ to neodškrtl, nebo to nikdy nebylo další na řadě.
 
 - [ ] 2026-09-21  Hot: dotáhnout tři díry příbuzné B02/B06/B07 — `_confirmed` a `vol_stop` cení jen vlastní řádek vstupu, `control` bere mezery mezi koly a prvních 24 h deníku jako „nebyl hot“ a `resolve()` nezkusí znovu kartu, jejíž čtení selhalo. Test napřed.
 
+- [ ] 2026-09-21  Připomínka „N captures není v žádném archivu“ počítá i 392 těl, která `prune_runs.py` už smazal (necitovaná) — nedají se archivovat, takže hlásí 392 navždy. `archive.pending` má brát jen ta, co jsou na disku. Test napřed.
 - [ ] 2026-09-21  Kontrola Nexusových rout čte holý prefix z prózy (`/api/v1/cloned-bots`, `/api/v1/clob`) jako routu, takže odpověď, která jmenuje jen prefix, by padla falešně. Test napřed.
