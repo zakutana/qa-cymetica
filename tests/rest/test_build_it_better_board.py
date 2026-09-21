@@ -341,19 +341,50 @@ def overdue(item: dict, now) -> dict | None:
     deadline = item.get("deadline_at")
     if not deadline:
         return None
-    if item.get("our_url") or item.get("resolved_at") or item.get("verdict"):
-        return None
     try:
         when = datetime.fromisoformat(str(deadline).replace("Z", "+00:00"))
     except (TypeError, ValueError):
         return None
     if when.tzinfo is None:
         when = when.replace(tzinfo=timezone.utc)
+
+    row = {"ticket": item.get("ticket"), "deadline_at": deadline,
+           "stage": item.get("stage")}
+    shipped = item.get("our_url") or item.get("resolved_at") or item.get("verdict")
+    if shipped:
+        # A LINK IS NOT A TIME. Until 2026-09-21 this returned None the moment
+        # our_url appeared, so ET-26036 -- filed as #112 for passing its
+        # deadline with nothing built -- read as compliant four hours later
+        # when they shipped it, and verify.py composed a pass saying the
+        # 24-hour promise held. Their own record said otherwise: on_time
+        # false, resolved_at 3h59m past deadline_at.
+        finished = item.get("resolved_at") or item.get("shipped_at")
+        try:
+            done = datetime.fromisoformat(str(finished).replace("Z", "+00:00"))
+        except (TypeError, ValueError):
+            done = None
+        if done is not None and done.tzinfo is None:
+            done = done.replace(tzinfo=timezone.utc)
+        if done is None:
+            if item.get("on_time") is False:
+                return {**row, "shipped_late": True,
+                        "over_by_hours": None,
+                        "why": "their own record marks it on_time false"}
+            if when >= now:
+                return None
+            # Shipped, past the deadline, and no readable finish time: rule 8
+            # -- not evidence of a breach and not evidence of compliance.
+            return {**row, "unreadable": True, "over_by_hours": None}
+        if done <= when:
+            return None
+        return {**row, "shipped_late": True,
+                "over_by_hours": round((done - when).total_seconds() / 3600.0, 1),
+                "resolved_at": finished}
+
     if when >= now:
         return None
-    return {"ticket": item.get("ticket"), "deadline_at": deadline,
-            "stage": item.get("stage"), "over_by_hours":
-                round((now - when).total_seconds() / 3600.0, 1)}
+    return {**row, "over_by_hours":
+            round((now - when).total_seconds() / 3600.0, 1)}
 
 
 @qa(component="rest.build_it_better", tier=SafetyTier.SAFE, surface="rest")
@@ -397,18 +428,37 @@ def test_a_build_ships_inside_the_24_hours_it_publishes(rest_anon):
                        or i.get("verdict"))
                and str(i.get("deadline_at")) > now.isoformat()]
 
+    # A shipped build whose finish time nobody publishes is neither a breach
+    # nor compliance, so it is said out loud and kept out of the verdict.
+    unreadable = [o for o in late if o.get("unreadable")]
+    breaches = [o for o in late if not o.get("unreadable")]
+
+    def _said(o):
+        if o.get("shipped_late"):
+            late_by = (f"{o['over_by_hours']}h after"
+                       if o.get("over_by_hours") is not None else "after")
+            return (f"{o['ticket']} shipped {late_by} its own published "
+                    f"deadline of {str(o['deadline_at'])[:19]}"
+                    + (f", and {o['why']}" if o.get("why") else ""))
+        return (f"{o['ticket']} passed its own deadline "
+                f"{str(o['deadline_at'])[:19]} {o['over_by_hours']}h ago and "
+                f"has shipped nothing (stage {o['stage']})")
+
     conclude(Measurement(
-        verdict="failed" if late else "passed",
-        reason=("; ".join(
-            f"{o['ticket']} passed its own deadline {str(o['deadline_at'])[:19]} "
-            f"{o['over_by_hours']}h ago and has shipped nothing "
-            f"(stage {o['stage']})" for o in late)
-            if late else
-            f"no request on the board is past the 24-hour deadline it "
-            f"publishes; {len(dated)} carry one"
-            + (f", and {len(waiting)} are still inside their window: "
-               f"{', '.join(str(t) for t in waiting)}" if waiting else "")),
-        left={"overdue": len(late)}, right={"overdue": 0},
+        verdict="failed" if breaches else "passed",
+        reason=("; ".join(_said(o) for o in breaches)
+                if breaches else
+                f"every request on the board met the 24-hour deadline it "
+                f"publishes; {len(dated)} carry one"
+                + (f", and {len(waiting)} are still inside their window: "
+                   f"{', '.join(str(t) for t in waiting)}" if waiting else ""))
+               + (f". NOT measured: {len(unreadable)} shipped request(s) "
+                  f"publish no finish time, so whether they met it cannot be "
+                  f"read: {', '.join(str(o['ticket']) for o in unreadable)}"
+                  if unreadable else ""),
+        left={"overdue": len(breaches), "unreadable": len(unreadable)},
+        right={"overdue": 0},
+        population={"with_a_deadline": len(dated), "late": len(breaches)},
         sources={"board": BOARD}))
 
 

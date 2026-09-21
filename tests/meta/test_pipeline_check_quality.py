@@ -803,6 +803,65 @@ def test_a_requirement_split_into_numbered_items_is_not_a_dropped_one():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_build_that_shipped_late_is_not_a_build_that_shipped_on_time():
+    """The pass verdict this check was about to send to #112.
+
+    ET-26036 passed its deadline at 2026-09-20T20:25:59Z with nothing built;
+    we filed it as #112. Four hours later Cymetica shipped it -- stage
+    "shipped", our_url /weekly-signal, resolved_at 2026-09-21T00:25:27Z -- and
+    `overdue()` returned None the moment `our_url` appeared, whatever the
+    clock said. The check went green and verify.py composed a **pass** on
+    #112: "the check that recorded this defect now passes". That sentence
+    would have told them their 24-hour promise held on the one request where
+    it provably did not.
+
+    Their own record disagrees with the verdict we nearly sent: the item
+    carries `on_time: false`, and resolved_at is 3h59m past deadline_at.
+
+    So lateness is read from the clock rather than from the presence of a
+    link: a shipped build whose resolution is after its deadline is late, one
+    resolved inside it is not, and a shipped build with no readable
+    resolution time is reported as unreadable rather than counted either way
+    (rule 8).
+    """
+    from tests.rest.test_build_it_better_board import overdue
+    from datetime import datetime, timezone
+
+    now = datetime(2026, 9, 21, 1, 0, tzinfo=timezone.utc)
+    deadline = "2026-09-20T20:25:59.571403+00:00"
+
+    # What we filed: past the deadline, nothing shipped.
+    assert overdue({"ticket": "ET-26036", "deadline_at": deadline,
+                    "stage": "funded"}, now)
+
+    # What they then did: shipped it, four hours late. Still late.
+    late = overdue({"ticket": "ET-26036", "deadline_at": deadline,
+                    "stage": "shipped", "our_url": "/weekly-signal",
+                    "resolved_at": "2026-09-21T00:25:27.792893+00:00",
+                    "on_time": False}, now)
+    assert late, "a build that shipped four hours late read as shipped on time"
+    assert late.get("shipped_late"), late
+
+    # The stranger's ticket, shipped inside its own window: not late.
+    assert overdue({"ticket": "ET-26171",
+                    "deadline_at": "2026-09-21T20:37:17.710254+00:00",
+                    "stage": "shipped", "our_url": "/coinmarketcup",
+                    "resolved_at": "2026-09-21T00:25:28.821118+00:00",
+                    "on_time": True}, now) is None
+
+    # Shipped, past the deadline, and no readable resolution time: not
+    # counted as late, and not counted as on time either.
+    unreadable = overdue({"ticket": "ET-9999", "deadline_at": deadline,
+                          "stage": "shipped", "our_url": "/x"}, now)
+    assert unreadable is not None and unreadable.get("unreadable"), unreadable
+
+    # Still inside its window with nothing shipped: not evidence of anything.
+    assert overdue({"ticket": "ET-0001",
+                    "deadline_at": "2026-09-22T00:00:00+00:00",
+                    "stage": "funded"}, now) is None
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_published_ranking_that_admits_recency_is_not_the_defect():
     """#111, fixed the way the report offered, four hours after we filed it.
 
