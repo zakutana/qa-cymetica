@@ -1,158 +1,129 @@
-# Deep pass — 2026-09-20
+# Deep pass — 2026-09-21
 
-Spuštěn v 14:12 UTC na tvůj návrh („nedáme předtím deep pass?"), ne v noci.
-Start commit `17c98be7`, 87 commitů nepushnutých, `tests/meta` zelená na vstupu.
+Spuštěn na tvůj dotaz („Dáme deep pass? I ten 10denní review?"), večer.
+Start commit `c42647e9` (hned po ohlédnutí za 10 dní), 18 commitů passu,
+109 nepushnutých celkem. `tests/meta` byla na vstupu zelená.
 
 ## Co se stalo
 
-Pět nezávislých čtenářů: tři auditoři nad **132 kontrolami**, jejichž otisk se
-od posledního auditu pohnul, a dva recenzenti nad 13 041 řádky skutečného kódu
-(bez generovaného stavu). Dohromady **36 tvrzení**.
-
-Tři triážní agenti bez sdíleného kontextu, každý v jiném pořadí, každý musel
-nález **reprodukovat ze zdroje**, než ho uznal:
-
-| | |
-|---|---|
-| skutečných (≥2 ze 3) | **28** — všech 28 opraveno |
-| minority report (1 ze 3) | 4 |
-| zahozeno (0 ze 3) | 4 |
-
-Triáda tedy odstranila **8 z 36**. U tří z nich jsem si sám myslel, že jsou
-skutečné — bez ní bych zbytečně měkčil kontroly, které jsou správně přísné.
-
-**Nejdražší nález mířil na moji vlastní dnešní práci.** `--collect-only`
-zapisuje **přípustný záznam běhu** s nula výsledky; takových je na disku 113
-z 496. Ranní oprava výběru default běhu četla `collected` místo rozsouzeného,
-takže si jeden z nich vybrala — 1053 sebraných, 0 výsledků, 59 z 63 řádků
-formálně „pokrytých" a ani jeden rozsouzený. Přesně ta vada z 12. 9., kterou
-měla podle vlastního docstringu zavřít. Teď čte totéž co `_apply_run`, než
-něčím pohne; živě to skočilo na běh s 65 rozsouzenými.
-
-**Druhý mířil na větu, kterou jsem odpoledne postavil na odvolané zprávě.**
-Ústupek se štítkem u #85 stál na jejich REPLY-0034 z 12:55; ve 13:49 ji sami
-přepsali — *„labelled or not, that is a defect"*. Přečetl jsem bod 4 a ne větu
-za ním, a obě jsou v našem žurnálu. Ústupek šel celý pryč.
+* **64 nálezů:** 12 z code review (R01–R12) a 52 z auditu kontrol proti jejich
+  vlastním docstringům (A01–A19 vendor kontroly, B01–B17 a C01–C16 naše testy).
+* **Tři nezávislí čtenáři u každého:** 61 skutečných, 1 vyřazený (R04, 0 ze 3),
+  2 v menšině (R07, B01, po 1 ze 3).
+* **Opraveno všech 61, test napřed.** Každý nový nebo posílený test nejdřív
+  zčervenal ze správného důvodu, u testů testů na mutaci, kterou nález
+  jmenoval.
+* **Ověřovací běh:** `PRE-0145`, `run-20260921T201015Z-b8579867`, úroveň V,
+  plný selektor: 1129 prošlo, 8 selhalo, 5 inconclusive.
+  * První pokus `PRE-0144` nebyl přípustný: jejich `openapi-public.json`,
+    `mcp.json` a `ai-plugin.json` se změnily během běhu.
+* **Nesahal jsem na:** laborku (loop stojí), žádná objednávka, žádný nový report.
 
 ## Opraveno
 
-Všech 28, každé s testem napřed a commitem, který ho jmenuje. Tři nejvážnější:
-
-* **Dvě věty pro vendora tvrdily víc, než kontrola měřila.** FOMO podlaha
-  soudila solanový průlom solanovým poměrem a citovala jim ho poměrem
-  Robinhoodu — pool 75,16 $ souzený na 1,88 $ hlášený jako 3,76 $, na řádku
-  založeném jako **#102**. A passující verdikt říkal *„každý řádek čistí
-  podlahu"* vedle čísla, které ji nečistí.
-* **Čtyři testy nemohly selhat.** Strážce „archiv má volajícího" hlídal
-  řetězec, který je v obou souborech i v próze — smazal jsem oba skutečné
-  volající a zůstal zelený. „Polovina" se porovnávala s toutéž funkcí, co ji
-  spočítala, takže čtvrtinový vklad prošel. Fixture pro `n_eff` ležela mimo
-  pásmo, které cituje z Nexuse (rho −0,20, n_eff 23,4 z pěti pozic). Noční
-  kontrola soudila `0 == 0`.
-* **Nečitelné razítko pouštělo 25. otázku.** Oba denní stropy četly
-  `(_at(...) or since) > since`, takže řádek, jehož čas nejde přečíst, se
-  nepočítal — pravidlo 8 obrácené směrem, který utrácí.
+* **Kontroly proti Cymetice (A01–A19, R03, R09, R10): 22 kontrol mělo díru.**
+  Většinou šlo o pravidlo 8 nebo 10: selhané nebo prázdné čtení rozhodlo
+  verdikt, třeba 429 hlášené jako „chce klíč" nebo „0 z 0" jako pass.
+  Ostatní kontroly neuměly poznat opravu, nebo naopak uznaly falešnou:
+  * #117 soudil nákup libovolné karty;
+  * #116 bral „no pro-forma" jako přiznání;
+  * #112 zůstal navždy červený kvůli jednomu pozdnímu dodání;
+  * routy od Nexuse: `<id>` usekl cestu a `{slot}` bral jakékoli slovo.
+* **Hot studie (B02–B09):**
+  * NEX-0055 se teď měří tak, jak zní: nejvýš 30 min v Hotu, cena přes celý
+    koš, neviděný obchod je `unobserved`, ne `open`.
+  * Selhané čtení Hotu vyřadí kontrolní skupinu.
+  * Testy, které nemohly selhat na vlastní bráně, teď selžou. Zabito deset
+    mutací.
+* **Laborka (R01, R02, R05, R06, R08, R11, R12, C01, C04, C09):**
+  * index kol a jedno čtení deníku na tick;
+  * nezdařené předčasné zavření je dluh, dokud neprojde;
+  * každý room na boardu;
+  * test exkluzivity ticku, počítání objednávek a sdílený denní strop otázek
+    teď chytí svou mutaci.
+* **Naše hlídače (B11, B14–B16, C02, C03, C05–C08, C10, C11) a kosmetika
+  (B17, C12–C16).** Každý test viděl jen sám sebe, ne mutaci, kterou má chytit.
+  Teď ji chytí.
 
 ## Co odešlo Cymetice
 
-Ověřovací běh `run-20260920T162940Z-da287834`, prereg `PRE-0129`, **úroveň V**,
-1062 kontrol: 1048 prošlo, 4 spadly, 10 inconclusive. Ledger je teď
-**46 VERIFIED FIXED**, 4 STILL REPRODUCIBLE, 3 „naše kontrola nerozhodne",
-11 WITHDRAWN.
-
-Odesláno **šest verdiktů**: pass na #104, #105, #106, #107 a #109, korekce
-(`fail`) na #103.
-
-**A jeden verdikt jsem zadržel.** Na #89 by `fail` byla nepravda — dnes ráno
-jsem změřil, že `/fund` i `/go-live` agentní klíč přijímají a odmítá jediná
-routa, `/activity`, což je #98. Jenže jeden řádek nese oba reporty a jeden
-verdikt jde na oba. Je to nerozdělený řádek z NEXT.md a drželi ho tak i dva
-passy přede mnou.
-
-**První běh musel jít znovu.** Vrátil se jako úroveň **R** s důvodem
-`code_moved_during_run` — psal jsem zprávu, zatímco devatenáctiminutová suita
-běžela. To je přesně incident z 12. 9., kvůli kterému se git vzorkuje i na
-konci. Kdybych vzal krok 6 doslova, odešly by **čtyři korekce tvrdící „kontrola
-pořád padá"** na #104, #105, #106 a #107 — jejichž kontroly v tomtéž běhu
-prošly. Řádky četly REPRODUCING jen proto, že běh úrovně R smí vadu otevřít a
-nesmí ji zavřít. Na čistém stromě z nich byly passy.
-
-Tři řádky po dnešních opravách četly CHECK CHANGED (#85, #106, #109) a nesou
-`pin-fingerprint` s odůvodněním: u #85 je nová definice **přísnější** než
-připnutá, u #106 **širší**, u #109 se změnila jen věta v důvodu.
+* **10 ověření `pass`** na #88, #102, #104, #105, #106, #109, #110, #111,
+  #113 a #116. Každé až po pinu opravené definice s důvodem v žurnálu.
+* **#116 je opravené jimi:** metodika teď výslovně píše, že FTA Fund —
+  Cryptos je pro-forma od založení. Ověřil jsem to v textu, ne jen z verdiktu.
+* **Zadrženy 3 `fail`:**
+  * **#89/#98:** jeden řádek drží dva reporty a #89 je opravený, takže fail by
+    o něm lhal. Stejně jako minulé passy.
+  * **#112:** jediný důkaz je to samé pozdní dodání ET-26036, které report
+    popisuje. Po 00:25 UTC vypadne z 24h okna.
 
 ## Prořezáno
 
-* **Paměť:** 54 souborů, 48 živých, přesně na stropu. Zvažoval jsem sloučit
-  „docstring je slib" s „ověř, že workflow existuje" a **neudělal to**: první
-  je o čtení *vlastní* prózy proti kódu, druhá o nedůvěře k *cizí*. Nic
-  sloučeno, nic retirováno; dvě lekce přidány jako přípisky k existujícím.
-* **Součásti:** hlídka hlásí nic přes strop, nic nečinné.
-* **Mechanismy:** `never_fired --zeros` je 4 z 55 a **všechny čtyři jsou
-  cvičené testem** — žádný mrtvý mechanismus, nic k odstranění.
-* **Testy:** `tests/meta` 576 → **581** (+5). Každý nový nese vstup, který
-  žádný existující neměl: štítek, co nic neomlouvá; `--collect-only` záznam
-  běhu; timeout tam, kde stará fixture měla 503; nečitelné razítko na denním
-  stropu; poměr per řada tam, kde všechny fixtures posílaly jedno číslo oběma.
-  Zbylých dvacet oprav posílilo existující testy místo přidání souboru — to je
-  ten poměr, který krok 1b hlídá.
+* **Paměť:** 57 souborů, 48 živých, na stropu.
+  * `in-a-critical-moment…` sloučena do `a-blocked-tool…`.
+  * `a-read-that-writes-is-a-writer` sloučena do
+    `adding-a-writer-changes-every-other-writer`: stejná vada z druhé strany,
+    zapisovač, kterého jsem nepočítal.
+  * Jedna nová: `an-early-verdict-decides-only-what-the-close-cannot-reverse`.
+  * Jeden přípisek: k `a-loop-that-cannot-reach-the-goal…`.
+* **Součásti:** `patrol --flags` nehlásí nic.
+* **Mechanismy:** `never_fired --zeros` je 4 z 55 a všechny čtyři jsou cvičené
+  testem. Nic mrtvého.
+* **Testy:** `tests/meta` 621 → **641** (+20).
+  * Nové soubory jen dva: `test_pipeline_check_subjects.py` (#117 a #116
+    celé na stubech) a `test_pipeline_fomo_calibration.py` (každá FOMO
+    kontrola má vlastní meta soubor).
+  * Zbytek jsou testy, které pouštějí celou kontrolu. Žádný existující test
+    tu kontrolu nepouštěl, jen její pomocnou funkci. U každého je v commitu
+    jmenovaný test, do kterého šlo přidat a proč ne.
 
 ## Změněná pravidla
 
-**Nový hook: backtick v `git commit -m` je odmítnut.** Uvnitř dvojitých
-uvozovek backtick spustí příkaz a jeho *výstup* vloží do zprávy — dneska mi
-třikrát vypadla fráze z commit hlášky a git pokaždé skončil nulou. Selhání je
-tiché a dopadá na toho, kdo čte historii, což je tenhle pass sám. Paměť o tom
-mluví od 14. 9.; teď je to mechanismus. `-F soubor` zůstává otevřený, jinak by
-hook zavřel i cestu ven ze sebe. Test jmenuje všechny tři dnešní příkazy.
-**Veto tvoje** — stačí říct a hook zmizí.
+**Laborka: strop 25 nových roomů denně a 125 běžících (dřív 10 a 50).**
+Schválil jsi to na plánu; brána backtestu je beze změny. Čtenář 1 ukázal, že
+pin „aspoň 50" projde jakékoli číslo, takže test teď drží přesné hodnoty.
+Hlasy ne/ne/ano.
+
+**Jeden room na kartu, kterou Nexus jmenuje, a objednávka se počítá, jen když
+ji přijali.** Hlasy ne/ne/ne.
+
+**Hot kolo běží i během deep passu a noci.** Jen čte do vlastního deníku a
+Hot nemá historii, takže vynechané kolo je navždy ztracené. Hlasy ne/ne/ne.
+
+**Room se dá předčasně jen vyvrátit, nikdy potvrdit.** Vyvrátí ho propad za
+stop, nebo situace, kdy všechny nohy skončily v čisté ztrátě. Výhra čeká na
+konec okna. Byla to tři kola čtenářů: první dvě verze se s koncem okna
+rozcházely, poslední vydržela 20 000 náhodných případů. Hlasy ne/ne/ne.
+
+**Tick se odklidí, když už běží jiný** (značka zastará po 45 min). Hlasy
+ne/ne/ne.
+
+Veto u všech pěti tvoje.
 
 ## Minority report
 
-Čtyři nálezy s jedním hlasem ze tří. Nezahazuji je, protože nejdůležitější
-nález 7. 9. měl taky jeden hlas:
-
-* **T06 — deep pass přebaluje celý měsíční archiv při každém běhu.**
-  `keep.py` bere `pending ∪ already`, takže jakmile balík existuje, každý pass
-  ho komprimuje znovu celý. Dva čtenáři to nazvali nákladem, ne vadou.
-  Sledovat, až měsíc povyroste.
-* **T02 — test startu session může projít naprázdno**, když `state()` vrátí
-  prázdné seznamy. Dnes má zuby; sourozenec v témže souboru ho kryje.
-* **T04 — fixture v testu výběru běhu jsou všechny přípustné**, takže slovo
-  „admissible" v tvrzení nemá vyvracející případ.
-* **T03 — sweep skill dával vendorovi autoritu nad tím, co sweep dělá.**
-  Dva čtenáři to nazvali formulací. **Ale třetí našel v téže větě věcnou
-  chybu:** citoval jsem REPLY-0031, což je odpověď na jinou otázku; priority
-  nese REPLY-0030. Opraveno, a věta teď říká, že je následujeme na **tvůj**
-  pokyn, ne na jejich.
+* **R07 — karta, jejíž nákup nepřijali, se může koupit znovu z jiné odpovědi
+  v tomtéž ticku.** Dva čtenáři to nepotvrdili; od C04 se nepřijatá objednávka
+  nepočítá, room se zastaví a karta zůstane „held".
+* **B01 — vstup do Hotu přes díru po selhaném kole.** Dva čtenáři to nazvali
+  záměrnou tolerancí. Oprava B05 to navíc pokrývá: vstup víc než 30 min po
+  posledním kole, které koš vidělo mimo Hot, se už nepočítá.
 
 ## Čeká na tebe
 
-* **Nový hook na backticky je na tvoje veto.** Nic jiného v tomhle passu
-  nemění pravidlo.
-* **Dnes ve 20:25:59 UTC vyprší jejich vlastní 24h lhůta na ET-26036.**
-  Kontrola je napsaná a sedí; stačí po té hodině pustit
-  `python -m pytest tests/rest/test_build_it_better_board.py -q`. Když
-  shipnou, projdu `our_url` proti specu a pošle se BB-VERDICT.
-* **#102 (FOMO podlaha) leží u nich se souzeným číslem, které se lišilo od
-  citovaného.** Dnes je řádek Inconclusive (nikdo neservíruje `max_buy_5pct_usd`),
-  takže se nic neposílá — ale až se to rozjede, stojí za zvážení, jestli jim
-  ten rozdíl neříct sami.
-
-## Týden
-
-Nebyl na řadě: poslední proběhl 19. 9., tedy před jedním dnem.
+* **ET-26036: verdikt dál čeká na obrazcovou TA.** Beze změny, rozhodnutí je
+  tvoje (MSG-0038).
+* **Kontrola odkazu na fond (#104) projde i s nečitelným skillem, pokud všech
+  26 fondů nese `profile_url`.** Vada, kterou jsme hlásili, je tím vyvrácená
+  bez ohledu na skill. Přísnější čtení by bylo Inconclusive. Veto tvoje.
 
 ## Co mě to naučilo
 
-**Dvě opravy z dneška neopravovaly nic a obě vypadaly hotově.** Výběr běhu
-četl `collected` místo rozsouzeného; `except SystemExit` nechytal timeout,
-který jmenoval ve vlastním komentáři, protože test používal 503. V obou
-případech byl test zelený nad tou jedinou cestou, která už fungovala.
+**Předčasný verdikt smí říct jen to, co pozdější data nemůžou otočit.** RC4
+potřeboval tři kola, protože jsem záplatoval každý rozpor s koncem okna,
+místo abych se zeptal, co jde z neúplných dat vůbec rozhodnout. Propad jen
+roste, uzavřená noha je zmrazená; výhra ne. Zapsáno do paměti.
 
-**A jedna past je v tomhle skillu samotném.** Krok 10b říká „zahoď položku
-odškrtnutou týden" — jenže datum na řádku NEXT.md je den *dohody*, ne
-odškrtnutí. Dnes má 24 odškrtnutých položek datum z 10.–12. září a poznámku o
-dokončení z dneška; slepý prořez by smazal celý dnešní záznam. Změřeno: 52
-vypadá starých, skutečně starých je 34. Dneska jsem to udělal ručně správně;
-změna té věty je zásah do páteře a jde na tři čtenáře v příštím passu.
+**A první verze mého vlastního testu (C09) mutaci propustila:** hledal jsem v
+odmítnutí číslo „24", které je i v „posledních 24 h". Mutace ukázala, že test
+nic nehlídá, dřív než jsem mu uvěřil.
