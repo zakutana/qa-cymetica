@@ -23,14 +23,15 @@ When the platform refuses for a reason it names, it says so: TRD-0007 got a
 not a stated gate.
 
 **This check places no order.** It reads what `scripts/paper.py` recorded.
-Its subject is the card of our newest 5xx buy, and the verdict is the NEWEST
-attempt on THAT card: accepted passes, a 5xx while it still reads
-`tradeable_now: true` fails, a 4xx with a reason is the gate working and is
-inconclusive. Until the deep pass of 2026-09-21 it judged the newest buy of
-ANY card, so an accepted buy of another card -- two were accepted the day
-this was found -- would have passed #117 with a4a5b71e still answering 500
-(R03/A01, 3/3). A card nobody tries again stays failed: a fix is shown by a
-buy of the card that failed, not by the calendar.
+Its subjects are EVERY card one of our buys got a 5xx on, each judged by the
+NEWEST attempt on that card: a 5xx while it still reads `tradeable_now: true`
+fails; a pass needs every one of them since accepted; a 4xx with a reason is
+the gate working, and a card no longer tradeable or unreadable is unmeasured
+-- both inconclusive. Until the deep pass of 2026-09-21 it judged the newest
+buy of ANY card, and then only the card of the newest 5xx, so an accepted buy
+of another card would have passed #117 with a4a5b71e still answering 500
+(R03 and A01, 3/3 each). A card nobody tries again stays failed: a fix is
+shown by a buy of the card that failed, not by the calendar.
 """
 
 from __future__ import annotations
@@ -73,56 +74,100 @@ def buy_attempts(rows) -> list[dict]:
     return sorted(out, key=lambda a: (a["at"], a["id"]))
 
 
+def _is_5xx(attempt: dict) -> bool:
+    return isinstance(attempt["status"], int) and attempt["status"] >= 500
+
+
+def _accepted(attempt: dict) -> bool:
+    status = attempt["status"]
+    return (isinstance(status, int) and 200 <= status < 300
+            and attempt["outcome"] == "accepted")
+
+
 @qa(component="rest.event_cards", tier=SafetyTier.SAFE, surface="rest")
 def test_a_card_that_reads_tradeable_now_takes_a_paper_buy(rest_trusted):
-    """Our newest paper buy against the card's own tradeable_now."""
+    """Every card whose buy got a 5xx, by its newest attempt, against its own tradeable_now."""
     attempts = buy_attempts(_paper().load())
     if not attempts:
         raise Inconclusive("no paper buy has been attempted")
-    failed = [a for a in attempts
-              if isinstance(a["status"], int) and a["status"] >= 500]
-    subject = failed[-1]["card"] if failed else attempts[-1]["card"]
-    latest = [a for a in attempts if a["card"] == subject][-1]
-    status = latest["status"]
-    if isinstance(status, int) and 200 <= status < 300 and latest["outcome"] == "accepted":
-        conclude(Measurement(
-            verdict="passed",
-            reason=(f"the newest paper buy of card {latest['card']}, {latest['id']}, "
-                    f"was accepted" + (" -- the card whose buy last got a 5xx"
-                                       if failed else "")),
-            left=status, right="2xx",
-            population={"newest_on_card": latest, "subject": subject},
-            sources={"log": "state/paper.jsonl"}))
-        return
-    if not (isinstance(status, int) and status >= 500):
-        raise Inconclusive(f"the newest paper buy of card {subject}, {latest['id']}, "
-                           f"came back {status} {latest['response']} -- a stated "
+    newest: dict[str, dict] = {}
+    for attempt in attempts:
+        newest[attempt["card"]] = attempt
+    # A01, deep pass of 2026-09-21 (3/3): judging only the card of the newest
+    # 5xx let card A 500, card B 500, B accepted pass with A never tried
+    # again. Every card that ever answered 5xx is a subject, each by its own
+    # newest attempt.
+    struck = [card for card in newest if any(
+        _is_5xx(a) for a in attempts if a["card"] == card)]
+    if not struck:
+        latest = attempts[-1]
+        if _accepted(latest):
+            conclude(Measurement(
+                verdict="passed",
+                reason=(f"no paper buy has answered 5xx, and the newest, "
+                        f"{latest['id']} of card {latest['card']}, was accepted"),
+                left=latest["status"], right="2xx",
+                population={"newest": latest},
+                sources={"log": "state/paper.jsonl"}))
+            return
+        raise Inconclusive(f"the newest paper buy, {latest['id']}, came back "
+                           f"{latest['status']} {latest['response']} -- a stated "
                            f"refusal or an unread outcome, not this defect")
 
-    response = rest_trusted.get(CARD.format(card=latest["card"]))
-    if response.status_code != 200:
-        raise Inconclusive(f"the card could not be read: HTTP {response.status_code}")
-    card = response.json() or {}
-    if card.get("tradeable_now") is not True:
-        raise Inconclusive(f"the card no longer reads tradeable_now true "
-                           f"({card.get('tradeable_now')}, "
-                           f"{card.get('trading_blocked_reason')})")
-    same = [a for a in attempts if a["card"] == latest["card"]
-            and isinstance(a["status"], int) and a["status"] >= 500]
+    breaches, unmeasured = [], []
+    for card_id in struck:
+        latest = newest[card_id]
+        if _accepted(latest):
+            continue
+        if not _is_5xx(latest):
+            unmeasured.append(f"{card_id}: its newest buy {latest['id']} came back "
+                              f"{latest['status']} {latest['response']} -- a stated "
+                              f"refusal or an unread outcome")
+            continue
+        response = rest_trusted.get(CARD.format(card=card_id))
+        if response.status_code != 200:
+            unmeasured.append(f"{card_id}: the card could not be read, HTTP "
+                              f"{response.status_code}")
+            continue
+        card = response.json() or {}
+        if card.get("tradeable_now") is not True:
+            unmeasured.append(f"{card_id}: no longer reads tradeable_now true "
+                              f"({card.get('tradeable_now')}, "
+                              f"{card.get('trading_blocked_reason')})")
+            continue
+        breaches.append((card_id, latest, card))
+
+    if breaches:
+        card_id, latest, card = breaches[0]
+        same = [a for a in attempts if a["card"] == card_id and _is_5xx(a)]
+        conclude(Measurement(
+            verdict="failed",
+            reason=(f"card {card_id} reads status {card.get('status')}, "
+                    f"tradeable_now true, trading_blocked_reason "
+                    f"{card.get('trading_blocked_reason')}, and our paper buy of it "
+                    f"answered HTTP {latest['status']} {latest['response']} "
+                    f"({len(same)} time(s): "
+                    f"{', '.join(a['id'] + ' ' + a['at'][11:19] for a in same)})"
+                    + (f"; {len(breaches) - 1} other tradeable card(s) the same"
+                       if len(breaches) > 1 else "")),
+            left=latest["status"], right="2xx, or a 4xx naming its reason",
+            population={"attempts_on_card": same,
+                        "other_cards": [c for c, _, _ in breaches[1:]],
+                        "card": {k: card.get(k) for k in (
+                            "status", "tradeable_now", "trading_blocked_reason",
+                            "pw_live", "current_index", "share_price_usd")},
+                        "legs": [(b.get("symbol"), b.get("weight"))
+                                 for b in card.get("basket") or []]},
+            sources={"contract": "GET /api/v1/event-cards/{id} tradeability.tradeable_now: "
+                                 "'the only trade gate'",
+                     "log": "state/paper.jsonl (TRD intent / outcome, with evidence ids)"}))
+        return
+    if unmeasured:
+        raise Inconclusive("; ".join(unmeasured))
     conclude(Measurement(
-        verdict="failed",
-        reason=(f"card {latest['card']} reads status {card.get('status')}, "
-                f"tradeable_now true, trading_blocked_reason "
-                f"{card.get('trading_blocked_reason')}, and our paper buy of it "
-                f"answered HTTP {status} {latest['response']} "
-                f"({len(same)} time(s): {', '.join(a['id'] + ' ' + a['at'][11:19] for a in same)})"),
-        left=status, right="2xx, or a 4xx naming its reason",
-        population={"attempts_on_card": same,
-                    "card": {k: card.get(k) for k in (
-                        "status", "tradeable_now", "trading_blocked_reason",
-                        "pw_live", "current_index", "share_price_usd")},
-                    "legs": [(b.get("symbol"), b.get("weight"))
-                             for b in card.get("basket") or []]},
-        sources={"contract": "GET /api/v1/event-cards/{id} tradeability.tradeable_now: "
-                             "'the only trade gate'",
-                 "log": "state/paper.jsonl (TRD intent / outcome, with evidence ids)"}))
+        verdict="passed",
+        reason=(f"every card whose paper buy answered 5xx has since taken one: "
+                + ", ".join(f"{c} ({newest[c]['id']})" for c in struck)),
+        left=[newest[c]["status"] for c in struck], right="2xx",
+        population={"newest_on_struck_cards": [newest[c] for c in struck]},
+        sources={"log": "state/paper.jsonl"}))

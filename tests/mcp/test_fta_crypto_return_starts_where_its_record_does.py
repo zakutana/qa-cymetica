@@ -26,8 +26,10 @@ later. That is a backfill, which the methodology says there is none of.
 **What is measured.** The inception `get_fund` publishes against the
 inception the fund's own history publishes, while the methodology still says
 "nothing backfilled". Either fix satisfies it: start the published return
-where the record starts, or stop telling advisors nothing is backfilled. A
-read that fails is unmeasured, never a defect (rule 8).
+where the record starts (and the return then follows from that record), or
+tell advisors the pro-forma stretch is in it -- a sentence that mentions
+pro-forma only to deny it ("no pro-forma") is not that disclosure. A read
+that fails is unmeasured, never a defect (rule 8).
 """
 
 from __future__ import annotations
@@ -43,7 +45,19 @@ HISTORY = "/api/v1/fta-fund/history"
 SYMBOL = "FTA-CRYPTOS"
 NO_BACKFILL = "nothing backfilled"
 PRO_FORMA = re.compile(r"pro[\s-]?forma", re.IGNORECASE)
+# A03, deep pass of 2026-09-21 (3/3): "nothing backfilled, no pro-forma, no
+# backtest" DENIES the stretch, and was read as disclosing it. A mention with a
+# negation in the few words before it, inside the same clause, is a denial --
+# "No backfill. Pro-forma: ..." is a disclosure, and a false fail is a claim.
+DENIED = re.compile(r"\b(?:no|not|never|nor|without|zero)\b(?:[\s,'-]+\w+){0,3}?"
+                    r"[\s,'-]+pro[\s-]?forma", re.IGNORECASE)
 RETURN_SLACK_PP = 5.0
+
+
+def discloses_pro_forma(text: str) -> bool:
+    """Whether the methodology says a pro-forma stretch is IN the return."""
+    return any(not DENIED.search(text[:m.end()][-80:])
+               for m in PRO_FORMA.finditer(text))
 
 
 def _short_return(points) -> float | None:
@@ -101,7 +115,7 @@ def test_the_fta_crypto_return_starts_where_its_own_record_does(mcp_anon, rest_a
     # fix the report offered is a DISCLOSURE, so that is what is looked for;
     # and dates that agree on paper while the return still spans the old start
     # are not taken as the fix either.
-    disclosed = bool(PRO_FORMA.search(returns_rule))
+    disclosed = discloses_pro_forma(returns_rule)
     claims_none = not disclosed
     early = published < recorded
     if claims_none and not early:
