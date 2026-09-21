@@ -188,6 +188,26 @@ def test_the_rule_needs_its_own_threshold_and_rank():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_nex_0057_drops_the_rank_and_enters_only_once_the_next_round_confirms():
+    """His revision: no rank gate; the basket must still be in Hot one round
+    later, and the trade starts there, at that round's price."""
+    heads = [_headline(1, published=T0)]
+    rounds = [_round(T0)] + _path(1, T0 + timedelta(minutes=20),
+                                  [100, 102, 111], rank=40)
+    variant = hot.VARIANTS["NEX-0057a"]
+    said = hot.nexus_rule(rounds, heads, variant)
+    (trade,) = said["trades"]
+    assert trade["at"] == _iso(T0 + timedelta(minutes=40)), "entered on confirmation"
+    assert trade["exit"] == "take_profit"
+    assert abs(trade["gross"] - (111 / 102 - 1) * 100) < 1e-6
+
+    blip = [_round(T0)] + _path(1, T0 + timedelta(minutes=20), [100], rank=40) \
+        + [_round(T0 + timedelta(minutes=40))]
+    assert hot.nexus_rule(blip, heads, variant)["trades"] == []
+    assert hot.nexus_rule(rounds, heads)["trades"] == [], "NEX-0055 keeps its rank"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_trade_whose_time_stop_was_never_seen_is_open_not_a_result():
     heads = [_headline(1, published=T0)]
     rounds = [_round(T0)] + _path(1, T0 + timedelta(minutes=20), [100, 101])

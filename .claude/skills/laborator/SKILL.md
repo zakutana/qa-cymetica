@@ -192,7 +192,11 @@ The rule under test is Nexus's own, NEX-0055: crypto baskets only, 24 h return
 24 h, take-profit +8 %, stop −4 %, 0.2 % costs; **no verdict under 100
 trades**, then his one-sided t ≥ 1.65. It is measured on their price-weighted
 index, not his 1/N -- `preview_card_basket` prices too few of the crypto
-members for 1/N -- and every reading says so. `lab.py brief` carries the
+members for 1/N -- and every reading says so. Its rank ≤ 3 could never fire
+(baskets enter Hot near its bottom, ranks 6-100), so NEX-0057 revised it: no
+rank gate, the basket still in Hot at the next round and entered there, and
+the three exits he offered are run side by side (`qa/hot.py VARIANTS`). His
+volatility-scaled stop is still to build. `lab.py brief` carries the
 latest reading, so every question to him carries it too.
 
 ## What we know about Nexus

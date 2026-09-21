@@ -242,7 +242,9 @@ def reading(rows: list[dict] | None = None) -> dict:
             "follow": hot.follow(found, rows),
             "control": hot.control(rows, found),
             "cards": card_follow(rows),
-            "rule": {k: v for k, v in hot.nexus_rule(rows).items() if k != "trades"}}
+            "rules": {name: {k: v for k, v in hot.nexus_rule(rows, rule=rule).items()
+                             if k != "trades"}
+                      for name, rule in hot.VARIANTS.items()}}
 
 
 def _pct(value) -> str:
@@ -264,9 +266,10 @@ def say_reading(said: dict) -> list[str]:
                 f"not in Hot {_pct(base['mean'])}, {base['up']}/{base['n']} up")
     for h, c in (said.get("cards") or {}).items():
         lines.append(f"  card   +{float(h):.0f}h: {_pct(c['mean'])} mean over {c['n']}")
-    rule = said.get("rule") or {}
-    lines.append(f"  NEX-0055: {rule.get('entries', 0)} qualifying entr(ies), "
-                 f"{rule.get('open', 0)} open -- {rule.get('verdict')}")
+    rules = said.get("rules") or {"NEX-0055": said.get("rule") or {}}
+    for name, rule in rules.items():
+        lines.append(f"  {name}: {rule.get('entries', 0)} qualifying entr(ies), "
+                     f"{rule.get('open', 0)} open -- {rule.get('verdict')}")
     return lines
 
 

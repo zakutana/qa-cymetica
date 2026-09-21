@@ -51,6 +51,21 @@ RULE = {
     "max_overlap": 0.5,
     "min_trades": 100,
     "min_t": 1.65,
+    "confirm_rounds": 0,
+}
+
+# NEX-0057 (2026-09-21 10:36), his revision once the first 100 minutes showed
+# baskets entering Hot near its bottom (ranks 6-100), so rank <= 3 never
+# fired: drop the rank gate, require the basket still in Hot at the next
+# round and enter there, and either take +4-5 % or hold ~12 h. His
+# volatility-scaled stop is not here yet -- it needs the basket's own ATR.
+VARIANTS = {
+    "NEX-0055": dict(RULE),
+    "NEX-0057a": {**RULE, "max_rank": None, "confirm_rounds": 1},
+    "NEX-0057b": {**RULE, "max_rank": None, "confirm_rounds": 1,
+                  "take_profit": 5.0},
+    "NEX-0057c": {**RULE, "max_rank": None, "confirm_rounds": 1,
+                  "hold_hours": 12.0},
 }
 
 
@@ -254,12 +269,32 @@ def _qualifies(e: dict, rule: dict) -> bool:
         return False
     if len(e.get("members") or []) < rule["min_members"]:
         return False
-    if not isinstance(e.get("rank"), int) or e["rank"] > rule["max_rank"]:
+    if rule.get("max_rank") is not None and (
+            not isinstance(e.get("rank"), int) or e["rank"] > rule["max_rank"]):
         return False
     published = _at(e.get("published_at"))
     if published is None:
         return False
     return _at(e["at"]) - published <= timedelta(minutes=rule["max_age_minutes"])
+
+
+def _confirmed(e: dict, rounds: list[dict], heads: dict, n: int) -> dict | None:
+    """The entry moved to the n-th following round, if the basket is still in
+    Hot there and every round between is covered; None if it is not."""
+    t = _at(e["at"])
+    later = [r for r in rounds if _at(r["at"]) > t and r.get("hot") is not None]
+    prev = next((r for r in rounds if r["at"] == e["at"]), None)
+    for rnd in later[:n]:
+        if prev is None or not covered(prev, rnd):
+            return None
+        fps = {_fp(heads.get(h["row"]), h["cls"]) for h in _hot_rows(rnd)}
+        if e["fp"] not in fps:
+            return None
+        prev = rnd
+    if len(later) < n:
+        return None
+    px = _px_at(prev, e["row"], e["cls"])
+    return {**e, "at": prev["at"], "px": px} if px else None
 
 
 def _overlap(a, b) -> float:
@@ -276,7 +311,11 @@ def nexus_rule(rows, headlines=None, rule: dict | None = None) -> dict:
     level itself: we see the path only every tick."""
     rule = {**RULE, **(rule or {})}
     rounds = _rounds(rows)
+    heads = _headlines(headlines if headlines is not None else rows)
     found = [e for e in entries(rows, headlines) if _qualifies(e, rule)]
+    if rule.get("confirm_rounds"):
+        found = [c for c in (_confirmed(e, rounds, heads, rule["confirm_rounds"])
+                             for e in found) if c]
     trades, open_, skipped, held_rows = [], 0, 0, set()
     holding: list[tuple[datetime, list]] = []
     for e in found:
