@@ -208,6 +208,19 @@ def test_nex_0057_drops_the_rank_and_enters_only_once_the_next_round_confirms():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_volatility_stop_widens_with_the_basket_and_never_tightens_past_four():
+    """NEX-0057: stop about -1.25x the basket's hourly ATR, floored at -4 %,
+    target twice the stop. A quiet basket keeps -4 / +8."""
+    quiet = _path(1, T0, [100, 100.1, 100.0, 100.1])
+    assert hot.vol_stop(quiet, 1, "crypto", T0 + timedelta(minutes=60)) == -4.0
+    wild = _path(1, T0, [100, 104, 100, 104])
+    stop = hot.vol_stop(wild, 1, "crypto", T0 + timedelta(minutes=60))
+    assert stop < -4.0
+    few = _path(1, T0, [100])
+    assert hot.vol_stop(few, 1, "crypto", T0) == -4.0, "no history, the floor"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_trade_whose_time_stop_was_never_seen_is_open_not_a_result():
     heads = [_headline(1, published=T0)]
     rounds = [_round(T0)] + _path(1, T0 + timedelta(minutes=20), [100, 101])

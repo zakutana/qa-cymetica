@@ -66,7 +66,14 @@ VARIANTS = {
                   "take_profit": 5.0},
     "NEX-0057c": {**RULE, "max_rank": None, "confirm_rounds": 1,
                   "hold_hours": 12.0},
+    # His stop: about -1.0 to -1.5x the basket's hourly ATR, never tighter
+    # than -4 %, the target twice the stop so the 2:1 holds.
+    "NEX-0057d": {**RULE, "max_rank": None, "confirm_rounds": 1,
+                  "vol_stop": True},
 }
+
+VOL_LOOKBACK_HOURS = 6.0
+VOL_MULTIPLE = 1.25
 
 
 def basket_fp(members, cls: str) -> str | None:
@@ -278,6 +285,32 @@ def _qualifies(e: dict, rule: dict) -> bool:
     return _at(e["at"]) - published <= timedelta(minutes=rule["max_age_minutes"])
 
 
+def vol_stop(rows, row_id, cls: str, at, floor: float = -4.0) -> float:
+    """-VOL_MULTIPLE x the basket's hourly ATR in percent, read off the rounds
+    in the VOL_LOOKBACK_HOURS before `at`, never tighter than `floor`. A
+    round-to-round move is scaled to an hour by sqrt(hour / step). Under three
+    priced rounds there is no ATR, and the floor stands."""
+    at = _at(at) if not isinstance(at, datetime) else at
+    path = []
+    for rnd in _rounds(rows):
+        when = _at(rnd["at"])
+        if at - timedelta(hours=VOL_LOOKBACK_HOURS) <= when <= at:
+            px = _px_at(rnd, row_id, cls)
+            if px:
+                path.append((when, px))
+    if len(path) < 3:
+        return floor
+    moves, steps = [], []
+    for (t1, p1), (t2, p2) in zip(path, path[1:]):
+        moves.append(abs(p2 / p1 - 1.0) * 100.0)
+        steps.append((t2 - t1).total_seconds() / 3600.0)
+    step = sum(steps) / len(steps)
+    if step <= 0:
+        return floor
+    hourly = (sum(moves) / len(moves)) * math.sqrt(1.0 / step)
+    return round(min(floor, -VOL_MULTIPLE * hourly), 6)
+
+
 def _confirmed(e: dict, rounds: list[dict], heads: dict, n: int) -> dict | None:
     """The entry moved to the n-th following round, if the basket is still in
     Hot there and every round between is covered; None if it is not."""
@@ -328,6 +361,10 @@ def nexus_rule(rows, headlines=None, rule: dict | None = None) -> dict:
             skipped += 1
             continue
         end = t0 + timedelta(hours=rule["hold_hours"])
+        stop, target = rule["stop"], rule["take_profit"]
+        if rule.get("vol_stop"):
+            stop = vol_stop(rows, e["row"], e["cls"], t0, floor=rule["stop"])
+            target = -2.0 * stop
         exit_, gross, closed_at = None, None, None
         for rnd in rounds:
             when = _at(rnd["at"])
@@ -339,10 +376,10 @@ def nexus_rule(rows, headlines=None, rule: dict | None = None) -> dict:
             if not px:
                 continue
             move = (px / float(e["px"]) - 1.0) * 100.0
-            if move >= rule["take_profit"]:
+            if move >= target:
                 exit_, gross, closed_at = "take_profit", move, when
                 break
-            if move <= rule["stop"]:
+            if move <= stop:
                 exit_, gross, closed_at = "stop", move, when
                 break
             if when >= end - timedelta(minutes=TOLERANCE_MINUTES):

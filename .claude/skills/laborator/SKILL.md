@@ -195,8 +195,9 @@ index, not his 1/N -- `preview_card_basket` prices too few of the crypto
 members for 1/N -- and every reading says so. Its rank ≤ 3 could never fire
 (baskets enter Hot near its bottom, ranks 6-100), so NEX-0057 revised it: no
 rank gate, the basket still in Hot at the next round and entered there, and
-the three exits he offered are run side by side (`qa/hot.py VARIANTS`). His
-volatility-scaled stop is still to build. `lab.py brief` carries the
+the exits he offered are run side by side (`qa/hot.py VARIANTS`), his
+volatility-scaled stop among them (−1.25× the basket's hourly ATR over the six
+hours before entry, never tighter than −4 %, target twice the stop). `lab.py brief` carries the
 latest reading, so every question to him carries it too.
 
 ## What we know about Nexus
