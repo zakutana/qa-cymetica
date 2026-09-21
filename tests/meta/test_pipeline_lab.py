@@ -403,8 +403,13 @@ def test_an_order_is_capped_at_a_share_of_what_is_free():
                              running=lab.CAPS["running_experiments"])
     assert not ok and "running" in why.lower(), why
     # "Aspoň 50" is a floor: 125 since 2026-09-21 (25 new rooms a day over a
-    # five-day window). Below 50 is the operator's number broken.
+    # five-day window). Below 50 is the operator's number broken -- and the
+    # value itself is pinned, not only the floor: `>= 50` alone survived
+    # setting it to 10**6 (reader 1 of the deep pass of 2026-09-21), which is
+    # the silent drift this pin exists for. Moving it is an edit HERE too.
     assert lab.CAPS["running_experiments"] >= 50
+    assert lab.CAPS["running_experiments"] == 125
+    assert lab.CAPS["new_rooms_per_day"] == 25
 
     # THE CAP ITSELF, by name and by boundary. L04, deep pass of 2026-09-13,
     # triage 3/3: this test used to pin only the rendering. Three readers set
@@ -1009,6 +1014,28 @@ def test_a_take_profit_reached_inside_the_window_survives_there_and_then():
     series = {"card-a": _series("2026-09-05T00:00:00+00:00", [100, 103, 108.5])}
     said = lab.verdict(_acceptance(), series, now)
     assert said["verdict"] == "survived" and said["early"] is True, said
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_early_take_profit_that_lost_to_the_benchmark_is_refuted():
+    """Two of three rule-change readers, deep pass of 2026-09-21: an early
+    "survived" skipped the benchmark the closed-window verdict applies, so the
+    same path read survived at +6 h and refuted at the close. The criterion is
+    one criterion whenever it is read."""
+    now = "2026-09-05T06:00:00+00:00"
+    series = {
+        "card-a": _series("2026-09-05T00:00:00+00:00", [100, 103, 108.5]),
+        "btc-card": _series("2026-09-05T00:00:00+00:00", [100, 110, 115]),
+    }
+    said = lab.verdict(_acceptance(benchmark_card="btc-card"), series, now)
+    assert said["verdict"] == "refuted" and said["early"] is True, said
+    assert "benchmark" in said["why"].lower()
+
+    # No benchmark read yet: not settled early either way -- it waits.
+    thin = {"card-a": series["card-a"],
+            "btc-card": _series("2026-09-05T00:00:00+00:00", [100])}
+    said = lab.verdict(_acceptance(benchmark_card="btc-card"), thin, now)
+    assert said["verdict"] == "open", said
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

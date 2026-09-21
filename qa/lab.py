@@ -847,8 +847,30 @@ def _early(acceptance: dict, series: dict, start, moment) -> dict | None:
                         f"window closed")}
     if all(leg["exit"] for leg in legs):
         ok = value > 0 and all(leg["exit"] == "tp" for leg in legs)
+        # The benchmark is part of the criterion whenever it is read: an early
+        # "survived" that skipped it read survived at +6 h and refuted at the
+        # close on one path (deep pass of 2026-09-21, 2 of 3 readers). Up to
+        # the moment of the last exit, from the benchmark's own index; no
+        # benchmark read yet means not settled early.
+        card = acceptance.get("benchmark_card")
+        benchmark = None
+        if ok and card:
+            last_exit = max(leg["curve"][-1][0] for leg in legs)
+            marks = [(t, v) for t, v in _points(series.get(card))
+                     if start <= t <= last_exit]
+            if len(marks) < 2:
+                return None
+            benchmark = (marks[-1][1] / marks[0][1] - 1.0) * 100.0
+            if value <= benchmark:
+                return {"verdict": "refuted", "return_pct": value,
+                        "max_drawdown_pct": drawdown, "legs": clean,
+                        "benchmark_pct": benchmark,
+                        "why": (f"every leg reached its take-profit before the "
+                                f"window closed, at {value:+.2f}%, against the "
+                                f"benchmark's {benchmark:+.2f}%")}
         return {"verdict": "survived" if ok else "refuted", "return_pct": value,
                 "max_drawdown_pct": drawdown, "legs": clean,
+                "benchmark_pct": benchmark,
                 "why": (f"every leg reached its "
                         f"{'take-profit' if ok else 'exit'} before the window "
                         f"closed, at {value:+.2f}%")}
