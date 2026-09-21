@@ -237,6 +237,40 @@ def test_one_card_is_not_bought_once_per_answer_that_mentions_it(
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_card_that_cannot_trade_does_not_park_the_cards_that_can_for_ever(
+        tmp_path, monkeypatch):
+    """NEX-0052 named its recommendation beside two counterexamples, one of
+    them `pw_live: false`, and the untradeable one parked the whole answer
+    for 27 ticks. A fresh answer still waits whole -- the plan keeps its legs
+    together while there is a chance they all open -- but past
+    WAIT_FOR_LEGS_HOURS the cards that pass open their room, and the one that
+    cannot trade is named rather than waited for."""
+    other = "7764668a-0000-4000-8000-000000000000"
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    _book(tmp_path, 100000.0)
+    sent = _wire(scripts_lab, monkeypatch, [CARD])
+    basket = {"legs": [{"symbol": "BTC", "weight": 1.0}], "tradeable": True,
+              "title": "a card"}
+    monkeypatch.setattr(scripts_lab, "_card_live", lambda card: (
+        basket if card == CARD else {**basket, "tradeable": False}))
+    text = "Buy " + CARD + " bull. Not " + other + ". " + ("reasoning. " * 40)
+
+    fresh = datetime.now(timezone.utc).isoformat()
+    _answers(tmp_path, [{"type": "answer", "id": "NEX-0001", "at": fresh,
+                         "text": text}])
+    said = scripts_lab.night_promote()
+    assert not sent and said["rooms"] == 0, "a fresh answer waits whole"
+
+    old = (datetime.now(timezone.utc) - timedelta(
+        hours=scripts_lab.WAIT_FOR_LEGS_HOURS + 1)).isoformat()
+    _answers(tmp_path, [{"type": "answer", "id": "NEX-0001", "at": old,
+                         "text": text}])
+    said = scripts_lab.night_promote()
+    assert sent == [CARD] and said["rooms"] == 1
+    assert any(other[:8] in line for line in said["held"])
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_room_that_cannot_open_does_not_discard_what_was_already_placed(
         tmp_path, monkeypatch):
     """A short answer naming a real card passes `proposed_cards` and fails

@@ -1337,6 +1337,12 @@ def _gate(card: str, legs: list[dict]) -> dict:
     return lab.gate(readings)
 
 
+# How long an answer waits whole for a leg that cannot be read or traded yet.
+# NEX-0052 named its pick beside two counterexamples, one `pw_live: false`,
+# and the counterexample parked the pick for 27 ticks (2026-09-21).
+WAIT_FOR_LEGS_HOURS = 2.0
+
+
 def night_promote(since: datetime | None = None) -> dict:
     """Launch what Nexus endorsed tonight, on paper, under the day's brakes.
 
@@ -1365,7 +1371,10 @@ def night_promote(since: datetime | None = None) -> dict:
         #86 and #87 over these very trades.
 
     A card that could not be READ, or cannot be traded right now, decides
-    nothing: the answer waits for the next tick whole.
+    nothing: the answer waits for the next tick whole -- for
+    WAIT_FOR_LEGS_HOURS. After that the cards that passed open their room and
+    the rest are named, so a counterexample Nexus mentioned beside his pick
+    cannot hold the pick back for ever.
 
     Returns what it did and, for everything it did not, why -- so the morning
     reads a reason rather than a silence.
@@ -1474,8 +1483,15 @@ def night_promote(since: datetime | None = None) -> dict:
                             f"{prior.get('why')}")
                 continue
             chosen[card] = {**prior, "title": live.get("title") or ""}
-        if waiting or not chosen:
+        if not chosen:
             continue
+        if waiting:
+            age = _now() - (_moment(answer.get("at")) or _now())
+            if age < timedelta(hours=WAIT_FOR_LEGS_HOURS):
+                continue
+            held.append(f"{origin}: opened with {len(chosen)} card(s) after "
+                        f"{WAIT_FOR_LEGS_HOURS:g} h -- the rest could not be "
+                        f"read or traded (named above)")
 
         # MONEY FIRST, and nothing consumed before it answers. Opening the room
         # ahead of this put the origin in `linked` on a refusal, which meant a
