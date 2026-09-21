@@ -29,7 +29,10 @@ WHAT IT ASSERTS.
      shape that made us call a card self-contradicting once already.
   4. *Nothing earlier was recorded.* "Counting started 2026-09-20; nothing
      earlier was recorded." No day before `first_counted` may carry a figure,
-     and the app's `first_counted` must be the board's `counting_since`.
+     and no app's `first_counted` may fall before the board's
+     `counting_since`. A LATER one is an app first visited after counting
+     began, not a contradiction -- until 2026-09-21 this said "must be", our
+     clause and not their sentence, and read 8 apps as defects.
 
 WHAT IT DOES NOT ASSERT, AND WHY. Not that `uses` is ever smaller than
 `views`. It is the one figure whose defect would be silent -- a `uses` that is
@@ -149,11 +152,16 @@ def _series(body: dict, path: str, counting_since) -> tuple[list, bool]:
                     f"{path} carries {figures} on {stamp}, before the "
                     f"{first} they say counting started on -- their "
                     f"announcement says nothing earlier was recorded")
+    # Earlier only. An app first visited after counting began says so -- 8 of
+    # 14 apps read as defects in PRE-0145 for a first_counted of the 21st,
+    # while the 6 first visited on the 20th said the 20th (deep pass of
+    # 2026-09-21). "Nothing earlier was recorded" bounds it from below.
     if body.get("first_counted") and counting_since and \
-            str(body["first_counted"]) != str(counting_since):
+            str(body["first_counted"]) < str(counting_since):
         problems.append(
-            f"{path} says counting started {body['first_counted']} while the "
-            f"board says {counting_since} for every app on it")
+            f"{path} says counting started {body['first_counted']}, before the "
+            f"{counting_since} the board says counting started for every app "
+            f"-- their announcement says nothing earlier was recorded")
 
     for metric in METRICS:
         summed = sum(_number(d.get(metric)) or 0 for d in daily

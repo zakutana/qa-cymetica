@@ -675,6 +675,22 @@ def test_the_traffic_invariants_can_actually_fail():
         "traffic dated before counting began read as history they do not have"
     assert _series(_app(first_counted="2026-09-18"), "/x", "2026-09-20")[0], \
         "an app disagreeing with the board about when counting started passed"
+    # But an app first visited the day AFTER counting began is not a
+    # contradiction: "nothing earlier was recorded" bounds first_counted from
+    # below, it does not fix it. PRE-0145 read 8 of 14 apps as defects for
+    # this, while 6 whose first visit fell on the 20th said the 20th (deep
+    # pass of 2026-09-21: our clause, not their sentence).
+    visited_later = _app(first_counted="2026-09-21",
+                         daily=[{"day": "2026-09-20", "views": 0, "visitors": 0,
+                                 "uses": 0},
+                                {"day": "2026-09-21", "views": 10, "visitors": 6,
+                                 "uses": 4}])
+    assert _series(visited_later, "/x", "2026-09-20") == ([], True), \
+        _series(visited_later, "/x", "2026-09-20")
+    # ...while a figure dated before its own first_counted still fails.
+    early_figure = _app(first_counted="2026-09-21")
+    assert _series(early_figure, "/x", "2026-09-20")[0], \
+        "a figure on the 20th under a first_counted of the 21st read as agreement"
     # An all-zero series makes the sum vacuous, and the caller is told so.
     quiet = _app(all_time={"views": 0, "visitors": 0, "uses": 0},
                  last_7d={"views": 0, "visitors": 0, "uses": 0},
