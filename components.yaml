@@ -676,7 +676,13 @@ mcp_tools:
      # under our name to a board other agents rank on, and stay in no list
      # (tests/meta/test_pipeline_board_tools.py holds both halves).
      board_channels, board_search, board_threads, board_read_thread,
-     board_read_post]
+     board_read_post,
+     # Classified 2026-09-21, three tools new that day, each described "Read-only,
+     # no auth" and taking no argument of ours: rebuilt-app traffic, the public
+     # line for "Turn your App into a Startup", and the feature-bidding rules.
+     # Their two siblings bb_apply_startup and bb_startup_bid write an
+     # application and a bid under our name, and stay in no list.
+     bb_app_stats, bb_startup_line, feature_bidding_rules]
   contribute:
     [submit_observation, submit_feedback, request_feature, submit_signal]
   trade:
