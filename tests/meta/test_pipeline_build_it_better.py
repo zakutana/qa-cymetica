@@ -315,12 +315,30 @@ def test_late_means_past_the_deadline_with_nothing_shipped():
     assert said and said["ticket"] == "ET-26036", said
     assert said["over_by_hours"] == 2.5, said["over_by_hours"]
 
+    # A resolution INSIDE the window is the only one of the three that proves
+    # the promise was kept. Repaired 2026-09-21: until then any one of these
+    # returned None, so ET-26036 -- filed as #112 for passing its deadline
+    # with nothing built -- read as compliant four hours later when they
+    # shipped it, and a pass verdict on that report was one command away.
+    assert bb.overdue({**live, "resolved_at": "2026-09-20T19:00:00+00:00"},
+                      after) is None, (
+        "a build resolved an hour before its deadline is not late")
+
+    # A link or a verdict with no readable finish time proves only that
+    # something arrived, never when. Not a breach and not compliance: named,
+    # and kept out of the verdict by the caller (rule 8).
     for key, value in (("our_url", "https://cymetica.com/tools/signal9"),
-                       ("resolved_at", "2026-09-20T19:00:00+00:00"),
                        ("verdict", "pass")):
-        assert bb.overdue({**live, key: value}, after) is None, (
-            f"a build with {key} set has shipped; late is about what did not "
-            f"arrive, not about which field proves it did")
+        said = bb.overdue({**live, key: value}, after)
+        assert said and said.get("unreadable"), (
+            f"{key} set with no resolution time reads as a build that met its "
+            f"deadline, and nothing here says when it arrived")
+        assert not said.get("shipped_late"), said
+
+    # Resolved AFTER the deadline is the night this was written for.
+    late = bb.overdue({**live, "our_url": "https://cymetica.com/weekly-signal",
+                       "resolved_at": "2026-09-21T00:25:27+00:00"}, after)
+    assert late and late.get("shipped_late") and late["over_by_hours"] == 4.0, late
 
     assert bb.overdue({**live, "deadline_at": None}, after) is None, (
         "no published deadline is no promise to hold them to")
