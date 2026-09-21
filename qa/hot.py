@@ -169,10 +169,13 @@ def entries(rows, headlines=None) -> list[dict]:
 
 
 def forward(rows, row_id, cls: str, t0, px0: float, hours: float,
-            tolerance_minutes: float = TOLERANCE_MINUTES) -> float | None:
+            tolerance_minutes: float = TOLERANCE_MINUTES,
+            siblings=()) -> float | None:
     """Percent return of the row's index from `px0` at `t0` to `t0 + hours`,
     read off the round nearest the horizon within the tolerance; None if no
-    such round priced it."""
+    such round priced it. `siblings` are other headlines on the same basket:
+    the price is the basket's, so any of them will do once the row itself has
+    left the wire."""
     t0 = _at(t0) if not isinstance(t0, datetime) else t0
     target = t0 + timedelta(hours=hours)
     best = None
@@ -181,6 +184,10 @@ def forward(rows, row_id, cls: str, t0, px0: float, hours: float,
         if off > timedelta(minutes=tolerance_minutes):
             continue
         px = _px_at(rnd, row_id, cls)
+        for other in siblings if not px else ():
+            px = _px_at(rnd, other, cls)
+            if px:
+                break
         if px and (best is None or off < best[0]):
             best = (off, px)
     if best is None or not px0:
@@ -207,9 +214,17 @@ def _horizon(rows, items, cls: str, hours: float) -> dict:
     open; one they passed without pricing the row is unobserved."""
     rounds = _rounds(rows)
     last = _at(rounds[-1]["at"]) if rounds else None
+    heads = _headlines(rows)
+    by_fp: dict[str, list] = {}
+    for hid, head in heads.items():
+        fp = _fp(head, cls)
+        if fp:
+            by_fp.setdefault(fp, []).append(hid)
     values, missing, open_ = [], 0, 0
     for row, at, px in items:
-        r = forward(rows, row, cls, at, px, hours)
+        fp = _fp(heads.get(row), cls)
+        siblings = [h for h in by_fp.get(fp, ()) if h != row] if fp else []
+        r = forward(rows, row, cls, at, px, hours, siblings=siblings)
         if r is not None:
             values.append(r)
         elif last is None or _at(at) + timedelta(

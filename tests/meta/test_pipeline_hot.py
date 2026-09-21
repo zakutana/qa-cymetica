@@ -109,6 +109,23 @@ def test_a_forward_return_with_no_round_near_the_horizon_is_unobserved():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_basket_is_priced_through_another_headline_when_its_own_row_is_gone():
+    """Hot belongs to the basket: when the entry's own headline stops being
+    listed, a round that prices the same basket under another headline is
+    still the basket's price. Seen live on 2026-09-21: 3 of 9 crypto entries
+    unobserved at +6 h because their own row had left the wire."""
+    heads = [_headline(1), _headline(2)]
+    rounds = [_round(T0)] + _path(1, T0 + timedelta(minutes=20), [100])
+    rounds.append(_round(T0 + timedelta(hours=6, minutes=20), [],
+                         [(2, 1.0, 106, 0.1, 3.0)]))
+    (entry,) = hot.entries(rounds, heads)
+    # The whole diary, as reading() passes it: the siblings come from the
+    # headline rows in it.
+    (six,) = hot.follow([entry], heads + rounds, horizons=(6,))["crypto"]
+    assert six["n"] == 1 and six["mean"] == 6.0
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_follow_counts_unobserved_apart_from_the_measured():
     heads = [_headline(1)]
     rounds = [_round(T0)] + _path(1, T0 + timedelta(minutes=20), [100, 104])
