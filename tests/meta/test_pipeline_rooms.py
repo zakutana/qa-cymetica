@@ -826,6 +826,17 @@ def test_two_card_rooms_from_one_answer_each_draw_their_own_trade(tmp_path, monk
     assert _legs(view, "STR-0001") == ["TRD-0001"]
     assert _legs(view, "STR-0002") == ["TRD-0002"]
 
+    # R12, deep pass of 2026-09-21 (3/3): a card none of this answer's rooms
+    # holds fell back to the answer's LAST room, drawn inside a strategy it
+    # did not come from. It stays in General.
+    _write(tmp_path / "paper.jsonl", [
+        *_buy("TRD-0001", 900, "NEX-1", position="P-1", card="card-a-1111"),
+        *_buy("TRD-0002", 950, "NEX-1", position="P-2", card="card-b-2222"),
+        *_buy("TRD-0003", 990, "NEX-1", position="P-3", card="card-z-9999")])
+    view = _render().build_rooms()
+    assert _legs(view, "STR-0002") == ["TRD-0002"]
+    assert "TRD-0003" in _legs(view, "general")
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_bot_and_everything_done_to_it_follow_its_instance(tmp_path, monkeypatch):

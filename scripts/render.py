@@ -838,9 +838,12 @@ def build_rooms() -> dict:
     marks = store.read_marks(stored)
     opened = store.strategies(stored)
     titles = store.names(stored)
-    by_origin = {s.get("origin"): s["id"] for s in opened}
-    # One room per card since 2026-09-21: every order from one answer carries
-    # the same Nexus id, so the card it bought is what picks its room.
+    # A WHOLE-ANSWER room (no card) takes every order that acts on its answer.
+    # A card room takes only the orders for its card: every order from one
+    # answer carries the same Nexus id, and an order for a card none of the
+    # answer's rooms holds belongs in General (R12, deep pass of 2026-09-21 --
+    # it fell back to the answer's LAST room, a strategy it did not come from).
+    by_origin = {s.get("origin"): s["id"] for s in opened if not s.get("card")}
     by_card = {(s.get("origin"), str(s.get("card")).lower()): s["id"]
                for s in opened if s.get("card")}
     linked: dict[str, str] = {}
