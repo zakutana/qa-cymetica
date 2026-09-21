@@ -118,4 +118,7 @@ to neodškrtl, nebo to nikdy nebylo další na řadě.
 
 - [ ] 2026-09-21  Připomínka „N captures není v žádném archivu“ počítá i 392 těl, která `prune_runs.py` už smazal (necitovaná) — nedají se archivovat, takže hlásí 392 navždy. `archive.pending` má brát jen ta, co jsou na disku. Test napřed.
 - [ ] 2026-09-21  Odstranit příkaz `lab.py night` (operátor: „night je zbytečný“, noc jede přes `/loop 20m jdi do laborky`). Sdílené části, které volá `tick` (`night_promote`, `night_refill`, `search_queue`), zůstanou; pryč jde jen smyčka `night()`, její CLI, testy a zmínky v CLAUDE.md a skillu.
+- [ ] 2026-09-21  Laborka, verdikt: 3 ze 3 uzavřených roomů jsou inconclusive, protože jejich historie indexu pokrývá 0 %, 4 % a 65 % okna. Počítat pokrytí i z našich vlastních vzorků (`sampler.py` už karty čte), aby verdikt vůbec mohl padnout. Test napřed.
+- [ ] 2026-09-21  Laborka, kontrolní skupina: ke každému roomu z Nexusovy karty otevřít papírový room na náhodnou kartu stejné kategorie, jinak „Nexus vydělal“ nejde odlišit od „trh rostl“. Stejně jako kontrolní rameno u memecoinů.
+- [ ] 2026-09-21  Laborka, papírová cesta pro AIB fondy (vstup `index_price_usd`, dráha z `get_fund_history`, stejný verdikt jako u karet), aby šly měřit návrhy jako NEX-0056. Pak klony botů.
 - [ ] 2026-09-21  Kontrola Nexusových rout čte holý prefix z prózy (`/api/v1/cloned-bots`, `/api/v1/clob`) jako routu, takže odpověď, která jmenuje jen prefix, by padla falešně. Test napřed.
