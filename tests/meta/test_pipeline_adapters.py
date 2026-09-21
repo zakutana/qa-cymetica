@@ -960,12 +960,36 @@ def test_what_their_server_already_holds_is_dropped_before_sending():
         # re-sent and their tracker kept the wrong final reading.
         {"finding_id": "CYM-d", "report_id": 85, "fingerprint": "fp-3",
          "verdict": "pass"},
+        # Their rows under fp-4 carry neither a date nor a numeric id, so
+        # neither is the last word and both count as held -- the set of two
+        # `_newest_per_fingerprint` exists to be able to say.
+        {"finding_id": "CYM-e", "report_id": 90, "fingerprint": "fp-4",
+         "verdict": "pass"},
     ]
-    held = {49: {"fp-1": "pass"}, 59: {"fp-1": "pass"}, 85: {"fp-3": "fail"}}
+    # Built by the function main() builds it with, not typed. This fixture was
+    # `{"fp-1": "pass"}` -- a string where production holds a SET -- so `in`
+    # changed to `==` in the partition stayed green here while in production
+    # it matched nothing and re-sent every duplicate (B11, deep pass of
+    # 2026-09-21).
+    def row(fingerprint, verdict, at=None, id_=None):
+        return {"fingerprint": fingerprint, "verdict": verdict,
+                "created_at": at, "id": id_}
+
+    theirs = {
+        49: [row("fp-1", "pass", "2026-09-07T10:00:00+00:00", "1")],
+        59: [row("fp-1", "pass", "2026-09-07T10:00:00+00:00", "2")],
+        85: [row("fp-3", "pass", "2026-09-10T20:08:00+00:00", "3"),
+             row("fp-3", "fail", "2026-09-10T21:46:00+00:00", "4")],
+        90: [row("fp-4", "pass"), row("fp-4", "fail")],
+    }
+    held = {rid: verify._newest_per_fingerprint(rows)
+            for rid, rows in theirs.items()}
+    assert held[85] == {"fp-3": {"fail"}} and \
+        held[90] == {"fp-4": {"pass", "fail"}}, held
 
     fresh, duplicates = verify.partition_by_what_they_hold(work, held)
 
-    assert [i["finding_id"] for i in duplicates] == ["CYM-a"], \
+    assert [i["finding_id"] for i in duplicates] == ["CYM-a", "CYM-e"], \
         "a verification their server already holds was queued for sending again"
     assert [i["finding_id"] for i in fresh] == ["CYM-b", "CYM-c", "CYM-d"], \
         "a verification they do not hold was dropped, so the debt cannot be paid"

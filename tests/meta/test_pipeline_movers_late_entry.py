@@ -122,10 +122,26 @@ def test_any_declared_deadline_clears_it_whatever_it_is_called():
                   {"submissions_lock_at": "2026-09-11"}):
         verdict, why = mod.decide({**ROUND, **extra}, RULES, date(2026, 9, 13))
         assert verdict == "passed", (extra, why)
-    # And a field that is about something else is not a deadline for entries.
-    verdict, why = mod.decide({**ROUND, "trading_closes_at": "2026-09-11"},
-                              RULES, date(2026, 9, 13))
-    assert verdict == "failed", why
+    # C02, deep pass of 2026-09-21: the widening stopped at three suffixes, so
+    # a date suffix, `until`, a window that ends, or the round's own prefix
+    # still read as no deadline -- a false FAIL on #101 after their repair.
+    for extra in ({"entries_close_date": "2026-09-11"},
+                  {"entries_until": "2026-09-11T21:00:00Z"},
+                  {"entry_window_ends_at": "2026-09-11T21:00:00Z"},
+                  {"round_entry_deadline": "2026-09-11"}):
+        verdict, why = mod.decide({**ROUND, **extra}, RULES, date(2026, 9, 13))
+        assert verdict == "passed", (extra, why)
+        verdict, why = mod.decide(ROUND, {**RULES, **extra}, date(2026, 9, 13))
+        assert verdict == "passed", ("on the rules", extra, why)
+    # And a field that is about something else is not a deadline for entries:
+    # a market's close, a timestamp of the round that says nothing about when
+    # entering stops, or the close price an entry was struck at.
+    for extra in ({"trading_closes_at": "2026-09-11"},
+                  {"created_at": "2026-09-11T00:00:00Z"},
+                  {"round_start": "2026-09-11"},
+                  {"entry_close_price": 335.80}):
+        verdict, why = mod.decide({**ROUND, **extra}, RULES, date(2026, 9, 13))
+        assert verdict == "failed", (extra, why)
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -142,6 +158,26 @@ def test_rules_that_no_longer_price_at_the_round_day_are_not_failed():
     verdict, why = mod.decide(ROUND, repaired, date(2026, 9, 13))
     assert verdict == "inconclusive", why
     assert "round day" in why, why
+
+    # C03, deep pass of 2026-09-21: and the defect reworded is still the
+    # defect. The rule was the literal "round day", so a hyphen, an underscore
+    # or a possessive read as their repair and the check went quiet with the
+    # pricing unchanged.
+    for said in ("locks the stored close on the round-day",
+                 "locks the stored close on the round_day",
+                 "locks the stored close on the Round Day",
+                 "locks the round day's stored close",
+                 "locks the round's day close",
+                 "locks the stored close on the "
+                 "round\N{RIGHT SINGLE QUOTATION MARK}s day"):
+        reworded = {**RULES, "text": (f"Enter up to 5 universe symbols per "
+                                      f"round. Each pick {said} and is scored "
+                                      f"a week later on its real 7-day return.")}
+        verdict, why = mod.decide(ROUND, reworded, date(2026, 9, 13))
+        assert verdict == "failed", (said, why)
+        # And the reason quotes what THEIR text says, not our transcription of
+        # the old wording -- the reason goes to them.
+        assert said in why, (said, why)
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

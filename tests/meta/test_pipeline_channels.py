@@ -208,10 +208,21 @@ def test_every_channel_waiting_on_them_is_named_at_session_start(
     assert proc.returncode == 0, proc.stderr
 
     state = _channels().state(read_events())
-    for name, channel in state.items():
-        if channel["waiting_on"] != "them":
-            continue
-        for msg_id in channel["unanswered"]:
+    # The loop below asserts once per unanswered id, so a channel this fixture
+    # seeds nothing on asserted nothing at all -- a fifth channel waiting on
+    # them arrived here green, which is the opposite of the sentence above
+    # (B16, deep pass of 2026-09-21). Every channel qa/channels.py knows that
+    # waits on them has to carry an id here, or the test cannot see it.
+    theirs = sorted(name for name, channel in state.items()
+                    if channel["waiting_on"] == "them")
+    assert theirs, f"no channel waits on them any more: {sorted(state)}"
+    unseeded = [name for name in theirs if not state[name]["unanswered"]]
+    assert not unseeded, (
+        f"{unseeded} wait(s) on them and this fixture seeds nothing unanswered "
+        f"there, so whether the session-start hook names it is not tested -- "
+        f"append an event that leaves one of our messages open on it")
+    for name in theirs:
+        for msg_id in state[name]["unanswered"]:
             assert msg_id in proc.stdout, (
                 f"{name} waits on them and {msg_id} is not named at session "
                 f"start: {proc.stdout!r}")

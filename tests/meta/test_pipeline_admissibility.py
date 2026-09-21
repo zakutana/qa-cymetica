@@ -163,29 +163,51 @@ def test_the_writer_sees_a_commit_made_during_the_run(monkeypatch):
     Driven through the writer, with git answering from a script: HEAD moved
     and the move touched code -> moved; HEAD moved over tracked state only (a
     console poll during the run) -> not; porcelain dirty -> moved.
+
+    The stub answered on the subcommand alone, so it told the writer "no code
+    moved" whatever the writer asked -- and dropping `"--", *CODE_PATHS` from
+    either call stayed green, while against a real repository a state-only
+    commit would then read as code moving (B14, deep pass of 2026-09-21). It
+    now answers the way git does: a pathspec after `--` narrows what status
+    and diff report, and without one they report every path.
     """
     import qa.report_plugin as plugin
 
-    def git(answers):
+    def git(head, committed=(), dirty=()):
+        def within(path, args):
+            if "--" not in args:
+                return True
+            spec = args[args.index("--") + 1:]
+            return any(path == p or path.startswith(p + "/") for p in spec)
+
         def _git(*args):
-            return answers.get(args[0], "")
+            if args[0] == "rev-parse":
+                return head
+            if args[0] == "status":
+                return "\n".join(f" M {p}" for p in dirty if within(p, args))
+            if args[0] == "diff":
+                return "\n".join(p for p in committed if within(p, args))
+            return ""
         return _git
 
     monkeypatch.setattr(plugin, "_git", git(
-        {"status": "", "rev-parse": "bbb", "diff": "qa/evidence.py\n"}))
+        "bbb", committed=["qa/evidence.py", "state/ledger.json"]))
     assert plugin.code_moved_since("aaa") is True
 
     monkeypatch.setattr(plugin, "_git", git(
-        {"status": "", "rev-parse": "bbb", "diff": ""}))
+        "bbb", committed=["state/ledger.json", "dashboard/index.html"]))
     assert plugin.code_moved_since("aaa") is False, (
         "a commit of tracked state during the run is not the code moving")
 
-    monkeypatch.setattr(plugin, "_git", git(
-        {"status": " M qa/fold.py", "rev-parse": "aaa", "diff": ""}))
+    monkeypatch.setattr(plugin, "_git", git("aaa", dirty=["qa/fold.py"]))
     assert plugin.code_moved_since("aaa") is True
 
-    monkeypatch.setattr(plugin, "_git", git(
-        {"status": "", "rev-parse": "aaa", "diff": "qa/fold.py\n"}))
+    monkeypatch.setattr(plugin, "_git", git("aaa", dirty=["state/ledger.json"]))
+    assert plugin.code_moved_since("aaa") is False, (
+        "a run writes state/ under itself on purpose; that is not the code "
+        "being dirty at the end")
+
+    monkeypatch.setattr(plugin, "_git", git("aaa", committed=["qa/fold.py"]))
     assert plugin.code_moved_since("aaa") is False, "HEAD did not move"
 
     import inspect

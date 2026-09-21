@@ -70,14 +70,33 @@ DEADLINE_FIELDS = ("entries_close", "entries_close_at", "closes_at",
 # `entries_close_time` FAILED a repair (V07, deep pass of 2026-09-19, 3/3).
 # Anchored to entries/submissions/picks, so a market's `trading_closes_at` is
 # not read as a deadline for entering the round.
+#
+# And the widening then stopped at three suffixes, so `entries_close_date`,
+# `entries_until`, `entry_window_ends_at` and `round_entry_deadline` all read
+# as no deadline -- a false FAIL on #101 after their repair (C02, deep pass of
+# 2026-09-21). The entry word is still required, and the name must END on a
+# word that says when -- so `created_at`, `round_start` and a price struck at
+# entry (`entry_close_price`) are still not a deadline for entering.
 DEADLINE_NAMED = re.compile(
-    r"^(entr(y|ies)|submissions?|picks?)_?"
-    r"(close[sd]?|closing|cutoff|deadline|locks?|locked)(_at|_time|_utc)?$",
+    r"^((round|tournament)_?)?(entr(y|ies)|submissions?|picks?)_?"
+    r"((window|period|accepted)_?)?"
+    r"(close[sd]?|closing|cutoff|deadline|locks?|locked|until|ends?|ending)"
+    r"(_?(at|time|utc|date|on|day))?$",
     re.IGNORECASE)
 # Their rule that a pick is priced at the ROUND DAY's close -- the defect. When
 # the rules text stops saying so, a late entry may be priced at its own day,
 # which is the second repair, and only an entry can show it.
-PRICES_AT_THE_ROUND_DAY = re.compile(r"round day", re.IGNORECASE)
+#
+# Not the literal "round day": "round-day", "round_day" and "the round's day"
+# are the same rule, and read as the repair they went quiet over an unchanged
+# defect (C03, deep pass of 2026-09-21).
+PRICES_AT_THE_ROUND_DAY = re.compile(
+    r"\bround(['\N{RIGHT SINGLE QUOTATION MARK}]s"
+    r"|s['\N{RIGHT SINGLE QUOTATION MARK}])?[\s_-]+day", re.IGNORECASE)
+# Their rule as quoted at the top of this file, for a payload that carries no
+# rules text to quote from.
+TRANSCRIBED_RULE = ("Each pick locks the stored close on the round day and is "
+                    "scored a week later on its real 7-day return")
 
 
 def _day(value) -> date | None:
@@ -112,6 +131,22 @@ def trading_sessions(anchor: date, today: date) -> int:
             sessions += 1
         day += timedelta(days=1)
     return sessions
+
+
+def their_rule(text: str) -> str | None:
+    """The sentence of their rules that prices a pick at the round day, in
+    THEIR words, or None when no sentence of it does.
+
+    The failed reason quoted 'the stored close on the round day' whatever the
+    text said. Harmless while the rule matched only that literal; once "the
+    round-day" or "the round's day" counts as the same rule (C03, deep pass of
+    2026-09-21), a fixed quote would put words in their mouth in a reason that
+    goes to them.
+    """
+    for sentence in re.split(r"(?<=[.!?])\s+", text or ""):
+        if PRICES_AT_THE_ROUND_DAY.search(sentence):
+            return sentence.strip().rstrip(".")
+    return None
 
 
 def declares_a_deadline(round_: dict, rules: dict) -> bool:
@@ -189,11 +224,12 @@ def decide(round_: dict, rules: dict, today: date) -> tuple[str, str]:
 
     sessions = trading_sessions(anchor, today)
     elapsed = (today - anchor).days
+    rule = their_rule(text) or TRANSCRIBED_RULE
     return ("failed",
             f"the round anchored {anchor} is still open -- it does not score "
             f"until {scores_after} and nothing in its payload names a cutoff "
-            f"for entries -- while their own rules price every pick at 'the "
-            f"stored close on the round day'. By that rule an entry made "
+            f"for entries -- while their own rules say '{rule}'. By that "
+            f"rule an entry made "
             f"today is priced at the {anchor} close, which is how our own "
             f"entry of 2026-09-13 came back, with {sessions} trading "
             f"session(s) of the "

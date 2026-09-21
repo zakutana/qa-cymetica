@@ -829,7 +829,7 @@ def test_nexus_tools_skips_a_newest_answer_that_names_no_tool():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_a_label_does_not_excuse_a_tool_the_reader_cannot_call():
+def test_a_label_does_not_excuse_a_tool_the_reader_cannot_call(monkeypatch):
     """The carve-out this replaces was built on a sentence they withdrew.
 
     REPLY-0034 at 12:55 on 2026-09-20 shipped a label -- `[NEXUS runs this for
@@ -869,6 +869,47 @@ def test_a_label_does_not_excuse_a_tool_the_reader_cannot_call():
                "update_bot_settings" in tool_mentions(text), (
             f"the name must still be COLLECTED whatever follows it, or the "
             f"check cannot hold it against the served list: {text[:60]}")
+
+    # Both assertions above hold a helper; neither reaches the verdict. An
+    # inline carve-out there -- `if "not an MCP tool" in latest["text"]:
+    # missing = []` -- stayed green under both (B15, deep pass of 2026-09-21).
+    # So the check is driven whole, the recorded answer and the served list
+    # stubbed, and every shape has to come out FAILED naming its tool.
+    import contextvars
+
+    class Recorded:
+        def __init__(self, text):
+            self.rows = [{"id": "NEX-0900", "type": "answer",
+                          "at": "2026-09-20T13:49:00+00:00", "text": text}]
+
+        def load(self):
+            return self.rows
+
+        def path(self):
+            return Path("nexus.jsonl")
+
+    class Served:
+        def tools_list(self):
+            return [{"name": "place_order"}, {"name": "get_event_card_info"}]
+
+    def drive(text):
+        monkeypatch.setattr(test_nexus_channel, "_nexus", lambda: Recorded(text))
+        check = test_nexus_channel.test_every_tool_nexus_tells_an_agent_to_call_exists
+        # A context of its own, so the measurement the check concludes does not
+        # land in this test's own run record.
+        return contextvars.copy_context().run(check, Served())
+
+    for text, tool in (
+            (f"call `identify_address(addr)` {marker} before you trade",
+             "identify_address"),
+            (f"call `update_bot_settings(id)` {tiered}", "update_bot_settings"),
+            ("call `identify_address(addr)` to check the counterparty",
+             "identify_address")):
+        with pytest.raises(AssertionError, match=tool):
+            drive(text)
+    # And the stub is not what fails them: a label beside a tool the server
+    # does serve is no defect.
+    assert drive(f"call `place_order(card)` {marker}") is None
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

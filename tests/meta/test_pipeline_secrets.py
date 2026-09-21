@@ -28,7 +28,7 @@ from pathlib import Path
 
 import httpx
 
-from qa.evidence import REDACTED, EvidenceStore
+from qa.evidence import REDACTED, SECRET_HEADERS, EvidenceStore
 from qa.marks import SafetyTier, qa
 from qa.measure import Measurement, conclude
 
@@ -42,6 +42,12 @@ FAKE_KEY = "evt_" + "a1b2c3d4" * 6
 # tell whether the header NAMES were known: x-api-key taken out of
 # SECRET_HEADERS stayed green (V15, deep pass of 2026-09-19, 3/3).
 PLAIN_KEY = "plain-Secret-Qz-Kx-Wv-Jm"
+# Every header name qa/evidence.py redacts, written down here so that one
+# falling out of SECRET_HEADERS is a red line rather than a quieter fixture.
+PINNED_SECRET_HEADERS = frozenset({
+    "x-api-key", "authorization", "cookie", "set-cookie",
+    "x-hmac-signature", "x-signature", "proxy-authorization",
+})
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -89,22 +95,35 @@ def test_a_key_no_pattern_recognises_is_still_kept_off_disk_by_its_header(
         tmp_path):
     """The header door on its own. A key in a shape the value patterns miss is
     stopped only because the redactor knows the header's NAME -- so this is
-    what goes red when a name falls out of SECRET_HEADERS."""
+    what goes red when a name falls out of SECRET_HEADERS.
+
+    It sent five of the seven, so x-signature or proxy-authorization falling
+    out stayed green (C10, deep pass of 2026-09-21). Every name is sent now,
+    on the request and on the response, each with a key of its own so a leak
+    names its door -- iterated from the PINNED set as well as the live one,
+    because a fixture built from SECRET_HEADERS alone loses a name in the same
+    edit that takes it out of the redactor, and then nothing is sent to leak.
+    """
+    fallen = sorted(PINNED_SECRET_HEADERS - SECRET_HEADERS)
+    assert not fallen, (
+        f"{fallen} no longer in SECRET_HEADERS: its value would reach disk "
+        f"whenever it is not shaped like a pattern the redactor knows")
+
+    names = sorted(PINNED_SECRET_HEADERS | SECRET_HEADERS)
+    door = {name: f"{PLAIN_KEY}:{name}:" for name in names}
     request = httpx.Request(
-        "GET", "https://cymetica.com/api/v1/thing",
-        headers={"x-api-key": PLAIN_KEY,
-                 "authorization": f"Token {PLAIN_KEY}",
-                 "x-hmac-signature": PLAIN_KEY,
-                 "cookie": f"session={PLAIN_KEY}"})
-    response = httpx.Response(
-        200, headers={"set-cookie": f"session={PLAIN_KEY}"},
-        content=b"{}", request=request)
+        "GET", "https://cymetica.com/api/v1/thing", headers=door)
+    response = httpx.Response(200, headers=door, content=b"{}",
+                              request=request)
 
     store = EvidenceStore("run-secrets-headers", root=tmp_path)
     evidence_id = store.capture(request, response, SafetyTier.SAFE, "test.rule")
     written = (tmp_path / "sha256" / evidence_id[:2] /
                f"{evidence_id}.json").read_text(encoding="utf-8")
 
-    assert PLAIN_KEY not in written, (
-        "a key reached disk through a header the redactor does not name")
-    assert written.count(REDACTED) >= 5, written
+    leaked = [name for name, value in door.items() if value in written]
+    assert not leaked, (
+        f"a key reached disk through {leaked}, a header the redactor does not "
+        f"name")
+    assert PLAIN_KEY not in written, written
+    assert written.count(REDACTED) >= 2 * len(names), written
