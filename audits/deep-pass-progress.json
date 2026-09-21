@@ -2,7 +2,7 @@
  "run": "deep-pass-2026-09-21",
  "at": "2026-09-21T18:45:00+00:00",
  "previous_at": "2026-09-20T14:12:00+00:00",
- "at_finished": "2026-09-21T20:42:23+00:00",
+ "at_finished": "2026-09-21T20:50:53+00:00",
  "start_commit": "c42647e99c05c6c03266a3b9caad4991c7e21725",
  "gaps": [
   {
@@ -903,7 +903,7 @@
   }
  ],
  "next": [
-  "Dvě kontroly nově selhávají a nemají report (run-20260921T201015Z-b8579867): Nexusovy routy — NEX-0060 posílá agenta na `/api/v1/event-cards/{id}/trade`, kterou `/openapi-public.json` nepublikuje; a provoz Build it Better — aplikace hlásí `first_counted` 2026-09-21, board `counting_since` 2026-09-20. Příští sweep ověří, čí je to chyba, a založí je.",
+  "Kontrola Nexusových rout nově selhává a nemá report (run-20260921T201015Z-b8579867): NEX-0060 píše „REST `POST /api/v1/event-cards/{id}/trade`“ a `/openapi-public.json` tu cestu nepublikuje (naše nákupy jdou přes `/buy`). Příští sweep přečte jejich openapi a založí to.",
   "Hot: dotáhnout tři díry příbuzné B02/B06/B07 — `_confirmed` a `vol_stop` cení jen vlastní řádek vstupu, `control` bere mezery mezi koly a prvních 24 h deníku jako „nebyl hot“ a `resolve()` nezkusí znovu kartu, jejíž čtení selhalo. Test napřed.",
   "Kontrola Nexusových rout čte holý prefix z prózy (`/api/v1/cloned-bots`, `/api/v1/clob`) jako routu, takže odpověď, která jmenuje jen prefix, by padla falešně. Test napřed."
  ],

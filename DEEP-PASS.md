@@ -41,6 +41,11 @@ Start commit `c42647e9` (hned po ohlédnutí za 10 dní), 18 commitů passu,
   * každý room na boardu;
   * test exkluzivity ticku, počítání objednávek a sdílený denní strop otázek
     teď chytí svou mutaci.
+* **Kontrola provozu Build it Better by založila falešný report.** V běhu
+  hlásila 8 ze 14 aplikací jako vadné, protože `first_counted` 21. 9. se
+  nerovnal `counting_since` 20. 9. To „rovná se“ byla naše domněnka, jejich
+  věta říká jen „nic dřív“. Aplikace poprvé navštívené 20. 9. hlásily 20. 9.
+  Opraveno (`55429f0b`) a řádek stažen událostí dřív, než se cokoliv poslalo.
 * **Naše hlídače (B11, B14–B16, C02, C03, C05–C08, C10, C11) a kosmetika
   (B17, C12–C16).** Každý test viděl jen sám sebe, ne mutaci, kterou má chytit.
   Teď ji chytí.
@@ -113,6 +118,8 @@ Veto u všech pěti tvoje.
 
 * **ET-26036: verdikt dál čeká na obrazcovou TA.** Beze změny, rozhodnutí je
   tvoje (MSG-0038).
+* **#112: zadržel jsem `fail`.** Jediný důkaz je samo ET-26036, za které už
+  zaplatili, a po 00:25 UTC vypadne z 24h okna. Veto tvoje.
 * **Kontrola odkazu na fond (#104) projde i s nečitelným skillem, pokud všech
   26 fondů nese `profile_url`.** Vada, kterou jsme hlásili, je tím vyvrácená
   bez ohledu na skill. Přísnější čtení by bylo Inconclusive. Veto tvoje.
