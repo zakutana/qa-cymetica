@@ -64,6 +64,12 @@ def test_the_fta_crypto_return_starts_where_its_own_record_does(mcp_anon, rest_a
     except McpError as exc:
         raise Inconclusive(f"the connector could not be read: {exc}")
     returns_rule = str(methodology.get("returns") or "")
+    # Rule 8. The first preregistered run read an empty methodology in the
+    # same minute list_funds came back empty, and "the sentence is gone" was
+    # scored a pass. An unreadable contract is not a withdrawn one.
+    if not returns_rule.strip():
+        raise Inconclusive("get_fund_methodology carried no `returns` text, so the "
+                           "contract could not be read")
     published = _day(fund.get("inception_date") or fund.get("inception"))
 
     response = rest_anon.get(HISTORY)
