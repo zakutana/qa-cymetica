@@ -22,12 +22,15 @@ When the platform refuses for a reason it names, it says so: TRD-0007 got a
 400 "This card's price is not currently available". A 500 with "Buy failed" is
 not a stated gate.
 
-**This check places no order.** It reads what `scripts/paper.py` recorded
-and judges the NEWEST buy attempt only, so a fix can turn it green on the
-next buy the laboratory places (the growing-log trap). A 5xx on a card that
-reads `tradeable_now: true` now fails; an accepted newest buy passes; a
-newest buy refused with a 4xx and a reason is inconclusive -- that is the
-gate working, not this defect.
+**This check places no order.** It reads what `scripts/paper.py` recorded.
+Its subject is the card of our newest 5xx buy, and the verdict is the NEWEST
+attempt on THAT card: accepted passes, a 5xx while it still reads
+`tradeable_now: true` fails, a 4xx with a reason is the gate working and is
+inconclusive. Until the deep pass of 2026-09-21 it judged the newest buy of
+ANY card, so an accepted buy of another card -- two were accepted the day
+this was found -- would have passed #117 with a4a5b71e still answering 500
+(R03/A01, 3/3). A card nobody tries again stays failed: a fix is shown by a
+buy of the card that failed, not by the calendar.
 """
 
 from __future__ import annotations
@@ -76,20 +79,25 @@ def test_a_card_that_reads_tradeable_now_takes_a_paper_buy(rest_trusted):
     attempts = buy_attempts(_paper().load())
     if not attempts:
         raise Inconclusive("no paper buy has been attempted")
-    latest = attempts[-1]
+    failed = [a for a in attempts
+              if isinstance(a["status"], int) and a["status"] >= 500]
+    subject = failed[-1]["card"] if failed else attempts[-1]["card"]
+    latest = [a for a in attempts if a["card"] == subject][-1]
     status = latest["status"]
     if isinstance(status, int) and 200 <= status < 300 and latest["outcome"] == "accepted":
         conclude(Measurement(
             verdict="passed",
-            reason=f"the newest paper buy, {latest['id']} on {str(latest['card'])[:8]}, "
-                   f"was accepted",
-            left=status, right="2xx", population={"newest": latest},
+            reason=(f"the newest paper buy of card {latest['card']}, {latest['id']}, "
+                    f"was accepted" + (" -- the card whose buy last got a 5xx"
+                                       if failed else "")),
+            left=status, right="2xx",
+            population={"newest_on_card": latest, "subject": subject},
             sources={"log": "state/paper.jsonl"}))
         return
     if not (isinstance(status, int) and status >= 500):
-        raise Inconclusive(f"the newest paper buy, {latest['id']}, came back "
-                           f"{status} {latest['response']} -- a stated refusal or "
-                           f"an unread outcome, not this defect")
+        raise Inconclusive(f"the newest paper buy of card {subject}, {latest['id']}, "
+                           f"came back {status} {latest['response']} -- a stated "
+                           f"refusal or an unread outcome, not this defect")
 
     response = rest_trusted.get(CARD.format(card=latest["card"]))
     if response.status_code != 200:

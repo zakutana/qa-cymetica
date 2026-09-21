@@ -32,6 +32,7 @@ read that fails is unmeasured, never a defect (rule 8).
 
 from __future__ import annotations
 
+import re
 from datetime import date
 
 from qa.client import McpError
@@ -41,6 +42,17 @@ from qa.measure import Measurement, conclude
 HISTORY = "/api/v1/fta-fund/history"
 SYMBOL = "FTA-CRYPTOS"
 NO_BACKFILL = "nothing backfilled"
+PRO_FORMA = re.compile(r"pro[\s-]?forma", re.IGNORECASE)
+RETURN_SLACK_PP = 5.0
+
+
+def _short_return(points) -> float | None:
+    """The short book's return from its record's first point to its last."""
+    values = [p.get("v") for p in points or [] if isinstance(p, dict)]
+    values = [float(v) for v in values if isinstance(v, (int, float)) and v > 0]
+    if len(values) < 2:
+        return None
+    return round(-(values[-1] / values[0] - 1.0) * 100.0, 4)
 
 
 def _body(answer):
@@ -84,8 +96,23 @@ def test_the_fta_crypto_return_starts_where_its_own_record_does(mcp_anon, rest_a
         raise Inconclusive(f"an inception is missing: get_fund {published}, "
                            f"history {recorded}")
 
-    claims_none = NO_BACKFILL in returns_rule.lower()
+    # R09/A03, deep pass of 2026-09-21 (3/3): "the methodology no longer says
+    # 'nothing backfilled'" passed on any rewording of an unchanged claim. The
+    # fix the report offered is a DISCLOSURE, so that is what is looked for;
+    # and dates that agree on paper while the return still spans the old start
+    # are not taken as the fix either.
+    disclosed = bool(PRO_FORMA.search(returns_rule))
+    claims_none = not disclosed
     early = published < recorded
+    if claims_none and not early:
+        ret = fund.get("return_since_inception_pct")
+        implied = _short_return(points)
+        if (not isinstance(ret, (int, float)) or implied is None
+                or abs(float(ret) - implied) > RETURN_SLACK_PP):
+            raise Inconclusive(
+                f"the inceptions now agree ({published}), but the published "
+                f"return {ret} % does not follow from the record it names "
+                f"({implied} % from its first point) -- a relabel is not the fix")
     conclude(Measurement(
         verdict="failed" if (claims_none and early) else "passed",
         reason=(f"get_fund publishes {SYMBOL}'s return ({fund.get('return_since_inception_pct')} %) "
@@ -93,11 +120,14 @@ def test_the_fta_crypto_return_starts_where_its_own_record_does(mcp_anon, rest_a
                 f"is {recorded} (first point {first_point}): the published return starts "
                 f"{(recorded - published).days} days before the record does, with the "
                 f"composition last changed "
-                f"{fund.get('last_composition_change')}; the methodology still says "
-                f"'{NO_BACKFILL}'"
+                f"{fund.get('last_composition_change')}; the methodology discloses "
+                f"no pro-forma stretch"
+                + (f" and says '{NO_BACKFILL}'" if NO_BACKFILL in returns_rule.lower()
+                   else "")
                 if (claims_none and early) else
-                f"published inception {published}, recorded {recorded}; the methodology "
-                f"{'says' if claims_none else 'no longer says'} '{NO_BACKFILL}'"),
+                f"published inception {published}, recorded {recorded}; "
+                + ("the methodology discloses the pro-forma stretch" if disclosed
+                   else "the published return follows from the record")),
         left=str(published), right=str(recorded),
         population={"get_fund": {k: fund.get(k) for k in (
                         "inception_date", "return_since_inception_pct",

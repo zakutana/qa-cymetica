@@ -44,6 +44,7 @@ from qa.measure import Measurement, conclude
 
 REPO = Path(__file__).resolve().parent.parent.parent
 WINDOW_HOURS = 72
+MIN_WHOLE = 8
 PAUSE_S = 2.0
 ELLIPSES = ("...", "…")
 
@@ -105,7 +106,14 @@ def served_answer(payload):
 
 
 def is_cut(answer: str) -> bool:
-    return answer.lstrip().startswith(ELLIPSES)
+    """An ellipsis first, or a lower-case word first: NEX-0057 came back
+    opening "shot, confirming the surge..." -- cut mid-sentence with no
+    ellipsis at all, which the first version counted as whole (A02, deep pass
+    of 2026-09-21). His answers open with a capital, a heading or markup."""
+    head = answer.lstrip()
+    if head.startswith(ELLIPSES):
+        return True
+    return bool(head[:1]) and head[:1].isalpha() and head[:1].islower()
 
 
 @qa(component="mcp.tools_call", tier=SafetyTier.SAFE, surface="mcp")
@@ -136,6 +144,15 @@ def test_a_deep_answer_arrives_whole(mcp_trusted):
     measured = len(cut) + len(whole)
     if not measured:
         raise Inconclusive(f"no job could be re-read: {'; '.join(unmeasured)}")
+    # R10, deep pass of 2026-09-21 (3/3): the cut answers age out of the
+    # window, and two whole answers after them would have read as a fix. The
+    # defect hit 2 answers in a morning, so a pass needs a run of whole ones
+    # long enough to mean something.
+    if not cut and len(whole) < MIN_WHOLE:
+        raise Inconclusive(
+            f"{len(whole)} whole answer(s) in the last {WINDOW_HOURS} h and none "
+            f"cut -- under the {MIN_WHOLE} a pass needs, so the calendar could be "
+            f"doing the fixing")
 
     named = "; ".join(f"{c['id']} (job {c['job_id']}, {c['chars']} chars) opens "
                       f"{c['opens']!r}" for c in cut)
