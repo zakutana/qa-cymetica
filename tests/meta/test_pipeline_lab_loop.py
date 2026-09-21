@@ -1171,6 +1171,62 @@ def test_a_room_past_its_stop_is_stopped_early_and_its_position_closed(
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_early_close_that_failed_is_tried_again_and_the_benchmark_read_once(
+        tmp_path, monkeypatch):
+    """R06 and R08, deep pass of 2026-09-21 (3/3 each). The verdict is written
+    and the room stopped BEFORE the close, so a close that failed was never
+    tried again and the stake stayed out under the ceiling. And every room
+    fetched the same benchmark history for itself. A stopped room with an
+    early verdict and a position still ours is closed on the next call; a
+    card's history is read once per call."""
+    import qa.rooms as qa_rooms
+
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    cards = [_card(0x31), _card(0x32)]
+    answers = [{"type": "answer", "id": f"NEX-000{n}",
+                "at": (NOW - timedelta(minutes=30)).isoformat(),
+                "text": _whole(card)} for n, card in enumerate(cards, 1)]
+    _launchpad(scripts_lab, tmp_path, monkeypatch, answers,
+               live={c: _basket("BTC", "ETH") for c in cards},
+               readings={("BTC", "ETH"): (6.5, 1.3)})
+    scripts_lab.night_promote()
+    rows = qa_rooms.load()
+    opened = qa_rooms.acceptance_of(rows, qa_rooms.strategies(rows)[0]["id"])["at"]
+    _write(tmp_path, "paper.jsonl", [
+        {"id": "TRD-0001", "type": "intent", "at": opened, "card_id": cards[0],
+         "usdc": 480.0, "paper": True, "nexus": {"id": "NEX-0001"}},
+        {"id": "TRD-0001", "type": "outcome", "at": opened, "outcome": "accepted",
+         "http_status": 200, "position_id": "P-1"}])
+    attempts = []
+
+    def close(position, confirm):
+        attempts.append(position)
+        if len(attempts) == 1:
+            raise SystemExit("their /sell answered 500")
+        return {}
+    paper = scripts_lab._sibling("paper")
+    paper.close = close
+
+    start = datetime.fromisoformat(opened)
+    fetched = []
+
+    def history(client, card):
+        fetched.append(card)
+        values = [100, 99, 85] if card in cards else [100, 100, 100]
+        return [{"t": (start + timedelta(hours=h)).isoformat(), "index": v}
+                for h, v in enumerate(values)]
+    monkeypatch.setattr(scripts_lab, "_history", history)
+
+    said = scripts_lab.verdicts(now=start + timedelta(hours=3))
+    assert len(said) == 2 and all(s["early"] for s in said), said
+    assert len(fetched) == len(set(fetched)), f"a card was read twice: {fetched}"
+    assert attempts == ["P-1"] and said[0].get("close_failed")
+
+    scripts_lab.verdicts(now=start + timedelta(hours=3, minutes=10))
+    assert attempts == ["P-1", "P-1"], "the failed close was not tried again"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_room_opens_only_from_a_card_their_backtest_rates(
         tmp_path, monkeypatch):
     """Three answers, three fates, and each written down once.

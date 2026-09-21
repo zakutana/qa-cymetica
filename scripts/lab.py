@@ -1022,11 +1022,18 @@ def verdicts(now=None) -> list[dict]:
         checked = json.loads(_early_state_path().read_text(encoding="utf-8"))
     except (OSError, ValueError):
         checked = {}
-    due = []
+    due, owed = [], []
     for strategy in rooms.strategies(rows):
         room = strategy["id"]
         acceptance = rooms.acceptance_of(rows, room)
-        if acceptance is None or rooms.verdict_of(rows, room) is not None:
+        if acceptance is None:
+            continue
+        settled = rooms.verdict_of(rows, room)
+        if settled is not None:
+            # R06, deep pass of 2026-09-21: the verdict is written before the
+            # close, so a close that failed has to be owed from here on.
+            if settled.get("early"):
+                owed.append((strategy, acceptance))
             continue
         said = lab.verdict(acceptance, {}, moment)
         if said["verdict"] != "open":
@@ -1037,8 +1044,33 @@ def verdicts(now=None) -> list[dict]:
         last = _moment(checked.get(room))
         if last is None or moment - last >= timedelta(minutes=EARLY_CHECK_MINUTES):
             due.append((room, acceptance, strategy))
+
+    def close_positions(strategy: dict, legs: list, said: dict) -> None:
+        """Close what our accepted buys opened for this room's cards. Not
+        while a deep pass runs -- it verifies #85-#87 over these very trades
+        -- and whatever fails stays owed to the next call."""
+        if pass_in_flight():
+            said.setdefault("close_failed", []).append(
+                "a deep pass is running; the close waits for the next call")
+            return
+        paper = _sibling("paper")
+        for position in _room_positions(
+                paper.load(), str(strategy.get("origin")), legs):
+            try:
+                paper.close(position, True)
+            except (Exception, SystemExit) as exc:  # noqa: BLE001
+                said.setdefault("close_failed", []).append(
+                    f"{position}: {str(exc)[:160]}")
+
+    retried = []
+    for strategy, acceptance in owed:
+        legs = [leg.get("card") for leg in acceptance.get("legs") or []]
+        said = {"room": strategy["id"], "retry": True}
+        close_positions(strategy, legs, said)
+        if said.get("close_failed"):
+            retried.append(said)
     if not due:
-        return []
+        return retried
 
     load_dotenv()
     ids = identities()
@@ -1046,13 +1078,21 @@ def verdicts(now=None) -> list[dict]:
     client = build_client(identity, EndpointRegistry.load(), timeout=30.0)
     token = CURRENT_TIER.set(SafetyTier.SAFE)
     out = []
+    # R08, deep pass of 2026-09-21: every room fetched the same benchmark for
+    # itself -- up to 125 identical reads an hour. One read per card per call.
+    histories: dict[str, list] = {}
+
+    def history(card: str) -> list:
+        if card not in histories:
+            histories[card] = _history(client, card)
+        return histories[card]
     try:
         for room, acceptance, strategy in due:
             legs = [leg.get("card") for leg in acceptance.get("legs") or []]
             cards = list(legs)
             if acceptance.get("benchmark_card"):
                 cards.append(acceptance["benchmark_card"])
-            series = {card: _history(client, card) for card in cards if card}
+            series = {card: history(card) for card in cards if card}
             said = lab.verdict(acceptance, series, moment)
             checked[room] = moment.isoformat()
             if said["verdict"] == "open":
@@ -1066,14 +1106,7 @@ def verdicts(now=None) -> list[dict]:
                 # The money comes back under the ceiling only when the
                 # position is closed; a stopped room alone frees a slot in the
                 # count, not the stake.
-                paper = _sibling("paper")
-                for position in _room_positions(
-                        paper.load(), str(strategy.get("origin")), legs):
-                    try:
-                        paper.close(position, True)
-                    except (Exception, SystemExit) as exc:  # noqa: BLE001
-                        said.setdefault("close_failed", []).append(
-                            f"{position}: {str(exc)[:160]}")
+                close_positions(strategy, legs, said)
             out.append({"room": room, **said})
     finally:
         client.close()
