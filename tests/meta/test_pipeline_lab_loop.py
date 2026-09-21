@@ -1093,6 +1093,84 @@ def _basket(*symbols):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_cards_question_names_what_we_hold_and_what_the_gate_refused(
+        tmp_path, monkeypatch):
+    """The question that feeds one-room-per-card: up to five cards, each with
+    its thesis -- fewer if fewer are worth it, because the operator said a
+    room is for a promising theory, not a quota. It carries the WHOLE ids of
+    the cards we hold (NEX-0058 could not find two cards we named by their
+    first eight characters) and why the gate refused his last ones."""
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    held, refused = _card(0x21), _card(0x22)
+    answers = [{"type": "answer", "id": "NEX-0001",
+                "at": (NOW - timedelta(minutes=30)).isoformat(),
+                "text": "Buy " + held + " and " + refused + ". " + "why. " * 60}]
+    _launchpad(scripts_lab, tmp_path, monkeypatch, answers,
+               live={held: _basket("BTC", "ETH"), refused: _basket("SOL", "DOGE")},
+               readings={("BTC", "ETH"): (6.5, 1.3), ("DOGE", "SOL"): (-3.0, -0.4)})
+    scripts_lab.night_promote()
+
+    text = scripts_lab.cards_question()
+
+    assert held in text, "the held card is named whole"
+    assert refused[:8] in text and "backtest" in text.lower()
+    assert "up to five" in text.lower() and "fewer" in text.lower()
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_room_past_its_stop_is_stopped_early_and_its_position_closed(
+        tmp_path, monkeypatch):
+    """2026-09-21: a room that fails is dropped, not carried to the end of its
+    window. verdicts() reads a running room's index once an hour; a crossing
+    of its stop records the verdict (early), stops the room and closes the
+    paper position it holds, so its money comes back under the ceiling.
+    A room still inside its stop is left running, and is not read again
+    inside the hour."""
+    import qa.rooms as qa_rooms
+
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    card = _card(0xE)
+    answers = [{"type": "answer", "id": "NEX-0001",
+                "at": (NOW - timedelta(minutes=30)).isoformat(),
+                "text": _whole(card)}]
+    _launchpad(scripts_lab, tmp_path, monkeypatch, answers,
+               live={card: _basket("BTC", "ETH")},
+               readings={("BTC", "ETH"): (6.5, 1.3)})
+    scripts_lab.night_promote()
+    (room,) = qa_rooms.strategies(qa_rooms.load())
+    opened = qa_rooms.acceptance_of(qa_rooms.load(), room["id"])["at"]
+    _write(tmp_path, "paper.jsonl", [
+        {"id": "TRD-0001", "type": "intent", "at": opened, "card_id": card,
+         "usdc": 480.0, "paper": True, "nexus": {"id": "NEX-0001"}},
+        {"id": "TRD-0001", "type": "outcome", "at": opened, "outcome": "accepted",
+         "http_status": 200, "position_id": "P-1"}])
+    closed = []
+    paper = scripts_lab._sibling("paper")
+    paper.close = lambda position, confirm: closed.append(position) or {}
+
+    start = datetime.fromisoformat(opened)
+    points = lambda values: [{"t": (start + timedelta(hours=h)).isoformat(),
+                              "index": v} for h, v in enumerate(values)]
+    path = {"now": points([100, 99, 97])}
+    monkeypatch.setattr(scripts_lab, "_history",
+                        lambda client, c: path["now"] if c == card else [])
+
+    later = start + timedelta(hours=3)
+    assert scripts_lab.verdicts(now=later) == []
+    rows = qa_rooms.load()
+    assert qa_rooms.status_of(rows, room["id"]) == "running"
+
+    path["now"] = points([100, 99, 97, 88])
+    assert scripts_lab.verdicts(now=later + timedelta(minutes=30)) == [], (
+        "read again inside the hour")
+    said = scripts_lab.verdicts(now=later + timedelta(hours=2))
+    assert [s["verdict"] for s in said] == ["refuted"] and said[0]["early"], said
+    rows = qa_rooms.load()
+    assert qa_rooms.status_of(rows, room["id"]) == "stopped"
+    assert closed == ["P-1"], "the position the room held was not closed"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_room_opens_only_from_a_card_their_backtest_rates(
         tmp_path, monkeypatch):
     """Three answers, three fates, and each written down once.

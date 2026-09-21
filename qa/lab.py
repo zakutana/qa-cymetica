@@ -783,10 +783,76 @@ def formula_fingerprint() -> str:
     import inspect
 
     try:
-        source = inspect.getsource(verdict)
+        # Both halves of the formula since 2026-09-21: a verdict can now be
+        # settled inside the window by _early, and a change there is a change
+        # to what a verdict means.
+        source = inspect.getsource(verdict) + inspect.getsource(_early)
     except (OSError, TypeError):  # pragma: no cover -- frozen or stripped
         return "unknown"
     return hashlib.sha256(source.encode("utf-8")).hexdigest()[:12]
+
+
+def _early(acceptance: dict, series: dict, start, moment) -> dict | None:
+    """A verdict that is already settled inside the window, or None.
+
+    2026-09-21, the operator: rooms that fail are dropped rather than carried
+    to the end of a five-day window. Two things settle one early, both of them
+    crossings we have SEEN on their own index, so neither needs the coverage a
+    closed window does: the portfolio's drawdown going past the stop it was
+    accepted with (refuted), or every leg having reached its own take-profit
+    or stop (the one exit Nexus's plan names). No history, no early verdict --
+    `verdicts()` asks with an empty series first, and that must stay "open".
+    """
+    legs = []
+    for leg in acceptance.get("legs") or []:
+        inside = [(t, v) for t, v in _points(series.get(leg.get("card")))
+                  if start <= t <= moment]
+        if len(inside) < 2:
+            return None
+        entry = inside[0][1]
+        way = -1.0 if str(leg.get("side")).lower() == "bear" else 1.0
+        take, stop = leg.get("tp"), leg.get("sl")
+        exit_kind, curve = None, []
+        for when, value in inside:
+            moved = way * (value / entry - 1.0) * 100.0
+            curve.append((when, moved))
+            if take is not None and moved >= float(take):
+                exit_kind = "tp"
+                break
+            if stop is not None and moved <= float(stop):
+                exit_kind = "sl"
+                break
+        legs.append({**leg, "exit": exit_kind, "curve": curve,
+                     "return_pct": curve[-1][1]})
+    if not legs:
+        return None
+
+    weight = sum(float(leg.get("share") or 1.0) for leg in legs) or 1.0
+    stamps = sorted({when for leg in legs for when, _ in leg["curve"]})
+    peak, drawdown, value = None, 0.0, 0.0
+    for stamp in stamps:
+        value = sum(float(leg.get("share") or 1.0)
+                    * ([m for w, m in leg["curve"] if w <= stamp] or [0.0])[-1]
+                    for leg in legs) / weight
+        peak = value if peak is None else max(peak, value)
+        drawdown = max(drawdown, peak - value)
+    clean = [{k: v for k, v in leg.items() if k != "curve"} for leg in legs]
+
+    stop_pct = float(acceptance.get("stop_pct") or 0) or None
+    if stop_pct is not None and drawdown > stop_pct:
+        return {"verdict": "refuted", "return_pct": value,
+                "max_drawdown_pct": drawdown, "legs": clean,
+                "why": (f"its drawdown reached {drawdown:.2f}%, past the "
+                        f"{stop_pct:.2f}% it was accepted with, before the "
+                        f"window closed")}
+    if all(leg["exit"] for leg in legs):
+        ok = value > 0 and all(leg["exit"] == "tp" for leg in legs)
+        return {"verdict": "survived" if ok else "refuted", "return_pct": value,
+                "max_drawdown_pct": drawdown, "legs": clean,
+                "why": (f"every leg reached its "
+                        f"{'take-profit' if ok else 'exit'} before the window "
+                        f"closed, at {value:+.2f}%")}
+    return None
 
 
 def verdict(acceptance: dict, series: dict, now) -> dict:
@@ -815,6 +881,10 @@ def verdict(acceptance: dict, series: dict, now) -> dict:
     end = start + timedelta(days=days)
     moment = _at(now) or datetime.now(timezone.utc)
     if moment < end:
+        early = _early(acceptance, series, start, moment)
+        if early is not None:
+            return {**early, "early": True, "closes_at": end.isoformat(),
+                    "formula": formula_fingerprint()}
         return {"verdict": "open", "why": f"the window closes {end.isoformat()}",
                 "closes_at": end.isoformat(), "coverage": None,
                 "formula": formula_fingerprint()}

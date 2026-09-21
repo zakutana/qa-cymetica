@@ -36,12 +36,22 @@ answer, and only if their own backtest of it holds up.
 ## The brakes are in code, not here
 
 `qa/lab.py` holds them, so a tick at three in the morning cannot talk itself
-out of one: paper only; 24 questions and 10 new rooms a rolling day; one
-question in flight, twenty minutes apart, and their own backoff first; 50
-experiments at 1.2% of the book each under a 60% ceiling; a live read of every
+out of one: paper only; 24 questions and 25 new rooms a rolling day; one
+question in flight, twenty minutes apart, and their own backoff first; 125
+experiments at 0.48% of the book each under a 60% ceiling; a live read of every
 card (#91) and their backtest after fees before any room; and **nothing but
-the memecoin readings while a deep pass runs** -- that pass verifies #85, #86
-and #87 over these very answers and trades.
+the memecoin and Hot readings while a deep pass runs** -- that pass verifies
+#85, #86 and #87 over these very answers and trades.
+
+**One room per card, and the caps are ceilings, not a quota** (2026-09-21).
+An answer naming five cards is five strategies: each card that passes the gate
+opens its own room, and a card that cannot trade yet is tried again next tick
+without holding the others back. A room whose own index crosses its stop is
+stopped early (read once an hour) and its paper position closed. The operator,
+on the plan: a room still needs a promising theory or backtest, so a question
+asks for *up to* five cards, each with its thesis: `python scripts/lab.py
+ask-cards` composes it from the diary (held cards by whole id, what the gate
+refused). Use it when a question may go and nothing more specific is pending.
 
 `scripts/lab.py` refuses rather than warns. If it refuses, read the reason; it
 is never arbitrary.

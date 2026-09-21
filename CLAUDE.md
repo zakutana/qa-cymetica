@@ -448,8 +448,8 @@ tests/repo/       repository consistency. Deliberately NOT in tests/meta:
 qa/lab.py         the laboratory's notebook and its brakes, in code rather
                   than in prose: sessions, ranked snapshots, the catalogue it
                   compares against the baseline, and the caps -- paper only,
-                  24 questions and 10 rooms a rolling day, 50 experiments at
-                  1.2% of the book each under a 60% ceiling, a backtest before
+                  24 questions and 25 rooms a rolling day, 125 experiments at
+                  0.48% of the book each under a 60% ceiling, a backtest before
                   a room, and nothing at all while a deep pass runs.
 qa/backtests.py   the register of what has already been measured: a basket's
                   fingerprint (sorted legs, window, fees) against what it
@@ -569,8 +569,8 @@ qa/rooms.py          the Nexus rooms (docs/nexus-rooms-plan.md): strategies,
                      gitignored because they are written while a sweep may
                      run. Two writers on purpose: the browser reaches
                      add_operator_note and nothing else. A strategy room
-                     opens only from a whole Nexus answer, one answer one
-                     room; whether the answer PROPOSED anything is the
+                     opens only from a whole Nexus answer, one room per card
+                     it names; whether the answer PROPOSED anything is the
                      opener's call (NEX-0002 named no card and has none).
                      A room's name is its newest `title` row; its `plan` is
                      Nexus's proposal as legs -- card id, side, share, TP/SL.

@@ -973,23 +973,70 @@ def adopt(room: str, window_days: float = 7.0, stop_pct: float = 5.0,
              f"is judged"))
 
 
+# How often a RUNNING room's index is read for an early verdict. Every tick at
+# ten minutes would be a history read per room per tick, up to 125 of them.
+EARLY_CHECK_MINUTES = 60
+
+
+def _early_state_path() -> Path:
+    from qa.state import state_dir
+
+    return state_dir() / "lab_early.json"
+
+
+def _room_positions(paper_rows: list[dict], origin: str, cards) -> list[str]:
+    """Positions our accepted buys opened for this answer's cards and that no
+    close of ours has closed."""
+    wanted = {str(c).lower() for c in cards}
+    opened, closed = [], set()
+    by_id: dict[str, dict] = {}
+    for row in paper_rows:
+        by_id.setdefault(row.get("id"), {})[row.get("type")] = row
+    for chain in by_id.values():
+        intent, outcome = chain.get("intent") or {}, chain.get("outcome") or {}
+        if intent.get("kind") == "close":
+            if outcome.get("outcome") == "accepted" and intent.get("position_id"):
+                closed.add(intent["position_id"])
+            continue
+        nexus = intent.get("nexus")
+        said = nexus.get("id") if isinstance(nexus, dict) else nexus
+        if (said == origin and str(intent.get("card_id")).lower() in wanted
+                and outcome.get("outcome") == "accepted"
+                and outcome.get("position_id")):
+            opened.append(outcome["position_id"])
+    return [p for p in opened if p not in closed]
+
+
 def verdicts(now=None) -> list[dict]:
-    """Every room whose window has closed and has no verdict yet."""
+    """Every room whose window has closed and has no verdict yet -- and, once
+    an hour, every running room whose own index already settled it early
+    (`qa.lab._early`): past its stop, or every leg at its level. An early
+    verdict stops the room and closes the paper position it holds."""
     from qa.client import build_client
     from qa.config import identities, load_dotenv
     from qa.safety import CURRENT_TIER, EndpointRegistry, SafetyTier
 
+    moment = _moment(now) if now is not None else _now()
     rows = rooms.load()
+    try:
+        checked = json.loads(_early_state_path().read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        checked = {}
     due = []
     for strategy in rooms.strategies(rows):
         room = strategy["id"]
         acceptance = rooms.acceptance_of(rows, room)
         if acceptance is None or rooms.verdict_of(rows, room) is not None:
             continue
-        said = lab.verdict(acceptance, {}, now or _now())
-        if said["verdict"] == "open":
+        said = lab.verdict(acceptance, {}, moment)
+        if said["verdict"] != "open":
+            due.append((room, acceptance, strategy))
             continue
-        due.append((room, acceptance))
+        if rooms.status_of(rows, room) != "running":
+            continue
+        last = _moment(checked.get(room))
+        if last is None or moment - last >= timedelta(minutes=EARLY_CHECK_MINUTES):
+            due.append((room, acceptance, strategy))
     if not due:
         return []
 
@@ -1000,20 +1047,41 @@ def verdicts(now=None) -> list[dict]:
     token = CURRENT_TIER.set(SafetyTier.SAFE)
     out = []
     try:
-        for room, acceptance in due:
-            cards = [leg.get("card") for leg in acceptance.get("legs") or []]
+        for room, acceptance, strategy in due:
+            legs = [leg.get("card") for leg in acceptance.get("legs") or []]
+            cards = list(legs)
             if acceptance.get("benchmark_card"):
                 cards.append(acceptance["benchmark_card"])
             series = {card: _history(client, card) for card in cards if card}
-            said = lab.verdict(acceptance, series, now or _now())
+            said = lab.verdict(acceptance, series, moment)
+            checked[room] = moment.isoformat()
+            if said["verdict"] == "open":
+                continue
             rooms.record_verdict(room, said)
             rooms.set_status(
                 room, "stopped",
-                f"verdict: {said['verdict']} -- {said.get('why', '')}"[:400])
+                (f"verdict{' (early)' if said.get('early') else ''}: "
+                 f"{said['verdict']} -- {said.get('why', '')}")[:400])
+            if said.get("early"):
+                # The money comes back under the ceiling only when the
+                # position is closed; a stopped room alone frees a slot in the
+                # count, not the stake.
+                paper = _sibling("paper")
+                for position in _room_positions(
+                        paper.load(), str(strategy.get("origin")), legs):
+                    try:
+                        paper.close(position, True)
+                    except (Exception, SystemExit) as exc:  # noqa: BLE001
+                        said.setdefault("close_failed", []).append(
+                            f"{position}: {str(exc)[:160]}")
             out.append({"room": room, **said})
     finally:
         client.close()
         CURRENT_TIER.reset(token)
+        try:
+            _early_state_path().write_text(json.dumps(checked), encoding="utf-8")
+        except OSError:
+            pass
     return out
 
 
@@ -1050,6 +1118,45 @@ def ask(question: str, wait: bool = True, lane: str = "auto") -> dict:
         print(f"[lab] deep lane: {why} -- asking through qa-agent/ask instead")
         return _sibling("nexus").ask_shallow(question)
     return _sibling("nexus").ask(question, wait=wait)
+
+
+def cards_question() -> str:
+    """The question that feeds one room per card (2026-09-21).
+
+    Up to five cards, each with the thesis it rests on -- and fewer if fewer
+    are worth it: the operator, on the plan, "pořád by room měl vzniknout jen
+    na základě slibné teorie nebo backtestu". It names the WHOLE ids of what we
+    hold (NEX-0058 could not look up two cards we gave by eight characters)
+    and why the gate refused his recent picks, since he remembers nothing.
+    """
+    stored = rooms.load()
+    holding = []
+    for room_id, plan in rooms.plans(stored).items():
+        if rooms.status_of(stored, room_id) == "stopped":
+            continue
+        holding += [str(leg["card"]) for leg in plan.get("legs") or []
+                    if leg.get("card")]
+    refused = [row for row in lab.load() if row.get("type") == "gate"
+               and row.get("verdict") in ("reject", "unknown_card")][-5:]
+    lines = [
+        "Up to five event cards you would hold on paper now, each on its own: "
+        "the whole card UUID, status live and tradeable_now true, side, "
+        "take-profit and stop in percent, and one line on the thesis or the "
+        "backtest it rests on. Fewer is fine if fewer are worth it -- we open "
+        "a room only for a card whose own backtest after fees holds up, so a "
+        "weak pick costs a slot and a question, not money.",
+    ]
+    if holding:
+        lines.append("Already held, do not repeat: " + ", ".join(sorted(set(holding))) + ".")
+    if refused:
+        lines.append("Your recent picks our gate (your backtest_event_card_idea, "
+                     "after fees) refused: " + "; ".join(
+                         f"{str(r.get('card'))[:8]} ({r.get('origin')}) "
+                         f"{str(r.get('why') or r.get('verdict'))[:90]}"
+                         for r in refused) + ".")
+    lines.append("Name no card you are not proposing: our launcher reads every "
+                 "UUID in the answer as a pick.")
+    return " ".join(lines)
 
 
 def buy(card_id: str, usdc: float, nexus_id: str | None, confirm: bool) -> dict:
@@ -2384,6 +2491,7 @@ def main(argv: list[str] | None = None) -> int:
     adopt_cmd.add_argument("--no-benchmark", action="store_true")
     sub.add_parser("verdicts", help="close every window that has come due")
     sub.add_parser("surface", help="their catalogue against the baseline")
+    sub.add_parser("ask-cards", help="ask Nexus for up to five cards, with brakes")
     ask_cmd = sub.add_parser("ask", help="one question to Nexus, with brakes")
     ask_cmd.add_argument("question")
     ask_cmd.add_argument("--no-wait", action="store_true")
@@ -2538,6 +2646,9 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(ask(args.question, wait=not args.no_wait,
                              lane=args.lane),
                          ensure_ascii=False, indent=1, default=str)[:2000])
+    elif args.cmd == "ask-cards":
+        said = ask(cards_question(), wait=False)
+        print(f"{said.get('id')}: asked for up to five cards")
     elif args.cmd == "buy":
         print(json.dumps(buy(args.card, args.usdc, args.nexus, args.confirm),
                          ensure_ascii=False, indent=1, default=str)[:2000])

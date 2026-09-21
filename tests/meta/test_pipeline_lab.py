@@ -981,6 +981,37 @@ def test_a_window_that_has_not_closed_has_no_verdict_yet():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_stop_crossed_inside_the_window_refutes_it_there_and_then():
+    """2026-09-21, the operator: rooms that fail are dropped, not carried to
+    the end of a five-day window. A crossing we have SEEN is a fact whatever
+    the coverage of the rest of the window, so it needs none; a path that
+    has not crossed stays open."""
+    now = "2026-09-05T06:00:00+00:00"
+    crossed = {"card-a": _series("2026-09-05T00:00:00+00:00", [100, 98, 94.5])}
+    said = lab.verdict(_acceptance(), crossed, now)
+    assert said["verdict"] == "refuted" and said["early"] is True, said
+    assert "before the window closed" in said["why"]
+
+    held = {"card-a": _series("2026-09-05T00:00:00+00:00", [100, 98, 97])}
+    assert lab.verdict(_acceptance(), held, now)["verdict"] == "open"
+
+    # Only the portfolio stop, no leg levels -- the laboratory's own rooms.
+    bare = _acceptance(legs=[{"card": "card-a", "side": "bull", "share": 1.0}],
+                       stop_pct=10.0)
+    deep = {"card-a": _series("2026-09-05T00:00:00+00:00", [100, 104, 93])}
+    said = lab.verdict(bare, deep, now)
+    assert said["verdict"] == "refuted" and said["early"], said
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_take_profit_reached_inside_the_window_survives_there_and_then():
+    now = "2026-09-05T06:00:00+00:00"
+    series = {"card-a": _series("2026-09-05T00:00:00+00:00", [100, 103, 108.5])}
+    said = lab.verdict(_acceptance(), series, now)
+    assert said["verdict"] == "survived" and said["early"] is True, said
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_room_goes_running_only_with_a_criterion_written_first(tmp_path,
                                                                  monkeypatch):
     """Preregistration, in the laboratory. A criterion written after the
