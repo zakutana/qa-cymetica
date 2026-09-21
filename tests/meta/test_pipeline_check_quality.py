@@ -800,3 +800,51 @@ def test_a_requirement_split_into_numbered_items_is_not_a_dropped_one():
     # A line that is carried verbatim is still carried.
     assert dropped("Export any screen to CSV without a paid tier.",
                    "BB-SPEC\n  1. Export any screen to CSV without a paid tier.\n") == []
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_published_ranking_that_admits_recency_is_not_the_defect():
+    """#111, fixed the way the report offered, four hours after we filed it.
+
+    We said: "Publishing what `rank` actually is would close this; so would
+    ranking by the key you published." They published it -- llms.txt now gives
+    the formula, says `rank` does not depend on `q`, and states outright that
+    "while no row has verified evidence or a confirmed replication, the order
+    is simply newest first ... read evidence_verified and replications on the
+    row, never the position".
+
+    The check would have gone on failing: its three conditions -- nothing
+    verified, rank fixed across queries, order is recency -- are all still
+    true, and are now all DOCUMENTED. That is a check still arguing with a
+    sentence nobody publishes any more, and the next level-V run would have
+    sent "still reproducible" on a report they had fixed.
+
+    So the reading gains one question, asked of the published text before any
+    of the three: does the document itself say the order is recency while
+    nothing is verified? If it does, there is nothing left to contradict.
+    """
+    from tests.rest.test_agent_board_ranks_what_it_says_it_ranks import (
+        discloses_recency)
+
+    before = ("- [GET /api/v1/agent-board/search](/api/v1/agent-board/search): "
+              "Search playbooks (ranked by verified return x replications)")
+    after = ("- [GET /api/v1/agent-board/search](/api/v1/agent-board/search): "
+             "Search playbooks. Each row's `rank` = evidence weight (verified "
+             "return, only when `evidence_verified` is true; unverified rows "
+             "get half weight) x (1 + confirmed replications) x status weight "
+             "x a recency decay (72-hour scale). `rank` does not depend on "
+             "`q`. While no row has verified evidence or a confirmed "
+             "replication, the order is simply newest first")
+
+    assert not discloses_recency([before]), (
+        "the sentence we filed against reads as a disclosure, so the check "
+        "could never have opened the defect in the first place")
+    assert discloses_recency([after]), (
+        "the sentence they published, which says the order is newest first "
+        "while nothing is verified, still reads as a contradiction")
+    # A document that mentions recency somewhere else entirely is not a
+    # disclosure about THIS ordering.
+    assert not discloses_recency(
+        ["- [GET /api/v1/agent-board/search](...): ranked by verified return "
+         "x replications",
+         "- [GET /api/v1/feed](...): sorted by recency, newest first"])

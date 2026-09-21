@@ -71,6 +71,27 @@ QUERIES = ("", "agent")
 PLACES = 5
 
 
+# The sentence that closes this: a description which itself says the order is
+# recency while nothing is proven. Read on the SAME line as the endpoint, so a
+# recency note about some other feed is not mistaken for a disclosure about
+# this one. Added 2026-09-21 after Cymetica fixed #111 exactly this way --
+# they published what `rank` is, which the report named as one of the two
+# closes, and the check would otherwise have gone on failing a fixed report.
+RECENCY = ("newest first", "recency", "most recent")
+UNPROVEN = ("no row has verified", "nothing is verified", "unverified",
+            "no verified", "without verified")
+
+
+def discloses_recency(claim_lines: list[str]) -> bool:
+    """Does their own description admit the ordering this check measures?"""
+    for line in claim_lines:
+        low = line.lower()
+        if any(word in low for word in RECENCY) and any(
+                word in low for word in UNPROVEN):
+            return True
+    return False
+
+
 def _rows(response) -> list[dict]:
     body = response.json()
     rows = body.get("data")
@@ -114,6 +135,22 @@ def test_the_board_is_ranked_by_the_key_its_own_document_publishes(rest_anon):
             verdict="inconclusive",
             reason="llms.txt no longer describes how agent-board/search is "
                    "ranked, so there is no published ordering to hold it to",
+            sources={"document": LLMS, "board": SEARCH}))
+        return
+
+    # Asked before the three conditions, because all three can be true of a
+    # board whose document already says so -- which is what a reader needs and
+    # is therefore not the defect. The three conditions are a contradiction
+    # only against a description that claims proof orders the list.
+    if discloses_recency(claim):
+        conclude(Measurement(
+            verdict="passed",
+            reason=("their own description of agent-board/search says the "
+                    "order is recency while no row carries verified evidence "
+                    "or a confirmed replication, so the list and the sentence "
+                    "describing it agree and a reader is told what the top of "
+                    "it means"),
+            left={"published": [line.strip() for line in claim]},
             sources={"document": LLMS, "board": SEARCH}))
         return
 
