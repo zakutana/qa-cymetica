@@ -623,7 +623,7 @@ def _doors(**over):
     their API; the real doors are named in `_tick_doors` and checked apart."""
     calls = {k: [] for k in ("fomo", "sample", "cycle", "promote", "truth",
                              "search", "verdicts", "refill", "moves",
-                             "fomo_reading")}
+                             "fomo_reading", "hot", "hot_reading")}
 
     def door(name, value):
         return lambda *a: calls[name].append(a) or value
@@ -642,6 +642,8 @@ def _doors(**over):
         "refill": door("refill", [{"legs": [], "period": 90, "why": f"r{n}"}
                                   for n in range(10)]),
         "fomo_reading": door("fomo_reading", {"readouts": [], "claims": {}}),
+        "hot": door("hot", {"ok": True, "hot": 100, "headlines": 3, "cards": 0}),
+        "hot_reading": door("hot_reading", {"rounds": 0}),
     }
 
     def search(bite):
@@ -703,10 +705,14 @@ def test_a_tick_keeps_the_nights_clocks(tmp_path, monkeypatch):
     # Hot against control is written into the diary every six hours: often
     # enough to watch it move, rarely enough that the diary stays readable.
     assert len(calls["fomo_reading"]) == 1
+    assert len(calls["hot"]) == 4, "Hot has no history; every tick is a round"
+    assert len(calls["hot_reading"]) == 1
     _tick(scripts_lab, NOW + timedelta(hours=6, minutes=10), doors)
     assert len(calls["fomo_reading"]) == 2
+    assert len(calls["hot_reading"]) == 2
     kept = [r for r in lab.load() if r.get("type") == "fomo_reading"]
     assert len(kept) == 2 and "readouts" in kept[0]
+    assert len([r for r in lab.load() if r.get("type") == "hot_reading"]) == 2
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -761,8 +767,16 @@ def test_a_tick_during_a_deep_pass_or_a_night_only_reads_the_memecoins(
         # reads the memecoins". Enumerating what you expect is how a check
         # stops covering what you did not think of; found by three readers on
         # 2026-09-20.
+        #
+        # The Hot round is the second exemption (2026-09-21), for the same
+        # two reasons as the memecoins, each one refutable: it reads only
+        # their headlines and card histories -- no Nexus answer, no trade, so
+        # nothing #85-#87 verify -- and Hot has no history, so a round a
+        # pass skips is a moment nobody can read again. Its six-hourly
+        # READING is not exempt; it waits like everything else.
+        assert len(calls["hot"]) == 1
         for door, made in sorted(calls.items()):
-            if door == "fomo":
+            if door in ("fomo", "hot"):
                 continue
             assert not made, f"{door} ran while a {blocker} was on"
         assert did["may_ask"] is False

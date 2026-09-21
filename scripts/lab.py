@@ -1807,6 +1807,8 @@ TICK = {
     "answers_hours": 24,
     # Hot against control (fomo_watch.py report), into the diary this often.
     "fomo_reading_hours": 6,
+    # The Hot headlines study (hot_watch.py report), the same way.
+    "hot_reading_hours": 6,
 }
 TICK_STATE = "lab_tick.json"
 
@@ -1916,6 +1918,21 @@ def _fomo_round() -> dict:
             "failed": len(capture.get("errors") or [])}
 
 
+def _hot_round() -> dict:
+    """One round of the Hot headlines watch. Hot has no history, so a round
+    that does not happen is a moment nobody can read again."""
+    watch = _sibling("hot_watch")
+    client = watch._client()
+    try:
+        said = watch.tick(client)
+    finally:
+        client.close()
+    capture, resolve = said.get("capture") or {}, said.get("resolve") or {}
+    return {"ok": bool(capture.get("ok")), "hot": capture.get("hot", 0),
+            "headlines": capture.get("headlines", 0),
+            "cards": resolve.get("cards", 0)}
+
+
 def _sample_round() -> dict:
     """One sampler round -- our positions and the cards our plans name --
     because `_deployed`, the verdicts and what resolved without us all read
@@ -1956,6 +1973,8 @@ def _tick_doors() -> dict:
         "refill": night_refill,
         "verdicts": verdicts,
         "fomo_reading": lambda: _sibling("fomo_watch").reading(),
+        "hot": _hot_round,
+        "hot_reading": lambda: _sibling("hot_watch").reading(),
     }
 
 
@@ -1965,15 +1984,19 @@ def _say_tick(said: dict, out) -> None:
     at = str(said.get("at") or _now().isoformat())[11:16]
     if said.get("skipped"):
         out(f"tick {said['session']} {at}: held -- a {said['skipped']} is "
-            f"running; memecoins only ({said.get('fomo')})")
+            f"running; memecoins and Hot only ({said.get('fomo')}, "
+            f"{said.get('hot')})")
         return
     fomo = said.get("fomo") or {}
+    hot_ = said.get("hot") or {}
     out(f"tick {said['session']} {at}: {said['backtests']} backtest(s) "
         f"({said['known']} already known), "
         f"{'answers picked up' if said['cycled'] else 'no cycle due'}, "
         f"{said['rooms']} room(s) / {said['orders']} order(s), "
         f"{said['verdicts']} verdict(s), memecoins +{fomo.get('added', 0)} "
-        f"signal(s) / {fomo.get('checked', 0)} checkpoint(s)")
+        f"signal(s) / {fomo.get('checked', 0)} checkpoint(s), "
+        f"Hot {'round' if hot_.get('ok') else 'round FAILED'} "
+        f"(+{hot_.get('headlines', 0)} headline(s), {hot_.get('cards', 0)} card(s))")
     for line in said.get("held") or []:
         out(f"  held:  {line}")
     if said.get("resolved"):
@@ -1999,7 +2022,8 @@ def tick(*, now: datetime | None = None, actions: dict | None = None,
     moment = now or _now()
     doors = {**_tick_doors(), **(actions or {})}
     said: dict = {"at": moment.isoformat(timespec="seconds"), "session": None,
-                  "skipped": "", "fomo": None, "sample": None, "cycled": False,
+                  "skipped": "", "fomo": None, "hot": None, "sample": None,
+                  "cycled": False,
                   "truth": False, "backtests": 0, "known": 0,
                   "refilled": False, "rooms": 0, "orders": 0, "held": [],
                   "verdicts": 0, "resolved": 0, "errors": []}
@@ -2013,6 +2037,11 @@ def tick(*, now: datetime | None = None, actions: dict | None = None,
 
     said["session"] = _day_session(moment)
     said["fomo"] = attempt("fomo", doors["fomo"])
+    # Before the hold, like the memecoins: it only reads their headlines and
+    # card histories, so it touches nothing a deep pass verifies (#85-#87 are
+    # over Nexus answers and our trades), and Hot has no history -- a round
+    # skipped is a moment lost.
+    said["hot"] = attempt("hot", doors["hot"])
     if doors["pass"]():
         said["skipped"] = "pass"
     elif doors["night"]():
@@ -2080,6 +2109,14 @@ def tick(*, now: datetime | None = None, actions: dict | None = None,
         if reading is not None:
             lab.note_fomo_reading(reading)
             state["last_fomo_reading"] = moment.isoformat()
+
+    last_hot = lab._at(state.get("last_hot_reading"))
+    if last_hot is None or (moment - last_hot).total_seconds() >= \
+            TICK["hot_reading_hours"] * 3600:
+        reading = attempt("hot_reading", doors["hot_reading"])
+        if reading is not None:
+            lab.note_hot_reading(reading)
+            state["last_hot_reading"] = moment.isoformat()
 
     may, why = lab.may_ask(int(doors["asked_today"]() or 0), False)
     if may:
@@ -2196,6 +2233,15 @@ def brief() -> str:
                    f"({str(reading.get('at'))[:16]}, hot against a control "
                    f"from the same feed):")
         for line in _sibling("fomo_watch").say_reading(reading):
+            out.append(f"  {line}")
+
+    hot_reading = lab.last_hot_reading()
+    if hot_reading:
+        out.append("")
+        out.append(f"Hot headlines -- does a basket that just entered Hot keep "
+                   f"rising? ({str(hot_reading.get('at'))[:16]}, NEX-0055 is "
+                   f"the rule under test):")
+        for line in _sibling("hot_watch").say_reading(hot_reading):
             out.append(f"  {line}")
     return "\n".join(out)
 

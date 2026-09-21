@@ -187,6 +187,18 @@ def last_fomo_reading(rows: list[dict] | None = None) -> dict | None:
     return seen[-1] if seen else None
 
 
+def note_hot_reading(said: dict) -> dict:
+    """The Hot headlines study as `hot_watch.py report` computed it. Its own
+    diary is not snapshotted, so this line is the copy that outlives the disk."""
+    return _append({"type": "hot_reading", "at": _now(), **said})
+
+
+def last_hot_reading(rows: list[dict] | None = None) -> dict | None:
+    rows = load() if rows is None else rows
+    seen = [r for r in rows if r.get("type") == "hot_reading"]
+    return seen[-1] if seen else None
+
+
 def last_tick(rows: list[dict] | None = None) -> dict | None:
     rows = load() if rows is None else rows
     seen = [r for r in rows if r.get("type") == "tick"]

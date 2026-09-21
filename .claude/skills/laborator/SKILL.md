@@ -175,6 +175,26 @@ Nexus may be asked about memecoins like any product -- which of the radar's
 own fields to trust, what entry and exit to use -- and his rule is tested on
 the diary before anything else is done with it.
 
+## Hot headlines: can we get in before the move?
+
+A study opened 2026-09-21. The Hot tab on /headlines ranks
+by `hotidx.hot`, the trailing 24 h return **at read time** of a basket of
+"related assets" -- so Hot belongs to the basket, not to the headline, and the
+card behind the Trade button is a different basket on purpose (NEX-0054). The
+tick writes a round every time (the hot top 100 and the newest 500 on the
+wire, which carry the basket's index for about 56 h), and reads each entry's
+card history once its day is out. Hot has no history of its own: a round
+nobody took is a moment nobody can read again, which is why it runs even while
+a deep pass holds the rest.
+
+The rule under test is Nexus's own, NEX-0055: crypto baskets only, 24 h return
+≥ +6 %, ≥ 3 members, rank ≤ 3, headline ≤ 60 min old and ≤ 30 min in Hot; hold
+24 h, take-profit +8 %, stop −4 %, 0.2 % costs; **no verdict under 100
+trades**, then his one-sided t ≥ 1.65. It is measured on their price-weighted
+index, not his 1/N -- `preview_card_basket` prices too few of the crypto
+members for 1/N -- and every reading says so. `lab.py brief` carries the
+latest reading, so every question to him carries it too.
+
 ## What we know about Nexus
 
 Written here because every tick needs it before it asks anything, and because

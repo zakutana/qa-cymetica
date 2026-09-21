@@ -95,6 +95,11 @@ state/backtests.jsonl
 # above: appended to by a running poller, snapshotted by the deep pass.
 state/fomo_signals.jsonl
 
+# The Hot headlines watch -- scripts/hot_watch.py, a round every tick. Unlike
+# the diaries above it is NOT snapshotted: about 2 MB a day would grow git for
+# ever. The six-hourly reading goes into lab.jsonl, which is.
+state/hot_watch.jsonl
+
 # Captured requests and responses. 7 747 files and 469 MB by 2026-09-12,
 # growing 40-170 MB a day -- 120 MB of one day's 170 written by two checks that
 # walk the event-card listing page by page on every run -- and nothing in the

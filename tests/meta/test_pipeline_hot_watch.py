@@ -1,0 +1,126 @@
+"""scripts/hot_watch.py: the live round around qa/hot.py, over a mock client.
+
+Field shapes captured live on 2026-09-21: GET /api/v1/headlines answers
+`{"items": [{id, headline, published_at, source, tags, tickers, value_usd,
+event_card_id, hotidx: {hot, hot_class, stock_px, crypto_px, stock_ret_24h,
+crypto_ret_24h, stock_members, crypto_members}}], "filters", "mode"}`, and
+GET /api/v1/event-cards/{id}/index-history answers `{"points": [{t, index}]}`.
+"""
+
+from __future__ import annotations
+
+import importlib.util
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+
+import httpx
+
+from qa.marks import SafetyTier, qa
+
+REPO = Path(__file__).resolve().parent.parent.parent
+T0 = datetime(2026, 9, 21, 12, 0, tzinfo=timezone.utc)
+
+
+def _module(tmp_path, monkeypatch):
+    import importlib
+
+    import qa.state
+
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    importlib.reload(qa.state)
+    spec = importlib.util.spec_from_file_location(
+        "hot_watch_under_test", REPO / "scripts" / "hot_watch.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _client(handler):
+    from qa.client import build_mock_client
+
+    return build_mock_client(handler, timeout=5.0)
+
+
+def _item(hid, px=100.0, ret=7.0, cls="crypto", card="card-1"):
+    return {"id": hid, "headline": f"headline {hid}", "source": "Wire",
+            "published_at": T0.isoformat(), "tags": ["crypto"], "tickers": [],
+            "value": None, "value_usd": None, "event_card_id": card,
+            "hotidx": {"hot": ret, "hot_class": cls,
+                       "crypto_px": px, "crypto_ret_24h": ret,
+                       "stock_px": 50.0, "stock_ret_24h": 0.5,
+                       "crypto_members": ["AAA", "BBB", "CCC"],
+                       "stock_members": ["XX"]}}
+
+
+def _handler(hot_items, wire_items, fail_hot=False):
+    def handler(request):
+        params = request.url.params
+        if request.url.path == "/api/v1/headlines":
+            if params.get("filter") == "hot":
+                if fail_hot:
+                    return httpx.Response(503)
+                return httpx.Response(200, json={"items": hot_items, "mode": "hot"})
+            return httpx.Response(200, json={"items": wire_items, "mode": "feed"})
+        return httpx.Response(404)
+    return handler
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_capture_writes_one_round_and_each_headline_once(tmp_path, monkeypatch):
+    mod = _module(tmp_path, monkeypatch)
+    items = [_item(1), _item(2, px=5.0)]
+    said = mod.capture(_client(_handler(items[:1], items)), now=T0)
+    assert said["ok"] and said["headlines"] == 2
+
+    rows = mod.load()
+    (rnd,) = [r for r in rows if r["type"] == "round"]
+    assert rnd["hot"] == [[1, 1, 7.0, "crypto", 100.0, 7.0]]
+    assert [1, 50.0, 100.0, 0.5, 7.0] in rnd["wire"]
+    head = next(r for r in rows if r["type"] == "headline" and r["id"] == 1)
+    assert head["crypto_fp"] == "crypto:AAA,BBB,CCC"
+    assert head["event_card_id"] == "card-1"
+
+    again = mod.capture(_client(_handler(items[:1], items)),
+                        now=T0 + timedelta(minutes=20))
+    assert again["headlines"] == 0
+    assert len([r for r in mod.load() if r["type"] == "headline"]) == 2
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_failed_hot_read_is_written_as_none_not_as_an_empty_tab(tmp_path,
+                                                                    monkeypatch):
+    mod = _module(tmp_path, monkeypatch)
+    said = mod.capture(_client(_handler([], [_item(1)], fail_hot=True)), now=T0)
+    assert said["ok"] is False
+    (rnd,) = [r for r in mod.load() if r["type"] == "round"]
+    assert rnd["hot"] is None and rnd["errors"]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_card_is_priced_afterwards_from_its_own_history(tmp_path, monkeypatch):
+    """The card behind an entry is read once its day has passed, from
+    index-history -- never sampled on the way."""
+    mod = _module(tmp_path, monkeypatch)
+    wire = [_item(1)]
+    mod.capture(_client(_handler([], wire)), now=T0)
+    mod.capture(_client(_handler(wire, wire)), now=T0 + timedelta(minutes=20))
+
+    asked = []
+
+    def history(request):
+        asked.append(request.url.path)
+        pts = [{"t": (T0 + timedelta(hours=h)).isoformat(), "index": 100 + h}
+               for h in range(0, 30)]
+        return httpx.Response(200, json={"points": pts})
+
+    early = mod.resolve(_client(history), now=T0 + timedelta(hours=3))
+    assert early["cards"] == 0 and not asked, "not before the day is out"
+
+    later = mod.resolve(_client(history), now=T0 + timedelta(hours=25))
+    assert later["cards"] == 1
+    assert asked == ["/api/v1/event-cards/card-1/index-history"]
+    (card,) = [r for r in mod.load() if r["type"] == "card"]
+    assert card["card_id"] == "card-1" and card["ok"]
+
+    mod.resolve(_client(history), now=T0 + timedelta(hours=26))
+    assert len(asked) == 1, "a card is read once"
