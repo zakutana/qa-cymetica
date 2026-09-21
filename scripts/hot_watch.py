@@ -148,9 +148,11 @@ def _headline_row(item: dict, at: str) -> dict:
             "crypto_fp": hot.basket_fp(crypto, "crypto")}
 
 
-def capture(client, now=None) -> dict:
+def capture(client, now=None, rows: list | None = None) -> dict:
     """One round. A failed hot read is written as `hot: null`, never as an
-    empty tab: were it empty, the next round would call everything an entry."""
+    empty tab: were it empty, the next round would call everything an entry.
+    `rows`, when given, is the diary already read -- and what this round
+    writes is appended to it too, so the caller's copy stays the file's."""
     at = (now or _now()).isoformat(timespec="seconds")
     hot_items, hot_err = _read(client, {"filter": "hot", "limit": HOT_LIMIT})
     wire_items, wire_err = _read(client, {"limit": WIRE_LIMIT})
@@ -161,7 +163,8 @@ def capture(client, now=None) -> dict:
         hot_rows = [r for r in (_hot_row(i + 1, it) for i, it in enumerate(hot_items)) if r]
     wire_rows = [r for r in (_wire_row(it) for it in wire_items or []) if r]
 
-    known = {r.get("id") for r in load() if r.get("type") == "headline"}
+    diary = load() if rows is None else rows
+    known = {r.get("id") for r in diary if r.get("type") == "headline"}
     fresh, seen = [], set()
     for item in (hot_items or []) + (wire_items or []):
         hid = item.get("id")
@@ -170,8 +173,11 @@ def capture(client, now=None) -> dict:
         seen.add(hid)
         fresh.append(_headline_row(item, at))
 
-    _append(fresh + [{"type": "round", "at": at, "ok": not errors,
-                      "errors": errors, "hot": hot_rows, "wire": wire_rows}])
+    written = fresh + [{"type": "round", "at": at, "ok": not errors,
+                        "errors": errors, "hot": hot_rows, "wire": wire_rows}]
+    _append(written)
+    if rows is not None:
+        rows.extend(written)
     return {"ok": not errors, "errors": errors, "headlines": len(fresh),
             "hot": len(hot_rows or []), "wire": len(wire_rows)}
 
@@ -185,10 +191,10 @@ def _points(body) -> list[list]:
     return out
 
 
-def resolve(client, now=None) -> dict:
+def resolve(client, now=None, rows: list | None = None) -> dict:
     """Each entry whose day is out gets its card's history, once."""
     now = now or _now()
-    rows = load()
+    rows = load() if rows is None else rows
     done = {(r.get("fp"), r.get("entry_at")) for r in rows if r.get("type") == "card"}
     due = [e for e in hot.entries(rows)
            if e.get("event_card_id") and (e["fp"], e["at"]) not in done
@@ -219,7 +225,10 @@ def tick(client) -> dict:
 
     token = CURRENT_TIER.set(SafetyTier.SAFE)
     try:
-        return {"capture": capture(client), "resolve": resolve(client)}
+        # One read of the diary per tick (R11, deep pass of 2026-09-21).
+        rows = load()
+        return {"capture": capture(client, rows=rows),
+                "resolve": resolve(client, rows=rows)}
     finally:
         CURRENT_TIER.reset(token)
 

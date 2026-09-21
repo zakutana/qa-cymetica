@@ -126,6 +126,34 @@ def test_a_basket_is_priced_through_another_headline_when_its_own_row_is_gone():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_readings_sort_the_diary_once_not_once_per_basket(monkeypatch):
+    """R01, deep pass of 2026-09-21 (3/3): forward() re-sorted the whole diary
+    for every basket, and control() hands it hundreds per entry round -- 0.9 s
+    at 27 rounds, growing about R^2.3, inside a tick every six hours. The
+    readings now index the rounds once per call."""
+    heads = [_headline(n, crypto=(f"C{n}A", f"C{n}B", f"C{n}C")) for n in range(1, 41)]
+    rounds = [_round(T0)]
+    for i in range(1, 30):
+        when = T0 + timedelta(minutes=20 * i)
+        hot_rows = [(1, 1, 7.0, "crypto", 100 + i, 7.0)] if i >= 1 else []
+        wire = [(n, 1.0, 50 + n + i, 0.1, 1.0) for n in range(1, 41)]
+        rounds.append(_round(when, hot_rows, wire))
+    rows = heads + rounds
+    calls = {"n": 0}
+    real = hot._rounds
+
+    def counted(rs):
+        calls["n"] += 1
+        return real(rs)
+    monkeypatch.setattr(hot, "_rounds", counted)
+    found = hot.entries(rows)
+    calls["n"] = 0
+    said = hot.control(rows, found, horizons=(1.0, 6.0))
+    assert calls["n"] <= 4, f"_rounds ran {calls['n']} times for one reading"
+    assert said["crypto"][0]["n"] > 0
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_follow_counts_unobserved_apart_from_the_measured():
     heads = [_headline(1)]
     rounds = [_round(T0)] + _path(1, T0 + timedelta(minutes=20), [100, 104])

@@ -168,6 +168,60 @@ def entries(rows, headlines=None) -> list[dict]:
     return out
 
 
+class _Index:
+    """The rounds sorted ONCE, with each round's prices by (class, row).
+
+    R01, deep pass of 2026-09-21: forward() re-sorted the whole diary for
+    every basket it priced, and control() prices hundreds per entry round, so
+    a reading grew about R^2.3. Built once per reading, read by bisection.
+    A hot row's price wins over the wire's, as `_px_at` has it.
+    """
+
+    def __init__(self, rows):
+        import bisect
+
+        self._bisect = bisect
+        self.rounds = _rounds(rows)
+        self.times = [_at(r["at"]) for r in self.rounds]
+        self.prices: list[dict] = []
+        for rnd in self.rounds:
+            here: dict = {}
+            for w in rnd.get("wire") or []:
+                if isinstance(w, (list, tuple)) and len(w) >= 3:
+                    for cls, px in (("stocks", w[1]), ("crypto", w[2])):
+                        if isinstance(px, (int, float)) and px > 0:
+                            here[(cls, w[0])] = float(px)
+            for h in _hot_rows(rnd):
+                if h["px"]:
+                    here[(h["cls"], h["row"])] = float(h["px"])
+            self.prices.append(here)
+
+    def last(self):
+        return self.times[-1] if self.times else None
+
+    def forward(self, row_id, cls: str, t0, px0: float, hours: float,
+                tolerance_minutes: float = TOLERANCE_MINUTES,
+                siblings=()) -> float | None:
+        t0 = _at(t0) if not isinstance(t0, datetime) else t0
+        target = t0 + timedelta(hours=hours)
+        slack = timedelta(minutes=tolerance_minutes)
+        lo = self._bisect.bisect_left(self.times, target - slack)
+        hi = self._bisect.bisect_right(self.times, target + slack)
+        best = None
+        for i in range(lo, hi):
+            here = self.prices[i]
+            px = here.get((cls, row_id))
+            if not px:
+                px = next((here[(cls, s)] for s in siblings
+                           if here.get((cls, s))), None)
+            off = abs(self.times[i] - target)
+            if px and (best is None or off < best[0]):
+                best = (off, px)
+        if best is None or not px0:
+            return None
+        return round((best[1] / float(px0) - 1.0) * 100.0, 6)
+
+
 def forward(rows, row_id, cls: str, t0, px0: float, hours: float,
             tolerance_minutes: float = TOLERANCE_MINUTES,
             siblings=()) -> float | None:
@@ -175,24 +229,9 @@ def forward(rows, row_id, cls: str, t0, px0: float, hours: float,
     read off the round nearest the horizon within the tolerance; None if no
     such round priced it. `siblings` are other headlines on the same basket:
     the price is the basket's, so any of them will do once the row itself has
-    left the wire."""
-    t0 = _at(t0) if not isinstance(t0, datetime) else t0
-    target = t0 + timedelta(hours=hours)
-    best = None
-    for rnd in _rounds(rows):
-        off = abs(_at(rnd["at"]) - target)
-        if off > timedelta(minutes=tolerance_minutes):
-            continue
-        px = _px_at(rnd, row_id, cls)
-        for other in siblings if not px else ():
-            px = _px_at(rnd, other, cls)
-            if px:
-                break
-        if px and (best is None or off < best[0]):
-            best = (off, px)
-    if best is None or not px0:
-        return None
-    return round((best[1] / float(px0) - 1.0) * 100.0, 6)
+    left the wire. One call builds its own index; a reading builds one."""
+    return _Index(rows).forward(row_id, cls, t0, px0, hours,
+                                tolerance_minutes, siblings)
 
 
 def _summary(values: list[float], unobserved: int, open_: int = 0) -> dict:
@@ -209,12 +248,13 @@ def _summary(values: list[float], unobserved: int, open_: int = 0) -> dict:
             "up": up, "up_ci": _wilson(up, n)}
 
 
-def _horizon(rows, items, cls: str, hours: float) -> dict:
+def _horizon(rows, items, cls: str, hours: float, index: "_Index | None" = None,
+             heads: dict | None = None) -> dict:
     """`items` = [(row, at, px)]. A horizon the rounds have not reached yet is
     open; one they passed without pricing the row is unobserved."""
-    rounds = _rounds(rows)
-    last = _at(rounds[-1]["at"]) if rounds else None
-    heads = _headlines(rows)
+    index = index or _Index(rows)
+    last = index.last()
+    heads = heads if heads is not None else _headlines(rows)
     by_fp: dict[str, list] = {}
     for hid, head in heads.items():
         fp = _fp(head, cls)
@@ -224,7 +264,7 @@ def _horizon(rows, items, cls: str, hours: float) -> dict:
     for row, at, px in items:
         fp = _fp(heads.get(row), cls)
         siblings = [h for h in by_fp.get(fp, ()) if h != row] if fp else []
-        r = forward(rows, row, cls, at, px, hours, siblings=siblings)
+        r = index.forward(row, cls, at, px, hours, siblings=siblings)
         if r is not None:
             values.append(r)
         elif last is None or _at(at) + timedelta(
@@ -238,9 +278,10 @@ def _horizon(rows, items, cls: str, hours: float) -> dict:
 def follow(found: list[dict], rows, horizons=(6.0, 24.0)) -> dict:
     """Per class, per horizon: the index's return after entry."""
     out = {}
+    index, heads = _Index(rows), _headlines(rows)
     for cls in CLASSES:
         mine = [(e["row"], e["at"], e["px"]) for e in found if e["cls"] == cls]
-        out[cls] = [_horizon(rows, mine, cls, h) for h in horizons]
+        out[cls] = [_horizon(rows, mine, cls, h, index, heads) for h in horizons]
     return out
 
 
@@ -251,7 +292,8 @@ def control(rows, found: list[dict], horizons=(6.0, 24.0), headlines=None) -> di
     equal size -- a larger control costs nothing here, since no leg is priced.
     One that left Hot hours ago is excluded: it is the tail of the thing
     measured, not its absence."""
-    ordered = _rounds(rows)
+    index = _Index(rows)
+    ordered = index.rounds
     rounds = {r["at"]: r for r in ordered}
     heads = _headlines(headlines if headlines is not None else rows)
     seen_hot: dict[str, list[datetime]] = {}
@@ -280,7 +322,7 @@ def control(rows, found: list[dict], horizons=(6.0, 24.0), headlines=None) -> di
                         and (fp, e["at"]) not in picked):
                     picked[(fp, e["at"])] = (w[0], px)
         items = [(row, at, px) for (_, at), (row, px) in picked.items()]
-        out[cls] = [_horizon(rows, items, cls, h) for h in horizons]
+        out[cls] = [_horizon(rows, items, cls, h, index, heads) for h in horizons]
     return out
 
 

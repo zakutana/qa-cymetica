@@ -97,6 +97,27 @@ def test_a_failed_hot_read_is_written_as_none_not_as_an_empty_tab(tmp_path,
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_tick_reads_the_diary_once(tmp_path, monkeypatch):
+    """R11, deep pass of 2026-09-21 (3/3): capture() and resolve() each parsed
+    the whole diary, about 2 MB more every day, on every tick. The tick reads
+    it once and hands it to both; what capture wrote is in the hand-off."""
+    mod = _module(tmp_path, monkeypatch)
+    wire = [_item(1)]
+    mod.capture(_client(_handler([], wire)), now=T0)
+    loads = {"n": 0}
+    real = mod.load
+
+    def counted():
+        loads["n"] += 1
+        return real()
+    monkeypatch.setattr(mod, "load", counted)
+    monkeypatch.setattr(mod, "_now", lambda: T0 + timedelta(minutes=20))
+    said = mod.tick(_client(_handler(wire, wire)))
+    assert loads["n"] == 1, f"the diary was read {loads['n']} times in one tick"
+    assert said["capture"]["ok"]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_read_that_outlives_its_deadline_is_a_failed_read_not_a_hung_tick(
         tmp_path, monkeypatch):
     """2026-09-21 18:06: the `limit=500` wire read hung a tick for 15 minutes.
