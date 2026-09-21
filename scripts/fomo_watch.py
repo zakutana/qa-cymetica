@@ -116,7 +116,10 @@ def _claim(calibration) -> dict | None:
     if isinstance(hot, dict):
         for ours, theirs in (("hot_precision", "precision"), ("hot_n", "n"),
                              ("hot_hits", "hits"), ("hot_ci_low", "ci_low"),
-                             ("hot_ci_high", "ci_high")):
+                             ("hot_ci_high", "ci_high"),
+                             # Without this the figure outlives the caveat it
+                             # was published with (2026-09-21).
+                             ("hot_sufficient", "sufficient")):
             if hot.get(theirs) is not None:
                 claim[ours] = hot[theirs]
     return claim or None
@@ -537,12 +540,23 @@ def say_reading(said: dict) -> list[str]:
               f"({_pct(control['rate'])}), lift "
             + (f"{lift:.1f}x" if lift is not None else "-"))
     for chain, claim in sorted(said["claims"].items()):
+        # Their own sufficiency flag travels with the number or the line
+        # overstates them. On 2026-09-21 this printed "their claim: hot 11.2%
+        # of 171" while the same block carried sufficient false, and that
+        # sentence was one step from a filed report about a claim they do not
+        # make. What they publish there is a count and an interval.
+        enough = claim.get("hot_sufficient")
         lines.append(
-            f"their claim ({chain}, {str(claim.get('at'))[:10]}): hot "
-            f"{_pct(claim.get('hot_precision'))} of {claim.get('hot_n')} "
-            f"reached {claim.get('target_multiple')}x inside "
-            f"{claim.get('horizon_hours')} h, base rate "
-            f"{_pct(claim.get('base_rate'))}")
+            f"their figure ({chain}, {str(claim.get('at'))[:10]}): hot "
+            f"{claim.get('hot_hits')}/{claim.get('hot_n')} reached "
+            f"{claim.get('target_multiple')}x inside "
+            f"{claim.get('horizon_hours')} h"
+            + (f", 95% {_pct(claim.get('hot_ci_low'))}-"
+               f"{_pct(claim.get('hot_ci_high'))}"
+               if claim.get("hot_ci_low") is not None else "")
+            + f", base rate {_pct(claim.get('base_rate'))}"
+            + ("" if enough else " -- THEY MARK THIS SAMPLE INSUFFICIENT, so "
+                                "it is a reading of theirs, not a claim"))
     return lines
 
 
