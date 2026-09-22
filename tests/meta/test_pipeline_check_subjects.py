@@ -255,6 +255,72 @@ def test_a_clone_refusal_that_asks_for_the_retry_it_refuses_fails(monkeypatch):
         "detail": "You already hold a paper clone of this species."}})
 
 
+def _run_clone_check_on_captures(monkeypatch, rows, captured):
+    """The check with the REAL their_body, reading captures from a stub store
+    keyed by evidence id -- `_run_clone_check` stubs their_body itself, and a
+    captured empty body never reaches the check as `{}` (C08)."""
+    check = _load("tests/rest/test_a_refused_clone_says_why.py",
+                  "refused_clone_check_on_captures")
+    monkeypatch.setattr(check, "_clones", lambda: type("C", (), {
+        "load": staticmethod(lambda: rows)})())
+
+    class Store:
+        @staticmethod
+        def load(evidence_id, root=None):
+            if evidence_id not in captured:
+                raise OSError(evidence_id)
+            return {"response": {"body": captured[evidence_id]}}
+    monkeypatch.setattr(check, "EvidenceStore", Store)
+    check.test_a_refused_paper_clone_says_why(
+        _Rest({"/openapi-public.json": OPENAPI_CLONE}))
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_clone_refusal_is_read_the_way_it_was_captured(monkeypatch):
+    """A04 and C08, deep pass of 2026-09-22 evening (3/3 each), and R04 (2/3).
+
+    An empty 400 is captured as {"encoding": "empty", "value": null}, so the
+    real their_body returned None and the docstring's "no detail at all --
+    fail" went inconclusive as an unreadable capture. A reason under a key
+    other than `detail` read as no reason. The no-detail breach went out with
+    the retry sentence it does not fit. And "do not try again" read as asking
+    for a retry, so a fix that names its reason would have failed."""
+    one = _cloned("CLN-0017", PCPN, "13:39:02", 400, "rejected")
+
+    # Inconclusive is a skip, so an unmeasured result would read as a skipped
+    # guard, not a red one: caught and failed here.
+    try:
+        with pytest.raises(AssertionError, match="no detail") as silent:
+            _run_clone_check_on_captures(monkeypatch, one, {
+                "ev-CLN-0017": {"encoding": "empty", "value": None}})
+    except Inconclusive as exc:
+        pytest.fail(f"an empty refusal read as an unreadable capture: {exc}")
+    assert "asks for a retry" not in str(silent.value), str(silent.value)
+
+    # A capture that is not there is still unmeasured, not an empty body.
+    with pytest.raises(Inconclusive):
+        _run_clone_check_on_captures(monkeypatch, one, {})
+
+    # A reason under their own error envelope is a reason.
+    _run_clone_check_on_captures(monkeypatch, one, {
+        "ev-CLN-0017": {"encoding": "json", "value": {"error": {
+            "code": "CLONE_LIMIT", "message": "one paper clone per species"}}}})
+
+    # A refusal that tells the caller NOT to try again does not ask for one,
+    # retried or not.
+    again = one + _cloned("CLN-0020", PCPN, "17:47:14", 400, "rejected")
+    told = {"encoding": "json", "value": {
+        "detail": "You already hold a paper clone of this species; do not try again."}}
+    _run_clone_check_on_captures(monkeypatch, again, {
+        "ev-CLN-0017": told, "ev-CLN-0020": told})
+
+    # And the defect as captured still fails, retry sentence and all.
+    asked = {"encoding": "json", "value": AGAIN}
+    with pytest.raises(AssertionError, match="asks for a retry"):
+        _run_clone_check_on_captures(monkeypatch, again, {
+            "ev-CLN-0017": asked, "ev-CLN-0020": asked})
+
+
 # ------------------------------------ /api-docs examples carry what they need -
 
 CLONE_SPEC = {

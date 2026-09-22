@@ -57,6 +57,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import re
 from pathlib import Path
 
 from qa.evidence import EvidenceStore
@@ -66,7 +67,6 @@ from qa.measure import Measurement, conclude
 REPO = Path(__file__).resolve().parent.parent.parent
 OPENAPI = "/openapi-public.json"
 ROUTE = "/api/v1/cloned-bots/clone"
-RETRY = "try again"
 
 
 def _clones():
@@ -121,23 +121,49 @@ def their_body(attempt: dict):
     except (OSError, ValueError):
         return None
     body = (record.get("response") or {}).get("body") or {}
+    # An empty body is captured as {"encoding": "empty", "value": null}: read,
+    # and empty. It is the "no detail at all" case, not an unreadable capture
+    # (C08, deep pass of 2026-09-22 evening).
+    if body.get("encoding") == "empty":
+        return {}
     return body.get("value")
 
 
 def detail_of(body) -> str:
     """The refusal's words, flattened: `detail` as a string, or the text of
-    whatever it nests. Empty when there is nothing to read."""
+    whatever it nests -- and when there is no `detail`, the whole body, so a
+    reason under their own error envelope (`{"error": {"message": ...}}`)
+    is a reason (A04). Empty when there is nothing to read."""
     if body is None:
         return ""
-    detail = body.get("detail") if isinstance(body, dict) else body
+    if isinstance(body, dict):
+        detail = body.get("detail") if "detail" in body else body
+    else:
+        detail = body
     if detail in (None, "", {}, []):
         return ""
     return detail if isinstance(detail, str) else json.dumps(detail, sort_keys=True)
 
 
+NEGATED = re.compile(r"\b(?:not|never|don't|dont|cannot|can't|won't|no need to)"
+                     r"(?:\s+\w+){0,2}\s*$", re.I)
+
+
+def asks_retry(said: str) -> bool:
+    """Whether the words tell the caller to try again. "Please try again"
+    does; "do not try again" does not (R04): a refusal that names its reason
+    and says not to retry is the fix, not the defect."""
+    for found in re.finditer(r"\btry\s+again\b", said, re.I):
+        if not NEGATED.search(said[max(0, found.start() - 40):found.start()]):
+            return True
+    return False
+
+
 def judge(attempts: list[dict], bodies: dict[str, object]) -> dict:
     """Each refused source by its newest attempt: `breaches`, `passes`,
-    `unmeasured`, as lists of (source_id, reason, attempts on it)."""
+    `unmeasured`, as lists of (source_id, reason, attempts on it). A breach
+    carries a fourth element, which of the two it is -- "retry" or "silent"
+    -- because each goes out with its own sentence (A04c)."""
     newest: dict[str, dict] = {}
     for attempt in attempts:
         newest[attempt["source_id"]] = attempt
@@ -163,9 +189,9 @@ def judge(attempts: list[dict], bodies: dict[str, object]) -> dict:
         if not said:
             out["breaches"].append((source, f"{latest['id']} was refused HTTP "
                                     f"{latest['status']} with no detail at all "
-                                    f"({json.dumps(body)[:120]})", mine))
+                                    f"({json.dumps(body)[:120]})", mine, "silent"))
             continue
-        if RETRY not in said.lower():
+        if not asks_retry(said):
             out["passes"].append((source, f"{latest['id']} was refused HTTP "
                                   f"{latest['status']} saying {said[:160]!r}", mine))
             continue
@@ -175,7 +201,7 @@ def judge(attempts: list[dict], bodies: dict[str, object]) -> dict:
             out["unmeasured"].append((source, f"{latest['id']} asks for a retry "
                                       f"and nobody has retried it yet", mine))
             continue
-        out["breaches"].append((source, said, mine))
+        out["breaches"].append((source, said, mine, "retry"))
     return out
 
 
@@ -209,20 +235,25 @@ def test_a_refused_paper_clone_says_why(rest_trusted):
     documented = _documented(rest_trusted)
 
     if said["breaches"]:
-        source, detail, mine = said["breaches"][0]
+        source, detail, mine, kind = said["breaches"][0]
         refused = [a for a in mine if _refused(a)]
+        when = ", ".join(a["id"] + " " + a["at"][:10] + " " + a["at"][11:19]
+                         for a in refused)
+        what = ("the refusal asks for a retry and the retry is refused the same way"
+                if kind == "retry" else
+                "the refusal says nothing a caller could act on")
         conclude(Measurement(
             verdict="failed",
             reason=(f"a paper clone of wta source {source} was refused HTTP "
-                    f"{refused[-1]['status']} {detail!r} {len(refused)} times "
-                    f"({', '.join(a['id'] + ' ' + a['at'][:10] + ' ' + a['at'][11:19] for a in refused)} UTC): "
-                    f"the refusal asks for a retry and the retry is refused the "
-                    f"same way; {documented}"
+                    f"{refused[-1]['status']} "
+                    + (f"{detail!r} {len(refused)} times ({when} UTC)"
+                       if kind == "retry" else f"-- {detail}")
+                    + f": {what}; {documented}"
                     + (f"; {len(said['breaches']) - 1} other source(s) the same"
                        if len(said["breaches"]) > 1 else "")),
             left=detail, right="a clone, or a refusal a retry does not refute",
             population={"attempts_on_source": mine,
-                        "other_sources": [s for s, _, _ in said["breaches"][1:]],
+                        "other_sources": [b[0] for b in said["breaches"][1:]],
                         "evidence": [a["evidence_id"] for a in refused]},
             sources={"contract": f"{OPENAPI} POST {ROUTE}: 'Paper mode clones "
                                  f"are free'; responses 200 and 422",
