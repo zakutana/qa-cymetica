@@ -89,15 +89,46 @@ def resolve(page: str, expression: str, before: int) -> str | None:
     only to another name, is not read -- and an unread tile is inconclusive,
     never a pass.
     """
-    if not NAME.fullmatch(expression):
-        return expression
+    if NAME.fullmatch(expression):
+        return _assignment(page, expression, before)
+    # A01/C04, deep pass of 2026-09-22 evening: only a WHOLE-expression name
+    # was followed, so `(s.building || 0) + nf` with `const nf = s.funded`
+    # passed, and so did `(s.building || 0) + countOf(s)`. Every free name is
+    # followed now -- not a field, not the object a field hangs off -- and a
+    # call whose body is elsewhere is not read.
+    for called in CALL.finditer(expression):
+        if called.group(1) not in PURE_CALLS:
+            return None
+    resolved = expression
+    for name in sorted(set(FREE.findall(expression)) - WORDS - PURE_CALLS):
+        value = _assignment(page, name, before)
+        if value is None:
+            return None
+        resolved = re.sub(r"(?<![\w$.])" + re.escape(name) + r"(?![\w$(.\[])",
+                          f"({value})", resolved)
+    return resolved
+
+
+def _assignment(page: str, name: str, before: int) -> str | None:
+    """A name's nearest assignment earlier in the page, if it is not merely
+    another name."""
     assigned = list(re.finditer(
-        r"(?<![\w$.])" + re.escape(expression) + r"\s*=(?![=>])\s*([^;]{1,160}?)\s*;",
+        r"(?<![\w$.])" + re.escape(name) + r"\s*=(?![=>])\s*([^;]{1,160}?)\s*;",
         page[:before], re.S))
     if not assigned:
         return None
     value = " ".join(assigned[-1].group(1).split())
     return None if NAME.fullmatch(value) else value
+
+
+# A name standing alone in the expression -- not after a dot, not the object a
+# field or index hangs off, not a call.
+FREE = re.compile(r"(?<![\w$.'\"])([A-Za-z_$][\w$]*)(?![\w$]|\s*[.(\[])")
+# A call of a free function, not a method: `countOf(s)`, not `.toLocaleString()`.
+CALL = re.compile(r"(?<![\w$.])([A-Za-z_$][\w$]*)\s*\(")
+# Calls that only convert the number they are given.
+PURE_CALLS = frozenset({"Number", "parseInt", "parseFloat", "String"})
+WORDS = frozenset({"true", "false", "null", "undefined", "NaN", "Infinity"})
 
 
 @qa(component="rest.build_it_better", tier=SafetyTier.SAFE, surface="rest")

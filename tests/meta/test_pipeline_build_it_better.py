@@ -570,6 +570,22 @@ def test_the_building_tile_is_judged_by_the_arithmetic_behind_its_name():
         with pytest.raises(Inconclusive):
             run(script)
 
+    # A01/C04, deep pass of 2026-09-22 evening (3/3): a name was followed
+    # only when it was the WHOLE expression, so a stage hidden in a local
+    # beside s.building passed, and so did a call beside it. Every free name
+    # in the expression is followed; a call whose body is elsewhere, or a
+    # name with no assignment, is not read.
+    with pytest.raises(AssertionError, match="funded"):
+        run("function paint(s){ const nf = (s.funded || 0); "
+            "text($('bs-building'), (s.building || 0) + nf); }")
+    for script in (
+            "function paint(s){ text($('bs-building'), "
+            "(s.building || 0) + countOf(s)); }",
+            "function paint(s){ text($('bs-building'), (s.building || 0) + nf); }"):
+        with pytest.raises(Inconclusive):
+            run(script)
+    run("function paint(s){ text($('bs-building'), Number(s.building || 0)); }")
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_socket_named_by_its_path_or_with_a_trailing_slash_is_named():
