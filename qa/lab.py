@@ -1165,7 +1165,24 @@ def ruled_out_cards(text: str) -> set[str]:
 # it priced whole: positive, and at a Sharpe of at least half. Deliberately a
 # low bar -- the room's own window is the real test, and this only keeps out
 # what already lost money on their own numbers.
-GATE = {"periods": (30, 90), "min_sharpe": 0.5, "min_return_pct": 0.0}
+#
+# The cost is the LIVE round trip, charged on their gross return: two fills at
+# their 0.2% taker fee and 0.5% of slippage each side. Their backtest's own fee
+# toggle is 2% + 0.5% per side, 5% a round trip -- "a deliberately conservative
+# stress estimate, not the live fee schedule" (REPLY-0047, verified live
+# 2026-09-22) -- and gating on it refused cards for a cost no trade pays.
+# Sharpe is theirs, on the gross path either way.
+GATE = {"periods": (30, 90), "min_sharpe": 0.5, "min_return_pct": 0.0,
+        "round_trip_cost_pct": 1.4}
+
+
+def _net(row: dict) -> float:
+    """A reading's return after the live round trip. One their toggle already
+    charged (`fees`) is taken as it stands, never charged twice."""
+    ret = float(row["r"])
+    if row.get("fees"):
+        return ret
+    return ((1 + ret / 100) * (1 - GATE["round_trip_cost_pct"] / 100) - 1) * 100
 
 
 def gate(readings: list[dict]) -> dict:
@@ -1184,7 +1201,7 @@ def gate(readings: list[dict]) -> dict:
         return {"verdict": "unbacktestable",
                 "why": "their backtest priced no window of this basket whole"}
     longest = max(whole, key=lambda row: float(row.get("p") or 0))
-    period, ret, sharpe = int(longest.get("p") or 0), longest["r"], longest["s"]
+    period, ret, sharpe = int(longest.get("p") or 0), _net(longest), longest["s"]
     said = {"period": period, "return_pct": ret, "sharpe": sharpe,
             "drawdown_pct": longest.get("d")}
     if ret <= GATE["min_return_pct"]:

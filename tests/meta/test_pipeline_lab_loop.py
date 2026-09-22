@@ -1177,6 +1177,28 @@ def test_the_gate_reads_the_longest_window_their_backtest_priced_whole():
     assert lab.gate([{"p": 90, "r": None, "s": None}])["verdict"] == "unbacktestable"
 
 
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_gate_charges_what_a_trade_costs_not_their_stress_test():
+    """REPLY-0047, 2026-09-22, verified live: their backtest's fee toggle is
+    2% + 0.5% PER SIDE, 5% a round trip, "a deliberately conservative stress
+    estimate, not the live fee schedule" -- the live event-card taker fee is
+    0.2% a fill. The gate asked for "positive after fees" through that
+    toggle, so a card up 3% gross over a quarter was refused for a cost it
+    would never pay. The gate now reads the GROSS return and charges the live
+    round trip: two fills of 0.2% and 0.5% of slippage each side."""
+    gross = {"p": 90, "r": 3.0, "s": 1.1, "d": 2.0}
+    said = lab.gate([gross])
+    assert said["verdict"] == "pass", said
+    cost = lab.GATE["round_trip_cost_pct"]
+    assert cost == 1.4
+    assert round(said["return_pct"], 4) == round(((1.03) * (1 - cost / 100) - 1) * 100, 4)
+    # Under the live cost, still a loss.
+    assert lab.gate([dict(gross, r=1.0)])["verdict"] == "reject"
+    # A reading their toggle already charged is not charged twice.
+    stressed = lab.gate([_reading(90, 2.0, 1.1)])
+    assert stressed["verdict"] == "pass" and stressed["return_pct"] == 2.0, stressed
+
+
 def _launchpad(scripts_lab, tmp_path, monkeypatch, answers, live, readings,
                refuse=()):
     """night_promote with their card door and their backtest stubbed, the
@@ -1422,7 +1444,11 @@ def test_a_room_opens_only_from_a_card_their_backtest_rates(
     did = scripts_lab.night_promote()
 
     assert [card for card, _ in sent] == [a], sent
-    assert all(fees for _, _, fees in calls), "a gate that ignores fees"
+    # Gross since 2026-09-22 (REPLY-0047): their fee toggle is a 5% stress
+    # estimate, and the gate charges the live round trip itself
+    # (test_the_gate_charges_what_a_trade_costs_not_their_stress_test).
+    assert not any(fees for _, _, fees in calls), (
+        "the gate asked their stress-test toggle, which charges 5% a trade")
     assert did["rooms"] == 1 and did["orders"] == 1, did
     held = " | ".join(did["held"])
     assert "NEX-0002" in held and "-4.0" in held, held

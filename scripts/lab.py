@@ -1525,7 +1525,8 @@ def _gate(card: str, legs: list[dict]) -> dict:
                    "weight": float(leg["weight"]) / total} for leg in basket]
         for period in lab.GATE["periods"]:
             try:
-                readings.append(backtest(basket, period, include_fees=True,
+                # Gross: `qa.lab.gate` charges the live round trip itself.
+                readings.append(backtest(basket, period, include_fees=False,
                                          why=f"gate {card[:8]}",
                                          cite="backtest.event_card_idea"))
             except qa_backtests.BacktestError:
