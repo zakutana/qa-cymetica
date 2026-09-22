@@ -1451,3 +1451,78 @@ def test_status_of_reads_the_newest_row_and_nothing_for_a_proposed_room():
     ]
     assert rooms.status_of(moved, "STR-0001") == "paused"
     assert rooms.status_of(moved, "STR-0002") == "running"
+
+
+# ---------------------------------------------------------------------------
+# 2026-09-22: a room holds a card, a paper bot or a marked fund
+# ---------------------------------------------------------------------------
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_leg_names_its_kind_and_an_old_card_leg_reads_as_a_card(
+        tmp_path, monkeypatch):
+    """The operator, 2026-09-22: everything that runs on paper, not only
+    cards. A leg is a kind -- card, bot, fund -- and the thing it names, its
+    `ref`. A leg written the old way, with `card` alone, IS a card leg: it is
+    stored with the same card field every reader already reads, and a row
+    already on disk that has no kind is read as one without being rewritten."""
+    rooms = _rooms_at(tmp_path, monkeypatch)
+    _write(tmp_path / "nexus.jsonl", _answered("NEX-1", 0))
+    rooms.open_strategy("NEX-1", "mixed")
+
+    old = {"card": CARD_A, "side": "bull", "share": 0.1, "tp": 13.0, "sl": -9.0}
+    plan = rooms.set_plan("STR-0001", [
+        old,
+        {"kind": "bot", "ref": "inst-7", "side": "bull", "share": 0.2},
+        {"kind": "fund", "ref": "AIB-SPACE", "side": "bull", "share": 0.3}])
+    card, bot, fund = plan["legs"]
+    assert (card["card"], card["kind"], card["ref"]) == (CARD_A, "card", CARD_A)
+    assert (card["share"], card["tp"], card["sl"]) == (0.1, 13.0, -9.0)
+    assert (bot["kind"], bot["ref"]) == ("bot", "inst-7") and "card" not in bot
+    assert (fund["kind"], fund["ref"]) == ("fund", "AIB-SPACE") and "card" not in fund
+
+    # A leg on disk from before: no kind, no ref. Read, not rewritten.
+    assert rooms.leg_kind({"card": CARD_B, "side": "bull"}) == "card"
+    assert rooms.leg_ref({"card": CARD_B, "side": "bull"}) == CARD_B
+    assert rooms.leg_ref(bot) == "inst-7" and rooms.leg_kind(fund) == "fund"
+
+    before = _stored(tmp_path)
+    leg = {"kind": "bot", "ref": "inst-7", "side": "bull", "share": 0.2}
+    for legs in ([dict(leg, kind="stock")], [dict(leg, ref="")],
+                 [dict(leg, kind="card", ref=CARD_A[:8])],
+                 [dict(leg, kind="fund", ref="aib space")],
+                 [leg, dict(leg, share=0.1)]):
+        with pytest.raises(rooms.RoomError):
+            rooms.set_plan("STR-0001", legs)
+    assert _stored(tmp_path) == before, "a refused leg still wrote something"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_bot_or_fund_room_is_one_thing_of_its_answer_not_the_whole_answer(
+        tmp_path, monkeypatch):
+    """A room with no `card` used to mean a WHOLE-ANSWER room -- in
+    open_strategy, in the launcher and on the page. A bot room has no card,
+    and read that way it would refuse the answer's cards and swallow every
+    order the answer made. It is keyed by its kind and ref instead."""
+    rooms = _rooms_at(tmp_path, monkeypatch)
+    _write(tmp_path / "nexus.jsonl", [*_answered("NEX-1", 0)])
+    _write(tmp_path / "paper.jsonl", [
+        *_buy("TRD-0001", 900, "NEX-1", position="P-1", card="card-a-1111"),
+        *_buy("TRD-0002", 950, "NEX-1", position="P-2", card="card-z-9999")])
+
+    bot = rooms.open_strategy("NEX-1", "MACD Hunter", kind="bot",
+                              ref="dd206f68-048f-4325-9f33-4ca77e40bbeb")
+    card = rooms.open_strategy("NEX-1", "Karta A", card="card-a-1111")
+    fund = rooms.open_strategy("NEX-1", "AIB-SPACE", kind="fund", ref="AIB-SPACE")
+    assert (bot["kind"], card.get("kind", "card"), fund["kind"]) == (
+        "bot", "card", "fund")
+    with pytest.raises(rooms.RoomError):
+        rooms.open_strategy("NEX-1", "again", kind="bot",
+                            ref="dd206f68-048f-4325-9f33-4ca77e40bbeb")
+    with pytest.raises(rooms.RoomError):
+        rooms.open_strategy("NEX-1", "the whole answer, on top of its rooms")
+
+    view = _render().build_rooms()
+    assert _legs(view, "STR-0002") == ["TRD-0001"]
+    assert _legs(view, "STR-0001") == [], "the bot room took the answer's orders"
+    assert "TRD-0002" in _legs(view, "general")

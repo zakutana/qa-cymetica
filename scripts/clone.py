@@ -238,8 +238,12 @@ def _guidance(nexus_id: str | None) -> dict:
         return {"id": None, "note": "no recorded guidance; this clone is "
                 "ours, not Cymetica's"}
     rows = []
-    src = state_dir() / "nexus.jsonl"
-    if src.is_file():
+    # Both of his doors: the laboratory acts on an answer from the sync lane
+    # (nexus_shallow.jsonl) as it does on a deep one, and a clone it launches
+    # from one must still name it.
+    for src in (state_dir() / "nexus.jsonl", state_dir() / "nexus_shallow.jsonl"):
+        if not src.is_file():
+            continue
         for line in src.read_text(encoding="utf-8").splitlines():
             if line.strip():
                 try:
@@ -464,13 +468,19 @@ def _instance(client, instance_id: str) -> dict:
     return row
 
 
-def enable(instance_id: str, confirm: bool) -> dict:
+def enable(instance_id: str, confirm: bool, enabled: bool = True) -> dict:
     """Start a paper bot trading, and record what they said it was first.
 
     The one call here that keeps spending after we stop watching, so the
     floor reads both of their statements about the instance and refuses
     unless they agree. See `startable`.
+
+    `enabled=False` pauses it -- the laboratory's close of a bot room
+    (2026-09-22). Stopping a bot spends nothing, so it needs only that they
+    list it as ours; it keeps the same intent/outcome/after chain, as kind
+    "disable". The practice money stays in the clone.
     """
+    kind = "enable" if enabled else "disable"
     load_dotenv()
     install_client_guard()
     registry = EndpointRegistry.load()
@@ -479,7 +489,7 @@ def enable(instance_id: str, confirm: bool) -> dict:
     client = build_client(identities()["trusted"], registry, timeout=60.0)
 
     row = _instance(client, instance_id)
-    if not startable(row):
+    if enabled and not startable(row):
         economics = row.get("execution_economics") or {}
         raise SystemExit(
             f"{instance_id}: they say is_paper="
@@ -491,7 +501,7 @@ def enable(instance_id: str, confirm: bool) -> dict:
 
     before = _snapshot(client)
     run_id = _next_id(load())
-    entry = {"id": run_id, "type": "intent", "at": _now(), "kind": "enable",
+    entry = {"id": run_id, "type": "intent", "at": _now(), "kind": kind,
              "instance_id": instance_id,
              "their_is_paper": row.get("is_paper"),
              "their_execution_class":
@@ -511,16 +521,16 @@ def enable(instance_id: str, confirm: bool) -> dict:
     token = CURRENT_TIER.set(SafetyTier.MUTATE)
     try:
         response = client.post(TOGGLE.format(id=instance_id),
-                               params={"enabled": "true"})
+                               params={"enabled": "true" if enabled else "false"})
     except Exception as exc:  # noqa: BLE001
-        _append({"id": run_id, "type": "outcome", "at": _now(), "kind": "enable",
+        _append({"id": run_id, "type": "outcome", "at": _now(), "kind": kind,
                  "outcome": "not_sent", "error": f"{type(exc).__name__}: {exc}"})
         raise
     finally:
         CURRENT_TIER.reset(token)
 
     served, said = _served(response)
-    _append({"id": run_id, "type": "outcome", "at": _now(), "kind": "enable",
+    _append({"id": run_id, "type": "outcome", "at": _now(), "kind": kind,
              "outcome": said,
              "http_status": response.status_code,
              "evidence_id": _capture(response),
@@ -535,7 +545,7 @@ def enable(instance_id: str, confirm: bool) -> dict:
     except SystemExit as exc:
         after_row, reread = {}, f"failed: {exc}"
     try:
-        _append({"id": run_id, "type": "after", "at": _now(), "kind": "enable",
+        _append({"id": run_id, "type": "after", "at": _now(), "kind": kind,
                  "reread": reread,
                  "their_is_trading": after_row.get("is_trading"),
                  "their_is_paper": after_row.get("is_paper"),
@@ -544,7 +554,8 @@ def enable(instance_id: str, confirm: bool) -> dict:
     finally:
         client.close()
     if reread != "ok":
-        print(f"   WARNING: switched on, then {reread}. Read their my-clones "
+        print(f"   WARNING: switched {'on' if enabled else 'off'}, then {reread}. "
+              f"Read their my-clones "
               f"before doing anything else with it.")
 
     print(f"{run_id}: HTTP {response.status_code}, "

@@ -89,6 +89,10 @@ def _wire(scripts_lab, monkeypatch, cards):
               "tradeable": True, "title": "a card"}
     monkeypatch.setattr(scripts_lab, "_card_live",
                         lambda card: basket if card in cards else None)
+    # Since 2026-09-22 an answer may name a bot or a fund too; their
+    # catalogues are read, and here they list nothing.
+    monkeypatch.setattr(scripts_lab, "_bot_catalogue", lambda: [])
+    monkeypatch.setattr(scripts_lab, "_fund_catalogue", lambda: [])
     monkeypatch.setattr(scripts_lab, "backtest",
                         lambda legs, period_days=30, **_: {
                             "cached": True, "p": period_days, "r": 6.0,

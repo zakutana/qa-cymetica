@@ -843,7 +843,10 @@ def build_rooms() -> dict:
     # answer carries the same Nexus id, and an order for a card none of the
     # answer's rooms holds belongs in General (R12, deep pass of 2026-09-21 --
     # it fell back to the answer's LAST room, a strategy it did not come from).
-    by_origin = {s.get("origin"): s["id"] for s in opened if not s.get("card")}
+    # A bot or fund room (2026-09-22) has no card and is not a whole-answer
+    # room either: it holds one thing of its answer, like a card room.
+    by_origin = {s.get("origin"): s["id"] for s in opened
+                 if store.room_key(s) is None}
     by_card = {(s.get("origin"), str(s.get("card")).lower()): s["id"]
                for s in opened if s.get("card")}
     linked: dict[str, str] = {}

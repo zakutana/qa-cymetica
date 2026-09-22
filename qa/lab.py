@@ -770,6 +770,59 @@ def _points(rows) -> list[tuple[datetime, float]]:
     return sorted(out)
 
 
+def _ref(leg: dict):
+    """The key a leg's series is under: its `ref` -- a card's id, a bot's
+    instance, a fund's symbol -- or, on a leg from before 2026-09-22, its
+    `card`, which is the same id. So a card is judged on the same series,
+    to the same number, whichever way its leg was written."""
+    return leg.get("ref") or leg.get("card")
+
+
+def bot_series(samples: list[dict], instance: str, funded: float | None
+               ) -> list[dict]:
+    """A paper bot's own index, from the sampler's rows: 100 at what went in,
+    moved by what it made -- `100 * (1 + total_profit_usdc / funded)`.
+
+    Not `balance_usdc` alone, although that is what the sampler reads off
+    their my-clones row: since their fix of #94 a stake is debited from it
+    when the bot OPENS a position, so a bot with 40% in a trade reads -40%
+    and would be refuted past its stop on the first sample. What went in
+    plus what it made does not depend on how they book a stake -- the
+    reading `scripts/paper.py::capital_in_bots` already makes of the same
+    fields. No funding on record, no series: a bot we cannot size is not
+    judged at all.
+    """
+    try:
+        base = float(funded or 0)
+    except (TypeError, ValueError):
+        return []
+    if base <= 0:
+        return []
+    out = []
+    for row in samples or []:
+        if (not isinstance(row, dict) or row.get("kind") != "bot"
+                or row.get("instance_id") != instance):
+            continue
+        try:
+            profit = float(row.get("total_profit_usdc"))
+        except (TypeError, ValueError):
+            continue
+        if row.get("at"):
+            out.append({"t": row["at"], "index": 100.0 * (1.0 + profit / base)})
+    return out
+
+
+def fund_series(points) -> list[dict]:
+    """Their fund history, `[{t, v}]` from get_fund_history, in the shape the
+    verdict reads a card's index in."""
+    out = []
+    for point in points or []:
+        if isinstance(point, dict) and point.get("t") and isinstance(
+                point.get("v"), (int, float)) and not isinstance(point["v"], bool):
+            out.append({"t": point["t"], "index": float(point["v"])})
+    return out
+
+
 def formula_fingerprint() -> str:
     """The hash of the verdict's own source.
 
@@ -806,7 +859,7 @@ def _early(acceptance: dict, series: dict, start, moment) -> dict | None:
     """
     legs = []
     for leg in acceptance.get("legs") or []:
-        inside = [(t, v) for t, v in _points(series.get(leg.get("card")))
+        inside = [(t, v) for t, v in _points(series.get(_ref(leg)))
                   if start <= t <= moment]
         if len(inside) < 2:
             return None
@@ -912,10 +965,10 @@ def verdict(acceptance: dict, series: dict, now, closes: dict | None = None
     for leg in acceptance.get("legs") or []:
         # A card that closes inside the window is judged up to its close:
         # after it their index stops, and that is the end, not a gap.
-        closed = _at((closes or {}).get(leg.get("card")))
+        closed = _at((closes or {}).get(_ref(leg)))
         stop_at = min(end, closed) if closed and closed > start else end
         judged.append(stop_at)
-        inside = _inside(_points(series.get(leg.get("card"))), start, stop_at)
+        inside = _inside(_points(series.get(_ref(leg))), start, stop_at)
         if len(inside) < 2:
             legs.append({**leg, "exit": None, "return_pct": None,
                          "why": "no index inside the window"})
@@ -1144,9 +1197,15 @@ def ruled_out_cards(text: str) -> set[str]:
     sits inside such a section is ruled out. One mention anywhere else, as in
     "open the position with card_id ...", keeps it a proposal.
     """
+    return _ruled_out(str(text or "").lower(), CARD_ID.findall)
+
+
+def _ruled_out(text: str, find) -> set[str]:
+    """The section reading behind ruled_out_cards, for anything `find` picks
+    out of a line -- cards by id, bots by species name, funds by symbol."""
     inside = False
     mentioned: dict[str, bool] = {}
-    for line in str(text or "").lower().split("\n"):
+    for line in str(text or "").split("\n"):
         ruling = inside
         if line.strip() and not _BULLET.match(line):
             # A heading that rules out opens a section; one that names a card
@@ -1154,9 +1213,72 @@ def ruled_out_cards(text: str) -> set[str]:
             # A ruling line that names its cards itself ("Passed but not
             # selected: `849a695b`") rules those out and opens one too.
             ruling = inside = bool(_RULED_OUT.search(line))
-        for found in CARD_ID.findall(line):
+        for found in find(line):
             mentioned[found] = mentioned.get(found, False) or not ruling
-    return {card for card, elsewhere in mentioned.items() if not elsewhere}
+    return {name for name, elsewhere in mentioned.items() if not elsewhere}
+
+
+def _whole_names(names, flags: int, edge: str):
+    """A finder for exact catalogue names in a line, longest first, each
+    span taken once -- so a name inside a longer one ("MACD Hunter" in a
+    hypothetical "MACD Hunter Pro") is not a second mention."""
+    patterns = [(name, re.compile(rf"(?<![{edge}]){re.escape(name)}(?![{edge}])",
+                                  flags))
+                for name in sorted({str(n) for n in names if n}, key=len,
+                                   reverse=True)]
+
+    def find(line: str) -> list[str]:
+        spans: list[tuple[int, int, str]] = []
+        for name, pattern in patterns:
+            for hit in pattern.finditer(line):
+                if any(a < hit.end() and hit.start() < b for a, b, _ in spans):
+                    continue
+                spans.append((hit.start(), hit.end(), name))
+        return [name for _, _, name in sorted(spans)]
+    return find
+
+
+def _proposed(text: str, find) -> list[str]:
+    """Every name `find` sees, first mention first, less those he ruled out."""
+    body = str(text or "")
+    seen: list[str] = []
+    for found in find(body):
+        if found not in seen:
+            seen.append(found)
+    out = _ruled_out(body, find)
+    return [name for name in seen if name not in out]
+
+
+def proposed_bots(text: str, catalogue) -> list[dict]:
+    """The bots an answer proposes to clone, as their catalogue rows.
+
+    2026-09-22, the operator: "papírově jde spustit plno věcí kromě karet".
+    A bot is named by its species name exactly as GET
+    /api/v1/cloned-bots/available lists it -- twenty-two of them on that
+    day -- as a whole name (case aside: it is prose), never as part of a
+    longer word. A name he mentions only under a heading that rules it out
+    is not a proposal, as with a card (NEX-0064). An invented name is
+    nothing: there is no row to clone.
+    """
+    rows = [row for row in catalogue or ()
+            if isinstance(row, dict) and row.get("name") and row.get("id")]
+    by_name = {str(row["name"]): row for row in rows}
+    # The finder hands back the catalogue's own spelling, whatever case the
+    # answer wrote it in.
+    find = _whole_names(by_name, re.I, "A-Za-z0-9")
+    return [by_name[name] for name in _proposed(text, find)]
+
+
+def proposed_funds(text: str, catalogue) -> list[str]:
+    """The funds an answer proposes to watch, by the symbol list_funds gives.
+
+    Exact and case-sensitive: a symbol is a code ("AIB-SPACE"), and prose
+    that happens to say "event-card" is not the EVENT-CARD fund. The hyphen
+    is part of a symbol, so AIB-AI is not read inside AIB-AIX.
+    """
+    symbols = [row.get("symbol") if isinstance(row, dict) else row
+               for row in catalogue or ()]
+    return _proposed(text, _whole_names(symbols, 0, "A-Za-z0-9_-"))
 
 
 # What "promising" means before a room opens. [operator 2026-09-19] asked for

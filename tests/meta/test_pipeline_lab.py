@@ -1452,6 +1452,10 @@ def test_the_night_holds_no_hand_that_trades_files_or_commits():
                    or getattr(c.func, "attr", None) == name)
                    for c in ast.walk(node))
 
+    # Since 2026-09-22 a paper bot is funded from the same book (clone.py's
+    # `fund`), so a transfer into a clone is a spend like a buy.
+    spends = ("buy", "fund")
+
     def _gate_then_spend(node) -> bool:
         for block in [b for n in ast.walk(node)
                       for b in (getattr(n, "body", []), getattr(n, "orelse", []))
@@ -1459,13 +1463,16 @@ def test_the_night_holds_no_hand_that_trades_files_or_commits():
             gate = next((i for i, s in enumerate(block)
                          if _calls(s, "affordable")), None)
             spend = next((i for i, s in enumerate(block)
-                          if _calls(s, "buy")), None)
+                          if any(_calls(s, name) for name in spends)), None)
             if gate is not None and spend is not None and gate < spend:
                 return True
         return False
 
     spenders = [node for node in ast.walk(tree)
-                if isinstance(node, ast.FunctionDef) and _calls(node, "buy")]
+                if isinstance(node, ast.FunctionDef)
+                and any(_calls(node, name) for name in spends)]
+    assert any(_calls(node, "fund") for node in spenders), (
+        "nothing in the night funds a paper bot; the operator asked for bots")
     assert spenders, "nothing in the night can launch; the operator asked for it"
     for node in spenders:
         assert _gate_then_spend(node), (

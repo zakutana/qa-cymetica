@@ -124,6 +124,16 @@ def _free_cash() -> float | None:
             newest = row["after"]
         elif row.get("type") == "after":
             newest = row
+    # clone.py reads the same account after every transfer into a paper bot
+    # (2026-09-22). Its read wins only when it is provably the later one.
+    cloned = [row for row in _sibling("clone").load()
+              if row.get("type") == "after" and row.get("sim_balance_usdc")
+              is not None and _moment(row.get("at")) is not None]
+    if cloned:
+        later = max(cloned, key=lambda row: _moment(row["at"]))
+        mine = _moment((newest or {}).get("at")) if isinstance(newest, dict) else None
+        if newest is None or (mine is not None and _moment(later["at"]) > mine):
+            newest = later
     if not isinstance(newest, dict):
         return None
     for key in ("sim_balance_usdc", "balance_usdc", "free_usdc"):
@@ -222,7 +232,19 @@ def _deployed() -> float:
         out[str(position or f"order:{row.get('id')}")] = usdc
     for position in _closed_on_their_side():
         out.pop(position, None)
-    return sum(out.values())
+    return sum(out.values()) + _in_clones()
+
+
+def _in_clones() -> float:
+    """Practice money moved into our paper clones: every ACCEPTED transfer in
+    clones.jsonl (2026-09-22, when the laboratory began to clone bots).
+
+    From our own record, like the rest of `_deployed`, not a read of their
+    my-clones (`paper.clone_capital`), so the ceiling does not depend on
+    their API answering. The money stays in a clone when the bot is paused,
+    so nothing here releases it. A refused transfer never moved anything.
+    """
+    return sum(_funded().values())
 
 
 def _amount(value) -> float | None:
@@ -1044,9 +1066,10 @@ def verdicts(now=None) -> list[dict]:
         settled = rooms.verdict_of(rows, room)
         if settled is not None:
             # R06, deep pass of 2026-09-21: the verdict is written before the
-            # close, so a close that failed has to be owed from here on.
-            if settled.get("early"):
-                owed.append((strategy, acceptance))
+            # close, so a close that failed has to be owed from here on. A
+            # bot still trading after any verdict is owed its pause too.
+            if settled.get("early") or _bots_running(acceptance):
+                owed.append((strategy, acceptance, bool(settled.get("early"))))
             continue
         said = lab.verdict(acceptance, {}, moment)
         if said["verdict"] != "open":
@@ -1058,28 +1081,47 @@ def verdicts(now=None) -> list[dict]:
         if last is None or moment - last >= timedelta(minutes=EARLY_CHECK_MINUTES):
             due.append((room, acceptance, strategy))
 
-    def close_positions(strategy: dict, legs: list, said: dict) -> None:
-        """Close what our accepted buys opened for this room's cards. Not
-        while a deep pass runs -- it verifies #85-#87 over these very trades
-        -- and whatever fails stays owed to the next call."""
+    def close_positions(strategy: dict, acceptance: dict, said: dict,
+                        cards: bool = True) -> None:
+        """Close what our accepted buys opened for this room's cards, and
+        pause the paper bots it runs (2026-09-22; the practice money stays
+        in the clone). A fund was never bought, so there is nothing to
+        close. Not while a deep pass runs -- it verifies #85-#87 over these
+        very trades -- and whatever fails stays owed to the next call."""
         if pass_in_flight():
             said.setdefault("close_failed", []).append(
                 "a deep pass is running; the close waits for the next call")
             return
-        paper = _sibling("paper")
-        for position in _room_positions(
-                paper.load(), str(strategy.get("origin")), legs):
+        legs = acceptance.get("legs") or []
+        if cards:
+            paper = _sibling("paper")
+            for position in _room_positions(
+                    paper.load(), str(strategy.get("origin")),
+                    [rooms.leg_ref(leg) for leg in legs
+                     if rooms.leg_kind(leg) == "card"]):
+                try:
+                    paper.close(position, True)
+                except (Exception, SystemExit) as exc:  # noqa: BLE001
+                    said.setdefault("close_failed", []).append(
+                        f"{position}: {str(exc)[:160]}")
+        for instance in _bots_running(acceptance):
+            clone = _sibling("clone")
             try:
-                paper.close(position, True)
+                clone.enable(instance, True, enabled=False)
             except (Exception, SystemExit) as exc:  # noqa: BLE001
                 said.setdefault("close_failed", []).append(
-                    f"{position}: {str(exc)[:160]}")
+                    f"{instance}: {str(exc)[:160]}")
+                continue
+            if _clone_outcome(clone, "disable", instance) == "accepted":
+                said.setdefault("paused", []).append(instance)
+            else:
+                said.setdefault("close_failed", []).append(
+                    f"{instance}: the pause was not accepted")
 
     retried = []
-    for strategy, acceptance in owed:
-        legs = [leg.get("card") for leg in acceptance.get("legs") or []]
+    for strategy, acceptance, early in owed:
         said = {"room": strategy["id"], "retry": True}
-        close_positions(strategy, legs, said)
+        close_positions(strategy, acceptance, said, cards=early)
         if said.get("close_failed"):
             retried.append(said)
     if not due:
@@ -1109,14 +1151,40 @@ def verdicts(now=None) -> list[dict]:
             except Exception:  # noqa: BLE001 -- unread: judged as before
                 closings[card] = None
         return closings[card]
+    samples: list[dict] | None = None
+    funded: dict[str, float] | None = None
+    fund_histories: dict[str, list] = {}
+
+    def series_of(leg: dict) -> list:
+        """A leg's index, by its kind: a card's from their index-history, a
+        bot's from the sampler's rows on this machine, a fund's from
+        get_fund_history. An unread fund is an empty series -- the verdict
+        reads that as a gap, never as a loss."""
+        nonlocal samples, funded
+        kind, ref = rooms.leg_kind(leg), rooms.leg_ref(leg)
+        if kind == "bot":
+            if samples is None:
+                samples, funded = rooms.load_samples(), _funded()
+            return lab.bot_series(samples, ref, funded.get(ref))
+        if kind == "fund":
+            if ref not in fund_histories:
+                try:
+                    fund_histories[ref] = lab.fund_series(_fund_points(ref))
+                except Exception:  # noqa: BLE001 -- unread: a gap
+                    fund_histories[ref] = []
+            return fund_histories[ref]
+        return history(ref)
     try:
         for room, acceptance, strategy in due:
-            legs = [leg.get("card") for leg in acceptance.get("legs") or []]
-            cards = list(legs)
+            legs = acceptance.get("legs") or []
+            series = {rooms.leg_ref(leg): series_of(leg) for leg in legs
+                      if rooms.leg_ref(leg)}
             if acceptance.get("benchmark_card"):
-                cards.append(acceptance["benchmark_card"])
-            series = {card: history(card) for card in cards if card}
-            closes = {card: closes_at(card) for card in legs if card}
+                series[acceptance["benchmark_card"]] = history(
+                    acceptance["benchmark_card"])
+            closes = {rooms.leg_ref(leg): closes_at(rooms.leg_ref(leg))
+                      for leg in legs
+                      if rooms.leg_kind(leg) == "card" and rooms.leg_ref(leg)}
             said = lab.verdict(acceptance, series, moment, closes=closes)
             checked[room] = moment.isoformat()
             if said["verdict"] == "open":
@@ -1126,11 +1194,14 @@ def verdicts(now=None) -> list[dict]:
                 room, "stopped",
                 (f"verdict{' (early)' if said.get('early') else ''}: "
                  f"{said['verdict']} -- {said.get('why', '')}")[:400])
-            if said.get("early"):
+            if said.get("early") or _bots_running(acceptance):
                 # The money comes back under the ceiling only when the
                 # position is closed; a stopped room alone frees a slot in the
-                # count, not the stake.
-                close_positions(strategy, legs, said)
+                # count, not the stake. A bot is paused at ANY verdict: its
+                # window is over either way, and a bot left trading goes on
+                # spending after nobody is judging it.
+                close_positions(strategy, acceptance, said,
+                                cards=bool(said.get("early")))
             out.append({"room": room, **said})
     finally:
         client.close()
@@ -1178,30 +1249,41 @@ def ask(question: str, wait: bool = True, lane: str = "auto") -> dict:
 
 
 def cards_question() -> str:
-    """The question that feeds one room per card (2026-09-21).
+    """The question that feeds one room per pick (2026-09-21; since
+    2026-09-22 a pick is a card, a bot to clone on paper or a fund to mark).
 
-    Up to five cards, each with the thesis it rests on -- and fewer if fewer
+    Up to five, each with the thesis it rests on -- and fewer if fewer
     are worth it: the operator, on the plan, "pořád by room měl vzniknout jen
     na základě slibné teorie nebo backtestu". It names the WHOLE ids of what we
     hold (NEX-0058 could not look up two cards we gave by eight characters)
     and why the gate refused his recent picks, since he remembers nothing.
     """
     stored = rooms.load()
+    titles = rooms.names(stored)
     holding = []
     for room_id, plan in rooms.plans(stored).items():
         if rooms.status_of(stored, room_id) == "stopped":
             continue
-        holding += [str(leg["card"]) for leg in plan.get("legs") or []
-                    if leg.get("card")]
+        for leg in plan.get("legs") or []:
+            kind, ref = rooms.leg_kind(leg), rooms.leg_ref(leg)
+            if not ref:
+                continue
+            # He knows a bot by its species name, not by our clone's instance.
+            holding.append(f"bot {titles.get(room_id, ref)}" if kind == "bot"
+                           else f"fund {ref}" if kind == "fund" else str(ref))
     refused = [row for row in lab.load() if row.get("type") == "gate"
                and row.get("verdict") in ("reject", "unknown_card")][-5:]
     lines = [
-        "Up to five event cards you would hold on paper now, each on its own: "
-        "the whole card UUID, status live and tradeable_now true, side, "
-        "take-profit and stop in percent, and one line on the thesis or the "
-        "backtest it rests on. Fewer is fine if fewer are worth it -- we open "
-        "a room only for a card whose own backtest after fees holds up, so a "
-        "weak pick costs a slot and a question, not money.",
+        "Up to five things you would run on paper now, each on its own: an "
+        "event card (the whole card UUID, status live and tradeable_now "
+        "true), a bot to clone on paper (its exact species name from "
+        "/api/v1/cloned-bots/available), or a fund to mark (its symbol from "
+        "list_funds -- we watch a fund, we do not buy one). For each: side "
+        "where it has one, take-profit and stop in percent, and one line on "
+        "the thesis or the backtest it rests on. Fewer is fine if fewer are "
+        "worth it -- we open a room for a card only when its own backtest "
+        "after fees holds up, so a weak pick costs a slot and a question, "
+        "not money.",
     ]
     if holding:
         lines.append("Already held, do not repeat: " + ", ".join(sorted(set(holding))) + ".")
@@ -1211,8 +1293,10 @@ def cards_question() -> str:
                          f"{str(r.get('card'))[:8]} ({r.get('origin')}) "
                          f"{str(r.get('why') or r.get('verdict'))[:90]}"
                          for r in refused) + ".")
-    lines.append("Name no card you are not proposing: our launcher reads every "
-                 "UUID in the answer as a pick.")
+    lines.append("Name no card, bot or fund you are not proposing: our "
+                 "launcher reads every UUID, species name and fund symbol in "
+                 "the answer as a pick, unless it sits under a heading that "
+                 "rules it out.")
     return " ".join(lines)
 
 
@@ -1509,6 +1593,81 @@ def _card_live(card: str) -> dict | None:
             "title": str(body.get("title") or "")}
 
 
+def _bot_catalogue() -> list[dict] | None:
+    """Every bot they will clone -- GET /api/v1/cloned-bots/available, read
+    through clone.py's own reader so the source_type each row needs comes
+    from the group it arrives under. None when unread: an unread catalogue
+    is not an empty one, and the answer's bots wait for the next tick."""
+    from qa.client import build_client
+    from qa.config import identities, load_dotenv
+    from qa.safety import CURRENT_TIER, EndpointRegistry, SafetyTier
+
+    clone = _sibling("clone")
+    load_dotenv()
+    ids = identities()
+    identity = ids["trusted"] if ids["trusted"].present else ids["anon"]
+    client = build_client(identity, EndpointRegistry.load(), timeout=30.0)
+    token = CURRENT_TIER.set(SafetyTier.SAFE)
+    try:
+        response = client.get(clone.AVAILABLE)
+        if response.status_code != 200:
+            return None
+        return clone.available_bots(response.json())
+    except Exception:  # noqa: BLE001 -- unread, not empty
+        return None
+    finally:
+        CURRENT_TIER.reset(token)
+        client.close()
+
+
+def _fund_tool(tool: str, arguments: dict):
+    """One of their four read-only fund tools, on /mcp/v1 with no key -- the
+    advisor connector's own terms, so no shadow account is needed (the
+    keyed identity answers NO_SHADOW_ACCOUNT there)."""
+    from qa.config import identities, load_dotenv
+    from qa.client import build_mcp_client
+    from qa.safety import CURRENT_TIER, EndpointRegistry, SafetyTier
+
+    load_dotenv()
+    client = build_mcp_client(identities()["anon"], EndpointRegistry.load())
+    token = CURRENT_TIER.set(SafetyTier.SAFE)
+    try:
+        answer = client.call(tool, arguments)
+    finally:
+        CURRENT_TIER.reset(token)
+        client.http.close()
+    if isinstance(answer, dict) and isinstance(answer.get("result"), dict):
+        return answer["result"]
+    return answer if isinstance(answer, dict) else {}
+
+
+def _fund_catalogue() -> list[str] | None:
+    """The symbols list_funds hands out, or None when it could not be read."""
+    try:
+        funds = _fund_tool("list_funds", {"limit": 100}).get("funds")
+    except Exception:  # noqa: BLE001 -- unread, not empty
+        return None
+    if not isinstance(funds, list):
+        return None
+    return [str(row["symbol"]) for row in funds
+            if isinstance(row, dict) and row.get("symbol")]
+
+
+FUND_POINTS = 400  # their maximum; the default of 80 clips the series
+
+
+def _fund_points(symbol: str) -> list[dict]:
+    """get_fund_history for one fund, `[{t, v}]`, the whole of what they keep
+    (points=400). Raises when unread, so a failed read is never an empty
+    series (rule 8)."""
+    said = _fund_tool("get_fund_history", {"symbol": symbol, "points": FUND_POINTS})
+    if "points" not in said and (said.get("error") or said.get("code")):
+        # A rate limit came back this way on 2026-09-19: an answer, not a
+        # history, and not an empty one.
+        raise RuntimeError(str(said.get("code") or said.get("error"))[:120])
+    return said.get("points") or []
+
+
 def _gate(card: str, legs: list[dict]) -> dict:
     """Their backtest of one card's basket, after fees, over the gate's
     windows -- read through the register, so a card is never priced twice --
@@ -1610,39 +1769,61 @@ def night_promote(since: datetime | None = None) -> dict:
     # A room opened from a whole answer (before 2026-09-21) spends the answer;
     # a room opened for one card spends that card of it, and its other cards
     # may still open their own.
+    # A bot or fund room (2026-09-22) holds one thing of its answer, keyed by
+    # `ref`, and is no more a whole-answer room than a card room is.
     whole_linked = {str(row.get("origin")) for row in stored
-                    if row.get("type") == "strategy" and not row.get("card")}
+                    if row.get("type") == "strategy"
+                    and rooms.room_key(row) is None}
     card_linked = {(str(row.get("origin")), str(row.get("card")).lower())
                    for row in stored
                    if row.get("type") == "strategy" and row.get("card")}
+    ref_linked = {(str(row.get("origin")), str(row.get("ref")).lower())
+                  for row in stored
+                  if row.get("type") == "strategy" and row.get("ref")}
+    # A species or a fund a room not yet stopped already holds, by any answer.
+    live_refs: dict[tuple[str, str], str] = {}
+    for row in rooms.strategies(stored):
+        if row.get("ref") and rooms.status_of(stored, row["id"]) != "stopped":
+            live_refs.setdefault((str(row.get("kind")), str(row["ref"]).lower()),
+                                 row["id"])
+    catalogues: dict[str, list | None] = {}
+
+    def catalogue(kind: str):
+        """Their bot or fund catalogue, read once per call and only when an
+        answer is actually being read."""
+        if kind not in catalogues:
+            try:
+                catalogues[kind] = (_bot_catalogue() if kind == "bot"
+                                    else _fund_catalogue())
+            except Exception:  # noqa: BLE001 -- unread, not empty
+                catalogues[kind] = None
+        return catalogues[kind]
     capped = False
 
-    for answer in answers:
-        if capped:
-            break
-        origin = str(answer.get("id") or "")
-        if not origin or origin in whole_linked:
-            continue
-        # Every id the answer names; whether it EXISTS is asked of their API
-        # below, not of what our own sampler happened to have seen.
-        named = lab.proposed_cards(answer.get("text"), ())["unknown"]
-        if not named:
-            held.append(f"{origin}: names no card we can act on; the morning "
-                        f"reads it")
-            continue
-        ruled_out = lab.ruled_out_cards(answer.get("text"))
+    def launch_cards(origin: str, text, named: list[str]) -> None:
+        """The answer's cards, each its own room -- as it has been since
+        2026-09-21. A `return` here leaves the answer's bots and funds to
+        be read after it."""
+        nonlocal opened, placed, capped
+        # Asked again here, not only on entry: a pass started while this call
+        # walked earlier answers verifies #85-#87 over the next order.
+        if pass_in_flight():
+            held.append(f"{origin}: a deep pass is running")
+            capped = True
+            return
+        ruled_out = lab.ruled_out_cards(text)
         for card in named:
             if card in ruled_out:
                 held.append(f"{origin}/{card[:8]}: he named it only to rule "
                             f"it out -- not a proposal")
         named = [c for c in named if c not in ruled_out]
         if not named:
-            continue
+            return
         spent = ("reject", "unknown_card")
         named = [c for c in named if (origin, c) not in card_linked]
         if all(decided.get((origin, card), {}).get("verdict") in spent
                for card in named):
-            continue  # decided on an earlier tick, and nothing in it may run
+            return  # decided on an earlier tick, and nothing in it may run
 
         chosen: dict[str, dict] = {}
         for card in named:
@@ -1777,7 +1958,274 @@ def night_promote(since: datetime | None = None) -> dict:
                 rooms.set_status(room, status, why=why_status)
             except rooms.RoomError as exc:
                 held.append(f"{room}: {exc}")
+
+    def room_slot(origin: str) -> bool:
+        """One more room under the day cap, or say why not and stop."""
+        nonlocal capped
+        if today + opened >= cap:
+            held.append(f"{origin}: {today + opened} room(s) opened in the "
+                        f"last 24 h and the cap is {cap} a day — the next "
+                        f"day takes the rest")
+            capped = True
+            return False
+        return True
+
+    def launch_bot(origin: str, bot: dict) -> None:
+        """One bot he named, cloned on paper through clone.py -- its paper
+        flag, its is_paper floors and its CLN record, none of them ours to
+        repeat -- funded with half a stake (a bot has no backtest) and
+        started. Its room's leg is the clone's instance; the room opens
+        before the clone, as a card's does before its order, so a clone that
+        fails leaves a stopped room saying why rather than a silence."""
+        nonlocal opened, capped
+        name, species = str(bot.get("name")), str(bot.get("id"))
+        tag = f"{origin}/{name}"
+        if (origin, species.lower()) in ref_linked:
+            return
+        owner = live_refs.get(("bot", species.lower()))
+        if owner:
+            held.append(f"{tag}: already cloned in {owner} -- not a second "
+                        f"experiment")
+            return
+        if not room_slot(origin):
+            return
+        if pass_in_flight():
+            held.append(f"{tag}: a deep pass is running")
+            capped = True
+            return
+        free, deployed = _free_cash(), _deployed()
+        stake = _leg_stakes(free, deployed, 1, half=True)[0]
+        ok, why = lab.affordable(stake, free, _running_experiments(),
+                                 deployed=deployed)
+        if not ok or stake <= 0:
+            held.append(f"{tag}: {why or 'no stake'} — left for the morning")
+            capped = True
+            return
+        key = f"bot:{name}"
+        if (origin, key) not in decided:
+            decided[(origin, key)] = lab.note_gate(origin, key, {
+                "verdict": "unbacktestable",
+                "why": "their backtest prices a basket of coins, not a bot"})
+        try:
+            room = rooms.open_strategy(origin, name[:rooms.MAX_TITLE],
+                                       kind="bot", ref=species)["id"]
+        except rooms.RoomError as exc:
+            held.append(f"{tag}: {exc}")
+            return
+        opened += 1
+        ref_linked.add((origin, species.lower()))
+        live_refs[("bot", species.lower())] = room
+        clone = _sibling("clone")
+
+        def stop(why: str) -> None:
+            held.append(f"{tag}: {why}")
+            try:
+                rooms.set_status(room, "stopped", why=why[:400])
+            except rooms.RoomError as exc:
+                held.append(f"{room}: {exc}")
+
+        try:
+            made = clone.clone(bot.get("source_type"), species,
+                               f"lab {name}"[:60], origin, True) or {}
+        except (Exception, SystemExit) as exc:  # noqa: BLE001
+            return stop(f"the paper clone was refused ({str(exc)[:160]})")
+        instance = made.get("clone_instance_id")
+        if made.get("outcome") != "accepted" or not instance:
+            return stop(f"the paper clone was not accepted (HTTP "
+                        f"{made.get('http_status')}, {made.get('outcome')}), "
+                        f"so nothing runs here")
+        if made.get("is_paper") is not True:
+            return stop(f"they did not confirm {instance} as paper "
+                        f"(is_paper={made.get('is_paper')!r}), so it is "
+                        f"neither funded nor started")
+        try:
+            rooms.add_link(room, made["id"],
+                           why=f"the paper clone of {name} this room runs")
+            plan = rooms.set_plan(room, [{"kind": "bot", "ref": instance,
+                                          "side": "bull", "share": 1.0}])
+            rooms.set_acceptance(
+                room, window_days=NIGHT_WINDOW_DAYS, stop_pct=NIGHT_STOP_PCT,
+                legs=plan["legs"], benchmark_card=BTC_PROXY,
+                why=(f"opened unattended from {origin}, one room for the bot "
+                     f"{name}, cloned on paper as {instance}; the window and "
+                     f"the stop are the laboratory's defaults, not numbers "
+                     f"Nexus gave. Judged on what it made against what went "
+                     f"in -- NOT backtested, half stake")[:900],
+                adopted=True)
+        except (rooms.RoomError, KeyError) as exc:
+            return stop(f"the room could not be written ({exc})")
+        try:
+            clone.fund(instance, stake, True)
+        except (Exception, SystemExit) as exc:  # noqa: BLE001
+            return stop(f"funding {instance} was refused ({str(exc)[:160]})")
+        if _clone_outcome(clone, "fund", instance) != "accepted":
+            return stop(f"funding {instance} was not accepted")
+        try:
+            clone.enable(instance, True)
+        except (Exception, SystemExit) as exc:  # noqa: BLE001
+            return stop(f"starting {instance} was refused ({str(exc)[:160]}); "
+                        f"its {stake:.2f} stays in the clone")
+        if _clone_outcome(clone, "enable", instance) != "accepted":
+            return stop(f"starting {instance} was not accepted; its "
+                        f"{stake:.2f} stays in the clone")
+        try:
+            rooms.set_status(room, "running", why=(
+                f"cloned on paper from {origin}: {name} as {instance}, funded "
+                f"{stake:.2f} USDC (half stake, not backtested) and started"))
+        except rooms.RoomError as exc:
+            held.append(f"{room}: {exc}")
+
+    def launch_fund(origin: str, symbol: str) -> None:
+        """One fund he named, MARKED and not bought: create_aib_fund spends
+        real money and has no paper switch. A room, a leg, a criterion, no
+        order of any kind -- and a notional stake that no ceiling counts. It
+        takes a slot among the running experiments, because it is one. A fund
+        whose history is empty has nothing to be judged on and opens nothing."""
+        nonlocal opened, capped
+        tag = f"{origin}/{symbol}"
+        if (origin, symbol.lower()) in ref_linked:
+            return
+        owner = live_refs.get(("fund", symbol.lower()))
+        if owner:
+            held.append(f"{tag}: already marked in {owner}")
+            return
+        key = f"fund:{symbol}"
+        if decided.get((origin, key), {}).get("verdict") == "no_series":
+            return
+        if not room_slot(origin):
+            return
+        running = _running_experiments()
+        if running >= lab.CAPS["running_experiments"]:
+            held.append(f"{tag}: {running} experiments are already running — "
+                        f"left for the morning")
+            capped = True
+            return
+        try:
+            points = lab.fund_series(_fund_points(symbol))
+        except Exception as exc:  # noqa: BLE001 -- unread is not empty
+            held.append(f"{tag}: its history could not be read "
+                        f"({str(exc)[:120]}) — the next tick tries again")
+            return
+        if not points:
+            decided[(origin, key)] = lab.note_gate(origin, key, {
+                "verdict": "no_series",
+                "why": "get_fund_history returned no points, so there is "
+                       "nothing to judge it on"})
+            held.append(f"{tag}: their history of it is empty -- nothing to "
+                        f"judge it on, so no room")
+            return
+        notional = _leg_stakes(_free_cash(), _deployed(), 1)[0]
+        try:
+            room = rooms.open_strategy(origin, symbol, kind="fund",
+                                       ref=symbol)["id"]
+        except rooms.RoomError as exc:
+            held.append(f"{tag}: {exc}")
+            return
+        opened += 1
+        ref_linked.add((origin, symbol.lower()))
+        live_refs[("fund", symbol.lower())] = room
+        try:
+            plan = rooms.set_plan(room, [{"kind": "fund", "ref": symbol,
+                                          "side": "bull", "share": 1.0}])
+            rooms.set_acceptance(
+                room, window_days=NIGHT_WINDOW_DAYS, stop_pct=NIGHT_STOP_PCT,
+                legs=plan["legs"], benchmark_card=BTC_PROXY,
+                why=(f"opened unattended from {origin}, one room for the fund "
+                     f"{symbol}: marked, not bought -- no order of any kind, "
+                     f"a notional {notional:.2f} USDC counted in no ceiling. "
+                     f"Judged on their get_fund_history; the window and the "
+                     f"stop are the laboratory's defaults, not numbers Nexus "
+                     f"gave")[:900],
+                adopted=True)
+            rooms.set_status(room, "running", why=(
+                f"marked, not bought -- no order; a notional {notional:.2f} "
+                f"USDC from {origin}, counted in no ceiling"))
+        except rooms.RoomError as exc:
+            held.append(f"{room}: {exc}")
+
+    for answer in answers:
+        if capped:
+            break
+        origin = str(answer.get("id") or "")
+        if not origin or origin in whole_linked:
+            continue
+        text = answer.get("text")
+        # Every id the answer names; whether it EXISTS is asked of their API
+        # below, not of what our own sampler happened to have seen.
+        named = lab.proposed_cards(text, ())["unknown"]
+        bots_listed = catalogue("bot")
+        if bots_listed:
+            # A species id is a bot's, not a card nobody can find (#91).
+            species = {str(b.get("id")).lower() for b in bots_listed}
+            named = [c for c in named if c not in species]
+        bots = lab.proposed_bots(text, bots_listed or [])
+        funds = lab.proposed_funds(text, catalogue("fund") or [])
+        if not (named or bots or funds):
+            held.append(f"{origin}: names no card, bot or fund we can act on; "
+                        f"the morning reads it")
+            continue
+        if named:
+            launch_cards(origin, text, named)
+        for bot in bots:
+            if capped:
+                break
+            launch_bot(origin, bot)
+        for symbol in funds:
+            if capped:
+                break
+            launch_fund(origin, symbol)
     return {"rooms": opened, "orders": placed, "held": held}
+
+
+def _bots_running(acceptance: dict) -> list[str]:
+    """The criterion's bot legs that our own record says we started and have
+    not paused since: the newest ACCEPTED switch of each, per clones.jsonl."""
+    wanted = [rooms.leg_ref(leg) for leg in acceptance.get("legs") or []
+              if rooms.leg_kind(leg) == "bot"]
+    if not wanted:
+        return []
+    rows = _sibling("clone").load()
+    outcomes = {row.get("id"): row.get("outcome") for row in rows
+                if row.get("type") == "outcome"}
+    switched: dict[str, str] = {}
+    for row in rows:
+        if (row.get("type") == "intent"
+                and row.get("kind") in ("enable", "disable")
+                and outcomes.get(row.get("id")) == "accepted"):
+            switched[str(row.get("instance_id"))] = row["kind"]
+    return [ref for ref in wanted if switched.get(str(ref)) == "enable"]
+
+
+def _funded() -> dict[str, float]:
+    """What went into each clone: accepted transfers in clones.jsonl -- the
+    base a bot's index is measured against (`qa.lab.bot_series`)."""
+    rows = _sibling("clone").load()
+    asked = {row.get("id"): row for row in rows
+             if row.get("type") == "intent" and row.get("kind") == "fund"}
+    out: dict[str, float] = {}
+    for row in rows:
+        intent = asked.get(row.get("id"))
+        if (intent and row.get("type") == "outcome"
+                and row.get("outcome") == "accepted"):
+            amount = _amount(intent.get("amount"))
+            if amount is not None:
+                key = str(intent.get("instance_id"))
+                out[key] = out.get(key, 0.0) + amount
+    return out
+
+
+def _clone_outcome(clone, kind: str, instance: str) -> str | None:
+    """What clone.py recorded for its newest `kind` call on this instance --
+    fund() and enable() return their body, not whether it was accepted."""
+    rows = clone.load()
+    asked = [row.get("id") for row in rows
+             if row.get("type") == "intent" and row.get("kind") == kind
+             and row.get("instance_id") == instance]
+    if not asked:
+        return None
+    return next((row.get("outcome") for row in reversed(rows)
+                 if row.get("type") == "outcome" and row.get("id") == asked[-1]),
+                None)
 
 
 def _night_search(moves: list[dict]) -> dict:

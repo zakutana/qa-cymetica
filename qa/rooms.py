@@ -62,6 +62,13 @@ MAX_LEGS = 8
 # A card by the whole id their API names it with. The sampler reads the card
 # through it, and the eight-character prefix our own logs print reads nothing.
 CARD_ID = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
+# What a leg may hold since 2026-09-22 -- the operator: everything that runs on
+# paper, not only cards. A card is bought on paper, a bot is cloned on paper
+# (scripts/clone.py), a fund is only MARKED: create_aib_fund spends real money
+# and has no paper switch, so its leg is watched on its own series.
+LEG_KINDS = ("card", "bot", "fund")
+FUND_SYMBOL = re.compile(r"^[A-Z0-9][A-Z0-9-]{0,39}$")
+BOT_REF = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.:-]{0,79}$")
 # What the tab calls an answered question. render.py's _nexus_questions() reads
 # this same number, so a room opens only from an answer the tab shows as one.
 ANSWERED_CHARS = 300
@@ -300,7 +307,18 @@ def _strategy(rows: list[dict], room: str) -> None:
         raise RoomError(f"there is no strategy room {room!r}")
 
 
-def open_strategy(origin: str, title: str, card: str | None = None) -> dict:
+def room_key(row: dict) -> str | None:
+    """What a strategy room was opened FOR, within its answer: a card's id,
+    or since 2026-09-22 a bot's species id or a fund's symbol. None is a
+    WHOLE-ANSWER room -- the older kind, which takes everything the answer
+    did. A bot or fund room has no `card`, and reading "no card" as "whole
+    answer" would let it swallow every order its answer made."""
+    key = row.get("card") or row.get("ref")
+    return str(key).lower() if key else None
+
+
+def open_strategy(origin: str, title: str, card: str | None = None, *,
+                  kind: str | None = None, ref: str | None = None) -> dict:
     """A room for a strategy Nexus proposed, opened from its whole answer.
 
     One answer opens one room -- or, when `card` is given, one room per card
@@ -309,31 +327,39 @@ def open_strategy(origin: str, title: str, card: str | None = None) -> dict:
     than strategies). Either way every order and clone that acts on an
     answer has exactly one room to be drawn in: by the answer, or by the
     answer and the card it bought.
+
+    `kind` and `ref` open a room for one bot (its species id) or one fund
+    (its symbol) of the answer, the same way `card` does for a card.
     """
     name = " ".join(str(title or "").split())
     if not name or len(name) > MAX_TITLE:
         raise RoomError(f"a title of 1 to {MAX_TITLE} characters")
+    if kind is not None and (kind not in LEG_KINDS or kind == "card" or not ref):
+        raise RoomError("a bot or fund room names its kind and what it holds; "
+                        "a card room is opened with `card`")
     if whole_answer(nexus_answers(), origin) is None:
         raise RoomError(f"{origin} has no whole answer from Nexus, and a room "
                         f"opens only from one")
 
-    wanted = str(card).lower() if card else None
+    wanted = str(card or ref).lower() if (card or ref) else None
 
     def build(rows: list[dict]) -> list[dict]:
-        # A whole-answer room (no card) excludes every other room from that
-        # answer, and a card room excludes a second room for the same card.
+        # A whole-answer room excludes every other room from that answer, and
+        # a room for one thing excludes a second room for the same thing.
         taken = next((r["id"] for r in strategies(rows)
                       if r.get("origin") == origin
-                      and (wanted is None or not r.get("card")
-                           or str(r.get("card")).lower() == wanted)), None)
+                      and (wanted is None or room_key(r) is None
+                           or room_key(r) == wanted)), None)
         if taken:
             raise RoomError(f"{origin} already opened {taken}"
                             + (f" for {wanted[:8]}" if wanted else ""))
         used = [number(r["id"]) for r in strategies(rows)]
         row = {"type": "strategy", "id": f"STR-{max(used, default=0) + 1:04d}",
                "origin": origin, "title": name, "at": _now()}
-        if wanted:
+        if card:
             row["card"] = wanted
+        elif kind:
+            row["kind"], row["ref"] = kind, str(ref)
         return [row]
     return _append(build)[0]
 
@@ -524,11 +550,33 @@ def _number(value, what: str) -> float | None:
         raise RoomError(f"{what} is a number, not {value!r}") from None
 
 
+def leg_kind(leg: dict) -> str:
+    """What a leg holds. A leg written before 2026-09-22 names only `card`,
+    and is a card leg -- read that way, never rewritten."""
+    return str(leg.get("kind") or "card")
+
+
+def leg_ref(leg: dict):
+    """The thing a leg names: a card's whole id, a bot's instance id, a fund's
+    symbol. An old card leg's `card` is its ref."""
+    return leg.get("ref") or leg.get("card")
+
+
 def _leg(leg: dict) -> dict:
-    card = str(leg.get("card") or "").strip().lower()
-    if not CARD_ID.match(card):
-        raise RoomError(f"{card!r} is not a card id -- the whole id, the way "
-                        f"their API names the card")
+    kind = leg_kind(leg)
+    if kind not in LEG_KINDS:
+        raise RoomError(f"a leg holds a {', a '.join(LEG_KINDS)}, not {kind!r}")
+    ref = str(leg_ref(leg) or "").strip()
+    if kind == "card":
+        ref = ref.lower()
+        if not CARD_ID.match(ref):
+            raise RoomError(f"{ref!r} is not a card id -- the whole id, the way "
+                            f"their API names the card")
+    elif kind == "fund" and not FUND_SYMBOL.match(ref):
+        raise RoomError(f"{ref!r} is not a fund symbol, the way list_funds "
+                        f"names one")
+    elif kind == "bot" and not BOT_REF.match(ref):
+        raise RoomError(f"{ref!r} is not a bot's instance id")
     side = str(leg.get("side") or "").strip().lower()
     if side not in SIDES:
         raise RoomError(f"a side is {' or '.join(SIDES)}, not {leg.get('side')!r}")
@@ -541,13 +589,19 @@ def _leg(leg: dict) -> dict:
     sl = _number(leg.get("sl"), "a stop")
     if sl is not None and sl >= 0:
         raise RoomError("a stop is a fall, below 0 %")
-    return {"card": card, "side": side, "share": round(share, 6), "tp": tp, "sl": sl}
+    # A card leg keeps `card`, the field the sampler, the page and the launcher
+    # have always read it by.
+    named = {"card": ref} if kind == "card" else {}
+    return {**named, "kind": kind, "ref": ref, "side": side,
+            "share": round(share, 6), "tp": tp, "sl": sl}
 
 
 def set_plan(room: str, legs: list[dict], reserve=None, bankroll=None) -> dict:
     """Nexus's proposal for a strategy, written down as legs.
 
-    A leg is a card by its whole id, a side, the share of the bankroll Nexus
+    A leg is a card by its whole id (or, since 2026-09-22, a `kind` of bot or
+    fund and its `ref`: the clone's instance id, the fund's symbol), a side,
+    the share of the bankroll Nexus
     gave it, and the take-profit and stop it gave, in percent from the entry.
     `reserve` is the share it kept back and `bankroll` the sum it sized
     against. It records what was PROPOSED; what was done stays in paper.jsonl,
@@ -556,9 +610,9 @@ def set_plan(room: str, legs: list[dict], reserve=None, bankroll=None) -> dict:
     clean = [_leg(leg if isinstance(leg, dict) else {}) for leg in legs or []]
     if not clean or len(clean) > MAX_LEGS:
         raise RoomError(f"a plan has 1 to {MAX_LEGS} legs")
-    cards = [leg["card"] for leg in clean]
-    if len(set(cards)) != len(cards):
-        raise RoomError("a card is named twice -- one leg per card")
+    named = [(leg["kind"], leg["ref"]) for leg in clean]
+    if len(set(named)) != len(named):
+        raise RoomError("a card, bot or fund is named twice -- one leg each")
     kept = _number(reserve, "a reserve")
     if kept is not None and not 0 <= kept < 1:
         raise RoomError("a reserve is at least 0 and less than the whole bankroll")

@@ -26,6 +26,8 @@ import json
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+import pytest
+
 from qa import lab
 from qa.marks import SafetyTier, qa
 
@@ -1209,6 +1211,9 @@ def _launchpad(scripts_lab, tmp_path, monkeypatch, answers, live, readings,
                                       "sim_balance_usdc": "100000"}])
     monkeypatch.setattr(scripts_lab, "pass_in_flight", lambda: False)
     monkeypatch.setattr(scripts_lab, "card_baskets", lambda: [])
+    # Their bot and fund catalogues (2026-09-22), empty unless a test says so.
+    monkeypatch.setattr(scripts_lab, "_bot_catalogue", lambda: [])
+    monkeypatch.setattr(scripts_lab, "_fund_catalogue", lambda: [])
 
     def _live(card):
         said = live[card]
@@ -1767,3 +1772,397 @@ def test_a_verdict_reads_the_whole_index_history_not_the_last_five_days(
     if interval is None and "interval=" in path:
         interval = path.split("interval=", 1)[1].split("&", 1)[0]
     assert interval == "all", (path, kwargs)
+
+
+# ---------------------------------------------------------------------------
+# 2026-09-22: bots cloned on paper and funds marked, not only cards
+# ---------------------------------------------------------------------------
+#
+# The operator: "proč běží jen samé karty, proč nezkouší boty... papírově jde
+# spustit plno věcí kromě karet". Their catalogue as GET
+# /api/v1/cloned-bots/available answered it (evidence 1287ecda), in part.
+
+MACD = {"id": "dd206f68-048f-4325-9f33-4ca77e40bbeb", "name": "MACD Hunter",
+        "source_type": "wta_species"}
+TITAN = {"id": "86de496c-a5df-49e7-91e2-b0dc96cfd783", "name": "Trend Titan",
+         "source_type": "wta_species"}
+DOOM = {"id": "80ec35bf-a03e-45e0-9c5c-6053f5c69076", "name": "Doom & Gloom",
+        "source_type": "perpetual_agent"}
+LIQ = {"id": "e1251539-3494-4993-9568-42bf35c757fa", "name": "Liquidation Hunter",
+       "source_type": "perpetual_agent"}
+CATALOGUE = [MACD, TITAN, DOOM, LIQ]
+FUNDS = ["AIB-SPACE", "AIB-AI", "FTA-STOCKS"]
+
+
+def _clonepad(scripts_lab, tmp_path, monkeypatch, answers, fund_points=None,
+              clone_outcome="accepted"):
+    """night_promote with the bot catalogue, the fund roster and clone.py's
+    three writes stubbed -- each stub writes the rows the real one writes, so
+    the record downstream is the real record. Nothing reaches their side."""
+    sent, _ = _launchpad(scripts_lab, tmp_path, monkeypatch, answers,
+                         live={}, readings={})
+    monkeypatch.setattr(scripts_lab, "_bot_catalogue", lambda: list(CATALOGUE))
+    monkeypatch.setattr(scripts_lab, "_fund_catalogue", lambda: list(FUNDS))
+    monkeypatch.setattr(scripts_lab, "_fund_points",
+                        lambda symbol: (fund_points or {}).get(symbol, []))
+    pinned = scripts_lab._sibling
+    clone = pinned("clone")
+    calls = []
+
+    def _clone(source_type, source_id, name, nexus_id, confirm):
+        calls.append(("clone", source_type, source_id, nexus_id, confirm))
+        cid = clone._next_id(clone.load())
+        clone._append({"id": cid, "type": "intent", "at": NOW.isoformat(),
+                       "source_type": source_type, "source_id": source_id,
+                       "custom_name": name, "paper": True,
+                       "nexus": {"id": nexus_id}})
+        out = {"id": cid, "type": "outcome", "at": NOW.isoformat(),
+               "outcome": clone_outcome, "http_status": 200,
+               "clone_instance_id": f"inst-{len(calls)}", "is_paper": True,
+               "is_trading": False}
+        clone._append(out)
+        return out
+
+    def _fund(instance_id, amount, confirm):
+        calls.append(("fund", instance_id, amount, confirm))
+        cid = clone._next_id(clone.load())
+        clone._append({"id": cid, "type": "intent", "at": NOW.isoformat(),
+                       "kind": "fund", "instance_id": instance_id,
+                       "amount": float(amount)})
+        clone._append({"id": cid, "type": "outcome", "at": NOW.isoformat(),
+                       "kind": "fund", "outcome": "accepted",
+                       "http_status": 200})
+        return {"bot_balance": amount}
+
+    def _enable(instance_id, confirm, enabled=True):
+        calls.append(("enable" if enabled else "pause", instance_id, confirm))
+        cid = clone._next_id(clone.load())
+        kind = "enable" if enabled else "disable"
+        clone._append({"id": cid, "type": "intent", "at": NOW.isoformat(),
+                       "kind": kind, "instance_id": instance_id})
+        clone._append({"id": cid, "type": "outcome", "at": NOW.isoformat(),
+                       "kind": kind, "outcome": "accepted", "http_status": 200})
+        return {"is_trading": enabled}
+
+    clone.clone, clone.fund, clone.enable = _clone, _fund, _enable
+    monkeypatch.setattr(scripts_lab, "_sibling",
+                        lambda n: clone if n == "clone" else pinned(n))
+    return sent, calls
+
+
+def _answer(text, ident="NEX-0001"):
+    return [{"type": "answer", "id": ident,
+             "at": (NOW - timedelta(minutes=30)).isoformat(),
+             "text": text + " " + ("reasoning. " * 40)}]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_catalogue_readers_take_whole_names_and_respect_what_he_ruled_out():
+    """A bot is proposed by its exact species name from their catalogue, a
+    fund by its exact symbol from list_funds. A name inside a longer word is
+    not a mention, and a name that sits only under a ruling-out heading is
+    not a proposal -- the same reading ruled_out_cards gives a card."""
+    text = ("**Clone MACD Hunter on paper.** It fits the regime.\n"
+            "Mark `AIB-SPACE` as the fund to watch.\n\n"
+            "**Why the others are out:**\n"
+            "- Trend Titan: chops in this range.\n"
+            "- AIB-AI: too concentrated.\n\n"
+            "MACD Hunters in general lag; Doom & Gloom has no edge here, "
+            "skip it.\n")
+    bots = [b["name"] for b in lab.proposed_bots(text, CATALOGUE)]
+    assert bots == ["MACD Hunter"], bots
+    assert lab.proposed_funds(text, FUNDS) == ["AIB-SPACE"]
+    assert lab.proposed_bots("Moon Hunter looks good", CATALOGUE) == []
+    assert lab.proposed_funds("aib-space, lower case, is not the symbol",
+                              FUNDS) == []
+    # The card reader keeps its own behaviour through the shared section logic.
+    card = _card(0x77)
+    assert lab.ruled_out_cards(f"**These are out:**\n- `{card}`\n") == {card}
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_bot_he_names_is_cloned_funded_and_started_on_paper_in_its_own_room(
+        tmp_path, monkeypatch):
+    """clone (paper) -> fund with the stake -> enable, through clone.py's own
+    functions, so its paper floors and its CLN record are the ones used. A
+    bot has no backtest, so it goes at half the stake, like an untested card.
+    Its room holds one leg -- the bot's instance -- a criterion of the same
+    window, stop and benchmark as a card, and a link to its clone."""
+    import qa.rooms as qa_rooms
+
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    sent, calls = _clonepad(scripts_lab, tmp_path, monkeypatch,
+                            _answer("Clone MACD Hunter on paper, it suits the tape."))
+
+    did = scripts_lab.night_promote()
+
+    half = scripts_lab._leg_stakes(100000.0, 0.0, 1, half=True)[0]
+    assert [c[0] for c in calls] == ["clone", "fund", "enable"], calls
+    assert calls[0][1:] == ("wta_species", MACD["id"], "NEX-0001", True)
+    assert calls[1] == ("fund", "inst-1", half, True) and half > 0
+    assert sent == [], "a bot room placed a card order"
+    assert did["rooms"] == 1, did
+    rows = qa_rooms.load()
+    (room,) = qa_rooms.strategies(rows)
+    assert (room["kind"], room["ref"]) == ("bot", MACD["id"])
+    criterion = qa_rooms.acceptance_of(rows, room["id"])
+    assert [(qa_rooms.leg_kind(g), qa_rooms.leg_ref(g))
+            for g in criterion["legs"]] == [("bot", "inst-1")]
+    assert (criterion["window_days"], criterion["stop_pct"]) == (
+        scripts_lab.NIGHT_WINDOW_DAYS, scripts_lab.NIGHT_STOP_PCT)
+    assert criterion["benchmark_card"] == scripts_lab.BTC_PROXY
+    assert "not backtested" in criterion["why"].lower()
+    assert qa_rooms.status_of(rows, room["id"]) == "running"
+    assert any(r.get("type") == "link" and r.get("room") == room["id"]
+               and str(r.get("ref")).startswith("CLN-") for r in rows)
+
+    again = scripts_lab.night_promote()
+    assert [c[0] for c in calls] == ["clone", "fund", "enable"], (
+        "the next tick cloned the same bot again")
+    assert again["rooms"] == 0
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_bot_nobody_lists_or_he_ruled_out_opens_nothing(tmp_path, monkeypatch):
+    import qa.rooms as qa_rooms
+
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    text = ("Moon Hunter is my pick.\n\n**Why the others are out:**\n"
+            "- Trend Titan: chops.\n")
+    sent, calls = _clonepad(scripts_lab, tmp_path, monkeypatch, _answer(text))
+
+    scripts_lab.night_promote()
+
+    assert calls == [] and sent == []
+    assert qa_rooms.strategies(qa_rooms.load()) == []
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_clone_they_did_not_accept_is_never_funded(tmp_path, monkeypatch):
+    import qa.rooms as qa_rooms
+
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    sent, calls = _clonepad(scripts_lab, tmp_path, monkeypatch,
+                            _answer("Clone MACD Hunter."), clone_outcome="rejected")
+
+    did = scripts_lab.night_promote()
+
+    assert [c[0] for c in calls] == ["clone"], calls
+    rows = qa_rooms.load()
+    (room,) = qa_rooms.strategies(rows)
+    assert qa_rooms.status_of(rows, room["id"]) == "stopped"
+    assert any("MACD Hunter" in h for h in did["held"]), did
+
+
+def _bot_room(scripts_lab, tmp_path, monkeypatch):
+    import qa.rooms as qa_rooms
+
+    sent, calls = _clonepad(scripts_lab, tmp_path, monkeypatch,
+                            _answer("Clone MACD Hunter on paper."))
+    scripts_lab.night_promote()
+    rows = qa_rooms.load()
+    (room,) = qa_rooms.strategies(rows)
+    acceptance = qa_rooms.acceptance_of(rows, room["id"])
+    funded = calls[1][2]
+    monkeypatch.setattr(scripts_lab, "_history",
+                        lambda client, c: [
+                            {"t": (datetime.fromisoformat(acceptance["at"])
+                                   + timedelta(hours=h)).isoformat(),
+                             "index": 100.0} for h in range(0, 24 * 6)])
+    return room, acceptance, funded, calls
+
+
+def _bot_samples(tmp_path, start, funded, profits, balances=None, hours=6):
+    rows = []
+    for n, profit in enumerate(profits):
+        rows.append({"type": "sample", "kind": "bot", "instance_id": "inst-1",
+                     "at": (start + timedelta(hours=hours * n)).isoformat(),
+                     "balance_usdc": str((balances or {}).get(n, funded + profit)),
+                     "total_profit_usdc": str(profit), "is_paper": True})
+    _write(tmp_path, "samples.jsonl", rows)
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_bot_room_is_judged_on_what_it_made_and_paused_at_the_close(
+        tmp_path, monkeypatch):
+    """The series is the bot's own, from the sampler's rows, rebased to 100 at
+    entry: what went in plus what it made (`total_profit_usdc`), the reading
+    paper.capital_in_bots uses. NOT `balance_usdc` alone: since their fix of
+    #94 a stake is debited from it on entry, so a bot that opens a position
+    reads as a loss it has not taken. At the close the bot is paused."""
+    import qa.rooms as qa_rooms
+
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    room, acceptance, funded, calls = _bot_room(scripts_lab, tmp_path, monkeypatch)
+    start = datetime.fromisoformat(acceptance["at"])
+    days = float(acceptance["window_days"])
+    count = int(days * 24 / 6) + 1
+
+    # Mid-window: half its balance in a trade, nothing lost. Not refuted.
+    _bot_samples(tmp_path, start, funded, [0.0] * 4,
+                 balances={2: funded * 0.5, 3: funded * 0.5})
+    assert scripts_lab.verdicts(now=start + timedelta(hours=20)) == []
+    assert qa_rooms.status_of(qa_rooms.load(), room["id"]) == "running"
+
+    # The close: +5% on what went in, the benchmark flat. Survived, paused.
+    _bot_samples(tmp_path, start, funded,
+                 [funded * 0.05 * n / (count - 1) for n in range(count)])
+    said = scripts_lab.verdicts(now=start + timedelta(days=days, hours=1))
+    assert [s["verdict"] for s in said] == ["survived"], said
+    assert said[0]["return_pct"] == pytest.approx(5.0)
+    assert calls[-1] == ("pause", "inst-1", True), calls
+    assert qa_rooms.status_of(qa_rooms.load(), room["id"]) == "stopped"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_bot_past_its_stop_is_refuted_early_and_paused(tmp_path, monkeypatch):
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    room, acceptance, funded, calls = _bot_room(scripts_lab, tmp_path, monkeypatch)
+    start = datetime.fromisoformat(acceptance["at"])
+    _bot_samples(tmp_path, start, funded, [0.0, -0.05 * funded, -0.15 * funded])
+
+    said = scripts_lab.verdicts(now=start + timedelta(hours=13))
+
+    assert [s["verdict"] for s in said] == ["refuted"] and said[0]["early"], said
+    assert calls[-1] == ("pause", "inst-1", True), calls
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_bot_with_too_few_samples_is_inconclusive_not_a_loss(tmp_path, monkeypatch):
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    room, acceptance, funded, calls = _bot_room(scripts_lab, tmp_path, monkeypatch)
+    start = datetime.fromisoformat(acceptance["at"])
+    days = float(acceptance["window_days"])
+    _bot_samples(tmp_path, start, funded, [0.0])
+
+    said = scripts_lab.verdicts(now=start + timedelta(days=days, hours=1))
+
+    assert [s["verdict"] for s in said] == ["inconclusive"], said
+
+
+def _flat_then(start, values, hours=6):
+    return [{"t": (start + timedelta(hours=hours * n)).isoformat(), "v": v}
+            for n, v in enumerate(values)]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_fund_is_marked_not_bought_and_judged_on_its_own_series(
+        tmp_path, monkeypatch):
+    """create_aib_fund costs real money and has no paper switch, so a fund
+    Nexus picks is WATCHED: a room, a leg, a criterion, and no order of any
+    kind. Its notional stake is written down and counts toward no ceiling.
+    The verdict reads get_fund_history the way it reads a card's index. A
+    fund whose history is empty has nothing to judge and opens no room."""
+    import qa.rooms as qa_rooms
+
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    start = NOW - timedelta(hours=1)
+    series = {"AIB-SPACE": _flat_then(start, [64.0] * 3)}
+    sent, calls = _clonepad(
+        scripts_lab, tmp_path, monkeypatch,
+        _answer("Mark AIB-SPACE, and FTA-STOCKS if you want a second."),
+        fund_points=series)
+    deployed = scripts_lab._deployed()
+
+    did = scripts_lab.night_promote()
+
+    assert sent == [] and calls == [], "a fund was bought or cloned"
+    assert scripts_lab._deployed() == deployed, "a marked fund counted as deployed"
+    rows = qa_rooms.load()
+    (room,) = qa_rooms.strategies(rows)
+    assert (room["kind"], room["ref"]) == ("fund", "AIB-SPACE"), did
+    assert any("FTA-STOCKS" in h for h in did["held"]), did
+    criterion = qa_rooms.acceptance_of(rows, room["id"])
+    assert [(qa_rooms.leg_kind(g), qa_rooms.leg_ref(g))
+            for g in criterion["legs"]] == [("fund", "AIB-SPACE")]
+    moved = [r for r in rows if r.get("type") == "status"]
+    assert moved[-1]["status"] == "running"
+    assert "marked, not bought" in moved[-1]["why"]
+
+    opened = datetime.fromisoformat(criterion["at"])
+    days = float(criterion["window_days"])
+    count = int(days * 24 / 6) + 2
+    series["AIB-SPACE"] = _flat_then(
+        opened, [64.0 * (1 + 0.04 * n / count) for n in range(count)])
+    monkeypatch.setattr(scripts_lab, "_history",
+                        lambda client, c: [{"t": p["t"], "index": 100.0}
+                                           for p in series["AIB-SPACE"]])
+    said = scripts_lab.verdicts(now=opened + timedelta(days=days, hours=13))
+    assert [s["verdict"] for s in said] == ["survived"], said
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_money_moved_into_a_clone_counts_as_deployed(tmp_path, monkeypatch):
+    """The 60% ceiling is measured against what is out. A clone funded with
+    practice money holds it until somebody moves it back -- pausing the bot
+    does not -- so an accepted transfer in clones.jsonl is deployed, and a
+    refused one is not."""
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    _write(tmp_path, "clones.jsonl", [
+        {"id": "CLN-0002", "type": "intent", "kind": "fund",
+         "instance_id": "inst-1", "amount": 500.0},
+        {"id": "CLN-0002", "type": "outcome", "kind": "fund",
+         "outcome": "accepted", "http_status": 200},
+        {"id": "CLN-0003", "type": "intent", "kind": "fund",
+         "instance_id": "inst-1", "amount": 700.0},
+        {"id": "CLN-0003", "type": "outcome", "kind": "fund",
+         "outcome": "rejected", "http_status": 401}])
+
+    assert scripts_lab._deployed() == 500.0
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_free_cash_is_the_newest_account_read_whichever_script_took_it(
+        tmp_path, monkeypatch):
+    """clone.py snapshots the account either side of every transfer, as
+    paper.py does of every order. Read from paper.jsonl alone, the free cash
+    stayed at its pre-transfer figure while `_deployed` counted the transfer
+    -- the same money on both sides of the book, which raises the ceiling."""
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    _write(tmp_path, "paper.jsonl", [
+        {"id": "TRD-0001", "type": "after", "at": "2026-09-22T10:00:00+00:00",
+         "sim_balance_usdc": "100000"}])
+    _write(tmp_path, "clones.jsonl", [
+        {"id": "CLN-0002", "type": "after", "at": "2026-09-22T11:00:00+00:00",
+         "sim_balance_usdc": "99500.00"}])
+    assert scripts_lab._free_cash() == 99500.0
+    _write(tmp_path, "paper.jsonl", [
+        {"id": "TRD-0002", "type": "after", "at": "2026-09-22T12:00:00+00:00",
+         "sim_balance_usdc": "99000"}])
+    assert scripts_lab._free_cash() == 99000.0
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_card_verdict_is_the_same_number_with_or_without_a_kind():
+    """A leg written before 2026-09-22 has only `card`; one written after has
+    `kind` and `ref` beside it. The formula keys its series by ref, so both
+    must give the identical verdict -- a card room judged differently after
+    this change would be the past rewritten."""
+    start = NOW - timedelta(days=6)
+    card = _card(0x55)
+    rising = [{"t": (start + timedelta(hours=h)).isoformat(),
+               "index": 100.0 + h * 0.05} for h in range(24 * 5 + 2)]
+    old = {"at": start.isoformat(), "window_days": 5.0, "stop_pct": 10.0,
+           "legs": [{"card": card, "side": "bull", "share": 1.0,
+                     "tp": None, "sl": None}]}
+    new = {**old, "legs": [{**old["legs"][0], "kind": "card", "ref": card}]}
+    was, now = lab.verdict(old, {card: rising}, NOW), lab.verdict(new, {card: rising}, NOW)
+    assert was["verdict"] == now["verdict"] == "survived"
+    assert (was["return_pct"], was["max_drawdown_pct"], was["coverage"]) == (
+        now["return_pct"], now["max_drawdown_pct"], now["coverage"])
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_question_offers_a_card_a_bot_or_a_fund_and_names_all_we_hold(
+        tmp_path, monkeypatch):
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    _clonepad(scripts_lab, tmp_path, monkeypatch,
+              _answer("Clone MACD Hunter, and mark AIB-SPACE."),
+              fund_points={"AIB-SPACE": _flat_then(NOW, [64.0, 64.0])})
+    scripts_lab.night_promote()
+
+    text = scripts_lab.cards_question()
+
+    assert "/api/v1/cloned-bots/available" in text and "list_funds" in text
+    assert "whole" in text.lower() and "uuid" in text.lower()
+    assert "MACD Hunter" in text and "AIB-SPACE" in text, text

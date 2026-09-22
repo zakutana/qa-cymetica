@@ -43,16 +43,30 @@ card (#91) and their backtest after fees before any room; and **nothing but
 the memecoin and Hot readings while a deep pass runs** -- that pass verifies
 #85, #86 and #87 over these very answers and trades.
 
-**One room per card, and the caps are ceilings, not a quota** (2026-09-21).
-An answer naming five cards is five strategies: each card that passes the gate
-opens its own room, and a card that cannot trade yet is tried again next tick
-without holding the others back. A room whose own index crosses its stop, or
-whose every leg is out at a net loss, is stopped early (read once an hour) and
-its paper position closed; a win waits for the window to close. The operator,
-on the plan: a room still needs a promising theory or backtest, so a question
-asks for *up to* five cards, each with its thesis: `python scripts/lab.py
-ask-cards` composes it from the diary (held cards by whole id, what the gate
-refused). Use it when a question may go and nothing more specific is pending.
+**One room per thing, and the caps are ceilings, not a quota** (2026-09-21,
+widened 2026-09-22). An answer naming five cards is five strategies: each card
+that passes the gate opens its own room, and a card that cannot trade yet is
+tried again next tick without holding the others back. Since 2026-09-22 a room
+holds one of three kinds:
+
+- **a card** -- read live, backtested after fees, bought on paper;
+- **a bot** -- named by its exact species name from
+  `/api/v1/cloned-bots/available`, cloned on paper through `scripts/clone.py`
+  (clone, fund, enable -- its own paper floors), at half the stake because a
+  bot has no backtest, judged on what it made against what went in, and paused
+  when its verdict comes;
+- **a fund** -- named by its `list_funds` symbol, **marked, not bought**
+  (`create_aib_fund` spends real money and has no paper switch): no order, a
+  notional stake no ceiling counts, judged on `get_fund_history`. A fund whose
+  history is empty opens nothing.
+
+A room whose own series crosses its stop, or whose every leg is out at a net
+loss, is stopped early (read once an hour) and its paper position closed; a win
+waits for the window to close. The operator, on the plan: a room still needs a
+promising theory or backtest, so a question asks for *up to* five picks, each
+with its thesis: `python scripts/lab.py ask-cards` composes it from the diary
+(what we hold, of every kind; what the gate refused). Use it when a question
+may go and nothing more specific is pending.
 
 `scripts/lab.py` refuses rather than warns. If it refuses, read the reason; it
 is never arbitrary.
@@ -77,7 +91,8 @@ most of it memecoin quotes after a gap -- so give the command the full
 ten-minute timeout. It does, in order of what expires: the memecoin checkpoints (hot signals and
 their control group), a sampler round, answers picked up every half hour with
 the launch straight after (live card read, backtest gate, room, plan,
-criterion, paper order), their ranking every six hours, a bite of the search,
+criterion, paper order -- or a paper clone for a bot, a mark for a fund),
+their ranking every six hours, a bite of the search,
 the verdicts that came due, anything that resolved without us, and the
 memecoin study into the diary every six hours. It opens the day's session and
 closes yesterday's. It **asks nothing**; its last line says whether a question
@@ -85,7 +100,7 @@ may go.
 
 **3. Read what came back.** A `held` line is a reason, not noise: a card the
 backtest rejected (the numbers are in it), a card #91-style unknown, a market
-shut. A new answer: `python scripts/nexus.py show NEX-...`, and if a room
+shut, a clone they did not accept, a fund with no history. A new answer: `python scripts/nexus.py show NEX-...`, and if a room
 opened from it, a Czech gist into the room:
 `python scripts/rooms.py note STR-... "..." --re NEX-... --gist`.
 
@@ -122,6 +137,11 @@ hold: an event card, by its whole UUID, live and tradeable now.** A proposal
 of anything else is a slot and a question spent on nothing we can measure.
 The rotation below picks the theme; the answer is still cards.
 
+Since 2026-09-22 "what a room can hold" is wider than the paragraph above
+says: a card, a bot cloned on paper, or a fund marked without an order (see
+the brakes above). `lab.py ask-cards` asks for all three; a pick of anything
+else is still a slot and a question spent on nothing we can measure.
+
 [operator 2026-09-21] *"bod 2 nesouhlasim"* -- to a control group of random
 cards beside every Nexus room. Not built, and not proposed again.
 
@@ -131,9 +151,10 @@ first, the rejected ones with their numbers), their own ranking, what measured
 well on our side, and the memecoin study. Rotate by what the diary shows is
 least explored:
 
-- **a new concrete strategy** on a theme we have tested least -- the cards
-  that ride on bots, funds, the movers, memecoins -- by whole card id, side,
-  share of the bankroll, exit rules, and what it rests on;
+- **a new concrete strategy** on a theme we have tested least -- a bot to
+  clone, a fund to mark, the cards that ride on the movers or memecoins -- by
+  whole card id, species name or fund symbol, side, share of the bankroll,
+  exit rules, and what it rests on;
 - **what breaks** their own best-ranked strategy, and what to watch before
   the drawdown;
 - **one of our well-measured baskets, as a question** -- would he trade it,
@@ -162,9 +183,11 @@ Nothing moved -- one line saying so. The console's Nexus tab has the rest.
 
 ## What makes a proposal concrete
 
-It names what to buy or clone, by the whole card id or the bot. A method, a
-caution or a list of tools is not one: NEX-0002 answered at length and named no
-card. The launch reads every id the answer names; the legs it writes are the
+It names what to buy, clone or mark: the whole card id, the bot's exact species
+name, the fund's symbol. A method, a caution or a list of tools is not one:
+NEX-0002 answered at length and named no card. The launch reads every id,
+species name and symbol the answer names, except those it names only under a
+heading that rules them out; the legs it writes are the
 laboratory's reading (bull, evenly), and the window, the stop and the benchmark
 are its defaults -- `adopted` says so on the criterion. When his answer DOES
 give sides, shares or levels, write them with `rooms.py plan` before the
