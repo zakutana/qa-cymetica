@@ -558,6 +558,40 @@ def test_the_room_cap_is_a_rolling_day_and_counts_rooms_opened_earlier(
     assert any("a day" in line for line in did["held"]), did["held"]
 
 
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_card_he_names_only_to_rule_out_opens_no_room(tmp_path, monkeypatch):
+    """NEX-0064 recommended one card and listed three more under "Why the
+    other three ... are out". The launch read every UUID in the text as a
+    proposal and opened STR-0011 and STR-0012 on two of the rejected ones,
+    with a paper order each. A card is his proposal, not his mention."""
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    pick, out_a, out_b = _card(1), _card(2), _card(3)
+    text = (
+        "**Answer: one card fits, not three.** Naming it:\n\n"
+        f"**`{pick}`** -- \"NEAR Protocol Price Surges\"\n"
+        "- **Side: trade UP (bull).**\n"
+        "- **Take-profit +15% / stop -9%.**\n\n"
+        "**Why the other two candidates are out:**\n"
+        f"- **`{out_a}`** (WIF): downtrend, no up-momentum to ride long.\n"
+        f"- **`{out_b}`**: fails your own gate at 7d.\n\n"
+        "**Reader next step (allied MCP):** open the position with "
+        f"`trade_event_card` (`card_id: {pick}`, `direction: \"bull\"`).\n"
+        + ("reasoning. " * 40))
+    answers = [{"type": "answer", "id": "NEX-0001",
+                "at": (NOW - timedelta(hours=1)).isoformat(), "text": text}]
+    _launchpad(scripts_lab, tmp_path, monkeypatch, answers,
+               live={c: _basket("BTC", "ETH") for c in (pick, out_a, out_b)},
+               readings={("BTC", "ETH"): (6.5, 1.3)})
+    import qa.rooms as qa_rooms
+
+    did = scripts_lab.night_promote()
+
+    cards = [row.get("card") for row in qa_rooms.strategies(qa_rooms.load())]
+    assert cards == [pick], (cards, did["held"])
+    assert any(out_a[:8] in line and "rule" in line for line in did["held"]), (
+        did["held"])
+
+
 def _fill(stakes_for, rooms_wanted=70, book=100000.0):
     """Open rooms one after another the way the loop would, until the brakes
     stop it. Returns (rooms placed whole, deployed)."""

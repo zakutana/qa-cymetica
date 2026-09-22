@@ -1569,6 +1569,14 @@ def night_promote(since: datetime | None = None) -> dict:
             held.append(f"{origin}: names no card we can act on; the morning "
                         f"reads it")
             continue
+        ruled_out = lab.ruled_out_cards(answer.get("text"))
+        for card in named:
+            if card in ruled_out:
+                held.append(f"{origin}/{card[:8]}: he named it only to rule "
+                            f"it out -- not a proposal")
+        named = [c for c in named if c not in ruled_out]
+        if not named:
+            continue
         spent = ("reject", "unknown_card")
         named = [c for c in named if (origin, c) not in card_linked]
         if all(decided.get((origin, card), {}).get("verdict") in spent

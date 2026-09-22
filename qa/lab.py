@@ -1104,6 +1104,34 @@ def proposed_cards(text: str, known) -> dict[str, list[str]]:
             "unknown": [c for c in seen if c not in have]}
 
 
+_RULED_OUT = re.compile(
+    r"\b(are out|is out|ruled out|rejected|disqualified|excluded|withheld|"
+    r"not (?:a )?(?:long|pick|buy|fit)|skip|avoid|pass on|would not|won'?t)\b",
+    re.I)
+_BULLET = re.compile(r"^\s*(?:[-*•]|\d+[.)])\s")
+
+
+def ruled_out_cards(text: str) -> set[str]:
+    """Cards the answer names only to rule them out.
+
+    NEX-0064 recommended one card and put three under "**Why the other three
+    ... are out:**"; reading every UUID as a proposal opened rooms on two of
+    them. A heading -- a line that is not a bullet -- whose words rule out
+    starts a section; the next heading ends it. A card every mention of which
+    sits inside such a section is ruled out. One mention anywhere else, as in
+    "open the position with card_id ...", keeps it a proposal.
+    """
+    inside = False
+    mentioned: dict[str, bool] = {}
+    for line in str(text or "").lower().split("\n"):
+        if line.strip() and not _BULLET.match(line):
+            ids = CARD_ID.findall(line)
+            inside = bool(_RULED_OUT.search(line)) and not ids
+        for found in CARD_ID.findall(line):
+            mentioned[found] = mentioned.get(found, False) or not inside
+    return {card for card, elsewhere in mentioned.items() if not elsewhere}
+
+
 # What "promising" means before a room opens. [operator 2026-09-19] asked for
 # the promising ones as rooms, after a proper backtest; the bar itself is ours.
 # Their own backtest of the card's basket, AFTER FEES, over the longest window
