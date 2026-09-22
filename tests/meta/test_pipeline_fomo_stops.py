@@ -378,4 +378,10 @@ def test_the_report_and_the_brief_print_the_stop_lines(tmp_path, monkeypatch):
     assert "upper bound" in lines, lines
 
     old = {k: v for k, v in said.items() if k not in ("stops", "entries")}
-    assert mod.say_reading(old) is not None
+    # C05, deep pass of 2026-09-22: `is not None` passed on [] -- a reading
+    # that prints nothing. The old reading prints everything it still has,
+    # -- at the least every readout line the new one prints.
+    printed = mod.say_reading(old)
+    kept = [line for line in mod.say_reading(said)
+            if " inside " in line and line.split()[0].endswith("x")]
+    assert kept and all(line in printed for line in kept), (printed, kept)

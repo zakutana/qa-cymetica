@@ -202,6 +202,11 @@ def test_resolve_checkpoints_only_what_is_due_and_computes_our_own_return(
     # The same horizon is not checkpointed twice. Read between two marks --
     # since 2026-09-13 every hour is a horizon, so at exactly +2h the SECOND
     # hour is legitimately ripe and this would be measuring that instead.
+    # B01, deep pass of 2026-09-22: at +1h45 the hour's window has already
+    # closed, so that read passes whether or not resolve() remembers what it
+    # did. +1h05 is still inside it -- only the done checkpoint refuses it.
+    inside = mod.resolve(_client(handler), now=T0 + timedelta(hours=1, minutes=5))
+    assert inside["checked"] == 0, inside
     again = mod.resolve(_client(handler), now=T0 + timedelta(hours=1, minutes=45))
     assert again["checked"] == 0
 

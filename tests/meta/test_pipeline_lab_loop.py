@@ -23,6 +23,7 @@ from __future__ import annotations
 import importlib
 import importlib.util
 import json
+import re
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -1683,7 +1684,11 @@ def test_an_id_their_api_does_not_know_is_not_called_an_invented_card(
     (gate,) = [r for r in lab.load() if r.get("type") == "gate"]
     for said in (gate["why"], " ".join(did["held"])):
         assert "no card" in said and "not a card" in said, said
-        assert "invented" not in said or "or" in said, said
+        # B02, deep pass of 2026-09-22: `"or" in said` found "or" inside
+        # order and record, so a plain accusation passed. Each "invented"
+        # has to be one side of a whole-word "or" that follows it.
+        for hit in re.finditer(r"invented", said):
+            assert re.search(r"\bor\b", said[hit.end():hit.end() + 40]), said
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

@@ -167,6 +167,11 @@ def test_no_state_change_without_run_id_or_event_id():
     from qa.fold import display_state, fold
 
     rng = random.Random(20260905)
+    # C08, deep pass of 2026-09-22: the docstring says ADMISSIBLE and the
+    # assertion only asked for a run_id, while the generator makes level
+    # "none" runs -- so a fold that let one of those move a check stayed
+    # green. Every run's level is kept, and a CHECK cause must be R or V.
+    levels: dict[str, str] = {}
     for seed in range(200):
         state = ledger(row("CYM-a", checks=[CHECK_A]), row("CYM-b", checks=[CHECK_B]))
         events: list[dict] = []
@@ -191,6 +196,7 @@ def test_no_state_change_without_run_id_or_event_id():
                 outcome = rng.choice(["passed", "failed", "inconclusive", "skipped"])
                 nodes = rng.sample([CHECK_A, CHECK_B], rng.randint(1, 2))
                 level = rng.choice(["V", "R", "none"])
+                levels[f"run-{seed}-{step}"] = level
                 r = run(f"run-{seed}-{step}", [result(n, outcome) for n in nodes],
                         level=level, at=f"2026-09-05T10:{step:02d}:00+00:00")
                 state = fold(state, run=r, events=events)
@@ -235,6 +241,11 @@ def test_no_state_change_without_run_id_or_event_id():
                         f"seed {seed}: {t['axis']} transition to {t['to']!r} "
                         f"has no {key} -- state was assigned, not caused"
                     )
+                    if t["axis"] == "check":
+                        assert levels.get(cause["run_id"]) in ("R", "V"), (
+                            f"seed {seed}: CHECK moved to {t['to']!r} on "
+                            f"{cause['run_id']}, a run of level "
+                            f"{levels.get(cause['run_id'])!r} -- not admissible")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

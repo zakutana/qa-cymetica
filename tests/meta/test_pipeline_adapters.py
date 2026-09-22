@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import re
 from pathlib import Path
 
 import httpx
@@ -759,10 +760,10 @@ def test_settle_reads_the_newest_mark_the_way_the_fold_does(tmp_path,
             "verdict": "pass", "run_id": "run-1", "tree_sha": "t",
             "checked_at": "2026-09-20T09:00:00+00:00"}
 
-    def mark(verdict, at):
+    def mark(verdict, at, fingerprint="fp-1"):
         append_event({"type": "verification_outcome", "at": at, "by": "agent",
                       "source": "scripts/verify.py", "finding_id": "CYM-a",
-                      "report_id": 46, "fingerprint": "fp-1",
+                      "report_id": 46, "fingerprint": fingerprint,
                       "verdict": verdict, "outcome": "accepted",
                       "run_id": "run-0", "tree_sha": "t",
                       "checked_at": at, "evidence_id": "e"})
@@ -776,6 +777,16 @@ def test_settle_reads_the_newest_mark_the_way_the_fold_does(tmp_path,
 
     # And once it IS the last word, a second send writes nothing.
     assert verify.settle(dict(item), "evidence-2") is False
+
+    # C04, deep pass of 2026-09-22: the tie the fold's own reader covers.
+    # Their timestamps are truncated to the second, so a pass and a fail can
+    # share one; journal order says the fail is the newer word, and the pass
+    # is owed again. Read by `at` alone, max() keeps the first it meets.
+    mark("pass", "2026-09-11T08:00:00+00:00", fingerprint="fp-2")
+    mark("fail", "2026-09-11T08:00:00+00:00", fingerprint="fp-2")
+    tied = {**item, "fingerprint": "fp-2"}
+    assert verify.settle(dict(tied), "evidence-3") is True, (
+        "a fail written after the pass in the same second is the last word")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -801,7 +812,10 @@ def test_the_correction_we_send_says_which_of_the_three_things_happened():
 
     accepted = verify.body({**base, "correction_reason": "accepted"})["evidence"]
     assert "accepted and paid" in accepted, accepted
-    assert "claim of yours" in accepted, (
+    # C03, deep pass of 2026-09-22: "claim of yours" alone was satisfied by
+    # "This answers a claim of yours that the defect is fixed" -- the very
+    # thing this sentence may not say. It has to be the negated form.
+    assert re.search(r"\bnot\b[^.]{0,40}\bclaim of yours\b", accepted), (
         "it has to say it is NOT answering a claim of theirs")
     for wrong in ("a fix was claimed", "sent you a pass"):
         assert wrong not in accepted, f"still says {wrong!r}: {accepted[:400]}"

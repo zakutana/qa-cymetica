@@ -1465,8 +1465,30 @@ def test_the_night_holds_no_hand_that_trades_files_or_commits():
             spend = next((i for i, s in enumerate(block)
                           if any(_calls(s, name) for name in spends)), None)
             if gate is not None and spend is not None and gate < spend:
-                return True
+                # C02, deep pass of 2026-09-22: calling the gate is not
+                # obeying it. Dropping `not ok or` at both call sites kept
+                # this green. Its verdict has to be bound, and a statement
+                # between it and the spend has to leave on `not <verdict>`.
+                verdict = _bound_verdict(block[gate])
+                if verdict and any(_leaves_on_not(s, verdict)
+                                   for s in block[gate + 1:spend]):
+                    return True
         return False
+
+    def _bound_verdict(stmt):
+        targets = getattr(stmt, "targets", None) or []
+        if targets and isinstance(targets[0], ast.Tuple) and targets[0].elts:
+            first = targets[0].elts[0]
+            return getattr(first, "id", None)
+        return None
+
+    def _leaves_on_not(stmt, name: str) -> bool:
+        return (isinstance(stmt, ast.If)
+                and any(isinstance(n, ast.UnaryOp) and isinstance(n.op, ast.Not)
+                        and getattr(n.operand, "id", None) == name
+                        for n in ast.walk(stmt.test))
+                and any(isinstance(n, (ast.Return, ast.Raise, ast.Continue,
+                                       ast.Break)) for n in stmt.body))
 
     spenders = [node for node in ast.walk(tree)
                 if isinstance(node, ast.FunctionDef)
