@@ -477,8 +477,11 @@
   },
   "meta_tests": {
     "start": 683,
-    "end": null,
-    "reason": null
+    "end": 691,
+    "reason": "+8, each driving a whole check or a whole launch where the existing tests drove only a helper: two lab launches (R01, R06), #117 at the buy and paper.py recording it (A03), #89 both steps (A08), token gates unread list (A15), FOMO calibration lower bound and depth (A09 x2). The rest are stricter asserts in existing tests."
   },
-  "finished": false
+  "finished": true,
+  "rule_changes": [],
+  "next": [],
+  "at_finished": "2026-09-22T16:04:59+00:00"
 }

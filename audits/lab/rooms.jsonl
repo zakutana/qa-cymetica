@@ -216,3 +216,9 @@
 {"type": "status", "room": "STR-0031", "status": "stopped", "why": "NEX-0073 vybral jen MACD Hunter; RSI Sniper byl odmitnuta alternativa. Klon pozastaven (CLN-0019).", "at": "2026-09-22T13:40:10+00:00"}
 {"type": "plan", "room": "STR-0029", "legs": [{"card": "dd206f68-048f-4325-9f33-4ca77e40bbeb", "kind": "card", "ref": "dd206f68-048f-4325-9f33-4ca77e40bbeb", "side": "bull", "share": 1.0, "tp": null, "sl": -5.0}], "reserve": null, "bankroll": null, "at": "2026-09-22T13:40:10+00:00"}
 {"type": "plan", "room": "STR-0029", "legs": [{"kind": "bot", "ref": "996cd23e-2838-432c-aca7-5437fbd1ecbc", "side": "bull", "share": 1.0, "tp": null, "sl": -5.0}], "reserve": null, "bankroll": null, "at": "2026-09-22T13:40:27+00:00"}
+{"type": "read", "room": "STR-0004", "through": "N-0049", "at": "2026-09-22T13:52:38+00:00"}
+{"type": "read", "room": "STR-0012", "through": "N-0050", "at": "2026-09-22T13:52:38+00:00"}
+{"type": "read", "room": "STR-0027", "through": "N-0048", "at": "2026-09-22T13:52:38+00:00"}
+{"type": "claude_note", "id": "N-0051", "room": "STR-0027", "at": "2026-09-22T13:52:53+00:00", "text": "Ano, chyba u Cymeticy: karta hlásila obchodovatelná (tradeable_now true), ale nákup vrátil 409 'New purchases are closed for this index'. Stejná třída jako náš report #117, beru to jako další důkaz. Room je zastavený, nic v něm neleží."}
+{"type": "claude_note", "id": "N-0052", "room": "STR-0004", "at": "2026-09-22T13:52:54+00:00", "text": "Souhlas. Nepovedené a zastavené roomy schovám z hlavního seznamu do sbalené sekce 'Ukončené' -- smazat záznam nejde (deník je jen k připisování), ale překážet už nebude."}
+{"type": "claude_note", "id": "N-0053", "room": "STR-0012", "at": "2026-09-22T13:52:54+00:00", "text": "Tohle byl omyl launche: Nexus kartu 0a35dd76 v NEX-0064 vyřadil a launch ji přesto otevřel; zastavil jsem ho a papír zavřel na nule. Důvod teď dám přímo do řádku v seznamu, bez rozklikávání, a zastavené roomy schovám do sbalené sekce."}

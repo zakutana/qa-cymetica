@@ -1,136 +1,113 @@
-# Deep pass — 2026-09-21
+# Deep pass — 2026-09-22
 
-Spuštěn na tvůj dotaz („Dáme deep pass? I ten 10denní review?"), večer.
-Start commit `c42647e9` (hned po ohlédnutí za 10 dní), 18 commitů passu,
-109 nepushnutých celkem. `tests/meta` byla na vstupu zelená.
+Spuštěn na tvůj `/deep-pass` odpoledne, po dni laborky (boti, fondy) a
+rozdělení #89/#98. Start commit `c02f33ba`. `tests/meta` byla na vstupu
+zelená (683 testů).
 
 ## Co se stalo
 
-* **64 nálezů:** 12 z code review (R01–R12) a 52 z auditu kontrol proti jejich
-  vlastním docstringům (A01–A19 vendor kontroly, B01–B17 a C01–C16 naše testy).
-* **Tři nezávislí čtenáři u každého:** 61 skutečných, 1 vyřazený (R04, 0 ze 3),
-  2 v menšině (R07, B01, po 1 ze 3).
-* **Opraveno všech 61, test napřed.** Každý nový nebo posílený test nejdřív
-  zčervenal ze správného důvodu, u testů testů na mutaci, kterou nález
-  jmenoval.
-* **Ověřovací běh:** `PRE-0145`, `run-20260921T201015Z-b8579867`, úroveň V,
-  plný selektor: 1129 prošlo, 8 selhalo, 5 inconclusive.
-  * První pokus `PRE-0144` nebyl přípustný: jejich `openapi-public.json`,
-    `mcp.json` a `ai-plugin.json` se změnily během běhu.
-* **Nesahal jsem na:** laborku (loop stojí), žádná objednávka, žádný nový report.
+* **33 nálezů:** 6 z code review (R01–R06) a 27 z auditu 278 změněných
+  kontrol proti jejich vlastním docstringům (A01–A17 vendor kontroly,
+  B01–B02 a C01–C08 naše testy).
+* **Tři nezávislí čtenáři u každého:** 23 skutečných, 8 vyřazených
+  (0 ze 3), 2 v menšině (C01, C07, po 1 ze 3).
+* **Opraveno všech 23, test napřed.** U testů testů jsem mutaci zkusil
+  (B01, C02): bez opravy zčervenaly.
+* **Ověřovací běh:** `PRE-0148`, `run-20260922T153451Z-10bb4939`, úroveň V,
+  plný selektor: 1187 prošlo, 6 selhalo, 9 přeskočeno. Těch šest je jejich
+  stav, ne naše chyba: #52, #86, #98, #103, #114 a #117.
+* **Nesahal jsem na:** laborku (stojí), žádná objednávka, žádný nový report.
 
 ## Opraveno
 
-* **Kontroly proti Cymetice (A01–A19, R03, R09, R10): 22 kontrol mělo díru.**
-  Většinou šlo o pravidlo 8 nebo 10: selhané nebo prázdné čtení rozhodlo
-  verdikt, třeba 429 hlášené jako „chce klíč" nebo „0 z 0" jako pass.
-  Ostatní kontroly neuměly poznat opravu, nebo naopak uznaly falešnou:
-  * #117 soudil nákup libovolné karty;
-  * #116 bral „no pro-forma" jako přiznání;
-  * #112 zůstal navždy červený kvůli jednomu pozdnímu dodání;
-  * routy od Nexuse: `<id>` usekl cestu a `{slot}` bral jakékoli slovo.
-* **Hot studie (B02–B09):**
-  * NEX-0055 se teď měří tak, jak zní: nejvýš 30 min v Hotu, cena přes celý
-    koš, neviděný obchod je `unobserved`, ne `open`.
-  * Selhané čtení Hotu vyřadí kontrolní skupinu.
-  * Testy, které nemohly selhat na vlastní bráně, teď selžou. Zabito deset
-    mutací.
-* **Laborka (R01, R02, R05, R06, R08, R11, R12, C01, C04, C09):**
-  * index kol a jedno čtení deníku na tick;
-  * nezdařené předčasné zavření je dluh, dokud neprojde;
-  * každý room na boardu;
-  * test exkluzivity ticku, počítání objednávek a sdílený denní strop otázek
-    teď chytí svou mutaci.
-* **Kontrola provozu Build it Better by založila falešný report.** V běhu
-  hlásila 8 ze 14 aplikací jako vadné, protože `first_counted` 21. 9. se
-  nerovnal `counting_since` 20. 9. To „rovná se“ byla naše domněnka, jejich
-  věta říká jen „nic dřív“. Aplikace poprvé navštívené 20. 9. hlásily 20. 9.
-  Opraveno (`55429f0b`) a řádek stažen událostí dřív, než se cokoliv poslalo.
-* **Naše hlídače (B11, B14–B16, C02, C03, C05–C08, C10, C11) a kosmetika
-  (B17, C12–C16).** Každý test viděl jen sám sebe, ne mutaci, kterou má chytit.
-  Teď ji chytí.
+* **Laborka klonovala druh, který už máme (R01, R06, R02).**
+  * Perceptron (CLN-0002 ze STR-0001) neviděla, protože nemá room, a
+    klonovala ho znovu. Cymetica to odmítla 400 (CLN-0017), ale room a
+    místo v denním stropu už byly pryč.
+  * Teď čte `clones.jsonl`. Druh, který vlastníme nebo který odmítli, znovu
+    neklonuje.
+  * Bot, se kterým Nexus svou volbu jen srovnává, není volba: když řádek
+    říká „Pick:", počítají se jen boti na něm.
+* **13 kontrol proti Cymetice nedrželo svůj docstring (A02–A17).**
+  * **#89** prošel i bez `/fund` v jejich openapi. Teď musí vidět obě
+    routy, `/fund` i `/go-live`.
+  * **#111** by prošel na desce pořád řazené od nejnovějšího. „Mlčet" teď
+    znamená inconclusive, ne pass.
+  * **#117** soudil `tradeable_now` dnes. `paper.py` teď zapisuje bránu
+    karty ve chvíli nákupu a kontrola soudí podle ní.
+  * **FOMO kalibrace (A09):** naše 0 ze 44 na 72 h není vyvrácení. Cenu
+    čteme hodinově jen do 24 h a mince může mezi čteními ztrojnásobit a
+    spadnout zpět. Náš počet je dolní mez: jejich číslo potvrdí, ale na 72 h
+    ho vyvrátit nemůže. Filtr hloubky je pryč, jejich tvrzení je o celém
+    feedu.
+  * **Menší opravy:**
+    * pro-forma popřené slovem „nothing";
+    * věta rozdělená uvnitř závorky;
+    * `first_session` po konci řady;
+    * routa jmenovaná jen proto, aby Nexus řekl, že neexistuje;
+    * „ukázáno na záložce Cards" čtené jako započtení;
+    * Auth sloupec teď čteme z jejich stránky, ne z našich konstant;
+    * dlaždice Building s jinou fází, než je pět, které jsme znali;
+    * chybějící seznam `paused_tokens` čtený jako prázdný;
+    * `prompt` místo `query`.
+* **7 našich testů prošlo i to, co měly chytit (B01, B02, C02–C05, C08).**
+  Třeba: strop se volal, ale jeho odpověď nikdo nečetl; „or" se našlo ve
+  slově „order"; vlastnost foldu nekontrolovala, že běh je přípustný.
 
 ## Co odešlo Cymetice
 
-* **10 ověření `pass`** na #88, #102, #104, #105, #106, #109, #110, #111,
-  #113 a #116. Každé až po pinu opravené definice s důvodem v žurnálu.
-* **#116 je opravené jimi:** metodika teď výslovně píše, že FTA Fund —
-  Cryptos je pro-forma od založení. Ověřil jsem to v textu, ne jen z verdiktu.
-* **Zadrženy 3 `fail`:**
-  * **#89/#98:** jeden řádek drží dva reporty a #89 je opravený, takže fail by
-    o něm lhal. Stejně jako minulé passy.
-  * **#112:** jediný důkaz je to samé pozdní dodání ET-26036, které report
-    popisuje. Po 00:25 UTC vypadne z 24h okna.
+* **3 ověření `pass`:** #89, #111, #113. Každý řádek dostal pin opravené
+  definice s důvodem v žurnálu a pod přísnější kontrolou živě prošel.
+* **1 `fail` na #86:** poslali jsme pass, ale hluboký kanál zase nestíhá.
+  Z 5 otázek jedna vůbec neodpověděla (NEX-0072, vypršel čas) a 3 odpověděly
+  po víc než 5 minutách.
+* **FOMO kalibrace po opravě A09 prochází:** na solaně 81 z 878 proti
+  jejich 10,8 %, to je běžný šum.
 
 ## Prořezáno
 
-* **Paměť:** 57 souborů, 48 živých, na stropu.
-  * `in-a-critical-moment…` sloučena do `a-blocked-tool…`.
-  * `a-read-that-writes-is-a-writer` sloučena do
-    `adding-a-writer-changes-every-other-writer`: stejná vada z druhé strany,
-    zapisovač, kterého jsem nepočítal.
-  * Jedna nová: `an-early-verdict-decides-only-what-the-close-cannot-reverse`.
-  * Jeden přípisek: k `a-loop-that-cannot-reach-the-goal…`.
-* **Součásti:** `patrol --flags` nehlásí nic.
-* **Mechanismy:** `never_fired --zeros` je 4 z 55 a všechny čtyři jsou cvičené
-  testem. Nic mrtvého.
-* **Testy:** `tests/meta` 621 → **641** (+20).
-  * Nové soubory jen dva: `test_pipeline_check_subjects.py` (#117 a #116
-    celé na stubech) a `test_pipeline_fomo_calibration.py` (každá FOMO
-    kontrola má vlastní meta soubor).
-  * Zbytek jsou testy, které pouštějí celou kontrolu. Žádný existující test
-    tu kontrolu nepouštěl, jen její pomocnou funkci. U každého je v commitu
-    jmenovaný test, do kterého šlo přidat a proč ne.
-
-## Změněná pravidla
-
-**Laborka: strop 25 nových roomů denně a 125 běžících (dřív 10 a 50).**
-Schválil jsi to na plánu; brána backtestu je beze změny. Čtenář 1 ukázal, že
-pin „aspoň 50" projde jakékoli číslo, takže test teď drží přesné hodnoty.
-Hlasy ne/ne/ano.
-
-**Jeden room na kartu, kterou Nexus jmenuje, a objednávka se počítá, jen když
-ji přijali.** Hlasy ne/ne/ne.
-
-**Hot kolo běží i během deep passu a noci.** Jen čte do vlastního deníku a
-Hot nemá historii, takže vynechané kolo je navždy ztracené. Hlasy ne/ne/ne.
-
-**Room se dá předčasně jen vyvrátit, nikdy potvrdit.** Vyvrátí ho propad za
-stop, nebo situace, kdy všechny nohy skončily v čisté ztrátě. Výhra čeká na
-konec okna. Byla to tři kola čtenářů: první dvě verze se s koncem okna
-rozcházely, poslední vydržela 20 000 náhodných případů. Hlasy ne/ne/ne.
-
-**Tick se odklidí, když už běží jiný** (značka zastará po 45 min). Hlasy
-ne/ne/ne.
-
-Veto u všech pěti tvoje.
+* **Paměť:** 58 souborů.
+  * Jedna nová: `i-narrowed-their-rule-to-what-my-code-could-do`. Tvoje
+    „jen co jde v papíru" jsem zúžil na „jen karty".
+  * Jedna vyřazená: `a-rule-i-keep-breaking-needs-a-hook-not-a-reminder`.
+    Drží to teď dva hooky a jejich testy.
+* **Součásti:** `patrol` nehlásí nic nečinného ani nic přes strop.
+* **Mechanismy:** `never_fired --zeros` hlásí 4 z 56 a všechny čtyři cvičí
+  nějaký test. Nic mrtvého.
+* **Testy:** `tests/meta` 683 → **691** (+8). Každý nový pouští celou
+  kontrolu nebo celé spuštění laborky. Existující testy volaly jen pomocnou
+  funkci, takže nález do nich nešel přidat (A08, A15, A03, A09 a dva
+  laborky). Zbytek jsou přísnější asserty v existujících testech.
 
 ## Minority report
 
-* **R07 — karta, jejíž nákup nepřijali, se může koupit znovu z jiné odpovědi
-  v tomtéž ticku.** Dva čtenáři to nepotvrdili; od C04 se nepřijatá objednávka
-  nepočítá, room se zastaví a karta zůstane „held".
-* **B01 — vstup do Hotu přes díru po selhaném kole.** Dva čtenáři to nazvali
-  záměrnou tolerancí. Oprava B05 to navíc pokrývá: vstup víc než 30 min po
-  posledním kole, které koš vidělo mimo Hot, se už nepočítá.
+* **C01 — tick hlídá běžící deep pass, ale test to ověřuje jen na
+  plánovači, ne na skutečném ticku.** Dva čtenáři to vyvrátili: stráž
+  skutečného ticku drží
+  `test_a_tick_during_a_deep_pass_or_a_night_only_reads_memecoins_and_hot`
+  a ověřuje, že všechny ostatní dveře zůstanou zavřené.
+* **C07 — test kanálů porovnává jen počty, takže chyba se stejným součtem
+  projde.** Třetí čtenář ukázal, že stará chyba z 8. 9. dá ve fixturu taky
+  2. Dva čtenáři to vyvrátili: test navíc jmenuje, která tři vlákna jsou
+  uvnitř a která venku.
+
+## Změněná pravidla
+
+Žádné. Pass neměnil žádné pravidlo, hook ani krok skillu. Dva pokusy dnes
+ráno uvolnit hooky proti heredocu shodili čtenáři ještě před passem.
 
 ## Čeká na tebe
 
 * **ET-26036: verdikt dál čeká na obrazcovou TA.** Beze změny, rozhodnutí je
   tvoje (MSG-0038).
-* **#112: zadržel jsem `fail`.** Jediný důkaz je samo ET-26036, za které už
-  zaplatili, a po 00:25 UTC vypadne z 24h okna. Veto tvoje.
-* **Kontrola odkazu na fond (#104) projde i s nečitelným skillem, pokud všech
-  26 fondů nese `profile_url`.** Vada, kterou jsme hlásili, je tím vyvrácená
-  bez ohledu na skill. Přísnější čtení by bylo Inconclusive. Veto tvoje.
+* **FOMO report (NEXT.md, 20. 9.) nezakládám: jejich číslo se potvrdilo.**
+  Po opravě A09 dává celý feed 81 z 878 proti jejich 10,8 %. Naše 0/44 byla
+  jen mince, které šly koupit, a navíc jen dolní mez. Veto tvoje.
 
 ## Co mě to naučilo
 
-**Předčasný verdikt smí říct jen to, co pozdější data nemůžou otočit.** RC4
-potřeboval tři kola, protože jsem záplatoval každý rozpor s koncem okna,
-místo abych se zeptal, co jde z neúplných dat vůbec rozhodnout. Propad jen
-roste, uzavřená noha je zmrazená; výhra ne. Zapsáno do paměti.
-
-**A první verze mého vlastního testu (C09) mutaci propustila:** hledal jsem v
-odmítnutí číslo „24", které je i v „posledních 24 h". Mutace ukázala, že test
-nic nehlídá, dřív než jsem mu uvěřil.
+**Tvrzení o celém feedu jsem měřil na podmnožině, kterou bych koupil.**
+Naše 0/44 bylo připravené jako report. Celý feed dává 81/878 a jejich
+číslo sedí. Filtr hloubky patří k otázce „dá se to obchodovat", ne k
+otázce „platí jejich kalibrace". A špičku mezi hodinovými čteními
+nevidíme, takže náš počet je vždycky jen dolní mez.
