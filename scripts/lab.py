@@ -1476,6 +1476,11 @@ def _gate(card: str, legs: list[dict]) -> dict:
             except qa_backtests.BacktestError:
                 continue
             except (Exception, SystemExit) as exc:  # noqa: BLE001
+                # "could be priced (need >= 80%)" is their answer: crypto legs
+                # only, by the tool's own description. Read as "unread" it was
+                # retried every tick for good (NEX-0063's stock card).
+                if "could be priced" in str(exc):
+                    continue
                 return {"verdict": "unread",
                         "why": f"their backtest did not answer ({exc})"}
     return lab.gate(readings)

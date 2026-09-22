@@ -596,6 +596,34 @@ def test_a_card_he_names_only_to_rule_out_opens_no_room(tmp_path, monkeypatch):
         did["held"])
 
 
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_basket_their_backtest_cannot_price_is_untested_not_unread(
+        tmp_path, monkeypatch):
+    """NEX-0063's stock card: their backtest prices crypto legs only and said
+    so -- "only 47.0% of requested basket weight could be priced". That is an
+    answer, not a silence, and read as "unread" it was retried every tick for
+    good. It is the absence of a test, which the gate already has a word for."""
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+
+    def refused(*args, **kwargs):
+        raise RuntimeError(
+            "tool error: {'error': \"Can't backtest this basket: only 47.0% of "
+            "requested basket weight could be priced (need >= 80%)\", "
+            "'success': False, 'code': 'TOOL_FAILED'}")
+    monkeypatch.setattr(scripts_lab, "backtest", refused)
+
+    said = scripts_lab._gate(_card(7), [{"symbol": "META", "weight": 0.5},
+                                        {"symbol": "BTC", "weight": 0.5}])
+    assert said["verdict"] == "unbacktestable", said
+
+    def down(*args, **kwargs):
+        raise RuntimeError("HTTP 502 from /mcp/v1")
+    monkeypatch.setattr(scripts_lab, "backtest", down)
+    assert scripts_lab._gate(_card(8), [{"symbol": "BTC", "weight": 0.5},
+                                        {"symbol": "ETH", "weight": 0.5}]
+                             )["verdict"] == "unread", "a failed read is unread"
+
+
 def _fill(stakes_for, rooms_wanted=70, book=100000.0):
     """Open rooms one after another the way the loop would, until the brakes
     stop it. Returns (rooms placed whole, deployed)."""
