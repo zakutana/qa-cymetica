@@ -491,10 +491,10 @@
   },
   "meta_tests": {
     "start": 699,
-    "end": null,
-    "reason": null
+    "end": 703,
+    "reason": "+4, each driving a path no existing test drove: the REST paper floor and a JSON-RPC batch (test_a_money_tool_with_a_paper_flag drives the MCP gate only), the real their_body over captured bodies for #119 (the existing test stubs it), every spelling of a curl on /api-docs (the existing test reads one), and night_promote with a bot room beside a card of the same answer (the existing rooms test drives open_strategy only). The rest are stricter asserts in existing tests."
   },
-  "finished": false,
+  "finished": true,
   "rule_changes": [
     {
       "id": "RC1",
@@ -509,5 +509,10 @@
       "commit": "0d750746",
       "handover": true
     }
-  ]
+  ],
+  "next": [
+    "**#117 a #119 opravili a zaplatili, ale naše kontroly soudí naše vlastní zápisy z doby PŘED opravou** (nákupy TRD-0010/0011, klony CLN-0017/0020). Ověřit novým zápisem: papírový nákup karty a4a5b71e (`paper.py buy`) a nový pokus o klon Perceptron Oracle (`clone.py clone`, čekáme 409 `ALREADY_CLONED` s důvodem); pak `verify.py --confirm`. Do té doby jejich `correction_owed` neposílat -- tvrdil by „náš re-check nesouhlasí“ a nic by znovu neměřil.",
+    "Otisk kontroly (`qa/report_plugin.py::check_fingerprint`) hashuje jen testovací funkci, ne pomocné funkce, které volá, takže `verify.py` u nepřipíchnutého řádku tvrdí „the same test, not a rewritten one“ i po přepsání pomocníka (dnes u #119, #113, #89, #121, #116; #120 jsem proto připíchl ručně). Opravit -- otisk i přes volané pomocníky modulu, nebo pravdivá věta -- a k tomu, aby `correction_owed` nevznikl u kontroly nad našimi zápisy staršími než jejich oprava. Test napřed, pak `/code-review` (sahá na fold)."
+  ],
+  "at_finished": "2026-09-22T22:44:19+00:00"
 }
