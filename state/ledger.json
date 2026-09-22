@@ -34,14 +34,14 @@
       },
       "reproductions": 9,
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "check": {
         "state": "CHECK_CHANGED",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "a00fa16074a898173577cb72f9e863a691aa4bfdb20c43a2d1476189800850ff",
         "last_exploratory_pass": {
@@ -163,14 +163,14 @@
       },
       "reproductions": 17,
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "c128bb487c196aee5ab6a08c9bfedce70d99544cab71152a482c5530ad93b4a7",
         "last_exploratory_pass": {
@@ -369,14 +369,14 @@
       },
       "reproductions": 3,
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "2150b030a8e4860cf7a2480bc36a2ae989dae3d032e200d87b5667f27c8c236f",
         "last_exploratory_pass": {
@@ -629,14 +629,14 @@
       },
       "reproductions": 3,
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "check": {
         "state": "PASSING_UNPINNED",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": null,
         "last_exploratory_pass": {
@@ -731,6 +731,8 @@
           12,
           54,
           83,
+          87,
+          89,
           108
         ],
         "right": [
@@ -769,9 +771,7 @@
           82,
           85,
           86,
-          87,
           88,
-          89,
           90,
           91,
           92,
@@ -809,7 +809,7 @@
           "closed": 72,
           "server_total": 74
         },
-        "reason": "9 of 72 reports they closed have never been re-checked by an admissible run of ours"
+        "reason": "11 of 72 reports they closed have never been re-checked by an admissible run of ours"
       },
       "checks": [
         "tests/rest/test_bounty_tracker.py::test_reports_they_closed_have_been_rechecked_by_us"
@@ -822,8 +822,8 @@
       },
       "reproductions": 4,
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "check": {
         "state": "REPRODUCING",
@@ -832,7 +832,7 @@
           "at": "2026-09-05T19:56:34+00:00"
         },
         "pinned_fingerprint": "76f53745c4961b0f0a6076e33cd1d16173f41f802d404fbbb746923be506797e",
-        "evidence_only": "run-20260921T201015Z-b8579867"
+        "evidence_only": "run-20260922T071603Z-e6ea6f06"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -986,14 +986,14 @@
       },
       "reproductions": 8,
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "sha256:9e5564057407dd11f05887c86b3b9017",
         "last_exploratory_pass": {
@@ -1136,14 +1136,14 @@
       },
       "reproductions": 3,
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "5ec2ad807e24bbd1d7b1426ec466461d8cacd67ff55a809ed16b497f18351a97",
         "last_exploratory_pass": {
@@ -1282,14 +1282,14 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "aee41113b423d34dbb0fb7a237f679ec142e320ffd706e3a3645b1a3b80b4cd5",
         "last_exploratory_pass": {
@@ -1428,14 +1428,14 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "sha256:480bd5eb9d55f9495ccad7c95a78bea9",
         "last_exploratory_pass": {
@@ -1574,14 +1574,14 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "sha256:6156cefe281b0c01af3a3391dce65475",
         "last_exploratory_pass": {
@@ -1784,14 +1784,14 @@
       },
       "reproductions": 4,
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "7d407afa861e77a3cf508bd4322059dcb57278fd95b3e61c32246e840a94b4ee",
         "last_exploratory_pass": {
@@ -1907,7 +1907,7 @@
       "note": "Commits legitimately accrue, so a small gap is expected and a large one is not. This is the platform's headline marketing figure, so a stale number here is a measurement defect rather than a cosmetic one.",
       "detail": {
         "left": 21800,
-        "right": 23262,
+        "right": 23278,
         "sources": {
           "llms_txt": "regex_int:With ([\\d,]+)\\+ commits",
           "build_stats": "jsonpath:$.totals.commits"
@@ -1918,7 +1918,7 @@
             "build_stats": "jsonpath:$.totals.commits"
           }
         },
-        "reason": "commit_count: How many commits are in the production codebase? llms.txt says 21800; the build-stats endpoint says 23262. (23262 is 6.7% above the stated minimum of 21800 (tolerance 5.0%), so the published figure is stale rather than wrong)"
+        "reason": "commit_count: How many commits are in the production codebase? llms.txt says 21800; the build-stats endpoint says 23278. (23278 is 6.8% above the stated minimum of 21800 (tolerance 5.0%), so the published figure is stale rather than wrong)"
       },
       "checks": [
         "tests/reconciliation/test_reconcile.py::test_sources_agree[commit_count::build_stats-vs-llms_txt]"
@@ -1929,16 +1929,16 @@
           "run_id": "legacy"
         }
       },
-      "reproductions": 17,
+      "reproductions": 18,
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "sha256:f3d9b4a71fbf227f926c530f5d62476d"
       },
@@ -2112,7 +2112,8 @@
         "run-20260921T142845Z-46f4f6eb",
         "run-20260921T144102Z-34fd7a57",
         "run-20260921T170811Z-e1dee8ae",
-        "run-20260921T201015Z-b8579867"
+        "run-20260921T201015Z-b8579867",
+        "run-20260922T071603Z-e6ea6f06"
       ]
     },
     "CYM-tracker-closure-rate": {
@@ -2148,14 +2149,14 @@
       },
       "reproductions": 8,
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "b29402efa7bf2470bde86d34d23e67843ebdc1e6f2fcb235b26081136d119299",
         "last_exploratory_pass": {
@@ -2437,14 +2438,14 @@
       },
       "reproductions": 17,
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "sha256:c92311ababf484c409f09471d3d2b835",
         "last_exploratory_pass": {
@@ -2854,14 +2855,14 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "sha256:3bd11ec340a31060a08d40b5e9a262d7",
         "last_exploratory_pass": {
@@ -3059,14 +3060,14 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "sha256:9e5564057407dd11f05887c86b3b9017",
         "last_exploratory_pass": {
@@ -3237,14 +3238,14 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "sha256:9e5564057407dd11f05887c86b3b9017",
         "last_exploratory_pass": {
@@ -3447,14 +3448,14 @@
       },
       "reproductions": 8,
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "7e9fa3b315c02dbafde5c9fd268cdc7c32c6019c6dbfe7476611705cb1c95608",
         "last_exploratory_pass": {
@@ -3586,7 +3587,7 @@
             114,
             117
           ],
-          "page_bytes": 289470
+          "page_bytes": 293872
         },
         "reason": "0 of the 64 reports of ours that have reached a published stage are absent from the tracker where work happens (not counted: [54, 62, 114, 117], which they have not validated)"
       }
@@ -3610,14 +3611,14 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "check": {
         "state": "PASSING_UNPINNED",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": null,
         "last_exploratory_pass": {
@@ -3713,14 +3714,14 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "check": {
         "state": "PASSING_UNPINNED",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": null,
         "last_exploratory_pass": {
@@ -3919,8 +3920,8 @@
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "63b5af80410517bcd0f649fe3bfddfbb4986eb2d467a60c979a1bc66dc452220",
         "last_exploratory_pass": {
@@ -4052,8 +4053,8 @@
         "reason": "the bug-report reward programme is described in agent-card.json, agent-skills.json, llms.txt, mcp.json"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -4077,8 +4078,8 @@
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "4eab7cd9650f8ced35800751c28bd5162702733480316dfc25703dba65a04397",
         "last_exploratory_pass": {
@@ -4340,8 +4341,8 @@
         "reason": "20 of the 20 closed report(s) can be read as paid or awarded from reward_status ['paid'], so a settled report is distinguishable from an unrecorded one; stats still report bugs_fixed=82 and total_paid=70000.0"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -4365,8 +4366,8 @@
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "bbdc1d54bf684a9e645532950d2a04740ef9083655d287ae7dd192a9d16dfab5",
         "last_exploratory_pass": {
@@ -4462,8 +4463,8 @@
         "reason": "/api/v1/account/me answers HTTP 200 to the credential the catalogue names"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -4487,8 +4488,8 @@
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "fab9ea34aa0eefe65a940f193a856ca6e13426fdee9c14c85bd53118a81b3ba5",
         "last_exploratory_pass": {
@@ -4654,8 +4655,8 @@
         "reason": "the channel reported its own published reward-tier values"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -4679,8 +4680,8 @@
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "04cf163554964f44f24aae44e443668700ca69347c90e518ffd3a2cff7d10810",
         "last_exploratory_pass": {
@@ -4833,8 +4834,8 @@
         "reason": "every one of the 35 automated repl(ies) since 2026-09-07T07:53:17.653185+00:00 carries metadata.is_answer (35 of them true, which is their rule for a substantive answer)"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -4862,7 +4863,7 @@
           "at": "2026-09-10T21:43:39+00:00"
         },
         "pinned_fingerprint": "d8c89bb5d9dfb6abe6d9f240604f15d80183028892047d05a574abc9740d5a4c",
-        "evidence_only": "run-20260921T201015Z-b8579867"
+        "evidence_only": "run-20260922T071603Z-e6ea6f06"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -5005,8 +5006,8 @@
         "reason": "not asked: this check needs a fresh async reply, getting one means posting to the vendor's a2a channel, and that needs QA_ALLOW_A2A_SEND=1 for the run"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -5030,8 +5031,8 @@
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "e8b6dc45879b9d4219d1818f07ca3b841ece9be3f5c8752248b97cea47b22833",
         "last_exploratory_pass": {
@@ -5246,8 +5247,8 @@
         "reason": "all 20 recorded award(s) sit inside the tier each row publishes, and of the 20 row(s) that name a currency on both sides, none contradicts itself"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -5271,8 +5272,8 @@
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "ada0068b55c66e5e02f8048f4302d1077cf6a57c4527faa3e8dc4abe6bc5a1fd",
         "last_exploratory_pass": {
@@ -5489,8 +5490,8 @@
         "reason": "the aggregate and the leaderboard agree on 75 valid report(s); every hunter's total_earned matches the total_paid it is defined as"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -5514,8 +5515,8 @@
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "b5ad3dc6a3b54e17185484837e8bac5bef42f551adedbe435b807c3a0d81945b",
         "last_exploratory_pass": {
@@ -5660,8 +5661,8 @@
         "reason": "every path a /build recipe sends an agent to is callable: 3 checked against 150 documented paths; /events/universe named as being for people, not called"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -5685,8 +5686,8 @@
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "0760ba619fbd7a06945b43cc499e2a739d906a4deb8ebe97cd3dbd484d066d37",
         "last_exploratory_pass": {
@@ -5801,8 +5802,8 @@
         "reason": "POST /mcp/v1/register documents the field /build says to save: 'api_key'"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -5826,8 +5827,8 @@
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "92c230648502812ed80e88cfba49ef71ca8303fae2f1ac8a4ea40bb2bb1a90d1",
         "last_exploratory_pass": {
@@ -5939,8 +5940,8 @@
         "reason": "every surface names the same rungs: ['allied', 'recognized', 'trusted', 'unknown']"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -5964,8 +5965,8 @@
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "490328669c50d9e10b4917f7d34e5974d460a08e4aa608ac77a148651c77c6d8",
         "last_exploratory_pass": {
@@ -6096,8 +6097,8 @@
         "reason": "the leaderboard's rows are rankable: the period narrows the set"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -6121,8 +6122,8 @@
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "236c68e92be50b732a7a4ae6b4890fbf1213c7cd4cae533b240ad125fcc15d25",
         "last_exploratory_pass": {
@@ -6235,8 +6236,8 @@
         "reason": "all 6 order surfaces take the same control, `paper`, so one helper can state the book everywhere"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -6260,8 +6261,8 @@
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "ba32011ff9878149115a486791636008104e030dc9216745a19505bade147ba4",
         "last_exploratory_pass": {
@@ -6385,8 +6386,8 @@
         "reason": "the setting the order endpoints resolve against is published as ['simulation_mode']"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -6410,8 +6411,8 @@
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "c07738dfe41ae11926fab9b971579f7d72aac31b8f06b734755cb384f8c8786c",
         "last_exploratory_pass": {
@@ -6552,8 +6553,8 @@
         "reason": "trade history reports 0 trade(s) and says what that number spans: identity, covers, does_not_cover, see_also"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -6577,8 +6578,8 @@
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "c504687a8affa03c127572e1fea10a615c12e3d943b6f886dc29b745c94664f0",
         "last_exploratory_pass": {
@@ -6683,8 +6684,8 @@
         "reason": "no order surface says `paper` may be disobeyed, so a caller that asks for paper is given paper"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -6836,12 +6837,12 @@
           "run_id": "run-20260910T110122Z-44e2cd2"
         }
       },
-      "reproductions": 30,
+      "reproductions": 31,
       "check": {
-        "state": "PASSING",
+        "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "84885322a72b7450579e6de4f695e915fe4f4d6a9eccac0e0f54fbaec3e20ee8"
       },
@@ -6989,6 +6990,15 @@
             "run_id": "run-20260921T134907Z-7926ab54"
           },
           "at": "2026-09-21T13:57:05+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "PASSING",
+          "to": "REPRODUCING",
+          "cause": {
+            "run_id": "run-20260922T071603Z-e6ea6f06"
+          },
+          "at": "2026-09-22T07:35:06+00:00"
         }
       ],
       "regressions": [
@@ -6996,6 +7006,11 @@
           "at": "2026-09-11T15:20:34+00:00",
           "run_id": "run-20260911T151835Z-31ec9b3e",
           "from_run": "run-20260911T055512Z-0d595c5b"
+        },
+        {
+          "at": "2026-09-22T07:35:06+00:00",
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "from_run": "run-20260921T201015Z-b8579867"
         }
       ],
       "severity": "S3-CONTRACT",
@@ -7030,7 +7045,8 @@
         "run-20260920T214845Z-59a2a541",
         "run-20260921T003400Z-0010d49f",
         "run-20260921T014914Z-df9988d9",
-        "run-20260921T082640Z-23d8eece"
+        "run-20260921T082640Z-23d8eece",
+        "run-20260922T071603Z-e6ea6f06"
       ],
       "component": "mcp.tools_call",
       "section": "tools_call",
@@ -7041,11 +7057,11 @@
       ],
       "detail": {
         "left": [
-          263.0,
-          166.0,
-          171.0,
-          186.0,
-          324.0
+          226.0,
+          293.0,
+          219.0,
+          347.0,
+          260.0
         ],
         "right": 300,
         "sources": {
@@ -7056,24 +7072,28 @@
           "window": 5,
           "finished": 5,
           "failed": 0,
-          "late": 0,
+          "late": 1,
           "stalled": 0,
           "our_read_failed": [],
           "timed_from": "question timestamp, not the poll stopwatch"
         },
-        "reason": "4 investigation(s) answered inside the published 1-5 min, bounded by polls; 1 were only looked at after finishing (NEX-0060), so their latency is an upper bound and counts neither way"
+        "reason": "1 answered later than the published 5 min (worst NEX-0065 still running at 322s)"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
-        "reverify": false,
+        "reverify": true,
         "repair_check": false,
-        "reopen": [],
+        "reopen": [
+          86
+        ],
         "retractions": [],
         "verification_owed": [],
-        "correction_owed": [],
+        "correction_owed": [
+          86
+        ],
         "disputed": []
       }
     },
@@ -7089,8 +7109,8 @@
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "c0260ccc81d31eed5db260e9aa71892030cef7ff5a089ba6d42a0dc52510983c",
         "last_exploratory_pass": {
@@ -7299,9 +7319,11 @@
       ],
       "detail": {
         "left": [
+          "get_event_card_info",
           "trade_event_card"
         ],
         "right": [
+          "get_event_card_info",
           "trade_event_card"
         ],
         "sources": {
@@ -7309,16 +7331,16 @@
           "tools": "POST /mcp/v1 tools/list"
         },
         "population": {
-          "answers_recorded": 27,
-          "subject": "NEX-0060",
-          "subject_at": "2026-09-21T18:06:41+00:00",
+          "answers_recorded": 33,
+          "subject": "NEX-0066",
+          "subject_at": "2026-09-22T02:10:56+00:00",
           "tools_served": 101
         },
-        "reason": "every one of the 1 tool(s) Nexus named is served"
+        "reason": "every one of the 2 tool(s) Nexus named is served"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -7340,10 +7362,10 @@
       },
       "reproductions": 5,
       "check": {
-        "state": "INCONCLUSIVE",
+        "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "683fdd876eb2d0049f2a12a2c627bce72b54436c423dc695b21442e4f885f7a5"
       },
@@ -7483,6 +7505,15 @@
             "run_id": "run-20260921T201015Z-b8579867"
           },
           "at": "2026-09-21T20:33:20+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "INCONCLUSIVE",
+          "to": "PASSING",
+          "cause": {
+            "run_id": "run-20260922T071603Z-e6ea6f06"
+          },
+          "at": "2026-09-22T07:35:06+00:00"
         }
       ],
       "regressions": [],
@@ -7504,10 +7535,10 @@
       ],
       "detail": {
         "left": [
-          1189.04
+          1.0
         ],
         "right": [
-          1189.04
+          1.0
         ],
         "sources": {
           "balance": "/api/v1/account/me",
@@ -7515,25 +7546,25 @@
           "our_record": "paper.jsonl"
         },
         "population": {
-          "accepted": 6,
-          "readable": 5,
-          "unreadable": 1,
-          "subject": "TRD-0008",
+          "accepted": 21,
+          "readable": 18,
+          "unreadable": 3,
+          "subject": "TRD-0026",
           "ever_debited_nothing": 2,
           "trades_counter": [
-            5,
-            6
+            21,
+            22
           ]
         },
-        "reason": "the newest paper buy TRD-0008 (2026-09-21T00:52:35+00:00) bought 1189.04 and debited 1189.04 from the paper balance"
+        "reason": "the newest paper buy TRD-0026 (2026-09-22T05:50:38+00:00) bought 1.00 and debited 1.00 from the paper balance"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
-        "reverify": true,
-        "repair_check": true,
+        "reverify": false,
+        "repair_check": false,
         "reopen": [],
         "retractions": [],
         "verification_owed": [],
@@ -7553,8 +7584,8 @@
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "085e9abd1744b2ea5db74e90069965b9f47cf2bf230b825c3876e94d68dc116e",
         "last_exploratory_pass": {
@@ -7742,8 +7773,8 @@
         "reason": "every /api/v1/cloned-bots route that answered 405 with an Allow header is one of the 12 they document"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -7763,12 +7794,12 @@
           "run_id": "run-20260910T205116Z-80ff405"
         }
       },
-      "reproductions": 23,
+      "reproductions": 24,
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "4d7dd0f1952c6ea876b8f03aea300fb99f89e1be901dccb238f3d462aecef9cf"
       },
@@ -7892,7 +7923,8 @@
         "run-20260921T142845Z-46f4f6eb",
         "run-20260921T144102Z-34fd7a57",
         "run-20260921T170811Z-e1dee8ae",
-        "run-20260921T201015Z-b8579867"
+        "run-20260921T201015Z-b8579867",
+        "run-20260922T071603Z-e6ea6f06"
       ],
       "component": "rest.agents",
       "section": "agents",
@@ -7932,8 +7964,8 @@
         "reason": "10 cloned-bots route(s) accept the agent's x-api-key and 1 do not: GET /api/v1/cloned-bots/{instance_id}/activity. The funding route is not among them, so a clone can be created and paid for with the agent credential; what that same credential cannot reach is the route named above"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
         "reverify": true,
@@ -7964,8 +7996,8 @@
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "7a52ceff1e585acf3435b70f322e83c344d04b06af6d7ae07370c50f443e6fd0"
       },
@@ -8141,25 +8173,26 @@
       "detail": {
         "left": [],
         "right": [
-          "9ef04dc6-dc11-447a-a360-b6395f618648"
+          "0a35dd76-0929-4d64-8f79-18e677e2c758",
+          "c3525683-c0e1-4ea6-b00c-cc9aa9fb44bf"
         ],
         "sources": {
           "answers": "state/nexus.jsonl",
           "cards": "GET /api/v1/event-cards/{id}"
         },
         "population": {
-          "answer": "NEX-0060",
-          "at": "2026-09-21T18:06:41+00:00",
-          "named": 1,
-          "resolved": 1,
+          "answer": "NEX-0066",
+          "at": "2026-09-22T02:10:56+00:00",
+          "named": 2,
+          "resolved": 2,
           "not_found": 0,
           "unread": 0
         },
-        "reason": "every one of the 1 card(s) named in NEX-0060 resolves"
+        "reason": "every one of the 2 card(s) named in NEX-0066 resolves"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -8183,8 +8216,8 @@
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "f10984755a3fc80f40bb0b3a95098751d68b43fa5d8026e16a66405692f0bd97",
         "last_exploratory_pass": {
@@ -8316,20 +8349,18 @@
           "card": "GET /api/v1/event-cards/{id}"
         },
         "population": {
-          "listed": 4089,
+          "listed": 4539,
           "offset_ignored": false,
-          "user_submissions_skipped": [
-            "a4a5b71e-de11-4805-b8a3-ed9c3f8f8161"
-          ],
-          "witnesses": 19,
-          "checked": 11,
+          "user_submissions_skipped": [],
+          "witnesses": 30,
+          "checked": 12,
           "unreachable": 0
         },
-        "reason": "every one of the 11 tradeable card(s) checked appears in the listing"
+        "reason": "every one of the 12 tradeable card(s) checked appears in the listing"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -8353,8 +8384,8 @@
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "baf436747483adfa85430a04b2119a0cc05ab880f86d558e2855580a2a9c2687",
         "last_exploratory_pass": {
@@ -8454,19 +8485,19 @@
           "tool": "POST /mcp/v1 tools/call ask_nexus_deep"
         },
         "population": {
-          "answers": 27,
-          "subject": "NEX-0060",
+          "answers": 33,
+          "subject": "NEX-0066",
           "earlier_answers_that_leaked": [
             "NEX-0011",
             "NEX-0015",
             "NEX-0017"
           ]
         },
-        "reason": "the newest recorded deep answer, NEX-0060 (2026-09-21T18:06:41+00:00), cites no internal source location"
+        "reason": "the newest recorded deep answer, NEX-0066 (2026-09-22T02:10:56+00:00), cites no internal source location"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -8490,8 +8521,8 @@
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "b336927c694c0ad968b9678055feeec4e59093850ffbb71522eb3286c9165335",
         "last_exploratory_pass": {
@@ -8592,8 +8623,8 @@
         "reason": "all 51 of the documented GET paths that answered read the agent key"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -8617,8 +8648,8 @@
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "4f6665a41151d607e31b19cc0950ae341cf1b49e38add9846f613d1a1181f84d",
         "last_exploratory_pass": {
@@ -8753,8 +8784,8 @@
         "reason": "every one of the 1 judged bot(s) counts what it has open: 1 nothing open"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -8778,8 +8809,8 @@
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "f6206c3e45fa527784fe102e6836979651737e448416a238fb2b70ef8bd23eb0",
         "last_exploratory_pass": {
@@ -8907,16 +8938,16 @@
         },
         "population": {
           "our_account": 113,
-          "witnesses": 19,
+          "witnesses": 30,
           "user_submissions_read": 1,
           "not_ours": 1,
-          "listed_with_flag": 4127
+          "listed_with_flag": 4559
         },
-        "reason": "1 submission(s) of other users answer 200 to account 113, and every one is among the 4127 cards listed with include_user_submitted=true, so each is public"
+        "reason": "1 submission(s) of other users answer 200 to account 113, and every one is among the 4559 cards listed with include_user_submitted=true, so each is public"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -8940,8 +8971,8 @@
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "d350e3be5dd059a7593e42828f974edae44589a4ad2ba75eadddd73e8dd7dc5b",
         "last_exploratory_pass": {
@@ -9062,15 +9093,20 @@
         },
         "population": {
           "detail": [],
-          "not_in_the_tool": [],
+          "not_in_the_tool": [
+            "cryptobull-blue",
+            "cryptobull-red",
+            "hybrid2-red",
+            "hybrid2-blue"
+          ],
           "read_failed": [],
-          "compared": 16
+          "compared": 12
         },
-        "reason": "all 16 answers name the period they cover"
+        "reason": "all 12 answers name the period they cover"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -9094,8 +9130,8 @@
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "d00642e279528c5554bd095096c397de4d570788310ce0933c092d320dc11053",
         "last_exploratory_pass": {
@@ -9234,22 +9270,18 @@
         },
         "right": {
           "control_365": {
-            "n_points": 361,
+            "n_points": 362,
             "period_days": 365,
-            "total_return_pct": -56.7421,
-            "sharpe_ratio": -1.0986,
-            "says_covered": [
-              "covered_days"
-            ]
+            "total_return_pct": -53.0941,
+            "sharpe_ratio": -0.9314,
+            "says_covered": []
           },
           "control_180": {
-            "n_points": 176,
+            "n_points": 177,
             "period_days": 180,
-            "total_return_pct": -28.0178,
-            "sharpe_ratio": -1.2072,
-            "says_covered": [
-              "covered_days"
-            ]
+            "total_return_pct": -42.7841,
+            "sharpe_ratio": -1.4169,
+            "says_covered": []
           }
         },
         "sources": {
@@ -9271,8 +9303,8 @@
         "reason": "the 365-day answer names the window it covered (covered_days)"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -9296,8 +9328,8 @@
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "4ea140bbefcea8ace32cd5461dfc2018ae877bd18e510bf6b33c39605bc9bd4c",
         "last_exploratory_pass": {
@@ -9383,10 +9415,10 @@
         "left": [
           {
             "leaderboard_house": {
-              "picks": 4,
-              "rounds": 1,
-              "avg_pct": 4.01,
-              "median_pct": 2.01,
+              "picks": 5,
+              "rounds": 2,
+              "avg_pct": 2.38,
+              "median_pct": -4.17,
               "doublers": 0,
               "hit50": 0
             }
@@ -9403,10 +9435,10 @@
               "hit50": 31
             },
             "live": {
-              "scored": 4,
-              "runs_scored": 1,
-              "mean_pct": 4.01,
-              "median_pct": 2.01,
+              "scored": 5,
+              "runs_scored": 2,
+              "mean_pct": 2.38,
+              "median_pct": -4.17,
               "hit100": 0,
               "hit50": 0
             }
@@ -9427,7 +9459,7 @@
             "doublers",
             "hit50"
           ],
-          "live_scored": 4,
+          "live_scored": 5,
           "backtest_scored": 250,
           "backtest_first_anchor": "2026-06-19",
           "backtest_last_anchor": "2026-09-04",
@@ -9448,8 +9480,8 @@
         "reason": "the house row matches the live half of their own track record on 6 shared quantities, which is what a leaderboard beside live entrants should show"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -9473,8 +9505,8 @@
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "187de3341ad1873eb9c2968e1a79e5cda3fb2d5c7e29ff46066f602403df0422",
         "last_exploratory_pass": {
@@ -9577,9 +9609,9 @@
       "detail": {
         "left": [
           {
-            "round_anchor": "2026-09-18",
-            "scores_after": "2026-09-25",
-            "read_on": "2026-09-21"
+            "round_anchor": "2026-09-21",
+            "scores_after": "2026-09-28",
+            "read_on": "2026-09-22"
           }
         ],
         "right": [
@@ -9593,7 +9625,7 @@
           "our_entry": "state/lab.jsonl type=tournament"
         },
         "population": {
-          "days_already_elapsed": 3,
+          "days_already_elapsed": 1,
           "window_days": 7,
           "declares_a_deadline": true,
           "round_fields": [
@@ -9614,8 +9646,8 @@
         "reason": "the round declares when entries stop being accepted, so the window a late entry could exploit is at least stated"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -9637,10 +9669,10 @@
       },
       "reproductions": 1,
       "check": {
-        "state": "PASSING",
+        "state": "INCONCLUSIVE",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "e497701194f4c7111d2f99b797f22d1f66b81b502f3bc176d76a75956a2ac8a0",
         "last_exploratory_pass": {
@@ -9777,6 +9809,15 @@
             "run_id": "run-20260921T201015Z-b8579867"
           },
           "at": "2026-09-21T20:33:20+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "PASSING",
+          "to": "INCONCLUSIVE",
+          "cause": {
+            "run_id": "run-20260922T071603Z-e6ea6f06"
+          },
+          "at": "2026-09-22T07:35:06+00:00"
         }
       ],
       "regressions": [],
@@ -9825,12 +9866,12 @@
         "reason": "every hot row on both chains clears the floor: 6 robinhood and 13 solana hot rows, the thinnest allowing $502 of max buy against a $500 floor"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
-        "reverify": false,
-        "repair_check": false,
+        "reverify": true,
+        "repair_check": true,
         "reopen": [],
         "retractions": [],
         "verification_owed": [],
@@ -9846,12 +9887,12 @@
           "run_id": "run-20260919T211126Z-507a7113"
         }
       },
-      "reproductions": 14,
+      "reproductions": 15,
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "4e20d9ebfd70f3e0cd3e778f8f0fd9d6bdde4e3b5e3d2cde024b168bcc03cea8"
       },
@@ -9942,7 +9983,8 @@
         "run-20260921T134907Z-7926ab54",
         "run-20260921T144102Z-34fd7a57",
         "run-20260921T170811Z-e1dee8ae",
-        "run-20260921T201015Z-b8579867"
+        "run-20260921T201015Z-b8579867",
+        "run-20260922T071603Z-e6ea6f06"
       ],
       "component": "mcp.fund_research",
       "section": "fund_research",
@@ -9970,7 +10012,7 @@
               "first_v": 146.181,
               "off_pct": -3.27,
               "returned": 80,
-              "return_since_inception_pct": -2.91
+              "return_since_inception_pct": -3.26
             }
           ],
           "unseparated": [
@@ -9980,45 +10022,45 @@
               "first_t": "2026-09-19T08:11",
               "first_v": 0.3575,
               "off_pct": 0.49,
-              "returned": 50,
-              "return_since_inception_pct": 15.5
+              "returned": 59,
+              "return_since_inception_pct": 20.88
             }
           ],
           "within": [
             "AIB-8830DFE9",
-            "AIB-DA16D8CF",
-            "AIB-3DBEA91C",
-            "AIB-BIOSCIENCES",
-            "AIB-B9A9BE83",
             "AIB-MOLECULAR",
+            "AIB-DA16D8CF",
             "AIB-DCA251C8",
-            "AIB-QUANTUM",
+            "AIB-B9A9BE83",
             "AIB-POWER",
+            "AIB-CC7F8F7E",
+            "AIB-QUANTUM",
             "AIB-8F4B6922",
             "AMF-BLACKSWAN",
-            "AIB-CC7F8F7E",
-            "AMF-WHITESWAN",
             "AIB-COMPUTE",
             "AIB-CYBERSECURITY",
-            "AIB-SPACE",
             "AIB-ROBOTICS",
+            "AIB-SPACE",
             "AIB-DEFENSE",
             "AIB-07E46605",
             "AIB-C71BAD8B"
           ],
           "unmeasured": [
-            "MA-RIPPLE: no inception_index_price_usd",
+            "MA-RIPPLE: get_fund carried no fund ([])",
+            "AIB-3DBEA91C: history has no readable point (empty)",
+            "AIB-BIOSCIENCES: get_fund carried no fund ([])",
+            "AMF-WHITESWAN: history has no readable point (empty)",
             "FTA-STOCKS: read failed (tool error: {'error': 'No history series for this sleeve here — see its page URL)",
             "FTA-CRYPTOS: no inception_index_price_usd",
             "EVENT-CARD: read failed (tool error: {'error': 'No history series for this sleeve here — see its page URL)"
           ],
           "roster": 26
         },
-        "reason": "1 of 22 fund histories, fetched as their advisor skill says (symbol only), start more than 2% away from the fund's own inception level -- worst AIB-DATA-CENTERS: first point 146.181 at 2026-07-28T21:00 against inception 151.11975 (-3.27%), while it reports -2.91% since inception"
+        "reason": "1 of 19 fund histories, fetched as their advisor skill says (symbol only), start more than 2% away from the fund's own inception level -- worst AIB-DATA-CENTERS: first point 146.181 at 2026-07-28T21:00 against inception 151.11975 (-3.27%), while it reports -3.26% since inception"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
         "reverify": true,
@@ -10042,8 +10084,8 @@
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "95dc4c587aea14e45e9760e8ea83d3a4e8f489f1267ded56e5026c58c034a7f8",
         "last_exploratory_pass": {
@@ -10162,25 +10204,25 @@
           "missing": [],
           "present": [
             "AIB-8830DFE9",
-            "MA-RIPPLE",
             "AIB-C4B13E1B",
-            "AIB-DA16D8CF",
+            "MA-RIPPLE",
             "AIB-3DBEA91C",
-            "AIB-BIOSCIENCES",
-            "AIB-B9A9BE83",
             "AIB-MOLECULAR",
+            "AIB-BIOSCIENCES",
+            "AIB-DA16D8CF",
             "AIB-DCA251C8",
-            "AIB-QUANTUM",
+            "AIB-B9A9BE83",
             "AIB-POWER",
+            "AIB-CC7F8F7E",
+            "AIB-QUANTUM",
             "AIB-8F4B6922",
             "AMF-BLACKSWAN",
-            "AIB-CC7F8F7E",
             "AMF-WHITESWAN",
             "AIB-COMPUTE",
             "AIB-CYBERSECURITY",
             "AIB-DATA-CENTERS",
-            "FTA-STOCKS",
             "AIB-SPACE",
+            "FTA-STOCKS",
             "AIB-ROBOTICS",
             "AIB-DEFENSE",
             "FTA-CRYPTOS",
@@ -10201,8 +10243,8 @@
         "reason": "all 26 listed funds carry profile_url"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -10226,8 +10268,8 @@
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "e616fbf087930ded36b0388c0e493ed52abf6081761ed6f810593cd402766c59",
         "last_exploratory_pass": {
@@ -10366,8 +10408,8 @@
         "reason": "every public GET declared in /openapi.json is also in /openapi-public.json (13 vs 150 paths, 4 of the difference private or not a GET)"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -10389,10 +10431,10 @@
       },
       "reproductions": 1,
       "check": {
-        "state": "PASSING",
+        "state": "INCONCLUSIVE",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "a77dd40f16c6639f0f61a3624d31a2cbb4bcbc4936e590f413bfb111a60ea919",
         "last_exploratory_pass": {
@@ -10493,6 +10535,15 @@
             "run_id": "run-20260921T201015Z-b8579867"
           },
           "at": "2026-09-21T20:33:20+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "PASSING",
+          "to": "INCONCLUSIVE",
+          "cause": {
+            "run_id": "run-20260922T071603Z-e6ea6f06"
+          },
+          "at": "2026-09-22T07:35:06+00:00"
         }
       ],
       "regressions": [],
@@ -10541,12 +10592,12 @@
         "reason": "all 12 coins on the roster answered the text outlook"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
-        "reverify": false,
-        "repair_check": false,
+        "reverify": true,
+        "repair_check": true,
         "reopen": [],
         "retractions": [],
         "verification_owed": [],
@@ -10566,8 +10617,8 @@
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "d0699f895df0d89f3940259c63d506674761ec889df7c6e6338b25e4e5b7cd3d",
         "last_exploratory_pass": {
@@ -10682,8 +10733,8 @@
         "reason": "every read returned at most its limit (5->5, 50->50)"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -10707,8 +10758,8 @@
       "check": {
         "state": "CHECK_CHANGED",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "bf8a210d394b0679b3186d484b7881970fc6c55295aa3fa17d7c3959cef5bf16",
         "last_exploratory_pass": {
@@ -10797,8 +10848,8 @@
         "reason": "on 1 request(s) the clock starts only once the gate is filled or waived, and never before it"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -10822,8 +10873,8 @@
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "e27ffa63a1369a3e8c9a6044545dbdbc984274bb14cf844e260de1529712d8dd",
         "last_exploratory_pass": {
@@ -10979,8 +11030,8 @@
         "reason": "all 1 advertised channel(s) are named in a machine-readable document: wss://cymetica.com/ws/build-it-better in /llms.txt, /.well-known/mcp.json, /openapi-public.json"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -11004,8 +11055,8 @@
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "8aa97e5a70a1a004856b2c177a95d055f6b0f9982801496fc2870ca940acbd03"
       },
@@ -11117,10 +11168,10 @@
             "sessions": 315,
             "messages": 608185,
             "tool_calls": 60519,
-            "commits": 23262,
-            "lines_added": 15643751,
-            "lines_removed": 2865524,
-            "bugs_fixed": 12753,
+            "commits": 23278,
+            "lines_added": 15646642,
+            "lines_removed": 2865765,
+            "bugs_fixed": 12768,
             "features": 4850,
             "optimizations": 1044
           },
@@ -11133,9 +11184,9 @@
             "to": "2026-02-16"
           },
           "daily_commits": {
-            "days": 302,
+            "days": 303,
             "from": "2025-11-23",
-            "to": "2026-09-21"
+            "to": "2026-09-22"
           }
         },
         "sources": {
@@ -11156,8 +11207,8 @@
         "reason": "sessions, messages, tool_calls sum the 17 day(s) from 2026-01-31 to 2026-02-16, and the first session they record (2026-01-31) falls inside that window"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -11181,8 +11232,8 @@
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "0f75f6fe965d0a1d55aec68684871913e1ee7d26839d5ef149db011aaea67051"
       },
@@ -11310,8 +11361,8 @@
         "reason": "their own description of agent-board/search says the order is recency while no row carries verified evidence or a confirmed replication, so the list and the sentence describing it agree and a reader is told what the top of it means"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -11333,10 +11384,10 @@
       },
       "reproductions": 11,
       "check": {
-        "state": "REPRODUCING",
+        "state": "INCONCLUSIVE",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "d68dde5d632e02f6434da646359d6a3efa738a21eed738630bd3c1f06281b5d9"
       },
@@ -11400,6 +11451,15 @@
             "event_id": "eaf7a1eb1b25ee2c28a6d5e5387ad3909161a05522ab69860ad131c9cdb8cd30"
           },
           "at": "2026-09-21T08:36:14+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "REPRODUCING",
+          "to": "INCONCLUSIVE",
+          "cause": {
+            "run_id": "run-20260922T071603Z-e6ea6f06"
+          },
+          "at": "2026-09-22T07:35:06+00:00"
         }
       ],
       "regressions": [
@@ -11433,7 +11493,7 @@
       ],
       "detail": {
         "left": {
-          "overdue": 1,
+          "overdue": 0,
           "unreadable": 0
         },
         "right": {
@@ -11444,33 +11504,32 @@
         },
         "population": {
           "with_a_deadline": 2,
-          "judged": 2,
-          "late": 1,
-          "met": [
-            "ET-26171"
-          ],
+          "judged": 0,
+          "late": 0,
+          "met": [],
           "waiting": [],
-          "history": [],
-          "history_late": [],
+          "history": [
+            "ET-26171",
+            "ET-26036"
+          ],
+          "history_late": [
+            "ET-26036"
+          ],
           "settled_within_hours": 24
         },
-        "reason": "ET-26036 shipped 4.0h after its own published deadline of 2026-09-20T20:25:59"
+        "reason": "no build on the board settled in the last 24 h and none is past its deadline with nothing shipped, so the 24-hour promise was not put to the test: 0 still inside their window. NOT in the verdict: 2 request(s) settled more than 24 h ago and are history: ET-26171, ET-26036 (shipped late)"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
         "reverify": true,
-        "repair_check": false,
-        "reopen": [
-          112
-        ],
+        "repair_check": true,
+        "reopen": [],
         "retractions": [],
         "verification_owed": [],
-        "correction_owed": [
-          112
-        ],
+        "correction_owed": [],
         "disputed": []
       }
     },
@@ -11486,8 +11545,8 @@
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "db5b7b315735c496674e82bdc768e9ae1aad4993c50120b7fe4dfd12c3633e28",
         "last_exploratory_pass": {
@@ -11561,8 +11620,8 @@
         "reason": "every improvement line of 2 request(s) appears whole in the spec that request was asked to lock"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -11586,8 +11645,8 @@
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "b19ce59f3c8da589e7aab474d24fc2aa2ec0e67727dd1349be20aec391fb9874"
       },
@@ -11714,8 +11773,8 @@
         "reason": "the Building now tile is computed as 's.building || 0', which counts nothing but what is building"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -11735,12 +11794,12 @@
           "run_id": "run-20260921T082640Z-23d8eece"
         }
       },
-      "reproductions": 7,
+      "reproductions": 8,
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "2e8b6858e71d177779a21f95ec0e35a6b92cb18ef65e71e7d8adbc6ddd20965b"
       },
@@ -11789,7 +11848,8 @@
         "run-20260921T142845Z-46f4f6eb",
         "run-20260921T144102Z-34fd7a57",
         "run-20260921T170811Z-e1dee8ae",
-        "run-20260921T201015Z-b8579867"
+        "run-20260921T201015Z-b8579867",
+        "run-20260922T071603Z-e6ea6f06"
       ],
       "component": "mcp.tools_call",
       "section": "tools_call",
@@ -11896,15 +11956,57 @@
               "asked": "2026-09-21T18:01:17+00:00",
               "chars": 3456,
               "opens": "Robustness is now clear. Only one card clears the after-fees"
+            },
+            {
+              "id": "NEX-0061",
+              "job_id": "6e2671e5-27ce-4840-89ea-d3a7483d55c9",
+              "asked": "2026-09-21T21:34:28+00:00",
+              "chars": 3900,
+              "opens": "## Zero cards clear your bar right now — here is the verifie"
+            },
+            {
+              "id": "NEX-0062",
+              "job_id": "2419603f-bd31-4b80-ab9c-67b75cd2a6cc",
+              "asked": "2026-09-21T22:09:12+00:00",
+              "chars": 4066,
+              "opens": "I verified every figure against the live backtester and the "
+            },
+            {
+              "id": "NEX-0063",
+              "job_id": "88849842-593a-4757-8022-4237dea9c37c",
+              "asked": "2026-09-21T22:48:02+00:00",
+              "chars": 4191,
+              "opens": "I've verified everything against the live listing. Here is t"
+            },
+            {
+              "id": "NEX-0064",
+              "job_id": "76f31126-c37d-4d2e-af6c-8970e6beba9e",
+              "asked": "2026-09-21T23:50:15+00:00",
+              "chars": 3792,
+              "opens": "Verified against the live feed and the fee-inclusive backtes"
+            },
+            {
+              "id": "NEX-0065",
+              "job_id": "9dc94ad5-41fa-472b-8b50-0b24e5930884",
+              "asked": "2026-09-22T00:29:13+00:00",
+              "chars": 4727,
+              "opens": "Confirmed. 9c7b0e8c (KSM 75% / XRP 24%) posts **+14.70%, Sha"
+            },
+            {
+              "id": "NEX-0066",
+              "job_id": "d1b83b82-c4cc-41fc-9499-027db6ae3d47",
+              "asked": "2026-09-22T02:06:36+00:00",
+              "chars": 2795,
+              "opens": "Two cards clear the after-fees gate as distinct, non-redunda"
             }
           ],
           "unmeasured": []
         },
-        "reason": "2 of 12 deep answers asked in the last 72 h are served by get_deep_answer with their start cut off: NEX-0054 (job bfb44eb7-1d12-4e78-abdb-67ddcc4d52d3, 1665 chars) opens '...ols with the hot basket is the predicted outcome; the \"ne'; NEX-0057 (job 9b1e61af-120a-4077-a5af-a7ed9f23013d, 3399 chars) opens \"shot, confirming the surge wasn't a one-tick blip. Roughly h\""
+        "reason": "2 of 18 deep answers asked in the last 72 h are served by get_deep_answer with their start cut off: NEX-0054 (job bfb44eb7-1d12-4e78-abdb-67ddcc4d52d3, 1665 chars) opens '...ols with the hot basket is the predicted outcome; the \"ne'; NEX-0057 (job 9b1e61af-120a-4077-a5af-a7ed9f23013d, 3399 chars) opens \"shot, confirming the surge wasn't a one-tick blip. Roughly h\""
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -11928,8 +12030,8 @@
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "3789db2c68f6b78827c0f48fbf0affe567ab27e2acb1dffb6a67f8405e74df7a"
       },
@@ -12019,15 +12121,15 @@
           "measured": [
             {
               "window": 7,
-              "rows": 132
+              "rows": 500
             },
             {
               "window": 14,
-              "rows": 137
+              "rows": 500
             },
             {
               "window": 30,
-              "rows": 150
+              "rows": 500
             }
           ],
           "unmeasured": []
@@ -12035,8 +12137,8 @@
         "reason": "each product is on one row in all 3 windows read"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -12060,8 +12162,8 @@
       "check": {
         "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "3d0968cd68babcff16599d0e834a5c235fd784c9342554d9e3bb66756cefc1f9"
       },
@@ -12160,16 +12262,16 @@
         "population": {
           "get_fund": {
             "inception_date": "2026-07-26",
-            "return_since_inception_pct": -16.31,
+            "return_since_inception_pct": -17.87,
             "last_composition_change": "2026-08-17T01:53:28+00:00",
             "status": "live",
-            "index_price_usd": 0.115003
+            "index_price_usd": 0.116541
           },
           "history": {
             "inception": "2026-08-09",
             "first_point": {
-              "t": "2026-08-21",
-              "v": 0.096726
+              "t": "2026-08-22",
+              "v": 0.095733
             },
             "points": 32
           },
@@ -12178,8 +12280,8 @@
         "reason": "published inception 2026-07-26, recorded 2026-08-09; the methodology discloses the pro-forma stretch"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -12199,12 +12301,12 @@
           "run_id": "run-20260921T170811Z-e1dee8ae"
         }
       },
-      "reproductions": 2,
+      "reproductions": 3,
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "af53690d9c5372c16d5820346b194f8e91dbdf64be260d735275e1777c3b419e"
       },
@@ -12248,7 +12350,8 @@
       "title": "card a4a5b71e-de11-4805-b8a3-ed9c3f8f8161 reads status live, tradeable_now true, trading_blocked_reason None, and our paper buy of it answered HTTP 500 {\"detail\": \"Buy failed\"} (2 time(s): TRD-0010 17:01:28, TRD-0011 17:04:10)",
       "reproduced_in": [
         "run-20260921T170811Z-e1dee8ae",
-        "run-20260921T201015Z-b8579867"
+        "run-20260921T201015Z-b8579867",
+        "run-20260922T071603Z-e6ea6f06"
       ],
       "component": "rest.event_cards",
       "section": "event_cards",
@@ -12293,8 +12396,8 @@
             "tradeable_now": true,
             "trading_blocked_reason": null,
             "pw_live": true,
-            "current_index": 139.272072,
-            "share_price_usd": "1.3927"
+            "current_index": 136.635874,
+            "share_price_usd": "1.3664"
           },
           "legs": [
             [
@@ -12342,8 +12445,8 @@
         "reason": "card a4a5b71e-de11-4805-b8a3-ed9c3f8f8161 reads status live, tradeable_now true, trading_blocked_reason None, and our paper buy of it answered HTTP 500 {\"detail\": \"Buy failed\"} (2 time(s): TRD-0010 17:01:28, TRD-0011 17:04:10)"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -12365,10 +12468,10 @@
       },
       "reproductions": 1,
       "check": {
-        "state": "REPRODUCING",
+        "state": "CHECK_CHANGED",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "1b49585cd57c7f8cf5008cd58527605c078dabbf4919b78c0faf5a1baafc44c5"
       },
@@ -12388,6 +12491,15 @@
             "run_id": "run-20260921T201015Z-b8579867"
           },
           "at": "2026-09-21T20:33:20+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "REPRODUCING",
+          "to": "CHECK_CHANGED",
+          "cause": {
+            "run_id": "run-20260922T071603Z-e6ea6f06"
+          },
+          "at": "2026-09-22T07:35:06+00:00"
         }
       ],
       "regressions": [],
@@ -12405,11 +12517,10 @@
       ],
       "detail": {
         "left": {
-          "answer": "NEX-0060",
-          "at": "2026-09-21T18:06:41+00:00",
+          "answer": "NEX-0066",
+          "at": "2026-09-22T02:10:56+00:00",
           "routes": [
-            "/api/v1/event-cards",
-            "/api/v1/event-cards/9ef04dc6-dc11-447a-a360-b6395f618648/trade"
+            "/api/v1/event-cards/{id}/buy"
           ]
         },
         "right": {
@@ -12420,14 +12531,14 @@
           "our diary": "state/nexus.jsonl"
         },
         "population": {
-          "routes_named": 2,
-          "missing": 1
+          "routes_named": 1,
+          "missing": 0
         },
-        "reason": "NEX-0060 sends an agent to /api/v1/event-cards/9ef04dc6-dc11-447a-a360-b6395f618648/trade, which /openapi-public.json does not publish"
+        "reason": "every one of the 1 route(s) NEX-0066 names is published: /api/v1/event-cards/{id}/buy"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -12449,10 +12560,10 @@
       },
       "reproductions": 1,
       "check": {
-        "state": "REPRODUCING",
+        "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20260921T201015Z-b8579867",
-          "at": "2026-09-21T20:33:20+00:00"
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
         },
         "pinned_fingerprint": "4ab5c7b76f1a02454deaa910308c4356d73589b6a94f9eaf8e8c5775ea9790c9"
       },
@@ -12484,6 +12595,15 @@
             "event_id": "fac52b89a6d770e9ecc41e0df65b746d44ccf7d8a9d8fe3e13ad294a86b643bf"
           },
           "at": "2026-09-21T20:49:46+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "REPRODUCING",
+          "to": "PASSING",
+          "cause": {
+            "run_id": "run-20260922T071603Z-e6ea6f06"
+          },
+          "at": "2026-09-22T07:35:06+00:00"
         }
       ],
       "regressions": [],
@@ -12504,16 +12624,44 @@
           "board": [
             {
               "path": "/weekly-signal",
-              "views": 10,
-              "visitors": 2,
+              "views": 16,
+              "visitors": 3,
               "uses": 8,
               "likes": 0
             },
             {
               "path": "/tradingview",
-              "views": 6,
-              "visitors": 2,
+              "views": 11,
+              "visitors": 3,
               "uses": 4,
+              "likes": 0
+            },
+            {
+              "path": "/exchange-refugees",
+              "views": 6,
+              "visitors": 1,
+              "uses": 0,
+              "likes": 0
+            },
+            {
+              "path": "/token-info",
+              "views": 5,
+              "visitors": 3,
+              "uses": 2,
+              "likes": 0
+            },
+            {
+              "path": "/bitmex",
+              "views": 3,
+              "visitors": 2,
+              "uses": 0,
+              "likes": 0
+            },
+            {
+              "path": "/thinkorswim",
+              "views": 3,
+              "visitors": 1,
+              "uses": 0,
               "likes": 0
             },
             {
@@ -12538,24 +12686,24 @@
               "likes": 0
             },
             {
-              "path": "/token-info",
-              "views": 2,
-              "visitors": 2,
-              "uses": 2,
-              "likes": 0
-            },
-            {
-              "path": "/bitmex",
-              "views": 1,
-              "visitors": 1,
-              "uses": 0,
-              "likes": 0
-            },
-            {
               "path": "/coinigy",
               "views": 1,
               "visitors": 1,
               "uses": 0,
+              "likes": 0
+            },
+            {
+              "path": "/motivewave",
+              "views": 1,
+              "visitors": 1,
+              "uses": 0,
+              "likes": 0
+            },
+            {
+              "path": "/myforexfunds",
+              "views": 1,
+              "visitors": 1,
+              "uses": 1,
               "likes": 0
             },
             {
@@ -12607,12 +12755,16 @@
           "apps_read": [
             "/weekly-signal",
             "/tradingview",
+            "/exchange-refugees",
+            "/token-info",
+            "/bitmex",
+            "/thinkorswim",
             "/bullx",
             "/etoro",
             "/finviz",
-            "/token-info",
-            "/bitmex",
             "/coinigy",
+            "/motivewave",
+            "/myforexfunds",
             "/myfundedfutures",
             "/wallstreetbets",
             "/sierra-chart",
@@ -12627,16 +12779,16 @@
         },
         "population": {
           "apps_listed": 115,
-          "apps_carrying_a_figure": 14,
-          "apps_read": 14,
-          "apps_bracketed": 14,
-          "apps_with_a_non_zero_day": 14
+          "apps_carrying_a_figure": 18,
+          "apps_read": 18,
+          "apps_bracketed": 18,
+          "apps_with_a_non_zero_day": 18
         },
-        "reason": "/weekly-signal says counting started 2026-09-21 while the board says 2026-09-20 for every app on it; /tradingview says counting started 2026-09-21 while the board says 2026-09-20 for every app on it; /bullx says counting started 2026-09-21 while the board says 2026-09-20 for every app on it; /token-info says counting started 2026-09-21 while the board says 2026-09-20 for every app on it; /myfundedfutures says counting started 2026-09-21 while the board says 2026-09-20 for every app on it; /stockanalysis says counting started 2026-09-21 while the board says 2026-09-20 for every app on it; /tradersync says counting started 2026-09-21 while the board says 2026-09-20 for every app on it; /yfinance says counting started 2026-09-21 while the board says 2026-09-20 for every app on it"
+        "reason": "18 app(s) of the 115 on the board were read one by one, and for 18 of them every figure on the board re-read between the app's two reads is the app's own; the daily series sums to last_30d for 18 app(s) that have moved at all (/weekly-signal, /tradingview, /exchange-refugees, /token-info, /bitmex, /thinkorswim, /bullx, /etoro, /finviz, /coinigy, /motivewave, /myforexfunds, /myfundedfutures, /wallstreetbets, /sierra-chart, /stockanalysis, /tradersync, /yfinance)"
       },
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -12662,8 +12814,11 @@
         "tests/rest/test_cloned_bots_surface.py::test_one_credential_funds_and_starts_a_clone"
       ],
       "check": {
-        "state": "UNVERIFIED",
-        "adjudicated_by": null,
+        "state": "PASSING_UNPINNED",
+        "adjudicated_by": {
+          "run_id": "run-20260922T071603Z-e6ea6f06",
+          "at": "2026-09-22T07:35:06+00:00"
+        },
         "pinned_fingerprint": null
       },
       "filing": {
@@ -12712,6 +12867,15 @@
             "event_id": "62d3619a93ff50cff79ed3b09753a13232bf7b9079599cca157667a5670c6b19"
           },
           "at": "2026-09-22T07:05:44+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "UNVERIFIED",
+          "to": "PASSING_UNPINNED",
+          "cause": {
+            "run_id": "run-20260922T071603Z-e6ea6f06"
+          },
+          "at": "2026-09-22T07:35:06+00:00"
         }
       ],
       "regressions": [],
@@ -12721,10 +12885,9 @@
       "tag": "BOTS",
       "kind": "check_failure",
       "provenance": {
-        "run_id": "run-20260921T201015Z-b8579867",
-        "measured_at": "2026-09-21T20:33:20+00:00"
+        "run_id": "run-20260922T071603Z-e6ea6f06",
+        "measured_at": "2026-09-22T07:35:06+00:00"
       },
-      "split_from": "CYM-one_credential_carries_a_clone_from_creation_to_funding",
       "obligations": {
         "reverify": true,
         "repair_check": false,
@@ -12733,24 +12896,39 @@
         "verification_owed": [],
         "correction_owed": [],
         "disputed": []
-      }
+      },
+      "detail": {
+        "left": [],
+        "right": [
+          "POST /api/v1/cloned-bots/{instance_id}/fund",
+          "POST /api/v1/cloned-bots/{instance_id}/go-live"
+        ],
+        "sources": {
+          "documented": "/openapi-public.json"
+        },
+        "population": {
+          "flow_steps": 2,
+          "blocked": 0
+        },
+        "reason": "every step that moves a clone forward accepts the agent's x-api-key: POST /api/v1/cloned-bots/{instance_id}/fund, POST /api/v1/cloned-bots/{instance_id}/go-live"
+      },
+      "split_from": "CYM-one_credential_carries_a_clone_from_creation_to_funding"
     }
   },
-  "run_id": "run-20260921T201015Z-b8579867",
+  "run_id": "run-20260922T071603Z-e6ea6f06",
   "run_level": "V",
-  "updated_at": "2026-09-21T20:33:20+00:00",
-  "run_carried": true,
+  "updated_at": "2026-09-22T07:35:06+00:00",
   "counts": {
     "WITHDRAWN": 13,
-    "VERIFIED FIXED": 54,
+    "VERIFIED FIXED": 52,
     "STILL REPRODUCIBLE": 4,
-    "OUR CHECK CANNOT TELL": 1,
+    "OUR CHECK CANNOT TELL": 3,
     "RAISED": 2,
-    "NOT RAISED YET": 1,
-    "FIX CLAIMED": 1
+    "CHECK CHANGED": 1,
+    "NEVER SEEN BROKEN": 1
   },
   "events_head": {
-    "seq": 2547,
-    "chain": "ff6fa1496d0a564301877e211a6e83823e093dd92cafef60d90a81da55aea08f"
+    "seq": 2548,
+    "chain": "0cc59b5f44c3d04146b701e607b6b477255328b920ee154ae76bc323f30f5fdd"
   }
 }
