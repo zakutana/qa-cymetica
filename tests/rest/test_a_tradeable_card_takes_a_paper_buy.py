@@ -137,6 +137,15 @@ def test_a_card_that_reads_tradeable_now_takes_a_paper_buy(rest_trusted):
                 continue
             breaches.append((card_id, latest, {**then, "read": "at the buy"}))
             continue
+        # Recorded at the buy, and unreadable then: what the card said when it
+        # was bought is unknown, and today's read is not it (C09, deep pass of
+        # 2026-09-22 evening -- it fell through and said the buy predated
+        # recording). Only a buy with no record at all is judged on today.
+        if isinstance(then, dict):
+            unmeasured.append(f"{card_id}: the card could not be read when "
+                              f"{latest['id']} was placed (HTTP "
+                              f"{then.get('http_status')})")
+            continue
         response = rest_trusted.get(CARD.format(card=card_id))
         if response.status_code != 200:
             unmeasured.append(f"{card_id}: the card could not be read, HTTP "

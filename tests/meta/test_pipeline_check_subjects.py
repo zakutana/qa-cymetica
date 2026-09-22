@@ -131,6 +131,16 @@ def test_the_buy_is_judged_by_what_the_card_said_when_it_was_placed_117(
     with pytest.raises(AssertionError, match=A):
         _run_buy_check(monkeypatch, open_then, {A: _card(False)})
 
+    # C09, deep pass of 2026-09-22 evening (3/3): paper.py records a card it
+    # could not read at the buy as {"http_status": 503}. That was taken as
+    # "the buy predates recording the card" and judged on today's read --
+    # a false sentence, and a fail that may blame a card shut at the time.
+    unread_then = _buy("TRD-1", A, "17:01:28", 500, "unknown")
+    unread_then[0]["card_before"] = {"at": "2026-09-21T17:01:27+00:00",
+                                     "http_status": 503}
+    with pytest.raises(Inconclusive, match="could not be read"):
+        _run_buy_check(monkeypatch, unread_then, {A: _card(True)})
+
 
 # --------------------------------------------------------------- #116 -------
 
