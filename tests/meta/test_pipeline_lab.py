@@ -25,6 +25,7 @@ classification would be the thing the classification exists to stop.
 from __future__ import annotations
 
 import json
+import re
 import textwrap
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -1437,6 +1438,16 @@ def test_the_night_holds_no_hand_that_trades_files_or_commits():
         assert hand not in reached, (
             f"the night can reach {hand!r}: it researches and launches on "
             f"paper, it does not talk to the vendor")
+    # B01, deep pass of 2026-09-22 evening (3/3): five exact names, so
+    # os.system("git commit -am night") in night_promote stayed green -- the
+    # door the docstring says is shut, through a hand the list did not name.
+    for hand in ("system", "popen", "Popen", "execv", "execvp", "spawnv",
+                 "startfile", "check_call", "check_output"):
+        assert hand not in reached, f"the night can reach a shell: {hand!r}"
+    shell = re.compile(r"\bgit\s+(?:commit|push|add|tag|reset)\b"
+                       r"|\b(?:submit|withdraw|prereg|verify)\.py\b")
+    said = sorted(s for s in reached if shell.search(s))
+    assert not said, f"the night carries a command it must not run: {said}"
 
     # Every function in the night that can spend must reach the caps BEFORE it
     # spends, and the interlock at all. Read as a tree, not as token presence:

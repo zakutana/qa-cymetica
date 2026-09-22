@@ -1903,6 +1903,12 @@ def test_the_catalogue_readers_take_whole_names_and_respect_what_he_ruled_out():
     assert bots == ["MACD Hunter"], bots
     assert lab.proposed_funds(text, FUNDS) == ["AIB-SPACE"]
     assert lab.proposed_bots("Moon Hunter looks good", CATALOGUE) == []
+    # B02, deep pass of 2026-09-22 evening (3/3): the only longer word above
+    # named a bot already proposed, so plain substring matching stayed green.
+    # Unproposed and inside longer words, it must not be read as a mention.
+    assert lab.proposed_bots("The Trend Titans of this cycle are all "
+                             "MACD Hunters.", CATALOGUE) == []
+    assert lab.proposed_funds("The AIB-SPACEX basket is not ours.", FUNDS) == []
     assert lab.proposed_funds("aib-space, lower case, is not the symbol",
                               FUNDS) == []
     # R02, deep pass of 2026-09-22: a bot he measures his pick against, in
@@ -2032,7 +2038,15 @@ def test_a_species_we_already_own_a_clone_of_is_not_cloned_again(
         {"id": "CLN-0002", "type": "intent", "source_type": "wta_species",
          "source_id": MACD["id"], "paper": True},
         {"id": "CLN-0002", "type": "outcome", "outcome": "accepted",
-         "http_status": 200, "clone_instance_id": "inst-old"}])
+         "http_status": 200, "clone_instance_id": "inst-old"},
+        # B05, deep pass of 2026-09-22 evening: "whether or not it is
+        # paused" -- and the fixture had no pause, so a reader that dropped
+        # paused instances stayed green. Paused here, the way close_positions
+        # pauses one: an accepted disable.
+        {"id": "CLN-0003", "type": "intent", "kind": "disable",
+         "instance_id": "inst-old"},
+        {"id": "CLN-0003", "type": "outcome", "kind": "disable",
+         "outcome": "accepted", "http_status": 200}])
 
     did = scripts_lab.night_promote()
 
@@ -2235,9 +2249,10 @@ def test_an_arena_leg_is_a_gap_until_something_reads_its_series(
 def test_the_board_the_brief_and_resume_read_bot_and_fund_rooms(
         tmp_path, monkeypatch, capsys):
     """The plan's own check: `lab.py board` and `resume` over the new rooms.
-    A bot's gate row names `bot:<species>`, a fund's `fund:<symbol>`, where
-    every earlier row named a card -- and resume is the first thing a tick
-    after a /clear runs."""
+    A bot's gate row names `bot:<species>` where every earlier row named a
+    card (a fund writes one, `fund:<symbol>`, only when its history is empty
+    -- see the fund test) -- and resume is the first thing a tick after a
+    /clear runs."""
     scripts_lab = _scripts_lab(tmp_path, monkeypatch)
     _clonepad(scripts_lab, tmp_path, monkeypatch,
               _answer("Clone MACD Hunter, and mark AIB-SPACE."),
@@ -2248,9 +2263,41 @@ def test_the_board_the_brief_and_resume_read_bot_and_fund_rooms(
     (line,) = [scripts_lab._board_line(row) for row in scripts_lab.board_rows()]
     assert "STR-0001" in line and "STR-0002" in line, line
     assert "MACD Hunter" in line, line
-    assert scripts_lab.brief()
+    # B08, deep pass of 2026-09-22 evening: the gate keys the docstring names
+    # were asserted nowhere, and brief() only for being non-empty -- its
+    # first line is fixed, so it always is.
+    keys = {key for _, key in lab.gates()}
+    assert "bot:MACD Hunter" in keys, keys
+    said = scripts_lab.brief()
+    # The brief counts them rather than naming them: both rooms, the bot's
+    # and the fund's, are running experiments on its book line.
+    assert re.search(r"\b2 of \d+ experiments running", said), said[:600]
     assert scripts_lab.cmd_resume() == 0
     capsys.readouterr()
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_bot_room_does_not_spend_the_rest_of_its_answer(tmp_path, monkeypatch):
+    """B03, deep pass of 2026-09-22 evening (3/3). A room with no `card` used
+    to mean a WHOLE-ANSWER room in three places -- open_strategy, the launcher
+    and the page -- and only open_strategy was driven. In the launcher,
+    reading a bot room as whole-answer marks its answer spent, so a card of
+    the same answer held back on one tick never opens on a later one."""
+    import qa.rooms as qa_rooms
+
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    a = _card(0xA)
+    sent, _ = _launchpad(
+        scripts_lab, tmp_path, monkeypatch,
+        _answer(f"Clone MACD Hunter on paper. Buy {a} bull, sized small."),
+        live={a: _basket("BTC", "ETH")},
+        readings={("BTC", "ETH"): (6.5, 1.3)})
+    # The bot's room stands already, from an earlier tick.
+    qa_rooms.open_strategy("NEX-0001", "MACD Hunter", kind="bot", ref=MACD["id"])
+
+    did = scripts_lab.night_promote()
+
+    assert [card for card, _ in sent] == [a], (sent, did)
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -2268,7 +2315,14 @@ def test_money_moved_into_a_clone_counts_as_deployed(tmp_path, monkeypatch):
         {"id": "CLN-0003", "type": "intent", "kind": "fund",
          "instance_id": "inst-1", "amount": 700.0},
         {"id": "CLN-0003", "type": "outcome", "kind": "fund",
-         "outcome": "rejected", "http_status": 401}])
+         "outcome": "rejected", "http_status": 401},
+        # B06, deep pass of 2026-09-22 evening: "pausing the bot does not"
+        # release the money -- and there was no pause here, so a reader that
+        # dropped paused instances' transfers stayed green.
+        {"id": "CLN-0004", "type": "intent", "kind": "disable",
+         "instance_id": "inst-1"},
+        {"id": "CLN-0004", "type": "outcome", "kind": "disable",
+         "outcome": "accepted", "http_status": 200}])
 
     assert scripts_lab._deployed() == 500.0
 

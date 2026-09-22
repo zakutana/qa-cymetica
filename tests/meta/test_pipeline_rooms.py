@@ -227,8 +227,19 @@ def test_a_stopped_room_says_why_and_steps_out_of_the_way(tmp_path, monkeypatch)
     rooms = {r["id"]: r for r in render.build_rooms()["rooms"]}
     assert rooms["STR-0001"]["why"] == "Nexus ruled it out"
     assert rooms["STR-0002"]["why"] == "bought"
-    assert "Ukončené" in render.TEMPLATE, "no folded group for stopped rooms"
-    assert "nr.why" in render.TEMPLATE, "the reason is not drawn on the card"
+    # B04, deep pass of 2026-09-22 evening (3/3): both words were searched in
+    # the whole template, and two of the three "Ukončené" are comments -- a
+    # strip that kept stopped rooms stayed green. Comments out, and each
+    # promise read where it is kept: the strip's filter and the card itself.
+    import re
+    code = re.sub(r"(?m)^\s*//[^\n]*|\s//\s[^\n]*", "", render.TEMPLATE)
+    assert "Ukončené" in code, "no folded group for stopped rooms"
+    assert re.search(r"const strip = rooms\.filter\(\s*nr\s*=>\s*"
+                     r"nr\.status\s*!==\s*\"stopped\"", code), (
+        "the strip no longer leaves stopped rooms out")
+    start = code.index("function nxCard(")
+    card = code[start:code.index("\nfunction ", start + 1)]
+    assert "nr.why" in card, "the reason is not drawn on the room's own card"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -1539,6 +1550,11 @@ def test_an_arena_leg_names_a_team(tmp_path, monkeypatch):
         {"kind": "arena", "ref": "blue", "side": "bull", "share": 0.1}])
     (leg,) = plan["legs"]
     assert (leg["kind"], leg["ref"]) == ("arena", "BLUE") and "card" not in leg
+    # B07, deep pass of 2026-09-22 evening (3/3): one of TWO -- narrowing the
+    # teams to BLUE alone stayed green.
+    plan = rooms.set_plan("STR-0001", [
+        {"kind": "arena", "ref": "red", "side": "bear", "share": 0.1}])
+    assert [(g["kind"], g["ref"]) for g in plan["legs"]] == [("arena", "RED")]
 
     before = _stored(tmp_path)
     for ref in ("GREEN", "", "BLUE-RED", CARD_A):
