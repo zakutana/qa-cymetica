@@ -132,6 +132,17 @@ def _fills(value: str, slot: str, at: int, template: list[str],
     return not (is_id and siblings and WORD.fullmatch(value))
 
 
+def _family(path: str, templates: set[str]) -> bool:
+    """A bare prefix of routes they publish: prose naming a family ("the
+    /api/v1/cloned-bots endpoints"), not a route to call. Read as a route it
+    failed as unpublished. A prefix of nothing they publish is not a family
+    and stays a route."""
+    parts = path.strip("/").split("/")
+    return any(len(t.strip("/").split("/")) > len(parts)
+               and t.strip("/").split("/")[:len(parts)] == parts
+               for t in templates)
+
+
 def _matches(path: str, templates: set[str]) -> bool:
     """A path matches a published template when the fixed parts line up.
 
@@ -199,7 +210,8 @@ def test_every_route_nexus_tells_an_agent_to_call_is_published(rest_anon):
             f"from it")
 
     named = sorted(routes_named(newest["text"]))
-    missing = [p for p in named if not _matches(p, templates)]
+    missing = [p for p in named
+               if not _matches(p, templates) and not _family(p, templates)]
 
     conclude(Measurement(
         verdict="failed" if missing else "passed",

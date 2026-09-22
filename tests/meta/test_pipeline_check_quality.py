@@ -999,6 +999,15 @@ def test_a_route_their_ai_names_is_matched_against_the_template_not_the_text(
     with pytest.raises(AssertionError, match="start-trading"):
         _run("Then `POST /api/v1/cloned-bots/start-trading` to begin.")
 
+    # A bare prefix in prose names a family of routes, not one to call: "the
+    # /api/v1/cloned-bots endpoints" is not a claim that the prefix itself is
+    # served, and read as a route it failed as unpublished. A prefix of a
+    # route they publish passes; a prefix of nothing they publish still fails.
+    _run("The /api/v1/cloned-bots endpoints and the /api/v1/clones family "
+         "cover it; start with `PATCH /api/v1/cloned-bots/<id>/settings`.")
+    with pytest.raises(AssertionError, match="/api/v1/clob"):
+        _run("The /api/v1/clob endpoints cover it.")
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_coin_the_second_look_could_not_read_is_not_a_missing_coin(
