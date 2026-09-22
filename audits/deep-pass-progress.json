@@ -9,8 +9,12 @@
       "nodeid": "scripts/open_checks.py::since_last_full_run",
       "claim": "A full-selector run that aborted in tests/meta has meta results only and still counts as the last full run.",
       "source": "review",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -19,8 +23,12 @@
       "nodeid": "tests/rest/test_a_refused_clone_says_why.py::test_a_refused_paper_clone_says_why",
       "claim": "Docstring headline and #119 promise 'made, or refused for a reason', but judge() passes any 4xx detail that merely omits 'try again' (e.g. 'Invalid clone request.').",
       "source": "review",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "not",
+        "t2": "not",
+        "t3": "not"
+      },
+      "verdict": "false_positive",
       "fixed": false,
       "commit": null
     },
@@ -29,8 +37,12 @@
       "nodeid": "tests/rest/test_a_refused_clone_says_why.py::test_a_refused_paper_clone_says_why",
       "claim": "A breach needs an earlier refusal with a byte-identical detail; a per-request id or timestamp in the message sends the refuted retry to unmeasured forever.",
       "source": "review",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "not",
+        "t2": "not",
+        "t3": "not"
+      },
+      "verdict": "false_positive",
       "fixed": false,
       "commit": null
     },
@@ -39,8 +51,12 @@
       "nodeid": "tests/rest/test_a_refused_clone_says_why.py::test_a_refused_paper_clone_says_why",
       "claim": "'try again' is a plain substring, so a fix that names its reason and says 'do not try again' still fails.",
       "source": "review",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "not"
+      },
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -49,8 +65,12 @@
       "nodeid": "tests/discovery/test_api_docs_examples_carry_what_their_routes_require.py::test_every_request_example_on_api_docs_carries_what_its_route_requires",
       "claim": "route_of() takes the first matching route, so a template listed before a literal route can claim the literal path and judge against the wrong schema.",
       "source": "review",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "not",
+        "t2": "not",
+        "t3": "not"
+      },
+      "verdict": "false_positive",
       "fixed": false,
       "commit": null
     },
@@ -59,8 +79,12 @@
       "nodeid": "tests/discovery/test_api_docs_examples_carry_what_their_routes_require.py::test_every_request_example_on_api_docs_carries_what_its_route_requires",
       "claim": "Only `curl -X M url -d '{...}'` is read; --data, a double-quoted body, a quoted URL or -X after the URL are silently uncounted while the pass line says all examples hold.",
       "source": "review",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "not",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -69,8 +93,12 @@
       "nodeid": "tests/discovery/test_api_docs_examples_carry_what_their_routes_require.py::test_every_request_example_on_api_docs_carries_what_its_route_requires",
       "claim": "required_of() resolves only a top-level $ref; allOf/anyOf/oneOf bodies read as requiring nothing.",
       "source": "review",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "not",
+        "t2": "not",
+        "t3": "not"
+      },
+      "verdict": "false_positive",
       "fixed": false,
       "commit": null
     },
@@ -79,8 +107,12 @@
       "nodeid": "scripts/lab.py::verdicts",
       "claim": "Arena legs are a gap, but verdicts() still calls closes_at(ref), a live GET /api/v1/event-cards/BLUE per leg per due verdict.",
       "source": "review",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "not",
+        "t2": "not",
+        "t3": "not"
+      },
+      "verdict": "false_positive",
       "fixed": false,
       "commit": null
     },
@@ -89,8 +121,12 @@
       "nodeid": "scripts/lab.py::tick_exclusive",
       "claim": "The orphaned tick marker is handled by a skill rule, while tick_exclusive still trusts a dead pid's marker for 45 minutes.",
       "source": "review",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "not",
+        "t2": "not",
+        "t3": "not"
+      },
+      "verdict": "false_positive",
       "fixed": false,
       "commit": null
     },
@@ -99,8 +135,12 @@
       "nodeid": "scripts/processes.py::reminders",
       "claim": "The reminders mechanism still phrases maintenance lines as commands for the operator, contrary to [operator 2026-09-22]; only CLAUDE.md prose changed.",
       "source": "review",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "not",
+        "t2": "real",
+        "t3": "not"
+      },
+      "verdict": "minority",
       "fixed": false,
       "commit": null
     },
@@ -109,8 +149,12 @@
       "nodeid": "tests/rest/test_the_build_board_counts_building_as_building.py::test_the_boards_building_tile_counts_only_what_is_building",
       "claim": "resolve() follows a name only when the whole expression is a bare name, so (s.building || 0) + nf with const nf = (s.funded || 0) passes; the funded stage is hidden behind a local.",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -119,8 +163,12 @@
       "nodeid": "tests/rest/test_cloned_bots_surface.py::test_one_credential_funds_and_starts_a_clone",
       "claim": "credential_gap tests 'x-api-key' in headers case-sensitively, but a security scheme's name is added as written and their ApiKeyAuth is 'X-API-Key': a route declared through security reads as publishing only authorization.",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -129,8 +177,12 @@
       "nodeid": "tests/rest/test_agent_board_ranks_what_it_says_it_ranks.py::test_the_board_is_ranked_by_the_key_its_own_document_publishes",
       "claim": "r.get('rank') or 0 and str(created_at or '') turn missing fields into values; with no created_at or a renamed rank the check fails 'exactly newest-first' with nothing read.",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "not",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -139,8 +191,12 @@
       "nodeid": "tests/rest/test_a_refused_clone_says_why.py::test_a_refused_paper_clone_says_why",
       "claim": "(a) an empty 4xx body is stored as encoding empty/value null, their_body() returns None and the docstring's 'no detail at all -> fail' becomes inconclusive; (b) a reason not under top-level detail reads as no detail; (c) the no-detail breach is reported with the retry sentence; (d) clone_attempts never filters paper.",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -149,8 +205,12 @@
       "nodeid": "tests/rest/test_startup_line_is_reachable_as_documented.py::test_the_startup_calls_answer_the_reader_their_own_page_promises",
       "claim": "PAGE_STATUSES is our hard-coded copy, never read off the page the docstring names as the claimant, so a page change reads as a promise not served; a line body with no count passes.",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -159,8 +219,12 @@
       "nodeid": "tests/discovery/test_api_docs_examples_carry_what_their_routes_require.py::test_every_request_example_on_api_docs_carries_what_its_route_requires",
       "claim": "CURL requires an unquoted URL, so curl -X POST \"https://...\" examples (two on the page today) are dropped silently, neither judged nor counted.",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "not",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -169,8 +233,12 @@
       "nodeid": "tests/meta/test_pipeline_lab.py::test_the_night_holds_no_hand_that_trades_files_or_commits",
       "claim": "Checks only that five exact names are absent; os.system('git commit ...') added to night_promote stays green although the docstring says committing is not a door of the night (reproduced by the auditor).",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -179,8 +247,12 @@
       "nodeid": "tests/meta/test_pipeline_lab_loop.py::test_the_catalogue_readers_take_whole_names_and_respect_what_he_ruled_out",
       "claim": "The only longer-word case ('MACD Hunters') names a bot already proposed, so plain substring matching in _whole_names stays green (reproduced).",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -189,8 +261,12 @@
       "nodeid": "tests/meta/test_pipeline_rooms.py::test_a_bot_or_fund_room_is_one_thing_of_its_answer_not_the_whole_answer",
       "claim": "Docstring names the launcher as one of three places, but no test drives whole_linked in night_promote; room_key(row) is None -> not row.get('card') stays green.",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -199,8 +275,12 @@
       "nodeid": "tests/meta/test_pipeline_rooms.py::test_a_stopped_room_says_why_and_steps_out_of_the_way",
       "claim": "Only checks 'Ukoncene' and 'nr.why' appear in the template; two of three 'Ukoncene' are comments, so keeping stopped rooms on the strip stays green.",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -209,8 +289,12 @@
       "nodeid": "tests/meta/test_pipeline_lab_loop.py::test_a_species_we_already_own_a_clone_of_is_not_cloned_again",
       "claim": "Docstring says held whether or not paused; the fixture has no disable row, so skipping paused instances stays green.",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "not",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -219,8 +303,12 @@
       "nodeid": "tests/meta/test_pipeline_lab_loop.py::test_money_moved_into_a_clone_counts_as_deployed",
       "claim": "Docstring says pausing does not release the money; no pause row in the fixture, so dropping disabled instances' transfers stays green.",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "not",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -229,8 +317,12 @@
       "nodeid": "tests/meta/test_pipeline_rooms.py::test_an_arena_leg_names_a_team",
       "claim": "Claims a team is one of two; only BLUE is shown accepted, so ARENA_TEAMS = ('BLUE',) stays green.",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -239,8 +331,12 @@
       "nodeid": "tests/meta/test_pipeline_lab_loop.py::test_the_board_the_brief_and_resume_read_bot_and_fund_rooms",
       "claim": "Docstring names gate-row keys bot:<species> and fund:<symbol>; nothing asserts them and brief() is only checked non-empty.",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "not",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -249,8 +345,12 @@
       "nodeid": "tests/meta/test_guard_is_real.py::test_a_paper_gate_reads_the_value_not_that_something_is_there",
       "claim": "qa/safety.py lets a live order through: a JSON-RPC batch body (a list) is returned unchecked at MUTATE (safety.py ~271-274), and the REST required_flags check (_assert_declared_flags ~410) still reads not payload.get(flag), so paper='false' passes on event-card buy.",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -259,8 +359,12 @@
       "nodeid": "tests/meta/test_pipeline_adapters.py::test_settle_reads_the_newest_mark_the_way_the_fold_does",
       "claim": "The test writes only accepted marks; deleting the outcome == 'accepted' filter in verify.py settle() stays green, and an unknown re-sent pass would become the newest mark so the obligation never clears.",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -269,8 +373,12 @@
       "nodeid": "tests/meta/test_pipeline_adapters.py::test_the_correction_we_send_says_which_of_the_three_things_happened",
       "claim": "fix_claimed is checked by the substring 'a fix was claimed', which the default wording also contains; deleting the branch stays green.",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -279,8 +387,12 @@
       "nodeid": "tests/meta/test_pipeline_build_it_better.py::test_the_building_tile_is_judged_by_the_arithmetic_behind_its_name",
       "claim": "resolve() follows a name only when the whole expression is that name; (s.building || 0) + nf with nf = s.funded passes (same defect as A01, meta side).",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -289,8 +401,12 @@
       "nodeid": "tests/meta/test_pipeline_check_quality.py::test_a_route_their_ai_names_is_matched_against_the_template_not_the_text",
       "claim": "_matches in test_nexus_routes_exist.py lets a placeholder in Nexus's text match a fixed published segment: /api/v1/exchange/{pair} matches /api/v1/exchange/pairs.",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -299,8 +415,12 @@
       "nodeid": "tests/meta/test_pipeline_check_quality.py::test_a_refusal_that_blames_trust_level_for_a_wording_is_the_defect",
       "claim": "denies_identity is satisfied by denying either identity or trust level anywhere in the hint; 'not about your identity; it needs a higher trust level' passes.",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -309,8 +429,12 @@
       "nodeid": "tests/meta/test_pipeline_check_subjects.py::test_a_denial_of_a_pro_forma_stretch_is_not_a_disclosure_of_one_116",
       "claim": "DENIED looks for a negation only before the word; 'pro-forma periods are excluded' / 'Pro-forma figures are never used' read as disclosures and #116 would pass on a live defect.",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -319,8 +443,12 @@
       "nodeid": "tests/meta/test_pipeline_check_subjects.py::test_a_clone_refusal_that_asks_for_the_retry_it_refuses_fails",
       "claim": "The test stubs their_body; a real empty 400 is captured as encoding empty/value None, their_body returns None and the check goes inconclusive where the docstring says fail (same root as A04a).",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -329,8 +457,12 @@
       "nodeid": "tests/meta/test_pipeline_check_subjects.py::test_the_buy_is_judged_by_what_the_card_said_when_it_was_placed_117",
       "claim": "A card_before recorded as unreadable ({'http_status': 503}) falls back to today's read with the false sentence 'the buy predates recording the card at the buy'.",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -339,8 +471,12 @@
       "nodeid": "tests/meta/test_pipeline_fold.py::test_no_state_change_without_run_id_or_event_id",
       "claim": "FILING changes are checked only for a present event_id, not that it belongs to an event passed in; a fold citing an event never in the journal stays green.",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
       "commit": null
     }
