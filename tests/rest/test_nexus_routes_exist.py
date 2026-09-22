@@ -176,8 +176,12 @@ def _matches(path: str, templates: set[str]) -> bool:
     for candidate in published:
         if len(candidate) != len(parts):
             continue
-        if all(p.startswith(("{", "<")) or c == p
-               or (c.startswith("{") and _fills(p, c, at, candidate, published))
+        # His placeholder stands only where theirs does: a `{pair}` of his
+        # against their literal `pairs` is not that route (C05, deep pass of
+        # 2026-09-22 evening -- it matched any published segment).
+        if all((p.startswith(("{", "<")) and c.startswith("{")) or c == p
+               or (c.startswith("{") and not p.startswith(("{", "<"))
+                   and _fills(p, c, at, candidate, published))
                for at, (c, p) in enumerate(zip(candidate, parts))):
             return True
     return False

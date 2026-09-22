@@ -943,6 +943,13 @@ def test_a_route_their_ai_names_is_matched_against_the_template_not_the_text(
     assert not _matches("/api/v1/cloned-bots/{id}/settings/advanced", published), (
         "a longer path matched a shorter template"
     )
+    # C05, deep pass of 2026-09-22 evening (3/3): a placeholder in HIS text
+    # matched any published segment, literal included, so
+    # /exchange/{pair} passed against a document that publishes only
+    # /exchange/pairs. His placeholder stands only where theirs does.
+    assert not _matches("/api/v1/exchange/{pair}", {"/api/v1/exchange/pairs"})
+    assert not _matches("/api/v1/{x}/{y}/{z}", published)
+    assert _matches("/api/v1/event-cards/{id}", published)
     assert routes_named("no routes here, only prose about fees") == set()
     # A11, deep pass of 2026-09-22: the check is about routes he TELLS an
     # agent to call. One he names to say it does not exist, or to steer an
