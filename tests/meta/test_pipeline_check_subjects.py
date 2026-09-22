@@ -452,3 +452,69 @@ def test_every_way_a_curl_can_be_written_is_read():
         "curl -X POST \"https://cymetica.com/api/v1/ai_trading_agent/prompt-assets\" "
         "-d '{\"q\": 1}'"), CLONE_SPEC)
     assert said["unpublished"] == ["POST /api/v1/ai_trading_agent/prompt-assets"], said
+
+
+# ------------------------------- a card's tradeability, REST against MCP -----
+
+CLOSED = "US equity markets are closed -- this card holds stocks."
+
+
+def _run_tradeability_check(rest_cards, mcp_cards, listing=None):
+    """The check whole: REST answered from `rest_cards` (id -> tradeable_now),
+    the listing from the same unless given, MCP from `mcp_cards` (id ->
+    tradeable_now, or an Exception to raise)."""
+    from qa.client import McpError
+
+    check = _load("tests/mcp/test_card_tradeability_agrees_across_surfaces.py",
+                  "tradeability_check_under_test")
+
+    def card(cid, now):
+        return {"id": cid, "status": "live", "tradeable_now": now,
+                "trading_blocked_reason": None if now else CLOSED}
+
+    rows = listing if listing is not None else [card(c, v) for c, v in rest_cards.items()]
+    answers = {check.LIST: (200, {"cards": rows, "us_market_open": False})}
+    for cid, now in rest_cards.items():
+        answers[check.CARD.format(id=cid)] = (200, card(cid, now))
+
+    class Mcp:
+        def call(self, tool, args):
+            said = mcp_cards[args["query"]]
+            if isinstance(said, Exception):
+                raise said
+            return {"success": True, "result": {"cards": [
+                {"id": args["query"], "status": "live", "tradeable_now": said}]}}
+
+    check.test_a_card_is_tradeable_on_every_surface_or_on_none(Mcp(), _Rest(answers))
+    return McpError
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_card_that_is_closed_on_rest_and_open_on_mcp_fails():
+    """2026-09-22 23:20 UTC, US markets closed: 21 of 25 stock cards read
+    tradeable_now false on GET /api/v1/event-cards/{id} and true through the
+    get_event_card_info tool Nexus reads -- so NEX-0078 recommended a70b8d5e
+    as "verified live and tradeable" when REST, the one trade gate, refused
+    it. Judged only where one surface reads the card closed: with every card
+    open on both, the case this is about was not exercised."""
+    a, b, c = (f"{n:08x}-0000-4000-8000-000000000000" for n in (1, 2, 3))
+
+    with pytest.raises(AssertionError, match=a[:8]):
+        _run_tradeability_check({a: False, b: False}, {a: True, b: False})
+    # The other direction is the same disagreement.
+    with pytest.raises(AssertionError, match=b[:8]):
+        _run_tradeability_check({a: False, b: True}, {a: False, b: False})
+
+    # Agreement with a card closed on both is the gate working.
+    _run_tradeability_check({a: False, b: False}, {a: False, b: False})
+
+    # Every card open on both: the closed case was not exercised.
+    with pytest.raises(Inconclusive):
+        _run_tradeability_check({a: True, b: True}, {a: True, b: True})
+    # A tool that cannot answer is unread, never agreement.
+    from qa.client import McpError
+    with pytest.raises(Inconclusive):
+        _run_tradeability_check({a: False}, {a: McpError("tool error", {})})
+    # A card the tool no longer returns is unread too.
+    with pytest.raises(Inconclusive):
+        _run_tradeability_check({c: False}, {c: None})
