@@ -1182,7 +1182,9 @@ def proposed_cards(text: str, known) -> dict[str, list[str]]:
 
 _RULED_OUT = re.compile(
     r"\b(are out|is out|ruled out|rejected|disqualified|excluded|withheld|"
-    r"not (?:a )?(?:long|pick|buy|fit|selected)|skip|avoid|pass on)\b",
+    r"not (?:a )?(?:long|pick|buy|fit|selected)|skip|avoid|pass on|"
+    # NEX-0073: "**Why it edges the alternatives:** Fibonacci Phoenix ...".
+    r"alternatives?|runners?-up|instead of)\b",
     re.I)
 _BULLET = re.compile(r"^\s*(?:[-*•]|\d+[.)])\s")
 

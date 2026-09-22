@@ -1938,6 +1938,27 @@ def test_a_bot_nobody_lists_or_he_ruled_out_opens_nothing(tmp_path, monkeypatch)
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_alternatives_he_weighed_against_his_pick_are_not_picks(
+        tmp_path, monkeypatch):
+    """NEX-0073, 2026-09-22: asked for ONE bot, he answered "**Pick: MACD
+    Hunter**" and then "**Why it edges the alternatives:** Fibonacci Phoenix
+    ... and RSI Sniper ... and Perceptron Oracle ...". The launch cloned all
+    four; two were stopped and paused by hand."""
+    import qa.rooms as qa_rooms
+
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    text = ("**Pick: MACD Hunter** (momentum).\n\n"
+            "**Why it edges the alternatives:** Fibonacci Phoenix (40%) and "
+            "Trend Titan (35%) need a higher hit-rate.\n")
+    sent, calls = _clonepad(scripts_lab, tmp_path, monkeypatch, _answer(text))
+
+    scripts_lab.night_promote()
+
+    titles = [r["title"] for r in qa_rooms.strategies(qa_rooms.load())]
+    assert titles == ["MACD Hunter"], titles
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_clone_they_did_not_accept_is_never_funded(tmp_path, monkeypatch):
     import qa.rooms as qa_rooms
 
