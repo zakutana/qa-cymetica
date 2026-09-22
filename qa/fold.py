@@ -385,6 +385,65 @@ def _move_filing(row: dict, to: str, event: dict) -> None:
     })
 
 
+def _split_report(rows: dict, event: dict) -> None:
+    """Move one report off a row that holds two, onto a row of its own.
+
+    2026-09-22: CYM-one_credential_carries_a_clone_from_creation_to_funding
+    held #89 (fixed, paid) and #98 (still broken), and its one check fails on
+    #98's route -- so the row owed a `fail` on #89 as well. A report is moved
+    WITH its status and with what we already told them about it, at the
+    event's own place in the replay, so everything before it stays as it was
+    and the old row loses no transition.
+
+    The one place an event brings a row into being, and only out of a row
+    that holds the report: the new row inherits the old one's `first_seen`
+    (the run that first saw the defect), is adjudicated by the check the
+    event names, and starts UNVERIFIED with no pin. A split of a row that
+    does not exist, or of a report it does not hold, moves nothing.
+    """
+    src = rows.get(event.get("finding_id") or "")
+    new_id, report_id = event.get("to_id"), event.get("report_id")
+    if src is None or not new_id or new_id == src.get("id"):
+        return
+    moving = [r for r in src["filing"]["reports"] if r["report_id"] == report_id]
+    if not moving:
+        return
+    dst = rows.get(new_id)
+    if dst is None:
+        dst = rows[new_id] = {
+            "id": new_id,
+            "title": f"{src.get('title') or src.get('id')} -- #{report_id}",
+            "first_seen": copy.deepcopy(src.get("first_seen")),
+            "reproductions": 0,
+            "checks": [event["nodeid"]] if event.get("nodeid") else [],
+            "check": {"state": "UNVERIFIED", "adjudicated_by": None,
+                      "pinned_fingerprint": None},
+            "filing": {"state": "NOT_RAISED", "adjudicated_by": None,
+                       "reports": [], "refused": [], "verifications": []},
+            "transitions": [], "regressions": [],
+        }
+        for field in ("severity", "component", "section", "tag", "kind",
+                      "provenance"):
+            if field in src:
+                dst[field] = copy.deepcopy(src[field])
+    src["filing"]["reports"] = [r for r in src["filing"]["reports"]
+                                if r["report_id"] != report_id]
+    for report in moving:
+        if not any(r["report_id"] == report_id for r in dst["filing"]["reports"]):
+            dst["filing"]["reports"].append(dict(report))
+    told = [v for v in src["filing"]["verifications"] if v["report_id"] == report_id]
+    src["filing"]["verifications"] = [
+        v for v in src["filing"]["verifications"] if v["report_id"] != report_id]
+    dst["filing"]["verifications"].extend(told)
+    status = (moving[0].get("status") or "").lower()
+    _move_filing(dst, "FIX_CLAIMED" if status in _FIX_CLAIMED_STATUSES
+                 else "RAISED", event)
+    src.setdefault("split_to", [])
+    if new_id not in src["split_to"]:
+        src["split_to"].append(new_id)
+    dst["split_from"] = src.get("id")
+
+
 def _apply_events(rows: dict, events: Iterable[dict]) -> None:
     """Replay the journal onto the FILING axis of every row.
 
@@ -401,11 +460,17 @@ def _apply_events(rows: dict, events: Iterable[dict]) -> None:
         # Rebuilt from the journal on every fold, like the axis itself.
         row.pop("superseded_by", None)
         row.pop("supersedes", None)
+        row.pop("split_to", None)
+        row.pop("split_from", None)
 
     retracted: dict[str, set[int]] = {}
 
     for event in events:
         etype = event.get("type")
+
+        if etype == "split_report":
+            _split_report(rows, event)
+            continue
 
         if etype == "vendor_read":
             # Rule 8: a failed read is not an empty read. bounty.py could not

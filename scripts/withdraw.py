@@ -210,6 +210,15 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("to_id")
     p.add_argument("--reason", required=True)
 
+    p = sub.add_parser("split-report",
+                       help="move one report off a row onto a row of its own")
+    p.add_argument("finding_id")
+    p.add_argument("--report", type=int, required=True)
+    p.add_argument("--to", dest="to_id", required=True)
+    p.add_argument("--check", dest="nodeid", required=True,
+                   help="the check that adjudicates the new row")
+    p.add_argument("--reason", required=True)
+
     p = sub.add_parser("note", help="record something without changing state")
     p.add_argument("finding_id")
     p.add_argument("--text", required=True)
@@ -265,6 +274,20 @@ def main(argv: list[str] | None = None) -> int:
         reason = _require_reason(args.reason, "retraction")
         return _emit({**base, "type": "retraction_sent", "finding_id": args.finding_id,
                       "report_id": args.report, "reason": reason}, args.finding_id)
+
+    if args.command == "split-report":
+        # The report has to be on the row, and the new row must not already
+        # exist -- either way the event would be permanent and move nothing.
+        reports, _ = _affected(args.finding_id)
+        if _known_ids() is not None and args.report not in reports:
+            raise SystemExit(f"{args.finding_id} holds no report #{args.report} "
+                             f"(it holds {reports or 'none'})")
+        if args.to_id == args.finding_id or args.to_id in (_known_ids() or set()):
+            raise SystemExit(f"{args.to_id} already exists; a split makes a new row")
+        reason = _require_reason(args.reason, "split")
+        return _emit({**base, "type": "split_report", "finding_id": args.finding_id,
+                      "report_id": args.report, "to_id": args.to_id,
+                      "nodeid": args.nodeid, "reason": reason}, args.finding_id)
 
     if args.command == "supersede":
         reason = _require_reason(args.reason, "supersede")

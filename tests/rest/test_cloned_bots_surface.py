@@ -266,6 +266,49 @@ def test_one_credential_carries_a_clone_from_creation_to_funding(rest_trusted):
 
 
 @qa(component="rest.agents", tier=SafetyTier.SAFE, surface="rest")
+def test_one_credential_funds_and_starts_a_clone(rest_trusted):
+    """#89 alone: the steps that MOVE a clone forward -- `/fund` and
+    `/go-live` -- accept the credential an agent is told to use.
+
+    Not a narrowing of the check above, which stays whole and is #98's (the
+    DO NOT NARROW there is about that one claim). This is the other claim the
+    same row used to carry: on 2026-09-22 #89 and #98 were split onto rows of
+    their own (`split_report`), because one check failing on /activity made
+    the row owe a `fail` on #89, which they fixed in 48 minutes and paid.
+    Same reading of the same document, `credential_gap`'s `blocked` subset.
+    """
+    spec = rest_trusted.get(OPENAPI)
+    if spec.status_code != 200:
+        raise Inconclusive(
+            f"{OPENAPI} answered HTTP {spec.status_code}; a failed read is "
+            f"not an empty document")
+    paths = {p: ops for p, ops in (spec.json().get("paths") or {}).items()
+             if p.startswith(PREFIX)}
+    schemes = (spec.json().get("components") or {}).get("securitySchemes") or {}
+    gap = credential_gap(paths, schemes)
+    steps = sorted(route for route in list(gap["accepts"]) + list(gap["refuses"])
+                   if route.rsplit("/", 1)[-1] in MOVES_THE_CLONE)
+    if not steps:
+        raise Inconclusive(
+            f"their openapi names no authenticated {PREFIX} fund or go-live "
+            f"route, so there is no step to carry a credential")
+    conclude(Measurement(
+        verdict="failed" if gap["blocked"] else "passed",
+        reason=(f"{', '.join(sorted(gap['blocked']))} publish(es) only "
+                f"`authorization`, so an agent that authenticates the "
+                f"documented way cannot fund or start the clone it created"
+                if gap["blocked"] else
+                f"every step that moves a clone forward accepts the agent's "
+                f"x-api-key: {', '.join(steps)}"),
+        left=sorted(gap["blocked"]),
+        right=steps,
+        population={"flow_steps": len(steps), "blocked": len(gap["blocked"])},
+        sources={"documented": OPENAPI},
+        claim_id="one_credential_funds_and_starts_a_clone",
+    ))
+
+
+@qa(component="rest.agents", tier=SafetyTier.SAFE, surface="rest")
 def test_every_cloned_bot_route_they_serve_is_one_they_document(rest_trusted):
     """A clone starts paused, and the way to start it is unpublished."""
     spec = rest_trusted.get(OPENAPI)

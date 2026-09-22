@@ -131,6 +131,28 @@ def test_a_mistyped_finding_id_is_refused_before_it_is_permanent(tmp_path, monke
         withdraw.main(["supersede", "CYM-real", "CYM-nope", "--reason", "r"])
     assert not journal.exists()
 
+    # split-report: the row must exist, must hold the report, and the new row
+    # must not -- an event that points at nothing is permanent and does nothing.
+    row["filing"]["reports"] = [{"report_id": 98, "status": "paid"}]
+    (tmp_path / "ledger.json").write_text(
+        json.dumps({"schema": 2, "findings": {"CYM-real": row}}), encoding="utf-8")
+    for argv in (["split-report", "CYM-nope", "--report", "98", "--to", "CYM-new",
+                  "--check", "t::b", "--reason", "r"],
+                 ["split-report", "CYM-real", "--report", "89", "--to", "CYM-new",
+                  "--check", "t::b", "--reason", "r"],
+                 ["split-report", "CYM-real", "--report", "98", "--to", "CYM-real",
+                  "--check", "t::b", "--reason", "r"]):
+        with pytest.raises(SystemExit):
+            withdraw.main(argv)
+        assert not journal.exists(), argv
+    # ... and the well-formed one is written. Without it the refusals above
+    # pass on argparse not knowing the subcommand at all.
+    assert withdraw.main(["split-report", "CYM-real", "--report", "98", "--to",
+                          "CYM-new", "--check", "t::b", "--reason", "r"]) == 0
+    written = json.loads(journal.read_text(encoding="utf-8").splitlines()[-1])
+    assert written["type"] == "split_report" and written["report_id"] == 98
+    journal.unlink()
+
     assert withdraw.main(["withdraw", "CYM-real", "--reason", "the real one"]) == 0
     assert journal.exists()
 

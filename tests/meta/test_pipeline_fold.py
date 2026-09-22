@@ -194,6 +194,18 @@ def test_no_state_change_without_run_id_or_event_id():
                 r = run(f"run-{seed}-{step}", [result(n, outcome) for n in nodes],
                         level=level, at=f"2026-09-05T10:{step:02d}:00+00:00")
                 state = fold(state, run=r, events=events)
+            elif rng.random() < 0.3 and any(e.get("report_id") for e in events):
+                # split_report (2026-09-22) is the one event that brings a
+                # row into being, so it is in the alphabet: a row that
+                # appears must appear with a transition naming the event.
+                report = rng.choice([e["report_id"] for e in events
+                                     if e.get("type") == "filing_outcome"])
+                events = events + [event(
+                    "split_report", at=f"2026-09-05T09:{step:02d}:30+00:00",
+                    source="scripts/withdraw.py", by="operator",
+                    finding_id="CYM-a", report_id=report, to_id=f"CYM-s{step}",
+                    nodeid=CHECK_C, reason="property")]
+                state = fold(state, run=None, events=events)
             else:
                 # The status varies. Every sequence used the default
                 # "pending", so FILING never left RAISED in any of the 200 and
@@ -208,11 +220,13 @@ def test_no_state_change_without_run_id_or_event_id():
             for fid, row_ in state["findings"].items():
                 after = (display_state(row_), row_["check"]["state"],
                          row_["filing"]["state"])
-                new = [t for t in row_["transitions"] if _key(t) not in before_tx[fid]]
-                if after != before[fid]:
+                new = [t for t in row_["transitions"]
+                       if _key(t) not in before_tx.get(fid, set())]
+                # A row that did not exist before step moved from nothing.
+                if after != before.get(fid, (None, "UNVERIFIED", "NOT_RAISED")):
                     assert new, (
                         f"seed {seed} step {step}: {fid} moved "
-                        f"{before[fid]} -> {after} with no transition recorded"
+                        f"{before.get(fid)} -> {after} with no transition recorded"
                     )
                 for t in new:
                     cause = t.get("cause") or {}
@@ -1291,3 +1305,97 @@ def test_a_correction_under_the_same_definition_is_recorded():
     twice = fold(ledger(copy.deepcopy(broken)),
                  events=filed + [sent_pass, correction, correction])
     assert len(twice["findings"]["CYM-a"]["filing"]["verifications"]) == 2
+
+
+def _split(report_id=89, to_id="CYM-s", nodeid=CHECK_B,
+           at="2026-09-22T09:00:00+00:00", fid="CYM-a"):
+    return event("split_report", at=at, source="scripts/withdraw.py",
+                 by="operator", finding_id=fid, report_id=report_id,
+                 to_id=to_id, nodeid=nodeid, reason="two reports, two checks")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_split_gives_one_report_its_own_row_and_its_own_verdict():
+    """CYM-one_credential_carries_a_clone_from_creation_to_funding held #89
+    (/fund, /go-live: fixed and paid) and #98 (/activity: still refused).
+    Its one check fails on /activity, so the row owed a `fail` to BOTH, and
+    `verify.py` would have told them #89 still reproduces. A deep pass held
+    it twice. `split_report` moves one report, with its status and what we
+    already told them about it, onto a row adjudicated by its own check.
+
+    Appended, never rewritten: the old row keeps every transition it had, so
+    `write_ledger` accepts the result, and a second fold changes nothing."""
+    from qa.fold import fold
+
+    filed = (_filed(report_id=89, status="paid")
+             + _filed(report_id=98, status="paid", at="2026-09-19T09:00:00+00:00"))
+    told = event("verification_outcome", at="2026-09-12T10:00:00+00:00",
+                 finding_id="CYM-a", report_id=89, verdict="fail",
+                 fingerprint="sha256:old", run_id="run-old", outcome="accepted",
+                 evidence_id="ev-9")
+    before = fold(ledger(row("CYM-a", check_state="REPRODUCING", pinned=FP)),
+                  events=filed + [told])
+    a_before = before["findings"]["CYM-a"]
+    assert a_before["obligations"]["correction_owed"] == [89, 98]
+
+    after = fold(before, events=filed + [told, _split()])
+    a, b = after["findings"]["CYM-a"], after["findings"]["CYM-s"]
+
+    assert [r["report_id"] for r in a["filing"]["reports"]] == [98]
+    assert a["obligations"]["correction_owed"] == [98], a["obligations"]
+    assert not [v for v in a["filing"]["verifications"] if v["report_id"] == 89]
+    assert {_key(t) for t in a_before["transitions"]} <= {
+        _key(t) for t in a["transitions"]}, "the old row lost a transition"
+
+    assert b["checks"] == [CHECK_B]
+    assert b["first_seen"] == a["first_seen"], (
+        "the run that first saw #89's defect is the old row's first run")
+    assert b["check"]["state"] == "UNVERIFIED"
+    assert b["check"]["pinned_fingerprint"] is None
+    assert b["filing"]["reports"] == [{"report_id": 89, "status": "paid"}]
+    assert b["filing"]["state"] == "FIX_CLAIMED"
+    assert [v["report_id"] for v in b["filing"]["verifications"]] == [89]
+    moves = [t for t in b["transitions"] if t["axis"] == "filing"]
+    assert moves and all(t["cause"].get("event_id") for t in moves), moves
+    assert b["split_from"] == "CYM-a" and a["split_to"] == ["CYM-s"]
+
+    # A second fold over the same journal changes nothing.
+    again = fold(after, events=filed + [told, _split()])
+    assert again["findings"] == after["findings"]
+
+    # And the new row answers to its own check: a V run where CHECK_A still
+    # fails and CHECK_B passes leaves A reproducing and B passing.
+    ran = fold(after, run=fold_run("run-9", [(CHECK_A, "failed"), (CHECK_B, "passed")],
+                                   at="2026-09-22T10:00:00+00:00"),
+               events=filed + [told, _split()])
+    assert ran["findings"]["CYM-a"]["check"]["state"] == "REPRODUCING"
+    assert ran["findings"]["CYM-s"]["check"]["state"] == "PASSING_UNPINNED"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_split_that_names_no_row_or_no_report_moves_nothing():
+    """A split of a row that does not exist, or of a report the row does not
+    hold, creates nothing: an event may carry a report, it may not invent a
+    row out of nothing."""
+    from qa.fold import fold
+
+    filed = _filed(report_id=98, status="paid")
+    base = ledger(row("CYM-a", check_state="REPRODUCING", pinned=FP))
+    for split in (_split(fid="CYM-nobody"), _split(report_id=89)):
+        out = fold(base, events=filed + [split])
+        assert "CYM-s" not in out["findings"], split
+        assert [r["report_id"] for r in out["findings"]["CYM-a"]["filing"]["reports"]] == [98]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_journal_accepts_a_split_only_with_everything_it_needs():
+    from qa.state import JournalError, _validate_event
+
+    good = _split()
+    _validate_event(good)
+    for missing in ("finding_id", "report_id", "to_id", "nodeid", "reason"):
+        bad = {k: v for k, v in good.items() if k != missing}
+        with pytest.raises(JournalError):
+            _validate_event(bad)
+    with pytest.raises(JournalError):
+        _validate_event(dict(good, to_id="CYM-a"))  # a row split onto itself

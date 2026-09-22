@@ -533,6 +533,11 @@ EVENT_TYPES = frozenset({
     # the server's: a send whose response never arrived has no server id, and
     # that is exactly the case the record exists for.
     "a2a_intent", "a2a_outcome",
+    # One report moved off a row that holds two, onto a row of its own with
+    # its own check (2026-09-22). #89 and #98 sat on one row whose one check
+    # fails on /activity, so the fold owed a `fail` on #89 too -- which is
+    # fixed and paid. Appended, never rewritten: the old row keeps its past.
+    "split_report",
 })
 REQUIRED_EVENT_KEYS = ("type", "at", "by", "source")
 ALLOWED_EVENT_KEYS = frozenset({
@@ -594,6 +599,8 @@ def _natural_key(event: dict) -> str:
         return f"{t}|{g('finding_id')}|{g('report_id')}"
     if t == "supersede":
         return f"{t}|{g('from_id')}|{g('to_id')}"
+    if t == "split_report":
+        return f"{t}|{g('finding_id')}|{g('report_id')}|{g('to_id')}"
     if t in ("verification_intent", "verification_outcome"):
         # The FINGERPRINT is in the key, not the run. One report can carry two
         # checks -- #50, #51, #52 and #67 each do -- so keying on the report
@@ -647,6 +654,14 @@ def _validate_event(event: dict) -> None:
         raise JournalError(f"event has unknown keys {sorted(unknown)}")
     if event["type"] == "withdraw" and not (event.get("reason") or "").strip():
         raise JournalError("a withdraw event needs a non-empty reason")
+    if event["type"] == "split_report":
+        for key in ("finding_id", "to_id", "nodeid", "reason"):
+            if not str(event.get(key) or "").strip():
+                raise JournalError(f"a split_report event needs {key!r}")
+        if event.get("report_id") is None:
+            raise JournalError("a split_report event needs the report it moves")
+        if event["to_id"] == event["finding_id"]:
+            raise JournalError("a split_report cannot move a report onto its own row")
     if event["type"] in ("telegram_sent", "telegram_reply"):
         # Without an id the natural key is `telegram_sent|None`, so the second
         # id-less message is answered "duplicate" and dropped without a word --
