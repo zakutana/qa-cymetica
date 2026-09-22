@@ -1636,6 +1636,22 @@ def test_a_refusal_that_blames_trust_level_for_a_wording_is_the_defect():
             f"{reason}")
         assert "trust level" in reason or "identity" in reason, reason
 
+    # C06, deep pass of 2026-09-22 evening (3/3): a denial of EITHER word
+    # anywhere satisfied the predicate, so a hint that denies identity and
+    # blames trust level in the next breath passed. Every mention has to sit
+    # inside a denial.
+    for blamed in ("The wording is not about your identity; it needs a higher "
+                   "trust level.",
+                   "It is about the wording, not your identity. Your trust "
+                   "level does not permit this query."):
+        verdict, reason = _drive_check(check, _Mcp(blamed))
+        assert verdict == "failed", (
+            f"a hint blaming trust level passed beside a denial of identity: "
+            f"{blamed!r}: {reason}")
+    assert _drive_check(check, _Mcp(
+        "About the wording only -- nothing to do with your identity or your "
+        "trust level."))[0] == "passed"
+
     # A17, deep pass of 2026-09-22: `parameter` had to be one of four names,
     # so a refusal naming `prompt` for the `query` we sent passed -- a field
     # the caller cannot reword because it never sent one.

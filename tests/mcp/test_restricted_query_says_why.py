@@ -138,13 +138,22 @@ def test_a_restricted_query_says_which_rule_it_tripped(mcp_anon):
     # comment calls the defect, read as its denial (A16, deep pass of
     # 2026-09-21). And it is in the verdict now: outside it, "The wording of
     # this query is not permitted at your trust level" passed with a suffix.
-    denies_identity = re.search(
+    # And EVERY mention inside a denial (C06, deep pass of 2026-09-22
+    # evening): "not about your identity; it needs a higher trust level"
+    # denies one and blames the other, and passed on the denial alone. A list
+    # after one "not" -- "not your identity or trust level", their own hint --
+    # is one denial of both.
+    subject = (r"(?:your\s+|the\s+|a\s+)?(?:identity|trust[\s-]level)"
+               r"(?:\s*(?:,|\bor\b|\bnor\b|\band\b)\s*(?:your\s+|the\s+|a\s+)?"
+               r"(?:identity|trust[\s-]level))*")
+    denials = [m.span() for m in re.finditer(
         r"\bnot\s+(?:about\s+|related\s+to\s+|due\s+to\s+|based\s+on\s+"
-        r"|a\s+(?:matter|question)\s+of\s+)?(?:your\s+|the\s+|a\s+)?"
-        r"(?:identity|trust[\s-]level)"
-        r"|\bnothing\s+to\s+do\s+with\s+(?:your\s+)?(?:identity|trust[\s-]level)"
-        r"|\bregardless\s+of\s+(?:your\s+)?(?:identity|trust[\s-]level)",
-        hint) is not None
+        r"|a\s+(?:matter|question)\s+of\s+)?" + subject
+        + r"|\bnothing\s+to\s+do\s+with\s+" + subject
+        + r"|\bregardless\s+of\s+" + subject, hint)]
+    mentions = [m.start() for m in re.finditer(r"identity|trust[\s-]level", hint)]
+    denies_identity = bool(denials) and all(
+        any(start <= at < end for start, end in denials) for at in mentions)
     # `parameter` names the field that tripped, which is the other half of
     # what makes the refusal actionable: without it there is nothing to
     # reword.
