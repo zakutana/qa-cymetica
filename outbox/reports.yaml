@@ -3049,12 +3049,70 @@ reports:
       accepted, or is refused with a 4xx that names its reason -- either
       satisfies us.
 
+  - key: refused-clone-says-try-again
+    findings: [CYM-a_refused_paper_clone_says_why]
+    severity: low
+    category: api
+    url: https://cymetica.com/api/v1/cloned-bots/clone
+    title: "A paper clone is refused 400 \"Invalid clone request. Please try again.\" and trying again is refused the same way"
+    expected: >
+      Your openapi entry for POST /api/v1/cloned-bots/clone says "Paper mode
+      clones are free -- no deposit required", takes CloneBotRequest
+      (source_type and source_id required; paper / is_paper true = paper
+      clone) and documents two responses, 200 CloneBotResponse and 422
+      HTTPValidationError; llms.txt adds "Clone any of 11 AI trading agent
+      species". So a schema-valid paper clone of a bot that
+      /api/v1/cloned-bots/available lists is made, or refused with a reason an
+      agent can act on -- the way your other refusals already are: /fund
+      answers {"detail":{"error":{"code":"UNAUTHORIZED","message":"Valid JWT
+      token required"}}}, and the MCP wording filter answers QUERY_RESTRICTED
+      with a reason and a hint.
+    actual: >
+      A paper clone of Perceptron Oracle (wta_species
+      23441934-8475-4aa0-bbff-75c03ecd3284), sent with an X-API-Key and the
+      same body shape that had just cloned MACD Hunter (13:38:10), Fibonacci
+      Phoenix (13:38:34) and RSI Sniper (13:38:45) on the same account,
+      answered HTTP 400 {"detail": "Invalid clone request. Please try again."}
+      at 13:39:02 UTC on 2026-09-22. Trying again at 17:47:14 UTC: the same
+      400, the same sentence. We found no limit on cloning in the openapi
+      entry, llms.txt or /api-docs.
+    steps:
+      - 'GET https://cymetica.com/openapi-public.json -> POST /api/v1/cloned-bots/clone documents responses 200 and 422; description "Paper mode clones are free -- no deposit required"'
+      - 'POST /api/v1/cloned-bots/clone with an X-API-Key and {"source_type":"wta_species","source_id":"23441934-8475-4aa0-bbff-75c03ecd3284","paper":true,"is_paper":true} -> HTTP 400 {"detail":"Invalid clone request. Please try again."}'
+      - 'Repeat the same request, as the message asks -> the same 400 and the same sentence'
+    body: >
+      "Please try again" tells an agent the failure is transient, so an agent
+      that does what it is told retries -- and every retry is refused the same
+      way. Our account already holds a paper clone of Perceptron Oracle
+      (d778102d, cloned 2026-09-10), so a limit of one clone per species per
+      account may be the reason. That is a guess, clearly labelled as one. If
+      it is the reason, saying so in the refusal, and in the openapi entry, is
+      the whole of what we are asking for.
+
+      Our check places no clone: it reads our own recorded attempts and the
+      response captured for each, judges every species a clone of ours was
+      refused on by its newest attempt, and fails only when the refusal asks
+      for a retry that a retry has already refuted, or carries no detail at
+      all. A clone that is made, or a refusal that names its reason, clears
+      it.
+
+      CORRECTION TO #89 (fixed and paid, 2026-09-10). We wrote there that
+      POST /api/v1/cloned-bots/{id}/fund refused our key with "a bare 401 with
+      an empty body", and argued that an agent could not tell a wrong key from
+      the wrong kind of key. That was our error, not yours: your response
+      carried {"detail":{"error":{"code":"UNAUTHORIZED","message":"Valid JWT
+      token required"}}}, which names the kind. Our recorder dropped the body
+      of every refusal and wrote {} in its place. It is fixed, and this report
+      is the first written from the corrected record. The finding in #89 --
+      the key was not accepted on /fund -- stands, and you fixed it the same
+      day.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in
   paper mode. What we do execute is paper only and recorded: paper event-card
-  orders, and one paper bot clone. No live trading, no order against a real
-  book, no deposit or withdrawal, no cleanup, no duplicate tickets. UI defects
-  are out of scope. Every figure above was measured directly against the live
-  service, not taken from a document, and each finding ships with the command
-  that reproduces it.
+  orders, and paper bot clones funded from the practice balance. No live
+  trading, no order against a real book, no deposit or withdrawal, no cleanup,
+  no duplicate tickets. UI defects are out of scope. Every figure above was
+  read from the live service at the time stated, and each finding ships with
+  the command that reproduces it.
