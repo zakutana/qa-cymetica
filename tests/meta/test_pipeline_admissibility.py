@@ -372,3 +372,14 @@ def test_a_collect_only_run_is_not_the_last_full_run(tmp_path, monkeypatch):
 
     said = mod.since_last_full_run()
     assert "run-full" in said and "run-collect-only" not in said, said
+
+    # R01, deep pass of 2026-09-22 evening (3/3): a full run the meta gate
+    # aborted has results -- tests/meta only -- and not one settled row was
+    # re-checked. Judged something means judged something on THEIR side.
+    (runs / "c.json").write_text(json.dumps(_admissible(
+        "run-meta-aborted", "2026-09-22T19:00:00+00:00", selector_full=True,
+        collected=["tests/meta/test_x.py::test_a", "tests/rest/test_y.py::test_b"],
+        results=[{"nodeid": "tests/meta/test_x.py::test_a", "outcome": "failed"}])),
+        encoding="utf-8")
+    said = mod.since_last_full_run()
+    assert "run-full" in said and "run-meta-aborted" not in said, said
