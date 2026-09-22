@@ -1307,6 +1307,34 @@ def test_a_correction_under_the_same_definition_is_recorded():
     assert len(twice["findings"]["CYM-a"]["filing"]["verifications"]) == 2
 
 
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_old_pin_event_does_not_undo_a_newer_run():
+    """Found 2026-09-22 while folding the split: CYM-one_credential_...'s pin
+    was set by an operator event on 09-11 (97e5...), then a failing run on
+    09-21 re-pinned it to what it failed under (4d7d...). An events-only fold
+    replays every pin event before the run it does not have, so the 09-11 pin
+    came back and the row's `correction_owed` went from [89, 98] to nothing:
+    we had told them `fail` under 97e5, and that was now the "current"
+    definition. In a run fold the same stale pin decides PASSING against
+    CHECK_CHANGED. A pin older than the run that last adjudicated the row is
+    history; one newer than it is the operator's word and stands."""
+    from qa.fold import fold
+
+    old_pin = event("pin_fingerprint", at="2026-09-11T17:57:55+00:00",
+                    source="scripts/withdraw.py", by="operator",
+                    finding_id="CYM-a", value="sha256:old", reason="then")
+    adjudicated = row("CYM-a", check_state="REPRODUCING", pinned="sha256:new",
+                      check={"state": "REPRODUCING", "pinned_fingerprint": "sha256:new",
+                             "adjudicated_by": {"run_id": "run-9",
+                                                "at": "2026-09-21T20:33:20+00:00"}})
+    out = fold(ledger(adjudicated), events=[old_pin])
+    assert out["findings"]["CYM-a"]["check"]["pinned_fingerprint"] == "sha256:new"
+
+    newer = dict(old_pin, at="2026-09-22T10:00:00+00:00", value="sha256:operator")
+    out = fold(ledger(adjudicated), events=[old_pin, newer])
+    assert out["findings"]["CYM-a"]["check"]["pinned_fingerprint"] == "sha256:operator"
+
+
 def _split(report_id=89, to_id="CYM-s", nodeid=CHECK_B,
            at="2026-09-22T09:00:00+00:00", fid="CYM-a"):
     return event("split_report", at=at, source="scripts/withdraw.py",

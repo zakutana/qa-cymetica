@@ -7780,37 +7780,12 @@
         },
         "reports": [
           {
-            "report_id": 89,
-            "status": "paid"
-          },
-          {
             "report_id": 98,
             "status": "paid"
           }
         ],
         "refused": [],
         "verifications": [
-          {
-            "report_id": 89,
-            "fingerprint": "af7841d8586fb0d1fb240121bf8302f368b2a676786ff878d7772e010337b439",
-            "run_id": "run-20260910T213841Z-adc2783",
-            "verdict": "pass",
-            "at": "2026-09-10T21:46:14+00:00"
-          },
-          {
-            "report_id": 89,
-            "fingerprint": "97e5b904e1094ff2b00f2375482cff9fc5fc53a2daab4c47aa343d8ee2c0f3cb",
-            "run_id": "run-20260911T174358Z-c0e379b9",
-            "verdict": "pass",
-            "at": "2026-09-11T17:59:23+00:00"
-          },
-          {
-            "report_id": 89,
-            "fingerprint": "97e5b904e1094ff2b00f2375482cff9fc5fc53a2daab4c47aa343d8ee2c0f3cb",
-            "run_id": "run-20260912T204351Z-3bc5adff",
-            "verdict": "fail",
-            "at": "2026-09-12T21:02:48+00:00"
-          },
           {
             "report_id": 98,
             "fingerprint": "97e5b904e1094ff2b00f2375482cff9fc5fc53a2daab4c47aa343d8ee2c0f3cb",
@@ -7964,17 +7939,18 @@
         "reverify": true,
         "repair_check": false,
         "reopen": [
-          89,
           98
         ],
         "retractions": [],
         "verification_owed": [],
         "correction_owed": [
-          89,
           98
         ],
         "disputed": []
-      }
+      },
+      "split_to": [
+        "CYM-one_credential_funds_and_starts_a_clone"
+      ]
     },
     "CYM-every_card_nexus_tells_an_agent_to_trade_exists": {
       "id": "CYM-every_card_nexus_tells_an_agent_to_trade_exists",
@@ -12671,21 +12647,110 @@
         "correction_owed": [],
         "disputed": []
       }
+    },
+    "CYM-one_credential_funds_and_starts_a_clone": {
+      "id": "CYM-one_credential_funds_and_starts_a_clone",
+      "title": "2 cloned-bots route(s) accept the agent's x-api-key and 2 do not: POST /api/v1/cloned-bots/{instance_id}/fund, POST /api/v1/cloned-bots/{instance_id}/go-live. A clone is created with a practice balance of 0.00, so an agent that authenticates the documented way can create a bot and cannot put money in it; funding it with that key returns 401 with an empty body -- #89",
+      "first_seen": {
+        "at": "2026-09-10T20:52:16+00:00",
+        "cause": {
+          "run_id": "run-20260910T205116Z-80ff405"
+        }
+      },
+      "reproductions": 0,
+      "checks": [
+        "tests/rest/test_cloned_bots_surface.py::test_one_credential_funds_and_starts_a_clone"
+      ],
+      "check": {
+        "state": "UNVERIFIED",
+        "adjudicated_by": null,
+        "pinned_fingerprint": null
+      },
+      "filing": {
+        "state": "FIX_CLAIMED",
+        "adjudicated_by": {
+          "event_id": "62d3619a93ff50cff79ed3b09753a13232bf7b9079599cca157667a5670c6b19",
+          "at": "2026-09-22T07:05:44+00:00"
+        },
+        "reports": [
+          {
+            "report_id": 89,
+            "status": "paid"
+          }
+        ],
+        "refused": [],
+        "verifications": [
+          {
+            "report_id": 89,
+            "fingerprint": "af7841d8586fb0d1fb240121bf8302f368b2a676786ff878d7772e010337b439",
+            "run_id": "run-20260910T213841Z-adc2783",
+            "verdict": "pass",
+            "at": "2026-09-10T21:46:14+00:00"
+          },
+          {
+            "report_id": 89,
+            "fingerprint": "97e5b904e1094ff2b00f2375482cff9fc5fc53a2daab4c47aa343d8ee2c0f3cb",
+            "run_id": "run-20260911T174358Z-c0e379b9",
+            "verdict": "pass",
+            "at": "2026-09-11T17:59:23+00:00"
+          },
+          {
+            "report_id": 89,
+            "fingerprint": "97e5b904e1094ff2b00f2375482cff9fc5fc53a2daab4c47aa343d8ee2c0f3cb",
+            "run_id": "run-20260912T204351Z-3bc5adff",
+            "verdict": "fail",
+            "at": "2026-09-12T21:02:48+00:00"
+          }
+        ]
+      },
+      "transitions": [
+        {
+          "axis": "filing",
+          "from": "NOT_RAISED",
+          "to": "FIX_CLAIMED",
+          "cause": {
+            "event_id": "62d3619a93ff50cff79ed3b09753a13232bf7b9079599cca157667a5670c6b19"
+          },
+          "at": "2026-09-22T07:05:44+00:00"
+        }
+      ],
+      "regressions": [],
+      "severity": "S3-CONTRACT",
+      "component": "rest.agents",
+      "section": "agents",
+      "tag": "BOTS",
+      "kind": "check_failure",
+      "provenance": {
+        "run_id": "run-20260921T201015Z-b8579867",
+        "measured_at": "2026-09-21T20:33:20+00:00"
+      },
+      "split_from": "CYM-one_credential_carries_a_clone_from_creation_to_funding",
+      "obligations": {
+        "reverify": true,
+        "repair_check": false,
+        "reopen": [],
+        "retractions": [],
+        "verification_owed": [],
+        "correction_owed": [],
+        "disputed": []
+      }
     }
   },
   "run_id": "run-20260921T201015Z-b8579867",
   "run_level": "V",
   "updated_at": "2026-09-21T20:33:20+00:00",
+  "run_carried": true,
   "counts": {
     "WITHDRAWN": 13,
     "VERIFIED FIXED": 54,
     "STILL REPRODUCIBLE": 4,
     "OUR CHECK CANNOT TELL": 1,
     "RAISED": 2,
-    "NOT RAISED YET": 1
+    "NOT RAISED YET": 1,
+    "FIX CLAIMED": 1
   },
   "events_head": {
-    "seq": 2540,
-    "chain": "2e6a79504af27933ee12e57eb16fc9a5aff9f69003860af85b4026c09e582870"
+    "seq": 2547,
+    "chain": "ff6fa1496d0a564301877e211a6e83823e093dd92cafef60d90a81da55aea08f"
   }
 }

@@ -353,7 +353,16 @@ def _apply_check_definition(rows: dict, events: Iterable[dict]) -> None:
                 c for c in (row.get("checks") or []) if c != event.get("nodeid"))
 
         elif etype == "pin_fingerprint":
-            row.setdefault("check", {})["pinned_fingerprint"] = event.get("value")
+            # Only a pin newer than the run that last adjudicated the row. The
+            # journal is replayed whole on every fold, so a pin from before
+            # that run -- which a failing run has since re-pinned -- came back
+            # on every fold without a run and undid it (2026-09-22: 09-11's pin
+            # over 09-21's, and a correction owed on #98 vanished).
+            check = row.setdefault("check", {})
+            judged = str((check.get("adjudicated_by") or {}).get("at") or "")
+            if judged and str(event.get("at") or "") < judged:
+                continue
+            check["pinned_fingerprint"] = event.get("value")
 
 
 def _filing_targets(event: dict, rows: dict) -> list[str]:
