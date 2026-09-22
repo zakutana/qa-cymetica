@@ -87,8 +87,11 @@ python scripts/lab.py tick
 ```
 
 It takes minutes, not seconds -- the first live one took eight and a half,
-most of it memecoin quotes after a gap -- so give the command the full
-ten-minute timeout. It does, in order of what expires: the memecoin checkpoints (hot signals and
+most of it memecoin quotes after a gap. **Run it in the background**
+(`python -u scripts/lab.py tick`, `run_in_background`), never under a
+`timeout`: on 2026-09-22 a tick after a seven-hour gap outran the ten-minute
+tool limit, the kill skipped its cleanup, and its marker held every later tick
+off for `TICK_STALE_MINUTES` (45). It does, in order of what expires: the memecoin checkpoints (hot signals and
 their control group), a sampler round, answers picked up every half hour with
 the launch straight after (live card read, backtest gate, room, plan,
 criterion, paper order -- or a paper clone for a bot, a mark for a fund),
