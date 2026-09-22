@@ -3,8 +3,350 @@
   "at": "2026-09-22T14:45:00+00:00",
   "previous_at": "2026-09-21T18:45:00+00:00",
   "start_commit": "c02f33ba769bb4f714a5a7b790e4fa269d247fdf",
-  "gaps": [],
-  "retrospective": {"last": "2026-09-19", "done": false},
-  "meta_tests": {"start": 683, "end": null, "reason": null},
+  "gaps": [
+    {
+      "id": "R01",
+      "nodeid": "scripts/lab.py::night_promote.launch_bot",
+      "claim": "a species we already own a clone of (STR-0001's Perceptron, paused STR-0030/0031 clones) is cloned again; their API refuses it and a room + cap slot is spent",
+      "source": "review",
+      "votes": null,
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "R02",
+      "nodeid": "qa/lab.py::proposed_bots",
+      "claim": "every whole-name mention of a species in prose is a proposal unless under a ruling heading; NEX-0073 picked one bot and four were cloned",
+      "source": "review",
+      "votes": null,
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "R03",
+      "nodeid": "qa/lab.py::_RULED_OUT",
+      "claim": "pick extraction is a keyword patchwork over prose; ask for a machine-readable pick line and launch only that",
+      "source": "review",
+      "votes": null,
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "R04",
+      "nodeid": "qa/fold.py::_apply_check_definition",
+      "claim": "stale-pin fix compares pin event at and adjudicated_by.at as strings; mixed ISO spellings (Z vs +00:00) misorder",
+      "source": "review",
+      "votes": null,
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "R05",
+      "nodeid": "qa/fold.py::_apply_check_definition",
+      "claim": "CLAUDE.md requires /code-review before committing a qa/fold.py change; the stale-pin change (a9210ec0) was committed without one",
+      "source": "review",
+      "votes": null,
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "R06",
+      "nodeid": "scripts/lab.py::night_promote.launch_bot",
+      "claim": "a refused clone still consumes a room and a cap slot and nothing records the refusal against the species, so every later answer naming it repeats the refusal",
+      "source": "review",
+      "votes": null,
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "B01",
+      "nodeid": "tests/meta/test_pipeline_fomo_watch.py::test_resolve_checkpoints_only_what_is_due_and_computes_our_own_return",
+      "claim": "'the same horizon is not checkpointed twice' is asserted at T0+1h45, after the 1h window (now 0.5 h) has closed, so it passes even if resolve() stopped reading done checkpoints; a second resolve inside the open window (+1h05) would tell",
+      "source": "audit",
+      "votes": null,
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "B02",
+      "nodeid": "tests/meta/test_pipeline_lab_loop.py::test_an_id_their_api_does_not_know_is_not_called_an_invented_card",
+      "claim": "'invented' not in said or 'or' in said -- 'or' is a substring of for/order/record, so an accusation 'Nexus invented this card ... not a card we can order' passes",
+      "source": "audit",
+      "votes": null,
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "A01",
+      "nodeid": "tests/mcp/test_a_deep_answer_arrives_whole.py::test_a_deep_answer_arrives_whole",
+      "claim": "docstring: cut only if it starts with an ellipsis; is_cut also fails an answer whose first char is lower-case ('pump.fun ...', 'iPhone ...')",
+      "source": "audit",
+      "votes": null,
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "A02",
+      "nodeid": "tests/mcp/test_fta_crypto_return_starts_where_its_record_does.py::test_the_fta_crypto_return_starts_where_its_own_record_does",
+      "claim": "DENIED knows no/not/never/nor/without/zero; 'nothing backfilled or pro-forma' counts as disclosure and passes on the live defect",
+      "source": "audit",
+      "votes": null,
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "A03",
+      "nodeid": "tests/rest/test_a_tradeable_card_takes_a_paper_buy.py::test_a_card_that_reads_tradeable_now_takes_a_paper_buy",
+      "claim": "contract is tradeable_now at the moment of the buy; the check reads tradeable_now today, paper.py never recorded it at the buy",
+      "source": "audit",
+      "votes": null,
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "A04",
+      "nodeid": "tests/rest/test_agent_board_ranks_what_it_says_it_ranks.py::test_the_board_is_ranked_by_the_key_its_own_document_publishes",
+      "claim": "docstring says 'stay quiet' when a condition fails; three branches return passed, so #111 can read VERIFIED FIXED on a still newest-first board",
+      "source": "audit",
+      "votes": null,
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "A05",
+      "nodeid": "tests/rest/test_build_it_better_spec_keeps_the_request.py::test_a_spec_written_after_their_fix_keeps_every_line_and_change",
+      "claim": "REPLY-0021: never split inside parentheses; SENTENCE_END splits inside them, so a generator doing the same passes",
+      "source": "audit",
+      "votes": null,
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "A06",
+      "nodeid": "tests/rest/test_build_it_better_traffic_agrees.py::test_the_traffic_figures_agree_with_the_days_they_are_made_of",
+      "claim": "sums the whole daily[] against last_30d without checking daily[] spans those 30 days; fails falsely once history passes 30 days (~2026-10-20)",
+      "source": "audit",
+      "votes": null,
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "A07",
+      "nodeid": "tests/rest/test_build_stats_covers_the_period_it_claims.py::test_the_build_totals_reach_back_to_the_date_they_are_published_under",
+      "claim": "asserts only first_session >= series_from, not <= series_to; a first_session after the series passes as 'inside that window'",
+      "source": "audit",
+      "votes": null,
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "A08",
+      "nodeid": "tests/rest/test_cloned_bots_surface.py::test_one_credential_funds_and_starts_a_clone",
+      "claim": "passes as soon as ANY fund/go-live route is listed with x-api-key; /fund vanishing from openapi still passes 'every step accepts'",
+      "source": "audit",
+      "votes": null,
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "A09",
+      "nodeid": "tests/rest/test_fomo_calibration_reproduces.py::test_the_radars_published_hit_rate_reproduces_on_its_own_signals",
+      "claim": "their rate is the PEAK inside the window, no depth filter; our peak is sampled hourly then 6-hourly and tradeable() drops unknown-depth signals, so the test is biased low and fails a true rate",
+      "source": "audit",
+      "votes": null,
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "A10",
+      "nodeid": "tests/rest/test_fomo_radar_hot_clears_its_tradeability_floor.py::test_a_hot_signal_clears_the_tradeability_floor_they_shipped",
+      "claim": "docstring: MIN_BREACHES distinct tokens in a single read; the first failed branch fires on one thin token pooled over 5 reads",
+      "source": "audit",
+      "votes": null,
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "A11",
+      "nodeid": "tests/rest/test_nexus_routes_exist.py::test_every_route_nexus_tells_an_agent_to_call_is_published",
+      "claim": "'tells an agent to call' but any /api/v1 string counts; 'there is no /api/v1/cloned-bots/{id}/start' fails as sending an agent there",
+      "source": "audit",
+      "votes": null,
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "A12",
+      "nodeid": "tests/rest/test_portfolio_summary.py::test_the_summary_says_which_populations_its_counters_leave_out",
+      "claim": "a counters_cover naming event cards without a negation word counts as 'counted'; 'only on-chain WTA bets; event-card positions are shown on the Cards tab' passes as INCLUDE",
+      "source": "audit",
+      "votes": null,
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "A13",
+      "nodeid": "tests/rest/test_startup_line_is_reachable_as_documented.py::test_the_startup_calls_answer_the_reader_their_own_page_promises",
+      "claim": "'the Auth column is the contract' but the check reads our constants, never their page; a page change to 'account' fails as the page marking it public",
+      "source": "audit",
+      "votes": null,
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "A14",
+      "nodeid": "tests/rest/test_the_build_board_counts_building_as_building.py::test_the_boards_building_tile_counts_only_what_is_building",
+      "claim": "substring match against five stage names; building+pending or +in_progress passes",
+      "source": "audit",
+      "votes": null,
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "A15",
+      "nodeid": "tests/rest/test_token_gates_agree_with_their_own_design.py::test_the_token_gates_say_the_same_thing_three_times",
+      "claim": "a missing paused_tokens list reads as empty, so a renamed/dropped field fails every paused row about a list that does not exist (rule 8)",
+      "source": "audit",
+      "votes": null,
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "A16",
+      "nodeid": "tests/rest/test_build_it_better_board.py::test_the_spec_s_funding_gate_is_the_one_the_build_actually_waits_on",
+      "claim": "a per-ticket non-200/non-JSON read is skipped silently, not counted as unread (rule 8); minor",
+      "source": "audit",
+      "votes": null,
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "A17",
+      "nodeid": "tests/mcp/test_restricted_query_says_why.py::test_a_restricted_query_says_which_rule_it_tripped",
+      "claim": "parameter must be one of four names; naming 'prompt' for a query that tripped on 'query' passes; minor",
+      "source": "audit",
+      "votes": null,
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "C01",
+      "nodeid": "tests/meta/test_pipeline_lab.py::test_a_tick_while_a_deep_pass_runs_does_nothing_at_all",
+      "claim": "only the planner night_tick(pass_running=True) is asserted; the real tick's `if doors['pass']()` guard is untested, so deleting it keeps the test green while ticks poll Nexus during a pass",
+      "source": "audit",
+      "votes": null,
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "C02",
+      "nodeid": "tests/meta/test_pipeline_lab.py::test_the_night_holds_no_hand_that_trades_files_or_commits",
+      "claim": "checks affordable() is CALLED before buy/fund, not that its answer is used; dropping `not ok or` at the two call sites keeps it green",
+      "source": "audit",
+      "votes": null,
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "C03",
+      "nodeid": "tests/meta/test_pipeline_adapters.py::test_the_correction_we_send_says_which_of_the_three_things_happened",
+      "claim": "an 'accepted' correction must not claim they claimed a fix; 'This answers a claim of yours that the defect is fixed' passes every assertion",
+      "source": "audit",
+      "votes": null,
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "C04",
+      "nodeid": "tests/meta/test_pipeline_adapters.py::test_settle_reads_the_newest_mark_the_way_the_fold_does",
+      "claim": "never gives settle two marks in the same second, the tie the fold's own test covers",
+      "source": "audit",
+      "votes": null,
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "C05",
+      "nodeid": "tests/meta/test_pipeline_fomo_stops.py::test_the_report_and_the_brief_print_the_stop_lines",
+      "claim": "an old reading must still print; asserts say_reading(old) is not None, and [] passes",
+      "source": "audit",
+      "votes": null,
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "C06",
+      "nodeid": "tests/meta/test_pipeline_hot_watch.py::test_a_read_that_outlives_its_deadline_is_a_failed_read_not_a_hung_tick",
+      "claim": "round still written past the deadline; only the returned dict is asserted, never mod.load()",
+      "source": "audit",
+      "votes": null,
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "C07",
+      "nodeid": "tests/meta/test_pipeline_channels.py::test_the_two_a2a_readers_cannot_disagree",
+      "claim": "compares counts only; compare() counting a different thread with the same total passes",
+      "source": "audit",
+      "votes": null,
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "C08",
+      "nodeid": "tests/meta/test_pipeline_fold.py::test_no_state_change_without_run_id_or_event_id",
+      "claim": "claims every CHECK transition cites an ADMISSIBLE run; only asserts run_id present, and the generator makes level-none runs",
+      "source": "audit",
+      "votes": null,
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    }
+  ],
+  "review": {
+    "done": true,
+    "findings": 6
+  },
+  "retrospective": {
+    "last": "2026-09-19",
+    "done": false
+  },
+  "meta_tests": {
+    "start": 683,
+    "end": null,
+    "reason": null
+  },
   "finished": false
 }
