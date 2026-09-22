@@ -292,6 +292,17 @@ def test_one_credential_funds_and_starts_a_clone(rest_trusted):
         raise Inconclusive(
             f"their openapi names no authenticated {PREFIX} fund or go-live "
             f"route, so there is no step to carry a credential")
+    # A08, deep pass of 2026-09-22: a pass is about BOTH steps. With /fund
+    # gone from the document it passed on /go-live alone. A refusal still
+    # fails whatever else is missing; a missing step never passes.
+    missing = [seg for seg in MOVES_THE_CLONE
+               if not any(route.rsplit("/", 1)[-1] == seg for route in steps)]
+    if missing and not gap["blocked"]:
+        raise Inconclusive(
+            f"their openapi no longer names an authenticated {PREFIX} "
+            f"{' or '.join(missing)} route, so whether an agent can "
+            f"{'fund' if 'fund' in missing else 'start'} its clone was not "
+            f"read -- only {', '.join(steps)}")
     conclude(Measurement(
         verdict="failed" if gap["blocked"] else "passed",
         reason=(f"{', '.join(sorted(gap['blocked']))} publish(es) only "

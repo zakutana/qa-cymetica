@@ -70,7 +70,8 @@ def buy_attempts(rows) -> list[dict]:
                     "status": outcome.get("http_status"),
                     "outcome": outcome.get("outcome"),
                     "response": str(outcome.get("response") or "")[:200],
-                    "evidence_id": outcome.get("evidence_id")})
+                    "evidence_id": outcome.get("evidence_id"),
+                    "card_before": intent.get("card_before")})
     return sorted(out, key=lambda a: (a["at"], a["id"]))
 
 
@@ -124,6 +125,18 @@ def test_a_card_that_reads_tradeable_now_takes_a_paper_buy(rest_trusted):
                               f"{latest['status']} {latest['response']} -- a stated "
                               f"refusal or an unread outcome")
             continue
+        # A03, deep pass of 2026-09-22: the contract is tradeable_now AT the
+        # buy. paper.py records the card's gate in the intent since then;
+        # a buy from before that is judged on today's read, and says so.
+        then = latest.get("card_before")
+        if isinstance(then, dict) and isinstance(then.get("tradeable_now"), bool):
+            if then["tradeable_now"] is not True:
+                unmeasured.append(f"{card_id}: it read tradeable_now false when "
+                                  f"{latest['id']} was placed "
+                                  f"({then.get('trading_blocked_reason')})")
+                continue
+            breaches.append((card_id, latest, {**then, "read": "at the buy"}))
+            continue
         response = rest_trusted.get(CARD.format(card=card_id))
         if response.status_code != 200:
             unmeasured.append(f"{card_id}: the card could not be read, HTTP "
@@ -135,14 +148,16 @@ def test_a_card_that_reads_tradeable_now_takes_a_paper_buy(rest_trusted):
                               f"({card.get('tradeable_now')}, "
                               f"{card.get('trading_blocked_reason')})")
             continue
-        breaches.append((card_id, latest, card))
+        breaches.append((card_id, latest, {**card, "read": (
+            "today -- the buy predates recording the card at the buy")}))
 
     if breaches:
         card_id, latest, card = breaches[0]
         same = [a for a in attempts if a["card"] == card_id and _is_5xx(a)]
         conclude(Measurement(
             verdict="failed",
-            reason=(f"card {card_id} reads status {card.get('status')}, "
+            reason=(f"card {card_id} reads (read {card.get('read')}) status "
+                    f"{card.get('status')}, "
                     f"tradeable_now true, trading_blocked_reason "
                     f"{card.get('trading_blocked_reason')}, and our paper buy of it "
                     f"answered HTTP {latest['status']} {latest['response']} "
@@ -154,7 +169,8 @@ def test_a_card_that_reads_tradeable_now_takes_a_paper_buy(rest_trusted):
             population={"attempts_on_card": same,
                         "other_cards": [c for c, _, _ in breaches[1:]],
                         "card": {k: card.get(k) for k in (
-                            "status", "tradeable_now", "trading_blocked_reason",
+                            "read", "status", "tradeable_now",
+                            "trading_blocked_reason",
                             "pw_live", "current_index", "share_price_usd")},
                         "legs": [(b.get("symbol"), b.get("weight"))
                                  for b in card.get("basket") or []]},

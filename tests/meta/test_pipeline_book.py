@@ -377,6 +377,52 @@ def test_an_order_is_refused_when_the_money_in_bots_cannot_be_read(tmp_path, mon
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_order_records_what_the_card_said_about_itself_before_it(
+        tmp_path, monkeypatch):
+    """A03, deep pass of 2026-09-22: #117's contract is tradeable_now at the
+    moment of the buy, and nothing recorded it -- the check could only read
+    the card days later. The intent carries the card's own gate, read just
+    before, and an unread card is recorded as unread, not as tradeable."""
+    mod = _paper(tmp_path, monkeypatch)
+    answers = {"/api/v1/event-cards/card-1": (200, {
+        "status": "live", "tradeable_now": True,
+        "trading_blocked_reason": None}),
+        "/api/v1/event-cards/card-2": (503, {})}
+
+    class Response:
+        def __init__(self, status, body):
+            self.status_code, self._body = status, body
+
+        def json(self):
+            return self._body
+
+    class Client:
+        def get(self, path, **kwargs):
+            return Response(*answers.get(path, (404, {})))
+
+        def post(self, *args, **kwargs):
+            raise AssertionError("a dry run posted")
+
+        def close(self):
+            pass
+
+    monkeypatch.setattr(mod, "install_client_guard", lambda: None)
+    monkeypatch.setattr(mod, "identities", lambda: {"trusted": None})
+    monkeypatch.setattr(mod, "build_client", lambda *a, **k: Client())
+    monkeypatch.setattr(mod, "_guidance", lambda nexus_id: {"id": None})
+    monkeypatch.setattr(mod, "_snapshot", lambda client: {})
+    monkeypatch.setattr(mod, "_positions", lambda client: [])
+    monkeypatch.setattr(mod, "clone_capital", lambda client: 0.0)
+    monkeypatch.setattr(mod, "affordable", lambda *a, **k: (True, "ok"))
+
+    entry = mod.buy("card-1", 10.0, None, confirm=False)
+    assert entry["card_before"]["tradeable_now"] is True, entry
+    unread = mod.buy("card-2", 10.0, None, confirm=False)
+    assert "tradeable_now" not in unread["card_before"], unread
+    assert unread["card_before"]["http_status"] == 503
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_200_in_an_unexpected_wrapper_is_not_an_empty_book(tmp_path, monkeypatch):
     """R07, from the 2026-09-10 deep pass, confirmed by the sweep after it.
 

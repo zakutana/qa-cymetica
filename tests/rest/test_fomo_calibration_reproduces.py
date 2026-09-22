@@ -35,6 +35,13 @@ their 171 is their own history and ours is a fortnight of it; what is being
 compared is their published RATE against our observed one, never one count
 against another.
 
+NOR A MISS WE DID NOT SEE (A09, deep pass of 2026-09-22). Our peak is the
+highest of the readings we took, hourly only to `SAMPLED_HOURS`; past that a
+coin can triple and fall back between readings. So our count is a lower
+bound: it can confirm a published rate at any horizon and refute one only up
+to the horizon we read. The 0 of 44 above was a 72-hour reading, and is
+therefore not a refutation.
+
 INCONCLUSIVE when the feed publishes no rate for that horizon, when too few
 windows have passed, or when the response cannot be read -- rule 8, and the
 reason says which.
@@ -49,6 +56,7 @@ import math
 from datetime import datetime, timezone
 from pathlib import Path
 
+from qa.fomo import HORIZONS_HOURS
 from qa.marks import Inconclusive, SafetyTier, qa
 from qa.measure import Measurement, conclude
 
@@ -60,6 +68,9 @@ MIN_SIGNALS = 30
 # One in a hundred. Deliberately far from the usual 5%: this resolves noisily
 # and a report is expensive to be wrong about.
 REJECT_AT = 0.01
+# How far our record reads each coin at every hour (`qa.fomo.HORIZONS_HOURS`).
+# Past it a peak can fall between readings, so a miss there is not a miss.
+SAMPLED_HOURS = max(HORIZONS_HOURS)
 
 
 def diary() -> list[dict]:
@@ -152,7 +163,7 @@ def test_the_radars_published_hit_rate_reproduces_on_its_own_signals(rest_anon):
         # subset we would trade.
         out = fomo.compare(mine, multiple=claim["multiple"],
                            within_hours=claim["horizon_hours"], now=now,
-                           min_liquidity=0, min_volume=0)
+                           min_liquidity=0, min_volume=0, require_depth=False)
         hot = out.get("hot") or {}
         n, hits = int(hot.get("n") or 0), int(hot.get("hits") or 0)
         if n < MIN_SIGNALS:
@@ -169,7 +180,20 @@ def test_the_radars_published_hit_rate_reproduces_on_its_own_signals(rest_anon):
                         "our_windows": n, "our_hits": hits}
         p = improbability(hits, n, claim["rate"])
         facts[chain]["improbability"] = round(p, 6)
-        if p < REJECT_AT:
+        # A09, deep pass of 2026-09-22 (3/3): our peak is the highest of the
+        # readings we took, hourly to SAMPLED_HOURS and not between that and
+        # their horizon, so a coin that tripled in the gap and fell back is
+        # our miss and their hit. The count is a lower bound: it can confirm
+        # their rate, never refute it past what we read.
+        if p < REJECT_AT and claim["horizon_hours"] > SAMPLED_HOURS:
+            said.append(
+                f"{chain}: {hits} of {n} reached {claim['multiple']:.0f}x in "
+                f"our readings against their {claim['rate'] * 100:.1f}% "
+                f"inside {claim['horizon_hours']:.0f} h -- but we read each "
+                f"coin hourly only to {SAMPLED_HOURS:.0f} h, so our peak is a "
+                f"lower bound and cannot refute a rate over a longer window")
+            facts.pop(chain)
+        elif p < REJECT_AT:
             problems.append(
                 f"{chain}: they publish {claim['rate'] * 100:.1f}% of their hot "
                 f"signals reaching {claim['multiple']:.0f}x inside "

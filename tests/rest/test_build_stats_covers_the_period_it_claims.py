@@ -121,6 +121,13 @@ def window_problems(body: dict) -> tuple[list[str], dict]:
         return [], {**facts, "measured": False,
                     "why": f"first_session reads {first_session!r}, not a day"}
     # Their own dates, compared as their own strings: both are ISO days.
+    # A07, deep pass of 2026-09-22: one bound was read, so a first session
+    # after the series ended passed as "inside that window". It is neither
+    # inside nor the defect measured here.
+    if first_session[:10] > last:
+        return [], {**facts, "measured": False,
+                    "why": (f"first_session {first_session[:10]} is after the "
+                            f"series ends on {last}, so it is not inside it")}
     if first_session[:10] >= first:
         return [], facts
 

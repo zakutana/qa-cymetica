@@ -71,6 +71,9 @@ TILE = re.compile(
 OTHER_STAGES = ("funded", "requested", "queued", "shipped", "total")
 # The one stage the tile may count, as a word: `s.building`, `s['building']`.
 BUILDING = re.compile(r"\bbuilding\b")
+# A field read inside the expression: `s.funded`, `s['in_progress']` -- not a
+# method call such as `.toLocaleString()`.
+FIELD = re.compile(r"""\.\s*([A-Za-z_]\w*)\b(?!\s*\()|\[\s*['"](\w+)['"]\s*\]""")
 # A bare name, which says nothing about what it holds until it is followed.
 NAME = re.compile(r"[A-Za-z_$][\w$]*")
 
@@ -137,7 +140,12 @@ def test_the_boards_building_tile_counts_only_what_is_building(rest_anon):
             left={"tile_expression": tile, "resolved": expression},
             sources={"board": BOARD_PAGE}))
         return
-    added = [stage for stage in OTHER_STAGES if stage in expression]
+    # A14, deep pass of 2026-09-22: every field the expression reads that is
+    # not `building` is added to it, whatever it is called -- a list of five
+    # names let `+ s.pending` pass. A method call is not a field.
+    fields = {a or b for a, b in FIELD.findall(expression)} - {"building"}
+    added = sorted(fields | {stage for stage in OTHER_STAGES
+                             if stage in expression})
     # Quoted as the page wrote it, and through the name when it used one.
     shown = (repr(expression) if expression == tile
              else f"{tile!r}, which is {expression!r}")

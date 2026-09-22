@@ -45,12 +45,36 @@ measures -- a surface being undiscoverable does not make it wrong.
 
 from __future__ import annotations
 
+import html
+import re
+
 from qa.marks import Inconclusive, SafetyTier, qa
 from qa.measure import Measurement, conclude
 
+PAGE = "/build-it-better/api"
 TERMS = "/api/v1/build-it-better/startups/terms"
 LINE = "/api/v1/build-it-better/startups/line"
 MINE = "/api/v1/build-it-better/startups/mine"
+# One row of their table: method, the path as the page writes it, the Auth
+# cell. A13, deep pass of 2026-09-22: the Auth column is the contract, and
+# until then the check read our own copy of it, never their page.
+ROW = re.compile(r'<tr><td><span class="m">(GET|POST)</span>\s*<code>([^<]+)</code>'
+                 r'</td><td>.*?</td><td>(.*?)</td></tr>', re.S)
+
+
+def page_auth(page: str) -> dict[str, str]:
+    """GET path on the page -> "public" (a dash) or "account", read off the
+    Auth cell. A cell that is neither is left out: not a contract we read."""
+    out = {}
+    for method, path, cell in ROW.findall(page or ""):
+        text = html.unescape(re.sub(r"<[^>]+>", "", cell)).strip().lower()
+        if method != "GET":
+            continue
+        if text in ("-", "–", "—", ""):
+            out[path.strip()] = "public"
+        elif text.startswith("account"):
+            out[path.strip()] = "account"
+    return out
 # The four the page prints as the status of an application, in its own order.
 PAGE_STATUSES = ("submitted", "reviewing", "accepted", "declined")
 REFUSALS = (401, 403)
@@ -69,34 +93,46 @@ def test_the_startup_calls_answer_the_reader_their_own_page_promises(rest_anon):
     # serves. Anything else -- a 429 of our budget, a 5xx of their restart --
     # is a read that failed, and went out as "answered HTTP 429 to a client
     # carrying no credential" (A09, deep pass of 2026-09-21). Rule 8.
+    document = rest_anon.get(PAGE)
+    auth = page_auth(document.text if document.status_code == 200 else "")
+    subjects = (("terms", TERMS, terms), ("the line", LINE, line),
+                ("/startups/mine", MINE, mine))
+    unlisted = [path for _, path, _ in subjects
+                if path.split("/build-it-better", 1)[-1] not in auth]
+    if unlisted:
+        raise Inconclusive(
+            f"their page {PAGE} (HTTP {document.status_code}) marks no Auth "
+            f"for {', '.join(unlisted)}, so there is no published contract to "
+            f"hold these calls to")
+
     problems: list[str] = []
     unread: list[str] = []
-    for name, path, response in (("terms", TERMS, terms), ("the line", LINE, line)):
+    for name, path, response in subjects:
         code = response.status_code
-        if code in REFUSALS:
+        if auth[path.split("/build-it-better", 1)[-1]] == "public":
+            if code in REFUSALS:
+                problems.append(
+                    f"the page marks {path} as needing no account, and it "
+                    f"answered HTTP {code} to a client carrying no credential")
+            elif code == 404:
+                problems.append(
+                    f"the page documents {path} as a call needing no account, "
+                    f"and it answered HTTP 404: the route it sends a reader to "
+                    f"does not exist")
+            elif code != 200:
+                unread.append(f"{name} ({path}) answered HTTP {code}")
+        elif code == 200:
             problems.append(
-                f"the page marks {path} as needing no account, and it answered "
-                f"HTTP {code} to a client carrying no credential")
+                f"{path} is marked as needing an account and answered 200 to "
+                f"a client carrying no credential, so one reader can see "
+                f"applications that are not theirs")
         elif code == 404:
             problems.append(
-                f"the page documents {path} as a call needing no account, and "
-                f"it answered HTTP 404: the route it sends a reader to does "
-                f"not exist")
-        elif code != 200:
+                f"{path} is marked as needing an account and answered HTTP "
+                f"{code}, which is neither the refusal the page implies nor "
+                f"the 200 it promises a signed-in caller")
+        elif code not in REFUSALS:
             unread.append(f"{name} ({path}) answered HTTP {code}")
-
-    if mine.status_code == 200:
-        problems.append(
-            f"{MINE} is marked as needing an account and answered 200 to a "
-            f"client carrying no credential, so one reader can see "
-            f"applications that are not theirs")
-    elif mine.status_code == 404:
-        problems.append(
-            f"{MINE} is marked as needing an account and answered HTTP "
-            f"{mine.status_code}, which is neither the refusal the page "
-            f"implies nor the 200 it promises a signed-in caller")
-    elif mine.status_code not in REFUSALS:
-        unread.append(f"/startups/mine ({MINE}) answered HTTP {mine.status_code}")
 
     served, listed, counted = None, None, None
     if terms.status_code == 200:
@@ -141,8 +177,10 @@ def test_the_startup_calls_answer_the_reader_their_own_page_promises(rest_anon):
             "; ".join(unread) + " -- a failed read is neither a call that "
             "demands a key nor one that refuses a stranger")
 
-    held = ["terms and the line answer a reader with no credential, and "
-            f"/startups/mine refuses one with HTTP {mine.status_code}"]
+    held = ["each call answers a reader with no credential as the page's Auth "
+            "column says: " + ", ".join(
+                f"{path.rsplit('/', 1)[-1]} ({auth[path.split('/build-it-better', 1)[-1]]}) "
+                f"HTTP {response.status_code}" for _, path, response in subjects)]
     if served:
         held.append(f"every status the page prints is served: {', '.join(served)}")
     # Said every run, so an empty auction is never mistaken for a tested one.

@@ -148,8 +148,9 @@ def test_a_restricted_query_says_which_rule_it_tripped(mcp_anon):
     # `parameter` names the field that tripped, which is the other half of
     # what makes the refusal actionable: without it there is nothing to
     # reword.
-    names_field = str(body.get("parameter") or "") in (
-        "query", "question", "text", "prompt")
+    # A17, deep pass of 2026-09-22: the field WE sent, not any of four names
+    # -- `prompt` for a `query` names nothing the caller can reword.
+    names_field = str(body.get("parameter") or "") == "query"
 
     conclude(Measurement(
         verdict="failed" if (missing or loose or not says_wording

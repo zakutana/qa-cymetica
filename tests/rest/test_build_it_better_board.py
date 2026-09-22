@@ -105,7 +105,16 @@ def sentences_of(line: str) -> list[str]:
     the very excuse the check exists to refuse, so a full stop only ends a
     sentence when a capital letter starts the next one.
     """
-    parts = re.split(SENTENCE_END, line.strip())
+    # A05, deep pass of 2026-09-22: REPLY-0021 promises "never inside
+    # parentheses" too, so a stop inside one ends nothing.
+    text, parts, start = line.strip(), [], 0
+    for hit in SENTENCE_END.finditer(text):
+        before = text[start:hit.start()]
+        if text[:hit.start()].count("(") > text[:hit.start()].count(")"):
+            continue
+        parts.append(before)
+        start = hit.end()
+    parts.append(text[start:])
     return [p.strip() for p in parts if p.strip()]
 
 

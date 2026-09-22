@@ -35,6 +35,7 @@ cannot regress quietly back into the state that fooled us.
 from __future__ import annotations
 
 import json
+import re
 
 from qa.marks import Inconclusive, SafetyTier, qa
 from qa.measure import Measurement, conclude
@@ -48,6 +49,26 @@ NEGATIONS = ("not ", "exclud", "except", "without",
              # "not counted" -- it is what made V09 of 2026-09-13 read a vague
              # mention as counting (V10, deep pass of 2026-09-19).
              "elsewhere", "separately")
+# A12, deep pass of 2026-09-22: "only on-chain WTA bets; event-card positions
+# are shown on the Cards tab" names event cards with no negation word and
+# counted as INCLUDING them. Sending the reader elsewhere leaves them out.
+POINTERS = ("shown on", "shown in", "see ", " tab", "listed on", "read at",
+            "read from", "available at", "available on", "/api/")
+CARDS = ("event-card", "event card", "event_card")
+
+
+def _left_out(covers: str) -> bool:
+    """Does counters_cover say event cards are NOT in the counters -- by a
+    negation, by a pointer elsewhere, or by limiting the counters with "only"
+    in a clause that does not name them? Read clause by clause."""
+    clauses = [c for c in re.split(r"[;.]\s+|[;.]$", covers) if c.strip()]
+    card_clauses = [c for c in clauses if any(k in c for k in CARDS)]
+    if not card_clauses:
+        return False
+    if any(n in c for c in card_clauses for n in NEGATIONS + POINTERS):
+        return True
+    return any(re.search(r"\bonly\b", c) for c in clauses
+               if c not in card_clauses)
 
 
 def accounts_for(scope) -> str | None:
@@ -72,9 +93,9 @@ def accounts_for(scope) -> str | None:
     words = " ".join(str(item) for item in excluded).lower()
 
     def mentions(text: str) -> bool:
-        return any(k in text for k in ("event-card", "event card", "event_card"))
+        return any(k in text for k in CARDS)
 
-    if mentions(covers) and not any(n in covers for n in NEGATIONS):
+    if mentions(covers) and not _left_out(covers):
         return "counted"
     if mentions(words):
         return "named"
@@ -103,8 +124,7 @@ def states_exclusion(scope) -> bool:
     """
     scope = scope if isinstance(scope, dict) else {}
     covers = str(scope.get("counters_cover") or "").lower()
-    return (any(k in covers for k in ("event-card", "event card", "event_card"))
-            and any(n in covers for n in NEGATIONS))
+    return any(k in covers for k in CARDS) and _left_out(covers)
 
 
 def scope_problems(scope: dict, body: dict, held: int) -> list[str]:

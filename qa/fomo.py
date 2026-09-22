@@ -686,7 +686,8 @@ def _wilson(hits: int, n: int, z: float = 1.96) -> tuple[float, float] | None:
 
 def compare(rows: list[dict], multiple: float = 3.0, within_hours: float = 72.0,
             now=None, min_liquidity: float = MIN_LIQUIDITY_USD,
-            min_volume: float = MIN_VOLUME_H24) -> dict:
+            min_volume: float = MIN_VOLUME_H24,
+            require_depth: bool = True) -> dict:
     """Hot against control: how many reached `multiple` x their entry inside
     `within_hours`, judged on the PEAK -- their label is "reached 3x inside
     72 h", so a coin that tripled at hour twenty and died by seventy-two did
@@ -696,6 +697,10 @@ def compare(rows: list[dict], multiple: float = 3.0, within_hours: float = 72.0,
     cannot, so counting open windows counts the early hits alone. Only coins
     somebody could have bought, judged on the depth read when the signal
     fired. A signal nothing was read for is unread, not a miss.
+
+    `require_depth=False` drops that last condition: their calibration block
+    is about every hot signal of the feed, not the ones deep enough to buy
+    (A09, deep pass of 2026-09-22).
     """
     moment = now or datetime.now(timezone.utc)
     entries = {"hot": {}, "control": {}}
@@ -732,7 +737,7 @@ def compare(rows: list[dict], multiple: float = 3.0, within_hours: float = 72.0,
             # Three states, as tradeable() says: never quoted for depth is
             # unknown, not untradeable (R07, deep pass of 2026-09-19).
             can = tradeable(signal, min_liquidity, min_volume)
-            if can is not True:
+            if require_depth and can is not True:
                 excluded["untradeable" if can is False
                          else "depth_unknown"] += 1
                 continue

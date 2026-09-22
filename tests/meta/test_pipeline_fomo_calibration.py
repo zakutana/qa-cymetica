@@ -53,9 +53,12 @@ class _Answer:
         return self._body
 
 
-def _drive(monkeypatch, windows: dict) -> tuple[str, str, object]:
+def _drive(monkeypatch, windows: dict, horizon_hours: float = 24,
+           asked: list | None = None) -> tuple[str, str, object]:
     """Run the check whole. `windows` is chain -> (completed windows, hits),
-    the counts `compare` reports for that chain's hot arm.
+    the counts `compare` reports for that chain's hot arm. Their claim is
+    CALIBRATION with `horizon_hours` put in -- 24 by default, a horizon our
+    record reads hourly all the way (A09, deep pass of 2026-09-22).
 
     In a copied context, so the measurement the check emits stays out of this
     meta test's own run record."""
@@ -67,12 +70,16 @@ def _drive(monkeypatch, windows: dict) -> tuple[str, str, object]:
     order = iter(mod.CHAINS)
 
     def compare(rows, **kw):
+        if asked is not None:
+            asked.append(kw)
         n, hits = windows[next(order)]
         return {"hot": {"n": n, "hits": hits}}
 
     monkeypatch.setattr(qa.fomo, "compare", compare)
+    claim = {"calibration": {**CALIBRATION["calibration"],
+                             "horizon_hours": horizon_hours}}
     client = types.SimpleNamespace(
-        get=lambda path, params=None: _Answer(200, CALIBRATION))
+        get=lambda path, params=None: _Answer(200, claim))
 
     def run():
         try:
@@ -130,3 +137,49 @@ def test_the_calibration_check_still_says_no_and_still_says_yes(monkeypatch):
     assert verdict == "passed", reason
     assert "5/40" in m.reason and "robinhood: only 7" in m.reason, m.reason
     assert set(m.population) == {"solana"}, m.population
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_peak_we_did_not_sample_cannot_refute_their_rate(monkeypatch):
+    """A09, deep pass of 2026-09-22 (3/3). Their rate is the PEAK inside the
+    window over every hot signal. Ours was the peak of the readings we took
+    -- hourly to 24 h, nothing between that and 72 h -- over the signals our
+    depth filter kept, so a coin that tripled at hour 40 and fell back was a
+    miss. That count is a lower bound: it can confirm their rate, never
+    refute it past the horizon we read. And no depth filter: their claim is
+    about their whole feed."""
+    asked: list = []
+    verdict, reason, _ = _drive(monkeypatch, {"solana": (44, 0),
+                                              "robinhood": (7, 0)},
+                                horizon_hours=72, asked=asked)
+    assert verdict == "inconclusive", (verdict, reason)
+    assert "lower bound" in reason, reason
+    assert asked and all(kw.get("require_depth") is False for kw in asked), (
+        f"the calibration was read through the depth filter: {asked}")
+
+    verdict, reason, _ = _drive(monkeypatch, {"solana": (40, 5),
+                                              "robinhood": (7, 0)},
+                                horizon_hours=72)
+    assert verdict == "passed", reason
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_calibration_counts_signals_whose_depth_was_never_read():
+    """A09's other half, in qa.fomo.compare: `require_depth=False` counts a
+    signal nobody read depth for, which the study (whose question is what
+    could be BOUGHT) rightly drops."""
+    from datetime import datetime, timezone
+
+    from qa import fomo
+
+    rows = [{"type": "signal", "key": "k", "at": "2026-09-10T00:00:00+00:00",
+             "price_usd": 1.0},
+            {"type": "checkpoint", "key": "k", "horizon": "6h",
+             "at": "2026-09-10T06:00:00+00:00", "price_usd": 3.5}]
+    now = datetime(2026, 9, 20, tzinfo=timezone.utc)
+    kept = fomo.compare(rows, multiple=3.0, within_hours=24, now=now,
+                        min_liquidity=0, min_volume=0)
+    assert kept["hot"]["n"] == 0, kept
+    whole = fomo.compare(rows, multiple=3.0, within_hours=24, now=now,
+                         min_liquidity=0, min_volume=0, require_depth=False)
+    assert (whole["hot"]["n"], whole["hot"]["hits"]) == (1, 1), whole

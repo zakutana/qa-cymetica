@@ -551,6 +551,16 @@ def test_the_building_tile_is_judged_by_the_arithmetic_behind_its_name():
     run("function paint(s){ const nb = (s.building || 0); "
         "text($('bs-building'), nb); }")
 
+    # A14, deep pass of 2026-09-22: only five stage names were looked for,
+    # so a tile adding a stage nobody listed -- pending, in_progress -- passed
+    # as counting nothing but what is building. Any other field is added.
+    for other in ("pending", "in_progress"):
+        with pytest.raises(AssertionError, match=other):
+            run(f"function paint(s){{ text($('bs-building'), "
+                f"(s.building || 0) + (s['{other}'] || 0)); }}")
+    run("function paint(s){ text($('bs-building'), "
+        "(s.building || 0).toLocaleString()); }")
+
     # And what cannot be read is not a pass.
     for script in (
             "function paint(s){ text($('bs-building'), nb); }",

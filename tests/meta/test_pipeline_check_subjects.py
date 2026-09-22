@@ -111,6 +111,27 @@ def test_a_card_that_failed_and_was_never_tried_again_still_fails_117(monkeypatc
         _run_buy_check(monkeypatch, refused, {A: _card(True), B: _card(True)})
 
 
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_buy_is_judged_by_what_the_card_said_when_it_was_placed_117(
+        monkeypatch):
+    """A03, deep pass of 2026-09-22: the contract is tradeable_now AT the
+    buy, and the check could only read it today. paper.py now records the
+    card's own gate in the intent; a 5xx on a card that read NOT tradeable
+    then is the gate's business, however it reads now, and one that read
+    tradeable then fails even if it has since shut."""
+    shut_then = _buy("TRD-1", A, "17:01:28", 500, "unknown")
+    shut_then[0]["card_before"] = {"tradeable_now": False,
+                                   "trading_blocked_reason": "market closed"}
+    with pytest.raises(Inconclusive):
+        _run_buy_check(monkeypatch, shut_then, {A: _card(True)})
+
+    open_then = _buy("TRD-1", A, "17:01:28", 500, "unknown")
+    open_then[0]["card_before"] = {"tradeable_now": True,
+                                   "trading_blocked_reason": None}
+    with pytest.raises(AssertionError, match=A):
+        _run_buy_check(monkeypatch, open_then, {A: _card(False)})
+
+
 # --------------------------------------------------------------- #116 -------
 
 class _Mcp:
@@ -149,6 +170,13 @@ def test_a_denial_of_a_pro_forma_stretch_is_not_a_disclosure_of_one_116():
                        "no backtest.")
     with pytest.raises(AssertionError, match="discloses no pro-forma"):
         _run_fta_check("Returns are never pro forma: nothing backfilled.")
+    # A02, deep pass of 2026-09-22: "nothing" was not a negation, so the
+    # denial their page could write next passed as a disclosure.
+    with pytest.raises(AssertionError, match="discloses no pro-forma"):
+        _run_fta_check("Measured since inception: nothing backfilled or "
+                       "pro-forma.")
+    with pytest.raises(AssertionError, match="discloses no pro-forma"):
+        _run_fta_check("Neither backfilled nor pro-forma.")
 
     _run_fta_check("Return since inception includes a pro-forma period before "
                    "the first held position: today's composition applied to "

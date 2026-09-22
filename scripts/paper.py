@@ -64,6 +64,7 @@ from qa.safety import CURRENT_TIER, EndpointRegistry, SafetyTier  # noqa: E402
 from qa.state import file_lock, state_dir  # noqa: E402
 
 BUY = "/api/v1/event-cards/{card_id}/buy"
+CARD = "/api/v1/event-cards/{card_id}"
 SELL = "/api/v1/event-cards/{card_id}/sell"
 POSITIONS = "/api/v1/event-cards/positions"
 ACCOUNT = "/api/v1/account/me"
@@ -127,6 +128,30 @@ def _capture(response, tier: SafetyTier = SafetyTier.MUTATE) -> str | None:
             response.request, response, tier) or None
     except Exception:  # noqa: BLE001
         return None
+
+
+def _card_gate(client, card_id: str) -> dict:
+    """The card's own trade gate, read just before the order: #117's contract
+    is tradeable_now AT the buy, and until 2026-09-22 (A03) nothing recorded
+    it, so the check could only read the card days later. An unread card is
+    recorded as unread -- no tradeable_now key -- never as tradeable."""
+    token = CURRENT_TIER.set(SafetyTier.SAFE)
+    try:
+        response = client.get(CARD.format(card_id=card_id))
+    except Exception as exc:  # noqa: BLE001 -- a failed read is not a gate
+        return {"at": _now(), "read": f"{type(exc).__name__}"}
+    finally:
+        CURRENT_TIER.reset(token)
+    out: dict = {"at": _now(), "http_status": response.status_code}
+    if response.status_code == 200:
+        try:
+            card = response.json() or {}
+        except ValueError:
+            return out
+        for key in ("status", "tradeable_now", "trading_blocked_reason"):
+            if key in card:
+                out[key] = card[key]
+    return out
 
 
 def _snapshot(client) -> dict:
@@ -466,7 +491,8 @@ def buy(card_id: str, usdc: float, nexus_id: str | None, confirm: bool) -> dict:
                   "order is paper whatever this sends")
         entry = {"id": _next_id(load()), "type": "intent", "at": _now(),
                  "card_id": card_id, "usdc": float(usdc), "paper": paper,
-                 "nexus": guidance, "before": before, "body": body}
+                 "nexus": guidance, "before": before,
+                 "card_before": _card_gate(client, card_id), "body": body}
 
         if not confirm:
             print(json.dumps({k: v for k, v in entry.items() if k != "nexus"},

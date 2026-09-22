@@ -1331,6 +1331,22 @@ def test_the_summary_may_account_for_positions_by_counting_them():
         "a sentence that says event cards are NOT counted is not counting them")
     assert accounts_for({"counters_cover": "on-chain WTA bets",
                          "counters_do_not_cover": []}) is None
+    # A12, deep pass of 2026-09-22: a mention with no negation word is not a
+    # count. Pointing the reader somewhere else, or limiting the counters to
+    # something else, leaves event cards out as surely as "not" does -- and
+    # that is the exclusion STATED, so states_exclusion says yes.
+    from tests.rest.test_portfolio_summary import states_exclusion
+
+    for pointed in ("only on-chain WTA bets; event-card positions are shown "
+                    "on the Cards tab",
+                    "WTA bets. For event-card positions see "
+                    "/api/v1/event-cards/positions"):
+        scope = {"counters_cover": pointed, "counters_do_not_cover": []}
+        assert accounts_for(scope) is None, pointed
+        assert states_exclusion(scope), pointed
+    assert accounts_for({"counters_cover": "only trades, bots and event-card "
+                                           "positions",
+                         "counters_do_not_cover": []}) == "counted"
 
     # V10, deep pass of 2026-09-19 (3/3): and a scope that COUNTS them was
     # then failed for not saying where else to read them -- a pointer is owed

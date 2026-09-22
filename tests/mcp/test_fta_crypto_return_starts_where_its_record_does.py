@@ -49,7 +49,10 @@ PRO_FORMA = re.compile(r"pro[\s-]?forma", re.IGNORECASE)
 # backtest" DENIES the stretch, and was read as disclosing it. A mention with a
 # negation in the few words before it, inside the same clause, is a denial --
 # "No backfill. Pro-forma: ..." is a disclosure, and a false fail is a claim.
-DENIED = re.compile(r"\b(?:no|not|never|nor|without|zero)\b(?:[\s,'-]+\w+){0,3}?"
+# A02, deep pass of 2026-09-22: "nothing backfilled or pro-forma" is a denial
+# too, and "nothing", "none" and "neither" were not negations here.
+DENIED = re.compile(r"\b(?:no|not|never|nor|neither|none|nothing|without|zero)\b"
+                    r"(?:[\s,'-]+\w+){0,3}?"
                     r"[\s,'-]+pro[\s-]?forma", re.IGNORECASE)
 RETURN_SLACK_PP = 5.0
 

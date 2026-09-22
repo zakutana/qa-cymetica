@@ -828,6 +828,11 @@ def test_the_build_stats_window_reading_can_be_wrong_in_both_directions():
     with pytest.raises(AssertionError, match="2025-11-23"):
         _drive(_body())
     _drive(_body(first_session="2026-02-01"))
+    # A07, deep pass of 2026-09-22: only `>= series_from` was asked, so a
+    # first session AFTER the series ends passed as "inside that window".
+    # It is not inside, and not this defect either.
+    with pytest.raises(Inconclusive, match="after"):
+        _drive(_body(first_session="2026-03-01"))
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -877,6 +882,17 @@ def test_a_requirement_split_into_numbered_items_is_not_a_dropped_one():
     assert dropped(cut_request, cut_spec), (
         "a requirement cut at the full stop inside e.g. passed, which is the "
         "defect the whole check was written for")
+
+    # A05, deep pass of 2026-09-22: REPLY-0021 promises "never inside
+    # parentheses", and SENTENCE_END split inside them, so a generator doing
+    # the same passed. A cut inside a parenthesis is a cut.
+    from tests.rest.test_build_it_better_board import sentences_of
+    assert sentences_of("Show signals (Buy only. Sell later). Then stop.") == [
+        "Show signals (Buy only. Sell later).", "Then stop."]
+    inside = "Show signals (Buy only. Sell later.) on the chart."
+    assert dropped(inside, "BB-SPEC\n  1. Show signals (Buy only.\n"
+                           "  2. Sell later.) on the chart.\n"), (
+        "a requirement cut inside its parentheses passed")
 
     # A line that is carried verbatim is still carried.
     assert dropped("Export any screen to CSV without a paid tier.",
@@ -928,6 +944,15 @@ def test_a_route_their_ai_names_is_matched_against_the_template_not_the_text(
         "a longer path matched a shorter template"
     )
     assert routes_named("no routes here, only prose about fees") == set()
+    # A11, deep pass of 2026-09-22: the check is about routes he TELLS an
+    # agent to call. One he names to say it does not exist, or to steer an
+    # agent away from, is not an instruction, and failed as one.
+    assert routes_named(
+        "There is no `/api/v1/cloned-bots/{id}/start`; use "
+        "`POST /api/v1/cloned-bots/{id}/toggle-trading` instead.") == {
+        "/api/v1/cloned-bots/{id}/toggle-trading"}
+    assert routes_named("Do not call /api/v1/admin/reset, and "
+                        "/api/v1/legacy/fund does not exist.") == set()
 
     # A06 (1): `<name>` is a path parameter too. Both spellings are verbatim
     # from our own diary of their answers, the second with a space inside.
@@ -1101,19 +1126,30 @@ def test_a_startup_call_that_could_not_be_read_is_not_one_that_demands_a_key():
 
     path_of = {"terms": startup.TERMS, "line": startup.LINE, "mine": startup.MINE}
 
-    def drive(**status):
+    def page(mine="account", line="–"):
+        # Their table as served on 2026-09-22, cut to the three GET rows.
+        row = ('<tr><td><span class="m">GET</span> <code>{p}</code></td>'
+               '<td>what it does</td><td>{a}</td></tr>')
+        return ('<h3 id="startup">Turn your App into a Startup</h3><table>'
+                + row.format(p="/startups/terms", a="–")
+                + row.format(p="/startups/line", a=line)
+                + row.format(p="/startups/mine", a=mine) + "</table>")
+
+    def drive(page_html=None, **status):
         served = {
             startup.TERMS: (200, {"statuses": dict.fromkeys(startup.PAGE_STATUSES, "."),
                                   "token_chains": {"solana": "SOL"}}),
             startup.LINE: (200, {"line": [], "count": 0,
                                  "rules": "Highest bid first, ties by arrival."}),
-            startup.MINE: (401, {"detail": "Not authenticated"})}
+            startup.MINE: (401, {"detail": "Not authenticated"}),
+            startup.PAGE: (200, page() if page_html is None else page_html)}
         for name, code in status.items():
             served[path_of[name]] = (code, {"detail": "."})
 
         def get(path, **kw):
             code, body = served[path]
-            return SimpleNamespace(status_code=code, json=lambda: body)
+            return SimpleNamespace(status_code=code, json=lambda: body,
+                                   text=body if isinstance(body, str) else "")
 
         # A copied context, so the check's measurement stays out of this meta
         # test's own run record.
@@ -1138,6 +1174,17 @@ def test_a_startup_call_that_could_not_be_read_is_not_one_that_demands_a_key():
         drive(mine=200)
     with pytest.raises(AssertionError, match="HTTP 404"):
         drive(mine=404)
+
+    # A13, deep pass of 2026-09-22: "the Auth column is the contract", and
+    # the check read our own constants, never their page. The page is read
+    # now: a call it marks `account` that refuses a stranger is right, and
+    # one it marks public that refuses is the defect -- whichever call it is.
+    drive(page(line="account"), line=401)
+    with pytest.raises(AssertionError, match="needing no account"):
+        drive(page(mine="–"), mine=401)
+    # An unread page, or a row it no longer carries, is not a contract.
+    with pytest.raises(Inconclusive, match="page"):
+        drive("<html>maintenance</html>")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -1332,6 +1379,60 @@ class _Rest:
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_list_the_gates_no_longer_carry_is_unread_not_empty():
+    """A15, deep pass of 2026-09-22. `body.get("paused_tokens") or []` read a
+    renamed or dropped list as an empty one, so every paused row failed as
+    "absent from paused_tokens" -- a sentence about a list that is not in the
+    response (rule 8). No meta test drove this check before."""
+    mod = _check_module("tests/rest/test_token_gates_agree_with_their_own_design.py",
+                        "token_gates_m")
+    rows = [{"token": "ET10", "withdrawals_open": False,
+             "user_message_when_paused": "Paused for review."},
+            {"token": "USDC", "withdrawals_open": True}]
+
+    def gates(**lists):
+        return _Rest({mod.GATES: _Reply(200, {"gates": rows, **lists})})
+
+    check = mod.test_the_token_gates_say_the_same_thing_three_times
+    whole = {"paused_tokens": ["ET10"], "governed_tokens": ["ET10", "USDC"]}
+    assert _drive_check(check, gates(**whole))[0] == "passed"
+    assert _drive_check(check, gates(paused_tokens=[],
+                                     governed_tokens=["ET10", "USDC"]))[0] == "failed"
+    verdict, reason = _drive_check(check, gates(governed_tokens=["ET10", "USDC"]))
+    assert verdict == "inconclusive" and "paused_tokens" in reason, (verdict, reason)
+    verdict, reason = _drive_check(check, gates(paused_tokens=["ET10"]))
+    assert verdict == "inconclusive" and "governed_tokens" in reason, (verdict, reason)
+    # What the lists that ARE there say still stands.
+    assert _drive_check(check, gates(paused_tokens=["USDC"]))[0] == "failed"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_fund_and_start_check_needs_both_steps_to_pass_89():
+    """A08, deep pass of 2026-09-22: #89's pass read "every step that moves a
+    clone forward accepts x-api-key" off whichever of /fund and /go-live the
+    document still listed, so /fund vanishing from their openapi passed on
+    /go-live alone -- a pass verify.py would send on a step nobody can read.
+    Both have to be there to pass; a missing one is unread (rule 8)."""
+    mod = _check_module("tests/rest/test_cloned_bots_surface.py", "clone_surface_m")
+    agent = {"parameters": [{"in": "header", "name": "x-api-key"},
+                            {"in": "header", "name": "authorization"}]}
+    human = {"parameters": [{"in": "header", "name": "authorization"}]}
+
+    def spec(**routes):
+        paths = {f"{mod.PREFIX}/{{instance_id}}/{seg.replace('_', '-')}":
+                 {"post": op} for seg, op in routes.items()}
+        return _Rest({mod.OPENAPI: _Reply(200, {"paths": paths})})
+
+    check = mod.test_one_credential_funds_and_starts_a_clone
+    assert _drive_check(check, spec(fund=agent, go_live=agent))[0] == "passed"
+    assert _drive_check(check, spec(fund=human, go_live=agent))[0] == "failed"
+    verdict, reason = _drive_check(check, spec(go_live=agent))
+    assert verdict == "inconclusive" and "fund" in reason, (verdict, reason)
+    # A step missing does not hide a step that refuses.
+    assert _drive_check(check, spec(go_live=human))[0] == "failed"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_profile_link_check_reads_the_skill_it_says_either_fix_satisfies(
         monkeypatch):
     """A11, deep pass of 2026-09-21. The docstring -- and the report we sent
@@ -1458,8 +1559,18 @@ def test_the_board_compared_over_no_shared_row_is_not_a_relevance_score():
 
     # The defect as filed, and the relevance score that is not it.
     assert _drive_check(check, board(rows(), rows()))[0] == "failed"
+    # A04, deep pass of 2026-09-22: the docstring says any one condition
+    # failing is enough to "stay quiet", and three branches PASSED instead
+    # -- so #111 would have read VERIFIED FIXED on a board still ranked
+    # newest-first with one proved row, or with a rank that jitters. Quiet
+    # is inconclusive; only the disclosure is the fix.
     assert _drive_check(
-        check, board(rows(), rows(ranks=(0.9, 0.1, 0.05))))[0] == "passed"
+        check, board(rows(), rows(ranks=(0.9, 0.1, 0.05))))[0] == "inconclusive"
+    proved = rows()
+    proved[2]["evidence_verified"] = True
+    assert _drive_check(check, board(proved, proved))[0] == "inconclusive"
+    shuffled = rows(ranks=(0.07984, 0.36374, 0.14878))
+    assert _drive_check(check, board(shuffled, shuffled))[0] == "inconclusive"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -1506,6 +1617,13 @@ def test_a_refusal_that_blames_trust_level_for_a_wording_is_the_defect():
             f"a wording refusal attributed to trust level passed: {blamed!r}: "
             f"{reason}")
         assert "trust level" in reason or "identity" in reason, reason
+
+    # A17, deep pass of 2026-09-22: `parameter` had to be one of four names,
+    # so a refusal naming `prompt` for the `query` we sent passed -- a field
+    # the caller cannot reword because it never sent one.
+    wrong = _Mcp(live)
+    wrong.refusal["parameter"] = "prompt"
+    assert _drive_check(check, wrong)[0] == "failed"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

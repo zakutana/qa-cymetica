@@ -77,13 +77,31 @@ def _nexus():
     return mod
 
 
+# A11, deep pass of 2026-09-22: a path named to deny it or to steer away from
+# it -- "there is no `/api/v1/.../start`", "do not call ...", "... does not
+# exist" -- is not one he tells an agent to call, and failed as one. Read in
+# the same clause only: a denial in the sentence before says nothing of this.
+DENIED_BEFORE = re.compile(
+    r"\b(?:there is no|there's no|no such|not|never|don't|do not|avoid|"
+    r"instead of|rather than)\b[^.;:\n]{0,40}$", re.I)
+DENIED_AFTER = re.compile(
+    r"^[`'\"]?\s*(?:does not|doesn't|is not|isn't)\s+(?:exist|served|"
+    r"published|documented|available)", re.I)
+
+
 def routes_named(text: str) -> set[str]:
     """Concrete API paths an answer tells a caller to use."""
     found = set()
-    for raw in ROUTE.findall(text or ""):
-        path = raw.rstrip(".,;:)`'\"")
-        if len(path) > len("/api/v1/"):
-            found.add(path)
+    text = text or ""
+    for hit in ROUTE.finditer(text):
+        path = hit.group(0).rstrip(".,;:)`'\"")
+        if len(path) <= len("/api/v1/"):
+            continue
+        before = text[max(0, hit.start() - 60):hit.start()]
+        after = text[hit.start() + len(path):hit.start() + len(path) + 40]
+        if DENIED_BEFORE.search(before) or DENIED_AFTER.search(after):
+            continue
+        found.add(path)
     return found
 
 

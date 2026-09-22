@@ -85,27 +85,35 @@ def test_the_token_gates_say_the_same_thing_three_times(rest_anon):
             if r.get("token") and r.get("withdrawals_open") is False}
     open_ = {str(r.get("token")) for r in rows
              if r.get("token") and r.get("withdrawals_open") is True}
+    # A15, deep pass of 2026-09-22: a list the response does not carry is
+    # unread, not empty -- `or []` failed every paused row as "absent from
+    # paused_tokens" when the field was renamed or dropped (rule 8).
+    unread = [name for name in ("paused_tokens", "governed_tokens")
+              if not isinstance(body.get(name), list)]
     listed_paused = {str(t) for t in (body.get("paused_tokens") or [])}
     listed_governed = {str(t) for t in (body.get("governed_tokens") or [])}
 
     problems: list[str] = []
-    for token in sorted(listed_paused - shut):
-        state = "open" if token in open_ else "unstated"
-        problems.append(
-            f"{token} is in paused_tokens while its own row says "
-            f"withdrawals_open is {state}")
-    for token in sorted(shut - listed_paused):
-        problems.append(
-            f"{token}'s row says withdrawals_open false and it is absent from "
-            f"paused_tokens, so a reader of that list is told it is open")
-    for token in sorted(listed_governed - named):
-        problems.append(
-            f"{token} is named in governed_tokens and has no gate row, so its "
-            f"state cannot be read -- and by their own default a token with "
-            f"no row is withdrawable")
-    for token in sorted(named - listed_governed):
-        problems.append(
-            f"{token} has a gate row and is absent from governed_tokens")
+    if "paused_tokens" not in unread:
+        for token in sorted(listed_paused - shut):
+            state = "open" if token in open_ else "unstated"
+            problems.append(
+                f"{token} is in paused_tokens while its own row says "
+                f"withdrawals_open is {state}")
+        for token in sorted(shut - listed_paused):
+            problems.append(
+                f"{token}'s row says withdrawals_open false and it is absent "
+                f"from paused_tokens, so a reader of that list is told it is "
+                f"open")
+    if "governed_tokens" not in unread:
+        for token in sorted(listed_governed - named):
+            problems.append(
+                f"{token} is named in governed_tokens and has no gate row, so "
+                f"its state cannot be read -- and by their own default a "
+                f"token with no row is withdrawable")
+        for token in sorted(named - listed_governed):
+            problems.append(
+                f"{token} has a gate row and is absent from governed_tokens")
     for row in rows:
         token = str(row.get("token"))
         if row.get("withdrawals_open") is False and not str(
@@ -114,6 +122,16 @@ def test_the_token_gates_say_the_same_thing_three_times(rest_anon):
                 f"{token} is paused and carries no user_message_when_paused, "
                 f"which their design says is the text the withdrawal screen "
                 f"shows at request time")
+
+    if unread and not problems:
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason=(f"the response carries no {' and no '.join(unread)} list, "
+                    f"so what the rows say could not be held against it -- a "
+                    f"list that is not there is not an empty one"),
+            sources={"gates": GATES},
+            population={"gate_rows": len(rows), "unread": unread}))
+        return
 
     conclude(Measurement(
         verdict="failed" if problems else "passed",

@@ -198,9 +198,13 @@ def test_the_board_is_ranked_by_the_key_its_own_document_publishes(rest_anon):
              "rank_unchanged_by_the_query": len(fixed),
              "ranking_is_recency_order": by_age}
 
+    # A04, deep pass of 2026-09-22: "stay quiet" is inconclusive. These three
+    # branches passed, so #111 would have read VERIFIED FIXED on a board still
+    # ranked newest-first with one proved row. Only the disclosure above is
+    # the fix this check can recognise.
     if proved:
         conclude(Measurement(
-            verdict="passed",
+            verdict="inconclusive",
             reason=(f"{len(proved)} of {len(rows)} playbook(s) carry a "
                     f"confirmed replication or verified evidence, so the "
                     f"published key can order the board and this check has "
@@ -224,7 +228,7 @@ def test_the_board_is_ranked_by_the_key_its_own_document_publishes(rest_anon):
 
     if len(fixed) != len(shared):
         conclude(Measurement(
-            verdict="passed",
+            verdict="inconclusive",
             reason=(f"no playbook carries a verified return or a replication, "
                     f"but `rank` moves with the query on "
                     f"{len(shared) - len(fixed)} of {len(shared)} row(s), so "
@@ -235,7 +239,7 @@ def test_the_board_is_ranked_by_the_key_its_own_document_publishes(rest_anon):
 
     if not by_age:
         conclude(Measurement(
-            verdict="passed",
+            verdict="inconclusive",
             reason=(f"no playbook carries a verified return or a replication "
                     f"and `rank` is fixed across queries, but the order is not "
                     f"recency either, so what it is was not established here"),
