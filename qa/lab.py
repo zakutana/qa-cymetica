@@ -858,7 +858,23 @@ def _early(acceptance: dict, series: dict, start, moment) -> dict | None:
     return None
 
 
-def verdict(acceptance: dict, series: dict, now) -> dict:
+def _inside(points, start, end):
+    """A leg's points inside [start, end], with the value it held at `start`.
+
+    They record the index when it moves. A last point before the window whose
+    value the first point inside repeats is the value the whole stretch held
+    (SPCX: 85 h, 99.870362 at both ends), so it stands at `start`. A value
+    that moved across the gap moved at a time nobody knows, and stays out.
+    """
+    inside = [(t, v) for t, v in points if start <= t <= end]
+    before = [(t, v) for t, v in points if t < start]
+    if inside and before and inside[0][0] > start and before[-1][1] == inside[0][1]:
+        inside.insert(0, (start, before[-1][1]))
+    return inside
+
+
+def verdict(acceptance: dict, series: dict, now, closes: dict | None = None
+            ) -> dict:
     """Did the strategy do what it was accepted on? Numbers only, no opinion.
 
     The acceptance is written BEFORE the room goes running, so nothing here can
@@ -892,17 +908,21 @@ def verdict(acceptance: dict, series: dict, now) -> dict:
                 "closes_at": end.isoformat(), "coverage": None,
                 "formula": formula_fingerprint()}
 
-    legs, covered = [], []
+    legs, covered, judged = [], [], []
     for leg in acceptance.get("legs") or []:
-        inside = [(t, v) for t, v in _points(series.get(leg.get("card")))
-                  if start <= t <= end]
+        # A card that closes inside the window is judged up to its close:
+        # after it their index stops, and that is the end, not a gap.
+        closed = _at((closes or {}).get(leg.get("card")))
+        stop_at = min(end, closed) if closed and closed > start else end
+        judged.append(stop_at)
+        inside = _inside(_points(series.get(leg.get("card"))), start, stop_at)
         if len(inside) < 2:
             legs.append({**leg, "exit": None, "return_pct": None,
                          "why": "no index inside the window"})
             covered.append(0.0)
             continue
         span = (inside[-1][0] - inside[0][0]).total_seconds()
-        covered.append(min(span / (end - start).total_seconds(), 1.0))
+        covered.append(min(span / (stop_at - start).total_seconds(), 1.0))
         entry = inside[0][1]
         way = -1.0 if str(leg.get("side")).lower() == "bear" else 1.0
         take, stop = leg.get("tp"), leg.get("sl")
@@ -961,8 +981,11 @@ def verdict(acceptance: dict, series: dict, now) -> dict:
     benchmark = None
     card = acceptance.get("benchmark_card")
     if card:
+        # Over the stretch the legs were judged on, not the whole window: a
+        # leg that closed on day two is not measured against five days of BTC.
+        until = max(judged) if judged else end
         marks = [(t, v) for t, v in _points(series.get(card))
-                 if start <= t <= end]
+                 if start <= t <= until]
         if len(marks) >= 2:
             benchmark = (marks[-1][1] / marks[0][1] - 1.0) * 100.0
 

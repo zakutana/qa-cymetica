@@ -878,6 +878,16 @@ def _history(client, card: str) -> list[dict]:
     return body.get("points") or body.get("history") or []
 
 
+def _closes_at(client, card: str) -> str | None:
+    """When the card stops trading, from the card itself. After it their index
+    stops, so a verdict judges the card up to here (`qa.lab.verdict`)."""
+    response = client.get(f"/api/v1/event-cards/{card}")
+    if response.status_code != 200:
+        return None
+    body = response.json() or {}
+    return body.get("trading_closes_at") if isinstance(body, dict) else None
+
+
 def _basket_returns(points: list[tuple], since) -> list[float]:
     """Daily % change of one card's index, from `since` on. `points` is
     already `_at`/float pairs, sorted, from `qa.lab._points`."""
@@ -1090,6 +1100,16 @@ def verdicts(now=None) -> list[dict]:
         if card not in histories:
             histories[card] = _history(client, card)
         return histories[card]
+
+    closings: dict[str, str | None] = {}
+
+    def closes_at(card: str) -> str | None:
+        if card not in closings:
+            try:
+                closings[card] = _closes_at(client, card)
+            except Exception:  # noqa: BLE001 -- unread: judged as before
+                closings[card] = None
+        return closings[card]
     try:
         for room, acceptance, strategy in due:
             legs = [leg.get("card") for leg in acceptance.get("legs") or []]
@@ -1097,7 +1117,8 @@ def verdicts(now=None) -> list[dict]:
             if acceptance.get("benchmark_card"):
                 cards.append(acceptance["benchmark_card"])
             series = {card: history(card) for card in cards if card}
-            said = lab.verdict(acceptance, series, moment)
+            closes = {card: closes_at(card) for card in legs if card}
+            said = lab.verdict(acceptance, series, moment, closes=closes)
             checked[room] = moment.isoformat()
             if said["verdict"] == "open":
                 continue

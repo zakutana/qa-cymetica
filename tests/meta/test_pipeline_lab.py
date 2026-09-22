@@ -906,6 +906,56 @@ def test_the_stop_nexus_named_is_taken_when_the_index_crosses_it():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_card_that_closes_inside_the_window_is_judged_up_to_its_close():
+    """Every crypto card tradeable on 2026-09-22 closed on 2026-09-24, inside
+    the laboratory's five-day windows. After the close their index stops, and
+    reading the rest of the window as a gap made every one of those rooms
+    inconclusive before it opened. A card's close is where its window ends."""
+    now = "2026-09-07T01:00:00+00:00"
+    series = {"card-a": _series("2026-09-05T00:00:00+00:00",
+                                [100, 101, 102, 103, 104], hours=6)}
+    closes = {"card-a": "2026-09-06T00:00:00+00:00"}
+
+    said = lab.verdict(_acceptance(), series, now, closes=closes)
+    assert said["verdict"] == "survived", said
+    assert said["coverage"] >= 0.8, said
+
+    without = lab.verdict(_acceptance(), series, now)
+    assert without["verdict"] == "inconclusive", (
+        "with no close to go by, half a window is still a gap")
+
+    # The benchmark over the same stretch: BTC flat until the close and up
+    # 20% after it must not refute a leg that had already closed at +4%.
+    series["btc"] = _series("2026-09-05T00:00:00+00:00",
+                            [100, 100, 100, 100, 100, 110, 120], hours=6)
+    benched = lab.verdict(_acceptance(benchmark_card="btc"), series, now,
+                          closes=closes)
+    assert benched["verdict"] == "survived", benched
+    assert benched["benchmark_pct"] == 0.0, benched
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_flat_stretch_they_did_not_record_is_the_same_value_not_a_gap():
+    """SPCX, 2026-09-11 17:14 to 09-15 05:46: no point for 85 hours and
+    99.870362 at both ends. They record the index when it moves; a stretch
+    with the same value on both sides is that value, and STR-0005 read it as
+    a gap covering the first two days of its window."""
+    now = "2026-09-07T01:00:00+00:00"
+    before = _series("2026-09-04T12:00:00+00:00", [100])
+    after = _series("2026-09-05T10:00:00+00:00",
+                    [100, 99, 98, 97, 96, 95, 94, 93, 92], hours=4)
+    said = lab.verdict(_acceptance(), {"card-a": before + after}, now)
+    assert said["coverage"] >= 0.8, said
+    assert said["verdict"] == "refuted", said
+
+    moved = _series("2026-09-05T10:00:00+00:00",
+                    [103, 99, 98, 97, 96, 95, 94, 93, 92], hours=4)
+    unknown = lab.verdict(_acceptance(), {"card-a": before + moved}, now)
+    assert unknown["verdict"] == "inconclusive", (
+        "a value that moved across the gap moved at a time nobody knows")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_gap_in_the_data_is_inconclusive_and_never_a_loss():
     """Rule 8 in the laboratory: the console stopped sampling, so we do not
     know -- and "we do not know" may not be written into the record as a

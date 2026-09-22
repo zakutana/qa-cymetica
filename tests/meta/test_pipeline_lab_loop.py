@@ -1305,6 +1305,41 @@ def test_a_room_past_its_stop_is_stopped_early_and_its_position_closed(
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_room_whose_card_closed_inside_the_window_gets_a_verdict(
+        tmp_path, monkeypatch):
+    """Every crypto card the laboratory bought on the night of 2026-09-21
+    closes on 2026-09-24, inside its five-day window. verdicts() has to hand
+    the formula each card's close, or all of them come back inconclusive."""
+    import qa.rooms as qa_rooms
+
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    card = _card(0x24)
+    answers = [{"type": "answer", "id": "NEX-0001",
+                "at": (NOW - timedelta(minutes=30)).isoformat(),
+                "text": _whole(card)}]
+    _launchpad(scripts_lab, tmp_path, monkeypatch, answers,
+               live={card: _basket("BTC", "ETH")},
+               readings={("BTC", "ETH"): (6.5, 1.3)})
+    scripts_lab.night_promote()
+    (room,) = qa_rooms.strategies(qa_rooms.load())
+    acceptance = qa_rooms.acceptance_of(qa_rooms.load(), room["id"])
+    start = datetime.fromisoformat(acceptance["at"])
+    days = float(acceptance["window_days"])
+    close = start + timedelta(days=days / 2)
+    hours = int((close - start).total_seconds() // 3600)
+    points = [{"t": (start + timedelta(hours=h)).isoformat(),
+               "index": 100 + h * 0.05} for h in range(hours + 1)]
+    monkeypatch.setattr(scripts_lab, "_history",
+                        lambda client, c: points if c == card else [])
+    monkeypatch.setattr(scripts_lab, "_closes_at",
+                        lambda client, c: close.isoformat() if c == card else None)
+
+    said = scripts_lab.verdicts(now=start + timedelta(days=days, hours=1))
+
+    assert [s["verdict"] for s in said] == ["survived"], said
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_an_early_close_that_failed_is_tried_again_and_the_benchmark_read_once(
         tmp_path, monkeypatch):
     """R06 and R08, deep pass of 2026-09-21 (3/3 each). The verdict is written
