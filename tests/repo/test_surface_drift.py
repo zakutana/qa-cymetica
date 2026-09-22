@@ -197,6 +197,46 @@ def test_data_used_as_keys_is_not_a_field():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_id_in_the_path_is_data_not_a_call_of_its_own():
+    """The same rule one level up, for the URL. `/bounty/reports/102/
+    verifications` and `/103/` are one call; keyed apart, 206 of the 356
+    calls in audits/surface.json were one per report or card, and the file
+    grew in git by a few kB with every card the laboratory read."""
+    from qa import surface
+
+    def record(url, rpc=None):
+        body = {"value": {"method": "tools/call", "params": {"name": rpc}}} if rpc else {}
+        return {"request": {"method": "GET", "url": url, "body": body}}
+
+    same = {surface.surface_key(record(u)) for u in (
+        "https://cymetica.com/api/v1/bounty/reports/102/verifications",
+        "https://cymetica.com/api/v1/bounty/reports/116/verifications")}
+    assert len(same) == 1, same
+    cards = {surface.surface_key(record(u)) for u in (
+        "https://cymetica.com/api/v1/event-cards/9f9433ef-75ec-4637-a743-64d9110545bf",
+        "https://cymetica.com/api/v1/event-cards/30408a4b-8717-4fc7-a91a-9a6724cadd7e/index-history?interval=all")}
+    assert len(cards) == 2, cards  # the card, and its history: two calls
+    assert all("{id}" in key for key in cards), cards
+    # A route word stays: /event-cards/trending is its own call.
+    assert "trending" in surface.surface_key(
+        record("https://cymetica.com/api/v1/event-cards/trending"))
+    # MCP calls keep their tool name.
+    assert "tools/call:get_fund" in surface.surface_key(
+        record("https://cymetica.com/mcp/v1/", rpc="get_fund"))
+
+    # And what was agreed under the old keys folds into the route: what any
+    # card ever carried, and only what every card always did.
+    old = {
+        "GET https://cymetica.com/api/v1/bounty/reports/102/verifications?":
+            {"always": ["a", "b"], "seen": ["a", "b"]},
+        "GET https://cymetica.com/api/v1/bounty/reports/103/verifications?":
+            {"always": ["a"], "seen": ["a", "c"]}}
+    (key, shape), = surface.rekey(old).items()
+    assert key == "GET https://cymetica.com/api/v1/bounty/reports/{id}/verifications?"
+    assert shape == {"always": ["a"], "seen": ["a", "b", "c"]}, shape
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_only_a_field_that_was_always_there_can_vanish():
     """Their orderbook carries `arbitrage.buy_chain` when an arbitrage exists
     and not otherwise. Comparing one capture against one capture calls that a

@@ -875,7 +875,10 @@ def surface_drift(update: bool = False) -> list[str]:
 
     stored = surface.remembered()
     seen = surface.shapes_since()
-    said = surface.drift_against(stored.get("calls") or {}, seen)
+    # Under the route's key: shapes agreed before 2026-09-22 carried one key
+    # per card or report, and fold into their route here (`surface.rekey`).
+    agreed = surface.rekey(stored.get("calls"))
+    said = surface.drift_against(agreed, seen)
 
     listed = surface.tools_seen()
     if listed is not None:
@@ -894,7 +897,7 @@ def surface_drift(update: bool = False) -> list[str]:
         # oscillated: vanished, acknowledged, appeared, acknowledged, for ever,
         # in the first line of every session start. `always` is the opposite: it
         # is a claim about the present, so the newest reading replaces it.
-        calls = merge_shapes(stored.get("calls"), seen)
+        calls = merge_shapes(agreed, seen)
         surface.remember({"calls": calls,
                           "tools": listed if listed is not None
                                    else stored.get("tools") or [],

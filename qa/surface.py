@@ -225,6 +225,55 @@ def _payload(record: dict):
     return body
 
 
+# Path segments that are DATA, not route words: a card or bot UUID, a report
+# number, their ticket id, a coin's file. Keyed apart they made one call per
+# card read -- 206 of 356 in audits/surface.json -- and the file grew in git
+# with every card the laboratory looked at. The pruner keeps its own finer key
+# (`qa.evidence.call_key`); a shape is a property of the route.
+_DATA_SEGMENT = re.compile(
+    r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
+    r"|\d+|ET-\d+|[A-Z0-9]{2,10}\.txt")
+
+
+def surface_key(record: dict) -> str:
+    """`call_key` with the data in the path collapsed to `{id}`."""
+    from qa.evidence import call_key
+
+    return collapse_key(call_key(record))
+
+
+def rekey(calls: dict | None) -> dict:
+    """Stored shapes under `surface_key`'s keys. The ones agreed before it
+    carried an id per card; they fold into their route, `seen` unioned (what
+    any of them ever carried) and `always` intersected (what all of them did).
+    """
+    out: dict[str, dict] = {}
+    for key, shape in (calls or {}).items():
+        new = collapse_key(key)
+        held = out.get(new)
+        if held is None:
+            out[new] = {"always": sorted(shape.get("always") or []),
+                        "seen": sorted(shape.get("seen") or [])}
+            continue
+        held["always"] = sorted(set(held["always"]) & set(shape.get("always") or []))
+        held["seen"] = sorted(set(held["seen"]) | set(shape.get("seen") or []))
+    return out
+
+
+def collapse_key(key: str) -> str:
+    """A `call_key` string with the data segments of its path as `{id}`."""
+    method, _, rest = key.partition(" ")
+    url, _, tail = rest.partition("?")
+    scheme, sep, path = url.partition("://")
+    if not sep:
+        scheme, path = "", url
+    host, _, route = path.partition("/")
+    route = "/".join("{id}" if _DATA_SEGMENT.fullmatch(part) else part
+                     for part in route.split("/"))
+    rebuilt = f"{scheme}{sep}{host}/{route}" if sep else f"{host}/{route}"
+    return f"{method} {rebuilt}?{tail}"
+
+
 def shapes_since(hours: float = RECENT_HOURS, root: Path | None = None) -> dict:
     """Each call's shape across EVERY recent answer, not just the newest one.
 
@@ -235,14 +284,12 @@ def shapes_since(hours: float = RECENT_HOURS, root: Path | None = None) -> dict:
     Only 2xx answers: an error page has a shape of its own, and comparing it
     against a good one would report a drift every time their server hiccups.
     """
-    from qa.evidence import call_key
-
     out: dict[str, dict] = {}
     for record in _captures_since(hours, root):
         status = (record.get("response") or {}).get("status_code")
         if not isinstance(status, int) or not 200 <= status < 300:
             continue
-        key = call_key(record)
+        key = surface_key(record)
         here = fields(_payload(record))
         held = out.get(key)
         if held is None:
