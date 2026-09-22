@@ -173,6 +173,8 @@ PINNED = {
          "cb577a012a2a725bef69d94c3c5b61514b7d107a0bf6dc056b6ecd76d7247c9e"),
         ("2026-09-21", "bod 2 nesouhlasim",
          "d02aee93929a533cbbc91a3c5b1f79670cb3033e744ea1c90e4a256efbde6d75"),
+        ("2026-09-22", "papirove jde spustit plno veci krome",
+         "9326dd255727663eb9f93f7878ab2977de2b456aa69c0c69338111d92e876ad5"),
         ("2026-09-20", "to taky delej v laborce jak se nudis",
          "6bcc9e3d19ab3a107d1dde286472574e640a5c23de34717057018d2726272d8b"),
     ],

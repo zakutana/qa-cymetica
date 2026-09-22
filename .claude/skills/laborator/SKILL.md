@@ -145,6 +145,12 @@ else is still a slot and a question spent on nothing we can measure.
 [operator 2026-09-21] *"bod 2 nesouhlasim"* -- to a control group of random
 cards beside every Nexus room. Not built, and not proposed again.
 
+[operator 2026-09-22] *"co to meles, papirove jde spustit plno veci krome
+karet"* -- said when a day of rooms had held only event cards, because the
+decision of 2026-09-21 had been narrowed here to "an event card". A room holds
+whatever runs on paper: a card, a bot cloned on paper, a fund marked against
+its index -- and Arena once Nexus has said how it pays.
+
 `brief` is his memory, because Nexus remembers nothing between questions: what
 the day may still spend, how every proposal of his did (the board, best earner
 first, the rejected ones with their numbers), their own ranking, what measured
