@@ -1987,6 +1987,10 @@ def night_promote(since: datetime | None = None) -> dict:
             held.append(f"{tag}: already cloned in {owner} -- not a second "
                         f"experiment")
             return
+        cloned = _species_cloned().get(species.lower())
+        if cloned:
+            held.append(f"{tag}: {cloned} -- not cloned again")
+            return
         if not room_slot(origin):
             return
         if pass_in_flight():
@@ -2211,6 +2215,36 @@ def _funded() -> dict[str, float]:
             if amount is not None:
                 key = str(intent.get("instance_id"))
                 out[key] = out.get(key, 0.0) + amount
+    return out
+
+
+def _species_cloned() -> dict[str, str]:
+    """Every species our clone record has already asked for, lower-case id ->
+    why the launch leaves it alone: a clone we own (accepted, whoever opened
+    it, paused or not), or one their API refused.
+
+    R01/R06, deep pass of 2026-09-22: the launch knew only the rooms, so
+    STR-0001's Perceptron (CLN-0002) was cloned again and refused with a 400
+    (CLN-0017), and a refusal left nothing that stopped the next answer
+    naming the species from spending a room on the same refusal. A clone
+    whose outcome was never recorded is left alone too: we do not know it
+    did not land."""
+    rows = _sibling("clone").load()
+    outcomes = {row.get("id"): row for row in rows
+                if row.get("type") == "outcome" and not row.get("kind")}
+    out: dict[str, str] = {}
+    for row in rows:
+        species = str(row.get("source_id") or "").lower()
+        if row.get("type") != "intent" or row.get("kind") or not species:
+            continue
+        result = outcomes.get(row.get("id")) or {}
+        if result.get("outcome") == "accepted":
+            out[species] = (f"we already own a clone of it ({row.get('id')}, "
+                            f"{result.get('clone_instance_id')})")
+        elif species not in out:
+            out[species] = (f"their API refused to clone it ({row.get('id')}, "
+                            f"HTTP {result.get('http_status')}, "
+                            f"{result.get('outcome') or 'no outcome recorded'})")
     return out
 
 

@@ -1268,7 +1268,21 @@ def proposed_bots(text: str, catalogue) -> list[dict]:
     # The finder hands back the catalogue's own spelling, whatever case the
     # answer wrote it in.
     find = _whole_names(by_name, re.I, "A-Za-z0-9")
-    return [by_name[name] for name in _proposed(text, find)]
+    names = _proposed(text, find)
+    # R02, deep pass of 2026-09-22: a species he measures his pick against
+    # ("It beats RSI Sniper and Trend Titan ...") is prose, not a pick. When
+    # a line says which he picks, only the bots named on such a line are.
+    picked = {name for line in str(text or "").split("\n")
+              if _PICKED.search(line) for name in find(line)}
+    if picked & set(names):
+        names = [name for name in names if name in picked]
+    return [by_name[name] for name in names]
+
+
+# A line that says which one he chooses -- "**Pick: MACD Hunter**", "I would
+# clone MACD Hunter", "my recommendation".
+_PICKED = re.compile(r"\b(pick|my choice|recommend\w*|clone|go with|choose|"
+                     r"chosen|select(?:ed)?)\b", re.I)
 
 
 def proposed_funds(text: str, catalogue) -> list[str]:

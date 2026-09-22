@@ -1875,6 +1875,16 @@ def test_the_catalogue_readers_take_whole_names_and_respect_what_he_ruled_out():
     assert lab.proposed_bots("Moon Hunter looks good", CATALOGUE) == []
     assert lab.proposed_funds("aib-space, lower case, is not the symbol",
                               FUNDS) == []
+    # R02, deep pass of 2026-09-22: a bot he measures his pick against, in
+    # plain prose and under no ruling heading, is not a second pick. When he
+    # says which he picks, only the bots on that line are proposals.
+    compared = ("**Pick: MACD Hunter** (momentum).\n\n"
+                "It beats RSI Sniper and Trend Titan on trend days.\n")
+    assert [b["name"] for b in lab.proposed_bots(compared, CATALOGUE)] == [
+        "MACD Hunter"]
+    both = "MACD Hunter and Trend Titan both look fine here.\n"
+    assert [b["name"] for b in lab.proposed_bots(both, CATALOGUE)] == [
+        "MACD Hunter", "Trend Titan"]
     # The card reader keeps its own behaviour through the shared section logic.
     card = _card(0x77)
     assert lab.ruled_out_cards(f"**These are out:**\n- `{card}`\n") == {card}
@@ -1973,6 +1983,57 @@ def test_a_clone_they_did_not_accept_is_never_funded(tmp_path, monkeypatch):
     (room,) = qa_rooms.strategies(rows)
     assert qa_rooms.status_of(rows, room["id"]) == "stopped"
     assert any("MACD Hunter" in h for h in did["held"]), did
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_species_we_already_own_a_clone_of_is_not_cloned_again(
+        tmp_path, monkeypatch):
+    """R01, deep pass of 2026-09-22: STR-0001's Perceptron clone (CLN-0002)
+    had no room the launch could see, so NEX-0073 cloned Perceptron Oracle a
+    second time -- their API refused it with a 400 (CLN-0017), after a room
+    and a cap slot were already spent. A clone we own is held, whoever
+    opened it and whether or not it is paused."""
+    import qa.rooms as qa_rooms
+
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    sent, calls = _clonepad(scripts_lab, tmp_path, monkeypatch,
+                            _answer("Clone MACD Hunter on paper."))
+    _write(tmp_path, "clones.jsonl", [
+        {"id": "CLN-0002", "type": "intent", "source_type": "wta_species",
+         "source_id": MACD["id"], "paper": True},
+        {"id": "CLN-0002", "type": "outcome", "outcome": "accepted",
+         "http_status": 200, "clone_instance_id": "inst-old"}])
+
+    did = scripts_lab.night_promote()
+
+    assert calls == [], calls
+    assert qa_rooms.strategies(qa_rooms.load()) == []
+    assert did["rooms"] == 0
+    assert any("CLN-0002" in h for h in did["held"]), did["held"]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_species_their_api_refused_to_clone_is_not_tried_on_every_answer(
+        tmp_path, monkeypatch):
+    """R06, deep pass of 2026-09-22: a refused clone left a stopped room and
+    nothing against the species, so every later answer naming it opened
+    another room, spent another slot and got the same refusal."""
+    import qa.rooms as qa_rooms
+
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    answers = (_answer("Clone MACD Hunter.", "NEX-0001")
+               + _answer("MACD Hunter again, it suits the tape.", "NEX-0002"))
+    sent, calls = _clonepad(scripts_lab, tmp_path, monkeypatch, answers,
+                            clone_outcome="rejected")
+
+    first = scripts_lab.night_promote()
+    second = scripts_lab.night_promote()
+
+    assert [c[0] for c in calls] == ["clone"], calls
+    assert len(qa_rooms.strategies(qa_rooms.load())) == 1
+    assert first["rooms"] + second["rooms"] == 1
+    assert any("refused" in h and "MACD Hunter" in h
+               for h in first["held"] + second["held"])
 
 
 def _bot_room(scripts_lab, tmp_path, monkeypatch):
