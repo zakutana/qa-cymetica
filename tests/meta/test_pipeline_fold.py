@@ -165,6 +165,7 @@ def test_no_state_change_without_run_id_or_event_id():
     (FILING). A change with no cause is the class of defect that produced 71
     of the 109 transitions in the audit."""
     from qa.fold import display_state, fold
+    from qa.state import event_id
 
     rng = random.Random(20260905)
     # C08, deep pass of 2026-09-22: the docstring says ADMISSIBLE and the
@@ -246,6 +247,16 @@ def test_no_state_change_without_run_id_or_event_id():
                             f"seed {seed}: CHECK moved to {t['to']!r} on "
                             f"{cause['run_id']}, a run of level "
                             f"{levels.get(cause['run_id'])!r} -- not admissible")
+                    else:
+                        # C10, deep pass of 2026-09-22 evening (3/3): a
+                        # FILING cause was held only to being non-empty, so
+                        # a fold citing an event never in the journal -- the
+                        # self-made move behind 71 of the 109 -- stayed
+                        # green. It has to name an event the fold was given.
+                        assert cause["event_id"] in {event_id(e) for e in events}, (
+                            f"seed {seed}: FILING moved to {t['to']!r} on "
+                            f"{cause['event_id']!r}, which is no event in the "
+                            f"journal")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
