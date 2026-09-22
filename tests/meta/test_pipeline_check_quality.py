@@ -1133,21 +1133,30 @@ def test_a_startup_call_that_could_not_be_read_is_not_one_that_demands_a_key():
 
     path_of = {"terms": startup.TERMS, "line": startup.LINE, "mine": startup.MINE}
 
-    def page(mine="account", line="–"):
-        # Their table as served on 2026-09-22, cut to the three GET rows.
-        row = ('<tr><td><span class="m">GET</span> <code>{p}</code></td>'
-               '<td>what it does</td><td>{a}</td></tr>')
-        return ('<h3 id="startup">Turn your App into a Startup</h3><table>'
-                + row.format(p="/startups/terms", a="–")
-                + row.format(p="/startups/line", a=line)
-                + row.format(p="/startups/mine", a=mine) + "</table>")
+    # Their markup, verbatim from 2026-09-22: every word in its own <code>.
+    said = ("<code>submitted</code> → <code>reviewing</code> → "
+            "<code>accepted</code> | <code>declined</code>")
 
-    def drive(page_html=None, **status):
+    def page(mine="account", line="–", statuses=said):
+        # Their table as served on 2026-09-22, cut to the three GET rows, and
+        # the /startups/mine row's prose, which is where the page prints the
+        # status vocabulary.
+        row = ('<tr><td><span class="m">GET</span> <code>{p}</code></td>'
+               '<td>{d}</td><td>{a}</td></tr>')
+        mine_says = (f"Your applications with <code>status</code>: {statuses}."
+                     if statuses else "Your applications.")
+        return ('<h3 id="startup">Turn your App into a Startup</h3><table>'
+                + row.format(p="/startups/terms", d="terms", a="–")
+                + row.format(p="/startups/line", d="the line", a=line)
+                + row.format(p="/startups/mine", d=mine_says, a=mine) + "</table>")
+
+    def drive(page_html=None, statuses=("submitted", "reviewing", "accepted",
+                                         "declined"), line_body=None, **status):
         served = {
-            startup.TERMS: (200, {"statuses": dict.fromkeys(startup.PAGE_STATUSES, "."),
+            startup.TERMS: (200, {"statuses": dict.fromkeys(statuses, "."),
                                   "token_chains": {"solana": "SOL"}}),
-            startup.LINE: (200, {"line": [], "count": 0,
-                                 "rules": "Highest bid first, ties by arrival."}),
+            startup.LINE: (200, line_body or {"line": [], "count": 0,
+                                              "rules": "Highest bid first, ties by arrival."}),
             startup.MINE: (401, {"detail": "Not authenticated"}),
             startup.PAGE: (200, page() if page_html is None else page_html)}
         for name, code in status.items():
@@ -1192,6 +1201,19 @@ def test_a_startup_call_that_could_not_be_read_is_not_one_that_demands_a_key():
     # An unread page, or a row it no longer carries, is not a contract.
     with pytest.raises(Inconclusive, match="page"):
         drive("<html>maintenance</html>")
+
+    # A05, deep pass of 2026-09-22 evening (3/3). The statuses were our own
+    # copy, never read off the page the docstring names as the claimant, so a
+    # page and an endpoint that dropped `reviewing` together failed as a
+    # promise not served. And a line with no `count` passed.
+    shorter = "<code>submitted</code> &rarr; <code>accepted</code> | <code>declined</code>"
+    drive(page(statuses=shorter), statuses=("submitted", "accepted", "declined"))
+    with pytest.raises(AssertionError, match="reviewing"):
+        drive(page(), statuses=("submitted", "accepted", "declined"))
+    with pytest.raises(AssertionError, match="count"):
+        drive(line_body={"line": [], "rules": "Highest bid first."})
+    with pytest.raises(Inconclusive, match="status"):
+        drive(page(statuses=None))
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

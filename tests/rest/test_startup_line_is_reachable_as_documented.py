@@ -75,9 +75,25 @@ def page_auth(page: str) -> dict[str, str]:
         elif text.startswith("account"):
             out[path.strip()] = "account"
     return out
-# The four the page prints as the status of an application, in its own order.
+# The four the page printed as the status of an application on 2026-09-21, in
+# its own order -- kept for the record. The check reads the page's own words
+# (page_statuses) since A05, deep pass of 2026-09-22 evening: our copy made a
+# page and an endpoint that changed together read as a promise not served.
 PAGE_STATUSES = ("submitted", "reviewing", "accepted", "declined")
+# Read off the text once the tags are gone -- their markup puts every word in
+# its own <code>, so "status" and its colon arrive a space apart.
+STATUS_LINE = re.compile(r"status\s*:\s*([a-z_]+(?:\s*(?:→|->|\|)\s*[a-z_]+)+)", re.I)
 REFUSALS = (401, 403)
+
+
+def page_statuses(page: str) -> tuple[str, ...] | None:
+    """The application statuses the page prints ("submitted → reviewing →
+    accepted | declined"), in its order, or None when it prints none."""
+    text = html.unescape(re.sub(r"<[^>]+>", " ", page or ""))
+    found = STATUS_LINE.search(text)
+    if not found:
+        return None
+    return tuple(w.lower() for w in re.findall(r"[a-z_]+", found.group(1), re.I))
 
 
 @qa(component="rest.build_it_better", tier=SafetyTier.SAFE, surface="rest")
@@ -134,7 +150,7 @@ def test_the_startup_calls_answer_the_reader_their_own_page_promises(rest_anon):
         elif code not in REFUSALS:
             unread.append(f"{name} ({path}) answered HTTP {code}")
 
-    served, listed, counted = None, None, None
+    served, listed, counted, printed = None, None, None, None
     if terms.status_code == 200:
         body = terms.json()
         statuses = body.get("statuses")
@@ -144,12 +160,17 @@ def test_the_startup_calls_answer_the_reader_their_own_page_promises(rest_anon):
                 "tells an applicant to expect back from /startups/mine")
         else:
             served = sorted(statuses)
-            missing = [s for s in PAGE_STATUSES if s not in statuses]
-            if missing:
-                problems.append(
-                    f"the page prints the application status as "
-                    f"{' -> '.join(PAGE_STATUSES)} and terms serves "
-                    f"{served}, so {missing} is promised and not served")
+            printed = page_statuses(document.text if document.status_code == 200 else "")
+            if printed is None:
+                unread.append(f"the page {PAGE} prints no application status "
+                              f"vocabulary to hold terms' statuses to")
+            else:
+                missing = [s for s in printed if s not in statuses]
+                if missing:
+                    problems.append(
+                        f"the page prints the application status as "
+                        f"{' -> '.join(printed)} and terms serves "
+                        f"{served}, so {missing} is promised and not served")
         if not isinstance(body.get("token_chains"), dict):
             problems.append(
                 "terms carries no `token_chains`, and the page sends a "
@@ -161,7 +182,12 @@ def test_the_startup_calls_answer_the_reader_their_own_page_promises(rest_anon):
         listed = len(rows) if isinstance(rows, list) else None
         if listed is None:
             problems.append("the line carries no `line` array to read")
-        elif isinstance(counted, int) and counted != listed:
+        elif not isinstance(counted, int) or isinstance(counted, bool):
+            # The docstring's item 1 names `count`; a line without one passed
+            # (A05, deep pass of 2026-09-22 evening).
+            problems.append(f"the line carries no `count` (got {counted!r}), "
+                            f"which the page promises beside the line itself")
+        elif counted != listed:
             problems.append(
                 f"the line says count {counted} and carries {listed} row(s)")
         if not str(body.get("rules") or "").strip():
@@ -194,7 +220,8 @@ def test_the_startup_calls_answer_the_reader_their_own_page_promises(rest_anon):
         reason="; ".join(problems) if problems else "; ".join(held),
         left={"terms": terms.status_code, "line": line.status_code,
               "mine": mine.status_code},
-        right={"statuses_served": served, "page_statuses": list(PAGE_STATUSES),
+        right={"statuses_served": served,
+               "page_statuses": list(printed) if printed else None,
                "line_rows": listed, "line_count": counted},
         sources={"terms": TERMS, "line": LINE, "mine": MINE},
         population={"applications_in_the_line": listed, "unread": unread}))
