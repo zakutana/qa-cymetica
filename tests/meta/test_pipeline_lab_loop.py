@@ -565,7 +565,7 @@ def test_a_card_he_names_only_to_rule_out_opens_no_room(tmp_path, monkeypatch):
     proposal and opened STR-0011 and STR-0012 on two of the rejected ones,
     with a paper order each. A card is his proposal, not his mention."""
     scripts_lab = _scripts_lab(tmp_path, monkeypatch)
-    pick, out_a, out_b = _card(1), _card(2), _card(3)
+    pick, out_a, out_b, spare = _card(1), _card(2), _card(3), _card(4)
     text = (
         "**Answer: one card fits, not three.** Naming it:\n\n"
         f"**`{pick}`** -- \"NEAR Protocol Price Surges\"\n"
@@ -574,13 +574,17 @@ def test_a_card_he_names_only_to_rule_out_opens_no_room(tmp_path, monkeypatch):
         "**Why the other two candidates are out:**\n"
         f"- **`{out_a}`** (WIF): downtrend, no up-momentum to ride long.\n"
         f"- **`{out_b}`**: fails your own gate at 7d.\n\n"
+        # NEX-0065 opened STR-0016 on a card it kept only as a spare.
+        f"Passed but not selected (kept as your alternate): `{spare}`, "
+        "+4.17% / Sharpe 1.70.\n\n"
         "**Reader next step (allied MCP):** open the position with "
         f"`trade_event_card` (`card_id: {pick}`, `direction: \"bull\"`).\n"
         + ("reasoning. " * 40))
     answers = [{"type": "answer", "id": "NEX-0001",
                 "at": (NOW - timedelta(hours=1)).isoformat(), "text": text}]
     _launchpad(scripts_lab, tmp_path, monkeypatch, answers,
-               live={c: _basket("BTC", "ETH") for c in (pick, out_a, out_b)},
+               live={c: _basket("BTC", "ETH")
+                     for c in (pick, out_a, out_b, spare)},
                readings={("BTC", "ETH"): (6.5, 1.3)})
     import qa.rooms as qa_rooms
 

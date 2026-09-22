@@ -1106,7 +1106,7 @@ def proposed_cards(text: str, known) -> dict[str, list[str]]:
 
 _RULED_OUT = re.compile(
     r"\b(are out|is out|ruled out|rejected|disqualified|excluded|withheld|"
-    r"not (?:a )?(?:long|pick|buy|fit)|skip|avoid|pass on|would not|won'?t)\b",
+    r"not (?:a )?(?:long|pick|buy|fit|selected)|skip|avoid|pass on)\b",
     re.I)
 _BULLET = re.compile(r"^\s*(?:[-*•]|\d+[.)])\s")
 
@@ -1124,11 +1124,15 @@ def ruled_out_cards(text: str) -> set[str]:
     inside = False
     mentioned: dict[str, bool] = {}
     for line in str(text or "").lower().split("\n"):
+        ruling = inside
         if line.strip() and not _BULLET.match(line):
-            ids = CARD_ID.findall(line)
-            inside = bool(_RULED_OUT.search(line)) and not ids
+            # A heading that rules out opens a section; one that names a card
+            # without ruling it out ("**`9f9433ef`** -- NEAR ...") closes it.
+            # A ruling line that names its cards itself ("Passed but not
+            # selected: `849a695b`") rules those out and opens one too.
+            ruling = inside = bool(_RULED_OUT.search(line))
         for found in CARD_ID.findall(line):
-            mentioned[found] = mentioned.get(found, False) or not inside
+            mentioned[found] = mentioned.get(found, False) or not ruling
     return {card for card, elsewhere in mentioned.items() if not elsewhere}
 
 
