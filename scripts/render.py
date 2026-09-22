@@ -1169,11 +1169,19 @@ def build_rooms() -> dict:
 
     waiting = store.unread(stored)
 
+    # The newest reason each room gave for its state, so a stopped room says
+    # why on its own card (N-0050, 2026-09-22: "musím rozkliknout").
+    reasons: dict[str, str] = {}
+    for row in sorted((r for r in stored if r.get("type") == "status"),
+                      key=lambda r: str(r.get("at") or "")):
+        reasons[row.get("room")] = str(row.get("why") or "")
+
     def entry(room: str, title: str, kind: str, origin, status) -> dict:
         thread = threads[room]
         panel = panels.get(room) or {}
         return {"id": room, "title": title, "kind": kind, "origin": origin,
-                "status": status, "messages": len(thread),
+                "status": status, "why": reasons.get(room, ""),
+                "messages": len(thread),
                 "last_at": max((m["at"] for m in thread if m.get("at")),
                                default=None),
                 "unread_by_claude": sum(
@@ -1949,6 +1957,8 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:15.0px; max-wid
 .nx-card-top{display:flex;align-items:center;gap:8px;min-width:0;font-size:12.5px;color:var(--text-dim);white-space:nowrap;overflow:hidden}
 .nx-card-name{font-size:17px;font-weight:600;line-height:1.25;overflow-wrap:anywhere}
 .nx-card-num{font-size:15px;font-weight:600;color:var(--text-dim)}
+.nx-card-why{font-size:12px;line-height:1.3;color:var(--text-dim)}
+.nx-card.nx-ended{opacity:.75;border-style:dashed}
 .nx-badge{position:absolute;top:10px;right:12px;background:var(--accent);color:var(--surface);border-radius:9px;padding:0 .45rem;font-size:.75em;font-weight:600}
 .nx-main{display:grid;grid-template-columns:minmax(360px,2fr) minmax(0,3fr);gap:18px;height:calc(100vh - 48px);min-height:480px}
 .nx-chatcol{display:flex;flex-direction:column;min-width:0;min-height:0;border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow:hidden}
@@ -4275,8 +4285,12 @@ function nxScore(nr) {
   return '<span class="nx-state">nikdo nenapsal, co je úspěch</span>';
 }
 function nxGeneral(np) {
-  const rooms = ((NX && NX.rooms) || []).filter(nr => nr.kind === "strategy");
-  const count = status => rooms.filter(nr => nr.status === status).length;
+  const every = ((NX && NX.rooms) || []).filter(nr => nr.kind === "strategy");
+  const count = status => every.filter(nr => nr.status === status).length;
+  // The table lists what is live; the stopped ones are counted, and shown
+  // with their reason only when the "Ukončené" group is open.
+  const rooms = readStore("qa.showEnded", "0") === "1" ? every
+    : every.filter(nr => nr.status !== "stopped");
   const bots = rooms.filter(nr => nr.holds === "bot");
   const inBot = bots.reduce((sum, nr) => sum + (Number(nxBotValue(nr)) || 0), 0);
   const quiet = (np.partial || 0) + (np.failed || 0) + (np.refused || 0);
@@ -4290,7 +4304,9 @@ function nxGeneral(np) {
       : nr.if_bought_pct != null
         ? '<span class="nx-dim">nekoupeno</span> ' + esc(nxPct(nr.if_bought_pct, 2))
         : "—") +
-    "</span><span>" + nxScore(nr) + "</span></div>").join("");
+    "</span><span>" + (nr.status === "stopped" && nr.why
+      ? '<span class="nx-state" title="' + esc(nr.why) + '">' + esc(nxShort(nr.why, 60)) +
+        "</span>" : nxScore(nr)) + "</span></div>").join("");
   return nxHero("Přehled", "", "Každá otázka na Nexuse a každá strategie, co navrhl") +
     nxTiles([
       ["Volné peníze", np.balance != null ? nxMoney(np.balance) : "—",
@@ -4299,8 +4315,9 @@ function nxGeneral(np) {
        np.book_trades != null ? np.book_trades + " objednávek na účtu" : "", ""],
       ["V botovi", bots.length ? nxMoney(inBot) : "—",
        bots.length ? bots.map(nr => nr.title || nr.id).join(", ") : "žádný bot", ""],
-      ["Strategie", rooms.length, count("running") + " běží · " + count("proposed") +
-       " jen návrh" + (count("paused") ? " · " + count("paused") + " pauza" : ""), ""]]) +
+      ["Strategie", every.length, count("running") + " běží · " + count("proposed") +
+       " jen návrh" + (count("paused") ? " · " + count("paused") + " pauza" : "") +
+       (count("stopped") ? " · " + count("stopped") + " ukončených" : ""), ""]]) +
     '<div class="nx-sec">Strategie</div>' + (rooms.length
       ? '<p class="nx-foot nx-cap">Co Nexus navrhl. <b>Nekoupeno</b> = jen návrh, ' +
         "číslo za tím je, kolik by to dělalo, kdybychom ho koupili. " +
@@ -4351,7 +4368,9 @@ function nxCard(nr, current) {
   return '<button type="button" class="nx-card' + on + '" data-room="' + esc(nr.id) +
     '" title="' + esc(nr.id) + '"><span class="nx-card-top">' + nxPill(nr.status) +
     (nr.holds ? "<span>" + esc(NX_HOLDS[nr.holds] || nr.holds) + "</span>" : "") +
-    '</span><span class="nx-card-name">' + esc(nr.title || nr.id) + "</span>" + number +
+    '</span><span class="nx-card-name">' + esc(nr.title || nr.id) + "</span>" +
+    (nr.status === "stopped" && nr.why
+      ? '<span class="nx-card-why">' + esc(nxShort(nr.why, 90)) + "</span>" : number) +
     badge + "</button>";
 }
 
@@ -4390,8 +4409,20 @@ function renderRooms(data) {
     const newest = thread.reduce((n, nm) => Math.max(n, Date.parse(nm.at || "") || 0), 0);
     writeStore("qa.roomSeen." + current, newest);
   }
+  // [N-0049, N-0050] a stopped room is a record, not a thing to look at every
+  // day: it leaves the strip for a folded "Ukončené" group, and says why on
+  // its own card when the group is open. The room open right now stays.
+  const showEnded = readStore("qa.showEnded", "0") === "1";
+  const ended = rooms.filter(nr => nr.status === "stopped");
+  const strip = rooms.filter(nr => nr.status !== "stopped" || showEnded ||
+                                   nr.id === current);
   document.getElementById("roomList").innerHTML =
-    rooms.map(nr => nxCard(nr, current)).join("");
+    strip.map(nr => nxCard(nr, current)).join("") + (ended.length
+      ? '<button type="button" class="nx-card nx-ended" data-ended="1">' +
+        '<span class="nx-card-top">' + (showEnded ? "▴ schovat" : "▾ ukázat") +
+        '</span><span class="nx-card-name">Ukončené (' + ended.length + ")</span>" +
+        '<span class="nx-card-num">nepovedené a zastavené pokusy</span></button>'
+      : "");
   const shown = rooms.find(nr => nr.id === current) ||
     { id: "general", title: "General", kind: "general" };
   const chat = document.getElementById("roomChat");
@@ -4443,6 +4474,12 @@ function loadRooms() {
 }
 
 document.getElementById("roomList").addEventListener("click", e => {
+  const ended = e.target.closest("[data-ended]");
+  if (ended) {
+    writeStore("qa.showEnded", readStore("qa.showEnded", "0") === "1" ? "0" : "1");
+    renderRooms(NX);
+    return;
+  }
   const b = e.target.closest("[data-room]");
   if (!b) return;
   writeStore("qa.room", b.dataset.room);

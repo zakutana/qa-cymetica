@@ -204,6 +204,34 @@ def test_a_nexus_answer_reaches_the_page_as_text_never_as_markup(tmp_path, monke
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_stopped_room_says_why_and_steps_out_of_the_way(tmp_path, monkeypatch):
+    """[N-0049, N-0050, 2026-09-22] "proč taková místnost tady existuje, to je
+    očividně failed pokus, má se smazat" and "proč tu nevidím žádnou hlášku?
+    jen víc musím rozkliknout". A room is a record and is not deleted; a
+    stopped one leaves the strip for a folded "Ukončené" group, and its
+    reason is on its own card and row, not only inside its thread."""
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    _write(tmp_path / "rooms.jsonl", [
+        {"type": "strategy", "id": "STR-0001", "origin": "NEX-1", "title": "A",
+         "at": _at(1)},
+        {"type": "status", "room": "STR-0001", "status": "running", "why": "bought",
+         "at": _at(2)},
+        {"type": "status", "room": "STR-0001", "status": "stopped",
+         "why": "Nexus ruled it out", "at": _at(3)},
+        {"type": "strategy", "id": "STR-0002", "origin": "NEX-2", "title": "B",
+         "at": _at(4)},
+        {"type": "status", "room": "STR-0002", "status": "running", "why": "bought",
+         "at": _at(5)},
+    ])
+    render = _render()
+    rooms = {r["id"]: r for r in render.build_rooms()["rooms"]}
+    assert rooms["STR-0001"]["why"] == "Nexus ruled it out"
+    assert rooms["STR-0002"]["why"] == "bought"
+    assert "Ukončené" in render.TEMPLATE, "no folded group for stopped rooms"
+    assert "nr.why" in render.TEMPLATE, "the reason is not drawn on the card"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_tab_reads_no_field_the_rooms_do_not_write(tmp_path, monkeypatch):
     """The payload's field guard, for the shapes that are not in the payload.
 
