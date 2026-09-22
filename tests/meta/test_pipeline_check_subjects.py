@@ -253,3 +253,87 @@ def test_a_clone_refusal_that_asks_for_the_retry_it_refuses_fails(monkeypatch):
     named = rows + _cloned("CLN-0031", PCPN, "18:40:00", 409, "rejected")
     _run_clone_check(monkeypatch, named, {**twice, "CLN-0031": {
         "detail": "You already hold a paper clone of this species."}})
+
+
+# ------------------------------------ /api-docs examples carry what they need -
+
+CLONE_SPEC = {
+    "paths": {
+        "/api/v1/cloned-bots/clone": {"post": {"requestBody": {"content": {
+            "application/json": {"schema": {
+                "$ref": "#/components/schemas/CloneBotRequest"}}}}}},
+        "/api/v1/cloned-bots/{instance_id}/fund": {"post": {"requestBody": {
+            "content": {"application/json": {"schema": {
+                "required": ["amount"], "properties": {"amount": {}}}}}}}},
+    },
+    "components": {"schemas": {"CloneBotRequest": {
+        "required": ["source_type", "source_id"],
+        "properties": {"source_type": {}, "source_id": {}, "paper": {},
+                       "is_paper": {}, "custom_name": {}}}}},
+}
+
+
+def _page(*blocks):
+    return "".join(f'<div class="code-block" style="x">{b}</div><p>prose</p>'
+                   for b in blocks)
+
+
+def _curl(path, body, method="POST"):
+    return (f"curl -X {method} https://cymetica.com{path} \\\n"
+            f"  -H \"X-API-Key: $KEY\" \\\n  -d '{body}'\n"
+            f'<span style="c"># Response:</span>\n{{"ok": true}}')
+
+
+class _Page:
+    def __init__(self, status, text=None, body=None):
+        self.status_code, self.text, self._body = status, text, body
+
+    def json(self):
+        return self._body
+
+
+def _run_docs_check(page, spec=CLONE_SPEC, page_status=200, spec_status=200):
+    check = _load(
+        "tests/discovery/test_api_docs_examples_carry_what_their_routes_require.py",
+        "docs_examples_check_under_test")
+
+    class Rest:
+        def get(self, path, **_):
+            if path == "/api-docs":
+                return _Page(page_status, text=page)
+            return _Page(spec_status, body=spec)
+    check.test_every_request_example_on_api_docs_carries_what_its_route_requires(Rest())
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_api_docs_example_missing_a_required_field_fails():
+    """/api-docs on 2026-09-22: the clone example sends bot_id and is_paper,
+    and CloneBotRequest requires source_type and source_id. A route reached
+    through a template ({instance_id}) is matched too, and a span inside the
+    block -- their markup -- does not break the body."""
+    bad = _page(_curl("/api/v1/cloned-bots/clone",
+                      '{"bot_id": "bot_abc123", "is_paper": true}'),
+                _curl("/api/v1/cloned-bots/abc/fund", '{"amount": 1}'))
+    with pytest.raises(AssertionError, match="source_type"):
+        _run_docs_check(bad)
+
+    good = _page(_curl("/api/v1/cloned-bots/clone",
+                       '{"source_type": "wta_species", "source_id": "s1", '
+                       '"paper": true}'),
+                 _curl("/api/v1/cloned-bots/abc/fund", '{"amount": 1}'))
+    _run_docs_check(good)
+
+    # A missing field on the templated route is found as well.
+    with pytest.raises(AssertionError, match="amount"):
+        _run_docs_check(_page(_curl("/api/v1/cloned-bots/abc/fund", '{"x": 1}')))
+
+    # A route the schema does not publish is not judged; alone, nothing is.
+    with pytest.raises(Inconclusive):
+        _run_docs_check(_page(_curl("/api/v1/wta/markets/m1/bet", '{"x": 1}')))
+
+    # No example found, or a document that cannot be read: nothing measured.
+    with pytest.raises(Inconclusive):
+        _run_docs_check("<p>curl -X POST https://cymetica.com/api/v1/"
+                        "cloned-bots/clone -d '{\"bot_id\": 1}'</p>")
+    with pytest.raises(Inconclusive):
+        _run_docs_check(bad, spec_status=503)
