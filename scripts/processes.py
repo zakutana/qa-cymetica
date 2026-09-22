@@ -919,9 +919,13 @@ def _unarchived() -> int:
     name a number the command would disagree with.
     """
     try:
-        from qa import archive, manifest
+        from qa import archive, keepset, manifest
 
-        return len(archive.pending(manifest.read()))
+        # Only what an archive run could take: a body `prune_runs.py` already
+        # let go of can never be bundled, and counting it kept the reminder
+        # at 392 after `keep.py archive` had taken everything it could.
+        return sum(1 for key in archive.pending(manifest.read())
+                   if keepset.evidence_path(key).is_file())
     except Exception:  # noqa: BLE001 -- a reminder never fails a session
         return 0
 

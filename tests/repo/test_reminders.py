@@ -418,3 +418,25 @@ def test_n_eff_is_named_only_past_nexus_own_collapse_threshold():
     # No reading at all (never run, or the book was too thin to correlate) is
     # silence, not a nag about a number nobody has.
     assert not _says(mod.reminders(_facts(n_eff=None), NOW), "N_eff")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_archive_reminder_counts_only_what_an_archive_run_could_take(
+        tmp_path, monkeypatch):
+    """2026-09-21: `keep.py archive` bundled everything it could and the
+    reminder still said 392 -- bodies `prune_runs.py` had already let go of,
+    uncited, that no archive run can ever take. A count that can never reach
+    zero is a line the operator learns to skip."""
+    from qa import keepset, manifest
+
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    here, gone = "a" * 64, "b" * 64
+    body = keepset.evidence_path(here)
+    body.parent.mkdir(parents=True, exist_ok=True)
+    body.write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(manifest, "read", lambda *a, **k: {
+        here: {"id": here, "archive": ""},
+        gone: {"id": gone, "archive": ""},
+        "c" * 64: {"id": "c" * 64, "archive": "evidence-2026-09"}})
+
+    assert _module()._unarchived() == 1
