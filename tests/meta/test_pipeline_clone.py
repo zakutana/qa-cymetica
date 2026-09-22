@@ -306,6 +306,18 @@ def test_a_route_whose_credential_is_declared_by_security_is_not_public():
         "read as public")
     assert "GET /api/v1/cloned-bots/available" not in {**gap["accepts"], **gap["refuses"]}
 
+    # A02, deep pass of 2026-09-22 evening (3/3): a header name is not
+    # case-sensitive, and their own ApiKeyAuth scheme is named "X-API-Key".
+    # Compared as written, a route declaring the key through that scheme read
+    # as publishing only `authorization` -- a false fail on #89's row.
+    theirs = {"ApiKeyAuth": {"type": "apiKey", "in": "header", "name": "X-API-Key"}}
+    gap = surface.credential_gap({"/api/v1/cloned-bots/{instance_id}/fund": {
+        "post": {"security": [{"ApiKeyAuth": []}]}}}, theirs)
+    assert "POST /api/v1/cloned-bots/{instance_id}/fund" in gap["accepts"], gap
+    gap = surface.credential_gap({"/api/v1/cloned-bots/{instance_id}/fund": {
+        "post": {"parameters": [{"in": "header", "name": "X-API-Key"}]}}}, {})
+    assert "POST /api/v1/cloned-bots/{instance_id}/fund" in gap["accepts"], gap
+
     source = (REPO / "tests" / "rest" / "test_cloned_bots_surface.py").read_text(encoding="utf-8")
     assert "401 with an empty body\"" not in source.split("def test_one_credential")[1].split("conclude(")[1], (
         "the failure sentence still asserts a live 401 the check never measures")

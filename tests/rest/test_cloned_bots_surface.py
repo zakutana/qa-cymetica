@@ -129,7 +129,10 @@ def _credential_headers(op: dict, schemes: dict) -> set:
                 headers.add(scheme.get("name"))
             elif scheme.get("type") in ("http", "oauth2", "openIdConnect"):
                 headers.add("authorization")
-    return {h for h in headers if h}
+    # Lower-cased: a header name is not case-sensitive, and their own
+    # ApiKeyAuth scheme is named "X-API-Key" (A02, deep pass of 2026-09-22
+    # evening) -- compared as written, it read as a route refusing the key.
+    return {str(h).lower() for h in headers if h}
 
 
 # The steps that move a clone forward, reported separately so the reason can
