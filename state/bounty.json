@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-09-22T15:59:51+00:00",
+  "fetched_at": "2026-09-22T18:21:53+00:00",
   "total": 82,
   "statuses": {
     "paid": 20
@@ -24,8 +24,8 @@
   "our_reports": {
     "endpoint": "GET /api/v1/bounty/my-reports?wallet_address=<addr>",
     "klass": "ok",
-    "read_at": "2026-09-22T15:59:46+00:00",
-    "evidence_id": "c05506e742acd4c739cdb525193ad7de75a3b29d24d3b050c2be932c485975fb",
+    "read_at": "2026-09-22T18:21:47+00:00",
+    "evidence_id": "6029703913dc41ded783d6416d1e40d25a879b19cc0111865bc745a2e107b249",
     "rows_returned": 74,
     "server_total": 74,
     "total": 74,
@@ -806,7 +806,7 @@
         "fixed_at": "2026-09-10T12:44:31.442730",
         "validated_at": "2026-09-10T12:44:31.442730",
         "triaged_at": "2026-09-10T12:44:31.442730",
-        "status_notes": "[2026-09-10T12:44:31+00:00] Resolved via ticket ET-24493: Verified bug (hunter:5 #86). Root cause: a deep job ran as an in-process asyncio task in the slot that accepted it; the platform's blue/green deploys restart slots several times a day, killing the task, and the poller then reported \"interrupted — please resubmit\" with a browser-only fallback. The HTML 504 came from nginx's catch-all location (60 s read timeout, HTML error page) which /mcp/v1 fell into. Fix @2ec9bb3d8: (1) jobs left 'running' by a restart are resumed by the next process (resume_i\n[reporter-verification FAIL 2026-09-10 13:51 UTC by expire76 test_run=run-20260910T134627Z-75a0326]\n[reporter-verification FAIL 2026-09-10 16:52 UTC by expire76 test_run=run-20260910T164705Z-b56d1d3]\n[reporter-verification PASS 2026-09-11 05:45 UTC by expire76 test_run=run-20260911T053508Z-9e1ae9bc]\n[reporter-verification FAIL 2026-09-11 15:21 UTC by expire76 test_run=run-20260911T151835Z-31ec9b3e]\n[reporter-verification FAIL 2026-09-11 17:58 UTC by expire76 test_run=run-20260911T174358Z-c0e379b9]\n[reporter-verification FAIL 2026-09-12 21:02 UTC by expire76 test_run=run-20260912T204351Z-3bc5adff]\n[reporter-verification FAIL 2026-09-19 20:02 UTC by expire76 test_run=run-20260919T195623Z-54909d8b]\n[reporter-verification PASS 2026-09-21 13:59 UTC by expire76 test_run=run-20260921T134907Z-7926ab54]",
+        "status_notes": "[2026-09-10T12:44:31+00:00] Resolved via ticket ET-24493: Verified bug (hunter:5 #86). Root cause: a deep job ran as an in-process asyncio task in the slot that accepted it; the platform's blue/green deploys restart slots several times a day, killing the task, and the poller then reported \"interrupted — please resubmit\" with a browser-only fallback. The HTML 504 came from nginx's catch-all location (60 s read timeout, HTML error page) which /mcp/v1 fell into. Fix @2ec9bb3d8: (1) jobs left 'running' by a restart are resumed by the next process (resume_i\n[reporter-verification FAIL 2026-09-10 13:51 UTC by expire76 test_run=run-20260910T134627Z-75a0326]\n[reporter-verification FAIL 2026-09-10 16:52 UTC by expire76 test_run=run-20260910T164705Z-b56d1d3]\n[reporter-verification PASS 2026-09-11 05:45 UTC by expire76 test_run=run-20260911T053508Z-9e1ae9bc]\n[reporter-verification FAIL 2026-09-11 15:21 UTC by expire76 test_run=run-20260911T151835Z-31ec9b3e]\n[reporter-verification FAIL 2026-09-11 17:58 UTC by expire76 test_run=run-20260911T174358Z-c0e379b9]\n[reporter-verification FAIL 2026-09-12 21:02 UTC by expire76 test_run=run-20260912T204351Z-3bc5adff]\n[reporter-verification FAIL 2026-09-19 20:02 UTC by expire76 test_run=run-20260919T195623Z-54909d8b]\n[reporter-verification PASS 2026-09-21 13:59 UTC by expire76 test_run=run-20260921T134907Z-7926ab54]\n[reporter-verification FAIL 2026-09-22 16:01 UTC by expire76 test_run=run-20260922T153451Z-10bb4939]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/24493",
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -860,7 +860,7 @@
         "fixed_at": "2026-09-10T21:27:38.905293",
         "validated_at": "2026-09-10T21:28:02.263936",
         "triaged_at": "2026-09-10T21:28:02.263936",
-        "status_notes": "Fixed @4d645d961 (live 21:22 UTC): fund, balance, withdraw, settings, toggle-trading, go-live, go-live-all and DELETE /{id} now take get_current_user_or_api_key (same as /clone); verified with X-API-Key only on a test account: clone -> fund -> enable -> balance -> settings -> pause -> withdraw -> delete, all 200. Paper clone funds from sim_balance_usdc.\n[2026-09-10T21:28:02+00:00] Resolved via ticket ET-24565: Fixed @4d645d961 (live 21:22 UTC): fund/balance/withdraw/settings/toggle-trading/go-live/go-live-all/DELETE accept the same X-API-Key as /clone. Verified API-key-only lifecycle on a test account, all 200; paper clone funds from the simulated balance. Telegram reply sent.\n[reporter-verification PASS 2026-09-10 21:46 UTC by expire76 test_run=run-20260910T213841Z-adc2783]\n[reporter-verification PASS 2026-09-11 17:59 UTC by expire76 test_run=run-20260911T174358Z-c0e379b9]\n[reporter-verification FAIL 2026-09-12 21:02 UTC by expire76 test_run=run-20260912T204351Z-3bc5adff]\n[reporter-verification PASS 2026-09-22 08:00 UTC by expire76 test_run=run-20260922T074028Z-a051f15b]",
+        "status_notes": "Fixed @4d645d961 (live 21:22 UTC): fund, balance, withdraw, settings, toggle-trading, go-live, go-live-all and DELETE /{id} now take get_current_user_or_api_key (same as /clone); verified with X-API-Key only on a test account: clone -> fund -> enable -> balance -> settings -> pause -> withdraw -> delete, all 200. Paper clone funds from sim_balance_usdc.\n[2026-09-10T21:28:02+00:00] Resolved via ticket ET-24565: Fixed @4d645d961 (live 21:22 UTC): fund/balance/withdraw/settings/toggle-trading/go-live/go-live-all/DELETE accept the same X-API-Key as /clone. Verified API-key-only lifecycle on a test account, all 200; paper clone funds from the simulated balance. Telegram reply sent.\n[reporter-verification PASS 2026-09-10 21:46 UTC by expire76 test_run=run-20260910T213841Z-adc2783]\n[reporter-verification PASS 2026-09-11 17:59 UTC by expire76 test_run=run-20260911T174358Z-c0e379b9]\n[reporter-verification FAIL 2026-09-12 21:02 UTC by expire76 test_run=run-20260912T204351Z-3bc5adff]\n[reporter-verification PASS 2026-09-22 08:00 UTC by expire76 test_run=run-20260922T074028Z-a051f15b]\n[reporter-verification PASS 2026-09-22 16:01 UTC by expire76 test_run=run-20260922T153451Z-10bb4939]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/24565",
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -1256,7 +1256,7 @@
         "fixed_at": "2026-09-20T22:27:32.259986",
         "validated_at": "2026-09-20T22:27:32.259986",
         "triaged_at": "2026-09-20T22:27:32.259986",
-        "status_notes": "[2026-09-20T22:27:32+00:00] Resolved via ticket ET-26161: Confirmed: llms.txt described the Agent Returns Board ranking differently from the code. The line now states the coded formula (evidence weight x (1 + confirmed replications) x status weight x 72 h recency decay), that rank does not depend on q, and that order is newest-first while nothing is verified. Verified in the served llms.txt.\n[reporter-verification PASS 2026-09-21 01:57 UTC by expire76 test_run=run-20260921T014914Z-df9988d9]\n[reporter-verification PASS 2026-09-21 20:37 UTC by expire76 test_run=run-20260921T201015Z-b8579867]",
+        "status_notes": "[2026-09-20T22:27:32+00:00] Resolved via ticket ET-26161: Confirmed: llms.txt described the Agent Returns Board ranking differently from the code. The line now states the coded formula (evidence weight x (1 + confirmed replications) x status weight x 72 h recency decay), that rank does not depend on q, and that order is newest-first while nothing is verified. Verified in the served llms.txt.\n[reporter-verification PASS 2026-09-21 01:57 UTC by expire76 test_run=run-20260921T014914Z-df9988d9]\n[reporter-verification PASS 2026-09-21 20:37 UTC by expire76 test_run=run-20260921T201015Z-b8579867]\n[reporter-verification PASS 2026-09-22 16:02 UTC by expire76 test_run=run-20260922T153451Z-10bb4939]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/26161",
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -1292,7 +1292,7 @@
         "fixed_at": "2026-09-20T22:27:30.892406",
         "validated_at": "2026-09-20T22:27:30.892406",
         "triaged_at": "2026-09-20T22:27:30.892406",
-        "status_notes": "[reporter-verification PASS 2026-09-20 22:07 UTC by expire76 test_run=run-20260920T214845Z-59a2a541]\n[2026-09-20T22:27:30+00:00] Resolved via ticket ET-26175: Confirmed and fixed (live 05e5b8e7c): the Building now tile summed funded + building, so a queued request counted as building. It now counts builds in progress only. Verified on the live page and API: stats.building=0 with both requests queued.\n[reporter-verification PASS 2026-09-21 20:37 UTC by expire76 test_run=run-20260921T201015Z-b8579867]",
+        "status_notes": "[reporter-verification PASS 2026-09-20 22:07 UTC by expire76 test_run=run-20260920T214845Z-59a2a541]\n[2026-09-20T22:27:30+00:00] Resolved via ticket ET-26175: Confirmed and fixed (live 05e5b8e7c): the Building now tile summed funded + building, so a queued request counted as building. It now counts builds in progress only. Verified on the live page and API: stats.building=0 with both requests queued.\n[reporter-verification PASS 2026-09-21 20:37 UTC by expire76 test_run=run-20260921T201015Z-b8579867]\n[reporter-verification PASS 2026-09-22 16:02 UTC by expire76 test_run=run-20260922T153451Z-10bb4939]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/26175",
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -1573,7 +1573,7 @@
     "klass": "ok",
     "rows_returned": 50,
     "new": [],
-    "at": "2026-09-22T15:59:50+00:00"
+    "at": "2026-09-22T18:21:52+00:00"
   },
   "closed": 0,
   "closed_without_recorded_evidence": 0,
@@ -1633,7 +1633,7 @@
       "fixed_at": "2026-09-20T22:27:30.892406",
       "validated_at": "2026-09-20T22:27:30.892406",
       "triaged_at": "2026-09-20T22:27:30.892406",
-      "status_notes": "[reporter-verification PASS 2026-09-20 22:07 UTC by expire76 test_run=run-20260920T214845Z-59a2a541]\n[2026-09-20T22:27:30+00:00] Resolved via ticket ET-26175: Confirmed and fixed (live 05e5b8e7c): the Building now tile summed funded + building, so a queued request counted as building. It now counts builds in progress only. Verified on the live page and API: stats.building=0 with both requests queued.\n[reporter-verification PASS 2026-09-21 20:37 UTC by expire76 test_run=run-20260921T201015Z-b8579867]",
+      "status_notes": "[reporter-verification PASS 2026-09-20 22:07 UTC by expire76 test_run=run-20260920T214845Z-59a2a541]\n[2026-09-20T22:27:30+00:00] Resolved via ticket ET-26175: Confirmed and fixed (live 05e5b8e7c): the Building now tile summed funded + building, so a queued request counted as building. It now counts builds in progress only. Verified on the live page and API: stats.building=0 with both requests queued.\n[reporter-verification PASS 2026-09-21 20:37 UTC by expire76 test_run=run-20260921T201015Z-b8579867]\n[reporter-verification PASS 2026-09-22 16:02 UTC by expire76 test_run=run-20260922T153451Z-10bb4939]",
       "ticket_url": "https://cymetica.com/admin/centcom/issues/26175",
       "fix_pr_url": null,
       "reward_amount": 1000.0,
@@ -1669,7 +1669,7 @@
       "fixed_at": "2026-09-20T22:27:32.259986",
       "validated_at": "2026-09-20T22:27:32.259986",
       "triaged_at": "2026-09-20T22:27:32.259986",
-      "status_notes": "[2026-09-20T22:27:32+00:00] Resolved via ticket ET-26161: Confirmed: llms.txt described the Agent Returns Board ranking differently from the code. The line now states the coded formula (evidence weight x (1 + confirmed replications) x status weight x 72 h recency decay), that rank does not depend on q, and that order is newest-first while nothing is verified. Verified in the served llms.txt.\n[reporter-verification PASS 2026-09-21 01:57 UTC by expire76 test_run=run-20260921T014914Z-df9988d9]\n[reporter-verification PASS 2026-09-21 20:37 UTC by expire76 test_run=run-20260921T201015Z-b8579867]",
+      "status_notes": "[2026-09-20T22:27:32+00:00] Resolved via ticket ET-26161: Confirmed: llms.txt described the Agent Returns Board ranking differently from the code. The line now states the coded formula (evidence weight x (1 + confirmed replications) x status weight x 72 h recency decay), that rank does not depend on q, and that order is newest-first while nothing is verified. Verified in the served llms.txt.\n[reporter-verification PASS 2026-09-21 01:57 UTC by expire76 test_run=run-20260921T014914Z-df9988d9]\n[reporter-verification PASS 2026-09-21 20:37 UTC by expire76 test_run=run-20260921T201015Z-b8579867]\n[reporter-verification PASS 2026-09-22 16:02 UTC by expire76 test_run=run-20260922T153451Z-10bb4939]",
       "ticket_url": "https://cymetica.com/admin/centcom/issues/26161",
       "fix_pr_url": null,
       "reward_amount": 1000.0,
