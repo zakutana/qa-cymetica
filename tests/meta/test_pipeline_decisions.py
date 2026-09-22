@@ -224,6 +224,86 @@ EXCEPTIONS = {
 }
 
 
+# The operator's own words quoted in CODE. 2026-09-12 noticed that 27 tagged
+# paragraphs sat in 18 files this test never read. Most of them are citations
+# ("[operator ...] asked for ...") whose authoritative copy is pinned above;
+# what cannot drift unnoticed is a VERBATIM quote, `*"..."*`, right after a tag.
+# Pinned by the quote alone, not the comment around it, so editing the code
+# beside it is free and changing their words is not.
+CODE_GLOBS = ("qa/*.py", "scripts/*.py", ".claude/hooks/*.py")
+CODE_TAG = re.compile(r"\[operator (\d{4}-\d{2}-\d{2})")
+CODE_QUOTE = re.compile(r'\*"(.{8,}?)"\*', re.S)
+COMMENT_PREFIX = re.compile(r"^\s*(?:#|//|/\*|\*(?!\")|--)?\s?", re.M)
+
+CODE_QUOTES = [
+    (".claude/hooks/next_step.py", "2026-09-10",
+     "36106104ca24ac23456f3ab54f8ce63a37a71126073ce966e528591a457a6de6"),
+    (".claude/hooks/no_heredoc_writes.py", "2026-09-13",
+     "55441599a7daccea3d832f358d39df183337e17627f6f800fc0a79b16c12b576"),
+    ("qa/backtests.py", "2026-09-12",
+     "800df1f8b93a48069b0b5332e22952ad15fd4bf75fb279abcdcbedd869e532d5"),
+    ("qa/fomo.py", "2026-09-14",
+     "a5df6c2930cd102f5127a4644d2dd16be5d4dbfb8cb26425c23bce0202b21018"),
+    ("qa/fomo.py", "2026-09-14",
+     "c56eb4b76383c6f9def1ea9bebe5268fccf8accfd39fd5435e658d348fe66586"),
+    ("qa/lab.py", "2026-09-12",
+     "3702ccb65894037650ef16bc23705eccf4e49f7bee7107b5d58b5b7adc0412fd"),
+    ("qa/lab.py", "2026-09-12",
+     "ef4d9d80bc06d1298e03afb93fa1103541d6fabb0ae4d807f6c4bf2f18867dcb"),
+    ("qa/surface.py", "2026-09-12",
+     "aaff8ea0c2f536368b68993b2c61e4d5867af49595e5b2eb45267c8707545a58"),
+    ("scripts/fomo_watch.py", "2026-09-14",
+     "a5df6c2930cd102f5127a4644d2dd16be5d4dbfb8cb26425c23bce0202b21018"),
+    ("scripts/lab.py", "2026-09-11",
+     "902465215bb86ef4bd84111ed6eaa4b36560c662244cb75101f447691ff9d446"),
+    ("scripts/lab.py", "2026-09-12",
+     "086cc5114766752cfd88b4ffb1216ecc8c77145cf4a51964424aea675d721edc"),
+    ("scripts/lab.py", "2026-09-12",
+     "8ed03cc0674744855bc3a8df687f6aed15f8d48b2aa52da4ad11eb3b15549d6b"),
+    ("scripts/lab.py", "2026-09-19",
+     "b728a8019df6a47e5d818eed9c91fff1fd667767bbc4a8b54d946282f3184b9e"),
+    ("scripts/processes.py", "2026-09-12",
+     "5e560c7516300844aa7e622e12d1412855d789bd281b9a4457be81de6baf6134"),
+    ("scripts/render.py", "2026-09-14",
+     "9f6840703365a5c4bfe09c3eeaf48da80098999e2b4489b58e45e338655fe4b5"),
+]
+
+
+def code_quotes(text: str) -> list[tuple[str, str]]:
+    """(date, sha256) of every verbatim quote that opens right after a tag."""
+    out = []
+    for tag in CODE_TAG.finditer(text):
+        window = text[tag.end():tag.end() + 600]
+        quoted = CODE_QUOTE.search(window)
+        if not quoted or quoted.start() > 40:
+            continue
+        words = " ".join(COMMENT_PREFIX.sub("", quoted.group(1)).split())
+        out.append((tag.group(1),
+                    hashlib.sha256(words.encode("utf-8")).hexdigest()))
+    return out
+
+
+def _code_files() -> list[str]:
+    return sorted({str(p.relative_to(REPO)).replace("\\", "/")
+                   for pattern in CODE_GLOBS for p in REPO.glob(pattern)})
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_operators_words_quoted_in_code_are_still_their_words():
+    """Both directions over the code: a pinned quote gone or reworded, and a
+    tagged quote nobody pinned."""
+    found = {rel: code_quotes(_text(rel)) for rel in _code_files()}
+    for rel, date, digest in CODE_QUOTES:
+        assert (date, digest) in found.get(rel, []), (
+            f"{rel}: the operator's words of {date} are gone or reworded. "
+            f"Put them back, or take it to them")
+    pinned = {(rel, date, digest) for rel, date, digest in CODE_QUOTES}
+    loose = [f"{rel} {date} {digest[:12]}" for rel, rows in found.items()
+             for date, digest in rows if (rel, date, digest) not in pinned]
+    assert not loose, ("a tagged quote of the operator in code that nothing "
+                       "pins -- pin it if they said it:\n  " + "\n  ".join(loose))
+
+
 def _pinned_rows() -> list[tuple[str, str, str, str]]:
     return [(rel, date, hint, digest)
             for rel, rows in PINNED.items() for date, hint, digest in rows]

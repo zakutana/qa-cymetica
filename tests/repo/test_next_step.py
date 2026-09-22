@@ -44,7 +44,14 @@ REPO = Path(__file__).resolve().parent.parent.parent
 # stand, like every other ceiling here, and about six new items of room.
 DONE_KEPT_DAYS = 7
 MAX_LINES = 170
-ITEM_DATE = re.compile(r"^- \[[ x]\]\s+(\d{4}-\d{2}-\d{2})")
+# The item's own date, and -- on a ticked line -- the day it was DONE.
+# The first carried a literal backspace byte where `\b` was meant (written
+# through a heredoc on 2026-09-12), so it matched no line at all and the
+# budget below measured nothing for ten days. The day it was done is what a
+# week is counted from: the date at the front is when it was AGREED, and an
+# item agreed on the 12th and finished on the 22nd is not a week old.
+ITEM_DATE = re.compile(r"^- \[[ x]\]\s+(\d{4}-\d{2}-\d{2})\b")
+DONE_ON = re.compile(r"\bhotovo (\d{4}-\d{2}-\d{2})\b", re.I)
 
 
 def _date(line: str):
@@ -56,6 +63,22 @@ def _date(line: str):
         return date.fromisoformat(found.group(1))
     except ValueError:
         return None
+def _done_on(line: str):
+    """The day a ticked item was done: its `hotovo YYYY-MM-DD`, else the day
+    it was agreed -- the earlier of the two, so an unstamped item is pruned
+    too soon rather than kept for ever. Step 10b stamps what it ticks."""
+    # A stamp in the future is a typo, and taken at its word it would keep a
+    # ticked item until that date plus a week (a reader of 2026-09-22).
+    for stamp in reversed(DONE_ON.findall(line)):
+        try:
+            done = date.fromisoformat(stamp)
+        except ValueError:
+            continue
+        if done <= date.today():
+            return done
+    return _date(line)
+
+
 NEXT = REPO / "NEXT.md"
 HOOK = REPO / ".claude" / "hooks" / "next_step.py"
 PROGRESS = REPO / "audits" / "deep-pass-progress.json"
@@ -201,6 +224,24 @@ def test_the_hook_prints_the_open_items_and_nothing_else(tmp_path):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_budget_can_read_the_lines_it_budgets():
+    """The negative control the budget never had: its pattern carried a
+    backspace byte for ten days and matched nothing, and the test was green
+    throughout because an empty list has no stale items in it."""
+    agreed = "- [x] 2026-09-12  something finished"
+    assert _date(agreed) == date(2026, 9, 12)
+    assert _done_on(agreed) == date(2026, 9, 12), "unstamped: the agreed day"
+    assert _done_on(agreed + " (hotovo 2026-09-22)") == date(2026, 9, 22)
+    assert _done_on(agreed + " (hotovo 2999-01-01)") == date(2026, 9, 12), (
+        "a stamp in the future kept an item for ever")
+    lines = (REPO / "NEXT.md").read_text(encoding="utf-8").splitlines()
+    items = [l for l in lines if l.startswith(("- [ ]", "- [x]"))
+             and not l.startswith(("- [ ] YYYY", "- [x] YYYY"))]
+    assert items and all(_date(l) for l in items), [
+        l[:40] for l in items if not _date(l)]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_handover_does_not_carry_months_of_finished_work():
     """[operator 2026-09-12] asked whether NEXT.md can just be cleared.
 
@@ -220,7 +261,7 @@ def test_the_handover_does_not_carry_months_of_finished_work():
     done = [l for l in lines if l.startswith("- [x]")]
     stale = []
     for line in done:
-        when = _date(line)
+        when = _done_on(line)
         if when and (date.today() - when).days > DONE_KEPT_DAYS:
             stale.append(line[:70])
 

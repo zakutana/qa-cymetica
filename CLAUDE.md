@@ -467,8 +467,8 @@ scripts/lab.py    that loop from our side: `tick` (the day's session, answers
                   night runs as the loop too; `lab.py night` was removed
                   2026-09-21.
 NEXT.md           what we agreed to do next and have not done. Plain markdown,
-                  one line per item, `- [ ] YYYY-MM-DD  sentence`; ticked
-                  items stay as history and stop being printed.
+                  one line per item, `- [ ] YYYY-MM-DD  sentence`; ticked, it
+                  gets `(hotovo DATE)` and goes a week after that stamp.
                   `.claude/hooks/next_step.py` prints the open ones at every
                   session start, the deep pass's step 10b writes it, and
                   `tests/repo/test_next_step.py` fails on an unparsable line

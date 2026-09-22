@@ -70,6 +70,7 @@ the file rather than remembering:
  "gaps": [
   {"id": "T01", "nodeid": "...", "claim": "...", "source": "audit|review",
    "votes": null, "verdict": null, "fixed": false, "commit": null}],
+ "review": {"done": true, "findings": 0},
  "next": ["one sentence per item, the same ones written into NEXT.md"],
  "retrospective": {"last": "2026-09-09", "done": false},
  "rule_changes": [
@@ -94,7 +95,11 @@ the file rather than remembering:
   reads `previous_at`, falls back a day when no pass is named, and says which
   of the three floors it used.
 * **Step 2** appends a gap the moment an auditor returns it. `votes` and
-  `verdict` stay null.
+  `verdict` stay null. **Step 3** does the same for every review finding,
+  `"source": "review"`, the moment the review returns, and sets
+  `review: {"done": true, "findings": N}` -- N the number it returned, 0 when
+  it found nothing, so a review lost to a compaction cannot read as a clean
+  one. `tests/repo/test_deep_pass_finished.py` holds the two to each other.
 * **Step 4** fills `votes` and `verdict` per gap, one at a time.
 * **Step 5** reads the file for `verdict == "real" and not fixed`, and sets
   `fixed` and `commit` as each one lands. A gap it deliberately leaves for the
@@ -430,6 +435,13 @@ context and nowhere else until it is written down.
 Invoke the `code-review` skill with `xhigh` over `git diff @{upstream}...HEAD`,
 which now includes anything step 1 changed.
 
+**Write every finding into the notebook the moment the review returns it**,
+as step 2 does for the audit: one entry in `gaps` with `"source": "review"`,
+`votes` and `verdict` null. On 2026-09-12 a compaction landed between this
+step and step 4, and the notebook held 27 claims, every one from the audit --
+the whole review was gone without a trace, and a finding nobody wrote down is
+one step 5 never fixes.
+
 ### 4 · The adversarial round
 
 Findings from steps 2 and 3 together. **Three `finding-triage` agents,
@@ -617,7 +629,16 @@ So the two are split at this step, and the split is the point:
 `/clear` nothing else remembers them, which is what this file is for. **Finished ones lose their
 prose**: on 2026-09-12 the file was 307 lines of which 255 were explanation
 beneath work already done. Drop the paragraphs under `- [x]` items, keep the
-one-line record, and drop the item itself once it has been ticked a week. Git
+one-line record, and drop the item itself once it has been ticked a week.
+
+**A week from the day it was DONE, read off the line.** The date at the front
+is the day it was agreed; on 2026-09-20, 24 ticked items carried dates from
+10-12 September and a note that they were finished that day, and a prune by
+the front date would have deleted the whole day's record. So whoever ticks an
+item appends `(hotovo YYYY-MM-DD)`, and this step counts from that stamp. An
+unstamped ticked item counts from the day it was agreed -- pruned sooner, never
+kept for ever -- and when this step ticks one, it stamps it.
+`tests/repo/test_next_step.py` reads the stamp the same way. Git
 holds every version, so this loses nothing — unlike `outbox/reports.yaml`,
 whose rule about never deleting is about the only copy of what we SENT.
 

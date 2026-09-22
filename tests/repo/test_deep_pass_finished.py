@@ -81,6 +81,8 @@ NEXT_FROM = "2026-09-10"
 # passes on record is `?` -- the one number "was this worth what it cost" is
 # about. Gated too, so those three stay green: they could not have written it.
 COST_FROM = "2026-09-12"
+# The first pass that could write step 3's `review` block starts after this.
+REVIEW_FROM = "2026-09-23"
 WEEK = 7
 
 # How long a pass may be in flight before an unwritten `finished` stops
@@ -338,6 +340,24 @@ def problems(progress: dict, nodeids: set[str] | None = None,
             "`at_finished` was never written, so this pass cost `?` minutes and "
             "the week cannot say whether the process was worth it. Step 11b "
             "writes it beside `finished`")
+
+    # Step 3 writes its findings before step 4 votes, and says how many there
+    # were: a compaction between the two once took the whole review with it,
+    # and "no review gaps" read the same as "the review found nothing".
+    if at[:10] >= REVIEW_FROM and progress.get("finished"):
+        review = progress.get("review")
+        if not isinstance(review, dict) or not review.get("done"):
+            out.append("no `review` block with done: true -- step 3 records "
+                       "that it ran and how many findings it returned, or a "
+                       "review lost to a compaction reads as a clean one")
+        else:
+            written = sum(1 for g in gaps if g.get("source") == "review")
+            said = review.get("findings")
+            # `True` is an int in Python and would stand for one finding.
+            if (not isinstance(said, int) or isinstance(said, bool)
+                    or said != written):
+                out.append(f"the review returned {said!r} finding(s) and the "
+                           f"notebook holds {written} with source review")
 
     if at[:10] >= NEXT_FROM:
         out += _next_step_problems(progress, agreed_items)
@@ -625,6 +645,43 @@ def test_a_finished_pass_records_when_it_finished():
     ancient = problems(_pass(finished=True, at="2026-09-11T17:00:00+00:00"),
                        NODEIDS, set())
     assert not any("at_finished" in line for line in ancient), ancient
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_review_writes_what_it_found_before_the_vote():
+    """2026-09-12: a compaction landed between step 3 and step 4 and the
+    notebook held 27 claims, all 27 from the audit -- the whole review gone,
+    and nothing could tell that from a review that found nothing. Step 3 now
+    writes `review: {done, findings}` and one `source: review` gap per
+    finding, and the two have to agree."""
+    at = "2026-09-23T02:00:00+00:00"
+    done = "2026-09-23T04:00:00+00:00"
+    silent = problems(_pass(finished=True, at=at, at_finished=done), NODEIDS, set())
+    assert any("`review`" in line for line in silent), silent
+
+    gap = {"id": "R1", "nodeid": "x", "source": "review",
+           "verdict": "false_positive", "fixed": False}
+    lost = problems(_pass(finished=True, at=at, at_finished=done,
+                          review={"done": True, "findings": 3}, gaps=[gap]),
+                    NODEIDS, set())
+    assert any("review" in line and "3" in line for line in lost), lost
+    truthy = problems(_pass(finished=True, at=at, at_finished=done,
+                            review={"done": True, "findings": True}, gaps=[gap]),
+                      NODEIDS, set())
+    assert any("review" in line for line in truthy), "True counted as one"
+
+    whole = problems(_pass(finished=True, at=at, at_finished=done,
+                           review={"done": True, "findings": 1}, gaps=[gap]),
+                     NODEIDS, set())
+    assert not any("review" in line for line in whole), whole
+    empty = problems(_pass(finished=True, at=at, at_finished=done,
+                           review={"done": True, "findings": 0}), NODEIDS, set())
+    assert not any("review" in line for line in empty), empty
+
+    # The passes written before the key existed are not failed for it.
+    older = problems(_pass(finished=True, at_finished="2026-09-20T04:00:00+00:00"),
+                     NODEIDS, set())
+    assert not any("`review`" in line for line in older), older
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
