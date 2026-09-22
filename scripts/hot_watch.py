@@ -43,6 +43,11 @@ WIRE_LIMIT = 500
 CARDS_PER_RESOLVE = 20
 READ_DEADLINE_S = 90.0
 CARD_WINDOW_HOURS = (-1.0, 25.0)
+# A card read that failed is tried again on a later resolve -- a 503 or a
+# timeout is usually gone by the next tick -- but not for ever: a card they
+# dropped answers 404 on every tick, and each of those is a GET for nothing.
+# Three reads on three ticks separates the two; after that it is unobserved.
+MAX_CARD_TRIES = 3
 
 
 def diary_path() -> Path:
@@ -191,11 +196,29 @@ def _points(body) -> list[list]:
     return out
 
 
+def _card_attempts(rows) -> dict:
+    """(fp, entry_at) -> [ok row or None, failed attempts, a failed row]."""
+    out: dict[tuple, list] = {}
+    for r in rows:
+        if r.get("type") != "card":
+            continue
+        slot = out.setdefault((r.get("fp"), r.get("entry_at")), [None, 0, None])
+        if r.get("ok"):
+            slot[0] = slot[0] or r
+        else:
+            slot[1] += 1
+            slot[2] = slot[2] or r
+    return out
+
+
 def resolve(client, now=None, rows: list | None = None) -> dict:
-    """Each entry whose day is out gets its card's history, once."""
+    """Each entry whose day is out gets its card's history: read until one
+    read succeeds, or MAX_CARD_TRIES have failed. Rule 8: a failed read is not
+    a read, so it does not make the entry done."""
     now = now or _now()
     rows = load() if rows is None else rows
-    done = {(r.get("fp"), r.get("entry_at")) for r in rows if r.get("type") == "card"}
+    done = {key for key, (ok, failed, _) in _card_attempts(rows).items()
+            if ok or failed >= MAX_CARD_TRIES}
     due = [e for e in hot.entries(rows)
            if e.get("event_card_id") and (e["fp"], e["at"]) not in done
            and _at(e["at"]) + timedelta(hours=hot.RULE["hold_hours"]) <= now]
@@ -239,8 +262,12 @@ def card_follow(rows, horizons=(6.0, 24.0)) -> dict:
     B07, deep pass of 2026-09-21: a card whose read failed, or whose history
     has no point near the entry or the horizon, was dropped and `unobserved`
     was a hard 0. It is unobserved now -- counted, never a zero -- unless the
-    diary has not reached the horizon yet, which is open, as in hot.follow."""
-    cards = [r for r in rows if r.get("type") == "card" and _at(r.get("entry_at"))]
+    diary has not reached the horizon yet, which is open, as in hot.follow.
+
+    Since resolve() retries a failed read, several rows can stand for one
+    entry: it is ONE card, read off its ok row if any, else one failed row."""
+    cards = [ok or failed for (_, entry_at), (ok, _, failed)
+             in _card_attempts(rows).items() if _at(entry_at)]
     stamps = [t for t in (_at(r.get("at")) for r in rows) if t]
     last = max(stamps, default=None)
     slack = timedelta(minutes=hot.TOLERANCE_MINUTES)

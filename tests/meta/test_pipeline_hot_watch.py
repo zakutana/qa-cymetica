@@ -174,10 +174,57 @@ def test_the_card_is_priced_afterwards_from_its_own_history(tmp_path, monkeypatc
     entry_at = (T0 + timedelta(minutes=20)).isoformat()
     base = {"type": "card", "at": (T0 + timedelta(hours=25)).isoformat(),
             "fp": "crypto:DDD,EEE,FFF", "entry_at": entry_at}
-    failed = {**base, "card_id": "card-2", "ok": False, "status": 503, "points": []}
+    # Two distinct entries: rows on one (fp, entry_at) are attempts at ONE card.
+    failed = {**base, "fp": "crypto:GGG,HHH,III", "card_id": "card-2", "ok": False,
+              "status": 503, "points": []}
     short = {**base, "card_id": "card-3", "ok": True, "status": 200,
              "points": [[T0.isoformat(), 100], [(T0 + timedelta(hours=1)).isoformat(), 101]]}
     said = mod.card_follow(mod.load() + [failed, short], horizons=(6.0, 40.0))
     assert said[6.0]["n"] == 1 and said[6.0]["unobserved"] == 2
     assert said[6.0]["open"] == 0
     assert said[40.0]["n"] == 0 and said[40.0]["open"] == 3
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_card_whose_read_failed_is_read_again_and_counted_once(tmp_path,
+                                                                  monkeypatch):
+    """Rule 8: a failed read is not a read. resolve() wrote one row per entry
+    and took ANY row as done, so a card whose read failed once -- a 503, a
+    timeout -- was never read again. It is retried up to MAX_CARD_TRIES, and
+    card_follow reads one row per entry, the ok one if there is one, so the
+    attempts are not counted as entries."""
+    mod = _module(tmp_path, monkeypatch)
+    wire = [_item(1)]
+    mod.capture(_client(_handler([], wire)), now=T0)
+    mod.capture(_client(_handler(wire, wire)), now=T0 + timedelta(minutes=20))
+    asked = []
+
+    def down(request):
+        asked.append(request.url.path)
+        return httpx.Response(503)
+
+    def up(request):
+        asked.append(request.url.path)
+        pts = [{"t": (T0 + timedelta(hours=h)).isoformat(), "index": 100 + h}
+               for h in range(0, 30)]
+        return httpx.Response(200, json={"points": pts})
+
+    mod.resolve(_client(down), now=T0 + timedelta(hours=25))
+    mod.resolve(_client(up), now=T0 + timedelta(hours=26))
+    assert len(asked) == 2, "a failed card read is read again"
+    mod.resolve(_client(up), now=T0 + timedelta(hours=27))
+    assert len(asked) == 2, "and once it is read, it is done"
+    said = mod.card_follow(mod.load(), horizons=(6.0,))
+    assert said[6.0]["n"] == 1 and said[6.0]["unobserved"] == 0, \
+        "two attempts at one card are one entry"
+
+    # A card that never answers stops costing a GET every tick.
+    mod2 = _module(tmp_path / "b", monkeypatch)
+    mod2.capture(_client(_handler([], wire)), now=T0)
+    mod2.capture(_client(_handler(wire, wire)), now=T0 + timedelta(minutes=20))
+    asked.clear()
+    for h in range(mod2.MAX_CARD_TRIES + 2):
+        mod2.resolve(_client(down), now=T0 + timedelta(hours=25 + h))
+    assert len(asked) == mod2.MAX_CARD_TRIES
+    said = mod2.card_follow(mod2.load(), horizons=(6.0,))
+    assert said[6.0]["n"] == 0 and said[6.0]["unobserved"] == 1

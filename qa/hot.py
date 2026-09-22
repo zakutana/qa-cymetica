@@ -111,8 +111,18 @@ def _hot_rows(rnd: dict) -> list[dict]:
     return out
 
 
-def _px_at(rnd: dict, row_id, cls: str):
-    """The row's index price for `cls` in one round, from hot or the wire."""
+def _px_at(rnd: dict, row_id, cls: str, siblings=()):
+    """The row's index price for `cls` in one round, from hot or the wire;
+    failing that, any sibling's -- the price is the basket's, as `_Index.price`
+    has it (B02)."""
+    for rid in (row_id, *siblings):
+        px = _own_px(rnd, rid, cls)
+        if px:
+            return px
+    return None
+
+
+def _own_px(rnd: dict, row_id, cls: str):
     for h in _hot_rows(rnd):
         if h["row"] == row_id and h["cls"] == cls and h["px"]:
             return float(h["px"])
@@ -305,13 +315,23 @@ def control(rows, found: list[dict], horizons=(6.0, 24.0), headlines=None) -> di
     One that left Hot hours ago is excluded: it is the tail of the thing
     measured, not its absence. So is a day in which a hot read failed: what
     was in Hot then is unknown, and an unknown is not "not in Hot" (rule 8),
-    so an entry with one in the day before it brings no control at all."""
+    so an entry with one in the day before it brings no control at all. The
+    same holds for a day the loop did not watch: one that starts before the
+    diary's first round, or holds a stretch wider than GAP_MINUTES with no
+    round in it."""
     index = _Index(rows)
     ordered = index.rounds
     rounds = {r["at"]: r for r in ordered}
     heads = _headlines(headlines if headlines is not None else rows)
     seen_hot: dict[str, list[datetime]] = {}
     blind: list[datetime] = []
+    times = index.times
+    first = times[0] if times else None
+    # Stretches with no round at all: the loop was not running, and what was
+    # in Hot then is as unknown as during a failed read. A blind round was
+    # still a round taken, so it bounds a gap; it is `blind` that covers it.
+    gaps = [(a, b) for a, b in zip(times, times[1:])
+            if b - a > timedelta(minutes=GAP_MINUTES)]
     for rnd in ordered:
         if rnd.get("hot") is None:
             blind.append(_at(rnd["at"]))
@@ -343,6 +363,14 @@ def control(rows, found: list[dict], horizons=(6.0, 24.0), headlines=None) -> di
             # their basket on the same round's wire, so the narrower reading
             # would still count a fifth of the unknowns as not-hot.
             if lately(blind, when):
+                continue
+            # The same reasoning for the rounds that were never taken: a look-
+            # back that starts before the diary's first round, or holds a
+            # stretch wider than GAP_MINUTES with no round, cannot prove any
+            # basket absent from Hot, so this entry brings no control either.
+            start = when - timedelta(hours=ONCE_HOURS)
+            if first is None or start < first or any(
+                    a < when and b > start for a, b in gaps):
                 continue
             for w in rnd.get("wire") or []:
                 fp = _fp(heads.get(w[0]), cls)
@@ -380,17 +408,20 @@ def _qualifies(e: dict, rule: dict) -> bool:
     return _at(e["at"]) - published <= timedelta(minutes=rule["max_age_minutes"])
 
 
-def vol_stop(rows, row_id, cls: str, at, floor: float = -4.0) -> float:
+def vol_stop(rows, row_id, cls: str, at, floor: float = -4.0,
+             siblings=()) -> float:
     """-VOL_MULTIPLE x the basket's hourly ATR in percent, read off the rounds
     in the VOL_LOOKBACK_HOURS before `at`, never tighter than `floor`. A
     round-to-round move is scaled to an hour by sqrt(hour / step). Under three
-    priced rounds there is no ATR, and the floor stands."""
+    priced rounds there is no ATR, and the floor stands. `siblings` are other
+    headlines on the basket: B02's reasoning, the path is the basket's, so a
+    round that priced it under another headline is a point on it."""
     at = _at(at) if not isinstance(at, datetime) else at
     path = []
     for rnd in _rounds(rows):
         when = _at(rnd["at"])
         if at - timedelta(hours=VOL_LOOKBACK_HOURS) <= when <= at:
-            px = _px_at(rnd, row_id, cls)
+            px = _px_at(rnd, row_id, cls, siblings)
             if px:
                 path.append((when, px))
     if len(path) < 3:
@@ -406,9 +437,13 @@ def vol_stop(rows, row_id, cls: str, at, floor: float = -4.0) -> float:
     return round(min(floor, -VOL_MULTIPLE * hourly), 6)
 
 
-def _confirmed(e: dict, rounds: list[dict], heads: dict, n: int) -> dict | None:
+def _confirmed(e: dict, rounds: list[dict], heads: dict, n: int,
+               siblings=()) -> dict | None:
     """The entry moved to the n-th following round, if the basket is still in
-    Hot there and every round between is covered; None if it is not."""
+    Hot there and every round between is covered; None if it is not. The
+    price there is the basket's, through a sibling headline if the entry's own
+    row has left the round -- B02's reasoning: the basket being in Hot under
+    another headline confirms it, so that headline's price must be able to."""
     t = _at(e["at"])
     later = [r for r in rounds if _at(r["at"]) > t and r.get("hot") is not None]
     prev = next((r for r in rounds if r["at"] == e["at"]), None)
@@ -421,7 +456,7 @@ def _confirmed(e: dict, rounds: list[dict], heads: dict, n: int) -> dict | None:
         prev = rnd
     if len(later) < n:
         return None
-    px = _px_at(prev, e["row"], e["cls"])
+    px = _px_at(prev, e["row"], e["cls"], siblings)
     return {**e, "at": prev["at"], "px": px} if px else None
 
 
@@ -456,9 +491,16 @@ def nexus_rule(rows, headlines=None, rule: dict | None = None) -> dict:
             fp = _fp(head, cls)
             if fp:
                 by_fp.setdefault(fp, []).append(hid)
+
+    def sibs(e: dict) -> list:
+        # B02, deep pass of 2026-09-21: the price is the basket's, so every
+        # read of it -- confirmation, stop, exits -- goes through the siblings.
+        return [h for h in by_fp.get(e["fp"], ()) if h != e["row"]]
+
     found = [e for e in entries(rows, headlines) if _qualifies(e, rule)]
     if rule.get("confirm_rounds"):
-        found = [c for c in (_confirmed(e, rounds, heads, rule["confirm_rounds"])
+        found = [c for c in (_confirmed(e, rounds, heads, rule["confirm_rounds"],
+                                        sibs(e))
                              for e in found) if c]
     trades, open_, missing, skipped, held_rows = [], 0, 0, 0, set()
     holding: list[tuple[datetime, list]] = []
@@ -472,14 +514,15 @@ def nexus_rule(rows, headlines=None, rule: dict | None = None) -> dict:
             skipped += 1
             continue
         end = t0 + timedelta(hours=rule["hold_hours"])
-        stop, target = rule["stop"], rule["take_profit"]
-        if rule.get("vol_stop"):
-            stop = vol_stop(rows, e["row"], e["cls"], t0, floor=rule["stop"])
-            target = -2.0 * stop
         # B02, deep pass of 2026-09-21: exits read the entry's own row only, so
         # a trade whose row left the wire never exited and stayed open for
         # ever, where follow() read the same basket through a sibling.
-        siblings = [h for h in by_fp.get(e["fp"], ()) if h != e["row"]]
+        siblings = sibs(e)
+        stop, target = rule["stop"], rule["take_profit"]
+        if rule.get("vol_stop"):
+            stop = vol_stop(rows, e["row"], e["cls"], t0, floor=rule["stop"],
+                            siblings=siblings)
+            target = -2.0 * stop
         exit_, gross, closed_at = None, None, None
         for i in range(index.after(t0), len(rounds)):
             when = index.times[i]

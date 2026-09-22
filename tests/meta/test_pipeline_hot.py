@@ -35,6 +35,17 @@ def _round(when, hot_rows=(), wire=()):
             "hot": [list(r) for r in hot_rows], "wire": [list(w) for w in wire]}
 
 
+def _quiet(start, end, every=40, hot_rows=(), skip=()):
+    """Rounds every `every` min from `start` up to (not including) `end`, none
+    at a time in `skip`: the loop running, seeing `hot_rows` or nothing."""
+    out, when = [], start
+    while when < end:
+        if when not in skip:
+            out.append(_round(when, hot_rows))
+        when += timedelta(minutes=every)
+    return out
+
+
 def _path(hid, start, pxs, every=20, rank=1, in_hot=True, ret=7.0):
     """Rounds every `every` min; the row sits in hot (crypto) at each px."""
     out = []
@@ -133,13 +144,54 @@ def test_a_basket_is_priced_through_another_headline_when_its_own_row_is_gone():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_confirmation_reads_the_basket_through_a_sibling_headline():
+    """B02's reasoning, carried to NEX-0057's confirmation: the basket is still
+    in Hot one round later under another headline, and that round prices it
+    through that headline. Before, the entry's own row being gone dropped the
+    entry altogether."""
+    heads = [_headline(1, published=T0), _headline(2, published=T0)]
+    rounds = [_round(T0),
+              _round(T0 + timedelta(minutes=20), [(1, 40, 7.0, "crypto", 100, 7.0)],
+                     [(1, 1.0, 100, 0.1, 7.0)]),
+              _round(T0 + timedelta(minutes=40), [(2, 40, 7.0, "crypto", 102, 7.0)],
+                     [(2, 1.0, 102, 0.1, 7.0)]),
+              _round(T0 + timedelta(minutes=60), [], [(2, 1.0, 112, 0.1, 7.0)])]
+    said = hot.nexus_rule(heads + rounds, rule=hot.VARIANTS["NEX-0057a"])
+    assert said["entries"] == 1, "a sibling's price confirms the entry"
+    (trade,) = said["trades"]
+    assert trade["at"] == _iso(T0 + timedelta(minutes=40))
+    assert trade["exit"] == "take_profit"
+    assert abs(trade["gross"] - (112 / 102 - 1) * 100) < 1e-6
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_volatility_stop_reads_the_basket_through_a_sibling_headline():
+    """B02's reasoning, carried to NEX-0057d's stop: the basket's path before
+    the entry is priced under another headline. Read through the entry's own
+    row only, it had two points, so no ATR, and the -4 floor stopped a trade
+    the basket's own swing says should have ridden a -5 % dip."""
+    heads = [_headline(1, published=T0), _headline(2, published=T0)]
+    before = [_round(T0 + timedelta(minutes=20 * i), [], [(2, 10.0, px, 0.1, 7.0)])
+              for i, px in enumerate([100, 103])]
+    rounds = before + _path(1, T0 + timedelta(minutes=40),
+                            [100, 103, 97.85, 113.3, 117.42], rank=40)
+    assert hot.vol_stop(rounds, 1, "crypto", T0 + timedelta(minutes=60)) == -4.0
+    stop = hot.vol_stop(rounds, 1, "crypto", T0 + timedelta(minutes=60), siblings=[2])
+    assert stop < -5.0
+    (trade,) = hot.nexus_rule(rounds, heads, hot.VARIANTS["NEX-0057d"])["trades"]
+    assert trade["exit"] == "take_profit", "the sibling's path widened the stop"
+    assert abs(trade["gross"] - (117.42 / 103 - 1) * 100) < 1e-6
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_readings_sort_the_diary_once_not_once_per_basket(monkeypatch):
     """R01, deep pass of 2026-09-21 (3/3): forward() re-sorted the whole diary
     for every basket, and control() hands it hundreds per entry round -- 0.9 s
     at 27 rounds, growing about R^2.3, inside a tick every six hours. The
     readings now index the rounds once per call."""
     heads = [_headline(n, crypto=(f"C{n}A", f"C{n}B", f"C{n}C")) for n in range(1, 41)]
-    rounds = [_round(T0)]
+    # A day of rounds before, so the control has a look-back to stand on.
+    rounds = _quiet(T0 - timedelta(hours=25), T0) + [_round(T0)]
     for i in range(1, 30):
         when = T0 + timedelta(minutes=20 * i)
         hot_rows = [(1, 1, 7.0, "crypto", 100 + i, 7.0)] if i >= 1 else []
@@ -183,8 +235,13 @@ def test_the_control_holds_no_basket_that_was_in_hot_during_the_last_day():
     a failed hot read in it cannot say which baskets were never called."""
     heads = [_headline(1), _headline(2, crypto=("DDD", "EEE", "FFF")),
              _headline(3, crypto=("GGG", "HHH", "III"))]
-    was_hot = _round(T0, [(2, 1, 5.0, "crypto", 10, 5.0)],
-                     [(2, 1.0, 10, 0.1, 5.0)])
+    # The loop ran all day before (row 2 hot throughout, so it is no entry)
+    # and between -- the control needs a whole look-back (see the test below).
+    hot_2 = [(2, 1, 5.0, "crypto", 10, 5.0)]
+    day = _quiet(T0 - timedelta(hours=21), T0, every=20, hot_rows=hot_2)
+    was_hot = _round(T0, hot_2, [(2, 1.0, 10, 0.1, 5.0)])
+    between = _quiet(T0 + timedelta(minutes=20), T0 + timedelta(hours=3), every=20,
+                     skip={T0 + timedelta(hours=1)})
     before = _round(T0 + timedelta(hours=3), [], [])
     entry = _round(T0 + timedelta(hours=3, minutes=20),
                    [(1, 1, 7.0, "crypto", 100, 7.0)],
@@ -192,7 +249,7 @@ def test_the_control_holds_no_basket_that_was_in_hot_during_the_last_day():
                     (3, 1.0, 20, 0.1, 1.0)])
     later = _round(T0 + timedelta(hours=3, minutes=40), [],
                    [(2, 1.0, 11, 0.1, 1.0), (3, 1.0, 21, 0.1, 1.0)])
-    rows = heads + [was_hot, before, entry, later]
+    rows = heads + day + [was_hot] + between + [before, entry, later]
     found = hot.entries(rows)
     assert [e["row"] for e in found] == [1]
     (short,) = hot.control(rows, found, horizons=(20 / 60,))["crypto"]
@@ -204,16 +261,48 @@ def test_the_control_holds_no_basket_that_was_in_hot_during_the_last_day():
     # a blind round in the look-back proves no basket absent -- keeps it out.
     blind = {"type": "round", "at": _iso(T0 + timedelta(hours=1)), "ok": False,
              "errors": ["hot: HTTP 503", "wire: HTTP 503"], "hot": None, "wire": []}
-    rows = heads + [was_hot, blind, before, entry, later]
+    rows = heads + day + [was_hot, blind] + between + [before, entry, later]
     found = hot.entries(rows)
     assert [e["row"] for e in found] == [1]
     (short,) = hot.control(rows, found, horizons=(20 / 60,))["crypto"]
     assert short["n"] == 0, "a basket hot only while we were blind is not a control"
     # A blind round older than the day before the entry is outside the question.
     old = {**blind, "at": _iso(T0 + timedelta(hours=3, minutes=20) - timedelta(hours=25))}
-    rows = heads + [old, was_hot, before, entry, later]
+    rows = heads + [old] + day + [was_hot] + between + [before, entry, later]
     (short,) = hot.control(rows, hot.entries(rows), horizons=(20 / 60,))["crypto"]
     assert short["n"] == 1 and short["mean"] == 5.0
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_control_takes_nothing_from_a_look_back_the_loop_did_not_watch():
+    """B06's reasoning, rule 8, carried to the rounds that were never taken: a
+    stretch longer than GAP_MINUTES with no round, or the day before the first
+    round of the diary, is as unknown as a failed hot read -- a basket hot
+    only then would join the control as "not in Hot". So an entry whose day
+    before holds either brings no control at all."""
+    heads = [_headline(1), _headline(3, crypto=("GGG", "HHH", "III"))]
+    entry = _round(T0, [(1, 1, 7.0, "crypto", 100, 7.0)],
+                   [(1, 1.0, 100, 0.1, 7.0), (3, 1.0, 20, 0.1, 1.0)])
+    later = _round(T0 + timedelta(minutes=20), [], [(3, 1.0, 21, 0.1, 1.0)])
+
+    def control_n(day):
+        rows = heads + day + [entry, later]
+        found = hot.entries(rows)
+        assert [e["row"] for e in found] == [1]
+        (short,) = hot.control(rows, found, horizons=(20 / 60,))["crypto"]
+        return short["n"]
+
+    start = T0 - timedelta(hours=27)
+    assert control_n(_quiet(start, T0)) == 1, "a watched day: row 3 is a control"
+    assert control_n(_quiet(T0 - timedelta(hours=23), T0)) == 0, \
+        "the diary began inside the day before the entry"
+    hole = T0 - timedelta(hours=10) - timedelta(minutes=20)
+    assert hole in {start + timedelta(minutes=40 * k) for k in range(60)}
+    assert control_n(_quiet(start, T0, skip={hole})) == 0, \
+        "an 80-minute stretch with no round inside the day before"
+    old = start + timedelta(minutes=80)
+    assert control_n(_quiet(start, T0, skip={old})) == 1, \
+        "a hole older than the day before is outside the question"
 
 
 # NEX-0055, verbatim in the parts that are tested: crypto only, ret_24h >= 6,
