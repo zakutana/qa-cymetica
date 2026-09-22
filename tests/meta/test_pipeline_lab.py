@@ -1491,6 +1491,47 @@ def test_the_notebook_is_outside_git():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_refill_reaches_live_cards_it_has_not_walked_yet():
+    """2026-09-21 21:43 onward, every tick: "0 backtest(s), 56 already known".
+    The seeds were the cards our sampler happened to see and the best of our
+    own readings, and both are deterministic -- once walked, the refill hands
+    back the same questions and the register answers all of them. Their live
+    crypto cards change every day; they are what a dry search refills from."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "lab_refill_live", REPO / "scripts" / "lab.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    live = [{"card": "c1", "title": "new today",
+             "legs": [{"symbol": "NEAR", "weight": 0.5},
+                      {"symbol": "TRUMP", "weight": 0.5}]}]
+    assert module.night_refill(rows=[]) == [], "no readings, no live cards"
+    moves = module.night_refill(rows=[], live=live)
+    symbols = {leg["symbol"] for move in moves for leg in (move["legs"] or [])}
+    assert {"NEAR", "TRUMP"} <= symbols, moves[:3]
+
+    # The listing, crypto only and tradeable: a stock leg cannot be priced by
+    # their backtest, and a card that cannot trade is not a question for now.
+    listing = {"cards": [
+        {"id": "a", "title": "ok", "tradeable_now": True, "has_stock_legs": False,
+         "basket": [{"symbol": "NEAR", "weight": 0.52, "asset_type": "crypto"},
+                    {"symbol": "XRP", "weight": 0.48, "asset_type": "crypto"}]},
+        {"id": "b", "title": "stocks", "tradeable_now": True, "has_stock_legs": True,
+         "basket": [{"symbol": "GNRC", "weight": 0.6, "asset_type": "stock"},
+                    {"symbol": "BTC", "weight": 0.4, "asset_type": "crypto"}]},
+        {"id": "c", "title": "shut", "tradeable_now": False, "has_stock_legs": False,
+         "basket": [{"symbol": "SOL", "weight": 0.5, "asset_type": "crypto"},
+                    {"symbol": "ETH", "weight": 0.5, "asset_type": "crypto"}]},
+        {"id": "d", "title": "one coin", "tradeable_now": True,
+         "has_stock_legs": False,
+         "basket": [{"symbol": "WIF", "weight": 1.0, "asset_type": "crypto"}]}]}
+    seeds = module.live_card_seeds(listing)
+    assert [s["card"] for s in seeds] == ["a"], seeds
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_refill_climbs_from_what_scored_rather_than_from_where_we_started():
     """Otherwise the night re-walks its own first queue for ever.
 

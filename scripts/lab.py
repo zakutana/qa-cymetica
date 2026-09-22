@@ -1288,8 +1288,62 @@ def search_queue(seeds: list[dict], rows: list[dict] | None = None,
     return queue
 
 
+LIVE_CARDS_PAGE = 100
+LIVE_SEED_CAP = 6
+
+
+def live_card_seeds(listing) -> list[dict]:
+    """Their live cards as search seeds: crypto legs only, tradeable now, two
+    legs at least. Pure, over the body of `GET /api/v1/event-cards`.
+
+    A stock leg their backtest cannot price (crypto only, by its own
+    description), and a card that cannot trade is not a question for now.
+    """
+    out = []
+    for card in (listing or {}).get("cards") or []:
+        if not isinstance(card, dict) or card.get("has_stock_legs") \
+                or card.get("tradeable_now") is not True:
+            continue
+        legs = [{"symbol": str(leg["symbol"]).upper(),
+                 "weight": float(leg["weight"])}
+                for leg in card.get("basket") or []
+                if isinstance(leg, dict) and leg.get("symbol")
+                and leg.get("asset_type") == "crypto"
+                and isinstance(leg.get("weight"), (int, float))
+                and leg["weight"] > 0]
+        if len(legs) >= qa_backtests.MIN_LEGS:
+            out.append({"card": str(card.get("id")),
+                        "title": str(card.get("title") or "")[:60],
+                        "legs": legs[:qa_backtests.MAX_LEGS]})
+    return out
+
+
+def _live_card_seeds() -> list[dict]:
+    """One page of their live cards, newest first. Unread is no seeds: the
+    refill then climbs from our readings alone, as it always did."""
+    try:
+        from qa.client import build_client
+        from qa.config import identities, load_dotenv
+        from qa.safety import CURRENT_TIER, EndpointRegistry, SafetyTier
+
+        load_dotenv()
+        ids = identities()
+        identity = ids["trusted"] if ids["trusted"].present else ids["anon"]
+        client = build_client(identity, EndpointRegistry.load(), timeout=60.0)
+        token = CURRENT_TIER.set(SafetyTier.SAFE)
+        try:
+            response = client.get("/api/v1/event-cards", params={
+                "status": "live", "limit": LIVE_CARDS_PAGE})
+        finally:
+            CURRENT_TIER.reset(token)
+        return live_card_seeds(response.json()) if response.status_code == 200 else []
+    except Exception:  # noqa: BLE001 -- an unread listing is not a dry search
+        return []
+
+
 def night_refill(rows: list[dict] | None = None, limit: int = 8,
-                 cap: int = 24, pool: list[str] | None = None) -> list[dict]:
+                 cap: int = 24, pool: list[str] | None = None,
+                 live: list[dict] | None = None) -> list[dict]:
     """The next round, seeded by what actually scored — not by where we began.
 
     `night_moves()` is the neighbourhood of THEIR cards, and it is finite: 168
@@ -1317,8 +1371,16 @@ def night_refill(rows: list[dict] | None = None, limit: int = 8,
         if len(legs) >= qa_backtests.MIN_LEGS:
             seeds.append({"legs": legs,
                           "title": str(row.get("why") or "")[:60]})
+    # And their live cards (2026-09-22): our readings alone are deterministic,
+    # so once walked the refill handed back only what the register knew --
+    # "0 backtest(s), 56 already known" every tick from 21:43 on. Their cards
+    # change every day. A few moves each, so one listing cannot drown the climb.
+    fresh = [move for seed in (live or [])
+             for move in qa_backtests.neighbourhood(
+                 seed, pool or symbol_pool(list(live or []) + seeds),
+                 cap=LIVE_SEED_CAP)]
     if not seeds:
-        return []
+        return fresh
     # The pool is what `add` and `drop` may substitute FROM. Left to the seeds
     # alone it is the winners' own symbols, and the climb can then only
     # reshuffle them: on 2026-09-13 all twenty of the top twenty readings
@@ -1330,7 +1392,7 @@ def night_refill(rows: list[dict] | None = None, limit: int = 8,
     # wider universe (their cards) passes it.
     return [move for seed in seeds
             for move in qa_backtests.neighbourhood(
-                seed, pool or symbol_pool(seeds), cap=cap)]
+                seed, pool or symbol_pool(seeds), cap=cap)] + fresh
 
 
 # What the night writes as a criterion when it opens a room unattended. Ours,
@@ -1958,7 +2020,7 @@ def _tick_doors() -> dict:
         "truth": functools.partial(truth, limit=8),
         "search": _night_search,
         "moves": night_moves,
-        "refill": night_refill,
+        "refill": lambda: night_refill(live=_live_card_seeds()),
         "verdicts": verdicts,
         "fomo_reading": lambda: _sibling("fomo_watch").reading(),
         "hot": _hot_round,
