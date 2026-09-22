@@ -89,7 +89,10 @@ def since_last_full_run() -> str:
     """
     from qa.state import list_runs
 
-    full = [r for r in list_runs() if r.get("selector_full")]
+    # And judged something: `pytest --collect-only tests` is selector_full
+    # with zero results, and tests/repo spawns one every session.
+    full = [r for r in list_runs()
+            if r.get("selector_full") and r.get("results")]
     if not full:
         return ("no run on record ever offered the whole suite -- a narrow "
                 "sweep cannot see a settled row regress")

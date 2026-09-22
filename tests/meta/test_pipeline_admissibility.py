@@ -341,3 +341,34 @@ def test_the_default_run_has_to_have_judged_something_in_the_ledger(tmp_path):
     # the only sensible answer -- the first fold must not be unfoldable.
     assert ledger_mod._run_that_adjudicates({"findings": {}}, runs=empty) \
         == "run-ourselves"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_collect_only_run_is_not_the_last_full_run(tmp_path, monkeypatch):
+    """2026-09-22 17:50 UTC: `open_checks.py --explain` said "last full run
+    0h ago" about run-20260922T174253Z-d7c8c4c3 -- a `pytest --collect-only
+    tests` that tests/repo/test_audit_scope.py spawns, 1207 collected, 0
+    results. `selector_full` is true of it, and that was the only thing the
+    line asked. The ledger's default stopped taking such records on
+    2026-09-20; this reader did not, so the one line that says whether a
+    settled row could have regressed unseen could be reset by any tests/repo
+    run while nothing had been re-checked."""
+    import importlib.util
+
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    runs = tmp_path / "runs"
+    runs.mkdir()
+    (runs / "a.json").write_text(json.dumps(_admissible(
+        "run-full", "2026-09-20T10:00:00+00:00", selector_full=True)),
+        encoding="utf-8")
+    (runs / "b.json").write_text(json.dumps(_admissible(
+        "run-collect-only", "2026-09-22T17:42:58+00:00", selector_full=True,
+        collected=["tests/x.py::test_a"], results=[])), encoding="utf-8")
+
+    path = Path(__file__).resolve().parents[2] / "scripts" / "open_checks.py"
+    spec = importlib.util.spec_from_file_location("open_checks_under_test", path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+
+    said = mod.since_last_full_run()
+    assert "run-full" in said and "run-collect-only" not in said, said
