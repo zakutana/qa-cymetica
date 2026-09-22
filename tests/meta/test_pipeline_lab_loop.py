@@ -2092,6 +2092,28 @@ def test_a_fund_is_marked_not_bought_and_judged_on_its_own_series(
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_board_the_brief_and_resume_read_bot_and_fund_rooms(
+        tmp_path, monkeypatch, capsys):
+    """The plan's own check: `lab.py board` and `resume` over the new rooms.
+    A bot's gate row names `bot:<species>`, a fund's `fund:<symbol>`, where
+    every earlier row named a card -- and resume is the first thing a tick
+    after a /clear runs."""
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    _clonepad(scripts_lab, tmp_path, monkeypatch,
+              _answer("Clone MACD Hunter, and mark AIB-SPACE."),
+              fund_points={"AIB-SPACE": _flat_then(NOW, [64.0, 64.0])})
+    scripts_lab.night_promote()
+
+    # The board is one line per ANSWER: both of its rooms, the bot's gate.
+    (line,) = [scripts_lab._board_line(row) for row in scripts_lab.board_rows()]
+    assert "STR-0001" in line and "STR-0002" in line, line
+    assert "MACD Hunter" in line, line
+    assert scripts_lab.brief()
+    assert scripts_lab.cmd_resume() == 0
+    capsys.readouterr()
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_money_moved_into_a_clone_counts_as_deployed(tmp_path, monkeypatch):
     """The 60% ceiling is measured against what is out. A clone funded with
     practice money holds it until somebody moves it back -- pausing the bot
