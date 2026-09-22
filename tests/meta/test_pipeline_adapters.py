@@ -770,6 +770,16 @@ def test_settle_reads_the_newest_mark_the_way_the_fold_does(tmp_path,
 
     mark("pass", "2026-09-10T20:08:29+00:00")
     mark("fail", "2026-09-10T21:46:08+00:00")
+    # C02, deep pass of 2026-09-22 evening (3/3): the docstring's own path --
+    # the re-sent pass recorded with outcome `unknown` -- was never written
+    # here, so dropping the `accepted` filter stayed green while the unknown
+    # pass became the newest mark and the obligation could never clear.
+    append_event({"type": "verification_outcome",
+                  "at": "2026-09-11T09:00:00+00:00", "by": "agent",
+                  "source": "scripts/verify.py", "finding_id": "CYM-a",
+                  "report_id": 46, "fingerprint": "fp-1", "verdict": "pass",
+                  "outcome": "unknown", "run_id": "run-0", "tree_sha": "t",
+                  "checked_at": "2026-09-11T09:00:00+00:00", "evidence_id": "e"})
 
     assert verify.settle(dict(item), "evidence-1") is True, (
         "their last accepted word is the fail, so the pass is owed and has "
@@ -827,6 +837,11 @@ def test_the_correction_we_send_says_which_of_the_three_things_happened():
     claimed = verify.body({**base, "correction_reason": "fix_claimed"})["evidence"]
     assert "a fix was claimed" in claimed, claimed
     assert "accepted and paid" not in claimed, claimed
+    # C03, deep pass of 2026-09-22 evening (3/3): the default wording holds
+    # "a fix was claimed" too, so deleting this branch stayed green. Its own
+    # sentence says it without the disjunction.
+    for default_only in ("either a fix was claimed", "sent you a pass"):
+        assert default_only not in claimed, f"fell back to the default: {claimed[:300]}"
 
     # No reason recorded says LESS, not something false. Each sentence above
     # asserts a specific thing about what they did, so the narrowest of them
