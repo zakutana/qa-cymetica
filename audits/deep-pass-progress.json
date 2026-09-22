@@ -15,8 +15,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "4fc389d1"
     },
     {
       "id": "R02",
@@ -57,8 +57,8 @@
         "t3": "not"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "a49f5d95"
     },
     {
       "id": "R05",
@@ -85,8 +85,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "b2aa49e0"
     },
     {
       "id": "R07",
@@ -155,8 +155,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "bac45a82"
     },
     {
       "id": "A02",
@@ -169,8 +169,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "8c160d53"
     },
     {
       "id": "A03",
@@ -183,8 +183,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "c7ac1a82"
     },
     {
       "id": "A04",
@@ -197,8 +197,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "a49f5d95"
     },
     {
       "id": "A05",
@@ -211,8 +211,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "8421c227"
     },
     {
       "id": "A06",
@@ -225,8 +225,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "b2aa49e0"
     },
     {
       "id": "B01",
@@ -239,8 +239,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "c685e641"
     },
     {
       "id": "B02",
@@ -253,8 +253,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "c685e641"
     },
     {
       "id": "B03",
@@ -267,8 +267,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "c685e641"
     },
     {
       "id": "B04",
@@ -281,8 +281,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "c685e641"
     },
     {
       "id": "B05",
@@ -295,8 +295,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "c685e641"
     },
     {
       "id": "B06",
@@ -309,8 +309,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "c685e641"
     },
     {
       "id": "B07",
@@ -323,8 +323,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "c685e641"
     },
     {
       "id": "B08",
@@ -337,8 +337,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "c685e641"
     },
     {
       "id": "C01",
@@ -351,8 +351,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "0d750746"
     },
     {
       "id": "C02",
@@ -365,8 +365,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "fca95c53"
     },
     {
       "id": "C03",
@@ -379,8 +379,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "fca95c53"
     },
     {
       "id": "C04",
@@ -393,8 +393,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "bac45a82"
     },
     {
       "id": "C05",
@@ -407,8 +407,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "1d5765ae"
     },
     {
       "id": "C06",
@@ -421,8 +421,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "01b59261"
     },
     {
       "id": "C07",
@@ -435,8 +435,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "728a6ce6"
     },
     {
       "id": "C08",
@@ -449,8 +449,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "a49f5d95"
     },
     {
       "id": "C09",
@@ -463,8 +463,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "7f795625"
     },
     {
       "id": "C10",
@@ -477,8 +477,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "b6413dd3"
     }
   ],
   "review": {
@@ -494,5 +494,20 @@
     "end": null,
     "reason": null
   },
-  "finished": false
+  "finished": false,
+  "rule_changes": [
+    {
+      "id": "RC1",
+      "what": "qa/safety.py: the REST required_flags floor needs the flag to be True itself (not truthy), and a JSON-RPC batch body is checked call by call instead of returning unread at PROBE and MUTATE",
+      "why": "C01 (3/3): paper 'false' passed an event-card buy at MUTATE, and a batch carried place_arena_order mode 'live' to the transport; the MCP paper gate had been fixed the same afternoon and these two doors had not",
+      "votes": {
+        "t1": "no",
+        "t2": "no",
+        "t3": "no"
+      },
+      "test": "tests/meta/test_guard_is_real.py::test_a_string_flag_or_a_batch_does_not_carry_a_live_order_past_the_guard",
+      "commit": "0d750746",
+      "handover": true
+    }
+  ]
 }
