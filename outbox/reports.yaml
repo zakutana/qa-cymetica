@@ -3143,6 +3143,44 @@ reports:
       response block. It goes green when the clone example carries
       source_type and source_id.
 
+  - key: nexus-arena-routes-unpublished
+    findings: [CYM-every_route_nexus_tells_an_agent_to_call_is_published]
+    severity: low
+    category: documentation
+    url: https://cymetica.com/api/v1/arena/state
+    title: "Nexus sends agents to three Arena REST routes /openapi-public.json does not publish, and one of them answers 404"
+    expected: >
+      A REST route your own AI tells an agent to call is one the agent can
+      find in /openapi-public.json, the schema llms.txt tells agent builders
+      to import -- and one the server serves.
+    actual: >
+      NEX-0076 (ask_nexus_deep, answered 2026-09-22 18:35:51 UTC), asked how
+      the Arena settles, names REST twins for its Arena tools: POST
+      /api/v1/arena/order, GET /api/v1/arena/state and GET
+      /api/v1/arena/positions. None of the three is in /openapi-public.json,
+      whose only Arena path is /api/v1/arena/market. Read anonymously at
+      19:5x UTC: /api/v1/arena/state answers 404 {"detail":"Not Found"},
+      /api/v1/arena/positions answers 401 "Authentication required", and
+      /api/v1/arena/order answers 405 to a GET -- so two are served and
+      unpublished, and the one named for reading the Arena's state does not
+      exist.
+    steps:
+      - 'ask_nexus_deep "How does the CyMetica-42 Arena settle? ... Name the tool that shows it." -> the answer names "REST twin: GET /api/v1/arena/state", "GET /api/v1/arena/positions" and "REST POST /api/v1/arena/order"'
+      - 'GET https://cymetica.com/openapi-public.json -> the only path containing "arena" is /api/v1/arena/market'
+      - 'GET https://cymetica.com/api/v1/arena/state -> 404 {"detail":"Not Found"}'
+    body: >
+      An agent that follows the answer either reaches a 404 or has to call
+      routes it cannot find in the schema it was told to import. The MCP
+      tools the same answer names (get_arena_state, get_arena_positions,
+      place_arena_order) are served; it is the REST twins that are not where
+      the answer says. The same gap was relayed on Telegram on 2026-09-21 for
+      another route (MSG-0039).
+
+      Our check reads the newest recorded Nexus answer that names a route and
+      fails when a named /api/v1 path is not in /openapi-public.json. It does
+      not test whether the route works. It goes green when the routes Nexus
+      names are published, or when Nexus names the ones that are.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in

@@ -1791,6 +1791,7 @@
 {"archive": "evidence-2026-09", "bytes": 277510, "call": "GET https://cymetica.com/api/v1/headlines?", "id": "3fa0eddf45889430b7e3b668df8afb3ab4977d23b6363c612fd9b714ad167f32", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 37523, "call": "GET https://cymetica.com/api/v1/build-it-better/apps/leaderboard?days,sort", "id": "3fa1e611f3ebe244cc72ada76ff9608d981a70a66403d16da6c855bcb8be507e", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 4977, "call": "GET https://cymetica.com/api/v1/research-backtest/themes?", "id": "3fa4a3f9c3c008036ab4eb88b8ae1aadbf3a83393ee83633f817257072cbc10d", "why": "row"}
+{"archive": "", "bytes": 8445, "call": "POST https://cymetica.com/api/v1/bounty/reports?", "id": "3faa0ef8a9663e8c8cac50d8af50afb96e190fe7f1cc773aa9479b9fc693d192", "why": "their-words"}
 {"archive": "evidence-2026-09", "bytes": 6103, "call": "GET https://cymetica.com/api/v1/crypto-outlook/XRP.txt?", "id": "3fc09744cf120fa4ec6c6e395cd4fba49dfd50d39ce92c3b86684ca6a6ff3125", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 9668, "call": "POST https://cymetica.com/api/v1/bounty/qa-agent/ask?", "id": "3fc5934131584323d9033a73110f9cdc05b3eb3f9a984bcbaf709ebdfecc7e5a", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 4252, "call": "GET https://cymetica.com/api/v1/bounty/my-reports?", "id": "3fcf1a36a58385c21173cf57766d31206e026707bca71230e4530a1b45bbd236", "why": "promised"}
