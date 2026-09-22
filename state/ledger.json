@@ -12819,7 +12819,7 @@
           "run_id": "run-20260922T071603Z-e6ea6f06",
           "at": "2026-09-22T07:35:06+00:00"
         },
-        "pinned_fingerprint": null
+        "pinned_fingerprint": "676cc30bfc504aeb92af9fdacb6c67746e15bee58df28dd8bba0edfea9b51103"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -12918,6 +12918,7 @@
   "run_id": "run-20260922T071603Z-e6ea6f06",
   "run_level": "V",
   "updated_at": "2026-09-22T07:35:06+00:00",
+  "run_carried": true,
   "counts": {
     "WITHDRAWN": 13,
     "VERIFIED FIXED": 52,
@@ -12928,7 +12929,7 @@
     "NEVER SEEN BROKEN": 1
   },
   "events_head": {
-    "seq": 2548,
-    "chain": "0cc59b5f44c3d04146b701e607b6b477255328b920ee154ae76bc323f30f5fdd"
+    "seq": 2549,
+    "chain": "4692ff8bf8e49af3616b82ddff09686954404a77458148d29f03c76dd8d6e5d8"
   }
 }
