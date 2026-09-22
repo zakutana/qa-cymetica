@@ -268,6 +268,20 @@ class SafetyTransport(httpx.BaseTransport):
                 )
             return
 
+        # A JSON-RPC batch is a list of calls, and every one is held to the rule
+        # a single call is. Until 2026-09-22 any body that was not an object
+        # returned here unread at PROBE and MUTATE, so a batch carrying
+        # place_arena_order with mode 'live' reached the transport (C01).
+        if isinstance(payload, list):
+            if tier is SafetyTier.SAFE:
+                raise SafetyViolation("SAFE test sent a non-object JSON-RPC body.")
+            for item in payload:
+                self._check_rpc_call(item, tier)
+            return
+        self._check_rpc_call(payload, tier)
+
+    def _check_rpc_call(self, payload, tier) -> None:
+        """One JSON-RPC call, alone or as a member of a batch."""
         if not isinstance(payload, dict):
             if tier is SafetyTier.SAFE:
                 raise SafetyViolation("SAFE test sent a non-object JSON-RPC body.")
@@ -407,7 +421,10 @@ class SafetyTransport(httpx.BaseTransport):
                 f"MUTATE body for {rule.id} is not a JSON object, so the "
                 f"{', '.join(sorted(declared))} flag it must carry cannot be read."
             )
-        missing = sorted(flag for flag in declared if not payload.get(flag))
+        # `True` itself, not truthy: "false" and "0" are truthy strings a
+        # server may coerce to false (C01, deep pass of 2026-09-22 evening --
+        # the MCP paper gate had been fixed the same afternoon, this was not).
+        missing = sorted(flag for flag in declared if payload.get(flag) is not True)
         if missing:
             raise SafetyViolation(
                 f"MUTATE {rule.id} without {', '.join(missing)}. That flag is "

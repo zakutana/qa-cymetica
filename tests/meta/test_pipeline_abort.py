@@ -179,7 +179,15 @@ PINNED = {
     # and a value gate the exact value (components.yaml:
     # `place_arena_order: {mode: paper}`). The file differs by one added test,
     # which went red against a mutant restoring the truthy reading.
-    "test_guard_is_real.py": "c715864aa579b0fcf11b2a26c5654d34d3b9fb6d9e68a0910eef989f15394a0f",
+    #
+    # Re-derived an EIGHTH time, 2026-09-22 evening, by the deep pass (C01,
+    # 3/3), and again only adding enforcement: the REST floor's
+    # `required_flags` read the same truthy `not payload.get(flag)` the MCP
+    # gate had just stopped reading, and `_check_rpc` returned unread on a
+    # JSON-RPC body that was a list, so a batch carried a live
+    # place_arena_order past it. One added test, red on the string flag and,
+    # with that fixed, red against a mutant that skipped the batch again.
+    "test_guard_is_real.py": "2b27825ad55022281587d6eafc2e5e86463ca31a4aa0868c233f928fea55a839",
 }
 
 

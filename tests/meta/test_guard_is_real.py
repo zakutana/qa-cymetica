@@ -737,6 +737,7 @@ def test_a_paper_gate_reads_the_value_not_that_something_is_there():
         CURRENT_TIER.reset(token)
 
     # Paper is still not free: below MUTATE the arena order is refused too.
+    # (The REST floor and a JSON-RPC batch: the next test.)
     for tier in (SafetyTier.SAFE, SafetyTier.PROBE):
         token = CURRENT_TIER.set(tier)
         try:
@@ -745,6 +746,62 @@ def test_a_paper_gate_reads_the_value_not_that_something_is_there():
         finally:
             CURRENT_TIER.reset(token)
     client.http.close()
+
+
+@qa(component="meta.guard", tier=SafetyTier.SAFE, surface="meta")
+def test_a_string_flag_or_a_batch_does_not_carry_a_live_order_past_the_guard():
+    """C01, deep pass of 2026-09-22 evening (3/3). Two doors the MCP paper
+    gate's fix of the same afternoon left open.
+
+    The REST floor, `required_flags`, still read `not payload.get(flag)`: a
+    `paper` of `"false"` -- or `"0"` -- is truthy, reads as false to a server
+    that coerces strings, and passed an event-card buy at MUTATE. The flag has
+    to be `True` itself, the rule the MCP gate now holds.
+
+    And `_check_rpc` returned early on any body that was not a JSON object, at
+    PROBE and MUTATE alike. A JSON-RPC batch is a list, so
+    `[{"method": "tools/call", "params": {"name": "place_arena_order",
+    "arguments": {"mode": "live", ...}}}]` reached the transport unread. Every
+    call in a batch is held to the rule a single call is."""
+    registry = EndpointRegistry.load()
+    registry.mutate_enabled = True
+    registry.mutate_allowed_hosts = frozenset({"cymetica.com"})
+    rest = _deaf_client(registry=registry)
+    mcp = _deaf_mcp_client(registry=registry)
+    buy = "https://cymetica.com/api/v1/event-cards/42/buy"
+
+    def call(tool, arguments):
+        return {"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+                "params": {"name": tool, "arguments": arguments}}
+
+    live = call("place_arena_order", {"team_symbol": "BLUE", "side": "buy",
+                                      "price": 0.5, "size": 1, "mode": "live"})
+    token = CURRENT_TIER.set(SafetyTier.MUTATE)
+    try:
+        for spelled in ("false", "0", "true", 1):
+            with pytest.raises(SafetyViolation):
+                rest.post(buy, json={"amount_usdc": 10, "paper": spelled})
+        with pytest.raises(AssertionError, match="THE GUARD LET IT THROUGH"):
+            rest.post(buy, json={"amount_usdc": 10, "paper": True})
+
+        with pytest.raises(SafetyViolation):
+            mcp.http.post("", json=[live])
+        with pytest.raises(SafetyViolation):
+            mcp.http.post("", json=[call("get_event_card_info", {}), live])
+        # A batch of reads is still a read.
+        with pytest.raises(AssertionError, match="THE GUARD LET IT THROUGH"):
+            mcp.http.post("", json=[call("get_event_card_info", {})])
+    finally:
+        CURRENT_TIER.reset(token)
+
+    token = CURRENT_TIER.set(SafetyTier.PROBE)
+    try:
+        with pytest.raises(SafetyViolation):
+            mcp.http.post("", json=[live])
+    finally:
+        CURRENT_TIER.reset(token)
+    rest.close()
+    mcp.http.close()
 
 
 @qa(component="meta.guard", tier=SafetyTier.SAFE, surface="meta")
