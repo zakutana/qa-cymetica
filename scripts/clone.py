@@ -331,7 +331,7 @@ def clone(source_type: str, source_id: str, name: str | None,
         "is_paper": served.get("is_paper"),
         "is_trading": served.get("is_trading"),
         "evidence_id": evidence,
-        "response": json.dumps(served)[:2000],
+        "response": _recorded(response, served)[:2000],
     }
     _append(outcome)
     _append({"id": clone_id, "type": "after", **_snapshot(client)})
@@ -410,7 +410,7 @@ def fund(instance_id: str, amount: float, confirm: bool) -> dict:
     _append({"id": fund_id, "type": "outcome", "at": _now(), "kind": "fund",
              "outcome": said,
              "http_status": response.status_code, "evidence_id": evidence,
-             "response": json.dumps(served)[:2000]})
+             "response": _recorded(response, served)[:2000]})
     after = _snapshot(client)
     _append({"id": fund_id, "type": "after", **after})
     client.close()
@@ -446,6 +446,23 @@ def _served(response) -> tuple[dict, str]:
         return unwrap(response.json()), "accepted"
     except ValueError:
         return {"unreadable_body": str(getattr(response, "text", ""))[:300]}, "unknown"
+
+
+def _recorded(response, served: dict) -> str:
+    """The record's `response`: what they said, whatever the status.
+
+    `served` is empty on a refusal, on purpose -- an error body carries no
+    instance id or paper flag to read. But until 2026-09-22 the record was
+    `json.dumps(served)` on every path, so every refusal read `{}`: CLN-0003's
+    401 became "a bare 401 with an empty body" in #89, and CLN-0017's 400
+    nearly became a second report built on the same nothing.
+    """
+    if response.status_code == 200:
+        return json.dumps(served)
+    try:
+        return json.dumps(response.json(), ensure_ascii=False)
+    except ValueError:
+        return str(getattr(response, "text", ""))
 
 
 def _instance(client, instance_id: str) -> dict:
@@ -534,7 +551,7 @@ def enable(instance_id: str, confirm: bool, enabled: bool = True) -> dict:
              "outcome": said,
              "http_status": response.status_code,
              "evidence_id": _capture(response),
-             "response": json.dumps(served)[:1200]})
+             "response": _recorded(response, served)[:1200]})
     # The bot may be running by now, so a re-read that fails must not end
     # the record: until the deep pass of 2026-09-11 it raised "Nothing is
     # started on an unreadable answer" about a bot just started, and the

@@ -187,6 +187,63 @@ def test_a_200_we_cannot_read_still_gets_its_outcome(tmp_path, monkeypatch):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_refusal_is_recorded_in_their_words(tmp_path, monkeypatch):
+    """CLN-0017, 2026-09-22 13:39 UTC: a paper clone refused HTTP 400, and the
+    record said `"response": "{}"`. NEXT.md then planned a report about a
+    refusal "with an empty body". The capture held
+    `{"detail": "Invalid clone request. Please try again."}` -- `_served`
+    returned `{}` for every status but 200, and that `{}` is what went into
+    the record.
+
+    The same line wrote CLN-0003 on 2026-09-10: `/fund` refused 401 and the
+    record said `{}`, so #89 told Cymetica the refusal was "a bare 401 with an
+    empty body". It carried `UNAUTHORIZED` and "Valid JWT token required".
+
+    The fields read off a SUCCESS stay empty on a refusal -- an error body
+    carries no instance id -- but `response` is what they said, whatever the
+    status."""
+    import ast
+
+    mod = _clone(tmp_path, monkeypatch)
+    said = {"detail": "Invalid clone request. Please try again."}
+
+    class Client:
+        def post(self, *args, **kwargs):
+            return _Response(400, said)
+
+        def close(self):
+            pass
+
+    _offline(mod, monkeypatch, Client())
+    mod.clone("wta_species", "23441934", None, None, confirm=True)
+    outcome = [r for r in mod.load() if r.get("type") == "outcome"]
+    assert len(outcome) == 1, outcome
+    row = outcome[0]
+    assert (row["outcome"], row["http_status"]) == ("rejected", 400)
+    assert row["clone_instance_id"] is None and row["is_paper"] is None
+    assert "Invalid clone request" in row["response"], (
+        f"their refusal was recorded as {row['response']!r}, not in their words")
+
+    # Nested, as /fund answered on 2026-09-10, and a body that is not JSON.
+    nested = {"detail": {"error": {"code": "UNAUTHORIZED",
+                                   "message": "Valid JWT token required"}}}
+    assert "Valid JWT token required" in mod._recorded(_Response(401, nested), {})
+    assert "bad gateway" in mod._recorded(_Response(502, readable=False), {})
+
+    # And fund() and enable() write theirs through the same door: none of the
+    # three may put `json.dumps(served)` into a record again.
+    tree = ast.parse((REPO / "scripts" / "clone.py").read_text(encoding="utf-8"))
+    for fn in (n for n in ast.walk(tree)
+               if isinstance(n, ast.FunctionDef) and n.name in ("clone", "fund", "enable")):
+        dumped = [c.lineno for c in ast.walk(fn) if isinstance(c, ast.Call)
+                  and getattr(c.func, "attr", None) == "dumps"
+                  and any(getattr(a, "id", None) == "served" for a in c.args)]
+        assert not dumped, (
+            f"{fn.name}() records json.dumps(served) at line(s) {dumped}: "
+            f"`served` is empty on a refusal, so the record loses their words")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_bot_switched_on_keeps_its_record_when_the_reread_fails(tmp_path, monkeypatch):
     """R05, deep pass of 2026-09-11. After toggle-trading answered 200, a
     failed my-clones re-read raised "Nothing is started on an unreadable
