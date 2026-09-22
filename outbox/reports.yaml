@@ -3107,6 +3107,42 @@ reports:
       the key was not accepted on /fund -- stands, and you fixed it the same
       day.
 
+  - key: api-docs-clone-example-missing-required
+    findings: [CYM-every_request_example_on_api_docs_carries_what_its_route_requires]
+    severity: low
+    category: documentation
+    url: https://cymetica.com/api-docs
+    title: "The /api-docs example for POST /api/v1/cloned-bots/clone sends bot_id; the route requires source_type and source_id"
+    expected: >
+      A curl example on /api-docs is a request its route accepts.
+      /openapi-public.json -- the schema llms.txt tells agent builders to
+      import -- gives POST /api/v1/cloned-bots/clone a CloneBotRequest body
+      whose required fields are source_type and source_id.
+    actual: >
+      /api-docs shows curl -X POST https://cymetica.com/api/v1/cloned-bots/clone
+      -d '{"bot_id": "bot_abc123", "is_paper": true}'. That body carries
+      neither required field, and bot_id is not a CloneBotRequest property at
+      all, so it is a request your own schema documents as a 422
+      (HTTPValidationError). The response block under it ({"clone_id",
+      "source_bot_id", "simulated_balance": 10000.00, "status": "active"}) is
+      not what the route returns either: llms.txt says a clone "starts PAUSED
+      with 0 balance", and the live response carries id, source_id, is_paper
+      and is_trading false. The other five request examples on the page that
+      target a route the schema publishes carry every field it requires.
+    steps:
+      - 'GET https://cymetica.com/api-docs -> the code block under POST /api/v1/cloned-bots/clone sends {"bot_id": "bot_abc123", "is_paper": true}'
+      - 'GET https://cymetica.com/openapi-public.json -> components.schemas.CloneBotRequest.required = ["source_type", "source_id"]; its properties are source_type, source_id, custom_name, is_paper, paper'
+      - 'GET https://cymetica.com/api/v1/cloned-bots/available -> the source_type (by group) and source_id (per bot) the example should carry'
+    body: >
+      The right shape is one GET away, but an agent that learns the route from
+      /api-docs sends bot_id and gets a validation error back.
+
+      Our check reads every curl example with a JSON body on /api-docs,
+      matches it to its route in /openapi-public.json, and fails when a field
+      the route requires is left out. It judges the request only, not the
+      response block. It goes green when the clone example carries
+      source_type and source_id.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in
