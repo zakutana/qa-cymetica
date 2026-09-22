@@ -186,8 +186,9 @@ def test_resolve_checkpoints_only_what_is_due_and_computes_our_own_return(
             {"address": "0xabc", "price_usd": 0.003,
              "change_h1": 999.0}]})  # their rolling window -- must be ignored
 
-    # Not due yet, thirty minutes in.
-    early = mod.resolve(_client(handler), now=T0 + timedelta(minutes=30))
+    # Not due yet, ten minutes in. (Thirty until 2026-09-22, when +30 min
+    # became a horizon of its own.)
+    early = mod.resolve(_client(handler), now=T0 + timedelta(minutes=10))
     assert early["checked"] == 0
 
     due = mod.resolve(_client(handler), now=T0 + timedelta(hours=1, minutes=1))

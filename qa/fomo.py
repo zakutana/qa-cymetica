@@ -40,14 +40,30 @@ from statistics import median
 # indistinguishable from one that never moved. A day is where it stops --
 # these are bonding-curve launches, and what happens after 24h is a different
 # question from whether the signal called the move.
-HORIZONS_HOURS = tuple(float(h) for h in range(1, 25))
+#
+# And +15 and +30 minutes before the first hour (2026-09-22). A stop can only
+# fire at a point we read, so with the first point at an hour every stop in
+# `stop_study` was an hour late, and the median first verified price sat 67
+# minutes after the flag. These two narrow both.
+HORIZONS_HOURS = (0.25, 0.5) + tuple(float(h) for h in range(1, 25))
 
 # How late a checkpoint may still be taken. The loop ticks every twenty
 # minutes and their memecoin-terminal caches for three, so an hour is either
 # caught close to its mark or not at all -- filling it later would file a
 # price under a time it was not read at. Deliberately not generous.
+#
+# This is the CAP. Each horizon's own window is half of it (`due_tolerance`):
+# a +15 min checkpoint read forty minutes late is a +55 min reading, and the
+# 0.75 h an hourly mark can afford would have filed it under +15.
 DUE_TOLERANCE_HOURS = 0.75
 DEFAULT_HIT_THRESHOLD = 20.0
+
+
+def due_tolerance(hours: float) -> float:
+    """How late a checkpoint at `hours` may be taken: half the horizon, never
+    more than `DUE_TOLERANCE_HOURS`. The writer offers a horizon only inside
+    it and the reader drops what falls outside it -- one rule, both sides."""
+    return min(float(hours) / 2.0, DUE_TOLERANCE_HOURS)
 
 
 def _at(value) -> datetime | None:
@@ -103,7 +119,7 @@ def due_checkpoints(signals: list[dict], done: dict[str, set[str]], now=None,
     files it under the horizon it is handed, so offering a horizon that came
     round hours ago would write today's price into a slot it was never
     measured in. A horizon is due only while it is still within
-    `DUE_TOLERANCE_HOURS`; after that it stays an unfilled gap, which
+    `due_tolerance(horizon)`; after that it stays an unfilled gap, which
     `curves()` draws as a break in the line. Found 2026-09-13 when the
     horizons went hourly and 85 seven-hour-old signals suddenly had hours
     2 to 5 "due".
@@ -121,7 +137,7 @@ def due_checkpoints(signals: list[dict], done: dict[str, set[str]], now=None,
             if label in recorded:
                 continue
             ripe = when + timedelta(hours=hours)
-            if ripe <= moment < ripe + timedelta(hours=DUE_TOLERANCE_HOURS):
+            if ripe <= moment < ripe + timedelta(hours=due_tolerance(hours)):
                 out.append((signal, label))
     return out
 
@@ -146,7 +162,7 @@ def _hours(label) -> float | None:
 
 
 def read_late(signal: dict | None, checkpoint: dict,
-              tolerance: float = DUE_TOLERANCE_HOURS) -> bool:
+              tolerance: float | None = None) -> bool:
     """Was this checkpoint read further from its own label than the writer
     would ever have allowed?
 
@@ -164,6 +180,8 @@ def read_late(signal: dict | None, checkpoint: dict,
     fired = _at((signal or {}).get("at"))
     if hours is None or taken is None or fired is None:
         return False
+    if tolerance is None:
+        tolerance = due_tolerance(hours)
     return abs((taken - fired).total_seconds() / 3600.0 - hours) > tolerance
 
 
@@ -539,9 +557,15 @@ def curves(rows: list[dict], limit: int | None = 40,
             continue
         label = str(row.get("horizon") or "")
         try:
-            hour = int(float(label.rstrip("h")))
+            hours = float(label.rstrip("h"))
         except ValueError:
             continue
+        # The +15/+30 min points are for `stop_study`. This is the hourly
+        # picture, drawn 24 hours wide; int(0.25) is hour 0, a slot the page
+        # never draws and two readings would overwrite.
+        if hours < 1:
+            continue
+        hour = int(hours)
         seen.setdefault(token, {})[hour] = row.get("return_pct")
         if isinstance(row.get("price_usd"), (int, float)):
             priced.setdefault(token, {})[hour] = row["price_usd"]
@@ -727,3 +751,242 @@ def compare(rows: list[dict], multiple: float = 3.0, within_hours: float = 72.0,
     hot, control = out["hot"]["rate"], out["control"]["rate"]
     out["lift"] = (hot / control) if hot is not None and control else None
     return out
+
+
+# --- an entry read after the signal ------------------------------------------
+#
+# 748 of 2571 signals carried no price when they fired (2026-09-22): the
+# terminal did not know the coin yet. `fomo_watch.resolve()` quotes each of
+# them once more on the next round and writes an `entry` row with the moment
+# IT was read. No reader here takes that price for the signal's: the horizons
+# are counted from the signal, so a return from a later entry would credit it
+# with minutes it never had. It is counted (`entries`) and nothing else, until
+# a reader measures its own horizons from the entry's `at`.
+
+# Only inside the first hour. Past it the coin has been read at +15 and +30
+# min and at the hour by the checkpoints, and a retry is no longer an entry --
+# and the backlog of old unpriced signals is not re-quoted on the first round.
+ENTRY_RETRY_HOURS = 1.0
+
+
+def entry_retries(signals: list[dict], retried_keys, now=None) -> list[dict]:
+    """The unpriced signals still young enough to be quoted again, and not
+    already quoted again."""
+    moment = now or datetime.now(timezone.utc)
+    retried = set(retried_keys or ())
+    out = []
+    for signal in signals or []:
+        price, key = signal.get("price_usd"), signal.get("key")
+        fired = _at(signal.get("at"))
+        if not key or key in retried or fired is None:
+            continue
+        if isinstance(price, (int, float)) and price > 0:
+            continue
+        if fired <= moment < fired + timedelta(hours=ENTRY_RETRY_HOURS):
+            out.append(signal)
+    return out
+
+
+def entries(rows: list[dict]) -> dict:
+    """How many signals fired with no price, how many were quoted again, how
+    many of those the retry priced, and how long after the signal."""
+    signals = _signals(rows)
+    unpriced = {k for k, s in signals.items()
+                if not (isinstance(s.get("price_usd"), (int, float))
+                        and s["price_usd"] > 0)}
+    first: dict[str, dict] = {}
+    for row in rows or []:
+        if row.get("type") == "entry" and row.get("key") in unpriced:
+            first.setdefault(row["key"], row)
+    priced = {k: r for k, r in first.items()
+              if isinstance(r.get("price_usd"), (int, float))
+              and r["price_usd"] > 0}
+    delays = []
+    for key, row in priced.items():
+        fired, read = _at(signals[key].get("at")), _at(row.get("at"))
+        if fired is not None and read is not None:
+            delays.append((read - fired).total_seconds() / 60.0)
+    return {"signals": len(signals), "unpriced_at_signal": len(unpriced),
+            "retried": len(first), "priced_on_retry": len(priced),
+            "median_delay_min": median(delays) if delays else None}
+
+
+# --- the stop study -----------------------------------------------------------
+#
+# NEXT.md, 2026-09-21: with no stop the gross expectation per hot signal was
+# -0.72 %, with a -10 % stop +8.3 % -- and that simulation lived in a session.
+# This is it in code, over the same diary, with what makes it an upper bound
+# said beside every number it returns.
+
+# Our clip: the lab's stake per room on 2026-09-21 (0.48 % of the book, 1 189
+# USDC), the figure NEXT.md held against the radar's depth.
+DEFAULT_CLIP_USD = 1189.0
+# What `max_buy_5pct_usd` means: the buy that moves the price 5 %.
+RADAR_IMPACT_PCT = 5.0
+# Charged to a signal the radar published no depth for. A clip that fits
+# inside `max_buy_5pct_usd` pays at most 5 % a side, so 10 % is the round trip
+# NEXT.md reasoned with -- the ceiling for a clip that fits, a floor for one
+# that does not.
+DEFAULT_ROUND_TRIP_COST_PCT = 10.0
+
+UNMEASURED_FILLS = (
+    "fills between checkpoints are unmeasured: a stop or a target is taken "
+    "at the first reading past it, not at its level, and the entry is the "
+    "price quoted when the radar flagged -- so every positive figure is an "
+    "upper bound")
+
+
+def round_trip_cost(signal: dict, clip_usd: float = DEFAULT_CLIP_USD
+                    ) -> tuple[float, bool]:
+    """Percent lost buying and selling `clip_usd`, from the depth the radar
+    published when it fired, and whether it had to be assumed.
+
+    Price impact grows with size about linearly while the trade is small
+    against the pool, so a clip a quarter of `max_buy_5pct_usd` moves the
+    price about a quarter of 5 %, each way. Swap fees are not in it.
+    """
+    depth = signal.get("radar_max_buy_5pct_usd")
+    if isinstance(depth, (int, float)) and depth > 0:
+        return 2.0 * RADAR_IMPACT_PCT * clip_usd / depth, False
+    return DEFAULT_ROUND_TRIP_COST_PCT, True
+
+
+# How far a pair's age may drift from the clock between two readings before
+# it is a different pair. Read off the real diary 2026-09-22: PUMP's age
+# flipped 37.2 M <-> 17.6 M seconds hour by hour with its price 0.004 <-> 21,
+# and 149 of 2481 read signals broke this way -- while `nub`'s rug (price
+# /480, liquidity to three cents) kept time on one pair.
+PAIR_AGE_SLACK_SECONDS = 3600.0
+
+
+def pair_changed(readings: list[dict]) -> bool:
+    """Did memecoin-terminal answer a different PAIR somewhere along these
+    readings (the signal row first, then its checkpoints in order)? A reading
+    without `age_seconds` or a readable `at` cannot say, and is skipped."""
+    previous = None
+    for row in readings:
+        age, when = row.get("age_seconds"), _at(row.get("at"))
+        if not isinstance(age, (int, float)) or when is None:
+            continue
+        if previous is not None:
+            elapsed = (when - previous[1]).total_seconds()
+            if abs((age - previous[0]) - elapsed) > PAIR_AGE_SLACK_SECONDS:
+                return True
+        previous = (age, when)
+    return False
+
+
+def stop_study(rows: list[dict], stop_pct: float, target_pct: float | None = None,
+               cost_pct: float | None = None, now=None,
+               clip_usd: float = DEFAULT_CLIP_USD, top: int = 5,
+               min_liquidity: float = MIN_LIQUIDITY_USD,
+               min_volume: float = MIN_VOLUME_H24) -> dict:
+    """Buy every hot signal at its own price, sell at the first checkpoint at
+    or past the stop (`stop_pct` below entry, a magnitude) or the target
+    (`target_pct` above it), AT THAT CHECKPOINT'S PRICE; otherwise at the last
+    checkpoint of the day.
+
+    Through `usable()` like every reader here, so a checkpoint filed under an
+    hour it was not read in is not on the path and a coin nobody could trade
+    is not a trade. Only windows that have closed: an open one shows its
+    early stops and none of its late recoveries. The entry is the signal's
+    own price -- a retried `entry` row is never taken for it. A path on which
+    their terminal answered a different pair (`pair_changed`) is counted and
+    left out.
+
+    `cost_pct` is a fixed round trip for every trade; left out, each trade
+    pays `round_trip_cost` from the radar's published depth.
+    """
+    moment = now or datetime.now(timezone.utc)
+    stop = abs(float(stop_pct))
+    last = max(HORIZONS_HOURS)
+    kept, filtered = usable(rows, min_liquidity, min_volume)
+    signals = _signals(kept)
+
+    paths: dict[str, list[tuple[float, float]]] = {}
+    read: dict[str, list[tuple[float, dict]]] = {}
+    for row in kept:
+        if row.get("type") != "checkpoint" or row.get("key") not in signals:
+            continue
+        hours, price = _hours(row.get("horizon")), row.get("price_usd")
+        if hours is None:
+            continue
+        read.setdefault(row["key"], []).append((hours, row))
+        if isinstance(price, (int, float)):
+            paths.setdefault(row["key"], []).append((hours, price))
+
+    excluded = {"window_open": 0, "unpriced": 0, "unread": 0,
+                "pair_changed": 0}
+    trades = []
+    for key, signal in signals.items():
+        fired = _at(signal.get("at"))
+        if fired is None or fired + timedelta(
+                hours=last + due_tolerance(last)) > moment:
+            excluded["window_open"] += 1
+            continue
+        entry = signal.get("price_usd")
+        if not isinstance(entry, (int, float)) or entry <= 0:
+            excluded["unpriced"] += 1
+            continue
+        path = sorted(paths.get(key) or [])
+        if not path:
+            excluded["unread"] += 1
+            continue
+        # Their terminal answering another pair for the same address is not
+        # a move of this coin: PUMP at 0.004 and 21 in alternate hours put
+        # +31 620 % a trade on the first run of this study.
+        ordered = [signal] + [r for _, r in sorted(read.get(key) or [],
+                                                   key=lambda item: item[0])]
+        if pair_changed(ordered):
+            excluded["pair_changed"] += 1
+            continue
+        why, (hours, price) = "last", path[-1]
+        for point in path:
+            ret = (point[1] / entry - 1.0) * 100.0
+            if ret <= -stop:
+                why, (hours, price) = "stop", point
+                break
+            if target_pct is not None and ret >= target_pct:
+                why, (hours, price) = "target", point
+                break
+        if cost_pct is not None:
+            cost, assumed = float(cost_pct), False
+        else:
+            cost, assumed = round_trip_cost(signal, clip_usd)
+        gross = (price / entry - 1.0) * 100.0
+        depth = signal.get("radar_max_buy_5pct_usd")
+        trades.append({
+            "key": key, "symbol": signal.get("symbol"), "exit": why,
+            "exit_hours": hours, "gross_pct": gross, "cost_pct": cost,
+            "net_pct": gross - cost, "cost_assumed": assumed,
+            "thin": isinstance(depth, (int, float)) and depth < clip_usd,
+            # A stop can only fire at a point: a path with one inside the
+            # first hour, at or before the exit, is where the minutes counted.
+            "dense": any(h < 1.0 for h, _ in path if h <= hours),
+        })
+
+    nets = [t["net_pct"] for t in trades]
+    spread = _spread(nets, top)
+    costs = [t["cost_pct"] for t in trades]
+    return {
+        "stop_pct": stop, "target_pct": target_pct, "n": len(trades),
+        "mean_net_pct": spread["pnl_pct"], "median_net_pct": spread["median_pct"],
+        "mean_net_without_top_pct": spread["pnl_without_top_pct"], "top": top,
+        "mean_gross_pct": (sum(t["gross_pct"] for t in trades) / len(trades)
+                           if trades else None),
+        "wins": sum(1 for n in nets if n > 0),
+        "win_rate": (sum(1 for n in nets if n > 0) / len(nets)) if nets else None,
+        "exits": {k: sum(1 for t in trades if t["exit"] == k)
+                  for k in ("stop", "target", "last")},
+        "dense_before_exit": sum(1 for t in trades if t["dense"]),
+        "cost": {"mode": "fixed" if cost_pct is not None else "radar depth",
+                 "clip_usd": clip_usd,
+                 "median_round_trip_pct": median(costs) if costs else None,
+                 "assumed": sum(1 for t in trades if t["cost_assumed"]),
+                 "thin": sum(1 for t in trades if t["thin"])},
+        "excluded": {**excluded,
+                     "untradeable": filtered.get("n_untradeable", 0),
+                     "late_readings": filtered.get("late_readings", 0)},
+        "caveat": UNMEASURED_FILLS,
+        "trades": trades,
+    }

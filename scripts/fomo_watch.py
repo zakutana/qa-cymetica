@@ -343,6 +343,25 @@ def resolve(client, now=None) -> dict:
             raise said
         return said
 
+    # A signal that fired with no price is quoted once more, as its own
+    # `entry` row carrying the moment it was read -- never written onto the
+    # signal, whose horizons are counted from when IT fired. A failed read
+    # writes nothing, so the next round inside the hour tries again.
+    retried = {r["key"] for r in rows if r.get("type") == "entry" and r.get("key")}
+    entries = 0
+    for signal in fomo.entry_retries(signals, retried, now=now):
+        # `_listing`, not `_quote`: `_quote` answers None on a 503, and a
+        # retry spent on an outage would be written as a coin with no price.
+        try:
+            quote = _listing(client, signal.get("token_address"))
+        except Exception:  # noqa: BLE001 -- rule 8: not a coin with no price
+            continue
+        price = (quote or {}).get("price_usd")
+        _append({"type": "entry", "at": now.isoformat(), "key": signal["key"],
+                 "price_usd": float(price) if isinstance(price, (int, float))
+                 else None, **_depth(quote)})
+        entries += 1
+
     written = []
     for signal, horizon in fomo.due_checkpoints(signals, done, now=now):
         try:
@@ -392,7 +411,7 @@ def resolve(client, now=None) -> dict:
             **_depth(quote),
         }))
     return {"checked": len(written), "checkpoints": written,
-            "studied": len(readings)}
+            "studied": len(readings), "entries": entries}
 
 
 def depth(client, now=None, only_missing: bool = True) -> dict:
@@ -517,9 +536,59 @@ def reading(rows: list[dict] | None = None, now=None) -> dict:
     for row in rows:
         if row.get("type") == "calibration" and row.get("chain"):
             claims[row["chain"]] = row
+    # The trades themselves stay out: this dict is stored in the lab diary
+    # every few hours, and a thousand trades a copy is not a reading.
+    stops = [{k: v for k, v in fomo.stop_study(
+                 rows, stop_pct=s, target_pct=t, now=now).items()
+              if k != "trades"} for s, t in STOPS]
     return {"readouts": [fomo.compare(rows, multiple=m, within_hours=h, now=now)
                          for m, h in READOUTS],
-            "claims": claims}
+            "claims": claims, "stops": stops, "entries": fomo.entries(rows)}
+
+
+# Stop -10 % alone, and with a +100 % target: the two NEXT.md of 2026-09-21
+# reasoned about.
+STOPS = ((10.0, None), (10.0, 100.0))
+
+
+def _signed(value) -> str:
+    return "-" if value is None else f"{value:+.1f}%"
+
+
+def say_stops(said: dict) -> list[str]:
+    """One line per stop rule and the caveat once. A reading stored before
+    the study existed has no `stops`, and prints nothing here."""
+    lines = []
+    for out in said.get("stops") or []:
+        rule = f"stop -{out['stop_pct']:g}%" + (
+            f" / target +{out['target_pct']:g}%"
+            if out.get("target_pct") is not None else ", no target")
+        cost, exits = out.get("cost") or {}, out.get("exits") or {}
+        lines.append(
+            f"{rule}: n={out['n']}, net {_signed(out['mean_net_pct'])}/trade "
+            f"(median {_signed(out['median_net_pct'])}, without best "
+            f"{out.get('top', 5)} {_signed(out['mean_net_without_top_pct'])}),"
+            f" win {_pct(out['win_rate'])}; exits {exits.get('stop', 0)} stop"
+            f" / {exits.get('target', 0)} target / {exits.get('last', 0)} "
+            f"at the last point; {out['dense_before_exit']} with a sub-hour "
+            f"point before exit; round trip median "
+            f"{_signed(cost.get('median_round_trip_pct'))} at "
+            f"${cost.get('clip_usd', 0):,.0f} ({cost.get('assumed', 0)} "
+            f"with no radar depth charged the default); "
+            f"{(out.get('excluded') or {}).get('pair_changed', 0)} left out "
+            f"where their terminal switched pair")
+    if said.get("stops"):
+        lines.append(said["stops"][0].get("caveat") or fomo.UNMEASURED_FILLS)
+    entry = said.get("entries")
+    if entry:
+        lines.append(
+            f"entries: {entry['unpriced_at_signal']} of {entry['signals']} "
+            f"signals had no price when they fired; {entry['retried']} quoted "
+            f"again, {entry['priced_on_retry']} priced"
+            + (f" (median {entry['median_delay_min']:.0f} min later)"
+               if entry.get("median_delay_min") is not None else "")
+            + " -- a later entry, not used as the signal's")
+    return lines
 
 
 def _pct(value) -> str:
@@ -557,7 +626,7 @@ def say_reading(said: dict) -> list[str]:
             + f", base rate {_pct(claim.get('base_rate'))}"
             + ("" if enough else " -- THEY MARK THIS SAMPLE INSUFFICIENT, so "
                                 "it is a reading of theirs, not a claim"))
-    return lines
+    return lines + say_stops(said)
 
 
 def main(argv: list[str] | None = None) -> int:

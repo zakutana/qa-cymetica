@@ -55,8 +55,9 @@ def test_new_signals_dedupes_by_token_and_hour_not_by_poll():
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_due_checkpoints_fires_only_after_its_own_horizon():
     signal = {"key": "0xabc:2026-09-13T12", "at": T0.isoformat()}
-    # Not due at all, one hour in.
-    assert fomo.due_checkpoints([signal], done={}, now=T0 + timedelta(minutes=30)) == []
+    # Not due at all, ten minutes in. (Thirty until 2026-09-22, when +15 and
+    # +30 min became horizons of their own and thirty minutes became one.)
+    assert fomo.due_checkpoints([signal], done={}, now=T0 + timedelta(minutes=10)) == []
 
     # 1h is due, 6h and 24h are not.
     due = fomo.due_checkpoints([signal], done={}, now=T0 + timedelta(hours=1, minutes=1))
@@ -187,9 +188,14 @@ def test_every_hour_of_the_first_day_is_a_checkpoint():
     24 checkpoints per signal against their memecoin-terminal, whose own
     server cache is 180s -- spread across a day this is nothing, and the
     register is what stops any hour being asked twice.
+
+    Since 2026-09-22 the day also opens with +15 and +30 minutes, so a stop
+    can be seen firing before the first hour (test_pipeline_fomo_stops.py).
+    The property this test guards is unchanged: every hour of the first day
+    is still a horizon, and the day still ends at 24.
     """
-    assert fomo.HORIZONS_HOURS == tuple(float(h) for h in range(1, 25)), (
-        fomo.HORIZONS_HOURS)
+    assert fomo.HORIZONS_HOURS == (0.25, 0.5) + tuple(
+        float(h) for h in range(1, 25)), fomo.HORIZONS_HOURS
 
     t0 = T0
     signal = {"key": "0xabc:2026-09-13T12", "at": t0.isoformat()}
@@ -275,6 +281,11 @@ def test_an_hour_missed_is_never_filled_with_a_later_price():
     `curves()` already draws as a break in the line. A hole in a measurement
     is honest; a fabricated point is not, and a fabricated point that looks
     plausible is the worst of the three.
+
+    Since 2026-09-22 the window is per horizon -- half of it, at most
+    `DUE_TOLERANCE_HOURS` -- because +15 min cannot keep a 45-minute window.
+    From the second hour on it is the same 0.75 h, which is what the boundary
+    below still reads.
     """
     t0 = T0
     signal = {"key": "0xabc:2026-09-13T12", "at": t0.isoformat()}
@@ -291,9 +302,10 @@ def test_an_hour_missed_is_never_filled_with_a_later_price():
         f"a stale hour was offered for filling with a later price: {due}")
 
     # The boundary itself, both sides of it.
-    late = t0 + timedelta(hours=2 + fomo.DUE_TOLERANCE_HOURS - 0.01)
+    assert fomo.due_tolerance(2.0) == fomo.DUE_TOLERANCE_HOURS
+    late = t0 + timedelta(hours=2 + fomo.due_tolerance(2.0) - 0.01)
     assert "2h" in [l for _, l in fomo.due_checkpoints([signal], {}, now=late)]
-    later = t0 + timedelta(hours=2 + fomo.DUE_TOLERANCE_HOURS + 0.01)
+    later = t0 + timedelta(hours=2 + fomo.due_tolerance(2.0) + 0.01)
     assert "2h" not in [l for _, l in fomo.due_checkpoints([signal], {},
                                                            now=later)]
 
