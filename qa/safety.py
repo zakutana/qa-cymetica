@@ -130,9 +130,11 @@ class EndpointRegistry:
         self.tools_contribute = frozenset(tools.get("contribute", []))
         self.tools_trade = frozenset(tools.get("trade", []))
         self.tools_provision = frozenset(tools.get("provision", []))
-        # tool name -> the argument that must be present and true before it may
-        # be executed. The tool-side twin of EndpointRule.required_flags.
-        self.tools_paper_gated: dict[str, str] = dict(tools.get("paper_gated", {}))
+        # tool name -> what must be in the arguments before it may be executed:
+        # a flag name that must be `True` itself, or {argument: value} that must
+        # match exactly (place_arena_order's `mode: paper`). The tool-side twin
+        # of EndpointRule.required_flags.
+        self.tools_paper_gated: dict[str, str | dict] = dict(tools.get("paper_gated", {}))
         self.components = raw.get("components", {})
         self.mutate_enabled = False
         self.mutate_allowed_hosts: frozenset[str] = frozenset()
@@ -319,11 +321,23 @@ class SafetyTransport(httpx.BaseTransport):
         # costs a rate limit and leaves a position on their side.
         gate = self.registry.tools_paper_gated.get(str(tool))
         if gate:
-            if not args.get(gate):
+            # The VALUE, not that something is there. `not args.get(gate)` let
+            # a `paper` of "false" through -- truthy, and false to a server
+            # that coerces strings -- and would have let place_arena_order's
+            # `mode: 'live'` through the moment it was gated on `mode`.
+            wanted = gate if isinstance(gate, dict) else {gate: True}
+            # `is` for a bool, because 1 == True; `==` for a string.
+            wrong = {k: v for k, v in wanted.items()
+                     if not (args.get(k) is v if isinstance(v, bool)
+                             else args.get(k) == v)}
+            if wrong:
+                said = ", ".join(f"{k}={v!r}" for k, v in wanted.items())
                 raise SafetyViolation(
-                    f"MCP tool {tool!r} moves money unless {gate!r} is true, "
-                    f"and this call does not carry it. That flag is what says "
-                    f"no real funds move; send it, or do not call the tool."
+                    f"MCP tool {tool!r} moves money unless {said}, and this "
+                    f"call does not carry it (got "
+                    f"{ {k: args.get(k) for k in wanted} }). That argument is "
+                    f"what says no real funds move; send it, or do not call "
+                    f"the tool."
                 )
             return
 

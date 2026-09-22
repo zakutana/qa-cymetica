@@ -170,7 +170,16 @@ PINNED = {
     # AMBER. Nothing existing was weakened: the file differs by one added
     # test. Measured after the change: 9 of 9 corpus parts hash exactly as the
     # last run record holds them.
-    "test_guard_is_real.py": "4e03f3fb20b9475b446447a3559ead36b70ade5e34d9bcbb09745a6f931406aa",
+    #
+    # Re-derived a SEVENTH time, 2026-09-22, and again only adding
+    # enforcement. The paper gate on MCP tools read `not args.get(gate)` --
+    # present and truthy -- so `paper: "false"` passed it, and
+    # place_arena_order, whose stop is `mode: 'paper'` against a truthy
+    # `'live'`, could not be gated at all. A flag gate now needs `True` itself
+    # and a value gate the exact value (components.yaml:
+    # `place_arena_order: {mode: paper}`). The file differs by one added test,
+    # which went red against a mutant restoring the truthy reading.
+    "test_guard_is_real.py": "c715864aa579b0fcf11b2a26c5654d34d3b9fb6d9e68a0910eef989f15394a0f",
 }
 
 

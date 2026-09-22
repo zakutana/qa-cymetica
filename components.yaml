@@ -699,8 +699,16 @@ mcp_tools:
   # trading only on an explicit paper=false AND the platform trading gate."
   # place_order is NOT here: the CLOB has no paper book at all and refuses
   # paper=true with 400 CLOB_NO_PAPER_BOOK, so its floor stays absolute.
+  #
+  # place_arena_order, new 2026-09-22, from its own description: "PAPER by
+  # default (mode='paper'): no real funds move. mode='live' passes the
+  # fail-closed trading gate first". Its stop is a VALUE, `mode: paper`, not a
+  # flag -- and gated as a bare name, 'live' would have passed, being truthy.
+  # Omitted is refused although their default is paper. The REST twin,
+  # arena.order, stays probe_only.
   paper_gated:
     trade_event_card: paper
+    place_arena_order: {mode: paper}
   provision:
     [create_aib_fund, edit_aib_fund_basket, launchpad_launch_token,
      register_webhook, subscribe_prices]

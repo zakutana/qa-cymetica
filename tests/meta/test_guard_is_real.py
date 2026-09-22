@@ -696,6 +696,58 @@ def test_a_money_tool_with_a_paper_flag_is_executable_only_with_it():
 
 
 @qa(component="meta.guard", tier=SafetyTier.SAFE, surface="meta")
+def test_a_paper_gate_reads_the_value_not_that_something_is_there():
+    """`place_arena_order` (new 2026-09-22) is stopped by a STRING, not a
+    flag: *"PAPER by default (mode='paper'): no real funds move. mode='live'
+    passes the fail-closed trading gate first"*, and its schema is
+    `mode: enum [paper, live]`. The gate read `not args.get(gate)` -- present
+    and truthy -- and `'live'` is a truthy string, so naming this tool in
+    paper_gated the old way would have let a live order through wearing the
+    gate's own key.
+
+    The same reading had a hole on the gate that already existed: a `paper`
+    of `"false"` is truthy, and a server that coerces strings reads it as
+    false. A flag gate now needs `True` itself, and a value gate needs the
+    value. Omitted is refused on both, although their default is paper: the
+    default is theirs to change, the argument is what we sent."""
+    registry = EndpointRegistry.load()
+    registry.mutate_enabled = True
+    registry.mutate_allowed_hosts = frozenset({"cymetica.com"})
+    client = _deaf_mcp_client(registry=registry)
+    order = {"team_symbol": "BLUE", "side": "buy", "price": 0.5, "size": 1}
+
+    token = CURRENT_TIER.set(SafetyTier.MUTATE)
+    try:
+        for args in ({**order, "mode": "live"}, dict(order),
+                     {**order, "mode": "PAPER"}, {**order, "mode": True}):
+            with pytest.raises(SafetyViolation) as refused:
+                client.call_raw("place_arena_order", args)
+            assert "mode" in str(refused.value), (args, str(refused.value))
+
+        with pytest.raises(AssertionError, match="THE GUARD LET IT THROUGH"):
+            client.call_raw("place_arena_order", {**order, "mode": "paper"})
+
+        with pytest.raises(SafetyViolation):
+            client.call_raw("trade_event_card",
+                            {"card_id": "c1", "amount_usdc": 1, "paper": "false"})
+        with pytest.raises(AssertionError, match="THE GUARD LET IT THROUGH"):
+            client.call_raw("trade_event_card",
+                            {"card_id": "c1", "amount_usdc": 1, "paper": True})
+    finally:
+        CURRENT_TIER.reset(token)
+
+    # Paper is still not free: below MUTATE the arena order is refused too.
+    for tier in (SafetyTier.SAFE, SafetyTier.PROBE):
+        token = CURRENT_TIER.set(tier)
+        try:
+            with pytest.raises(SafetyViolation):
+                client.call_raw("place_arena_order", {**order, "mode": "paper"})
+        finally:
+            CURRENT_TIER.reset(token)
+    client.http.close()
+
+
+@qa(component="meta.guard", tier=SafetyTier.SAFE, surface="meta")
 def test_a_tool_this_registry_has_never_heard_of_is_refused_at_mutate():
     """Default-deny, at the one tier that can spend.
 
