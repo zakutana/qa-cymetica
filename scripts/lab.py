@@ -2291,7 +2291,9 @@ def tick(*, now: datetime | None = None, actions: dict | None = None,
     launched = attempt("promote", doors["promote"]) or {}
     said["rooms"] += launched.get("rooms", 0)
     said["orders"] += launched.get("orders", 0)
-    said["held"] = list(launched.get("held") or [])[:6]
+    # The newest six: the launch lists oldest answer first, and the first six
+    # were the same four answers all night while NEX-0063's reason sat unseen.
+    said["held"] = list(launched.get("held") or [])[-6:]
 
     said["verdicts"] = len(attempt("verdicts", doors["verdicts"]) or [])
     said["resolved"] = len(attempt("resolved", _record_resolved) or [])

@@ -730,6 +730,23 @@ def _tick(scripts_lab, when, doors):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_tick_shows_the_newest_reasons_it_held(tmp_path, monkeypatch):
+    """The launch lists its reasons oldest answer first, and the tick kept the
+    first six: NEX-0049..0052 filled every line all night, and NEX-0063's
+    backtest refusal -- the one that mattered -- was never on screen."""
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    reasons = [f"NEX-{n:04d}: old reason" for n in range(40, 49)]
+    reasons.append("NEX-0063/5e25b255: the one that matters")
+    doors, _ = _doors(promote=lambda: {"rooms": 0, "orders": 0,
+                                       "held": reasons})
+
+    said = _tick(scripts_lab, NOW, doors)
+
+    assert "NEX-0063/5e25b255: the one that matters" in said["held"], said["held"]
+    assert len(said["held"]) <= 6
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_tick_carries_on_the_walk_where_the_last_one_stopped(
         tmp_path, monkeypatch):
     """A tick is a fresh process every twenty minutes. The night held its
