@@ -127,7 +127,7 @@ asked for it. So it is kept here.
   prints what is due and the words that start it; if it printed anything,
   repeat that line in your first answer, in Czech. Hook output arrives in your
   context, not on their screen, and a reminder they never see is the mechanism
-  this rule replaced.
+  this rule replaced. A command in it is run, not repeated (2026-09-22).
 * [operator 2026-09-14] *"odstrat to rpavidlo at muzu nmormalne loop
   spoustet"*
 
@@ -143,6 +143,12 @@ asked for it. So it is kept here.
   refused to let `/loop` re-arm itself. That reading was more careful than
   wrong, but it was still wrong: the operator is the one who gets to say
   which of their own past decisions a new one narrows, and they just did.
+* [operator 2026-09-22] *"Co to je za bash s ripty? To po me nechtej to musis
+  sam spoustet ka nicemu nerozumim"*
+
+  **A shell command is ours to run, never theirs** -- a reminder's too: read
+  what it changes, run it, say in a line what it did. Theirs is only what
+  they start by saying it: a deep pass, a `/loop`, a push.
 * Non-trivial work starts in plan mode. Ask for it; do not wait to be told.
 * Tests before implementation. A test written afterwards passes whatever the
   code does, including the mistake, and 21 commits here carry code with no
@@ -455,17 +461,11 @@ qa/backtests.py   the register of what has already been measured: a basket's
                   fingerprint (sorted legs, window, fees) against what it
                   returned, so no night pays for the same backtest twice.
                   state/backtests.jsonl, gitignored like the other diaries.
-qa/surface.py     the watch over THEIR side, mirroring the DNA patrol: their
-                  tool schemas and the shape of their REST answers, read from
-                  captures we already make. `headline_period` appeared in our
-                  own data and we heard of it from their Telegram instead.
 scripts/lab.py    that loop from our side: `tick` (the day's session, answers
                   picked up, a card read live and backtested before a paper
                   room, the search, verdicts; state in state/lab_tick.json),
                   `brief`, `board` (his proposals by what they earned), `log`,
-                  `ask`, `truth`, `buy`. It refuses rather than warns. The
-                  night runs as the loop too; `lab.py night` was removed
-                  2026-09-21.
+                  `ask`, `truth`, `buy`. It refuses rather than warns.
 NEXT.md           what we agreed to do next and have not done. Plain markdown,
                   one line per item, `- [ ] YYYY-MM-DD  sentence`; ticked, it
                   gets `(hotovo DATE)` and goes a week after that stamp.

@@ -111,6 +111,8 @@ PINNED = {
          "414477775223dde3619b3647031988fa6fdaaac3a5c04f0f7ac04451dcbd19fa"),
         ("2026-09-14", "odstrat to rpavidlo at muzu nmormalne loop",
          "5444a72213e3220cba076f610990576c2031818eb9e0a5e5294c8337159205cb"),
+        ("2026-09-22", "to po me nechtej to musis sam spoustet",
+         "a15842a274dbd0c21b79903ae881a04d0ed7188114083e2484ac66b2f2f2e7c0"),
         ("2026-09-12", "nechci za mesic zjistit ze v githubu",
          "f04881f6d4780e403c5ce74c6313abba17fd2de5dff818d30ca979aeefcdf296"),
         ("2026-09-10", "a proc nezakladas nalezy sam od sebe",
