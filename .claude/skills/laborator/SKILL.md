@@ -307,10 +307,3 @@ has had so far, or when a row's subject has visibly changed. What the hunt
 covers, rotate: their newest surfaces first, then the ones the sweep's own
 rows touch -- bots and clones, skills, event cards -- so a defect there is
 found by looking, not only when an existing check happens to fail.
-
-## The night
-
-`python scripts/lab.py night --until 07:00` still exists: one process on their
-machine, started by them, ending at an hour on their own clock (PowerShell,
-one command). It is the same work as the ticks with a template question, and
-while it runs the ticks hold. A running `/loop` makes it unnecessary.

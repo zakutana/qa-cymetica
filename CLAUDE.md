@@ -463,8 +463,9 @@ scripts/lab.py    that loop from our side: `tick` (the day's session, answers
                   picked up, a card read live and backtested before a paper
                   room, the search, verdicts; state in state/lab_tick.json),
                   `brief`, `board` (his proposals by what they earned), `log`,
-                  `ask`, `truth`, `buy`. It refuses rather than warns. `night
-                  --until HH:MM` is the same work as one process THEY start.
+                  `ask`, `truth`, `buy`. It refuses rather than warns. The
+                  night runs as the loop too; `lab.py night` was removed
+                  2026-09-21.
 NEXT.md           what we agreed to do next and have not done. Plain markdown,
                   one line per item, `- [ ] YYYY-MM-DD  sentence`; ticked
                   items stay as history and stop being printed.

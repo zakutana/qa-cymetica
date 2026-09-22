@@ -2838,9 +2838,6 @@ h4.sec {
       <tr><td>„jdi do laboratoře&ldquo;</td><td class="when">když chceš nové strategie</td>
           <td>Session s Nexusem: co je nového &rarr; jejich backtesty &rarr;
           jedna otázka &rarr; room a paper obchod &rarr; poučení pro příště.</td></tr>
-      <tr><td><code>lab.py night --until 07:00</code></td><td class="when">večer</td>
-          <td>Celou noc backtesty, ráno souhrn. Neobchoduje, nezakládá nálezy,
-          necommituje &mdash; noc hledá, ráno se jedná.</td></tr>
       <tr><td>„jdu spat&ldquo;</td><td class="when">než jdeš spát</td>
           <td>Deep pass přes všechno nepushnuté. Jediná věc, která pushuje.</td></tr>
       <tr><td>„přečti si to&ldquo;</td><td class="when">když jsi psal do roomu</td>

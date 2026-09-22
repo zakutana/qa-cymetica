@@ -38,7 +38,6 @@ import importlib.util
 import json
 import os
 import sys
-import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -1231,37 +1230,10 @@ def buy(card_id: str, usdc: float, nexus_id: str | None, confirm: bool) -> dict:
 
 
 # --- the night -------------------------------------------------------------
-
-BREAKS_IT = (
-    "Their own backtest ranks {slug} at Sharpe {sharpe} with a max drawdown of "
-    "{dd}% over {over}. What BREAKS it? Name the market condition it fails in, "
-    "the kind of event card that would make it fail fastest, and one number we "
-    "could watch that turns bad BEFORE the drawdown does. If the ranking "
-    "itself is measured over too short a window to mean anything, say that "
-    "instead -- we would rather drop a candidate than trade a statistic."
-)
-
-
-def _candidates(ranked: list[dict], already: set[str]) -> list[str]:
-    """The ranked concepts we have not asked about tonight, best first."""
-    out = []
-    for row in ranked:
-        slug = str(row.get("strategy") or "").strip()
-        if slug and slug not in already and slug not in out:
-            out.append(slug)
-    return out
-
-
-def _night_question(ranked: list[dict], slug: str) -> str:
-    row = next((r for r in ranked if r.get("strategy") == slug), {})
-    return BREAKS_IT.format(slug=slug, sharpe=row.get("sharpe", "?"),
-                            dd=row.get("max_drawdown", "?"),
-                            over=row.get("over", "an unstated window"))
-
-
-def _night_backoff():
-    """How long their own failure asked us to stay away."""
-    return lab.backoff_until(_nexus_rows(), _now())
+#
+# `lab.py night` itself was removed on 2026-09-21: the laboratory runs
+# overnight as `/loop 20m jdi do laborky`. What it walked with stays here,
+# because the tick walks with the same.
 
 
 def night_moves() -> list[dict]:
@@ -1282,8 +1254,8 @@ def search_queue(seeds: list[dict], rows: list[dict] | None = None,
                  cap: int = 12, limit: int = 8) -> list[dict]:
     """Every basket worth asking about: their cards, AND what scored well.
 
-    The one place both callers take their moves from. `night()` already
-    climbed -- it refills from the register the moment its first queue empties
+    The one place both callers take their moves from. The night (removed
+    2026-09-21) already climbed -- it refills from the register the moment its first queue empties
     -- but the hand-run `lab.py search` walked only `card_baskets()`, which is
     finite and small (seven cards the sampler has seen with two legs or more).
     So the second sweep of 2026-09-13 came back **0 asked, 32 already known**,
@@ -1760,210 +1732,6 @@ def _night_search(moves: list[dict]) -> dict:
     return did
 
 
-def _night_ask(slug: str, question: str) -> dict:
-    """One question, put down and left with their side.
-
-    `wait=False` on purpose: waiting blocks for up to fifteen minutes, which
-    would carry a tick past both the deadline and the deep-pass check it made
-    on the way in. The next cycle picks the answer up. The one straddle left --
-    a poll in flight when a pass starts -- is under a minute wide and not worth
-    a lock.
-    """
-    return _sibling("nexus").ask(question, wait=False)
-
-
-def _lessons(did: dict, ranked: list[dict]) -> list[str]:
-    """At most three, drawn from what was counted rather than from opinion."""
-    out = []
-    if did.get("backtests"):
-        out.append(f"walked {did['backtests']} backtest(s), "
-                   f"{did.get('already_known', 0)} already in the register")
-    if did["asked"]:
-        out.append(f"asked Nexus {did['asked']} question(s); "
-                   f"{did['answered']} came back by dawn")
-    if did["skipped"]["pass"]:
-        out.append(f"{did['skipped']['pass']} of {did['ticks']} ticks did "
-                   f"nothing: a deep pass was in flight")
-    if did["skipped"]["backoff"]:
-        out.append(f"{did['skipped']['backoff']} tick(s) waited out a backoff "
-                   f"their own failure asked for")
-    if ranked and len(out) < lab.MAX_LESSONS:
-        best = ranked[0]
-        out.append(f"their best-ranked concept was {best.get('strategy')} "
-                   f"(sharpe {best.get('sharpe')}, over {best.get('over')})")
-    if not out:
-        out.append("the night ran and found nothing worth a line")
-    return out[:lab.MAX_LESSONS]
-
-
-def night(until: str, *, clock=None, sleep=None, actions=None, out=print) -> dict:
-    """Research until an hour the operator names, then stop.
-
-    One process, started by them, with its end written into it -- not a
-    scheduler. [operator 2026-09-12] *"ne zadene schedulery automaticke
-    nechci"*. Nothing here trades, files or commits: the night measures and
-    asks, the morning acts on what it found. That is not only prose -- the
-    doors it can reach are the four in `actions`, and none of them is a hand
-    that spends.
-
-    What it does with the hours: picks up answers that are still in flight,
-    samples the running experiments, re-ranks their backtests when the snapshot
-    goes stale, and asks Nexus what breaks the best candidates -- one question
-    at a time, two hours apart, twelve at most. `--no-wait` on the ask is
-    deliberate: waiting on their side blocks for up to fifteen minutes, which
-    would carry a tick past both the deadline and the deep-pass check it made
-    on the way in. The next tick picks the answer up.
-
-    The clock is read every loop rather than counted down, so a laptop that
-    slept still stops at the hour it was given.
-    """
-    clock = clock or (lambda: datetime.now().astimezone())
-    sleep = sleep or time.sleep
-    started = clock()
-    due = lab.deadline(until, started)
-    # Every door is a name resolved here, not inside a lambda: a mistyped
-    # default would otherwise surface at three in the morning, on their machine.
-    actions = actions or {
-        "pass": pass_in_flight, "backoff": _night_backoff, "cycle": cycle,
-        "truth": functools.partial(truth, limit=8), "ask": _night_ask,
-        "search": _night_search, "moves": night_moves,
-        "refill": night_refill,
-        "promote": functools.partial(night_promote, since=started),
-        "asked_today": _asked_today,
-    }
-
-    session = lab.open_session(mode="night", until=due.isoformat())["session"]
-    did = {"ticks": 0, "cycles": 0, "truths": 0, "asked": 0, "answered": 0,
-           "backtests": 0, "already_known": 0, "refills": 0,
-           "rooms": 0, "orders": 0, "held": [],
-           "errors": [], "stopped": "deadline",
-           "skipped": {"pass": 0, "backoff": 0, "cap": 0, "too soon": 0,
-                       "nothing to ask about": 0},
-           "questions": []}
-    queue = list((actions.get("moves") or (lambda: []))())
-    # The cap is a rolling day's, so what the day already asked counts: a
-    # night started after a day of loop ticks does not get a fresh 24.
-    state: dict = {"asked": int((actions.get("asked_today")
-                                 or (lambda: 0))() or 0),
-                   "candidates": [], "hold_until": None,
-                   "pending": len(queue)}
-    ranked: list[dict] = []
-    asked_about: set[str] = set()
-
-    out(f"laboratory night {session}: research only, no orders, no filings.")
-    out(f"  started {started.isoformat(timespec='minutes')}")
-    out(f"  ends    {due.isoformat(timespec='minutes')} "
-        f"({(due - started).total_seconds() / 3600:.1f} h from now)")
-    out(f"  at most {lab.CAPS['questions_per_day'] - state['asked']} more "
-        f"question(s) today ({lab.CAPS['questions_per_day']} a rolling day), "
-        f"at least {lab.NIGHT['ask_seconds'] // 60} min apart, and their own "
-        f"backoff on top. Ctrl-C stops it.")
-
-    crashed: BaseException | None = None
-    try:
-        while clock() < due:
-            now = clock()
-            did["ticks"] += 1
-            state["pass_running"] = bool(actions["pass"]())
-            state["hold_until"] = actions["backoff"]()
-            plan = lab.night_tick(state, now)
-            if plan["skipped"]:
-                did["skipped"][plan["skipped"]] = \
-                    did["skipped"].get(plan["skipped"], 0) + 1
-
-            for step in plan["do"]:
-                try:
-                    if step == "search":
-                        size = lab.NIGHT["search_batch"]
-                        bite, queue = queue[:size], queue[size:]
-                        got = actions["search"](bite) or {}
-                        did["backtests"] += got.get("asked", 0)
-                        did["already_known"] += got.get("known", 0)
-                        if not queue:
-                            # The first queue is finite -- 168 moves, six ticks,
-                            # twelve minutes of a fourteen-hour night. Refill
-                            # from what has actually scored, so the night climbs
-                            # instead of stopping. An empty refill (nothing
-                            # measured yet, or nothing clean) ends the search
-                            # honestly rather than looping on nothing.
-                            queue = list((actions.get("refill")
-                                          or (lambda: []))())
-                            did["refills"] += 1 if queue else 0
-                        state["pending"] = len(queue)
-                        if got.get("asked") and out:
-                            out(f"  {now.strftime('%H:%M')} {got['asked']} "
-                                f"backtest(s), {len(queue)} left to walk")
-                    elif step == "cycle":
-                        done = actions["cycle"]() or {}
-                        state["last_cycle"] = now
-                        did["cycles"] += 1
-                        # A cycle is what brings an answer back, so launching
-                        # is checked straight after one and nowhere else.
-                        launched = (actions.get("promote")
-                                    or (lambda: {}))() or {}
-                        did["rooms"] += launched.get("rooms", 0)
-                        did["orders"] += launched.get("orders", 0)
-                        did["held"].extend(launched.get("held", [])[:3])
-                        if launched.get("orders"):
-                            out(f"  {now.strftime('%H:%M')} "
-                                f"{launched['orders']} paper order(s) from "
-                                f"{launched['rooms']} new room(s)")
-                        did["answered"] = sum(
-                            1 for row in _nexus_rows()
-                            if row.get("type") == "answer"
-                            and (_moment(row.get("at")) or started) >= started)
-                    elif step == "truth":
-                        ranked = actions["truth"]() or ranked
-                        state["last_truth"] = now
-                        did["truths"] += 1
-                        state["candidates"] = _candidates(ranked, asked_about)
-                    elif step == "ask":
-                        slug = state["candidates"][0]
-                        said = actions["ask"](
-                            slug, _night_question(ranked, slug)) or {}
-                        asked_about.add(slug)
-                        state["candidates"] = state["candidates"][1:]
-                        state["last_ask"] = now
-                        state["asked"] += 1
-                        did["asked"] += 1
-                        did["questions"].append(
-                            {"at": now.isoformat(timespec="minutes"),
-                             "about": slug, "id": said.get("id")})
-                        out(f"  {now.strftime('%H:%M')} asked about {slug} "
-                            f"({said.get('id') or 'no id'})")
-                except (Exception, SystemExit) as exc:  # one bad step is not the night
-                    did["errors"].append(f"{step}: {exc}")
-                    out(f"  {now.strftime('%H:%M')} {step} failed: {exc}")
-
-            remaining = (due - clock()).total_seconds()
-            if remaining <= 0:
-                break
-            sleep(min(lab.NIGHT["tick_seconds"], remaining))
-    except KeyboardInterrupt:
-        did["stopped"] = "interrupted"
-        out("\n  stopped by hand; closing the session so the morning is clean")
-    except (Exception, SystemExit) as exc:  # noqa: BLE001
-        # A tick reads files another process writes, so a half-written line is
-        # an exception rather than a keyboard. The session is closed either
-        # way -- one left open makes the morning refuse to start the next
-        # night -- and the traceback still reaches their terminal below.
-        did["stopped"] = f"crashed: {exc}"
-        crashed = exc
-        out(f"\n  the night stopped on an error: {exc}")
-
-    queue =[f"{q['id']}: worth a room if the answer is concrete ({q['about']})"
-             for q in did["questions"] if q.get("id")][:lab.MAX_NEXT]
-    lab.close_session(session, _lessons(did, ranked), queue, did=did)
-    _archive_diaries()
-    out(f"\n{session} closed after {did['ticks']} tick(s): {did['asked']} "
-        f"asked, {did['answered']} answered, {did['cycles']} cycle(s). "
-        f"`lab.py status` has it in the morning.")
-    if crashed is not None:
-        raise crashed
-    return did
-
-
-
 # --- the loop tick ---------------------------------------------------------
 #
 # [operator 2026-09-19] *"jak zadam /loop 20m jdi do laborky tak ty budes
@@ -2089,7 +1857,12 @@ def _close_day(rows: list[dict], session: str, opened: dict) -> dict:
                 ][-(lab.MAX_LESSONS - 1):]
     nextup = [e["text"] for e in lab.entries(rows, session, "next")
               ][-lab.MAX_NEXT:]
-    return lab.close_session(session, lessons, nextup, did=counts)
+    closed = lab.close_session(session, lessons, nextup, did=counts)
+    # The day's diaries finalise here, and nobody is watching this close: the
+    # night archived its own on the way out, and since it was removed
+    # (2026-09-21) this is the close the laboratory's writing ends at.
+    _archive_diaries()
+    return closed
 
 
 def _day_session(moment: datetime) -> str:
@@ -2590,13 +2363,8 @@ def main(argv: list[str] | None = None) -> int:
     kind.add_argument("--lesson", action="store_const", const="lesson",
                       dest="kind")
     kind.add_argument("--next", action="store_const", const="next", dest="kind")
-    night_cmd = sub.add_parser(
-        "night", help="research until an hour you name, then stop")
-    night_cmd.add_argument("--until", required=True, metavar="HH:MM",
-                           help="on YOUR clock, not UTC; at most 14 h away")
     open_cmd = sub.add_parser("open", help="start a session")
-    open_cmd.add_argument("--mode", default="session",
-                          choices=["session", "night"])
+    open_cmd.add_argument("--mode", default="session", choices=["session"])
     close_cmd = sub.add_parser("close", help="end it, with what it learned")
     close_cmd.add_argument("--lesson", action="append", default=[])
     close_cmd.add_argument("--next", action="append", default=[], dest="nextup")
@@ -2740,19 +2508,6 @@ def main(argv: list[str] | None = None) -> int:
         session = _day_session(_now())
         record = lab.note_entry(session, args.text, kind=args.kind or "log")
         print(f"{session}: {record['kind']} written")
-    elif args.cmd == "night":
-        # The caps are a rolling day's since 2026-09-19, so an open session no
-        # longer carries counters a night could inherit -- and the loop's day
-        # session is open all day by design. Two nights at once still walk
-        # one queue twice.
-        running = lab.night_running()
-        if running:
-            raise SystemExit(f"{running[0]} is a night running until "
-                             f"{running[1]}; one at a time")
-        try:
-            night(args.until)
-        except lab.LabError as exc:  # a bad hour is a typo, not a traceback
-            raise SystemExit(str(exc))
     elif args.cmd == "open":
         record = lab.open_session(mode=args.mode)
         print(f"{record['session']} open ({record['mode']})")

@@ -479,8 +479,10 @@ def test_closing_a_session_puts_the_diaries_where_git_can_hold_them(
     mechanism; it is a mechanism with one trigger, in the wrong place for data
     that finalises at the end of a session.
 
-    Both ends are checked: the `close` subcommand and the night's own close.
-    The night matters more -- it runs unattended for hours and writes the most.
+    Both ends are checked: the `close` subcommand and the close a tick makes
+    of yesterday's session. The tick's matters more -- since `lab.py night`
+    was removed (2026-09-21) it is the only close nobody is watching, at the
+    end of a day the loop wrote all of.
 
     The archive is stubbed here so the assertion is about the CALL. That it
     writes beside the state it archives, rather than into this repository, is
@@ -508,16 +510,21 @@ def test_closing_a_session_puts_the_diaries_where_git_can_hold_them(
         "the session closed and its diaries stayed on a single disk")
 
     calls.clear()
-    zone = timezone(timedelta(hours=2))
-    clock = _Clock(datetime(2026, 9, 12, 23, 30, tzinfo=zone))
-    scripts_lab.night(
-        "23:45", clock=clock, sleep=clock.sleep,
-        actions={"pass": lambda: False, "backoff": lambda: None,
-                 "cycle": lambda: {"polled": []}, "truth": lambda: [],
-                 "ask": lambda concept, question: {"id": "NEX-1"}},
-        out=lambda *a: None)
+    now = datetime(2026, 9, 13, 8, 0, tzinfo=timezone.utc)
+    lab._append({"type": "session", "state": "open", "session": "LAB-0901",
+                 "mode": "loop", "day": "2026-09-12",
+                 "at": (now - timedelta(days=1)).isoformat()})
+    stub = lambda *a: {}  # noqa: E731 -- every door a tick reaches, inert
+    doors = {name: stub for name in scripts_lab._tick_doors()}
+    doors.update({"pass": lambda: False, "night": lambda: False,
+                  "asked_today": lambda: 0, "moves": lambda: [],
+                  "refill": lambda: [], "truth": lambda: [],
+                  "verdicts": lambda: []})
+    monkeypatch.setattr(scripts_lab, "_record_resolved", lambda: [])
+    scripts_lab.tick(now=now, actions=doors, out=lambda *a: None)
+    assert lab.last_close()["session"] == "LAB-0901", "yesterday stayed open"
     assert calls == ["snapshot"], (
-        "a night wrote all night and archived none of it")
+        "the loop wrote all day, closed the day, and archived none of it")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -1234,20 +1241,6 @@ def _scripts_lab(tmp_path, monkeypatch):
     return module
 
 
-class _Clock:
-    """Wall time the test moves. A night paced by a fake clock runs in
-    milliseconds; a night paced by the real one could not be tested at all."""
-
-    def __init__(self, start):
-        self.now = start
-
-    def __call__(self):
-        return self.now
-
-    def sleep(self, seconds):
-        self.now += timedelta(seconds=seconds)
-
-
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_night_and_the_loop_share_one_cap_per_day(tmp_path, monkeypatch):
     """There were two caps until 2026-09-19 -- eight a session, twelve a
@@ -1259,9 +1252,9 @@ def test_the_night_and_the_loop_share_one_cap_per_day(tmp_path, monkeypatch):
     Until the deep pass of 2026-09-21 (C09) this called the pure `may_ask`
     three times, as its sibling above does, so a night or a hand-asked
     question counting on its own would have stayed green. Now: one counter,
-    read by the night, the tick and `ask` alike, over whoever asked."""
-    import ast
-
+    read by the tick and `ask` alike, over whoever asked. (The night read it
+    too, until `lab.py night` was removed on 2026-09-21; the rows below still
+    carry its questions, because a diary of the time does.)"""
     scripts_lab = _scripts_lab(tmp_path, monkeypatch)
     now = datetime.now(timezone.utc)
     rows = ([{"type": "question", "id": f"NEX-N{n}", "session": "LAB-0009",
@@ -1275,14 +1268,6 @@ def test_the_night_and_the_loop_share_one_cap_per_day(tmp_path, monkeypatch):
     monkeypatch.setattr(scripts_lab, "_nexus_rows", lambda: rows)
     assert scripts_lab._asked_today() == 5, "the night's three and the loop's two"
     assert scripts_lab._tick_doors()["asked_today"] is scripts_lab._asked_today
-
-    tree = ast.parse((REPO / "scripts" / "lab.py").read_text(encoding="utf-8"))
-    night = next(n for n in tree.body
-                 if isinstance(n, ast.FunctionDef) and n.name == "night")
-    doors = {k.value: v.id for d in ast.walk(night) if isinstance(d, ast.Dict)
-             for k, v in zip(d.keys, d.values)
-             if isinstance(k, ast.Constant) and isinstance(v, ast.Name)}
-    assert doors.get("asked_today") == "_asked_today", doors
 
     cap = lab.CAPS["questions_per_day"]
     monkeypatch.setattr(scripts_lab, "pass_in_flight", lambda: False)
@@ -1399,177 +1384,6 @@ def test_the_night_waits_the_hour_their_own_failure_asked_for():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_a_night_ends_at_its_deadline_paced_and_counted(tmp_path, monkeypatch):
-    """The whole of F7 in one run: it stops by itself, it asks at their pace,
-    it never exceeds the night's cap, and what it did is on the record for the
-    morning."""
-    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
-    zone = timezone(timedelta(hours=2))
-    clock = _Clock(datetime(2026, 9, 12, 23, 30, tzinfo=zone))
-    asked, cycles, truths = [], [], []
-
-    def _truth():
-        truths.append(clock())
-        # MORE concepts than the cap allows. Six was the fixture until
-        # 2026-09-12 and `_candidates` drops anything already asked, so the
-        # night ran out of subjects at six against a cap of twelve -- both cap
-        # assertions below were satisfied by the fixture rather than by the
-        # cap, and three readers each deleted the cap branch from `night_tick`
-        # and watched this stay green.
-        return [{"strategy": f"bt-{n}", "sharpe": 5 - n, "max_drawdown": 1.0 + n,
-                 "total_return": 12.0, "over": "48h"} for n in range(30)]
-
-    def _ask(concept, question):
-        asked.append((clock(), concept, question))
-        return {"id": f"NEX-{len(asked)}", "status": "queued"}
-
-    # The cap is per rolling day since 2026-09-19, and a day's questions asked
-    # BEFORE the night count against it -- so the day arrives with all but
-    # eight spent, and eight is what the night may still ask. Without the
-    # preload a 7.5-hour night at the 20-minute floor asks 23 against 24 and
-    # the cap is never what stops it.
-    already = lab.CAPS["questions_per_day"] - 8
-    did = scripts_lab.night(
-        "07:00", clock=clock, sleep=clock.sleep,
-        actions={"pass": lambda: False, "backoff": lambda: None,
-                 "cycle": lambda: cycles.append(clock()) or {"polled": []},
-                 "truth": _truth, "ask": _ask,
-                 "asked_today": lambda: already},
-        out=lambda *a: None)
-
-    assert clock() >= datetime(2026, 9, 13, 7, 0, tzinfo=zone), "it stopped early"
-    assert clock() < datetime(2026, 9, 13, 7, 30, tzinfo=zone), (
-        "it ran past the hour they named")
-    assert len(asked) == lab.CAPS["questions_per_day"] - already, (
-        f"{len(asked)} questions on top of {already} already asked today, "
-        f"against a cap of {lab.CAPS['questions_per_day']}: with thirty "
-        f"concepts on offer the cap is the only thing that can stop it, so "
-        f"this is the cap measured rather than the fixture running dry")
-    assert did["skipped"]["cap"] > 0, (
-        "the night never once refused a question for the cap, so the branch "
-        "that enforces it was never reached")
-    gaps = [(b[0] - a[0]).total_seconds() for a, b in zip(asked, asked[1:])]
-    assert all(gap >= 20 * 60 for gap in gaps), gaps
-    # One ask per ten ticks at the very most: 20 minutes against a 2-minute
-    # tick. Stated as a RATIO rather than a count, because the count is now
-    # the cap's and this assertion is the pace's -- two different claims that
-    # were sharing one number before.
-    assert did["ticks"] > 200, did["ticks"]
-    assert len(asked) * 10 <= did["ticks"], (
-        f"{len(asked)} questions over {did['ticks']} ticks: the pace is the "
-        f"question clock, not the tick")
-    assert len({concept for _, concept, _ in asked}) == len(asked), (
-        "it asked about the same concept twice")
-    assert all(q.strip().endswith("?") or "?" in q for _, _, q in asked)
-    assert len(cycles) > len(asked), "answers are picked up between questions"
-    assert 1 <= len(truths) <= 3, truths
-
-    assert did["asked"] == len(asked) and did["ticks"] > 0
-    assert did["skipped"]["pass"] == 0
-    assert lab.open_sessions() == [], "the night left its session open"
-    closed = lab.last_close()
-    assert closed["mode"] == "night"
-    assert closed["did"]["asked"] == len(asked)
-    assert 0 < len(closed["lessons"]) <= lab.MAX_LESSONS
-    assert closed["next"], "the morning needs the ids worth a room"
-    assert any("NEX-" in item for item in closed["next"])
-
-    summary = scripts_lab.status()
-    assert "night" in summary.lower() and str(len(asked)) in summary, summary
-
-
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_a_night_with_nexus_dead_still_searches_all_night(tmp_path, monkeypatch):
-    """The acceptance for the rebuilt night: their side being down stops the
-    questions and nothing else. Backtests are reads, they cost only their rate
-    limit, and a night that stops walking because Nexus is quiet is the night
-    the operator went after."""
-    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
-    zone = timezone(timedelta(hours=2))
-    clock = _Clock(datetime(2026, 9, 12, 23, 30, tzinfo=zone))
-    walked, asked = [], []
-    moves = [{"legs": [], "period": 30, "why": f"m{n}"} for n in range(400)]
-
-    def _search(bite):
-        walked.extend(bite)
-        return {"asked": len(bite), "known": 0, "failed": 0}
-
-    did = scripts_lab.night(
-        "07:00", clock=clock, sleep=clock.sleep,
-        actions={"pass": lambda: False,
-                 # Their side down, and it never comes back tonight.
-                 "backoff": lambda: clock() + timedelta(hours=9),
-                 "cycle": lambda: {}, "truth": lambda: [],
-                 "ask": lambda slug, question: asked.append(slug),
-                 "search": _search, "moves": lambda: list(moves)},
-        out=lambda *a: None)
-
-    assert asked == [], "it asked while their own failure said to wait"
-    assert did["skipped"]["backoff"] > 0, did["skipped"]
-    assert len(walked) == len(moves), (
-        f"only {len(walked)} of {len(moves)} moves were walked in eight hours")
-    assert did["backtests"] == len(moves)
-
-
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_an_interrupted_night_still_closes_its_session(tmp_path, monkeypatch):
-    """Ctrl-C is how the operator stops it. A session left open makes the next
-    laboratory inherit an unfinished night, and the reminder rule then nags
-    about a night that is long over."""
-    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
-    zone = timezone(timedelta(hours=2))
-    clock = _Clock(datetime(2026, 9, 12, 23, 30, tzinfo=zone))
-
-    def _stop():
-        raise KeyboardInterrupt
-
-    did = scripts_lab.night(
-        "07:00", clock=clock, sleep=clock.sleep,
-        actions={"pass": lambda: False, "backoff": lambda: None,
-                 "cycle": _stop, "truth": lambda: [], "ask": lambda c, q: {}},
-        out=lambda *a: None)
-
-    assert did["stopped"] == "interrupted"
-    assert lab.open_sessions() == []
-    assert lab.last_close()["did"]["stopped"] == "interrupted"
-
-
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_a_night_that_crashes_still_closes_its_session(tmp_path, monkeypatch):
-    """Ctrl-C is not the only way a night ends early. Every tick reads files
-    another process writes -- the deep pass's own notebook, nexus.jsonl -- and
-    one half-written line at three in the morning is a raised exception, not a
-    keyboard. Left open, the morning's `status` says OPEN, the reminder nags
-    about a night that is long over, and `lab.py night` refuses to start the
-    next one. The traceback still reaches their terminal; the session does not
-    stay open to buy it.
-    """
-    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
-    zone = timezone(timedelta(hours=2))
-    clock = _Clock(datetime(2026, 9, 12, 23, 30, tzinfo=zone))
-    looks = {"n": 0}
-
-    def _pass():
-        looks["n"] += 1
-        if looks["n"] >= 3:
-            raise RuntimeError("deep-pass-progress.json was half written")
-        return False
-
-    with pytest.raises(RuntimeError):
-        scripts_lab.night(
-            "07:00", clock=clock, sleep=clock.sleep,
-            actions={"pass": _pass, "backoff": lambda: None,
-                     "cycle": lambda: {}, "truth": lambda: [],
-                     "ask": lambda slug, question: {}},
-            out=lambda *a: None)
-
-    assert lab.open_sessions() == [], "the crash left the night open"
-    closed = lab.last_close()
-    assert closed["did"]["stopped"].startswith("crashed"), closed["did"]
-    assert "half written" in closed["did"]["stopped"]
-
-
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_night_holds_no_hand_that_trades_files_or_commits():
     """A negative control that does not need the thing it tests: read off the
     source rather than performed.
@@ -1584,7 +1398,9 @@ def test_the_night_holds_no_hand_that_trades_files_or_commits():
 
     source = (REPO / "scripts" / "lab.py").read_text(encoding="utf-8")
     night = source[source.index("\n# --- the night"):source.index("\ndef main(")]
-    assert "def night(" in night and len(night) > 2000, "the slice moved"
+    # `def night(` was the anchor until the command was removed on 2026-09-21;
+    # the section still holds every door the tick spends through.
+    assert "def night_promote(" in night and len(night) > 2000, "the slice moved"
 
     # The CODE, not the prose. A raw substring search read docstrings too, so
     # explaining in words that the night must not reach paper was itself a
@@ -1664,26 +1480,6 @@ def test_the_night_holds_no_hand_that_trades_files_or_commits():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_the_nights_own_doors_are_the_real_ones(tmp_path, monkeypatch):
-    """The loop above is driven with fakes, which leaves the wiring untested --
-    and a mistyped default would surface at three in the morning on their
-    machine, hours into a night that then does nothing. A clock already past
-    the deadline builds the real doors and runs no tick, so this reaches
-    nothing over the network."""
-    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
-    zone = timezone(timedelta(hours=2))
-    start = datetime(2026, 9, 12, 23, 30, tzinfo=zone)
-    readings = iter([start, start + timedelta(hours=9)])
-
-    did = scripts_lab.night("07:00", clock=lambda: next(readings),
-                            sleep=lambda seconds: None, out=lambda *a: None)
-
-    assert did["ticks"] == 0, "a tick ran and would have called their API"
-    assert lab.open_sessions() == []
-    assert lab.last_close()["mode"] == "night"
-
-
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_notebook_is_outside_git():
     """It is appended to while a run may be in flight, and a dirty tree is a
     tree no run can reach level V from -- the reason nexus.jsonl and
@@ -1692,75 +1488,6 @@ def test_the_notebook_is_outside_git():
     ignored = (REPO / ".gitignore").read_text(encoding="utf-8")
     assert "state/lab.jsonl" in ignored, (
         "the laboratory's notebook would dirty the tree mid-run")
-
-
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_the_night_keeps_searching_after_the_first_queue_runs_out(
-        tmp_path, monkeypatch):
-    """[operator] *"celou noc budete delat backtesty nonstop"* — and it did not.
-
-    `night_moves()` is built ONCE and only ever sliced. Measured on the real
-    repository: 168 moves, 30 a tick, a tick every two minutes — **six ticks,
-    twelve minutes** of a fourteen-hour night, and then `pending` sits at 0 and
-    `night_tick` stops scheduling `search` until dawn. The second night is
-    worse: the walk is deterministic, so it rebuilds the same 168 and the
-    register answers "already measured" for nearly all of them.
-
-    An independent reviewer found it; two others read "search runs every tick"
-    and called it delivered. The tick is uncapped, the SUPPLY was not, and the
-    queue length is what settles it.
-
-    The refill is also the better search. The first queue is the neighbourhood
-    of THEIR cards; a refill is the neighbourhood of whatever has actually
-    scored best so far, so each round climbs instead of restarting.
-    """
-    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
-    zone = timezone(timedelta(hours=2))
-    clock = _Clock(datetime(2026, 9, 12, 20, 0, tzinfo=zone))
-    walked, refills = [], []
-
-    searched_at = []
-
-    def _search(bite):
-        searched_at.append(clock.now)
-        walked.extend(bite)
-        return {"asked": len(bite), "known": 0}
-
-    def _refill():
-        refills.append(len(refills))
-        return [{"kind": "window", "period": 30, "legs": [], "why": f"r{n}"}
-                for n in range(40)]
-
-    did = scripts_lab.night(
-        "06:00", clock=clock, sleep=clock.sleep,
-        actions={"pass": lambda: False, "backoff": lambda: None,
-                 "cycle": lambda: {"polled": []}, "truth": lambda: [],
-                 "ask": lambda concept, question: {"id": "NEX-1"},
-                 "search": _search, "refill": _refill,
-                 "moves": lambda: [{"kind": "window", "period": 30,
-                                    "legs": [], "why": f"seed{n}"}
-                                   for n in range(30)]},
-        out=lambda *a: None)
-
-    assert refills, "the queue emptied and the night stopped searching"
-    assert len(walked) > 30 * 4, (
-        f"only {len(walked)} move(s) walked in a ten-hour night")
-    assert did["backtests"] == len(walked)
-
-    # WHEN, not only how many. `len(walked) > 120` is satisfied by a night that
-    # refills three times and then stops: 30 + 3x40 = 150 over about seven
-    # ticks, and nothing for the remaining ten hours. All three assertions above
-    # stay green on exactly the defect this docstring quantifies -- "twelve
-    # minutes of a fourteen-hour night". So the last search has to land near the
-    # end of the night, which is the property, and it is the one a cap on
-    # refills breaks. 3/3, deep pass of 2026-09-13.
-    assert searched_at, "the night never searched at all"
-    started, ended = searched_at[0], clock.now
-    span = (ended - started).total_seconds()
-    idle = (ended - searched_at[-1]).total_seconds()
-    assert span > 0 and idle <= span * 0.1, (
-        f"the night's last search was {idle / 3600:.1f} h before dawn, out of "
-        f"{span / 3600:.1f} h -- it walked {len(walked)} moves and then waited")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -2024,50 +1751,6 @@ def test_an_answer_that_names_no_card_is_left_for_the_morning():
     indicator -- and it proposes nothing to buy. An answer is not a proposal."""
     assert lab.proposed_cards("treat that number as unmeasured", {"a"}) == {
         "actionable": [], "unknown": []}
-
-
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_the_night_reaches_the_launch_step_at_all(tmp_path, monkeypatch):
-    """[operator 2026-09-12] *"Jasne ze v noci muze spoustet."*
-
-    The night researched all night and placed nothing, which was a narrowing I
-    put in a plan they do not read. This is the wiring: `night()` reaches the
-    promote step and counts what it returns.
-
-    **Renamed 2026-09-13 (3/3), and the old name is the finding.** It read
-    `..._on_paper_from_a_nexus_answer_and_nothing_else`, claiming the road (a
-    room opens from a whole Nexus answer, never from a basket of ours) and the
-    brakes (`affordable`, paper only, nothing while a deep pass runs) -- and
-    `promote` here is a stub that returns `{"rooms": 1, "orders": 1}` whatever
-    it is handed. A `night_promote` that opened a room from our own basket,
-    skipped `affordable` and posted live would have kept every assertion below
-    green. The road and the brakes are really held by
-    tests/meta/test_pipeline_night_spend.py, which drives the real function;
-    this name was borrowing their credit. Same shape as A04 of the 2026-09-12
-    pass, which was ruled real and fixed by a rename.
-    """
-    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
-    bought, rooms_opened = [], []
-
-    def _promote():
-        rooms_opened.append("STR-0001")
-        bought.append({"card": "c1", "usdc": 1700.0})
-        return {"rooms": 1, "orders": 1, "held": []}
-
-    zone = timezone(timedelta(hours=2))
-    clock = _Clock(datetime(2026, 9, 12, 22, 0, tzinfo=zone))
-    did = scripts_lab.night(
-        "23:00", clock=clock, sleep=clock.sleep,
-        actions={"pass": lambda: False, "backoff": lambda: None,
-                 "cycle": lambda: {"polled": []}, "truth": lambda: [],
-                 "ask": lambda concept, question: {"id": "NEX-1"},
-                 "search": lambda bite: {"asked": len(bite), "known": 0},
-                 "refill": list, "moves": list, "promote": _promote},
-        out=lambda *a: None)
-
-    assert did["orders"] >= 1, "the night launched nothing"
-    assert did["rooms"] >= 1
-    assert bought, "no paper order was placed"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
