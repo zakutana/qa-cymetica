@@ -178,19 +178,36 @@ def test_the_board_is_ranked_by_the_key_its_own_document_publishes(rest_anon):
             population={"playbooks": len(rows)}))
         return
 
-    ranked = sorted(rows, key=lambda r: -(r.get("rank") or 0))
+    # A03, deep pass of 2026-09-22 evening: `rank or 0` and `created_at or
+    # ""` turned a field the board stopped carrying into a value, and the
+    # check failed "exactly newest-first" having read neither. Unread.
+    blind = [r.get("id") for r in rows
+             if not isinstance(r.get("rank"), (int, float))
+             or isinstance(r.get("rank"), bool) or not r.get("created_at")]
+    if blind:
+        conclude(Measurement(
+            verdict="inconclusive",
+            reason=(f"{len(blind)} of {len(rows)} playbook(s) carry no numeric "
+                    f"`rank` or no `created_at`, so neither the board's order "
+                    f"nor its age order can be read"),
+            sources={"document": LLMS, "board": SEARCH},
+            population={"playbooks": len(rows), "unread": blind[:10]}))
+        return
+
+    ranked = sorted(rows, key=lambda r: -r["rank"])
     proved = [r for r in rows if not _nil_key(r)]
     # Same row, other query: is `rank` a property of the row or of the search?
     # Only rows that carry an id can be the same row. Keyed on r.get("id"),
     # every id-less row became None and was compared with the LAST id-less row
     # of the other query (A14, deep pass of 2026-09-21).
     other = {r["id"]: r.get("rank") for r in _rows(narrow)
-             if r.get("id") is not None}
+             if r.get("id") is not None and isinstance(r.get("rank"), (int, float))
+             and not isinstance(r.get("rank"), bool)}
     shared = [r for r in rows if r.get("id") is not None and r["id"] in other]
     fixed = [r for r in shared
-             if round(float(r.get("rank") or 0), PLACES)
-             == round(float(other[r.get("id")] or 0), PLACES)]
-    newest = sorted(rows, key=lambda r: str(r.get("created_at") or ""), reverse=True)
+             if round(float(r["rank"]), PLACES)
+             == round(float(other[r.get("id")]), PLACES)]
+    newest = sorted(rows, key=lambda r: str(r["created_at"]), reverse=True)
     by_age = [r.get("id") for r in newest] == [r.get("id") for r in ranked]
 
     facts = {"playbooks": len(rows), "with_a_verified_key": len(proved),

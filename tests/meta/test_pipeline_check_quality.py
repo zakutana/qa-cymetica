@@ -1571,6 +1571,17 @@ def test_the_board_compared_over_no_shared_row_is_not_a_relevance_score():
     assert _drive_check(check, board(proved, proved))[0] == "inconclusive"
     shuffled = rows(ranks=(0.07984, 0.36374, 0.14878))
     assert _drive_check(check, board(shuffled, shuffled))[0] == "inconclusive"
+    # A03, deep pass of 2026-09-22 evening (3/3): `rank or 0` and
+    # `created_at or ""` turned a field the board stopped carrying into a
+    # value, so a renamed `rank` or a dropped `created_at` failed "exactly
+    # newest-first" having read neither. A field that is not there is unread.
+    for drop in ("rank", "created_at"):
+        blind = rows()
+        for row in blind:
+            row.pop(drop)
+        verdict, reason = _drive_check(check, board(blind, blind))
+        assert verdict == "inconclusive", (
+            f"rows with no {drop} were judged: {verdict}: {reason}")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
