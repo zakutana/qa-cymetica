@@ -193,8 +193,11 @@ def _quote(client, token_address: str) -> dict | None:
 # It is ours, because we wrote the print down as a return and drew it. We had
 # these fields in the same response the price came out of and kept only the
 # price, so a year of diary cannot be re-judged. Kept from now on.
+# `pair_address` since 2026-09-22: the terminal answered one address with
+# different pairs from hour to hour (JUP 1437.39 -> 0.2782, liquidity 91M ->
+# 2M), and `age_seconds` beside `dex` only hinted at which one a price was.
 DEPTH_FIELDS = ("liquidity_usd", "volume_h24", "market_cap", "buys_h24",
-                "sells_h24", "age_seconds", "dex")
+                "sells_h24", "age_seconds", "dex", "pair_address")
 
 
 def _depth(quote: dict | None) -> dict:

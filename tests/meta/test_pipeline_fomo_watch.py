@@ -400,7 +400,8 @@ def test_a_price_is_written_with_the_depth_it_was_quoted_at(tmp_path,
     mod = _module(tmp_path, monkeypatch)
     quote = {"price_usd": 0.002, "liquidity_usd": 0.02, "volume_h24": 0.25,
              "market_cap": 45160641.0, "buys_h24": 23, "sells_h24": 11,
-             "age_seconds": 46877, "dex": "meteora", "name": "Melon Musk"}
+             "age_seconds": 46877, "dex": "meteora", "name": "Melon Musk",
+             "pair_address": "PairMeteora1"}
 
     def handler(request):
         url = str(request.url)
@@ -426,6 +427,11 @@ def test_a_price_is_written_with_the_depth_it_was_quoted_at(tmp_path,
     assert check["horizon"] == "1h"
     assert check["liquidity_usd"] == 0.02, (
         "depth on the signal alone cannot say whether the EXIT was tradeable")
+    # 2026-09-22: their terminal answered one address with different pairs
+    # from hour to hour (JUP 1437.39 -> 0.2782). Which pair a price came from
+    # is what a check on that has to read, on the entry and on every exit.
+    assert signal["pair_address"] == "PairMeteora1"
+    assert check["pair_address"] == "PairMeteora1"
 
     # A quote that carries none of it still writes the price. Their rows are
     # not all the same shape and a missing field is not a failed read.
