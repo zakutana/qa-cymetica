@@ -187,3 +187,69 @@ def test_a_denial_of_a_pro_forma_stretch_is_not_a_disclosure_of_one_116():
 
     with pytest.raises(Inconclusive):
         _run_fta_check("")
+
+
+# ------------------------------------------------- a refused clone says why -
+
+PCPN, RSI = "23441934-8475-4aa0-bbff-75c03ecd3284", "70a47f2a-e1d5-40dc-9c01-bd9b9a2d3c80"
+AGAIN = {"detail": "Invalid clone request. Please try again."}
+OPENAPI_CLONE = (200, {"paths": {"/api/v1/cloned-bots/clone": {"post": {
+    "responses": {"200": {}, "422": {}}}}}})
+
+
+def _cloned(clone_id, source, at, status, outcome):
+    return [{"id": clone_id, "type": "intent", "source_type": "wta_species",
+             "source_id": source, "paper": True, "at": f"2026-09-22T{at}+00:00"},
+            {"id": clone_id, "type": "outcome", "http_status": status,
+             "outcome": outcome, "evidence_id": f"ev-{clone_id}",
+             # What the record said until 2026-09-22 -- never read: the check
+             # takes the body from the capture.
+             "response": "{}"}]
+
+
+def _run_clone_check(monkeypatch, rows, bodies):
+    check = _load("tests/rest/test_a_refused_clone_says_why.py",
+                  "refused_clone_check_under_test")
+    monkeypatch.setattr(check, "_clones", lambda: type("C", (), {
+        "load": staticmethod(lambda: rows)})())
+    monkeypatch.setattr(check, "their_body",
+                        lambda attempt: bodies.get(attempt["id"]))
+    check.test_a_refused_paper_clone_says_why(
+        _Rest({"/openapi-public.json": OPENAPI_CLONE}))
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_clone_refusal_that_asks_for_the_retry_it_refuses_fails(monkeypatch):
+    """CLN-0017 and CLN-0020: the same paper clone, refused twice with "Please
+    try again". Judged per source by its newest attempt -- the #117 lesson: a
+    different species cloned afterwards is not the fix -- and on their body
+    from the capture, never on our record's `response`, which read `{}`."""
+    rows = (_cloned("CLN-0017", PCPN, "13:39:02", 400, "rejected")
+            + _cloned("CLN-0014", RSI, "13:39:30", 200, "accepted")
+            + _cloned("CLN-0020", PCPN, "17:47:14", 400, "rejected"))
+    twice = {"CLN-0017": AGAIN, "CLN-0020": AGAIN}
+    with pytest.raises(AssertionError, match="Please try again"):
+        _run_clone_check(monkeypatch, rows, twice)
+    # Another species cloned AFTER it is not the fix.
+    later = rows + _cloned("CLN-0021", RSI, "18:00:00", 200, "accepted")
+    with pytest.raises(AssertionError, match=PCPN):
+        _run_clone_check(monkeypatch, later, twice)
+
+    # Refused once, never retried: the advice has not been tested.
+    with pytest.raises(Inconclusive):
+        _run_clone_check(monkeypatch, rows[:4], {"CLN-0017": AGAIN})
+
+    # A capture that cannot be read is unmeasured, not an empty body.
+    with pytest.raises(Inconclusive):
+        _run_clone_check(monkeypatch, rows, {"CLN-0017": AGAIN})
+
+    # A refusal with nothing in it fails on its own.
+    with pytest.raises(AssertionError, match="no detail"):
+        _run_clone_check(monkeypatch, rows, {"CLN-0017": AGAIN, "CLN-0020": {}})
+
+    # The fixes: the clone is made, or the refusal names its reason.
+    made = rows + _cloned("CLN-0030", PCPN, "18:30:00", 200, "accepted")
+    _run_clone_check(monkeypatch, made, twice)
+    named = rows + _cloned("CLN-0031", PCPN, "18:40:00", 409, "rejected")
+    _run_clone_check(monkeypatch, named, {**twice, "CLN-0031": {
+        "detail": "You already hold a paper clone of this species."}})
