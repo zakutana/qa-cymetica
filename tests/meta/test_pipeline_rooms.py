@@ -1526,6 +1526,29 @@ def test_a_leg_names_its_kind_and_an_old_card_leg_reads_as_a_card(
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_arena_leg_names_a_team(tmp_path, monkeypatch):
+    """The fourth paper product (NEXT.md, 2026-09-22): place_arena_order takes
+    `team_symbol: enum [BLUE, RED]` and trades on paper with `mode: paper`.
+    Its leg names the team the way their schema does -- upper case, one of
+    two -- and nothing else is a team."""
+    rooms = _rooms_at(tmp_path, monkeypatch)
+    _write(tmp_path / "nexus.jsonl", _answered("NEX-1", 0))
+    rooms.open_strategy("NEX-1", "Arena")
+
+    plan = rooms.set_plan("STR-0001", [
+        {"kind": "arena", "ref": "blue", "side": "bull", "share": 0.1}])
+    (leg,) = plan["legs"]
+    assert (leg["kind"], leg["ref"]) == ("arena", "BLUE") and "card" not in leg
+
+    before = _stored(tmp_path)
+    for ref in ("GREEN", "", "BLUE-RED", CARD_A):
+        with pytest.raises(rooms.RoomError):
+            rooms.set_plan("STR-0001", [
+                {"kind": "arena", "ref": ref, "side": "bull", "share": 0.1}])
+    assert _stored(tmp_path) == before, "a refused leg still wrote something"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_bot_or_fund_room_is_one_thing_of_its_answer_not_the_whole_answer(
         tmp_path, monkeypatch):
     """A room with no `card` used to mean a WHOLE-ANSWER room -- in

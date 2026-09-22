@@ -66,7 +66,11 @@ CARD_ID = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]
 # paper, not only cards. A card is bought on paper, a bot is cloned on paper
 # (scripts/clone.py), a fund is only MARKED: create_aib_fund spends real money
 # and has no paper switch, so its leg is watched on its own series.
-LEG_KINDS = ("card", "bot", "fund")
+# An arena leg (2026-09-22) holds one team of their BLUE/RED Arena, named as
+# place_arena_order's `team_symbol` enum names it; the tool trades on paper
+# only with `mode: paper`, which qa/safety.py holds it to.
+LEG_KINDS = ("card", "bot", "fund", "arena")
+ARENA_TEAMS = ("BLUE", "RED")
 FUND_SYMBOL = re.compile(r"^[A-Z0-9][A-Z0-9-]{0,39}$")
 BOT_REF = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.:-]{0,79}$")
 # What the tab calls an answered question. render.py's _nexus_questions() reads
@@ -577,6 +581,11 @@ def _leg(leg: dict) -> dict:
                         f"names one")
     elif kind == "bot" and not BOT_REF.match(ref):
         raise RoomError(f"{ref!r} is not a bot's instance id")
+    elif kind == "arena":
+        ref = ref.upper()
+        if ref not in ARENA_TEAMS:
+            raise RoomError(f"{ref!r} is not an Arena team: "
+                            f"{' or '.join(ARENA_TEAMS)}")
     side = str(leg.get("side") or "").strip().lower()
     if side not in SIDES:
         raise RoomError(f"a side is {' or '.join(SIDES)}, not {leg.get('side')!r}")

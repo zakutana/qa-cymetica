@@ -343,6 +343,31 @@ def test_a_queued_deep_job_is_still_in_flight_after_our_give_up():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_question_turned_away_at_the_door_is_not_in_flight():
+    """NEX-0074, 2026-09-22 17:28 UTC: their wording filter answered
+    QUERY_RESTRICTED before any job existed, and `nexus.py ask` wrote the
+    question row with `accepted: false` and no `job_id`. `outstanding` read
+    that row as a job still being answered, so the reworded question a minute
+    later was refused by OUR brake -- "NEX-0074 is still being answered" --
+    for the two hours of IN_FLIGHT_HOURS, over a job that never existed and
+    that nothing could ever poll.
+
+    It still counts as an ask against the hour (the test below): the filter
+    ran on their side. What it cannot be is in flight."""
+    asked = NOW - timedelta(minutes=1)
+    refused = {**_question("NEX-1", asked), "accepted": False,
+               "error": "tool error: {'error': 'QUERY_RESTRICTED'}"}
+    taken = {**_question("NEX-2", asked), "accepted": True, "job_id": "j-2"}
+
+    assert lab.outstanding([refused], NOW) == [], (
+        "a question with no job on their side has nothing left to answer")
+    assert lab.outstanding([refused, taken], NOW) == ["NEX-2"], (
+        "one they took on is still in flight until it is answered")
+    may, why = lab.may_ask_now([refused], NOW)
+    assert may, why
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_refused_question_still_counts_against_the_hour():
     """2026-09-21, 01:25 UTC: "Hourly deep-answer limit reached."
 
@@ -2176,6 +2201,34 @@ def test_a_fund_is_marked_not_bought_and_judged_on_its_own_series(
                                            for p in series["AIB-SPACE"]])
     said = scripts_lab.verdicts(now=opened + timedelta(days=days, hours=13))
     assert [s["verdict"] for s in said] == ["survived"], said
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_arena_leg_is_a_gap_until_something_reads_its_series(
+        tmp_path, monkeypatch):
+    """An arena leg (2026-09-22) names a team, BLUE or RED, and nothing here
+    reads a team's price yet: how a share settles is NEX-0076's question. Any
+    kind series_of does not know fell through to a CARD's index-history, so
+    an arena leg would have been judged on /event-cards/BLUE. Until a reader
+    exists it is a gap -- inconclusive, never a loss and never a pass."""
+    import qa.rooms as qa_rooms
+
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    _write(tmp_path, "nexus.jsonl", _answer("Hold BLUE through the next epoch."))
+    room = qa_rooms.open_strategy("NEX-0001", "Arena BLUE", kind="arena",
+                                  ref="BLUE")
+    qa_rooms.set_plan(room["id"], [
+        {"kind": "arena", "ref": "BLUE", "side": "bull", "share": 0.1}])
+    qa_rooms.set_acceptance(room["id"], 1.0, 10.0, "an arena room under test")
+    qa_rooms.set_status(room["id"], "running", "an arena room under test")
+
+    read = []
+    monkeypatch.setattr(scripts_lab, "_history",
+                        lambda client, card: read.append(card) or [])
+    said = scripts_lab.verdicts(now=datetime.now(timezone.utc) + timedelta(days=2))
+
+    assert "BLUE" not in read, f"a team was read as a card: {read}"
+    assert [s["verdict"] for s in said] == ["inconclusive"], said
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

@@ -447,6 +447,12 @@ def may_ask_now(nexus_rows: list[dict], now: datetime | None = None,
                if r.get("type") == "gave_up"
                and str(r.get("status") or "").startswith("failed")
                and isinstance(r.get("retry_after_s"), (int, float))}
+    # And one refused at the door, before any job existed (NEX-0074, their
+    # wording filter): not taken on either, and the filter's own hint is to
+    # ask again in different words. The hourly count below still has it.
+    refused |= {r.get("id") for r in nexus_rows
+                if r.get("type") == "question"
+                and r.get("accepted") is False and not r.get("job_id")}
     # Not a question the operator asked them in a browser. `nexus.py record`
     # writes one so the answer survives a /clear, and the floor read it as
     # traffic of ours: recording at 14:00 stopped the laboratory asking
@@ -569,6 +575,14 @@ def outstanding(nexus_rows: list[dict], now: datetime | None = None,
         if not ident:
             continue
         if kind == "question":
+            # Turned away before a job existed -- `nexus.py ask` writes
+            # `accepted: false` with no job_id when their side refuses the
+            # call itself (NEX-0074, the wording filter). There is nothing to
+            # poll and nothing to wait for; counted in flight, it held the
+            # lane for IN_FLIGHT_HOURS. `accepted` absent is an older row and
+            # stays as it was.
+            if row.get("accepted") is False and not row.get("job_id"):
+                continue
             when = row.get("at")
             try:
                 stamp = datetime.fromisoformat(str(when).replace("Z", "+00:00"))

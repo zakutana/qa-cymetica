@@ -1162,6 +1162,11 @@ def verdicts(now=None) -> list[dict]:
         reads that as a gap, never as a loss."""
         nonlocal samples, funded
         kind, ref = rooms.leg_kind(leg), rooms.leg_ref(leg)
+        if kind == "arena":
+            # Nothing reads a team's price yet (NEX-0076 asks how a share
+            # settles). A gap, not a card: the fall-through below would have
+            # judged BLUE on /event-cards/BLUE.
+            return []
         if kind == "bot":
             if samples is None:
                 samples, funded = rooms.load_samples(), _funded()
