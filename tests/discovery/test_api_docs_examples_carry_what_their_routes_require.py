@@ -43,28 +43,42 @@ from qa.measure import Measurement, conclude
 PAGE = "/api-docs"
 OPENAPI = "/openapi-public.json"
 BLOCK = re.compile(r'<div class="code-block"[^>]*>(.*?)</div>', re.S)
-CURL = re.compile(
-    r"curl\s+-X\s+(POST|PUT|PATCH)\s+https://cymetica\.com(/api/[^\s\\'\"?]+)"
-    r"(.*?)(?=curl\s+-X|\Z)", re.S)
-BODY = re.compile(r"-d\s+'(\{.*?\})'", re.S)
+# One curl command, read in any order and either quoting (A06, R06, deep pass
+# of 2026-09-22 evening): until then only `curl -X M https://... -d '{...}'`
+# was read, and a quoted URL -- two on their page that day -- `--data`, a
+# double-quoted body or `-X` after the URL were neither judged nor counted.
+COMMAND = re.compile(r"\bcurl\b(.*?)(?=\bcurl\b|\Z)", re.S)
+METHOD = re.compile(r"(?:-X|--request)\s+['\"]?([A-Z]+)")
+URL = re.compile(r"['\"]?https://cymetica\.com(/api/[^\s\\'\"?]+)")
+BODY = re.compile(r"(?:-d|--data(?:-raw|-binary)?)\s+(['\"])(\{.*?\})\1(?=\s|\\|$)",
+                  re.S)
+WRITES = ("POST", "PUT", "PATCH")
 
 
 def examples(page: str) -> list[dict]:
     """Every documented write with a JSON body: method, path, body (or the
-    raw text when it does not parse)."""
+    raw text when it does not parse). A body with no -X is a POST, as curl
+    sends it."""
     out = []
     for block in BLOCK.findall(page):
         text = html.unescape(re.sub(r"<[^>]+>", "", block))
-        for method, path, rest in CURL.findall(text):
-            found = BODY.search(rest)
-            if not found:
+        for command in COMMAND.findall(text):
+            url, found = URL.search(command), BODY.search(command)
+            if not url or not found:
                 continue
+            method = METHOD.search(command)
+            method = method.group(1) if method else "POST"
+            if method not in WRITES:
+                continue
+            raw = found.group(2)
+            if found.group(1) == '"':
+                raw = raw.replace('\\"', '"')
             try:
-                body = json.loads(found.group(1))
+                body = json.loads(raw)
             except json.JSONDecodeError:
                 body = None
-            out.append({"method": method, "path": path, "body": body,
-                        "raw": " ".join(found.group(1).split())[:200]})
+            out.append({"method": method, "path": url.group(1), "body": body,
+                        "raw": " ".join(raw.split())[:200]})
     return out
 
 

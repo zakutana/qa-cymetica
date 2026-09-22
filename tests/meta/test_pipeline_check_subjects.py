@@ -403,3 +403,34 @@ def test_an_api_docs_example_missing_a_required_field_fails():
                         "cloned-bots/clone -d '{\"bot_id\": 1}'</p>")
     with pytest.raises(Inconclusive):
         _run_docs_check(bad, spec_status=503)
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_every_way_a_curl_can_be_written_is_read():
+    """A06 (3/3) and R06 (2/3), deep pass of 2026-09-22 evening. The reader
+    took only `curl -X METHOD https://... -d '{...}'`: a quoted URL -- two on
+    their page that day -- `--data`, a double-quoted body, or `-X` after the
+    URL were neither judged nor counted, while the pass line said all
+    examples hold."""
+    check = _load(
+        "tests/discovery/test_api_docs_examples_carry_what_their_routes_require.py",
+        "docs_examples_spellings")
+    fund = "/api/v1/cloned-bots/abc/fund"
+    spellings = [
+        f"curl -X POST \"https://cymetica.com{fund}\" -d '{{\"x\": 1}}'",
+        f"curl https://cymetica.com{fund} -X POST --data '{{\"x\": 1}}'",
+        f"curl -X POST https://cymetica.com{fund} -d \"{{\\\"x\\\": 1}}\"",
+        f"curl https://cymetica.com{fund} --data-raw '{{\"x\": 1}}'",
+    ]
+    for spelled in spellings:
+        found = check.examples(_page(spelled))
+        assert len(found) == 1, (spelled, found)
+        said = check.judge(_page(spelled), CLONE_SPEC)
+        assert said["breaches"] and said["breaches"][0]["missing"] == ["amount"], (
+            spelled, said)
+
+    # Counted when unpublished, as the docstring says.
+    said = check.judge(_page(
+        "curl -X POST \"https://cymetica.com/api/v1/ai_trading_agent/prompt-assets\" "
+        "-d '{\"q\": 1}'"), CLONE_SPEC)
+    assert said["unpublished"] == ["POST /api/v1/ai_trading_agent/prompt-assets"], said
