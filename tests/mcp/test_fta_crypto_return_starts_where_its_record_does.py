@@ -54,13 +54,26 @@ PRO_FORMA = re.compile(r"pro[\s-]?forma", re.IGNORECASE)
 DENIED = re.compile(r"\b(?:no|not|never|nor|neither|none|nothing|without|zero)\b"
                     r"(?:[\s,'-]+\w+){0,3}?"
                     r"[\s,'-]+pro[\s-]?forma", re.IGNORECASE)
+# C07, deep pass of 2026-09-22 evening (3/3): the negation can come AFTER the
+# word -- "pro-forma periods are excluded", "pro-forma figures are never used"
+# -- inside the same clause, and read as a disclosure. And "exclude(s) any
+# pro-forma" puts the verb first.
+DENIED_AFTER = re.compile(r"^pro[\s-]?forma(?:[\s,'-]+\w+){0,4}?[\s,'-]+"
+                          r"(?:excluded|never|not|omitted|removed|isn't|aren't)\b",
+                          re.IGNORECASE)
+EXCLUDES = re.compile(r"\bexclud(?:e|es|ing)\b(?:[\s,'-]+\w+){0,2}?[\s,'-]+"
+                      r"pro[\s-]?forma", re.IGNORECASE)
 RETURN_SLACK_PP = 5.0
 
 
 def discloses_pro_forma(text: str) -> bool:
     """Whether the methodology says a pro-forma stretch is IN the return."""
-    return any(not DENIED.search(text[:m.end()][-80:])
-               for m in PRO_FORMA.finditer(text))
+    def denied(m) -> bool:
+        before = text[:m.end()][-80:]
+        clause = re.split(r"[.;]", text[m.start():m.start() + 120], 1)[0]
+        return bool(DENIED.search(before) or EXCLUDES.search(before)
+                    or DENIED_AFTER.search(clause))
+    return any(not denied(m) for m in PRO_FORMA.finditer(text))
 
 
 def _short_return(points) -> float | None:

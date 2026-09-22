@@ -177,6 +177,14 @@ def test_a_denial_of_a_pro_forma_stretch_is_not_a_disclosure_of_one_116():
                        "pro-forma.")
     with pytest.raises(AssertionError, match="discloses no pro-forma"):
         _run_fta_check("Neither backfilled nor pro-forma.")
+    # C07, deep pass of 2026-09-22 evening (3/3): a negation AFTER the word
+    # denies it just as well, and read as a disclosure.
+    for denial in ("Measured since inception; nothing backfilled; pro-forma "
+                   "periods are excluded.",
+                   "Pro-forma figures are never used; nothing backfilled.",
+                   "Returns exclude any pro-forma stretch."):
+        with pytest.raises(AssertionError, match="discloses no pro-forma"):
+            _run_fta_check(denial)
 
     _run_fta_check("Return since inception includes a pro-forma period before "
                    "the first held position: today's composition applied to "
