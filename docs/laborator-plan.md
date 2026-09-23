@@ -137,6 +137,7 @@ Each phase: tests first (red), then code, `pytest tests/meta tests/repo`, commit
   3. `clone.enable()` narrowed: a started clone may start again only as a new variant -- our own accepted pause, then an accepted settings PATCH after it, and no room running on it. A halt by their guard or an unexplained one stays never restarted (V2).
   4. The own lane: `rooms.open_strategy` accepts an `OUR-NNNN` origin without a Nexus answer, labelled „naše"; `brief` lists each running one as a question for him; the board ranks them after his; a species' variants are one at a time, so they count as one.
   5. A variant's verdict starts at its restart: `bot_series` measures from total funding, so a reused clone would carry the previous variant's P&L. The enable intent already records `bot_balance_usdc` at the start.
+  - And verify after the loop's first day that `answer_read` rows appear in `state/lab.jsonl`: an answer is not marked read while their bot or fund catalogue is unread (`_bot_catalogue`/`_fund_catalogue` return None on any non-200 or reshaped body), so a chronically unread catalogue would quietly keep the old re-reading.
 
 **V6 · Manažer za pár tokenů** (Sonnet · high)
 - The tick's last line is `decide: none | question | answer NEX-… | gap`. On `none` the skill writes one line and stops, with no brief, no diary and no memory read.
