@@ -59,7 +59,7 @@ In `.claude/skills/laborator/SKILL.md`, pins 1–4 of v1: manager and technician
 |---|---|---|---|
 | V0 | Úklid a záznamy dne | MSG-0045 zapsaná; archiv zabalený a na OneDrive se stejným hashem; 460 MB worktrees pryč; revize v repu | hotovo 3db2de5d |
 | V1 | Kritické opravy (před 26. 9. 00:52 UTC) | B1, C1, C3, A1, D1 mají každá test pojmenovaný po incidentu a jsou zelené | hotovo ce8a0b1e |
-| V2 | Poctivá čísla laborky | verdikt z naší knihy; Bollinger ≈ +3 %; NEX-0064 na desce +4,17 %; NEX-0080 → 1 volba; zastavený bez pozice = archiv | otevřená |
+| V2 | Poctivá čísla laborky | verdikt z naší knihy; Bollinger ≈ +3 %; NEX-0064 na desce +4,17 %; NEX-0080 → 1 volba; zastavený bez pozice = archiv | hotovo dcac9077 |
 | V3 | Memecoiny poctivě | report řekne „10 $ do každého hot signálu = X % po nákladech, n, stihli bychom Y %"; srovnání s kontrolou po tokenech a bez přepnutých párů | otevřená |
 | V4 | Laboratoř jako oddělení + stránka /lab | screenshot 2000 px viděný; commitnutá stránka nemá žádný vstup mimo git (test); poznámka ze stránky dojde do `rooms.py unread` | otevřená |
 | V5 | Pás a boti | tik spustí variantu bota s jiným nastavením přes bránu papíru; jediný limit je 60 % knihy; odpověď se čte jednou | otevřená |
@@ -96,6 +96,7 @@ Each phase: tests first (red), then code, `pytest tests/meta tests/repo`, commit
 - C4: n_eff on time-aligned returns.
 - C7: picks are read only from pick lines, tested against the real answers in `nexus.jsonl`. C8: drawdown from the peak. C9: `_next_id` taken under the lock.
 - Bot stop cause is one of three: ours, their guard, or unexplained. An unexplained stop gets a check + report. A stopped bot is never re-enabled.
+  - *Done 9f141b82, except the report:* Bollinger Bandit (36642175) halted at +7.11 on 240.18 with no reason anywhere -- their settings are PATCH-only (no read-back), my-clones has no reason field, /activity no halt event, and their docs describe no automatic halt at all. The Telegram line went to the operator on 2026-09-23; the check and the report are a NEXT.md line, because the contract to hold has to be their documented one, not Nexus's NEX-0049.
 - `board`/`brief` include bots and funds. clones.jsonl leaves git via a `keep.py` subcommand.
 
 **V3 · Memecoiny poctivě** (Opus · high)
