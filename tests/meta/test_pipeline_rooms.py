@@ -303,6 +303,8 @@ def test_the_tab_reads_no_field_the_rooms_do_not_write(tmp_path, monkeypatch):
         "ns": {k for c in bots for s in c.get("samples") or [] for k in s},
         "na": {k for c in bots for a in c.get("activity") or [] for k in a},
         "nl": {k for p in panels for leg in p.get("legs") or [] for k in leg},
+        # The Nexus line on /lab reads _nexus_channel() as `nch.`.
+        "nch": set(_lab_page()._nexus_channel()),
     }
     for name, keys in written.items():
         # Any identifier, camelCase included: `[a-z_]+` then `\b` could not

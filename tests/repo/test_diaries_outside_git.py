@@ -99,6 +99,11 @@ def test_the_committed_console_hashes_nothing_git_does_not_hold(tmp_path,
     assert digest(bare) == digest(full), (
         "a gitignored file under state/ moved the committed console's hash, "
         "so the committed page is a render of something no commit carries")
+    # The copies are hard links into the real state/: a render that ever
+    # appended to a file there would have written through them. Red, not silent.
+    moved = subprocess.run(["git", "status", "--porcelain", "--", "state"],
+                           cwd=REPO, capture_output=True, text=True).stdout
+    assert not moved, f"rendering over the linked copies wrote into state/:\n{moved}"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

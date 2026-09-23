@@ -112,7 +112,7 @@ Each phase: tests first (red), then code, `pytest tests/meta tests/repo`, commit
 **V4 · Laboratoř jako oddělení + /lab** (Sonnet · high)
 - `lab.py report` → `state/lab/report.json`: per product, net %, n, Wilson band, running, best, archived count; plus a Nexus hit-rate line (questions → picks → gate → survived).
 - serve.py serves `/lab` from it, and the page is not committed.
-- The Nexus and Memecoiny tabs, `build_rooms` and the `fomo`/`nexus` payload inputs are removed from render.py. The committed page then hashes nothing outside git (the D2 half those inputs cause). render.py:4931's quote is re-pinned where the memecoin room now lives, same hash, own commit.
+- The Nexus and Memecoiny tabs, `build_rooms` and the `fomo`/`nexus` payload inputs are removed from render.py. The committed page then hashes nothing outside git (the D2 half those inputs cause). render.py:4931's quote is re-pinned where the memecoin room now lives, same hash.
 - The collectors (fomo, hot, sampler) run on serve.py's timers (reads only), and the tick stops its own fomo round, leaving one writer.
 - `console.cmd --fomo 1` only after this, together with new-signal horizons 0.25/1/4/24 h, a quote cap per round, and bulky captures pruned after 1 day.
 - Tests first: the tests that pin the old tabs are rewritten, and a both-ways field guard is added for `report.json`.
