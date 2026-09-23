@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-09-22T22:36:53+00:00",
+  "fetched_at": "2026-09-22T23:54:02+00:00",
   "total": 86,
   "statuses": {
     "paid": 19,
@@ -25,8 +25,8 @@
   "our_reports": {
     "endpoint": "GET /api/v1/bounty/my-reports?wallet_address=<addr>",
     "klass": "ok",
-    "read_at": "2026-09-22T22:36:48+00:00",
-    "evidence_id": "567c7eef7159eae7a6deb847fb524944fb478f28b71acc5fc3b8fb52f2ed0ecf",
+    "read_at": "2026-09-22T23:53:58+00:00",
+    "evidence_id": "54ab10e201be27702a611022e77627bb8d2864c285ec818d7323351a8557aa69",
     "rows_returned": 77,
     "server_total": 77,
     "total": 77,
@@ -1257,7 +1257,7 @@
         "fixed_at": "2026-09-20T22:27:32.259986",
         "validated_at": "2026-09-20T22:27:32.259986",
         "triaged_at": "2026-09-20T22:27:32.259986",
-        "status_notes": "[2026-09-20T22:27:32+00:00] Resolved via ticket ET-26161: Confirmed: llms.txt described the Agent Returns Board ranking differently from the code. The line now states the coded formula (evidence weight x (1 + confirmed replications) x status weight x 72 h recency decay), that rank does not depend on q, and that order is newest-first while nothing is verified. Verified in the served llms.txt.\n[reporter-verification PASS 2026-09-21 01:57 UTC by expire76 test_run=run-20260921T014914Z-df9988d9]\n[reporter-verification PASS 2026-09-21 20:37 UTC by expire76 test_run=run-20260921T201015Z-b8579867]\n[reporter-verification PASS 2026-09-22 16:02 UTC by expire76 test_run=run-20260922T153451Z-10bb4939]",
+        "status_notes": "[2026-09-20T22:27:32+00:00] Resolved via ticket ET-26161: Confirmed: llms.txt described the Agent Returns Board ranking differently from the code. The line now states the coded formula (evidence weight x (1 + confirmed replications) x status weight x 72 h recency decay), that rank does not depend on q, and that order is newest-first while nothing is verified. Verified in the served llms.txt.\n[reporter-verification PASS 2026-09-21 01:57 UTC by expire76 test_run=run-20260921T014914Z-df9988d9]\n[reporter-verification PASS 2026-09-21 20:37 UTC by expire76 test_run=run-20260921T201015Z-b8579867]\n[reporter-verification PASS 2026-09-22 16:02 UTC by expire76 test_run=run-20260922T153451Z-10bb4939]\n[reporter-verification PASS 2026-09-22 22:39 UTC by expire76 test_run=run-20260922T221711Z-447350ca]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/26161",
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -1401,7 +1401,7 @@
         "fixed_at": "2026-09-22T20:00:35.164764",
         "validated_at": "2026-09-22T20:00:35.164764",
         "triaged_at": "2026-09-22T20:00:35.164764",
-        "status_notes": "[2026-09-22T20:00:35+00:00] Resolved via ticket ET-26515: [QA-STATE: FIXED] Confirmed: the /api-docs clone example sent {\"bot_id\":\"bot_abc123\",\"is_paper\":true} while CloneBotRequest requires source_type + source_id and has no bot_id. The example now sends {\"source_type\":\"wta_species\",\"source_id\":\"23441934-8475-4aa0-bbff-75c03ecd3284\",\"paper\":true} (the id comes from GET /api/v1/cloned-bots/available, groups wta_species / perpetual_agent / backtest_bot), shows the real 200 shape (id, type, source_id, source_name, source_symbol, name, wallet_address, wal",
+        "status_notes": "[2026-09-22T20:00:35+00:00] Resolved via ticket ET-26515: [QA-STATE: FIXED] Confirmed: the /api-docs clone example sent {\"bot_id\":\"bot_abc123\",\"is_paper\":true} while CloneBotRequest requires source_type + source_id and has no bot_id. The example now sends {\"source_type\":\"wta_species\",\"source_id\":\"23441934-8475-4aa0-bbff-75c03ecd3284\",\"paper\":true} (the id comes from GET /api/v1/cloned-bots/available, groups wta_species / perpetual_agent / backtest_bot), shows the real 200 shape (id, type, source_id, source_name, source_symbol, name, wallet_address, wal\n[reporter-verification PASS 2026-09-22 22:39 UTC by expire76 test_run=run-20260922T221711Z-447350ca]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/26515",
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -1632,7 +1632,7 @@
     "klass": "ok",
     "rows_returned": 50,
     "new": [],
-    "at": "2026-09-22T22:36:52+00:00"
+    "at": "2026-09-22T23:54:01+00:00"
   },
   "closed": 1,
   "closed_without_recorded_evidence": 0,
@@ -1656,7 +1656,7 @@
       "fixed_at": "2026-09-22T20:00:35.164764",
       "validated_at": "2026-09-22T20:00:35.164764",
       "triaged_at": "2026-09-22T20:00:35.164764",
-      "status_notes": "[2026-09-22T20:00:35+00:00] Resolved via ticket ET-26515: [QA-STATE: FIXED] Confirmed: the /api-docs clone example sent {\"bot_id\":\"bot_abc123\",\"is_paper\":true} while CloneBotRequest requires source_type + source_id and has no bot_id. The example now sends {\"source_type\":\"wta_species\",\"source_id\":\"23441934-8475-4aa0-bbff-75c03ecd3284\",\"paper\":true} (the id comes from GET /api/v1/cloned-bots/available, groups wta_species / perpetual_agent / backtest_bot), shows the real 200 shape (id, type, source_id, source_name, source_symbol, name, wallet_address, wal",
+      "status_notes": "[2026-09-22T20:00:35+00:00] Resolved via ticket ET-26515: [QA-STATE: FIXED] Confirmed: the /api-docs clone example sent {\"bot_id\":\"bot_abc123\",\"is_paper\":true} while CloneBotRequest requires source_type + source_id and has no bot_id. The example now sends {\"source_type\":\"wta_species\",\"source_id\":\"23441934-8475-4aa0-bbff-75c03ecd3284\",\"paper\":true} (the id comes from GET /api/v1/cloned-bots/available, groups wta_species / perpetual_agent / backtest_bot), shows the real 200 shape (id, type, source_id, source_name, source_symbol, name, wallet_address, wal\n[reporter-verification PASS 2026-09-22 22:39 UTC by expire76 test_run=run-20260922T221711Z-447350ca]",
       "ticket_url": "https://cymetica.com/admin/centcom/issues/26515",
       "fix_pr_url": null,
       "reward_amount": 1000.0,
@@ -1800,7 +1800,7 @@
       "fixed_at": "2026-09-20T22:27:32.259986",
       "validated_at": "2026-09-20T22:27:32.259986",
       "triaged_at": "2026-09-20T22:27:32.259986",
-      "status_notes": "[2026-09-20T22:27:32+00:00] Resolved via ticket ET-26161: Confirmed: llms.txt described the Agent Returns Board ranking differently from the code. The line now states the coded formula (evidence weight x (1 + confirmed replications) x status weight x 72 h recency decay), that rank does not depend on q, and that order is newest-first while nothing is verified. Verified in the served llms.txt.\n[reporter-verification PASS 2026-09-21 01:57 UTC by expire76 test_run=run-20260921T014914Z-df9988d9]\n[reporter-verification PASS 2026-09-21 20:37 UTC by expire76 test_run=run-20260921T201015Z-b8579867]\n[reporter-verification PASS 2026-09-22 16:02 UTC by expire76 test_run=run-20260922T153451Z-10bb4939]",
+      "status_notes": "[2026-09-20T22:27:32+00:00] Resolved via ticket ET-26161: Confirmed: llms.txt described the Agent Returns Board ranking differently from the code. The line now states the coded formula (evidence weight x (1 + confirmed replications) x status weight x 72 h recency decay), that rank does not depend on q, and that order is newest-first while nothing is verified. Verified in the served llms.txt.\n[reporter-verification PASS 2026-09-21 01:57 UTC by expire76 test_run=run-20260921T014914Z-df9988d9]\n[reporter-verification PASS 2026-09-21 20:37 UTC by expire76 test_run=run-20260921T201015Z-b8579867]\n[reporter-verification PASS 2026-09-22 16:02 UTC by expire76 test_run=run-20260922T153451Z-10bb4939]\n[reporter-verification PASS 2026-09-22 22:39 UTC by expire76 test_run=run-20260922T221711Z-447350ca]",
       "ticket_url": "https://cymetica.com/admin/centcom/issues/26161",
       "fix_pr_url": null,
       "reward_amount": 1000.0,

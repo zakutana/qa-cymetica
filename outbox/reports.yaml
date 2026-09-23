@@ -3181,6 +3181,49 @@ reports:
       not test whether the route works. It goes green when the routes Nexus
       names are published, or when Nexus names the ones that are.
 
+  - key: card-tradeable-now-disagrees-mcp-rest
+    findings: [CYM-a_card_is_tradeable_on_every_surface_or_on_none]
+    severity: medium
+    category: api
+    url: https://cymetica.com/mcp/v1
+    title: "get_event_card_info says tradeable_now true for stock cards that GET /api/v1/event-cards/{id} says are closed"
+    expected: >
+      One answer to "can a position be opened on this card right now". The
+      card's tradeability block on GET /api/v1/event-cards/{id} says of
+      tradeable_now: "True when a position can be opened on this card RIGHT
+      NOW via POST /buy, /sell or /short ... False carries
+      trading_blocked_reason. This is the only trade gate." The MCP tool
+      get_event_card_info returns a field of the same name for the same card,
+      so the two have to agree.
+    actual: >
+      On 2026-09-22 between 23:20 and 23:25 UTC, with US equity markets closed
+      (your listing itself said us_market_open: false), 21 of 25 live stock
+      cards read tradeable_now false on REST -- "US equity markets are closed
+      -- this card holds stocks and trades during US market hours" -- and
+      tradeable_now true through get_event_card_info in the same minute. A
+      second sample of 16 cards gave 8 disagreeing, a70b8d5e-c57f-4ef7-ac53-
+      b29148e5b920 among them. The tool's trading_window reads only the card's
+      close date ("closes 2026-09-25T23:17Z"). Your Nexus reads cards through
+      that tool: asked for one card "live and tradeable right now", it answered
+      with a70b8d5e, "Verified live and tradeable this run ...
+      get_event_card_info returned status: live, tradeable_now: true", while
+      the REST gate reported it closed.
+    steps:
+      - 'GET https://cymetica.com/api/v1/event-cards/a70b8d5e-c57f-4ef7-ac53-b29148e5b920 outside US market hours -> tradeable_now false, trading_blocked_reason "US equity markets are closed ..."'
+      - 'tools/call get_event_card_info {"query": "a70b8d5e-c57f-4ef7-ac53-b29148e5b920"} on /mcp/v1 in the same minute -> result.cards[0].tradeable_now true, trading_window "closes 2026-09-25T..."'
+      - 'The same for any card GET /api/v1/event-cards marks closed that has stock legs (has_stock_legs true)'
+    body: >
+      An agent on MCP, and your own Nexus, are told a stock card can be traded
+      when the trade gate says it cannot: the tool's tradeable_now appears to
+      follow the card's trading window only, not US market hours. During US
+      market hours the two agree, so it shows between 20:00 and 13:30 UTC and
+      at weekends. Either the tool applies the same gate as REST, or the field
+      carries a different name so it cannot be read as that gate.
+
+      Our check reads up to twelve cards the listing marks closed and four it
+      marks open, on both surfaces, and fails on any disagreement; with
+      nothing closed it is inconclusive, never a pass.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in
