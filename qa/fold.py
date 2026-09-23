@@ -609,6 +609,10 @@ def _apply_events(rows: dict, events: Iterable[dict]) -> None:
             for fid in targets:
                 for report in rows[fid]["filing"]["reports"]:
                     if report["report_id"] == event.get("report_id"):
+                        if report.get("status") != event.get("status"):
+                            # When their word last changed: a correction is
+                            # owed only on a measurement after it (RO01).
+                            report["status_at"] = event.get("at")
                         report["status"] = event.get("status")
                 # _REPLIED_STATUSES is deliberately NOT consulted here. Reading
                 # `invalid` as REPLIED is more accurate, and it is also
@@ -726,6 +730,32 @@ def correction_reason(report: dict, verified: list) -> str | None:
     return None
 
 
+def _measured_since(row: dict, report: dict, verified: list) -> bool:
+    """Whether the failure that adjudicated this row was measured AFTER the
+    word a correction answers: their status (a claimed fix, a payment), or
+    the pass of ours it withdraws.
+
+    RO01 of the deep pass of 2026-09-24 (3/3). The correction says our check
+    STILL fails; a failure measured before they paid says nothing about what
+    they did after. On 2026-09-23 #117, #119, #122 and #123 were owed one on a
+    run that finished at 00:26 -- #123 filed at 00:27, #122 and #123 paid at
+    06:48 -- and verify.py would have told them it was "our own re-reading".
+    Until a run reads the row after their word, the re-verify (rule 7) is
+    what is owed. A row that cannot say when it was measured owes nothing:
+    a sentence we cannot date is one we cannot stand behind.
+    """
+    measured = str(((row.get("check") or {}).get("adjudicated_by") or {})
+                   .get("at") or "")
+    if correction_reason(report, verified) == "our_pass":
+        said = [str(v.get("at") or "") for v in verified
+                if v.get("report_id") == report.get("report_id")
+                and v.get("verdict") == "pass"]
+        since = max(said) if said else ""
+    else:
+        since = str(report.get("status_at") or "")
+    return bool(measured) and bool(since) and measured > since
+
+
 def _told(verified: list, report_id, fingerprint, verdict: str) -> bool:
     """Is this verdict the LAST thing they heard, for this check definition?
 
@@ -822,7 +852,8 @@ def _obligations(row: dict) -> dict:
         # What a withdrawn row owes is the retraction above.
         "correction_owed": ([r["report_id"] for r in row["filing"]["reports"]
                              if not _told(verified, r["report_id"], pinned, "fail")
-                             and correction_reason(r, verified) is not None]
+                             and correction_reason(r, verified) is not None
+                             and _measured_since(row, r, verified)]
                             if check == "REPRODUCING" and pinned
                             and filing not in _TERMINAL else []),
         # They read the report and said no, and our check still fails. One of

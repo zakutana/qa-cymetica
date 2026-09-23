@@ -119,6 +119,14 @@ def ledger(*rows):
     return {"schema": 2, "findings": {r["id"]: r for r in rows}}
 
 
+def _measured(r, at="2026-09-30T00:00:00+00:00"):
+    """A row as a failing run leaves it: adjudicated, at a moment after every
+    claim these fixtures make -- a correction is owed only on a measurement
+    after their word (RO01, deep pass of 2026-09-24)."""
+    r["check"]["adjudicated_by"] = {"run_id": "run-2", "at": at}
+    return r
+
+
 def _key(transition):
     t = transition
     return (t["axis"], t["from"], t["to"], t["at"], tuple(sorted((t.get("cause") or {}).items())))
@@ -1158,7 +1166,7 @@ def test_a_pass_we_sent_that_stopped_being_true_owes_a_correction():
 
     filed_claimed = _filed("CYM-a", 46, "fixed")
     filed_quiet = _filed("CYM-a", 46, "pending")
-    broken = row("CYM-a", check_state="REPRODUCING", pinned=FP)
+    broken = _measured(row("CYM-a", check_state="REPRODUCING", pinned=FP))
 
     def owed(base_row, events):
         out = fold(ledger(copy.deepcopy(base_row)), events=events)
@@ -1253,7 +1261,7 @@ def test_a_correction_is_owed_per_report_not_per_row():
     filed = _filed(report_id=89, status="fixed")
     # Filed later, never claimed fixed by them.
     fresh = _filed(report_id=108, status="pending", at="2026-09-19T09:00:00+00:00")
-    reproducing = row("CYM-a", check_state="REPRODUCING", pinned=FP)
+    reproducing = _measured(row("CYM-a", check_state="REPRODUCING", pinned=FP))
 
     ob = fold(ledger(reproducing), events=filed + fresh)["findings"]["CYM-a"]
     owed = ob["obligations"]["correction_owed"]
@@ -1316,10 +1324,31 @@ def test_a_correction_says_which_of_the_three_things_happened():
 
     # And the obligation itself still reads the same three.
     filed = _filed(report_id=89, status="paid")
-    reproducing = row("CYM-a", check_state="REPRODUCING", pinned=FP)
+    reproducing = _measured(row("CYM-a", check_state="REPRODUCING", pinned=FP))
+    reproducing["check"]["adjudicated_by"] = {"run_id": "run-2",
+                                              "at": "2026-09-05T10:00:00+00:00"}
     owed = fold(ledger(reproducing),
                 events=filed)["findings"]["CYM-a"]["obligations"]
     assert owed["correction_owed"] == [89], owed["correction_owed"]
+
+    # RO01 (deep pass of 2026-09-24): a correction says our check STILL fails
+    # after they engaged with the report. A failure measured BEFORE they paid
+    # or claimed a fix says nothing about their fix -- #122 and #123 were
+    # paid at 06:48 on 2026-09-23, #123 was filed a minute after the only run
+    # that judged them, and verify.py would have told them it was "our own
+    # re-reading". Until a run reads it after their word, what is owed is
+    # the re-verify (rule 7), not a correction.
+    stale = row("CYM-a", check_state="REPRODUCING", pinned=FP)
+    stale["check"]["adjudicated_by"] = {"run_id": "run-1",
+                                        "at": "2026-09-05T08:00:00+00:00"}
+    owed = fold(ledger(stale), events=filed)["findings"]["CYM-a"]["obligations"]
+    assert owed["correction_owed"] == [], (
+        "a correction was owed on a measurement older than their payment")
+    assert owed["reverify"] is True, owed
+    unknown = row("CYM-a", check_state="REPRODUCING", pinned=FP)
+    owed = fold(ledger(unknown), events=filed)["findings"]["CYM-a"]["obligations"]
+    assert owed["correction_owed"] == [], (
+        "a row that cannot say when it was measured owed a correction")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -1350,7 +1379,7 @@ def test_a_correction_under_the_same_definition_is_recorded():
     from qa.fold import fold
 
     filed = _filed("CYM-a", 46, "pending")
-    broken = row("CYM-a", check_state="REPRODUCING", pinned=FP)
+    broken = _measured(row("CYM-a", check_state="REPRODUCING", pinned=FP))
     sent_pass = _verification(fingerprint=FP, verdict="pass")
     correction = _verification(fingerprint=FP, verdict="fail",
                                at="2026-09-07T16:00:00+00:00")
@@ -1425,7 +1454,7 @@ def test_a_split_gives_one_report_its_own_row_and_its_own_verdict():
                  finding_id="CYM-a", report_id=89, verdict="fail",
                  fingerprint="sha256:old", run_id="run-old", outcome="accepted",
                  evidence_id="ev-9")
-    before = fold(ledger(row("CYM-a", check_state="REPRODUCING", pinned=FP)),
+    before = fold(ledger(_measured(row("CYM-a", check_state="REPRODUCING", pinned=FP))),
                   events=filed + [told])
     a_before = before["findings"]["CYM-a"]
     assert a_before["obligations"]["correction_owed"] == [89, 98]
@@ -1444,7 +1473,7 @@ def test_a_split_gives_one_report_its_own_row_and_its_own_verdict():
         "the run that first saw #89's defect is the old row's first run")
     assert b["check"]["state"] == "UNVERIFIED"
     assert b["check"]["pinned_fingerprint"] is None
-    assert b["filing"]["reports"] == [{"report_id": 89, "status": "paid"}]
+    assert [(r["report_id"], r["status"]) for r in b["filing"]["reports"]] == [(89, "paid")]
     assert b["filing"]["state"] == "FIX_CLAIMED"
     assert [v["report_id"] for v in b["filing"]["verifications"]] == [89]
     moves = [t for t in b["transitions"] if t["axis"] == "filing"]
