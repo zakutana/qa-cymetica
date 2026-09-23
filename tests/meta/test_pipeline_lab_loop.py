@@ -3301,6 +3301,13 @@ def test_a_tick_starts_the_next_setting_of_a_judged_bot_on_its_one_clone(
     # One at a time: a room runs on the clone, so nothing moves.
     before = len(calls)
     assert scripts_lab.bot_variants()["rooms"] == 0 and len(calls) == before
+    # And the next tick's verdicts leave it alone: his settled room no longer
+    # owns the clone, so it is owed no pause -- the newest start is the
+    # variant's, not his bot "still trading after its verdict".
+    scripts_lab.verdicts(now=datetime.fromisoformat(criterion["at"])
+                         + timedelta(hours=1))
+    assert calls[before:] == [], ("a settled room paused the variant running "
+                                  "on its clone", calls[before:])
 
     # Its verdict starts at its restart: +2% on what the bot held then
     # (240 in + 12 made), not +7% on the 240 that went in at the funding.

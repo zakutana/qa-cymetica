@@ -2124,3 +2124,11 @@ def test_a_room_of_ours_is_judged_when_its_variant_ran_and_archived_when_not():
     archived = lab.archived_rooms(rows, [], [], clones)
     assert archived == {"STR-0003"}, archived
     assert lab.picked_rooms(rows, []) == set(), "a room of ours is not his pick"
+
+    # And what ours earned is not his record: the Nexus line on /lab
+    # (questions -> picks -> gate -> survived) counts his rooms' verdicts only.
+    from qa import lab_report
+    judged = rows + [{"type": "verdict", "room": "STR-0002", "verdict": "survived",
+                      "at": _t(10)}]
+    said = lab_report._nexus([], [], judged)
+    assert (said["survived"], said["refuted"]) == (0, 0), said

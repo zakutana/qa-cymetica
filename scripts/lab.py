@@ -1261,7 +1261,8 @@ def verdicts(now=None) -> list[dict]:
             # ANY verdict since C3 (2026-09-23), not only an early one, and
             # for an archived room too. A bot still trading after any verdict
             # is owed its pause too.
-            if holding(strategy, acceptance) or _bots_running(acceptance):
+            if holding(strategy, acceptance) or _bots_running(
+                    acceptance, room, rows):
                 owed.append((strategy, acceptance))
             continue
         status = rooms.status_of(rows, room)
@@ -1282,7 +1283,8 @@ def verdicts(now=None) -> list[dict]:
         in the clone). A fund was never bought, so there is nothing to
         close. Not while a deep pass runs -- it verifies #85-#87 over these
         very trades -- and whatever fails stays owed to the next call."""
-        positions, bots = holding(strategy, acceptance), _bots_running(acceptance)
+        positions = holding(strategy, acceptance)
+        bots = _bots_running(acceptance, strategy["id"])
         if not positions and not bots:
             return
         if pass_in_flight():
@@ -2464,11 +2466,32 @@ def night_promote(since: datetime | None = None) -> dict:
     return {"rooms": opened, "orders": placed, "held": held}
 
 
-def _bots_running(acceptance: dict) -> list[str]:
+def _bots_running(acceptance: dict, room: str | None = None,
+                  stored: list[dict] | None = None) -> list[str]:
     """The criterion's bot legs that our own record says we started and have
-    not paused since: the newest ACCEPTED switch of each, per clones.jsonl."""
+    not paused since: the newest ACCEPTED switch of each, per clones.jsonl.
+
+    With `room`, only the clones that room still OWNS -- none a later room
+    runs on. Since V5 a clone's next setting runs in a new room on the same
+    clone, so the newest switch may be the variant's start; read against the
+    settled room before it, that start looked like its bot "still trading
+    after its verdict" and the next tick paused the variant. Ownership, not
+    time: the verdict's stop, its pause and the variant's start are stamped
+    to the second and can share one."""
     wanted = [rooms.leg_ref(leg) for leg in acceptance.get("legs") or []
               if rooms.leg_kind(leg) == "bot"]
+    if room is not None and wanted:
+        owner: dict[str, str] = {}
+        rows_ = rooms.load() if stored is None else stored
+        for row in rows_:
+            if row.get("type") != "acceptance" or not row.get("room"):
+                continue
+            for leg in row.get("legs") or []:
+                if rooms.leg_kind(leg) == "bot":
+                    ref, held_by = str(rooms.leg_ref(leg)), str(row["room"])
+                    if rooms.number(held_by) >= rooms.number(owner.get(ref, "")):
+                        owner[ref] = held_by
+        wanted = [ref for ref in wanted if owner.get(str(ref), room) == room]
     if not wanted:
         return []
     rows = _sibling("clone").load()

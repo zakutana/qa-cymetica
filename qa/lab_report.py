@@ -182,7 +182,12 @@ def _nexus(nexus_rows, notebook, room_rows) -> dict:
     picked (the rooms holding a pick), what the gate passed, what survived."""
     answers = [r for r in nexus_rows if r.get("type") == "answer"]
     gates = [r for r in notebook if r.get("type") == "gate"]
-    verdicts = list(_latest(room_rows, "verdict").values())
+    # His record only: a room of ours (V5, OUR-...) is our idea, and what it
+    # earned is not a pick of his that survived.
+    ours = {str(r.get("id")) for r in room_rows
+            if r.get("type") == "strategy" and lab.is_ours(r.get("origin"))}
+    verdicts = [v for room, v in _latest(room_rows, "verdict").items()
+                if room not in ours]
     return {
         "questions": sum(1 for r in nexus_rows if r.get("type") == "question"),
         "answered": len({str(a.get("id")) for a in answers}),
