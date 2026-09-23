@@ -995,3 +995,111 @@ def stop_study(rows: list[dict], stop_pct: float, target_pct: float | None = Non
         "caveat": UNMEASURED_FILLS,
         "trades": trades,
     }
+
+
+# --- $10 into every hot signal -------------------------------------------------
+#
+# [operator 2026-09-23] asked whether $10 into every hot signal would have had
+# the liquidity and the time to buy it all -- whether the strategy is real and
+# could be executed. The plan's V3 answers it here, as a buyer lives it.
+
+TEN_DOLLAR_CLIP = 10.0
+TEN_DOLLAR_HOLD_HOURS = 24.0
+# Their swap fee is not published per pool; the answer is given at three.
+SWAP_FEES_PCT = (0.5, 1.0, 2.0)
+
+
+def ten_dollars(rows: list[dict], now=None, clip_usd: float = TEN_DOLLAR_CLIP,
+                hold_hours: float = TEN_DOLLAR_HOLD_HOURS,
+                fees_pct=SWAP_FEES_PCT, top: int = 5) -> dict:
+    """$10 into every hot signal, held a day, no stop, net of fees.
+
+    Every signal whose day has closed is asked, in the order a buyer meets
+    them: did we have its PRICE when it fired; did the radar's depth THEN
+    (`max_buy_5pct_usd`) take the clip -- the depth at entry decides the buy,
+    never a later reading, which is how `sellable` took the coins that
+    rugged later out of their own history; did their terminal stay on one
+    pair (`pair_changed`); was it read at the end of the day. The sale is
+    capped by what the pool held then -- half its liquidity, the quote side of
+    the pool -- so a drained pool pays about nothing, as it would have. Each
+    side pays the swap fee and the price impact of the clip against the
+    radar's depth; the answer is given at 0.5, 1 and 2 % a side.
+
+    `could_buy_share` is "stihli bychom": of the hot signals, the share we
+    had a price for and could have put $10 into when they fired.
+    """
+    moment = now or datetime.now(timezone.utc)
+    kept = in_time(rows)
+    signals = _signals(kept)
+    exits: dict[str, dict] = {}
+    read: dict[str, list[tuple[float, dict]]] = {}
+    for row in kept:
+        if row.get("type") != "checkpoint" or row.get("key") not in signals:
+            continue
+        hours = _hours(row.get("horizon"))
+        if hours is None or hours > hold_hours:
+            continue
+        read.setdefault(row["key"], []).append((hours, row))
+        if hours == hold_hours:
+            exits[row["key"]] = row
+
+    excluded = {"unpriced": 0, "depth_unknown": 0, "too_thin": 0,
+                "pair_changed": 0, "unread_at_24h": 0}
+    window_open, asked, could_buy, trades, latency = 0, 0, 0, [], []
+    for key, signal in signals.items():
+        fired = _at(signal.get("at"))
+        if fired is None or fired + timedelta(
+                hours=hold_hours + due_tolerance(hold_hours)) > moment:
+            window_open += 1
+            continue
+        asked += 1
+        entry = signal.get("price_usd")
+        depth = signal.get("radar_max_buy_5pct_usd")
+        if not isinstance(entry, (int, float)) or entry <= 0:
+            excluded["unpriced"] += 1
+            continue
+        if not isinstance(depth, (int, float)) or isinstance(depth, bool):
+            excluded["depth_unknown"] += 1
+            continue
+        if depth < clip_usd:
+            excluded["too_thin"] += 1
+            continue
+        could_buy += 1
+        waited = signal.get("radar_first_buy_seconds_ago")
+        if isinstance(waited, (int, float)) and not isinstance(waited, bool):
+            latency.append(waited / 60.0)
+        ordered = [signal] + [r for _, r in sorted(read.get(key) or [],
+                                                   key=lambda item: item[0])]
+        if pair_changed(ordered):
+            excluded["pair_changed"] += 1
+            continue
+        last = exits.get(key) or {}
+        price = last.get("price_usd")
+        if not isinstance(price, (int, float)) or price <= 0:
+            excluded["unread_at_24h"] += 1
+            continue
+        proceeds = clip_usd * price / entry
+        liquidity = last.get("liquidity_usd")
+        if isinstance(liquidity, (int, float)) and not isinstance(liquidity, bool):
+            proceeds = min(proceeds, liquidity / 2.0)
+        trades.append({"key": key, "symbol": signal.get("symbol"),
+                       "proceeds_usd": proceeds,
+                       "impact_pct": RADAR_IMPACT_PCT * clip_usd / depth})
+
+    by_fee = {}
+    for fee in fees_pct:
+        nets = [(t["proceeds_usd"] / clip_usd * (1 - fee / 100.0) ** 2
+                 * (1 - t["impact_pct"] / 100.0) ** 2 - 1.0) * 100.0
+                for t in trades]
+        spread = _spread(nets, top)
+        by_fee[fee] = {"n": len(nets), "mean_net_pct": spread["pnl_pct"],
+                       "median_net_pct": spread["median_pct"],
+                       "mean_net_without_top_pct": spread["pnl_without_top_pct"],
+                       "win_rate": (sum(1 for n in nets if n > 0) / len(nets)
+                                    if nets else None)}
+    return {"clip_usd": clip_usd, "hold_hours": hold_hours, "top": top,
+            "signals": asked, "window_open": window_open, "bought": len(trades),
+            "could_buy": could_buy,
+            "could_buy_share": could_buy / asked if asked else None,
+            "first_buy_to_quote_min": median(latency) if latency else None,
+            "excluded": excluded, "by_fee": by_fee}

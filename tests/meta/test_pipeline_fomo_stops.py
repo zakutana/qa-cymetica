@@ -22,6 +22,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import httpx
+import pytest
 
 from qa import fomo
 from qa.marks import SafetyTier, qa
@@ -385,3 +386,79 @@ def test_the_report_and_the_brief_print_the_stop_lines(tmp_path, monkeypatch):
     kept = [line for line in mod.say_reading(said)
             if " inside " in line and line.split()[0].endswith("x")]
     assert kept and all(line in printed for line in kept), (printed, kept)
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_ten_dollars_into_every_hot_signal_is_answered_honestly():
+    """[operator 2026-09-23] "kdybychom se pak treba rozhodnul dat 10$ do
+    kazdeho hot signalu ... ze na to je likvidita i cas vse koupit" -- the
+    plan's V3. What the diary answered instead was a study that dropped every
+    coin whose NEWEST depth was dust (`sellable`): the coins that rugged later
+    were taken out of their own history, and the losers with them.
+
+    So the $10 question is asked the way a buyer lives it. A signal is bought
+    only if we had its price when it fired and the radar's depth then
+    (`max_buy_5pct_usd`) took $10; it is held 24 hours, no stop; the sale is
+    capped by what the pool holds then (half its liquidity, the quote side),
+    so a drained pool pays about nothing; a path on which their terminal
+    switched pair is left out; a swap fee is charged each side, at 0.5, 1 and
+    2 %. And "stihli bychom" is the share of hot signals that could have been
+    bought at all."""
+    def sig(n, **extra):
+        return _signal(f"0x{n:03x}:2026-09-13T12", **extra)
+    good, drained, unpriced, thin, blind, unread, young, switched = (
+        sig(1, radar_max_buy_5pct_usd=5000.0),
+        sig(2, price=2.0, radar_max_buy_5pct_usd=3000.0),
+        sig(3, price=None, radar_max_buy_5pct_usd=5000.0),
+        sig(4, radar_max_buy_5pct_usd=5.0),
+        sig(5),
+        sig(6, radar_max_buy_5pct_usd=5000.0),
+        sig(7, radar_max_buy_5pct_usd=5000.0,
+            at=DONE - timedelta(hours=10)),
+        sig(8, radar_max_buy_5pct_usd=5000.0, age_seconds=100.0))
+
+    def exit24(signal, price, liquidity, **extra):
+        (row,) = _path(signal["key"], signal["price_usd"], [(24, price)])
+        return {**row, "liquidity_usd": liquidity, **extra}
+    rows = [good, drained, unpriced, thin, blind, unread, young, switched,
+            exit24(good, 1.5, 100_000.0), exit24(drained, 2.0, 4.0),
+            exit24(thin, 3.0, 100_000.0), exit24(blind, 3.0, 100_000.0),
+            # the terminal answered another pair: age jumped by days in a day
+            exit24(switched, 1.2, 100_000.0, age_seconds=900_000.0)]
+
+    said = fomo.ten_dollars(rows, now=DONE)
+
+    assert said["clip_usd"] == 10.0
+    assert said["signals"] == 7, "the open window is not a signal of this study yet"
+    assert said["bought"] == 2, said
+    assert said["excluded"] == {"unpriced": 1, "too_thin": 1, "depth_unknown": 1,
+                                "unread_at_24h": 1, "pair_changed": 1}, said
+    assert said["could_buy_share"] == pytest.approx(4 / 7), (
+        "good, drained, unread and switched could all have been bought")
+
+    def net(proceeds, depth, fee):
+        impact = fomo.RADAR_IMPACT_PCT * 10.0 / depth
+        return (proceeds / 10.0 * (1 - fee / 100) ** 2
+                * (1 - impact / 100) ** 2 - 1) * 100
+    for fee in (0.5, 1.0, 2.0):
+        mine = said["by_fee"][fee]
+        want = [net(15.0, 5000.0, fee), net(2.0, 3000.0, fee)]
+        assert mine["mean_net_pct"] == pytest.approx(sum(want) / 2), (fee, mine)
+        assert mine["n"] == 2
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_report_opens_with_the_ten_dollar_answer(tmp_path, monkeypatch):
+    """The plan's V3 done-when: the report says "$10 into every hot signal =
+    X % after costs, n, could buy Y %" -- first, because it is the question
+    the operator asked, before the hot-against-control readouts."""
+    mod = _watch(tmp_path, monkeypatch)
+    key = "0x001:2026-09-13T12"
+    signal = _signal(key, radar_max_buy_5pct_usd=5000.0)
+    (exit24,) = _path(key, 1.0, [(24, 1.5)])
+    said = mod.reading([signal, {**exit24, "liquidity_usd": 100_000.0}],
+                       now=DONE)
+    first = mod.say_reading(said)[0]
+    assert first.startswith("$10 into every hot signal"), first
+    assert "n=1" in first and "Could buy 100.0% of 1" in first, first
+    assert "after costs at 1% a side" in first, first

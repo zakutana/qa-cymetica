@@ -549,9 +549,39 @@ def reading(rows: list[dict] | None = None, now=None) -> dict:
     stops = [{k: v for k, v in fomo.stop_study(
                  rows, stop_pct=s, target_pct=t, now=now).items()
               if k != "trades"} for s, t in STOPS]
-    return {"readouts": [fomo.compare(rows, multiple=m, within_hours=h, now=now)
+    return {"ten_dollars": fomo.ten_dollars(rows, now=now),
+            "readouts": [fomo.compare(rows, multiple=m, within_hours=h, now=now)
                          for m, h in READOUTS],
             "claims": claims, "stops": stops, "entries": fomo.entries(rows)}
+
+
+def say_ten_dollars(said: dict) -> list[str]:
+    """The operator's question first (V3, 2026-09-23): what $10 into every hot
+    signal made after costs, on how many, and how many we could have bought.
+    A reading stored before this existed has none, and prints nothing."""
+    out = said.get("ten_dollars")
+    if not out:
+        return []
+    fees = out.get("by_fee") or {}
+    one = fees.get(1.0) or next(iter(fees.values()), {})
+    left = out.get("excluded") or {}
+    return [
+        f"${out['clip_usd']:g} into every hot signal, held "
+        f"{out['hold_hours']:g} h, no stop: {_signed(one.get('mean_net_pct'))} "
+        f"a trade after costs at 1% a side (median "
+        f"{_signed(one.get('median_net_pct'))}, without the best "
+        f"{out.get('top', 5)} {_signed(one.get('mean_net_without_top_pct'))}, "
+        f"win {_pct(one.get('win_rate'))}), n={out['bought']}; at "
+        + ", ".join(f"{fee:g}% a side {_signed(v.get('mean_net_pct'))}"
+                    for fee, v in sorted(fees.items()))
+        + f". Could buy {_pct(out.get('could_buy_share'))} of "
+          f"{out['signals']} hot signals (a price and the radar's depth for "
+          f"${out['clip_usd']:g} when they fired); left out: "
+          f"{left.get('unpriced', 0)} unpriced, {left.get('depth_unknown', 0)} "
+          f"with no radar depth, {left.get('too_thin', 0)} too thin, "
+          f"{left.get('pair_changed', 0)} where their terminal switched pair, "
+          f"{left.get('unread_at_24h', 0)} with no reading at "
+          f"{out['hold_hours']:g} h -- if those are rugs, the truth is worse"]
 
 
 # Stop -10 % alone, and with a +100 % target: the two NEXT.md of 2026-09-21
@@ -604,7 +634,7 @@ def _pct(value) -> str:
 
 
 def say_reading(said: dict) -> list[str]:
-    lines = []
+    lines = say_ten_dollars(said)
     for out in said["readouts"]:
         hot, control = out["hot"], out["control"]
         ci = hot.get("ci")
