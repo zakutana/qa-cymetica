@@ -1043,6 +1043,9 @@ def _experiment(rid: str, sector: str, report_room: dict, panel: dict,
                       if ends and group == "live" else None),
         "ends_at": ends.isoformat() if ends else None,
         "opened_at": panel.get("opened_at"), "origin": panel.get("origin"),
+        # V5, the own lane: a room of OURS -- labelled „naše", ranked after his.
+        "ours": bool(re.match(r"^OUR-\d{4}$", str(
+            report_room.get("origin") or panel.get("origin") or ""))),
         "url": first.get("url"),
         "trading": clones[-1].get("trading") if clones else None,
         "tp": first.get("tp"), "sl": first.get("sl")}
@@ -1254,6 +1257,8 @@ button { font: inherit; color: inherit; }
 .rk { font: 500 13px var(--mono); color: var(--text-faint); text-align: right; }
 .nm { font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden;
   text-overflow: ellipsis; }
+.nm .ours { font-size: 11px; font-weight: 600; padding: 1px 6px; margin-left: 6px;
+  border-radius: 999px; border: 1px solid currentColor; opacity: .7; }
 .val { font-size: 18px; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums;
   white-space: nowrap; }
 .usd { font-size: 13.5px; text-align: right; font-variant-numeric: tabular-nums;
@@ -1615,7 +1620,8 @@ function row(le, rank, open) {
   return `<li class="row${open ? " open" : ""}" data-id="${esc(le.id)}" tabindex="0"
       role="button" aria-expanded="${open}">
     <span class="rk">${rank}</span>
-    <span class="nm" title="${esc(le.title)}">${esc(le.title)}</span>
+    <span class="nm" title="${esc(le.title)}">${esc(le.title)}${le.ours
+      ? ' <span class="ours">naše</span>' : ""}</span>
     <span class="sp">${le.group === "archive" ? '<span class="sp-none">—</span>' : spark(le.spark)}</span>
     <span class="val ${tone(le.net_pct)}">${pctText(le.net_pct)}</span>
     <span class="usd ${tone(le.usdc)}">${le.usdc == null ? "" : usdText(le.usdc)}</span>
@@ -1691,7 +1697,8 @@ function detail(le) {
      lb && lb.pct != null ? `za ${lb.period} d · Sharpe ${num(lb.sharpe, 1)}`
                           : "tohle se otestovat nedá"],
   ];
-  const facts = [le.origin ? `nápad ${esc(le.origin)}` : "",
+  const facts = [le.ours ? `naše (${esc(le.origin)})`
+                 : le.origin ? `nápad ${esc(le.origin)}` : "",
                  le.opened_at ? `otevřeno ${day(le.opened_at)}` : "",
                  le.ends_at ? `vyhodnocení ${day(le.ends_at)}` : ""].filter(Boolean);
   if (le.tp != null || le.sl != null) {
@@ -1820,9 +1827,11 @@ function groupNow(counts) {
 }
 function ordered(list, group) {
   const net = le => le.net_pct == null ? -Infinity : le.net_pct;
+  // A room of ours never ranks above his picks (V5, the own lane).
+  const lane = (a, b) => Number(!!a.ours) - Number(!!b.ours);
   return list.slice().sort(group === "archive"
-    ? (a, b) => String(b.id).localeCompare(String(a.id))
-    : (a, b) => net(b) - net(a));
+    ? (a, b) => lane(a, b) || String(b.id).localeCompare(String(a.id))
+    : (a, b) => lane(a, b) || net(b) - net(a));
 }
 function renderRoom() {
   const room = document.getElementById("room");

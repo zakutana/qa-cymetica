@@ -798,7 +798,7 @@ def _doors(**over):
     """Every door a tick reaches, stubbed and counted. Nothing here touches
     their API; the real doors are named in `_tick_doors` and checked apart."""
     calls = {k: [] for k in ("fomo", "sample", "cycle", "promote", "truth",
-                             "search", "verdicts", "refill", "moves",
+                             "search", "verdicts", "variants", "refill", "moves",
                              "fomo_reading", "hot", "hot_reading")}
 
     def door(name, value):
@@ -816,6 +816,7 @@ def _doors(**over):
         "promote": door("promote", {"rooms": 0, "orders": 0, "held": []}),
         "truth": door("truth", []),
         "verdicts": door("verdicts", []),
+        "variants": door("variants", {"rooms": 0, "orders": 0, "held": []}),
         "moves": door("moves", [{"legs": [], "period": 30, "why": f"m{n}"}
                                 for n in range(150)]),
         "refill": door("refill", [{"legs": [], "period": 90, "why": f"r{n}"}
@@ -2542,13 +2543,31 @@ def _clonepad(scripts_lab, tmp_path, monkeypatch, answers, fund_points=None,
         calls.append(("enable" if enabled else "pause", instance_id, confirm))
         cid = clone._next_id(clone.load())
         kind = "enable" if enabled else "disable"
-        clone._append({"id": cid, "type": "intent", "at": NOW.isoformat(),
-                       "kind": kind, "instance_id": instance_id})
-        clone._append({"id": cid, "type": "outcome", "at": NOW.isoformat(),
+        # The real clock, as clone.enable writes it: a variant's restart is
+        # found AFTER its room's criterion (V5), which is written on it too.
+        at = datetime.now(timezone.utc).isoformat()
+        clone._append({"id": cid, "type": "intent", "at": at, "kind": kind,
+                       "instance_id": instance_id,
+                       "bot_profit_usdc": _enable.profit})
+        clone._append({"id": cid, "type": "outcome", "at": at,
                        "kind": kind, "outcome": "accepted", "http_status": 200})
         return {"is_trading": enabled}
+    # What their row says the bot has made, as the real enable() records it.
+    _enable.profit = None
+
+    def _settings(instance_id, changes, confirm):
+        calls.append(("settings", instance_id, dict(changes), confirm))
+        cid = clone._next_id(clone.load())
+        at = datetime.now(timezone.utc).isoformat()
+        clone._append({"id": cid, "type": "intent", "at": at, "kind": "settings",
+                       "instance_id": instance_id, "body": dict(changes)})
+        clone._append({"id": cid, "type": "outcome", "at": at, "kind": "settings",
+                       "outcome": _settings.outcome, "http_status": 200})
+        return {"id": cid, "outcome": _settings.outcome}
+    _settings.outcome = "accepted"
 
     clone.clone, clone.fund, clone.enable = _clone, _fund, _enable
+    clone.settings = _settings
     monkeypatch.setattr(scripts_lab, "_sibling",
                         lambda n: clone if n == "clone" else pinned(n))
     return sent, calls
@@ -3215,3 +3234,172 @@ def test_the_question_offers_a_card_a_bot_or_a_fund_and_names_all_we_hold(
     assert "/api/v1/cloned-bots/available" in text and "list_funds" in text
     assert "whole" in text.lower() and "uuid" in text.lower()
     assert "MACD Hunter" in text and "AIB-SPACE" in text, text
+
+
+# ---------------------------------------------------------------------------
+# V5: the tick walks a paper bot's settings in time, on its one clone
+# ---------------------------------------------------------------------------
+
+def _judged_bot(scripts_lab, tmp_path, monkeypatch, made_pct=0.05):
+    """His pick's bot room, run to its verdict and paused by the close."""
+    room, acceptance, funded, calls = _bot_room(scripts_lab, tmp_path, monkeypatch)
+    start = datetime.fromisoformat(acceptance["at"])
+    days = float(acceptance["window_days"])
+    count = int(days * 24 / 6) + 1
+    _bot_samples(tmp_path, start, funded,
+                 [funded * made_pct * n / (count - 1) for n in range(count)])
+    scripts_lab.verdicts(now=start + timedelta(days=days, hours=1))
+    assert calls[-1] == ("pause", "inst-1", True), calls
+    return room, funded, calls, scripts_lab._sibling("clone")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_tick_starts_the_next_setting_of_a_judged_bot_on_its_one_clone(
+        tmp_path, monkeypatch):
+    """The phase's done-when: the tick starts a variant of a bot with other
+    settings, through the paper floor, under 60% of the book alone.
+
+    REPLY-0049: one paper clone per species, so the grid is walked in TIME on
+    it: when a variant's room has its verdict (and the close paused the bot),
+    the next setting opens a NEW room of ours (OUR-...), goes through
+    clone.settings() -- the floor that refuses while a room runs, and the new
+    room is not running yet -- and the bot starts again through
+    clone.enable(). One at a time: nothing moves while a room runs on it. And
+    the variant is judged from its restart, not from the clone's funding."""
+    import qa.rooms as qa_rooms
+
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    room, acceptance, funded, calls = _bot_room(scripts_lab, tmp_path, monkeypatch)
+    # His room runs: nothing to vary yet.
+    assert scripts_lab.bot_variants()["rooms"] == 0
+    assert "settings" not in [c[0] for c in calls]
+    start = datetime.fromisoformat(acceptance["at"])
+    days = float(acceptance["window_days"])
+    count = int(days * 24 / 6) + 1
+    _bot_samples(tmp_path, start, funded,
+                 [funded * 0.05 * n / (count - 1) for n in range(count)])
+    scripts_lab.verdicts(now=start + timedelta(days=days, hours=1))
+    clone = scripts_lab._sibling("clone")
+
+    clone.enable.profit = str(funded * 0.05)
+    did = scripts_lab.bot_variants()
+
+    assert [c[0] for c in calls[-2:]] == ["settings", "enable"], calls
+    assert calls[-2][1:] == ("inst-1", lab.variants()[0]["settings"], True)
+    assert did["rooms"] == 1 and did["orders"] == 1, did
+    rows = qa_rooms.load()
+    (variant,) = [s for s in qa_rooms.strategies(rows)
+                  if str(s["origin"]).startswith("OUR-")]
+    assert (variant["origin"], variant["kind"], variant["ref"]) == (
+        "OUR-0001", "bot", MACD["id"]), variant
+    assert "reference" in variant["title"] and "MACD Hunter" in variant["title"]
+    assert qa_rooms.status_of(rows, variant["id"]) == "running"
+    criterion = qa_rooms.acceptance_of(rows, variant["id"])
+    assert [(qa_rooms.leg_kind(g), qa_rooms.leg_ref(g))
+            for g in criterion["legs"]] == [("bot", "inst-1")]
+
+    # One at a time: a room runs on the clone, so nothing moves.
+    before = len(calls)
+    assert scripts_lab.bot_variants()["rooms"] == 0 and len(calls) == before
+
+    # Its verdict starts at its restart: +2% on what the bot held then
+    # (240 in + 12 made), not +7% on the 240 that went in at the funding.
+    vstart = datetime.fromisoformat(criterion["at"])
+    held = funded * 1.05
+    _write(tmp_path, "samples.jsonl", [
+        {"type": "sample", "kind": "bot", "instance_id": "inst-1",
+         "at": (vstart + timedelta(hours=6 * n)).isoformat(),
+         "total_profit_usdc": str(funded * 0.05 + held * 0.02 * n / (count - 1)),
+         "is_paper": True} for n in range(count)])
+    said = scripts_lab.verdicts(now=vstart + timedelta(days=days, hours=1))
+    assert [s["room"] for s in said] == [variant["id"]], said
+    assert said[0]["return_pct"] == pytest.approx(2.0), said
+    assert calls[-1] == ("pause", "inst-1", True), calls
+
+    # And the walk goes on: the next setting, in the next room.
+    scripts_lab.bot_variants()
+    assert calls[-2][:3] == ("settings", "inst-1", lab.variants()[1]["settings"])
+    assert calls[-1][0] == "enable"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_variant_that_cannot_run_starts_nothing_and_says_why(tmp_path, monkeypatch):
+    """The refusals, each before anything is started: a settings PATCH their
+    side did not accept leaves the bot paused and its room stopped with the
+    reason (the variant is not proposed again every tick); a bot that
+    stopped by itself before our pause is never started again (V2, a
+    finding); and a book nobody can read starts nothing."""
+    import qa.rooms as qa_rooms
+
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    room, funded, calls, clone = _judged_bot(scripts_lab, tmp_path, monkeypatch)
+
+    real = scripts_lab._free_cash
+    scripts_lab._free_cash = lambda: None
+    did = scripts_lab.bot_variants()
+    scripts_lab._free_cash = real
+    assert did["rooms"] == 0 and any("unreadable" in h for h in did["held"]), did
+    assert calls[-1][0] == "pause", calls
+
+    clone.settings.outcome = "rejected"
+    did = scripts_lab.bot_variants()
+    assert calls[-1][0] == "settings", ("started after a refused PATCH", calls)
+    rows = qa_rooms.load()
+    (ours,) = [s for s in qa_rooms.strategies(rows)
+               if str(s["origin"]).startswith("OUR-")]
+    assert qa_rooms.status_of(rows, ours["id"]) == "stopped"
+    assert any("settings" in h for h in did["held"]), did
+    # The refused variant is spent; the next tick proposes the next one.
+    clone.settings.outcome = "accepted"
+    scripts_lab.bot_variants()
+    assert calls[-2][2] == lab.variants()[1]["settings"], calls[-2]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_bot_their_side_halted_is_never_varied(tmp_path, monkeypatch):
+    import qa.rooms as qa_rooms
+
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    room, funded, calls, clone = _judged_bot(scripts_lab, tmp_path, monkeypatch)
+    rows = clone.load()
+    started = next(r["at"] for r in rows if r.get("kind") == "enable")
+    paused = next(r["at"] for r in rows if r.get("kind") == "disable")
+    halted = datetime.fromisoformat(started) + (
+        datetime.fromisoformat(paused) - datetime.fromisoformat(started)) / 2
+    _write(tmp_path, "samples.jsonl", [
+        {"type": "sample", "kind": "bot", "instance_id": "inst-1",
+         "at": halted.isoformat(), "is_trading": False,
+         "total_profit_usdc": str(-0.1 * funded)}])
+    before = len(calls)
+
+    did = scripts_lab.bot_variants()
+
+    assert len(calls) == before and did["rooms"] == 0, calls[before:]
+    assert any("by itself" in h for h in did["held"]), did
+    assert not [s for s in qa_rooms.strategies(qa_rooms.load())
+                if str(s["origin"]).startswith("OUR-")]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_our_rooms_rank_after_his_and_are_put_to_him_as_questions(
+        tmp_path, monkeypatch):
+    """The own lane's two rules the board and the brief keep: a room of ours
+    is never ranked above his picks, whatever it earned, and each one running
+    is listed as a QUESTION for him -- never a proposal."""
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    room, funded, calls, clone = _judged_bot(scripts_lab, tmp_path, monkeypatch,
+                                             made_pct=-0.02)
+    clone.enable.profit = str(-0.02 * funded)
+    scripts_lab.bot_variants()
+    vstart = datetime.now(timezone.utc)
+    _write(tmp_path, "samples.jsonl", [
+        {"type": "sample", "kind": "bot", "instance_id": "inst-1",
+         "at": (vstart + timedelta(hours=1)).isoformat(),
+         "total_profit_usdc": str(-0.02 * funded + 30.0), "is_paper": True}])
+
+    board = scripts_lab.board_rows()
+    assert [r["origin"] for r in board] == ["NEX-0001", "OUR-0001"], board
+    assert board[1]["pnl_pct"] > (board[0]["pnl_pct"] or -1e9), (
+        "the fixture must have ours earning more, or the order proves nothing")
+    said = scripts_lab.brief()
+    assert "OUR-0001" in said and "question for him" in said, said

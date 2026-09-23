@@ -2203,18 +2203,57 @@ def board(answers: list[dict], notebook: list[dict], room_rows: list[dict],
                                      else "unrealized_pnl_usdc"))
         count(origin, stake, pnl, card_room(origin, card))
     went_in = funded(clone_rows)
+    # A room of ours (V5) is ours by construction, so its bot is counted too.
+    for origin, opened_here in rooms_by.items():
+        if is_ours(origin):
+            bot_rooms[origin] = [str(r.get("id")) for r in opened_here
+                                 if r.get("kind") == "bot"]
+    stopped_at = {}
+    for row in room_rows:
+        if row.get("type") == "status":
+            stopped_at[str(row.get("room"))] = (
+                _at(row.get("at")) if row.get("status") == "stopped" else None)
+
+    def reading(instance: str, since=None, until=None) -> float | None:
+        """The bot's lifetime profit at its newest reading inside the room's
+        own run: a later variant on the same clone is not this room's."""
+        best = None
+        for row in sample_rows:
+            if row.get("kind") != "bot" or str(row.get("instance_id")) != instance:
+                continue
+            when = _at(row.get("at"))
+            if when is None or (since and when < since) or (until and when > until):
+                continue
+            if best is None or when >= best[0]:
+                best = (when, row)
+        return _money(best[1].get("total_profit_usdc")) if best else None
+
     for origin, room_ids in bot_rooms.items():
         for room_id in room_ids:
-            for leg in (accepted_on.get(room_id) or {}).get("legs") or []:
+            criterion = accepted_on.get(room_id) or {}
+            for leg in criterion.get("legs") or []:
                 instance = str(leg.get("ref") or "")
                 if leg.get("kind") != "bot" or not went_in.get(instance):
                     continue
-                count(origin, went_in[instance], _money(
-                    (newest_bot.get(instance) or {}).get("total_profit_usdc")),
-                    room_id)
+                until = stopped_at.get(room_id)
+                restart = bot_restart(clone_rows, instance, criterion.get("at"),
+                                      sample_rows)
+                if restart is None:
+                    count(origin, went_in[instance],
+                          reading(instance, until=until), room_id)
+                elif restart["profit"] is not None:
+                    # A variant: on what the bot held at its restart, and only
+                    # what it made since.
+                    now = reading(instance, _at(restart["at"]), until)
+                    count(origin, went_in[instance] + restart["profit"],
+                          None if now is None else now - restart["profit"],
+                          room_id)
 
     out = []
-    for answer in answers:
+    ours = [{"type": "answer", "id": origin,
+             "at": min(str(r.get("at") or "") for r in opened)}
+            for origin, opened in rooms_by.items() if is_ours(origin)]
+    for answer in list(answers) + ours:
         if answer.get("type") != "answer":
             continue
         origin = str(answer.get("id") or "")
@@ -2253,11 +2292,14 @@ def board(answers: list[dict], notebook: list[dict], room_rows: list[dict],
                        "why": g.get("why")} for g in gated]})
 
     def order(row):
+        # A room of ours is never ranked above his picks (V5, the own lane):
+        # his rows first, however they earned; ours after, in the same order.
+        lane = 3 if is_ours(row["origin"]) else 0
         if row["pnl_pct"] is not None:
-            return (0, -row["pnl_pct"])
+            return (lane, -row["pnl_pct"])
         if row["room"]:
-            return (1, 0.0)
-        return (2, 0.0)
+            return (lane + 1, 0.0)
+        return (lane + 2, 0.0)
     return sorted(out, key=order)
 
 

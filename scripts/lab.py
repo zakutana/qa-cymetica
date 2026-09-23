@@ -1352,15 +1352,16 @@ def verdicts(now=None) -> list[dict]:
     samples: list[dict] | None = None
     funded: dict[str, float] | None = None
     entered: dict[str, str] = {}
+    clone_rows: list[dict] = []
     fund_histories: dict[str, object] = {}
 
-    def series_of(leg: dict) -> list:
+    def series_of(leg: dict, acceptance: dict | None = None) -> list:
         """A leg's index, by its kind: a card's from their index-history, a
         bot's from the sampler's rows on this machine, a fund's from
         get_fund_history. A read that failed raises Unread and the verdict
         waits; only an ANSWER with no points is an empty series, which the
         verdict reads as a gap, never as a loss."""
-        nonlocal samples, funded, entered
+        nonlocal samples, funded, entered, clone_rows
         kind, ref = rooms.leg_kind(leg), rooms.leg_ref(leg)
         if kind == "arena":
             # Nothing reads a team's price yet (NEX-0076 asks how a share
@@ -1369,9 +1370,18 @@ def verdicts(now=None) -> list[dict]:
             return []
         if kind == "bot":
             if samples is None:
-                clones = _sibling("clone").load()
-                samples, funded = rooms.load_samples(), lab.funded(clones)
-                entered = lab.funded_at(clones)
+                clone_rows = _sibling("clone").load()
+                samples, funded = rooms.load_samples(), lab.funded(clone_rows)
+                entered = lab.funded_at(clone_rows)
+            # A variant (V5) runs on a RESTART of a clone that ran before:
+            # measured from that restart, not from the clone's funding.
+            restart = lab.bot_restart(clone_rows, ref,
+                                      (acceptance or {}).get("at"), samples)
+            if restart is not None:
+                return lab.bot_series(samples, ref, funded.get(ref),
+                                      entry_at=restart["at"],
+                                      entry_profit=restart["profit"],
+                                      restart=True)
             return lab.bot_series(samples, ref, funded.get(ref),
                                   entry_at=entered.get(str(ref)))
         if kind == "fund":
@@ -1382,8 +1392,8 @@ def verdicts(now=None) -> list[dict]:
         for room, acceptance, strategy, closed, halted in due:
             legs = acceptance.get("legs") or []
             try:
-                series = {rooms.leg_ref(leg): series_of(leg) for leg in legs
-                          if rooms.leg_ref(leg)}
+                series = {rooms.leg_ref(leg): series_of(leg, acceptance)
+                          for leg in legs if rooms.leg_ref(leg)}
                 if acceptance.get("benchmark_card"):
                     series[acceptance["benchmark_card"]] = history(
                         acceptance["benchmark_card"])
@@ -1413,9 +1423,9 @@ def verdicts(now=None) -> list[dict]:
                 books["paper"] = _sibling("paper").load()
                 books["theirs"] = _closed_on_their_side()
             if samples is None:
-                clones = _sibling("clone").load()
-                samples, funded = rooms.load_samples(), lab.funded(clones)
-                entered = lab.funded_at(clones)
+                clone_rows = _sibling("clone").load()
+                samples, funded = rooms.load_samples(), lab.funded(clone_rows)
+                entered = lab.funded_at(clone_rows)
             booked = dict(series)
             for leg in legs:
                 ref = rooms.leg_ref(leg)
@@ -2524,6 +2534,154 @@ def _clone_outcome(clone, kind: str, instance: str) -> str | None:
                 None)
 
 
+def bot_variants() -> dict:
+    """The next setting of every paper bot of ours whose last room has its
+    verdict (V5 of plan v2) -- the tick door that walks the grid in TIME.
+
+    REPLY-0049: one active paper clone per species per account, so a
+    species' settings run one after another on its ONE clone. For a clone
+    of ours whose rooms are all stopped, the newest with a verdict, and which
+    WE paused (a halt of theirs, or an unexplained one, is never restarted --
+    `clone.restart_refusal`), the next variant of `qa.lab.variants()`:
+
+        a proposal of ours (OUR-NNNN)  ->  a NEW room from it, its criterion
+        ->  clone.settings() (the paper floor; refused while a room runs,
+            and this one is not running yet)
+        ->  clone.enable() (starts again only after our pause and that
+            accepted change)  ->  the room running
+
+    Money: nothing new moves -- the clone's parked money becomes exposure,
+    and 60% of the book is the one limit asked of it (`restart_affordable`).
+    A step that fails stops the room with the reason and leaves the bot
+    paused; the variant is spent (`tried_variants`), so the next tick
+    proposes the next one rather than the same refusal every tick.
+
+    A species' variants run one at a time, so they are one experiment's
+    exposure at any moment: correlated rooms count as one by construction."""
+    if pass_in_flight():
+        return {"rooms": 0, "orders": 0, "held": ["variants: a deep pass is running"]}
+    clone = _sibling("clone")
+    rows = clone.load()
+    stored = rooms.load()
+    samples = rooms.load_samples()
+    went_in = lab.funded(rows)
+    intents = {row.get("id"): row for row in rows
+               if row.get("type") == "intent" and not row.get("kind")}
+    ours: dict[str, tuple[str, str]] = {}
+    for row in rows:
+        if (row.get("type") == "outcome" and not row.get("kind")
+                and row.get("outcome") == "accepted" and row.get("is_paper") is True
+                and row.get("clone_instance_id")):
+            intent = intents.get(row.get("id")) or {}
+            ours[str(row["clone_instance_id"])] = (
+                str(row.get("id")), str(intent.get("source_id") or ""))
+    on_clone: dict[str, list[str]] = {}
+    for room_id, plan in rooms.plans(stored).items():
+        for leg in plan.get("legs") or []:
+            if rooms.leg_kind(leg) == "bot":
+                on_clone.setdefault(str(rooms.leg_ref(leg)), []).append(room_id)
+    titles = rooms.names(stored)
+    opened, started, held = 0, 0, []
+
+    for instance, (cid, species) in ours.items():
+        rooms_here = sorted(on_clone.get(instance) or [], key=rooms.number)
+        if not rooms_here or not species:
+            continue            # no room ever ran on it: nothing to vary from
+        if any(rooms.status_of(stored, r) != "stopped" for r in rooms_here):
+            continue            # one at a time: a room still holds the clone
+        last = rooms_here[-1]
+        name = titles.get(rooms_here[0]) or species[:8]
+        tag = f"{name} ({instance[:8]})"
+        if rooms.verdict_of(stored, last) is None:
+            # Stopped without a verdict. A variant of ours whose restart never
+            # ran (its PATCH or its start refused) measured nothing and holds
+            # nothing back; any other room is still owed its verdict.
+            opened_from = next((s.get("origin") for s in rooms.strategies(stored)
+                                if s["id"] == last), None)
+            criterion = rooms.acceptance_of(stored, last) or {}
+            if not (lab.is_ours(opened_from) and lab.bot_restart(
+                    rows, instance, criterion.get("at"), samples) is None):
+                continue
+        refused = clone.restart_refusal(instance, rows, samples, planned=True)
+        if refused:
+            held.append(f"variants: {tag}: {refused}"[:300])
+            continue
+        variant = lab.next_variant(lab.tried_variants(instance))
+        if variant is None:
+            continue            # the grid is walked; the clone stays parked
+        amount = went_in.get(instance) or 0.0
+        ok, why = lab.restart_affordable(amount, _free_cash(), _deployed(),
+                                         _parked())
+        if not ok:
+            held.append(f"variants: {tag}: {why}")
+            continue
+        proposal = lab.note_proposal(
+            "bot", species, instance, variant,
+            why=(f"the next setting of the grid for {name} on its one paper "
+                 f"clone, after {last} had its verdict"))
+        origin = proposal["id"]
+        try:
+            room = rooms.open_strategy(
+                origin, f"{name} · {variant['label']}"[:rooms.MAX_TITLE],
+                kind="bot", ref=species)["id"]
+        except rooms.RoomError as exc:
+            held.append(f"variants: {tag}: {exc}")
+            continue
+        opened += 1
+
+        def stop(why: str) -> None:
+            held.append(f"variants: {tag}: {why}"[:300])
+            try:
+                rooms.set_status(room, "stopped", why=why[:400])
+            except rooms.RoomError as exc:
+                held.append(f"{room}: {exc}")
+
+        try:
+            rooms.add_link(room, cid, why=f"the paper clone of {name} this "
+                                          f"variant runs on")
+            plan = rooms.set_plan(room, [{"kind": "bot", "ref": instance,
+                                          "side": "bull", "share": 1.0}])
+            rooms.set_acceptance(
+                room, window_days=NIGHT_WINDOW_DAYS, stop_pct=NIGHT_STOP_PCT,
+                legs=plan["legs"], benchmark_card=BTC_PROXY,
+                why=(f"OUR variant {origin} of {name} ({variant['label']}), "
+                     f"on its one paper clone {instance} after {last}'s "
+                     f"verdict; settings {json.dumps(variant['settings'])}. "
+                     f"Judged from its restart on what the bot held then; "
+                     f"the window and the stop are the laboratory's "
+                     f"defaults")[:900],
+                adopted=True)
+        except (rooms.RoomError, KeyError) as exc:
+            stop(f"the room could not be written ({exc})")
+            continue
+        try:
+            clone.settings(instance, variant["settings"], True)
+        except (Exception, SystemExit) as exc:  # noqa: BLE001
+            stop(f"the settings PATCH was refused ({str(exc)[:160]}); the bot "
+                 f"stays paused")
+            continue
+        if _clone_outcome(clone, "settings", instance) != "accepted":
+            stop("the settings PATCH was not accepted; the bot stays paused")
+            continue
+        try:
+            clone.enable(instance, True)
+        except (Exception, SystemExit) as exc:  # noqa: BLE001
+            stop(f"starting it again was refused ({str(exc)[:160]}); its "
+                 f"settings changed and it stays paused")
+            continue
+        if _clone_outcome(clone, "enable", instance) != "accepted":
+            stop("starting it again was not accepted; it stays paused")
+            continue
+        started += 1
+        try:
+            rooms.set_status(room, "running", why=(
+                f"our variant {variant['label']} of {name}, started again on "
+                f"{instance} after an accepted settings change"))
+        except rooms.RoomError as exc:
+            held.append(f"{room}: {exc}")
+    return {"rooms": opened, "orders": started, "held": held}
+
+
 def _night_search(moves: list[dict]) -> dict:
     """One bite of the queue. The register answers what it already knows."""
     did = {"asked": 0, "known": 0, "failed": 0}
@@ -2797,6 +2955,7 @@ def _tick_doors() -> dict:
         "moves": night_moves,
         "refill": lambda: night_refill(live=_live_card_seeds()),
         "verdicts": verdicts,
+        "variants": bot_variants,
         "fomo_reading": lambda: _sibling("fomo_watch").reading(),
         "hot": _hot_round,
         "hot_reading": lambda: _sibling("hot_watch").reading(),
@@ -2827,7 +2986,10 @@ def _say_tick(said: dict, out) -> None:
         f"({said['known']} already known), "
         f"{'answers picked up' if said['cycled'] else 'no cycle due'}, "
         f"{said['rooms']} room(s) / {said['orders']} order(s), "
-        f"{said['verdicts']} verdict(s), {memecoins}, {hot_said}"
+        f"{said['verdicts']} verdict(s), "
+        + (f"{said['variants']} bot variant(s) started, "
+           if said.get("variants") else "")
+        + f"{memecoins}, {hot_said}"
         + (", samples by the console"
            if (said.get("sample") or {}).get("by") == "console" else ""))
     for line in said.get("held") or []:
@@ -2866,7 +3028,7 @@ def tick(*, now: datetime | None = None, actions: dict | None = None,
                   "cycled": False,
                   "truth": False, "backtests": 0, "known": 0,
                   "refilled": False, "rooms": 0, "orders": 0, "held": [],
-                  "verdicts": 0, "resolved": 0, "errors": []}
+                  "verdicts": 0, "variants": 0, "resolved": 0, "errors": []}
 
     def attempt(name, call, *args):
         try:
@@ -2960,6 +3122,14 @@ def tick(*, now: datetime | None = None, actions: dict | None = None,
     said["verdicts"] = sum(1 for row in judged if row.get("verdict") != "waiting")
     said["verdicts_waiting"] = [f"{row['room']}: {row.get('why', '')}"
                                 for row in judged if row.get("verdict") == "waiting"]
+    # After the verdicts, whose close pauses a judged bot: its next setting
+    # starts on the same clone (V5, REPLY-0049), in a room of ours.
+    varied = attempt("variants", doors["variants"]) or {}
+    said["rooms"] += varied.get("rooms", 0)
+    said["variants"] = varied.get("orders", 0)
+    every += list(varied.get("held") or [])
+    said["held"] = every[-6:]
+    said["held_older"] = len(every) - len(said["held"])
     said["resolved"] = len(attempt("resolved", _record_resolved) or [])
 
     last_reading = lab._at(state.get("last_fomo_reading"))
@@ -3153,14 +3323,30 @@ def brief() -> str:
     if not rows:
         out.append("  none has come to anything yet")
 
+    # Our own lane (V5): every room of ours that runs is put to him as a
+    # question -- would he run this setting, or another? -- never as a
+    # proposal of his, and never ranked above his picks (the board above).
+    stored = rooms.load()
+    titles = rooms.names(stored)
+    ours = [s for s in rooms.strategies(stored) if lab.is_ours(s.get("origin"))
+            and rooms.status_of(stored, s["id"]) == "running"]
+    if ours:
+        out.append("")
+        out.append("OUR rooms running -- each a question for him, never a "
+                   "proposal: would he run this setting, or which instead?")
+        for strategy in ours:
+            out.append(f"  {strategy['id']}  {strategy['origin']}  "
+                       f"{titles.get(strategy['id'])}")
+
     # Every stop of a paper bot of ours, and its cause (V2, 2026-09-23): two
     # halted by themselves and nobody noticed. An unexplained one is a check
     # and a report, and a question for him.
     stops = lab.bot_stops(_sibling("clone").load(), rooms.load_samples())
     if stops:
         out.append("")
-        out.append("paper bots that stopped, and why (a stopped bot is never "
-                   "started again):")
+        out.append("paper bots that stopped, and why (a halt that was not ours "
+                   "is never started again; after our pause, only as a new "
+                   "setting in a room of ours):")
         for stop in stops[-8:]:
             pct = stop.get("profit_pct")
             out.append(f"  {stop['instance'][:8]}  {stop['cause']:11}  between "

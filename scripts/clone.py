@@ -524,7 +524,8 @@ def _instance(client, instance_id: str) -> dict:
 
 
 def restart_refusal(instance_id: str, rows: list[dict] | None = None,
-                    samples: list[dict] | None = None) -> str | None:
+                    samples: list[dict] | None = None,
+                    planned: bool = False) -> str | None:
     """Why this clone may not be started now, or None -- from our own record
     and the sampler's rows on this machine, before anything is asked of them.
 
@@ -541,7 +542,12 @@ def restart_refusal(instance_id: str, rows: list[dict] | None = None,
 
     so every start measures one setting. And never after a stop that was not
     ours (`qa.lab.bot_stops`: their guard, or unexplained): that stop is a
-    finding to report, not a variant to run over."""
+    finding to report, not a variant to run over.
+
+    `planned=True` is the laboratory asking BEFORE it opens a variant's room
+    and sends the PATCH: the same reading, with the settings change taken as
+    the next step rather than required already -- one reading for both, so
+    the tick cannot open a room enable() would then refuse."""
     rows = load() if rows is None else rows
     answered = {row.get("id"): row.get("outcome") for row in rows
                 if row.get("type") == "outcome"}
@@ -561,7 +567,7 @@ def restart_refusal(instance_id: str, rows: list[dict] | None = None,
                 f"a new variant needs our own pause first, then a settings "
                 f"change after it")
     after_pause = since[since.index("disable") + 1:]
-    if "settings" not in after_pause:
+    if "settings" not in after_pause and not planned:
         return (f"{instance_id} is paused by us, but no accepted settings "
                 f"change follows the pause, so a start now would run the same "
                 f"settings again -- the same experiment, not a new variant")

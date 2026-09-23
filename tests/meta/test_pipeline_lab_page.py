@@ -314,6 +314,36 @@ def test_an_experiment_opens_into_a_chart_and_four_numbers(tmp_path):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_room_of_ours_says_naše_and_never_ranks_above_his(tmp_path):
+    """V5, the own lane: a paper bot's next setting is OUR idea (origin
+    OUR-...). The page says so -- „naše", not "nápad OUR-0001" -- and ranks
+    it after his, whatever it earned."""
+    rooms_view, report = _rooms_view(), _report()
+    rooms_view["rooms"].append({"id": "STR-0006", "kind": "strategy",
+                                "title": "Bollinger Bandit · SL 5",
+                                "origin": "OUR-0001", "status": "running"})
+    rooms_view["panels"]["STR-0006"] = {
+        **rooms_view["panels"]["STR-0003"], "title": "Bollinger Bandit · SL 5",
+        "origin": "OUR-0001", "status": "running", "clones": []}
+    report["rooms"].append({**next(r for r in report["rooms"]
+                                   if r["id"] == "STR-0003"),
+                            "id": "STR-0006", "origin": "OUR-0001",
+                            "net_pct": 99.0, "usdc": 99.0})
+    view = _lab_page().lab_view(rooms_view, report, CHANNEL, FOMO, now=NOW)
+    by_id = {e["id"]: e for e in view["experiments"]}
+    assert by_id["STR-0006"]["ours"] is True and by_id["STR-0003"]["ours"] is False
+
+    code, err, captured = _run_page(_node(), tmp_path / "ours", view,
+                                    after='window.labShow("bots");',
+                                    page=_lab_page())
+    assert code == 0, err[:1200]
+    room = captured.get("room", "")
+    assert "naše" in room, room[:2000]
+    assert room.index("Bollinger Bandit · SL 5") > room.index("Bollinger Bandit<"), (
+        "a room of ours ranked above his pick")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_bots_room_says_whether_each_bot_trades(tmp_path):
     room = _drawn(tmp_path, "bots", after='window.labShow("bots");').get("room", "")
     # A bot that stopped by itself says so once -- its reason -- rather than
