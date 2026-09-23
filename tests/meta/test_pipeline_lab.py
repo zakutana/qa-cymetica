@@ -14,8 +14,11 @@ behind it:
   * **a missing number is missing.** `get_strategy_returns` promises "a
     strategy with no runs returns a note, never a fabricated number". Ranking
     it as a zero would be us fabricating what they refused to.
-  * **a cap on questions and rooms.** Nexus's own guide: an open-ended night
-    "drifts, burns calls, and gives you no way to judge what it found".
+  * **their pace, and the book's ceiling.** Nexus's own guide: an open-ended
+    night "drifts, burns calls, and gives you no way to judge what it found".
+    Our own caps on questions and rooms held that until V5 (2026-09-23); their
+    hourly limit, their bound on outstanding jobs, their backoff and 60% of
+    the book hold it now.
 
 The tools the ground-truth lane calls are checked against components.yaml
 rather than by calling them: a test that reaches the vendor to prove a
@@ -129,10 +132,10 @@ def test_an_answer_they_gave_the_operator_does_not_pace_our_door():
 
     The floor is about THEIR side: one question in flight so the pick-up is
     not split, and a pace their rate limit can carry. Neither is true of a
-    conversation that happened in a browser. The day's CAP is the other way
-    round and stays -- `asked_within` counts "whoever asked them", which is
-    deliberate and documented, because the cap is about how much of their
-    time we take in a day and the operator's questions take some of it.
+    conversation that happened in a browser. (Since V5, 2026-09-23, the floor
+    and the in-flight rule are gone and the pace is their hourly limit; it
+    reads our door the same way. The day's count went too; `asked_within`
+    still counts "whoever asked them", for the brief.)
 
     Found by three readers on 2026-09-20, the day the command was written.
     """
@@ -147,19 +150,26 @@ def test_an_answer_they_gave_the_operator_does_not_pace_our_door():
         f"an answer the operator pasted in put our own door behind a "
         f"twenty-minute floor: {why}")
 
-    # The cap is the other half and it still counts it.
+    # The day's figure still counts it (said in the brief, no longer a cap).
     assert lab.asked_within(recorded, now) == 1, (
-        "the day's cap is about how much of their time we take, and a "
-        "question the operator put to them takes some of it")
+        "a question the operator put to them takes some of their time")
 
-    # A question of OURS at the same moment still holds the floor shut --
-    # answered, so it is the FLOOR refusing and not the in-flight rule, which
-    # fires one step earlier and would have hidden this.
-    ours = [{"type": "question", "id": "NEX-0101", "at": now.isoformat()},
-            {"type": "answer", "id": "NEX-0101", "at": now.isoformat(),
-             "text": "..."}]
+    # The floor and the in-flight rule went in V5 (2026-09-23); the pace that
+    # holds now is their hour, and it too is about OUR door. Three recorded
+    # from a browser inside the hour do not shut it; three of ours do --
+    # answered, so it is the HOUR refusing and nothing else.
+    browser = [{**row, "id": f"NEX-01{n}{row['type'][0]}"} for n in range(
+        lab.ASKS_PER_HOUR) for row in recorded]
+    browser = [{**row, "id": row["id"][:-1]} for row in browser]
+    may, why = lab.may_ask_now(browser, now)
+    assert may, why
+    ours = []
+    for n in range(lab.ASKS_PER_HOUR):
+        ours += [{"type": "question", "id": f"NEX-020{n}", "at": now.isoformat()},
+                 {"type": "answer", "id": f"NEX-020{n}", "at": now.isoformat(),
+                  "text": "..."}]
     may, why = lab.may_ask_now(ours, now)
-    assert not may and "floor" in why, why
+    assert not may and "hour" in why, why
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -333,7 +343,7 @@ def test_the_notebook_keeps_at_most_three_lessons_and_knows_an_open_session(
     # further down this file says `<= lab.MAX_LESSONS` -- so a silent drop to
     # two was invisible while the name, close_session's docstring and
     # CLAUDE.md all said three, and a night would have lost a third of what
-    # it learned. The same pattern as `running_experiments == 50` above.
+    # it learned. The same pattern as `stake_share_of_book == 0.0048` above.
     assert lab.MAX_LESSONS == 3
 
     opened = lab.open_session(mode="session")
@@ -369,15 +379,30 @@ def test_nothing_is_asked_while_a_deep_pass_is_running():
     interlock buys nothing; a name that claims one it does not make costs a
     reader their trust in every other name here. A04, triage 3/3.
     """
-    may, why = lab.may_ask(asked=0, pass_running=True)
+    may, why = lab.may_ask(pass_running=True)
     assert not may and "deep pass" in why.lower(), why
 
-    may, why = lab.may_ask(asked=lab.CAPS["questions_per_day"],
-                           pass_running=False)
-    assert not may and str(lab.CAPS["questions_per_day"]) in why, why
-
-    may, _ = lab.may_ask(asked=1, pass_running=False)
+    may, _ = lab.may_ask(pass_running=False)
     assert may
+
+    # V5 (2026-09-23): the day's count of 24 went, and what it protected --
+    # an open-ended loop burning their calls -- is held by THEIR pace. Thirty
+    # answered questions over the last day do not stop the next one; three
+    # inside the hour do.
+    now = datetime(2026, 9, 23, 12, 0, tzinfo=timezone.utc)
+    day = []
+    for n in range(30):
+        at = (now - timedelta(minutes=45 * (n + 2))).isoformat()
+        day += [{"type": "question", "id": f"NEX-D{n}", "at": at},
+                {"type": "answer", "id": f"NEX-D{n}", "at": at}]
+    assert "questions_per_day" not in lab.CAPS
+    may, why = lab.may_ask_now(day, now)
+    assert may, why
+    hour = day + [{"type": "question", "id": f"NEX-H{n}",
+                   "at": (now - timedelta(minutes=10 * (n + 1))).isoformat()}
+                  for n in range(lab.ASKS_PER_HOUR)]
+    may, why = lab.may_ask_now(hour, now)
+    assert not may and "hour" in why, why
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -400,17 +425,20 @@ def test_an_order_is_capped_at_a_share_of_what_is_free():
     ok, why = lab.affordable(10_000, free_cash=free, running=2)
     assert not ok and "2" in why, why
 
-    ok, why = lab.affordable(1_000, free_cash=free,
-                             running=lab.CAPS["running_experiments"])
-    assert not ok and "running" in why.lower(), why
-    # "Aspoň 50" is a floor: 125 since 2026-09-21 (25 new rooms a day over a
-    # five-day window). Below 50 is the operator's number broken -- and the
-    # value itself is pinned, not only the floor: `>= 50` alone survived
-    # setting it to 10**6 (reader 1 of the deep pass of 2026-09-21), which is
-    # the silent drift this pin exists for. Moving it is an edit HERE too.
-    assert lab.CAPS["running_experiments"] >= 50
-    assert lab.CAPS["running_experiments"] == 125
-    assert lab.CAPS["new_rooms_per_day"] == 25
+    # V5 (2026-09-23): the count caps went -- 125 running, 25 new a day. A
+    # running count is no refusal now; what holds is the 60% ceiling below,
+    # and it binds on the book, not on a number of rooms.
+    ok, why = lab.affordable(1_000, free_cash=free, running=10_000)
+    assert ok, why
+    for gone in ("running_experiments", "new_rooms_per_day"):
+        assert gone not in lab.CAPS, f"{gone} is still a cap of ours"
+    # The stake that replaced the count, pinned by value like the others: a
+    # FIXED 0.48% of the book, so the ceiling alone stops the count at 125 --
+    # "aspoň 50" is the operator's floor and 125 keeps it. `>= 50`-style pins
+    # survived 10**6 once (reader 1 of the deep pass of 2026-09-21), so the
+    # value itself, and moving it is an edit HERE too.
+    assert lab.CAPS["stake_share_of_book"] == 0.0048
+    assert round(lab.CAPS["total_exposure"] / lab.CAPS["stake_share_of_book"]) >= 50
 
     # THE CAP ITSELF, by name and by boundary. L04, deep pass of 2026-09-13,
     # triage 3/3: this test used to pin only the rendering. Three readers set
@@ -820,10 +848,12 @@ def test_the_night_searches_on_its_own_clock_not_the_question_clock():
     done = lab.night_tick({**state, "pending": 0}, now)
     assert "search" not in done["do"], "nothing left to walk"
 
-    # The question floor is no longer two hours: their side sets the pace when
-    # it is down, and when it is up we should not be throttling ourselves.
-    assert lab.NIGHT["ask_seconds"] <= 20 * 60
-    soon = lab.night_tick({**state, "last_ask": now - timedelta(minutes=25)}, now)
+    # The question floor is gone altogether (V5, 2026-09-23; two hours, then
+    # twenty minutes): their side sets the pace -- ASKS_PER_HOUR, read off the
+    # diary by may_ask_now -- so a question five minutes after the last is
+    # not held here.
+    assert "ask_seconds" not in lab.NIGHT
+    soon = lab.night_tick({**state, "last_ask": now - timedelta(minutes=5)}, now)
     assert "ask" in soon["do"], soon
 
 
@@ -1310,19 +1340,17 @@ def _scripts_lab(tmp_path, monkeypatch):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_the_night_and_the_loop_share_one_cap_per_day(tmp_path, monkeypatch):
+def test_the_hand_and_the_loop_share_their_hourly_limit(tmp_path, monkeypatch):
     """There were two caps until 2026-09-19 -- eight a session, twelve a
-    night -- because a night was long and a session had a person waiting
-    through it. A loop that ticks all day is neither, and the arithmetic of a
-    rolling day covers both: whatever asked a question in the last 24 hours,
-    it counts.
+    night -- then one per rolling day (24), and since V5 (2026-09-23) none of
+    ours: the brake is THEIR hourly limit, and it has to count whoever asked.
 
-    Until the deep pass of 2026-09-21 (C09) this called the pure `may_ask`
-    three times, as its sibling above does, so a night or a hand-asked
-    question counting on its own would have stayed green. Now: one counter,
-    read by the tick and `ask` alike, over whoever asked. (The night read it
-    too, until `lab.py night` was removed on 2026-09-21; the rows below still
-    carry its questions, because a diary of the time does.)"""
+    Until the deep pass of 2026-09-21 (C09) the day's test called the pure
+    `may_ask` three times, so a hand-asked question counting on its own would
+    have stayed green. The same holds for the hour: one reader of the diary,
+    over every session's questions, refusing `ask` itself. And the tick holds
+    no door for a day's count any more -- a door nobody reads is a brake that
+    looks present."""
     scripts_lab = _scripts_lab(tmp_path, monkeypatch)
     now = datetime.now(timezone.utc)
     rows = ([{"type": "question", "id": f"NEX-N{n}", "session": "LAB-0009",
@@ -1335,17 +1363,18 @@ def test_the_night_and_the_loop_share_one_cap_per_day(tmp_path, monkeypatch):
                for n in range(4)])
     monkeypatch.setattr(scripts_lab, "_nexus_rows", lambda: rows)
     assert scripts_lab._asked_today() == 5, "the night's three and the loop's two"
-    assert scripts_lab._tick_doors()["asked_today"] is scripts_lab._asked_today
+    assert "asked_today" not in scripts_lab._tick_doors()
 
-    cap = lab.CAPS["questions_per_day"]
     monkeypatch.setattr(scripts_lab, "pass_in_flight", lambda: False)
-    monkeypatch.setattr(scripts_lab, "_nexus_rows", lambda: [
-        {"type": "question", "id": f"NEX-{n}", "session": f"LAB-{n % 3}",
-         "at": (now - timedelta(minutes=30 * n + 1)).isoformat()}
-        for n in range(cap)])
-    # The cap's own refusal, by its words: "24" alone also matches the hours
-    # and the pace's reasons, which is how the first draft passed a mutation.
-    with pytest.raises(SystemExit, match=f"the cap is {cap}"):
+    inside = []
+    for n in range(lab.ASKS_PER_HOUR):
+        at = (now - timedelta(minutes=15 * n + 1)).isoformat()
+        inside += [{"type": "question", "id": f"NEX-{n}",
+                    "session": f"LAB-{n % 3}", "at": at},
+                   {"type": "answer", "id": f"NEX-{n}", "at": at}]
+    monkeypatch.setattr(scripts_lab, "_nexus_rows", lambda: inside)
+    # The limit's own refusal, by its words: "3" alone also matches minutes.
+    with pytest.raises(SystemExit, match=f"the cap is {lab.ASKS_PER_HOUR}"):
         scripts_lab.ask("one more", wait=False)
 
 
@@ -1387,24 +1416,26 @@ def test_a_tick_while_a_deep_pass_runs_does_nothing_at_all():
     assert plan["do"] == ["cycle", "truth", "ask"], (
         "the first tick of a night has never cycled, ranked or asked")
 
-    # Inside every floor: five minutes since the last question (the floor came
-    # down to twenty on 2026-09-12), five since the last cycle, an hour since
-    # the ranking, and nothing left to walk.
+    # Five minutes since the last question, five since the last cycle, an hour
+    # since the ranking, and nothing left to walk. The floor ("too soon") and
+    # the day's count ("cap") went in V5 (2026-09-23): a question five
+    # minutes after the last one, the day's hundredth, is theirs to pace --
+    # may_ask_now's hourly limit and bound -- not this clock's.
     fresh = {**state, "last_cycle": now - timedelta(minutes=5),
              "last_truth": now - timedelta(hours=1),
              "last_ask": now - timedelta(minutes=5)}
     plan = lab.night_tick(fresh, now)
-    assert plan["do"] == [] and plan["skipped"] == "too soon"
+    assert plan["do"] == ["ask"], plan
 
-    plan = lab.night_tick({**fresh, "last_ask": now - timedelta(hours=3)}, now)
-    assert plan["do"] == ["ask"]
+    plan = lab.night_tick({**fresh, "asked": 100}, now)
+    assert plan["do"] == ["ask"], plan
 
-    plan = lab.night_tick({**fresh, "last_ask": now - timedelta(hours=3),
-                           "asked": lab.CAPS["questions_per_day"]}, now)
-    assert plan["do"] == [] and plan["skipped"] == "cap"
+    # Their backoff still holds it.
+    plan = lab.night_tick({**fresh, "hold_until": now + timedelta(minutes=30)},
+                          now)
+    assert plan["do"] == [] and plan["skipped"] == "backoff"
 
-    plan = lab.night_tick({**fresh, "last_ask": now - timedelta(hours=3),
-                           "candidates": []}, now)
+    plan = lab.night_tick({**fresh, "candidates": []}, now)
     assert plan["do"] == [] and plan["skipped"] == "nothing to ask about"
 
 
@@ -1429,7 +1460,7 @@ def test_the_night_waits_the_hour_their_own_failure_asked_for():
                 for n in range(count)]
 
     one = lab.backoff_until(_failed(1, 10), now)
-    assert one == now + timedelta(seconds=lab.NIGHT["ask_seconds"]) - timedelta(minutes=10)
+    assert one == now + timedelta(seconds=lab.NIGHT["backoff_base_seconds"]) - timedelta(minutes=10)
 
     three = lab.backoff_until(_failed(3, 10), now)
     assert three > one, "three refusals in a row is not one refusal"

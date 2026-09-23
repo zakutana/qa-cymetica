@@ -70,12 +70,14 @@ def _card(n):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_the_question_cap_is_a_rolling_day_not_a_session():
-    """Twenty-four a day, counted over the last twenty-four hours.
+def test_the_questions_are_paced_by_their_hour_not_a_count_of_ours():
+    """Twenty-four a day until V5 (2026-09-23), eight a session before that.
 
     Per session it was eight, and a session is whatever was opened last: a
     loop ticking every twenty minutes reached eight before lunch, and opening
-    a new session to get past it would have been the reset nobody meant.
+    a new session to get past it would have been the reset nobody meant. The
+    day's count then never bound anything their own hourly limit did not --
+    so it went, and the day's figure is only said, never a refusal.
     """
     rows = [_question("NEX-1", NOW - timedelta(hours=30)),
             _question("NEX-2", NOW - timedelta(hours=23)),
@@ -84,26 +86,29 @@ def test_the_question_cap_is_a_rolling_day_not_a_session():
     assert lab.asked_within(rows, NOW) == 2, (
         "a question thirty hours old still counted against today")
 
-    cap = lab.CAPS["questions_per_day"]
-    may, why = lab.may_ask(asked=cap - 1, pass_running=False)
+    may, why = lab.may_ask(pass_running=False)
     assert may, why
-    may, why = lab.may_ask(asked=cap, pass_running=False)
-    assert not may and str(cap) in why and "24 h" in why, why
-    may, why = lab.may_ask(asked=0, pass_running=True)
+    may, why = lab.may_ask(pass_running=True)
     assert not may and "deep pass" in why.lower(), why
 
     for gone in ("questions_per_session", "questions_per_night",
-                 "new_rooms_per_session"):
+                 "new_rooms_per_session", "questions_per_day",
+                 "new_rooms_per_day", "running_experiments"):
         assert gone not in lab.CAPS, (
-            f"{gone} is still a cap: a per-session count is the one the loop "
-            f"exhausts or resets")
+            f"{gone} is still a cap of ours: V5 left only their pace and the "
+            f"book's ceiling")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_a_question_waits_for_the_last_one_the_floor_and_their_backoff():
+def test_a_question_waits_for_their_hour_their_bound_and_their_backoff():
     """The night kept its pace in memory; a tick is a new process every twenty
     minutes, so the pace is read off the diary -- or `lab.py ask` from a loop
-    would ask on every tick, over an answer still in flight."""
+    would ask on every tick.
+
+    Since V5 (2026-09-23) the pace is theirs alone. One question in flight
+    and the twenty-minute floor were ours, and both went: a question five
+    minutes after the last, with that one still being answered, may go --
+    until their hour or their bound says otherwise."""
     def q(ident, minutes):
         return _question(ident, NOW - timedelta(minutes=minutes))
 
@@ -111,14 +116,16 @@ def test_a_question_waits_for_the_last_one_the_floor_and_their_backoff():
         return {"type": kind, "id": ident,
                 "at": (NOW - timedelta(minutes=minutes)).isoformat(), **extra}
 
+    # In flight, and five minutes old: not a brake of ours any more.
     may, why = lab.may_ask_now([q("NEX-1", 5)], NOW)
-    assert not may and "NEX-1" in why, why
-
-    may, why = lab.may_ask_now([q("NEX-1", 15), a("NEX-1", 2)], NOW)
-    assert not may and "20" in why, why
-
-    may, why = lab.may_ask_now([q("NEX-1", 30), a("NEX-1", 22)], NOW)
     assert may, why
+    may, why = lab.may_ask_now([q("NEX-1", 15), a("NEX-1", 2)], NOW)
+    assert may, why
+
+    # Their hour: the fourth inside it waits.
+    may, why = lab.may_ask_now([q("NEX-1", 50), q("NEX-2", 30), q("NEX-3", 5)],
+                               NOW)
+    assert not may and "hour" in why, why
 
     may, why = lab.may_ask_now(
         [q("NEX-1", 60), a("NEX-1", 30, kind="gave_up", status="failed",
@@ -145,11 +152,12 @@ def test_a_question_their_side_turned_away_does_not_hold_our_floor():
     may, why = lab.may_ask_now([_question("NEX-1", asked), longer], NOW)
     assert not may and "wait" in why, why
 
-    # An ANSWERED question still holds the floor: that one they worked on.
+    # And since V5 (2026-09-23) an ANSWERED one holds no floor either: the
+    # floor itself went, and their hourly limit is the pace.
     answered = {"type": "answer", "id": "NEX-1",
                 "at": (asked + timedelta(minutes=1)).isoformat()}
     may, why = lab.may_ask_now([_question("NEX-1", asked), answered], NOW)
-    assert not may and "20" in why, why
+    assert may, why
 
 
 def _refused(ident, asked, retry):
@@ -165,8 +173,8 @@ def test_while_the_deep_lane_is_full_the_question_goes_the_shallow_way(
     """[operator 2026-09-19] said yes to the fallback Cymetica advised in
     REPLY-0018: when the deep lane is at capacity, the question goes through
     POST /api/v1/bounty/qa-agent/ask at once instead of stalling the loop --
-    under the same day's cap and the same one-in-flight pace. Without the
-    backoff, the deep lane; asked for the deep lane by name, it still waits."""
+    under the same hourly limit and bound. Without the backoff, the deep
+    lane; asked for the deep lane by name, it still waits."""
     scripts_lab = _scripts_lab(tmp_path, monkeypatch)
     monkeypatch.setattr(scripts_lab, "pass_in_flight", lambda: False)
     sent = []
@@ -202,15 +210,19 @@ def test_while_the_deep_lane_is_full_the_question_goes_the_shallow_way(
     scripts_lab.ask("five cards?", wait=False)
     assert sent[-1] == ("deep", "five cards?"), sent
 
-    # The pace still holds on the shallow lane: one in flight, 20 minutes.
+    # Their hourly limit still holds on the shallow lane (the twenty-minute
+    # floor that held it before V5 went; the hour covers what it paced).
     _write(tmp_path, "nexus.jsonl",
            [*_refused("NEX-0031", real_now - timedelta(minutes=9), 877),
-            _question("NEX-0032", real_now - timedelta(minutes=3)),
+            _question("NEX-0032", real_now - timedelta(minutes=6)),
             {"type": "answer", "id": "NEX-0032", "lane": "shallow",
+             "at": (real_now - timedelta(minutes=6)).isoformat()},
+            _question("NEX-0033", real_now - timedelta(minutes=3)),
+            {"type": "answer", "id": "NEX-0033", "lane": "shallow",
              "at": (real_now - timedelta(minutes=3)).isoformat()}])
     with __import__("pytest").raises(SystemExit) as paced:
         scripts_lab.ask("again?", wait=False)
-    assert "20" in str(paced.value), paced.value
+    assert "hour" in str(paced.value), paced.value
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -323,15 +335,18 @@ def test_a_queued_deep_job_is_still_in_flight_after_our_give_up():
              "at": (asked + timedelta(minutes=30)).isoformat()}]
 
     assert lab.outstanding(rows, NOW) == ["NEX-1"]
+    # Since V5 (2026-09-23) one job in flight holds nothing back by itself:
+    # REPLY-0037 bounds us at six, not one. What stops this one is their hour
+    # -- three asks inside it.
     may, why = lab.may_ask_now(rows, NOW)
-    assert not may and "NEX-1" in why, (
-        "one outstanding deep job at a time is their condition for a slot")
+    assert not may and "hour" in why, why
+    may, why = lab.may_ask_now(rows[:2] + rows[6:], NOW)
+    assert may, why
 
-    # R04 (3/3): but not for a day. A job their side lost -- or one whose
-    # every poll errors -- used to hold the lane for POLLABLE_HOURS, the sync
-    # door included. It is still polled for a late answer; after
-    # IN_FLIGHT_HOURS it no longer stops the next question.
-    old = NOW - timedelta(hours=lab.IN_FLIGHT_HOURS, minutes=10)
+    # R04 (3/3): and not for a day. A job their side lost -- or one whose
+    # every poll errors -- is still polled for a late answer over
+    # POLLABLE_HOURS; it takes one of their six slots, never the lane.
+    old = NOW - timedelta(hours=2, minutes=10)
     stale = [_question("NEX-1", old),
              {"type": "gave_up", "id": "NEX-1", "status": "queued",
               "at": (old + timedelta(minutes=15)).isoformat()},
@@ -437,7 +452,9 @@ def test_our_own_outstanding_jobs_stay_under_their_reserved_bound():
     the window their side actually keeps: POLLABLE_HOURS, the same twenty-four
     they now promise. It is not a pace, so `ignore_backoff` does not lift it.
     """
-    old = NOW - timedelta(hours=lab.IN_FLIGHT_HOURS, minutes=10)
+    # Since V5 (2026-09-23) there is no in-flight window of ours at all, so
+    # this bound is the ONLY thing between the loop and a seventh job.
+    old = NOW - timedelta(hours=2, minutes=10)
     stale = []
     for n in range(lab.OUTSTANDING_BOUND):
         stale.append(_question(f"NEX-{n}", old - timedelta(minutes=n)))
@@ -543,18 +560,19 @@ def test_a_new_session_does_not_reset_what_was_asked_today(tmp_path, monkeypatch
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_the_room_cap_is_a_rolling_day_and_counts_rooms_opened_earlier(
+def test_the_rooms_of_a_day_are_bounded_by_the_book_not_by_a_count(
         tmp_path, monkeypatch):
-    """A day's cap of new rooms: 125 running over a five-day window is 25 a
-    day (CAPS, since 2026-09-21; ten and fifty before).
+    """A day's cap of new rooms (25 since 2026-09-21; ten and fifty before)
+    went in V5 (2026-09-23). It was "a ceiling, not a quota" behind the gate;
+    the gate stays the bar, and MONEY is the ceiling: `affordable` refuses a
+    room past 60% of the book, however few opened today.
 
-    The rooms opened earlier TODAY count, or every tick would get a day's cap
-    of its own -- the per-session cap's reset, one level down.
+    Both halves, so the test cannot pass by the launch simply stopping: thirty
+    passing cards on a roomy book all open -- past the old 25 -- and on a book
+    already 60% out, none does and the refusal names the ceiling.
     """
     scripts_lab = _scripts_lab(tmp_path, monkeypatch)
-    cap = lab.CAPS["new_rooms_per_day"]
-    earlier = cap - 2
-    cards = [_card(n) for n in range(earlier + 6)]
+    cards = [_card(n) for n in range(30)]
     answers = [{"type": "answer", "id": f"NEX-{n:04d}",
                 "at": (NOW - timedelta(hours=1)).isoformat(),
                 "text": _whole(cards[n])} for n in range(len(cards))]
@@ -562,28 +580,19 @@ def test_the_room_cap_is_a_rolling_day_and_counts_rooms_opened_earlier(
                live={c: _basket("BTC", "ETH") for c in cards},
                readings={("BTC", "ETH"): (6.5, 1.3)})
     import qa.rooms as qa_rooms
-    for n in range(earlier):
-        qa_rooms.open_strategy(f"NEX-{n:04d}", f"earlier {n}")
-    # And rooms from BEFORE the day, which must not count. Every room above is
-    # minutes old, so a rooms_within that ignored `hours` passed -- and would
-    # have stopped the laboratory for good after its tenth room (L02, 3/3).
-    long_ago = datetime.now(timezone.utc) - timedelta(hours=30)
-    with open(tmp_path / "rooms.jsonl", "a", encoding="utf-8") as handle:
-        for n in range(5):
-            handle.write(json.dumps({
-                "type": "strategy", "id": f"STR-09{n:02d}",
-                "origin": f"NEX-OLD{n}", "title": "yesterday",
-                "at": long_ago.isoformat()}) + "\n")
-    assert lab.rooms_within(qa_rooms.load()) == earlier
 
     did = scripts_lab.night_promote()
 
     opened = qa_rooms.strategies(qa_rooms.load())
-    assert did["rooms"] == cap - earlier, (
-        f"{did['rooms']} opened on top of {earlier} earlier today, against a "
-        f"cap of {cap} a day")
-    assert len(opened) == cap + 5
-    assert any("a day" in line for line in did["held"]), did["held"]
+    assert did["rooms"] == len(cards) == len(opened), (did["rooms"], did["held"])
+    assert not any("a day" in line for line in did["held"]), did["held"]
+
+    # The same answers again, on a book already at the ceiling.
+    (tmp_path / "rooms.jsonl").unlink()
+    monkeypatch.setattr(scripts_lab, "_deployed", lambda: 150000.0)
+    did = scripts_lab.night_promote()
+    assert did["rooms"] == 0, did
+    assert any("60%" in line for line in did["held"]), did["held"]
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -678,8 +687,12 @@ def test_every_running_room_fits_under_the_ceiling(tmp_path, monkeypatch):
     """[operator 2026-09-12] fifty at once. The ceiling is 60% of the book, so a
     room may take 1.2% of it, split across its cards.
 
-    Fifty was their floor; the cap has been 125 since 2026-09-21 (RC1), so a
-    room takes 0.48% -- and the assertions read CAPS, not a number.
+    Fifty was their floor; the count cap was 125 from 2026-09-21 (RC1) and
+    went in V5 (2026-09-23). A room now takes a FIXED share of the book,
+    CAPS["stake_share_of_book"], so the 60% ceiling alone is what stops the
+    count -- at total_exposure / stake_share_of_book rooms, never below the
+    operator's fifty. `_fill` asks for far more than that, and `affordable`
+    is given no count to refuse on: the ceiling has to be what stops it.
 
     The negative control is the stake it replaces: 2% of what is free for EACH
     card, which runs a mix of one-, two- and three-card rooms into the 60%
@@ -688,11 +701,13 @@ def test_every_running_room_fits_under_the_ceiling(tmp_path, monkeypatch):
     """
     scripts_lab = _scripts_lab(tmp_path, monkeypatch)
 
-    placed, deployed = _fill(scripts_lab._leg_stakes,
-                             rooms_wanted=lab.CAPS["running_experiments"] + 5)
-    assert placed == lab.CAPS["running_experiments"], (
-        f"{placed} rooms fit, against the {lab.CAPS['running_experiments']} "
-        f"the operator asked for")
+    fits = round(lab.CAPS["total_exposure"] / lab.CAPS["stake_share_of_book"])
+    placed, deployed = _fill(scripts_lab._leg_stakes, rooms_wanted=fits * 3)
+    assert placed >= 50, (
+        f"{placed} rooms fit, against the fifty the operator asked for")
+    assert fits - 1 <= placed <= fits, (
+        f"{placed} rooms fit where the ceiling allows {fits}: something other "
+        f"than 60% of the book stopped the count")
     assert deployed <= 100000.0 * lab.CAPS["total_exposure"] + 1e-6
 
     old, _ = _fill(lambda free, deployed, legs:
@@ -729,7 +744,6 @@ def _doors(**over):
 
     doors = {
         "pass": lambda: False, "night": lambda: False,
-        "asked_today": lambda: 0,
         # No console collecting: the tick does its own rounds.
         "console": lambda: set(),
         # And no morning report due.
@@ -1029,13 +1043,15 @@ def test_a_tick_writes_down_what_it_did_and_whether_a_question_may_go(
     and why not, and asks nothing itself."""
     scripts_lab = _scripts_lab(tmp_path, monkeypatch)
     real_now = datetime.now(timezone.utc)
+    # Their bound (V5 left only their pace): six of ours outstanding.
     _write(tmp_path, "nexus.jsonl", [
-        _question("NEX-0031", real_now - timedelta(minutes=5))])
+        _question(f"NEX-003{n}", real_now - timedelta(hours=2, minutes=n))
+        for n in range(lab.OUTSTANDING_BOUND)])
     doors, _ = _doors()
 
     did = _tick(scripts_lab, real_now, doors)
 
-    assert did["may_ask"] is False and "NEX-0031" in did["why"], did
+    assert did["may_ask"] is False and "NEX-0030" in did["why"], did
     ticks = [r for r in lab.load() if r.get("type") == "tick"]
     assert len(ticks) == 1 and ticks[0]["session"] == did["session"]
     assert ticks[0]["backtests"] == scripts_lab.TICK["search_bite"]
@@ -1317,7 +1333,10 @@ def test_the_brief_carries_his_track_record_into_the_next_question(
 
     text = scripts_lab.brief()
 
-    assert "1 of 24" in text, text
+    # Since V5 (2026-09-23) the day's figure is said without a cap of ours,
+    # and the only limit named is the book's.
+    assert "1 in the last 24 h" in text and "of 24" not in text, text
+    assert "the only limit" in text, text
     assert "NEX-0001" in text and "-4.0%" in text, text
     # The section's CONTENT, not its header: the register was empty, so the
     # header was all there was to find, and a brief that listed our baskets
@@ -2177,17 +2196,18 @@ def test_a_refused_paper_order_does_not_stop_the_launch_or_strand_the_room(
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_an_answer_naming_many_cards_opens_a_room_for_each_under_the_day_cap(
+def test_an_answer_naming_many_cards_opens_a_room_for_each_under_the_ceiling(
         tmp_path, monkeypatch):
     """2026-09-21: one room per card. An answer naming nine cards used to open
     ONE room of MAX_LEGS legs (R02 kept it from being stranded); now every card
     that passes the gate is its own strategy -- its own plan of one leg, its
-    own criterion, its own order -- until the day cap, which is counted per
-    room and says what it left for the next day."""
+    own criterion, its own order -- until the book's 60% ceiling, which says
+    what it left for later. (Until V5, 2026-09-23, a day cap of 25 rooms
+    stopped it first; the fixture's book is sized so the ceiling binds.)"""
     import qa.rooms as qa_rooms
 
     scripts_lab = _scripts_lab(tmp_path, monkeypatch)
-    cap = lab.CAPS["new_rooms_per_day"]
+    cap = 12
     cards = [_card(0x100 + n) for n in range(cap + 2)]
     text = "Buy " + ", ".join(cards) + " bull. " + "why. " * 60
     answers = [{"type": "answer", "id": "NEX-0001",
@@ -2195,6 +2215,14 @@ def test_an_answer_naming_many_cards_opens_a_room_for_each_under_the_day_cap(
     sent, _ = _launchpad(scripts_lab, tmp_path, monkeypatch, answers,
                          live={c: _basket("BTC", "ETH") for c in cards},
                          readings={("BTC", "ETH"): (6.5, 1.3)})
+    # A book of 217 391.30 with 117 391.30 already out: 60% of it leaves
+    # 13 043.48, and a room takes 0.48% of the book (1 043.47) -- room for
+    # twelve and a half, so twelve. Every accepted order moves money from
+    # free to out, as the real book does.
+    monkeypatch.setattr(scripts_lab, "_free_cash",
+                        lambda: 100000.0 - sum(u for _, u in sent))
+    monkeypatch.setattr(scripts_lab, "_deployed",
+                        lambda: 117391.30 + sum(u for _, u in sent))
 
     did = scripts_lab.night_promote()
 
@@ -2206,7 +2234,7 @@ def test_an_answer_naming_many_cards_opens_a_room_for_each_under_the_day_cap(
         criterion = qa_rooms.acceptance_of(rows, room["id"])
         assert criterion and [leg["card"] for leg in criterion["legs"]] == [room["card"]]
     assert [card for card, _ in sent] == cards[:cap]
-    assert any("a day" in h for h in did["held"]), did["held"]
+    assert any("60%" in h for h in did["held"]), did["held"]
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -2931,7 +2959,7 @@ def test_the_board_the_brief_and_resume_read_bot_and_fund_rooms(
     said = scripts_lab.brief()
     # The brief counts them rather than naming them: both rooms, the bot's
     # and the fund's, are running experiments on its book line.
-    assert re.search(r"\b2 of \d+ experiments running", said), said[:600]
+    assert re.search(r"\b2 experiment\(s\) running", said), said[:600]
     assert scripts_lab.cmd_resume() == 0
     capsys.readouterr()
 

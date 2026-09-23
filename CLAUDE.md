@@ -453,10 +453,10 @@ tests/repo/       repository consistency. Deliberately NOT in tests/meta:
                   name. What it knows about Nexus grows in that file.
 qa/lab.py         the laboratory's notebook and its brakes, in code rather
                   than in prose: sessions, ranked snapshots, the catalogue it
-                  compares against the baseline, and the caps -- paper only,
-                  24 questions and 25 rooms a rolling day, 125 experiments at
-                  0.48% of the book each under a 60% ceiling, a backtest before
-                  a room, and nothing at all while a deep pass runs.
+                  compares against the baseline, and the brakes -- paper only,
+                  0.48% of the book a room under a 60% ceiling (the only count
+                  limit), their pace (3 asks an hour, 6 outstanding, backoff),
+                  a backtest before a room, nothing while a deep pass runs.
 qa/backtests.py   the register of what has already been measured: a basket's
                   fingerprint (sorted legs, window, fees) against what it
                   returned, so no night pays for the same backtest twice.

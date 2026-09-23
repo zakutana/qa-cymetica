@@ -847,8 +847,15 @@ def status() -> str:
             out.append(f"{room} {name}: no criterion -- `lab.py adopt {room}` "
                        f"before it can run")
 
-    out.append(f"{_running_experiments()} experiment(s) running, "
-               f"{lab.CAPS['running_experiments']} is the cap")
+    # The one limit on how many run is the book's 60% (V5, 2026-09-23): each
+    # room takes a fixed share of it, and there is no count cap of ours.
+    free, deployed, parked = _free_cash(), _deployed(), _parked()
+    book = (free or 0.0) + deployed + parked
+    limit = lab.CAPS["total_exposure"] * 100
+    out.append(f"{_running_experiments()} experiment(s) running; the only limit "
+               f"is {limit:.0f}% of the book"
+               + (f", {deployed / book * 100:.1f}% out of {book:.0f}"
+                  if free is not None and book else ", the book unreadable"))
     if pass_in_flight():
         out.append("a deep pass is running: no questions and no orders until "
                    "it finishes")
@@ -1459,8 +1466,8 @@ def _lane(rows: list[dict], lane: str = "auto") -> tuple[str | None, str]:
     [operator 2026-09-19] said yes to the fallback Cymetica advised in
     REPLY-0018: while their deep lane is at capacity, ask the sync door
     (POST /api/v1/bounty/qa-agent/ask) instead of stalling the loop. Same
-    day's cap, same one-in-flight and twenty-minute pace; only their deep
-    lane's own wait is lifted for it.
+    hourly limit and the same bound; only their deep lane's own wait is
+    lifted for it.
     """
     moment = _now()
     may, why = lab.may_ask_now(rows, moment)
@@ -1476,7 +1483,7 @@ def _lane(rows: list[dict], lane: str = "auto") -> tuple[str | None, str]:
 
 def ask(question: str, wait: bool = True, lane: str = "auto") -> dict:
     rows = _nexus_rows()
-    may, why = lab.may_ask(_asked_today(rows), pass_in_flight())
+    may, why = lab.may_ask(pass_in_flight())
     if not may:
         raise SystemExit(f"not asking: {why}")
     chosen, why = _lane(rows, lane)
@@ -1759,10 +1766,13 @@ def _leg_stakes(free: float | None, deployed: float, legs: int,
     """What each card of ONE room takes, floored to the cent.
 
     [operator 2026-09-12] fifty at once, under a ceiling of 60% of the book --
-    so a room may take the book's 60/50 = 1.2%, split evenly across its cards.
-    Until 2026-09-19 every CARD took 2% of what was free, so a three-card room
-    took six per cent and the ceiling stopped the laboratory near a dozen
-    rooms, with thirty-odd experiments still owed.
+    so a room took the book's 60/50 = 1.2%, split evenly across its cards,
+    then 60/125 = 0.48% (2026-09-21). Until 2026-09-19 every CARD took 2% of
+    what was free, so a three-card room took six per cent and the ceiling
+    stopped the laboratory near a dozen rooms, with thirty-odd experiments
+    still owed. Since V5 (2026-09-23) the share is FIXED --
+    CAPS["stake_share_of_book"], the same 0.48% -- and no count derives it:
+    the 60% ceiling is the only limit on how many run.
 
     The per-order ceiling (`_stake`, 2% of what is free) still caps each leg:
     near the end of the book, free is 40% of it and 2% of that is less than a
@@ -1775,7 +1785,7 @@ def _leg_stakes(free: float | None, deployed: float, legs: int,
         return [0.0] * count
     # Parked money (clones that do not trade) is book too, and exposure not.
     book = free + max(deployed or 0.0, 0.0) + max(parked or 0.0, 0.0)
-    share = lab.CAPS["total_exposure"] / lab.CAPS["running_experiments"]
+    share = lab.CAPS["stake_share_of_book"]
     each = min(book * share / count, _stake(free))
     if half:
         each /= 2
@@ -1964,8 +1974,10 @@ def night_promote(since: datetime | None = None) -> dict:
         question can tell Nexus how his idea measured;
       * an answer that names no card proposes nothing (NEX-0026 was the best
         answer we have had and named none);
-      * `CAPS["new_rooms_per_day"]` new rooms a rolling day, counted per room,
-        and `affordable` decides the size and whether there is room at all;
+      * `affordable` decides whether there is money for it at all: 60% of
+        the book is the only limit on how many run. The day's cap of 25 new
+        rooms went in V5 (2026-09-23) -- it was "a ceiling, not a quota",
+        and the gate above is the bar it deferred to;
       * nothing at all while a deep pass runs, because it is verifying #85,
         #86 and #87 over these very trades.
 
@@ -1973,7 +1985,7 @@ def night_promote(since: datetime | None = None) -> dict:
     strategies; each card that passes the gate opens its own room, plan,
     criterion and order. The operator, on the plan: a room is still only for
     a promising theory or backtest -- so the gate above is the bar, and the
-    caps are ceilings, never a quota. A card that could not be READ, or cannot
+    money is the only ceiling. A card that could not be READ, or cannot
     be traded right now, decides nothing and holds nothing back: it is tried
     again on the next tick, and the answer's other cards open meanwhile (NEX-
     0052's counterexample once parked its pick for 27 ticks).
@@ -1990,8 +2002,6 @@ def night_promote(since: datetime | None = None) -> dict:
         return {"rooms": 0, "orders": 0, "held": []}
 
     stored = rooms.load()
-    today = lab.rooms_within(stored, _now())
-    cap = lab.CAPS["new_rooms_per_day"]
     decided = lab.gates()
     paper = _sibling("paper")
     opened, placed, held = 0, 0, []
@@ -2135,12 +2145,6 @@ def night_promote(since: datetime | None = None) -> dict:
         # each is its own room now, so there are no legs to keep together, and
         # it is tried again on the next tick under the same answer.
         for card, gate_row in chosen.items():
-            if today + opened >= cap:
-                held.append(f"{origin}: {today + opened} room(s) opened in the "
-                            f"last 24 h and the cap is {cap} a day — the next "
-                            f"day takes the rest")
-                capped = True
-                break
             # MONEY FIRST, and nothing consumed before it answers: a room opened
             # ahead of a refusal spends its card for the morning too.
             free, deployed, parked = _free_cash(), _deployed(), _parked()
@@ -2221,17 +2225,6 @@ def night_promote(since: datetime | None = None) -> dict:
             except rooms.RoomError as exc:
                 held.append(f"{room}: {exc}")
 
-    def room_slot(origin: str) -> bool:
-        """One more room under the day cap, or say why not and stop."""
-        nonlocal capped
-        if today + opened >= cap:
-            held.append(f"{origin}: {today + opened} room(s) opened in the "
-                        f"last 24 h and the cap is {cap} a day — the next "
-                        f"day takes the rest")
-            capped = True
-            return False
-        return True
-
     def launch_bot(origin: str, bot: dict) -> None:
         """One bot he named, cloned on paper through clone.py -- its paper
         flag, its is_paper floors and its CLN record, none of them ours to
@@ -2252,8 +2245,6 @@ def night_promote(since: datetime | None = None) -> dict:
         cloned = _species_cloned().get(species.lower())
         if cloned:
             held.append(f"{tag}: {cloned} -- not cloned again")
-            return
-        if not room_slot(origin):
             return
         if pass_in_flight():
             held.append(f"{tag}: a deep pass is running")
@@ -2346,8 +2337,13 @@ def night_promote(since: datetime | None = None) -> dict:
         real money and has no paper switch. A room, a leg, a criterion, no
         order of any kind -- and a notional stake that no ceiling counts. It
         takes a slot among the running experiments, because it is one. A fund
-        whose history is empty has nothing to be judged on and opens nothing."""
-        nonlocal opened, capped
+        whose history is empty has nothing to be judged on and opens nothing.
+
+        Since V5 (2026-09-23) no count holds it back: it spends nothing, so
+        the book's ceiling cannot see it, and the 125-experiment cap that
+        did went. One room per fund while it runs (`live_refs`) is what
+        keeps one fund from being marked twice."""
+        nonlocal opened
         tag = f"{origin}/{symbol}"
         if (origin, symbol.lower()) in ref_linked:
             return
@@ -2357,14 +2353,6 @@ def night_promote(since: datetime | None = None) -> dict:
             return
         key = f"fund:{symbol}"
         if decided.get((origin, key), {}).get("verdict") == "no_series":
-            return
-        if not room_slot(origin):
-            return
-        running = _running_experiments()
-        if running >= lab.CAPS["running_experiments"]:
-            held.append(f"{tag}: {running} experiments are already running — "
-                        f"left for the morning")
-            capped = True
             return
         try:
             points = lab.fund_series(_fund_points(symbol))
@@ -2778,7 +2766,6 @@ def _tick_doors() -> dict:
     return {
         "pass": pass_in_flight,
         "night": lambda: lab.night_running() is not None,
-        "asked_today": _asked_today,
         "morning": _morning_due,
         "console": _console_collects,
         "fomo": _fomo_round,
@@ -2972,13 +2959,13 @@ def tick(*, now: datetime | None = None, actions: dict | None = None,
             lab.note_hot_reading(reading)
             state["last_hot_reading"] = moment.isoformat()
 
-    may, why = lab.may_ask(int(doors["asked_today"]() or 0), False)
-    if may:
-        rows = _nexus_rows()
-        may, why = lab.may_ask_now(rows, moment)
-        if not may and lab.may_ask_now(rows, moment, ignore_backoff=True)[0]:
-            may, why = True, (f"through the shallow lane -- the deep one is "
-                              f"held: {why}")
+    # The deep pass returned above; what is left is theirs (V5, 2026-09-23):
+    # the hour's asks, their bound of outstanding jobs, their backoff.
+    rows = _nexus_rows()
+    may, why = lab.may_ask_now(rows, moment)
+    if not may and lab.may_ask_now(rows, moment, ignore_backoff=True)[0]:
+        may, why = True, (f"through the shallow lane -- the deep one is "
+                          f"held: {why}")
     said.update(may_ask=may, why=why)
     state["queue"] = queue
     _save_tick_state(state)
@@ -3121,11 +3108,11 @@ def brief() -> str:
     asked = lab.asked_within(nexus_rows, now)
     free, deployed, parked = _free_cash(), _deployed(), _parked()
     today = lab.rooms_within(rooms.load(), now)
-    may, why = lab.may_ask(asked, pass_in_flight())
+    may, why = lab.may_ask(pass_in_flight())
     if may:
         may, why = lab.may_ask_now(nexus_rows, now)
-    out = [f"questions: {asked} of {lab.CAPS['questions_per_day']} in the last "
-           f"24 h -- " + ("the next may go now" if may else f"not now: {why}")]
+    out = [f"questions: {asked} in the last 24 h, no cap of ours -- "
+           + ("the next may go now" if may else f"not now: {why}")]
     if free is None:
         out.append("book: unreadable -- nothing can be launched on it")
     else:
@@ -3133,10 +3120,9 @@ def brief() -> str:
         out.append(f"book: {free:.0f} USDC free, {deployed:.0f} out "
                    f"({deployed / book * 100 if book else 0:.1f}% of "
                    f"{book:.0f}; the ceiling is "
-                   f"{lab.CAPS['total_exposure'] * 100:.0f}%), "
-                   f"{_running_experiments()} of "
-                   f"{lab.CAPS['running_experiments']} experiments running, "
-                   f"{today} of {lab.CAPS['new_rooms_per_day']} new rooms today"
+                   f"{lab.CAPS['total_exposure'] * 100:.0f}%, the only limit), "
+                   f"{_running_experiments()} experiment(s) running, "
+                   f"{today} new room(s) today"
                    + (f"; {parked:.0f} parked in bots that do not trade"
                       if parked else ""))
 

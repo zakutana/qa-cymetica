@@ -43,38 +43,45 @@ MAX_LESSONS = 3
 MAX_NEXT = 8
 ID = re.compile(r"^LAB-(\d{4})$")
 
-# What the laboratory may spend, per ROLLING DAY. Nexus's own guide is explicit
-# that an open-ended night "drifts, burns calls, and gives you no way to judge
-# what it found" -- so there is a ceiling, and a pace under it (NIGHT below).
+# What the laboratory may spend. Nexus's own guide is explicit that an
+# open-ended night "drifts, burns calls, and gives you no way to judge what it
+# found" -- so there was a ceiling per session, then per rolling day
+# (2026-09-19: a per-session count stopped the /loop before lunch or reset
+# whenever a session opened), and since V5 there is none of ours at all.
 #
-# Per session until 2026-09-19: eight questions and three rooms a session,
-# twelve questions a night. Then the operator made the laboratory a /loop that
-# ticks every twenty minutes all day, and a per-session count either stopped
-# it before lunch or reset whenever a session opened -- five rooms in six days
-# against their fifty. The two numbers below are ours, not theirs: fifty
-# running over a five-day window is ten new rooms a day, and a question an
-# hour on average keeps a question in flight for most of the day without
-# spending one on every tick.
+# V5 of plan v2 (2026-09-23), "pás bez našich stropů": the operator's
+# *"zadne limity, proste co je slibne a dava smysl to se jde hend otestvoat"*
+# (laborator/SKILL.md). OUR count caps went; what each protected, and the
+# brake that holds it now:
+#
+#   questions_per_day (24)   "an open-ended loop drifts and burns calls".
+#                            Their own limits hold that now: ASKS_PER_HOUR
+#                            (3 an hour, refusals counted), OUTSTANDING_BOUND
+#                            (6 jobs of ours on their side) and backoff_until
+#                            (the wait their failure asked for). The pace is
+#                            theirs, measured, not a number we picked.
+#   new_rooms_per_day (25)   "a ceiling, not a quota: the gate is the bar".
+#                            The gate still is (qa.lab.gate), and money is the
+#                            rest: `affordable` refuses past 60% of the book.
+#   running_experiments (125) "past that nothing gets watched properly", and
+#                            it set the stake (60% / 125). Each room now takes
+#                            a FIXED share of the book, stake_share_of_book --
+#                            the same 0.48%, a new reason -- so the 60% ceiling
+#                            by itself stops the count at 125 and is the only
+#                            count limit. Watching is the verdicts' job, one
+#                            per room, whatever the count.
+#
+# [operator 2026-09-12] *"musime testvoat aspon 50 strategii najednou"*.
+# Raised from 6 at 15% on 2026-09-12, and their reason is right for a reason
+# they did not give: a verdict takes a five-to-seven-day window, so six at a
+# time is six verdicts a week and knowing which of Nexus's ideas pay needs
+# dozens. The count was always the weaker brake -- fifty at 2% is the whole
+# book -- so what holds is the ceiling on what may be deployed at once: always
+# dry powder, and one bad night cannot take it all. "Aspoň 50" is a floor, and
+# 0.48% a room fits 125 under the ceiling; share_of_free_cash stays the
+# operator's 2%, the per-order cap.
 CAPS = {
-    "questions_per_day": 24,
-    # 10 -> 25 on 2026-09-21, with one room per card. Ten was fifty over a
-    # five-day window, and it never bound -- eight rooms in eleven days, held
-    # back by one room per ANSWER. It is a ceiling, not a quota: the operator,
-    # on the plan, "pořád by room měl vzniknout jen na základě slibné teorie
-    # nebo backtestu" -- the gate is the bar.
-    "new_rooms_per_day": 25,
-    # [operator 2026-09-12] *"musime testvoat aspon 50 strategii najednou"*.
-    # Raised from 6 at 15% on 2026-09-12, and their reason is right for a
-    # reason they did not give: a verdict takes a five-to-seven-day window, so
-    # six at a time is six verdicts a week and knowing which of Nexus's ideas
-    # pay needs dozens. The count is the weaker brake -- fifty at 2% is the
-    # whole book -- so what actually holds is the ceiling on what may be
-    # deployed at once: always dry powder, and one bad night cannot take it all.
-    # 50 -> 125 on 2026-09-21: 25 a day over the five-day window. "Aspoň 50" is
-    # a floor, so this keeps it; the per-room stake follows by itself
-    # (total_exposure / running_experiments, 0.48% of the book) under the same
-    # 60% ceiling, and share_of_free_cash stays the operator's 2%.
-    "running_experiments": 125,
+    "stake_share_of_book": 0.0048,
     "share_of_free_cash": 0.02,
     "total_exposure": 0.60,
 }
@@ -390,85 +397,60 @@ def rooms_within(room_rows: list[dict], now: datetime | None = None,
                and _within(row.get("at"), since))
 
 
-def may_ask(asked: int, pass_running: bool) -> tuple[bool, str]:
-    """Whether another question may go to Nexus now, given how many went in
-    the last twenty-four hours.
+def may_ask(pass_running: bool) -> tuple[bool, str]:
+    """Whether another question may go to Nexus now, as far as OUR side goes.
 
     Not while a deep pass is running. That pass verifies #85 (the newest answer
     that names a tool), #86 (the last five questions) and #87 (the newest
     trade) -- so a question asked mid-run changes the subject the pass is
     measuring, and the verdict it sends the vendor is then about something
     else. Ours to wait; theirs to receive one true answer.
+
+    The day's count of 24 went in V5 (2026-09-23): the pace is theirs now,
+    `may_ask_now` -- ASKS_PER_HOUR, OUTSTANDING_BOUND and their backoff.
     """
     if pass_running:
         return False, ("a deep pass is running: it is verifying #85, #86 and "
                        "#87 over these very answers. Ask after it finishes")
-    cap = CAPS["questions_per_day"]
-    if asked >= cap:
-        return False, (f"{asked} questions in the last 24 h, and the cap is "
-                       f"{cap}: an open-ended loop drifts and burns calls, "
-                       f"which is Cymetica's own warning about the night")
     return True, ""
 
 
 def may_ask_now(nexus_rows: list[dict], now: datetime | None = None,
                 ignore_backoff: bool = False) -> tuple[bool, str]:
-    """The pace under the cap, for a question asked by hand or by a loop tick.
+    """The pace, for a question asked by hand or by a loop tick -- THEIRS.
 
-    The night held these three in its own loop state; a tick is a fresh
-    process every twenty minutes, so they are read off the diary instead:
+    A tick is a fresh process every twenty minutes, so it is read off the
+    diary:
 
-      * one question in flight at a time -- a second one splits the pick-up
-        and Nexus answers the older context;
-      * twenty minutes since the last one, the night's own floor;
+      * at most OUTSTANDING_BOUND jobs of ours on their side (REPLY-0037);
+      * at most ASKS_PER_HOUR asks in a rolling hour, refused ones included;
       * the wait their own failure asked for (`backoff_until`).
+
+    Two brakes of OURS went in V5 (2026-09-23), each covered by one above:
+
+      * one question in flight at a time (IN_FLIGHT_HOURS, two hours): it kept
+        the pick-up from splitting. Every question is polled by its own job id
+        (`outstanding`, `cycle`), so nothing splits, and how many may wait on
+        their side is their bound of six, not ours of one;
+      * twenty minutes since the last question (the night's floor): the pace
+        their deep lane can carry is ASKS_PER_HOUR, measured on 2026-09-21
+        when the fourth ask of an hour came back "Hourly deep-answer limit
+        reached" -- the floor never stopped that, the hourly count did.
     """
     moment = now or datetime.now(timezone.utc)
-    # Their bound before our pace: six outstanding of our own (REPLY-0037),
-    # over the day they keep a queued job. Not a pace, so --now does not lift
-    # it -- a seventh would be refused by them, and asking is what spends the
-    # slot they reserved.
+    # Their bound first: six outstanding of our own (REPLY-0037), over the day
+    # they keep a queued job. Not a pace, so --now does not lift it -- a
+    # seventh would be refused by them, and asking is what spends the slot
+    # they reserved.
     held = outstanding(nexus_rows, moment, within_hours=POLLABLE_HOURS)
     if len(held) >= OUTSTANDING_BOUND:
         return False, (f"{len(held)} of our questions are outstanding on their "
                        f"side and their reserved lane bounds us at "
                        f"{OUTSTANDING_BOUND}: {', '.join(held[-3:])} first")
-    # In flight for PACING only while it is recent. A job their side lost, or
-    # one whose every poll errors, is still polled for a late answer over
-    # POLLABLE_HOURS -- but it held the lane for that whole day, sync door
-    # included (R04, deep pass of 2026-09-19).
-    waiting = outstanding(nexus_rows, moment, within_hours=IN_FLIGHT_HOURS)
-    if waiting:
-        return False, (f"{waiting[-1]} is still being answered; the next tick "
-                       f"picks it up first")
-    # The floor runs from the last question their side actually TOOK ON. One
-    # they turned away outright -- failed, with a retry_after of their own --
-    # spent nothing of theirs, and their wait replaces ours: NEX-0029 was
-    # refused "at capacity, retry after 30 s" and our floor then held the
-    # same question for eighteen minutes.
-    refused = {r.get("id") for r in nexus_rows
-               if r.get("type") == "gave_up"
-               and str(r.get("status") or "").startswith("failed")
-               and isinstance(r.get("retry_after_s"), (int, float))}
-    # And one refused at the door, before any job existed (NEX-0074, their
-    # wording filter): not taken on either, and the filter's own hint is to
-    # ask again in different words. The hourly count below still has it.
-    refused |= {r.get("id") for r in nexus_rows
-                if r.get("type") == "question"
-                and r.get("accepted") is False and not r.get("job_id")}
-    # Not a question the operator asked them in a browser. `nexus.py record`
-    # writes one so the answer survives a /clear, and the floor read it as
-    # traffic of ours: recording at 14:00 stopped the laboratory asking
-    # anything until 14:20, for a question that never used their door. The
-    # floor is about THEIR side -- one in flight so the pick-up is not split,
-    # and a pace their limit can carry -- and neither holds for a
-    # conversation that happened on their website. The day's CAP still counts
-    # it, deliberately: that one is about how much of their time we take.
-    stamps = [_at(r.get("at")) for r in nexus_rows
-              if r.get("type") == "question" and r.get("id") not in refused
-              and r.get("lane") != "operator"]
     # Every ask inside the last hour, refused or not: a refusal turns out to
-    # cost them something, which is what their own hourly limit says.
+    # cost them something, which is what their own hourly limit says. Not a
+    # question the operator asked them in a browser (`lane: operator`,
+    # `nexus.py record`): it never used their door.
     hour_ago = moment - timedelta(hours=1)
     recent = [s for s in (_at(r.get("at")) for r in nexus_rows
                           if r.get("type") == "question"
@@ -479,13 +461,6 @@ def may_ask_now(nexus_rows: list[dict], now: datetime | None = None,
                        f"the cap is {ASKS_PER_HOUR}: their deep lane has an "
                        f"hourly limit of its own and a refusal counts against "
                        f"it")
-
-    last = max((s for s in stamps if s is not None), default=None)
-    floor = NIGHT["ask_seconds"]
-    if last is not None and (moment - last).total_seconds() < floor:
-        minutes = int((moment - last).total_seconds() // 60)
-        return False, (f"the last question went {minutes} min ago and the "
-                       f"floor is {floor // 60}")
     # `ignore_backoff` is for the SHALLOW lane: the wait their deep lane
     # asked for is about the deep lane (REPLY-0018: a shared capacity window
     # on deep investigations), and their own advice is to ask the sync door
@@ -505,8 +480,9 @@ def affordable(usdc: float, free_cash: float | None, running: int,
     is deployed. An unreadable book refuses -- rule 8, and the same refusal
     paper.py makes when it cannot read what is in the bots.
 
-    The total is the brake that matters now that fifty may run. Fifty at 2% is
-    the whole book, so without a ceiling the count would be no limit at all.
+    The total is the brake that matters, and since V5 the only one on how
+    many run. Fifty at 2% is the whole book, so without a ceiling the count
+    would be no limit at all.
     It is measured against the BOOK -- free plus what is out -- because that is
     what exposure means. Against the remainder it would walk down as we deploy
     and bind at 37.5%, under a number written as 60%.
@@ -518,10 +494,10 @@ def affordable(usdc: float, free_cash: float | None, running: int,
     if free_cash is None:
         return False, ("the book could not be read, and an unreadable book is "
                        "not an empty one: no order goes out on it")
-    if running >= CAPS["running_experiments"]:
-        return False, (f"{running} experiments are already running and the cap "
-                       f"is {CAPS['running_experiments']}: past that nothing "
-                       f"gets watched properly")
+    # `running` is said, not counted against: the 125-experiment cap went in
+    # V5 (2026-09-23). A room takes a fixed share of the BOOK
+    # (CAPS["stake_share_of_book"]), so the 60% ceiling below is the only
+    # count limit -- it stops the laboratory at 125 rooms by itself.
     share = CAPS["share_of_free_cash"]
     ceiling = free_cash * share
     if usdc > ceiling:
@@ -542,15 +518,14 @@ def affordable(usdc: float, free_cash: float | None, running: int,
 
 
 POLLABLE_HOURS = 24
-# How long one question may hold the next one back. Their deep investigations
-# take one to five minutes by their own contract and queue when the lane is
-# full (REPLY-0019); two hours is far past both, and short of a lost day.
-IN_FLIGHT_HOURS = 2
+# IN_FLIGHT_HOURS (2) went in V5, 2026-09-23: one question held the next one
+# back for up to two hours so the pick-up would not split. Each job is polled
+# by its own id, so it does not; what bounds how many wait is theirs, below.
+#
 # How many jobs of ours may be outstanding on their side at once. Theirs, not
 # ours: REPLY-0037 reserves a lane slot for this agent and bounds it at six.
 # Counted over POLLABLE_HOURS because that is the window the same answer says
-# they now hold a queued job for -- the pacing window above is shorter on
-# purpose and no longer covers what their side still has.
+# they now hold a queued job for.
 OUTSTANDING_BOUND = 6
 # Deep questions we may ASK in a rolling hour, refused ones included. Theirs
 # is undocumented: on 2026-09-21 at 01:25 UTC the fourth question of an hour
@@ -586,8 +561,8 @@ def outstanding(nexus_rows: list[dict], now: datetime | None = None,
             # `accepted: false` with no job_id when their side refuses the
             # call itself (NEX-0074, the wording filter). There is nothing to
             # poll and nothing to wait for; counted in flight, it held the
-            # lane for IN_FLIGHT_HOURS. `accepted` absent is an older row and
-            # stays as it was.
+            # lane for two hours then, and a slot of OUTSTANDING_BOUND now.
+            # `accepted` absent is an older row and stays as it was.
             if row.get("accepted") is False and not row.get("job_id"):
                 continue
             when = row.get("at")
@@ -635,13 +610,14 @@ NIGHT = {
     # runs on EVERY tick, bounded by their 30/min and by nothing of ours:
     # [operator 2026-09-12] *"celou noc budete delat backtesty nonstop"*, said
     # about a night that ran them twice. The question floor came down from two
-    # hours to twenty minutes at the same time -- their own `retry_after` sets
-    # the pace when they are down, and when they are up we should not be
-    # throttling ourselves on top of a cap that already binds.
+    # hours to twenty minutes at the same time, and went altogether in V5
+    # (2026-09-23): their hourly limit (ASKS_PER_HOUR) is the pace now.
     "search_batch": 30,           # backtests per tick; their limit per minute
-    "ask_seconds": 20 * 60,
-    # And when their side refuses without saying when to come back, the wait
-    # DOUBLES per refusal in the streak, up to this. Flat is wrong both ways:
+    # When their side refuses without saying when to come back, the wait
+    # starts here -- the old floor's twenty minutes, kept as backoff's base
+    # because backoff stays -- and DOUBLES per refusal in the streak, up to
+    # the maximum below. Flat is wrong both ways:
+    "backoff_base_seconds": 20 * 60,
     # twenty minutes spends a whole night's cap inside an outage like the one
     # of 2026-09-12 (six refusals over seventeen hours), and two hours
     # throttles a Nexus that is merely having a moment.
@@ -711,7 +687,7 @@ def backoff_until(nexus_rows: list[dict], now: datetime | None = None):
         # Theirs first, always. Ours only when they did not say, and then it
         # doubles per refusal so a long outage is waited out rather than
         # hammered through a night's whole question budget.
-        wait = min(NIGHT["ask_seconds"] * (2 ** max(streak - 1, 0)),
+        wait = min(NIGHT["backoff_base_seconds"] * (2 ** max(streak - 1, 0)),
                    NIGHT["backoff_max_seconds"])
     until = failed[0] + timedelta(seconds=wait)
     return until if until > moment else None
@@ -750,13 +726,11 @@ def night_tick(state: dict, now: datetime) -> dict:
     # The skip reason is the ASK's, whatever else the tick did. A tick that
     # cycled but could not ask is exactly the one worth counting: without it a
     # night held off by a backoff all night reads as a night with nothing to say.
+    # "too soon" (the twenty-minute floor) and "cap" (24 a day) went in V5;
+    # their hourly limit and bound are `may_ask_now`'s, read off the diary.
     hold = state.get("hold_until")
-    if not _stale("last_ask", NIGHT["ask_seconds"]):
-        skipped = "too soon"
-    elif hold is not None and now < hold:
+    if hold is not None and now < hold:
         skipped = "backoff"
-    elif state.get("asked", 0) >= CAPS["questions_per_day"]:
-        skipped = "cap"
     elif not state.get("candidates"):
         skipped = "nothing to ask about"
     else:

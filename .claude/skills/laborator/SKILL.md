@@ -62,9 +62,10 @@ of `docs/laborator-plan.md`; until a phase lands, its brakes hold.
 ## The brakes are in code, not here
 
 `qa/lab.py` holds them, so a tick at three in the morning cannot talk itself
-out of one: paper only; 24 questions and 25 new rooms a rolling day; one
-question in flight, twenty minutes apart, and their own backoff first; 125
-experiments at 0.48% of the book each under a 60% ceiling; a live read of every
+out of one: paper only; THEIR pace -- three asks an hour, six of ours
+outstanding, their backoff first (our day caps, the one-in-flight rule and the
+twenty-minute floor went in V5, 2026-09-23); 0.48% of the book a room under a
+60% ceiling, which is the only limit on how many run; a live read of every
 card (#91) and their backtest after fees before any room; and **nothing but
 the memecoin and Hot readings while a deep pass runs** -- that pass verifies
 #85, #86 and #87 over these very answers and trades.

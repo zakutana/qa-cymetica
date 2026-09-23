@@ -168,7 +168,7 @@ def test_a_refused_answer_is_left_for_the_morning_and_not_spent(
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_a_night_room_carries_a_criterion_and_the_room_cap_holds(
+def test_a_night_room_carries_a_criterion_and_the_ceiling_holds(
         tmp_path, monkeypatch):
     """A room with no criterion is never graded and never closes.
 
@@ -179,11 +179,12 @@ def test_a_night_room_carries_a_criterion_and_the_room_cap_holds(
 
     `new_rooms_per_session` was enforced nowhere: its own definition was the
     only reference to it in the repository. It became `new_rooms_per_day` on
-    2026-09-19, and the fixture offers MORE answers than the cap, or the cap
-    is never what stops it.
+    2026-09-19 and went in V5 (2026-09-23): what stops a night now is the
+    book's 60%, so the fixture offers more answers than the book can carry
+    and the ceiling is what has to stop it.
     """
     scripts_lab = _scripts_lab(tmp_path, monkeypatch)
-    count = lab.CAPS["new_rooms_per_day"] + 2
+    count = 30
     cards = [f"3040{n:04x}-8717-4fc7-a91a-9a6724cadd7e" for n in range(count)]
     _answers(tmp_path, [
         {"type": "answer", "id": f"NEX-{n:04d}",
@@ -191,15 +192,32 @@ def test_a_night_room_carries_a_criterion_and_the_room_cap_holds(
         for n in range(count)])
     _book(tmp_path, 100000.0)
     _wire(scripts_lab, monkeypatch, cards)
+    # A 159 000 book whose 60% (95 400) leaves room for twenty rooms of 0.48%
+    # (763.20 each) and not a twenty-first; every accepted order moves money
+    # from free to out, as the real book does.
+    out = 159000.0 * 0.6 - 763.2 * 20 - 100.0
+    spent: list[float] = []
+    monkeypatch.setattr(scripts_lab, "_deployed", lambda: out + sum(spent))
+    monkeypatch.setattr(scripts_lab, "_free_cash",
+                        lambda: 159000.0 - out - sum(spent))
+    paper = scripts_lab._sibling("paper")
+    real_buy = paper.buy
+
+    def _counted(card, usdc, *a, **k):
+        said = real_buy(card, usdc, *a, **k)
+        if (said or {}).get("outcome") == "accepted":
+            spent.append(usdc)
+        return said
+    paper.buy = _counted
 
     did = scripts_lab.night_promote()
 
     import qa.rooms as qa_rooms
     rows = qa_rooms.load()
     opened = qa_rooms.strategies(rows)
-    assert len(opened) == lab.CAPS["new_rooms_per_day"], (
-        f"{len(opened)} rooms against a cap of "
-        f"{lab.CAPS['new_rooms_per_day']} a day")
+    assert len(opened) == 20, (
+        f"{len(opened)} rooms where the book's 60% had room for twenty")
+    assert any("60%" in line for line in did["held"]), did["held"]
     assert did["rooms"] == len(opened)
     assert opened, "nothing launched on a book that can clearly afford it"
     for room in opened:
