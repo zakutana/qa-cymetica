@@ -290,7 +290,8 @@ def test_submit_intent_outcome_log_survives_timeout_and_409(tmp_path, monkeypatc
             return httpx.Response(409, json={"detail": "already reported"})
         return httpx.Response(201, json={"report_id": 100 + len(body["title"])})
 
-    items = [{"key": k, "payload": _payload(k), "findings": [f"CYM-{k}"]}
+    items = [{"key": k, "payload": _payload(k), "findings": [f"CYM-{k}"],
+              "runs": {f"CYM-{k}": "run-evidence"}}
              for k in ("first", "times-out", "duplicate", "last")]
 
     results = submit.submit_batch(_client(handler), items, confirm=True)
@@ -312,6 +313,18 @@ def test_submit_intent_outcome_log_survives_timeout_and_409(tmp_path, monkeypatc
     assert timed_out["outcome"] == "unknown"
     assert timed_out.get("report_id") is None
     assert "reconcile" in (timed_out.get("reason") or "").lower()
+
+    # B4 of the review of 2026-09-23 (3/3): every report promises its
+    # evidence "on request", and 0 of 151 filing events named the run that
+    # holds it, so the keepset could not keep it. Both halves carry it now.
+    for e in intents + outcomes:
+        assert e.get("runs") == {f"CYM-{e['key']}": "run-evidence"}, e
+    from qa import keepset
+    cited = keepset.cited(events, {"findings": {"CYM-first": {"checks": ["t::c"]}}},
+                          lambda run_id: {"results": [
+                              {"nodeid": "t::c", "evidence_ids": ["e" * 64]}]}
+                          if run_id == "run-evidence" else None)
+    assert cited.get("e" * 64) == "promised", cited
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

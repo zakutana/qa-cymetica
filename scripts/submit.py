@@ -82,6 +82,20 @@ def load_findings() -> dict:
     return {"findings": list(load_ledger()["findings"].values())}
 
 
+def evidence_runs(findings: dict, cited: list[str]) -> dict[str, str]:
+    """Per finding, the run that last adjudicated its row: its numbers are the
+    ones injected into the report and its captures are the evidence the report
+    offers "on request" (B4 of the review of 2026-09-23)."""
+    rows = {row.get("id"): row for row in findings.get("findings") or []}
+    out = {}
+    for fid in cited:
+        run_id = (((rows.get(fid) or {}).get("check") or {})
+                  .get("adjudicated_by") or {}).get("run_id")
+        if run_id:
+            out[fid] = run_id
+    return out
+
+
 def compose(report: dict, findings: dict, footer: str) -> dict:
     """Build one submission. Numbers come from the ledger, never typed."""
     by_id = {f["id"]: f for f in findings["findings"]}
@@ -290,11 +304,16 @@ def submit_batch(client, items: list[dict], confirm: bool = False,
         for index, item in enumerate(items):
             key, payload = item["key"], item["payload"]
             findings = list(item.get("findings") or [])
+            # Which run holds the evidence behind each finding (B4 of the
+            # review of 2026-09-23, 3/3): the report promises it "on request",
+            # and qa/keepset.py keeps a run's captures only when an event
+            # names the run.
+            runs = dict(item.get("runs") or {})
             at = _now()
             append_event({
                 "type": "filing_intent", "at": at, "by": "agent",
                 "source": "scripts/submit.py", "key": key, "intent_at": at,
-                "title": payload["title"], "findings": findings,
+                "title": payload["title"], "findings": findings, "runs": runs,
             })
 
             try:
@@ -305,7 +324,7 @@ def submit_batch(client, items: list[dict], confirm: bool = False,
                 append_event({
                     "type": "filing_outcome", "at": _now(), "by": "agent",
                     "source": "scripts/submit.py", "key": key,
-                    "outcome": "unknown", "findings": findings,
+                    "outcome": "unknown", "findings": findings, "runs": runs,
                     "reason": f"{type(exc).__name__}: {exc} -- run submit.py "
                               f"--reconcile to settle it against my-reports",
                 })
@@ -331,7 +350,7 @@ def submit_batch(client, items: list[dict], confirm: bool = False,
                 "type": "filing_outcome", "at": _now(), "by": "agent",
                 "source": "scripts/submit.py", "key": key, "outcome": outcome,
                 "report_id": report_id, "http_status": response.status_code,
-                "findings": findings, "evidence_id": evidence_id,
+                "findings": findings, "runs": runs, "evidence_id": evidence_id,
             })
             results.append({"key": key, "outcome": outcome,
                             "report_id": report_id,
@@ -498,10 +517,9 @@ def main() -> None:
             if payload["title"].strip().lower() in seen:
                 print(f"  SKIP  {key}: a report with this title already exists")
                 continue
-            items.append({
-                "key": key, "payload": payload,
-                "findings": [r["findings"] for r in reports if r["key"] == key][0],
-            })
+            cited = [r["findings"] for r in reports if r["key"] == key][0]
+            items.append({"key": key, "payload": payload, "findings": cited,
+                          "runs": evidence_runs(findings, cited)})
 
         for result in submit_batch(client, items, confirm=True, pause=PAUSE_SECONDS):
             detail = f"  id={result['report_id']}" if result.get("report_id") else ""

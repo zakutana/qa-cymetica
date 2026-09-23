@@ -550,6 +550,9 @@ ALLOWED_EVENT_KEYS = frozenset({
     "klass", "rows_returned", "server_total", "stale_from",
     # verification_intent / verification_outcome
     "verdict", "fingerprint", "tree_sha", "checked_at",
+    # filing_intent / filing_outcome: the run behind each finding, whose
+    # captures the report promises "on request" (B4, review of 2026-09-23).
+    "runs",
     # What tells one of their a2a messages from another. fetch_inbox read all
     # three off the wire and kept none, so a routing prompt and a human answer
     # were the same row. `reply_to` already exists and takes their

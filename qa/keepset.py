@@ -189,11 +189,15 @@ def cited(events: list[dict], ledger: dict, load_run, trades=()) -> dict[str, st
     for event in events:
         if event.get("type") not in PROMISES:
             continue
-        run_id, finding_id = event.get("run_id"), event.get("finding_id")
-        if not isinstance(run_id, str) or not isinstance(finding_id, str):
-            continue
-        note(_run_evidence(record(run_id), checks_of.get(finding_id, set())),
-             "promised")
+        # A verification names one run and one finding; a filing (since B4
+        # of the review of 2026-09-23) names the run behind each finding.
+        pairs = [(event.get("run_id"), event.get("finding_id"))]
+        pairs += [(run, fid) for fid, run in (event.get("runs") or {}).items()]
+        for run_id, finding_id in pairs:
+            if not isinstance(run_id, str) or not isinstance(finding_id, str):
+                continue
+            note(_run_evidence(record(run_id), checks_of.get(finding_id, set())),
+                 "promised")
 
     for finding_id, row in (ledger.get("findings") or {}).items():
         if not isinstance(row, dict):
