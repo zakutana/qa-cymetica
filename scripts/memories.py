@@ -103,12 +103,43 @@ def load() -> list[dict]:
     if not directory.is_dir():
         return []
     return [read(p) for p in sorted(directory.glob("*.md"))
-            if p.name != "MEMORY.md"]
+            if p.name not in ("MEMORY.md", RETIRED_FILE)]
+
+
+# What the harness loads of MEMORY.md: the first 200 lines / 25 000
+# characters (plan v2, V7, E3). Held under it, not on it.
+INDEX_MAX_LINES = 180
+INDEX_MAX_CHARS = 22000
+# Retired lines live here, marker and all. Nothing appends to this file, so
+# the positional failure below cannot come back through it.
+RETIRED_FILE = "MEMORY-retired.md"
+# What one `--for` prints of whole bodies. `--for lab` was 28 KB and
+# `--for deep-pass` up to 69, above what a Bash result carries, and only 9 of
+# 50 reads in the transcripts took a body whole (E2).
+BUDGET_BYTES = 8192
+DATE = re.compile(r"\b(20\d\d-\d\d-\d\d)\b")
 
 
 def _index_text() -> str:
-    path = memory_dir() / "MEMORY.md"
-    return path.read_text(encoding="utf-8") if path.is_file() else ""
+    """MEMORY.md and the retired lines beside it, as one text."""
+    out = []
+    for name in ("MEMORY.md", RETIRED_FILE):
+        path = memory_dir() / name
+        if path.is_file():
+            out.append(path.read_text(encoding="utf-8"))
+    return "\n".join(out)
+
+
+def ranked(memories: list[dict], klass: str) -> list[dict]:
+    """The memories for one class, most relevant first: the fewer classes a
+    memory applies to, the more it is about this one; among equals the one
+    whose newest date is latest, since a memory that happened again says so
+    with a later date."""
+    def newest(memory: dict) -> str:
+        return max(DATE.findall(memory["body"]) or [""])
+    matching = [m for m in memories if klass in m["applies"]]
+    matching.sort(key=newest, reverse=True)
+    return sorted(matching, key=lambda m: len(m["applies"]))
 
 
 # A retirement is marked IN ITS OWN LINE, not by where the line sits.
@@ -193,6 +224,8 @@ def main(argv: list[str] | None = None) -> int:
                        help="one line each, with what it applies to")
     group.add_argument("--check", action="store_true",
                        help="exit 1 if any memory is unclassified or unindexed")
+    parser.add_argument("--all", action="store_true",
+                        help="with --for: every body, past the budget")
     args = parser.parse_args(argv)
 
     memories = load()
@@ -213,16 +246,31 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     retired = retired_names()
-    matching = [m for m in memories
-                if args.klass in m["applies"] and m["path"].stem not in retired]
+    matching = ranked([m for m in memories if m["path"].stem not in retired],
+                      args.klass)
     if not matching:
         print(f"nothing recorded about {args.klass} yet")
         return 0
-    print(f"# {len(matching)} memories that apply to {args.klass}\n")
+    head = f"# {len(matching)} memories that apply to {args.klass}, most specific first\n"
+    blocks, used, rest = [], len(head.encode("utf-8")) + 1, []
+    # Room for the closing list of what did not fit, so the whole stays
+    # under the budget.
+    tail_room = 120 + sum(len(m["name"]) + 8 for m in matching)
     for memory in matching:
-        print(f"## {memory['name']}\n")
-        print(memory["body"])
-        print()
+        block = f"## {memory['name']}\n\n{memory['body']}\n"
+        size = len(block.encode("utf-8")) + 1
+        # Always one whole body, even a long one; never a body cut short.
+        if args.all or not blocks or used + size + tail_room <= BUDGET_BYTES:
+            blocks.append(block)
+            used += size
+        else:
+            rest.append(memory["name"])
+    print(head)
+    for block in blocks:
+        print(block)
+    if rest:
+        print(f"# +{len(rest)} more, not printed: {', '.join(rest)}\n"
+              f"# every body: python scripts/memories.py --for {args.klass} --all")
     return 0
 
 

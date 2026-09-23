@@ -34,6 +34,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import subprocess
+import tempfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -341,27 +342,31 @@ def test_the_memory_ceiling_counts_what_can_actually_be_brought_down():
     A ceiling on a monotone number is the same defect as a check over a
     growing log that can never go green. What it watches now is the count of
     LIVE pointers -- the thing prořez can actually reduce, by merging.
+
+    Since plan v2, V7 a retired line moves to MEMORY-retired.md, so a
+    retirement takes a line out of the index itself; one left behind is
+    still not counted. Held on a fixture index, in THIS project's folder --
+    `*cymetica*` once took the web-qa-agent project's first.
     """
     module = _module()
-    measured = module.sizes()
-    live = measured.get("memory_lines")
-    if live is None:
-        pytest.skip("no memory index on this machine, so nothing to count")
-
-    index = next(iter((Path.home() / ".claude" / "projects").glob(
-        "*cymetica*/memory/MEMORY.md")), None)
-    assert index is not None
-    text = index.read_text(encoding="utf-8")
-    raw = len(text.splitlines())
-    retired = len([l for l in text.splitlines() if "RETIRED" in l])
-
-    assert live < raw, (
-        f"the ceiling still counts every line ({live} of {raw}); a retired "
-        f"line can never be removed, so the number can only grow")
-    assert live == raw - retired - len(
-        [l for l in text.splitlines() if not l.strip().startswith("- [")]), (
-        f"live={live}, raw={raw}, retired={retired}: the count should be the "
-        f"pointers that are still in force")
+    home = Path(tempfile.mkdtemp())
+    folder = home / ".claude" / "projects" / module.project_slug() / "memory"
+    folder.mkdir(parents=True)
+    (folder / "MEMORY.md").write_text(
+        "# index\n- [A](a.md) — one\n- [B](b.md) — two\n"
+        "- [C](c.md) — RETIRED 2026-09-13: merged into a\n", encoding="utf-8")
+    other = home / ".claude" / "projects" / "C--x-cymetica-qa-agent-web-qa-agent" / "memory"
+    other.mkdir(parents=True)
+    (other / "MEMORY.md").write_text("- [X](x.md) — theirs\n" * 9,
+                                     encoding="utf-8")
+    original = Path.home
+    Path.home = classmethod(lambda cls: home)
+    try:
+        live = module.sizes(REPO).get("memory_lines")
+    finally:
+        Path.home = original
+    assert live == 2, (
+        f"live={live}: the count is this project's pointers still in force")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

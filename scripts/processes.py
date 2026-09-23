@@ -482,16 +482,18 @@ def sizes(root: Path | None = None) -> dict:
     # number that can only grow is a warning that can never be cleared, which
     # is the same defect as a check over a growing log. What prořez CAN reduce
     # is the count of pointers still in force, by merging one into another.
-    index = Path.home() / ".claude" / "projects"
-    for candidate in index.glob("*cymetica*/memory/MEMORY.md"):
-        try:
-            lines = candidate.read_text(encoding="utf-8").splitlines()
-        except OSError:
-            break
+    # (Since V7 retired lines live in MEMORY-retired.md; still skipped here in
+    # case one is left behind.) THIS project's index: `*cymetica*` took the
+    # first match, which could be the web-qa-agent project's.
+    candidate = (Path.home() / ".claude" / "projects" / project_slug()
+                 / "memory" / "MEMORY.md")
+    try:
+        lines = candidate.read_text(encoding="utf-8").splitlines()
         out["memory_lines"] = len(
             [line for line in lines
              if line.strip().startswith("- [") and "RETIRED" not in line])
-        break
+    except OSError:
+        pass
 
     oldest = None
     for path in (base / "NEXT.md",):

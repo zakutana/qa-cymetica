@@ -262,6 +262,91 @@ def test_a_memory_retired_on_purpose_is_not_a_memory_nobody_linked(tmp_path,
         f"{found}")
 
 
+def _memory(tmp_path, stem, applies, date, size=3000):
+    body = f"{date}. body of {stem}. " + ("x" * size) + f" end of {stem}\n"
+    (tmp_path / f"{stem}.md").write_text(
+        f'---\nname: {stem}\ndescription: "d"\napplies: {applies}\n---\n\n'
+        + body, encoding="utf-8")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_class_prints_whole_bodies_to_a_budget_most_specific_first(
+        tmp_path, monkeypatch):
+    """Plan v2, V7 (E2). `--for lab` was 28 KB and `--for deep-pass` up to
+    69, above what one Bash result carries, and only 9 of 50 reads in the
+    transcripts took a body whole. So a class prints WHOLE bodies up to
+    BUDGET_BYTES, most specific first (a memory for this class alone before
+    one for five), newest first among equals, and names the rest."""
+    import contextlib
+    import io
+
+    mod = _module()
+    monkeypatch.setenv("QA_MEMORY_DIR", str(tmp_path))
+    _memory(tmp_path, "wide", "lab, sweep, fold", "2026-09-22")
+    _memory(tmp_path, "narrow_old", "lab", "2026-09-10")
+    _memory(tmp_path, "narrow_new", "lab", "2026-09-20")
+    (tmp_path / "MEMORY.md").write_text(
+        "- [W](wide.md) — a\n- [O](narrow_old.md) — b\n- [N](narrow_new.md) — c\n",
+        encoding="utf-8")
+
+    out = io.StringIO()
+    with contextlib.redirect_stdout(out):
+        mod.main(["--for", "lab"])
+    printed = out.getvalue()
+
+    assert len(printed.encode("utf-8")) <= mod.BUDGET_BYTES, len(printed)
+    assert printed.index("body of narrow_new") < printed.index("body of narrow_old")
+    for stem in ("narrow_new", "narrow_old"):
+        assert f"end of {stem}" in printed, f"{stem} was cut, not printed whole"
+    assert "body of wide" not in printed and "wide" in printed, (
+        "what did not fit is named, not dropped")
+    assert "--all" in printed
+
+    out = io.StringIO()
+    with contextlib.redirect_stdout(out):
+        mod.main(["--for", "lab", "--all"])
+    assert "end of wide" in out.getvalue()
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_retired_line_lives_in_its_own_file_and_still_counts(tmp_path,
+                                                                monkeypatch):
+    """Plan v2, V7 (E3). The harness loads the first 200 lines / 25 000
+    characters of MEMORY.md; retired lines are history, not something a
+    session needs every time. They move to MEMORY-retired.md, marker and
+    all, which no new line is ever appended to -- so the positional failure
+    the marker was chosen to avoid cannot come back."""
+    mod = _module()
+    monkeypatch.setenv("QA_MEMORY_DIR", str(tmp_path))
+    for stem in ("live", "old"):
+        (tmp_path / f"{stem}.md").write_text(
+            f'---\nname: {stem}\ndescription: "d"\napplies: sweep\n---\n\n'
+            f"body of {stem}\n", encoding="utf-8")
+    (tmp_path / "MEMORY.md").write_text("- [Live](live.md) — a\n",
+                                        encoding="utf-8")
+    (tmp_path / "MEMORY-retired.md").write_text(
+        "- [Old](old.md) — RETIRED 2026-09-10: merged into live.\n",
+        encoding="utf-8")
+
+    assert mod.problems(mod.load(), mod.index_names()) == []
+    assert mod.retired_names() == {"old"}
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_index_fits_what_the_harness_loads():
+    """Over the real directory: under the harness's load limit, with room,
+    and no retired line left in what every session loads."""
+    mod = _module()
+    path = mod.memory_dir() / "MEMORY.md"
+    if not path.is_file():
+        raise Inconclusive(f"no index at {path} on this machine")
+    text = path.read_text(encoding="utf-8")
+    assert len(text.splitlines()) <= mod.INDEX_MAX_LINES, len(text.splitlines())
+    assert len(text) <= mod.INDEX_MAX_CHARS, len(text)
+    assert not mod.RETIRED_LINE.search(text), (
+        "a retired line is still in MEMORY.md; it belongs in MEMORY-retired.md")
+
+
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_an_unclassified_or_unlinked_memory_is_a_problem(tmp_path, monkeypatch):
     """Both directions: a file nothing links, and a link with no file."""

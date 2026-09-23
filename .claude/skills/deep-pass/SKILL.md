@@ -294,9 +294,13 @@ each one loud rather than silent:
   one, keeping the richer path; retire a file whose content CLAUDE.md, a test
   or a skill now holds; turn a relative date into an absolute one.
 
-  **Retire by marking the line in `MEMORY.md` — leave it where it is and add
-  `RETIRED YYYY-MM-DD: <reason>` to it — and leave the file.** `rm` is not on
-  the allowlist and an unattended pass may not ask, so the file always stays.
+  **Retire by adding `RETIRED YYYY-MM-DD: <reason>` to the memory's line and
+  moving that line from `MEMORY.md` into `MEMORY-retired.md` beside it — and
+  leave the file.** `rm` is not on the allowlist and an unattended pass may
+  not ask, so the file always stays. (Since plan v2, V7: the harness loads
+  only the first 200 lines / 25 000 characters of MEMORY.md, so history does
+  not stay in it; `memories.py` reads both files, and nothing appends to the
+  retired one, so the marker still carries the meaning, not the position.)
 
   This said "drop the line from MEMORY.md and leave the file" until
   2026-09-10, when a pass performed it exactly and
