@@ -1921,6 +1921,15 @@ def test_the_catalogue_readers_take_whole_names_and_respect_what_he_ruled_out():
     both = "MACD Hunter and Trend Titan both look fine here.\n"
     assert [b["name"] for b in lab.proposed_bots(both, CATALOGUE)] == [
         "MACD Hunter", "Trend Titan"]
+    # 2026-09-23 02:15 UTC, NEX-0081: asked for ONE fund, he answered "## Pick:
+    # **AIB-MOLECULAR**" and ranked it ahead of five others in prose -- and
+    # the fund reader, which never got R02's rule, opened six rooms. The same
+    # rule for funds: when a line says which he picks, only those are picks.
+    ranked = ("## Pick: **AIB-SPACE** -- mark it, watch 5 days.\n"
+              "It sits at the top, ahead of AIB-AI (+9.8%) and FTA-STOCKS.\n")
+    assert lab.proposed_funds(ranked, FUNDS) == ["AIB-SPACE"]
+    assert lab.proposed_funds("AIB-SPACE and AIB-AI both look fine.\n",
+                              FUNDS) == ["AIB-SPACE", "AIB-AI"]
     # The card reader keeps its own behaviour through the shared section logic.
     card = _card(0x77)
     assert lab.ruled_out_cards(f"**These are out:**\n- `{card}`\n") == {card}

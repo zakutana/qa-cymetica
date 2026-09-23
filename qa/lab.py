@@ -1282,15 +1282,22 @@ def proposed_bots(text: str, catalogue) -> list[dict]:
     # The finder hands back the catalogue's own spelling, whatever case the
     # answer wrote it in.
     find = _whole_names(by_name, re.I, "A-Za-z0-9")
-    names = _proposed(text, find)
     # R02, deep pass of 2026-09-22: a species he measures his pick against
     # ("It beats RSI Sniper and Trend Titan ...") is prose, not a pick. When
     # a line says which he picks, only the bots named on such a line are.
+    names = _only_picked(text, find, _proposed(text, find))
+    return [by_name[name] for name in names]
+
+
+def _only_picked(text: str, find, names: list[str]) -> list[str]:
+    """When a line says which he picks, only what that line names; otherwise
+    every name. Bots since R02 (2026-09-22); funds since NEX-0081 (2026-09-23,
+    one pick and five funds ranked below it in prose opened six rooms)."""
     picked = {name for line in str(text or "").split("\n")
               if _PICKED.search(line) for name in find(line)}
     if picked & set(names):
-        names = [name for name in names if name in picked]
-    return [by_name[name] for name in names]
+        return [name for name in names if name in picked]
+    return names
 
 
 # A line that says which one he chooses -- "**Pick: MACD Hunter**", "I would
@@ -1308,7 +1315,8 @@ def proposed_funds(text: str, catalogue) -> list[str]:
     """
     symbols = [row.get("symbol") if isinstance(row, dict) else row
                for row in catalogue or ()]
-    return _proposed(text, _whole_names(symbols, 0, "A-Za-z0-9_-"))
+    find = _whole_names(symbols, 0, "A-Za-z0-9_-")
+    return _only_picked(text, find, _proposed(text, find))
 
 
 # What "promising" means before a room opens. [operator 2026-09-19] asked for
