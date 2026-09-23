@@ -568,3 +568,76 @@ def test_a_report_created_behind_a_500_fails_and_a_clean_run_of_twelve_passes(
     honest = _filed("k-down", 30, 500)
     with pytest.raises(Inconclusive):
         _run_filing_check(monkeypatch, clean[:20] + honest)
+
+
+# --------------------------- a paper buy is judged against the paper book ---
+
+PRIV = "5d91bf43-a597-47b0-9abe-5c7f52618bbd"
+OTHER = "30015006-abff-44b6-bdb0-f659faf4f3f4"
+SHORT = '{"detail": "Insufficient USDC balance: you have 7.650006."}'
+
+
+def _paper_buy(trade_id, card, at, status, response="", *, sim="88598.91",
+               mode=True, paper=True, usdc=480.36, tradeable=True,
+               before=True):
+    intent = {"id": trade_id, "type": "intent", "card_id": card, "usdc": usdc,
+              "paper": paper, "at": f"2026-09-23T{at}+00:00",
+              "body": {"amount_usdc": usdc, "paper": paper},
+              "card_before": {"tradeable_now": tradeable,
+                              "trading_blocked_reason":
+                                  None if tradeable else "market closed"}}
+    if before:
+        intent["before"] = {"simulation_mode": mode, "sim_balance_usdc": sim}
+    return [intent, {"id": trade_id, "type": "outcome", "http_status": status,
+                     "outcome": "accepted" if status == 200 else "unknown",
+                     "response": response, "evidence_id": trade_id.lower()}]
+
+
+def _run_paper_book_check(monkeypatch, rows):
+    check = _load("tests/rest/test_a_paper_buy_is_judged_against_the_paper_book.py",
+                  "paper_book_check_under_test")
+    monkeypatch.setattr(check, "_paper", lambda: type("P", (), {
+        "load": staticmethod(lambda: rows)})())
+    check.test_a_paper_buy_is_not_refused_for_money_the_paper_book_holds()
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_paper_buy_refused_for_a_balance_it_is_not_spending_fails(monkeypatch):
+    """2026-09-23 05:59 and 06:00 UTC: a paper buy of 480.36 on AIB-Privacy
+    (tradeable_now true), account in simulation_mode with 88,598.91 paper
+    USDC, came back 409 "Insufficient USDC balance: you have 7.650006." twice,
+    while a paper buy of another card a minute later was accepted. The
+    subject is every card refused that way, by its newest buy -- another
+    card's accepted buy is not the fix (A01's lesson, #117)."""
+    rows = (_paper_buy("TRD-0039", PRIV, "05:59:13", 409, SHORT)
+            + _paper_buy("TRD-0040", PRIV, "06:00:24", 409, SHORT)
+            + _paper_buy("TRD-0041", OTHER, "06:01:16", 200, usdc=5.0))
+    with pytest.raises(AssertionError, match=PRIV) as failed:
+        _run_paper_book_check(monkeypatch, rows)
+    assert "7.650006" in str(failed.value) and "88598.91" in str(failed.value), (
+        str(failed.value))
+
+    # A buy of the refused card that lands is the fix.
+    _run_paper_book_check(monkeypatch, rows + _paper_buy(
+        "TRD-0050", PRIV, "09:00:00", 200))
+
+    # Short on paper too: the refusal is true, not this defect.
+    with pytest.raises(Inconclusive):
+        _run_paper_book_check(monkeypatch, _paper_buy(
+            "TRD-1", PRIV, "05:59:13", 409, SHORT, sim="300.00"))
+    # A card shut at the buy, a live account, a live order, or a buy with no
+    # book recorded before it: nothing about the paper book can be read.
+    for shape in ({"tradeable": False}, {"mode": False}, {"paper": False},
+                  {"before": False}):
+        with pytest.raises(Inconclusive):
+            _run_paper_book_check(monkeypatch, _paper_buy(
+                "TRD-1", PRIV, "05:59:13", 409, SHORT, **shape))
+    # No buy ever refused for balance: nothing to judge, never a pass.
+    with pytest.raises(Inconclusive):
+        _run_paper_book_check(monkeypatch,
+                              _paper_buy("TRD-0041", OTHER, "06:01:16", 200))
+    # A different refusal on the newest buy of the struck card is unmeasured.
+    with pytest.raises(Inconclusive):
+        _run_paper_book_check(monkeypatch, rows + _paper_buy(
+            "TRD-0051", PRIV, "09:00:00", 409,
+            '{"detail": "New purchases are closed for this index."}'))
