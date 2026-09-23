@@ -39,7 +39,7 @@ room -- but whether the answer PROPOSED something is ours to judge first.
 NEX-0002 answered at length and named no card, so it has no room; the 1 USDC
 orders placed after it are measurements and stay in General.
 
-A SessionStart hook (.claude/hooks/room_notes.py) says how many are waiting,
+A SessionStart hook (.claude/hooks/start/room_notes.py) says how many are waiting,
 by room, in one line -- never their words.
 """
 

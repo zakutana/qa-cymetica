@@ -38,7 +38,7 @@ import sys
 import unicodedata
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+REPO_ROOT = Path(__file__).resolve().parents[3]
 LEAD_CHARS = 140
 
 # All four are matched after diacritics are stripped, so the skill may write
@@ -127,6 +127,24 @@ def handover(report: str) -> list[str]:
         return []
     return [f"{title.lstrip('# ').strip()} -- left open:"] + lines + [
         "  the rest is in DEEP-PASS.md; nothing else loads it."]
+
+
+def one_line(report: str) -> list[str]:
+    """The handover in the session start's one slot: every lead it left
+    open, joined, and where the rest is -- the content, not a pointer, which
+    is the difference this hook was written for (plan v2, V7)."""
+    said = handover(report)
+    if not said:
+        return []
+    leads = "; ".join(line.strip() for line in said[1:-1])
+    return [f"{said[0]} {leads} -- the rest: DEEP-PASS.md"]
+
+
+def lines() -> list[str]:
+    path = Path(os.environ.get("QA_DEEP_PASS") or REPO_ROOT / "DEEP-PASS.md")
+    if not path.is_file():
+        return []
+    return one_line(path.read_text(encoding="utf-8", errors="replace"))
 
 
 def main() -> int:

@@ -200,7 +200,7 @@ def test_every_channel_waiting_on_them_is_named_at_session_start(
     append_event(_vendor_a2a("receipt-9", at=AT, text="queued for review",
                              auto=True, kind="first_pass", answers="theirs-9"))
 
-    hook = REPO / ".claude" / "hooks" / "open_threads.py"
+    hook = REPO / ".claude" / "hooks" / "start" / "open_threads.py"
     env = dict(os.environ, QA_STATE_DIR=str(tmp_path),
                PYTHONPATH=str(REPO), PYTHONIOENCODING="utf-8")
     proc = subprocess.run([sys.executable, str(hook)], capture_output=True,

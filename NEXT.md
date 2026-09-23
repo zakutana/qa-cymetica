@@ -4,8 +4,9 @@ Co jsme se domluvili, že je další krok. Ne to, o čem má rozhodnout operáto
 to patří do `DEEP-PASS.md` pod *Čeká na tebe*. Sem jde jenom práce, která je
 už rozhodnutá a ještě není udělaná.
 
-`.claude/hooks/next_step.py` z toho na začátku každé session vypíše jeden
-řádek na položku. Nic víc; důvod a kontext se čtou odsud, až se někdo zeptá.
+`.claude/hooks/session_start.py` z toho na začátku každé session vypíše počet
+otevřených a první z nich; celé se čtou odsud. Otevřených je nejvýš deset, po
+nejvýš 300 znacích (plán v2, V7) -- detail patří tam, kde je práce.
 
 Formát je závazný, protože ho čte hook i test:
 
@@ -24,7 +25,7 @@ nikdy nebylo další na řadě.
 ---
 
 - [x] 2026-09-23  Revize `docs/review-2026-09-23.md` a triáž: 32 skutečných, 3 v menšině, 2 zamítnuté; plán v2 je napsaný. (hotovo 2026-09-23)
-- [ ] 2026-09-23  Plán v2 (`docs/laborator-plan.md`): fáze po jedné, stav v tabulce plánu; teď V7. Po prvním dni smyčky ověřit řádky `answer_read` (V5) a `python scripts/processes.py loop` (V6: pracovních ≤ 20, klidné ≤ 4 volání, Sonnet).
+- [ ] 2026-09-23  Plán v2 (`docs/laborator-plan.md`): otevřené fáze V7 V8 V9 V10 V11, po jedné, stav v tabulce plánu. Po prvním dni smyčky ověřit řádky `answer_read` (V5) a `python scripts/processes.py loop` (V6: pracovních ≤ 20, klidné ≤ 4 volání, Sonnet).
 - [ ] 2026-09-23  Zbytky V3 a V4 (memecoiny), detail v plánu pod V3 a V4: `console.cmd --fomo 1` s horizonty jen pro nové signály, strop quote, prořez captures; hloubka při signálu jen se stropem prodeje ve všech čtečkách; test L553; C6; přepnuté páry (rugy).
 - [ ] 2026-09-23  Bollinger Bandit (klon 36642175) se 23. 9. zastavil sám a důvod není nikde: kontrola proti jejich dokumentované smlouvě + report přes submit.py. Napřed jedno volání `POST /api/v1/backtest-labs/autopsy` (REPLY-0049: `stop_reason` je jen tam a chce run, který klon nemá).
 - [ ] 2026-09-23  `POST /api/v1/backtest/bots/{slug}/run-backtest` chybí v `openapi-public.json` (REPLY-0049: sami to nazvali chybou dokumentace). Kontrola (GET openapi, SAFE) + report přes submit.py.
@@ -88,7 +89,8 @@ nikdy nebylo další na řadě.
 - [x] 2026-09-22  `POST /api/v1/cloned-bots/clone` (paper, Perceptron Oracle, CLN-0017, 13:39 UTC) odmítl HTTP 400 s prázdným tělem `{}` -- agent nepozná proč (MACD Hunter, Fibonacci Phoenix, RSI Sniper vteřiny předtím prošly). Nejspíš limit jednoho klonu na druh (máme d778102d z 10. 9.), ale bez důvodu v odpovědi. Změřit znovu, napsat kontrolu „odmítnutý klon říká proč“ a podat report, třída #93. (Tělo prázdné nebylo: `{"detail": "Invalid clone request. Please try again."}`; `{}` zapisoval náš `clone.py` u každého odmítnutí, opraveno. CLN-0020 v 17:47 stejná 400, kontrola `test_a_refused_paper_clone_says_why`, report **#119** i s opravou #89, kterému jsme 10. 9. psali „prázdné tělo“ ze stejné chyby. Cestou nalezen **#120**: příklad na `/api-docs` posílá `bot_id` místo `source_type`/`source_id`. hotovo 2026-09-22)
 - [x] 2026-09-22  Arena jako čtvrtý papírový produkt laborky: zeptat se Nexuse, jak se na Areně vyplácí a oceňuje podíl BLUE/RED (epochy po hodině, poslední končily DRAW). Pak dát `place_arena_order` do `paper_gated` s `mode: paper` (dnes REST `probe_only`) a přidat druh `arena` k nohám roomu vedle karty, bota a fondu. (NEX-0076 odpověděl; brána chce přímo hodnotu `mode == 'paper'`, protože stará kontrola pravdivosti by pustila i `'live'` a `paper: "false"`; noha `arena` s ref BLUE/RED, verdikt ji zatím čte jako mezeru. hotovo 2026-09-22)
 - [ ] 2026-09-22  #117 a #119 ověřit novým zápisem (naše kontroly soudí zápisy z doby před jejich opravou): papírový nákup a4a5b71e (`paper.py buy`) a nový klon Perceptron Oracle (čekáme 409 ALREADY_CLONED s důvodem), pak `verify.py --confirm`. Do té doby `correction_owed` neposílat.
-- [x] 2026-09-22  Otisk kontroly přes volané pomocníky (A8) a `correction_owed` nad našimi zápisy staršími než jejich oprava: přesunuto do plánu v2, fáze V8. (hotovo 2026-09-23)
+- [x] 2026-09-22  **#117 a #119 opravili a zaplatili, ale naše kontroly soudí naše vlastní zápisy z doby PŘED opravou** (nákupy TRD-0010/0011, klony CLN-0017/0020). Ověřit novým zápisem: papírový nákup karty a4a5b71e (`paper.py buy`) a nový pokus o klon Perceptron Oracle (`clone.py clone`, čekáme 409 `ALREADY_CLONED` s důvodem); pak `verify.py --confirm`. Do té doby jejich `correction_owed` neposílat -- tvrdil by „náš re-check nesouhlasí“ a nic by znovu neměřil. (Přepsáno kratším otevřeným řádkem výš. hotovo 2026-09-23)
+- [x] 2026-09-22  Otisk kontroly (`qa/report_plugin.py::check_fingerprint`) hashuje jen testovací funkci, ne pomocné funkce, které volá, takže `verify.py` u nepřipíchnutého řádku tvrdí „the same test, not a rewritten one“ i po přepsání pomocníka (dnes u #119, #113, #89, #121, #116; #120 jsem proto připíchl ručně). Opravit -- otisk i přes volané pomocníky modulu, nebo pravdivá věta -- a k tomu, aby `correction_owed` nevznikl u kontroly nad našimi zápisy staršími než jejich oprava. Test napřed, pak `/code-review` (sahá na fold). (Přesunuto do plánu v2, fáze V8. hotovo 2026-09-23)
 - [ ] 2026-09-22  Arena: čtení ceny podílu BLUE/RED pro verdikt (`series_of` dnes vrací mezeru). NEX-0076: podíl se nevyplácí, má cenu na CLOB 0,01–1 $; zdroj `get_arena_orderbook` (nejdřív do `components.yaml`) nebo `GET /api/v1/arena/market`. Do té doby žádný room s arena nohou.
 - [ ] 2026-09-21  ET-26036: čekáme na obrazcovou TA (REPLY-0042 ji slibuje; verdikt zůstává fail, MSG-0038). Až ohlásí hotovo: definice obrazců, kombinace s RSI/MACD, backtest (základ, po aktivech, 90% verze), vykreslení v grafu. Verdikt až s operátorem.
 - [x] 2026-09-21  **ET-26036, přepracovaná `/weekly-signal` (REPLY-0040): operátor se k verdiktu vrátí večer.** (Rozhodnuto: fail, viz výš.) V prohlížeči ověřeno, že body 1, 2, 3 a 5 sedí. Bod 4 (publikovaný Pine script) chybí, protože nemají účet na TradingView, a jejich C2 („když to jde, jinak na vlastním grafu") tu druhou možnost povoluje. Doporučen pass s poznámkou. **Nic neposílat, dokud to operátor neřekne.** (hotovo 2026-09-21)

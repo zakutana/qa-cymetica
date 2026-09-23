@@ -439,7 +439,7 @@ def _next_items(text: str | None = None) -> set[str]:
     """
     try:
         spec = importlib.util.spec_from_file_location(
-            "next_step_hook", REPO / ".claude" / "hooks" / "next_step.py")
+            "next_step_hook", REPO / ".claude" / "hooks" / "start" / "next_step.py")
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         if text is None:

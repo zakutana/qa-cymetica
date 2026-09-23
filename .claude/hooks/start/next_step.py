@@ -28,7 +28,7 @@ import re
 import sys
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+REPO_ROOT = Path(__file__).resolve().parents[3]
 LIMIT = 5
 WIDTH = 150
 
@@ -71,6 +71,20 @@ def parse(text: str) -> list[dict]:
             out.append({"done": found.group(1) == "x",
                         "at": found.group(2), "what": found.group(3)})
     return out
+
+
+def summary() -> list[str]:
+    """The session start's one line: how many agreements are open, and the
+    first of them -- NEXT.md is ten lines at most and is read whole from
+    there (plan v2, V7)."""
+    path = Path(os.environ.get("QA_NEXT_FILE") or (REPO_ROOT / "NEXT.md"))
+    if not path.is_file():
+        return []
+    items = [i for i in parse(path.read_text(encoding="utf-8")) if not i["done"]]
+    if not items:
+        return []
+    return [f"NEXT.md: {len(items)} open, read it whole -- first: "
+            f"{items[0]['what'][:WIDTH]}"]
 
 
 def main() -> int:

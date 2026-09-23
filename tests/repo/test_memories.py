@@ -369,7 +369,7 @@ def test_the_hook_is_one_line_and_never_fails(tmp_path, monkeypatch):
     import subprocess
     import sys
 
-    hook = REPO / ".claude" / "hooks" / "memory_index.py"
+    hook = REPO / ".claude" / "hooks" / "start" / "memory_index.py"
     result = subprocess.run([sys.executable, str(hook)], cwd=REPO,
                             capture_output=True, text=True, encoding="utf-8",
                             errors="replace", timeout=60)

@@ -34,7 +34,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+REPO_ROOT = Path(__file__).resolve().parents[3]
 LIMIT = 10
 
 # What to type when a thread turns out to matter, per channel. A line that
@@ -69,26 +69,32 @@ def _open() -> list[tuple[str, list[str]]]:
     return out
 
 
+def lines() -> list[str]:
+    """What the session start prints, one line or none."""
+    waiting = _open()
+    if not waiting:
+        return []
+    parts = []
+    for name, ids in waiting:
+        shown = ids[:LIMIT]
+        marks = ", ".join(shown)
+        if len(ids) > len(shown):
+            marks += f", +{len(ids) - len(shown)} more"
+        how = READ_WITH.get(name)
+        parts.append(f"{name}: {marks}" + (f" -- {how}" if how else ""))
+    return ["Sent by us and unanswered -- " + " | ".join(parts)]
+
+
 def main() -> int:
     try:
-        waiting = _open()
-        if not waiting:
+        said = lines()
+        if not said:
             return 0
-
-        parts = []
-        for name, ids in waiting:
-            shown = ids[:LIMIT]
-            marks = ", ".join(shown)
-            if len(ids) > len(shown):
-                marks += f", +{len(ids) - len(shown)} more"
-            how = READ_WITH.get(name)
-            parts.append(f"{name}: {marks}" + (f" -- {how}" if how else ""))
-
         try:
             sys.stdout.reconfigure(encoding="utf-8", errors="replace")
         except (AttributeError, ValueError):
             pass
-        print("Sent by us and unanswered -- " + " | ".join(parts))
+        print("\n".join(said))
     except Exception:
         return 0
     return 0

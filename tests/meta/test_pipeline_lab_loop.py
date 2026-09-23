@@ -799,7 +799,8 @@ def _doors(**over):
     their API; the real doors are named in `_tick_doors` and checked apart."""
     calls = {k: [] for k in ("fomo", "sample", "cycle", "promote", "truth",
                              "search", "verdicts", "variants", "refill", "moves",
-                             "fomo_reading", "hot", "hot_reading")}
+                             "fomo_reading", "hot", "hot_reading",
+                             "surface_drift")}
 
     def door(name, value):
         return lambda *a: calls[name].append(a) or value
@@ -824,6 +825,7 @@ def _doors(**over):
         "fomo_reading": door("fomo_reading", {"readouts": [], "claims": {}}),
         "hot": door("hot", {"ok": True, "hot": 100, "headlines": 3, "cards": 0}),
         "hot_reading": door("hot_reading", {"rounds": 0}),
+        "surface_drift": door("surface_drift", []),
     }
 
     def search(bite):
@@ -3589,6 +3591,22 @@ def test_the_budget_decides_whether_an_idle_hunt_spends_an_agent():
     assert lab.budget_mode(10, lab.BUDGET_CEILING_PCT) == "minimal"
     assert lab.budget_mode(None, 10) == "minimal", (
         "a usage nobody could read is not room to spend")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_tick_scans_their_surface_every_few_hours_for_the_session_start(
+        tmp_path, monkeypatch):
+    """Plan v2, V7 (E1): the session start reads the drift from a cache, and
+    by day the loop's tick is what refreshes it -- once per surface_hours."""
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    doors, calls = _doors()
+    _tick(scripts_lab, NOW, doors)
+    _tick(scripts_lab, NOW + timedelta(minutes=20), doors)
+    assert len(calls["surface_drift"]) == 1, calls["surface_drift"]
+    later = NOW + timedelta(hours=scripts_lab.TICK["surface_hours"], minutes=1)
+    _tick(scripts_lab, later, doors)
+    assert len(calls["surface_drift"]) == 2
+    assert "surface_drift" in scripts_lab._tick_doors()
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

@@ -16,24 +16,30 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+REPO_ROOT = Path(__file__).resolve().parents[3]
+
+
+def lines() -> list[str]:
+    """What the session start prints, one line or none."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "memories_for_hook", REPO_ROOT / "scripts" / "memories.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    memories = module.load()
+    if not memories:
+        return []
+    classes = "|".join(module.CLASSES)
+    return [f"memory: {len(memories)} files. Before substantive work read the "
+            f"ones for this task: python scripts/memories.py --for <{classes}>"]
 
 
 def main() -> int:
     try:
-        import importlib.util
-
-        spec = importlib.util.spec_from_file_location(
-            "memories_for_hook", REPO_ROOT / "scripts" / "memories.py")
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-        memories = module.load()
-        if not memories:
-            return 0
-        classes = "|".join(module.CLASSES)
-        print(f"memory: {len(memories)} files. Before substantive work read the "
-              f"ones for this task: python scripts/memories.py --for "
-              f"<{classes}>")
+        said = lines()
+        if said:
+            print("\n".join(said))
     except Exception:  # noqa: BLE001
         return 0
     return 0

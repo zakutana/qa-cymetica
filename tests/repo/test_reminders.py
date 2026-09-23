@@ -310,7 +310,7 @@ def test_the_hook_is_silent_when_nothing_is_due_and_never_fails(tmp_path,
     import subprocess
     import sys
 
-    hook = REPO / ".claude" / "hooks" / "reminders.py"
+    hook = REPO / ".claude" / "hooks" / "start" / "reminders.py"
     assert hook.is_file(), "the reminder hook is the whole mechanism"
 
     source = hook.read_text(encoding="utf-8")

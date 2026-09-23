@@ -244,13 +244,16 @@ EXCEPTIONS = {
 # what cannot drift unnoticed is a VERBATIM quote, `*"..."*`, right after a tag.
 # Pinned by the quote alone, not the comment around it, so editing the code
 # beside it is free and changing their words is not.
-CODE_GLOBS = ("qa/*.py", "scripts/*.py", ".claude/hooks/*.py")
+CODE_GLOBS = ("qa/*.py", "scripts/*.py", ".claude/hooks/*.py",
+              ".claude/hooks/start/*.py")
 CODE_TAG = re.compile(r"\[operator (\d{4}-\d{2}-\d{2})")
 CODE_QUOTE = re.compile(r'\*"(.{8,}?)"\*', re.S)
 COMMENT_PREFIX = re.compile(r"^\s*(?:#|//|/\*|\*(?!\")|--)?\s?", re.M)
 
 CODE_QUOTES = [
-    (".claude/hooks/next_step.py", "2026-09-10",
+    # Moved with its hook into the one session start's sources (plan v2,
+    # V7); same words, same hash.
+    (".claude/hooks/start/next_step.py", "2026-09-10",
      "36106104ca24ac23456f3ab54f8ce63a37a71126073ce966e528591a457a6de6"),
     (".claude/hooks/no_heredoc_writes.py", "2026-09-13",
      "55441599a7daccea3d832f358d39df183337e17627f6f800fc0a79b16c12b576"),

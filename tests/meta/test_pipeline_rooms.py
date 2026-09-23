@@ -291,7 +291,7 @@ def test_the_tab_reads_no_field_the_rooms_do_not_write(tmp_path, monkeypatch):
 # ---------------------------------------------------------------------------
 # P2: the operator's notes, and how the next session hears about them
 # ---------------------------------------------------------------------------
-HOOK = REPO / ".claude" / "hooks" / "room_notes.py"
+HOOK = REPO / ".claude" / "hooks" / "start" / "room_notes.py"
 
 
 def _run(args, state_dir: Path, encoding: str = "utf-8"):

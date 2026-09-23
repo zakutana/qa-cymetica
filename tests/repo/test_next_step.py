@@ -80,7 +80,7 @@ def _done_on(line: str):
 
 
 NEXT = REPO / "NEXT.md"
-HOOK = REPO / ".claude" / "hooks" / "next_step.py"
+HOOK = REPO / ".claude" / "hooks" / "start" / "next_step.py"
 PROGRESS = REPO / "audits" / "deep-pass-progress.json"
 
 # An item nobody has ticked in this long is either done and unrecorded, or was

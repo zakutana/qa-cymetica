@@ -101,6 +101,9 @@ state/lab_tick.json
 state/lab_tick.running
 # When each running room's index was last read for an early verdict.
 state/lab_early.json
+# What the last surface scan found (processes.py surface_drift), for the
+# session start to read instead of scanning (plan v2, V7). A cache.
+state/surface_drift.json
 
 # What the laboratory has already asked their backtest, keyed on the basket.
 # Appended to while a run may be in flight, like the diaries above; the deep

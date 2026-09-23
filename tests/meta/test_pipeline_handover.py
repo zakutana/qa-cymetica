@@ -44,7 +44,7 @@ from qa.marks import SafetyTier, qa
 from qa.measure import Measurement, conclude
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-HOOK = REPO_ROOT / ".claude" / "hooks" / "deep_pass_handover.py"
+HOOK = REPO_ROOT / ".claude" / "hooks" / "start" / "deep_pass_handover.py"
 
 REPORT = """# Deep pass — 2026-09-08
 

@@ -2748,6 +2748,9 @@ TICK = {
     "fomo_reading_hours": 6,
     # The Hot headlines study (hot_watch.py report), the same way.
     "hot_reading_hours": 6,
+    # Their surface against the shape we agreed (processes.py surface_drift),
+    # cached for the session start, which no longer scans (plan v2, V7).
+    "surface_hours": 6,
 }
 TICK_STATE = "lab_tick.json"
 
@@ -2991,6 +2994,7 @@ def _tick_doors() -> dict:
         "fomo_reading": lambda: _sibling("fomo_watch").reading(),
         "hot": _hot_round,
         "hot_reading": lambda: _sibling("hot_watch").reading(),
+        "surface_drift": lambda: _sibling("processes").surface_drift(),
     }
 
 
@@ -3190,6 +3194,12 @@ def tick(*, now: datetime | None = None, actions: dict | None = None,
         if reading is not None:
             lab.note_hot_reading(reading)
             state["last_hot_reading"] = moment.isoformat()
+
+    last_scan = lab._at(state.get("last_surface_scan"))
+    if last_scan is None or (moment - last_scan).total_seconds() >= \
+            TICK["surface_hours"] * 3600:
+        if attempt("surface_drift", doors["surface_drift"]) is not None:
+            state["last_surface_scan"] = moment.isoformat()
 
     # The deep pass returned above; what is left is theirs (V5, 2026-09-23):
     # the hour's asks, their bound of outstanding jobs, their backoff.

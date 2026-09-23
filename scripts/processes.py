@@ -3,7 +3,7 @@
 [operator 2026-09-12] *"ne zadene schedulery automaticke nechci ... Proste
 mibudes jen pripominat co mam kdy delat alke vse si chci spoustet sam"* -- so
 nothing here starts anything. `reminders` composes at most a few lines saying
-what is on the table and the words that start it; `.claude/hooks/reminders.py`
+what is on the table and the words that start it; `.claude/hooks/start/reminders.py`
 prints them at the start of a session and CLAUDE.md says to repeat them in the
 first answer, because hook output is not something they read.
 
@@ -498,7 +498,7 @@ def sizes(root: Path | None = None) -> dict:
     oldest = None
     for path in (base / "NEXT.md",):
         try:
-            source = base / ".claude" / "hooks" / "next_step.py"
+            source = base / ".claude" / "hooks" / "start" / "next_step.py"
             spec = importlib.util.spec_from_file_location("next_for_sizes",
                                                           source)
             module = importlib.util.module_from_spec(spec)
@@ -727,7 +727,7 @@ def pass_in_flight(now: datetime | None = None) -> bool:
 
 def _open_next() -> list[str]:
     """The open lines, through the hook's own parser: one reader, one format."""
-    path = REPO_ROOT / ".claude" / "hooks" / "next_step.py"
+    path = REPO_ROOT / ".claude" / "hooks" / "start" / "next_step.py"
     target = REPO_ROOT / "NEXT.md"
     if not path.is_file() or not target.is_file():
         return []
@@ -934,15 +934,42 @@ def surface_drift(update: bool = False) -> list[str]:
                                    else stored.get("tools") or [],
                           "agreed_at": datetime.now(timezone.utc).isoformat(
                               timespec="seconds")})
+    try:
+        # Agreed to, nothing is left to report.
+        _cache_drift([] if update else said)
+    except OSError:
+        pass
     return said
 
 
+def drift_cache_path() -> Path:
+    from qa.state import state_dir
+
+    return state_dir() / "surface_drift.json"
+
+
+def _cache_drift(said: list[str]) -> None:
+    """What the last scan found, for the session start to read (plan v2, V7,
+    E1): the scan took 3.4 s of the hook's 4.3 and grows with the evidence
+    store, and four of 24 hook runs timed out and printed nothing."""
+    target = drift_cache_path()
+    target.parent.mkdir(parents=True, exist_ok=True)
+    tmp = target.with_name(target.name + ".tmp")
+    tmp.write_text(json.dumps({"at": datetime.now(timezone.utc).isoformat(
+        timespec="seconds"), "drift": said}, ensure_ascii=False), encoding="utf-8")
+    tmp.replace(target)
+
+
 def _surface_facts() -> dict:
-    """Never raises: a session start is not the place to die on a stray file."""
+    """The drift the patrol or the laboratory tick last found -- read, never
+    computed here. Never raises: a session start is not the place to die on
+    a stray file."""
     try:
-        return {"surface_drift": surface_drift()}
+        cached = json.loads(drift_cache_path().read_text(encoding="utf-8"))
+        drift = [str(line) for line in cached.get("drift") or []]
     except Exception:  # noqa: BLE001
-        return {"surface_drift": []}
+        return {}
+    return {"surface_drift": drift} if drift else {}
 
 
 def _unarchived() -> int:
@@ -1444,6 +1471,12 @@ def main(argv: list[str] | None = None) -> int:
         # question the patrol answers is about the recent past.
         floor = getattr(args, "since", None) or (
             datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
+        # The deep pass runs the patrol, so the pass refreshes the drift the
+        # session start reads (V7); the laboratory tick does it by day.
+        try:
+            surface_drift()
+        except Exception:  # noqa: BLE001 -- the patrol is not about their side
+            pass
         state = patrol(since=floor)
         if getattr(args, "extract", False):
             extract(REPO_ROOT, {"at": state["at"], "day": state["day"],

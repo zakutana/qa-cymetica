@@ -41,7 +41,7 @@ from qa.marks import SafetyTier, qa
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 SCRIPT = REPO_ROOT / "scripts" / "correspond.py"
-HOOK = REPO_ROOT / ".claude" / "hooks" / "open_threads.py"
+HOOK = REPO_ROOT / ".claude" / "hooks" / "start" / "open_threads.py"
 
 AT = "2026-09-07T21:00:00+00:00"
 LATER = "2026-09-08T07:00:00+00:00"

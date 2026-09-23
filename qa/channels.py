@@ -10,7 +10,7 @@ not a fourth store -- they already meet in one place:
 
 all of it the append-only journal. So this is a library that reads it, and the
 CLI, the alert and any skill go through here rather than each growing their own
-idea of what "unanswered" means. That is the `.claude/hooks/open_threads.py`
+idea of what "unanswered" means. That is the `.claude/hooks/start/open_threads.py`
 pattern, and the reason for it is that two readers of one journal eventually
 disagree and nobody can tell which is right.
 

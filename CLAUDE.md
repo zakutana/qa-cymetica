@@ -123,7 +123,7 @@ asked for it. So it is kept here.
   session heard "run it without me" in a sentence that meant "remind me". The
   distance between those two is the whole of this rule.
 
-  **The reminder is for them, so say it to them.** `.claude/hooks/reminders.py`
+  **The reminder is for them, so say it to them.** `.claude/hooks/start/reminders.py`
   prints what is due and the words that start it; if it printed anything,
   repeat that line in your first answer, in Czech. Hook output arrives in your
   context, not on their screen, and a reminder they never see is the mechanism
@@ -469,7 +469,7 @@ scripts/lab.py    that loop from our side: `tick` (the day's session, answers
 NEXT.md           what we agreed to do next and have not done. Plain markdown,
                   one line per item, `- [ ] YYYY-MM-DD  sentence`; ticked, it
                   gets `(hotovo DATE)` and goes a week after that stamp.
-                  `.claude/hooks/next_step.py` prints the open ones at every
+                  `.claude/hooks/start/next_step.py` prints the open ones at every
                   session start, the deep pass's step 10b writes it, and
                   `tests/repo/test_next_step.py` fails on an unparsable line
                   and on anything open over fourteen days. It holds work that
@@ -520,7 +520,7 @@ scripts/correspond.py  the operator's Telegram conversation with the vendor.
                      an answer, put it through here** rather than into a
                      conversation that ends at the next /clear -- ET-22498 set
                      off the whole /build walk and what we asked in it is gone.
-                     A SessionStart hook (.claude/hooks/open_threads.py) names
+                     A SessionStart hook (.claude/hooks/start/open_threads.py) names
                      the unanswered ids in one line -- through qa/channels.py
                      since 2026-09-20, so it covers every channel waiting on
                      them, not Telegram alone.
@@ -587,7 +587,7 @@ scripts/rooms.py     the rooms from our side. **When the operator says
                      goes through `nexus.py ask --room STR-...`. A note is their
                      feedback read from a file, not an instruction in the chat
                      -- what would send, spend or publish is confirmed with them
-                     first. A SessionStart hook (.claude/hooks/room_notes.py)
+                     first. A SessionStart hook (.claude/hooks/start/room_notes.py)
                      names how many wait, by room, in one line.
 scripts/open_checks.py  the selector for a sweep over what is still open.
                      Always prepends tests/meta.
@@ -624,7 +624,7 @@ qa/surface.py        THEIR side, watched. The patrol below measures our parts;
 scripts/processes.py  what is due, and what the operator said since the last
                      pass. `reminders` is the whole of the scheduler they
                      refused: a few lines naming what is on the table and the
-                     words that start it, printed by .claude/hooks/reminders.py
+                     words that start it, printed by .claude/hooks/start/reminders.py
                      and repeated to them in the first answer. Each rule is a
                      fixture in tests/repo/test_reminders.py in both
                      directions, because a line that appears every evening is

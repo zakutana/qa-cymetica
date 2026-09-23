@@ -27,20 +27,24 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(os.environ.get("QA_REPO_ROOT")
-            or Path(__file__).resolve().parent.parent.parent)
+            or Path(__file__).resolve().parents[3])
 LIMIT = 4
+
+
+def lines() -> list[str]:
+    """Everything that is due; the session start keeps what fits its slot."""
+    source = ROOT / "scripts" / "processes.py"
+    if not source.is_file():
+        return []
+    spec = importlib.util.spec_from_file_location("processes_for_hook", source)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.reminders(module.facts(), datetime.now(timezone.utc))
 
 
 def main() -> int:
     try:
-        source = ROOT / "scripts" / "processes.py"
-        if not source.is_file():
-            return 0
-        spec = importlib.util.spec_from_file_location("processes_for_hook",
-                                                      source)
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-        due = module.reminders(module.facts(), datetime.now(timezone.utc))
+        due = lines()
         if not due:
             return 0
         try:

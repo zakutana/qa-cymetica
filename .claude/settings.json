@@ -52,55 +52,10 @@
             "type": "command",
             "command": "python",
             "args": [
-              ".claude/hooks/open_threads.py"
+              ".claude/hooks/session_start.py"
             ],
             "timeout": 10,
-            "statusMessage": "reading the threads waiting on them"
-          },
-          {
-            "type": "command",
-            "command": "python",
-            "args": [
-              ".claude/hooks/deep_pass_handover.py"
-            ],
-            "timeout": 10,
-            "statusMessage": "reading the last deep pass handover"
-          },
-          {
-            "type": "command",
-            "command": "python",
-            "args": [
-              ".claude/hooks/memory_index.py"
-            ],
-            "timeout": 10,
-            "statusMessage": "counting the memories"
-          },
-          {
-            "type": "command",
-            "command": "python",
-            "args": [
-              ".claude/hooks/next_step.py"
-            ],
-            "timeout": 10,
-            "statusMessage": "reading what we agreed to do next"
-          },
-          {
-            "type": "command",
-            "command": "python",
-            "args": [
-              ".claude/hooks/room_notes.py"
-            ],
-            "timeout": 10,
-            "statusMessage": "counting unread notes in the Nexus rooms"
-          },
-          {
-            "type": "command",
-            "command": "python",
-            "args": [
-              ".claude/hooks/reminders.py"
-            ],
-            "timeout": 15,
-            "statusMessage": "working out what is due"
+            "statusMessage": "what is due, what is open, what is next"
           }
         ]
       }
