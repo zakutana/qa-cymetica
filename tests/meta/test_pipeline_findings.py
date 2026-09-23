@@ -132,7 +132,8 @@ def test_a_run_may_not_restate_a_judgement_it_never_made():
     from tests.meta.test_pipeline_fold import fold_run, ledger, row
 
     findings = _findings()
-    existing = row("CYM-anon-tool-surface", checks=["tests/a.py::test_x"])
+    existing = row("CYM-anon-tool-surface",
+                   checks=["tests/a.py::test_x", "tests/a.py::test_y"])
     existing["severity"] = "S0-CUSTODY"
     existing["title"] = "An unauthenticated caller is served all 46 MCP tools"
 
@@ -149,6 +150,20 @@ def test_a_run_may_not_restate_a_judgement_it_never_made():
     kept = after["findings"]["CYM-anon-tool-surface"]
     assert kept["severity"] == "S0-CUSTODY", kept["severity"]
     assert kept["title"].startswith("An unauthenticated caller")
+    # Nor which checks the row declares (A3 of the review of 2026-09-23,
+    # 3/3): the candidate lists only the checks that FAILED in this run, and
+    # copying it over the row dropped test_y -- a later pass on test_x alone
+    # would then verify a row whose other check was never read. A run may
+    # add a check to a row; only a rebind or retire event takes one away.
+    assert kept["checks"] == ["tests/a.py::test_x", "tests/a.py::test_y"], kept["checks"]
+    from tests.meta.test_pipeline_fold import event
+    retired = fold(ledger(existing), run=fold_run("run-v", [("tests/a.py::test_x", "failed")]),
+                   candidates=cand, events=[event(
+                       "retire_check", source="scripts/withdraw.py", by="operator",
+                       finding_id="CYM-anon-tool-surface", nodeid="tests/a.py::test_x",
+                       reason="its source is gone")])
+    assert retired["findings"]["CYM-anon-tool-surface"]["checks"] == ["tests/a.py::test_y"], (
+        "a still-failing check the operator retired came back through the run")
 
     # A brand-new row still gets both.
     fresh = fold({"findings": {}}, run=fold_run("run-v", [("tests/a.py::test_x", "failed")]),

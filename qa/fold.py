@@ -327,6 +327,19 @@ def _apply_run(row: dict, run: dict, level: str) -> None:
 # ---------------------------------------------------------------------------
 # FILING axis
 # ---------------------------------------------------------------------------
+def _retired_checks(events: Iterable[dict]) -> dict[str, set[str]]:
+    """Per row, the checks an operator event took away -- retired, or the
+    old nodeid a rebind replaced -- so a run cannot add them back."""
+    out: dict[str, set[str]] = {}
+    for event in events:
+        fid = str(event.get("finding_id") or "")
+        if event.get("type") == "retire_check" and event.get("nodeid"):
+            out.setdefault(fid, set()).add(str(event["nodeid"]))
+        elif event.get("type") == "rebind_check" and event.get("value"):
+            out.setdefault(fid, set()).add(str(event["value"]))
+    return out
+
+
 def _apply_check_definition(rows: dict, events: Iterable[dict]) -> None:
     """Operator events that change WHICH checks adjudicate a row.
 
@@ -821,6 +834,7 @@ def fold(prev: dict | None = None, run: dict | None = None,
 
     if run is not None:
         at = run.get("finished_at") or run.get("started_at")
+        retired = _retired_checks(events)
         for cand in candidates:
             row = rows.get(cand["id"])
             if row is None:
@@ -851,9 +865,19 @@ def fold(prev: dict | None = None, run: dict | None = None,
                 seen_in.append(run["run_id"])
                 row["reproductions"] = row.get("reproductions", 0) + 1
             for field in ("title", "severity", "component", "section", "tag",
-                          "kind", "checks", "detail", "note"):
+                          "kind", "detail", "note"):
                 if field in cand:
                     row[field] = cand[field]
+            # A run may ADD a check to a row, never take one away (A3 of the
+            # review of 2026-09-23, 3/3): the candidate names only the checks
+            # that failed in this run, and copying it over the row dropped the
+            # rest, so a later pass on the survivors verified checks nobody
+            # read. Rebind and retire events move `checks` (above), and a
+            # check they took away does not come back through a run.
+            if "checks" in cand:
+                gone = retired.get(cand["id"], set())
+                row["checks"] = sorted((set(row.get("checks") or [])
+                                        | set(cand["checks"])) - gone)
             row["provenance"] = {"run_id": run["run_id"], "measured_at": at}
 
         for row in rows.values():
