@@ -23,7 +23,7 @@ nikdy nebylo další na řadě.
 
 ---
 
-- [ ] 2026-09-23  Revize `docs/review-2026-09-23.md`: 38 nálezů triáží tři agenti (platí 2 ze 3), pak plán v2 podle architekta. B1 opravit první; C1 a C3 musí být hotové před 26. 9. 00:52 UTC. Až po obnovení týdenního limitu (23. 9. 15:00 UTC).
+- [x] 2026-09-23  Revize `docs/review-2026-09-23.md` a triáž: 32 skutečných, 3 v menšině, 2 zamítnuté; plán v2 je napsaný. (hotovo 2026-09-23)
 - [ ] 2026-09-23  Plán v2 `docs/laborator-plan.md`: fáze V1 V2 V3 V4 V5 V6 V7 V8 V9 V10, po jedné na session, stav v tabulce plánu. V1 (kritické opravy) musí být hotová před 26. 9. 00:52 UTC.
 - [x] 2026-09-18  (Hotovo 2026-09-19: zapisuje ho `lab.py tick` jednou do deníku laboratoře, ne do paper.jsonl — to je deník obchodů a #87 soudí jeho nejnovější obchod; `status` ho po zápisu přestane opakovat.) `resolved_without_us` (qa/lab.py) jen HLÁSÍ, že se karta uzavřela sama (sampler ví, náš `paper.jsonl` ne) — nic to nezapisuje. Stejný řádek se proto opakuje v `status`/`resume` napořád (09fc27fa, 85,76 USDC, karta e579581b). Chybí zapisovač, co to jednou přiklopí do paper.jsonl jako uzavřenou pozici — vlastní práce s testem napřed, ne rychlá oprava uprostřed tiku.
 - [x] 2026-09-14  (Hotovo v deep passu 2026-09-19: 736 řádků, prořezány historické odbočky, žádné pravidlo ani rozhodnutí.) CLAUDE.md má 761 řádků proti stropu 750 (a proti 200 doporučeným). Strop už jednou zvednut (700→750, 2026-09-13) — podruhé ne. Prořezat, ne přestěhovat: `.claude/rules/` bez `paths:` neušetří kontext vůbec, s `paths:` se načte až po prvním čtení odpovídajícího souboru. Největší kandidát je „Where things live" (255 ř., třetina, nula odstavců `[operator]`). Patří to do deep passu, vlastním commitem. (hotovo 2026-09-19)

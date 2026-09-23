@@ -75,7 +75,7 @@ Each phase: tests first (red), then code, `pytest tests/meta tests/repo`, commit
 **V1 · Kritické opravy** (Opus · high; before 2026-09-26 00:52 UTC)
 - **B1:** PROBE judges inertness from the whole request — query string, form or non-JSON body, and MCP `{}` arguments on non-read tools — so `toggle-trading?enabled=true` is refused. Test first in the existing gate tests; the 2026-09-22 RC1 test is the pattern.
 - **C1:** a failed benchmark or card-history read is `unread`, not `[]`. The verdict waits (rule 8) and is re-judged on the next tick; it is never written without its benchmark.
-- **C3:** a normal window close sells the room's card positions (the early path already does). The first real case is STR-0006.
+- **C3:** a normal window close sells the room's card positions (the early path already does). It has already fired: STR-0003's TRD-0006 is still open, and it is closed in the same change. The next case is STR-0006.
 - **A1:** `ledger.py --run` refuses a run older than the ledger's newest adjudicating run unless it is named `--replay`. `/code-review` (fold/state).
 - **D1:** `prune_runs.py` never deletes a capture the manifest knows that no verified bundle holds, and it prints how many it held back. The deep pass's step 0 stops the prune when the archive fails.
 
@@ -97,7 +97,7 @@ Each phase: tests first (red), then code, `pytest tests/meta tests/repo`, commit
 - Headline = `stop_study()` at a $10 clip: no stop, 24 h hold, pair-clean, swap fee per side with sensitivity at 0.5/1/2 %.
 - Depth at entry decides the buy; depth at exit caps the sell. Split the test at L553 and keep its case-blind half.
 - C5: `compare()` counts per token, pair-clean, over the same period for both groups, with an honest interval.
-- C6: time exits no longer depend on a round within ±30 min, and `control()` is fixed.
+- C6 is a minority finding (1 of 3), so it is examined but not assumed: whether dropping unobserved time exits biases the hot-headline sample.
 - `RADAR_FIELDS` += price_usd, first_buy_seconds_ago, exit_signal, exit_reason, updated_at.
 - Fill share = `max_buy_5pct_usd` against $10, plus first-checkpoint latency.
 - The pinned quotes (fomo.py:260/466/489) stay verbatim.
@@ -115,7 +115,7 @@ Each phase: tests first (red), then code, `pytest tests/meta tests/repo`, commit
 - Our caps go: questions/day, rooms/day, running_experiments, the 20-min spacing, IN_FLIGHT_HOURS.
 - Theirs stay: OUTSTANDING_BOUND 6, ASKS_PER_HOUR 3, backoff, and `pass_in_flight`.
 - Stake = a fixed share of the book, so 60 % exposure is the only count limit. Answers are read once.
-- `clone.py settings()` gets the paper floor (B7, the `enable()` check) and components.yaml declares only safe fields (no arb, custodial or onchain). Each variant is a new room, and a PATCH is refused while its room runs.
+- `clone.py settings()` gets the paper floor before it exists (the `enable()` check). B7 was dropped only because nothing calls the PATCH yet, and this phase adds the caller. components.yaml declares only safe fields (no arb, custodial or onchain). Each variant is a new room, and a PATCH is refused while its room runs.
 - Grid per species: SL / TP / max_position / max_open_positions / min_ai_confidence / market toggles.
 - Own lane under the 2026-09-23 pin:
   - origin `OUR-…`, labelled „naše";
@@ -134,7 +134,7 @@ Each phase: tests first (red), then code, `pytest tests/meta tests/repo`, commit
 - **One SessionStart hook,** ≤ 8 lines in ≤ 3 s: what is due · threads · notes · NEXT. There is no surface scan in the hook; drift is computed by the tick and the pass and cached (E1). The two hook quotes are re-pinned at the new path, same hash.
 - **Memories:**
   - `memories.py --for` prints complete bodies ≤ 8 KB, ranked by relevance (E2);
-  - MEMORY.md stays under the harness's load limit (200 lines / 25 000 characters): retired lines move to `MEMORY-retired.md` (E3).
+  - MEMORY.md stays under the harness's load limit (200 lines / 25 000 characters): retired lines move to `MEMORY-retired.md`. This is prevention, not a fix: E3 was dropped as a forecast.
 - **Patrol:**
   - counts slash commands and `.md` preregistrations;
   - an idle flag only where a part can leave a record (E4).
@@ -151,7 +151,7 @@ Each phase: tests first (red), then code, `pytest tests/meta tests/repo`, commit
 - **Deleted:** the finished plans in docs/, the stray `f`, the dead `night_running` reminder.
 
 **V8 · Jádro QA** (Opus · high, `/code-review`)
-- The confirmed A, B and D findings not already fixed in V1: A2–A8, B2–B6, D3, D5, D6.
+- The confirmed A, B and D findings not already fixed in V1 or V4: A2–A8, B2–B6, D3, D6. D5 is a minority finding and is examined only.
 - `vendor_read` is journaled only when a read's health changes (ok→fail, fail→ok); status changes are kept. This keeps rule 8 and removes the "console poll" commits.
 - The fingerprint covers the module helpers a check calls (A8).
 
