@@ -114,6 +114,21 @@ def _next_id(rows: list[dict]) -> str:
     return f"TRD-{max(used, default=0) + 1:04d}"
 
 
+def _append_intent(record: dict) -> dict:
+    """Write an intent under a fresh id, the id taken under the same lock as
+    the write. C9 of the 2026-09-23 review: the id was taken from the file
+    and the intent written after a round of network reads, so a second writer
+    could append the same number in between. The record passed in is given
+    its id in place, so the caller's outcome rows carry it."""
+    target = path()
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with file_lock(target):
+        record["id"] = _next_id(load())
+        with open(target, "a", encoding="utf-8") as handle:
+            handle.write(json.dumps(record, ensure_ascii=False) + "\n")
+    return record
+
+
 def _capture(response, tier: SafetyTier = SafetyTier.MUTATE) -> str | None:
     """The evidence id, or None with the reason -- never a raise.
 
@@ -504,7 +519,7 @@ def buy(card_id: str, usdc: float, nexus_id: str | None, confirm: bool) -> dict:
         # Intent first. A POST that times out still leaves the order on the
         # record, which is the whole of rule 9 and the reason a2a survives a
         # timeout.
-        _append(entry)
+        _append_intent(entry)
         token = CURRENT_TIER.set(SafetyTier.MUTATE)
         try:
             response = client.post(BUY.format(card_id=card_id), json=body)
@@ -616,7 +631,7 @@ def close(position_id: str, confirm: bool) -> dict:
             print("\nnothing sent (--confirm to close it)")
             return entry
 
-        _append(entry)
+        _append_intent(entry)
         token = CURRENT_TIER.set(SafetyTier.MUTATE)
         try:
             response = client.post(SELL.format(card_id=card_id), json=body)

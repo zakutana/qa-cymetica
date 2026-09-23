@@ -104,6 +104,19 @@ def _next_id(rows: list[dict]) -> str:
     return f"CLN-{max(used, default=0) + 1:04d}"
 
 
+def _append_intent(record: dict) -> dict:
+    """paper.py's `_append_intent`, for the same reason (C9, review of
+    2026-09-23): the id is taken under the lock, in the step that writes it,
+    not before a round of network reads another writer can land inside."""
+    target = path()
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with file_lock(target):
+        record["id"] = _next_id(load())
+        with open(target, "a", encoding="utf-8") as handle:
+            handle.write(json.dumps(record, ensure_ascii=False) + "\n")
+    return record
+
+
 def _capture(response, tier: SafetyTier = SafetyTier.MUTATE) -> str | None:
     """The evidence id, or None -- never a raise. paper.py's shape and reason:
     a capture that raises between the request and the record leaves an intent
@@ -303,7 +316,7 @@ def clone(source_type: str, source_id: str, name: str | None,
         print("\nnothing sent, and nothing recorded. Add --confirm.")
         return entry
 
-    _append(entry)
+    clone_id = _append_intent(entry)["id"]
     token = CURRENT_TIER.set(SafetyTier.MUTATE)
     try:
         response = client.post(CLONE, json=body)
@@ -393,7 +406,7 @@ def fund(instance_id: str, amount: float, confirm: bool) -> dict:
         print("\nnothing sent, and nothing recorded. Add --confirm.")
         return entry
 
-    _append(entry)
+    fund_id = _append_intent(entry)["id"]
     token = CURRENT_TIER.set(SafetyTier.MUTATE)
     try:
         response = client.post(PREFIX_FUND.format(id=instance_id), json=body)
@@ -534,7 +547,7 @@ def enable(instance_id: str, confirm: bool, enabled: bool = True) -> dict:
         print("\nnothing sent, and nothing recorded. Add --confirm.")
         return entry
 
-    _append(entry)
+    run_id = _append_intent(entry)["id"]
     token = CURRENT_TIER.set(SafetyTier.MUTATE)
     try:
         response = client.post(TOGGLE.format(id=instance_id),

@@ -890,6 +890,27 @@ def test_a_strategy_that_made_money_inside_its_stop_survives():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_drawdown_is_measured_from_the_peak_not_in_points_of_return():
+    """C8 of the 2026-09-23 review (3/3). The drawdown was the fall in
+    PERCENTAGE POINTS of return -- +50% to +20% read as 30 -- where a holder
+    at 150 who is now at 120 has lost 20% from the peak. Against a 25% stop
+    the points reading refuted a room that never breached it, early and at
+    the close alike."""
+    legs = [{"card": "card-a", "side": "bull", "share": 1.0}]
+    accepted = _acceptance(legs=legs, stop_pct=25.0)
+    series = {"card-a": _series("2026-09-05T00:00:00+00:00",
+                                [100, 150, 120, 120, 120], hours=12)}
+
+    inside = lab.verdict(accepted, series, "2026-09-06T01:00:00+00:00")
+    assert inside["verdict"] == "open", (
+        "a 20% fall from the peak was read as past a 25% stop", inside)
+
+    closed = lab.verdict(accepted, series, "2026-09-07T01:00:00+00:00")
+    assert closed["verdict"] == "survived", closed
+    assert closed["max_drawdown_pct"] == pytest.approx(20.0), closed
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_strategy_that_lost_is_refuted_and_says_by_how_much():
     now = "2026-09-07T01:00:00+00:00"
     series = {"card-a": _series("2026-09-05T00:00:00+00:00",
@@ -1177,7 +1198,7 @@ def test_open_book_returns_reads_only_running_rooms_weighted_by_leg(
 
     assert list(returns) == ["STR-0001"], (
         "a room never set running is not part of the open book")
-    assert all(abs(r - 10.0) < 1e-6 for r in returns["STR-0001"]), returns
+    assert all(abs(r - 10.0) < 1e-6 for r in returns["STR-0001"].values()), returns
 
     # A bear leg's return is flipped, and a two-leg room is share-weighted.
     rows.append({"type": "plan", "room": "STR-0001", "at": "t3",
@@ -1188,9 +1209,50 @@ def test_open_book_returns_reads_only_running_rooms_weighted_by_leg(
     history["c2"] = history["c1"]  # identical series, opposite leg side
     mixed = scripts_lab.open_book_returns(
         now=now, history=lambda card: history.get(card, []))
-    assert all(abs(r) < 1e-6 for r in mixed["STR-0001"]), (
+    assert all(abs(r) < 1e-6 for r in mixed["STR-0001"].values()), (
         f"+10% bull and -10% (flipped bear) at equal share should cancel: "
         f"{mixed}")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_open_book_correlates_returns_of_the_same_day(tmp_path, monkeypatch):
+    """C4 of the 2026-09-23 review (3/3, narrower). Returns were paired by
+    their position in each room's list, so a room whose card has five days of
+    history was correlated against one with three by setting day one of the
+    first beside day three of the second. Two rooms that moved identically
+    every day they shared read ~0.8 and the book looked broader than it is.
+    The returns are per UTC day now, and pairs are taken on the days both have
+    -- a day with no point is a day the index did not move."""
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    now = datetime(2026, 9, 13, 12, 0, tzinfo=timezone.utc)
+    rows = []
+    for n, card in ((1, "a"), (2, "b")):
+        rows += [{"type": "strategy", "id": f"STR-000{n}", "origin": f"NEX-{n}",
+                  "at": "t0"},
+                 {"type": "plan", "room": f"STR-000{n}", "at": "t1",
+                  "legs": [{"card": card, "side": "bull", "share": 1.0}]},
+                 {"type": "status", "room": f"STR-000{n}", "status": "running",
+                  "at": "t2"}]
+    (tmp_path / "rooms.jsonl").write_text(
+        "".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+
+    moves = [2.0, -1.0, 3.0, -2.0, 1.0]           # days -4 .. 0, card a
+    def path(start_value, days_back, steps):
+        value = start_value
+        out = [(now - timedelta(days=days_back), value)]
+        for d, pct in zip(range(days_back - 1, -1, -1), steps):
+            value *= 1 + pct / 100
+            out.append((now - timedelta(days=d), value))
+        return [{"t": t.isoformat(), "index": v} for t, v in out]
+    history = {"a": path(100.0, 5, moves),
+               "b": path(50.0, 3, moves[2:])}     # the last three days only
+
+    returns = scripts_lab.open_book_returns(
+        now=now, history=lambda card: history.get(card, []))
+    said = lab.n_eff(returns)
+    assert said["rho"] == pytest.approx(1.0), (
+        f"identical days read as rho {said['rho']:.3f}", returns)
+    assert said["n_eff"] == pytest.approx(1.0)
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

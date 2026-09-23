@@ -423,6 +423,58 @@ def test_an_order_records_what_the_card_said_about_itself_before_it(
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_order_takes_its_id_when_it_is_written_not_before(
+        tmp_path, monkeypatch):
+    """C9 of the 2026-09-23 review. `buy` numbered its intent from the file
+    and then read their book and the card over the network before writing it,
+    so a second writer -- the tick's launch beside an operator's `lab.py buy`
+    -- could append the same TRD number in between, and every reader keyed on
+    the id (`_deployed`, the board, the closes) would join two orders into
+    one. The id is now taken under the file's lock, in the step that writes."""
+    mod = _paper(tmp_path, monkeypatch)
+    _trade(mod, "TRD-0001", 10.0, "p0")
+
+    class Response:
+        def __init__(self, status, body):
+            self.status_code, self._body = status, body
+            self.request = None
+            self.headers = {}
+            self.text = json.dumps(body)
+
+        def json(self):
+            return self._body
+
+    class Client:
+        def get(self, path, **kwargs):
+            # Another writer lands its order while ours reads the card.
+            mod._append({"id": "TRD-0002", "type": "intent", "usdc": 5.0,
+                         "card_id": "other", "paper": True})
+            return Response(200, {"status": "live", "tradeable_now": True})
+
+        def post(self, *args, **kwargs):
+            return Response(200, {"position_id": "p9"})
+
+        def close(self):
+            pass
+
+    monkeypatch.setattr(mod, "install_client_guard", lambda: None)
+    monkeypatch.setattr(mod, "identities", lambda: {"trusted": None})
+    monkeypatch.setattr(mod, "build_client", lambda *a, **k: Client())
+    monkeypatch.setattr(mod, "_guidance", lambda nexus_id: {"id": None})
+    monkeypatch.setattr(mod, "_snapshot", lambda client: {})
+    monkeypatch.setattr(mod, "_positions", lambda client: [])
+    monkeypatch.setattr(mod, "clone_capital", lambda client: 0.0)
+    monkeypatch.setattr(mod, "affordable", lambda *a, **k: (True, "ok"))
+    monkeypatch.setattr(mod, "_capture", lambda *a, **k: None)
+    monkeypatch.setattr(mod, "PAUSE_SECONDS", 0)
+
+    said = mod.buy("card-1", 10.0, None, confirm=True)
+    assert said["id"] == "TRD-0003", said["id"]
+    intents = [r["id"] for r in mod.load() if r.get("type") == "intent"]
+    assert len(intents) == len(set(intents)), f"an id was taken twice: {intents}"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_200_in_an_unexpected_wrapper_is_not_an_empty_book(tmp_path, monkeypatch):
     """R07, from the 2026-09-10 deep pass, confirmed by the sweep after it.
 

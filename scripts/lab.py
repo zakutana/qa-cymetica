@@ -938,22 +938,35 @@ def _closes_at(client, card: str) -> str | None:
     return _body(response, f"card {card[:8]}").get("trading_closes_at")
 
 
-def _basket_returns(points: list[tuple], since) -> list[float]:
-    """Daily % change of one card's index, from `since` on. `points` is
-    already `_at`/float pairs, sorted, from `qa.lab._points`."""
-    inside = [(t, v) for t, v in points if t >= since]
-    if len(inside) < 2:
-        return []
-    out = []
-    for (t0, v0), (t1, v1) in zip(inside, inside[1:]):
-        if v0:
-            out.append((v1 / v0 - 1.0) * 100.0)
+def _basket_returns(points: list[tuple], since) -> dict[str, float]:
+    """% change of one card's index per UTC day, from `since` on, keyed by
+    the day. `points` is already `_at`/float pairs, sorted, from
+    `qa.lab._points`.
+
+    Keyed by the DAY, not listed: C4 of the 2026-09-23 review paired two
+    rooms' returns by their position in the list, so five days of one card
+    were set beside three of another from the wrong day on. A day with no
+    point is a day the index did not move -- they record it when it moves --
+    so the last value carries forward."""
+    closes: dict = {}
+    for t, v in points:
+        closes[t.date()] = v            # sorted, so the day's last one wins
+    if not closes:
+        return {}
+    day, last, value = min(closes), max(closes), None
+    out: dict[str, float] = {}
+    while day <= last:
+        prior, value = value, closes.get(day, value)
+        if prior and day >= since.date():
+            out[day.isoformat()] = (value / prior - 1.0) * 100.0
+        day += timedelta(days=1)
     return out
 
 
 def open_book_returns(now=None, history=None, window_days: float = 14.0
-                      ) -> dict[str, list[float]]:
-    """One aligned return series per RUNNING room, weighted across its legs.
+                      ) -> dict[str, dict[str, float]]:
+    """One return series per RUNNING room, by UTC day, weighted across its
+    legs over the days every leg has.
 
     `history` is `(card) -> list[dict]`, injectable so this needs no network
     to test; the real caller (`book_correlation`) binds it to a live client
@@ -964,7 +977,7 @@ def open_book_returns(now=None, history=None, window_days: float = 14.0
     """
     since = (now or _now()) - timedelta(days=window_days)
     rows = rooms.load()
-    out: dict[str, list[float]] = {}
+    out: dict[str, dict[str, float]] = {}
     for strategy in rooms.strategies(rows):
         room = strategy["id"]
         if rooms.status_of(rows, room) != "running":
@@ -989,15 +1002,15 @@ def open_book_returns(now=None, history=None, window_days: float = 14.0
                 continue
             way = -1.0 if str(leg.get("side")).lower() == "bear" else 1.0
             share = float(leg.get("share") or 1.0)
-            per_leg.append((share, [way * r for r in returns]))
+            per_leg.append((share, {d: way * r for d, r in returns.items()}))
         if not per_leg:
             continue
-        length = min(len(r) for _, r in per_leg)
-        if length == 0:
+        days = sorted(set.intersection(*(set(r) for _, r in per_leg)))
+        if not days:
             continue
         total_share = sum(share for share, _ in per_leg) or 1.0
-        out[room] = [sum(share * r[i] for share, r in per_leg) / total_share
-                     for i in range(length)]
+        out[room] = {d: sum(share * r[d] for share, r in per_leg) / total_share
+                     for d in days}
     return out
 
 
@@ -1872,7 +1885,7 @@ def night_promote(since: datetime | None = None) -> dict:
         return catalogues[kind]
     capped = False
 
-    def launch_cards(origin: str, text, named: list[str]) -> None:
+    def launch_cards(origin: str, text, named: list[str], species) -> None:
         """The answer's cards, each its own room -- as it has been since
         2026-09-21. A `return` here leaves the answer's bots and funds to
         be read after it."""
@@ -1884,11 +1897,15 @@ def night_promote(since: datetime | None = None) -> dict:
             capped = True
             return
         ruled_out = lab.ruled_out_cards(text)
+        picked = set(lab.picked_cards(text, species))
         for card in named:
             if card in ruled_out:
                 held.append(f"{origin}/{card[:8]}: he named it only to rule "
                             f"it out -- not a proposal")
-        named = [c for c in named if c not in ruled_out]
+            elif card not in picked:
+                held.append(f"{origin}/{card[:8]}: named, but not on the line "
+                            f"that declares his pick -- not a proposal")
+        named = [c for c in named if c not in ruled_out and c in picked]
         if not named:
             return
         spent = ("reject", "unknown_card")
@@ -2230,6 +2247,7 @@ def night_promote(since: datetime | None = None) -> dict:
         # below, not of what our own sampler happened to have seen.
         named = lab.proposed_cards(text, ())["unknown"]
         bots_listed = catalogue("bot")
+        species: set[str] = set()
         if bots_listed:
             # A species id is a bot's, not a card nobody can find (#91).
             species = {str(b.get("id")).lower() for b in bots_listed}
@@ -2241,7 +2259,7 @@ def night_promote(since: datetime | None = None) -> dict:
                         f"the morning reads it")
             continue
         if named:
-            launch_cards(origin, text, named)
+            launch_cards(origin, text, named, species)
         for bot in bots:
             if capped:
                 break

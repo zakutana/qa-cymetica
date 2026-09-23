@@ -1,0 +1,87 @@
+"""What the laboratory reads out of Nexus's answers, against what he wrote.
+
+C7 of the 2026-09-23 review (3/3): the reader took a bot as picked when any
+line naming it carried a word like "clone" or "recommend". NEX-0080 picks one
+bot on its `**Pick:**` line and then compares it with the four we already run
+("...on a 5-day paper run it's the clone most likely to be uncorrelated") --
+and the reader came back with five. NEX-0010 compared its pick with MACD Hunter
+("run each as a paper clone") and came back with two. Only one room opened
+from NEX-0080, because the other four were already cloned; the reading was
+wrong all the same, and it is what the board and the brief are built from.
+
+So a pick is read from a line that DECLARES one -- `Pick:`, `The one to
+clone:`, `Answer:`, `PICK 1 --`, "I would clone" -- and prose that merely
+mentions a species or says "clone" is not one. An answer with no such line
+keeps the old reading: every name less those he ruled out.
+
+The answers are his, verbatim, in tests/meta/fixtures/nexus_answers.json, and
+so are the catalogues they were read against. NEX-0050 is in the fixture and
+not below: its card is on a "Pair-with card id:" line beside the card it
+pairs with, and no line declares either -- the launch opened the right one
+only because the other was already held.
+"""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import pytest
+
+from qa import lab
+from qa.marks import SafetyTier, qa
+
+FIXTURE = json.loads((Path(__file__).resolve().parent / "fixtures"
+                      / "nexus_answers.json").read_text(encoding="utf-8"))
+
+# Read by hand from each answer. Cards as the launch sees them: every id he
+# names, less the species ids of bots (a bot is not a card, #91).
+EXPECTED = {
+    # 73b31f87 is the id of a backtest run he cites, not a card: the reader
+    # hands it on, and their API's 404 is what says so (`unknown_card`).
+    "NEX-0010": {"bots": ["Perceptron Oracle"],
+                 "cards": ["73b31f87-8825-4e19-b103-5a93aa67ad21"]},
+    "NEX-0045": {"cards": ["30015006-abff-44b6-bdb0-f659faf4f3f4"]},
+    "NEX-0059": {"cards": ["a4a5b71e-de11-4805-b8a3-ed9c3f8f8161"]},
+    "NEX-0060": {"cards": ["9ef04dc6-dc11-447a-a360-b6395f618648"]},
+    "NEX-0063": {"cards": ["5e25b255-6ace-49a7-a748-e70a3dac6b3a"]},
+    "NEX-0064": {"cards": ["9f9433ef-75ec-4637-a743-64d9110545bf"]},
+    "NEX-0065": {"cards": ["1de24f14-38f1-40d9-ac7f-993c1592781f",
+                           "9c7b0e8c-8799-47af-9100-38cff2c50c83",
+                           "e849ec0f-45be-43e2-8f01-4945c78346e1"]},
+    "NEX-0066": {"cards": ["c3525683-c0e1-4ea6-b00c-cc9aa9fb44bf",
+                           "0a35dd76-0929-4d64-8f79-18e677e2c758"]},
+    "NEX-0067": {"cards": ["6d0b5308-c151-45a2-b4eb-d2f6c61fc4eb",
+                           "d43bdb4f-694e-4511-ba70-648750a6fe82",
+                           "db54ed55-851d-40ac-a775-a43e43604a28"]},
+    "NEX-0068": {"cards": ["27c96532-123d-494f-ab89-d7dcdb8af33f"]},
+    "NEX-0069": {"cards": ["a9cf285b-4da2-4eda-97b9-4b0b52cb1677",
+                           "c0d78ca5-d864-4fb3-90c7-8b1bfde4c2c2",
+                           "0112ab1b-39ad-42b8-a78c-529e6bcbbba1"]},
+    "NEX-0070": {"cards": ["9fcda87b-ff0b-42d0-888c-5eb9e3a46a54",
+                           "74e34e84-9dc6-4a33-ad58-32f7b52c3226"]},
+    "NEX-0073": {"bots": ["MACD Hunter"]},
+    "NEX-0079": {"cards": ["97b827ad-b61d-4d3f-8398-8548ebc2a242"]},
+    "NEX-0080": {"bots": ["Bollinger Bandit"]},
+    "NEX-0081": {"funds": ["AIB-MOLECULAR"]},
+    "NEX-0086": {"funds": ["AIB-BIOSCIENCES"]},
+    "NEX-0088": {"cards": ["5d91bf43-a597-47b0-9abe-5c7f52618bbd"]},
+}
+
+
+def _read(answer_id: str) -> dict:
+    text = FIXTURE["answers"][answer_id]["text"]
+    species = {row["id"].lower() for row in FIXTURE["bots"]}
+    return {"cards": lab.picked_cards(text, species),
+            "bots": [row["name"] for row in lab.proposed_bots(text, FIXTURE["bots"])],
+            "funds": lab.proposed_funds(text, FIXTURE["funds"])}
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+@pytest.mark.parametrize("answer_id", sorted(EXPECTED))
+def test_a_pick_is_read_from_the_line_that_declares_it(answer_id):
+    said = _read(answer_id)
+    for kind in ("cards", "bots", "funds"):
+        assert said[kind] == EXPECTED[answer_id].get(kind, []), (
+            f"{answer_id} {kind}: read {said[kind]}, he picked "
+            f"{EXPECTED[answer_id].get(kind, [])}")

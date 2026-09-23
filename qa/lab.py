@@ -853,10 +853,22 @@ def formula_fingerprint() -> str:
         # Both halves of the formula since 2026-09-21: a verdict can now be
         # settled inside the window by _early, and a change there is a change
         # to what a verdict means.
-        source = inspect.getsource(verdict) + inspect.getsource(_early)
+        # And every helper they call to reach a number: a change inside one
+        # is a change to what a verdict means, and a hash of the callers
+        # alone would not move (A8's lesson, review of 2026-09-23).
+        source = "".join(inspect.getsource(f) for f in (
+            verdict, _early, _from_peak, _inside))
     except (OSError, TypeError):  # pragma: no cover -- frozen or stripped
         return "unknown"
     return hashlib.sha256(source.encode("utf-8")).hexdigest()[:12]
+
+
+def _from_peak(peak: float, value: float) -> float:
+    """How far below its best the portfolio stands, in % of that best --
+    both given as % returns on what went in. C8, review of 2026-09-23: the
+    difference in percentage points read +50% -> +20% as a 30% drawdown
+    where the holder lost 20%."""
+    return max(0.0, (1.0 - (1.0 + value / 100.0) / (1.0 + peak / 100.0)) * 100.0)
 
 
 def _early(acceptance: dict, series: dict, start, moment) -> dict | None:
@@ -903,7 +915,7 @@ def _early(acceptance: dict, series: dict, start, moment) -> dict | None:
                     * ([m for w, m in leg["curve"] if w <= stamp] or [0.0])[-1]
                     for leg in legs) / weight
         peak = value if peak is None else max(peak, value)
-        drawdown = max(drawdown, peak - value)
+        drawdown = max(drawdown, _from_peak(peak, value))
     clean = [{k: v for k, v in leg.items() if k != "curve"} for leg in legs]
 
     stop_pct = float(acceptance.get("stop_pct") or 0) or None
@@ -1043,7 +1055,7 @@ def verdict(acceptance: dict, series: dict, now, closes: dict | None = None
         value = total / weight
         running.append(value)
         peak = value if peak is None else max(peak, value)
-        drawdown = max(drawdown, peak - value)
+        drawdown = max(drawdown, _from_peak(peak, value))
 
     benchmark = None
     card = acceptance.get("benchmark_card")
@@ -1108,10 +1120,16 @@ def rank(rows: list[dict]) -> list[dict]:
     return scored + unscored
 
 
-def _pearson(a: list[float], b: list[float]) -> float | None:
+def _pearson(a, b) -> float | None:
     """None when the correlation is undefined -- too short, or either series
     is flat -- rather than a fabricated 0.0 or 1.0. A flat series (a card that
-    has not moved) has no variance to correlate against anything."""
+    has not moved) has no variance to correlate against anything.
+
+    Two series keyed by day are paired on the days both have (C4, review of
+    2026-09-23); two lists are taken as already aligned."""
+    if isinstance(a, dict) and isinstance(b, dict):
+        shared = sorted(set(a) & set(b))
+        a, b = [a[k] for k in shared], [b[k] for k in shared]
     n = min(len(a), len(b))
     if n < 3:
         return None
@@ -1310,20 +1328,64 @@ def proposed_bots(text: str, catalogue) -> list[dict]:
 
 
 def _only_picked(text: str, find, names: list[str]) -> list[str]:
-    """When a line says which he picks, only what that line names; otherwise
-    every name. Bots since R02 (2026-09-22); funds since NEX-0081 (2026-09-23,
-    one pick and five funds ranked below it in prose opened six rooms)."""
-    picked = {name for line in str(text or "").split("\n")
-              if _PICKED.search(line) for name in find(line)}
+    """When a line declares which he picks, only what such a line names;
+    otherwise every name. Bots since R02 (2026-09-22); funds since NEX-0081
+    (2026-09-23, one pick and five funds ranked below it in prose opened six
+    rooms); cards since C7 (2026-09-23).
+
+    A declaring line that names nothing -- "**The one pick:**", "# ONE PICK
+    THAT CLEARS THE BAR" -- hands the declaration to the next line that names
+    something, unless a heading comes first."""
+    picked: set[str] = set()
+    pending = False
+    for line in str(text or "").split("\n"):
+        heading = bool(_MD_HEADING.match(line))
+        declares = bool(_PICKED.search(line) or (
+            heading and _PICK_WORD.search(line)
+            and not _RULED_OUT.search(_BRACKETED.sub("", line))))
+        found = find(line)
+        if declares:
+            picked.update(found)
+            pending = not found
+        elif pending and found:
+            picked.update(found)
+            pending = False
+        elif heading:
+            pending = False
     if picked & set(names):
         return [name for name in names if name in picked]
     return names
 
 
-# A line that says which one he chooses -- "**Pick: MACD Hunter**", "I would
-# clone MACD Hunter", "my recommendation".
-_PICKED = re.compile(r"\b(pick|my choice|recommend\w*|clone|go with|choose|"
-                     r"chosen|select(?:ed)?)\b", re.I)
+# A line that DECLARES which one he chooses -- "**Pick: MACD Hunter**",
+# "**The one to clone: `Perceptron Oracle`**", "## Answer: clone ...",
+# "**PICK 1 — `9ef04dc6…`**", "I would clone MACD Hunter". C7, review of
+# 2026-09-23 (3/3): any line carrying "clone", "recommend" or "choose" counted,
+# so NEX-0080's comparison of its pick with the four bots we already run --
+# "it's the clone most likely to be uncorrelated" -- read as five picks.
+_PICKED = re.compile(
+    r"^[\s#>*_`-]*(?:\d+[.)]\s*)?[*_`\s]*"
+    r"(?:(?:the|my|one|top)\s+)*"
+    r"(?:picks?|choice|answer|recommendation|one to clone)"
+    r"\b[^:\n—–]{0,12}[:—–]"
+    r"|\bI(?:'d| would)\s+(?:pick|choose|clone|go with)\b",
+    re.I)
+# A markdown heading about his pick: "# ONE PICK THAT CLEARS THE BAR".
+_PICK_WORD = re.compile(r"\bpicks?\b", re.I)
+
+
+def picked_cards(text: str, species=()) -> list[str]:
+    """The cards an answer picks, first mention first: every id he names,
+    less the species ids of bots (a bot is not a card, #91), less those he
+    names only to rule out, and -- when a line declares his pick -- only what
+    such a line names. The same reading `proposed_bots` and `proposed_funds`
+    make, so the launch and the board cannot disagree about what he chose."""
+    body = str(text or "")
+    skip = {str(s).lower() for s in species or ()}
+
+    def find(line: str) -> list[str]:
+        return [c for c in CARD_ID.findall(line.lower()) if c not in skip]
+    return _only_picked(body, find, _proposed(body.lower(), find))
 
 
 def proposed_funds(text: str, catalogue) -> list[str]:
