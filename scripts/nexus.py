@@ -557,6 +557,10 @@ def answer(question_id: str, once: bool = False) -> dict:
         raise SystemExit(f"no question {question_id}; `nexus.py list` shows them")
     if any(r.get("id") == question_id and r.get("type") == "answer" for r in rows):
         raise SystemExit(f"{question_id} is already answered; `nexus.py show {question_id}`")
+    if not asked[-1].get("job_id"):
+        # Refused at the door (NEX-0087, QUERY_RESTRICTED): no job to poll.
+        raise SystemExit(f"{question_id} was refused, nothing to pick up: "
+                         f"{str(asked[-1].get('error') or 'no job id')[:300]}")
     client = _client()
     token = CURRENT_TIER.set(SafetyTier.SAFE)
     try:

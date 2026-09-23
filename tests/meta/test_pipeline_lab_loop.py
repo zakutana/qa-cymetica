@@ -1796,6 +1796,38 @@ def test_an_answer_he_gave_elsewhere_is_his_guidance_not_his_latency(
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_picking_up_a_refused_question_says_it_was_refused(tmp_path, monkeypatch):
+    """NEX-0087, 2026-09-23 05:26 UTC: QUERY_RESTRICTED at the door, so the
+    row has no job_id, and `nexus.py answer NEX-0087` died in a KeyError
+    traceback. There is nothing to poll; the refusal is the answer."""
+    import importlib
+    import importlib.util as util
+
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    import qa.state
+    importlib.reload(qa.state)
+    spec = util.spec_from_file_location("nexus_refused",
+                                        REPO / "scripts" / "nexus.py")
+    nexus = util.module_from_spec(spec)
+    spec.loader.exec_module(nexus)
+    nexus._append({"id": "NEX-0087", "type": "question",
+                   "at": "2026-09-23T05:26:04+00:00", "tool": "ask_nexus_deep",
+                   "question": "which card?", "accepted": False,
+                   "error": "tool error: {'error': 'QUERY_RESTRICTED'}"})
+
+    def no_door():
+        raise AssertionError("a refused question was polled")
+    monkeypatch.setattr(nexus, "_client", no_door)
+
+    try:
+        nexus.answer("NEX-0087")
+    except SystemExit as said:
+        assert "refused" in str(said) and "QUERY_RESTRICTED" in str(said), str(said)
+    else:  # pragma: no cover -- the assertion is the point
+        raise AssertionError("a refused question was picked up as outstanding")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_verdict_reads_the_whole_index_history_not_the_last_five_days(
         tmp_path, monkeypatch):
     """`index-history` with no `interval` answers the last five days only.
