@@ -414,8 +414,13 @@ def reconcile(client, wallet: str) -> int:
             "asked about -- neither is a reason to settle an outcome.")
 
     events = read_events()
+    # Settled means the fold can see it: accepted AND captured (B6 of the
+    # review of 2026-09-23, 3/3). The fold refuses an outcome with no
+    # evidence, and counting it as settled here left the report invisible to
+    # both for good.
     settled = {e.get("report_id") for e in events
-               if e["type"] == "filing_outcome" and e.get("outcome") == "accepted"}
+               if e["type"] == "filing_outcome" and e.get("outcome") == "accepted"
+               and e.get("evidence_id")}
     intents = {(e.get("title") or "").strip().lower(): e
                for e in events if e["type"] == "filing_intent"}
 

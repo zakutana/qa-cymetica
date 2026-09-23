@@ -382,6 +382,28 @@ def test_reconcile_adds_the_missing_record_and_never_edits(tmp_path, monkeypatch
 
     assert submit.reconcile(client, wallet="0xabc") == 0, "reconcile is not idempotent"
 
+    # B6 of the review of 2026-09-23 (3/3): an `accepted` outcome carrying no
+    # evidence is refused by the fold (gap 2) -- and reconcile counted it as
+    # settled, so the report stayed invisible to both for good. Without its
+    # capture it is not settled: reconcile appends one that has it.
+    from qa.state import append_event
+    append_event({"type": "filing_outcome", "at": "2026-09-05T10:00:00+00:00",
+                  "by": "agent", "source": "scripts/submit.py", "key": "other",
+                  "outcome": "accepted", "report_id": 77, "findings": ["CYM-o"]})
+    append_event({"type": "filing_intent", "at": "2026-09-05T09:59:00+00:00",
+                  "by": "agent", "source": "scripts/submit.py", "key": "other",
+                  "intent_at": "2026-09-05T09:59:00+00:00", "title": "other report",
+                  "findings": ["CYM-o"]})
+
+    def handler_77(request):
+        return httpx.Response(200, json={"reports": [
+            {"id": 77, "title": "other report", "status": "pending",
+             "created_at": "2026-09-05T10:00:00Z"}]})
+    assert submit.reconcile(_client(handler_77), wallet="0xabc") == 1, \
+        "an accepted outcome with no capture was counted as settled"
+    last = [e for e in read_events() if e["type"] == "filing_outcome"][-1]
+    assert last["report_id"] == 77 and last.get("evidence_id"), last
+
 
 # ---------------------------------------------------------------------------
 # THR -- retired 2026-09-06, with the mechanism it guarded
