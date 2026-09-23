@@ -63,7 +63,7 @@ In `.claude/skills/laborator/SKILL.md`, pins 1–4 of v1: manager and technician
 | V3 | Memecoiny poctivě | report řekne „10 $ do každého hot signálu = X % po nákladech, n, stihli bychom Y %"; srovnání s kontrolou po tokenech a bez přepnutých párů | hotovo be97cb6d |
 | V4 | Laboratoř jako oddělení + stránka /lab | screenshot 2000 px viděný; commitnutá stránka nemá žádný vstup mimo git (test); poznámka ze stránky dojde do `rooms.py unread`; **jeden room na odvětví a operátor stránku viděl a dal ≥ 9/10** | hotovo de9b43b7 — operátor 23. 9.: „nová lab je perfektní“ (a6037069 dostala 3/10) |
 | V5 | Pás a boti | tik spustí variantu bota s jiným nastavením přes bránu papíru; jediný limit je 60 % knihy; odpověď se čte jednou | hotovo 4af17a57 (s 11685b1e, 1028c377, 59cde5f2, 4ac9694b, d0609c5e, 3a07a9f4); po prvním dni smyčky ověřit řádky `answer_read` |
-| V6 | Manažer za pár tokenů | klidné kolo = 1 krátký tah AI; den smyčky ≤ 20 tahů AI při stejném počtu spuštění | otevřená |
+| V6 | Manažer za pár tokenů | klidné kolo = 1 krátký tah AI; den smyčky ≤ 20 tahů AI při stejném počtu spuštění | hotovo 1b8e6ac4; po prvním dni smyčky ověřit `processes.py loop`: pracovních kol ≤ 20, klidné ≤ 4 volání, model Sonnet |
 | V7 | Údržba, která dojde | start session ≤ 8 řádků za ≤ 3 s; `memories.py --for lab` ≤ 8 KB celé; MEMORY.md v limitu harnessu; CLAUDE.md ≤ 300 ř.; NEXT.md ≤ 10 otevřených | otevřená |
 | V8 | Jádro QA | každý potvrzený nález A/B/D má test; `/code-review` přes fold/state prošel | otevřená |
 | V9 | Oddělení do budoucna | testovací oddělení (skill + skript + deník) se objeví v hlídce, archivu a na /lab bez jediné úpravy | otevřená |
@@ -146,6 +146,7 @@ Each phase: tests first (red), then code, `pytest tests/meta tests/repo`, commit
 - The reminder names `/model sonnet` when the transcripts show the loop ran on Opus.
 - An idle bug hunt runs only in the normal budget mode, with one Sonnet agent at most.
 - `clone.py`/`paper.py`/`hot_watch.py` are added to the allowlist; paper-only stays enforced in code.
+- *Done 1b8e6ac4.* The done-when as written could not be met: at 20-minute firings a day is 72 firings, so it is read as **working firings** (the tick decided something) **≤ 20 a day while the tick still runs on every firing**, and a quiet firing is the tick in the background plus one line -- two short turns, because ticks take 2-13 min and a foreground one was killed at the tool's ten minutes (2026-09-22). Measured before: 2026-09-21, 49 firings, 342 calls, all Opus. `qa.lab.decide` replayed over the 160 stored ticks says `none` on 100 (`may_ask` alone woke the manager on 97) and 8-22 working ticks a day, fewer firings since a question and its answer share one. A question is due on news (a verdict, a resolved position) or every 2 h within their pace; a hunt every 8 h, the first of a local night the sweep, only under 85 % of both windows (`lab.py budget`). Skill 400 → 89 lines, pins at their hashes; the patrol holds it at 100.
 
 **V7 · Údržba, která dojde** (Sonnet · high)
 - **One SessionStart hook,** ≤ 8 lines in ≤ 3 s: what is due · threads · notes · NEXT. There is no surface scan in the hook; drift is computed by the tick and the pass and cached (E1). The two hook quotes are re-pinned at the new path, same hash.
