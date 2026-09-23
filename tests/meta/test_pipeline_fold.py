@@ -831,6 +831,17 @@ def test_a_failed_read_marks_every_row_and_a_clean_one_clears_it():
     assert stale([bad, unknown]) == "2026-09-05T10:00:00+00:00", \
         "a classless read cleared a mark it is no evidence against"
 
+    # A5 of the review of 2026-09-23 (3/3): a clean read clears only the
+    # failure of the SAME door. The a2a inbox answering says nothing about
+    # the tracker, and cleared its failure in the same run.
+    inbox_ok = {**good, "source": "scripts/bounty.py a2a-inbox"}
+    assert stale([bad, inbox_ok]) == "2026-09-05T10:00:00+00:00", \
+        "the inbox's clean read cleared the tracker's failure"
+    inbox_bad = {**bad, "source": "scripts/bounty.py a2a-inbox",
+                 "at": "2026-09-05T09:00:00+00:00"}
+    assert stale([inbox_bad, bad, good]) == "2026-09-05T09:00:00+00:00", \
+        "the tracker recovering does not clear the inbox's failure"
+
     # The filing half, on a row that has one.
     filed = ledger(row("CYM-a", checks=[CHECK_A]))
     events = _filed("CYM-a", 46, "fixed") + [

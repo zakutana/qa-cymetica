@@ -497,6 +497,8 @@ def _apply_events(rows: dict, events: Iterable[dict]) -> None:
         row.pop("split_from", None)
 
     retracted: dict[str, set[int]] = {}
+    # Which door's read failed last and has not read cleanly since (A5).
+    failing: dict[str, str] = {}
 
     for event in events:
         etype = event.get("type")
@@ -517,13 +519,26 @@ def _apply_events(rows: dict, events: Iterable[dict]) -> None:
             # Only an explicit klass speaks: "ok" clears, a named failure
             # marks, and a read that recorded no class does neither, because
             # it is not evidence either way.
+            #
+            # Per door (A5 of the review of 2026-09-23, 3/3): a clean read
+            # clears only the failure of the SAME source. The a2a inbox
+            # answering is no evidence about the tracker, and it cleared the
+            # tracker's failure in the same run. `stale_from` is the oldest
+            # failure still standing.
             klass = event.get("klass")
+            source = str(event.get("source") or "")
             if klass == "ok":
-                for row in rows.values():
-                    row["filing"].pop("stale_from", None)
+                failing.pop(source, None)
             elif klass is not None:
-                for row in rows.values():
-                    row["filing"]["stale_from"] = event["at"]
+                failing[source] = event["at"]
+            else:
+                continue
+            since = min(failing.values()) if failing else None
+            for row in rows.values():
+                if since is None:
+                    row["filing"].pop("stale_from", None)
+                else:
+                    row["filing"]["stale_from"] = since
             continue
 
         if etype == "supersede":
