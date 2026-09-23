@@ -67,6 +67,13 @@ state/nexus_shallow.jsonl
 # scripts/paper.py proof reads it from disk.
 state/paper.jsonl
 
+# Every paper clone, transfer and pause, and the account either side of them
+# (scripts/clone.py). Committed until 2026-09-23, while the laboratory wrote it
+# in the middle of a tick -- the same dirty-tree reason as paper.jsonl. Copied
+# into audits/lab/ by `scripts/keep.py snapshot`; untracked once by
+# `scripts/keep.py release clones.jsonl`.
+state/clones.jsonl
+
 # The Nexus rooms: the operator's notes from the console and what the sampler
 # reads on a timer. The same reason again, only sharper -- a note is one click
 # away at any moment, including the middle of a sweep. qa/rooms.py reads both

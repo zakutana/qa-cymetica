@@ -51,7 +51,10 @@ DIARIES = ("rooms.jsonl", "nexus.jsonl", "paper.jsonl", "lab.jsonl",
            "backtests.jsonl",
            # FOMO Radar's hot signals and their return-since-signal --
            # scripts/fomo_watch.py, added 2026-09-13.
-           "fomo_signals.jsonl")
+           "fomo_signals.jsonl",
+           # Every paper clone, transfer and pause (scripts/clone.py). In git
+           # until 2026-09-23, written mid-tick; `release` let go of it.
+           "clones.jsonl")
 def snapshot_dir() -> Path:
     """Beside the state it archives, not beside the repository.
 
@@ -198,6 +201,34 @@ def _release(month: str, known: dict) -> int:
     return 0
 
 
+def release(name: str) -> int:
+    """Let git go of one diary that has moved outside it: `git rm --cached`,
+    the file itself untouched on disk.
+
+    protect_state refuses a shell `git rm` aimed under state/, correctly --
+    so this names only a file in DIARIES, and only once .gitignore already
+    ignores it, and refuses anything else before git is asked a thing.
+    """
+    if name not in DIARIES:
+        raise SystemExit(f"keep: {name!r} is not a diary this script copies "
+                         f"into audits/lab/ ({', '.join(DIARIES)}); not a diary "
+                         f"to release")
+    rel = f"state/{name}"
+    # --no-index: a file git still tracks is never "ignored" otherwise.
+    if subprocess.run(["git", "check-ignore", "-q", "--no-index", rel],
+                      cwd=REPO_ROOT).returncode != 0:
+        raise SystemExit(f"keep: {rel} is not gitignored yet -- ignore it "
+                         f"first, or git would stage it again")
+    done = subprocess.run(["git", "rm", "--cached", "--quiet",
+                           "--ignore-unmatch", rel], cwd=REPO_ROOT,
+                          capture_output=True, text=True)
+    if done.returncode != 0:
+        raise SystemExit(f"keep: git rm --cached {rel}: "
+                         f"{done.stderr.strip()[:200]}")
+    print(f"keep: git let go of {rel}; the file stays on disk")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -208,6 +239,9 @@ def main(argv: list[str] | None = None) -> int:
         "untrack", help="let go of tracked captures nothing cites any more")
     drop_cmd.add_argument("--quiet", action="store_true")
     sub.add_parser("snapshot", help="copy the diaries into audits/lab/")
+    rel_cmd = sub.add_parser(
+        "release", help="let git go of a diary that has moved outside it")
+    rel_cmd.add_argument("name", help="a file in DIARIES, e.g. clones.jsonl")
     arch = sub.add_parser(
         "archive", help="bundle the capture bodies, verified, into archive/")
     arch.add_argument("--month", required=True, help="YYYY-MM")
@@ -225,6 +259,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.cmd == "archive":
         return _archive(args.month, args.release)
+
+    if args.cmd == "release":
+        return release(args.name)
 
     target = snapshot_dir()
     copied = snapshot()
