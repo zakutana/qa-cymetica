@@ -3224,6 +3224,39 @@ reports:
       marks open, on both surfaces, and fails on any disagreement; with
       nothing closed it is inconclusive, never a pass.
 
+  - key: report-created-behind-a-500
+    findings: [CYM-a_report_the_server_creates_is_answered_as_created]
+    severity: low
+    category: api
+    url: https://cymetica.com/api/v1/bounty/reports
+    title: "POST /api/v1/bounty/reports answers HTTP 500 for reports it has created (#110, #113, #122)"
+    expected: >
+      llms.txt documents POST /api/v1/bounty/reports as the route a hunter
+      files through. A 5xx tells the client the request was not completed, so
+      a created report is answered 2xx with its id, and a 5xx means nothing
+      was created.
+    actual: >
+      Three of our submissions were answered HTTP 500 and the report existed
+      anyway: #110 (2026-09-20 17:40 UTC), #113 (2026-09-20 21:01 UTC) and
+      #122 (2026-09-22 23:55 UTC -- your server_created_at 23:55:08, the 500
+      at 23:55:18). Each was found only because our client reconciles an
+      unclear outcome against GET /api/v1/bounty/my-reports. That is three of
+      about thirteen submissions over those three days.
+    steps:
+      - 'POST /api/v1/bounty/reports with an X-API-Key and a well-formed report -> intermittently HTTP 500'
+      - 'GET /api/v1/bounty/my-reports seconds later -> the report is there, with an id and a created_at before the 500'
+    body: >
+      A client that does what a 500 says -- assumes nothing was filed and
+      retries -- files the report twice; your 409 on a duplicate title within
+      24 hours only catches a retry that keeps the title. A guess, labelled
+      as one: the created_at before the 500 suggests a step after the insert
+      fails and its error is returned in place of the created report.
+
+      Our check files nothing: it reads our own journal of submissions and
+      judges the newest twelve. A 5xx whose report exists fails it; twelve
+      clean ones pass it, since at the rate we saw a clean twelve happens by
+      chance less than one time in twenty.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in
