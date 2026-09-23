@@ -24,7 +24,8 @@ live on one disk.
 
 The caps are here rather than in the skill because a limit written in prose is
 a limit the next session can talk itself out of. They are the operator's to
-veto, and the reasons are in docs/lab-plan.md.
+veto, and the reasons are in `git show 2ce72f21:docs/lab-plan.md` (the
+finished plan, removed in plan v2, V7).
 """
 
 from __future__ import annotations

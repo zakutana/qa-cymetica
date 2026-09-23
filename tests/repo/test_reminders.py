@@ -181,12 +181,8 @@ def test_a_night_still_inside_its_own_hours_is_not_a_forgotten_session():
         "LAB-0006"], "the night's own session is not a session to close"
     assert mod.sessions_to_close(["LAB-0006"], None) == ["LAB-0006"]
     assert mod.sessions_to_close([], "LAB-0007") == []
-
-    running = mod.reminders(_facts(lab_open=[], night_running="LAB-0007",
-                                   night_until=_ago(hours=-8)), NOW)
-    assert not _says(running, "zavře"), running
-    assert _says(running, "LAB-0007"), (
-        "say it is running, so a night nobody remembers starting is visible")
+    # The reminder that said a night was running went in plan v2, V7: the
+    # `lab.py night` command that started one was removed on 2026-09-21.
 
     forgotten = mod.reminders(_facts(lab_open=["LAB-0006"]), NOW)
     assert _says(forgotten, "LAB-0006", "laborato"), forgotten

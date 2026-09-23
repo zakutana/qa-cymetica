@@ -131,15 +131,6 @@ def reminders(facts: dict, now: datetime) -> list[str]:
             f"Laboratoř má otevřenou session {session} — zavře ji „jdi do "
             f"laboratoře\", a do té doby neví další session, kde jste skončili.")
 
-    # A night is an open session ON PURPOSE, until the hour it was given. Only
-    # a session left open past that is something to close.
-    if facts.get("night_running"):
-        until = str(facts.get("night_until") or "")[:16].replace("T", " ")
-        out.append(
-            f"Laboratoř právě běží v noci jako {facts['night_running']}"
-            + (f" do {until}" if until else "")
-            + " — neptej se Nexuse souběžně, ráno ji shrne `lab.py status`.")
-
     # Nexus's own leading indicator (2026-09-12, unprompted, about its own top
     # strategy): "when average pairwise correlation crosses ~0.6-0.7 the
     # breadth collapses and that precedes the drawdown." Below that threshold
@@ -252,6 +243,10 @@ CEILINGS = {
 
 BASH_SCRIPT = re.compile(r"python\s+scripts[/\\]([a-z_]+)\.py")
 SLASH = re.compile(r"^/([a-z][a-z0-9-]+)")
+COMMAND_NAME = re.compile(r"<command-name>(/[^<\s]+)</command-name>")
+# A preregistration is Markdown (scripts/prereg.py), and the patrol globbed
+# *.json: 155 of them were invisible, so prereg.py read as never run (E4).
+REGISTERED = re.compile(r"^\s*Registered\s+(\S+)", re.M)
 
 
 def parts(root: Path | None = None) -> list[dict]:
@@ -304,6 +299,13 @@ def records_by_part(root: Path | None = None) -> dict[str, list[str]]:
         except (OSError, json.JSONDecodeError):
             continue
         note("prereg.py", row.get("at") or row.get("created_at"))
+    for path in sorted((state / "preregistrations").glob("*.md")):
+        try:
+            found = REGISTERED.search(path.read_text(encoding="utf-8"))
+        except OSError:
+            continue
+        if found:
+            note("prereg.py", found.group(1))
     return out
 
 
@@ -388,7 +390,11 @@ def runs_from_transcripts(rows, known: set[str] | None = None) -> dict[str, dict
         when = row.get("timestamp")
         content = (row.get("message") or {}).get("content")
         if isinstance(content, str):
-            found = SLASH.match(content.strip())
+            # A typed slash command reaches the transcript as
+            # `<command-name>/deep-pass</command-name>`, not as "/deep-pass",
+            # so SLASH never saw one (E4, review of 2026-09-23).
+            named = COMMAND_NAME.search(content)
+            found = SLASH.match(named.group(1) if named else content.strip())
             # Only a name we know, or a plugin's `namespace:skill`. Anything
             # else beginning with a slash is the operator typing -- "/btw" was
             # counted as a part for exactly one run before this line existed.
@@ -572,6 +578,17 @@ def flags(state: dict) -> list[str]:
         if seen.get("runs", 0) == 0 and idle is not None and idle >= IDLE_DAYS:
             out.append(f"{name}: nothing for {idle:.0f} days -- a candidate for "
                        f"the prořez, or a mechanism nobody can reach")
+        # Never seen at all had no age, so this flag could not fire for it
+        # (E4): "nothing idle" was then reported as health. Only where a part
+        # can leave a record -- a hook cannot, and `unwired` covers hooks --
+        # and only once it has existed long enough to have run.
+        age = seen.get("age_days")
+        if (idle is None and seen.get("runs", 0) == 0
+                and seen.get("kind") in ("skill", "agent", "script")
+                and age is not None and age >= IDLE_DAYS):
+            out.append(f"{name}: not seen in the patrol's window and it leaves "
+                       f"no record, {age:.0f} days after it was added -- idle, "
+                       f"unreachable, or leaving no trace the patrol reads")
         if seen.get("errors") and seen.get("runs"):
             share = seen["errors"] / max(seen["runs"], 1)
             if share >= 0.5:
@@ -647,6 +664,13 @@ def patrol(root: Path | None = None, since: str | None = None) -> dict:
         row["kind"] = part["kind"]
         row["idle_days"] = round((now - last).total_seconds() / 86400, 1) \
             if last else None
+        if last is None:
+            # How long it has existed: the commit that added it.
+            added = _git("log", "--diff-filter=A", "--format=%aI", "--",
+                         part["path"]).strip().splitlines()
+            born = _moment(added[-1]) if added else None
+            row["age_days"] = (round((now - born).total_seconds() / 86400, 1)
+                               if born else None)
         out["parts"][part["name"]] = row
     # Two kinds of part that is not here, and they are not the same question.
     # `gone` left records and no longer exists -- migrate_ledger.py, retired
@@ -1084,7 +1108,10 @@ def messages(rows, since: str | None) -> list[tuple[str, str]]:
     floor = _moment(since) if since else None
     out = []
     for row in rows:
-        if row.get("type") != "user":
+        # isMeta: the harness speaking as the user -- a /loop's own prompt on
+        # every firing, which made most of step 1's reading "jdi do laborky"
+        # (E6, review of 2026-09-23).
+        if row.get("type") != "user" or row.get("isMeta"):
             continue
         stamp = _moment(row.get("timestamp"))
         if stamp is None or (floor is not None and stamp < floor):
@@ -1177,6 +1204,8 @@ def trail(rows, since: str | None, limit: int = 120) -> list[dict]:
         kind = row.get("type")
 
         if kind == "user":
+            if row.get("isMeta"):
+                continue  # a /loop's own prompt, not the operator (E6)
             content = (row.get("message") or {}).get("content")
             if isinstance(content, str) and content.strip():
                 if (_HARNESS_BLOCK.match(content.lstrip())
@@ -1235,6 +1264,23 @@ def trail(rows, since: str | None, limit: int = 120) -> list[dict]:
 
     out.sort(key=lambda r: r["at"])
     return out[-limit:]
+
+
+def trail_cut(rows, since: str | None, limit: int = 120) -> int:
+    """How many older entries `trail` left out at this limit -- it cut to 120
+    without a word, so step 1 could not tell a quiet day from a cut one (E6)."""
+    return max(0, len(trail(rows, since, limit=10 ** 9)) - limit)
+
+
+def day_row(state: dict) -> dict:
+    """The patrol's state as one row of audits/processes.jsonl. The counts are
+    over the patrol's window, seven days, so they say so: labelled `runs`,
+    daily rows of seven-day totals read as a week's work every day (E8)."""
+    return {"at": state["at"], "day": state["day"],
+            "parts": {name: {"runs_7d": part.get("runs", 0),
+                             "errors_7d": part.get("errors", 0)}
+                      for name, part in (state.get("parts") or {}).items()},
+            "sizes": state.get("sizes") or {}}
 
 def transcript_rows():
     """Every line of this project's transcripts. 20-30 MB each, so the caller
@@ -1492,11 +1538,7 @@ def main(argv: list[str] | None = None) -> int:
             pass
         state = patrol(since=floor)
         if getattr(args, "extract", False):
-            extract(REPO_ROOT, {"at": state["at"], "day": state["day"],
-                                "parts": {k: {"runs": v["runs"],
-                                              "errors": v["errors"]}
-                                          for k, v in state["parts"].items()},
-                                "sizes": state["sizes"]})
+            extract(REPO_ROOT, day_row(state))
         if getattr(args, "flags", False):
             for line in flags(state):
                 print(line)
@@ -1510,11 +1552,14 @@ def main(argv: list[str] | None = None) -> int:
         since, whose = messages_floor(_notebook(), datetime.now(timezone.utc))
 
     if args.cmd == "trail":
-        walked = trail(transcript_rows(), since, limit=args.limit)
+        rows = list(transcript_rows())
+        walked = trail(rows, since, limit=args.limit)
+        cut = trail_cut(rows, since, limit=args.limit)
         counts = {k: sum(1 for r in walked if r["kind"] == k)
                   for k in ("operator", "correction", "error")}
         print(f"# {len(walked)} entr(ies) since {since} ({whose}) -- "
-              + ", ".join(f"{v} {k}" for k, v in counts.items()))
+              + ", ".join(f"{v} {k}" for k, v in counts.items())
+              + (f"; {cut} older not shown (--limit)" if cut else ""))
         mark = {"operator": "THEY", "correction": "WRONG", "error": "RED "}
         for row in walked:
             print(f"{row['at'][11:16]}  {mark[row['kind']]}  {row['text']}")
