@@ -1,400 +1,89 @@
 ---
 name: laborator
-description: The laboratory, one tick at a time -- a lab technician working alone with Cymetica's AI, Nexus. Each invocation reads the diary for where the last tick stopped, runs `lab.py tick` (memecoin checkpoints, Nexus answers picked up, promising proposals backtested and launched as paper rooms, the search, due verdicts), puts a question to Nexus when one may go, writes the diary, and answers in two or three lines. Use for every firing of "/loop 20m jdi do laborky" and whenever the operator says "jdi do laboratoře", "jdi do laborky", "laborka", "laboratoř", "do labu", "pokračuj v laborce", "jdi pracovat do laboratoře s Nexusem", "zahaj session s Nexusem", "jdi za Nexusem", "vymyslete s Nexusem strategie", or asks for new strategies from Nexus.
+description: The laboratory, one tick at a time -- a lab manager working with Cymetica's AI, Nexus. Each invocation runs `lab.py tick` (memecoin checkpoints, Nexus answers picked up and launched as paper rooms, bot variants, due verdicts) and acts only on its last line, `decide:` -- a quiet tick costs one line. Use for every firing of "/loop 20m jdi do laborky" and whenever the operator says "jdi do laboratoře", "jdi do laborky", "laborka", "laboratoř", "do labu", "pokračuj v laborce", "jdi pracovat do laboratoře s Nexusem", "zahaj session s Nexusem", "jdi za Nexusem", "vymyslete s Nexusem strategie", or asks for new strategies from Nexus.
 model: sonnet
 effort: high
 ---
 
 # The laboratory
 
-[operator 2026-09-11] *"Moje vize je ze te budu casto posialt pracovat s Nexusem
-do laboratore a budete skoumat same nove strategie a hledat ty nejvydelecnejsi.
-Ja to budu monitorovat v roomech ktere jsme dne spostavili."*
+[operator 2026-09-11] *"Moje vize je ze te budu casto posialt pracovat s Nexusem do laboratore a budete skoumat same nove strategie a hledat ty nejvydelecnejsi. Ja to budu monitorovat v roomech ktere jsme dne spostavili."*
 
-[operator 2026-09-19] *"Hele ja proste chci ze jak zadam ti /loop 20m jdi do
-laborky tak ty budes pracovat samostatne, a komunikovat s nexusem strategie
-sam, zapisovat si je at vise kde jsi skoncil, co uz jsi otestvoal, chapes,
-proste si vedes dennik at mas prehled, jako realny laborant v laboratori. A
-cilem je proste najit ty nejvydelecnejsi stretegie napric produkty co ti enxus
-poradi a pak i zvlast v sekci pro memecoiny kde vlastne skoumas ten fomo radar
-jestli dokaze predikovat memeociny co pumpnou. Pracujes samostatne a s
-vlasntim uvazenim, jen mas jasny cil, najit pomoci nexuse a cymetica paltformy
-nejvydelecnejsi stregie. chapes? a to jak to udelas, kdy pouzvas backtesty,
-kdy komunikujes s nexuem je mi jedno. je to na tobe"*
+[operator 2026-09-19] *"Hele ja proste chci ze jak zadam ti /loop 20m jdi do laborky tak ty budes pracovat samostatne, a komunikovat s nexusem strategie sam, zapisovat si je at vise kde jsi skoncil, co uz jsi otestvoal, chapes, proste si vedes dennik at mas prehled, jako realny laborant v laboratori. A cilem je proste najit ty nejvydelecnejsi stretegie napric produkty co ti enxus poradi a pak i zvlast v sekci pro memecoiny kde vlastne skoumas ten fomo radar jestli dokaze predikovat memeociny co pumpnou. Pracujes samostatne a s vlasntim uvazenim, jen mas jasny cil, najit pomoci nexuse a cymetica paltformy nejvydelecnejsi stregie. chapes? a to jak to udelas, kdy pouzvas backtesty, kdy komunikujes s nexuem je mi jedno. je to na tobe"*
 
-So every invocation is **one tick** of a laboratory that runs all day, and the
-goal is fixed: the strategies that earn the most, across whatever products
-Nexus advises -- and, separately, whether FOMO Radar's `hot` predicts the
-memecoins that pump. How to get there is ours to judge, tick by tick: when to
-ask, what to ask, what to test. The diary is how the next tick knows.
+Every invocation is **one tick** of a laboratory that runs all day, towards a fixed goal: the strategies that earn the most, across whatever Nexus advises, and separately whether FOMO Radar's `hot` predicts a pump. CLAUDE.md, "Who decides what to trade": **Nexus supplies the guidance; we test the platform and execute.**
 
-CLAUDE.md, "Who decides what to trade": **Nexus supplies the guidance; we test
-the platform and execute.** A strategy of ours never becomes a room -- narrowed
-on 2026-09-23, see *The manager* below. A basket our search measures well is a
-QUESTION for Nexus; a room opens only from his answer, and only if their own
-backtest of it holds up.
+## A tick
+
+1. `python -u scripts/lab.py tick` with `run_in_background`, never under a timeout (a killed tick holds its marker for 45 min). End the turn without a word; its notification wakes you.
+2. Read only its **last line**, `decide: ...`, and do exactly what it names -- nothing else:
+   - `none` -- one Czech line (`laborka: klid`) and stop. No resume, no brief, no diary, no memory, no Nexus.
+   - `report` -- the morning report, first (below).
+   - `gap` -- the tick's new `failed:` or `held:` line. A bug gets a check and a report, filed; a gap is said in the answer with a Telegram block.
+   - `answer NEX-…` -- `python scripts/nexus.py show NEX-…`. Sides, shares or levels he gave go in with `python scripts/rooms.py plan`; a Czech gist into each room it opened: `rooms.py note STR-… "…" --re NEX-… --gist`.
+   - `question` -- `python scripts/lab.py brief` (his memory: the board, the gate's refusals, what we know about him), then `python scripts/lab.py ask --no-wait "…"`. Start `python scripts/nexus.py answer NEX-…` in the background and run the tick again when it finishes.
+   - `hunt bugs` / `hunt sweep` -- read `get_usage`, then `python scripts/lab.py budget WEEKLY FIVE_HOUR`. On `normal`, ONE Sonnet agent: a bug hunt (their newest surface first, SAFE reads) or the `qa-sweep` skill at narrow width. On `minimal`, one line and stop.
+3. Only after a tick that decided something: `lab.py log "…"` (what and why), `--lesson`, `--next`. `lab.py resume` only after a `/clear`.
+4. Two or three Czech lines: the delta. Everything else is on http://127.0.0.1:8787/lab.
+
+`lab.py` refuses rather than warns; a refusal is a reason, never arbitrary. The brakes are in code (`qa/lab.py`), not here: paper only; THEIR pace (three asks an hour, six outstanding, their backoff); 0.48 % of the book a room under a 60 % ceiling, the only count limit; a live read and their backtest after fees before a card room; nothing but memecoins and Hot while a deep pass runs.
 
 ## The manager
 
 [operator 2026-09-23] *"Ja uz chci jen te posilat do laborky a o nic se nestarat, Proste chci se uz jen soustredit na hledani vydelecnych strategii. Takze jak pujdes do laborky musi se z tebe stat top laboratorni manager chapes. musis si to tam umet top zorganizovat tu praci, klidne si muzes spustit i laboranty (subagenty) na ruzne jine prace, protoze CyMetica ma vice produktu a porad budou pribyvat."*
 
-So a tick is a manager's, not a technician's: it organises the work across
-every product Cymetica has, and may hand a product to a subagent. Nothing
-about it is left for the operator to look after.
+So a tick organises the work across every product Cymetica has and may hand a product to a subagent; nothing is left for the operator to look after.
 
 [operator 2026-09-23] *"Me zajimaji pouze impact data, podle kterych se muzu dal rozhodovat, jasne vysledky a zaden sum."* A dal: *"TO je jedna skupina v laborce, to si spis predstavuji ze by mel byt jeden room. Dalsi sekce, room kde budem operovat a testovat jsou ti jejich boti, tam se mi zda ze zaostavame, musime vic otestovat jejich boty a ruzne kombinace atd."*
 
-Our reading: a room is a PRODUCT -- cards, bots, memecoins, funds -- and what
-it shows is the net result after costs, how many experiments stand behind it,
-and how sure we are. Bots are the room we are behind on: their species and
-their settings, in combinations.
+A room is a PRODUCT -- cards, bots, memecoins, funds -- showing the net result after costs, how many experiments stand behind it, and how sure we are. Bots are where we are behind: species and settings, in combinations (`qa.lab.variants`).
 
 [operator 2026-09-23] *"ty by nam mel poskytnout Hlavne Nexus, a ty jako manager s nim o tom diskutovat a klidne navrhnout i jine navrhy"* A dal: *"Ale melo by to odsypat jako na pasu, zadne limity, proste co je slibne a dava smysl to se jde hend otestvoat."* A o neuspechu: *"A neuspesne pokusy proste zahazujes at tam neni bordel, das je treba doa rchivu nebo enco"*
 
-Our reading: this narrows "a strategy of ours never becomes a room" above.
-Nexus comes first, and ideas of ours may run too, in their own lane: marked
-as ours, each also put to Nexus, never ranked above his picks. Our own count
-caps go, the paper floor and the 60 % ceiling stay, and a failed experiment
-goes to the archive instead of the page. The CLAUDE.md pin of 2026-09-10 is
-untouched; this is the narrower case. The code catches up in phases V2 to V6
-of `docs/laborator-plan.md`; until a phase lands, its brakes hold.
+This narrows "a strategy of ours never becomes a room": Nexus first, ours in their own lane (`OUR-…`, labelled „naše", each also put to him, never ranked above his picks). Our count caps went; the paper floor and the 60 % ceiling stay; a failed experiment goes to the archive.
 
-## The brakes are in code, not here
+## Asking Nexus
 
-`qa/lab.py` holds them, so a tick at three in the morning cannot talk itself
-out of one: paper only; THEIR pace -- three asks an hour, six of ours
-outstanding, their backoff first (our day caps, the one-in-flight rule and the
-twenty-minute floor went in V5, 2026-09-23); 0.48% of the book a room under a
-60% ceiling, which is the only limit on how many run; a live read of every
-card (#91) and their backtest after fees before any room; and **nothing but
-the memecoin and Hot readings while a deep pass runs** -- that pass verifies
-#85, #86 and #87 over these very answers and trades.
+[operator 2026-09-19] *"Ano"* -- to whether the laboratory may, on its own, send its question through their sync door (`POST /api/v1/bounty/qa-agent/ask`) while the deep lane is at capacity, as Cymetica advised in REPLY-0018. The a2a `--confirm` condition still holds for everything else.
 
-**One room per thing, and the caps are ceilings, not a quota** (2026-09-21,
-widened 2026-09-22). An answer naming five cards is five strategies: each card
-that passes the gate opens its own room, and a card that cannot trade yet is
-tried again next tick without holding the others back. Since 2026-09-22 a room
-holds one of three kinds:
+[operator 2026-09-21] *"tak snad nexusovi rikej ze muze doporucovat jen veci co jdou v papiru jen spustit ne"* -- said when NEX-0056 proposed an AIB fund the laboratory had no paper road for. **Every question tells him what a room can hold: an event card, by its whole UUID, live and tradeable now.** A proposal of anything else is a slot and a question spent on nothing we can measure. The rotation below picks the theme; the answer is still cards.
 
-- **a card** -- read live, backtested after fees, bought on paper;
-- **a bot** -- named by its exact species name from
-  `/api/v1/cloned-bots/available`, cloned on paper through `scripts/clone.py`
-  (clone, fund, enable -- its own paper floors), at half the stake because a
-  bot has no backtest, judged on what it made against what went in, and paused
-  when its verdict comes;
-- **a fund** -- named by its `list_funds` symbol, **marked, not bought**
-  (`create_aib_fund` spends real money and has no paper switch): no order, a
-  notional stake no ceiling counts, judged on `get_fund_history`. A fund whose
-  history is empty opens nothing.
+[operator 2026-09-21] *"bod 2 nesouhlasim"* -- to a control group of random cards beside every Nexus room. Not built, and not proposed again.
 
-A room whose own series crosses its stop, or whose every leg is out at a net
-loss, is stopped early (read once an hour) and its paper position closed; a win
-waits for the window to close. The operator, on the plan: a room still needs a
-promising theory or backtest, so a question asks for *up to* five picks, each
-with its thesis: `python scripts/lab.py ask-cards` composes it from the diary
-(what we hold, of every kind; what the gate refused). Use it when a question
-may go and nothing more specific is pending.
+[operator 2026-09-22] *"co to meles, papirove jde spustit plno veci krome karet"* -- said when a day of rooms had held only event cards, because the decision of 2026-09-21 had been narrowed here to "an event card". A room holds whatever runs on paper: a card, a bot cloned on paper, a fund marked against its index -- and Arena once Nexus has said how it pays.
 
-`scripts/lab.py` refuses rather than warns. If it refuses, read the reason; it
-is never arbitrary.
-
-## A tick
-
-**1. Where the last one stopped** -- only when this conversation has not
-already seen it (the first tick after a `/clear`, or when unsure):
-
-```bash
-python scripts/lab.py resume
-```
-
-**2. The work that is due:**
-
-```bash
-python scripts/lab.py tick
-```
-
-It takes minutes, not seconds -- the first live one took eight and a half,
-most of it memecoin quotes after a gap. **Run it in the background**
-(`python -u scripts/lab.py tick`, `run_in_background`), never under a
-`timeout`: on 2026-09-22 a tick after a seven-hour gap outran the ten-minute
-tool limit, the kill skipped its cleanup, and its marker held every later tick
-off for `TICK_STALE_MINUTES` (45). It does, in order of what expires: the memecoin checkpoints (hot signals and
-their control group), a sampler round, answers picked up every half hour with
-the launch straight after (live card read, backtest gate, room, plan,
-criterion, paper order -- or a paper clone for a bot, a mark for a fund),
-their ranking every six hours, a bite of the search,
-the verdicts that came due, anything that resolved without us, and the
-memecoin study into the diary every six hours. It opens the day's session and
-closes yesterday's. It **asks nothing**; its last line says whether a question
-may go. When it prints `ranní přehled je na řadě`, make the report before
-anything else -- see "Ranní přehled" below.
-
-**3. Read what came back.** A `held` line is a reason, not noise: a card the
-backtest rejected (the numbers are in it), a card #91-style unknown, a market
-shut, a clone they did not accept, a fund with no history. A new answer: `python scripts/nexus.py show NEX-...`, and if a room
-opened from it, a Czech gist into the room:
-`python scripts/rooms.py note STR-... "..." --re NEX-... --gist`.
-
-**4. A question, when one may go** -- judgement, not a template:
-
-```bash
-python scripts/lab.py brief
-python scripts/lab.py ask --no-wait "..."
-```
-
-Then **don't wait for the next tick to hear back**: start
-`python scripts/nexus.py answer NEX-...` in the BACKGROUND (it polls until he
-answers, one to five minutes), and when it finishes run `lab.py tick` at once
--- the launch looks at every answer on every tick.
-
-[operator 2026-09-19] *"Ano"* -- to whether the laboratory may, on its own,
-send its question through their sync door (`POST /api/v1/bounty/qa-agent/ask`)
-while the deep lane is at capacity, as Cymetica advised in REPLY-0018. The
-a2a `--confirm` condition still holds for everything else.
-
-Since REPLY-0019 a deep question at capacity is **queued, not refused**: it
-stays in flight until their window frees, the tick looks at it once per tick
-(`nexus.py poll_once`, honouring their `poll_after_s`), and no second deep
-question goes while it waits -- one outstanding job is their condition for a
-slot. If deep ever refuses again with a `retry_after`, `lab.py ask` takes the
-sync door by itself (`state/nexus_shallow.jsonl`, `lane: shallow`). Expect
-little from it on strategy: NEX-0034, the five-card question, got a generic
-menu at confidence 0.48 and no card.
-
-[operator 2026-09-21] *"tak snad nexusovi rikej ze muze doporucovat jen veci co
-jdou v papiru jen spustit ne"* -- said when NEX-0056 proposed an AIB fund the
-laboratory had no paper road for. **Every question tells him what a room can
-hold: an event card, by its whole UUID, live and tradeable now.** A proposal
-of anything else is a slot and a question spent on nothing we can measure.
-The rotation below picks the theme; the answer is still cards.
-
-Since 2026-09-22 "what a room can hold" is wider than the paragraph above
-says: a card, a bot cloned on paper, or a fund marked without an order (see
-the brakes above). `lab.py ask-cards` asks for all three; a pick of anything
-else is still a slot and a question spent on nothing we can measure.
-
-[operator 2026-09-21] *"bod 2 nesouhlasim"* -- to a control group of random
-cards beside every Nexus room. Not built, and not proposed again.
-
-[operator 2026-09-22] *"co to meles, papirove jde spustit plno veci krome
-karet"* -- said when a day of rooms had held only event cards, because the
-decision of 2026-09-21 had been narrowed here to "an event card". A room holds
-whatever runs on paper: a card, a bot cloned on paper, a fund marked against
-its index -- and Arena once Nexus has said how it pays.
-
-`brief` is his memory, because Nexus remembers nothing between questions: what
-the day may still spend, how every proposal of his did (the board, best earner
-first, the rejected ones with their numbers), their own ranking, what measured
-well on our side, and the memecoin study. Rotate by what the diary shows is
-least explored:
-
-- **a new concrete strategy** on a theme we have tested least -- a bot to
-  clone, a fund to mark, the cards that ride on the movers or memecoins -- by
-  whole card id, species name or fund symbol, side, share of the bankroll,
-  exit rules, and what it rests on;
-- **what breaks** their own best-ranked strategy, and what to watch before
-  the drawdown;
-- **one of our well-measured baskets, as a question** -- would he trade it,
-  and what card carries it.
-
-Every question carries how his last proposals actually did, in one line each,
-and the operator's feedback from the rooms in our own words, never their
-text (it is Czech, written to us). `QUERY_RESTRICTED` or an answer cut short:
-rephrase once, more generally, never more.
-
-**5. The diary** -- one line, every tick that did or learned something:
-
-```bash
-python scripts/lab.py log "..."            # what was done and why
-python scripts/lab.py log --lesson "..."   # something learned; the day keeps two
-python scripts/lab.py log --next "..."     # what a later tick should pick up
-```
-
-The tick writes the counts itself. This is the judgement half: what a
-question was for, what an answer changed, what to try next. The first tick of
-a new day closes the old session with its counts and the lessons written here.
-
-**6. Two or three lines to the operator, in Czech.** The delta: rooms opened,
-what the gate rejected and why, a verdict, the memecoin number when it moved.
-Nothing moved -- one line saying so. The laboratory's page, http://127.0.0.1:8787/lab, has the rest.
+Each question names what a room can hold -- a card by its whole id, a bot by its exact species name, a fund by its symbol -- and carries how his last proposals did. Rotate what the diary shows least explored: a new concrete strategy, what breaks their own best-ranked one, one of our well-measured baskets as a question. `lab.py ask-cards` composes the standard one. `QUERY_RESTRICTED` or an answer cut short: rephrase once, more generally, never more. What we learn about him goes into `NEXUS_KNOWN` in `scripts/lab.py`, which `brief` prints.
 
 ## Ranní přehled
 
 [operator 2026-09-23] *"jo a jeste chci pridat do planu ze kazde rano chci vygenerovany krasny vecny strucny artifakt o tom co se vnoci udalo v laborce. takovy top prehled chapes. Na ktery ti dam pak feedback, jako manageorvi laborky a ty udelas podle nej patricne upravy a tak. Tento artikaft chci mit pripraven vzdy v 7 hodin rano. Bude tam strucna sekce o deep passu jak probihal a pak na stav laborky."*
 
-Our reading (plan v2, V11): one short page at one address, updated in place
--- the one Artifact this project publishes. No scheduler: the overnight
-loop's first tick from 06:40 says `ranní přehled je na řadě`, and a session
-that starts after 7:00 without one is told so by the reminders. Either way,
-make it at once:
+The one Artifact this project publishes, at one address. No scheduler: the overnight tick from 06:40 says `report`, and a session after 7:00 without one is reminded.
 
-1. `python scripts/lab.py morning` -- builds `state/lab/morning.html` from the
-   report, DEEP-PASS.md and this diary, and prints the address if one exists.
-2. Publish that file with the Artifact tool. The first time: a new Artifact
-   (icon `report`). Every time after: `action: "read"` on the printed address,
-   then publish the file with `url` set to it, so the address never changes.
-3. `python scripts/lab.py morning --published <url>` -- only now is the day's
-   report made, and tomorrow's compares against what this one showed.
+1. `python scripts/lab.py morning` builds `state/lab/morning.html` and prints the address if one exists.
+2. Publish that file with the Artifact tool -- the first time a new one (icon `report`); after that `action: "read"` on the address, then publish with `url` set to it.
+3. `python scripts/lab.py morning --published <url>`.
 
-Their feedback on the report -- in chat, or as a comment on the Artifact --
-goes into the diary as `lab.py log --feedback "..."`. Act on it, then write
-what changed as `lab.py log --acted "..."`: the next report shows it under
-"Podle tvé zpětné vazby". A message Cymetica is owed goes in as
-`lab.py log --telegram "..."`; the report carries it ready to paste, with our
-handle. What the manager means to do today is the newest `--next` lines.
+Their feedback, in chat or as an Artifact comment: `lab.py log --feedback "…"`; act on it, then `lab.py log --acted "…"`, which the next report shows. A message Cymetica is owed: `lab.py log --telegram "…"`.
 
-## What makes a proposal concrete
-
-It names what to buy, clone or mark: the whole card id, the bot's exact species
-name, the fund's symbol. A method, a caution or a list of tools is not one:
-NEX-0002 answered at length and named no card. The launch reads every id,
-species name and symbol the answer names, except those it names only under a
-heading that rules them out; the legs it writes are the
-laboratory's reading (bull, evenly), and the window, the stop and the benchmark
-are its defaults -- `adopted` says so on the criterion. When his answer DOES
-give sides, shares or levels, write them with `rooms.py plan` before the
-criterion is set.
-
-## The verdict
-
-`lab.py tick` closes every window that came due (`qa/lab.py::verdict`): their
-own index history, his take-profit and stop applied along the path, against a
-BTC benchmark, **inconclusive under 80% coverage -- never a loss**. Every
-verdict carries the fingerprint of the formula that made it. `lab.py board`
-ranks his proposals by what they actually earned, from our own positions.
-
-## Memecoins: does `hot` predict a pump?
+## Memecoins and Hot
 
 [operator 2026-09-23] *"musis se ujistit ze ty data sedi a kdybychg se pak treba rozhodnul dat 10$ do kazdeho hot signaluz e na to je likvidita i cas vse koupit, ze proste ta strategie je realne a pujde exekuovat chapes."*
 
-So the headline is not a signal's paper return but what $10 into every hot
-signal would have made: after fees, with the depth there to buy and to sell,
-and with the time there to get in (phase V3).
-
-```bash
-python scripts/fomo_watch.py report
-```
-
-Their feed claims (its `calibration` block) that a hot coin reached 3x inside
-72 hours for 9.5% of 169, against a base rate of 3.4%. We measure it against a
-control group -- coins the same feed listed in the same round and did not
-call hot, as many as it did call -- on the peak inside windows that have fully
-passed, for coins somebody could have bought. The readouts are 3x/72 h, 2x/24 h
-and 1.5x/6 h. When our number and their claim disagree beyond both intervals,
-that is a finding: a check and a report, as for any other.
-
-Nexus may be asked about memecoins like any product -- which of the radar's
-own fields to trust, what entry and exit to use -- and his rule is tested on
-the diary before anything else is done with it.
-
-## Hot headlines: can we get in before the move?
-
-A study opened 2026-09-21. The Hot tab on /headlines ranks
-by `hotidx.hot`, the trailing 24 h return **at read time** of a basket of
-"related assets" -- so Hot belongs to the basket, not to the headline, and the
-card behind the Trade button is a different basket on purpose (NEX-0054). The
-tick writes a round every time (the hot top 100 and the newest 500 on the
-wire, which carry the basket's index for about 56 h), and reads each entry's
-card history once its day is out. Hot has no history of its own: a round
-nobody took is a moment nobody can read again, which is why it runs even while
-a deep pass holds the rest.
-
-The rule under test is Nexus's own, NEX-0055: crypto baskets only, 24 h return
-≥ +6 %, ≥ 3 members, rank ≤ 3, headline ≤ 60 min old and ≤ 30 min in Hot; hold
-24 h, take-profit +8 %, stop −4 %, 0.2 % costs; **no verdict under 100
-trades**, then his one-sided t ≥ 1.65. It is measured on their price-weighted
-index, not his 1/N -- `preview_card_basket` prices too few of the crypto
-members for 1/N -- and every reading says so. Its rank ≤ 3 could never fire
-(baskets enter Hot near its bottom, ranks 6-100), so NEX-0057 revised it: no
-rank gate, the basket still in Hot at the next round and entered there, and
-the exits he offered are run side by side (`qa/hot.py VARIANTS`), his
-volatility-scaled stop among them (−1.25× the basket's hourly ATR over the six
-hours before entry, never tighter than −4 %, target twice the stop). `lab.py brief` carries the
-latest reading, so every question to him carries it too.
-
-## What we know about Nexus
-
-Written here because every tick needs it before it asks anything, and because
-this is where the laboratory records what it learns:
-
-- **The deep lane falls over.** NEX-0020 to NEX-0025 all failed in 78-92 s on
-  2026-09-11. When it is down, the tick still has work; `lab.py ask` waits out
-  the backoff their own failure asked for.
-- **It refuses sizing questions about bots** with `QUERY_RESTRICTED`, while
-  giving the same class of advice for event cards in full (NEX-0012, NEX-0016).
-- **It recommends tools the caller cannot reach.** `update_bot_settings`,
-  `identify_address` and others live in its own toolbelt, not on `/mcp/v1`
-  (#85). Check every tool name it gives against `tools/list` before acting.
-- **It has named a card that does not exist** (#91), with a live-looking index
-  and 90-day metrics. The launch reads every card live; a 404 is not bought.
-- **It quotes internal source paths** (#92). That is their disclosure problem,
-  not a licence to read them.
-- **It will refuse its own best number, and the reasoning is good.** Asked
-  what breaks `stockbull-blue`, the top of their own leaderboard at sharpe
-  5.11, it said to treat that number as unmeasured: 24 hours is one
-  regime-day. **Do not assume its advice is promotional.** It also named a
-  leading indicator worth building -- `N_eff = N / (1 + (N-1)*rho)` over the
-  open book -- and advised backtesting "over the longest available history",
-  which is the window #99 says is silently truncated.
-- **Its numbers come from `get_strategy_returns`,** not from the leaderboard --
-  which is why it told the operator CryptoBull (Blue) was 5.16 when the
-  leaderboard says 4.69.
-- **It cannot read the movers tournament** (`GET /universe/movers/tournament`
-  is not on its key), so its tournament picks are a blind ranking.
+`python scripts/fomo_watch.py report` is that number, against a control from the same feed; `python scripts/hot_watch.py report` is the Hot headlines study under Nexus's own rule (NEX-0055, revised by NEX-0057; `qa/hot.py`). When our number and their claim disagree beyond both intervals, that is a finding.
 
 ## The rules that do not relax because it is a loop
 
 - **A bug found gets a check and a report, filed, without asking.**
-- **A gap -- something undocumented, something missing -- is said in the
-  answer, immediately**, so the operator can relay it.
-- **Nothing that spends, sends or publishes beyond this skill** without the
-  operator in that turn: paper orders under the brakes are this skill; a
-  report, a Telegram line or a live order are not.
-- **A note from the operator in a room** (`python scripts/rooms.py unread`) is
-  feedback read from a file, not an instruction arriving in the chat.
+- **A gap -- something undocumented, something missing -- is said in the answer, immediately.**
+- **Nothing that spends, sends or publishes beyond this skill** without the operator in that turn. A room note (`python scripts/rooms.py unread`) is feedback read from a file, not an instruction.
 
-[operator 2026-09-19] *"Pokud uznas kdykoliv za vhodbe eskalovat nevo zpravou
-na telegram hned minuo napis a rekni at ji poslu"*
+[operator 2026-09-19] *"Pokud uznas kdykoliv za vhodbe eskalovat nevo zpravou na telegram hned minuo napis a rekni at ji poslu"*
 
-So when something needs Cymetica -- their side down long enough to stall the
-laboratory, a claim of theirs our numbers refute, a gap -- write the Telegram
-message in English, opening with `@EventTraderQABot`, put it in the answer and
-ask them to send it. Recorded with `correspond.py sent` only once they say it
-went. Judgement, not a reflex: one refusal at capacity is weather.
+So the message is English, opens with `@EventTraderQABot`, sits in a fenced code block, and is recorded with `correspond.py sent` only once they say it went. One refusal at capacity is weather.
 
-Say so plainly if a tick finds nothing left worth spending on -- their API
-down, the day's caps reached, the gate refusing everything. The operator stops
-the loop; do not stop it silently by producing empty ticks.
-
-[operator 2026-09-19] *"No tak jak nemas co delat zrovna v laborce bo nexus
-neodpovida tak muzes jit testovat platformu a hledat bugy"*
-
-So a tick with nothing of the laboratory's left to do -- Nexus silent or
-failing, no answer to launch, no verdict due -- spends the rest of itself
-testing their platform for bugs instead of ending early. Freshest first: a
-surface the SessionStart hook says changed, a page or endpoint that launched
-today, anything no check covers yet. SAFE reads unless the operator says
-otherwise in that turn. A bug found there gets a check and a report, filed,
-exactly as anywhere else, and the tick's two lines say what was looked at.
-
-A standing wait -- a vendor ticket until its spec or stage moves, an answer
-still owed -- is re-read by the tick as well, with a NEXT.md line so it
-survives a `/clear`. Not a Monitor, not a new timer: the tick is already
-running because they started it. (Praised the evening this was first done,
-over the Build it Better ticket ET-26036.)
+[operator 2026-09-19] *"No tak jak nemas co delat zrovna v laborce bo nexus neodpovida tak muzes jit testovat platformu a hledat bugy"*
 
 [operator 2026-09-20] *"Jo to taky delej v laborce jak se nudis"*
 
-Said of the sweep, after a night of idle ticks that hunted new surfaces while
-the open findings went unmeasured. **An idle tick may run the sweep too** --
-the `qa-sweep` skill, narrow width, which re-measures every open row, files
-what is still unreported and sends a verification for what now passes. It is
-the standing work the loop can always fall back on, and unlike a bug hunt it
-has a fixed end.
-
-Not every tick: a sweep costs a preregistered run and a minute of their
-server, and nothing it measures moves that fast. Once a night is the shape it
-has had so far, or when a row's subject has visibly changed. What the hunt
-covers, rotate: their newest surfaces first, then the ones the sweep's own
-rows touch -- bots and clones, skills, event cards -- so a defect there is
-found by looking, not only when an existing check happens to fail.
+The tick decides when: a hunt every eight hours when nothing else is due, the first of a local night is the sweep, and only in the normal budget mode, with one Sonnet agent at most. Say plainly when a tick finds nothing worth spending on; the operator stops the loop.

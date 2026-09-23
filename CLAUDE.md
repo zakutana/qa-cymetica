@@ -446,11 +446,11 @@ tests/repo/       repository consistency. Deliberately NOT in tests/meta:
                   finding that silently never gets fixed.
 .claude/skills/laborator/SKILL.md
                   "/loop 20m jdi do laborky": one tick of a laboratory that
-                  runs all day -- `lab.py tick`, then a question to Nexus when
-                  one may go, composed from `lab.py brief` (he remembers
-                  nothing, so our record is his memory), then a line of the
-                  diary (`lab.py log`). `pokracuj` is the same tick by its old
-                  name. What it knows about Nexus grows in that file.
+                  runs all day -- `lab.py tick`, whose last line `decide:`
+                  says what, if anything, needs the model; `none` costs one
+                  line (plan v2, V6). `pokracuj` is the same tick by its old
+                  name. What it knows about Nexus grows in `NEXUS_KNOWN`
+                  (scripts/lab.py), which `lab.py brief` prints.
 qa/lab.py         the laboratory's notebook and its brakes, in code rather
                   than in prose: sessions, ranked snapshots, the catalogue it
                   compares against the baseline, and the brakes -- paper only,

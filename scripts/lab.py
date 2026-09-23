@@ -2423,12 +2423,16 @@ def night_promote(since: datetime | None = None) -> dict:
         except rooms.RoomError as exc:
             held.append(f"{room}: {exc}")
 
+    # The answers that opened a room on this call: `decide: answer NEX-...`
+    # wakes the manager for them (V6), and for nothing an answer only named.
+    answered: list[str] = []
     for answer in answers:
         if capped:
             break
         origin = str(answer.get("id") or "")
         if not origin or origin in whole_linked or origin in already:
             continue
+        before = opened
         text = answer.get("text")
         # Every id the answer names; whether it EXISTS is asked of their API
         # below, not of what our own sampler happened to have seen.
@@ -2461,9 +2465,12 @@ def night_promote(since: datetime | None = None) -> dict:
                 if capped:
                     break
                 launch_fund(origin, symbol, text)
+        if opened > before:
+            answered.append(origin)
         if origin not in pending:
             lab.note_answer_read(origin)
-    return {"rooms": opened, "orders": placed, "held": held}
+    return {"rooms": opened, "orders": placed, "held": held,
+            "answered": answered}
 
 
 def _bots_running(acceptance: dict, room: str | None = None,
@@ -2772,6 +2779,8 @@ def tick_exclusive(*, now: datetime | None = None, actions: dict | None = None,
     if since is not None and moment - since < timedelta(minutes=TICK_STALE_MINUTES):
         out(f"tick skipped -- another tick is running since {since.isoformat()[11:16]} "
             f"(pid {held.get('pid')}); it will finish the work")
+        # That tick decides; this firing has nothing to wake the manager for.
+        out(lab.decide_line([]))
         return {"busy": True, "since": since.isoformat()}
     marker.write_text(json.dumps({"pid": os.getpid(), "at": moment.isoformat()}),
                       encoding="utf-8")
@@ -2995,6 +3004,7 @@ def _say_tick(said: dict, out) -> None:
             f"{said.get('hot')})")
         if said.get("morning_due"):
             out(MORNING_LINE)
+        out(lab.decide_line(said.get("decide") or []))
         return
     fomo = said.get("fomo") or {}
     hot_ = said.get("hot") or {}
@@ -3024,12 +3034,19 @@ def _say_tick(said: dict, out) -> None:
         out(f"  verdict waits:  {line}")
     if said.get("resolved"):
         out(f"  resolved without us, written down: {said['resolved']}")
-    out("  question: may go now -- `lab.py brief`, then `lab.py ask --no-wait`"
-        if said.get("may_ask") else f"  question: not now -- {said.get('why')}")
+    decided = said.get("decide") or []
+    if "question" in decided:
+        out("  question: due -- `lab.py brief`, then `lab.py ask --no-wait`")
+    elif said.get("may_ask"):
+        out(f"  question: their pace allows one, not due -- nothing new since "
+            f"the last, and one goes every {lab.QUESTION_HOURS:g} h")
+    else:
+        out(f"  question: not now -- {said.get('why')}")
     if said.get("morning_due"):
         out(MORNING_LINE)
     for problem in said.get("errors") or []:
         out(f"  failed: {problem}")
+    out(lab.decide_line(decided))
 
 
 def tick(*, now: datetime | None = None, actions: dict | None = None,
@@ -3042,7 +3059,8 @@ def tick(*, now: datetime | None = None, actions: dict | None = None,
     everything else. Then the night's own clocks -- answers every half hour
     and a launch straight after, the ranking every six, a bite of the search
     every tick -- then the verdicts that came due and any position that
-    resolved without us. It asks nothing; it says whether a question may go.
+    resolved without us. It asks nothing; its last line, `decide: ...`, says
+    what needs the manager -- and `none` that nothing does (plan v2, V6).
     """
     moment = now or _now()
     doors = {**_tick_doors(), **(actions or {})}
@@ -3083,6 +3101,7 @@ def tick(*, now: datetime | None = None, actions: dict | None = None,
         said["skipped"] = "night"
     if said["skipped"]:
         said.update(may_ask=False, why=f"a {said['skipped']} is running")
+        _decide(said, moment)
         lab.note_tick(said)
         _say_tick(said, out)
         return said
@@ -3132,6 +3151,7 @@ def tick(*, now: datetime | None = None, actions: dict | None = None,
     launched = attempt("promote", doors["promote"]) or {}
     said["rooms"] += launched.get("rooms", 0)
     said["orders"] += launched.get("orders", 0)
+    said["answered"] = list(launched.get("answered") or [])
     # The newest six: the launch lists oldest answer first, and the first six
     # were the same four answers all night while NEX-0063's reason sat unseen.
     every = list(launched.get("held") or [])
@@ -3179,11 +3199,21 @@ def tick(*, now: datetime | None = None, actions: dict | None = None,
         may, why = True, (f"through the shallow lane -- the deep one is "
                           f"held: {why}")
     said.update(may_ask=may, why=why)
+    _decide(said, moment, rows)
     state["queue"] = queue
     _save_tick_state(state)
     lab.note_tick(said)
     _say_tick(said, out)
     return said
+
+
+def _decide(said: dict, moment: datetime, nexus_rows: list[dict] | None = None) -> None:
+    """What the manager is woken for (V6), written onto the tick's own record
+    so the next tick can read when the last hunt was."""
+    earlier = [row for row in lab.load() if row.get("type") == "tick"][-200:]
+    rows = _nexus_rows() if nexus_rows is None else nexus_rows
+    said["decide"] = lab.decide(said, earlier, lab.last_question_at(rows), moment,
+                                local_hour=moment.astimezone().hour)
 
 
 def board_rows() -> list[dict]:
@@ -3421,7 +3451,40 @@ def brief() -> str:
                    f"the rule under test):")
         for line in _sibling("hot_watch").say_reading(hot_reading):
             out.append(f"  {line}")
+    out.append("")
+    out.append("what we know about Nexus -- read before writing to him:")
+    out.extend(f"  - {line}" for line in NEXUS_KNOWN)
     return "\n".join(out)
+
+
+# What the laboratory has learned about Nexus himself. It lived in
+# laborator/SKILL.md, loaded on every firing of the loop, while only a question
+# needs it (plan v2, V6); this is where it grows now.
+NEXUS_KNOWN = (
+    "The deep lane falls over: NEX-0020..0025 all failed in 78-92 s on "
+    "2026-09-11. `lab.py ask` waits out the backoff their failure asked for.",
+    "It refuses sizing questions about bots with QUERY_RESTRICTED -- a filter "
+    "on the question's WORDING (REPLY-0031), not a boundary: the same advice "
+    "for event cards comes in full. Rephrase once, more generally, never more.",
+    "It recommends tools the caller cannot reach (update_bot_settings, "
+    "identify_address live in its own toolbelt, not on /mcp/v1 -- #85). Check "
+    "every tool name against tools/list before acting.",
+    "It has named a card that does not exist (#91), with a live-looking index "
+    "and 90-day metrics. The launch reads every card live; a 404 is not bought.",
+    "It quotes internal source paths (#92). Their disclosure problem, not a "
+    "licence to read them.",
+    "It will refuse its own best number, with good reasons (stockbull-blue at "
+    "sharpe 5.11: 24 h is one regime-day). Do not assume it is promotional. "
+    "Its leading indicator: N_eff = N / (1 + (N-1)*rho) over the open book; "
+    "backtest over the longest history, which #99 says is silently truncated.",
+    "Its numbers come from get_strategy_returns, not the leaderboard (it said "
+    "CryptoBull Blue 5.16 where the leaderboard says 4.69).",
+    "It cannot read the movers tournament (GET /universe/movers/tournament is "
+    "not on its key), so its tournament picks are a blind ranking.",
+    "A proposal is concrete only if it names what to buy, clone or mark: the "
+    "whole card id, the bot's exact species name, the fund's symbol. NEX-0002 "
+    "answered at length and named none.",
+)
 
 
 def cmd_resume() -> int:
@@ -3540,6 +3603,11 @@ def main(argv: list[str] | None = None) -> int:
     buy_cmd.add_argument("--confirm", action="store_true")
     sub.add_parser("tick", help="one step of the laboratory -- what a /loop runs")
     sub.add_parser("brief", help="what the next question to Nexus should carry")
+    budget_cmd = sub.add_parser(
+        "budget", help="whether an idle hunt may spend an agent (V6): the "
+        "plan's two windows from get_usage, in per cent")
+    budget_cmd.add_argument("weekly")
+    budget_cmd.add_argument("five_hour")
     board_cmd = sub.add_parser(
         "board", help="his proposals and what each earned, best first")
     board_cmd.add_argument("--top", type=int, default=20)
@@ -3699,6 +3767,13 @@ def main(argv: list[str] | None = None) -> int:
         tick_exclusive()
     elif args.cmd == "brief":
         print(brief())
+    elif args.cmd == "budget":
+        mode = lab.budget_mode(args.weekly, args.five_hour)
+        print(f"{mode} -- " + ("one Sonnet agent may hunt"
+                               if mode == "normal" else
+                               f"no agent: a window is at or past "
+                               f"{lab.BUDGET_CEILING_PCT} % or unreadable, "
+                               f"the hunt waits"))
     elif args.cmd == "morning":
         if args.published:
             state = morning_published(args.published)

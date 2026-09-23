@@ -947,10 +947,13 @@ def test_a_tick_that_finds_another_one_running_does_nothing(tmp_path, monkeypatc
     marker = scripts_lab._tick_marker()
     marker.write_text(json.dumps({"pid": 1, "at": NOW.isoformat()}), encoding="utf-8")
 
+    printed = []
     said = scripts_lab.tick_exclusive(now=NOW + timedelta(minutes=10),
-                                      actions=doors, out=lambda *a: None)
+                                      actions=doors, out=printed.append)
     assert said["busy"] and not any(calls.values()), "the running tick owns the work"
     assert marker.exists(), "and its marker is left for it to remove"
+    assert printed[-1] == "decide: none", (
+        "V6: the firing that stepped aside has nothing to wake the manager for")
 
     said = scripts_lab.tick_exclusive(
         now=NOW + timedelta(minutes=scripts_lab.TICK_STALE_MINUTES + 1),
@@ -2298,6 +2301,8 @@ def test_an_answer_naming_many_cards_opens_a_room_for_each_under_the_ceiling(
         assert criterion and [leg["card"] for leg in criterion["legs"]] == [room["card"]]
     assert [card for card, _ in sent] == cards[:cap]
     assert any("60%" in h for h in did["held"]), did["held"]
+    # V6: the answer that opened them is the one the manager is woken for.
+    assert did["answered"] == ["NEX-0001"], did
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -3410,3 +3415,189 @@ def test_our_rooms_rank_after_his_and_are_put_to_him_as_questions(
         "the fixture must have ours earning more, or the order proves nothing")
     said = scripts_lab.brief()
     assert "OUR-0001" in said and "question for him" in said, said
+
+
+# --- V6: the manager wakes only when there is something to decide ----------
+
+def _said(**over):
+    base = {"at": NOW.isoformat(), "skipped": "", "morning_due": False,
+            "errors": [], "held": [], "answered": [], "verdicts": 0,
+            "resolved": 0, "may_ask": True, "why": ""}
+    base.update(over)
+    return base
+
+
+def _tick_row(when, **over):
+    return {"type": "tick", "at": when.isoformat(), "errors": [], "held": [],
+            "verdicts": 0, "resolved": 0, "decide": [], **over}
+
+
+def _decide(said, earlier=(), last_question=None, hour=14):
+    return lab.decide(said, list(earlier), last_question, NOW, local_hour=hour)
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_quiet_tick_decides_nothing_and_says_so_in_its_last_line(
+        tmp_path, monkeypatch):
+    """Plan v2, V6. The loop ran 35 firings a day at a median of 11 model
+    calls each, every one on Opus (transcript 655b6244, 2026-09-20/21),
+    because every firing read the brief, wrote the diary and composed a
+    reply whatever the tick had found. The tick now says what, if anything,
+    needs the manager -- and a firing that reads `decide: none` stops."""
+    hour_ago = NOW - timedelta(hours=1)
+    earlier = [_tick_row(hour_ago, decide=["hunt bugs"])]
+    items = _decide(_said(), earlier, last_question=NOW - timedelta(minutes=30))
+    assert items == [], items
+    assert lab.decide_line(items) == "decide: none"
+
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    real_now = datetime.now(timezone.utc)
+    _write(tmp_path, "nexus.jsonl", [
+        _question("NEX-0001", real_now - timedelta(minutes=30)),
+        {"type": "answer", "id": "NEX-0001",
+         "at": (real_now - timedelta(minutes=25)).isoformat(), "text": "..."}])
+    lab.note_tick({"at": (real_now - timedelta(hours=1)).isoformat(),
+                   "decide": ["hunt bugs"], "errors": [], "held": []})
+    doors, _ = _doors()
+    printed = []
+    said = scripts_lab.tick(now=real_now, actions=doors, out=printed.append)
+    assert printed[-1] == "decide: none", printed
+    assert said["decide"] == [], said
+    stored = [r for r in lab.load() if r.get("type") == "tick"][-1]
+    assert stored["decide"] == [], "the next tick reads what this one decided"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_question_is_due_on_news_or_after_its_hours_not_on_every_tick():
+    """Replayed over the 160 stored ticks, `may_ask` alone woke the manager
+    on 97 of them -- and V5 took away the floor that had held it that low.
+    A question is his memory of what happened (he remembers nothing), so it
+    is due when something happened that he has not heard -- a verdict, a
+    position that resolved -- or when QUESTION_HOURS passed without one."""
+    asked = NOW - timedelta(minutes=40)
+    # A hunt an hour ago, so an idle tick has nothing else to wake him for.
+    hunted = _tick_row(NOW - timedelta(hours=1), decide=["hunt bugs"])
+    assert _decide(_said(), [hunted], asked) == []
+    later = NOW - timedelta(hours=lab.QUESTION_HOURS, minutes=1)
+    assert _decide(_said(), [hunted], later) == ["question"]
+    assert _decide(_said(), [hunted], None) == ["question"], (
+        "never asked is due")
+    # News since the last question, in this tick or an earlier one.
+    assert _decide(_said(verdicts=1), [hunted], asked) == ["question"]
+    verdict_after = _tick_row(NOW - timedelta(minutes=20), verdicts=2)
+    assert _decide(_said(), [hunted, verdict_after], asked) == ["question"]
+    verdict_before = _tick_row(NOW - timedelta(hours=1), resolved=1,
+                               decide=["hunt bugs"])
+    assert _decide(_said(), [verdict_before], asked) == [], (
+        "news he already carried in the last question is not news")
+    # Their pace still decides whether one may go at all.
+    assert _decide(_said(may_ask=False, verdicts=1), [hunted], later) == []
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_answer_a_gap_and_the_report_wake_the_manager_in_that_order():
+    """One line, every item that needs him, most urgent first: the morning
+    report (V11 -- the 06:40 tick returns it), a gap to say to the operator,
+    an answer that opened a room, a question."""
+    items = _decide(_said(morning_due=True, answered=["NEX-0090"],
+                          errors=["cycle: HTTP 502 from their side"]),
+                    last_question=None)
+    assert items == ["report", "gap", "answer NEX-0090", "question"], items
+    assert lab.decide_line(items) == (
+        "decide: report + gap + answer NEX-0090 + question")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_gap_is_what_went_wrong_for_the_first_time_not_every_tick():
+    """A held reason is retried every tick and shown every tick, so "a gap"
+    means first seen: a door that did not fail on the tick before, or a
+    reason of the HTTP-error class no earlier tick carried. Replayed, that
+    woke the manager 4 times in 160 ticks."""
+    asked = NOW - timedelta(minutes=30)
+    failing = _said(errors=["cycle: HTTP 502 from their side"])
+    before = _tick_row(NOW - timedelta(minutes=20), decide=["hunt bugs"])
+    assert _decide(failing, [before], asked) == ["gap"]
+    still = _tick_row(NOW - timedelta(minutes=20), decide=["hunt bugs"],
+                      errors=["cycle: HTTP 503 again"])
+    assert _decide(failing, [still], asked) == [], "the same door, still down"
+
+    refused = ("NEX-0088/5d91bf43: the paper order was not accepted "
+               "(HTTP 409, no position returned)")
+    assert _decide(_said(held=[refused]), [before], asked) == ["gap"]
+    seen = _tick_row(NOW - timedelta(hours=3), held=[refused])
+    assert _decide(_said(held=[refused]), [seen, before], asked) == []
+    ordinary = "NEX-0083: names no card, bot or fund we can act on"
+    assert _decide(_said(held=[ordinary]), [before], asked) == [], (
+        "a proposal that names nothing is the morning's to read, not a gap")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_idle_hunt_comes_every_few_hours_and_the_sweep_once_a_night():
+    """The 2026-09-19 and 2026-09-20 decisions in laborator/SKILL.md: an idle
+    tick hunts for bugs, and may run the sweep. Every idle tick doing that
+    was most of the loop's cost; so a hunt is due HUNT_HOURS after the last
+    one the tick asked for, the sweep is the first hunt of a local night, and
+    nothing else due means nothing else."""
+    asked = NOW - timedelta(minutes=30)
+    assert _decide(_said(), [], asked, hour=14) == ["hunt bugs"]
+    recent = _tick_row(NOW - timedelta(hours=3), decide=["hunt bugs"])
+    assert _decide(_said(), [recent], asked, hour=14) == []
+    old = _tick_row(NOW - timedelta(hours=lab.HUNT_HOURS, minutes=1),
+                    decide=["hunt bugs"])
+    assert _decide(_said(), [old], asked, hour=14) == ["hunt bugs"]
+    assert _decide(_said(), [old], asked, hour=2) == ["hunt sweep"]
+    swept = _tick_row(NOW - timedelta(hours=12), decide=["hunt sweep"])
+    assert _decide(_said(), [swept, old], asked, hour=2) == ["hunt bugs"]
+    # Anything else due, and the hunt waits: the manager is awake anyway.
+    assert _decide(_said(), [old], None, hour=14) == ["question"]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_while_a_deep_pass_runs_only_the_report_can_wake_the_manager():
+    """The pass verifies #85-#87 over these very answers and trades; the
+    tick that yields to it has nothing for the manager to decide but the
+    report, which is read-only."""
+    held = _said(skipped="pass", may_ask=False, answered=["NEX-0090"])
+    assert _decide(held, last_question=None) == []
+    assert _decide({**held, "morning_due": True}, last_question=None) == ["report"]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_answer_that_opened_a_room_is_named_by_the_tick(tmp_path, monkeypatch):
+    """`answer NEX-...` comes from the launch itself: the answers that
+    opened a room on THIS tick. One that named nothing is the morning's."""
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    real_now = datetime.now(timezone.utc)
+    _write(tmp_path, "nexus.jsonl", [
+        _question("NEX-0090", real_now - timedelta(minutes=10))])
+    doors, _ = _doors(promote=lambda: {"rooms": 1, "orders": 1, "held": [],
+                                       "answered": ["NEX-0090"]})
+    printed = []
+    said = scripts_lab.tick(now=real_now, actions=doors, out=printed.append)
+    assert "answer NEX-0090" in said["decide"], said["decide"]
+    assert printed[-1].startswith("decide: ") and "NEX-0090" in printed[-1]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_budget_decides_whether_an_idle_hunt_spends_an_agent():
+    """V6: a hunt runs one Sonnet agent in the normal budget mode and none
+    otherwise. The line is V7's: at 85 % of the week the deep pass goes
+    minimal too, and the 5-hour window is held to the same number so a hunt
+    does not take the operator's own afternoon."""
+    assert lab.budget_mode(5, 35) == "normal"
+    assert lab.budget_mode(lab.BUDGET_CEILING_PCT, 10) == "minimal"
+    assert lab.budget_mode(10, lab.BUDGET_CEILING_PCT) == "minimal"
+    assert lab.budget_mode(None, 10) == "minimal", (
+        "a usage nobody could read is not room to spend")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_brief_carries_what_we_know_about_nexus(tmp_path, monkeypatch):
+    """It lived in laborator/SKILL.md, loaded on every firing of the loop,
+    while only a question needs it. V6 moved it here, into the one read
+    every question makes."""
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    text = scripts_lab.brief()
+    for known in ("QUERY_RESTRICTED", "#85", "#91", "#92",
+                  "get_strategy_returns", "movers tournament"):
+        assert known in text, (known, text[-2000:])

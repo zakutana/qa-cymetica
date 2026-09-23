@@ -596,6 +596,124 @@ def outstanding(nexus_rows: list[dict], now: datetime | None = None,
 STILL_WORKING = frozenset({"running", "queued", "pending"})
 
 
+# --- what wakes the manager (plan v2, V6) -----------------------------------
+#
+# A /loop firing costs a model turn whatever the tick found, and on 2026-09-20
+# the loop spent 533 calls on 35 firings. The tick now ends in one line naming
+# what needs the manager, and a firing that reads `decide: none` stops there.
+# Each constant says what it was set for, so a later change of context re-asks
+# it rather than inheriting it.
+
+# A question is his memory of what happened -- he remembers nothing -- so one
+# is due when something happened he has not heard, or after this long without
+# one. Set for a loop day of at most twenty working firings (V6's done-when):
+# twelve by this clock, the rest for news, answers, gaps and the report. It is
+# not a cap on him: their pace (may_ask_now) still decides whether one may go.
+QUESTION_HOURS = 2.0
+# The idle bug hunt of 2026-09-19, which every idle tick used to run.
+HUNT_HOURS = 8.0
+# The sweep of 2026-09-20 is "once a night": the first hunt of a local night,
+# unless one ran inside this many hours.
+SWEEP_HOURS = 20.0
+NIGHT_LOCAL_HOURS = range(0, 6)
+# The budget line for anything optional. V7's: at 85 % of the week the deep
+# pass goes minimal too; the 5-hour window is held to the same number.
+BUDGET_CEILING_PCT = 85
+# A held reason worth saying to the operator the first time it appears: an
+# error from their side, or an id their API does not know.
+GAP_HELD = re.compile(r"HTTP [45]\d\d|knows no card")
+
+
+def _door(error: str) -> str:
+    return str(error).split(":", 1)[0].strip()
+
+
+def new_gaps(said: dict, earlier: list[dict]) -> list[str]:
+    """What went wrong for the first time: a door that did not fail on the
+    tick before, or a held reason of the gap class no earlier tick carried.
+    A held reason is retried and shown on every tick, so "first" is the
+    whole of what makes it news."""
+    before = earlier[-1] if earlier else {}
+    failing = {_door(e) for e in before.get("errors") or []}
+    gaps = [e for e in said.get("errors") or [] if _door(e) not in failing]
+    seen = {line for row in earlier for line in row.get("held") or []}
+    gaps += [line for line in said.get("held") or []
+             if GAP_HELD.search(str(line)) and line not in seen]
+    return gaps
+
+
+def _last_decided(earlier: list[dict], prefix: str) -> datetime | None:
+    for row in reversed(earlier):
+        if any(str(item).startswith(prefix) for item in row.get("decide") or []):
+            return _at(row.get("at"))
+    return None
+
+
+def decide(said: dict, earlier: list[dict], last_question: datetime | None,
+           now: datetime, local_hour: int) -> list[str]:
+    """What this tick needs the manager for, most urgent first; [] is none.
+
+    `said` is the tick's own record, `earlier` the tick rows before it in
+    order, `last_question` when the last question of ours went. Pure: the
+    same diary always decides the same way, so a day can be replayed.
+    """
+    items: list[str] = []
+    if said.get("morning_due"):
+        items.append("report")
+    if said.get("skipped"):
+        # A deep pass or a night holds everything but the read-only report.
+        return items
+    if new_gaps(said, earlier):
+        items.append("gap")
+    items += [f"answer {origin}" for origin in said.get("answered") or []]
+
+    if said.get("may_ask"):
+        news = bool(said.get("verdicts") or said.get("resolved"))
+        if not news and last_question is not None:
+            news = any((row.get("verdicts") or row.get("resolved"))
+                       and (_at(row.get("at")) or now) > last_question
+                       for row in earlier)
+        waited = (last_question is None or (now - last_question).total_seconds()
+                  >= QUESTION_HOURS * 3600)
+        if news or waited:
+            items.append("question")
+
+    if not items:
+        hunted = _last_decided(earlier, "hunt")
+        if hunted is None or (now - hunted).total_seconds() >= HUNT_HOURS * 3600:
+            swept = _last_decided(earlier, "hunt sweep")
+            night = local_hour in NIGHT_LOCAL_HOURS and (
+                swept is None or (now - swept).total_seconds() >= SWEEP_HOURS * 3600)
+            items.append("hunt sweep" if night else "hunt bugs")
+    return items
+
+
+def last_question_at(nexus_rows: list[dict]) -> datetime | None:
+    """When our last question reached him: not one the operator asked in a
+    browser (`lane: operator`), nor one turned away at their door before a
+    job existed -- neither carried our record to him."""
+    stamps = [_at(row.get("at")) for row in nexus_rows
+              if row.get("type") == "question" and row.get("lane") != "operator"
+              and not (row.get("accepted") is False and not row.get("job_id"))]
+    stamps = [s for s in stamps if s is not None]
+    return max(stamps) if stamps else None
+
+
+def decide_line(items: list[str]) -> str:
+    return "decide: " + (" + ".join(items) if items else "none")
+
+
+def budget_mode(weekly_pct, five_hour_pct) -> str:
+    """`normal` when both of the plan's windows are under the line, else
+    `minimal`. A usage nobody could read is not room to spend."""
+    try:
+        under = (float(weekly_pct) < BUDGET_CEILING_PCT
+                 and float(five_hour_pct) < BUDGET_CEILING_PCT)
+    except (TypeError, ValueError):
+        return "minimal"
+    return "normal" if under else "minimal"
+
+
 # --- the night -------------------------------------------------------------
 #
 # [operator 2026-09-12] No scheduler, ever: they start everything themselves.

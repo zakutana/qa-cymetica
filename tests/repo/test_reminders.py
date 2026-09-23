@@ -102,6 +102,25 @@ def test_a_missing_morning_report_is_named_so_the_session_makes_it():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_loop_on_opus_is_named_with_the_words_that_move_it_to_sonnet():
+    """Plan v2, V6. The laboratory's frontmatter says `model: sonnet`, and on
+    2026-09-20 its loop still made 533 calls on Opus and none on Sonnet. A
+    session cannot change its own model; `/model` is the operator's, so the
+    reminder names what THEY type, in the session the loop runs in."""
+    mod = _module()
+    opus = mod.reminders(_facts(loop_models={"claude-opus-5-5": 20,
+                                             "claude-sonnet-5": 1}), NOW)
+    assert _says(opus, "laborka", "/model sonnet"), opus
+    sonnet = mod.reminders(_facts(loop_models={"claude-sonnet-5": 20,
+                                               "claude-opus-5-5": 1}), NOW)
+    assert not _says(sonnet, "/model"), sonnet
+    # Two firings are the operator trying it by hand, not a loop running.
+    tried = mod.reminders(_facts(loop_models={"claude-opus-5-5": 2}), NOW)
+    assert not _says(tried, "/model"), tried
+    assert not _says(mod.reminders(_facts(), NOW), "/model")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_week_is_named_when_it_is_due_even_with_nothing_to_review():
     """The week rides on the deep pass, and the pass only runs when they say so.
     With `unpushed == 0` nothing else would mention it, so a quiet week is

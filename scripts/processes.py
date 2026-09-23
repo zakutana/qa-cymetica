@@ -112,6 +112,17 @@ def reminders(facts: dict, now: datetime) -> list[str]:
             "`python scripts/lab.py morning`, pak ho publikuj (laborator, "
             "Ranní přehled).")
 
+    # Plan v2, V6: the laboratory's frontmatter says sonnet and its loop ran
+    # on Opus anyway -- 533 calls to 0 on 2026-09-20. `/model` is theirs.
+    models = facts.get("loop_models") or {}
+    firings = sum(models.values())
+    sonnet = sum(n for model, n in models.items() if "sonnet" in model)
+    if firings >= LOOP_MIN_FIRINGS and sonnet * 2 < firings:
+        out.append(
+            f"Laborka jela za posledních 24 h na dražším modelu ({firings - sonnet} "
+            f"z {firings} kol) — v její session napiš `/model sonnet`, smyčka "
+            f"pak stojí zlomek.")
+
     for session in facts.get("lab_open") or []:
         out.append(
             f"Laboratoř má otevřenou session {session} — zavře ji „jdi do "
@@ -227,6 +238,10 @@ CEILINGS = {
     "memory_lines": 48,
     "next_oldest_days": 10,
     "pack_mb": 150,
+    # Plan v2, V6: the laboratory's skill is loaded on every firing of its
+    # loop -- it was 400 lines. The pins stay verbatim; the rest lives in the
+    # commands it names (`lab.py brief` carries what we know about Nexus).
+    "lab_skill_lines": 100,
 }
 
 BASH_SCRIPT = re.compile(r"python\s+scripts[/\\]([a-z_]+)\.py")
@@ -449,6 +464,12 @@ def sizes(root: Path | None = None) -> dict:
     try:
         out["claude_md_lines"] = len(
             (base / "CLAUDE.md").read_text(encoding="utf-8").splitlines())
+    except OSError:
+        pass
+    try:
+        out["lab_skill_lines"] = len(
+            (base / ".claude" / "skills" / "laborator" / "SKILL.md")
+            .read_text(encoding="utf-8").splitlines())
     except OSError:
         pass
 
@@ -955,6 +976,7 @@ def facts() -> dict:
         "morning_missing": _morning_missing(),
         **_lab_facts(),
         **_surface_facts(),
+        **_loop_facts(),
     }
 
 
@@ -1189,6 +1211,162 @@ def transcript_rows():
                     continue
 
 
+# --- what a day of the laboratory's /loop costs (plan v2, V6) --------------
+
+# A firing is the loop's prompt arriving: "jdi do laborky" as the operator gave
+# it to /loop, and its older name. The /loop command itself runs it once too.
+LOOP_PROMPT = re.compile(r"^\s*(?:/loop\s+\S+\s+)?(?:jdi do labor|pokra[cč]uj)",
+                         re.I)
+# The tick's own last line, at the start of a line -- the skill quotes it in
+# backticks, so its text is never read as a tick's decision.
+DECIDE_LINE = re.compile(r"(?:^|\n)decide: ([^\n]+)")
+# At least this many firings in a day before the model it ran on is named: two
+# are the operator trying something by hand, not a loop.
+LOOP_MIN_FIRINGS = 3
+
+
+def project_slug(root: Path | None = None) -> str:
+    """This project's directory name under ~/.claude/projects."""
+    return re.sub(r"[^A-Za-z0-9]", "-", str(Path(root or CODE_ROOT).resolve()))
+
+
+def project_transcripts(home: Path | None = None,
+                        since: datetime | None = None) -> list[Path]:
+    """THIS project's transcripts, newest last. `transcript_rows()` globs
+    `*cymetica*` and so reads the web-qa-agent project's too (plan v1, L7);
+    what is written from V6 on does not inherit that."""
+    folder = Path(home or Path.home()) / ".claude" / "projects" / project_slug()
+    found = []
+    for path in folder.glob("*.jsonl"):
+        try:
+            stamp = datetime.fromtimestamp(path.stat().st_mtime, timezone.utc)
+        except OSError:
+            continue
+        if since is None or stamp >= since:
+            found.append((stamp, path))
+    return [path for _, path in sorted(found)]
+
+
+def _texts(content) -> list[str]:
+    """Every tool result's text in one user record."""
+    out = []
+    for block in content if isinstance(content, list) else []:
+        if not isinstance(block, dict) or block.get("type") != "tool_result":
+            continue
+        inner = block.get("content")
+        if isinstance(inner, str):
+            out.append(inner)
+        elif isinstance(inner, list):
+            out.extend(str(part.get("text") or "") for part in inner
+                       if isinstance(part, dict))
+    return out
+
+
+def loop_firings(lines) -> list[dict]:
+    """One transcript's loop firings: when, how many model calls followed
+    (a call streamed as several records is one), on which model, and what
+    the tick decided -- [] for none, None when no tick line was seen.
+
+    A firing's calls run until the next prompt that is not a task
+    notification: the operator speaking starts their own turn."""
+    firings: list[dict] = []
+    current = None
+    for line in lines:
+        if not ('"assistant"' in line or "queue-operation" in line
+                or "decide: " in line
+                or ('"type":"user"' in line and "tool_result" not in line)):
+            continue
+        try:
+            row = json.loads(line)
+        except ValueError:
+            continue
+        kind = row.get("type")
+        if kind == "queue-operation" and row.get("operation") == "enqueue":
+            content = str(row.get("content") or "")
+            if LOOP_PROMPT.match(content):
+                current = {"at": str(row.get("timestamp") or ""), "ids": set(),
+                           "models": {}, "decide": None}
+                firings.append(current)
+            elif not content.startswith("<task-notification>"):
+                current = None
+            continue
+        message = row.get("message") or {}
+        typed = message.get("content") if kind == "user" else None
+        if isinstance(typed, str) and not row.get("isMeta") \
+                and not typed.startswith("<"):
+            # Typed while the session was idle, a prompt skips the queue.
+            if not LOOP_PROMPT.match(typed):
+                current = None
+            elif current is None or current["ids"]:
+                current = {"at": str(row.get("timestamp") or ""), "ids": set(),
+                           "models": {}, "decide": None}
+                firings.append(current)
+            continue
+        if current is None:
+            continue
+        if kind == "assistant":
+            ident = message.get("id") or row.get("uuid")
+            if ident and ident not in current["ids"]:
+                current["ids"].add(ident)
+                model = str(message.get("model") or "?")
+                current["models"][model] = current["models"].get(model, 0) + 1
+        elif kind == "user" and not row.get("isMeta"):
+            for text in _texts(message.get("content")):
+                for said in DECIDE_LINE.findall(text):
+                    said = said.strip()
+                    current["decide"] = ([] if said == "none" else
+                                         [item.strip() for item in said.split(" + ")])
+    out = []
+    for firing in firings:
+        models = firing.pop("models")
+        firing["calls"] = len(firing.pop("ids"))
+        firing["models"] = models
+        firing["model"] = max(models, key=models.get) if models else None
+        out.append(firing)
+    return out
+
+
+def loop_days(firings: list[dict]) -> dict[str, dict]:
+    """Per UTC day: firings, how many worked (the tick decided something),
+    how many were quiet and what the dearest quiet one cost, and the models
+    every call ran on -- V6's done-when, as numbers."""
+    days: dict[str, dict] = {}
+    for firing in firings:
+        day = days.setdefault(firing["at"][:10], {
+            "firings": 0, "working": 0, "quiet": 0, "unknown": 0,
+            "calls": 0, "quiet_calls_max": 0, "models": {}})
+        day["firings"] += 1
+        day["calls"] += firing["calls"]
+        for model, n in firing["models"].items():
+            day["models"][model] = day["models"].get(model, 0) + n
+        if firing["decide"] is None:
+            day["unknown"] += 1
+        elif firing["decide"]:
+            day["working"] += 1
+        else:
+            day["quiet"] += 1
+            day["quiet_calls_max"] = max(day["quiet_calls_max"], firing["calls"])
+    return days
+
+
+def _loop_facts(now: datetime | None = None) -> dict:
+    """The model each loop firing of the last day ran on, counted by firing."""
+    moment = now or datetime.now(timezone.utc)
+    since = moment - timedelta(hours=24)
+    counts: dict[str, int] = {}
+    try:
+        for path in project_transcripts(since=since):
+            with open(path, encoding="utf-8", errors="replace") as handle:
+                for firing in loop_firings(handle):
+                    at = _moment(firing["at"])
+                    if at is None or at < since or not firing["model"]:
+                        continue
+                    counts[firing["model"]] = counts.get(firing["model"], 0) + 1
+    except OSError:
+        return {}
+    return {"loop_models": counts} if counts else {}
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = parser.add_subparsers(dest="cmd")
@@ -1213,6 +1391,10 @@ def main(argv: list[str] | None = None) -> int:
     walk.add_argument("--since-last-pass", action="store_true",
                       help="since the deep pass's own notebook says it started")
     walk.add_argument("--limit", type=int, default=120)
+    cost = sub.add_parser("loop", help="what each day of the laboratory's "
+                                       "/loop cost: firings, working, calls, "
+                                       "models (plan v2, V6)")
+    cost.add_argument("--days", type=int, default=3)
     args = parser.parse_args(argv)
 
     try:
@@ -1223,6 +1405,24 @@ def main(argv: list[str] | None = None) -> int:
     if args.cmd == "reminders":
         for line in reminders(facts(), datetime.now(timezone.utc)):
             print(line)
+        return 0
+
+    if args.cmd == "loop":
+        since = datetime.now(timezone.utc) - timedelta(days=args.days)
+        firings = []
+        for path in project_transcripts(since=since):
+            with open(path, encoding="utf-8", errors="replace") as handle:
+                firings += loop_firings(handle)
+        days = loop_days([f for f in firings
+                          if (_moment(f["at"]) or since) >= since])
+        if not days:
+            print("no loop firing in the window")
+        for day, row in sorted(days.items()):
+            models = ", ".join(f"{m} {n}" for m, n in sorted(row["models"].items()))
+            print(f"{day}: {row['firings']} firing(s), {row['working']} working, "
+                  f"{row['quiet']} quiet (dearest {row['quiet_calls_max']} "
+                  f"call(s)), {row['unknown']} without a decide line; "
+                  f"{row['calls']} call(s) -- {models}")
         return 0
 
     if args.cmd == "surface":

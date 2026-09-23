@@ -38,7 +38,10 @@
       "Bash(python scripts/nexus.py:*)",
       "Bash(python scripts/fomo_watch.py:*)",
       "Bash(python scripts/review.py:*)",
-      "Bash(python scripts/a2a.py:*)"
+      "Bash(python scripts/a2a.py:*)",
+      "Bash(python scripts/clone.py:*)",
+      "Bash(python scripts/paper.py:*)",
+      "Bash(python scripts/hot_watch.py:*)"
     ]
   },
   "hooks": {

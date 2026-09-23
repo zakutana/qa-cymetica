@@ -67,3 +67,43 @@ def test_every_script_our_instructions_name_is_allowlisted():
                  "instructions": [p.relative_to(REPO).as_posix()
                                   for p in INSTRUCTIONS]},
     ))
+
+
+# The tests that make an allowlisted spending script safe to run unasked. The
+# prompt was never the brake: these are, and they have to stay where they are.
+PAPER_GUARDS = {
+    "tests/meta/test_guard_is_real.py": [
+        "test_an_order_without_its_paper_flag_never_leaves_this_machine",
+        "test_cloning_a_bot_needs_its_paper_flag_too",
+    ],
+    "tests/meta/test_pipeline_clone.py": [
+        "test_starting_a_bot_needs_both_of_their_paper_statements",
+        "test_a_settings_patch_needs_our_paper_record_theirs_and_no_running_room",
+    ],
+}
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_laboratorys_own_doors_run_unasked_because_the_code_holds_paper():
+    """Plan v2, V6: the laboratory's manager runs clone.py, paper.py and
+    hot_watch.py, and a prompt on each is a turn of the loop spent waiting
+    for someone asleep. Allowlisting them is safe only because paper-only is
+    enforced in code, by the tests named above -- so the allowlist entry and
+    the guard that justifies it are held together."""
+    allowed = json.loads(SETTINGS.read_text(encoding="utf-8"))
+    entries = (allowed.get("permissions") or {}).get("allow") or []
+    missing = [name for name in ("clone", "paper", "hot_watch")
+               if f"Bash(python scripts/{name}.py:*)" not in entries]
+    gone = [f"{rel}::{name}" for rel, names in PAPER_GUARDS.items()
+            for name in names
+            if f"def {name}(" not in (REPO / rel).read_text(encoding="utf-8")]
+    conclude(Measurement(
+        verdict="failed" if missing or gone else "passed",
+        reason=(f"not allowlisted: {missing}; paper guards gone: {gone}"
+                if missing or gone else
+                "clone.py, paper.py and hot_watch.py are allowlisted, and the "
+                "four tests that hold them to paper are in place"),
+        left=missing, right=gone,
+        sources={"allowlist": SETTINGS.relative_to(REPO).as_posix(),
+                 "guards": sorted(PAPER_GUARDS)},
+    ))
