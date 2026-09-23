@@ -187,7 +187,13 @@ PINNED = {
     # JSON-RPC body that was a list, so a batch carried a live
     # place_arena_order past it. One added test, red on the string flag and,
     # with that fixed, red against a mutant that skipped the batch again.
-    "test_guard_is_real.py": "2b27825ad55022281587d6eafc2e5e86463ca31a4aa0868c233f928fea55a839",
+    #
+    # Re-derived a NINTH time, 2026-09-23 (B1 of the whole-project review,
+    # 3/3), and again only adding enforcement: PROBE read a JSON body alone,
+    # so `toggle-trading?enabled=true` with an empty body -- the parameter
+    # rides in the query -- and a form body both passed as inert. One added
+    # test, red on the query string before the fix.
+    "test_guard_is_real.py": "0ac8b845c5c7b9a00875bb86bd1d8e95005cc5be7fa54368e000e368df6a3f47",
 }
 
 

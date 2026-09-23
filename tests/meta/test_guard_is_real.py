@@ -804,6 +804,59 @@ def test_a_string_flag_or_a_batch_does_not_carry_a_live_order_past_the_guard():
     mcp.http.close()
 
 
+@qa(component="meta.guard", tier=SafetyTier.PROBE, surface="meta")
+def test_toggle_trading_enabled_in_the_query_string_is_not_an_inert_probe():
+    """B1, review of 2026-09-23 (3/3). PROBE judged a request inert from its
+    JSON body alone, so the parameter that starts a bot never reached it:
+    `toggle-trading` takes `enabled` as a QUERY parameter and no body at all,
+    and `POST .../toggle-trading?enabled=true` with an empty body is exactly
+    the canonical inert probe to a reader of bodies. A form body went the same
+    way -- anything json.loads could not parse was "malformed input, inert by
+    construction", and `amount=1` as a form is not malformed to a server.
+
+    The whole request is read now: query parameters and form fields are held
+    to the rule body keys are, and a body that is neither JSON nor a form is
+    refused unless it says it is JSON (a malformed-JSON probe their parser
+    rejects before any handler runs). No caller sends any of these today; this
+    is the floor before the first one does.
+
+    The MCP half of the review's claim -- `{}` arguments to a non-read tool --
+    stays as it was: triage found it deliberate 3/3, it is the anonymous
+    authorization probe of tests/mcp/test_trust_ladder.py."""
+    rest = _deaf_client()
+    toggle = "https://cymetica.com/api/v1/cloned-bots/abc/toggle-trading"
+    withdraw = "https://cymetica.com/api/v1/funding/withdraw"
+    try:
+        with pytest.raises(SafetyViolation, match="enabled"):
+            rest.post(toggle, params={"enabled": "true"})
+        with pytest.raises(SafetyViolation, match="enabled"):
+            rest.post(f"{toggle}?enabled=true", json={})
+        with pytest.raises(SafetyViolation, match="undeclared"):
+            rest.post(withdraw, params={"surprise": "x"})
+        with pytest.raises(SafetyViolation, match="amount"):
+            rest.post(withdraw, data={"amount": "1"})
+        with pytest.raises(SafetyViolation):
+            rest.post(withdraw, content=b"amount=1",
+                      headers={"Content-Type": "text/plain"})
+        with pytest.raises(SafetyViolation):
+            rest.post(withdraw, content=b"amount=1",
+                      headers={"Content-Type": "multipart/form-data; boundary=x"})
+
+        # Still inert, so still let through to the (deaf) transport: the
+        # empty probe, an empty query value, a declared inert query key, and
+        # the malformed-JSON probe.
+        for probe in (lambda: rest.post(toggle),
+                      lambda: rest.post(toggle, params={"enabled": ""}),
+                      lambda: rest.post("https://cymetica.com/api/v1/tuatara/discover",
+                                        params={"query": "btc"}),
+                      lambda: rest.post(withdraw, content=b"{not json",
+                                        headers={"Content-Type": "application/json"})):
+            with pytest.raises(AssertionError, match="THE GUARD LET IT THROUGH"):
+                probe()
+    finally:
+        rest.close()
+
+
 @qa(component="meta.guard", tier=SafetyTier.SAFE, surface="meta")
 def test_a_tool_this_registry_has_never_heard_of_is_refused_at_mutate():
     """Default-deny, at the one tier that can spend.

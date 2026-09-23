@@ -36,6 +36,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 from typing import Any
+from urllib.parse import parse_qsl
 
 import httpx
 import yaml
@@ -434,26 +435,52 @@ class SafetyTransport(httpx.BaseTransport):
             )
 
     def _assert_inert(self, request, rule) -> None:
-        """A PROBE body must be provably incapable of executing."""
+        """A PROBE request must be provably incapable of executing -- the
+        whole request, not its JSON body alone.
+
+        Until 2026-09-23 (B1) only a JSON body was read. `toggle-trading`
+        takes `enabled` as a query parameter and no body, so
+        `?enabled=true` with an empty body was the canonical inert probe; and
+        a form body failed json.loads and passed as "malformed input".
+        """
+        query = dict(request.url.params.multi_items())
+        if query:
+            self._assert_inert_keys(rule, query, "query string")
+
         body = request.read()
         if body in INERT_BODIES:
             return
+        ctype = request.headers.get("content-type", "").split(";")[0].strip().lower()
+        if ctype == "application/x-www-form-urlencoded":
+            form = dict(parse_qsl(body.decode("latin-1"), keep_blank_values=True))
+            self._assert_inert_keys(rule, form, "form body")
+            return
         try:
-            payload = json.loads(body or b"{}")
-        except json.JSONDecodeError:
-            return  # malformed input is inert by construction
+            payload = json.loads(body)
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            if ctype == "application/json" or ctype.endswith("+json"):
+                return  # malformed JSON: their parser refuses it before any handler
+            raise SafetyViolation(
+                f"PROBE body for {rule.id} is {ctype or 'untyped'} and not "
+                f"JSON, so the guard cannot read what it carries. Send JSON or "
+                f"a form, or an empty body."
+            )
         if not isinstance(payload, dict):
             raise SafetyViolation(
                 f"PROBE body for {rule.id} must be a JSON object or inert."
             )
+        self._assert_inert_keys(rule, payload, "body")
 
+    def _assert_inert_keys(self, rule, payload: dict, where: str) -> None:
+        """Keys of a PROBE request, wherever they ride: none executable with a
+        value, none undeclared."""
         present = {
             k for k, v in payload.items()
             if k in rule.executable_params and v not in (None, "", [], {})
         }
         if present:
             raise SafetyViolation(
-                f"PROBE body for {rule.id} carries executable parameters "
+                f"PROBE {where} for {rule.id} carries executable parameters "
                 f"{sorted(present)}. A probe proves REACHABILITY, never "
                 f"EXECUTION -- the finding is which error class came back, and "
                 f"that is readable from an empty body."
@@ -462,7 +489,7 @@ class SafetyTransport(httpx.BaseTransport):
         undeclared = set(payload) - rule.executable_params - rule.inert_params
         if undeclared:
             raise SafetyViolation(
-                f"PROBE body for {rule.id} has undeclared keys {sorted(undeclared)}. "
+                f"PROBE {where} for {rule.id} has undeclared keys {sorted(undeclared)}. "
                 f"Declare each in components.yaml as executable_params or "
                 f"inert_params before probing: the guard cannot reason about "
                 f"parameters it has never seen."

@@ -29,9 +29,35 @@ memecoins that pump. How to get there is ours to judge, tick by tick: when to
 ask, what to ask, what to test. The diary is how the next tick knows.
 
 CLAUDE.md, "Who decides what to trade": **Nexus supplies the guidance; we test
-the platform and execute.** A strategy of ours never becomes a room. A basket
-our search measures well is a QUESTION for Nexus; a room opens only from his
-answer, and only if their own backtest of it holds up.
+the platform and execute.** A strategy of ours never becomes a room -- narrowed
+on 2026-09-23, see *The manager* below. A basket our search measures well is a
+QUESTION for Nexus; a room opens only from his answer, and only if their own
+backtest of it holds up.
+
+## The manager
+
+[operator 2026-09-23] *"Ja uz chci jen te posilat do laborky a o nic se nestarat, Proste chci se uz jen soustredit na hledani vydelecnych strategii. Takze jak pujdes do laborky musi se z tebe stat top laboratorni manager chapes. musis si to tam umet top zorganizovat tu praci, klidne si muzes spustit i laboranty (subagenty) na ruzne jine prace, protoze CyMetica ma vice produktu a porad budou pribyvat."*
+
+So a tick is a manager's, not a technician's: it organises the work across
+every product Cymetica has, and may hand a product to a subagent. Nothing
+about it is left for the operator to look after.
+
+[operator 2026-09-23] *"Me zajimaji pouze impact data, podle kterych se muzu dal rozhodovat, jasne vysledky a zaden sum."* A dal: *"TO je jedna skupina v laborce, to si spis predstavuji ze by mel byt jeden room. Dalsi sekce, room kde budem operovat a testovat jsou ti jejich boti, tam se mi zda ze zaostavame, musime vic otestovat jejich boty a ruzne kombinace atd."*
+
+Our reading: a room is a PRODUCT -- cards, bots, memecoins, funds -- and what
+it shows is the net result after costs, how many experiments stand behind it,
+and how sure we are. Bots are the room we are behind on: their species and
+their settings, in combinations.
+
+[operator 2026-09-23] *"ty by nam mel poskytnout Hlavne Nexus, a ty jako manager s nim o tom diskutovat a klidne navrhnout i jine navrhy"* A dal: *"Ale melo by to odsypat jako na pasu, zadne limity, proste co je slibne a dava smysl to se jde hend otestvoat."* A o neuspechu: *"A neuspesne pokusy proste zahazujes at tam neni bordel, das je treba doa rchivu nebo enco"*
+
+Our reading: this narrows "a strategy of ours never becomes a room" above.
+Nexus comes first, and ideas of ours may run too, in their own lane: marked
+as ours, each also put to Nexus, never ranked above his picks. Our own count
+caps go, the paper floor and the 60 % ceiling stay, and a failed experiment
+goes to the archive instead of the page. The CLAUDE.md pin of 2026-09-10 is
+untouched; this is the narrower case. The code catches up in phases V2 to V6
+of `docs/laborator-plan.md`; until a phase lands, its brakes hold.
 
 ## The brakes are in code, not here
 
@@ -211,6 +237,12 @@ verdict carries the fingerprint of the formula that made it. `lab.py board`
 ranks his proposals by what they actually earned, from our own positions.
 
 ## Memecoins: does `hot` predict a pump?
+
+[operator 2026-09-23] *"musis se ujistit ze ty data sedi a kdybychg se pak treba rozhodnul dat 10$ do kazdeho hot signaluz e na to je likvidita i cas vse koupit, ze proste ta strategie je realne a pujde exekuovat chapes."*
+
+So the headline is not a signal's paper return but what $10 into every hot
+signal would have made: after fees, with the depth there to buy and to sell,
+and with the time there to get in (phase V3).
 
 ```bash
 python scripts/fomo_watch.py report
