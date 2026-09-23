@@ -88,7 +88,10 @@ def reminders(facts: dict, now: datetime) -> list[str]:
     if drift:
         out.append(f"Cymetica změnila povrch od minule ({len(drift)}):")
         out.extend(f"  {line}" for line in drift[:5])
-        out.append("  potvrď příkazem `python scripts/processes.py surface --update`")
+        # R10 (deep pass of 2026-09-22, minority): a command in a reminder is
+        # ours to run (CLAUDE.md), so it says who runs it.
+        out.append("  session je projde a potvrdí sama: "
+                   "`python scripts/processes.py surface --update`")
 
     since = _hours_since(facts.get("last_pass"), now)
     if facts.get("unpushed") and (since is None or since > MISSED_NIGHT_HOURS):
@@ -240,6 +243,11 @@ CEILINGS = {
     # loop -- it was 400 lines. The pins stay verbatim; the rest lives in the
     # commands it names (`lab.py brief` carries what we know about Nexus).
     "lab_skill_lines": 100,
+    # Plan v2, V7: tests/meta grows only by replacement -- 225 to 786 test
+    # functions in fifteen days, most of them guarding us rather than testing
+    # them. A new guard replaces or merges one; the room above today's 786 is
+    # for V8's findings, whose tests the plan already owes.
+    "meta_tests": 800,
 }
 
 BASH_SCRIPT = re.compile(r"python\s+scripts[/\\]([a-z_]+)\.py")
@@ -462,6 +470,13 @@ def sizes(root: Path | None = None) -> dict:
     try:
         out["claude_md_lines"] = len(
             (base / "CLAUDE.md").read_text(encoding="utf-8").splitlines())
+    except OSError:
+        pass
+    try:
+        out["meta_tests"] = sum(
+            1 for path in (base / "tests" / "meta").glob("*.py")
+            for line in path.read_text(encoding="utf-8").splitlines()
+            if line.startswith("def test_"))
     except OSError:
         pass
     try:

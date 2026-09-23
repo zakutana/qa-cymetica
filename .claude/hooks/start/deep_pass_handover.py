@@ -57,7 +57,10 @@ LEAD_CHARS = 140
 # be one paragraph -- often "nic nemenit", which is the answer that most needs
 # to arrive, because a retrospective that speaks only when it proposes
 # something turns into a proposal mill.
-SECTIONS = (("ceka na tebe", "open", 5), ("minority report", "decide", 5),
+# Everything under Čeká na tebe reaches the session start: since plan v2, V7
+# the report is ten lines plus one per such item, and a cap here would drop
+# exactly the items the ten lines were written to keep (a 1c reader).
+SECTIONS = (("ceka na tebe", "open", 20), ("minority report", "decide", 5),
             ("zmenena pravidla", "rule", 3), ("tyden", "week", 2))
 
 
@@ -140,11 +143,58 @@ def one_line(report: str) -> list[str]:
     return [f"{said[0]} {leads} -- the rest: DEEP-PASS.md"]
 
 
-def lines() -> list[str]:
-    path = Path(os.environ.get("QA_DEEP_PASS") or REPO_ROOT / "DEEP-PASS.md")
-    if not path.is_file():
+# A pass stamps its notebook when it starts and sets `finished` last. Unfinished
+# and older than this is a pass that died, not one still running (the same
+# bound as tests/repo/test_deep_pass_finished.py::liveness).
+DIED_HOURS = 24
+
+
+def died(progress: dict) -> list[str]:
+    """One line when the last pass died halfway (plan v2, V7, E5): its
+    notebook is otherwise silent until the next step 0 overwrites it."""
+    if not progress or progress.get("finished"):
         return []
-    return one_line(path.read_text(encoding="utf-8", errors="replace"))
+    try:
+        from datetime import datetime, timezone
+
+        started = datetime.fromisoformat(str(progress.get("at")).replace("Z", "+00:00"))
+        if started.tzinfo is None:
+            started = started.replace(tzinfo=timezone.utc)
+        hours = (datetime.now(timezone.utc) - started).total_seconds() / 3600
+    except (TypeError, ValueError):
+        hours = DIED_HOURS
+    if hours < DIED_HOURS:
+        return []
+    owed = [g for g in progress.get("gaps") or []
+            if g.get("verdict") in ("real", "minority", None)
+            and not g.get("fixed")]
+    # A died pass never wrote its report, so what it handed the operator was
+    # never shown to them; it is named here (a 1c reader, 2026-09-23).
+    handed = [str(g.get("id")) for g in owed if g.get("deferred_to_operator")
+              or g.get("verdict") == "minority"]
+    return [f"Deep pass {progress.get('run', '?')} nedoběhl (začal "
+            f"{str(progress.get('at'))[:16]}): {len(owed)} nález(ů) neopraveno"
+            + (f", z toho pro tebe {', '.join(handed)}" if handed else "")
+            + " -- příští pass je převezme (`deep_pass_process.py carry`)."]
+
+
+def lines() -> list[str]:
+    import json
+
+    try:
+        progress = json.loads((REPO_ROOT / "audits" / "deep-pass-progress.json")
+                              .read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        progress = {}
+    path = Path(os.environ.get("QA_DEEP_PASS") or REPO_ROOT / "DEEP-PASS.md")
+    report = (one_line(path.read_text(encoding="utf-8", errors="replace"))
+              if path.is_file() else [])
+    death = died(progress if isinstance(progress, dict) else {})
+    # ONE line, both halves: the session start's slot for the pass holds one,
+    # and a death line in front of the report pushed the report out unseen
+    # (a 1c reader, 2026-09-23).
+    joined = " ".join(death + report)
+    return [joined] if joined else []
 
 
 def main() -> int:

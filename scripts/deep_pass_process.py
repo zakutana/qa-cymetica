@@ -222,11 +222,175 @@ def render(rows: list[dict]) -> str:
     return "\n".join(lines)
 
 
+# --- how big tonight's pass is (plan v2, V7) --------------------------------
+#
+# The architect's review of 2026-09-23: the pass's self-maintenance was sized
+# for a team while it runs on one Pro plan. So a pass is as big as its diff.
+
+# What makes a pass full: anything that is not known to be harmless. The first
+# draft listed what was dangerous instead -- the core, a check, six vendor-
+# facing scripts -- and all three 1c readers found paths it called light that
+# POST to their platform (nexus.py, paper.py, clone.py, bounty.py) or decide
+# what the ledger says (ledger.py, findings.py, qa/fingerprint.py). A list of
+# the harmless cannot miss a dangerous file added next month; that one could.
+CORE = ("qa/state.py", "qa/fold.py", "qa/measure.py")
+# Prose only. The second draft also listed tests/meta, tests/repo, audits/,
+# the session-start hooks and processes.py -- a 1c reader pointed out those ARE
+# the guards -- and the third listed two page scripts, which a reader showed
+# write state/ and load the scripts that POST to their platform.
+LIGHT_SAFE = ("docs/", "dashboard/", "NEXT.md", "DEEP-PASS.md", "ARCHITECTURE.md")
+FULL_COMMITS = 15
+# V7's line for the week. At this much of it spent the pass does not run at
+# all: it writes nothing, sends nothing, and the reminder keeps saying one is
+# owed. Three rounds of 1c readers found a "minimal" pass that gated and
+# reported without reviewing could still push, still verify, silence the
+# reminder or fail its own guard; not running has none of those failures.
+DEFER_WEEKLY_PCT = 85
+
+
+def _is_check(path: str) -> bool:
+    return (path.startswith("tests/") and path.endswith(".py")
+            and not path.startswith(("tests/meta/", "tests/repo/")))
+
+
+def pass_size(files: list[str], commits: int, weekly_pct) -> tuple[str, str]:
+    """`full`, `light` or `deferred`, and the reason, from the unpushed diff's
+    files, its commit count and the week's use of the plan."""
+    try:
+        weekly = float(weekly_pct)
+    except (TypeError, ValueError):
+        return "deferred", "the week's use could not be read"
+    if weekly >= DEFER_WEEKLY_PCT:
+        return "deferred", f"{weekly:g} % of the week is spent"
+    core = [f for f in files if f in CORE]
+    if core:
+        return "full", f"the core moved: {', '.join(core)}"
+    checks = [f for f in files if _is_check(f)]
+    if checks:
+        return "full", f"{len(checks)} check(s) against their platform moved"
+    other = [f for f in files if not f.startswith(LIGHT_SAFE)]
+    if other:
+        return "full", f"not known harmless: {', '.join(other[:3])}"
+    if commits >= FULL_COMMITS:
+        return "full", f"{commits} commits"
+    return "light", (f"{commits} commit(s), {len(files)} file(s), every one "
+                     f"prose")
+
+
+def carried_gaps(previous: dict) -> list[dict]:
+    """What the last pass confirmed or claimed and did not fix -- carried into
+    the next notebook, never overwritten (E5). A claim the triage never
+    reached is carried too, to be triaged again. One handed to the operator
+    is carried only when that pass died: then its report was never written,
+    so the operator was never shown it (a 1c reader, 2026-09-23)."""
+    run = str(previous.get("run") or "")
+    shown = bool(previous.get("finished"))
+    out = []
+    for gap in previous.get("gaps") or []:
+        handed = gap.get("deferred_to_operator") or gap.get("verdict") == "minority"
+        if gap.get("fixed") or (handed and shown):
+            continue
+        # A minority verdict is the operator's to see (step 4), and a pass
+        # that died before step 10 never showed it (a 1c reader).
+        if gap.get("verdict") not in ("real", "minority", None):
+            continue
+        out.append({**gap, "carried_from": run})
+    return out
+
+
+# Areas read whole now and then, because the diff review sees only what moved.
+AREAS = {
+    "core": ("qa/state.py", "qa/fold.py", "qa/measure.py"),
+    "outbound": ("scripts/submit.py", "scripts/verify.py", "qa/safety.py",
+                 "qa/client.py"),
+    "lab": ("qa/lab.py", "scripts/lab.py", "scripts/clone.py", "scripts/paper.py"),
+    "memecoins": ("qa/fomo.py", "scripts/fomo_watch.py", "qa/hot.py"),
+}
+REREAD_COMMITS = 15
+REREAD_DAYS = 30
+REREADS = "audits/rereads.json"
+
+
+def rereads_due(record: dict, counts: dict, today, areas=None) -> dict[str, str]:
+    """Areas owed a whole reading, with why: never read, REREAD_COMMITS
+    commits touched them since, or REREAD_DAYS days went by."""
+    due = {}
+    for area in (areas or AREAS):
+        last = (record or {}).get(area)
+        if not last:
+            due[area] = "never read whole"
+            continue
+        changed = int(counts.get(area) or 0)
+        if changed >= REREAD_COMMITS:
+            due[area] = f"{changed} commits since {last.get('commit', '?')[:8]}"
+            continue
+        try:
+            days = (today - datetime.fromisoformat(str(last["at"])[:10]).date()).days
+        except (KeyError, ValueError):
+            due[area] = "its last reading has no date"
+            continue
+        if days >= REREAD_DAYS:
+            due[area] = f"{days} days since the last reading"
+    return due
+
+
+def _commits_touching(paths, since: str | None) -> int:
+    span = f"{since}..HEAD" if since else "HEAD"
+    out = _git("rev-list", "--count", span, "--", *paths).strip()
+    # Unreadable counts as owed: a reading nobody can date is due (rule 8).
+    return int(out) if out.isdigit() else REREAD_COMMITS
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--json", action="store_true",
                         help="the rows, for the console")
+    sub = parser.add_subparsers(dest="cmd")
+    size_cmd = sub.add_parser("size", help="full, light or deferred, and why")
+    size_cmd.add_argument("--weekly", help="the week's use of the plan, per cent")
+    sub.add_parser("carry", help="the last notebook's unfixed gaps, as JSON")
+    sub.add_parser("reread", help="which areas are owed a whole reading")
     args = parser.parse_args(argv)
+
+    if args.cmd == "size":
+        # --no-renames: a check moved into tests/repo is a deletion of the
+        # check's path and an addition, so the check's path is seen (1c).
+        files = [f for f in _git("diff", "--name-only", "--no-renames",
+                                 "@{upstream}..HEAD").splitlines() if f]
+        # Stripped: `_git` keeps git's newline, and "89\n" is not a digit
+        # string -- which made every count 0 until this read failed closed.
+        commits = _git("rev-list", "--count", "@{upstream}..HEAD").strip()
+        if not commits.isdigit():
+            # A diff nobody could read is not an empty one (rule 8): full,
+            # never light (round-five readers of the 1c change).
+            mode, why = pass_size([], 0, args.weekly)
+            if mode != "deferred":
+                mode, why = "full", "the diff could not be read"
+            print(f"{mode} -- {why}")
+            return 0
+        mode, why = pass_size(files, int(commits), args.weekly)
+        print(f"{mode} -- {why}")
+        return 0
+    if args.cmd == "carry":
+        try:
+            previous = json.loads((REPO_ROOT / PROGRESS).read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            previous = {}
+        print(json.dumps(carried_gaps(previous), ensure_ascii=False, indent=1))
+        return 0
+    if args.cmd == "reread":
+        try:
+            record = json.loads((REPO_ROOT / REREADS).read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            record = {}
+        counts = {area: _commits_touching(paths, (record.get(area) or {}).get("commit"))
+                  for area, paths in AREAS.items()}
+        due = rereads_due(record, counts, datetime.now().date())
+        for area, why in due.items():
+            print(f"{area}: {why} -- {' '.join(AREAS[area])}")
+        if not due:
+            print("no area is owed a whole reading")
+        return 0
 
     rows = passes()
     if args.json:

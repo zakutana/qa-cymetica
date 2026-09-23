@@ -139,6 +139,16 @@ or at 90%, once, in the evening, by somebody who is going to bed.
 
 ### 0 · Gate and tidy
 
+**The budget comes first** (plan v2, V7). Read `get_usage`, then
+`python scripts/deep_pass_process.py size --weekly <weekly %>`. On
+`deferred` -- 85 % of the week spent, or a use nobody could read -- the pass
+does not run: nothing below, no notebook, no report, no commit, no push. Tell
+the operator in one Czech line how full the week is and how many commits
+wait; the reminder at the next session start keeps saying a pass is owed.
+(Three rounds of 1c readers took apart a "minimal" pass that gated without
+reviewing: it could push, verify, silence that reminder or fail its own
+guard. Not running has none of those failures.)
+
 ```bash
 git status --short
 git log --oneline @{upstream}..HEAD
@@ -189,6 +199,16 @@ python scripts/memories.py --for deep-pass
   printing the reason each survivor was kept. It is here rather than at the
   end because step 2 scans every record on disk, and 500 records from
   `pytest tests/meta -q` sessions are 500 files it reads to learn nothing.
+* **Carry what the last pass left** (E5): `python scripts/deep_pass_process.py
+  carry` prints the gaps the previous notebook claimed or confirmed and
+  neither fixed nor handed over -- a pass that died halfway leaves them there.
+  They go into the new notebook's `gaps` with `carried_from`, and step 4
+  triages the unvoted ones with tonight's.
+* **An area owed a whole reading**: `python scripts/deep_pass_process.py
+  reread`. For each area it names (≥ 15 commits touched it, 30 days, or
+  never), one agent reads those files WHOLE -- not the diff -- beside step
+  3's review, and its findings enter step 4 as `"source": "reread"`; then
+  `audits/rereads.json` gets `{area: {"at": today, "commit": HEAD}}`.
 * **Record the starting commit.** Step 9 needs it.
 * **Open the progress file with what the last pass left.** Carry
   `retrospective.last` forward from the previous run's file (absent → `null`,
@@ -320,7 +340,7 @@ each one loud rather than silent:
   patched that until a memory's own hook began with a date, which the real
   file already had. A marker in the line has no position to get wrong.
 
-  Every merge and retirement also goes under **Prořezáno** in `DEEP-PASS.md`
+  Every merge and retirement also goes into step 8's commit message
   with the reason — the morning's account of it, while MEMORY.md is the
   permanent one. Prořez had never run here up to 2026-09-09; 22 files, all
   appended, none merged.
@@ -329,7 +349,7 @@ each one loud rather than silent:
   hook that has done nothing for fourteen days is a cut candidate -- the same
   question `never_fired.py` asks of mechanisms, asked of the things that carry
   them. Idle is a question, not a verdict: say which it is and why, in
-  Prořezáno.
+  the commit message.
 * **Mechanisms.** `python scripts/never_fired.py --zeros`. A symbol that is
   never fired **and** never exercised — "nothing at all behind it", in the
   tool's own words — is a mechanism nobody has ever made happen on purpose, the
@@ -337,12 +357,12 @@ each one loud rather than silent:
   procedure below. A zero that IS exercised stays, and the week reports how
   long it has stood; that judgement is the operator's and the tool says so.
 
-* **Tests.** A pass that adds to `tests/meta` names, under Prořezáno, which
-  existing test it considered folding the new assertion into and why that test
-  would not hold it. Growth is allowed; unexplained growth is not. Written to
-  `meta_tests.reason`, and a guard reads it. Two genuine duplicates and one
-  merge came out of 21 files on 2026-09-09, so this is a slow cut by design —
-  the ratio is bounded by rule 10 and by incidents, not by a target.
+* **Tests.** Since plan v2, V7 **`tests/meta` grows only by replacement**: a
+  new guard replaces or merges an existing one (225 → 786 test functions in
+  fifteen days, most of them guarding us). A pass that adds one names which
+  test it folded or retired, in `meta_tests.reason`, which a guard reads; the
+  patrol's `meta_tests` ceiling (800, room for V8's owed tests) is the
+  backstop.
 
 ### 1c · Changing a rule, which this pass may now do
 
@@ -437,10 +457,21 @@ Append each claimed gap to `audits/deep-pass-progress.json` **as the auditor
 returns it**, not after all three have finished. An agent's report is in
 context and nowhere else until it is written down.
 
-### 3 · Code review at xhigh
+### 3 · Code review, at xhigh unless the diff is prose
 
-Invoke the `code-review` skill with `xhigh` over `git diff @{upstream}...HEAD`,
-which now includes anything step 1 changed.
+Size it first, now that step 1's commits are in the diff: `python
+scripts/deep_pass_process.py size --weekly <the number step 0 read>` (the
+budget was decided there, so this cannot say `deferred`), written into the
+notebook as `size`. **full** unless every changed file is prose
+(`LIGHT_SAFE`: docs, the dashboard page, NEXT.md, DEEP-PASS.md,
+ARCHITECTURE.md -- tests, audits, hooks and every script are guards or talk
+to their platform): the review at `xhigh`. **light**: the review at `high`.
+Size changes this review's effort and nothing else: step 2's audit, the
+carried gaps and the whole readings do not come from the diff, so **step 4
+is always the three Opus triage agents as written** (a 1c reader).
+
+Invoke the `code-review` skill at that effort over `git diff
+@{upstream}...HEAD`, which now includes anything step 1 changed.
 
 **Write every finding into the notebook the moment the review returns it**,
 as step 2 does for the audit: one entry in `gaps` with `"source": "review"`,
@@ -554,8 +585,10 @@ other people.
 ### 7 · A second round, but only when there is something to review
 
 Repeat 3–6 **only** if a fix touched `qa/state.py`, `qa/fold.py` or
-`qa/measure.py`. Elsewhere it is a cost without a return — the same standard
-CLAUDE.md uses for when to propose `/code-review` at all.
+`qa/measure.py` -- **or**, in a light pass, if the pass's own commits touched
+anything outside `LIGHT_SAFE`; that second round is full. Elsewhere it is a
+cost without a return — the same standard CLAUDE.md uses for when to propose
+`/code-review` at all.
 
 ### 8 · Commit
 
@@ -588,15 +621,20 @@ to be reported, and nothing goes to `origin` until step 12.
 ### 10 · `DEEP-PASS.md`
 
 A file, not just chat, because they may `/clear` before reading it.
-Overwritten each run, committed with the rest. Czech, short:
-
-**Co se stalo · Opraveno · Prořezáno · Minority report · Změněná pravidla ·
-Čeká na tebe · Týden · Co mě to naučilo**
-
-`Týden` only when step 11 ran. `Prořezáno` and `Změněná pravidla` are written
-even when they are one line saying nothing was cut and nothing was changed —
-the difference between "none" and "the step did not happen" is the whole
-reason the headings exist, and it is the same distinction rule 8 makes.
+Overwritten each run, committed with the rest. Czech, and **at most ten
+lines plus one per bullet under Změněná pravidla and Čeká na tebe** (plan v2,
+V7: it was 103 for a reader who does not read) -- the title, then
+`## Opraveno` and `## Co odešlo Cymetice` (the 7:00 report reads both, by
+those names: `qa/morning.py`), `## Změněná pravidla`, `## Čeká na tebe` and,
+when step 11 ran, `## Týden`, each with one bold line. A rule change is one
+bullet each, because the operator's veto is only over what they are shown;
+every item that needs them -- a minority report, a gap deferred to them -- is
+its own bullet under Čeká na tebe. Neither counts against the ten: the budget
+cuts our account, not their part. `Změněná pravidla` is written even when it says
+nothing changed -- "none" and "the step did not happen" are different, the
+distinction rule 8 makes. What was fixed, pruned and learned in detail is in
+step 8's commit message and the notebook; `Co se stalo` names both.
+`tests/repo/test_deep_pass_size.py` holds the ten lines.
 
 Numbers, not adjectives. Name the run id and the prereg. If something was
 refused or skipped, say which and why — a run that quietly did less is the one
@@ -610,9 +648,9 @@ point belongs in "Čeká na tebe" by name. The one report nobody can check is th
 one written from memory at the end of a long night.
 
 **The bold lead of each item is what the operator reads.** The SessionStart
-hook prints the lead of every item under Čeká na tebe, Minority report,
-Změněná pravidla and Týden, and nothing else. Write the sentence that has to
-survive alone in bold, and put the argument under it.
+hook prints the lead of every item under Čeká na tebe, Změněná pravidla and
+Týden, and nothing else. Write the sentence that has to survive alone in
+bold; the argument is the commit's.
 
 ### 10b · `NEXT.md` — where tomorrow carries on
 
@@ -783,8 +821,8 @@ Four questions, answered in Czech under **Týden**, in that order:
    CLAUDE.md asks of a part added later: it measures itself without anybody
    wiring it in, because the patrol finds it by glob and this step reads its
    numbers. A part that did nothing all week is either a cut candidate or a
-   mechanism nobody can reach — say which, in one line, and put a cut under
-   **Prořezáno** rather than here.
+   mechanism nobody can reach — say which, in one line, and put a cut in the
+   commit message rather than here.
 
 **"Nic neměnit" is a complete answer** and is written as such. Then set
 `retrospective.last` to today and `done` to true.
