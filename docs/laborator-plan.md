@@ -108,6 +108,7 @@ Each phase: tests first (red), then code, `pytest tests/meta tests/repo`, commit
 - Fill share = `max_buy_5pct_usd` against $10, plus first-checkpoint latency.
 - The pinned quotes (fomo.py:260/466/489) stay verbatim.
 - Out-of-sample rule: a pattern is dated and judged only on data after its date.
+- *Remaining (NEXT.md):* `fomo.sellable` judges a coin by its NEWEST depth (look-ahead), but switching to the depth at the signal alone moved the stop study from −11.7 % to +85 917 % -- it lands only together with the sell cap at exit depth in every reader (`stop_study`, `stats`, basket), as `ten_dollars` already does. Then split the L553 test; C6; the out-of-sample rule. `stop_study` and `compare` still drop the pair switches, which are rugs (measured 2026-09-23) and so losses; `ten_dollars` counts them.
 
 **V4 · Laboratoř jako oddělení + /lab** (Sonnet · high)
 - `lab.py report` → `state/lab/report.json`: per product, net %, n, Wilson band, running, best, archived count; plus a Nexus hit-rate line (questions → picks → gate → survived).
@@ -116,6 +117,7 @@ Each phase: tests first (red), then code, `pytest tests/meta tests/repo`, commit
 - The collectors (fomo, hot, sampler) run on serve.py's timers (reads only), and the tick stops its own fomo round, leaving one writer.
 - `console.cmd --fomo 1` only after this, together with new-signal horizons 0.25/1/4/24 h, a quote cap per round, and bulky captures pruned after 1 day.
 - Tests first: the tests that pin the old tabs are rewritten, and a both-ways field guard is added for `report.json`.
+- *Remaining (NEXT.md):* the new horizons are stored ON the signal, not in the global `HORIZONS_HOURS` -- otherwise old signals lose their checkpoints.
 - *Done 0f63c4cf + a6037069, except the `--fomo 1` bullet, which is a NEXT.md line. One deviation, decided: the tick keeps its fomo/hot/sample doors and skips exactly the rounds the console's `/status` says it runs -- dropping them outright would lose checkpoints on any night the console is closed (scripts/lab.py said so when it took the sampler over).*
 
 **V5 · Pás a boti** (Opus · high)
@@ -171,7 +173,7 @@ Each phase: tests first (red), then code, `pytest tests/meta tests/repo`, commit
 **V8 · Jádro QA** (Opus · high, `/code-review`)
 - The confirmed A, B and D findings not already fixed in V1 or V4: A2–A8, B2–B6, D3, D6. D5 is a minority finding and is examined only.
 - `vendor_read` is journaled only when a read's health changes (ok→fail, fail→ok); status changes are kept. This keeps rule 8 and removes the "console poll" commits.
-- The fingerprint covers the module helpers a check calls (A8).
+- The fingerprint covers the module helpers a check calls (A8). Today `verify.py` says "the same test, not a rewritten one" after a helper was rewritten (#119, #113, #89, #121, #116; #120 was pinned by hand for that reason): fix the fingerprint or the sentence. And no `correction_owed` for a check that judges our own writes from before their fix (#117, #119).
 
 **V9 · Oddělení do budoucna** (Sonnet · high)
 - The department shape, plus one fixture-department test.

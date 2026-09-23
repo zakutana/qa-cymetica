@@ -123,6 +123,36 @@ def items() -> list[dict]:
     return _hook().parse(NEXT.read_text(encoding="utf-8"))
 
 
+# Plan v2, V7: what a session start can carry and the operator can hold. On
+# 2026-09-23 there were thirteen open items, the longest 715 characters, and
+# the hook printed five of them cut at 200 -- so eight agreements were never
+# seen and the five that were showed their first sentence only.
+MAX_OPEN = 10
+MAX_ITEM_CHARS = 300
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_open_agreements_fit_where_they_are_read():
+    """Ten open lines at most, each short enough to be read whole. The
+    detail an item needs lives where the work is -- a plan row, a commit --
+    and the line says where."""
+    if not NEXT.is_file():
+        raise Inconclusive("NEXT.md does not exist yet")
+    lines = [line for line in NEXT.read_text(encoding="utf-8").splitlines()
+             if line.startswith("- [ ] ") and _date(line)]
+    long = [f"{line[:50]}... ({len(line)})" for line in lines
+            if len(line) > MAX_ITEM_CHARS]
+    conclude(Measurement(
+        verdict="failed" if len(lines) > MAX_OPEN or long else "passed",
+        reason=(f"{len(lines)} open item(s) against {MAX_OPEN}, "
+                f"{len(long)} longer than {MAX_ITEM_CHARS} characters"
+                if len(lines) > MAX_OPEN or long else
+                f"{len(lines)} open item(s), none longer than {MAX_ITEM_CHARS}"),
+        left={"open": len(lines), "long": long[:5]},
+        right={"max_open": MAX_OPEN, "max_chars": MAX_ITEM_CHARS},
+        sources={"handover": "NEXT.md"}))
+
+
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_every_line_that_looks_like_an_item_is_one():
     """A malformed line is an item that will never be printed and never noticed."""
