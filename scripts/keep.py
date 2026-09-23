@@ -72,7 +72,11 @@ def snapshot() -> list[str]:
     target = snapshot_dir()
     target.mkdir(parents=True, exist_ok=True)
     copied = []
-    for name in DIARIES:
+    # And every department's diaries, found by its shape (plan v2, V9).
+    from qa import departments
+
+    found = [p.name for paths in departments.diaries().values() for p in paths]
+    for name in dict.fromkeys([*DIARIES, *found]):
         source = state_dir() / name
         if not source.is_file():
             continue

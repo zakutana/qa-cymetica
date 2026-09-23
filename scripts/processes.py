@@ -293,6 +293,16 @@ def records_by_part(root: Path | None = None) -> dict[str, list[str]]:
     for part, name in PART_RECORDS.items():
         for row in _jsonl(state / name):
             note(part, row.get("at") or row.get("asked") or row.get("started"))
+    # A department's diaries are its script's records (plan v2, V9): found by
+    # the department shape, not by a line added here.
+    from qa import departments
+
+    for dept, paths in departments.diaries(state).items():
+        if f"{dept}.py" in PART_RECORDS:
+            continue
+        for path in paths:
+            for row in _jsonl(path):
+                note(f"{dept}.py", row.get("at"))
     for path in sorted((state / "preregistrations").glob("*.json")):
         try:
             row = json.loads(path.read_text(encoding="utf-8"))

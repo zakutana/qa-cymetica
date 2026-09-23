@@ -1098,8 +1098,18 @@ def build_lab(now=None) -> dict:
     Nexus's channel and the memecoin diary. What /lab embeds and /lab.json
     answers."""
     moment = now or datetime.now(timezone.utc)
-    return lab_view(build_rooms(), _lab_script().write_report(moment),
+    view = lab_view(build_rooms(), _lab_script().write_report(moment),
                     _nexus_channel(), _fomo_stats() or {}, now=moment)
+    view["departments"] = departments_view()
+    return view
+
+
+def departments_view() -> list[dict]:
+    """The other departments, beside the laboratory (plan v2, V9): each by
+    its own report, found by its shape rather than listed here."""
+    from qa import departments
+
+    return departments.departments()
 
 
 def render_lab(data: dict | None = None) -> str:
@@ -1417,6 +1427,7 @@ button { font: inherit; color: inherit; }
   <nav class="sectors" id="sectors" role="tablist" aria-label="Odvětví"></nav>
   <p class="nexus" id="nexus"></p>
   <main class="room" id="room"></main>
+  <section class="room" id="departments"></section>
 </div>
 
 <aside class="drawer" id="drawer" hidden aria-label="Konverzace">
@@ -1864,6 +1875,10 @@ function renderAll() {
     SECTORS.map(k => sectorTab(sectorOf(k), k === SECTOR)).join("");
   document.getElementById("nexus").innerHTML = nexusLine(V.nexus);
   renderRoom();
+  // Every other department, by its own report (plan v2, V9).
+  document.getElementById("departments").innerHTML = (V.departments || []).map(d =>
+    `<h2>${esc(d.title)}</h2><ul>${(d.lines || []).map(l => `<li>${esc(l)}</li>`).join("")}</ul>`
+  ).join("");
 }
 function labShow(sector, group) {
   if (SECTORS.includes(sector)) { SECTOR = sector; writeStore("lab.sector", sector); }
