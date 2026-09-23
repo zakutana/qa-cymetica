@@ -61,7 +61,7 @@ In `.claude/skills/laborator/SKILL.md`, pins 1–4 of v1: manager and technician
 | V1 | Kritické opravy (před 26. 9. 00:52 UTC) | B1, C1, C3, A1, D1 mají každá test pojmenovaný po incidentu a jsou zelené | hotovo ce8a0b1e |
 | V2 | Poctivá čísla laborky | verdikt z naší knihy; Bollinger ≈ +3 %; NEX-0064 na desce +4,17 %; NEX-0080 → 1 volba; zastavený bez pozice = archiv | hotovo dcac9077 |
 | V3 | Memecoiny poctivě | report řekne „10 $ do každého hot signálu = X % po nákladech, n, stihli bychom Y %"; srovnání s kontrolou po tokenech a bez přepnutých párů | hotovo be97cb6d |
-| V4 | Laboratoř jako oddělení + stránka /lab | screenshot 2000 px viděný; commitnutá stránka nemá žádný vstup mimo git (test); poznámka ze stránky dojde do `rooms.py unread` | hotovo a6037069 |
+| V4 | Laboratoř jako oddělení + stránka /lab | screenshot 2000 px viděný; commitnutá stránka nemá žádný vstup mimo git (test); poznámka ze stránky dojde do `rooms.py unread`; **jeden room na odvětví a operátor stránku viděl a dal ≥ 9/10** | znovu otevřená: a6037069 prošla vším ostatním a dostala 3/10 (43 roomů po kartách místo čtyř po odvětvích) |
 | V5 | Pás a boti | tik spustí variantu bota s jiným nastavením přes bránu papíru; jediný limit je 60 % knihy; odpověď se čte jednou | otevřená |
 | V6 | Manažer za pár tokenů | klidné kolo = 1 krátký tah AI; den smyčky ≤ 20 tahů AI při stejném počtu spuštění | otevřená |
 | V7 | Údržba, která dojde | start session ≤ 8 řádků za ≤ 3 s; `memories.py --for lab` ≤ 8 KB celé; MEMORY.md v limitu harnessu; CLAUDE.md ≤ 300 ř.; NEXT.md ≤ 10 otevřených | otevřená |
@@ -124,6 +124,7 @@ Each phase: tests first (red), then code, `pytest tests/meta tests/repo`, commit
 - Stake = a fixed share of the book, so 60 % exposure is the only count limit. Answers are read once.
 - `clone.py settings()` gets the paper floor before it exists (the `enable()` check). B7 was dropped only because nothing calls the PATCH yet, and this phase adds the caller. components.yaml declares only safe fields (no arb, custodial or onchain). Each variant is a new room, and a PATCH is refused while its room runs.
 - Grid per species: SL / TP / max_position / max_open_positions / min_ai_confidence / market toggles.
+- *2026-09-23, REPLY-0049:* one active paper clone per species per account (a second is 409 ALREADY_CLONED; several is a feature ask they logged). So a species' variants run one after another on its one clone, never side by side, and the grid is walked in time.
 - Own lane under the 2026-09-23 pin:
   - origin `OUR-…`, labelled „naše";
   - each also asked to Nexus;
