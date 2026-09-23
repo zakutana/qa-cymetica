@@ -167,7 +167,26 @@ def test_records_collected_nodeids_and_check_fingerprint(pytester, tmp_path):
         def test_b():
             '''A docstring must not change the fingerprint.'''
             pass
+
+        def _limit():
+            return _floor() + 2
+
+        def _floor():
+            return 1
+
+        @qa(**TAG)
+        def test_c():
+            assert _limit() == 3
     """)
+    # A8 of the review of 2026-09-23 (3/3): the helpers a check calls are
+    # part of what it asserts, and check_fingerprint never saw them, so
+    # verify.py told the vendor "the same test" after a helper was rewritten.
+    # They are hashed apart, transitively, beside the unchanged fingerprint --
+    # changing check_fingerprint itself would move every row to CHECK_CHANGED.
+    helpers = {r["nodeid"].rsplit("::", 1)[-1]: r.get("helpers_fingerprint")
+               for r in run["results"]}
+    assert all(isinstance(h, str) and len(h) == 64 for h in helpers.values()), helpers
+    assert helpers["test_c"] != helpers["test_a"] == helpers["test_b"], helpers
     assert run.get("schema") == 2
     collected = run["collected"]
     assert any(n.endswith("::test_a") for n in collected) and any(n.endswith("::test_b") for n in collected)

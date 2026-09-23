@@ -62,10 +62,26 @@ def _item(**over):
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_pass_on_an_unrepaired_check_still_claims_the_same_definition():
-    """The ordinary case must keep its strongest true sentence."""
-    evidence = _verify().body(_item())["evidence"]
+    """The ordinary case must keep its strongest TRUE sentence -- and since
+    A8 of the review of 2026-09-23 (3/3), "the same test" is true only when
+    the helpers the check calls match the failure's too. A helper rewritten
+    after #119, #113, #89, #121 and #116 failed left their verifications
+    saying "not a rewritten one" about a check that had been rewritten."""
+    verify = _verify()
+    evidence = verify.body(_item(helpers_same=True))["evidence"]
     assert "under the same definition it failed under" in evidence
     assert "matches the one recorded at the failure" in evidence
+
+    # The failure predates helper fingerprints, or its run was pruned: the
+    # test function is the one that failed, and nothing more is claimed.
+    unknown = verify.body(_item())["evidence"]
+    assert "not a rewritten one" not in unknown, unknown
+    assert "same recorded definition" in unknown and "helper" in unknown, unknown
+
+    # A helper it calls changed: said, like a pin.
+    moved = verify.body(_item(helpers_same=False))["evidence"]
+    assert "not a rewritten one" not in moved and "helper" in moved, moved
+    assert verify.body(_item(helpers_same=False))["verdict"] == "pass"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

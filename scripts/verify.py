@@ -187,6 +187,7 @@ def owed(ledger: dict, only: list[str] | None) -> list[dict]:
                 "checks": row.get("checks") or [],
                 "title": row.get("title") or fid,
                 "pin": pin_reason(fid, row["check"]["pinned_fingerprint"]),
+                "helpers_same": helpers_match(row, run),
                 "identity": identity_kind(run, row.get("checks") or []),
                 "evidence_ids": sorted({
                     str(e) for result in (run.get("results") or [])
@@ -215,6 +216,33 @@ def identity_kind(run: dict, checks: list[str]) -> str | None:
         if result.get("nodeid") in wanted and result.get("role") == "verdict"
     }
     return kinds.pop() if len(kinds) == 1 else None
+
+
+def helpers_match(row: dict, run: dict) -> bool | None:
+    """Whether the helpers this row's checks call are the ones they called
+    when the row last reproduced: True, False, or None when either run did
+    not record them (they are recorded since 2026-09-23, A8) or the failing
+    run's record is gone. Only True lets the pass say "the same test"."""
+    checks = set(row.get("checks") or [])
+
+    def helpers(record: dict):
+        found = {r.get("helpers_fingerprint")
+                 for r in (record.get("results") or [])
+                 if r.get("nodeid") in checks and r.get("role", "verdict") == "verdict"}
+        found.discard(None)
+        return found or None
+
+    now = helpers(run)
+    if not now:
+        return None
+    for run_id in reversed(row.get("reproduced_in") or []):
+        try:
+            failed = load_run(run_id)
+        except Exception:  # noqa: BLE001 -- pruned or unreadable: unknown
+            continue
+        then = helpers(failed)
+        return None if then is None else then == now
+    return None
 
 
 def pin_reason(finding_id: str, fingerprint: str) -> str | None:
@@ -282,14 +310,41 @@ def body(item: dict) -> dict:
             "recorded at the failure. Why this row carries a pin, in our own "
             f"words: {pin}"
         )
-    elif verdict == "pass":
+    elif verdict == "pass" and item.get("helpers_same") is True:
         headline = (
             "VERDICT pass -- the check that recorded this defect now passes, "
             "under the same definition it failed under."
         )
         why_fingerprint = (
-            "Because it matches the one recorded at the failure, this is the "
-            "same test, not a rewritten one that happens to pass."
+            "Because it matches the one recorded at the failure -- and so do "
+            "the helper functions the check calls -- this is the same test, "
+            "not a rewritten one that happens to pass."
+        )
+    elif verdict == "pass" and item.get("helpers_same") is False:
+        # A8: a helper the check calls was rewritten after the failure. The
+        # recorded definition matches; the whole of the test does not.
+        headline = (
+            "VERDICT pass -- the check that recorded this defect now passes. "
+            "Its recorded definition is the one that failed, but a helper "
+            "function the check calls has changed since, so this is not "
+            "automatically the identical test."
+        )
+        why_fingerprint = (
+            "The recorded definition matches the one at the failure; a helper "
+            "function the check calls does not. Judge the change, provided on "
+            "request."
+        )
+    elif verdict == "pass":
+        # A8: the failure's run predates helper fingerprints, or is gone.
+        # The strongest TRUE sentence is about the recorded definition alone.
+        headline = (
+            "VERDICT pass -- the check that recorded this defect now passes, "
+            "under the same recorded definition it failed under."
+        )
+        why_fingerprint = (
+            "That definition matches the one recorded at the failure. The "
+            "helper functions the check calls were not fingerprinted then, so "
+            "we do not claim more than that."
         )
     elif item.get("correction_reason") == "accepted":
         # The third case, and the reason two paid reports sat with them under

@@ -289,6 +289,45 @@ def check_fingerprint(item) -> str:
     return hashlib.sha256("\n".join(parts).encode("utf-8")).hexdigest()
 
 
+def helpers_fingerprint(item) -> str:
+    """Hash of the functions the check calls from its OWN module, followed
+    transitively -- the half of its definition `check_fingerprint` never saw.
+
+    A8 of the review of 2026-09-23 (3/3): a helper rewritten after a failure
+    left `check_fingerprint` unchanged, and verify.py told the vendor "the
+    same test, not a rewritten one". Kept apart from `check_fingerprint`
+    rather than folded into it: a new formula there would move every row in
+    the ledger to CHECK_CHANGED at once. Never raises; a check whose module
+    cannot be read hashes to the empty set and says nothing more.
+    """
+    dumps: dict[str, str] = {}
+    try:
+        module = inspect.getmodule(item.obj)
+        todo = [item.obj]
+        seen: set[int] = set()
+        while todo:
+            fn = todo.pop()
+            if id(fn) in seen:
+                continue
+            seen.add(id(fn))
+            tree = _strip_docstrings(ast.parse(textwrap.dedent(inspect.getsource(fn))))
+            for node in ast.walk(tree):
+                if not isinstance(node, ast.Name):
+                    continue
+                helper = getattr(module, node.id, None)
+                if (inspect.isfunction(helper)
+                        and getattr(helper, "__module__", None) == module.__name__
+                        and helper is not item.obj and node.id not in dumps):
+                    dumps[node.id] = ast.dump(_strip_docstrings(ast.parse(
+                        textwrap.dedent(inspect.getsource(helper)))),
+                        include_attributes=False)
+                    todo.append(helper)
+    except Exception:  # noqa: BLE001
+        pass
+    joined = "\n".join(f"{name}={dump}" for name, dump in sorted(dumps.items()))
+    return hashlib.sha256(joined.encode("utf-8")).hexdigest()
+
+
 @pytest.hookimpl(hookwrapper=True, tryfirst=True)
 def pytest_runtest_makereport(item, call):
     """Classify. Runs LAST among wrappers, so the report it reads is final."""
@@ -351,6 +390,7 @@ def pytest_runtest_makereport(item, call):
         "evidence_ids": evidence_ids,
         "measurement": measurement.as_record() if measurement else None,
         "check_fingerprint": fingerprint,
+        "helpers_fingerprint": helpers_fingerprint(item),
         "reason": reason,
         "failure_repr": _trim(str(report.longrepr)) if kind in ("failed", "error") else None,
     }
