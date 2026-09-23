@@ -26,6 +26,7 @@ import argparse
 import json
 import sys
 from collections.abc import Sequence
+from datetime import datetime
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -215,8 +216,44 @@ def _nothing_adjudicating_message(prev: dict) -> str:
     ])
 
 
+def _moment(value):
+    try:
+        return datetime.fromisoformat(str(value))
+    except (TypeError, ValueError):
+        return None
+
+
+def _older_than_ledger(run: dict, prev: dict | None) -> str | None:
+    """Why this run may not be folded onto `prev` going forward, or None.
+
+    A1 of the 2026-09-23 review (3/3): nothing compared a run's time with the
+    ledger's, so a stale `--run` id moved rows back to what an older run saw.
+    The newest moment the ledger stands on is its header's run or any row's
+    adjudication, whichever is later; a run that finished before it is a
+    replay, and has to be named as one.
+    """
+    stamps = [(prev or {}).get("updated_at")] + [
+        ((row.get("check") or {}).get("adjudicated_by") or {}).get("at")
+        for row in ((prev or {}).get("findings") or {}).values()]
+    newest = max((m for m in map(_moment, stamps) if m is not None), default=None)
+    if newest is None:
+        return None
+    at = run.get("finished_at") or run.get("started_at")
+    when = _moment(at)
+    if when is not None and when >= newest:
+        return None
+    return "\n".join([
+        f"run {run['run_id']} finished {at or 'at no recorded time'}, before "
+        f"{newest.isoformat()} -- the newest run the ledger stands on.",
+        "Folding it would move rows back to what an older run saw, and a row "
+        "moved that way can owe the vendor a false pass or fail.",
+        "",
+        "If a rebuild from an older run is what you mean, name it: --replay.",
+    ])
+
+
 def compose(run_id: str | None = None, events_only: bool = False,
-            attest: bool = False) -> dict:
+            attest: bool = False, forward_only: bool = False) -> dict:
     """Fold one run and the whole journal onto the previous ledger.
 
     `attest` appends the `run_recorded` event that pins the record's bytes, and
@@ -232,6 +269,12 @@ def compose(run_id: str | None = None, events_only: bool = False,
     tracked. Default-off means a caller that only looks cannot write by
     accident; only main() asks for it, and then only for a fold that took the
     run and is about to be written.
+
+    `forward_only` refuses a run older than the ledger (A1), before anything
+    is attested. Off by default for the same reason: the refolds that only
+    look -- `--check`, rule 12's guard -- fold the run the ledger cites, and
+    must answer about it whatever its age. main() asks for it unless the run
+    is named `--replay`.
     """
     events = read_events()
     prev = load_previous()
@@ -245,6 +288,10 @@ def compose(run_id: str | None = None, events_only: bool = False,
             if run_id is None:
                 raise SystemExit(_nothing_adjudicating_message(prev))
         run = load_run(run_id)
+        if forward_only:
+            backwards = _older_than_ledger(run, prev)
+            if backwards:
+                raise SystemExit(backwards)
 
         # Gap 1: corroborate the record against things it does not control,
         # before anything it says is allowed to move a row.
@@ -408,6 +455,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--check", action="store_true",
                         help="exit 1 if the committed ledger is not what the "
                              "inputs fold to; writes nothing")
+    parser.add_argument("--replay", action="store_true",
+                        help="fold a run OLDER than the one the ledger stands "
+                             "on; refused without it, because it moves rows "
+                             "back to what that run saw")
     args = parser.parse_args(argv)
 
     if args.check:
@@ -466,7 +517,7 @@ def main(argv: list[str] | None = None) -> int:
     # ledger must write nothing to the journal, and the pin is what stops a
     # restructure attesting during a read-only check. It caught this one.
     ledger = compose(run_id=args.run_id, events_only=args.events_only,
-                     attest=not args.check)
+                     attest=not args.check, forward_only=not args.replay)
 
     if "rejected_run" in ledger:
         # Refuse rather than write. Composing an inadmissible record would

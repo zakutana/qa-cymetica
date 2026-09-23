@@ -279,12 +279,45 @@ def _cited_by_run(records: dict[str, dict]) -> dict[str, str]:
 _call_key = evidence.call_key
 
 
+def unbundled() -> set[str]:
+    """Ids the manifest knows that no bundle on this disk holds.
+
+    D1 of the 2026-09-23 review (3/3). The manifest is the proof that outlives
+    a body, but only once a bundle holds the body: when the ledger folded onto
+    a new run, captures stopped being cited, this pruner deleted them as
+    nothing-stands-on-it before any archive had taken them, and 392 are gone
+    for good -- `archive: ""` in the manifest for ever. A stamp is believed
+    only if its bundle is here and lists the id; listing is by name, 3 s over
+    8 197 members, and the hashing is `keep.py archive`'s, done before it
+    stamped.
+    """
+    import tarfile
+
+    from qa import archive, manifest
+
+    held: dict[str, set[str]] = {}
+    out: set[str] = set()
+    for key, row in manifest.read().items():
+        stamp = str((row or {}).get("archive") or "")
+        if stamp not in held:
+            try:
+                held[stamp] = (archive.members(archive.archive_path(
+                    stamp.removeprefix("evidence-"))) if stamp else set())
+            except (ValueError, OSError, tarfile.TarError, EOFError):
+                held[stamp] = set()
+        if key not in held[stamp]:
+            out.add(key)
+    return out
+
+
 def evidence_keep_set(older_than_days: int = EVIDENCE_DAYS,
                       records: dict[str, dict] | None = None) -> dict[str, str]:
     """capture id -> the reason it survives. Absence is the only licence.
 
         kept       something stands on it: qa/keepset.py names which
         tracked    git has it, so somebody committed it on purpose
+        unarchived the manifest knows it and no bundle here holds it yet --
+                   `keep.py archive` first, then it may go (D1)
         young      a run newer than the cutoff still cites it, or it is newer
         witness    the newest capture of its call, so the last answer of every
                    surface we touch is always on disk
@@ -321,6 +354,14 @@ def evidence_keep_set(older_than_days: int = EVIDENCE_DAYS,
         return {p.stem: "unreadable" for p in files}
     for digest in tracked:
         keep.setdefault(digest, "tracked")
+    try:
+        waiting = unbundled()
+    except Exception as exc:  # noqa: BLE001 -- the same safe direction as above
+        print(f"  WARNING: could not read the manifest or its bundles ({exc}); "
+              f"keeping every capture")
+        return {p.stem: "unreadable" for p in files}
+    for digest in waiting:
+        keep.setdefault(digest, "unarchived")
 
     candidates = []
     for path in files:
@@ -365,8 +406,16 @@ def main(argv: list[str] | None = None) -> int:
 
     records = {p.stem: _load(p) for p in records_on_disk()}
     _sweep("record", records_on_disk(), keep_set(args.older_than), args.apply)
-    _sweep("capture", evidence_files(),
-           evidence_keep_set(args.captures_older_than, records), args.apply)
+    captures = evidence_files()
+    keep = evidence_keep_set(args.captures_older_than, records)
+    _sweep("capture", captures, keep, args.apply)
+    # Said on its own line, because it is the one reason that means something
+    # upstream did not happen: every one is a body waiting on an archive run.
+    waiting = sum(1 for p in captures if keep.get(p.stem) == "unarchived")
+    if waiting:
+        print(f"  held back {waiting} capture(s) the manifest knows and no "
+              f"bundle holds yet -- `keep.py archive --month YYYY-MM` takes "
+              f"them, and the next prune may then let them go")
     return 0
 
 

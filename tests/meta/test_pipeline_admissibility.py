@@ -344,6 +344,90 @@ def test_the_default_run_has_to_have_judged_something_in_the_ledger(tmp_path):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_older_run_is_not_folded_over_a_newer_one_without_replay(
+        tmp_path, monkeypatch):
+    """A1 of the 2026-09-23 review (3/3). Nothing compared a run's time with
+    the ledger's: `ledger.py --run <id>` folded whatever it was named, so a
+    stale id moved a row BACKWARDS -- here from passing, as the newer run
+    judged it, to reproducing, as an older one had -- and a row moved that
+    way can owe the vendor a false pass or fail. The pin path has had a date
+    guard since 2026-09-22; this path had none.
+
+    So the write path refuses a run older than the newest the ledger stands
+    on, before it attests anything, unless the run is named `--replay`. The
+    same run again is not older, and folds as before. The read-only paths
+    (`--check`, rule 12's refold) are untouched: they refold the run the
+    ledger cites, which is never newer than itself."""
+    import importlib.util
+
+    state = tmp_path / "state"
+    (state / "journal").mkdir(parents=True)
+    (state / "runs").mkdir(parents=True)
+    monkeypatch.setenv("QA_STATE_DIR", str(state))
+
+    path = Path(__file__).resolve().parents[2] / "scripts" / "ledger.py"
+    spec = importlib.util.spec_from_file_location("ledger_order", path)
+    ledger_mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(ledger_mod)
+    # Nothing here may reach the repository's own git index.
+    monkeypatch.setattr(ledger_mod, "_track_run_record", lambda run_id: None)
+    monkeypatch.setattr(ledger_mod.keepset, "track", lambda **k: None)
+    monkeypatch.setattr(ledger_mod.keepset, "untrack", lambda **k: None)
+
+    from qa.state import read_events
+
+    check = "tests/rest/test_a.py::test_one"
+    old_at, new_at = "2026-09-20T10:00:00+00:00", "2026-09-22T10:00:00+00:00"
+
+    def run(run_id, at, outcome):
+        return _admissible(run_id, at, collected=[check],
+                           exit_status=0 if outcome == "passed" else 1,
+                           results=[{"nodeid": check, "outcome": outcome}],
+                           prereg_id=None, prereg_commit=None,
+                           prereg_tag_sha=None)
+    for run_id, at, outcome in (("run-old", old_at, "failed"),
+                                ("run-new", new_at, "passed")):
+        (state / "runs" / f"{run_id}.json").write_text(
+            json.dumps(run(run_id, at, outcome)), encoding="utf-8")
+
+    (state / "ledger.json").write_text(json.dumps({
+        "schema": 2, "run_id": "run-new", "run_level": "R",
+        "updated_at": new_at,
+        "findings": {"CYM-a": {
+            "id": "CYM-a", "title": "t", "severity": "S3-CONTRACT",
+            "checks": [check],
+            "first_seen": {"at": old_at, "cause": {"run_id": "run-first"}},
+            "reproductions": 1, "reproduced_in": ["run-first"],
+            "check": {"state": "PASSING_UNPINNED", "pinned_fingerprint": None,
+                      "adjudicated_by": {"run_id": "run-new", "at": new_at}},
+            "filing": {"state": "NOT_RAISED", "adjudicated_by": None,
+                       "reports": [], "refused": [], "verifications": []},
+            "transitions": [{"axis": "check", "from": "UNVERIFIED",
+                             "to": "PASSING_UNPINNED",
+                             "cause": {"run_id": "run-new"}, "at": new_at}],
+            "regressions": []}}}), encoding="utf-8")
+    before = (state / "ledger.json").read_bytes()
+
+    with pytest.raises(SystemExit) as refused:
+        ledger_mod.main(["--run", "run-old"])
+    said = str(refused.value)
+    assert "run-old" in said and "--replay" in said, said
+    assert (state / "ledger.json").read_bytes() == before, "the ledger moved"
+    assert not [e for e in read_events() if e.get("type") == "run_recorded"], (
+        "the refused run was attested in the journal anyway")
+
+    # The same run the ledger stands on is not older than itself.
+    assert ledger_mod.main(["--run", "run-new"]) == 0
+
+    # Named as a replay, it folds -- and moves the row, which is why it
+    # has to be named.
+    assert ledger_mod.main(["--run", "run-old", "--replay"]) == 0
+    folded = json.loads((state / "ledger.json").read_text(encoding="utf-8"))
+    assert folded["run_id"] == "run-old"
+    assert folded["findings"]["CYM-a"]["check"]["state"] == "REPRODUCING"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_collect_only_run_is_not_the_last_full_run(tmp_path, monkeypatch):
     """2026-09-22 17:50 UTC: `open_checks.py --explain` said "last full run
     0h ago" about run-20260922T174253Z-d7c8c4c3 -- a `pytest --collect-only

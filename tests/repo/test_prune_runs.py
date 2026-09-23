@@ -363,6 +363,56 @@ def test_a_ledger_that_cannot_be_read_is_not_a_ledger_citing_nothing(
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_capture_the_manifest_knows_is_not_pruned_before_a_bundle_holds_it(
+        tmp_path, monkeypatch, capsys):
+    """D1 of the 2026-09-23 review (3/3). The manifest is the proof that
+    outlives a body -- but only once a bundle holds the body. When the ledger
+    folded onto a new run, captures stopped being cited; the pruner deleted
+    them as nothing-stands-on-it before any archive had taken them, and 392
+    are gone for good: known to the manifest, `archive: ""` for ever, their
+    bodies in no bundle and on no disk.
+
+    So a capture the manifest knows is held back until a bundle on this disk
+    holds it: no stamp, or a stamp whose bundle is not here, keeps it. Only a
+    body the bundle lists may go. And the pruner says how many it held back,
+    so a failed archive is a number on screen, not a pile that quietly
+    grows."""
+    from qa import archive, manifest
+
+    state, mod = _state(tmp_path, monkeypatch)
+    _no_git(monkeypatch)
+    url = "https://cymetica.com/api/v1/same"
+    witness, bundled, unstamped, elsewhere = ("f" * 64, "1a" * 32,
+                                              "2b" * 32, "3c" * 32)
+    _capture(state, witness, url=url, age_days=10)
+    for digest in (bundled, unstamped, elsewhere):
+        _capture(state, digest, url=url, age_days=20)
+    target = archive.archive_path("2026-09")
+    archive.build([bundled], target)
+    archive.commit(target, releasable=True)
+    assert archive.members(target) == {bundled}
+    manifest.write({
+        bundled: {"id": bundled, "archive": "evidence-2026-09"},
+        unstamped: {"id": unstamped, "archive": ""},
+        # Stamped into a bundle that is not on this disk.
+        elsewhere: {"id": elsewhere, "archive": "evidence-2026-08"},
+    })
+
+    keep = mod.evidence_keep_set()
+    assert keep.get(witness) == "witness", keep
+    assert keep.get(unstamped) == "unarchived", keep
+    assert keep.get(elsewhere) == "unarchived", keep
+    assert bundled not in keep, "a body a bundle holds may go"
+
+    capsys.readouterr()
+    assert mod.main(["--apply"]) == 0
+    out = capsys.readouterr().out
+    assert "held back 2" in out, out
+    left = {p.stem for p in (state / "evidence").rglob("*.json")}
+    assert left == {witness, unstamped, elsewhere}, left
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_dry_run_deletes_nothing_and_apply_deletes_only_the_victims(
         tmp_path, monkeypatch, capsys):
     state, mod = _state(tmp_path, monkeypatch)

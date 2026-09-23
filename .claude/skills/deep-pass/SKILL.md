@@ -144,8 +144,7 @@ git status --short
 git log --oneline @{upstream}..HEAD
 python -m pytest tests/meta -q
 python scripts/keep.py track
-python scripts/keep.py archive --month $(date -u +%Y-%m) --release
-python scripts/prune_runs.py --apply
+python scripts/keep.py archive --month $(date -u +%Y-%m) --release && python scripts/prune_runs.py --apply
 python scripts/memories.py --for deep-pass
 ```
 
@@ -176,7 +175,11 @@ python scripts/memories.py --for deep-pass
   It reads the bundle back off disk and hashes every member before `--release`
   touches a single original, so a truncated write cannot take the evidence
   with it. Before the pruner, because a capture inside a bundle is one the
-  pruner may let go of.
+  pruner may let go of -- and **only if it succeeded** (`&&`): an archive that
+  failed leaves the prune for the next pass, and the report says why it
+  failed -- the fix is ours, not the operator's. The pruner holds back on its own too
+  since D1 (2026-09-23): nothing the manifest knows goes until a bundle here
+  lists it, and it prints how many it held back.
 * **Prune the run records and the captures.** `prune_runs.py --apply` removes
   captures older than three days that nothing stands on and that are not the
   newest answer of their call -- 4 814 files and 172 MB the first time it ran.
