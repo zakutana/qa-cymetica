@@ -51,6 +51,11 @@ def test_a_markdown_preregistration_is_a_run_of_prereg(tmp_path):
         "# PRE-0155\n\n    Registered  2026-09-23T06:10:35+00:00\n", encoding="utf-8")
     seen = procs.records_by_part(tmp_path)
     assert seen.get("prereg.py") == ["2026-09-23T06:10:35+00:00"], seen
+    # bounty.py journals a read only on a health change since V8; the file it
+    # rewrites on every read is its trace (review of V8).
+    assert "bounty.py" not in seen
+    (tmp_path / "state" / "bounty.json").write_text("{}", encoding="utf-8")
+    assert procs.records_by_part(tmp_path).get("bounty.py"), "bounty.py lost its trace"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

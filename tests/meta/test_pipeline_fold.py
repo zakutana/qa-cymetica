@@ -506,6 +506,13 @@ def test_regression_is_permanent_and_requires_backed_passing():
         was["findings"]["CYM-c"]["check"]["adjudicated_by"] = {"run_id": "run-p", "at": "x"}
         fell = fold(was, run=run("run-q", [result(CHECK_A, "failed")]), events=[])
         assert len(fell["findings"]["CYM-c"]["regressions"]) == 1, passing
+        # ...but only a fall from PASSING is their fix regressing: the other
+        # two passes prove no fix, so no reopen is owed (review of V8).
+        claimed = fold(was, run=run("run-q", [result(CHECK_A, "failed")]),
+                       events=events_for("CYM-c", "FIX_CLAIMED"))
+        assert claimed["findings"]["CYM-c"]["obligations"]["reopen"] == [], passing
+    assert broke["findings"]["CYM-a"]["obligations"]["reopen"] == [46], \
+        "a fall from PASSING after their fix claim owes a reopen"
 
 
 # ---------------------------------------------------------------------------
