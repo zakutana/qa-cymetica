@@ -62,7 +62,7 @@ In `.claude/skills/laborator/SKILL.md`, pins 1–4 of v1: manager and technician
 | V2 | Poctivá čísla laborky | verdikt z naší knihy; Bollinger ≈ +3 %; NEX-0064 na desce +4,17 %; NEX-0080 → 1 volba; zastavený bez pozice = archiv | hotovo dcac9077 |
 | V3 | Memecoiny poctivě | report řekne „10 $ do každého hot signálu = X % po nákladech, n, stihli bychom Y %"; srovnání s kontrolou po tokenech a bez přepnutých párů | hotovo be97cb6d |
 | V4 | Laboratoř jako oddělení + stránka /lab | screenshot 2000 px viděný; commitnutá stránka nemá žádný vstup mimo git (test); poznámka ze stránky dojde do `rooms.py unread`; **jeden room na odvětví a operátor stránku viděl a dal ≥ 9/10** | přestavěno de9b43b7 (4 roomy po odvětvích, 1920×1000 bez scrollu); čeká na hodnocení operátora — a6037069 dostala 3/10 |
-| V5 | Pás a boti | tik spustí variantu bota s jiným nastavením přes bránu papíru; jediný limit je 60 % knihy; odpověď se čte jednou | otevřená |
+| V5 | Pás a boti | tik spustí variantu bota s jiným nastavením přes bránu papíru; jediný limit je 60 % knihy; odpověď se čte jednou | z části: brána papíru pro PATCH nastavení 11685b1e, 60 % knihy jediný limit 1028c377, odpověď se čte jednou 59cde5f2; zbývá spouštěč variant v tiku (viz V5 níž) |
 | V6 | Manažer za pár tokenů | klidné kolo = 1 krátký tah AI; den smyčky ≤ 20 tahů AI při stejném počtu spuštění | otevřená |
 | V7 | Údržba, která dojde | start session ≤ 8 řádků za ≤ 3 s; `memories.py --for lab` ≤ 8 KB celé; MEMORY.md v limitu harnessu; CLAUDE.md ≤ 300 ř.; NEXT.md ≤ 10 otevřených | otevřená |
 | V8 | Jádro QA | každý potvrzený nález A/B/D má test; `/code-review` přes fold/state prošel | otevřená |
@@ -130,6 +130,13 @@ Each phase: tests first (red), then code, `pytest tests/meta tests/repo`, commit
   - each also asked to Nexus;
   - never ranked above his picks;
   - correlated rooms count as one.
+- *Done, three commits:* 11685b1e `clone.py settings()` -- the body carries only `SAFE_SETTINGS` (the grid's fields; no `is_trading`, arb, on-chain share or market lists), our record says the instance is a paper clone of ours, no room of ours runs on it, their row says paper twice; the transport's new `closed_body` refuses any undeclared field at MUTATE, and components.yaml declares exactly the grid. 1028c377 our caps gone, each replaced in a comment by the brake that covers it (60 % of the book at a fixed 0.48 % a room, ASKS_PER_HOUR, OUTSTANDING_BOUND, backoff, `pass_in_flight`). 59cde5f2 an answer is read once; only one with a pick still waiting is read again.
+- *Remaining -- the variant launcher, which is what the done-when names:*
+  1. `qa.lab.next_variant(tried)`: the grid per species, one factor at a time from their baseline (SL, TP, max_position, max_open_positions, min_ai_confidence, the four market toggles), deterministic, walked in time on the species' one clone.
+  2. A tick door: for a clone of ours whose rooms are all stopped, the next variant opens a NEW room, PATCHes through `clone.settings()` (the gate above) and starts it; the 60 % check counts the clone's parked money becoming exposure.
+  3. `clone.enable()` narrowed: a started clone may start again only as a new variant -- our own accepted pause, then an accepted settings PATCH after it, and no room running on it. A halt by their guard or an unexplained one stays never restarted (V2).
+  4. The own lane: `rooms.open_strategy` accepts an `OUR-NNNN` origin without a Nexus answer, labelled „naše"; `brief` lists each running one as a question for him; the board ranks them after his; a species' variants are one at a time, so they count as one.
+  5. A variant's verdict starts at its restart: `bot_series` measures from total funding, so a reused clone would carry the previous variant's P&L. The enable intent already records `bot_balance_usdc` at the start.
 
 **V6 · Manažer za pár tokenů** (Sonnet · high)
 - The tick's last line is `decide: none | question | answer NEX-… | gap`. On `none` the skill writes one line and stops, with no brief, no diary and no memory read.
