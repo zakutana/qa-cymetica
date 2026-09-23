@@ -1082,13 +1082,18 @@ def test_the_board_ranks_his_proposals_by_what_they_earned():
     his answer, the newest reading of each position, realised once closed --
     and a proposal the backtest turned away is on the board too, with its
     numbers, because "what has been tested" is half of what they asked for."""
+    # Since C2 (2026-09-23) a position counts for an answer only on a card
+    # the answer picked, so each names the cards its orders bought.
+    c1, c1b, c2, c3 = _card(0xC1), _card(0xC1B), _card(0xC2), _card(0xC3)
+    texts = {1: f"Buy {c1} and {c1b}.", 2: f"Buy {c2}.", 3: f"Buy {c3}.",
+             4: "..."}
     answers = [{"type": "answer", "id": f"NEX-000{n}",
-                "at": f"2026-09-19T0{n}:00:00+00:00", "text": "..."}
+                "at": f"2026-09-19T0{n}:00:00+00:00", "text": texts[n]}
                for n in range(1, 5)]
     notebook = [
-        {"type": "gate", "origin": "NEX-0001", "card": "c1", "verdict": "pass",
+        {"type": "gate", "origin": "NEX-0001", "card": c1, "verdict": "pass",
          "why": "+6.5% at Sharpe 1.30 over 90 days after fees"},
-        {"type": "gate", "origin": "NEX-0003", "card": "c3",
+        {"type": "gate", "origin": "NEX-0003", "card": c3,
          "verdict": "reject", "why": "-4.0% over 90 days after fees"}]
     room_rows = [
         {"type": "strategy", "id": "STR-0001", "origin": "NEX-0001",
@@ -1098,14 +1103,14 @@ def test_the_board_ranks_his_proposals_by_what_they_earned():
          "title": "SOL memes", "at": "2026-09-19T02:10:00+00:00"},
         {"type": "status", "room": "STR-0002", "status": "running"}]
     paper_rows = [
-        _intent("TRD-1", "c1", 600.0, "NEX-0001"), _accepted("TRD-1", "p1"),
-        _intent("TRD-2", "c1b", 600.0, "NEX-0001"), _accepted("TRD-2", "p2"),
-        _intent("TRD-3", "c2", 1200.0, "NEX-0002"), _accepted("TRD-3", "p3")]
+        _intent("TRD-1", c1, 600.0, "NEX-0001"), _accepted("TRD-1", "p1"),
+        _intent("TRD-2", c1b, 600.0, "NEX-0001"), _accepted("TRD-2", "p2"),
+        _intent("TRD-3", c2, 1200.0, "NEX-0002"), _accepted("TRD-3", "p3")]
     samples = [
-        _position("p1", "c1", "open", 10.0, at="2026-09-19T10:00:00+00:00"),
-        _position("p1", "c1", "open", 40.0, at="2026-09-19T12:00:00+00:00"),
-        _position("p2", "c1b", "closed", 20.0),
-        _position("p3", "c2", "open", -30.0)]
+        _position("p1", c1, "open", 10.0, at="2026-09-19T10:00:00+00:00"),
+        _position("p1", c1, "open", 40.0, at="2026-09-19T12:00:00+00:00"),
+        _position("p2", c1b, "closed", 20.0),
+        _position("p3", c2, "open", -30.0)]
 
     # Handed newest first, so the order that comes out is the board's own:
     # in file order the best earner was also the earliest, and a board that
@@ -1146,6 +1151,89 @@ def test_the_board_shows_every_room_an_answer_opened(tmp_path, monkeypatch):
     assert [r["verdict"] for r in row["rooms"]] == ["refuted", None]
     assert row["status"] != "running", "a refuted room read as running"
     assert "refuted" in str(row["verdict"])
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_board_credits_what_he_picked_with_what_it_made():
+    """C2 of the 2026-09-23 review (3/3, reworded). NEX-0064 picked one card
+    and ruled three out; the launch opened rooms on two of those by mistake,
+    bought them and sold them a minute later. The board then credited his
+    answer with the stake of all three buys and the P&L of the one position
+    the sampler had read -- 19.82 on 1426.83, +1.39% -- where his pick made
+    +4.17% on its 475.61. And a P&L realised on OUR close record counted for
+    nothing when the sampler never saw the position closed.
+
+    So an answer is credited only with what it picked (`lab.picked_cards`;
+    the same reading for a bot); a position's money is our own close record
+    when we sold it, the sampler's newest reading otherwise; the return is
+    over the stake of the positions priced, and the row says how many were.
+    A paper bot he picked counts on what went into it and what it made."""
+    fixture = json.loads((REPO / "tests" / "meta" / "fixtures"
+                          / "nexus_answers.json").read_text(encoding="utf-8"))
+    pick = "9f9433ef-75ec-4637-a743-64d9110545bf"
+    out_a = "db54ed55-851d-40ac-a775-a43e43604a28"
+    out_b = "0a35dd76-0929-4d64-8f79-18e677e2c758"
+    sold, unread = _card(0x5), _card(0x6)
+    answers = [
+        {"type": "answer", "id": "NEX-0064", "at": "2026-09-21T23:50:00+00:00",
+         "text": fixture["answers"]["NEX-0064"]["text"]},
+        {"type": "answer", "id": "NEX-0002", "at": "2026-09-19T02:00:00+00:00",
+         "text": f"Buy {sold} and {unread}."},
+        {"type": "answer", "id": "NEX-0003", "at": "2026-09-19T03:00:00+00:00",
+         "text": "**Pick: MACD Hunter.**\n\nIt beats Trend Titan on trades."}]
+    room_rows = [
+        {"type": "strategy", "id": "STR-0003", "origin": "NEX-0003",
+         "title": "MACD Hunter", "kind": "bot", "ref": "sp-macd"},
+        {"type": "acceptance", "room": "STR-0003", "window_days": 5.0,
+         "legs": [{"kind": "bot", "ref": "inst-macd", "share": 1.0}]},
+        {"type": "strategy", "id": "STR-0004", "origin": "NEX-0003",
+         "title": "Trend Titan", "kind": "bot", "ref": "sp-titan"},
+        {"type": "acceptance", "room": "STR-0004", "window_days": 5.0,
+         "legs": [{"kind": "bot", "ref": "inst-titan", "share": 1.0}]}]
+
+    def close(ident, position, realized):
+        return [{"type": "intent", "id": ident, "kind": "close",
+                 "position_id": position},
+                {"type": "outcome", "id": ident, "kind": "close",
+                 "outcome": "accepted", "realized_pnl_usdc": realized}]
+    paper_rows = [
+        _intent("TRD-0013", pick, 475.61, "NEX-0064"), _accepted("TRD-0013", "P-13"),
+        _intent("TRD-0014", out_a, 475.61, "NEX-0064"), _accepted("TRD-0014", "P-14"),
+        _intent("TRD-0015", out_b, 475.61, "NEX-0064"), _accepted("TRD-0015", "P-15"),
+        *close("TRD-0016", "P-14", 0.582433), *close("TRD-0017", "P-15", 0.268275),
+        _intent("TRD-0005", sold, 100.0, "NEX-0002"), _accepted("TRD-0005", "P-5"),
+        _intent("TRD-0006", unread, 100.0, "NEX-0002"), _accepted("TRD-0006", "P-6"),
+        *close("TRD-0007", "P-5", 5.0)]
+    samples = [
+        _position("P-13", pick, "open", 19.817763558441584),
+        {"type": "sample", "kind": "bot", "at": "2026-09-23T07:05:46+00:00",
+         "instance_id": "inst-macd", "total_profit_usdc": 7.1},
+        {"type": "sample", "kind": "bot", "at": "2026-09-23T07:05:46+00:00",
+         "instance_id": "inst-titan", "total_profit_usdc": -50.0}]
+    clone_rows = []
+    for ident, instance, amount in (("CLN-1", "inst-macd", 240.0),
+                                    ("CLN-2", "inst-titan", 100.0)):
+        clone_rows += [{"type": "intent", "id": ident, "kind": "fund",
+                        "instance_id": instance, "amount": amount},
+                       {"type": "outcome", "id": ident, "outcome": "accepted"}]
+
+    rows = {r["origin"]: r for r in lab.board(
+        answers, [], room_rows, paper_rows, samples, clone_rows)}
+
+    his = rows["NEX-0064"]
+    assert his["stake_usdc"] == pytest.approx(475.61), his
+    assert round(his["pnl_pct"], 2) == 4.17, his
+
+    both = rows["NEX-0002"]
+    assert both["pnl_usdc"] == pytest.approx(5.0), (
+        "a sale on our own record counted for nothing", both)
+    assert both["pnl_pct"] == pytest.approx(5.0), (
+        "the return is over the stake that was priced", both)
+    assert (both["priced"], both["positions"]) == (1, 2), both
+
+    bot = rows["NEX-0003"]
+    assert bot["stake_usdc"] == pytest.approx(240.0), bot
+    assert bot["pnl_pct"] == pytest.approx(7.1 / 240 * 100), bot
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

@@ -2292,20 +2292,9 @@ def _bots_running(acceptance: dict) -> list[str]:
 
 def _funded() -> dict[str, float]:
     """What went into each clone: accepted transfers in clones.jsonl -- the
-    base a bot's index is measured against (`qa.lab.bot_series`)."""
-    rows = _sibling("clone").load()
-    asked = {row.get("id"): row for row in rows
-             if row.get("type") == "intent" and row.get("kind") == "fund"}
-    out: dict[str, float] = {}
-    for row in rows:
-        intent = asked.get(row.get("id"))
-        if (intent and row.get("type") == "outcome"
-                and row.get("outcome") == "accepted"):
-            amount = _amount(intent.get("amount"))
-            if amount is not None:
-                key = str(intent.get("instance_id"))
-                out[key] = out.get(key, 0.0) + amount
-    return out
+    base a bot's index is measured against (`qa.lab.bot_series`). One
+    reading, `qa.lab.funded`, shared with the board."""
+    return lab.funded(_sibling("clone").load())
 
 
 def _species_cloned() -> dict[str, str]:
@@ -2777,13 +2766,16 @@ def board_rows() -> list[dict]:
     from qa.rooms import load_samples
 
     return lab.board(_nexus_rows(), lab.load(), rooms.load(),
-                     _sibling("paper").load(), load_samples())
+                     _sibling("paper").load(), load_samples(),
+                     _sibling("clone").load())
 
 
 def _board_line(row: dict) -> str:
     if row["pnl_pct"] is not None:
-        money = (f"{row['pnl_pct']:+6.1f}%  {row['pnl_usdc']:+.2f} on "
+        money = (f"{row['pnl_pct']:+6.2f}%  {row['pnl_usdc']:+.2f} on "
                  f"{row['stake_usdc']:.0f} USDC")
+        if row.get("priced", 0) < row.get("positions", 0):
+            money += f" ({row['priced']} of {row['positions']} priced)"
     elif row["room"]:
         money = "  not priced yet"
     else:

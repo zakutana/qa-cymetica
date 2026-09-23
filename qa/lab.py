@@ -1537,19 +1537,64 @@ def _money(value) -> float | None:
         return None
 
 
+def funded(clone_rows) -> dict[str, float]:
+    """What went into each paper clone: its accepted transfers, by instance --
+    the base a bot's money is measured against."""
+    asked = {row.get("id"): row for row in clone_rows or ()
+             if row.get("type") == "intent" and row.get("kind") == "fund"}
+    out: dict[str, float] = {}
+    for row in clone_rows or ():
+        intent = asked.get(row.get("id"))
+        if (intent and row.get("type") == "outcome"
+                and row.get("outcome") == "accepted"):
+            amount = _money(intent.get("amount"))
+            if amount is not None:
+                key = str(intent.get("instance_id"))
+                out[key] = out.get(key, 0.0) + amount
+    return out
+
+
+def _sold_by_us(paper_rows) -> dict[str, float | None]:
+    """position -> the P&L our own accepted close record realised (None when
+    the record carries no figure). The close outcome often names no position;
+    its intent does."""
+    intents = {row.get("id"): row for row in paper_rows
+               if row.get("type") == "intent"}
+    out: dict[str, float | None] = {}
+    for row in paper_rows:
+        if row.get("type") != "outcome" or row.get("outcome") != "accepted":
+            continue
+        intent = intents.get(row.get("id")) or {}
+        if row.get("kind") != "close" and intent.get("kind") != "close":
+            continue
+        position = intent.get("position_id") or row.get("position_id")
+        if position:
+            out[str(position)] = _money(row.get("realized_pnl_usdc"))
+    return out
+
+
 def board(answers: list[dict], notebook: list[dict], room_rows: list[dict],
-          paper_rows: list[dict], sample_rows: list[dict]) -> list[dict]:
+          paper_rows: list[dict], sample_rows: list[dict],
+          clone_rows: list[dict] | tuple = ()) -> list[dict]:
     """Every Nexus proposal that came to anything, and what it earned.
 
     [operator 2026-09-19] the goal is the strategies that earn the most, so
     each answer is followed to the money: the stake our paper orders credited
-    to it (`intent.nexus.id`), the NEWEST reading of each of those positions --
-    realised once closed, unrealised while open -- and the room's status and
-    verdict. An answer the gate turned away is on the board with its numbers:
-    "what has been tested" was the other half of what they asked for.
+    to it (`intent.nexus.id`) on the cards it PICKED, what each of those
+    positions made -- our own close record when we sold it, the sampler's
+    newest reading otherwise -- the paper bots it picked on what went in and
+    what they made, and each room's status and verdict. An answer the gate
+    turned away is on the board with its numbers: "what has been tested" was
+    the other half of what they asked for.
+
+    C2 of the 2026-09-23 review: the stake of every buy was set against the
+    P&L of the positions the sampler had read, and a card he ruled out that
+    the launch bought by mistake was his -- NEX-0064 read +1.39% where his one
+    pick made +4.17%. Only picks are his now, and the return is over the
+    stake of the positions priced, with the count said.
 
     Best earner first, by return on the stake; then the rooms nothing has
-    priced yet; then what the gate rejected. Pure over five loaded diaries.
+    priced yet; then what the gate rejected. Pure over six loaded diaries.
     """
     gates_by: dict[str, list[dict]] = {}
     for row in notebook:
@@ -1568,6 +1613,25 @@ def board(answers: list[dict], notebook: list[dict], room_rows: list[dict],
         elif row.get("type") == "verdict":
             verdicts[row.get("room")] = row
 
+    texts = {str(a.get("id") or ""): str(a.get("text") or "")
+             for a in answers if a.get("type") == "answer"}
+    picked = {origin: set(picked_cards(text)) for origin, text in texts.items()}
+    accepted_on: dict[str, dict] = {}
+    for row in room_rows:
+        if row.get("type") == "acceptance":
+            accepted_on[str(row.get("room"))] = row
+    # A bot room is his when its species is what his answer picks, read the
+    # way the launch reads it, against the bot rooms this answer opened.
+    bot_rooms: dict[str, list[str]] = {}
+    for origin, opened in rooms_by.items():
+        bots = [r for r in opened if r.get("kind") == "bot"]
+        if not bots or origin not in texts:
+            continue
+        chosen = {row["name"] for row in proposed_bots(texts[origin], [
+            {"name": r.get("title"), "id": r.get("ref")} for r in bots])}
+        bot_rooms[origin] = [str(r.get("id")) for r in bots
+                             if r.get("title") in chosen]
+
     intents = {r.get("id"): r for r in paper_rows
                if r.get("type") == "intent" and r.get("kind") != "close"}
     held: dict[str, tuple[str, float]] = {}
@@ -1579,34 +1643,57 @@ def board(answers: list[dict], notebook: list[dict], room_rows: list[dict],
         if not intent:
             continue
         nexus = intent.get("nexus")
-        origin = nexus.get("id") if isinstance(nexus, dict) else nexus
+        origin = str((nexus.get("id") if isinstance(nexus, dict) else nexus)
+                     or "")
         position = row.get("position_id") or intent.get("position_id")
         stake = _money(intent.get("usdc"))
-        if origin and position and stake is not None:
-            held[str(position)] = (str(origin), stake)
+        if (position and stake is not None and str(intent.get("card_id") or "")
+                .lower() in picked.get(origin, ())):
+            held[str(position)] = (origin, stake)
 
     newest: dict[str, dict] = {}
+    newest_bot: dict[str, dict] = {}
     for row in sample_rows:
-        if row.get("kind") != "position":
+        if row.get("kind") == "position":
+            key, into = str(row.get("position_id") or ""), newest
+        elif row.get("kind") == "bot":
+            key, into = str(row.get("instance_id") or ""), newest_bot
+        else:
             continue
-        position = str(row.get("position_id") or "")
-        if position in held and str(row.get("at") or "") >= str(
-                newest.get(position, {}).get("at") or ""):
-            newest[position] = row
+        if str(row.get("at") or "") >= str(into.get(key, {}).get("at") or ""):
+            into[key] = row
 
+    sold = _sold_by_us(paper_rows)
     money: dict[str, dict] = {}
-    for position, (origin, stake) in held.items():
-        book = money.setdefault(origin, {"stake": 0.0, "pnl": 0.0,
-                                         "priced": 0, "positions": 0})
+
+    def count(origin: str, stake: float, pnl: float | None) -> None:
+        book = money.setdefault(origin, {"stake": 0.0, "pnl": 0.0, "priced": 0,
+                                         "positions": 0, "priced_stake": 0.0})
         book["stake"] += stake
         book["positions"] += 1
-        reading = newest.get(position) or {}
-        pnl = _money(reading.get("realized_pnl_usdc"
-                                 if reading.get("status") == "closed"
-                                 else "unrealized_pnl_usdc"))
         if pnl is not None:
             book["pnl"] += pnl
             book["priced"] += 1
+            book["priced_stake"] += stake
+
+    for position, (origin, stake) in held.items():
+        if sold.get(position) is not None:
+            pnl = sold[position]
+        else:
+            reading = newest.get(position) or {}
+            pnl = _money(reading.get("realized_pnl_usdc"
+                                     if reading.get("status") == "closed"
+                                     else "unrealized_pnl_usdc"))
+        count(origin, stake, pnl)
+    went_in = funded(clone_rows)
+    for origin, room_ids in bot_rooms.items():
+        for room_id in room_ids:
+            for leg in (accepted_on.get(room_id) or {}).get("legs") or []:
+                instance = str(leg.get("ref") or "")
+                if leg.get("kind") != "bot" or not went_in.get(instance):
+                    continue
+                count(origin, went_in[instance], _money(
+                    (newest_bot.get(instance) or {}).get("total_profit_usdc")))
 
     out = []
     for answer in answers:
@@ -1634,9 +1721,11 @@ def board(answers: list[dict], notebook: list[dict], room_rows: list[dict],
             "status": (statuses[0] if len(statuses) == 1
                        else " / ".join(statuses) if statuses else None),
             "stake_usdc": cash["stake"] if cash else 0.0,
+            "positions": cash["positions"] if cash else 0,
+            "priced": cash["priced"] if cash else 0,
             "pnl_usdc": cash["pnl"] if priced else None,
-            "pnl_pct": (cash["pnl"] / cash["stake"] * 100.0
-                        if priced and cash["stake"] else None),
+            "pnl_pct": (cash["pnl"] / cash["priced_stake"] * 100.0
+                        if priced and cash["priced_stake"] else None),
             "verdict": (said[0] if len(each) == 1 and said
                         else ", ".join(said) if said else None),
             "verdict_return_pct": (each[0]["verdict_return_pct"]
