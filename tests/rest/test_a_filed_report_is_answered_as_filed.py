@@ -1,0 +1,108 @@
+"""A report the server creates is answered as created.
+
+`llms.txt` documents the one route a hunter files through:
+
+    POST /api/v1/bounty/reports: File a bug report (X-API-Key or session)
+
+An HTTP 5xx says the server could not complete the request. A client that
+receives one has to assume nothing was filed -- and retries, which is how a
+duplicate ticket is made (their own 409 on a duplicate title within 24 h only
+catches a retry that keeps the title).
+
+**What was seen.** Three of our submissions answered HTTP 500 and the report
+existed anyway, found only because `scripts/submit.py --reconcile` compares
+an unclear outcome against `GET /api/v1/bounty/my-reports`:
+
+    #110  build-stats-window                       2026-09-20 17:40 UTC
+    #113  bb-building-tile                         2026-09-20 21:01 UTC
+    #122  card-tradeable-now-disagrees-mcp-rest    2026-09-22 23:55 UTC
+          (their server_created_at 23:55:08, our 500 at 23:55:18)
+
+Three of about thirteen submissions in those three days, so it is
+intermittent, and a check over one submission is a coin flip (the rotating-
+population lesson). This one reads the newest TWELVE: at the observed rate a
+clean run of twelve would happen by chance under 5% of the time.
+
+**This check files nothing.** It reads what submit.py journalled -- intent,
+outcome with its HTTP status, and the reconciled outcome with the server's
+report id -- and judges the newest twelve submissions:
+
+  * one answered 5xx whose report exists (a later accepted outcome for the
+    same key carries a report id) -- fail;
+  * twelve answered 2xx with their report id, none masked -- pass;
+  * fewer than twelve and none masked -- inconclusive.
+
+A 5xx whose report does NOT exist is the server failing honestly, not this.
+"""
+
+from __future__ import annotations
+
+from qa.marks import Inconclusive, SafetyTier, qa
+from qa.measure import Measurement, conclude
+from qa.state import read_events
+
+WINDOW = 12
+ROUTE = "POST /api/v1/bounty/reports"
+
+
+def submissions(events) -> list[dict]:
+    """Every filing, oldest first: its key, when, the POST's status, and the
+    report id the server gave -- on the answer or on reconciling it."""
+    by_key: dict[str, dict] = {}
+    for e in events:
+        key = e.get("key")
+        if not key or e.get("type") not in ("filing_intent", "filing_outcome"):
+            continue
+        row = by_key.setdefault(key, {"key": key, "at": e.get("at") or "",
+                                      "status": None, "report_id": None,
+                                      "reconciled": False})
+        if e["type"] == "filing_outcome":
+            if isinstance(e.get("http_status"), int) and row["status"] is None:
+                row["status"] = e["http_status"]
+            if e.get("report_id") is not None:
+                row["report_id"] = e["report_id"]
+                row["reconciled"] = bool(e.get("reconciled_from"))
+    return sorted(by_key.values(), key=lambda r: (r["at"], r["key"]))
+
+
+def _masked(row: dict) -> bool:
+    return isinstance(row["status"], int) and row["status"] >= 500 \
+        and row["report_id"] is not None
+
+
+@qa(component="rest.support", tier=SafetyTier.SAFE, surface="rest")
+def test_a_report_the_server_creates_is_answered_as_created():
+    """The newest twelve of our filings, each against the report it made."""
+    rows = submissions(read_events())
+    newest = rows[-WINDOW:]
+    masked = [r for r in newest if _masked(r)]
+    if masked:
+        conclude(Measurement(
+            verdict="failed",
+            reason=(f"{len(masked)} of our newest {len(newest)} submission(s) to "
+                    f"{ROUTE} answered HTTP {masked[-1]['status']} and the report "
+                    f"was created anyway: "
+                    + ", ".join(f"#{r['report_id']} ({r['key']}, {r['at'][:16]} UTC)"
+                                for r in masked)
+                    + " -- a client told the filing failed retries it"),
+            left=[(r["report_id"], r["status"]) for r in masked],
+            right="a created report answered 2xx with its id",
+            population={"window": [{k: r[k] for k in ("key", "at", "status", "report_id")}
+                                   for r in newest]},
+            sources={"contract": f"llms.txt: {ROUTE} 'File a bug report'",
+                     "log": "state/journal/events.jsonl (filing_intent / "
+                            "filing_outcome, reconciled against my-reports)"}))
+        return
+    clean = [r for r in newest if isinstance(r["status"], int)
+             and 200 <= r["status"] < 300 and r["report_id"] is not None]
+    if len(newest) < WINDOW or len(clean) < WINDOW:
+        raise Inconclusive(
+            f"{len(clean)} clean submission(s) in the newest {len(newest)}; "
+            f"twelve are needed before an intermittent 500 can be called gone")
+    conclude(Measurement(
+        verdict="passed",
+        reason=(f"the newest {WINDOW} submissions to {ROUTE} were each answered "
+                f"2xx with the id of the report they created"),
+        left=len(masked), right=0,
+        population={"window": [r["report_id"] for r in newest]},
+        sources={"log": "state/journal/events.jsonl"}))

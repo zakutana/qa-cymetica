@@ -518,3 +518,53 @@ def test_a_card_that_is_closed_on_rest_and_open_on_mcp_fails():
     # A card the tool no longer returns is unread too.
     with pytest.raises(Inconclusive):
         _run_tradeability_check({c: False}, {c: None})
+
+
+# ------------------------------------ a filed report is answered as filed -
+
+def _filed(key, minute, status, then_created=None):
+    """One submission as submit.py journals it: intent, outcome, and -- when
+    the POST said 5xx and the report exists anyway -- the reconciled one."""
+    at = f"2026-09-22T10:{minute:02d}:00+00:00"
+    rows = [{"type": "filing_intent", "key": key, "at": at}]
+    if status >= 500:
+        rows.append({"type": "filing_outcome", "key": key, "http_status": status,
+                     "outcome": "unknown", "report_id": None, "at": at})
+        if then_created:
+            rows.append({"type": "filing_outcome", "key": key, "outcome": "accepted",
+                         "report_id": then_created, "reconciled_from": "my-reports",
+                         "at": at})
+    else:
+        rows.append({"type": "filing_outcome", "key": key, "http_status": status,
+                     "outcome": "accepted", "report_id": 100 + minute, "at": at})
+    return rows
+
+
+def _run_filing_check(monkeypatch, events):
+    check = _load("tests/rest/test_a_filed_report_is_answered_as_filed.py",
+                  "filed_report_check_under_test")
+    monkeypatch.setattr(check, "read_events", lambda: events)
+    check.test_a_report_the_server_creates_is_answered_as_created()
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_report_created_behind_a_500_fails_and_a_clean_run_of_twelve_passes(
+        monkeypatch):
+    """#110, #113 and #122: POST /api/v1/bounty/reports answered HTTP 500 and
+    the report existed anyway, found only by reconciling against my-reports.
+    Three of about thirteen, so it is intermittent: judged over the newest
+    twelve submissions, a masked success among them fails, twelve clean ones
+    pass, fewer and none masked is not enough to say."""
+    clean = [row for n in range(12) for row in _filed(f"k{n}", n, 200)]
+    masked = _filed("k-late", 30, 500, then_created=122)
+
+    with pytest.raises(AssertionError, match="122"):
+        _run_filing_check(monkeypatch, clean + masked)
+    _run_filing_check(monkeypatch, masked + [
+        row for n in range(12) for row in _filed(f"k{n}", 40 + n, 200)])
+    with pytest.raises(Inconclusive):
+        _run_filing_check(monkeypatch, clean[:10])
+    # A 500 whose report does NOT exist is an honest failure, not this defect.
+    honest = _filed("k-down", 30, 500)
+    with pytest.raises(Inconclusive):
+        _run_filing_check(monkeypatch, clean[:20] + honest)
