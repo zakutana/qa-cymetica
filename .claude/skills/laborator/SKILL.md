@@ -125,7 +125,8 @@ their ranking every six hours, a bite of the search,
 the verdicts that came due, anything that resolved without us, and the
 memecoin study into the diary every six hours. It opens the day's session and
 closes yesterday's. It **asks nothing**; its last line says whether a question
-may go.
+may go. When it prints `ranní přehled je na řadě`, make the report before
+anything else -- see "Ranní přehled" below.
 
 **3. Read what came back.** A `held` line is a reason, not noise: a card the
 backtest rejected (the numbers are in it), a card #91-style unknown, a market
