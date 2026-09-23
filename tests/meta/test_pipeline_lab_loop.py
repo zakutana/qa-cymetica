@@ -1406,14 +1406,198 @@ def test_a_room_whose_card_closed_inside_the_window_gets_a_verdict(
     hours = int((close - start).total_seconds() // 3600)
     points = [{"t": (start + timedelta(hours=h)).isoformat(),
                "index": 100 + h * 0.05} for h in range(hours + 1)]
+    # A flat benchmark: since C1 (2026-09-23) a room accepted against one is
+    # not survived on its return alone.
+    flat = [{"t": p["t"], "index": 100.0} for p in points]
     monkeypatch.setattr(scripts_lab, "_history",
-                        lambda client, c: points if c == card else [])
+                        lambda client, c: points if c == card else flat)
     monkeypatch.setattr(scripts_lab, "_closes_at",
                         lambda client, c: close.isoformat() if c == card else None)
 
     said = scripts_lab.verdicts(now=start + timedelta(days=days, hours=1))
 
     assert [s["verdict"] for s in said] == ["survived"], said
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_failed_benchmark_read_does_not_turn_refuted_into_survived(
+        tmp_path, monkeypatch):
+    """C1 of the 2026-09-23 review (3/3). `_history` answered `[]` for any
+    status but 200, so a benchmark read that failed looked like a benchmark
+    with no marks, the verdict judged the room on its return alone, and a
+    room that lost to BTC was written down as survived -- once, for good.
+
+    A failed read is not an empty one (rule 8). The real reader is driven
+    here, through a client that answers 502: the room stays running with no
+    verdict, the tick says it waits, and the next call -- the read answering
+    this time -- refutes it against the benchmark. A failed read of the
+    room's own card waits the same way instead of coming back inconclusive.
+    And a benchmark that answered with nothing over the window does not let
+    a positive return survive either: that is inconclusive."""
+    import qa.rooms as qa_rooms
+
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    card = _card(0xC1)
+    answers = [{"type": "answer", "id": "NEX-0001",
+                "at": (NOW - timedelta(minutes=30)).isoformat(),
+                "text": _whole(card)}]
+    _launchpad(scripts_lab, tmp_path, monkeypatch, answers,
+               live={card: _basket("BTC", "ETH")},
+               readings={("BTC", "ETH"): (6.5, 1.3)})
+    scripts_lab.night_promote()
+    (room,) = qa_rooms.strategies(qa_rooms.load())
+    acceptance = qa_rooms.acceptance_of(qa_rooms.load(), room["id"])
+    bench = acceptance["benchmark_card"]
+    assert bench, "the room was accepted without a benchmark"
+    start = datetime.fromisoformat(acceptance["at"])
+    days = float(acceptance["window_days"])
+    hours = int(days * 24)
+
+    def rising(pct):
+        return [{"t": (start + timedelta(hours=h)).isoformat(),
+                 "index": 100 * (1 + pct / 100 * h / hours)}
+                for h in range(hours + 1)]
+    failing = {bench}
+
+    class Response:
+        def __init__(self, c):
+            self.status_code = 502 if c in failing else 200
+            self.body = {"points": rising(3.0 if c == card else 10.0)}
+
+        def json(self):
+            return self.body
+
+    class Client:
+        def get(self, path, **kwargs):
+            return Response(path.split("/event-cards/")[1].split("/")[0])
+
+    real = scripts_lab._history
+    monkeypatch.setattr(scripts_lab, "_history",
+                        lambda client, c: real(Client(), c))
+    monkeypatch.setattr(scripts_lab, "_closes_at", lambda client, c: None)
+    after = start + timedelta(days=days, hours=1)
+
+    said = scripts_lab.verdicts(now=after)
+    assert [s["verdict"] for s in said] == ["waiting"], said
+    assert "502" in said[0]["why"], said
+    rows = qa_rooms.load()
+    assert qa_rooms.verdict_of(rows, room["id"]) is None, "written without its benchmark"
+    assert qa_rooms.status_of(rows, room["id"]) == "running"
+
+    failing.clear()
+    failing.add(card)
+    said = scripts_lab.verdicts(now=after + timedelta(minutes=20))
+    assert [s["verdict"] for s in said] == ["waiting"], (
+        "a failed read of the room's own card was judged, not waited on", said)
+
+    failing.clear()
+    said = scripts_lab.verdicts(now=after + timedelta(minutes=40))
+    assert [s["verdict"] for s in said] == ["refuted"], said
+    assert "benchmark" in said[0]["why"], said
+
+    # A benchmark that ANSWERED with nothing over the window: no survival.
+    from qa import lab
+    points = {card: rising(3.0), bench: []}
+    judged = lab.verdict(acceptance, points, after)
+    assert judged["verdict"] == "inconclusive", judged
+    points[bench] = rising(1.0)
+    assert lab.verdict(acceptance, points, after)["verdict"] == "survived"
+
+    # The tick does not count a waiting verdict as one, and says why it waits.
+    doors, _ = _doors(verdicts=lambda: [
+        {"room": "STR-0001", "verdict": "waiting",
+         "why": "index-history of a4a5b71e answered HTTP 502"},
+        {"room": "STR-0002", "verdict": "refuted", "why": "it returned -1%"}])
+    printed = []
+    said = scripts_lab.tick(now=after, actions=doors, out=printed.append)
+    assert said["verdicts"] == 1, said
+    assert any("STR-0001" in line and "502" in line for line in printed), printed
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_window_that_closes_normally_sells_the_rooms_card_position(
+        tmp_path, monkeypatch):
+    """C3 of the 2026-09-23 review (3/3), already fired once: only an EARLY
+    verdict closed a room's card positions. STR-0003 was judged at the end
+    of its window on 2026-09-18 and TRD-0006 stayed open under it until the
+    card resolved on its own the next day, counted against the ceiling the
+    whole time. The next room to close normally is STR-0006, 2026-09-26.
+
+    Any verdict now sells what the room holds. A sale that fails is owed and
+    tried again on the next call, as the early path's is. And a position
+    their own record already shows closed -- TRD-0006's, resolved without us
+    -- is not sold a second time: that is a close retried every tick
+    forever."""
+    import qa.rooms as qa_rooms
+
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    cards = [_card(0xC3), _card(0xC4)]
+    answers = [{"type": "answer", "id": f"NEX-000{n}",
+                "at": (NOW - timedelta(minutes=30)).isoformat(),
+                "text": _whole(card)} for n, card in enumerate(cards, 1)]
+    _launchpad(scripts_lab, tmp_path, monkeypatch, answers,
+               live={c: _basket("BTC", "ETH") for c in cards},
+               readings={("BTC", "ETH"): (6.5, 1.3)})
+    scripts_lab.night_promote()
+    rows = qa_rooms.load()
+    first, second = qa_rooms.strategies(rows)
+    acceptance = qa_rooms.acceptance_of(rows, first["id"])
+    opened = acceptance["at"]
+    start = datetime.fromisoformat(opened)
+    days = float(acceptance["window_days"])
+    buys = []
+    for n, card in enumerate(cards, 1):
+        buys += [
+            {"id": f"TRD-000{n}", "type": "intent", "at": opened, "card_id": card,
+             "usdc": 480.0, "paper": True, "nexus": {"id": f"NEX-000{n}"}},
+            {"id": f"TRD-000{n}", "type": "outcome", "at": opened,
+             "outcome": "accepted", "http_status": 200, "position_id": f"P-{n}"}]
+    _write(tmp_path, "paper.jsonl", buys)
+    # P-2's card resolved on their side: the sampler saw it closed.
+    _write(tmp_path, "samples.jsonl", [
+        {"type": "sample", "kind": "position", "at": opened,
+         "position_id": "P-2", "status": "open"},
+        {"type": "sample", "kind": "position",
+         "at": (start + timedelta(days=1)).isoformat(),
+         "position_id": "P-2", "status": "closed", "realized_pnl_usdc": 85.76}])
+    attempts = []
+
+    def close(position, confirm):
+        """Fails once, then writes what paper.close writes on a sale."""
+        attempts.append(position)
+        if len(attempts) == 1:
+            raise SystemExit("their /sell answered 500")
+        sale = f"TRD-01{len(attempts):02d}"
+        with open(tmp_path / "paper.jsonl", "a", encoding="utf-8") as fh:
+            fh.write(json.dumps({"id": sale, "type": "intent", "kind": "close",
+                                 "position_id": position, "paper": True}) + "\n")
+            fh.write(json.dumps({"id": sale, "type": "outcome",
+                                 "outcome": "accepted", "http_status": 200}) + "\n")
+        return {}
+    scripts_lab._sibling("paper").close = close
+
+    hours = int(days * 24)
+    points = [{"t": (start + timedelta(hours=h)).isoformat(),
+               "index": 100 + h * 0.01} for h in range(hours + 1)]
+    flat = [{"t": p["t"], "index": 100.0} for p in points]
+    monkeypatch.setattr(scripts_lab, "_history",
+                        lambda client, c: points if c in cards else flat)
+    monkeypatch.setattr(scripts_lab, "_closes_at", lambda client, c: None)
+    after = start + timedelta(days=days, hours=1)
+
+    said = scripts_lab.verdicts(now=after)
+    assert sorted(s["verdict"] for s in said) == ["survived", "survived"], said
+    assert not any(s.get("early") for s in said), said
+    assert attempts == ["P-1"], (
+        "a normal verdict left the room's position open" if not attempts
+        else f"sold {attempts}: P-2 was already closed on their side")
+    assert any(s.get("close_failed") for s in said), said
+
+    scripts_lab.verdicts(now=after + timedelta(minutes=20))
+    assert attempts == ["P-1", "P-1"], "the failed sale was not tried again"
+
+    scripts_lab.verdicts(now=after + timedelta(minutes=40))
+    assert attempts == ["P-1", "P-1"], "a sold position was sold again"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

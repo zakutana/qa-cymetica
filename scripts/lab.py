@@ -888,25 +888,54 @@ INDEX_HISTORY = "/api/v1/event-cards/{card}/index-history"
 BTC_PROXY = "a4a5b71e-de11-4805-b8a3-ed9c3f8f8161"
 
 
+class Unread(Exception):
+    """A read that did not answer -- not an empty answer (rule 8).
+
+    C1 of the 2026-09-23 review: `_history` returned `[]` for any status but
+    200, so a failed benchmark read looked like a benchmark with no marks, the
+    verdict judged a room on its return alone, and a room that lost to BTC was
+    written down as survived, once and for good. Whatever needs this read
+    waits for the next call instead."""
+
+
+def _body(response, what: str) -> dict:
+    """A 200's JSON object, or Unread. A 404 is an answer -- they do not know
+    it -- and comes back as an empty object; any other status is not."""
+    if response.status_code == 404:
+        return {}
+    if response.status_code != 200:
+        raise Unread(f"{what} answered HTTP {response.status_code}")
+    try:
+        body = response.json()
+    except ValueError as exc:
+        raise Unread(f"{what} answered HTTP 200 with a body that is not JSON"
+                     ) from exc
+    if body is None:
+        return {}
+    if not isinstance(body, dict):
+        raise Unread(f"{what} answered a {type(body).__name__}, not an object")
+    return body
+
+
 def _history(client, card: str) -> list[dict]:
+    """A card's index history, `[]` when they have none, Unread when the read
+    failed."""
     # Without `interval` they answer the last five days, and a verdict is read
     # after its window closed: STR-0005 lost two days of its seven that way.
     response = client.get(INDEX_HISTORY.format(card=card),
                           params={"interval": "all"})
-    if response.status_code != 200:
-        return []
-    body = response.json() or {}
+    body = _body(response, f"index-history of {card[:8]}")
     return body.get("points") or body.get("history") or []
 
 
 def _closes_at(client, card: str) -> str | None:
     """When the card stops trading, from the card itself. After it their index
-    stops, so a verdict judges the card up to here (`qa.lab.verdict`)."""
+    stops, so a verdict judges the card up to here (`qa.lab.verdict`). None
+    when the card names no close; Unread when the read failed -- judging a
+    card that closed on day two over the whole window would come back
+    inconclusive, for good."""
     response = client.get(f"/api/v1/event-cards/{card}")
-    if response.status_code != 200:
-        return None
-    body = response.json() or {}
-    return body.get("trading_closes_at") if isinstance(body, dict) else None
+    return _body(response, f"card {card[:8]}").get("trading_closes_at")
 
 
 def _basket_returns(points: list[tuple], since) -> list[float]:
@@ -948,7 +977,13 @@ def open_book_returns(now=None, history=None, window_days: float = 14.0
             card = leg.get("card")
             if not card:
                 continue
-            points = lab._points(history(card) if history else [])
+            try:
+                points = lab._points(history(card) if history else [])
+            except Unread:
+                # A leg we could not read is not a flat leg: the room is left
+                # out of the correlation rather than read as a smaller basket.
+                per_leg = []
+                break
             returns = _basket_returns(points, since)
             if not returns:
                 continue
@@ -1018,9 +1053,12 @@ def _early_state_path() -> Path:
     return state_dir() / "lab_early.json"
 
 
-def _room_positions(paper_rows: list[dict], origin: str, cards) -> list[str]:
+def _room_positions(paper_rows: list[dict], origin: str, cards,
+                    theirs: set[str] | frozenset = frozenset()) -> list[str]:
     """Positions our accepted buys opened for this answer's cards and that no
-    close of ours has closed."""
+    close of ours has closed -- nor their own record, `theirs`: a card that
+    resolved by itself (TRD-0006, 2026-09-19) is not sold again, or its sale
+    fails and is owed on every call for good."""
     wanted = {str(c).lower() for c in cards}
     opened, closed = [], set()
     by_id: dict[str, dict] = {}
@@ -1038,15 +1076,16 @@ def _room_positions(paper_rows: list[dict], origin: str, cards) -> list[str]:
                 and outcome.get("outcome") == "accepted"
                 and outcome.get("position_id")):
             opened.append(outcome["position_id"])
-    return [p for p in opened if p not in closed]
+    return [p for p in opened if p not in closed and p not in theirs]
 
 
 def verdicts(now=None) -> list[dict]:
     """Every room whose window has closed and has no verdict yet -- and, once
     an hour, every running room whose own index already settled it early
     (`qa.lab._early`): past its stop, or every leg out at a net loss. Only a
-    refutation settles early; an early verdict stops the room and closes the
-    paper position it holds."""
+    refutation settles early. Any verdict stops the room, sells the paper
+    positions it holds and pauses its bots; what fails is owed to the next
+    call."""
     from qa.client import build_client
     from qa.config import identities, load_dotenv
     from qa.safety import CURRENT_TIER, EndpointRegistry, SafetyTier
@@ -1057,6 +1096,16 @@ def verdicts(now=None) -> list[dict]:
         checked = json.loads(_early_state_path().read_text(encoding="utf-8"))
     except (OSError, ValueError):
         checked = {}
+
+    def holding(strategy: dict, acceptance: dict) -> list[str]:
+        """The room's card positions still open: ours not closed by us, nor
+        closed on their side."""
+        return _room_positions(
+            _sibling("paper").load(), str(strategy.get("origin")),
+            [rooms.leg_ref(leg) for leg in acceptance.get("legs") or []
+             if rooms.leg_kind(leg) == "card"],
+            _closed_on_their_side())
+
     due, owed = [], []
     for strategy in rooms.strategies(rows):
         room = strategy["id"]
@@ -1066,45 +1115,43 @@ def verdicts(now=None) -> list[dict]:
         settled = rooms.verdict_of(rows, room)
         if settled is not None:
             # R06, deep pass of 2026-09-21: the verdict is written before the
-            # close, so a close that failed has to be owed from here on. A
-            # bot still trading after any verdict is owed its pause too.
-            if settled.get("early") or _bots_running(acceptance):
-                owed.append((strategy, acceptance, bool(settled.get("early"))))
+            # close, so a close that failed has to be owed from here on -- at
+            # ANY verdict since C3 (2026-09-23), not only an early one. A bot
+            # still trading after any verdict is owed its pause too.
+            if holding(strategy, acceptance) or _bots_running(acceptance):
+                owed.append((strategy, acceptance))
             continue
         said = lab.verdict(acceptance, {}, moment)
         if said["verdict"] != "open":
-            due.append((room, acceptance, strategy))
+            due.append((room, acceptance, strategy, True))
             continue
         if rooms.status_of(rows, room) != "running":
             continue
         last = _moment(checked.get(room))
         if last is None or moment - last >= timedelta(minutes=EARLY_CHECK_MINUTES):
-            due.append((room, acceptance, strategy))
+            due.append((room, acceptance, strategy, False))
 
-    def close_positions(strategy: dict, acceptance: dict, said: dict,
-                        cards: bool = True) -> None:
+    def close_positions(strategy: dict, acceptance: dict, said: dict) -> None:
         """Close what our accepted buys opened for this room's cards, and
         pause the paper bots it runs (2026-09-22; the practice money stays
         in the clone). A fund was never bought, so there is nothing to
         close. Not while a deep pass runs -- it verifies #85-#87 over these
         very trades -- and whatever fails stays owed to the next call."""
+        positions, bots = holding(strategy, acceptance), _bots_running(acceptance)
+        if not positions and not bots:
+            return
         if pass_in_flight():
             said.setdefault("close_failed", []).append(
                 "a deep pass is running; the close waits for the next call")
             return
-        legs = acceptance.get("legs") or []
-        if cards:
-            paper = _sibling("paper")
-            for position in _room_positions(
-                    paper.load(), str(strategy.get("origin")),
-                    [rooms.leg_ref(leg) for leg in legs
-                     if rooms.leg_kind(leg) == "card"]):
-                try:
-                    paper.close(position, True)
-                except (Exception, SystemExit) as exc:  # noqa: BLE001
-                    said.setdefault("close_failed", []).append(
-                        f"{position}: {str(exc)[:160]}")
-        for instance in _bots_running(acceptance):
+        paper = _sibling("paper")
+        for position in positions:
+            try:
+                paper.close(position, True)
+            except (Exception, SystemExit) as exc:  # noqa: BLE001
+                said.setdefault("close_failed", []).append(
+                    f"{position}: {str(exc)[:160]}")
+        for instance in bots:
             clone = _sibling("clone")
             try:
                 clone.enable(instance, True, enabled=False)
@@ -1119,9 +1166,9 @@ def verdicts(now=None) -> list[dict]:
                     f"{instance}: the pause was not accepted")
 
     retried = []
-    for strategy, acceptance, early in owed:
+    for strategy, acceptance in owed:
         said = {"room": strategy["id"], "retry": True}
-        close_positions(strategy, acceptance, said, cards=early)
+        close_positions(strategy, acceptance, said)
         if said.get("close_failed"):
             retried.append(said)
     if not due:
@@ -1134,32 +1181,39 @@ def verdicts(now=None) -> list[dict]:
     token = CURRENT_TIER.set(SafetyTier.SAFE)
     out = []
     # R08, deep pass of 2026-09-21: every room fetched the same benchmark for
-    # itself -- up to 125 identical reads an hour. One read per card per call.
-    histories: dict[str, list] = {}
+    # itself -- up to 125 identical reads an hour. One read per card per call,
+    # and a failed one is remembered as failed for the rest of the call (C1).
+    def once(cache: dict, key: str, read):
+        if key not in cache:
+            try:
+                cache[key] = read()
+            except Unread as exc:
+                cache[key] = exc
+            except Exception as exc:  # noqa: BLE001 -- a transport error
+                cache[key] = Unread(f"{type(exc).__name__}: {str(exc)[:120]}")
+        if isinstance(cache[key], Unread):
+            raise cache[key]
+        return cache[key]
+
+    histories: dict[str, object] = {}
 
     def history(card: str) -> list:
-        if card not in histories:
-            histories[card] = _history(client, card)
-        return histories[card]
+        return once(histories, card, lambda: _history(client, card))
 
-    closings: dict[str, str | None] = {}
+    closings: dict[str, object] = {}
 
     def closes_at(card: str) -> str | None:
-        if card not in closings:
-            try:
-                closings[card] = _closes_at(client, card)
-            except Exception:  # noqa: BLE001 -- unread: judged as before
-                closings[card] = None
-        return closings[card]
+        return once(closings, card, lambda: _closes_at(client, card))
     samples: list[dict] | None = None
     funded: dict[str, float] | None = None
-    fund_histories: dict[str, list] = {}
+    fund_histories: dict[str, object] = {}
 
     def series_of(leg: dict) -> list:
         """A leg's index, by its kind: a card's from their index-history, a
         bot's from the sampler's rows on this machine, a fund's from
-        get_fund_history. An unread fund is an empty series -- the verdict
-        reads that as a gap, never as a loss."""
+        get_fund_history. A read that failed raises Unread and the verdict
+        waits; only an ANSWER with no points is an empty series, which the
+        verdict reads as a gap, never as a loss."""
         nonlocal samples, funded
         kind, ref = rooms.leg_kind(leg), rooms.leg_ref(leg)
         if kind == "arena":
@@ -1172,24 +1226,30 @@ def verdicts(now=None) -> list[dict]:
                 samples, funded = rooms.load_samples(), _funded()
             return lab.bot_series(samples, ref, funded.get(ref))
         if kind == "fund":
-            if ref not in fund_histories:
-                try:
-                    fund_histories[ref] = lab.fund_series(_fund_points(ref))
-                except Exception:  # noqa: BLE001 -- unread: a gap
-                    fund_histories[ref] = []
-            return fund_histories[ref]
+            return once(fund_histories, ref,
+                        lambda: lab.fund_series(_fund_points(ref)))
         return history(ref)
     try:
-        for room, acceptance, strategy in due:
+        for room, acceptance, strategy, closed in due:
             legs = acceptance.get("legs") or []
-            series = {rooms.leg_ref(leg): series_of(leg) for leg in legs
-                      if rooms.leg_ref(leg)}
-            if acceptance.get("benchmark_card"):
-                series[acceptance["benchmark_card"]] = history(
-                    acceptance["benchmark_card"])
-            closes = {rooms.leg_ref(leg): closes_at(rooms.leg_ref(leg))
-                      for leg in legs
-                      if rooms.leg_kind(leg) == "card" and rooms.leg_ref(leg)}
+            try:
+                series = {rooms.leg_ref(leg): series_of(leg) for leg in legs
+                          if rooms.leg_ref(leg)}
+                if acceptance.get("benchmark_card"):
+                    series[acceptance["benchmark_card"]] = history(
+                        acceptance["benchmark_card"])
+                closes = {rooms.leg_ref(leg): closes_at(rooms.leg_ref(leg))
+                          for leg in legs
+                          if rooms.leg_kind(leg) == "card" and rooms.leg_ref(leg)}
+            except Unread as exc:
+                # Not written, not checked: the next call reads it again. A
+                # running room's hourly look just waits; a closed window's
+                # verdict is said to be waiting, so the tick shows it.
+                if closed:
+                    out.append({"room": room, "verdict": "waiting",
+                                "why": (f"{exc} -- a failed read is not an empty "
+                                        f"one; judged again on the next call")})
+                continue
             said = lab.verdict(acceptance, series, moment, closes=closes)
             checked[room] = moment.isoformat()
             if said["verdict"] == "open":
@@ -1199,14 +1259,13 @@ def verdicts(now=None) -> list[dict]:
                 room, "stopped",
                 (f"verdict{' (early)' if said.get('early') else ''}: "
                  f"{said['verdict']} -- {said.get('why', '')}")[:400])
-            if said.get("early") or _bots_running(acceptance):
-                # The money comes back under the ceiling only when the
-                # position is closed; a stopped room alone frees a slot in the
-                # count, not the stake. A bot is paused at ANY verdict: its
-                # window is over either way, and a bot left trading goes on
-                # spending after nobody is judging it.
-                close_positions(strategy, acceptance, said,
-                                cards=bool(said.get("early")))
+            # The money comes back under the ceiling only when the position is
+            # closed; a stopped room alone frees a slot in the count, not the
+            # stake. At ANY verdict, early or at the window's end (C3,
+            # 2026-09-23: STR-0003's TRD-0006 rode past its verdict until the
+            # card resolved by itself): the window is over either way, and a
+            # position or a bot left running goes on after nobody judges it.
+            close_positions(strategy, acceptance, said)
             out.append({"room": room, **said})
     finally:
         client.close()
@@ -2540,6 +2599,8 @@ def _say_tick(said: dict, out) -> None:
     if said.get("held_older"):
         out(f"  held:  +{said['held_older']} older reason(s) not shown -- "
             f"still retried every tick")
+    for line in said.get("verdicts_waiting") or []:
+        out(f"  verdict waits:  {line}")
     if said.get("resolved"):
         out(f"  resolved without us, written down: {said['resolved']}")
     out("  question: may go now -- `lab.py brief`, then `lab.py ask --no-wait`"
@@ -2645,7 +2706,12 @@ def tick(*, now: datetime | None = None, actions: dict | None = None,
     # And how many that cut, said: NEX-0078 slid off unannounced (2026-09-23).
     said["held_older"] = len(every) - len(said["held"])
 
-    said["verdicts"] = len(attempt("verdicts", doors["verdicts"]) or [])
+    judged = list(attempt("verdicts", doors["verdicts"]) or [])
+    # A verdict that waits on a failed read is not a verdict (C1): counted
+    # apart, and named with the read that failed.
+    said["verdicts"] = sum(1 for row in judged if row.get("verdict") != "waiting")
+    said["verdicts_waiting"] = [f"{row['room']}: {row.get('why', '')}"
+                                for row in judged if row.get("verdict") == "waiting"]
     said["resolved"] = len(attempt("resolved", _record_resolved) or [])
 
     last_reading = lab._at(state.get("last_fomo_reading"))

@@ -1058,19 +1058,27 @@ def verdict(acceptance: dict, series: dict, now, closes: dict | None = None
 
     stop_pct = float(acceptance.get("stop_pct") or 0) or None
     if ret <= 0:
-        why, ok = f"it returned {ret:+.2f}%", False
+        why, name = f"it returned {ret:+.2f}%", "refuted"
     elif benchmark is not None and ret <= benchmark:
-        why, ok = (f"it returned {ret:+.2f}% against the benchmark's "
-                   f"{benchmark:+.2f}%"), False
+        why, name = (f"it returned {ret:+.2f}% against the benchmark's "
+                     f"{benchmark:+.2f}%"), "refuted"
     elif stop_pct is not None and drawdown > stop_pct:
-        why, ok = (f"its drawdown reached {drawdown:.2f}%, past the "
-                   f"{stop_pct:.2f}% it was accepted with"), False
+        why, name = (f"its drawdown reached {drawdown:.2f}%, past the "
+                     f"{stop_pct:.2f}% it was accepted with"), "refuted"
+    elif card and benchmark is None:
+        # Accepted against a benchmark that has no marks over the stretch:
+        # beating it cannot be claimed, and a gap is not a loss either (C1,
+        # review of 2026-09-23 -- on return alone, a room that lost to BTC
+        # survived).
+        why, name = (f"it returned {ret:+.2f}%, but its benchmark has no "
+                     f"marks over the window, so beating it cannot be "
+                     f"claimed"), "inconclusive"
     else:
-        why, ok = (f"it returned {ret:+.2f}% inside a {drawdown:.2f}% drawdown"
-                   + (f", against the benchmark's {benchmark:+.2f}%"
-                      if benchmark is not None else "")), True
+        why, name = (f"it returned {ret:+.2f}% inside a {drawdown:.2f}% drawdown"
+                     + (f", against the benchmark's {benchmark:+.2f}%"
+                        if benchmark is not None else "")), "survived"
 
-    return {"verdict": "survived" if ok else "refuted", "why": why,
+    return {"verdict": name, "why": why,
             "return_pct": ret, "max_drawdown_pct": drawdown,
             "benchmark_pct": benchmark, "coverage": coverage,
             "legs": [{k: v for k, v in leg.items() if k != "curve"}
