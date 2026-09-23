@@ -613,11 +613,13 @@ def _ours(mod, instance="inst-1", is_paper=True, outcome="accepted"):
 
 
 class _Tripwire:
-    """Their side, where a PATCH that is actually sent is the failure. `rows`
-    is what my-clones answers; `patched` is set only by a positive control."""
+    """Their side, where a PATCH or a toggle that is actually sent is the
+    failure. `rows` is what my-clones answers; `sent` fills only in a positive
+    control, which passes the answer it wants."""
 
-    def __init__(self, rows=None, status=200, patch=None):
+    def __init__(self, rows=None, status=200, patch=None, post=None):
         self.rows, self.status, self.patch_answer = rows, status, patch
+        self.post_answer = post
         self.sent = []
 
     def get(self, path, params=None):
@@ -628,6 +630,12 @@ class _Tripwire:
             raise AssertionError(f"a settings PATCH was sent: {path} {json}")
         self.sent.append((path, json))
         return self.patch_answer
+
+    def post(self, path, json=None, params=None, **kwargs):
+        if self.post_answer is None:
+            raise AssertionError(f"a toggle was sent: {path} {params}")
+        self.sent.append((path, params))
+        return self.post_answer
 
     def close(self):
         pass
@@ -748,6 +756,105 @@ def test_a_settings_patch_needs_our_paper_record_theirs_and_no_running_room(
     assert [r["type"] for r in chain] == ["intent", "outcome", "after"], chain
     assert chain[0]["body"] == change and chain[0]["their_is_paper"] is True
     assert chain[1]["outcome"] == "accepted"
+
+
+def _switch(mod, kind, instance="inst-1", outcome="accepted", body=None):
+    """One of clone.py's own chains on `instance`: enable, disable, settings."""
+    cid = mod._next_id(mod.load())
+    mod._append({"id": cid, "type": "intent", "kind": kind,
+                 "instance_id": instance, **({"body": body} if body else {})})
+    mod._append({"id": cid, "type": "outcome", "kind": kind,
+                 "outcome": outcome, "http_status": 200})
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_started_clone_starts_again_only_as_a_new_variant(tmp_path, monkeypatch):
+    """V5 of plan v2 (REPLY-0049): one paper clone per species per account, so
+    a species' settings are walked in time on its ONE clone -- which means
+    starting a clone that has run before. V2's rule stays the floor: a bot
+    that stopped is not started again as the SAME experiment. It may start
+    again only as a new one, and only in this order, each step accepted:
+
+        our pause  ->  a settings change after it  ->  no room running on it
+
+    and never after a halt that was not ours (their guard, or unexplained):
+    what stopped it is a finding, not a variant.
+
+    Every refusal is proved from our record before a client exists
+    (`_no_client`), so a floor that broke fails here and toggles nothing."""
+    mod = _clone(tmp_path, monkeypatch)
+    _ours(mod)
+    _switch(mod, "enable")
+
+    _no_client(mod, monkeypatch)
+    # Started, never paused: V2's refusal, in its own words.
+    with pytest.raises(SystemExit, match="never started again"):
+        mod.enable("inst-1", True)
+    # A settings change BEFORE our pause changes the experiment that ran.
+    _switch(mod, "settings", body={"stop_loss_pct": 5.0})
+    _switch(mod, "disable")
+    with pytest.raises(SystemExit, match="settings"):
+        mod.enable("inst-1", True)
+    # Paused by us, and the change after it was refused by them.
+    _switch(mod, "settings", outcome="rejected", body={"stop_loss_pct": 5.0})
+    with pytest.raises(SystemExit, match="settings"):
+        mod.enable("inst-1", True)
+
+    # Paused by us, an accepted change after it -- but a room runs on it.
+    _switch(mod, "settings", body={"stop_loss_pct": 5.0})
+    import qa.rooms as qa_rooms
+    import json as _json
+    running = [{"type": "strategy", "id": "STR-0002", "origin": "NEX-0001",
+                "title": "bot", "kind": "bot", "ref": "sp-1",
+                "at": "2026-09-23T00:00:00+00:00"},
+               {"type": "plan", "room": "STR-0002", "legs": [
+                   {"kind": "bot", "ref": "inst-1", "side": "bull", "share": 1.0}],
+                "at": "2026-09-23T00:00:01+00:00"},
+               {"type": "status", "room": "STR-0002", "status": "running",
+                "why": "x", "at": "2026-09-23T00:00:02+00:00"}]
+    (tmp_path / qa_rooms.path().name).write_text(
+        "".join(_json.dumps(r) + "\n" for r in running), encoding="utf-8")
+    with pytest.raises(SystemExit, match="STR-0002"):
+        mod.enable("inst-1", True)
+    (tmp_path / qa_rooms.path().name).write_text("", encoding="utf-8")
+
+    # A halt that was not ours: the sampler saw it stop at a loss before our
+    # pause reached it. Never restarted, whatever came after.
+    samples = tmp_path / qa_rooms.samples_path().name
+    halted = [{"type": "sample", "kind": "bot", "instance_id": "inst-1",
+               "at": "2026-09-22T20:00:00+00:00", "is_trading": False,
+               "total_profit_usdc": "-24.02"}]
+    samples.write_text("".join(_json.dumps(r) + "\n" for r in halted),
+                       encoding="utf-8")
+    stamped = [dict(r, at="2026-09-22T13:38:30+00:00") if r.get("kind") == "enable"
+               else dict(r, at="2026-09-22T21:00:00+00:00") for r in mod.load()]
+    mod.path().write_text("".join(_json.dumps(r) + "\n" for r in stamped),
+                          encoding="utf-8")
+    with pytest.raises(SystemExit, match="their_guard"):
+        mod.enable("inst-1", True)
+    samples.write_text("", encoding="utf-8")
+
+    # All four hold: the floor lets it through to their side, where the
+    # two-statement paper floor and the toggle follow as for a first start.
+    wire = _Tripwire([{**PAPER_ROW, "total_profit_usdc": "3.5",
+                       "current_balance_usdc": "243.5"}], 200,
+                     post=_Response(200, {**PAPER_ROW, "is_trading": True}))
+    _offline(mod, monkeypatch, wire)
+    mod.enable("inst-1", True)
+    assert wire.sent == [("/api/v1/cloned-bots/inst-1/toggle-trading",
+                          {"enabled": "true"})], wire.sent
+    intent = [r for r in mod.load() if r.get("kind") == "enable"
+              and r.get("type") == "intent"][-1]
+    # Item 5 of V5: the variant's verdict starts at this restart, so the
+    # restart records what the bot had made so far, off the same row.
+    assert intent["bot_profit_usdc"] == "3.5", intent
+    assert intent["bot_balance_usdc"] == "243.5", intent
+
+    # And once more: the variant just started, so the next start needs its
+    # own pause and its own change again.
+    _no_client(mod, monkeypatch)
+    with pytest.raises(SystemExit, match="never started again"):
+        mod.enable("inst-1", True)
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

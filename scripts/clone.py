@@ -523,6 +523,66 @@ def _instance(client, instance_id: str) -> dict:
     return row
 
 
+def restart_refusal(instance_id: str, rows: list[dict] | None = None,
+                    samples: list[dict] | None = None) -> str | None:
+    """Why this clone may not be started now, or None -- from our own record
+    and the sampler's rows on this machine, before anything is asked of them.
+
+    V2 of the 2026-09-23 plan: a bot that stopped is never started again as
+    the same experiment -- CLN-0007 restarted a halted Perceptron Oracle on
+    2026-09-11 and its record ran on as one experiment across two starts.
+
+    V5 narrows it and keeps its reason. REPLY-0049: one paper clone per
+    species per account (a second is 409 ALREADY_CLONED), so the settings grid
+    is walked in time on the species' one clone, and a clone that ran before
+    may start again ONLY as a new variant -- each step accepted, in order:
+
+        our pause  ->  a settings change after it  ->  no room running on it
+
+    so every start measures one setting. And never after a stop that was not
+    ours (`qa.lab.bot_stops`: their guard, or unexplained): that stop is a
+    finding to report, not a variant to run over."""
+    rows = load() if rows is None else rows
+    answered = {row.get("id"): row.get("outcome") for row in rows
+                if row.get("type") == "outcome"}
+    # File order is the order they were sent in: every chain is appended
+    # intent-first by this module, under its lock.
+    steps = [row["kind"] for row in rows
+             if row.get("type") == "intent"
+             and row.get("kind") in ("enable", "disable", "settings")
+             and str(row.get("instance_id")) == str(instance_id)
+             and answered.get(row.get("id")) == "accepted"]
+    if "enable" not in steps:
+        return None      # a first start: enable()'s paper floor is the rest
+    since = steps[len(steps) - 1 - steps[::-1].index("enable") + 1:]
+    if "disable" not in since:
+        return (f"{instance_id} was started once already, and a bot that has "
+                f"been started is never started again as the same experiment: "
+                f"a new variant needs our own pause first, then a settings "
+                f"change after it")
+    after_pause = since[since.index("disable") + 1:]
+    if "settings" not in after_pause:
+        return (f"{instance_id} is paused by us, but no accepted settings "
+                f"change follows the pause, so a start now would run the same "
+                f"settings again -- the same experiment, not a new variant")
+    running = room_running(instance_id)
+    if running:
+        return (f"{running} is running on {instance_id}; a variant starts only "
+                f"in a room of its own, after that one stops")
+    from qa import lab
+    from qa import rooms
+
+    samples = rooms.load_samples() if samples is None else samples
+    theirs = [stop for stop in lab.bot_stops(rows, samples)
+              if stop["instance"] == str(instance_id) and stop["cause"] != "ours"]
+    if theirs:
+        stop = theirs[-1]
+        return (f"{instance_id} stopped by itself ({stop['cause']}, between "
+                f"{stop['after']} and {stop['before']}); a stop that was not "
+                f"ours is a finding, and the bot is never started again")
+    return None
+
+
 def enable(instance_id: str, confirm: bool, enabled: bool = True) -> dict:
     """Start a paper bot trading, and record what they said it was first.
 
@@ -537,22 +597,9 @@ def enable(instance_id: str, confirm: bool, enabled: bool = True) -> dict:
     """
     kind = "enable" if enabled else "disable"
     if enabled:
-        # V2 of the 2026-09-23 plan: a bot that stopped -- paused by us,
-        # halted by their guard, or for no reason anyone can read -- is never
-        # started again. CLN-0007 restarted a halted Perceptron Oracle on
-        # 2026-09-11 and its record ran on as one experiment across two
-        # starts. A new experiment is a new clone. Refused from our own
-        # record, before anything is asked of their side.
-        rows = load()
-        answered = {row.get("id"): row.get("outcome") for row in rows
-                    if row.get("type") == "outcome"}
-        if any(row.get("type") == "intent" and row.get("kind") == "enable"
-               and str(row.get("instance_id")) == str(instance_id)
-               and answered.get(row.get("id")) == "accepted" for row in rows):
-            raise SystemExit(
-                f"{instance_id} was started once already, and a bot that has "
-                f"been started is never started again: whatever stopped it, "
-                f"a new experiment is a new clone")
+        refused = restart_refusal(instance_id)
+        if refused:
+            raise SystemExit(refused)
     load_dotenv()
     install_client_guard()
     registry = EndpointRegistry.load()
@@ -579,6 +626,10 @@ def enable(instance_id: str, confirm: bool, enabled: bool = True) -> dict:
              "their_execution_class":
                  (row.get("execution_economics") or {}).get("execution_class"),
              "bot_balance_usdc": row.get("current_balance_usdc"),
+             # What it had made before this start, off the same row (V5): a
+             # variant restarts a clone that ran before, and its verdict is
+             # measured from here, not from the clone's first funding.
+             "bot_profit_usdc": row.get("total_profit_usdc"),
              "before": before,
              "sizing": "ours -- Nexus answered QUERY_RESTRICTED to the sizing "
                        "question (NEX-0013, NEX-0014), so no recorded guidance "
