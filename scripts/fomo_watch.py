@@ -214,7 +214,12 @@ def _depth(quote: dict | None) -> dict:
 # simply moved between the two reads.
 RADAR_FIELDS = ("liquidity_usd", "max_buy_5pct_usd", "hot_pressure", "thin",
                 "signal_type", "conviction_kind", "token_age_seconds",
-                "usd_invested", "qualified_buyers", "new_qualified_buyers_15m")
+                "usd_invested", "qualified_buyers", "new_qualified_buyers_15m",
+                # V3 of the 2026-09-23 plan: the radar's own price and timing
+                # (how late was our quote -- could we have got in?) and its
+                # own exit call, which nothing kept.
+                "price_usd", "first_buy_seconds_ago", "exit_signal",
+                "exit_reason", "updated_at")
 
 
 def _radar(row: dict | None) -> dict:

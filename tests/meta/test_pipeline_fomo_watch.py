@@ -333,6 +333,43 @@ def test_the_radars_own_gate_fields_are_kept_beside_our_reading(tmp_path,
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_radars_own_price_timing_and_exit_are_kept(tmp_path, monkeypatch):
+    """The plan's V3 (review of 2026-09-23): the radar row carries its own
+    price (`price_usd`), how long ago the first buy was
+    (`first_buy_seconds_ago`), its own exit call (`exit_signal`,
+    `exit_reason`) and when it was computed (`updated_at`) -- and the capture
+    kept none of them. Without the radar's price and timing we cannot say how
+    late our own quote was, which is the "could we have got in" half of "$10
+    into every hot signal"; without its exit we cannot test the exit it
+    publishes. What is in the response at capture time is the only chance."""
+    mod = _module(tmp_path, monkeypatch)
+    radar = {"token_address": "SoL3", "hot": True, "symbol": "EXIT",
+             "price_usd": 0.0012, "first_buy_seconds_ago": 94.0,
+             "exit_signal": True, "exit_reason": "buyers_fading",
+             "updated_at": "2026-09-13T11:59:30+00:00"}
+
+    def handler(request):
+        url = str(request.url)
+        if "fomo-radar/signals" in url:
+            if request.url.params.get("chain") != "solana":
+                return httpx.Response(200, json={"rows": []})
+            return httpx.Response(200, json={"rows": [radar]})
+        return httpx.Response(200, json={"rows": [
+            {"address": request.url.params.get("q"), "price_usd": 0.0013,
+             "liquidity_usd": 9000.0, "volume_h24": 50000.0}]})
+
+    mod.capture(_client(handler), now=T0)
+    signal = [r for r in mod.load() if r["type"] == "signal"][0]
+
+    assert signal["radar_price_usd"] == 0.0012
+    assert signal["radar_first_buy_seconds_ago"] == 94.0
+    assert signal["radar_exit_signal"] is True
+    assert signal["radar_exit_reason"] == "buyers_fading"
+    assert signal["radar_updated_at"] == "2026-09-13T11:59:30+00:00"
+    assert signal["price_usd"] == 0.0013, "ours is still ours"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_failed_read_never_writes_a_delisting(tmp_path, monkeypatch):
     """Rule 8, on the round that seeds depth for tokens whose 24h of
     checkpoints is over.
