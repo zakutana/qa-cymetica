@@ -1097,14 +1097,22 @@ def verdicts(now=None) -> list[dict]:
     except (OSError, ValueError):
         checked = {}
 
+    books: dict[str, object] = {}
+
     def holding(strategy: dict, acceptance: dict) -> list[str]:
         """The room's card positions still open: ours not closed by us, nor
-        closed on their side."""
+        closed on their side. Both diaries are read once per call, not once
+        per room: every settled room is asked on every tick, and V5 lifts the
+        room count. Safe within a call -- rooms hold different positions, and
+        a room is either owed or due, never both."""
+        if not books:
+            books["paper"] = _sibling("paper").load()
+            books["theirs"] = _closed_on_their_side()
         return _room_positions(
-            _sibling("paper").load(), str(strategy.get("origin")),
+            books["paper"], str(strategy.get("origin")),
             [rooms.leg_ref(leg) for leg in acceptance.get("legs") or []
              if rooms.leg_kind(leg) == "card"],
-            _closed_on_their_side())
+            books["theirs"])
 
     due, owed = [], []
     for strategy in rooms.strategies(rows):
