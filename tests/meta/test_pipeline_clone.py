@@ -594,3 +594,194 @@ def test_a_bot_we_started_once_is_never_started_again(tmp_path, monkeypatch):
         mod.enable("inst-2", True)
     with pytest.raises(Reached):
         mod.enable("inst-1", True, enabled=False)
+
+
+# --- the settings PATCH: the paper floor before its first caller (V5, B7) ----
+
+PAPER_ROW = {"id": "inst-1", "is_paper": True, "is_trading": False,
+             "execution_economics": {"execution_class": "PAPER_SIMULATION"}}
+
+
+def _ours(mod, instance="inst-1", is_paper=True, outcome="accepted"):
+    """Our clone record: the clone that made `instance`, as clone() writes it."""
+    cid = mod._next_id(mod.load())
+    mod._append({"id": cid, "type": "intent", "source_type": "wta_species",
+                 "source_id": "sp-1", "paper": True})
+    mod._append({"id": cid, "type": "outcome", "outcome": outcome,
+                 "http_status": 200, "clone_instance_id": instance,
+                 "is_paper": is_paper})
+
+
+class _Tripwire:
+    """Their side, where a PATCH that is actually sent is the failure. `rows`
+    is what my-clones answers; `patched` is set only by a positive control."""
+
+    def __init__(self, rows=None, status=200, patch=None):
+        self.rows, self.status, self.patch_answer = rows, status, patch
+        self.sent = []
+
+    def get(self, path, params=None):
+        return _Response(self.status, self.rows)
+
+    def patch(self, path, json=None, **kwargs):
+        if self.patch_answer is None:
+            raise AssertionError(f"a settings PATCH was sent: {path} {json}")
+        self.sent.append((path, json))
+        return self.patch_answer
+
+    def close(self):
+        pass
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_settings_patch_carries_only_the_fields_the_grid_walks(
+        tmp_path, monkeypatch):
+    """B7 of the 2026-09-23 review was dropped only because nothing sent the
+    PATCH; V5 adds the caller, so the floor comes first.
+
+    The transport's MUTATE branch never reads `executable_params` -- it is a
+    PROBE declaration -- so what a PATCH may carry is `SAFE_SETTINGS` in
+    clone.py, checked before a client exists. `is_trading` is left out on
+    purpose: `is_trading: true` is a START through a second door, past
+    `enable()`'s two-statement floor and its never-restart rule. The arb, the
+    on-chain share and the market lists are not ours to move at all.
+
+    Refused before anything is built: a refusal that broke would otherwise
+    reach their side (`_no_client`)."""
+    import yaml
+
+    mod = _clone(tmp_path, monkeypatch)
+    _no_client(mod, monkeypatch)
+    _ours(mod)
+
+    grid = {"stop_loss_pct", "take_profit_pct", "max_position_pct",
+            "max_open_positions", "min_ai_confidence"}
+    assert grid <= mod.SAFE_SETTINGS, mod.SAFE_SETTINGS
+    unsafe = {"is_trading", "arb_strategy_enabled", "onchain_pct",
+              "perpetual_markets", "custom_markets", "strategy_override",
+              "catalog_watchlist", "custom_avatar_url", "name"}
+    assert not (unsafe & mod.SAFE_SETTINGS), unsafe & mod.SAFE_SETTINGS
+
+    raw = yaml.safe_load((REPO / "components.yaml").read_text(encoding="utf-8"))
+    rule = next(e for e in raw["endpoints"] if e["id"] == "cloned_bots.settings")
+    assert set(rule["executable_params"]) == set(mod.SAFE_SETTINGS), (
+        "components.yaml and clone.py disagree about what a PATCH may carry")
+
+    for changes, said in (({"is_trading": True}, "is_trading"),
+                          ({"onchain_pct": 0}, "onchain_pct"),
+                          ({"arb_strategy_enabled": True}, "arb_strategy"),
+                          ({"stop_loss_pct": 5, "name": "x"}, "name"),
+                          ({}, "nothing"),
+                          ({"stop_loss_pct": 35}, "stop_loss_pct"),
+                          ({"take_profit_pct": 1}, "take_profit_pct"),
+                          ({"min_ai_confidence": 1.5}, "min_ai_confidence"),
+                          ({"max_open_positions": -1}, "max_open_positions"),
+                          ({"event_card_trading_enabled": "yes"},
+                           "event_card_trading_enabled")):
+        with pytest.raises(SystemExit, match=said):
+            mod.settings("inst-1", changes, confirm=True)
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_settings_patch_needs_our_paper_record_theirs_and_no_running_room(
+        tmp_path, monkeypatch):
+    """A PATCH to /settings carries no `paper` -- their schema rejects unknown
+    fields by name -- so the transport's required_flags has nothing to read.
+    The floor is enable()'s, and one more: the instance must be a PAPER clone
+    by OUR record (an accepted clone whose outcome said is_paper true), and by
+    THEIR row now (is_paper and execution_class agreeing, `startable`). And a
+    room running on it holds its settings still: a variant is a new room, and
+    changing the one being measured would judge two settings as one.
+
+    Every refusal is proved against a tripwire whose `patch` raises."""
+    mod = _clone(tmp_path, monkeypatch)
+    change = {"stop_loss_pct": 8}
+
+    # Not a clone of ours at all, and one our record does not call paper.
+    _no_client(mod, monkeypatch)
+    with pytest.raises(SystemExit, match="our record"):
+        mod.settings("inst-1", change, confirm=True)
+    _ours(mod, instance="inst-live", is_paper=False)
+    with pytest.raises(SystemExit, match="our record"):
+        mod.settings("inst-live", change, confirm=True)
+    _ours(mod, instance="inst-refused", outcome="rejected")
+    with pytest.raises(SystemExit, match="our record"):
+        mod.settings("inst-refused", change, confirm=True)
+
+    # Ours and paper, but a room is running on it.
+    _ours(mod)
+    import qa.rooms as qa_rooms
+    rows = [{"type": "strategy", "id": "STR-0001", "origin": "NEX-0001",
+             "title": "bot", "kind": "bot", "ref": "sp-1", "at": "2026-09-23T00:00:00+00:00"},
+            {"type": "plan", "room": "STR-0001", "legs": [
+                {"kind": "bot", "ref": "inst-1", "side": "bull", "share": 1.0}],
+             "at": "2026-09-23T00:00:01+00:00"},
+            {"type": "status", "room": "STR-0001", "status": "running",
+             "why": "x", "at": "2026-09-23T00:00:02+00:00"}]
+    (tmp_path / qa_rooms.path().name).write_text(
+        "".join(__import__("json").dumps(r) + "\n" for r in rows), encoding="utf-8")
+    with pytest.raises(SystemExit, match="STR-0001"):
+        mod.settings("inst-1", change, confirm=True)
+    with open(tmp_path / qa_rooms.path().name, "a", encoding="utf-8") as handle:
+        handle.write(__import__("json").dumps(
+            {"type": "status", "room": "STR-0001", "status": "stopped",
+             "why": "window closed", "at": "2026-09-23T00:00:03+00:00"}) + "\n")
+
+    # Their row: not paper, a live execution class, unreadable, not listed.
+    for rows_, status in (([{**PAPER_ROW, "is_paper": False}], 200),
+                          ([{**PAPER_ROW, "execution_economics":
+                             {"execution_class": "LIVE_ONCHAIN"}}], 200),
+                          (None, 503),
+                          ([], 200)):
+        _offline(mod, monkeypatch, _Tripwire(rows_, status))
+        with pytest.raises(SystemExit):
+            mod.settings("inst-1", change, confirm=True)
+    assert not [r for r in mod.load() if r.get("kind") == "settings"], (
+        "a refused PATCH left a record")
+
+    # The positive control: all three agree, and the chain is written.
+    wire = _Tripwire([PAPER_ROW], 200, patch=_Response(200, {"success": True}))
+    _offline(mod, monkeypatch, wire)
+    mod.settings("inst-1", change, confirm=True)
+    assert wire.sent == [("/api/v1/cloned-bots/inst-1/settings", change)], wire.sent
+    chain = [r for r in mod.load() if r.get("kind") == "settings"]
+    assert [r["type"] for r in chain] == ["intent", "outcome", "after"], chain
+    assert chain[0]["body"] == change and chain[0]["their_is_paper"] is True
+    assert chain[1]["outcome"] == "accepted"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_transport_holds_a_settings_patch_to_its_declared_fields():
+    """The second, independent floor: at MUTATE the transport refuses a
+    settings PATCH carrying a field components.yaml does not declare -- so
+    somebody who edits SAFE_SETTINGS in clone.py still meets the wall, and
+    `is_trading` or `onchain_pct` never reach their side from any caller."""
+    import httpx
+
+    from qa.safety import (CURRENT_TIER, EndpointRegistry, SafetyTransport,
+                           SafetyViolation)
+
+    class Inner(httpx.BaseTransport):
+        def handle_request(self, request):
+            raise AssertionError("the request reached the network")
+
+    registry = EndpointRegistry.load()
+    registry.mutate_enabled = True
+    registry.mutate_allowed_hosts = frozenset({"cymetica.com"})
+    transport = SafetyTransport(Inner(), registry)
+    token = CURRENT_TIER.set(SafetyTier.MUTATE)
+    try:
+        for body in ({"is_trading": True}, {"onchain_pct": 0},
+                     {"stop_loss_pct": 8, "arb_strategy_enabled": True}):
+            request = httpx.Request(
+                "PATCH", "https://cymetica.com/api/v1/cloned-bots/inst-1/settings",
+                json=body)
+            with pytest.raises(SafetyViolation, match="not declared"):
+                transport.handle_request(request)
+        fine = httpx.Request(
+            "PATCH", "https://cymetica.com/api/v1/cloned-bots/inst-1/settings",
+            json={"stop_loss_pct": 8})
+        with pytest.raises(AssertionError, match="reached the network"):
+            transport.handle_request(fine)
+    finally:
+        CURRENT_TIER.reset(token)

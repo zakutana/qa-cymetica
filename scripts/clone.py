@@ -58,7 +58,32 @@ CLONE = "/api/v1/cloned-bots/clone"
 MY_CLONES = "/api/v1/cloned-bots/my-clones"
 PREFIX_FUND = "/api/v1/cloned-bots/{id}/fund"
 TOGGLE = "/api/v1/cloned-bots/{id}/toggle-trading"
+SETTINGS = "/api/v1/cloned-bots/{id}/settings"
 ACCOUNT = "/api/v1/account/me"
+
+# What a settings PATCH may carry: the grid of plan v2's V5 -- the exits, the
+# sizing, the AI's floor and which markets the bot may trade -- and nothing
+# else. components.yaml declares exactly these (`closed_body`), so the
+# transport refuses the rest at MUTATE whoever builds the body.
+#
+# Left out on purpose, each for its own reason:
+#   is_trading    a START through a second door, past enable()'s floor and its
+#                 rule that a stopped bot is not started again as the same
+#                 experiment;
+#   onchain_pct, arb_strategy_enabled, strategy_override, perpetual_markets,
+#   custom_markets, catalog_watchlist
+#                 where and how its money moves, not how a strategy is tuned;
+#   name, avatar  nothing a verdict could tell apart.
+# Bounds are theirs (update_bot_settings: "stop_loss_pct (1-20),
+# take_profit_pct (5-100), max_position_pct (1-50) ... min_ai_confidence 0-1",
+# max_open_positions "0 = unlimited"), checked here so a typo is not spent as
+# a 422 against them.
+SETTING_BOUNDS = {"stop_loss_pct": (1.0, 20.0), "take_profit_pct": (5.0, 100.0),
+                  "max_position_pct": (1.0, 50.0), "min_ai_confidence": (0.0, 1.0),
+                  "max_open_positions": (0, None)}
+MARKET_TOGGLES = frozenset({"event_card_trading_enabled", "arena_trading_enabled",
+                            "catalog_trading_enabled", "tge_trading_enabled"})
+SAFE_SETTINGS = frozenset(SETTING_BOUNDS) | MARKET_TOGGLES
 
 # Their two group keys, and the enum value each maps to. The plural/singular
 # mismatch is theirs: `available` returns "perpetual_agents" and
@@ -612,6 +637,156 @@ def enable(instance_id: str, confirm: bool, enabled: bool = True) -> dict:
     return served
 
 
+def safe_settings(changes) -> dict:
+    """The PATCH body, or a refusal naming the field -- before anything else."""
+    if not isinstance(changes, dict) or not changes:
+        raise SystemExit("a settings PATCH with nothing in it changes nothing")
+    unsafe = sorted(set(changes) - SAFE_SETTINGS)
+    if unsafe:
+        raise SystemExit(
+            f"{', '.join(unsafe)}: not a field the laboratory may PATCH. It "
+            f"walks {', '.join(sorted(SAFE_SETTINGS))}; is_trading is enable()'s, "
+            f"and where the money goes is not a setting we tune")
+    body = {}
+    for key, value in changes.items():
+        if key in MARKET_TOGGLES:
+            if not isinstance(value, bool):
+                raise SystemExit(f"{key} is true or false, not {value!r}")
+        else:
+            low, high = SETTING_BOUNDS[key]
+            integer = key == "max_open_positions"
+            if isinstance(value, bool) or not isinstance(
+                    value, int if integer else (int, float)):
+                raise SystemExit(f"{key} is a number, not {value!r}")
+            if value < low or (high is not None and value > high):
+                raise SystemExit(f"{key} {value} is outside their bounds "
+                                 f"{low}-{high if high is not None else ''}")
+        body[key] = value
+    return body
+
+
+def paper_by_our_record(instance_id: str, rows: list[dict] | None = None) -> bool:
+    """Whether OUR record says we made `instance_id` as a paper clone: an
+    accepted clone whose outcome carried their `is_paper: true`. A bot we did
+    not clone, or one they did not confirm as paper, is not ours to tune."""
+    rows = load() if rows is None else rows
+    return any(row.get("type") == "outcome" and not row.get("kind")
+               and row.get("outcome") == "accepted"
+               and str(row.get("clone_instance_id")) == str(instance_id)
+               and row.get("is_paper") is True for row in rows)
+
+
+def room_running(instance_id: str) -> str | None:
+    """The strategy room now RUNNING on this instance, if any. Its settings
+    are what that room measures, so they hold still while it runs."""
+    from qa import rooms
+
+    stored = rooms.load()
+    for room, plan in rooms.plans(stored).items():
+        if any(rooms.leg_kind(leg) == "bot"
+               and str(rooms.leg_ref(leg)) == str(instance_id)
+               for leg in plan.get("legs") or []) \
+                and rooms.status_of(stored, room) == "running":
+            return room
+    return None
+
+
+def settings(instance_id: str, changes: dict, confirm: bool) -> dict:
+    """Change a paper clone's settings -- one variant of the grid (V5).
+
+    The paper floor was written before its first caller (B7 of the 2026-09-23
+    review was dropped only because nothing sent the PATCH yet). A PATCH to
+    /settings carries no `paper` -- their schema rejects unknown fields by
+    name -- so the transport's required_flags has nothing to read, and the
+    floor is here, three times, every one before the request:
+
+      * the body carries only SAFE_SETTINGS (the transport holds the same
+        list, `closed_body` in components.yaml);
+      * OUR record made this instance as a paper clone, and no room of ours
+        is running on it -- a variant is a new room, never a change under the
+        one being measured;
+      * THEIR row says paper twice over, is_paper and execution_class
+        (`startable`, enable()'s floor), read from them now.
+    """
+    body = safe_settings(changes)
+    if not paper_by_our_record(instance_id):
+        raise SystemExit(
+            f"{instance_id} is not a paper clone by our record (no accepted "
+            f"clone of ours whose outcome said is_paper true), so its settings "
+            f"are not ours to change")
+    running = room_running(instance_id)
+    if running:
+        raise SystemExit(
+            f"{running} is running on {instance_id}, and its settings are what "
+            f"it measures: a variant is a new room, opened after this one stops")
+
+    load_dotenv()
+    install_client_guard()
+    registry = EndpointRegistry.load()
+    registry.mutate_enabled = True
+    registry.mutate_allowed_hosts = frozenset({"cymetica.com"})
+    client = build_client(identities()["trusted"], registry, timeout=60.0)
+
+    row = _instance(client, instance_id)
+    if not startable(row):
+        economics = row.get("execution_economics") or {}
+        raise SystemExit(
+            f"{instance_id}: they say is_paper={row.get('is_paper')!r} and "
+            f"execution_class={economics.get('execution_class')!r}. Both must "
+            f"say paper before its settings change -- the PATCH carries no "
+            f"flag for the transport to read, so this is the floor.")
+
+    before = _snapshot(client)
+    change_id = _next_id(load())
+    entry = {"id": change_id, "type": "intent", "at": _now(), "kind": "settings",
+             "instance_id": instance_id, "body": body,
+             "their_is_paper": row.get("is_paper"),
+             "their_execution_class":
+                 (row.get("execution_economics") or {}).get("execution_class"),
+             "their_settings": row.get("settings"),
+             "before": before}
+
+    if not confirm:
+        print(json.dumps(entry, indent=2, ensure_ascii=False))
+        print("\nnothing sent, and nothing recorded. Add --confirm.")
+        return entry
+
+    change_id = _append_intent(entry)["id"]
+    token = CURRENT_TIER.set(SafetyTier.MUTATE)
+    try:
+        response = client.patch(SETTINGS.format(id=instance_id), json=body)
+    except Exception as exc:  # noqa: BLE001
+        _append({"id": change_id, "type": "outcome", "at": _now(),
+                 "kind": "settings", "outcome": "not_sent",
+                 "error": f"{type(exc).__name__}: {exc}"})
+        raise
+    finally:
+        CURRENT_TIER.reset(token)
+
+    served, said = _served(response)
+    _append({"id": change_id, "type": "outcome", "at": _now(), "kind": "settings",
+             "outcome": said, "http_status": response.status_code,
+             "evidence_id": _capture(response),
+             "response": _recorded(response, served)[:1200]})
+    reread = "ok"
+    try:
+        after_row = _instance(client, instance_id)
+    except SystemExit as exc:
+        after_row, reread = {}, f"failed: {exc}"
+    try:
+        _append({"id": change_id, "type": "after", "at": _now(),
+                 "kind": "settings", "reread": reread,
+                 "their_is_paper": after_row.get("is_paper"),
+                 "their_is_trading": after_row.get("is_trading"),
+                 "their_settings": after_row.get("settings"),
+                 **_snapshot(client)})
+    finally:
+        client.close()
+    print(f"{change_id}: HTTP {response.status_code}, settings of {instance_id} "
+          f"-> {json.dumps(body)}")
+    return {"id": change_id, "outcome": said, **served}
+
+
 def watch(instance_id: str, every: int, until: int) -> int:
     """Sample our bot on a timer -- now one round of the console's sampler.
 
@@ -664,6 +839,13 @@ def main() -> int:
     go.add_argument("--instance-id", required=True)
     go.add_argument("--confirm", action="store_true")
 
+    tune = sub.add_parser("settings", help="change a paper clone's settings "
+                          "(one variant; refused while its room runs)")
+    tune.add_argument("--instance-id", required=True)
+    tune.add_argument("--set", action="append", default=[], metavar="KEY=VALUE",
+                      help=f"one of {', '.join(sorted(SAFE_SETTINGS))}")
+    tune.add_argument("--confirm", action="store_true")
+
     eye = sub.add_parser("watch", help="sample a running bot on a timer")
     eye.add_argument("--instance-id", required=True)
     eye.add_argument("--every", type=int, default=600)
@@ -709,6 +891,14 @@ def main() -> int:
 
     if args.cmd == "enable":
         enable(args.instance_id, args.confirm)
+        return 0
+
+    if args.cmd == "settings":
+        changes = {}
+        for pair in args.set:
+            key, _, value = pair.partition("=")
+            changes[key] = json.loads(value)
+        settings(args.instance_id, changes, args.confirm)
         return 0
 
     if args.cmd == "fund":

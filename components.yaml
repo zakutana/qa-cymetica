@@ -514,11 +514,28 @@ endpoints:
     component: rest.agents
     executable_params: [enabled]
 
+  # The settings PATCH (V5, 2026-09-23): the laboratory walks a grid of a
+  # species' settings on its one paper clone. Their UpdateSettingsRequest has
+  # 31 fields and rejects unknown ones by name, so there is no `paper` to
+  # require and required_flags has nothing to read. Two floors instead:
+  #
+  #   * closed_body -- at MUTATE the body may carry ONLY the fields below, so
+  #     is_trading (a start through a second door, past enable()'s floor),
+  #     onchain_pct, arb_strategy_enabled, strategy_override and the market
+  #     lists never reach them from any caller. These are exactly
+  #     scripts/clone.py's SAFE_SETTINGS, and a test holds the two equal;
+  #   * scripts/clone.py::settings -- our record says the instance is a paper
+  #     clone of ours, no room of ours is running on it, and THEIR row says
+  #     paper twice (is_paper and execution_class), read before the PATCH.
   - id: cloned_bots.settings
     path: /api/v1/cloned-bots/{instance_id}/settings
     methods: [PATCH]
     component: rest.agents
-    executable_params: [is_trading, stop_loss_pct, take_profit_pct, max_position_pct]
+    executable_params: [stop_loss_pct, take_profit_pct, max_position_pct,
+                        max_open_positions, min_ai_confidence,
+                        event_card_trading_enabled, arena_trading_enabled,
+                        catalog_trading_enabled, tge_trading_enabled]
+    closed_body: true
 
   - id: prop.signup
     path: /api/v1/prop/signup

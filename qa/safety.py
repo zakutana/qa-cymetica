@@ -86,6 +86,11 @@ class EndpointRule:
     # harmless in a probe -- five declared, three sent, and requiring
     # all of them would have broken the a2a writer.
     required_flags: frozenset[str] = frozenset()
+    # A MUTATE body may carry ONLY the declared params. For a write whose
+    # safety is a matter of WHICH fields it touches rather than of a flag it
+    # carries -- the settings PATCH, where `is_trading` or `onchain_pct` is
+    # the danger and there is no `paper` to require (V5, 2026-09-23).
+    closed_body: bool = False
     probe_only: bool = False
     readonly_rpc: bool = False
     forbidden_always: bool = False
@@ -120,6 +125,7 @@ class EndpointRegistry:
                     executable_params=frozenset(e.get("executable_params", [])),
                     inert_params=frozenset(e.get("inert_params", [])),
                     required_flags=frozenset(e.get("required_flags", [])),
+                    closed_body=bool(e.get("closed_body", False)),
                     probe_only=bool(e.get("probe_only", False)),
                     readonly_rpc=bool(e.get("readonly_rpc", False)),
                     forbidden_always=bool(e.get("forbidden_always", False)),
@@ -251,6 +257,7 @@ class SafetyTransport(httpx.BaseTransport):
                 f"not. No MUTATE test may target it, even with --allow-mutate."
             )
         self._assert_declared_flags(request, rule)
+        self._assert_closed_body(request, rule)
         host = request.url.host
         if host not in self.registry.mutate_allowed_hosts:
             raise SafetyViolation(f"MUTATE against unlisted host {host!r}.")
@@ -433,6 +440,29 @@ class SafetyTransport(httpx.BaseTransport):
                 f"absence against the account's own simulation_mode. Send it "
                 f"true, or do not send the order."
             )
+
+    def _assert_closed_body(self, request, rule) -> None:
+        """A `closed_body` rule's MUTATE request carries declared keys only,
+        in its query string and its body alike. Anything unreadable is a
+        refusal: a body the guard cannot read is one it cannot vouch for."""
+        if not getattr(rule, "closed_body", False):
+            return
+        allowed = rule.executable_params | rule.inert_params
+        query = set(dict(request.url.params.multi_items()))
+        try:
+            payload = json.loads(request.read() or b"{}")
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            payload = None
+        if not isinstance(payload, dict):
+            raise SafetyViolation(
+                f"MUTATE body for {rule.id} is not a JSON object, so which "
+                f"fields it changes cannot be read.")
+        undeclared = sorted((set(payload) | query) - allowed)
+        if undeclared:
+            raise SafetyViolation(
+                f"MUTATE {rule.id} carries {undeclared}, not declared in "
+                f"components.yaml. This write is safe only in the fields it "
+                f"touches; declare a field there, on purpose, before it goes.")
 
     def _assert_inert(self, request, rule) -> None:
         """A PROBE request must be provably incapable of executing -- the
