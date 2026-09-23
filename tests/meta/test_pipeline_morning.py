@@ -1,0 +1,220 @@
+"""The morning report: every day at 7:00, what the night did in the lab.
+
+Plan v2, V11 (docs/laborator-plan.md), pin 7 in the laborator skill: a short
+page every morning at seven -- the deep pass in a few lines, then the lab by
+room, what changed overnight, what the manager does today -- at one address,
+readable on a phone, and the operator's feedback on it acted on and named in
+the next one. No new scheduler: the overnight /loop's first tick from 06:40
+says the report is due, and a session started after 07:00 without one makes
+it at once.
+"""
+
+from __future__ import annotations
+
+import importlib
+import importlib.util
+import json
+import re
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+
+from qa import morning
+from qa.marks import SafetyTier, qa
+
+REPO = Path(__file__).resolve().parent.parent.parent
+LOCAL = timezone(timedelta(hours=2))
+
+
+def _at(day: int, hour: int, minute: int = 0) -> datetime:
+    return datetime(2026, 9, day, hour, minute, tzinfo=LOCAL)
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_report_is_due_from_six_forty_until_it_is_made_that_day():
+    assert not morning.due(_at(24, 6, 39), {})
+    assert morning.due(_at(24, 6, 40), {})
+    assert morning.due(_at(24, 6, 40), {"made_on": "2026-09-23"})
+    assert not morning.due(_at(24, 9, 0), {"made_on": "2026-09-24"})
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_after_seven_a_missing_report_is_missing():
+    assert not morning.missing(_at(24, 6, 59), {})
+    assert morning.missing(_at(24, 7, 0), {"made_on": "2026-09-23"})
+    assert not morning.missing(_at(24, 7, 30), {"made_on": "2026-09-24"})
+
+
+DEEP = """# Deep pass — 2026-09-22 večer
+
+Spuštěn na tvůj `/deep-pass`.
+
+## Co se stalo
+
+* **34 nálezů:** 10 z code review.
+
+## Opraveno
+
+* **Bezpečnostní brána pustila živý příkaz dvěma dveřmi (C01, 3/3).**
+  * vnořený bod se nepočítá
+* **Kontrola #119 měla tři díry.** Prázdné tělo.
+* **Naše vlastní:** `open_checks` bral za plný běh i běh zastavený.
+
+## Co odešlo Cymetice
+
+* **2 ověření `pass`:** #111 a #120.
+
+## Čeká na tebe
+
+* **ET-26036: verdikt dál čeká na obrazcovou TA.** Beze změny.
+"""
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_deep_pass_is_three_lines_fixed_sent_and_waiting():
+    said = morning.deep_pass(DEEP)
+    assert said["title"] == "Deep pass — 2026-09-22 večer"
+    assert [line["kind"] for line in said["lines"]] == ["fixed", "sent", "waiting"]
+    fixed, sent, waiting = said["lines"]
+    assert fixed["count"] == 3, "nested bullets are not fixes of their own"
+    assert fixed["text"].startswith("Bezpečnostní brána pustila živý příkaz")
+    assert "`" not in sent["text"] and "#111" in sent["text"]
+    assert waiting["text"] == "ET-26036: verdikt dál čeká na obrazcovou TA."
+    assert all(len(line["text"]) <= 140 for line in said["lines"])
+    assert morning.deep_pass("")["lines"] == [], "no pass on record is no lines"
+
+
+def _report(net: float, rooms: list[dict], questions: int = 80) -> dict:
+    sector = {"n": 2, "net_pct": net, "usdc": net * 5, "stake_usdc": 500.0,
+              "wins": 1, "wilson": None, "min_n": 5, "running": 2, "archived": 0}
+    return {"generated_at": "x",
+            "products": {"cards": sector, "bots": dict(sector, net_pct=1.0),
+                         "memecoins": dict(sector, net_pct=-19.8),
+                         "funds": dict(sector, net_pct=None, n=0)},
+            "nexus": {"questions": questions, "answered": 50, "picks": 30,
+                      "gated": 30, "gate_pass": 20, "survived": 0, "refuted": 1},
+            "rooms": rooms}
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_overnight_names_what_moved_since_the_last_report():
+    before = _report(-3.2, [
+        {"id": "STR-1", "title": "ZEC rally", "product": "cards", "verdict": None,
+         "net_pct": 2.0},
+        {"id": "STR-2", "title": "SOL doubles", "product": "cards", "verdict": None,
+         "net_pct": -1.0}])
+    now = _report(-4.2, [
+        {"id": "STR-1", "title": "ZEC rally", "product": "cards", "verdict": None,
+         "net_pct": 2.5},
+        {"id": "STR-2", "title": "SOL doubles", "product": "cards",
+         "verdict": "refuted", "net_pct": -3.1},
+        {"id": "STR-3", "title": "FLOW recovery", "product": "cards",
+         "verdict": None, "net_pct": None}], questions=85)
+    lines = morning.overnight(now, before)
+    text = " | ".join(lines)
+    assert "Nový pokus: FLOW recovery" in text
+    assert "✗ nevyšlo: SOL doubles" in text
+    assert "Karty −3,2 % → −4,2 %" in text
+    assert "Nexus: +5 otázek" in text
+    assert len(lines) <= morning.MAX_OVERNIGHT
+    assert morning.overnight(now, None) == [], "no earlier report, nothing to compare"
+
+
+def _entry(kind, text, at):
+    return {"type": "entry", "kind": kind, "text": text, "at": at, "session": "LAB-1"}
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_report_carries_the_feedback_acted_on_and_a_ready_telegram_block():
+    """Pin 7: the operator gives feedback on the report as the lab's manager;
+    what the manager changed because of it is named in the next one. And a
+    message for Cymetica is ready to paste, opening with our handle (CLAUDE.md,
+    2026-09-13)."""
+    notebook = [
+        _entry("feedback", "chci vidět víc botů", "2026-09-23T20:00:00+00:00"),
+        _entry("acted", "boti mají vlastní room nahoře", "2026-09-23T21:00:00+00:00"),
+        _entry("acted", "staré, už hlášené", "2026-09-22T21:00:00+00:00"),
+        _entry("telegram", "memecoin terminal switches pairs", "2026-09-23T22:00:00+00:00"),
+        _entry("next", "otestovat MACD s jiným stopem", "2026-09-23T23:00:00+00:00"),
+        _entry("next", "zeptat se Nexuse na fondy", "2026-09-23T23:01:00+00:00")]
+    since = "2026-09-23T05:00:00+00:00"
+    assert morning.acted(notebook, since) == ["boti mají vlastní room nahoře"]
+    assert morning.telegram(notebook, since) == (
+        "@EventTraderQABot memecoin terminal switches pairs")
+    assert morning.today(notebook) == ["otestovat MACD s jiným stopem",
+                                       "zeptat se Nexuse na fondy"]
+    assert morning.telegram(notebook, "2026-09-24T00:00:00+00:00") is None
+
+
+def _view():
+    return morning.build(
+        _report(-4.2, []), {"made_at": "2026-09-23T05:00:00+00:00",
+                            "snapshot": _report(-3.2, [])},
+        DEEP, [_entry("acted", "boti mají vlastní room", "2026-09-23T21:00:00+00:00"),
+               _entry("telegram", "@EventTraderQABot ahoj", "2026-09-23T22:00:00+00:00")],
+        _at(24, 6, 45))
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_page_is_one_short_czech_page_in_the_artifact_shape():
+    page = importlib.util.spec_from_file_location(
+        "morning_page", REPO / "scripts" / "morning.py")
+    module = importlib.util.module_from_spec(page)
+    page.loader.exec_module(module)
+    html = module.render(_view())
+    assert "<title>Ranní přehled laborky</title>" in html[:8192]
+    for tag in ("html", "body", "!doctype", "head"):
+        assert not re.search(rf"<{tag}[\s>]", html, re.I), (
+            f"the publish skeleton supplies <{tag}>")
+    for words in ("Deep pass", "Karty", "Boti", "Memecoiny", "Fondy", "Přes noc",
+                  "Dnes", "Podle tvé zpětné vazby", "boti mají vlastní room",
+                  "@EventTraderQABot ahoj"):
+        assert words in html, f"{words!r} is not on the page"
+    assert "−4,2" in html and "Karty −3,2 % → −4,2 %" in html
+    # Both themes, the artifact contract's way.
+    assert ':root:not([data-theme="light"])' in html and ':root[data-theme="dark"]' in html
+    assert re.search(r"body\s*\{[^}]*background", html), "the body paints its own ground"
+    # The Telegram block is a code block with a copy button, never a quote
+    # (CLAUDE.md, asked 2026-09-20).
+    assert "<pre" in html and "navigator.clipboard" in html
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_lab_py_morning_builds_the_page_and_published_records_the_day(
+        tmp_path, monkeypatch):
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    import qa.rooms
+    import qa.state
+    from qa import lab
+
+    importlib.reload(qa.state)
+    importlib.reload(lab)
+    importlib.reload(qa.rooms)
+    spec = importlib.util.spec_from_file_location(
+        "scripts_lab_morning", REPO / "scripts" / "lab.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    assert module.main(["morning"]) == 0
+    page = tmp_path / "lab" / "morning.html"
+    assert page.is_file() and "Ranní přehled laborky" in page.read_text(encoding="utf-8")
+    state = json.loads((tmp_path / "lab" / "morning.json").read_text(encoding="utf-8"))
+    assert not state.get("made_on"), "made only once it is published"
+    assert morning.due(datetime.now().astimezone().replace(hour=7), state)
+
+    assert module.main(["morning", "--published", "https://claude.ai/code/artifact/x"]) == 0
+    state = json.loads((tmp_path / "lab" / "morning.json").read_text(encoding="utf-8"))
+    today = datetime.now().astimezone().date().isoformat()
+    assert state["made_on"] == today and state["url"] == "https://claude.ai/code/artifact/x"
+    assert state["snapshot"]["products"], "the next report compares against this one"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_lab_notebook_takes_feedback_acted_and_telegram_lines(tmp_path, monkeypatch):
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    import qa.state
+    from qa import lab
+
+    importlib.reload(qa.state)
+    importlib.reload(lab)
+    for kind in ("feedback", "acted", "telegram"):
+        assert lab.note_entry("LAB-0001", f"a {kind}", kind=kind)["kind"] == kind

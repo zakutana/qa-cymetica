@@ -104,6 +104,14 @@ def reminders(facts: dict, now: datetime) -> list[str]:
             f"Týdenní ohlédnutí {due} — příští „jdu spat\" ho udělá i s týdnem, "
             f"i když nebude co kontrolovat.")
 
+    # Plan v2, V11: the overnight loop's tick makes the 7:00 report. When no
+    # tick ran, the session that starts is the one to make it -- at once.
+    if facts.get("morning_missing"):
+        out.append(
+            "Ranní přehled z laborky za dnešek chybí — udělej ho hned: "
+            "`python scripts/lab.py morning`, pak ho publikuj (laborator, "
+            "Ranní přehled).")
+
     for session in facts.get("lab_open") or []:
         out.append(
             f"Laboratoř má otevřenou session {session} — zavře ji „jdi do "
@@ -944,9 +952,28 @@ def facts() -> dict:
         "open_next": _open_next(),
         "plan_phases": plan_phases(),
         "evidence_unarchived": _unarchived(),
+        "morning_missing": _morning_missing(),
         **_lab_facts(),
         **_surface_facts(),
     }
+
+
+def _morning_missing() -> bool:
+    """Past 7:00 local and today's morning report not published (V11). A
+    local-file read, like every fact here."""
+    try:
+        from qa import morning
+        from qa.state import state_dir
+
+        try:
+            state = json.loads((state_dir() / "lab" / "morning.json")
+                               .read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            state = {}
+        return morning.missing(datetime.now().astimezone(),
+                               state if isinstance(state, dict) else {})
+    except Exception:  # noqa: BLE001 -- a reminder never fails a session
+        return False
 
 
 # A block the harness injects into the user's side. `messages()` learned this

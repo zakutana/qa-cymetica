@@ -148,7 +148,10 @@ def open_session(mode: str = "session", note: str | None = None,
     return _append(record)
 
 
-ENTRY_KINDS = ("log", "lesson", "next")
+# `feedback`, `acted` and `telegram` feed the morning report (plan v2, V11):
+# what the operator said about it, what the manager changed because of it,
+# and a message for Cymetica the report carries ready to paste.
+ENTRY_KINDS = ("log", "lesson", "next", "feedback", "acted", "telegram")
 
 
 def note_entry(session: str, text: str, kind: str = "log") -> dict:

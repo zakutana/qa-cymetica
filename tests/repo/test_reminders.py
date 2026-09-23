@@ -90,6 +90,18 @@ def test_the_deep_pass_is_named_only_when_a_night_was_missed():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_missing_morning_report_is_named_so_the_session_makes_it():
+    """Plan v2, V11: the report is ready at 7:00 because the overnight loop's
+    tick makes it. When no tick ran, the next session start says so -- and a
+    command in a reminder is run, not repeated (CLAUDE.md)."""
+    mod = _module()
+    missing = mod.reminders(_facts(morning_missing=True), NOW)
+    assert _says(missing, "ranní přehled", "lab.py morning"), missing
+    made = mod.reminders(_facts(morning_missing=False), NOW)
+    assert not _says(made, "ranní přehled"), made
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_week_is_named_when_it_is_due_even_with_nothing_to_review():
     """The week rides on the deep pass, and the pass only runs when they say so.
     With `unpushed == 0` nothing else would mention it, so a quiet week is

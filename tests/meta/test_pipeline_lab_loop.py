@@ -732,6 +732,8 @@ def _doors(**over):
         "asked_today": lambda: 0,
         # No console collecting: the tick does its own rounds.
         "console": lambda: set(),
+        # And no morning report due.
+        "morning": lambda: False,
         "fomo": door("fomo", {"added": 2}),
         "sample": door("sample", {"rows": 3}),
         "cycle": door("cycle", {"polled": []}),
@@ -965,6 +967,28 @@ def test_a_tick_during_a_deep_pass_or_a_night_only_reads_memecoins_and_hot(
                 continue
             assert not made, f"{door} ran while a {blocker} was on"
         assert did["may_ask"] is False
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_first_tick_from_six_forty_says_the_morning_report_is_due(
+        tmp_path, monkeypatch):
+    """Plan v2, V11 -- no scheduler: the overnight loop's own tick says the
+    report is due and how to make it, even while a deep pass holds the rest
+    (the report is read-only and the pass's own notebook is one of its
+    inputs)."""
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    for blocker in (False, True):
+        doors, _ = _doors(morning=lambda: True, **{"pass": lambda: blocker})
+        printed = []
+        said = scripts_lab.tick(now=NOW, actions=doors, out=printed.append)
+        assert said["morning_due"] is True
+        assert any("lab.py morning" in line for line in printed), printed
+    doors, _ = _doors()
+    printed = []
+    said = scripts_lab.tick(now=NOW + timedelta(minutes=20), actions=doors,
+                            out=printed.append)
+    assert not said["morning_due"]
+    assert not any("lab.py morning" in line for line in printed), printed
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

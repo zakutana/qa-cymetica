@@ -383,7 +383,7 @@ python scripts/ledger.py --run <run_id> && python scripts/render.py
 Then commit the ledger, the journal and the dashboard together; rule 12's test
 fails if the page and the ledger disagree. That is the whole of it.
 
-**Do not publish an Artifact.** The instruction to republish one to a fixed URL
+**Do not publish an Artifact** (one exception: the 7:00 morning report, `laborator`). Republishing one to a fixed URL
 after every change was withdrawn:
 
 [operator 2026-09-06] *"nechapu proc tvorit ty artifacty to uz nedelej"*

@@ -2735,6 +2735,15 @@ def _sample_round() -> dict:
     return {"rows": max(len(written) - 1, 0), "ok": bool(last.get("ok"))}
 
 
+def _morning_due() -> bool:
+    from qa import morning as qa_morning
+
+    return qa_morning.due(datetime.now().astimezone(), load_morning())
+
+
+MORNING_LINE = ("  ranní přehled je na řadě -- `python scripts/lab.py morning`, "
+                "pak ho publikovat (laborator skill, Ranní přehled)")
+
 CONSOLE_STATUS = "http://127.0.0.1:8787/status"
 
 
@@ -2770,6 +2779,7 @@ def _tick_doors() -> dict:
         "pass": pass_in_flight,
         "night": lambda: lab.night_running() is not None,
         "asked_today": _asked_today,
+        "morning": _morning_due,
         "console": _console_collects,
         "fomo": _fomo_round,
         "sample": _sample_round,
@@ -2795,6 +2805,8 @@ def _say_tick(said: dict, out) -> None:
         out(f"tick {said['session']} {at}: held -- a {said['skipped']} is "
             f"running; memecoins and Hot only ({said.get('fomo')}, "
             f"{said.get('hot')})")
+        if said.get("morning_due"):
+            out(MORNING_LINE)
         return
     fomo = said.get("fomo") or {}
     hot_ = said.get("hot") or {}
@@ -2823,6 +2835,8 @@ def _say_tick(said: dict, out) -> None:
         out(f"  resolved without us, written down: {said['resolved']}")
     out("  question: may go now -- `lab.py brief`, then `lab.py ask --no-wait`"
         if said.get("may_ask") else f"  question: not now -- {said.get('why')}")
+    if said.get("morning_due"):
+        out(MORNING_LINE)
     for problem in said.get("errors") or []:
         out(f"  failed: {problem}")
 
@@ -2856,6 +2870,8 @@ def tick(*, now: datetime | None = None, actions: dict | None = None,
             return None
 
     said["session"] = _day_session(moment)
+    # The morning report (V11) has no scheduler: this tick says it is due.
+    said["morning_due"] = bool(attempt("morning", doors.get("morning", lambda: False)))
     collecting = attempt("console", doors.get("console", set)) or set()
 
     def collect(name):
@@ -3008,6 +3024,67 @@ def write_report(now: datetime | None = None) -> dict:
                    encoding="utf-8")
     tmp.replace(target)
     return said
+
+
+MORNING = Path("lab") / "morning.json"
+MORNING_PAGE = Path("lab") / "morning.html"
+
+
+def _morning_file(rel: Path) -> Path:
+    from qa.state import state_dir
+
+    return state_dir() / rel
+
+
+def load_morning() -> dict:
+    """The morning report's own record: the day it was last published, its
+    address, and the report it showed -- what the next one compares against."""
+    try:
+        said = json.loads(_morning_file(MORNING).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    return said if isinstance(said, dict) else {}
+
+
+def _write_text(target: Path, text: str) -> None:
+    target.parent.mkdir(parents=True, exist_ok=True)
+    tmp = target.with_name(target.name + ".tmp")
+    tmp.write_text(text, encoding="utf-8")
+    tmp.replace(target)
+
+
+def morning_page(now_local: datetime | None = None) -> Path:
+    """Plan v2, V11: build this morning's report into state/lab/morning.html
+    for the session to publish. Not yet "made" -- that is `--published`, so a
+    publish that failed is still due."""
+    from qa import morning as qa_morning
+
+    moment = now_local or datetime.now().astimezone()
+    report = write_report()
+    state = load_morning()
+    deep = REPO_ROOT / "DEEP-PASS.md"
+    view = qa_morning.build(
+        report, state, deep.read_text(encoding="utf-8") if deep.is_file() else "",
+        lab.load(), moment)
+    page = _morning_file(MORNING_PAGE)
+    _write_text(page, _sibling("morning").render(view))
+    state["pending"] = {"built_at": _now().isoformat(timespec="seconds"),
+                        "snapshot": report}
+    _write_text(_morning_file(MORNING), json.dumps(state, ensure_ascii=False))
+    return page
+
+
+def morning_published(url: str, now_local: datetime | None = None) -> dict:
+    """The report went out at `url`: today is made, and what it showed is
+    what tomorrow's compares against."""
+    moment = now_local or datetime.now().astimezone()
+    state = load_morning()
+    pending = state.pop("pending", None) or {}
+    state.update(made_on=moment.date().isoformat(),
+                 made_at=_now().isoformat(timespec="seconds"), url=url,
+                 snapshot=pending.get("snapshot") or write_report())
+    _write_text(_morning_file(MORNING), json.dumps(state, ensure_ascii=False))
+    return state
 
 
 def _board_line(row: dict) -> str:
@@ -3254,6 +3331,10 @@ def main(argv: list[str] | None = None) -> int:
     board_cmd.add_argument("--top", type=int, default=20)
     sub.add_parser("report", help="state/lab/report.json -- what each product "
                                   "earned after costs, for the /lab page")
+    morning_cmd = sub.add_parser(
+        "morning", help="build this morning's report (state/lab/morning.html) "
+                        "for the session to publish; --published URL records it")
+    morning_cmd.add_argument("--published", metavar="URL")
     log_cmd = sub.add_parser(
         "log", help="one line of today's diary: done, learned (--lesson) or "
                     "to pick up (--next)")
@@ -3262,6 +3343,13 @@ def main(argv: list[str] | None = None) -> int:
     kind.add_argument("--lesson", action="store_const", const="lesson",
                       dest="kind")
     kind.add_argument("--next", action="store_const", const="next", dest="kind")
+    # The morning report's loop (V11): their feedback, what was changed
+    # because of it, and a message for Cymetica the report carries ready.
+    kind.add_argument("--feedback", action="store_const", const="feedback",
+                      dest="kind")
+    kind.add_argument("--acted", action="store_const", const="acted", dest="kind")
+    kind.add_argument("--telegram", action="store_const", const="telegram",
+                      dest="kind")
     open_cmd = sub.add_parser("open", help="start a session")
     open_cmd.add_argument("--mode", default="session", choices=["session"])
     close_cmd = sub.add_parser("close", help="end it, with what it learned")
@@ -3397,6 +3485,16 @@ def main(argv: list[str] | None = None) -> int:
         tick_exclusive()
     elif args.cmd == "brief":
         print(brief())
+    elif args.cmd == "morning":
+        if args.published:
+            state = morning_published(args.published)
+            print(f"  published {state['made_on']} at {state['url']}")
+        else:
+            page = morning_page()
+            url = load_morning().get("url")
+            print(f"  built {page}")
+            print(f"  publish it {'to ' + url + ' (Artifact read, then publish with url)' if url else 'as a new Artifact'}"
+                  f", then: python scripts/lab.py morning --published <url>")
     elif args.cmd == "report":
         said = write_report()
         for name, product in said["products"].items():

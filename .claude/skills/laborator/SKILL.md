@@ -216,6 +216,31 @@ a new day closes the old session with its counts and the lessons written here.
 what the gate rejected and why, a verdict, the memecoin number when it moved.
 Nothing moved -- one line saying so. The laboratory's page, http://127.0.0.1:8787/lab, has the rest.
 
+## Ranní přehled
+
+[operator 2026-09-23] *"jo a jeste chci pridat do planu ze kazde rano chci vygenerovany krasny vecny strucny artifakt o tom co se vnoci udalo v laborce. takovy top prehled chapes. Na ktery ti dam pak feedback, jako manageorvi laborky a ty udelas podle nej patricne upravy a tak. Tento artikaft chci mit pripraven vzdy v 7 hodin rano. Bude tam strucna sekce o deep passu jak probihal a pak na stav laborky."*
+
+Our reading (plan v2, V11): one short page at one address, updated in place
+-- the one Artifact this project publishes. No scheduler: the overnight
+loop's first tick from 06:40 says `ranní přehled je na řadě`, and a session
+that starts after 7:00 without one is told so by the reminders. Either way,
+make it at once:
+
+1. `python scripts/lab.py morning` -- builds `state/lab/morning.html` from the
+   report, DEEP-PASS.md and this diary, and prints the address if one exists.
+2. Publish that file with the Artifact tool. The first time: a new Artifact
+   (icon `report`). Every time after: `action: "read"` on the printed address,
+   then publish the file with `url` set to it, so the address never changes.
+3. `python scripts/lab.py morning --published <url>` -- only now is the day's
+   report made, and tomorrow's compares against what this one showed.
+
+Their feedback on the report -- in chat, or as a comment on the Artifact --
+goes into the diary as `lab.py log --feedback "..."`. Act on it, then write
+what changed as `lab.py log --acted "..."`: the next report shows it under
+"Podle tvé zpětné vazby". A message Cymetica is owed goes in as
+`lab.py log --telegram "..."`; the report carries it ready to paste, with our
+handle. What the manager means to do today is the newest `--next` lines.
+
 ## What makes a proposal concrete
 
 It names what to buy, clone or mark: the whole card id, the bot's exact species
