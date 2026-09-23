@@ -26,7 +26,7 @@ import json
 from datetime import datetime, timedelta
 
 from qa.marks import SafetyTier, qa
-from tests.meta.test_pipeline_render import _committed_payload, _render
+from tests.meta.test_pipeline_render import _committed_payload, _lab_page, _render
 
 
 def _question(qid, t0, accepted=True, polls=(), answer=None, gave_up=False):
@@ -68,7 +68,7 @@ def test_the_nexus_row_counts_each_question_by_what_happened_to_it(
     (tmp_path / "nexus.jsonl").write_text(
         "".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
 
-    channel = _render()._nexus_channel()
+    channel = _lab_page()._nexus_channel()
 
     assert [q["outcome"] for q in channel["questions"]] == [
         "answered", "answered", "failed", "refused", "partial"]
@@ -84,7 +84,7 @@ def test_the_nexus_row_counts_each_question_by_what_happened_to_it(
 def test_the_nexus_row_is_empty_not_invented_when_nothing_was_asked(
         tmp_path, monkeypatch):
     monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
-    channel = _render()._nexus_channel()
+    channel = _lab_page()._nexus_channel()
     assert channel["asked"] == 0 and channel["questions"] == []
     assert channel["median_seconds"] is None, (
         "no watched question is no typical time, not a zero")

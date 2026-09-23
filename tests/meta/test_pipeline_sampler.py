@@ -37,7 +37,7 @@ from pathlib import Path
 import httpx
 
 from qa.marks import SafetyTier, qa
-from tests.meta.test_pipeline_render import REPO, _render
+from tests.meta.test_pipeline_render import REPO, _lab_page
 from tests.meta.test_pipeline_rooms import (
     INSTANCE, _answered, _bot_rows, _buy, _close, _write)
 
@@ -288,14 +288,14 @@ def test_the_panel_says_stale_after_three_intervals_without_a_tick(tmp_path, mon
         return {"type": "tick", "at": (now - timedelta(minutes=minutes_ago)).isoformat(
             timespec="seconds"), "every": 600, "ok": ok, "reads": {}}
 
-    never = _render().build_rooms()["panels"]["general"]
+    never = _lab_page().build_rooms()["panels"]["general"]
     assert never["stale"] is None and never["sampled_at"] is None, (
         "a sampler that never ran read as fresh, or as stale")
     _write(tmp_path / "samples.jsonl", [tick(45)])
-    general = _render().build_rooms()["panels"]["general"]
+    general = _lab_page().build_rooms()["panels"]["general"]
     assert general["stale"] is True, "45 minutes without a tick, at every 10, is not fresh"
     _write(tmp_path / "samples.jsonl", [tick(45), tick(2, ok=False)])
-    general = _render().build_rooms()["panels"]["general"]
+    general = _lab_page().build_rooms()["panels"]["general"]
     assert (general["stale"], general["sampler_ok"]) == (False, False), (
         "a read that failed two minutes ago is fresh, and failed -- both must show")
 
@@ -308,7 +308,7 @@ def test_the_panel_says_stale_after_three_intervals_without_a_tick(tmp_path, mon
     for minutes, every, stale in ((4, 60, True), (2, 60, False),
                                   (29, 600, False), (31, 600, True)):
         _write(tmp_path / "samples.jsonl", [tick_every(minutes, every)])
-        assert _render().build_rooms()["panels"]["general"]["stale"] is stale, (
+        assert _lab_page().build_rooms()["panels"]["general"]["stale"] is stale, (
             f"{minutes} min without a tick at every={every}s should read "
             f"{'stale' if stale else 'fresh'}: stale is three intervals")
 
@@ -324,7 +324,7 @@ def test_a_bots_panel_carries_what_the_sampler_read_beside_the_old_samples(
     rooms.open_strategy("NEX-1", "Karta A a bot")
     sampler.tick(_client(_api(), []), every=600)
 
-    panel = _render().build_rooms()["panels"]["STR-0001"]
+    panel = _lab_page().build_rooms()["panels"]["STR-0001"]
     (bot,) = panel["clones"]
     assert [s["balance"] for s in bot["samples"]] == [999.0, 950.0, 950.0, 950.0], (
         "the old samples in clones.jsonl and the sampler's are one series")

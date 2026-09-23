@@ -61,12 +61,12 @@ WHO = {"question": "Claude -> Nexus", "reply": "Nexus",
 
 
 def _view() -> dict:
-    """The rooms as the console draws them -- one derivation, render.py's."""
+    """The rooms as /lab draws them -- one derivation, lab_page.py's."""
     spec = importlib.util.spec_from_file_location(
-        "render_rooms_cli", REPO_ROOT / "scripts" / "render.py")
-    render = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(render)
-    return render.build_rooms()
+        "lab_page_rooms_cli", REPO_ROOT / "scripts" / "lab_page.py")
+    page = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(page)
+    return page.build_rooms()
 
 
 def _when(at) -> str:

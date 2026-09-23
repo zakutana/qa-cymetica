@@ -256,6 +256,28 @@ def tick(client) -> dict:
         CURRENT_TIER.reset(token)
 
 
+def run(stop, every: float, client=None) -> int:
+    """Round after round until `stop` is set, for `serve.py --hot MINUTES`.
+    Nothing a round does ends the loop -- the rule fomo_watch.run and
+    sampler.run follow: a console started once by the operator must not stop
+    watching because one HTTP call failed."""
+    import threading
+
+    stop = stop or threading.Event()
+    rounds = 0
+    while True:
+        try:
+            if client is None:
+                client = _client()
+            tick(client)
+        except Exception as exc:  # noqa: BLE001 -- the loop outlives any one round
+            print(f"[hot] round failed: {type(exc).__name__}: {exc}",
+                  file=sys.stderr)
+        rounds += 1
+        if stop.wait(every):
+            return rounds
+
+
 def card_follow(rows, horizons=(6.0, 24.0)) -> dict:
     """The card's own return over the same horizons, from its history.
 

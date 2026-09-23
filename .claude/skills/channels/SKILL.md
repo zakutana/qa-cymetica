@@ -15,7 +15,7 @@ nebo komand ze ti jen povim at zkontrolujes vsechny kanaly a podas mi stav."*
 This is that.
 
 Since 2026-09-11 there is a fourth place something waits for us: the
-operator's own notes in the console's Nexus tab (docs/nexus-rooms-plan.md).
+operator's own notes in the rooms on /lab (docs/nexus-rooms-plan.md).
 Not a vendor channel -- they write it themselves -- but `status` prints it as
 ROOMS beside the other three, and `watch` names a new note the moment it lands.
 

@@ -113,7 +113,7 @@ def cmd_status(args) -> int:
     # tab. Printed here because it is a place something waits on us, and a
     # status that left it out would say nothing was waiting while it was.
     waiting = state["rooms"].get("unanswered") or []
-    print("ROOMS (your notes in the console's Nexus tab)")
+    print("ROOMS (your notes on the laboratory's page, /lab)")
     print(f"  {'waiting on us':20}  {len(waiting)}"
           + (f": {', '.join(str(w) for w in waiting[:8])}" if waiting else ""))
     if waiting:

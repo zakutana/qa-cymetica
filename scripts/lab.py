@@ -2735,6 +2735,26 @@ def _sample_round() -> dict:
     return {"rows": max(len(written) - 1, 0), "ok": bool(last.get("ok"))}
 
 
+CONSOLE_STATUS = "http://127.0.0.1:8787/status"
+
+
+def _console_collects() -> set[str]:
+    """The rounds the console on this machine is doing on its own timers
+    (serve.py --fomo, --hot, --sample), as its /status says. One writer per
+    diary (plan v2, V4): a tick leaves those rounds to it, and does them
+    itself when the console is closed or does not answer -- a checkpoint
+    nobody took is gone for good."""
+    import urllib.request
+
+    try:
+        with urllib.request.urlopen(CONSOLE_STATUS, timeout=2) as response:
+            said = json.loads(response.read().decode("utf-8"))
+    except Exception:  # noqa: BLE001 -- no console is the ordinary case
+        return set()
+    collectors = said.get("collectors") if isinstance(said, dict) else None
+    return {str(k) for k, v in (collectors or {}).items() if v}
+
+
 def _record_resolved() -> list[dict]:
     from qa.rooms import load_samples
 
@@ -2750,6 +2770,7 @@ def _tick_doors() -> dict:
         "pass": pass_in_flight,
         "night": lambda: lab.night_running() is not None,
         "asked_today": _asked_today,
+        "console": _console_collects,
         "fomo": _fomo_round,
         "sample": _sample_round,
         "cycle": cycle,
@@ -2777,14 +2798,20 @@ def _say_tick(said: dict, out) -> None:
         return
     fomo = said.get("fomo") or {}
     hot_ = said.get("hot") or {}
+    memecoins = ("memecoins by the console" if fomo.get("by") == "console"
+                 else f"memecoins +{fomo.get('added', 0)} signal(s) / "
+                      f"{fomo.get('checked', 0)} checkpoint(s)")
+    hot_said = ("Hot by the console" if hot_.get("by") == "console"
+                else f"Hot {'round' if hot_.get('ok') else 'round FAILED'} "
+                     f"(+{hot_.get('headlines', 0)} headline(s), "
+                     f"{hot_.get('cards', 0)} card(s))")
     out(f"tick {said['session']} {at}: {said['backtests']} backtest(s) "
         f"({said['known']} already known), "
         f"{'answers picked up' if said['cycled'] else 'no cycle due'}, "
         f"{said['rooms']} room(s) / {said['orders']} order(s), "
-        f"{said['verdicts']} verdict(s), memecoins +{fomo.get('added', 0)} "
-        f"signal(s) / {fomo.get('checked', 0)} checkpoint(s), "
-        f"Hot {'round' if hot_.get('ok') else 'round FAILED'} "
-        f"(+{hot_.get('headlines', 0)} headline(s), {hot_.get('cards', 0)} card(s))")
+        f"{said['verdicts']} verdict(s), {memecoins}, {hot_said}"
+        + (", samples by the console"
+           if (said.get("sample") or {}).get("by") == "console" else ""))
     for line in said.get("held") or []:
         out(f"  held:  {line}")
     if said.get("held_older"):
@@ -2829,12 +2856,20 @@ def tick(*, now: datetime | None = None, actions: dict | None = None,
             return None
 
     said["session"] = _day_session(moment)
-    said["fomo"] = attempt("fomo", doors["fomo"])
+    collecting = attempt("console", doors.get("console", set)) or set()
+
+    def collect(name):
+        """A round the console is doing is its own; one writer per diary."""
+        if name in collecting:
+            return {"by": "console"}
+        return attempt(name, doors[name])
+
+    said["fomo"] = collect("fomo")
     # Before the hold, like the memecoins: it only reads their headlines and
     # card histories, so it touches nothing a deep pass verifies (#85-#87 are
     # over Nexus answers and our trades), and Hot has no history -- a round
     # skipped is a moment lost.
-    said["hot"] = attempt("hot", doors["hot"])
+    said["hot"] = collect("hot")
     if doors["pass"]():
         said["skipped"] = "pass"
     elif doors["night"]():
@@ -2845,7 +2880,7 @@ def tick(*, now: datetime | None = None, actions: dict | None = None,
         _say_tick(said, out)
         return said
 
-    said["sample"] = attempt("sample", doors["sample"])
+    said["sample"] = collect("sample")
     state = _load_tick_state()
     queue = list(state.get("queue") or [])
     if not queue and not state.get("seeded"):

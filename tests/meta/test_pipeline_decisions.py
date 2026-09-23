@@ -276,7 +276,9 @@ CODE_QUOTES = [
      "b728a8019df6a47e5d818eed9c91fff1fd667767bbc4a8b54d946282f3184b9e"),
     ("scripts/processes.py", "2026-09-12",
      "5e560c7516300844aa7e622e12d1412855d789bd281b9a4457be81de6baf6134"),
-    ("scripts/render.py", "2026-09-14",
+    # Moved with the memecoin panel from render.py to /lab (plan v2, V4);
+    # same words, same hash.
+    ("scripts/lab_page.py", "2026-09-14",
      "9f6840703365a5c4bfe09c3eeaf48da80098999e2b4489b58e45e338655fe4b5"),
 ]
 

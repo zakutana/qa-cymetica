@@ -54,7 +54,13 @@ rem --sample 10 is on too: every ten minutes the server reads their API for the
 rem Nexus tab -- our bot and our card positions, GET only -- into
 rem state/samples.jsonl. That file is gitignored, so unlike --ask it never
 rem dirties the tree. Pass --sample 0 to turn it off.
-%PY% scripts\serve.py --open --ask 15 --sample 10 --fomo 20 %*
+rem
+rem --fomo 20 and --hot 20 go round the memecoin signals and the Hot headlines,
+rem GET only, into their gitignored diaries. While they run, a lab tick leaves
+rem those rounds to the console (it asks /status) -- one writer per diary -- and
+rem does them itself when the console is closed, so nothing is lost overnight.
+rem The laboratory's own page is http://127.0.0.1:8787/lab
+%PY% scripts\serve.py --open --ask 15 --sample 10 --fomo 20 --hot 20 %*
 
 rem Only pause on a failure; a clean Ctrl-C should just close.
 if errorlevel 1 (

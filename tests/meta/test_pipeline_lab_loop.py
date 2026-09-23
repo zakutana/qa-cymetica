@@ -730,6 +730,8 @@ def _doors(**over):
     doors = {
         "pass": lambda: False, "night": lambda: False,
         "asked_today": lambda: 0,
+        # No console collecting: the tick does its own rounds.
+        "console": lambda: set(),
         "fomo": door("fomo", {"added": 2}),
         "sample": door("sample", {"rows": 3}),
         "cycle": door("cycle", {"polled": []}),
@@ -963,6 +965,36 @@ def test_a_tick_during_a_deep_pass_or_a_night_only_reads_memecoins_and_hot(
                 continue
             assert not made, f"{door} ran while a {blocker} was on"
         assert did["may_ask"] is False
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_tick_leaves_a_round_to_the_console_that_is_collecting_it(
+        tmp_path, monkeypatch):
+    """Plan v2, V4: one writer per diary. The console's timers (serve.py
+    --fomo, --hot, --sample) and the tick both went round the same diaries --
+    two readers of their API writing the same rows. The console does it now
+    when it runs; a tick skips exactly the rounds the console says it is
+    doing and still does the rest, so a console closed overnight loses no
+    checkpoint (they cannot be read again later)."""
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    doors, calls = _doors(console=lambda: {"fomo", "hot", "sample"})
+    printed = []
+    said = scripts_lab.tick(now=NOW, actions=doors, out=printed.append)
+    assert not calls["fomo"] and not calls["hot"] and not calls["sample"], calls
+    assert said["fomo"] == said["hot"] == said["sample"] == {"by": "console"}
+    assert any("by the console" in line for line in printed), printed
+
+    doors, calls = _doors(console=lambda: {"fomo"})
+    _tick(scripts_lab, NOW + timedelta(minutes=20), doors)
+    assert not calls["fomo"], "the console collects the memecoins"
+    assert calls["hot"] and calls["sample"], "the rest is still the tick's"
+
+    def down():
+        raise OSError("connection refused")
+    doors, calls = _doors(console=down)
+    said = _tick(scripts_lab, NOW + timedelta(minutes=40), doors)
+    assert calls["fomo"] and calls["hot"] and calls["sample"], (
+        "a console that does not answer collects nothing")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

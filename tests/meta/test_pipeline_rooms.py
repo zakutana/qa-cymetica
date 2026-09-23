@@ -34,7 +34,14 @@ from pathlib import Path
 import pytest
 
 from qa.marks import SafetyTier, qa
-from tests.meta.test_pipeline_render import REPO, _live_payload, _render, _run_page
+from tests.meta.test_pipeline_render import (REPO, _lab_page, _live_payload,
+                                             _render)
+from tests.meta.test_pipeline_render import _run_page as _run_any_page
+
+
+def _run_page(*args, **kwargs):
+    """The rooms are drawn by the laboratory's page, /lab, since V4."""
+    return _run_any_page(*args, page=_lab_page(), **kwargs)
 
 T0 = datetime.fromisoformat("2026-09-11T05:00:00+00:00")
 
@@ -81,7 +88,7 @@ def test_general_holds_every_question_and_what_happened_to_it(tmp_path, monkeypa
     monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
     _write(tmp_path / "nexus.jsonl", _five_questions())
 
-    view = _render().build_rooms()
+    view = _lab_page().build_rooms()
 
     assert [r["id"] for r in view["rooms"]][:1] == ["general"]
     thread = view["threads"]["general"]
@@ -136,7 +143,7 @@ def test_a_note_or_a_sample_cannot_move_the_dashboard(tmp_path, monkeypatch):
     assert render.payload_hash(render.build_payload()) == before, (
         "a note or a sample moved the payload, so it would rewrite the committed "
         "dashboard and dirty the tree in the middle of a sweep")
-    notes = [m for m in render.build_rooms()["threads"]["general"]
+    notes = [m for m in _lab_page().build_rooms()["threads"]["general"]
              if m["kind"] == "operator_note"]
     assert [m["text"] for m in notes] == ["proč ne víc?"]
 
@@ -159,7 +166,7 @@ def test_a_note_reads_as_read_only_up_to_the_mark(tmp_path, monkeypatch):
         {"type": "operator_note", "id": "N-0003", "room": "general", "at": _at(30),
          "text": "c"},
     ])
-    view = _render().build_rooms()
+    view = _lab_page().build_rooms()
     notes = [m for m in view["threads"]["general"] if m["kind"] == "operator_note"]
     assert [(m["id"], m["read"]) for m in notes] == [
         ("N-0001", True), ("N-0002", False), ("N-0003", False)]
@@ -224,7 +231,7 @@ def test_a_stopped_room_says_why_and_steps_out_of_the_way(tmp_path, monkeypatch)
          "at": _at(5)},
     ])
     render = _render()
-    rooms = {r["id"]: r for r in render.build_rooms()["rooms"]}
+    rooms = {r["id"]: r for r in _lab_page().build_rooms()["rooms"]}
     assert rooms["STR-0001"]["why"] == "Nexus ruled it out"
     assert rooms["STR-0002"]["why"] == "bought"
     # B04, deep pass of 2026-09-22 evening (3/3): both words were searched in
@@ -232,7 +239,7 @@ def test_a_stopped_room_says_why_and_steps_out_of_the_way(tmp_path, monkeypatch)
     # strip that kept stopped rooms stayed green. Comments out, and each
     # promise read where it is kept: the strip's filter and the card itself.
     import re
-    code = re.sub(r"(?m)^\s*//[^\n]*|\s//\s[^\n]*", "", render.TEMPLATE)
+    code = re.sub(r"(?m)^\s*//[^\n]*|\s//\s[^\n]*", "", _lab_page().TEMPLATE)
     assert "Ukončené" in code, "no folded group for stopped rooms"
     assert re.search(r"const strip = rooms\.filter\(\s*nr\s*=>\s*"
                      r"nr\.status\s*!==\s*\"stopped\"", code), (
@@ -283,7 +290,7 @@ def test_the_tab_reads_no_field_the_rooms_do_not_write(tmp_path, monkeypatch):
          "text": "c", "re": "NEX-1", "gist": True},
     ])
     render = _render()
-    view = render.build_rooms()
+    view = _lab_page().build_rooms()
     panels = list(view["panels"].values())
     bots = [c for p in panels for c in p.get("clones") or []]
     written = {
@@ -301,7 +308,7 @@ def test_the_tab_reads_no_field_the_rooms_do_not_write(tmp_path, monkeypatch):
         # Any identifier, camelCase included: `[a-z_]+` then `\b` could not
         # match `np.samplerOk` at all, so a camelCase read that renders
         # undefined was never compared (P13, deep pass of 2026-09-11).
-        read = set(re.findall(rf"\b{name}\.([A-Za-z_][A-Za-z0-9_]*)", render.TEMPLATE))
+        read = set(re.findall(rf"\b{name}\.([A-Za-z_][A-Za-z0-9_]*)", _lab_page().TEMPLATE))
         assert read, f"the tab reads no `{name}.` field at all, so this proves nothing"
         missing = sorted(read - keys)
         assert not missing, (
@@ -708,7 +715,7 @@ def test_one_answer_opens_one_room_per_card_and_each_card_once(tmp_path, monkeyp
         rooms.open_strategy("NEX-1", "A again", card="aaaaaaaa-0000")
     with pytest.raises(rooms.RoomError):
         rooms.open_strategy("NEX-1", "the whole answer, on top of its cards")
-    view = _render().build_rooms()
+    view = _lab_page().build_rooms()
     assert [(r["id"], r["kind"], r["status"]) for r in view["rooms"]] == [
         ("general", "general", None), ("STR-0001", "strategy", "proposed"),
         ("STR-0002", "strategy", "proposed")]
@@ -733,7 +740,7 @@ def test_the_newest_status_wins_and_every_change_says_why(tmp_path, monkeypatch)
                          why="his own stop over his own horizon")
     rooms.set_status("STR-0001", "running", "TRD-0001 bought 10 000 USDC")
     rooms.set_status("STR-0001", "paused", "the bot stopped itself at -5 %")
-    view = _render().build_rooms()
+    view = _lab_page().build_rooms()
     room = next(r for r in view["rooms"] if r["id"] == "STR-0001")
     panel = view["panels"]["STR-0001"]
     assert room["status"] == panel["status"] == "paused"
@@ -764,7 +771,7 @@ def test_the_panel_and_the_overview_carry_the_criterion_and_the_verdict(
         "return_pct": 4.2, "max_drawdown_pct": 1.1, "benchmark_pct": 2.0,
         "coverage": 1.0, "formula": "abc123"})
 
-    view = _render().build_rooms()
+    view = _lab_page().build_rooms()
     panel = view["panels"]["STR-0001"]
     assert panel["criterion"]["window_days"] == 7
     assert panel["criterion"]["stop_pct"] == 5.0
@@ -828,7 +835,7 @@ def test_a_trade_finds_its_room_by_the_answer_it_acts_on(tmp_path, monkeypatch):
         *_buy("TRD-0006", 1150, "NEX-1", usdc=5.0, outcome="rejected")])
     rooms.open_strategy("NEX-1", "Karta A")
 
-    view = _render().build_rooms()
+    view = _lab_page().build_rooms()
     assert _legs(view, "STR-0001") == ["TRD-0001", "TRD-0003", "TRD-0006"]
     assert _legs(view, "general") == ["TRD-0002", "TRD-0004", "TRD-0005"]
     said = {m["id"]: m["text"] for m in view["threads"]["general"] if m["kind"] == "leg"}
@@ -844,7 +851,7 @@ def test_a_trade_finds_its_room_by_the_answer_it_acts_on(tmp_path, monkeypatch):
         "a rejected order was counted as money in the strategy")
 
     rooms.add_link("STR-0001", "TRD-0002", "measured beside this answer")
-    view = _render().build_rooms()
+    view = _lab_page().build_rooms()
     assert _legs(view, "STR-0001") == ["TRD-0001", "TRD-0002", "TRD-0003", "TRD-0006"]
     assert "TRD-0002" not in _legs(view, "general")
     assert view["panels"]["STR-0001"]["unclosed"] == 1
@@ -863,7 +870,7 @@ def test_two_card_rooms_from_one_answer_each_draw_their_own_trade(tmp_path, monk
     rooms.open_strategy("NEX-1", "Karta A", card="card-a-1111")
     rooms.open_strategy("NEX-1", "Karta B", card="card-b-2222")
 
-    view = _render().build_rooms()
+    view = _lab_page().build_rooms()
     assert _legs(view, "STR-0001") == ["TRD-0001"]
     assert _legs(view, "STR-0002") == ["TRD-0002"]
 
@@ -874,7 +881,7 @@ def test_two_card_rooms_from_one_answer_each_draw_their_own_trade(tmp_path, monk
         *_buy("TRD-0001", 900, "NEX-1", position="P-1", card="card-a-1111"),
         *_buy("TRD-0002", 950, "NEX-1", position="P-2", card="card-b-2222"),
         *_buy("TRD-0003", 990, "NEX-1", position="P-3", card="card-z-9999")])
-    view = _render().build_rooms()
+    view = _lab_page().build_rooms()
     assert _legs(view, "STR-0002") == ["TRD-0002"]
     assert "TRD-0003" in _legs(view, "general")
 
@@ -894,7 +901,7 @@ def test_a_bot_and_everything_done_to_it_follow_its_instance(tmp_path, monkeypat
     _write(tmp_path / "clones.jsonl", _bot_rows())
     rooms.open_strategy("NEX-1", "Perceptron Oracle bot")
 
-    view = _render().build_rooms()
+    view = _lab_page().build_rooms()
     assert _legs(view, "STR-0001") == [
         "CLN-0001", "CLN-0002", "CLN-0003", "CLN-0004", "CLN-0005"]
     assert _legs(view, "general") == ["CLN-0006"]
@@ -929,7 +936,7 @@ def test_a_question_asked_in_a_room_is_read_there_and_general_points_to_it(
     rooms.open_strategy("NEX-1", "Karta A")
     rooms.add_link("STR-0001", "NEX-7", "it asks about this card")
 
-    view = _render().build_rooms()
+    view = _lab_page().build_rooms()
     assert [(m["kind"], m["id"]) for m in view["threads"]["general"]] == [
         ("question", "NEX-1"), ("reply", "NEX-1"),
         ("pointer", "NEX-6"), ("pointer", "NEX-7"),
@@ -972,7 +979,7 @@ def test_a_gist_rides_inside_its_answer_wherever_the_answer_is_drawn(
     def bubbles(view, room):
         return [m["text"] for m in view["threads"][room] if m["kind"] == "claude_note"]
 
-    view = _render().build_rooms()
+    view = _lab_page().build_rooms()
     for room in ("general", "STR-0001"):
         assert replies(view, room)["NEX-1"]["gist"] == "Doporučil kartu A, bull, 10 %"
     assert bubbles(view, "general") == [], "the summary was drawn as a bubble as well"
@@ -982,7 +989,7 @@ def test_a_gist_rides_inside_its_answer_wherever_the_answer_is_drawn(
     fixed = _run(["scripts/rooms.py", "note", "general", "Oprava: karta A, bull, 5 %",
                   "--re", "NEX-1", "--gist"], tmp_path)
     assert fixed.returncode == 0, fixed.stderr
-    view = _render().build_rooms()
+    view = _lab_page().build_rooms()
     assert replies(view, "STR-0001")["NEX-1"]["gist"] == "Oprava: karta A, bull, 5 %"
     assert bubbles(view, "general") == ["Doporučil kartu A, bull, 10 %"]
 
@@ -1070,7 +1077,7 @@ def test_a_strategy_room_draws_its_book_and_its_bot_and_general_the_portfolio(
     rooms.set_acceptance("STR-0001", window_days=7, stop_pct=5.0,
                          why="his own stop over his own horizon")
     rooms.set_status("STR-0001", "running", "TRD-0001 koupil 10 000 USDC")
-    view = _render().build_rooms()
+    view = _lab_page().build_rooms()
 
     monkeypatch.delenv("QA_STATE_DIR", raising=False)
     payload = _live_payload(_render())
@@ -1184,7 +1191,7 @@ def test_a_name_and_a_plan_are_checked_before_anything_is_written(tmp_path, monk
     assert [(g["card"], g["share"], g["tp"], g["sl"]) for g in plan["legs"]] == [
         (CARD_B, 0.2, 8.0, -5.0), (CARD_A, 0.1, 13.0, -9.0)]
     assert (plan["reserve"], plan["bankroll"]) == (0.7, 100000.0)
-    (room,) = [r for r in _render().build_rooms()["rooms"] if r["id"] == "STR-0001"]
+    (room,) = [r for r in _lab_page().build_rooms()["rooms"] if r["id"] == "STR-0001"]
     assert room["title"] == "BTC + BCH blend", (
         "the tab still names the room by the title it was opened with")
 
@@ -1269,7 +1276,7 @@ def test_a_plan_leg_meets_its_order_its_card_and_where_it_stood_when_proposed(
          "current_value_usdc": 10014.48, "unrealized_pnl_usdc": 14.48,
          "realized_pnl_usdc": 0.0},
     ])
-    panel = _render().build_rooms()["panels"]["STR-0001"]
+    panel = _lab_page().build_rooms()["panels"]["STR-0001"]
     legs = {leg["card"]: leg for leg in panel["legs"]}
 
     bought = legs[CARD_A]
@@ -1313,7 +1320,7 @@ def test_the_composer_sits_under_the_thread_never_over_it():
     column, and the composer is the next thing in that column."""
     import re
 
-    template = _render().TEMPLATE
+    template = _lab_page().TEMPLATE
     # Every way to reach the composer: its class, its id, and a style on the
     # element itself. Only `.nx-compose` was read, so `#nxCompose{position:
     # sticky}` or an inline style floated it with the test green (P05, deep
@@ -1339,40 +1346,26 @@ def test_the_composer_sits_under_the_thread_never_over_it():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_the_nexus_tab_takes_the_whole_screen_and_the_others_keep_their_width(
-        tmp_path):
-    """The rest of the console reads best as a column. The Nexus tab is a chat
-    beside a dashboard, and on the operator's screen it had a third of the width
-    it could have had. The switch is the tab itself: showTab marks #wrap, and
-    one rule widens the page only while the Nexus tab is shown."""
+def test_the_lab_page_takes_the_whole_screen_and_the_console_keeps_its_column():
+    """The console reads best as a column. The rooms are a chat beside a
+    dashboard, and on the operator's screen they had a third of the width they
+    could have had -- so while they were a tab, showTab widened the page for
+    that tab alone. Since V4 they are on a page of their own, /lab, which is
+    wide throughout, and the console keeps its column."""
     import re
 
-    node = shutil.which("node")
-    if not node:
-        pytest.skip("node is not installed, so the page cannot be run here")
-    if not (REPO / "state" / "ledger.json").exists():
-        pytest.skip("no committed ledger, so there is no page to run")
-    template = _render().TEMPLATE
-    # The harness makes any element it is asked for, so the markup is held too.
-    assert '<div class="wrap" id="wrap">' in template, (
-        "the page has no #wrap, so the tab has nothing to widen")
-    assert re.search(r'\.wrap\[data-tab="nexus"\]\s*\{[^}]*max-width\s*:\s*none',
-                     template), "no rule widens the page while the Nexus tab is shown"
-    # The other half of the name: the other tabs keep their width. Only the
-    # widening was asserted, so deleting the base width made every tab full
-    # width with the test green (P06, deep pass of 2026-09-11).
-    assert re.search(r'\.wrap\s*\{[^}]*max-width\s*:\s*\d+px', template), (
-        "the page's own width is gone, so every tab is as wide as the Nexus one")
-    code, err, captured = _run_page(
-        node, tmp_path, _live_payload(_render()),
-        after='window.showTab("nexus");\n'
-              'document.getElementById("probe-a").innerHTML = '
-              'document.getElementById("wrap").dataset.tab;\n'
-              'window.showTab("findings");\n'
-              'document.getElementById("probe-b").innerHTML = '
-              'document.getElementById("wrap").dataset.tab;')
-    assert code == 0, f"the page throws when the tab is switched:\n{err[:900]}"
-    assert (captured.get("probe-a"), captured.get("probe-b")) == ("nexus", "findings")
+    lab = _lab_page().TEMPLATE
+    assert '<div class="wrap" id="wrap">' in lab, "the lab page has no #wrap"
+    rules = re.findall(r'(?m)^\.wrap\s*\{([^}]*)\}', lab)
+    assert rules and "max-width:none" in rules[-1].replace(" ", ""), (
+        "the last word on .wrap on /lab is not full width, so the rooms get "
+        "the console's column")
+    console = _render().TEMPLATE
+    assert re.search(r'\.wrap\s*\{[^}]*max-width\s*:\s*\d+px', console), (
+        "the console's own width is gone")
+    assert "max-width:none" not in "".join(
+        re.findall(r'(?m)^\.wrap[^{]*\{([^}]*)\}', console)).replace(" ", ""), (
+        "something in the console still widens it to the whole screen")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -1434,7 +1427,7 @@ def test_the_strip_names_each_strategy_and_its_panel_leads_with_numbers(
     rooms.set_acceptance("STR-0001", window_days=7, stop_pct=5.0,
                          why="his own stop over his own horizon")
     rooms.set_status("STR-0001", "running", why)
-    view = _render().build_rooms()
+    view = _lab_page().build_rooms()
     monkeypatch.delenv("QA_STATE_DIR", raising=False)
     code, err, captured = _run_page(
         node, tmp_path / "page", _live_payload(_render()),
@@ -1605,7 +1598,7 @@ def test_a_bot_or_fund_room_is_one_thing_of_its_answer_not_the_whole_answer(
     with pytest.raises(rooms.RoomError):
         rooms.open_strategy("NEX-1", "the whole answer, on top of its rooms")
 
-    view = _render().build_rooms()
+    view = _lab_page().build_rooms()
     assert _legs(view, "STR-0002") == ["TRD-0001"]
     assert _legs(view, "STR-0001") == [], "the bot room took the answer's orders"
     assert "TRD-0002" in _legs(view, "general")

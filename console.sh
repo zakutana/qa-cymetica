@@ -46,4 +46,4 @@ echo
 # the measurement filled only when a round was run by hand. Three of the
 # first day's twenty-four hours were captured. `./console.sh --fomo 0` turns
 # it off.
-exec $PY scripts/serve.py --open --ask 15 --sample 10 --fomo 20 "$@"
+exec $PY scripts/serve.py --open --ask 15 --sample 10 --fomo 20 --hot 20 "$@"

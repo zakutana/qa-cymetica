@@ -73,7 +73,7 @@ LEG_KINDS = ("card", "bot", "fund", "arena")
 ARENA_TEAMS = ("BLUE", "RED")
 FUND_SYMBOL = re.compile(r"^[A-Z0-9][A-Z0-9-]{0,39}$")
 BOT_REF = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.:-]{0,79}$")
-# What the tab calls an answered question. render.py's _nexus_questions() reads
+# What /lab calls an answered question. lab_page.py's _nexus_questions() reads
 # this same number, so a room opens only from an answer the tab shows as one.
 ANSWERED_CHARS = 300
 # What a link may name, by the prefix of its id, and the row that proves the id

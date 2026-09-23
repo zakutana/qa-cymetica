@@ -184,6 +184,39 @@ def test_the_nexus_line_follows_his_questions_to_what_survived():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_lab_page_reads_every_field_the_report_writes_and_no_other(
+        monkeypatch):
+    """Both directions. JavaScript reading a missing property is undefined,
+    not an error, so a field the page reads and the report never writes draws
+    "undefined" quietly; a field the report writes and the page never reads is
+    a figure nobody sees. The page names its shapes -- `lp.` a product, `ln.`
+    the Nexus line -- and this holds each against qa/lab_report.py."""
+    import re
+
+    monkeypatch.setattr(lab_report.fomo, "ten_dollars", lambda rows, now=None: {
+        "signals": 1, "window_open": 0, "could_buy_share": 1.0,
+        "by_fee": {1.0: {"n": 1, "mean_net_pct": 1.0, "win_rate": 1.0}}})
+    said = _report(fomo_rows=[{"type": "signal"}])
+    written = {
+        "lp": {k for p in said["products"].values() for k in p},
+        "ln": set(said["nexus"]),
+    }
+    spec = importlib.util.spec_from_file_location(
+        "lab_page_fields", REPO / "scripts" / "lab_page.py")
+    page = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(page)
+    for name, keys in written.items():
+        read = set(re.findall(rf"\b{name}\.([A-Za-z_][A-Za-z0-9_]*)", page.TEMPLATE))
+        assert read, f"the page reads no `{name}.` field, so this proves nothing"
+        assert not read - keys, (
+            f"/lab reads `{name}.` fields the report never writes: "
+            f"{sorted(read - keys)}")
+        assert not keys - read, (
+            f"the report writes `{name}.` fields /lab never shows: "
+            f"{sorted(keys - read)}")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_lab_py_report_writes_state_lab_report_json(tmp_path, monkeypatch):
     """`lab.py report` writes the one file the /lab page reads, from the
     diaries on this machine and nothing fetched."""

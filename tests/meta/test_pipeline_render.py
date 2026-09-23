@@ -49,6 +49,16 @@ def _render():
     return mod
 
 
+def _lab_page():
+    """scripts/lab_page.py -- the laboratory's page, /lab (plan v2, V4): the
+    Nexus rooms and the memecoin measurement live there, not in the console."""
+    path = REPO / "scripts" / "lab_page.py"
+    spec = importlib.util.spec_from_file_location("lab_page_mod", path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
 def _live_payload(render):
     """The page as it would render RIGHT NOW, folded fresh from the journal.
 
@@ -309,8 +319,8 @@ def test_the_memecoin_section_renders_with_and_without_a_diary(tmp_path,
     checkout, since `state/fomo_signals.jsonl` is gitignored -- so the
     memecoin panel with a diary behind it had never once actually run in
     Node before this test. It lived in statBlocks()'s `if (fm) {...}` when
-    this was written; it is memecoinPanel() on its own tab now, and the stats
-    grid must not draw it a second time.
+    this was written, then on a tab of its own; since V4 it is memecoinPanel()
+    on the laboratory's page, and the console must not draw it at all.
     """
     import shutil
 
@@ -318,14 +328,13 @@ def test_the_memecoin_section_renders_with_and_without_a_diary(tmp_path,
     if not node:
         pytest.skip("node is not installed, so the page cannot be run here")
 
-    render = _render()
-    payload = render.build_payload()
-    payload["stats"] = {**payload.get("stats", {}), "fomo": None}
-    code, err, captured = _run_page(node, tmp_path / "nofomo", payload)
+    lab = _lab_page()
+    payload = {"stats": {"fomo": None}, "report": {}}
+    code, err, captured = _run_page(node, tmp_path / "nofomo", payload, page=lab)
     assert code == 0, f"the page throws with no diary:\n{err[:900]}"
-    assert "Memecoiny" not in captured.get("stats", ""), (
-        "the measurement moved to its own tab; it must not be drawn in the "
-        "stats grid as well -- one measurement, one place")
+    assert 'id="memecoins"' not in _render().TEMPLATE, (
+        "the measurement lives on /lab; it must not be drawn in the console "
+        "as well -- one measurement, one place")
     assert "No memecoin signals" in captured.get("memecoins", ""), (
         "with no diary the tab says so rather than opening blank: never "
         "watched and watched-with-nothing-yet must not look the same")
@@ -380,7 +389,7 @@ def test_the_memecoin_section_renders_with_and_without_a_diary(tmp_path,
                                        "winners": 30, "losers": 66,
                                        "unscored": 0}},
     }
-    code, err, captured = _run_page(node, tmp_path / "withfomo", payload)
+    code, err, captured = _run_page(node, tmp_path / "withfomo", payload, page=lab)
     assert code == 0, f"the page throws with a real diary:\n{err[:900]}"
     panel = captured.get("memecoins", "")
     assert "hot" in panel, "the tab must say what is being measured"
@@ -427,8 +436,6 @@ def test_the_memecoin_section_renders_with_and_without_a_diary(tmp_path,
     assert "+4.0%" in tail[:200], tail[:200]
     assert "+46.0%" not in tail[:200], (
         "the summary is showing the mean under the word median")
-    assert "Memecoiny" not in captured.get("stats", ""), (
-        "drawn twice -- the operator then has to guess which one is live")
 
     # [operator 2026-09-14] *"ma to byt vetsi ten celkovy P&L kdybychom vse
     # nakoupili v moment singnalu"*. The headline, and -- never apart from it
@@ -480,7 +487,7 @@ def test_the_memecoin_section_renders_with_and_without_a_diary(tmp_path,
     thin["stats"]["fomo"]["basket"]["high_conviction"] = {
         "min": 70, "n": 4, "pnl_pct": 291.7, "median_pct": 304.5,
         "pnl_without_top_pct": None, "winners": 2, "losers": 2, "unscored": 0}
-    code, err, thin_cap = _run_page(node, tmp_path / "thinconv", thin)
+    code, err, thin_cap = _run_page(node, tmp_path / "thinconv", thin, page=lab)
     assert code == 0, err[:900]
     thin_panel = thin_cap.get("memecoins", "")
     assert "too few to mean anything" in thin_panel
@@ -1028,19 +1035,19 @@ class _Captured(dict):
     appended: dict = {}
 
 
-def _run_page(node, workdir, payload, after: str = ""):
+def _run_page(node, workdir, payload, after: str = "", page=None):
     """Execute the page's own script over `payload`.
 
     Returns (returncode, stderr, captured), where `captured` maps element id
     to the HTML the page wrote into it. `after` runs once the page has loaded,
     so a test can call what the page exposes on `window` -- the Nexus rooms
-    arrive by fetch, which the harness never makes.
+    arrive by fetch, which the harness never makes. `page` is the module whose
+    TEMPLATE runs: the console by default, `_lab_page()` for /lab.
     """
     import subprocess
 
     workdir.mkdir(parents=True, exist_ok=True)
-    render = _render()
-    html = render.TEMPLATE
+    html = (page or _render()).TEMPLATE
     opening = "<script>\n"
     start = html.index(opening, html.index('id="data"'))
     script = html[start + len(opening):html.rindex("</script>")]
@@ -1855,99 +1862,35 @@ def test_our_own_verifications_appear_in_the_conversation(tmp_path, monkeypatch)
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_the_memecoin_measurement_is_its_own_tab_not_the_last_block_of_stats():
+def test_the_memecoin_measurement_is_on_the_lab_page_and_the_console_links_there():
     """[operator 2026-09-13] they asked for "separatni sekci jen pro
     memecoiny" and then could not find it.
 
     It shipped as the fifth and last block of the Stats tab, which is a
-    section only in the sense that a paragraph is one. They were on Findings,
-    looked, and said it was not there -- the same class of miss as
-    `look-at-the-page-before-calling-it-done`: every test green, the data
-    present, and nobody had checked whether a person could reach it.
+    section only in the sense that a paragraph is one -- the same class of
+    miss as `look-at-the-page-before-calling-it-done`: every test green, the
+    data present, and nobody had checked whether a person could reach it.
+    It then had a tab of its own; since V4 of plan v2 it is a section of the
+    laboratory's page, /lab, because its figures come from a gitignored diary
+    and the committed console may hash only what git holds.
 
-    Asserted here rather than eyeballed, because "is it findable" is exactly
-    the property that quietly regresses. Three things: the tab button exists,
-    it has a panel to draw into, and the drawing function targets that panel
-    rather than the stats grid.
+    So "findable" is now two things: the console carries a link to /lab, and
+    the lab page has a section, an element to draw into and a writer for it.
+    That the writer runs and draws is the node test above.
     """
-    render = _render()
-    page = render.TEMPLATE
+    console = _render().TEMPLATE
+    assert 'href="/lab"' in console, (
+        "the console does not link to the laboratory, so the memecoins and the "
+        "rooms are reachable only by typing a URL nobody was told")
+    assert 'id="memecoins"' not in console, "drawn in the console as well"
 
-    assert 'data-tab="memecoins"' in page, (
-        "no tab button -- the measurement is reachable only by scrolling "
-        "another tab to its end")
-    assert 'id="panel-memecoins"' in page, "a tab button with no panel"
-    assert 'id="memecoins"' in page, "a panel with nothing to draw into"
+    page = _lab_page().TEMPLATE
+    assert 'id="panel-memecoins"' in page, "no section for the memecoins"
+    assert 'id="memecoins"' in page, "a section with nothing to draw into"
     assert 'getElementById("memecoins")' in page, (
-        "nothing writes the panel, so the tab opens empty")
-
+        "nothing writes the section, so it opens empty")
     # The hover bubble is ours: an element to draw into and a handler that
     # follows the cursor. Without both, the graph has no readable labels at
     # all now that the native <title> is gone.
     assert 'id="mcTip"' in page, "no bubble element"
     assert "mousemove" in page and "mcTip" in page, "nothing shows the bubble"
-
-    # And the tab actually OPENS. showTab() ignores any name not in PANELS
-    # and silently falls back to overview, so a button can exist, a panel can
-    # exist, the data can be right -- and clicking it does nothing at all.
-    # That is what shipped for a few minutes on 2026-09-13 and it is only
-    # visible by pressing the button, which is the whole lesson of
-    # `look-at-the-page-before-calling-it-done`.
-    panels = page[page.index("const PANELS"):]
-    panels = panels[:panels.index("};") + 2]
-    assert "memecoins:" in panels, (
-        "the tab is not in PANELS, so showTab falls back to overview and the "
-        "button is dead")
-
-    # And the block must no longer be appended to the stats grid, or it shows
-    # up twice and the operator has to guess which one is live.
-    stats_fn = page[page.index("function statBlocks()"):]
-    stats_fn = stats_fn[:stats_fn.index("\n}")]
-    assert "Memecoiny" not in stats_fn, (
-        "still drawn inside statBlocks as well -- one measurement, one place")
-
-
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_pressing_the_memecoin_tab_actually_opens_its_panel(tmp_path,
-                                                             monkeypatch):
-    """M04, deep pass of 2026-09-13. Reading the map is not pressing the button.
-
-    Its sibling above asserts that the button exists, the panel exists, a
-    writer targets it and `memecoins:` appears in PANELS -- and every one of
-    those holds while PANELS points at a panel id that does not exist. A typo
-    or a renamed panel (`memecoins: "panel-memecoin"`) satisfies the lot,
-    `showTab`'s forEach finds no element for that id, and clicking the tab
-    hides everything and shows nothing. I verified that by mutation, and it is
-    the bug that actually shipped for a few minutes this afternoon.
-
-    The file two doors down has proved exactly this for the Nexus tab since
-    2026-09-11, by running `showTab` in node and reading back what the page
-    did. Using it here is the whole repair.
-    """
-    import shutil
-
-    node = shutil.which("node")
-    if not node:
-        pytest.skip("node is not installed, so the page cannot be run here")
-
-    render = _render()
-    payload = render.build_payload()
-    code, err, captured = _run_page(
-        node, tmp_path / "opens", payload,
-        # The panel is hidden FIRST, because the harness builds every element
-        # with `hidden: false` whatever the markup says -- so reading it after
-        # showTab proves nothing unless showTab had to change it. The first
-        # version of this probe was green against a PANELS map pointing at a
-        # panel that does not exist, which is the whole defect.
-        after='document.getElementById("panel-memecoins").hidden = true;\n'
-              'window.showTab("memecoins");\n'
-              'document.getElementById("probe-a").innerHTML = '
-              'String(document.getElementById("panel-memecoins").hidden);\n'
-              'document.getElementById("probe-b").innerHTML = '
-              'String(document.getElementById("panel-findings").hidden);')
-    assert code == 0, f"the page throws when the tab is opened:\n{err[:900]}"
-    assert captured.get("probe-a") == "false", (
-        "pressing Memecoiny leaves its own panel hidden -- a dead tab, which "
-        "every assertion in the sibling test above is blind to")
-    assert captured.get("probe-b") == "true", (
-        "opening one tab must hide the others, or two panels draw at once")

@@ -214,7 +214,7 @@ a new day closes the old session with its counts and the lessons written here.
 
 **6. Two or three lines to the operator, in Czech.** The delta: rooms opened,
 what the gate rejected and why, a verdict, the memecoin number when it moved.
-Nothing moved -- one line saying so. The console's Nexus tab has the rest.
+Nothing moved -- one line saying so. The laboratory's page, http://127.0.0.1:8787/lab, has the rest.
 
 ## What makes a proposal concrete
 

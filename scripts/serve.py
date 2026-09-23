@@ -18,15 +18,17 @@ from the ledger is the exact failure that guard exists to catch.
 
 What it writes, all of it. dashboard/index.html, which is a projection and
 always was. With `--ask`, what the bell needs -- see asker(). With `--sample`,
-what scripts/sampler.py reads of their API for the Nexus tab, into the
-gitignored state/samples.jsonl -- see sampler_loop(). And one row in
-state/rooms.jsonl when the operator sends a note from the Nexus tab: through
+what scripts/sampler.py reads of their API for the rooms, into the
+gitignored state/samples.jsonl -- see collector_loop(). And one row in
+state/rooms.jsonl when the operator sends a note from the laboratory's page: through
 qa.rooms.add_operator_note, the only writer the page can reach, behind a token
 minted at launch, a Host and an Origin naming this machine, and a JSON body.
 
-The Nexus tab's rooms are served beside the page, at /rooms.json, and are not
-part of what it renders -- ROOM_FILES says why -- so a note or a sample never
-moves dashboard/index.html.
+The laboratory has a page of its own, /lab (scripts/lab_page.py, plan v2 V4),
+rendered on request and written nowhere, with its rooms at /rooms.json. Neither
+is part of the committed console -- ROOM_FILES says why -- so a note or a
+sample never moves dashboard/index.html. Asking for /lab rewrites the
+gitignored state/lab/report.json, which is what the page reads.
 """
 
 from __future__ import annotations
@@ -96,6 +98,16 @@ def _page_digest(path: Path) -> str | None:
 def _render_module():
     spec = importlib.util.spec_from_file_location(
         "render_live", REPO_ROOT / "scripts" / "render.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _lab_page_module():
+    """scripts/lab_page.py, loaded fresh per request, so an edit to the
+    laboratory's page shows on the next reload without a restart."""
+    spec = importlib.util.spec_from_file_location(
+        "lab_page_live", REPO_ROOT / "scripts" / "lab_page.py")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -179,7 +191,7 @@ def local_host(header, port: int) -> bool:
     return (header or "").strip().lower() in {f"{n}:{port}" for n in LOOPBACK_NAMES}
 
 
-# The console's one write path: a note from the Nexus tab. Small, and JSON --
+# The console's one write path: a note from /lab's rooms. Small, and JSON --
 # a cross-site form can send text/plain without asking, but not
 # application/json and not a header of our own; the browser asks first with an
 # OPTIONS preflight, which this server never answers.
@@ -248,6 +260,10 @@ class Live:
         self.digest = ""
         self.error: str | None = None
         self.listeners: list[queue.Queue] = []
+        # The rounds this console runs on its own timers, name -> seconds.
+        # /status says so, and a lab tick leaves exactly those to it: one
+        # writer per diary (plan v2, V4).
+        self.collectors: dict[str, float] = {}
         self.rebuild()
 
     def rebuild(self) -> bool:
@@ -461,42 +477,28 @@ def _poll_inbox(bounty) -> None:
         print(f"      {bounty._printable(first[0] if first else '')[:100]}")
 
 
-def sampler_loop(stop: threading.Event, every: float) -> None:
-    """The half of the Nexus tab that reads their API: scripts/sampler.py, one
-    round every `every` seconds, GET only, into state/samples.jsonl. The room
-    watcher sees that file move and tells the open tab.
-
-    The loop outlives every round (sampler.run says how), so the one thing
-    that can stop it here is the script failing to load at all -- and that is
-    said in the server window rather than dying with the thread.
+def collector_loop(name: str, script: str, stop: threading.Event,
+                   every: float, collectors: dict) -> None:
+    """One of the laboratory's read-only rounds on this console's timer:
+    scripts/<script>.py's run(), GET only, into its own gitignored diary.
+    Listed in `collectors` while it runs, so /status can tell a lab tick to
+    leave that round to us -- and taken off the list if the script cannot
+    even load, so the tick does the round itself instead of nobody doing it.
     """
     try:
         spec = importlib.util.spec_from_file_location(
-            "sampler_serve", REPO_ROOT / "scripts" / "sampler.py")
-        sampler = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(sampler)
+            f"{script}_serve", REPO_ROOT / "scripts" / f"{script}.py")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
     except Exception as exc:  # noqa: BLE001 -- say it, do not take the server down
-        print(f"[sample] the sampler did not load, so nothing is read: "
+        collectors.pop(name, None)
+        print(f"[{name}] did not load, so the lab tick keeps doing it: "
               f"{type(exc).__name__}: {exc}", file=sys.stderr)
         return
-    sampler.run(stop, every)
-
-
-def fomo_loop(stop: threading.Event, every: float) -> None:
-    """The other half of the memecoin measurement: scripts/fomo_watch.py, one
-    round every `every` seconds, GET only, into state/fomo_signals.jsonl.
-    Same shape as `sampler_loop` above, for the same reason: the loop outlives
-    every round, and only a script that cannot even load stops the thread."""
     try:
-        spec = importlib.util.spec_from_file_location(
-            "fomo_watch_serve", REPO_ROOT / "scripts" / "fomo_watch.py")
-        fomo_watch = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(fomo_watch)
-    except Exception as exc:  # noqa: BLE001 -- say it, do not take the server down
-        print(f"[fomo] did not load, so nothing is watched: "
-             f"{type(exc).__name__}: {exc}", file=sys.stderr)
-        return
-    fomo_watch.run(stop, every)
+        module.run(stop, every)
+    finally:
+        collectors.pop(name, None)
 
 
 def watcher(live: Live, stop: threading.Event, every: float = POLL_SECONDS) -> None:
@@ -512,7 +514,7 @@ def watcher(live: Live, stop: threading.Event, every: float = POLL_SECONDS) -> N
 
 
 def make_handler(live: Live, note_token: str | None = None):
-    """The request handler. `note_token` None means the Nexus tab is read-only."""
+    """The request handler. `note_token` None means /lab's rooms are read-only."""
     class Handler(BaseHTTPRequestHandler):
         protocol_version = "HTTP/1.1"
 
@@ -553,7 +555,9 @@ def make_handler(live: Live, note_token: str | None = None):
             if path == "/status":
                 with live.lock:
                     body = json.dumps({"digest": live.digest, "error": live.error,
-                                       "listeners": len(live.listeners)}).encode("utf-8")
+                                       "listeners": len(live.listeners),
+                                       "collectors": dict(live.collectors)}
+                                      ).encode("utf-8")
                 self._send(body, "application/json; charset=utf-8")
                 return
 
@@ -563,6 +567,10 @@ def make_handler(live: Live, note_token: str | None = None):
 
             if path == "/rooms.json":
                 self.send_rooms()
+                return
+
+            if path == "/lab":
+                self.send_lab()
                 return
 
             if path == "/events":
@@ -697,15 +705,33 @@ def make_handler(live: Live, note_token: str | None = None):
             live.notify_rooms()
             self._json({"id": row["id"], "at": row["at"]}, 201)
 
+        def send_lab(self) -> None:
+            """The laboratory's page (V4): rendered now, written nowhere -- it
+            reads gitignored diaries, which is why it is not the committed
+            console. To this machine by name, like the rooms it carries."""
+            if not local_host(self.headers.get("Host"),
+                              self.server.server_address[1]):
+                self._send(b"the laboratory is served to this machine only",
+                           "text/plain; charset=utf-8", 403)
+                return
+            try:
+                html = _lab_page_module().render_lab()
+            except Exception as exc:  # noqa: BLE001 -- a broken page must not kill the server
+                self._send(f"the laboratory's page failed: {type(exc).__name__}: "
+                           f"{exc}".encode("utf-8"), "text/plain; charset=utf-8", 500)
+                return
+            self._send(html.encode("utf-8"), "text/html; charset=utf-8")
+
         def send_rooms(self) -> None:
-            """The Nexus tab's data -- to this machine by name, to nothing else."""
+            """The rooms on /lab -- to this machine by name, to nothing else."""
             if not local_host(self.headers.get("Host"),
                               self.server.server_address[1]):
                 self._send(b'{"error": "the rooms are served to this machine only"}',
                            "application/json; charset=utf-8", 403)
                 return
             try:
-                body = json.dumps(live.render.build_rooms(), ensure_ascii=False)
+                body = json.dumps(_lab_page_module().build_rooms(),
+                                  ensure_ascii=False)
             except Exception as exc:  # noqa: BLE001 -- a broken view must not kill the server
                 self._send(json.dumps({"error": f"{type(exc).__name__}: {exc}"})
                            .encode("utf-8"), "application/json; charset=utf-8", 500)
@@ -782,7 +808,7 @@ def main(argv: list[str] | None = None) -> int:
                              "Writes when a report moves, which dirties the "
                              "tree; off by default")
     parser.add_argument("--sample", type=float, default=0, metavar="MINUTES",
-                        help="also read their API for the Nexus tab this often "
+                        help="also read their API for /lab's rooms this often "
                              "(e.g. --sample 10): our bot and our card "
                              "positions, GET only, into the gitignored "
                              "state/samples.jsonl; off by default")
@@ -792,6 +818,11 @@ def main(argv: list[str] | None = None) -> int:
                              "checkpoint due ones, GET only, into the "
                              "gitignored state/fomo_signals.jsonl; off by "
                              "default")
+    parser.add_argument("--hot", type=float, default=0, metavar="MINUTES",
+                        help="also go round the Hot headlines this often "
+                             "(e.g. --hot 20), GET only, into the gitignored "
+                             "state/hot_watch.jsonl; off by default. While it "
+                             "runs a lab tick leaves the round to the console")
     args = parser.parse_args(argv)
     if args.poll <= 0:
         parser.error("--poll must be greater than zero")
@@ -801,6 +832,8 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("--sample is in minutes; anything under 1 is hammering them")
     if args.fomo and args.fomo < 1:
         parser.error("--fomo is in minutes; anything under 1 is hammering them")
+    if args.hot and args.hot < 1:
+        parser.error("--hot is in minutes; anything under 1 is hammering them")
 
     live = Live()
     if live.error:
@@ -841,16 +874,21 @@ def main(argv: list[str] | None = None) -> int:
     # Started only once this process holds the port: a second launch opens the
     # tab of the first and returns above, and must not leave a second sampler
     # reading their API beside the first one's.
-    if args.sample:
-        threading.Thread(target=sampler_loop, args=(stop, args.sample * 60),
-                         daemon=True).start()
-    if args.fomo:
-        threading.Thread(target=fomo_loop, args=(stop, args.fomo * 60),
-                         daemon=True).start()
+    # Listed before each thread starts, and taken off by collector_loop if its
+    # script cannot load: a lab tick reads the list on /status and leaves
+    # exactly these rounds to this console.
+    for name, script, minutes in (("sample", "sampler", args.sample),
+                                  ("fomo", "fomo_watch", args.fomo),
+                                  ("hot", "hot_watch", args.hot)):
+        if minutes:
+            live.collectors[name] = minutes * 60
+            threading.Thread(target=collector_loop,
+                             args=(name, script, stop, minutes * 60,
+                                   live.collectors), daemon=True).start()
     rows = sum(live.payload.get("display_counts", {}).values())
     print(f"[serve] {url}  {rows} rows, payload {live.digest[:16]}")
     print(f"[serve] watching {', '.join(WATCHED)} every {args.poll:g}s")
-    print("[serve] notes from the Nexus tab: "
+    print("[serve] notes from /lab: "
           + ("on, from this machine only" if note_token else
              "OFF -- this console listens beyond this machine"))
     if args.ask:
@@ -859,12 +897,16 @@ def main(argv: list[str] | None = None) -> int:
     else:
         print("[serve] not asking their tracker; the bell only moves after a "
               "sweep (--ask 15 to change that)")
-    print(f"[serve] reading their API for the Nexus tab every {args.sample:g} min"
+    print(f"[serve] reading their API for /lab's rooms every {args.sample:g} min"
           if args.sample else
-          "[serve] not reading their API for the Nexus tab (--sample 10 to change that)")
+          "[serve] not reading their API for /lab's rooms (--sample 10 to change that)")
     print(f"[serve] watching FOMO Radar's hot signal every {args.fomo:g} min"
           if args.fomo else
           "[serve] not watching FOMO Radar (--fomo 10 to change that)")
+    print(f"[serve] going round the Hot headlines every {args.hot:g} min"
+          if args.hot else
+          "[serve] not watching the Hot headlines (--hot 20 to change that)")
+    print(f"[serve] the laboratory: {url}lab")
     print("[serve] the open tab reloads itself when the state moves. Ctrl-C to stop.")
     if args.open:
         webbrowser.open(url)

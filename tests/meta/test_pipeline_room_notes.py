@@ -110,6 +110,34 @@ def _get(port: int, path: str, host: str, origin: str | None = None):
     return status, body
 
 
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_lab_page_is_served_to_this_machine_with_its_note_box(console):
+    """/lab (plan v2, V4): the laboratory's page, rendered on request. It
+    carries the rooms' composer, since a note from it is the one write the
+    page may make; like the rooms, it is served to this machine by name."""
+    port = console["port"]
+    status, body = _get(port, "/lab", f"127.0.0.1:{port}")
+    page = body.decode("utf-8")
+    assert status == 200, page[:300]
+    assert "<title>Laboratoř</title>" in page
+    assert 'id="nxCompose"' in page and 'fetch("/notes"' in page.replace("'", '"')
+    assert (console["state"] / "lab" / "report.json").is_file(), (
+        "the page drew products that no report was written for")
+    status, _ = _get(port, "/lab", f"evil.example:{port}")
+    assert status == 403, "the laboratory went to a host that is not this machine"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_console_says_which_rounds_it_is_collecting(console):
+    """One writer per diary: a lab tick asks /status which rounds the console
+    runs on its timers and leaves exactly those to it."""
+    port = console["port"]
+    console["live"].collectors.update({"fomo": 1200.0, "hot": 0})
+    status, body = _get(port, "/status", f"127.0.0.1:{port}")
+    assert status == 200
+    assert json.loads(body)["collectors"] == {"fomo": 1200.0, "hot": 0}
+
+
 def _post_note(port: int, payload, **over):
     """A note the way the page sends one, with any header replaced or removed."""
     host = f"127.0.0.1:{port}"
