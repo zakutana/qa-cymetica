@@ -498,6 +498,15 @@ def test_regression_is_permanent_and_requires_backed_passing():
     explor = fold(explor, run=run("run-f", [result(CHECK_B, "failed")]), events=[])
     assert explor["findings"]["CYM-b"]["regressions"] == []
 
+    # A7 of the review of 2026-09-23 (3/3): a level-V pass under a changed or
+    # never-failed definition is a pass too, and failing after it is a
+    # regression. Recorded only from PASSING, those went unrecorded.
+    for passing in ("PASSING_UNPINNED", "CHECK_CHANGED"):
+        was = ledger(row("CYM-c", check_state=passing, checks=[CHECK_A], pinned=FP1))
+        was["findings"]["CYM-c"]["check"]["adjudicated_by"] = {"run_id": "run-p", "at": "x"}
+        fell = fold(was, run=run("run-q", [result(CHECK_A, "failed")]), events=[])
+        assert len(fell["findings"]["CYM-c"]["regressions"]) == 1, passing
+
 
 # ---------------------------------------------------------------------------
 # Display is a composition, never a stored field

@@ -302,7 +302,10 @@ def _apply_run(row: dict, run: dict, level: str) -> None:
         # Pin the fingerprint the row failed under. A later pass counts as a
         # verification only under this same definition.
         check["pinned_fingerprint"] = _fingerprint_of(mine)
-        if prior == "PASSING":
+        # Every state a level-V pass establishes, not PASSING alone (A7 of
+        # the review of 2026-09-23, 3/3): failing after a pass under a
+        # changed or never-failed definition is a regression too.
+        if prior in ("PASSING", "PASSING_UNPINNED", "CHECK_CHANGED"):
             row.setdefault("regressions", []).append({
                 "at": at, "run_id": run_id,
                 "from_run": (check.get("adjudicated_by") or {}).get("run_id"),
