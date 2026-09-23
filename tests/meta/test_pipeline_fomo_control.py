@@ -286,6 +286,51 @@ def _read(kind, key, hours, price, group=None):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_hot_and_control_are_compared_per_coin_over_one_period_on_one_pair():
+    """C5 of the 2026-09-23 review (3/3). The stored 13.1% against 7.4% was
+    three comparisons in one: it counted SIGNALS, so a coin the radar called
+    hot five times was five hits or five misses of one coin; it set hot
+    signals from 2026-09-13 beside a control group that began on 2026-09-19;
+    and it had no pair filter, so a coin their terminal answered on another
+    pair moved by the other pair's price.
+
+    Now each group is compared over the period both exist, on the first call
+    of each coin, and a path whose pair switched is left out -- each said,
+    with the Wilson interval over coins."""
+    early = T0 - timedelta(hours=1)
+    rows = [
+        _row("control", "control:c1:T", T0),
+        _read("study", "control:c1:T", 30, 3.5, "control"),
+        _row("control", "control:c2:T", T0),
+        _read("study", "control:c2:T", 30, 1.1, "control"),
+        # Before there was a control group: another period.
+        _row("signal", "early:T", early),
+        {**_read("checkpoint", "early:T", 21, 3.5),
+         "at": (early + timedelta(hours=21)).isoformat()},
+        # One coin, called hot twice: one coin.
+        _row("signal", "twice:T1", T0), _read("checkpoint", "twice:T1", 20, 3.5),
+        _row("signal", "twice:T2", T0 + timedelta(minutes=30)),
+        {**_read("checkpoint", "twice:T2", 20, 3.5),
+         "at": (T0 + timedelta(minutes=30, hours=20)).isoformat()},
+        _row("signal", "miss:T", T0), _read("checkpoint", "miss:T", 20, 1.2),
+        # Their terminal answered another pair: the age jumped by days.
+        _row("signal", "switched:T", T0, age_seconds=100.0),
+        {**_read("checkpoint", "switched:T", 20, 9.0), "age_seconds": 900_000.0},
+    ]
+
+    said = fomo.compare(rows, multiple=3.0, within_hours=72,
+                        now=T0 + timedelta(hours=73))
+
+    hot = said["hot"]
+    assert (hot["n"], hot["hits"]) == (2, 1), hot
+    assert hot["excluded"]["before_period"] == 1, hot["excluded"]
+    assert hot["excluded"]["repeat_call"] == 1, hot["excluded"]
+    assert hot["excluded"]["pair_changed"] == 1, hot["excluded"]
+    assert (said["control"]["n"], said["control"]["hits"]) == (2, 1), said
+    assert said["period_from"] == T0.isoformat(), said
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_pump_is_its_peak_inside_a_window_that_has_passed():
     """Their label is "reached 3x inside 72 hours", so a coin that tripled at
     hour twenty and died by seventy-two DID pump. A window still open is not

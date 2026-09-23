@@ -637,15 +637,23 @@ def say_reading(said: dict) -> list[str]:
     lines = say_ten_dollars(said)
     for out in said["readouts"]:
         hot, control = out["hot"], out["control"]
-        ci = hot.get("ci")
+        ci, cci = hot.get("ci"), control.get("ci")
         lift = out.get("lift")
+        unit = f" {hot['unit']}s" if hot.get("unit") else ""
+        # Both intervals, and over what: C5 of 2026-09-23 -- a rate beside a
+        # rate with one interval reads as more certain than it is.
         lines.append(
             f"{out['multiple']:g}x inside {out['within_hours']:g} h: hot "
-            f"{hot['hits']}/{hot['n']} ({_pct(hot['rate'])}"
+            f"{hot['hits']}/{hot['n']}{unit} ({_pct(hot['rate'])}"
             + (f", 95% {_pct(ci[0])}-{_pct(ci[1])}" if ci else "")
-            + f"), control {control['hits']}/{control['n']} "
-              f"({_pct(control['rate'])}), lift "
-            + (f"{lift:.1f}x" if lift is not None else "-"))
+            + f"), control {control['hits']}/{control['n']}{unit} "
+              f"({_pct(control['rate'])}"
+            + (f", 95% {_pct(cci[0])}-{_pct(cci[1])}" if cci else "")
+            + "), lift "
+            + (f"{lift:.1f}x" if lift is not None else "-")
+            + (f" -- first call of each coin, one pair, since "
+               f"{str(out['period_from'])[:10]}" if out.get("period_from")
+               else ""))
     for chain, claim in sorted(said["claims"].items()):
         # Their own sufficiency flag travels with the number or the line
         # overstates them. On 2026-09-21 this printed "their claim: hot 11.2%

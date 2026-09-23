@@ -712,6 +712,7 @@ def compare(rows: list[dict], multiple: float = 3.0, within_hours: float = 72.0,
             entries["control"][key] = row
 
     peaks: dict[str, float] = {}
+    paths: dict[str, list[tuple[float, dict]]] = {}
     for row in in_time(rows):
         kind, key = row.get("type"), row.get("key")
         if kind == "checkpoint" or kind == "study":
@@ -723,16 +724,34 @@ def compare(rows: list[dict], multiple: float = 3.0, within_hours: float = 72.0,
             if kind == "study" and row.get("group") not in ("hot", "control"):
                 continue
             peaks[key] = max(peaks.get(key, price), price)
+            paths.setdefault(key, []).append((hours, row))
 
-    out = {"multiple": multiple, "within_hours": within_hours}
+    # C5 of the 2026-09-23 review: one period for both groups -- from when
+    # both exist -- so hot signals of a week the control group never saw are
+    # not set beside it.
+    firsts = [min((t for t in (_at(s.get("at")) for s in signals.values())
+                   if t is not None), default=None)
+              for signals in entries.values()]
+    period_from = (max(firsts) if all(t is not None for t in firsts)
+                   else None)
+
+    def token_of(key: str) -> str:
+        return str(key).removeprefix(CONTROL_PREFIX).rsplit(":", 1)[0].lower()
+
+    out = {"multiple": multiple, "within_hours": within_hours,
+           "period_from": period_from.isoformat() if period_from else None}
     for group, signals in entries.items():
-        n = hits = 0
         excluded = {"untradeable": 0, "depth_unknown": 0, "window_open": 0,
-                    "unpriced": 0, "unread": 0}
+                    "unpriced": 0, "unread": 0, "before_period": 0,
+                    "pair_changed": 0, "repeat_call": 0}
+        measured: dict[str, tuple] = {}
         for key, signal in signals.items():
             fired = _at(signal.get("at"))
             if fired is None or fired + timedelta(hours=within_hours) > moment:
                 excluded["window_open"] += 1
+                continue
+            if period_from is not None and fired < period_from:
+                excluded["before_period"] += 1
                 continue
             # Three states, as tradeable() says: never quoted for depth is
             # unknown, not untradeable (R07, deep pass of 2026-09-19).
@@ -748,9 +767,24 @@ def compare(rows: list[dict], multiple: float = 3.0, within_hours: float = 72.0,
             if key not in peaks:
                 excluded["unread"] += 1
                 continue
-            n += 1
-            hits += 1 if peaks[key] / entry >= multiple else 0
-        out[group] = {"n": n, "hits": hits,
+            ordered = [signal] + [r for _, r in sorted(
+                paths.get(key) or [], key=lambda item: item[0])]
+            if pair_changed(ordered):
+                excluded["pair_changed"] += 1
+                continue
+            # One coin, one call: the first measured call of each coin. A coin
+            # called hot five times is one coin, not five hits or misses.
+            token = token_of(key)
+            hit = peaks[key] / entry >= multiple
+            if token in measured:
+                excluded["repeat_call"] += 1
+                if fired < measured[token][0]:
+                    measured[token] = (fired, hit)
+                continue
+            measured[token] = (fired, hit)
+        n = len(measured)
+        hits = sum(1 for _, hit in measured.values() if hit)
+        out[group] = {"n": n, "hits": hits, "unit": "coin",
                       "rate": hits / n if n else None,
                       "ci": _wilson(hits, n), "excluded": excluded}
     hot, control = out["hot"]["rate"], out["control"]["rate"]
