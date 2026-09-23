@@ -251,7 +251,14 @@ def _selector_is_full(config) -> bool:
     than merely untested, has never once been able to fire.
     """
     args = list(config.invocation_params.args)
-    narrowed = any(a in ("-k", "-m") or a.startswith(("-k", "-m")) for a in args)
+    # -k and -m, and (A4 of the review of 2026-09-23, 3/3) the options that
+    # deselect or skip what was collected: counted as full, they let a
+    # partial run declare a check GONE.
+    narrowed = any(a in ("-k", "-m") or a.startswith(("-k", "-m", "--deselect",
+                                                       "--ignore", "--lf",
+                                                       "--last-failed", "--sw",
+                                                       "--stepwise"))
+                   for a in args)
     if narrowed:
         return False
     # config.args falls back to the testpaths ini value when nothing

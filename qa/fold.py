@@ -219,20 +219,32 @@ def _structural_reason(checks: Sequence[str]) -> str | None:
     return None
 
 
+def _unverifiable(row: dict, reason: str, cause: dict, at) -> None:
+    """Enter UNVERIFIABLE with the transition that says why. A4 of the review
+    of 2026-09-23 (3/3): it was the one state entered without one, so the
+    history could not say which run or event took a row there."""
+    check = row["check"]
+    prior = check.get("state")
+    check["state"] = "UNVERIFIABLE"
+    check["unverifiable_reason"] = reason
+    if prior != "UNVERIFIABLE":
+        row["transitions"].append({"axis": "check", "from": prior,
+                                   "to": "UNVERIFIABLE", "cause": cause, "at": at})
+
+
 def _apply_run(row: dict, run: dict, level: str) -> None:
     """Move the CHECK axis of one row according to one admissible run."""
     check = row["check"]
     checks = row.get("checks") or []
 
-    reason = _structural_reason(checks)
-    if reason:
-        check["state"] = "UNVERIFIABLE"
-        check["unverifiable_reason"] = reason
-        return
-    check.pop("unverifiable_reason", None)
-
     at = run.get("finished_at") or run.get("started_at")
     run_id = run["run_id"]
+
+    reason = _structural_reason(checks)
+    if reason:
+        _unverifiable(row, reason, {"run_id": run_id}, at)
+        return
+    check.pop("unverifiable_reason", None)
     results = {r["nodeid"]: r for r in run.get("results", [])}
     mine = [results.get(nodeid) for nodeid in checks]
 
@@ -246,9 +258,8 @@ def _apply_run(row: dict, run: dict, level: str) -> None:
         collected = set(run.get("collected") or [])
         missing = [c for c in checks if c not in collected]
         if missing:
-            check["state"] = "UNVERIFIABLE"
-            check["unverifiable_reason"] = "check_missing"
             check["missing_checks"] = sorted(missing)
+            _unverifiable(row, "check_missing", {"run_id": run_id}, at)
             return
     check.pop("missing_checks", None)
 
@@ -889,8 +900,17 @@ def fold(prev: dict | None = None, run: dict | None = None,
         for row in rows.values():
             reason = _structural_reason(row.get("checks") or [])
             if reason:
-                row["check"]["state"] = "UNVERIFIABLE"
-                row["check"]["unverifiable_reason"] = reason
+                # Without a run, only a check-definition event changes what a
+                # row declares; the last one for this row is the cause. None
+                # means the row was already so from its run, and already here.
+                defining = [e for e in events if e.get("finding_id") == row.get("id")
+                            and e.get("type") in ("rebind_check", "retire_check")]
+                if defining:
+                    _unverifiable(row, reason, {"event_id": event_id(defining[-1])},
+                                  defining[-1].get("at"))
+                else:
+                    row["check"]["state"] = "UNVERIFIABLE"
+                    row["check"]["unverifiable_reason"] = reason
 
         # This fold adjudicated nothing. That does not un-adjudicate what came
         # before, and dropping the attribution said it did: an --events-only

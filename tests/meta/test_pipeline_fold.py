@@ -632,6 +632,13 @@ def test_a_full_run_can_say_a_check_is_gone_and_a_partial_one_cannot():
     assert r["state"] == "UNVERIFIABLE"
     assert r["unverifiable_reason"] == "check_missing"
     assert r["missing_checks"] == [CHECK_A]
+    # A4 of the review of 2026-09-23 (3/3): the row moved to UNVERIFIABLE
+    # and no transition said so -- the one change of state in the ledger
+    # that named no cause.
+    moved = [t for t in after["findings"]["CYM-a"]["transitions"]
+             if t.get("to") == "UNVERIFIABLE"]
+    assert moved and moved[-1]["from"] == "REPRODUCING" \
+        and moved[-1]["cause"] == {"run_id": "run-full"}, moved
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

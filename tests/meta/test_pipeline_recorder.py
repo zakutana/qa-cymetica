@@ -362,6 +362,12 @@ def test_an_option_value_is_not_a_test_path():
         "the preregistration id was read as a test path again"
     assert _selector_is_full(config(["-q"], ["tests"])), \
         "no positional argument means the testpaths default, which is the suite"
+    # A4 of the review of 2026-09-23 (3/3): these narrow collection too, and
+    # counted as full they let a partial run call a check GONE.
+    for narrowing in (["--deselect", "tests/a.py::t"], ["--deselect=tests/a.py::t"],
+                      ["--ignore", "tests/rest"], ["--ignore-glob=*x*"],
+                      ["--lf"], ["--last-failed"], ["--sw"], ["--stepwise"]):
+        assert not _selector_is_full(config(["tests", *narrowing], ["tests"])), narrowing
 
     assert not _selector_is_full(config(
         ["tests/meta", "a.py::t", "--prereg", "P"], ["tests/meta", "a.py::t"]))
