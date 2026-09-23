@@ -2537,6 +2537,9 @@ def _say_tick(said: dict, out) -> None:
         f"(+{hot_.get('headlines', 0)} headline(s), {hot_.get('cards', 0)} card(s))")
     for line in said.get("held") or []:
         out(f"  held:  {line}")
+    if said.get("held_older"):
+        out(f"  held:  +{said['held_older']} older reason(s) not shown -- "
+            f"still retried every tick")
     if said.get("resolved"):
         out(f"  resolved without us, written down: {said['resolved']}")
     out("  question: may go now -- `lab.py brief`, then `lab.py ask --no-wait`"
@@ -2637,7 +2640,10 @@ def tick(*, now: datetime | None = None, actions: dict | None = None,
     said["orders"] += launched.get("orders", 0)
     # The newest six: the launch lists oldest answer first, and the first six
     # were the same four answers all night while NEX-0063's reason sat unseen.
-    said["held"] = list(launched.get("held") or [])[-6:]
+    every = list(launched.get("held") or [])
+    said["held"] = every[-6:]
+    # And how many that cut, said: NEX-0078 slid off unannounced (2026-09-23).
+    said["held_older"] = len(every) - len(said["held"])
 
     said["verdicts"] = len(attempt("verdicts", doors["verdicts"]) or [])
     said["resolved"] = len(attempt("resolved", _record_resolved) or [])

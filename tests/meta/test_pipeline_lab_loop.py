@@ -775,6 +775,30 @@ def test_a_tick_shows_the_newest_reasons_it_held(tmp_path, monkeypatch):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_tick_says_how_many_reasons_it_left_off_screen(tmp_path, monkeypatch):
+    """The newest six hid the rest without a word: on 2026-09-23 NEX-0078's
+    stock card fell off the screen as newer answers arrived, still retried
+    every tick, and a session spent an hour looking for why the launch had
+    dropped it. A cut that is not said reads as an absence."""
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    reasons = [f"NEX-{n:04d}: reason" for n in range(40, 50)]
+    doors, _ = _doors(promote=lambda: {"rooms": 0, "orders": 0,
+                                       "held": reasons})
+    printed = []
+
+    scripts_lab.tick(now=NOW, actions=doors, out=printed.append)
+
+    assert any("4 older" in line for line in printed), printed
+
+    printed.clear()
+    doors, _ = _doors(promote=lambda: {"rooms": 0, "orders": 0,
+                                       "held": reasons[:6]})
+    scripts_lab.tick(now=NOW + timedelta(minutes=20), actions=doors,
+                     out=printed.append)
+    assert not any("older" in line for line in printed), printed
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_tick_carries_on_the_walk_where_the_last_one_stopped(
         tmp_path, monkeypatch):
     """A tick is a fresh process every twenty minutes. The night held its
