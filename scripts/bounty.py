@@ -350,11 +350,11 @@ def fetch_inbox(client=None, agent_id: str | None = None) -> dict:
     if klass != "ok":
         return {"klass": klass, "rows_returned": None, "new": [], "at": at}
 
-    return record_inbox(messages, klass=klass, at=at)
+    return record_inbox(messages, klass=klass, at=at, evidence_id=evidence_id)
 
 
 def record_inbox(messages: list[dict], klass: str = "ok",
-                 at: str | None = None) -> dict:
+                 at: str | None = None, evidence_id: str | None = None) -> dict:
     """Their messages onto the journal, one event each, keyed on their id.
 
     Split out of fetch_inbox so the recording can be tested without the
@@ -389,6 +389,10 @@ def record_inbox(messages: list[dict], klass: str = "ok",
             "by": "vendor", "source": A2A_SOURCE, "msg_id": str(msg_id),
             "text": message.get("content") or "",
             "origin": "a2a", "via": message.get("thread_id"),
+            # The capture their words came in (D6 of the review of
+            # 2026-09-23): the keepset keeps what a `message` names, and it
+            # named nothing, so the words stayed and their proof could go.
+            "evidence_id": evidence_id,
         }
         # Written even when false or absent, which is the whole point: "the
         # vendor says this is a person" and "nobody classified this" were the

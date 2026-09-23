@@ -1071,6 +1071,13 @@ def test_the_a2a_inbox_is_read_and_each_message_recorded_once(tmp_path, monkeypa
         "a message from them recorded as ours"
     assert messages[1]["text"] == "a real answer", \
         "the body is not kept, so the journal records that they spoke and not what they said"
+    # D6 of the review of 2026-09-23 (3/3): their words are kept (VENDOR_WORDS
+    # includes `message`), but the capture they came in named no message, so
+    # the keepset could not keep it. Each message now names the inbox read's
+    # capture.
+    read = [e for e in read_events() if e["type"] == "vendor_read"][0]
+    assert all(m.get("evidence_id") == read.get("evidence_id") for m in messages), \
+        [(m.get("evidence_id"), read.get("evidence_id")) for m in messages]
 
     # The next sweep reads the same inbox. Nothing is owed twice.
     again = bounty.fetch_inbox(client=inbox, agent_id="expire76-qa")
