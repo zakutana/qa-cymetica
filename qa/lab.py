@@ -1706,9 +1706,12 @@ def bot_stops(clone_rows, samples) -> list[dict]:
     Its cause is one of three:
 
         ours          our accepted pause lies between the two
-        their_guard   it stopped at a cumulative LOSS, which is where their
-                      halt is documented to fire (NEX-0049: the stop-loss and
-                      the pause are the same lever)
+        their_guard   it stopped at a cumulative LOSS. Not documented --
+                      their docs describe no automatic halt, and NEX-0049's
+                      "the stop-loss and the pause are the same lever" is a
+                      claim of Nexus's -- but every loss-side halt we have
+                      stopped at a round share of what went in (Perceptron
+                      Oracle -5.00% twice, MACD Hunter -10.00%)
         unexplained   neither -- a check and a report
 
     Pure over two loaded diaries; `after` and `before` bound the moment.
