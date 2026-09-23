@@ -520,6 +520,10 @@ def test_closing_a_session_puts_the_diaries_where_git_can_hold_them(
     the committed audits/lab/lab.jsonl came back modified.
     """
     scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    # No pass running: the notebook read is REPO_ROOT/audits, and a real
+    # pass in flight holds the archive back (RL03) -- tested in
+    # test_the_buy_path_reads_what_is_already_deployed.
+    monkeypatch.setattr(scripts_lab, "pass_in_flight", lambda: False)
     calls = []
     real_sibling = scripts_lab._sibling
 
@@ -695,6 +699,21 @@ def test_the_buy_path_reads_what_is_already_deployed(tmp_path, monkeypatch):
         scripts_lab.buy("c4", 500.0, nexus_id=None, confirm=True)
     assert "deep pass" in str(held.value), str(held.value)
     assert len(sent) == 1, "a deep pass was running and the order went anyway"
+
+    # RL03 (deep pass of 2026-09-24): the first tick after midnight UTC
+    # closes the day, and closing it copied the diaries into the TRACKED
+    # audits/lab/ -- before the tick's pass guard. A dirty tree mid-pass is
+    # one its preregistration refuses; the pass's step 8 archives them.
+    snapped = []
+    keep = real_sibling("keep")
+    keep.snapshot = lambda: snapped.append(1) or ["audits/lab/lab.jsonl"]
+    monkeypatch.setattr(scripts_lab, "_sibling",
+                        lambda name: keep if name == "keep"
+                        else paper if name == "paper" else real_sibling(name))
+    assert scripts_lab._archive_diaries() == [] and snapped == [], (
+        "the day's close wrote tracked files while a deep pass was running")
+    monkeypatch.setattr(scripts_lab, "pass_in_flight", lambda: False)
+    assert scripts_lab._archive_diaries() and snapped == [1]
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -1474,6 +1493,34 @@ def test_the_night_waits_the_hour_their_own_failure_asked_for():
                          "at": (now - timedelta(minutes=1)).isoformat()}]
     assert lab.backoff_until(answered, now) is None, (
         "one answer since the failure means the lane is open again")
+
+    # RL06 (deep pass of 2026-09-24): only the DEEP lane's own rows speak
+    # about its capacity. An answer the operator pasted from the web chat is
+    # no evidence the lane is open, and our own give-up -- a job still
+    # `running` when our patience ran out -- is not a failure of theirs.
+    pasted = [*_failed(1, 10), {"id": "NEX-3", "type": "answer", "lane": "operator",
+                                "at": (now - timedelta(minutes=1)).isoformat()}]
+    assert lab.backoff_until(pasted, now) == one, (
+        "an answer pasted from their web chat cleared the deep lane's wait")
+    impatient = [{"id": "NEX-4", "type": "gave_up", "status": "running",
+                  "at": (now - timedelta(minutes=10)).isoformat()},
+                 {"id": "NEX-5", "type": "gave_up", "status": "unread: ReadTimeout",
+                  "at": (now - timedelta(minutes=9)).isoformat()}]
+    assert lab.backoff_until(impatient, now) is None, (
+        "our own give-ups were counted as their failures")
+
+    # RL05: an answer whose time cannot be read is not a fresh one -- the
+    # launch window reads it as old, not as now (rule 8, on the side that
+    # spends).
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("lab_rl05", REPO / "scripts" / "lab.py")
+    scripts_lab = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(scripts_lab)
+    since = now - timedelta(hours=24)
+    assert scripts_lab._fresh({"at": (now - timedelta(hours=1)).isoformat()}, since)
+    assert not scripts_lab._fresh({"at": "včera 14:00"}, since), (
+        "an answer with an unreadable time was launched as fresh")
+    assert scripts_lab._fresh({"at": "anything"}, None)
 
     held = lab.night_tick({"asked": 0, "candidates": ["bt-x"],
                            "hold_until": now + timedelta(hours=1)}, now)

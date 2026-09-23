@@ -623,6 +623,8 @@ BUDGET_CEILING_PCT = 85
 # A held reason worth saying to the operator the first time it appears: an
 # error from their side, or an id their API does not know.
 GAP_HELD = re.compile(r"HTTP [45]\d\d|knows no card")
+# What scripts/lab.py writes when a close only waits for a deep pass to end.
+CLOSE_WAITS = "a deep pass is running"
 
 
 def _door(error: str) -> str:
@@ -637,9 +639,19 @@ def new_gaps(said: dict, earlier: list[dict]) -> list[str]:
     before = earlier[-1] if earlier else {}
     failing = {_door(e) for e in before.get("errors") or []}
     gaps = [e for e in said.get("errors") or [] if _door(e) not in failing]
-    seen = {line for row in earlier for line in row.get("held") or []}
-    gaps += [line for line in said.get("held") or []
+    # Every gap-class held line the tick saw, not only the six it shows
+    # (RL04, deep pass of 2026-09-24); a tick row from before carries `held`.
+    seen = {line for row in earlier
+            for line in (row.get("gap_held") or []) + (row.get("held") or [])}
+    held = said.get("gap_held")
+    held = said.get("held") if held is None else held
+    gaps += [line for line in held or []
              if GAP_HELD.search(str(line)) and line not in seen]
+    # A close their side refused, the first time (RL01). One that only waits
+    # for a deep pass to end is the pass working, not news.
+    closes = {line for row in earlier for line in row.get("close_failed") or []}
+    gaps += [line for line in said.get("close_failed") or []
+             if CLOSE_WAITS not in line and line not in closes]
     return gaps
 
 
@@ -774,6 +786,16 @@ def deadline(text: str, now: datetime | None = None) -> datetime:
     return due
 
 
+IN_FLIGHT = ("queued", "pending", "running", "processing", "in_progress")
+
+
+def _ours_gave_up(row: dict) -> bool:
+    """A give-up of OURS: their job still in flight when we stopped
+    polling, or a read of ours that failed (`unread: ...`)."""
+    status = str(row.get("status") or "").lower()
+    return status in IN_FLIGHT or status.startswith("unread")
+
+
 def backoff_until(nexus_rows: list[dict], now: datetime | None = None):
     """When the lane may be tried again, after their side gave up on us.
 
@@ -787,11 +809,17 @@ def backoff_until(nexus_rows: list[dict], now: datetime | None = None):
     for row in nexus_rows:
         # The wait is the DEEP lane's (REPLY-0018: a shared capacity window on
         # deep investigations). The sync door failing or answering says
-        # nothing about it either way.
-        if row.get("lane") == "shallow":
+        # nothing about it either way -- nor does an answer the operator
+        # pasted from their web chat (RL06, deep pass of 2026-09-24).
+        if row.get("lane") in ("shallow", "operator"):
             continue
         when = _at(row.get("at"))
         if when is None:
+            continue
+        if row.get("type") == "gave_up" and _ours_gave_up(row):
+            # Our patience ran out while their job was still going, or our
+            # read failed: not a refusal of theirs (their_down_streak says
+            # the same of these).
             continue
         if row.get("type") == "gave_up":
             failed = (when, row)

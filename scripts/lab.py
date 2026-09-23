@@ -126,9 +126,18 @@ def _free_cash() -> float | None:
             newest = row
     # clone.py reads the same account after every transfer into a paper bot
     # (2026-09-22). Its read wins only when it is provably the later one.
-    cloned = [row for row in _sibling("clone").load()
-              if row.get("type") == "after" and row.get("sim_balance_usdc")
-              is not None and _moment(row.get("at")) is not None]
+    afters = [row for row in _sibling("clone").load()
+              if row.get("type") == "after" and _moment(row.get("at")) is not None]
+    mine = _moment((newest or {}).get("at")) if isinstance(newest, dict) else None
+    if afters:
+        # The newest transfer's read of the account failed: what is free
+        # after it is unknown, and the balance from before it counts money
+        # `_deployed` already counts as sent (RL08, deep pass of 2026-09-24).
+        last = max(afters, key=lambda row: _moment(row["at"]))
+        if last.get("sim_balance_usdc") is None and (
+                mine is None or _moment(last["at"]) > mine):
+            return None
+    cloned = [row for row in afters if row.get("sim_balance_usdc") is not None]
     if cloned:
         later = max(cloned, key=lambda row: _moment(row["at"]))
         mine = _moment((newest or {}).get("at")) if isinstance(newest, dict) else None
@@ -321,7 +330,15 @@ def _archive_diaries() -> list[str]:
 
     Best effort on purpose: a failed copy says so and does not take down the
     close that ends the session. A session left open stops the next one.
+
+    Not while a deep pass runs (RL03, deep pass of 2026-09-24): audits/lab/
+    is tracked, the first tick after midnight UTC closes the day BEFORE the
+    tick's own pass guard, and a tree dirtied mid-pass is one the pass's
+    preregistration refuses. The pass's step 8 snapshots them itself.
     """
+    if pass_in_flight():
+        print("[lab] a deep pass is running; its step 8 archives the diaries")
+        return []
     try:
         return _sibling("keep").snapshot()
     except Exception as exc:  # noqa: BLE001 -- an archive is not a brake
@@ -1294,10 +1311,19 @@ def verdicts(now=None) -> list[dict]:
         paper = _sibling("paper")
         for position in positions:
             try:
-                paper.close(position, True)
+                entry = paper.close(position, True)
             except (Exception, SystemExit) as exc:  # noqa: BLE001
                 said.setdefault("close_failed", []).append(
                     f"{position}: {str(exc)[:160]}")
+                continue
+            # paper.close RETURNS on a /sell their side refused: it writes the
+            # outcome `unknown` and raises only when the POST itself failed
+            # (RL02, deep pass of 2026-09-24). What it recorded decides.
+            outcome = _paper_outcome(paper, (entry or {}).get("id"))
+            if outcome.get("outcome") != "accepted":
+                said.setdefault("close_failed", []).append(
+                    f"{position}: the sell was not accepted (HTTP "
+                    f"{outcome.get('http_status', '?')})")
         for instance in bots:
             clone = _sibling("clone")
             try:
@@ -1469,7 +1495,24 @@ def verdicts(now=None) -> list[dict]:
             _early_state_path().write_text(json.dumps(checked), encoding="utf-8")
         except OSError:
             pass
-    return out
+    # The closes still owed ride along whatever else came due: they were
+    # returned only when nothing was due, and dropped otherwise (RL01).
+    return retried + out
+
+
+def _tally_verdicts(judged: list[dict]) -> dict:
+    """What a tick says of verdicts(): how many rooms were JUDGED, which
+    wait on a failed read, and every close that failed. A retry of an owed
+    close is no verdict (RL01, deep pass of 2026-09-24): counted as one, it
+    was news to decide() on every tick while the bot it could not pause kept
+    trading unseen."""
+    return {
+        "verdicts": sum(1 for row in judged
+                        if row.get("verdict") not in (None, "waiting")),
+        "verdicts_waiting": [f"{row['room']}: {row.get('why', '')}"
+                             for row in judged if row.get("verdict") == "waiting"],
+        "close_failed": [f"{row['room']}: {line}" for row in judged
+                         for line in row.get("close_failed") or []]}
 
 
 def _lane(rows: list[dict], lane: str = "auto") -> tuple[str | None, str]:
@@ -1964,6 +2007,17 @@ def _gate(card: str, legs: list[dict]) -> dict:
     return lab.gate(readings)
 
 
+def _fresh(row: dict, since: datetime | None) -> bool:
+    """Whether an answer is inside the launch window. One whose time cannot
+    be read is NOT: `nexus.py record --at` takes free text, and reading
+    that as now launched an answer of any age (RL05, deep pass of
+    2026-09-24) -- rule 8 on the side that spends."""
+    if since is None:
+        return True
+    when = _moment(row.get("at"))
+    return when is not None and when >= since
+
+
 def night_promote(since: datetime | None = None) -> dict:
     """Launch what Nexus endorsed tonight, on paper, under the day's brakes.
 
@@ -2009,7 +2063,7 @@ def night_promote(since: datetime | None = None) -> dict:
         return {"rooms": 0, "orders": 0, "held": ["a deep pass is running"]}
 
     answers = [row for row in _nexus_rows() if row.get("type") == "answer"
-               and (since is None or (_moment(row.get("at")) or _now()) >= since)]
+               and _fresh(row, since)]
     if not answers:
         return {"rooms": 0, "orders": 0, "held": []}
 
@@ -2240,9 +2294,12 @@ def night_promote(since: datetime | None = None) -> dict:
                             f"{'refused' if refused else 'not accepted'} "
                             f"({reason})")
                 status = "stopped"
+                # A stopped room that held nothing is archived and never
+                # judged (V2), so this says so rather than promising a verdict
+                # (RL07, deep pass of 2026-09-24).
                 why_status = (f"the paper order did not land ({reason}), so "
-                              f"nothing is at stake here; the criterion still "
-                              f"judges his idea on the index")
+                              f"nothing is at stake here; a room that held "
+                              f"nothing is archived and not judged")
             try:
                 rooms.set_status(room, status, why=why_status)
             except rooms.RoomError as exc:
@@ -2548,6 +2605,15 @@ def _species_cloned() -> dict[str, str]:
                             f"HTTP {result.get('http_status')}, "
                             f"{result.get('outcome') or 'no outcome recorded'})")
     return out
+
+
+def _paper_outcome(paper, entry_id) -> dict:
+    """The outcome row paper.py wrote for one of its intents, or {} -- a
+    close returns its intent, not whether their side accepted it."""
+    if not entry_id:
+        return {}
+    return next((row for row in reversed(paper.load())
+                 if row.get("type") == "outcome" and row.get("id") == entry_id), {})
 
 
 def _clone_outcome(clone, kind: str, instance: str) -> str | None:
@@ -3036,6 +3102,8 @@ def _say_tick(said: dict, out) -> None:
             f"still retried every tick")
     for line in said.get("verdicts_waiting") or []:
         out(f"  verdict waits:  {line}")
+    for line in said.get("close_failed") or []:
+        out(f"  close failed:  {line}")
     if said.get("resolved"):
         out(f"  resolved without us, written down: {said['resolved']}")
     decided = said.get("decide") or []
@@ -3165,10 +3233,9 @@ def tick(*, now: datetime | None = None, actions: dict | None = None,
 
     judged = list(attempt("verdicts", doors["verdicts"]) or [])
     # A verdict that waits on a failed read is not a verdict (C1): counted
-    # apart, and named with the read that failed.
-    said["verdicts"] = sum(1 for row in judged if row.get("verdict") != "waiting")
-    said["verdicts_waiting"] = [f"{row['room']}: {row.get('why', '')}"
-                                for row in judged if row.get("verdict") == "waiting"]
+    # apart, and named with the read that failed. A close that failed is
+    # said, and decide() reads it (RL01).
+    said.update(_tally_verdicts(judged))
     # After the verdicts, whose close pauses a judged bot: its next setting
     # starts on the same clone (V5, REPLY-0049), in a room of ours.
     varied = attempt("variants", doors["variants"]) or {}
@@ -3177,6 +3244,10 @@ def tick(*, now: datetime | None = None, actions: dict | None = None,
     every += list(varied.get("held") or [])
     said["held"] = every[-6:]
     said["held_older"] = len(every) - len(said["held"])
+    # Every gap-class line, not the newest six: decide() reads these, and a
+    # line cut from the six was never news -- the gate writes an unknown
+    # card once and only once (RL04, deep pass of 2026-09-24).
+    said["gap_held"] = [line for line in every if lab.GAP_HELD.search(str(line))]
     said["resolved"] = len(attempt("resolved", _record_resolved) or [])
 
     last_reading = lab._at(state.get("last_fomo_reading"))
@@ -3760,7 +3831,11 @@ def main(argv: list[str] | None = None) -> int:
         if not said:
             print("no window has come due")
         for row in said:
-            print(f"  {row['room']}: {row['verdict']} -- {row.get('why', '')}")
+            # A retry of an owed close carries no verdict (RL01).
+            print(f"  {row['room']}: {row.get('verdict', 'close owed')} -- "
+                  f"{row.get('why', '')}")
+            for line in row.get("close_failed") or []:
+                print(f"      close failed: {line}")
     elif args.cmd == "surface":
         print(json.dumps(surface(), ensure_ascii=False, indent=1))
     elif args.cmd == "ask":

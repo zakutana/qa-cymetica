@@ -2058,10 +2058,19 @@ def test_an_early_close_that_failed_is_tried_again_and_the_benchmark_read_once(
     attempts = []
 
     def close(position, confirm):
+        """What paper.close does (RL02, deep pass of 2026-09-24): a /sell
+        that answers non-2xx is written as outcome `unknown` and RETURNS; it
+        raises only when the POST itself fails. Refused twice, then sold."""
         attempts.append(position)
-        if len(attempts) == 1:
-            raise SystemExit("their /sell answered 500")
-        return {}
+        sale = f"TRD-01{len(attempts):02d}"
+        status = 500 if len(attempts) <= 2 else 200
+        with open(tmp_path / "paper.jsonl", "a", encoding="utf-8") as fh:
+            fh.write(json.dumps({"id": sale, "type": "intent", "kind": "close",
+                                 "position_id": position, "paper": True}) + "\n")
+            fh.write(json.dumps({"id": sale, "type": "outcome", "kind": "close",
+                                 "outcome": "accepted" if status == 200 else "unknown",
+                                 "http_status": status}) + "\n")
+        return {"id": sale}
     paper = scripts_lab._sibling("paper")
     paper.close = close
 
@@ -2070,18 +2079,36 @@ def test_an_early_close_that_failed_is_tried_again_and_the_benchmark_read_once(
 
     def history(client, card):
         fetched.append(card)
-        values = [100, 99, 85] if card in cards else [100, 100, 100]
+        # The first room's card falls through its stop; the second's is flat,
+        # so that room stays open and is looked at again an hour later.
+        values = [100, 99, 85] if card == cards[0] else [100, 100, 100]
         return [{"t": (start + timedelta(hours=h)).isoformat(), "index": v}
                 for h, v in enumerate(values)]
     monkeypatch.setattr(scripts_lab, "_history", history)
 
     said = scripts_lab.verdicts(now=start + timedelta(hours=3))
-    assert len(said) == 2 and all(s["early"] for s in said), said
+    assert len(said) == 1 and said[0]["early"], said
     assert len(fetched) == len(set(fetched)), f"a card was read twice: {fetched}"
-    assert attempts == ["P-1"] and said[0].get("close_failed")
+    assert attempts == ["P-1"], attempts
+    assert any("500" in line for line in said[0].get("close_failed") or []), (
+        "a /sell their side refused was taken for a sale", said)
 
-    scripts_lab.verdicts(now=start + timedelta(hours=3, minutes=10))
+    # RL01: the next call owes the close AND looks at the open room again. The
+    # retry that failed a second time is in what it returns -- it was dropped
+    # whenever anything else came due -- and it is no verdict.
+    again = scripts_lab.verdicts(now=start + timedelta(hours=4, minutes=1))
     assert attempts == ["P-1", "P-1"], "the failed close was not tried again"
+    retry = [row for row in again if row.get("retry")]
+    assert retry and retry[0].get("close_failed"), again
+    tally = scripts_lab._tally_verdicts(again)
+    assert tally["verdicts"] == 0, tally
+    assert tally["close_failed"] and "500" in tally["close_failed"][0], tally
+    real = scripts_lab.verdicts
+    monkeypatch.setattr(scripts_lab, "verdicts", lambda now=None: again)
+    assert scripts_lab.main(["verdicts"]) == 0, "a retry row crashed `lab.py verdicts`"
+
+    real(now=start + timedelta(hours=4, minutes=10))
+    assert attempts == ["P-1", "P-1", "P-1"]
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -2261,6 +2288,13 @@ def test_a_refused_paper_order_does_not_stop_the_launch_or_strand_the_room(
                  if r["origin"] == "NEX-0001")
     assert qa_rooms.status_of(rows, first["id"]) == "stopped", (
         "a room with no position reads as an experiment in flight")
+    # RL07 (deep pass of 2026-09-24): its reason promised "the criterion
+    # still judges his idea on the index", and since V2 a stopped room that
+    # held nothing is archived and never judged. The reason says so.
+    why = [r.get("why") for r in rows if r.get("type") == "status"
+           and r.get("room") == first["id"]][-1]
+    assert "still judges" not in why and "not judged" in why, why
+    assert first["id"] in lab.archived_rooms(rows, [], [], [])
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -3205,6 +3239,15 @@ def test_free_cash_is_the_newest_account_read_whichever_script_took_it(
         {"id": "TRD-0002", "type": "after", "at": "2026-09-22T12:00:00+00:00",
          "sim_balance_usdc": "99000"}])
     assert scripts_lab._free_cash() == 99000.0
+    # RL08 (deep pass of 2026-09-24): a transfer whose after-read of the
+    # account FAILED left the older, pre-transfer balance to win while
+    # `_deployed` already counted the transfer. The newest read is unknown,
+    # so the free cash is unknown -- the same refusal paper.py makes.
+    _write(tmp_path, "clones.jsonl", [
+        {"id": "CLN-0003", "type": "after", "at": "2026-09-22T13:00:00+00:00",
+         "error": "account read: HTTP 503"}])
+    assert scripts_lab._free_cash() is None, (
+        "a failed read after a transfer fell back to the balance before it")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -3531,6 +3574,21 @@ def test_a_gap_is_what_went_wrong_for_the_first_time_not_every_tick():
     ordinary = "NEX-0083: names no card, bot or fund we can act on"
     assert _decide(_said(held=[ordinary]), [before], asked) == [], (
         "a proposal that names nothing is the morning's to read, not a gap")
+
+    # RL04 (deep pass of 2026-09-24): the tick shows the newest six held lines,
+    # and a gap line older than those six was never read -- while the gate
+    # marks an unknown card spent, so it is written once and only once.
+    unknown = "NEX-0091/9ef04dc6: their API knows no card 9ef04dc6"
+    shown = [f"NEX-00{n}: variant held" for n in range(60, 66)]
+    assert _decide(_said(held=shown, gap_held=[unknown]), [before], asked) == ["gap"]
+    # RL01: a close their side refused is news the first time, and a close
+    # that only waits for a deep pass is not news at all.
+    refused_close = "STR-0009: P-1: the sell answered HTTP 500"
+    assert _decide(_said(close_failed=[refused_close]), [before], asked) == ["gap"]
+    told = _tick_row(NOW - timedelta(hours=1), close_failed=[refused_close])
+    assert _decide(_said(close_failed=[refused_close]), [told, before], asked) == []
+    waits = "STR-0009: a deep pass is running; the close waits for the next call"
+    assert _decide(_said(close_failed=[waits]), [before], asked) == []
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
