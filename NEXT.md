@@ -25,7 +25,7 @@ nikdy nebylo další na řadě.
 ---
 
 - [x] 2026-09-23  Revize `docs/review-2026-09-23.md` a triáž: 32 skutečných, 3 v menšině, 2 zamítnuté; plán v2 je napsaný. (hotovo 2026-09-23)
-- [ ] 2026-09-23  Plán v2 (`docs/laborator-plan.md`): otevřené fáze V7 V8 V9 V10 V11, po jedné, stav v tabulce plánu. Po prvním dni smyčky ověřit řádky `answer_read` (V5) a `python scripts/processes.py loop` (V6: pracovních ≤ 20, klidné ≤ 4 volání, Sonnet).
+- [ ] 2026-09-23  Plán v2 (`docs/laborator-plan.md`): otevřené fáze V8 V9 V10 V11, po jedné, stav v tabulce plánu. Po prvním dni smyčky ověřit řádky `answer_read` (V5) a `python scripts/processes.py loop` (V6: pracovních ≤ 20, klidné ≤ 4 volání, Sonnet).
 - [ ] 2026-09-23  Zbytky V3 a V4 (memecoiny), detail v plánu pod V3 a V4: `console.cmd --fomo 1` s horizonty jen pro nové signály, strop quote, prořez captures; hloubka při signálu jen se stropem prodeje ve všech čtečkách; test L553; C6; přepnuté páry (rugy).
 - [ ] 2026-09-23  Bollinger Bandit (klon 36642175) se 23. 9. zastavil sám a důvod není nikde: kontrola proti jejich dokumentované smlouvě + report přes submit.py. Napřed jedno volání `POST /api/v1/backtest-labs/autopsy` (REPLY-0049: `stop_reason` je jen tam a chce run, který klon nemá).
 - [ ] 2026-09-23  `POST /api/v1/backtest/bots/{slug}/run-backtest` chybí v `openapi-public.json` (REPLY-0049: sami to nazvali chybou dokumentace). Kontrola (GET openapi, SAFE) + report přes submit.py.
