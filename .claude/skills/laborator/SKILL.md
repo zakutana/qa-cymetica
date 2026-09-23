@@ -52,7 +52,7 @@ This narrows "a strategy of ours never becomes a room": Nexus first, ours in the
 
 [operator 2026-09-22] *"co to meles, papirove jde spustit plno veci krome karet"* -- said when a day of rooms had held only event cards, because the decision of 2026-09-21 had been narrowed here to "an event card". A room holds whatever runs on paper: a card, a bot cloned on paper, a fund marked against its index -- and Arena once Nexus has said how it pays.
 
-Each question names what a room can hold -- a card by its whole id, a bot by its exact species name, a fund by its symbol -- and carries how his last proposals did. Rotate what the diary shows least explored: a new concrete strategy, what breaks their own best-ranked one, one of our well-measured baskets as a question. `lab.py ask-cards` composes the standard one. `QUERY_RESTRICTED` or an answer cut short: rephrase once, more generally, never more. What we learn about him goes into `NEXUS_KNOWN` in `scripts/lab.py`, which `brief` prints.
+Each question names what a room can hold -- a card by its whole id, a bot by its exact species name, a fund by its symbol -- and carries how his last proposals did. Rotate what the diary shows least explored: a new concrete strategy, what breaks their own best-ranked one, one of our well-measured baskets as a question. `lab.py ask-cards` composes the standard one. The operator's room notes go in as our own words, never their text (it is Czech, written to us). `QUERY_RESTRICTED` or an answer cut short: rephrase once, more generally, never more. What we learn about him goes into `NEXUS_KNOWN` in `scripts/lab.py`, which `brief` prints.
 
 ## Ranní přehled
 
@@ -86,4 +86,4 @@ So the message is English, opens with `@EventTraderQABot`, sits in a fenced code
 
 [operator 2026-09-20] *"Jo to taky delej v laborce jak se nudis"*
 
-The tick decides when: a hunt every eight hours when nothing else is due, the first of a local night is the sweep, and only in the normal budget mode, with one Sonnet agent at most. Say plainly when a tick finds nothing worth spending on; the operator stops the loop.
+The tick decides when: a hunt every eight hours when nothing else is due, the first of a local night is the sweep, and only in the normal budget mode, with one Sonnet agent at most. A hunt also re-reads a standing wait -- a vendor ticket until its spec or stage moves (ET-26036), an answer still owed -- with a NEXT.md line so it survives a `/clear`. Say plainly when a tick finds nothing worth spending on; the operator stops the loop.

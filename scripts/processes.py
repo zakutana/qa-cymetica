@@ -1214,7 +1214,9 @@ def transcript_rows():
 # --- what a day of the laboratory's /loop costs (plan v2, V6) --------------
 
 # A firing is the loop's prompt arriving: "jdi do laborky" as the operator gave
-# it to /loop, and its older name. The /loop command itself runs it once too.
+# it to /loop, and its older name. The /loop command itself runs it once too;
+# typed into an idle session it is recorded as <command-message>, skips the
+# queue, and so is one firing a loop start this does not count.
 LOOP_PROMPT = re.compile(r"^\s*(?:/loop\s+\S+\s+)?(?:jdi do labor|pokra[cč]uj)",
                          re.I)
 # The tick's own last line, at the start of a line -- the skill quotes it in
