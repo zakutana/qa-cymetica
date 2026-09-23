@@ -28,9 +28,11 @@ holds serve.py to the first.
 by the reader through the last note it printed -- so a note that lands while
 the reader is printing stays unread instead of being swallowed.
 
-A strategy room opens from one whole Nexus answer and from nothing else --
-CLAUDE.md's rule that Nexus supplies the guidance and we execute -- and one
-answer opens one room. Whether an answer PROPOSED anything is a judgement this
+A strategy room opens from one whole Nexus answer -- CLAUDE.md's rule that
+Nexus supplies the guidance and we execute -- and one answer opens one room.
+Since V5 (2026-09-23) one more thing opens one: a proposal of OURS on record
+(OUR-NNNN, qa.lab.note_proposal), a paper bot's next setting. Its origin
+says whose idea it is, so it is never read as his. Whether an answer PROPOSED anything is a judgement this
 module cannot make: NEX-0002 answered at length and named no card, so it has no
 room, and that call is the opener's.
 
@@ -79,7 +81,11 @@ ANSWERED_CHARS = 300
 # What a link may name, by the prefix of its id, and the row that proves the id
 # was ours: a question we asked, an order or a clone we intended.
 RECORDS = {"NEX": ("nexus.jsonl", "question"), "TRD": ("paper.jsonl", "intent"),
-           "CLN": ("clones.jsonl", "intent")}
+           "CLN": ("clones.jsonl", "intent"),
+           # V5: a proposal of OURS in the laboratory's notebook -- what a
+           # room of our own lane opens from (qa.lab.note_proposal).
+           "OUR": ("lab.jsonl", "proposal")}
+OUR_ORIGIN = re.compile(r"^OUR-\d{4}$")
 
 
 class RoomError(ValueError):
@@ -353,7 +359,13 @@ def open_strategy(origin: str, title: str, card: str | None = None, *,
     if kind is not None and (kind not in LEG_KINDS or kind == "card" or not ref):
         raise RoomError("a bot or fund room names its kind and what it holds; "
                         "a card room is opened with `card`")
-    if whole_answer(nexus_answers(), origin) is None:
+    if OUR_ORIGIN.match(str(origin)):
+        # Our own lane (V5, under the 2026-09-23 pin): a room we propose
+        # opens from our proposal on record, and its origin says it is ours.
+        if not on_record(origin):
+            raise RoomError(f"{origin} is no proposal of ours on record, and "
+                            f"a room of ours opens only from one")
+    elif whole_answer(nexus_answers(), origin) is None:
         raise RoomError(f"{origin} has no whole answer from Nexus, and a room "
                         f"opens only from one")
 

@@ -671,6 +671,39 @@ def test_a_room_opens_only_from_a_whole_answer_and_only_once(tmp_path, monkeypat
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_room_of_ours_opens_from_our_own_proposal_on_record_and_nothing_else(
+        tmp_path, monkeypatch):
+    """V5, the own lane under the 2026-09-23 pin ("Nexus mainly, our ideas
+    too"): a room WE propose -- a paper bot's next setting -- opens from our
+    own proposal, OUR-NNNN in the laboratory's notebook, never from nothing.
+    Its origin says whose idea it is, so nothing can pass it off as his: a
+    NEX- origin still needs his whole answer, an OUR- one our record."""
+    from qa import lab
+
+    rooms = _rooms_at(tmp_path, monkeypatch)
+    _write(tmp_path / "nexus.jsonl", _five_questions())
+    for origin in ("OUR-0001", "NEX-404", "OURS-1"):
+        with pytest.raises(rooms.RoomError):
+            rooms.open_strategy(origin, "a variant", kind="bot", ref="sp-1")
+    assert not (tmp_path / "rooms.jsonl").exists(), "a refused room was written anyway"
+
+    said = lab.note_proposal("bot", "sp-1", "inst-1", lab.variants()[1],
+                             why="the next setting of the grid")
+    assert said["id"] == "OUR-0001" and said["variant"] == lab.variants()[1]["label"]
+    assert lab.note_proposal("bot", "sp-1", "inst-1", lab.variants()[2],
+                             why="and the one after")["id"] == "OUR-0002"
+    assert rooms.on_record("OUR-0001") and not rooms.on_record("OUR-0009")
+    assert lab.tried_variants("inst-1") == [lab.variants()[1]["label"],
+                                            lab.variants()[2]["label"]]
+
+    made = rooms.open_strategy("OUR-0001", "MACD Hunter · SL 5", kind="bot",
+                               ref="sp-1")
+    assert (made["origin"], made["kind"], made["ref"]) == ("OUR-0001", "bot", "sp-1")
+    with pytest.raises(rooms.RoomError):
+        rooms.open_strategy("OUR-0001", "the same idea again", kind="bot", ref="sp-1")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_one_answer_opens_one_room_per_card_and_each_card_once(tmp_path, monkeypatch):
     """2026-09-21: an answer naming five cards is five strategies, and it used
     to open one room holding them all -- or, since the day cap was per answer,

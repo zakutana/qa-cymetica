@@ -38,7 +38,8 @@ from qa.state import file_lock, state_dir
 
 NOTEBOOK = "lab.jsonl"
 KINDS = ("session", "truth", "surface", "cycle", "n_eff", "tournament",
-         "gate", "tick", "entry", "resolved", "fomo_reading", "answer_read")
+         "gate", "tick", "entry", "resolved", "fomo_reading", "answer_read",
+         "proposal")
 MAX_LESSONS = 3
 MAX_NEXT = 8
 ID = re.compile(r"^LAB-(\d{4})$")
@@ -774,7 +775,8 @@ def _ref(leg: dict):
 
 
 def bot_series(samples: list[dict], instance: str, funded: float | None,
-               entry_at=None) -> list[dict]:
+               entry_at=None, entry_profit=None, restart: bool = False
+               ) -> list[dict]:
     """A paper bot's own index, from the sampler's rows: 100 at what went in,
     moved by what it made -- `100 * (1 + total_profit_usdc / funded)`.
 
@@ -793,6 +795,15 @@ def bot_series(samples: list[dict], instance: str, funded: float | None,
     went in, read as -9.7% from the first reading (review of 2026-09-23). A
     funding before the window is outside it, and a room that took over a
     running bot starts from its first reading inside, as before.
+
+    A RESTART -- a variant of V5 on a clone that ran before (`bot_restart`)
+    -- passes `entry_profit`, what the bot had made by `entry_at`. Their
+    `total_profit_usdc` is lifetime, so measured from the funding a variant
+    would carry the previous setting's P&L. It enters at 100 on what the bot
+    held then (went in + made so far) and moves only by what it made since;
+    readings before the restart are the previous variant's. A restart whose
+    profit is unknown (`restart=True`, `entry_profit=None`) is not sized, so
+    not judged.
     """
     try:
         base = float(funded or 0)
@@ -800,6 +811,27 @@ def bot_series(samples: list[dict], instance: str, funded: float | None,
         return []
     if base <= 0:
         return []
+    if restart or entry_profit is not None:
+        start = _at(entry_at)
+        if entry_profit is None or start is None:
+            return []
+        held = base + float(entry_profit)
+        if held <= 0:
+            return []
+        out = [{"t": start.isoformat(), "index": 100.0}]
+        for row in samples or []:
+            if (not isinstance(row, dict) or row.get("kind") != "bot"
+                    or row.get("instance_id") != instance):
+                continue
+            when = _at(row.get("at"))
+            try:
+                profit = float(row.get("total_profit_usdc"))
+            except (TypeError, ValueError):
+                continue
+            if when is not None and when > start:
+                out.append({"t": row["at"], "index": 100.0 * (
+                    1.0 + (profit - float(entry_profit)) / held)})
+        return out
     out = [{"t": str(entry_at), "index": 100.0}] if entry_at else []
     for row in samples or []:
         if (not isinstance(row, dict) or row.get("kind") != "bot"
@@ -1578,6 +1610,176 @@ def note_answer_read(origin: str) -> dict:
     return _append({"type": "answer_read", "origin": str(origin), "at": _now()})
 
 
+# --- V5: a paper bot's settings, walked in time on its one clone -----------
+#
+# REPLY-0049 (2026-09-23): one active paper clone per species per account; a
+# second is 409 ALREADY_CLONED. So a species' settings are tried one after
+# another on its ONE clone, never side by side: the grid is walked in time.
+#
+# WHY EVERY BODY IS WHOLE. A PATCH that sets a field cannot unset it. A fresh
+# clone's stop_loss_pct, take_profit_pct, max_position_pct and
+# min_ai_confidence are null (CLN-0018's response, 2026-09-22) and clone.py's
+# floor sends numbers only, so a factor one variant moved would leak into
+# every variant after it and "one factor at a time" would be false from the
+# second variant on. Every variant's PATCH carries the whole grid -- the
+# reference with exactly one factor moved -- so a variant is determined by its
+# own body, whatever ran on the clone before it.
+#
+# THE REFERENCE is their default wherever they have one (the same response:
+# max_open_positions 5, arena on, event cards and TGE off) and ours where
+# theirs is unset, inside their bounds (update_bot_settings: SL 1-20, TP
+# 5-100, max_position 1-50, confidence 0-1). The first variant IS the
+# reference; the room his pick opened, at their defaults, is its control.
+# catalog_trading_enabled is in every body, off, and never moved: it trades
+# only a catalog_watchlist, and the watchlist is where money goes -- not a
+# setting we tune (clone.py leaves it out of SAFE_SETTINGS on purpose).
+#
+# These are OUR rooms (origin OUR-...): the settings are our idea, measured
+# beside his picks and never ranked above them, and each is put to him as a
+# question (`lab.py brief`).
+VARIANT_REFERENCE = {
+    "stop_loss_pct": 10.0, "take_profit_pct": 20.0, "max_position_pct": 10.0,
+    "max_open_positions": 5, "min_ai_confidence": 0.5,
+    "event_card_trading_enabled": False, "arena_trading_enabled": True,
+    "catalog_trading_enabled": False, "tge_trading_enabled": False,
+}
+# Each factor once either side of the reference, the toggles flipped once.
+VARIANT_MOVES = (
+    ("stop_loss_pct", 5.0), ("stop_loss_pct", 15.0),
+    ("take_profit_pct", 10.0), ("take_profit_pct", 40.0),
+    ("max_position_pct", 5.0), ("max_position_pct", 25.0),
+    ("max_open_positions", 2), ("max_open_positions", 10),
+    ("min_ai_confidence", 0.3), ("min_ai_confidence", 0.7),
+    ("event_card_trading_enabled", True),
+    ("arena_trading_enabled", False),
+    ("tge_trading_enabled", True),
+)
+OUR_ID = re.compile(r"^OUR-(\d{4})$")
+
+
+def variants() -> list[dict]:
+    """The grid in the order it is walked: [{label, settings}], the reference
+    first. Pure and deterministic -- the same list on every call."""
+    out = [{"label": "reference", "settings": dict(VARIANT_REFERENCE)}]
+    for field, value in VARIANT_MOVES:
+        out.append({"label": f"{field}={value}",
+                    "settings": {**VARIANT_REFERENCE, field: value}})
+    return out
+
+
+def next_variant(tried) -> dict | None:
+    """The first variant of the grid not yet tried on a clone, or None when
+    its walk is done. `tried` is every label already proposed for it,
+    whatever became of the proposal: one their side refused is not proposed
+    again on every tick -- its room says why it stopped."""
+    done = {str(label) for label in tried or ()}
+    return next((v for v in variants() if v["label"] not in done), None)
+
+
+def note_proposal(kind: str, ref: str, instance: str, variant: dict,
+                  why: str) -> dict:
+    """One idea of OURS, OUR-NNNN -- what a room of our own lane opens from
+    (`qa.rooms.open_strategy` asks `on_record`). The id is taken under the
+    lock, in the step that writes it."""
+    target = path()
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with file_lock(target):
+        used = [int(found.group(1)) for found in
+                (OUR_ID.match(str(row.get("id") or "")) for row in load()
+                 if row.get("type") == "proposal") if found]
+        record = {"type": "proposal", "id": f"OUR-{max(used, default=0) + 1:04d}",
+                  "at": _now(), "kind": kind, "ref": str(ref),
+                  "instance": str(instance), "variant": variant["label"],
+                  "settings": dict(variant["settings"]), "why": str(why)}
+        with open(target, "a", encoding="utf-8") as handle:
+            handle.write(json.dumps(record, ensure_ascii=False) + "\n")
+    return record
+
+
+def proposals(rows: list[dict] | None = None) -> list[dict]:
+    rows = load() if rows is None else rows
+    return [r for r in rows if r.get("type") == "proposal"]
+
+
+def tried_variants(instance: str, rows: list[dict] | None = None) -> list[str]:
+    """The labels already proposed for one clone, oldest first."""
+    return [str(r.get("variant")) for r in proposals(rows)
+            if str(r.get("instance")) == str(instance)]
+
+
+def is_ours(origin) -> bool:
+    """A room of our own lane: its origin is a proposal of ours, not his."""
+    return bool(OUR_ID.match(str(origin or "")))
+
+
+def restart_affordable(amount: float, free_cash: float | None,
+                       deployed: float = 0.0, parked: float = 0.0
+                       ) -> tuple[bool, str]:
+    """Whether a paused clone's money may trade again under the ceiling.
+
+    A variant spends no new money: the clone's practice balance was moved in
+    once and sits PARKED while the bot is paused (V2 of 2026-09-23). Starting
+    it again turns parked money into exposure, so the one count limit left
+    since V5 -- 60% of the book -- is asked of it. `affordable`'s 2%-of-free
+    per-order cap is not: it sizes a NEW stake, and a restart takes nothing
+    from free cash."""
+    if free_cash is None:
+        return False, ("the book could not be read, and an unreadable book is "
+                       "not an empty one: no bot starts on it")
+    limit = CAPS["total_exposure"]
+    book = free_cash + max(deployed or 0.0, 0.0) + max(parked or 0.0, 0.0)
+    if deployed + amount > book * limit:
+        return False, (f"{deployed:.0f} is already out and the {amount:.0f} "
+                       f"parked in this clone would pass {limit * 100:.0f}% of "
+                       f"the {book:.0f} book")
+    return True, (f"{deployed + amount:.0f} out of the {book * limit:.0f} "
+                  f"allowed on a {book:.0f} book")
+
+
+def bot_restart(clone_rows, instance: str, since, samples=None) -> dict | None:
+    """Where a bot leg of a room whose criterion was written at `since`
+    enters, when that room runs on a RESTART of the clone -- a variant (V5).
+
+    None for a room on the clone's first run (it enters at its funding, as
+    before) and for a room that took over a bot already running (no start
+    after its criterion; read as it always was). Otherwise the first accepted
+    start at or after `since`, and what the bot had made by then: the start's
+    own `bot_profit_usdc`, else the sampler's newest reading at or before it,
+    else None -- a variant that cannot be sized is not judged."""
+    moment = _at(since)
+    answered = {row.get("id"): row for row in clone_rows or ()
+                if row.get("type") == "outcome"}
+    starts, pauses = [], []
+    for row in clone_rows or ():
+        done = answered.get(row.get("id")) or {}
+        if (row.get("type") == "intent" and row.get("kind") in ("enable", "disable")
+                and str(row.get("instance_id")) == str(instance)
+                and done.get("outcome") == "accepted"):
+            when = _at(done.get("at") or row.get("at"))
+            if when is not None:
+                (starts if row["kind"] == "enable" else pauses).append((when, row))
+    before = [s for s in starts if moment is not None and s[0] < moment]
+    after = sorted((s for s in starts if moment is not None and s[0] >= moment),
+                   key=lambda s: s[0])
+    if not before or not after:
+        return None
+    when, intent = after[0]
+    # A pause between the criterion and that start means the start is a LATER
+    # room's variant: this room took over a bot already running and ended.
+    if any(moment <= at < when for at, _ in pauses):
+        return None
+    profit = _money(intent.get("bot_profit_usdc"))
+    if profit is None:
+        seen = [(_at(r.get("at")), _money(r.get("total_profit_usdc")))
+                for r in samples or ()
+                if isinstance(r, dict) and r.get("kind") == "bot"
+                and str(r.get("instance_id")) == str(instance)]
+        seen = sorted((at, p) for at, p in seen
+                      if at is not None and at <= when and p is not None)
+        profit = seen[-1][1] if seen else None
+    return {"at": when.isoformat(), "profit": profit}
+
+
 def answers_read(rows: list[dict] | None = None) -> set[str]:
     """Every answer the launch has marked read."""
     rows = load() if rows is None else rows
@@ -1856,6 +2058,17 @@ def archived_rooms(room_rows: list[dict], answers: list[dict],
         cards = {str(row.get("card") or "").lower()} | {
             str(leg.get("card") or leg.get("ref") or "").lower()
             for leg in legs if (leg.get("kind") or "card") == "card"}
+        if is_ours(row.get("origin")):
+            # A room of ours (V5) is never his pick, so "not his pick" cannot
+            # archive it -- that would archive every variant as it stopped. It
+            # held something only if its restart went through: our variant
+            # ran on the clone after its criterion was written.
+            since = (accepted_on.get(room) or {}).get("at")
+            ran = any(bot_restart(clone_rows, str(leg.get("ref")), since)
+                      for leg in legs if leg.get("kind") == "bot")
+            if not ran:
+                out.add(room)
+            continue
         held = any((str(row.get("origin")), c) in bought for c in cards if c) \
             or any(went_in.get(str(leg.get("ref")))
                    for leg in legs if leg.get("kind") == "bot")

@@ -1969,3 +1969,158 @@ def test_status_shows_the_cached_n_eff_and_a_resolve_nobody_caught(
     out = scripts_lab.status()
     assert "RESOLVED WITHOUT US" not in out, out
     assert "written down: 1" in out, out
+
+
+# --- V5: a paper bot's settings, walked in time on its one clone -----------
+
+def _clone_module(tmp_path, monkeypatch):
+    import importlib.util
+
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    spec = importlib.util.spec_from_file_location(
+        "clone_for_the_grid", REPO / "scripts" / "clone.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_settings_grid_is_walked_one_variant_at_a_time_and_each_body_is_whole(
+        tmp_path, monkeypatch):
+    """V5 of plan v2: a grid of settings per species, walked in time on its
+    ONE paper clone (REPLY-0049), one factor at a time.
+
+    A PATCH that sets a field cannot unset it -- a fresh clone's SL, TP,
+    max_position and min_ai_confidence are null (CLN-0018's response) and
+    clone.py's floor sends numbers only -- so a factor one variant moved would
+    leak into every later one. Every body therefore carries the WHOLE grid:
+    the reference with exactly one factor moved, determined by itself and not
+    by what ran on the clone before. Every body is one clone.py's floor
+    accepts, so the grid can never spend a variant on a 422."""
+    clone = _clone_module(tmp_path, monkeypatch)
+    grid = lab.variants()
+    labels = [v["label"] for v in grid]
+    assert labels[0] == "reference" and len(set(labels)) == len(labels), labels
+    reference = grid[0]["settings"]
+    # Their defaults wherever they have one (CLN-0018, 2026-09-22).
+    assert (reference["max_open_positions"], reference["arena_trading_enabled"],
+            reference["event_card_trading_enabled"],
+            reference["tge_trading_enabled"],
+            reference["catalog_trading_enabled"]) == (5, True, False, False, False)
+    moved = set()
+    for variant in grid:
+        body = variant["settings"]
+        assert set(body) == set(clone.SAFE_SETTINGS), sorted(set(body) ^ set(clone.SAFE_SETTINGS))
+        assert clone.safe_settings(body) == body, variant["label"]
+        diff = {k for k in body if body[k] != reference[k]}
+        assert len(diff) == (0 if variant["label"] == "reference" else 1), variant
+        moved |= diff
+    # Every factor of the plan's grid is walked, except the catalog toggle,
+    # which trades only a watchlist and the watchlist is not ours to set.
+    assert moved == set(clone.SAFE_SETTINGS) - {"catalog_trading_enabled"}, moved
+
+    assert lab.next_variant([]) == grid[0]
+    assert lab.next_variant(["reference"]) == grid[1]
+    assert lab.next_variant(labels[:5]) == lab.next_variant(labels[:5]) == grid[5]
+    assert lab.next_variant(labels) is None, "a walk that is done proposes nothing"
+
+
+def _chain(ident, kind, at, instance="inst-1", **intent):
+    return [{"id": ident, "type": "intent", "kind": kind, "instance_id": instance,
+             "at": at, **intent},
+            {"id": ident, "type": "outcome", "kind": kind, "outcome": "accepted",
+             "at": at, "http_status": 200}]
+
+
+def _t(days=0.0, minutes=0.0):
+    return (datetime(2026, 9, 20, tzinfo=timezone.utc)
+            + timedelta(days=days, minutes=minutes)).isoformat()
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_variant_is_measured_from_its_restart_not_from_the_first_funding():
+    """Item 5 of V5. `bot_series` measures from what went in, with their
+    lifetime `total_profit_usdc` -- so a clone reused for a second setting
+    would carry the first setting's P&L into the second verdict. A room on a
+    RESTART enters at 100 at that restart, on what the bot held then (what
+    went in plus what it had made), and moves only by what it made since.
+
+    The past is not rewritten: a room on a clone's first run enters at its
+    funding as before, and a room that took over a running bot (no start
+    after its criterion) is read as it always was."""
+    clones = [*_chain("CLN-0001", "fund", _t(0, 1), amount=240.0),
+              *_chain("CLN-0002", "enable", _t(0, 2)),
+              *_chain("CLN-0003", "disable", _t(5)),
+              *_chain("CLN-0004", "settings", _t(5, 1)),
+              *_chain("CLN-0005", "enable", _t(5, 2), bot_profit_usdc="20.0")]
+    assert lab.bot_restart(clones, "inst-1", _t(0)) is None, "a first run"
+    assert lab.bot_restart(clones, "inst-1", _t(1)) is None, "an adopted room"
+    restart = lab.bot_restart(clones, "inst-1", _t(5, 0.5))
+    assert restart == {"at": _t(5, 2), "profit": 20.0}, restart
+
+    samples = [{"type": "sample", "kind": "bot", "instance_id": "inst-1",
+                "at": at, "total_profit_usdc": profit}
+               for at, profit in ((_t(4), "20.0"), (_t(5, 60), "20.0"),
+                                  (_t(6), "32.6"))]
+    series = lab.bot_series(samples, "inst-1", 240.0, entry_at=restart["at"],
+                            entry_profit=restart["profit"])
+    assert [p["t"] for p in series] == [_t(5, 2), _t(5, 60), _t(6)], series
+    assert series[-1]["index"] == pytest.approx(100.0 * (1 + 12.6 / 260.0))
+    # The first run, unchanged: from what went in, through every reading.
+    first = lab.bot_series(samples, "inst-1", 240.0, entry_at=_t(0, 1))
+    assert first[-1]["index"] == pytest.approx(100.0 * (1 + 32.6 / 240.0))
+
+    # A restart that did not carry the figure takes the newest reading at or
+    # before it; with none, the variant cannot be sized and is not judged.
+    bare = [row if row.get("id") != "CLN-0005" or row["type"] != "intent"
+            else {k: v for k, v in row.items() if k != "bot_profit_usdc"}
+            for row in clones]
+    assert lab.bot_restart(bare, "inst-1", _t(5, 0.5), samples)["profit"] == 20.0
+    unsized = lab.bot_restart(bare, "inst-1", _t(5, 0.5), [])
+    assert unsized["profit"] is None
+    assert lab.bot_series(samples, "inst-1", 240.0, entry_at=unsized["at"],
+                          entry_profit=unsized["profit"], restart=True) == []
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_restart_turns_parked_money_into_exposure_under_the_same_ceiling():
+    """A variant spends no new money: the clone's practice balance was moved
+    in once and sits PARKED while the bot is paused (V2). Starting it again
+    turns that parked money into exposure, so 60% of the book -- the only
+    count limit since V5 -- is asked of it. The 2%-of-free per-order cap is
+    not: it sizes a new stake, and a restart takes nothing from free cash."""
+    ok, why = lab.restart_affordable(240.0, 10_000.0, deployed=5_700.0, parked=240.0)
+    assert ok, why
+    ok, why = lab.restart_affordable(240.0, 6_000.0, deployed=9_400.0, parked=240.0)
+    assert not ok and "60%" in why, why
+    ok, why = lab.restart_affordable(5_000.0, 10_000.0, deployed=0.0, parked=5_000.0)
+    assert ok, ("a restart is not a new order; the per-order cap does not apply", why)
+    ok, why = lab.restart_affordable(240.0, None, deployed=0.0, parked=240.0)
+    assert not ok and "unreadable" in why, why
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_room_of_ours_is_judged_when_its_variant_ran_and_archived_when_not():
+    """An OUR- room has no answer of his, so it is never among his picks
+    (`picked_rooms` feeds "his picks" on /lab and must not grow by ours). The
+    archive read "not his pick" as "archive", which would have archived every
+    variant the moment it stopped. A room of ours is archived only when
+    nothing ran in it -- its restart never accepted -- and judged otherwise."""
+    clones = [*_chain("CLN-0001", "fund", _t(0, 1), amount=240.0),
+              *_chain("CLN-0002", "enable", _t(0, 2)),
+              *_chain("CLN-0003", "disable", _t(5)),
+              *_chain("CLN-0004", "settings", _t(5, 1)),
+              *_chain("CLN-0005", "enable", _t(5, 2), bot_profit_usdc="20.0")]
+    leg = {"kind": "bot", "ref": "inst-1", "side": "bull", "share": 1.0}
+
+    def room(ident, origin, opened):
+        return [{"type": "strategy", "id": ident, "origin": origin, "title": "x",
+                 "kind": "bot", "ref": "sp-1", "at": opened},
+                {"type": "acceptance", "room": ident, "window_days": 5.0,
+                 "stop_pct": 10.0, "legs": [leg], "at": opened},
+                {"type": "status", "room": ident, "status": "stopped",
+                 "why": "x", "at": _t(9)}]
+    rows = room("STR-0002", "OUR-0001", _t(5, 0.5)) + room("STR-0003", "OUR-0002", _t(8))
+    archived = lab.archived_rooms(rows, [], [], clones)
+    assert archived == {"STR-0003"}, archived
+    assert lab.picked_rooms(rows, []) == set(), "a room of ours is not his pick"
