@@ -309,6 +309,9 @@ def _apply_run(row: dict, run: dict, level: str) -> None:
             row.setdefault("regressions", []).append({
                 "at": at, "run_id": run_id,
                 "from_run": (check.get("adjudicated_by") or {}).get("run_id"),
+                # Only a fall from PASSING is their fix regressing; the other
+                # two passes prove no fix, so `reopen` reads this (review).
+                "from_state": prior,
             })
     elif "inconclusive" in outcomes:
         new = "INCONCLUSIVE"
@@ -349,8 +352,13 @@ def _retired_checks(events: Iterable[dict]) -> dict[str, set[str]]:
         fid = str(event.get("finding_id") or "")
         if event.get("type") == "retire_check" and event.get("nodeid"):
             out.setdefault(fid, set()).add(str(event["nodeid"]))
-        elif event.get("type") == "rebind_check" and event.get("value"):
-            out.setdefault(fid, set()).add(str(event["value"]))
+        elif event.get("type") == "rebind_check":
+            if event.get("value"):
+                out.setdefault(fid, set()).add(str(event["value"]))
+            # A rebind that brings a check back restores it (rule 10: a
+            # subject that comes back is restored the same way) -- review.
+            if event.get("nodeid"):
+                out.setdefault(fid, set()).discard(str(event["nodeid"]))
     return out
 
 
@@ -765,7 +773,9 @@ def _obligations(row: dict) -> dict:
                          and filing in ("RAISED", "REPLIED", "FIX_CLAIMED")),
         # Gap 4: regressing after they closed the report is something we owe
         # them a message about, not just a red badge.
-        "reopen": (filed if row.get("regressions") and check == "REPRODUCING"
+        "reopen": (filed if any(r.get("from_state", "PASSING") == "PASSING"
+                                for r in row.get("regressions") or [])
+                   and check == "REPRODUCING"
                    and filing == "FIX_CLAIMED" else []),
         # Rule 11: withdrawing a filed finding leaves a correction owed.
         "retractions": ([r for r in filed if r not in retracted]

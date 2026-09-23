@@ -164,6 +164,17 @@ def test_a_run_may_not_restate_a_judgement_it_never_made():
                        reason="its source is gone")])
     assert retired["findings"]["CYM-anon-tool-surface"]["checks"] == ["tests/a.py::test_y"], (
         "a still-failing check the operator retired came back through the run")
+    # ...and a rebind that brings it back restores it for good (review of V8).
+    back = fold(ledger(existing), run=fold_run("run-v", [("tests/a.py::test_x", "failed")]),
+                candidates=cand, events=[
+                    event("retire_check", source="scripts/withdraw.py", by="operator",
+                          finding_id="CYM-anon-tool-surface", nodeid="tests/a.py::test_x",
+                          reason="gone"),
+                    event("rebind_check", at="2026-09-06T09:00:00+00:00",
+                          source="scripts/withdraw.py", by="operator",
+                          finding_id="CYM-anon-tool-surface", nodeid="tests/a.py::test_x",
+                          reason="it came back")])
+    assert "tests/a.py::test_x" in back["findings"]["CYM-anon-tool-surface"]["checks"]
 
     # A brand-new row still gets both.
     fresh = fold({"findings": {}}, run=fold_run("run-v", [("tests/a.py::test_x", "failed")]),

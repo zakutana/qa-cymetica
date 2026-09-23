@@ -299,6 +299,13 @@ def records_by_part(root: Path | None = None) -> dict[str, list[str]]:
         except (OSError, json.JSONDecodeError):
             continue
         note("prereg.py", row.get("at") or row.get("created_at"))
+    # bounty.py rewrites state/bounty.json on every read; since V8 its journal
+    # events come only on a door's health change, so the file is its trace.
+    try:
+        note("bounty.py", datetime.fromtimestamp(
+            (state / "bounty.json").stat().st_mtime, timezone.utc).isoformat())
+    except OSError:
+        pass
     for path in sorted((state / "preregistrations").glob("*.md")):
         try:
             found = REGISTERED.search(path.read_text(encoding="utf-8"))
