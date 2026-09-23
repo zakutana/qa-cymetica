@@ -344,6 +344,8 @@ def test_a_filed_report_says_the_same_thing():
         "detail": {"reason": "what the run measured", "count": 3},
         "checks": ["tests/rest/test_example.py::test_one"],
         "provenance": {"measured_at": "2026-09-10T12:00:00+00:00"},
+        # What a finding we file looks like since B5: our check reproduces it.
+        "check": {"state": "REPRODUCING"},
     }]}
     composed = submit.compose(report, findings, "Filed by the QA agent.")
     description = composed["description"]

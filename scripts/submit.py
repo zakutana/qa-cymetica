@@ -119,7 +119,7 @@ def compose(report: dict, findings: dict, footer: str) -> dict:
                    and (f.get("filing") or {}).get("state", "NOT_RAISED") == "NOT_RAISED"]
     if not_failing:
         raise SystemExit(
-            f"{report['key']}: {not_failing} -- a report is composed only about "
+            f"{report.get('key', report.get('title'))}: {not_failing} -- a report is composed only about "
             f"a finding whose check is REPRODUCING. Rule 10: an inconclusive "
             f"measurement is never a defect.")
 

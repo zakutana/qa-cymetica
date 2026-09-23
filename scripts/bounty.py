@@ -156,6 +156,25 @@ def classify_read(outcome) -> str:
     return "ok" if isinstance(body, dict) else "malformed"
 
 
+def health_changed(source: str, klass: str) -> bool:
+    """Whether this read's class differs from the last one journaled for the
+    same door (plan v2, V8). Rule 8 needs to know when a door failed and when
+    it answered again -- ok->fail, fail->ok -- and the fold reads nothing else
+    of a vendor_read (qa/fold.py, per door since A5). A read identical to the
+    last said nothing new, and every console poll became an event and a
+    `console poll` commit. A journal that cannot be read counts as changed."""
+    from qa.state import read_events
+
+    try:
+        last = None
+        for event in read_events():
+            if event.get("type") == "vendor_read" and event.get("source") == source:
+                last = event.get("klass")
+    except Exception:  # noqa: BLE001 -- unsure is changed: rule 8 wants the record
+        return True
+    return last != klass
+
+
 def _capture(response) -> str | None:
     """Store the bytes a read rests on and return their id.
 
@@ -338,11 +357,12 @@ def fetch_inbox(client=None, agent_id: str | None = None) -> dict:
         data = response.json()
         messages = data.get("messages") or data.get("inbox") or []
 
-    append_event({
-        "type": "vendor_read", "at": at, "by": "agent", "source": A2A_SOURCE,
-        "klass": klass, "evidence_id": evidence_id,
-        "rows_returned": len(messages) if klass == "ok" else None,
-    })
+    if health_changed(A2A_SOURCE, klass):
+        append_event({
+            "type": "vendor_read", "at": at, "by": "agent", "source": A2A_SOURCE,
+            "klass": klass, "evidence_id": evidence_id,
+            "rows_returned": len(messages) if klass == "ok" else None,
+        })
 
     # Rule 8. A refused inbox is not an empty one, and the quiet failure here
     # is the dangerous one: 401, nothing parsed, nothing written, a sweep that
@@ -491,12 +511,13 @@ def fetch_our_reports(client=None, wallet: str | None = None,
         rows = data.get("reports") or data.get("data") or []
         server_total = data.get("total", len(rows))
 
-    append_event({
-        "type": "vendor_read", "at": at, "by": "agent", "source": "scripts/bounty.py",
-        "klass": klass, "evidence_id": evidence_id,
-        "rows_returned": len(rows) if klass == "ok" else None,
-        "server_total": server_total,
-    })
+    if health_changed("scripts/bounty.py", klass):
+        append_event({
+            "type": "vendor_read", "at": at, "by": "agent", "source": "scripts/bounty.py",
+            "klass": klass, "evidence_id": evidence_id,
+            "rows_returned": len(rows) if klass == "ok" else None,
+            "server_total": server_total,
+        })
 
     if klass != "ok":
         stale = dict(previous or {})

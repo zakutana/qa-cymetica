@@ -1105,6 +1105,10 @@ def test_the_a2a_inbox_is_read_and_each_message_recorded_once(tmp_path, monkeypa
     again = bounty.fetch_inbox(client=inbox, agent_id="expire76-qa")
     assert again["new"] == []
     assert len([e for e in read_events() if e["type"] == "message"]) == 2
+    # Plan v2, V8: a read is journaled when its HEALTH changes, not every
+    # time -- a second clean read of the same door says nothing rule 8 needs,
+    # and every console poll used to become a journal event and a commit.
+    assert len([e for e in read_events() if e["type"] == "vendor_read"]) == 1
 
     # And the automated first pass is distinguishable from an answer, because
     # 21 of the 23 messages sitting in the real inbox were routing prompts.
