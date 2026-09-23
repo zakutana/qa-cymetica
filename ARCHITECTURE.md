@@ -10,9 +10,303 @@ readers on 2026-09-20, one section each, and what it got wrong — as opposed to
 what merely aged — is kept in §9, because those are the mistakes a third
 reading would otherwise repeat.
 
+§0 below is the current map; §1-§9 are the reading of 2026-09-20.
+
 This file is for sessions, not for the operator. It is descriptive only: no
 proposals, no fixes. Claims marked `UNCERTAIN:` were not established from the
 source and must not be built on.
+
+## 0. Where things live -- the current map
+
+Moved here from CLAUDE.md on 2026-09-23 (plan v2, V7), with every
+path in it checked against the tree that day. Unlike §1-§9, this
+section is kept current: a change that moves a part changes its line.
+
+
+```
+qa/state.py       the ONLY module that writes state/ledger.json and the
+                  journal. Admissibility, the ledger contract, the append-only
+                  hash chain. Other modules write their own narrow file
+                  under state/ -- run records, the vendor snapshot, the
+                  section map, preregistrations, the Nexus rooms. The guard in
+                  tests/meta/test_pipeline_withdraw.py enforces the accurate
+                  sentence, not the wider one: it fires on a write near the
+                  words ledger, events or journal.
+qa/fold.py        pure: ledger = f(previous rows, one run, the journal)
+qa/measure.py     Measurement + conclude(): a check's verdict and pytest's
+                  outcome are one value
+scripts/ledger.py CLI over the fold
+scripts/withdraw.py  the only human writer — every command is one event
+scripts/prereg.py    freeze and tag a run's configuration
+scripts/never_fired.py  which of our mechanisms have never once occurred in
+                     the data. A green guard says a mechanism WOULD work; this
+                     says whether it ever has. Read `--zeros` at the end of a
+                     sweep. Each zero names the test that exercises it, or says
+                     nothing does -- so the line to act on is "never fired AND
+                     never exercised", the shape all three dead mechanisms had
+                     on 2026-09-06. One exercised and never fired is the
+                     operator's judgement. **Read the count off the tool, never
+                     off prose** -- this line said five while the tool said seven.
+tests/meta/       self-tests. Run FIRST and abort the session on failure, so
+                  a broken guard stops every live request.
+tests/repo/       repository consistency. Deliberately NOT in tests/meta:
+                  a stale ledger must not abort the run that would fix it.
+.claude/hooks/session_start.py
+                  the ONE SessionStart hook (plan v2, V7): what is due, what
+                  the last pass left, the threads, the room notes, NEXT and the
+                  memories, each in a fixed slot, eight lines at most, about a
+                  second. Its sources are .claude/hooks/start/*.py, each still
+                  runnable alone; the surface drift is read from
+                  state/surface_drift.json, which `processes.py surface`, the
+                  patrol and the laboratory tick write.
+.claude/hooks/protect_state.py
+                  rule 4, enforced before the write instead of after it. A
+                  PreToolUse hook that refuses an editor write, a shell
+                  redirect, sed -i, rm or git checkout aimed under state/.
+                  Reads are untouched, and the sanctioned writers go through
+                  qa/state.py so they never name the path. Without it the
+                  hash chain still catches a hand edit -- but only at the
+                  next load, one step too late.
+.claude/skills/deep-pass/SKILL.md
+                  the unattended pass over everything unpushed, and the only
+                  thing here that pushes. Its step 2 is the one worth the
+                  run: three auditors hold each check's assertion against the
+                  contract its docstring names. That class of defect happened
+                  five times on 2026-09-07, every guard green throughout, and
+                  one of them sent a false claim to the vendor. Named for
+                  what it does, not for the night -- the operator runs it in
+                  the day too. Its progress goes to
+                  audits/deep-pass-progress.json as it goes: the run is
+                  compacted mid-flight, and a triage verdict lost that way is a
+                  finding that silently never gets fixed.
+.claude/skills/laborator/SKILL.md
+                  "/loop 20m jdi do laborky": one tick of a laboratory that
+                  runs all day -- `lab.py tick`, whose last line `decide:`
+                  says what, if anything, needs the model; `none` costs one
+                  line (plan v2, V6). `pokracuj` is the same tick by its old
+                  name. What it knows about Nexus grows in `NEXUS_KNOWN`
+                  (scripts/lab.py), which `lab.py brief` prints.
+qa/lab.py         the laboratory's notebook and its brakes, in code rather
+                  than in prose: sessions, ranked snapshots, the catalogue it
+                  compares against the baseline, and the brakes -- paper only,
+                  0.48% of the book a room under a 60% ceiling (the only count
+                  limit), their pace (3 asks an hour, 6 outstanding, backoff),
+                  a backtest before a room, nothing while a deep pass runs.
+qa/backtests.py   the register of what has already been measured: a basket's
+                  fingerprint (sorted legs, window, fees) against what it
+                  returned, so no night pays for the same backtest twice.
+                  state/backtests.jsonl, gitignored like the other diaries.
+scripts/lab.py    that loop from our side: `tick` (the day's session, answers
+                  picked up, a card read live and backtested before a paper
+                  room, the search, verdicts; state in state/lab_tick.json),
+                  `brief`, `board` (his proposals by what they earned), `log`,
+                  `ask`, `truth`, `buy`. It refuses rather than warns.
+NEXT.md           what we agreed to do next and have not done. Plain markdown,
+                  one line per item, `- [ ] YYYY-MM-DD  sentence`; ticked, it
+                  gets `(hotovo DATE)` and goes a week after that stamp. At
+                  most ten open lines of 300 characters. The session start
+                  prints how many and the first, the deep pass's step 10b
+                  writes it, and `tests/repo/test_next_step.py` fails on an
+                  unparsable line, on the budget, and on anything open over
+                  fourteen days. It holds work that
+                  is OURS and already decided; what needs the operator's
+                  judgement goes under DEEP-PASS.md's Čeká na tebe.
+DEEP-PASS.md      what the last deep pass did, in Czech, overwritten each
+                  run. **Read it at the start of any session that follows
+                  one** -- five headings, and "Ceka na tebe" is the handover:
+                  what the pass could not finish and what needs the
+                  operator's judgement. Nothing else loads it, so a session
+                  that does not open it answers "how did the deep pass go" out
+                  of nothing -- which happened on 2026-09-08, because the
+                  pointer to this file lived only inside the skill.
+.claude/agents/   model and effort per role, in frontmatter. So neither the
+                  operator nor a session has to choose one per task -- the
+                  task carries its own. A session still cannot change its
+                  OWN model or effort; that stays /model and /effort, and
+                  stays the operator's.
+audits/checks.json
+                  nodeid -> the fingerprint last audited, so the contract audit
+                  re-reads only what moved -- keyed on the fingerprint rather
+                  than the run, like verification_owed.
+```
+
+The scripts a session actually spends its time in.
+
+```
+scripts/findings.py  what a run turns into a finding. Title and severity are
+                     JUDGEMENTS and a run may not overwrite them -- which is
+                     why a row's title stays frozen at the measurement that
+                     opened it while detail.reason moves. Anything reading a
+                     title as a current reading is wrong.
+scripts/bounty.py    their tracker -> state/bounty.json. The inbound channel
+                     we FETCH, and the only thing that lights the console's
+                     bell. Records CHANGES, not polls -- one vendor_read per
+                     run, a vendor_status only when a status actually moved.
+                     Not the only correspondence: the Telegram thread is
+                     recorded by correspond.py, which the bell does NOT cover.
+scripts/correspond.py  the operator's Telegram conversation with the vendor.
+                     `sent` records a message once THEY confirm they sent it,
+                     `reply` files the answer they paste back, `list` and
+                     `show` read it. Ids are MSG-NNNN / REPLY-NNNN, and their
+                     ticket id (ET-22498) goes in `via`, because that is the
+                     id the operator will say out loud. Two event types of its
+                     own: a chat is not a filing, so it moves neither axis and
+                     the fold does not read it -- `--findings` is advisory.
+                     **When the operator says they sent something, or pastes
+                     an answer, put it through here** rather than into a
+                     conversation that ends at the next /clear -- ET-22498 set
+                     off the whole /build walk and what we asked in it is gone.
+                     A SessionStart hook (.claude/hooks/start/open_threads.py) names
+                     the unanswered ids in one line -- through qa/channels.py
+                     since 2026-09-20, so it covers every channel waiting on
+                     them, not Telegram alone.
+scripts/submit.py    the one write we make on purpose. Every number in a
+                     report is injected from the ledger at send time, so a
+                     figure frozen when the finding opened can never go out.
+scripts/serve.py     the console on 127.0.0.1:8787. Polls local files once a
+                     minute and renders. `--ask MINUTES` adds the half that
+                     fetches: one GET of our own reports on a timer, so the
+                     bell can light unattended; `--sample MINUTES` runs
+                     scripts/sampler.py for the Nexus tab, into the gitignored
+                     state/samples.jsonl. One write of its own: a note the
+                     operator sends from the Nexus tab, through
+                     qa.rooms.add_operator_note, behind a launch token, a
+                     loopback Host and Origin and a JSON body -- and none at
+                     all when it listens beyond this machine. Rooms are served
+                     at /rooms.json, outside the payload, so a note never moves
+                     the dashboard.
+scripts/sampler.py   what their API says about our bot, our card positions and
+                     the cards a strategy's plan names, for the Nexus tab's
+                     panels. SAFE, GET only, six doors, and only what our own
+                     records say is ours. Every round writes a `tick` to
+                     state/samples.jsonl (gitignored), even a round whose every
+                     read failed, so a stall reads as "stale" rather than as
+                     quiet; a card they no longer know is a `not_found` row,
+                     not a failed round. `clone.py watch` is one round of it.
+scripts/a2a.py       the third channel, from our side. `send` posts a question
+                     and only on `--confirm` -- the operator's condition, and
+                     without it nothing is written either. Two events per send,
+                     keyed on OUR id, so a POST that times out still leaves the
+                     text on the journal. Built because nothing in scripts/ had
+                     ever sent one, and the question that started the /build
+                     walk exists nowhere.
+scripts/channels.py  all three channels in one place, and the operator's notes
+                     in the Nexus rooms beside them. `status` reads them live
+                     and says where each stands, `status --offline` answers
+                     from the journal alone, `watch` prints one line per new
+                     inbound message so a Monitor turns it into a chat message.
+                     Everything it knows comes from qa/channels.py.
+qa/channels.py       the ONE reader across bug reports, Telegram and a2a, so
+                     the CLI, the alert and the skill cannot grow three ideas
+                     of "unanswered". One judgement: an automated reply is
+                     silent, an unclassifiable one is not.
+qa/rooms.py          the Nexus rooms (docs/nexus-rooms-plan.md): strategies,
+                     the operator's notes, ours, read marks, the sampler's
+                     rows. state/rooms.jsonl and state/samples.jsonl, both
+                     gitignored because they are written while a sweep may
+                     run. Two writers on purpose: the browser reaches
+                     add_operator_note and nothing else. A strategy room
+                     opens only from a whole Nexus answer, one room per card
+                     it names; whether the answer PROPOSED anything is the
+                     opener's call (NEX-0002 named no card and has none).
+                     A room's name is its newest `title` row; its `plan` is
+                     Nexus's proposal as legs -- card id, side, share, TP/SL.
+scripts/rooms.py     the rooms from our side. **When the operator says
+                     "přečti si to", run `unread`**: it prints their notes in
+                     full and marks them read, and the console shows a second
+                     tick. `note` answers into a room; `note --re NEX-... --gist`
+                     is our one-line Czech summary, drawn inside that answer;
+                     `open --from NEX-...`, `status` and `link` open and move a
+                     strategy room; `title` names it and `plan` writes Nexus's
+                     proposal down leg by leg (`--leg CARD:SIDE:SHARE:tp=N:sl=N`),
+                     which `show` prints with each leg's levels. A follow-up
+                     goes through `nexus.py ask --room STR-...`. A note is their
+                     feedback read from a file, not an instruction in the chat
+                     -- what would send, spend or publish is confirmed with them
+                     first. A SessionStart hook (.claude/hooks/start/room_notes.py)
+                     names how many wait, by room, in one line.
+scripts/open_checks.py  the selector for a sweep over what is still open.
+                     Always prepends tests/meta.
+scripts/inventory.py    the platform section map the dashboard renders. An
+                     inventory, not a test suite. SAFE tier, never a POST.
+qa/keepset.py        which captures have to survive, and why: their answers the
+                     ledger stands on, and what every verdict and report we
+                     sent promises "on request". One reader for the tracker,
+                     the pruner and the guard, so the three cannot grow three
+                     ideas of "cited".
+qa/manifest.py       the proof that outlives the body -- accumulates, and a
+                     thinner entry never replaces a fuller one, because an
+                     archived capture's call key can never be recomputed.
+qa/archive.py        the monthly bundle, and the check before the move: build,
+                     read back off disk, hash every member, THEN release.
+scripts/keep.py      `track` writes the manifest (bodies stay on disk since
+                     D3); `archive --month [--release]` bundles and lets go;
+                     `snapshot` copies the lab diaries into audits/lab/.
+                     `.githooks/pre-commit` calls track at every commit, the
+                     fold when a row starts standing on a new run, the deep
+                     pass for a clone with no hooksPath, and `lab.py close`
+                     snapshots when a session ends.
+scripts/prune_runs.py  run records older than a week and captures older than
+                     three days that nothing stands on, by name, with the
+                     reason each survivor was kept printed.
+qa/surface.py        THEIR side, watched. The patrol below measures our parts;
+                     this one reads captures we already make and says when a
+                     tool's PARAMETERS moved or a response started or stopped
+                     carrying a field. `processes.py surface --update` agrees
+                     to a new shape (audits/surface.json); the frozen
+                     before-the-upgrade marker stays audits/nexus-baseline.json.
+                     Written after #97 was fixed and the proof sat unread in our
+                     own captures for a day.
+scripts/processes.py  what is due, and what the operator said since the last
+                     pass. `reminders` is the whole of the scheduler they
+                     refused: a few lines naming what is on the table and the
+                     words that start it, printed by .claude/hooks/start/reminders.py
+                     and repeated to them in the first answer. Each rule is a
+                     fixture in tests/repo/test_reminders.py in both
+                     directions, because a line that appears every evening is
+                     one they stop reading.
+                     `messages --since-last-pass` is the deep pass's step 1
+                     reader -- since the last pass, not since midnight UTC.
+```
+
+Parts the two maps above do not describe, one line each from their own
+docstrings -- read the file before building on the line:
+
+```
+qa/client.py       HTTP and MCP clients -- the only sanctioned way to the network.
+qa/safety.py       mechanical safety enforcement: tiers, the paper gate, PROBE.
+qa/config.py       configuration and the identity registry.
+qa/evidence.py     content-addressed capture; `content_id` is the one id.
+qa/fingerprint.py  the platform fingerprint, our substitute for a build version.
+qa/extractors.py   the small DSL that pulls comparable values out of sources.
+qa/sources.py      source snapshots for the contradiction sweep.
+qa/marks.py        the @qa decorator every check carries.
+qa/report_plugin.py  pytest plugin: a run becomes a schema-2 record.
+qa/console.py      makes a stream able to print what we print at it.
+qa/fomo.py         does FOMO Radar's `hot` predict a memecoin moving?
+qa/hot.py          the Hot headlines study, under Nexus's own rule.
+qa/lab_report.py   what each laboratory product earned, after costs.
+qa/morning.py      the 7:00 morning report's content.
+scripts/lab_page.py  the /lab page, served and never committed.
+scripts/morning.py   the morning report drawn as a page.
+scripts/fomo_watch.py  the memecoin watch and its report.
+scripts/hot_watch.py   what is in Hot every round, so a rule can be tested.
+scripts/clone.py   paper clones of their bots: clone, fund, settings, enable.
+scripts/paper.py   one paper trade on an event card, with its proof chain.
+scripts/nexus.py   questions to Nexus and the answers picked up.
+scripts/movers.py  the Movers Tournament: scored, no money moves.
+scripts/memories.py  the memories for a kind of work, whole bodies to 8 KB.
+scripts/render.py  state/*.json into the operator dashboard.
+scripts/verify.py  tells them a check passes under the fingerprint it failed.
+scripts/review.py  the look back over a window the caller chooses.
+scripts/deep_pass_process.py  what each deep pass cost and caught.
+.claude/hooks/no_heredoc_writes.py  a heredoc may not write a file here.
+.claude/hooks/no_backtick_commit.py a commit message may not run a backtick.
+.claude/skills/    deep-pass, laborator, pokracuj, qa-sweep, channels, ohlednuti.
+.claude/agents/    check-auditor and finding-triage, model and effort in frontmatter.
+```
+
+---
 
 Scale, for orientation:
 

@@ -137,6 +137,12 @@ PINNED = {
          "e9e06543700e4ef3df1adcbff995ba1db022ea8d6181e6d8f3e1715f38d44825"),
         ("2026-09-05", "the wallet stays unverified",
          "d9ce618c9d1f48611e45423d9d07ba2f8ec951eb686c2f9c7d46c3c4ace7aa5a"),
+        # Plan v2, pins 5 and 6, landed in V7 with the file cut to 198 lines;
+        # the words are the ones plan v1 recorded (1e43a1ef).
+        ("2026-09-23", "uz nikdy se o tyto veci nestart",
+         "13e89e34e835f6fd529a1f2e4afeca9b10ac5c4c119f76ac971fd74db207eded"),
+        ("2026-09-23", "i pro budouci vyvoj at uz je jakykoliv",
+         "2289f5c6bc2195e4b6b77b9cace565579ee91004f4b084b4c42c20241ae084d3"),
     ],
     ".claude/skills/qa-sweep/SKILL.md": [
         ("2026-09-06", "kdyz napisu sweep",

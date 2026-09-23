@@ -221,11 +221,9 @@ IDLE_DAYS = 14
 # the repository now grows, and fires long before anyone finds gigabytes there.
 CEILINGS = {
     "evidence_mb": 1000,
-    # Raised 2026-09-13 from 700, which the file sat exactly on with zero
-    # room -- the deep pass of 2026-09-13 named this in NEXT.md rather than
-    # trim something else just to keep a number where it was. Room to grow,
-    # not a promise it will.
-    "claude_md_lines": 750,
+    # Plan v2, V7: 750 -> 300 when the file was cut to 198 lines (the maps
+    # went to ARCHITECTURE.md). A 750 ceiling on a 200-line file is dead.
+    "claude_md_lines": 300,
     # LIVE pointers now, not raw lines -- see sizes(). Raised 45 -> 48 twice in
     # one day while it was counting lines, which is what exposed it: retired
     # lines stay for ever, so the measured number could only grow and the only
