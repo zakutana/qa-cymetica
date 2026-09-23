@@ -175,6 +175,7 @@ Each phase: tests first (red), then code, `pytest tests/meta tests/repo`, commit
 - The confirmed A, B and D findings not already fixed in V1 or V4: A2–A8, B2–B6, D3, D6. D5 is a minority finding and is examined only.
 - Since V7 `tests/meta` grows only by replacement (the patrol's `meta_tests` ceiling is 800, 786 on 2026-09-23): a finding's test goes into an existing test where one already drives that path, or into tests/repo, and a new meta guard replaces or merges one.
 - `vendor_read` is journaled only when a read's health changes (ok→fail, fail→ok); status changes are kept. This keeps rule 8 and removes the "console poll" commits.
+- *Progress (a line per landed finding, so a compacted loop knows where it is):* A6 done (protect_state walks the command: cd, absolute and /c/ redirects, Python writes).
 - The fingerprint covers the module helpers a check calls (A8). Today `verify.py` says "the same test, not a rewritten one" after a helper was rewritten (#119, #113, #89, #121, #116; #120 was pinned by hand for that reason): fix the fingerprint or the sentence. And no `correction_owed` for a check that judges our own writes from before their fix (#117, #119).
 
 **V9 · Oddělení do budoucna** (Sonnet · high)

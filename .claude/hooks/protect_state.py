@@ -105,14 +105,24 @@ def deny(reason: str) -> None:
     sys.exit(0)
 
 
-def under_state(raw: str) -> bool:
+MSYS_DRIVE = re.compile(r"^/([a-zA-Z])/")
+
+
+def _drive(text: str) -> str:
+    """Git Bash spells C:\\ as /c/ -- an absolute path the shell writes to and
+    Path() would read as \\c\\ on the current drive (A6)."""
+    return MSYS_DRIVE.sub(lambda m: f"{m.group(1)}:/", text)
+
+
+def under_state(raw: str, cwd: Path | None = None) -> bool:
     if not raw:
         return False
     try:
-        target = Path(os.path.expandvars(raw.strip().strip("\"'"))).expanduser()
+        target = Path(_drive(os.path.expandvars(raw.strip().strip("\"'")))).expanduser()
         if not target.is_absolute():
-            # Against REPO, not cwd: the hook's cwd is not ours to assume.
-            target = REPO / target
+            # Against REPO (or a `cd` this command made), not the hook's own
+            # cwd, which is not ours to assume.
+            target = (cwd or REPO) / target
         target = Path(os.path.normpath(str(target)))
     except (OSError, ValueError):
         return False
@@ -121,6 +131,45 @@ def under_state(raw: str) -> bool:
     except ValueError:
         return False
     return True
+
+
+# A6 of the review of 2026-09-23 (3/3): the forms above read the command as
+# text and missed an absolute-path redirect, `cd state; > x`, Path.write_text,
+# a raw-string open(..., 'a') and shutil.copy. So the command is also walked
+# segment by segment with its working directory, and every redirect target,
+# and every string a Python write could be aimed at, is RESOLVED.
+SEGMENT = re.compile(r"\s*(?:&&|\|\||;|\||\n)\s*")
+CD = re.compile(r"^\s*(?:cd|Set-Location|pushd)\s+(\"[^\"]*\"|'[^']*'|\S+)\s*$", re.I)
+REDIRECT = re.compile(r"(?<![0-9&])>>?\s*(\"[^\"]*\"|'[^']*'|[^\s;|&<>]+)")
+PY_WRITE = re.compile(
+    r"\.write_text\(|\.write_bytes\(|\.unlink\(|\.rename\(|\.touch\("
+    r"|\bshutil\.(?:copy\w*|move)\(|\bos\.(?:replace|rename|remove|unlink)\("
+    r"|\bopen\([^)]*,\s*r?[\"'][rbt+]*[wax]", re.I)
+# Single- and double-quoted strings searched apart: `python -c "..."` wraps
+# the code in one, and the path inside it sits in the other.
+LITERALS = (re.compile(r"(?:\b[rRbB])?'([^'\n]*)'"),
+            re.compile(r"(?:\b[rRbB])?\"([^\"\n]*)\""))
+
+
+def writes_under_state(command: str) -> bool:
+    """Whether any segment of `command` writes to a path under state/, with
+    each `cd` followed. Reads -- cat, grep, a redirect of their output
+    elsewhere, a Python read -- resolve to no write target and pass."""
+    cwd = REPO
+    for segment in SEGMENT.split(command):
+        moved = CD.match(segment)
+        if moved:
+            path = Path(_drive(moved.group(1).strip("\"'")))
+            cwd = Path(os.path.normpath(str(path if path.is_absolute() else cwd / path)))
+            continue
+        for found in REDIRECT.finditer(segment):
+            if under_state(found.group(1), cwd):
+                return True
+        if PY_WRITE.search(segment):
+            for literal in (m for form in LITERALS for m in form.finditer(segment)):
+                if under_state(literal.group(1), cwd):
+                    return True
+    return False
 
 
 def main() -> None:
@@ -143,13 +192,13 @@ def main() -> None:
 
     if tool in SHELL_TOOLS:
         command = strip_payload(str(args.get("command") or ""))
-        for form in WRITE_FORMS:
-            if re.search(form, command, re.IGNORECASE):
-                deny(
-                    "This command writes under state/, which is written only by "
-                    f"qa/state.py.\n\n{REMEDY}\n\nReading state/ is fine -- cat, "
-                    "grep, ls and git status are not matched."
-                )
+        if writes_under_state(command) or any(
+                re.search(form, command, re.IGNORECASE) for form in WRITE_FORMS):
+            deny(
+                "This command writes under state/, which is written only by "
+                f"qa/state.py.\n\n{REMEDY}\n\nReading state/ is fine -- cat, "
+                "grep, ls and git status are not matched."
+            )
         return
 
 

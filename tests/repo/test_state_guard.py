@@ -90,6 +90,14 @@ DENIED_COMMANDS = [
     "python -c \"open('state/ledger.json','w').write('{}')\"",
     "Set-Content state\\ledger.json -Value x",
     "Remove-Item state\\ledger.json",
+    # A6 of the review of 2026-09-23 (3/3): five shapes that went through.
+    f"echo x > {(REPO / 'state' / 'ledger.json').as_posix()}",
+    "echo x > /c/Users/adamz/Documents/Projects/cymetica-qa-agent/qa-cymetica/state/ledger.json",
+    "cd state; echo x > ledger.json",
+    "cd state && echo '{}' >> journal/events.jsonl",
+    "python -c \"from pathlib import Path; Path('state/ledger.json').write_text('{}')\"",
+    "python -c \"open(r'state\\journal\\events.jsonl','a').write('x')\"",
+    "python -c \"import shutil; shutil.copy('/tmp/x.json', 'state/ledger.json')\"",
 ]
 
 # The sanctioned writers reach state/ through qa/state.py and never name the
@@ -102,6 +110,10 @@ ALLOWED_COMMANDS = [
     "python -m pytest tests --prereg PRE-0039 -q",
     "python scripts/prereg.py new --selector tests --window 30 --tag",
     "cat state/ledger.json",
+    # A read of state/ whose OUTPUT goes elsewhere is a read.
+    "cat state/ledger.json > /tmp/ledger-copy.json",
+    "python -c \"print(open('state/ledger.json').read()[:200])\"",
+    "cd state && ls -la",
     "grep RAISED state/journal/events.jsonl",
     "ls -la state/runs",
     "git status --short",
