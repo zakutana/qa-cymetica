@@ -107,6 +107,22 @@ def compose(report: dict, findings: dict, footer: str) -> dict:
             f"A report may not cite a finding the ledger does not hold."
         )
 
+    # Rule 10 in code (B5 of the review of 2026-09-23, 3/3): a report is
+    # about a defect our check reproduces now. INCONCLUSIVE is never a
+    # defect, and a passing or unverifiable row has nothing to report.
+    # Only a finding not yet raised: outbox/reports.yaml is the archive of
+    # everything we sent, composed whole on every run and skipped at send
+    # time by its title, so a filed row that is fixed today is history here.
+    not_failing = [f"{f['id']} ({(f.get('check') or {}).get('state')})"
+                   for f in linked
+                   if (f.get("check") or {}).get("state") != "REPRODUCING"
+                   and (f.get("filing") or {}).get("state", "NOT_RAISED") == "NOT_RAISED"]
+    if not_failing:
+        raise SystemExit(
+            f"{report['key']}: {not_failing} -- a report is composed only about "
+            f"a finding whose check is REPRODUCING. Rule 10: an inconclusive "
+            f"measurement is never a defect.")
+
     unmeasured = [f["id"] for f in linked
                   if not (f.get("provenance") or {}).get("measured_at")]
     if unmeasured:
