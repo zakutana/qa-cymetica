@@ -2962,6 +2962,56 @@ def test_money_in_a_clone_is_out_and_a_paused_clone_holds_it_parked(
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_every_bot_stop_is_ours_their_guard_or_unexplained():
+    """The plan's V2 (review of 2026-09-23): two bots stopped by themselves
+    and nobody noticed. Every stop now has one of three causes: OURS (our
+    accepted pause came first), THEIR GUARD (it stopped at a cumulative loss,
+    where their halt is documented to fire -- NEX-0049), or UNEXPLAINED. The
+    real three of 2026-09-22/23: Fibonacci Phoenix paused by us a minute
+    after its start, MACD Hunter halted at -24.02 on 240.21, and Bollinger
+    Bandit halted between 01:43 and 02:05 while +7.11 up -- which nothing in
+    their documentation explains, and which is a check and a report."""
+    def fund(ident, instance, amount, at):
+        return [{"id": ident, "type": "intent", "kind": "fund",
+                 "instance_id": instance, "amount": amount, "at": at},
+                {"id": ident, "type": "outcome", "outcome": "accepted", "at": at}]
+
+    def switch(ident, instance, kind, at):
+        return [{"id": ident, "type": "intent", "kind": kind,
+                 "instance_id": instance, "at": at},
+                {"id": ident, "type": "outcome", "outcome": "accepted", "at": at}]
+
+    def sample(instance, at, trading, profit):
+        return {"type": "sample", "kind": "bot", "instance_id": instance,
+                "at": at, "is_trading": trading, "total_profit_usdc": profit}
+    clones = [
+        *fund("CLN-0009", "macd", 240.21, "2026-09-22T13:38:17+00:00"),
+        *switch("CLN-0010", "macd", "enable", "2026-09-22T13:38:30+00:00"),
+        *fund("CLN-0012", "fib", 240.21, "2026-09-22T13:38:38+00:00"),
+        *switch("CLN-0013", "fib", "enable", "2026-09-22T13:38:41+00:00"),
+        *switch("CLN-0018", "fib", "disable", "2026-09-22T13:39:55+00:00"),
+        *fund("CLN-0022", "boll", 240.18, "2026-09-23T01:31:41+00:00"),
+        *switch("CLN-0023", "boll", "enable", "2026-09-23T01:32:23+00:00")]
+    samples = [
+        sample("macd", "2026-09-22T20:00:00+00:00", False, "-24.02"),
+        sample("fib", "2026-09-22T20:00:00+00:00", False, "0.0"),
+        sample("boll", "2026-09-23T01:43:18+00:00", True, "33.6252"),
+        sample("boll", "2026-09-23T02:05:44+00:00", False, "7.109328"),
+        sample("boll", "2026-09-23T07:05:46+00:00", False, "7.109328")]
+
+    stops = {s["instance"]: s for s in lab.bot_stops(clones, samples)}
+
+    assert {k: v["cause"] for k, v in stops.items()} == {
+        "fib": "ours", "macd": "their_guard", "boll": "unexplained"}, stops
+    boll = stops["boll"]
+    assert (boll["after"], boll["before"]) == (
+        "2026-09-23T01:43:18+00:00", "2026-09-23T02:05:44+00:00"), boll
+    assert boll["profit_usdc"] == pytest.approx(7.109328)
+    assert stops["macd"]["after"] == "2026-09-22T13:38:30+00:00", (
+        "a stop the sampler never saw trading is bounded by our start")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_free_cash_is_the_newest_account_read_whichever_script_took_it(
         tmp_path, monkeypatch):
     """clone.py snapshots the account either side of every transfer, as

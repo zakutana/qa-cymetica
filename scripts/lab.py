@@ -3007,6 +3007,21 @@ def brief() -> str:
     if not rows:
         out.append("  none has come to anything yet")
 
+    # Every stop of a paper bot of ours, and its cause (V2, 2026-09-23): two
+    # halted by themselves and nobody noticed. An unexplained one is a check
+    # and a report, and a question for him.
+    stops = lab.bot_stops(_sibling("clone").load(), rooms.load_samples())
+    if stops:
+        out.append("")
+        out.append("paper bots that stopped, and why (a stopped bot is never "
+                   "started again):")
+        for stop in stops[-8:]:
+            pct = stop.get("profit_pct")
+            out.append(f"  {stop['instance'][:8]}  {stop['cause']:11}  between "
+                       f"{str(stop['after'])[:16]} and {str(stop['before'])[:16]}"
+                       + (f", at {pct:+.2f}% on what went in"
+                          if pct is not None else ""))
+
     last = lab.last_truth()
     if last and last.get("ranked"):
         out.append("")

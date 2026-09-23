@@ -511,6 +511,23 @@ def enable(instance_id: str, confirm: bool, enabled: bool = True) -> dict:
     "disable". The practice money stays in the clone.
     """
     kind = "enable" if enabled else "disable"
+    if enabled:
+        # V2 of the 2026-09-23 plan: a bot that stopped -- paused by us,
+        # halted by their guard, or for no reason anyone can read -- is never
+        # started again. CLN-0007 restarted a halted Perceptron Oracle on
+        # 2026-09-11 and its record ran on as one experiment across two
+        # starts. A new experiment is a new clone. Refused from our own
+        # record, before anything is asked of their side.
+        rows = load()
+        answered = {row.get("id"): row.get("outcome") for row in rows
+                    if row.get("type") == "outcome"}
+        if any(row.get("type") == "intent" and row.get("kind") == "enable"
+               and str(row.get("instance_id")) == str(instance_id)
+               and answered.get(row.get("id")) == "accepted" for row in rows):
+            raise SystemExit(
+                f"{instance_id} was started once already, and a bot that has "
+                f"been started is never started again: whatever stopped it, "
+                f"a new experiment is a new clone")
     load_dotenv()
     install_client_guard()
     registry = EndpointRegistry.load()

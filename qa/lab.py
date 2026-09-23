@@ -1697,6 +1697,66 @@ def funded_at(clone_rows) -> dict[str, str]:
     return out
 
 
+def bot_stops(clone_rows, samples) -> list[dict]:
+    """Every time a paper bot of ours stopped trading, and why.
+
+    The plan's V2 (review of 2026-09-23): two bots stopped by themselves and
+    nobody noticed. A stop is the step from trading -- a sampler reading that
+    says so, or our own accepted start -- to a reading that says it does not.
+    Its cause is one of three:
+
+        ours          our accepted pause lies between the two
+        their_guard   it stopped at a cumulative LOSS, which is where their
+                      halt is documented to fire (NEX-0049: the stop-loss and
+                      the pause are the same lever)
+        unexplained   neither -- a check and a report
+
+    Pure over two loaded diaries; `after` and `before` bound the moment.
+    """
+    went_in = funded(clone_rows)
+    answered = {row.get("id"): row for row in clone_rows or ()
+                if row.get("type") == "outcome"}
+    events: dict[str, list[tuple[str, str, dict]]] = {}
+    for row in clone_rows or ():
+        done = answered.get(row.get("id")) or {}
+        if (row.get("type") == "intent" and row.get("kind") in ("enable", "disable")
+                and done.get("outcome") == "accepted"):
+            events.setdefault(str(row.get("instance_id")), []).append(
+                (str(done.get("at") or row.get("at") or ""), row["kind"], row))
+    for row in samples or ():
+        if row.get("kind") == "bot" and row.get("instance_id"):
+            events.setdefault(str(row["instance_id"]), []).append(
+                (str(row.get("at") or ""), "sample", row))
+
+    out = []
+    for instance, seen in events.items():
+        trading_since, paused = None, False
+        for at, kind, row in sorted(seen, key=lambda e: e[0]):
+            if kind == "enable":
+                trading_since, paused = at, False
+            elif kind == "disable":
+                paused = True
+            elif row.get("is_trading") is True:
+                trading_since, paused = at, False
+            elif row.get("is_trading") is False and trading_since is not None:
+                profit = _money(row.get("total_profit_usdc"))
+                if paused:
+                    cause = "ours"
+                elif profit is not None and profit < 0:
+                    cause = "their_guard"
+                else:
+                    cause = "unexplained"
+                base = went_in.get(instance)
+                out.append({"instance": instance, "cause": cause,
+                            "after": trading_since, "before": at,
+                            "profit_usdc": profit, "funded_usdc": base,
+                            "profit_pct": (profit / base * 100.0
+                                           if profit is not None and base
+                                           else None)})
+                trading_since, paused = None, False
+    return sorted(out, key=lambda s: s["before"])
+
+
 def _sold_by_us(paper_rows) -> dict[str, float | None]:
     """position -> the P&L our own accepted close record realised (None when
     the record carries no figure). The close outcome often names no position;

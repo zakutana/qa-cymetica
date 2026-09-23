@@ -563,3 +563,34 @@ def test_the_clone_record_is_not_written_into_the_paper_trade_log(
     assert mod.path().name == "clones.jsonl"
     assert mod._next_id([]) == "CLN-0001"
     assert mod._next_id([{"id": "CLN-0003"}, {"id": "TRD-0009"}]) == "CLN-0004"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_bot_we_started_once_is_never_started_again(tmp_path, monkeypatch):
+    """The plan's V2 (review of 2026-09-23): a bot that stopped -- paused by
+    us, halted by their guard, or for no reason anyone can read -- is never
+    re-enabled. CLN-0007 restarted Perceptron Oracle on 2026-09-11 after it
+    had halted, and its record then ran on as one experiment across two
+    starts. A new experiment is a new clone. Refused before any client is
+    built, so nothing is asked of their side; a pause is still allowed."""
+    mod = _clone(tmp_path, monkeypatch)
+    mod._append({"id": "CLN-0001", "type": "intent", "kind": "enable",
+                 "instance_id": "inst-1"})
+    mod._append({"id": "CLN-0001", "type": "outcome", "kind": "enable",
+                 "outcome": "accepted", "http_status": 200})
+
+    class Reached(Exception):
+        pass
+
+    def no_client(*a, **k):
+        raise Reached("a client was built")
+    monkeypatch.setattr(mod, "build_client", no_client)
+
+    with pytest.raises(SystemExit, match="never started again"):
+        mod.enable("inst-1", True)
+    # The first start of another bot, and a pause of this one, go on to their
+    # side as before.
+    with pytest.raises(Reached):
+        mod.enable("inst-2", True)
+    with pytest.raises(Reached):
+        mod.enable("inst-1", True, enabled=False)
