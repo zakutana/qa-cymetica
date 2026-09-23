@@ -1066,6 +1066,66 @@ def _early_state_path() -> Path:
     return state_dir() / "lab_early.json"
 
 
+def _position_book(paper_rows: list[dict], origin: str, card: str,
+                   samples: list[dict]) -> dict | None:
+    """Our first accepted buy of `card` for `origin`, and what became of it:
+    when it filled, at what index (`entry_index`, from the buy's own
+    response), and -- once we sold it, or their record shows it closed --
+    when, and what it was worth then, per 100 of what went in. None when we
+    never held it; the verdict then reads their index alone."""
+    intents = {r.get("id"): r for r in paper_rows if r.get("type") == "intent"}
+    buy = None
+    for row in paper_rows:
+        intent = intents.get(row.get("id")) or {}
+        if (row.get("type") != "outcome" or row.get("outcome") != "accepted"
+                or "close" in (row.get("kind"), intent.get("kind"))
+                or not row.get("position_id")):
+            continue
+        nexus = intent.get("nexus")
+        said = nexus.get("id") if isinstance(nexus, dict) else nexus
+        if said == origin and str(intent.get("card_id") or "").lower() == \
+                str(card).lower():
+            buy = (intent, row)
+            break
+    if buy is None:
+        return None
+    intent, row = buy
+    position, notional = str(row["position_id"]), _amount(intent.get("usdc"))
+    try:
+        response = json.loads(row.get("response") or "{}")
+    except (TypeError, ValueError):
+        response = {}
+    out = {"position": position, "filled_at": row.get("at") or intent.get("at"),
+           "entry_index": (response.get("entry_index")
+                           if isinstance(response, dict) else None),
+           "closed_at": None, "closed_value": None}
+    realized, closed_at = None, None
+    for close in paper_rows:
+        ask = intents.get(close.get("id")) or {}
+        if (close.get("type") == "outcome" and close.get("outcome") == "accepted"
+                and "close" in (close.get("kind"), ask.get("kind"))
+                and str(ask.get("position_id") or close.get("position_id"))
+                == position):
+            realized = _amount(close.get("realized_pnl_usdc"))
+            closed_at = close.get("at") or ask.get("at")
+            break
+    if closed_at is None:
+        newest = None
+        for sample in samples or ():
+            if (sample.get("kind") == "position"
+                    and str(sample.get("position_id")) == position
+                    and (newest is None
+                         or str(sample.get("at")) >= str(newest.get("at")))):
+                newest = sample
+        if newest and newest.get("status") == "closed":
+            realized = _amount(newest.get("realized_pnl_usdc"))
+            closed_at = newest.get("at")
+    if closed_at and realized is not None and notional:
+        out["closed_at"] = closed_at
+        out["closed_value"] = 100.0 * (1.0 + realized / notional)
+    return out
+
+
 def _room_positions(paper_rows: list[dict], origin: str, cards,
                     theirs: set[str] | frozenset = frozenset()) -> list[str]:
     """Positions our accepted buys opened for this answer's cards and that no
@@ -1287,8 +1347,41 @@ def verdicts(now=None) -> list[dict]:
                                 "why": (f"{exc} -- a failed read is not an empty "
                                         f"one; judged again on the next call")})
                 continue
-            said = lab.verdict(acceptance, series, moment, closes=closes,
+            # Our book on every card leg we hold (the plan's V2): their index
+            # rebased on our fill, and what we sold for from the sale on. The
+            # index alone is the cross-check, judged beside it.
+            start = _moment(acceptance.get("at"))
+            until = moment
+            if start is not None:
+                until = min(moment, start + timedelta(
+                    days=float(acceptance.get("window_days") or 0)))
+                if _moment(halted) is not None:
+                    until = min(until, _moment(halted))
+            if not books:
+                books["paper"] = _sibling("paper").load()
+                books["theirs"] = _closed_on_their_side()
+            if samples is None:
+                clones = _sibling("clone").load()
+                samples, funded = rooms.load_samples(), lab.funded(clones)
+                entered = lab.funded_at(clones)
+            booked = dict(series)
+            for leg in legs:
+                ref = rooms.leg_ref(leg)
+                if rooms.leg_kind(leg) != "card" or not ref:
+                    continue
+                book = _position_book(books["paper"], str(strategy.get("origin")),
+                                      str(ref), samples)
+                if book is not None:
+                    booked[ref] = lab.book_series(
+                        series.get(ref), book["entry_index"], book["filled_at"],
+                        book["closed_at"], book["closed_value"],
+                        until=until.isoformat())
+            said = lab.verdict(acceptance, booked, moment, closes=closes,
                                stopped=halted)
+            if booked != series:
+                said["index_return_pct"] = lab.verdict(
+                    acceptance, series, moment, closes=closes,
+                    stopped=halted).get("return_pct")
             checked[room] = moment.isoformat()
             if said["verdict"] == "open":
                 continue

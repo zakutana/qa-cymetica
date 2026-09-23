@@ -883,8 +883,11 @@ def test_a_strategy_that_made_money_inside_its_stop_survives():
     # Five points twelve hours apart over a two-day window: the last one falls
     # exactly on the closing edge and is inside it. This test said 3.0 first,
     # from counting four steps and assuming the edge was exclusive -- the code
-    # was right and the expectation was not.
-    assert round(said["return_pct"], 2) == 4.0, said
+    # was right and the expectation was not. Since V2 (2026-09-23) a card leg
+    # pays the live round trip, 1.4%, on what it made.
+    (leg,) = said["legs"]
+    assert round(leg["gross_return_pct"], 2) == 4.0, said
+    assert said["return_pct"] == pytest.approx((1.04 * 0.986 - 1) * 100), said
     assert said["max_drawdown_pct"] <= 5.0
     assert said["formula"], "a verdict records the formula that produced it"
 
@@ -1043,11 +1046,13 @@ def test_an_inconclusive_verdict_is_still_writable_to_the_diary():
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_beating_nothing_is_not_beating_the_benchmark():
     """Cymetica's own guide asks whether a strategy beats BTC, not whether it
-    is positive. A card that rose 1% while the benchmark rose 4% is refuted."""
+    is positive. A card that rose 3% while the benchmark rose 4% is refuted.
+    (It said 1% until V2: after the 1.4% round trip that is a loss, and the
+    test would have been refuted for the wrong reason.)"""
     now = "2026-09-07T01:00:00+00:00"
     series = {
         "card-a": _series("2026-09-05T00:00:00+00:00",
-                          [100, 100.25, 100.5, 100.75, 101], hours=12),
+                          [100, 100.75, 101.5, 102.25, 103], hours=12),
         "btc-card": _series("2026-09-05T00:00:00+00:00",
                             [100, 101, 102, 103, 104], hours=12),
     }

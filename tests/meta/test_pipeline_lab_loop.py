@@ -1666,7 +1666,7 @@ def test_a_window_that_closes_normally_sells_the_rooms_card_position(
 
     hours = int(days * 24)
     points = [{"t": (start + timedelta(hours=h)).isoformat(),
-               "index": 100 + h * 0.01} for h in range(hours + 1)]
+               "index": 100 + h * 0.05} for h in range(hours + 1)]
     flat = [{"t": p["t"], "index": 100.0} for p in points]
     monkeypatch.setattr(scripts_lab, "_history",
                         lambda client, c: points if c in cards else flat)
@@ -1686,6 +1686,85 @@ def test_a_window_that_closes_normally_sells_the_rooms_card_position(
 
     scripts_lab.verdicts(now=after + timedelta(minutes=40))
     assert attempts == ["P-1", "P-1"], "a sold position was sold again"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_card_room_is_judged_on_our_position_net_of_the_round_trip(
+        tmp_path, monkeypatch):
+    """The plan's V2 (review of 2026-09-23): the verdict read their index
+    from its first point inside the window, not what OUR position did, and
+    charged nothing for getting in and out. A card that had already moved
+    before our order filled was credited with the move we never had, and a
+    position we sold on day two was judged as if held to the end.
+
+    Our book: 100 at our fill (`entry_index`, from the buy's own response),
+    their index rebased on it while we hold (a paper position is worth units
+    x index), and the realised value from our sale on, frozen to the end.
+    The live round trip (1.4%) is charged once on the leg's return. Their
+    index-only reading rides beside as the cross-check."""
+    import qa.rooms as qa_rooms
+
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    held, sold = _card(0xB0), _card(0xB1)
+    answers = [{"type": "answer", "id": f"NEX-000{n}",
+                "at": (NOW - timedelta(minutes=30)).isoformat(),
+                "text": _whole(card)} for n, card in enumerate((held, sold), 1)]
+    _launchpad(scripts_lab, tmp_path, monkeypatch, answers,
+               live={c: _basket("BTC", "ETH") for c in (held, sold)},
+               readings={("BTC", "ETH"): (6.5, 1.3)})
+    scripts_lab.night_promote()
+    rows = qa_rooms.load()
+    first, second = qa_rooms.strategies(rows)
+    acceptance = qa_rooms.acceptance_of(rows, first["id"])
+    start = datetime.fromisoformat(acceptance["at"])
+    days = float(acceptance["window_days"])
+    end = start + timedelta(days=days)
+    filled = start + timedelta(minutes=2)
+
+    def buy(ident, card, origin, position, entry):
+        return [{"id": ident, "type": "intent", "card_id": card, "usdc": 100.0,
+                 "paper": True, "nexus": {"id": origin},
+                 "at": filled.isoformat()},
+                {"id": ident, "type": "outcome", "outcome": "accepted",
+                 "position_id": position, "at": filled.isoformat(),
+                 "response": json.dumps({"position_id": position,
+                                         "entry_index": entry,
+                                         "notional_usdc": 100.0})}]
+    sale_at = start + timedelta(days=2)
+    _write(tmp_path, "paper.jsonl", [
+        *buy("TRD-0001", held, "NEX-0001", "P-1", 200.0),
+        *buy("TRD-0002", sold, "NEX-0002", "P-2", 50.0),
+        {"id": "TRD-0003", "type": "intent", "kind": "close",
+         "position_id": "P-2", "at": sale_at.isoformat()},
+        {"id": "TRD-0003", "type": "outcome", "kind": "close",
+         "outcome": "accepted", "realized_pnl_usdc": 2.0,
+         "proceeds_usdc": 102.0, "at": sale_at.isoformat()}])
+    scripts_lab._sibling("paper").close = lambda position, confirm: {}
+
+    hours = int(days * 24)
+    # The held card had moved 190 -> 200 before our order filled, and goes
+    # on to 210. The sold card goes on to 60 after we sold it at 51.
+    index = {held: [{"t": start.isoformat(), "index": 190.0}]
+             + [{"t": (filled + timedelta(hours=h)).isoformat(),
+                 "index": 200.0 + 10.0 * h / hours} for h in range(hours)],
+             sold: [{"t": (filled + timedelta(hours=h)).isoformat(),
+                     "index": 50.0 + 10.0 * h / hours} for h in range(hours)]}
+    flat = [{"t": (start + timedelta(hours=h)).isoformat(), "index": 100.0}
+            for h in range(hours + 1)]
+    monkeypatch.setattr(scripts_lab, "_history",
+                        lambda client, c: index.get(c, flat))
+    monkeypatch.setattr(scripts_lab, "_closes_at", lambda client, c: None)
+
+    said = {s["room"]: s for s in scripts_lab.verdicts(now=end + timedelta(hours=1))}
+
+    net = lambda gross: ((1 + gross / 100) * (1 - 0.014) - 1) * 100  # noqa: E731
+    mine = said[first["id"]]
+    last = 200.0 + 10.0 * (hours - 1) / hours
+    assert mine["return_pct"] == pytest.approx(net((last / 200.0 - 1) * 100)), mine
+    assert mine["index_return_pct"] == pytest.approx(net((last / 190.0 - 1) * 100)), (
+        "the cross-check is their index alone, net the same way")
+    assert said[second["id"]]["return_pct"] == pytest.approx(net(2.0)), (
+        "a position we sold is worth what we sold it for, to the end")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -1796,8 +1875,9 @@ def test_a_stopped_room_is_archived_or_judged_up_to_its_stop(
     assert [s["room"] for s in said if s.get("verdict")] == ["STR-0001"], said
     (judged,) = [s for s in said if s["room"] == "STR-0001"]
     assert judged["window"]["to"] == stopped_at.isoformat(), judged
-    assert judged["return_pct"] == pytest.approx(2.4), (
-        "judged over the window up to the stop, 24 hours at +0.1 an hour")
+    assert judged["return_pct"] == pytest.approx((1.024 * 0.986 - 1) * 100), (
+        "judged over the window up to the stop, 24 hours at +0.1 an hour, "
+        "after the round trip")
     rows = qa_rooms.load()
     assert qa_rooms.verdict_of(rows, "STR-0002") is None
     assert qa_rooms.verdict_of(rows, "STR-0003") is None

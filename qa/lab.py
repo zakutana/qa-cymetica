@@ -833,6 +833,63 @@ def bot_series(samples: list[dict], instance: str, funded: float | None,
     return out
 
 
+def book_series(index_points, entry_index, filled_at, closed_at=None,
+                closed_value=None, until=None) -> list[dict]:
+    """A card leg as OUR position saw it -- the plan's V2 of 2026-09-23.
+
+    A paper position is worth units x their index (their sample: 0.02164 x
+    231.30 = 5.0064, to the cent), so our book is their index rebased on our
+    own fill: 100 at `filled_at` (`entry_index` from the buy's response, or
+    their index there when the response did not carry it), then
+    100 x index / entry at every point after it while we hold. From our
+    close -- or their resolution -- on, the leg is worth `closed_value`, and
+    frozen at it to `until`: what we sold for is what the leg made.
+
+    Before, the verdict read their index from its first point inside the
+    window: a card that moved before our order filled was credited with a
+    move we never had, and a position sold on day two was judged as if held.
+    """
+    filled, closed = _at(filled_at), _at(closed_at)
+    points = _points(index_points)
+    if filled is None:
+        return []
+    try:
+        entry = float(entry_index)
+    except (TypeError, ValueError):
+        entry = None
+    if not entry:
+        before = [v for t, v in points if t <= filled]
+        after = [v for t, v in points if t > filled]
+        entry = (before or after or [None])[-1 if before else 0]
+    if not entry:
+        return []
+    out = [{"t": filled.isoformat(), "index": 100.0}]
+    for when, value in points:
+        if when <= filled:
+            continue
+        if closed is not None and when >= closed:
+            break
+        out.append({"t": when.isoformat(), "index": 100.0 * value / entry})
+    if closed is not None and isinstance(closed_value, (int, float)):
+        out.append({"t": closed.isoformat(), "index": float(closed_value)})
+        stop = _at(until)
+        if stop is not None and stop > closed:
+            out.append({"t": stop.isoformat(), "index": float(closed_value)})
+    return out
+
+
+def _cost(leg: dict) -> float:
+    """The live round trip a leg pays, in %: a card or a fund leg is bought
+    and sold (GATE's 0.2% taker + 0.5% slippage each side); a bot's P&L is
+    as their engine books it."""
+    kind = leg.get("kind") or "card"
+    return GATE["round_trip_cost_pct"] if kind in ("card", "fund") else 0.0
+
+
+def _net_of(gross_pct: float, cost_pct: float) -> float:
+    return ((1.0 + gross_pct / 100.0) * (1.0 - cost_pct / 100.0) - 1.0) * 100.0
+
+
 def fund_series(points) -> list[dict]:
     """Their fund history, `[{t, v}]` from get_fund_history, in the shape the
     verdict reads a card's index in."""
@@ -864,7 +921,8 @@ def formula_fingerprint() -> str:
         # is a change to what a verdict means, and a hash of the callers
         # alone would not move (A8's lesson, review of 2026-09-23).
         source = "".join(inspect.getsource(f) for f in (
-            verdict, _early, _from_peak, _inside, bot_series, fund_series))
+            verdict, _early, _from_peak, _inside, bot_series, fund_series,
+            book_series, _cost, _net_of))
     except (OSError, TypeError):  # pragma: no cover -- frozen or stripped
         return "unknown"
     return hashlib.sha256(source.encode("utf-8")).hexdigest()[:12]
@@ -910,7 +968,7 @@ def _early(acceptance: dict, series: dict, start, moment) -> dict | None:
                 exit_kind = "sl"
                 break
         legs.append({**leg, "exit": exit_kind, "curve": curve,
-                     "return_pct": curve[-1][1]})
+                     "return_pct": _net_of(curve[-1][1], _cost(leg))})
     if not legs:
         return None
 
@@ -924,6 +982,10 @@ def _early(acceptance: dict, series: dict, start, moment) -> dict | None:
         peak = value if peak is None else max(peak, value)
         drawdown = max(drawdown, _from_peak(peak, value))
     clean = [{k: v for k, v in leg.items() if k != "curve"} for leg in legs]
+    # What it stands at after the round trip each card or fund leg pays; the
+    # drawdown above is on the gross path, where his stop is set.
+    value = sum(float(leg.get("share") or 1.0) * leg["return_pct"]
+                for leg in legs) / weight
 
     stop_pct = float(acceptance.get("stop_pct") or 0) or None
     if stop_pct is not None and drawdown > stop_pct:
@@ -1030,10 +1092,11 @@ def verdict(acceptance: dict, series: dict, now, closes: dict | None = None,
             if stop is not None and moved <= float(stop):
                 exit_kind, exit_value = "sl", value
                 break
+        gross = way * (exit_value / entry - 1.0) * 100.0
         legs.append({**leg, "exit": exit_kind, "entry_index": entry,
                      "exit_index": exit_value,
-                     "return_pct": way * (exit_value / entry - 1.0) * 100.0,
-                     "curve": curve})
+                     "return_pct": _net_of(gross, _cost(leg)),
+                     "gross_return_pct": gross, "curve": curve})
 
     coverage = min(covered) if covered else 0.0
     scored = [leg for leg in legs if leg.get("return_pct") is not None]
