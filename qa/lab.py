@@ -792,8 +792,8 @@ def _ref(leg: dict):
     return leg.get("ref") or leg.get("card")
 
 
-def bot_series(samples: list[dict], instance: str, funded: float | None
-               ) -> list[dict]:
+def bot_series(samples: list[dict], instance: str, funded: float | None,
+               entry_at=None) -> list[dict]:
     """A paper bot's own index, from the sampler's rows: 100 at what went in,
     moved by what it made -- `100 * (1 + total_profit_usdc / funded)`.
 
@@ -805,6 +805,13 @@ def bot_series(samples: list[dict], instance: str, funded: float | None
     reading `scripts/paper.py::capital_in_bots` already makes of the same
     fields. No funding on record, no series: a bot we cannot size is not
     judged at all.
+
+    `entry_at`, when the funding moment is known, is a point at 100: what
+    went in, before it traded. Bollinger Bandit (STR-0034) had made +33.6 on
+    240 by its first reading and stood at +7.1 at the end -- +2.96% on what
+    went in, read as -9.7% from the first reading (review of 2026-09-23). A
+    funding before the window is outside it, and a room that took over a
+    running bot starts from its first reading inside, as before.
     """
     try:
         base = float(funded or 0)
@@ -812,7 +819,7 @@ def bot_series(samples: list[dict], instance: str, funded: float | None
         return []
     if base <= 0:
         return []
-    out = []
+    out = [{"t": str(entry_at), "index": 100.0}] if entry_at else []
     for row in samples or []:
         if (not isinstance(row, dict) or row.get("kind") != "bot"
                 or row.get("instance_id") != instance):
@@ -857,7 +864,7 @@ def formula_fingerprint() -> str:
         # is a change to what a verdict means, and a hash of the callers
         # alone would not move (A8's lesson, review of 2026-09-23).
         source = "".join(inspect.getsource(f) for f in (
-            verdict, _early, _from_peak, _inside))
+            verdict, _early, _from_peak, _inside, bot_series, fund_series))
     except (OSError, TypeError):  # pragma: no cover -- frozen or stripped
         return "unknown"
     return hashlib.sha256(source.encode("utf-8")).hexdigest()[:12]
@@ -1551,6 +1558,23 @@ def funded(clone_rows) -> dict[str, float]:
             if amount is not None:
                 key = str(intent.get("instance_id"))
                 out[key] = out.get(key, 0.0) + amount
+    return out
+
+
+def funded_at(clone_rows) -> dict[str, str]:
+    """When each paper clone was first funded: the time of its first accepted
+    transfer, by instance -- the moment a bot enters at 100."""
+    asked = {row.get("id"): row for row in clone_rows or ()
+             if row.get("type") == "intent" and row.get("kind") == "fund"}
+    out: dict[str, str] = {}
+    for row in clone_rows or ():
+        intent = asked.get(row.get("id"))
+        if (intent and row.get("type") == "outcome"
+                and row.get("outcome") == "accepted"):
+            when = str(row.get("at") or intent.get("at") or "")
+            key = str(intent.get("instance_id"))
+            if when and (key not in out or when < out[key]):
+                out[key] = when
     return out
 
 

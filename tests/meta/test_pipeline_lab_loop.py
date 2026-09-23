@@ -2184,10 +2184,13 @@ def _clonepad(scripts_lab, tmp_path, monkeypatch, answers, fund_points=None,
     def _fund(instance_id, amount, confirm):
         calls.append(("fund", instance_id, amount, confirm))
         cid = clone._next_id(clone.load())
-        clone._append({"id": cid, "type": "intent", "at": NOW.isoformat(),
+        # The real clock, as clone.fund writes it: a bot enters at its
+        # funding, which comes after the criterion the launch just wrote.
+        funded_at = datetime.now(timezone.utc).isoformat()
+        clone._append({"id": cid, "type": "intent", "at": funded_at,
                        "kind": "fund", "instance_id": instance_id,
                        "amount": float(amount)})
-        clone._append({"id": cid, "type": "outcome", "at": NOW.isoformat(),
+        clone._append({"id": cid, "type": "outcome", "at": funded_at,
                        "kind": "fund", "outcome": "accepted",
                        "http_status": 200})
         return {"bot_balance": amount}
@@ -2517,6 +2520,31 @@ def test_a_bot_room_is_judged_on_what_it_made_and_paused_at_the_close(
     assert said[0]["return_pct"] == pytest.approx(5.0)
     assert calls[-1] == ("pause", "inst-1", True), calls
     assert qa_rooms.status_of(qa_rooms.load(), room["id"]) == "stopped"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_bot_is_judged_from_what_went_in_not_from_its_first_reading(
+        tmp_path, monkeypatch):
+    """Bollinger Bandit, STR-0034: 240 USDC in, and by the sampler's first
+    reading it had already made +33.6; it gave most of that back and stood at
+    +7.1. The verdict took the FIRST READING as the entry, so a bot that made
+    +2.96% on what went in read -9.7% -- rebased on a peak it reached before
+    anyone looked. A bot enters at 100 when it is funded; a room that took
+    over a bot funded before its window still starts from the first reading
+    inside it."""
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    room, acceptance, funded, calls = _bot_room(scripts_lab, tmp_path, monkeypatch)
+    start = datetime.fromisoformat(acceptance["at"])
+    days = float(acceptance["window_days"])
+    first = start + timedelta(hours=1)
+    count = int((days * 24 - 5) / 6) + 1
+    profits = [33.6 / 240 * funded] * (count - 1) + [7.1 / 240 * funded]
+    _bot_samples(tmp_path, first, funded, profits)
+
+    said = scripts_lab.verdicts(now=start + timedelta(days=days, hours=1))
+
+    assert [s["verdict"] for s in said] == ["survived"], said
+    assert said[0]["return_pct"] == pytest.approx(7.1 / 240 * 100), said
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

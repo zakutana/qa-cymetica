@@ -1227,6 +1227,7 @@ def verdicts(now=None) -> list[dict]:
         return once(closings, card, lambda: _closes_at(client, card))
     samples: list[dict] | None = None
     funded: dict[str, float] | None = None
+    entered: dict[str, str] = {}
     fund_histories: dict[str, object] = {}
 
     def series_of(leg: dict) -> list:
@@ -1235,7 +1236,7 @@ def verdicts(now=None) -> list[dict]:
         get_fund_history. A read that failed raises Unread and the verdict
         waits; only an ANSWER with no points is an empty series, which the
         verdict reads as a gap, never as a loss."""
-        nonlocal samples, funded
+        nonlocal samples, funded, entered
         kind, ref = rooms.leg_kind(leg), rooms.leg_ref(leg)
         if kind == "arena":
             # Nothing reads a team's price yet (NEX-0076 asks how a share
@@ -1244,8 +1245,11 @@ def verdicts(now=None) -> list[dict]:
             return []
         if kind == "bot":
             if samples is None:
-                samples, funded = rooms.load_samples(), _funded()
-            return lab.bot_series(samples, ref, funded.get(ref))
+                clones = _sibling("clone").load()
+                samples, funded = rooms.load_samples(), lab.funded(clones)
+                entered = lab.funded_at(clones)
+            return lab.bot_series(samples, ref, funded.get(ref),
+                                  entry_at=entered.get(str(ref)))
         if kind == "fund":
             return once(fund_histories, ref,
                         lambda: lab.fund_series(_fund_points(ref)))
