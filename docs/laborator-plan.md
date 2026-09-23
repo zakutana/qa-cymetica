@@ -11,6 +11,7 @@ k předělání čehokoli.
 - Jednou: založ session „Laborka" a vyber v ní model Sonnet.
 - Ráno v ní napiš `/loop 20m jdi do laborky`, večer v hlavní session „jdu spát". Nic dalšího.
 - Výsledky čteš na stránce Laboratoř. Připomenu ti jen tyhle věci, a když něco nesedí (třeba laborka jede na Opusu), napíšu jak to spravit.
+- **Každé ráno v 7:00 hotový přehled:** krátce deep pass, pak stav laborky. Vždy na stejné adrese, otevřeš ho i z mobilu. K přehledu mi napiš, co chceš jinak. Zapíšu to do deníku laborky a v dalším přehledu uvidíš řádek, co jsem podle toho změnil.
 
 **Co se mění**
 - **Nejdřív opravím čísla,** podle kterých by ses rozhodoval o penězích. Verdikt pokusu bude z našich papírových pozic, ne z jejich indexu. Tam, kde dnes vychází „nedá se říct", prostě bude číslo.
@@ -50,7 +51,7 @@ See `docs/review-2026-09-23.md`. The architect's target, adopted here:
 The findings, as triage confirms them, are the work of V1, V2, V7 and V8. A finding triage rejects is dropped with its reason recorded in the review file.
 
 ### Decisions pinned verbatim (unchanged from v1)
-In `.claude/skills/laborator/SKILL.md`, pins 1–4 of v1: manager and technicians; impact data and product rooms; Nexus mainly, our ideas too, no limits, failures archived; memecoin data must hold and "$10 into every hot signal" must be executable. In CLAUDE.md, pins 5–6: never think about it, reminders welcome; the future inherits all of it. The quotes are in git at 1e43a1ef:docs/laborator-plan.md. PINNED rows go in the same commit. No existing pin is edited; the 2026-09-10 pin stays, and the 2026-09-23 one narrows it.
+In `.claude/skills/laborator/SKILL.md`, pins 1–4 of v1: manager and technicians; impact data and product rooms; Nexus mainly, our ideas too, no limits, failures archived; memecoin data must hold and "$10 into every hot signal" must be executable. In CLAUDE.md, pins 5–6: never think about it, reminders welcome; the future inherits all of it. The quotes are in git at 1e43a1ef:docs/laborator-plan.md. PINNED rows go in the same commit. No existing pin is edited; the 2026-09-10 pin stays, and the 2026-09-23 one narrows it. When they land: pins 1–4 in V1's first commit; pins 5–6 in V7, once CLAUDE.md has room under its 750-line ceiling; pin 7 in V11.
 
 ### Phases
 
@@ -67,6 +68,9 @@ In `.claude/skills/laborator/SKILL.md`, pins 1–4 of v1: manager and technician
 | V8 | Jádro QA | každý potvrzený nález A/B/D má test; `/code-review` přes fold/state prošel | otevřená |
 | V9 | Oddělení do budoucna | testovací oddělení (skill + skript + deník) se objeví v hlídce, archivu a na /lab bez jediné úpravy | otevřená |
 | V10 | Závěrečný audit | nezávislý audit plánu proti repu; každé „hotovo, když" pravdivé | otevřená |
+| V11 | Ranní přehled v 7:00 (jde hned po V4) | v 7:00 je na stejné adrese nová verze: deep pass ≤ 3 řádky, laborka po roomech, co se změnilo přes noc, co dnes udělám; screenshot z mobilu i desktopu viděný; poznámka k přehledu se v dalším přehledu ukáže jako provedená změna | otevřená |
+
+Order: V1 V2 V3 V4 V11 V5 V6 V7 V8 V9 V10. V11 follows V4 directly because the morning report is what the operator sees first.
 
 Each phase: tests first (red), then code, `pytest tests/meta tests/repo`, commit on `main`, no push. A NEXT.md line is written when a phase starts, and the row gets `hotovo <hash>` when it ends. The first line of each phase session states class · needs · running. `get_usage` is read before each phase.
 
@@ -159,6 +163,23 @@ Each phase: tests first (red), then code, `pytest tests/meta tests/repo`, commit
 - The department shape, plus one fixture-department test.
 - CLAUDE.md "Nové oddělení", ≤ 8 lines.
 - Outward writes stay denied by default. A tweet is a draft the operator posts.
+
+**V11 · Ranní přehled v 7:00** (Sonnet · high; runs right after V4, which it depends on for `report.json`)
+- **Pin 7,** in `.claude/skills/laborator/SKILL.md`, verbatim: *"jo a jeste chci pridat do planu ze kazde rano chci vygenerovany krasny vecny strucny artifakt o tom co se vnoci udalo v laborce. takovy top prehled chapes. Na ktery ti dam pak feedback, jako manageorvi laborky a ty udelas podle nej patricne upravy a tak. Tento artikaft chci mit pripraven vzdy v 7 hodin rano. Bude tam strucna sekce o deep passu jak probihal a pak na stav laborky."*
+  - It narrows the 2026-09-06 "no artifacts" decision for this one report. CLAUDE.md's own sentence "Do not publish an Artifact." gains the exception on the same line; the pinned quote under it is untouched.
+- **No new scheduler.**
+  - The lab `/loop` runs overnight anyway, and its first tick at or after 06:40 local returns `decide: report`.
+  - If no tick ran, the next session start says the report is missing and makes it at once.
+  - This respects the 2026-09-12 and 09-14 decisions: the loop is theirs.
+- **Content:** one short page, impact only, Czech. Published to one fixed artifact URL, updated in place; artifact-design skill first.
+  1. Deep pass: fixed / sent / needs you, ≤ 3 lines, from DEEP-PASS.md.
+  2. Lab: KPI strip; per product room, net % after costs, n and confidence; what changed overnight; Nexus in one line; what the manager does today.
+  3. A ready Telegram block when something needs Cymetica.
+  4. "Podle tvé zpětné vazby: …".
+- **Feedback loop:**
+  - The operator's feedback, in chat or as comments on the artifact (`ArtifactComments`), goes into the lab notebook as `lab.py log --feedback`.
+  - The manager acts on it, and the next report names what changed because of it.
+  - Feedback is kept for the week's look back, so a repeated wish becomes a rule rather than a daily correction.
 
 **V10 · Závěrečný audit** (Opus · high)
 - One independent agent reads this plan against the repository; any false done-when reopens its row.
