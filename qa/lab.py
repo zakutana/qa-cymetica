@@ -495,7 +495,7 @@ def may_ask_now(nexus_rows: list[dict], now: datetime | None = None,
 
 
 def affordable(usdc: float, free_cash: float | None, running: int,
-               deployed: float = 0.0) -> tuple[bool, str]:
+               deployed: float = 0.0, parked: float = 0.0) -> tuple[bool, str]:
     """Whether one experiment may take this much, and how much may be out at once.
 
     A share of what is FREE, not of the bankroll: the book already knows what
@@ -507,6 +507,10 @@ def affordable(usdc: float, free_cash: float | None, running: int,
     It is measured against the BOOK -- free plus what is out -- because that is
     what exposure means. Against the remainder it would walk down as we deploy
     and bind at 37.5%, under a number written as 60%.
+
+    `parked` is money in paper clones that do not trade (V2, 2026-09-23): in
+    the book, out of free cash, and not exposure. Left out, the book is only
+    smaller -- the omission errs toward refusing.
     """
     if free_cash is None:
         return False, ("the book could not be read, and an unreadable book is "
@@ -523,12 +527,12 @@ def affordable(usdc: float, free_cash: float | None, running: int,
                        f"what a verdict compares, so a smaller stake measures "
                        f"the same strategy")
     limit = CAPS["total_exposure"]
-    book = free_cash + deployed
+    book = free_cash + deployed + max(parked or 0.0, 0.0)
     if (deployed + usdc) > book * limit:
         return False, (f"{deployed:.0f} is already out and {usdc:.0f} more "
                        f"would pass {limit * 100:.0f}% of the {book:.0f} book "
-                       f"(free plus deployed). There is always dry powder, so "
-                       f"one bad night cannot take the book")
+                       f"(free, deployed and parked). There is always dry "
+                       f"powder, so one bad night cannot take the book")
     return True, (f"{usdc:.0f} of {free_cash:.0f} free, {running} running, "
                   f"{deployed + usdc:.0f} out of the {book * limit:.0f} "
                   f"allowed on a {book:.0f} book")

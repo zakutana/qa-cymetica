@@ -235,16 +235,61 @@ def _deployed() -> float:
     return sum(out.values()) + _in_clones()
 
 
-def _in_clones() -> float:
-    """Practice money moved into our paper clones: every ACCEPTED transfer in
-    clones.jsonl (2026-09-22, when the laboratory began to clone bots).
+def _clone_money() -> tuple[float, float]:
+    """Practice money moved into our paper clones -- every ACCEPTED transfer
+    in clones.jsonl (2026-09-22) -- split into what trades and what is
+    PARKED in a clone that does not.
 
-    From our own record, like the rest of `_deployed`, not a read of their
-    my-clones (`paper.clone_capital`), so the ceiling does not depend on
-    their API answering. The money stays in a clone when the bot is paused,
-    so nothing here releases it. A refused transfer never moved anything.
+    From records on this machine, like the rest of `_deployed`, so the
+    ceiling does not depend on their API answering. The money stays in a
+    clone when the bot stops, so nothing here releases it to free cash. But
+    a clone we paused (our newest accepted switch is `disable`), or one that
+    stopped by itself (the sampler's newest reading, taken after our last
+    switch, says `is_trading: false`), exposes nothing: the plan's V2 found
+    1 960 USDC sitting in paused bots and counted against the 60% ceiling as
+    if it traded. A refused transfer never moved anything.
     """
-    return sum(_funded().values())
+    rows = _sibling("clone").load()
+    went_in = lab.funded(rows)
+    outcomes = {row.get("id"): row for row in rows if row.get("type") == "outcome"}
+    switched: dict[str, tuple[str, str]] = {}
+    for row in rows:
+        done = outcomes.get(row.get("id")) or {}
+        if (row.get("type") == "intent" and row.get("kind") in ("enable", "disable")
+                and done.get("outcome") == "accepted"):
+            when = str(done.get("at") or row.get("at") or "")
+            instance = str(row.get("instance_id"))
+            if when >= switched.get(instance, ("", ""))[0]:
+                switched[instance] = (when, row["kind"])
+    newest: dict[str, dict] = {}
+    for row in rooms.load_samples():
+        if row.get("kind") == "bot":
+            key = str(row.get("instance_id"))
+            if str(row.get("at") or "") >= str(newest.get(key, {}).get("at") or ""):
+                newest[key] = row
+    active = parked = 0.0
+    for instance, amount in went_in.items():
+        when, kind = switched.get(instance, ("", None))
+        reading = newest.get(instance) or {}
+        stopped = (kind == "disable"
+                   or (reading.get("is_trading") is False
+                       and str(reading.get("at") or "") >= when))
+        if stopped:
+            parked += amount
+        else:
+            active += amount
+    return active, parked
+
+
+def _in_clones() -> float:
+    """What trades in our paper clones -- the exposed half of `_clone_money`."""
+    return _clone_money()[0]
+
+
+def _parked() -> float:
+    """What sits in clones that do not trade: out of free cash, in the book,
+    and against no ceiling."""
+    return _clone_money()[1]
 
 
 def _amount(value) -> float | None:
@@ -1501,7 +1546,7 @@ def buy(card_id: str, usdc: float, nexus_id: str | None, confirm: bool) -> dict:
             "not buying: a deep pass is running and #87 judges the newest "
             "trade. Wait for it to finish")
     ok, why = lab.affordable(usdc, _free_cash(), _running_experiments(),
-                             deployed=_deployed())
+                             deployed=_deployed(), parked=_parked())
     if not ok:
         raise SystemExit(f"not buying: {why}")
     print(f"[lab] {why}")
@@ -1710,7 +1755,7 @@ def _stake(free: float | None) -> float:
 
 
 def _leg_stakes(free: float | None, deployed: float, legs: int,
-                half: bool = False) -> list[float]:
+                half: bool = False, parked: float = 0.0) -> list[float]:
     """What each card of ONE room takes, floored to the cent.
 
     [operator 2026-09-12] fifty at once, under a ceiling of 60% of the book --
@@ -1728,7 +1773,8 @@ def _leg_stakes(free: float | None, deployed: float, legs: int,
     count = max(int(legs), 0)
     if free is None or free <= 0 or count == 0:
         return [0.0] * count
-    book = free + max(deployed or 0.0, 0.0)
+    # Parked money (clones that do not trade) is book too, and exposure not.
+    book = free + max(deployed or 0.0, 0.0) + max(parked or 0.0, 0.0)
     share = lab.CAPS["total_exposure"] / lab.CAPS["running_experiments"]
     each = min(book * share / count, _stake(free))
     if half:
@@ -2097,11 +2143,12 @@ def night_promote(since: datetime | None = None) -> dict:
                 break
             # MONEY FIRST, and nothing consumed before it answers: a room opened
             # ahead of a refusal spends its card for the morning too.
-            free, deployed = _free_cash(), _deployed()
+            free, deployed, parked = _free_cash(), _deployed(), _parked()
             untested = gate_row["verdict"] == "unbacktestable"
-            stake = _leg_stakes(free, deployed, 1, half=untested)[0]
+            stake = _leg_stakes(free, deployed, 1, half=untested,
+                                parked=parked)[0]
             ok, why = lab.affordable(stake, free, _running_experiments(),
-                                     deployed=deployed)
+                                     deployed=deployed, parked=parked)
             if not ok or stake <= 0:
                 held.append(f"{origin}/{card[:8]}: {why or 'no stake'} — left "
                             f"for the morning")
@@ -2212,10 +2259,10 @@ def night_promote(since: datetime | None = None) -> dict:
             held.append(f"{tag}: a deep pass is running")
             capped = True
             return
-        free, deployed = _free_cash(), _deployed()
-        stake = _leg_stakes(free, deployed, 1, half=True)[0]
+        free, deployed, parked = _free_cash(), _deployed(), _parked()
+        stake = _leg_stakes(free, deployed, 1, half=True, parked=parked)[0]
         ok, why = lab.affordable(stake, free, _running_experiments(),
-                                 deployed=deployed)
+                                 deployed=deployed, parked=parked)
         if not ok or stake <= 0:
             held.append(f"{tag}: {why or 'no stake'} — left for the morning")
             capped = True
@@ -2333,7 +2380,8 @@ def night_promote(since: datetime | None = None) -> dict:
             held.append(f"{tag}: their history of it is empty -- nothing to "
                         f"judge it on, so no room")
             return
-        notional = _leg_stakes(_free_cash(), _deployed(), 1)[0]
+        notional = _leg_stakes(_free_cash(), _deployed(), 1,
+                               parked=_parked())[0]
         try:
             room = rooms.open_strategy(origin, symbol, kind="fund",
                                        ref=symbol)["id"]
@@ -2930,7 +2978,7 @@ def brief() -> str:
     now = _now()
     nexus_rows = _nexus_rows()
     asked = lab.asked_within(nexus_rows, now)
-    free, deployed = _free_cash(), _deployed()
+    free, deployed, parked = _free_cash(), _deployed(), _parked()
     today = lab.rooms_within(rooms.load(), now)
     may, why = lab.may_ask(asked, pass_in_flight())
     if may:
@@ -2940,14 +2988,16 @@ def brief() -> str:
     if free is None:
         out.append("book: unreadable -- nothing can be launched on it")
     else:
-        book = free + deployed
+        book = free + deployed + parked
         out.append(f"book: {free:.0f} USDC free, {deployed:.0f} out "
                    f"({deployed / book * 100 if book else 0:.1f}% of "
                    f"{book:.0f}; the ceiling is "
                    f"{lab.CAPS['total_exposure'] * 100:.0f}%), "
                    f"{_running_experiments()} of "
                    f"{lab.CAPS['running_experiments']} experiments running, "
-                   f"{today} of {lab.CAPS['new_rooms_per_day']} new rooms today")
+                   f"{today} of {lab.CAPS['new_rooms_per_day']} new rooms today"
+                   + (f"; {parked:.0f} parked in bots that do not trade"
+                      if parked else ""))
 
     rows = board_rows()
     out.append("")

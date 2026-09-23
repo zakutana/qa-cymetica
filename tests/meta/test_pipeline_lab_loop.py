@@ -2905,30 +2905,60 @@ def test_a_bot_room_does_not_spend_the_rest_of_its_answer(tmp_path, monkeypatch)
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_money_moved_into_a_clone_counts_as_deployed(tmp_path, monkeypatch):
-    """The 60% ceiling is measured against what is out. A clone funded with
-    practice money holds it until somebody moves it back -- pausing the bot
-    does not -- so an accepted transfer in clones.jsonl is deployed, and a
-    refused one is not."""
-    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
-    _write(tmp_path, "clones.jsonl", [
-        {"id": "CLN-0002", "type": "intent", "kind": "fund",
-         "instance_id": "inst-1", "amount": 500.0},
-        {"id": "CLN-0002", "type": "outcome", "kind": "fund",
-         "outcome": "accepted", "http_status": 200},
-        {"id": "CLN-0003", "type": "intent", "kind": "fund",
-         "instance_id": "inst-1", "amount": 700.0},
-        {"id": "CLN-0003", "type": "outcome", "kind": "fund",
-         "outcome": "rejected", "http_status": 401},
-        # B06, deep pass of 2026-09-22 evening: "pausing the bot does not"
-        # release the money -- and there was no pause here, so a reader that
-        # dropped paused instances' transfers stayed green.
-        {"id": "CLN-0004", "type": "intent", "kind": "disable",
-         "instance_id": "inst-1"},
-        {"id": "CLN-0004", "type": "outcome", "kind": "disable",
-         "outcome": "accepted", "http_status": 200}])
+def test_money_in_a_clone_is_out_and_a_paused_clone_holds_it_parked(
+        tmp_path, monkeypatch):
+    """A clone funded with practice money holds it until somebody moves it
+    back -- pausing the bot does not -- so an accepted transfer is out of the
+    free cash, and a refused one never was.
 
-    assert scripts_lab._deployed() == 500.0
+    But out is not exposed. The plan's V2 (review of 2026-09-23): 1 960 USDC
+    sat in paused bots and counted against the 60% ceiling as if it traded.
+    Money in a clone that is not trading -- paused by us, or stopped by
+    itself, which the sampler sees as `is_trading: false` after our start --
+    is PARKED: it stays in the book and out of free cash, and only what
+    trades counts against the ceiling."""
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+
+    def fund(ident, instance, amount, outcome="accepted"):
+        return [{"id": ident, "type": "intent", "kind": "fund",
+                 "instance_id": instance, "amount": amount},
+                {"id": ident, "type": "outcome", "kind": "fund",
+                 "outcome": outcome, "http_status": 200}]
+
+    def switch(ident, instance, kind, at):
+        return [{"id": ident, "type": "intent", "kind": kind,
+                 "instance_id": instance, "at": at},
+                {"id": ident, "type": "outcome", "kind": kind,
+                 "outcome": "accepted", "http_status": 200, "at": at}]
+    _write(tmp_path, "clones.jsonl", [
+        *fund("CLN-0002", "inst-1", 500.0),
+        *fund("CLN-0003", "inst-1", 700.0, outcome="rejected"),
+        # B06, deep pass of 2026-09-22 evening: "pausing the bot does not"
+        # release the money -- a reader that dropped a paused instance's
+        # transfers has to go red.
+        *switch("CLN-0004", "inst-1", "disable", "2026-09-22T10:00:00+00:00"),
+        *fund("CLN-0005", "inst-2", 240.0),
+        *switch("CLN-0006", "inst-2", "enable", "2026-09-22T10:00:00+00:00"),
+        *fund("CLN-0007", "inst-3", 100.0),
+        *switch("CLN-0008", "inst-3", "enable", "2026-09-22T10:00:00+00:00")])
+    _write(tmp_path, "samples.jsonl", [
+        {"type": "sample", "kind": "bot", "instance_id": "inst-2",
+         "at": "2026-09-22T09:00:00+00:00", "is_trading": False},
+        {"type": "sample", "kind": "bot", "instance_id": "inst-2",
+         "at": "2026-09-22T12:00:00+00:00", "is_trading": True},
+        # inst-3 stopped by itself after we started it.
+        {"type": "sample", "kind": "bot", "instance_id": "inst-3",
+         "at": "2026-09-22T12:00:00+00:00", "is_trading": False}])
+
+    assert scripts_lab._deployed() == 240.0, "only the bot that trades is exposed"
+    assert scripts_lab._parked() == 600.0, (
+        "a paused or self-stopped clone still holds its money")
+
+    # 6 050 out on a 10 000 book passes 60%; with the 600 parked in the book
+    # (10 600) it does not -- parked money is book, not exposure.
+    ok, why = lab.affordable(50.0, 4_000.0, 0, deployed=6_000.0, parked=600.0)
+    assert ok and "10600" in why, (
+        "the book counts parked money, the exposure does not", why)
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
