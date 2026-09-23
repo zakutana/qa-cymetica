@@ -1960,6 +1960,48 @@ def test_the_catalogue_readers_take_whole_names_and_respect_what_he_ruled_out():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_markdown_section_that_rules_out_holds_its_prose_and_a_qualifier_rules_nothing():
+    """NEX-0086, 2026-09-23 04:56 UTC, in its shape: one fund picked under
+    "# ONE PICK", its sub-heading qualified "(... a watch, not a buy)", and
+    every bot named in a PARAGRAPH under "# BOTS — RULED OUT". The paragraph,
+    a non-bullet line, closed the ruling section, so all six bots read as
+    proposals -- the next tick would have cloned two he called noise -- and
+    the qualifier's "not a buy" ruled out the one fund he did pick."""
+    card = _card(0x86)
+    text = (
+        "Verified. Here is the result of running the gate myself.\n\n"
+        "# ONE PICK THAT CLEARS THE BAR\n\n"
+        "**FUND — AIB-SPACE — mark/watch (no side; long-only NAV sleeve, so "
+        "this is a watch, not a buy)**\n"
+        "- Watch-up trigger: +8% from current.\n"
+        "- Rests on: the strongest live sleeve, ahead of AIB-AI at 99.96.\n"
+        "- Reader's next step: GET /api/v1/aib/AIB-SPACE/quote.\n\n"
+        "That is the only slot I will spend. Everything below is ruled out "
+        "on purpose — none of these is a pick.\n\n"
+        "# CARDS — RULED OUT (do NOT read any id below as a pick)\n\n"
+        f"- {card} — unbacktestable.\n\n"
+        "# BOTS — RULED OUT (do NOT read any species name below as a pick)\n\n"
+        "Full roster from /api/v1/cloned-bots/available. Every species with "
+        "a real sample is net-negative: MACD Hunter -$52.1, Trend Titan "
+        "-$284.6, least-bad Doom & Gloom at 50.9%. The only positive PnL is "
+        "Liquidation Hunter at +$0.05 over 5 trades — noise, not evidence.\n\n"
+        "If you want a bot to add signal, clone a fresh one and point it at "
+        "a set.\n\n"
+        "**Summary: 1 pick (mark AIB-SPACE). 0 cards, 0 bots — withheld "
+        "because none cleared the bar.**\n")
+
+    assert lab.proposed_bots(text, CATALOGUE) == []
+    assert lab.proposed_funds(text, FUNDS) == ["AIB-SPACE"]
+    assert lab.ruled_out_cards(text) == {card}
+    # A markdown heading that does not rule out keeps the old reading below
+    # it: a bold heading that rules out still opens a section of its own.
+    mixed = ("# Recommendation\n\n**Clone MACD Hunter.**\n\n"
+             "**Why the others are out:**\n- Trend Titan: chops.\n")
+    assert [b["name"] for b in lab.proposed_bots(mixed, CATALOGUE)] == [
+        "MACD Hunter"]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_bot_he_names_is_cloned_funded_and_started_on_paper_in_its_own_room(
         tmp_path, monkeypatch):
     """clone (paper) -> fund with the stake -> enable, through clone.py's own

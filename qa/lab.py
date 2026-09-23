@@ -1201,6 +1201,10 @@ _RULED_OUT = re.compile(
     r"alternatives?|runners?-up|instead of)\b",
     re.I)
 _BULLET = re.compile(r"^\s*(?:[-*•]|\d+[.)])\s")
+_MD_HEADING = re.compile(r"^\s*#{1,6}\s")
+# A qualifier in brackets describes the thing, not a verdict on it: NEX-0086's
+# pick read "**FUND — X — mark/watch (... so this is a watch, not a buy)**".
+_BRACKETED = re.compile(r"\([^()]*\)")
 
 
 def ruled_out_cards(text: str) -> set[str]:
@@ -1218,17 +1222,25 @@ def ruled_out_cards(text: str) -> set[str]:
 
 def _ruled_out(text: str, find) -> set[str]:
     """The section reading behind ruled_out_cards, for anything `find` picks
-    out of a line -- cards by id, bots by species name, funds by symbol."""
-    inside = False
+    out of a line -- cards by id, bots by species name, funds by symbol.
+
+    A markdown heading ("# BOTS — RULED OUT") that rules out holds everything
+    to the next markdown heading, prose included: NEX-0086 named six bots in
+    a paragraph under one, and the paragraph closed the section.
+    """
+    inside = held = False
     mentioned: dict[str, bool] = {}
     for line in str(text or "").split("\n"):
         ruling = inside
-        if line.strip() and not _BULLET.match(line):
+        says = _RULED_OUT.search(_BRACKETED.sub("", line))
+        if _MD_HEADING.match(line):
+            ruling = inside = held = bool(says)
+        elif line.strip() and not _BULLET.match(line) and not held:
             # A heading that rules out opens a section; one that names a card
             # without ruling it out ("**`9f9433ef`** -- NEAR ...") closes it.
             # A ruling line that names its cards itself ("Passed but not
             # selected: `849a695b`") rules those out and opens one too.
-            ruling = inside = bool(_RULED_OUT.search(line))
+            ruling = inside = bool(says)
         for found in find(line):
             mentioned[found] = mentioned.get(found, False) or not ruling
     return {name for name, elsewhere in mentioned.items() if not elsewhere}
