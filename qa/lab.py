@@ -38,7 +38,7 @@ from qa.state import file_lock, state_dir
 
 NOTEBOOK = "lab.jsonl"
 KINDS = ("session", "truth", "surface", "cycle", "n_eff", "tournament",
-         "gate", "tick", "entry", "resolved", "fomo_reading")
+         "gate", "tick", "entry", "resolved", "fomo_reading", "answer_read")
 MAX_LESSONS = 3
 MAX_NEXT = 8
 ID = re.compile(r"^LAB-(\d{4})$")
@@ -1567,6 +1567,21 @@ def note_gate(origin: str, card: str, said: dict) -> dict:
     the next question can tell Nexus how his idea measured."""
     return _append({"type": "gate", "at": _now(), "origin": origin,
                     "card": card, **said})
+
+
+def note_answer_read(origin: str) -> dict:
+    """An answer the launch has read whole, with nothing of it left waiting.
+
+    V5 (2026-09-23): answers are read once. Plan v1 measured 242 re-reads of
+    answers that named nothing -- the same "names no card" line on every tick
+    for a day. Only an answer with a pick still waiting is read again."""
+    return _append({"type": "answer_read", "origin": str(origin), "at": _now()})
+
+
+def answers_read(rows: list[dict] | None = None) -> set[str]:
+    """Every answer the launch has marked read."""
+    rows = load() if rows is None else rows
+    return {str(r.get("origin")) for r in rows if r.get("type") == "answer_read"}
 
 
 def gates(rows: list[dict] | None = None) -> dict[tuple[str, str], dict]:

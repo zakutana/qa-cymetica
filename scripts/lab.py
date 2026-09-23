@@ -2005,6 +2005,17 @@ def night_promote(since: datetime | None = None) -> dict:
     decided = lab.gates()
     paper = _sibling("paper")
     opened, placed, held = 0, 0, []
+    # Answers are read ONCE (V5, 2026-09-23): an answer whose every pick was
+    # decided is marked read and skipped from then on. `pending` holds the
+    # answers with something still waiting -- a card unread or not tradeable
+    # yet, a gate or catalogue that did not answer, money not there yet, a
+    # deep pass -- and those are read again on the next tick.
+    already = lab.answers_read()
+    pending: set[str] = set()
+
+    def later(origin: str, line: str) -> None:
+        held.append(line)
+        pending.add(origin)
     bought: set[str] = set()
     # Cards a room not yet stopped already holds. `bought` alone lasted one
     # call, so the next tick bought a card a running room held -- two
@@ -2059,7 +2070,7 @@ def night_promote(since: datetime | None = None) -> dict:
         # Asked again here, not only on entry: a pass started while this call
         # walked earlier answers verifies #85-#87 over the next order.
         if pass_in_flight():
-            held.append(f"{origin}: a deep pass is running")
+            later(origin, f"{origin}: a deep pass is running")
             capped = True
             return
         ruled_out = lab.ruled_out_cards(text)
@@ -2105,8 +2116,8 @@ def night_promote(since: datetime | None = None) -> dict:
             try:
                 live = _card_live(card)
             except Exception as exc:  # noqa: BLE001 -- unread is not absent
-                held.append(f"{origin}/{card[:8]}: the card could not be read "
-                            f"({exc}) — the next tick tries again")
+                later(origin, f"{origin}/{card[:8]}: the card could not be "
+                              f"read ({exc}) — the next tick tries again")
                 continue
             if live is None:
                 # Which of the two a 404 was cannot be told from here: a card
@@ -2124,14 +2135,14 @@ def night_promote(since: datetime | None = None) -> dict:
                             f"all) -- not bought")
                 continue
             if live.get("tradeable") is False:
-                held.append(f"{origin}/{card[:8]}: not tradeable now — the next "
-                            f"tick tries again")
+                later(origin, f"{origin}/{card[:8]}: not tradeable now — the "
+                              f"next tick tries again")
                 continue
             if prior is None:
                 said = _gate(card, live.get("legs") or [])
                 if said["verdict"] == "unread":
-                    held.append(f"{origin}/{card[:8]}: {said['why']} — the next "
-                                f"tick tries again")
+                    later(origin, f"{origin}/{card[:8]}: {said['why']} — the "
+                                  f"next tick tries again")
                     continue
                 prior = decided[(origin, card)] = lab.note_gate(
                     origin, card, said)
@@ -2154,8 +2165,8 @@ def night_promote(since: datetime | None = None) -> dict:
             ok, why = lab.affordable(stake, free, _running_experiments(),
                                      deployed=deployed, parked=parked)
             if not ok or stake <= 0:
-                held.append(f"{origin}/{card[:8]}: {why or 'no stake'} — left "
-                            f"for the morning")
+                later(origin, f"{origin}/{card[:8]}: {why or 'no stake'} — "
+                              f"left for the morning")
                 capped = True
                 break
             name = gate_row["title"] or f"{origin}: {card[:8]}"
@@ -2247,7 +2258,7 @@ def night_promote(since: datetime | None = None) -> dict:
             held.append(f"{tag}: {cloned} -- not cloned again")
             return
         if pass_in_flight():
-            held.append(f"{tag}: a deep pass is running")
+            later(origin, f"{tag}: a deep pass is running")
             capped = True
             return
         free, deployed, parked = _free_cash(), _deployed(), _parked()
@@ -2255,7 +2266,7 @@ def night_promote(since: datetime | None = None) -> dict:
         ok, why = lab.affordable(stake, free, _running_experiments(),
                                  deployed=deployed, parked=parked)
         if not ok or stake <= 0:
-            held.append(f"{tag}: {why or 'no stake'} — left for the morning")
+            later(origin, f"{tag}: {why or 'no stake'} — left for the morning")
             capped = True
             return
         key = f"bot:{name}"
@@ -2357,8 +2368,8 @@ def night_promote(since: datetime | None = None) -> dict:
         try:
             points = lab.fund_series(_fund_points(symbol))
         except Exception as exc:  # noqa: BLE001 -- unread is not empty
-            held.append(f"{tag}: its history could not be read "
-                        f"({str(exc)[:120]}) — the next tick tries again")
+            later(origin, f"{tag}: its history could not be read "
+                          f"({str(exc)[:120]}) — the next tick tries again")
             return
         if not points:
             decided[(origin, key)] = lab.note_gate(origin, key, {
@@ -2404,34 +2415,42 @@ def night_promote(since: datetime | None = None) -> dict:
         if capped:
             break
         origin = str(answer.get("id") or "")
-        if not origin or origin in whole_linked:
+        if not origin or origin in whole_linked or origin in already:
             continue
         text = answer.get("text")
         # Every id the answer names; whether it EXISTS is asked of their API
         # below, not of what our own sampler happened to have seen.
         named = lab.proposed_cards(text, ())["unknown"]
         bots_listed = catalogue("bot")
+        funds_listed = catalogue("fund")
+        # A catalogue that did not answer is not one that lists nothing: the
+        # answer may name a bot or a fund we could not recognise, so it is
+        # read again rather than marked read.
+        if bots_listed is None or funds_listed is None:
+            pending.add(origin)
         species: set[str] = set()
         if bots_listed:
             # A species id is a bot's, not a card nobody can find (#91).
             species = {str(b.get("id")).lower() for b in bots_listed}
             named = [c for c in named if c not in species]
         bots = lab.proposed_bots(text, bots_listed or [])
-        funds = lab.proposed_funds(text, catalogue("fund") or [])
+        funds = lab.proposed_funds(text, funds_listed or [])
         if not (named or bots or funds):
             held.append(f"{origin}: names no card, bot or fund we can act on; "
                         f"the morning reads it")
-            continue
-        if named:
-            launch_cards(origin, text, named, species)
-        for bot in bots:
-            if capped:
-                break
-            launch_bot(origin, bot)
-        for symbol in funds:
-            if capped:
-                break
-            launch_fund(origin, symbol, text)
+        else:
+            if named:
+                launch_cards(origin, text, named, species)
+            for bot in bots:
+                if capped:
+                    break
+                launch_bot(origin, bot)
+            for symbol in funds:
+                if capped:
+                    break
+                launch_fund(origin, symbol, text)
+        if origin not in pending:
+            lab.note_answer_read(origin)
     return {"rooms": opened, "orders": placed, "held": held}
 
 

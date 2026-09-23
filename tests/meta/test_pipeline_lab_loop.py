@@ -587,12 +587,74 @@ def test_the_rooms_of_a_day_are_bounded_by_the_book_not_by_a_count(
     assert did["rooms"] == len(cards) == len(opened), (did["rooms"], did["held"])
     assert not any("a day" in line for line in did["held"]), did["held"]
 
-    # The same answers again, on a book already at the ceiling.
-    (tmp_path / "rooms.jsonl").unlink()
+    # New answers on the same cards' twins, on a book already at the ceiling.
+    # (The first answers are read now -- V5 reads an answer once.)
+    more = [_card(0x200 + n) for n in range(5)]
+    _write(tmp_path, "nexus.jsonl", answers + [
+        {"type": "answer", "id": f"NEX-{n + 100:04d}", "at": answers[0]["at"],
+         "text": _whole(more[n])} for n in range(len(more))])
+    monkeypatch.setattr(scripts_lab, "_card_live",
+                        lambda card: _basket("BTC", "ETH"))
     monkeypatch.setattr(scripts_lab, "_deployed", lambda: 150000.0)
     did = scripts_lab.night_promote()
     assert did["rooms"] == 0, did
     assert any("60%" in line for line in did["held"]), did["held"]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_answer_is_read_once_unless_something_of_it_waits(
+        tmp_path, monkeypatch):
+    """V5 (2026-09-23): "answers are read once; only answers with pending
+    legs are re-read". Plan v1 measured 242 re-reads of answers that named
+    nothing: every tick for a day walked the same answer, wrote the same
+    "names no card" line, and pushed the reason that mattered off the screen.
+
+    An answer whose every pick was decided is marked read in the notebook
+    and skipped from then on. One with a pick still waiting -- a card that
+    could not be read, a catalogue that did not answer, money not there yet
+    -- is read again next tick, and marked read once nothing of it waits."""
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    waiting = _card(0x51)
+    at = (NOW - timedelta(hours=1)).isoformat()
+    answers = [{"type": "answer", "id": "NEX-0001", "at": at,
+                "text": "Nothing worth running today. " + "why. " * 60},
+               {"type": "answer", "id": "NEX-0002", "at": at,
+                "text": _whole(waiting)}]
+    live = {waiting: RuntimeError("HTTP 502 from their card door")}
+    _launchpad(scripts_lab, tmp_path, monkeypatch, answers, live=live,
+               readings={("BTC", "ETH"): (6.5, 1.3)})
+    looked = []
+    real_live = scripts_lab._card_live
+    monkeypatch.setattr(scripts_lab, "_card_live",
+                        lambda card: looked.append(card) or real_live(card))
+
+    first = scripts_lab.night_promote()
+    assert any("NEX-0001" in h and "names no" in h for h in first["held"]), first
+    assert "NEX-0001" in lab.answers_read(), "an answer that names nothing was not marked read"
+    assert "NEX-0002" not in lab.answers_read(), "a pick still waiting was marked read"
+
+    second = scripts_lab.night_promote()
+    assert not any("NEX-0001" in h for h in second["held"]), (
+        f"an answer read once was read again: {second['held']}")
+    assert looked.count(waiting) == 2, "the waiting card was not tried again"
+
+    # The card can be read now: its room opens, and the answer is done.
+    live[waiting] = _basket("BTC", "ETH")
+    third = scripts_lab.night_promote()
+    assert third["rooms"] == 1, third
+    assert "NEX-0002" in lab.answers_read()
+
+    # A catalogue that did not answer is not an answer that named nothing.
+    _write(tmp_path, "nexus.jsonl", answers + [
+        {"type": "answer", "id": "NEX-0003", "at": at,
+         "text": "Clone MACD Hunter on paper. " + "why. " * 60}])
+
+    def unread():
+        raise RuntimeError("their catalogue did not answer")
+    monkeypatch.setattr(scripts_lab, "_bot_catalogue", unread)
+    scripts_lab.night_promote()
+    assert "NEX-0003" not in lab.answers_read(), (
+        "an answer read against an unreadable catalogue was marked read")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -2734,13 +2796,16 @@ def test_a_species_their_api_refused_to_clone_is_not_tried_on_every_answer(
                             clone_outcome="rejected")
 
     first = scripts_lab.night_promote()
+    # A LATER answer naming it (the first two are read once since V5).
+    _write(tmp_path, "nexus.jsonl",
+           answers + _answer("And MACD Hunter once more.", "NEX-0003"))
     second = scripts_lab.night_promote()
 
     assert [c[0] for c in calls] == ["clone"], calls
     assert len(qa_rooms.strategies(qa_rooms.load())) == 1
     assert first["rooms"] + second["rooms"] == 1
-    assert any("refused" in h and "MACD Hunter" in h
-               for h in first["held"] + second["held"])
+    assert any("NEX-0003" in h and "refused" in h and "MACD Hunter" in h
+               for h in second["held"]), second["held"]
 
 
 def _bot_room(scripts_lab, tmp_path, monkeypatch):
