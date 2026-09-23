@@ -1052,10 +1052,12 @@ def ten_dollars(rows: list[dict], now=None, clip_usd: float = TEN_DOLLAR_CLIP,
     them: did we have its PRICE when it fired; did the radar's depth THEN
     (`max_buy_5pct_usd`) take the clip -- the depth at entry decides the buy,
     never a later reading, which is how `sellable` took the coins that
-    rugged later out of their own history; did their terminal stay on one
-    pair (`pair_changed`); was it read at the end of the day. The sale is
-    capped by what the pool held then -- half its liquidity, the quote side of
-    the pool -- so a drained pool pays about nothing, as it would have. Each
+    rugged later out of their own history; was it read at the end of the
+    day. The sale is capped by what the pool held then -- half its
+    liquidity, the quote side of the pool -- so a drained pool pays about
+    nothing, as it would have; a path on which their terminal answered
+    another pair (`pair_changed`, `switched` counts them) is kept, and pays
+    no gain. Each
     side pays the swap fee and the price impact of the clip against the
     radar's depth; the answer is given at 0.5, 1 and 2 % a side.
 
@@ -1078,8 +1080,9 @@ def ten_dollars(rows: list[dict], now=None, clip_usd: float = TEN_DOLLAR_CLIP,
             exits[row["key"]] = row
 
     excluded = {"unpriced": 0, "depth_unknown": 0, "too_thin": 0,
-                "pair_changed": 0, "unread_at_24h": 0}
+                "unread_at_24h": 0}
     window_open, asked, could_buy, trades, latency = 0, 0, 0, [], []
+    switched = 0
     for key, signal in signals.items():
         fired = _at(signal.get("at"))
         if fired is None or fired + timedelta(
@@ -1104,9 +1107,6 @@ def ten_dollars(rows: list[dict], now=None, clip_usd: float = TEN_DOLLAR_CLIP,
             latency.append(waited / 60.0)
         ordered = [signal] + [r for _, r in sorted(read.get(key) or [],
                                                    key=lambda item: item[0])]
-        if pair_changed(ordered):
-            excluded["pair_changed"] += 1
-            continue
         last = exits.get(key) or {}
         price = last.get("price_usd")
         if not isinstance(price, (int, float)) or price <= 0:
@@ -1116,6 +1116,16 @@ def ten_dollars(rows: list[dict], now=None, clip_usd: float = TEN_DOLLAR_CLIP,
         liquidity = last.get("liquidity_usd")
         if isinstance(liquidity, (int, float)) and not isinstance(liquidity, bool):
             proceeds = min(proceeds, liquidity / 2.0)
+        # A path on which their terminal answered another pair used to be
+        # left out, as their defect. Measured 2026-09-23: all 60 switches
+        # since pairs were recorded were the main pool drained to nothing
+        # (DexScreener: FRIES's pumpswap pool at $0, FIBONACCI with no pool
+        # at all) -- a rug, a loss the buyer takes. So it stays in: the sale
+        # is capped by the pool that is left, as above, and a switched pair
+        # pays no GAIN, because its price is not one the buyer's pool paid.
+        if pair_changed(ordered):
+            switched += 1
+            proceeds = min(proceeds, clip_usd)
         trades.append({"key": key, "symbol": signal.get("symbol"),
                        "proceeds_usd": proceeds,
                        "impact_pct": RADAR_IMPACT_PCT * clip_usd / depth})
@@ -1136,4 +1146,4 @@ def ten_dollars(rows: list[dict], now=None, clip_usd: float = TEN_DOLLAR_CLIP,
             "could_buy": could_buy,
             "could_buy_share": could_buy / asked if asked else None,
             "first_buy_to_quote_min": median(latency) if latency else None,
-            "excluded": excluded, "by_fee": by_fee}
+            "excluded": excluded, "switched": switched, "by_fee": by_fee}

@@ -1802,7 +1802,9 @@ function memeRoom(lp) {
     <div class="m-tiles">${tiles.map(([k, v, s, extra]) =>
       `<div class="tile"><span>${k}</span><b>${v}</b><i>${s}</i>${extra}</div>`).join("")}</div>
     ${dropped.length ? `<p class="filt">Vynecháno, protože by se nedalo koupit nebo změřit:
-      ${dropped.join(" · ")}. Tyhle coiny nejsou v žádném čísle.</p>` : ""}
+      ${dropped.join(" · ")}. Tyhle coiny nejsou v žádném čísle.${lp.switched
+        ? ` Započteno: ${num(lp.switched, 0)} rugů (hlavní pool vybraný na nulu) —
+          prodány za to, co v poolu zbylo.` : ""}</p>` : ""}
     ${moversTable()}`;
 }
 

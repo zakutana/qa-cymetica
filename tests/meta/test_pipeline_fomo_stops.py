@@ -420,21 +420,29 @@ def test_ten_dollars_into_every_hot_signal_is_answered_honestly():
     def exit24(signal, price, liquidity, **extra):
         (row,) = _path(signal["key"], signal["price_usd"], [(24, price)])
         return {**row, "liquidity_usd": liquidity, **extra}
-    rows = [good, drained, unpriced, thin, blind, unread, young, switched,
+    rugged = sig(9, radar_max_buy_5pct_usd=5000.0, age_seconds=100.0)
+    rows = [good, drained, unpriced, thin, blind, unread, young, switched, rugged,
             exit24(good, 1.5, 100_000.0), exit24(drained, 2.0, 4.0),
             exit24(thin, 3.0, 100_000.0), exit24(blind, 3.0, 100_000.0),
-            # the terminal answered another pair: age jumped by days in a day
-            exit24(switched, 1.2, 100_000.0, age_seconds=900_000.0)]
+            # the terminal answered another pair: age jumped by days in a day,
+            # and on it the price reads HIGHER -- a switched pair's price is
+            # not a price the buyer's own pool paid, so it pays no gain
+            exit24(switched, 1.2, 100_000.0, age_seconds=900_000.0),
+            # 2026-09-23: every switch on record since 22. 9. was this one --
+            # the main pool drained (a rug) and the terminal on the only pool
+            # left, twelve cents deep. A real loss, never left out.
+            exit24(rugged, 0.9, 0.12, age_seconds=900_000.0)]
 
     said = fomo.ten_dollars(rows, now=DONE)
 
     assert said["clip_usd"] == 10.0
-    assert said["signals"] == 7, "the open window is not a signal of this study yet"
-    assert said["bought"] == 2, said
+    assert said["signals"] == 8, "the open window is not a signal of this study yet"
+    assert said["bought"] == 4, said
     assert said["excluded"] == {"unpriced": 1, "too_thin": 1, "depth_unknown": 1,
-                                "unread_at_24h": 1, "pair_changed": 1}, said
-    assert said["could_buy_share"] == pytest.approx(4 / 7), (
-        "good, drained, unread and switched could all have been bought")
+                                "unread_at_24h": 1}, said
+    assert said["switched"] == 2, "a switched pair is counted, and said"
+    assert said["could_buy_share"] == pytest.approx(5 / 8), (
+        "good, drained, unread, switched and rugged could all have been bought")
 
     def net(proceeds, depth, fee):
         impact = fomo.RADAR_IMPACT_PCT * 10.0 / depth
@@ -442,9 +450,11 @@ def test_ten_dollars_into_every_hot_signal_is_answered_honestly():
                 * (1 - impact / 100) ** 2 - 1) * 100
     for fee in (0.5, 1.0, 2.0):
         mine = said["by_fee"][fee]
-        want = [net(15.0, 5000.0, fee), net(2.0, 3000.0, fee)]
-        assert mine["mean_net_pct"] == pytest.approx(sum(want) / 2), (fee, mine)
-        assert mine["n"] == 2
+        want = [net(15.0, 5000.0, fee), net(2.0, 3000.0, fee),
+                net(10.0, 5000.0, fee),   # switched: capped at the $10 it cost
+                net(0.06, 5000.0, fee)]   # rugged: half of $0.12 is all it sells for
+        assert mine["mean_net_pct"] == pytest.approx(sum(want) / 4), (fee, mine)
+        assert mine["n"] == 4
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

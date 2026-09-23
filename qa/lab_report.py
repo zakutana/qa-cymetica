@@ -166,6 +166,8 @@ def _memecoins(fomo_rows: list[dict], now) -> dict:
         # What could not be bought or measured, by reason: the page names the
         # filter (the operator, 2026-09-14) rather than hiding it.
         "excluded": said.get("excluded") or {},
+        # Kept in the answer: a drained pool, sold for what is left in it.
+        "switched": int(said.get("switched") or 0),
         "signals": said.get("signals"),
         "could_buy_share": said.get("could_buy_share"),
         "conviction_70": {"min": CONVICTION_MIN,

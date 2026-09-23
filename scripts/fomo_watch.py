@@ -579,9 +579,10 @@ def say_ten_dollars(said: dict) -> list[str]:
           f"${out['clip_usd']:g} when they fired); left out: "
           f"{left.get('unpriced', 0)} unpriced, {left.get('depth_unknown', 0)} "
           f"with no radar depth, {left.get('too_thin', 0)} too thin, "
-          f"{left.get('pair_changed', 0)} where their terminal switched pair, "
           f"{left.get('unread_at_24h', 0)} with no reading at "
-          f"{out['hold_hours']:g} h -- if those are rugs, the truth is worse"]
+          f"{out['hold_hours']:g} h -- if those are rugs, the truth is worse; "
+          f"{out.get('switched', 0)} kept where their terminal switched pair "
+          f"(a drained pool, paying no gain)"]
 
 
 # Stop -10 % alone, and with a +100 % target: the two NEXT.md of 2026-09-21
