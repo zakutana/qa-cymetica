@@ -120,11 +120,17 @@ def test_the_lab_page_is_served_to_this_machine_with_its_note_box(console):
     page = body.decode("utf-8")
     assert status == 200, page[:300]
     assert "<title>Laboratoř</title>" in page
-    assert 'id="nxCompose"' in page and 'fetch("/notes"' in page.replace("'", '"')
+    assert 'id="compose"' in page and 'fetch("/notes"' in page.replace("'", '"')
     assert (console["state"] / "lab" / "report.json").is_file(), (
         "the page drew products that no report was written for")
     status, _ = _get(port, "/lab", f"evil.example:{port}")
     assert status == 403, "the laboratory went to a host that is not this machine"
+    # The view it redraws from, the same doors.
+    status, body = _get(port, "/lab.json", f"127.0.0.1:{port}")
+    assert status == 200 and [s["key"] for s in json.loads(body)["sectors"]] == [
+        "cards", "bots", "memecoins", "funds"]
+    status, _ = _get(port, "/lab.json", f"evil.example:{port}")
+    assert status == 403, "the laboratory's data went to a host that is not this machine"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

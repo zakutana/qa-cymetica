@@ -50,9 +50,10 @@ def _git_files(*args: str) -> list[str]:
 
 
 def _place(names: list[str], into: Path) -> None:
-    """Hard links where the volume allows it -- 80 MB of tracked state is
-    copied twice otherwise -- and a copy where it does not."""
-    import os
+    """Copies, never links. A hard link would let a render that appends to a
+    file write through into the real state/ -- and the console, running with
+    --ask, does write there on its own timer, so a check for such a write
+    could not tell the two apart. Copies make the question go away."""
     import shutil
 
     for name in names:
@@ -60,10 +61,7 @@ def _place(names: list[str], into: Path) -> None:
             continue
         source, target = REPO / name, into / Path(name).relative_to("state")
         target.parent.mkdir(parents=True, exist_ok=True)
-        try:
-            os.link(source, target)
-        except OSError:
-            shutil.copy2(source, target)
+        shutil.copy2(source, target)
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -99,11 +97,6 @@ def test_the_committed_console_hashes_nothing_git_does_not_hold(tmp_path,
     assert digest(bare) == digest(full), (
         "a gitignored file under state/ moved the committed console's hash, "
         "so the committed page is a render of something no commit carries")
-    # The copies are hard links into the real state/: a render that ever
-    # appended to a file there would have written through them. Red, not silent.
-    moved = subprocess.run(["git", "status", "--porcelain", "--", "state"],
-                           cwd=REPO, capture_output=True, text=True).stdout
-    assert not moved, f"rendering over the linked copies wrote into state/:\n{moved}"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

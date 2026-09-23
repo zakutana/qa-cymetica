@@ -164,8 +164,20 @@ def strategies(rows: list[dict]) -> list[dict]:
 
 
 def known_rooms(rows: list[dict]) -> set[str]:
-    """General, and every strategy room that has been opened."""
+    """General, and every strategy room that has been opened. What a question
+    to Nexus may be asked in: a sector names nothing he could answer about."""
     return {GENERAL} | {r["id"] for r in strategies(rows)}
+
+
+# One room per sector on /lab (the operator, 2026-09-23: "1 room pro karty,
+# 1 pro boty, 1 na memecoiny"). They hold notes -- the operator's and ours --
+# and exist without being opened, the way General does.
+SECTORS = ("cards", "bots", "memecoins", "funds")
+
+
+def note_rooms(rows: list[dict]) -> set[str]:
+    """Where a note may go: every room a question may, and the four sectors."""
+    return known_rooms(rows) | set(SECTORS)
 
 
 def names(rows: list[dict]) -> dict[str, str]:
@@ -254,7 +266,7 @@ def _next_note_id(rows: list[dict]) -> str:
 
 def _note(kind: str, room: str, text, **extra):
     def build(rows: list[dict]) -> list[dict]:
-        if room not in known_rooms(rows):
+        if room not in note_rooms(rows):
             raise RoomError(f"there is no room {room!r}")
         body = str(text or "").strip()
         if not body:

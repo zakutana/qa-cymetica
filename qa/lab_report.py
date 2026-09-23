@@ -17,7 +17,9 @@ not a room at all but "$10 into every hot signal". Per product:
 * `n`: the experiments with a number; `running`; `archived`;
 * `wilson`: the 95 % band on the share of experiments that made money, and
   `None` under `MIN_N` -- two coins are not a measurement;
-* `best`: the room that made the most.
+* `usdc` and `stake_usdc`: the same net return in money, over what went in.
+
+Every room's own row rides beside them (`rooms`), which is what /lab ranks.
 
 Pure: every input is handed in, so a test holds the whole of it.
 """
@@ -29,8 +31,11 @@ from datetime import datetime, timezone
 from qa import fomo, lab
 
 PRODUCTS = ("cards", "bots", "memecoins", "funds")
-KIND_PRODUCT = {"card": "cards", "arena": "cards", "bot": "bots",
-                "fund": "funds"}
+# A room's kind -> its product. An Arena room is none of the four yet, so it
+# is in no product rather than quietly among the cards.
+KIND_PRODUCT = {"card": "cards", "bot": "bots", "fund": "funds"}
+# Their own score, the line the operator asked about on 2026-09-14.
+CONVICTION_MIN = 70.0
 # Under this many experiments no band is printed; the page says "málo dat".
 MIN_N = 5
 # The memecoin headline is read at this swap fee a side; 0.5 and 2 ride beside.
@@ -62,8 +67,23 @@ def _room_net(room: dict, verdict: dict | None, money: dict | None) -> float | N
     return lab._net_of(gross, lab._cost({"kind": room.get("kind") or "card"}))
 
 
+def _product(room: dict, bot_origins: set[str]) -> str | None:
+    """A room's product. Rooms opened before 2026-09-21 carry no kind: one
+    naming a card holds cards, and one whose answer's order was a clone
+    (STR-0001, Perceptron Oracle) holds a bot."""
+    kind = room.get("kind")
+    if kind:
+        return KIND_PRODUCT.get(kind)
+    if room.get("card"):
+        return "cards"
+    return "bots" if str(room.get("origin")) in bot_origins else "cards"
+
+
 def _rooms(answers, notebook, room_rows, paper_rows, sample_rows,
            clone_rows) -> list[dict]:
+    bot_origins = {str((r.get("nexus") or {}).get("id"))
+                   for r in clone_rows or ()
+                   if r.get("type") == "intent" and isinstance(r.get("nexus"), dict)}
     status = {k: str(v.get("status")) for k, v in
               _latest(room_rows, "status").items()}
     verdicts = _latest(room_rows, "verdict")
@@ -81,29 +101,47 @@ def _rooms(answers, notebook, room_rows, paper_rows, sample_rows,
         rid = str(room.get("id"))
         verdict = verdicts.get(rid)
         gone = rid in archived
+        book = money.get(rid) or {}
+        net = None if gone else _room_net(room, verdict, book)
+        stake = book.get("priced_stake") if book.get("priced") else None
         out.append({
             "id": rid, "title": room.get("title"), "origin": room.get("origin"),
-            "product": KIND_PRODUCT.get(room.get("kind") or "card", "cards"),
+            "product": _product(room, bot_origins),
             "status": status.get(rid), "archived": gone,
             "verdict": (verdict or {}).get("verdict"),
-            "net_pct": None if gone else _room_net(room, verdict, money.get(rid))})
+            "net_pct": net, "stake_usdc": stake,
+            # The same net return, in money, over what was put in.
+            "usdc": (stake * net / 100.0
+                     if stake and net is not None else None)})
     return out
 
 
-def _product(rooms: list[dict]) -> dict:
+def _sector(rooms: list[dict]) -> dict:
     judged = [r for r in rooms if r["net_pct"] is not None]
-    best = max(judged, key=lambda r: r["net_pct"], default=None)
+    moneyed = [r for r in judged if r["usdc"] is not None]
     return {
         "n": len(judged),
         "net_pct": (sum(r["net_pct"] for r in judged) / len(judged)
                     if judged else None),
+        "usdc": sum(r["usdc"] for r in moneyed) if moneyed else None,
+        "stake_usdc": (sum(r["stake_usdc"] for r in moneyed)
+                       if moneyed else None),
         "wins": sum(1 for r in judged if r["net_pct"] > 0),
         "wilson": _band(sum(1 for r in judged if r["net_pct"] > 0), len(judged)),
         "min_n": MIN_N,
         "running": sum(1 for r in rooms if r["status"] == "running"),
-        "archived": sum(1 for r in rooms if r["archived"]),
-        "best": ({"room": best["id"], "title": best["title"],
-                  "net_pct": best["net_pct"]} if best else None)}
+        "archived": sum(1 for r in rooms if r["archived"])}
+
+
+def _high_conviction(fomo_rows: list[dict]) -> list[dict]:
+    """The signals their own score put at CONVICTION_MIN or more, each with
+    its own checkpoints. A signal with no score is not a low one."""
+    keep = {r.get("key") for r in fomo_rows
+            if r.get("type") == "signal"
+            and isinstance(r.get("conviction"), (int, float))
+            and not isinstance(r.get("conviction"), bool)
+            and r["conviction"] >= CONVICTION_MIN}
+    return [r for r in fomo_rows if r.get("key") in keep]
 
 
 def _memecoins(fomo_rows: list[dict], now) -> dict:
@@ -113,13 +151,26 @@ def _memecoins(fomo_rows: list[dict], now) -> dict:
     n = int(head.get("n") or 0)
     rate = head.get("win_rate")
     wins = round(rate * n) if isinstance(rate, (int, float)) else 0
+    # [operator 2026-09-14] asked what entering only at conviction 70 and up
+    # would make: the same question, over those signals alone.
+    high = _high_conviction(fomo_rows or [])
+    high_said = fomo.ten_dollars(high, now=now) if high else {}
+    high_head = (high_said.get("by_fee") or {}).get(MEMECOIN_FEE_PCT) or {}
     return {
         "n": n, "net_pct": head.get("mean_net_pct"), "wins": wins,
+        "median_pct": head.get("median_net_pct"),
+        "usdc": None, "stake_usdc": None,
         "wilson": _band(wins, n), "min_n": MIN_N,
         "running": int(said.get("window_open") or 0), "archived": None,
-        "best": None, "fee_pct": MEMECOIN_FEE_PCT,
+        "fee_pct": MEMECOIN_FEE_PCT,
+        # What could not be bought or measured, by reason: the page names the
+        # filter (the operator, 2026-09-14) rather than hiding it.
+        "excluded": said.get("excluded") or {},
         "signals": said.get("signals"),
         "could_buy_share": said.get("could_buy_share"),
+        "conviction_70": {"min": CONVICTION_MIN,
+                          "n": int(high_head.get("n") or 0),
+                          "net_pct": high_head.get("mean_net_pct")},
         "fees": [{"fee_pct": fee, "net_pct": row.get("mean_net_pct"),
                   "n": row.get("n")} for fee, row in sorted(by_fee.items())]}
 
@@ -147,7 +198,7 @@ def report(nexus_rows: list[dict], notebook: list[dict], room_rows: list[dict],
     answers = [r for r in nexus_rows if r.get("type") == "answer"]
     rooms = _rooms(answers, notebook, room_rows, paper_rows, sample_rows,
                    clone_rows)
-    products = {p: _product([r for r in rooms if r["product"] == p])
+    products = {p: _sector([r for r in rooms if r["product"] == p])
                 for p in PRODUCTS if p != "memecoins"}
     products["memecoins"] = _memecoins(fomo_rows, moment)
     return {"generated_at": moment.isoformat(timespec="seconds"),

@@ -115,19 +115,92 @@ def test_each_product_says_what_it_earned_after_costs():
     running_card = lab._net_of(25.0 / 500.0 * 100.0, lab.GATE["round_trip_cost_pct"])
     assert cards["n"] == 2 and cards["running"] == 1, cards
     assert cards["net_pct"] == pytest.approx((running_card + 2.0) / 2), cards
-    assert cards["best"]["room"] == "STR-0001", cards
-    assert cards["best"]["net_pct"] == pytest.approx(running_card)
 
     assert bots["n"] == 1 and bots["running"] == 1, bots
     assert bots["net_pct"] == pytest.approx(7.2 / 240.0 * 100.0), bots
 
     assert funds["n"] == 1 and funds["archived"] == 1, funds
     assert funds["net_pct"] == pytest.approx(-1.0), funds
-    assert funds["best"]["room"] == "STR-0004"
 
     by_room = {r["id"]: r for r in said["rooms"]}
+    assert by_room["STR-0001"]["net_pct"] == pytest.approx(running_card)
+    assert by_room["STR-0004"]["net_pct"] == pytest.approx(-1.0)
     assert by_room["STR-0005"]["archived"] is True
     assert by_room["STR-0005"]["net_pct"] is None
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_room_that_holds_a_bot_is_a_bot_even_from_before_rooms_had_kinds():
+    """STR-0001, Perceptron Oracle, opened 2026-09-11 before a room carried
+    its kind: no `kind`, no `card`, and its answer's order was a clone. The
+    first report counted it among the cards. A room with no kind is the kind
+    of what its answer put money into; an Arena room is none of the four."""
+    fx = _fixture()
+    fx["room_rows"] += [
+        {"type": "strategy", "id": "STR-0006", "origin": "NEX-0006",
+         "title": "Perceptron Oracle"},
+        {"type": "status", "room": "STR-0006", "status": "stopped"},
+        {"type": "verdict", "room": "STR-0006", "verdict": "refuted",
+         "return_pct": -4.96},
+        {"type": "strategy", "id": "STR-0007", "origin": "NEX-0007",
+         "kind": "arena", "ref": "BLUE", "title": "Arena BLUE"},
+        {"type": "status", "room": "STR-0007", "status": "running"}]
+    fx["clone_rows"] += [
+        {"type": "intent", "id": "CLN-9", "kind": "clone",
+         "nexus": {"id": "NEX-0006"}, "source_id": "perceptron"},
+        {"type": "outcome", "id": "CLN-9", "outcome": "accepted"}]
+    said = _report(room_rows=fx["room_rows"], clone_rows=fx["clone_rows"])
+    by_room = {r["id"]: r for r in said["rooms"]}
+    assert by_room["STR-0006"]["product"] == "bots", by_room["STR-0006"]
+    assert by_room["STR-0007"]["product"] is None, "an Arena room is not a card"
+    assert said["products"]["bots"]["n"] == 2
+    assert said["products"]["cards"]["n"] == 2, "the old bot room left the cards"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_each_product_says_how_many_usdc_it_made_beside_the_percent():
+    """"Čistý výsledek" is money to the operator: the percent per experiment
+    and, beside it, the USDC -- net of the same costs, over the rooms that
+    put a stake in. A room with no stake (a fund only marked) adds nothing."""
+    said = _report()
+    cards, bots, funds = (said["products"][k] for k in ("cards", "bots", "funds"))
+    running_card = lab._net_of(25.0 / 500.0 * 100.0, lab.GATE["round_trip_cost_pct"])
+    assert cards["usdc"] == pytest.approx(500.0 * running_card / 100.0)
+    assert cards["stake_usdc"] == pytest.approx(500.0)
+    assert bots["usdc"] == pytest.approx(7.2)
+    assert funds["usdc"] is None, "nothing was staked, so there is no money figure"
+    by_room = {r["id"]: r for r in said["rooms"]}
+    assert by_room["STR-0001"]["stake_usdc"] == pytest.approx(500.0)
+    assert by_room["STR-0001"]["usdc"] == pytest.approx(500.0 * running_card / 100.0)
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_memecoins_carry_the_median_and_the_high_conviction_answer(monkeypatch):
+    """[operator 2026-09-14] asked for the P&L of entering only at their
+    conviction 70 and above. Answered by the same $10 question over the
+    signals that scored 70 or more -- their checkpoints with them -- and the
+    median beside the mean, because one runaway coin moves a mean."""
+    calls = []
+
+    def fake(rows, now=None, **kw):
+        calls.append(rows)
+        n = 20 if len(calls) == 1 else 4
+        return {"signals": 40, "window_open": 0, "could_buy_share": 0.5,
+                "by_fee": {1.0: {"n": n, "mean_net_pct": -4.0 if n == 20 else 6.0,
+                                 "median_net_pct": -9.0, "win_rate": 0.25}}}
+
+    monkeypatch.setattr(lab_report.fomo, "ten_dollars", fake)
+    rows = [{"type": "signal", "key": "a", "conviction": 88.0},
+            {"type": "signal", "key": "b", "conviction": 12.0},
+            {"type": "signal", "key": "c"},
+            {"type": "checkpoint", "key": "a", "horizon": "24h"},
+            {"type": "checkpoint", "key": "b", "horizon": "24h"}]
+    memes = _report(fomo_rows=rows)["products"]["memecoins"]
+    assert memes["median_pct"] == -9.0
+    assert memes["conviction_70"] == {"min": 70.0, "n": 4, "net_pct": 6.0}
+    assert [r.get("key") for r in calls[1]] == ["a", "a"], (
+        "the high-conviction answer must see only those signals and their "
+        "own checkpoints")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -184,13 +257,12 @@ def test_the_nexus_line_follows_his_questions_to_what_survived():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_the_lab_page_reads_every_field_the_report_writes_and_no_other(
-        monkeypatch):
-    """Both directions. JavaScript reading a missing property is undefined,
-    not an error, so a field the page reads and the report never writes draws
-    "undefined" quietly; a field the report writes and the page never reads is
-    a figure nobody sees. The page names its shapes -- `lp.` a product, `ln.`
-    the Nexus line -- and this holds each against qa/lab_report.py."""
+def test_every_figure_the_report_writes_reaches_the_lab_page(monkeypatch):
+    """A field the report writes and the page never reads is a figure nobody
+    sees. The page names its shapes -- `lp.` a sector, `ln.` the Nexus line --
+    and every product and Nexus field this report writes has to be read under
+    them. (The other direction, a field read and never written, is held
+    against lab_view() in test_pipeline_lab_page.py.)"""
     import re
 
     monkeypatch.setattr(lab_report.fomo, "ten_dollars", lambda rows, now=None: {
@@ -207,10 +279,6 @@ def test_the_lab_page_reads_every_field_the_report_writes_and_no_other(
     spec.loader.exec_module(page)
     for name, keys in written.items():
         read = set(re.findall(rf"\b{name}\.([A-Za-z_][A-Za-z0-9_]*)", page.TEMPLATE))
-        assert read, f"the page reads no `{name}.` field, so this proves nothing"
-        assert not read - keys, (
-            f"/lab reads `{name}.` fields the report never writes: "
-            f"{sorted(read - keys)}")
         assert not keys - read, (
             f"the report writes `{name}.` fields /lab never shows: "
             f"{sorted(keys - read)}")

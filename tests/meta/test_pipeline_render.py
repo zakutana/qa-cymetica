@@ -312,202 +312,6 @@ def test_the_pages_javascript_parses(tmp_path, monkeypatch):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_the_memecoin_section_renders_with_and_without_a_diary(tmp_path,
-                                                                monkeypatch):
-    """The one branch nothing else here exercises. Every other test in this
-    file runs against `stats.fomo == null` -- the real state on a fresh
-    checkout, since `state/fomo_signals.jsonl` is gitignored -- so the
-    memecoin panel with a diary behind it had never once actually run in
-    Node before this test. It lived in statBlocks()'s `if (fm) {...}` when
-    this was written, then on a tab of its own; since V4 it is memecoinPanel()
-    on the laboratory's page, and the console must not draw it at all.
-    """
-    import shutil
-
-    node = shutil.which("node")
-    if not node:
-        pytest.skip("node is not installed, so the page cannot be run here")
-
-    lab = _lab_page()
-    payload = {"stats": {"fomo": None}, "report": {}}
-    code, err, captured = _run_page(node, tmp_path / "nofomo", payload, page=lab)
-    assert code == 0, f"the page throws with no diary:\n{err[:900]}"
-    assert 'id="memecoins"' not in _render().TEMPLATE, (
-        "the measurement lives on /lab; it must not be drawn in the console "
-        "as well -- one measurement, one place")
-    assert "No memecoin signals" in captured.get("memecoins", ""), (
-        "with no diary the tab says so rather than opening blank: never "
-        "watched and watched-with-nothing-yet must not look the same")
-
-    payload["stats"]["fomo"] = {
-        "tracked": 3, "hit_threshold": 20.0,
-        "horizons": {
-            # mean and median DIFFER, so an assertion about the median
-            # cannot be satisfied by the mean. They were both 4.0 until the
-            # deep pass of 2026-09-13, which made the label the only thing
-            # under test -- rendering ${pct(first.mean_pct)} beneath the word
-            # "median" kept it green, and the page would have shown +46% as a
-            # median while half the signals were under water. M03.
-            "1h": {"resolved": 2, "hit_rate": 0.5, "mean_pct": 46.0,
-                  "median_pct": 4.0,
-                  "top": [{"symbol": "DOGEX", "conviction": 0.9,
-                          "return_pct": 38.5}],
-                  "bottom": [{"symbol": "PEPEX", "conviction": 0.1,
-                             "return_pct": -30.5}]},
-            "24h": {"resolved": 0, "hit_rate": None, "mean_pct": None,
-                   "median_pct": None, "top": [], "bottom": []},
-        },
-        # One row per token, which is what the single list draws. The gap at
-        # hour 3 is deliberate: it must render as a dashed stretch, not as a
-        # point at zero.
-        "curves": [
-            {"token": "0xa", "symbol": "DOGEX", "conviction": 0.9,
-             "points": [[1, 38.5], [2, 41.0], [3, None], [4, 12.0]],
-             "last": 12.0, "peak": 41.0, "trough": 12.0,
-             "entry_price": 5.561e-06, "last_price": 6.228e-06},
-            {"token": "0xb", "symbol": "PEPEX", "conviction": 0.1,
-             "points": [[1, -30.5]], "last": -30.5, "peak": -30.5,
-             "trough": -30.5, "entry_price": 0.0452, "last_price": 0.0314},
-        ],
-        "curves_total": 9,
-        # The shape `qa.fomo.basket` returns. The mean and the mean without
-        # the best few DIFFER by three orders of magnitude here on purpose:
-        # that gap is the finding the panel exists to show, and an assertion
-        # about one cannot be satisfied by the other.
-        "basket": {"pnl_pct": 494.7, "pnl_without_top_pct": -1.5,
-                   "median_pct": -0.5, "top": 5, "n_priced": 378,
-                   "n_unpriced": 448, "tracked": 826, "winners": 136,
-                   "losers": 242, "stale_readings": 914,
-                   "fresh_readings": 2319, "late_readings": 85,
-                   "best": {"symbol": "MelonMusk", "return_pct": 73848.0},
-                   "worst": {"symbol": "RUGME", "return_pct": -100.0},
-                   "n_tradeable": 188, "n_untradeable": 332,
-                   "n_depth_unknown": 58, "min_liquidity": 1000.0,
-                   "high_conviction": {"min": 70, "n": 96, "pnl_pct": 12.4,
-                                       "median_pct": -3.3,
-                                       "pnl_without_top_pct": -9.1,
-                                       "winners": 30, "losers": 66,
-                                       "unscored": 0}},
-    }
-    code, err, captured = _run_page(node, tmp_path / "withfomo", payload, page=lab)
-    assert code == 0, f"the page throws with a real diary:\n{err[:900]}"
-    panel = captured.get("memecoins", "")
-    assert "hot" in panel, "the tab must say what is being measured"
-    assert "DOGEX" in panel and "PEPEX" in panel
-
-    # ONE list, with the graph as a COLUMN of it. [operator 2026-09-13]:
-    # "mel to byt jen 1 senzam porad jako predtim jen nova kolumna s grafem".
-    # The first attempt put 24 separate cards under the table instead.
-    assert panel.count("<table") == 1, (
-        f"one list, not several: {panel.count('<table')} tables")
-    assert "mc-spark" in panel, "the graph column is missing"
-    assert "mc-curve\"" not in panel and "mc-curves" not in panel, (
-        "the per-token cards came back; the graph belongs in the row")
-
-    # Hovering a point names the hour and what it was worth then -- through
-    # our OWN bubble, not the browser's native <title>, which renders as a
-    # small grey OS tooltip with no colour and a half-second delay.
-    # [operator 2026-09-13] "je to male a skarede, ma to byt vetsi ta bubble
-    # a pekne barevne zobrazit".
-    assert "<title>" not in panel, (
-        "the native tooltip is back; it cannot be styled or coloured")
-    assert 'data-h="1"' in panel and 'data-v="38.5"' in panel, panel[:500]
-    assert 'data-h="4"' in panel and 'data-v="12"' in panel
-    assert 'data-h="3"' not in panel, "an unpriced hour must not get a point"
-
-    # A gap is drawn as a dashed stretch, never as a point at zero.
-    assert "stroke-dasharray" in panel
-
-    # Green for a gain, red for a loss -- the operator reads pictures, and
-    # asked for this twice. Asserted on the classes rather than eyeballed.
-    assert "mc-up" in panel and "mc-down" in panel, (
-        "a gain and a loss must be coloured differently, not both grey")
-    up = panel[panel.index("DOGEX"):]
-    assert "mc-up" in up[:up.index("PEPEX")], "the +38.5% row is not green"
-    down = panel[panel.index("PEPEX"):]
-    assert "mc-down" in down[:400], "the -30.5% row is not red"
-
-    # The summary reports the MEDIAN, not the mean: one token at +1262% drags
-    # the mean to +46% while half the signals are under water.
-    assert "median at 1&nbsp;h" in panel or "median at 1 h" in panel, panel[:600]
-    # The VALUE, not only the label: 4.0 is the median and 46.0 is the mean,
-    # and the summary must be showing the first.
-    tail = panel[panel.index("median at 1"):]
-    assert "+4.0%" in tail[:200], tail[:200]
-    assert "+46.0%" not in tail[:200], (
-        "the summary is showing the mean under the word median")
-
-    # [operator 2026-09-14] *"ma to byt vetsi ten celkovy P&L kdybychom vse
-    # nakoupili v moment singnalu"*. The headline, and -- never apart from it
-    # -- what the headline is made of: it is +494.7% and -1.5% without its
-    # best five, and a page showing only the first is a lie told with a true
-    # figure. Same defect as M03 above, one figure up.
-    assert "+494.7%" in panel, "the P&L of buying every signal is missing"
-    # [operator 2026-09-14] took the "without the best 5" card out; the figure
-    # stays as one line under the headline, because nothing else on the page
-    # says whether that headline is the signal or one lucky row.
-    assert "-1.5%" in panel, (
-        "the mean without the best rows is missing; the headline is 5 rows")
-    assert 'mc-h">without the best' not in panel, (
-        "it has a card of its own again; it was ours, not theirs")
-    head = panel[:panel.index("mc-figs")]
-    assert head.index("+494.7%") < head.index("-1.5%") < head.index("-0.5%"), (
-        "P&L, then what it rests on, then the median -- in that order")
-    assert "MelonMusk" in panel and "73848" in panel, (
-        "the row that IS the headline must be named beside it")
-
-    # And what the headline is silent about: 448 of 826 signals had no price
-    # when they fired, so they are in no figure on this page.
-    assert "448" in panel, "the signals with no entry price are not shown"
-    assert "914" in panel, "the repeated price reads are not shown"
-
-    # [operator 2026-09-14] *"proc to zobrazuje coiny co se neda obchodvat
-    # nebo prodavat? ty jsou uplne zbytecne"*. They are dropped -- and a
-    # filter the page does not name is worse than no filter, because the
-    # reader cannot tell the population from the finding.
-    assert "dropped as untradeable" in panel and "332" in panel
-    assert "58" in panel, "the tokens of unknown depth are kept and uncounted"
-    assert "$1000" in panel, "the threshold itself must be on the page"
-
-    # [operator 2026-09-14] asked for a price-at-signal column, looked at it
-    # and had it taken out again -- *"ty dve kolumny smaz sou zbytecne"*. The
-    # numbers stay in the payload, where the P&L is computed from them; the
-    # table is back to five columns.
-    assert "price at signal" not in panel and "price now" not in panel
-    assert panel.count("<th>") == 5, panel[panel.index("<thead"):][:400]
-
-    # [operator 2026-09-14] *"P&L jen kdyubychom vstupovali do Conviction 70 a
-    # vic"*: their own score, tested against the basket that took everything.
-    assert "conviction &ge;&nbsp;70 only" in panel
-    assert "+12.4%" in panel, "the high-conviction basket is not drawn"
-
-    # Below ten signals that basket is noise, and a hero number off four rows
-    # is the defect the whole panel was rewritten to stop.
-    thin = json.loads(json.dumps(payload))
-    thin["stats"]["fomo"]["basket"]["high_conviction"] = {
-        "min": 70, "n": 4, "pnl_pct": 291.7, "median_pct": 304.5,
-        "pnl_without_top_pct": None, "winners": 2, "losers": 2, "unscored": 0}
-    code, err, thin_cap = _run_page(node, tmp_path / "thinconv", thin, page=lab)
-    assert code == 0, err[:900]
-    thin_panel = thin_cap.get("memecoins", "")
-    assert "too few to mean anything" in thin_panel
-    head = thin_panel[:thin_panel.index("mc-figs")]
-    assert "+291.7%" in head and "n&nbsp;=&nbsp;4" in head, (
-        "the count must take the hero slot, with the figure demoted")
-
-    # A figure that cannot exist yet says so. "-- of 0" beside the 24h hit
-    # rate is what the operator read as the panel being broken; no signal had
-    # lived a whole day.
-    assert "not yet" in panel and "no signal is that old" in panel
-
-    # The table is sorted by peak and cut at 40, so it is winners by
-    # construction. The page has to say so rather than let it read as a
-    # sample.
-    assert "of 9" in panel and "by construction" in panel, (
-        "the table does not say it is showing the biggest movers only")
-
-
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_page_reads_no_field_the_payload_stops_writing(tmp_path, monkeypatch):
     """The class of defect behind three separate visible breakages.
 
@@ -1884,13 +1688,15 @@ def test_the_memecoin_measurement_is_on_the_lab_page_and_the_console_links_there
         "rooms are reachable only by typing a URL nobody was told")
     assert 'id="memecoins"' not in console, "drawn in the console as well"
 
+    # On /lab the memecoins are one of the four sector rooms (2026-09-23): in
+    # the list of sectors the tabs are drawn from, and a room of their own.
     page = _lab_page().TEMPLATE
-    assert 'id="panel-memecoins"' in page, "no section for the memecoins"
-    assert 'id="memecoins"' in page, "a section with nothing to draw into"
-    assert 'getElementById("memecoins")' in page, (
-        "nothing writes the section, so it opens empty")
+    assert re.search(r'const SECTORS = \[[^\]]*"memecoins"', page), (
+        "no Memecoiny room among the sectors")
+    assert "function memeRoom(" in page and 'SECTOR === "memecoins"' in page, (
+        "nothing draws the memecoin room, so it opens empty")
     # The hover bubble is ours: an element to draw into and a handler that
     # follows the cursor. Without both, the graph has no readable labels at
     # all now that the native <title> is gone.
-    assert 'id="mcTip"' in page, "no bubble element"
-    assert "mousemove" in page and "mcTip" in page, "nothing shows the bubble"
+    assert 'id="tip"' in page, "no bubble element"
+    assert "mousemove" in page and ".mc-pt" in page, "nothing shows the bubble"

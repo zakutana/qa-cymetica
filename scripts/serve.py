@@ -573,6 +573,10 @@ def make_handler(live: Live, note_token: str | None = None):
                 self.send_lab()
                 return
 
+            if path == "/lab.json":
+                self.send_lab_json()
+                return
+
             if path == "/events":
                 self.stream_events()
                 return
@@ -721,6 +725,22 @@ def make_handler(live: Live, note_token: str | None = None):
                            f"{exc}".encode("utf-8"), "text/plain; charset=utf-8", 500)
                 return
             self._send(html.encode("utf-8"), "text/html; charset=utf-8")
+
+        def send_lab_json(self) -> None:
+            """What /lab draws, so the open page redraws in place when the
+            rooms move. It carries their answers verbatim: this machine only."""
+            if not local_host(self.headers.get("Host"),
+                              self.server.server_address[1]):
+                self._send(b'{"error": "the laboratory is served to this machine only"}',
+                           "application/json; charset=utf-8", 403)
+                return
+            try:
+                body = json.dumps(_lab_page_module().build_lab(), ensure_ascii=False)
+            except Exception as exc:  # noqa: BLE001 -- a broken view must not kill the server
+                self._send(json.dumps({"error": f"{type(exc).__name__}: {exc}"})
+                           .encode("utf-8"), "application/json; charset=utf-8", 500)
+                return
+            self._send(body.encode("utf-8"), "application/json; charset=utf-8")
 
         def send_rooms(self) -> None:
             """The rooms on /lab -- to this machine by name, to nothing else."""

@@ -1,30 +1,31 @@
 """The laboratory's page, served at /lab and never committed.
 
-Plan v2, V4 (docs/laborator-plan.md): the laboratory is the product, and it
-has a page of its own. At the top, per product -- Karty, Boti, Memecoiny,
-Fondy -- what it earned after costs, how many experiments that stands on and
-how sure it is, from `state/lab/report.json` (`lab.py report`, rewritten on
-every visit). Under it the rooms with Nexus -- the thread, the strategy's
-numbers and the box the operator writes a note in -- and the memecoin
-measurement in full.
+Plan v2, V4 (docs/laborator-plan.md), redone after the operator gave the first
+version 3/10 on 2026-09-23: "1 room na odvetvi ... musim moc scrollovat,
+neprehledne". Four sector rooms -- Karty, Boti, Memecoiny, Fondy -- always in
+sight at the top with what each made after costs; the chosen one below as a
+ranking of its experiments, the failures folded into an archive, one click
+opening an experiment into its chart and four numbers. The conversation with
+Nexus, which they said they will hardly read, is behind a button.
 
-Everything here used to be two tabs of the committed console (the Nexus and
-Memecoiny tabs of scripts/render.py). They moved because every figure on them
-comes from a gitignored diary, and the committed page hashed those diaries:
-a fresh clone could not re-render what was committed (D2 of the 2026-09-23
-review). This page is rendered on request by scripts/serve.py and written
-nowhere, so it may read anything on this machine.
+Everything here used to be two tabs of the committed console. Every figure
+comes from a gitignored diary, so the page is rendered on request by
+scripts/serve.py and written nowhere (D2 of the 2026-09-23 review).
 
-What the page reaches: /rooms.json (build_rooms, below), /token and
-POST /notes -- the one write, through qa.rooms.add_operator_note, behind the
-guards serve.py already holds -- and /events for "the rooms moved".
+What the page reaches: /lab.json (build_lab, below) to redraw in place,
+/token and POST /notes -- the one write, through qa.rooms.add_operator_note,
+behind the guards serve.py holds -- and /events for "the rooms moved".
+build_rooms() is still the one reading of the rooms; scripts/rooms.py and the
+sampler's tests stand on it, and lab_view() only regroups it.
 """
 
 from __future__ import annotations
 
 import importlib.util
 import json
+import re
 import sys
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -461,6 +462,7 @@ def build_rooms() -> dict:
                                   "why": row.get("why"), "at": row.get("at")})
 
     threads: dict[str, list[dict]] = {store.GENERAL: [],
+                                      **{room: [] for room in store.SECTORS},
                                       **{room: [] for room in titles}}
     order: dict[int, tuple] = {}
 
@@ -850,20 +852,37 @@ def _fomo_stats() -> dict | None:
         if isinstance(row, dict):
             rows.append(row)
 
-    from qa.fomo import basket, curves, stats
+    from qa.fomo import curves
 
-    # The curves are what the page DRAWS; the stats are what it concludes.
-    # Both, because a hit rate without the shape hides a coin that ran 900%
-    # in hour three and gave it back by six.
-    #
-    # And the basket, which is what the operator asked the page to lead with:
-    # what an equal stake in every signal would be worth. `curves` is trimmed
-    # HERE rather than inside, so the page can say how many it is not showing
-    # -- it draws the forty biggest movers, and a table of winners that does
-    # not say it is a table of winners is the whole of "looks too promising".
-    drawn = curves(rows, limit=None)
-    return {**stats(rows), "basket": basket(rows), "curves": drawn[:40],
-            "curves_total": len(drawn)}
+    # What the room concludes is the report's ($10 into every hot signal,
+    # qa/lab_report.py); this is only the list under it -- what the coins
+    # DID. Trimmed HERE rather than inside, so the page can say how many it
+    # is not showing: a table of winners that does not say it is one is the
+    # whole of "looks too promising". And over coins that stayed on one pair:
+    # a switched pair is their terminal's bug, not a coin that moved.
+    drawn = curves(_pair_clean(rows), limit=None)
+    return {"curves": drawn[:40], "curves_total": len(drawn)}
+
+
+def _pair_clean(rows: list[dict]) -> list[dict]:
+    """The memecoin diary without the signals whose readings came back on a
+    different pair of the same address (qa.fomo.pair_changed, the report we
+    owe them from MSG-0045) -- JUP read at 0.28 and at 1 437 USD is not a
+    +500 000 % mover."""
+    from qa.fomo import pair_changed
+
+    readings: dict[str, list[dict]] = {}
+    for row in rows:
+        if row.get("key") and row.get("type") in ("signal", "checkpoint"):
+            readings.setdefault(str(row["key"]), []).append(row)
+    switched = set()
+    for key, found in readings.items():
+        ordered = ([r for r in found if r.get("type") == "signal"][:1]
+                   + sorted((r for r in found if r.get("type") == "checkpoint"),
+                            key=lambda r: str(r.get("at") or "")))
+        if pair_changed(ordered):
+            switched.add(key)
+    return [r for r in rows if str(r.get("key")) not in switched]
 
 
 def _lab_script():
@@ -874,13 +893,210 @@ def _lab_script():
     return module
 
 
+# ---------------------------------------------------------------------------
+# The view: one room per sector, results first
+# ---------------------------------------------------------------------------
+# The operator, 2026-09-23, on the first /lab: "proc ma kazda karta svuj
+# room? ja myslel ze bude 1 room na odvetvi". So the page draws four sector
+# rooms, each a ranking of its experiments; the rooms build_rooms() writes
+# per experiment are the rows of those rankings, and their threads sit behind
+# the page's conversation button.
+
+SECTOR_NAMES = {"cards": "Karty", "bots": "Boti", "memecoins": "Memecoiny",
+                "funds": "Fondy"}
+SECTORS = tuple(SECTOR_NAMES)
+# Points on a row's small line, and on an opened experiment's chart.
+SPARK_POINTS = 40
+PATH_POINTS = 160
+MOVERS = 40
+
+_DRAWDOWN = re.compile(r"drawdown reached ([\d.]+)%, past the ([\d.]+)%")
+_AGAINST = re.compile(r"against the benchmark's ([+\-]?[\d.]+)%")
+
+
+def _thin(points: list, keep: int) -> list:
+    """Evenly spaced points, the first and the last always kept."""
+    if len(points) <= keep:
+        return list(points)
+    step = (len(points) - 1) / (keep - 1)
+    return [points[round(i * step)] for i in range(keep)]
+
+
+def _cz(value: float, digits: int = 1) -> str:
+    """-11.78 -> "−11,8": the operator's decimal comma and a real minus."""
+    text = f"{abs(value):.{digits}f}".replace(".", ",")
+    return ("−" if value < 0 and text.strip("0,") else "") + text
+
+
+def _signed(value: float, digits: int = 1) -> str:
+    return ("+" if value > 0 else "") + _cz(value, digits)
+
+
+def _level(text: str) -> str:
+    """10.00 -> "10", 11.78 -> "11,8"."""
+    value = float(text)
+    return _cz(value, 0 if value == round(value) else 1)
+
+
+def _path(panel: dict) -> list[list]:
+    """What an experiment is worth, in % since we went in, over time.
+
+    A card: its index rebased on the index we bought at (V2's book), from our
+    buy to our sale, so the last point is our result before costs. A bot:
+    what their engine booked over what went in. A fund only marked: nothing
+    of ours is in it, so no line.
+    """
+    legs = [leg for leg in panel.get("legs") or [] if leg.get("series")]
+    if legs:
+        leg = legs[0]
+        trades = panel.get("trades") or []
+        bought = min((m for m in (_moment(t.get("at")) for t in trades
+                                  if t.get("outcome") == "accepted") if m),
+                     default=None)
+        sold = max((m for m in (_moment(t.get("closed_at")) for t in trades) if m),
+                   default=None)
+        points = []
+        for stamp_, value in leg["series"]:
+            when = _moment(stamp_)
+            if when is None or not isinstance(value, (int, float)):
+                continue
+            if (bought and when < bought) or (sold and when > sold):
+                continue
+            points.append((stamp_, float(value)))
+        entry = leg.get("entry")
+        base = (float(entry) if isinstance(entry, (int, float)) and entry
+                else (points[0][1] if points else None))
+        if not base:
+            return []
+        return [[t, round((v / base - 1.0) * 100.0, 3)] for t, v in points]
+    for clone in panel.get("clones") or []:
+        funded = clone.get("funded")
+        if funded:
+            return [[s.get("at"), round(float(s["pnl"]) / float(funded) * 100.0, 3)]
+                    for s in clone.get("samples") or []
+                    if isinstance(s.get("pnl"), (int, float))]
+    return []
+
+
+def _group(report_room: dict, panel: dict) -> str:
+    """live: still running; done: judged or stopped; archive: what the report
+    archives -- nothing bought, or not his pick (N-0049/N-0050: a failed
+    attempt out of the way, but not deleted)."""
+    if report_room.get("archived"):
+        return "archive"
+    if (panel.get("verdict") or {}).get("verdict") or panel.get("status") == "stopped":
+        return "done"
+    return "live"
+
+
+def _reason(group: str, panel: dict) -> str | None:
+    """A few Czech words for why it stands where it does -- never the
+    verdict's English paragraph (N-0032, N-0034: "kdo to má číst?")."""
+    verdict = panel.get("verdict") or {}
+    name, why = verdict.get("verdict"), str(verdict.get("why") or "")
+    ret = verdict.get("return_pct")
+    if group == "archive":
+        return "Nexus to nevybral" if panel.get("invested") else "nic se nekoupilo"
+    if name == "survived":
+        return f"vydělal {_signed(ret)} %" if ret is not None else None
+    if name == "refuted":
+        found = _DRAWDOWN.search(why)
+        if found:
+            return (f"propad {_level(found.group(1))} % přes limit "
+                    f"{_level(found.group(2))} %")
+        found = _AGAINST.search(why)
+        if found:
+            return f"horší než BTC ({_signed(float(found.group(1)))} %)"
+        return f"skončil {_signed(ret)} %" if ret is not None else None
+    if name == "inconclusive":
+        return ("nelze porovnat s BTC" if "benchmark" in why
+                else "málo dat k posouzení")
+    clones = panel.get("clones") or []
+    if clones and clones[-1].get("trading") is False and panel.get("status") == "running":
+        return "zastavil se sám"
+    return None
+
+
+def _experiment(rid: str, sector: str, report_room: dict, panel: dict,
+                now: datetime) -> dict:
+    group = _group(report_room, panel)
+    path = _path(panel)
+    legs = panel.get("legs") or []
+    first = legs[0] if legs else {}
+    clones = panel.get("clones") or []
+    tested = next((b for b in panel.get("backtests") or [] if b), None)
+    criterion = panel.get("criterion") or {}
+    start, window = _moment(criterion.get("at")), criterion.get("window_days")
+    ends = (start + timedelta(days=float(window))) if start and window else None
+    return {
+        "id": rid, "sector": sector, "group": group,
+        "title": panel.get("title") or rid, "status": panel.get("status"),
+        "verdict": (panel.get("verdict") or {}).get("verdict"),
+        "net_pct": report_room.get("net_pct"), "usdc": report_room.get("usdc"),
+        "stake": report_room.get("stake_usdc"),
+        "reason": _reason(group, panel),
+        "path": _thin(path, PATH_POINTS), "spark": _thin(path, SPARK_POINTS),
+        "backtest": ({"pct": tested.get("return_pct"), "period": tested.get("period"),
+                      "sharpe": tested.get("sharpe"),
+                      "pass": tested.get("verdict") == "pass"} if tested else None),
+        "left_days": ((ends - now).total_seconds() / 86400.0
+                      if ends and group == "live" else None),
+        "ends_at": ends.isoformat() if ends else None,
+        "opened_at": panel.get("opened_at"), "origin": panel.get("origin"),
+        "url": first.get("url"),
+        "trading": clones[-1].get("trading") if clones else None,
+        "tp": first.get("tp"), "sl": first.get("sl")}
+
+
+def lab_view(rooms: dict, report: dict, channel: dict, fomo: dict | None,
+             now: datetime | None = None) -> dict:
+    """What /lab draws, joined in one place so a test can hold all of it:
+    the four sectors with the report's figures, every experiment as a row of
+    its sector's ranking, the Nexus line, the paper account, the threads for
+    the conversation drawer and the memecoin movers. Pure."""
+    moment = now or datetime.now(timezone.utc)
+    products = report.get("products") or {}
+    by_id = {r.get("id"): r for r in report.get("rooms") or []}
+    panels = rooms.get("panels") or {}
+    experiments = []
+    for room in rooms.get("rooms") or []:
+        rid = room.get("id")
+        report_room = by_id.get(rid) or {}
+        sector = report_room.get("product")
+        if room.get("kind") != "strategy" or sector not in SECTOR_NAMES:
+            continue
+        experiments.append(_experiment(rid, sector, report_room,
+                                       panels.get(rid) or {}, moment))
+    general = panels.get("general") or {}
+    in_bots = sum(float((panels.get(e["id"], {}).get("clones") or [{}])[-1]
+                        .get("balance") or 0)
+                  for e in experiments
+                  if e["sector"] == "bots" and e["group"] != "archive")
+    return {
+        "generated_at": report.get("generated_at"),
+        "sectors": [{"key": key, "name": name, **(products.get(key) or {})}
+                    for key, name in SECTOR_NAMES.items()],
+        "experiments": experiments,
+        "nexus": {**(report.get("nexus") or {}),
+                  **{k: (channel or {}).get(k) for k in
+                     ("median_seconds", "measured", "failed", "refused")}},
+        "account": {"free": general.get("balance"),
+                    "in_cards": general.get("notional"),
+                    "in_bots": round(in_bots, 2) or None,
+                    "at": general.get("balance_at"), "stale": general.get("stale")},
+        "threads": rooms.get("threads") or {},
+        "movers": ((fomo or {}).get("curves") or [])[:MOVERS],
+        "movers_total": (fomo or {}).get("curves_total") or 0,
+    }
+
+
 def build_lab(now=None) -> dict:
-    """What the page draws on load: the report, rewritten now, and the memecoin
-    measurement. The rooms are not in it -- they arrive by /rooms.json and
-    redraw on their own event, so a note being typed is never reloaded away."""
-    return {"report": _lab_script().write_report(now),
-            "channel": _nexus_channel(),
-            "stats": {"fomo": _fomo_stats()}}
+    """The view, now: the report rewritten (state/lab/report.json), the rooms,
+    Nexus's channel and the memecoin diary. What /lab embeds and /lab.json
+    answers."""
+    moment = now or datetime.now(timezone.utc)
+    return lab_view(build_rooms(), _lab_script().write_report(moment),
+                    _nexus_channel(), _fomo_stats() or {}, now=moment)
 
 
 def render_lab(data: dict | None = None) -> str:
@@ -894,362 +1110,331 @@ TEMPLATE = r"""<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Laboratoř</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
+/* [hidden] first: a class with display set must never beat it. */
 [hidden] { display: none !important; }
 
+/* One set of tokens, light and dark, the console's own surfaces. Sector hues
+   are the reference categorical slots in the order that passes the dataviz
+   validator on both surfaces (blue, amber, violet, pink); they mark identity
+   only -- a tab's edge, a dot -- and never colour a number. Green and red
+   are for money: a gain and a loss. */
 :root {
-  --bg:#f6f7f6; --surface:#ffffff; --surface-2:#eef1f0; --line:#d5dbd9;
-  --line-soft:#e6eae9; --text:#10171a; --text-dim:#5a6a6c; --text-faint:#8b9a9b;
-  --accent:#0d6b66; --accent-dim:#0d6b6622;
-  --ok:#17803d;   --ok-bg:#17803d1f;
-  --auth:#0e7490; --auth-bg:#0e74901f;
-  --warn:#9a6300; --warn-bg:#9a63001f;
-  --bad:#b3261e;  --bad-bg:#b3261e1f;
-  --wait:#6b3fc4; --wait-bg:#6b3fc41f;
-  --none:#9aa8a8; --none-bg:#9aa8a826;
-  --radius:7px;
-  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --bg:#f3f5f4; --surface:#ffffff; --surface-2:#eef1f0; --surface-3:#e4e9e7;
+  --line:#d9dfdd; --line-soft:#e8ecea;
+  --text:#0f1719; --text-dim:#56676a; --text-faint:#8a999a;
+  --ok:#17803d; --ok-bg:#17803d17; --bad:#b3261e; --bad-bg:#b3261e14;
+  --accent:#0d6b66;
+  --c-cards:#2a78d6; --c-bots:#eda100; --c-memecoins:#4a3aa7; --c-funds:#e87ba4;
+  --shadow:0 1px 2px rgba(15,23,25,.06), 0 8px 24px rgba(15,23,25,.06);
   --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg:#0c1214; --surface:#121b1d; --surface-2:#182326; --line:#243436;
-    --line-soft:#1b282a; --text:#e4ecea; --text-dim:#93a5a5; --text-faint:#6a7b7c;
-    --accent:#4ecfc4; --accent-dim:#4ecfc422;
-    --ok:#4ec97a; --ok-bg:#4ec97a1f; --auth:#45b8d6; --auth-bg:#45b8d61f;
-    --warn:#e0a338; --warn-bg:#e0a3381f; --bad:#f2685e; --bad-bg:#f2685e1f;
-    --wait:#a98cf0; --wait-bg:#a98cf01f; --none:#647476; --none-bg:#64747626;
+    --bg:#0b1113; --surface:#121b1d; --surface-2:#18231f; --surface-3:#1f2c2e;
+    --line:#243436; --line-soft:#1b282a;
+    --text:#e6eeec; --text-dim:#98aaa9; --text-faint:#687a7b;
+    --ok:#4ec97a; --ok-bg:#4ec97a1c; --bad:#f2685e; --bad-bg:#f2685e1c;
+    --accent:#4ecfc4;
+    --c-cards:#3987e5; --c-bots:#c98500; --c-memecoins:#9085e9; --c-funds:#d55181;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.25);
+    color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg:#0c1214; --surface:#121b1d; --surface-2:#182326; --line:#243436;
-  --line-soft:#1b282a; --text:#e4ecea; --text-dim:#93a5a5; --text-faint:#6a7b7c;
-  --accent:#4ecfc4; --accent-dim:#4ecfc422;
-  --ok:#4ec97a; --ok-bg:#4ec97a1f; --auth:#45b8d6; --auth-bg:#45b8d61f;
-  --warn:#e0a338; --warn-bg:#e0a3381f; --bad:#f2685e; --bad-bg:#f2685e1f;
-  --wait:#a98cf0; --wait-bg:#a98cf01f; --none:#647476; --none-bg:#64747626;
+  --bg:#0b1113; --surface:#121b1d; --surface-2:#18231f; --surface-3:#1f2c2e;
+  --line:#243436; --line-soft:#1b282a;
+  --text:#e6eeec; --text-dim:#98aaa9; --text-faint:#687a7b;
+  --ok:#4ec97a; --ok-bg:#4ec97a1c; --bad:#f2685e; --bad-bg:#f2685e1c;
+  --accent:#4ecfc4;
+  --c-cards:#3987e5; --c-bots:#c98500; --c-memecoins:#9085e9; --c-funds:#d55181;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.25);
+  color-scheme: dark;
 }
 
-* { box-sizing:border-box; }
-body {
-  margin:0; background:var(--bg); color:var(--text); font-family:var(--sans);
-  font-size:16.5px; line-height:1.55; -webkit-font-smoothing:antialiased;
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--text); font: 15px/1.45 var(--sans);
+  -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; }
+.up { color: var(--ok); } .down { color: var(--bad); } .flat { color: var(--text-faint); }
+
+.app { max-width: 1480px; margin: 0 auto; padding: 20px 28px 36px;
+  display: flex; flex-direction: column; gap: 14px; }
+
+/* ---------- the bar across the top ---------- */
+.top { display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap; }
+.brand h1 { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -.015em; }
+.brand p { margin: 2px 0 0; font-size: 13px; color: var(--text-dim); }
+.brand p b { color: var(--text); font-weight: 600; }
+.brand .warn { color: var(--bad); font-weight: 600; }
+.top-r { display: flex; align-items: center; gap: 10px; }
+.btn { display: inline-flex; align-items: center; gap: 6px; font-size: 14px;
+  padding: 7px 14px; border-radius: 999px; border: 1px solid var(--line);
+  background: var(--surface); color: var(--text); cursor: pointer; text-decoration: none; }
+.btn:hover { border-color: var(--text-faint); }
+.btn:focus-visible, .sec:focus-visible, .row:focus-visible, .seg button:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px; }
+.live { font: 12px var(--mono); color: var(--text-faint); display: inline-flex;
+  align-items: center; gap: 6px; }
+.live i { width: 7px; height: 7px; border-radius: 50%; background: var(--text-faint); }
+.live.on i { background: var(--ok); } .live.off i { background: var(--bad); }
+
+/* ---------- the four sector rooms, always in sight ---------- */
+.sectors { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.sec { position: relative; text-align: left; cursor: pointer; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 14px; padding: 13px 16px 12px 20px;
+  display: flex; flex-direction: column; gap: 1px; min-width: 0;
+  transition: border-color .15s, box-shadow .15s, transform .15s; }
+.sec::before { content: ""; position: absolute; left: 0; top: 12px; bottom: 12px;
+  width: 4px; border-radius: 0 4px 4px 0; background: var(--hue); }
+.sec:hover { border-color: var(--text-faint); }
+.sec[aria-selected="true"] { border-color: var(--hue); box-shadow: 0 0 0 1px var(--hue), var(--shadow); }
+.sec-name { font-size: 12.5px; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--text-dim); }
+.sec-val { font-size: 30px; font-weight: 700; line-height: 1.15; letter-spacing: -.015em;
+  white-space: nowrap; }
+.sec-mid { font-size: 14px; font-weight: 600; color: var(--text-dim); white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; }
+.sec-foot { font-size: 12.5px; color: var(--text-faint); white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; }
+
+.nexus { margin: 0; font-size: 14px; color: var(--text-dim); line-height: 1.6; }
+.nexus b { color: var(--text); font-variant-numeric: tabular-nums; }
+.nexus b.up { color: var(--ok); }
+.nexus .ar { color: var(--text-faint); margin: 0 3px; }
+.nexus small { color: var(--text-faint); font-size: 12.5px; }
+.nx-tag { display: inline-block; font-size: 11.5px; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--text-dim); background: var(--surface-2);
+  border-radius: 6px; padding: 1px 7px; margin-right: 4px; }
+
+/* ---------- a room: its number, then its ranking ---------- */
+.room { background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
+  padding: 20px 22px 14px; display: flex; flex-direction: column; gap: 14px;
+  box-shadow: var(--shadow); border-top: 3px solid var(--hue); }
+.room-head { display: flex; align-items: flex-end; gap: 22px; flex-wrap: wrap; }
+.hero { font-size: 52px; font-weight: 700; line-height: .95; letter-spacing: -.025em;
+  white-space: nowrap; }
+.hero-side { display: flex; flex-direction: column; gap: 5px; padding-bottom: 3px; min-width: 0; }
+.hero-l1 { font-size: 15px; color: var(--text-dim); }
+.hero-l1 b { color: var(--text); font-weight: 600; }
+.hero-l1 b.up { color: var(--ok); } .hero-l1 b.down { color: var(--bad); }
+.hero-l2 { font-size: 14px; color: var(--text-dim); display: flex; align-items: center;
+  gap: 8px; flex-wrap: wrap; }
+.hero-l2 small { color: var(--text-faint); font-size: 12.5px; }
+.conf { display: inline-block; padding: 2px 10px; border-radius: 999px; font-weight: 600;
+  font-size: 13px; background: var(--surface-2); color: var(--text-dim); }
+.conf.up { background: var(--ok-bg); color: var(--ok); }
+.conf.down { background: var(--bad-bg); color: var(--bad); }
+
+.bar { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  flex-wrap: wrap; }
+.seg { display: inline-flex; gap: 3px; padding: 3px; border-radius: 999px;
+  background: var(--surface-2); }
+.seg button { border: 0; background: none; color: var(--text-dim); padding: 6px 15px;
+  border-radius: 999px; cursor: pointer; font-size: 14px; }
+.seg button:hover { color: var(--text); }
+.seg button[aria-selected="true"] { background: var(--surface); color: var(--text);
+  font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,.18); }
+.seg .n { margin-left: 6px; color: var(--text-faint); font-variant-numeric: tabular-nums;
+  font-weight: 500; }
+.bar-hint { font-size: 12.5px; color: var(--text-faint); }
+
+.board { list-style: none; margin: 0; padding: 0; }
+.row { display: grid; grid-template-columns: 26px minmax(0, 1fr) 110px 88px 80px 132px 250px 14px;
+  align-items: center; gap: 12px; padding: 8px 10px; border-radius: 10px; cursor: pointer;
+  min-height: 46px; }
+.board > li + li.row { border-top: 1px solid var(--line-soft); }
+.row:hover, .row.open { background: var(--surface-2); }
+.row.open { border-radius: 10px 10px 0 0; }
+.rk { font: 500 13px var(--mono); color: var(--text-faint); text-align: right; }
+.nm { font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis; }
+.val { font-size: 18px; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums;
+  white-space: nowrap; }
+.usd { font-size: 13.5px; text-align: right; font-variant-numeric: tabular-nums;
+  white-space: nowrap; }
+.bt, .st { display: flex; gap: 6px; min-width: 0; overflow: hidden; }
+.chev { color: var(--text-faint); font-size: 16px; }
+.chip { font-size: 12.5px; padding: 2px 9px; border-radius: 999px; background: var(--surface-3);
+  color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 100%; }
+.chip.up { background: var(--ok-bg); color: var(--ok); }
+.chip.down { background: var(--bad-bg); color: var(--bad); }
+.spark { width: 110px; height: 28px; display: block; overflow: visible; }
+.sp-zero { stroke: var(--line); stroke-width: 1; }
+.sp-none { color: var(--text-faint); }
+.more { align-self: flex-start; border: 0; background: none; color: var(--accent);
+  cursor: pointer; font-size: 14px; font-weight: 600; padding: 4px 10px; }
+.empty { margin: 0; padding: 26px 10px; color: var(--text-faint); font-size: 15px; }
+
+/* An opened experiment: its line over time, and four numbers beside it. */
+.detail { background: var(--surface-2); border-radius: 0 0 10px 10px; padding: 6px 14px 16px 48px;
+  margin-bottom: 6px; }
+.dt { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(280px, 1fr); gap: 22px;
+  align-items: start; }
+.dt-chart { margin: 0; min-width: 0; }
+.dt-chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+.dt-empty { padding: 30px 0; color: var(--text-faint); }
+.ax text { font: 11.5px var(--sans); fill: var(--text-faint); }
+.ax line { stroke: var(--line-soft); stroke-width: 1; }
+.ax .zero { stroke: var(--line); }
+.lvl { stroke-width: 1.5; stroke-dasharray: 5 4; }
+.lvl-tp { stroke: var(--ok); } .lvl-sl { stroke: var(--bad); }
+.lvl-t { font: 600 11.5px var(--sans); }
+.xh { stroke: var(--text-faint); stroke-width: 1; }
+.tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.tile { background: var(--surface); border: 1px solid var(--line-soft); border-radius: 10px;
+  padding: 10px 12px; min-width: 0; }
+.tile span { display: block; font-size: 12.5px; color: var(--text-dim); }
+.tile b { display: block; font-size: 22px; font-weight: 700; line-height: 1.25;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tile i { display: block; font-style: normal; font-size: 12.5px; color: var(--text-faint);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.meter { height: 6px; border-radius: 3px; background: var(--surface-3); margin-top: 7px;
+  overflow: hidden; }
+.meter s { display: block; height: 100%; background: var(--accent); border-radius: 3px; }
+.dt-facts { margin: 12px 0 0; font-size: 13px; color: var(--text-dim); }
+.dt-links { display: flex; gap: 16px; margin-top: 8px; font-size: 14px; flex-wrap: wrap; }
+.dt-links a, .linkish { color: var(--accent); text-decoration: none; background: none;
+  border: 0; padding: 0; cursor: pointer; font-weight: 600; }
+
+/* ---------- the memecoin room ---------- */
+.m-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.filt { margin: 0; font-size: 12.5px; color: var(--text-faint); }
+.movers h3 { margin: 4px 0 8px; font-size: 15px; }
+.movers h3 small { font-weight: 400; color: var(--text-faint); font-size: 12.5px; margin-left: 6px; }
+.mc-list { width: 100%; border-collapse: collapse; }
+.mc-list th { text-align: left; font-size: 12px; font-weight: 600; color: var(--text-faint);
+  text-transform: uppercase; letter-spacing: .05em; padding: 4px 10px; }
+.mc-list th:nth-child(3), .mc-list th:nth-child(4) { text-align: right; }
+.mc-list td { padding: 3px 10px; border-top: 1px solid var(--line-soft); }
+.mc-sym { font-weight: 600; }
+.mc-conv { color: var(--text-dim); font-variant-numeric: tabular-nums; }
+.mc-ret { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mc-up { color: var(--ok); } .mc-down { color: var(--bad); } .mc-flat { color: var(--text-faint); }
+.mc-g { width: 170px; }
+.mc-spark { display: block; width: 150px; height: 30px; overflow: visible; }
+.mc-pt { cursor: crosshair; }
+
+/* Our own bubble -- the browser's title tooltip is small, grey and late. */
+.tip { position: fixed; z-index: 80; pointer-events: none; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px;
+  box-shadow: var(--shadow); min-width: 120px; }
+.tip-h { font-size: 12px; color: var(--text-dim); }
+.tip-v { font-size: 22px; font-weight: 700; line-height: 1.2; }
+
+/* ---------- the conversation, behind its button ---------- */
+.drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(560px, 100vw);
+  background: var(--surface); border-left: 1px solid var(--line); z-index: 60;
+  display: flex; flex-direction: column; box-shadow: -18px 0 40px rgba(0,0,0,.28); }
+.dr-head { display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 14px 18px 10px; }
+.dr-head h2 { margin: 0; font-size: 17px; }
+.dr-scope { display: flex; gap: 6px; flex-wrap: wrap; padding: 0 18px 10px;
+  border-bottom: 1px solid var(--line); }
+.dr-scope button { border: 1px solid var(--line); background: none; border-radius: 999px;
+  padding: 3px 11px; font-size: 13px; cursor: pointer; color: var(--text-dim); }
+.dr-scope button[aria-pressed="true"] { background: var(--surface-3); color: var(--text);
+  border-color: var(--text-faint); }
+.thread { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 14px 18px 18px;
+  display: flex; flex-direction: column; gap: 10px; }
+.th-room { font-size: 12px; font-weight: 700; color: var(--text-dim); text-transform: uppercase;
+  letter-spacing: .05em; margin-top: 8px; }
+.compose { flex: none; display: flex; flex-direction: column; gap: 6px; padding: 12px 18px 14px;
+  border-top: 1px solid var(--line); background: var(--surface-2); }
+.compose textarea { width: 100%; resize: vertical; min-height: 3.2em; font: inherit;
+  color: var(--text); background: var(--surface); border: 1px solid var(--line);
+  border-radius: 8px; padding: .5rem .65rem; }
+.send { display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  font-size: 12.5px; color: var(--text-dim); }
+.send button { padding: 6px 16px; border-radius: 999px; border: 0; background: var(--accent);
+  color: var(--surface); font-weight: 600; cursor: pointer; }
+.send button:disabled { opacity: .5; cursor: default; }
+.nx-msg { border: 1px solid var(--line); border-radius: 12px; padding: .6rem .8rem;
+  background: var(--surface); max-width: 94%; align-self: flex-start; }
+.nx-msg.nx-ours { align-self: flex-end; background: var(--surface-2); }
+.nx-msg.nx-op { align-self: flex-end; border-color: var(--accent); }
+.nx-msg.nx-cl { background: var(--surface-2); }
+.nx-msg.nx-sys { align-self: center; border: 0; background: none; padding: 0 .6rem;
+  color: var(--text-faint); font-size: 12.5px; text-align: center; }
+.nx-msg.nx-failed, .nx-msg.nx-refused { border-color: var(--bad); }
+.nx-h { font-size: 12px; color: var(--text-dim); margin-bottom: .3rem; }
+.nx-h b { color: var(--text); }
+.nx-s { font-size: 12.5px; color: var(--text-dim); font-style: italic; }
+.nx-b { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14px; }
+.nx-b.nx-clamp { max-height: 7.5em; overflow: hidden;
+  -webkit-mask-image: linear-gradient(#000 60%, transparent); mask-image: linear-gradient(#000 60%, transparent); }
+.nx-b code { font-family: var(--mono); font-size: .9em; background: var(--surface-2);
+  padding: 0 .2em; border-radius: 3px; }
+.nx-more, .nx-goto { background: none; border: 0; color: var(--accent); cursor: pointer;
+  padding: 0; font-size: 12.5px; }
+.nx-gist { margin: 0 0 .4rem; padding: .35rem .6rem; border-left: 3px solid var(--accent);
+  background: var(--surface-2); border-radius: 0 6px 6px 0; font-size: 13.5px; }
+.nx-tick { color: var(--ok); margin-left: .3rem; }
+
+@media (max-width: 1180px) {
+  .row { grid-template-columns: 22px minmax(0, 1fr) 90px 80px 120px 14px; }
+  .row .usd, .row .st { display: none; }
+  .dt { grid-template-columns: 1fr; }
+  .m-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
-.wrap { max-width:1240px; margin:0 auto; padding:32px 22px 80px; }
-
-.mast { border-bottom:2px solid var(--text); padding-bottom:14px; }
-.mast h1 {
-  font-size:clamp(26px,4vw,38px); font-weight:600; letter-spacing:-0.022em;
-  margin:0 0 4px; text-wrap:balance;
+@media (max-width: 760px) {
+  .app { padding: 14px 16px 28px; }
+  .sectors { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sec-val { font-size: 24px; }
+  .hero { font-size: 40px; }
+  .row { grid-template-columns: minmax(0, 1fr) 76px 12px; gap: 8px; }
+  .row .rk, .row .sp, .row .bt { display: none; }
+  .detail { padding-left: 12px; }
+  .top-r .live { display: none; }
+  .mc-g { width: auto; }
 }
-.mast .sub { color:var(--text-dim); font-size:16.0px; max-width:70ch; margin:0; }
-.meta {
-  display:flex; flex-wrap:wrap; gap:6px 20px; margin-top:14px;
-  font-family:var(--mono); font-size:13.0px; color:var(--text-faint);
-}
-.meta b { color:var(--text-dim); font-weight:500; }
-
-.blurb { font-size:14.1px; color:var(--text-dim); margin:0; line-height:1.5; }
-.live {
-  font-family:var(--mono); font-size:12px; color:var(--text-faint);
-  display:inline-flex; align-items:center; gap:6px;
-}
-.live i { width:7px; height:7px; border-radius:50%; background:var(--text-faint); }
-.live.on i { background:var(--ok); }
-.live.off i { background:var(--warn); }
-.meta a { color:var(--accent); text-decoration:none; }
-h2.group {
-  font-size:13.5px; text-transform:uppercase; letter-spacing:0.13em;
-  font-weight:700; margin:38px 0 3px; display:flex; align-items:center; gap:10px;
-}
-.tab-n { background:var(--accent); color:var(--surface); border-radius:9px;
-  padding:0 .45rem; font-size:.75em; font-weight:600; letter-spacing:0; }
-
-/* ---------- the four products ----------
-   One card each, the same four every time, so a product with nothing to say
-   is visibly empty rather than missing. The number is the net return after
-   costs; under it how many experiments it stands on, and how sure that is --
-   no band under five, because two coins are not a measurement. */
-.lab-products { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
-  gap:14px; margin:26px 0 12px; }
-.lab-p { background:var(--surface); border:1px solid var(--line); border-radius:12px;
-  padding:16px 18px 15px; display:flex; flex-direction:column; gap:4px; min-width:0; }
-.lab-p h3 { margin:0; font-size:13px; text-transform:uppercase; letter-spacing:.08em;
-  color:var(--text-dim); }
-.lab-big { font-size:40px; font-weight:700; line-height:1.15;
-  font-variant-numeric:tabular-nums; }
-.lab-big.up { color:var(--ok); } .lab-big.down { color:var(--bad); }
-.lab-big.none { color:var(--text-faint); }
-.lab-sub { font-size:13.5px; color:var(--text-dim); }
-.lab-band { font-size:13.5px; }
-.lab-band.thin { color:var(--text-faint); }
-.lab-best { font-size:13px; color:var(--text-faint); overflow-wrap:anywhere; }
-.lab-nexus { margin:6px 0 0; font-size:15px; color:var(--text-dim); }
-.lab-nexus b { color:var(--text); font-variant-numeric:tabular-nums; }
-/* The rooms: a strip of named strategies across the top; under it the chat
-   with Nexus on the left and, beside it, the strategy's numbers, chart and
-   configuration. The page takes the whole width (the console keeps its
-   column), and both columns scroll on their own, so the
-   composer is always under the thread and never over it -- it once floated
-   over it, sticky, and the operator said so. Ours and the operator's messages
-   sit on the right like any chat, Nexus on the left. Every class is nx- so
-   nothing here can restyle the findings' own conversation. */
-.wrap{max-width:none;padding-left:28px;padding-right:28px}
-
-/* ---------- the Memecoiny tab ----------------------------------------
-   Green up, red down, and big enough to read from across the desk. The
-   operator asked twice; the first answer was the last block of another tab
-   in the same grey as everything else. */
-.mc-up{color:var(--ok);font-weight:700}
-.mc-down{color:var(--bad);font-weight:700}
-.mc-flat{color:var(--text-faint)}
-
-.mc-top{margin:4px 0 26px}
-.mc-top h2{margin:0 0 6px;font-size:26px;letter-spacing:-.2px}
-.mc-top .blurb{max-width:70ch;margin-top:10px}
-.mc-count{font-size:40px;font-weight:700;line-height:1.1;color:var(--text)}
-.mc-count span{font-size:14px;font-weight:400;color:var(--text-dim);
-  margin-left:10px;letter-spacing:0}
-
-.mc-grid{display:grid;gap:16px;margin-bottom:30px;
-  grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
-.mc-card{background:var(--surface);border:1px solid var(--line);
-  border-radius:var(--radius);padding:20px 22px}
-.mc-h{font-size:13px;text-transform:uppercase;letter-spacing:.6px;
-  color:var(--text-dim)}
-.mc-big{font-size:48px;font-weight:800;line-height:1.15;margin:8px 0 2px;
-  letter-spacing:-1px}
-.mc-sub{font-size:13px;color:var(--text-dim)}
-.mc-figs{display:flex;gap:26px;margin:16px 0 0;padding-top:14px;
-  border-top:1px solid var(--line-soft)}
-.mc-figs dt{font-size:12px;color:var(--text-dim);margin:0}
-.mc-figs dd{margin:2px 0 0;font-size:19px;font-weight:600}
-
-.mc-figs .mc-of{font-size:12px;color:var(--text-dim);font-weight:400}
-.mc-list{width:100%;border-collapse:collapse;background:var(--surface);
-  border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
-.mc-list th{text-align:left;font-size:12px;text-transform:uppercase;
-  letter-spacing:.5px;color:var(--text-dim);font-weight:600;
-  padding:11px 16px;border-bottom:1px solid var(--line)}
-.mc-list th:nth-child(3),.mc-list th:nth-child(4){text-align:right}
-.mc-list td{padding:10px 16px;border-bottom:1px solid var(--line-soft);
-  font-size:16px;vertical-align:middle}
-.mc-list tr:last-child td{border-bottom:0}
-.mc-list tr:hover td{background:var(--surface-2)}
-.mc-g{width:170px;padding-right:18px!important}
-.mc-spark{display:block;width:150px;height:30px;overflow:visible}
-.mc-spark .mc-pt{cursor:crosshair}
-.mc-tip{position:fixed;z-index:60;pointer-events:none;
-  background:var(--surface);border:1px solid var(--line);
-  border-radius:10px;padding:8px 14px;
-  box-shadow:0 8px 26px rgba(0,0,0,.45);white-space:nowrap}
-.mc-tip .mc-th{font-size:12px;color:var(--text-dim);letter-spacing:.4px;
-  text-transform:uppercase}
-.mc-tip .mc-tv{font-size:26px;font-weight:800;line-height:1.15;
-  font-variant-numeric:tabular-nums}
-.mc-table{margin:0 0 26px}
-.mc-table h3{font-size:15px;margin:0 0 10px;color:var(--text-dim);
-  font-weight:600}
-.mc-table table{width:100%;border-collapse:collapse;background:var(--surface);
-  border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
-.mc-table th{text-align:left;font-size:12px;text-transform:uppercase;
-  letter-spacing:.5px;color:var(--text-dim);font-weight:600;
-  padding:11px 16px;border-bottom:1px solid var(--line)}
-.mc-table td{padding:12px 16px;border-bottom:1px solid var(--line-soft);
-  font-size:16px}
-.mc-table tr:last-child td{border-bottom:0}
-.mc-sym{font-weight:600}
-.mc-conv{color:var(--text-dim);font-variant-numeric:tabular-nums}
-.mc-ret{text-align:right;font-size:20px;font-variant-numeric:tabular-nums}
-.nx-strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin:18px 0 16px}
-.nx-card{position:relative;display:flex;flex-direction:column;gap:5px;min-width:0;text-align:left;padding:12px 15px 13px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--text);font:inherit;cursor:pointer}
-.nx-card:hover{border-color:var(--text-faint)}
-.nx-card.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
-.nx-card-top{display:flex;align-items:center;gap:8px;min-width:0;font-size:12.5px;color:var(--text-dim);white-space:nowrap;overflow:hidden}
-.nx-card-name{font-size:17px;font-weight:600;line-height:1.25;overflow-wrap:anywhere}
-.nx-card-num{font-size:15px;font-weight:600;color:var(--text-dim)}
-.nx-card-why{font-size:12px;line-height:1.3;color:var(--text-dim)}
-.nx-card.nx-ended{opacity:.75;border-style:dashed}
-.nx-badge{position:absolute;top:10px;right:12px;background:var(--accent);color:var(--surface);border-radius:9px;padding:0 .45rem;font-size:.75em;font-weight:600}
-.nx-main{display:grid;grid-template-columns:minmax(360px,2fr) minmax(0,3fr);gap:18px;height:calc(100vh - 48px);min-height:680px}
-.nx-chatcol{display:flex;flex-direction:column;min-width:0;min-height:0;border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow:hidden}
-.nx-chat{flex:1 1 auto;min-height:0;overflow-y:auto;padding:18px 18px 22px;display:flex;flex-direction:column;gap:14px}
-.nx-compose{flex:none;display:flex;flex-direction:column;gap:6px;padding:12px 14px;border-top:1px solid var(--line);background:var(--surface-2)}
-.nx-compose textarea{width:100%;box-sizing:border-box;resize:vertical;min-height:3.2em;font:inherit;color:var(--text);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:.5rem .65rem}
-.nx-send{display:flex;justify-content:space-between;align-items:center;gap:.6rem;font-size:.8em;color:var(--text-dim)}
-.nx-send button{font:inherit;font-size:1.15em;padding:.3rem .9rem;border-radius:6px;border:1px solid var(--wait);background:var(--wait);color:var(--surface);cursor:pointer}
-.nx-send button:disabled{opacity:.5;cursor:default}
-.nx-panel{min-width:0;min-height:0;overflow-y:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:22px 26px 26px}
-@media (max-width:1100px){.nx-main{grid-template-columns:1fr;height:auto}.nx-chatcol{height:75vh}.nx-panel{overflow:visible}}
-.nx-note{margin-top:14px;padding:.7rem .9rem;border:1px dashed var(--line);border-radius:var(--radius);color:var(--text-dim)}
-.nx-msg{border:1px solid var(--line);border-radius:14px;padding:.75rem .95rem;background:var(--surface);max-width:min(52rem,90%);align-self:flex-start}
-.nx-msg.nx-ours{align-self:flex-end;background:var(--accent-dim);border-color:var(--accent)}
-.nx-msg.nx-op{align-self:flex-end;background:var(--wait-bg);border-color:var(--wait)}
-.nx-msg.nx-cl{background:var(--surface-2)}
-.nx-msg.nx-sys{align-self:center;max-width:92%;border:none;background:none;padding:0 1rem;color:var(--text-faint);font-size:.8em;text-align:center}
-.nx-msg.nx-failed,.nx-msg.nx-refused{border-color:var(--bad)}
-.nx-msg.nx-partial,.nx-msg.nx-waiting{border-color:var(--warn)}
-.nx-h{font-size:.78em;color:var(--text-dim);margin-bottom:.4rem}
-.nx-h b{color:var(--text);font-weight:600}
-.nx-s{font-size:.85em;color:var(--text-dim);font-style:italic}
-.nx-b{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5}
-.nx-b.nx-clamp{max-height:9.5em;overflow:hidden;-webkit-mask-image:linear-gradient(#000 65%,transparent);mask-image:linear-gradient(#000 65%,transparent)}
-.nx-b code{font-family:var(--mono);font-size:.9em;background:var(--surface-2);padding:0 .2em;border-radius:3px}
-.nx-more{margin-top:.35rem;background:none;border:none;color:var(--accent);cursor:pointer;font:inherit;font-size:.82em;padding:0}
-.nx-tick{color:var(--ok);margin-left:.3rem}
-.nx-st{font-weight:700}
-.nx-st.nx-running{color:var(--ok)}
-.nx-st.nx-paused{color:var(--warn)}
-.nx-st.nx-stopped{color:var(--bad)}
-.nx-st.nx-proposed{color:var(--text-dim)}
-.nx-gist{margin:.1rem 0 .5rem;padding:.45rem .65rem;border-left:3px solid var(--accent);background:var(--surface-2);border-radius:0 6px 6px 0;font-size:.95em;line-height:1.45}
-.nx-gist span{display:block;font-size:.72em;color:var(--text-dim);margin-bottom:.1rem}
-.nx-opened{margin-top:.35rem;font-size:.8em}
-.nx-goto{background:none;border:none;color:var(--accent);cursor:pointer;font:inherit;padding:0;text-decoration:underline}
-.nx-leg.nx-no{color:var(--bad)}
-.nx-hero{display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px}
-.nx-hero h2{margin:0;font-size:26px;font-weight:600;letter-spacing:-.01em;line-height:1.2;overflow-wrap:anywhere}
-.nx-sub{margin:6px 0 0;font-size:13px;color:var(--text-faint)}
-.nx-pill{display:inline-flex;align-items:center;gap:6px;padding:3px 11px;border-radius:999px;background:var(--surface-2);color:var(--text-dim);font-size:13px;font-weight:600;white-space:nowrap}
-.nx-pill.nx-running{background:var(--ok-bg);color:var(--ok)}
-.nx-pill.nx-paused{background:var(--warn-bg);color:var(--warn)}
-.nx-pill.nx-stopped{background:var(--bad-bg);color:var(--bad)}
-/* [operator 2026-09-20, N-0035] "Vice barev pouyivej pro tagz jako Bot Cards":
-   what a room HOLDS is the thing they scan the strip for, and it was the one
-   pill with no colour at all. */
-.nx-pill.nx-holds-bot{background:rgba(139,111,232,.20);color:#c3b4ff}
-.nx-pill.nx-holds-cards{background:rgba(72,150,232,.20);color:#9ecbff}
-.nx-pill.nx-trading-on{background:var(--ok-bg);color:var(--ok)}
-.nx-pill.nx-trading-off{background:var(--surface-2);color:var(--text-dim)}
-.nx-gist{margin:0;font-size:16px;line-height:1.45;font-weight:600}
-.nx-more{margin-top:8px}
-.nx-more>summary{cursor:pointer;color:var(--text-dim);font-size:13px;
-  font-weight:600;list-style:none;user-select:none}
-.nx-more>summary::-webkit-details-marker{display:none}
-.nx-more>summary::before{content:"▸ ";color:var(--text-dim)}
-.nx-more[open]>summary::before{content:"▾ "}
-.nx-more>summary:hover{color:var(--text)}
-.nx-cap{margin:-2px 0 10px}
-.nx-table.nx-bt .nx-tr{grid-template-columns:2fr 1.2fr .8fr .8fr .8fr}
-.nx-card-top .nx-pill{padding:1px 8px;font-size:12px}
-.nx-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:20px 0 4px}
-.nx-tile{min-width:0;padding:13px 15px;border-radius:10px;background:var(--surface-2)}
-.nx-tile span{display:block;font-size:12.5px;color:var(--text-dim)}
-.nx-tile b{display:block;margin-top:2px;font-size:26px;font-weight:600;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.nx-tile i{display:block;margin-top:2px;font-style:normal;font-size:12.5px;color:var(--text-faint)}
-.nx-up{color:var(--ok)}
-.nx-down{color:var(--bad)}
-.nx-warn{color:var(--warn)}
-.nx-sec{margin:28px 0 8px;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-faint)}
-.nx-table{font-size:14px}
-.nx-tr{display:grid;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line-soft)}
-.nx-tr > *{min-width:0;overflow-wrap:anywhere}
-.nx-tr small{display:block;font-size:12px;color:var(--text-faint)}
-.nx-th{border-top:none;padding-top:0;font-size:12.5px;color:var(--text-faint)}
-.nx-legs .nx-tr{grid-template-columns:minmax(0,2.3fr) .8fr 1.2fr 1.5fr 1.3fr 1fr}
-.nx-trades .nx-tr{grid-template-columns:minmax(0,1.4fr) .8fr .8fr 1.3fr 1.1fr}
-.nx-orders .nx-tr{grid-template-columns:.9fr 1.1fr minmax(0,2.2fr) 1fr}
-.nx-strats .nx-tr{grid-template-columns:minmax(0,1.8fr) .6fr 1fr .9fr 1fr 1.2fr}
-.nx-state{font-size:13px;font-weight:600;color:var(--text-dim)}
-.nx-state.nx-open{color:var(--ok)}
-.nx-state.nx-card-closed{color:var(--text-faint)}
-.nx-state.nx-card-not-found{color:var(--bad)}
-.nx-dim{color:var(--text-faint)}
-.nx-kv{display:flex;flex-wrap:wrap;gap:8px 28px;font-size:14px}
-.nx-kv span{margin-right:6px;color:var(--text-faint)}
-.nx-chips{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:10px}
-.nx-chips > span{min-width:5.5rem;margin-right:4px;font-size:12.5px;color:var(--text-faint)}
-.nx-chip{padding:3px 9px;border-radius:6px;border:1px solid var(--line-soft);background:var(--surface-2);font-family:var(--mono);font-size:12.5px}
-.nx-ct{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin:22px 0 4px;font-size:14px;font-weight:600}
-.nx-ct small{font-size:12.5px;font-weight:400;color:var(--text-faint)}
-.nx-chart{display:block;max-width:100%;height:auto;overflow:visible}
-.nx-chart text{font-size:12px;fill:var(--text-dim)}
-.nx-chart .nx-gl{stroke:var(--line-soft);stroke-width:1}
-.nx-chart .nx-area{fill:var(--accent-dim);stroke:none}
-.nx-chart .nx-line{fill:none;stroke:var(--accent);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
-.nx-chart .nx-ref{stroke-width:1.5;stroke-dasharray:6 4}
-.nx-chart .nx-ref-tp{stroke:var(--ok)}
-.nx-chart .nx-ref-sl{stroke:var(--bad)}
-.nx-chart .nx-ref-entry,.nx-chart .nx-ref-base{stroke:var(--text-dim);stroke-dasharray:2 4}
-.nx-chart .nx-tp{fill:var(--ok)}
-.nx-chart .nx-sl{fill:var(--bad)}
-.nx-chart .nx-now{fill:var(--text);font-weight:600}
-.nx-chart .nx-vl{stroke:var(--wait);stroke-width:1.5;stroke-dasharray:3 3}
-.nx-chart .nx-vt{fill:var(--wait)}
-.nx-chart .nx-dot{fill:var(--accent);stroke:var(--surface);stroke-width:2}
-.nx-chart .nx-dot-open{fill:var(--surface);stroke:var(--accent);stroke-width:2}
-.nx-chart .nx-dot-loss{fill:var(--bad);stroke:var(--surface);stroke-width:2}
-/* Why a strategy stands where it does: under its name, above its numbers,
-   coloured by where it stands, and every earlier move under it. */
-.nx-status{margin:18px 0 4px;padding:14px 18px 13px;border-radius:10px;background:var(--surface-2);border-left:4px solid var(--accent)}
-.nx-status.nx-paused{border-left-color:var(--warn);background:var(--warn-bg)}
-.nx-status.nx-stopped{border-left-color:var(--bad);background:var(--bad-bg)}
-.nx-status.nx-proposed{border-left-color:var(--text-faint)}
-.nx-status h3{margin:0;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-dim)}
-.nx-status>p{margin:6px 0 0;font-size:16px;line-height:1.55;white-space:pre-wrap}
-.nx-moves{display:grid;gap:5px;margin:12px 0 0;padding-top:10px;border-top:1px solid var(--line-soft)}
-.nx-moves p{margin:0;font-size:13.5px;line-height:1.5;color:var(--text-dim)}
-.nx-moves b{font-weight:600}
-/* A card's name opens the card itself on cymetica.com. */
-.nx-link{color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-faint)}
-.nx-link:hover{color:var(--accent);border-bottom-color:var(--accent)}
-.nx-out{font-size:.8em;color:var(--accent)}
-.nx-foot{margin:12px 0 0;font-size:12.5px;color:var(--text-faint)}
-.nx-stale b{color:var(--bad)}
-.nx-pf{padding:0;border:none;background:none;color:var(--text);font:inherit;font-weight:600;text-align:left;cursor:pointer}
-.nx-pf:hover{color:var(--accent)}
-
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 
-<div class="wrap" id="wrap">
-  <header class="mast">
-    <h1>Laboratoř</h1>
-    <p class="sub">Co laborka s Nexusem vydělala, po nákladech. Jen papír,
-    žádné skutečné peníze.</p>
-    <div class="meta" id="meta"><a href="/">&larr; konzole</a>
-      <span id="reportAt"></span></div>
-  </header>
-
-  <section class="lab-products" id="products" aria-label="Produkty"></section>
-  <p class="lab-nexus" id="nexusLine"></p>
-
-  <h2 class="group">Roomy <span class="tab-n" id="nexusN" hidden></span></h2>
-  <section class="panel" id="panel-nexus">
-  <div class="nx-note" id="roomsNote" hidden></div>
-  <nav class="nx-strip" id="roomList" aria-label="Strategies"></nav>
-  <div class="nx-main" id="nxMain">
-    <div class="nx-chatcol">
-      <div class="nx-chat" id="roomChat"></div>
-      <form class="nx-compose" id="nxCompose" hidden>
-        <textarea id="nxDraft" rows="2" maxlength="4000"
-          placeholder="Your feedback for this room. Claude reads it when you ask."></textarea>
-        <div class="nx-send"><span id="nxSendNote">Ctrl+Enter sends</span>
-          <button type="submit" id="nxSend">Send</button></div>
-      </form>
+<div class="app" id="app">
+  <header class="top">
+    <div class="brand">
+      <h1>Laboratoř</h1>
+      <p id="account">Papírové obchody podle Nexuse · čísla po poplatcích</p>
     </div>
-    <aside class="nx-panel" id="roomPanel"></aside>
-  </div>
-  </section>
-
-
-  <h2 class="group">Memecoiny do detailu</h2>
-  <section class="panel" id="panel-memecoins">
-  <div id="memecoins"></div>
-  <div id="mcTip" class="mc-tip" hidden></div>
-  </section>
-
-
+    <div class="top-r">
+      <span class="live" id="live"><i></i><span>statická</span></span>
+      <button class="btn" type="button" id="chatBtn">💬 Konverzace</button>
+      <a class="btn" href="/">← Konzole</a>
+    </div>
+  </header>
+  <nav class="sectors" id="sectors" role="tablist" aria-label="Odvětví"></nav>
+  <p class="nexus" id="nexus"></p>
+  <main class="room" id="room"></main>
 </div>
+
+<aside class="drawer" id="drawer" hidden aria-label="Konverzace">
+  <div class="dr-head"><h2 id="drTitle">Konverzace</h2>
+    <button class="btn" type="button" id="drClose">Zavřít ✕</button></div>
+  <div class="dr-scope" id="drScope"></div>
+  <div class="thread" id="thread"></div>
+  <form class="compose" id="compose">
+    <textarea id="draft" rows="2" maxlength="4000"
+      placeholder="Poznámka pro Clauda k tomuhle roomu — přečte si ji, až mu napíšeš „přečti si to“."></textarea>
+    <div class="send"><span id="sendNote">Ctrl+Enter odešle</span>
+      <button type="submit" id="send">Poslat</button></div>
+  </form>
+</aside>
+<div class="tip" id="tip" hidden></div>
 
 <script id="data" type="application/json">__DATA__</script>
 <script>
-const D = JSON.parse(document.getElementById("data").textContent);
-const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let V = JSON.parse(document.getElementById("data").textContent);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g,
+  c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
 const stamp = t => t ? String(t).replace("T", " ").slice(0, 16) : "";
-
-// localStorage is a convenience here, never state: every read falls back to
-// its default and every write may fail silently.
+// localStorage is a convenience here, never state.
 function readStore(key, dflt) {
   try { const v = localStorage.getItem(key); return v === null ? dflt : v; }
   catch (_) { return dflt; }
@@ -1257,73 +1442,447 @@ function readStore(key, dflt) {
 function writeStore(key, value) {
   try { localStorage.setItem(key, String(value)); } catch (_) {}
 }
+const LOCAL = ["127.0.0.1", "localhost", "[::1]"].includes(location.hostname);
+const SECTORS = ["cards", "bots", "memecoins", "funds"];
+const GROUPS = [["live", "Běží"], ["done", "Vyhodnoceno"], ["archive", "Archiv"]];
+const EMPTY = {live: "Teď tu nic neběží.", done: "Zatím nic vyhodnoceného.",
+               archive: "Archiv je prázdný."};
+const TOP = 10;
 
-/* ---------- the four products, from state/lab/report.json ----------
-   `lp.` is a product and `ln.` the Nexus line: named, so a test can hold
-   every field read here against what qa/lab_report.py writes. */
-const PRODUCT_NAMES = {cards: "Karty", bots: "Boti", memecoins: "Memecoiny",
-                       funds: "Fondy"};
-function labPct(v) {
-  if (v == null) return "&mdash;";
-  return (v > 0 ? "+" : "") + v.toFixed(2).replace(".", ",") + "&nbsp;%";
+/* ---------- numbers, the way the operator reads them ----------
+   A decimal comma, a real minus, a space before %, and as many decimals as
+   the size of the number needs. The page names its shapes -- `lp.` a sector,
+   `le.` an experiment, `lb.` its backtest, `ln.` the Nexus line, `la.` the
+   account -- and tests/meta/test_pipeline_lab_page.py holds every one against
+   what lab_view() writes, in both directions. */
+// A number never breaks across a line: no-break spaces between its thousands
+// and before its unit ("1 414 $" once wrapped as "1 414" / "$" on a phone).
+const NB = " ";
+function num(v, digits) {
+  const n = Number(v), fixed = Math.abs(n).toFixed(digits), parts = fixed.split(".");
+  return (n < 0 && Number(fixed) !== 0 ? "−" : "") +
+    parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, NB) + (parts[1] ? "," + parts[1] : "");
 }
-function labShare(v) { return Math.round(v * 100) + "&nbsp;%"; }
-function labProduct(key, lp) {
-  const tone = lp.net_pct == null ? "none" : (lp.net_pct > 0 ? "up" : "down");
-  const band = lp.wilson
-    ? `<div class="lab-band">vydělalo ${labShare(lp.wilson[0])}&ndash;${
-        labShare(lp.wilson[1])} pokusů (95&nbsp;%)</div>`
-    : `<div class="lab-band thin">${lp.wins} z ${lp.n} v plusu &middot; málo dat
-        na jistotu (n&nbsp;&lt;&nbsp;${lp.min_n})</div>`;
-  let sub, extra = "";
-  if (key === "memecoins") {
-    sub = `10&nbsp;$ do každého hot signálu, den držení, ${
-      String(lp.fee_pct).replace(".", ",")}&nbsp;% za stranu &middot; ${lp.n} obchodů`;
-    const fees = (lp.fees || []).filter(f => f.fee_pct !== lp.fee_pct)
-      .map(f => `${String(f.fee_pct).replace(".", ",")}&nbsp;%: ${labPct(f.net_pct)}`);
-    extra = `<div class="lab-best">${lp.could_buy_share == null ? ""
-        : `stihli bychom ${labShare(lp.could_buy_share)} z ${lp.signals} signálů`}${
-        fees.length ? " &middot; " + fees.join(", ") : ""}${
-        lp.running ? ` &middot; ${lp.running} ještě nemá celý den` : ""}</div>`;
-  } else {
-    sub = `${lp.n} pokusů &middot; běží ${lp.running} &middot; v archivu ${lp.archived}`;
-    if (lp.best) extra = `<div class="lab-best">nejlepší ${esc(lp.best.room)} ${
-      esc((lp.best.title || "").slice(0, 40))} ${labPct(lp.best.net_pct)}</div>`;
+function places(v) { const a = Math.abs(v); return a >= 100 ? 0 : a >= 10 ? 1 : 2; }
+function pctText(v, digits) {
+  if (v == null || isNaN(v)) return "—";
+  const d = digits == null ? places(v) : digits;
+  return (v > 0 && Number(Math.abs(v).toFixed(d)) !== 0 ? "+" : "") + num(v, d) + NB + "%";
+}
+function usdText(v) {
+  if (v == null || isNaN(v)) return "—";
+  const d = Math.abs(v) >= 100 ? 0 : 2;
+  return (v > 0 && Number(Math.abs(v).toFixed(d)) !== 0 ? "+" : "") + num(v, d) + NB + "$";
+}
+function money(v) { return v == null || isNaN(v) ? "—" : num(v, Math.abs(v) >= 100 ? 0 : 2) + NB + "$"; }
+function tone(v) { return v == null || isNaN(v) ? "flat" : v > 0 ? "up" : v < 0 ? "down" : "flat"; }
+function plural(n, one, few, many) { return n === 1 ? one : (n >= 2 && n <= 4) ? few : many; }
+function day(iso) {
+  const d = new Date(iso);
+  return isNaN(d) ? "" : d.getDate() + ". " + (d.getMonth() + 1) + ".";
+}
+function clock(iso) {
+  const d = new Date(iso);
+  return isNaN(d) ? "" : day(iso) + " " + String(d.getHours()).padStart(2, "0") + ":" +
+    String(d.getMinutes()).padStart(2, "0");
+}
+function leftText(v) {
+  if (v == null) return "";
+  if (v <= 0) return "vyhodnocení dnes";
+  if (v < 1) return "zbývá " + Math.max(1, Math.round(v * 24)) + " h";
+  return "zbývá " + Math.round(v) + " d";
+}
+function chip(cls, text) { return `<span class="chip ${cls}">${text}</span>`; }
+
+function sectorOf(key) {
+  return (V.sectors || []).find(lp => lp.key === key) || {key: key, name: key};
+}
+
+/* ---------- the top: the account and the four rooms ---------- */
+function accountLine(la) {
+  if (!la || la.free == null) return "Papírové obchody podle Nexuse · čísla po poplatcích";
+  return `Papírový účet: <b>${money(la.free)}</b> volné · ${money(la.in_cards)} v kartách · ` +
+    `${money(la.in_bots)} v botech` + (la.at ? ` <span class="flat">(${clock(la.at)})</span>` : "") +
+    (la.stale ? ' · <span class="warn">⚠ data z API jsou stará</span>' : "");
+}
+function sectorTab(lp, on) {
+  const meme = lp.key === "memecoins";
+  const mid = meme
+    ? (lp.n ? `${num(lp.n, 0)} obchodů po 10 $` : "zatím žádný obchod")
+    : lp.usdc != null ? `<span class="${tone(lp.usdc)}">${usdText(lp.usdc)}</span>`
+                         + ` <span class="flat">z ${money(lp.stake_usdc)}</span>`
+    : (lp.running ? "zatím bez výsledku" : "zatím nic");
+  const foot = meme ? `${num(lp.running || 0, 0)} ještě čeká na celý den`
+    : `${lp.n || 0} ${plural(lp.n || 0, "pokus", "pokusy", "pokusů")} · ${lp.running || 0} běží`;
+  return `<button class="sec" role="tab" type="button" aria-selected="${on}"
+      data-sector="${esc(lp.key)}" style="--hue:var(--c-${esc(lp.key)})">
+    <span class="sec-name">${esc(lp.name)}</span>
+    <span class="sec-val ${tone(lp.net_pct)}">${pctText(lp.net_pct)}</span>
+    <span class="sec-mid">${mid}</span>
+    <span class="sec-foot">${foot}</span></button>`;
+}
+function nexusLine(ln) {
+  if (!ln || ln.questions == null) return "";
+  const ar = '<span class="ar">→</span>';
+  const took = ln.median_seconds != null
+    ? ` · odpovídá za ~${Math.max(1, Math.round(ln.median_seconds / 60))} min` +
+      ` <small>(změřeno ${ln.measured}×)</small>` : "";
+  const quiet = (ln.failed || ln.refused)
+    ? ` · <small>${ln.failed || 0} bez odpovědi, ${ln.refused || 0} odmítl</small>` : "";
+  return `<span class="nx-tag">Nexus</span> <b>${ln.questions}</b> otázek ${ar} ` +
+    `<b>${ln.answered}</b> odpovědí ${ar} <b>${ln.picks}</b> nápadů ${ar} ` +
+    `<b>${ln.gate_pass}</b> z ${ln.gated} prošlo backtestem ${ar} ` +
+    `<b class="${ln.survived ? "up" : ""}">${ln.survived}</b> vyšlo` +
+    (ln.refuted ? `, ${ln.refuted} nevyšlo` : "") + took + quiet;
+}
+
+/* ---------- a room's number: how sure, in words ---------- */
+function confidence(lp) {
+  if (!lp.wilson) return ["flat", "málo dat na jistotu"];
+  if (lp.wilson[0] > 0.5) return ["up", "spíš vydělává"];
+  if (lp.wilson[1] < 0.5) return ["down", "spíš prodělává"];
+  return ["flat", "zatím nerozhodnuto"];
+}
+function band(lp) {
+  return lp.wilson
+    ? `<small>${Math.round(lp.wilson[0] * 100)}–${Math.round(lp.wilson[1] * 100)} % pokusů v plusu, 95 % jistota</small>`
+    : `<small>méně než ${lp.min_n} ${plural(lp.min_n, "pokus", "pokusy", "pokusů")}</small>`;
+}
+function roomHead(lp) {
+  if (!lp.n) {
+    return `<div class="room-head"><div class="hero flat">—</div><div class="hero-side">
+      <div class="hero-l1">zatím žádný výsledek</div>
+      <div class="hero-l2">${lp.running || 0} běží · číslo přijde, až skončí první okno</div>
+      </div></div>`;
   }
-  return `<article class="lab-p"><h3>${PRODUCT_NAMES[key] || esc(key)}</h3>
-    <div class="lab-big ${tone}">${labPct(lp.net_pct)}</div>
-    <div class="lab-sub">${sub}</div>${band}${extra}</article>`;
+  const [ct, cw] = confidence(lp);
+  return `<div class="room-head">
+    <div class="hero ${tone(lp.net_pct)}">${pctText(lp.net_pct)}</div>
+    <div class="hero-side">
+      <div class="hero-l1">průměr na pokus, po poplatcích` +
+        (lp.usdc != null ? ` · celkem <b class="${tone(lp.usdc)}">${usdText(lp.usdc)}</b>` +
+                           ` z ${money(lp.stake_usdc)} vložených` : "") + `</div>
+      <div class="hero-l2">${lp.wins} z ${lp.n} v plusu
+        <span class="conf ${ct}">${cw}</span>${band(lp)}</div>
+    </div></div>`;
 }
-function labNexus(ln, nch) {
-  // How reliable he is, beside what came of it: the typical answer time is
-  // taken only over questions watched from the start (_nexus_summary).
-  // `nch.` is _nexus_channel(); `nc.` is taken, it is a bot in the rooms.
-  const typical = nch && nch.median_seconds != null
-    ? ` &middot; odpovídá typicky za <b>${Math.round(nch.median_seconds / 60)}&nbsp;min</b>
-       (sledováno ${nch.measured}), selhalo ${nch.failed}, odmítl ${nch.refused}` : "";
-  return `Nexus: <b>${ln.questions}</b> otázek &rarr; <b>${ln.answered}</b> odpovědí
-    &rarr; <b>${ln.picks}</b> voleb &rarr; brána pustila <b>${ln.gate_pass}</b>
-    z ${ln.gated} &rarr; přežilo <b>${ln.survived}</b>, vyvráceno ${ln.refuted}${typical}`;
+
+/* ---------- one experiment, one row ---------- */
+const VERDICT = {survived: ["up", "✓ vyšlo"], refuted: ["down", "✗ nevyšlo"],
+                 inconclusive: ["", "? nedá se říct"]};
+const STATUS = {paused: "pauza", proposed: "návrh", stopped: "zastaveno"};
+function btChip(lb) {
+  if (!lb || lb.pct == null) return chip("", "bez backtestu");
+  return chip(lb.pass ? "up" : "down", "backtest " + pctText(lb.pct, 0));
 }
-(function products() {
-  const R = D.report || {};
-  const all = R.products || {};
-  document.getElementById("products").innerHTML = ["cards", "bots", "memecoins", "funds"]
-    .filter(k => all[k]).map(k => labProduct(k, all[k])).join("");
-  if (R.nexus) document.getElementById("nexusLine").innerHTML = labNexus(R.nexus, D.channel);
-  if (R.generated_at) document.getElementById("reportAt").textContent =
-    "report " + R.generated_at.replace("T", " ").slice(0, 16) + " UTC";
-})();
+function stateChips(le) {
+  if (le.group === "done") {
+    const v = VERDICT[le.verdict] || ["", STATUS[le.status] || "ukončeno"];
+    return chip(v[0], v[1]) + (le.reason ? chip("", esc(le.reason)) : "");
+  }
+  if (le.group === "archive") return chip("", esc(le.reason || "v archivu"));
+  const out = [];
+  // A bot that stopped by itself says so once, in its reason.
+  if (le.trading != null && !le.reason) {
+    out.push(chip(le.trading ? "up" : "", le.trading ? "obchoduje" : "stojí"));
+  }
+  if (le.reason) out.push(chip("down", esc(le.reason)));
+  if (STATUS[le.status]) out.push(chip("", STATUS[le.status]));
+  if (le.left_days != null) out.push(chip("", leftText(le.left_days)));
+  return out.join("");
+}
+function spark(points) {
+  if (!points || points.length < 2) return '<span class="sp-none">—</span>';
+  const W = 110, H = 28, P = 3;
+  const ts = points.map(p => Date.parse(p[0])), vs = points.map(p => p[1]);
+  const t0 = Math.min(...ts), t1 = Math.max(...ts);
+  const lo = Math.min(0, ...vs), hi = Math.max(0, ...vs), span = (hi - lo) || 1;
+  const x = t => P + (t1 > t0 ? (t - t0) / (t1 - t0) : 0) * (W - 2 * P);
+  const y = v => P + (1 - (v - lo) / span) * (H - 2 * P);
+  const d = ts.map((t, i) => (i ? "L" : "M") + x(t).toFixed(1) + " " + y(vs[i]).toFixed(1)).join(" ");
+  const last = vs[vs.length - 1], col = last >= 0 ? "var(--ok)" : "var(--bad)";
+  const z = y(0).toFixed(1);
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" aria-hidden="true">
+    <line class="sp-zero" x1="${P}" x2="${W - P}" y1="${z}" y2="${z}"/>
+    <path d="${d} L${x(ts[ts.length - 1]).toFixed(1)} ${z} L${x(ts[0]).toFixed(1)} ${z}Z"
+      fill="${col}" opacity=".12"/>
+    <path d="${d}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round"
+      stroke-linecap="round"/>
+    <circle cx="${x(ts[ts.length - 1]).toFixed(1)}" cy="${y(last).toFixed(1)}" r="3.2"
+      fill="${col}" stroke="var(--surface)" stroke-width="2"/></svg>`;
+}
+function row(le, rank, open) {
+  return `<li class="row${open ? " open" : ""}" data-id="${esc(le.id)}" tabindex="0"
+      role="button" aria-expanded="${open}">
+    <span class="rk">${rank}</span>
+    <span class="nm" title="${esc(le.title)}">${esc(le.title)}</span>
+    <span class="sp">${le.group === "archive" ? '<span class="sp-none">—</span>' : spark(le.spark)}</span>
+    <span class="val ${tone(le.net_pct)}">${pctText(le.net_pct)}</span>
+    <span class="usd ${tone(le.usdc)}">${le.usdc == null ? "" : usdText(le.usdc)}</span>
+    <span class="bt">${btChip(le.backtest)}</span>
+    <span class="st">${stateChips(le)}</span>
+    <span class="chev" aria-hidden="true">${open ? "▾" : "›"}</span></li>` +
+    (open ? detail(le) : "");
+}
 
-/* ---------- the Nexus tab: rooms, served beside the payload, never in it ----------
-   The operator's notes and the sampler's rows land while a sweep may be
-   running, and everything in D is written into the committed dashboard -- so
-   the console serves the rooms at /rooms.json and says when they move with an
-   event of its own. Opened as a file there is no console to ask, and the tab
-   says so rather than showing an empty room as if nobody had said anything. */
-const NX_LOCAL = ["127.0.0.1", "localhost", "[::1]"].includes(location.hostname);
-let NX = null;
+/* ---------- an opened experiment ---------- */
+const CHARTS = {};
+function niceStep(span) {
+  const raw = span / 4, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const n = raw / mag;
+  return (n >= 5 ? 10 : n >= 2 ? 5 : n >= 1 ? 2 : 1) * mag;
+}
+function chart(le) {
+  const pts = le.path || [];
+  if (pts.length < 2) {
+    return `<figure class="dt-chart"><div class="dt-empty">${le.sector === "funds"
+      ? "Fond jen sledujeme, nic se v něm nekoupilo — čára tu zatím není."
+      : "Zatím žádný průběh."}</div></figure>`;
+  }
+  const W = 640, H = 210, L = 50, R = 84, T = 10, B = 26;
+  const ts = pts.map(p => Date.parse(p[0])), vs = pts.map(p => p[1]);
+  const marks = vs.concat([0], le.tp != null ? [le.tp] : [], le.sl != null ? [le.sl] : []);
+  let lo = Math.min(...marks), hi = Math.max(...marks);
+  const padV = (hi - lo) * 0.08 || 1; lo -= padV; hi += padV;
+  const t0 = Math.min(...ts), t1 = Math.max(...ts);
+  const x = t => L + (t1 > t0 ? (t - t0) / (t1 - t0) : 0) * (W - L - R);
+  const y = v => T + (1 - (v - lo) / (hi - lo)) * (H - T - B);
+  const step = niceStep(hi - lo), digits = step < 1 ? 1 : 0;
+  const ticks = [];
+  for (let v = Math.ceil(lo / step) * step; v <= hi; v += step) ticks.push(v);
+  const last = vs[vs.length - 1], col = last >= 0 ? "var(--ok)" : "var(--bad)";
+  const d = ts.map((t, i) => (i ? "L" : "M") + x(t).toFixed(1) + " " + y(vs[i]).toFixed(1)).join(" ");
+  const level = (v, cls, word) => v == null ? "" :
+    `<line class="lvl ${cls}" x1="${L}" x2="${W - R}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}"/>
+     <text class="lvl-t ${cls === "lvl-tp" ? "up" : "down"}" x="${W - R + 6}" y="${(y(v) + 4).toFixed(1)}"
+       fill="currentColor">${word} ${pctText(v, 0)}</text>`;
+  CHARTS[le.id] = {W: W, L: L, R: R, T: T, B: B, H: H, ts: ts, vs: vs,
+                   x0: t0, x1: t1, lo: lo, hi: hi};
+  return `<figure class="dt-chart"><svg viewBox="0 0 ${W} ${H}" data-chart="${esc(le.id)}"
+      role="img" aria-label="${esc(le.title)}: ${pctText(last)} od nákupu">
+    <g class="ax">${ticks.map(v => `<line x1="${L}" x2="${W - R}" y1="${y(v).toFixed(1)}"
+        y2="${y(v).toFixed(1)}"${Math.abs(v) < step / 1000 ? ' class="zero"' : ""}/>
+      <text x="${L - 8}" y="${(y(v) + 4).toFixed(1)}" text-anchor="end">${pctText(v, digits)}</text>`).join("")}
+      <text x="${L}" y="${H - 6}">${day(pts[0][0])}</text>
+      <text x="${W - R}" y="${H - 6}" text-anchor="end">${day(pts[pts.length - 1][0])}</text></g>
+    ${level(le.tp, "lvl-tp", "cíl")}${level(le.sl, "lvl-sl", "stop")}
+    <path d="${d} L${x(t1).toFixed(1)} ${y(0).toFixed(1)} L${x(t0).toFixed(1)} ${y(0).toFixed(1)}Z"
+      fill="${col}" opacity=".10"/>
+    <path d="${d}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round"
+      stroke-linecap="round"/>
+    <circle cx="${x(ts[ts.length - 1]).toFixed(1)}" cy="${y(last).toFixed(1)}" r="4.5"
+      fill="${col}" stroke="var(--surface)" stroke-width="2"/>
+    <line class="xh" x1="0" x2="0" y1="${T}" y2="${H - B}" visibility="hidden"/>
+    <circle class="xd" r="4.5" cx="0" cy="0" fill="${col}" stroke="var(--surface)"
+      stroke-width="2" visibility="hidden"/>
+    <rect x="${L}" y="${T}" width="${W - L - R}" height="${H - T - B}" fill="transparent"/>
+  </svg></figure>`;
+}
+function detail(le) {
+  const lb = le.backtest;
+  const now = le.stake != null && le.usdc != null ? le.stake + le.usdc : null;
+  const tiles = [
+    ["Vloženo", money(le.stake), le.sector === "bots" ? "do bota" : "papírové peníze"],
+    ["Teď", money(now), now == null ? "" : "po poplatcích"],
+    ["Výsledek", `<span class="${tone(le.net_pct)}">${pctText(le.net_pct)}</span>`,
+     le.usdc == null ? "" : `<span class="${tone(le.usdc)}">${usdText(le.usdc)}</span>`],
+    ["Backtest", lb && lb.pct != null
+       ? `<span class="${lb.pass ? "up" : "down"}">${pctText(lb.pct, 0)}</span>` : "—",
+     lb && lb.pct != null ? `za ${lb.period} d · Sharpe ${num(lb.sharpe, 1)}`
+                          : "tohle se otestovat nedá"],
+  ];
+  const facts = [le.origin ? `nápad ${esc(le.origin)}` : "",
+                 le.opened_at ? `otevřeno ${day(le.opened_at)}` : "",
+                 le.ends_at ? `vyhodnocení ${day(le.ends_at)}` : ""].filter(Boolean);
+  if (le.tp != null || le.sl != null) {
+    facts.push(`cíl ${pctText(le.tp, 0)} · stop ${pctText(le.sl, 0)}`);
+  }
+  return `<li class="detail" data-for="${esc(le.id)}"><div class="dt">
+    ${chart(le)}
+    <div class="dt-side">
+      <div class="tiles">${tiles.map(([k, v, s]) =>
+        `<div class="tile"><span>${k}</span><b>${v}</b><i>${s}</i></div>`).join("")}</div>
+      <p class="dt-facts">${facts.join(" · ")}</p>
+      <div class="dt-links">${le.url ? `<a href="${esc(le.url)}" target="_blank"
+          rel="noopener">Karta na Cymetice ↗</a>` : ""}
+        <button type="button" class="linkish" data-chat="${esc(le.id)}">💬 Konverzace k tomuhle</button></div>
+    </div></div></li>`;
+}
 
+/* ---------- the memecoin room ----------
+   V3's answer is the headline: $10 into every hot signal, held a day, after
+   costs. Under it the operator's own list from 2026-09-13/14 -- one list,
+   the graph as its column, our own coloured bubble. */
+function pct(v) {
+  if (v == null) return `<span class="mc-flat">—</span>`;
+  return `<span class="${v > 0 ? "mc-up" : v < 0 ? "mc-down" : "mc-flat"}">${pctText(v, 1)}</span>`;
+}
+/* One token, one hourly curve. A gap is a BREAK in the line, never a point at
+   zero: an hour nobody could price is drawn dashed, as the guess it is. */
+function curveSvg(points) {
+  const W = 150, H = 30, PAD = 3;
+  const read = (points || []).filter(p => p[1] != null);
+  if (!read.length) return `<span class="mc-flat">—</span>`;
+  const vals = read.map(p => p[1]);
+  const hi = Math.max(...vals, 0), lo = Math.min(...vals, 0), span = (hi - lo) || 1;
+  const x = h => PAD + ((h - 1) / 23) * (W - 2 * PAD);   // always 24 hours wide
+  const y = v => PAD + (1 - (v - lo) / span) * (H - 2 * PAD);
+  const lines = read.slice(1).map((p, i) => {
+    const a = read[i];
+    return `<line x1="${x(a[0]).toFixed(1)}" y1="${y(a[1]).toFixed(1)}"
+      x2="${x(p[0]).toFixed(1)}" y2="${y(p[1]).toFixed(1)}"
+      stroke="var(${p[1] >= a[1] ? "--ok" : "--bad"})" stroke-width="1.8"
+      stroke-linecap="round"${p[0] - a[0] > 1 ? ' stroke-dasharray="2 3" opacity=".55"' : ""}/>`;
+  }).join("");
+  // The wide transparent circle is the hit area: a 2px dot is not a target.
+  const dots = read.map(p =>
+    `<g class="mc-pt" data-h="${p[0]}" data-v="${p[1]}">
+      <circle cx="${x(p[0]).toFixed(1)}" cy="${y(p[1]).toFixed(1)}" r="8" fill="transparent"/>
+      <circle cx="${x(p[0]).toFixed(1)}" cy="${y(p[1]).toFixed(1)}" r="2.6"
+        fill="var(${p[1] >= 0 ? "--ok" : "--bad"})"/></g>`).join("");
+  const zero = y(0).toFixed(1);
+  return `<svg class="mc-spark" viewBox="0 0 ${W} ${H}" role="img"
+    aria-label="výnos po hodinách od signálu">
+    <line x1="${PAD}" x2="${W - PAD}" y1="${zero}" y2="${zero}" stroke="var(--line)"
+      stroke-width="1"/>${lines}${dots}</svg>`;
+}
+const DROPPED = [["unpriced", "bez ceny při signálu"], ["depth_unknown", "neznámá hloubka"],
+                 ["too_thin", "moc tenký pool na 10 $"], ["pair_changed", "přepnutý pár"],
+                 ["unread_at_24h", "nepřečteno po 24 h"]];
+function moversTable() {
+  const all = V.movers || [];
+  if (!all.length) return `<p class="empty">Zatím žádný signál nemá za sebou první hodinu.</p>`;
+  const open = readStore("lab.movers", "0") === "1";
+  const shown = open ? all : all.slice(0, TOP);
+  const rows = shown.map(c => `<tr>
+      <td class="mc-sym">${esc(c.symbol || "?")}</td>
+      <td class="mc-conv">${c.conviction == null ? "—" : num(c.conviction, 0)}</td>
+      <td class="mc-ret">${pct(c.last)}</td>
+      <td class="mc-ret">${pct(c.peak)}</td>
+      <td class="mc-g">${curveSvg(c.points)}</td></tr>`).join("");
+  return `<div class="movers"><h3>Největší pohyby<small>${shown.length} z ${num(V.movers_total || 0, 0)}
+      · seřazené podle vrcholu, takže jsou to vítězové z principu, ne průměr</small></h3>
+    <table class="mc-list"><thead><tr><th>token</th><th>conviction</th><th>teď</th>
+      <th>vrchol</th><th>prvních 24 h</th></tr></thead><tbody>${rows}</tbody></table>
+    ${all.length > TOP ? `<button type="button" class="more" data-movers>${open ? "Méně ▴"
+      : `Všech ${all.length} ▾`}</button>` : ""}</div>`;
+}
+function memeRoom(lp) {
+  const [ct, cw] = confidence(lp);
+  const hc = lp.conviction_70 || {};
+  const ex = lp.excluded || {};
+  const otherFees = (lp.fees || []).filter(f => f.fee_pct !== lp.fee_pct);
+  const others = otherFees.map(f => pctText(f.net_pct, 1)).join(" / ");
+  const otherWhat = "při " + otherFees.map(f => num(f.fee_pct, 1) + " %").join(" / ") + " za stranu";
+  const dropped = DROPPED.filter(([k]) => ex[k]).map(([k, w]) => `${num(ex[k], 0)} ${w}`);
+  const could = lp.could_buy_share == null ? null : Math.round(lp.could_buy_share * 100);
+  const tiles = [
+    ["Stihli bychom koupit", could == null ? "—" : could + " %",
+     `z ${num(lp.signals || 0, 0)} signálů`,
+     could == null ? "" : `<div class="meter"><s style="width:${could}%"></s></div>`],
+    [`Jen conviction ≥ ${num(hc.min || 70, 0)}`,
+     `<span class="${tone(hc.net_pct)}">${pctText(hc.net_pct, 1)}</span>`,
+     `${num(hc.n || 0, 0)} ${plural(hc.n || 0, "obchod", "obchody", "obchodů")}`, ""],
+    // [operator 2026-09-14] *"to me nezjaima bez top 5 nechapu proc by
+    // to tam melo byt"*. So there is no "without the best five" figure; what
+    // says whether the headline is the signal or one lucky coin is the
+    // median beside it -- the trade in the middle, which no outlier moves.
+    ["Typický obchod (medián)", `<span class="${tone(lp.median_pct)}">${pctText(lp.median_pct, 1)}</span>`,
+     "polovina dopadne hůř", ""],
+    ["Jiný poplatek", others || "—", otherFees.length ? otherWhat : "", ""],
+  ];
+  return `<div class="room-head">
+      <div class="hero ${tone(lp.net_pct)}">${pctText(lp.net_pct, 1)}</div>
+      <div class="hero-side">
+        <div class="hero-l1">na obchod, když dáš <b>10 $ do každého hot signálu</b> a držíš den
+          · ${num(lp.fee_pct, 0)} % poplatek za stranu</div>
+        <div class="hero-l2">${num(lp.n || 0, 0)} obchodů · ${num(lp.wins || 0, 0)} v plusu
+          <span class="conf ${ct}">${lp.wilson && lp.wilson[1] < 0.5 ? "většina prodělá" : cw}</span>${band(lp)}</div>
+      </div></div>
+    <div class="m-tiles">${tiles.map(([k, v, s, extra]) =>
+      `<div class="tile"><span>${k}</span><b>${v}</b><i>${s}</i>${extra}</div>`).join("")}</div>
+    ${dropped.length ? `<p class="filt">Vynecháno, protože by se nedalo koupit nebo změřit:
+      ${dropped.join(" · ")}. Tyhle coiny nejsou v žádném čísle.</p>` : ""}
+    ${moversTable()}`;
+}
+
+/* ---------- the room on screen ---------- */
+let SECTOR = readStore("lab.sector", "cards");
+if (!SECTORS.includes(SECTOR)) SECTOR = "cards";
+let OPEN = readStore("lab.open", "");
+function mine() { return (V.experiments || []).filter(le => le.sector === SECTOR); }
+function groupNow(counts) {
+  const saved = readStore("lab.group." + SECTOR, "");
+  if (saved && counts[saved]) return saved;
+  return (GROUPS.find(([g]) => counts[g]) || ["live"])[0];
+}
+function ordered(list, group) {
+  const net = le => le.net_pct == null ? -Infinity : le.net_pct;
+  return list.slice().sort(group === "archive"
+    ? (a, b) => String(b.id).localeCompare(String(a.id))
+    : (a, b) => net(b) - net(a));
+}
+function renderRoom() {
+  const room = document.getElementById("room");
+  const lp = sectorOf(SECTOR);
+  room.setAttribute("style", "--hue:var(--c-" + SECTOR + ")");
+  room.setAttribute("aria-label", lp.name || SECTOR);
+  if (SECTOR === "memecoins") { room.innerHTML = memeRoom(lp); return; }
+  const list = mine();
+  const counts = {};
+  GROUPS.forEach(([g]) => { counts[g] = list.filter(le => le.group === g).length; });
+  if (lp.archived != null) counts.archive = Math.max(counts.archive, lp.archived);
+  const group = groupNow(counts);
+  const rows = ordered(list.filter(le => le.group === group), group);
+  const all = readStore("lab.all." + SECTOR + "." + group, "0") === "1";
+  const shown = all ? rows : rows.slice(0, TOP);
+  room.innerHTML = roomHead(lp) +
+    `<div class="bar"><div class="seg" role="tablist">${GROUPS.map(([g, w]) =>
+      `<button type="button" role="tab" data-group="${g}" aria-selected="${g === group}">${w}` +
+      `<span class="n">${counts[g]}</span></button>`).join("")}</div>
+     <span class="bar-hint">${group === "archive" ? "nevydařené pokusy — nic se nemaže"
+       : "seřazeno podle výsledku po poplatcích · klik = detail"}</span></div>` +
+    (shown.length ? `<ol class="board">${shown.map((le, i) =>
+       row(le, i + 1, le.id === OPEN)).join("")}</ol>` : `<p class="empty">${EMPTY[group]}</p>`) +
+    (rows.length > TOP ? `<button type="button" class="more" data-all>${all ? "Méně ▴"
+       : `Všech ${rows.length} ▾`}</button>` : "");
+}
+function renderAll() {
+  document.getElementById("account").innerHTML = accountLine(V.account);
+  document.getElementById("sectors").innerHTML =
+    SECTORS.map(k => sectorTab(sectorOf(k), k === SECTOR)).join("");
+  document.getElementById("nexus").innerHTML = nexusLine(V.nexus);
+  renderRoom();
+}
+function labShow(sector, group) {
+  if (SECTORS.includes(sector)) { SECTOR = sector; writeStore("lab.sector", sector); }
+  if (group) writeStore("lab.group." + SECTOR, group);
+  renderAll();
+  if (CHAT && SECTORS.includes(CHAT)) labChat(SECTOR);
+}
+function labOpen(id) {
+  OPEN = id || "";
+  writeStore("lab.open", OPEN);
+  const le = (V.experiments || []).find(e => e.id === OPEN);
+  if (le) {
+    SECTOR = le.sector;
+    writeStore("lab.sector", SECTOR);
+    writeStore("lab.group." + SECTOR, le.group);
+  }
+  renderAll();
+}
+window.labShow = labShow;
+window.labOpen = labOpen;
+
+/* ---------- the conversation: closed until asked for ----------
+   The operator, 2026-09-23: they will hardly ever read it, maybe glance at it
+   out of curiosity. A sector's conversation is every experiment's thread in
+   it, oldest first, plus the notes written to the sector itself. */
+let CHAT = null;
+const NX_OUTCOME = {partial: "useknuté — přišla jen první věta",
+                    failed: "bez odpovědi — přestali jsme čekat",
+                    refused: "odmítl ještě před začátkem",
+                    waiting: "čeká se na Nexuse…"};
 // Nexus writes markdown. Escape first, always, and only then turn a few marks
 // back into tags of our own -- so nothing the vendor wrote can become markup.
 function nxText(text) {
@@ -1338,949 +1897,109 @@ function nxSecs(s) {
   if (s == null) return "";
   if (s < 90) return Math.round(s) + " s";
   if (s < 5400) return Math.round(s / 60) + " min";
-  return (s / 3600).toFixed(1) + " h";
+  return (s / 3600).toFixed(1).replace(".", ",") + " h";
 }
-const nxDigits = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-const NX_OUTCOME = {
-  partial: "cut short — only an opening line came back",
-  failed: "no answer — our loop gave up waiting",
-  refused: "refused before an investigation started",
-  waiting: "waiting for Nexus…",
-};
-
-// The tab names its own shapes -- `nm` a message, `nr` a room, `np` a panel,
-// and inside a strategy's panel `nt` a trade, `nh` a change of status, `nc` a
-// bot and `ns` one of its samples -- because `f.` and `m.` belong to the
-// payload's field guard, and these arrive by fetch.
-// tests/meta/test_pipeline_rooms.py holds each name against what
-// build_rooms() writes, the same way that guard holds the payload.
-const NX_STATUS = { proposed: "○", running: "●", paused: "‖", stopped: "■" };
-function nxGlyph(status) {
-  return '<span class="nx-st nx-' + esc(status || "proposed") + '">' +
-    (NX_STATUS[status] || "○") + "</span>";
-}
-// Money the way the operator reads it: 10 000, 89 000.96, 0.00216, −50.
-function nxMoney(v) {
-  if (v == null || v === "" || isNaN(Number(v))) return "—";
-  const n = Number(v), a = Math.abs(n);
-  const parts = a.toFixed(a >= 1 || a === 0 ? 2 : 5).split(".");
-  const tail = Number(parts[1]) ? "." + parts[1].replace(/0+$/, "") : "";
-  return (n < 0 ? "−" : "") + nxDigits(parts[0]) + tail;
-}
-function nxShort(text, n) {
-  const s = String(text == null ? "" : text);
-  return s.length > n ? s.slice(0, n - 1) + "…" : s;
-}
-// A way into another room, from a line in this one.
-function nxGoto(room, label) {
-  return '<button type="button" class="nx-goto" data-room="' + esc(room) + '">' +
-    esc(label) + "</button>";
-}
-function nxBubble(nm, current) {
-  const at = nm.at ? " · " + esc(stamp(nm.at)) : "";
+function nxBubble(nm) {
+  const at = nm.at ? " · " + esc(clock(nm.at)) : "";
   if (nm.kind === "question") {
-    const opened = (nm.opened || []).map(room => room === current
-      ? '<span class="nx-s">this room was opened from this answer</span>'
-      : nxGoto(room, "→ it opened " + room)).join(" ");
-    return '<div class="nx-msg nx-ours"><div class="nx-h"><b>Claude → Nexus</b>' + at +
-      " · " + esc(nm.id) + '</div><div class="nx-b">' + nxText(nm.text) + "</div>" +
-      (opened ? '<div class="nx-opened">' + opened + "</div>" : "") + "</div>";
+    const long = String(nm.text || "").length > 300;
+    return `<div class="nx-msg nx-ours"><div class="nx-h"><b>Claude → Nexus</b>${at} · ` +
+      `${esc(nm.id)}</div><div class="nx-b${long ? " nx-clamp" : ""}">${nxText(nm.text)}</div>` +
+      (long ? `<button class="nx-more" type="button">▾ celé</button>` : "") + "</div>";
   }
   if (nm.kind === "reply") {
     const text = nm.text || "";
-    const took = nm.seconds != null ? " · " + nxSecs(nm.seconds)
-               : (nm.upper != null && text ? " · ≤ " + nxSecs(nm.upper) : "");
+    const took = nm.seconds != null ? " · za " + nxSecs(nm.seconds) : "";
     const note = NX_OUTCOME[nm.outcome];
-    const long = text.length > 700;
-    const label = "▾ whole answer (" + nxDigits(text.length) + " characters)";
-    return '<div class="nx-msg nx-' + esc(nm.outcome || "answered") + '">' +
-      '<div class="nx-h"><b>Nexus</b>' + at + took + "</div>" +
-      (note ? '<div class="nx-s">' + esc(note) + "</div>" : "") +
-      (nm.gist ? '<div class="nx-gist"><span>Claude · summary</span>' + nxText(nm.gist) +
-                 "</div>" : "") +
-      (text ? '<div class="nx-b' + (long ? " nx-clamp" : "") + '">' + nxText(text) + "</div>" : "") +
-      (long ? '<button class="nx-more" type="button" data-label="' + esc(label) + '">' +
-              esc(label) + "</button>" : "") +
-      "</div>";
+    const long = text.length > 500;
+    return `<div class="nx-msg nx-${esc(nm.outcome || "answered")}">` +
+      `<div class="nx-h"><b>Nexus</b>${at}${took}</div>` +
+      (note ? `<div class="nx-s">${esc(note)}</div>` : "") +
+      (nm.gist ? `<div class="nx-gist">${nxText(nm.gist)}</div>` : "") +
+      (text ? `<div class="nx-b${long ? " nx-clamp" : ""}">${nxText(text)}</div>` : "") +
+      (long ? `<button class="nx-more" type="button">▾ celá odpověď</button>` : "") + "</div>";
   }
   if (nm.kind === "operator_note") {
-    return '<div class="nx-msg nx-op"><div class="nx-h"><b>You</b>' + at +
-      ' <span class="nx-tick" title="' + (nm.read ? "read by Claude" : "saved, not read yet") +
-      '">' + (nm.read ? "✓✓" : "✓") + '</span></div><div class="nx-b">' +
-      nxText(nm.text) + "</div></div>";
+    return `<div class="nx-msg nx-op"><div class="nx-h"><b>Ty</b>${at}` +
+      `<span class="nx-tick" title="${nm.read ? "Claude přečetl" : "uloženo, zatím nepřečteno"}">` +
+      `${nm.read ? "✓✓" : "✓"}</span></div><div class="nx-b">${nxText(nm.text)}</div></div>`;
   }
   if (nm.kind === "claude_note") {
-    return '<div class="nx-msg nx-cl"><div class="nx-h"><b>Claude</b>' +
-      (nm.re ? " · on " + esc(nm.re) : "") + at + '</div><div class="nx-b">' +
-      nxText(nm.text) + "</div></div>";
+    return `<div class="nx-msg nx-cl"><div class="nx-h"><b>Claude</b>` +
+      `${nm.re ? " · k " + esc(nm.re) : ""}${at}</div><div class="nx-b">${nxText(nm.text)}</div></div>`;
   }
-  if (nm.kind === "pointer") {
-    return '<div class="nx-msg nx-sys">' + esc(nm.id) + at + " · asked in " +
-      nxGoto(nm.room, nm.room + (nm.title ? " · " + nm.title : "")) + ": " +
-      esc(nxShort(nm.text, 110)) + "</div>";
-  }
-  if (nm.kind === "status") {
-    // One line in the thread; the whole reason is in the panel, folded.
-    return '<div class="nx-msg nx-sys" title="' + esc(nm.text || "") + '">' +
-      nxGlyph(nm.status) + " " + esc(nm.status || "") +
-      (nm.text ? " — " + esc(nxShort(nm.text, 140)) : "") + at + "</div>";
-  }
-  if (nm.kind === "leg") {
-    return '<div class="nx-msg nx-sys nx-leg' +
-      (nm.outcome === "accepted" ? "" : " nx-no") + '">' + esc(nm.text || "") + at + "</div>";
-  }
-  return '<div class="nx-msg nx-sys">' + esc(nm.text || "") + "</div>";
+  return `<div class="nx-msg nx-sys">${esc(nm.text || "")}${at}</div>`;
 }
-
-// Where a strategy stands, as a word beside its name; the thread's status
-// lines keep the bare glyph.
-// [operator 2026-09-20, N-0034] "vubec se v tom detialu nevyznam, ma to byt
-// uplne jednoduche pro degeny z co nejmin ctenim". So the words on this tab
-// are Czech and short: it is the one surface in this console written for the
-// operator rather than for the vendor, and they read Czech. Ids, card
-// symbols and numbers are untouched -- those are the same in both languages.
-const NX_WORD = { proposed: "Návrh", running: "Běží", paused: "Pauza",
-                  stopped: "Stojí" };
-const NX_HOLDS = { bot: "Bot", cards: "Karty" };
-function nxPill(status) {
-  const s = status || "proposed";
-  return '<span class="nx-pill nx-' + esc(s) + '">' + (NX_STATUS[s] || "○") + " " +
-    esc(NX_WORD[s] || s) + "</span>";
+function chatItems(room) {
+  const T = V.threads || {};
+  if (!SECTORS.includes(room)) return (T[room] || []).map(nm => [room, nm]);
+  const items = (T[room] || []).map(nm => [room, nm]);
+  (V.experiments || []).filter(le => le.sector === room)
+    .forEach(le => (T[le.id] || []).forEach(nm => items.push([le.id, nm])));
+  return items.sort((a, b) => String(a[1].at || "").localeCompare(String(b[1].at || "")));
 }
-// Signed money and percentages the way the operator reads them -- +14.48,
-// −50, +0.7 % -- and the class that colours them.
-function nxSigned(v) {
-  if (v == null || v === "" || isNaN(Number(v))) return "—";
-  const n = Number(v);
-  return (n > 0 ? "+" : "") + nxMoney(n);
+function chatName(room) {
+  if (room === "general") return "Celá konverzace s Nexusem";
+  if (SECTORS.includes(room)) return sectorOf(room).name;
+  const le = (V.experiments || []).find(e => e.id === room);
+  return le ? le.title : room;
 }
-function nxTone(v) {
-  const n = Number(v);
-  return v == null || v === "" || isNaN(n) || n === 0 ? "" : n > 0 ? " nx-up" : " nx-down";
-}
-function nxPct(v, digits) {
-  if (v == null || v === "" || isNaN(Number(v))) return "—";
-  const n = Number(v);
-  const places = digits != null ? digits : Math.abs(n) >= 10 ? 0 : 1;
-  const s = Math.abs(n).toFixed(places);
-  return (Number(s) === 0 ? "" : n > 0 ? "+" : "−") + s + " %";
-}
-// A drawdown and a stop are magnitudes, not directions: their sign is in the
-// word, not the number. nxPct puts a + in front of any positive figure, so
-// "Propad +10.5 %" said a loss had gained, and "Stopka +10 %" said a stop-loss
-// was a profit. Seen on the page 2026-09-21, the first night a room carried a
-// backtest at all.
-function nxMag(v, digits) {
-  if (v == null || v === "" || isNaN(Number(v))) return "—";
-  const n = Math.abs(Number(v));
-  const places = digits != null ? digits : n >= 10 ? 0 : 1;
-  return n.toFixed(places) + " %";
-}
-function nxShare(v) {
-  if (v == null || v === "" || isNaN(Number(v))) return "—";
-  const n = Number(v) * 100;
-  return (Math.abs(n - Math.round(n)) < 0.05 ? String(Math.round(n)) : n.toFixed(1)) + " %";
-}
-function nxLevel(v) {
-  return v == null || v === "" || isNaN(Number(v)) ? "—" : Number(v).toFixed(2);
-}
-const NX_MONTH = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep",
-                  "Oct", "Nov", "Dec"];
-// "11 Sep 10:25" -- UTC, like every other time on this page.
-function nxDay(iso) {
-  const d = new Date(iso || "");
-  if (isNaN(d.getTime())) return "";
-  return d.getUTCDate() + " " + NX_MONTH[d.getUTCMonth()] + " " +
-    String(d.getUTCHours()).padStart(2, "0") + ":" +
-    String(d.getUTCMinutes()).padStart(2, "0");
-}
-// How long until a card stops trading: "in 36 h", "in 3 d", "closed".
-function nxUntil(iso) {
-  const t = Date.parse(iso || "");
-  if (!t) return null;
-  const hours = (t - Date.now()) / 3600000;
-  if (hours <= 0) return "skončila";
-  if (hours < 1) return "za " + Math.max(1, Math.round(hours * 60)) + " min";
-  if (hours < 48) return "za " + Math.round(hours) + " h";
-  return "za " + Math.round(hours / 24) + " d";
-}
-// Four big numbers, each with its label above it and one quiet line under it.
-function nxTiles(tiles) {
-  return '<div class="nx-tiles">' + tiles.map(([label, value, sub, tone]) =>
-    '<div class="nx-tile"><span>' + esc(label) + '</span><b class="' +
-    (tone || "").trim() + '">' + esc(value == null ? "—" : String(value)) + "</b>" +
-    (sub ? "<i>" + esc(String(sub)) + "</i>" : "") + "</div>").join("") + "</div>";
-}
-function nxHero(name, pills, sub) {
-  return '<div class="nx-hero"><h2>' + esc(name) + "</h2>" + pills + "</div>" +
-    (sub ? '<p class="nx-sub">' + sub + "</p>" : "");
-}
-// Where the console's sampler stands, said the same way in every panel: when
-// it last read their API, and "stale" once three rounds have gone by without one.
-function nxSampler(np) {
-  if (!np.sampled_at) {
-    return '<p class="nx-foot">Their API has not been read yet: the console reads it ' +
-      "when it runs with --sample.</p>";
-  }
-  const failed = Object.entries(np.sampler_reads || {}).filter(([, verdict]) => verdict !== "ok");
-  return '<p class="nx-foot' + (np.stale ? " nx-stale" : "") + '">' +
-    (np.stale ? "<b>stale</b> — no round for over three intervals. " : "") +
-    "Read from their API " + esc(stamp(np.sampled_at)) + " UTC, every " +
-    esc(nxSecs(np.sampler_every)) +
-    (np.sampler_ok === false ? " · failed: " +
-      esc(failed.map(([door, verdict]) => door + " " + verdict).join(", ")) : "") + ".</p>";
-}
-function nxParams(params) {
-  return Object.entries(params || {}).map(([k, v]) => k + " " + v).join(", ");
-}
-
-// Round numbers for an axis, three to five of them between lo and hi.
-function nxTicks(lo, hi) {
-  const raw = (hi - lo) / 4;
-  if (!(raw > 0)) return [lo];
-  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
-  const step = [1, 2, 2.5, 5, 10].map(k => k * mag).find(s => s >= raw) || raw;
-  const out = [];
-  for (let v = Math.ceil(lo / step) * step; v <= hi + step * 1e-6; v += step) {
-    out.push(Number(v.toFixed(10)));
-  }
-  return out;
-}
-// Labels down the right edge of a chart, pushed apart so no two overlap.
-function nxPlace(labels, top, bottom) {
-  const sorted = labels.slice().sort((a, b) => a.y - b.y);
-  let last = -Infinity;
-  sorted.forEach(label => { label.y = Math.max(label.y, last + 15); last = label.y; });
-  const over = sorted.length ? sorted[sorted.length - 1].y - bottom : 0;
-  if (over > 0) sorted.forEach(label => { label.y -= over; });
-  sorted.forEach(label => { label.y = Math.max(label.y, top); });
-  return sorted;
-}
-// A line over time with levels across it -- a card's entry, Nexus's
-// take-profit and stop -- each dashed and named at its right end, and the
-// moment something happened as a mark. Drawn at the width of the panel it
-// sits in, so its text is the size of the text around it. No library: the
-// Stats tab draws the same way.
-function nxChart(series, opts) {
-  const o = opts || {};
-  const pts = (series || []).map(p => [Date.parse(p[0]), Number(p[1])])
-    .filter(p => isFinite(p[0]) && isFinite(p[1]));
-  if (pts.length < 2) return "";
-  const refs = (o.refs || []).filter(r => r && r.v != null && isFinite(Number(r.v)));
-  const box = document.getElementById("roomPanel");
-  const W = Math.max(360, Math.round((box && box.clientWidth ? box.clientWidth : 700) - 54));
-  const H = 230, L = 52, R = 100, T = 14, B = 30;
-  const values = pts.map(p => p[1]).concat(refs.map(r => Number(r.v)));
-  let lo = Math.min(...values), hi = Math.max(...values);
-  if (hi - lo < 1e-9) { lo -= 1; hi += 1; }
-  const pad = (hi - lo) * 0.08;
-  lo -= pad; hi += pad;
-  const t0 = pts[0][0], t1 = pts[pts.length - 1][0], span = t1 - t0 || 1;
-  const x = t => L + (t - t0) / span * (W - L - R);
-  const y = v => T + (hi - v) / (hi - lo) * (H - T - B);
-  const fmt = o.format || nxLevel;
-  const r1 = n => n.toFixed(1);
-  let svg = '<svg class="nx-chart" viewBox="0 0 ' + W + " " + H + '" width="' + W +
-    '" height="' + H + '" role="img" aria-label="' + esc(o.label || "") + '">';
-  // An axis of whole numbers reads 105, not 105.00.
-  const ticks = nxTicks(lo, hi);
-  const whole = ticks.every(v => Math.abs(v - Math.round(v)) < 1e-9);
-  const tick = o.format ? fmt : v => (whole ? String(Math.round(v)) : nxLevel(v));
-  ticks.forEach(v => {
-    svg += '<line class="nx-gl" x1="' + L + '" x2="' + (W - R) + '" y1="' + r1(y(v)) +
-      '" y2="' + r1(y(v)) + '"/><text x="' + (L - 8) + '" y="' + r1(y(v) + 4) +
-      '" text-anchor="end">' + esc(tick(v)) + "</text>";
-  });
-  const line = pts.map(p => r1(x(p[0])) + "," + r1(y(p[1]))).join(" ");
-  svg += '<path class="nx-area" d="M' + r1(x(t0)) + "," + (H - B) + " L" +
-    line.split(" ").join(" L") + " L" + r1(x(t1)) + "," + (H - B) + ' Z"/>';
-  const labels = [];
-  refs.forEach(r => {
-    const at = y(Number(r.v));
-    svg += '<line class="nx-ref nx-ref-' + esc(r.kind) + '" data-ref="' + esc(r.kind) +
-      '" x1="' + L + '" x2="' + (W - R) + '" y1="' + r1(at) + '" y2="' + r1(at) + '"/>';
-    labels.push({ y: at + 4, text: r.label, cls: "nx-" + r.kind });
-  });
-  if (o.vline && isFinite(Date.parse(o.vline.t))) {
-    const at = Date.parse(o.vline.t);
-    if (at >= t0 && at <= t1) {
-      svg += '<line class="nx-vl" x1="' + r1(x(at)) + '" x2="' + r1(x(at)) + '" y1="' + T +
-        '" y2="' + (H - B) + '"/><text class="nx-vt" x="' +
-        r1(Math.min(x(at) + 5, W - R - 96)) + '" y="' + (T + 11) + '">' +
-        esc(o.vline.label || "") + "</text>";
-    }
-  }
-  svg += '<polyline class="nx-line" points="' + line + '"/>';
-  (o.marks || []).forEach(mark => {
-    const at = Date.parse(mark.t);
-    if (!isFinite(at) || at < t0 || at > t1 || mark.v == null) return;
-    svg += '<circle class="nx-dot-' + esc(mark.kind || "open") + '" cx="' + r1(x(at)) +
-      '" cy="' + r1(y(Number(mark.v))) + '" r="4.5"><title>' + esc(mark.title || "") +
-      "</title></circle>";
-  });
-  const last = pts[pts.length - 1];
-  svg += '<circle class="nx-dot" cx="' + r1(x(last[0])) + '" cy="' + r1(y(last[1])) +
-    '" r="5"/>';
-  labels.push({ y: y(last[1]) + 4, text: "teď " + fmt(last[1]), cls: "nx-now" });
-  nxPlace(labels, T + 8, H - B).forEach(label => {
-    svg += '<text class="' + label.cls + '" x="' + (W - R + 8) + '" y="' + r1(label.y) +
-      '">' + esc(label.text) + "</text>";
-  });
-  [0, 1 / 3, 2 / 3, 1].forEach((k, i) => {
-    const at = t0 + span * k;
-    svg += '<text x="' + r1(x(at)) + '" y="' + (H - 8) + '" text-anchor="' +
-      (i === 0 ? "start" : i === 3 ? "end" : "middle") + '">' +
-      esc(nxDay(new Date(at).toISOString())) + "</text>";
-  });
-  return svg + "</svg>";
-}
-
-// A strategy's cards: Nexus's plan with what was done laid over it. An event
-// card is a piece of news, so a leg is named by its headline, and the basket
-// its index tracks sits under that, quietly. A card their API does not know is
-// said to be one: an id means nothing to the operator.
-function nxLegName(nl) {
-  if (nl.state === "card not found") return "Karta, která neexistuje";
-  return nl.card_title ? nxShort(nl.card_title, 64) : nl.label || "Kartu jsme ještě nečetli";
-}
-function nxLegNote(nl) {
-  if (nl.state === "card not found") return "Nexus si ji vymyslel, jejich API na ni vrací 404";
-  return nl.label ? "sleduje: " + nl.label : "";
-}
-// The payload keeps its English states -- the guards pin those names -- and
-// the page says them in the operator's words. N-0031: "to ma tento room 2
-// cards co testvoal? proc jsou obe not bought".
-const NX_LEG = {"not bought": "nekoupeno", "card not found": "karta neexistuje",
-                bought: "koupeno", closed: "zavřeno", open: "drží se"};
-// A card's own page on cymetica.com, in a new tab, wherever the card is named;
-// plain text for a card their API does not know. `inner` is already escaped.
-function nxCardLink(nl, inner) {
-  return nl && nl.url ? '<a class="nx-link" href="' + esc(nl.url) +
-    '" target="_blank" rel="noopener" title="Open the card on cymetica.com">' + inner +
-    ' <span class="nx-out">↗</span></a>' : inner;
-}
-function nxLegs(np) {
-  const legs = np.legs || [];
-  if (!legs.length) return "";
-  const rows = legs.map(nl => {
-    const share = nl.share != null
-      ? nxShare(nl.share) + (nl.usdc_proposed != null ? " · " + nxMoney(nl.usdc_proposed) : "")
-      : nl.invested ? nxMoney(nl.invested) + " USDC" : "—";
-    const moved = nl.entry != null
-      ? esc(nxLevel(nl.entry) + " → " + nxLevel(nl.current))
-      : nl.at_proposal != null
-        ? esc(nxLevel(nl.at_proposal) + " → " + nxLevel(nl.current)) +
-          "<small>od chvíle, co to Nexus navrhl</small>"
-        : "—";
-    const exits = (nl.tp != null ? nxPct(nl.tp, nl.tp % 1 ? 1 : 0) : "—") + " / " +
-      (nl.sl != null ? nxPct(nl.sl, nl.sl % 1 ? 1 : 0) : "—");
-    const state = nl.state || "not bought";
-    return '<div class="nx-tr"><span><b title="' + esc(nl.card_title || "") + '">' +
-      nxCardLink(nl, esc(nxLegName(nl))) + "</b><small>" + esc(nxLegNote(nl)) + "</small></span><span>" +
-      (nl.side === "bear" ? "▼ bear" : nl.side ? "▲ " + esc(nl.side) : "—") + "</span><span>" +
-      esc(share) + "</span><span>" + moved + "</span><span>" + esc(exits) +
-      '</span><span class="nx-state nx-' + esc(state.split(" ").join("-")) + '">' +
-      esc(NX_LEG[state] || state) + "</span></div>";
+function renderChat() {
+  const titles = {};
+  (V.experiments || []).forEach(le => { titles[le.id] = le.title; });
+  let last = null;
+  const html = chatItems(CHAT).map(([room, nm]) => {
+    const head = room !== last && titles[room] && SECTORS.includes(CHAT)
+      ? `<div class="th-room">${esc(titles[room])}</div>` : "";
+    last = room;
+    return head + nxBubble(nm);
   }).join("");
-  return '<div class="nx-sec">Karty téhle strategie</div><div class="nx-table nx-legs">' +
-    '<div class="nx-tr nx-th"><span>Karta</span><span>Sázka</span><span>Podíl</span>' +
-    "<span>Vstup → teď</span><span>Zisk / stopka</span><span>Stav</span></div>" +
-    rows + (np.reserve != null
-      ? '<div class="nx-tr nx-dim"><span>Rezerva</span><span></span><span>' +
-        esc(nxShare(np.reserve)) + "</span><span></span><span></span><span></span></div>"
-      : "") + "</div>";
+  document.getElementById("thread").innerHTML =
+    html || `<p class="empty">Tady zatím nikdo nic nenapsal.</p>`;
+  document.getElementById("drTitle").textContent = "Konverzace · " + chatName(CHAT);
+  const scopes = [[SECTOR, sectorOf(SECTOR).name], ["general", "Celá s Nexusem"]];
+  if (!SECTORS.includes(CHAT) && CHAT !== "general") scopes.push([CHAT, "jen tenhle pokus"]);
+  document.getElementById("drScope").innerHTML = scopes.map(([k, w]) =>
+    `<button type="button" data-scope="${esc(k)}" aria-pressed="${k === CHAT}">${esc(w)}</button>`).join("");
 }
-// One chart per card that has an index: the entry and Nexus's exits across it
-// when it was bought; when it was not, where it stood when Nexus proposed it
-// and how it moved since -- what would have happened, and said so.
-function nxLegCharts(np) {
-  return (np.legs || []).filter(nl => (nl.series || []).length >= 2).map(nl => {
-    const bought = nl.entry != null;
-    const refs = [];
-    if (bought) {
-      refs.push({ v: nl.entry, label: "entry " + nxLevel(nl.entry), kind: "entry" });
-    } else if (nl.at_proposal != null) {
-      refs.push({ v: nl.at_proposal, label: "navrženo " + nxLevel(nl.at_proposal),
-                  kind: "base" });
-    }
-    if (nl.tp_level != null) {
-      refs.push({ v: nl.tp_level, label: "TP " + nxLevel(nl.tp_level), kind: "tp" });
-    }
-    if (nl.sl_level != null) {
-      refs.push({ v: nl.sl_level, label: "SL " + nxLevel(nl.sl_level), kind: "sl" });
-    }
-    const order = bought ? (np.trades || []).find(nt => nt.card === nl.card &&
-                                                        nt.outcome === "accepted") : null;
-    const head = nxLegName(nl) + (bought ? "" : " · nekoupeno");
-    const note = bought
-      ? (nl.pnl != null ? "zisk " + nxSigned(nl.pnl) + " USDC" : "")
-      : "kdybychom koupili, když to navrhl: " + nxPct(nl.since_proposal, 2);
-    return '<div class="nx-ct"><span>' + nxCardLink(nl, esc(head)) + "</span><small>" +
-      esc(note) +
-      "</small></div>" + nxChart(nl.series, {
-        refs: refs, label: head,
-        vline: bought ? (order ? { t: order.at, label: "koupeno" } : null)
-                      : (np.proposed_at ? { t: np.proposed_at, label: "Nexus navrhl" }
-                                        : null) });
-  }).join("");
+function labChat(room) {
+  CHAT = room || SECTOR;
+  document.getElementById("drawer").hidden = false;
+  renderChat();
+  bindComposer(CHAT);
+  // Like any chat: the newest at the bottom, and the bottom in view.
+  const thread = document.getElementById("thread");
+  thread.scrollTop = thread.scrollHeight || 0;
 }
-function nxOrders(np) {
-  const orders = np.trades || [];
-  if (!orders.length) return "";
-  const legOf = card => (np.legs || []).find(nl => nl.card === card);
-  return '<div class="nx-sec">Orders</div><div class="nx-table nx-orders">' +
-    '<div class="nx-tr nx-th"><span>Order</span><span>When</span><span>What</span>' +
-    "<span>State</span></div>" + orders.map(nt => {
-      const leg = legOf(nt.card);
-      const state = nt.outcome !== "accepted" ? (nt.outcome || "no outcome recorded")
-        : nt.closed_by ? "closed " + nxSigned(nt.realized) + " USDC" : "open";
-      return '<div class="nx-tr"><span>' + esc(nt.id) + '</span><span class="nx-dim">' +
-        esc(nxDay(nt.at)) + "</span><span>" + esc((nt.side || "buy") + " · " +
-        nxMoney(nt.usdc) + " USDC · ") + (leg ? nxCardLink(leg, esc(nxLegName(leg)))
-                                            : esc(nxShort(nt.card, 9))) +
-        '</span><span class="nx-state' + (state === "open" ? " nx-open"
-          : nt.outcome !== "accepted" ? " nx-card-not-found" : "") + '">' + esc(state) +
-        "</span></div>";
-    }).join("") + "</div>";
+function closeChat() {
+  document.getElementById("drawer").hidden = true;
+  CHAT = null;
 }
-function nxCardTiles(np) {
-  const legs = np.legs || [];
-  const closes = np.closes_at ? nxDay(np.closes_at) + " UTC" : "";
-  // Every leg counted by where it stands, so a card they no longer have is
-  // counted too: "2 not bought · 1 card not found".
-  const states = {};
-  legs.forEach(nl => { states[nl.state] = (states[nl.state] || 0) + 1; });
-  const told = Object.entries(states).map(
-    ([word, n]) => n + " " + (NX_LEG[word] || word)).join(" · ");
-  if ((np.invested || 0) > 0) {
-    const proposed = np.proposed_share != null && np.bankroll
-      ? np.proposed_share * np.bankroll : null;
-    return nxTiles([
-      ["Zisk", np.pnl != null ? nxSigned(np.pnl) + " USDC" : "—",
-       np.pnl_pct != null ? nxPct(np.pnl_pct, 2) + " z vloženého" : "", nxTone(np.pnl)],
-      ["Vloženo", nxMoney(np.invested),
-       proposed != null ? "z " + nxMoney(proposed) + " navržených" : "USDC", ""],
-      ["Teď to má cenu", np.value != null ? nxMoney(np.value) : "—", "USDC", ""],
-      ["Karta končí", nxUntil(np.closes_at) || "—", closes, ""]]);
-  }
-  return nxTiles([
-    ["Navrhl vsadit", np.proposed_share != null ? nxShare(np.proposed_share) : "—",
-     np.bankroll ? "z " + nxMoney(np.bankroll) + " USDC" : "z účtu", ""],
-    ["Kdybychom koupili", nxPct(np.if_bought_pct, 2), "tolik by to dělalo dneska",
-     nxTone(np.if_bought_pct)],
-    ["Karet", legs.length, told, ""],
-    ["První končí", nxUntil(np.closes_at) || "—", closes, ""]]);
-}
-// A bot: what it is, the indicators it trades on, its P&L with each of its
-// trades on the line, and the trades themselves.
-function nxBot(nc) {
-  const cfg = nc.config || {};
-  const chips = list => (list || []).map(ind => '<span class="nx-chip" title="' +
-    esc(nxParams(ind && ind.params)) + '">' + esc((ind && ind.name) || "?") +
-    "</span>").join("");
-  const mode = cfg.execution_class
-    ? String(cfg.execution_class).toLowerCase().split("_").join(" ")
-    : nc.paper === false ? "LIVE" : "paper";
-  const pairs = [["Bot", nc.name],
-                 ["Clone of", [nc.source, nc.symbol].filter(Boolean).join(" · ")],
-                 ["Strategy", cfg.strategy_type || nc.strategy],
-                 ["Risk", cfg.risk_profile || nc.risk], ["Mode", mode]]
-    .filter(([, v]) => v);
-  const acts = nc.activity || [];
-  const series = (nc.samples || []).filter(ns => ns.pnl != null).map(ns => [ns.at, ns.pnl]);
-  // Where the line stands at a trade's moment, between the two samples around
-  // it, so each dot sits on the line rather than above a drop it caused.
-  const valueAt = when => {
-    const t = Date.parse(when);
-    let prev = null;
-    for (const p of series) {
-      const at = Date.parse(p[0]);
-      if (at >= t) {
-        if (!prev || at === t) return p[1];
-        const from = Date.parse(prev[0]);
-        return prev[1] + (p[1] - prev[1]) * (t - from) / ((at - from) || 1);
-      }
-      prev = p;
-    }
-    return prev ? prev[1] : null;
-  };
-  const marks = acts.map(na => na.is_closed && na.closed_at
-    ? { t: na.closed_at, v: valueAt(na.closed_at),
-        kind: Number(na.profit_usdc) < 0 ? "loss" : "open",
-        title: (na.symbol || "?") + " " + (na.trade_type || "") + " closed " +
-               nxSigned(na.profit_usdc) + " USDC" }
-    : { t: na.executed_at, v: valueAt(na.executed_at), kind: "open",
-        title: (na.symbol || "?") + " " + (na.trade_type || "") + " " +
-               nxMoney(na.amount_usdc) + " USDC, open" });
-  return '<div class="nx-sec">Jak je bot nastavený</div><div class="nx-kv">' +
-    pairs.map(([k, v]) => "<div><span>" + esc(k) + "</span>" + esc(v) + "</div>").join("") +
-    "</div>" +
-    ((cfg.primary_indicators || []).length
-      ? '<div class="nx-chips"><span>Hlavní</span>' + chips(cfg.primary_indicators) +
-        "</div>" : "") +
-    ((cfg.secondary_indicators || []).length
-      ? '<div class="nx-chips"><span>Vedlejší</span>' + chips(cfg.secondary_indicators) +
-        "</div>" : "") +
-    (series.length >= 2
-      ? '<div class="nx-ct"><span>Zisk od zapnutí</span><small>' +
-        esc(nc.win_rate != null ? "úspěšnost " + nc.win_rate + " %" : "") + "</small></div>" +
-        nxChart(series, { marks: marks, format: nxSigned, label: "Zisk bota v čase" })
-      : "") +
-    (acts.length
-      ? '<div class="nx-sec">Jeho obchody</div><div class="nx-table nx-trades">' +
-        '<div class="nx-tr nx-th"><span>Mince</span><span>Typ</span><span>USDC</span>' +
-        "<span>Výsledek</span><span>Kdy</span></div>" + acts.map(na =>
-          '<div class="nx-tr"><span><b>' + esc(na.symbol || "?") + "</b> · " +
-          esc(na.side || "") + "</span><span>" + esc(na.trade_type || "") + "</span><span>" +
-          esc(nxMoney(na.amount_usdc)) + "</span>" + (na.is_closed
-            ? '<span class="' + nxTone(na.profit_usdc).trim() + '">' +
-              esc(nxSigned(na.profit_usdc)) + " · zavřeno" +
-              (na.exit_reason ? "<small>" + esc(na.exit_reason) + "</small>" : "") + "</span>"
-            : '<span class="nx-dim">drží se</span>') +
-          '<span class="nx-dim">' + esc(nxDay(na.executed_at)) + "</span></div>").join("") +
-        "</div>"
-      : "");
-}
-// Why a strategy stands where it does, and every move before it, newest first:
-// under the name, above the numbers. It is the operator's first question about
-// a strategy, and folded at the bottom it was the one thing they could not find.
-// The current move is said once, as the why, not again in the list.
-// One line, derived from the fields -- not the stored `why`, which is a
-// paragraph written for a reader who is not there. N-0032 and N-0034 are the
-// same complaint twice: "kdo to ma cist". The paragraph and the whole history
-// are one click away and nothing is thrown out.
-function nxGist(np) {
-  const v = np.verdict, why = String(np.why || "");
-  if (np.status === "proposed") return "Jen návrh. Nekoupili jsme nic.";
-  if (v && v.verdict === "inconclusive") {
-    const cov = v.coverage != null ? Math.round(v.coverage * 100) + " %" : "málo";
-    return "Nedá se říct, jestli to vyšlo: karta hlásila cenu jen " + cov +
-           " okna. Chybí data, ne peníze.";
-  }
-  if (v && v.verdict === "survived") return "Vyšlo to.";
-  if (v && v.verdict === "refuted") return "Nevyšlo to.";
-  if (/drop\b/i.test(why) && /^NEX-/.test(why)) return "Nexus to sám odvolal.";
-  if (np.status === "paused") return "Zastavilo se to samo.";
-  if (np.status === "running") return "Běží, verdikt ještě není.";
-  return "";
-}
-function nxStatus(np) {
-  const moves = (np.history || []).filter(nh =>
-    !(nh.status === np.status && nh.why === np.why)).reverse();
-  const gist = nxGist(np);
-  if (!np.why && !moves.length && !gist) return "";
-  const long = (np.why ? "<p>" + esc(np.why) + "</p>" : "") +
-    (moves.length ? '<div class="nx-moves">' + moves.map(nh => "<p>" +
-      nxGlyph(nh.status) + " <b>" + esc(NX_WORD[nh.status] || nh.status || "") + "</b> · " +
-      esc(nxDay(nh.at)) + (nh.why ? " — " + esc(nh.why) : "") + "</p>").join("") +
-      "</div>" : "");
-  return '<div class="nx-status nx-' + esc(np.status || "proposed") + '">' +
-    (gist ? '<p class="nx-gist">' + esc(gist) + "</p>" : "") +
-    (long ? "<details class=\"nx-more\"><summary>víc</summary>" + long + "</details>" : "") +
-    "</div>";
-}
-// What a room was accepted on, and what the numbers said at the end of its
-// window. A room with neither is one nobody could score afterwards, so the
-// panel says that first rather than leaving the space blank.
-const NX_SAID = {survived: ["Vyšlo", " nx-up"], refuted: ["Nevyšlo", " nx-down"],
-                 inconclusive: ["Nedá se říct", ""], open: ["Ještě běží", ""]};
-// When the verdict becomes computable: the moment it was accepted plus its
-// window, which is the arithmetic qa/lab.py:verdict does -- it starts the
-// window at acceptance["at"], never at the moment the room went running. A
-// window already past says "due now", because then nobody has run the verdict
-// yet and that is the one state worth noticing on this page.
-function nxDue(c) {
-  const t = Date.parse(c.at || ""), d = Number(c.window_days);
-  if (!t || !(d > 0)) return ["—", "není okno, které by skončilo"];
-  const end = new Date(t + d * 86400000).toISOString(), left = nxUntil(end);
-  return left === "closed" ? ["čeká se na něj", "okno skončilo " + nxDay(end), " nx-warn"]
-                           : [left, "okno končí " + nxDay(end), ""];
-}
-function nxVerdict(np) {
-  const c = np.criterion, v = np.verdict;
-  if (!c && !v) {
-    return '<div class="nx-sec">Jak se pozná úspěch</div><p class="nx-foot">' +
-      "Nikdo to dopředu nenapsal, takže se po skončení nedá říct, jestli to vyšlo." +
-      " Píše to <code>lab.py adopt</code> a bez toho už room běžet nesmí.</p>";
-  }
-  let html = '<div class="nx-sec">Jak to dopadlo</div>';
-  if (v) {
-    const said = NX_SAID[v.verdict] || [v.verdict, ""];
-    html += nxTiles([
-      [said[0], v.return_pct != null ? nxPct(v.return_pct, 2) : "—",
-       "tolik to vydělalo za okno", said[1]],
-      ["Největší propad", v.max_drawdown_pct != null ? nxMag(v.max_drawdown_pct, 2) : "—",
-       c && c.stop_pct != null ? "brali jsme to se stopkou " + nxMag(c.stop_pct, 0) : "",
-       ""],
-      ["Pro srovnání", v.benchmark_pct != null ? nxPct(v.benchmark_pct, 2) : "—",
-       v.benchmark_pct != null ? "BTC karta za stejnou dobu" : "není s čím srovnat", ""],
-      ["Kolik dat", v.coverage != null ? Math.round(v.coverage * 100) + " %" : "—",
-       "okna má vůbec cenu karty",
-       v.coverage != null && v.coverage < 0.8 ? " nx-down" : ""]]);
-  } else {
-    const due = nxDue(c);
-    html += nxTiles([
-      ["Okno", (c.window_days != null ? c.window_days : "—") + " d",
-       c.adopted ? "běží od chvíle, kdy se to napsalo" : "napsáno dřív, než se spustilo", ""],
-      ["Stopka", c.stop_pct != null ? nxMag(c.stop_pct, 0) : "—", "od vstupu", ""],
-      ["Pro srovnání", c.benchmark ? String(c.benchmark).slice(0, 8) : "nic",
-       c.benchmark ? "BTC karta" : "není s čím srovnat", ""],
-      ["Verdikt", due[0], due[1], due[2]]]);
-  }
-  if (np.claim) {
-    html += '<p class="nx-foot">Nexus sliboval: ' + Object.keys(np.claim).map(
-      k => esc(k) + " " + esc(String(np.claim[k]))).join(" · ") + "</p>";
-  }
-  return html;
-}
-// What their own backtest said about each card BEFORE the room opened, or
-// that nothing was measured. The second case is the true one for every room
-// on this page and the panel says it in one sentence rather than leaving the
-// space blank -- an absent brake that looks like a blank is how a brake stays
-// absent.
-function nxBacktest(np) {
-  const rows = np.backtests || [];
-  if (!rows.length) {
-    return '<div class="nx-sec">Backtest před spuštěním</div>' +
-      '<p class="nx-foot">Žádný. Tenhle room vznikl dřív, než jsme si dali ' +
-      "pravidlo backtestovat každou kartu předem (12. 9.). Od té doby se " +
-      "každé kartě měří návratnost a Sharpe na jejich vlastním backtestu a " +
-      "room se bez toho neotevře.</p>";
-  }
-  const word = {pass: ["prošlo", " nx-up"], reject: ["neprošlo", " nx-down"],
-                unbacktestable: ["nešlo změřit", ""]};
-  return '<div class="nx-sec">Backtest před spuštěním</div>' +
-    '<div class="nx-table nx-bt"><div class="nx-tr nx-th"><span>Karta</span>' +
-    "<span>Výsledek</span><span>Výnos</span><span>Sharpe</span><span>Propad</span></div>" +
-    rows.map(b => {
-      const said = word[b.verdict] || [b.verdict || "—", ""];
-      return '<div class="nx-tr"><span><b>' +
-        esc(String(b.title || b.card || "?").slice(0, 34)) + "</b></span>" +
-        '<span class="' + said[1].trim() + '">' + esc(said[0]) +
-        (b.period ? ' <small>' + esc(b.period) + " d</small>" : "") + "</span><span>" +
-        esc(b.return_pct != null ? nxPct(b.return_pct, 1) : "—") + "</span><span>" +
-        esc(b.sharpe != null ? Number(b.sharpe).toFixed(2) : "—") + "</span><span>" +
-        esc(b.drawdown_pct != null ? nxMag(b.drawdown_pct, 1) : "—") + "</span></div>";
-    }).join("") + "</div>";
-}
-function nxStrategy(nr, np) {
-  const nc = (np.clones || [])[0] || null;
-  const pills = nxPill(np.status) +
-    (np.holds ? '<span class="nx-pill nx-holds-' + esc(np.holds) + '">' +
-                esc(NX_HOLDS[np.holds] || np.holds) + " · papír</span>" : "") +
-    (nc && nc.trading != null ? '<span class="nx-pill nx-trading-' +
-      (nc.trading ? "on" : "off") + '">' +
-      (nc.trading ? "obchoduje" : "neobchoduje") + "</span>" : "");
-  const sub = esc(nr.id) + " · navrhl Nexus v " + esc(np.origin || "—") +
-    (np.since ? " · od " + esc(nxDay(np.since)) : "");
-  let html = nxHero(np.title || nr.title || nr.id, pills, sub) + nxStatus(np) +
-    nxVerdict(np);
-  if (nc) {
-    const acts = nc.activity || [];
-    const closed = acts.filter(na => na.is_closed).length;
-    html += nxTiles([
-      ["P&L", nc.pnl != null ? nxSigned(nc.pnl) + " USDC" : "—",
-       nc.pnl != null && nc.funded ? nxPct(nc.pnl / nc.funded * 100) + " of what it was given"
-                                   : "", nxTone(nc.pnl)],
-      ["Balance", nxMoney(nc.balance), nc.locked != null
-        ? nxMoney(nc.locked) + " locked · " + nxMoney(nc.available) + " free" : "", ""],
-      ["Funded", nxMoney(nc.funded), "USDC", ""],
-      ["Trades", acts.length || nc.trades || 0,
-       acts.length ? closed + " closed · " + (acts.length - closed) + " open" : "", ""]]) +
-      nxBot(nc);
-  } else if ((np.legs || []).length) {
-    html += nxCardTiles(np);
-  }
-  html += nxBacktest(np);
-  if ((np.legs || []).length) {
-    html += nxLegs(np) + nxLegCharts(np) + nxOrders(np);
-  } else if (!nc) {
-    html += '<p class="nx-foot">Nic nekoupeno a žádný plán k tomu napsaný není.</p>';
-  }
-  return html + nxSampler(np);
-}
-function nxPanelOf(id) {
-  return ((NX && NX.panels) || {})[id] || {};
-}
-function nxBotValue(nr) {
-  const np = nxPanelOf(nr.id);
-  return np.value;
-}
-// The overview: the account, every strategy with where it stands, and how
-// Nexus has answered so far.
-// One cell per strategy: what it came to, or when it will be known, or that
-// nobody wrote down what would count. The operator reads this column to find
-// out which of Nexus's ideas made money, which is the whole question.
-function nxScore(nr) {
-  const v = nr.verdict, c = nr.criterion;
-  if (v) {
-    const said = NX_SAID[v.verdict] || [v.verdict, ""];
-    return '<b class="' + said[1].trim() + '">' + esc(said[0]) + "</b>" +
-      (v.return_pct != null ? " " + esc(nxPct(v.return_pct, 2)) : "");
-  }
-  if (c) {
-    return '<span class="nx-state">čeká ' + (c.window_days != null ? c.window_days : "?") +
-      " d</span>";
-  }
-  return '<span class="nx-state">nikdo nenapsal, co je úspěch</span>';
-}
-function nxGeneral(np) {
-  const every = ((NX && NX.rooms) || []).filter(nr => nr.kind === "strategy");
-  const count = status => every.filter(nr => nr.status === status).length;
-  // The table lists what is live; the stopped ones are counted, and shown
-  // with their reason only when the "Ukončené" group is open.
-  const rooms = readStore("qa.showEnded", "0") === "1" ? every
-    : every.filter(nr => nr.status !== "stopped");
-  const bots = rooms.filter(nr => nr.holds === "bot");
-  const inBot = bots.reduce((sum, nr) => sum + (Number(nxBotValue(nr)) || 0), 0);
-  const quiet = (np.partial || 0) + (np.failed || 0) + (np.refused || 0);
-  const table = rooms.map(nr => '<div class="nx-tr"><span><button type="button" ' +
-    'class="nx-pf" data-room="' + esc(nr.id) + '">' + esc(nr.title || nr.id) +
-    "</button></span><span>" + esc(NX_HOLDS[nr.holds] || "—") + "</span><span>" +
-    nxPill(nr.status) + "</span><span>" + (nr.invested ? esc(nxMoney(nr.invested)) + " USDC"
-      : nr.proposed_share != null ? esc(nxShare(nr.proposed_share)) + " proposed" : "—") +
-    '</span><span class="' + nxTone(nr.pnl).trim() + '">' +
-    (nr.pnl != null ? esc(nxSigned(nr.pnl)) + " USDC"
-      : nr.if_bought_pct != null
-        ? '<span class="nx-dim">nekoupeno</span> ' + esc(nxPct(nr.if_bought_pct, 2))
-        : "—") +
-    "</span><span>" + (nr.status === "stopped" && nr.why
-      ? '<span class="nx-state" title="' + esc(nr.why) + '">' + esc(nxShort(nr.why, 60)) +
-        "</span>" : nxScore(nr)) + "</span></div>").join("");
-  return nxHero("Přehled", "", "Každá otázka na Nexuse a každá strategie, co navrhl") +
-    nxTiles([
-      ["Volné peníze", np.balance != null ? nxMoney(np.balance) : "—",
-       np.balance_at ? "USDC, stav k " + nxDay(np.balance_at) : "USDC, papír", ""],
-      ["V kartách", np.notional != null ? nxMoney(np.notional) : "—",
-       np.book_trades != null ? np.book_trades + " objednávek na účtu" : "", ""],
-      ["V botovi", bots.length ? nxMoney(inBot) : "—",
-       bots.length ? bots.map(nr => nr.title || nr.id).join(", ") : "žádný bot", ""],
-      ["Strategie", every.length, count("running") + " běží · " + count("proposed") +
-       " jen návrh" + (count("paused") ? " · " + count("paused") + " pauza" : "") +
-       (count("stopped") ? " · " + count("stopped") + " ukončených" : ""), ""]]) +
-    '<div class="nx-sec">Strategie</div>' + (rooms.length
-      ? '<p class="nx-foot nx-cap">Co Nexus navrhl. <b>Nekoupeno</b> = jen návrh, ' +
-        "číslo za tím je, kolik by to dělalo, kdybychom ho koupili. " +
-        "<b>Nedá se říct</b> = karta přestala hlásit cenu, takže se nedá spočítat, " +
-        "jestli to vyšlo.</p>" +
-        '<div class="nx-table nx-strats"><div class="nx-tr nx-th"><span>Strategie</span>' +
-        "<span>Drží</span><span>Stav</span><span>Vloženo</span><span>Zisk</span>" +
-        "<span>Jak dopadla</span></div>" +
-        table + "</div>"
-      : '<p class="nx-foot">Každá strategie, co Nexus navrhne, dostane vlastní kartu nahoře.</p>') +
-    '<div class="nx-sec">Nexus, všechny otázky</div>' +
-    nxTiles([
-      ["Zeptali jsme se", np.asked || 0, "", ""],
-      ["Odpověděl", np.answered || 0,
-       np.asked ? Math.round((np.answered || 0) / np.asked * 100) + " % z toho" : "", ""],
-      ["Obvykle to trvá", np.median_seconds != null ? nxSecs(np.median_seconds) : "—", "", ""],
-      ["Bez odpovědi", quiet, (np.partial || 0) + " useklých · " + (np.failed || 0) +
-       " vzdal · " + (np.refused || 0) + " odmítl", quiet ? " nx-down" : ""]]) +
-    '<div class="rely-strip">' + (np.strip || []).map(o =>
-      '<i class="sq ' + esc(o) + '" title="' + esc(o) + '"></i>').join("") + "</div>" +
-    '<p class="nx-foot rely-legend">' + [["answered", "odpověděl"], ["partial", "useklé"],
-      ["failed", "vzdal to"], ["refused", "odmítl"], ["waiting", "čeká se"]].map(
-      ([cls, word]) => '<i class="sq ' + cls + '"></i>' + word).join(" &nbsp; ") + "</p>" +
-    '<div class="nx-why">' + nxSampler(np) + "</div>";
-}
-function nxPanel(nr, np) {
-  return nr && nr.kind === "strategy" ? nxStrategy(nr, np) : nxGeneral(np);
-}
-// One card per room across the top: where it stands, what it holds, its name,
-// and the one number that says how it is doing.
-function nxCard(nr, current) {
-  const fresh = nxFresh(nr.id);
-  const badge = fresh ? '<span class="nx-badge" title="new since you last looked">' +
-    fresh + "</span>" : "";
-  const on = nr.id === current ? " on" : "";
-  if (nr.kind !== "strategy") {
-    const np = nxPanelOf(nr.id);
-    return '<button type="button" class="nx-card' + on + '" data-room="' + esc(nr.id) + '">' +
-      '<span class="nx-card-top">Everything</span><span class="nx-card-name">Overview</span>' +
-      '<span class="nx-card-num">' + esc(String(np.asked || 0)) + " questions to Nexus</span>" +
-      badge + "</button>";
-  }
-  const number = nr.pnl != null
-    ? '<span class="nx-card-num' + nxTone(nr.pnl) + '">' + esc(nxSigned(nr.pnl)) +
-      " USDC</span>"
-    : '<span class="nx-card-num">' + (nr.proposed_share != null
-        ? esc(nxShare(nr.proposed_share)) + " of account" : "nothing bought") + "</span>";
-  return '<button type="button" class="nx-card' + on + '" data-room="' + esc(nr.id) +
-    '" title="' + esc(nr.id) + '"><span class="nx-card-top">' + nxPill(nr.status) +
-    (nr.holds ? "<span>" + esc(NX_HOLDS[nr.holds] || nr.holds) + "</span>" : "") +
-    '</span><span class="nx-card-name">' + esc(nr.title || nr.id) + "</span>" +
-    (nr.status === "stopped" && nr.why
-      ? '<span class="nx-card-why">' + esc(nxShort(nr.why, 90)) + "</span>" : number) +
-    badge + "</button>";
-}
+window.labChat = labChat;
 
-// What arrived since the operator last looked at a room: Nexus's replies and
-// our notes, never their own. Kept in this browser only -- a convenience, not
-// state, like every other readStore on this page.
-function nxFresh(id) {
-  const seen = Number(readStore("qa.roomSeen." + id, "0")) || 0;
-  return ((NX && NX.threads && NX.threads[id]) || []).filter(nm =>
-    (nm.kind === "reply" || nm.kind === "claude_note") && nm.at &&
-    Date.parse(nm.at) > seen).length;
-}
-
-// The room drawn last, so a redraw can tell a switch of room -- which opens at
-// the newest message -- from a refresh, which leaves the reader where they
-// were. A redraw lands every few seconds while notes and samples arrive, and a
-// thread that jumped each time could not be read.
-let NX_SHOWN = null, nxResizing = null;
-// The two columns fill the window under the strip, so the composer sits at the
-// bottom of the screen and the thread scrolls above it.
-function nxFit() {
-  const main = document.getElementById("nxMain");
-  if (!main || !main.style || typeof main.getBoundingClientRect !== "function") return;
-  if ((window.innerWidth || 0) < 1100) { main.style.height = ""; return; }
-  const top = main.getBoundingClientRect().top + (window.scrollY || 0);
-  main.style.height = Math.max(480, Math.round((window.innerHeight || 0) - top - 18)) + "px";
-}
-
-function renderRooms(data) {
-  NX = data || { rooms: [], threads: {}, panels: {} };
-  const rooms = NX.rooms || [];
-  let current = readStore("qa.room", "general");
-  if (!rooms.some(nr => nr.id === current)) current = rooms.length ? rooms[0].id : "general";
-  const thread = (NX.threads || {})[current] || [];
-  if (!document.getElementById("panel-nexus").hidden) {
-    const newest = thread.reduce((n, nm) => Math.max(n, Date.parse(nm.at || "") || 0), 0);
-    writeStore("qa.roomSeen." + current, newest);
-  }
-  // [N-0049, N-0050] a stopped room is a record, not a thing to look at every
-  // day: it leaves the strip for a folded "Ukončené" group, and says why on
-  // its own card when the group is open. The room open right now stays.
-  const showEnded = readStore("qa.showEnded", "0") === "1";
-  const ended = rooms.filter(nr => nr.status === "stopped");
-  const strip = rooms.filter(nr => nr.status !== "stopped" || showEnded ||
-                                   nr.id === current);
-  document.getElementById("roomList").innerHTML =
-    strip.map(nr => nxCard(nr, current)).join("") + (ended.length
-      ? '<button type="button" class="nx-card nx-ended" data-ended="1">' +
-        '<span class="nx-card-top">' + (showEnded ? "▴ schovat" : "▾ ukázat") +
-        '</span><span class="nx-card-name">Ukončené (' + ended.length + ")</span>" +
-        '<span class="nx-card-num">nepovedené a zastavené pokusy</span></button>'
-      : "");
-  const shown = rooms.find(nr => nr.id === current) ||
-    { id: "general", title: "General", kind: "general" };
-  const chat = document.getElementById("roomChat");
-  const panel = document.getElementById("roomPanel");
-  const switched = NX_SHOWN !== current;
-  const atEnd = !chat.scrollHeight ||
-    chat.scrollHeight - chat.scrollTop - chat.clientHeight < 60;
-  const chatAt = chat.scrollTop, panelAt = panel.scrollTop;
-  nxFit();
-  chat.innerHTML = thread.length ? thread.map(nm => nxBubble(nm, current)).join("")
-                                 : '<div class="empty">Nothing here yet.</div>';
-  chat.scrollTop = switched || atEnd ? chat.scrollHeight : chatAt;
-  panel.innerHTML = nxPanel(shown, (NX.panels || {})[current] || {});
-  panel.scrollTop = switched ? 0 : panelAt || 0;
-  NX_SHOWN = current;
-  const total = rooms.reduce((n, nr) => n + nxFresh(nr.id), 0);
-  const badge = document.getElementById("nexusN");
-  if (badge) { badge.textContent = total ? String(total) : ""; badge.hidden = !total; }
-  nxBindComposer(current);
-}
-window.renderRooms = renderRooms;
-window.addEventListener("resize", () => {
-  clearTimeout(nxResizing);
-  nxResizing = setTimeout(() => {
-    if (NX && !document.getElementById("panel-nexus").hidden) renderRooms(NX);
-  }, 150);
-});
-
-// The one line the tab says about itself: why it is empty, or nothing. It is a
-// status, not a mark the operator can clear, so it shows exactly when there is
-// something to say and is never revealed unconditionally
-// (tests/repo/test_live_server.py counts those).
-function nxSay(message) {
-  const note = document.getElementById("roomsNote");
-  note.textContent = message || "";
-  note.hidden = !message;
-}
-
-function loadRooms() {
-  if (!NX_LOCAL || typeof fetch !== "function") {
-    nxSay("The rooms live in the running console, not in this file. " +
-          "Start console.cmd and open http://127.0.0.1:8787/.");
-    return;
-  }
-  fetch("/rooms.json", { cache: "no-store" })
-    .then(r => r.ok ? r.json() : Promise.reject(new Error("HTTP " + r.status)))
-    .then(data => { nxSay(""); renderRooms(data); })
-    .catch(e => nxSay("Could not load the rooms: " + e.message));
-}
-
-document.getElementById("roomList").addEventListener("click", e => {
-  const ended = e.target.closest("[data-ended]");
-  if (ended) {
-    writeStore("qa.showEnded", readStore("qa.showEnded", "0") === "1" ? "0" : "1");
-    renderRooms(NX);
-    return;
-  }
-  const b = e.target.closest("[data-room]");
-  if (!b) return;
-  writeStore("qa.room", b.dataset.room);
-  renderRooms(NX);
-});
-// A line naming another room -- a pointer, "it opened STR-0003", a strategy in
-// General's portfolio -- takes the operator there.
-function nxGoInto(e) {
-  const go = e.target.closest(".nx-goto, .nx-pf");
-  if (!go) return false;
-  writeStore("qa.room", go.dataset.room);
-  renderRooms(NX);
-  return true;
-}
-document.getElementById("roomPanel").addEventListener("click", nxGoInto);
-document.getElementById("roomChat").addEventListener("click", e => {
-  if (nxGoInto(e)) return;
-  const b = e.target.closest(".nx-more");
-  if (!b || !b.previousElementSibling) return;
-  const body = b.previousElementSibling;
-  body.classList.toggle("nx-clamp");
-  b.textContent = body.classList.contains("nx-clamp") ? b.dataset.label : "▴ less";
-});
-
-/* The composer: the operator's feedback for the room on screen. It is the
-   console's one write, so it goes through every door serve.py keeps -- a
-   token asked for at the moment of sending, a JSON body, this machine only. */
-let nxReloadWhenDone = false, nxSending = false;
-
-function nxTyping() {
-  const draft = document.getElementById("nxDraft");
-  return !!(draft && document.activeElement === draft &&
-            String(draft.value || "").trim());
-}
-// A page update never lands under a note being written. The draft would
-// survive -- it is stored as it is typed -- but the operator's cursor would not.
-function nxReloadIfDue() {
-  if (!nxReloadWhenDone || nxSending || nxTyping()) return;
-  writeStore("qa.scroll", window.scrollY);
-  location.reload();
-}
-function nxBindComposer(room) {
-  const form = document.getElementById("nxCompose");
-  const draft = document.getElementById("nxDraft");
-  form.hidden = !NX_LOCAL;
+/* The composer: the operator's note for the room in the drawer. It is the
+   page's one write, so it goes through every door serve.py keeps -- a token
+   asked for at the moment of sending, a JSON body, this machine only. */
+let sending = false;
+function bindComposer(room) {
+  const form = document.getElementById("compose"), draft = document.getElementById("draft");
+  form.hidden = !LOCAL;
   if (form.dataset.room === room) return;
-  if (form.dataset.room) writeStore("qa.draft." + form.dataset.room, draft.value || "");
+  if (form.dataset.room) writeStore("lab.draft." + form.dataset.room, draft.value || "");
   form.dataset.room = room;
-  draft.value = readStore("qa.draft." + room, "");
+  draft.value = readStore("lab.draft." + room, "");
+  document.getElementById("sendNote").textContent = "Uloží se do: " + chatName(room) + " · Ctrl+Enter odešle";
 }
 // Asked for at the moment of sending, never baked into the page: a tab left
-// open across a console restart would otherwise hold a token the new process
-// never issued, and every note would bounce.
+// open across a console restart would otherwise hold a token nobody issued.
 function nxPost(room, text) {
-  return fetch("/token", { cache: "no-store" })
+  return fetch("/token", {cache: "no-store"})
     .then(r => r.ok ? r.json()
-                    : Promise.reject(new Error("the console gave no token (" + r.status + ")")))
+                    : Promise.reject(new Error("konzole nedala token (" + r.status + ")")))
     .then(t => fetch("/notes", {
       method: "POST",
-      headers: { "Content-Type": "application/json", "X-QA-Token": t.token },
-      body: JSON.stringify({ room: room, text: text }),
+      headers: {"Content-Type": "application/json", "X-QA-Token": t.token},
+      body: JSON.stringify({room: room, text: text}),
     }))
     .then(r => r.ok ? r.json()
                     : r.json().catch(() => ({})).then(b =>
@@ -2289,255 +2008,154 @@ function nxPost(room, text) {
 // On window so a test can run the page's own send path over a stub fetch and
 // hold what it sends against what serve.py accepts.
 window.nxPost = nxPost;
-document.getElementById("nxDraft").addEventListener("input", e => {
-  const room = document.getElementById("nxCompose").dataset.room;
-  if (room) writeStore("qa.draft." + room, e.target.value);
+
+/* ---------- live: the numbers and the rooms redraw on their own ---------- */
+function refresh() {
+  if (!LOCAL || typeof fetch !== "function") return;
+  fetch("/lab.json", {cache: "no-store"})
+    .then(r => r.ok ? r.json() : Promise.reject(new Error("HTTP " + r.status)))
+    .then(view => { V = view; renderAll(); if (CHAT) renderChat(); })
+    .catch(() => {});
+}
+
+/* ---------- wiring ---------- */
+document.getElementById("sectors").addEventListener("click", e => {
+  const b = e.target.closest("[data-sector]");
+  if (b) labShow(b.dataset.sector);
 });
-document.getElementById("nxDraft").addEventListener("keydown", e => {
-  if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+document.getElementById("room").addEventListener("click", e => {
+  if (e.target.closest("a")) return;
+  const g = e.target.closest("[data-group]");
+  if (g) { labShow(SECTOR, g.dataset.group); return; }
+  const chat = e.target.closest("[data-chat]");
+  if (chat) { labChat(chat.dataset.chat); return; }
+  if (e.target.closest("[data-all]")) {
+    const key = "lab.all." + SECTOR + "." + readStore("lab.group." + SECTOR, "live");
+    writeStore(key, readStore(key, "0") === "1" ? "0" : "1");
+    renderRoom();
+    return;
+  }
+  if (e.target.closest("[data-movers]")) {
+    writeStore("lab.movers", readStore("lab.movers", "0") === "1" ? "0" : "1");
+    renderRoom();
+    return;
+  }
+  if (e.target.closest(".detail")) return;
+  const r = e.target.closest(".row");
+  if (r) labOpen(r.dataset.id === OPEN ? "" : r.dataset.id);
+});
+document.getElementById("room").addEventListener("keydown", e => {
+  const r = e.target.closest && e.target.closest(".row");
+  if (r && (e.key === "Enter" || e.key === " ")) {
     e.preventDefault();
-    document.getElementById("nxSend").click();
+    labOpen(r.dataset.id === OPEN ? "" : r.dataset.id);
   }
 });
-document.getElementById("nxDraft").addEventListener("blur",
-  () => setTimeout(nxReloadIfDue, 800));
-document.getElementById("nxCompose").addEventListener("submit", e => {
+document.getElementById("chatBtn").addEventListener("click", () =>
+  CHAT ? closeChat() : labChat(SECTOR));
+document.getElementById("drClose").addEventListener("click", closeChat);
+document.getElementById("drScope").addEventListener("click", e => {
+  const b = e.target.closest("[data-scope]");
+  if (b) labChat(b.dataset.scope);
+});
+document.getElementById("thread").addEventListener("click", e => {
+  const b = e.target.closest(".nx-more");
+  if (!b || !b.previousElementSibling) return;
+  const body = b.previousElementSibling;
+  body.classList.toggle("nx-clamp");
+  b.textContent = body.classList.contains("nx-clamp") ? "▾ celé" : "▴ méně";
+});
+document.addEventListener("keydown", e => { if (e.key === "Escape" && CHAT) closeChat(); });
+document.getElementById("draft").addEventListener("input", e => {
+  const room = document.getElementById("compose").dataset.room;
+  if (room) writeStore("lab.draft." + room, e.target.value);
+});
+document.getElementById("draft").addEventListener("keydown", e => {
+  if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+    e.preventDefault();
+    document.getElementById("send").click();
+  }
+});
+document.getElementById("compose").addEventListener("submit", e => {
   e.preventDefault();
-  const form = document.getElementById("nxCompose");
-  const draft = document.getElementById("nxDraft");
-  const button = document.getElementById("nxSend");
-  const status = document.getElementById("nxSendNote");
-  const room = form.dataset.room;
-  const text = String(draft.value || "").trim();
-  if (!room || !text || nxSending) return;
-  nxSending = true;
+  const form = document.getElementById("compose"), draft = document.getElementById("draft");
+  const button = document.getElementById("send"), note = document.getElementById("sendNote");
+  const room = form.dataset.room, text = String(draft.value || "").trim();
+  if (!room || !text || sending) return;
+  sending = true;
   button.disabled = true;
-  status.textContent = "sending…";
+  note.textContent = "posílám…";
   nxPost(room, text)
     .then(() => {
       draft.value = "";
-      writeStore("qa.draft." + room, "");
-      status.textContent = "saved ✓ — Claude reads it when you ask";
-      loadRooms();
+      writeStore("lab.draft." + room, "");
+      note.textContent = "uloženo ✓ — Claude si to přečte, až mu řekneš „přečti si to“";
+      refresh();
     })
-    .catch(err => { status.textContent = "not sent: " + err.message; })
-    .finally(() => { nxSending = false; button.disabled = false; nxReloadIfDue(); });
+    .catch(err => { note.textContent = "neodešlo: " + err.message; })
+    .finally(() => { sending = false; button.disabled = false; });
 });
-if (NX_LOCAL) loadRooms();
 
-
-/* ---------- the memecoin measurement in full ----------
-   A tab of the console from 2026-09-13, after the operator asked for a
-   section just for memecoins, got the last block of Stats, and could not find
-   it; on this page since V4.
-
-   Green is a gain and red is a loss, everywhere, including the summary --
-   they read pictures rather than tables. The MEDIAN is the headline and the
-   mean is beside it in small text, because one token returning +1262% drags
-   the mean to +46% while half the signals are under water: a hero number that
-   says +46% would be a lie told with a true figure.
-*/
-function pct(v) {
-  if (v == null) return `<span class="mc-flat">&mdash;</span>`;
-  const cls = v > 0 ? "mc-up" : (v < 0 ? "mc-down" : "mc-flat");
-  const sign = v > 0 ? "+" : "";
-  return `<span class="${cls}">${sign}${v.toFixed(1)}%</span>`;
-}
-
-/* One token, one hourly curve. A gap is a BREAK in the line, never a point
-   at zero: half these tokens are too new for any DEX pool, and a flat line
-   would say the coin sat still when the truth is that nobody could price it.
-   Drawn as inline SVG -- no library reaches this page and none is needed. */
-function curveSvg(points) {
-  // The 24h shape, inline in a table cell. Hovering a point names the hour
-  // and what it was worth then -- a native <title>, so it needs no script
-  // and works the moment the page opens.
-  const W = 150, H = 30, PAD = 3;
-  const read = points.filter(p => p[1] != null);
-  if (!read.length) return `<span class="mc-flat">&mdash;</span>`;
-  const vals = read.map(p => p[1]);
-  const hi = Math.max(...vals, 0), lo = Math.min(...vals, 0);
-  const span = (hi - lo) || 1;
-  const x = h => PAD + ((h - 1) / 23) * (W - 2 * PAD);   // always 24 hours wide
-  const y = v => PAD + (1 - (v - lo) / span) * (H - 2 * PAD);
-
-  // Solid between two hours read back to back, dashed across hours nobody
-  // priced -- the shape is a guess there and should look like one.
-  const lines = read.slice(1).map((p, i) => {
-    const a = read[i];
-    return `<line x1="${x(a[0]).toFixed(1)}" y1="${y(a[1]).toFixed(1)}"
-      x2="${x(p[0]).toFixed(1)}" y2="${y(p[1]).toFixed(1)}"
-      stroke="var(${p[1] >= a[1] ? "--ok" : "--bad"})" stroke-width="1.6"
-      stroke-linecap="round"${p[0] - a[0] > 1 ? ' stroke-dasharray="2 3" opacity=".55"' : ""}/>`;
-  }).join("");
-  // Our own bubble, not the browser's <title>: that one is small, grey,
-  // half a second late and cannot be coloured. The wide transparent circle
-  // is the hit area -- a 2px dot is not something anyone can aim at.
-  const dots = read.map(p =>
-    `<g class="mc-pt" data-h="${p[0]}" data-v="${p[1]}">
-      <circle cx="${x(p[0]).toFixed(1)}" cy="${y(p[1]).toFixed(1)}" r="7"
-        fill="transparent"/>
-      <circle cx="${x(p[0]).toFixed(1)}" cy="${y(p[1]).toFixed(1)}" r="2.4"
-        fill="var(${p[1] >= 0 ? "--ok" : "--bad"})"/></g>`).join("");
-  const zero = y(0);
-
-  return `<svg class="mc-spark" viewBox="0 0 ${W} ${H}" role="img"
-    aria-label="return by hour since the signal">
-    <line x1="${PAD}" x2="${W - PAD}" y1="${zero.toFixed(1)}" y2="${zero.toFixed(1)}"
-      stroke="var(--line)" stroke-width="1" stroke-dasharray="2 3"/>
-    ${lines}${dots}
-  </svg>`;
-}
-
-function memecoinPanel() {
-  const fm = (D.stats || {}).fomo;
-  if (!fm) return `<p class="blurb">No memecoin signals have been captured
-    yet. <code>python scripts/fomo_watch.py capture</code> starts it.</p>`;
-
-  const thr = fm.hit_threshold != null ? fm.hit_threshold : 20;
-  const day = (fm.horizons || {})["24h"] || {};
-  const first = (fm.horizons || {})["1h"] || {};
-  const b = fm.basket || {};
-  const rows = (fm.curves || []).map(c => `<tr>
-      <td class="mc-sym">${esc(c.symbol || "?")}</td>
-      <td class="mc-conv">${c.conviction == null ? "&mdash;" : c.conviction}</td>
-      <td class="mc-ret">${pct(c.last)}</td>
-      <td class="mc-ret">${pct(c.peak)}</td>
-      <td class="mc-g">${curveSvg(c.points)}</td>
-    </tr>`).join("");
-
-  // "-- of 0" is what the operator saw and read as broken. It was not: no
-  // signal had lived a whole day yet. A figure that cannot exist yet says so.
-  const fig = (label, row) => {
-    const hit = row.hit_rate == null ? null : Math.round(row.hit_rate * 100);
-    return `<div><dt>${label}</dt><dd>${hit == null
-      ? `<span class="mc-flat">not yet</span>` : hit + "%"}
-      <span class="mc-of">${hit == null ? "no signal is that old"
-        : "of " + (row.resolved || 0)}</span></dd></div>`;
-  };
-  const card = (head, value, sub, cls) => `<div class="mc-card">
-      <div class="mc-h">${head}</div>
-      <div class="mc-big ${cls || ""}">${value}</div>
-      <div class="mc-sub">${sub}</div></div>`;
-  const big = v => v == null ? `<span class="mc-flat">&mdash;</span>`
-    : `<span class="${v > 0 ? "mc-up" : (v < 0 ? "mc-down" : "mc-flat")}">${
-       v > 0 ? "+" : ""}${v.toFixed(1)}%</span>`;
-
-  const best = b.best || {}, worst = b.worst || {}, hc = b.high_conviction || {};
-  return `<header class="mc-top">
-      <h2>Bought every <code>hot</code> signal the moment it fired &mdash;
-        what would it be worth?</h2>
-      <div class="mc-grid">
-        ${card("P&amp;L, equal stake in every signal", big(b.pnl_pct),
-          // [operator 2026-09-14] *"to me nezjaima bez top 5 nechapu proc by
-          // to tam melo byt"*. It had a card of its own, which was mine and
-          // not asked for. It stays as one line here because it is the only
-          // thing on the page that says whether the headline is the signal
-          // or one lucky row -- demoted, not deleted.
-          `${b.n_priced || 0} signals bought &mdash;
-           ${b.pnl_without_top_pct == null ? "&mdash;"
-             : pct(b.pnl_without_top_pct)} without the best ${b.top || 5},
-           of which ${esc(best.symbol || "?")} ${pct(best.return_pct)}`)}
-        ${card("the median signal", big(b.median_pct),
-          `${b.winners || 0} up, ${b.losers || 0} down &mdash; worst
-           ${esc(worst.symbol || "?")} ${pct(worst.return_pct)}`)}
-        ${card(`conviction &ge;&nbsp;${hc.min != null ? hc.min : 70} only`,
-          // Once only tradeable coins count, their own high-conviction
-          // signals are a handful. A hero number off four rows is the
-          // defect this whole panel was rewritten to stop, so below ten it
-          // is drawn grey and the count takes its place.
-          (hc.n || 0) < 10 ? `<span class="mc-flat">n&nbsp;=&nbsp;${hc.n || 0}</span>`
-                           : big(hc.pnl_pct),
-          (hc.n || 0) < 10
-            ? `too few to mean anything &mdash; they would have returned
-               ${pct(hc.pnl_pct)}`
-            : `${hc.n} of those signals &mdash; ${pct(hc.median_pct)} median,
-               ${hc.pnl_without_top_pct == null ? "&mdash;"
-                 : pct(hc.pnl_without_top_pct)} without its best ${b.top || 5}`)}
-      </div>
-      <dl class="mc-figs">
-        <div><dt>signals tracked</dt><dd>${b.tracked || fm.tracked || 0}</dd></div>
-        <div><dt>dropped as untradeable</dt><dd>${b.n_untradeable || 0}
-          <span class="mc-of">pool under $${b.min_liquidity || 0}</span></dd></div>
-        <div><dt>depth not known</dt><dd>${b.n_depth_unknown || 0}
-          <span class="mc-of">kept; never quoted</span></dd></div>
-        <div><dt>no price when it fired</dt><dd>${b.n_unpriced || 0}
-          <span class="mc-of">never in any figure</span></dd></div>
-        <div><dt>same price read twice</dt><dd>${b.stale_readings || 0}
-          <span class="mc-of">of ${(b.stale_readings || 0) + (b.fresh_readings || 0)} readings</span></dd></div>
-        ${fig(`hit &ge;&nbsp;${thr}% at 1 h`, first)}
-        ${fig(`hit &ge;&nbsp;${thr}% at 24 h`, day)}
-        <div><dt>median at 1 h</dt><dd>${pct(first.median_pct)}</dd></div>
-      </dl>
-      <p class="blurb">Only coins somebody could actually buy and sell are
-      counted &mdash; a pair needs $${b.min_liquidity || 0} of liquidity and
-      as much traded in a day, or it is dropped. Half the tokens their signal
-      flags are dust ($0.00 to $15 a pool) and they carried the whole of the
-      good news. Return is <strong>ours</strong>: the signal's own price
-      against each hour after it, never their rolling window.</p>
-    </header>
-    ${rows ? `<div class="mc-table"><h3>The ${
-        (fm.curves || []).length} biggest movers of ${fm.curves_total || 0}
-        curves &mdash; by peak, so this table is winners by construction.</h3>
-      <table class="mc-list"><thead><tr>
-        <th>token</th><th>conviction</th>
-        <th>now</th><th>peak after signal</th>
-        <th>first 24 hours</th></tr></thead>
-      <tbody>${rows}</tbody></table></div>`
-    : `<p class="blurb">Tracking signals; none has reached its first
-       checkpoint (1h) yet.</p>`}`;
-}
-
-
-document.getElementById("memecoins").innerHTML = memecoinPanel();
-
-/* The hover bubble. Delegated, so it keeps working after a re-render, and
-   positioned in viewport coordinates because the panel scrolls. */
-(function () {
-  const tip = document.getElementById("mcTip");
-  const host = document.getElementById("memecoins");
-  if (!tip || !host) return;
+/* The bubble over a memecoin's hour and over an experiment's line. */
+(function hover() {
+  const tip = document.getElementById("tip"), room = document.getElementById("room");
   const place = e => {
     const w = tip.offsetWidth, h = tip.offsetHeight;
     let left = e.clientX + 16, top = e.clientY - h - 12;
-    if (left + w > innerWidth - 8) left = e.clientX - w - 16;
+    if (left + w > window.innerWidth - 8) left = e.clientX - w - 16;
     if (top < 8) top = e.clientY + 18;
     tip.style.left = left + "px";
     tip.style.top = top + "px";
   };
-  host.addEventListener("mousemove", e => {
-    const pt = e.target.closest(".mc-pt");
-    if (!pt) { tip.hidden = true; return; }
-    const v = Number(pt.dataset.v);
-    tip.innerHTML = `<div class="mc-th">hour ${esc(pt.dataset.h)} after the signal</div>
-      <div class="mc-tv ${v > 0 ? "mc-up" : (v < 0 ? "mc-down" : "mc-flat")}">${
-        (v > 0 ? "+" : "") + v.toFixed(1)}%</div>`;
+  const show = (e, head, value) => {
+    tip.innerHTML = `<div class="tip-h">${head}</div>` +
+      `<div class="tip-v ${tone(value)}">${pctText(value)}</div>`;
     tip.hidden = false;
     place(e);
+  };
+  const quiet = () => {
+    tip.hidden = true;
+    const svgs = room.querySelectorAll ? room.querySelectorAll("svg[data-chart]") : [];
+    Array.prototype.forEach.call(svgs, svg => {
+      const xh = svg.querySelector(".xh"), xd = svg.querySelector(".xd");
+      if (xh) xh.setAttribute("visibility", "hidden");
+      if (xd) xd.setAttribute("visibility", "hidden");
+    });
+  };
+  room.addEventListener("mousemove", e => {
+    const pt = e.target.closest && e.target.closest(".mc-pt");
+    if (pt) { show(e, `${esc(pt.dataset.h)}. hodina po signálu`, Number(pt.dataset.v)); return; }
+    const svg = e.target.closest && e.target.closest("svg[data-chart]");
+    const c = svg && CHARTS[svg.dataset.chart];
+    if (!c) { quiet(); return; }
+    // The crosshair finds the time: the reader aims at a moment, not at a line.
+    const box = svg.getBoundingClientRect();
+    const at = c.x0 + ((e.clientX - box.left) / box.width * c.W - c.L) /
+               (c.W - c.L - c.R) * (c.x1 - c.x0);
+    let best = 0;
+    c.ts.forEach((t, i) => { if (Math.abs(t - at) < Math.abs(c.ts[best] - at)) best = i; });
+    const px = c.L + (c.x1 > c.x0 ? (c.ts[best] - c.x0) / (c.x1 - c.x0) : 0) * (c.W - c.L - c.R);
+    const py = c.T + (1 - (c.vs[best] - c.lo) / (c.hi - c.lo)) * (c.H - c.T - c.B);
+    const xh = svg.querySelector(".xh"), xd = svg.querySelector(".xd");
+    xh.setAttribute("x1", px); xh.setAttribute("x2", px); xh.setAttribute("visibility", "visible");
+    xd.setAttribute("cx", px); xd.setAttribute("cy", py); xd.setAttribute("visibility", "visible");
+    show(e, clock(new Date(c.ts[best]).toISOString()) + " · od nákupu", c.vs[best]);
   });
-  host.addEventListener("mouseleave", () => { tip.hidden = true; });
+  room.addEventListener("mouseleave", quiet);
 })();
 
-
-/* ---------- live: the rooms redraw on their own event ----------
-   Only when served by scripts/serve.py. A change to the console's own page
-   is not this page's business; the rooms are. */
 (function live() {
-  const dot = document.createElement("span");
-  dot.className = "live";
-  dot.innerHTML = '<i></i><span>static</span>';
-  const meta = document.getElementById("meta");
-  if (meta) meta.appendChild(dot);
-  const LOCAL = ["127.0.0.1", "localhost", "[::1]"];
-  if (!window.EventSource || !LOCAL.includes(location.hostname)) return;
+  const dot = document.getElementById("live");
+  const say = (cls, word) => { dot.className = "live " + cls; dot.innerHTML = `<i></i><span>${word}</span>`; };
+  if (!window.EventSource || !LOCAL) return;
   let src;
   try { src = new EventSource("/events"); } catch (_) { return; }
-  const on = () => { dot.className = "live on"; dot.innerHTML = '<i></i><span>live</span>'; };
-  src.addEventListener("hello", () => { on(); loadRooms(); });
-  src.addEventListener("rooms", () => loadRooms());
-  src.onerror = () => { dot.className = "live off";
-                        dot.innerHTML = '<i></i><span>reconnecting</span>'; };
+  src.addEventListener("hello", () => { say("on", "živě"); refresh(); });
+  src.addEventListener("rooms", refresh);
+  src.onerror = () => say("off", "připojuji znovu");
   window.addEventListener("beforeunload", () => src.close());
 })();
+
+renderAll();
 </script>
 """

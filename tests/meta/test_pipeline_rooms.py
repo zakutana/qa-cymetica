@@ -175,39 +175,29 @@ def test_a_note_reads_as_read_only_up_to_the_mark(tmp_path, monkeypatch):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_a_nexus_answer_reaches_the_page_as_text_never_as_markup(tmp_path, monkeypatch):
-    node = shutil.which("node")
-    if not node:
-        pytest.skip("node is not installed, so the page cannot be run here")
-    if not (REPO / "state" / "ledger.json").exists():
-        pytest.skip("no committed ledger, so there is no page to run")
-    monkeypatch.delenv("QA_STATE_DIR", raising=False)
-    render = _render()
-    payload = _live_payload(render)
+def test_a_note_can_go_to_a_sector_room_but_a_question_cannot(tmp_path, monkeypatch):
+    """The operator, 2026-09-23: one room per sector -- Karty, Boti,
+    Memecoiny, Fondy. A note written in one lands in that room and is read
+    back there. A question to Nexus still belongs to an experiment or to
+    General: "in the cards room" names nothing he could answer about."""
+    rooms = _rooms_at(tmp_path, monkeypatch)
+    row = rooms.add_operator_note("cards", "proč tolik červené?")
+    assert row["room"] == "cards"
+    view = _lab_page().build_rooms()
+    assert [m["text"] for m in view["threads"]["cards"]] == ["proč tolik červené?"]
+    assert not [m for m in view["threads"]["general"]
+                if m.get("text") == "proč tolik červené?"], "it fell into General"
+    with pytest.raises(rooms.RoomError):
+        rooms.add_operator_note("cardz", "a room nobody opened")
 
-    hostile = ('<script>alert(1)</script><img src=x onerror=alert(2)> '
-               '**bold** and `code`')
-    rooms = {
-        "rooms": [{"id": "general", "title": "General", "kind": "general"}],
-        "threads": {"general": [
-            {"kind": "question", "id": "NEX-9", "at": _at(0), "text": "what now?"},
-            {"kind": "reply", "id": "NEX-9", "at": _at(120), "text": hostile,
-             "outcome": "answered", "seconds": 120.0, "upper": 130.0},
-        ]},
-        "panels": {"general": {}},
-    }
-    code, err, captured = _run_page(
-        node, tmp_path / "rooms", payload,
-        after=f"window.renderRooms({json.dumps(rooms)});")
+    mod = _nexus_module(tmp_path, monkeypatch)
 
-    assert code == 0, f"the page throws when it renders the rooms:\n{err[:900]}"
-    chat = captured.get("roomChat", "")
-    assert "what now?" in chat, "the rooms renderer never wrote the thread"
-    assert "&lt;script&gt;alert(1)&lt;/script&gt;" in chat
-    assert "<script" not in chat.lower() and "<img" not in chat.lower(), (
-        "a Nexus answer became markup on the page")
-    assert "<b>bold</b>" in chat and "<code>code</code>" in chat, (
-        "the markdown subset is applied after escaping, and it did not apply")
+    def tripwire():
+        raise AssertionError("the client was built for a question to a sector")
+
+    monkeypatch.setattr(mod, "_client", tripwire)
+    with pytest.raises(rooms.RoomError):
+        mod.ask("and the stop?", wait=False, room="cards")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -234,19 +224,10 @@ def test_a_stopped_room_says_why_and_steps_out_of_the_way(tmp_path, monkeypatch)
     rooms = {r["id"]: r for r in _lab_page().build_rooms()["rooms"]}
     assert rooms["STR-0001"]["why"] == "Nexus ruled it out"
     assert rooms["STR-0002"]["why"] == "bought"
-    # B04, deep pass of 2026-09-22 evening (3/3): both words were searched in
-    # the whole template, and two of the three "Ukončené" are comments -- a
-    # strip that kept stopped rooms stayed green. Comments out, and each
-    # promise read where it is kept: the strip's filter and the card itself.
-    import re
-    code = re.sub(r"(?m)^\s*//[^\n]*|\s//\s[^\n]*", "", _lab_page().TEMPLATE)
-    assert "Ukončené" in code, "no folded group for stopped rooms"
-    assert re.search(r"const strip = rooms\.filter\(\s*nr\s*=>\s*"
-                     r"nr\.status\s*!==\s*\"stopped\"", code), (
-        "the strip no longer leaves stopped rooms out")
-    start = code.index("function nxCard(")
-    card = code[start:code.index("\nfunction ", start + 1)]
-    assert "nr.why" in card, "the reason is not drawn on the room's own card"
+    # The page half -- a stopped room out of the ranking, into a folded
+    # archive, with a few words of reason on its own row -- is held against
+    # /lab in test_pipeline_lab_page.py::test_the_archive_and_the_judged_are_
+    # one_click_away_with_their_reason.
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -256,11 +237,10 @@ def test_the_tab_reads_no_field_the_rooms_do_not_write(tmp_path, monkeypatch):
     test_the_page_reads_no_field_the_payload_stops_writing holds `f.` and `m.`
     against what the payload carries: JavaScript reading a missing property is
     undefined, not an error, and three visible breakages came from exactly
-    that. The rooms arrive by fetch and never pass through that guard, so the
-    tab names its own shapes -- `nm.` a message, `nr.` a room, `np.` a panel,
-    and inside a strategy's panel `nt.` a trade, `nh.` a change of status,
-    `nl.` a leg of its plan, `nc.` a bot and `ns.` one of its samples -- and
-    this holds each against what build_rooms() actually writes.
+    that. The rooms never pass through that guard, so the page names its own
+    shape for a message of a thread -- `nm.` -- and this holds it against what
+    build_rooms() actually writes. (It named nine shapes while the rooms were
+    a tab of their own; /lab reads the rest through lab_view().)
     """
     import re
 
@@ -289,22 +269,12 @@ def test_the_tab_reads_no_field_the_rooms_do_not_write(tmp_path, monkeypatch):
         {"type": "claude_note", "id": "N-0003", "room": "general", "at": _at(7),
          "text": "c", "re": "NEX-1", "gist": True},
     ])
-    render = _render()
     view = _lab_page().build_rooms()
-    panels = list(view["panels"].values())
-    bots = [c for p in panels for c in p.get("clones") or []]
+    # Since /lab became four sector rooms (2026-09-23) the page reads the
+    # rooms' panels through lab_view() -- held in test_pipeline_lab_page.py --
+    # and only the thread's messages directly, in the conversation drawer.
     written = {
         "nm": {k for thread in view["threads"].values() for m in thread for k in m},
-        "nr": {k for r in view["rooms"] for k in r},
-        "np": {k for p in panels for k in p},
-        "nt": {k for p in panels for t in p.get("trades") or [] for k in t},
-        "nh": {k for p in panels for h in p.get("history") or [] for k in h},
-        "nc": {k for c in bots for k in c},
-        "ns": {k for c in bots for s in c.get("samples") or [] for k in s},
-        "na": {k for c in bots for a in c.get("activity") or [] for k in a},
-        "nl": {k for p in panels for leg in p.get("legs") or [] for k in leg},
-        # The Nexus line on /lab reads _nexus_channel() as `nch.`.
-        "nch": set(_lab_page()._nexus_channel()),
     }
     for name, keys in written.items():
         # Any identifier, camelCase included: `[a-z_]+` then `\b` could not
@@ -1051,75 +1021,6 @@ def test_a_question_for_a_room_that_does_not_exist_is_never_sent(tmp_path, monke
         "question", "NEX-0002", "STR-0001")
 
 
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_a_strategy_room_draws_its_book_and_its_bot_and_general_the_portfolio(
-        tmp_path, monkeypatch):
-    """The panel beside a strategy's chat, drawn by the page itself.
-
-    What the operator asked for on 2026-09-11: a room's chat on the left and,
-    beside it, how the strategy is doing -- its trades, its bot, where it
-    stands. General's panel carries the paper account and every strategy with
-    its state. A title is ours, but it is text, and is drawn as text.
-    """
-    node = shutil.which("node")
-    if not node:
-        pytest.skip("node is not installed, so the page cannot be run here")
-    if not (REPO / "state" / "ledger.json").exists():
-        pytest.skip("no committed ledger, so there is no page to run")
-    state = tmp_path / "state"
-    state.mkdir()
-    rooms = _rooms_at(state, monkeypatch)
-    _write(state / "nexus.jsonl", _answered("NEX-1", 0))
-    _write(state / "paper.jsonl", [*_buy("TRD-0001", 900, "NEX-1", usdc=10000.0),
-                                   _snapshot("TRD-0001", 905)])
-    _write(state / "clones.jsonl", _bot_rows())
-    _write(state / "samples.jsonl", _sampled_rows())
-    rooms.open_strategy("NEX-1", "<b>Karta</b> <script>alert(1)</script>")
-    # A room runs only once its criterion is written (2026-09-12).
-    rooms.set_acceptance("STR-0001", window_days=7, stop_pct=5.0,
-                         why="his own stop over his own horizon")
-    rooms.set_status("STR-0001", "running", "TRD-0001 koupil 10 000 USDC")
-    view = _lab_page().build_rooms()
-
-    monkeypatch.delenv("QA_STATE_DIR", raising=False)
-    payload = _live_payload(_render())
-
-    def drawn(room):
-        code, err, captured = _run_page(
-            node, tmp_path / room, payload,
-            after=f"localStorage.setItem(\"qa.room\", {json.dumps(room)});\n"
-                  f"window.renderRooms({json.dumps(view)});")
-        assert code == 0, f"the page throws when it draws {room}:\n{err[:900]}"
-        return captured
-
-    strategy = drawn("STR-0001")
-    panel = strategy.get("roomPanel", "")
-    assert "Běží" in panel and "TRD-0001 koupil 10 000 USDC" in panel
-    # In the orders table, not anywhere: the status text above already holds
-    # both strings, so dropping the trades list stayed green (P02, deep pass
-    # of 2026-09-11).
-    assert "nx-orders" in panel, "the strategy panel has no orders table"
-    orders = panel[panel.index("nx-orders"):]
-    assert "TRD-0001" in orders and "10 000" in orders, (
-        "the order is not in the panel's orders table")
-    assert "QA Perceptron paper" in panel and "<polyline" in panel, (
-        "the bot, or the line of its P&L, is not in the panel")
-    drawn_text = strategy.get("roomList", "") + strategy.get("roomChat", "")
-    assert "&lt;script&gt;" in drawn_text and "<script" not in drawn_text.lower()
-    # What the sampler read: the bot's indicators and its trades, what is
-    # locked in them, and the card's index since the order went in.
-    assert "rsi" in panel and "ETH" in panel and "locked" in panel, (
-        "the bot's configuration, trades or balance split is not in the panel")
-    assert panel.count("<polyline") >= 2, "the card's index line is not drawn"
-
-    general = drawn("general").get("roomPanel", "")
-    assert "89 000.96" in general, "the overview does not show the paper account"
-    assert 'data-room="STR-0001"' in general and "Běží" in general, (
-        "the overview does not list the strategies and where each stands")
-    assert "stale" in general, (
-        "a sampler whose last round is hours old is not called stale on the page")
-
-
 # ---------------------------------------------------------------------------
 # A strategy's name, and Nexus's proposal written down as its plan
 # ---------------------------------------------------------------------------
@@ -1315,177 +1216,26 @@ def test_a_plan_leg_meets_its_order_its_card_and_where_it_stood_when_proposed(
 # The page: a strip of named strategies, the chat beside a panel of numbers
 # ---------------------------------------------------------------------------
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_the_composer_sits_under_the_thread_never_over_it():
-    """The first thing the operator said about the tab, 2026-09-11: the box they
-    write in covered the end of the conversation. It was `position: sticky` over
-    a thread that scrolled with the page. The thread now scrolls inside its own
-    column, and the composer is the next thing in that column."""
-    import re
-
-    template = _lab_page().TEMPLATE
-    # Every way to reach the composer: its class, its id, and a style on the
-    # element itself. Only `.nx-compose` was read, so `#nxCompose{position:
-    # sticky}` or an inline style floated it with the test green (P05, deep
-    # pass of 2026-09-11).
-    rules = re.findall(r"([^{}]*(?:\.nx-compose|#nxCompose)[^{}]*)\{([^}]*)\}", template)
-    assert rules, "there is no rule for the composer at all"
-    for selector, body in rules:
-        assert not re.search(r"position\s*:\s*(sticky|fixed|absolute)", body), (
-            f"{selector.strip()} floats the composer over the thread: {body}")
-    tag = re.search(r'<[^>]*id="nxCompose"[^>]*>', template)
-    assert tag, "the composer element is not in the page"
-    assert not re.search(r"position\s*:\s*(sticky|fixed|absolute)", tag.group(0)), (
-        f"the composer floats by an inline style: {tag.group(0)}")
-    chats = [body for selector, body in re.findall(r"([^{}]*)\{([^}]*)\}", template)
-             if selector.strip() == ".nx-chat"]
-    assert len(chats) == 1, f"the thread has {len(chats)} rules; one is its own"
-    assert re.search(r"overflow-y\s*:\s*auto", chats[0]), (
-        f"the thread does not scroll on its own, so the page does: {chats[0]}")
-    column = template.index('class="nx-chatcol"')
-    assert (column < template.index('id="roomChat"') < template.index('id="nxCompose"')
-            < template.index('id="roomPanel"')), (
-        "the thread and the composer are not one column with the panel beside it")
-
-
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_lab_page_takes_the_whole_screen_and_the_console_keeps_its_column():
     """The console reads best as a column. The rooms are a chat beside a
     dashboard, and on the operator's screen they had a third of the width they
     could have had -- so while they were a tab, showTab widened the page for
-    that tab alone. Since V4 they are on a page of their own, /lab, which is
-    wide throughout, and the console keeps its column."""
+    that tab alone. Since V4 they are on a page of their own, /lab, wider than
+    the console's column throughout, and the console keeps its column."""
     import re
 
     lab = _lab_page().TEMPLATE
-    assert '<div class="wrap" id="wrap">' in lab, "the lab page has no #wrap"
-    rules = re.findall(r'(?m)^\.wrap\s*\{([^}]*)\}', lab)
-    assert rules and "max-width:none" in rules[-1].replace(" ", ""), (
-        "the last word on .wrap on /lab is not full width, so the rooms get "
-        "the console's column")
+    assert '<div class="app" id="app">' in lab, "the lab page has no #app"
+    widths = re.findall(r'(?m)^\.app\s*\{[^}]*max-width\s*:\s*(\d+)px', lab)
     console = _render().TEMPLATE
-    assert re.search(r'\.wrap\s*\{[^}]*max-width\s*:\s*\d+px', console), (
-        "the console's own width is gone")
+    column = re.search(r'\.wrap\s*\{[^}]*max-width\s*:\s*(\d+)px', console)
+    assert column, "the console's own width is gone"
+    assert widths and int(widths[-1]) >= int(column.group(1)) + 200, (
+        "/lab is no wider than the console's column, so the ranking and its "
+        "numbers get squeezed the way the rooms once were")
     assert "max-width:none" not in "".join(
         re.findall(r'(?m)^\.wrap[^{]*\{([^}]*)\}', console)).replace(" ", ""), (
         "something in the console still widens it to the whole screen")
-
-
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_the_strip_names_each_strategy_and_its_panel_leads_with_numbers(
-        tmp_path, monkeypatch):
-    """The operator's other two complaints: rooms named by number, and a panel
-    that had to be read. The strip gives a strategy's name, where it stands and
-    its one number. The panel opens on the name and four figures; the
-    configuration is a table; the chart draws the entry and Nexus's exits as
-    lines, and a leg nobody bought is labelled as what would have happened.
-
-    Then their next two, on the first version of this. Why a strategy stands
-    where it does was folded away at the bottom, and it was the thing they
-    most wanted: it sits under the name now, above the numbers, with every
-    earlier move beside it and the current one said once. And an event card is
-    a piece of news, not a coin: a leg is named by its headline, the basket it
-    tracks goes under it, and a card their API does not know is said to be
-    one, never shown as an id."""
-    import re
-
-    gone = "5bd86126-90eb-4ad8-8e55-909397dab402"  # NEX-0012's Polygon card, a 404
-
-    node = shutil.which("node")
-    if not node:
-        pytest.skip("node is not installed, so the page cannot be run here")
-    if not (REPO / "state" / "ledger.json").exists():
-        pytest.skip("no committed ledger, so there is no page to run")
-    state = tmp_path / "state"
-    state.mkdir()
-    rooms = _rooms_at(state, monkeypatch)
-    _write(state / "nexus.jsonl", _answered("NEX-1", 0))
-    _write(state / "paper.jsonl", _buy("TRD-0001", 900, "NEX-1", usdc=10000.0,
-                                       card=CARD_A))
-    _write(state / "samples.jsonl", [
-        {"type": "tick", "at": _at(950), "every": 600, "ok": True, "reads": {}},
-        _card(CARD_A, 950, [("BCH", 0.685), ("OKB", 0.315)],
-              closes="2026-09-12T23:14:22+00:00"),
-        _card(CARD_B, 950, [("BTC", 0.996), ("ETH", 0.004)],
-              closes="2026-09-12T07:44:00+00:00"),
-        _index(CARD_A, 950, [(30, 99.0), (900, 92.3), (950, 92.42)]),
-        _index(CARD_B, 950, [(30, 97.0), (60, 97.36), (950, 98.0)]),
-        {"type": "sample", "kind": "position", "at": _at(950), "position_id": "P-1",
-         "card_id": CARD_A, "status": "open", "current_index": 92.42,
-         "current_value_usdc": 10014.48, "unrealized_pnl_usdc": 14.48,
-         "realized_pnl_usdc": 0.0},
-        dict(_card(gone, 950, [], status="not_found"), title=None, index_base=None),
-    ])
-    rooms.open_strategy("NEX-1", "BTC 20 % + BCH-blend 10 %")
-    rooms.set_title("STR-0001", "BTC + BCH blend")
-    rooms.set_plan("STR-0001", [
-        {"card": CARD_B, "side": "bull", "share": 0.2, "tp": 8.0, "sl": -5.0},
-        {"card": CARD_A, "side": "bull", "share": 0.1, "tp": 13.0, "sl": -9.0},
-        {"card": gone, "side": "bull", "share": 0.05}],
-        reserve=0.65, bankroll=100000.0)
-    before = "Čeká na nákup, Nexus navrhl tři karty."
-    rooms.set_status("STR-0001", "paused", before)
-    why = "Koupeno TRD-0001 za 10 000 USDC; Nexus dal TP +13 % a SL -9 %."
-    # A room runs only once its criterion is written (2026-09-12).
-    rooms.set_acceptance("STR-0001", window_days=7, stop_pct=5.0,
-                         why="his own stop over his own horizon")
-    rooms.set_status("STR-0001", "running", why)
-    view = _lab_page().build_rooms()
-    monkeypatch.delenv("QA_STATE_DIR", raising=False)
-    code, err, captured = _run_page(
-        node, tmp_path / "page", _live_payload(_render()),
-        after='localStorage.setItem("qa.room", "STR-0001");\n'
-              f"window.renderRooms({json.dumps(view)});")
-    assert code == 0, f"the page throws when it draws the strategy:\n{err[:900]}"
-
-    strip = re.sub(r"<[^>]+>", " ", captured.get("roomList", ""))
-    assert "BTC + BCH blend" in strip and "Běží" in strip and "+14" in strip, strip
-    assert "STR-0001" not in strip, "the strip still names a strategy by its number"
-
-    panel = captured.get("roomPanel", "")
-    assert panel.index("BTC + BCH blend") < panel.index("nx-tile"), (
-        "the panel does not open on the strategy's name")
-    text = re.sub(r"<[^>]+>", " ", panel)
-    # Each figure where it belongs, not anywhere on the panel: "10 000" and
-    # "+13 %" are also in the why above the tiles and "BTC" is in the title,
-    # so the tiles, the TP column and the basket label could all go with the
-    # test green (P01, deep pass of 2026-09-11).
-    tiles = re.sub(r"<[^>]+>", " ", panel[panel.index("nx-tiles"):panel.index("nx-legs")])
-    legs = re.sub(r"<[^>]+>", " ", panel[panel.index("nx-legs"):])
-    for figure in ("+14", "10 000"):
-        assert figure in tiles, f"{figure!r} is not in the tiles"
-    for figure in ("68 % BCH · 32 % OKB", "sleduje: BTC", "nekoupeno", "92.28", "+13 %"):
-        assert figure in legs, f"{figure!r} is not in the legs table"
-    table = panel[panel.index("nx-legs"):]
-    assert table.index("card e579581b") < table.index("68 % BCH · 32 % OKB"), (
-        "a leg is named by the coins in its basket, not by the news on its card")
-    assert "neexistuje" in text and gone[:8] not in text, (
-        "a card their API does not know is shown as an id")
-    assert f'href="https://cymetica.com/events/{CARD_A}"' in panel, (
-        "a card cannot be opened on cymetica.com from the panel")
-    assert f"cymetica.com/events/{gone}" not in panel, "a card that does not exist is linked"
-    for ref in ("entry", "tp", "sl", "base"):
-        assert f'data-ref="{ref}"' in panel, f"the chart draws no {ref} line"
-    assert "kdybychom koupili" in text.lower(), (
-        "a leg nobody bought is not labelled as what would have happened")
-    assert text.count(why) == 1, "why the strategy stands where it does is said twice"
-    # [operator 2026-09-20, N-0032 and N-0034] The paragraph itself may now be
-    # folded -- "zase uplne megadlouhy 'Why it is stopped', kdo to ma cist" --
-    # but the ANSWER may not be. What replaced it is one derived line, and
-    # this guard moved with it rather than being dropped: the short line is
-    # visible and above the numbers, and the full text is still on the page.
-    #
-    # The older rule (2026-09-11) was that `why` itself must not be folded,
-    # because folded at the bottom it was the one thing they could not find.
-    # That reason is served by the line; it was never served by the paragraph.
-    gist = "Běží, verdikt ještě není."
-    at = panel.index(gist)
-    assert panel.rfind("<details", 0, at) <= panel.rfind("</details>", 0, at), (
-        "the one-line answer is folded away, which is the 2026-09-11 defect")
-    assert at < panel.index("nx-tile"), "the one-line answer sits under the numbers"
-    for said in (why, before):
-        assert said in panel, f"{said!r} is no longer on the page at all"
-    assert "<details" in panel and "víc" in panel, (
-        "the full text has no way to be opened")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
