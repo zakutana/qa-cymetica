@@ -3257,6 +3257,52 @@ reports:
       clean ones pass it, since at the rate we saw a clean twelve happens by
       chance less than one time in twenty.
 
+  - key: paper-buy-checked-against-another-balance
+    findings: [CYM-a_paper_buy_is_not_refused_for_money_the_paper_book_holds]
+    severity: medium
+    category: api
+    url: https://cymetica.com/api/v1/event-cards/5d91bf43-a597-47b0-9abe-5c7f52618bbd/buy
+    title: "A paper buy of AIB-Privacy is refused for \"Insufficient USDC balance: you have 7.650006\" from a paper book of 88,598.91 USDC"
+    expected: >
+      The card's tradeability block on GET /api/v1/event-cards/{id} says of
+      tradeable_now: "True when a position can be opened on this card RIGHT
+      NOW via POST /buy, /sell or /short (paper or live per your account
+      mode) ... This is the only trade gate." Our account reads
+      simulation_mode: true on GET /api/v1/account/me, so a buy sent with
+      "paper": true on a card that reads tradeable_now true opens a paper
+      position, or is refused for a reason that belongs to the paper book.
+    actual: >
+      On 2026-09-23 card 5d91bf43-a597-47b0-9abe-5c7f52618bbd ("AIB-Privacy --
+      Privacy Crypto Index Basket", evcdx_symbol AIB-PRIVACY, pw_live false)
+      read status live, tradeable_now true, trading_blocked_reason null. With
+      the account in simulation_mode and sim_balance.usdc 88598.91, POST
+      /api/v1/event-cards/{id}/buy with {"amount_usdc": 480.36, "paper":
+      true} answered HTTP 409 {"detail": "Insufficient USDC balance: you have
+      7.650006."} at 05:59:13 and again at 06:00:24 UTC. A paper buy of 5 USDC
+      on another card from the same account (30015006-abff-44b6-bdb0-
+      f659faf4f3f4, no EVCDX symbol, pw_live true) was accepted at 06:01:16.
+      7.650006 is neither the paper book nor the balance_usdc
+      /api/v1/account/me reports (0.00).
+    steps:
+      - 'GET https://cymetica.com/api/v1/account/me -> simulation_mode true, sim_balance.usdc "88598.91"'
+      - 'GET https://cymetica.com/api/v1/event-cards/5d91bf43-a597-47b0-9abe-5c7f52618bbd -> status live, tradeable_now true, trading_blocked_reason null, evcdx_symbol "AIB-PRIVACY"'
+      - 'POST https://cymetica.com/api/v1/event-cards/5d91bf43-a597-47b0-9abe-5c7f52618bbd/buy {"amount_usdc": 480.36, "paper": true} -> 409 {"detail": "Insufficient USDC balance: you have 7.650006."}'
+      - 'The same POST on 30015006-abff-44b6-bdb0-f659faf4f3f4 with {"amount_usdc": 5, "paper": true} -> 200 with a position_id'
+    body: >
+      The buy appears to be checked against a balance other than the paper
+      book -- which one, only you can say; the card carrying an EVCDX token
+      listing is the visible difference from the card that took the order.
+      Your Nexus picked this card for a paper trade (NEX-0088, "status =
+      live, tradeable_now = true"), so an agent following it on paper cannot
+      open the position. Either the paper buy draws on the paper book, or
+      tradeable_now reads false for a paper account on cards it cannot buy,
+      with the reason.
+
+      Our check places no order: it reads our own record of each buy -- the
+      body sent, the card's gate and the paper book read just before -- and
+      judges every card ever refused this way by its newest buy. It goes
+      green when a paper buy of that card is accepted.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in
