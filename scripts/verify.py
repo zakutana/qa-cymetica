@@ -181,6 +181,7 @@ def owed(ledger: dict, only: list[str] | None) -> list[dict]:
                     if verdict == "fail" else None),
                 "fingerprint": row["check"]["pinned_fingerprint"],
                 "run_id": run_id,
+                "level": level,
                 "checked_at": adjudicated.get("at"),
                 "tree_sha": run.get("git_head"),
                 "prereg_id": run.get("prereg_id"),
@@ -267,6 +268,23 @@ def pin_reason(finding_id: str, fingerprint: str) -> str | None:
     return latest
 
 
+def _run_line(item: dict) -> str:
+    """How the run was made, said at the level it actually has. B2 of the
+    review of 2026-09-23 (3/3): a `fail` may go out from an R-level run --
+    no clean tree, no preregistration -- and this line described every run as
+    the V-level one. Absent a level, the V wording stands: a pass cannot go
+    out below V (work() refuses it)."""
+    if item.get("level") == "R":
+        return (f"RUN: {item['run_id']} at commit {item['tree_sha']}. It is a "
+                f"run our rules admit to show that a defect reproduces; it was "
+                f"not preregistered, so it is not the kind of run that "
+                f"verifies a fix.")
+    return (f"RUN: {item['run_id']}, preregistration {item['prereg_id']}, on a "
+            f"clean working tree at commit {item['tree_sha']}. The selector was "
+            f"frozen and git-tagged BEFORE the run, so the set of checks could "
+            f"not be narrowed after seeing the results.")
+
+
 def _evidence_offer(item: dict) -> str:
     """How they can check this, said truthfully.
 
@@ -276,9 +294,11 @@ def _evidence_offer(item: dict) -> str:
     """
     ids = [str(i) for i in (item.get("evidence_ids") or []) if i]
     named = f" under evidence id(s) {', '.join(ids)}" if ids else ""
+    # An R-level run has no preregistration to offer (B2).
+    tail = ("as is the check's definition" if item.get("level") == "R" else
+            "as are the check's definition and the preregistration named above")
     return ("EVIDENCE: the request and response behind this verdict are "
-            f"retained{named} and are provided on request, as are the "
-            "check's definition and the preregistration named above.")
+            f"retained{named} and are provided on request, {tail}.")
 
 
 def body(item: dict) -> dict:
@@ -425,10 +445,7 @@ def body(item: dict) -> dict:
         f"Independent re-check by the QA agent for hunter expire76.\n\n"
         f"{headline}\n\n"
         f"WHAT THE FINGERPRINT IS: {what_it_is} {why_fingerprint}\n\n"
-        f"RUN: {item['run_id']}, preregistration {item['prereg_id']}, on a clean "
-        f"working tree at commit {item['tree_sha']}. The selector was frozen and "
-        f"git-tagged BEFORE the run, so the set of checks could not be narrowed "
-        f"after seeing the results.\n\n"
+        f"{_run_line(item)}\n\n"
         f"CHECK(S) THIS COVERS:\n{checks}\n\n"
         f"{_evidence_offer(item)}\n\n"
         f"FINDING {item['finding_id']}: {item['title']}"

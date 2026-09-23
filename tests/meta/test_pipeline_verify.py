@@ -239,6 +239,17 @@ def test_we_never_send_them_to_a_repository_they_cannot_open():
     assert "provided on request" in bare
     assert "None" not in bare and "[]" not in bare
 
+    # B2 of the review of 2026-09-23 (3/3): a `fail` may go out from an
+    # R-level run -- no clean tree, no preregistration -- and the RUN line
+    # described every run as the V-level one. The same class: a true verdict
+    # inside a sentence about how it was measured that is not true.
+    level_r = verify.body(_item(verdict="fail", level="R", prereg_id=None))["evidence"]
+    for claim in ("clean working tree", "frozen and git-tagged", "preregistration"):
+        assert claim not in level_r, (claim, level_r)
+    assert "not preregistered" in level_r, level_r
+    level_v = verify.body(_item(level="V"))["evidence"]
+    assert "clean working tree" in level_v and "frozen and git-tagged" in level_v
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_paragraph_names_the_kind_of_fingerprint_the_run_produced():
