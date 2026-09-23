@@ -87,6 +87,11 @@ state/samples.jsonl
 # by `scripts/keep.py snapshot`, so months of it are not on one disk.
 state/lab.jsonl
 
+# The laboratory's report (`lab.py report`, plan v2 V4): a projection of the
+# diaries above, rewritten whenever the /lab page is asked for. Outside git for
+# their reason, and so the committed console hashes nothing that is not in git.
+state/lab/
+
 # Where the loop's last tick stopped: the search queue and the clocks. Rewritten
 # every twenty minutes while a /loop runs, and rebuilt from the diaries if it is
 # lost -- a cache of the walk, not a record of anything.

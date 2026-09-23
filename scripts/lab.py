@@ -2946,6 +2946,35 @@ def board_rows() -> list[dict]:
                      _sibling("clone").load())
 
 
+REPORT = Path("lab") / "report.json"
+
+
+def report_path() -> Path:
+    from qa.state import state_dir
+
+    return state_dir() / REPORT
+
+
+def write_report(now: datetime | None = None) -> dict:
+    """`state/lab/report.json`, the one file the /lab page reads (V4): what
+    each product earned after costs, from the diaries on this machine --
+    nothing fetched, so it answers while their API is down."""
+    from qa import lab_report
+    from qa.rooms import load_samples
+
+    said = lab_report.report(
+        _nexus_rows(), lab.load(), rooms.load(), _sibling("paper").load(),
+        load_samples(), _sibling("clone").load(),
+        _sibling("fomo_watch").load(), now=now or _now())
+    target = report_path()
+    target.parent.mkdir(parents=True, exist_ok=True)
+    tmp = target.with_name(target.name + ".tmp")
+    tmp.write_text(json.dumps(said, ensure_ascii=False, indent=1),
+                   encoding="utf-8")
+    tmp.replace(target)
+    return said
+
+
 def _board_line(row: dict) -> str:
     if row["pnl_pct"] is not None:
         money = (f"{row['pnl_pct']:+6.2f}%  {row['pnl_usdc']:+.2f} on "
@@ -3188,6 +3217,8 @@ def main(argv: list[str] | None = None) -> int:
     board_cmd = sub.add_parser(
         "board", help="his proposals and what each earned, best first")
     board_cmd.add_argument("--top", type=int, default=20)
+    sub.add_parser("report", help="state/lab/report.json -- what each product "
+                                  "earned after costs, for the /lab page")
     log_cmd = sub.add_parser(
         "log", help="one line of today's diary: done, learned (--lesson) or "
                     "to pick up (--next)")
@@ -3331,6 +3362,14 @@ def main(argv: list[str] | None = None) -> int:
         tick_exclusive()
     elif args.cmd == "brief":
         print(brief())
+    elif args.cmd == "report":
+        said = write_report()
+        for name, product in said["products"].items():
+            net = product["net_pct"]
+            print(f"  {name:10} n={product['n']:<3} "
+                  + (f"{net:+.2f}%" if net is not None else "  -   ")
+                  + f"  running {product['running']}")
+        print(f"  -> {report_path()}")
     elif args.cmd == "board":
         rows = board_rows()
         for row in rows[:args.top]:

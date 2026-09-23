@@ -1927,7 +1927,7 @@ def board(answers: list[dict], notebook: list[dict], room_rows: list[dict],
 
     intents = {r.get("id"): r for r in paper_rows
                if r.get("type") == "intent" and r.get("kind") != "close"}
-    held: dict[str, tuple[str, float]] = {}
+    held: dict[str, tuple[str, float, str]] = {}
     for row in paper_rows:
         if (row.get("type") != "outcome" or row.get("outcome") != "accepted"
                 or row.get("kind") == "close"):
@@ -1942,7 +1942,8 @@ def board(answers: list[dict], notebook: list[dict], room_rows: list[dict],
         stake = _money(intent.get("usdc"))
         if (position and stake is not None and str(intent.get("card_id") or "")
                 .lower() in picked.get(origin, ())):
-            held[str(position)] = (origin, stake)
+            held[str(position)] = (origin, stake,
+                                   str(intent.get("card_id") or "").lower())
 
     newest: dict[str, dict] = {}
     newest_bot: dict[str, dict] = {}
@@ -1958,18 +1959,36 @@ def board(answers: list[dict], notebook: list[dict], room_rows: list[dict],
 
     sold = _sold_by_us(paper_rows)
     money: dict[str, dict] = {}
+    # The same money by room, for the laboratory's report (V4): one answer
+    # may open several rooms, and a product is a kind of room, not an answer.
+    by_room: dict[str, dict] = {}
 
-    def count(origin: str, stake: float, pnl: float | None) -> None:
-        book = money.setdefault(origin, {"stake": 0.0, "pnl": 0.0, "priced": 0,
-                                         "positions": 0, "priced_stake": 0.0})
-        book["stake"] += stake
-        book["positions"] += 1
-        if pnl is not None:
-            book["pnl"] += pnl
-            book["priced"] += 1
-            book["priced_stake"] += stake
+    def count(origin: str, stake: float, pnl: float | None,
+              room: str | None = None) -> None:
+        books = [money.setdefault(origin, {})]
+        if room:
+            books.append(by_room.setdefault(room, {}))
+        for book in books:
+            for key in ("stake", "pnl", "priced_stake"):
+                book.setdefault(key, 0.0)
+            for key in ("priced", "positions"):
+                book.setdefault(key, 0)
+            book["stake"] += stake
+            book["positions"] += 1
+            if pnl is not None:
+                book["pnl"] += pnl
+                book["priced"] += 1
+                book["priced_stake"] += stake
 
-    for position, (origin, stake) in held.items():
+    def card_room(origin: str, card: str) -> str | None:
+        opened = rooms_by.get(origin) or []
+        named = [r for r in opened if str(r.get("card") or "").lower() == card]
+        whole = [r for r in opened if not r.get("card")
+                 and r.get("kind") not in ("bot", "fund", "arena")]
+        chosen = (named or whole or [None])[0]
+        return str(chosen.get("id")) if chosen else None
+
+    for position, (origin, stake, card) in held.items():
         if sold.get(position) is not None:
             pnl = sold[position]
         else:
@@ -1977,7 +1996,7 @@ def board(answers: list[dict], notebook: list[dict], room_rows: list[dict],
             pnl = _money(reading.get("realized_pnl_usdc"
                                      if reading.get("status") == "closed"
                                      else "unrealized_pnl_usdc"))
-        count(origin, stake, pnl)
+        count(origin, stake, pnl, card_room(origin, card))
     went_in = funded(clone_rows)
     for origin, room_ids in bot_rooms.items():
         for room_id in room_ids:
@@ -1986,7 +2005,8 @@ def board(answers: list[dict], notebook: list[dict], room_rows: list[dict],
                 if leg.get("kind") != "bot" or not went_in.get(instance):
                     continue
                 count(origin, went_in[instance], _money(
-                    (newest_bot.get(instance) or {}).get("total_profit_usdc")))
+                    (newest_bot.get(instance) or {}).get("total_profit_usdc")),
+                    room_id)
 
     out = []
     for answer in answers:
@@ -2002,7 +2022,8 @@ def board(answers: list[dict], notebook: list[dict], room_rows: list[dict],
                  "title": r.get("title"), "status": status.get(r.get("id")),
                  "verdict": (verdicts.get(r.get("id")) or {}).get("verdict"),
                  "verdict_return_pct": (verdicts.get(r.get("id")) or {}).get(
-                     "return_pct")} for r in opened]
+                     "return_pct"),
+                 "money": by_room.get(str(r.get("id")))} for r in opened]
         room_id = ", ".join(str(r["id"]) for r in each) if each else None
         priced = bool(cash and cash["priced"])
         statuses = sorted({r["status"] for r in each if r["status"]})
