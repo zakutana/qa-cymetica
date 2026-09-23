@@ -61,7 +61,7 @@ In `.claude/skills/laborator/SKILL.md`, pins 1–4 of v1: manager and technician
 | V1 | Kritické opravy (před 26. 9. 00:52 UTC) | B1, C1, C3, A1, D1 mají každá test pojmenovaný po incidentu a jsou zelené | hotovo ce8a0b1e |
 | V2 | Poctivá čísla laborky | verdikt z naší knihy; Bollinger ≈ +3 %; NEX-0064 na desce +4,17 %; NEX-0080 → 1 volba; zastavený bez pozice = archiv | hotovo dcac9077 |
 | V3 | Memecoiny poctivě | report řekne „10 $ do každého hot signálu = X % po nákladech, n, stihli bychom Y %"; srovnání s kontrolou po tokenech a bez přepnutých párů | hotovo be97cb6d |
-| V4 | Laboratoř jako oddělení + stránka /lab | screenshot 2000 px viděný; commitnutá stránka nemá žádný vstup mimo git (test); poznámka ze stránky dojde do `rooms.py unread` | otevřená |
+| V4 | Laboratoř jako oddělení + stránka /lab | screenshot 2000 px viděný; commitnutá stránka nemá žádný vstup mimo git (test); poznámka ze stránky dojde do `rooms.py unread` | hotovo a6037069 |
 | V5 | Pás a boti | tik spustí variantu bota s jiným nastavením přes bránu papíru; jediný limit je 60 % knihy; odpověď se čte jednou | otevřená |
 | V6 | Manažer za pár tokenů | klidné kolo = 1 krátký tah AI; den smyčky ≤ 20 tahů AI při stejném počtu spuštění | otevřená |
 | V7 | Údržba, která dojde | start session ≤ 8 řádků za ≤ 3 s; `memories.py --for lab` ≤ 8 KB celé; MEMORY.md v limitu harnessu; CLAUDE.md ≤ 300 ř.; NEXT.md ≤ 10 otevřených | otevřená |
@@ -116,6 +116,7 @@ Each phase: tests first (red), then code, `pytest tests/meta tests/repo`, commit
 - The collectors (fomo, hot, sampler) run on serve.py's timers (reads only), and the tick stops its own fomo round, leaving one writer.
 - `console.cmd --fomo 1` only after this, together with new-signal horizons 0.25/1/4/24 h, a quote cap per round, and bulky captures pruned after 1 day.
 - Tests first: the tests that pin the old tabs are rewritten, and a both-ways field guard is added for `report.json`.
+- *Done 0f63c4cf + a6037069, except the `--fomo 1` bullet, which is a NEXT.md line. One deviation, decided: the tick keeps its fomo/hot/sample doors and skips exactly the rounds the console's `/status` says it runs -- dropping them outright would lose checkpoints on any night the console is closed (scripts/lab.py said so when it took the sampler over).*
 
 **V5 · Pás a boti** (Opus · high)
 - Our caps go: questions/day, rooms/day, running_experiments, the 20-min spacing, IN_FLIGHT_HOURS.
