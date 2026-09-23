@@ -85,6 +85,7 @@ Each phase: tests first (red), then code, `pytest tests/meta tests/repo`, commit
 
 **V2 · Poctivá čísla laborky** (Opus · high)
 - **Verdict = our paper book.** Realized + unrealized P&L from our positions, net of fees, against the BTC proxy over the same window. Their index history is used for marks (funds) and as a cross-check. The formula fingerprint moves; old verdicts keep theirs.
+  - *Design, 2026-09-23:* a paper position is worth `units × current_index` (their sample: 0.02164 × 231.30 = 5.0064, to the cent), so a card leg's book IS their index rebased on OUR entry: 100 at the buy (`entry_index` from the buy's own response), `100 × index / entry_index` at every index point after it, and after our close (or their resolution) the realised value `100 × (1 + realised / notional)` at the close. The path stays dense because it is their history; the entry and the exit are ours. The live round trip (`GATE["round_trip_cost_pct"]`, 1.4 %) is charged once on a card or fund leg's return in `verdict` -- the path, the drawdown and his TP/SL (index-level, as NEX-0065 says) stay gross. A bot is as they book it, from its funding. A card leg with no position of ours falls back to the index. The index-only return rides beside as `index_return_pct`, the cross-check.
 - Bot leg enters at funding (the Bollinger fixture: +2.96 %). Nexus's TP/SL go into the plan legs before `set_acceptance`, forward only.
 - Status first:
   - stopped without a position → `archived`, no verdict;
