@@ -68,7 +68,7 @@ In `.claude/skills/laborator/SKILL.md`, pins 1–4 of v1: manager and technician
 | V8 | Jádro QA | každý potvrzený nález A/B/D má test; `/code-review` přes fold/state prošel | otevřená |
 | V9 | Oddělení do budoucna | testovací oddělení (skill + skript + deník) se objeví v hlídce, archivu a na /lab bez jediné úpravy | otevřená |
 | V10 | Závěrečný audit | nezávislý audit plánu proti repu; každé „hotovo, když" pravdivé | otevřená |
-| V11 | Ranní přehled v 7:00 (jde hned po V4) | v 7:00 je na stejné adrese nová verze: deep pass ≤ 3 řádky, laborka po roomech, co se změnilo přes noc, co dnes udělám; screenshot z mobilu i desktopu viděný; poznámka k přehledu se v dalším přehledu ukáže jako provedená změna | otevřená |
+| V11 | Ranní přehled v 7:00 (jde hned po V4) | v 7:00 je na stejné adrese nová verze: deep pass ≤ 3 řádky, laborka po roomech, co se změnilo přes noc, co dnes udělám; screenshot z mobilu i desktopu viděný; poznámka k přehledu se v dalším přehledu ukáže jako provedená změna | postaveno b9a79e8a, první verze na https://claude.ai/artifact/GuKb2rfBC1hxeDrUDtVXkL; čeká na první ranní vydání a pohled z mobilu (publikovaná stránka chce přihlášení, ten screenshot může udělat jen operátor) |
 
 Order: V1 V2 V3 V4 V11 V5 V6 V7 V8 V9 V10. V11 follows V4 directly because the morning report is what the operator sees first.
 
