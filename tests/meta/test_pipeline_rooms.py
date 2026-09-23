@@ -1212,6 +1212,22 @@ def test_a_plan_is_written_from_the_command_line_the_way_nexus_gives_it(tmp_path
             for g in plan["legs"]] == [(CARD_B, "bull", 0.2, 8.0, -5.0),
                                        (CARD_A, "bull", 0.1, 13.0, -9.0)]
     assert (plan["reserve"], plan["bankroll"]) == (0.7, 100000.0)
+    # 2026-09-23: NEX-0086 gave a fund +8 % / -6 %, and the command line took a
+    # card only, so STR-0041 kept neither. A leg may lead with its kind.
+    bot = "d778102d-cf3f-4d86-ad1e-2d8511b345dc"
+    kinds = _run(["scripts/rooms.py", "plan", "STR-0001",
+                  "--leg", "fund:AIB-SPACE:bull:60%:tp=8:sl=-6",
+                  "--leg", f"bot:{bot}:bull:40%"], tmp_path)
+    assert kinds.returncode == 0, kinds.stderr
+    newest = [r for r in _stored(tmp_path) if r["type"] == "plan"][-1]
+    assert [(g["kind"], g["ref"], g["share"], g["tp"], g["sl"])
+            for g in newest["legs"]] == [("fund", "AIB-SPACE", 0.6, 8.0, -6.0),
+                                         ("bot", bot, 0.4, None, None)]
+    assert "card" not in newest["legs"][0]
+    for leg in ("fund:not a symbol:bull:10%", "desk:AIB-SPACE:bull:10%",
+                "fund:AIB-SPACE:bull"):
+        bad = _run(["scripts/rooms.py", "plan", "STR-0001", "--leg", leg], tmp_path)
+        assert bad.returncode == 2 and "refused" in bad.stderr, (leg, bad.stderr)
     named = _run(["scripts/rooms.py", "title", "STR-0001", "BTC + BCH blend"], tmp_path)
     assert named.returncode == 0, named.stderr
     listed = _run(["scripts/rooms.py", "list"], tmp_path)

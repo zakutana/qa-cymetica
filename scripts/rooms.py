@@ -94,11 +94,18 @@ def _share(text) -> float:
 
 
 def _leg(text: str) -> dict:
-    """CARD:SIDE:SHARE, then tp=N and sl=N when Nexus gave them."""
+    """CARD:SIDE:SHARE, then tp=N and sl=N when Nexus gave them. A leg that
+    is not a card leads with its kind: fund:SYMBOL:..., bot:INSTANCE:..."""
     parts = str(text or "").split(":")
+    kind = "card"
+    if parts[0].lower() in rooms.LEG_KINDS:
+        kind, parts = parts[0].lower(), parts[1:]
     if len(parts) < 3:
-        raise rooms.RoomError(f"{text!r}: a leg is CARD:SIDE:SHARE[:tp=N][:sl=N]")
-    leg: dict = {"card": parts[0], "side": parts[1], "share": _share(parts[2])}
+        raise rooms.RoomError(f"{text!r}: a leg is [KIND:]REF:SIDE:SHARE"
+                              f"[:tp=N][:sl=N]")
+    named = ({"card": parts[0]} if kind == "card"
+             else {"kind": kind, "ref": parts[0]})
+    leg: dict = {**named, "side": parts[1], "share": _share(parts[2])}
     for extra in parts[3:]:
         key, _, value = extra.partition("=")
         if key not in ("tp", "sl") or not value:
@@ -240,7 +247,8 @@ def cmd_plan(args) -> int:
     except rooms.RoomError as exc:
         return _refused(exc)
     print(f"{row['room']}: "
-          + ", ".join(f"{leg['card'][:8]} {leg['side']} {leg['share']:.0%}"
+          + ", ".join(f"{str(rooms.leg_ref(leg))[:15]} {leg['side']} "
+                      f"{leg['share']:.0%}"
                       for leg in row["legs"])
           + (f", {row['reserve']:.0%} kept back" if row.get("reserve") is not None
              else ""))
@@ -283,7 +291,8 @@ def main(argv: list[str] | None = None) -> int:
     plan.add_argument("room")
     plan.add_argument("--leg", action="append", required=True,
                       help="CARD:SIDE:SHARE[:tp=N][:sl=N], the card by its whole "
-                           "id, e.g. e579581b-...:bull:10%%:tp=13:sl=-9")
+                           "id, e.g. e579581b-...:bull:10%%:tp=13:sl=-9; a fund "
+                           "or bot leads with its kind: fund:AIB-X:bull:100%%:sl=-6")
     plan.add_argument("--reserve", help="the share Nexus kept back, e.g. 70%%")
     plan.add_argument("--bankroll", type=float,
                       help="the sum Nexus sized the shares against")
