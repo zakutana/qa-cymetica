@@ -737,9 +737,13 @@ def _obligations(row: dict) -> dict:
         # only when the definition moves, which is the one case that is new
         # information. PASSING_UNPINNED is excluded on purpose: passing under
         # a definition we never saw fail proves no fix.
+        # Not on a terminal row (B3 of the review of 2026-09-23, 3/3): a
+        # finding we withdrew owes a retraction, and a pass on it would tell
+        # them their fix works on a defect we said was not one.
         "verification_owed": ([r for r in filed
                                if not _told(verified, r, pinned, "pass")]
-                              if check == "PASSING" and pinned else []),
+                              if check == "PASSING" and pinned
+                              and filing not in _TERMINAL else []),
         # The other direction, and the one that exists because we can be
         # wrong. A pass we sent stops being true the moment the check is
         # repaired -- and with a pass-only rule it would stop being OWED at

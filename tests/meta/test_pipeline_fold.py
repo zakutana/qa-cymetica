@@ -1088,6 +1088,14 @@ def test_nothing_is_owed_where_there_is_nothing_to_verify():
         "our check still fails; a pass verification would be a false statement"
     assert owed("PASSING", _filed("CYM-a", 46, "fixed"), pinned=None) == [], \
         "never seen failing under this definition, so passing proves no fix"
+    # B3 of the review of 2026-09-23 (3/3): a finding we took back owes a
+    # retraction, never a pass -- "your fix works" about a defect we said was
+    # not one. #54 and #108 were one pin away from it.
+    withdrawn = _filed("CYM-a", 46, "fixed") + [
+        event("withdraw", at="2026-09-19T10:00:00+00:00", source="scripts/withdraw.py",
+              finding_id="CYM-a", reason="not a defect")]
+    assert owed("PASSING", withdrawn) == [], \
+        "a withdrawn finding was asked for a pass verification"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
