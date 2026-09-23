@@ -1051,12 +1051,34 @@ def test_what_their_server_already_holds_is_dropped_before_sending():
     assert held[85] == {"fp-3": {"fail"}} and \
         held[90] == {"fp-4": {"pass", "fail"}}, held
 
-    fresh, duplicates = verify.partition_by_what_they_hold(work, held)
+    fresh, duplicates, later = verify.partition_by_what_they_hold(work, held)
 
     assert [i["finding_id"] for i in duplicates] == ["CYM-a", "CYM-e"], \
         "a verification their server already holds was queued for sending again"
     assert [i["finding_id"] for i in fresh] == ["CYM-b", "CYM-c", "CYM-d"], \
         "a verification they do not hold was dropped, so the debt cannot be paid"
+    assert later == []
+
+    # RO03 (deep pass of 2026-09-24): two rows sharing one check and one
+    # report -- CYM-skill_count and CYM-skill_ids on #51 -- each sent the same
+    # pass in one run, twice (2026-09-07, 2026-09-10): the dedup only knew
+    # what their server held before the batch. One goes; the other waits for
+    # the next run's read, which finds it held and settles it.
+    twins = [{"finding_id": f, "report_id": 51, "fingerprint": "fp-9",
+              "verdict": "pass"} for f in ("CYM-skill_count", "CYM-skill_ids")]
+    fresh, duplicates, later = verify.partition_by_what_they_hold(
+        twins, {51: {}})
+    assert [i["finding_id"] for i in fresh] == ["CYM-skill_count"], fresh
+    assert [i["finding_id"] for i in later] == ["CYM-skill_ids"], later
+
+    # RO07: a duplicate whose read could not be kept cannot settle -- and
+    # settle() refusing it stopped the WHOLE run before any fresh send. It
+    # is held back alone; the rest goes on.
+    ready, held_back = verify.settleable(
+        [{"finding_id": "CYM-a", "report_id": 49},
+         {"finding_id": "CYM-e", "report_id": 90}], {49: "ev-1", 90: None})
+    assert [i["finding_id"] for i in ready] == ["CYM-a"]
+    assert [i["finding_id"] for i in held_back] == ["CYM-e"]
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -1365,6 +1387,17 @@ def test_send_actually_sends(tmp_path, monkeypatch):
     assert [e["type"] for e in read_events()
             if e.get("report_id") == 47] == ["verification_intent",
                                              "verification_outcome"]
+
+    # RO07 (deep pass of 2026-09-24): an answer that could not be kept stops
+    # the batch -- and the rest of it vanished with no line, the fault the
+    # docstring finds in submit.py. They are named, as the rate-limit stop
+    # names them.
+    def _lost(response, tier=None):
+        raise SystemExit("disk full")
+    monkeypatch.setattr(verify, "_capture", _lost)
+    said = verify.send(created, [copy_item(item, report_id=48),
+                                 copy_item(item, report_id=49)], pause=0)
+    assert [r["outcome"] for r in said] == ["unknown", "not attempted"], said
 
 
 def copy_item(item, **over):

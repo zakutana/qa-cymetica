@@ -71,6 +71,12 @@ def test_a_pass_on_an_unrepaired_check_still_claims_the_same_definition():
     evidence = verify.body(_item(helpers_same=True))["evidence"]
     assert "under the same definition it failed under" in evidence
     assert "matches the one recorded at the failure" in evidence
+    # H01 (deep pass of 2026-09-24, 3/3): helpers_fingerprint hashes the
+    # helpers in the check's OWN file, not what it imports or its fixtures,
+    # and the sentence said "the helper functions the check calls -- this is
+    # the same test". It says what was compared, and what was not.
+    assert "not a rewritten one" not in evidence, evidence
+    assert "own file" in evidence and "imports" in evidence, evidence
 
     # The failure predates helper fingerprints, or its run was pruned: the
     # test function is the one that failed, and nothing more is claimed.
@@ -249,6 +255,16 @@ def test_we_never_send_them_to_a_repository_they_cannot_open():
     assert "not preregistered" in level_r, level_r
     level_v = verify.body(_item(level="V"))["evidence"]
     assert "clean working tree" in level_v and "frozen and git-tagged" in level_v
+
+    # RO06 (deep pass of 2026-09-24): R is also a PREREGISTERED run that fell
+    # short -- a dirty tree, code that moved during it (PRE-0084, PRE-0092,
+    # PRE-0128). "It was not preregistered" is then false; the line says the
+    # preregistration and the reason the run is not the verifying kind.
+    dirty = verify.body(_item(verdict="fail", level="R", prereg_id="PRE-0092",
+                              level_reasons=["git_dirty"]))["evidence"]
+    assert "not preregistered" not in dirty, dirty
+    assert "PRE-0092" in dirty and "working tree was not clean" in dirty, dirty
+    assert "clean working tree" not in dirty.replace("was not clean", ""), dirty
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

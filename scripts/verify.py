@@ -182,6 +182,7 @@ def owed(ledger: dict, only: list[str] | None) -> list[dict]:
                 "fingerprint": row["check"]["pinned_fingerprint"],
                 "run_id": run_id,
                 "level": level,
+                "level_reasons": list(admissibility(run).reasons),
                 "checked_at": adjudicated.get("at"),
                 "tree_sha": run.get("git_head"),
                 "prereg_id": run.get("prereg_id"),
@@ -268,12 +269,32 @@ def pin_reason(finding_id: str, fingerprint: str) -> str | None:
     return latest
 
 
+# qa.state.admissibility's reasons for a V-less run, in the vendor's words.
+_LEVEL_R_SAID = {
+    "git_dirty": "the working tree was not clean",
+    "code_moved_during_run": "our code changed while it ran",
+    "prereg_commit_mismatch": "it did not run at the commit the "
+                              "preregistration was made at",
+}
+
+
 def _run_line(item: dict) -> str:
     """How the run was made, said at the level it actually has. B2 of the
     review of 2026-09-23 (3/3): a `fail` may go out from an R-level run --
     no clean tree, no preregistration -- and this line described every run as
     the V-level one. Absent a level, the V wording stands: a pass cannot go
     out below V (work() refuses it)."""
+    if item.get("level") == "R" and item.get("prereg_id"):
+        # R is also a PREREGISTERED run that fell short (RO06, deep pass of
+        # 2026-09-24): PRE-0084 and PRE-0092 on a dirty tree, PRE-0128 with
+        # our code moving under it. "Not preregistered" was false of those.
+        why = "; ".join(_LEVEL_R_SAID.get(r, r)
+                        for r in item.get("level_reasons") or [])
+        return (f"RUN: {item['run_id']} at commit {item['tree_sha']}, under "
+                f"preregistration {item['prereg_id']}, but "
+                f"{why or 'it fell short of the level our rules require to verify'}"
+                f" -- so it is a run our rules admit to show that a defect "
+                f"reproduces, not the kind of run that verifies a fix.")
     if item.get("level") == "R":
         return (f"RUN: {item['run_id']} at commit {item['tree_sha']}. It is a "
                 f"run our rules admit to show that a defect reproduces; it was "
@@ -294,8 +315,10 @@ def _evidence_offer(item: dict) -> str:
     """
     ids = [str(i) for i in (item.get("evidence_ids") or []) if i]
     named = f" under evidence id(s) {', '.join(ids)}" if ids else ""
-    # An R-level run has no preregistration to offer (B2).
-    tail = ("as is the check's definition" if item.get("level") == "R" else
+    # An R-level run without a preregistration has none to offer (B2); one
+    # that carried a preregistration has it (RO06).
+    tail = ("as is the check's definition"
+            if item.get("level") == "R" and not item.get("prereg_id") else
             "as are the check's definition and the preregistration named above")
     return ("EVIDENCE: the request and response behind this verdict are "
             f"retained{named} and are provided on request, {tail}.")
@@ -335,10 +358,14 @@ def body(item: dict) -> dict:
             "VERDICT pass -- the check that recorded this defect now passes, "
             "under the same definition it failed under."
         )
+        # H01 (deep pass of 2026-09-24): helpers_fingerprint hashes the
+        # helpers in the check's own file, so that is what this says it
+        # compared -- not everything the check calls.
         why_fingerprint = (
-            "Because it matches the one recorded at the failure -- and so do "
-            "the helper functions the check calls -- this is the same test, "
-            "not a rewritten one that happens to pass."
+            "It matches the one recorded at the failure, and so do the helper "
+            "functions in the check's own file that it calls, so the check was "
+            "not rewritten to pass. Code it imports from other modules is not "
+            "part of this comparison."
         )
     elif verdict == "pass" and item.get("helpers_same") is False:
         # A8: a helper the check calls was rewritten after the failure. The
@@ -711,8 +738,12 @@ def send(client, items: list[dict], pause: int = PAUSE_SECONDS) -> list[dict]:
             if capture_error:
                 # Their answer could not be kept, so nothing further may be
                 # sent on its authority -- but the attempt is now on record,
-                # and the next run's dedup read will settle it.
+                # and the next run's dedup read will settle it. The rest is
+                # named, as the rate-limit stop below names it (RO07).
                 print(f"  STOP  {capture_error}")
+                for skipped in items[index + 1:]:
+                    results.append({**skipped, "outcome": "not attempted",
+                                    "error": f"stopped: {capture_error}"})
                 break
 
             remaining = response.headers.get("x-ratelimit-remaining")
@@ -741,17 +772,37 @@ def partition_by_what_they_hold(work, held):
     duplicate verification for every pair they already hold. Their server is
     the authority on what they have, and this is where that is honoured.
     """
-    fresh, duplicates = [], []
+    fresh, duplicates, later = [], [], []
+    going: set[tuple] = set()
     for item in work:
         # Their newest word under this definition. Membership over everything
         # they hold made a verdict unrepeatable -- see already_sent -- so a
         # pass superseded by a fail could never be restored.
         theirs = held[item["report_id"]].get(item["fingerprint"]) or set()
+        key = (item["report_id"], item["fingerprint"], item["verdict"])
         if item["verdict"] in theirs:
             duplicates.append(item)
+        elif key in going:
+            # Another row of ours sends this very verdict in this batch (RO03,
+            # deep pass of 2026-09-24: #51 got two identical passes, twice).
+            # The next run's read finds it held and settles this one.
+            later.append(item)
         else:
+            going.add(key)
             fresh.append(item)
-    return fresh, duplicates
+    return fresh, duplicates, later
+
+
+def settleable(duplicates, evidence):
+    """The duplicates whose read was kept, and the ones whose was not.
+
+    settle() refuses without evidence, rightly, and it raised SystemExit
+    inside the loop -- so one read that could not be kept stopped every
+    fresh send in the run (RO07, deep pass of 2026-09-24). It is held back
+    alone, still owed; the next run's read settles it.
+    """
+    ready = [i for i in duplicates if evidence.get(i["report_id"])]
+    return ready, [i for i in duplicates if not evidence.get(i["report_id"])]
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -828,7 +879,16 @@ def main(argv: list[str] | None = None) -> int:
         finally:
             CURRENT_TIER.reset(token)
 
-        fresh, duplicates = partition_by_what_they_hold(work, held)
+        fresh, duplicates, later = partition_by_what_they_hold(work, held)
+        for item in later:
+            print(f"  LATER {item['finding_id']} on #{item['report_id']}: "
+                  f"another row sends this {item['verdict']} in this run; "
+                  f"the next run's read settles it")
+        duplicates, unkept = settleable(duplicates, evidence)
+        for item in unkept:
+            print(f"  HOLD  {item['finding_id']} on #{item['report_id']}: "
+                  f"they hold this {item['verdict']}, but the read that found "
+                  f"it was not kept, so it cannot settle; still owed")
         for item in duplicates:
             # They hold it and the obligation says we do not, so this read
             # IS the settlement -- see settle(). Without it a capture that
