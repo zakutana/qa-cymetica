@@ -532,6 +532,18 @@ def make_handler(live: Live, note_token: str | None = None):
 
         def do_GET(self) -> None:  # noqa: N802 -- BaseHTTPRequestHandler's name
             path = self.path.split("?", 1)[0]
+            # D3 of the review of 2026-09-23 (3/3): on a console bound to
+            # this machine, every route is this machine's -- the page, the
+            # payload with every finding and their words, the stream, the
+            # status -- not only /rooms.json and /lab. A page elsewhere could
+            # otherwise read them through a rebound DNS name. A console
+            # listening beyond this machine was exposed on purpose and stays
+            # readable there (it takes no notes: note_token is None).
+            if note_token is not None and not local_host(
+                    self.headers.get("Host"), self.server.server_address[1]):
+                self._send(b"this console is served to this machine only",
+                           "text/plain; charset=utf-8", 403)
+                return
             if path in ("/", "/index.html"):
                 with live.lock:
                     html, error = live.html, live.error

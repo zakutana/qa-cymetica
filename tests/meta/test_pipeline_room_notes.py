@@ -171,6 +171,15 @@ def test_the_rooms_are_served_to_this_machine_and_refused_to_any_other_name(cons
             f"could read the operator's notes through a rebound DNS name")
         assert b"general" not in body
 
+    # D3 of the review of 2026-09-23 (3/3): the console's own page, its
+    # payload (every finding, their words) and its status were served to any
+    # Host. On a console bound to this machine they are this machine's too.
+    for path in ("/", "/payload.json", "/status"):
+        status, _ = _get(port, path, f"evil.example:{port}")
+        assert status == 403, (path, status)
+        status, _ = _get(port, path, f"127.0.0.1:{port}")
+        assert status != 403, (path, status)
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_note_at_any_shut_door_is_refused_and_nothing_is_written(console):
