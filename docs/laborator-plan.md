@@ -75,7 +75,7 @@ Kept as they are: every existing pin; paper only; nothing starts by itself excep
 | Fáze | Co | Hotovo, když | Stav |
 |---|---|---|---|
 | L0 | Úklid a rozdělaná práce | patrol bez vlajky stropu; evidence ≤ 700 MB; ≤ 42 živých pamětí; oba reporty v žurnálu jako `accepted` | otevřená |
-| L1 | Plán, rozhodnutí, místo v CLAUDE.md, revize jádra | meta+repo zelené; CLAUDE.md ≤ 640 ř.; čerstvá session ukáže ≤ 1 řádek za plán; revize jádra má verdikt a každý její nález prošel triáží | otevřená |
+| L1 | Plán, rozhodnutí, místo v CLAUDE.md, revize celé architektury a jádra (brána před L2) | meta+repo zelené; CLAUDE.md ≤ 640 ř.; čerstvá session ukáže ≤ 1 řádek za plán; revize má verdikt po oblastech a každý její nález prošel triáží 2 ze 3 | otevřená |
 | L2 | Poctivá čísla laborky (před 26. 9.) | Bollinger ≈ +3 % v `lab.py status`; ručně zastavený pokus bez pozice nemá verdikt; TP/SL z Nexusovy odpovědi v kritériu | otevřená |
 | L3 | Memecoiny: pravda o číslech | stránka už nezávisí na deníku (fomo na `/lab.json`); `fomo_watch.py report` řekne „10 $ do každého hot signálu = X % po nákladech, n; stihli bychom Y %"; pět bývalých „nejlepších" je vyřazených | otevřená |
 | L4 | Jeden tab „Laboratoř" | screenshot 2000 px viděný: roomy podle produktů, žádné titulky zpráv na dlaždicích; poznámka z tabu se objeví v `rooms.py unread` | otevřená |
@@ -108,7 +108,13 @@ Each phase: tests first (red), then code, `pytest tests/meta tests/repo`, commit
 - Pins 1-6 as above.
 - `reminders()` prints one line per plan, not per phase: a fixture in both directions in `test_reminders.py`.
 - NEXT.md gets one line per phase, dated and written the day that phase starts, so the 14-day rule (`test_next_step.py:88`) counts each phase separately and budget pauses between phases cannot turn it red.
-- A core review, because the plan builds on a core this session did not read: one read-only Opus agent holds `qa/state.py`, `qa/fold.py`, `qa/measure.py`, `scripts/submit.py` and `scripts/verify.py` against CLAUDE.md's twelve rules. The operator asked on 2026-09-23 whether the core had been examined thoroughly; the honest answer was no. Every finding goes through the deep pass's triage and fix path, and the verdict goes to the operator in one line.
+- A review of the whole architecture and core, and the gate before L2. The operator asked on 2026-09-23 how the plan could promise anything about a core this session had not read; the honest answer was that it could not. Five independent read-only readers, one per area:
+  - the QA core (state, fold, measure, fingerprint, ledger, withdraw, prereg);
+  - outbound and safety (submit, verify, bounty, a2a, correspond, channels, safety, client, components.yaml);
+  - the lab and trading (lab, rooms, nexus, paper, clone, sampler, backtests, fomo, hot);
+  - the console and data upkeep (render, serve, keep, prune, archive, manifest, keepset, evidence);
+  - self-maintenance (processes, memories, never_fired, review, hooks, the deep-pass skill).
+  Each holds its area against CLAUDE.md's twelve rules, the operator's goals and the records of what has actually fired. Every finding goes to three `finding-triage` agents; only two of three makes it real. The verdict goes to the operator by area, in a few lines.
 
 **L2 · Poctivá čísla laborky** (Opus · high)
 - `verdict()`/`_early()`: a bot leg enters at 100 = funding (`bot_series` is already indexed so). The formula fingerprint moves; old verdicts keep theirs.
@@ -202,6 +208,7 @@ Each phase: tests first (red), then code, `pytest tests/meta tests/repo`, commit
 - Housekeeping in the first tick of each UTC day, unless a pass or prereg is in flight.
 - The dead `night_running` rule is removed.
 - New budget keys are emitted by `sizes()`.
+- A standing re-read against slow rot, triggered rather than weekly (the operator, 2026-09-23: weekly is probably too often). An area of the five above is read in full by an independent reader when it has taken ≥ 15 commits since its last full read, or when 30 days have passed, whichever comes first. So a quiet area is re-read monthly and a busy one where it is busy. A diff review cannot see what decays without changing (the transcript glob that started reading another project is the example). This is a rule, in the 1c form.
 - Growth budget: `meta_tests` (the `def test_` count under tests/meta) is emitted by `sizes()` with a ceiling at today's count + 20. A new guard replaces or merges an existing one. This is a rule, so it lands in the 1c form: a test naming the incident (225 → 709 in 13 days, 864 guarding us vs 97 testing them) and a paragraph under `Změněná pravidla`.
 
 **L8 · Oddělení do budoucna** (Sonnet · high)
