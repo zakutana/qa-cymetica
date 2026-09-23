@@ -58,7 +58,7 @@ In `.claude/skills/laborator/SKILL.md`, pins 1–4 of v1: manager and technician
 | Fáze | Co | Hotovo, když | Stav |
 |---|---|---|---|
 | V0 | Úklid a záznamy dne | MSG-0045 zapsaná; archiv zabalený a na OneDrive se stejným hashem; 460 MB worktrees pryč; revize v repu | hotovo 3db2de5d |
-| V1 | Kritické opravy (před 26. 9. 00:52 UTC) | B1, C1, C3, A1, D1 mají každá test pojmenovaný po incidentu a jsou zelené | otevřená |
+| V1 | Kritické opravy (před 26. 9. 00:52 UTC) | B1, C1, C3, A1, D1 mají každá test pojmenovaný po incidentu a jsou zelené | hotovo ce8a0b1e |
 | V2 | Poctivá čísla laborky | verdikt z naší knihy; Bollinger ≈ +3 %; NEX-0064 na desce +4,17 %; NEX-0080 → 1 volba; zastavený bez pozice = archiv | otevřená |
 | V3 | Memecoiny poctivě | report řekne „10 $ do každého hot signálu = X % po nákladech, n, stihli bychom Y %"; srovnání s kontrolou po tokenech a bez přepnutých párů | otevřená |
 | V4 | Laboratoř jako oddělení + stránka /lab | screenshot 2000 px viděný; commitnutá stránka nemá žádný vstup mimo git (test); poznámka ze stránky dojde do `rooms.py unread` | otevřená |
@@ -77,10 +77,10 @@ Each phase: tests first (red), then code, `pytest tests/meta tests/repo`, commit
 ### Phase details
 
 **V1 · Kritické opravy** (Opus · high; before 2026-09-26 00:52 UTC)
-- **B1:** PROBE judges inertness from the whole request — query string, form or non-JSON body, and MCP `{}` arguments on non-read tools — so `toggle-trading?enabled=true` is refused. Test first in the existing gate tests; the 2026-09-22 RC1 test is the pattern.
+- **B1:** PROBE judges inertness from the whole request — query string, form or non-JSON body, and MCP `{}` arguments on non-read tools — so `toggle-trading?enabled=true` is refused. Test first in the existing gate tests; the 2026-09-22 RC1 test is the pattern. *Done 5f5f5d6b: the query string and the body are read; the MCP `{}` half stays, triage found it deliberate 3/3 (the anonymous authorization probe).*
 - **C1:** a failed benchmark or card-history read is `unread`, not `[]`. The verdict waits (rule 8) and is re-judged on the next tick; it is never written without its benchmark.
-- **C3:** a normal window close sells the room's card positions (the early path already does). It has already fired: STR-0003's TRD-0006 is still open, and it is closed in the same change. The next case is STR-0006.
-- **A1:** `ledger.py --run` refuses a run older than the ledger's newest adjudicating run unless it is named `--replay`. `/code-review` (fold/state).
+- **C3:** a normal window close sells the room's card positions (the early path already does). It has already fired: STR-0003's TRD-0006 is still open, and it is closed in the same change. The next case is STR-0006. *Done 40ea9e2e: TRD-0006 had already resolved on their side on 2026-09-19 (+85.76 USDC), so there was nothing left to sell; a position their record shows closed is no longer sold again.*
+- **A1:** `ledger.py --run` refuses a run older than the ledger's newest adjudicating run unless it is named `--replay`. `/code-review` (fold/state). *Done f0af8234, in `scripts/ledger.py` alone: fold/state/measure are untouched, so CLAUDE.md's review trigger did not fire.*
 - **D1:** `prune_runs.py` never deletes a capture the manifest knows that no verified bundle holds, and it prints how many it held back. The deep pass's step 0 stops the prune when the archive fails.
 
 **V2 · Poctivá čísla laborky** (Opus · high)
