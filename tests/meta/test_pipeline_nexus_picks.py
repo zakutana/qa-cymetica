@@ -69,6 +69,48 @@ EXPECTED = {
 }
 
 
+# His take-profit and stop for each pick, read by hand. A stop is a fall.
+# The plan's V2: "Nexus's TP/SL go into the plan legs before
+# set_acceptance" -- every room of 2026-09-21..23 carries tp None, sl None
+# while he named both each time, so the criterion judged his idea without
+# his exits.
+LEVELS = {
+    "NEX-0045": {"30015006-abff-44b6-bdb0-f659faf4f3f4": (20.0, -12.0)},
+    "NEX-0059": {"a4a5b71e-de11-4805-b8a3-ed9c3f8f8161": (8.0, -5.0)},
+    "NEX-0060": {"9ef04dc6-dc11-447a-a360-b6395f618648": (10.0, -6.0)},
+    "NEX-0063": {"5e25b255-6ace-49a7-a748-e70a3dac6b3a": (4.0, -3.0)},
+    "NEX-0064": {"9f9433ef-75ec-4637-a743-64d9110545bf": (15.0, -9.0)},
+    "NEX-0065": {"1de24f14-38f1-40d9-ac7f-993c1592781f": (14.0, -9.0),
+                 "9c7b0e8c-8799-47af-9100-38cff2c50c83": (9.0, -6.0),
+                 "e849ec0f-45be-43e2-8f01-4945c78346e1": (4.0, -3.0)},
+    "NEX-0066": {"c3525683-c0e1-4ea6-b00c-cc9aa9fb44bf": (22.0, -15.0),
+                 "0a35dd76-0929-4d64-8f79-18e677e2c758": (30.0, -18.0)},
+    "NEX-0067": {"6d0b5308-c151-45a2-b4eb-d2f6c61fc4eb": (12.0, -7.0),
+                 "d43bdb4f-694e-4511-ba70-648750a6fe82": (20.0, -13.0),
+                 "db54ed55-851d-40ac-a775-a43e43604a28": (25.0, -15.0)},
+    "NEX-0068": {"27c96532-123d-494f-ab89-d7dcdb8af33f": (12.0, -8.0)},
+    "NEX-0069": {"a9cf285b-4da2-4eda-97b9-4b0b52cb1677": (6.0, -4.0),
+                 "c0d78ca5-d864-4fb3-90c7-8b1bfde4c2c2": (18.0, -10.0),
+                 "0112ab1b-39ad-42b8-a78c-529e6bcbbba1": (10.0, -7.0)},
+    "NEX-0070": {"9fcda87b-ff0b-42d0-888c-5eb9e3a46a54": (15.0, -6.0),
+                 "74e34e84-9dc6-4a33-ad58-32f7b52c3226": (15.0, -10.0)},
+    "NEX-0079": {"97b827ad-b61d-4d3f-8398-8548ebc2a242": (8.0, -5.0)},
+    "NEX-0081": {"AIB-MOLECULAR": (None, -6.0)},
+    "NEX-0088": {"5d91bf43-a597-47b0-9abe-5c7f52618bbd": (25.0, -12.0)},
+}
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+@pytest.mark.parametrize("answer_id", sorted(LEVELS))
+def test_his_take_profit_and_stop_are_read_for_each_pick(answer_id):
+    text = FIXTURE["answers"][answer_id]["text"]
+    picks = list(LEVELS[answer_id])
+    said = lab.exit_levels(text, picks)
+    for pick, (tp, sl) in LEVELS[answer_id].items():
+        assert (said[pick]["tp"], said[pick]["sl"]) == (tp, sl), (
+            f"{answer_id} {pick[:12]}: read {said[pick]}, he said tp {tp} sl {sl}")
+
+
 def _read(answer_id: str) -> dict:
     text = FIXTURE["answers"][answer_id]["text"]
     species = {row["id"].lower() for row in FIXTURE["bots"]}

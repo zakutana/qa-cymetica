@@ -1689,6 +1689,32 @@ def test_a_window_that_closes_normally_sells_the_rooms_card_position(
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_his_exits_are_on_the_leg_the_criterion_judges(tmp_path, monkeypatch):
+    """Every room the launch opened from 2026-09-21 on carries tp None and
+    sl None, while nearly every answer named both ("TP +8%, stop -4%"). The
+    criterion judged his idea without his exits. They are read per card and
+    written onto the leg before the criterion is -- forward only."""
+    import qa.rooms as qa_rooms
+
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    card = _card(0xE1)
+    answers = [{"type": "answer", "id": "NEX-0001",
+                "at": (NOW - timedelta(minutes=30)).isoformat(),
+                "text": (f"**PICK 1 — `{card}`** — side: UP (bull). "
+                         f"TP +8%, stop −4%.\n" + "reasoning. " * 40)}]
+    _launchpad(scripts_lab, tmp_path, monkeypatch, answers,
+               live={card: _basket("BTC", "ETH")},
+               readings={("BTC", "ETH"): (6.5, 1.3)})
+
+    scripts_lab.night_promote()
+
+    rows = qa_rooms.load()
+    (room,) = qa_rooms.strategies(rows)
+    (leg,) = qa_rooms.acceptance_of(rows, room["id"])["legs"]
+    assert (leg["tp"], leg["sl"]) == (8.0, -4.0), leg
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_benchmark_card_is_not_an_experiment(tmp_path, monkeypatch):
     """STR-0008: NEX-0059 picked a4a5b71e, the BTC card every room is judged
     against, and the launch opened a room on it -- one that could only ever

@@ -1925,6 +1925,9 @@ def night_promote(since: datetime | None = None) -> dict:
         named = [c for c in named if c not in ruled_out and c in picked]
         if not named:
             return
+        # His exits, per card, onto the leg before the criterion is written
+        # (V2, 2026-09-23). Forward only: a room already open keeps its own.
+        exits = lab.exit_levels(text, named)
         spent = ("reject", "unknown_card")
         named = [c for c in named if (origin, c) not in card_linked]
         if all(decided.get((origin, card), {}).get("verdict") in spent
@@ -2018,16 +2021,23 @@ def night_promote(since: datetime | None = None) -> dict:
                 # The leg is the laboratory's READING of his answer -- bull --
                 # because his answers carry no machine-readable side. The
                 # criterion takes it, or `qa.lab.verdict` has nothing to score.
+                levels = exits.get(card) or {}
                 plan = rooms.set_plan(room, [{"card": card, "side": "bull",
-                                              "share": 1.0}])
+                                              "share": 1.0, **levels}])
+                said_levels = (f"his take-profit {levels.get('tp')} % and stop "
+                               f"{levels.get('sl')} % are on the leg"
+                               if levels.get("tp") or levels.get("sl")
+                               else "he named no take-profit or stop")
                 # A room with no criterion is one no verdict can ever reach.
-                # The window and the stop are OURS, not his -- `adopted` says so.
+                # The window and the room's stop are OURS, not his -- `adopted`
+                # says so; the leg's exits are his when he named them.
                 rooms.set_acceptance(
                     room, window_days=NIGHT_WINDOW_DAYS, stop_pct=NIGHT_STOP_PCT,
                     legs=plan["legs"], benchmark_card=BTC_PROXY,
                     why=(f"opened unattended from {origin}, one room for this "
-                         f"card; the window and the stop are the laboratory's "
-                         f"defaults, not numbers Nexus gave. Backtest: "
+                         f"card; the window and the room's stop are the "
+                         f"laboratory's defaults, not numbers Nexus gave; "
+                         f"{said_levels}. Backtest: "
                          f"{card[:8]} {gate_row.get('why')}"
                          + (" -- NOT backtested, half stake" if untested
                             else ""))[:900],
@@ -2191,7 +2201,7 @@ def night_promote(since: datetime | None = None) -> dict:
         except rooms.RoomError as exc:
             held.append(f"{room}: {exc}")
 
-    def launch_fund(origin: str, symbol: str) -> None:
+    def launch_fund(origin: str, symbol: str, text) -> None:
         """One fund he named, MARKED and not bought: create_aib_fund spends
         real money and has no paper switch. A room, a leg, a criterion, no
         order of any kind -- and a notional stake that no ceiling counts. It
@@ -2240,9 +2250,11 @@ def night_promote(since: datetime | None = None) -> dict:
         opened += 1
         ref_linked.add((origin, symbol.lower()))
         live_refs[("fund", symbol.lower())] = room
+        levels = lab.exit_levels(text, [symbol]).get(symbol) or {}
         try:
             plan = rooms.set_plan(room, [{"kind": "fund", "ref": symbol,
-                                          "side": "bull", "share": 1.0}])
+                                          "side": "bull", "share": 1.0,
+                                          **levels}])
             rooms.set_acceptance(
                 room, window_days=NIGHT_WINDOW_DAYS, stop_pct=NIGHT_STOP_PCT,
                 legs=plan["legs"], benchmark_card=BTC_PROXY,
@@ -2290,7 +2302,7 @@ def night_promote(since: datetime | None = None) -> dict:
         for symbol in funds:
             if capped:
                 break
-            launch_fund(origin, symbol)
+            launch_fund(origin, symbol, text)
     return {"rooms": opened, "orders": placed, "held": held}
 
 

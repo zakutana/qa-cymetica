@@ -1389,6 +1389,50 @@ _PICKED = re.compile(
 _PICK_WORD = re.compile(r"\bpicks?\b", re.I)
 
 
+# "Take-profit: +20% from entry. Stop: -12% from entry.", "TP +8%, stop -4%",
+# "take-profit **+12%** · stop **−7%**" -- markdown and a unicode minus
+# between the word and the number, nothing else. "hard 24h stop", "Time stop:
+# close at 7 days" and "stop set just outside ... 6.8%" are not levels.
+_LEVEL_GAP = r"[\s*:_`]*"
+_NUMBER = r"([+−-]?\s?\d+(?:\.\d+)?)\s*%"
+_TAKE = re.compile(r"(?:take[- ]?profit|\bTP\b)" + _LEVEL_GAP + _NUMBER, re.I)
+_STOP = re.compile(r"\b(?:stop(?:[- ]?loss)?|SL)\b" + _LEVEL_GAP + _NUMBER, re.I)
+
+
+def exit_levels(text: str, picks: list[str]) -> dict[str, dict]:
+    """His take-profit and stop for each pick, in % from entry -- the stop a
+    fall, so below zero. A pick's levels are the first ones after a line that
+    names it alone, before a line that names another; a level he states on
+    the pick's own line is its own. What he did not state stays None.
+
+    The plan's V2 of 2026-09-23: every room the launch opened carried tp and
+    sl None although nearly every answer named both, so the criterion judged
+    his idea without his exits."""
+    wanted = {str(p).lower(): p for p in picks}
+    out = {p: {"tp": None, "sl": None} for p in picks}
+    current = None
+    for line in str(text or "").split("\n"):
+        lower = line.lower()
+        named = [key for key in wanted if key in lower]
+        if len(named) == 1:
+            current = wanted[named[0]]
+        elif named:
+            current = None
+        if current is None:
+            continue
+        levels = out[current]
+        take, stop = _TAKE.search(line), _STOP.search(line)
+        if take and levels["tp"] is None:
+            levels["tp"] = abs(_level(take.group(1)))
+        if stop and levels["sl"] is None:
+            levels["sl"] = -abs(_level(stop.group(1)))
+    return out
+
+
+def _level(raw: str) -> float:
+    return float(raw.replace("−", "-").replace(" ", ""))
+
+
 def picked_cards(text: str, species=()) -> list[str]:
     """The cards an answer picks, first mention first: every id he names,
     less the species ids of bots (a bot is not a card, #91), less those he
