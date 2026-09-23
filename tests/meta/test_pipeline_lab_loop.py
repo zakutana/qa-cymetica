@@ -1689,6 +1689,97 @@ def test_a_window_that_closes_normally_sells_the_rooms_card_position(
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_benchmark_card_is_not_an_experiment(tmp_path, monkeypatch):
+    """STR-0008: NEX-0059 picked a4a5b71e, the BTC card every room is judged
+    against, and the launch opened a room on it -- one that could only ever
+    tie its own benchmark. It is refused at the launch now, and said."""
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    bench = scripts_lab.BTC_PROXY
+    answers = [{"type": "answer", "id": "NEX-0001",
+                "at": (NOW - timedelta(minutes=30)).isoformat(),
+                "text": _whole(bench)}]
+    _launchpad(scripts_lab, tmp_path, monkeypatch, answers,
+               live={bench: _basket("BTC", "ETH")},
+               readings={("BTC", "ETH"): (6.5, 1.3)})
+
+    said = scripts_lab.night_promote()
+
+    assert said["rooms"] == 0, said
+    assert any("benchmark" in line for line in said["held"]), said["held"]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_stopped_room_is_archived_or_judged_up_to_its_stop(
+        tmp_path, monkeypatch):
+    """Review of 2026-09-23 (the plan's V2): `verdicts()` never read a room's
+    status. A room stopped because its order never landed (STR-0027,
+    STR-0042) was still judged "on the index" at the end of its window -- a
+    verdict on an experiment nobody ran -- and one opened by mistake on a
+    card he had ruled out (STR-0011, STR-0012) was his to lose. And a room
+    stopped by hand while it held a position waited for a window that no
+    longer meant anything.
+
+    Status first. Stopped, never having held anything, or not his pick: the
+    room is archived -- derived, not written, and never given a verdict.
+    Stopped holding his pick: judged now, over the window up to the stop."""
+    import qa.rooms as qa_rooms
+
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    pick, ruled, never = _card(0xA1), _card(0xA2), _card(0xA3)
+    text = (f"**Pick: `{pick}`** and a second, `{never}`.\n\n"
+            f"**Why the others are out:**\n- `{ruled}` is ruled out.\n")
+    _write(tmp_path, "nexus.jsonl", _answer(text))
+    start = datetime.now(timezone.utc) - timedelta(days=2)
+    rooms_rows, paper_rows = [], []
+    for n, card in enumerate((pick, ruled, never), 1):
+        room = f"STR-000{n}"
+        rooms_rows += [
+            {"type": "strategy", "id": room, "origin": "NEX-0001",
+             "title": card[:8], "card": card, "at": start.isoformat()},
+            {"type": "acceptance", "room": room, "window_days": 5.0,
+             "stop_pct": 10.0, "benchmark_card": scripts_lab.BTC_PROXY,
+             "legs": [{"card": card, "side": "bull", "share": 1.0}],
+             "adopted": True, "why": "test", "at": start.isoformat()}]
+        if card != never:
+            paper_rows += [
+                {"id": f"TRD-000{n}", "type": "intent", "card_id": card,
+                 "usdc": 100.0, "paper": True, "nexus": {"id": "NEX-0001"},
+                 "at": start.isoformat()},
+                {"id": f"TRD-000{n}", "type": "outcome", "outcome": "accepted",
+                 "position_id": f"P-{n}", "at": start.isoformat()}]
+    stopped_at = start + timedelta(days=1)
+    for n in (1, 2, 3):
+        rooms_rows.append({"type": "status", "room": f"STR-000{n}",
+                           "status": "stopped", "why": "by hand",
+                           "at": stopped_at.isoformat()})
+    _write(tmp_path, "rooms.jsonl", rooms_rows)
+    _write(tmp_path, "paper.jsonl", paper_rows)
+    scripts_lab._sibling("paper").close = lambda position, confirm: {}
+
+    hours = 48
+    rising = [{"t": (start + timedelta(hours=h)).isoformat(),
+               "index": 100 + h * 0.1} for h in range(hours + 1)]
+    flat = [{"t": p["t"], "index": 100.0} for p in rising]
+    monkeypatch.setattr(scripts_lab, "_history",
+                        lambda client, c: rising if c != scripts_lab.BTC_PROXY
+                        else flat)
+    monkeypatch.setattr(scripts_lab, "_closes_at", lambda client, c: None)
+
+    said = scripts_lab.verdicts(now=start + timedelta(days=2))
+
+    assert [s["room"] for s in said if s.get("verdict")] == ["STR-0001"], said
+    (judged,) = [s for s in said if s["room"] == "STR-0001"]
+    assert judged["window"]["to"] == stopped_at.isoformat(), judged
+    assert judged["return_pct"] == pytest.approx(2.4), (
+        "judged over the window up to the stop, 24 hours at +0.1 an hour")
+    rows = qa_rooms.load()
+    assert qa_rooms.verdict_of(rows, "STR-0002") is None
+    assert qa_rooms.verdict_of(rows, "STR-0003") is None
+    assert lab.archived_rooms(rows, qa_rooms.nexus_answers(), paper_rows) == {
+        "STR-0002", "STR-0003"}
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_an_early_close_that_failed_is_tried_again_and_the_benchmark_read_once(
         tmp_path, monkeypatch):
     """R06 and R08, deep pass of 2026-09-21 (3/3 each). The verdict is written

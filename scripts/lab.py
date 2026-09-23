@@ -1127,6 +1127,15 @@ def verdicts(now=None) -> list[dict]:
              if rooms.leg_kind(leg) == "card"],
             books["theirs"])
 
+    # Status first (V2 of the 2026-09-23 plan). A stopped room that never held
+    # anything, or held what he did not pick, is archived and never judged; a
+    # stopped room that held his pick is judged now, up to its stop.
+    archived = lab.archived_rooms(rows, rooms.nexus_answers(),
+                                  _sibling("paper").load(),
+                                  _sibling("clone").load())
+    stops = {str(row.get("room")): row.get("at") for row in rows
+             if row.get("type") == "status" and row.get("status") == "stopped"}
+
     due, owed = [], []
     for strategy in rooms.strategies(rows):
         room = strategy["id"]
@@ -1134,23 +1143,26 @@ def verdicts(now=None) -> list[dict]:
         if acceptance is None:
             continue
         settled = rooms.verdict_of(rows, room)
-        if settled is not None:
+        if settled is not None or room in archived:
             # R06, deep pass of 2026-09-21: the verdict is written before the
             # close, so a close that failed has to be owed from here on -- at
-            # ANY verdict since C3 (2026-09-23), not only an early one. A bot
-            # still trading after any verdict is owed its pause too.
+            # ANY verdict since C3 (2026-09-23), not only an early one, and
+            # for an archived room too. A bot still trading after any verdict
+            # is owed its pause too.
             if holding(strategy, acceptance) or _bots_running(acceptance):
                 owed.append((strategy, acceptance))
             continue
-        said = lab.verdict(acceptance, {}, moment)
+        status = rooms.status_of(rows, room)
+        halted = stops.get(room) if status == "stopped" else None
+        said = lab.verdict(acceptance, {}, moment, stopped=halted)
         if said["verdict"] != "open":
-            due.append((room, acceptance, strategy, True))
+            due.append((room, acceptance, strategy, True, halted))
             continue
-        if rooms.status_of(rows, room) != "running":
+        if status != "running":
             continue
         last = _moment(checked.get(room))
         if last is None or moment - last >= timedelta(minutes=EARLY_CHECK_MINUTES):
-            due.append((room, acceptance, strategy, False))
+            due.append((room, acceptance, strategy, False, None))
 
     def close_positions(strategy: dict, acceptance: dict, said: dict) -> None:
         """Close what our accepted buys opened for this room's cards, and
@@ -1255,7 +1267,7 @@ def verdicts(now=None) -> list[dict]:
                         lambda: lab.fund_series(_fund_points(ref)))
         return history(ref)
     try:
-        for room, acceptance, strategy, closed in due:
+        for room, acceptance, strategy, closed, halted in due:
             legs = acceptance.get("legs") or []
             try:
                 series = {rooms.leg_ref(leg): series_of(leg) for leg in legs
@@ -1275,7 +1287,8 @@ def verdicts(now=None) -> list[dict]:
                                 "why": (f"{exc} -- a failed read is not an empty "
                                         f"one; judged again on the next call")})
                 continue
-            said = lab.verdict(acceptance, series, moment, closes=closes)
+            said = lab.verdict(acceptance, series, moment, closes=closes,
+                               stopped=halted)
             checked[room] = moment.isoformat()
             if said["verdict"] == "open":
                 continue
@@ -1923,6 +1936,12 @@ def night_promote(since: datetime | None = None) -> dict:
             # Nexus repeats its favourite card across answers, and "fifty
             # experiments" meant fifty different things.
             if card in bought:
+                continue
+            if card == BTC_PROXY:
+                # STR-0008 (NEX-0059): a room on the card every room is
+                # judged against could only ever tie it.
+                held.append(f"{origin}/{card[:8]}: it is the benchmark itself "
+                            f"-- a room on it measures nothing against it")
                 continue
             if card in held_by:
                 held.append(f"{origin}/{card[:8]}: already held in "

@@ -959,8 +959,8 @@ def _inside(points, start, end):
     return inside
 
 
-def verdict(acceptance: dict, series: dict, now, closes: dict | None = None
-            ) -> dict:
+def verdict(acceptance: dict, series: dict, now, closes: dict | None = None,
+            stopped=None) -> dict:
     """Did the strategy do what it was accepted on? Numbers only, no opinion.
 
     The acceptance is written BEFORE the room goes running, so nothing here can
@@ -977,6 +977,11 @@ def verdict(acceptance: dict, series: dict, now, closes: dict | None = None
         refuted        it lost, or it lost to the benchmark, or its drawdown
                        went past the stop it was accepted with
         survived       none of the above
+
+    `stopped`, the moment the room was stopped by hand while it held its
+    pick, ends the window there: it is judged over what it ran (V2 of the
+    2026-09-23 plan -- a stopped room used to wait for a window that no
+    longer meant anything).
     """
     start = _at(acceptance.get("at"))
     days = float(acceptance.get("window_days") or 0)
@@ -984,6 +989,9 @@ def verdict(acceptance: dict, series: dict, now, closes: dict | None = None
         return {"verdict": "inconclusive", "why": "the acceptance names no window",
                 "coverage": 0.0, "formula": formula_fingerprint()}
     end = start + timedelta(days=days)
+    halted = _at(stopped)
+    if halted is not None and start < halted < end:
+        end = halted
     moment = _at(now) or datetime.now(timezone.utc)
     if moment < end:
         early = _early(acceptance, series, start, moment)
@@ -1597,6 +1605,99 @@ def _sold_by_us(paper_rows) -> dict[str, float | None]:
     return out
 
 
+def picked_rooms(room_rows: list[dict], answers: list[dict]) -> set[str]:
+    """The rooms that hold what their answer PICKED, read the way the launch
+    reads it: a card room's card among `picked_cards`, a bot room's species
+    among `proposed_bots` against the bot rooms that answer opened, a fund
+    room's symbol among `proposed_funds`. A room opened from a whole answer
+    (before 2026-09-21) holds all of it. One reading for the board, the
+    verdicts and the archive, so the three cannot disagree about whose idea
+    a room was."""
+    texts = {str(a.get("id") or ""): str(a.get("text") or "")
+             for a in answers if a.get("type") == "answer"}
+    by_origin: dict[str, list[dict]] = {}
+    for row in room_rows:
+        if row.get("type") == "strategy":
+            by_origin.setdefault(str(row.get("origin")), []).append(row)
+    out: set[str] = set()
+    for origin, opened in by_origin.items():
+        text = texts.get(origin)
+        if text is None:
+            continue
+        cards = set(picked_cards(text))
+        bots = {row["name"] for row in proposed_bots(text, [
+            {"name": r.get("title"), "id": r.get("ref")}
+            for r in opened if r.get("kind") == "bot"])}
+        funds = set(proposed_funds(text, [
+            r.get("ref") for r in opened if r.get("kind") == "fund"]))
+        for row in opened:
+            kind = row.get("kind")
+            if row.get("card"):
+                chosen = str(row["card"]).lower() in cards
+            elif kind == "bot":
+                chosen = row.get("title") in bots
+            elif kind == "fund":
+                chosen = row.get("ref") in funds
+            else:
+                chosen = True       # a whole-answer room, or an arena team
+            if chosen:
+                out.add(str(row.get("id")))
+    return out
+
+
+def archived_rooms(room_rows: list[dict], answers: list[dict],
+                   paper_rows: list[dict], clone_rows=()) -> set[str]:
+    """Stopped rooms that are archived rather than judged -- derived, never
+    written, so no status anywhere has to learn a new word.
+
+    Stopped, with no verdict, and either never holding anything -- no order
+    of ours accepted on its cards, no funding of its bots, and a fund or an
+    Arena room holds nothing -- or not holding his pick (the launch opened
+    STR-0011 and STR-0012 on cards NEX-0064 had ruled out). A stopped room
+    that held his pick is not archived: it is judged up to its stop.
+    """
+    status: dict[str, str] = {}
+    judged: set[str] = set()
+    accepted_on: dict[str, dict] = {}
+    for row in room_rows:
+        if row.get("type") == "status":
+            status[str(row.get("room"))] = str(row.get("status"))
+        elif row.get("type") == "verdict":
+            judged.add(str(row.get("room")))
+        elif row.get("type") == "acceptance":
+            accepted_on[str(row.get("room"))] = row
+    intents = {r.get("id"): r for r in paper_rows
+               if r.get("type") == "intent" and r.get("kind") != "close"}
+    bought: set[tuple[str, str]] = set()
+    for row in paper_rows:
+        if (row.get("type") == "outcome" and row.get("outcome") == "accepted"
+                and row.get("kind") != "close"):
+            intent = intents.get(row.get("id")) or {}
+            nexus = intent.get("nexus")
+            origin = nexus.get("id") if isinstance(nexus, dict) else nexus
+            bought.add((str(origin), str(intent.get("card_id") or "").lower()))
+    went_in = funded(clone_rows)
+    picks = picked_rooms(room_rows, answers)
+
+    out: set[str] = set()
+    for row in room_rows:
+        if row.get("type") != "strategy":
+            continue
+        room = str(row.get("id"))
+        if status.get(room) != "stopped" or room in judged:
+            continue
+        legs = (accepted_on.get(room) or {}).get("legs") or []
+        cards = {str(row.get("card") or "").lower()} | {
+            str(leg.get("card") or leg.get("ref") or "").lower()
+            for leg in legs if (leg.get("kind") or "card") == "card"}
+        held = any((str(row.get("origin")), c) in bought for c in cards if c) \
+            or any(went_in.get(str(leg.get("ref")))
+                   for leg in legs if leg.get("kind") == "bot")
+        if not held or room not in picks:
+            out.add(room)
+    return out
+
+
 def board(answers: list[dict], notebook: list[dict], room_rows: list[dict],
           paper_rows: list[dict], sample_rows: list[dict],
           clone_rows: list[dict] | tuple = ()) -> list[dict]:
@@ -1644,17 +1745,11 @@ def board(answers: list[dict], notebook: list[dict], room_rows: list[dict],
     for row in room_rows:
         if row.get("type") == "acceptance":
             accepted_on[str(row.get("room"))] = row
-    # A bot room is his when its species is what his answer picks, read the
-    # way the launch reads it, against the bot rooms this answer opened.
-    bot_rooms: dict[str, list[str]] = {}
-    for origin, opened in rooms_by.items():
-        bots = [r for r in opened if r.get("kind") == "bot"]
-        if not bots or origin not in texts:
-            continue
-        chosen = {row["name"] for row in proposed_bots(texts[origin], [
-            {"name": r.get("title"), "id": r.get("ref")} for r in bots])}
-        bot_rooms[origin] = [str(r.get("id")) for r in bots
-                             if r.get("title") in chosen]
+    # A bot room is his when its species is what his answer picks.
+    his = picked_rooms(room_rows, answers)
+    bot_rooms = {origin: [str(r.get("id")) for r in opened
+                          if r.get("kind") == "bot" and str(r.get("id")) in his]
+                 for origin, opened in rooms_by.items()}
 
     intents = {r.get("id"): r for r in paper_rows
                if r.get("type") == "intent" and r.get("kind") != "close"}
