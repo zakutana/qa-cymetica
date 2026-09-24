@@ -111,3 +111,23 @@ def test_the_claim_routes_are_writes_with_a_closed_body_and_nothing_else():
         assert rule.closed_body is True
         assert set(rule.executable_params) == {"link_slug"}
         assert not rule.required_flags
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_creator_routes_speak_as_the_creator_account_or_not_at_all(monkeypatch):
+    """REPLY-0058 (2026-09-24): the creator queues belong to tg_expire76, and
+    our trusted key is account expire76 -- a lead it claims is credited to the
+    wrong account and `?status=claimed` reads empty. So creator.py speaks with
+    QA_CREATOR_KEY, the key minted on tg_expire76 itself, and without one it
+    refuses: falling back to the trusted key is the defect, not a default."""
+    from qa.config import identities
+
+    monkeypatch.setenv("QA_CREATOR_KEY", "k-creator")
+    monkeypatch.setenv("QA_TRUSTED_KEY", "k-trusted")
+    assert identities()["creator"].headers() == {"X-API-Key": "k-creator"}
+
+    mod = _module()
+    assert mod.identity().value == "k-creator"
+    monkeypatch.setenv("QA_CREATOR_KEY", "")
+    with pytest.raises(mod.CreatorError, match="QA_CREATOR_KEY"):
+        mod.identity()

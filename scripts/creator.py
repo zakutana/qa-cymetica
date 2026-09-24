@@ -51,17 +51,28 @@ def claim(client, outlet: str, lead_id: int, page_slug: str = "",
     return response.json() or {}
 
 
+def identity():
+    """The key minted on tg_expire76, the account the queues belong to. No
+    fallback to `trusted`: that is account expire76, whose claims would be
+    credited to the wrong dashboard (REPLY-0058)."""
+    from qa.config import identities
+
+    creator = identities()["creator"]
+    if not creator.value:
+        raise CreatorError("no QA_CREATOR_KEY in .env -- mint one in the "
+                           "dashboard's 'Your agent's API key' panel")
+    return creator
+
+
 def _client(mutate: bool):
     from qa.client import build_client
-    from qa.config import identities, load_dotenv
     from qa.safety import EndpointRegistry
 
-    load_dotenv()
     registry = EndpointRegistry.load()
     if mutate:
         registry.mutate_enabled = True
         registry.mutate_allowed_hosts = frozenset({"cymetica.com"})
-    return build_client(identities()["trusted"], registry, timeout=40.0)
+    return build_client(identity(), registry, timeout=40.0)
 
 
 def cmd_leads(args) -> int:
