@@ -636,9 +636,11 @@ class _Tripwire:
     failure. `rows` is what my-clones answers; `sent` fills only in a positive
     control, which passes the answer it wants."""
 
-    def __init__(self, rows=None, status=200, patch=None, post=None):
+    def __init__(self, rows=None, status=200, patch=None, post=None,
+                delete=None):
         self.rows, self.status, self.patch_answer = rows, status, patch
         self.post_answer = post
+        self.delete_answer = delete
         self.sent = []
 
     def get(self, path, params=None):
@@ -655,6 +657,12 @@ class _Tripwire:
             raise AssertionError(f"a toggle was sent: {path} {params}")
         self.sent.append((path, params))
         return self.post_answer
+
+    def delete(self, path, **kwargs):
+        if self.delete_answer is None:
+            raise AssertionError(f"a DELETE was sent: {path}")
+        self.sent.append((path,))
+        return self.delete_answer
 
     def close(self):
         pass
@@ -775,6 +783,78 @@ def test_a_settings_patch_needs_our_paper_record_theirs_and_no_running_room(
     assert [r["type"] for r in chain] == ["intent", "outcome", "after"], chain
     assert chain[0]["body"] == change and chain[0]["their_is_paper"] is True
     assert chain[1]["outcome"] == "accepted"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_release_needs_our_paper_record_theirs_and_no_running_room(
+        tmp_path, monkeypatch):
+    """DELETE carries no body at all -- one door further than toggle-trading
+    -- so required_flags has nothing to read either. The floor is three
+    checks, the same shape as settings()'s: our record made this instance as
+    a paper clone, no room of ours is RUNNING on it (a stopped room's bot is
+    exactly what release exists to free), and their row says paper twice over
+    right now (`startable`).
+
+    Every refusal is proved against a tripwire whose `delete` raises."""
+    mod = _clone(tmp_path, monkeypatch)
+
+    # Not a clone of ours at all, and one our record does not call paper.
+    _no_client(mod, monkeypatch)
+    with pytest.raises(SystemExit, match="our record"):
+        mod.release("inst-1", confirm=True)
+    _ours(mod, instance="inst-live", is_paper=False)
+    with pytest.raises(SystemExit, match="our record"):
+        mod.release("inst-live", confirm=True)
+
+    # Not confirmed at all -- refused before our record is even read.
+    with pytest.raises(SystemExit, match="confirm"):
+        mod.release("inst-1", confirm=False)
+
+    # Ours and paper, but a room is RUNNING on it: release is not a pause.
+    _ours(mod)
+    import qa.rooms as qa_rooms
+    import json as _json
+    rows = [{"type": "strategy", "id": "STR-0001", "origin": "NEX-0001",
+             "title": "bot", "kind": "bot", "ref": "sp-1", "at": "2026-09-23T00:00:00+00:00"},
+            {"type": "plan", "room": "STR-0001", "legs": [
+                {"kind": "bot", "ref": "inst-1", "side": "bull", "share": 1.0}],
+             "at": "2026-09-23T00:00:01+00:00"},
+            {"type": "status", "room": "STR-0001", "status": "running",
+             "why": "x", "at": "2026-09-23T00:00:02+00:00"}]
+    (tmp_path / qa_rooms.path().name).write_text(
+        "".join(_json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+    with pytest.raises(SystemExit, match="STR-0001"):
+        mod.release("inst-1", confirm=True)
+
+    # Stopped: a release is exactly what closes out a stopped room's bot.
+    with open(tmp_path / qa_rooms.path().name, "a", encoding="utf-8") as handle:
+        handle.write(_json.dumps(
+            {"type": "status", "room": "STR-0001", "status": "stopped",
+             "why": "window closed", "at": "2026-09-23T00:00:03+00:00"}) + "\n")
+
+    # Their row: not paper, a live execution class, unreadable, not listed.
+    for rows_, status in (([{**PAPER_ROW, "is_paper": False}], 200),
+                          ([{**PAPER_ROW, "execution_economics":
+                             {"execution_class": "LIVE_ONCHAIN"}}], 200),
+                          (None, 503),
+                          ([], 200)):
+        _offline(mod, monkeypatch, _Tripwire(rows_, status))
+        with pytest.raises(SystemExit):
+            mod.release("inst-1", confirm=True)
+    assert not [r for r in mod.load() if r.get("kind") == "release"], (
+        "a refused DELETE left a record")
+
+    # The positive control: all three agree, and a 204 with no body is
+    # accepted -- the ordinary shape for a delete that worked.
+    wire = _Tripwire([PAPER_ROW], 200, delete=_Response(204, None))
+    _offline(mod, monkeypatch, wire)
+    said = mod.release("inst-1", confirm=True)
+    assert wire.sent == [("/api/v1/cloned-bots/inst-1",)], wire.sent
+    assert said["outcome"] == "accepted" and said["http_status"] == 204
+    chain = [r for r in mod.load() if r.get("kind") == "release"]
+    assert [r["type"] for r in chain] == ["intent", "outcome", "after"], chain
+    assert chain[0]["their_is_paper"] is True
+    assert chain[1]["outcome"] == "accepted" and chain[1]["http_status"] == 204
 
 
 def _switch(mod, kind, instance="inst-1", outcome="accepted", body=None):

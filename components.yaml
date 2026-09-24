@@ -563,6 +563,18 @@ endpoints:
   #   * scripts/clone.py::settings -- our record says the instance is a paper
   #     clone of ours, no room of ours is running on it, and THEIR row says
   #     paper twice (is_paper and execution_class), read before the PATCH.
+  # Deleting a clone frees one of the five paper slots the platform allows.
+  # DELETE carries no body at all, so there is nothing for required_flags to
+  # read -- same shape as toggle-trading, one door further. The floor is in
+  # scripts/clone.py::release, which asks THEM for the instance's is_paper
+  # AND execution_class (startable, enable()'s floor) before every delete,
+  # and refuses on our own record or a running room first.
+  - id: cloned_bots.release
+    path: /api/v1/cloned-bots/{instance_id}
+    methods: [DELETE]
+    component: rest.agents
+    executable_params: []
+
   - id: cloned_bots.settings
     path: /api/v1/cloned-bots/{instance_id}/settings
     methods: [PATCH]

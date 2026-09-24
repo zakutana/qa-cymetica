@@ -57,6 +57,7 @@ AVAILABLE = "/api/v1/cloned-bots/available"
 CLONE = "/api/v1/cloned-bots/clone"
 MY_CLONES = "/api/v1/cloned-bots/my-clones"
 PREFIX_FUND = "/api/v1/cloned-bots/{id}/fund"
+PREFIX_RELEASE = "/api/v1/cloned-bots/{id}"
 TOGGLE = "/api/v1/cloned-bots/{id}/toggle-trading"
 SETTINGS = "/api/v1/cloned-bots/{id}/settings"
 ACCOUNT = "/api/v1/account/me"
@@ -503,6 +504,19 @@ def _recorded(response, served: dict) -> str:
         return str(getattr(response, "text", ""))
 
 
+def _served_delete(response) -> tuple[dict, str]:
+    """DELETE's answer, read once. 204 No Content is the ordinary shape for a
+    delete that worked -- `_served`'s 200-only floor would read it as a
+    refusal -- so any 2xx is accepted whether or not it carries a body, and
+    only reads the body when there is one to read."""
+    if not (200 <= response.status_code < 300):
+        return {}, "rejected"
+    try:
+        return unwrap(response.json()), "accepted"
+    except ValueError:
+        return {}, "accepted"
+
+
 def _instance(client, instance_id: str) -> dict:
     """Their current row for one clone, or a refusal. Never our own record."""
     token = CURRENT_TIER.set(SafetyTier.SAFE)
@@ -748,6 +762,87 @@ def room_running(instance_id: str) -> str | None:
     return None
 
 
+def release(instance_id: str, confirm: bool) -> dict:
+    """Delete a paper clone -- documented (`DELETE /api/v1/cloned-bots/
+    {instance_id}`, 2026-09-24) but never called until this room hit the
+    platform's cap of five paper bots with all five stopped: V2's rule (a
+    bot that halted is never restarted as the same experiment) means a
+    stopped bot can only ever be released, never reused, so without this the
+    fifth slot is permanent. Refused, in order, before a client exists:
+
+      * not confirmed;
+      * our record never made this instance as a paper clone
+        (`paper_by_our_record`) -- not ours to delete;
+      * a room of ours is RUNNING on it (`room_running`) -- that snapshot is
+        still evidence of an open investigation, closed by `rooms.py status`
+        first, never destroyed by a release.
+
+    And read from them, after a client exists:
+
+      * their row does not say paper twice over right now (`startable`,
+        enable()'s and settings()'s floor) -- deleting an instance that went
+        live would destroy real state, not a practice one.
+    """
+    if not confirm:
+        raise SystemExit("pass confirm=True to actually release the clone")
+    if not paper_by_our_record(instance_id):
+        raise SystemExit(
+            f"{instance_id} is not a paper clone by our record (no accepted "
+            f"clone of ours whose outcome said is_paper true), so it is not "
+            f"ours to delete")
+    running = room_running(instance_id)
+    if running:
+        raise SystemExit(
+            f"{running} is running on {instance_id}; stop that room first "
+            f"(rooms.py status) -- a release is not a pause")
+
+    load_dotenv()
+    install_client_guard()
+    registry = EndpointRegistry.load()
+    registry.mutate_enabled = True
+    registry.mutate_allowed_hosts = frozenset({"cymetica.com"})
+    client = build_client(identities()["trusted"], registry, timeout=60.0)
+
+    row = _instance(client, instance_id)
+    if not startable(row):
+        economics = row.get("execution_economics") or {}
+        raise SystemExit(
+            f"{instance_id} does not read as paper on both of their "
+            f"statements now (is_paper={row.get('is_paper')!r}, "
+            f"execution_class={economics.get('execution_class')!r}). "
+            f"Nothing is deleted on an instance we cannot confirm is "
+            f"practice money.")
+
+    before = _snapshot(client)
+    entry = {"type": "intent", "at": _now(), "kind": "release",
+             "instance_id": instance_id, "their_is_paper": True, "before": before}
+    release_id = _append_intent(entry)["id"]
+    token = CURRENT_TIER.set(SafetyTier.MUTATE)
+    try:
+        response = client.delete(PREFIX_RELEASE.format(id=instance_id))
+    except Exception as exc:  # noqa: BLE001
+        _append({"id": release_id, "type": "outcome", "at": _now(),
+                 "kind": "release", "outcome": "not_sent",
+                 "error": f"{type(exc).__name__}: {exc}"})
+        raise
+    finally:
+        CURRENT_TIER.reset(token)
+
+    evidence = _capture(response)
+    served, said = _served_delete(response)
+    _append({"id": release_id, "type": "outcome", "at": _now(), "kind": "release",
+             "outcome": said, "http_status": response.status_code,
+             "evidence_id": evidence, "response": _recorded(response, served)[:2000]})
+    after = _snapshot(client)
+    _append({"id": release_id, "type": "after", "kind": "release", **after})
+    client.close()
+
+    print(f"{release_id}: HTTP {response.status_code}, released {instance_id}, "
+          f"outcome {said}")
+    return {"id": release_id, "instance_id": instance_id, "outcome": said,
+            "http_status": response.status_code}
+
+
 def settings(instance_id: str, changes: dict, confirm: bool) -> dict:
     """Change a paper clone's settings -- one variant of the grid (V5).
 
@@ -903,6 +998,11 @@ def main() -> int:
                       help=f"one of {', '.join(sorted(SAFE_SETTINGS))}")
     tune.add_argument("--confirm", action="store_true")
 
+    gone = sub.add_parser("release", help="delete a stopped paper clone, to "
+                          "free one of the five slots")
+    gone.add_argument("--instance-id", required=True)
+    gone.add_argument("--confirm", action="store_true")
+
     eye = sub.add_parser("watch", help="sample a running bot on a timer")
     eye.add_argument("--instance-id", required=True)
     eye.add_argument("--every", type=int, default=600)
@@ -960,6 +1060,10 @@ def main() -> int:
 
     if args.cmd == "fund":
         fund(args.instance_id, args.amount, args.confirm)
+        return 0
+
+    if args.cmd == "release":
+        release(args.instance_id, args.confirm)
         return 0
 
     clone(args.source_type, args.source_id, args.name, args.nexus,
