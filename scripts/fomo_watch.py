@@ -568,7 +568,12 @@ def say_ten_dollars(said: dict) -> list[str]:
     if not out:
         return []
     fees = out.get("by_fee") or {}
-    one = fees.get(1.0) or next(iter(fees.values()), {})
+    # `fees.get(1.0)` alone misses a reading read back off the diary, whose
+    # keys round-tripped through JSON as strings -- silently falling back to
+    # WHICHEVER fee is first in the dict, not the 1% the headline claims
+    # (found live, 2026-09-24, beside the `:g` crash below).
+    one = next((v for fee, v in fees.items() if float(fee) == 1.0),
+              next(iter(fees.values()), {}))
     left = out.get("excluded") or {}
     return [
         f"${out['clip_usd']:g} into every hot signal, held "
@@ -577,8 +582,12 @@ def say_ten_dollars(said: dict) -> list[str]:
         f"{_signed(one.get('median_net_pct'))}, without the best "
         f"{out.get('top', 5)} {_signed(one.get('mean_net_without_top_pct'))}, "
         f"win {_pct(one.get('win_rate'))}), n={out['bought']}; at "
-        + ", ".join(f"{fee:g}% a side {_signed(v.get('mean_net_pct'))}"
-                    for fee, v in sorted(fees.items()))
+        # A reading read back off the diary round-tripped through JSON, whose
+        # object keys are always strings -- `by_fee`'s 0.5/1.0/2.0 come back
+        # as "0.5"/"1.0"/"2.0". Read as a number either way (found live,
+        # 2026-09-24: `:g` on a string crashed `lab.py brief`).
+        + ", ".join(f"{float(fee):g}% a side {_signed(v.get('mean_net_pct'))}"
+                    for fee, v in sorted(fees.items(), key=lambda kv: float(kv[0])))
         + f". Could buy {_pct(out.get('could_buy_share'))} of "
           f"{out['signals']} hot signals (a price and the radar's depth for "
           f"${out['clip_usd']:g} when they fired); left out: "

@@ -505,3 +505,29 @@ def test_the_report_opens_with_the_ten_dollar_answer(tmp_path, monkeypatch):
     assert first.startswith("$10 into every hot signal"), first
     assert "n=1" in first and "Could buy 100.0% of 1" in first, first
     assert "after costs at 1% a side" in first, first
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_reading_read_back_off_disk_still_prints_the_ten_dollar_line(
+        tmp_path, monkeypatch):
+    """`lab.note_fomo_reading` writes the reading to the JSONL diary and
+    `lab.load()` reads it back through json.loads -- a dict's numeric keys
+    (`by_fee`'s 0.5/1.0/2.0) come back as strings. `say_ten_dollars` formatted
+    the key with `:g`, which raised on a string and crashed `lab.py brief`
+    (found live, 2026-09-24)."""
+    import json
+
+    mod = _watch(tmp_path, monkeypatch)
+    key = "0x001:2026-09-13T12"
+    signal = _signal(key, radar_max_buy_5pct_usd=5000.0)
+    (exit24,) = _path(key, 1.0, [(24, 1.5)])
+    said = mod.reading([signal, {**exit24, "liquidity_usd": 100_000.0}], now=DONE)
+    stored = json.loads(json.dumps(said))
+    assert isinstance(next(iter(stored["ten_dollars"]["by_fee"])), str)
+    fresh = "\n".join(mod.say_reading(said))
+    stale = "\n".join(mod.say_reading(stored))
+    assert stale.startswith("$10 into every hot signal"), stale
+    # And the headline's "at 1% a side" figure is still the 1% row, not
+    # whichever fee happens to be first in the dict (the fallback silently
+    # picked 0.5% off a stored reading).
+    assert stale == fresh, (fresh, stale)

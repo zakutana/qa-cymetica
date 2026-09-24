@@ -46,8 +46,22 @@
         },
         "pinned_fingerprint": "a00fa16074a898173577cb72f9e863a691aa4bfdb20c43a2d1476189800850ff",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": [],
+            "right": "allied",
+            "sources": {
+              "tier_from": "/mcp/v1/agents/me",
+              "entitlement_from": "/.well-known/mcp.json"
+            },
+            "population": {
+              "served": 108,
+              "entitled_at_allied": 108,
+              "declared_total": 108
+            },
+            "reason": "the platform states this caller is ALLIED; it is served 108 tools, 0 of them declared above allied"
+          }
         }
       },
       "filing": {
@@ -177,8 +191,21 @@
         },
         "pinned_fingerprint": "c128bb487c196aee5ab6a08c9bfedce70d99544cab71152a482c5530ad93b4a7",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": [],
+            "right": "GET /api/v1/bounty/filing-message",
+            "sources": {
+              "endpoint": "/api/v1/bounty/filing-message",
+              "fix": "commit d12ea54a9"
+            },
+            "population": {
+              "our_wallet_verified": "Required once the wallet is verified (a valid signed filing or POST /wallet/verify verifies it); a captured signature can only re-file the same title, which the 24h duplicate gate rejects.",
+              "title_sha256": "c5a3bac9753a2fe375cde3b0c7c88c210945047d3cddd7a3b9799f92f66766af"
+            },
+            "reason": "attribution is provable: the signing message names the wallet, is bound to sha256(title), and is deterministic"
+          }
         }
       },
       "filing": {
@@ -385,8 +412,23 @@
         },
         "pinned_fingerprint": "2150b030a8e4860cf7a2480bc36a2ae989dae3d032e200d87b5667f27c8c236f",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": [
+              11
+            ],
+            "right": 11,
+            "sources": {
+              "document": "/llms.txt",
+              "catalogue": "/api/v1/agents/species"
+            },
+            "population": {
+              "occurrences": 6,
+              "live_species": 11
+            },
+            "reason": "llms.txt states the species count in 6 place(s); the live catalogue lists 11, and every one of them agrees"
+          }
         }
       },
       "filing": {
@@ -654,8 +696,141 @@
         },
         "pinned_fingerprint": null,
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": [
+              "get_market",
+              "get_orderbook",
+              "get_platform_status",
+              "get_prices",
+              "get_trust_signal",
+              "list_clob_pairs",
+              "list_markets",
+              "search_markets"
+            ],
+            "right": [
+              "ask_nexus_deep",
+              "backtest_event_card_idea",
+              "bb_accept_spec",
+              "bb_app_stats",
+              "bb_apply_startup",
+              "bb_file_request",
+              "bb_get_request",
+              "bb_post_verdict",
+              "bb_request_change",
+              "bb_search_rebuilt_apps",
+              "bb_startup_bid",
+              "bb_startup_line",
+              "board_channels",
+              "board_flag",
+              "board_post",
+              "board_read_post",
+              "board_read_thread",
+              "board_replicate",
+              "board_revise",
+              "board_search",
+              "board_subscribe",
+              "board_threads",
+              "browse_ontology",
+              "build_custom_event_card",
+              "ceo_ai_index_get",
+              "clone_bot",
+              "create_aib_fund",
+              "edit_aib_fund_basket",
+              "feature_bidding_rules",
+              "feature_bids",
+              "feature_board",
+              "feature_my_bids",
+              "feature_place_bid",
+              "find_trade_path",
+              "fund_clone_bot",
+              "get_agent_profile",
+              "get_ai_native_proof",
+              "get_arena_epoch",
+              "get_arena_history",
+              "get_arena_orderbook",
+              "get_arena_positions",
+              "get_arena_state",
+              "get_arena_teams",
+              "get_backtest_models",
+              "get_bot_indicators",
+              "get_btc_pool_history",
+              "get_btc_pool_state",
+              "get_bug_bounty_program",
+              "get_clone_balance",
+              "get_crypto_outlook",
+              "get_deadcoin_desk_info",
+              "get_deadcoin_quote",
+              "get_deep_answer",
+              "get_deposit_address",
+              "get_event_card_info",
+              "get_fund",
+              "get_fund_history",
+              "get_fund_methodology",
+              "get_market",
+              "get_market_analytics",
+              "get_my_clones",
+              "get_oracle_insights",
+              "get_order_history",
+              "get_orderbook",
+              "get_platform_status",
+              "get_positions",
+              "get_prediction_statistics",
+              "get_prices",
+              "get_rate_limits",
+              "get_signal_history",
+              "get_strategy_returns",
+              "get_trust_ladder",
+              "get_trust_signal",
+              "launchpad_get_token",
+              "launchpad_launch_token",
+              "launchpad_list_launchers",
+              "launchpad_list_tokens",
+              "launchpad_record_cross_launch",
+              "launchpad_set_token_socials",
+              "launchpad_trade_quote",
+              "list_backtest_surfaces",
+              "list_clob_pairs",
+              "list_clonable_bots",
+              "list_funds",
+              "list_markets",
+              "list_my_aib_funds",
+              "list_ontology_dimensions",
+              "place_arena_order",
+              "place_order",
+              "preview_card_basket",
+              "query_knowledge",
+              "register_webhook",
+              "request_feature",
+              "resolve_ontology_concept",
+              "search_markets",
+              "search_ontology",
+              "set_aib_fund_weights",
+              "submit_feedback",
+              "submit_observation",
+              "submit_signal",
+              "subscribe_prices",
+              "suggest_card_assets",
+              "sui_launchpad_prepare",
+              "toggle_bot_trading",
+              "trade_event_card",
+              "update_bot_indicators",
+              "update_bot_settings",
+              "who_is_this"
+            ],
+            "sources": {
+              "llms_txt": "scope:MCP Tools|regex_all:^- `([a-z][a-z0-9_]+)`",
+              "mcp_json": "set:$.tools[*].name"
+            },
+            "population": {
+              "witness": {
+                "llms_txt": "scope:MCP Tools|regex_all:^- `([a-z][a-z0-9_]+)`",
+                "mcp_json": "set:$.tools[*].name"
+              }
+            },
+            "reason": "mcp_tool_names_documented_exist: Does every tool name llms.txt documents exist on the server? llms.txt says 8 (get_market, get_orderbook, get_platform_status, get_prices, get_trust_signal, list_clob_pairs, list_markets, search_markets), .well-known/mcp.json says 108 (ask_nexus_deep, backtest_event_card_idea, bb_accept_spec, bb_app_stats, bb_apply_startup, bb_file_request, bb_get_request, bb_post_verdict and 100 more), and that satisfies subset."
+          }
         }
       },
       "filing": {
@@ -745,10 +920,10 @@
           12,
           54,
           83,
-          95,
           106,
           108,
-          112
+          113,
+          122
         ],
         "right": [
           46,
@@ -794,6 +969,7 @@
           92,
           93,
           94,
+          95,
           96,
           97,
           98,
@@ -808,7 +984,7 @@
           109,
           110,
           111,
-          113,
+          112,
           114,
           115,
           116,
@@ -816,7 +992,6 @@
           119,
           120,
           121,
-          122,
           123
         ],
         "sources": {
@@ -841,8 +1016,8 @@
       },
       "reproductions": 4,
       "provenance": {
-        "run_id": "run-20260924T020959Z-7d4d6288",
-        "measured_at": "2026-09-24T02:48:13+00:00"
+        "run_id": "run-20260924T082511Z-74033ba0",
+        "measured_at": "2026-09-24T08:57:39+00:00"
       },
       "check": {
         "state": "REPRODUCING",
@@ -851,7 +1026,7 @@
           "at": "2026-09-05T19:56:34+00:00"
         },
         "pinned_fingerprint": "76f53745c4961b0f0a6076e33cd1d16173f41f802d404fbbb746923be506797e",
-        "evidence_only": "run-20260924T020959Z-7d4d6288"
+        "evidence_only": "run-20260924T082511Z-74033ba0"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -1018,8 +1193,55 @@
         },
         "pinned_fingerprint": "sha256:9e5564057407dd11f05887c86b3b9017",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": [
+              "arena-trading",
+              "asset-discovery",
+              "bug-bounty",
+              "clone-ai-agent",
+              "et10-revenue-share",
+              "exchange-tokens",
+              "market-data",
+              "portfolio-management",
+              "prop-desk-trading",
+              "trade-event-cards",
+              "trade-prediction-markets"
+            ],
+            "right": [
+              "ai-crypto-nativeness-leaderboard",
+              "ai-due-diligence",
+              "ai-native-provenance",
+              "ai-pivot-washing",
+              "arena-trading",
+              "asset-discovery",
+              "bug-bounty",
+              "ceo-ai-expertise-index",
+              "clone-ai-agent",
+              "et10-revenue-share",
+              "exchange-tokens",
+              "live-headlines",
+              "market-data",
+              "portfolio-management",
+              "prop-desk-trading",
+              "smart-delegation",
+              "tge-prediction-markets",
+              "trade-event-cards",
+              "trade-prediction-markets"
+            ],
+            "sources": {
+              "agent_skills": "set:$.skills[*].id",
+              "agent_card": "set:$.skills[*].id"
+            },
+            "population": {
+              "witness": {
+                "agent_skills": "set:$.skills[*].id",
+                "agent_card": "set:$.skills[*].id"
+              }
+            },
+            "reason": "skills_subset: Is agent-skills.json the actionable subset of agent-card.json, as stated? agent-skills.json says 11 (arena-trading, asset-discovery, bug-bounty, clone-ai-agent, et10-revenue-share, exchange-tokens, market-data, portfolio-management and 3 more), agent-card.json says 19 (ai-crypto-nativeness-leaderboard, ai-due-diligence, ai-native-provenance, ai-pivot-washing, arena-trading, asset-discovery, bug-bounty, ceo-ai-expertise-index and 11 more), and that satisfies subset."
+          }
         }
       },
       "filing": {
@@ -1170,8 +1392,20 @@
         },
         "pinned_fingerprint": "5ec2ad807e24bbd1d7b1426ec466461d8cacd67ff55a809ed16b497f18351a97",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": [],
+            "right": "tools/list",
+            "sources": {
+              "document": "/llms.txt"
+            },
+            "population": {
+              "mcp_lines": 4,
+              "doc_bytes": 71888
+            },
+            "reason": "llms.txt states no fixed catalogue size and directs the reader to tools/list for their own tier"
+          }
         }
       },
       "filing": {
@@ -1318,8 +1552,8 @@
         },
         "pinned_fingerprint": "aee41113b423d34dbb0fb7a237f679ec142e320ffd706e3a3645b1a3b80b4cd5",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00"
         }
       },
       "filing": {
@@ -1466,8 +1700,47 @@
         },
         "pinned_fingerprint": "sha256:480bd5eb9d55f9495ccad7c95a78bea9",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": [
+              "ATR",
+              "BOLL",
+              "DIV",
+              "FIB",
+              "ICHI",
+              "MACD",
+              "PCPN",
+              "RSI",
+              "STOCH",
+              "TREND",
+              "VOL"
+            ],
+            "right": [
+              "ATR",
+              "BOLL",
+              "DIV",
+              "FIB",
+              "ICHI",
+              "MACD",
+              "PCPN",
+              "RSI",
+              "STOCH",
+              "TREND",
+              "VOL"
+            ],
+            "sources": {
+              "llms_txt": "list_after:AI trading agent",
+              "live_species": "set:$[*].symbol"
+            },
+            "population": {
+              "witness": {
+                "llms_txt": "AI trading agent species (MACD, RSI, BOLL, VOL, TREND, STOCH, ICHI, FIB, ATR, DIV, PCPN)",
+                "live_species": "set:$[*].symbol"
+              }
+            },
+            "reason": "agent_names: Does llms.txt name agent symbols that actually exist? Both llms.txt and the live species endpoint now say 11 (ATR, BOLL, DIV, FIB, ICHI, MACD, PCPN, RSI and 3 more)."
+          }
         }
       },
       "filing": {
@@ -1614,8 +1887,23 @@
         },
         "pinned_fingerprint": "sha256:6156cefe281b0c01af3a3391dce65475",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": 11,
+            "right": 11,
+            "sources": {
+              "live_species": "len:$",
+              "llms_txt": "regex_int:any of our (\\d+) AI trading agent species"
+            },
+            "population": {
+              "witness": {
+                "live_species": "len:$",
+                "llms_txt": "any of our 11 AI trading agent species"
+              }
+            },
+            "reason": "agent_count: How many clonable AI trading agents exist? Both the live species endpoint and llms.txt now say 11."
+          }
         }
       },
       "filing": {
@@ -1721,7 +2009,7 @@
         "state": "UNVERIFIABLE",
         "adjudicated_by": null,
         "pinned_fingerprint": null,
-        "not_checked_in": "run-20260921T170811Z-e1dee8ae",
+        "not_checked_in": "run-20260924T082511Z-74033ba0",
         "missing_checks": [
           "tests/reconciliation/test_reconcile.py::test_sources_agree[chain_count::live_chains-vs-mcp_json]"
         ],
@@ -1827,8 +2115,21 @@
         },
         "pinned_fingerprint": "7d407afa861e77a3cf508bd4322059dcb57278fd95b3e61c32246e840a94b4ee",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": "500+",
+            "right": 586,
+            "sources": {
+              "document": "/llms.txt",
+              "catalogue": "MCP list_clob_pairs"
+            },
+            "population": {
+              "total": 586,
+              "floor": 500
+            },
+            "reason": "llms.txt promises at least 500 CLOB pairs; list_clob_pairs states total=586."
+          }
         }
       },
       "filing": {
@@ -1941,7 +2242,7 @@
       "note": "Commits legitimately accrue, so a small gap is expected and a large one is not. This is the platform's headline marketing figure, so a stale number here is a measurement defect rather than a cosmetic one.",
       "detail": {
         "left": 21800,
-        "right": 23511,
+        "right": 23562,
         "sources": {
           "llms_txt": "regex_int:With ([\\d,]+)\\+ commits",
           "build_stats": "jsonpath:$.totals.commits"
@@ -1952,7 +2253,7 @@
             "build_stats": "jsonpath:$.totals.commits"
           }
         },
-        "reason": "commit_count: How many commits are in the production codebase? llms.txt says 21800; the build-stats endpoint says 23511. (23511 is 7.8% above the stated minimum of 21800 (tolerance 5.0%), so the published figure is stale rather than wrong)"
+        "reason": "commit_count: How many commits are in the production codebase? llms.txt says 21800; the build-stats endpoint says 23562. (23562 is 8.1% above the stated minimum of 21800 (tolerance 5.0%), so the published figure is stale rather than wrong)"
       },
       "checks": [
         "tests/reconciliation/test_reconcile.py::test_sources_agree[commit_count::build_stats-vs-llms_txt]"
@@ -1963,17 +2264,17 @@
           "run_id": "legacy"
         }
       },
-      "reproductions": 26,
+      "reproductions": 27,
       "provenance": {
-        "run_id": "run-20260924T020959Z-7d4d6288",
-        "measured_at": "2026-09-24T02:48:13+00:00"
+        "run_id": "run-20260924T082511Z-74033ba0",
+        "measured_at": "2026-09-24T08:57:39+00:00"
       },
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20260924T020959Z-7d4d6288",
-          "at": "2026-09-24T02:48:13+00:00",
-          "started_at": "2026-09-24T02:10:06+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "started_at": "2026-09-24T08:25:40+00:00"
         },
         "pinned_fingerprint": "sha256:f3d9b4a71fbf227f926c530f5d62476d"
       },
@@ -2157,7 +2458,8 @@
         "run-20260922T221711Z-447350ca",
         "run-20260922T233020Z-f795349d",
         "run-20260923T000429Z-062ab82e",
-        "run-20260924T020959Z-7d4d6288"
+        "run-20260924T020959Z-7d4d6288",
+        "run-20260924T082511Z-74033ba0"
       ]
     },
     "CYM-tracker-closure-rate": {
@@ -2205,8 +2507,21 @@
         },
         "pinned_fingerprint": "b29402efa7bf2470bde86d34d23e67843ebdc1e6f2fcb235b26081136d119299",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": [],
+            "right": 20,
+            "sources": {
+              "endpoint": "GET /api/v1/bounty/reports"
+            },
+            "population": {
+              "rows_returned": 20,
+              "closed": 20,
+              "server_total": 89
+            },
+            "reason": "0 of 20 closed reports carry no evidence field at all (validated_at, triaged_at, severity_confirmed, ticket_url, fix_pr_url, status_notes)"
+          }
         }
       },
       "filing": {
@@ -2499,8 +2814,21 @@
         },
         "pinned_fingerprint": "sha256:c92311ababf484c409f09471d3d2b835",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": "/api/v1/account",
+            "right": [
+              "/api/v1/account/me",
+              "/api/v1/account/me/portfolio"
+            ],
+            "sources": {
+              "document": "llms.txt",
+              "section": "account"
+            },
+            "population": 141,
+            "reason": "/api/v1/account was renamed, not withdrawn: llms.txt now documents /api/v1/account/me, /api/v1/account/me/portfolio, which is served"
+          }
         }
       },
       "filing": {
@@ -2699,7 +3027,7 @@
         "state": "UNVERIFIABLE",
         "adjudicated_by": null,
         "pinned_fingerprint": null,
-        "not_checked_in": "run-20260921T170811Z-e1dee8ae",
+        "not_checked_in": "run-20260924T082511Z-74033ba0",
         "missing_checks": [
           "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_count::llms_txt-vs-mcp_anon]",
           "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_count::llms_txt-vs-mcp_json]",
@@ -2927,8 +3255,141 @@
         },
         "pinned_fingerprint": "sha256:3bd11ec340a31060a08d40b5e9a262d7",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": [
+              "get_market",
+              "get_orderbook",
+              "get_platform_status",
+              "get_prices",
+              "get_trust_signal",
+              "list_clob_pairs",
+              "list_markets",
+              "search_markets"
+            ],
+            "right": [
+              "ask_nexus_deep",
+              "backtest_event_card_idea",
+              "bb_accept_spec",
+              "bb_app_stats",
+              "bb_apply_startup",
+              "bb_file_request",
+              "bb_get_request",
+              "bb_post_verdict",
+              "bb_request_change",
+              "bb_search_rebuilt_apps",
+              "bb_startup_bid",
+              "bb_startup_line",
+              "board_channels",
+              "board_flag",
+              "board_post",
+              "board_read_post",
+              "board_read_thread",
+              "board_replicate",
+              "board_revise",
+              "board_search",
+              "board_subscribe",
+              "board_threads",
+              "browse_ontology",
+              "build_custom_event_card",
+              "ceo_ai_index_get",
+              "clone_bot",
+              "create_aib_fund",
+              "edit_aib_fund_basket",
+              "feature_bidding_rules",
+              "feature_bids",
+              "feature_board",
+              "feature_my_bids",
+              "feature_place_bid",
+              "find_trade_path",
+              "fund_clone_bot",
+              "get_agent_profile",
+              "get_ai_native_proof",
+              "get_arena_epoch",
+              "get_arena_history",
+              "get_arena_orderbook",
+              "get_arena_positions",
+              "get_arena_state",
+              "get_arena_teams",
+              "get_backtest_models",
+              "get_bot_indicators",
+              "get_btc_pool_history",
+              "get_btc_pool_state",
+              "get_bug_bounty_program",
+              "get_clone_balance",
+              "get_crypto_outlook",
+              "get_deadcoin_desk_info",
+              "get_deadcoin_quote",
+              "get_deep_answer",
+              "get_deposit_address",
+              "get_event_card_info",
+              "get_fund",
+              "get_fund_history",
+              "get_fund_methodology",
+              "get_market",
+              "get_market_analytics",
+              "get_my_clones",
+              "get_oracle_insights",
+              "get_order_history",
+              "get_orderbook",
+              "get_platform_status",
+              "get_positions",
+              "get_prediction_statistics",
+              "get_prices",
+              "get_rate_limits",
+              "get_signal_history",
+              "get_strategy_returns",
+              "get_trust_ladder",
+              "get_trust_signal",
+              "launchpad_get_token",
+              "launchpad_launch_token",
+              "launchpad_list_launchers",
+              "launchpad_list_tokens",
+              "launchpad_record_cross_launch",
+              "launchpad_set_token_socials",
+              "launchpad_trade_quote",
+              "list_backtest_surfaces",
+              "list_clob_pairs",
+              "list_clonable_bots",
+              "list_funds",
+              "list_markets",
+              "list_my_aib_funds",
+              "list_ontology_dimensions",
+              "place_arena_order",
+              "place_order",
+              "preview_card_basket",
+              "query_knowledge",
+              "register_webhook",
+              "request_feature",
+              "resolve_ontology_concept",
+              "search_markets",
+              "search_ontology",
+              "set_aib_fund_weights",
+              "submit_feedback",
+              "submit_observation",
+              "submit_signal",
+              "subscribe_prices",
+              "suggest_card_assets",
+              "sui_launchpad_prepare",
+              "toggle_bot_trading",
+              "trade_event_card",
+              "update_bot_indicators",
+              "update_bot_settings",
+              "who_is_this"
+            ],
+            "sources": {
+              "llms_txt": "scope:MCP Tools|regex_all:^- `([a-z][a-z0-9_]+)`",
+              "mcp_json": "set:$.tools[*].name"
+            },
+            "population": {
+              "witness": {
+                "llms_txt": "scope:MCP Tools|regex_all:^- `([a-z][a-z0-9_]+)`",
+                "mcp_json": "set:$.tools[*].name"
+              }
+            },
+            "reason": "mcp_tool_names_documented_exist: Does every tool name llms.txt documents exist on the server? llms.txt says 8 (get_market, get_orderbook, get_platform_status, get_prices, get_trust_signal, list_clob_pairs, list_markets, search_markets), .well-known/mcp.json says 108 (ask_nexus_deep, backtest_event_card_idea, bb_accept_spec, bb_app_stats, bb_apply_startup, bb_file_request, bb_get_request, bb_post_verdict and 100 more), and that satisfies subset."
+          }
         }
       },
       "filing": {
@@ -3134,8 +3595,55 @@
         },
         "pinned_fingerprint": "sha256:9e5564057407dd11f05887c86b3b9017",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": [
+              "arena-trading",
+              "asset-discovery",
+              "bug-bounty",
+              "clone-ai-agent",
+              "et10-revenue-share",
+              "exchange-tokens",
+              "market-data",
+              "portfolio-management",
+              "prop-desk-trading",
+              "trade-event-cards",
+              "trade-prediction-markets"
+            ],
+            "right": [
+              "ai-crypto-nativeness-leaderboard",
+              "ai-due-diligence",
+              "ai-native-provenance",
+              "ai-pivot-washing",
+              "arena-trading",
+              "asset-discovery",
+              "bug-bounty",
+              "ceo-ai-expertise-index",
+              "clone-ai-agent",
+              "et10-revenue-share",
+              "exchange-tokens",
+              "live-headlines",
+              "market-data",
+              "portfolio-management",
+              "prop-desk-trading",
+              "smart-delegation",
+              "tge-prediction-markets",
+              "trade-event-cards",
+              "trade-prediction-markets"
+            ],
+            "sources": {
+              "agent_skills": "set:$.skills[*].id",
+              "agent_card": "set:$.skills[*].id"
+            },
+            "population": {
+              "witness": {
+                "agent_skills": "set:$.skills[*].id",
+                "agent_card": "set:$.skills[*].id"
+              }
+            },
+            "reason": "skills_subset: Is agent-skills.json the actionable subset of agent-card.json, as stated? agent-skills.json says 11 (arena-trading, asset-discovery, bug-bounty, clone-ai-agent, et10-revenue-share, exchange-tokens, market-data, portfolio-management and 3 more), agent-card.json says 19 (ai-crypto-nativeness-leaderboard, ai-due-diligence, ai-native-provenance, ai-pivot-washing, arena-trading, asset-discovery, bug-bounty, ceo-ai-expertise-index and 11 more), and that satisfies subset."
+          }
         }
       },
       "filing": {
@@ -3314,8 +3822,55 @@
         },
         "pinned_fingerprint": "sha256:9e5564057407dd11f05887c86b3b9017",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": [
+              "arena-trading",
+              "asset-discovery",
+              "bug-bounty",
+              "clone-ai-agent",
+              "et10-revenue-share",
+              "exchange-tokens",
+              "market-data",
+              "portfolio-management",
+              "prop-desk-trading",
+              "trade-event-cards",
+              "trade-prediction-markets"
+            ],
+            "right": [
+              "ai-crypto-nativeness-leaderboard",
+              "ai-due-diligence",
+              "ai-native-provenance",
+              "ai-pivot-washing",
+              "arena-trading",
+              "asset-discovery",
+              "bug-bounty",
+              "ceo-ai-expertise-index",
+              "clone-ai-agent",
+              "et10-revenue-share",
+              "exchange-tokens",
+              "live-headlines",
+              "market-data",
+              "portfolio-management",
+              "prop-desk-trading",
+              "smart-delegation",
+              "tge-prediction-markets",
+              "trade-event-cards",
+              "trade-prediction-markets"
+            ],
+            "sources": {
+              "agent_skills": "set:$.skills[*].id",
+              "agent_card": "set:$.skills[*].id"
+            },
+            "population": {
+              "witness": {
+                "agent_skills": "set:$.skills[*].id",
+                "agent_card": "set:$.skills[*].id"
+              }
+            },
+            "reason": "skills_subset: Is agent-skills.json the actionable subset of agent-card.json, as stated? agent-skills.json says 11 (arena-trading, asset-discovery, bug-bounty, clone-ai-agent, et10-revenue-share, exchange-tokens, market-data, portfolio-management and 3 more), agent-card.json says 19 (ai-crypto-nativeness-leaderboard, ai-due-diligence, ai-native-provenance, ai-pivot-washing, arena-trading, asset-discovery, bug-bounty, ceo-ai-expertise-index and 11 more), and that satisfies subset."
+          }
         }
       },
       "filing": {
@@ -3526,8 +4081,28 @@
         },
         "pinned_fingerprint": "7e9fa3b315c02dbafde5c9fd268cdc7c32c6019c6dbfe7476611705cb1c95608",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": [],
+            "right": 70,
+            "sources": {
+              "filed_via": "POST /api/v1/bounty/reports",
+              "looked_in": "/leaderboard/bugs",
+              "stages_from": "/api/v1/bounty/my-reports"
+            },
+            "population": {
+              "filed": 73,
+              "publishable": 70,
+              "withheld_pre_validation": [
+                54,
+                62,
+                114
+              ],
+              "page_bytes": 300197
+            },
+            "reason": "0 of the 70 reports of ours that have reached a published stage are absent from the tracker where work happens (not counted: [54, 62, 114], which they have not validated)"
+          }
         }
       },
       "filing": {
@@ -3690,8 +4265,27 @@
         },
         "pinned_fingerprint": null,
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": [],
+            "right": [
+              "hunter_name",
+              "steps_to_reproduce",
+              "expected_behavior",
+              "actual_behavior",
+              "url"
+            ],
+            "sources": {
+              "sent_to": "POST /api/v1/bounty/reports",
+              "read_from": "/api/v1/bounty/my-reports"
+            },
+            "population": {
+              "reports_compared": 73,
+              "empty_on_some_rows": {}
+            },
+            "reason": "0 of the 5 fields we send come back empty on every one of our 73 reports: none"
+          }
         }
       },
       "filing": {
@@ -3794,8 +4388,20 @@
         },
         "pinned_fingerprint": null,
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": 73,
+            "right": 73,
+            "sources": {
+              "sent_to": "POST /api/v1/bounty/reports",
+              "read_from": "/api/v1/bounty/my-reports"
+            },
+            "population": {
+              "reports_compared": 73
+            },
+            "reason": "hunter_name survives on 73 of 73 of our reports; we send 'expire76' on every one"
+          }
         }
       },
       "filing": {
@@ -3876,7 +4482,7 @@
           "at": "2026-09-07T17:40:13+00:00"
         },
         "pinned_fingerprint": "5e9d6943c1eaf398d598a59460e9acdf2a187f99ecb323ce600818b417cefeae",
-        "not_checked_in": "run-20260921T170811Z-e1dee8ae",
+        "not_checked_in": "run-20260924T082511Z-74033ba0",
         "missing_checks": [
           "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/vaix/prices]"
         ],
@@ -3995,8 +4601,31 @@
         },
         "pinned_fingerprint": "63b5af80410517bcd0f649fe3bfddfbb4986eb2d467a60c979a1bc66dc452220",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": [
+              "agent-card.json",
+              "agent-skills.json",
+              "llms.txt",
+              "mcp.json"
+            ],
+            "right": [
+              "agent-card.json",
+              "agent-skills.json",
+              "llms.txt",
+              "mcp.json",
+              "openapi.json"
+            ],
+            "sources": {
+              "searched": "agent-card.json, agent-skills.json, llms.txt, mcp.json, openapi.json"
+            },
+            "population": {
+              "documents_read": 5,
+              "unreadable": {}
+            },
+            "reason": "the bug-report reward programme is described in agent-card.json, agent-skills.json, llms.txt, mcp.json"
+          }
         }
       },
       "filing": {
@@ -4155,8 +4784,28 @@
         },
         "pinned_fingerprint": "4eab7cd9650f8ced35800751c28bd5162702733480316dfc25703dba65a04397",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T180830Z-e421a8dd",
-          "at": "2026-09-20T18:23:39+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": 19,
+            "right": 20,
+            "sources": {
+              "tracker": "/api/v1/bounty/reports",
+              "totals": "/api/v1/bounty/stats",
+              "their_ref": "ET-22226"
+            },
+            "population": {
+              "rows_returned": 20,
+              "closed": 20,
+              "reward_status_values": [
+                "awarded",
+                "paid"
+              ],
+              "bugs_fixed_per_stats": 89,
+              "total_paid_per_stats": 76000.0
+            },
+            "reason": "19 of the 20 closed report(s) can be read as paid or awarded from reward_status ['awarded', 'paid'], so a settled report is distinguishable from an unrecorded one; stats still report bugs_fixed=89 and total_paid=76000.0"
+          }
         }
       },
       "filing": {
@@ -4447,8 +5096,21 @@
         },
         "pinned_fingerprint": "bbdc1d54bf684a9e645532950d2a04740ef9083655d287ae7dd192a9d16dfab5",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": "/api/v1/account/me -> 200",
+            "right": "/api/v1/account/me/portfolio -> 200",
+            "sources": {
+              "schemes": "/.well-known/agent-card.json",
+              "skill": "/.well-known/agent-skills.json#et10-revenue-share"
+            },
+            "population": {
+              "header": "X-API-Key",
+              "same_client": true
+            },
+            "reason": "/api/v1/account/me answers HTTP 200 to the credential the catalogue names"
+          }
         }
       },
       "filing": {
@@ -4571,8 +5233,31 @@
         },
         "pinned_fingerprint": "fab9ea34aa0eefe65a940f193a856ca6e13426fdee9c14c85bd53118a81b3ba5",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": [],
+            "right": {
+              "currency": "ET10",
+              "critical": {
+                "min": 1000.0,
+                "max": 1000.0
+              }
+            },
+            "sources": {
+              "asked": "/api/v1/bounty/qa-agent/ask",
+              "published_at": "/api/v1/bounty/reward-tiers",
+              "cited_by_agent": [
+                "GET /api/v1/bounty/reward-tiers"
+              ]
+            },
+            "population": {
+              "confidence": 0.85,
+              "answer_chars": 1574,
+              "answer_head": "GET /api/v1/bounty/reward-tiers returns currency \"ET10\": the live programme pays 1000 ET10 per verified, non-duplicate bug (duplicates earn nothing). The planned_cym_program block "
+            },
+            "reason": "the channel reported its own published reward-tier values"
+          }
         }
       },
       "filing": {
@@ -4765,8 +5450,27 @@
         },
         "pinned_fingerprint": "04cf163554964f44f24aae44e443668700ca69347c90e518ffd3a2cff7d10810",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": 35,
+            "right": 35,
+            "sources": {
+              "inbox": "/api/v1/bounty/a2a/inbox/{agent_id}",
+              "their_claim": "is_answer=true on every substantive answer; false on the routing/preference prompt"
+            },
+            "population": {
+              "messages": 50,
+              "automated": 35,
+              "before_they_began_tagging": 0,
+              "tagging_began": "2026-09-07T07:53:17.653185+00:00",
+              "untagged_since": [],
+              "kinds": [
+                "first_pass"
+              ]
+            },
+            "reason": "every one of the 35 automated repl(ies) since 2026-09-07T07:53:17.653185+00:00 carries metadata.is_answer (35 of them true, which is their rule for a substantive answer)"
+          }
         }
       },
       "filing": {
@@ -4962,7 +5666,7 @@
           "at": "2026-09-10T21:43:39+00:00"
         },
         "pinned_fingerprint": "d8c89bb5d9dfb6abe6d9f240604f15d80183028892047d05a574abc9740d5a4c",
-        "evidence_only": "run-20260924T020959Z-7d4d6288"
+        "evidence_only": "run-20260924T082511Z-74033ba0"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -5107,8 +5811,8 @@
         "reason": "not asked: this check needs a fresh async reply, getting one means posting to the vendor's a2a channel, and that needs QA_ALLOW_A2A_SEND=1 for the run"
       },
       "provenance": {
-        "run_id": "run-20260924T020959Z-7d4d6288",
-        "measured_at": "2026-09-24T02:48:13+00:00"
+        "run_id": "run-20260924T082511Z-74033ba0",
+        "measured_at": "2026-09-24T08:57:39+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -5138,8 +5842,26 @@
         },
         "pinned_fingerprint": "e8b6dc45879b9d4219d1818f07ca3b841ece9be3f5c8752248b97cea47b22833",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": [],
+            "right": 20,
+            "sources": {
+              "tracker": "/api/v1/bounty/reports",
+              "tiers": "/api/v1/bounty/reward-tiers"
+            },
+            "population": {
+              "rows": 20,
+              "awarded": 20,
+              "measured": 20,
+              "without_a_band": 0,
+              "currency_mismatch": 0,
+              "currency_unmeasurable": 0,
+              "below_published_minimum": 0
+            },
+            "reason": "all 20 recorded award(s) sit inside the tier each row publishes, and of the 20 row(s) that name a currency on both sides, none contradicts itself"
+          }
         }
       },
       "filing": {
@@ -5382,8 +6104,57 @@
         },
         "pinned_fingerprint": "ada0068b55c66e5e02f8048f4302d1077cf6a57c4527faa3e8dc4abe6bc5a1fd",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": {
+              "leaderboard": [
+                {
+                  "hunter": "expire76",
+                  "earned": 72000.0,
+                  "awarded": 72000.0,
+                  "paid": 72000.0
+                },
+                {
+                  "hunter": "Crypto42day",
+                  "earned": 2000.0,
+                  "awarded": 2000.0,
+                  "paid": 2000.0
+                },
+                {
+                  "hunter": "hunter_0x00000000",
+                  "earned": 0.0,
+                  "awarded": 1000.0,
+                  "paid": 0.0
+                },
+                {
+                  "hunter": "hunter_0x000000_0099",
+                  "earned": 0.0,
+                  "awarded": 3000.0,
+                  "paid": 0.0
+                }
+              ],
+              "board_valid_reports": 82
+            },
+            "right": {
+              "awards_recorded": 85,
+              "awards_recorded_total": 85000.0,
+              "payouts_recorded": 77,
+              "total_paid": 76000.0,
+              "valid_reports": 89,
+              "valid_reports_attributed": 82,
+              "total_earned_definition": "paid"
+            },
+            "sources": {
+              "stats": "/api/v1/bounty/stats",
+              "leaderboard": "/api/v1/bounty/leaderboard"
+            },
+            "population": {
+              "hunters_listed": 4,
+              "active_hunters": 4
+            },
+            "reason": "the aggregate and the leaderboard agree on 82 valid report(s); every hunter's total_earned matches the total_paid it is defined as"
+          }
         }
       },
       "filing": {
@@ -5627,8 +6398,27 @@
         },
         "pinned_fingerprint": "b5ad3dc6a3b54e17185484837e8bac5bef42f551adedbe435b807c3a0d81945b",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": [],
+            "right": [
+              "/api/v1/backtest/leaderboard",
+              "/api/v1/event-cards/symbols/search",
+              "/mcp/v1/agents/me"
+            ],
+            "sources": {
+              "page": "/build",
+              "schema": "/openapi-public.json"
+            },
+            "population": {
+              "recipes": 10,
+              "paths_named": 3,
+              "paths_named_for_people": 1,
+              "documented_paths": 173
+            },
+            "reason": "every path a /build recipe sends an agent to is callable: 3 checked against 173 documented paths; /events/universe named as being for people, not called"
+          }
         }
       },
       "filing": {
@@ -5800,8 +6590,39 @@
         },
         "pinned_fingerprint": "0760ba619fbd7a06945b43cc499e2a739d906a4deb8ebe97cd3dbd484d066d37",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": "api_key",
+            "right": [
+              "agent_id",
+              "api_docs_url",
+              "api_key",
+              "created_at",
+              "expires_at",
+              "fee_structure",
+              "important_notice",
+              "onboarding_url",
+              "paper_trading_available",
+              "profit_paths_count",
+              "quick_start",
+              "rate_limits",
+              "role",
+              "role_guidance",
+              "sdk_docs_url",
+              "trading_pairs",
+              "trust_level",
+              "welcome_message"
+            ],
+            "sources": {
+              "page": "/build",
+              "schema": "/openapi-public.json"
+            },
+            "population": {
+              "described_fields": 18
+            },
+            "reason": "POST /mcp/v1/register documents the field /build says to save: 'api_key'"
+          }
         }
       },
       "filing": {
@@ -5943,8 +6764,27 @@
         },
         "pinned_fingerprint": "92c230648502812ed80e88cfba49ef71ca8303fae2f1ac8a4ea40bb2bb1a90d1",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": [
+              "allied",
+              "recognized",
+              "trusted",
+              "unknown"
+            ],
+            "right": "{\"/build\": [\"allied\", \"recognized\", \"trusted\", \"unknown\"], \"llms.txt\": [\"allied\", \"recognized\", \"trusted\", \"unknown\"], \"mcp.json\": [\"allied\", \"recognized\", \"trusted\", \"unknown\"]}",
+            "sources": {
+              "page": "/build",
+              "document": "/llms.txt",
+              "manifest": "/.well-known/mcp.json"
+            },
+            "population": {
+              "tools": 108,
+              "surfaces": 3
+            },
+            "reason": "every surface names the same rungs: ['allied', 'recognized', 'trusted', 'unknown']"
+          }
         }
       },
       "filing": {
@@ -6083,8 +6923,31 @@
         },
         "pinned_fingerprint": "490328669c50d9e10b4917f7d34e5974d460a08e4aa608ac77a148651c77c6d8",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": [
+              "120h / 352 markets",
+              "24h / 355 markets",
+              "30 days",
+              "48h / 354 markets",
+              "6 months",
+              "72h / 354 markets"
+            ],
+            "right": [
+              "one comparable period, or a period filter"
+            ],
+            "sources": {
+              "leaderboard": "/api/v1/backtest/leaderboard",
+              "page": "/build"
+            },
+            "population": {
+              "rows": 16,
+              "periods": 6,
+              "rows_with_30_days": 2
+            },
+            "reason": "the leaderboard's rows are rankable: the period narrows the set"
+          }
         }
       },
       "filing": {
@@ -6242,8 +7105,20 @@
         },
         "pinned_fingerprint": "236c68e92be50b732a7a4ae6b4890fbf1213c7cd4cae533b240ad125fcc15d25",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": [],
+            "right": [],
+            "sources": {
+              "schema": "/openapi-public.json"
+            },
+            "population": {
+              "endpoints": 6,
+              "without_the_control": 0
+            },
+            "reason": "all 6 order surfaces take the same control, `paper`, so one helper can state the book everywhere"
+          }
         }
       },
       "filing": {
@@ -6383,8 +7258,24 @@
         },
         "pinned_fingerprint": "ba32011ff9878149115a486791636008104e030dc9216745a19505bade147ba4",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": [
+              "simulation_mode"
+            ],
+            "right": [
+              "a response field naming the mode"
+            ],
+            "sources": {
+              "schema": "/openapi-public.json"
+            },
+            "population": {
+              "prose_mentions": 13,
+              "response_fields": 1
+            },
+            "reason": "the setting the order endpoints resolve against is published as ['simulation_mode']"
+          }
         }
       },
       "filing": {
@@ -6535,8 +7426,29 @@
         },
         "pinned_fingerprint": "c07738dfe41ae11926fab9b971579f7d72aac31b8f06b734755cb384f8c8786c",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": [
+              "covers",
+              "does_not_cover",
+              "identity",
+              "see_also"
+            ],
+            "right": [
+              "identity",
+              "covers",
+              "does_not_cover"
+            ],
+            "sources": {
+              "trades": "/api/v1/trades"
+            },
+            "population": {
+              "trades_reported": 0,
+              "scope_fields": 4
+            },
+            "reason": "trade history reports 0 trade(s) and says what that number spans: identity, covers, does_not_cover, see_also"
+          }
         }
       },
       "filing": {
@@ -6704,8 +7616,20 @@
         },
         "pinned_fingerprint": "c504687a8affa03c127572e1fea10a615c12e3d943b6f886dc29b745c94664f0",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": [],
+            "right": [],
+            "sources": {
+              "schema": "/openapi-public.json"
+            },
+            "population": {
+              "surfaces_checked": 6,
+              "not_always_honoured": 0
+            },
+            "reason": "no order surface says `paper` may be disobeyed, so a caller that asks for paper is given paper"
+          }
         }
       },
       "filing": {
@@ -6835,7 +7759,7 @@
           "at": "2026-09-10T04:56:30+00:00"
         },
         "pinned_fingerprint": "05d129030ccb0a67babee3e9b1383e236e0bc719fd5e42f532cb727b83375d1a",
-        "not_checked_in": "run-20260921T170811Z-e1dee8ae",
+        "not_checked_in": "run-20260924T082511Z-74033ba0",
         "missing_checks": [
           "tests/rest/test_portfolio_summary.py::test_the_summary_does_not_report_a_history_the_positions_contradict"
         ],
@@ -6960,13 +7884,13 @@
           "run_id": "run-20260910T110122Z-44e2cd2"
         }
       },
-      "reproductions": 39,
+      "reproductions": 40,
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20260924T020959Z-7d4d6288",
-          "at": "2026-09-24T02:48:13+00:00",
-          "started_at": "2026-09-24T02:10:06+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "started_at": "2026-09-24T08:25:40+00:00"
         },
         "pinned_fingerprint": "84885322a72b7450579e6de4f695e915fe4f4d6a9eccac0e0f54fbaec3e20ee8"
       },
@@ -7179,7 +8103,8 @@
         "run-20260922T221711Z-447350ca",
         "run-20260922T233020Z-f795349d",
         "run-20260923T000429Z-062ab82e",
-        "run-20260924T020959Z-7d4d6288"
+        "run-20260924T020959Z-7d4d6288",
+        "run-20260924T082511Z-74033ba0"
       ],
       "component": "mcp.tools_call",
       "section": "tools_call",
@@ -7213,8 +8138,8 @@
         "reason": "2 answered later than the published 5 min (worst NEX-0085 still running at 328s)"
       },
       "provenance": {
-        "run_id": "run-20260924T020959Z-7d4d6288",
-        "measured_at": "2026-09-24T02:48:13+00:00"
+        "run_id": "run-20260924T082511Z-74033ba0",
+        "measured_at": "2026-09-24T08:57:39+00:00"
       },
       "obligations": {
         "reverify": true,
@@ -7246,8 +8171,29 @@
         },
         "pinned_fingerprint": "c0260ccc81d31eed5db260e9aa71892030cef7ff5a089ba6d42a0dc52510983c",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": [
+              "get_event_card_info",
+              "trade_event_card"
+            ],
+            "right": [
+              "get_event_card_info",
+              "trade_event_card"
+            ],
+            "sources": {
+              "answers": "nexus.jsonl",
+              "tools": "POST /mcp/v1 tools/list"
+            },
+            "population": {
+              "answers_recorded": 50,
+              "subject": "NEX-0088",
+              "subject_at": "2026-09-23T05:52:09+00:00",
+              "tools_served": 108
+            },
+            "reason": "every one of the 2 tool(s) Nexus named is served"
+          }
         }
       },
       "filing": {
@@ -7501,7 +8447,36 @@
           "at": "2026-09-24T02:48:13+00:00",
           "started_at": "2026-09-24T02:10:06+00:00"
         },
-        "pinned_fingerprint": "683fdd876eb2d0049f2a12a2c627bce72b54436c423dc695b21442e4f885f7a5"
+        "pinned_fingerprint": "683fdd876eb2d0049f2a12a2c627bce72b54436c423dc695b21442e4f885f7a5",
+        "last_exploratory_pass": {
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": [
+              5.0
+            ],
+            "right": [
+              5.0
+            ],
+            "sources": {
+              "balance": "/api/v1/account/me",
+              "positions": "/api/v1/event-cards/positions",
+              "our_record": "paper.jsonl"
+            },
+            "population": {
+              "accepted": 34,
+              "readable": 28,
+              "unreadable": 6,
+              "subject": "TRD-0041",
+              "ever_debited_nothing": 2,
+              "trades_counter": [
+                33,
+                34
+              ]
+            },
+            "reason": "the newest paper buy TRD-0041 (2026-09-23T06:01:14+00:00) bought 5.00 and debited 5.00 from the paper balance"
+          }
+        }
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -7725,8 +8700,38 @@
         },
         "pinned_fingerprint": "085e9abd1744b2ea5db74e90069965b9f47cf2bf230b825c3876e94d68dc116e",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": [],
+            "right": [
+              "/api/v1/cloned-bots/available",
+              "/api/v1/cloned-bots/clone",
+              "/api/v1/cloned-bots/my-clones",
+              "/api/v1/cloned-bots/{instance_id}",
+              "/api/v1/cloned-bots/{instance_id}/activity",
+              "/api/v1/cloned-bots/{instance_id}/asset-analytics",
+              "/api/v1/cloned-bots/{instance_id}/balance",
+              "/api/v1/cloned-bots/{instance_id}/fund",
+              "/api/v1/cloned-bots/{instance_id}/go-live",
+              "/api/v1/cloned-bots/{instance_id}/settings",
+              "/api/v1/cloned-bots/{instance_id}/toggle-trading",
+              "/api/v1/cloned-bots/{instance_id}/withdraw"
+            ],
+            "sources": {
+              "documented": "/openapi-public.json",
+              "served": "GET /api/v1/cloned-bots/... (405), then OPTIONS where the GET named no method (405)"
+            },
+            "population": {
+              "probed": 4,
+              "routed": 4,
+              "asked_options": 0,
+              "documented": 12,
+              "undocumented": 0,
+              "clone": "36642175-7210-4ca5-a6be-f94bfe14b382"
+            },
+            "reason": "every /api/v1/cloned-bots route that answered 405 with an Allow header is one of the 12 they document"
+          }
         }
       },
       "filing": {
@@ -7931,13 +8936,13 @@
           "run_id": "run-20260910T205116Z-80ff405"
         }
       },
-      "reproductions": 32,
+      "reproductions": 33,
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20260924T020959Z-7d4d6288",
-          "at": "2026-09-24T02:48:13+00:00",
-          "started_at": "2026-09-24T02:10:06+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "started_at": "2026-09-24T08:25:40+00:00"
         },
         "pinned_fingerprint": "4d7dd0f1952c6ea876b8f03aea300fb99f89e1be901dccb238f3d462aecef9cf"
       },
@@ -8078,7 +9083,8 @@
         "run-20260922T221711Z-447350ca",
         "run-20260922T233020Z-f795349d",
         "run-20260923T000429Z-062ab82e",
-        "run-20260924T020959Z-7d4d6288"
+        "run-20260924T020959Z-7d4d6288",
+        "run-20260924T082511Z-74033ba0"
       ],
       "component": "rest.agents",
       "section": "agents",
@@ -8118,8 +9124,8 @@
         "reason": "10 cloned-bots route(s) accept the agent's x-api-key and 1 do not: GET /api/v1/cloned-bots/{instance_id}/activity. The funding route is not among them, so a clone can be created and paid for with the agent credential; what that same credential cannot reach is the route named above"
       },
       "provenance": {
-        "run_id": "run-20260924T020959Z-7d4d6288",
-        "measured_at": "2026-09-24T02:48:13+00:00"
+        "run_id": "run-20260924T082511Z-74033ba0",
+        "measured_at": "2026-09-24T08:57:39+00:00"
       },
       "obligations": {
         "reverify": true,
@@ -8146,11 +9152,11 @@
       },
       "reproductions": 1,
       "check": {
-        "state": "PASSING",
+        "state": "INCONCLUSIVE",
         "adjudicated_by": {
-          "run_id": "run-20260924T020959Z-7d4d6288",
-          "at": "2026-09-24T02:48:13+00:00",
-          "started_at": "2026-09-24T02:10:06+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "started_at": "2026-09-24T08:25:40+00:00"
         },
         "pinned_fingerprint": "7a52ceff1e585acf3435b70f322e83c344d04b06af6d7ae07370c50f443e6fd0"
       },
@@ -8309,6 +9315,15 @@
             "run_id": "run-20260921T014914Z-df9988d9"
           },
           "at": "2026-09-21T01:56:52+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "PASSING",
+          "to": "INCONCLUSIVE",
+          "cause": {
+            "run_id": "run-20260924T082511Z-74033ba0"
+          },
+          "at": "2026-09-24T08:57:39+00:00"
         }
       ],
       "regressions": [],
@@ -8344,12 +9359,12 @@
         "reason": "every one of the 1 card(s) named in NEX-0088 resolves"
       },
       "provenance": {
-        "run_id": "run-20260924T020959Z-7d4d6288",
-        "measured_at": "2026-09-24T02:48:13+00:00"
+        "run_id": "run-20260924T082511Z-74033ba0",
+        "measured_at": "2026-09-24T08:57:39+00:00"
       },
       "obligations": {
-        "reverify": false,
-        "repair_check": false,
+        "reverify": true,
+        "repair_check": true,
         "reopen": [],
         "retractions": [],
         "verification_owed": [],
@@ -8375,8 +9390,33 @@
         },
         "pinned_fingerprint": "f10984755a3fc80f40bb0b3a95098751d68b43fa5d8026e16a66405692f0bd97",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": [],
+            "right": [
+              "000d9571-2038-406a-aa57-c8c9cc10badb",
+              "0011ec06-eeee-4558-9b67-fd3271ba843c",
+              "002cf2e4-8c87-4fa4-b5f8-544b08ef929c",
+              "002e6f91-747b-4d8e-b09e-e35eb56df942",
+              "003bdd6c-6662-4f92-ad42-3de451430f6f"
+            ],
+            "sources": {
+              "listing": "GET /api/v1/event-cards?limit=200",
+              "card": "GET /api/v1/event-cards/{id}"
+            },
+            "population": {
+              "listed": 6163,
+              "offset_ignored": false,
+              "user_submissions_skipped": [
+                "c0d78ca5-d864-4fb3-90c7-8b1bfde4c2c2"
+              ],
+              "witnesses": 43,
+              "checked": 9,
+              "unreachable": 0
+            },
+            "reason": "every one of the 9 tradeable card(s) checked appears in the listing"
+          }
         }
       },
       "filing": {
@@ -8547,8 +9587,26 @@
         },
         "pinned_fingerprint": "baf436747483adfa85430a04b2119a0cc05ab880f86d558e2855580a2a9c2687",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": [],
+            "right": [],
+            "sources": {
+              "answers": "state/nexus.jsonl",
+              "tool": "POST /mcp/v1 tools/call ask_nexus_deep"
+            },
+            "population": {
+              "answers": 50,
+              "subject": "NEX-0088",
+              "earlier_answers_that_leaked": [
+                "NEX-0011",
+                "NEX-0015",
+                "NEX-0017"
+              ]
+            },
+            "reason": "the newest recorded deep answer, NEX-0088 (2026-09-23T05:52:09+00:00), cites no internal source location"
+          }
         }
       },
       "filing": {
@@ -8686,8 +9744,29 @@
         },
         "pinned_fingerprint": "b336927c694c0ad968b9678055feeec4e59093850ffbb71522eb3286c9165335",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": [],
+            "right": [],
+            "sources": {
+              "document": "/llms.txt",
+              "credential": "X-API-Key, trusted tier"
+            },
+            "population": {
+              "documented": 56,
+              "served": 53,
+              "unauthenticated": 0,
+              "other": {
+                "/api/v1/creator/post-kit?surface=/path": 404,
+                "/api/v1/bounty/my-reports": 422
+              },
+              "unreachable": {
+                "/api/v1/markets": "RemoteProtocolError"
+              }
+            },
+            "reason": "all 53 of the documented GET paths that answered read the agent key"
+          }
         }
       },
       "filing": {
@@ -8815,8 +9894,28 @@
         },
         "pinned_fingerprint": "4f6665a41151d607e31b19cc0950ae341cf1b49e38add9846f613d1a1181f84d",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": [],
+            "right": [],
+            "sources": {
+              "open": "GET /api/v1/cloned-bots/{id}/activity (not in openapi)",
+              "locked": "GET /api/v1/cloned-bots/{id}/balance",
+              "funded": "accepted fund transfers in state/clones.jsonl (scripts/clone.py)"
+            },
+            "population": {
+              "bots": 5,
+              "checked": 5,
+              "unread": [],
+              "unreconciled": [],
+              "mismatched": 0,
+              "nothing open": 5,
+              "locked": 0,
+              "counted": 0
+            },
+            "reason": "every one of the 5 judged bot(s) counts what it has open: 5 nothing open"
+          }
         }
       },
       "filing": {
@@ -8979,8 +10078,26 @@
         },
         "pinned_fingerprint": "f6206c3e45fa527784fe102e6836979651737e448416a238fb2b70ef8bd23eb0",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": [],
+            "right": [],
+            "sources": {
+              "account": "/api/v1/account/me",
+              "card": "GET /api/v1/event-cards/{id}",
+              "listing": "GET /api/v1/event-cards?include_user_submitted=true",
+              "rule": "their resolution of #95, 2026-09-11 09:47 (ET-24616)"
+            },
+            "population": {
+              "our_account": 113,
+              "witnesses": 43,
+              "user_submissions_read": 2,
+              "not_ours": 2,
+              "listed_with_flag": 6187
+            },
+            "reason": "2 submission(s) of other users answer 200 to account 113, and every one is among the 6187 cards listed with include_user_submitted=true, so each is public"
+          }
         }
       },
       "filing": {
@@ -9161,8 +10278,41 @@
         },
         "pinned_fingerprint": "d350e3be5dd059a7593e42828f974edae44589a4ad2ba75eadddd73e8dd7dc5b",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": {
+              "windowless": []
+            },
+            "right": {
+              "periods_on_the_leaderboard": [
+                "120h / 352 markets",
+                "24h / 355 markets",
+                "30 days",
+                "48h / 354 markets",
+                "6 months",
+                "72h / 354 markets"
+              ]
+            },
+            "sources": {
+              "ranking": "/api/v1/backtest/leaderboard",
+              "tool": "POST /mcp/v1 tools/call get_strategy_returns",
+              "their_guide": "Telegram ET-24713, 2026-09-11"
+            },
+            "population": {
+              "detail": [],
+              "not_in_the_tool": [
+                "cryptobull-blue",
+                "hybrid2-red",
+                "hybrid2-blue"
+              ],
+              "read_failed": [
+                "cryptobull-red (ReadTimeout: The read operation timed out)"
+              ],
+              "compared": 12
+            },
+            "reason": "all 12 answers name the period they cover"
+          }
         }
       },
       "filing": {
@@ -9317,8 +10467,67 @@
         },
         "pinned_fingerprint": "d00642e279528c5554bd095096c397de4d570788310ce0933c092d320dc11053",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": {
+              "asked_365": {
+                "n_points": 39,
+                "period_days": 365,
+                "total_return_pct": 74.2093,
+                "sharpe_ratio": 5.1052,
+                "says_covered": [
+                  "covered_days"
+                ]
+              },
+              "asked_180": {
+                "n_points": 39,
+                "period_days": 180,
+                "total_return_pct": 74.2093,
+                "sharpe_ratio": 5.1052,
+                "says_covered": [
+                  "covered_days"
+                ]
+              }
+            },
+            "right": {
+              "control_365": {
+                "n_points": 360,
+                "period_days": 365,
+                "total_return_pct": -46.0278,
+                "sharpe_ratio": -0.7097,
+                "says_covered": [
+                  "covered_days"
+                ]
+              },
+              "control_180": {
+                "n_points": 175,
+                "period_days": 180,
+                "total_return_pct": -15.6192,
+                "sharpe_ratio": -0.4722,
+                "says_covered": [
+                  "covered_days"
+                ]
+              }
+            },
+            "sources": {
+              "tool": "POST /mcp/v1 tools/call backtest_event_card_idea",
+              "their_fix_on_the_sibling": "#97, fixed 2026-09-12"
+            },
+            "population": {
+              "basket": [
+                "WIF",
+                "PNUT",
+                "GOAT",
+                "ACT"
+              ],
+              "control": [
+                "BCH",
+                "OKB"
+              ]
+            },
+            "reason": "the 365-day answer names the window it covered (covered_days)"
+          }
         }
       },
       "filing": {
@@ -9521,8 +10730,75 @@
         },
         "pinned_fingerprint": "4ea140bbefcea8ace32cd5461dfc2018ae877bd18e510bf6b33c39605bc9bd4c",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": [
+              {
+                "leaderboard_house": {
+                  "picks": 5,
+                  "rounds": 2,
+                  "avg_pct": 2.38,
+                  "median_pct": -4.17,
+                  "doublers": 0,
+                  "hit50": 0
+                }
+              }
+            ],
+            "right": [
+              {
+                "backtest": {
+                  "scored": 250,
+                  "runs_scored": 12,
+                  "mean_pct": 29.92,
+                  "median_pct": -2.87,
+                  "hit100": 17,
+                  "hit50": 31
+                },
+                "live": {
+                  "scored": 5,
+                  "runs_scored": 3,
+                  "mean_pct": 2.38,
+                  "median_pct": -4.17,
+                  "hit100": 0,
+                  "hit50": 0
+                }
+              }
+            ],
+            "sources": {
+              "leaderboard": "/api/v1/universe/movers/tournament",
+              "track_record": "/api/v1/universe/movers/potential"
+            },
+            "population": {
+              "shared_quantities": 6,
+              "agree_with_backtest": [],
+              "agree_with_live": [
+                "picks",
+                "avg_pct",
+                "median_pct",
+                "doublers",
+                "hit50"
+              ],
+              "live_scored": 5,
+              "backtest_scored": 250,
+              "backtest_first_anchor": "2026-06-19",
+              "backtest_last_anchor": "2026-09-04",
+              "house_row_fields": [
+                "avg_pct",
+                "basis",
+                "best_pct",
+                "doublers",
+                "handle",
+                "hit50",
+                "is_house",
+                "median_pct",
+                "picks",
+                "rank",
+                "rounds"
+              ]
+            },
+            "reason": "the house row matches the live half of their own track record on 5 shared quantities, which is what a leaderboard beside live entrants should show"
+          }
         }
       },
       "filing": {
@@ -9699,8 +10975,47 @@
         },
         "pinned_fingerprint": "187de3341ad1873eb9c2968e1a79e5cda3fb2d5c7e29ff46066f602403df0422",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": [
+              {
+                "round_anchor": "2026-09-24",
+                "scores_after": "2026-10-01",
+                "read_on": "2026-09-24"
+              }
+            ],
+            "right": [
+              {
+                "rules_text": "Enter up to 5 universe symbols per round. Each pick locks the stored close on the round day and is scored a week later on its real 7-day return. Entries close at the next US session open after the round day (round.entries_close_at) so nobody commits on a return they can already see. Ranked by average return; the NEXUS screen competes as a row. Every row carries basis: 'live' means forward-scored rounds; 'backtest' means the screen's record reconstructed over stored closes after the fact, shown until it has forward-scored rounds of its own. Scoreboard only — no prizes, nothing moves money.",
+                "window_days": 7
+              }
+            ],
+            "sources": {
+              "tournament": "/api/v1/universe/movers/tournament",
+              "our_entry": "state/lab.jsonl type=tournament"
+            },
+            "population": {
+              "days_already_elapsed": 0,
+              "window_days": 7,
+              "declares_a_deadline": true,
+              "round_fields": [
+                "entries",
+                "entries_close_at",
+                "entries_open",
+                "round_anchor",
+                "scores_after",
+                "traders"
+              ],
+              "rules_fields": [
+                "max_picks",
+                "text",
+                "window_days"
+              ],
+              "our_entry_priced_at_anchor": "recorded once, state/lab.jsonl type=tournament 2026-09-13"
+            },
+            "reason": "the round declares when entries stop being accepted, so the window a late entry could exploit is at least stated"
+          }
         }
       },
       "filing": {
@@ -9867,8 +11182,40 @@
         },
         "pinned_fingerprint": "e497701194f4c7111d2f99b797f22d1f66b81b502f3bc176d76a75956a2ac8a0",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": [],
+            "right": [
+              {
+                "chain": "robinhood",
+                "hot_rows": 6,
+                "thinnest_max_buy_usd": 517.49,
+                "serves_gate_fields": true
+              }
+            ],
+            "sources": {
+              "signals": "/api/v1/clones/fomo-radar/signals"
+            },
+            "population": {
+              "floor_max_buy_usd": 500.0,
+              "breach_fraction": 0.9,
+              "min_breaches": 2,
+              "published_ratio": 0.05,
+              "solana_ratio": 0.025000000549101137,
+              "reads": 5,
+              "spacing_seconds": 18.0,
+              "solana_rows": 85,
+              "solana_hot": 17,
+              "solana_breaches": 0,
+              "solana_rows_serving_gate": 85,
+              "robinhood_rows": 12,
+              "robinhood_hot": 6,
+              "robinhood_breaches": 0,
+              "robinhood_rows_serving_gate": 12
+            },
+            "reason": "every hot row on both chains clears the floor: 6 robinhood and 17 solana hot rows, the thinnest allowing $517 of max buy against a $500 floor"
+          }
         }
       },
       "filing": {
@@ -10124,13 +11471,13 @@
           "run_id": "run-20260919T211126Z-507a7113"
         }
       },
-      "reproductions": 22,
+      "reproductions": 23,
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20260924T020959Z-7d4d6288",
-          "at": "2026-09-24T02:48:13+00:00",
-          "started_at": "2026-09-24T02:10:06+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "started_at": "2026-09-24T08:25:40+00:00"
         },
         "pinned_fingerprint": "4e20d9ebfd70f3e0cd3e778f8f0fd9d6bdde4e3b5e3d2cde024b168bcc03cea8"
       },
@@ -10248,7 +11595,8 @@
         "run-20260922T221711Z-447350ca",
         "run-20260922T233020Z-f795349d",
         "run-20260923T000429Z-062ab82e",
-        "run-20260924T020959Z-7d4d6288"
+        "run-20260924T020959Z-7d4d6288",
+        "run-20260924T082511Z-74033ba0"
       ],
       "component": "mcp.fund_research",
       "section": "fund_research",
@@ -10276,7 +11624,7 @@
               "first_v": 146.181,
               "off_pct": -3.27,
               "returned": 80,
-              "return_since_inception_pct": -2.72
+              "return_since_inception_pct": -3.85
             }
           ],
           "unseparated": [
@@ -10287,28 +11635,28 @@
               "first_v": 0.3575,
               "off_pct": 0.49,
               "returned": 80,
-              "return_since_inception_pct": 8.1
+              "return_since_inception_pct": 9.61
             }
           ],
           "within": [
             "AIB-8830DFE9",
             "AIB-MOLECULAR",
-            "AIB-BIOSCIENCES",
-            "AIB-3DBEA91C",
             "AIB-DA16D8CF",
             "AIB-B9A9BE83",
+            "AIB-BIOSCIENCES",
+            "AIB-3DBEA91C",
             "AIB-DCA251C8",
+            "AIB-CC7F8F7E",
             "AIB-POWER",
             "AMF-BLACKSWAN",
-            "AIB-CC7F8F7E",
-            "AIB-COMPUTE",
             "AMF-WHITESWAN",
-            "AIB-QUANTUM",
-            "AIB-8F4B6922",
             "AIB-E8E466C9",
             "AIB-CYBERSECURITY",
-            "AIB-SPACE",
+            "AIB-COMPUTE",
+            "AIB-QUANTUM",
+            "AIB-8F4B6922",
             "AIB-ROBOTICS",
+            "AIB-SPACE",
             "AIB-DEFENSE",
             "AIB-07E46605",
             "AIB-C71BAD8B"
@@ -10321,11 +11669,11 @@
           ],
           "roster": 27
         },
-        "reason": "1 of 23 fund histories, fetched as their advisor skill says (symbol only), start more than 2% away from the fund's own inception level -- worst AIB-DATA-CENTERS: first point 146.181 at 2026-07-28T21:00 against inception 151.11975 (-3.27%), while it reports -2.72% since inception"
+        "reason": "1 of 23 fund histories, fetched as their advisor skill says (symbol only), start more than 2% away from the fund's own inception level -- worst AIB-DATA-CENTERS: first point 146.181 at 2026-07-28T21:00 against inception 151.11975 (-3.27%), while it reports -3.85% since inception"
       },
       "provenance": {
-        "run_id": "run-20260924T020959Z-7d4d6288",
-        "measured_at": "2026-09-24T02:48:13+00:00"
+        "run_id": "run-20260924T082511Z-74033ba0",
+        "measured_at": "2026-09-24T08:57:39+00:00"
       },
       "obligations": {
         "reverify": true,
@@ -10355,8 +11703,59 @@
         },
         "pinned_fingerprint": "95dc4c587aea14e45e9760e8ea83d3a4e8f489f1267ded56e5026c58c034a7f8",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": [],
+            "right": "profile_url on every fund",
+            "sources": {
+              "contract": "https://cymetica.com/static/plugins/eventtrader-funds/skills/fund-research/SKILL.md, 'Links to cite': One fund: profile_url",
+              "roster": "list_funds(limit=100)",
+              "fund": "get_fund(symbol)"
+            },
+            "population": {
+              "missing": [],
+              "present": [
+                "AIB-8830DFE9",
+                "MA-RIPPLE",
+                "AIB-C4B13E1B",
+                "AIB-MOLECULAR",
+                "AIB-DA16D8CF",
+                "AIB-B9A9BE83",
+                "AIB-BIOSCIENCES",
+                "AIB-3DBEA91C",
+                "AIB-DCA251C8",
+                "AIB-CC7F8F7E",
+                "AIB-POWER",
+                "AMF-BLACKSWAN",
+                "AMF-WHITESWAN",
+                "AIB-E8E466C9",
+                "AIB-CYBERSECURITY",
+                "AIB-QUANTUM",
+                "AIB-COMPUTE",
+                "AIB-8F4B6922",
+                "FTA-STOCKS",
+                "AIB-DATA-CENTERS",
+                "AIB-ROBOTICS",
+                "AIB-SPACE",
+                "AIB-DEFENSE",
+                "FTA-CRYPTOS",
+                "AIB-07E46605",
+                "AIB-C71BAD8B",
+                "EVENT-CARD"
+              ],
+              "unmeasured": [],
+              "roster": 27,
+              "skill": {
+                "read": true,
+                "status": 200,
+                "fields": [
+                  "profile_url"
+                ]
+              }
+            },
+            "reason": "all 27 listed funds carry profile_url"
+          }
         }
       },
       "filing": {
@@ -10578,8 +11977,39 @@
         },
         "pinned_fingerprint": "e616fbf087930ded36b0388c0e493ed52abf6081761ed6f810593cd402766c59",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": [],
+            "right": [],
+            "sources": {
+              "contract": "llms.txt lines 30 and 643, both linking a machine-readable schema for the same API",
+              "small": "/openapi.json",
+              "curated": "/openapi-public.json"
+            },
+            "population": {
+              "openapi_json": 13,
+              "openapi_public": 173,
+              "shared": 8,
+              "only_in_openapi_json": [
+                "/api/v1/account/me/balances",
+                "/api/v1/account/me/portfolio",
+                "/api/v1/agents/clone",
+                "/api/v1/funding/withdraw"
+              ],
+              "not_public": [
+                "/api/v1/account/me/balances (401)",
+                "/api/v1/account/me/portfolio (401)",
+                "/api/v1/agents/clone (405)",
+                "/api/v1/funding/withdraw (405)"
+              ],
+              "templated_skipped": [
+                "/api/v1/backtest/bots/{slug}/run-backtest"
+              ],
+              "unreadable": []
+            },
+            "reason": "every public GET declared in /openapi.json is also in /openapi-public.json (13 vs 173 paths, 4 of the difference private or not a GET)"
+          }
         }
       },
       "filing": {
@@ -10739,9 +12169,9 @@
       "check": {
         "state": "INCONCLUSIVE",
         "adjudicated_by": {
-          "run_id": "run-20260924T020959Z-7d4d6288",
-          "at": "2026-09-24T02:48:13+00:00",
-          "started_at": "2026-09-24T02:10:06+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "started_at": "2026-09-24T08:25:40+00:00"
         },
         "pinned_fingerprint": "a77dd40f16c6639f0f61a3624d31a2cbb4bcbc4936e590f413bfb111a60ea919",
         "last_exploratory_pass": {
@@ -10900,8 +12330,8 @@
         "reason": "all 12 coins on the roster answered the text outlook"
       },
       "provenance": {
-        "run_id": "run-20260924T020959Z-7d4d6288",
-        "measured_at": "2026-09-24T02:48:13+00:00"
+        "run_id": "run-20260924T082511Z-74033ba0",
+        "measured_at": "2026-09-24T08:57:39+00:00"
       },
       "obligations": {
         "reverify": true,
@@ -10931,8 +12361,40 @@
         },
         "pinned_fingerprint": "d0699f895df0d89f3940259c63d506674761ec889df7c6e6338b25e4e5b7cd3d",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": [
+              5,
+              50
+            ],
+            "right": [
+              5,
+              50
+            ],
+            "sources": {
+              "contract": "openapi-public.json, GET /api/v1/launchpad/onchain/screener: limit (default 200, maximum 500)",
+              "endpoint": "/api/v1/launchpad/onchain/screener"
+            },
+            "population": {
+              "reads": [
+                {
+                  "limit": 5,
+                  "rows": 5,
+                  "external_shape": 2,
+                  "ratio": 1.0
+                },
+                {
+                  "limit": 50,
+                  "rows": 50,
+                  "external_shape": 25,
+                  "ratio": 1.0
+                }
+              ],
+              "unmeasured": []
+            },
+            "reason": "every read returned at most its limit (5->5, 50->50)"
+          }
         }
       },
       "filing": {
@@ -11074,8 +12536,22 @@
         },
         "pinned_fingerprint": "bf8a210d394b0679b3186d484b7881970fc6c55295aa3fa17d7c3959cef5bf16",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T204931Z-9b10f557",
-          "at": "2026-09-20T20:49:59+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": {
+              "clock_before_gate": 0,
+              "read": 1,
+              "unread": 0
+            },
+            "right": {
+              "clock_before_gate": 0
+            },
+            "sources": {
+              "board": "/api/v1/build-it-better/requests"
+            },
+            "reason": "on 1 request(s) the clock starts only once the gate is filled or waived, and never before it"
+          }
         }
       },
       "filing": {
@@ -11191,8 +12667,31 @@
         },
         "pinned_fingerprint": "e27ffa63a1369a3e8c9a6044545dbdbc984274bb14cf844e260de1529712d8dd",
         "last_exploratory_pass": {
-          "run_id": "run-20260920T202827Z-34a2af16",
-          "at": "2026-09-20T20:44:56+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": {
+              "advertised": [
+                "wss://cymetica.com/ws/build-it-better"
+              ],
+              "undocumented": []
+            },
+            "right": {
+              "undocumented": []
+            },
+            "sources": {
+              "pages": [
+                "/build-it-better/api",
+                "/build-it-better"
+              ],
+              "documents": [
+                "/llms.txt",
+                "/.well-known/mcp.json",
+                "/openapi-public.json"
+              ]
+            },
+            "reason": "all 1 advertised channel(s) are named in a machine-readable document: wss://cymetica.com/ws/build-it-better in /llms.txt, /.well-known/mcp.json, /openapi-public.json"
+          }
         }
       },
       "filing": {
@@ -11373,7 +12872,55 @@
           "at": "2026-09-24T02:48:13+00:00",
           "started_at": "2026-09-24T02:10:06+00:00"
         },
-        "pinned_fingerprint": "8aa97e5a70a1a004856b2c177a95d055f6b0f9982801496fc2870ca940acbd03"
+        "pinned_fingerprint": "8aa97e5a70a1a004856b2c177a95d055f6b0f9982801496fc2870ca940acbd03",
+        "last_exploratory_pass": {
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": {
+              "totals": {
+                "sessions": 315,
+                "messages": 608185,
+                "tool_calls": 60519,
+                "commits": 23562,
+                "lines_added": 15724417,
+                "lines_removed": 2872020,
+                "bugs_fixed": 12917,
+                "features": 4952,
+                "optimizations": 1058
+              },
+              "first_session": "2026-01-31"
+            },
+            "right": {
+              "daily_activity": {
+                "days": 17,
+                "from": "2026-01-31",
+                "to": "2026-02-16"
+              },
+              "daily_commits": {
+                "days": 305,
+                "from": "2025-11-23",
+                "to": "2026-09-24"
+              }
+            },
+            "sources": {
+              "build stats": "/api/v1/build-stats"
+            },
+            "population": {
+              "measured": true,
+              "series_days": 17,
+              "series_from": "2026-01-31",
+              "series_to": "2026-02-16",
+              "totals_equal_to_the_series": [
+                "sessions",
+                "messages",
+                "tool_calls"
+              ],
+              "first_session": "2026-01-31"
+            },
+            "reason": "sessions, messages, tool_calls sum the 17 day(s) from 2026-01-31 to 2026-02-16, and the first session they record (2026-01-31) falls inside that window"
+          }
+        }
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -11552,7 +13099,24 @@
           "at": "2026-09-24T02:48:13+00:00",
           "started_at": "2026-09-24T02:10:06+00:00"
         },
-        "pinned_fingerprint": "7f5fb8efbfa3f29d78fff8c268230f6c58dfcc948de0fd52b6a33dac49c5272f"
+        "pinned_fingerprint": "7f5fb8efbfa3f29d78fff8c268230f6c58dfcc948de0fd52b6a33dac49c5272f",
+        "last_exploratory_pass": {
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": {
+              "published": [
+                "`GET /api/v1/agent-board/search?q=`, `POST /api/v1/agent-board/posts` (X-API-Key),",
+                "- [GET /api/v1/agent-board/search](/api/v1/agent-board/search): Search playbooks. Each row's `rank` = evidence weight (verified return, only when `evidence_verified` is true; unverified rows get half weight) × (1 + confirmed replications) × status weight × a recency decay (72-hour scale). `rank` does not depend on `q`. While no row has verified evidence or a confirmed replication, the order is simply newest first — read `evidence_verified` and `replications` on the row, never the position, to judge how proven a playbook is"
+              ]
+            },
+            "sources": {
+              "document": "/llms.txt",
+              "board": "/api/v1/agent-board/search"
+            },
+            "reason": "their own description of agent-board/search says the order is recency while no row carries verified evidence or a confirmed replication, so the list and the sentence describing it agree and a reader is told what the top of it means"
+          }
+        }
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -11758,7 +13322,41 @@
           "at": "2026-09-24T02:48:13+00:00",
           "started_at": "2026-09-24T02:10:06+00:00"
         },
-        "pinned_fingerprint": "d68dde5d632e02f6434da646359d6a3efa738a21eed738630bd3c1f06281b5d9"
+        "pinned_fingerprint": "d68dde5d632e02f6434da646359d6a3efa738a21eed738630bd3c1f06281b5d9",
+        "last_exploratory_pass": {
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": {
+              "overdue": 0,
+              "unreadable": 0
+            },
+            "right": {
+              "overdue": 0
+            },
+            "sources": {
+              "board": "/api/v1/build-it-better/requests"
+            },
+            "population": {
+              "with_a_deadline": 3,
+              "judged": 1,
+              "late": 0,
+              "met": [
+                "ET-26608"
+              ],
+              "waiting": [],
+              "history": [
+                "ET-26171",
+                "ET-26036"
+              ],
+              "history_late": [
+                "ET-26036"
+              ],
+              "settled_within_hours": 24
+            },
+            "reason": "every build that settled in the last 24 h met the 24-hour deadline it publishes (ET-26608), and none is past its deadline with nothing shipped. NOT in the verdict: 2 request(s) settled more than 24 h ago and are history: ET-26171, ET-26036 (shipped late)"
+          }
+        }
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -11930,13 +13528,13 @@
           "run_id": "run-20260920T202827Z-34a2af16"
         }
       },
-      "reproductions": 2,
+      "reproductions": 3,
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20260924T020959Z-7d4d6288",
-          "at": "2026-09-24T02:48:13+00:00",
-          "started_at": "2026-09-24T02:10:06+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "started_at": "2026-09-24T08:25:40+00:00"
         },
         "pinned_fingerprint": "db5b7b315735c496674e82bdc768e9ae1aad4993c50120b7fe4dfd12c3633e28",
         "last_exploratory_pass": {
@@ -12004,7 +13602,8 @@
       "title": "1 requirement(s) are in the request and in no spec: ET-26171 'It is necessary to remove all news functions and focus exclusively on '",
       "reproduced_in": [
         "run-20260920T202827Z-34a2af16",
-        "run-20260924T020959Z-7d4d6288"
+        "run-20260924T020959Z-7d4d6288",
+        "run-20260924T082511Z-74033ba0"
       ],
       "component": "rest.build_it_better",
       "section": "build_it_better",
@@ -12027,8 +13626,8 @@
         "reason": "1 requirement(s) are in the request and in no spec: ET-26776 'Build EIDOLON: a premium cinematic front-end operating system for Cyme'"
       },
       "provenance": {
-        "run_id": "run-20260924T020959Z-7d4d6288",
-        "measured_at": "2026-09-24T02:48:13+00:00"
+        "run_id": "run-20260924T082511Z-74033ba0",
+        "measured_at": "2026-09-24T08:57:39+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -12056,7 +13655,34 @@
           "at": "2026-09-24T02:48:13+00:00",
           "started_at": "2026-09-24T02:10:06+00:00"
         },
-        "pinned_fingerprint": "0883ad81621b70d0438e8c3715af8baf0ceef5cf5141bc68dc1cd8d894fbe14c"
+        "pinned_fingerprint": "0883ad81621b70d0438e8c3715af8baf0ceef5cf5141bc68dc1cd8d894fbe14c",
+        "last_exploratory_pass": {
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": {
+              "tile_expression": "s.building || 0",
+              "tile": "s.building || 0"
+            },
+            "right": {
+              "stats": {
+                "total": 4,
+                "requested": 1,
+                "funded": 0,
+                "building": 0,
+                "shipped": 3,
+                "on_time": 2,
+                "overdue": 0,
+                "median_build_seconds": 60164
+              }
+            },
+            "sources": {
+              "board": "/build-it-better",
+              "api": "/api/v1/build-it-better/requests"
+            },
+            "reason": "the Building now tile is computed as 's.building || 0', which counts nothing but what is building"
+          }
+        }
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -12237,13 +13863,13 @@
           "run_id": "run-20260921T082640Z-23d8eece"
         }
       },
-      "reproductions": 16,
+      "reproductions": 17,
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20260924T020959Z-7d4d6288",
-          "at": "2026-09-24T02:48:13+00:00",
-          "started_at": "2026-09-24T02:10:06+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "started_at": "2026-09-24T08:25:40+00:00"
         },
         "pinned_fingerprint": "2e8b6858e71d177779a21f95ec0e35a6b92cb18ef65e71e7d8adbc6ddd20965b"
       },
@@ -12301,7 +13927,8 @@
         "run-20260922T221711Z-447350ca",
         "run-20260922T233020Z-f795349d",
         "run-20260923T000429Z-062ab82e",
-        "run-20260924T020959Z-7d4d6288"
+        "run-20260924T020959Z-7d4d6288",
+        "run-20260924T082511Z-74033ba0"
       ],
       "component": "mcp.tools_call",
       "section": "tools_call",
@@ -12312,7 +13939,6 @@
       ],
       "detail": {
         "left": [
-          "NEX-0054",
           "NEX-0057"
         ],
         "right": [],
@@ -12324,13 +13950,6 @@
         "population": {
           "cut": [
             {
-              "id": "NEX-0054",
-              "job_id": "bfb44eb7-1d12-4e78-abdb-67ddcc4d52d3",
-              "asked": "2026-09-21T07:36:36+00:00",
-              "chars": 1665,
-              "opens": "...ols with the hot basket is the predicted outcome; the \"ne"
-            },
-            {
               "id": "NEX-0057",
               "job_id": "9b1e61af-120a-4077-a5af-a7ed9f23013d",
               "asked": "2026-09-21T10:33:32+00:00",
@@ -12339,41 +13958,6 @@
             }
           ],
           "whole": [
-            {
-              "id": "NEX-0049",
-              "job_id": "01ef8af2-a9c2-45d1-b563-2dbc890a0d72",
-              "asked": "2026-09-21T02:30:30+00:00",
-              "chars": 3983,
-              "opens": "Verified everything I need. Here is the answer for the calli"
-            },
-            {
-              "id": "NEX-0050",
-              "job_id": "3e453e48-1a97-48bb-a41a-8c1dde256d71",
-              "asked": "2026-09-21T03:08:17+00:00",
-              "chars": 2229,
-              "opens": "Confirmed against the live listing. One clarification carrie"
-            },
-            {
-              "id": "NEX-0051",
-              "job_id": "00695b1e-e117-4a99-b960-f5ae011eb36e",
-              "asked": "2026-09-21T03:47:45+00:00",
-              "chars": 5972,
-              "opens": "I could not pull the radar's raw payload from my side — the "
-            },
-            {
-              "id": "NEX-0052",
-              "job_id": "f9599b47-2d3d-4d83-a4df-0b236a636dd2",
-              "asked": "2026-09-21T05:29:16+00:00",
-              "chars": 3403,
-              "opens": "## Verified finding\n\nI checked the live event-card API direc"
-            },
-            {
-              "id": "NEX-0055",
-              "job_id": "5cba4fcc-6292-4a16-86df-90f1a0855056",
-              "asked": "2026-09-21T08:40:41+00:00",
-              "chars": 5764,
-              "opens": "Verified against the currently-served release before answeri"
-            },
             {
               "id": "NEX-0056",
               "job_id": "a707ecfc-7601-4ad8-8c00-6634fba0382f",
@@ -12566,11 +14150,11 @@
           ],
           "unmeasured": []
         },
-        "reason": "2 of 34 deep answers asked in the last 72 h are served by get_deep_answer with their start cut off: NEX-0054 (job bfb44eb7-1d12-4e78-abdb-67ddcc4d52d3, 1665 chars) opens '...ols with the hot basket is the predicted outcome; the \"ne'; NEX-0057 (job 9b1e61af-120a-4077-a5af-a7ed9f23013d, 3399 chars) opens \"shot, confirming the surge wasn't a one-tick blip. Roughly h\""
+        "reason": "1 of 28 deep answers asked in the last 72 h are served by get_deep_answer with their start cut off: NEX-0057 (job 9b1e61af-120a-4077-a5af-a7ed9f23013d, 3399 chars) opens \"shot, confirming the surge wasn't a one-tick blip. Roughly h\""
       },
       "provenance": {
-        "run_id": "run-20260924T020959Z-7d4d6288",
-        "measured_at": "2026-09-24T02:48:13+00:00"
+        "run_id": "run-20260924T082511Z-74033ba0",
+        "measured_at": "2026-09-24T08:57:39+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -12598,7 +14182,38 @@
           "at": "2026-09-24T02:48:13+00:00",
           "started_at": "2026-09-24T02:10:06+00:00"
         },
-        "pinned_fingerprint": "3789db2c68f6b78827c0f48fbf0affe567ab27e2acb1dffb6a67f8405e74df7a"
+        "pinned_fingerprint": "3789db2c68f6b78827c0f48fbf0affe567ab27e2acb1dffb6a67f8405e74df7a",
+        "last_exploratory_pass": {
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": [],
+            "right": [],
+            "sources": {
+              "contract": "llms.txt, Product Trend Radar: which apps, products and services are gaining attention, ranked",
+              "read": "GET /api/v1/product-radar/leaderboard?window=7|14|30&limit=500 with our key"
+            },
+            "population": {
+              "duplicates": {},
+              "measured": [
+                {
+                  "window": 7,
+                  "rows": 500
+                },
+                {
+                  "window": 14,
+                  "rows": 500
+                },
+                {
+                  "window": 30,
+                  "rows": 500
+                }
+              ],
+              "unmeasured": []
+            },
+            "reason": "each product is on one row in all 3 windows read"
+          }
+        }
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -12732,7 +14347,39 @@
           "at": "2026-09-24T02:48:13+00:00",
           "started_at": "2026-09-24T02:10:06+00:00"
         },
-        "pinned_fingerprint": "3d0968cd68babcff16599d0e834a5c235fd784c9342554d9e3bb66756cefc1f9"
+        "pinned_fingerprint": "3d0968cd68babcff16599d0e834a5c235fd784c9342554d9e3bb66756cefc1f9",
+        "last_exploratory_pass": {
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": "2026-07-26",
+            "right": "2026-08-09",
+            "sources": {
+              "contract": "get_fund_methodology.returns: 'nothing backfilled, no backtest'",
+              "published": "get_fund {symbol: FTA-CRYPTOS}",
+              "record": "GET /api/v1/fta-fund/history"
+            },
+            "population": {
+              "get_fund": {
+                "inception_date": "2026-07-26",
+                "return_since_inception_pct": -12.88,
+                "last_composition_change": "2026-08-17T01:53:28+00:00",
+                "status": "live",
+                "index_price_usd": 0.111615
+              },
+              "history": {
+                "inception": "2026-08-09",
+                "first_point": {
+                  "t": "2026-08-24",
+                  "v": 0.100941
+                },
+                "points": 32
+              },
+              "methodology_returns": "Return is measured since the fund's own inception from real market prices with timestamped entries. One fund is an exception and says so in its return_basis: FTA Fund — Cryptos is pro-forma, today's composition applied across the full period since inception, the same construction its page and chart state, so the stretch before last_composition_change was not held in that form. Short books report the FUND return: a falling index is a positive return."
+            },
+            "reason": "published inception 2026-07-26, recorded 2026-08-09; the methodology discloses the pro-forma stretch"
+          }
+        }
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -12869,13 +14516,13 @@
           "run_id": "run-20260921T170811Z-e1dee8ae"
         }
       },
-      "reproductions": 10,
+      "reproductions": 11,
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20260924T020959Z-7d4d6288",
-          "at": "2026-09-24T02:48:13+00:00",
-          "started_at": "2026-09-24T02:10:06+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "started_at": "2026-09-24T08:25:40+00:00"
         },
         "pinned_fingerprint": "e77176673b270cba67e599aab8b4011f8b1805aed59efc088f93522cef55ffe3"
       },
@@ -12955,7 +14602,8 @@
         "run-20260922T221711Z-447350ca",
         "run-20260922T233020Z-f795349d",
         "run-20260923T000429Z-062ab82e",
-        "run-20260924T020959Z-7d4d6288"
+        "run-20260924T020959Z-7d4d6288",
+        "run-20260924T082511Z-74033ba0"
       ],
       "component": "rest.event_cards",
       "section": "event_cards",
@@ -13003,8 +14651,8 @@
             "tradeable_now": true,
             "trading_blocked_reason": null,
             "pw_live": true,
-            "current_index": 134.33756,
-            "share_price_usd": "1.3434"
+            "current_index": 135.326466,
+            "share_price_usd": "1.3533"
           },
           "legs": [
             [
@@ -13052,8 +14700,8 @@
         "reason": "card a4a5b71e-de11-4805-b8a3-ed9c3f8f8161 reads (read today -- the buy predates recording the card at the buy) status live, tradeable_now true, trading_blocked_reason None, and our paper buy of it answered HTTP 500 {\"detail\": \"Buy failed\"} (2 time(s): TRD-0010 17:01:28, TRD-0011 17:04:10)"
       },
       "provenance": {
-        "run_id": "run-20260924T020959Z-7d4d6288",
-        "measured_at": "2026-09-24T02:48:13+00:00"
+        "run_id": "run-20260924T082511Z-74033ba0",
+        "measured_at": "2026-09-24T08:57:39+00:00"
       },
       "obligations": {
         "reverify": true,
@@ -13077,11 +14725,11 @@
       },
       "reproductions": 3,
       "check": {
-        "state": "PASSING",
+        "state": "INCONCLUSIVE",
         "adjudicated_by": {
-          "run_id": "run-20260924T020959Z-7d4d6288",
-          "at": "2026-09-24T02:48:13+00:00",
-          "started_at": "2026-09-24T02:10:06+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "started_at": "2026-09-24T08:25:40+00:00"
         },
         "pinned_fingerprint": "799ae81824626c5ec366030934a5032f7862eb51bdf0336d8195bbd0ef487d68"
       },
@@ -13172,6 +14820,15 @@
             "event_id": "51a41912bfc54a65c73eb7ce2702bf6d4a5a1fa19146c3849040d6954649d02f"
           },
           "at": "2026-09-23T06:48:54+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "PASSING",
+          "to": "INCONCLUSIVE",
+          "cause": {
+            "run_id": "run-20260924T082511Z-74033ba0"
+          },
+          "at": "2026-09-24T08:57:39+00:00"
         }
       ],
       "regressions": [
@@ -13220,12 +14877,12 @@
         "reason": "every one of the 4 route(s) NEX-0088 names is published: /api/v1/event-cards/5d91bf43-a597-47b0-9abe-5c7f52618bbd, /api/v1/event-cards/5d91bf43-a597-47b0-9abe-5c7f52618bbd/buy, /api/v1/event-cards/5d91bf43-a597-47b0-9abe-5c7f52618bbd/sell, /api/v1/event-cards/{id}"
       },
       "provenance": {
-        "run_id": "run-20260924T020959Z-7d4d6288",
-        "measured_at": "2026-09-24T02:48:13+00:00"
+        "run_id": "run-20260924T082511Z-74033ba0",
+        "measured_at": "2026-09-24T08:57:39+00:00"
       },
       "obligations": {
-        "reverify": false,
-        "repair_check": false,
+        "reverify": true,
+        "repair_check": true,
         "reopen": [],
         "retractions": [],
         "verification_owed": [],
@@ -13249,7 +14906,290 @@
           "at": "2026-09-24T02:48:13+00:00",
           "started_at": "2026-09-24T02:10:06+00:00"
         },
-        "pinned_fingerprint": "4ab5c7b76f1a02454deaa910308c4356d73589b6a94f9eaf8e8c5775ea9790c9"
+        "pinned_fingerprint": "4ab5c7b76f1a02454deaa910308c4356d73589b6a94f9eaf8e8c5775ea9790c9",
+        "last_exploratory_pass": {
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": {
+              "board": [
+                {
+                  "path": "/weekly-signal",
+                  "views": 18,
+                  "visitors": 4,
+                  "uses": 8,
+                  "likes": 0
+                },
+                {
+                  "path": "/tradingview",
+                  "views": 14,
+                  "visitors": 6,
+                  "uses": 4,
+                  "likes": 0
+                },
+                {
+                  "path": "/token-info",
+                  "views": 12,
+                  "visitors": 7,
+                  "uses": 7,
+                  "likes": 0
+                },
+                {
+                  "path": "/exchange-refugees",
+                  "views": 6,
+                  "visitors": 1,
+                  "uses": 0,
+                  "likes": 0
+                },
+                {
+                  "path": "/bitmex",
+                  "views": 4,
+                  "visitors": 3,
+                  "uses": 0,
+                  "likes": 0
+                },
+                {
+                  "path": "/thinkorswim",
+                  "views": 3,
+                  "visitors": 1,
+                  "uses": 0,
+                  "likes": 0
+                },
+                {
+                  "path": "/benzinga-pro",
+                  "views": 2,
+                  "visitors": 2,
+                  "uses": 1,
+                  "likes": 0
+                },
+                {
+                  "path": "/bullx",
+                  "views": 2,
+                  "visitors": 2,
+                  "uses": 0,
+                  "likes": 0
+                },
+                {
+                  "path": "/etoro",
+                  "views": 2,
+                  "visitors": 2,
+                  "uses": 1,
+                  "likes": 0
+                },
+                {
+                  "path": "/finviz",
+                  "views": 2,
+                  "visitors": 2,
+                  "uses": 1,
+                  "likes": 0
+                },
+                {
+                  "path": "/mql5",
+                  "views": 2,
+                  "visitors": 1,
+                  "uses": 1,
+                  "likes": 0
+                },
+                {
+                  "path": "/pickmytrade",
+                  "views": 2,
+                  "visitors": 2,
+                  "uses": 2,
+                  "likes": 0
+                },
+                {
+                  "path": "/atas",
+                  "views": 1,
+                  "visitors": 1,
+                  "uses": 1,
+                  "likes": 0
+                },
+                {
+                  "path": "/barchart",
+                  "views": 1,
+                  "visitors": 1,
+                  "uses": 1,
+                  "likes": 0
+                },
+                {
+                  "path": "/coingecko",
+                  "views": 1,
+                  "visitors": 1,
+                  "uses": 1,
+                  "likes": 0
+                },
+                {
+                  "path": "/coinglass",
+                  "views": 1,
+                  "visitors": 1,
+                  "uses": 1,
+                  "likes": 0
+                },
+                {
+                  "path": "/coinigy",
+                  "views": 1,
+                  "visitors": 1,
+                  "uses": 0,
+                  "likes": 0
+                },
+                {
+                  "path": "/iex-cloud",
+                  "views": 1,
+                  "visitors": 1,
+                  "uses": 1,
+                  "likes": 0
+                },
+                {
+                  "path": "/interactive-brokers",
+                  "views": 1,
+                  "visitors": 1,
+                  "uses": 1,
+                  "likes": 0
+                },
+                {
+                  "path": "/moomoo",
+                  "views": 1,
+                  "visitors": 1,
+                  "uses": 1,
+                  "likes": 0
+                },
+                {
+                  "path": "/motivewave",
+                  "views": 1,
+                  "visitors": 1,
+                  "uses": 0,
+                  "likes": 0
+                },
+                {
+                  "path": "/myforexfunds",
+                  "views": 1,
+                  "visitors": 1,
+                  "uses": 1,
+                  "likes": 0
+                },
+                {
+                  "path": "/myfundedfutures",
+                  "views": 1,
+                  "visitors": 1,
+                  "uses": 1,
+                  "likes": 0
+                },
+                {
+                  "path": "/prorealtime",
+                  "views": 1,
+                  "visitors": 1,
+                  "uses": 1,
+                  "likes": 0
+                },
+                {
+                  "path": "/wallstreetbets",
+                  "views": 1,
+                  "visitors": 1,
+                  "uses": 0,
+                  "likes": 0
+                },
+                {
+                  "path": "/sierra-chart",
+                  "views": 1,
+                  "visitors": 1,
+                  "uses": 1,
+                  "likes": 0
+                },
+                {
+                  "path": "/stockanalysis",
+                  "views": 1,
+                  "visitors": 1,
+                  "uses": 0,
+                  "likes": 0
+                },
+                {
+                  "path": "/stockcharts",
+                  "views": 1,
+                  "visitors": 1,
+                  "uses": 1,
+                  "likes": 0
+                },
+                {
+                  "path": "/traderspost",
+                  "views": 1,
+                  "visitors": 1,
+                  "uses": 0,
+                  "likes": 0
+                },
+                {
+                  "path": "/tradersync",
+                  "views": 1,
+                  "visitors": 1,
+                  "uses": 0,
+                  "likes": 0
+                },
+                {
+                  "path": "/unusualwhales",
+                  "views": 1,
+                  "visitors": 1,
+                  "uses": 1,
+                  "likes": 0
+                },
+                {
+                  "path": "/yfinance",
+                  "views": 1,
+                  "visitors": 1,
+                  "uses": 0,
+                  "likes": 0
+                }
+              ]
+            },
+            "right": {
+              "counting_since": "2026-09-20",
+              "apps_read": [
+                "/weekly-signal",
+                "/tradingview",
+                "/token-info",
+                "/exchange-refugees",
+                "/bitmex",
+                "/thinkorswim",
+                "/benzinga-pro",
+                "/bullx",
+                "/etoro",
+                "/finviz",
+                "/mql5",
+                "/pickmytrade",
+                "/atas",
+                "/barchart",
+                "/coingecko",
+                "/coinglass",
+                "/coinigy",
+                "/iex-cloud",
+                "/interactive-brokers",
+                "/moomoo",
+                "/motivewave",
+                "/myforexfunds",
+                "/myfundedfutures",
+                "/prorealtime",
+                "/wallstreetbets",
+                "/sierra-chart",
+                "/stockanalysis",
+                "/stockcharts",
+                "/traderspost",
+                "/tradersync",
+                "/unusualwhales",
+                "/yfinance"
+              ]
+            },
+            "sources": {
+              "leaderboard": "/api/v1/build-it-better/apps/leaderboard",
+              "one app": "/api/v1/build-it-better/apps/stats"
+            },
+            "population": {
+              "apps_listed": 116,
+              "apps_carrying_a_figure": 32,
+              "apps_read": 32,
+              "apps_bracketed": 32,
+              "apps_with_a_non_zero_day": 32
+            },
+            "reason": "32 app(s) of the 116 on the board were read one by one, and for 32 of them every figure on the board re-read between the app's two reads is the app's own; the daily series sums to last_30d for 32 app(s) that have moved at all (/weekly-signal, /tradingview, /token-info, /exchange-refugees, /bitmex, /thinkorswim, /benzinga-pro, /bullx, /etoro, /finviz, /mql5, /pickmytrade, /atas, /barchart, /coingecko, /coinglass, /coinigy, /iex-cloud, /interactive-brokers, /moomoo, /motivewave, /myforexfunds, /myfundedfutures, /prorealtime, /wallstreetbets, /sierra-chart, /stockanalysis, /stockcharts, /traderspost, /tradersync, /unusualwhales, /yfinance)"
+          }
+        }
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -13634,7 +15574,26 @@
           "at": "2026-09-24T02:48:13+00:00",
           "started_at": "2026-09-24T02:10:06+00:00"
         },
-        "pinned_fingerprint": "3e7934294282ab8d5bed6c9fe5338a7153fe7b058eda3e28625b465cfa4ece74"
+        "pinned_fingerprint": "3e7934294282ab8d5bed6c9fe5338a7153fe7b058eda3e28625b465cfa4ece74",
+        "last_exploratory_pass": {
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": [],
+            "right": [
+              "POST /api/v1/cloned-bots/{instance_id}/fund",
+              "POST /api/v1/cloned-bots/{instance_id}/go-live"
+            ],
+            "sources": {
+              "documented": "/openapi-public.json"
+            },
+            "population": {
+              "flow_steps": 2,
+              "blocked": 0
+            },
+            "reason": "every step that moves a clone forward accepts the agent's x-api-key: POST /api/v1/cloned-bots/{instance_id}/fund, POST /api/v1/cloned-bots/{instance_id}/go-live"
+          }
+        }
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -13779,13 +15738,13 @@
           "run_id": "run-20260922T175844Z-c225b791"
         }
       },
-      "reproductions": 6,
+      "reproductions": 7,
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20260924T020959Z-7d4d6288",
-          "at": "2026-09-24T02:48:13+00:00",
-          "started_at": "2026-09-24T02:10:06+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "started_at": "2026-09-24T08:25:40+00:00"
         },
         "pinned_fingerprint": "f9147b657ba9d4d8852f04c3986c958f28c5d72e80c2035d46de64ac4c1e1de4"
       },
@@ -13843,7 +15802,8 @@
         "run-20260922T221711Z-447350ca",
         "run-20260922T233020Z-f795349d",
         "run-20260923T000429Z-062ab82e",
-        "run-20260924T020959Z-7d4d6288"
+        "run-20260924T020959Z-7d4d6288",
+        "run-20260924T082511Z-74033ba0"
       ],
       "component": "rest.agents",
       "section": "agents",
@@ -13898,8 +15858,8 @@
         "reason": "a paper clone of wta source 23441934-8475-4aa0-bbff-75c03ecd3284 was refused HTTP 400 'Invalid clone request. Please try again.' 2 times (CLN-0017 2026-09-22 13:39:02, CLN-0020 2026-09-22 17:47:13 UTC): the refusal asks for a retry and the retry is refused the same way; /openapi-public.json documents POST /api/v1/cloned-bots/clone as answering 200, 404, 409, 422, 503"
       },
       "provenance": {
-        "run_id": "run-20260924T020959Z-7d4d6288",
-        "measured_at": "2026-09-24T02:48:13+00:00"
+        "run_id": "run-20260924T082511Z-74033ba0",
+        "measured_at": "2026-09-24T08:57:39+00:00"
       },
       "obligations": {
         "reverify": true,
@@ -13929,7 +15889,42 @@
           "at": "2026-09-24T02:48:13+00:00",
           "started_at": "2026-09-24T02:10:06+00:00"
         },
-        "pinned_fingerprint": "170f56de79523c2c95e671cabe72a06ed553f6f948778de844cb5ba8fe69ef8a"
+        "pinned_fingerprint": "170f56de79523c2c95e671cabe72a06ed553f6f948778de844cb5ba8fe69ef8a",
+        "last_exploratory_pass": {
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": [],
+            "right": [],
+            "sources": {
+              "page": "/api-docs",
+              "schema": "/openapi-public.json",
+              "contract": "llms.txt names /openapi-public.json as the schema to import; /api-docs shows the curl to copy"
+            },
+            "population": {
+              "examples": 12,
+              "breaches": [],
+              "held": [
+                "POST /api/v1/exchange/sbio/orders",
+                "POST /api/v1/exchange/evcdx-spacex/orders",
+                "POST /api/v1/exchange/evcdx-spacex/orders",
+                "POST /api/v1/cloned-bots/clone",
+                "POST /api/v1/exchange/vaix/orders",
+                "POST /api/v1/exchange/vaix/orders"
+              ],
+              "unpublished": [
+                "POST /api/v1/wta/markets/{market_id}/bet",
+                "POST /api/v1/exchange/sbio/orders/batch",
+                "POST /api/v1/ai_trading_agent/prompt-assets",
+                "POST /api/v1/ai_trading_agent/analyze-url-assets",
+                "POST /api/v1/perpetual/user/vaix-predict",
+                "POST /api/v1/vaults/0x.../deposit"
+              ],
+              "unparsed": []
+            },
+            "reason": "all 6 request example(s) on /api-docs that target a published route carry every field it requires"
+          }
+        }
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -14067,7 +16062,127 @@
           "at": "2026-09-24T02:48:13+00:00",
           "started_at": "2026-09-24T02:10:06+00:00"
         },
-        "pinned_fingerprint": "148d300d0b8a4f408d544c6254e1d8d4ec6925a037ab0027658ef9ccc12929a6"
+        "pinned_fingerprint": "148d300d0b8a4f408d544c6254e1d8d4ec6925a037ab0027658ef9ccc12929a6",
+        "last_exploratory_pass": {
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "detail": {
+            "left": 0,
+            "right": 0,
+            "sources": {
+              "contract": "GET /api/v1/event-cards/{id} tradeability.tradeable_now: 'the only trade gate'",
+              "rest": "/api/v1/event-cards/{id}",
+              "mcp": "tools/call get_event_card_info"
+            },
+            "population": {
+              "sampled": 16,
+              "read_on_both": 16,
+              "disagree": 0,
+              "closed_on_both": 12,
+              "us_market_open": false,
+              "pairs": [
+                {
+                  "card": "65bd2864-742e-40dd-825e-65598f5b0523",
+                  "rest": false,
+                  "tool": false,
+                  "at": "2026-09-24T08:45:43+00:00",
+                  "tool_at": "2026-09-24T08:45:44+00:00",
+                  "reason": "US equity markets are closed — this card holds stocks and trades during US market hours (Mon–Fri, 9:30am–4:00pm ET). Crypto-only cards trade 24/7."
+                },
+                {
+                  "card": "8395df1f-3d2b-4155-8e87-246764238d74",
+                  "rest": false,
+                  "tool": false,
+                  "at": "2026-09-24T08:45:44+00:00",
+                  "tool_at": "2026-09-24T08:45:45+00:00",
+                  "reason": "US equity markets are closed — this card holds stocks and trades during US market hours (Mon–Fri, 9:30am–4:00pm ET). Crypto-only cards trade 24/7."
+                },
+                {
+                  "card": "95a368ab-eaca-4527-8ecb-a0dd89aa390f",
+                  "rest": false,
+                  "tool": false,
+                  "at": "2026-09-24T08:45:45+00:00",
+                  "tool_at": "2026-09-24T08:45:46+00:00",
+                  "reason": "US equity markets are closed — this card holds stocks and trades during US market hours (Mon–Fri, 9:30am–4:00pm ET). Crypto-only cards trade 24/7."
+                },
+                {
+                  "card": "17ffc5da-3f1a-4dca-b81e-e3ebcff34aeb",
+                  "rest": false,
+                  "tool": false,
+                  "at": "2026-09-24T08:45:46+00:00",
+                  "tool_at": "2026-09-24T08:45:47+00:00",
+                  "reason": "US equity markets are closed — this card holds stocks and trades during US market hours (Mon–Fri, 9:30am–4:00pm ET). Crypto-only cards trade 24/7."
+                },
+                {
+                  "card": "74516b57-dd97-4ad9-8dca-da3b2c1ba165",
+                  "rest": false,
+                  "tool": false,
+                  "at": "2026-09-24T08:45:47+00:00",
+                  "tool_at": "2026-09-24T08:45:48+00:00",
+                  "reason": "US equity markets are closed — this card holds stocks and trades during US market hours (Mon–Fri, 9:30am–4:00pm ET). Crypto-only cards trade 24/7."
+                },
+                {
+                  "card": "871ccfba-2c5b-4329-8a09-fd11fa4a1aee",
+                  "rest": false,
+                  "tool": false,
+                  "at": "2026-09-24T08:45:48+00:00",
+                  "tool_at": "2026-09-24T08:45:49+00:00",
+                  "reason": "US equity markets are closed — this card holds stocks and trades during US market hours (Mon–Fri, 9:30am–4:00pm ET). Crypto-only cards trade 24/7."
+                },
+                {
+                  "card": "070066f6-200b-469f-b43f-09120b953d9a",
+                  "rest": false,
+                  "tool": false,
+                  "at": "2026-09-24T08:45:49+00:00",
+                  "tool_at": "2026-09-24T08:45:51+00:00",
+                  "reason": "US equity markets are closed — this card holds stocks and trades during US market hours (Mon–Fri, 9:30am–4:00pm ET). Crypto-only cards trade 24/7."
+                },
+                {
+                  "card": "a70b8d5e-c57f-4ef7-ac53-b29148e5b920",
+                  "rest": false,
+                  "tool": false,
+                  "at": "2026-09-24T08:45:51+00:00",
+                  "tool_at": "2026-09-24T08:45:52+00:00",
+                  "reason": "US equity markets are closed — this card holds stocks and trades during US market hours (Mon–Fri, 9:30am–4:00pm ET). Crypto-only cards trade 24/7."
+                },
+                {
+                  "card": "498558a9-eab4-4e00-be6d-20a33b481cc3",
+                  "rest": false,
+                  "tool": false,
+                  "at": "2026-09-24T08:45:52+00:00",
+                  "tool_at": "2026-09-24T08:45:53+00:00",
+                  "reason": "US equity markets are closed — this card holds stocks and trades during US market hours (Mon–Fri, 9:30am–4:00pm ET). Crypto-only cards trade 24/7."
+                },
+                {
+                  "card": "01d486c8-f366-4bdd-ab22-f166d9d6b0f3",
+                  "rest": false,
+                  "tool": false,
+                  "at": "2026-09-24T08:45:53+00:00",
+                  "tool_at": "2026-09-24T08:45:55+00:00",
+                  "reason": "US equity markets are closed — this card holds stocks and trades during US market hours (Mon–Fri, 9:30am–4:00pm ET). Crypto-only cards trade 24/7."
+                },
+                {
+                  "card": "344cb935-f4da-4127-ac41-f1e0a2220c00",
+                  "rest": false,
+                  "tool": false,
+                  "at": "2026-09-24T08:45:55+00:00",
+                  "tool_at": "2026-09-24T08:45:57+00:00",
+                  "reason": "US equity markets are closed — this card holds stocks and trades during US market hours (Mon–Fri, 9:30am–4:00pm ET). Crypto-only cards trade 24/7."
+                },
+                {
+                  "card": "9591f392-0ec5-4da1-a903-b777bb80ac19",
+                  "rest": false,
+                  "tool": false,
+                  "at": "2026-09-24T08:45:57+00:00",
+                  "tool_at": "2026-09-24T08:46:00+00:00",
+                  "reason": "US equity markets are closed — this card holds stocks and trades during US market hours (Mon–Fri, 9:30am–4:00pm ET). Crypto-only cards trade 24/7."
+                }
+              ],
+              "unread": []
+            },
+            "reason": "12 card(s) read closed on both /api/v1/event-cards/{id} and get_event_card_info, and none of the 16 read on both disagrees"
+          }
+        }
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -14275,13 +16390,13 @@
           "run_id": "run-20260923T000429Z-062ab82e"
         }
       },
-      "reproductions": 2,
+      "reproductions": 3,
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20260924T020959Z-7d4d6288",
-          "at": "2026-09-24T02:48:13+00:00",
-          "started_at": "2026-09-24T02:10:06+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "started_at": "2026-09-24T08:25:40+00:00"
         },
         "pinned_fingerprint": "c8c24b2391af2d1a7a8e6ab30fbddb5c538d271eb97d9972ca529798519dc857"
       },
@@ -14335,7 +16450,8 @@
       "title": "3 of our newest 12 submission(s) to POST /api/v1/bounty/reports answered HTTP 500 and the report was created anyway: #110 (build-stats-window, 2026-09-20T17:40 UTC), #113 (bb-building-tile, 2026-09-20T21:00 UTC), #122 (card-tradeable-now-disagrees-mcp-rest, 2026-09-22T23:55 UTC) -- a client told the filing failed retries it",
       "reproduced_in": [
         "run-20260923T000429Z-062ab82e",
-        "run-20260924T020959Z-7d4d6288"
+        "run-20260924T020959Z-7d4d6288",
+        "run-20260924T082511Z-74033ba0"
       ],
       "component": "rest.support",
       "section": "support",
@@ -14439,8 +16555,8 @@
         "reason": "2 of our newest 12 submission(s) to POST /api/v1/bounty/reports answered HTTP 500 and the report was created anyway: #113 (bb-building-tile, 2026-09-20T21:00 UTC), #122 (card-tradeable-now-disagrees-mcp-rest, 2026-09-22T23:55 UTC) -- a client told the filing failed retries it"
       },
       "provenance": {
-        "run_id": "run-20260924T020959Z-7d4d6288",
-        "measured_at": "2026-09-24T02:48:13+00:00"
+        "run_id": "run-20260924T082511Z-74033ba0",
+        "measured_at": "2026-09-24T08:57:39+00:00"
       },
       "obligations": {
         "reverify": true,
@@ -14462,13 +16578,13 @@
           "run_id": "run-20260924T020959Z-7d4d6288"
         }
       },
-      "reproductions": 1,
+      "reproductions": 2,
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20260924T020959Z-7d4d6288",
-          "at": "2026-09-24T02:48:13+00:00",
-          "started_at": "2026-09-24T02:10:06+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "started_at": "2026-09-24T08:25:40+00:00"
         },
         "pinned_fingerprint": "6a0791437c8cc5aa4df286c0c372a8d5513e25d504d40418c4f8ce8a1f1c49a3"
       },
@@ -14494,7 +16610,8 @@
       "severity": "S3-CONTRACT",
       "title": "card 5d91bf43-a597-47b0-9abe-5c7f52618bbd read tradeable_now true at the buy, the account was in simulation_mode with a paper book of 88598.91 USDC, and a paper buy of 480.36 USDC sent with paper: true answered HTTP 409 {\"detail\": \"Insufficient USDC balance: you have 7.650006.\"} (2 time(s): TRD-0039 05:59:12, TRD-0040 06:00:23)",
       "reproduced_in": [
-        "run-20260924T020959Z-7d4d6288"
+        "run-20260924T020959Z-7d4d6288",
+        "run-20260924T082511Z-74033ba0"
       ],
       "component": "rest.event_cards",
       "section": "event_cards",
@@ -14594,8 +16711,8 @@
         "tests/rest/test_a_paper_buy_is_judged_against_the_paper_book.py::test_a_paper_buy_is_not_refused_for_money_the_paper_book_holds"
       ],
       "provenance": {
-        "run_id": "run-20260924T020959Z-7d4d6288",
-        "measured_at": "2026-09-24T02:48:13+00:00"
+        "run_id": "run-20260924T082511Z-74033ba0",
+        "measured_at": "2026-09-24T08:57:39+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -14615,13 +16732,13 @@
           "run_id": "run-20260924T020959Z-7d4d6288"
         }
       },
-      "reproductions": 1,
+      "reproductions": 2,
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20260924T020959Z-7d4d6288",
-          "at": "2026-09-24T02:48:13+00:00",
-          "started_at": "2026-09-24T02:10:06+00:00"
+          "run_id": "run-20260924T082511Z-74033ba0",
+          "at": "2026-09-24T08:57:39+00:00",
+          "started_at": "2026-09-24T08:25:40+00:00"
         },
         "pinned_fingerprint": "2e22cca70cda0f5984ce2f3230718d3230c72fa57acf17d00e4b221e9a9c7fb5"
       },
@@ -14647,7 +16764,8 @@
       "severity": "S3-CONTRACT",
       "title": "2 request line(s) and 0 BB-CHANGE(s) filed after REPLY-0021 2026-09-19T18:56:28Z are not in the spec whole: ET-26776 lost request line 'Build EIDOLON: a premium cinematic front-end operating system for Cymetica. Cymetica is th'; ET-26608 lost request line 'Github: I like the current design, so I'd be glad if the structure stayed the same (tabs, '. NOT in the verdict -- ours, excluded: ET-26036",
       "reproduced_in": [
-        "run-20260924T020959Z-7d4d6288"
+        "run-20260924T020959Z-7d4d6288",
+        "run-20260924T082511Z-74033ba0"
       ],
       "component": "rest.build_it_better",
       "section": "build_it_better",
@@ -14690,8 +16808,8 @@
         "tests/rest/test_build_it_better_spec_keeps_the_request.py::test_a_spec_written_after_their_fix_keeps_every_line_and_change"
       ],
       "provenance": {
-        "run_id": "run-20260924T020959Z-7d4d6288",
-        "measured_at": "2026-09-24T02:48:13+00:00"
+        "run_id": "run-20260924T082511Z-74033ba0",
+        "measured_at": "2026-09-24T08:57:39+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -14704,20 +16822,20 @@
       }
     }
   },
-  "run_id": "run-20260924T020959Z-7d4d6288",
-  "run_level": "V",
-  "updated_at": "2026-09-24T02:48:13+00:00",
+  "run_id": "run-20260924T082511Z-74033ba0",
+  "run_level": "R",
+  "updated_at": "2026-09-24T08:57:39+00:00",
   "counts": {
     "WITHDRAWN": 13,
-    "VERIFIED FIXED": 56,
+    "VERIFIED FIXED": 54,
     "STILL REPRODUCIBLE": 7,
-    "OUR CHECK CANNOT TELL": 1,
+    "OUR CHECK CANNOT TELL": 3,
     "CHECK CHANGED": 2,
     "RAISED": 1,
     "NOT RAISED YET": 2
   },
   "events_head": {
-    "seq": 2656,
-    "chain": "d47e684db84900b7a9fb87903362a7b1bb196e92745c2ae1326c9ffc03b56b0b"
+    "seq": 2664,
+    "chain": "292c803679ac0497148dc3290c532afe025eb3de5c2b08b6c9329cc7a59dc00e"
   }
 }
