@@ -1,14 +1,20 @@
 {
-  "run": "deep pass 2026-09-22 evening",
-  "at": "2026-09-22T20:36:20+00:00",
-  "previous_at": "2026-09-22T14:45:00+00:00",
-  "start_commit": "274c3ce8d66c071aee0cc51f1c494e7edcb8882d",
+  "run": "deep pass 2026-09-24 night (after plan v2 V10, started by the operator's /loop)",
+  "at": "2026-09-23T22:55:50+00:00",
+  "previous_at": "2026-09-22T20:36:20+00:00",
+  "start_commit": "76f6c23ee948c7b0aea1e241c61dbe036aa9afcd",
+  "size": "full",
+  "budget": {
+    "weekly_pct": 11,
+    "five_hour_pct": 33
+  },
   "gaps": [
     {
-      "id": "R01",
-      "nodeid": "scripts/open_checks.py::since_last_full_run",
-      "claim": "A full-selector run that aborted in tests/meta has meta results only and still counts as the last full run.",
+      "id": "H01",
+      "nodeid": "qa/report_plugin.py::helpers_fingerprint",
       "source": "review",
+      "carried_from": "V8 /code-review 2026-09-23",
+      "claim": "helpers_fingerprint hashes only module-level helpers the check calls by name in its own file; a change in a fixture or an imported helper leaves it unchanged, so verify.py's helpers_match says 'same helpers' when they moved.",
       "votes": {
         "t1": "real",
         "t2": "real",
@@ -16,101 +22,209 @@
       },
       "verdict": "real",
       "fixed": true,
-      "commit": "4fc389d1"
+      "commit": "705c60ae"
+    },
+    {
+      "id": "H02",
+      "nodeid": "qa/report_plugin.py::helpers_fingerprint",
+      "source": "review",
+      "carried_from": "V8 /code-review 2026-09-23",
+      "claim": "when inspect.getsource raises for one helper, helpers_fingerprint hashes the partial set it collected instead of saying the fingerprint is unknown, so two different helper sets can match.",
+      "votes": {
+        "t1": "false_positive",
+        "t2": "false_positive",
+        "t3": "false_positive"
+      },
+      "verdict": "false_positive",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "H03",
+      "nodeid": "qa/report_plugin.py::helpers_fingerprint",
+      "source": "review",
+      "carried_from": "V8 /code-review 2026-09-23",
+      "claim": "helpers_fingerprint re-parses and re-hashes the module per collected item, uncached, over every parametrised id of a full run.",
+      "votes": {
+        "t1": "false_positive",
+        "t2": "false_positive",
+        "t3": "false_positive"
+      },
+      "verdict": "false_positive",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "H04",
+      "nodeid": "scripts/bounty.py::health_changed",
+      "source": "review",
+      "carried_from": "V8 /code-review 2026-09-23",
+      "claim": "health_changed reads the whole journal on every console poll to find the last vendor_read per door, a cost that grows with the journal for ever.",
+      "votes": {
+        "t1": "false_positive",
+        "t2": "false_positive",
+        "t3": "false_positive"
+      },
+      "verdict": "false_positive",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "H05",
+      "nodeid": "scripts/submit.py (B5 guard)",
+      "source": "review",
+      "carried_from": "V8 /code-review 2026-09-23",
+      "claim": "the B5 guard (no report for a row with no check state) applies only to NOT_RAISED rows, so a RAISED row that lost its check state can still be re-sent.",
+      "votes": {
+        "t1": "false_positive",
+        "t2": "real",
+        "t3": "false_positive"
+      },
+      "verdict": "minority",
+      "fixed": false,
+      "commit": null,
+      "why": "t2: follow-up entries citing a RAISED row with an INCONCLUSIVE check pass the guard"
+    },
+    {
+      "id": "H06",
+      "nodeid": "qa/fold.py::_unverifiable",
+      "source": "review",
+      "carried_from": "V8 /code-review 2026-09-23",
+      "claim": "on an events-only fold the UNVERIFIABLE transition's cause can name an event that has nothing to do with the row that moved.",
+      "votes": {
+        "t1": "false_positive",
+        "t2": "false_positive",
+        "t3": "false_positive"
+      },
+      "verdict": "false_positive",
+      "fixed": false,
+      "commit": null,
+      "why": "t3: defining filters by finding_id; the real defect is RC02"
+    },
+    {
+      "id": "H07",
+      "nodeid": "conventions: V8 core commits",
+      "source": "review",
+      "carried_from": "V8 /code-review 2026-09-23",
+      "claim": "the V8 commits to qa/fold.py and qa/state.py landed before /code-review ran, against CLAUDE.md's 'propose /code-review before committing'.",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": null,
+      "note": "process, not code: the V8 core commits are inside this pass's step-3 review scope (git diff @{upstream}...HEAD), so the review they skipped ran over them; the deep pass reviews its own core fixes after committing them (step 7, round 2: S01-S06), which is the skill's design"
+    },
+    {
+      "id": "R01",
+      "nodeid": "scripts/processes.py::LOOP_PROMPT",
+      "source": "review",
+      "claim": "LOOP_PROMPT counts any typed 'pokračuj', in any session, as a laboratory loop firing: the plan sessions' 13:14 and 19:29 continuations (101 and 151 calls) are counted, inflating the /model sonnet reminder and V6's per-day measurement.",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "69cd1ed1"
     },
     {
       "id": "R02",
-      "nodeid": "tests/rest/test_a_refused_clone_says_why.py::test_a_refused_paper_clone_says_why",
-      "claim": "Docstring headline and #119 promise 'made, or refused for a reason', but judge() passes any 4xx detail that merely omits 'try again' (e.g. 'Invalid clone request.').",
+      "nodeid": "scripts/processes.py::reminders",
       "source": "review",
-      "votes": {
-        "t1": "not",
-        "t2": "not",
-        "t3": "not"
-      },
-      "verdict": "false_positive",
-      "fixed": false,
-      "commit": null
-    },
-    {
-      "id": "R03",
-      "nodeid": "tests/rest/test_a_refused_clone_says_why.py::test_a_refused_paper_clone_says_why",
-      "claim": "A breach needs an earlier refusal with a byte-identical detail; a per-request id or timestamp in the message sends the refuted retry to unmeasured forever.",
-      "source": "review",
-      "votes": {
-        "t1": "not",
-        "t2": "not",
-        "t3": "not"
-      },
-      "verdict": "false_positive",
-      "fixed": false,
-      "commit": null
-    },
-    {
-      "id": "R04",
-      "nodeid": "tests/rest/test_a_refused_clone_says_why.py::test_a_refused_paper_clone_says_why",
-      "claim": "'try again' is a plain substring, so a fix that names its reason and says 'do not try again' still fails.",
-      "source": "review",
+      "claim": "reminders() puts the surface drift first (header + up to 5 lines + confirm) inside the 'due' source that session_start caps at 3 lines, so any drift hides the morning-missing, pass-owed and loop-model lines behind '(+N dalších)' -- E1's crowding moved inside the slot.",
       "votes": {
         "t1": "real",
-        "t2": "real",
-        "t3": "not"
-      },
-      "verdict": "real",
-      "fixed": true,
-      "commit": "a49f5d95"
-    },
-    {
-      "id": "R05",
-      "nodeid": "tests/discovery/test_api_docs_examples_carry_what_their_routes_require.py::test_every_request_example_on_api_docs_carries_what_its_route_requires",
-      "claim": "route_of() takes the first matching route, so a template listed before a literal route can claim the literal path and judge against the wrong schema.",
-      "source": "review",
-      "votes": {
-        "t1": "not",
-        "t2": "not",
-        "t3": "not"
-      },
-      "verdict": "false_positive",
-      "fixed": false,
-      "commit": null
-    },
-    {
-      "id": "R06",
-      "nodeid": "tests/discovery/test_api_docs_examples_carry_what_their_routes_require.py::test_every_request_example_on_api_docs_carries_what_its_route_requires",
-      "claim": "Only `curl -X M url -d '{...}'` is read; --data, a double-quoted body, a quoted URL or -X after the URL are silently uncounted while the pass line says all examples hold.",
-      "source": "review",
-      "votes": {
-        "t1": "not",
         "t2": "real",
         "t3": "real"
       },
       "verdict": "real",
       "fixed": true,
-      "commit": "b2aa49e0"
+      "commit": "69cd1ed1"
+    },
+    {
+      "id": "R03",
+      "nodeid": "scripts/lab.py::write_report",
+      "source": "review",
+      "claim": "write_report uses one fixed report.json.tmp while GET /lab, GET /lab.json (threaded server), the lab tick and morning_page all call it; concurrent writers on Windows raise PermissionError on replace (a 500 or a failed tick) or move another writer's partial tmp into place.",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "69cd1ed1"
+    },
+    {
+      "id": "R04",
+      "nodeid": "qa/lab_report.py::_rooms",
+      "source": "review",
+      "claim": "_rooms names a room by its strategy row's opening title, not its newest title row (qa.rooms.names), so report.json and the 7:00 report call STR-0004 'BTC 30 % + BCH 12 % pro 89 000' while /lab says 'BTC selling lows + MARA'.",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "69cd1ed1"
+    },
+    {
+      "id": "R05",
+      "nodeid": "qa/morning.py::today",
+      "source": "review",
+      "claim": "today() prints the newest three 'next' lines ever written as what the manager does today, unbounded by date, so a night that wrote none shows days-old plans as today's.",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "69cd1ed1"
+    },
+    {
+      "id": "R06",
+      "nodeid": "scripts/processes.py::reminders (plan phases)",
+      "source": "review",
+      "claim": "the phase reminder counts a phase as carried when its id is a SUBSTRING of NEXT.md's open lines, so an open V1 is masked by a line naming V10 or V11.",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "69cd1ed1"
     },
     {
       "id": "R07",
-      "nodeid": "tests/discovery/test_api_docs_examples_carry_what_their_routes_require.py::test_every_request_example_on_api_docs_carries_what_its_route_requires",
-      "claim": "required_of() resolves only a top-level $ref; allOf/anyOf/oneOf bodies read as requiring nothing.",
+      "nodeid": ".claude/hooks/protect_state.py::REDIRECT",
       "source": "review",
+      "claim": "REDIRECT's lookbehind skips fd-prefixed redirects, so '2> state/x' and '&> state/x' write under state/ past the pre-write guard.",
       "votes": {
-        "t1": "not",
-        "t2": "not",
-        "t3": "not"
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
       },
-      "verdict": "false_positive",
-      "fixed": false,
-      "commit": null
+      "verdict": "real",
+      "fixed": true,
+      "commit": "c03c1c0b",
+      "why": "t1: relative fd-prefixed forms are caught by WRITE_FORMS[0]; absolute and cd forms pass; t3: the finding's examples are caught by WRITE_FORMS[0]; the absolute-path and cd forms with an fd prefix pass"
     },
     {
       "id": "R08",
-      "nodeid": "scripts/lab.py::verdicts",
-      "claim": "Arena legs are a gap, but verdicts() still calls closes_at(ref), a live GET /api/v1/event-cards/BLUE per leg per due verdict.",
+      "nodeid": "scripts/processes.py::main trail",
       "source": "review",
+      "claim": "'trail' materialises every row of every project transcript (list(transcript_rows())) and walks it twice (trail + trail_cut with limit 10**9) just to count what was cut.",
       "votes": {
-        "t1": "not",
-        "t2": "not",
-        "t3": "not"
+        "t1": "false_positive",
+        "t2": "false_positive",
+        "t3": "false_positive"
       },
       "verdict": "false_positive",
       "fixed": false,
@@ -118,233 +232,24 @@
     },
     {
       "id": "R09",
-      "nodeid": "scripts/lab.py::tick_exclusive",
-      "claim": "The orphaned tick marker is handled by a skill rule, while tick_exclusive still trusts a dead pid's marker for 45 minutes.",
+      "nodeid": ".claude/hooks/start/memory_index.py::lines",
       "source": "review",
+      "claim": "the session start's memory line counts retired memory bodies as files: 'memory: 59 files' while 46 are live.",
       "votes": {
-        "t1": "not",
-        "t2": "not",
-        "t3": "not"
-      },
-      "verdict": "false_positive",
-      "fixed": false,
-      "commit": null
-    },
-    {
-      "id": "R10",
-      "nodeid": "scripts/processes.py::reminders",
-      "claim": "The reminders mechanism still phrases maintenance lines as commands for the operator, contrary to [operator 2026-09-22]; only CLAUDE.md prose changed.",
-      "source": "review",
-      "votes": {
-        "t1": "not",
-        "t2": "real",
-        "t3": "not"
-      },
-      "verdict": "minority",
-      "fixed": false,
-      "commit": null
-    },
-    {
-      "id": "A01",
-      "nodeid": "tests/rest/test_the_build_board_counts_building_as_building.py::test_the_boards_building_tile_counts_only_what_is_building",
-      "claim": "resolve() follows a name only when the whole expression is a bare name, so (s.building || 0) + nf with const nf = (s.funded || 0) passes; the funded stage is hidden behind a local.",
-      "source": "audit",
-      "votes": {
-        "t1": "real",
+        "t1": "false_positive",
         "t2": "real",
         "t3": "real"
       },
       "verdict": "real",
       "fixed": true,
-      "commit": "bac45a82"
-    },
-    {
-      "id": "A02",
-      "nodeid": "tests/rest/test_cloned_bots_surface.py::test_one_credential_funds_and_starts_a_clone",
-      "claim": "credential_gap tests 'x-api-key' in headers case-sensitively, but a security scheme's name is added as written and their ApiKeyAuth is 'X-API-Key': a route declared through security reads as publishing only authorization.",
-      "source": "audit",
-      "votes": {
-        "t1": "real",
-        "t2": "real",
-        "t3": "real"
-      },
-      "verdict": "real",
-      "fixed": true,
-      "commit": "8c160d53"
-    },
-    {
-      "id": "A03",
-      "nodeid": "tests/rest/test_agent_board_ranks_what_it_says_it_ranks.py::test_the_board_is_ranked_by_the_key_its_own_document_publishes",
-      "claim": "r.get('rank') or 0 and str(created_at or '') turn missing fields into values; with no created_at or a renamed rank the check fails 'exactly newest-first' with nothing read.",
-      "source": "audit",
-      "votes": {
-        "t1": "not",
-        "t2": "real",
-        "t3": "real"
-      },
-      "verdict": "real",
-      "fixed": true,
-      "commit": "c7ac1a82"
-    },
-    {
-      "id": "A04",
-      "nodeid": "tests/rest/test_a_refused_clone_says_why.py::test_a_refused_paper_clone_says_why",
-      "claim": "(a) an empty 4xx body is stored as encoding empty/value null, their_body() returns None and the docstring's 'no detail at all -> fail' becomes inconclusive; (b) a reason not under top-level detail reads as no detail; (c) the no-detail breach is reported with the retry sentence; (d) clone_attempts never filters paper.",
-      "source": "audit",
-      "votes": {
-        "t1": "real",
-        "t2": "real",
-        "t3": "real"
-      },
-      "verdict": "real",
-      "fixed": true,
-      "commit": "a49f5d95"
-    },
-    {
-      "id": "A05",
-      "nodeid": "tests/rest/test_startup_line_is_reachable_as_documented.py::test_the_startup_calls_answer_the_reader_their_own_page_promises",
-      "claim": "PAGE_STATUSES is our hard-coded copy, never read off the page the docstring names as the claimant, so a page change reads as a promise not served; a line body with no count passes.",
-      "source": "audit",
-      "votes": {
-        "t1": "real",
-        "t2": "real",
-        "t3": "real"
-      },
-      "verdict": "real",
-      "fixed": true,
-      "commit": "8421c227"
-    },
-    {
-      "id": "A06",
-      "nodeid": "tests/discovery/test_api_docs_examples_carry_what_their_routes_require.py::test_every_request_example_on_api_docs_carries_what_its_route_requires",
-      "claim": "CURL requires an unquoted URL, so curl -X POST \"https://...\" examples (two on the page today) are dropped silently, neither judged nor counted.",
-      "source": "audit",
-      "votes": {
-        "t1": "not",
-        "t2": "real",
-        "t3": "real"
-      },
-      "verdict": "real",
-      "fixed": true,
-      "commit": "b2aa49e0"
-    },
-    {
-      "id": "B01",
-      "nodeid": "tests/meta/test_pipeline_lab.py::test_the_night_holds_no_hand_that_trades_files_or_commits",
-      "claim": "Checks only that five exact names are absent; os.system('git commit ...') added to night_promote stays green although the docstring says committing is not a door of the night (reproduced by the auditor).",
-      "source": "audit",
-      "votes": {
-        "t1": "real",
-        "t2": "real",
-        "t3": "real"
-      },
-      "verdict": "real",
-      "fixed": true,
-      "commit": "c685e641"
-    },
-    {
-      "id": "B02",
-      "nodeid": "tests/meta/test_pipeline_lab_loop.py::test_the_catalogue_readers_take_whole_names_and_respect_what_he_ruled_out",
-      "claim": "The only longer-word case ('MACD Hunters') names a bot already proposed, so plain substring matching in _whole_names stays green (reproduced).",
-      "source": "audit",
-      "votes": {
-        "t1": "real",
-        "t2": "real",
-        "t3": "real"
-      },
-      "verdict": "real",
-      "fixed": true,
-      "commit": "c685e641"
-    },
-    {
-      "id": "B03",
-      "nodeid": "tests/meta/test_pipeline_rooms.py::test_a_bot_or_fund_room_is_one_thing_of_its_answer_not_the_whole_answer",
-      "claim": "Docstring names the launcher as one of three places, but no test drives whole_linked in night_promote; room_key(row) is None -> not row.get('card') stays green.",
-      "source": "audit",
-      "votes": {
-        "t1": "real",
-        "t2": "real",
-        "t3": "real"
-      },
-      "verdict": "real",
-      "fixed": true,
-      "commit": "c685e641"
-    },
-    {
-      "id": "B04",
-      "nodeid": "tests/meta/test_pipeline_rooms.py::test_a_stopped_room_says_why_and_steps_out_of_the_way",
-      "claim": "Only checks 'Ukoncene' and 'nr.why' appear in the template; two of three 'Ukoncene' are comments, so keeping stopped rooms on the strip stays green.",
-      "source": "audit",
-      "votes": {
-        "t1": "real",
-        "t2": "real",
-        "t3": "real"
-      },
-      "verdict": "real",
-      "fixed": true,
-      "commit": "c685e641"
-    },
-    {
-      "id": "B05",
-      "nodeid": "tests/meta/test_pipeline_lab_loop.py::test_a_species_we_already_own_a_clone_of_is_not_cloned_again",
-      "claim": "Docstring says held whether or not paused; the fixture has no disable row, so skipping paused instances stays green.",
-      "source": "audit",
-      "votes": {
-        "t1": "real",
-        "t2": "not",
-        "t3": "real"
-      },
-      "verdict": "real",
-      "fixed": true,
-      "commit": "c685e641"
-    },
-    {
-      "id": "B06",
-      "nodeid": "tests/meta/test_pipeline_lab_loop.py::test_money_moved_into_a_clone_counts_as_deployed",
-      "claim": "Docstring says pausing does not release the money; no pause row in the fixture, so dropping disabled instances' transfers stays green.",
-      "source": "audit",
-      "votes": {
-        "t1": "real",
-        "t2": "not",
-        "t3": "real"
-      },
-      "verdict": "real",
-      "fixed": true,
-      "commit": "c685e641"
-    },
-    {
-      "id": "B07",
-      "nodeid": "tests/meta/test_pipeline_rooms.py::test_an_arena_leg_names_a_team",
-      "claim": "Claims a team is one of two; only BLUE is shown accepted, so ARENA_TEAMS = ('BLUE',) stays green.",
-      "source": "audit",
-      "votes": {
-        "t1": "real",
-        "t2": "real",
-        "t3": "real"
-      },
-      "verdict": "real",
-      "fixed": true,
-      "commit": "c685e641"
-    },
-    {
-      "id": "B08",
-      "nodeid": "tests/meta/test_pipeline_lab_loop.py::test_the_board_the_brief_and_resume_read_bot_and_fund_rooms",
-      "claim": "Docstring names gate-row keys bot:<species> and fund:<symbol>; nothing asserts them and brief() is only checked non-empty.",
-      "source": "audit",
-      "votes": {
-        "t1": "real",
-        "t2": "not",
-        "t3": "real"
-      },
-      "verdict": "real",
-      "fixed": true,
-      "commit": "c685e641"
+      "commit": "69cd1ed1",
+      "why": "t1: 59 files is literally true"
     },
     {
       "id": "C01",
-      "nodeid": "tests/meta/test_guard_is_real.py::test_a_paper_gate_reads_the_value_not_that_something_is_there",
-      "claim": "qa/safety.py lets a live order through: a JSON-RPC batch body (a list) is returned unchecked at MUTATE (safety.py ~271-274), and the REST required_flags check (_assert_declared_flags ~410) still reads not payload.get(flag), so paper='false' passes on event-card buy.",
+      "nodeid": "tests/meta/test_pipeline_fold.py::test_no_state_change_without_run_id_or_event_id",
       "source": "audit",
+      "claim": "a CHECK-axis move made in the same step as a legitimate FILING transition is never attributed: the test only requires some transition on either axis, so a fold that set check PASSING on FIX_CLAIMED without a check transition stayed green (95 silent moves over 200 sequences, mutation probe) -- the row would display VERIFIED FIXED.",
       "votes": {
         "t1": "real",
         "t2": "real",
@@ -352,13 +257,14 @@
       },
       "verdict": "real",
       "fixed": true,
-      "commit": "0d750746"
+      "commit": "d1205347",
+      "why": "t2: surviving mutation: a passing run silently sets filing FIX_CLAIMED"
     },
     {
       "id": "C02",
-      "nodeid": "tests/meta/test_pipeline_adapters.py::test_settle_reads_the_newest_mark_the_way_the_fold_does",
-      "claim": "The test writes only accepted marks; deleting the outcome == 'accepted' filter in verify.py settle() stays green, and an unknown re-sent pass would become the newest mark so the obligation never clears.",
+      "nodeid": "tests/meta/test_pipeline_lab.py::test_the_night_holds_no_hand_that_trades_files_or_commits",
       "source": "audit",
+      "claim": "the night's no-hand guard matches a fixed name list inside one slice of scripts/lab.py: _sibling('verify').main(...) (and correspond, a2a, bounty) passes because the regex needs 'verify.py', and _archive_diaries (outside the slice, called from it) reaches keep.py's git subprocess unread.",
       "votes": {
         "t1": "real",
         "t2": "real",
@@ -366,27 +272,29 @@
       },
       "verdict": "real",
       "fixed": true,
-      "commit": "fca95c53"
+      "commit": "ba30b1bb",
+      "why": "t1: first half only; t2: first half only; keep.snapshot runs no git; t3: first half only"
     },
     {
       "id": "C03",
-      "nodeid": "tests/meta/test_pipeline_adapters.py::test_the_correction_we_send_says_which_of_the_three_things_happened",
-      "claim": "fix_claimed is checked by the substring 'a fix was claimed', which the default wording also contains; deleting the branch stays green.",
+      "nodeid": "tests/meta/test_pipeline_clone.py::test_a_route_whose_credential_is_declared_by_security_is_not_public",
       "source": "audit",
+      "claim": "the '401 with an empty body' guard reads only the slice between the first two conclude( after test_one_credential, which ends before #89's own check's reason text, and needs the closing quote -- the false claim could return in the check that feeds #89's verification and stay green.",
       "votes": {
         "t1": "real",
         "t2": "real",
-        "t3": "real"
+        "t3": "false_positive"
       },
       "verdict": "real",
       "fixed": true,
-      "commit": "fca95c53"
+      "commit": "ba30b1bb",
+      "why": "t3: the #89 check never held the phrase; a new regression, not a revert"
     },
     {
       "id": "C04",
-      "nodeid": "tests/meta/test_pipeline_build_it_better.py::test_the_building_tile_is_judged_by_the_arithmetic_behind_its_name",
-      "claim": "resolve() follows a name only when the whole expression is that name; (s.building || 0) + nf with nf = s.funded passes (same defect as A01, meta side).",
+      "nodeid": "tests/meta/test_pipeline_lab_loop.py::test_the_board_the_brief_and_resume_read_bot_and_fund_rooms",
       "source": "audit",
+      "claim": "for resume the test asserts only cmd_resume() == 0 and discards the output, so resume dropping bot and fund rooms stays green (B08 fixed the same shape for brief).",
       "votes": {
         "t1": "real",
         "t2": "real",
@@ -394,13 +302,13 @@
       },
       "verdict": "real",
       "fixed": true,
-      "commit": "bac45a82"
+      "commit": "ba30b1bb"
     },
     {
-      "id": "C05",
-      "nodeid": "tests/meta/test_pipeline_check_quality.py::test_a_route_their_ai_names_is_matched_against_the_template_not_the_text",
-      "claim": "_matches in test_nexus_routes_exist.py lets a placeholder in Nexus's text match a fixed published segment: /api/v1/exchange/{pair} matches /api/v1/exchange/pairs.",
+      "id": "B01",
+      "nodeid": "tests/mcp/test_fta_crypto_return_starts_where_its_record_does.py (discloses_pro_forma)",
       "source": "audit",
+      "claim": "discloses_pro_forma reads 'We do not use backtests or any pro-forma data' and 'Returns exclude backfilled, backtested and pro-forma figures' as disclosures (negation window too narrow), and 'includes a pro-forma stretch, not a backtest' as a denial -- a PASSING, FIX_CLAIMED row can be passed on a denial.",
       "votes": {
         "t1": "real",
         "t2": "real",
@@ -408,13 +316,13 @@
       },
       "verdict": "real",
       "fixed": true,
-      "commit": "1d5765ae"
+      "commit": "ba30b1bb"
     },
     {
-      "id": "C06",
-      "nodeid": "tests/meta/test_pipeline_check_quality.py::test_a_refusal_that_blames_trust_level_for_a_wording_is_the_defect",
-      "claim": "denies_identity is satisfied by denying either identity or trust level anywhere in the hint; 'not about your identity; it needs a higher trust level' passes.",
+      "id": "B02",
+      "nodeid": "tests/rest/test_a_refused_clone_says_why.py (asks_retry)",
       "source": "audit",
+      "claim": "asks_retry matches only the literal 'try again', so 'Please retry.' or 'don't hesitate to try again' read as a refusal for a stated reason: a one-word rewording turns a REPRODUCING, FIX_CLAIMED row VERIFIED FIXED with the defect unchanged.",
       "votes": {
         "t1": "real",
         "t2": "real",
@@ -422,13 +330,13 @@
       },
       "verdict": "real",
       "fixed": true,
-      "commit": "01b59261"
+      "commit": "ba30b1bb"
     },
     {
-      "id": "C07",
-      "nodeid": "tests/meta/test_pipeline_check_subjects.py::test_a_denial_of_a_pro_forma_stretch_is_not_a_disclosure_of_one_116",
-      "claim": "DENIED looks for a negation only before the word; 'pro-forma periods are excluded' / 'Pro-forma figures are never used' read as disclosures and #116 would pass on a live defect.",
+      "id": "B03",
+      "nodeid": "tests/rest/test_nexus_routes_exist.py",
       "source": "audit",
+      "claim": "a route is dropped when 'not', 'never', 'rather than' appear anywhere earlier in its clause ('If the clone does not start, call POST .../restart' judges nothing), and a path that is a prefix of a published one is excused as a family (POST /api/v1/cloned-bots).",
       "votes": {
         "t1": "real",
         "t2": "real",
@@ -436,13 +344,14 @@
       },
       "verdict": "real",
       "fixed": true,
-      "commit": "728a6ce6"
+      "commit": "ba30b1bb",
+      "why": "t1: the negation half only; _family is documented"
     },
     {
-      "id": "C08",
-      "nodeid": "tests/meta/test_pipeline_check_subjects.py::test_a_clone_refusal_that_asks_for_the_retry_it_refuses_fails",
-      "claim": "The test stubs their_body; a real empty 400 is captured as encoding empty/value None, their_body returns None and the check goes inconclusive where the docstring says fail (same root as A04a).",
+      "id": "B04",
+      "nodeid": "tests/discovery/test_api_docs_examples_carry_what_their_routes_require.py (BODY)",
       "source": "audit",
+      "claim": "BODY requires whitespace after -d, so curl ... -d'{\"x\": 1}' is neither judged nor counted while the pass line says all N examples carry every field.",
       "votes": {
         "t1": "real",
         "t2": "real",
@@ -450,27 +359,28 @@
       },
       "verdict": "real",
       "fixed": true,
-      "commit": "a49f5d95"
+      "commit": "ba30b1bb"
     },
     {
-      "id": "C09",
-      "nodeid": "tests/meta/test_pipeline_check_subjects.py::test_the_buy_is_judged_by_what_the_card_said_when_it_was_placed_117",
-      "claim": "A card_before recorded as unreadable ({'http_status': 503}) falls back to today's read with the false sentence 'the buy predates recording the card at the buy'.",
+      "id": "B05",
+      "nodeid": "tests/rest/test_the_build_board_counts_building_as_building.py (TILE)",
       "source": "audit",
+      "claim": "TILE captures lazily to the first ')' followed by ';', so a correct tile on one line with another text(...) call (or no semicolon) captures the neighbour's s.funded and fails a PASSING, FIX_CLAIMED row as a regression -- a false fail to the vendor.",
       "votes": {
-        "t1": "real",
+        "t1": "false_positive",
         "t2": "real",
         "t3": "real"
       },
       "verdict": "real",
       "fixed": true,
-      "commit": "7f795625"
+      "commit": "ba30b1bb",
+      "why": "t1: the mis-capture resolves to inconclusive, never a fail; t2: only minified (no ');' after the tile's own call) reproduces"
     },
     {
-      "id": "C10",
-      "nodeid": "tests/meta/test_pipeline_fold.py::test_no_state_change_without_run_id_or_event_id",
-      "claim": "FILING changes are checked only for a present event_id, not that it belongs to an event passed in; a fold citing an event never in the journal stays green.",
+      "id": "B06",
+      "nodeid": "tests/rest/test_a_filed_report_is_answered_as_filed.py (submissions/_masked)",
       "source": "audit",
+      "claim": "submissions() groups by key with the first status and the last report id, and _masked never reads the reconciled flag it computes, so an honest 500 followed by a successful resend under the same key reads as '500 and created anyway' -- a false fail on a REPRODUCING, FIX_CLAIMED row.",
       "votes": {
         "t1": "real",
         "t2": "real",
@@ -478,41 +388,812 @@
       },
       "verdict": "real",
       "fixed": true,
-      "commit": "b6413dd3"
+      "commit": "ba30b1bb"
+    },
+    {
+      "id": "B07",
+      "nodeid": "tests/rest/test_agent_board_ranks_what_it_says_it_ranks.py (ORDERED_BY_AGE)",
+      "source": "audit",
+      "claim": "the recency-disclosure predicate has no negation guard: 'not sorted by recency' or 'never newest-first' plus an 'unverified' word counts as disclosing recency order, so the PASSING, FIX_CLAIMED row keeps passing on a denial.",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "ba30b1bb"
+    },
+    {
+      "id": "B08",
+      "nodeid": "tests/mcp/test_restricted_query_says_why.py (trust-level denial)",
+      "source": "audit",
+      "claim": "every mention of identity/trust level must fall inside one of five listed denial phrasings, so 'It does not depend on your identity or trust level.' fails as 'no longer says it is not about identity' -- a false fail that would open and file a new row.",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "ba30b1bb"
+    },
+    {
+      "id": "B09",
+      "nodeid": "scripts/open_checks.py::judged_theirs",
+      "source": "audit",
+      "claim": "judged_theirs accepts any non-meta result whatever its outcome, so a full run where every vendor check was inconclusive (an outage) still reads as the last full run.",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "ba30b1bb"
+    },
+    {
+      "id": "A01",
+      "nodeid": "tests/rest/test_a_filed_report_is_answered_as_filed.py",
+      "source": "audit",
+      "verdict": "duplicate",
+      "dup_of": "B06",
+      "claim": "the same defect as B06, found independently: _masked never reads `reconciled`, so a resend after an honest 500 reads as masked (today all four masked rows are genuine reconciles: #93, #110, #113, #122).",
+      "votes": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "A02",
+      "nodeid": "tests/mcp/test_restricted_query_says_why.py (denials)",
+      "source": "audit",
+      "verdict": "duplicate",
+      "dup_of": "B08",
+      "claim": "the same defect as B08, found independently: denials recognises a fixed list of phrasings, so 'unrelated to your identity' fails as not denying it.",
+      "votes": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "A03",
+      "nodeid": "tests/mcp/test_restricted_query_says_why.py (says_wording)",
+      "source": "audit",
+      "claim": "says_wording is a substring test ('wording' in hint), so 'It is not about the wording' passes as 'its hint says it is about the wording' -- the presence-vs-value shape the docstring fixed for the identity half.",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "ba30b1bb"
+    },
+    {
+      "id": "A04",
+      "nodeid": "tests/rest/test_a_paper_buy_is_judged_against_the_paper_book.py",
+      "source": "audit",
+      "claim": "any accepted newest buy on the struck card counts as the fix, with no check of its amount against the balance the refusal quoted nor that it was paper: a 5 USDC buy the wrong 7.65 balance also covers passes while a 480 USDC paper buy would still get the 409.",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "ba30b1bb"
+    },
+    {
+      "id": "A05",
+      "nodeid": "tests/rest/test_a_refused_clone_says_why.py (asks_retry)",
+      "source": "audit",
+      "claim": "asks_retry reads any 'try again' as asking to retry the SAME request, so a fixed refusal ('You already hold a paper clone of this bot. Try again with a different bot.') fails as the defect -- a false fail (B02 is the other direction of the same predicate).",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "ba30b1bb"
+    },
+    {
+      "id": "A06",
+      "nodeid": "tests/mcp/test_card_tradeability_agrees_across_surfaces.py",
+      "source": "audit",
+      "claim": "the docstring says the reason names both read times because the pair can straddle an open/close; the code takes one `at` before the REST read and fails any rest != tool, so a read pair straddling 13:30 UTC fails with evidence that cannot show the straddle.",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "ba30b1bb"
+    },
+    {
+      "id": "A07",
+      "nodeid": "tests/rest/test_startup_line_is_reachable_as_documented.py (STATUS_LINE)",
+      "source": "audit",
+      "claim": "STATUS_LINE.search takes the first 'status:' arrow list anywhere on the page, so an unrelated 'Bid status: pending -> won | lost' above the application flow fails the check as 'promised and not served'.",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "ba30b1bb"
+    },
+    {
+      "id": "A08",
+      "nodeid": "tests/meta/test_pipeline_adapters.py::test_settle_reads_the_newest_mark_the_way_the_fold_does",
+      "source": "audit",
+      "claim": "the test never calls the fold; settle breaks a same-second tie by journal order (scripts/verify.py:535) while the fold keeps one mark per (report, fingerprint, verdict) and breaks ties by that mark's first position (qa/fold.py:675-682, 756) -- fail T1, then pass and fail in one second T2: the fold owes a fail, settle writes nothing, the correction stays owed for ever.",
+      "votes": {
+        "t1": "false_positive",
+        "t2": "false_positive",
+        "t3": "real"
+      },
+      "verdict": "minority",
+      "fixed": false,
+      "commit": null,
+      "why": "t1: no path produces the tie; t2: no path produces opposite verdicts for one key in one second"
+    },
+    {
+      "id": "RC01",
+      "nodeid": "qa/state.py::_honoured_preregistration / admissibility",
+      "source": "reread",
+      "area": "core",
+      "claim": "a run narrowed with -k/-m/--deselect under a folder-selector preregistration ('tests') reaches level V: the prereg check asks only that each preregistered path collected something, and admissibility never reads selector_full -- 'run the single check you expect to pass' verifies a fix (reachable, not live: no skill passes -k).",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "d1205347"
+    },
+    {
+      "id": "RC02",
+      "nodeid": "qa/fold.py:934 vs qa/state.py:391",
+      "source": "reread",
+      "area": "core",
+      "claim": "the events-only UNVERIFIABLE transition (V8 A4) carries cause {event_id}, and write_ledger refuses any CHECK transition without a run_id: retire_check on a single-check row followed by the documented ledger.py --events-only now fails to write -- rule 10's 'retire promptly' is blocked on 66 rows.",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "3186f2ef"
+    },
+    {
+      "id": "RC03",
+      "nodeid": "qa/fold.py::_split_report ordering",
+      "source": "reread",
+      "area": "core",
+      "claim": "_split_report creates the new row inside _apply_events, after _apply_run walked the rows, so a fold is not idempotent: the first fold leaves the new row UNVERIFIED, the rule-12 refold of the same inputs makes it REPRODUCING, and test_repo_consistency goes red.",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "d1205347"
+    },
+    {
+      "id": "RC04",
+      "nodeid": "qa/fold.py:308 (regressions)",
+      "source": "reread",
+      "area": "core",
+      "claim": "a regression is recorded only when the IMMEDIATELY prior state was a pass, so PASSING -> INCONCLUSIVE (one transport error) -> REPRODUCING records no regression and no reopen obligation on a FIX_CLAIMED row.",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "d1205347"
+    },
+    {
+      "id": "RC05",
+      "nodeid": "qa/fold.py supersede vs _obligations",
+      "source": "reread",
+      "area": "core",
+      "claim": "a superseded row goes terminal and owes nothing, and nothing reads `supersedes`, so a report the old row held (still failing) is owed to nobody -- 'the replacement carries the debt' has no line behind it (never fired: 0 supersede events).",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "d1205347"
+    },
+    {
+      "id": "RC06",
+      "nodeid": "qa/fold.py:247/264 (_apply_run)",
+      "source": "reread",
+      "area": "core",
+      "claim": "_apply_run pops unverifiable_reason and missing_checks before learning the run did not touch the row, so a partial run leaves a check_missing row UNVERIFIABLE with no reason and no missing_checks (4 live rows).",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "d1205347",
+      "why": "t2: 5 live UNVERIFIABLE rows all carry a reason; mechanism reproduces"
+    },
+    {
+      "id": "RC07",
+      "nodeid": "qa/fold.py:544 (failing per door)",
+      "source": "reread",
+      "area": "core",
+      "claim": "failing[source] = event['at'] overwrites on each new failure class, so stale_from is the newest failure, not the oldest still standing the comment promises (ok 09-01, unauthorized 09-02, server_error 09-05 -> stale_from 09-05).",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "d1205347"
+    },
+    {
+      "id": "RC08",
+      "nodeid": "qa/fold.py:473-484 (split)",
+      "source": "reread",
+      "area": "core",
+      "claim": "after a split the source row keeps a FIX_CLAIMED earned by the report it gave away, so it displays STILL REPRODUCIBLE with reverify owed on a report that was never claimed fixed (mechanism only; live #98 is paid).",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "d1205347"
+    },
+    {
+      "id": "RL01",
+      "nodeid": "scripts/lab.py::verdicts / tick (close_failed)",
+      "source": "reread",
+      "area": "lab",
+      "claim": "a close that keeps failing is never reported yet counted as a verdict: verdicts() returns retry rows {room, retry, close_failed} with no 'verdict' key, tick counts every row whose verdict != 'waiting', close_failed is never printed or passed to decide, so a refuted bot whose pause is refused keeps trading unseen, decide() calls it news and asks Nexus every tick, and 'lab.py verdicts' by hand crashes KeyError 'verdict' (always during a deep pass).",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "a5f7a418"
+    },
+    {
+      "id": "RL02",
+      "nodeid": "scripts/paper.py::close / scripts/lab.py::close_positions",
+      "source": "reread",
+      "area": "lab",
+      "claim": "a non-2xx /sell is written as outcome 'unknown' and returns normally; close_positions records only exceptions (the bot branch checks 'accepted'), so a 500 on a sell counts as closed, never reaches close_failed, and the sell is re-posted every tick (tests stub the 500 as a raise the real function never does).",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "a5f7a418"
+    },
+    {
+      "id": "RL03",
+      "nodeid": "scripts/lab.py tick (_day_session before the pass guard)",
+      "source": "reread",
+      "area": "lab",
+      "claim": "the first tick after UTC midnight closes the previous day and runs keep.snapshot() (8 tracked audits/lab files) BEFORE checking for a running deep pass, dirtying the tree so the pass's prereg is refused or its run is level R.",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "a5f7a418"
+    },
+    {
+      "id": "RL04",
+      "nodeid": "scripts/lab.py::tick / qa/lab.py::new_gaps",
+      "source": "reread",
+      "area": "lab",
+      "claim": "new_gaps reads the held lines after they were cut to the last six, so a gap-class line (HTTP 4xx/5xx, knows no card) outside those six never wakes the manager -- and the gate marks unknown_card spent, so it is never printed again.",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "a5f7a418"
+    },
+    {
+      "id": "RL05",
+      "nodeid": "scripts/lab.py:2012 (answer age)",
+      "source": "reread",
+      "area": "lab",
+      "claim": "(_moment(at) or _now()) >= since reads an unreadable answer time as now, so an operator-recorded answer with a free-text --at is launched as fresh however old -- the reverse of qa/lab.py's own rule for the same input.",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "a5f7a418"
+    },
+    {
+      "id": "RL06",
+      "nodeid": "qa/lab.py:791-800 (deep-lane backoff)",
+      "source": "reread",
+      "area": "lab",
+      "claim": "the deep-lane backoff skips only lane=='shallow', so an operator-pasted answer (lane operator) clears the deep lane's backoff and our own give-ups (unread: ReadTimeout) count as their failures.",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "a5f7a418"
+    },
+    {
+      "id": "RL07",
+      "nodeid": "scripts/lab.py:2242 vs qa/lab.py::archived_rooms",
+      "source": "reread",
+      "area": "lab",
+      "claim": "a room whose paper order failed is stopped saying 'the criterion still judges his idea on the index', but archived_rooms archives any stopped room that never held a position and verdicts() skips archived rooms -- the promised verdict never comes.",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "a5f7a418"
+    },
+    {
+      "id": "RL08",
+      "nodeid": "scripts/lab.py::_free_cash",
+      "source": "reread",
+      "area": "lab",
+      "claim": "a clone after-snapshot whose account read failed is dropped, so a pre-transfer balance wins while funded() already counts the transfer: the book is overstated and the 60 % ceiling loosens by ~0.6x the transfer.",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "a5f7a418"
+    },
+    {
+      "id": "RM01",
+      "nodeid": "qa/fomo.py:83/:1086 (ten_dollars unit)",
+      "source": "reread",
+      "area": "memecoins",
+      "claim": "the '$10 into every hot signal' headline buys once per token per clock hour, so a coin that stays hot is bought every hour (STONK 46x; 785 buys are 167 coins), against new_signals' own promise that a coin hot across polls is one signal: as published -21.2 % mean / 29 % win, one buy per hot episode -37.0 % / 23 %.",
+      "votes": {
+        "t1": "false_positive",
+        "t2": "false_positive",
+        "t3": "false_positive"
+      },
+      "verdict": "false_positive",
+      "fixed": false,
+      "commit": null,
+      "why": "t1: documented unit; t2: one buy per token per HOUR is the documented signal unit (signal_key docstring); weighting by coin is methodology; t3: signal = one per token per hour by definition"
+    },
+    {
+      "id": "RM02",
+      "nodeid": "qa/fomo.py:970-982 (stop_study 'last')",
+      "source": "reread",
+      "area": "memecoins",
+      "claim": "stop_study sells a path the loop stopped reading at its last reading as if held 24 h (299 of 1306 trades exit 'last' before hour 23, clustered at loop stops), while ten_dollars excludes the same case as unread_at_24h: the -10 % stop study reads -11.8 % instead of -18.5 %.",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "d05a012f"
+    },
+    {
+      "id": "RM03",
+      "nodeid": "scripts/fomo_watch.py:346 (_quote)",
+      "source": "reread",
+      "area": "memecoins",
+      "claim": "_quote returns None on any non-200, so a 503 checkpoint is written as the same {price_usd: None} row a delisting writes, and due_checkpoints never retries it: rule 8 (a failed read is not an empty read) broken; 8459 of 40317 checkpoints have no price and none can be told from an outage.",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "d05a012f"
+    },
+    {
+      "id": "RM04",
+      "nodeid": "qa/hot.py:371-374 (control look-back)",
+      "source": "reread",
+      "area": "memecoins",
+      "claim": "control() needs 24 h of rounds with no gap over 40 min, and the loop stops nightly (longest clean stretch 4 h 39 min), so it has never returned a number and cannot under today's operation.",
+      "votes": {
+        "t1": "false_positive",
+        "t2": "real",
+        "t3": "false_positive"
+      },
+      "verdict": "minority",
+      "fixed": false,
+      "commit": null,
+      "why": "t1: documented rule, honest n=0; t3: n=0 is deliberate under rule 8 and reported honestly"
+    },
+    {
+      "id": "RM05",
+      "nodeid": "qa/hot.py:527-551 (time exits)",
+      "source": "reread",
+      "area": "memecoins",
+      "claim": "a stop or target exits at any round but a time exit needs a round within +-30 min of the hold's end; trades without one are dropped as unobserved, so survivors are biased to stops and targets (NEX-0057a: 9 of 12 unobserved) -- C6, now firing.",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "f7af1d73"
+    },
+    {
+      "id": "RM06",
+      "nodeid": "qa/fomo.py:648-660 (R08 control guard)",
+      "source": "reread",
+      "area": "memecoins",
+      "claim": "the R08 guard works one way only: a coin drawn as a control at :05 that goes hot at :25 is in both groups in the same hour (74 of 77 overlaps), the case R08's own test says pulls the lift toward 1 (immaterial today: 5.18 vs 4.94).",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "d05a012f"
+    },
+    {
+      "id": "RM07",
+      "nodeid": "qa/fomo.py:750 (compare window)",
+      "source": "reread",
+      "area": "memecoins",
+      "claim": "compare() closes a window at fired + within_hours while stop_study and ten_dollars add due_tolerance, so a coin read in the last 45 min before its checkpoint is judged without its last point (can only turn a hit into a false miss).",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "d05a012f"
+    },
+    {
+      "id": "RO01",
+      "nodeid": "scripts/verify.py:145-148 (fail corrections)",
+      "source": "reread",
+      "area": "outbound",
+      "claim": "a fail correction cites adjudicated_by's run without comparing it with when the vendor received, paid or claimed the report, or with a later passing run: correction_owed holds #117, #119, #122, #123, all citing run-20260923T000429Z (finished 00:26:54) -- #123 was FILED after it and #122/#123 paid 06:48 -- so verify.py --confirm now would tell them paid reports 'still fail' on our 're-reading', skipping rule 7's re-verify.",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "ac1c1354",
+      "why": "t2: the 'skipping rule 7' part is wrong: reverify stays owed"
+    },
+    {
+      "id": "RO02",
+      "nodeid": "scripts/submit.py compose/evidence_runs vs fold detail/provenance",
+      "source": "reread",
+      "area": "outbound",
+      "claim": "an R-level pass overwrites a REPRODUCING row's detail and provenance without moving its state, so a NOT_RAISED report prints the passing run's reason under MEASURED VALUES while evidence_runs offers the failing run's captures (latent: 0 NOT_RAISED rows).",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "d1205347"
+    },
+    {
+      "id": "RO03",
+      "nodeid": "scripts/verify.py:734-754 (dedup within a batch)",
+      "source": "reread",
+      "area": "outbound",
+      "claim": "duplicates are checked only against what their server held before the batch, so two findings sharing one check, fingerprint and report send the same verdict twice in one run -- fired 2026-09-07 and 2026-09-10 on #51 (CYM-skill_count, CYM-skill_ids).",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "705c60ae"
+    },
+    {
+      "id": "RO04",
+      "nodeid": "scripts/submit.py:138 + outbox footer",
+      "source": "reread",
+      "area": "outbound",
+      "claim": "'MEASURED VALUES (from the live service)' and the footer 'Every figure above was read from the live service' sit over figures our checks read from our own files (#117, #119, #123 sources are state/paper.jsonl, clones.jsonl, the journal; #123's body says so), and hand-typed figures in title/actual/body go out frozen.",
+      "votes": {
+        "t1": "real",
+        "t2": "false_positive",
+        "t3": "false_positive"
+      },
+      "verdict": "minority",
+      "fixed": false,
+      "commit": null,
+      "why": "t1: only the docstring half: step figures typed by hand"
+    },
+    {
+      "id": "RO05",
+      "nodeid": "qa/safety.py:224 vs 261 (MCP host allowlist)",
+      "source": "reread",
+      "area": "outbound",
+      "claim": "an MCP JSON-RPC request returns from _check() before the MUTATE host allowlist runs, so MUTATE on MCP is double- not triple-gated: tools/call trade_event_card with paper true to an unlisted host reaches the transport (latent: needs a wrong base_urls.mcp).",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "3186f2ef"
+    },
+    {
+      "id": "RO06",
+      "nodeid": "scripts/verify.py:277-281 (_run_line)",
+      "source": "reread",
+      "area": "outbound",
+      "claim": "the R-level line tells the vendor 'it was not preregistered', but R is also reached WITH a preregistration (git_dirty, code_moved_during_run, commit mismatch) -- a false sentence in our own V8 wording.",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "705c60ae"
+    },
+    {
+      "id": "RO07",
+      "nodeid": "scripts/verify.py:711-716, 836 (settle)",
+      "source": "reread",
+      "area": "outbound",
+      "claim": "a capture failure after a POST ends the batch and drops the rest with no line, and a read whose capture failed makes settle() raise SystemExit before any fresh send (liveness only).",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "705c60ae"
+    },
+    {
+      "id": "RO08",
+      "nodeid": "qa/client.py:228 / qa/config.py:38 (X-API-Key-Scope)",
+      "source": "reread",
+      "area": "outbound",
+      "claim": "both files say the transport reads X-API-Key-Scope and refuses a trade-scoped key outside MUTATE; nothing reads it (the only occurrence is the write), and the header goes to cymetica.com on every request (dormant: every identity is read-scoped).",
+      "votes": {
+        "t1": "false_positive",
+        "t2": "false_positive",
+        "t3": "false_positive"
+      },
+      "verdict": "false_positive",
+      "fixed": false,
+      "commit": null,
+      "why": "t3: the header is sent only when scope != read; never sent today"
+    },
+    {
+      "id": "S01",
+      "nodeid": "qa/fold.py::_measured_since",
+      "source": "review",
+      "round": 2,
+      "claim": "RO01 compares their status change with the run's FINISH time; a 22-minute run that was already running when they paid counts as measured after it -- only started_at is an honest bound (results carry no per-check start).",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "fafc2633"
+    },
+    {
+      "id": "S02",
+      "nodeid": "qa/report_plugin.py:260 + qa/state.py:284 (NARROWING_OPTIONS)",
+      "source": "review",
+      "round": 2,
+      "claim": "narrowing is matched by argv prefix, so bundled flags (-qk x, -vm expr) and PYTEST_ADDOPTS='-k x' narrow unseen: the run reaches V under the full prereg and selector_full stays True, so folding it moves every unselected row to UNVERIFIABLE(check_missing). Read the parsed options instead.",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "fafc2633"
+    },
+    {
+      "id": "S03",
+      "nodeid": "qa/fold.py::_carry_reports",
+      "source": "review",
+      "round": 2,
+      "claim": "RC05's carry ignores terminal rows: out of a WITHDRAWN row the replacement owes a pass on a report the old row owes a retraction on; into an already SUPERSEDED row the claim lands on a terminal row and is owed to nobody again.",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "fafc2633"
+    },
+    {
+      "id": "S04",
+      "nodeid": "qa/fold.py split (RC08)",
+      "source": "review",
+      "round": 2,
+      "claim": "RC08 reads the remaining reports' CURRENT statuses, so a report whose status fell back fixed->in_progress (#67, #80, #87 did) makes an unrelated split drop the row FIX_CLAIMED->RAISED and turn reverify off with its check failing; and it always lands on RAISED even when REPLIED was earned.",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "fafc2633"
+    },
+    {
+      "id": "S05",
+      "nodeid": "qa/fold.py::_apply_run (RC06)",
+      "source": "review",
+      "round": 2,
+      "claim": "RC06 is incomplete: an R-level pass or an evidence-only reading still clears unverifiable_reason and missing_checks without changing the UNVERIFIABLE state; the clears belong beside adjudicated_by (low).",
+      "votes": {
+        "t1": "false_positive",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "fafc2633",
+      "why": "t1: the cleared reason had just been refuted by the run that collected the check; nothing downstream reads it (low). t3: the ledger says UNVERIFIABLE with no reason, against RC06's own comment (low)"
+    },
+    {
+      "id": "S06",
+      "nodeid": "qa/state.py:285 (RC01 token compare)",
+      "source": "review",
+      "round": 2,
+      "claim": "RC01 compares option tokens by whitespace split: a prereg saying --deselect=X refuses a run with --deselect X, and --deselect A vs --deselect B passes; the exemption is effectively dead (low).",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "fafc2633",
+      "why": "t1/t3: prereg --deselect A vs run --deselect B passes; the honest space-form run is refused; no committed prereg carries an option (low-medium)"
     }
   ],
   "review": {
     "done": true,
-    "findings": 10
+    "findings": 9
+  },
+  "rereads": {
+    "due": [
+      "core",
+      "outbound",
+      "lab",
+      "memecoins"
+    ],
+    "done": [
+      "core",
+      "outbound",
+      "lab",
+      "memecoins"
+    ]
   },
   "retrospective": {
     "last": "2026-09-19",
     "done": false
   },
   "meta_tests": {
-    "start": 699,
-    "end": 703,
-    "reason": "+4, each driving a path no existing test drove: the REST paper floor and a JSON-RPC batch (test_a_money_tool_with_a_paper_flag drives the MCP gate only), the real their_body over captured bodies for #119 (the existing test stubs it), every spelling of a curl on /api-docs (the existing test reads one), and night_promote with a bot room beside a card of the same answer (the existing rooms test drives open_strategy only). The rest are stricter asserts in existing tests."
+    "start": 786,
+    "end": null,
+    "reason": null
   },
-  "finished": true,
+  "finished": false,
   "rule_changes": [
     {
       "id": "RC1",
-      "what": "qa/safety.py: the REST required_flags floor needs the flag to be True itself (not truthy), and a JSON-RPC batch body is checked call by call instead of returning unread at PROBE and MUTATE",
-      "why": "C01 (3/3): paper 'false' passed an event-card buy at MUTATE, and a batch carried place_arena_order mode 'live' to the transport; the MCP paper gate had been fixed the same afternoon and these two doors had not",
+      "gap": "RC02",
+      "what": "qa/state.py::_check_row (the ledger contract) accepts a CHECK transition to UNVERIFIABLE whose cause is an event_id -- what the fold writes when a retire/rebind event leaves a row nothing to adjudicate; every other CHECK move still needs a run_id. CLAUDE.md's axes table says so.",
+      "why": "RC02 (3/3): since V8 the fold writes that move with its event as the cause and the contract refused it, so rule 10's retire path (withdraw.py retire-check, ledger.py --events-only) could not be written for any single-check row.",
       "votes": {
         "t1": "no",
         "t2": "no",
         "t3": "no"
       },
-      "test": "tests/meta/test_guard_is_real.py::test_a_string_flag_or_a_batch_does_not_carry_a_live_order_past_the_guard",
-      "commit": "0d750746",
+      "reasons": {
+        "t1": "_check_row never checked state against transitions or event ids; the exception accepts only the more traceable form (to UNVERIFIABLE with a named event_id) of a move the fold already made; forged ledgers are caught by the hook, rule 12's refold and the multiset check; every other CHECK move still needs a run_id; the axes-table row is not an [operator] paragraph",
+        "t2": "the exception is limited to transitions to UNVERIFIABLE; any other target without a run_id is refused; the contract accepts any present event_id without confirming it is a retire/rebind -- as it always accepted any present run_id; only fold.py:1041 writes it, from retire/rebind events; a hand edit is stopped by protect_state and rule 12; more traceable than the pre-V8 move with no transition; the axes-table row is untagged",
+        "t3": "only the named case is newly allowed; every other target without a run_id is refused; the contract does not check the event's type, wider than the CLAUDE.md wording, but no case where that matters (a hand-edited state never needed a transition; rule 12's refold catches both); UNVERIFIABLE never shows as VERIFIED FIXED; untagged table row"
+      },
+      "test": "tests/meta/test_pipeline_findings.py::test_every_check_is_collectible_or_row_is_unverifiable",
+      "commit": "3186f2ef",
+      "handover": true
+    },
+    {
+      "id": "RC2",
+      "gap": "RO05",
+      "what": "qa/safety.py holds a paper-gated MCP tools/call cleared at MUTATE to the MUTATE host allowlist; the guard file gains one test and its hash pin is re-derived a tenth time with the reason.",
+      "why": "RO05 (3/3): _check returned from the JSON-RPC branch before the host allowlist, so a paper order over MCP had two gates where REST has three.",
+      "votes": {
+        "t1": "no",
+        "t2": "no",
+        "t3": "no"
+      },
+      "reasons": {
+        "t1": "only adds a refusal: every raise unchanged, other exits return None, the batch is a list so every member is checked before any(); the host check runs only for a MUTATE paper-gated clearance; the new test fails without it; the pin is a hash pin, not an operator decision",
+        "t2": "only adds a check: every existing refusal fires first in the same order; the batch is checked item by item through a real list; True only on the paper-gated path at MUTATE; the only new refusal is a paper-gated MCP call to a host off mutate_allowed_hosts; one test added, no existing line changed; the pin re-derived with its reason",
+        "t3": "returns True in exactly one place (a paper-gated tool at MUTATE past the switch and flag); any() over a list checks every call; the new check can only raise; read tools unaffected; the test fails with the fix reverted"
+      },
+      "test": "tests/meta/test_guard_is_real.py::test_an_mcp_money_call_is_held_to_the_host_allowlist_too",
+      "commit": "3186f2ef",
+      "handover": true
+    },
+    {
+      "id": "RC3",
+      "gap": "R07",
+      "what": ".claude/hooks/protect_state.py: fd-prefixed redirects (2>, 1>, &>), >|, a write inside a quoted or $( ) target, and a quoted string that is itself a command are read as writes; HEAD's reading runs verbatim first and WRITE_FORMS before both; every exception refuses.",
+      "why": "R07 (3/3): the lookbehind that spared 2>&1 spared 2> state/x too. Seven earlier 1c rounds each found a way a new reading lost one of HEAD's refusals; the landed design keeps HEAD's reading whole and only adds.",
+      "votes": {
+        "t1": "no",
+        "t2": "no",
+        "t3": "no"
+      },
+      "reasons": {
+        "t1": "_head_writes_under_state matches HEAD word for word; WRITE_FORMS first; 50,000-command side-by-side fuzz: 0 lost refusals, 0 new crashes; 391 inputs that crashed HEAD now refused",
+        "t2": "820,073 generated commands: 0 deny-at-HEAD allowed now, 0 crashes; 18,165 allow->deny, 6,770 HEAD crashes now denied; recursion bounded; 77 passed",
+        "t3": "AST-equal to HEAD's function; WRITE_FORMS asked first; every exception path refuses; recursion terminates; 60,000-command fuzz, 0 lost refusals"
+      },
+      "rounds": 8,
+      "test": "tests/repo/test_state_guard.py::test_shell_write_under_state_is_refused",
+      "commit": "c03c1c0b",
       "handover": true
     }
   ],
-  "next": [
-    "**#117 a #119 opravili a zaplatili, ale naše kontroly soudí naše vlastní zápisy z doby PŘED opravou** (nákupy TRD-0010/0011, klony CLN-0017/0020). Ověřit novým zápisem: papírový nákup karty a4a5b71e (`paper.py buy`) a nový pokus o klon Perceptron Oracle (`clone.py clone`, čekáme 409 `ALREADY_CLONED` s důvodem); pak `verify.py --confirm`. Do té doby jejich `correction_owed` neposílat -- tvrdil by „náš re-check nesouhlasí“ a nic by znovu neměřil.",
-    "Otisk kontroly (`qa/report_plugin.py::check_fingerprint`) hashuje jen testovací funkci, ne pomocné funkce, které volá, takže `verify.py` u nepřipíchnutého řádku tvrdí „the same test, not a rewritten one“ i po přepsání pomocníka (dnes u #119, #113, #89, #121, #116; #120 jsem proto připíchl ručně). Opravit -- otisk i přes volané pomocníky modulu, nebo pravdivá věta -- a k tomu, aby `correction_owed` nevznikl u kontroly nad našimi zápisy staršími než jejich oprava. Test napřed, pak `/code-review` (sahá na fold)."
-  ],
-  "at_finished": "2026-09-22T22:44:19+00:00"
+  "review2": {
+    "done": true,
+    "findings": 6,
+    "scope": "76f6c23e..HEAD core"
+  }
 }
