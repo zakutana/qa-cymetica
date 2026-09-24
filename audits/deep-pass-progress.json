@@ -1101,11 +1101,77 @@
       "fixed": true,
       "commit": "fafc2633",
       "why": "t1/t3: prereg --deselect A vs run --deselect B passes; the honest space-form run is refused; no committed prereg carries an option (low-medium)"
+    },
+    {
+      "id": "Q01",
+      "nodeid": "qa/state.py::_honoured_preregistration (paths)",
+      "source": "review",
+      "round": 3,
+      "claim": "a run that names ONE check under a `tests` preregistration reaches level V: the folder token covers the node, so it is neither uncovered nor unused, and the paths the run named are never compared with the ones it promised -- the attack the function's docstring names; S02/S06 closed it for options only.",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "240bb802"
+    },
+    {
+      "id": "Q02",
+      "nodeid": "qa/fold.py::_split_report (S04 target)",
+      "source": "review",
+      "round": 3,
+      "claim": "S04 reads 'they replied' off the row's transitions, and a reply that arrives after FIX_CLAIMED writes none (the rank guard), so the RC08 move-back lands on RAISED although they answered -- depending only on event order.",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "240bb802"
+    },
+    {
+      "id": "Q03",
+      "nodeid": "qa/state.py::split_selector (short option with =)",
+      "source": "review",
+      "round": 3,
+      "claim": "`-k=x` is read as ('-k', '=x') while pytest parses keyword 'x'; the plugin records both, so an honest run preregistered with either spelling is refused (latent).",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "240bb802"
+    },
+    {
+      "id": "Q04",
+      "nodeid": "qa/state.py::_VALUE_LONG",
+      "source": "review",
+      "round": 3,
+      "claim": "a value-taking long option missing from _VALUE_LONG (the repo's own --snapshot-window, --color, --log-cli-level, --durations-min, ...) still has its value read as a path the run promised to collect -- S06 fixed only for the listed options (latent).",
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": true,
+      "commit": "240bb802"
     }
   ],
   "review": {
     "done": true,
-    "findings": 9
+    "findings": 26,
+    "by_round": {
+      "step 3 (R01-R09)": 9,
+      "carried from the V8 review (H01-H07)": 7,
+      "step 7 round 2 (S01-S06)": 6,
+      "round 3, the second round's own fixes before the push (Q01-Q04)": 4
+    }
   },
   "rereads": {
     "due": [
@@ -1127,10 +1193,10 @@
   },
   "meta_tests": {
     "start": 786,
-    "end": null,
-    "reason": null
+    "end": 787,
+    "reason": "one added: tests/meta/test_guard_is_real.py::test_an_mcp_money_call_is_held_to_the_host_allowlist_too (RC2, the guard file gains one test and its pin is re-derived); every other new assertion extends an existing test"
   },
-  "finished": false,
+  "finished": true,
   "rule_changes": [
     {
       "id": "RC1",
@@ -1195,5 +1261,23 @@
     "done": true,
     "findings": 6,
     "scope": "76f6c23e..HEAD core"
-  }
+  },
+  "next": [
+    "Plán v2 (`docs/laborator-plan.md`): otevřená fáze V11 (čeká na ranní vydání), stav v tabulce plánu. Po prvním dni smyčky ověřit řádky `answer_read` (V5) a `python scripts/processes.py loop` (V6: pracovních ≤ 20, klidné ≤ 4 volání, Sonnet).",
+    "Zbytky V3 a V4 (memecoiny), detail v plánu pod V3 a V4: `console.cmd --fomo 1` s horizonty jen pro nové signály, strop quote, prořez captures; hloubka při signálu jen se stropem prodeje ve všech čtečkách; test L553; C6; přepnuté páry (rugy).",
+    "Bollinger Bandit (klon 36642175) se 23. 9. zastavil sám a důvod není nikde: kontrola proti jejich dokumentované smlouvě + report přes submit.py. Napřed jedno volání `POST /api/v1/backtest-labs/autopsy` (REPLY-0049: `stop_reason` je jen tam a chce run, který klon nemá).",
+    "`POST /api/v1/backtest/bots/{slug}/run-backtest` chybí v `openapi-public.json` (REPLY-0049: sami to nazvali chybou dokumentace). Kontrola (GET openapi, SAFE) + report přes submit.py.",
+    "#117 a #119 ověřit novým zápisem (naše kontroly soudí zápisy z doby před jejich opravou): papírový nákup a4a5b71e (`paper.py buy`) a nový klon Perceptron Oracle (čekáme 409 ALREADY_CLONED s důvodem), pak `verify.py --confirm`. Do té doby `correction_owed` neposílat.",
+    "#123 stejně: kontrola čte našich posledních 12 podání a obě selhání (#113, #122) jsou před jejich opravou 23. 9.; `correction_owed` neposílat, dokud v okně nejsou podání po ní -- pak `verify.py --dry-run`.",
+    "Arena: čtení ceny podílu BLUE/RED pro verdikt (`series_of` dnes vrací mezeru). NEX-0076: podíl se nevyplácí, má cenu na CLOB 0,01–1 $; zdroj `get_arena_orderbook` (nejdřív do `components.yaml`) nebo `GET /api/v1/arena/market`. Do té doby žádný room s arena nohou.",
+    "ET-26036: čekáme na obrazcovou TA (REPLY-0042 ji slibuje; verdikt zůstává fail, MSG-0038). Až ohlásí hotovo: definice obrazců, kombinace s RSI/MACD, backtest (základ, po aktivech, 90% verze), vykreslení v grafu. Verdikt až s operátorem.",
+    "Laborka 24.–26. 9.: Hot blok v `lab.py brief` (projde vůbec něco pravidlu NEX-0055? když skoro nic, s číslem za Nexusem); verdikty STR-0006/0007 (kritérium naše výchozí, ne jeho TP/SL); při 6 uzavřených verdiktech `lab.py grade` -- předpovídá brána?",
+    "Podat report „papírový nákup AIB-Privacy odmítnut pro 7,65 USDC“ (kontrola f0b3887b, záznam v outboxu hotový): nová prereg, plný běh `tests`, `ledger.py --run`, `render.py`, `submit.py`. PRE-0155 zůstal zastavený uprostřed."
+  ],
+  "review3": {
+    "done": true,
+    "findings": 4,
+    "scope": "fafc2633 f7af1d73 (the second round's own fixes, before the push)"
+  },
+  "at_finished": "2026-09-24T03:20:16+00:00"
 }
