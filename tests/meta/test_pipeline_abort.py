@@ -193,7 +193,13 @@ PINNED = {
     # so `toggle-trading?enabled=true` with an empty body -- the parameter
     # rides in the query -- and a form body both passed as inert. One added
     # test, red on the query string before the fix.
-    "test_guard_is_real.py": "0ac8b845c5c7b9a00875bb86bd1d8e95005cc5be7fa54368e000e368df6a3f47",
+    #
+    # Re-derived a TENTH time, 2026-09-24, by the deep pass (RO05, 3/3), and
+    # again only adding enforcement: `_check` returned from the JSON-RPC
+    # branch before the MUTATE host allowlist, so a paper order over MCP had
+    # two gates where REST has three. One added test, red against a host off
+    # the list before the fix.
+    "test_guard_is_real.py": "b709ff3738fe33d991f1fe9c4bd7b8c543307f3e94419c6f7372854d7e2cd409",
 }
 
 

@@ -222,7 +222,14 @@ class SafetyTransport(httpx.BaseTransport):
 
         # MCP JSON-RPC: safety is decided by the body, not the HTTP method.
         if rule is not None and rule.readonly_rpc:
-            self._check_rpc(request, tier, rule)
+            writes = self._check_rpc(request, tier, rule)
+            # A call that may move money is held to where writes may go, as a
+            # REST write is below: this branch returned before the allowlist,
+            # so MUTATE over MCP had two gates, not three (RO05, deep pass of
+            # 2026-09-24).
+            host = request.url.host
+            if writes and host not in self.registry.mutate_allowed_hosts:
+                raise SafetyViolation(f"MUTATE against unlisted host {host!r}.")
             return
 
         if method in READ_METHODS:
@@ -263,7 +270,7 @@ class SafetyTransport(httpx.BaseTransport):
             raise SafetyViolation(f"MUTATE against unlisted host {host!r}.")
 
     # -- JSON-RPC body classification -------------------------------------
-    def _check_rpc(self, request, tier, rule) -> None:
+    def _check_rpc(self, request, tier, rule) -> bool:
         body = request.read()
         try:
             payload = json.loads(body or b"{}")
@@ -283,12 +290,12 @@ class SafetyTransport(httpx.BaseTransport):
         if isinstance(payload, list):
             if tier is SafetyTier.SAFE:
                 raise SafetyViolation("SAFE test sent a non-object JSON-RPC body.")
-            for item in payload:
-                self._check_rpc_call(item, tier)
-            return
-        self._check_rpc_call(payload, tier)
+            # A list, not a generator: any() over a generator stops at the
+            # first True and would leave the calls after it unread.
+            return any([self._check_rpc_call(item, tier) for item in payload])
+        return self._check_rpc_call(payload, tier)
 
-    def _check_rpc_call(self, payload, tier) -> None:
+    def _check_rpc_call(self, payload, tier) -> bool:
         """One JSON-RPC call, alone or as a member of a batch."""
         if not isinstance(payload, dict):
             if tier is SafetyTier.SAFE:
@@ -361,7 +368,9 @@ class SafetyTransport(httpx.BaseTransport):
                     f"what says no real funds move; send it, or do not call "
                     f"the tool."
                 )
-            return
+            # Cleared to move paper money: the caller holds it to the host
+            # allowlist (RO05).
+            return True
 
         if klass in ("trade", "provision"):
             raise SafetyViolation(

@@ -229,6 +229,31 @@ def test_every_check_is_collectible_or_row_is_unverifiable():
     assert after["findings"]["CYM-none"]["check"]["unverifiable_reason"] == "no_checks"
     assert after["findings"]["CYM-ok"]["check"]["state"] == "UNVERIFIED"
 
+    # RC02 (deep pass of 2026-09-24, 3/3): rule 10's documented path --
+    # `withdraw.py retire-check`, then `ledger.py --events-only` -- on a row
+    # with one check. Since V8 the move to UNVERIFIABLE names the retire
+    # event as its cause, and the ledger contract refused every CHECK
+    # transition without a run_id, so the write failed on 74 rows. The one
+    # CHECK move an event may cause is this one; any other still needs a run.
+    from qa.state import _check_row
+
+    from tests.meta.test_pipeline_fold import event
+    single = ledger(row("CYM-one", check_state="REPRODUCING",
+                        checks=["tests/a.py::test_x"]))
+    retired = fold(single, run=None, events=[event(
+        "retire_check", source="scripts/withdraw.py", by="operator",
+        finding_id="CYM-one", nodeid="tests/a.py::test_x", reason="its source is gone")])
+    one = retired["findings"]["CYM-one"]
+    assert one["check"]["state"] == "UNVERIFIABLE", one["check"]
+    errors: list[str] = []
+    _check_row("CYM-one", one, errors)
+    assert errors == [], errors
+    forged = {**one, "transitions": [{**one["transitions"][-1], "to": "PASSING"}]}
+    errors = []
+    _check_row("CYM-one", forged, errors)
+    assert errors and "run_id" in errors[0], (
+        "an event may take a row to UNVERIFIABLE and nowhere else")
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_inconclusive_on_filed_row_opens_repair_obligation():

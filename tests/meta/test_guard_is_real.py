@@ -975,3 +975,29 @@ def test_cloning_a_bot_needs_its_paper_flag_too():
     finally:
         CURRENT_TIER.reset(token)
         client.close()
+
+
+@qa(component="meta.guard", tier=SafetyTier.SAFE, surface="meta")
+def test_an_mcp_money_call_is_held_to_the_host_allowlist_too():
+    """RO05 of the deep pass of 2026-09-24 (3/3). MUTATE is triple-gated on
+    REST -- the switch, the flag, the host -- and `_check` returned from the
+    JSON-RPC branch before it reached the host allowlist. Over MCP a paper
+    order had two gates: `tools/call trade_event_card {paper: true}` to a
+    host not on the list reached the transport, where the same order over
+    REST is refused as an unlisted host."""
+    registry = EndpointRegistry.load()
+    registry.mutate_enabled = True
+    registry.mutate_allowed_hosts = frozenset({"not-this-host.example"})
+    client = _deaf_mcp_client(registry=registry)
+
+    token = CURRENT_TIER.set(SafetyTier.MUTATE)
+    try:
+        with pytest.raises(SafetyViolation, match="unlisted host"):
+            client.call_raw("trade_event_card",
+                            {"card_id": "c1", "amount_usdc": 1, "paper": True})
+        # A read tool writes nothing, and is not held to where writes may go.
+        with pytest.raises(AssertionError, match="THE GUARD LET IT THROUGH"):
+            client.call_raw("get_platform_status", {})
+    finally:
+        CURRENT_TIER.reset(token)
+        client.http.close()

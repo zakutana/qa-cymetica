@@ -412,7 +412,13 @@ def _check_row(fid: str, row: dict, errors: list[str]) -> None:
 
     for t in row.get("transitions", []):
         axis, cause = t.get("axis"), (t.get("cause") or {})
-        if axis == "check" and not cause.get("run_id"):
+        # The one CHECK move an event may cause: an operator's check-definition
+        # event (retire or rebind) leaving the row nothing to adjudicate. Rule
+        # 10's retire path wrote it that way since V8 and this refused it on
+        # every single-check row (RC02, deep pass of 2026-09-24). Any other
+        # CHECK move still needs a run.
+        by_definition = t.get("to") == "UNVERIFIABLE" and cause.get("event_id")
+        if axis == "check" and not cause.get("run_id") and not by_definition:
             errors.append(f"{fid}: a CHECK transition to {t.get('to')!r} has no run_id")
         if axis == "filing" and not cause.get("event_id"):
             errors.append(f"{fid}: a FILING transition to {t.get('to')!r} has no event_id")
