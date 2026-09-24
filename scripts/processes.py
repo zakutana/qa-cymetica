@@ -79,20 +79,6 @@ def reminders(facts: dict, now: datetime) -> list[str]:
     """At most a few lines: what is due, and the words that start it."""
     out: list[str] = []
 
-    # First, because it is the only line about a change we did not make. The
-    # patrol below measures OUR parts; this one says their side moved under us.
-    # [operator 2026-09-12] asked how it was possible we would not notice --
-    # and the answer that day was that nothing looked. It keeps saying it until
-    # `processes.py surface --update` acknowledges the new shape.
-    drift = facts.get("surface_drift") or []
-    if drift:
-        out.append(f"Cymetica změnila povrch od minule ({len(drift)}):")
-        out.extend(f"  {line}" for line in drift[:5])
-        # R10 (deep pass of 2026-09-22, minority): a command in a reminder is
-        # ours to run (CLAUDE.md), so it says who runs it.
-        out.append("  session je projde a potvrdí sama: "
-                   "`python scripts/processes.py surface --update`")
-
     since = _hours_since(facts.get("last_pass"), now)
     if facts.get("unpushed") and (since is None or since > MISSED_NIGHT_HOURS):
         waited = f"{since:.0f} h" if since is not None else "neznámo jak dlouho"
@@ -166,11 +152,31 @@ def reminders(facts: dict, now: datetime) -> list[str]:
         if not phase.get("open"):
             continue
         name, plan = phase.get("id", "?"), phase.get("plan", "?")
-        if name in carried and Path(plan).name in carried:
+        # The id as a WORD: "V1" in "otevřená fáze V11" hid an open V1 (R06,
+        # deep pass of 2026-09-24).
+        named = re.search(rf"(?<![\w.]){re.escape(name)}(?!\w)", carried)
+        if named and Path(plan).name in carried:
             continue
         out.append(
             f"Fáze {name} z {plan} nemá ani commit, ani řádek v NEXT.md — "
             f"schválený plán, o kterém by nikdo nevěděl.")
+
+    # Their side moved under us -- the one line about a change we did not
+    # make. [operator 2026-09-12] asked how it was possible we would not
+    # notice; it keeps saying it until `processes.py surface --update`
+    # acknowledges the new shape. ONE line, and after what is due: as a
+    # header, five lines and a confirm line it filled the session start's
+    # whole slot and hid the morning report and the owed pass behind
+    # "(+N dalších)" (R02, deep pass of 2026-09-24). R10 (2026-09-22): the
+    # command is ours to run, so it says who runs it.
+    drift = facts.get("surface_drift") or []
+    if drift:
+        named = "; ".join(str(line) for line in drift[:5])
+        more = f"; +{len(drift) - 5} další" if len(drift) > 5 else ""
+        out.append(
+            f"Cymetica změnila povrch od minule ({len(drift)}: {named}{more})"
+            " — session je projde a potvrdí sama: "
+            "`python scripts/processes.py surface --update`")
     return out
 
 
@@ -1324,6 +1330,7 @@ def transcript_rows():
 # queue, and so is one firing a loop start this does not count.
 LOOP_PROMPT = re.compile(r"^\s*(?:/loop\s+\S+\s+)?(?:jdi do labor|pokra[cč]uj)",
                          re.I)
+TYPED_LOOP_PROMPT = re.compile(r"^\s*(?:/loop\s+\S+\s+)?jdi do labor", re.I)
 # The tick's own last line, at the start of a line -- the skill quotes it in
 # backticks, so its text is never read as a tick's decision.
 DECIDE_LINE = re.compile(r"(?:^|\n)decide: ([^\n]+)")
@@ -1401,8 +1408,12 @@ def loop_firings(lines) -> list[dict]:
         typed = message.get("content") if kind == "user" else None
         if isinstance(typed, str) and not row.get("isMeta") \
                 and not typed.startswith("<"):
-            # Typed while the session was idle, a prompt skips the queue.
-            if not LOOP_PROMPT.match(typed):
+            # Typed while the session was idle, a prompt skips the queue. Only
+            # the laboratory's own words: "pokračuj" TYPED is the operator
+            # saying carry on in whatever session they are in -- two plan
+            # sessions were counted as lab firings that way (R01, deep pass of
+            # 2026-09-24). A /loop queues its prompt, old name and all.
+            if not TYPED_LOOP_PROMPT.match(typed):
                 current = None
             elif current is None or current["ids"]:
                 current = {"at": str(row.get("timestamp") or ""), "ids": set(),

@@ -27,11 +27,14 @@ def lines() -> list[str]:
         "memories_for_hook", REPO_ROOT / "scripts" / "memories.py")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    memories = module.load()
+    # The memories in force: a retired body stays on disk as the record, and
+    # counting it said 59 while 46 were live (R09, deep pass of 2026-09-24).
+    retired = module.retired_names()
+    memories = [m for m in module.load() if m["path"].stem not in retired]
     if not memories:
         return []
     classes = "|".join(module.CLASSES)
-    return [f"memory: {len(memories)} files. Before substantive work read the "
+    return [f"memory: {len(memories)} in force. Before substantive work read the "
             f"ones for this task: python scripts/memories.py --for <{classes}>"]
 
 

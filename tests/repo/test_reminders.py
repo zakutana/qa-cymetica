@@ -204,6 +204,14 @@ def test_a_plan_phase_with_neither_a_commit_nor_a_line_is_named():
         open_next=["F5 z `docs/lab-plan.md`: experimenty"]), NOW)
     assert not _says(carried, "F5", "lab-plan"), carried
 
+    # R06 (deep pass of 2026-09-24, 3/3): the id was matched as a SUBSTRING,
+    # so NEXT.md naming V11 carried an open V1 -- the plan's own line reads
+    # "otevřená fáze V11" today.
+    hidden = mod.reminders(_facts(
+        plan_phases=[{"plan": "docs/laborator-plan.md", "id": "V1", "open": True}],
+        open_next=["Plán v2 (`docs/laborator-plan.md`): otevřená fáze V11"]), NOW)
+    assert _says(hidden, "V1", "laborator-plan"), hidden
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_phase_is_read_whatever_letter_it_was_numbered_with():

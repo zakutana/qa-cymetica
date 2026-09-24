@@ -100,6 +100,18 @@ def test_a_firing_is_counted_in_calls_with_its_model_and_its_decision():
     assert firings[0]["model"] == "claude-opus-5-5"
     assert firings[2]["decide"] is None, "a firing whose tick nobody saw"
 
+    # R01 (deep pass of 2026-09-24, 3/3): "pokračuj" TYPED into a plan
+    # session is the operator saying carry on, not the laboratory's tick --
+    # two plan sessions (101 and 151 Opus calls) were counted as lab firings
+    # and fed the /model sonnet reminder. A /loop that queues it is the tick
+    # by its old name and still counts.
+    typed = [{"type": "user", "timestamp": _at(0),
+              "message": {"role": "user", "content": "Pokracuj"}},
+             _assistant(0.1, "msg_p1"), _assistant(0.2, "msg_p2")]
+    assert procs.loop_firings(_lines(typed)) == [], "a typed carry-on became a lab tick"
+    queued = [_enqueue(0, "pokracuj"), _assistant(0.1, "msg_q1")]
+    assert len(procs.loop_firings(_lines(queued))) == 1
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_loop_day_says_how_many_firings_worked_and_what_a_quiet_one_cost():

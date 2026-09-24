@@ -331,6 +331,16 @@ def test_a_retired_line_lives_in_its_own_file_and_still_counts(tmp_path,
     assert mod.problems(mod.load(), mod.index_names()) == []
     assert mod.retired_names() == {"old"}
 
+    # R09 (deep pass of 2026-09-24): the session start's line counted every
+    # body on disk, retired ones too -- "memory: 59 files" while 46 were in
+    # force, the one number the ceiling does not measure.
+    spec = importlib.util.spec_from_file_location(
+        "memory_index_r09", REPO / ".claude" / "hooks" / "start" / "memory_index.py")
+    hook = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(hook)
+    [said] = hook.lines()
+    assert said.startswith("memory: 1 "), said
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_index_fits_what_the_harness_loads():

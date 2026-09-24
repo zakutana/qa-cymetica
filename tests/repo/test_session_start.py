@@ -58,6 +58,26 @@ def test_every_source_keeps_its_slot_however_much_another_says():
     assert len(due) < mod.SLOTS["due"], "the last due line says what was cut"
     assert any("+" in line and "processes.py reminders" in line for line in said)
 
+    # R02 (deep pass of 2026-09-24, 3/3): the same crowding one level down.
+    # The drift was a header, up to five lines and a confirm line INSIDE the
+    # due source, so any drift pushed the morning report and the owed pass
+    # behind "(+N dalších)". It is one line, after what is due.
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "processes_r02", HOOK.parents[2] / "scripts" / "processes.py")
+    procs = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(procs)
+    from datetime import datetime, timezone
+    now = datetime(2026, 9, 24, 7, 30, tzinfo=timezone.utc)
+    lines = procs.reminders({"surface_drift": ["GET /x added", "GET /y moved"],
+                             "morning_missing": True, "unpushed": 5,
+                             "last_pass": "2026-09-21T20:00:00+00:00",
+                             "week_last": now.isoformat()}, now)
+    shown = mod.compose({"due": lines})
+    assert any("Ranní přehled" in line for line in shown), shown
+    assert any("Deep pass neběžel" in line for line in shown), shown
+    assert sum(1 for line in lines if "povrch" in line or "GET /" in line) == 1, lines
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_source_that_fails_costs_its_own_slot_only():

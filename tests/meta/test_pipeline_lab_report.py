@@ -128,6 +128,15 @@ def test_each_product_says_what_it_earned_after_costs():
     assert by_room["STR-0005"]["archived"] is True
     assert by_room["STR-0005"]["net_pct"] is None
 
+    # R04 (deep pass of 2026-09-24, 3/3): a room's name is its newest `title`
+    # row (qa.rooms.names), and the report named it by the one it opened
+    # with -- STR-0004 read "BTC 30 % + BCH 12 % pro 89 000" in the report and
+    # the 7:00 page while /lab said "BTC selling lows + MARA".
+    renamed = _report(room_rows=_fixture()["room_rows"] + [
+        {"type": "title", "room": "STR-0001", "title": "Card one, renamed"}])
+    assert {r["id"]: r for r in renamed["rooms"]}["STR-0001"]["title"] == \
+        "Card one, renamed"
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_room_that_holds_a_bot_is_a_bot_even_from_before_rooms_had_kinds():
@@ -314,3 +323,26 @@ def test_lab_py_report_writes_state_lab_report_json(tmp_path, monkeypatch):
                          .read_text(encoding="utf-8"))
     assert set(written["products"]) == {"cards", "bots", "memecoins", "funds"}
     assert written["products"]["cards"]["n"] == 2
+
+    # R03 (deep pass of 2026-09-24, 3/3): /lab and /lab.json on the console's
+    # threaded server, the tick and the morning page all write this file, and
+    # all through ONE `report.json.tmp` -- on Windows a replace while another
+    # writer held that tmp raised PermissionError (99 of 120 in a probe).
+    # Every writer has its own tmp; the file is whole whoever wins.
+    import threading
+    failures = []
+
+    def write(n):
+        try:
+            for i in range(15):
+                module._write_text(tmp_path / "lab" / "race.json",
+                                   json.dumps({"writer": n, "i": i}))
+        except Exception as exc:  # noqa: BLE001 -- the assertion reads it
+            failures.append(repr(exc))
+    threads = [threading.Thread(target=write, args=(n,)) for n in range(4)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+    assert failures == [], failures[:3]
+    assert json.loads((tmp_path / "lab" / "race.json").read_text(encoding="utf-8"))

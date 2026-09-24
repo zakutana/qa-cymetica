@@ -3327,12 +3327,7 @@ def write_report(now: datetime | None = None) -> dict:
         _nexus_rows(), lab.load(), rooms.load(), _sibling("paper").load(),
         load_samples(), _sibling("clone").load(),
         _sibling("fomo_watch").load(), now=now or _now())
-    target = report_path()
-    target.parent.mkdir(parents=True, exist_ok=True)
-    tmp = target.with_name(target.name + ".tmp")
-    tmp.write_text(json.dumps(said, ensure_ascii=False, indent=1),
-                   encoding="utf-8")
-    tmp.replace(target)
+    _write_text(report_path(), json.dumps(said, ensure_ascii=False, indent=1))
     return said
 
 
@@ -3357,10 +3352,30 @@ def load_morning() -> dict:
 
 
 def _write_text(target: Path, text: str) -> None:
+    """Whole or not at all, whoever else is writing the same file.
+
+    /lab and /lab.json on the console's threaded server, the tick and the
+    morning page all write report.json, and all did it through ONE
+    `report.json.tmp` -- on Windows a replace while another writer held that
+    tmp raised PermissionError, a 500 on the page or a failed tick (R03, deep
+    pass of 2026-09-24). Each writer has its own tmp, and a replace that
+    meets another writer's open handle waits a moment and tries again."""
+    import threading
+    import time
+
     target.parent.mkdir(parents=True, exist_ok=True)
-    tmp = target.with_name(target.name + ".tmp")
+    tmp = target.with_name(f"{target.name}.{os.getpid()}."
+                           f"{threading.get_ident()}.tmp")
     tmp.write_text(text, encoding="utf-8")
-    tmp.replace(target)
+    for attempt in range(20):
+        try:
+            tmp.replace(target)
+            return
+        except PermissionError:
+            if attempt == 19:
+                tmp.unlink(missing_ok=True)
+                raise
+            time.sleep(0.05)
 
 
 def morning_page(now_local: datetime | None = None) -> Path:

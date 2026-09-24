@@ -140,9 +140,14 @@ def test_the_report_carries_the_feedback_acted_on_and_a_ready_telegram_block():
     assert morning.acted(notebook, since) == ["boti mají vlastní room nahoře"]
     assert morning.telegram(notebook, since) == (
         "@EventTraderQABot memecoin terminal switches pairs")
-    assert morning.today(notebook) == ["otestovat MACD s jiným stopem",
-                                       "zeptat se Nexuse na fondy"]
+    assert morning.today(notebook, since) == ["otestovat MACD s jiným stopem",
+                                              "zeptat se Nexuse na fondy"]
     assert morning.telegram(notebook, "2026-09-24T00:00:00+00:00") is None
+    # R05 (deep pass of 2026-09-24, 3/3): "what the manager does today" took
+    # the newest three `next` lines ever written, so a night that wrote none
+    # showed days-old plans as today's -- live on 09-24, the newest was from
+    # 09-23 04:14. Since the last report, like its neighbours.
+    assert morning.today(notebook, "2026-09-24T00:00:00+00:00") == []
 
 
 def _view():

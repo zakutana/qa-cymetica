@@ -154,12 +154,15 @@ def telegram(notebook: list[dict], since: str | None) -> str | None:
 TODAY_LINE = 110
 
 
-def today(notebook: list[dict], limit: int = 3) -> list[str]:
-    """What the manager means to do today: the newest `next` lines, each cut
-    to its first sentence -- the diary line is written for the next tick,
-    the report is read by the operator on a phone."""
+def today(notebook: list[dict], since: str | None = None,
+          limit: int = 3) -> list[str]:
+    """What the manager means to do today: the newest `next` lines written
+    since the last report, each cut to its first sentence -- the diary line
+    is written for the next tick, the report is read by the operator on a
+    phone. Unbounded, a night that wrote none showed days-old plans as
+    today's (R05, deep pass of 2026-09-24)."""
     out = []
-    for row in _since(notebook, "next", None)[-limit:]:
+    for row in _since(notebook, "next", since)[-limit:]:
         text = re.split(r"(?<=[.!?])\s", row["text"].strip(), 1)[0]
         out.append(text if len(text) <= TODAY_LINE
                    else text[:TODAY_LINE - 1].rstrip() + "…")
@@ -181,7 +184,7 @@ def build(report: dict, state: dict | None, deep_md: str, notebook: list[dict],
         "overnight": overnight(report, state.get("snapshot")),
         # The first report has nothing to compare against, and says so.
         "compared": bool(state.get("snapshot")),
-        "today": today(notebook),
+        "today": today(notebook, since),
         "telegram": telegram(notebook, since),
         "acted": acted(notebook, since),
     }

@@ -29,6 +29,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from qa import fomo, lab
+from qa.rooms import names as room_names
 
 PRODUCTS = ("cards", "bots", "memecoins", "funds")
 # A room's kind -> its product. An Arena room is none of the four yet, so it
@@ -94,6 +95,10 @@ def _rooms(answers, notebook, room_rows, paper_rows, sample_rows,
             if each.get("money"):
                 money[str(each["id"])] = each["money"]
     archived = lab.archived_rooms(room_rows, answers, paper_rows, clone_rows)
+    # A room's name is its newest `title` row, as /lab says it: the opening
+    # title named STR-0004 by a basket it no longer holds (R04, deep pass of
+    # 2026-09-24).
+    titles = room_names(room_rows)
     out = []
     for room in room_rows:
         if room.get("type") != "strategy":
@@ -105,7 +110,8 @@ def _rooms(answers, notebook, room_rows, paper_rows, sample_rows,
         net = None if gone else _room_net(room, verdict, book)
         stake = book.get("priced_stake") if book.get("priced") else None
         out.append({
-            "id": rid, "title": room.get("title"), "origin": room.get("origin"),
+            "id": rid, "title": titles.get(rid, room.get("title")),
+            "origin": room.get("origin"),
             "product": _product(room, bot_origins),
             "status": status.get(rid), "archived": gone,
             "verdict": (verdict or {}).get("verdict"),
