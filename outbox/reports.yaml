@@ -3303,6 +3303,104 @@ reports:
       judges every card ever refused this way by its newest buy. It goes
       green when a paper buy of that card is accepted.
 
+  - key: creator-leads-tool-filter-falls-through-on-unknown-values
+    findings:
+      - CYM-creator-reddit-leads-tool-filter-honours-unknown-values
+      - CYM-creator-twitter-leads-tool-filter-honours-unknown-values
+    severity: medium
+    category: api
+    url: https://cymetica.com/api/v1/creator/reddit-leads
+    title: "The `tool` filter on the creator lead queues (reddit-leads, twitter-leads) returns the whole queue for a value that matches no real tool"
+    expected: >
+      openapi-public.json's own parameter description for `tool` on both
+      GET /api/v1/creator/reddit-leads and GET /api/v1/creator/twitter-leads:
+      "One queue per tool: a site path such as /pineconnector (or just
+      pineconnector) keeps only threads whose best-matching page is that
+      tool. Empty = every tool." The only stated case for "every tool" is an
+      EMPTY value; a non-empty value that names no real site tool cannot be
+      any lead's best-matching page, so the documented behaviour is an empty
+      result, same as any other tool with nothing currently matching it.
+    actual: >
+      A real, currently-empty tool correctly returns zero leads -- the "no
+      match" case works when the value is a real site path. A value that
+      matches no real tool at all returns every lead the account has instead,
+      spanning dozens of distinct tool_path values, on both endpoints. The
+      parameter is read and does narrow for a real value (?tool=/build and
+      the doc's own alternative spelling ?tool=build both narrow correctly to
+      only /build leads); only a value the lookup does not recognise falls
+      through to unfiltered rather than to empty.
+    steps:
+      - "GET /api/v1/creator/reddit-leads?limit=200&tool=/coinglass (a real site tool, no reddit leads at the time) -> 200, 0 leads"
+      - "GET /api/v1/creator/reddit-leads?limit=200&tool=/qa-fixture-does-not-exist-1234 -> 200, 200 leads (the full page), spanning 55 distinct tool_path values"
+      - "GET /api/v1/creator/twitter-leads?limit=200&tool=/qa-fixture-does-not-exist-1234 -> 200, 145 leads (every lead the account has), spanning 46 distinct tool_path values"
+      - "GET /api/v1/creator/reddit-leads?limit=30&tool=/build -> 30 leads, every one tool_path /build (positive control: a real, populated tool narrows correctly)"
+    body: >
+      SCOPE: read-only. Every call above is a GET; nothing was claimed,
+      replied to or skipped, and no lead of ours was touched.
+
+      An agent that scopes its own work with this filter -- pull only the
+      leads for the one tool I have a page for, per the parameter's own "one
+      queue per tool" framing -- gets every other tool's leads back the
+      moment it passes a value the server does not recognise: a typo, a tool
+      since renamed on the site, or (as above) a site path this account
+      simply has zero current leads for under the wrong spelling. Nothing in
+      the response distinguishes that from a correctly scoped answer, so the
+      caller has no way to tell "your filter matched nothing" from "your
+      filter was silently ignored" without independently recomputing the
+      match itself.
+
+      Our check makes no claim about mistyped-case values (e.g. /Build vs
+      /build) since the doc does not commit to case-sensitivity either way --
+      only about a value that corresponds to no real site tool at all, where
+      the "keeps only threads whose best-matching page is that tool" promise
+      leaves no room for a full-queue answer.
+
+  - key: head-to-head-surface-undocumented
+    findings: [CYM-head-to-head-surface-is-documented]
+    severity: medium
+    category: documentation
+    url: https://cymetica.com/api/v1/head-to-head/sides
+    title: "The head-to-head paper-matchup routes answer live and appear in neither OpenAPI document nor llms.txt"
+    expected: >
+      llms.txt (lines 30, 643) tells an agent builder to import
+      /openapi-public.json or /openapi.json for the REST surface, and its own
+      prose separately names every other REST section under a "## REST API"
+      heading (markets, event cards, agents, movers, cloned bots, the
+      creator dashboard, and so on). A route an agent can call should be
+      discoverable from at least one of the documents it is told to read.
+    actual: >
+      GET /api/v1/head-to-head/sides answers 200 with the callable sides of a
+      matchup; GET /api/v1/head-to-head/mine answers 200 with an (empty but
+      200, i.e. real list-endpoint) result; GET /api/v1/head-to-head itself
+      answers 405 with Allow: POST. All three are live, routed endpoints.
+      None of the three, and no path containing "head", appears in
+      /openapi.json (13 paths) or /openapi-public.json (173 paths), and no
+      case-insensitive match for "head-to-head", "head to head", "h2h",
+      "matchup" or "duel" appears anywhere in llms.txt's 71 KB of text. An
+      agent that reads either schema, or the prose that tells it which schema
+      to import, cannot discover this feature exists.
+    steps:
+      - "GET /api/v1/head-to-head/sides -> 200, a body naming the account's own bot and paper clones as callable sides"
+      - "GET /api/v1/head-to-head/mine -> 200, {\"items\": []}"
+      - "GET /api/v1/head-to-head -> 405, Allow: POST"
+      - "OPTIONS /api/v1/head-to-head/sides -> 405, Allow: GET; OPTIONS /api/v1/head-to-head/mine -> 405, Allow: GET"
+      - "GET /openapi.json and /openapi-public.json -> 0 of 13 and 0 of 173 paths mention \"head\""
+      - "GET /llms.txt -> no case-insensitive match for head-to-head, head to head, h2h, matchup or duel"
+    body: >
+      SCOPE: discoverability only, same shape as the cloned-bots finding
+      above (#88/#89) but one step earlier in the flow -- there the routes
+      existed and started a bot; here the whole feature is unnamed anywhere
+      an agent is told to look. We placed no matchup: POST /api/v1/head-to-
+      head is a write and out of scope for this pass; every call above is a
+      GET or OPTIONS.
+
+      If this is deliberately unpublished (a feature still in front-end-only
+      rollout, say), this becomes a note rather than a defect and we will
+      record it that way. If it is meant to be callable by an outside agent,
+      the fix is the same one that closed #88: a paths entry (or at minimum
+      a mention under llms.txt's own REST-API prose, the way every sibling
+      feature gets one).
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in

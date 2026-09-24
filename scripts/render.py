@@ -60,6 +60,7 @@ COMPONENT_TO_SECTION = {
     "rest.support": "support", "rest.movers": "movers",
     "rest.clones": "clones",
     "rest.build_it_better": "build_it_better",
+    "rest.creator": "creator", "rest.head_to_head": "head_to_head",
     "meta.guard": "_meta", "meta.classifier": "_meta",
     "meta.pipeline": "_meta",
 }

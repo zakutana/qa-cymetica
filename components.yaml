@@ -207,6 +207,22 @@ components:
     surface: rest
     criticality: medium
     staleness_hours: 24
+  rest.creator:
+    # Tracked links, post-kit, reward ledger and the reddit/twitter lead
+    # queues behind cymetica.com/<username>. Added to openapi-public.json and
+    # llms.txt 2026-09-23/24; first checks against it 2026-09-24.
+    title: Creator dashboard (links, post-kit, rewards, lead queues)
+    surface: rest
+    criticality: medium
+    staleness_hours: 24
+  rest.head_to_head:
+    # GET /sides and /mine answer live (200) and POST /head-to-head is routed
+    # (405 with Allow: POST on GET) -- confirmed 2026-09-24 -- while none of
+    # the three appears in /openapi.json, /openapi-public.json or llms.txt.
+    title: Head-to-head paper matchups
+    surface: rest
+    criticality: medium
+    staleness_hours: 24
 
   funding.deposit:
     title: Deposit addresses

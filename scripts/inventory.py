@@ -226,6 +226,22 @@ SECTIONS: list[dict] = [
         "blast": "measurement",
     },
     {
+        "id": "creator",
+        "title": "Creator dashboard",
+        "blurb": "Tracked links, post-kit, reward ledger and the Reddit/X lead queues behind cymetica.com/<username>. Added to openapi-public.json and llms.txt 2026-09-23/24.",
+        "patterns": [r"^/api/v1/creator-links", r"^/api/v1/creator/"],
+        "tools": [],
+        "blast": "measurement",
+    },
+    {
+        "id": "head_to_head",
+        "title": "Head-to-head paper matchups",
+        "blurb": "Paper matchups between an agent's own bot or clone and another. GET /sides and /mine answer live; none of the three routes appears in either OpenAPI document or llms.txt.",
+        "patterns": [r"^/api/v1/head-to-head"],
+        "tools": [],
+        "blast": "measurement",
+    },
+    {
         "id": "build_it_better",
         "title": "Build it Better",
         "blurb": "Name a financial app, say what it should do better, and their pipeline rebuilds it on EventTrader inside 24 hours. Six MCP tools and a public board. Their own first priority for outside QA (REPLY-0030, 2026-09-20); its REST routes are in mcp.json and in no OpenAPI document.",
