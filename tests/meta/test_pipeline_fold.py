@@ -122,8 +122,9 @@ def ledger(*rows):
 def _measured(r, at="2026-09-30T00:00:00+00:00"):
     """A row as a failing run leaves it: adjudicated, at a moment after every
     claim these fixtures make -- a correction is owed only on a measurement
-    after their word (RO01, deep pass of 2026-09-24)."""
-    r["check"]["adjudicated_by"] = {"run_id": "run-2", "at": at}
+    after their word (RO01, deep pass of 2026-09-24). Dated by when the run
+    STARTED as well (S01): only that bounds when the check read the row."""
+    r["check"]["adjudicated_by"] = {"run_id": "run-2", "at": at, "started_at": at}
     return r
 
 
@@ -713,6 +714,26 @@ def test_a_full_run_can_say_a_check_is_gone_and_a_partial_one_cannot():
     assert later.get("unverifiable_reason") == "check_missing", later
     assert later.get("missing_checks") == [CHECK_A], later
 
+    # S05 (deep pass of 2026-09-24, 2/3): nor may a run that READ the row and
+    # could not move it -- a pass without level V, or an evidence-only
+    # reading. The state stays UNVERIFIABLE, so the reason for it stays too:
+    # the clears go where the state moves, not above the gates.
+    exploratory = run("run-r", [result(CHECK_A, "passed")], level="R")
+    later = fold(after, run=exploratory, events=[])["findings"]["CYM-a"]["check"]
+    assert later["state"] == "UNVERIFIABLE"
+    assert later.get("unverifiable_reason") == "check_missing", later
+    assert later.get("missing_checks") == [CHECK_A], later
+    ev = result(CHECK_A, "passed")
+    ev["measurement"] = {"verdict": "passed", "reason": "r", "role": "evidence"}
+    later = fold(after, run=run("run-e", [ev]), events=[])["findings"]["CYM-a"]["check"]
+    assert later["state"] == "UNVERIFIABLE"
+    assert later.get("unverifiable_reason") == "check_missing", later
+    # And a run that does move it takes the reason with it.
+    moved = fold(after, run=run("run-v", [result(CHECK_A, "failed")]),
+                 events=[])["findings"]["CYM-a"]["check"]
+    assert moved["state"] == "REPRODUCING"
+    assert "unverifiable_reason" not in moved and "missing_checks" not in moved, moved
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_an_evidence_only_check_verifies_nothing():
@@ -825,6 +846,33 @@ def test_supersede_merges_rows_and_excludes_from_tiles():
     moved = later["findings"]["CYM-new"]
     assert moved["filing"]["state"] == "FIX_CLAIMED", moved["filing"]
     assert moved["obligations"]["reverify"] is True, moved["obligations"]
+
+    # S03 (deep pass of 2026-09-24, 3/3): the carry read neither end's state.
+    # Out of a row we WITHDREW, it made the replacement owe a pass on the very
+    # report the old row owes a retraction on: nothing is carried out of one.
+    supersede = events[-1]
+    taken_back = fold(state, events=_filed("CYM-old", 46, "fixed") + [
+        event("withdraw", at="2026-09-05T12:00:00+00:00", source="scripts/withdraw.py",
+              finding_id="CYM-old", reason="not a defect"), supersede])
+    assert taken_back["findings"]["CYM-old"]["obligations"]["retractions"] == [46]
+    assert taken_back["findings"]["CYM-new"]["filing"]["reports"] == [], \
+        "a report we retracted was carried onto the row that replaced it"
+    # Into a row ALREADY superseded, the claim landed on a terminal row and
+    # was owed to nobody again: the debt follows the chain to where it is live.
+    chain = ledger(row("CYM-old", check_state="REPRODUCING", checks=[CHECK_A]),
+                   row("CYM-new", check_state="REPRODUCING", checks=[CHECK_B]),
+                   row("CYM-newer", check_state="REPRODUCING", checks=[CHECK_C]))
+    onward = _filed("CYM-old", 46, "pending") + [
+        event("supersede", at="2026-09-05T12:00:00+00:00", by="operator",
+              source="scripts/withdraw.py", from_id="CYM-new", to_id="CYM-newer",
+              reason="renamed again"),
+        supersede,
+        event("vendor_status", at="2026-09-05T14:00:00+00:00", report_id=46,
+              status="fixed", evidence_id="ev-9")]
+    live = fold(chain, events=onward)["findings"]["CYM-newer"]
+    assert [r["report_id"] for r in live["filing"]["reports"]] == [46], live["filing"]
+    assert live["filing"]["state"] == "FIX_CLAIMED", live["filing"]
+    assert live["obligations"]["reverify"] is True, live["obligations"]
 
     # And the composition table still has no holes.
     for check in ("UNVERIFIED", "REPRODUCING", "PASSING"):
@@ -1392,8 +1440,9 @@ def test_a_correction_says_which_of_the_three_things_happened():
     # And the obligation itself still reads the same three.
     filed = _filed(report_id=89, status="paid")
     reproducing = _measured(row("CYM-a", check_state="REPRODUCING", pinned=FP))
-    reproducing["check"]["adjudicated_by"] = {"run_id": "run-2",
-                                              "at": "2026-09-05T10:00:00+00:00"}
+    reproducing["check"]["adjudicated_by"] = {
+        "run_id": "run-2", "at": "2026-09-05T10:00:00+00:00",
+        "started_at": "2026-09-05T10:00:00+00:00"}
     owed = fold(ledger(reproducing),
                 events=filed)["findings"]["CYM-a"]["obligations"]
     assert owed["correction_owed"] == [89], owed["correction_owed"]
@@ -1416,6 +1465,25 @@ def test_a_correction_says_which_of_the_three_things_happened():
     owed = fold(ledger(unknown), events=filed)["findings"]["CYM-a"]["obligations"]
     assert owed["correction_owed"] == [], (
         "a row that cannot say when it was measured owed a correction")
+
+    # S01 (deep pass of 2026-09-24, 3/3): a run FINISHING after their word is
+    # not a check reading after it. Results carry no time of their own, and
+    # committed runs last up to 29 minutes, so a run that started at 08:40 and
+    # finished at 09:02 may have read the row before a payment at 09:00. Only
+    # a run that STARTED after their word measured after it.
+    straddles = fold_run("run-3", [(CHECK_A, "failed")], fingerprint=FP)
+    straddles["started_at"] = "2026-09-05T08:40:00+00:00"
+    straddles["finished_at"] = "2026-09-05T09:02:00+00:00"
+    judged = fold(ledger(row("CYM-a", check_state="REPRODUCING", pinned=FP)),
+                  run=straddles, events=filed)["findings"]["CYM-a"]
+    assert judged["check"]["adjudicated_by"]["started_at"] == straddles["started_at"]
+    assert judged["obligations"]["correction_owed"] == [], (
+        "a run that was already running when they paid owed a correction")
+    after = dict(straddles, run_id="run-4", started_at="2026-09-05T09:05:00+00:00",
+                 finished_at="2026-09-05T09:20:00+00:00")
+    judged = fold(ledger(row("CYM-a", check_state="REPRODUCING", pinned=FP)),
+                  run=after, events=filed)["findings"]["CYM-a"]
+    assert judged["obligations"]["correction_owed"] == [89], judged["obligations"]
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -1587,6 +1655,30 @@ def test_a_split_gives_one_report_its_own_row_and_its_own_verdict():
     back = [t for t in gave["transitions"] if t["axis"] == "filing"
             and t["to"] == "RAISED" and t["from"] == "FIX_CLAIMED"]
     assert back and back[0]["cause"].get("event_id"), gave["transitions"]
+
+    # S04 (deep pass of 2026-09-24, 3/3): RC08 read what the remaining reports
+    # say NOW. #67 claimed a fix and then fell back to in_progress (#67, #80
+    # and #87 did); the forward-only axis kept the claim, and a split of #89
+    # took it away and turned the re-verify off with the check still failing.
+    fell_back = (_filed(report_id=67, status="fixed")
+                 + [event("vendor_status", at="2026-09-05T10:00:00+00:00",
+                          report_id=67, status="in_progress", evidence_id="ev-3")]
+                 + _filed(report_id=89, status="paid", at="2026-09-19T09:00:00+00:00"))
+    kept = fold(ledger(_measured(row("CYM-a", check_state="REPRODUCING", pinned=FP))),
+                events=fell_back + [_split()])["findings"]["CYM-a"]
+    assert kept["filing"]["state"] == "FIX_CLAIMED", kept["filing"]
+    assert kept["obligations"]["reverify"] is True, kept["obligations"]
+    # And it moves back only to what was earned: their reply stays.
+    replied = (_filed(report_id=67)
+               + [event("reply", at="2026-09-06T09:00:00+00:00", findings=["CYM-a"],
+                        evidence_id="ev-4")]
+               + _filed(report_id=89, status="paid", at="2026-09-19T09:00:00+00:00"))
+    gave = fold(ledger(_measured(row("CYM-a", check_state="REPRODUCING", pinned=FP))),
+                events=replied + [_split()])["findings"]["CYM-a"]
+    assert gave["filing"]["state"] == "REPLIED", gave["filing"]
+    back = [t for t in gave["transitions"]
+            if t["axis"] == "filing" and t["from"] == "FIX_CLAIMED"]
+    assert back and back[-1]["to"] == "REPLIED", gave["transitions"]
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

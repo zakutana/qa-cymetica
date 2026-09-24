@@ -283,11 +283,6 @@ def _apply_run(row: dict, run: dict, level: str) -> None:
         check["not_checked_in"] = run_id
         return
     check.pop("not_checked_in", None)
-    # Only now, with every check read, does the row stop being unverifiable
-    # for the reason it was: popped earlier, a partial run that never touched
-    # it erased WHY (RC06, deep pass of 2026-09-24).
-    check.pop("unverifiable_reason", None)
-    check.pop("missing_checks", None)
 
     # What this run measured; it becomes the row's reading where the run
     # adjudicates the row (below), and rides beside it where it does not.
@@ -365,7 +360,17 @@ def _apply_run(row: dict, run: dict, level: str) -> None:
     # candidates(), so a row whose check started passing kept the numbers
     # from the day it broke and wore "figures not re-measured" forever.
     _measured_here()
-    check["adjudicated_by"] = {"run_id": run_id, "at": at}
+    # `started_at` beside `at` (S01, deep pass of 2026-09-24): results carry
+    # no time of their own, so only the run's start bounds when its checks
+    # read the row -- which is what a correction owed after their word needs.
+    check["adjudicated_by"] = {"run_id": run_id, "at": at,
+                               "started_at": run.get("started_at")}
+    # Only a run that adjudicated the row stops it being unverifiable for the
+    # reason it was: popped any earlier, a partial run that never touched it
+    # (RC06) or a pass that could not move it (S05, deep pass of 2026-09-24)
+    # erased WHY while the state stayed.
+    check.pop("unverifiable_reason", None)
+    check.pop("missing_checks", None)
     if new != prior:
         check["state"] = new
         row["transitions"].append({
@@ -462,7 +467,29 @@ def _move_filing(row: dict, to: str, event: dict) -> None:
     })
 
 
-def _carry_reports(old: dict, new: dict, event: dict) -> None:
+def _claimed(report: dict, ever_claimed: set) -> bool:
+    """Did they ever claim a fix on this report? The axis moves forward only,
+    so a claim they later walked back (fixed, then in_progress: #67, #80 and
+    #87) still earned the FIX_CLAIMED it moved the row to (S04)."""
+    return (report.get("report_id") in ever_claimed
+            or (report.get("status") or "").lower() in _FIX_CLAIMED_STATUSES)
+
+
+def _live_end(rows: dict, fid: str) -> dict:
+    """The row a supersede chain ends on: a claim carried onto a row that is
+    itself superseded was owed to nobody (S03, deep pass of 2026-09-24)."""
+    seen = {fid}
+    row = rows[fid]
+    while row["filing"]["state"] == "SUPERSEDED":
+        onward = row.get("superseded_by")
+        if onward not in rows or onward in seen:
+            break
+        seen.add(onward)
+        row = rows[onward]
+    return row
+
+
+def _carry_reports(old: dict, new: dict, event: dict, ever_claimed: set) -> None:
     """The replacement holds what the superseded row filed (RC05, deep pass
     of 2026-09-24): the comment said it carried the debt and nothing did --
     the old row went terminal owing nothing, the new one held no report, and
@@ -478,12 +505,11 @@ def _carry_reports(old: dict, new: dict, event: dict) -> None:
     new["filing"]["verifications"].extend(
         dict(v) for v in old["filing"].get("verifications") or []
         if v.get("report_id") in ids)
-    claimed = any((r.get("status") or "").lower() in _FIX_CLAIMED_STATUSES
-                  for r in new["filing"]["reports"])
+    claimed = any(_claimed(r, ever_claimed) for r in new["filing"]["reports"])
     _move_filing(new, "FIX_CLAIMED" if claimed else "RAISED", event)
 
 
-def _split_report(rows: dict, event: dict) -> None:
+def _split_report(rows: dict, event: dict, ever_claimed: set) -> None:
     """Move one report off a row that holds two, onto a row of its own.
 
     2026-09-22: CYM-one_credential_carries_a_clone_from_creation_to_funding
@@ -533,17 +559,20 @@ def _split_report(rows: dict, event: dict) -> None:
     src["filing"]["verifications"] = [
         v for v in src["filing"]["verifications"] if v["report_id"] != report_id]
     dst["filing"]["verifications"].extend(told)
-    status = (moving[0].get("status") or "").lower()
-    _move_filing(dst, "FIX_CLAIMED" if status in _FIX_CLAIMED_STATUSES
+    _move_filing(dst, "FIX_CLAIMED" if _claimed(moving[0], ever_claimed)
                  else "RAISED", event)
     # The row that gave the report away keeps no FIX_CLAIMED that report
     # earned (RC08, deep pass of 2026-09-24): it displayed STILL REPRODUCIBLE
     # and owed a re-verify on a fix nobody claimed for what it still holds.
     # The one move back the axis makes, caused by the split event, appended.
+    # Only if nothing it keeps EVER claimed one, and only as far back as what
+    # was earned: their reply names the row, not the report (S04).
     left = src["filing"]["reports"]
     if src["filing"]["state"] == "FIX_CLAIMED" and not any(
-            (r.get("status") or "").lower() in _FIX_CLAIMED_STATUSES for r in left):
-        target = "RAISED" if left else "NOT_RAISED"
+            _claimed(r, ever_claimed) for r in left):
+        replied = any(t.get("axis") == "filing" and t.get("to") == "REPLIED"
+                      for t in src.get("transitions") or [])
+        target = ("REPLIED" if replied else "RAISED") if left else "NOT_RAISED"
         src["filing"]["state"] = target
         src["filing"]["adjudicated_by"] = {"event_id": event_id(event),
                                            "at": event["at"]}
@@ -578,12 +607,14 @@ def _apply_events(rows: dict, events: Iterable[dict]) -> None:
     retracted: dict[str, set[int]] = {}
     # Which door's read failed last and has not read cleanly since (A5).
     failing: dict[str, str] = {}
+    # Every report they have ever claimed a fix on, so far in the replay (S04).
+    ever_claimed: set = set()
 
     for event in events:
         etype = event.get("type")
 
         if etype == "split_report":
-            _split_report(rows, event)
+            _split_report(rows, event, ever_claimed)
             continue
 
         if etype == "vendor_read":
@@ -627,6 +658,7 @@ def _apply_events(rows: dict, events: Iterable[dict]) -> None:
             # Handled before the target lookup: this event names its two rows
             # directly rather than through finding_id or a report.
             old_id, new_id = event.get("from_id"), event.get("to_id")
+            was = rows[old_id]["filing"]["state"] if old_id in rows else None
             if old_id in rows:
                 rows[old_id]["superseded_by"] = new_id
                 _move_filing(rows[old_id], "SUPERSEDED", event)
@@ -636,8 +668,13 @@ def _apply_events(rows: dict, events: Iterable[dict]) -> None:
                 supersedes = rows[new_id].setdefault("supersedes", [])
                 if old_id not in supersedes:
                     supersedes.append(old_id)
-                if old_id in rows and old_id != new_id:
-                    _carry_reports(rows[old_id], rows[new_id], event)
+                # Only out of a row that was live (S03, deep pass of
+                # 2026-09-24): a withdrawn row's reports are owed a
+                # retraction, not a pass, and a row superseded before has
+                # carried its own already. Onto where the chain is live.
+                if old_id in rows and old_id != new_id and was not in _TERMINAL:
+                    _carry_reports(rows[old_id], _live_end(rows, new_id), event,
+                                   ever_claimed)
             continue
 
         targets = [fid for fid in _filing_targets(event, rows) if fid in rows]
@@ -679,6 +716,8 @@ def _apply_events(rows: dict, events: Iterable[dict]) -> None:
 
         elif etype == "vendor_status":
             status = (event.get("status") or "").lower()
+            if status in _FIX_CLAIMED_STATUSES:
+                ever_claimed.add(event.get("report_id"))
             for fid in targets:
                 for report in rows[fid]["filing"]["reports"]:
                     if report["report_id"] == event.get("report_id"):
@@ -816,9 +855,13 @@ def _measured_since(row: dict, report: dict, verified: list) -> bool:
     Until a run reads the row after their word, the re-verify (rule 7) is
     what is owed. A row that cannot say when it was measured owes nothing:
     a sentence we cannot date is one we cannot stand behind.
+
+    Dated by the run's START (S01, deep pass of 2026-09-24, 3/3): a run that
+    finished after their word may have read the row before it, and results
+    carry no time of their own.
     """
     measured = str(((row.get("check") or {}).get("adjudicated_by") or {})
-                   .get("at") or "")
+                   .get("started_at") or "")
     if correction_reason(report, verified) == "our_pass":
         said = [str(v.get("at") or "") for v in verified
                 if v.get("report_id") == report.get("report_id")

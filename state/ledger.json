@@ -41,7 +41,8 @@
         "state": "CHECK_CHANGED",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "a00fa16074a898173577cb72f9e863a691aa4bfdb20c43a2d1476189800850ff",
         "last_exploratory_pass": {
@@ -171,7 +172,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "c128bb487c196aee5ab6a08c9bfedce70d99544cab71152a482c5530ad93b4a7",
         "last_exploratory_pass": {
@@ -378,7 +380,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "2150b030a8e4860cf7a2480bc36a2ae989dae3d032e200d87b5667f27c8c236f",
         "last_exploratory_pass": {
@@ -646,7 +649,8 @@
         "state": "PASSING_UNPINNED",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": null,
         "last_exploratory_pass": {
@@ -1008,7 +1012,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "sha256:9e5564057407dd11f05887c86b3b9017",
         "last_exploratory_pass": {
@@ -1159,7 +1164,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "5ec2ad807e24bbd1d7b1426ec466461d8cacd67ff55a809ed16b497f18351a97",
         "last_exploratory_pass": {
@@ -1306,7 +1312,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "aee41113b423d34dbb0fb7a237f679ec142e320ffd706e3a3645b1a3b80b4cd5",
         "last_exploratory_pass": {
@@ -1453,7 +1460,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "sha256:480bd5eb9d55f9495ccad7c95a78bea9",
         "last_exploratory_pass": {
@@ -1600,7 +1608,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "sha256:6156cefe281b0c01af3a3391dce65475",
         "last_exploratory_pass": {
@@ -1812,7 +1821,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "7d407afa861e77a3cf508bd4322059dcb57278fd95b3e61c32246e840a94b4ee",
         "last_exploratory_pass": {
@@ -1961,7 +1971,8 @@
         "state": "REPRODUCING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "sha256:f3d9b4a71fbf227f926c530f5d62476d"
       },
@@ -2187,7 +2198,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "b29402efa7bf2470bde86d34d23e67843ebdc1e6f2fcb235b26081136d119299",
         "last_exploratory_pass": {
@@ -2480,7 +2492,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "sha256:c92311ababf484c409f09471d3d2b835",
         "last_exploratory_pass": {
@@ -2907,7 +2920,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "sha256:3bd11ec340a31060a08d40b5e9a262d7",
         "last_exploratory_pass": {
@@ -3113,7 +3127,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "sha256:9e5564057407dd11f05887c86b3b9017",
         "last_exploratory_pass": {
@@ -3292,7 +3307,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "sha256:9e5564057407dd11f05887c86b3b9017",
         "last_exploratory_pass": {
@@ -3503,7 +3519,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "7e9fa3b315c02dbafde5c9fd268cdc7c32c6019c6dbfe7476611705cb1c95608",
         "last_exploratory_pass": {
@@ -3668,7 +3685,8 @@
         "state": "PASSING_UNPINNED",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": null,
         "last_exploratory_pass": {
@@ -3771,7 +3789,8 @@
         "state": "PASSING_UNPINNED",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": null,
         "last_exploratory_pass": {
@@ -3971,7 +3990,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "63b5af80410517bcd0f649fe3bfddfbb4986eb2d467a60c979a1bc66dc452220",
         "last_exploratory_pass": {
@@ -4130,7 +4150,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "4eab7cd9650f8ced35800751c28bd5162702733480316dfc25703dba65a04397",
         "last_exploratory_pass": {
@@ -4421,7 +4442,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "bbdc1d54bf684a9e645532950d2a04740ef9083655d287ae7dd192a9d16dfab5",
         "last_exploratory_pass": {
@@ -4544,7 +4566,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "fab9ea34aa0eefe65a940f193a856ca6e13426fdee9c14c85bd53118a81b3ba5",
         "last_exploratory_pass": {
@@ -4737,7 +4760,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "04cf163554964f44f24aae44e443668700ca69347c90e518ffd3a2cff7d10810",
         "last_exploratory_pass": {
@@ -5109,7 +5133,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "e8b6dc45879b9d4219d1818f07ca3b841ece9be3f5c8752248b97cea47b22833",
         "last_exploratory_pass": {
@@ -5352,7 +5377,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "ada0068b55c66e5e02f8048f4302d1077cf6a57c4527faa3e8dc4abe6bc5a1fd",
         "last_exploratory_pass": {
@@ -5596,7 +5622,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "b5ad3dc6a3b54e17185484837e8bac5bef42f551adedbe435b807c3a0d81945b",
         "last_exploratory_pass": {
@@ -5768,7 +5795,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "0760ba619fbd7a06945b43cc499e2a739d906a4deb8ebe97cd3dbd484d066d37",
         "last_exploratory_pass": {
@@ -5910,7 +5938,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "92c230648502812ed80e88cfba49ef71ca8303fae2f1ac8a4ea40bb2bb1a90d1",
         "last_exploratory_pass": {
@@ -6049,7 +6078,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "490328669c50d9e10b4917f7d34e5974d460a08e4aa608ac77a148651c77c6d8",
         "last_exploratory_pass": {
@@ -6207,7 +6237,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "236c68e92be50b732a7a4ae6b4890fbf1213c7cd4cae533b240ad125fcc15d25",
         "last_exploratory_pass": {
@@ -6347,7 +6378,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "ba32011ff9878149115a486791636008104e030dc9216745a19505bade147ba4",
         "last_exploratory_pass": {
@@ -6498,7 +6530,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "c07738dfe41ae11926fab9b971579f7d72aac31b8f06b734755cb384f8c8786c",
         "last_exploratory_pass": {
@@ -6666,7 +6699,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "c504687a8affa03c127572e1fea10a615c12e3d943b6f886dc29b745c94664f0",
         "last_exploratory_pass": {
@@ -6931,7 +6965,8 @@
         "state": "REPRODUCING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "84885322a72b7450579e6de4f695e915fe4f4d6a9eccac0e0f54fbaec3e20ee8"
       },
@@ -7205,7 +7240,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "c0260ccc81d31eed5db260e9aa71892030cef7ff5a089ba6d42a0dc52510983c",
         "last_exploratory_pass": {
@@ -7461,7 +7497,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "683fdd876eb2d0049f2a12a2c627bce72b54436c423dc695b21442e4f885f7a5"
       },
@@ -7682,7 +7719,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "085e9abd1744b2ea5db74e90069965b9f47cf2bf230b825c3876e94d68dc116e",
         "last_exploratory_pass": {
@@ -7897,7 +7935,8 @@
         "state": "REPRODUCING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "4d7dd0f1952c6ea876b8f03aea300fb99f89e1be901dccb238f3d462aecef9cf"
       },
@@ -8108,7 +8147,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "7a52ceff1e585acf3435b70f322e83c344d04b06af6d7ae07370c50f443e6fd0"
       },
@@ -8328,7 +8368,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "f10984755a3fc80f40bb0b3a95098751d68b43fa5d8026e16a66405692f0bd97",
         "last_exploratory_pass": {
@@ -8500,7 +8541,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "baf436747483adfa85430a04b2119a0cc05ab880f86d558e2855580a2a9c2687",
         "last_exploratory_pass": {
@@ -8638,7 +8680,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "b336927c694c0ad968b9678055feeec4e59093850ffbb71522eb3286c9165335",
         "last_exploratory_pass": {
@@ -8766,7 +8809,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "4f6665a41151d607e31b19cc0950ae341cf1b49e38add9846f613d1a1181f84d",
         "last_exploratory_pass": {
@@ -8929,7 +8973,8 @@
         "state": "INCONCLUSIVE",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "f6206c3e45fa527784fe102e6836979651737e448416a238fb2b70ef8bd23eb0",
         "last_exploratory_pass": {
@@ -9101,7 +9146,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "d350e3be5dd059a7593e42828f974edae44589a4ad2ba75eadddd73e8dd7dc5b",
         "last_exploratory_pass": {
@@ -9263,7 +9309,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "d00642e279528c5554bd095096c397de4d570788310ce0933c092d320dc11053",
         "last_exploratory_pass": {
@@ -9466,7 +9513,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "4ea140bbefcea8ace32cd5461dfc2018ae877bd18e510bf6b33c39605bc9bd4c",
         "last_exploratory_pass": {
@@ -9643,7 +9691,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "187de3341ad1873eb9c2968e1a79e5cda3fb2d5c7e29ff46066f602403df0422",
         "last_exploratory_pass": {
@@ -9810,7 +9859,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "e497701194f4c7111d2f99b797f22d1f66b81b502f3bc176d76a75956a2ac8a0",
         "last_exploratory_pass": {
@@ -10076,7 +10126,8 @@
         "state": "REPRODUCING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "4e20d9ebfd70f3e0cd3e778f8f0fd9d6bdde4e3b5e3d2cde024b168bcc03cea8"
       },
@@ -10295,7 +10346,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "95dc4c587aea14e45e9760e8ea83d3a4e8f489f1267ded56e5026c58c034a7f8",
         "last_exploratory_pass": {
@@ -10517,7 +10569,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "e616fbf087930ded36b0388c0e493ed52abf6081761ed6f810593cd402766c59",
         "last_exploratory_pass": {
@@ -10683,7 +10736,8 @@
         "state": "INCONCLUSIVE",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "a77dd40f16c6639f0f61a3624d31a2cbb4bcbc4936e590f413bfb111a60ea919",
         "last_exploratory_pass": {
@@ -10868,7 +10922,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "d0699f895df0d89f3940259c63d506674761ec889df7c6e6338b25e4e5b7cd3d",
         "last_exploratory_pass": {
@@ -11010,7 +11065,8 @@
         "state": "CHECK_CHANGED",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "bf8a210d394b0679b3186d484b7881970fc6c55295aa3fa17d7c3959cef5bf16",
         "last_exploratory_pass": {
@@ -11126,7 +11182,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "e27ffa63a1369a3e8c9a6044545dbdbc984274bb14cf844e260de1529712d8dd",
         "last_exploratory_pass": {
@@ -11309,7 +11366,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "8aa97e5a70a1a004856b2c177a95d055f6b0f9982801496fc2870ca940acbd03"
       },
@@ -11487,7 +11545,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "7f5fb8efbfa3f29d78fff8c268230f6c58dfcc948de0fd52b6a33dac49c5272f"
       },
@@ -11692,7 +11751,8 @@
         "state": "INCONCLUSIVE",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "d68dde5d632e02f6434da646359d6a3efa738a21eed738630bd3c1f06281b5d9"
       },
@@ -11852,7 +11912,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "db5b7b315735c496674e82bdc768e9ae1aad4993c50120b7fe4dfd12c3633e28",
         "last_exploratory_pass": {
@@ -11952,7 +12013,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "0883ad81621b70d0438e8c3715af8baf0ceef5cf5141bc68dc1cd8d894fbe14c"
       },
@@ -12131,7 +12193,8 @@
         "state": "REPRODUCING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "2e8b6858e71d177779a21f95ec0e35a6b92cb18ef65e71e7d8adbc6ddd20965b"
       },
@@ -12426,7 +12489,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "3789db2c68f6b78827c0f48fbf0affe567ab27e2acb1dffb6a67f8405e74df7a"
       },
@@ -12559,7 +12623,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "3d0968cd68babcff16599d0e834a5c235fd784c9342554d9e3bb66756cefc1f9"
       },
@@ -12703,7 +12768,8 @@
         "state": "REPRODUCING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "e77176673b270cba67e599aab8b4011f8b1805aed59efc088f93522cef55ffe3"
       },
@@ -12907,7 +12973,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "799ae81824626c5ec366030934a5032f7862eb51bdf0336d8195bbd0ef487d68"
       },
@@ -13063,7 +13130,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "4ab5c7b76f1a02454deaa910308c4356d73589b6a94f9eaf8e8c5775ea9790c9"
       },
@@ -13399,7 +13467,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "3e7934294282ab8d5bed6c9fe5338a7153fe7b058eda3e28625b465cfa4ece74"
       },
@@ -13551,7 +13620,8 @@
         "state": "REPRODUCING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "f9147b657ba9d4d8852f04c3986c958f28c5d72e80c2035d46de64ac4c1e1de4"
       },
@@ -13691,7 +13761,8 @@
         "state": "PASSING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "170f56de79523c2c95e671cabe72a06ed553f6f948778de844cb5ba8fe69ef8a"
       },
@@ -13828,7 +13899,8 @@
         "state": "REPRODUCING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "148d300d0b8a4f408d544c6254e1d8d4ec6925a037ab0027658ef9ccc12929a6"
       },
@@ -14063,7 +14135,8 @@
         "state": "REPRODUCING",
         "adjudicated_by": {
           "run_id": "run-20260923T000429Z-062ab82e",
-          "at": "2026-09-23T00:26:54+00:00"
+          "at": "2026-09-23T00:26:54+00:00",
+          "started_at": "2026-09-23T00:04:35+00:00"
         },
         "pinned_fingerprint": "c8c24b2391af2d1a7a8e6ab30fbddb5c538d271eb97d9972ca529798519dc857"
       },

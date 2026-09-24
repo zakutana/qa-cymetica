@@ -226,11 +226,84 @@ def _preregistered_selector(prereg_id: str) -> str | None:
     return None
 
 
-# The pytest options that narrow what a session collects or runs -- one list,
-# read by qa/report_plugin.py for `selector_full` and here for a
-# preregistration's promise.
-NARROWING_OPTIONS = ("-k", "-m", "--deselect", "--ignore", "--lf",
-                     "--last-failed", "--sw", "--stepwise")
+# The pytest options that narrow what a session collects or runs, each by the
+# one name it is compared under and the attribute pytest parses it into
+# (config.option.<dest>) -- one table, read by qa/report_plugin.py for
+# `selector_full` and `narrowing`, and here for a preregistration's promise.
+NARROWING_DESTS = (("keyword", "-k"), ("markexpr", "-m"),
+                   ("deselect", "--deselect"), ("ignore", "--ignore"),
+                   ("ignore_glob", "--ignore-glob"), ("lf", "--lf"),
+                   ("stepwise", "--sw"), ("stepwise_skip", "--sw"))
+_NARROWING = {option for _, option in NARROWING_DESTS}
+_NARROWING_ALIASES = {"--last-failed": "--lf", "--stepwise": "--sw",
+                      "--sw-skip": "--sw", "--stepwise-skip": "--sw"}
+_NARROWING_FLAGS = frozenset({"--lf", "--sw"})
+# Options whose value may be the NEXT token -- read so that value is never
+# taken for a path the run promised to collect. Short ones can end a bundle
+# (`-qk x`); a long one not listed here is read as a flag, as before.
+_VALUE_SHORT = frozenset("kmpcoWr")
+_VALUE_LONG = frozenset({"--deselect", "--ignore", "--ignore-glob", "--prereg",
+                         "--tb", "--rootdir", "--basetemp", "--maxfail",
+                         "--junitxml", "--junit-xml", "--capture", "--durations",
+                         "--import-mode", "--confcutdir", "--override-ini",
+                         "--log-level", "--lfnf", "--last-failed-no-failures"})
+
+
+def split_selector(command) -> tuple[list[str], set[tuple[str, str]]]:
+    """A pytest command line as (the paths it names, the narrowing options it
+    carries, each WITH its value).
+
+    A string is split the way `_honoured_preregistration` always split one; a
+    sequence is taken as already-split arguments (invocation_params.args).
+
+    S06 (deep pass of 2026-09-24, 3/3): whitespace tokens read an option's
+    value as a path the run had to collect, and compared `--deselect A` with
+    `--deselect B` by the option alone. S02 (3/3): a prefix match never read
+    `-qk x` as a -k. Raises ValueError when the string does not parse.
+    """
+    import shlex
+
+    if isinstance(command, str):
+        # posix=False, because posix mode reads a backslash as an escape and
+        # this workspace is Windows: `--selector tests\meta` was recorded
+        # verbatim by prereg.py and came back out of shlex as `testsmeta`, so
+        # run_integrity reported two problems about a run that had honoured
+        # its preregistration exactly, and compose() raised on them. The
+        # normalisation in _selector_covers was written for these tokens and
+        # never saw one. Non-posix keeps the quotes on, so strip them here.
+        tokens = [t.strip("\"'") for t in shlex.split(command, posix=False)]
+    else:
+        tokens = [str(t) for t in command]
+    paths: list[str] = []
+    narrowing: set[tuple[str, str]] = set()
+    i = 0
+    while i < len(tokens):
+        token = tokens[i]
+        i += 1
+        if not token or token == "-":
+            continue
+        if token.startswith("--"):
+            name, eq, value = token.partition("=")
+            name = _NARROWING_ALIASES.get(name, name)
+            if not eq and name in _VALUE_LONG and i < len(tokens):
+                value = tokens[i]
+                i += 1
+            if name in _NARROWING:
+                narrowing.add((name, "" if name in _NARROWING_FLAGS else value))
+        elif token.startswith("-"):
+            for j, letter in enumerate(token[1:], start=1):
+                if letter not in _VALUE_SHORT:
+                    continue
+                value = token[j + 1:]
+                if not value and i < len(tokens):
+                    value = tokens[i]
+                    i += 1
+                if f"-{letter}" in _NARROWING:
+                    narrowing.add((f"-{letter}", value))
+                break
+        else:
+            paths.append(token)
+    return paths, narrowing
 
 
 def _honoured_preregistration(run: dict, selector: str) -> list[str]:
@@ -249,18 +322,8 @@ def _honoured_preregistration(run: dict, selector: str) -> list[str]:
     A declared token that collected nothing means it ran less -- the shape of
     narrowing to a result you like, and the reason this exists.
     """
-    import shlex
-
     try:
-        # posix=False, because posix mode reads a backslash as an escape and
-        # this workspace is Windows: `--selector tests\meta` was recorded
-        # verbatim by prereg.py and came back out of shlex as `testsmeta`, so
-        # run_integrity reported two problems about a run that had honoured
-        # its preregistration exactly, and compose() raised on them. The
-        # normalisation in _selector_covers was written for these tokens and
-        # never saw one. Non-posix keeps the quotes on, so strip them here.
-        tokens = [t.strip("\"'") for t in shlex.split(selector, posix=False)]
-        tokens = [t for t in tokens if t and not t.startswith("-")]
+        tokens, promised = split_selector(selector)
     except ValueError:
         return [f"the preregistered selector {selector!r} does not parse"]
     if not tokens:
@@ -276,18 +339,28 @@ def _honoured_preregistration(run: dict, selector: str) -> list[str]:
     # check collected under it, so `pytest tests -k x` under the full sweep's
     # `tests` honoured every token below and reached level V -- the attack
     # this function exists for, open for the one selector that is not a list
-    # of ids. The options that narrow what was collected are on the record.
-    try:
-        ran = shlex.split(str(run.get("selector") or ""), posix=False)
-    except ValueError:
-        ran = []
-    narrowed = [a for a in ran
-                if a.startswith(NARROWING_OPTIONS) and a not in selector.split()]
+    # of ids. The options that narrow what was collected are on the record:
+    # as pytest PARSED them since S02 (a bundled `-qk`, PYTEST_ADDOPTS), off
+    # the command line for a record older than that. Each with its value
+    # (S06): `--deselect A` promised is not `--deselect B` run.
+    if run.get("narrowing") is not None:
+        try:
+            ran = {(str(o), str(v)) for o, v in run["narrowing"]}
+        except (TypeError, ValueError):
+            return [f"the run's narrowing {run['narrowing']!r} does not read "
+                    f"as option-value pairs"]
+    else:
+        try:
+            ran = split_selector(str(run.get("selector") or ""))[1]
+        except ValueError:
+            ran = set()
+    narrowed = sorted(ran - promised)
     if narrowed:
+        option, value = narrowed[0]
         problems.append(
             f"the run narrowed what {run.get('prereg_id')} preregistered with "
-            f"{narrowed[0]} -- a session may not choose after the tag which of "
-            f"its preregistered checks to run")
+            f"{option} {value}".rstrip() + " -- a session may not choose after "
+            f"the tag which of its preregistered checks to run")
 
     uncovered = [n for n in collected
                  if not any(_selector_covers(t, n) for t in tokens)]

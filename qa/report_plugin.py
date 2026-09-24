@@ -143,6 +143,9 @@ def pytest_sessionstart(session):
         # what separates "that check was not selected" from "that check does
         # not exist" -- and only a full run can say the second.
         "selector_full": _selector_is_full(session.config),
+        # What narrowed it, as pytest parsed it -- what a preregistration's
+        # promise is held to (S02, deep pass of 2026-09-24).
+        "narrowing": _narrowing(session.config),
         "allow_mutate": bool(_opt(session.config, "--allow-mutate", False)),
         "collected": [],
         "results": [],
@@ -250,20 +253,47 @@ def _selector_is_full(config) -> bool:
     check_missing branch, the only thing that can say a check is GONE rather
     than merely untested, has never once been able to fire.
     """
-    from qa.state import NARROWING_OPTIONS
-
-    args = list(config.invocation_params.args)
     # -k and -m, and (A4 of the review of 2026-09-23, 3/3) the options that
     # deselect or skip what was collected: counted as full, they let a
-    # partial run declare a check GONE. One list with the preregistration's
+    # partial run declare a check GONE. One table with the preregistration's
     # own check (RC01).
-    narrowed = any(a.startswith(NARROWING_OPTIONS) for a in args)
-    if narrowed:
+    if _narrowing(config):
         return False
     # config.args falls back to the testpaths ini value when nothing
     # positional was given, which is the same thing: the whole suite.
     positional = [str(a) for a in (getattr(config, "args", None) or [])]
     return not positional or positional == ["tests"]
+
+
+def _narrowing(config) -> list[list[str]]:
+    """The options this session narrowed what it collected with, each with
+    its value: what pytest PARSED, and what the command line says.
+
+    S02 (deep pass of 2026-09-24, 3/3): a prefix match over the raw arguments
+    never read `-qk x` as a -k, and PYTEST_ADDOPTS never reaches them at all
+    -- a run of 1 of 128 checks recorded itself full. config.option holds
+    both. The command line is read too, so a plugin that is not loaded
+    (`-p no:cacheprovider` takes --lf with it) hides nothing either.
+    """
+    from qa.state import NARROWING_DESTS, split_selector
+
+    pairs: set[tuple[str, str]] = set()
+    option = getattr(config, "option", None)
+    for dest, name in NARROWING_DESTS:
+        value = getattr(option, dest, None)
+        if not value:
+            continue
+        if value is True:
+            pairs.add((name, ""))
+        elif isinstance(value, (list, tuple)):
+            pairs.update((name, str(v)) for v in value)
+        else:
+            pairs.add((name, str(value)))
+    try:
+        pairs |= split_selector(list(config.invocation_params.args))[1]
+    except ValueError:
+        pass
+    return [list(p) for p in sorted(pairs)]
 
 
 def check_fingerprint(item) -> str:

@@ -352,10 +352,10 @@ def test_an_option_value_is_not_a_test_path():
 
     from qa.report_plugin import _selector_is_full
 
-    def config(raw, resolved):
+    def config(raw, resolved, **parsed):
         return types.SimpleNamespace(
             invocation_params=types.SimpleNamespace(args=tuple(raw)),
-            args=list(resolved))
+            args=list(resolved), option=types.SimpleNamespace(**parsed))
 
     assert _selector_is_full(config(
         ["tests", "--prereg", "PRE-0045", "-q"], ["tests"])), \
@@ -375,6 +375,27 @@ def test_an_option_value_is_not_a_test_path():
         assert not _selector_is_full(config(
             ["tests", narrowing, "foo"], ["tests"])), \
             f"{narrowing} narrows collection and must not read as full"
+
+    # S02 (deep pass of 2026-09-24, 3/3): a bundled flag is not a prefix
+    # (`-qk x`), and PYTEST_ADDOPTS never reaches invocation_params -- a run
+    # of 1 of 128 checks recorded itself full. What pytest PARSED says it.
+    for bundled in (["-qk", "x"], ["-vm", "slow"], ["-qkx"]):
+        assert not _selector_is_full(config(["tests", *bundled], ["tests"])), bundled
+    assert not _selector_is_full(config(["tests"], ["tests"], keyword="x")), \
+        "a -k from PYTEST_ADDOPTS read as a full run"
+    for dest, value in (("markexpr", "slow"), ("deselect", ["a.py::t"]),
+                        ("ignore", ["tests/rest"]), ("ignore_glob", ["*x*"]),
+                        ("lf", True), ("stepwise", True)):
+        assert not _selector_is_full(config(["tests"], ["tests"], **{dest: value})), dest
+    assert _selector_is_full(config(["tests"], ["tests"], keyword="", markexpr="",
+                                    deselect=None, lf=False)), \
+        "pytest's own defaults read as narrowing"
+
+    # And the record carries it, for the preregistration's check to read.
+    from qa.report_plugin import _narrowing
+    assert _narrowing(config(["tests", "-qk", "x"], ["tests"], keyword="x")) \
+        == [["-k", "x"]]
+    assert _narrowing(config(["tests"], ["tests"], keyword="", deselect=None)) == []
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

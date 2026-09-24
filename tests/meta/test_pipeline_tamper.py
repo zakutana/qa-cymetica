@@ -170,6 +170,40 @@ def test_a_run_that_did_not_honour_its_preregistration_is_refused():
          "selector": "tests --prereg PRE-0002 -q --no-header --tb=no"},
         "tests") == []
 
+    # S02 (deep pass of 2026-09-24, 3/3): matched as argv PREFIXES, a bundled
+    # flag narrowed unseen -- `-qk x` is the token `-qk`, which does not start
+    # with `-k` -- and PYTEST_ADDOPTS never reaches the command line at all.
+    for bundled in ("-qk test_one", "-vm slow", "-qktest_one"):
+        assert _honoured_preregistration(
+            {"prereg_id": "PRE-0002", "collected": [one],
+             "selector": f"tests {bundled} --prereg PRE-0002"}, "tests"), bundled
+    # What pytest PARSED is on the record since S02, and it is what counts.
+    assert _honoured_preregistration(
+        {"prereg_id": "PRE-0002", "collected": [one],
+         "selector": "tests --prereg PRE-0002", "narrowing": [["-k", "test_one"]]},
+        "tests"), "a -k from PYTEST_ADDOPTS narrowed unseen"
+    assert _honoured_preregistration(
+        {"prereg_id": "PRE-0002", "collected": [one, two],
+         "selector": "tests --prereg PRE-0002", "narrowing": []}, "tests") == []
+
+    # S06 (deep pass of 2026-09-24, 3/3): options compared as whitespace
+    # tokens. An option's VALUE was read as a path the run had to collect, so
+    # the honest run was refused; and `--deselect A` in the preregistration
+    # let a run deselect B instead. An option is compared with its value.
+    promised = f"tests --deselect {two}"
+    assert _honoured_preregistration(
+        {"prereg_id": "PRE-0003", "collected": [one],
+         "selector": f"tests --deselect {two} --prereg PRE-0003"}, promised) == [], \
+        "the run that deselected exactly what it promised was refused"
+    assert _honoured_preregistration(
+        {"prereg_id": "PRE-0003", "collected": [two],
+         "selector": f"tests --deselect {one} --prereg PRE-0003"}, promised), \
+        "a run deselected another check than the one it promised"
+    assert _honoured_preregistration(
+        {"prereg_id": "PRE-0003", "collected": [one],
+         "selector": f"tests --deselect {two} --prereg PRE-0003"},
+        f"tests --deselect={two}") == [], "--deselect=X and --deselect X differ"
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_concurrent_writers_cannot_break_the_chain(tmp_path):
