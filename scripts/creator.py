@@ -43,12 +43,35 @@ def claim(client, outlet: str, lead_id: int, page_slug: str = "",
         raise CreatorError(f"unknown outlet {outlet!r} -- one of {OUTLETS}")
     if not confirm:
         raise CreatorError("pass confirm=True to actually claim the lead")
-    response = client.post(f"/api/v1/creator/{outlet}-leads/{int(lead_id)}/reply",
-                           json={"link_slug": page_slug or ""})
+    import httpx
+
+    try:
+        response = client.post(
+            f"/api/v1/creator/{outlet}-leads/{int(lead_id)}/reply",
+            json={"link_slug": page_slug or ""})
+    except httpx.TimeoutException:
+        return _settle(client, outlet, lead_id, "timed out")
+    if response.status_code >= 500:
+        return _settle(client, outlet, lead_id, f"HTTP {response.status_code}")
     if response.status_code != 200:
         raise CreatorError(
             f"claim refused: HTTP {response.status_code} {response.text[:200]!r}")
     return response.json() or {}
+
+
+def _settle(client, outlet: str, lead_id: int, why: str) -> dict:
+    """A 5xx or a timeout is outcome-unknown, not a refusal: their 503 has
+    answered claims that committed (ET-27021). Read the claimed leads back
+    and report what is there; never retry blind."""
+    response = client.get(f"/api/v1/creator/{outlet}-leads",
+                          params={"status": "claimed,replied", "limit": 200})
+    if response.status_code != 200:
+        raise CreatorError(f"claim {why}, and the read-back failed too "
+                           f"(HTTP {response.status_code}) -- outcome unknown")
+    for lead in response.json().get("leads") or []:
+        if lead.get("id") == int(lead_id):
+            return {**lead, "settled_by_read": True}
+    raise CreatorError(f"claim {why}; read back: lead {lead_id} is not claimed")
 
 
 def identity():
@@ -112,6 +135,8 @@ def cmd_claim(args) -> int:
         CURRENT_TIER.reset(token)
         client.close()
     slug = said.get("reply_slug")
+    if said.get("settled_by_read"):
+        print("(their answer was a 5xx or a timeout; this is the read-back)")
     print(f"lead {said.get('id')} {said.get('status')}  {said.get('permalink')}")
     print(f"tracked link: {tracked_url(slug) if slug else '(none returned)'}")
     print(f"suggested reply: {said.get('suggested_reply')}")

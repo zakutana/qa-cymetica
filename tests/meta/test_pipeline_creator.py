@@ -98,6 +98,40 @@ def test_a_claim_posts_the_documented_body_and_returns_the_tracked_link():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_503_or_a_timeout_is_settled_by_reading_the_lead_back():
+    """ET-27021 (2026-09-24): claims on leads 109 and 83 answered 503 and 97
+    timed out, and all three had committed; creator.py printed "claim
+    refused". A 5xx or a timeout is outcome-unknown: read the claimed leads
+    back and say what is there, never retry blind and never call it refused."""
+    from tests.meta.test_guard_is_real import as_mutate_tier
+
+    mod = _module()
+    posts = []
+
+    def committed(request):
+        if request.method == "POST":
+            posts.append(request.url.path)
+            return httpx.Response(503, json={"error": {"code": "SERVICE_UNAVAILABLE"}})
+        assert request.url.params.get("status") == "claimed,replied"
+        return httpx.Response(200, json={"leads": [CLAIMED]})
+
+    with as_mutate_tier():
+        said = mod.claim(_client(committed, mutate=True), "twitter", 3,
+                         "p497i3fy", confirm=True)
+    assert said["reply_slug"] == "znn8eicp" and said["settled_by_read"] is True
+    assert posts == ["/api/v1/creator/twitter-leads/3/reply"], "retried blind"
+
+    def lost(request):
+        if request.method == "POST":
+            raise httpx.ReadTimeout("timed out", request=request)
+        return httpx.Response(200, json={"leads": []})
+
+    with as_mutate_tier(), pytest.raises(mod.CreatorError, match="not claimed"):
+        mod.claim(_client(lost, mutate=True), "twitter", 3, "p497i3fy",
+                  confirm=True)
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_claim_routes_are_writes_with_a_closed_body_and_nothing_else():
     """The gate: both routes are declared, their body may carry link_slug and
     nothing more, and no rule on them moves money (no required_flags)."""
