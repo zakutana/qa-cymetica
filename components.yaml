@@ -437,6 +437,26 @@ endpoints:
     component: rest.movers
     executable_params: [symbols]
 
+  # The creator dashboard's "Reply with this page" (2026-09-24): claims one
+  # lead in the reply queue and mints a tracked link for that one reply. No
+  # money moves and nothing is posted to X or Reddit -- the operator posts by
+  # hand. Closed body: ClaimBody in /openapi-public.json carries link_slug and
+  # nothing else. scripts/creator.py turns MUTATE on for their host and asks
+  # for confirm before the network.
+  - id: creator.twitter_lead_reply
+    path: /api/v1/creator/twitter-leads/{lead_id}/reply
+    methods: [POST]
+    component: rest.creator
+    executable_params: [link_slug]
+    closed_body: true
+
+  - id: creator.reddit_lead_reply
+    path: /api/v1/creator/reddit-leads/{lead_id}/reply
+    methods: [POST]
+    component: rest.creator
+    executable_params: [link_slug]
+    closed_body: true
+
   - id: arena.order
     path: /api/v1/arena/order
     methods: [POST]
