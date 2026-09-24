@@ -740,15 +740,28 @@ def compare(rows: list[dict], multiple: float = 3.0, within_hours: float = 72.0,
 
     out = {"multiple": multiple, "within_hours": within_hours,
            "period_from": period_from.isoformat() if period_from else None}
+    hot_keys = set(entries.get("hot") or {})
     for group, signals in entries.items():
         excluded = {"untradeable": 0, "depth_unknown": 0, "window_open": 0,
                     "unpriced": 0, "unread": 0, "before_period": 0,
-                    "pair_changed": 0, "repeat_call": 0}
+                    "pair_changed": 0, "repeat_call": 0, "also_hot": 0}
         measured: dict[str, tuple] = {}
         for key, signal in signals.items():
             fired = _at(signal.get("at"))
-            if fired is None or fired + timedelta(hours=within_hours) > moment:
+            # Closed once its LAST reading could have been taken: the due
+            # tolerance, as stop_study and ten_dollars wait for it (RM07,
+            # deep pass of 2026-09-24) -- judged sooner, a coin whose multiple
+            # came at the last point read as a miss.
+            if fired is None or fired + timedelta(
+                    hours=within_hours + due_tolerance(within_hours)) > moment:
                 excluded["window_open"] += 1
+                continue
+            # A control drawn at :05 that went hot at :25 is the same coin at
+            # the same hour in both arms -- the case R08 guarded only the
+            # other way round (RM06, deep pass of 2026-09-24).
+            if group == "control" and \
+                    str(key).removeprefix(CONTROL_PREFIX) in hot_keys:
+                excluded["also_hot"] += 1
                 continue
             if period_from is not None and fired < period_from:
                 excluded["before_period"] += 1
@@ -955,7 +968,7 @@ def stop_study(rows: list[dict], stop_pct: float, target_pct: float | None = Non
             paths.setdefault(row["key"], []).append((hours, price))
 
     excluded = {"window_open": 0, "unpriced": 0, "unread": 0,
-                "pair_changed": 0}
+                "pair_changed": 0, "unread_at_end": 0}
     trades = []
     for key, signal in signals.items():
         fired = _at(signal.get("at"))
@@ -988,6 +1001,14 @@ def stop_study(rows: list[dict], stop_pct: float, target_pct: float | None = Non
             if target_pct is not None and ret >= target_pct:
                 why, (hours, price) = "target", point
                 break
+        if why == "last" and hours < last:
+            # Held to the end means READ to the end (RM02, deep pass of
+            # 2026-09-24, 3/3): a path the loop stopped reading was sold at
+            # its last reading as if held the day -- 308 of 1333 trades,
+            # clustered where the loop stopped, the -10 % study -12.1 %
+            # where it is -18.8 %. `ten_dollars` calls it unread_at_24h.
+            excluded["unread_at_end"] += 1
+            continue
         if cost_pct is not None:
             cost, assumed = float(cost_pct), False
         else:

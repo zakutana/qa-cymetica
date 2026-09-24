@@ -263,6 +263,17 @@ def test_a_target_exits_at_the_reading_and_no_exit_holds_to_the_last():
     assert round(said["mean_net_pct"], 6) == round((140.0 + 5.0) / 2, 6), said
     assert said["win_rate"] == 1.0
 
+    # RM02 (deep pass of 2026-09-24, 3/3): a path the loop stopped reading
+    # before the day was out was SOLD at its last reading as if held the day
+    # -- 308 of 1333 trades, the -10 % study -12.1 % where it is -18.8 %.
+    # `ten_dollars` leaves the same case out as unread; so does this.
+    cut = "0xcut:2026-09-13T12"
+    said = fomo.stop_study(rows + [_signal(cut)]
+                           + _path(cut, 1.0, [(1, 0.97), (6, 1.30)]),
+                           stop_pct=10.0, target_pct=100.0, cost_pct=0.0, now=DONE)
+    assert said["n"] == 2, said
+    assert said["excluded"]["unread_at_end"] == 1, said["excluded"]
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_cost_comes_from_their_max_buy_against_our_clip():

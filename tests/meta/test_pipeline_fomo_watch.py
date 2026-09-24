@@ -191,6 +191,17 @@ def test_resolve_checkpoints_only_what_is_due_and_computes_our_own_return(
     early = mod.resolve(_client(handler), now=T0 + timedelta(minutes=10))
     assert early["checked"] == 0
 
+    # RM03 (deep pass of 2026-09-24, 3/3): a checkpoint read that answered
+    # 503 was written as {price_usd: None} -- the row a delisting writes --
+    # and the hour marked done, so it was never read again inside its
+    # window. 8459 of 40317 checkpoints carry no price and none can be told
+    # from an outage. Rule 8: nothing is written, and the hour is retried.
+    down = mod.resolve(_client(lambda r: httpx.Response(503, json={"d": 1})),
+                       now=T0 + timedelta(hours=1))
+    assert not [r for r in mod.load() if r.get("type") == "checkpoint"], (
+        "an outage was written as a coin with no price")
+    assert down["checked"] == 0 or all(c.get("error") for c in down["checkpoints"]), down
+
     due = mod.resolve(_client(handler), now=T0 + timedelta(hours=1, minutes=1))
     assert due["checked"] == 1
     checkpoint = due["checkpoints"][0]

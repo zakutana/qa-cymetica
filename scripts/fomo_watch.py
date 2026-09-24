@@ -343,7 +343,12 @@ def resolve(client, now=None) -> dict:
         token = str(address or "").lower()
         if token not in quoted:
             try:
-                quoted[token] = _quote(client, address)
+                # `_listing`: a 503 raises, so an outage writes nothing and
+                # the hour is read again inside its window. `_quote` answered
+                # None and it was written as the row a delisting writes (RM03,
+                # deep pass of 2026-09-24, 3/3) -- the case the entry retry
+                # below already knew.
+                quoted[token] = _listing(client, address)
             except Exception as exc:  # noqa: BLE001 -- re-raised per reading
                 quoted[token] = exc
         said = quoted[token]

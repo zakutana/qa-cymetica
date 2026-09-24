@@ -319,7 +319,7 @@ def test_hot_and_control_are_compared_per_coin_over_one_period_on_one_pair():
     ]
 
     said = fomo.compare(rows, multiple=3.0, within_hours=72,
-                        now=T0 + timedelta(hours=73))
+                        now=T0 + timedelta(hours=74))  # every window and its tolerance closed
 
     hot = said["hot"]
     assert (hot["n"], hot["hits"]) == (2, 1), hot
@@ -328,6 +328,23 @@ def test_hot_and_control_are_compared_per_coin_over_one_period_on_one_pair():
     assert hot["excluded"]["pair_changed"] == 1, hot["excluded"]
     assert (said["control"]["n"], said["control"]["hits"]) == (2, 1), said
     assert said["period_from"] == T0.isoformat(), said
+
+    # RM06 (deep pass of 2026-09-24, 3/3): R08 kept a coin hot EARLIER in the
+    # hour out of the control draw, not one drawn at :05 that went hot at
+    # :25 -- the same coin at the same hour in both arms (74 of 77 overlaps).
+    both = rows + [_row("control", "control:twice:T1", T0),
+                   _read("study", "control:twice:T1", 30, 3.5, "control")]
+    said = fomo.compare(both, multiple=3.0, within_hours=72,
+                        now=T0 + timedelta(hours=74))
+    assert (said["control"]["n"], said["control"]["hits"]) == (2, 1), said
+    assert said["control"]["excluded"]["also_hot"] == 1, said["control"]
+
+    # RM07: the window closed at fired + 72 h, while its last reading may be
+    # taken up to the due tolerance later -- a coin whose 3x came at hour 72
+    # was judged without that point, a false miss.
+    early_read = fomo.compare(rows, multiple=3.0, within_hours=72,
+                              now=T0 + timedelta(hours=72, minutes=10))
+    assert early_read["hot"]["n"] == 0, early_read["hot"]
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
