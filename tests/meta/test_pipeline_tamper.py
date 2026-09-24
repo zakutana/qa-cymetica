@@ -204,6 +204,33 @@ def test_a_run_that_did_not_honour_its_preregistration_is_refused():
          "selector": f"tests --deselect {two} --prereg PRE-0003"},
         f"tests --deselect={two}") == [], "--deselect=X and --deselect X differ"
 
+    # Q01 (deep pass of 2026-09-24, 3/3): and the PATHS. A run pointed at one
+    # check under the suite's `tests` collected one node, the folder covered
+    # it, nothing was unused -- level V for "run the one check you expect to
+    # pass", the attack this function exists for, open once options were shut.
+    for pointed in ({"selector": f"{one} --prereg PRE-0004"},
+                    {"selector": "tests --prereg PRE-0004", "paths": [one]},
+                    {"selector": "tests/rest --prereg PRE-0004"}):
+        said = _honoured_preregistration(
+            {"prereg_id": "PRE-0004", "collected": [one], "narrowing": [], **pointed},
+            "tests")
+        assert said and "did not preregister" in said[0], (pointed, said)
+    for honest in ({"selector": "tests --prereg PRE-0004"},
+                   {"selector": "--prereg PRE-0004 -q", "paths": ["tests"]},
+                   {"selector": "tests\\ --prereg PRE-0004", "paths": ["tests\\"]},
+                   {"selector": "--prereg PRE-0004"}):
+        assert _honoured_preregistration(
+            {"prereg_id": "PRE-0004", "collected": [one, two], "narrowing": [],
+             **honest}, "tests") == [], honest
+
+    # Q03, Q04 (3/3): `-k=x` is keyword x to pytest, and an option's value is
+    # never a path -- this repository's own --snapshot-window included.
+    from qa.state import split_selector
+    assert split_selector("tests -k=x")[1] == {("-k", "x")}
+    assert split_selector("tests -qk=x")[1] == {("-k", "x")}
+    assert split_selector("tests --snapshot-window 60 --color yes "
+                          "--log-cli-level INFO --durations-min 1")[0] == ["tests"]
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_concurrent_writers_cannot_break_the_chain(tmp_path):

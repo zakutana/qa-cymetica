@@ -509,7 +509,8 @@ def _carry_reports(old: dict, new: dict, event: dict, ever_claimed: set) -> None
     _move_filing(new, "FIX_CLAIMED" if claimed else "RAISED", event)
 
 
-def _split_report(rows: dict, event: dict, ever_claimed: set) -> None:
+def _split_report(rows: dict, event: dict, ever_claimed: set,
+                  replied: set) -> None:
     """Move one report off a row that holds two, onto a row of its own.
 
     2026-09-22: CYM-one_credential_carries_a_clone_from_creation_to_funding
@@ -566,13 +567,13 @@ def _split_report(rows: dict, event: dict, ever_claimed: set) -> None:
     # and owed a re-verify on a fix nobody claimed for what it still holds.
     # The one move back the axis makes, caused by the split event, appended.
     # Only if nothing it keeps EVER claimed one, and only as far back as what
-    # was earned: their reply names the row, not the report (S04).
+    # was earned: their reply names the row, not the report (S04) -- read off
+    # the reply itself, which after the claim left no transition (Q02).
     left = src["filing"]["reports"]
     if src["filing"]["state"] == "FIX_CLAIMED" and not any(
             _claimed(r, ever_claimed) for r in left):
-        replied = any(t.get("axis") == "filing" and t.get("to") == "REPLIED"
-                      for t in src.get("transitions") or [])
-        target = ("REPLIED" if replied else "RAISED") if left else "NOT_RAISED"
+        answered = src.get("id") in replied
+        target = ("REPLIED" if answered else "RAISED") if left else "NOT_RAISED"
         src["filing"]["state"] = target
         src["filing"]["adjudicated_by"] = {"event_id": event_id(event),
                                            "at": event["at"]}
@@ -607,14 +608,17 @@ def _apply_events(rows: dict, events: Iterable[dict]) -> None:
     retracted: dict[str, set[int]] = {}
     # Which door's read failed last and has not read cleanly since (A5).
     failing: dict[str, str] = {}
-    # Every report they have ever claimed a fix on, so far in the replay (S04).
+    # Every report they have ever claimed a fix on, so far in the replay (S04),
+    # and every row they replied on -- a reply after the claim writes no
+    # transition, the axis only moving forward (Q02).
     ever_claimed: set = set()
+    replied: set = set()
 
     for event in events:
         etype = event.get("type")
 
         if etype == "split_report":
-            _split_report(rows, event, ever_claimed)
+            _split_report(rows, event, ever_claimed, replied)
             continue
 
         if etype == "vendor_read":
@@ -745,6 +749,7 @@ def _apply_events(rows: dict, events: Iterable[dict]) -> None:
 
         elif etype == "reply":
             for fid in targets:
+                replied.add(fid)
                 _move_filing(rows[fid], "REPLIED", event)
 
         elif etype == "verification_outcome":

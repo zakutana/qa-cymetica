@@ -146,6 +146,8 @@ def pytest_sessionstart(session):
         # What narrowed it, as pytest parsed it -- what a preregistration's
         # promise is held to (S02, deep pass of 2026-09-24).
         "narrowing": _narrowing(session.config),
+        # And the paths it was pointed at, as pytest resolved them (Q01).
+        "paths": _paths(session.config),
         "allow_mutate": bool(_opt(session.config, "--allow-mutate", False)),
         "collected": [],
         "results": [],
@@ -263,6 +265,14 @@ def _selector_is_full(config) -> bool:
     # positional was given, which is the same thing: the whole suite.
     positional = [str(a) for a in (getattr(config, "args", None) or [])]
     return not positional or positional == ["tests"]
+
+
+def _paths(config) -> list[str]:
+    """The paths this session was pointed at, as pytest resolved them:
+    config.args, which never holds an option's value and falls back to the
+    testpaths ini value when nothing positional was given (Q01, deep pass of
+    2026-09-24) -- what a preregistration's promised paths are held to."""
+    return [str(a) for a in (getattr(config, "args", None) or [])]
 
 
 def _narrowing(config) -> list[list[str]]:

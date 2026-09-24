@@ -397,6 +397,13 @@ def test_an_option_value_is_not_a_test_path():
         == [["-k", "x"]]
     assert _narrowing(config(["tests"], ["tests"], keyword="", deselect=None)) == []
 
+    # Q01 (deep pass of 2026-09-24, 3/3): the paths it was pointed at, as
+    # pytest resolved them -- an option's value is never one of them.
+    from qa.report_plugin import _paths
+    assert _paths(config(["tests/a.py::t", "--snapshot-window", "60"],
+                         ["tests/a.py::t"])) == ["tests/a.py::t"]
+    assert _paths(config(["-q"], ["tests"])) == ["tests"]
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_part_that_could_not_be_read_is_not_a_part_that_changed():

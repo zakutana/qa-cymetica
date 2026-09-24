@@ -1679,6 +1679,16 @@ def test_a_split_gives_one_report_its_own_row_and_its_own_verdict():
     back = [t for t in gave["transitions"]
             if t["axis"] == "filing" and t["from"] == "FIX_CLAIMED"]
     assert back and back[-1]["to"] == "REPLIED", gave["transitions"]
+    # Q02 (3/3): whatever the order. A reply that arrives after the claim
+    # writes no transition -- the axis only moves forward -- and read off the
+    # transitions, the same reply a day later was silence.
+    late = (_filed(report_id=67)
+            + _filed(report_id=89, status="paid", at="2026-09-19T09:00:00+00:00")
+            + [event("reply", at="2026-09-20T09:00:00+00:00", findings=["CYM-a"],
+                     evidence_id="ev-4")])
+    gave = fold(ledger(_measured(row("CYM-a", check_state="REPRODUCING", pinned=FP))),
+                events=late + [_split()])["findings"]["CYM-a"]
+    assert gave["filing"]["state"] == "REPLIED", gave["filing"]
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

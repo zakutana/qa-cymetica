@@ -246,7 +246,26 @@ _VALUE_LONG = frozenset({"--deselect", "--ignore", "--ignore-glob", "--prereg",
                          "--tb", "--rootdir", "--basetemp", "--maxfail",
                          "--junitxml", "--junit-xml", "--capture", "--durations",
                          "--import-mode", "--confcutdir", "--override-ini",
-                         "--log-level", "--lfnf", "--last-failed-no-failures"})
+                         "--log-level", "--lfnf", "--last-failed-no-failures",
+                         # Q04 (deep pass of 2026-09-24, 3/3): this repository's
+                         # own, and the rest of pytest 8.3's value-taking ones.
+                         "--snapshot-window", "--color", "--code-highlight",
+                         "--log-cli-level", "--log-cli-format",
+                         "--log-cli-date-format", "--log-file",
+                         "--log-file-level", "--log-file-format",
+                         "--log-file-date-format", "--log-format",
+                         "--log-date-format", "--log-auto-indent",
+                         "--show-capture", "--verbosity", "--pythonwarnings",
+                         "--config-file", "--assert", "--durations-min",
+                         "--doctest-glob", "--doctest-report", "--junit-prefix",
+                         "--pastebin", "--pdbcls"})
+
+
+def _path(token: str) -> str:
+    """A path as `_selector_covers` compares one: forward slashes, no
+    trailing one, no leading `./`."""
+    token = token.replace("\\", "/").rstrip("/")
+    return token[2:] if token.startswith("./") else token
 
 
 def split_selector(command) -> tuple[list[str], set[tuple[str, str]]]:
@@ -294,7 +313,8 @@ def split_selector(command) -> tuple[list[str], set[tuple[str, str]]]:
             for j, letter in enumerate(token[1:], start=1):
                 if letter not in _VALUE_SHORT:
                     continue
-                value = token[j + 1:]
+                # `-k=x` is keyword x to pytest (Q03, 3/3).
+                value = token[j + 1:].removeprefix("=")
                 if not value and i < len(tokens):
                     value = tokens[i]
                     i += 1
@@ -361,6 +381,31 @@ def _honoured_preregistration(run: dict, selector: str) -> list[str]:
             f"the run narrowed what {run.get('prereg_id')} preregistered with "
             f"{option} {value}".rstrip() + " -- a session may not choose after "
             f"the tag which of its preregistered checks to run")
+
+    # Q01 (deep pass of 2026-09-24, 3/3): and the PATHS it was pointed at. A
+    # run of `tests/rest/x.py::t` under the suite's `tests` collected one node,
+    # the folder covered it and nothing was unused -- level V for "run the one
+    # check you expect to pass", open once the options were shut. Every path
+    # the run named is one the preregistration named; none at all is the
+    # suite's testpaths, `tests`. As pytest resolved them since Q01
+    # (`paths`), off the command line before that; a record carrying
+    # neither has nothing here to compare.
+    if run.get("paths") is not None or run.get("selector") is not None:
+        if run.get("paths") is not None:
+            named = [str(p) for p in run["paths"]]
+        else:
+            try:
+                named = split_selector(str(run["selector"]))[0]
+            except ValueError:
+                named = []
+        named = [_path(p) for p in named] or ["tests"]
+        extra = [p for p in named if p not in {_path(t) for t in tokens}]
+        if extra:
+            problems.append(
+                f"the run was pointed at {extra[0]}, which "
+                f"{run.get('prereg_id')} did not preregister -- a session may "
+                f"not choose after the tag which of its preregistered checks "
+                f"to run")
 
     uncovered = [n for n in collected
                  if not any(_selector_covers(t, n) for t in tokens)]
