@@ -382,7 +382,26 @@ def test_the_hook_is_silent_when_nothing_is_due_and_never_fails(tmp_path,
     broken = subprocess.run([sys.executable, str(hook)], cwd=tmp_path, env=env,
                             capture_output=True, text=True, timeout=30)
     assert broken.returncode == 0, broken.stderr
-    assert socket is not None  # the import above is the guard's own subject
+
+    # The no-network promise, measured where the work is: the hook's text
+    # holds no network import, but everything runs in processes.facts(), so
+    # a live call there stayed green (deep pass 2026-09-24, A08, 3/3). Every
+    # outward connection is counted while the real facts are read.
+    dialled = []
+    real_connect = socket.socket.connect
+
+    def refuse(self, address):
+        dialled.append(address)
+        raise OSError("the session start may not reach the network")
+    monkeypatch.setattr(socket.socket, "connect", refuse)
+    monkeypatch.setattr(socket, "create_connection",
+                        lambda address, *a, **k: dialled.append(address)
+                        or (_ for _ in ()).throw(OSError("no network")))
+    try:
+        _module().facts()
+    finally:
+        monkeypatch.setattr(socket.socket, "connect", real_connect)
+    assert dialled == [], f"the session start reached the network: {dialled}"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

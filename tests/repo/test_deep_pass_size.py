@@ -80,6 +80,16 @@ def test_the_size_command_reads_the_real_commit_count():
     if upstream.returncode == 0:
         assert "could not be read" not in result.stdout, result.stdout
 
+    # The count itself, not only the absence of a message: git's "89\n" must
+    # reach pass_size as 89, which the old `else 0` read as 0 and still
+    # printed no "could not be read" (deep pass 2026-09-24, A10, 3/3).
+    dp = _module()
+    seen = []
+    dp._git = lambda *a: "89\n" if a[0] == "rev-list" else "docs/x.md\n"
+    dp.pass_size = lambda files, commits, weekly: seen.append(commits) or ("light", "x")
+    assert dp.main(["size", "--weekly", "5"]) == 0
+    assert seen == [89], seen
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_gaps_a_dead_pass_confirmed_are_carried_not_overwritten():

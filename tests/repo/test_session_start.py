@@ -110,7 +110,13 @@ def test_the_surface_drift_is_read_from_its_cache_not_computed(tmp_path,
     what they found."""
     procs = _module(REPO / "scripts" / "processes.py", "processes_cache")
 
+    # Counted, not raised: `_surface_facts` catches every exception, so a
+    # raising tripwire was swallowed and computing on a missing cache passed
+    # (deep pass 2026-09-24, A07, 3/3).
+    computed = []
+
     def never(*a, **k):
+        computed.append(1)
         raise AssertionError("the session start computed the drift")
     monkeypatch.setattr(procs, "surface_drift", never)
     monkeypatch.setattr(procs, "drift_cache_path",
@@ -120,3 +126,4 @@ def test_the_surface_drift_is_read_from_its_cache_not_computed(tmp_path,
         {"at": "2026-09-23T20:00:00+00:00", "drift": ["nový nástroj x"]}),
         encoding="utf-8")
     assert procs._surface_facts() == {"surface_drift": ["nový nástroj x"]}
+    assert computed == [], "the session start computed the drift"

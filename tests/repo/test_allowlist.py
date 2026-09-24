@@ -94,9 +94,26 @@ def test_the_laboratorys_own_doors_run_unasked_because_the_code_holds_paper():
     entries = (allowed.get("permissions") or {}).get("allow") or []
     missing = [name for name in ("clone", "paper", "hot_watch")
                if f"Bash(python scripts/{name}.py:*)" not in entries]
+    # In place AND in force: a guard skipped, or with its body emptied, still
+    # had its `def` line and passed (deep pass 2026-09-24, A09). So each one
+    # is read as code: present, not skipped or xfailed, and asserting.
+    import ast
+
+    def in_force(rel: str, name: str) -> bool:
+        tree = ast.parse((REPO / rel).read_text(encoding="utf-8"))
+        fn = next((n for n in tree.body if isinstance(n, ast.FunctionDef)
+                   and n.name == name), None)
+        if fn is None:
+            return False
+        marks = ast.dump(ast.Module(body=[], type_ignores=[])) + "".join(
+            ast.dump(d) for d in fn.decorator_list)
+        if "skip" in marks or "xfail" in marks:
+            return False
+        return any(isinstance(n, ast.Assert)
+                   or (isinstance(n, ast.Attribute) and n.attr == "raises")
+                   for n in ast.walk(fn))
     gone = [f"{rel}::{name}" for rel, names in PAPER_GUARDS.items()
-            for name in names
-            if f"def {name}(" not in (REPO / rel).read_text(encoding="utf-8")]
+            for name in names if not in_force(rel, name)]
     conclude(Measurement(
         verdict="failed" if missing or gone else "passed",
         reason=(f"not allowlisted: {missing}; paper guards gone: {gone}"
