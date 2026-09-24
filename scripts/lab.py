@@ -3567,6 +3567,11 @@ NEXUS_KNOWN = (
     "every tool name against tools/list before acting.",
     "It has named a card that does not exist (#91), with a live-looking index "
     "and 90-day metrics. The launch reads every card live; a 404 is not bought.",
+    "Same for a fund (NEX-0089): AIB-CRYPTO-LONG, with a live-looking index "
+    "138.44 and a NAV/share, is not in list_funds. `launch_fund` reads the "
+    "history live too, so it opened nothing -- but a watch-only pick is not "
+    "self-verifying the way a room with an order is; read `_fund_catalogue()` "
+    "before repeating one of his fund symbols anywhere else.",
     "It quotes internal source paths (#92). Their disclosure problem, not a "
     "licence to read them.",
     "It will refuse its own best number, with good reasons (stockbull-blue at "
