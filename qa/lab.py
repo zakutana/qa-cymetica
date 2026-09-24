@@ -454,9 +454,11 @@ def may_ask_now(nexus_rows: list[dict], now: datetime | None = None,
     # question the operator asked them in a browser (`lane: operator`,
     # `nexus.py record`): it never used their door.
     hour_ago = moment - timedelta(hours=1)
+    # Nor one through the NEXUS bar (`lane: chat`, ask_nexus): 200 a minute on
+    # our key, never their deep lane (deep pass 2026-09-24, R01).
     recent = [s for s in (_at(r.get("at")) for r in nexus_rows
                           if r.get("type") == "question"
-                          and r.get("lane") != "operator")
+                          and r.get("lane") not in ("operator", "chat"))
               if s is not None and s > hour_ago]
     if len(recent) >= ASKS_PER_HOUR:
         return False, (f"{len(recent)} question(s) went in the last hour and "

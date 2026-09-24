@@ -1131,6 +1131,20 @@ def test_a_name_and_a_plan_are_checked_before_anything_is_written(tmp_path, monk
     assert room["title"] == "BTC + BCH blend", (
         "the tab still names the room by the title it was opened with")
 
+    # One bot, one room at a time (deep pass 2026-09-24, R03, 3/3): Trend
+    # Titan 6fdb8288 sat in STR-0044 and STR-0045, both running, so its P&L
+    # counted twice. A bot that a room not yet stopped holds -- proposed,
+    # running or paused -- is refused to any other plan until that room stops.
+    _write(tmp_path / "nexus.jsonl", [*_answered("NEX-1", 0), *_answered("NEX-2", 10)])
+    rooms.open_strategy("NEX-2", "a bot room")
+    bot = {"kind": "bot", "ref": "inst-1", "side": "bull", "share": 0.5}
+    rooms.set_plan("STR-0002", [bot])
+    with pytest.raises(rooms.RoomError, match="STR-0002"):
+        rooms.set_plan("STR-0001", [bot])
+    rooms.set_plan("STR-0002", [bot])  # its own room may rewrite its plan
+    rooms.set_status("STR-0002", "stopped", why="window closed")
+    rooms.set_plan("STR-0001", [bot])
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_plan_is_written_from_the_command_line_the_way_nexus_gives_it(tmp_path):

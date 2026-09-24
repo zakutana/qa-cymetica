@@ -126,6 +126,11 @@ def test_the_chat_lane_asks_ask_nexus_and_writes_the_shallow_diary(
     rows = [_question(f"NEX-{n:04d}", now) for n in range(1, 4)]
     assert module._lane(rows, "deep")[0] is None
     assert module._lane(rows, "chat")[0] == "chat"
+    # The other direction (deep pass 2026-09-24, R01, 3/3): chat questions
+    # never used their deep lane, so they do not spend its hourly count --
+    # three degen prompts through ask_nexus held the next tick's deep question.
+    chats = [{**_question(f"NEX-{n:04d}", now), "lane": "chat"} for n in range(5, 9)]
+    assert lab.may_ask_now(chats, now)[0] is True, lab.may_ask_now(chats, now)
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -3473,6 +3478,19 @@ def test_a_tick_starts_the_next_setting_of_a_judged_bot_on_its_one_clone(
     scripts_lab.bot_variants()
     assert calls[-2][:3] == ("settings", "inst-1", lab.variants()[1]["settings"])
     assert calls[-1][0] == "enable"
+
+    # Ownership is the room still running, not the highest number (deep pass
+    # 2026-09-24, R03's second half): STR-0045 was stopped with Trend Titan
+    # in its criterion while STR-0044, lower-numbered, still ran on it; read
+    # by number, the stopped room's close would have paused STR-0044's bot.
+    leg = [{"kind": "bot", "ref": "inst-1", "side": "bull", "share": 1.0}]
+    held = [{"type": "strategy", "id": "STR-0101", "origin": "NEX-1", "title": "a"},
+            {"type": "strategy", "id": "STR-0102", "origin": "NEX-2", "title": "b"},
+            {"type": "acceptance", "room": "STR-0101", "legs": leg},
+            {"type": "acceptance", "room": "STR-0102", "legs": leg},
+            {"type": "status", "room": "STR-0101", "status": "running", "why": "x"},
+            {"type": "status", "room": "STR-0102", "status": "stopped", "why": "x"}]
+    assert scripts_lab._bots_running({"legs": leg}, "STR-0102", stored=held) == []
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

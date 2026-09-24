@@ -6,54 +6,623 @@
   "start_commit": "b21fb3285b00e02f5b6f5e009dea19530335bed4",
   "size": "full",
   "gaps": [
-    {"id": "R01", "nodeid": "qa/lab.py:457", "claim": "may_ask_now counts chat-lane questions (lane 'chat') toward the deep lane's ASKS_PER_HOUR, so degen prompts through ask_nexus starve the deep lane", "source": "review", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "R02", "nodeid": "scripts/clone.py:249", "claim": "release() can delete a paper bot that is trading when no room is marked running (no room, or a room still at proposed); nothing reads their row's is_trading, though the docstring says only a stopped bot is released", "source": "review", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "R03", "nodeid": "qa/rooms.py:198", "claim": "set_plan accepts a bot instance already held by another running room: Trend Titan 6fdb8288 is a leg of STR-0044 and STR-0045, so its P&L is counted twice and room_running names whichever room comes first", "source": "review", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "R04", "nodeid": "scripts/creator.py:412", "claim": "posted()'s twitter regex refuses X copy-link URLs carrying ?s=46&t=... query strings", "source": "review", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "R05", "nodeid": "scripts/nexus.py:885", "claim": "ask_chat records ask_nexus's canned decline (confidence 0.2, answer_source none, escalate set) as type answer, inflating answered counts and waking the answer branch", "source": "review", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "R06", "nodeid": "scripts/lab.py:1109", "claim": "adopt() and lab.py adopt --window-days default to 7 days while cards_question now promises Nexus a 3-day judgement window", "source": "review", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "R07", "nodeid": "scripts/nexus.py:158", "claim": "the chat lane reuses READ_TIMEOUT 90 s while ask_nexus took 52 s on a one-line question; long degen prompts time out and are recorded as gave_up", "source": "review", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "R08", "nodeid": "scripts/creator.py:503", "claim": "cmd_leads/cmd_claim/cmd_posted call _client() outside their try, so a missing QA_CREATOR_KEY is an uncaught traceback, not a refusal line", "source": "review", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "A01", "nodeid": "tests/rest/test_creator_links_lists_every_tracked_link.py::test_creator_links_lists_every_reply_tracked_link", "claim": "compares reply slugs only to the list's top-level slugs; the capture shows all 14 nested as kind:post children of the artifact links, so the check fails while the contract holds -- not yet filed", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "A02", "nodeid": "tests/rest/test_the_build_board_counts_building_as_building.py::test_the_boards_building_tile_counts_only_what_is_building", "claim": "any field read other than `building` counts as added, so a correct `d.stats.building || 0` gives added=['stats'] and fails; row is FIX_CLAIMED, a false regression on re-verify", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "A03", "nodeid": "tests/rest/test_head_to_head_surface_is_undocumented.py::test_the_head_to_head_routes_they_serve_are_named_in_no_document", "claim": "'documented' if any OpenAPI path contains the substring 'head' or llms.txt says matchup/duel/h2h anywhere; an unrelated /headlines path passes it while the routes stay undocumented", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "A04", "nodeid": "tests/rest/test_creator_leads_tool_filter.py", "claim": "a 200 with an empty leads list passes without reading the unfiltered queue, so on an empty queue a regressed fall-through passes", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "A05", "nodeid": "tests/rest/test_creator_links_lists_every_tracked_link.py::test_creator_links_lists_every_reply_tracked_link", "claim": "a reply slug whose /stats answers non-200 is dropped silently and the pass reason still says every one", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "A06", "nodeid": "tests/mcp/test_card_tradeability_agrees_across_surfaces.py::test_a_card_is_tradeable_on_every_surface_or_on_none", "claim": "the fail reason always states one direction (told tradeable, gate refuses) even when REST says true and the tool says false", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "A07", "nodeid": "tests/repo/test_session_start.py::test_the_surface_drift_is_read_from_its_cache_not_computed", "claim": "the tripwire raising in surface_drift is swallowed by _surface_facts' catch-all, so computing on a missing cache passes", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "A08", "nodeid": "tests/repo/test_reminders.py::test_the_hook_is_silent_when_nothing_is_due_and_never_fails", "claim": "the no-network promise is checked by scanning only the hook file's text; a live call in processes.facts() stays green", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "A09", "nodeid": "tests/repo/test_allowlist.py::test_the_laboratorys_own_doors_run_unasked_because_the_code_holds_paper", "claim": "only checks that `def <guard>(` appears in text; a skipped or emptied guard passes", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "A10", "nodeid": "tests/repo/test_deep_pass_size.py::test_the_size_command_reads_the_real_commit_count", "claim": "only asserts 'could not be read' is absent; a regression turning an unreadable count into 0 passes", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "A11", "nodeid": "tests/repo/test_reminders.py::test_a_night_still_inside_its_own_hours_is_not_a_forgotten_session", "claim": "docstring says the exclusion is asserted where it is made (_lab_facts) but only sessions_to_close is tested", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "B01", "nodeid": "tests/meta/test_pipeline_fomo_stops.py::test_a_reading_read_back_off_disk_still_prints_the_ten_dollar_line", "claim": "the 1%-a-side headline row is not pinned: only stale == fresh and the label are checked, so picking the first fee (0.5%) passes both (mutant confirmed)", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "B02", "nodeid": "tests/meta/test_pipeline_lab.py::test_a_restart_turns_parked_money_into_exposure_under_the_same_ceiling", "claim": "the refusing case is already over 60% before the restart amount, so a restart_affordable ignoring amount passes (mutant confirmed)", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "B03", "nodeid": "tests/meta/test_pipeline_lab_loop.py::test_our_own_outstanding_jobs_stay_under_their_reserved_bound", "claim": "REPLY-0037's bound of SIX is read back from lab.OUTSTANDING_BOUND and never pinned by value; 12 passes (mutant confirmed)", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "B04", "nodeid": "tests/meta/test_pipeline_lab_page.py::test_a_coin_whose_pair_switched_is_not_among_the_biggest_movers", "claim": "only the helper _pair_clean is called; its one caller _fomo_stats (scripts/lab_page.py:863) is untested, so removing the call stays green", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "B05", "nodeid": "tests/meta/test_pipeline_fomo_control.py::test_hot_and_control_are_compared_per_coin_over_one_period_on_one_pair", "claim": "both calls of the repeated coin are hits, so first-call and last-call give the same answer; 'first call' is unguarded", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "B06", "nodeid": "tests/meta/test_pipeline_hot.py::test_the_rule_takes_profit_at_the_first_round_past_eight_percent", "claim": "the path exits at 109 for any take-profit between 3 and 9%; 5% passes (mutant confirmed)", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "B07", "nodeid": "tests/meta/test_pipeline_lab_loop.py::test_the_budget_decides_whether_an_idle_hunt_spends_an_agent", "claim": "85% of the week is read back from lab.BUDGET_CEILING_PCT, never pinned; 95 passes", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "B08", "nodeid": "tests/meta/test_pipeline_lab_report.py::test_the_nexus_line_follows_his_questions_to_what_survived", "claim": "asserts picks >= 3 while all five fixture rooms are picks; counting every room passes", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "B09", "nodeid": "tests/meta/test_pipeline_fomo_stops.py::test_ten_dollars_into_every_hot_signal_is_answered_honestly", "claim": "docstring says a switched-pair path is left out; the assertion requires it bought and capped -- stale docstring", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "B10", "nodeid": "tests/meta/test_pipeline_lab_loop.py::test_a_bot_is_judged_from_what_went_in_not_from_its_first_reading", "claim": "docstring's take-over case (start from the first reading inside the window) is not asserted", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "B11", "nodeid": "tests/meta/test_pipeline_lab_report.py::test_memecoins_carry_the_median_and_the_high_conviction_answer", "claim": "the fake gives the same median for all signals and the conviction subset, so a median from the subset passes", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "G01", "nodeid": "tests/meta/test_pipeline_creator.py::test_mark_posted_sends_the_reply_url_and_only_a_status_link", "claim": "reddit is never exercised; REPLY_URL['reddit'] accepts a thread URL with no comment id, so posted() would claim a reward on a URL that is not our reply", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "G02", "nodeid": "tests/meta/test_pipeline_creator.py::test_the_creator_routes_speak_as_the_creator_account_or_not_at_all", "claim": "only identity() is asserted; _client() building with identities()['trusted'] stays green -- the REPLY-0058 incident", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "G03", "nodeid": "tests/meta/test_pipeline_creator.py::test_the_claim_routes_are_writes_with_a_closed_body_and_nothing_else", "claim": "asserts executable_params only; the closed-body wall admits executable|inert params, so an inert_params entry passes", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "G04", "nodeid": "tests/meta/test_pipeline_creator.py::test_a_503_or_a_timeout_is_settled_by_reading_the_lead_back", "claim": "the no-blind-retry count is asserted on the 503 path only; a retry on TimeoutException stays green", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "G05", "nodeid": "tests/meta/test_pipeline_clone.py::test_a_settings_patch_carries_only_the_fields_the_grid_walks", "claim": "compares executable_params only; inert_params on cloned_bots.settings would widen the PATCH and pass", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "G06", "nodeid": "tests/meta/test_pipeline_clone.py::test_a_started_clone_starts_again_only_as_a_new_variant", "claim": "only a their-guard stop is seeded; narrowing the filter to their_guard lets an unexplained stop restart and stays green", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "G07", "nodeid": "tests/meta/test_pipeline_clone.py::test_a_bot_we_started_once_is_never_started_again", "claim": "docstring says a bot paused by us is never re-enabled; V5 allows it after a settings change -- stale docstring", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "G08", "nodeid": "tests/meta/test_pipeline_recorder.py::test_records_collected_nodeids_and_check_fingerprint", "claim": "only fingerprint equality for identical bodies is asserted; a constant fingerprint passes and CHECK_CHANGED could never fire", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "G09", "nodeid": "tests/meta/test_pipeline_tamper.py::test_a_run_that_did_not_honour_its_preregistration_is_refused", "claim": "docstring says the selector is read from git at the tag; every call passes the selector directly and _preregistered_selector is untested", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "G10", "nodeid": "tests/meta/test_pipeline_fold.py::test_regression_is_permanent_and_requires_backed_passing", "claim": "no fold after the regression re-passes the row's own check, so a fold that clears regressions on a pass stays green", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "G11", "nodeid": "tests/meta/test_pipeline_adapters.py::test_what_their_server_already_holds_is_dropped_before_sending", "claim": "calls partition_by_what_they_hold directly; main() bypassing it (the named fresh = work incident) stays green", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "G12", "nodeid": "tests/meta/test_pipeline_adapters.py::test_submit_intent_outcome_log_survives_timeout_and_409", "claim": "with test_send_actually_sends: both assert only journal order, so an intent written after the POST returns stays green (rule 9, the #55 shape)", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "R09", "nodeid": "scripts/clone.py:292", "claim": "release() closes the client only after the after-snapshot succeeds; an exception there leaks the client and leaves the chain without its after row", "source": "review", "votes": null, "verdict": null, "fixed": false, "commit": null}
+    {
+      "id": "R01",
+      "nodeid": "qa/lab.py:457",
+      "claim": "may_ask_now counts chat-lane questions (lane 'chat') toward the deep lane's ASKS_PER_HOUR, so degen prompts through ask_nexus starve the deep lane",
+      "source": "review",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "R02",
+      "nodeid": "scripts/clone.py:249",
+      "claim": "release() can delete a paper bot that is trading when no room is marked running (no room, or a room still at proposed); nothing reads their row's is_trading, though the docstring says only a stopped bot is released",
+      "source": "review",
+      "votes": {
+        "t1": "not-real",
+        "t3": "real",
+        "t2": "not-real"
+      },
+      "verdict": "minority",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "R03",
+      "nodeid": "qa/rooms.py:198",
+      "claim": "set_plan accepts a bot instance already held by another running room: Trend Titan 6fdb8288 is a leg of STR-0044 and STR-0045, so its P&L is counted twice and room_running names whichever room comes first",
+      "source": "review",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "R04",
+      "nodeid": "scripts/creator.py:412",
+      "claim": "posted()'s twitter regex refuses X copy-link URLs carrying ?s=46&t=... query strings",
+      "source": "review",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "R05",
+      "nodeid": "scripts/nexus.py:885",
+      "claim": "ask_chat records ask_nexus's canned decline (confidence 0.2, answer_source none, escalate set) as type answer, inflating answered counts and waking the answer branch",
+      "source": "review",
+      "votes": {
+        "t1": "not-real",
+        "t3": "not-real",
+        "t2": "not-real"
+      },
+      "verdict": "dropped",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "R06",
+      "nodeid": "scripts/lab.py:1109",
+      "claim": "adopt() and lab.py adopt --window-days default to 7 days while cards_question now promises Nexus a 3-day judgement window",
+      "source": "review",
+      "votes": {
+        "t1": "not-real",
+        "t3": "real",
+        "t2": "not-real"
+      },
+      "verdict": "minority",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "R07",
+      "nodeid": "scripts/nexus.py:158",
+      "claim": "the chat lane reuses READ_TIMEOUT 90 s while ask_nexus took 52 s on a one-line question; long degen prompts time out and are recorded as gave_up",
+      "source": "review",
+      "votes": {
+        "t1": "not-real",
+        "t3": "not-real",
+        "t2": "not-real"
+      },
+      "verdict": "dropped",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "R08",
+      "nodeid": "scripts/creator.py:503",
+      "claim": "cmd_leads/cmd_claim/cmd_posted call _client() outside their try, so a missing QA_CREATOR_KEY is an uncaught traceback, not a refusal line",
+      "source": "review",
+      "votes": {
+        "t1": "not-real",
+        "t3": "not-real",
+        "t2": "not-real"
+      },
+      "verdict": "dropped",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "A01",
+      "nodeid": "tests/rest/test_creator_links_lists_every_tracked_link.py::test_creator_links_lists_every_reply_tracked_link",
+      "claim": "compares reply slugs only to the list's top-level slugs; the capture shows all 14 nested as kind:post children of the artifact links, so the check fails while the contract holds -- not yet filed",
+      "source": "audit",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "A02",
+      "nodeid": "tests/rest/test_the_build_board_counts_building_as_building.py::test_the_boards_building_tile_counts_only_what_is_building",
+      "claim": "any field read other than `building` counts as added, so a correct `d.stats.building || 0` gives added=['stats'] and fails; row is FIX_CLAIMED, a false regression on re-verify",
+      "source": "audit",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "A03",
+      "nodeid": "tests/rest/test_head_to_head_surface_is_undocumented.py::test_the_head_to_head_routes_they_serve_are_named_in_no_document",
+      "claim": "'documented' if any OpenAPI path contains the substring 'head' or llms.txt says matchup/duel/h2h anywhere; an unrelated /headlines path passes it while the routes stay undocumented",
+      "source": "audit",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "A04",
+      "nodeid": "tests/rest/test_creator_leads_tool_filter.py",
+      "claim": "a 200 with an empty leads list passes without reading the unfiltered queue, so on an empty queue a regressed fall-through passes",
+      "source": "audit",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "A05",
+      "nodeid": "tests/rest/test_creator_links_lists_every_tracked_link.py::test_creator_links_lists_every_reply_tracked_link",
+      "claim": "a reply slug whose /stats answers non-200 is dropped silently and the pass reason still says every one",
+      "source": "audit",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "A06",
+      "nodeid": "tests/mcp/test_card_tradeability_agrees_across_surfaces.py::test_a_card_is_tradeable_on_every_surface_or_on_none",
+      "claim": "the fail reason always states one direction (told tradeable, gate refuses) even when REST says true and the tool says false",
+      "source": "audit",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "A07",
+      "nodeid": "tests/repo/test_session_start.py::test_the_surface_drift_is_read_from_its_cache_not_computed",
+      "claim": "the tripwire raising in surface_drift is swallowed by _surface_facts' catch-all, so computing on a missing cache passes",
+      "source": "audit",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "A08",
+      "nodeid": "tests/repo/test_reminders.py::test_the_hook_is_silent_when_nothing_is_due_and_never_fails",
+      "claim": "the no-network promise is checked by scanning only the hook file's text; a live call in processes.facts() stays green",
+      "source": "audit",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "A09",
+      "nodeid": "tests/repo/test_allowlist.py::test_the_laboratorys_own_doors_run_unasked_because_the_code_holds_paper",
+      "claim": "only checks that `def <guard>(` appears in text; a skipped or emptied guard passes",
+      "source": "audit",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "not-real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "A10",
+      "nodeid": "tests/repo/test_deep_pass_size.py::test_the_size_command_reads_the_real_commit_count",
+      "claim": "only asserts 'could not be read' is absent; a regression turning an unreadable count into 0 passes",
+      "source": "audit",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "A11",
+      "nodeid": "tests/repo/test_reminders.py::test_a_night_still_inside_its_own_hours_is_not_a_forgotten_session",
+      "claim": "docstring says the exclusion is asserted where it is made (_lab_facts) but only sessions_to_close is tested",
+      "source": "audit",
+      "votes": {
+        "t1": "not-real",
+        "t3": "not-real",
+        "t2": "not-real"
+      },
+      "verdict": "dropped",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "B01",
+      "nodeid": "tests/meta/test_pipeline_fomo_stops.py::test_a_reading_read_back_off_disk_still_prints_the_ten_dollar_line",
+      "claim": "the 1%-a-side headline row is not pinned: only stale == fresh and the label are checked, so picking the first fee (0.5%) passes both (mutant confirmed)",
+      "source": "audit",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "B02",
+      "nodeid": "tests/meta/test_pipeline_lab.py::test_a_restart_turns_parked_money_into_exposure_under_the_same_ceiling",
+      "claim": "the refusing case is already over 60% before the restart amount, so a restart_affordable ignoring amount passes (mutant confirmed)",
+      "source": "audit",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "B03",
+      "nodeid": "tests/meta/test_pipeline_lab_loop.py::test_our_own_outstanding_jobs_stay_under_their_reserved_bound",
+      "claim": "REPLY-0037's bound of SIX is read back from lab.OUTSTANDING_BOUND and never pinned by value; 12 passes (mutant confirmed)",
+      "source": "audit",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "B04",
+      "nodeid": "tests/meta/test_pipeline_lab_page.py::test_a_coin_whose_pair_switched_is_not_among_the_biggest_movers",
+      "claim": "only the helper _pair_clean is called; its one caller _fomo_stats (scripts/lab_page.py:863) is untested, so removing the call stays green",
+      "source": "audit",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "B05",
+      "nodeid": "tests/meta/test_pipeline_fomo_control.py::test_hot_and_control_are_compared_per_coin_over_one_period_on_one_pair",
+      "claim": "both calls of the repeated coin are hits, so first-call and last-call give the same answer; 'first call' is unguarded",
+      "source": "audit",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "B06",
+      "nodeid": "tests/meta/test_pipeline_hot.py::test_the_rule_takes_profit_at_the_first_round_past_eight_percent",
+      "claim": "the path exits at 109 for any take-profit between 3 and 9%; 5% passes (mutant confirmed)",
+      "source": "audit",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "B07",
+      "nodeid": "tests/meta/test_pipeline_lab_loop.py::test_the_budget_decides_whether_an_idle_hunt_spends_an_agent",
+      "claim": "85% of the week is read back from lab.BUDGET_CEILING_PCT, never pinned; 95 passes",
+      "source": "audit",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "B08",
+      "nodeid": "tests/meta/test_pipeline_lab_report.py::test_the_nexus_line_follows_his_questions_to_what_survived",
+      "claim": "asserts picks >= 3 while all five fixture rooms are picks; counting every room passes",
+      "source": "audit",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "B09",
+      "nodeid": "tests/meta/test_pipeline_fomo_stops.py::test_ten_dollars_into_every_hot_signal_is_answered_honestly",
+      "claim": "docstring says a switched-pair path is left out; the assertion requires it bought and capped -- stale docstring",
+      "source": "audit",
+      "votes": {
+        "t1": "not-real",
+        "t3": "not-real",
+        "t2": "not-real"
+      },
+      "verdict": "dropped",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "B10",
+      "nodeid": "tests/meta/test_pipeline_lab_loop.py::test_a_bot_is_judged_from_what_went_in_not_from_its_first_reading",
+      "claim": "docstring's take-over case (start from the first reading inside the window) is not asserted",
+      "source": "audit",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "B11",
+      "nodeid": "tests/meta/test_pipeline_lab_report.py::test_memecoins_carry_the_median_and_the_high_conviction_answer",
+      "claim": "the fake gives the same median for all signals and the conviction subset, so a median from the subset passes",
+      "source": "audit",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "G01",
+      "nodeid": "tests/meta/test_pipeline_creator.py::test_mark_posted_sends_the_reply_url_and_only_a_status_link",
+      "claim": "reddit is never exercised; REPLY_URL['reddit'] accepts a thread URL with no comment id, so posted() would claim a reward on a URL that is not our reply",
+      "source": "audit",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "G02",
+      "nodeid": "tests/meta/test_pipeline_creator.py::test_the_creator_routes_speak_as_the_creator_account_or_not_at_all",
+      "claim": "only identity() is asserted; _client() building with identities()['trusted'] stays green -- the REPLY-0058 incident",
+      "source": "audit",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "G03",
+      "nodeid": "tests/meta/test_pipeline_creator.py::test_the_claim_routes_are_writes_with_a_closed_body_and_nothing_else",
+      "claim": "asserts executable_params only; the closed-body wall admits executable|inert params, so an inert_params entry passes",
+      "source": "audit",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "G04",
+      "nodeid": "tests/meta/test_pipeline_creator.py::test_a_503_or_a_timeout_is_settled_by_reading_the_lead_back",
+      "claim": "the no-blind-retry count is asserted on the 503 path only; a retry on TimeoutException stays green",
+      "source": "audit",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "G05",
+      "nodeid": "tests/meta/test_pipeline_clone.py::test_a_settings_patch_carries_only_the_fields_the_grid_walks",
+      "claim": "compares executable_params only; inert_params on cloned_bots.settings would widen the PATCH and pass",
+      "source": "audit",
+      "votes": {
+        "t1": "not-real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "G06",
+      "nodeid": "tests/meta/test_pipeline_clone.py::test_a_started_clone_starts_again_only_as_a_new_variant",
+      "claim": "only a their-guard stop is seeded; narrowing the filter to their_guard lets an unexplained stop restart and stays green",
+      "source": "audit",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "G07",
+      "nodeid": "tests/meta/test_pipeline_clone.py::test_a_bot_we_started_once_is_never_started_again",
+      "claim": "docstring says a bot paused by us is never re-enabled; V5 allows it after a settings change -- stale docstring",
+      "source": "audit",
+      "votes": {
+        "t1": "not-real",
+        "t3": "not-real",
+        "t2": "not-real"
+      },
+      "verdict": "dropped",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "G08",
+      "nodeid": "tests/meta/test_pipeline_recorder.py::test_records_collected_nodeids_and_check_fingerprint",
+      "claim": "only fingerprint equality for identical bodies is asserted; a constant fingerprint passes and CHECK_CHANGED could never fire",
+      "source": "audit",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "G09",
+      "nodeid": "tests/meta/test_pipeline_tamper.py::test_a_run_that_did_not_honour_its_preregistration_is_refused",
+      "claim": "docstring says the selector is read from git at the tag; every call passes the selector directly and _preregistered_selector is untested",
+      "source": "audit",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "G10",
+      "nodeid": "tests/meta/test_pipeline_fold.py::test_regression_is_permanent_and_requires_backed_passing",
+      "claim": "no fold after the regression re-passes the row's own check, so a fold that clears regressions on a pass stays green",
+      "source": "audit",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "G11",
+      "nodeid": "tests/meta/test_pipeline_adapters.py::test_what_their_server_already_holds_is_dropped_before_sending",
+      "claim": "calls partition_by_what_they_hold directly; main() bypassing it (the named fresh = work incident) stays green",
+      "source": "audit",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "G12",
+      "nodeid": "tests/meta/test_pipeline_adapters.py::test_submit_intent_outcome_log_survives_timeout_and_409",
+      "claim": "with test_send_actually_sends: both assert only journal order, so an intent written after the POST returns stays green (rule 9, the #55 shape)",
+      "source": "audit",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "R09",
+      "nodeid": "scripts/clone.py:292",
+      "claim": "release() closes the client only after the after-snapshot succeeds; an exception there leaks the client and leaves the chain without its after row",
+      "source": "review",
+      "votes": {
+        "t1": "not-real",
+        "t3": "real",
+        "t2": "not-real"
+      },
+      "verdict": "minority",
+      "fixed": false,
+      "commit": null
+    }
   ],
-  "review": {"done": true, "findings": 9},
+  "review": {
+    "done": true,
+    "findings": 9
+  },
   "next": null,
-  "retrospective": {"last": "2026-09-19", "done": false},
+  "retrospective": {
+    "last": "2026-09-19",
+    "done": false
+  },
   "rule_changes": [],
-  "meta_tests": {"start": 802, "end": null, "reason": "the day added 11 guards (creator 3, clone release 1, h2h 2, lab loop 4, lab report 1) and grew past the 800 ceiling; 1b folded three into existing ones: the two h2h guards into one, the chat lane's pace into the chat lane guard, the plan-holds-bots case into test_a_room_that_holds_a_bot_is_a_bot_even_from_before_rooms_had_kinds -- 802 -> 799"},
+  "meta_tests": {
+    "start": 802,
+    "end": null,
+    "reason": "the day added 11 guards (creator 3, clone release 1, h2h 2, lab loop 4, lab report 1) and grew past the 800 ceiling; 1b folded three into existing ones: the two h2h guards into one, the chat lane's pace into the chat lane guard, the plan-holds-bots case into test_a_room_that_holds_a_bot_is_a_bot_even_from_before_rooms_had_kinds -- 802 -> 799"
+  },
   "finished": false
 }

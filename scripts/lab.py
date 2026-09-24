@@ -2566,13 +2566,20 @@ def _bots_running(acceptance: dict, room: str | None = None,
     if room is not None and wanted:
         owner: dict[str, str] = {}
         rows_ = rooms.load() if stored is None else stored
+        # A room still running outranks a stopped one, whatever the numbers
+        # (deep pass 2026-09-24, R03): STR-0045 was stopped holding Trend
+        # Titan while STR-0044, lower, ran on it, and by number alone the
+        # stopped room's close would have paused STR-0044's bot.
+        def rank(held_by: str) -> tuple[int, int]:
+            live = rooms.status_of(rows_, held_by) != "stopped"
+            return (1 if live else 0, rooms.number(held_by))
         for row in rows_:
             if row.get("type") != "acceptance" or not row.get("room"):
                 continue
             for leg in row.get("legs") or []:
                 if rooms.leg_kind(leg) == "bot":
                     ref, held_by = str(rooms.leg_ref(leg)), str(row["room"])
-                    if rooms.number(held_by) >= rooms.number(owner.get(ref, "")):
+                    if ref not in owner or rank(held_by) >= rank(owner[ref]):
                         owner[ref] = held_by
         wanted = [ref for ref in wanted if owner.get(str(ref), room) == room]
     if not wanted:

@@ -658,6 +658,17 @@ def set_plan(room: str, legs: list[dict], reserve=None, bankroll=None) -> dict:
 
     def build(rows: list[dict]) -> list[dict]:
         _strategy(rows, room)
+        # One bot, one room at a time (deep pass 2026-09-24, R03): a clone
+        # held by another room that has not stopped would be judged twice.
+        bots = {leg["ref"] for leg in clean if leg["kind"] == "bot"}
+        for other, plan in plans(rows).items():
+            if other == room or status_of(rows, other) == "stopped":
+                continue
+            held = bots & {str(leg_ref(g)) for g in plan.get("legs") or []
+                           if leg_kind(g) == "bot"}
+            if held:
+                raise RoomError(f"{', '.join(sorted(held))} is held by {other}, "
+                                f"which has not stopped; one bot, one room")
         return [{"type": "plan", "room": room, "legs": clean,
                  "reserve": None if kept is None else round(kept, 6),
                  "bankroll": size, "at": _now()}]
