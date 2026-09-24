@@ -475,6 +475,17 @@ endpoints:
     executable_params: [reply_url]
     closed_body: true
 
+  # A head-to-head matchup of two paper sides (cymetica.com/h2h). Nothing
+  # moves money; the one outward effect is `is_public`, default TRUE, which
+  # publishes a share card -- scripts/h2h.py always sends it false.
+  - id: head_to_head.create
+    path: /api/v1/head-to-head
+    methods: [POST]
+    component: rest.head_to_head
+    executable_params: [original, improved, title, days, start, symbols,
+                        is_public]
+    closed_body: true
+
   - id: arena.order
     path: /api/v1/arena/order
     methods: [POST]
