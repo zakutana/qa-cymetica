@@ -150,6 +150,30 @@ def test_a_run_that_did_not_honour_its_preregistration_is_refused():
     # this check must not claim it as a broken promise as well.
     assert check([]) == []
 
+    # The docstring's last sentence, never exercised until the deep pass of
+    # 2026-09-24 (G09, 3/3): the selector comes from git AT THE TAG, so the
+    # call is `git show prereg/<id>:<file>`, never a working-tree read.
+    import subprocess
+
+    import qa.state as qa_state
+    asked = []
+
+    class Done:
+        stdout = "# PRE-0007\nSelector   tests/meta\n"
+
+    def run(argv, **kw):
+        asked.append(argv)
+        return Done()
+    real_run = subprocess.run
+    subprocess.run = run
+    try:
+        said = qa_state._preregistered_selector("PRE-0007")
+    finally:
+        subprocess.run = real_run
+    assert said == "tests/meta", said
+    assert asked == [["git", "show",
+                      "prereg/PRE-0007:state/preregistrations/PRE-0007.md"]], asked
+
     # RC01 (deep pass of 2026-09-24, 3/3): a FOLDER preregistration --
     # `tests`, the full sweep's -- narrowed at run time with -k collected one
     # check, every token "collected something", and the run reached level V:

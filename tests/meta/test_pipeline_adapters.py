@@ -281,9 +281,16 @@ def test_submit_intent_outcome_log_survives_timeout_and_409(tmp_path, monkeypatc
     log said it had never been sent."""
     monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
     submit = _module("scripts/submit.py")
+    from qa.state import read_events as _journal
+    seen_at_post = []
 
     def handler(request):
         body = json.loads(request.content)
+        # What is on disk WHILE the POST is in flight: the journal's final
+        # order is the same whether the intent went before or after it, so
+        # only a read here measures rule 9 (deep pass 2026-09-24, G12, 3/3).
+        seen_at_post.append([e["type"] for e in _journal()
+                             if e.get("key") == body["title"]])
         if body["title"] == "times-out":
             raise httpx.ReadTimeout("timed out", request=request)
         if body["title"] == "duplicate":
@@ -304,6 +311,7 @@ def test_submit_intent_outcome_log_survives_timeout_and_409(tmp_path, monkeypatc
     outcomes = [e for e in events if e["type"] == "filing_outcome"]
 
     assert len(intents) == 4 and len(outcomes) == 4
+    assert seen_at_post == [["filing_intent"]] * 4, seen_at_post
     for item in items:
         pair = [e for e in events if e.get("key") == item["key"]]
         assert [e["type"] for e in pair] == ["filing_intent", "filing_outcome"], \
@@ -991,6 +999,27 @@ def test_one_unreadable_report_does_not_take_the_whole_run_with_it(
     assert not any("/46/" in url for url in posted), (
         "a report we could not read was sent blind")
 
+    # And main() acts on what their server HOLDS: the partition was tested
+    # only directly, so `fresh = work` inside main() -- the incident its
+    # sibling names -- stayed green (deep pass 2026-09-24, G11, 3/3).
+    posted.clear()
+    held = {"fingerprint": "fp-2", "verdict": "pass",
+            "created_at": "2026-09-12T20:30:00+00:00", "id": "9"}
+
+    def holding(request):
+        if request.url.path.endswith("/verifications"):
+            if "/46/" in str(request.url):
+                raise httpx.ReadTimeout("their TLS timed out", request=request)
+            return httpx.Response(200, json={"verifications": [held]})
+        posted.append(str(request.url))
+        return httpx.Response(200, json={"id": 1})
+    handle_ = handle
+    handle = holding  # noqa: F841 -- _sender reads `handle` late
+    verify.main(["--confirm"])
+    handle = handle_  # noqa: F841
+    assert not any("/47/" in url for url in posted), (
+        f"a verification their server already holds was sent again: {posted}")
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_what_their_server_already_holds_is_dropped_before_sending():
@@ -1368,10 +1397,18 @@ def test_send_actually_sends(tmp_path, monkeypatch):
         client._transport.registry.mutate_allowed_hosts = frozenset({"cymetica.com"})
         return client
 
-    created = _sender(lambda r: httpx.Response(
-        200, json={"success": True, "verification": {"id": 19}}))
+    in_flight = []
+
+    def _made(request):
+        # The journal while the POST is in flight (G12, deep pass 2026-09-24).
+        in_flight.append([e["type"] for e in read_events()
+                          if e["type"].startswith("verification_")])
+        return httpx.Response(200, json={"success": True, "verification": {"id": 19}})
+    created = _sender(_made)
     [result] = verify.send(created, [copy_item(item)], pause=0)
     assert result["outcome"] == "accepted", result
+    assert in_flight == [["verification_intent"]], \
+        "the intent must be on disk before the POST is made"
 
     events = [e for e in read_events() if e["type"].startswith("verification_")]
     assert [e["type"] for e in events] == ["verification_intent",

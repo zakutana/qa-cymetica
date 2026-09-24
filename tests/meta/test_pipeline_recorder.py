@@ -197,6 +197,10 @@ def test_records_collected_nodeids_and_check_fingerprint(pytester, tmp_path):
     # Different bodies -> different fingerprints; same body -> same. Both pass;
     # test_b's docstring is stripped, so its fingerprint equals test_a's.
     assert _result(run, "test_a")["check_fingerprint"] == _result(run, "test_b")["check_fingerprint"]
+    # ...and the other half, which only a comment said (deep pass 2026-09-24,
+    # G08, 3/3): a constant fingerprint passed, and CHECK_CHANGED -- rule 5 --
+    # could never have fired.
+    assert _result(run, "test_c")["check_fingerprint"] != _result(run, "test_a")["check_fingerprint"]
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

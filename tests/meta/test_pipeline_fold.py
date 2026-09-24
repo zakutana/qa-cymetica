@@ -529,6 +529,14 @@ def test_regression_is_permanent_and_requires_backed_passing():
     assert len(again["findings"]["CYM-a"]["regressions"]) == 1, \
         "a second consecutive failure is not a second regression"
 
+    # The incident itself: the row's OWN check passing again. No fold after
+    # the regression re-passed CHECK_A, so a fold that cleared `regressions`
+    # on a pass stayed green (deep pass 2026-09-24, G10, 3/3).
+    healed = fold(broke, run=run("run-z", [result(CHECK_A, "passed")],
+                                 at="2026-09-05T13:00:00+00:00"), events=ev)
+    assert healed["findings"]["CYM-a"]["regressions"] == reg, \
+        "passing again erased the regression -- the row went green again"
+
     # A regression can never follow an exploratory pass, because that pass
     # never established PASSING in the first place.
     explor = ledger(row("CYM-b", check_state="REPRODUCING", checks=[CHECK_B], pinned=FP1))

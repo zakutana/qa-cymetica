@@ -699,7 +699,11 @@ def test_a_settings_patch_carries_only_the_fields_the_grid_walks(
 
     raw = yaml.safe_load((REPO / "components.yaml").read_text(encoding="utf-8"))
     rule = next(e for e in raw["endpoints"] if e["id"] == "cloned_bots.settings")
-    assert set(rule["executable_params"]) == set(mod.SAFE_SETTINGS), (
+    # Both sets: the transport's closed-body wall lets through executable |
+    # inert, so an inert_params entry would widen the PATCH past this list
+    # (deep pass 2026-09-24, G05).
+    assert (set(rule["executable_params"]) | set(rule.get("inert_params") or [])
+            == set(mod.SAFE_SETTINGS)), (
         "components.yaml and clone.py disagree about what a PATCH may carry")
 
     for changes, said in (({"is_trading": True}, "is_trading"),
@@ -930,6 +934,13 @@ def test_a_started_clone_starts_again_only_as_a_new_variant(tmp_path, monkeypatc
     mod.path().write_text("".join(_json.dumps(r) + "\n" for r in stamped),
                           encoding="utf-8")
     with pytest.raises(SystemExit, match="their_guard"):
+        mod.enable("inst-1", True)
+    # And a halt nobody can explain -- stopped at a profit, not by us -- is
+    # never restarted either; only a their-guard halt was seeded, so a
+    # filter narrowed to their_guard passed (deep pass 2026-09-24, G06, 3/3).
+    samples.write_text("".join(_json.dumps({**r, "total_profit_usdc": "3.1"}) + "\n"
+                               for r in halted), encoding="utf-8")
+    with pytest.raises(SystemExit, match="unexplained"):
         mod.enable("inst-1", True)
     samples.write_text("", encoding="utf-8")
 

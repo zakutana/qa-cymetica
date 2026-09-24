@@ -283,8 +283,8 @@
         "t2": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "11c5ae37"
     },
     {
       "id": "B02",
@@ -297,8 +297,8 @@
         "t2": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "11c5ae37"
     },
     {
       "id": "B03",
@@ -311,8 +311,8 @@
         "t2": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "11c5ae37"
     },
     {
       "id": "B04",
@@ -325,8 +325,8 @@
         "t2": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "11c5ae37"
     },
     {
       "id": "B05",
@@ -339,8 +339,8 @@
         "t2": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "11c5ae37"
     },
     {
       "id": "B06",
@@ -353,8 +353,8 @@
         "t2": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "11c5ae37"
     },
     {
       "id": "B07",
@@ -367,8 +367,8 @@
         "t2": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "11c5ae37"
     },
     {
       "id": "B08",
@@ -381,8 +381,8 @@
         "t2": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "11c5ae37"
     },
     {
       "id": "B09",
@@ -409,8 +409,8 @@
         "t2": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "11c5ae37"
     },
     {
       "id": "B11",
@@ -423,8 +423,8 @@
         "t2": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "11c5ae37"
     },
     {
       "id": "G01",
