@@ -108,6 +108,8 @@ def cmd_claim(args) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
+    # A lead's body is anyone's tweet; a cp1250 console cannot print most of them.
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     sub = parser.add_subparsers(dest="cmd", required=True)
     leads = sub.add_parser("leads", help="read the reply queue")
