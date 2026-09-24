@@ -467,3 +467,15 @@ def test_a_collect_only_run_is_not_the_last_full_run(tmp_path, monkeypatch):
         encoding="utf-8")
     said = mod.since_last_full_run()
     assert "run-full" in said and "run-meta-aborted" not in said, said
+
+    # B09 (deep pass of 2026-09-24): a full run in an outage where every one
+    # of their checks came back inconclusive judged nothing either -- rule
+    # 10: an inconclusive measured nothing -- and still read as the last one.
+    (runs / "d.json").write_text(json.dumps(_admissible(
+        "run-outage", "2026-09-23T03:00:00+00:00", selector_full=True,
+        collected=["tests/meta/test_x.py::test_a", "tests/rest/test_y.py::test_b"],
+        results=[{"nodeid": "tests/meta/test_x.py::test_a", "outcome": "passed"},
+                 {"nodeid": "tests/rest/test_y.py::test_b",
+                  "outcome": "inconclusive"}])), encoding="utf-8")
+    said = mod.since_last_full_run()
+    assert "run-full" in said and "run-outage" not in said, said

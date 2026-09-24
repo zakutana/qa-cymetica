@@ -82,15 +82,23 @@ def page_auth(page: str) -> dict[str, str]:
 PAGE_STATUSES = ("submitted", "reviewing", "accepted", "declined")
 # Read off the text once the tags are gone -- their markup puts every word in
 # its own <code>, so "status" and its colon arrive a space apart.
-STATUS_LINE = re.compile(r"status\s*:\s*([a-z_]+(?:\s*(?:→|->|\|)\s*[a-z_]+)+)", re.I)
+STATUS_LINE = re.compile(r"\bstatus\s*:\s*([a-z_]+(?:\s*(?:→|->|\|)\s*[a-z_]+)+)", re.I)
 REFUSALS = (401, 403)
 
 
 def page_statuses(page: str) -> tuple[str, ...] | None:
     """The application statuses the page prints ("submitted → reviewing →
-    accepted | declined"), in its order, or None when it prints none."""
+    accepted | declined"), in its order, or None when it prints none.
+
+    The line that names the APPLICATION, or the page's only status line
+    (A07, deep pass of 2026-09-24): the first one anywhere was taken, so a
+    bid's or a build queue's statuses above it went out as "promised and
+    not served". Two lists, neither the application's, are not read."""
     text = html.unescape(re.sub(r"<[^>]+>", " ", page or ""))
-    found = STATUS_LINE.search(text)
+    lines = list(STATUS_LINE.finditer(text))
+    named = [m for m in lines if re.search(
+        r"\bapplication\b", text[max(0, m.start() - 40):m.start()], re.I)]
+    found = named[0] if named else (lines[0] if len(lines) == 1 else None)
     if not found:
         return None
     return tuple(w.lower() for w in re.findall(r"[a-z_]+", found.group(1), re.I))

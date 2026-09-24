@@ -95,6 +95,18 @@ def _accepted(buy: dict) -> bool:
             and buy["outcome"] == "accepted")
 
 
+QUOTED = re.compile(r"you have\s+([\d.,]+)", re.I)
+
+
+def _quoted_balance(refusals: list[dict]) -> float | None:
+    """The balance the newest refusal said we had ("you have 7.650006")."""
+    for buy in reversed(refusals):
+        found = QUOTED.search(buy["response"])
+        if found:
+            return _number(found.group(1).rstrip("."))
+    return None
+
+
 def _number(value):
     try:
         return float(str(value).replace(",", ""))
@@ -139,6 +151,18 @@ def test_a_paper_buy_is_not_refused_for_money_the_paper_book_holds():
     for card_id in struck:
         latest = newest[card_id]
         if _accepted(latest):
+            # The fix only when the buy is one the wrong balance could NOT
+            # cover (A04, deep pass of 2026-09-24): a 5 USDC buy lands under
+            # the 7.65 the refusal quoted whether or not anything was fixed.
+            quoted = _quoted_balance([b for b in attempts
+                                      if b["card"] == card_id and _short(b)])
+            amount = _number(latest["usdc"])
+            if quoted is not None and (amount is None or amount <= quoted):
+                unmeasured.append(
+                    f"{card_id}: its newest buy {latest['id']} of {amount} was "
+                    f"accepted, which the {quoted} the refusal quoted also "
+                    f"covers -- it proves nothing about the paper book")
+                continue
             fixed.append(card_id)
             continue
         if not _short(latest):

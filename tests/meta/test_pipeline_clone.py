@@ -318,9 +318,28 @@ def test_a_route_whose_credential_is_declared_by_security_is_not_public():
         "post": {"parameters": [{"in": "header", "name": "X-API-Key"}]}}}, {})
     assert "POST /api/v1/cloned-bots/{instance_id}/fund" in gap["accepts"], gap
 
+    # C03 (deep pass of 2026-09-24): read the first check's first conclude(
+    # only, and only with the closing quote -- so the claim could come back
+    # in the check that feeds #89's row since the split, or mid-sentence, and
+    # stay green. Every string in every test_one_credential* check, the
+    # docstring's history aside, in any spelling.
+    import ast
+    import re
+
     source = (REPO / "tests" / "rest" / "test_cloned_bots_surface.py").read_text(encoding="utf-8")
-    assert "401 with an empty body\"" not in source.split("def test_one_credential")[1].split("conclude(")[1], (
-        "the failure sentence still asserts a live 401 the check never measures")
+    claim = re.compile(r"401\s+(?:with\s+an\s+empty\s+body|and\s+no\s+body)", re.I)
+    checks = [node for node in ast.parse(source).body
+              if isinstance(node, ast.FunctionDef)
+              and node.name.startswith("test_one_credential")]
+    assert len(checks) >= 2, [c.name for c in checks]
+    for check in checks:
+        doc = ast.get_docstring(check, clean=False)
+        said = [n.value for n in ast.walk(check)
+                if isinstance(n, ast.Constant) and isinstance(n.value, str)
+                and n.value != doc and claim.search(n.value)]
+        assert not said, (check.name, said,
+                          "a failure sentence asserts a live 401 the check "
+                          "never measures")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

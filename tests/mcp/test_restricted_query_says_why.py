@@ -131,7 +131,15 @@ def test_a_restricted_query_says_which_rule_it_tripped(mcp_anon):
     # passed, sending that claim to the vendor. Presence versus value, the
     # 2026-09-07 shape exactly, in a check written to guard against it.
     hint = str(body.get("hint") or "").lower()
-    says_wording = "wording" in hint
+    # A mention of the wording that the hint does not DENY (A03, deep pass of
+    # 2026-09-24, 3/3): a substring test passed "this refusal is not about the
+    # wording" as "its hint says it is about the wording" -- presence where
+    # the claim is a value, in the check rewritten to stop exactly that.
+    wording_denied = [m.span() for m in re.finditer(
+        r"\b(?:not|\w+n't|nothing\s+to\s+do\s+with)\s+(?:\w+\s+){0,2}?"
+        r"(?:the\s+|your\s+)?wording\b", hint)]
+    says_wording = any(not any(s <= m.start() < e for s, e in wording_denied)
+                       for m in re.finditer(r"wording", hint))
     # A DENIAL of identity or trust level, not the words beside a "not". The
     # old arm read `"not a" in hint and "trust level" in hint`, and "not
     # allowed at your trust level" contains both -- the very attribution this
@@ -146,10 +154,21 @@ def test_a_restricted_query_says_which_rule_it_tripped(mcp_anon):
     subject = (r"(?:your\s+|the\s+|a\s+)?(?:identity|trust[\s-]level)"
                r"(?:\s*(?:,|\bor\b|\bnor\b|\band\b)\s*(?:your\s+|the\s+|a\s+)?"
                r"(?:identity|trust[\s-]level))*")
+    # B08 (deep pass of 2026-09-24, 3/3): five phrasings and no other, so "it
+    # does not depend on your identity or trust level" -- exactly the right
+    # thing -- failed as not saying it, and would have been filed. A negation
+    # with a relation word ("depend on", "about", "tied to") before the
+    # subject is a denial however it is put; "not permitted at your trust
+    # level" has no relation word and still blames it.
+    relation = (r"(?:about\s+|related\s+to\s+|due\s+to\s+|based\s+on\s+"
+                r"|because\s+of\s+|tied\s+to\s+|depend(?:s|ent)?\s+on\s+"
+                r"|a\s+(?:matter|question)\s+of\s+)")
     denials = [m.span() for m in re.finditer(
-        r"\bnot\s+(?:about\s+|related\s+to\s+|due\s+to\s+|based\s+on\s+"
-        r"|a\s+(?:matter|question)\s+of\s+)?" + subject
+        r"\bnot\s+" + relation + r"?" + subject
+        + r"|\b(?:not|\w+n't)\s+(?:\w+\s+){0,2}?" + relation + subject
         + r"|\bnothing\s+to\s+do\s+with\s+" + subject
+        + r"|\bunrelated\s+to\s+" + subject
+        + r"|\bindependent(?:ly)?\s+of\s+" + subject
         + r"|\bregardless\s+of\s+" + subject, hint)]
     mentions = [m.start() for m in re.finditer(r"identity|trust[\s-]level", hint)]
     denies_identity = bool(denials) and all(

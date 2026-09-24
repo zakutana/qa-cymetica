@@ -66,8 +66,12 @@ def submissions(events) -> list[dict]:
 
 
 def _masked(row: dict) -> bool:
+    """A 5xx whose report RECONCILING found -- the server made it and said it
+    had not. An honest 500 sent again under the same key and answered 201
+    with its id is two honest answers, and the first status beside the last
+    id read as this defect (B06, deep pass of 2026-09-24)."""
     return isinstance(row["status"], int) and row["status"] >= 500 \
-        and row["report_id"] is not None
+        and row["report_id"] is not None and row["reconciled"]
 
 
 @qa(component="rest.support", tier=SafetyTier.SAFE, surface="rest")

@@ -1579,7 +1579,11 @@ def test_the_night_holds_no_hand_that_trades_files_or_commits():
     # [operator 2026-09-12] *"Jasne ze v noci muze spoustet."* So this stopped
     # being "no hand at all" and became "only the braked one". Filing and
     # committing are still out: the night finds, the morning tells the vendor.
-    for hand in ("submit", "findings", "subprocess", "withdraw", "prereg"):
+    # C02 (deep pass of 2026-09-24): `_sibling("verify").main([...])` puts
+    # only "verify" among the names read here, and verify.py POSTs verdicts
+    # to their tracker -- as correspond, a2a and bounty talk to them too.
+    for hand in ("submit", "findings", "subprocess", "withdraw", "prereg",
+                 "verify", "correspond", "a2a", "bounty"):
         assert hand not in reached, (
             f"the night can reach {hand!r}: it researches and launches on "
             f"paper, it does not talk to the vendor")
@@ -1590,7 +1594,8 @@ def test_the_night_holds_no_hand_that_trades_files_or_commits():
                  "startfile", "check_call", "check_output"):
         assert hand not in reached, f"the night can reach a shell: {hand!r}"
     shell = re.compile(r"\bgit\s+(?:commit|push|add|tag|reset)\b"
-                       r"|\b(?:submit|withdraw|prereg|verify)\.py\b")
+                       r"|\b(?:submit|withdraw|prereg|verify|correspond|a2a"
+                       r"|bounty)\.py\b")
     said = sorted(s for s in reached if shell.search(s))
     assert not said, f"the night carries a command it must not run: {said}"
 

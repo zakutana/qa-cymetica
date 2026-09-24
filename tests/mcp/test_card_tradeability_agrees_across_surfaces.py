@@ -104,8 +104,12 @@ def test_a_card_is_tradeable_on_every_surface_or_on_none(mcp_trusted, rest_trust
         rest = _bool((one.json() or {}).get("tradeable_now")) if one.status_code == 200 else None
         reason = (one.json() or {}).get("trading_blocked_reason") if one.status_code == 200 else None
         try:
-            tool = _bool((_tool_card(mcp_trusted.call(TOOL, {"query": card_id}),
-                                     card_id) or {}).get("tradeable_now"))
+            answered = mcp_trusted.call(TOOL, {"query": card_id})
+            # Both read times, as the docstring promises (A06, deep pass of
+            # 2026-09-24): a pair can straddle a market open or close, and one
+            # time taken before the first read could not show it.
+            tool_at = _now()
+            tool = _bool((_tool_card(answered, card_id) or {}).get("tradeable_now"))
         except McpError as exc:
             unread.append(f"{card_id[:8]}: {TOOL} answered {str(exc)[:80]}")
             continue
@@ -113,7 +117,7 @@ def test_a_card_is_tradeable_on_every_surface_or_on_none(mcp_trusted, rest_trust
             unread.append(f"{card_id[:8]}: REST {rest!r}, {TOOL} {tool!r}")
             continue
         pairs.append({"card": card_id, "rest": rest, "tool": tool, "at": at,
-                      "reason": reason})
+                      "tool_at": tool_at, "reason": reason})
 
     differ = [p for p in pairs if p["rest"] != p["tool"]]
     closed_both = [p for p in pairs if p["rest"] is False and p["tool"] is False]
@@ -131,7 +135,8 @@ def test_a_card_is_tradeable_on_every_surface_or_on_none(mcp_trusted, rest_trust
             reason=(f"{len(differ)} of {len(pairs)} card(s) read on both surfaces "
                     f"disagree on tradeable_now: card {first['card']} reads "
                     f"{first['rest']} on {CARD} ({first['reason']!r}) and "
-                    f"{first['tool']} through {TOOL}, at {first['at']} "
+                    f"{first['tool']} through {TOOL} (REST read at "
+                    f"{first['at']}, tool read at {first['tool_at']}) "
                     f"(listing us_market_open {body.get('us_market_open')!r}); "
                     f"an agent or Nexus reading the tool is told a card can be "
                     f"traded that the trade gate refuses"),

@@ -51,28 +51,33 @@ PRO_FORMA = re.compile(r"pro[\s-]?forma", re.IGNORECASE)
 # "No backfill. Pro-forma: ..." is a disclosure, and a false fail is a claim.
 # A02, deep pass of 2026-09-22: "nothing backfilled or pro-forma" is a denial
 # too, and "nothing", "none" and "neither" were not negations here.
-DENIED = re.compile(r"\b(?:no|not|never|nor|neither|none|nothing|without|zero)\b"
-                    r"(?:[\s,'-]+\w+){0,3}?"
-                    r"[\s,'-]+pro[\s-]?forma", re.IGNORECASE)
-# C07, deep pass of 2026-09-22 evening (3/3): the negation can come AFTER the
-# word -- "pro-forma periods are excluded", "pro-forma figures are never used"
-# -- inside the same clause, and read as a disclosure. And "exclude(s) any
-# pro-forma" puts the verb first.
-DENIED_AFTER = re.compile(r"^pro[\s-]?forma(?:[\s,'-]+\w+){0,4}?[\s,'-]+"
-                          r"(?:excluded|never|not|omitted|removed|isn't|aren't)\b",
-                          re.IGNORECASE)
-EXCLUDES = re.compile(r"\bexclud(?:e|es|ing)\b(?:[\s,'-]+\w+){0,2}?[\s,'-]+"
-                      r"pro[\s-]?forma", re.IGNORECASE)
+#
+# B01, deep pass of 2026-09-24 (3/3): those windows COUNTED WORDS -- three
+# before, four after -- so "We do not use backtests or any pro-forma data" (a
+# denial four words off) and "Returns exclude backfilled, backtested and
+# pro-forma figures" read as disclosures, while "a pro-forma stretch, not a
+# backtest" read as a denial of the stretch. So: a negation ANYWHERE earlier
+# in the mention's own clause denies it; after the mention, only a denial that
+# attaches to it -- "pro-forma [figures] [are] excluded / never / not".
+CLAUSE_END = re.compile(r"[.;:\n]|\bbut\b", re.IGNORECASE)
+NEGATION = re.compile(r"\b(?:no|not|never|nor|neither|none|nothing|without|zero"
+                      r"|exclud(?:e|es|ed|ing))\b|n't\b", re.IGNORECASE)
+DENIED_AFTER = re.compile(r"^pro[\s-]?forma(?:[\s-]+\w+)?"
+                          r"(?:\s+(?:are|is|were|was|have been|has been|be))?"
+                          r"\s+(?:excluded|never|not|omitted|removed|isn't|aren't"
+                          r"|wasn't|weren't)\b", re.IGNORECASE)
 RETURN_SLACK_PP = 5.0
 
 
 def discloses_pro_forma(text: str) -> bool:
     """Whether the methodology says a pro-forma stretch is IN the return."""
     def denied(m) -> bool:
-        before = text[:m.end()][-80:]
-        clause = re.split(r"[.;]", text[m.start():m.start() + 120], 1)[0]
-        return bool(DENIED.search(before) or EXCLUDES.search(before)
-                    or DENIED_AFTER.search(clause))
+        start = max((c.end() for c in CLAUSE_END.finditer(text, 0, m.start())),
+                    default=0)
+        end = next((c.start() for c in CLAUSE_END.finditer(text, m.end())),
+                   len(text))
+        return bool(NEGATION.search(text[start:m.start()])
+                    or DENIED_AFTER.search(text[m.start():end]))
     return any(not denied(m) for m in PRO_FORMA.finditer(text))
 
 

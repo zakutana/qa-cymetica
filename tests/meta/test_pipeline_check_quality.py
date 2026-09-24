@@ -960,6 +960,17 @@ def test_a_route_their_ai_names_is_matched_against_the_template_not_the_text(
         "/api/v1/cloned-bots/{id}/toggle-trading"}
     assert routes_named("Do not call /api/v1/admin/reset, and "
                         "/api/v1/legacy/fund does not exist.") == set()
+    # B03 (deep pass of 2026-09-24, 3/3): a negation EARLIER in the sentence,
+    # across a comma, dropped the route he then tells the agent to call -- the
+    # route was never judged. A negation reaches across a comma only while no
+    # instruction starts after it.
+    assert routes_named("If the clone does not start, call "
+                        "`POST /api/v1/cloned-bots/{id}/restart`.") == {
+        "/api/v1/cloned-bots/{id}/restart"}
+    assert routes_named("Rather than polling, call GET /api/v1/foo/bar.") == {
+        "/api/v1/foo/bar"}
+    assert routes_named("Do not call /api/v1/admin/reset, /api/v1/admin/wipe "
+                        "or anything under them.") == set()
 
     # A06 (1): `<name>` is a path parameter too. Both spellings are verbatim
     # from our own diary of their answers, the second with a space inside.
@@ -1132,6 +1143,24 @@ def test_a_startup_call_that_could_not_be_read_is_not_one_that_demands_a_key():
     from tests.rest import test_startup_line_is_reachable_as_documented as startup
 
     path_of = {"terms": startup.TERMS, "line": startup.LINE, "mine": startup.MINE}
+
+    # A07 (deep pass of 2026-09-24, 3/3): the FIRST "status:" arrow list on
+    # the page was read as the application's, so a bid or a build queue's
+    # statuses above it went out as "promised and not served". The line that
+    # names the application, or the page's only one; `queue_status` is not
+    # `status`.
+    for above in ("<p>Bid status: pending -> won | lost</p>",
+                  "<p>queue_status: queued → building → shipped</p>"):
+        page = (above + "<p>Application status: submitted → reviewing → "
+                "accepted | declined</p>")
+        assert startup.page_statuses(page) == (
+            "submitted", "reviewing", "accepted", "declined"), page
+    assert startup.page_statuses(
+        "<p>Status: submitted → reviewing → accepted | declined</p>") == (
+        "submitted", "reviewing", "accepted", "declined")
+    assert startup.page_statuses("<p>Bid status: a -> b</p><p>Order status: "
+                                 "c -> d</p>") is None, (
+        "two lists and neither the application's: which one it is is unread")
 
     # Their markup, verbatim from 2026-09-22: every word in its own <code>.
     said = ("<code>submitted</code> → <code>reviewing</code> → "
@@ -1337,6 +1366,15 @@ def test_a_published_ranking_that_admits_recency_is_not_the_defect():
     assert discloses_recency(
         ["- [GET /api/v1/agent-board/search](...): while nothing is verified "
          "the board is ordered by recency"])
+    # B07 (deep pass of 2026-09-24, 3/3): a DENIAL of the order read as a
+    # statement of it -- no negation guard -- so the PASSING, FIX_CLAIMED row
+    # would go on passing on a sentence that says the board is NOT by age.
+    for denial in ("ranked by verified return x replications; not sorted by "
+                   "recency; unverified rows badged",
+                   "never newest-first; unverified rows last",
+                   "the order isn't simply by recency while rows are unverified"):
+        assert not discloses_recency(
+            [f"- [GET /api/v1/agent-board/search](...): {denial}"]), denial
 
 
 # ---------------------------------------------------------------------------
@@ -1673,6 +1711,25 @@ def test_a_refusal_that_blames_trust_level_for_a_wording_is_the_defect():
     assert _drive_check(check, _Mcp(
         "About the wording only -- nothing to do with your identity or your "
         "trust level."))[0] == "passed"
+
+    # B08 (deep pass of 2026-09-24, 3/3): a denial in any of five phrasings
+    # and no other, so a hint saying exactly the right thing in other words
+    # would fail -- and open a new row, filed without asking.
+    for denied in ("The wording of this parameter matched a restricted-topic "
+                   "filter. It does not depend on your identity or trust level.",
+                   "It is the wording; it is unrelated to your identity or trust "
+                   "level.",
+                   "The wording tripped it, independent of your trust level.",
+                   "The wording tripped it; it isn't about your identity."):
+        verdict, reason = _drive_check(check, _Mcp(denied))
+        assert verdict == "passed", (denied, reason)
+    # A03: "wording" was a substring test -- presence where the claim is a
+    # value, the shape this very check was rewritten to stop -- so a hint
+    # DENYING the wording passed as "its hint says it is about the wording".
+    verdict, reason = _drive_check(check, _Mcp(
+        "This refusal is not about the wording; it is not about your identity "
+        "or trust level either."))
+    assert verdict == "failed", reason
 
     # A17, deep pass of 2026-09-22: `parameter` had to be one of four names,
     # so a refusal naming `prompt` for the `query` we sent passed -- a field

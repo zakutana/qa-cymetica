@@ -93,9 +93,13 @@ def since_last_full_run() -> str:
     # selector_full with zero results, and tests/repo spawns one every
     # session; a full run the meta gate aborted has results, every one of
     # them tests/meta (R01, deep pass of 2026-09-22 evening).
+    # And JUDGED it: passed or failed. A run in an outage where every one of
+    # their checks came back inconclusive measured nothing (rule 10), and
+    # read as the last full run (B09, deep pass of 2026-09-24).
     def judged_theirs(run: dict) -> bool:
         return any(not str(r.get("nodeid") or "").replace("\\", "/")
                    .startswith(("tests/meta/", "tests/repo/"))
+                   and r.get("outcome") in ("passed", "failed")
                    for r in run.get("results") or [])
 
     full = [r for r in list_runs() if r.get("selector_full") and judged_theirs(r)]

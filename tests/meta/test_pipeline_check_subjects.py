@@ -196,9 +196,21 @@ def test_a_denial_of_a_pro_forma_stretch_is_not_a_disclosure_of_one_116():
         with pytest.raises(AssertionError, match="discloses no pro-forma"):
             _run_fta_check(denial)
 
+    # B01 (deep pass of 2026-09-24, 3/3): the negation window counted words,
+    # three before and four after, and missed a denial one word further off
+    # while taking "not" about something else for one. The whole CLAUSE
+    # before the mention is read, and after it only a denial that attaches.
+    for denial in ("We do not use backtests or any pro-forma data.",
+                   "Returns exclude backfilled, backtested and pro-forma figures.",
+                   "The return doesn't include any pro-forma stretch.",
+                   "Pro-forma months aren't used."):
+        with pytest.raises(AssertionError, match="discloses no pro-forma"):
+            _run_fta_check(denial)
+
     _run_fta_check("Return since inception includes a pro-forma period before "
                    "the first held position: today's composition applied to "
                    "past closes.")
+    _run_fta_check("The return includes a pro-forma stretch, not a backtest.")
     # A negation in the sentence before is not a denial of this one.
     _run_fta_check("No backfill. Pro-forma: the stretch before the first "
                    "position applies today's composition to past closes.")
@@ -338,6 +350,23 @@ def test_a_clone_refusal_is_read_the_way_it_was_captured(monkeypatch):
         _run_clone_check_on_captures(monkeypatch, again, {
             "ev-CLN-0017": asked, "ev-CLN-0020": asked})
 
+    # B02 (deep pass of 2026-09-24, 3/3): only the literal "try again" was a
+    # retry, so a one-word rewording of the unchanged defect passed -- and
+    # "don't hesitate to try again" read as a refusal to retry.
+    for reworded in ("Invalid clone request. Please retry.",
+                     "Invalid clone request. Please don't hesitate to try again."):
+        body = {"encoding": "json", "value": {"detail": reworded}}
+        with pytest.raises(AssertionError, match="asks for a retry"):
+            _run_clone_check_on_captures(monkeypatch, again, {
+                "ev-CLN-0017": body, "ev-CLN-0020": body})
+    # A05: a refusal that names its reason and sends the caller ELSEWHERE is
+    # the fix, however often it is met -- not the same retry refused again.
+    elsewhere = {"encoding": "json", "value": {"detail": (
+        "You already hold a paper clone of this bot. Try again with a "
+        "different bot.")}}
+    _run_clone_check_on_captures(monkeypatch, again, {
+        "ev-CLN-0017": elsewhere, "ev-CLN-0020": elsewhere})
+
 
 # ------------------------------------ /api-docs examples carry what they need -
 
@@ -439,6 +468,10 @@ def test_every_way_a_curl_can_be_written_is_read():
         f"curl https://cymetica.com{fund} -X POST --data '{{\"x\": 1}}'",
         f"curl -X POST https://cymetica.com{fund} -d \"{{\\\"x\\\": 1}}\"",
         f"curl https://cymetica.com{fund} --data-raw '{{\"x\": 1}}'",
+        # B04 (deep pass of 2026-09-24, 3/3): no space after -d, and the
+        # `=` form -- neither judged nor counted.
+        f"curl -X POST https://cymetica.com{fund} -d'{{\"x\": 1}}'",
+        f"curl -X POST https://cymetica.com{fund} --data='{{\"x\": 1}}'",
     ]
     for spelled in spellings:
         found = check.examples(_page(spelled))
@@ -499,8 +532,13 @@ def test_a_card_that_is_closed_on_rest_and_open_on_mcp_fails():
     open on both, the case this is about was not exercised."""
     a, b, c = (f"{n:08x}-0000-4000-8000-000000000000" for n in (1, 2, 3))
 
-    with pytest.raises(AssertionError, match=a[:8]):
+    with pytest.raises(AssertionError, match=a[:8]) as said:
         _run_tradeability_check({a: False, b: False}, {a: True, b: False})
+    # A06 (deep pass of 2026-09-24, 3/3): the docstring says the reason names
+    # BOTH read times, because the pair can straddle a market open or close;
+    # one time, taken before the first read, was all it carried.
+    assert "REST read at" in str(said.value) and "tool read at" in str(said.value), (
+        str(said.value))
     # The other direction is the same disagreement.
     with pytest.raises(AssertionError, match=b[:8]):
         _run_tradeability_check({a: False, b: True}, {a: False, b: False})
@@ -568,6 +606,19 @@ def test_a_report_created_behind_a_500_fails_and_a_clean_run_of_twelve_passes(
     honest = _filed("k-down", 30, 500)
     with pytest.raises(Inconclusive):
         _run_filing_check(monkeypatch, clean[:20] + honest)
+    # B06 (deep pass of 2026-09-24, 3/3): ...and sent again under the same
+    # key, answered 201 with its id. The first status and the last id made
+    # "500 and created anyway" out of two honest answers -- a false fail on a
+    # FIX_CLAIMED row. Masked is a 5xx whose report RECONCILING found.
+    resent = honest + [{"type": "filing_intent", "key": "k-down",
+                        "at": "2026-09-22T10:31:00+00:00"},
+                       {"type": "filing_outcome", "key": "k-down", "http_status": 201,
+                        "outcome": "accepted", "report_id": 131,
+                        "at": "2026-09-22T10:31:00+00:00"}]
+    # Not the defect; and a 500 among the newest twelve is not a clean
+    # twelve either, so it waits rather than failing.
+    with pytest.raises(Inconclusive):
+        _run_filing_check(monkeypatch, clean + resent)
 
 
 # --------------------------- a paper buy is judged against the paper book ---
@@ -620,6 +671,12 @@ def test_a_paper_buy_refused_for_a_balance_it_is_not_spending_fails(monkeypatch)
     # A buy of the refused card that lands is the fix.
     _run_paper_book_check(monkeypatch, rows + _paper_buy(
         "TRD-0050", PRIV, "09:00:00", 200))
+    # A04 (deep pass of 2026-09-24, 3/3): ...when it is bigger than the
+    # balance the refusal quoted. A 5 USDC buy the wrong 7.65 also covers
+    # lands whether or not they fixed anything, and passed as the fix.
+    with pytest.raises(Inconclusive):
+        _run_paper_book_check(monkeypatch, rows + _paper_buy(
+            "TRD-0052", PRIV, "09:00:00", 200, usdc=5.0))
 
     # Short on paper too: the refusal is true, not this defect.
     with pytest.raises(Inconclusive):

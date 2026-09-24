@@ -96,13 +96,23 @@ UNPROVEN = ("no row has verified", "nothing is verified", "unverified",
             "no verified", "without verified")
 
 
+# A statement of the order, not a denial of it (B07, deep pass of 2026-09-24,
+# 3/3): "not sorted by recency" and "never newest-first" matched as the
+# disclosure, so a document denying the order would have passed #111.
+DENIED_ORDER = re.compile(r"\b(?:not|never|no longer|isn't|aren't|nor)\b"
+                          r"(?:\W+\w+){0,2}?\W*$")
+
+
 def discloses_recency(claim_lines: list[str]) -> bool:
     """Does their own description admit the ordering this check measures?"""
     for line in claim_lines:
         low = line.lower()
-        if ORDERED_BY_AGE.search(low) and any(
-                word in low for word in UNPROVEN):
-            return True
+        if not any(word in low for word in UNPROVEN):
+            continue
+        for found in ORDERED_BY_AGE.finditer(low):
+            clause = re.split(r"[.;:]", low[:found.start()])[-1]
+            if not DENIED_ORDER.search(clause):
+                return True
     return False
 
 

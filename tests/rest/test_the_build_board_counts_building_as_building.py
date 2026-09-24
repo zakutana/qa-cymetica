@@ -65,8 +65,37 @@ API = "/api/v1/build-it-better/requests"
 # The tile is written by `text($('bs-building'), <expression>);` -- the id is
 # the anchor, because it is the one part a translation or a restyle will not
 # touch, and the expression after it is what this check reads.
-TILE = re.compile(
-    r"""\$\(\s*['"]bs-building['"]\s*\)\s*,\s*(.{0,160}?)\s*\)\s*;""", re.S)
+TILE = re.compile(r"""\$\(\s*['"]bs-building['"]\s*\)\s*,\s*""")
+
+
+def tile_argument(page: str) -> tuple[str, int] | None:
+    """The expression handed to the tile, read to its call's OWN closing
+    parenthesis, and where it was found.
+
+    B05, deep pass of 2026-09-24: read lazily to the first `)` followed by
+    `;`, a correct tile in minified or semicolon-less script took in the
+    NEXT tile's call and its stage -- `s.building||0),text($('bs-shipped'),
+    s.shipped||0` -- which is a false regression, or an unread tile, on a
+    PASSING, FIX_CLAIMED row. Parentheses are counted, quotes skipped."""
+    found = TILE.search(page)
+    if not found:
+        return None
+    depth, quote, i = 0, None, found.end()
+    while i < len(page) and i - found.end() <= 400:
+        ch = page[i]
+        if quote:
+            if ch == quote and page[i - 1] != "\\":
+                quote = None
+        elif ch in "'\"`":
+            quote = ch
+        elif ch in "([{":
+            depth += 1
+        elif ch in ")]}":
+            if depth == 0:
+                return page[found.end():i].strip(), found.start()
+            depth -= 1
+        i += 1
+    return None
 # Any stage name other than `building` appearing inside that expression.
 OTHER_STAGES = ("funded", "requested", "queued", "shipped", "total")
 # The one stage the tile may count, as a word: `s.building`, `s['building']`.
@@ -143,7 +172,7 @@ def test_the_boards_building_tile_counts_only_what_is_building(rest_anon):
             sources={"board": BOARD_PAGE}))
         return
 
-    found = TILE.search(page.text)
+    found = tile_argument(page.text)
     if not found:
         conclude(Measurement(
             verdict="inconclusive",
@@ -153,8 +182,8 @@ def test_the_boards_building_tile_counts_only_what_is_building(rest_anon):
             sources={"board": BOARD_PAGE}))
         return
 
-    tile = " ".join(found.group(1).split())
-    expression = resolve(page.text, tile, found.start())
+    tile = " ".join(found[0].split())
+    expression = resolve(page.text, tile, found[1])
     if expression is None or (not BUILDING.search(expression) and not any(
             stage in expression for stage in OTHER_STAGES)):
         # A pass is promised only for a tile that IS the building count, so

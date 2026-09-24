@@ -50,7 +50,10 @@ BLOCK = re.compile(r'<div class="code-block"[^>]*>(.*?)</div>', re.S)
 COMMAND = re.compile(r"\bcurl\b(.*?)(?=\bcurl\b|\Z)", re.S)
 METHOD = re.compile(r"(?:-X|--request)\s+['\"]?([A-Z]+)")
 URL = re.compile(r"['\"]?https://cymetica\.com(/api/[^\s\\'\"?]+)")
-BODY = re.compile(r"(?:-d|--data(?:-raw|-binary)?)\s+(['\"])(\{.*?\})\1(?=\s|\\|$)",
+# B04, deep pass of 2026-09-24 (3/3): whitespace was REQUIRED after the flag,
+# so `-d'{...}'` and `--data='{...}'` were neither judged nor counted while the
+# pass line said every example carries its fields. Space, `=`, or nothing.
+BODY = re.compile(r"(?:-d|--data(?:-raw|-binary)?)(?:\s+|=)?(['\"])(\{.*?\})\1(?=\s|\\|$)",
                   re.S)
 WRITES = ("POST", "PUT", "PATCH")
 

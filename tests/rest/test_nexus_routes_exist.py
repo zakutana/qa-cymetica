@@ -87,6 +87,20 @@ DENIED_BEFORE = re.compile(
 DENIED_AFTER = re.compile(
     r"^[`'\"]?\s*(?:does not|doesn't|is not|isn't)\s+(?:exist|served|"
     r"published|documented|available)", re.I)
+# B03, deep pass of 2026-09-24 (3/3): the denial reached across a comma, so in
+# "If the clone does not start, call POST .../restart" -- or "Rather than
+# polling, call GET ..." -- the route he tells the agent to call was dropped
+# and never judged. Past a comma, an instruction ends the negation's reach.
+INSTRUCTS = re.compile(r"\b(?:call|use|hit|send|try|query|post|get|patch|put|"
+                       r"delete|then)\b", re.I)
+
+
+def _denied_before(before: str) -> bool:
+    found = DENIED_BEFORE.search(before)
+    if not found:
+        return False
+    tail = before[found.start():].rsplit(",", 1)
+    return not (len(tail) == 2 and INSTRUCTS.search(tail[1]))
 
 
 def routes_named(text: str) -> set[str]:
@@ -99,7 +113,7 @@ def routes_named(text: str) -> set[str]:
             continue
         before = text[max(0, hit.start() - 60):hit.start()]
         after = text[hit.start() + len(path):hit.start() + len(path) + 40]
-        if DENIED_BEFORE.search(before) or DENIED_AFTER.search(after):
+        if _denied_before(before) or DENIED_AFTER.search(after):
             continue
         found.add(path)
     return found

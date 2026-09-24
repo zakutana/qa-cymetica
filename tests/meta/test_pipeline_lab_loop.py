@@ -3085,8 +3085,13 @@ def test_the_board_the_brief_and_resume_read_bot_and_fund_rooms(
     # The brief counts them rather than naming them: both rooms, the bot's
     # and the fund's, are running experiments on its book line.
     assert re.search(r"\b2 experiment\(s\) running", said), said[:600]
-    assert scripts_lab.cmd_resume() == 0
     capsys.readouterr()
+    assert scripts_lab.cmd_resume() == 0
+    # C04 (deep pass of 2026-09-24): resume's half asserted only the exit
+    # code and threw its output away, so resume dropping the bot and fund
+    # rooms stayed green. It prints both rooms.
+    shown = capsys.readouterr().out
+    assert "STR-0001" in shown and "STR-0002" in shown, shown[:800]
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

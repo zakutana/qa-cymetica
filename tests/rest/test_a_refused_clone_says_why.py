@@ -145,17 +145,30 @@ def detail_of(body) -> str:
     return detail if isinstance(detail, str) else json.dumps(detail, sort_keys=True)
 
 
+# "don't hesitate to" is encouragement, not a negation (B02, 2026-09-24).
 NEGATED = re.compile(r"\b(?:not|never|don't|dont|cannot|can't|won't|no need to)"
-                     r"(?:\s+\w+){0,2}\s*$", re.I)
+                     r"(?!\s+hesitate\b)(?:\s+\w+){0,2}\s*$", re.I)
+# Every way of saying it (B02, deep pass of 2026-09-24, 3/3): only the literal
+# "try again" counted, so "Please retry." -- one word, the defect unchanged --
+# passed as a refusal for a stated reason.
+RETRY = re.compile(r"\b(?:try\s+again|retry|re-try|resubmit|try\s+later)\b", re.I)
+# A05: a retry sent ELSEWHERE -- "try again with a different bot" -- names the
+# reason and the way out, which is the fix, not the same retry refused again.
+ELSEWHERE = re.compile(r"^\W*(?:\w+\W+){0,2}?(?:with|using|on|for)\s+(?:a\s+|an\s+)?"
+                       r"(?:different|another|other)\b", re.I)
 
 
 def asks_retry(said: str) -> bool:
-    """Whether the words tell the caller to try again. "Please try again"
-    does; "do not try again" does not (R04): a refusal that names its reason
-    and says not to retry is the fix, not the defect."""
-    for found in re.finditer(r"\btry\s+again\b", said, re.I):
-        if not NEGATED.search(said[max(0, found.start() - 40):found.start()]):
-            return True
+    """Whether the words tell the caller to try the SAME thing again. "Please
+    try again" does; "do not try again" does not (R04), and nor does "try
+    again with a different bot" (A05): a refusal that names its reason and
+    says not to retry, or where to go instead, is the fix, not the defect."""
+    for found in RETRY.finditer(said):
+        if NEGATED.search(said[max(0, found.start() - 40):found.start()]):
+            continue
+        if ELSEWHERE.search(said[found.end():found.end() + 60]):
+            continue
+        return True
     return False
 
 

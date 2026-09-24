@@ -586,6 +586,17 @@ def test_the_building_tile_is_judged_by_the_arithmetic_behind_its_name():
             run(script)
     run("function paint(s){ text($('bs-building'), Number(s.building || 0)); }")
 
+    # B05 (deep pass of 2026-09-24): the argument was read up to the first
+    # `)` followed by `;`, so a correct tile in minified or semicolon-less
+    # script took in the NEXT tile's stage -- a false regression on a
+    # PASSING, FIX_CLAIMED row. Read to the call's own closing parenthesis.
+    for script in (
+            "function paint(s){text($('bs-building'),s.building||0),"
+            "text($('bs-shipped'),s.shipped||0);}",
+            "function paint(s){ text($('bs-building'), s.building || 0)\n"
+            " text($('bs-funded'), s.funded || 0) }"):
+        run(script)
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_socket_named_by_its_path_or_with_a_trailing_slash_is_named():
