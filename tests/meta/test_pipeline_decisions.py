@@ -159,6 +159,8 @@ PINNED = {
          "d19c226ec84ee951da90b3d36b279ade48560674dfd6cdb3786698a8229a5311"),
         ("2026-09-10", "Ano, jen čísla",
          "4d18272203a67eaede4d3380b022a4c03367dd846a2381893b1e44930c3b2117"),
+        ("2026-09-24", "to byl ucel celou dobu",
+         "f82618dfc14b788601b7dcc4a90852c60e24a2b656245895ad0ef71beb886304"),
     ],
     ".claude/skills/pokracuj/SKILL.md": [
         ("2026-09-13", "chci at je genericky",

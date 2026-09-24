@@ -85,6 +85,15 @@ correspondence: nothing anyone says appears on the page, and the bell still
 lights for the bug tracker alone. The 2026-09-08 decision above is unchanged
 and stands over everything except those figures.
 
+[operator 2026-09-24] *"dyt prece k tomu slouzilo toto porovnavnai ze jak poslu an telgram zpravu kteoru jsem ted odelsla btw, tak mas stejnou poslat i na a2a chanell at porovnavame spolehlivost a2a kanalu a taky kvalitu jeslti je stejna s telegramem. Pokud pak zjistime ze to je stejne tak uz nebudem muset nikdy nic posilat na telegram a staci pouze a2a, to byl ucel celou dobu"*
+
+**Every Telegram message they send goes out over a2a too, the same text, in
+the turn they say it went.** `correspond.py sent` records the Telegram one,
+`a2a.py send --text-file … --confirm` sends its twin -- this standing
+instruction is the `--confirm` condition of 2026-09-08, given once for every
+mirror. The two rows in "Can we rely on them?" are the comparison: answered,
+time and quality, until it shows a2a alone is enough.
+
 Automated first-pass replies are silent on purpose — 35 of the 39 a2a messages
 we hold are the trophy-emoji routing prompt, and an alert that fires on those is
 one nobody reads. A message that cannot be classified is **not** silent; it
