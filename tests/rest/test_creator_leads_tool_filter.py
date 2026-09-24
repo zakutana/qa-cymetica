@@ -96,6 +96,24 @@ def _leak_check(rest, path: str, endpoint_label: str) -> dict:
     leaked_tools = sorted({l.get("tool_path") or "" for l in leads
                             if isinstance(l, dict) and l.get("tool_path") != UNKNOWN_TOOL})
 
+    # A04, deep pass of 2026-09-24 (3/3): an empty answer is only evidence
+    # that nothing leaked if there was something to leak. On an empty queue
+    # a server that ignores `tool` also answers empty, so read the unfiltered
+    # queue before an empty answer may pass.
+    if not leads:
+        whole = rest.get(path, params={"limit": READ_LIMIT})
+        whole_leads = (whole.json() or {}).get("leads") if whole.status_code == 200 else None
+        if not isinstance(whole_leads, list):
+            return {"ok": False,
+                    "reason": f"{endpoint_label} unfiltered answered HTTP "
+                              f"{whole.status_code}, so an empty filtered answer "
+                              f"proves nothing"}
+        if not whole_leads:
+            return {"ok": False,
+                    "reason": f"{endpoint_label}'s whole queue is empty, so an "
+                              f"empty answer to ?tool={UNKNOWN_TOOL!r} cannot "
+                              f"tell a filter from a fall-through"}
+
     # Context only: whichever known-real tool is currently empty on THIS
     # surface, if any, confirms the "no match -> empty" case still works for
     # a real path. Not required for the verdict -- the fabricated value alone

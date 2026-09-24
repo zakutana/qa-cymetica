@@ -59,8 +59,8 @@
         "t2": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "f07a1e26"
     },
     {
       "id": "R05",
@@ -437,8 +437,8 @@
         "t2": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "f07a1e26"
     },
     {
       "id": "G02",
@@ -451,8 +451,8 @@
         "t2": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "f07a1e26"
     },
     {
       "id": "G03",
@@ -465,8 +465,8 @@
         "t2": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "f07a1e26"
     },
     {
       "id": "G04",
@@ -479,8 +479,8 @@
         "t2": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "f07a1e26"
     },
     {
       "id": "G05",

@@ -597,6 +597,16 @@ def test_the_building_tile_is_judged_by_the_arithmetic_behind_its_name():
             " text($('bs-funded'), s.funded || 0) }"):
         run(script)
 
+    # A02 (deep pass of 2026-09-24, 3/3): every dotted segment was a field, so
+    # the API's own nesting -- `d.stats.building || 0` -- read as adding
+    # `stats`: a false regression on a FIX_CLAIMED row. A segment that only
+    # leads TO building is a path, not a stage; a sibling stage still fails.
+    run("function paint(d){ text($('bs-building'), d.stats.building || 0); }")
+    run("function paint(d){ text($('bs-building'), d['stats']['building'] || 0); }")
+    with pytest.raises(AssertionError, match="funded"):
+        run("function paint(d){ text($('bs-building'), "
+            "(d.stats.building || 0) + (d.stats.funded || 0)); }")
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_socket_named_by_its_path_or_with_a_trailing_slash_is_named():

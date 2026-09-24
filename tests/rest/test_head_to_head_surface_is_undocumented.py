@@ -41,6 +41,8 @@ SAFE. GET and OPTIONS only; /mine and /sides read our own account's state.
 
 from __future__ import annotations
 
+import re
+
 from qa.marks import Inconclusive, SafetyTier, qa
 from qa.measure import Measurement, conclude
 
@@ -51,11 +53,6 @@ LLMS = "/llms.txt"
 PREFIX = "/api/v1/head-to-head"
 PROBE_PATHS = (PREFIX, f"{PREFIX}/sides", f"{PREFIX}/mine")
 
-# Case-insensitive text needles: a heading, an abbreviation, or a close
-# synonym would each be a legitimate way for llms.txt to mention this
-# feature. U+2011 (non-breaking hyphen) is normalised to '-' first, since a
-# hand-typed heading is the likeliest place for one to appear unnoticed.
-LLMS_NEEDLES = ("head-to-head", "head to head", "h2h", "matchup", "duel")
 
 
 def _routed(response) -> str | None:
@@ -86,11 +83,21 @@ def test_the_head_to_head_routes_they_serve_are_named_in_no_document(rest_truste
 
     small_paths = set((small.json().get("paths") or {}).keys())
     curated_paths = set((curated.json().get("paths") or {}).keys())
-    small_hit = any("head" in p.lower() for p in small_paths)
-    curated_hit = any("head" in p.lower() for p in curated_paths)
+    llms_text = llms.text.replace("‑", "-")
 
-    llms_text = llms.text.replace("‑", "-").lower()
-    llms_hit = [needle for needle in LLMS_NEEDLES if needle in llms_text]
+    # A03, deep pass of 2026-09-24 (3/3): "documented" was any OpenAPI path
+    # containing "head", or "matchup"/"duel" anywhere in llms.txt -- an
+    # unrelated /headlines route passed it while these three stayed unnamed.
+    # Each route is documented only where its own path is: a key of either
+    # OpenAPI document, or the path written out in llms.txt.
+    def named_in(path: str) -> list[str]:
+        return ([OPENAPI_SMALL] if path in small_paths else []) + \
+               ([OPENAPI_CURATED] if path in curated_paths else []) + \
+               ([LLMS] if re.search(re.escape(path) + r"(?![\w/-])", llms_text)
+                else [])
+    small_hit = any(p in small_paths for p in PROBE_PATHS)
+    curated_hit = any(p in curated_paths for p in PROBE_PATHS)
+    llms_hit = [p for p in PROBE_PATHS if LLMS in named_in(p)]
 
     # Live evidence: GET first (a 2xx is direct proof), OPTIONS where GET
     # named no method (the same fallback the cloned-bots check uses).
@@ -113,25 +120,22 @@ def test_the_head_to_head_routes_they_serve_are_named_in_no_document(rest_truste
             f"Allow header, so no route could be shown to exist -- this "
             f"check only ever claims existence")
 
-    documented = small_hit or curated_hit or bool(llms_hit)
+    unnamed = [p for p in served if not named_in(p)]
+    documented = not unnamed
     conclude(Measurement(
         verdict="passed" if documented else "failed",
         reason=(
-            f"none of the {len(served)} live head-to-head route(s) "
-            f"({', '.join(f'{p} -> {v}' for p, v in served.items())}) "
-            f"appears in {OPENAPI_SMALL} ({len(small_paths)} paths), "
-            f"{OPENAPI_CURATED} ({len(curated_paths)} paths), or {LLMS} "
-            f"({len(llms.text)} chars, no match for "
-            f"{', '.join(LLMS_NEEDLES)}) -- the whole feature is undiscoverable "
-            f"to an agent that reads only what either document tells it to"
+            f"{len(unnamed)} of the {len(served)} live head-to-head route(s) "
+            f"({', '.join(f'{p} -> {served[p]}' for p in unnamed)}) "
+            f"appear(s) in neither {OPENAPI_SMALL} ({len(small_paths)} paths), "
+            f"{OPENAPI_CURATED} ({len(curated_paths)} paths), nor {LLMS} "
+            f"({len(llms.text)} chars) by its own path -- undiscoverable "
+            f"to an agent that reads only what those documents tell it to"
             if not documented else
-            f"the head-to-head surface is named in "
-            + ", ".join(
-                ([OPENAPI_SMALL] if small_hit else [])
-                + ([OPENAPI_CURATED] if curated_hit else [])
-                + ([f"{LLMS} ({', '.join(llms_hit)})"] if llms_hit else []))
+            "every live head-to-head route is named by its own path: "
+            + "; ".join(f"{p} in {', '.join(named_in(p))}" for p in served)
         ),
-        left=sorted(served), right=[],
+        left=sorted(unnamed), right=[],
         population={"served_routes": served,
                     "openapi_json_paths": len(small_paths),
                     "openapi_public_paths": len(curated_paths),

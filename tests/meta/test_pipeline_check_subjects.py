@@ -539,9 +539,13 @@ def test_a_card_that_is_closed_on_rest_and_open_on_mcp_fails():
     # one time, taken before the first read, was all it carried.
     assert "REST read at" in str(said.value) and "tool read at" in str(said.value), (
         str(said.value))
-    # The other direction is the same disagreement.
-    with pytest.raises(AssertionError, match=b[:8]):
+    assert "can be traded that the trade gate refuses" in str(said.value)
+    # The other direction is the same disagreement -- and its reason says
+    # THAT direction, not the first one (deep pass 2026-09-24, A06 again).
+    with pytest.raises(AssertionError, match=b[:8]) as other:
         _run_tradeability_check({a: False, b: True}, {a: False, b: False})
+    assert "cannot be traded that the trade gate accepts" in str(other.value), (
+        str(other.value))
 
     # Agreement with a card closed on both is the gate working.
     _run_tradeability_check({a: False, b: False}, {a: False, b: False})

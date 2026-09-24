@@ -138,8 +138,14 @@ def test_a_card_is_tradeable_on_every_surface_or_on_none(mcp_trusted, rest_trust
                     f"{first['tool']} through {TOOL} (REST read at "
                     f"{first['at']}, tool read at {first['tool_at']}) "
                     f"(listing us_market_open {body.get('us_market_open')!r}); "
-                    f"an agent or Nexus reading the tool is told a card can be "
-                    f"traded that the trade gate refuses"),
+                    # The consequence follows the direction measured (A06,
+                    # deep pass 2026-09-24): it said "told a card can be
+                    # traded that the gate refuses" even for REST true.
+                    + ("an agent or Nexus reading the tool is told a card can "
+                       "be traded that the trade gate refuses"
+                       if first["tool"] and not first["rest"] else
+                       "an agent or Nexus reading the tool is told a card "
+                       "cannot be traded that the trade gate accepts")),
             left=[(p["card"][:8], p["rest"], p["tool"]) for p in differ],
             right="the same tradeable_now on both surfaces",
             population=population, sources=sources))

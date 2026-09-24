@@ -204,6 +204,16 @@ def test_the_boards_building_tile_counts_only_what_is_building(rest_anon):
     # not `building` is added to it, whatever it is called -- a list of five
     # names let `+ s.pending` pass. A method call is not a field.
     fields = {a or b for a, b in FIELD.findall(expression)} - {"building"}
+    # A02, deep pass of 2026-09-24: a segment that only leads TO building --
+    # `d.stats.building`, `d['stats']['building']` -- is the API's nesting,
+    # not a stage added to it; a sibling like `d.stats.funded` still is.
+    fields -= {name for name in fields
+               if re.search(rf"""(?:\.\s*{name}\b|\[\s*['"]{name}['"]\s*\])"""
+                            rf"""\s*(?:\.\s*building\b|\[\s*['"]building['"]\s*\])""",
+                            expression)
+               and not re.search(rf"""(?:\.\s*{name}\b|\[\s*['"]{name}['"]\s*\])"""
+                                 rf"""\s*(?:\.\s*(?!building\b)\w+|\[\s*['"](?!building['"])\w+['"]\s*\])""",
+                                 expression)}
     added = sorted(fields | {stage for stage in OTHER_STAGES
                              if stage in expression})
     # Quoted as the page wrote it, and through the name when it used one.

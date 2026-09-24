@@ -5,22 +5,19 @@
     GET /api/v1/creator/{username}/links: All of one creator's tracked links
     with a summary. No key
 
-**What was seen when this was written (2026-09-24).** For tg_expire76 the
-list held 8 links, all `kind: artifact` (the creator's pages), with per-link
-clicks summing to 1 -- while `summary.clicks` read 23 and `summary.links` read
-8. The other 22 clicks sit on the per-reply tracked links the reply queue
-mints (`POST /api/v1/creator/{outlet}-leads/{id}/reply`, one `reply_slug` per
-thread, `https://cymetica.com/c/<reply_slug>`): each answers
-`GET /api/v1/creator-links/{slug}/stats` with `kind: post` and its own
-clicks, and none of them is in the list. So the summary counts links the list
-does not show, and a creator reading the list cannot see which reply brought
-the clicks -- the per-thread measurement the reply queue exists for.
+**Written 2026-09-24 on a misreading, repaired before anything was filed.**
+The first version read only the list's top-level `slug`s -- the creator's 8
+pages, `kind: artifact` -- and called all 14 per-reply tracked links missing.
+They were there all along: each page carries its reply links in `children`
+(`kind: post`), and the children's clicks plus the pages' add up to
+`summary.clicks`. The deep pass's contract audit caught it (A01, 3/3); the
+lesson is in memory as another absence got wrong.
 
-The check reads the list, then the stats of every tracked link the creator's
-own claimed leads carry (the reply queue's `tracked_url`s, read with
-`?status=claimed,replied`, which needs the creator's key), and fails when a
-reply link with its own stats is missing from the list. The summary's click
-total against the list's is reported beside it as context.
+What it holds now: every tracked link the creator's own claimed leads carry
+(the reply queue's `reply_slug`s, read with `?status=claimed,replied`, which
+needs the creator's key) appears in the list, at the top level or as a child
+of its page. A reply link whose stats cannot be read makes the check
+inconclusive, never a pass (rule 8).
 
 SAFE. Every request is a GET.
 """
@@ -61,7 +58,16 @@ def test_creator_links_lists_every_reply_tracked_link(rest_anon, rest_creator):
     links = body.get("links")
     if not isinstance(links, list):
         raise Inconclusive(f"{LINKS} answered 200 with no `links` list")
-    in_list = {l.get("slug") for l in links if isinstance(l, dict)}
+    # A reply link is listed as a child of the page it points at (`children`,
+    # kind post). Reading the top level alone called all 14 missing while the
+    # list held every one (deep pass 2026-09-24, A01 3/3 -- caught before it
+    # was filed).
+    in_list = set()
+    for link in links:
+        if isinstance(link, dict):
+            in_list.add(link.get("slug"))
+            in_list |= {c.get("slug") for c in link.get("children") or []
+                        if isinstance(c, dict)}
 
     reply_slugs: set[str] = set()
     for path in LEADS:
@@ -77,18 +83,29 @@ def test_creator_links_lists_every_reply_tracked_link(rest_anon, rest_creator):
         raise Inconclusive("the creator has no claimed lead with a reply_slug, "
                            "so there is no reply link to look for")
 
-    missing, reply_clicks = [], 0
+    missing, reply_clicks, unread = [], 0, []
     for slug in sorted(reply_slugs):
         stats = rest_anon.get(f"/api/v1/creator-links/{slug}/stats")
+        if stats.status_code == 404:
+            continue  # a slug with no link behind it is not a tracked link
         if stats.status_code != 200:
-            continue  # a link without stats is not a tracked link to list
+            unread.append(f"{slug} HTTP {stats.status_code}")
+            continue
         reply_clicks += int((stats.json() or {}).get("clicks") or 0)
         if slug not in in_list:
             missing.append(slug)
+    # A failed read is not an absent link (rule 8; deep pass A05, 3/3): a pass
+    # needs every reply link read, and a fail needs only the ones it read.
+    if unread and not missing:
+        raise Inconclusive(f"{len(unread)} reply link stats unread: "
+                           f"{', '.join(unread[:5])}")
 
     summary = body.get("summary") or {}
     listed_clicks = sum(int(l.get("clicks") or 0) for l in links
                         if isinstance(l, dict))
+    listed_clicks += sum(int(c.get("clicks") or 0) for l in links
+                         if isinstance(l, dict) for c in l.get("children") or []
+                         if isinstance(c, dict))
     conclude(Measurement(
         verdict="failed" if missing else "passed",
         reason=(
