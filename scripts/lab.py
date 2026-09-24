@@ -1525,6 +1525,11 @@ def _lane(rows: list[dict], lane: str = "auto") -> tuple[str | None, str]:
     lifted for it.
     """
     moment = _now()
+    if lane == "chat":
+        # The NEXUS bar (ask_nexus), asked by name: same hourly limit and
+        # bound as the sync door, and the deep lane's backoff is not its own.
+        chat, why_not = lab.may_ask_now(rows, moment, ignore_backoff=True)
+        return ("chat", "asked for by name") if chat else (None, why_not)
     may, why = lab.may_ask_now(rows, moment)
     if may and lane != "shallow":
         return "deep", ""
@@ -1545,6 +1550,8 @@ def ask(question: str, wait: bool = True, lane: str = "auto") -> dict:
     if not may:
         raise SystemExit(f"not asking: {why}")
     chosen, why = _lane(rows, lane)
+    if chosen == "chat":
+        return _sibling("nexus").ask_chat(question)
     if chosen is None:
         raise SystemExit(f"not asking: {why}")
     if chosen == "shallow":
@@ -3705,8 +3712,9 @@ def main(argv: list[str] | None = None) -> int:
     ask_cmd.add_argument("question")
     ask_cmd.add_argument("--no-wait", action="store_true")
     ask_cmd.add_argument("--lane", default="auto",
-                         choices=["auto", "deep", "shallow"],
-                         help="auto: deep, or qa-agent/ask while deep is full")
+                         choices=["auto", "deep", "shallow", "chat"],
+                         help="auto: deep, or qa-agent/ask while deep is full; "
+                              "chat: the NEXUS bar (ask_nexus)")
     buy_cmd = sub.add_parser("buy", help="one paper order, with brakes")
     buy_cmd.add_argument("--card", required=True)
     buy_cmd.add_argument("--usdc", type=float, required=True)

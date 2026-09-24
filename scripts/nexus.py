@@ -246,6 +246,54 @@ def ask_shallow(question: str) -> dict:
     return record
 
 
+CHAT = "ask_nexus"
+
+
+def ask_chat(question: str) -> dict:
+    """The question through the NEXUS bar: the MCP tool `ask_nexus`, which
+    their degen page's "Send to NEXUS" button fills (REPLY-0064). Its own
+    description: "Same answer as POST /api/v1/support/ai-agent". Written to
+    the shallow diary under the same NEX sequence, `lane: chat`; anything
+    that is not answer text is a give-up (rule 8)."""
+    entry = {"id": _next_id(load_all()), "type": "question", "at": _now(),
+             "question": question, "tool": CHAT, "lane": "chat"}
+    _append_shallow(entry)
+    try:
+        client = _client()
+        token = CURRENT_TIER.set(SafetyTier.SAFE)
+        try:
+            try:
+                body, failure = client.call(CHAT, {"question": question}), ""
+            except TRANSPORT_ERRORS as exc:
+                body, failure = None, f"unread: {type(exc).__name__}"
+            except McpError as exc:
+                body, failure = None, f"tool error: {str(exc)[:160]}"
+        finally:
+            client.http.close()
+            CURRENT_TIER.reset(token)
+    except BaseException as exc:
+        _append_shallow({"id": entry["id"], "type": "gave_up", "at": _now(),
+                         "lane": "chat",
+                         "status": f"error: {type(exc).__name__}: {str(exc)[:160]}"})
+        raise
+    body = body if isinstance(body, dict) else {}
+    text = str(body.get("answer") or "").strip()
+    if not text:
+        record = {"id": entry["id"], "type": "gave_up", "at": _now(),
+                  "lane": "chat",
+                  "status": f"failed: {failure or 'no answer text'}"}
+        _append_shallow(record)
+        print(f"{entry['id']}: {CHAT} gave no answer ({record['status']})")
+        return record
+    record = {"id": entry["id"], "type": "answer", "at": _now(), "lane": "chat",
+              "text": text, "confidence": body.get("confidence"),
+              "sources": body.get("sources"), "session_id": body.get("session_id")}
+    _append_shallow(record)
+    print(f"{entry['id']}: answered through {CHAT} "
+          f"(confidence {body.get('confidence')}, {len(text)} chars)")
+    return record
+
+
 def record_answer(question: str, text: str, *, at: str | None = None,
                   where: str = "web chat") -> dict:
     """An answer of his that did NOT come through a door of ours.

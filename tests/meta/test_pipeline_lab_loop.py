@@ -70,6 +70,50 @@ def _card(n):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_chat_lane_asks_ask_nexus_and_writes_the_shallow_diary(
+        tmp_path, monkeypatch):
+    """REPLY-0064's degen prompts carry a "Send to NEXUS" button: the NEXUS
+    bar, which is the MCP tool `ask_nexus` ("Same answer as POST
+    /api/v1/support/ai-agent"). Prompt 1 sent to the deep lane ran out of its
+    time budget (NEX-0093); the bounty door declined it (NEX-0094). So a
+    third lane, `chat`, asks what the page's button asks. Same diary and NEX
+    sequence as the shallow lane, marked `lane: chat`; a failure is a
+    give-up, never an empty answer."""
+    from importlib import util
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    import qa.state
+    importlib.reload(qa.state)
+    spec = util.spec_from_file_location("nexus_chat", REPO / "scripts" / "nexus.py")
+    nexus = util.module_from_spec(spec)
+    spec.loader.exec_module(nexus)
+
+    calls = []
+
+    class Client:
+        http = type("H", (), {"close": lambda self: None})()
+
+        def call(self, tool, arguments=None):
+            calls.append((tool, arguments))
+            return {"answer": "Buy " + _card(0xB) + " bull.", "confidence": 0.8,
+                    "session_id": "s-1"}
+
+    monkeypatch.setattr(nexus, "_client", lambda: Client())
+    said = nexus.ask_chat("degen prompt?")
+    assert calls == [("ask_nexus", {"question": "degen prompt?"})]
+    rows = nexus.load_shallow()
+    assert [r["type"] for r in rows] == ["question", "answer"]
+    assert rows[1]["lane"] == "chat" and rows[1]["id"] == said["id"]
+    assert _card(0xB) in rows[1]["text"] and rows[1]["confidence"] == 0.8
+
+    class Empty(Client):
+        def call(self, tool, arguments=None):
+            return {"answer": "", "confidence": 0.1}
+    monkeypatch.setattr(nexus, "_client", lambda: Empty())
+    nexus.ask_chat("again?")
+    assert nexus.load_shallow()[-1]["type"] == "gave_up"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_question_names_the_window_its_room_is_judged_on(tmp_path, monkeypatch):
     """[operator 2026-09-24, in chat] on Cymetica's degen prompts: "libi se mi
     ze tam konecne specifikuji to okno casove, to nam chybelo a proto vetsina

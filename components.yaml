@@ -733,6 +733,9 @@ mcp_tools:
      list_ontology_dimensions, browse_ontology, resolve_ontology_concept,
      search_ontology, find_trade_path, get_strategy_returns,
      get_deep_answer, ask_nexus_deep,
+     # The NEXUS bar (2026-09-24): a question, answered in the call, "Same
+     # answer as POST /api/v1/support/ai-agent". Read, like ask_nexus_deep.
+     ask_nexus,
      # The ground-truth lane of the overnight loop Cymetica themselves told us
      # to run (Telegram, 2026-09-11): surfaces, then models, then the metrics.
      # Both take no arguments and return a catalogue; both are served to an
