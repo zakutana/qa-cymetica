@@ -242,7 +242,7 @@ def test_a_stop_exits_at_the_first_reading_past_it_not_at_its_level():
     trade exits at -40 %, never at -10 % -- a fill at the stop level is a
     price nobody saw."""
     key = "0xabc:2026-09-13T12"
-    rows = [_signal(key)] + _path(key, 1.0, [(1, 0.95), (2, 0.60), (3, 3.0)])
+    rows = [_signal(key)] + _path(key, 1.0, [(1, 0.95), (2, 0.60), (3, 3.0), (24, 3.0)])
     said = fomo.stop_study(rows, stop_pct=10.0, cost_pct=0.0, now=DONE)
     assert said["n"] == 1
     assert round(said["mean_net_pct"], 6) == -40.0, said
@@ -253,7 +253,7 @@ def test_a_stop_exits_at_the_first_reading_past_it_not_at_its_level():
 def test_a_target_exits_at_the_reading_and_no_exit_holds_to_the_last():
     up, flat = "0xup:2026-09-13T12", "0xflat:2026-09-13T12"
     rows = ([_signal(up), _signal(flat)]
-            + _path(up, 1.0, [(1, 1.5), (2, 2.4), (3, 0.1)])
+            + _path(up, 1.0, [(1, 1.5), (2, 2.4), (3, 0.1), (24, 0.1)])
             + _path(flat, 1.0, [(1, 0.97), (24, 1.05)]))
     said = fomo.stop_study(rows, stop_pct=10.0, target_pct=100.0,
                            cost_pct=0.0, now=DONE)
@@ -273,6 +273,28 @@ def test_a_target_exits_at_the_reading_and_no_exit_holds_to_the_last():
                            stop_pct=10.0, target_pct=100.0, cost_pct=0.0, now=DONE)
     assert said["n"] == 2, said
     assert said["excluded"]["unread_at_end"] == 1, said["excluded"]
+
+    # RM05 (deep pass of 2026-09-24, 3/3): and a stop or a target is held to
+    # the same rule. Counted off a path the loop stopped reading, the trades
+    # that fell early stayed and the ones that would have ridden the day went:
+    # one rule for every exit, the path is read to its end.
+    short = "0xshort:2026-09-13T12"
+    said = fomo.stop_study(rows + [_signal(short)]
+                           + _path(short, 1.0, [(1, 0.5), (6, 0.4)]),
+                           stop_pct=10.0, target_pct=100.0, cost_pct=0.0, now=DONE)
+    assert said["n"] == 2, said
+    assert said["excluded"]["unread_at_end"] == 1, said["excluded"]
+    # READ, not priced: a path the loop did read to the end and found no
+    # price on is a coin that stopped trading -- 34 of the 410 stops this
+    # rule would otherwise have dropped, the loss the stop exists for. Kept.
+    dead = "0xdead:2026-09-13T12"
+    said = fomo.stop_study(rows + [_signal(dead)] + _path(dead, 1.0, [(1, 0.5)]) + [
+        {"type": "checkpoint", "key": dead, "horizon": "24h",
+         "at": (T0 + timedelta(hours=24)).isoformat(), "price_usd": None,
+         "return_pct": None}],
+        stop_pct=10.0, target_pct=100.0, cost_pct=0.0, now=DONE)
+    assert said["n"] == 3, said
+    assert said["excluded"]["unread_at_end"] == 0, said["excluded"]
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -327,7 +349,7 @@ def test_the_study_counts_the_trades_a_sub_hour_point_could_have_saved():
     travels with the numbers."""
     dense, sparse = "0xd:2026-09-13T12", "0xs:2026-09-13T12"
     rows = ([_signal(dense), _signal(sparse)]
-            + _path(dense, 1.0, [(0.25, 0.8), (1, 0.5)])
+            + _path(dense, 1.0, [(0.25, 0.8), (1, 0.5), (24, 0.5)])
             + _path(sparse, 1.0, [(1, 0.5), (24, 0.4)]))
     said = fomo.stop_study(rows, stop_pct=10.0, cost_pct=0.0, now=DONE)
     assert said["dense_before_exit"] == 1, said

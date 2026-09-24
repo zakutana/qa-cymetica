@@ -56,6 +56,18 @@ def _path(hid, start, pxs, every=20, rank=1, in_hot=True, ret=7.0):
     return out
 
 
+def _to_end(hid, cls="crypto", px=100.0):
+    """Rounds pricing the basket, out of Hot, around every hold's end: a trade
+    counts only once its hold is read to the end (RM05, deep pass of
+    2026-09-24), and these fixtures enter between T0+20m and T0+60m."""
+    out, when = [], T0 + timedelta(hours=23, minutes=40)
+    while when <= T0 + timedelta(hours=26, minutes=20):
+        wire = (hid, 10.0, px, 0.1, 7.0) if cls == "crypto" else (hid, px, 1.0, 7.0, 0.1)
+        out.append(_round(when, [], [wire]))
+        when += timedelta(minutes=20)
+    return out
+
+
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_basket_fingerprint_ignores_order_and_names_its_class():
     assert hot.basket_fp(["B", "A"], "crypto") == hot.basket_fp(["A", "B"], "crypto")
@@ -138,7 +150,8 @@ def test_a_basket_is_priced_through_another_headline_when_its_own_row_is_gone():
     # B02, deep pass of 2026-09-21: the rule's exits read the basket the same
     # way. Before, a trade whose own row had left the wire never exited.
     ruled = ([_round(T0)] + _path(1, T0 + timedelta(minutes=20), [100])
-             + [_round(T0 + timedelta(minutes=40), [], [(2, 1.0, 109, 0.1, 3.0)])])
+             + [_round(T0 + timedelta(minutes=40), [], [(2, 1.0, 109, 0.1, 3.0)])]
+             + _to_end(2))
     (trade,) = hot.nexus_rule(heads + ruled)["trades"]
     assert trade["exit"] == "take_profit" and trade["gross"] == 9.0
 
@@ -156,7 +169,7 @@ def test_a_confirmation_reads_the_basket_through_a_sibling_headline():
               _round(T0 + timedelta(minutes=40), [(2, 40, 7.0, "crypto", 102, 7.0)],
                      [(2, 1.0, 102, 0.1, 7.0)]),
               _round(T0 + timedelta(minutes=60), [], [(2, 1.0, 112, 0.1, 7.0)])]
-    said = hot.nexus_rule(heads + rounds, rule=hot.VARIANTS["NEX-0057a"])
+    said = hot.nexus_rule(heads + rounds + _to_end(2), rule=hot.VARIANTS["NEX-0057a"])
     assert said["entries"] == 1, "a sibling's price confirms the entry"
     (trade,) = said["trades"]
     assert trade["at"] == _iso(T0 + timedelta(minutes=40))
@@ -178,7 +191,8 @@ def test_the_volatility_stop_reads_the_basket_through_a_sibling_headline():
     assert hot.vol_stop(rounds, 1, "crypto", T0 + timedelta(minutes=60)) == -4.0
     stop = hot.vol_stop(rounds, 1, "crypto", T0 + timedelta(minutes=60), siblings=[2])
     assert stop < -5.0
-    (trade,) = hot.nexus_rule(rounds, heads, hot.VARIANTS["NEX-0057d"])["trades"]
+    (trade,) = hot.nexus_rule(rounds + _to_end(1), heads,
+                              hot.VARIANTS["NEX-0057d"])["trades"]
     assert trade["exit"] == "take_profit", "the sibling's path widened the stop"
     assert abs(trade["gross"] - (117.42 / 103 - 1) * 100) < 1e-6
 
@@ -313,7 +327,7 @@ def test_the_control_takes_nothing_from_a_look_back_the_loop_did_not_watch():
 def test_the_rule_takes_profit_at_the_first_round_past_eight_percent():
     heads = [_headline(1, published=T0)]
     rounds = [_round(T0)] + _path(1, T0 + timedelta(minutes=20),
-                                  [100, 103, 109, 95])
+                                  [100, 103, 109, 95]) + _to_end(1)
     said = hot.nexus_rule(rounds, heads)
     (trade,) = said["trades"]
     assert trade["exit"] == "take_profit"
@@ -328,7 +342,7 @@ def test_the_rule_ignores_a_stale_headline_and_a_stock_basket():
     round after its entry, so it traded nothing with the class gate deleted.
     Each fixture now trades once the one gate under test is relaxed."""
     old = _headline(1, published=T0 - timedelta(hours=3))
-    rounds = [_round(T0)] + _path(1, T0 + timedelta(minutes=20), [100, 120])
+    rounds = [_round(T0)] + _path(1, T0 + timedelta(minutes=20), [100, 120]) + _to_end(1)
     assert hot.nexus_rule(rounds, [old])["trades"] == []
     assert len(hot.nexus_rule(rounds, [old], {"max_age_minutes": 240})["trades"]) == 1
 
@@ -336,7 +350,7 @@ def test_the_rule_ignores_a_stale_headline_and_a_stock_basket():
     stock = [_round(T0)] + [
         _round(T0 + timedelta(minutes=20 * i), [(2, 1, 7.0, "stocks", px, 7.0)],
                [(2, px, 1.0, 7.0, 0.1)])
-        for i, px in ((1, 50.0), (2, 55.0))]
+        for i, px in ((1, 50.0), (2, 55.0))] + _to_end(2, "stocks")
     assert hot.nexus_rule(stock, [fresh])["trades"] == []
     (trade,) = hot.nexus_rule(stock, [fresh], {"hot_class": "stocks"})["trades"]
     assert trade["exit"] == "take_profit", "the class gate alone kept it out"
@@ -348,10 +362,12 @@ def test_the_rule_needs_its_own_threshold_and_rank():
     its entry, so it traded nothing whatever the threshold. Both fixtures now
     run to a take-profit, and trade once the gate under test is relaxed."""
     heads = [_headline(1, published=T0)]
-    low = [_round(T0)] + _path(1, T0 + timedelta(minutes=20), [100, 120], ret=5.0)
+    low = ([_round(T0)] + _path(1, T0 + timedelta(minutes=20), [100, 120], ret=5.0)
+           + _to_end(1))
     assert hot.nexus_rule(low, heads)["trades"] == []
     assert len(hot.nexus_rule(low, heads, {"min_ret_24h": 5.0})["trades"]) == 1
-    deep = [_round(T0)] + _path(1, T0 + timedelta(minutes=20), [100, 120], rank=4)
+    deep = ([_round(T0)] + _path(1, T0 + timedelta(minutes=20), [100, 120], rank=4)
+            + _to_end(1))
     assert hot.nexus_rule(deep, heads)["trades"] == []
     assert len(hot.nexus_rule(deep, heads, {"max_rank": 4})["trades"]) == 1
 
@@ -364,7 +380,7 @@ def test_the_rule_ignores_a_basket_that_may_have_sat_in_hot_past_thirty_minutes(
     absent -- and GAP_MINUTES lets that be 40. Past his 30 it is still an
     entry, just not one under his rule."""
     heads = [_headline(1, published=T0)]
-    late = [_round(T0)] + _path(1, T0 + timedelta(minutes=35), [100, 120])
+    late = [_round(T0)] + _path(1, T0 + timedelta(minutes=35), [100, 120]) + _to_end(1)
     assert len(hot.entries(late, heads)) == 1
     assert hot.nexus_rule(late, heads)["trades"] == []
     assert len(hot.nexus_rule(late, heads, {"max_minutes_in_hot": 40})["trades"]) == 1
@@ -376,7 +392,7 @@ def test_nex_0057_drops_the_rank_and_enters_only_once_the_next_round_confirms():
     later, and the trade starts there, at that round's price."""
     heads = [_headline(1, published=T0)]
     rounds = [_round(T0)] + _path(1, T0 + timedelta(minutes=20),
-                                  [100, 102, 111], rank=40)
+                                  [100, 102, 111], rank=40) + _to_end(1)
     variant = hot.VARIANTS["NEX-0057a"]
     said = hot.nexus_rule(rounds, heads, variant)
     (trade,) = said["trades"]
@@ -413,7 +429,8 @@ def test_the_volatility_stop_widens_with_the_basket_and_never_tightens_past_four
                             [100, 103, 97.85, 113.3, 117.42], rank=40)
     stop = hot.vol_stop(rounds, 1, "crypto", T0 + timedelta(minutes=60))
     assert 10.0 < -2.0 * stop < 14.0 and stop < -5.0, "the fixture spans both levels"
-    (trade,) = hot.nexus_rule(rounds, heads, hot.VARIANTS["NEX-0057d"])["trades"]
+    (trade,) = hot.nexus_rule(rounds + _to_end(1), heads,
+                              hot.VARIANTS["NEX-0057d"])["trades"]
     assert trade["at"] == _iso(T0 + timedelta(minutes=60))
     assert trade["exit"] == "take_profit"
     assert abs(trade["gross"] - (117.42 / 103 - 1) * 100) < 1e-6, "target = 2 x stop"
@@ -434,6 +451,22 @@ def test_a_trade_whose_time_stop_was_never_seen_is_open_not_a_result():
     said = hot.nexus_rule(later, heads)
     assert said["trades"] == []
     assert said["open"] == 0 and said["unobserved"] == 1
+
+    # RM05 (deep pass of 2026-09-24, 3/3): a stop or a target exited at any
+    # round, a time exit only at a round near the hold's end -- so a gap there
+    # dropped the trades that would have timed out and kept the ones that
+    # stopped, and the survivors leaned to the extremes (NEX-0057a: 9 of 12
+    # unobserved). One rule for every exit: the hold is read to its end.
+    stopped = [_round(T0)] + _path(1, T0 + timedelta(minutes=20), [100, 95])
+    said = hot.nexus_rule(stopped, heads)
+    assert said["trades"] == [] and said["open"] == 1, said
+    said = hot.nexus_rule(stopped + [_round(T0 + timedelta(hours=26))], heads)
+    assert said["trades"] == [] and said["unobserved"] == 1, (
+        "a stop was counted from a hold nobody read to its end", said)
+    (trade,) = hot.nexus_rule(stopped + _to_end(1), heads)["trades"]
+    assert trade["exit"] == "stop" and trade["gross"] == -5.0, trade
+    assert trade["closed_at"] == _iso(T0 + timedelta(minutes=40)), \
+        "read to the end, it still exits where it stopped"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

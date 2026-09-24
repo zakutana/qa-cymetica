@@ -467,6 +467,18 @@ def _overlap(a, b) -> float:
     return len(a & b) / min(len(a), len(b))
 
 
+def _read_at_end(index, e: dict, siblings, end: datetime, slack: timedelta) -> bool:
+    """Did a round within `slack` of the hold's end price the basket -- the
+    reading a time exit needs, asked of every exit (RM05)."""
+    for i in range(index.after(end - slack - timedelta(microseconds=1)),
+                   len(index.times)):
+        if index.times[i] > end + slack:
+            return False
+        if index.price(i, e["cls"], e["row"], siblings):
+            return True
+    return False
+
+
 def nexus_rule(rows, headlines=None, rule: dict | None = None) -> dict:
     """NEX-0055, run over the diary. Entries are ours, and qualify only if
     the last covered round that saw the basket absent is within his
@@ -477,8 +489,9 @@ def nexus_rule(rows, headlines=None, rule: dict | None = None) -> dict:
     first ROUND past a level, at the price that round saw, never at the level
     itself: we see the path only every tick. The price is the basket's,
     through any headline on it, as `follow` reads it. A trade no round priced
-    to an exit is open while the rounds have not passed its end, and
-    unobserved once they have."""
+    to an exit -- or, whatever its exit, at its hold's end (RM05) -- is open
+    while the rounds have not passed that end, and unobserved once they
+    have."""
     rule = {**RULE, **(rule or {})}
     index = _Index(rows)
     rounds = index.rounds
@@ -543,6 +556,14 @@ def nexus_rule(rows, headlines=None, rule: dict | None = None) -> dict:
                 break
         held_rows.add(e["row"])
         holding.append((end, e["members"]))
+        # One rule for every exit (RM05, deep pass of 2026-09-24, 3/3): the
+        # hold is read to its end. A time exit needs a priced round there and
+        # a stop did not, so a gap at the end dropped the trades that would
+        # have timed out and kept the ones that stopped (NEX-0057a: 9 of 12
+        # unobserved) -- survivors leaning to the extremes.
+        if exit_ in ("stop", "take_profit") and not _read_at_end(
+                index, e, siblings, end, slack):
+            exit_ = None
         if exit_ is None:
             if last is None or end + slack > last:
                 open_ += 1

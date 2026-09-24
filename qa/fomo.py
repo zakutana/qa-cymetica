@@ -992,6 +992,15 @@ def stop_study(rows: list[dict], stop_pct: float, target_pct: float | None = Non
         if pair_changed(ordered):
             excluded["pair_changed"] += 1
             continue
+        if max(h for h, _ in read[key]) < last:
+            # The loop never got to the end of this hold (RM05, deep pass of
+            # 2026-09-24, 3/3): counted off a path cut short, a stop kept the
+            # trades that fell early and dropped the ones that would have
+            # ridden the day -- every exit is held to it. READ, not priced:
+            # an end reading with no price is a coin that stopped trading,
+            # and its stop is the loss the stop exists for.
+            excluded["unread_at_end"] += 1
+            continue
         why, (hours, price) = "last", path[-1]
         for point in path:
             ret = (point[1] / entry - 1.0) * 100.0
@@ -1007,6 +1016,7 @@ def stop_study(rows: list[dict], stop_pct: float, target_pct: float | None = Non
             # its last reading as if held the day -- 308 of 1333 trades,
             # clustered where the loop stopped, the -10 % study -12.1 %
             # where it is -18.8 %. `ten_dollars` calls it unread_at_24h.
+            # With the check above, what reaches here read the end unpriced.
             excluded["unread_at_end"] += 1
             continue
         if cost_pct is not None:
