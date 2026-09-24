@@ -165,14 +165,11 @@ def test_a_room_that_holds_a_bot_is_a_bot_even_from_before_rooms_had_kinds():
     assert said["products"]["bots"]["n"] == 2
     assert said["products"]["cards"]["n"] == 2, "the old bot room left the cards"
 
-
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_a_room_whose_plan_holds_only_bots_is_a_bot_room():
-    """STR-0045 (2026-09-24): the head-to-head room opened from our proposal
-    OUR-0001, holding five paper bots in its plan, showed under Karty -- no
-    kind on the strategy row, and no clone of ours named its origin. The
-    operator: "proc tu nevidim ten nvoy experiment?" What a room holds is its
-    plan, so a kindless room whose plan holds only bots is a bot room."""
+    # STR-0045 (2026-09-24): the head-to-head room opened from our proposal
+    # OUR-0001, five paper bots in its plan, showed under Karty -- no kind on
+    # the strategy row and no clone of ours naming its origin. The operator:
+    # "proc tu nevidim ten nvoy experiment?" What a room holds is its plan.
+    # (Folded in, deep pass 2026-09-24.)
     fx = _fixture()
     fx["room_rows"] += [
         {"type": "strategy", "id": "STR-0045", "origin": "OUR-0001",

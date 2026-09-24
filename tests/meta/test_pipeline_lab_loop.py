@@ -116,13 +116,11 @@ def test_the_chat_lane_asks_ask_nexus_and_writes_the_shallow_diary(
     nexus.ask_chat("again?")
     assert nexus.load_shallow()[-1]["type"] == "gave_up"
 
-
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_the_chat_lane_is_not_held_by_the_deep_lanes_hourly_cap(tmp_path, monkeypatch):
-    """[operator 2026-09-24] "Co tonje za blbost 1 prompt za 3 hodiny? Ja si s
-    nim obcas pisu vic mnohem". The 3-an-hour cap is their DEEP lane's own
-    limit; the chat lane was given it by reuse. get_rate_limits for our key
-    reads 200 a minute. Three questions in the last hour hold deep, not chat."""
+    # And its pace is not the deep lane's. [operator 2026-09-24] "Co tonje za
+    # blbost 1 prompt za 3 hodiny? Ja si s nim obcas pisu vic mnohem": the
+    # 3-an-hour cap is THEIR deep lane's limit, given to this lane by reuse;
+    # get_rate_limits reads 200 a minute for our key. Three questions in the
+    # last hour hold deep, not chat. (Folded in, deep pass 2026-09-24.)
     module = _scripts_lab(tmp_path, monkeypatch)
     now = module._now()
     rows = [_question(f"NEX-{n:04d}", now) for n in range(1, 4)]

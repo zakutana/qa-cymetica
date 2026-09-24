@@ -49,7 +49,12 @@ def _client(handler, mutate=False):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_a_matchup_refuses_before_the_network():
+def test_a_matchup_is_refused_early_never_public_and_carries_only_its_fields():
+    """One guard for the one write (folded from two, deep pass 2026-09-24,
+    tests/meta grows only by replacement): the refusals first, each before
+    the network, then the one body that is sent."""
+    from tests.meta.test_guard_is_real import as_mutate_tier
+
     mod = _module()
 
     def untouched(request):
@@ -67,12 +72,6 @@ def test_a_matchup_refuses_before_the_network():
             mod.create(_client(untouched), "clone:a", "clone:b", days=days,
                        confirm=True)
 
-
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_a_matchup_is_never_public_and_carries_only_the_documented_fields():
-    from tests.meta.test_guard_is_real import as_mutate_tier
-
-    mod = _module()
     seen = []
 
     def handler(request):
