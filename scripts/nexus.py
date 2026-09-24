@@ -277,6 +277,8 @@ def ask_chat(question: str) -> dict:
                          "status": f"error: {type(exc).__name__}: {str(exc)[:160]}"})
         raise
     body = body if isinstance(body, dict) else {}
+    if "answer" not in body and isinstance(body.get("result"), dict):
+        body = body["result"]  # {"success", "tool", "result": {"answer", ...}}
     text = str(body.get("answer") or "").strip()
     if not text:
         record = {"id": entry["id"], "type": "gave_up", "at": _now(),

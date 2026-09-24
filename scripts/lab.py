@@ -1526,10 +1526,12 @@ def _lane(rows: list[dict], lane: str = "auto") -> tuple[str | None, str]:
     """
     moment = _now()
     if lane == "chat":
-        # The NEXUS bar (ask_nexus), asked by name: same hourly limit and
-        # bound as the sync door, and the deep lane's backoff is not its own.
-        chat, why_not = lab.may_ask_now(rows, moment, ignore_backoff=True)
-        return ("chat", "asked for by name") if chat else (None, why_not)
+        # The NEXUS bar (ask_nexus), asked by name. Not the deep lane's
+        # 3-an-hour cap: that is THEIR deep lane's own limit, and it was given
+        # to this lane by reuse until the operator asked why one prompt took
+        # hours (2026-09-24). get_rate_limits reads 200 a minute for our key;
+        # the call is synchronous, so one is in flight at a time anyway.
+        return "chat", "asked for by name"
     may, why = lab.may_ask_now(rows, moment)
     if may and lane != "shallow":
         return "deep", ""
