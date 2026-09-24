@@ -307,10 +307,12 @@ def test_hot_and_control_are_compared_per_coin_over_one_period_on_one_pair():
         _row("signal", "early:T", early),
         {**_read("checkpoint", "early:T", 21, 3.5),
          "at": (early + timedelta(hours=21)).isoformat()},
-        # One coin, called hot twice: one coin.
+        # One coin, called hot twice: one coin, on its FIRST call -- the first
+        # a hit and the second a miss, so keeping the last call reads (2, 0)
+        # (deep pass 2026-09-24, B05, 3/3: both were hits, and it passed).
         _row("signal", "twice:T1", T0), _read("checkpoint", "twice:T1", 20, 3.5),
         _row("signal", "twice:T2", T0 + timedelta(minutes=30)),
-        {**_read("checkpoint", "twice:T2", 20, 3.5),
+        {**_read("checkpoint", "twice:T2", 20, 1.0),
          "at": (T0 + timedelta(minutes=30, hours=20)).isoformat()},
         _row("signal", "miss:T", T0), _read("checkpoint", "miss:T", 20, 1.2),
         # Their terminal answered another pair: the age jumped by days.

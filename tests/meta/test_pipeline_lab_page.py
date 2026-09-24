@@ -196,7 +196,8 @@ def test_a_long_path_is_thinned_but_keeps_both_ends():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_a_coin_whose_pair_switched_is_not_among_the_biggest_movers():
+def test_a_coin_whose_pair_switched_is_not_among_the_biggest_movers(
+        tmp_path_factory, monkeypatch):
     """2026-09-23, the first look at the new page: JUP at +569 368 % topped
     the movers -- their terminal answering a different pair for the same
     address (the report we owe them), not a coin that moved. The $10 answer
@@ -216,6 +217,21 @@ def test_a_coin_whose_pair_switched_is_not_among_the_biggest_movers():
                         9_000_000.0, 1437.0, "1h")]
     kept = _lab_page()._pair_clean(steady + switched)
     assert {r["key"] for r in kept} == {"0xa:h"}
+
+    # And its one caller hands the movers only what it kept: the helper alone
+    # was tested, so dropping the call from `_fomo_stats` stayed green (deep
+    # pass 2026-09-24, B04, 3/3).
+    import qa.fomo
+    import qa.state
+    tmp = tmp_path_factory.mktemp("fomo")
+    (tmp / "fomo_signals.jsonl").write_text(
+        "".join(json.dumps(r) + "\n" for r in steady + switched), encoding="utf-8")
+    seen = []
+    page = _lab_page()
+    monkeypatch.setattr(qa.state, "state_dir", lambda: tmp)
+    monkeypatch.setattr(qa.fomo, "curves", lambda rows, **kw: seen.extend(rows) or [])
+    page._fomo_stats()
+    assert {r["key"] for r in seen} == {"0xa:h"}, seen
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

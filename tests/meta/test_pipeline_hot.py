@@ -334,6 +334,11 @@ def test_the_rule_takes_profit_at_the_first_round_past_eight_percent():
     assert trade["gross"] == 9.0, "exits at the round it saw, not at the level"
     assert abs(trade["net"] - 8.8) < 1e-9
     assert said["verdict"].startswith("not yet")
+    # The path exits at 109 for any take-profit in (3, 9], so the level is
+    # pinned by value, as NEX-0055 gave it (deep pass 2026-09-24, B06, 3/3).
+    assert hot.RULE["take_profit"] == 8.0, hot.RULE
+    below = hot.nexus_rule(rounds, heads, rule={**hot.RULE, "take_profit": 9.5})
+    assert below["trades"][0]["exit"] != "take_profit", "109 is not past 9.5 %"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

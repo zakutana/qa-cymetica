@@ -531,3 +531,11 @@ def test_a_reading_read_back_off_disk_still_prints_the_ten_dollar_line(
     # whichever fee happens to be first in the dict (the fallback silently
     # picked 0.5% off a stored reading).
     assert stale == fresh, (fresh, stale)
+    # ...pinned to the 1% row's own figure, since `stale == fresh` holds too
+    # when both pick the first fee (deep pass 2026-09-24, B01, 3/3).
+    rows = said["ten_dollars"]["by_fee"]
+    one = next(v for fee, v in rows.items() if float(fee) == 1.0)
+    first = next(v for fee, v in sorted(rows.items(), key=lambda kv: float(kv[0])))
+    assert one["mean_net_pct"] != first["mean_net_pct"], "the fixture cannot tell 1% from 0.5%"
+    headline = fresh.split(" a trade after costs at 1% a side")[0]
+    assert headline.endswith(mod._signed(one["mean_net_pct"])), (headline, one)

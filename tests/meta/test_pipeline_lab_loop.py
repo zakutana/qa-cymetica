@@ -549,7 +549,10 @@ def test_our_own_outstanding_jobs_stay_under_their_reserved_bound():
     they now promise. It is not a pace, so `ignore_backoff` does not lift it.
     """
     # Since V5 (2026-09-23) there is no in-flight window of ours at all, so
-    # this bound is the ONLY thing between the loop and a seventh job.
+    # this bound is the ONLY thing between the loop and a seventh job. Pinned
+    # by value, as REPLY-0037 gave it: read back from the constant, 12 passed
+    # (deep pass 2026-09-24, B03, 3/3).
+    assert lab.OUTSTANDING_BOUND == 6
     old = NOW - timedelta(hours=2, minutes=10)
     stale = []
     for n in range(lab.OUTSTANDING_BOUND):
@@ -3048,6 +3051,21 @@ def test_a_bot_is_judged_from_what_went_in_not_from_its_first_reading(
     assert [s["verdict"] for s in said] == ["survived"], said
     assert said[0]["return_pct"] == pytest.approx(7.1 / 240 * 100), said
 
+    # The docstring's second half, never set up until the deep pass of
+    # 2026-09-24 (B10, 3/3): funded 10 h before the window, +30 made by the
+    # time it opened -- the room enters at the reading inside it (112.5),
+    # not at 100 at the window's start.
+    t0 = datetime(2026, 9, 20, 12, tzinfo=timezone.utc)
+    rows = [{"type": "sample", "kind": "bot", "instance_id": "i-9",
+             "at": (t0 + timedelta(hours=h)).isoformat(),
+             "total_profit_usdc": str(p)} for h, p in ((-5, 30.0), (1, 30.0), (24, 36.0))]
+    series = lab.bot_series(rows, "i-9", 240.0, entry_at=(t0 - timedelta(hours=10)).isoformat())
+    took = lab.verdict({"at": t0.isoformat(), "window_days": 1.0, "stop_pct": 50.0,
+                        "legs": [{"kind": "bot", "ref": "i-9", "side": "bull",
+                                  "share": 1.0}]},
+                       {"i-9": series}, now=t0 + timedelta(days=1, hours=1))
+    assert took["legs"][0]["entry_index"] == pytest.approx(112.5), took
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_bot_past_its_stop_is_refuted_early_and_paused(tmp_path, monkeypatch):
@@ -3763,6 +3781,10 @@ def test_the_budget_decides_whether_an_idle_hunt_spends_an_agent():
     assert lab.budget_mode(10, lab.BUDGET_CEILING_PCT) == "minimal"
     assert lab.budget_mode(None, 10) == "minimal", (
         "a usage nobody could read is not room to spend")
+    # 85 % of the week, the deep pass's own DEFER line, pinned by value: read
+    # back from the constant, 95 passed (deep pass 2026-09-24, B07, 3/3).
+    assert lab.BUDGET_CEILING_PCT == 85
+    assert lab.budget_mode(84, 10) != "minimal" and lab.budget_mode(85, 10) == "minimal"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

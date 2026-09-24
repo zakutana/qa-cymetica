@@ -2145,6 +2145,13 @@ def test_a_restart_turns_parked_money_into_exposure_under_the_same_ceiling():
     assert ok, why
     ok, why = lab.restart_affordable(240.0, 6_000.0, deployed=9_400.0, parked=240.0)
     assert not ok and "60%" in why, why
+    # A case the AMOUNT decides (deep pass 2026-09-24, B02, 3/3): the one
+    # above was already over 60% before the restart, so a check ignoring the
+    # amount passed. Book 16 000, 9 400 out: 200 more fits, 300 does not.
+    ok, why = lab.restart_affordable(200.0, 6_300.0, deployed=9_400.0, parked=300.0)
+    assert ok, why
+    ok, why = lab.restart_affordable(300.0, 6_300.0, deployed=9_400.0, parked=300.0)
+    assert not ok and "60%" in why, why
     ok, why = lab.restart_affordable(5_000.0, 10_000.0, deployed=0.0, parked=5_000.0)
     assert ok, ("a restart is not a new order; the per-order cap does not apply", why)
     ok, why = lab.restart_affordable(240.0, None, deployed=0.0, parked=240.0)

@@ -211,8 +211,11 @@ def test_memecoins_carry_the_median_and_the_high_conviction_answer(monkeypatch):
         calls.append(rows)
         n = 20 if len(calls) == 1 else 4
         return {"signals": 40, "window_open": 0, "could_buy_share": 0.5,
+                # Different medians for the two calls, so a median read off
+                # the conviction subset cannot pass (deep pass B11, 3/3).
                 "by_fee": {1.0: {"n": n, "mean_net_pct": -4.0 if n == 20 else 6.0,
-                                 "median_net_pct": -9.0, "win_rate": 0.25}}}
+                                 "median_net_pct": -9.0 if n == 20 else -3.0,
+                                 "win_rate": 0.25}}}
 
     monkeypatch.setattr(lab_report.fomo, "ten_dollars", fake)
     rows = [{"type": "signal", "key": "a", "conviction": 88.0},
@@ -278,7 +281,12 @@ def test_the_nexus_line_follows_his_questions_to_what_survived():
     said = _report()["nexus"]
     assert said == {**said, "questions": 5, "answered": 4, "gate_pass": 2,
                     "gated": 3, "survived": 1, "refuted": 1}, said
-    assert said["picks"] >= 3, said
+    # His picks by exact count, beside a room of ours that is not one: with
+    # every fixture room a pick, `>= 3` passed a count of every room (deep
+    # pass 2026-09-24, B08, 3/3).
+    rooms = _fixture()["room_rows"] + [
+        {"type": "strategy", "id": "STR-0099", "origin": "OUR-0001", "title": "ours"}]
+    assert _report(room_rows=rooms)["nexus"]["picks"] == said["picks"] == 5, said
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
