@@ -40,6 +40,15 @@ value the server does not recognise (a typo, a tool since renamed, a site
 path this account has no leads for at all), with nothing in the response
 distinguishing that from a correctly scoped answer.
 
+**Their fix, 2026-09-24 (#124, REPLY in the journal the same day).** The
+parameter description now reads: "An unknown tool is refused with 400
+("unknown tool ...") rather than ignored, so an empty list always means the
+filter matched nothing." A refusal is the other honest answer to a value that
+matches nothing -- the promise is that an unknown value never hands back other
+tools' threads, and a 400 naming the value keeps it as surely as an empty
+list. So: 400 whose detail says "unknown tool" passes, a 200 with no leads
+passes, a 200 carrying leads fails, anything else is an unread answer.
+
 SAFE. Both reads are GET with a query string; nothing here writes.
 """
 
@@ -64,6 +73,15 @@ def _leak_check(rest, path: str, endpoint_label: str) -> dict:
     (via the caller) when nothing was read.
     """
     unknown = rest.get(path, params={"limit": READ_LIMIT, "tool": UNKNOWN_TOOL})
+    if unknown.status_code == 400:
+        try:
+            detail = str((unknown.json() or {}).get("detail") or "")
+        except ValueError:
+            detail = ""
+        if "unknown tool" in detail.lower():
+            # The documented refusal: nothing leaked, the value was named.
+            return {"ok": True, "unknown_tool_leads": 0, "leaked_tool_paths": [],
+                    "control": None, "refused": detail[:160]}
     if unknown.status_code != 200:
         return {"ok": False,
                 "reason": f"{endpoint_label} answered HTTP {unknown.status_code} "
@@ -118,8 +136,12 @@ def _run(rest, path: str, endpoint_label: str, claim_id: str) -> None:
             f"threads whose best-matching page is that tool' promises for any "
             f"non-empty value"
             if leaked else
-            f"?tool={UNKNOWN_TOOL!r} on {endpoint_label} correctly returned no "
-            f"leads"
+            (f"?tool={UNKNOWN_TOOL!r} on {endpoint_label} was refused with the "
+             f"documented 400 ({result['refused']!r}) -- no other tool's threads "
+             f"came back"
+             if result.get("refused") else
+             f"?tool={UNKNOWN_TOOL!r} on {endpoint_label} correctly returned no "
+             f"leads")
         ),
         left=result["leaked_tool_paths"], right=[],
         population={"unknown_tool_leads": leaked,
