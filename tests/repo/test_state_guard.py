@@ -98,6 +98,51 @@ DENIED_COMMANDS = [
     "python -c \"from pathlib import Path; Path('state/ledger.json').write_text('{}')\"",
     "python -c \"open(r'state\\journal\\events.jsonl','a').write('x')\"",
     "python -c \"import shutil; shutil.copy('/tmp/x.json', 'state/ledger.json')\"",
+    # R07 (deep pass of 2026-09-24, 3/3): a stream prefix kept the absolute
+    # and the cd forms of A6 open -- the lookbehind that spares `2>&1` spared
+    # these too.
+    f"echo x 2> {(REPO / 'state' / 'ledger.json').as_posix()}",
+    "echo x &> /c/Users/adamz/Documents/Projects/cymetica-qa-agent/qa-cymetica/state/ledger.json",
+    "cd state; ls 2> x.json",
+    "cd state; ls &> x.json",
+    "echo x 1> state/ledger.json",
+    # Two more a 1c reader named: a write hidden in a command substitution
+    # inside a quoted target, and the noclobber override `>|`.
+    "echo x 2>\"$(echo > /c/Users/adamz/Documents/Projects/cymetica-qa-agent/"
+    "qa-cymetica/state/ledger.json)\"",
+    f"echo x >| {(REPO / 'state' / 'ledger.json').as_posix()}",
+    # A `2>` inside a quoted ARGUMENT started a match whose quoted target
+    # swallowed the real redirect after it (a 1c reader, second round).
+    f"echo \"2>\" > {(REPO / 'state' / 'ledger.json').as_posix()} \"z\"",
+    f"echo '&>' > {(REPO / 'state' / 'ledger.json').as_posix()} 'z'",
+    # ...and a quoted argument that is itself a command still writes.
+    f"bash -c \"echo x > {(REPO / 'state' / 'ledger.json').as_posix()}\"",
+    f"eval 'echo x >> {(REPO / 'state' / 'ledger.json').as_posix()}'",
+    "python -c \"import os; os.system('echo x > "
+    f"{(REPO / 'state' / 'ledger.json').as_posix()}')\"",
+    "bash -c \"echo x > qa/../state/ledger.json\"",
+    "cd state; bash -c \"echo x > ledger.json\"",
+    # An escaped quote fooled the pairing (a 1c reader, third round).
+    "printf \"%s\" \"a\\\"b\" > "
+    f"\"{(REPO / 'state' / 'ledger.json').as_posix()}\"",
+    "cd state; echo \\\" > \"ledger.json\"",
+    "cd state; echo it\\'s > 'ledger.json'",
+    # A `cd` carrying a redirect writes before it moves (a 1c reader, fourth
+    # round, through `>|`; the plain form was open at HEAD too).
+    "cd /tmp>|x>/c/Users/adamz/Documents/Projects/cymetica-qa-agent/qa-cymetica"
+    "/state/ledger.json",
+    "cd /tmp>/c/Users/adamz/Documents/Projects/cymetica-qa-agent/qa-cymetica"
+    "/state/ledger.json",
+    # A reading that raised crashed the hook before the fixed forms were
+    # asked, and a crashed hook does not block (a 1c reader, seventh round).
+    "sed -i s/a/b/ state/ledger.json; echo x 2>~~:",
+    "echo x >~~: ; cd state; echo y > ledger.json",
+    # The shell joins `''ledger.json` into one word (a 1c reader, fourth round).
+    "cd state; echo x >''ledger.json",
+    "cd state; echo x > \"\"ledger.json",
+    "cd state && eval \"echo x > ledger.json\"",
+    "powershell -Command \"Get-Date > "
+    f"{(REPO / 'state' / 'ledger.json').as_posix()}\"",
 ]
 
 # The sanctioned writers reach state/ through qa/state.py and never name the
@@ -114,6 +159,14 @@ ALLOWED_COMMANDS = [
     "cat state/ledger.json > /tmp/ledger-copy.json",
     "python -c \"print(open('state/ledger.json').read()[:200])\"",
     "cd state && ls -la",
+    # A stream sent to another stream, or to nowhere, writes nothing (R07).
+    "cd state && ls 2>&1 | head",
+    "ls state 2>/dev/null",
+    # A `>` inside a quoted argument that names nothing under state/ writes
+    # nothing there.
+    "python -c \"print(1>0)\"",
+    "awk '$1>0' state/ledger.json",
+    "grep -c \"2>\" state/journal/events.jsonl",
     "grep RAISED state/journal/events.jsonl",
     "ls -la state/runs",
     "git status --short",
