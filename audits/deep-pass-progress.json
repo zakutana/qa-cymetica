@@ -213,8 +213,8 @@
         "t2": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "9f8cb8c2"
     },
     {
       "id": "A08",
@@ -227,8 +227,8 @@
         "t2": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "9f8cb8c2"
     },
     {
       "id": "A09",
@@ -241,8 +241,8 @@
         "t2": "not-real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "9f8cb8c2"
     },
     {
       "id": "A10",
@@ -255,8 +255,8 @@
         "t2": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "9f8cb8c2"
     },
     {
       "id": "A11",
