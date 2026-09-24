@@ -2,7 +2,7 @@
   "run": "deep-pass-2026-09-24",
   "at": "2026-09-24T20:26:30+00:00",
   "previous_at": "2026-09-23T22:55:50+00:00",
-  "at_finished": null,
+  "at_finished": "2026-09-24T22:46:22+00:00",
   "start_commit": "b21fb3285b00e02f5b6f5e009dea19530335bed4",
   "size": "full",
   "gaps": [
@@ -613,7 +613,11 @@
     "done": true,
     "findings": 9
   },
-  "next": null,
+  "next": [
+    "Po PRE-0159 (úroveň V): podat report AIB-Privacy (řádek NOT RAISED YET) přes `submit.py --only`. #117/#119/#123: `correction_owed` dál neposílat, dokud kontroly soudí zápisy před opravou -- nejdřív nový zápis (`paper.py buy` a4a5b71e, klon), pak `verify.py`.",
+    "Boti head-to-head po dávkách (operátor 24. 9. večer: „všechny otestuj“): 27. 9. uzavřít STR-0044/0046, pozastavit je a pustit další dávku (Divergence Dragon a perpetual agenti); vylepšené boty Cymetiky přidat, až půjdou poznat přes API.",
+    "Degen prompty přes obchodního Nexuse (`POST /api/v1/chat/stream`, X-API-Key, SSE; odpověď k ET-27068): napřed zjistit cenu jedné interakce a že účet klíče je v papírovém režimu, pak 11 promptů z `/api/v1/degen-prompts` doslova, každý svůj room, pak šablony."
+  ],
   "retrospective": {
     "last": "2026-09-19",
     "done": false
@@ -621,8 +625,8 @@
   "rule_changes": [],
   "meta_tests": {
     "start": 802,
-    "end": null,
+    "end": 799,
     "reason": "the day added 11 guards (creator 3, clone release 1, h2h 2, lab loop 4, lab report 1) and grew past the 800 ceiling; 1b folded three into existing ones: the two h2h guards into one, the chat lane's pace into the chat lane guard, the plan-holds-bots case into test_a_room_that_holds_a_bot_is_a_bot_even_from_before_rooms_had_kinds -- 802 -> 799"
   },
-  "finished": false
+  "finished": true
 }
