@@ -238,11 +238,23 @@ def test_no_state_change_without_run_id_or_event_id():
                 new = [t for t in row_["transitions"]
                        if _key(t) not in before_tx.get(fid, set())]
                 # A row that did not exist before step moved from nothing.
-                if after != before.get(fid, (None, "UNVERIFIED", "NOT_RAISED")):
+                was = before.get(fid, (None, "UNVERIFIED", "NOT_RAISED"))
+                if after != was:
                     assert new, (
                         f"seed {seed} step {step}: {fid} moved "
                         f"{before.get(fid)} -> {after} with no transition recorded"
                     )
+                # C01 (deep pass of 2026-09-24): each AXIS that moved names a
+                # transition on that axis. `assert new` took a filing
+                # transition as cover for a check move in the same step -- a
+                # fold setting check PASSING on FIX_CLAIMED, silently, stayed
+                # green over 74 such moves.
+                for index, axis in ((1, "check"), (2, "filing")):
+                    if after[index] != was[index]:
+                        assert any(t["axis"] == axis for t in new), (
+                            f"seed {seed} step {step}: {fid}'s {axis} moved "
+                            f"{was[index]} -> {after[index]} and only another "
+                            f"axis recorded a transition")
                 for t in new:
                     cause = t.get("cause") or {}
                     key = "run_id" if t["axis"] == "check" else "event_id"
@@ -467,6 +479,23 @@ def test_exploratory_pass_is_recorded_but_never_verifies():
     assert r["check"]["last_exploratory_pass"]["run_id"] == "run-r"
     assert [t for t in r["transitions"] if t["axis"] == "check"] == []
 
+    # RO02 (deep pass of 2026-09-24, 3/3): the pass moved no state and still
+    # became the row's `detail` and `provenance` -- so a report composed on the
+    # REPRODUCING row printed the passing reading under MEASURED VALUES while
+    # offering the failing run's captures. What the row says it measured is
+    # what the run that ADJUDICATED it measured.
+    failing = fold(state, run=run("run-f", [{**result(CHECK_A, "failed"),
+        "measurement": {"verdict": "failed", "reason": "BROKEN: 3 rows bad",
+                        "role": "verdict"}}]), events=events)
+    passed = {**result(CHECK_A, "passed"),
+              "measurement": {"verdict": "passed", "reason": "all 0 rows fine",
+                              "role": "verdict"}}
+    later = fold(failing, run=run("run-p", [passed], level="R"), events=events)
+    r = later["findings"]["CYM-a"]
+    assert r["detail"]["reason"] == "BROKEN: 3 rows bad", r["detail"]
+    assert r["provenance"]["run_id"] == "run-f", r["provenance"]
+    assert r["check"]["last_exploratory_pass"]["run_id"] == "run-p"
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_regression_is_permanent_and_requires_backed_passing():
@@ -521,6 +550,18 @@ def test_regression_is_permanent_and_requires_backed_passing():
         assert claimed["findings"]["CYM-c"]["obligations"]["reopen"] == [], passing
     assert broke["findings"]["CYM-a"]["obligations"]["reopen"] == [46], \
         "a fall from PASSING after their fix claim owes a reopen"
+
+    # RC04 (deep pass of 2026-09-24, 3/3): one inconclusive run between the
+    # pass and the fall -- a transport error -- erased the regression and the
+    # reopen it owes. What fell is the last state a run established.
+    blurred = fold(verified, run=run("run-i", [result(CHECK_A, "inconclusive")],
+                                     at="2026-09-05T10:30:00+00:00"), events=ev)
+    assert blurred["findings"]["CYM-a"]["check"]["state"] == "INCONCLUSIVE"
+    fell = fold(blurred, run=run("run-w", [result(CHECK_A, "failed")],
+                                 at="2026-09-05T11:00:00+00:00"), events=ev)
+    reg = fell["findings"]["CYM-a"]["regressions"]
+    assert len(reg) == 1 and reg[0]["from_state"] == "PASSING", reg
+    assert fell["findings"]["CYM-a"]["obligations"]["reopen"] == [46]
 
 
 # ---------------------------------------------------------------------------
@@ -664,6 +705,14 @@ def test_a_full_run_can_say_a_check_is_gone_and_a_partial_one_cannot():
     assert moved and moved[-1]["from"] == "REPRODUCING" \
         and moved[-1]["cause"] == {"run_id": "run-full"}, moved
 
+    # RC06 (deep pass of 2026-09-24, 3/3): a partial run that never touched
+    # the row erased WHY it is unverifiable -- the reason and the missing
+    # check were popped before the run learned it had not read the row.
+    later = fold(after, run=partial, events=[])["findings"]["CYM-a"]["check"]
+    assert later["state"] == "UNVERIFIABLE"
+    assert later.get("unverifiable_reason") == "check_missing", later
+    assert later.get("missing_checks") == [CHECK_A], later
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_an_evidence_only_check_verifies_nothing():
@@ -766,6 +815,17 @@ def test_supersede_merges_rows_and_excludes_from_tiles():
     later = fold(state, events=events + _filed("CYM-old", 46, "fixed"))
     assert later["findings"]["CYM-old"]["filing"]["state"] == "SUPERSEDED"
 
+    # RC05 (deep pass of 2026-09-24, 3/3): "the replacement carries the debt"
+    # had no line behind it. The old row went terminal owing nothing, the new
+    # one held no report, and a fix they claimed on #46 while the defect still
+    # failed was owed to nobody. The replacement holds the old row's reports,
+    # and what they say of them afterwards reaches it.
+    assert [r["report_id"] for r in new["filing"]["reports"]] == [46], new["filing"]
+    assert new["filing"]["state"] == "RAISED"
+    moved = later["findings"]["CYM-new"]
+    assert moved["filing"]["state"] == "FIX_CLAIMED", moved["filing"]
+    assert moved["obligations"]["reverify"] is True, moved["obligations"]
+
     # And the composition table still has no holes.
     for check in ("UNVERIFIED", "REPRODUCING", "PASSING"):
         assert DISPLAY[(check, "SUPERSEDED")] == "SUPERSEDED"
@@ -865,6 +925,13 @@ def test_a_failed_read_marks_every_row_and_a_clean_one_clears_it():
                  "at": "2026-09-05T09:00:00+00:00"}
     assert stale([inbox_bad, bad, good]) == "2026-09-05T09:00:00+00:00", \
         "the tracker recovering does not clear the inbox's failure"
+    # RC07 (deep pass of 2026-09-24, 3/3): a new failure CLASS on a door that
+    # never read cleanly in between overwrote the moment, so the badge said
+    # the door had been failing for less time than it had. Since V8 only a
+    # class change is journaled, so every new class moved it forward.
+    worse = read("2026-09-05T11:30:00+00:00", "server_error")
+    assert stale([bad, worse]) == "2026-09-05T10:00:00+00:00", \
+        "the oldest failure still standing was overwritten by a newer one"
 
     # The filing half, on a row that has one.
     filed = ledger(row("CYM-a", checks=[CHECK_A]))
@@ -1491,6 +1558,35 @@ def test_a_split_gives_one_report_its_own_row_and_its_own_verdict():
                events=filed + [told, _split()])
     assert ran["findings"]["CYM-a"]["check"]["state"] == "REPRODUCING"
     assert ran["findings"]["CYM-s"]["check"]["state"] == "PASSING_UNPINNED"
+
+    # RC03 (deep pass of 2026-09-24, 3/3): the split and a run in ONE fold.
+    # The new row was made inside the journal replay, after the run had
+    # walked the rows, so it came out UNVERIFIED -- and rule 12's refold of
+    # the same inputs, with that row already in `prev`, made it REPRODUCING.
+    fresh = fold(before, run=fold_run("run-9", [(CHECK_A, "failed"), (CHECK_B, "failed")],
+                                      at="2026-09-22T10:00:00+00:00"),
+                 events=filed + [told, _split()])
+    refold = fold(fresh, run=fold_run("run-9", [(CHECK_A, "failed"), (CHECK_B, "failed")],
+                                      at="2026-09-22T10:00:00+00:00"),
+                  events=filed + [told, _split()])
+    assert fresh["findings"]["CYM-s"]["check"]["state"] == "REPRODUCING", (
+        fresh["findings"]["CYM-s"]["check"])
+    assert refold["findings"] == fresh["findings"], "a fold is not a function of its inputs"
+
+    # RC08: the row that gave a report away kept the FIX_CLAIMED that report
+    # earned. #89 (fixed) moved off; #98 is still pending: the row is raised,
+    # and it owes no re-verify on a fix nobody claimed for what it holds.
+    mixed = (_filed(report_id=89, status="fixed")
+             + _filed(report_id=98, at="2026-09-19T09:00:00+00:00"))
+    held = fold(ledger(_measured(row("CYM-a", check_state="REPRODUCING", pinned=FP))),
+                events=mixed)
+    assert held["findings"]["CYM-a"]["filing"]["state"] == "FIX_CLAIMED"
+    gave = fold(held, events=mixed + [_split()])["findings"]["CYM-a"]
+    assert gave["filing"]["state"] == "RAISED", gave["filing"]
+    assert gave["obligations"]["reverify"] is False, gave["obligations"]
+    back = [t for t in gave["transitions"] if t["axis"] == "filing"
+            and t["to"] == "RAISED" and t["from"] == "FIX_CLAIMED"]
+    assert back and back[0]["cause"].get("event_id"), gave["transitions"]
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

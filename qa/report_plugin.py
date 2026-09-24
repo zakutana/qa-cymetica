@@ -250,15 +250,14 @@ def _selector_is_full(config) -> bool:
     check_missing branch, the only thing that can say a check is GONE rather
     than merely untested, has never once been able to fire.
     """
+    from qa.state import NARROWING_OPTIONS
+
     args = list(config.invocation_params.args)
     # -k and -m, and (A4 of the review of 2026-09-23, 3/3) the options that
     # deselect or skip what was collected: counted as full, they let a
-    # partial run declare a check GONE.
-    narrowed = any(a in ("-k", "-m") or a.startswith(("-k", "-m", "--deselect",
-                                                       "--ignore", "--lf",
-                                                       "--last-failed", "--sw",
-                                                       "--stepwise"))
-                   for a in args)
+    # partial run declare a check GONE. One list with the preregistration's
+    # own check (RC01).
+    narrowed = any(a.startswith(NARROWING_OPTIONS) for a in args)
     if narrowed:
         return False
     # config.args falls back to the testpaths ini value when nothing

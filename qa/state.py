@@ -226,6 +226,13 @@ def _preregistered_selector(prereg_id: str) -> str | None:
     return None
 
 
+# The pytest options that narrow what a session collects or runs -- one list,
+# read by qa/report_plugin.py for `selector_full` and here for a
+# preregistration's promise.
+NARROWING_OPTIONS = ("-k", "-m", "--deselect", "--ignore", "--lf",
+                     "--last-failed", "--sw", "--stepwise")
+
+
 def _honoured_preregistration(run: dict, selector: str) -> list[str]:
     """Did the run collect what it committed to collecting, and only that?
 
@@ -264,6 +271,23 @@ def _honoured_preregistration(run: dict, selector: str) -> list[str]:
         return []          # nothing collected is its own problem, named elsewhere
 
     problems: list[str] = []
+
+    # RC01 (deep pass of 2026-09-24, 3/3): a FOLDER token is kept by any one
+    # check collected under it, so `pytest tests -k x` under the full sweep's
+    # `tests` honoured every token below and reached level V -- the attack
+    # this function exists for, open for the one selector that is not a list
+    # of ids. The options that narrow what was collected are on the record.
+    try:
+        ran = shlex.split(str(run.get("selector") or ""), posix=False)
+    except ValueError:
+        ran = []
+    narrowed = [a for a in ran
+                if a.startswith(NARROWING_OPTIONS) and a not in selector.split()]
+    if narrowed:
+        problems.append(
+            f"the run narrowed what {run.get('prereg_id')} preregistered with "
+            f"{narrowed[0]} -- a session may not choose after the tag which of "
+            f"its preregistered checks to run")
 
     uncovered = [n for n in collected
                  if not any(_selector_covers(t, n) for t in tokens)]

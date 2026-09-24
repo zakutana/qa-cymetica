@@ -9,7 +9,9 @@ what caused it.
 Two axes, never overwriting each other:
 
     CHECK    moved only by an admissible run record that adjudicated every
-             check the row declares
+             check the row declares -- and, to UNVERIFIABLE only, by an
+             operator's retire/rebind event that leaves the row nothing to
+             adjudicate (RC02, deep pass of 2026-09-24)
     FILING   moved only by an event in the append-only journal
 
 The state you read on the dashboard is the composition of the two, computed at
@@ -232,6 +234,19 @@ def _unverifiable(row: dict, reason: str, cause: dict, at) -> None:
                                    "to": "UNVERIFIABLE", "cause": cause, "at": at})
 
 
+def _standing(row: dict, prior: str) -> str:
+    """The last state a run ESTABLISHED: an INCONCLUSIVE reading measured
+    nothing, so the state before it is still the one a fall is from. Read
+    off the row's own transitions, which record every `from`."""
+    standing = prior
+    for t in reversed(row.get("transitions") or []):
+        if standing != "INCONCLUSIVE":
+            break
+        if t.get("axis") == "check" and t.get("to") == "INCONCLUSIVE":
+            standing = t.get("from") or standing
+    return standing
+
+
 def _apply_run(row: dict, run: dict, level: str) -> None:
     """Move the CHECK axis of one row according to one admissible run."""
     check = row["check"]
@@ -244,7 +259,6 @@ def _apply_run(row: dict, run: dict, level: str) -> None:
     if reason:
         _unverifiable(row, reason, {"run_id": run_id}, at)
         return
-    check.pop("unverifiable_reason", None)
     results = {r["nodeid"]: r for r in run.get("results", [])}
     mine = [results.get(nodeid) for nodeid in checks]
 
@@ -261,7 +275,6 @@ def _apply_run(row: dict, run: dict, level: str) -> None:
             check["missing_checks"] = sorted(missing)
             _unverifiable(row, "check_missing", {"run_id": run_id}, at)
             return
-    check.pop("missing_checks", None)
 
     # Rule 2. A check that did not run tells us nothing. This is the branch
     # merge() reached only after its sticky-verified latch had already
@@ -270,26 +283,31 @@ def _apply_run(row: dict, run: dict, level: str) -> None:
         check["not_checked_in"] = run_id
         return
     check.pop("not_checked_in", None)
+    # Only now, with every check read, does the row stop being unverifiable
+    # for the reason it was: popped earlier, a partial run that never touched
+    # it erased WHY (RC06, deep pass of 2026-09-24).
+    check.pop("unverifiable_reason", None)
+    check.pop("missing_checks", None)
 
-    # This run looked at every check the row declares, so whatever it measured
-    # is now the row's current reading -- pass or fail. Only failures used to
-    # refresh it, via candidates(), so a row whose check started passing kept
-    # the numbers from the day it broke and wore "figures not re-measured"
-    # forever. Measuring is measuring; proposing a defect is the separate act.
+    # What this run measured; it becomes the row's reading where the run
+    # adjudicates the row (below), and rides beside it where it does not.
     measured = _measurement_detail(mine)
-    if measured:
-        row["detail"] = measured
-    row["provenance"] = {"run_id": run_id, "measured_at": at}
+
+    def _measured_here() -> None:
+        if measured:
+            row["detail"] = measured
+        row["provenance"] = {"run_id": run_id, "measured_at": at}
 
     # An evidence-role measurement can never fail -- conclude() returns rather
     # than raising, because comparing one sentence against another says
     # nothing about behaviour. So its "pass" is not evidence of anything and
     # must not establish PASSING: that is a check which passes because of how
     # it asks, which is the whole class this plan exists to stop. It measures
-    # (above) and adjudicates nothing.
+    # and adjudicates nothing.
     roles = {(r.get("role") or (r.get("measurement") or {}).get("role") or "verdict")
              for r in mine}
     if roles == {"evidence"}:
+        _measured_here()
         check["evidence_only"] = run_id
         return
     check.pop("evidence_only", None)
@@ -304,14 +322,18 @@ def _apply_run(row: dict, run: dict, level: str) -> None:
         check["pinned_fingerprint"] = _fingerprint_of(mine)
         # Every state a level-V pass establishes, not PASSING alone (A7 of
         # the review of 2026-09-23, 3/3): failing after a pass under a
-        # changed or never-failed definition is a regression too.
-        if prior in ("PASSING", "PASSING_UNPINNED", "CHECK_CHANGED"):
+        # changed or never-failed definition is a regression too. Read
+        # through any INCONCLUSIVE in between (RC04, deep pass of
+        # 2026-09-24): one transport error erased the regression and its
+        # reopen.
+        standing = _standing(row, prior)
+        if standing in ("PASSING", "PASSING_UNPINNED", "CHECK_CHANGED"):
             row.setdefault("regressions", []).append({
                 "at": at, "run_id": run_id,
                 "from_run": (check.get("adjudicated_by") or {}).get("run_id"),
                 # Only a fall from PASSING is their fix regressing; the other
                 # two passes prove no fix, so `reopen` reads this (review).
-                "from_state": prior,
+                "from_state": standing,
             })
     elif "inconclusive" in outcomes:
         new = "INCONCLUSIVE"
@@ -321,7 +343,13 @@ def _apply_run(row: dict, run: dict, level: str) -> None:
             # preregistration. A pass without them is evidence, and is
             # recorded as such so the operator can see it -- but it verifies
             # nothing and moves no state.
-            check["last_exploratory_pass"] = {"run_id": run_id, "at": at}
+            # Nor does it become what the row says it measured (RO02, deep
+            # pass of 2026-09-24): a report composed on the REPRODUCING row
+            # printed the passing reading while offering the failing run's
+            # captures. Its reading rides with it here.
+            check["last_exploratory_pass"] = {"run_id": run_id, "at": at,
+                                              **({"detail": measured}
+                                                 if measured else {})}
             return
         pinned = check.get("pinned_fingerprint")
         observed = _fingerprint_of(mine)
@@ -332,6 +360,11 @@ def _apply_run(row: dict, run: dict, level: str) -> None:
         else:
             new = "CHECK_CHANGED"
 
+    # This run adjudicated the row, so whatever it measured -- pass or fail --
+    # is the row's current reading. Only failures used to refresh it, via
+    # candidates(), so a row whose check started passing kept the numbers
+    # from the day it broke and wore "figures not re-measured" forever.
+    _measured_here()
     check["adjudicated_by"] = {"run_id": run_id, "at": at}
     if new != prior:
         check["state"] = new
@@ -429,6 +462,27 @@ def _move_filing(row: dict, to: str, event: dict) -> None:
     })
 
 
+def _carry_reports(old: dict, new: dict, event: dict) -> None:
+    """The replacement holds what the superseded row filed (RC05, deep pass
+    of 2026-09-24): the comment said it carried the debt and nothing did --
+    the old row went terminal owing nothing, the new one held no report, and
+    a fix claimed on a defect that still failed was owed to nobody. The old
+    row keeps its reports too, so the ids still lead somewhere; a later word
+    of theirs on one reaches both, and only the live row owes on it."""
+    held = {r["report_id"] for r in new["filing"]["reports"]}
+    carried = [dict(r) for r in old["filing"]["reports"] if r["report_id"] not in held]
+    if not carried:
+        return
+    new["filing"]["reports"].extend(carried)
+    ids = {r["report_id"] for r in carried}
+    new["filing"]["verifications"].extend(
+        dict(v) for v in old["filing"].get("verifications") or []
+        if v.get("report_id") in ids)
+    claimed = any((r.get("status") or "").lower() in _FIX_CLAIMED_STATUSES
+                  for r in new["filing"]["reports"])
+    _move_filing(new, "FIX_CLAIMED" if claimed else "RAISED", event)
+
+
 def _split_report(rows: dict, event: dict) -> None:
     """Move one report off a row that holds two, onto a row of its own.
 
@@ -482,6 +536,20 @@ def _split_report(rows: dict, event: dict) -> None:
     status = (moving[0].get("status") or "").lower()
     _move_filing(dst, "FIX_CLAIMED" if status in _FIX_CLAIMED_STATUSES
                  else "RAISED", event)
+    # The row that gave the report away keeps no FIX_CLAIMED that report
+    # earned (RC08, deep pass of 2026-09-24): it displayed STILL REPRODUCIBLE
+    # and owed a re-verify on a fix nobody claimed for what it still holds.
+    # The one move back the axis makes, caused by the split event, appended.
+    left = src["filing"]["reports"]
+    if src["filing"]["state"] == "FIX_CLAIMED" and not any(
+            (r.get("status") or "").lower() in _FIX_CLAIMED_STATUSES for r in left):
+        target = "RAISED" if left else "NOT_RAISED"
+        src["filing"]["state"] = target
+        src["filing"]["adjudicated_by"] = {"event_id": event_id(event),
+                                           "at": event["at"]}
+        src["transitions"].append({
+            "axis": "filing", "from": "FIX_CLAIMED", "to": target,
+            "cause": {"event_id": event_id(event)}, "at": event["at"]})
     src.setdefault("split_to", [])
     if new_id not in src["split_to"]:
         src["split_to"].append(new_id)
@@ -541,7 +609,10 @@ def _apply_events(rows: dict, events: Iterable[dict]) -> None:
             if klass == "ok":
                 failing.pop(source, None)
             elif klass is not None:
-                failing[source] = event["at"]
+                # The OLDEST failure still standing: a new failure class on a
+                # door that never read cleanly in between is the same outage
+                # (RC07, deep pass of 2026-09-24).
+                failing.setdefault(source, event["at"])
             else:
                 continue
             since = min(failing.values()) if failing else None
@@ -565,6 +636,8 @@ def _apply_events(rows: dict, events: Iterable[dict]) -> None:
                 supersedes = rows[new_id].setdefault("supersedes", [])
                 if old_id not in supersedes:
                     supersedes.append(old_id)
+                if old_id in rows and old_id != new_id:
+                    _carry_reports(rows[old_id], rows[new_id], event)
             continue
 
         targets = [fid for fid in _filing_targets(event, rows) if fid in rows]
@@ -983,7 +1056,15 @@ def fold(prev: dict | None = None, run: dict | None = None,
                 out[field] = carried
         out["run_carried"] = "run_id" in out
 
+    before_events = set(rows)
     _apply_events(rows, events)
+    if run is not None:
+        # A row the journal brought into being (a split) is read by the run
+        # folded with it, as it is by every refold of the same inputs: made
+        # after the run had walked the rows, it came out UNVERIFIED once and
+        # REPRODUCING on rule 12's refold (RC03, deep pass of 2026-09-24).
+        for fid in set(rows) - before_events:
+            _apply_run(rows[fid], run, level)
     for row in rows.values():
         # Chronological, and deterministically so. The FILING half is rebuilt
         # from the journal on every fold while the CHECK half accumulates, so

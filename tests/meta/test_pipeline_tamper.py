@@ -150,6 +150,26 @@ def test_a_run_that_did_not_honour_its_preregistration_is_refused():
     # this check must not claim it as a broken promise as well.
     assert check([]) == []
 
+    # RC01 (deep pass of 2026-09-24, 3/3): a FOLDER preregistration --
+    # `tests`, the full sweep's -- narrowed at run time with -k collected one
+    # check, every token "collected something", and the run reached level V:
+    # the attack the docstring names, open for the one selector that is not
+    # a list of ids. What the run was invoked with is on its record.
+    narrowed = _honoured_preregistration(
+        {"prereg_id": "PRE-0002", "collected": [one],
+         "selector": "tests -k test_one --prereg PRE-0002 -q"}, "tests")
+    assert narrowed and "-k" in narrowed[0], narrowed
+    for option in ("-m slow", "--deselect tests/rest/b.py::test_two", "--lf",
+                   "--ignore=tests/rest/b.py", "-ktest_one"):
+        assert _honoured_preregistration(
+            {"prereg_id": "PRE-0002", "collected": [one],
+             "selector": f"tests {option} --prereg PRE-0002"}, "tests"), option
+    # Options that narrow nothing are not a broken promise.
+    assert _honoured_preregistration(
+        {"prereg_id": "PRE-0002", "collected": [one],
+         "selector": "tests --prereg PRE-0002 -q --no-header --tb=no"},
+        "tests") == []
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_concurrent_writers_cannot_break_the_chain(tmp_path):
