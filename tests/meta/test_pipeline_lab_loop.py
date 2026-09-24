@@ -70,6 +70,38 @@ def _card(n):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_question_names_the_window_its_room_is_judged_on(tmp_path, monkeypatch):
+    """[operator 2026-09-24, in chat] on Cymetica's degen prompts: "libi se mi
+    ze tam konecne specifikuji to okno casove, to nam chybelo a proto vetsina
+    karet je prodelecnych". Our question never told Nexus a horizon, and
+    every room was then judged on our own 5 days. The window is said in the
+    question and is the same number the room's criterion uses."""
+    module = _scripts_lab(tmp_path, monkeypatch)
+    days = module.NIGHT_WINDOW_DAYS
+    assert days == 3.0
+    said = module.cards_question()
+    assert f"over {days:g} days" in said, said
+    assert "take-profit and stop" in said
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_blank_question_is_refused_before_anything_is_asked(tmp_path, monkeypatch):
+    """NEX-0092 (2026-09-24): a shell substitution that read an empty file
+    handed `lab.py ask` an empty string, and it went to their deep lane,
+    which answered "question is required" -- one of their asks spent, and a
+    failed question on the record. Blank is refused here, before the pace
+    is even read."""
+    module = _scripts_lab(tmp_path, monkeypatch)
+
+    def reached(*a, **k):
+        raise AssertionError("a blank question got past the refusal")
+    monkeypatch.setattr(module, "_nexus_rows", reached)
+    for blank in ("", "   ", "\n\t"):
+        with pytest.raises(SystemExit, match="empty"):
+            module.ask(blank, wait=False)
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_questions_are_paced_by_their_hour_not_a_count_of_ours():
     """Twenty-four a day until V5 (2026-09-23), eight a session before that.
 

@@ -1537,6 +1537,9 @@ def _lane(rows: list[dict], lane: str = "auto") -> tuple[str | None, str]:
 
 
 def ask(question: str, wait: bool = True, lane: str = "auto") -> dict:
+    if not str(question or "").strip():
+        # NEX-0092: an empty string reached their deep lane and cost an ask.
+        raise SystemExit("not asking: the question is empty")
     rows = _nexus_rows()
     may, why = lab.may_ask(pass_in_flight())
     if not may:
@@ -1580,9 +1583,11 @@ def cards_question() -> str:
         "event card (the whole card UUID, status live and tradeable_now "
         "true), a bot to clone on paper (its exact species name from "
         "/api/v1/cloned-bots/available), or a fund to mark (its symbol from "
-        "list_funds -- we watch a fund, we do not buy one). For each: side "
-        "where it has one, take-profit and stop in percent, how many days to "
-        "run it before judging it, and one line on "
+        "list_funds -- we watch a fund, we do not buy one). Each is held and "
+        f"judged over {NIGHT_WINDOW_DAYS:g} days from the moment we open it, "
+        "after fees, so pick for that window. For each: side where it has "
+        "one, take-profit and stop in percent sized for "
+        f"{NIGHT_WINDOW_DAYS:g} days, and one line on "
         "the thesis or the backtest it rests on. Fewer is fine if fewer are "
         "worth it -- we open a room for a card only when its own backtest "
         "after fees holds up, so a weak pick costs a slot and a question, "
@@ -1792,7 +1797,11 @@ def night_refill(rows: list[dict] | None = None, limit: int = 8,
 # or more exceeds -- every room the night ever opened would have been refuted
 # at its first verdict, whatever it earned. It never fired only because the
 # night never launched anything.
-NIGHT_WINDOW_DAYS = 5.0
+# 5.0 until 2026-09-24, and never said to Nexus: his picks were judged on a
+# horizon he was not told. Now the question names it (cards_question) and the
+# criterion uses the same number -- 3 days, the horizon of their own card
+# leaderboard ("72h Card Performance") and of their degen card prompts.
+NIGHT_WINDOW_DAYS = 3.0
 NIGHT_STOP_PCT = 10.0
 
 

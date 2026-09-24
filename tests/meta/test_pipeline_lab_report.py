@@ -167,6 +167,25 @@ def test_a_room_that_holds_a_bot_is_a_bot_even_from_before_rooms_had_kinds():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_room_whose_plan_holds_only_bots_is_a_bot_room():
+    """STR-0045 (2026-09-24): the head-to-head room opened from our proposal
+    OUR-0001, holding five paper bots in its plan, showed under Karty -- no
+    kind on the strategy row, and no clone of ours named its origin. The
+    operator: "proc tu nevidim ten nvoy experiment?" What a room holds is its
+    plan, so a kindless room whose plan holds only bots is a bot room."""
+    fx = _fixture()
+    fx["room_rows"] += [
+        {"type": "strategy", "id": "STR-0045", "origin": "OUR-0001",
+         "title": "Head-to-head"},
+        {"type": "plan", "room": "STR-0045", "legs": [
+            {"kind": "bot", "ref": "i-1", "side": "bull", "share": 0.5},
+            {"kind": "bot", "ref": "i-2", "side": "bull", "share": 0.5}]},
+        {"type": "status", "room": "STR-0045", "status": "running"}]
+    said = _report(room_rows=fx["room_rows"], clone_rows=fx["clone_rows"])
+    assert {r["id"]: r for r in said["rooms"]}["STR-0045"]["product"] == "bots"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_each_product_says_how_many_usdc_it_made_beside_the_percent():
     """"Čistý výsledek" is money to the operator: the percent per experiment
     and, beside it, the USDC -- net of the same costs, over the rooms that

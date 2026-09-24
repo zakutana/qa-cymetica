@@ -29,6 +29,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from qa import fomo, lab
+from qa import rooms as rooms_mod
 from qa.rooms import names as room_names
 
 PRODUCTS = ("cards", "bots", "memecoins", "funds")
@@ -68,15 +69,20 @@ def _room_net(room: dict, verdict: dict | None, money: dict | None) -> float | N
     return lab._net_of(gross, lab._cost({"kind": room.get("kind") or "card"}))
 
 
-def _product(room: dict, bot_origins: set[str]) -> str | None:
+def _product(room: dict, bot_origins: set[str], plan: dict | None = None) -> str | None:
     """A room's product. Rooms opened before 2026-09-21 carry no kind: one
     naming a card holds cards, and one whose answer's order was a clone
-    (STR-0001, Perceptron Oracle) holds a bot."""
+    (STR-0001, Perceptron Oracle) holds a bot. And a kindless room whose plan
+    holds legs of one kind is that kind -- STR-0045, five bots from our own
+    proposal, showed under the cards (2026-09-24)."""
     kind = room.get("kind")
     if kind:
         return KIND_PRODUCT.get(kind)
     if room.get("card"):
         return "cards"
+    held = {rooms_mod.leg_kind(leg) for leg in (plan or {}).get("legs") or []}
+    if len(held) == 1 and next(iter(held)) in KIND_PRODUCT:
+        return KIND_PRODUCT[next(iter(held))]
     return "bots" if str(room.get("origin")) in bot_origins else "cards"
 
 
@@ -99,6 +105,7 @@ def _rooms(answers, notebook, room_rows, paper_rows, sample_rows,
     # title named STR-0004 by a basket it no longer holds (R04, deep pass of
     # 2026-09-24).
     titles = room_names(room_rows)
+    plans = rooms_mod.plans(room_rows)
     out = []
     for room in room_rows:
         if room.get("type") != "strategy":
@@ -112,7 +119,7 @@ def _rooms(answers, notebook, room_rows, paper_rows, sample_rows,
         out.append({
             "id": rid, "title": titles.get(rid, room.get("title")),
             "origin": room.get("origin"),
-            "product": _product(room, bot_origins),
+            "product": _product(room, bot_origins, plans.get(rid)),
             "status": status.get(rid), "archived": gone,
             "verdict": (verdict or {}).get("verdict"),
             "net_pct": net, "stake_usdc": stake,
