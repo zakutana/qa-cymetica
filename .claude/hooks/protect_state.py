@@ -148,6 +148,7 @@ REDIRECT = re.compile(r">(?:>|\|)?\s*(\"[^\"]*\"|'[^']*'|[^\s;|&<>]+)")
 # The pattern before R07, still read beside the new one, so the new reading
 # can only ADD refusals to what it replaced.
 OLD_REDIRECT = re.compile(r"(?<![0-9&])>>?\s*(\"[^\"]*\"|'[^']*'|[^\s;|&<>]+)")
+NOCLOBBER = re.compile(r">\|")
 PY_WRITE = re.compile(
     r"\.write_text\(|\.write_bytes\(|\.unlink\(|\.rename\(|\.touch\("
     r"|\bshutil\.(?:copy\w*|move)\(|\bos\.(?:replace|rename|remove|unlink)\("
@@ -228,7 +229,7 @@ def _new_writes_under_state(command: str, cwd: Path) -> bool:
     # split, so its `|` is not taken for a pipe -- and the split itself stays
     # HEAD's (a 1c reader, fourth round: not splitting there let `cd` swallow
     # `cd /tmp>|x>/abs/state/ledger.json` whole).
-    for segment in SEGMENT.split(command.replace(">|", "> ")):
+    for segment in SEGMENT.split(NOCLOBBER.sub("> ", command)):
         moved = CD.match(segment)
         if moved:
             path = Path(_drive(moved.group(1).strip("\"'")))
