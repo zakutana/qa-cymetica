@@ -60,8 +60,11 @@ def claim(client, outlet: str, lead_id: int, page_slug: str = "",
     return response.json() or {}
 
 
-REPLY_URL = {"twitter": re.compile(r"^https://(x|twitter)\.com/[A-Za-z0-9_]{1,15}/status/\d+/?$"),
-             "reddit": re.compile(r"^https://(www\.|old\.)?reddit\.com/r/\w+/comments/\w+/.+")}
+# One post, and only the post: X's copy-link adds ?s=..&t=.. (dropped before
+# sending), and a reddit link must end in a comment id -- a thread URL is not
+# our reply (deep pass 2026-09-24, R04 and G01).
+REPLY_URL = {"twitter": re.compile(r"^(https://(?:x|twitter)\.com/[A-Za-z0-9_]{1,15}/status/\d+)/?(?:\?.*)?$"),
+             "reddit": re.compile(r"^(https://(?:www\.|old\.)?reddit\.com/r/\w+/comments/\w+/[^/?]+/\w+/?)(?:\?.*)?$")}
 
 
 def posted(client, outlet: str, lead_id: int, reply_url: str,
@@ -73,13 +76,14 @@ def posted(client, outlet: str, lead_id: int, reply_url: str,
     and a missing `confirm`, all before the network."""
     if outlet not in OUTLETS:
         raise CreatorError(f"unknown outlet {outlet!r} -- one of {OUTLETS}")
-    if not REPLY_URL[outlet].match(reply_url or ""):
+    one = REPLY_URL[outlet].match(reply_url or "")
+    if not one:
         raise CreatorError(f"reply_url {reply_url!r} is not a link to one "
                            f"{outlet} post")
     if not confirm:
         raise CreatorError("pass confirm=True to actually mark the lead posted")
     response = client.post(f"/api/v1/creator/{outlet}-leads/{int(lead_id)}/posted",
-                           json={"reply_url": reply_url})
+                           json={"reply_url": one.group(1)})
     if response.status_code != 200:
         raise CreatorError(
             f"posted refused: HTTP {response.status_code} {response.text[:200]!r}")

@@ -17,8 +17,8 @@
         "t2": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "b9204f21"
     },
     {
       "id": "R02",
@@ -45,8 +45,8 @@
         "t2": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "b9204f21"
     },
     {
       "id": "R04",

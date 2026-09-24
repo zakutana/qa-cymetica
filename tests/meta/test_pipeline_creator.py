@@ -121,14 +121,19 @@ def test_a_503_or_a_timeout_is_settled_by_reading_the_lead_back():
     assert said["reply_slug"] == "znn8eicp" and said["settled_by_read"] is True
     assert posts == ["/api/v1/creator/twitter-leads/3/reply"], "retried blind"
 
+    lost_posts = []
+
     def lost(request):
         if request.method == "POST":
+            lost_posts.append(request.url.path)
             raise httpx.ReadTimeout("timed out", request=request)
         return httpx.Response(200, json={"leads": []})
 
     with as_mutate_tier(), pytest.raises(mod.CreatorError, match="not claimed"):
         mod.claim(_client(lost, mutate=True), "twitter", 3, "p497i3fy",
                   confirm=True)
+    # The timeout path is never retried blind either (deep pass G04, 3/3).
+    assert lost_posts == ["/api/v1/creator/twitter-leads/3/reply"], lost_posts
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -154,6 +159,12 @@ def test_mark_posted_sends_the_reply_url_and_only_a_status_link(tmp_path):
                 "https://evil.example/status/1"):
         with pytest.raises(mod.CreatorError, match="reply_url"):
             mod.posted(_client(untouched), "twitter", 83, bad, confirm=True)
+    # Reddit is exercised too (deep pass G01, 3/3): a thread URL has no
+    # comment id, so it is not our reply and a reward on it is a false claim.
+    for bad in ("https://www.reddit.com/r/solana/comments/1abc23/some_title/",
+                "https://www.reddit.com/r/solana/comments/1abc23/"):
+        with pytest.raises(mod.CreatorError, match="reply_url"):
+            mod.posted(_client(untouched), "reddit", 7, bad, confirm=True)
 
     seen = []
 
@@ -170,6 +181,18 @@ def test_mark_posted_sends_the_reply_url_and_only_a_status_link(tmp_path):
                      {"reply_url": reply})], seen
     assert said["status"] == "replied"
 
+    # X's own copy-link form carries ?s=..&t=..; it is the same one post, sent
+    # without the query (deep pass R04, 3/3). A reddit comment link passes.
+    seen.clear()
+    with as_mutate_tier():
+        mod.posted(_client(handler, mutate=True), "twitter", 83,
+                   reply + "?s=46&t=AbC", confirm=True)
+        mod.posted(_client(handler, mutate=True), "reddit", 7,
+                   "https://www.reddit.com/r/solana/comments/1abc23/some_title/kx9f2ab/",
+                   confirm=True)
+    assert [s[2]["reply_url"] for s in seen] == [
+        reply, "https://www.reddit.com/r/solana/comments/1abc23/some_title/kx9f2ab/"]
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_claim_routes_are_writes_with_a_closed_body_and_nothing_else():
@@ -179,12 +202,15 @@ def test_the_claim_routes_are_writes_with_a_closed_body_and_nothing_else():
 
     rules = {r.id: r for r in EndpointRegistry.load().rules}
     for outlet in ("twitter", "reddit"):
-        rule = rules[f"creator.{outlet}_lead_reply"]
-        assert rule.path == f"/api/v1/creator/{outlet}-leads/{{lead_id}}/reply"
-        assert list(rule.methods) == ["POST"]
-        assert rule.closed_body is True
-        assert set(rule.executable_params) == {"link_slug"}
-        assert not rule.required_flags
+        for route, field in (("reply", "link_slug"), ("posted", "reply_url")):
+            rule = rules[f"creator.{outlet}_lead_{route}"]
+            assert rule.path == f"/api/v1/creator/{outlet}-leads/{{lead_id}}/{route}"
+            assert list(rule.methods) == ["POST"]
+            assert rule.closed_body is True
+            # The wall lets through executable | inert (qa/safety.py), so
+            # "nothing more" means both sets (deep pass G03, 3/3).
+            assert set(rule.executable_params) | set(rule.inert_params) == {field}
+            assert not rule.required_flags
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -202,6 +228,15 @@ def test_the_creator_routes_speak_as_the_creator_account_or_not_at_all(monkeypat
 
     mod = _module()
     assert mod.identity().value == "k-creator"
+    # And the client every request goes through is built with it -- the
+    # REPLY-0058 defect was the client, not the helper (deep pass G02, 3/3).
+    import qa.client as qa_client
+    built = []
+    monkeypatch.setattr(qa_client, "build_client",
+                        lambda identity, *a, **k: built.append(identity) or object())
+    for mutate in (False, True):
+        mod._client(mutate)
+    assert [i.value for i in built] == ["k-creator", "k-creator"], built
     monkeypatch.setenv("QA_CREATOR_KEY", "")
     with pytest.raises(mod.CreatorError, match="QA_CREATOR_KEY"):
         mod.identity()
