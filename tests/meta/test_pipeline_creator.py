@@ -132,6 +132,46 @@ def test_a_503_or_a_timeout_is_settled_by_reading_the_lead_back():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_mark_posted_sends_the_reply_url_and_only_a_status_link(tmp_path):
+    """[operator 2026-09-24, in chat] rewards stayed at 0 because no reply had
+    been marked posted: "Mark posted with the link to your reply. The team's
+    checker confirms it is displayed and credits the reward." The route is
+    POST /api/v1/creator/{outlet}-leads/{lead_id}/posted, PostedBody
+    {reply_url}. A reward is credited against that URL, so only a link to one
+    post is sent: an x.com / twitter.com status for X, a reddit.com comment
+    for Reddit -- refused before the network otherwise, and without confirm."""
+    from tests.meta.test_guard_is_real import as_mutate_tier
+
+    mod = _module()
+
+    def untouched(request):
+        raise AssertionError(f"reached the network: {request.url}")
+
+    reply = "https://x.com/ZakutanskyA/status/2103174083198202333"
+    with pytest.raises(mod.CreatorError, match="confirm"):
+        mod.posted(_client(untouched), "twitter", 83, reply, confirm=False)
+    for bad in ("", "https://x.com/ZakutanskyA", "https://cymetica.com/c/s2jvpj7j",
+                "https://evil.example/status/1"):
+        with pytest.raises(mod.CreatorError, match="reply_url"):
+            mod.posted(_client(untouched), "twitter", 83, bad, confirm=True)
+
+    seen = []
+
+    def handler(request):
+        seen.append((request.method, request.url.path,
+                     json.loads(request.content or b"{}")))
+        return httpx.Response(200, json={"id": 83, "status": "replied",
+                                         "reply_url": reply})
+
+    with as_mutate_tier():
+        said = mod.posted(_client(handler, mutate=True), "twitter", 83, reply,
+                          confirm=True)
+    assert seen == [("POST", "/api/v1/creator/twitter-leads/83/posted",
+                     {"reply_url": reply})], seen
+    assert said["status"] == "replied"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_claim_routes_are_writes_with_a_closed_body_and_nothing_else():
     """The gate: both routes are declared, their body may carry link_slug and
     nothing more, and no rule on them moves money (no required_flags)."""

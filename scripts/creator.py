@@ -16,6 +16,7 @@ thread. It posts nothing to X or Reddit -- the operator posts by hand.
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 from pathlib import Path
 
@@ -56,6 +57,32 @@ def claim(client, outlet: str, lead_id: int, page_slug: str = "",
     if response.status_code != 200:
         raise CreatorError(
             f"claim refused: HTTP {response.status_code} {response.text[:200]!r}")
+    return response.json() or {}
+
+
+REPLY_URL = {"twitter": re.compile(r"^https://(x|twitter)\.com/[A-Za-z0-9_]{1,15}/status/\d+/?$"),
+             "reddit": re.compile(r"^https://(www\.|old\.)?reddit\.com/r/\w+/comments/\w+/.+")}
+
+
+def posted(client, outlet: str, lead_id: int, reply_url: str,
+           confirm: bool = False) -> dict:
+    """Mark a claimed lead posted with the link to the reply the operator
+    posted -- what the dashboard's "Mark posted" does, and the only way a
+    reward is credited (their checker confirms the reply is displayed).
+    Refuses an unknown outlet, a URL that is not one post on that outlet,
+    and a missing `confirm`, all before the network."""
+    if outlet not in OUTLETS:
+        raise CreatorError(f"unknown outlet {outlet!r} -- one of {OUTLETS}")
+    if not REPLY_URL[outlet].match(reply_url or ""):
+        raise CreatorError(f"reply_url {reply_url!r} is not a link to one "
+                           f"{outlet} post")
+    if not confirm:
+        raise CreatorError("pass confirm=True to actually mark the lead posted")
+    response = client.post(f"/api/v1/creator/{outlet}-leads/{int(lead_id)}/posted",
+                           json={"reply_url": reply_url})
+    if response.status_code != 200:
+        raise CreatorError(
+            f"posted refused: HTTP {response.status_code} {response.text[:200]!r}")
     return response.json() or {}
 
 
@@ -143,6 +170,25 @@ def cmd_claim(args) -> int:
     return 0
 
 
+def cmd_posted(args) -> int:
+    from qa.safety import CURRENT_TIER, SafetyTier
+
+    client = _client(mutate=True)
+    token = CURRENT_TIER.set(SafetyTier.MUTATE)
+    try:
+        said = posted(client, args.outlet, args.lead, args.url, args.confirm)
+    except CreatorError as exc:
+        print(f"creator: {exc}")
+        return 1
+    finally:
+        CURRENT_TIER.reset(token)
+        client.close()
+    print(f"lead {said.get('id', args.lead)} {said.get('status')}  "
+          f"reply {said.get('reply_url') or args.url}  "
+          f"reward {said.get('reward_status')!r}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     # A lead's body is anyone's tweet; a cp1250 console cannot print most of them.
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -157,7 +203,15 @@ def main(argv: list[str] | None = None) -> int:
     one.add_argument("--lead", type=int, required=True)
     one.add_argument("--page", default="", help="artifact page slug to reply with")
     one.add_argument("--confirm", action="store_true")
+    done = sub.add_parser("posted", help="mark a lead posted with the reply's "
+                                         "link; the reward is credited on it")
+    done.add_argument("--outlet", choices=OUTLETS, default="twitter")
+    done.add_argument("--lead", type=int, required=True)
+    done.add_argument("--url", required=True, help="the posted reply's own link")
+    done.add_argument("--confirm", action="store_true")
     args = parser.parse_args(argv)
+    if args.cmd == "posted":
+        return cmd_posted(args)
     return cmd_leads(args) if args.cmd == "leads" else cmd_claim(args)
 
 

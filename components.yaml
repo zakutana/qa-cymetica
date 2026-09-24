@@ -457,6 +457,24 @@ endpoints:
     executable_params: [link_slug]
     closed_body: true
 
+  # Mark posted: records the link to the reply the operator posted by hand,
+  # which their checker verifies before crediting the reward. Closed body:
+  # PostedBody carries reply_url and nothing else; scripts/creator.py sends
+  # only a link to one post on that outlet, and only with confirm.
+  - id: creator.twitter_lead_posted
+    path: /api/v1/creator/twitter-leads/{lead_id}/posted
+    methods: [POST]
+    component: rest.creator
+    executable_params: [reply_url]
+    closed_body: true
+
+  - id: creator.reddit_lead_posted
+    path: /api/v1/creator/reddit-leads/{lead_id}/posted
+    methods: [POST]
+    component: rest.creator
+    executable_params: [reply_url]
+    closed_body: true
+
   - id: arena.order
     path: /api/v1/arena/order
     methods: [POST]

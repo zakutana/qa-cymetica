@@ -219,6 +219,11 @@ def cmd_sent(args) -> int:
         print(f"  NOTE: this message does not open with {HANDLE}, which is "
               f"what [operator 2026-09-13] asks of every message we draft. "
               f"Recorded as sent, because it was.")
+    # [operator 2026-09-24] in the channels skill: every Telegram message
+    # has an a2a twin, until they revoke it. Printed here because this is the
+    # one step every session takes when a message went out.
+    print("  NOW its a2a twin, same text: python scripts/a2a.py send "
+          "--text-file <the same file> --confirm")
     return 0
 
 
