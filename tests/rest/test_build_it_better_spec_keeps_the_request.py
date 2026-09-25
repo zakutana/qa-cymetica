@@ -43,7 +43,11 @@ WHAT IT ASSERTS, per request in that population:
      never to re-split. A single-line request: the line is one item, or each
      of its sentences is one item (split by the board check's SENTENCE_END,
      which does not end a sentence after e.g./i.e./etc., so an "e.g." cut
-     still fails).
+     still fails). A sentence cut at its semicolons into one item per
+     clause is carried too: every word survives (ET-26776, 2026-09-25).
+     The request's "{name}: " prefix is stripped under the record's
+     `app_name` or the name the spec header carries, since a BB-CHANGE can
+     rename the request after it was filed (ET-26608).
   2. Every BB-CHANGE posted before the latest BB-SPEC appears in that spec
      word for word as an amendment ("  CN. ..."), whitespace collapsed.
 
@@ -105,11 +109,28 @@ def _moment(value):
     return when if when.tzinfo else when.replace(tzinfo=timezone.utc)
 
 
-def request_text(body: str, app_name: str) -> str:
-    """The requester's list, without the "{app_name}: " the product prefixes."""
+SPEC_FOR = re.compile(r"^\s*BB-SPEC for (.+?)\s*$", re.M)
+
+
+def request_text(body: str, *names: str) -> str:
+    """The requester's list, without the "{name}: " the product prefixes.
+
+    More than one name, because a BB-CHANGE can rename the request: the
+    record's `app_name` is then the new name, while the prefix is the one it
+    was filed under -- which the first spec's header still carries
+    (ET-26608, "Github" renamed "Gem Screener", 2026-09-23).
+    """
     body = str(body or "")
-    prefix = f"{app_name}: " if app_name else ""
-    return body[len(prefix):] if prefix and body.startswith(prefix) else body
+    for name in names:
+        prefix = f"{name}: " if name else ""
+        if prefix and body.startswith(prefix):
+            return body[len(prefix):]
+    return body
+
+
+def spec_name(spec: str) -> str:
+    m = SPEC_FOR.search(str(spec or ""))
+    return m.group(1) if m else ""
 
 
 def spec_parts(spec: str) -> tuple[list[str], str]:
@@ -149,10 +170,24 @@ def lines_lost(request: str, items: list[str]) -> list[str]:
         if line in have:
             continue
         pieces = [_norm(p) for p in sentences_of(line)]
-        if len(pieces) > 1 and all(p in have for p in pieces):
+        if all(_carried(p, have) for p in pieces):
             continue
         lost.append(line)
     return lost
+
+
+def _carried(sentence: str, have: set[str]) -> bool:
+    """One item, or one item per clause when their writer cut at semicolons.
+
+    ET-26776's "Cymetica is the engine; Tuatara discovers; ..." came back as
+    four items: every word kept, only the ";" gone. That drops nothing, so it
+    is not what REPLY-0021's "nothing is ever dropped" is about. A cut
+    anywhere else -- the "e.g." cut -- is still a loss.
+    """
+    if sentence in have:
+        return True
+    clauses = [_norm(c) for c in sentence.split(";")]
+    return len(clauses) > 1 and all(c and c in have for c in clauses)
 
 
 def judge(record: dict) -> dict:
@@ -166,7 +201,10 @@ def judge(record: dict) -> dict:
     if not specs:
         return {"state": "unspecced"}
     latest = specs[-1]
-    request = request_text(asked[0].get("body"), str(record.get("app_name") or ""))
+    request = request_text(asked[0].get("body"),
+                           str(record.get("app_name") or ""),
+                           spec_name(specs[0].get("body")),
+                           spec_name(latest.get("body")))
     items, amended = spec_parts(latest.get("body"))
     if not items:
         return {"state": "unread", "why": "its latest BB-SPEC has no numbered item"}

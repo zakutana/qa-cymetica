@@ -1930,3 +1930,54 @@ def test_the_clone_surface_reads_the_flow_and_not_their_spelling():
         f"GET {PREFIX}/{{id}}/activity"], live
     assert live["refuses"], (
         "today's real shape must still be a finding, whatever `blocked` says")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_spec_check_reads_a_renamed_request_and_a_semicolon_split():
+    """Two losses the BB-SPEC check reported on 2026-09-25 that were ours.
+
+    ET-26608 was filed as "Github" and renamed "Gem Screener" by a BB-CHANGE;
+    the record's `app_name` is the new name, so the "Github: " the product put
+    in front of the request was left on its first line, and that line matched
+    no item. The name the request was filed under is the one the spec's own
+    header still carries ("BB-SPEC for Github").
+
+    ET-26776 was one paragraph, and their writer cut its sentences at
+    semicolons as well as full stops -- "Cymetica is the engine; Tuatara
+    discovers; ..." became four items. Every word is there; only the ";" is
+    gone. REPLY-0021 promises sentence ends, and that nothing is dropped;
+    a clause per item drops nothing, so it is not the defect this check hunts.
+
+    The direction that must still fail is pinned beside each: the "e.g." cut
+    of 2026-09-19 is a split at a full stop, not a semicolon, and a semicolon
+    split that loses a clause has lost it.
+    """
+    from tests.rest.test_build_it_better_spec_keeps_the_request import judge
+
+    def record(name, request, *items, header=None):
+        numbered = "\n".join(f"  {n}. {item}" for n, item in
+                             enumerate(items, 1))
+        return {"app_name": name, "messages": [
+            {"at": "1", "kind": "BB-REQUEST", "body": request},
+            {"at": "2", "kind": "BB-SPEC",
+             "body": f"BB-SPEC for {header or name}\n\nWhat we will build:\n"
+                     f"{numbered}\n"}]}
+
+    renamed = record("Gem Screener", "Github: Keep the tabs.\nEnglish only.",
+                     "Keep the tabs.", "English only.", header="Github")
+    assert judge(renamed)["lost"] == [], (
+        "the prefix is the name the request was filed under")
+
+    split = record("X", "X: A is one; B is two. Style: calm; no clutter.",
+                   "A is one", "B is two.", "Style: calm", "no clutter.")
+    assert judge(split)["lost"] == [], (
+        "a clause per item keeps every word the stranger sent")
+
+    cut = record("X", "X: Use indicators (e.g. RSI, MACD) daily.",
+                 "Use indicators (e.g.", "RSI, MACD) daily.")
+    assert judge(cut)["lost"] == ["Use indicators (e.g. RSI, MACD) daily."], (
+        "the e.g. cut is the defect REPLY-0021 fixed; it must still fail")
+
+    dropped = record("X", "X: A is one; B is two.", "A is one")
+    assert judge(dropped)["lost"] == ["A is one; B is two."], (
+        "a semicolon split that loses a clause has lost it")
