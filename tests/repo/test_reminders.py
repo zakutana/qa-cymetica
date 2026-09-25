@@ -376,6 +376,21 @@ def test_the_hook_is_silent_when_nothing_is_due_and_never_fails(tmp_path,
                             capture_output=True, text=True, timeout=30)
     assert broken.returncode == 0, broken.stderr
 
+    # Silence through the WHOLE hook, past the load: a processes.py that
+    # loads and has nothing due must leave stdout empty, and one with a line
+    # due must print exactly it. Only the pure reminders() was held silent,
+    # so a print after exec_module stayed green (deep pass 2026-09-25, A07).
+    stubbed = tmp_path / "stubbed"
+    (stubbed / "scripts").mkdir(parents=True)
+    for due, expected in (([], ""), (["the week is due"], "the week is due\n")):
+        (stubbed / "scripts" / "processes.py").write_text(
+            f"def facts():\n    return {{}}\n\n"
+            f"def reminders(facts, now):\n    return {due!r}\n", encoding="utf-8")
+        said = subprocess.run([sys.executable, str(hook)], cwd=stubbed,
+                              env={**os.environ, "QA_REPO_ROOT": str(stubbed)},
+                              capture_output=True, text=True, timeout=30)
+        assert (said.returncode, said.stdout) == (0, expected), (said.stdout, said.stderr)
+
     # The no-network promise, measured where the work is: the hook's text
     # holds no network import, but everything runs in processes.facts(), so
     # a live call there stayed green (deep pass 2026-09-24, A08, 3/3). Every

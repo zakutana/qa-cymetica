@@ -109,6 +109,18 @@ def test_the_laboratorys_own_doors_run_unasked_because_the_code_holds_paper():
             ast.dump(d) for d in fn.decorator_list)
         if "skip" in marks or "xfail" in marks:
             return False
+        # Skipped from inside too: a `pytest.skip()` in the body, or the
+        # module's own `pytestmark` (deep pass 2026-09-25, A09 -- decorators
+        # alone were read).
+        if any(isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)
+               and n.func.attr in ("skip", "xfail", "importorskip")
+               for n in ast.walk(fn)):
+            return False
+        if any(isinstance(n, ast.Assign)
+               and any(getattr(t, "id", None) == "pytestmark" for t in n.targets)
+               and ("skip" in ast.dump(n.value) or "xfail" in ast.dump(n.value))
+               for n in tree.body):
+            return False
         return any(isinstance(n, ast.Assert)
                    or (isinstance(n, ast.Attribute) and n.attr == "raises")
                    for n in ast.walk(fn))

@@ -127,3 +127,8 @@ def test_the_surface_drift_is_read_from_its_cache_not_computed(tmp_path,
         encoding="utf-8")
     assert procs._surface_facts() == {"surface_drift": ["nový nástroj x"]}
     assert computed == [], "the session start computed the drift"
+    # Through the path the session start actually takes, facts(), not only
+    # the helper: facts() calling surface_drift() itself stayed green (deep
+    # pass 2026-09-25, A10).
+    assert procs.facts().get("surface_drift") == ["nový nástroj x"]
+    assert computed == [], "facts() computed the drift"
