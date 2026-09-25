@@ -584,6 +584,20 @@ def leg_kind(leg: dict) -> str:
     return str(leg.get("kind") or "card")
 
 
+def room_kind(room: dict, plan: dict | None = None) -> str | None:
+    """What a room holds: its written `kind`; a room naming a card is a card
+    room; a kindless room whose plan holds legs of one kind is that kind.
+    One reading for the board's money and the report's sector -- the two
+    disagreed about STR-0044 and STR-0046 (2026-09-25), bot rooms opened
+    without `kind`, which /lab put under Boti with no number at all."""
+    if room.get("kind"):
+        return str(room["kind"])
+    if room.get("card"):
+        return "card"
+    held = {leg_kind(leg) for leg in (plan or {}).get("legs") or []}
+    return next(iter(held)) if len(held) == 1 else None
+
+
 def leg_ref(leg: dict):
     """The thing a leg names: a card's whole id, a bot's instance id, a fund's
     symbol. An old card leg's `card` is its ref."""

@@ -75,14 +75,9 @@ def _product(room: dict, bot_origins: set[str], plan: dict | None = None) -> str
     (STR-0001, Perceptron Oracle) holds a bot. And a kindless room whose plan
     holds legs of one kind is that kind -- STR-0045, five bots from our own
     proposal, showed under the cards (2026-09-24)."""
-    kind = room.get("kind")
+    kind = rooms_mod.room_kind(room, plan)
     if kind:
         return KIND_PRODUCT.get(kind)
-    if room.get("card"):
-        return "cards"
-    held = {rooms_mod.leg_kind(leg) for leg in (plan or {}).get("legs") or []}
-    if len(held) == 1 and next(iter(held)) in KIND_PRODUCT:
-        return KIND_PRODUCT[next(iter(held))]
     return "bots" if str(room.get("origin")) in bot_origins else "cards"
 
 

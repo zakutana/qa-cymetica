@@ -3621,6 +3621,34 @@ def test_our_rooms_rank_after_his_and_are_put_to_him_as_questions(
     said = scripts_lab.brief()
     assert "OUR-0001" in said and "question for him" in said, said
 
+    # 2026-09-25: STR-0044 (Trend Titan) and STR-0046 (the head-to-head four)
+    # were opened with no `kind` on their strategy row, only bot legs in
+    # their plan. /lab put them under Boti -- lab_report reads the plan --
+    # while the board counted bot money only for `kind == "bot"`, so both
+    # sat in the ranking with no number at all and the operator could not
+    # find them. One reading of a room's kind, for both.
+    at = "2026-09-24T21:05:52+00:00"
+    legs = [{"kind": "bot", "ref": "inst-h2h", "side": "bull", "share": 1.0}]
+    rows = [{"type": "strategy", "id": "STR-0046", "origin": "OUR-0002",
+             "title": "Head-to-head", "at": at},
+            {"type": "plan", "room": "STR-0046", "legs": legs, "at": at},
+            {"type": "acceptance", "room": "STR-0046", "window_days": 3.0,
+             "legs": legs, "at": at},
+            {"type": "status", "room": "STR-0046", "status": "running", "at": at}]
+    clones = [{"id": "CLN-9", "type": "intent", "kind": "fund",
+               "instance_id": "inst-h2h", "amount": 477.0, "at": at},
+              {"id": "CLN-9", "type": "outcome", "outcome": "accepted", "at": at}]
+    samples = [{"kind": "bot", "instance_id": "inst-h2h", "total_profit_usdc": "63.16",
+                "at": "2026-09-25T14:18:43+00:00"}]
+    (line,) = lab.board([], [], rows, [], samples, clones)
+    money = line["rooms"][0]["money"]
+    assert money and money["stake"] == 477.0 and abs(money["pnl"] - 63.16) < 1e-9, line
+    from qa import rooms as qa_rooms_mod
+    assert qa_rooms_mod.room_kind(rows[0], rows[1]) == "bot"
+    assert qa_rooms_mod.room_kind({"kind": "fund"}, rows[1]) == "fund", (
+        "a written kind is the kind")
+    assert qa_rooms_mod.room_kind({"card": "abc"}, None) == "card"
+
 
 # --- V6: the manager wakes only when there is something to decide ----------
 

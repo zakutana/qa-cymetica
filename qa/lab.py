@@ -2337,10 +2337,19 @@ def board(answers: list[dict], notebook: list[dict], room_rows: list[dict],
     for row in room_rows:
         if row.get("type") == "acceptance":
             accepted_on[str(row.get("room"))] = row
-    # A bot room is his when its species is what his answer picks.
+    # A bot room is his when its species is what his answer picks. Its kind
+    # read the way the report reads it (qa.rooms.room_kind): a kindless room
+    # with bot legs is a bot room, and its money was never counted.
+    from qa import rooms as rooms_store
+
+    plans = rooms_store.plans(room_rows)
+
+    def is_bot(r: dict) -> bool:
+        return rooms_store.room_kind(r, plans.get(str(r.get("id")))) == "bot"
+
     his = picked_rooms(room_rows, answers)
     bot_rooms = {origin: [str(r.get("id")) for r in opened
-                          if r.get("kind") == "bot" and str(r.get("id")) in his]
+                          if is_bot(r) and str(r.get("id")) in his]
                  for origin, opened in rooms_by.items()}
 
     intents = {r.get("id"): r for r in paper_rows
@@ -2420,7 +2429,7 @@ def board(answers: list[dict], notebook: list[dict], room_rows: list[dict],
     for origin, opened_here in rooms_by.items():
         if is_ours(origin):
             bot_rooms[origin] = [str(r.get("id")) for r in opened_here
-                                 if r.get("kind") == "bot"]
+                                 if is_bot(r)]
     stopped_at = {}
     for row in room_rows:
         if row.get("type") == "status":
