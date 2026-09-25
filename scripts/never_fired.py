@@ -181,9 +181,9 @@ def _obligations(ledger: dict, events: list[dict]) -> tuple[Counter, dict[str, s
 
     Two of the four are pure functions of the two axes, and both axes keep
     their history in the row's transitions, so those are exact. `disputed`
-    needs a vendor status as well, and the journal has those. `reopen` needs
-    the regression list, which is only ever current -- that one is still a
-    snapshot and the report says so.
+    needs a vendor status as well, and the journal has those. `reopen` is
+    replayed from the row's regression list, which the fold keeps, against
+    the filing timeline.
 
     `disputed` reads _REJECTED_STATUSES straight off the journal's events,
     which the fold does NOT do -- the fold leaves the axis at RAISED for those
@@ -250,9 +250,15 @@ def _obligations(ledger: dict, events: list[dict]) -> tuple[Counter, dict[str, s
         for _ in (row.get("obligations") or {}).get("correction_owed") or []:
             note("correction_owed", "")
 
-        # Snapshot: nothing records a regression that has since been resolved.
-        if row.get("regressions") and (row.get("obligations") or {}).get("reopen"):
-            note("reopen", "")
+        # Replayed from the row's regressions, which the fold keeps: a fall
+        # from PASSING while their fix was claimed is when `reopen` came due.
+        # Reading the current obligation alone lost it the moment the fail it
+        # asks for was sent -- and since 2026-09-25 sending it clears it.
+        for fall in row.get("regressions") or []:
+            when = str(fall.get("at") or "")
+            if (fall.get("from_state", "PASSING") == "PASSING"
+                    and _at(filing, when) == "FIX_CLAIMED"):
+                note("reopen", when)
 
     return seen, last
 
@@ -282,11 +288,10 @@ def vocabularies() -> list[dict]:
         {"name": "run refusals", "over": f"admissibility of {len(runs)} run records",
          "symbols": BLOCK_REASONS, "seen": block_seen, "last": block_last},
         # Replayed from each row's transitions, so an obligation raised and
-        # paid between two runs of this report still counts. `reopen` is the
-        # exception and is still a snapshot: nothing records a regression that
-        # has since been resolved.
+        # paid between two runs of this report still counts; `reopen` from
+        # the regressions the fold keeps.
         {"name": "obligations",
-         "over": "replayed from transitions; reopen is current-only",
+         "over": "replayed from transitions and regressions",
          "symbols": OBLIGATIONS, "seen": ob_seen, "last": ob_last},
     ]
 

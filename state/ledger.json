@@ -2442,9 +2442,7 @@
       "obligations": {
         "reverify": true,
         "repair_check": false,
-        "reopen": [
-          52
-        ],
+        "reopen": [],
         "retractions": [],
         "verification_owed": [],
         "correction_owed": [],
@@ -8207,9 +8205,7 @@
       "obligations": {
         "reverify": true,
         "repair_check": false,
-        "reopen": [
-          86
-        ],
+        "reopen": [],
         "retractions": [],
         "verification_owed": [],
         "correction_owed": [],

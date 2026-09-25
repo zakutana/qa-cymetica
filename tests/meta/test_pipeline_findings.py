@@ -292,6 +292,40 @@ def test_regression_after_closed_report_opens_reopen_obligation():
                                            at="2026-09-05T11:00:00+00:00"), events=events)
     assert regressed["findings"]["CYM-a"]["obligations"]["reopen"] == [46]
 
+    # The message it owes is a `fail` sent to them after the fall, and once
+    # it has gone the debt is paid. It never cleared: #52, #86 and #98 each
+    # got their fail on 2026-09-19/22 and still read "reopen" on 2026-09-25.
+    # A fail sent BEFORE the fall is about an earlier state and pays nothing.
+    from tests.meta.test_pipeline_fold import _verification
+    before = _verification(verdict="fail", at="2026-09-05T10:30:00+00:00")
+    after = _verification(verdict="fail", at="2026-09-05T11:30:00+00:00")
+    other = _verification(verdict="fail", report_id=47, at="2026-09-05T11:30:00+00:00")
+    assert fold(regressed, events=events + [before])["findings"]["CYM-a"][
+        "obligations"]["reopen"] == [46]
+    assert fold(regressed, events=events + [other])["findings"]["CYM-a"][
+        "obligations"]["reopen"] == [46], "a fail on another report says nothing about #46"
+    told = fold(regressed, events=events + [after])
+    assert told["findings"]["CYM-a"]["obligations"]["reopen"] == []
+    # Any definition: a check repaired after the fall still told them.
+    repaired = _verification(verdict="fail", fingerprint="f" * 64,
+                             at="2026-09-05T11:30:00+00:00")
+    assert fold(regressed, events=events + [repaired])["findings"]["CYM-a"][
+        "obligations"]["reopen"] == []
+    # Moments, not strings: a fall at a finished_at with fractions and a fail
+    # recorded in that same second ('+' sorts before '.') is told.
+    fractional = fold(passing, run=fold_run("run-w", [(CHECK_A, "failed")],
+                                            at="2026-09-05T11:00:00.481000+00:00"),
+                      events=events)
+    same_second = _verification(verdict="fail", at="2026-09-05T11:00:00+00:00")
+    assert fold(fractional, events=events + [same_second])["findings"]["CYM-a"][
+        "obligations"]["reopen"] == []
+    # ...and a later fall after another pass owes the message again.
+    again = fold(told, run=fold_run("run-x", [(CHECK_A, "passed")],
+                                    at="2026-09-05T12:00:00+00:00"), events=events + [after])
+    again = fold(again, run=fold_run("run-y", [(CHECK_A, "failed")],
+                                     at="2026-09-05T13:00:00+00:00"), events=events + [after])
+    assert again["findings"]["CYM-a"]["obligations"]["reopen"] == [46]
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_row_with_many_checks_does_not_get_a_chimera_for_a_detail():

@@ -32,6 +32,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+from datetime import datetime, timezone
 from typing import Any, Iterable, Sequence
 
 from qa.state import admissibility, event_id
@@ -877,6 +878,40 @@ def _measured_since(row: dict, report: dict, verified: list) -> bool:
     return bool(measured) and bool(since) and measured > since
 
 
+def _instant(value) -> datetime | None:
+    """An ISO timestamp as a moment. Compared as strings, a run's finished_at
+    with fractions ('...12.481+00:00') sorts AFTER a mark written in the same
+    second ('...12+00:00'), because '+' comes before '.'."""
+    try:
+        moment = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except (TypeError, ValueError):
+        return None
+    return moment if moment.tzinfo else moment.replace(tzinfo=timezone.utc)
+
+
+def _last_fall(row: dict) -> datetime | None:
+    """When the row last fell from PASSING -- the only fall that is their fix
+    regressing (the other two standings prove no fix) -- or None."""
+    falls = [m for r in row.get("regressions") or []
+             if r.get("from_state", "PASSING") == "PASSING"
+             and (m := _instant(r.get("at"))) is not None]
+    return max(falls) if falls else None
+
+
+def _told_since(verified: list, report_id, since: datetime, verdict: str) -> bool:
+    """Did this verdict go to them about this report at or after `since`?
+
+    Any definition, unlike `_told`: what `reopen` owes is the news that it
+    broke again, and a fail sent after the fall is that news whichever
+    fingerprint it carried -- a check repaired after the fall included."""
+    for v in verified:
+        sent = _instant(v.get("at"))
+        if (v["report_id"] == report_id and v.get("verdict") == verdict
+                and sent is not None and sent >= since.replace(microsecond=0)):
+            return True
+    return False
+
+
 def _told(verified: list, report_id, fingerprint, verdict: str) -> bool:
     """Is this verdict the LAST thing they heard, for this check definition?
 
@@ -924,8 +959,11 @@ def _obligations(row: dict) -> dict:
                          and filing in ("RAISED", "REPLIED", "FIX_CLAIMED")),
         # Gap 4: regressing after they closed the report is something we owe
         # them a message about, not just a red badge.
-        "reopen": (filed if any(r.get("from_state", "PASSING") == "PASSING"
-                                for r in row.get("regressions") or [])
+        # The message is a `fail` sent after the fall; once it has gone the
+        # debt is paid. It never cleared until 2026-09-25, so #52, #86 and #98
+        # read "reopen" for days after their fails went out.
+        "reopen": ([r for r in filed if not _told_since(verified, r, fell, "fail")]
+                   if (fell := _last_fall(row)) is not None
                    and check == "REPRODUCING"
                    and filing == "FIX_CLAIMED" else []),
         # Rule 11: withdrawing a filed finding leaves a correction owed.
