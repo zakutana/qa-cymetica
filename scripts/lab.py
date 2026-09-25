@@ -3529,7 +3529,9 @@ def brief() -> str:
                    + (f"; {parked:.0f} parked in bots that do not trade"
                       if parked else ""))
 
-    rows = board_rows()
+    # His rows only: ours are put to him below as questions, and listing one
+    # here credited our setting to him (deep pass 2026-09-25, C05).
+    rows = [row for row in board_rows() if not lab.is_ours(row.get("origin"))]
     out.append("")
     out.append("his proposals, best earner first (what to tell him):")
     for row in rows[:12]:

@@ -368,6 +368,21 @@ def test_the_bots_room_says_whether_each_bot_trades(tmp_path):
     assert "Bollinger Bandit" in room and "stopped by itself" in room
     assert ">idle<" not in room
 
+    # And the other two answers, which the fixture never drew (deep pass
+    # 2026-09-25, C08): a bot that trades says "trading", one that does not
+    # and has no reason says "idle".
+    for trading, word in ((True, ">trading<"), (False, ">idle<")):
+        view = _view()
+        bots = [e for e in view["experiments"] if e.get("trading") is not None]
+        assert bots, "the fixture holds no bot experiment to draw"
+        for e in bots:
+            e.update(trading=trading, reason=None)
+        code, err, captured = _run_page(_node(), tmp_path / f"bots-{trading}", view,
+                                        after='window.labShow("bots");',
+                                        page=_lab_page())
+        assert code == 0, err[:1200]
+        assert word in captured.get("room", ""), (word, captured.get("room", "")[:1500])
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_chat_is_behind_a_button_and_nexus_text_stays_text(tmp_path):

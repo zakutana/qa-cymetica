@@ -229,6 +229,11 @@ def test_memecoins_carry_the_median_and_the_high_conviction_answer(monkeypatch):
     assert [r.get("key") for r in calls[1]] == ["a", "a"], (
         "the high-conviction answer must see only those signals and their "
         "own checkpoints")
+    # "70 and above", at the edge: with signals only at 88 and 12, any cutoff
+    # between them -- or `>` for `>=` -- passed (deep pass 2026-09-25, C09).
+    edge = [{"type": "signal", "key": "at", "conviction": 70.0},
+            {"type": "signal", "key": "under", "conviction": 69.99}]
+    assert [r["key"] for r in lab_report._high_conviction(edge)] == ["at"]
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

@@ -553,6 +553,16 @@ def test_our_own_outstanding_jobs_stay_under_their_reserved_bound():
     # by value, as REPLY-0037 gave it: read back from the constant, 12 passed
     # (deep pass 2026-09-24, B03, 3/3).
     assert lab.OUTSTANDING_BOUND == 6
+    # The window is REPLY-0037's twenty-four hours, pinned by value and by
+    # behaviour: every job below was two hours old, so a window cut to three
+    # passed (deep pass 2026-09-25, C04). Six jobs of twenty hours still
+    # hold the seventh back; one past the day does not count.
+    assert lab.POLLABLE_HOURS == 24
+    day_old = [_question(f"NEX-D{n}", NOW - timedelta(hours=20, minutes=n))
+               for n in range(lab.OUTSTANDING_BOUND)]
+    assert not lab.may_ask_now(day_old, NOW)[0], "a 20-hour-old job still holds its slot"
+    expired = day_old[:-1] + [_question("NEX-DX", NOW - timedelta(hours=25))]
+    assert len(lab.outstanding(expired, NOW)) == lab.OUTSTANDING_BOUND - 1
     old = NOW - timedelta(hours=2, minutes=10)
     stale = []
     for n in range(lab.OUTSTANDING_BOUND):
@@ -3100,7 +3110,10 @@ def test_a_bot_is_judged_from_what_went_in_not_from_its_first_reading(
     t0 = datetime(2026, 9, 20, 12, tzinfo=timezone.utc)
     rows = [{"type": "sample", "kind": "bot", "instance_id": "i-9",
              "at": (t0 + timedelta(hours=h)).isoformat(),
-             "total_profit_usdc": str(p)} for h, p in ((-5, 30.0), (1, 30.0), (24, 36.0))]
+             # The reading before the window differs from the first inside
+             # it (deep pass 2026-09-25, C06): with both at 30.0, entering at
+             # the wrong one gave the same 112.5.
+             "total_profit_usdc": str(p)} for h, p in ((-5, 50.0), (1, 30.0), (24, 36.0))]
     series = lab.bot_series(rows, "i-9", 240.0, entry_at=(t0 - timedelta(hours=10)).isoformat())
     took = lab.verdict({"at": t0.isoformat(), "window_days": 1.0, "stop_pct": 50.0,
                         "legs": [{"kind": "bot", "ref": "i-9", "side": "bull",
@@ -3572,6 +3585,21 @@ def test_a_variant_that_cannot_run_starts_nothing_and_says_why(tmp_path, monkeyp
     assert did["rooms"] == 0 and any("unreadable" in h for h in did["held"]), did
     assert calls[-1][0] == "pause", calls
 
+    # "Under 60% of the book alone", driven through bot_variants: a book where
+    # what is out stays under the ceiling but what is out PLUS this clone's
+    # money does not. Passing 0.0 for the clone's amount -- or leaving out
+    # what is deployed -- starts it (deep pass 2026-09-25, C07).
+    saved = scripts_lab._free_cash, scripts_lab._deployed, scripts_lab._parked
+    scripts_lab._free_cash = lambda: 1000.0
+    scripts_lab._deployed = lambda: 1500.0 - funded
+    scripts_lab._parked = lambda: 0.0
+    try:
+        did = scripts_lab.bot_variants()
+    finally:
+        scripts_lab._free_cash, scripts_lab._deployed, scripts_lab._parked = saved
+    assert did["rooms"] == 0 and any("60%" in h for h in did["held"]), did
+    assert calls[-1][0] == "pause", calls
+
     clone.settings.outcome = "rejected"
     did = scripts_lab.bot_variants()
     assert calls[-1][0] == "settings", ("started after a refused PATCH", calls)
@@ -3634,6 +3662,14 @@ def test_our_rooms_rank_after_his_and_are_put_to_him_as_questions(
         "the fixture must have ours earning more, or the order proves nothing")
     said = scripts_lab.brief()
     assert "OUR-0001" in said and "question for him" in said, said
+    # Under its own heading, and never among his proposals: "question for
+    # him" is printed on every brief, so the section could vanish and this
+    # stay green while OUR-0001 was listed as his (deep pass 2026-09-25, C05).
+    his, _, rest = said.partition("his proposals, best earner first")
+    his_block = rest.split("\n\n", 1)[0]
+    assert "OUR-0001" not in his_block, his_block
+    assert "OUR rooms running" in said and "OUR-0001" in said.split(
+        "OUR rooms running", 1)[1], said
 
     # 2026-09-25: STR-0044 (Trend Titan) and STR-0046 (the head-to-head four)
     # were opened with no `kind` on their strategy row, only bot legs in
