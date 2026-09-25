@@ -2789,6 +2789,20 @@ def test_the_catalogue_readers_take_whole_names_and_respect_what_he_ruled_out():
                  "## NOT PICKS -- ruled out\n- Trend Titan: no edge.\n")
     assert [b["name"] for b in lab.proposed_bots(sectioned, CATALOGUE)] == [
         "MACD Hunter", "Doom & Gloom"]
+    # Deep pass 2026-09-25 (R04, R10): inside the PICKS section every naming
+    # line was a pick -- a comparison and a bulleted "Excluded:" included --
+    # and a numbered exclusion was a pick in the numbered fallback. Inside a
+    # section only the numbered items are, and a line that rules out is not.
+    sectioned_prose = ("## PICKS\n\n**1 -- MACD Hunter** -- clone it.\n"
+                       "It beats Trend Titan on drawdown.\n"
+                       "- Excluded: Liquidation Hunter (too correlated)\n\n"
+                       "**2 -- Doom & Gloom** -- clone it.\n")
+    assert [b["name"] for b in lab.proposed_bots(sectioned_prose, CATALOGUE)] == [
+        "MACD Hunter", "Doom & Gloom"]
+    numbered_out = ("1. MACD Hunter -- clone it.\n2. Doom & Gloom -- clone it.\n"
+                    "3. Trend Titan -- excluded, too correlated.\n")
+    assert [b["name"] for b in lab.proposed_bots(numbered_out, CATALOGUE)] == [
+        "MACD Hunter", "Doom & Gloom"]
     assert lab.proposed_funds("AIB-SPACE and AIB-AI both look fine.\n",
                               FUNDS) == ["AIB-SPACE", "AIB-AI"]
     # The card reader keeps its own behaviour through the shared section logic.

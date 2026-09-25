@@ -1649,10 +1649,15 @@ def _only_picked(text: str, find, names: list[str]) -> list[str]:
             # "# ONE PICK ..." still hands itself to the next naming line.
             section = declares and not found and bool(
                 re.search(r"\bpicks\b", line, re.I))
+        rules_out = bool(_RULED_OUT.search(_BRACKETED.sub("", line)))
         if declares:
             picked.update(found)
-            pending = not found
-        elif section and found:
+            # A section holds its own items; it hands nothing to a stray line.
+            pending = not found and not section
+        elif section and found and _ITEM.match(line) and not rules_out:
+            # Only the section's numbered items, never its prose or a line
+            # that rules out -- "It beats Trend Titan", "- Excluded: ..."
+            # (deep pass 2026-09-25, R04).
             picked.update(found)
         elif pending and found:
             picked.update(found)
@@ -1667,7 +1672,8 @@ def _only_picked(text: str, find, names: list[str]) -> list[str]:
     # each numbered item, in the answer's order.
     listed: list[str] = []
     for line in str(text or "").split("\n"):
-        if _NUMBERED.match(line):
+        # A numbered item that rules out is not a pick (R10, same pass).
+        if _NUMBERED.match(line) and not _RULED_OUT.search(_BRACKETED.sub("", line)):
             found = find(line)
             if found and found[0] not in listed:
                 listed.append(found[0])
@@ -1677,6 +1683,8 @@ def _only_picked(text: str, find, names: list[str]) -> list[str]:
 
 
 _NUMBERED = re.compile(r"^\s*\d+[.)]\s")
+# An item of a list, as markdown or as NEX-0100's bold "**1 -- MACD Hunter**".
+_ITEM = re.compile(r"^\s*(?:[-*•]\s+)?[*_`]*\s*\d+\s*(?:[.):]|--|[—–-])")
 
 
 # A line that DECLARES which one he chooses -- "**Pick: MACD Hunter**",
