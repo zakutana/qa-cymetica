@@ -1576,6 +1576,82 @@ def test_the_night_holds_no_hand_that_trades_files_or_commits():
 
     reached = _names(tree)
 
+    # Deep pass 2026-09-25 (B03, 3/3): only the slice was read, while the
+    # night calls lab.py functions defined outside it (`_archive_diaries`)
+    # and, through `_sibling`, keep, processes, morning and clone. What those
+    # reach is the night's hand too: walk them, function by function, from
+    # what the night names -- not whole modules, whose other commands (keep
+    # track's `git add`) the night never runs.
+    def _module_defs(path):
+        module = ast.parse(path.read_text(encoding="utf-8"))
+        for node in ast.walk(module):   # the code, not the prose, as above
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                body = node.body
+                if (body and isinstance(body[0], ast.Expr)
+                        and isinstance(body[0].value, ast.Constant)
+                        and isinstance(body[0].value.value, str)):
+                    node.body = body[1:] or [ast.Pass()]
+        return {n.name: n for n in module.body
+                if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))}
+
+    def _walk(defs, start):
+        seen, todo, names = set(), [n for n in start if n in defs], set()
+        while todo:
+            name = todo.pop()
+            if name in seen:
+                continue
+            seen.add(name)
+            found = _names(defs[name])
+            names |= found
+            todo += [n for n in found if n in defs and n not in seen]
+        return names
+
+    lab_defs = _module_defs(REPO / "scripts" / "lab.py")
+    in_slice = {n.name for n in ast.walk(tree) if isinstance(n, ast.FunctionDef)}
+    outside_defs = {k: v for k, v in lab_defs.items() if k not in in_slice}
+    outside = [n for n in _walk(outside_defs, reached - in_slice) | (reached - in_slice)
+               if n in outside_defs]
+    reached |= _walk(outside_defs, outside)
+
+    def _sibling_calls(nodes) -> dict:
+        """(module -> attributes) the code calls on `_sibling("module")`,
+        directly or through a name it was assigned to."""
+        calls: dict = {}
+        for fn in nodes:
+            local = {}
+            for child in ast.walk(fn):
+                if (isinstance(child, ast.Assign) and isinstance(child.value, ast.Call)
+                        and getattr(child.value.func, "id", None) == "_sibling"
+                        and child.value.args
+                        and isinstance(child.value.args[0], ast.Constant)):
+                    for target in child.targets:
+                        if isinstance(target, ast.Name):
+                            local[target.id] = child.value.args[0].value
+            for child in ast.walk(fn):
+                if not isinstance(child, ast.Attribute):
+                    continue
+                owner = child.value
+                if isinstance(owner, ast.Name) and owner.id in local:
+                    calls.setdefault(local[owner.id], set()).add(child.attr)
+                elif (isinstance(owner, ast.Call)
+                      and getattr(owner.func, "id", None) == "_sibling"
+                      and owner.args and isinstance(owner.args[0], ast.Constant)):
+                    calls.setdefault(owner.args[0].value, set()).add(child.attr)
+        return calls
+
+    night_fns = [n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef)]
+    calls = _sibling_calls(night_fns + [lab_defs[n] for n in outside])
+    walked = set()
+    for sibling, attrs in sorted(calls.items()):
+        path = REPO / "scripts" / f"{sibling}.py"
+        if sibling == "bounty" or not path.exists():   # bounty is walked below
+            continue
+        defs = _module_defs(path)
+        reached |= _walk(defs, attrs & set(defs))
+        walked.add(sibling)
+    assert {"keep", "clone"} <= walked, ("the walk no longer reaches the "
+                                         "siblings it was written for", walked)
+
     # [operator 2026-09-12] *"Jasne ze v noci muze spoustet."* So this stopped
     # being "no hand at all" and became "only the braked one". Filing and
     # committing are still out: the night finds, the morning tells the vendor.
