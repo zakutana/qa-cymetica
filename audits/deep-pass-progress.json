@@ -10,440 +10,836 @@
       "source": "review",
       "nodeid": "scripts/render.py:513 _rewards",
       "claim": "rewards.posts.read_at enters the payload hash, so every quiet console poll makes the committed dashboard stale against a render (rule 12 red between polls).",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "not real"
+      },
+      "verdict": "real",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "why": {
+        "t1": "every ok creator read writes a new read_at hashed into the payload (render.py:513); a quiet poll changes payload_hash; window overstated.",
+        "t2": "narrower: red at most one watcher tick after each poll; dashboard rewritten every poll.",
+        "t3": "read_at is shown on the page so it belongs in the hash; serve re-renders within POLL_SECONDS."
+      }
     },
     {
       "id": "R02",
       "source": "review",
       "nodeid": "qa/lab.py:671 vendor_news",
       "claim": "vendor_news counts the first-seen vendor_status of a report we just filed ourselves, so our own filing wakes a sweep as their news.",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "why": {
+        "t1": "#129 filed at seq 2756, first-seen vendor_status pending by agent at seq 2759 (bounty.py:631) counted by vendor_news (lab.py:671).",
+        "t2": "first-seen vendor_status of our own #129 (seq 2759) counted; next tick sweeps on our own filing.",
+        "t3": "#129's first-seen vendor_status (seq 2759) counted as news."
+      }
     },
     {
       "id": "R03",
       "source": "review",
       "nodeid": "scripts/lab.py:3156 _say_tick",
       "claim": "'their side moved:' prints the last three vendor events ever, not those since the last sweep, and prints on a night-rule sweep no news triggered.",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "why": {
+        "t1": "vendor_news returns lines[-3:] of every vendor event ever (lab.py:687); printed as 'their side moved' on any hunt sweep incl. night-rule.",
+        "t2": "lines[-3:] of every vendor event; printed whenever hunt sweep decided.",
+        "t3": "lines[-3:] of every vendor event printed on any hunt sweep incl. the night rule."
+      }
     },
     {
       "id": "R04",
       "source": "review",
       "nodeid": "qa/lab.py:1633 _only_picked",
       "claim": "inside a declaring '## PICKS' heading every naming line is picked until the next heading, ruled-out/excluded names included.",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "why": {
+        "t1": "under ## PICKS, 'It beats RSI Sniper and Trend Titan' returns both as picks (lab.py:1633 section and found); 'Not selected:' still removed.",
+        "t2": "demonstrated: bulleted 'Excluded: RSI Sniper' under ## PICKS returned as a pick.",
+        "t3": "reproduced: Excluded under ## PICKS returned as a pick."
+      }
     },
     {
       "id": "R05",
       "source": "review",
       "nodeid": "qa/lab_report.py:78 _product",
       "claim": "a plan-derived kind that is not a product (arena) now yields product None instead of falling through; the old `in KIND_PRODUCT` guard was dropped.",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "not real",
+        "t2": "not real",
+        "t3": "not real"
+      },
+      "verdict": "dropped",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "why": {
+        "t1": "None product for an arena-only room is what the KIND_PRODUCT comment asks (lab_report.py:35-37) and is left out of every sector at :216.",
+        "t2": "consistent with a written kind arena; no kindless arena room exists.",
+        "t3": "explicit kind arena already mapped to None; no arena leg ever written."
+      }
     },
     {
       "id": "R06",
       "source": "review",
       "nodeid": "qa/fold.py:895 _last_fall",
       "claim": "a regression whose `at` does not parse is dropped, so reopen is never owed for it where the old code owed it for any fall.",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "not real",
+        "t2": "not real",
+        "t3": "not real"
+      },
+      "verdict": "dropped",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "why": {
+        "t1": "regression `at` is always an ISO from _utc(); all 15 committed regressions parse.",
+        "t2": "regression at always plugin-written seconds ISO; all 15 parse.",
+        "t3": "regression at always parses."
+      }
     },
     {
       "id": "R07",
       "source": "review",
       "nodeid": "scripts/never_fired.py:260 _obligations",
       "claim": "the reopen replay orders a fall against the filing timeline by ISO string compare, the '+' vs '.' ordering _instant fixes in the fold.",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "not real",
+        "t2": "not real",
+        "t3": "not real"
+      },
+      "verdict": "dropped",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "why": {
+        "t1": "all `at` are second-precision +00:00, so string compare orders as _instant would.",
+        "t2": "both written at seconds precision +00:00; string compare orders the same.",
+        "t3": "both sides second-precision +00:00."
+      }
     },
     {
       "id": "R08",
       "source": "review",
       "nodeid": "scripts/render.py:268 _last_full_run",
       "claim": "json-parses every run record newer than the last full run on each render; unbounded when no full run for days.",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "not real",
+        "t2": "not real",
+        "t3": "not real"
+      },
+      "verdict": "dropped",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "why": {
+        "t1": "a cost, not a wrong output.",
+        "t2": "0.1 s over 50 records; a performance note.",
+        "t3": "performance only."
+      }
     },
     {
       "id": "R09",
       "source": "review",
       "nodeid": "scripts/render.py:2717 statBlocks",
       "claim": "the Rewards hero adds bug rewards in rw.currency to posts.et10 under one currency label.",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "not real",
+        "t3": "not real"
+      },
+      "verdict": "minority",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "why": {
+        "t1": "hero sums paid_total in leaderboard currency with posts.et10 under one label; latent.",
+        "t2": "both sides ET10 today; mix only if the vendor changes currency.",
+        "t3": "every leaderboard row is ET10; a mismatch needs the vendor to change currency."
+      }
     },
     {
       "id": "R10",
       "source": "review",
       "nodeid": "qa/lab.py:1650 _only_picked",
       "claim": "the numbered-list fallback takes the first name of every numbered line as a pick, numbered exclusions included.",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "why": {
+        "t1": "'3. Perceptron Oracle -- excluded, overfits' returned as a pick; _ruled_out skips numbered lines (lab.py:1544), fallback takes first name (lab.py:1650).",
+        "t2": "demonstrated: '3. RSI Sniper -- excluded' returned as a pick.",
+        "t3": "reproduced: numbered exclusion returned as a pick."
+      }
     },
     {
       "id": "C01",
       "source": "audit",
       "nodeid": "tests/meta/test_pipeline_lab_loop.py::test_their_news_wakes_a_sweep_within_a_tick_and_no_limit_is_weighed",
       "claim": "our own filing's first vendor_status (bounty.py:631 appends when a report id first appears) counts as their news (qa/lab.py:671) and wakes a sweep; the test's 'ours' event is a filing_outcome, never counted anyway. Replay: seq 2759 '#129 pending' by agent. Same as R02.",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "why": {
+        "t1": "same as R02, traced end to end; the test's 'ours' fixture is a filing_outcome never counted.",
+        "t2": "same as R02; the test's 'ours' event is a filing_outcome never read.",
+        "t3": "same as R02."
+      }
     },
     {
       "id": "C02",
       "source": "audit",
       "nodeid": "tests/meta/test_pipeline_lab_loop.py::test_the_tick_reads_their_tracker_and_scans_their_surface",
       "claim": "said['tracker'] is read by nothing: a tracker read failing every tick yields no gap and decide none (this morning's QA_WALLET_ADDRESS shape); the stub only returns ok and vendor_seq==7 is the stub's constant.",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "why": {
+        "t1": "tracker read failing returns klass unreachable, said['tracker'] read by nothing; the test checks only the stub.",
+        "t2": "nothing reads said['tracker']; a failing tracker read gives no failed/gap/decide.",
+        "t3": "nothing reads said['tracker']."
+      }
     },
     {
       "id": "C03",
       "source": "audit",
       "nodeid": "tests/meta/test_pipeline_lab_loop.py::test_their_news_wakes_a_sweep_within_a_tick_and_no_limit_is_weighed",
       "claim": "a vendor a2a message with no `auto` key (unknown per bounty.py:475) is treated as a person's reply; the fixture gives auto False where the real row has no key.",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "not real",
+        "t3": "not real"
+      },
+      "verdict": "minority",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "why": {
+        "t1": "fixture gives a2a_42be5226b2484f48 auto False where the real row has no key; mutation `is not True` -> `is False` stays green.",
+        "t2": "counting a keyless message as news is right on real data (seq 2727 is a person).",
+        "t3": "a missing auto is correctly treated as a person; the fixture gap runs the other way."
+      }
     },
     {
       "id": "C04",
       "source": "audit",
       "nodeid": "tests/meta/test_pipeline_lab_loop.py::test_our_own_outstanding_jobs_stay_under_their_reserved_bound",
       "claim": "every job in the test is 2h10m old, so a POLLABLE_HOURS window shrunk to 3h still passes; six 10-hour-old jobs would stop counting and a seventh question go out.",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "why": {
+        "t1": "every job 2h10m old; POLLABLE_HOURS unpinned; =3 stays green.",
+        "t2": "jobs 2h10m-2h15m old, POLLABLE_HOURS pinned by nothing.",
+        "t3": "mutation: POLLABLE_HOURS 24 -> 3 left 291 tests green."
+      }
     },
     {
       "id": "C05",
       "source": "audit",
       "nodeid": "tests/meta/test_pipeline_lab_loop.py::test_our_rooms_rank_after_his_and_are_put_to_him_as_questions",
       "claim": "brief() prints OUR-0001 under 'his proposals, best earner first' (scripts/lab.py:3522); the test's 'question for him' string is on every brief, so the OUR rooms section could vanish and the test stay green.",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "why": {
+        "t1": "brief prints OUR-0001 under 'his proposals'; 'question for him' printed unconditionally (lab.py:3570).",
+        "t2": "'question for him' printed unconditionally; deleting the OUR rooms section stays green.",
+        "t3": "mutation: emptied `ours` in brief(), test still passed."
+      }
     },
     {
       "id": "C06",
       "source": "audit",
       "nodeid": "tests/meta/test_pipeline_lab_loop.py::test_a_bot_is_judged_from_what_went_in_not_from_its_first_reading",
       "claim": "the reading before the window and the first inside it both carry 30.0 (test:3089), so the STR-0034 defect (first reading overall) gives the same 112.5.",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "not real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "why": {
+        "t1": "h=-5 and h=+1 both 30.0 (test:3089), rule not pinned.",
+        "t2": "the first half's 7.1/240 assertion catches STR-0034; the test as a whole tells them apart.",
+        "t3": "pre-window and first inside both 30.0; a mutation taking the pre-window reading still gives 112.5."
+      }
     },
     {
       "id": "C07",
       "source": "audit",
       "nodeid": "tests/meta/test_pipeline_lab_loop.py::test_a_tick_starts_the_next_setting_of_a_judged_bot_on_its_one_clone",
       "claim": "the '60% of the book alone' limit is never exercised: restart_affordable is not driven through bot_variants with a book over it.",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "why": {
+        "t1": "60% branch only exercised by calling restart_affordable directly.",
+        "t2": "no test drives bot_variants with a book over 60%.",
+        "t3": "mutation: restart_affordable(0.0, ...) left lab tests green."
+      }
     },
     {
       "id": "C08",
       "source": "audit",
       "nodeid": "tests/meta/test_pipeline_lab_page.py::test_the_bots_room_says_whether_each_bot_trades",
       "claim": "the fixture's only bot is not trading, so the 'trading' chip is never drawn; a page that never shows a trading bot passes.",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "why": {
+        "t1": "fixture's only bot is stopped; the trading chip never drawn.",
+        "t2": "the chip branch trading/idle never reached.",
+        "t3": "the trading chip is never drawn in the fixture."
+      }
     },
     {
       "id": "C09",
       "source": "audit",
       "nodeid": "tests/meta/test_pipeline_lab_report.py::test_memecoins_carry_the_median_and_the_high_conviction_answer",
       "claim": "signals at 88 and 12 only, so any conviction cutoff between 12 and 88 passes; no signal at 69/70 pins the operator's 70.",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "not real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "why": {
+        "t1": "signals 88 and 12 only; > or 50 stays green.",
+        "t2": "'min': 70.0 asserted is CONVICTION_MIN; changing the cutoff fails; only >= -> > survives, not the named mutation.",
+        "t3": "mutating >= to > at lab_report.py:151 still passes."
+      }
     },
     {
       "id": "C10",
       "source": "audit",
       "nodeid": "tests/meta/test_pipeline_lab_loop.py::test_their_news_wakes_a_sweep_within_a_tick_and_no_limit_is_weighed",
       "claim": "the no-get_usage guard scans only laborator/SKILL.md; docs/laborator-plan.md:75 still says get_usage is read before each phase.",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "not real",
+        "t2": "not real",
+        "t3": "real"
+      },
+      "verdict": "minority",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "why": {
+        "t1": "docstring names the laborator skill, which is what it scans; plan doc line is stale prose, not code.",
+        "t2": "the plan doc describes finished phases; nothing reads it as instructions.",
+        "t3": "low confidence: the plan doc still says get_usage is read before each phase."
+      }
     },
     {
       "id": "A01",
       "source": "audit",
       "nodeid": "tests/rest/test_creator_links_lists_every_tracked_link.py::test_creator_links_lists_every_reply_tracked_link",
       "claim": "LINKS is hard-coded to /creator/tg_expire76/links while the leads are now read with the trusted key (account expire76); reply slugs claimed by expire76 (505, 462, 503, 529, ...) are not in tg_expire76's list, so the next run fails on our own mismatch.",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "why": {
+        "t1": "LINKS hard-coded to tg_expire76 while leads read with expire76 key; its reply slugs would be counted missing.",
+        "t2": "evidence: LINKS stays tg_expire76 while leads come from expire76; reply slugs would read missing.",
+        "t3": "trusted-key claims on Chartink are not in tg_expire76's list; the next run fails on our own mismatch."
+      }
     },
     {
       "id": "A02",
       "source": "audit",
       "nodeid": "tests/discovery/test_public_page_reads_are_documented.py::test_what_a_public_page_reads_without_a_key_is_documented",
       "claim": "(a) probe is capped at MAX_PROBES=120 and run 195840Z hit the cap, so a pass can leave later candidates unprobed; (b) a 429/5xx probe counts as 'refused' and a non-200 page/script is dropped silently, so a rate-limited run passes (rule 8).",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "why": {
+        "t1": "probed exactly 120 (cap); any non-200 probe incl 429/5xx counts as refused.",
+        "t2": "(b) demonstrated: every probe 429/5xx counts as refused and passes; (a) cap structurally true.",
+        "t3": "a 429/5xx probe counts as refused; non-200 page dropped; no inconclusive past the cap."
+      }
     },
     {
       "id": "A03",
       "source": "audit",
       "nodeid": "tests/mcp/test_card_tradeability_agrees_across_surfaces.py::test_a_card_is_tradeable_on_every_surface_or_on_none",
       "claim": "passes on one card closed on both surfaces for any reason (reason recorded, never consulted), while stock-leg cards can sit in `unread` and out of the verdict -- the market-hours gate the docstring names is not exercised.",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "why": {
+        "t1": "passes on one card closed on both surfaces for any reason; unread pairs do not block.",
+        "t2": "date-closed card closed on both gives a pass, market-hours gate not exercised.",
+        "t3": "pass needs one card closed on both for any reason."
+      }
     },
     {
       "id": "A04",
       "source": "audit",
       "nodeid": "tests/rest/test_a_card_index_moves_with_its_basket.py::test_a_card_index_moves_no_further_than_its_basket_can",
       "claim": "a history answering 200 with no points (or renamed keys) is added to `judged` with no jumps, so an empty read counts toward a pass.",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "why": {
+        "t1": "200 history with no points appended to judged with no jumps.",
+        "t2": "{\"points\": []} appended to judged with no jumps.",
+        "t3": "200 history with no points still judged."
+      }
     },
     {
       "id": "A05",
       "source": "audit",
       "nodeid": "tests/mcp/test_community_funds_are_paper_or_live_not_both.py::test_a_community_fund_is_paper_or_live_not_both",
       "claim": "inconclusive only when every profile is unread: 2 of 3 unread and 1 read without an offer passes as 'the offer is gone'; only live[:3] is sampled.",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "why": {
+        "t1": "2 of 3 profiles unread and 1 read without offer passes.",
+        "t2": "2 of 3 profiles 429, third without offer: passes.",
+        "t3": "2 of 3 profiles unread and 1 read without the phrase passes."
+      }
     },
     {
       "id": "A06",
       "source": "audit",
       "nodeid": "tests/rest/test_head_to_head_surface_is_undocumented.py::test_the_head_to_head_routes_they_serve_are_named_in_no_document",
       "claim": "a probe answering 5xx/401 matches neither branch and drops out of `served`, so a route that failed to answer is judged as absent and the check can pass on the rest.",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "why": {
+        "t1": "5xx/401 probe drops out of served; passes on the rest.",
+        "t2": "/sides 503 or 401 dropped from served; passes on the other two.",
+        "t3": "a 5xx/401 probe drops out of served."
+      }
     },
     {
       "id": "A07",
       "source": "audit",
       "nodeid": "tests/repo/test_reminders.py::test_the_hook_is_silent_when_nothing_is_due_and_never_fails",
       "claim": "the hook's stdout is never asserted on the broken-files run; an unconditional print after exec_module stays green.",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "why": {
+        "t1": "broken-files run asserts only returncode; print after exec_module stays green.",
+        "t2": "unconditional print after exec_module survives; the broken-files run asserts only returncode.",
+        "t3": "mutation: print after exec_module left 55 tests green."
+      }
     },
     {
       "id": "A08",
       "source": "audit",
       "nodeid": "tests/mcp/test_fund_performance_page_matches_the_api.py::test_the_fund_leaderboard_page_matches_list_funds",
       "claim": "the index is compared only when both sides are numbers: page $1.23 against an API null index_price_usd is skipped and passes.",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "why": {
+        "t1": "index compared only when API value is a number.",
+        "t2": "index compared only when both are numbers, unlike the null-symmetric return check.",
+        "t3": "page $1.23 against API null skipped."
+      }
     },
     {
       "id": "A09",
       "source": "audit",
       "nodeid": "tests/repo/test_allowlist.py::test_the_laboratorys_own_doors_run_unasked_because_the_code_holds_paper",
       "claim": "'not skipped' is read from decorators only; a pytest.skip() in the body or module-level pytestmark skip leaves in_force True.",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "why": {
+        "t1": "in_force reads skip/xfail from decorators only.",
+        "t2": "skip read from decorator_list only.",
+        "t3": "skip/xfail read from decorators only."
+      }
     },
     {
       "id": "A10",
       "source": "audit",
       "nodeid": "tests/repo/test_session_start.py::test_the_surface_drift_is_read_from_its_cache_not_computed",
       "claim": "the tripwire covers _surface_facts() alone; facts() changed to call surface_drift() directly stays green.",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "not real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "why": {
+        "t1": "tripwire calls only _surface_facts; facts() changed stays green.",
+        "t2": "facts() calls exactly _surface_facts today; needs a future rewrite.",
+        "t3": "mutation: facts() calling surface_drift() directly left 122 tests green."
+      }
     },
     {
       "id": "A11",
       "source": "audit",
       "nodeid": "tests/rest/test_the_build_board_counts_building_as_building.py::test_the_boards_building_tile_counts_only_what_is_building",
       "claim": "TILE.search judges only the first write to the tile; a later refresh writing funded+building passes.",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "why": {
+        "t1": "TILE.search finds first write only; reproduced.",
+        "t2": "demonstrated: first write only.",
+        "t3": "TILE.search takes only the first write."
+      }
     },
     {
       "id": "B01",
       "source": "audit",
       "nodeid": "tests/meta/test_pipeline_findings.py::test_regression_after_closed_report_opens_reopen_obligation",
       "claim": "removing the `outcome != 'accepted'` filter at qa/fold.py:766 leaves all 1058 meta tests green (auditor ran it in memory): an `unknown` fail would clear reopen and an `unknown` pass verification_owed; every _verification() fixture is accepted.",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "why": {
+        "t1": "removing the accepted filter at fold.py:766: 206 fold/verification meta tests pass; every _verification fixture accepted.",
+        "t2": "demonstrated: filter removed, all 1058 meta green; unknown mark clears verification_owed/reopen.",
+        "t3": "mutation: filter at fold.py:766 to `if False` gave the baseline failures only."
+      }
     },
     {
       "id": "B02",
       "source": "audit",
       "nodeid": "tests/meta/test_pipeline_recorder.py::test_records_collected_nodeids_and_check_fingerprint",
       "claim": "neither check_fingerprint nor helpers_fingerprint covers module constants (WINDOW, OTHER_STAGES, TILE, SETTING_BOUNDS), so a constant changed to make a check pass keeps both hashes, and verify.py tells the vendor the check was not rewritten; transitivity of helper hashing is also unproven.",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "why": {
+        "t1": "module constants unhashed by check_fingerprint and helpers_fingerprint.",
+        "t2": "module constants unhashed; verify.py:365-368 would say the check was not rewritten.",
+        "t3": "MAX_STEP 0.40 -> 0.95 leaves both hashes unchanged."
+      }
     },
     {
       "id": "B03",
       "source": "audit",
       "nodeid": "tests/meta/test_pipeline_lab.py::test_the_night_holds_no_hand_that_trades_files_or_commits",
       "claim": "the test reads only the source between '# --- the night' and 'def main(' plus bounty; the night reaches _archive_diaries and, via _sibling, keep/processes/morning/clone, where a git commit or subprocess stays green.",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "why": {
+        "t1": "test reads only the night slice; _archive_diaries and _sibling targets not followed.",
+        "t2": "the night calls _archive_diaries (lab.py:322, outside the slice) -> keep.snapshot; a git commit there stays green.",
+        "t3": "the night slice calls _archive_diaries -> keep.snapshot, outside what the test parses."
+      }
     },
     {
       "id": "B04",
       "source": "audit",
       "nodeid": "tests/meta/test_pipeline_creator.py::test_mark_posted_sends_the_reply_url_and_only_a_status_link",
       "claim": "REPLY_URL['twitter'] accepts any account's status URL, including the thread's own tweet (CLAIMED permalink x.com/LuxAlgo/status/...), the X twin of the reddit thread URL the test refuses.",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "not real",
+        "t2": "not real",
+        "t3": "not real"
+      },
+      "verdict": "dropped",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "why": {
+        "t1": "contract is 'an x.com / twitter.com status'; the thread's own tweet is one; refusing it is a feature.",
+        "t2": "contract is URL shape; posted() has no permalink to compare; a new feature.",
+        "t3": "a thread's own tweet cannot be told from a reply by shape."
+      }
     },
     {
       "id": "B05",
       "source": "audit",
       "nodeid": "tests/meta/test_pipeline_creator.py::test_a_503_or_a_timeout_is_settled_by_reading_the_lead_back",
       "claim": "_settle returns any claimed lead with that id without comparing reply_page_slug to the page asked for, and reads back with limit 200 so a committed claim past the 200th reads 'not claimed'.",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "not real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "why": {
+        "t1": "_settle returns the lead as read back incl reply_page_slug; the >200 case unreachable from current data.",
+        "t2": "narrow: re-claim with page B answering 503 over a lead holding page A returns A's record as settled_by_read.",
+        "t3": "re-claim with page X answering 503 prints success with the old page's link."
+      }
     },
     {
       "id": "B06",
       "source": "audit",
       "nodeid": "tests/meta/test_pipeline_clone.py::test_a_settings_patch_carries_only_the_fields_the_grid_walks",
       "claim": "asserts grid <= SAFE_SETTINGS plus a fixed forbidden list; is_paper added to MARKET_TOGGLES and components.yaml together stays green and a PATCH could flip a clone to live.",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "not real",
+        "t3": "not real"
+      },
+      "verdict": "minority",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "why": {
+        "t1": "subset where contract is equality; is_paper added to both stays green.",
+        "t2": "hypothetical edit; docstring names is_trading, arb, onchain and market lists, not is_paper.",
+        "t3": "hypothetical future edit; docstring does not promise is_paper."
+      }
     },
     {
       "id": "B07",
       "source": "audit",
       "nodeid": "tests/meta/test_pipeline_decisions.py::test_every_decision_the_operator_made_is_still_there",
       "claim": "the 2026-09-09 decision owns the /channels table row, but the row sits outside the hashed paragraph; changing it to high stays green.",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "why": {
+        "t1": "/channels row outside hashed paragraph; nothing pins it.",
+        "t2": "the /channels row sits outside the hashed paragraph; editing it stays green.",
+        "t3": "the /channels row is outside the hashed paragraph."
+      }
     },
     {
       "id": "B08",
       "source": "audit",
       "nodeid": "tests/meta/test_pipeline_build_it_better.py::test_the_building_tile_is_judged_by_the_arithmetic_behind_its_name",
       "claim": "_assignment skips `+=`, so `let nb = s.building||0; nb += s.funded||0; text(tile, nb)` resolves to s.building and the check passes while the tile shows funded+building (verified).",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "why": {
+        "t1": "reproduced: += skipped by _assignment regex.",
+        "t2": "demonstrated: `nb +=` not matched by _assignment, resolves to s.building.",
+        "t3": "reproduced: += skipped."
+      }
     },
     {
       "id": "B09",
       "source": "audit",
       "nodeid": "tests/meta/test_pipeline_hot.py::test_the_rule_takes_profit_at_the_first_round_past_eight_percent",
       "claim": "the path [100,103,109,95] has one round past 8%, so peak or last-past-8% exits also give 9.0.",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "why": {
+        "t1": "[100,103,109,95] crosses 8% once; first-round not pinned.",
+        "t2": "one round past 8%; no hot test with two TP-crossing rounds of different value.",
+        "t3": "one round past 8%; first/peak/last all 9.0."
+      }
     },
     {
       "id": "B10",
       "source": "audit",
       "nodeid": "tests/meta/test_pipeline_lab.py::test_a_restart_turns_parked_money_into_exposure_under_the_same_ceiling",
       "claim": "the real caller passes went_in.get(instance) or 0.0 (scripts/lab.py:2734); a clone whose fund outcome was unknown counts 0, so every restart fits under the 60% ceiling (paper money).",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "not real",
+        "t2": "real",
+        "t3": "not real"
+      },
+      "verdict": "minority",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "why": {
+        "t1": "every bot verdict needs funded > 0; no restart reaches restart_affordable with 0.",
+        "t2": "latent: fund intent outcome unknown drops out of lab.funded, restart_affordable(0,...) counts it as zero exposure; no such row yet.",
+        "t3": "all accepted paper clones have a funded entry; not constructible today."
+      }
     },
     {
       "id": "B11",
       "source": "audit",
       "nodeid": "tests/meta/test_pipeline_h2h.py::test_a_matchup_is_refused_early_never_public_and_carries_only_its_fields",
       "claim": "the rule check is a superset check on executable_params and ignores inert_params, so the transport wall can widen unseen (body itself pinned). Cosmetic.",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "not real",
+        "t2": "not real",
+        "t3": "not real"
+      },
+      "verdict": "dropped",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "why": {
+        "t1": "body pinned exactly; registry superset secondary.",
+        "t2": "body pinned exactly; h2h.create the only sender.",
+        "t3": "body pinned by equality; create() the only caller."
+      }
     },
     {
       "id": "B12",
       "source": "audit",
       "nodeid": "tests/meta/test_pipeline_render.py::test_a_tile_lists_the_tests_behind_its_count",
       "claim": "the docstring promises a one-line description per test; nothing asserts it. Cosmetic.",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "not real",
+        "t2": "not real",
+        "t3": "not real"
+      },
+      "verdict": "dropped",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "why": {
+        "t1": "one-line doc asserted at test_pipeline_render.py:1311-1331.",
+        "t2": "premise false: test_pipeline_render.py:1318-1331 requires doc on every check on every tile.",
+        "t3": "the same test asserts a non-empty doc per test on a live tile."
+      }
     },
     {
       "id": "B13",
       "source": "audit",
       "nodeid": "tests/meta/test_pipeline_checks.py::test_a_field_named_with_via_or_through_is_not_a_tool",
       "claim": "TOOL_VERBS is a fixed list so 'with `rebalance_portfolio`' is not extracted; the docstring owns the choice. Cosmetic.",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t1": "not real",
+        "t2": "not real",
+        "t3": "not real"
+      },
+      "verdict": "dropped",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "why": {
+        "t1": "docstring's own choice; cosmetic.",
+        "t2": "TOOL_VERBS fixed by the docstring's own choice; cosmetic.",
+        "t3": "the docstring owns the verb-first choice."
+      }
     }
   ],
   "review": {

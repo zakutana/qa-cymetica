@@ -586,6 +586,19 @@ def test_the_building_tile_is_judged_by_the_arithmetic_behind_its_name():
             run(script)
     run("function paint(s){ text($('bs-building'), Number(s.building || 0)); }")
 
+    # Deep pass 2026-09-25 (B08, A11): `nb +=` after the assignment was not
+    # followed, and only the FIRST write to the tile was judged, so a refresh
+    # adding funded later passed. A compound assignment adds to the name; a
+    # second write is judged like the first.
+    with pytest.raises(AssertionError, match="funded"):
+        run("function paint(s){ let nb = s.building || 0; nb += s.funded || 0; "
+            "text($('bs-building'), nb); }")
+    with pytest.raises(AssertionError, match="funded"):
+        run("text($('bs-building'), s.building || 0); function refresh(s){ "
+            "text($('bs-building'), (s.funded || 0) + (s.building || 0)); }")
+    run("text($('bs-building'), s.building || 0); function refresh(s){ "
+        "text($('bs-building'), s.building || 0); }")
+
     # B05 (deep pass of 2026-09-24): the argument was read up to the first
     # `)` followed by `;`, so a correct tile in minified or semicolon-less
     # script took in the NEXT tile's stage -- a false regression on a

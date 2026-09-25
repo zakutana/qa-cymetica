@@ -30,7 +30,9 @@ the live invest offer gone -- because each is a way of making the three agree,
 and which is theirs (`a-check-encodes-the-fix-its-author-imagined`).
 
 **Nothing is bought.** GETs of three public pages and two read-only MCP tools.
-Up to PROFILES community profiles are read, spaced for their rate limit.
+While the launcher says paper-only, live community profiles are read one by
+one, spaced for their rate limit, until one offers live investment; a pass on
+"the offer is gone" needs every one read.
 """
 
 from __future__ import annotations
@@ -46,7 +48,6 @@ from qa.measure import Measurement, conclude
 SITE = "https://cymetica.com"
 LAUNCHER = SITE + "/fund-launcher"
 COMMUNITY = "Community AIB"
-PROFILES = 3
 PAUSE_S = 4.0
 
 PAPER_ONLY = re.compile(r"Community funds\W+Paper trading only", re.I)
@@ -94,8 +95,14 @@ def test_a_community_fund_is_paper_or_live_not_both(mcp_anon):
                            f"nothing for the launcher's sentence to be about")
     live = [f for f in community if f.get("status") == "live"]
 
+    # A corrected launcher settles it alone. While it still says paper-only,
+    # "the offer is gone" is a claim about EVERY live fund, so each is read
+    # until one offers -- three sampled, with two unread, passed on one page
+    # (deep pass 2026-09-25, A05).
     offers, unread = [], []
-    for row in live[:PROFILES]:
+    for row in (live if says_paper else []):
+        if offers:
+            break
         time.sleep(PAUSE_S)
         try:
             fund = _body(mcp_anon.call("get_fund", {"symbol": row["symbol"]})).get("fund") or {}
@@ -115,8 +122,9 @@ def test_a_community_fund_is_paper_or_live_not_both(mcp_anon):
             offers.append({"symbol": row["symbol"], "name": row.get("name"),
                            "invest_url": fund.get("invest_url"),
                            "profile_url": url, "offer": said})
-    if live and not offers and len(unread) == len(live[:PROFILES]):
-        raise Inconclusive(f"no community profile could be read: {'; '.join(unread)}")
+    if says_paper and live and not offers and unread:
+        raise Inconclusive(f"{len(unread)} of {len(live)} live community profile(s) "
+                           f"could not be read: {'; '.join(unread[:4])}")
 
     both = says_paper and bool(live) and bool(offers)
     conclude(Measurement(
@@ -128,9 +136,12 @@ def test_a_community_fund_is_paper_or_live_not_both(mcp_anon):
                 + "; ".join(f"{o['symbol']} {o['name']!r} \"{o['offer']}\" "
                             f"(invest_url {o['invest_url']})" for o in offers)
                 if both else
-                f"the launcher {'says' if says_paper else 'no longer says'} "
-                f"community funds are paper-only; {len(live)} of {len(community)} "
-                f"read live; {len(offers)} profile(s) offer live investment"),
+                (f"the launcher says community funds are paper-only; "
+                 f"{len(live)} of {len(community)} read live; none of their "
+                 f"profiles offers live investment"
+                 if says_paper else
+                 f"the launcher no longer says community funds are paper-only; "
+                 f"{len(live)} of {len(community)} read live")),
         left={"launcher_paper_only": says_paper, "community_live": len(live),
               "live_invest_offers": len(offers)},
         right="the three surfaces agree on whether a community fund takes real money",

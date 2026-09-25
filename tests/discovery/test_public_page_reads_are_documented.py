@@ -43,7 +43,7 @@ SITE = "https://cymetica.com"
 SPEC = "/openapi-public.json"
 PAUSE_S = 1.2
 MAX_PAGES = 90
-MAX_PROBES = 120
+MAX_PROBES = 250  # 120 was hit on 2026-09-25; past the cap a pass is inconclusive
 
 LINK = re.compile(r'href="(/[a-z0-9][a-z0-9\-/]*)"')
 SCRIPT = re.compile(r'<script[^>]+src="(/static/js/[^"?]+)')
@@ -66,6 +66,11 @@ def _get(client, url, **kw):
         return client.get(url, **kw)
     except httpx.TimeoutException:
         return None
+
+
+def _unanswered(response) -> bool:
+    """Rate-limited or broken on their side: not an answer about the path."""
+    return response.status_code == 429 or response.status_code >= 500
 
 
 def documented_patterns(spec: dict) -> list[re.Pattern]:
@@ -108,7 +113,7 @@ def test_what_a_public_page_reads_without_a_key_is_documented(rest_anon):
     for link in pages:
         time.sleep(PAUSE_S)
         page = _get(rest_anon, SITE + link)
-        if page is None:
+        if page is None or _unanswered(page):
             unread.append(link)
             continue
         if page.status_code != 200:
@@ -120,7 +125,7 @@ def test_what_a_public_page_reads_without_a_key_is_documented(rest_anon):
                 continue
             scripts_seen.add(js)
             script = _get(rest_anon, SITE + js)
-            if script is None:
+            if script is None or _unanswered(script):
                 unread.append(js)
             elif script.status_code == 200:
                 texts.append(script.text)
@@ -130,20 +135,26 @@ def test_what_a_public_page_reads_without_a_key_is_documented(rest_anon):
     if not read:
         raise Inconclusive("no linked page could be read")
 
-    probe = candidates(names, documented)[:MAX_PROBES]
+    every = candidates(names, documented)
+    probe = every[:MAX_PROBES]
     public, refused = [], 0
     for path in probe:
         time.sleep(PAUSE_S)
         answer = _get(rest_anon, path, headers={"Accept": "application/json"})
-        if answer is None:
+        if answer is None or _unanswered(answer):
             unread.append(path)
         elif answer.status_code == 200 and "json" in answer.headers.get("content-type", ""):
             public.append(path)
         else:
             refused += 1
-    # A fail needs only the reads that answered; a pass needs every one (rule 8).
-    if unread and not public:
-        raise Inconclusive(f"{len(unread)} read(s) timed out: {', '.join(unread[:5])}")
+    # A fail needs only the reads that answered; a pass needs every one (rule
+    # 8): a 429 or a 5xx is not a refusal, and a candidate past the cap was
+    # never asked (deep pass 2026-09-25, A02 -- run 195840Z hit the cap).
+    if not public and (unread or len(every) > len(probe)):
+        raise Inconclusive(
+            f"{len(unread)} read(s) went unanswered ({', '.join(unread[:5])}) and "
+            f"{len(every) - len(probe)} candidate(s) past the cap of {MAX_PROBES} "
+            f"were not probed")
     conclude(Measurement(
         verdict="failed" if public else "passed",
         reason=(f"{len(public)} path(s) that {read} public pages call answer an "
@@ -153,7 +164,8 @@ def test_what_a_public_page_reads_without_a_key_is_documented(rest_anon):
                 if public else
                 f"every read-shaped path {read} public pages name is documented or "
                 f"refuses an anonymous read ({len(probe)} probed)"),
-        left={"pages_read": read, "probed": len(probe), "public_undocumented": len(public)},
+        left={"pages_read": read, "candidates": len(every), "probed": len(probe),
+              "public_undocumented": len(public)},
         right={"public_undocumented": 0},
         population={"public_undocumented": public, "refused_or_not_json": refused,
                     "timed_out": unread},

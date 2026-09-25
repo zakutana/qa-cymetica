@@ -101,7 +101,7 @@ def test_the_head_to_head_routes_they_serve_are_named_in_no_document(rest_truste
 
     # Live evidence: GET first (a 2xx is direct proof), OPTIONS where GET
     # named no method (the same fallback the cloned-bots check uses).
-    served = {}
+    served, unread = {}, []
     for path in PROBE_PATHS:
         get = rest_trusted.get(path)
         if get.status_code == 200:
@@ -113,6 +113,10 @@ def test_the_head_to_head_routes_they_serve_are_named_in_no_document(rest_truste
             allow = _routed(opt)
         if allow:
             served[path] = f"405, Allow: {allow}"
+        elif get.status_code in (401, 403, 429) or get.status_code >= 500:
+            # Neither proof the route exists nor that it is gone: a failed
+            # read is not an absent route (rule 8; deep pass 2026-09-25, A06).
+            unread.append(f"{path} (HTTP {get.status_code})")
 
     if not served:
         raise Inconclusive(
@@ -122,6 +126,9 @@ def test_the_head_to_head_routes_they_serve_are_named_in_no_document(rest_truste
 
     unnamed = [p for p in served if not named_in(p)]
     documented = not unnamed
+    if documented and unread:
+        raise Inconclusive(f"every route that answered is documented, but "
+                           f"{len(unread)} did not answer: {', '.join(unread)}")
     conclude(Measurement(
         verdict="passed" if documented else "failed",
         reason=(

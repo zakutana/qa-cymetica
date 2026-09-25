@@ -29,9 +29,13 @@ close, which is why the reason names both times. It judges only where one
 surface reads a card closed:
 
   * any card closed on one and open on the other -- fail;
-  * at least one card closed on both, none disagreeing -- pass;
-  * every card open on both (markets open, nothing closed), or no pair
-    readable -- inconclusive: the case this is about was not exercised.
+  * at least one card closed on both, none disagreeing, every sampled card
+    read, and -- while the listing says US markets are closed -- one of them
+    closed for that reason -- pass;
+  * every card open on both (markets open, nothing closed), no pair
+    readable, a sampled card unread, or markets closed with no card closed
+    on both for the market-hours reason -- inconclusive: the case this is
+    about was not exercised.
 
 A tool error, an absent card or a non-boolean is unread, never agreement.
 
@@ -155,6 +159,21 @@ def test_a_card_is_tradeable_on_every_surface_or_on_none(mcp_trusted, rest_trust
             f"{len(pairs)} card(s) read on both surfaces and none is closed on "
             f"both" + (f"; unread: {'; '.join(unread[:3])}" if unread else "")
             + " -- the closed case was not exercised")
+    # A pass needs every sampled card read on both (rule 8), and, while the
+    # listing says US markets are shut, a card closed on both FOR that reason:
+    # one closed by its date is agreement about something else, and the
+    # stock-leg cards this check exists for could all sit in `unread`
+    # (deep pass 2026-09-25, A03).
+    if unread:
+        raise Inconclusive(
+            f"{len(unread)} of {len(subjects)} sampled card(s) could not be read "
+            f"on both surfaces ({'; '.join(unread[:3])}); a pass needs every one")
+    market = [p for p in closed_both if "market" in str(p["reason"] or "").lower()]
+    if body.get("us_market_open") is False and not market:
+        raise Inconclusive(
+            f"US markets are closed and none of the {len(closed_both)} card(s) "
+            f"closed on both is closed for that reason; the market-hours gate "
+            f"was not exercised")
     conclude(Measurement(
         verdict="passed",
         reason=(f"{len(closed_both)} card(s) read closed on both {CARD} and "

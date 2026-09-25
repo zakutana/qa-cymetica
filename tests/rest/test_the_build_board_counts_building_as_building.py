@@ -69,6 +69,19 @@ TILE = re.compile(r"""\$\(\s*['"]bs-building['"]\s*\)\s*,\s*""")
 
 
 def tile_argument(page: str) -> tuple[str, int] | None:
+    """The first expression handed to the tile, and where it was found."""
+    found = tile_arguments(page)
+    return found[0] if found else None
+
+
+def tile_arguments(page: str) -> list[tuple[str, int] | None]:
+    """Every write to the tile, in page order -- a refresh writes it again,
+    and a later write adding a stage is the same defect as the first (deep
+    pass 2026-09-25, A11). A write whose call cannot be closed is None."""
+    return [_argument_at(page, found) for found in TILE.finditer(page)]
+
+
+def _argument_at(page: str, found) -> tuple[str, int] | None:
     """The expression handed to the tile, read to its call's OWN closing
     parenthesis, and where it was found.
 
@@ -77,9 +90,6 @@ def tile_argument(page: str) -> tuple[str, int] | None:
     NEXT tile's call and its stage -- `s.building||0),text($('bs-shipped'),
     s.shipped||0` -- which is a false regression, or an unread tile, on a
     PASSING, FIX_CLAIMED row. Parentheses are counted, quotes skipped."""
-    found = TILE.search(page)
-    if not found:
-        return None
     depth, quote, i = 0, None, found.end()
     while i < len(page) and i - found.end() <= 400:
         ch = page[i]
@@ -140,14 +150,24 @@ def resolve(page: str, expression: str, before: int) -> str | None:
 
 def _assignment(page: str, name: str, before: int) -> str | None:
     """A name's nearest assignment earlier in the page, if it is not merely
-    another name."""
+    another name -- with every `name += ...` between it and the tile added on
+    (deep pass 2026-09-25, B08: `nb += s.funded` was skipped). Any other
+    compound operator is not read."""
     assigned = list(re.finditer(
         r"(?<![\w$.])" + re.escape(name) + r"\s*=(?![=>])\s*([^;]{1,160}?)\s*;",
         page[:before], re.S))
     if not assigned:
         return None
     value = " ".join(assigned[-1].group(1).split())
-    return None if NAME.fullmatch(value) else value
+    if NAME.fullmatch(value):
+        return None
+    for later in re.finditer(
+            r"(?<![\w$.])" + re.escape(name) + r"\s*([-+*/%|&^]|\*\*|<<|>>|\|\||&&|\?\?)=\s*([^;]{1,160}?)\s*;",
+            page[assigned[-1].end():before], re.S):
+        if later.group(1) != "+":
+            return None
+        value = f"({value}) + ({' '.join(later.group(2).split())})"
+    return value
 
 
 # A name standing alone in the expression -- not after a dot, not the object a
@@ -172,8 +192,8 @@ def test_the_boards_building_tile_counts_only_what_is_building(rest_anon):
             sources={"board": BOARD_PAGE}))
         return
 
-    found = tile_argument(page.text)
-    if not found:
+    writes = tile_arguments(page.text)
+    if not writes:
         conclude(Measurement(
             verdict="inconclusive",
             reason="the board page no longer carries a readable assignment "
@@ -182,13 +202,33 @@ def test_the_boards_building_tile_counts_only_what_is_building(rest_anon):
             sources={"board": BOARD_PAGE}))
         return
 
-    tile = " ".join(found[0].split())
-    expression = resolve(page.text, tile, found[1])
-    if expression is None or (not BUILDING.search(expression) and not any(
-            stage in expression for stage in OTHER_STAGES)):
-        # A pass is promised only for a tile that IS the building count, so
-        # an argument that names no stage at all -- an unfollowed name, a
-        # call whose body is elsewhere -- has not been read.
+    # Every write is judged (deep pass 2026-09-25, A11): a refresh that adds
+    # a stage is the defect however correct the first paint is. A fail needs
+    # one write that adds; a pass needs every write read.
+    judged, unread = [], []
+    for write in writes:
+        if write is None:
+            unread.append(("a write whose call does not close", None))
+            continue
+        tile = " ".join(write[0].split())
+        expression = resolve(page.text, tile, write[1])
+        if expression is None or (not BUILDING.search(expression) and not any(
+                stage in expression for stage in OTHER_STAGES)):
+            # A pass is promised only for a tile that IS the building count,
+            # so an argument that names no stage at all -- an unfollowed
+            # name, a call whose body is elsewhere -- has not been read.
+            unread.append((tile, expression))
+            continue
+        judged.append((tile, expression, added_stages(expression)))
+
+    def shown(tile, expression):
+        # Quoted as the page wrote it, and through the name when it used one.
+        return (repr(expression) if expression == tile
+                else f"{tile!r}, which is {expression!r}")
+
+    failing = [j for j in judged if j[2]]
+    if not failing and unread:
+        tile, expression = unread[0]
         conclude(Measurement(
             verdict="inconclusive",
             reason=(f"the board's Building now tile is computed as {tile!r}"
@@ -196,10 +236,50 @@ def test_the_boards_building_tile_counts_only_what_is_building(rest_anon):
                        and expression != tile else "")
                     + ", which names no stage this check can read, so what "
                       "the tile counts could not be established from the "
-                      "served HTML"),
-            left={"tile_expression": tile, "resolved": expression},
+                      "served HTML"
+                    + (f" ({len(unread)} of {len(writes)} write(s) unread)"
+                       if len(writes) > 1 else "")),
+            left={"tile_expression": tile, "resolved": expression,
+                  "writes": len(writes)},
             sources={"board": BOARD_PAGE}))
         return
+
+    # What the platform says about itself, quoted beside the arithmetic so a
+    # reader of the verdict can see both halves.
+    stats = {}
+    board = rest_anon.get(API)
+    if board.status_code == 200:
+        stats = (board.json() or {}).get("stats") or {}
+
+    if failing:
+        tile, expression, added = failing[0]
+        conclude(Measurement(
+            verdict="failed",
+            reason=(f"the board's Building now tile is computed as "
+                    f"{shown(tile, expression)}, so a request that is only "
+                    f"{', '.join(added)} is displayed as building. The column "
+                    f"under it filters stage == 'building' and does not, and "
+                    f"the API agrees with the column: stats building "
+                    f"{stats.get('building')}, funded {stats.get('funded')}"),
+            left={"tile_expression": expression, "tile": tile, "adds": added,
+                  "writes": len(writes)},
+            right={"stats": stats},
+            sources={"board": BOARD_PAGE, "api": API}))
+        return
+
+    conclude(Measurement(
+        verdict="passed",
+        reason=(f"the Building now tile is computed as "
+                f"{'; '.join(shown(t, e) for t, e, _ in judged)}, which "
+                f"counts nothing but what is building"),
+        left={"tile_expression": judged[0][1], "tile": judged[0][0],
+              "writes": len(writes)},
+        right={"stats": stats},
+        sources={"board": BOARD_PAGE, "api": API}))
+
+
+def added_stages(expression: str) -> list[str]:
+    """Every stage or field the expression adds to `building`."""
     # A14, deep pass of 2026-09-22: every field the expression reads that is
     # not `building` is added to it, whatever it is called -- a list of five
     # names let `+ s.pending` pass. A method call is not a field.
@@ -214,36 +294,4 @@ def test_the_boards_building_tile_counts_only_what_is_building(rest_anon):
                and not re.search(rf"""(?:\.\s*{name}\b|\[\s*['"]{name}['"]\s*\])"""
                                  rf"""\s*(?:\.\s*(?!building\b)\w+|\[\s*['"](?!building['"])\w+['"]\s*\])""",
                                  expression)}
-    added = sorted(fields | {stage for stage in OTHER_STAGES
-                             if stage in expression})
-    # Quoted as the page wrote it, and through the name when it used one.
-    shown = (repr(expression) if expression == tile
-             else f"{tile!r}, which is {expression!r}")
-    # What the platform says about itself, quoted beside the arithmetic so a
-    # reader of the verdict can see both halves.
-    stats = {}
-    board = rest_anon.get(API)
-    if board.status_code == 200:
-        stats = (board.json() or {}).get("stats") or {}
-
-    if added:
-        conclude(Measurement(
-            verdict="failed",
-            reason=(f"the board's Building now tile is computed as "
-                    f"{shown}, so a request that is only "
-                    f"{', '.join(added)} is displayed as building. The column "
-                    f"under it filters stage == 'building' and does not, and "
-                    f"the API agrees with the column: stats building "
-                    f"{stats.get('building')}, funded {stats.get('funded')}"),
-            left={"tile_expression": expression, "tile": tile, "adds": added},
-            right={"stats": stats},
-            sources={"board": BOARD_PAGE, "api": API}))
-        return
-
-    conclude(Measurement(
-        verdict="passed",
-        reason=(f"the Building now tile is computed as {shown}, which "
-                f"counts nothing but what is building"),
-        left={"tile_expression": expression, "tile": tile},
-        right={"stats": stats},
-        sources={"board": BOARD_PAGE, "api": API}))
+    return sorted(fields | {stage for stage in OTHER_STAGES if stage in expression})

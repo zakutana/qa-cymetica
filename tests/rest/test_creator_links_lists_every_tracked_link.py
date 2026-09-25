@@ -30,7 +30,13 @@ from qa.client import build_client
 from qa.marks import Inconclusive, SafetyTier, qa
 from qa.measure import Measurement, conclude
 
-CREATOR = "tg_expire76"
+# The account the leads below are read as: QA_TRUSTED_KEY is account
+# expire76. This said tg_expire76 after the key switch of 2026-09-25, so the
+# check would have compared expire76's reply links to another creator's list
+# (live that night: 16 of 16 in expire76's, 0 of 16 in tg_expire76's -- deep
+# pass 2026-09-25, A01). No API tells a key its creator name, so it is named
+# here.
+CREATOR = "expire76"
 LINKS = f"/api/v1/creator/{CREATOR}/links"
 LEADS = ("/api/v1/creator/twitter-leads", "/api/v1/creator/reddit-leads")
 CLAIM_ID = "creator-links-list-names-every-tracked-link"

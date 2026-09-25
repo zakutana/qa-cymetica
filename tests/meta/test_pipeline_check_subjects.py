@@ -602,6 +602,11 @@ def test_a_card_that_is_closed_on_rest_and_open_on_mcp_fails():
                  since), "thinned to 45 minutes, it is still one step"
     assert jumps([{"t": "2026-09-25T13:19:54+00:00", "index": 100.0},
                   {"t": "2026-09-25T13:29:25+00:00", "index": 108.0}], since) == []
+    # A history with nothing to judge is not a card that did not move: no
+    # step, so the check counts it unread (deep pass 2026-09-25, A04).
+    from tests.rest.test_a_card_index_moves_with_its_basket import steps
+    assert steps([], since) == [] and steps([{"ts": 1, "value": 2}] * 3, since) == []
+    assert len(steps(path, since)) == 2
 
     # And a fund's: the launcher's paper-only sentence and a profile's live
     # invest offer, read from what a visitor sees -- the markup as served on
@@ -645,6 +650,10 @@ def test_a_card_that_is_closed_on_rest_and_open_on_mcp_fails():
     assert disagreements(rows, api) == [], "a cent of rounding is not a disagreement"
     moved = [dict(api[0], index_price_usd=160.0)] + api[1:]
     assert any("index" in d for d in disagreements(rows, moved))
+    # A figure on one side only disagrees too (deep pass 2026-09-25, A08).
+    unpriced = [dict(api[0], index_price_usd=None)] + api[1:]
+    assert any("index" in d for d in disagreements(rows, unpriced)), \
+        "the page's $154.02 over an API null passed"
     extra = api + [{"name": "Hidden", "sleeve": "Managed AIB", "status": "live",
                     "index_price_usd": 1.0, "return_since_inception_pct": 50.0}]
     assert any("not on the page" in d for d in disagreements(rows, extra))
@@ -670,6 +679,13 @@ def test_a_card_that_is_closed_on_rest_and_open_on_mcp_fails():
     assert "/api/v1/aib/{x}/buy" in names and "/api/v1/headlines" in names
     doc = documented_patterns({"paths": {"/api/v1/event-cards/{card_id}/index-history": {}}})
     assert candidates(names, doc) == ["/api/v1/fta-fund/history", "/api/v1/headlines"]
+    # A rate limit or a 5xx is no answer about a path, never a refusal
+    # (deep pass 2026-09-25, A02).
+    from types import SimpleNamespace
+
+    from tests.discovery.test_public_page_reads_are_documented import _unanswered
+    assert [_unanswered(SimpleNamespace(status_code=s)) for s in (429, 503, 401, 404, 200)] \
+        == [True, True, False, False, False]
 
 
 # ------------------------------------ a filed report is answered as filed -

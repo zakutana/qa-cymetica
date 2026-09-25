@@ -90,7 +90,15 @@ def disagreements(rows: list[dict], funds: list[dict]) -> list[str]:
             out.append(f"{row['name']!r}: page {row['sleeve']}/{row['status']}, "
                        f"API {f.get('sleeve')}/{f.get('status')}")
         price = f.get("index_price_usd")
-        if row["index"] is not None and isinstance(price, (int, float)):
+        priced = isinstance(price, (int, float))
+        # A figure on one side only is a disagreement, the way the return is
+        # judged below: a page showing $1.23 over an API null passed
+        # (deep pass 2026-09-25, A08).
+        if (row["index"] is None) != (not priced):
+            out.append(f"{row['name']!r}: page index "
+                       f"{'none' if row['index'] is None else '$' + str(row['index'])}, "
+                       f"API {price}")
+        elif row["index"] is not None and priced:
             if abs(row["index"] - round(price, 2)) > max(INDEX_ABS, INDEX_REL * abs(price)):
                 out.append(f"{row['name']!r}: page index ${row['index']}, API {price}")
         ret = f.get("return_since_inception_pct")

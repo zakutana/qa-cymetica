@@ -78,9 +78,9 @@ def large_cap_share(basket) -> float:
     return share
 
 
-def jumps(points, since) -> list[dict]:
-    """Published steps of at most STEP_MINUTES, inside the window, that moved
-    the index by more than MAX_STEP."""
+def steps(points, since) -> list[tuple[dict, dict]]:
+    """The published steps a verdict can stand on: both ends dated and priced,
+    at most STEP_MINUTES apart, ending inside the window."""
     out = []
     for a, b in zip(points, points[1:]):
         t0, t1 = _moment(a.get("t")), _moment(b.get("t"))
@@ -90,6 +90,16 @@ def jumps(points, since) -> list[dict]:
             continue
         if t1 < since or (t1 - t0) > timedelta(minutes=STEP_MINUTES):
             continue
+        out.append((a, b))
+    return out
+
+
+def jumps(points, since) -> list[dict]:
+    """Published steps of at most STEP_MINUTES, inside the window, that moved
+    the index by more than MAX_STEP."""
+    out = []
+    for a, b in steps(points, since):
+        v0, v1 = a.get("index"), b.get("index")
         change = v1 / v0 - 1.0
         if abs(change) > MAX_STEP:
             out.append({"from": [a.get("t"), v0], "to": [b.get("t"), v1],
@@ -123,6 +133,12 @@ def test_a_card_index_moves_no_further_than_its_basket_can(rest_trusted):
             other.append(f"{card_id[:8]} ({share:.0%} large-cap)")
             continue
         points = (history.json() or {}).get("points") or []
+        # A history with no step to judge -- empty, or its keys renamed -- is
+        # an unread card, not a card that did not move (deep pass
+        # 2026-09-25, A04).
+        if not steps(points, since):
+            unread.append(f"{card_id[:8]} (no dated step in the last {WINDOW_HOURS} h)")
+            continue
         judged.append(card_id)
         for jump in jumps(points, since):
             breaches.append({
@@ -141,6 +157,10 @@ def test_a_card_index_moves_no_further_than_its_basket_can(rest_trusted):
     if not judged:
         raise Inconclusive(f"none of the {len(cards)} card(s) we hold is a "
                            f"large-cap basket{tail}")
+    # A fail needs only the cards it read; a pass needs every one (rule 8).
+    if unread and not breaches:
+        raise Inconclusive(f"{len(judged)} judged without a jump, but "
+                           f"{len(unread)} card(s) could not be judged{tail}")
     conclude(Measurement(
         verdict="failed" if breaches else "passed",
         reason=("; ".join(
