@@ -71,20 +71,24 @@ REPO = Path(__file__).resolve().parent.parent.parent
 # So: a backticked identifier counts when it is prefixed with MCP, carries a
 # call signature, follows a calling verb, or is called "the ... tool". Measured
 # against the three recorded answers, that reads tools out of all three.
-NAME = r"([a-z][a-z0-9]*(?:_[a-z0-9]+)+)"
+NAME = r"([a-z][a-z0-9]*(?:_[a-z0-9]+)*)"
 CALLING_VERBS = ("call", "calls", "calling", "use", "uses", "using", "invoke",
                  "invoking", "run", "running", "query", "querying", "hit")
+# Strong markup: a name here is a tool, one word or several.
 TOOL_MENTIONS = (
     re.compile(r"MCP\s+`" + NAME + r"(?:\([^`]*\))?`"),
     re.compile(r"`" + NAME + r"\([^`]*\)`"),
-    re.compile(r"\b(?:" + "|".join(CALLING_VERBS) + r")\s+(?:the\s+)?`" + NAME
-               + r"(?:\([^`]*\))?`", re.I),
     re.compile(r"`" + NAME + r"`\s+tool\b"),
 )
-# The underscore is not a guess: all 65 tools they publish carry one, and the
-# check asserts that before relying on it. It is what keeps `status` and `bear`
-# -- both of which sit in a calling phrase in NEX-0007 -- out of a report as
-# tools that do not exist.
+# A calling verb is weaker: Nexus backticks directions and fields in calling
+# phrases too (`bull`, `bear`, `status` in NEX-0007, NEX-0061, NEX-0071).
+CALLED = re.compile(r"\b(?:" + "|".join(CALLING_VERBS) + r")\s+(?:the\s+)?`"
+                    + NAME + r"(?:\([^`]*\))?`", re.I)
+# Until 2026-09-25 every name had to carry an underscore -- all 65 tools they
+# published did -- which is what kept `status` and `bear` out. Their tools/list
+# then added `fetch` and `search`, and the check stood down rather than read
+# them. A single word now counts after a verb only when it is shaped like a
+# tool: a verb itself (TOOL_VERBS below), as `fetch` and `search` are.
 #
 # with / via / through are how NEX-0008 named a real tool ("resolve the chain
 # with `find_trade_path`"), and also how an answer names a FIELD: "filter
@@ -106,6 +110,8 @@ WEAK_MENTION = re.compile(r"\b(?:" + "|".join(WEAK_VERBS) + r")\s+(?:the\s+)?`"
 
 def tool_mentions(text: str) -> set[str]:
     found = {m for pattern in TOOL_MENTIONS for m in pattern.findall(text or "")}
+    found |= {m for m in CALLED.findall(text or "")
+              if "_" in m or m in TOOL_VERBS}
     found |= {m for m in WEAK_MENTION.findall(text or "")
               if m.split("_", 1)[0] in TOOL_VERBS}
     return found
@@ -375,16 +381,18 @@ def test_every_tool_nexus_tells_an_agent_to_call_exists(mcp_trusted):
             "tools/list returned no tool names, so nothing could be compared "
             "against it -- a failed read is not an empty catalogue")
 
-    # The rule the extractor rests on, checked rather than assumed. Every name
-    # they publish is multi-segment; if that stops being true, a single-word
-    # tool would be invisible to us and this says so instead of narrowing in
-    # silence.
-    single = sorted(n for n in served if "_" not in n)
-    if single:
+    # The rule the extractor rests on, checked rather than assumed: a served
+    # single-word tool is read after a calling verb only if it is shaped like
+    # one. A served single word that is not would be invisible there, and this
+    # says so instead of narrowing in silence (it stood down on `fetch` and
+    # `search` until 2026-09-25, when the extractor learned single words).
+    unseen = sorted(n for n in served if "_" not in n and n not in TOOL_VERBS)
+    if unseen:
         raise Inconclusive(
-            f"the tool namespace now carries single-word names ({single[:5]}), "
-            f"which the mention extractor deliberately does not match -- it "
-            f"would collect field names. Widen it before trusting this result")
+            f"the tool namespace carries single-word names that are not verbs "
+            f"({unseen[:5]}); the extractor reads those only in strong markup, "
+            f"so a mention after 'call' or 'use' would be missed. Widen it "
+            f"before trusting this result")
 
     # Their fix of 2026-09-20 (REPLY-0034) does not stop NEXUS naming a tool
     # of its own; it LABELS one the reader cannot call. So an unreachable name

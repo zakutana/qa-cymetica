@@ -1501,6 +1501,19 @@ def test_a_field_named_with_via_or_through_is_not_a_tool():
     assert "get_event_card_info" in tool_mentions(
         "look it up via the `get_event_card_info` tool")
 
+    # 2026-09-25: their tools/list now serves `fetch` and `search`, and the
+    # check stood down (#85 inconclusive) because a single word could not be
+    # read at all. A single word counts where the markup is strong -- MCP
+    # prefix, a call signature, "the ... tool" -- and after a verb only when
+    # it is shaped like one, so the directions and fields Nexus backticks in
+    # calling phrases (`status`, `bull`, `bear`) stay out.
+    assert tool_mentions("call MCP `search` for it") == {"search"}
+    assert tool_mentions("then `fetch(id)` the record") == {"fetch"}
+    assert tool_mentions("the `search` tool finds it") == {"search"}
+    assert tool_mentions("use `fetch` on the id, or with `search`") == {"fetch", "search"}
+    assert tool_mentions("use `bull` for up, with `status` = active, "
+                         "call `bear` to go down") == set()
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_close_verdict_holds_its_own_contract():
