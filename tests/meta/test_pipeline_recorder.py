@@ -202,6 +202,55 @@ def test_records_collected_nodeids_and_check_fingerprint(pytester, tmp_path):
     # could never have fired.
     assert _result(run, "test_c")["check_fingerprint"] != _result(run, "test_a")["check_fingerprint"]
 
+    # Deep pass 2026-09-25 (B02, 3/3): a module constant the check reads --
+    # WINDOW, MAX_STEP, a TILE regex -- was in neither hash, so a threshold
+    # moved to make a check pass read as "the same test" in verify.py. And
+    # "transitively" was never shown: only a helper two calls down changes.
+    template = """
+        import re
+        WINDOW = {window}
+        TILE = re.compile(r"{tile}")
+
+        def _limit():
+            return _floor() + 2
+
+        def _floor():
+            return {floor}
+
+        @qa(**TAG)
+        def test_c():
+            assert _limit() >= 3
+
+        @qa(**TAG)
+        def test_d():
+            assert WINDOW > 0 and TILE.pattern
+    """
+
+    import importlib.util
+    from types import SimpleNamespace
+
+    from qa.report_plugin import helpers_fingerprint
+
+    def hashes(**values):
+        # One module per variant, loaded in-process: an inner session runs
+        # once per pytester directory.
+        path = tmp_path / f"variant_{values['window']}_{values['tile']}_{values['floor']}.py"
+        path.write_text("TAG = {}\ndef qa(**_):\n    return lambda f: f\n"
+                        + textwrap.dedent(template.format(**values)), encoding="utf-8")
+        spec = importlib.util.spec_from_file_location(path.stem, path)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[path.stem] = module
+        spec.loader.exec_module(module)
+        return {n: helpers_fingerprint(SimpleNamespace(obj=getattr(module, n)))
+                for n in ("test_c", "test_d")}
+
+    base = hashes(window=12, tile="bs-building", floor=1)
+    assert hashes(window=99, tile="bs-building", floor=1)["test_d"] != base["test_d"]
+    assert hashes(window=12, tile="bs-shipped", floor=1)["test_d"] != base["test_d"]
+    moved = hashes(window=12, tile="bs-building", floor=5)
+    assert moved["test_c"] != base["test_c"], "a helper two calls down is not followed"
+    assert moved["test_d"] == base["test_d"], "a helper the check never calls moved it"
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_evidence_ids_are_linked_at_call_time(pytester, tmp_path):

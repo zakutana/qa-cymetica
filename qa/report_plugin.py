@@ -28,6 +28,7 @@ import hashlib
 import inspect
 import json
 import platform
+import re
 import subprocess
 import textwrap
 from datetime import datetime, timezone
@@ -335,6 +336,24 @@ def check_fingerprint(item) -> str:
     return hashlib.sha256("\n".join(parts).encode("utf-8")).hexdigest()
 
 
+_CONSTANT_TYPES = (bool, int, float, str, bytes, tuple, list, frozenset, set, dict,
+                   re.Pattern, type(None))
+
+
+def _is_constant(value) -> bool:
+    return isinstance(value, _CONSTANT_TYPES)
+
+
+def _constant_repr(value) -> str:
+    """A stable text for a constant: a pattern by its source and flags, a set
+    in sorted order, everything else by repr."""
+    if isinstance(value, re.Pattern):
+        return f"re({value.pattern!r},{value.flags})"
+    if isinstance(value, (set, frozenset)):
+        return f"{type(value).__name__}({sorted(map(repr, value))})"
+    return repr(value)
+
+
 def helpers_fingerprint(item) -> str:
     """Hash of the functions the check calls from its OWN module, followed
     transitively -- the half of its definition `check_fingerprint` never saw.
@@ -368,6 +387,12 @@ def helpers_fingerprint(item) -> str:
                         textwrap.dedent(inspect.getsource(helper)))),
                         include_attributes=False)
                     todo.append(helper)
+                elif (f"const:{node.id}" not in dumps and hasattr(module, node.id)
+                      and _is_constant(helper)):
+                    # A module constant it reads -- a window, a threshold, a
+                    # regex -- is as much what it asserts (deep pass
+                    # 2026-09-25, B02: MAX_STEP 0.40 -> 0.95 kept both hashes).
+                    dumps[f"const:{node.id}"] = _constant_repr(helper)
     except Exception:  # noqa: BLE001
         pass
     joined = "\n".join(f"{name}={dump}" for name, dump in sorted(dumps.items()))
