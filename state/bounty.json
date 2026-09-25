@@ -1,6 +1,6 @@
 {
-  "fetched_at": "2026-09-25T12:15:40+00:00",
-  "total": 93,
+  "fetched_at": "2026-09-25T18:44:15+00:00",
+  "total": 94,
   "statuses": {
     "paid": 19,
     "fixed": 1
@@ -25,14 +25,14 @@
   "our_reports": {
     "endpoint": "GET /api/v1/bounty/my-reports?wallet_address=<addr>",
     "klass": "ok",
-    "read_at": "2026-09-25T12:15:33+00:00",
-    "evidence_id": "9238eee40fb239c5d9c62d8ca52f408693652ef19b3d01580bf5e19ff477fcca",
-    "rows_returned": 83,
-    "server_total": 83,
-    "total": 83,
+    "read_at": "2026-09-25T18:44:03+00:00",
+    "evidence_id": "cc68985855ec50fd2891109751cc598f356aa8e7ebe6d6d1bee3f0ca92d932be",
+    "rows_returned": 85,
+    "server_total": 85,
+    "total": 85,
     "statuses": {
-      "paid": 75,
-      "pending": 1,
+      "pending": 2,
+      "paid": 76,
       "fixed": 5,
       "invalid": 2
     },
@@ -789,7 +789,7 @@
         "fixed_at": "2026-09-10T12:44:30.855560",
         "validated_at": "2026-09-10T12:44:30.855560",
         "triaged_at": "2026-09-10T12:44:30.855560",
-        "status_notes": "[2026-09-10T12:44:30+00:00] Resolved via ticket ET-24492: Verified bug (hunter:5 #85). Root cause: get_event_card_info, backtest_event_card_idea and trade_event_card existed only as NEXUS chat tools (src/services/nexus/tools.py); the public MCP catalogue (POST /mcp/v1 tools/list, 62 tools) never served them, and the deep-answer prompt carried the chat catalogue, so deep answers named tools the caller could not invoke. Fix @2ec9bb3d8: (1) the three tools are now registered on MCP with the same names (src/mcp_public/tools/event_cards.py — info + backtest\n[reporter-verification PASS 2026-09-10 13:51 UTC by expire76 test_run=run-20260910T134627Z-75a0326]\n[reporter-verification FAIL 2026-09-10 16:52 UTC by expire76 test_run=run-20260910T164705Z-b56d1d3]\n[reporter-verification PASS 2026-09-10 20:08 UTC by expire76 test_run=run-20260910T200633Z-cac9698]\n[reporter-verification FAIL 2026-09-10 21:46 UTC by expire76 test_run=run-20260910T213841Z-adc2783]\n[reporter-verification PASS 2026-09-20 08:34 UTC by expire76 test_run=run-20260919T171917Z-2c3f7c91]\n[reporter-verification PASS 2026-09-20 13:04 UTC by expire76 test_run=run-20260920T130041Z-be0685e7]",
+        "status_notes": "[2026-09-10T12:44:30+00:00] Resolved via ticket ET-24492: Verified bug (hunter:5 #85). Root cause: get_event_card_info, backtest_event_card_idea and trade_event_card existed only as NEXUS chat tools (src/services/nexus/tools.py); the public MCP catalogue (POST /mcp/v1 tools/list, 62 tools) never served them, and the deep-answer prompt carried the chat catalogue, so deep answers named tools the caller could not invoke. Fix @2ec9bb3d8: (1) the three tools are now registered on MCP with the same names (src/mcp_public/tools/event_cards.py — info + backtest\n[reporter-verification PASS 2026-09-10 13:51 UTC by expire76 test_run=run-20260910T134627Z-75a0326]\n[reporter-verification FAIL 2026-09-10 16:52 UTC by expire76 test_run=run-20260910T164705Z-b56d1d3]\n[reporter-verification PASS 2026-09-10 20:08 UTC by expire76 test_run=run-20260910T200633Z-cac9698]\n[reporter-verification FAIL 2026-09-10 21:46 UTC by expire76 test_run=run-20260910T213841Z-adc2783]\n[reporter-verification PASS 2026-09-20 08:34 UTC by expire76 test_run=run-20260919T171917Z-2c3f7c91]\n[reporter-verification PASS 2026-09-20 13:04 UTC by expire76 test_run=run-20260920T130041Z-be0685e7]\n[reporter-verification PASS 2026-09-25 13:46 UTC by expire76 test_run=run-20260925T134052Z-31536d91]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/24492",
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -1383,7 +1383,7 @@
         "fixed_at": "2026-09-22T19:43:31.119696",
         "validated_at": "2026-09-22T19:43:31.119696",
         "triaged_at": "2026-09-22T19:43:31.119696",
-        "status_notes": "[2026-09-22T19:43:31+00:00] Resolved via ticket ET-26509: [QA-STATE: FIXED] Confirmed and fixed. Your guess was right: account 113 already holds an active paper clone of Perceptron Oracle (d778102d, 2026-09-10), and the rule is one ACTIVE clone per source per mode per account. The route was masking every service refusal as 400 \"Invalid clone request. Please try again.\" Now POST /api/v1/cloned-bots/clone answers 409 {\"detail\":{\"error\":{\"code\":\"ALREADY_CLONED\",\"message\":\"You already cloned Perceptron Oracle in paper mode\"}}} for that case; 404 SOURCE_NOT",
+        "status_notes": "[2026-09-22T19:43:31+00:00] Resolved via ticket ET-26509: [QA-STATE: FIXED] Confirmed and fixed. Your guess was right: account 113 already holds an active paper clone of Perceptron Oracle (d778102d, 2026-09-10), and the rule is one ACTIVE clone per source per mode per account. The route was masking every service refusal as 400 \"Invalid clone request. Please try again.\" Now POST /api/v1/cloned-bots/clone answers 409 {\"detail\":{\"error\":{\"code\":\"ALREADY_CLONED\",\"message\":\"You already cloned Perceptron Oracle in paper mode\"}}} for that case; 404 SOURCE_NOT\n[reporter-verification PASS 2026-09-25 13:28 UTC by expire76 test_run=run-20260925T132324Z-f7b41b77]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/26509",
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -1527,20 +1527,56 @@
         "fixed_at": "2026-09-25T08:54:10.302933",
         "validated_at": "2026-09-25T08:54:10.302933",
         "triaged_at": "2026-09-25T08:54:10.302933",
-        "status_notes": "[2026-09-25T08:54:10+00:00] Resolved via ticket ET-27179: Confirmed and fixed in release d822d95de (live 08:53 UTC). Root cause: the close path for an EVCDX-token card only credited the LIVE ledger; the paper credit (_paper_sim_close) lived in the non-EVCDX branch, while the open debited paper USDC on both card kinds — so a paper EVCDX round-trip answered proceeds/closed and returned nothing. The EVCDX branch now credits proceeds + realized P&L to the paper balance, books sim P&L, counts the trade and writes the closing SimulatedTrade row, gated on the",
+        "status_notes": "[2026-09-25T08:54:10+00:00] Resolved via ticket ET-27179: Confirmed and fixed in release d822d95de (live 08:53 UTC). Root cause: the close path for an EVCDX-token card only credited the LIVE ledger; the paper credit (_paper_sim_close) lived in the non-EVCDX branch, while the open debited paper USDC on both card kinds — so a paper EVCDX round-trip answered proceeds/closed and returned nothing. The EVCDX branch now credits proceeds + realized P&L to the paper balance, books sim P&L, counts the trade and writes the closing SimulatedTrade row, gated on the\n[reporter-verification PASS 2026-09-25 12:16 UTC by expire76 test_run=run-20260925T120511Z-202cfcad]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/27179",
         "fix_pr_url": null,
         "reward_amount": 1000.0
+      },
+      {
+        "id": 128,
+        "title": "Two event-card indices moved +142 % and -85 % in one step while their large-cap baskets moved ~1-3 % -- one leg is priced at several times, or a fraction of, its market price",
+        "status": "paid",
+        "hunter_name": "expire76",
+        "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
+        "severity_reported": "high",
+        "severity_confirmed": "high",
+        "category": "api",
+        "created_at": "2026-09-25T14:57:01.046318",
+        "fixed_at": "2026-09-25T15:46:06.394556",
+        "validated_at": "2026-09-25T15:46:06.394556",
+        "triaged_at": "2026-09-25T15:46:06.394556",
+        "status_notes": "[2026-09-25T15:46:06+00:00] Resolved via ticket ET-27252: Confirmed, fixed live @e2eb6f9e5f. Cause: pricer merged equity quotes into the shared price map, so a stock leg on any card overwrote the crypto homonym (TRX Gold vs TRON +142%, Banco de Chile vs Bitcoin Cash -85%); 231 live cards hit. Fix: per-card, per-asset-class price view (tests/test_index_pricer_homonym_legs.py). Both cards back at ~99.5 with continuity; 31,226 artefact snapshot rows removed (backup table kept). Only paper positions were open in the windows.",
+        "ticket_url": "https://cymetica.com/admin/centcom/issues/27252",
+        "fix_pr_url": null,
+        "reward_amount": 1000.0
+      },
+      {
+        "id": 129,
+        "title": "Fund Launcher says community funds are paper-only and buying in is simulated; every Community AIB fund reads live and its profile offers 'Invest ... now -- it's LIVE'",
+        "status": "pending",
+        "hunter_name": "expire76",
+        "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
+        "severity_reported": "medium",
+        "severity_confirmed": null,
+        "category": "documentation",
+        "created_at": "2026-09-25T17:51:17.401552",
+        "fixed_at": null,
+        "validated_at": null,
+        "triaged_at": null,
+        "status_notes": null,
+        "ticket_url": null,
+        "fix_pr_url": null,
+        "reward_amount": 0.0
       }
     ]
   },
   "qa_tracker": {
     "source": "https://cymetica.com/leaderboard/bugs (embedded allBugs)",
-    "total": 167,
+    "total": 168,
     "statuses": {
       "qa_testing": 2,
       "implementing": 2,
-      "completed": 112,
+      "completed": 113,
       "resolved": 25,
       "rejected": 2,
       "pending": 12,
@@ -1548,11 +1584,11 @@
     },
     "source_channels": {
       "web": 74,
-      "bounty": 93
+      "bounty": 94
     },
     "usernames": {
       "Maxorelaxo": 2,
-      "expire76": 112,
+      "expire76": 113,
       "Crypto42day": 2,
       "tonybugs0439": 5,
       "joebloggs": 12,
@@ -1649,6 +1685,7 @@
       "cloned bot profile does not display trading activity correctly",
       "неправильный баланс токенов в портфеле пользователя max",
       "swap pages fail to display user token balances",
+      "two event-card indices moved +142 % and -85 % in one step while their large-cap baskets moved ~1-3 % -- one leg is priced at several times, or a fraction of, its market price",
       "a paper close answers proceeds_usdc 20.0 and status closed, and the paper balance is never credited",
       "a paper buy of aib-privacy is refused for \"insufficient usdc balance: you have 7.650006\" from a paper book of 88,598.91 usdc",
       "the head-to-head paper-matchup routes answer live and appear in neither openapi document nor llms.txt",
@@ -1741,13 +1778,13 @@
       "critical: my positions p&l shows -$3.15 for a $0.10 position",
       "shares preview rounds to 1 decimal place instead of 2"
     ],
-    "has_linear_links": 58
+    "has_linear_links": 59
   },
   "a2a_inbox": {
     "klass": "ok",
     "rows_returned": 50,
     "new": [],
-    "at": "2026-09-25T12:15:39+00:00"
+    "at": "2026-09-25T18:44:14+00:00"
   },
   "closed": 1,
   "closed_without_recorded_evidence": 0,
@@ -1761,6 +1798,24 @@
   ],
   "reports": [
     {
+      "id": 128,
+      "title": "Two event-card indices moved +142 % and -85 % in one step while their large-cap baskets moved ~1-3 % -- one leg is priced at several times, or a fraction of, its market price",
+      "status": "paid",
+      "hunter_name": "expire76",
+      "severity_reported": "high",
+      "severity_confirmed": "high",
+      "created_at": "2026-09-25T14:57:01.046318",
+      "fixed_at": "2026-09-25T15:46:06.394556",
+      "validated_at": "2026-09-25T15:46:06.394556",
+      "triaged_at": "2026-09-25T15:46:06.394556",
+      "status_notes": "[2026-09-25T15:46:06+00:00] Resolved via ticket ET-27252: Confirmed, fixed live @e2eb6f9e5f. Cause: pricer merged equity quotes into the shared price map, so a stock leg on any card overwrote the crypto homonym (TRX Gold vs TRON +142%, Banco de Chile vs Bitcoin Cash -85%); 231 live cards hit. Fix: per-card, per-asset-class price view (tests/test_index_pricer_homonym_legs.py). Both cards back at ~99.5 with continuity; 31,226 artefact snapshot rows removed (backup table kept). Only paper positions were open in the windows.",
+      "ticket_url": "https://cymetica.com/admin/centcom/issues/27252",
+      "fix_pr_url": null,
+      "reward_amount": 1000.0,
+      "paid_at": "2026-09-25T15:50:26.463553",
+      "is_duplicate": false
+    },
+    {
       "id": 127,
       "title": "A paper close answers proceeds_usdc 20.0 and status closed, and the paper balance is never credited",
       "status": "paid",
@@ -1771,7 +1826,7 @@
       "fixed_at": "2026-09-25T08:54:10.302933",
       "validated_at": "2026-09-25T08:54:10.302933",
       "triaged_at": "2026-09-25T08:54:10.302933",
-      "status_notes": "[2026-09-25T08:54:10+00:00] Resolved via ticket ET-27179: Confirmed and fixed in release d822d95de (live 08:53 UTC). Root cause: the close path for an EVCDX-token card only credited the LIVE ledger; the paper credit (_paper_sim_close) lived in the non-EVCDX branch, while the open debited paper USDC on both card kinds — so a paper EVCDX round-trip answered proceeds/closed and returned nothing. The EVCDX branch now credits proceeds + realized P&L to the paper balance, books sim P&L, counts the trade and writes the closing SimulatedTrade row, gated on the",
+      "status_notes": "[2026-09-25T08:54:10+00:00] Resolved via ticket ET-27179: Confirmed and fixed in release d822d95de (live 08:53 UTC). Root cause: the close path for an EVCDX-token card only credited the LIVE ledger; the paper credit (_paper_sim_close) lived in the non-EVCDX branch, while the open debited paper USDC on both card kinds — so a paper EVCDX round-trip answered proceeds/closed and returned nothing. The EVCDX branch now credits proceeds + realized P&L to the paper balance, books sim P&L, counts the trade and writes the closing SimulatedTrade row, gated on the\n[reporter-verification PASS 2026-09-25 12:16 UTC by expire76 test_run=run-20260925T120511Z-202cfcad]",
       "ticket_url": "https://cymetica.com/admin/centcom/issues/27179",
       "fix_pr_url": null,
       "reward_amount": 1000.0,
@@ -1915,7 +1970,7 @@
       "fixed_at": "2026-09-22T19:43:31.119696",
       "validated_at": "2026-09-22T19:43:31.119696",
       "triaged_at": "2026-09-22T19:43:31.119696",
-      "status_notes": "[2026-09-22T19:43:31+00:00] Resolved via ticket ET-26509: [QA-STATE: FIXED] Confirmed and fixed. Your guess was right: account 113 already holds an active paper clone of Perceptron Oracle (d778102d, 2026-09-10), and the rule is one ACTIVE clone per source per mode per account. The route was masking every service refusal as 400 \"Invalid clone request. Please try again.\" Now POST /api/v1/cloned-bots/clone answers 409 {\"detail\":{\"error\":{\"code\":\"ALREADY_CLONED\",\"message\":\"You already cloned Perceptron Oracle in paper mode\"}}} for that case; 404 SOURCE_NOT",
+      "status_notes": "[2026-09-22T19:43:31+00:00] Resolved via ticket ET-26509: [QA-STATE: FIXED] Confirmed and fixed. Your guess was right: account 113 already holds an active paper clone of Perceptron Oracle (d778102d, 2026-09-10), and the rule is one ACTIVE clone per source per mode per account. The route was masking every service refusal as 400 \"Invalid clone request. Please try again.\" Now POST /api/v1/cloned-bots/clone answers 409 {\"detail\":{\"error\":{\"code\":\"ALREADY_CLONED\",\"message\":\"You already cloned Perceptron Oracle in paper mode\"}}} for that case; 404 SOURCE_NOT\n[reporter-verification PASS 2026-09-25 13:28 UTC by expire76 test_run=run-20260925T132324Z-f7b41b77]",
       "ticket_url": "https://cymetica.com/admin/centcom/issues/26509",
       "fix_pr_url": null,
       "reward_amount": 1000.0,
@@ -2101,24 +2156,6 @@
       "reward_amount": 1000.0,
       "paid_at": "2026-09-20T11:40:26.486822",
       "is_duplicate": false
-    },
-    {
-      "id": 107,
-      "title": "The launchpad screener returns twice its own limit: limit=5 answers 10 rows, limit=500 answers 1000",
-      "status": "paid",
-      "hunter_name": "expire76",
-      "severity_reported": "low",
-      "severity_confirmed": "low",
-      "created_at": "2026-09-20T03:21:44.447821",
-      "fixed_at": "2026-09-20T04:36:33.973903",
-      "validated_at": "2026-09-20T04:36:33.973903",
-      "triaged_at": "2026-09-20T04:36:33.973903",
-      "status_notes": "[2026-09-20T04:36:33+00:00] Resolved via ticket ET-26089: Fixed, live @6df0fd38f. The screener's limit bounded each source separately, so limit=5 answered 10 rows. It now bounds the whole response: external rows take up to half, the platform's launches the rest; a chain filter other than 4663 excludes external rows. Verified anonymously on the live API: limit 5 -> 5 rows, 50 -> 50, 500 -> 500. The screener page asks for 400 so it still shows 200 from each source. Regression test added.\n[reporter-verification PASS 2026-09-20 16:48 UTC by expire76 test_run=run-20260920T162940Z-da287834]",
-      "ticket_url": "https://cymetica.com/admin/centcom/issues/26089",
-      "fix_pr_url": null,
-      "reward_amount": 1000.0,
-      "paid_at": "2026-09-20T05:30:46.370734",
-      "is_duplicate": false
     }
   ],
   "leaderboard": [
@@ -2128,11 +2165,11 @@
       "avatar_url": null,
       "tier": "senior",
       "total_score": 460,
-      "valid_reports": 80,
+      "valid_reports": 81,
       "total_likes": 0,
-      "total_earned": 76000.0,
-      "total_awarded": 76000.0,
-      "total_paid": 76000.0,
+      "total_earned": 77000.0,
+      "total_awarded": 77000.0,
+      "total_paid": 77000.0,
       "reward_currency": "ET10"
     },
     {
