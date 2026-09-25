@@ -564,10 +564,11 @@ def test_a_card_that_is_closed_on_rest_and_open_on_mcp_fails():
 
 # ------------------------------------ a filed report is answered as filed -
 
-def _filed(key, minute, status, then_created=None):
+def _filed(key, minute, status, then_created=None, day="2026-09-24"):
     """One submission as submit.py journals it: intent, outcome, and -- when
-    the POST said 5xx and the report exists anyway -- the reconciled one."""
-    at = f"2026-09-22T10:{minute:02d}:00+00:00"
+    the POST said 5xx and the report exists anyway -- the reconciled one.
+    After their fix of #123 (2026-09-23 02:41 UTC) unless `day` says not."""
+    at = f"{day}T10:{minute:02d}:00+00:00"
     rows = [{"type": "filing_intent", "key": key, "at": at}]
     if status >= 500:
         rows.append({"type": "filing_outcome", "key": key, "http_status": status,
@@ -623,6 +624,19 @@ def test_a_report_created_behind_a_500_fails_and_a_clean_run_of_twelve_passes(
     # twelve either, so it waits rather than failing.
     with pytest.raises(Inconclusive):
         _run_filing_check(monkeypatch, clean + resent)
+
+    # 2026-09-25: their record of #123 says fixed_at 2026-09-23T02:41:50
+    # ("Fixed in 3299e580b, live"), and the window still held #122 from the
+    # night before, so the row read "still fails" on evidence older than the
+    # fix. What came before the fix is history, named and never judged.
+    before = _filed("k-old", 55, 500, then_created=122, day="2026-09-22")
+    _run_filing_check(monkeypatch, before + clean)
+    with pytest.raises(Inconclusive, match="122"):
+        _run_filing_check(monkeypatch, before + clean[:10])
+    # ...while one after it still fails, however many clean ones surround it.
+    with pytest.raises(AssertionError, match="123"):
+        _run_filing_check(monkeypatch, before + clean + _filed(
+            "k-new", 50, 500, then_created=123))
 
 
 # --------------------------- a paper buy is judged against the paper book ---

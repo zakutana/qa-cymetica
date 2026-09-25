@@ -33,6 +33,15 @@ report id -- and judges the newest twelve submissions:
   * fewer than twelve and none masked -- inconclusive.
 
 A 5xx whose report does NOT exist is the server failing honestly, not this.
+
+**After their fix only.** Their own record of #123 reads `fixed_at`
+2026-09-23T02:41:50 and "Fixed in 3299e580b, live" (the CentCom bridge held
+the DB session past its idle reap, and the response read of the saved report
+died). The window is the newest twelve submitted AFTER that: a masked 500
+from before it is history, named in the population and never judged. Until
+2026-09-25 the window reached back past the fix, so #122 of the night before
+kept the row "still reproducible" on evidence older than the claim it was
+answering.
 """
 
 from __future__ import annotations
@@ -43,6 +52,9 @@ from qa.state import read_events
 
 WINDOW = 12
 ROUTE = "POST /api/v1/bounty/reports"
+# Their `fixed_at` on #123, from GET /api/v1/bounty/my-reports.
+FIXED_AT = "2026-09-23T02:41:50"
+FIX_SOURCE = "#123 fixed_at 2026-09-23T02:41:50 UTC (3299e580b)"
 
 
 def submissions(events) -> list[dict]:
@@ -76,8 +88,12 @@ def _masked(row: dict) -> bool:
 
 @qa(component="rest.support", tier=SafetyTier.SAFE, surface="rest")
 def test_a_report_the_server_creates_is_answered_as_created():
-    """The newest twelve of our filings, each against the report it made."""
-    rows = submissions(read_events())
+    """The newest twelve of our filings since their fix, each against the
+    report it made."""
+    every = submissions(read_events())
+    rows = [r for r in every if r["at"][:19] >= FIXED_AT]
+    history = [f"#{r['report_id']} ({r['at'][:16]} UTC)"
+               for r in every if r["at"][:19] < FIXED_AT and _masked(r)]
     newest = rows[-WINDOW:]
     masked = [r for r in newest if _masked(r)]
     if masked:
@@ -101,12 +117,15 @@ def test_a_report_the_server_creates_is_answered_as_created():
              and 200 <= r["status"] < 300 and r["report_id"] is not None]
     if len(newest) < WINDOW or len(clean) < WINDOW:
         raise Inconclusive(
-            f"{len(clean)} clean submission(s) in the newest {len(newest)}; "
-            f"twelve are needed before an intermittent 500 can be called gone")
+            f"{len(clean)} clean submission(s) of {len(newest)} since {FIX_SOURCE}; "
+            f"twelve are needed before an intermittent 500 can be called gone"
+            + (f". Before the fix, history and not judged: {', '.join(history)}"
+               if history else ""))
     conclude(Measurement(
         verdict="passed",
-        reason=(f"the newest {WINDOW} submissions to {ROUTE} were each answered "
-                f"2xx with the id of the report they created"),
+        reason=(f"the newest {WINDOW} submissions to {ROUTE} since {FIX_SOURCE} "
+                f"were each answered 2xx with the id of the report they created"),
         left=len(masked), right=0,
-        population={"window": [r["report_id"] for r in newest]},
-        sources={"log": "state/journal/events.jsonl"}))
+        population={"window": [r["report_id"] for r in newest],
+                    "before_fix": history},
+        sources={"log": "state/journal/events.jsonl", "fix": FIX_SOURCE}))
