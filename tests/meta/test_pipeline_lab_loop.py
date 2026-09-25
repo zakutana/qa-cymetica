@@ -2776,6 +2776,16 @@ def test_the_catalogue_readers_take_whole_names_and_respect_what_he_ruled_out():
                 "1. `clone_bot` (paper by default).\n2. Fund it.\n")
     assert [b["name"] for b in lab.proposed_bots(numbered, CATALOGUE)] == [
         "MACD Hunter", "Doom & Gloom"]
+    # NEX-0100 (2026-09-25 07:20): "## PICKS -- open a paper room for each"
+    # over "**1 -- ...**" and "**2 -- ...**": the heading's declaration went to
+    # the first naming line only, and pick 2 was dropped as "not on the line
+    # that declares his pick". A declaring HEADING holds to the next heading.
+    sectioned = ("## PICKS -- open a paper room for each\n\n"
+                 "**1 -- MACD Hunter** -- stop 3%.\n- backtest +22%\n\n"
+                 "**2 -- Doom & Gloom** -- stop 5%.\n- backtest +27%\n\n"
+                 "## NOT PICKS -- ruled out\n- Trend Titan: no edge.\n")
+    assert [b["name"] for b in lab.proposed_bots(sectioned, CATALOGUE)] == [
+        "MACD Hunter", "Doom & Gloom"]
     assert lab.proposed_funds("AIB-SPACE and AIB-AI both look fine.\n",
                               FUNDS) == ["AIB-SPACE", "AIB-AI"]
     # The card reader keeps its own behaviour through the shared section logic.

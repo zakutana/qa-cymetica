@@ -1577,16 +1577,25 @@ def _only_picked(text: str, find, names: list[str]) -> list[str]:
     THAT CLEARS THE BAR" -- hands the declaration to the next line that names
     something, unless a heading comes first."""
     picked: set[str] = set()
-    pending = False
+    pending = section = False
     for line in str(text or "").split("\n"):
         heading = bool(_MD_HEADING.match(line))
         declares = bool(_PICKED.search(line) or (
             heading and _PICK_WORD.search(line)
             and not _RULED_OUT.search(_BRACKETED.sub("", line))))
         found = find(line)
+        if heading:
+            # A declaring HEADING that names nothing holds to the next
+            # heading: NEX-0100's "## PICKS" over "**1 -- ...**" and "**2 --
+            # ...**" had its second pick dropped (2026-09-25). Plural only:
+            # "# ONE PICK ..." still hands itself to the next naming line.
+            section = declares and not found and bool(
+                re.search(r"\bpicks\b", line, re.I))
         if declares:
             picked.update(found)
             pending = not found
+        elif section and found:
+            picked.update(found)
         elif pending and found:
             picked.update(found)
             pending = False
