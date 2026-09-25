@@ -336,6 +336,7 @@ def check_fingerprint(item) -> str:
     return hashlib.sha256("\n".join(parts).encode("utf-8")).hexdigest()
 
 
+HELPERS_FORMULA = 2
 _CONSTANT_TYPES = (bool, int, float, str, bytes, tuple, list, frozenset, set, dict,
                    re.Pattern, type(None))
 
@@ -462,6 +463,9 @@ def pytest_runtest_makereport(item, call):
         "measurement": measurement.as_record() if measurement else None,
         "check_fingerprint": fingerprint,
         "helpers_fingerprint": helpers_fingerprint(item),
+        # Which formula: 2 reads module constants too (2026-09-25, B02). Two
+        # hashes of different formulas are not a comparison (verify.py).
+        "helpers_formula": HELPERS_FORMULA,
         "reason": reason,
         "failure_repr": _trim(str(report.longrepr)) if kind in ("failed", "error") else None,
     }

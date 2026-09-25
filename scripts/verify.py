@@ -71,6 +71,7 @@ sys.path.insert(0, str(REPO_ROOT))
 from qa.client import build_client, install_client_guard  # noqa: E402
 from qa.config import identities, load_dotenv  # noqa: E402
 from qa.fold import correction_reason as fold_correction_reason  # noqa: E402
+from qa.report_plugin import HELPERS_FORMULA  # noqa: E402
 from qa.safety import CURRENT_TIER, EndpointRegistry, SafetyTier  # noqa: E402
 from qa.state import (admissibility, append_event, journal_path,  # noqa: E402
                       load_ledger, load_run, read_events)
@@ -228,9 +229,12 @@ def helpers_match(row: dict, run: dict) -> bool | None:
     checks = set(row.get("checks") or [])
 
     def helpers(record: dict):
+        # Only this formula's hashes: an older run's hash of the same check
+        # differs because the formula did, not the check (B02, 2026-09-25).
         found = {r.get("helpers_fingerprint")
                  for r in (record.get("results") or [])
-                 if r.get("nodeid") in checks and r.get("role", "verdict") == "verdict"}
+                 if r.get("nodeid") in checks and r.get("role", "verdict") == "verdict"
+                 and r.get("helpers_formula") == HELPERS_FORMULA}
         found.discard(None)
         return found or None
 
@@ -363,9 +367,9 @@ def body(item: dict) -> dict:
         # compared -- not everything the check calls.
         why_fingerprint = (
             "It matches the one recorded at the failure, and so do the helper "
-            "functions in the check's own file that it calls, so the check was "
-            "not rewritten to pass. Code it imports from other modules is not "
-            "part of this comparison."
+            "functions and constants in the check's own file that it uses, so "
+            "the check was not rewritten to pass. Code it imports from other "
+            "modules is not part of this comparison."
         )
     elif verdict == "pass" and item.get("helpers_same") is False:
         # A8: a helper the check calls was rewritten after the failure. The
@@ -373,13 +377,13 @@ def body(item: dict) -> dict:
         headline = (
             "VERDICT pass -- the check that recorded this defect now passes. "
             "Its recorded definition is the one that failed, but a helper "
-            "function the check calls has changed since, so this is not "
-            "automatically the identical test."
+            "function or constant the check uses has changed since, so this "
+            "is not automatically the identical test."
         )
         why_fingerprint = (
             "The recorded definition matches the one at the failure; a helper "
-            "function the check calls does not. Judge the change, provided on "
-            "request."
+            "function or constant the check uses does not. Judge the change, "
+            "provided on request."
         )
     elif verdict == "pass":
         # A8: the failure's run predates helper fingerprints, or is gone.

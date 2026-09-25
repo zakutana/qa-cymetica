@@ -89,6 +89,26 @@ def test_a_pass_on_an_unrepaired_check_still_claims_the_same_definition():
     assert "not a rewritten one" not in moved and "helper" in moved, moved
     assert verify.body(_item(helpers_same=False))["verdict"] == "pass"
 
+    # B02 (deep pass 2026-09-25): the hash now reads module constants too, so
+    # a failure hashed by the old formula is no comparison -- unknown, never
+    # "a helper changed" about a check nobody touched.
+    row = {"checks": ["t.py::test_c"], "reproduced_in": ["run-old"]}
+
+    def ran(hashed, formula):
+        result = {"nodeid": "t.py::test_c", "role": "verdict",
+                  "helpers_fingerprint": hashed}
+        return {"results": [dict(result, helpers_formula=formula) if formula else result]}
+
+    real_load = verify.load_run
+    try:
+        verify.load_run = lambda run_id: ran("h-old", None)
+        assert verify.helpers_match(row, ran("h-new", 2)) is None
+        verify.load_run = lambda run_id: ran("h-same", 2)
+        assert verify.helpers_match(row, ran("h-same", 2)) is True
+        assert verify.helpers_match(row, ran("h-moved", 2)) is False
+    finally:
+        verify.load_run = real_load
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_pass_on_a_hand_pinned_check_says_so_and_carries_the_reason():
