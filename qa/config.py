@@ -80,15 +80,6 @@ def identities() -> dict[str, Identity]:
             # sentence about which rung we tested from was wrong.
             expected_trust="allied",
         ),
-        # The creator dashboard's account, tg_expire76 (REPLY-0058). Its queues
-        # and tracked links answer only to a key minted on it; `trusted` is
-        # account expire76 and would claim leads for the wrong account.
-        "creator": Identity(
-            name="creator",
-            header="X-API-Key",
-            value=os.environ.get("QA_CREATOR_KEY") or None,
-            scope="read",
-        ),
         "recognized": Identity(
             name="recognized",
             header="X-API-Key",

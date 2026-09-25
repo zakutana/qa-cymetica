@@ -38,11 +38,11 @@ CLAIM_ID = "creator-links-list-names-every-tracked-link"
 
 @pytest.fixture(scope="module")
 def rest_creator(registry, evidence_store, budget, all_identities):
-    """The creator account's own key (QA_CREATOR_KEY): only it lists the
-    reply queue's claimed leads and their tracked links."""
-    identity = all_identities.get("creator")
+    """The operator's own key: the creator queue answers it since 2026-09-25,
+    and the tg_expire76 key it used before was retired that day."""
+    identity = all_identities.get("trusted")
     if identity is None or not identity.present:
-        pytest.skip("no QA_CREATOR_KEY: the creator's claimed leads cannot be read")
+        pytest.skip("no QA_TRUSTED_KEY: the creator's claimed leads cannot be read")
     client = build_client(identity, registry, evidence_store, budget)
     yield client
     client.close()

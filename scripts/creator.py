@@ -1,4 +1,4 @@
-"""The creator dashboard (cymetica.com/tg_expire76), read and claimed.
+"""The creator dashboard, read and claimed with the operator's own key.
 
     python scripts/creator.py leads [--outlet twitter|reddit] [--tool /x] [--limit N]
     python scripts/creator.py claim --outlet twitter --lead 3 --page p497i3fy --confirm
@@ -106,16 +106,15 @@ def _settle(client, outlet: str, lead_id: int, why: str) -> dict:
 
 
 def identity():
-    """The key minted on tg_expire76, the account the queues belong to. No
-    fallback to `trusted`: that is account expire76, whose claims would be
-    credited to the wrong dashboard (REPLY-0058)."""
+    """The operator's own key (account expire76). The queues answered it with
+    the same leads as tg_expire76's key on 2026-09-25, and that key was
+    retired the same day, so there is one account and one key."""
     from qa.config import identities
 
-    creator = identities()["creator"]
-    if not creator.value:
-        raise CreatorError("no QA_CREATOR_KEY in .env -- mint one in the "
-                           "dashboard's 'Your agent's API key' panel")
-    return creator
+    trusted = identities()["trusted"]
+    if not trusted.value:
+        raise CreatorError("no QA_TRUSTED_KEY in .env")
+    return trusted
 
 
 def _client(mutate: bool):

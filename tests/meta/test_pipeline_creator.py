@@ -214,20 +214,20 @@ def test_the_claim_routes_are_writes_with_a_closed_body_and_nothing_else():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_the_creator_routes_speak_as_the_creator_account_or_not_at_all(monkeypatch):
-    """REPLY-0058 (2026-09-24): the creator queues belong to tg_expire76, and
-    our trusted key is account expire76 -- a lead it claims is credited to the
-    wrong account and `?status=claimed` reads empty. So creator.py speaks with
-    QA_CREATOR_KEY, the key minted on tg_expire76 itself, and without one it
-    refuses: falling back to the trusted key is the defect, not a default."""
+def test_the_creator_routes_speak_as_the_operators_own_account(monkeypatch):
+    """REPLY-0058 (2026-09-24) tied the creator queues to tg_expire76 and a key
+    minted on it. On 2026-09-25 the queue answered the operator's own key
+    (account expire76) with the same 50 leads and the same counts, and the
+    operator retired the tg_expire76 key: creator.py speaks with the trusted
+    key, and there is no creator identity left to fall back to."""
     from qa.config import identities
 
-    monkeypatch.setenv("QA_CREATOR_KEY", "k-creator")
+    monkeypatch.setenv("QA_CREATOR_KEY", "k-old")
     monkeypatch.setenv("QA_TRUSTED_KEY", "k-trusted")
-    assert identities()["creator"].headers() == {"X-API-Key": "k-creator"}
+    assert "creator" not in identities(), "the tg_expire76 key is retired"
 
     mod = _module()
-    assert mod.identity().value == "k-creator"
+    assert mod.identity().value == "k-trusted"
     # And the client every request goes through is built with it -- the
     # REPLY-0058 defect was the client, not the helper (deep pass G02, 3/3).
     import qa.client as qa_client
@@ -236,7 +236,7 @@ def test_the_creator_routes_speak_as_the_creator_account_or_not_at_all(monkeypat
                         lambda identity, *a, **k: built.append(identity) or object())
     for mutate in (False, True):
         mod._client(mutate)
-    assert [i.value for i in built] == ["k-creator", "k-creator"], built
-    monkeypatch.setenv("QA_CREATOR_KEY", "")
-    with pytest.raises(mod.CreatorError, match="QA_CREATOR_KEY"):
+    assert [i.value for i in built] == ["k-trusted", "k-trusted"], built
+    monkeypatch.setenv("QA_TRUSTED_KEY", "")
+    with pytest.raises(mod.CreatorError, match="QA_TRUSTED_KEY"):
         mod.identity()
