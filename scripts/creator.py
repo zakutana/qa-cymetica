@@ -59,9 +59,10 @@ def claim(client, outlet: str, lead_id: int, page_slug: str,
             f"/api/v1/creator/{outlet}-leads/{int(lead_id)}/reply",
             json={"link_slug": page_slug})
     except httpx.TimeoutException:
-        return _settle(client, outlet, lead_id, "timed out")
+        return _settle(client, outlet, lead_id, "timed out", page_slug)
     if response.status_code >= 500:
-        return _settle(client, outlet, lead_id, f"HTTP {response.status_code}")
+        return _settle(client, outlet, lead_id, f"HTTP {response.status_code}",
+                       page_slug)
     if response.status_code != 200:
         raise CreatorError(
             f"claim refused: HTTP {response.status_code} {response.text[:200]!r}")
@@ -98,10 +99,11 @@ def posted(client, outlet: str, lead_id: int, reply_url: str,
     return response.json() or {}
 
 
-def _settle(client, outlet: str, lead_id: int, why: str) -> dict:
+def _settle(client, outlet: str, lead_id: int, why: str, page_slug: str) -> dict:
     """A 5xx or a timeout is outcome-unknown, not a refusal: their 503 has
     answered claims that committed (ET-27021). Read the claimed leads back
-    and report what is there; never retry blind."""
+    and report what is there; never retry blind. A lead holding another page
+    is an earlier claim, not this one (deep pass 2026-09-25, B05)."""
     response = client.get(f"/api/v1/creator/{outlet}-leads",
                           params={"status": "claimed,replied", "limit": 200})
     if response.status_code != 200:
@@ -109,6 +111,11 @@ def _settle(client, outlet: str, lead_id: int, why: str) -> dict:
                            f"(HTTP {response.status_code}) -- outcome unknown")
     for lead in response.json().get("leads") or []:
         if lead.get("id") == int(lead_id):
+            held = lead.get("reply_page_slug")
+            if held and held != page_slug:
+                raise CreatorError(
+                    f"claim {why}; read back: lead {lead_id} holds page {held}, "
+                    f"not {page_slug} -- this claim's outcome is unknown")
             return {**lead, "settled_by_read": True}
     raise CreatorError(f"claim {why}; read back: lead {lead_id} is not claimed")
 

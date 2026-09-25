@@ -53,7 +53,8 @@ CLAIMED = {"id": 3, "status": "claimed", "reply_slug": "znn8eicp",
            "suggested_reply": "TradingView alerts can fire straight into real "
                               "orders on EventTrader (paper first). How I set "
                               "it up: https://cymetica.com/c/znn8eicp",
-           "permalink": "https://x.com/LuxAlgo/status/2102498561636094324"}
+           "permalink": "https://x.com/LuxAlgo/status/2102498561636094324",
+           "reply_page_slug": "p497i3fy"}
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -141,6 +142,19 @@ def test_a_503_or_a_timeout_is_settled_by_reading_the_lead_back():
                   confirm=True)
     # The timeout path is never retried blind either (deep pass G04, 3/3).
     assert lost_posts == ["/api/v1/creator/twitter-leads/3/reply"], lost_posts
+
+    # A lead already claimed with ANOTHER page is not this claim settled: a
+    # re-claim that 503s over it printed the old page's link as its own
+    # (deep pass 2026-09-25, B05).
+    def elsewhere(request):
+        if request.method == "POST":
+            return httpx.Response(503, json={})
+        return httpx.Response(200, json={"leads": [
+            dict(CLAIMED, reply_page_slug="tf6kmemt")]})
+
+    with as_mutate_tier(), pytest.raises(mod.CreatorError, match="tf6kmemt"):
+        mod.claim(_client(elsewhere, mutate=True), "twitter", 3, "p497i3fy",
+                  confirm=True)
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

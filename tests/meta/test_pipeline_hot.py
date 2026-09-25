@@ -339,6 +339,12 @@ def test_the_rule_takes_profit_at_the_first_round_past_eight_percent():
     assert hot.RULE["take_profit"] == 8.0, hot.RULE
     below = hot.nexus_rule(rounds, heads, rule={**hot.RULE, "take_profit": 9.5})
     assert below["trades"][0]["exit"] != "take_profit", "109 is not past 9.5 %"
+    # The FIRST round past it, not the peak or the last: the path above
+    # crossed once, so hindsight gave the same 9.0 (deep pass 2026-09-25, B09).
+    twice = [_round(T0)] + _path(1, T0 + timedelta(minutes=20),
+                                 [100, 109, 115, 110, 95]) + _to_end(1)
+    (trade,) = hot.nexus_rule(twice, heads)["trades"]
+    assert (trade["exit"], trade["gross"]) == ("take_profit", 9.0), trade
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
