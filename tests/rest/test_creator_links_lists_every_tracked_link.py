@@ -51,6 +51,7 @@ def rest_creator(registry, evidence_store, budget, all_identities):
 @qa(component="rest.creator", tier=SafetyTier.SAFE, surface="rest",
     claim=CLAIM_ID)
 def test_creator_links_lists_every_reply_tracked_link(rest_anon, rest_creator):
+    """Every reply tracked link of the creator's claimed leads is in the link list, at the top or as a page's child."""
     listed = rest_anon.get(LINKS)
     if listed.status_code != 200:
         raise Inconclusive(f"{LINKS} answered HTTP {listed.status_code}")
