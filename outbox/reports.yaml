@@ -3494,6 +3494,48 @@ reports:
       legs (by your market_cap_rank) carry at least 90 % of the weight, over
       the last 24 hours. It places no order.
 
+  - key: community-funds-paper-and-live-at-once
+    findings: [CYM-a_community_fund_is_paper_or_live_not_both]
+    severity: medium
+    category: documentation
+    url: https://cymetica.com/fund-launcher
+    title: "Fund Launcher says community funds are paper-only and buying in is simulated; every Community AIB fund reads live and its profile offers 'Invest ... now -- it's LIVE'"
+    expected: >
+      One answer, on every surface, to whether money put into a community
+      fund is real. /fund-performance defines the words itself: "LIVE funds
+      take real USDC; PAPER funds trade simulated and take no investment yet."
+    actual: >
+      On 2026-09-25: /fund-launcher, under "Before you start", reads
+      "Community funds -- Paper trading only. The index, terminal and
+      management are real-time. Buying in is simulated.", and the builder
+      says "Community funds trade in paper mode (simulated) -- no real USDC
+      is invested." At the same time all 11 funds that list_funds (MCP)
+      returns with sleeve "Community AIB" carry status "live"; the
+      /fund-performance table marks them live under the legend above; get_fund
+      gives each an invest_url (e.g. AIB-8830DFE9 "Privacy":
+      https://cymetica.com/fund/apply?invest=AIB-8830DFE9); the fund's profile
+      page (https://cymetica.com/fund-performance/aib-8830dfe9) shows "Invest in
+      8830Dfe9 now -- it's LIVE"; and /fund/apply says "Every fund below is
+      live ... shares are issued at each fund's live NAV and settle to your
+      account instantly."
+    steps:
+      - 'GET https://cymetica.com/fund-launcher -> "Community funds ... Paper trading only ... Buying in is simulated."'
+      - 'MCP list_funds {limit: 100} -> 11 funds with sleeve "Community AIB", all status "live"'
+      - 'MCP get_fund {symbol: AIB-8830DFE9} -> status "live", invest_url https://cymetica.com/fund/apply?invest=AIB-8830DFE9'
+      - 'GET https://cymetica.com/fund-performance/aib-8830dfe9 -> "Invest in 8830Dfe9 now -- it''s LIVE"'
+      - 'GET https://cymetica.com/fund-performance -> legend "LIVE funds take real USDC; PAPER funds trade simulated"'
+    body: >
+      A visitor, or an agent following get_fund's invest_url, cannot tell
+      whether an investment in a community fund is real money or a
+      simulation -- two of your pages say opposite things about the same
+      fund. Which is true is yours to say; we did not invest to find out.
+
+      Our check reads the launcher text, the Community AIB statuses on
+      list_funds and up to three community profiles, and goes green when any
+      of the three stops saying its half: the launcher corrected, the funds
+      labelled paper, or the live invest offer removed. GETs and read-only
+      MCP tools only.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in
