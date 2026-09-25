@@ -603,6 +603,23 @@ def test_a_card_that_is_closed_on_rest_and_open_on_mcp_fails():
     assert jumps([{"t": "2026-09-25T13:19:54+00:00", "index": 100.0},
                   {"t": "2026-09-25T13:29:25+00:00", "index": 108.0}], since) == []
 
+    # And a fund's: the launcher's paper-only sentence and a profile's live
+    # invest offer, read from what a visitor sees -- the markup as served on
+    # 2026-09-25, tags and a comment in the way.
+    from tests.mcp.test_community_funds_are_paper_or_live_not_both import (
+        launcher_says_paper_only, offers_live_invest, visible_text)
+    launcher = ('<h4>Community funds</h4><!-- note --><p>Paper trading only</p>'
+                '<p>The index, terminal and management are real-time. '
+                'Buying in is simulated.</p>')
+    assert launcher_says_paper_only(visible_text(launcher))
+    assert not launcher_says_paper_only(visible_text(
+        "<h4>Community funds</h4><p>Take real USDC.</p>")), "a corrected launcher"
+    profile = '<a href="/fund/apply?invest=X">Invest in 8830Dfe9 now &mdash; it&#39;s LIVE &rarr;</a>'
+    assert offers_live_invest(visible_text(profile)) == "Invest in 8830Dfe9 now — it's LIVE"
+    assert offers_live_invest(visible_text("<p>Paper fund. Buy in (simulated).</p>")) is None
+    assert offers_live_invest(visible_text("<!-- Invest in X now, it's LIVE -->")) is None, (
+        "a comment is not what a visitor reads")
+
 
 # ------------------------------------ a filed report is answered as filed -
 
