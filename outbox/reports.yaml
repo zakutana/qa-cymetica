@@ -3536,6 +3536,61 @@ reports:
       labelled paper, or the live invest offer removed. GETs and read-only
       MCP tools only.
 
+  - key: public-page-reads-undocumented
+    findings: [CYM-what_a_public_page_reads_without_a_key_is_documented]
+    severity: low
+    category: documentation
+    url: https://cymetica.com/openapi-public.json
+    title: "50 read endpoints that your public pages call answer anonymously with JSON and are not in /openapi-public.json -- a list for you to sort into document or retire"
+    expected: >
+      /openapi-public.json is the document llms.txt and the agent card send
+      outside agents to. A public read that a live page depends on is either
+      part of that contract (and documented), or not meant for agents (and
+      you decide whether it stays public). Which is which is yours to say.
+    actual: >
+      On 2026-09-25 (19:58 UTC): the 70 pages the home page links to, with
+      their /static/js scripts, name 50 /api/v1 paths that answer an
+      anonymous GET with HTTP 200 JSON and match no path in
+      /openapi-public.json. Examples: /api/v1/fta-fund/history and
+      /api/v1/ma-fund/history (the charts on /fund-performance; MCP
+      get_fund_history refuses FTA-STOCKS), /api/v1/headlines,
+      /api/v1/agentbook/feed, /api/v1/microfunds, /api/v1/economic-calendar,
+      /api/v1/prop/stats, /api/v1/rewards/stats. Full list: agentbook/channels,
+      agentbook/feed, agentbook/posts, agentbook/reputation/leaderboard,
+      agents/species, ai-apps/leaderboard, ai-due-diligence,
+      ai-due-diligence/history, ai-due-diligence/pivot/history, arena/chart,
+      arena/featured-events, arena/headlines, arena/trades,
+      backtest/leaderboard, btc-pool/state, build-stats/recent,
+      card-track/race, card-track/standings, ceo-ai-leaderboard,
+      ceo-ai-leaderboard/methodology, ceo-ai-leaderboard/profile/{slug},
+      cloned-bots/backtest/queue, clones/fomo-radar/calibration,
+      economic-calendar, exchange/et10/orderbook, features, fta-fund/history,
+      headlines, irc-newsfeed, launchpad/arc/clock, ma-fund/history,
+      ma-ripple/live-deals, marketplace/trending, marr/reports/{id},
+      microfunds, nexus/plans, ontology/datacenter,
+      ontology/datacenter/stock-graph, perpetual/markets/{symbol}/status,
+      prediction-pools/wta-funding-stats, prices/{symbol}, products-stream,
+      prop/config, prop/reserve, prop/stats, rewards/leaderboard/features,
+      rewards/leaderboard/funders, rewards/stats (all under /api/v1/).
+    steps:
+      - 'GET https://cymetica.com/openapi-public.json -> the documented paths'
+      - 'GET https://cymetica.com/ -> 70 linked pages; GET each page and its /static/js scripts -> the /api/v1 literals they name'
+      - 'GET each undocumented read-shaped path, no key -> 50 answer 200 application/json'
+    body: >
+      We are not asking you to document all 50. Your platform moves fast
+      and some of these may be leftovers that no page should call any more.
+      The list is for your own triage: document what outside agents should
+      rely on, retire or lock down what is obsolete. What we can say is that
+      each one is named by a page linked from your home page today and
+      answers without a key.
+
+      Excluded on purpose: paths with an id we would have to guess, anything
+      shaped like an action (buy, create, submit, ...), per-user reads, CSRF,
+      push keys and analytics. Two reads timed out and are not counted.
+      Our check goes green when every such path is either in
+      /openapi-public.json or no longer answers an anonymous read. GETs
+      only.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in
