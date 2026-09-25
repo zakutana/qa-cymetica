@@ -601,6 +601,7 @@
 {"archive": "evidence-2026-09", "bytes": 8654, "call": "POST https://cymetica.com/mcp/v1/? tools/call:get_deep_answer", "id": "0e1061f5500a10cc58830eadd5f986f67e8f48ce31660f64814dd21b8f303058", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 9135, "call": "POST https://cymetica.com/mcp/v1/? tools/call:get_deep_answer", "id": "0e1c6ffb931569324be08c0d2f6500bc96d8c2187fff4f037bcf95dd3487739d", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 554874, "call": "GET https://cymetica.com/api/v1/event-cards?limit,offset", "id": "0e2257b99a0b6e2f568b8a553c2e65f5937d57fc84496b61d3456c03bf21978b", "why": "row"}
+{"archive": "", "bytes": 8261, "call": "POST https://cymetica.com/api/v1/bounty/reports/119/verification?", "id": "0e25cbbfec9792f89181ec95b78d93c433197ee7d9ee432ac2d95d2045874e53", "why": "their-words"}
 {"archive": "evidence-2026-09", "bytes": 7393, "call": "POST https://cymetica.com/api/v1/bounty/reports/69/verification?", "id": "0e2ab8d5c5644a3114896d3a33f800a7e365a2ba1ee95dc9affd8381549f3031", "why": "their-words"}
 {"archive": "evidence-2026-09", "bytes": 5388, "call": "POST https://cymetica.com/mcp/v1/? tools/call:get_fund", "id": "0e2c678d577595dc817851bb742a8707dfab5b30f5f3272bcf83e1fd96608def", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 9980, "call": "POST https://cymetica.com/mcp/v1/? tools/call:get_deep_answer", "id": "0e2d84a628e7ed5f3031447b80e7ae4f07bffafa0ec193ec6bd30506ea01b08f", "why": "row"}
@@ -1431,6 +1432,7 @@
 {"archive": "", "bytes": 9326, "call": "GET https://cymetica.com/api/v1/build-it-better/apps/stats?path", "id": "21057b3b8f4c156c199e3de0fe4e4a0f54185025e7fc40aab0c9efc77f5f6265", "why": "row"}
 {"archive": "", "bytes": 8718, "call": "POST https://cymetica.com/mcp/v1/? tools/call:get_fund_history", "id": "21064b5d5ec5fadf7b953abde8cc0d6faeb5f26684eb64fe685990b04c0678df", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 7632, "call": "GET https://cymetica.com/api/v1/cloned-bots/my-clones?", "id": "21079160f7a5ead22639b0bebd03f9f746b42c0042a6d29574cd29b1bdb3845a", "why": "row"}
+{"archive": "", "bytes": 692423, "call": "GET https://cymetica.com/openapi-public.json?", "id": "210de734c73c3adeba7e5829e10407acbf7f04fc915f7e753b33a637c0f71acb", "why": "promised"}
 {"archive": "evidence-2026-09", "bytes": 5475, "call": "POST https://cymetica.com/mcp/v1/? tools/call:get_strategy_returns", "id": "210ea6d63e9fbcaa9a94c9f201b6c5c6eea952067b5ae7cb0c14bd90a7e78312", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 9326, "call": "GET https://cymetica.com/api/v1/build-it-better/apps/stats?path", "id": "211075039d59662cc5eb702e85695ce6036648ec7e000ffe2a3bdf3d57ccb3a0", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 9522, "call": "GET https://cymetica.com/api/v1/agent-board/threads?", "id": "2113bc09eb2b3eed1bce85457077c9f1d7fcab9b1459131be54f566db57c6c10", "why": "row"}
