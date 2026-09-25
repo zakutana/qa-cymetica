@@ -3854,8 +3854,18 @@ def test_their_news_wakes_a_sweep_within_a_tick_and_no_limit_is_weighed():
         encoding="utf-8")
     assert "get_usage" not in skill and "lab.py budget" not in skill
 
+    # The first status a report ever shows is our filing reaching their
+    # tracker, not them moving (deep pass 2026-09-25, R02/C01: #129's
+    # "pending" at seq 2759 read as news and would wake a sweep on our own
+    # filing).
+    filed = {"type": "vendor_status", "seq": 9, "by": "agent",
+             "report_id": 127, "status": "pending"}
+    assert _news(filed)["seq"] is None, "our own filing is not their news"
     status = {"type": "vendor_status", "seq": 10, "by": "agent",
               "report_id": 127, "status": "paid"}
+
+    def news(*events):  # every case below starts from our filing
+        return _news(filed, *events)
     human = {"type": "message", "seq": 11, "by": "vendor", "origin": "a2a",
              "msg_id": "a2a_42be5226b2484f48", "auto": False}
     robot = {"type": "message", "seq": 12, "by": "vendor", "origin": "a2a",
@@ -3864,13 +3874,13 @@ def test_their_news_wakes_a_sweep_within_a_tick_and_no_limit_is_weighed():
                 "msg_id": "REPLY-0067"}
     ours = {"type": "filing_outcome", "seq": 14, "by": "agent"}
 
-    assert _news(status)["seq"] == 10
-    assert "#127 paid" in _news(status)["lines"]
-    assert _news(status, human)["seq"] == 11
-    assert _news(status, human, robot)["seq"] == 11, "their robot is not news"
-    assert _news(status, human, robot, telegram, ours)["seq"] == 13, (
+    assert news(status)["seq"] == 10
+    assert "#127 paid" in news(status)["lines"]
+    assert news(status, human)["seq"] == 11
+    assert news(status, human, robot)["seq"] == 11, "their robot is not news"
+    assert news(status, human, robot, telegram, ours)["seq"] == 13, (
         "a Telegram answer is news; our own filing is not")
-    assert _news()["seq"] is None and _news(ours)["seq"] is None
+    assert news()["seq"] is None and news(ours)["seq"] is None
 
     asked = NOW - timedelta(minutes=30)
     hunted = _tick_row(NOW - timedelta(hours=1), decide=["hunt bugs"],
@@ -3896,6 +3906,16 @@ def test_their_news_wakes_a_sweep_within_a_tick_and_no_limit_is_weighed():
     assert _decide(_said(skipped="pass", may_ask=False, vendor_seq=101),
                    [hunted], asked) == []
 
+    # What the tick says woke the sweep is what came AFTER the last sweep, and
+    # nothing on a sweep no news woke (deep pass 2026-09-25, R03: the last
+    # three vendor lines ever were printed on every hunt sweep).
+    items = news(status, human, telegram)["items"]
+    assert [seq for seq, _ in items] == [10, 11, 13]
+    assert lab.news_since(items, [_tick_row(NOW, decide=["hunt sweep"],
+                                            vendor_seq=11)]) == ["REPLY-0067"]
+    assert lab.news_since(items, [hunted]) == [], "no news since the baseline"
+    assert lab.news_since(items, []) == [], "no baseline: nothing to announce"
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_tick_reads_their_tracker_and_scans_their_surface(tmp_path, monkeypatch):
@@ -3920,6 +3940,33 @@ def test_the_tick_reads_their_tracker_and_scans_their_surface(tmp_path, monkeypa
     said = _tick(scripts_lab, NOW + timedelta(minutes=40), doors)
     assert calls["tracker"] == [] and said["tracker"] == {"by": "console"}
     assert said["vendor_seq"] == 7, "what the console wrote is news all the same"
+
+    # A read that fails is said, not swallowed (deep pass 2026-09-25, C02:
+    # `said["tracker"]` was read by nothing, so a tracker unread on every
+    # tick -- the missing-wallet shape of that morning -- gave no gap).
+    class Bounty:
+        def __init__(self, tracker, inbox):
+            self.tracker, self.inbox = tracker, inbox
+
+        def refresh_our_reports(self):
+            return {"klass": self.tracker}
+
+        def fetch_inbox(self):
+            return {"klass": self.inbox, "new": []}
+
+    sibling = scripts_lab._sibling
+    for tracker, inbox in (("unreachable", "ok"), ("ok", "unauthorized")):
+        monkeypatch.setattr(scripts_lab, "_sibling",
+                            lambda name, b=Bounty(tracker, inbox): b)
+        with pytest.raises(RuntimeError, match="unread"):
+            scripts_lab._tracker_round()
+    monkeypatch.setattr(scripts_lab, "_sibling", lambda name: Bounty("ok", "ok"))
+    assert scripts_lab._tracker_round()["tracker"] == "ok"
+    monkeypatch.setattr(scripts_lab, "_sibling", sibling)
+    doors, calls = _doors(tracker=lambda: (_ for _ in ()).throw(
+        RuntimeError("their tracker unread (unreachable)")))
+    said = _tick(scripts_lab, NOW + timedelta(hours=2), doors)
+    assert any(e.startswith("tracker:") for e in said["errors"]), said["errors"]
 
     # V7 (E1): the session start reads the drift from a cache, and by day the
     # loop's tick is what refreshes it -- once per surface_hours.

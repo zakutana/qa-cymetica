@@ -663,12 +663,18 @@ def vendor_news(events: list[dict]) -> dict:
     Moved: a report's status changed (`vendor_status` is written on change
     only), a person answered on a2a, a Telegram answer was pasted in. Their
     automated a2a acknowledgements are not news. Whoever wrote the event --
-    the console's --ask, this tick, a sweep -- it is the same news.
+    the console's --ask, this tick, a sweep -- it is the same news. A
+    report's FIRST status is our filing reaching their tracker, not them
+    moving (deep pass 2026-09-25, R02: #129's "pending" read as news).
+    `items` is (seq, line) of the last twenty, for `news_since`.
     """
-    seq, lines = None, []
+    seq, items, sighted = None, [], set()
     for event in events:
         kind = event.get("type")
         if kind == "vendor_status" and event.get("report_id") is not None:
+            if event["report_id"] not in sighted:
+                sighted.add(event["report_id"])
+                continue
             line = f"#{event['report_id']} {event.get('status')}"
         elif kind == "telegram_reply" and event.get("by") == "vendor":
             line = str(event.get("msg_id") or "telegram")
@@ -683,8 +689,20 @@ def vendor_news(events: list[dict]) -> dict:
             continue
         if seq is None or at > seq:
             seq = at
-        lines.append(line)
-    return {"seq": seq, "lines": lines[-3:]}
+        items.append((at, line))
+    return {"seq": seq, "lines": [line for _, line in items[-3:]],
+            "items": items[-20:]}
+
+
+def news_since(items, earlier: list[dict]) -> list[str]:
+    """The news lines after the last sweep's baseline -- what woke this one.
+    None without a baseline: the first tick sets it and announces nothing
+    (deep pass 2026-09-25, R03: the last three lines ever were printed on
+    every hunt sweep, a night sweep no news woke included)."""
+    baseline = _news_baseline(earlier)
+    if baseline is None:
+        return []
+    return [line for seq, line in items or [] if int(seq) > baseline]
 
 
 def _news_baseline(earlier: list[dict]) -> int | None:

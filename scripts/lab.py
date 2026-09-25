@@ -3035,6 +3035,14 @@ def _tracker_round() -> dict:
     bounty = _sibling("bounty")
     ours = bounty.refresh_our_reports() or {}
     inbox = bounty.fetch_inbox() or {}
+    # A failed read is said, as a door's error, so the first one is a gap
+    # (deep pass 2026-09-25, C02: nothing read the klass, and a tracker unread
+    # on every tick -- the missing-wallet morning -- was silent).
+    unread = [f"{what} unread ({said.get('klass')})"
+              for what, said in (("their tracker", ours), ("their inbox", inbox))
+              if said.get("klass") != "ok"]
+    if unread:
+        raise RuntimeError("; ".join(unread))
     return {"tracker": ours.get("klass"), "inbox": inbox.get("klass"),
             "new": len(inbox.get("new") or [])}
 
@@ -3231,7 +3239,8 @@ def tick(*, now: datetime | None = None, actions: dict | None = None,
     said["tracker"] = collect("tracker")
     news = attempt("vendor", doors["vendor"]) or {}
     said["vendor_seq"] = news.get("seq")
-    said["vendor_lines"] = list(news.get("lines") or [])
+    # Narrowed to what came after the last sweep in _decide, and not kept.
+    said["vendor_items"] = list(news.get("items") or [])
     state = _load_tick_state()
     queue = list(state.get("queue") or [])
     if not queue and not state.get("seeded"):
@@ -3348,6 +3357,9 @@ def _decide(said: dict, moment: datetime, nexus_rows: list[dict] | None = None) 
     rows = _nexus_rows() if nexus_rows is None else nexus_rows
     said["decide"] = lab.decide(said, earlier, lab.last_question_at(rows), moment,
                                 local_hour=moment.astimezone().hour)
+    items = said.pop("vendor_items", None) or []
+    said["vendor_lines"] = (lab.news_since(items, earlier)
+                            if "hunt sweep" in said["decide"] else [])
 
 
 def board_rows() -> list[dict]:
