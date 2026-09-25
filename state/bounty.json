@@ -1,6 +1,6 @@
 {
-  "fetched_at": "2026-09-25T18:44:15+00:00",
-  "total": 94,
+  "fetched_at": "2026-09-25T22:52:50+00:00",
+  "total": 96,
   "statuses": {
     "paid": 19,
     "fixed": 1
@@ -25,14 +25,14 @@
   "our_reports": {
     "endpoint": "GET /api/v1/bounty/my-reports?wallet_address=<addr>",
     "klass": "ok",
-    "read_at": "2026-09-25T18:44:03+00:00",
-    "evidence_id": "cc68985855ec50fd2891109751cc598f356aa8e7ebe6d6d1bee3f0ca92d932be",
-    "rows_returned": 85,
-    "server_total": 85,
-    "total": 85,
+    "read_at": "2026-09-25T22:52:46+00:00",
+    "evidence_id": "8c33266505fee5068494851473db3a3a3edc3ac0318123bb8c3c8a8238056adb",
+    "rows_returned": 86,
+    "server_total": 86,
+    "total": 86,
     "statuses": {
-      "pending": 2,
-      "paid": 76,
+      "paid": 78,
+      "pending": 1,
       "fixed": 5,
       "invalid": 2
     },
@@ -1545,7 +1545,7 @@
         "fixed_at": "2026-09-25T15:46:06.394556",
         "validated_at": "2026-09-25T15:46:06.394556",
         "triaged_at": "2026-09-25T15:46:06.394556",
-        "status_notes": "[2026-09-25T15:46:06+00:00] Resolved via ticket ET-27252: Confirmed, fixed live @e2eb6f9e5f. Cause: pricer merged equity quotes into the shared price map, so a stock leg on any card overwrote the crypto homonym (TRX Gold vs TRON +142%, Banco de Chile vs Bitcoin Cash -85%); 231 live cards hit. Fix: per-card, per-asset-class price view (tests/test_index_pricer_homonym_legs.py). Both cards back at ~99.5 with continuity; 31,226 artefact snapshot rows removed (backup table kept). Only paper positions were open in the windows.",
+        "status_notes": "[2026-09-25T15:46:06+00:00] Resolved via ticket ET-27252: Confirmed, fixed live @e2eb6f9e5f. Cause: pricer merged equity quotes into the shared price map, so a stock leg on any card overwrote the crypto homonym (TRX Gold vs TRON +142%, Banco de Chile vs Bitcoin Cash -85%); 231 live cards hit. Fix: per-card, per-asset-class price view (tests/test_index_pricer_homonym_legs.py). Both cards back at ~99.5 with continuity; 31,226 artefact snapshot rows removed (backup table kept). Only paper positions were open in the windows.\n[reporter-verification PASS 2026-09-25 18:44 UTC by expire76 test_run=run-20260925T183730Z-4813570f]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/27252",
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -1553,30 +1553,48 @@
       {
         "id": 129,
         "title": "Fund Launcher says community funds are paper-only and buying in is simulated; every Community AIB fund reads live and its profile offers 'Invest ... now -- it's LIVE'",
-        "status": "pending",
+        "status": "paid",
         "hunter_name": "expire76",
         "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
         "severity_reported": "medium",
-        "severity_confirmed": null,
+        "severity_confirmed": "medium",
         "category": "documentation",
         "created_at": "2026-09-25T17:51:17.401552",
-        "fixed_at": null,
-        "validated_at": null,
-        "triaged_at": null,
-        "status_notes": null,
-        "ticket_url": null,
+        "fixed_at": "2026-09-25T21:04:17.485383",
+        "validated_at": "2026-09-25T21:04:17.485383",
+        "triaged_at": "2026-09-25T21:04:17.485383",
+        "status_notes": "[2026-09-25T21:04:17+00:00] Resolved via ticket ET-27309: Fund Launcher copy was stale: community funds are live and take real USDC (operator reversed paper-only 2026-09-22). templates/fund_builder.html now says 'Community funds are live: anyone can buy in with real USDC from the fund's page', the kv reads 'Live — real USDC', the paper reminders are removed and the post-create JS is data-driven on trading_mode. Live in d12372c9a.",
+        "ticket_url": "https://cymetica.com/admin/centcom/issues/27309",
         "fix_pr_url": null,
-        "reward_amount": 0.0
+        "reward_amount": 1000.0
+      },
+      {
+        "id": 130,
+        "title": "50 read endpoints that your public pages call answer anonymously with JSON and are not in /openapi-public.json -- a list for you to sort into document or retire",
+        "status": "paid",
+        "hunter_name": "expire76",
+        "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
+        "severity_reported": "low",
+        "severity_confirmed": "low",
+        "category": "documentation",
+        "created_at": "2026-09-25T20:15:50.747366",
+        "fixed_at": "2026-09-25T21:21:03.841380",
+        "validated_at": "2026-09-25T21:21:03.841380",
+        "triaged_at": "2026-09-25T21:21:03.841380",
+        "status_notes": "[2026-09-25T21:21:03+00:00] Resolved via ticket ET-27390: All 50 keyless home-page reads (+2 timed-out) are now in /openapi-public.json as GET-only, no-credential paths (openapi_public.py ET-27390 block; parametrised routes as templates e.g. /api/v1/prices/{asset}, /api/v1/marr/reports/{slug}). Pinned by tests/test_reply_queue_and_reference_identity_0925.py + test_byoa_front_door.py. Live in 3d2298884.",
+        "ticket_url": "https://cymetica.com/admin/centcom/issues/27390",
+        "fix_pr_url": null,
+        "reward_amount": 1000.0
       }
     ]
   },
   "qa_tracker": {
     "source": "https://cymetica.com/leaderboard/bugs (embedded allBugs)",
-    "total": 168,
+    "total": 170,
     "statuses": {
       "qa_testing": 2,
       "implementing": 2,
-      "completed": 113,
+      "completed": 115,
       "resolved": 25,
       "rejected": 2,
       "pending": 12,
@@ -1584,11 +1602,11 @@
     },
     "source_channels": {
       "web": 74,
-      "bounty": 94
+      "bounty": 96
     },
     "usernames": {
       "Maxorelaxo": 2,
-      "expire76": 113,
+      "expire76": 115,
       "Crypto42day": 2,
       "tonybugs0439": 5,
       "joebloggs": 12,
@@ -1685,6 +1703,8 @@
       "cloned bot profile does not display trading activity correctly",
       "неправильный баланс токенов в портфеле пользователя max",
       "swap pages fail to display user token balances",
+      "50 read endpoints that your public pages call answer anonymously with json and are not in /openapi-public.json -- a list for you to sort into document or retire",
+      "fund launcher says community funds are paper-only and buying in is simulated; every community aib fund reads live and its profile offers 'invest ... now -- it's live'",
       "two event-card indices moved +142 % and -85 % in one step while their large-cap baskets moved ~1-3 % -- one leg is priced at several times, or a fraction of, its market price",
       "a paper close answers proceeds_usdc 20.0 and status closed, and the paper balance is never credited",
       "a paper buy of aib-privacy is refused for \"insufficient usdc balance: you have 7.650006\" from a paper book of 88,598.91 usdc",
@@ -1778,13 +1798,13 @@
       "critical: my positions p&l shows -$3.15 for a $0.10 position",
       "shares preview rounds to 1 decimal place instead of 2"
     ],
-    "has_linear_links": 59
+    "has_linear_links": 61
   },
   "a2a_inbox": {
     "klass": "ok",
     "rows_returned": 50,
     "new": [],
-    "at": "2026-09-25T18:44:14+00:00"
+    "at": "2026-09-25T22:52:49+00:00"
   },
   "closed": 1,
   "closed_without_recorded_evidence": 0,
@@ -1798,6 +1818,42 @@
   ],
   "reports": [
     {
+      "id": 130,
+      "title": "50 read endpoints that your public pages call answer anonymously with JSON and are not in /openapi-public.json -- a list for you to sort into document or retire",
+      "status": "paid",
+      "hunter_name": "expire76",
+      "severity_reported": "low",
+      "severity_confirmed": "low",
+      "created_at": "2026-09-25T20:15:50.747366",
+      "fixed_at": "2026-09-25T21:21:03.841380",
+      "validated_at": "2026-09-25T21:21:03.841380",
+      "triaged_at": "2026-09-25T21:21:03.841380",
+      "status_notes": "[2026-09-25T21:21:03+00:00] Resolved via ticket ET-27390: All 50 keyless home-page reads (+2 timed-out) are now in /openapi-public.json as GET-only, no-credential paths (openapi_public.py ET-27390 block; parametrised routes as templates e.g. /api/v1/prices/{asset}, /api/v1/marr/reports/{slug}). Pinned by tests/test_reply_queue_and_reference_identity_0925.py + test_byoa_front_door.py. Live in 3d2298884.",
+      "ticket_url": "https://cymetica.com/admin/centcom/issues/27390",
+      "fix_pr_url": null,
+      "reward_amount": 1000.0,
+      "paid_at": "2026-09-25T21:32:18.022423",
+      "is_duplicate": false
+    },
+    {
+      "id": 129,
+      "title": "Fund Launcher says community funds are paper-only and buying in is simulated; every Community AIB fund reads live and its profile offers 'Invest ... now -- it's LIVE'",
+      "status": "paid",
+      "hunter_name": "expire76",
+      "severity_reported": "medium",
+      "severity_confirmed": "medium",
+      "created_at": "2026-09-25T17:51:17.401552",
+      "fixed_at": "2026-09-25T21:04:17.485383",
+      "validated_at": "2026-09-25T21:04:17.485383",
+      "triaged_at": "2026-09-25T21:04:17.485383",
+      "status_notes": "[2026-09-25T21:04:17+00:00] Resolved via ticket ET-27309: Fund Launcher copy was stale: community funds are live and take real USDC (operator reversed paper-only 2026-09-22). templates/fund_builder.html now says 'Community funds are live: anyone can buy in with real USDC from the fund's page', the kv reads 'Live — real USDC', the paper reminders are removed and the post-create JS is data-driven on trading_mode. Live in d12372c9a.",
+      "ticket_url": "https://cymetica.com/admin/centcom/issues/27309",
+      "fix_pr_url": null,
+      "reward_amount": 1000.0,
+      "paid_at": "2026-09-25T21:10:50.362476",
+      "is_duplicate": false
+    },
+    {
       "id": 128,
       "title": "Two event-card indices moved +142 % and -85 % in one step while their large-cap baskets moved ~1-3 % -- one leg is priced at several times, or a fraction of, its market price",
       "status": "paid",
@@ -1808,7 +1864,7 @@
       "fixed_at": "2026-09-25T15:46:06.394556",
       "validated_at": "2026-09-25T15:46:06.394556",
       "triaged_at": "2026-09-25T15:46:06.394556",
-      "status_notes": "[2026-09-25T15:46:06+00:00] Resolved via ticket ET-27252: Confirmed, fixed live @e2eb6f9e5f. Cause: pricer merged equity quotes into the shared price map, so a stock leg on any card overwrote the crypto homonym (TRX Gold vs TRON +142%, Banco de Chile vs Bitcoin Cash -85%); 231 live cards hit. Fix: per-card, per-asset-class price view (tests/test_index_pricer_homonym_legs.py). Both cards back at ~99.5 with continuity; 31,226 artefact snapshot rows removed (backup table kept). Only paper positions were open in the windows.",
+      "status_notes": "[2026-09-25T15:46:06+00:00] Resolved via ticket ET-27252: Confirmed, fixed live @e2eb6f9e5f. Cause: pricer merged equity quotes into the shared price map, so a stock leg on any card overwrote the crypto homonym (TRX Gold vs TRON +142%, Banco de Chile vs Bitcoin Cash -85%); 231 live cards hit. Fix: per-card, per-asset-class price view (tests/test_index_pricer_homonym_legs.py). Both cards back at ~99.5 with continuity; 31,226 artefact snapshot rows removed (backup table kept). Only paper positions were open in the windows.\n[reporter-verification PASS 2026-09-25 18:44 UTC by expire76 test_run=run-20260925T183730Z-4813570f]",
       "ticket_url": "https://cymetica.com/admin/centcom/issues/27252",
       "fix_pr_url": null,
       "reward_amount": 1000.0,
@@ -2120,42 +2176,6 @@
       "reward_amount": 1000.0,
       "paid_at": "2026-09-20T22:34:07.980564",
       "is_duplicate": false
-    },
-    {
-      "id": 109,
-      "title": "The Build it Better websocket is live and named only in page HTML: an agent reading llms.txt, mcp.json or the OpenAPI cannot find it",
-      "status": "paid",
-      "hunter_name": "expire76",
-      "severity_reported": "low",
-      "severity_confirmed": "low",
-      "created_at": "2026-09-20T12:37:44.143437",
-      "fixed_at": "2026-09-20T13:39:46.695601",
-      "validated_at": "2026-09-20T13:39:46.695601",
-      "triaged_at": "2026-09-20T13:39:46.695601",
-      "status_notes": "[2026-09-20T13:39:46+00:00] Resolved via ticket ET-26122: Fixed and live @bc5946639 (first pass 32839220d). wss://cymetica.com/ws/build-it-better is named in llms.txt (new Build it Better section), .well-known/mcp.json, openapi-public.json (GET /api/v1/build-it-better/requests description) and agent-card.json; the placeholder-host ws URL in the backtest description now carries the real host. Verified anonymously: all four live documents name the socket, and the socket sends hello and answers ping. Reporter told in TG msg 235040 (topic 234611).\n[reporter-verification PASS 2026-09-20 13:57 UTC by expire76 test_run=run-20260920T135400Z-59a13105]\n[reporter-verification PASS 2026-09-20 16:47 UTC by expire76 test_run=run-20260920T162940Z-da287834]\n[reporter-verification PASS 2026-09-21 20:37 UTC by expire76 test_run=run-20260921T201015Z-b8579867]",
-      "ticket_url": "https://cymetica.com/admin/centcom/issues/26122",
-      "fix_pr_url": null,
-      "reward_amount": 1000.0,
-      "paid_at": "2026-09-20T13:43:25.105576",
-      "is_duplicate": false
-    },
-    {
-      "id": 108,
-      "title": "Every BB-SPEC says the 24-hour clock waits for a $100 MicroFund gate; your tools say there is nothing to fund, and your board agrees with the tools",
-      "status": "paid",
-      "hunter_name": "expire76",
-      "severity_reported": "medium",
-      "severity_confirmed": "medium",
-      "created_at": "2026-09-20T10:20:59.858021",
-      "fixed_at": "2026-09-20T11:29:40.586222",
-      "validated_at": "2026-09-20T11:29:40.586222",
-      "triaged_at": "2026-09-20T11:29:40.586222",
-      "status_notes": "[2026-09-20T11:29:40+00:00] Resolved via ticket ET-26113: Invalid, retracted by the reporter (TG 234985): the gate on ET-26036 was waived (funding.waived true, waiver_reason 'requester holds 100+ ET10'), so the clock starting was the documented behaviour; their reader had truncated the funding block. No reward claimed. The report's aside was valid and is fixed and live (a99e3363e): the Build it Better routes are now in openapi-public.json with per-operation security, admin spec route unpublished. Replied msg 235003.",
-      "ticket_url": "https://cymetica.com/admin/centcom/issues/26113",
-      "fix_pr_url": null,
-      "reward_amount": 1000.0,
-      "paid_at": "2026-09-20T11:40:26.486822",
-      "is_duplicate": false
     }
   ],
   "leaderboard": [
@@ -2165,11 +2185,11 @@
       "avatar_url": null,
       "tier": "senior",
       "total_score": 460,
-      "valid_reports": 81,
+      "valid_reports": 83,
       "total_likes": 0,
-      "total_earned": 77000.0,
-      "total_awarded": 77000.0,
-      "total_paid": 77000.0,
+      "total_earned": 79000.0,
+      "total_awarded": 79000.0,
+      "total_paid": 79000.0,
       "reward_currency": "ET10"
     },
     {
@@ -2214,7 +2234,7 @@
   ],
   "creator_rewards": {
     "klass": "ok",
-    "read_at": "2026-09-25T20:29:11+00:00",
+    "read_at": "2026-09-25T22:52:51+00:00",
     "stale_from": null,
     "summary": {
       "paid": 10,
