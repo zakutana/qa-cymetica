@@ -659,6 +659,18 @@ def test_a_card_that_is_closed_on_rest_and_open_on_mcp_fails():
     assert (row["name"], row["status"], row["index"], row["return"]) == (
         "FTA Fund — Stocks", "standing", 187.31, -2.3), row
 
+    # And what their pages read: a template stays a template, an action is
+    # never a candidate, plumbing is not, and a templated doc path covers it.
+    from tests.discovery.test_public_page_reads_are_documented import (
+        called_paths, candidates, documented_patterns)
+    js = ('fetch("/api/v1/fta-fund/history"); fetch(`/api/v1/aib/${sym}/buy`);'
+          ' fetch("/api/v1/btc-pool/enter"); fetch("/api/v1/rst/csrf-token");'
+          ' fetch("/api/v1/event-cards/abc/index-history"); fetch("/api/v1/headlines/")')
+    names = called_paths(js)
+    assert "/api/v1/aib/{x}/buy" in names and "/api/v1/headlines" in names
+    doc = documented_patterns({"paths": {"/api/v1/event-cards/{card_id}/index-history": {}}})
+    assert candidates(names, doc) == ["/api/v1/fta-fund/history", "/api/v1/headlines"]
+
 
 # ------------------------------------ a filed report is answered as filed -
 
