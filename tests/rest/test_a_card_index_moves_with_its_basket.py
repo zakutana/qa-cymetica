@@ -15,7 +15,7 @@ publishes the path, point by point. A position's `current_value_usdc` on
     97b827ad  "CME Group to Expand ..."          BCH 97.2 %, UNI 2.8 %, DUSK
               13:19:54 100.704 -> 13:29:25  14.925   (-85.2 % in one step)
 
-TRX, XTZ and BCH are top-100 assets that moved -1 % to -3.5 % that day, and
+TRX, XTZ and BCH are top-200 assets that moved -1 % to -3.5 % that day, and
 the cards' own `pw_index` / `pw_base` say the same thing the index does: the
 mean leg price went 0.2315 -> 0.5513 and 114.64 -> 17.08 -- one leg priced at
 several times, or a fraction of, what it trades at. Our paper position on
@@ -47,10 +47,15 @@ POSITIONS = "/api/v1/event-cards/positions"
 CARD = "/api/v1/event-cards/{card}"
 HISTORY = "/api/v1/event-cards/{card}/index-history"
 
-LARGE_CAP_RANK = 100
+# 200, not 100: XTZ is 133 on their own rank, and a top-200 coin does not
+# double in an hour either. 60 minutes, not 15: their history is thinned as
+# it ages -- 97b827ad's step read 13:19:54 -> 13:29:25 at 14:20 and
+# 13:19:54 -> 13:33:18 at 14:40, and at a 15-minute limit the first run of
+# this check read no step at all.
+LARGE_CAP_RANK = 200
 LARGE_CAP_WEIGHT = 0.9
 MAX_STEP = 0.40
-STEP_MINUTES = 15
+STEP_MINUTES = 60
 WINDOW_HOURS = 24
 
 
@@ -63,7 +68,7 @@ def _moment(value):
 
 
 def large_cap_share(basket) -> float:
-    """The weight carried by legs their own rank puts in the top 100."""
+    """The weight carried by legs their own rank puts in the top LARGE_CAP_RANK."""
     share = 0.0
     for leg in basket or []:
         rank, weight = leg.get("market_cap_rank"), leg.get("weight")

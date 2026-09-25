@@ -569,9 +569,11 @@ def test_a_card_that_is_closed_on_rest_and_open_on_mcp_fails():
 
     from tests.rest.test_a_card_index_moves_with_its_basket import (
         jumps, large_cap_share)
-    alchemy = [{"symbol": "TRX", "weight": 0.4879, "market_cap_rank": 10},
-               {"symbol": "XTZ", "weight": 0.472, "market_cap_rank": 90},
-               {"symbol": "ENJ", "weight": 0.0402, "market_cap_rank": 300}]
+    # Their own ranks that day: the first version cut at 100 and never
+    # judged this card, because XTZ is 133.
+    alchemy = [{"symbol": "TRX", "weight": 0.4879, "market_cap_rank": 8},
+               {"symbol": "XTZ", "weight": 0.472, "market_cap_rank": 133},
+               {"symbol": "ENJ", "weight": 0.0402, "market_cap_rank": 448}]
     assert large_cap_share(alchemy) > 0.9
     assert large_cap_share([{"symbol": "PEPE", "weight": 1.0,
                              "market_cap_rank": 400}]) == 0.0, (
@@ -589,10 +591,15 @@ def test_a_card_that_is_closed_on_rest_and_open_on_mcp_fails():
     # A big move spread over a gap longer than a step is not one step.
     assert jumps([path[0], {"t": "2026-09-25T12:30:00+00:00", "index": 150.0}],
                  since) == []
-    # Down counts the same as up, and the ordinary day does not.
+    # Down counts the same as up, and the ordinary day does not. The step as
+    # their thinned history served it at 14:40 -- 13 min 24 s, where the
+    # first version's 15-minute limit had already missed it at 14:32.
     assert jumps([{"t": "2026-09-25T13:19:54+00:00", "index": 100.704329},
-                  {"t": "2026-09-25T13:29:25+00:00", "index": 14.92515}],
+                  {"t": "2026-09-25T13:33:18+00:00", "index": 14.925121}],
                  since)[0]["change_pct"] == -85.2
+    assert jumps([{"t": "2026-09-25T13:19:54+00:00", "index": 100.704329},
+                  {"t": "2026-09-25T14:05:00+00:00", "index": 14.925121}],
+                 since), "thinned to 45 minutes, it is still one step"
     assert jumps([{"t": "2026-09-25T13:19:54+00:00", "index": 100.0},
                   {"t": "2026-09-25T13:29:25+00:00", "index": 108.0}], since) == []
 
