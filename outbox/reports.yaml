@@ -3401,6 +3401,49 @@ reports:
       a mention under llms.txt's own REST-API prose, the way every sibling
       feature gets one).
 
+  - key: paper-close-reports-proceeds-it-does-not-credit
+    findings: [CYM-closing_a_paper_position_returns_its_money]
+    severity: medium
+    category: api
+    url: https://cymetica.com/api/v1/event-cards/a4a5b71e-de11-4805-b8a3-ed9c3f8f8161/sell
+    title: "A paper close answers proceeds_usdc 20.0 and status closed, and the paper balance is never credited"
+    expected: >
+      Your own statement of 2026-09-10: "a paper close returns the proceeds
+      and books total_pnl." A close that answers status "closed" with
+      proceeds_usdc 20.0 puts 20.0 back into sim_balance.usdc on GET
+      /api/v1/account/me, as the close of another card from the same account
+      did 17 seconds earlier.
+    actual: >
+      On 2026-09-25, from an account in simulation_mode, we opened two 20 USDC
+      paper positions and closed both in full. Both buys debited 20.00. The
+      first close (position 60a470ac-7714-4ce2-a689-8732f5716fb6, card
+      5d91bf43, 08:09:34 UTC) answered proceeds_usdc 20.026915, and
+      sim_balance.usdc moved 88763.11 -> 88783.13, sim_total_trades 50 -> 51.
+      The second close (position d95dede0-eb95-4b7a-875d-816a452eab92, card
+      a4a5b71e "SpaceX IPO: Top 10 Crypto Plays", 08:09:53 UTC) answered
+      HTTP 200 {"closed_fraction": 1.0, "proceeds_usdc": 20.0,
+      "realized_pnl_usdc": 0.0, "status": "closed", "paper": true}, and
+      sim_balance.usdc stayed 88783.13 and sim_total_trades stayed 51 -- read
+      4 s after the close and again at 08:26:24, 17 minutes later.
+      GET /api/v1/event-cards/positions lists d95dede0 as status "closed". So
+      the position is gone and the 20.00 it held is in neither the position
+      nor the balance.
+    steps:
+      - 'GET https://cymetica.com/api/v1/account/me -> simulation_mode true, sim_balance.usdc "88783.13", sim_total_trades 51'
+      - 'POST https://cymetica.com/api/v1/event-cards/a4a5b71e-de11-4805-b8a3-ed9c3f8f8161/sell {"position_id": "d95dede0-eb95-4b7a-875d-816a452eab92", "fraction": 1.0, "paper": true} -> 200 {"proceeds_usdc": 20.0, "status": "closed", "paper": true}'
+      - 'GET https://cymetica.com/api/v1/account/me 4 s and 17 min later -> sim_balance.usdc "88783.13", sim_total_trades 51 (unchanged)'
+      - 'GET https://cymetica.com/api/v1/event-cards/positions -> d95dede0 status "closed", realized_pnl_usdc 0.0'
+    body: >
+      The one visible difference from the close that did credit is the card:
+      a4a5b71e is the card whose paper buys answered 500 "Buy failed" until
+      #117 was fixed; its first accepted buy was this one, at 08:09:10 UTC.
+      A book that debits on the way in and does not credit on the way out
+      reads every strategy on that card as losing its whole stake.
+
+      Our check places no order: it reads our own record of the newest close
+      -- the account read either side of it, each with its capture -- and
+      goes green when a close credits what it answered.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in
