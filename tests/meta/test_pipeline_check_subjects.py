@@ -561,6 +561,41 @@ def test_a_card_that_is_closed_on_rest_and_open_on_mcp_fails():
     with pytest.raises(Inconclusive):
         _run_tradeability_check({c: False}, {c: None})
 
+    # The other card-state check, merged here (the tests/meta ceiling): a
+    # card's index does not move further in one step than its basket can.
+    # d23b4cf2 on 2026-09-25: TRX/XTZ/ENJ, +142.3 % between two points three
+    # minutes apart; 97b827ad, 97 % BCH, -85.2 % in nine and a half.
+    from datetime import datetime, timezone
+
+    from tests.rest.test_a_card_index_moves_with_its_basket import (
+        jumps, large_cap_share)
+    alchemy = [{"symbol": "TRX", "weight": 0.4879, "market_cap_rank": 10},
+               {"symbol": "XTZ", "weight": 0.472, "market_cap_rank": 90},
+               {"symbol": "ENJ", "weight": 0.0402, "market_cap_rank": 300}]
+    assert large_cap_share(alchemy) > 0.9
+    assert large_cap_share([{"symbol": "PEPE", "weight": 1.0,
+                             "market_cap_rank": 400}]) == 0.0, (
+        "a small-cap basket can do what the rule forbids; it is not judged")
+    assert large_cap_share([{"symbol": "X", "weight": 1.0}]) == 0.0, (
+        "a leg with no rank is not large-cap by default")
+    since = datetime(2026, 9, 25, 0, 0, tzinfo=timezone.utc)
+    path = [{"t": "2026-09-25T10:27:07+00:00", "index": 100.436996},
+            {"t": "2026-09-25T10:30:21+00:00", "index": 243.39287},
+            {"t": "2026-09-25T10:32:20+00:00", "index": 243.461983}]
+    found = jumps(path, since)
+    assert [j["change_pct"] for j in found] == [142.3], found
+    # Before the window: history, not judged -- so a fix can show.
+    assert jumps(path, datetime(2026, 9, 25, 11, 0, tzinfo=timezone.utc)) == []
+    # A big move spread over a gap longer than a step is not one step.
+    assert jumps([path[0], {"t": "2026-09-25T12:30:00+00:00", "index": 150.0}],
+                 since) == []
+    # Down counts the same as up, and the ordinary day does not.
+    assert jumps([{"t": "2026-09-25T13:19:54+00:00", "index": 100.704329},
+                  {"t": "2026-09-25T13:29:25+00:00", "index": 14.92515}],
+                 since)[0]["change_pct"] == -85.2
+    assert jumps([{"t": "2026-09-25T13:19:54+00:00", "index": 100.0},
+                  {"t": "2026-09-25T13:29:25+00:00", "index": 108.0}], since) == []
+
 
 # ------------------------------------ a filed report is answered as filed -
 
