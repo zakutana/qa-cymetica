@@ -1594,7 +1594,22 @@ def _only_picked(text: str, find, names: list[str]) -> list[str]:
             pending = False
     if picked & set(names):
         return [name for name in names if name in picked]
+    # A numbered list that names them IS his pick list (NEX-0098, 2026-09-25:
+    # asked for five, he numbered five and discussed seven more in prose and
+    # an inline "**Excluded:**"; all twelve were cloned). The first name of
+    # each numbered item, in the answer's order.
+    listed: list[str] = []
+    for line in str(text or "").split("\n"):
+        if _NUMBERED.match(line):
+            found = find(line)
+            if found and found[0] not in listed:
+                listed.append(found[0])
+    if set(listed) & set(names):
+        return [name for name in listed if name in names]
     return names
+
+
+_NUMBERED = re.compile(r"^\s*\d+[.)]\s")
 
 
 # A line that DECLARES which one he chooses -- "**Pick: MACD Hunter**",

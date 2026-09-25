@@ -2761,6 +2761,21 @@ def test_the_catalogue_readers_take_whole_names_and_respect_what_he_ruled_out():
     ranked = ("## Pick: **AIB-SPACE** -- mark it, watch 5 days.\n"
               "It sits at the top, ahead of AIB-AI (+9.8%) and FTA-STOCKS.\n")
     assert lab.proposed_funds(ranked, FUNDS) == ["AIB-SPACE"]
+    # NEX-0098 (2026-09-25 01:27): asked for FIVE by name, he surveyed all
+    # twelve, numbered his five, and named the rest in prose and an inline
+    # "**Excluded:**" -- the tick cloned twelve (seven refused only by their
+    # cap). A numbered list naming bots is his pick list: its first name per
+    # item, and nothing he merely discussed.
+    numbered = ("Survey: MACD Hunter 41%, Trend Titan 0 trades, Doom & Gloom "
+                "30%, Liquidation Hunter 0 trades.\n\n"
+                "1. **MACD Hunter** -- stop 3.0%, TP 4.5%.\n"
+                "2. **Doom & Gloom** -- stop 2.5%, TP 5.0%.\n\n"
+                "Deliberately not stacked (Doom & Gloom, Trend Titan lean short).\n\n"
+                "**Excluded:** Liquidation Hunter (0 trades).\n\n"
+                "## How to run them\n"
+                "1. `clone_bot` (paper by default).\n2. Fund it.\n")
+    assert [b["name"] for b in lab.proposed_bots(numbered, CATALOGUE)] == [
+        "MACD Hunter", "Doom & Gloom"]
     assert lab.proposed_funds("AIB-SPACE and AIB-AI both look fine.\n",
                               FUNDS) == ["AIB-SPACE", "AIB-AI"]
     # The card reader keeps its own behaviour through the shared section logic.
