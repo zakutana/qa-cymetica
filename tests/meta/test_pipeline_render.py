@@ -1446,11 +1446,13 @@ def test_the_rewards_come_from_their_tracker(tmp_path, monkeypatch):
     # tweetu" -- bug rewards and post rewards side by side, never summed into
     # one figure that hides which is which.
     assert rewards["paid_total"] == 2000, "post rewards leaked into the bug total"
+    # No read time in the payload: every quiet poll rewrote it and made the
+    # page stale against its inputs (deep pass 2026-09-25, R01). Only a
+    # failed read's moment is shown.
     assert rewards["posts"] == {"paid_n": 7, "pending_n": 1, "et10": 7000,
-                                "etlp": 7000, "read_at": "2026-09-25T20:00:00+00:00",
-                                "stale": False}
+                                "etlp": 7000, "stale_from": None}
     for field in ("posts.et10", "posts.etlp", "posts.paid_n", "posts.pending_n",
-                  "posts.read_at", "posts.stale"):
+                  "posts.stale_from"):
         assert field in render.TEMPLATE, f"the page never shows {field}"
     assert rewards["pending_n"] == 1, "a fixed report is owed a reward"
     assert rewards["invalid_n"] == 1

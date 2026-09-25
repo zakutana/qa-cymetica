@@ -510,9 +510,11 @@ def _rewards() -> dict:
         "pending_n": int(posted.get("pending") or 0),
         "et10": int(posted.get("et10") or 0),
         "etlp": int(posted.get("etlp") or 0),
-        "read_at": creator.get("read_at"),
-        "stale": bool(creator) and (bool(creator.get("stale_from"))
-                                    or creator.get("klass") != "ok"),
+        # Not the read time: every quiet poll rewrote it, so the page went
+        # stale against its inputs each time (deep pass 2026-09-25, R01).
+        # Only a failed read's moment, which changes when something did.
+        "stale_from": (creator.get("stale_from") or creator.get("read_at")
+                       if creator and creator.get("klass") != "ok" else None),
     }
     return {
         "posts": posts,
@@ -2719,7 +2721,7 @@ function statBlocks() {
     <dl class="figs">
       <div><dt>bugs</dt><dd>${esc(money(rw.paid_total || 0))} ${esc(rw.currency || "ET10")} · ${rw.paid_n || 0} reports paid</dd></div>
       <div><dt>bugs pending</dt><dd>${rw.pending_n || 0} fixed, not yet paid · ${rw.invalid_n || 0} rejected</dd></div>
-      <div class="${posts.stale ? "warn" : ""}" title="${esc(posts.read_at ? "Creator dashboard, read " + posts.read_at + (posts.stale ? " -- the last read failed, these are the figures before it" : "") : "Not read yet")}"><dt>tweets</dt><dd>${esc(money(posts.et10 || 0))} ET10 + ${esc(money(posts.etlp || 0))} ETLP · ${posts.paid_n || 0} replies paid${posts.pending_n ? ` · ${posts.pending_n} awaiting check` : ""}</dd></div>
+      <div class="${posts.stale_from ? "warn" : ""}" title="${esc(posts.stale_from ? "Creator dashboard unread since " + posts.stale_from + " -- these are the figures before it" : "Creator dashboard, their own summary")}"><dt>tweets</dt><dd>${esc(money(posts.et10 || 0))} ET10 + ${esc(money(posts.etlp || 0))} ETLP · ${posts.paid_n || 0} replies paid${posts.pending_n ? ` · ${posts.pending_n} awaiting check` : ""}</dd></div>
     </dl>
     ${bars((rw.by_day || []).map(d => ({k: d.day, v: d.amount, t: money(d.amount) + " " + (rw.currency || "")})), "bug rewards by day")}
     ${rw.disagrees ? `<p class="blurb warn" title="They publish ${esc(money(rw.their_total))} ${esc(rw.currency || "")} across ${esc(String(rw.rows_they_hold))} report(s); we read ${esc(String(rw.rows_read))} row(s) and add up ${esc(money(rw.paid_total || 0))}. Days are the day they resolved each report.">&ne; their total ${esc(money(rw.their_total))} ${esc(rw.currency || "")}</p>`
