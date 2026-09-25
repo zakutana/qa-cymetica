@@ -620,6 +620,45 @@ def test_a_card_that_is_closed_on_rest_and_open_on_mcp_fails():
     assert offers_live_invest(visible_text("<!-- Invest in X now, it's LIVE -->")) is None, (
         "a comment is not what a visitor reads")
 
+    # And the leaderboard against list_funds, read off the row markup served
+    # on 2026-09-25.
+    from tests.mcp.test_fund_performance_page_matches_the_api import (
+        disagreements, rows_of)
+    def tr(rank, name, sleeve, status, index, ret):
+        return (f'<tr class="{status}"><td class="rk">{rank:02d}</td>'
+                f'<td class="fund"><a href="/x">{name}</a></td>'
+                f'<td class="sleeve">{sleeve}<span class="dir">long</span></td>'
+                f'<td class="status"><span class="st {status}">{status}</span></td>'
+                f'<td class="num" id="fp-x-rk-index">${index}</td>'
+                f'<td class="num" id="fp-x-rk-return"><span class="pos">{ret}%</span></td></tr>')
+    page = (tr(1, "Privacy", "Community AIB", "live", "154.02", "+121.83")
+            + tr(2, "M&amp;A Ripple Fund", "M&amp;A Ripple", "live", "115.98", "+15.98")
+            + tr(3, "Power", "Managed AIB", "live", "0.01", "+3.17"))
+    rows = rows_of(page)
+    assert [r["name"] for r in rows] == ["Privacy", "M&A Ripple Fund", "Power"]
+    api = [{"name": "Privacy", "sleeve": "Community AIB", "status": "live",
+            "index_price_usd": 154.018645, "return_since_inception_pct": 121.83},
+           {"name": "M&A Ripple Fund", "sleeve": "M&A Ripple", "status": "live",
+            "index_price_usd": 115.978, "return_since_inception_pct": 15.98},
+           {"name": "Power", "sleeve": "Managed AIB", "status": "live",
+            "index_price_usd": 0.01031653, "return_since_inception_pct": 3.17}]
+    assert disagreements(rows, api) == [], "a cent of rounding is not a disagreement"
+    moved = [dict(api[0], index_price_usd=160.0)] + api[1:]
+    assert any("index" in d for d in disagreements(rows, moved))
+    extra = api + [{"name": "Hidden", "sleeve": "Managed AIB", "status": "live",
+                    "index_price_usd": 1.0, "return_since_inception_pct": 50.0}]
+    assert any("not on the page" in d for d in disagreements(rows, extra))
+    assert any("order" in d for d in disagreements(list(reversed(rows)), api))
+    # FTA Fund -- Stocks: no profile link and no ids on its cells. The first
+    # version read those by id, missed the row, and reported the fund absent.
+    fta = ('<tr class="standing"><td class="rk">17</td><td class="fund">FTA Fund — Stocks</td>'
+           '<td class="sleeve">FTA<span class="dir">short</span></td>'
+           '<td class="status"><span class="st standing">standing</span></td>'
+           '<td class="num">$187.31</td><td class="num"><span class="neg">-2.30%</span></td></tr>')
+    (row,) = rows_of(fta)
+    assert (row["name"], row["status"], row["index"], row["return"]) == (
+        "FTA Fund — Stocks", "standing", 187.31, -2.3), row
+
 
 # ------------------------------------ a filed report is answered as filed -
 
