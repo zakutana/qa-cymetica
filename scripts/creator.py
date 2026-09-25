@@ -35,13 +35,21 @@ def tracked_url(slug: str) -> str:
     return f"{BASE}/c/{slug}"
 
 
-def claim(client, outlet: str, lead_id: int, page_slug: str = "",
+def claim(client, outlet: str, lead_id: int, page_slug: str,
           confirm: bool = False) -> dict:
     """Claim one lead and return their record of it, `reply_slug` and
-    `suggested_reply` included. Refuses an unknown outlet and a missing
-    `confirm` before anything reaches the network."""
+    `suggested_reply` included. Refuses an unknown outlet, an empty page and
+    a missing `confirm` before anything reaches the network.
+
+    No default page: a claim without one answered 200 and attached the
+    account's only page, and its pitch, to leads about other tools
+    (MSG-0061, 2026-09-25)."""
     if outlet not in OUTLETS:
         raise CreatorError(f"unknown outlet {outlet!r} -- one of {OUTLETS}")
+    page_slug = (page_slug or "").strip()
+    if not page_slug:
+        raise CreatorError("name the page to reply with (--page <slug>); "
+                           "without one their server picks a page for you")
     if not confirm:
         raise CreatorError("pass confirm=True to actually claim the lead")
     import httpx
@@ -49,7 +57,7 @@ def claim(client, outlet: str, lead_id: int, page_slug: str = "",
     try:
         response = client.post(
             f"/api/v1/creator/{outlet}-leads/{int(lead_id)}/reply",
-            json={"link_slug": page_slug or ""})
+            json={"link_slug": page_slug})
     except httpx.TimeoutException:
         return _settle(client, outlet, lead_id, "timed out")
     if response.status_code >= 500:
@@ -204,7 +212,7 @@ def main(argv: list[str] | None = None) -> int:
     one = sub.add_parser("claim", help="claim a lead; mints its tracked link")
     one.add_argument("--outlet", choices=OUTLETS, default="twitter")
     one.add_argument("--lead", type=int, required=True)
-    one.add_argument("--page", default="", help="artifact page slug to reply with")
+    one.add_argument("--page", required=True, help="artifact page slug to reply with")
     one.add_argument("--confirm", action="store_true")
     done = sub.add_parser("posted", help="mark a lead posted with the reply's "
                                          "link; the reward is credited on it")

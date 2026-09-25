@@ -67,6 +67,13 @@ def test_a_claim_refuses_before_the_network_without_confirm():
         mod.claim(_client(handler), "twitter", 3, "p497i3fy", confirm=False)
     with pytest.raises(mod.CreatorError, match="outlet"):
         mod.claim(_client(handler), "linkedin", 3, "p497i3fy", confirm=True)
+    # MSG-0061 (2026-09-25): a claim with no page answered 200 and attached
+    # the account's only page, Chartink, and its pitch to leads about Kalshi,
+    # MQL5, Topstep and Tradezella. The default "" was how every call site
+    # opted out of choosing, so there is no default and no empty page.
+    for empty in ("", "  ", None):
+        with pytest.raises(mod.CreatorError, match="page"):
+            mod.claim(_client(handler), "twitter", 3, empty, confirm=True)
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -94,7 +101,7 @@ def test_a_claim_posts_the_documented_body_and_returns_the_tracked_link():
         return httpx.Response(409, json={"detail": "lead already claimed"})
 
     with as_mutate_tier(), pytest.raises(mod.CreatorError, match="409"):
-        mod.claim(_client(refused, mutate=True), "reddit", 7, "", confirm=True)
+        mod.claim(_client(refused, mutate=True), "reddit", 7, "p497i3fy", confirm=True)
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
