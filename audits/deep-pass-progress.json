@@ -2,7 +2,7 @@
   "run": "deep-pass-2026-09-25",
   "at": "2026-09-25T20:49:03+00:00",
   "previous_at": "2026-09-24T20:26:30+00:00",
-  "at_finished": null,
+  "at_finished": "2026-09-25T23:32:57+00:00",
   "start_commit": "ff34dd5e70fe4320d5863956d345816f79d9eae5",
   "gaps": [
     {
@@ -847,7 +847,10 @@
     "done": true,
     "findings": 10
   },
-  "next": null,
+  "next": [
+    "Kontrola fund leaderboardu padá na NAŠEM parseru: po jejich ET-27387 (sloupce) čte návratnost jako index (53 „neshod“). Přečíst nový markup, opravit `rows_of`, pak běh; řádek NOT RAISED YET nezakládat.",
+    "Sweep: kontrola BB-SPEC padá na cizím ET-26924 (4 BB-CHANGE bez dodatku ve specu). Napřed přečíst jejich surové záznamy (memory a-check-encodes...), teprve pak report přes submit.py."
+  ],
   "retrospective": {
     "last": "2026-09-19",
     "done": false
@@ -855,8 +858,11 @@
   "rule_changes": [],
   "meta_tests": {
     "start": 800,
-    "end": null,
-    "reason": null
+    "end": 800,
+    "reason": "new assertions merged into existing guards; no test function added or removed"
   },
-  "finished": false
+  "finished": true,
+  "size": "full -- the core moved: qa/fold.py",
+  "run_id": "run-20260925T225326Z-b7f75212",
+  "prereg": "PRE-0178"
 }

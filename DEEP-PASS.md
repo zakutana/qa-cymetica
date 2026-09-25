@@ -1,15 +1,17 @@
-# Deep pass — 2026-09-24 večer (po dni creator dashboardu, head-to-head a degen promptů)
+# Deep pass — 2026-09-25 v noci (po dni creator odměn, #130 a redesignu konzole)
 ## Opraveno
-- **Všech 34 skutečných ze 43 nálezů (34 z auditu 259 kontrol, 9 z review), u každého test napřed; ověřeno PRE-0159, úroveň V (`run-20260924T220050Z-24d08821`).** Mezi nimi A01: můj nález „seznam odkazů creatora vynechává odkazy z odpovědí“ byl chybný (jsou vnořené pod stránkami), stažen dřív, než odešel.
+- **30 z 31 skutečných nálezů (44 tvrzení: 34 z auditu 68 kontrol, 10 z review; 3 čtenáři), každý s testem napřed; ověřeno PRE-0178, úroveň V (`run-20260925T225326Z-b7f75212`).** Hlavně: kontroly už neberou nepřečtené nebo prázdné čtení jako „prošlo“; náš vlastní report už laborku nebudí jako jejich novinka; kontrola odkazů creatora četla cizí účet (tg_expire76).
 ## Co odešlo Cymetice
-- **6 ověření `pass`, všechna přijata: #113, #114, #122, #124 (2×), #125.** #117, #119 a #123 záměrně ne (NEXT.md).
+- **6 ověření: pass na #113, #122, #125, #128, #129; fail na #112 (ET-26924 a ET-26776 dorazily po jejich 24h lhůtě).**
 ## Změněná pravidla
-- **Žádné.**
+- **Žádné.** Opravy zpřísnily kontroly, žádné pravidlo neoslabily.
 ## Čeká na tebe
-- **R02 (1 ze 3): `clone.py release` smí smazat bota, který obchoduje, když ho nedrží žádný room — nechávám, dva čtenáři to za vadu nemají a mazání navíc hlídá Claude Code.**
-- **R06 (1 ze 3): `lab.py adopt` bez `--window-days` zapíše 7 dní, otázka Nexusovi teď slibuje 3 — nechávám, ruční převzetí okno vždy zadává.**
-- **R09 (1 ze 3): `release` nezavře spojení, když selže závěrečné čtení po smazání — nechávám, jde o jednorázový příkaz.**
-- **ET-26036: verdikt dál čeká na obrazcovou TA** (MSG-0038).
+- **#130: přehled dluží „fail“ (10 z 50 cest pořád bez dokumentace, 40 doplnili v noci) — neposlal jsem ho, řekl jsi, že co dokumentovat je jejich volba; rozhodni, jestli jim to připomenout.**
+- **B07 (3/3): tvůj řádek `/channels` (Sonnet · low) v tabulce CLAUDE.md nehlídá žádný test — oprava patří do testu tvých rozhodnutí, na který noční pass nesmí sahat.**
+- **R09 (1 ze 3): hero „Rewards“ sčítá bugy a tweety pod jednou měnou — dnes obojí ET10, rozejde se jen když změní měnu bounty.**
+- **C03 (1 ze 3): test novinek dává lidské a2a zprávě `auto: False`, skutečná ho nemá — kód je správně, fixture je slabší.**
+- **C10 (1 ze 3): `docs/laborator-plan.md:75` pořád píše, že se čte `get_usage` — stará věta v plánu, kód ho nečte.**
+- **B06 (1 ze 3): test PATCH klonu hlídá podmnožinu, ne rovnost — `is_paper` přidané na dvě místa by prošlo.**
+- **B10 (1 ze 3): klon s neznámým výsledkem financování se při restartu počítá jako 0 v limitu 60 % — dnes takový neexistuje.**
 ## Co se stalo
-- **Jeden bot, jeden room: Trend Titan byl zároveň ve STR-0044 a STR-0045 a zastavení STR-0045 by ho pozastavilo; STR-0045 zastaven a znovu otevřen jako STR-0046 se 4 boty.** Chat Nexuse už hloubkové analýze nebere hodinový limit.
-- Plný pass, týden není na řadě (poslední 19. 9.). Prořez: tests/meta 802 → 799, paměť 50 → 48 řádků. Moje chyby dne: dva plné běhy zmařené (commit během běhu a nasazování Cymetiky) a nález na odkazy čtený jen z horní úrovně.
+- **První plný běh (PRE-0177) zmařilo jejich nasazení uprostřed (openapi/mcp); PRE-0178 platí.** Dvě nové NOT RAISED YET jsou v NEXT.md: parser fund leaderboardu po jejich změně sloupců (naše chyba) a BB-SPEC na cizím ET-26924 (napřed přečíst). Týden není na řadě (poslední 19. 9.); tests/meta 800 → 800, paměť 48.
