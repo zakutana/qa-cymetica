@@ -16,8 +16,8 @@
         "t3": "not real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "148ff20c",
       "why": {
         "t1": "every ok creator read writes a new read_at hashed into the payload (render.py:513); a quiet poll changes payload_hash; window overstated.",
         "t2": "narrower: red at most one watcher tick after each poll; dashboard rewritten every poll.",
@@ -35,8 +35,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "7709c2dc",
       "why": {
         "t1": "#129 filed at seq 2756, first-seen vendor_status pending by agent at seq 2759 (bounty.py:631) counted by vendor_news (lab.py:671).",
         "t2": "first-seen vendor_status of our own #129 (seq 2759) counted; next tick sweeps on our own filing.",
@@ -54,8 +54,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "7709c2dc",
       "why": {
         "t1": "vendor_news returns lines[-3:] of every vendor event ever (lab.py:687); printed as 'their side moved' on any hunt sweep incl. night-rule.",
         "t2": "lines[-3:] of every vendor event; printed whenever hunt sweep decided.",
@@ -73,8 +73,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "184c3a17",
       "why": {
         "t1": "under ## PICKS, 'It beats RSI Sniper and Trend Titan' returns both as picks (lab.py:1633 section and found); 'Not selected:' still removed.",
         "t2": "demonstrated: bulleted 'Excluded: RSI Sniper' under ## PICKS returned as a pick.",
@@ -187,8 +187,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "184c3a17",
       "why": {
         "t1": "'3. Perceptron Oracle -- excluded, overfits' returned as a pick; _ruled_out skips numbered lines (lab.py:1544), fallback takes first name (lab.py:1650).",
         "t2": "demonstrated: '3. RSI Sniper -- excluded' returned as a pick.",
@@ -206,8 +206,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "7709c2dc",
       "why": {
         "t1": "same as R02, traced end to end; the test's 'ours' fixture is a filing_outcome never counted.",
         "t2": "same as R02; the test's 'ours' event is a filing_outcome never read.",
@@ -225,8 +225,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "7709c2dc",
       "why": {
         "t1": "tracker read failing returns klass unreachable, said['tracker'] read by nothing; the test checks only the stub.",
         "t2": "nothing reads said['tracker']; a failing tracker read gives no failed/gap/decide.",
@@ -263,8 +263,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "e1d92451",
       "why": {
         "t1": "every job 2h10m old; POLLABLE_HOURS unpinned; =3 stays green.",
         "t2": "jobs 2h10m-2h15m old, POLLABLE_HOURS pinned by nothing.",
@@ -282,8 +282,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "e1d92451",
       "why": {
         "t1": "brief prints OUR-0001 under 'his proposals'; 'question for him' printed unconditionally (lab.py:3570).",
         "t2": "'question for him' printed unconditionally; deleting the OUR rooms section stays green.",
@@ -301,8 +301,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "e1d92451",
       "why": {
         "t1": "h=-5 and h=+1 both 30.0 (test:3089), rule not pinned.",
         "t2": "the first half's 7.1/240 assertion catches STR-0034; the test as a whole tells them apart.",
@@ -320,8 +320,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "e1d92451",
       "why": {
         "t1": "60% branch only exercised by calling restart_affordable directly.",
         "t2": "no test drives bot_variants with a book over 60%.",
@@ -339,8 +339,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "e1d92451",
       "why": {
         "t1": "fixture's only bot is stopped; the trading chip never drawn.",
         "t2": "the chip branch trading/idle never reached.",
@@ -358,8 +358,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "e1d92451",
       "why": {
         "t1": "signals 88 and 12 only; > or 50 stays green.",
         "t2": "'min': 70.0 asserted is CONVICTION_MIN; changing the cutoff fails; only >= -> > survives, not the named mutation.",
@@ -396,8 +396,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "e7f42902",
       "why": {
         "t1": "LINKS hard-coded to tg_expire76 while leads read with expire76 key; its reply slugs would be counted missing.",
         "t2": "evidence: LINKS stays tg_expire76 while leads come from expire76; reply slugs would read missing.",
@@ -415,8 +415,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "e7f42902",
       "why": {
         "t1": "probed exactly 120 (cap); any non-200 probe incl 429/5xx counts as refused.",
         "t2": "(b) demonstrated: every probe 429/5xx counts as refused and passes; (a) cap structurally true.",
@@ -434,8 +434,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "e7f42902",
       "why": {
         "t1": "passes on one card closed on both surfaces for any reason; unread pairs do not block.",
         "t2": "date-closed card closed on both gives a pass, market-hours gate not exercised.",
@@ -453,8 +453,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "e7f42902",
       "why": {
         "t1": "200 history with no points appended to judged with no jumps.",
         "t2": "{\"points\": []} appended to judged with no jumps.",
@@ -472,8 +472,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "e7f42902",
       "why": {
         "t1": "2 of 3 profiles unread and 1 read without offer passes.",
         "t2": "2 of 3 profiles 429, third without offer: passes.",
@@ -491,8 +491,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "e7f42902",
       "why": {
         "t1": "5xx/401 probe drops out of served; passes on the rest.",
         "t2": "/sides 503 or 401 dropped from served; passes on the other two.",
@@ -510,8 +510,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "4702e3a7",
       "why": {
         "t1": "broken-files run asserts only returncode; print after exec_module stays green.",
         "t2": "unconditional print after exec_module survives; the broken-files run asserts only returncode.",
@@ -529,8 +529,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "e7f42902",
       "why": {
         "t1": "index compared only when API value is a number.",
         "t2": "index compared only when both are numbers, unlike the null-symmetric return check.",
@@ -548,8 +548,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "4702e3a7",
       "why": {
         "t1": "in_force reads skip/xfail from decorators only.",
         "t2": "skip read from decorator_list only.",
@@ -567,8 +567,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "4702e3a7",
       "why": {
         "t1": "tripwire calls only _surface_facts; facts() changed stays green.",
         "t2": "facts() calls exactly _surface_facts today; needs a future rewrite.",
@@ -586,8 +586,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "e7f42902",
       "why": {
         "t1": "TILE.search finds first write only; reproduced.",
         "t2": "demonstrated: first write only.",
@@ -605,8 +605,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "91afd00a",
       "why": {
         "t1": "removing the accepted filter at fold.py:766: 206 fold/verification meta tests pass; every _verification fixture accepted.",
         "t2": "demonstrated: filter removed, all 1058 meta green; unknown mark clears verification_owed/reopen.",
@@ -624,8 +624,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "0fef948a",
       "why": {
         "t1": "module constants unhashed by check_fingerprint and helpers_fingerprint.",
         "t2": "module constants unhashed; verify.py:365-368 would say the check was not rewritten.",
@@ -643,8 +643,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "a35a998d",
       "why": {
         "t1": "test reads only the night slice; _archive_diaries and _sibling targets not followed.",
         "t2": "the night calls _archive_diaries (lab.py:322, outside the slice) -> keep.snapshot; a git commit there stays green.",
@@ -681,8 +681,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "453f2365",
       "why": {
         "t1": "_settle returns the lead as read back incl reply_page_slug; the >200 case unreachable from current data.",
         "t2": "narrow: re-claim with page B answering 503 over a lead holding page A returns A's record as settled_by_read.",
@@ -725,7 +725,8 @@
         "t1": "/channels row outside hashed paragraph; nothing pins it.",
         "t2": "the /channels row sits outside the hashed paragraph; editing it stays green.",
         "t3": "the /channels row is outside the hashed paragraph."
-      }
+      },
+      "deferred_to_operator": true
     },
     {
       "id": "B08",
@@ -738,8 +739,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "e7f42902",
       "why": {
         "t1": "reproduced: += skipped by _assignment regex.",
         "t2": "demonstrated: `nb +=` not matched by _assignment, resolves to s.building.",
@@ -757,8 +758,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "453f2365",
       "why": {
         "t1": "[100,103,109,95] crosses 8% once; first-round not pinned.",
         "t2": "one round past 8%; no hot test with two TP-crossing rounds of different value.",
