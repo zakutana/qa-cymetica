@@ -56,6 +56,18 @@ ACTION = re.compile(
 PLUMBING = re.compile(r"csrf|vapid|telemetry|analytics|bootstrap|/me$|/me/|/account")
 
 
+def _get(client, url, **kw):
+    """One GET, or None when their server did not answer in time. Some 200
+    reads across ~200 requests: one ReadTimeout made the whole run of
+    2026-09-25 19:42 inconclusive, so a slow answer is counted, not fatal."""
+    import httpx
+
+    try:
+        return client.get(url, **kw)
+    except httpx.TimeoutException:
+        return None
+
+
 def documented_patterns(spec: dict) -> list[re.Pattern]:
     return [re.compile("^" + re.sub(r"\\{[^}]+\\}", "[^/]+", re.escape(p)) + "$")
             for p in (spec.get("paths") or {})]
@@ -92,10 +104,13 @@ def test_what_a_public_page_reads_without_a_key_is_documented(rest_anon):
                     if not h.startswith(("/static", "/api", "/."))})[:MAX_PAGES]
     names: dict[str, set] = {}
     scripts_seen: set = set()
-    read = 0
+    read, unread = 0, []
     for link in pages:
         time.sleep(PAUSE_S)
-        page = rest_anon.get(SITE + link)
+        page = _get(rest_anon, SITE + link)
+        if page is None:
+            unread.append(link)
+            continue
         if page.status_code != 200:
             continue
         read += 1
@@ -104,8 +119,10 @@ def test_what_a_public_page_reads_without_a_key_is_documented(rest_anon):
             if js in scripts_seen:
                 continue
             scripts_seen.add(js)
-            script = rest_anon.get(SITE + js)
-            if script.status_code == 200:
+            script = _get(rest_anon, SITE + js)
+            if script is None:
+                unread.append(js)
+            elif script.status_code == 200:
                 texts.append(script.text)
         for text in texts:
             for path in called_paths(text):
@@ -117,11 +134,16 @@ def test_what_a_public_page_reads_without_a_key_is_documented(rest_anon):
     public, refused = [], 0
     for path in probe:
         time.sleep(PAUSE_S)
-        answer = rest_anon.get(path, headers={"Accept": "application/json"})
-        if answer.status_code == 200 and "json" in answer.headers.get("content-type", ""):
+        answer = _get(rest_anon, path, headers={"Accept": "application/json"})
+        if answer is None:
+            unread.append(path)
+        elif answer.status_code == 200 and "json" in answer.headers.get("content-type", ""):
             public.append(path)
         else:
             refused += 1
+    # A fail needs only the reads that answered; a pass needs every one (rule 8).
+    if unread and not public:
+        raise Inconclusive(f"{len(unread)} read(s) timed out: {', '.join(unread[:5])}")
     conclude(Measurement(
         verdict="failed" if public else "passed",
         reason=(f"{len(public)} path(s) that {read} public pages call answer an "
@@ -133,5 +155,6 @@ def test_what_a_public_page_reads_without_a_key_is_documented(rest_anon):
                 f"refuses an anonymous read ({len(probe)} probed)"),
         left={"pages_read": read, "probed": len(probe), "public_undocumented": len(public)},
         right={"public_undocumented": 0},
-        population={"public_undocumented": public, "refused_or_not_json": refused},
+        population={"public_undocumented": public, "refused_or_not_json": refused,
+                    "timed_out": unread},
         sources={"spec": SPEC, "pages": "links on the home page, with their /static/js"}))
