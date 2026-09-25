@@ -119,7 +119,7 @@ def test_the_lab_page_is_served_to_this_machine_with_its_note_box(console):
     status, body = _get(port, "/lab", f"127.0.0.1:{port}")
     page = body.decode("utf-8")
     assert status == 200, page[:300]
-    assert "<title>Laboratoř</title>" in page
+    assert "<title>Lab</title>" in page
     assert 'id="compose"' in page and 'fetch("/notes"' in page.replace("'", '"')
     assert (console["state"] / "lab" / "report.json").is_file(), (
         "the page drew products that no report was written for")

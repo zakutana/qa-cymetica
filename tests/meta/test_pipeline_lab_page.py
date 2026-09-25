@@ -140,10 +140,11 @@ def _view():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_the_view_is_four_sector_rooms_in_their_order_with_czech_names():
+def test_the_view_is_four_sector_rooms_in_their_order_with_their_names():
     view = _view()
     assert [s["key"] for s in view["sectors"]] == ["cards", "bots", "memecoins", "funds"]
-    assert [s["name"] for s in view["sectors"]] == ["Karty", "Boti", "Memecoiny", "Fondy"]
+    # English since 2026-09-25 (CLAUDE.md, How to work with me).
+    assert [s["name"] for s in view["sectors"]] == ["Cards", "Bots", "Memecoins", "Funds"]
     cards = view["sectors"][0]
     assert cards["net_pct"] == 1.0 and cards["usdc"] == 5.0, "the report's figures ride along"
 
@@ -158,11 +159,11 @@ def test_each_experiment_lands_in_its_sector_and_its_group():
     assert set(by_id) == {"STR-0001", "STR-0002", "STR-0003", "STR-0004"}
     assert (by_id["STR-0001"]["sector"], by_id["STR-0001"]["group"]) == ("cards", "live")
     assert (by_id["STR-0002"]["group"], by_id["STR-0002"]["reason"]) == (
-        "archive", "nic se nekoupilo")
+        "archive", "nothing bought")
     assert by_id["STR-0004"]["group"] == "done"
-    assert by_id["STR-0004"]["reason"] == "propad 11,8 % přes limit 10 %"
+    assert by_id["STR-0004"]["reason"] == "drawdown 11.8% past 10% limit"
     assert (by_id["STR-0003"]["sector"], by_id["STR-0003"]["reason"]) == (
-        "bots", "zastavil se sám")
+        "bots", "stopped by itself")
     assert by_id["STR-0003"]["trading"] is False
     for e in by_id.values():
         assert not e["reason"] or len(e["reason"]) <= 40, e["reason"]
@@ -292,7 +293,7 @@ def _drawn(tmp_path, name, after=""):
 def test_the_page_opens_on_four_sectors_and_a_ranking_not_on_rooms_per_card(tmp_path):
     captured = _drawn(tmp_path, "open")
     tabs = captured.get("sectors", "")
-    for name in ("Karty", "Boti", "Memecoiny", "Fondy"):
+    for name in ("Cards", "Bots", "Memecoins", "Funds"):
         assert name in tabs, f"no {name} room"
     assert tabs.count('data-sector="') == 4, "one room per sector, four of them"
     room = captured.get("room", "")
@@ -302,7 +303,7 @@ def test_the_page_opens_on_four_sectors_and_a_ranking_not_on_rooms_per_card(tmp_
     # Numbers before words: the row's result is there, and nothing on the page
     # speaks the verdict machinery's English (N-0035: "jaké if bought? nějaké
     # inconclusive? kdo se v tom má vyznat?").
-    assert "+0,59" in room
+    assert "+0.59" in room
     for jargon in ("inconclusive", "if bought", "refuted", "survived"):
         assert jargon not in room.lower(), f"{jargon!r} on the page"
     # Backtest shown by every experiment (N-0035: "asi by měly být v roomu
@@ -314,9 +315,9 @@ def test_the_page_opens_on_four_sectors_and_a_ranking_not_on_rooms_per_card(tmp_
 def test_the_archive_and_the_judged_are_one_click_away_with_their_reason(tmp_path):
     archive = _drawn(tmp_path, "archive",
                      after='window.labShow("cards", "archive");').get("room", "")
-    assert "Never bought" in archive and "nic se nekoupilo" in archive
+    assert "Never bought" in archive and "nothing bought" in archive
     done = _drawn(tmp_path, "done", after='window.labShow("cards", "done");').get("room", "")
-    assert "Solana doubles" in done and "propad 11,8 %" in done and "nevyšlo" in done
+    assert "Solana doubles" in done and "drawdown 11.8%" in done and "didn't work" in done
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -324,15 +325,15 @@ def test_an_experiment_opens_into_a_chart_and_four_numbers(tmp_path):
     room = _drawn(tmp_path, "detail",
                   after='window.labOpen("STR-0001");').get("room", "")
     assert "<svg" in room and "dt-chart" in room, "no chart in the opened experiment"
-    for label in ("Vloženo", "Teď", "Výsledek", "Backtest"):
+    for label in ("In<", "Now<", "Result<", "Backtest<"):
         assert label in room, f"the opened experiment has no {label}"
     assert "cymetica.com/events/c1" in room, "no way to the card itself"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_a_room_of_ours_says_naše_and_never_ranks_above_his(tmp_path):
+def test_a_room_of_ours_says_ours_and_never_ranks_above_his(tmp_path):
     """V5, the own lane: a paper bot's next setting is OUR idea (origin
-    OUR-...). The page says so -- „naše", not "nápad OUR-0001" -- and ranks
+    OUR-...). The page says so -- "ours", not "idea OUR-0001" -- and ranks
     it after his, whatever it earned."""
     rooms_view, report = _rooms_view(), _report()
     rooms_view["rooms"].append({"id": "STR-0006", "kind": "strategy",
@@ -354,7 +355,7 @@ def test_a_room_of_ours_says_naše_and_never_ranks_above_his(tmp_path):
                                     page=_lab_page())
     assert code == 0, err[:1200]
     room = captured.get("room", "")
-    assert "naše" in room, room[:2000]
+    assert ">ours<" in room, room[:2000]
     assert room.index("Bollinger Bandit · SL 5") > room.index("Bollinger Bandit<"), (
         "a room of ours ranked above his pick")
 
@@ -363,9 +364,9 @@ def test_a_room_of_ours_says_naše_and_never_ranks_above_his(tmp_path):
 def test_the_bots_room_says_whether_each_bot_trades(tmp_path):
     room = _drawn(tmp_path, "bots", after='window.labShow("bots");').get("room", "")
     # A bot that stopped by itself says so once -- its reason -- rather than
-    # "stojí" and "zastavil se sám" side by side.
-    assert "Bollinger Bandit" in room and "zastavil se sám" in room
-    assert "stojí" not in room
+    # "idle" and "stopped by itself" side by side.
+    assert "Bollinger Bandit" in room and "stopped by itself" in room
+    assert ">idle<" not in room
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -401,7 +402,7 @@ def test_a_sector_chat_holds_its_own_note_and_the_composer_sits_under_it(tmp_pat
     thread scrolls on its own and the composer is the next thing under it,
     never floated over it."""
     captured = _drawn(tmp_path, "sector-chat", after='window.labChat("cards");')
-    assert "hm" in captured.get("thread", ""), "the Karty room's own note is missing"
+    assert "hm" in captured.get("thread", ""), "the Cards room's own note is missing"
     template = _lab_page().TEMPLATE
     assert (template.index('id="thread"') < template.index('id="compose"')), (
         "the composer is above the thread")
@@ -425,7 +426,7 @@ def test_the_memecoin_room_keeps_the_operators_own_decisions(tmp_path):
     for, and the untradeable coins named as dropped rather than silently
     missing -- plus the table saying it is winners by construction."""
     room = _drawn(tmp_path, "memes", after='window.labShow("memecoins");').get("room", "")
-    assert "−19,8" in room, "the $10 answer is not the headline"
+    assert "−19.8" in room, "the $10 answer is not the headline"
     assert room.count("<table") == 1 and "mc-spark" in room
     assert room.count("<th>") == 5, "five columns: token, conviction, now, peak, the graph"
     assert "<title>" not in room, "the native tooltip is back"
@@ -436,13 +437,14 @@ def test_the_memecoin_room_keeps_the_operators_own_decisions(tmp_path):
     assert "mc-up" in up[:up.index("PEPEX")], "the gain is not green"
     assert "mc-down" in room[room.index("PEPEX"):][:500], "the loss is not red"
     assert "price at signal" not in room and "cena při signálu" not in room
-    assert "conviction ≥ 70" in room and "−12" in room
-    assert "bez ceny" in room and "1 200" in room, "the dropped coins are not named"
-    assert "vítězové" in room, "the table does not say it is winners by construction"
+    assert "Conviction ≥ 70" in room and "−12" in room
+    assert "unpriced" in room and "1,200" in room, "the dropped coins are not named"
+    assert "winners by construction" in room, (
+        "the table does not say it is winners by construction")
     # M03, deep pass of 2026-09-13: the figure under the word median must be
     # the median (-40) and not the mean (-19.8).
-    typical = room[room.index("Typický obchod"):][:300]
-    assert "−40" in typical and "−19,8" not in typical, typical
+    typical = room[room.index("Typical trade"):][:300]
+    assert "−40" in typical and "−19.8" not in typical, typical
     template = _lab_page().TEMPLATE
     assert 'id="tip"' in template and "mousemove" in template, "no bubble"
 
@@ -457,4 +459,4 @@ def test_a_memecoin_room_with_nothing_measured_yet_says_so(tmp_path):
                                     after='window.labShow("memecoins");',
                                     page=_lab_page())
     assert code == 0, err[:900]
-    assert "Zatím žádný signál" in captured.get("room", "")
+    assert "No signal has had" in captured.get("room", "")

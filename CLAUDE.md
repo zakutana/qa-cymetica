@@ -45,6 +45,9 @@ The operator talks normally and expects the process to be kept without being ask
 * [operator 2026-09-25] *"cymetica pracuje mnohem rychleji, to je hrozne neefektivni checkovat jejich zpravy jen jednou za 8 hodin. Me limity vubec neres a nemusis na ne myslet, ty si hlidam sam, mam Max plan takze limitu je hodne"*
 
   **Their plan's limits are theirs to watch, never ours**: nothing here reads `get_usage`, stands down at a percentage or reminds them what a model costs. And **what Cymetica does is acted on within a tick**: the laboratory's tick reads their tracker and inbox, and anything new from them wakes a sweep by day as well as by night (`tests/meta/test_pipeline_lab_loop.py`).
+* [operator 2026-09-25] *"skrasli celou paltformu je tam vsude moc textu co ani nectu , platform zalozka s emusi moc scrollovat a Laborator a vse v ni je cesky nechapu proc. vse ma byt anlgicky. Prece me znas, vis ze nerad ctu a mam rad jen vecne a prakticke informace. A taky cely design udelej do barev jake pouziva cymetica , libi s emi ta zelena vyrazna hlavne v kontrastu s tou tmavou"*
+
+  **Every page they look at is in English, in Cymetica's colours, and says numbers before words**: the console (`scripts/render.py`) and /lab (`scripts/lab_page.py`) use cymetica.com's palette (`#0a0e17`, green `#00ff88`, cyan `#00cfff`, red `#ff4444`) and JetBrains Mono / Archivo Black; an explanation goes in a tooltip or behind an expand, never in a paragraph on the page. Chat replies to them stay Czech.
 * Non-trivial work starts in plan mode. Ask for it; do not wait to be told.
 * Tests before implementation. A test written afterwards passes whatever the code does, including the mistake.
 * After changing `qa/state.py`, `qa/fold.py` or `qa/measure.py`, propose `/code-review` before committing. Elsewhere it is a cost without a return.

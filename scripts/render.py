@@ -896,7 +896,8 @@ def build_payload(ledger: dict | None = None, inventory: dict | None = None,
 
 
 TEMPLATE = r"""<title>Cymetica QA Console</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap">
 <style>
 /* The browser's own [hidden] rule is display:none at UA specificity, which
    ANY class selector beats. `.newreply { display:inline-flex }` did exactly
@@ -907,51 +908,46 @@ TEMPLATE = r"""<title>Cymetica QA Console</title>
    One line, first, so no later class can win against it. */
 [hidden] { display: none !important; }
 
+/* Cymetica's own palette, read off cymetica.com's main.css on 2026-09-25:
+   the navy gradient, #00ff88 for what is good, #ff4444 for what is broken,
+   #00cfff for what you can press. Dark only, as their site is (CLAUDE.md,
+   How to work with me: the console looks like Cymetica). */
 :root {
-  --bg:#f6f7f6; --surface:#ffffff; --surface-2:#eef1f0; --line:#d5dbd9;
-  --line-soft:#e6eae9; --text:#10171a; --text-dim:#5a6a6c; --text-faint:#8b9a9b;
-  --accent:#0d6b66; --accent-dim:#0d6b6622;
-  --ok:#17803d;   --ok-bg:#17803d1f;
-  --auth:#0e7490; --auth-bg:#0e74901f;
-  --warn:#9a6300; --warn-bg:#9a63001f;
-  --bad:#b3261e;  --bad-bg:#b3261e1f;
-  --wait:#6b3fc4; --wait-bg:#6b3fc41f;
-  --none:#9aa8a8; --none-bg:#9aa8a826;
-  --radius:7px;
-  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
-  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg:#0c1214; --surface:#121b1d; --surface-2:#182326; --line:#243436;
-    --line-soft:#1b282a; --text:#e4ecea; --text-dim:#93a5a5; --text-faint:#6a7b7c;
-    --accent:#4ecfc4; --accent-dim:#4ecfc422;
-    --ok:#4ec97a; --ok-bg:#4ec97a1f; --auth:#45b8d6; --auth-bg:#45b8d61f;
-    --warn:#e0a338; --warn-bg:#e0a3381f; --bad:#f2685e; --bad-bg:#f2685e1f;
-    --wait:#a98cf0; --wait-bg:#a98cf01f; --none:#647476; --none-bg:#64747626;
-  }
-}
-:root[data-theme="dark"] {
-  --bg:#0c1214; --surface:#121b1d; --surface-2:#182326; --line:#243436;
-  --line-soft:#1b282a; --text:#e4ecea; --text-dim:#93a5a5; --text-faint:#6a7b7c;
-  --accent:#4ecfc4; --accent-dim:#4ecfc422;
-  --ok:#4ec97a; --ok-bg:#4ec97a1f; --auth:#45b8d6; --auth-bg:#45b8d61f;
-  --warn:#e0a338; --warn-bg:#e0a3381f; --bad:#f2685e; --bad-bg:#f2685e1f;
-  --wait:#a98cf0; --wait-bg:#a98cf01f; --none:#647476; --none-bg:#64747626;
+  --bg:#0a0e17; --bg-2:#0d1520; --bg-3:#111a28;
+  --surface:rgba(17,24,39,.72); --surface-2:rgba(24,34,52,.85);
+  --line:rgba(0,150,255,.16); --line-soft:rgba(0,150,255,.08);
+  --text:#ffffff; --text-dim:#9fb3c8; --text-faint:#7b8794;
+  --accent:#00cfff; --accent-dim:rgba(0,207,255,.12);
+  --ok:#00ff88;   --ok-bg:rgba(0,255,136,.12);
+  --auth:#00aaff; --auth-bg:rgba(0,170,255,.13);
+  --warn:#ffb020; --warn-bg:rgba(255,176,32,.13);
+  --bad:#ff4444;  --bad-bg:rgba(255,68,68,.14);
+  --wait:#b08cff; --wait-bg:rgba(176,140,255,.14);
+  --none:#4a5a6e; --none-bg:rgba(123,135,148,.16);
+  --glow-ok:0 0 14px rgba(0,255,136,.35);
+  --glow-bad:0 0 14px rgba(255,68,68,.3);
+  --radius:8px;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sans:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --display:"Archivo Black","Inter",sans-serif;
+  color-scheme:dark;
 }
 
 * { box-sizing:border-box; }
 body {
-  margin:0; background:var(--bg); color:var(--text); font-family:var(--sans);
-  font-size:16.5px; line-height:1.55; -webkit-font-smoothing:antialiased;
+  margin:0; color:var(--text); font-family:var(--sans);
+  background:linear-gradient(180deg,var(--bg) 0%,var(--bg-2) 55%,var(--bg-3) 100%) fixed;
+  background-color:var(--bg);
+  font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased;
 }
-.wrap { max-width:1240px; margin:0 auto; padding:32px 22px 80px; }
+.wrap { max-width:1240px; margin:0 auto; padding:22px 20px 60px; }
 
-.mast { border-bottom:2px solid var(--text); padding-bottom:14px; }
+.mast { border-bottom:1px solid var(--line); padding-bottom:12px; }
 .mast h1 {
-  font-size:clamp(26px,4vw,38px); font-weight:600; letter-spacing:-0.022em;
-  margin:0 0 4px; text-wrap:balance;
+  font-family:var(--display); font-weight:400; font-size:clamp(24px,3.4vw,34px);
+  letter-spacing:.01em; margin:0 0 4px; text-wrap:balance; text-transform:uppercase;
 }
+.mast h1 em { font-style:normal; color:var(--ok); text-shadow:var(--glow-ok); }
 .mast .sub { color:var(--text-dim); font-size:16.0px; max-width:70ch; margin:0; }
 .meta {
   display:flex; flex-wrap:wrap; gap:6px 20px; margin-top:14px;
@@ -959,28 +955,72 @@ body {
 }
 .meta b { color:var(--text-dim); font-weight:500; }
 
-.triage {
-  display:grid; grid-template-columns:repeat(auto-fit,minmax(132px,1fr)); gap:1px;
-  background:var(--line); border:1px solid var(--line); border-radius:var(--radius);
-  overflow:hidden; margin:26px 0 6px;
+/* ---------- the cockpit ---------- */
+.triage { margin:20px 0 6px; }
+.kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; }
+@media (max-width:640px) {
+  .kpis .kpi { padding:11px 12px 10px; }
+  .kpis .kpi-n { font-size:26px; }
+  .mast h1 { padding-right:56px; font-size:22px; }
 }
-.tri { background:var(--surface); padding:13px 15px; }
-.tri .n {
-  font-family:var(--mono); font-size:27px; font-weight:600; line-height:1.1;
+.kpi {
+  display:flex; flex-direction:column; align-items:flex-start; gap:4px; text-align:left;
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+  padding:14px 16px 12px; cursor:pointer; color:var(--text); font:inherit;
+  backdrop-filter:blur(12px); transition:border-color .15s, box-shadow .15s;
+}
+.kpi:hover { border-color:rgba(0,150,255,.4); box-shadow:0 8px 32px rgba(0,0,0,.45); }
+.kpi:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+.kpi-n {
+  font-family:var(--display); font-size:38px; line-height:1; letter-spacing:.01em;
   font-variant-numeric:tabular-nums;
 }
-.tri .l {
-  font-size:12.0px; text-transform:uppercase; letter-spacing:0.09em;
-  color:var(--text-faint); margin-top:3px; font-weight:600;
+.kpi-l {
+  font-family:var(--mono); font-size:11.5px; text-transform:uppercase;
+  letter-spacing:.08em; color:var(--text-dim);
 }
+.kpi.ok .kpi-n { color:var(--ok); text-shadow:var(--glow-ok); }
+.kpi.bad .kpi-n { color:var(--bad); text-shadow:var(--glow-bad); }
+.kpi.warn .kpi-n { color:var(--warn); }
+.pills { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+.tri {
+  font-family:var(--mono); font-size:12px; color:var(--text-dim);
+  border:1px solid var(--line-soft); border-radius:20px; padding:3px 10px;
+  background:var(--surface);
+}
+.tri .n { font-weight:700; color:var(--text); font-variant-numeric:tabular-nums; }
+.tri .l { color:var(--text-faint); }
 .tri.s0 .n,.tri.s1 .n { color:var(--bad); }
 .tri.s2 .n,.tri.s3 .n { color:var(--warn); }
 .tri.s4 .n { color:var(--text-dim); }
 .tri.ok .n { color:var(--ok); }
 
+/* Areas in columns, each a panel of compact tiles: 28 tiles in one screen.
+   An area holding an open tile spans every column, so the open tile gets the
+   page's width -- a tile opening inside a narrow column was the complaint
+   that made open tiles take the whole row in the first place. */
+.areas { columns:228px; column-gap:10px; margin-top:14px; }
+.card-foot { display:flex; flex-wrap:wrap; align-items:center; gap:5px 8px; }
+.card-foot .bar { flex:1 1 110px; }
+.card-foot .stats { flex:0 1 auto; justify-content:flex-end; margin-left:auto; }
+.chip.untested { border:0; background:none; padding:0; font-weight:400; }
+.area {
+  break-inside:avoid; margin:0 0 12px; padding:10px 10px 8px;
+  background:rgba(13,21,32,.55); border:1px solid var(--line-soft);
+  border-radius:var(--radius);
+}
+.area:has(.card[open]) { column-span:all; }
+.area .grid { grid-template-columns:1fr; gap:6px; }
+.area:has(.card[open]) .grid { grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); }
 h2.group {
-  font-size:13.5px; text-transform:uppercase; letter-spacing:0.13em;
-  font-weight:700; margin:38px 0 3px; display:flex; align-items:center; gap:10px;
+  font-family:var(--mono); font-size:12px; text-transform:uppercase; letter-spacing:0.12em;
+  font-weight:700; margin:0 0 8px; display:flex; align-items:center; gap:10px;
+  color:var(--text-dim); cursor:help;
+}
+.map-legend {
+  display:flex; flex-wrap:wrap; gap:4px 16px; margin:18px 0 0; padding-top:12px;
+  border-top:1px solid var(--line-soft); font-family:var(--mono); font-size:11.5px;
+  color:var(--text-faint);
 }
 .tagchip {
   font-family:var(--mono); font-size:11.5px; font-weight:600; letter-spacing:0.06em;
@@ -993,29 +1033,32 @@ p.group-note { margin:0 0 15px; color:var(--text-dim); font-size:15.0px; max-wid
    in its row to the same height -- which is what made one open tile look
    like the whole row had come apart. */
 .grid {
-  display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
-  gap:12px; align-items:start;
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(212px,1fr));
+  gap:8px; align-items:start;
 }
 .card {
-  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
-  padding:15px 16px 14px; border-left:3px solid var(--none);
+  background:var(--surface); border:1px solid var(--line-soft); border-radius:var(--radius);
+  padding:8px 10px 8px; border-top:2px solid var(--none);
+  backdrop-filter:blur(12px); transition:border-color .15s, box-shadow .15s;
 }
+.card:hover { border-color:rgba(0,150,255,.35); box-shadow:0 8px 28px rgba(0,0,0,.4); }
 /* The card is a <details> now, so the column layout lives on the summary --
    display:flex on a details element breaks the open/closed flow. */
-.card > summary { display:flex; flex-direction:column; gap:10px; }
-.card.h-ok{border-left-color:var(--ok)} .card.h-warn{border-left-color:var(--warn)}
-.card.h-bad{border-left-color:var(--bad)} .card.h-none{border-left-color:var(--none)}
-.card-top { display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
-.card h3 { margin:0; font-size:16.0px; font-weight:600; letter-spacing:-0.01em; }
+.card > summary { display:flex; flex-direction:column; gap:5px; }
+.card.h-ok{border-top-color:var(--ok)} .card.h-warn{border-top-color:var(--warn)}
+.card.h-bad{border-top-color:var(--bad)} .card.h-none{border-top-color:var(--none)}
+.card-top { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+.card h3 { margin:0; font-size:13.5px; font-weight:600; line-height:1.3; cursor:help; }
 .pct {
-  font-family:var(--mono); font-size:25px; font-weight:600; line-height:1;
+  font-family:var(--display); font-size:19px; line-height:1;
   font-variant-numeric:tabular-nums; white-space:nowrap;
 }
-.pct.h-ok{color:var(--ok)} .pct.h-warn{color:var(--warn)} .pct.h-bad{color:var(--bad)}
-.pct.h-none{color:var(--text-faint); font-size:14.5px}
-.pct small { font-size:13.5px; font-weight:500; color:var(--text-faint); }
+.pct.h-ok{color:var(--ok); text-shadow:var(--glow-ok)} .pct.h-warn{color:var(--warn)}
+.pct.h-bad{color:var(--bad); text-shadow:var(--glow-bad)}
+.pct.h-none{color:var(--text-faint); font-size:14px; font-family:var(--mono)}
+.pct small { font-size:12px; color:var(--text-faint); font-family:var(--mono); }
 
-.bar { display:flex; height:7px; border-radius:3px; overflow:hidden; background:var(--surface-2); }
+.bar { display:flex; height:5px; border-radius:3px; overflow:hidden; background:var(--surface-2); }
 .bar span { display:block; }
 .seg-ok{background:var(--ok)} .seg-auth{background:var(--auth)}
 .seg-param{background:var(--auth);opacity:.6} .seg-method{background:var(--warn)}
@@ -1054,18 +1097,20 @@ details.stat summary{cursor:pointer;font-weight:600}
   box-shadow:inset 0 0 0 1px var(--none-bg);
 }
 .pct-wrap { display:flex; flex-direction:column; align-items:flex-end; gap:2px; }
+.pct-wrap { cursor:help; }
 .pct-cap {
-  font-family:var(--mono); font-size:11.0px; color:var(--text-faint);
+  font-family:var(--mono); font-size:10.5px; color:var(--text-faint);
   white-space:nowrap; letter-spacing:.02em;
 }
 .chip.untested {
   color:var(--text-faint); background:transparent;
   border:1px dashed var(--line); font-weight:600;
 }
-.blurb { font-size:14.1px; color:var(--text-dim); margin:0; line-height:1.5; }
-.stats { display:flex; flex-wrap:wrap; gap:5px; font-family:var(--mono); font-size:12.5px; }
+.blurb { font-size:13.5px; color:var(--text-dim); margin:0; line-height:1.5; }
+.cd-blurb { grid-column:1 / -1; }
+.stats { display:flex; flex-wrap:wrap; gap:4px; font-family:var(--mono); font-size:11px; }
 .chip {
-  border:1px solid var(--line); border-radius:4px; padding:2px 6px;
+  border:1px solid var(--line); border-radius:4px; padding:1px 6px;
   color:var(--text-dim); background:var(--surface-2); white-space:nowrap;
 }
 .chip.bad{color:var(--bad);border-color:transparent;background:var(--bad-bg);font-weight:600}
@@ -1079,7 +1124,10 @@ details.stat summary{cursor:pointer;font-weight:600}
   border:1px solid var(--line); background:var(--surface); color:var(--text-dim);
   border-radius:20px; font-weight:500;
 }
-.filters button[aria-pressed="true"] { background:var(--text); color:var(--bg); border-color:var(--text); }
+.filters button[aria-pressed="true"] {
+  background:var(--ok); color:#00131c; border-color:var(--ok); font-weight:700;
+  box-shadow:var(--glow-ok);
+}
 .filters button:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
 .filters .sep { width:1px; height:20px; background:var(--line); margin:0 5px; }
 .filters .fl {
@@ -1316,9 +1364,16 @@ details.stat summary{cursor:pointer;font-weight:600}
   padding:16px 18px 14px; min-width:0;
 }
 .stat.wide { grid-column:1 / -1; }
-.stat h3 { margin:0 0 10px; font-size:14px; font-weight:600; color:var(--text); }
-.hero { font-size:30px; font-weight:600; color:var(--text); line-height:1.1; }
-.hero span { font-size:13px; font-weight:400; color:var(--text-dim); }
+.stat h3 {
+  margin:0 0 10px; font-family:var(--mono); font-size:12px; font-weight:700;
+  text-transform:uppercase; letter-spacing:.1em; color:var(--text-dim);
+}
+.hero {
+  font-family:var(--display); font-size:34px; color:var(--ok); line-height:1.1;
+  text-shadow:var(--glow-ok); cursor:default;
+}
+.hero span { font-family:var(--mono); font-size:12px; color:var(--text-dim); text-shadow:none; }
+.blurb.warn { color:var(--warn); }
 .figs { display:flex; flex-wrap:wrap; gap:4px 18px; margin:10px 0 12px; }
 .figs div { display:flex; gap:6px; align-items:baseline; }
 .figs dt { font-size:12px; color:var(--text-faint); }
@@ -1501,20 +1556,30 @@ h4.sec {
    in a tab all day. Two things follow from that: it has to say whether it is
    live, and it has to be able to tell you something arrived while you were
    looking elsewhere. */
-.tabs { display:flex; gap:4px; margin:26px 0 0; border-bottom:1px solid var(--line); }
+.tabs {
+  display:flex; flex-wrap:wrap; gap:4px; margin:16px 0 0;
+  border-bottom:1px solid var(--line);
+}
 .tabs button {
   background:none; border:0; border-bottom:2px solid transparent; color:var(--text-dim);
-  font:inherit; font-size:15px; padding:10px 16px; cursor:pointer; margin-bottom:-1px;
+  font-family:var(--mono); font-size:13px; text-transform:uppercase; letter-spacing:.08em;
+  padding:10px 14px; cursor:pointer; margin-bottom:-1px;
 }
-.tabs button[aria-selected="true"] { color:var(--text); border-bottom-color:var(--accent); }
+.tabs button:hover { color:var(--text); }
+.tabs button[aria-selected="true"] {
+  color:var(--ok); border-bottom-color:var(--ok); text-shadow:var(--glow-ok);
+}
 .tabs button:focus-visible { outline:2px solid var(--accent); outline-offset:-2px; }
 /* The laboratory has a page of its own (/lab, served, never committed): its
    figures come from gitignored diaries, and this page hashes only what git
-   holds. A link, not a tab. */
+   holds. A link, not a tab -- styled as their green Trade button. */
 .tabs .tab-link {
-  margin-left:auto; align-self:center; padding:8px 14px; font-size:15px;
-  color:var(--accent); text-decoration:none; font-weight:600;
+  margin-left:auto; align-self:center; padding:6px 14px; font-size:13px;
+  font-family:var(--mono); text-transform:uppercase; letter-spacing:.06em;
+  background:var(--ok); color:#00131c; text-decoration:none; font-weight:800;
+  border-radius:7px; box-shadow:var(--glow-ok);
 }
+.tabs .tab-link:hover { background:var(--accent); }
 .tabs .tab-n {
   display:inline-block; margin-left:7px; padding:1px 7px; border-radius:9px;
   background:var(--none-bg); color:var(--text-dim); font-family:var(--mono); font-size:12px;
@@ -1543,7 +1608,7 @@ h4.sec {
   position:absolute; top:44px; right:0; width:min(460px, 88vw); z-index:60;
   /* --surface, not --card: --card is not a token in this sheet, so the panel
      resolved to no background at all and the page read straight through it. */
-  background:var(--surface); border:1px solid var(--line); border-radius:12px;
+  background:var(--bg-2); border:1px solid var(--line); border-radius:12px;
   box-shadow:0 18px 44px rgba(0,0,0,.55); padding:6px; text-align:left;
   max-height:min(70vh, 620px); overflow-y:auto;
 }
@@ -1595,7 +1660,7 @@ h4.sec {
 
 <div class="wrap" id="wrap">
   <header class="mast">
-    <h1>Cymetica QA Console</h1>
+    <h1>Cymetica <em>QA</em> Console</h1>
     <button class="bell" id="bell" aria-label="Replies from Cymetica" aria-expanded="false">
       &#128276;<span class="bell-n" id="bellN" hidden></span>
     </button>
@@ -1608,8 +1673,8 @@ h4.sec {
     <button data-tab="findings" aria-selected="false">Findings
       <span class="tab-n" id="tabN"></span></button>
     <button data-tab="stats" aria-selected="false">Stats</button>
-    <a class="tab-link" href="/lab">Laboratoř &rarr;</a>
-    <button data-tab="legend" aria-selected="false">How to read this</button>
+    <button data-tab="legend" aria-selected="false">Guide</button>
+    <a class="tab-link" href="/lab">Lab &rarr;</a>
   </nav>
 
   <section class="panel" id="panel-overview">
@@ -1629,8 +1694,6 @@ h4.sec {
 
   <section class="panel" id="panel-help" hidden>
   <h2 class="group">How this works</h2>
-  <p class="lead">Their platform is on the left. Everything to the right of it
-  is ours, and the only way anything on this page moves.</p>
 
   <svg class="diagram" viewBox="0 0 980 300" role="img"
        aria-label="Their platform is measured by checks; a run of those checks moves the left half of a row, and a message from them moves the right half; the page shows the two together.">
@@ -1698,224 +1761,45 @@ h4.sec {
     </g>
   </svg>
 
-  <p class="lead">A row on this page is those two halves put together. Nothing
-  writes a state directly &mdash; a run moves the left half, a message from
-  them moves the right, and every move says which one caused it.</p>
-
-  <h3 class="sec">What to run me on</h3>
-  <p class="lead">You set the model and the effort before giving a task; I
-  cannot change either. This table is read from the operating rules when the
-  page is built, so it is never a second copy.</p>
+  <h3 class="sec">Model &amp; effort per task</h3>
   <table class="stat-t" id="models"></table>
   </section>
 
   <section class="panel" id="panel-legend" hidden>
   <div class="note">
 
-    <p class="lead">Every badge answers <b>two</b> questions at once. That is why there
-    are so many of them &mdash; and the badge is just the square where the two answers meet.</p>
-
+    <h4>Every badge = what <b>we</b> measured &times; where it stands <b>with them</b></h4>
     <div id="axes"></div>
 
-    <p class="lead"><b>The grid below is the whole pipeline.</b> Down the side: what
-    <b>we</b> measured. Along the top: where it stands <b>with them</b>.
-    <span class="hi">Only one square is green</span> &mdash; our check passes <em>and</em>
-    they claim a fix. Nothing else counts as verified.</p>
-
+    <p class="lead"><span class="hi">Only one square is green:</span> our check
+    passes <em>and</em> they claim a fix.</p>
     <div id="matrix"></div>
 
-    <p class="lead"><b>A row carries other marks too.</b> None of them is a state:</p>
-
+    <h4>Other marks on a row</h4>
     <div id="marks"></div>
 
-    <h4>S0 to S4 &mdash; how much damage, not how sure we are</h4>
-
+    <h4>S0&ndash;S4 = how much damage</h4>
     <div id="sevs"></div>
 
-    <h4>The cards are places, not test suites</h4>
-
-    <p class="lead">One card = one part of the platform. Its chips count four
-    different things:</p>
-
+    <h4>Tile chips</h4>
     <div id="cardmarks"></div>
 
-    <p class="lead">The buttons at the top of the page filter the finding list:
-    the first row by <b>damage</b> (the S numbers), the second by <b>area</b>
-    &mdash; the same areas the cards are grouped under.</p>
-
-    <h4>The percentage on each card is a different thing</h4>
-
-    <p><b>It answers one question:</b> of all the addresses Cymetica publishes for this
-    part of the platform, how many actually answer when you call them? We call each twice
-    &mdash; once with no key, once with the API key &mdash; and take the better answer:</p>
-
+    <h4>Tile % = published addresses that answer</h4>
     <table class="verdicts"><tbody id="verdicts"></tbody></table>
 
-
-    <p><b>&ldquo;Checks&rdquo; is a different number again.</b> An address answering does
-    not mean the answer is <em>correct</em>. <b>100% with no checks</b> means
-    &ldquo;it is alive, and nobody has verified a word it says&rdquo;.</p>
-
-    <h4>The bell, in the top corner</h4>
-
-    <p class="lead">It counts <b>incoming answers on our own bug reports</b> that
-    you have not read yet &mdash; a status they changed, or a note they wrote
-    back &mdash; and nothing else. A number there means they have moved on
-    something we filed.</p>
-
-    <p class="example">It comes from their bug tracker, read back over their
-    own API, so it can only ever show something they actually said. That read
-    happens on a sweep, not when this page redraws: the page is where an answer
-    is delivered, never where one is discovered.</p>
-
-    <h3 style="margin-top:34px">Jak to celé běží</h3>
-
-    <p class="lead">Nahoře je, jak číst tuhle stránku. Tady je, jak funguje
-    systém za ní: co pouštíš ty, co se zlepšuje samo, a kolik dat se kde drží.</p>
-
-    <h4>Co pouštíš ty &mdash; a kdy</h4>
-
-    <p class="lead"><b>Nic se nespouští samo.</b> Žádný plánovač, žádný časovač.
-    Na začátku každé session se vypíše, co je na řadě a jakým povelem &mdash;
-    a spustíš to ty.</p>
-
+    <h4>Say this to Claude</h4>
     <div class="rb-wrap"><table class="rb">
-      <tr><th>Řekneš nebo spustíš</th><th>Kdy</th><th>Co se stane</th></tr>
-      <tr><td>„projdi bugy&ldquo;</td><td class="when">kdykoliv</td>
-          <td>Přeověří otevřené nálezy, podá nové, pošle verdikty. Každý nález
-          má napřed kontrolu, teprve pak report.</td></tr>
-      <tr><td>„jdi do laboratoře&ldquo;</td><td class="when">když chceš nové strategie</td>
-          <td>Session s Nexusem: co je nového &rarr; jejich backtesty &rarr;
-          jedna otázka &rarr; room a paper obchod &rarr; poučení pro příště.</td></tr>
-      <tr><td>„jdu spat&ldquo;</td><td class="when">než jdeš spát</td>
-          <td>Deep pass přes všechno nepushnuté. Jediná věc, která pushuje.</td></tr>
-      <tr><td>„přečti si to&ldquo;</td><td class="when">když jsi psal do roomu</td>
-          <td>Přečte tvoje poznámky celé, označí je a odpoví do nich.</td></tr>
-      <tr><td><code>console.cmd</code></td><td class="when">ráno</td>
-          <td>Tahle stránka na 127.0.0.1:8787. Sama se obnovuje do vteřiny.</td></tr>
+      <tr><th>You say</th><th>What happens</th></tr>
+      <tr><td>&bdquo;projdi bugy&ldquo;</td><td>Re-checks open findings, files new ones, sends verdicts.</td></tr>
+      <tr><td>&bdquo;jdi do laborky&ldquo;</td><td>One lab tick with Nexus: answers, paper rooms, verdicts.</td></tr>
+      <tr><td>&bdquo;jdu spat&ldquo;</td><td>Deep pass over everything unpushed; the only thing that pushes.</td></tr>
+      <tr><td>&bdquo;p&rcaron;e&ccaron;ti si to&ldquo;</td><td>Reads and answers your notes in the lab rooms.</td></tr>
+      <tr><td><code>console.cmd</code></td><td>Starts this page on 127.0.0.1:8787.</td></tr>
     </table></div>
 
-    <h4>Laboratoř</h4>
-
-    <p class="lead"><b>Nexus radí, my měříme a vykonáváme.</b> Naše vlastní
-    strategie se nikdy nestane roomem &mdash; jde Nexusovi jako otázka a room
-    otevře až jeho odpověď.</p>
-
-    <div class="rb-wrap"><table class="rb">
-      <tr><td>den</td><td>Co je nového, doběhnuté otázky, jejich backtesty
-          seřazené podle rizika (ne podle výnosu), jedna otázka Nexusovi
-          s tabulkou, jak dopadly jeho minulé návrhy &mdash; mezi otázkami si
-          nic nepamatuje, náš záznam je jeho paměť.</td></tr>
-      <tr><td>noc</td><td>Dvoje hodiny: backtesty souvisle (brzdí je jen jejich
-          limit 30 volání za minutu), otázka jen když je na co se ptát &mdash;
-          nejdřív 20 minut od sebe, nejvýš 12 za noc.</td></tr>
-      <tr><td>rozhodnutí</td><td>Room jen z konkrétní odpovědi. <b>Kritérium se
-          píše předem</b> a nejde s ním hnout, dokud okno běží &mdash; kritérium
-          přepsané v půlce je kritérium ušité na čísla. Verdikt se počítá z jejich
-          vlastní historie indexu; pod 80 % pokrytí je nerozhodnuto, nikdy ztráta.</td></tr>
-      <tr><td>brzdy</td><td>V kódu, ne v textu, aby si je session ve tři ráno
-          nerozmluvila: jen paper, 50 běžících experimentů, 2 % volných peněz na
-          jeden, nejvýš 60 % knihy venku najednou, a nic, když běží deep pass.</td></tr>
-      <tr><td>paměť</td><td>Každý backtest má otisk: koš, okno, poplatky. Co už
-          bylo změřeno, se nezměří znovu &mdash; ani dnes, ani za týden.</td></tr>
-    </table></div>
-
-    <h4>Deep pass</h4>
-
-    <p class="lead">Třináct kroků, doběhne bez tebe. Rozsah je <b>všechno
-    nepushnuté</b>, proto se pouští, než jdeš spát.</p>
-
-    <div class="rb-wrap"><table class="rb">
-      <tr><td>audit kontrol</td><td>Tři nezávislí auditoři drží tvrzení každé
-          kontroly proti smlouvě, kterou jmenuje její vlastní docstring. Tahle
-          třída vad nastala 7. 9. pětkrát za den, všechny testy zelené, a jedna
-          z nich poslala vendorovi nepravdivé tvrzení.</td></tr>
-      <tr><td>review a triage</td><td>Celý diff na nejvyšší úrovni, pak tři
-          nezávislé triage bez sdíleného kontextu. Nález projde, jen když
-          souhlasí aspoň dva ze tří.</td></tr>
-      <tr><td>oprava a ověření</td><td>Opraví, co přežilo, a ověří podle pravidel
-          repa: čistý strom, zapnutá preregistrace, celý selektor.</td></tr>
-      <tr><td>zápis</td><td><code>DEEP-PASS.md</code> česky (včetně „Čeká na
-          tebe&ldquo;), <code>NEXT.md</code> pro zítřek, a jednou týdně ohlédnutí
-          za celým týdnem.</td></tr>
-    </table></div>
-
-    <h4>Co se zlepšuje samo</h4>
-
-    <div class="rb-wrap"><table class="rb">
-      <tr><td>hlídka nad námi</td><td>Najde globem každý skill, agenta, skript
-          a hook a přečte z jejich vlastních záznamů, co dělaly. Nic se
-          neregistruje &mdash; registrace je věc, na kterou se zapomene. Týden se
-          u každé součásti ptá, jestli stála za to, co stála.</td></tr>
-      <tr><td>hlídka nad nimi</td><td>Když Cymetica přejmenuje parametr nástroje
-          nebo přidá pole do odpovědi, řekne se to při startu session. Postaveno
-          potom, co důkaz o jejich opravě ležel den v našich vlastních datech
-          a dozvěděli jsme se ho z Telegramu.</td></tr>
-      <tr><td>sebehodnocení</td><td><code>lab.py grade</code>: předpověděl náš
-          backtestový žebříček skutečný verdikt? Pod šesti uzavřenými verdikty
-          odpoví „málo dat&ldquo; místo vymyšlené korelace.</td></tr>
-      <tr><td>co nikdy neproběhlo</td><td><code>never_fired.py</code>: mechanismy,
-          které jsou v testech zelené a v datech ani jednou nenastaly. Zelený
-          test říká, že by fungoval; tohle říká, jestli někdy fungoval.</td></tr>
-      <tr><td>paměť</td><td>Soubory o tom, jak jsem se spletl &mdash; ne co jsem
-          našel, to stojí v nálezech nahoře. Píšou se, když se to stane, a čtou
-          se před prací, ne po ní.</td></tr>
-    </table></div>
-
-    <h4>Data &mdash; kolik, kde a jak dlouho</h4>
-
-    <p class="lead">Problém nikdy nebyl <em>kolik</em>, ale <b>kde</b> (v gitu)
-    a <b>jak dlouho</b> (navždy). První odpověď &mdash; git drží jen citované
-    &mdash; nestačila: i ta citovaná množina roste bez konce, a za osm hodin
-    práce přibylo 47 MB. Takže od 12. 9. <b>v gitu není ani jedna jejich
-    odpověď</b>:</p>
-
-    <div class="rb-wrap"><table class="rb">
-      <tr><th>Kde</th><th>Co tam je</th><th>Jak dlouho</th></tr>
-      <tr><td>git</td>
-          <td><b>žádná jejich odpověď.</b> Jen kód, stav nálezů, žurnál, deníky
-          laboratoře &mdash; a <b>manifest</b>: u každé držené odpovědi její
-          hash, velikost, jaké volání zodpověděla a v jakém archivu leží</td>
-          <td class="dur">navždy; jsou to stovky kilobajtů, ne stovky megabajtů</td></tr>
-      <tr><td><code>archive/</code> mimo git</td>
-          <td>samotné odpovědi, měsíční balík. Hash <b>je</b> důkaz
-          neporušenosti, protože jsou adresované obsahem &mdash; a než se
-          originál pustí, přehashuje se každý člen zpátky z toho balíku</td>
-          <td class="dur">navždy; v každém verdiktu vendorovi píšeme, že ho na
-          požádání vydáme</td></tr>
-      <tr><td><code>evidence/</code> na disku</td>
-          <td>všechny jejich odpovědi, adresované obsahem</td>
-          <td class="dur">3 dny &mdash; ale co něco cituje, zůstává, dokud to
-          cituje</td></tr>
-      <tr><td><code>state/runs</code></td>
-          <td>záznamy běhů &mdash; vstupy, ze kterých se skládá stav nálezů</td>
-          <td class="dur">7 dní, pokud na nich nic nestojí; na co se nahoře odkazuje,
-          je v gitu</td></tr>
-      <tr><td><code>state/*.jsonl</code></td>
-          <td>deníky: laboratoř, rejstřík backtestů, roomy, obchody, vzorky</td>
-          <td class="dur">navždy, ale jsou to kilobajty</td></tr>
-    </table></div>
-
-    <p class="example"><b>Kolik je toho dnes, vypíše</b>
-    <code>python scripts/prune_runs.py</code> &mdash; kolik záznamů a odpovědí
-    leží na disku, co by se smazalo, a u každého přeživšího důvod, proč zůstal.
-    Čísla čti z něj, ne odsud: stránka by je měla zmrazené, a přesně takhle už
-    tady jednou jedno číslo lhalo.</p>
-
-    <h4>Pět vět, které platí všude</h4>
-
-    <div class="rb-wrap"><table class="rb">
-      <tr><td>jen paper</td><td>Live se netestuje, dokud neřekneš jinak.</td></tr>
-      <tr><td>nic se nespouští samo</td><td>Připomínka ano, plánovač ne.</td></tr>
-      <tr><td>commit ano, push ne</td><td>Výjimka je deep pass, nebo když to
-          řekneš ty v té zprávě. Push totiž smaže rozsah review.</td></tr>
-      <tr><td>červený test v <code>tests/meta</code></td><td>je systém, který
-          funguje. Neopravuje se uvolněním pravidla &mdash; zastaví session dřív,
-          než půjde ven jediný požadavek.</td></tr>
-      <tr><td>„VERIFIED FIXED&ldquo;</td><td>je naše měření: naše kontrola prošla
-          pod otiskem, pod kterým padala. Ne že to oni řekli &mdash; jejich
-          „opraveno&ldquo; je tvrzení, které si teprve ověřujeme.</td></tr>
-    </table></div>
+    <p class="example">Paper only &middot; nothing starts by itself &middot;
+    commit yes, push only in the deep pass &middot; <b>VERIFIED FIXED</b> is our
+    measurement, their &ldquo;fixed&rdquo; is a claim.</p>
 
   </div>
   </section>
@@ -1995,12 +1879,6 @@ document.getElementById("meta").innerHTML =
   + `state as of ${D.events_head ? "journal event " + esc(D.events_head.seq) : "—"}`
   + `</span>`;
 
-document.getElementById("triage").innerHTML =
-  SEV.map(([k,l,c]) => `<div class="tri ${c}"><div class="n">${D.by_severity[k]||0}</div><div class="l">${l}</div></div>`).join("")
-  + `<div class="tri"><div class="n">${D.sections.filter(s=>!(s.checks&&s.checks.total)).length}</div><div class="l">sections with no checks</div></div>`
-  + `<div class="tri"><div class="n">${D.findings.filter(f=>f.filed&&f.filed.length).length}</div><div class="l">filed to their tracker</div></div>`
-  + `<div class="tri ok"><div class="n">${D.display_counts["VERIFIED FIXED"]||0}</div><div class="l">verified fixed by us</div></div>`
-  + `<div class="tri"><div class="n">${D.display_counts["FIX CLAIMED"]||0}</div><div class="l">fix claimed, unverified</div></div>`;
 
 /* ---------- section map, grouped by product area ---------- */
 function health(s) {
@@ -2013,15 +1891,15 @@ function health(s) {
 // What each bar segment and each verdict actually means, in the operator's
 // words. "ok 6, method 1, unprobed 3" told nobody anything.
 const VERDICT_WORDS = {
-  ok:        "answers properly",
-  auth:      "asks for a key -- the lock works",
-  param:     "wants a parameter we did not send",
-  method:    "we asked the wrong way (our fault, left out of the score)",
-  missing:   "documented, but there is nothing there",
-  server_error: "it broke on their side (5xx)",
-  unreachable: "we got no answer at all -- our network, not their endpoint",
-  unprobed:  "cannot be checked by a simple call",
-  websocket: "a live feed, not a request",
+  ok:        "answers",
+  auth:      "needs a key (lock works)",
+  param:     "wants a parameter",
+  method:    "wrong method (ours, not scored)",
+  missing:   "documented, not there",
+  server_error: "5xx on their side",
+  unreachable: "no answer (our network)",
+  unprobed:  "not simple-callable",
+  websocket: "live feed",
 };
 // Every verdict inventory.py can produce. server_error and unreachable were
 // missing, so an endpoint in either state vanished from the bar and from the
@@ -2037,20 +1915,23 @@ function card(s) {
     `<span class="seg-${k}" style="width:${(s.verdicts[k]/total*100).toFixed(2)}%"
       title="${s.verdicts[k]} ${VERDICT_WORDS[k]}"></span>`).join("");
 
+  // What the bar means, one line per verdict, in the tooltip of the number:
+  // the tile shows the number and the bar, the words wait for a hover.
   const legend = ORDER.filter(k => s.verdicts[k]).map(k =>
-    `<span class="blabel"><i class="seg-${k}"></i>${s.verdicts[k]} ${VERDICT_WORDS[k]}</span>`
-  ).join("");
+    `${s.verdicts[k]} ${VERDICT_WORDS[k]}`).join("\n");
+  const addresses = `${s.endpoints_documented} addresses published`
+    + (s.tools_declared ? ` · ${s.tools_declared} MCP tools` : "");
 
   const pct = s.reachable_pct == null
-    ? `<div class="pct-wrap"><span class="pct h-none">not checkable</span>
-       <span class="pct-cap">nothing here answers a simple call</span></div>`
-    : `<div class="pct-wrap"><span class="pct ${h}">${s.reachable_pct}<small>%</small></span>
-       <span class="pct-cap">${s.endpoints_reachable} of ${s.endpoints_probed}
-       published addresses answer</span></div>`;
+    ? `<div class="pct-wrap" title="${esc("Nothing here answers a simple call\n" + addresses)}">
+       <span class="pct h-none">n/a</span></div>`
+    : `<div class="pct-wrap" title="${esc(s.endpoints_reachable + " of " + s.endpoints_probed
+          + " published addresses answer\n" + addresses + "\n" + legend)}">
+       <span class="pct ${h}">${s.reachable_pct}<small>%</small></span></div>`;
 
   const checks = s.checks && s.checks.total
-    ? `<span class="chip ${s.checks.failed ? "bad" : "ok"}">${s.checks.total} tests written${s.checks.failed ? ", "+s.checks.failed+" failing" : ""}</span>`
-    : `<span class="chip untested">0 tests written</span>`;
+    ? `<span class="chip ${s.checks.failed ? "bad" : "ok"}">${s.checks.total} tests${s.checks.failed ? " · "+s.checks.failed+" failing" : ""}</span>`
+    : `<span class="chip untested" title="No check written for this area yet">untested</span>`;
   const sev = {};
   s.finding_severities.forEach(v => { sev[v] = (sev[v]||0)+1; });
   const fnd = Object.entries(sev).map(([k,n]) =>
@@ -2095,18 +1976,16 @@ function card(s) {
 
   return `<details class="card ${h}">
     <summary>
-      <div class="card-top"><h3>${esc(s.title)}</h3>${pct}</div>
-      <div class="blegend">${legend}</div>
-      <p class="blurb">${esc(s.blurb)}</p>
+      <div class="card-top"><h3 title="${esc(s.blurb)}">${esc(s.title)}</h3>${pct}</div>
+      <div class="card-foot"><div class="bar">${bar}</div>
       <div class="stats">
-        <span class="chip">${s.endpoints_documented} addresses published</span>
-        ${s.tools_declared ? `<span class="chip">${s.tools_declared} MCP tools</span>` : ""}
-        ${s.verdicts.missing ? `<span class="chip bad">${s.verdicts.missing} &times; not there</span>` : ""}
         ${checks}${fnd}
-      </div>
+        ${s.verdicts.missing ? `<span class="chip bad">${s.verdicts.missing} &times; missing</span>` : ""}
+      </div></div>
     </summary>
     <div class="card-detail">
-      <section class="cd-tests"><h4 class="sec">Checks behind that count</h4>${tests}</section>
+      <p class="blurb cd-blurb">${esc(s.blurb)}</p>
+      <section class="cd-tests"><h4 class="sec">Checks</h4>${tests}</section>
       <section class="cd-eps"><h4 class="sec">Published addresses</h4>
         ${detail || "<p class=\"blurb\">Nothing documented here.</p>"}</section>
     </div>
@@ -2120,14 +1999,18 @@ document.getElementById("map").addEventListener("toggle", e => {
   });
 }, true);
 
-document.getElementById("map").innerHTML = D.groups.map(g => {
+document.getElementById("map").innerHTML = `<div class="areas">` + D.groups.map(g => {
   const items = D.sections.filter(s => g.sections.includes(s.id));
   if (!items.length) return "";
   items.sort((a,b) => (a.reachable_pct ?? 999) - (b.reachable_pct ?? 999));
-  return `<h2 class="group"><span class="tagchip">${esc(g.tag)}</span>${esc(g.title)}</h2>
-          <p class="group-note">${esc(g.blurb)}</p>
-          <div class="grid">${items.map(card).join("")}</div>`;
-}).join("");
+  return `<section class="area"><h2 class="group" title="${esc(g.blurb)}">`
+    + `<span class="tagchip">${esc(g.tag)}</span>${esc(g.title)}</h2>`
+    + `<div class="grid">${items.map(card).join("")}</div></section>`;
+}).join("") + `</div>`
+  // The bar's colours, once for the whole map instead of on every tile.
+  + `<div class="map-legend">${ORDER.filter(k => D.sections.some(s => s.verdicts[k]))
+      .map(k => `<span class="blabel"><i class="seg-${k}"></i>${VERDICT_WORDS[k]}</span>`)
+      .join("")}</div>`;
 
 /* ---------- findings: the conversation through THEIR API ---------- */
 // Only the bounty API. Telegram is a different channel with different
@@ -2235,12 +2118,12 @@ function finding(f) {
           <span class="state ${stateClass(f.display_state)}">${esc(f.display_state)}</span>
           ${f.filed && f.filed.length ? `<span class="filed">${f.filed.map(x=>"#"+x.report_id).join(", ")}</span>` : ""}
           ${f.unmeasured ? `<span class="unmeasured" title="The wording and numbers here are from the day this was written; no run since has confirmed they still hold.">figures not re-measured</span>` : ""}
-          ${f.not_checked_in ? `<span class="unchecked" title="This sweep ran a narrower selector and did not include this check. The state and figures shown are the ones the last run that did include it left behind.">not re-checked${f.last_checked_at ? " &middot; last " + esc(stamp(f.last_checked_at)) : ""}</span>` : ""}
+          ${f.not_checked_in ? `<span class="unchecked" title="not re-checked by the last sweep${f.last_checked_at ? " &middot; last checked " + esc(stamp(f.last_checked_at)) : ""}">&#8635; ${f.last_checked_at ? esc(stamp(f.last_checked_at).slice(5)) : "old"}</span>` : ""}
           ${(f.owed || []).map(o => `<span class="owed" title="Something is still owed on this row: the fold works it out from the events, and it stays here until an event settles it. A re-verify is cleared by a level-V run under the pinned fingerprint; a retraction by a retraction-sent event.">${esc(o)}</span>`).join("")}
           ${f.stale_from ? `<span class="unheard" title="The last attempt to read their bug tracker did not succeed, so what they say here is as of the last clean read and may have moved since. A failed read is not an empty one: nothing on the vendor's side was allowed to change on the strength of it.">their side unread &middot; since ${esc(stamp(f.stale_from))}</span>` : ""}
-          ${changed ? `<span class="changed" title="The last time anything about this row moved -- either a run adjudicating the check, or a message on their tracker.">${f.last_change.axis
-              ? "changed " + esc(when(changed)) + " &middot; " + esc(f.last_change.from) + " &rarr; " + esc(f.last_change.to)
-              : "first seen " + esc(when(changed))}</span>` : ""}
+          ${changed ? `<span class="changed" title="${f.last_change.axis
+              ? "last change: " + esc(f.last_change.from) + " &rarr; " + esc(f.last_change.to)
+              : "first seen"}">${esc(when(changed))}</span>` : ""}
           <span class="newreply" data-newreply hidden title="They replied since you last looked"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="2.2" y="4.6" width="15.6" height="11" rx="2"/><path d="M2.6 6.2 10 11.4l7.4-5.2"/></svg><span class="sr-only">new reply</span></span>
         </div>
       </span>
@@ -2721,6 +2604,39 @@ paintVerdicts();
    colours, never the mark's. */
 const money = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
 
+/* ---------- the cockpit: the four numbers worth a glance ----------
+   Big, and one click from the list behind each. Severity, sections with no
+   check and what we filed ride underneath as small pills. */
+(function cockpit() {
+  const open = D.findings.filter(f => !SETTLED.has(f.display_state));
+  const severe = open.some(f => /^S[01]/.test(f.severity || ""));
+  const rw = (D.stats || {}).rewards || {};
+  const big = (cls, n, label, tab, tip) =>
+    `<button class="kpi ${cls}" data-go="${tab}" title="${esc(tip)}">`
+    + `<span class="kpi-n">${n}</span><span class="kpi-l">${label}</span></button>`;
+  const pill = (cls, n, label) =>
+    `<span class="tri ${cls}"><b class="n">${n}</b> <span class="l">${label}</span></span>`;
+  document.getElementById("triage").innerHTML =
+    `<div class="kpis">`
+    + big(open.length ? (severe ? "bad" : "warn") : "ok", open.length, "open findings",
+          "findings", "Not yet verified fixed, withdrawn or superseded")
+    + big("ok", D.display_counts["VERIFIED FIXED"] || 0, "verified fixed", "findings",
+          "Our check passes under the definition it once failed under")
+    + big("warn", D.display_counts["FIX CLAIMED"] || 0, "fix claimed, to verify",
+          "findings", "They say fixed; our check has not agreed yet")
+    + big("ok", Number(rw.paid_total || 0).toLocaleString("en-US"),
+          `${esc(rw.currency || "USDC")} rewarded`, "stats", "Paid by their bounty tracker")
+    + `</div><div class="pills">`
+    + SEV.map(([k, l, c]) => pill(c, D.by_severity[k] || 0, l)).join("")
+    + pill("", D.sections.filter(s => !(s.checks && s.checks.total)).length, "areas with no checks")
+    + pill("", D.findings.filter(f => f.filed && f.filed.length).length, "filed to their tracker")
+    + `</div>`;
+  document.getElementById("triage").addEventListener("click", e => {
+    const b = e.target.closest ? e.target.closest("[data-go]") : null;
+    if (b) showTab(b.dataset.go);
+  });
+})();
+
 function bars(rows, label) {
   if (!rows.length) return '<p class="blurb">Nothing recorded yet.</p>';
   const top = Math.max.apply(null, rows.map(r => r.v)) || 1;
@@ -2753,29 +2669,17 @@ function statBlocks() {
       <div><dt>rejected</dt><dd>${rw.invalid_n || 0}</dd></div>
     </dl>
     ${bars((rw.by_day || []).map(d => ({k: d.day, v: d.amount, t: money(d.amount) + " " + (rw.currency || "")})), "rewards by day")}
-    ${rw.disagrees ? `<p class="blurb warn">This does not match their own
-      figure. They publish ${esc(money(rw.their_total))} ${esc(rw.currency || "")}
-      across ${esc(String(rw.rows_they_hold))} report(s); we read
-      ${esc(String(rw.rows_read))} row(s) and add up
-      ${esc(money(rw.paid_total || 0))}. The number above is ours, and the gap
-      is the thing to look at first.</p>`
-      : `<p class="blurb">Agrees with their own published total
-      (${esc(money(rw.their_total))} ${esc(rw.currency || "")} over
-      ${esc(String(rw.rows_they_hold))} reports).</p>`}
-    <p class="blurb">Dated by the day they resolved the report; their tracker
-    does not tell us when each payment landed.</p>
+    ${rw.disagrees ? `<p class="blurb warn" title="They publish ${esc(money(rw.their_total))} ${esc(rw.currency || "")} across ${esc(String(rw.rows_they_hold))} report(s); we read ${esc(String(rw.rows_read))} row(s) and add up ${esc(money(rw.paid_total || 0))}. Days are the day they resolved each report.">&ne; their total ${esc(money(rw.their_total))} ${esc(rw.currency || "")}</p>`
+      : `<p class="blurb" title="Their published total, ${esc(String(rw.rows_they_hold))} reports. Days are the day they resolved each report.">= their total ${esc(money(rw.their_total))} ${esc(rw.currency || "")} &#10003;</p>`}
   </section>`);
 
   out.push(`<section class="stat">
     <h3>Defects fixed</h3>
-    <div class="hero">${fx.verified_by_us || 0} <span>verified by us</span></div>
+    <div class="hero" title="A check that was failing passes again. Re-pinned definitions are our bookkeeping and do not count.">${fx.verified_by_us || 0} <span>verified by us</span></div>
     <dl class="figs">
       <div><dt>verifications sent</dt><dd>${fx.told_them || 0}</dd></div>
     </dl>
     ${bars((fx.by_day || []).map(d => ({k: d.day, v: d.n})), "defects verified fixed by day")}
-    <p class="blurb">A defect counts when a check that was failing passes
-    again. Re-pinned definitions are not counted &mdash; there are 41 of those
-    and they are our own bookkeeping, not their repairs.</p>
   </section>`);
 
   // Can we rely on them? One square per question, oldest first, coloured by
@@ -2827,9 +2731,8 @@ function statBlocks() {
     <div class="rely-legend"><span><i class="sq answered"></i>answered</span>
       <span><i class="sq partial"></i>cut short</span><span><i class="sq failed"></i>failed</span>
       <span><i class="sq refused"></i>refused to start</span><span><i class="sq waiting"></i>no answer yet</span></div>
-    <p class="blurb">One square per question, oldest first. The dots are each
-    channel's typical answer time. Nexus is on the laboratory's page
-    (<a href="/lab">/lab</a>): its record lives outside git.</p>
+    <p class="blurb">One square per question, oldest first &middot; dots = typical
+    answer time &middot; Nexus is on <a href="/lab">/lab</a>.</p>
   </section>`);
 
   // What we test: every part of the platform the inventory knows, green where

@@ -294,7 +294,7 @@ def add_claude_note(room: str, text: str, about: str | None = None,
     """Ours, from scripts/rooms.py. Never unread: it is not the operator's feedback.
 
     `about` names the Nexus question it is about -- NEX-0016 -- and the tab
-    shows it beside the note. A `gist` is our one-line Czech summary of that
+    shows it beside the note. A `gist` is our one-line English summary of that
     answer: the tab draws it inside the answer wherever the answer is shown,
     so it must name a question that is on record.
     """

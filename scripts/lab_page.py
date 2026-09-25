@@ -902,8 +902,8 @@ def _lab_script():
 # per experiment are the rows of those rankings, and their threads sit behind
 # the page's conversation button.
 
-SECTOR_NAMES = {"cards": "Karty", "bots": "Boti", "memecoins": "Memecoiny",
-                "funds": "Fondy"}
+SECTOR_NAMES = {"cards": "Cards", "bots": "Bots", "memecoins": "Memecoins",
+                "funds": "Funds"}
 SECTORS = tuple(SECTOR_NAMES)
 # Points on a row's small line, and on an opened experiment's chart.
 SPARK_POINTS = 40
@@ -923,9 +923,9 @@ def _thin(points: list, keep: int) -> list:
 
 
 def _cz(value: float, digits: int = 1) -> str:
-    """-11.78 -> "−11,8": the operator's decimal comma and a real minus."""
-    text = f"{abs(value):.{digits}f}".replace(".", ",")
-    return ("−" if value < 0 and text.strip("0,") else "") + text
+    """-11.78 -> "−11.8": a decimal point and a real minus."""
+    text = f"{abs(value):.{digits}f}"
+    return ("−" if value < 0 and text.strip("0.") else "") + text
 
 
 def _signed(value: float, digits: int = 1) -> str:
@@ -933,7 +933,7 @@ def _signed(value: float, digits: int = 1) -> str:
 
 
 def _level(text: str) -> str:
-    """10.00 -> "10", 11.78 -> "11,8"."""
+    """10.00 -> "10", 11.78 -> "11.8"."""
     value = float(text)
     return _cz(value, 0 if value == round(value) else 1)
 
@@ -990,30 +990,30 @@ def _group(report_room: dict, panel: dict) -> str:
 
 
 def _reason(group: str, panel: dict) -> str | None:
-    """A few Czech words for why it stands where it does -- never the
+    """A few words for why it stands where it does -- never the
     verdict's English paragraph (N-0032, N-0034: "kdo to má číst?")."""
     verdict = panel.get("verdict") or {}
     name, why = verdict.get("verdict"), str(verdict.get("why") or "")
     ret = verdict.get("return_pct")
     if group == "archive":
-        return "Nexus to nevybral" if panel.get("invested") else "nic se nekoupilo"
+        return "not Nexus's pick" if panel.get("invested") else "nothing bought"
     if name == "survived":
-        return f"vydělal {_signed(ret)} %" if ret is not None else None
+        return f"made {_signed(ret)}%" if ret is not None else None
     if name == "refuted":
         found = _DRAWDOWN.search(why)
         if found:
-            return (f"propad {_level(found.group(1))} % přes limit "
-                    f"{_level(found.group(2))} %")
+            return (f"drawdown {_level(found.group(1))}% past "
+                    f"{_level(found.group(2))}% limit")
         found = _AGAINST.search(why)
         if found:
-            return f"horší než BTC ({_signed(float(found.group(1)))} %)"
-        return f"skončil {_signed(ret)} %" if ret is not None else None
+            return f"worse than BTC ({_signed(float(found.group(1)))}%)"
+        return f"ended {_signed(ret)}%" if ret is not None else None
     if name == "inconclusive":
-        return ("nelze porovnat s BTC" if "benchmark" in why
-                else "málo dat k posouzení")
+        return ("no BTC comparison" if "benchmark" in why
+                else "too little data")
     clones = panel.get("clones") or []
     if clones and clones[-1].get("trading") is False and panel.get("status") == "running":
-        return "zastavil se sám"
+        return "stopped by itself"
     return None
 
 
@@ -1119,11 +1119,11 @@ def render_lab(data: dict | None = None) -> str:
 
 
 TEMPLATE = r"""<!doctype html>
-<html lang="cs">
+<html lang="en">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Laboratoř</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<title>Lab</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap">
 <style>
 /* [hidden] first: a class with display set must never beat it. */
 [hidden] { display: none !important; }
@@ -1134,44 +1134,27 @@ TEMPLATE = r"""<!doctype html>
    only -- a tab's edge, a dot -- and never colour a number. Green and red
    are for money: a gain and a loss. */
 :root {
-  --bg:#f3f5f4; --surface:#ffffff; --surface-2:#eef1f0; --surface-3:#e4e9e7;
-  --line:#d9dfdd; --line-soft:#e8ecea;
-  --text:#0f1719; --text-dim:#56676a; --text-faint:#8a999a;
-  --ok:#17803d; --ok-bg:#17803d17; --bad:#b3261e; --bad-bg:#b3261e14;
-  --accent:#0d6b66;
-  --c-cards:#2a78d6; --c-bots:#eda100; --c-memecoins:#4a3aa7; --c-funds:#e87ba4;
-  --shadow:0 1px 2px rgba(15,23,25,.06), 0 8px 24px rgba(15,23,25,.06);
-  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
-  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
-  color-scheme: light;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg:#0b1113; --surface:#121b1d; --surface-2:#18231f; --surface-3:#1f2c2e;
-    --line:#243436; --line-soft:#1b282a;
-    --text:#e6eeec; --text-dim:#98aaa9; --text-faint:#687a7b;
-    --ok:#4ec97a; --ok-bg:#4ec97a1c; --bad:#f2685e; --bad-bg:#f2685e1c;
-    --accent:#4ecfc4;
-    --c-cards:#3987e5; --c-bots:#c98500; --c-memecoins:#9085e9; --c-funds:#d55181;
-    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.25);
-    color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --bg:#0b1113; --surface:#121b1d; --surface-2:#18231f; --surface-3:#1f2c2e;
-  --line:#243436; --line-soft:#1b282a;
-  --text:#e6eeec; --text-dim:#98aaa9; --text-faint:#687a7b;
-  --ok:#4ec97a; --ok-bg:#4ec97a1c; --bad:#f2685e; --bad-bg:#f2685e1c;
-  --accent:#4ecfc4;
-  --c-cards:#3987e5; --c-bots:#c98500; --c-memecoins:#9085e9; --c-funds:#d55181;
-  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.25);
+  /* Cymetica's own palette (cymetica.com main.css), the console's twin. */
+  --bg:#0a0e17; --bg-2:#0d1520; --bg-3:#111a28;
+  --surface:rgba(17,24,39,.72); --surface-2:rgba(24,34,52,.85); --surface-3:rgba(34,46,68,.9);
+  --line:rgba(0,150,255,.16); --line-soft:rgba(0,150,255,.08);
+  --text:#ffffff; --text-dim:#9fb3c8; --text-faint:#7b8794;
+  --ok:#00ff88; --ok-bg:rgba(0,255,136,.12); --bad:#ff4444; --bad-bg:rgba(255,68,68,.14);
+  --accent:#00cfff;
+  --c-cards:#00aaff; --c-bots:#ffb020; --c-memecoins:#b08cff; --c-funds:#ff6fae;
+  --glow-ok:0 0 14px rgba(0,255,136,.35); --glow-bad:0 0 14px rgba(255,68,68,.3);
+  --shadow:0 8px 32px rgba(0,0,0,.5);
+  --sans:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  --display:"Archivo Black","Inter",sans-serif;
   color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
 html, body { margin: 0; }
-body { background: var(--bg); color: var(--text); font: 15px/1.45 var(--sans);
-  -webkit-font-smoothing: antialiased; }
+body { color: var(--text); font: 15px/1.45 var(--sans); -webkit-font-smoothing: antialiased;
+  background: linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 55%, var(--bg-3) 100%) fixed;
+  background-color: var(--bg); }
 button { font: inherit; color: inherit; }
 .up { color: var(--ok); } .down { color: var(--bad); } .flat { color: var(--text-faint); }
 
@@ -1181,7 +1164,9 @@ button { font: inherit; color: inherit; }
 /* ---------- the bar across the top ---------- */
 .top { display: flex; align-items: flex-start; justify-content: space-between;
   gap: 16px; flex-wrap: wrap; }
-.brand h1 { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -.015em; }
+.brand h1 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 28px;
+  letter-spacing: .01em; text-transform: uppercase; }
+.brand h1 em { font-style: normal; color: var(--ok); text-shadow: var(--glow-ok); }
 .brand p { margin: 2px 0 0; font-size: 13px; color: var(--text-dim); }
 .brand p b { color: var(--text); font-weight: 600; }
 .brand .warn { color: var(--bad); font-weight: 600; }
@@ -1189,7 +1174,10 @@ button { font: inherit; color: inherit; }
 .btn { display: inline-flex; align-items: center; gap: 6px; font-size: 14px;
   padding: 7px 14px; border-radius: 999px; border: 1px solid var(--line);
   background: var(--surface); color: var(--text); cursor: pointer; text-decoration: none; }
-.btn:hover { border-color: var(--text-faint); }
+.btn:hover { border-color: var(--accent); }
+.btn-go { background: var(--ok); color: #00131c; border-color: var(--ok); font-weight: 800;
+  box-shadow: var(--glow-ok); }
+.btn-go:hover { background: var(--accent); border-color: var(--accent); }
 .btn:focus-visible, .sec:focus-visible, .row:focus-visible, .seg button:focus-visible {
   outline: 2px solid var(--accent); outline-offset: 2px; }
 .live { font: 12px var(--mono); color: var(--text-faint); display: inline-flex;
@@ -1200,17 +1188,20 @@ button { font: inherit; color: inherit; }
 /* ---------- the four sector rooms, always in sight ---------- */
 .sectors { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
 .sec { position: relative; text-align: left; cursor: pointer; background: var(--surface);
-  border: 1px solid var(--line); border-radius: 14px; padding: 13px 16px 12px 20px;
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--line); border-radius: 10px; padding: 13px 16px 12px 20px;
   display: flex; flex-direction: column; gap: 1px; min-width: 0;
   transition: border-color .15s, box-shadow .15s, transform .15s; }
 .sec::before { content: ""; position: absolute; left: 0; top: 12px; bottom: 12px;
   width: 4px; border-radius: 0 4px 4px 0; background: var(--hue); }
 .sec:hover { border-color: var(--text-faint); }
 .sec[aria-selected="true"] { border-color: var(--hue); box-shadow: 0 0 0 1px var(--hue), var(--shadow); }
-.sec-name { font-size: 12.5px; font-weight: 700; letter-spacing: .08em;
+.sec-name { font: 700 12px var(--mono); letter-spacing: .1em;
   text-transform: uppercase; color: var(--text-dim); }
-.sec-val { font-size: 30px; font-weight: 700; line-height: 1.15; letter-spacing: -.015em;
+.sec-val { font-family: var(--display); font-size: 30px; line-height: 1.15; letter-spacing: .01em;
   white-space: nowrap; }
+.sec-val.up, .hero.up { text-shadow: var(--glow-ok); }
+.sec-val.down, .hero.down { text-shadow: var(--glow-bad); }
 .sec-mid { font-size: 14px; font-weight: 600; color: var(--text-dim); white-space: nowrap;
   overflow: hidden; text-overflow: ellipsis; }
 .sec-foot { font-size: 12.5px; color: var(--text-faint); white-space: nowrap;
@@ -1226,11 +1217,13 @@ button { font: inherit; color: inherit; }
   border-radius: 6px; padding: 1px 7px; margin-right: 4px; }
 
 /* ---------- a room: its number, then its ranking ---------- */
-.room { background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
+.room { background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+  backdrop-filter: blur(12px);
   padding: 20px 22px 14px; display: flex; flex-direction: column; gap: 14px;
   box-shadow: var(--shadow); border-top: 3px solid var(--hue); }
+.room:empty { display: none; }
 .room-head { display: flex; align-items: flex-end; gap: 22px; flex-wrap: wrap; }
-.hero { font-size: 52px; font-weight: 700; line-height: .95; letter-spacing: -.025em;
+.hero { font-family: var(--display); font-size: 52px; line-height: .95; letter-spacing: .01em;
   white-space: nowrap; }
 .hero-side { display: flex; flex-direction: column; gap: 5px; padding-bottom: 3px; min-width: 0; }
 .hero-l1 { font-size: 15px; color: var(--text-dim); }
@@ -1251,8 +1244,9 @@ button { font: inherit; color: inherit; }
 .seg button { border: 0; background: none; color: var(--text-dim); padding: 6px 15px;
   border-radius: 999px; cursor: pointer; font-size: 14px; }
 .seg button:hover { color: var(--text); }
-.seg button[aria-selected="true"] { background: var(--surface); color: var(--text);
-  font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,.18); }
+.seg button[aria-selected="true"] { background: var(--ok); color: #00131c;
+  font-weight: 700; box-shadow: var(--glow-ok); }
+.seg button[aria-selected="true"] .n { color: #00131c; }
 .seg .n { margin-left: 6px; color: var(--text-faint); font-variant-numeric: tabular-nums;
   font-weight: 500; }
 .bar-hint { font-size: 12.5px; color: var(--text-faint); }
@@ -1337,7 +1331,7 @@ button { font: inherit; color: inherit; }
 .mc-pt { cursor: crosshair; }
 
 /* Our own bubble -- the browser's title tooltip is small, grey and late. */
-.tip { position: fixed; z-index: 80; pointer-events: none; background: var(--surface);
+.tip { position: fixed; z-index: 80; pointer-events: none; background: var(--bg-3);
   border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px;
   box-shadow: var(--shadow); min-width: 120px; }
 .tip-h { font-size: 12px; color: var(--text-dim); }
@@ -1345,7 +1339,7 @@ button { font: inherit; color: inherit; }
 
 /* ---------- the conversation, behind its button ---------- */
 .drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(560px, 100vw);
-  background: var(--surface); border-left: 1px solid var(--line); z-index: 60;
+  background: var(--bg-2); border-left: 1px solid var(--line); z-index: 60;
   display: flex; flex-direction: column; box-shadow: -18px 0 40px rgba(0,0,0,.28); }
 .dr-head { display: flex; align-items: center; justify-content: space-between; gap: 10px;
   padding: 14px 18px 10px; }
@@ -1367,8 +1361,8 @@ button { font: inherit; color: inherit; }
   border-radius: 8px; padding: .5rem .65rem; }
 .send { display: flex; justify-content: space-between; align-items: center; gap: 10px;
   font-size: 12.5px; color: var(--text-dim); }
-.send button { padding: 6px 16px; border-radius: 999px; border: 0; background: var(--accent);
-  color: var(--surface); font-weight: 600; cursor: pointer; }
+.send button { padding: 6px 16px; border-radius: 7px; border: 0; background: var(--ok);
+  color: #00131c; font-weight: 800; cursor: pointer; box-shadow: var(--glow-ok); }
 .send button:disabled { opacity: .5; cursor: default; }
 .nx-msg { border: 1px solid var(--line); border-radius: 12px; padding: .6rem .8rem;
   background: var(--surface); max-width: 94%; align-self: flex-start; }
@@ -1415,31 +1409,31 @@ button { font: inherit; color: inherit; }
 <div class="app" id="app">
   <header class="top">
     <div class="brand">
-      <h1>Laboratoř</h1>
-      <p id="account">Papírové obchody podle Nexuse · čísla po poplatcích</p>
+      <h1>Cymetica <em>Lab</em></h1>
+      <p id="account">Paper trades on Nexus's advice · after fees</p>
     </div>
     <div class="top-r">
-      <span class="live" id="live"><i></i><span>statická</span></span>
-      <button class="btn" type="button" id="chatBtn">💬 Konverzace</button>
-      <a class="btn" href="/">← Konzole</a>
+      <span class="live" id="live"><i></i><span>static</span></span>
+      <a class="btn" href="/">← Console</a>
+      <button class="btn btn-go" type="button" id="chatBtn">💬 Conversation</button>
     </div>
   </header>
-  <nav class="sectors" id="sectors" role="tablist" aria-label="Odvětví"></nav>
+  <nav class="sectors" id="sectors" role="tablist" aria-label="Sectors"></nav>
   <p class="nexus" id="nexus"></p>
   <main class="room" id="room"></main>
   <section class="room" id="departments"></section>
 </div>
 
-<aside class="drawer" id="drawer" hidden aria-label="Konverzace">
-  <div class="dr-head"><h2 id="drTitle">Konverzace</h2>
-    <button class="btn" type="button" id="drClose">Zavřít ✕</button></div>
+<aside class="drawer" id="drawer" hidden aria-label="Conversation">
+  <div class="dr-head"><h2 id="drTitle">Conversation</h2>
+    <button class="btn" type="button" id="drClose">Close ✕</button></div>
   <div class="dr-scope" id="drScope"></div>
   <div class="thread" id="thread"></div>
   <form class="compose" id="compose">
     <textarea id="draft" rows="2" maxlength="4000"
-      placeholder="Poznámka pro Clauda k tomuhle roomu — přečte si ji, až mu napíšeš „přečti si to“."></textarea>
-    <div class="send"><span id="sendNote">Ctrl+Enter odešle</span>
-      <button type="submit" id="send">Poslat</button></div>
+      placeholder="A note to Claude for this room — read when you tell him „přečti si to“."></textarea>
+    <div class="send"><span id="sendNote">Ctrl+Enter sends</span>
+      <button type="submit" id="send">Send</button></div>
   </form>
 </aside>
 <div class="tip" id="tip" hidden></div>
@@ -1460,42 +1454,46 @@ function writeStore(key, value) {
 }
 const LOCAL = ["127.0.0.1", "localhost", "[::1]"].includes(location.hostname);
 const SECTORS = ["cards", "bots", "memecoins", "funds"];
-const GROUPS = [["live", "Běží"], ["done", "Vyhodnoceno"], ["archive", "Archiv"]];
-const EMPTY = {live: "Teď tu nic neběží.", done: "Zatím nic vyhodnoceného.",
-               archive: "Archiv je prázdný."};
+const GROUPS = [["live", "Live"], ["done", "Done"], ["archive", "Archive"]];
+const EMPTY = {live: "Nothing live right now.", done: "Nothing judged yet.",
+               archive: "The archive is empty."};
 const TOP = 10;
 
-/* ---------- numbers, the way the operator reads them ----------
-   A decimal comma, a real minus, a space before %, and as many decimals as
+/* ---------- numbers ----------
+   A decimal point, a real minus, $ in front, and as many decimals as
    the size of the number needs. The page names its shapes -- `lp.` a sector,
    `le.` an experiment, `lb.` its backtest, `ln.` the Nexus line, `la.` the
    account -- and tests/meta/test_pipeline_lab_page.py holds every one against
    what lab_view() writes, in both directions. */
-// A number never breaks across a line: no-break spaces between its thousands
-// and before its unit ("1 414 $" once wrapped as "1 414" / "$" on a phone).
+// A number never breaks across a line: no space inside it at all.
 const NB = " ";
 function num(v, digits) {
   const n = Number(v), fixed = Math.abs(n).toFixed(digits), parts = fixed.split(".");
   return (n < 0 && Number(fixed) !== 0 ? "−" : "") +
-    parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, NB) + (parts[1] ? "," + parts[1] : "");
+    parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",") + (parts[1] ? "." + parts[1] : "");
 }
 function places(v) { const a = Math.abs(v); return a >= 100 ? 0 : a >= 10 ? 1 : 2; }
 function pctText(v, digits) {
   if (v == null || isNaN(v)) return "—";
   const d = digits == null ? places(v) : digits;
-  return (v > 0 && Number(Math.abs(v).toFixed(d)) !== 0 ? "+" : "") + num(v, d) + NB + "%";
+  return (v > 0 && Number(Math.abs(v).toFixed(d)) !== 0 ? "+" : "") + num(v, d) + "%";
 }
 function usdText(v) {
   if (v == null || isNaN(v)) return "—";
-  const d = Math.abs(v) >= 100 ? 0 : 2;
-  return (v > 0 && Number(Math.abs(v).toFixed(d)) !== 0 ? "+" : "") + num(v, d) + NB + "$";
+  const d = Math.abs(v) >= 100 ? 0 : 2, zero = Number(Math.abs(v).toFixed(d)) === 0;
+  return (zero ? "" : v > 0 ? "+" : "−") + "$" + num(Math.abs(v), d);
 }
-function money(v) { return v == null || isNaN(v) ? "—" : num(v, Math.abs(v) >= 100 ? 0 : 2) + NB + "$"; }
+function money(v) {
+  if (v == null || isNaN(v)) return "—";
+  const d = Math.abs(v) >= 100 ? 0 : 2;
+  return (v < 0 && Number(Math.abs(v).toFixed(d)) !== 0 ? "−" : "") + "$" + num(Math.abs(v), d);
+}
 function tone(v) { return v == null || isNaN(v) ? "flat" : v > 0 ? "up" : v < 0 ? "down" : "flat"; }
-function plural(n, one, few, many) { return n === 1 ? one : (n >= 2 && n <= 4) ? few : many; }
+function plural(n, one, many) { return n === 1 ? one : many; }
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 function day(iso) {
   const d = new Date(iso);
-  return isNaN(d) ? "" : d.getDate() + ". " + (d.getMonth() + 1) + ".";
+  return isNaN(d) ? "" : MONTHS[d.getMonth()] + " " + d.getDate();
 }
 function clock(iso) {
   const d = new Date(iso);
@@ -1504,9 +1502,9 @@ function clock(iso) {
 }
 function leftText(v) {
   if (v == null) return "";
-  if (v <= 0) return "vyhodnocení dnes";
-  if (v < 1) return "zbývá " + Math.max(1, Math.round(v * 24)) + " h";
-  return "zbývá " + Math.round(v) + " d";
+  if (v <= 0) return "verdict today";
+  if (v < 1) return Math.max(1, Math.round(v * 24)) + " h left";
+  return Math.round(v) + " d left";
 }
 function chip(cls, text) { return `<span class="chip ${cls}">${text}</span>`; }
 
@@ -1516,20 +1514,20 @@ function sectorOf(key) {
 
 /* ---------- the top: the account and the four rooms ---------- */
 function accountLine(la) {
-  if (!la || la.free == null) return "Papírové obchody podle Nexuse · čísla po poplatcích";
-  return `Papírový účet: <b>${money(la.free)}</b> volné · ${money(la.in_cards)} v kartách · ` +
-    `${money(la.in_bots)} v botech` + (la.at ? ` <span class="flat">(${clock(la.at)})</span>` : "") +
-    (la.stale ? ' · <span class="warn">⚠ data z API jsou stará</span>' : "");
+  if (!la || la.free == null) return "Paper trades on Nexus's advice · after fees";
+  return `Paper account <b>${money(la.free)}</b> free · ${money(la.in_cards)} in cards · ` +
+    `${money(la.in_bots)} in bots` + (la.at ? ` <span class="flat">(${clock(la.at)})</span>` : "") +
+    (la.stale ? ' · <span class="warn">⚠ API data is stale</span>' : "");
 }
 function sectorTab(lp, on) {
   const meme = lp.key === "memecoins";
   const mid = meme
-    ? (lp.n ? `${num(lp.n, 0)} obchodů po 10 $` : "zatím žádný obchod")
+    ? (lp.n ? `${num(lp.n, 0)} trades × $10` : "no trade yet")
     : lp.usdc != null ? `<span class="${tone(lp.usdc)}">${usdText(lp.usdc)}</span>`
-                         + ` <span class="flat">z ${money(lp.stake_usdc)}</span>`
-    : (lp.running ? "zatím bez výsledku" : "zatím nic");
-  const foot = meme ? `${num(lp.running || 0, 0)} ještě čeká na celý den`
-    : `${lp.n || 0} ${plural(lp.n || 0, "pokus", "pokusy", "pokusů")} · ${lp.running || 0} běží`;
+                         + ` <span class="flat">on ${money(lp.stake_usdc)}</span>`
+    : (lp.running ? "no result yet" : "nothing yet");
+  const foot = meme ? `${num(lp.running || 0, 0)} waiting for a full day`
+    : `${lp.n || 0} ${plural(lp.n || 0, "test", "tests")} · ${lp.running || 0} live`;
   return `<button class="sec" role="tab" type="button" aria-selected="${on}"
       data-sector="${esc(lp.key)}" style="--hue:var(--c-${esc(lp.key)})">
     <span class="sec-name">${esc(lp.name)}</span>
@@ -1541,66 +1539,66 @@ function nexusLine(ln) {
   if (!ln || ln.questions == null) return "";
   const ar = '<span class="ar">→</span>';
   const took = ln.median_seconds != null
-    ? ` · odpovídá za ~${Math.max(1, Math.round(ln.median_seconds / 60))} min` +
-      ` <small>(změřeno ${ln.measured}×)</small>` : "";
+    ? ` · answers in ~${Math.max(1, Math.round(ln.median_seconds / 60))} min` +
+      ` <small>(measured ${ln.measured}×)</small>` : "";
   const quiet = (ln.failed || ln.refused)
-    ? ` · <small>${ln.failed || 0} bez odpovědi, ${ln.refused || 0} odmítl</small>` : "";
-  return `<span class="nx-tag">Nexus</span> <b>${ln.questions}</b> otázek ${ar} ` +
-    `<b>${ln.answered}</b> odpovědí ${ar} <b>${ln.picks}</b> nápadů ${ar} ` +
-    `<b>${ln.gate_pass}</b> z ${ln.gated} prošlo backtestem ${ar} ` +
-    `<b class="${ln.survived ? "up" : ""}">${ln.survived}</b> vyšlo` +
-    (ln.refuted ? `, ${ln.refuted} nevyšlo` : "") + took + quiet;
+    ? ` · <small>${ln.failed || 0} unanswered, ${ln.refused || 0} refused</small>` : "";
+  return `<span class="nx-tag">Nexus</span> <b>${ln.questions}</b> questions ${ar} ` +
+    `<b>${ln.answered}</b> answers ${ar} <b>${ln.picks}</b> ideas ${ar} ` +
+    `<b>${ln.gate_pass}</b> of ${ln.gated} passed backtest ${ar} ` +
+    `<b class="${ln.survived ? "up" : ""}">${ln.survived}</b> worked` +
+    (ln.refuted ? `, ${ln.refuted} didn't` : "") + took + quiet;
 }
 
 /* ---------- a room's number: how sure, in words ---------- */
 function confidence(lp) {
-  if (!lp.wilson) return ["flat", "málo dat na jistotu"];
-  if (lp.wilson[0] > 0.5) return ["up", "spíš vydělává"];
-  if (lp.wilson[1] < 0.5) return ["down", "spíš prodělává"];
-  return ["flat", "zatím nerozhodnuto"];
+  if (!lp.wilson) return ["flat", "too little data"];
+  if (lp.wilson[0] > 0.5) return ["up", "likely profitable"];
+  if (lp.wilson[1] < 0.5) return ["down", "likely losing"];
+  return ["flat", "undecided"];
 }
 function band(lp) {
   return lp.wilson
-    ? `<small>${Math.round(lp.wilson[0] * 100)}–${Math.round(lp.wilson[1] * 100)} % pokusů v plusu, 95 % jistota</small>`
-    : `<small>méně než ${lp.min_n} ${plural(lp.min_n, "pokus", "pokusy", "pokusů")}</small>`;
+    ? `<small>${Math.round(lp.wilson[0] * 100)}–${Math.round(lp.wilson[1] * 100)}% of tests in profit, 95% sure</small>`
+    : `<small>fewer than ${lp.min_n} ${plural(lp.min_n, "test", "tests")}</small>`;
 }
 function roomHead(lp) {
   if (!lp.n) {
     return `<div class="room-head"><div class="hero flat">—</div><div class="hero-side">
-      <div class="hero-l1">zatím žádný výsledek</div>
-      <div class="hero-l2">${lp.running || 0} běží · číslo přijde, až skončí první okno</div>
+      <div class="hero-l1">no result yet</div>
+      <div class="hero-l2">${lp.running || 0} live · a number comes when the first window ends</div>
       </div></div>`;
   }
   const [ct, cw] = confidence(lp);
   return `<div class="room-head">
     <div class="hero ${tone(lp.net_pct)}">${pctText(lp.net_pct)}</div>
     <div class="hero-side">
-      <div class="hero-l1">průměr na pokus, po poplatcích` +
-        (lp.usdc != null ? ` · celkem <b class="${tone(lp.usdc)}">${usdText(lp.usdc)}</b>` +
-                           ` z ${money(lp.stake_usdc)} vložených` : "") + `</div>
-      <div class="hero-l2">${lp.wins} z ${lp.n} v plusu
+      <div class="hero-l1">average per test, after fees` +
+        (lp.usdc != null ? ` · total <b class="${tone(lp.usdc)}">${usdText(lp.usdc)}</b>` +
+                           ` on ${money(lp.stake_usdc)} in` : "") + `</div>
+      <div class="hero-l2">${lp.wins} of ${lp.n} in profit
         <span class="conf ${ct}">${cw}</span>${band(lp)}</div>
     </div></div>`;
 }
 
 /* ---------- one experiment, one row ---------- */
-const VERDICT = {survived: ["up", "✓ vyšlo"], refuted: ["down", "✗ nevyšlo"],
-                 inconclusive: ["", "? nedá se říct"]};
-const STATUS = {paused: "pauza", proposed: "návrh", stopped: "zastaveno"};
+const VERDICT = {survived: ["up", "✓ worked"], refuted: ["down", "✗ didn't work"],
+                 inconclusive: ["", "? can't tell"]};
+const STATUS = {paused: "paused", proposed: "proposed", stopped: "stopped"};
 function btChip(lb) {
-  if (!lb || lb.pct == null) return chip("", "bez backtestu");
+  if (!lb || lb.pct == null) return chip("", "no backtest");
   return chip(lb.pass ? "up" : "down", "backtest " + pctText(lb.pct, 0));
 }
 function stateChips(le) {
   if (le.group === "done") {
-    const v = VERDICT[le.verdict] || ["", STATUS[le.status] || "ukončeno"];
+    const v = VERDICT[le.verdict] || ["", STATUS[le.status] || "ended"];
     return chip(v[0], v[1]) + (le.reason ? chip("", esc(le.reason)) : "");
   }
-  if (le.group === "archive") return chip("", esc(le.reason || "v archivu"));
+  if (le.group === "archive") return chip("", esc(le.reason || "archived"));
   const out = [];
   // A bot that stopped by itself says so once, in its reason.
   if (le.trading != null && !le.reason) {
-    out.push(chip(le.trading ? "up" : "", le.trading ? "obchoduje" : "stojí"));
+    out.push(chip(le.trading ? "up" : "", le.trading ? "trading" : "idle"));
   }
   if (le.reason) out.push(chip("down", esc(le.reason)));
   if (STATUS[le.status]) out.push(chip("", STATUS[le.status]));
@@ -1632,7 +1630,7 @@ function row(le, rank, open) {
       role="button" aria-expanded="${open}">
     <span class="rk">${rank}</span>
     <span class="nm" title="${esc(le.title)}">${esc(le.title)}${le.ours
-      ? ' <span class="ours">naše</span>' : ""}</span>
+      ? ' <span class="ours">ours</span>' : ""}</span>
     <span class="sp">${le.group === "archive" ? '<span class="sp-none">—</span>' : spark(le.spark)}</span>
     <span class="val ${tone(le.net_pct)}">${pctText(le.net_pct)}</span>
     <span class="usd ${tone(le.usdc)}">${le.usdc == null ? "" : usdText(le.usdc)}</span>
@@ -1653,8 +1651,8 @@ function chart(le) {
   const pts = le.path || [];
   if (pts.length < 2) {
     return `<figure class="dt-chart"><div class="dt-empty">${le.sector === "funds"
-      ? "Fond jen sledujeme, nic se v něm nekoupilo — čára tu zatím není."
-      : "Zatím žádný průběh."}</div></figure>`;
+      ? "A fund we only watch — nothing bought, so no line yet."
+      : "No path yet."}</div></figure>`;
   }
   const W = 640, H = 210, L = 50, R = 84, T = 10, B = 26;
   const ts = pts.map(p => Date.parse(p[0])), vs = pts.map(p => p[1]);
@@ -1676,13 +1674,13 @@ function chart(le) {
   CHARTS[le.id] = {W: W, L: L, R: R, T: T, B: B, H: H, ts: ts, vs: vs,
                    x0: t0, x1: t1, lo: lo, hi: hi};
   return `<figure class="dt-chart"><svg viewBox="0 0 ${W} ${H}" data-chart="${esc(le.id)}"
-      role="img" aria-label="${esc(le.title)}: ${pctText(last)} od nákupu">
+      role="img" aria-label="${esc(le.title)}: ${pctText(last)} since entry">
     <g class="ax">${ticks.map(v => `<line x1="${L}" x2="${W - R}" y1="${y(v).toFixed(1)}"
         y2="${y(v).toFixed(1)}"${Math.abs(v) < step / 1000 ? ' class="zero"' : ""}/>
       <text x="${L - 8}" y="${(y(v) + 4).toFixed(1)}" text-anchor="end">${pctText(v, digits)}</text>`).join("")}
       <text x="${L}" y="${H - 6}">${day(pts[0][0])}</text>
       <text x="${W - R}" y="${H - 6}" text-anchor="end">${day(pts[pts.length - 1][0])}</text></g>
-    ${level(le.tp, "lvl-tp", "cíl")}${level(le.sl, "lvl-sl", "stop")}
+    ${level(le.tp, "lvl-tp", "target")}${level(le.sl, "lvl-sl", "stop")}
     <path d="${d} L${x(t1).toFixed(1)} ${y(0).toFixed(1)} L${x(t0).toFixed(1)} ${y(0).toFixed(1)}Z"
       fill="${col}" opacity=".10"/>
     <path d="${d}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round"
@@ -1699,21 +1697,21 @@ function detail(le) {
   const lb = le.backtest;
   const now = le.stake != null && le.usdc != null ? le.stake + le.usdc : null;
   const tiles = [
-    ["Vloženo", money(le.stake), le.sector === "bots" ? "do bota" : "papírové peníze"],
-    ["Teď", money(now), now == null ? "" : "po poplatcích"],
-    ["Výsledek", `<span class="${tone(le.net_pct)}">${pctText(le.net_pct)}</span>`,
+    ["In", money(le.stake), le.sector === "bots" ? "in the bot" : "paper money"],
+    ["Now", money(now), now == null ? "" : "after fees"],
+    ["Result", `<span class="${tone(le.net_pct)}">${pctText(le.net_pct)}</span>`,
      le.usdc == null ? "" : `<span class="${tone(le.usdc)}">${usdText(le.usdc)}</span>`],
     ["Backtest", lb && lb.pct != null
        ? `<span class="${lb.pass ? "up" : "down"}">${pctText(lb.pct, 0)}</span>` : "—",
-     lb && lb.pct != null ? `za ${lb.period} d · Sharpe ${num(lb.sharpe, 1)}`
-                          : "tohle se otestovat nedá"],
+     lb && lb.pct != null ? `${lb.period} d · Sharpe ${num(lb.sharpe, 1)}`
+                          : "can't be backtested"],
   ];
-  const facts = [le.ours ? `naše (${esc(le.origin)})`
-                 : le.origin ? `nápad ${esc(le.origin)}` : "",
-                 le.opened_at ? `otevřeno ${day(le.opened_at)}` : "",
-                 le.ends_at ? `vyhodnocení ${day(le.ends_at)}` : ""].filter(Boolean);
+  const facts = [le.ours ? `ours (${esc(le.origin)})`
+                 : le.origin ? `idea ${esc(le.origin)}` : "",
+                 le.opened_at ? `opened ${day(le.opened_at)}` : "",
+                 le.ends_at ? `verdict ${day(le.ends_at)}` : ""].filter(Boolean);
   if (le.tp != null || le.sl != null) {
-    facts.push(`cíl ${pctText(le.tp, 0)} · stop ${pctText(le.sl, 0)}`);
+    facts.push(`target ${pctText(le.tp, 0)} · stop ${pctText(le.sl, 0)}`);
   }
   return `<li class="detail" data-for="${esc(le.id)}"><div class="dt">
     ${chart(le)}
@@ -1722,8 +1720,8 @@ function detail(le) {
         `<div class="tile"><span>${k}</span><b>${v}</b><i>${s}</i></div>`).join("")}</div>
       <p class="dt-facts">${facts.join(" · ")}</p>
       <div class="dt-links">${le.url ? `<a href="${esc(le.url)}" target="_blank"
-          rel="noopener">Karta na Cymetice ↗</a>` : ""}
-        <button type="button" class="linkish" data-chat="${esc(le.id)}">💬 Konverzace k tomuhle</button></div>
+          rel="noopener">Card on Cymetica ↗</a>` : ""}
+        <button type="button" class="linkish" data-chat="${esc(le.id)}">💬 Conversation</button></div>
     </div></div></li>`;
 }
 
@@ -1760,16 +1758,16 @@ function curveSvg(points) {
         fill="var(${p[1] >= 0 ? "--ok" : "--bad"})"/></g>`).join("");
   const zero = y(0).toFixed(1);
   return `<svg class="mc-spark" viewBox="0 0 ${W} ${H}" role="img"
-    aria-label="výnos po hodinách od signálu">
+    aria-label="return by hour since the signal">
     <line x1="${PAD}" x2="${W - PAD}" y1="${zero}" y2="${zero}" stroke="var(--line)"
       stroke-width="1"/>${lines}${dots}</svg>`;
 }
-const DROPPED = [["unpriced", "bez ceny při signálu"], ["depth_unknown", "neznámá hloubka"],
-                 ["too_thin", "moc tenký pool na 10 $"], ["pair_changed", "přepnutý pár"],
-                 ["unread_at_24h", "nepřečteno po 24 h"]];
+const DROPPED = [["unpriced", "unpriced at signal"], ["depth_unknown", "unknown depth"],
+                 ["too_thin", "pool too thin for $10"], ["pair_changed", "pair switched"],
+                 ["unread_at_24h", "unread at 24 h"]];
 function moversTable() {
   const all = V.movers || [];
-  if (!all.length) return `<p class="empty">Zatím žádný signál nemá za sebou první hodinu.</p>`;
+  if (!all.length) return `<p class="empty">No signal has had its first hour yet.</p>`;
   const open = readStore("lab.movers", "0") === "1";
   const shown = open ? all : all.slice(0, TOP);
   const rows = shown.map(c => `<tr>
@@ -1778,12 +1776,12 @@ function moversTable() {
       <td class="mc-ret">${pct(c.last)}</td>
       <td class="mc-ret">${pct(c.peak)}</td>
       <td class="mc-g">${curveSvg(c.points)}</td></tr>`).join("");
-  return `<div class="movers"><h3>Největší pohyby<small>${shown.length} z ${num(V.movers_total || 0, 0)}
-      · seřazené podle vrcholu, takže jsou to vítězové z principu, ne průměr</small></h3>
-    <table class="mc-list"><thead><tr><th>token</th><th>conviction</th><th>teď</th>
-      <th>vrchol</th><th>prvních 24 h</th></tr></thead><tbody>${rows}</tbody></table>
-    ${all.length > TOP ? `<button type="button" class="more" data-movers>${open ? "Méně ▴"
-      : `Všech ${all.length} ▾`}</button>` : ""}</div>`;
+  return `<div class="movers"><h3>Top movers<small>${shown.length} of ${num(V.movers_total || 0, 0)}
+      · by peak: winners by construction, not the average</small></h3>
+    <table class="mc-list"><thead><tr><th>token</th><th>conviction</th><th>now</th>
+      <th>peak</th><th>first 24 h</th></tr></thead><tbody>${rows}</tbody></table>
+    ${all.length > TOP ? `<button type="button" class="more" data-movers>${open ? "Less ▴"
+      : `All ${all.length} ▾`}</button>` : ""}</div>`;
 }
 function memeRoom(lp) {
   const [ct, cw] = confidence(lp);
@@ -1791,38 +1789,38 @@ function memeRoom(lp) {
   const ex = lp.excluded || {};
   const otherFees = (lp.fees || []).filter(f => f.fee_pct !== lp.fee_pct);
   const others = otherFees.map(f => pctText(f.net_pct, 1)).join(" / ");
-  const otherWhat = "při " + otherFees.map(f => num(f.fee_pct, 1) + " %").join(" / ") + " za stranu";
+  const otherWhat = "at " + otherFees.map(f => num(f.fee_pct, 1) + "%").join(" / ") + " a side";
   const dropped = DROPPED.filter(([k]) => ex[k]).map(([k, w]) => `${num(ex[k], 0)} ${w}`);
   const could = lp.could_buy_share == null ? null : Math.round(lp.could_buy_share * 100);
   const tiles = [
-    ["Stihli bychom koupit", could == null ? "—" : could + " %",
-     `z ${num(lp.signals || 0, 0)} signálů`,
+    ["Could have bought", could == null ? "—" : could + "%",
+     `of ${num(lp.signals || 0, 0)} signals`,
      could == null ? "" : `<div class="meter"><s style="width:${could}%"></s></div>`],
-    [`Jen conviction ≥ ${num(hc.min || 70, 0)}`,
+    [`Conviction ≥ ${num(hc.min || 70, 0)} only`,
      `<span class="${tone(hc.net_pct)}">${pctText(hc.net_pct, 1)}</span>`,
-     `${num(hc.n || 0, 0)} ${plural(hc.n || 0, "obchod", "obchody", "obchodů")}`, ""],
+     `${num(hc.n || 0, 0)} ${plural(hc.n || 0, "trade", "trades")}`, ""],
     // [operator 2026-09-14] *"to me nezjaima bez top 5 nechapu proc by
     // to tam melo byt"*. So there is no "without the best five" figure; what
     // says whether the headline is the signal or one lucky coin is the
     // median beside it -- the trade in the middle, which no outlier moves.
-    ["Typický obchod (medián)", `<span class="${tone(lp.median_pct)}">${pctText(lp.median_pct, 1)}</span>`,
-     "polovina dopadne hůř", ""],
-    ["Jiný poplatek", others || "—", otherFees.length ? otherWhat : "", ""],
+    ["Typical trade (median)", `<span class="${tone(lp.median_pct)}">${pctText(lp.median_pct, 1)}</span>`,
+     "half do worse", ""],
+    ["Other fee", others || "—", otherFees.length ? otherWhat : "", ""],
   ];
   return `<div class="room-head">
       <div class="hero ${tone(lp.net_pct)}">${pctText(lp.net_pct, 1)}</div>
       <div class="hero-side">
-        <div class="hero-l1">na obchod, když dáš <b>10 $ do každého hot signálu</b> a držíš den
-          · ${num(lp.fee_pct, 0)} % poplatek za stranu</div>
-        <div class="hero-l2">${num(lp.n || 0, 0)} obchodů · ${num(lp.wins || 0, 0)} v plusu
-          <span class="conf ${ct}">${lp.wilson && lp.wilson[1] < 0.5 ? "většina prodělá" : cw}</span>${band(lp)}</div>
+        <div class="hero-l1">per trade: <b>$10 into every hot signal</b>, held a day
+          · ${num(lp.fee_pct, 0)}% fee a side</div>
+        <div class="hero-l2">${num(lp.n || 0, 0)} trades · ${num(lp.wins || 0, 0)} in profit
+          <span class="conf ${ct}">${lp.wilson && lp.wilson[1] < 0.5 ? "most lose" : cw}</span>${band(lp)}</div>
       </div></div>
     <div class="m-tiles">${tiles.map(([k, v, s, extra]) =>
       `<div class="tile"><span>${k}</span><b>${v}</b><i>${s}</i>${extra}</div>`).join("")}</div>
-    ${dropped.length ? `<p class="filt">Vynecháno, protože by se nedalo koupit nebo změřit:
-      ${dropped.join(" · ")}. Tyhle coiny nejsou v žádném čísle.${lp.switched
-        ? ` Započteno: ${num(lp.switched, 0)} rugů (hlavní pool vybraný na nulu) —
-          prodány za to, co v poolu zbylo.` : ""}</p>` : ""}
+    ${dropped.length ? `<p class="filt">Left out (could not buy or measure):
+      ${dropped.join(" · ")} — in no figure.${lp.switched
+        ? ` Counted: ${num(lp.switched, 0)} rugs (main pool drained), sold for what
+          was left.` : ""}</p>` : ""}
     ${moversTable()}`;
 }
 
@@ -1862,12 +1860,12 @@ function renderRoom() {
     `<div class="bar"><div class="seg" role="tablist">${GROUPS.map(([g, w]) =>
       `<button type="button" role="tab" data-group="${g}" aria-selected="${g === group}">${w}` +
       `<span class="n">${counts[g]}</span></button>`).join("")}</div>
-     <span class="bar-hint">${group === "archive" ? "nevydařené pokusy — nic se nemaže"
-       : "seřazeno podle výsledku po poplatcích · klik = detail"}</span></div>` +
+     <span class="bar-hint">${group === "archive" ? "failed tests — nothing is deleted"
+       : "by result after fees · click for detail"}</span></div>` +
     (shown.length ? `<ol class="board">${shown.map((le, i) =>
        row(le, i + 1, le.id === OPEN)).join("")}</ol>` : `<p class="empty">${EMPTY[group]}</p>`) +
-    (rows.length > TOP ? `<button type="button" class="more" data-all>${all ? "Méně ▴"
-       : `Všech ${rows.length} ▾`}</button>` : "");
+    (rows.length > TOP ? `<button type="button" class="more" data-all>${all ? "Less ▴"
+       : `All ${rows.length} ▾`}</button>` : "");
 }
 function renderAll() {
   document.getElementById("account").innerHTML = accountLine(V.account);
@@ -1905,10 +1903,10 @@ window.labOpen = labOpen;
    out of curiosity. A sector's conversation is every experiment's thread in
    it, oldest first, plus the notes written to the sector itself. */
 let CHAT = null;
-const NX_OUTCOME = {partial: "useknuté — přišla jen první věta",
-                    failed: "bez odpovědi — přestali jsme čekat",
-                    refused: "odmítl ještě před začátkem",
-                    waiting: "čeká se na Nexuse…"};
+const NX_OUTCOME = {partial: "cut short — only the first sentence came",
+                    failed: "no answer — we stopped waiting",
+                    refused: "refused before it started",
+                    waiting: "waiting for Nexus…"};
 // Nexus writes markdown. Escape first, always, and only then turn a few marks
 // back into tags of our own -- so nothing the vendor wrote can become markup.
 function nxText(text) {
@@ -1923,7 +1921,7 @@ function nxSecs(s) {
   if (s == null) return "";
   if (s < 90) return Math.round(s) + " s";
   if (s < 5400) return Math.round(s / 60) + " min";
-  return (s / 3600).toFixed(1).replace(".", ",") + " h";
+  return (s / 3600).toFixed(1) + " h";
 }
 function nxBubble(nm) {
   const at = nm.at ? " · " + esc(clock(nm.at)) : "";
@@ -1931,11 +1929,11 @@ function nxBubble(nm) {
     const long = String(nm.text || "").length > 300;
     return `<div class="nx-msg nx-ours"><div class="nx-h"><b>Claude → Nexus</b>${at} · ` +
       `${esc(nm.id)}</div><div class="nx-b${long ? " nx-clamp" : ""}">${nxText(nm.text)}</div>` +
-      (long ? `<button class="nx-more" type="button">▾ celé</button>` : "") + "</div>";
+      (long ? `<button class="nx-more" type="button">▾ all</button>` : "") + "</div>";
   }
   if (nm.kind === "reply") {
     const text = nm.text || "";
-    const took = nm.seconds != null ? " · za " + nxSecs(nm.seconds) : "";
+    const took = nm.seconds != null ? " · in " + nxSecs(nm.seconds) : "";
     const note = NX_OUTCOME[nm.outcome];
     const long = text.length > 500;
     return `<div class="nx-msg nx-${esc(nm.outcome || "answered")}">` +
@@ -1943,16 +1941,16 @@ function nxBubble(nm) {
       (note ? `<div class="nx-s">${esc(note)}</div>` : "") +
       (nm.gist ? `<div class="nx-gist">${nxText(nm.gist)}</div>` : "") +
       (text ? `<div class="nx-b${long ? " nx-clamp" : ""}">${nxText(text)}</div>` : "") +
-      (long ? `<button class="nx-more" type="button">▾ celá odpověď</button>` : "") + "</div>";
+      (long ? `<button class="nx-more" type="button">▾ full answer</button>` : "") + "</div>";
   }
   if (nm.kind === "operator_note") {
-    return `<div class="nx-msg nx-op"><div class="nx-h"><b>Ty</b>${at}` +
-      `<span class="nx-tick" title="${nm.read ? "Claude přečetl" : "uloženo, zatím nepřečteno"}">` +
+    return `<div class="nx-msg nx-op"><div class="nx-h"><b>You</b>${at}` +
+      `<span class="nx-tick" title="${nm.read ? "Claude read it" : "saved, not read yet"}">` +
       `${nm.read ? "✓✓" : "✓"}</span></div><div class="nx-b">${nxText(nm.text)}</div></div>`;
   }
   if (nm.kind === "claude_note") {
     return `<div class="nx-msg nx-cl"><div class="nx-h"><b>Claude</b>` +
-      `${nm.re ? " · k " + esc(nm.re) : ""}${at}</div><div class="nx-b">${nxText(nm.text)}</div></div>`;
+      `${nm.re ? " · re " + esc(nm.re) : ""}${at}</div><div class="nx-b">${nxText(nm.text)}</div></div>`;
   }
   return `<div class="nx-msg nx-sys">${esc(nm.text || "")}${at}</div>`;
 }
@@ -1965,7 +1963,7 @@ function chatItems(room) {
   return items.sort((a, b) => String(a[1].at || "").localeCompare(String(b[1].at || "")));
 }
 function chatName(room) {
-  if (room === "general") return "Celá konverzace s Nexusem";
+  if (room === "general") return "Whole conversation with Nexus";
   if (SECTORS.includes(room)) return sectorOf(room).name;
   const le = (V.experiments || []).find(e => e.id === room);
   return le ? le.title : room;
@@ -1981,10 +1979,10 @@ function renderChat() {
     return head + nxBubble(nm);
   }).join("");
   document.getElementById("thread").innerHTML =
-    html || `<p class="empty">Tady zatím nikdo nic nenapsal.</p>`;
-  document.getElementById("drTitle").textContent = "Konverzace · " + chatName(CHAT);
-  const scopes = [[SECTOR, sectorOf(SECTOR).name], ["general", "Celá s Nexusem"]];
-  if (!SECTORS.includes(CHAT) && CHAT !== "general") scopes.push([CHAT, "jen tenhle pokus"]);
+    html || `<p class="empty">Nothing written here yet.</p>`;
+  document.getElementById("drTitle").textContent = "Conversation · " + chatName(CHAT);
+  const scopes = [[SECTOR, sectorOf(SECTOR).name], ["general", "All with Nexus"]];
+  if (!SECTORS.includes(CHAT) && CHAT !== "general") scopes.push([CHAT, "this test only"]);
   document.getElementById("drScope").innerHTML = scopes.map(([k, w]) =>
     `<button type="button" data-scope="${esc(k)}" aria-pressed="${k === CHAT}">${esc(w)}</button>`).join("");
 }
@@ -2014,14 +2012,14 @@ function bindComposer(room) {
   if (form.dataset.room) writeStore("lab.draft." + form.dataset.room, draft.value || "");
   form.dataset.room = room;
   draft.value = readStore("lab.draft." + room, "");
-  document.getElementById("sendNote").textContent = "Uloží se do: " + chatName(room) + " · Ctrl+Enter odešle";
+  document.getElementById("sendNote").textContent = "Saves to: " + chatName(room) + " · Ctrl+Enter sends";
 }
 // Asked for at the moment of sending, never baked into the page: a tab left
 // open across a console restart would otherwise hold a token nobody issued.
 function nxPost(room, text) {
   return fetch("/token", {cache: "no-store"})
     .then(r => r.ok ? r.json()
-                    : Promise.reject(new Error("konzole nedala token (" + r.status + ")")))
+                    : Promise.reject(new Error("the console gave no token (" + r.status + ")")))
     .then(t => fetch("/notes", {
       method: "POST",
       headers: {"Content-Type": "application/json", "X-QA-Token": t.token},
@@ -2089,7 +2087,7 @@ document.getElementById("thread").addEventListener("click", e => {
   if (!b || !b.previousElementSibling) return;
   const body = b.previousElementSibling;
   body.classList.toggle("nx-clamp");
-  b.textContent = body.classList.contains("nx-clamp") ? "▾ celé" : "▴ méně";
+  b.textContent = body.classList.contains("nx-clamp") ? "▾ all" : "▴ less";
 });
 document.addEventListener("keydown", e => { if (e.key === "Escape" && CHAT) closeChat(); });
 document.getElementById("draft").addEventListener("input", e => {
@@ -2110,15 +2108,15 @@ document.getElementById("compose").addEventListener("submit", e => {
   if (!room || !text || sending) return;
   sending = true;
   button.disabled = true;
-  note.textContent = "posílám…";
+  note.textContent = "sending…";
   nxPost(room, text)
     .then(() => {
       draft.value = "";
       writeStore("lab.draft." + room, "");
-      note.textContent = "uloženo ✓ — Claude si to přečte, až mu řekneš „přečti si to“";
+      note.textContent = "saved ✓ — Claude reads it when you say „přečti si to“";
       refresh();
     })
-    .catch(err => { note.textContent = "neodešlo: " + err.message; })
+    .catch(err => { note.textContent = "not sent: " + err.message; })
     .finally(() => { sending = false; button.disabled = false; });
 });
 
@@ -2150,7 +2148,7 @@ document.getElementById("compose").addEventListener("submit", e => {
   };
   room.addEventListener("mousemove", e => {
     const pt = e.target.closest && e.target.closest(".mc-pt");
-    if (pt) { show(e, `${esc(pt.dataset.h)}. hodina po signálu`, Number(pt.dataset.v)); return; }
+    if (pt) { show(e, `hour ${esc(pt.dataset.h)} after the signal`, Number(pt.dataset.v)); return; }
     const svg = e.target.closest && e.target.closest("svg[data-chart]");
     const c = svg && CHARTS[svg.dataset.chart];
     if (!c) { quiet(); return; }
@@ -2165,7 +2163,7 @@ document.getElementById("compose").addEventListener("submit", e => {
     const xh = svg.querySelector(".xh"), xd = svg.querySelector(".xd");
     xh.setAttribute("x1", px); xh.setAttribute("x2", px); xh.setAttribute("visibility", "visible");
     xd.setAttribute("cx", px); xd.setAttribute("cy", py); xd.setAttribute("visibility", "visible");
-    show(e, clock(new Date(c.ts[best]).toISOString()) + " · od nákupu", c.vs[best]);
+    show(e, clock(new Date(c.ts[best]).toISOString()) + " · since entry", c.vs[best]);
   });
   room.addEventListener("mouseleave", quiet);
 })();
@@ -2176,9 +2174,9 @@ document.getElementById("compose").addEventListener("submit", e => {
   if (!window.EventSource || !LOCAL) return;
   let src;
   try { src = new EventSource("/events"); } catch (_) { return; }
-  src.addEventListener("hello", () => { say("on", "živě"); refresh(); });
+  src.addEventListener("hello", () => { say("on", "live"); refresh(); });
   src.addEventListener("rooms", refresh);
-  src.onerror = () => say("off", "připojuji znovu");
+  src.onerror = () => say("off", "reconnecting");
   window.addEventListener("beforeunload", () => src.close());
 })();
 

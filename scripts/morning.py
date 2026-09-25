@@ -17,8 +17,8 @@ from __future__ import annotations
 from datetime import date
 from html import escape
 
-SECTOR_HUES = {"cards": ("#2a78d6", "#3987e5"), "bots": ("#eda100", "#c98500"),
-               "memecoins": ("#4a3aa7", "#9085e9"), "funds": ("#e87ba4", "#d55181")}
+SECTOR_HUES = {"cards": ("#2a78d6", "#00aaff"), "bots": ("#eda100", "#ffb020"),
+               "memecoins": ("#4a3aa7", "#b08cff"), "funds": ("#e87ba4", "#ff6fae")}
 DAYS = ("pondělí", "úterý", "středa", "čtvrtek", "pátek", "sobota", "neděle")
 NB = " "
 
@@ -159,19 +159,19 @@ TEMPLATE = """<title>Ranní přehled laborky</title>
 }}
 @media (prefers-color-scheme: dark) {{
   :root:not([data-theme="light"]) {{
-    --bg:#0b1113; --surface:#121b1d; --surface-2:#18231f; --line:#243436;
-    --text:#e6eeec; --text-dim:#98aaa9; --text-faint:#6f8182;
-    --ok:#4ec97a; --ok-bg:#4ec97a1c; --bad:#f2685e; --bad-bg:#f2685e1c;
-    --warn:#e0a338; --warn-bg:#e0a3381f; --accent:#4ecfc4;
+    --bg:#0a0e17; --surface:#111827; --surface-2:#182234; --line:rgba(0,150,255,.16);
+    --text:#ffffff; --text-dim:#9fb3c8; --text-faint:#7b8794;
+    --ok:#00ff88; --ok-bg:rgba(0,255,136,.12); --bad:#ff4444; --bad-bg:rgba(255,68,68,.14);
+    --warn:#ffb020; --warn-bg:rgba(255,176,32,.13); --accent:#00cfff;
     {hues_dark}
     color-scheme: dark;
   }}
 }}
 :root[data-theme="dark"] {{
-  --bg:#0b1113; --surface:#121b1d; --surface-2:#18231f; --line:#243436;
-  --text:#e6eeec; --text-dim:#98aaa9; --text-faint:#6f8182;
-  --ok:#4ec97a; --ok-bg:#4ec97a1c; --bad:#f2685e; --bad-bg:#f2685e1c;
-  --warn:#e0a338; --warn-bg:#e0a3381f; --accent:#4ecfc4;
+  --bg:#0a0e17; --surface:#111827; --surface-2:#182234; --line:rgba(0,150,255,.16);
+  --text:#ffffff; --text-dim:#9fb3c8; --text-faint:#7b8794;
+  --ok:#00ff88; --ok-bg:rgba(0,255,136,.12); --bad:#ff4444; --bad-bg:rgba(255,68,68,.14);
+  --warn:#ffb020; --warn-bg:rgba(255,176,32,.13); --accent:#00cfff;
   {hues_dark}
   color-scheme: dark;
 }}

@@ -20,7 +20,7 @@ Every invocation is **one tick** of a laboratory that runs all day, towards a fi
    - `none` -- one Czech line (`laborka: klid`) and stop. No resume, no brief, no diary, no memory, no Nexus.
    - `report` -- the morning report, first (below).
    - `gap` -- the tick's new `failed:` or `held:` line. A bug gets a check and a report, filed; a gap is said in the answer with a Telegram block.
-   - `answer NEX-…` -- `python scripts/nexus.py show NEX-…`. Sides, shares or levels he gave go in with `python scripts/rooms.py plan`; a Czech gist into each room it opened: `rooms.py note STR-… "…" --re NEX-… --gist`.
+   - `answer NEX-…` -- `python scripts/nexus.py show NEX-…`. Sides, shares or levels he gave go in with `python scripts/rooms.py plan`; a short English gist into each room it opened (the page is English, CLAUDE.md): `rooms.py note STR-… "…" --re NEX-… --gist`.
    - `question` -- `python scripts/lab.py brief` (his memory: the board, the gate's refusals, what we know about him), then `python scripts/lab.py ask --no-wait "…"`. Start `python scripts/nexus.py answer NEX-…` in the background and run the tick again when it finishes.
    - `hunt bugs` / `hunt sweep` -- ONE Sonnet agent: a bug hunt (their newest surface first, SAFE reads) or the `qa-sweep` skill at narrow width. A `their side moved:` line above says what woke the sweep; hand it to the agent.
 3. Only after a tick that decided something: `lab.py log "…"` (what and why), `--lesson`, `--next`. `lab.py resume` only after a `/clear`.

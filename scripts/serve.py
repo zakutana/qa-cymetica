@@ -331,8 +331,8 @@ class Live:
         frozen = (payload or {}).get("generated_at") or "an unknown time"
         band = (
             '<div style="position:sticky;top:0;z-index:99999;padding:.6rem 1rem;'
-            'background:#5a1111;color:#ffd7d7;font:600 13px/1.5 ui-monospace,'
-            'monospace;border-bottom:1px solid #ff6b6b">'
+            'background:#3a0a10;color:#ffd7d7;font:600 13px/1.5 "JetBrains Mono",'
+            'ui-monospace,monospace;border-bottom:1px solid #ff4444">'
             f'{STALE_BANNER} &mdash; frozen at {_escape(frozen)}. '
             f'Every rebuild since has failed: {_escape(error)} '
             '&middot; restart the console to pick up changed modules.'

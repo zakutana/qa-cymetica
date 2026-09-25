@@ -44,7 +44,7 @@ def departments(state: Path | None = None, skip: tuple[str, ...] = ("lab",)) -> 
         try:
             report = json.loads((base / name / REPORT).read_text(encoding="utf-8"))
         except (OSError, ValueError):
-            report = {"title": name, "lines": ["zprávu nejde přečíst"]}
+            report = {"title": name, "lines": ["report unreadable"]}
         out.append({"id": name, "title": str(report.get("title") or name),
                     "lines": [str(line) for line in report.get("lines") or []]})
     return out

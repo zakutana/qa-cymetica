@@ -145,6 +145,8 @@ PINNED = {
          "2289f5c6bc2195e4b6b77b9cace565579ee91004f4b084b4c42c20241ae084d3"),
         ("2026-09-25", "Me limity vubec neres",
          "3f868c8f77d201124d36ead10a6162744af277af13661777bee59bd83e90692a"),
+        ("2026-09-25", "vse ma byt anlgicky",
+         "6182bf168fce7a202962eb76834ced134de99a9802c2508f95ebe880eae1eaf9"),
     ],
     ".claude/skills/qa-sweep/SKILL.md": [
         ("2026-09-06", "kdyz napisu sweep",

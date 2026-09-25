@@ -4,7 +4,7 @@
     {
       "name": "console-preview",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["scripts/serve.py", "--port", "8791"],
+      "runtimeArgs": ["scripts/serve.py", "--port", "8791", "--poll", "1"],
       "port": 8791
     }
   ]
