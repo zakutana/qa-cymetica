@@ -22,7 +22,7 @@ Every invocation is **one tick** of a laboratory that runs all day, towards a fi
    - `gap` -- the tick's new `failed:` or `held:` line. A bug gets a check and a report, filed; a gap is said in the answer with a Telegram block.
    - `answer NEX-…` -- `python scripts/nexus.py show NEX-…`. Sides, shares or levels he gave go in with `python scripts/rooms.py plan`; a Czech gist into each room it opened: `rooms.py note STR-… "…" --re NEX-… --gist`.
    - `question` -- `python scripts/lab.py brief` (his memory: the board, the gate's refusals, what we know about him), then `python scripts/lab.py ask --no-wait "…"`. Start `python scripts/nexus.py answer NEX-…` in the background and run the tick again when it finishes.
-   - `hunt bugs` / `hunt sweep` -- read `get_usage`, then `python scripts/lab.py budget WEEKLY FIVE_HOUR`. On `normal`, ONE Sonnet agent: a bug hunt (their newest surface first, SAFE reads) or the `qa-sweep` skill at narrow width. On `minimal`, one line and stop.
+   - `hunt bugs` / `hunt sweep` -- ONE Sonnet agent: a bug hunt (their newest surface first, SAFE reads) or the `qa-sweep` skill at narrow width. A `their side moved:` line above says what woke the sweep; hand it to the agent.
 3. Only after a tick that decided something: `lab.py log "…"` (what and why), `--lesson`, `--next`. `lab.py resume` only after a `/clear`.
 4. Two or three Czech lines: the delta. Everything else is on http://127.0.0.1:8787/lab.
 
@@ -86,4 +86,4 @@ So the message is English, opens with `@EventTraderQABot`, sits in a fenced code
 
 [operator 2026-09-20] *"Jo to taky delej v laborce jak se nudis"*
 
-The tick decides when: a hunt every eight hours when nothing else is due, the first of a local night is the sweep, and only in the normal budget mode, with one Sonnet agent at most. A hunt also re-reads a standing wait -- a vendor ticket until its spec or stage moves (ET-26036), an answer still owed -- with a NEXT.md line so it survives a `/clear`. Say plainly when a tick finds nothing worth spending on; the operator stops the loop.
+The tick decides when: a hunt every three hours when nothing else is due, the first of a local night is the sweep, and a sweep on the first tick after their side moves -- a report's status, an a2a answer, a pasted Telegram reply -- whatever the hour, with one Sonnet agent at most. The tick reads their tracker and inbox itself unless the console's `--ask` is doing it. Nothing weighs the plan's limits (CLAUDE.md, *How to work with me*). A hunt also re-reads a standing wait -- a vendor ticket until its spec or stage moves (ET-26036), an answer still owed -- with a NEXT.md line so it survives a `/clear`. Say plainly when a tick finds nothing worth spending on; the operator stops the loop.

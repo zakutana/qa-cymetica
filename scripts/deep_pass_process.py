@@ -240,12 +240,9 @@ CORE = ("qa/state.py", "qa/fold.py", "qa/measure.py")
 # write state/ and load the scripts that POST to their platform.
 LIGHT_SAFE = ("docs/", "dashboard/", "NEXT.md", "DEEP-PASS.md", "ARCHITECTURE.md")
 FULL_COMMITS = 15
-# V7's line for the week. At this much of it spent the pass does not run at
-# all: it writes nothing, sends nothing, and the reminder keeps saying one is
-# owed. Three rounds of 1c readers found a "minimal" pass that gated and
-# reported without reviewing could still push, still verify, silence the
-# reminder or fail its own guard; not running has none of those failures.
-DEFER_WEEKLY_PCT = 85
+# V7 had a third size, `deferred`: at 85 % of the week the pass did not run.
+# [operator 2026-09-25] "Me limity vubec neres ... ty si hlidam sam" -- the
+# plan's limits are theirs to watch, so the pass is sized by its diff alone.
 
 
 def _is_check(path: str) -> bool:
@@ -253,15 +250,9 @@ def _is_check(path: str) -> bool:
             and not path.startswith(("tests/meta/", "tests/repo/")))
 
 
-def pass_size(files: list[str], commits: int, weekly_pct) -> tuple[str, str]:
-    """`full`, `light` or `deferred`, and the reason, from the unpushed diff's
-    files, its commit count and the week's use of the plan."""
-    try:
-        weekly = float(weekly_pct)
-    except (TypeError, ValueError):
-        return "deferred", "the week's use could not be read"
-    if weekly >= DEFER_WEEKLY_PCT:
-        return "deferred", f"{weekly:g} % of the week is spent"
+def pass_size(files: list[str], commits: int) -> tuple[str, str]:
+    """`full` or `light`, and the reason, from the unpushed diff's files and
+    its commit count."""
     core = [f for f in files if f in CORE]
     if core:
         return "full", f"the core moved: {', '.join(core)}"
@@ -346,8 +337,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--json", action="store_true",
                         help="the rows, for the console")
     sub = parser.add_subparsers(dest="cmd")
-    size_cmd = sub.add_parser("size", help="full, light or deferred, and why")
-    size_cmd.add_argument("--weekly", help="the week's use of the plan, per cent")
+    sub.add_parser("size", help="full or light, and why")
     sub.add_parser("carry", help="the last notebook's unfixed gaps, as JSON")
     sub.add_parser("reread", help="which areas are owed a whole reading")
     args = parser.parse_args(argv)
@@ -363,12 +353,9 @@ def main(argv: list[str] | None = None) -> int:
         if not commits.isdigit():
             # A diff nobody could read is not an empty one (rule 8): full,
             # never light (round-five readers of the 1c change).
-            mode, why = pass_size([], 0, args.weekly)
-            if mode != "deferred":
-                mode, why = "full", "the diff could not be read"
-            print(f"{mode} -- {why}")
+            print("full -- the diff could not be read")
             return 0
-        mode, why = pass_size(files, int(commits), args.weekly)
+        mode, why = pass_size(files, int(commits))
         print(f"{mode} -- {why}")
         return 0
     if args.cmd == "carry":

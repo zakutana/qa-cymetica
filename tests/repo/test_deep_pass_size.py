@@ -3,8 +3,9 @@
 Plan v2, V7. The architect's review (2026-09-23): the pass's self-maintenance
 was sized for a team while it runs on one Pro plan, and 27 843 Opus messages
 stood against 1 133 on Sonnet. So a pass is as big as its diff -- full for
-anything but prose, light for prose alone, and deferred (not run at all) when
-the week is nearly spent. And the review's E5: a
+anything but prose, light for prose alone. (A third size, deferred -- not run
+at all when the week was nearly spent -- was removed on 2026-09-25: the
+operator watches the plan's limits.) And the review's E5: a
 pass that dies halfway is silent, and the next step 0 overwrites the gaps it
 had confirmed.
 
@@ -35,7 +36,7 @@ def _module(path=REPO / "scripts" / "deep_pass_process.py", name="dp_size"):
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_pass_is_as_big_as_what_changed():
     dp = _module()
-    size = lambda files, commits, weekly=10: dp.pass_size(files, commits, weekly)[0]
+    size = lambda files, commits: dp.pass_size(files, commits)[0]
     assert size(["qa/fold.py"], 2) == "full", "the core moved"
     assert size(["tests/rest/test_cards.py"], 2) == "full", "a check moved"
     assert size(["scripts/submit.py"], 2) == "full", "what talks to them moved"
@@ -56,12 +57,11 @@ def test_a_pass_is_as_big_as_what_changed():
         assert size([path], 1) == "full", path
     assert size(["docs/x.md"], dp.FULL_COMMITS) == "full", "a long day"
     assert size(["docs/x.md", "NEXT.md", "ARCHITECTURE.md"], 3) == "light"
-    # The budget decides before the diff does, and an unread budget is not
-    # room to spend -- the same line as the laboratory's (V6). A deferred
-    # pass does not run at all.
-    assert size(["qa/fold.py"], 30, dp.DEFER_WEEKLY_PCT) == "deferred"
-    assert size(["qa/fold.py"], 30, None) == "deferred"
-    mode, why = dp.pass_size(["qa/state.py"], 1, 5)
+    # No budget any more (operator, 2026-09-25: the plan's limits are theirs
+    # to watch): the week's use is not an input and `deferred` is never said.
+    assert not hasattr(dp, "DEFER_WEEKLY_PCT")
+    assert size(["qa/fold.py"], 30) == "full"
+    mode, why = dp.pass_size(["qa/state.py"], 1)
     assert "qa/state.py" in why
 
 
@@ -72,7 +72,7 @@ def test_the_size_command_reads_the_real_commit_count():
     make a pass full. Found when the unreadable case was made to fail
     closed and this repository's own diff came back "could not be read"."""
     result = subprocess.run([sys.executable, str(REPO / "scripts" / "deep_pass_process.py"),
-                             "size", "--weekly", "5"], cwd=REPO, capture_output=True,
+                             "size"], cwd=REPO, capture_output=True,
                             text=True, encoding="utf-8", errors="replace", timeout=60)
     assert result.returncode == 0, result.stderr
     upstream = subprocess.run(["git", "rev-parse", "@{upstream}"], cwd=REPO,
@@ -86,8 +86,8 @@ def test_the_size_command_reads_the_real_commit_count():
     dp = _module()
     seen = []
     dp._git = lambda *a: "89\n" if a[0] == "rev-list" else "docs/x.md\n"
-    dp.pass_size = lambda files, commits, weekly: seen.append(commits) or ("light", "x")
-    assert dp.main(["size", "--weekly", "5"]) == 0
+    dp.pass_size = lambda files, commits: seen.append(commits) or ("light", "x")
+    assert dp.main(["size"]) == 0
     assert seen == [89], seen
 
 

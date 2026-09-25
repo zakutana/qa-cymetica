@@ -139,15 +139,9 @@ or at 90%, once, in the evening, by somebody who is going to bed.
 
 ### 0 · Gate and tidy
 
-**The budget comes first** (plan v2, V7). Read `get_usage`, then
-`python scripts/deep_pass_process.py size --weekly <weekly %>`. On
-`deferred` -- 85 % of the week spent, or a use nobody could read -- the pass
-does not run: nothing below, no notebook, no report, no commit, no push. Tell
-the operator in one Czech line how full the week is and how many commits
-wait; the reminder at the next session start keeps saying a pass is owed.
-(Three rounds of 1c readers took apart a "minimal" pass that gated without
-reviewing: it could push, verify, silence that reminder or fail its own
-guard. Not running has none of those failures.)
+No budget gate: the plan's limits are not ours to weigh (CLAUDE.md, *How to
+work with me*), so the pass always runs. V7's `deferred` at 85 % of the week
+is gone.
 
 ```bash
 git status --short
@@ -460,9 +454,7 @@ context and nowhere else until it is written down.
 ### 3 · Code review, at xhigh unless the diff is prose
 
 Size it first, now that step 1's commits are in the diff: `python
-scripts/deep_pass_process.py size --weekly <the number step 0 read>` (the
-budget was decided there, so this cannot say `deferred`), written into the
-notebook as `size`. **full** unless every changed file is prose
+scripts/deep_pass_process.py size`, written into the notebook as `size`. **full** unless every changed file is prose
 (`LIGHT_SAFE`: docs, the dashboard page, NEXT.md, DEEP-PASS.md,
 ARCHITECTURE.md -- tests, audits, hooks and every script are guards or talk
 to their platform): the review at `xhigh`. **light**: the review at `high`.

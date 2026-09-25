@@ -909,6 +909,10 @@ def main(argv: list[str] | None = None) -> int:
     # Listed before each thread starts, and taken off by collector_loop if its
     # script cannot load: a lab tick reads the list on /status and leaves
     # exactly these rounds to this console.
+    # --ask too, so a lab tick leaves their tracker and inbox to this console
+    # rather than reading them a second time (one writer per diary).
+    if args.ask:
+        live.collectors["tracker"] = args.ask * 60
     for name, script, minutes in (("sample", "sampler", args.sample),
                                   ("fomo", "fomo_watch", args.fomo),
                                   ("hot", "hot_watch", args.hot)):

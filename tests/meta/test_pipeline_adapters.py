@@ -175,6 +175,10 @@ def test_a_refresh_that_could_not_read_keeps_the_snapshot(tmp_path, monkeypatch)
     """
     monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
     monkeypatch.delenv("QA_WALLET_ADDRESS", raising=False)
+    # fetch_our_reports loads .env itself since 2026-09-25, which would put
+    # the real wallet back and make this a live read of their tracker.
+    import qa.config
+    monkeypatch.setattr(qa.config, "load_dotenv", lambda *a, **k: None)
     bounty = _module("scripts/bounty.py")
 
     good = {"klass": "ok", "rows_returned": 2,

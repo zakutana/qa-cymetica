@@ -42,6 +42,9 @@ The operator talks normally and expects the process to be kept without being ask
 * [operator 2026-09-23] *"chci aby to vse automaticky platilo co jsme pospal i pro budouci vyvoj at uz je jakykoliv"*
 
   Everything agreed here holds for whatever is built next: a new part inherits these rules, the pins and the tests without being told.
+* [operator 2026-09-25] *"cymetica pracuje mnohem rychleji, to je hrozne neefektivni checkovat jejich zpravy jen jednou za 8 hodin. Me limity vubec neres a nemusis na ne myslet, ty si hlidam sam, mam Max plan takze limitu je hodne"*
+
+  **Their plan's limits are theirs to watch, never ours**: nothing here reads `get_usage`, stands down at a percentage or reminds them what a model costs. And **what Cymetica does is acted on within a tick**: the laboratory's tick reads their tracker and inbox, and anything new from them wakes a sweep by day as well as by night (`tests/meta/test_pipeline_lab_loop.py`).
 * Non-trivial work starts in plan mode. Ask for it; do not wait to be told.
 * Tests before implementation. A test written afterwards passes whatever the code does, including the mistake.
 * After changing `qa/state.py`, `qa/fold.py` or `qa/measure.py`, propose `/code-review` before committing. Elsewhere it is a cost without a return.

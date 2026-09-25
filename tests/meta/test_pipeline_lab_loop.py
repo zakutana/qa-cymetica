@@ -899,7 +899,7 @@ def _doors(**over):
     calls = {k: [] for k in ("fomo", "sample", "cycle", "promote", "truth",
                              "search", "verdicts", "variants", "refill", "moves",
                              "fomo_reading", "hot", "hot_reading",
-                             "surface_drift")}
+                             "surface_drift", "tracker")}
 
     def door(name, value):
         return lambda *a: calls[name].append(a) or value
@@ -925,6 +925,9 @@ def _doors(**over):
         "hot": door("hot", {"ok": True, "hot": 100, "headlines": 3, "cards": 0}),
         "hot_reading": door("hot_reading", {"rounds": 0}),
         "surface_drift": door("surface_drift", []),
+        # Their tracker and inbox: read, nothing new.
+        "tracker": door("tracker", {"tracker": "ok", "inbox": "ok", "new": 0}),
+        "vendor": lambda: {"seq": 7, "lines": []},
     }
 
     def search(bite):
@@ -3757,7 +3760,8 @@ def test_an_idle_hunt_comes_every_few_hours_and_the_sweep_once_a_night():
     nothing else due means nothing else."""
     asked = NOW - timedelta(minutes=30)
     assert _decide(_said(), [], asked, hour=14) == ["hunt bugs"]
-    recent = _tick_row(NOW - timedelta(hours=3), decide=["hunt bugs"])
+    recent = _tick_row(NOW - timedelta(hours=lab.HUNT_HOURS, minutes=-1),
+                       decide=["hunt bugs"])
     assert _decide(_said(), [recent], asked, hour=14) == []
     old = _tick_row(NOW - timedelta(hours=lab.HUNT_HOURS, minutes=1),
                     decide=["hunt bugs"])
@@ -3795,29 +3799,103 @@ def test_an_answer_that_opened_a_room_is_named_by_the_tick(tmp_path, monkeypatch
     assert printed[-1].startswith("decide: ") and "NEX-0090" in printed[-1]
 
 
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_the_budget_decides_whether_an_idle_hunt_spends_an_agent():
-    """V6: a hunt runs one Sonnet agent in the normal budget mode and none
-    otherwise. The line is V7's: at 85 % of the week the deep pass goes
-    minimal too, and the 5-hour window is held to the same number so a hunt
-    does not take the operator's own afternoon."""
-    assert lab.budget_mode(5, 35) == "normal"
-    assert lab.budget_mode(lab.BUDGET_CEILING_PCT, 10) == "minimal"
-    assert lab.budget_mode(10, lab.BUDGET_CEILING_PCT) == "minimal"
-    assert lab.budget_mode(None, 10) == "minimal", (
-        "a usage nobody could read is not room to spend")
-    # 85 % of the week, the deep pass's own DEFER line, pinned by value: read
-    # back from the constant, 95 passed (deep pass 2026-09-24, B07, 3/3).
-    assert lab.BUDGET_CEILING_PCT == 85
-    assert lab.budget_mode(84, 10) != "minimal" and lab.budget_mode(85, 10) == "minimal"
+def _news(*events):
+    return lab.vendor_news(list(events))
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_the_tick_scans_their_surface_every_few_hours_for_the_session_start(
-        tmp_path, monkeypatch):
-    """Plan v2, V7 (E1): the session start reads the drift from a cache, and
-    by day the loop's tick is what refreshes it -- once per surface_hours."""
+def test_their_news_wakes_a_sweep_within_a_tick_and_no_limit_is_weighed():
+    """[operator 2026-09-25] "cymetica pracuje mnohem rychleji, to je hrozne
+    neefektivni checkovat jejich zpravy jen jednou za 8 hodin." #127 was paid
+    77 minutes after it was filed; #126 was paid overnight and seen only by a
+    sweep the operator started by hand. So a sweep is due the first tick
+    after something new from them lands in the journal -- by day too, and
+    beside anything else that is due.
+
+    And the same day: "Me limity vubec neres a nemusis na ne myslet, ty si
+    hlidam sam, mam Max plan." V6 had a hunt read `get_usage` and stand down
+    at 85 %; that line is gone, and with it the reason HUNT_HOURS was eight.
+
+    News is a report's status changing, an a2a message a person sent, a
+    Telegram answer pasted in -- not their automated acknowledgements (20 of
+    the 72 a2a messages), not our own filings."""
+    assert not hasattr(lab, "budget_mode")
+    assert not hasattr(lab, "BUDGET_CEILING_PCT")
+    assert lab.HUNT_HOURS <= 3
+    skill = (REPO / ".claude" / "skills" / "laborator" / "SKILL.md").read_text(
+        encoding="utf-8")
+    assert "get_usage" not in skill and "lab.py budget" not in skill
+
+    status = {"type": "vendor_status", "seq": 10, "by": "agent",
+              "report_id": 127, "status": "paid"}
+    human = {"type": "message", "seq": 11, "by": "vendor", "origin": "a2a",
+             "msg_id": "a2a_42be5226b2484f48", "auto": False}
+    robot = {"type": "message", "seq": 12, "by": "vendor", "origin": "a2a",
+             "msg_id": "a2a_robot", "auto": True}
+    telegram = {"type": "telegram_reply", "seq": 13, "by": "vendor",
+                "msg_id": "REPLY-0067"}
+    ours = {"type": "filing_outcome", "seq": 14, "by": "agent"}
+
+    assert _news(status)["seq"] == 10
+    assert "#127 paid" in _news(status)["lines"]
+    assert _news(status, human)["seq"] == 11
+    assert _news(status, human, robot)["seq"] == 11, "their robot is not news"
+    assert _news(status, human, robot, telegram, ours)["seq"] == 13, (
+        "a Telegram answer is news; our own filing is not")
+    assert _news()["seq"] is None and _news(ours)["seq"] is None
+
+    asked = NOW - timedelta(minutes=30)
+    hunted = _tick_row(NOW - timedelta(hours=1), decide=["hunt bugs"],
+                       vendor_seq=100)
+    # Nothing new since the baseline: nothing.
+    assert _decide(_said(vendor_seq=100), [hunted], asked) == []
+    # Something new, at 14:00 local: the sweep, not tonight.
+    assert _decide(_said(vendor_seq=101), [hunted], asked) == ["hunt sweep"]
+    # Beside a question that is due, not instead of it.
+    assert _decide(_said(vendor_seq=101), [hunted], None) == [
+        "question", "hunt sweep"]
+    # The tick that decided the sweep is the new baseline: no second sweep.
+    swept = _tick_row(NOW - timedelta(minutes=20), decide=["hunt sweep"],
+                      vendor_seq=101)
+    assert _decide(_said(vendor_seq=101), [hunted, swept], asked) == []
+    assert _decide(_said(vendor_seq=102), [hunted, swept], asked) == ["hunt sweep"]
+    # No baseline at all -- the first tick after this shipped -- sets one and
+    # wakes nobody: what is already in the journal was swept by hand.
+    assert _decide(_said(vendor_seq=101),
+                   [_tick_row(NOW - timedelta(hours=1), decide=["hunt bugs"])],
+                   asked) == []
+    # A deep pass holds it like everything else; the next tick still sees it.
+    assert _decide(_said(skipped="pass", may_ask=False, vendor_seq=101),
+                   [hunted], asked) == []
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_tick_reads_their_tracker_and_scans_their_surface(tmp_path, monkeypatch):
+    """Their tracker and a2a inbox are read by the tick when the console is
+    not reading them (one writer per diary), never while a deep pass runs --
+    those reads append to the journal the pass is verifying. And their
+    surface is scanned every few hours for the session start."""
+    (tmp_path / "surface").mkdir()
     scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    assert "tracker" in scripts_lab._tick_doors()
+    assert "vendor" in scripts_lab._tick_doors()
+
+    doors, calls = _doors()
+    said = _tick(scripts_lab, NOW, doors)
+    assert len(calls["tracker"]) == 1 and said["vendor_seq"] == 7, said
+
+    doors, calls = _doors(**{"pass": lambda: True})
+    _tick(scripts_lab, NOW + timedelta(minutes=20), doors)
+    assert calls["tracker"] == [], "not while a deep pass runs"
+
+    doors, calls = _doors(console=lambda: {"tracker"})
+    said = _tick(scripts_lab, NOW + timedelta(minutes=40), doors)
+    assert calls["tracker"] == [] and said["tracker"] == {"by": "console"}
+    assert said["vendor_seq"] == 7, "what the console wrote is news all the same"
+
+    # V7 (E1): the session start reads the drift from a cache, and by day the
+    # loop's tick is what refreshes it -- once per surface_hours.
+    scripts_lab = _scripts_lab(tmp_path / "surface", monkeypatch)
     doors, calls = _doors()
     _tick(scripts_lab, NOW, doors)
     _tick(scripts_lab, NOW + timedelta(minutes=20), doors)
@@ -3826,6 +3904,8 @@ def test_the_tick_scans_their_surface_every_few_hours_for_the_session_start(
     _tick(scripts_lab, later, doors)
     assert len(calls["surface_drift"]) == 2
     assert "surface_drift" in scripts_lab._tick_doors()
+
+
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

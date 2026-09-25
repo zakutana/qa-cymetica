@@ -1583,10 +1583,42 @@ def test_the_night_holds_no_hand_that_trades_files_or_commits():
     # only "verify" among the names read here, and verify.py POSTs verdicts
     # to their tracker -- as correspond, a2a and bounty talk to them too.
     for hand in ("submit", "findings", "subprocess", "withdraw", "prereg",
-                 "verify", "correspond", "a2a", "bounty"):
+                 "verify", "correspond", "a2a"):
         assert hand not in reached, (
             f"the night can reach {hand!r}: it researches and launches on "
             f"paper, it does not talk to the vendor")
+    # bounty.py, since 2026-09-25: the tick reads their tracker and inbox so
+    # their answers are acted on within a tick (CLAUDE.md, How to work with
+    # me). READS only: the one function that loads it may touch exactly the
+    # two read functions, and neither they nor what they call may POST --
+    # bounty.fetch() probes the filing endpoint with empty POSTs, and that
+    # stays out of reach.
+    holders = [node for node in ast.walk(tree)
+               if isinstance(node, ast.FunctionDef) and "bounty" in _names(node)]
+    assert [h.name for h in holders] == ["_tracker_round"], [h.name for h in holders]
+    READS = {"refresh_our_reports", "fetch_inbox"}
+    used = {child.attr for child in ast.walk(holders[0])
+            if isinstance(child, ast.Attribute)
+            and isinstance(child.value, ast.Name) and child.value.id == "bounty"}
+    assert used and used <= READS, f"the tick reaches bounty.{used - READS}"
+    bounty_tree = ast.parse((REPO / "scripts" / "bounty.py").read_text(encoding="utf-8"))
+    defs = {n.name: n for n in bounty_tree.body if isinstance(n, ast.FunctionDef)}
+    seen, todo = set(), list(READS)
+    while todo:
+        name = todo.pop()
+        if name in seen or name not in defs:
+            continue
+        seen.add(name)
+        for child in ast.walk(defs[name]):
+            if isinstance(child, ast.Attribute) and child.attr in (
+                    "post", "put", "patch", "delete"):
+                raise AssertionError(f"bounty.{name} writes to them: .{child.attr}")
+            if isinstance(child, ast.Call) and isinstance(child.func, ast.Name):
+                todo.append(child.func.id)
+    assert {"fetch_our_reports", "record_inbox"} <= seen, seen
+    # And the read works from a tick, which has not loaded .env: the first
+    # live round read the wallet as unset and kept a stale snapshot.
+    assert "load_dotenv" in _names(defs["fetch_our_reports"])
     # B01, deep pass of 2026-09-22 evening (3/3): five exact names, so
     # os.system("git commit -am night") in night_promote stayed green -- the
     # door the docstring says is shut, through a hand the list did not name.

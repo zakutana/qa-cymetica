@@ -102,22 +102,15 @@ def test_a_missing_morning_report_is_named_so_the_session_makes_it():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_a_loop_on_opus_is_named_with_the_words_that_move_it_to_sonnet():
-    """Plan v2, V6. The laboratory's frontmatter says `model: sonnet`, and on
-    2026-09-20 its loop still made 533 calls on Opus and none on Sonnet. A
-    session cannot change its own model; `/model` is the operator's, so the
-    reminder names what THEY type, in the session the loop runs in."""
+def test_a_loop_on_opus_is_not_a_reminder_any_more():
+    """Plan v2, V6 reminded them to type `/model sonnet` when the lab's loop
+    ran on Opus, because it cost. The operator took the cost off our hands on
+    2026-09-25 (CLAUDE.md, *How to work with me*): the plan's limits are
+    theirs, so a reminder about the price of a model is not ours to make."""
     mod = _module()
     opus = mod.reminders(_facts(loop_models={"claude-opus-5-5": 20,
                                              "claude-sonnet-5": 1}), NOW)
-    assert _says(opus, "laborka", "/model sonnet"), opus
-    sonnet = mod.reminders(_facts(loop_models={"claude-sonnet-5": 20,
-                                               "claude-opus-5-5": 1}), NOW)
-    assert not _says(sonnet, "/model"), sonnet
-    # Two firings are the operator trying it by hand, not a loop running.
-    tried = mod.reminders(_facts(loop_models={"claude-opus-5-5": 2}), NOW)
-    assert not _says(tried, "/model"), tried
-    assert not _says(mod.reminders(_facts(), NOW), "/model")
+    assert not _says(opus, "/model"), opus
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

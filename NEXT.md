@@ -25,7 +25,7 @@ nikdy nebylo další na řadě.
 ---
 
 - [x] 2026-09-23  Revize `docs/review-2026-09-23.md` a triáž: 32 skutečných, 3 v menšině, 2 zamítnuté; plán v2 je napsaný. (hotovo 2026-09-23)
-- [ ] 2026-09-23  Plán v2 (`docs/laborator-plan.md`): otevřená fáze V11 (čeká na ranní vydání), stav v tabulce plánu. Po prvním dni smyčky ověřit řádky `answer_read` (V5) a `python scripts/processes.py loop` (V6: pracovních ≤ 20, klidné ≤ 4 volání, Sonnet).
+- [ ] 2026-09-23  Plán v2 (`docs/laborator-plan.md`): otevřená fáze V11 (čeká na ranní vydání), stav v tabulce plánu. Po prvním dni smyčky ověřit řádky `answer_read` (V5). Nákladová kritéria V6 zrušil operátor 25. 9. (limity hlídá sám).
 - [ ] 2026-09-23  Zbytky V3 a V4 (memecoiny), detail v plánu pod V3 a V4: `console.cmd --fomo 1` s horizonty jen pro nové signály, strop quote, prořez captures; hloubka při signálu jen se stropem prodeje ve všech čtečkách; test L553; C6; přepnuté páry (rugy).
 - [x] 2026-09-23  Bollinger Bandit (klon 36642175) se 23. 9. zastavil sám a důvod není nikde: kontrola proti jejich dokumentované smlouvě + report přes submit.py. Napřed jedno volání `POST /api/v1/backtest-labs/autopsy` (REPLY-0049: `stop_reason` je jen tam a chce run, který klon nemá). (REPLY-0067: zastavil ho vlastní TP/SL; že řádky důvod nenesou, uznali a slíbili opravu -- nahrazeno řádkem níž; hotovo 2026-09-25)
 - [ ] 2026-09-25  REPLY-0067 slibuje v příštím vydání: řádky my-clones nesou `auto_pause_reason`, `auto_pause_pnl_pct`, `auto_pause_at` a vlastní stop/target, a `GET /api/v1/agents/instances/{id}/events`. Po vydání ověřit na klonech z 24. 9. a Bollinger Bandit; chybí-li, kontrola + report.

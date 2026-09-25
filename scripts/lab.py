@@ -3027,6 +3027,24 @@ def _sample_round() -> dict:
     return {"rows": max(len(written) - 1, 0), "ok": bool(last.get("ok"))}
 
 
+def _tracker_round() -> dict:
+    """Their tracker and their a2a inbox, read the way the console's --ask
+    reads them (`serve.py::poll_once`): each writes to the journal only what
+    changed, so a quiet round writes nothing. [operator 2026-09-25]: they
+    answer within the hour, and a round that waits for a sweep does not."""
+    bounty = _sibling("bounty")
+    ours = bounty.refresh_our_reports() or {}
+    inbox = bounty.fetch_inbox() or {}
+    return {"tracker": ours.get("klass"), "inbox": inbox.get("klass"),
+            "new": len(inbox.get("new") or [])}
+
+
+def _vendor_news() -> dict:
+    from qa.state import read_events
+
+    return lab.vendor_news(read_events())
+
+
 def _morning_due() -> bool:
     from qa import morning as qa_morning
 
@@ -3087,6 +3105,8 @@ def _tick_doors() -> dict:
         "hot": _hot_round,
         "hot_reading": lambda: _sibling("hot_watch").reading(),
         "surface_drift": lambda: _sibling("processes").surface_drift(),
+        "tracker": _tracker_round,
+        "vendor": _vendor_news,
     }
 
 
@@ -3133,6 +3153,8 @@ def _say_tick(said: dict, out) -> None:
     if said.get("resolved"):
         out(f"  resolved without us, written down: {said['resolved']}")
     decided = said.get("decide") or []
+    if "hunt sweep" in decided and said.get("vendor_lines"):
+        out(f"  their side moved: {', '.join(said['vendor_lines'])}")
     if "question" in decided:
         out("  question: due -- `lab.py brief`, then `lab.py ask --no-wait`")
     elif said.get("may_ask"):
@@ -3205,6 +3227,11 @@ def tick(*, now: datetime | None = None, actions: dict | None = None,
         return said
 
     said["sample"] = collect("sample")
+    # After the hold: these reads append to the journal a deep pass verifies.
+    said["tracker"] = collect("tracker")
+    news = attempt("vendor", doors["vendor"]) or {}
+    said["vendor_seq"] = news.get("seq")
+    said["vendor_lines"] = list(news.get("lines") or [])
     state = _load_tick_state()
     queue = list(state.get("queue") or [])
     if not queue and not state.get("seeded"):
@@ -3731,11 +3758,6 @@ def main(argv: list[str] | None = None) -> int:
     buy_cmd.add_argument("--confirm", action="store_true")
     sub.add_parser("tick", help="one step of the laboratory -- what a /loop runs")
     sub.add_parser("brief", help="what the next question to Nexus should carry")
-    budget_cmd = sub.add_parser(
-        "budget", help="whether an idle hunt may spend an agent (V6): the "
-        "plan's two windows from get_usage, in per cent")
-    budget_cmd.add_argument("weekly")
-    budget_cmd.add_argument("five_hour")
     board_cmd = sub.add_parser(
         "board", help="his proposals and what each earned, best first")
     board_cmd.add_argument("--top", type=int, default=20)
@@ -3899,13 +3921,6 @@ def main(argv: list[str] | None = None) -> int:
         tick_exclusive()
     elif args.cmd == "brief":
         print(brief())
-    elif args.cmd == "budget":
-        mode = lab.budget_mode(args.weekly, args.five_hour)
-        print(f"{mode} -- " + ("one Sonnet agent may hunt"
-                               if mode == "normal" else
-                               f"no agent: a window is at or past "
-                               f"{lab.BUDGET_CEILING_PCT} % or unreadable, "
-                               f"the hunt waits"))
     elif args.cmd == "morning":
         if args.published:
             state = morning_published(args.published)

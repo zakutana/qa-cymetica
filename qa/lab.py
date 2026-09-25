@@ -613,15 +613,15 @@ STILL_WORKING = frozenset({"running", "queued", "pending"})
 # twelve by this clock, the rest for news, answers, gaps and the report. It is
 # not a cap on him: their pace (may_ask_now) still decides whether one may go.
 QUESTION_HOURS = 2.0
-# The idle bug hunt of 2026-09-19, which every idle tick used to run.
-HUNT_HOURS = 8.0
+# The idle bug hunt of 2026-09-19, which every idle tick used to run. Eight
+# hours was a cost; [operator 2026-09-25] took the cost away ("Me limity
+# vubec neres"), so it is as often as a hunt can finish and be read.
+HUNT_HOURS = 3.0
 # The sweep of 2026-09-20 is "once a night": the first hunt of a local night,
-# unless one ran inside this many hours.
+# unless one ran inside this many hours. By day a sweep comes on their news
+# instead (vendor_news below).
 SWEEP_HOURS = 20.0
 NIGHT_LOCAL_HOURS = range(0, 6)
-# The budget line for anything optional. V7's: at 85 % of the week the deep
-# pass goes minimal too; the 5-hour window is held to the same number.
-BUDGET_CEILING_PCT = 85
 # A held reason worth saying to the operator the first time it appears: an
 # error from their side, or an id their API does not know.
 GAP_HELD = re.compile(r"HTTP [45]\d\d|knows no card")
@@ -655,6 +655,50 @@ def new_gaps(said: dict, earlier: list[dict]) -> list[str]:
     gaps += [line for line in said.get("close_failed") or []
              if CLOSE_WAITS not in line and line not in closes]
     return gaps
+
+
+def vendor_news(events: list[dict]) -> dict:
+    """The newest journal `seq` at which Cymetica moved, and what moved.
+
+    Moved: a report's status changed (`vendor_status` is written on change
+    only), a person answered on a2a, a Telegram answer was pasted in. Their
+    automated a2a acknowledgements are not news. Whoever wrote the event --
+    the console's --ask, this tick, a sweep -- it is the same news.
+    """
+    seq, lines = None, []
+    for event in events:
+        kind = event.get("type")
+        if kind == "vendor_status" and event.get("report_id") is not None:
+            line = f"#{event['report_id']} {event.get('status')}"
+        elif kind == "telegram_reply" and event.get("by") == "vendor":
+            line = str(event.get("msg_id") or "telegram")
+        elif (kind == "message" and event.get("by") == "vendor"
+              and event.get("auto") is not True):
+            line = f"{event.get('origin') or 'a2a'} {event.get('msg_id')}"
+        else:
+            continue
+        try:
+            at = int(event.get("seq"))
+        except (TypeError, ValueError):
+            continue
+        if seq is None or at > seq:
+            seq = at
+        lines.append(line)
+    return {"seq": seq, "lines": lines[-3:]}
+
+
+def _news_baseline(earlier: list[dict]) -> int | None:
+    """The journal seq the last sweep already covered: the `vendor_seq` of
+    the newest tick that decided one, else the oldest tick that carried a
+    `vendor_seq` at all -- so the first tick after this shipped sets the line
+    rather than sweeping everything already in the journal."""
+    for row in reversed(earlier):
+        if "hunt sweep" in (row.get("decide") or []) and row.get("vendor_seq") is not None:
+            return int(row["vendor_seq"])
+    for row in earlier:
+        if row.get("vendor_seq") is not None:
+            return int(row["vendor_seq"])
+    return None
 
 
 def _last_decided(earlier: list[dict], prefix: str) -> datetime | None:
@@ -693,6 +737,13 @@ def decide(said: dict, earlier: list[dict], last_question: datetime | None,
         if news or waited:
             items.append("question")
 
+    # [operator 2026-09-25]: they work faster than a nightly sweep. Something
+    # new from them since the last sweep is a sweep now, by day too.
+    theirs = said.get("vendor_seq")
+    baseline = _news_baseline(earlier)
+    if theirs is not None and baseline is not None and int(theirs) > baseline:
+        items.append("hunt sweep")
+
     if not items:
         hunted = _last_decided(earlier, "hunt")
         if hunted is None or (now - hunted).total_seconds() >= HUNT_HOURS * 3600:
@@ -716,17 +767,6 @@ def last_question_at(nexus_rows: list[dict]) -> datetime | None:
 
 def decide_line(items: list[str]) -> str:
     return "decide: " + (" + ".join(items) if items else "none")
-
-
-def budget_mode(weekly_pct, five_hour_pct) -> str:
-    """`normal` when both of the plan's windows are under the line, else
-    `minimal`. A usage nobody could read is not room to spend."""
-    try:
-        under = (float(weekly_pct) < BUDGET_CEILING_PCT
-                 and float(five_hour_pct) < BUDGET_CEILING_PCT)
-    except (TypeError, ValueError):
-        return "minimal"
-    return "normal" if under else "minimal"
 
 
 # --- the night -------------------------------------------------------------

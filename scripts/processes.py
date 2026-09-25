@@ -101,17 +101,6 @@ def reminders(facts: dict, now: datetime) -> list[str]:
             "`python scripts/lab.py morning`, pak ho publikuj (laborator, "
             "Ranní přehled).")
 
-    # Plan v2, V6: the laboratory's frontmatter says sonnet and its loop ran
-    # on Opus anyway -- 533 calls to 0 on 2026-09-20. `/model` is theirs.
-    models = facts.get("loop_models") or {}
-    firings = sum(models.values())
-    sonnet = sum(n for model, n in models.items() if "sonnet" in model)
-    if firings >= LOOP_MIN_FIRINGS and sonnet * 2 < firings:
-        out.append(
-            f"Laborka jela za posledních 24 h na dražším modelu ({firings - sonnet} "
-            f"z {firings} kol) — v její session napiš `/model sonnet`, smyčka "
-            f"pak stojí zlomek.")
-
     for session in facts.get("lab_open") or []:
         out.append(
             f"Laboratoř má otevřenou session {session} — zavře ji „jdi do "
@@ -1067,7 +1056,6 @@ def facts() -> dict:
         "morning_missing": _morning_missing(),
         **_lab_facts(),
         **_surface_facts(),
-        **_loop_facts(),
     }
 
 
@@ -1336,9 +1324,6 @@ TYPED_LOOP_PROMPT = re.compile(r"^\s*(?:/loop\s+\S+\s+)?jdi do labor", re.I)
 # The tick's own last line, at the start of a line -- the skill quotes it in
 # backticks, so its text is never read as a tick's decision.
 DECIDE_LINE = re.compile(r"(?:^|\n)decide: ([^\n]+)")
-# At least this many firings in a day before the model it ran on is named: two
-# are the operator trying something by hand, not a loop.
-LOOP_MIN_FIRINGS = 3
 
 
 def project_slug(root: Path | None = None) -> str:
@@ -1467,24 +1452,6 @@ def loop_days(firings: list[dict]) -> dict[str, dict]:
             day["quiet"] += 1
             day["quiet_calls_max"] = max(day["quiet_calls_max"], firing["calls"])
     return days
-
-
-def _loop_facts(now: datetime | None = None) -> dict:
-    """The model each loop firing of the last day ran on, counted by firing."""
-    moment = now or datetime.now(timezone.utc)
-    since = moment - timedelta(hours=24)
-    counts: dict[str, int] = {}
-    try:
-        for path in project_transcripts(since=since):
-            with open(path, encoding="utf-8", errors="replace") as handle:
-                for firing in loop_firings(handle):
-                    at = _moment(firing["at"])
-                    if at is None or at < since or not firing["model"]:
-                        continue
-                    counts[firing["model"]] = counts.get(firing["model"], 0) + 1
-    except OSError:
-        return {}
-    return {"loop_models": counts} if counts else {}
 
 
 def main(argv: list[str] | None = None) -> int:

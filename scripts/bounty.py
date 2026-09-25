@@ -460,8 +460,13 @@ def fetch_our_reports(client=None, wallet: str | None = None,
     """
     import os
 
+    from qa.config import load_dotenv
     from qa.state import append_event
 
+    # Before the wallet is read, not after: identities() loads .env, and it
+    # runs below this line. A caller that had not loaded it -- the lab tick's
+    # tracker round, 2026-09-25 -- read "not set" and got a stale snapshot.
+    load_dotenv()
     wallet = wallet or os.environ.get("QA_WALLET_ADDRESS", "")
     if not wallet:
         # The same shape as every other failed read, and for the same reason:
