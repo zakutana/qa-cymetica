@@ -232,11 +232,10 @@ CEILINGS = {
     # it did on 2026-09-13: 49 raw lines, 45 in force. Left at 48 rather than
     # lowered to 45 -- a ceiling set flush against today is one that fires on
     # the next honest memory, and CLAUDE.md says a warning on from the first
-    # day is a warning nobody reads. 48 -> 52 on 2026-09-25 (sweep): the sweep
-    # wrote a-finer-split-is-not-a-drop, the 49th, so 48 fired on the very
-    # memory CLAUDE.md's own rule asked for. Left three above 49, same margin
-    # as the 45 -> 48 move, not flush against today either.
-    "memory_lines": 52,
+    # day is a warning nobody reads. A sweep raised it to 52 on 2026-09-25 to
+    # fit one new memory; put back the same night -- a ceiling that moves for
+    # the next memory is no ceiling. When it fires, merge or retire one.
+    "memory_lines": 48,
     "next_oldest_days": 10,
     "pack_mb": 150,
     # Plan v2, V6: the laboratory's skill is loaded on every firing of its
