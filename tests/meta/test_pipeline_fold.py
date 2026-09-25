@@ -1213,6 +1213,17 @@ def test_the_verification_debt_is_keyed_on_the_fingerprint_not_the_run():
     assert cleared["findings"]["CYM-a"]["obligations"]["verification_owed"] == [], \
         "the debt survived the verification that paid it"
 
+    # Only a send that LANDED pays it. A 5xx or a 2xx with no id is recorded
+    # `unknown` and still carries an evidence id; with the accepted-only
+    # filter removed all 1058 meta tests stayed green (deep pass 2026-09-25,
+    # B01), so the badge could have said "told" when nothing reached them.
+    for outcome in ("unknown", "rejected"):
+        unsent = fold(ledger(_verified_row()),
+                      events=filed + [_verification(outcome=outcome)])
+        assert unsent["findings"]["CYM-a"]["obligations"]["verification_owed"] == [46], \
+            f"an {outcome} send cleared the debt"
+        assert unsent["findings"]["CYM-a"]["filing"]["verifications"] == []
+
     # A later run, same definition: nothing new to tell them.
     #
     # The run has to be ADMISSIBLE or this case proves nothing. It used to be
