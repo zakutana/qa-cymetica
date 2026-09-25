@@ -158,6 +158,23 @@ def test_a_refresh_writes_the_section_the_bell_reads(tmp_path, monkeypatch):
     assert [(e["report_id"], e["status"]) for e in statuses] == [(46, "fixed")], \
         "the journal and the snapshot disagree about what changed"
 
+    # What our posted replies earned, read the same way into its own section.
+    paid = _client(lambda r: httpx.Response(200, json={
+        "summary": {"paid": 7, "pending": 0, "et10": 7000, "etlp": 7000},
+        "recent": []}))
+    posts = bounty.refresh_creator_rewards(client=paid)
+    assert posts["klass"] == "ok" and posts["summary"]["et10"] == 7000
+    on_disk = _json.loads(snapshot.read_text(encoding="utf-8"))
+    assert on_disk["creator_rewards"]["summary"]["paid"] == 7
+    assert on_disk["our_reports"]["reports"][0]["status"] == "fixed", \
+        "the rewards read rewrote the reports section"
+
+    # Rule 8: a read that fails keeps the figures it had, marked stale.
+    down = _client(lambda r: httpx.Response(503, json={}))
+    posts = bounty.refresh_creator_rewards(client=down)
+    assert posts["summary"]["et10"] == 7000, "a failed read zeroed the rewards"
+    assert posts["stale_from"] and posts["klass"] != "ok"
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_refresh_that_could_not_read_keeps_the_snapshot(tmp_path, monkeypatch):

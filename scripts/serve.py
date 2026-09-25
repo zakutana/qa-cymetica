@@ -418,6 +418,19 @@ def poll_once(bounty) -> None:
     """
     _poll_tracker(bounty)
     _poll_inbox(bounty)
+    _poll_post_rewards(bounty)
+
+
+def _poll_post_rewards(bounty) -> None:
+    """What our posted replies earned, beside the bug bounty on the page."""
+    refresh = getattr(bounty, "refresh_creator_rewards", None)
+    if refresh is None:
+        return
+    try:
+        refresh()
+    except Exception as exc:  # noqa: BLE001 -- a bad read must not kill the server
+        print(f"[ask] post rewards unread: {type(exc).__name__}: {exc}",
+              file=sys.stderr)
 
 
 def _poll_tracker(bounty) -> None:

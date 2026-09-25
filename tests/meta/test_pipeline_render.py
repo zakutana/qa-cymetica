@@ -1433,12 +1433,25 @@ def test_the_rewards_come_from_their_tracker(tmp_path, monkeypatch):
              "created_at": "2026-09-05T10:00:00"},
         ]},
         "leaderboard": [{"reward_currency": "ET10", "total_paid": 2000.0}],
+        "creator_rewards": {"klass": "ok", "read_at": "2026-09-25T20:00:00+00:00",
+                            "stale_from": None,
+                            "summary": {"paid": 7, "pending": 1, "et10": 7000,
+                                        "etlp": 7000}},
     }), encoding="utf-8")
     render = _render()
 
     rewards = render.build_payload(ledger=_ledger())["stats"]["rewards"]
     assert rewards["paid_n"] == 2
-    assert rewards["paid_total"] == 2000
+    # The operator, 2026-09-25: "at to jde rozpoznat co je z bugu a co z
+    # tweetu" -- bug rewards and post rewards side by side, never summed into
+    # one figure that hides which is which.
+    assert rewards["paid_total"] == 2000, "post rewards leaked into the bug total"
+    assert rewards["posts"] == {"paid_n": 7, "pending_n": 1, "et10": 7000,
+                                "etlp": 7000, "read_at": "2026-09-25T20:00:00+00:00",
+                                "stale": False}
+    for field in ("posts.et10", "posts.etlp", "posts.paid_n", "posts.pending_n",
+                  "posts.read_at", "posts.stale"):
+        assert field in render.TEMPLATE, f"the page never shows {field}"
     assert rewards["pending_n"] == 1, "a fixed report is owed a reward"
     assert rewards["invalid_n"] == 1
     assert rewards["currency"] == "ET10"

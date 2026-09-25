@@ -2211,5 +2211,18 @@
       "total_paid": 0.0,
       "reward_currency": "ET10"
     }
-  ]
+  ],
+  "creator_rewards": {
+    "klass": "ok",
+    "read_at": "2026-09-25T20:29:11+00:00",
+    "stale_from": null,
+    "summary": {
+      "paid": 10,
+      "pending": 0,
+      "failed": 0,
+      "unverifiable": 0,
+      "et10": 10000,
+      "etlp": 10000
+    }
+  }
 }

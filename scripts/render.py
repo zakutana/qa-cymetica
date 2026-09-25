@@ -500,7 +500,22 @@ def _rewards() -> dict:
     theirs = leaderboard.get("total_paid")
     rows_total = sum(int(r.get("reward_amount") or 0) for r in paid)
     server_n = (bounty.get("our_reports") or {}).get("total")
+    # Rewards for posted replies, kept beside the bug figures and never added
+    # into them: the operator wants to see which came from a bug and which
+    # from a tweet (2026-09-25).
+    creator = bounty.get("creator_rewards") or {}
+    posted = creator.get("summary") or {}
+    posts = {
+        "paid_n": int(posted.get("paid") or 0),
+        "pending_n": int(posted.get("pending") or 0),
+        "et10": int(posted.get("et10") or 0),
+        "etlp": int(posted.get("etlp") or 0),
+        "read_at": creator.get("read_at"),
+        "stale": bool(creator) and (bool(creator.get("stale_from"))
+                                    or creator.get("klass") != "ok"),
+    }
     return {
+        "posts": posts,
         "currency": leaderboard.get("reward_currency") or "ET10",
         "paid_n": len(paid),
         "paid_total": rows_total,
@@ -2637,7 +2652,7 @@ paintVerdicts();
    colours on this page already mean something (green passes, red fails), and
    a bar borrowing one would say a thing it does not mean. Numbers wear text
    colours, never the mark's. */
-const money = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+const money = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
 /* ---------- the cockpit: the four numbers worth a glance ----------
    Big, and one click from the list behind each. Severity, sections with no
@@ -2660,7 +2675,9 @@ const money = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
     + big("warn", D.display_counts["FIX CLAIMED"] || 0, "fix claimed, to verify",
           "findings", "They say fixed; our check has not agreed yet")
     + big("ok", Number(rw.paid_total || 0).toLocaleString("en-US"),
-          `${esc(rw.currency || "USDC")} rewarded`, "stats", "Paid by their bounty tracker")
+          `${esc(rw.currency || "ET10")} · bugs`, "stats", "Paid by their bounty tracker for our reports")
+    + big("ok", Number((rw.posts || {}).et10 || 0).toLocaleString("en-US"),
+          "ET10 · tweets", "stats", "Paid for replies we posted from the creator dashboard, plus the same in ETLP")
     + `</div><div class="pills">`
     + SEV.map(([k, l, c]) => pill(c, D.by_severity[k] || 0, l)).join("")
     + pill("", D.sections.filter(s => !(s.checks && s.checks.total)).length, "areas with no checks")
@@ -2695,15 +2712,16 @@ function statBlocks() {
   const ch = S.channels || {}, pr = S.process || [];
   const out = [];
 
+  const posts = rw.posts || {};
   out.push(`<section class="stat">
     <h3>Rewards</h3>
-    <div class="hero">${esc(money(rw.paid_total || 0))} <span>${esc(rw.currency || "")}</span></div>
+    <div class="hero" title="Bugs plus tweets; the split is below">${esc(money((rw.paid_total || 0) + (posts.et10 || 0)))} <span>${esc(rw.currency || "ET10")}</span></div>
     <dl class="figs">
-      <div><dt>paid</dt><dd>${rw.paid_n || 0} reports</dd></div>
-      <div><dt>pending</dt><dd>${rw.pending_n || 0} fixed, not yet paid</dd></div>
-      <div><dt>rejected</dt><dd>${rw.invalid_n || 0}</dd></div>
+      <div><dt>bugs</dt><dd>${esc(money(rw.paid_total || 0))} ${esc(rw.currency || "ET10")} · ${rw.paid_n || 0} reports paid</dd></div>
+      <div><dt>bugs pending</dt><dd>${rw.pending_n || 0} fixed, not yet paid · ${rw.invalid_n || 0} rejected</dd></div>
+      <div class="${posts.stale ? "warn" : ""}" title="${esc(posts.read_at ? "Creator dashboard, read " + posts.read_at + (posts.stale ? " -- the last read failed, these are the figures before it" : "") : "Not read yet")}"><dt>tweets</dt><dd>${esc(money(posts.et10 || 0))} ET10 + ${esc(money(posts.etlp || 0))} ETLP · ${posts.paid_n || 0} replies paid${posts.pending_n ? ` · ${posts.pending_n} awaiting check` : ""}</dd></div>
     </dl>
-    ${bars((rw.by_day || []).map(d => ({k: d.day, v: d.amount, t: money(d.amount) + " " + (rw.currency || "")})), "rewards by day")}
+    ${bars((rw.by_day || []).map(d => ({k: d.day, v: d.amount, t: money(d.amount) + " " + (rw.currency || "")})), "bug rewards by day")}
     ${rw.disagrees ? `<p class="blurb warn" title="They publish ${esc(money(rw.their_total))} ${esc(rw.currency || "")} across ${esc(String(rw.rows_they_hold))} report(s); we read ${esc(String(rw.rows_read))} row(s) and add up ${esc(money(rw.paid_total || 0))}. Days are the day they resolved each report.">&ne; their total ${esc(money(rw.their_total))} ${esc(rw.currency || "")}</p>`
       : `<p class="blurb" title="Their published total, ${esc(String(rw.rows_they_hold))} reports. Days are the day they resolved each report.">= their total ${esc(money(rw.their_total))} ${esc(rw.currency || "")} &#10003;</p>`}
   </section>`);

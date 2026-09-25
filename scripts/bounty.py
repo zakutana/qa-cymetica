@@ -290,6 +290,77 @@ def refresh_our_reports(client=None) -> dict:
     return ours
 
 
+CREATOR_REWARDS = "/api/v1/creator/rewards"
+
+
+def fetch_creator_rewards(client=None, previous: dict | None = None) -> dict:
+    """What our posted replies have earned: the creator dashboard's own
+    summary (paid, pending, ET10, ETLP), read with the operator's key.
+
+    Kept apart from the bug bounty on purpose -- the operator, 2026-09-25,
+    wanted to see which reward came from a bug and which from a tweet. Rule 8:
+    a read that is not clean hands back `previous` marked stale, never zeros.
+    """
+    import httpx
+
+    previous = previous or {}
+
+    def stale(klass: str) -> dict:
+        return {**previous, "klass": klass,
+                "stale_from": previous.get("stale_from") or previous.get("read_at")}
+
+    own = client is None
+    if own:
+        trusted = identities()["trusted"]
+        if not trusted.value:
+            return stale("no_key")
+        client = build_client(trusted, EndpointRegistry.load())
+    token = CURRENT_TIER.set(SafetyTier.SAFE)
+    try:
+        response = client.get(CREATOR_REWARDS)
+    except httpx.HTTPError:
+        return stale("unreachable")
+    finally:
+        CURRENT_TIER.reset(token)
+        if own:
+            client.close()
+    if response.status_code != 200:
+        return stale(f"http_{response.status_code}")
+    try:
+        summary = (response.json() or {}).get("summary")
+    except ValueError:
+        summary = None
+    if not isinstance(summary, dict):
+        return stale("malformed")
+    return {"klass": "ok", "read_at": _now(), "stale_from": None,
+            "summary": {k: summary.get(k) for k in
+                        ("paid", "pending", "failed", "unverifiable", "et10", "etlp")}}
+
+
+def refresh_creator_rewards(client=None) -> dict:
+    """Re-read the creator rewards into their own section of bounty.json,
+    under the same lock as refresh_our_reports and leaving every other
+    section as it was."""
+    from qa.state import file_lock
+
+    out = out_path()
+    out.parent.mkdir(parents=True, exist_ok=True)
+    with file_lock(out):
+        data: dict = {}
+        if out.exists():
+            try:
+                data = json.loads(out.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                data = {}
+        section = fetch_creator_rewards(client=client,
+                                        previous=data.get("creator_rewards"))
+        data["creator_rewards"] = section
+        tmp = out.with_suffix(".json.tmp")
+        tmp.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+        os.replace(tmp, out)
+    return section
+
+
 A2A_INBOX = "/api/v1/bounty/a2a/inbox/{agent_id}"
 
 # NOT "scripts/bounty.py". A vendor_read is keyed on at|source|klass, and this
@@ -708,7 +779,10 @@ if __name__ == "__main__":
     # be allowed to interleave with, and the one whose loss would be silent.
     with file_lock(out):
         out.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+    # After the full write, which does not carry this section over.
+    posts = refresh_creator_rewards()
     print(f"-> {out}")
+    print(f"   post rewards: {posts.get('klass')} {posts.get('summary')}")
     print(f"   total={data['total']}  statuses={data['statuses']}")
     print(f"   closed={data['closed']}  "
           f"without any recorded evidence={data['closed_without_recorded_evidence']}")
