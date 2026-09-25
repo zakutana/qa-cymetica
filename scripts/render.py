@@ -255,19 +255,50 @@ def _claim_questions() -> dict[str, str]:
             for c in data.get("claims", []) if c.get("id")}
 
 
-def _tests_by_section(run: dict) -> dict[str, list[dict]]:
+def _last_full_run(run: dict) -> dict:
+    """The newest run of the whole suite before `run`, admissible at R.
+
+    A narrow sweep's run holds a handful of checks, and the tiles read
+    "untested" on nearly every area until the next full run (2026-09-25: 27
+    of 28). What the tiles need is each check's newest result, so the page's
+    run is laid over the last full one. Only an admissible record counts: a
+    --collect-only record from tests/repo is newer and holds nothing.
+    """
+    from qa.state import admissibility, state_dir
+
+    before = str(run.get("run_id") or "~")
+    for path in sorted((state_dir() / "runs").glob("run-*.json"), reverse=True):
+        if path.stem >= before:
+            continue
+        try:
+            candidate = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if (candidate.get("selector_full") and candidate.get("results")
+                and admissibility(candidate).level):
+            return candidate
+    return {}
+
+
+def _tests_by_section(run: dict, earlier: dict | None = None) -> dict[str, list[dict]]:
     """The checks a run adjudicated, per tile, each able to say what it looks at.
 
     Deduped by nodeid: a result is written per phase, and a tile listing the
     same check three times is a tile nobody trusts. Self-tests are dropped --
     they measure us, and 448 of them under "Support desk" is the loudest
-    possible wrong number.
+    possible wrong number. A check `run` did not include comes from `earlier`
+    (the last full run) with `stale_at`, the moment it was last run.
     """
     catalogue = _test_catalogue()
     questions = _claim_questions()
     out: dict[str, list[dict]] = {}
     seen: set[str] = set()
-    for result in run.get("results", []):
+    ran = {r.get("nodeid") for r in run.get("results", [])}
+    older_at = (earlier or {}).get("finished_at") or (earlier or {}).get("started_at")
+    results = list(run.get("results", [])) + [
+        {**r, "_stale_at": older_at} for r in (earlier or {}).get("results", [])
+        if r.get("nodeid") not in ran]
+    for result in results:
         nodeid = result.get("nodeid") or ""
         if not nodeid or nodeid in seen:
             continue
@@ -294,6 +325,7 @@ def _tests_by_section(run: dict) -> dict[str, list[dict]]:
             "gone": gone,
             "outcome": result.get("outcome"),
             "reason": ((result.get("measurement") or {}).get("reason") or "")[:300],
+            "stale_at": result.get("_stale_at"),
         })
     for tests in out.values():
         tests.sort(key=lambda t: t["nodeid"])
@@ -596,7 +628,8 @@ def out_path() -> Path:
 
 
 def build_payload(ledger: dict | None = None, inventory: dict | None = None,
-                  thread: dict | None = None, run: dict | None = None) -> dict:
+                  thread: dict | None = None, run: dict | None = None,
+                  earlier_run: dict | None = None) -> dict:
     """Everything the page shows, derived and reconciled before it is shown.
 
     This used to REFUSE, with `allow_stale_head` as the way past it, when the
@@ -815,7 +848,9 @@ def build_payload(ledger: dict | None = None, inventory: dict | None = None,
     # One list, and the count read off it. They were two computations over the
     # same results and the count included every phase of every check, so a
     # tile could say more checks than it could name.
-    tests_by_section = _tests_by_section(run)
+    if earlier_run is None:
+        earlier_run = _last_full_run(run) if not run.get("selector_full") else {}
+    tests_by_section = _tests_by_section(run, earlier_run)
     checks: dict[str, dict[str, int]] = {}
     for section, tests in tests_by_section.items():
         bucket = checks.setdefault(
@@ -1930,7 +1965,7 @@ function card(s) {
        <span class="pct ${h}">${s.reachable_pct}<small>%</small></span></div>`;
 
   const checks = s.checks && s.checks.total
-    ? `<span class="chip ${s.checks.failed ? "bad" : "ok"}">${s.checks.total} tests${s.checks.failed ? " · "+s.checks.failed+" failing" : ""}</span>`
+    ? `<span class="chip ${s.checks.failed ? "bad" : "ok"}">${s.checks.total} test${s.checks.total === 1 ? "" : "s"}${s.checks.failed ? " · "+s.checks.failed+" failing" : ""}</span>`
     : `<span class="chip untested" title="No check written for this area yet">untested</span>`;
   const sev = {};
   s.finding_severities.forEach(v => { sev[v] = (sev[v]||0)+1; });
@@ -1967,7 +2002,7 @@ function card(s) {
   const tests = (s.tests || []).length
     ? `<ul class="tlist">${s.tests.map(t => `<li class="t-${esc(t.outcome)}">
         <span class="t-n">${esc(t.name)}</span>
-        <span class="t-o">${esc(t.outcome)}</span>
+        <span class="t-o"${t.stale_at ? ` title="not in the latest run; last run ${esc(stamp(t.stale_at))}"` : ""}>${esc(t.outcome)}${t.stale_at ? ` &#8635; ${esc(stamp(t.stale_at).slice(5))}` : ""}</span>
         ${t.gone ? `<span class="t-d t-gone">no longer exists &mdash; this row stands on the run that last ran it</span>`
                  : (t.doc ? `<span class="t-d">${esc(t.doc)}</span>` : "")}
         ${t.outcome === "passed" || !t.reason ? "" : `<span class="t-r">${esc(t.reason)}</span>`}

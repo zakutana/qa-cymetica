@@ -1283,6 +1283,31 @@ def test_a_tile_lists_the_tests_behind_its_count(tmp_path, monkeypatch):
                 "a self-test reached a tile about their platform"
             )
 
+    # 2026-09-25: after a narrow sweep the page's run holds a handful of
+    # checks, and the tiles read "untested" on 27 of 28 areas while the full
+    # suite had run the night before. A check the page's run did not include
+    # is shown from the last full run, marked with when -- never dropped, and
+    # never counted twice when both ran it.
+    earlier = {"run_id": "run-20260909T220000Z-full", "finished_at": "2026-09-09T22:05:00+00:00",
+               "results": [
+                   {"nodeid": "tests/rest/test_support.py::test_a", "role": "verdict",
+                    "component": "rest.support", "outcome": "failed", "measurement": {}},
+                   {"nodeid": "tests/rest/test_support.py::test_z", "role": "verdict",
+                    "component": "rest.support", "outcome": "passed", "measurement": {}},
+                   {"nodeid": "tests/meta/test_guard_is_real.py::test_e", "role": "verdict",
+                    "component": "rest.support", "outcome": "passed", "measurement": {}}]}
+    both = {s["id"]: s for s in render.build_payload(
+        ledger=_ledger(), inventory=inventory, run=run, earlier_run=earlier)["sections"]}
+    tests = {t["nodeid"]: t for t in both["support"]["tests"]}
+    assert set(tests) == {"tests/rest/test_support.py::test_a",
+                          "tests/rest/test_support.py::test_b",
+                          "tests/rest/test_support.py::test_z"}, tests
+    assert tests["tests/rest/test_support.py::test_a"]["outcome"] == "passed", (
+        "the page's own run wins over the older one")
+    assert not tests["tests/rest/test_support.py::test_a"].get("stale_at")
+    assert tests["tests/rest/test_support.py::test_z"]["stale_at"] == "2026-09-09T22:05:00+00:00"
+    assert both["support"]["checks"]["total"] == 3
+
     # Every check on a tile can say in one sentence what it looks at.
     monkeypatch.delenv("QA_STATE_DIR", raising=False)
     render = _render()
