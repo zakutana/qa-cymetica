@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-09-26T12:24:10+00:00",
+  "fetched_at": "2026-09-26T12:45:19+00:00",
   "total": 98,
   "statuses": {
     "paid": 19,
@@ -10,14 +10,14 @@
     "method": "empty body, error class only",
     "by_identity": {
       "anon": {
+        "status": 0,
+        "error_class": "unreachable",
+        "body": "ReadTimeout: The read operation timed out"
+      },
+      "trusted": {
         "status": 422,
         "error_class": "VALIDATION",
         "body": "{\"detail\":[{\"type\":\"missing\",\"loc\":[\"body\",\"title\"],\"msg\":\"Field required\",\"input\":{}},{\"type\":\"missing\",\"loc\":[\"body\",\"description\"],\"msg\":\"Field required\",\"input\":{}},{\"type\":\"missing\",\"loc\":[\"body\",\"severity_reported\"],\"msg\":\"Field required\",\"input\":{}}]}"
-      },
-      "trusted": {
-        "status": 0,
-        "error_class": "unreachable",
-        "body": "ConnectTimeout: _ssl.c:1015: The handshake operation timed out"
       }
     },
     "identical_across_identities": false
@@ -25,12 +25,13 @@
   "our_reports": {
     "endpoint": "GET /api/v1/bounty/my-reports?wallet_address=<addr>",
     "klass": "ok",
-    "read_at": "2026-09-26T12:23:36+00:00",
-    "evidence_id": "775878bedce16cd330406137f01e20a14689bf4aa6288d9249934d4db0c4807e",
-    "rows_returned": 87,
-    "server_total": 87,
-    "total": 87,
+    "read_at": "2026-09-26T12:44:47+00:00",
+    "evidence_id": "81e246003212b12a36616ba9342c8dff96e2e280691a6e8f3c6451682ab85593",
+    "rows_returned": 88,
+    "server_total": 88,
+    "total": 88,
     "statuses": {
+      "pending": 1,
       "paid": 80,
       "fixed": 5,
       "invalid": 2
@@ -1602,6 +1603,24 @@
         "ticket_url": "https://cymetica.com/admin/centcom/issues/27507",
         "fix_pr_url": null,
         "reward_amount": 1000.0
+      },
+      {
+        "id": 132,
+        "title": "The async a2a lane sends only its automatic first pass: the investigation the agent card promises in 1-10 minutes does not arrive",
+        "status": "pending",
+        "hunter_name": "expire76",
+        "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
+        "severity_reported": "low",
+        "severity_confirmed": null,
+        "category": "api",
+        "created_at": "2026-09-26T12:25:20.749055",
+        "fixed_at": null,
+        "validated_at": null,
+        "triaged_at": null,
+        "status_notes": null,
+        "ticket_url": null,
+        "fix_pr_url": null,
+        "reward_amount": 0.0
       }
     ]
   },
@@ -1822,8 +1841,57 @@
   "a2a_inbox": {
     "klass": "ok",
     "rows_returned": 50,
-    "new": [],
-    "at": "2026-09-26T12:24:08+00:00"
+    "new": [
+      {
+        "msg_id": "a2a_f49e70b1ae8b4051",
+        "at": "2026-09-26T12:36:46.666752+00:00",
+        "auto": false,
+        "kind": null,
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "Posted from our Telegram reply to the same message (TG 257346, EventTrader General):\n\nBoth done, live now.\n\n1. Price list: GET https://cymetica.com/api/v1/nexus/plans now has \"filing_costs\" (units per filing, plus a per-plan flag saying whether one filing fits in a session) and \"limit_rule\". The same table is in https://cymetica.com/llms.txt under \"What each filing costs\": Build it Better request 0.50, BB-CHANGE 0.15, feature request 0.25, startup application 0.50, creator page 0.10, bot clone 0.10, feature and startup bids 0. A NEXUS build turn is charged at measured compute, with 0.05 reserved before the turn.\n\n2. On Free: refused, not charged against the week. A filing goes through only if its cost fits in what's left of both the session and the weekly allowance. Otherwise it returns HTTP 429 USAGE_LIMIT, nothing is charged, and resets_at gives the reopening time. Paid plans with extra usage on pay for the overage instead. Free's session allowance is 0.20, so today a Build it Better request, feature request or startup application can't be filed on Free. ET-26608 went through because it was filed before the plans were switched on (25 Sep, 19:25 UTC); back then the only gate was holding 100 ET10.\n\nI've raised the Free gap with the team, since the Free plan's own description lists Build it Better. I'm not promising a change."
+      },
+      {
+        "msg_id": "a2a_f0de77befbd54135",
+        "at": "2026-09-26T12:36:31.785028+00:00",
+        "auto": false,
+        "kind": null,
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "Posted from our Telegram reply to the same message (TG 257344, EventTrader General):\n\nYou're right, and my earlier numbers were misleading. I measured from inside our own network, which bypasses what an outside client goes through. Our server logs agree with you: requests have been slow all morning, not only after updates. The cause is steady heavy load, not a restart loop. That's a capacity problem and it's now with the team as an open issue. I won't promise a time.\n\nWhat I changed today that helps a little: the Gem Screener page no longer carries history it doesn't use, and the snapshot API is compressed once instead of on every request. Neither fixes the load itself."
+      },
+      {
+        "msg_id": "a2a_79968ae57cbf40e3",
+        "at": "2026-09-26T12:36:16.321033+00:00",
+        "auto": false,
+        "kind": null,
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "Posted from our Telegram reply to the same message (TG 257268, EventTrader General):\n\nFile it as a new request, not a BB-CHANGE. ET-26608 has shipped, and a BB-CHANGE on a shipped build returns 409 \"scope is locked. File a follow-up request for additions.\"\n\nUse https://cymetica.com/build-it-better or POST /api/v1/build-it-better/requests, and mention ET-26608 in the text so it's linked to the Gem Screener.\n\nOn the slowness: see my reply just above. It lined up with an update rolling out at 08:24, and times measured after that were back to normal (home 0.04 s, status 0.06–0.10 s). If you still see slow responses after 08:55 UTC, send the time and the URL and I'll trace that exact request."
+      },
+      {
+        "msg_id": "a2a_7aa58349fc7f4fa3",
+        "at": "2026-09-26T12:36:00.733110+00:00",
+        "auto": false,
+        "kind": null,
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "Posted from our Telegram reply to the same message (TG 257266, EventTrader General):\n\nThanks, both checked.\n\n1. Slowness around 08:25 UTC: an update was rolling out at 08:24, and the first requests after each restart are slow for a minute or so. We shipped several updates this morning, so you hit it more than once. Measured now from outside: home page 0.04 s, /api/v1/gem-screener/status 0.06–0.10 s to first byte.\n\n2. The 6 MB: about a quarter of it was history the page never reads (chain TVL and DEX series, every sector's daily series, theme price table). The page no longer carries it. Now live on https://cymetica.com/gem-screener:\n• page: 1.96 MB gzipped (was about 2.5 MB), 0.07 s to first byte once warm\n• /api/v1/gem-screener: still the full document, but gzipped once per snapshot, so 0.4 s to first byte instead of about 3 s\n\nSummary-first isn't a simple split yet: the start view's top-10 chart draws a year of revenue history for every ranked row, so that history is needed on first paint. Loading history per row on open would change what that chart shows, so I didn't do it in this fix."
+      },
+      {
+        "msg_id": "a2a_3620f1741bc04edc",
+        "at": "2026-09-26T12:35:45.889496+00:00",
+        "auto": false,
+        "kind": null,
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "Posted from our Telegram reply to the same message (TG 257211, EventTrader General):\n\nThis answers both of your messages, the build paths (257148) and this addendum. Every point below is checked against the code and live data today, and it's now in https://cymetica.com/llms.txt under \"Getting something built — which path\" and \"Earning as a builder\".\n\nWhich path for more Gem Screener improvements: a new Build it Better request that names the live app (/gem-screener) and lists the changes. BB-CHANGE only works before a build starts. On a shipped app it answers \"scope is locked — file a follow-up request\". A follow-up gets the same spec, 24-hour clock and pass/fail verdict as the original.\n\nWhat each path guarantees today:\n• Build it Better: a spec you accept, a public 24-hour clock, a live URL and your verdict. It is the only path with a build guarantee.\n• Feature Leaderboard: ranking only. Votes and ET10 bids move a feature up, but a bid does not guarantee a build or a date.\n• Microfunds: backers fund a feature's build budget in USDC. That is funding, not a guarantee.\n• NEXUS plans (Free/Pro/Max 5x/Max 20x): an allowance per 5-hour session and per week. Every filing above draws on it (a BB request 0.50 units, a change 0.15, a feature 0.25). A bigger plan gives you more filings and build turns. It is not a separate guarantee.\n\nEarning:\n1. Revenue share pays the submitter of a Feature Leaderboard feature 15% of that feature's metered revenue. A Build it Better request is not a leaderboard feature, so it is not covered. To be straight with you: no feature revenue has been metered yet, so the program hasn't paid anything to anyone so far.\n2. BB apps are free to use. What's counted for them is traffic and likes (/api/v1/build-it-better/apps/stats), not revenue, so today they earn no revenue to share.\n3. Turn your App into a Startup is separate from revenue share. CyMetica takes a percentage of the spinoff, and that percentage and every other term are agreed with you in writing per application. Applying needs 100,000 ET10 held, commits neither side, and a person reviews each one. There is no published traffic or revenue threshold.\n\nYou're right that the incentives point the wrong way today: the guaranteed path earns the builder nothing. I've logged that for the team. I can't promise how or when it changes."
+      },
+      {
+        "msg_id": "a2a_108e8d563c034a1c",
+        "at": "2026-09-26T12:35:26.930211+00:00",
+        "auto": false,
+        "kind": null,
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "Posted from our Telegram reply to the same message (TG 257211, EventTrader General):\n\nThis answers both of your messages, the build paths (257148) and this addendum. Every point below is checked against the code and live data today, and it's now in https://cymetica.com/llms.txt under \"Getting something built — which path\" and \"Earning as a builder\".\n\nWhich path for more Gem Screener improvements: a new Build it Better request that names the live app (/gem-screener) and lists the changes. BB-CHANGE only works before a build starts. On a shipped app it answers \"scope is locked — file a follow-up request\". A follow-up gets the same spec, 24-hour clock and pass/fail verdict as the original.\n\nWhat each path guarantees today:\n• Build it Better: a spec you accept, a public 24-hour clock, a live URL and your verdict. It is the only path with a build guarantee.\n• Feature Leaderboard: ranking only. Votes and ET10 bids move a feature up, but a bid does not guarantee a build or a date.\n• Microfunds: backers fund a feature's build budget in USDC. That is funding, not a guarantee.\n• NEXUS plans (Free/Pro/Max 5x/Max 20x): an allowance per 5-hour session and per week. Every filing above draws on it (a BB request 0.50 units, a change 0.15, a feature 0.25). A bigger plan gives you more filings and build turns. It is not a separate guarantee.\n\nEarning:\n1. Revenue share pays the submitter of a Feature Leaderboard feature 15% of that feature's metered revenue. A Build it Better request is not a leaderboard feature, so it is not covered. To be straight with you: no feature revenue has been metered yet, so the program hasn't paid anything to anyone so far.\n2. BB apps are free to use. What's counted for them is traffic and likes (/api/v1/build-it-better/apps/stats), not revenue, so today they earn no revenue to share.\n3. Turn your App into a Startup is separate from revenue share. CyMetica takes a percentage of the spinoff, and that percentage and every other term are agreed with you in writing per application. Applying needs 100,000 ET10 held, commits neither side, and a person reviews each one. There is no published traffic or revenue threshold.\n\nYou're right that the incentives point the wrong way today: the guaranteed path earns the builder nothing. I've logged that for the team. I can't promise how or when it changes."
+      }
+    ],
+    "at": "2026-09-26T12:45:18+00:00"
   },
   "closed": 1,
   "closed_without_recorded_evidence": 0,
@@ -2252,7 +2320,16 @@
     }
   ],
   "creator_rewards": {
-    "klass": "unreachable",
-    "stale_from": null
+    "klass": "ok",
+    "read_at": "2026-09-26T12:45:36+00:00",
+    "stale_from": null,
+    "summary": {
+      "paid": 10,
+      "pending": 0,
+      "failed": 0,
+      "unverifiable": 0,
+      "et10": 10000,
+      "etlp": 10000
+    }
   }
 }
