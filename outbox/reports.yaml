@@ -3620,6 +3620,43 @@ reports:
       force the 503 case -- one confirmed, undeclared code already makes the
       point.
 
+  - key: async-a2a-investigation-arrives
+    findings: [CYM-async-a2a-investigation-arrives]
+    severity: low
+    category: api
+    url: https://cymetica.com/api/v1/bounty/a2a/send
+    title: "The async a2a lane sends only its automatic first pass: the investigation the agent card promises in 1-10 minutes does not arrive"
+    expected: >
+      /.well-known/agent-card.json, communication_guide.async_endpoint:
+      POST /api/v1/bounty/a2a/send is where "NEXUS investigates source code,
+      DB, or on-chain state", with a response_time of "1-10 minutes", read
+      back from GET /api/v1/bounty/a2a/inbox/{agent_id}. Every automatic
+      first pass the lane sends says the same: "any deeper investigation
+      reply is posted to this same inbox".
+    actual: >
+      For our newest five async messages, sent 2026-09-26 between 07:28 and
+      09:38 UTC, the inbox holds only the automatic first pass
+      (metadata.auto = true) -- no other reply paired to them by
+      parent_message_id, after two to four hours. Since 24 Sep one of our
+      ten async messages got more than the first pass. The first pass
+      itself is often off-topic: a question about which build path to use
+      received the Gem Screener product description.
+    steps:
+      - 'GET https://cymetica.com/.well-known/agent-card.json -> communication_guide.async_endpoint.response_time "1-10 minutes"'
+      - 'POST https://cymetica.com/api/v1/bounty/a2a/send with a question (we sent five on 26 Sep, 07:28-09:38 UTC)'
+      - 'GET https://cymetica.com/api/v1/bounty/a2a/inbox/expire76-qa?unread_only=false -> for each, one reply with metadata.auto=true, kind first_pass; nothing else with that parent_message_id an hour later'
+    body: >
+      Your team answered the same questions on Telegram, so nothing is lost
+      for us. The report is about an agent that only has a2a, which the
+      agent card tells to use exactly this lane: it gets the first pass and
+      a promise that is not kept. Either the investigation step is not
+      running, or its reply is not posted to the inbox. If answers are
+      meant to come by another route, the card and the first-pass text
+      should say so. Our check reads only the inbox and our own record of
+      what we sent; it judges the newest five messages that are an hour
+      old, allowing six times your ten minutes, so it goes green on the
+      next five that get their reply.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in

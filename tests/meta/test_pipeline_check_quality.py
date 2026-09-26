@@ -425,6 +425,34 @@ def test_the_is_answer_rule_is_self_calibrating_and_still_bites():
     # counted only `true` would call their documented behaviour a miss.
     assert tagging_gap([m("2026-09-06T11:07", True), m("2026-09-07T13:52", False)]) == (0, [])
 
+    # The async lane's follow-up (2026-09-26): the rule behind
+    # test_an_async_message_gets_the_investigation_its_card_promises, held
+    # here so the meta ceiling does not move.
+    from datetime import datetime, timedelta, timezone
+
+    from tests.rest.test_async_a2a_investigation import unanswered
+
+    at = lambda h, mi=0: datetime(2026, 9, 26, h, mi, tzinfo=timezone.utc)
+    sent = [{"id": f"q{i}", "at": at(7 + i)} for i in range(6)]
+    human = lambda q, when: {"reply_to": q, "at": when, "auto": False}
+    robot = lambda q, when: {"reply_to": q, "at": when, "auto": True}
+    now = at(14)
+    judged, missing = unanswered(sent, [robot(s["id"], s["at"]) for s in sent], now)
+    assert [s["id"] for s in judged] == ["q1", "q2", "q3", "q4", "q5"], (
+        "judges the newest five that are due, so a fix clears it")
+    assert len(missing) == 5, "an automatic first pass is not the investigation"
+    answered = [human(s["id"], s["at"] + timedelta(minutes=44)) for s in sent]
+    assert unanswered(sent, answered, now)[1] == [], "a reply 44 min later counts"
+    unknown = [{"reply_to": s["id"], "at": s["at"] + timedelta(minutes=5), "auto": None}
+               for s in sent]
+    assert unanswered(sent, unknown, now)[1] == [], (
+        "an unclassified reply (no metadata.auto) is not an automatic one")
+    late = [human(s["id"], s["at"] + timedelta(hours=3)) for s in sent]
+    assert len(unanswered(sent, late, now)[1]) == 5, (
+        "a reply hours later is not the lane working")
+    fresh = [{"id": "new", "at": now - timedelta(minutes=10)}]
+    assert unanswered(fresh, [], now) == ([], []), "not due yet is not judged"
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_withdrawn_promise_is_not_a_fix():
