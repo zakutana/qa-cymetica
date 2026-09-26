@@ -849,7 +849,7 @@
   },
   "next": [
     "Kontrola fund leaderboardu padá na NAŠEM parseru: po jejich ET-27387 (sloupce) čte návratnost jako index (53 „neshod“). Přečíst nový markup, opravit `rows_of`, pak běh; řádek NOT RAISED YET nezakládat.",
-    "Sweep: kontrola BB-SPEC padá na cizím ET-26924 (4 BB-CHANGE bez dodatku ve specu). Napřed přečíst jejich surové záznamy (memory a-check-encodes...), teprve pak report přes submit.py."
+    "Kontrola BB-SPEC (`test_build_it_better_spec_keeps_the_request.py`) padá na ET-26924 falešně: žadatel své BB-CHANGE sám stáhl („Withdraw all earlier BB-CHANGE items“). Naučit ji stažení, test napřed; report se nepodává (sweep 26. 9.)."
   ],
   "retrospective": {
     "last": "2026-09-19",
