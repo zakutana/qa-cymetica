@@ -3453,9 +3453,11 @@ def morning_page(now_local: datetime | None = None) -> Path:
     report = write_report()
     state = load_morning()
     deep = REPO_ROOT / "DEEP-PASS.md"
+    from qa.state import read_events
+
     view = qa_morning.build(
         report, state, deep.read_text(encoding="utf-8") if deep.is_file() else "",
-        lab.load(), moment)
+        lab.load(), moment, events=read_events())
     page = _morning_file(MORNING_PAGE)
     _write_text(page, _sibling("morning").render(view))
     state["pending"] = {"built_at": _now().isoformat(timespec="seconds"),

@@ -70,17 +70,48 @@ Spuštěn na tvůj `/deep-pass`.
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_the_deep_pass_is_three_lines_fixed_sent_and_waiting():
+def test_the_deep_pass_is_two_lines_what_we_fixed_and_what_went_to_them():
+    """The operator, 2026-09-26, on the report: "30 z 31 skutečných nálezů je
+    jako co? bugy v cymetice?" -- the fixes are OURS and must say so; the
+    process figures (claims, checks audited, readers) are not wanted; and
+    "Čeká na tebe" goes: nothing waits on them."""
     said = morning.deep_pass(DEEP)
     assert said["title"] == "Deep pass — 2026-09-22 večer"
-    assert [line["kind"] for line in said["lines"]] == ["fixed", "sent", "waiting"]
-    fixed, sent, waiting = said["lines"]
+    assert [line["kind"] for line in said["lines"]] == ["fixed", "sent"]
+    fixed, sent = said["lines"]
     assert fixed["count"] == 3, "nested bullets are not fixes of their own"
-    assert fixed["text"].startswith("Bezpečnostní brána pustila živý příkaz")
+    assert "našich" in fixed["text"] and "Cymetic" in fixed["text"], fixed
     assert "`" not in sent["text"] and "#111" in sent["text"]
-    assert waiting["text"] == "ET-26036: verdikt dál čeká na obrazcovou TA."
+    # A pass that writes its count in the lead is read by that count.
+    counted = morning.deep_pass(DEEP.replace(
+        "* **Bezpečnostní brána", "* **30 z 31 skutečných nálezů (44 tvrzení: 34 z auditu).** x\n* **Bezpečnostní brána"))
+    assert counted["lines"][0]["count"] == 30
     assert all(len(line["text"]) <= 140 for line in said["lines"])
     assert morning.deep_pass("")["lines"] == [], "no pass on record is no lines"
+
+    # And what happened with Cymetica overnight, which the report lacked:
+    # sweeps run, bugs we filed, what they fixed, what we verified.
+    since = "2026-09-25T20:00:00+00:00"
+    events = [
+        {"type": "filing_outcome", "outcome": "accepted", "report_id": 131,
+         "at": "2026-09-26T03:40:00+00:00"},
+        {"type": "filing_outcome", "outcome": "accepted", "report_id": 99,
+         "at": "2026-09-20T03:40:00+00:00"},
+        {"type": "vendor_status", "report_id": 131, "status": "pending",
+         "at": "2026-09-26T03:41:00+00:00"},
+        {"type": "vendor_status", "report_id": 131, "status": "paid",
+         "at": "2026-09-26T05:00:00+00:00"},
+        {"type": "vendor_status", "report_id": 132, "status": "pending",
+         "at": "2026-09-26T05:10:00+00:00"},
+        {"type": "verification_outcome", "outcome": "accepted", "verdict": "pass",
+         "report_id": 113, "at": "2026-09-25T23:20:00+00:00"},
+        {"type": "verification_outcome", "outcome": "unknown", "verdict": "pass",
+         "report_id": 114, "at": "2026-09-25T23:20:00+00:00"}]
+    ticks = [{"type": "tick", "at": "2026-09-26T00:00:00+00:00", "decide": ["hunt sweep"]},
+             {"type": "tick", "at": "2026-09-26T03:08:00+00:00", "decide": ["hunt bugs"]},
+             {"type": "tick", "at": "2026-09-25T10:00:00+00:00", "decide": ["hunt sweep"]}]
+    theirs = morning.cymetica(events, ticks, since)
+    assert theirs == {"sweeps": 2, "filed": [131], "fixed": [131], "verified": [113]}, theirs
 
 
 def _report(net: float, rooms: list[dict], questions: int = 80) -> dict:
@@ -172,8 +203,12 @@ def test_the_page_is_one_short_czech_page_in_the_artifact_shape():
             f"the publish skeleton supplies <{tag}>")
     for words in ("Deep pass", "Karty", "Boti", "Memecoiny", "Fondy", "Přes noc",
                   "Dnes", "Podle tvé zpětné vazby", "boti mají vlastní room",
-                  "@EventTraderQABot ahoj"):
+                  "@EventTraderQABot ahoj", "Cymetica", "sweep"):
         assert words in html, f"{words!r} is not on the page"
+    # Nothing waits on the operator (2026-09-26), and the Nexus line says what
+    # the numbers are: went to paper, lost, earned, still running.
+    assert "Čeká na tebe" not in html
+    assert "na papír" in html and "prodělalo" in html and "ještě běží" in html
     assert "−4,2" in html and "Karty −3,2 % → −4,2 %" in html
     # Both themes, the artifact contract's way.
     assert ':root:not([data-theme="light"])' in html and ':root[data-theme="dark"]' in html

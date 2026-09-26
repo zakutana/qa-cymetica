@@ -77,9 +77,14 @@ def _bullets(section: str) -> list[str]:
     return out
 
 
+FIXED_OURS = "chyb v našich vlastních kontrolách a nástrojích, ne v Cymetice"
+
+
 def deep_pass(markdown: str) -> dict:
-    """DEEP-PASS.md in three lines: what it fixed, what it sent Cymetica,
-    what waits for the operator."""
+    """DEEP-PASS.md in two lines: what it fixed of OURS, and what it sent
+    Cymetica. The operator, 2026-09-26: the fixes read as Cymetica's bugs,
+    the process figures are not wanted, and nothing waits on them -- so no
+    "Čeká na tebe" line."""
     title = next((line[2:].strip() for line in markdown.splitlines()
                   if line.startswith("# ")), None)
     sections: dict[str, str] = {}
@@ -87,13 +92,44 @@ def deep_pass(markdown: str) -> dict:
         head, _, body = chunk.partition("\n")
         sections[head.strip()] = body
     lines = []
-    for kind, head in (("fixed", "Opraveno"), ("sent", "Co odešlo Cymetice"),
-                       ("waiting", "Čeká na tebe")):
-        found = _bullets(sections.get(head, ""))
-        if head in sections:
-            lines.append({"kind": kind, "count": len(found),
-                          "text": _plain(found[0]) if found else "nic"})
+    if "Opraveno" in sections:
+        found = _bullets(sections["Opraveno"])
+        # A pass that leads with its count ("**30 z 31 ...**") is read by it.
+        lead = re.match(r"^\W*(\d+)\b", found[0]) if found else None
+        lines.append({"kind": "fixed",
+                      "count": int(lead.group(1)) if lead else len(found),
+                      "text": FIXED_OURS})
+    if "Co odešlo Cymetice" in sections:
+        found = _bullets(sections["Co odešlo Cymetice"])
+        lines.append({"kind": "sent", "count": len(found),
+                      "text": _plain(found[0]) if found else "nic"})
     return {"title": title, "lines": lines}
+
+
+FIXED_STATUSES = frozenset({"fixed", "paid", "resolved"})
+
+
+def cymetica(events: list[dict], ticks: list[dict], since: str | None) -> dict:
+    """What happened with Cymetica since the last report: sweeps and bug
+    hunts the lab ran, reports we filed, reports they fixed, fixes we
+    verified. The operator, 2026-09-26: the report did not say."""
+    def after(row) -> bool:
+        return since is None or str(row.get("at") or "") > since
+
+    sweeps = sum(1 for t in ticks if t.get("type") == "tick" and after(t)
+                 and any(str(d).startswith("hunt") for d in t.get("decide") or []))
+    filed = sorted({e["report_id"] for e in events
+                    if e.get("type") == "filing_outcome" and e.get("outcome") == "accepted"
+                    and e.get("report_id") is not None and after(e)})
+    fixed = sorted({e["report_id"] for e in events
+                    if e.get("type") == "vendor_status" and after(e)
+                    and str(e.get("status") or "").lower() in FIXED_STATUSES
+                    and e.get("report_id") is not None})
+    verified = sorted({e["report_id"] for e in events
+                       if e.get("type") == "verification_outcome" and after(e)
+                       and e.get("outcome") == "accepted" and e.get("verdict") == "pass"
+                       and e.get("report_id") is not None})
+    return {"sweeps": sweeps, "filed": filed, "fixed": fixed, "verified": verified}
 
 
 def overnight(report: dict, before: dict | None) -> list[str]:
@@ -170,10 +206,11 @@ def today(notebook: list[dict], since: str | None = None,
 
 
 def build(report: dict, state: dict | None, deep_md: str, notebook: list[dict],
-          now_local: datetime) -> dict:
+          now_local: datetime, events: list[dict] | None = None) -> dict:
     state = state or {}
     since = state.get("made_at")
     return {
+        "cymetica": cymetica(events or [], notebook, since),
         "date": now_local.date().isoformat(),
         "made_at": now_local.isoformat(timespec="minutes"),
         "deep_pass": deep_pass(deep_md or ""),

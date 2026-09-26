@@ -83,8 +83,21 @@ def _list(items: list[str], empty: str) -> str:
     return "<ul class=\"lines\">" + "".join(f"<li>{escape(i)}</li>" for i in items) + "</ul>"
 
 
-DEEP_TAGS = {"fixed": ("ok", "Opraveno"), "sent": ("", "Odešlo Cymetice"),
-             "waiting": ("warn", "Čeká na tebe")}
+DEEP_TAGS = {"fixed": ("ok", "Opraveno u nás"), "sent": ("", "Odešlo Cymetice")}
+
+
+def _ids(ids: list) -> str:
+    return ", ".join(f"#{i}" for i in ids) if ids else "žádný"
+
+
+def _cymetica(said: dict) -> str:
+    """Sweeps, what we filed, what they fixed, what we verified -- since the
+    last report (the operator, 2026-09-26)."""
+    return _list([
+        f"Kolikrát běžel sweep nebo hledání chyb: {said.get('sweeps', 0)}",
+        f"Našel jsem a nahlásil: {_ids(said.get('filed') or [])}",
+        f"Opravili: {_ids(said.get('fixed') or [])}",
+        f"Ověřil jsem, že oprava drží: {_ids(said.get('verified') or [])}"], "")
 
 
 def _deep(deep: dict) -> str:
@@ -102,11 +115,16 @@ def _deep(deep: dict) -> str:
 def _nexus(nexus: dict) -> str:
     if not nexus:
         return ""
-    return (f'<p class="nexus"><b>Nexus</b> {nexus.get("questions", 0)} otázek → '
-            f'{nexus.get("answered", 0)} odpovědí → {nexus.get("picks", 0)} nápadů → '
-            f'{nexus.get("gate_pass", 0)} prošlo backtestem → '
-            f'<b class="{"up" if nexus.get("survived") else ""}">{nexus.get("survived", 0)}</b>'
-            f' vyšlo</p>')
+    # Said as what happened to the ideas, not as a funnel of nouns: the
+    # operator read "0 vyšlo" as "nothing was tested" (2026-09-26).
+    tested = nexus.get("gate_pass", 0) or 0
+    won, lost = nexus.get("survived", 0) or 0, nexus.get("refuted", 0) or 0
+    running = max(tested - won - lost, 0)
+    return (f'<p class="nexus"><b>Nexus</b> {nexus.get("questions", 0)} otázek, '
+            f'{nexus.get("answered", 0)} odpovědí, navrhl {nexus.get("picks", 0)} věcí → '
+            f'{tested} prošlo jeho backtestem a šlo na papír → '
+            f'<b class="{"up" if won else ""}">{won} vydělalo</b> · {lost} prodělalo'
+            f' · {running} ještě běží</p>')
 
 
 def _heading_date(iso: str) -> str:
@@ -125,6 +143,7 @@ def render(view: dict) -> str:
         when=_heading_date(view["date"]), made=escape(made),
         deep_title=escape((deep.get("title") or "").replace("Deep pass — ", "")),
         deep=_deep(deep),
+        cymetica=_cymetica(view.get("cymetica") or {}),
         tiles="".join(_tile(s) for s in view.get("sectors") or []),
         nexus=_nexus(view.get("nexus") or {}),
         overnight=_list(view.get("overnight") or [],
@@ -234,6 +253,11 @@ footer code {{ font-family: var(--mono); }}
     <h1>Laborka přes noc</h1>
     <p class="meta">sestaveno v {made} · papírové obchody, čísla po poplatcích</p>
   </header>
+
+  <section>
+    <h2>Cymetica přes noc</h2>
+    {cymetica}
+  </section>
 
   <section>
     <h2>Deep pass <span>{deep_title}</span></h2>
