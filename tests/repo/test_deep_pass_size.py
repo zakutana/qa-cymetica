@@ -214,14 +214,16 @@ def test_the_report_is_ten_lines_plus_what_waits_for_them():
             theirs += 1
     assert len(lines) - theirs <= 10, (len(lines), theirs)
 
-    # And the 7:00 report still reads it: what was fixed, what was sent,
-    # what waits (a 1c reader found the short form had dropped the first two
-    # headings qa/morning.py reads, silently).
+    # And the 7:00 report still reads it: what was fixed and what was sent
+    # (a 1c reader found the short form had dropped the first two headings
+    # qa/morning.py reads, silently). What waits is no longer in the report:
+    # the operator's feedback of 2026-09-26 (commit cfef7f3a) took "Čeká na
+    # tebe" out of it; DEEP-PASS.md still carries the section for the pass.
     sys.path.insert(0, str(REPO))
     from qa import morning
 
     kinds = {line["kind"] for line in morning.deep_pass(text)["lines"]}
-    assert kinds == {"fixed", "sent", "waiting"}, kinds
+    assert kinds == {"fixed", "sent"}, kinds
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
