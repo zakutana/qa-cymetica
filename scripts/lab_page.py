@@ -697,10 +697,16 @@ def build_rooms() -> dict:
                                      "exit_reason", "executed_at", "closed_at")})
     # Switched on at one moment and stopped by itself at a later one: the
     # newest reading of whether it trades is the one that is true.
+    from qa import lab as qa_lab
+
+    every_stop = qa_lab.bot_stops(clone_rows, sampled)
     for owner in bots.values():
         known = [mark for mark in owner["marks"] if mark[1] is not None]
         if known:
             owner["bot"]["trading"] = max(known, key=lambda mark: mark[0])[1]
+        owner["bot"]["stop"] = _current_stop(
+            owner["bot"]["instance"], clone_rows, sampled, owner["bot"]["trading"],
+            stops=every_stop)
         owner["bot"]["activity"].sort(key=lambda a: str(a.get("executed_at") or ""),
                                       reverse=True)
 
@@ -986,7 +992,52 @@ def _group(report_room: dict, panel: dict) -> str:
         return "archive"
     if (panel.get("verdict") or {}).get("verdict") or panel.get("status") == "stopped":
         return "done"
+    if _bots_stopped(panel):
+        return "done"
     return "live"
+
+
+def _current_stop(instance: str, clone_rows, samples, trading,
+                  stops: list[dict] | None = None) -> dict | None:
+    """Why one bot stopped: {"cause", "pct"} from qa.lab.bot_stops, its newest
+    stop, and only while the bot's newest reading says it is not trading -- a
+    stop followed by a restart is not a stop. `stops` is bot_stops already
+    computed, so a page of many bots reads the diaries once."""
+    from qa import lab as qa_lab
+
+    if trading is not False:
+        return None
+    if stops is None:
+        stops = qa_lab.bot_stops(clone_rows, samples)
+    mine = [s for s in stops if s["instance"] == str(instance)]
+    return ({"cause": mine[-1]["cause"], "pct": mine[-1]["profit_pct"]}
+            if mine else None)
+
+
+def _bots_stopped(panel: dict) -> list[dict]:
+    """The stops of a room whose every bot the platform stopped, else [].
+
+    A paper bot is paused by its own stop-loss or take-profit (Cymetica's
+    answer to MSG-0060, 2026-09-25), and what it made cannot change after.
+    A bot we paused, one never switched on and one still trading each leave
+    the room live."""
+    clones = panel.get("clones") or []
+    stops = [c.get("stop") for c in clones]
+    if clones and all(c.get("trading") is False and s and s.get("cause") != "ours"
+                      for c, s in zip(clones, stops)):
+        return stops
+    return []
+
+
+def _stop_reason(stops: list[dict]) -> str:
+    if len(stops) > 1:
+        return f"all {len(stops)} stopped"
+    pct = stops[0].get("pct")
+    if pct is None or pct == 0:
+        return "stopped by itself"
+    pct = round(pct, 1)
+    shown = _signed(pct, 0 if pct == round(pct) else 1)
+    return f"{'take-profit' if pct > 0 else 'stop-loss'} {shown}%"
 
 
 def _reason(group: str, panel: dict) -> str | None:
@@ -1011,10 +1062,8 @@ def _reason(group: str, panel: dict) -> str | None:
     if name == "inconclusive":
         return ("no BTC comparison" if "benchmark" in why
                 else "too little data")
-    clones = panel.get("clones") or []
-    if clones and clones[-1].get("trading") is False and panel.get("status") == "running":
-        return "stopped by itself"
-    return None
+    stops = _bots_stopped(panel)
+    return _stop_reason(stops) if stops and panel.get("status") == "running" else None
 
 
 def _experiment(rid: str, sector: str, report_room: dict, panel: dict,

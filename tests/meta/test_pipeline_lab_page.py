@@ -76,6 +76,7 @@ def _rooms_view() -> dict:
                          "verdict": None, "legs": [], "trades": [],
                          "backtests": [], "invested": 240.0,
                          "clones": [{"funded": 240.0, "trading": False,
+                                     "stop": {"cause": "unexplained", "pct": 3.0},
                                      "balance": 247.2,
                                      "samples": [{"at": "2026-09-23T02:00:00+00:00",
                                                   "pnl": 24.0},
@@ -162,9 +163,17 @@ def test_each_experiment_lands_in_its_sector_and_its_group():
         "archive", "nothing bought")
     assert by_id["STR-0004"]["group"] == "done"
     assert by_id["STR-0004"]["reason"] == "drawdown 11.8% past 10% limit"
-    assert (by_id["STR-0003"]["sector"], by_id["STR-0003"]["reason"]) == (
-        "bots", "stopped by itself")
+    # A bot that hit its own take-profit is over: not "live" for two more
+    # days, and the reason says which limit it hit (2026-09-26).
+    assert (by_id["STR-0003"]["sector"], by_id["STR-0003"]["group"],
+            by_id["STR-0003"]["reason"]) == ("bots", "done", "take-profit +3%")
     assert by_id["STR-0003"]["trading"] is False
+    # The rest of the stopped-bot rule lives in helpers below, not tests of
+    # their own: tests/meta is held to a ceiling.
+    _check_a_bot_that_stopped_itself_is_done_and_says_which_limit_it_hit()
+    _check_a_bot_still_trading_or_paused_by_us_or_never_started_stays_live()
+    _check_a_batch_room_is_done_only_when_every_bot_in_it_has_stopped()
+    _check_the_stop_a_clone_carries_is_the_diaries_and_only_while_it_is_stopped()
     for e in by_id.values():
         assert not e["reason"] or len(e["reason"]) <= 40, e["reason"]
 
@@ -336,6 +345,8 @@ def test_a_room_of_ours_says_ours_and_never_ranks_above_his(tmp_path):
     OUR-...). The page says so -- "ours", not "idea OUR-0001" -- and ranks
     it after his, whatever it earned."""
     rooms_view, report = _rooms_view(), _report()
+    # Ranking is within a tab: both rooms must be live, so his bot still trades.
+    rooms_view["panels"]["STR-0003"]["clones"][0].update(trading=True, stop=None)
     rooms_view["rooms"].append({"id": "STR-0006", "kind": "strategy",
                                 "title": "Bollinger Bandit · SL 5",
                                 "origin": "OUR-0001", "status": "running"})
@@ -364,8 +375,8 @@ def test_a_room_of_ours_says_ours_and_never_ranks_above_his(tmp_path):
 def test_the_bots_room_says_whether_each_bot_trades(tmp_path):
     room = _drawn(tmp_path, "bots", after='window.labShow("bots");').get("room", "")
     # A bot that stopped by itself says so once -- its reason -- rather than
-    # "idle" and "stopped by itself" side by side.
-    assert "Bollinger Bandit" in room and "stopped by itself" in room
+    # "idle" and the reason side by side.
+    assert "Bollinger Bandit" in room and "take-profit +3%" in room
     assert ">idle<" not in room
 
     # And the other two answers, which the fixture never drew (deep pass
@@ -376,7 +387,8 @@ def test_the_bots_room_says_whether_each_bot_trades(tmp_path):
         bots = [e for e in view["experiments"] if e.get("trading") is not None]
         assert bots, "the fixture holds no bot experiment to draw"
         for e in bots:
-            e.update(trading=trading, reason=None)
+            # Only a live room draws the word; the fixture's bot is done now.
+            e.update(trading=trading, reason=None, group="live")
         code, err, captured = _run_page(_node(), tmp_path / f"bots-{trading}", view,
                                         after='window.labShow("bots");',
                                         page=_lab_page())
@@ -475,3 +487,72 @@ def test_a_memecoin_room_with_nothing_measured_yet_says_so(tmp_path):
                                     page=_lab_page())
     assert code == 0, err[:900]
     assert "No signal has had" in captured.get("room", "")
+
+
+def _bot_room(*clones):
+    """STR-0003 holding these clones, drawn through lab_view."""
+    rooms = _rooms_view()
+    rooms["panels"]["STR-0003"]["clones"] = [
+        {"funded": 240.0, "balance": 240.0, "samples": [], **c} for c in clones]
+    view = _lab_page().lab_view(rooms, _report(), CHANNEL, FOMO, now=NOW)
+    return {e["id"]: e for e in view["experiments"]}["STR-0003"]
+
+
+def _check_a_bot_that_stopped_itself_is_done_and_says_which_limit_it_hit():
+    """2026-09-26: the Live tab held eight bots that no longer traded, three of
+    them in profit. Cymetica's answer to MSG-0060: the platform pauses a paper
+    bot at its own stop-loss or take-profit. A stopped bot's result cannot
+    change, so it is done, and its reason is the limit and the result."""
+    take = _bot_room({"trading": False, "stop": {"cause": "unexplained", "pct": 29.0}})
+    assert (take["group"], take["reason"]) == ("done", "take-profit +29%")
+    assert take["left_days"] is None, "no days left on a test that is over"
+    loss = _bot_room({"trading": False, "stop": {"cause": "their_guard", "pct": -10.0}})
+    assert (loss["group"], loss["reason"]) == ("done", "stop-loss −10%")
+    assert _bot_room({"trading": False, "stop": {"cause": "their_guard",
+                                                 "pct": -19.19}})["reason"] == "stop-loss −19.2%"
+    flat = _bot_room({"trading": False, "stop": {"cause": "unexplained", "pct": None}})
+    assert (flat["group"], flat["reason"]) == ("done", "stopped by itself")
+
+
+def _check_a_bot_still_trading_or_paused_by_us_or_never_started_stays_live():
+    """Only a stop that was not ours ends the test. A bot we paused is ours to
+    resume; one never switched on has no stop; one trading has none yet."""
+    for clone in ({"trading": True, "stop": None},
+                  {"trading": False, "stop": None},
+                  {"trading": False, "stop": {"cause": "ours", "pct": 0.0}}):
+        room = _bot_room(clone)
+        assert room["group"] == "live", clone
+        assert room["reason"] is None, (clone, room["reason"])
+
+
+def _check_a_batch_room_is_done_only_when_every_bot_in_it_has_stopped():
+    """Head-to-head bots, batch 1 holds several clones: one that stopped
+    while the others trade does not end the room."""
+    stopped = {"trading": False, "stop": {"cause": "unexplained", "pct": 9.0}}
+    running = {"trading": True, "stop": None}
+    assert _bot_room(stopped, running)["group"] == "live"
+    room = _bot_room(stopped, {"trading": False,
+                               "stop": {"cause": "their_guard", "pct": -10.0}})
+    assert (room["group"], room["reason"]) == ("done", "all 2 stopped")
+
+
+def _check_the_stop_a_clone_carries_is_the_diaries_and_only_while_it_is_stopped():
+    """`stop` on a clone is what qa.lab.bot_stops finds, and only while the
+    bot's newest reading says it is not trading: a stop followed by a
+    restart is not a stop."""
+    page = _lab_page()
+    rows = [{"id": "CLN-1", "type": "intent", "kind": "fund", "instance_id": "i1",
+             "at": "2026-09-24T18:00:00+00:00", "amount": 100.0},
+            {"id": "CLN-1", "type": "outcome", "outcome": "accepted",
+             "at": "2026-09-24T18:00:01+00:00"},
+            {"id": "CLN-2", "type": "intent", "kind": "enable", "instance_id": "i1",
+             "at": "2026-09-24T18:01:00+00:00"},
+            {"id": "CLN-2", "type": "outcome", "outcome": "accepted",
+             "at": "2026-09-24T18:01:01+00:00"}]
+    samples = [{"type": "sample", "kind": "bot", "instance_id": "i1",
+                "at": "2026-09-24T19:00:00+00:00", "is_trading": False,
+                "total_profit_usdc": 29.0}]
+    stop = page._current_stop("i1", rows, samples, trading=False)
+    assert stop["cause"] == "unexplained" and stop["pct"] == pytest.approx(29.0)
+    assert page._current_stop("i1", rows, samples, trading=True) is None
+    assert page._current_stop("other", rows, samples, trading=False) is None
