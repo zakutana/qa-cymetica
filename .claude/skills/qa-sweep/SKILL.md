@@ -147,8 +147,12 @@ Do not skip steps. Each one exists because skipping it produced a wrong page.
 5. **Render and check.**
    ```
    python scripts/render.py
+   python scripts/prune_runs.py --apply     # uncited captures older than 3 days
    python -m pytest tests/repo -q
    ```
+   The prune is here because evidence on disk crossed its 1 GB ceiling on
+   2026-09-26 after a day of heavy sweeps, and `test_process_dna` went red
+   for a reason only a prune fixes. It deletes by name and prints why.
 
 6. **Commit.** That is the whole of it. The console is served locally by
    `scripts/serve.py`, which watches `state/` and pushes the change to the

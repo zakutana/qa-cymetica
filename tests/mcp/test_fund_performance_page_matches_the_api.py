@@ -49,7 +49,8 @@ ROW = re.compile(r"<tr[^>]*>\s*<td class=\"rk\">(\d+)</td>(.*?)</tr>", re.S)
 NAME = re.compile(r"<td class=\"fund\">(.*?)</td>", re.S)
 SLEEVE = re.compile(r"<td class=\"sleeve\">(.*?)<span", re.S)
 STATUS = re.compile(r"<span class=\"st [^\"]*\">(.*?)</span>", re.S)
-NUMS = re.compile(r"<td class=\"num\"[^>]*>(.*?)</td>", re.S)
+# `td.num` and, since their ET-27387, `td.num.idx` for the index cell.
+NUMS = re.compile(r"<td class=\"num(?: idx)?\"[^>]*>(.*?)</td>", re.S)
 FIGURE = re.compile(r"([+\-−]?[\d,]*\.?\d+)")
 
 

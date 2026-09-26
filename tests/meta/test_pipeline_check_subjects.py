@@ -667,6 +667,16 @@ def test_a_card_that_is_closed_on_rest_and_open_on_mcp_fails():
     (row,) = rows_of(fta)
     assert (row["name"], row["status"], row["index"], row["return"]) == (
         "FTA Fund — Stocks", "standing", 187.31, -2.3), row
+    # 2026-09-26: after their ET-27387 the index cell is `td.num.idx`. The
+    # first version matched class="num" exactly, missed it and read the
+    # RETURN as the index -- 53 false disagreements on 27 rows.
+    idx = ('<tr class="live"><td class="rk">01</td><td class="fund"><a href="/x">Privacy</a></td>'
+           '<td class="sleeve">Community AIB<span class="dir">long</span></td>'
+           '<td class="status"><span class="st live">live</span></td>'
+           '<td class="num idx" id="fp-x-rk-index">$152.50</td>'
+           '<td class="num" id="fp-x-rk-return"><span class="pos">+119.65%</span></td></tr>')
+    (row,) = rows_of(idx)
+    assert (row["index"], row["return"]) == (152.5, 119.65), row
 
     # And what their pages read: a template stays a template, an action is
     # never a candidate, plumbing is not, and a templated doc path covers it.

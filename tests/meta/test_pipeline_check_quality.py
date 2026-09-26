@@ -898,6 +898,35 @@ def test_a_requirement_split_into_numbered_items_is_not_a_dropped_one():
     assert dropped("Export any screen to CSV without a paid tier.",
                    "BB-SPEC\n  1. Export any screen to CSV without a paid tier.\n") == []
 
+    # The spec check (test_build_it_better_spec_keeps_the_request) on
+    # ET-26924, 2026-09-26: the writer now leaves withdrawn and repeated
+    # BB-CHANGEs out of the amendments and says how many in a footer. That
+    # is accounting, not a loss -- but only while the count covers what is
+    # missing, and never for the newest change.
+    from tests.rest.test_build_it_better_spec_keeps_the_request import judge
+
+    def record(footer, carried, changes=("first change", "second change", "third change")):
+        spec = ("BB-SPEC for App\n  1. Do one thing.\n\nYour changes (BB-CHANGE) -- scope:\n"
+                + "".join(f"  C{i}. {c}\n" for i, c in enumerate(carried, 1)) + footer)
+        stamp = lambda n: f"2026-09-24T10:0{n}:00+00:00"
+        return {"app_name": "App", "messages": [
+            {"kind": "BB-REQUEST", "at": stamp(0), "body": "App: Do one thing."},
+            *[{"kind": "BB-CHANGE", "at": stamp(i + 1), "body": c}
+              for i, c in enumerate(changes)],
+            {"kind": "BB-SPEC", "at": stamp(9), "body": spec}]}
+
+    said = "(2 earlier BB-CHANGE messages withdrawn or repeated by the requester -- not part of the scope.)\n"
+    assert judge(record(said, ["third change"]))["changes_missing"] == [], (
+        "two withdrawn changes, counted by the spec and both older than the "
+        "carried one, read as dropped")
+    assert len(judge(record("(1 earlier BB-CHANGE message withdrawn or repeated.)\n",
+                            ["third change"]))["changes_missing"]) == 2, (
+        "the spec counts fewer than it left out and the excess passed")
+    assert judge(record(said, ["second change"]))["changes_missing"] == [
+        "third change"], "the newest change was excused as withdrawn"
+    assert len(judge(record("", ["third change"]))["changes_missing"]) == 2, (
+        "with no footer a missing change is a dropped change again")
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_route_their_ai_names_is_matched_against_the_template_not_the_text(

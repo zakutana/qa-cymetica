@@ -94,6 +94,7 @@ OURS = frozenset({"ET-26036"})
 ITEM = re.compile(r"^\s+(\d+)\.\s+(.*\S)\s*$")
 AMENDMENT = re.compile(r"^\s+C(\d+)\.\s+(.*\S)\s*$")
 CHANGES_HEADING = "Your changes"
+WITHDRAWN = re.compile(r"\((\d+) earlier BB-CHANGE messages? withdrawn or repeated")
 
 
 def _norm(text: str) -> str:
@@ -213,6 +214,16 @@ def judge(record: dict) -> dict:
     pending = len(changes) - len(due)
     missing = [_norm(m.get("body")) for m in due
                if _norm(m.get("body")) and _norm(m.get("body")) not in amended]
+    # Since 2026-09-24 (ET-26924) the writer leaves withdrawn and repeated
+    # BB-CHANGEs out of the amendments and says how many in a footer. That is
+    # accounting, not a loss, but only while the count covers what is
+    # missing and never for the newest change, which nothing can have
+    # withdrawn.
+    said = WITHDRAWN.search(str(latest.get("body") or ""))
+    newest = _norm(due[-1].get("body")) if due else ""
+    older = [c for c in missing if c != newest]
+    if said and len(older) <= int(said.group(1)):
+        missing = [c for c in missing if c == newest]
     return {"state": "read", "lost": lines_lost(request, items),
             "changes_missing": missing, "changes_checked": len(due),
             "changes_pending": pending, "lines": len(lines_of(request)),
