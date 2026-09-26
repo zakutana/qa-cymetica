@@ -3591,6 +3591,35 @@ reports:
       /openapi-public.json or no longer answers an anonymous read. GETs
       only.
 
+  - key: prices-status-codes-undeclared
+    findings: [CYM-prices-status-codes-undeclared]
+    severity: low
+    category: documentation
+    url: https://cymetica.com/openapi-public.json
+    title: "GET /api/v1/prices/{asset} answers a status its own openapi entry never declares"
+    expected: >
+      A path's machine-readable `responses` object in /openapi-public.json --
+      not just the free-text description next to it -- lists every status
+      code the endpoint can actually return, so a schema-driven client has a
+      branch for each one.
+    actual: >
+      The path's own description reads "Current real price for an asset. 404
+      unknown asset, 503 no real price available." Its `responses` object
+      declares only 200 and 422. Asking for a made-up asset answers HTTP 404
+      today, with a structured body -- exactly the behaviour the description
+      promises and exactly the code `responses` never lists.
+    steps:
+      - 'GET https://cymetica.com/openapi-public.json -> paths["/api/v1/prices/{asset}"].get.responses has keys 200, 422 only'
+      - 'GET https://cymetica.com/api/v1/prices/NOTAREALASSETXYZ -> HTTP 404, {"detail":{"error":{"code":"PRICE_NOT_FOUND",...}}}'
+    body: >
+      Small on its own, but it is the newly-documented surface from last
+      night's deploy: an agent that generates a handler from the schema's
+      status-code list, the way /build tells it to, has no branch for the
+      code this endpoint hands back right now. Adding 404 (and 503, per your
+      own description) to the responses object would close it. We did not
+      force the 503 case -- one confirmed, undeclared code already makes the
+      point.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in
