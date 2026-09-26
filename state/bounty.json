@@ -1,6 +1,6 @@
 {
-  "fetched_at": "2026-09-25T22:52:50+00:00",
-  "total": 96,
+  "fetched_at": "2026-09-26T00:27:33+00:00",
+  "total": 97,
   "statuses": {
     "paid": 19,
     "fixed": 1
@@ -25,8 +25,8 @@
   "our_reports": {
     "endpoint": "GET /api/v1/bounty/my-reports?wallet_address=<addr>",
     "klass": "ok",
-    "read_at": "2026-09-26T00:05:18+00:00",
-    "evidence_id": "8342b73748d6bfc250ed7446fbbc2f91a5281bfcdf240bd58c881530776d7e14",
+    "read_at": "2026-09-26T00:27:26+00:00",
+    "evidence_id": "12c249fdb6ae88027e1a33f5f45c17ac2774691db0a59e513765ab58cba556b6",
     "rows_returned": 86,
     "server_total": 86,
     "total": 86,
@@ -1589,11 +1589,11 @@
   },
   "qa_tracker": {
     "source": "https://cymetica.com/leaderboard/bugs (embedded allBugs)",
-    "total": 170,
+    "total": 171,
     "statuses": {
       "qa_testing": 2,
       "implementing": 2,
-      "completed": 115,
+      "completed": 116,
       "resolved": 25,
       "rejected": 2,
       "pending": 12,
@@ -1601,11 +1601,11 @@
     },
     "source_channels": {
       "web": 74,
-      "bounty": 96
+      "bounty": 97
     },
     "usernames": {
       "Maxorelaxo": 2,
-      "expire76": 115,
+      "expire76": 116,
       "Crypto42day": 2,
       "tonybugs0439": 5,
       "joebloggs": 12,
@@ -1718,6 +1718,7 @@
       "a card reading tradeable_now true answers a paper buy with http 500 \"buy failed\"",
       "fta fund -- cryptos publishes a return from before it held anything, while the methodology says nothing is backfilled",
       "product trend radar ranks the same product on two rows, splitting its mentions between them",
+      "get_deep_answer serves a finished investigation with its start cut off, mid-word",
       "the live build board's \"building now\" tile counts queued requests, so it contradicts the building column directly beneath it",
       "build it better missed its own 24-hour deadline on et-26036: the clock expired with the request still queued and nothing built",
       "llms.txt says the agent returns board is ranked by verified return x replications; it is ranked by age, and nothing on it is verified",
@@ -1797,13 +1798,13 @@
       "critical: my positions p&l shows -$3.15 for a $0.10 position",
       "shares preview rounds to 1 decimal place instead of 2"
     ],
-    "has_linear_links": 61
+    "has_linear_links": 62
   },
   "a2a_inbox": {
     "klass": "ok",
     "rows_returned": 50,
     "new": [],
-    "at": "2026-09-25T22:52:49+00:00"
+    "at": "2026-09-26T00:27:31+00:00"
   },
   "closed": 1,
   "closed_without_recorded_evidence": 0,
@@ -1845,7 +1846,7 @@
       "fixed_at": "2026-09-25T21:04:17.485383",
       "validated_at": "2026-09-25T21:04:17.485383",
       "triaged_at": "2026-09-25T21:04:17.485383",
-      "status_notes": "[2026-09-25T21:04:17+00:00] Resolved via ticket ET-27309: Fund Launcher copy was stale: community funds are live and take real USDC (operator reversed paper-only 2026-09-22). templates/fund_builder.html now says 'Community funds are live: anyone can buy in with real USDC from the fund's page', the kv reads 'Live — real USDC', the paper reminders are removed and the post-create JS is data-driven on trading_mode. Live in d12372c9a.",
+      "status_notes": "[2026-09-25T21:04:17+00:00] Resolved via ticket ET-27309: Fund Launcher copy was stale: community funds are live and take real USDC (operator reversed paper-only 2026-09-22). templates/fund_builder.html now says 'Community funds are live: anyone can buy in with real USDC from the fund's page', the kv reads 'Live — real USDC', the paper reminders are removed and the post-create JS is data-driven on trading_mode. Live in d12372c9a.\n[reporter-verification PASS 2026-09-25 23:29 UTC by expire76 test_run=run-20260925T225326Z-b7f75212]",
       "ticket_url": "https://cymetica.com/admin/centcom/issues/27309",
       "fix_pr_url": null,
       "reward_amount": 1000.0,
@@ -1863,7 +1864,7 @@
       "fixed_at": "2026-09-25T15:46:06.394556",
       "validated_at": "2026-09-25T15:46:06.394556",
       "triaged_at": "2026-09-25T15:46:06.394556",
-      "status_notes": "[2026-09-25T15:46:06+00:00] Resolved via ticket ET-27252: Confirmed, fixed live @e2eb6f9e5f. Cause: pricer merged equity quotes into the shared price map, so a stock leg on any card overwrote the crypto homonym (TRX Gold vs TRON +142%, Banco de Chile vs Bitcoin Cash -85%); 231 live cards hit. Fix: per-card, per-asset-class price view (tests/test_index_pricer_homonym_legs.py). Both cards back at ~99.5 with continuity; 31,226 artefact snapshot rows removed (backup table kept). Only paper positions were open in the windows.\n[reporter-verification PASS 2026-09-25 18:44 UTC by expire76 test_run=run-20260925T183730Z-4813570f]",
+      "status_notes": "[2026-09-25T15:46:06+00:00] Resolved via ticket ET-27252: Confirmed, fixed live @e2eb6f9e5f. Cause: pricer merged equity quotes into the shared price map, so a stock leg on any card overwrote the crypto homonym (TRX Gold vs TRON +142%, Banco de Chile vs Bitcoin Cash -85%); 231 live cards hit. Fix: per-card, per-asset-class price view (tests/test_index_pricer_homonym_legs.py). Both cards back at ~99.5 with continuity; 31,226 artefact snapshot rows removed (backup table kept). Only paper positions were open in the windows.\n[reporter-verification PASS 2026-09-25 18:44 UTC by expire76 test_run=run-20260925T183730Z-4813570f]\n[reporter-verification PASS 2026-09-25 23:29 UTC by expire76 test_run=run-20260925T225326Z-b7f75212]",
       "ticket_url": "https://cymetica.com/admin/centcom/issues/27252",
       "fix_pr_url": null,
       "reward_amount": 1000.0,
@@ -1917,7 +1918,7 @@
       "fixed_at": "2026-09-24T11:55:44.457819",
       "validated_at": "2026-09-24T11:55:44.457819",
       "triaged_at": "2026-09-24T11:55:44.457819",
-      "status_notes": "[2026-09-24T11:55:44+00:00] Resolved via ticket ET-26931: Fixed and live: POST /api/v1/head-to-head, GET /api/v1/head-to-head/sides and GET /api/v1/head-to-head/mine are now in /openapi-public.json (allowlist + method map, with route descriptions) and /llms.txt has a \"Head-to-Head Paper Matchups\" section next to Clone Bots. GET /{slug} and POST /{slug}/refresh act on one already-known matchup and stay unpublished by design. Pinned by tests/test_openapi_public_head_to_head_26931.py.\n[reporter-verification PASS 2026-09-24 22:41 UTC by expire76 test_run=run-20260924T220050Z-24d08821]",
+      "status_notes": "[2026-09-24T11:55:44+00:00] Resolved via ticket ET-26931: Fixed and live: POST /api/v1/head-to-head, GET /api/v1/head-to-head/sides and GET /api/v1/head-to-head/mine are now in /openapi-public.json (allowlist + method map, with route descriptions) and /llms.txt has a \"Head-to-Head Paper Matchups\" section next to Clone Bots. GET /{slug} and POST /{slug}/refresh act on one already-known matchup and stay unpublished by design. Pinned by tests/test_openapi_public_head_to_head_26931.py.\n[reporter-verification PASS 2026-09-24 22:41 UTC by expire76 test_run=run-20260924T220050Z-24d08821]\n[reporter-verification PASS 2026-09-25 23:29 UTC by expire76 test_run=run-20260925T225326Z-b7f75212]",
       "ticket_url": "https://cymetica.com/admin/centcom/issues/26931",
       "fix_pr_url": null,
       "reward_amount": 1000.0,
@@ -1971,7 +1972,7 @@
       "fixed_at": "2026-09-23T02:41:51.420190",
       "validated_at": "2026-09-23T02:41:51.420190",
       "triaged_at": "2026-09-23T02:41:51.420190",
-      "status_notes": "[2026-09-23T02:41:51+00:00] Resolved via ticket ET-26558: Fixed in 5a0399fa9, live. get_event_card_info (NEXUS + MCP) used status + trading_closes_at only; it now reads the same gate as GET /api/v1/event-cards/{id} (card_trade_status incl. US market hours), adds trading_blocked_reason and us_market_open, fails closed. Verified live 02:4x UTC, market closed: card a70b8d5e reads tradeable_now=false with the REST reason on both surfaces.\n[reporter-verification PASS 2026-09-24 22:40 UTC by expire76 test_run=run-20260924T220050Z-24d08821]",
+      "status_notes": "[2026-09-23T02:41:51+00:00] Resolved via ticket ET-26558: Fixed in 5a0399fa9, live. get_event_card_info (NEXUS + MCP) used status + trading_closes_at only; it now reads the same gate as GET /api/v1/event-cards/{id} (card_trade_status incl. US market hours), adds trading_blocked_reason and us_market_open, fails closed. Verified live 02:4x UTC, market closed: card a70b8d5e reads tradeable_now=false with the REST reason on both surfaces.\n[reporter-verification PASS 2026-09-24 22:40 UTC by expire76 test_run=run-20260924T220050Z-24d08821]\n[reporter-verification PASS 2026-09-25 23:29 UTC by expire76 test_run=run-20260925T225326Z-b7f75212]",
       "ticket_url": "https://cymetica.com/admin/centcom/issues/26558",
       "fix_pr_url": null,
       "reward_amount": 1000.0,
@@ -2105,6 +2106,24 @@
       "is_duplicate": false
     },
     {
+      "id": 114,
+      "title": "get_deep_answer serves a finished investigation with its start cut off, mid-word",
+      "status": "paid",
+      "hunter_name": "expire76",
+      "severity_reported": "medium",
+      "severity_confirmed": "medium",
+      "created_at": "2026-09-21T08:39:41.454706",
+      "fixed_at": "2026-09-25T23:06:23.474923",
+      "validated_at": "2026-09-25T23:06:23.474923",
+      "triaged_at": "2026-09-25T23:06:23.474923",
+      "status_notes": "[reporter-verification PASS 2026-09-24 22:40 UTC by expire76 test_run=run-20260924T220050Z-24d08821]\n[2026-09-25T23:06:23+00:00] Resolved via ticket ET-26244: Verified live 2026-09-25 23:30 UTC: 0 of the 20 deep jobs finished in the last 72 hours begin with an ellipsis; the only cut answer in the last 7 days is from 09-21 07:36 UTC, before this report. The reporter's own 72-hour check goes green on this window. No stored-answer repair was needed.",
+      "ticket_url": "https://cymetica.com/admin/centcom/issues/26244",
+      "fix_pr_url": null,
+      "reward_amount": 1000.0,
+      "paid_at": "2026-09-25T23:18:33.891761",
+      "is_duplicate": false
+    },
+    {
       "id": 113,
       "title": "The live build board's \"Building now\" tile counts queued requests, so it contradicts the BUILDING column directly beneath it",
       "status": "paid",
@@ -2115,7 +2134,7 @@
       "fixed_at": "2026-09-20T22:27:30.892406",
       "validated_at": "2026-09-20T22:27:30.892406",
       "triaged_at": "2026-09-20T22:27:30.892406",
-      "status_notes": "[reporter-verification PASS 2026-09-20 22:07 UTC by expire76 test_run=run-20260920T214845Z-59a2a541]\n[2026-09-20T22:27:30+00:00] Resolved via ticket ET-26175: Confirmed and fixed (live 05e5b8e7c): the Building now tile summed funded + building, so a queued request counted as building. It now counts builds in progress only. Verified on the live page and API: stats.building=0 with both requests queued.\n[reporter-verification PASS 2026-09-21 20:37 UTC by expire76 test_run=run-20260921T201015Z-b8579867]\n[reporter-verification PASS 2026-09-22 16:02 UTC by expire76 test_run=run-20260922T153451Z-10bb4939]\n[reporter-verification PASS 2026-09-24 22:41 UTC by expire76 test_run=run-20260924T220050Z-24d08821]",
+      "status_notes": "[reporter-verification PASS 2026-09-20 22:07 UTC by expire76 test_run=run-20260920T214845Z-59a2a541]\n[2026-09-20T22:27:30+00:00] Resolved via ticket ET-26175: Confirmed and fixed (live 05e5b8e7c): the Building now tile summed funded + building, so a queued request counted as building. It now counts builds in progress only. Verified on the live page and API: stats.building=0 with both requests queued.\n[reporter-verification PASS 2026-09-21 20:37 UTC by expire76 test_run=run-20260921T201015Z-b8579867]\n[reporter-verification PASS 2026-09-22 16:02 UTC by expire76 test_run=run-20260922T153451Z-10bb4939]\n[reporter-verification PASS 2026-09-24 22:41 UTC by expire76 test_run=run-20260924T220050Z-24d08821]\n[reporter-verification PASS 2026-09-25 23:29 UTC by expire76 test_run=run-20260925T225326Z-b7f75212]",
       "ticket_url": "https://cymetica.com/admin/centcom/issues/26175",
       "fix_pr_url": null,
       "reward_amount": 1000.0,
@@ -2133,7 +2152,7 @@
       "fixed_at": "2026-09-20T22:27:31.636107",
       "validated_at": "2026-09-20T22:27:31.636107",
       "triaged_at": "2026-09-20T22:27:31.636107",
-      "status_notes": "[2026-09-20T22:27:31+00:00] Resolved via ticket ET-26174: Confirmed. ET-26036 ran past its 24 h with nothing on the board saying so, because a Build it Better ticket gets an automatic reply and dropped out of the unreplied list sessions work from. Fixed (live 05e5b8e7c): board stats carry `overdue` (live value 1), a late card is labelled past its 24 h and not shipped, and every session start now lists accepted builds with hours left or OVERDUE. The build of ET-26036 itself is tracked on its own ticket and is still owed.\n[reporter-verification PASS 2026-09-24 02:49 UTC by expire76 test_run=run-20260924T020959Z-7d4d6288]",
+      "status_notes": "[2026-09-20T22:27:31+00:00] Resolved via ticket ET-26174: Confirmed. ET-26036 ran past its 24 h with nothing on the board saying so, because a Build it Better ticket gets an automatic reply and dropped out of the unreplied list sessions work from. Fixed (live 05e5b8e7c): board stats carry `overdue` (live value 1), a late card is labelled past its 24 h and not shipped, and every session start now lists accepted builds with hours left or OVERDUE. The build of ET-26036 itself is tracked on its own ticket and is still owed.\n[reporter-verification PASS 2026-09-24 02:49 UTC by expire76 test_run=run-20260924T020959Z-7d4d6288]\n[reporter-verification FAIL 2026-09-25 23:28 UTC by expire76 test_run=run-20260925T225326Z-b7f75212]",
       "ticket_url": "https://cymetica.com/admin/centcom/issues/26174",
       "fix_pr_url": null,
       "reward_amount": 1000.0,
@@ -2157,24 +2176,6 @@
       "reward_amount": 1000.0,
       "paid_at": "2026-09-20T22:34:07.980564",
       "is_duplicate": false
-    },
-    {
-      "id": 110,
-      "title": "/build-stats publishes SINCE 2025-11-23 over session totals that hold only 17 days of February 2026",
-      "status": "paid",
-      "hunter_name": "expire76",
-      "severity_reported": "low",
-      "severity_confirmed": "low",
-      "created_at": "2026-09-20T17:40:40.369702",
-      "fixed_at": "2026-09-20T22:27:32.818106",
-      "validated_at": "2026-09-20T22:27:32.818106",
-      "triaged_at": "2026-09-20T22:27:32.818106",
-      "status_notes": "[reporter-verification PASS 2026-09-20 22:07 UTC by expire76 test_run=run-20260920T214845Z-59a2a541]\n[2026-09-20T22:27:32+00:00] Resolved via ticket ET-26153: Confirmed: /build-stats printed one SINCE date over series with different starts. The API now returns activity_period and commit_period (from/to/days each) and the page shows them separately. Live: activity 2026-01-31..2026-02-16 (17 days), commits 2025-11-23..2026-09-20 (302 days).\n[reporter-verification PASS 2026-09-21 20:37 UTC by expire76 test_run=run-20260921T201015Z-b8579867]",
-      "ticket_url": "https://cymetica.com/admin/centcom/issues/26153",
-      "fix_pr_url": null,
-      "reward_amount": 1000.0,
-      "paid_at": "2026-09-20T22:34:07.980564",
-      "is_duplicate": false
     }
   ],
   "leaderboard": [
@@ -2184,11 +2185,11 @@
       "avatar_url": null,
       "tier": "senior",
       "total_score": 460,
-      "valid_reports": 83,
+      "valid_reports": 84,
       "total_likes": 0,
-      "total_earned": 79000.0,
-      "total_awarded": 79000.0,
-      "total_paid": 79000.0,
+      "total_earned": 80000.0,
+      "total_awarded": 80000.0,
+      "total_paid": 80000.0,
       "reward_currency": "ET10"
     },
     {
@@ -2233,7 +2234,7 @@
   ],
   "creator_rewards": {
     "klass": "ok",
-    "read_at": "2026-09-25T22:52:51+00:00",
+    "read_at": "2026-09-26T00:27:34+00:00",
     "stale_from": null,
     "summary": {
       "paid": 10,
@@ -2243,6 +2244,5 @@
       "et10": 10000,
       "etlp": 10000
     }
-  },
-  "our_reports_refreshed_at": "2026-09-26T00:05:18+00:00"
+  }
 }
