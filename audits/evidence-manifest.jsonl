@@ -1953,6 +1953,7 @@
 {"archive": "evidence-2026-09", "bytes": 148650, "call": "GET https://cymetica.com/signup?", "id": "277139f553cc4832c4f263102284ce9570f8fe86d9ff2c88e78ce8ec1afc36b1", "why": "promised"}
 {"archive": "evidence-2026-09", "bytes": 36826, "call": "GET https://cymetica.com/api/v1/clones/fomo-radar/signals?chain,filter,limit", "id": "2779be6e16129dcb8b58194a6570972741db71590ec2891f05962cfd91def8b1", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 51017, "call": "GET https://cymetica.com/.well-known/mcp.json?", "id": "277a51c95f1c8d245221504ec42bc3fdc2bd8bb3eac50e53218134d0114a8b4e", "why": "row"}
+{"archive": "", "bytes": 4572, "call": "POST https://cymetica.com/api/v1/event-cards/30015006-abff-44b6-bdb0-f659faf4f3f4/sell?", "id": "277b731a834d611d823ef326e0f243052b2c6d9bca23ec7b320a040453836db5", "why": "trade"}
 {"archive": "", "bytes": 240178, "call": "GET https://cymetica.com/fund-performance/aib-cybersecurity?", "id": "278aa234fd5a25924ce92d85790268b970706035dd869d2e71d613a9cf76676a", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 4399, "call": "GET https://cymetica.com/api/v1/bounty/stats?", "id": "278d809e4436aae15da7a858e087ad815fa3e059e746476768a666c7a529900d", "why": "row"}
 {"archive": "", "bytes": 243028, "call": "GET https://cymetica.com/compare?", "id": "279ebad223759912cb7e22b3d04af4e087052433341beeee2cf97a9dc9414272", "why": "row"}
