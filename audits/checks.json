@@ -558,11 +558,12 @@
     },
     "tests/meta/test_pipeline_adapters.py::test_a_refresh_writes_the_section_the_bell_reads": {
       "fingerprints": [
-        "1a32add05d09de39ce9178b90949218ce9b3a5064a2cc64c537f70b151f064ef"
+        "1a32add05d09de39ce9178b90949218ce9b3a5064a2cc64c537f70b151f064ef",
+        "54ac8d74add0bb5c391ca4ab2496e1a37eb4109e705c5b99b96a1e18345d6904"
       ],
-      "at": "2026-09-07T20:50:41+00:00",
-      "run_id": "run-20260907T201230Z-7fee4cf",
-      "gap_claimed": false
+      "at": "2026-09-27T20:40:00+00:00",
+      "run_id": "run-20260927T190820Z-e40accb4",
+      "gap_claimed": true
     },
     "tests/meta/test_pipeline_adapters.py::test_a_refused_ledger_still_leaves_its_attestation_tracked": {
       "fingerprints": [
@@ -807,10 +808,11 @@
     },
     "tests/meta/test_pipeline_check_quality.py::test_the_is_answer_rule_is_self_calibrating_and_still_bites": {
       "fingerprints": [
-        "d205685e14180c281c17223f81a50491dbaa26e55d86c7f688900baafb0a5877"
+        "d205685e14180c281c17223f81a50491dbaa26e55d86c7f688900baafb0a5877",
+        "c80fff4372042146a481dc41b7493e05e4f9cd0eed5ff534ae1e2d488d970102"
       ],
-      "at": "2026-09-07T20:50:41+00:00",
-      "run_id": "run-20260907T201230Z-7fee4cf",
+      "at": "2026-09-27T20:40:00+00:00",
+      "run_id": "run-20260927T190820Z-e40accb4",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_checks.py::test_a_failed_read_is_never_a_value": {
@@ -1246,10 +1248,11 @@
     "tests/meta/test_pipeline_fold.py::test_the_verification_debt_is_keyed_on_the_fingerprint_not_the_run": {
       "fingerprints": [
         "5578aadf023a7ad76f4f0b9f964fb961be2668a4d7062e7aa9b53081b5a12d5d",
-        "08fdc66252a9d12a2153f4eb5e637373cd854a3529ff9c4b1292c630db957dba"
+        "08fdc66252a9d12a2153f4eb5e637373cd854a3529ff9c4b1292c630db957dba",
+        "5778eb8623d5870892c0b60352199679607637b2d378c35bf0ae03ff27e66e96"
       ],
-      "at": "2026-09-08T15:18:57+00:00",
-      "run_id": "run-20260908T150954Z-95f0a70",
+      "at": "2026-09-27T20:40:00+00:00",
+      "run_id": "run-20260927T190820Z-e40accb4",
       "gap_claimed": true
     },
     "tests/meta/test_pipeline_never_fired.py::test_a_mechanism_with_no_occurrences_is_printed_first": {
@@ -1417,11 +1420,12 @@
       "fingerprints": [
         "478608ed850ef89de7571ffcb03735ad7805d29dec9bc27b18a76eef890bd3e9",
         "b61a1201e0e47b2e7d0057887447bac071a3b0a09f3b1e030e72b32c7c6620ce",
-        "13630455b379632aab3c462d9a6353e40c3d907175e4405e28efe87f8f797667"
+        "13630455b379632aab3c462d9a6353e40c3d907175e4405e28efe87f8f797667",
+        "e6225f211505afc62510a7e9104643a9f4795ca8e6feb34c5e0960363435c1b0"
       ],
-      "at": "2026-09-25T20:49:03+00:00",
-      "run_id": "run-20260925T195840Z-d14ceca2",
-      "gap_claimed": true
+      "at": "2026-09-27T20:40:00+00:00",
+      "run_id": "run-20260927T190820Z-e40accb4",
+      "gap_claimed": false
     },
     "tests/meta/test_pipeline_recorder.py::test_totals_match_pytest_summary": {
       "fingerprints": [
@@ -2036,10 +2040,11 @@
     "tests/meta/test_pipeline_verify.py::test_a_pass_on_an_unrepaired_check_still_claims_the_same_definition": {
       "fingerprints": [
         "283473bc8299815b81d0c087926789e21b6e8ebaa5f414bedf35a85d9a97faf0",
-        "8e6b32ba7860fedbe20d01bb77577a60683cfb2909b962d31d8f781ab9cfcfd6"
+        "8e6b32ba7860fedbe20d01bb77577a60683cfb2909b962d31d8f781ab9cfcfd6",
+        "baf1c735f96b79926c64d69ed78813206611990b7d2e5d06972f41b275082627"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
+      "at": "2026-09-27T20:40:00+00:00",
+      "run_id": "run-20260927T190820Z-e40accb4",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_verify.py::test_a_pass_on_a_repaired_check_says_so_and_carries_the_reason": {
@@ -5056,10 +5061,11 @@
     },
     "tests/meta/test_pipeline_render.py::test_the_rewards_come_from_their_tracker": {
       "fingerprints": [
-        "f5a220c4cd1c664d82bd559a95dc6b7dfb5dbbe5434fab5ddce0013cf76f27c4"
+        "f5a220c4cd1c664d82bd559a95dc6b7dfb5dbbe5434fab5ddce0013cf76f27c4",
+        "81092cf9d4ed613666454c95d1674b545af16a1b3e55aea6fef8f875e6fe29fa"
       ],
-      "at": "2026-09-11T16:42:43+00:00",
-      "run_id": "run-20260911T151835Z-31ec9b3e",
+      "at": "2026-09-27T20:40:00+00:00",
+      "run_id": "run-20260927T190820Z-e40accb4",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_render.py::test_the_stats_panel_draws_without_throwing": {
@@ -6987,10 +6993,11 @@
         "d777b4c10248e4996fb74200d4f49f7fbfa84b07cb033e317878347c8e45bba4",
         "21d969aec2adffd37c435b0d2c180d11f1d2d80f5af4e03e61a8df987b060795",
         "1a2d0227d94946cfbfb3e39de6b632bc76765f08c40f394f48b7f97e929efa32",
-        "4b8ed46c16fec21ef94a60aea58a0f22d04c10d8c838d0de668ce0e0a520be76"
+        "4b8ed46c16fec21ef94a60aea58a0f22d04c10d8c838d0de668ce0e0a520be76",
+        "eb965edf9b828e4aae79162721f366ba2660e492e53a98f0b1011dffb31f626a"
       ],
-      "at": "2026-09-25T20:49:03+00:00",
-      "run_id": "run-20260925T195840Z-d14ceca2",
+      "at": "2026-09-27T20:40:00+00:00",
+      "run_id": "run-20260927T190820Z-e40accb4",
       "gap_claimed": true
     },
     "tests/meta/test_pipeline_lab.py::test_the_nights_own_doors_are_the_real_ones": {
@@ -7877,11 +7884,12 @@
       "fingerprints": [
         "6daa4391e8efe2923d6d64fcf5b5afe650951bc115e12ba471954ccb39729fef",
         "e8c3f072177472a177a60cc36c3ad45271783288bc2fa96faccb98e1956c42c0",
-        "d135ee2f1ca0f1514606a03e47120a244216e8bfcb3ce197f12fd4788e74367c"
+        "d135ee2f1ca0f1514606a03e47120a244216e8bfcb3ce197f12fd4788e74367c",
+        "1d6729146905e956dbb072d9c9f153efbb6c191d7c9e3e0a40ffe2d0ebd1975a"
       ],
-      "at": "2026-09-25T20:49:03+00:00",
-      "run_id": "run-20260924T220050Z-24d08821",
-      "gap_claimed": true
+      "at": "2026-09-27T20:40:00+00:00",
+      "run_id": "run-20260925T225326Z-b7f75212",
+      "gap_claimed": false
     },
     "tests/repo/test_reminders.py::test_lab_facts_counts_only_their_side_of_the_streak": {
       "fingerprints": [
@@ -8403,11 +8411,12 @@
         "a7ec6e08fc767dbefb98eaaa95b6243b8660355bf6bcb2b595ea56fa0b04e3ac",
         "cb5eb255831b44fcece253545f60e9ed08ca514c52d3978cc423bb5176d09fad",
         "be95aff1e95936d8e54ddcadcb31e52ab4cb154d6bce18b2ce23bdf2b1805706",
-        "b5bfbed4193085228d2e6050b61f8bc7bfdb4740765583de61d5804e8aa3908c"
+        "b5bfbed4193085228d2e6050b61f8bc7bfdb4740765583de61d5804e8aa3908c",
+        "c61f9e8848aab205a9a543bd633ac8263a428f75e80dd7dec0fd1c7e36daf56a"
       ],
-      "at": "2026-09-25T20:49:03+00:00",
-      "run_id": "run-20260925T195840Z-d14ceca2",
-      "gap_claimed": true
+      "at": "2026-09-27T20:40:00+00:00",
+      "run_id": "run-20260927T190820Z-e40accb4",
+      "gap_claimed": false
     },
     "tests/meta/test_pipeline_build_it_better.py::test_a_socket_named_by_its_path_or_with_a_trailing_slash_is_named": {
       "fingerprints": [
@@ -8454,10 +8463,11 @@
     "tests/meta/test_pipeline_check_quality.py::test_a_requirement_split_into_numbered_items_is_not_a_dropped_one": {
       "fingerprints": [
         "c78c38de1a8480efca6bb81e350c216652711506359fd3af9c2282f9d6832270",
-        "c6a1bc85830354ad6978b922e34604500cbf5d778e480ce71d88327e05eaf367"
+        "c6a1bc85830354ad6978b922e34604500cbf5d778e480ce71d88327e05eaf367",
+        "5a745f766fbd8ed0f654cac9053a3131c4cd8fff15f569ebe08ea5d4afa11a39"
       ],
-      "at": "2026-09-22T21:00:49+00:00",
-      "run_id": "run-20260922T190547Z-47962a20",
+      "at": "2026-09-27T20:40:00+00:00",
+      "run_id": "run-20260927T190820Z-e40accb4",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_check_quality.py::test_a_route_their_ai_names_is_matched_against_the_template_not_the_text": {
@@ -9194,11 +9204,12 @@
       "fingerprints": [
         "cae138450ffac366cdea3d8cf5358e2f62568a6c430d1f1a90cb0cc9d8171a03",
         "32698d43af59069ae1fda759bd2270f204ae74f1dffc0412663aeba7f3b65e6c",
-        "9abe766744657ff3522718c2dcf87d164252ddc6c77738a43bd222f52668b940"
+        "9abe766744657ff3522718c2dcf87d164252ddc6c77738a43bd222f52668b940",
+        "636d9a500dadaf0ea2e0d223547e439d0a5092ca0807b63d9192705ada77cf16"
       ],
-      "at": "2026-09-25T20:49:03+00:00",
-      "run_id": "run-20260925T195840Z-d14ceca2",
-      "gap_claimed": true
+      "at": "2026-09-27T20:40:00+00:00",
+      "run_id": "run-20260927T190820Z-e40accb4",
+      "gap_claimed": false
     },
     "tests/meta/test_pipeline_hot.py::test_the_rule_ignores_a_stale_headline_and_a_stock_basket": {
       "fingerprints": [
@@ -9462,11 +9473,12 @@
       "fingerprints": [
         "81c13ec2e12b59be09b3272613ee27dd454f9951c91254573755a2187035ca5f",
         "56567aebbd26309ddfeaccfd0f4e13a34ae55e791e3b46dcf3e8a50d12fbfe7c",
-        "67474f7813d847a1558dc9e0637fc3e21dc0776b87de1bf403c32f25a517770c"
+        "67474f7813d847a1558dc9e0637fc3e21dc0776b87de1bf403c32f25a517770c",
+        "12429c9707394c027129ced8b17a2c7768cc929a57212908a45ef7d4594f9e5f"
       ],
-      "at": "2026-09-25T20:49:03+00:00",
-      "run_id": "run-20260925T195840Z-d14ceca2",
-      "gap_claimed": true
+      "at": "2026-09-27T20:40:00+00:00",
+      "run_id": "run-20260927T190820Z-e40accb4",
+      "gap_claimed": false
     },
     "tests/meta/test_pipeline_lab_loop.py::test_the_cycle_looks_once_and_does_not_wait_on_a_queued_job": {
       "fingerprints": [
@@ -9643,11 +9655,12 @@
     },
     "tests/meta/test_pipeline_lab_loop.py::test_a_room_past_its_stop_is_stopped_early_and_its_position_closed": {
       "fingerprints": [
-        "693395b9c6a3a92240b7956a6672cbe4ff94cd97104b598d77086af572437342"
+        "693395b9c6a3a92240b7956a6672cbe4ff94cd97104b598d77086af572437342",
+        "d86b9f36a8e71d780fc47f72118e18cf86665efbc9245628318fc153c9fb7513"
       ],
-      "at": "2026-09-22T15:30:00+00:00",
-      "run_id": "run-20260922T074028Z-a051f15b",
-      "gap_claimed": false
+      "at": "2026-09-27T20:40:00+00:00",
+      "run_id": "run-20260927T190820Z-e40accb4",
+      "gap_claimed": true
     },
     "tests/meta/test_pipeline_lab_loop.py::test_a_room_whose_card_closed_inside_the_window_gets_a_verdict": {
       "fingerprints": [
@@ -9661,10 +9674,11 @@
     "tests/meta/test_pipeline_lab_loop.py::test_an_early_close_that_failed_is_tried_again_and_the_benchmark_read_once": {
       "fingerprints": [
         "92d3b0ff86710a8dd8c27d097328cd8b113a974d831868ae076063adf4cb7d38",
-        "fb1f3da100f0eca12703998d3c630714bd20f31802bc0ce4c5f3a57268cfac91"
+        "fb1f3da100f0eca12703998d3c630714bd20f31802bc0ce4c5f3a57268cfac91",
+        "5397d3446d84d0fc199ad55aadfedbb0727d9eba20ecc1607cd8091ad86bfd74"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
+      "at": "2026-09-27T20:40:00+00:00",
+      "run_id": "run-20260927T190820Z-e40accb4",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_lab_loop.py::test_a_room_opens_only_from_a_card_their_backtest_rates": {
@@ -10184,11 +10198,12 @@
         "b19ce59f3c8da589e7aab474d24fc2aa2ec0e67727dd1349be20aec391fb9874",
         "0883ad81621b70d0438e8c3715af8baf0ceef5cf5141bc68dc1cd8d894fbe14c",
         "9b05a4f3272345c1aabd4f422b53396b36752406c173ef46a4a28c6c2f8a2cff",
-        "69bcec6ffb6e888ba5087d67fbd523850ee1914abcb3af7cb127e7185b50ce5f"
+        "69bcec6ffb6e888ba5087d67fbd523850ee1914abcb3af7cb127e7185b50ce5f",
+        "91db554705e33be24aaac669dc345c5aaec32528efd86e6da049f3a7c5fc74af"
       ],
-      "at": "2026-09-25T20:49:03+00:00",
-      "run_id": "run-20260924T220050Z-24d08821",
-      "gap_claimed": true
+      "at": "2026-09-27T20:40:00+00:00",
+      "run_id": "run-20260925T225326Z-b7f75212",
+      "gap_claimed": false
     },
     "tests/rest/test_token_gates_agree_with_their_own_design.py::test_the_token_gates_say_the_same_thing_three_times": {
       "fingerprints": [
@@ -10319,10 +10334,11 @@
         "82e53f21ec33233c89a882ae2058858051ea0950461f7a91a209e9087b60103a",
         "eb2adcec05d969fb618e8c19cb9be7c223bce9818f0c2c0782a6d3226a9a1587",
         "715a3545a826fbec372f73105988e753686d452f17ccb986219c3e2784c63e1c",
-        "89b548abd1d0c342128959bd8d08cbae31ba848e798105f6ab95c8bad2a0fc8c"
+        "89b548abd1d0c342128959bd8d08cbae31ba848e798105f6ab95c8bad2a0fc8c",
+        "9030d9ecac4cca06a37b48b21e5ac308d4458cc488bdd49981210b8e38c508be"
       ],
-      "at": "2026-09-25T20:49:03+00:00",
-      "run_id": "run-20260925T195840Z-d14ceca2",
+      "at": "2026-09-27T20:40:00+00:00",
+      "run_id": "run-20260927T190820Z-e40accb4",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_lab_loop.py::test_a_bot_he_names_is_cloned_funded_and_started_on_paper_in_its_own_room": {
@@ -10550,10 +10566,11 @@
       "fingerprints": [
         "d163a9459e1b3a52b47278888269be2f4eee077d30906311dd3a2ce56c0197d8",
         "7c5a1794ea8cb50548833ccb92d4f57e9e5944ea79baa934865c34597c0f0b4d",
-        "202350a86a46ad3e551d487356d027ebde12ab719cbbd30851326a441e921f64"
+        "202350a86a46ad3e551d487356d027ebde12ab719cbbd30851326a441e921f64",
+        "fa0037a2e3ce0294766bb580272547a93d715cc4646ea1b76d04f36d5ac80842"
       ],
-      "at": "2026-09-25T20:49:03+00:00",
-      "run_id": "run-20260925T195840Z-d14ceca2",
+      "at": "2026-09-27T20:40:00+00:00",
+      "run_id": "run-20260927T190820Z-e40accb4",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_check_subjects.py::test_a_report_created_behind_a_500_fails_and_a_clean_run_of_twelve_passes": {
@@ -10586,11 +10603,12 @@
       "fingerprints": [
         "148d300d0b8a4f408d544c6254e1d8d4ec6925a037ab0027658ef9ccc12929a6",
         "ec78a05aa49e7b5abee352aeea5a55e71b4fe995e83d51ae63beccb94d8abddb",
-        "7ac823ca3776746a10c86683ed21f8238868e9c574b942ed7ef59b494ced54a6"
+        "7ac823ca3776746a10c86683ed21f8238868e9c574b942ed7ef59b494ced54a6",
+        "8d914f59502c3041531882197bcf8672d15e414b0de139f5dd99c964de49685a"
       ],
-      "at": "2026-09-25T20:49:03+00:00",
-      "run_id": "run-20260924T220050Z-24d08821",
-      "gap_claimed": true
+      "at": "2026-09-27T20:40:00+00:00",
+      "run_id": "run-20260925T225326Z-b7f75212",
+      "gap_claimed": false
     },
     "tests/rest/test_a_filed_report_is_answered_as_filed.py::test_a_report_the_server_creates_is_answered_as_created": {
       "fingerprints": [
@@ -10693,28 +10711,31 @@
     },
     "tests/meta/test_pipeline_creator.py::test_a_claim_refuses_before_the_network_without_confirm": {
       "fingerprints": [
-        "1d58f911a4680125030faf46a798e9cabf596cec78249c4ea9eac0383a7f35f2"
+        "1d58f911a4680125030faf46a798e9cabf596cec78249c4ea9eac0383a7f35f2",
+        "df86eda7cceead352420f1a7b14263e18a69c497413340338e1c73c049e2277c"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
+      "at": "2026-09-27T20:40:00+00:00",
+      "run_id": "run-20260927T190820Z-e40accb4",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_creator.py::test_a_claim_posts_the_documented_body_and_returns_the_tracked_link": {
       "fingerprints": [
-        "d7276caebe56507195e1658b60c247ba49698c0a2c70df7db7df9405c6d9c655"
+        "d7276caebe56507195e1658b60c247ba49698c0a2c70df7db7df9405c6d9c655",
+        "8e60a6793f7b65678a6f0981e8b99820e14d007f47386560b57ed5233258819b"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
+      "at": "2026-09-27T20:40:00+00:00",
+      "run_id": "run-20260927T190820Z-e40accb4",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_creator.py::test_a_503_or_a_timeout_is_settled_by_reading_the_lead_back": {
       "fingerprints": [
         "16f7aec68bf8a31cf52777e6e4e43b1b9abcb24f288c9210cccce97ad61bed20",
-        "a1e965bc39db8503cd8c5084ac473aff3f136170e24dad3162fd4a31ce5ab8b5"
+        "a1e965bc39db8503cd8c5084ac473aff3f136170e24dad3162fd4a31ce5ab8b5",
+        "10c34ac7b798167e906da09ee7bf84a351f7f225e60da71830fdce7041afe644"
       ],
-      "at": "2026-09-25T20:49:03+00:00",
-      "run_id": "run-20260925T195840Z-d14ceca2",
-      "gap_claimed": true
+      "at": "2026-09-27T20:40:00+00:00",
+      "run_id": "run-20260927T190820Z-e40accb4",
+      "gap_claimed": false
     },
     "tests/meta/test_pipeline_creator.py::test_mark_posted_sends_the_reply_url_and_only_a_status_link": {
       "fingerprints": [
@@ -11044,11 +11065,12 @@
     "tests/meta/test_pipeline_lab_loop.py::test_a_bot_is_judged_from_what_went_in_not_from_its_first_reading": {
       "fingerprints": [
         "33d9c8820c555cde609879040d75a67b2e46a518c92b23052bbeb48b8f38f26b",
-        "7194ba28d3bfb751b3939e76e35ae37984855166ab886c047f7d0c3a04bf153e"
+        "7194ba28d3bfb751b3939e76e35ae37984855166ab886c047f7d0c3a04bf153e",
+        "f8a1aca93bb9456bd7a661fc9ec60873279128e87e0a7fa43451f1b267c18956"
       ],
-      "at": "2026-09-25T20:49:03+00:00",
-      "run_id": "run-20260925T195840Z-d14ceca2",
-      "gap_claimed": true
+      "at": "2026-09-27T20:40:00+00:00",
+      "run_id": "run-20260927T190820Z-e40accb4",
+      "gap_claimed": false
     },
     "tests/meta/test_pipeline_lab_loop.py::test_money_in_a_clone_is_out_and_a_paused_clone_holds_it_parked": {
       "fingerprints": [
@@ -11077,10 +11099,11 @@
     },
     "tests/meta/test_pipeline_lab_loop.py::test_a_variant_that_cannot_run_starts_nothing_and_says_why": {
       "fingerprints": [
-        "e180f4b535c6be983a96513a6ee44c60130171a3087fca532b0f1c9311e6ef41"
+        "e180f4b535c6be983a96513a6ee44c60130171a3087fca532b0f1c9311e6ef41",
+        "b12749404facd4ae3c4972631e82bc923c21d208fff115ddd4f8b61adc9377b9"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
+      "at": "2026-09-27T20:40:00+00:00",
+      "run_id": "run-20260927T190820Z-e40accb4",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_lab_loop.py::test_a_bot_their_side_halted_is_never_varied": {
@@ -11094,10 +11117,11 @@
     "tests/meta/test_pipeline_lab_loop.py::test_our_rooms_rank_after_his_and_are_put_to_him_as_questions": {
       "fingerprints": [
         "5c2f063ed1a7f81fcd4537ad5d2142fc8ebbd4abbb338e5943dcd166837160ad",
-        "78ee1cc744c05e3f83a37a1fa44b0e86cb325b8ac89a33afcc45c548ad73c304"
+        "78ee1cc744c05e3f83a37a1fa44b0e86cb325b8ac89a33afcc45c548ad73c304",
+        "4044c0db87f7fafcbbbb7f2655fe5ea1cea30c58b2554b135d29e8843d8e86b6"
       ],
-      "at": "2026-09-25T20:49:03+00:00",
-      "run_id": "run-20260925T195840Z-d14ceca2",
+      "at": "2026-09-27T20:40:00+00:00",
+      "run_id": "run-20260927T190820Z-e40accb4",
       "gap_claimed": true
     },
     "tests/meta/test_pipeline_lab_loop.py::test_a_quiet_tick_decides_nothing_and_says_so_in_its_last_line": {
@@ -11192,10 +11216,11 @@
     "tests/meta/test_pipeline_lab_page.py::test_each_experiment_lands_in_its_sector_and_its_group": {
       "fingerprints": [
         "91c7c500edc367ae6d7180b305ebcf21319051978690e82a2a0f293a3931bb5b",
-        "d420751dfa01f545c209ba818b326a2b99509fb157e2afe86305a95a3c4436e4"
+        "d420751dfa01f545c209ba818b326a2b99509fb157e2afe86305a95a3c4436e4",
+        "92d3c3a885e1dd9c4639d760d97bb3687da4692508117681ef0ccbfbd69791cb"
       ],
-      "at": "2026-09-25T20:49:03+00:00",
-      "run_id": "run-20260925T195840Z-d14ceca2",
+      "at": "2026-09-27T20:40:00+00:00",
+      "run_id": "run-20260927T190820Z-e40accb4",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_lab_page.py::test_an_experiments_path_is_what_it_is_worth_since_we_went_in": {
@@ -11277,11 +11302,12 @@
     "tests/meta/test_pipeline_lab_page.py::test_the_bots_room_says_whether_each_bot_trades": {
       "fingerprints": [
         "636d6f9307aaf264de1e018a779a52bd3ad591314472ca041e3ddaed1dc6887e",
-        "94215918adc8d43767b099c8e9dff7dde37d69c62f2026cd067455cce985eba8"
+        "94215918adc8d43767b099c8e9dff7dde37d69c62f2026cd067455cce985eba8",
+        "1be9e39d459e57b567ac4038c5281f5620dea0505bc3e9ec2eec5036f65f7d8c"
       ],
-      "at": "2026-09-25T20:49:03+00:00",
-      "run_id": "run-20260925T195840Z-d14ceca2",
-      "gap_claimed": true
+      "at": "2026-09-27T20:40:00+00:00",
+      "run_id": "run-20260927T190820Z-e40accb4",
+      "gap_claimed": false
     },
     "tests/meta/test_pipeline_lab_page.py::test_the_chat_is_behind_a_button_and_nexus_text_stays_text": {
       "fingerprints": [
@@ -11346,11 +11372,12 @@
     "tests/meta/test_pipeline_lab_report.py::test_memecoins_carry_the_median_and_the_high_conviction_answer": {
       "fingerprints": [
         "04d44fb60c15a65765197425ad5c2286bc341357da7dbc01aaa34d6e5c47c1ae",
-        "7379730c56a00583050d1c9f33b71d91d16fcb9ad70ba66c7ad93d66bbbab986"
+        "7379730c56a00583050d1c9f33b71d91d16fcb9ad70ba66c7ad93d66bbbab986",
+        "59d02a5a531f98548e6bce55a9947ae761ea39606e7d0937647bd5eda92a47a7"
       ],
-      "at": "2026-09-25T20:49:03+00:00",
-      "run_id": "run-20260925T195840Z-d14ceca2",
-      "gap_claimed": true
+      "at": "2026-09-27T20:40:00+00:00",
+      "run_id": "run-20260927T190820Z-e40accb4",
+      "gap_claimed": false
     },
     "tests/meta/test_pipeline_lab_report.py::test_a_band_is_given_only_when_there_is_enough_to_band": {
       "fingerprints": [
@@ -11435,11 +11462,12 @@
     },
     "tests/meta/test_pipeline_morning.py::test_the_page_is_one_short_czech_page_in_the_artifact_shape": {
       "fingerprints": [
-        "115814f3515ce1a18972d956aa08ebe2f3d3d1d4d651e5ed037e488d5ab453c1"
+        "115814f3515ce1a18972d956aa08ebe2f3d3d1d4d651e5ed037e488d5ab453c1",
+        "97b8d27351b073b193e4006ee46c2ced612db2c7c2c18d2d63a2e6558eae6198"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
-      "gap_claimed": false
+      "at": "2026-09-27T20:40:00+00:00",
+      "run_id": "run-20260927T190820Z-e40accb4",
+      "gap_claimed": true
     },
     "tests/meta/test_pipeline_morning.py::test_lab_py_morning_builds_the_page_and_published_records_the_day": {
       "fingerprints": [
@@ -11773,27 +11801,30 @@
     "tests/repo/test_allowlist.py::test_the_laboratorys_own_doors_run_unasked_because_the_code_holds_paper": {
       "fingerprints": [
         "6269cfc9e7d2b8ae415237bfec2d3505e1125d2848e5a198ea7687c008347344",
-        "8a78c3364a2a6cf015e420f32fc4fc53c6d60da5ff371c723ac771e2e0b8c5f1"
+        "8a78c3364a2a6cf015e420f32fc4fc53c6d60da5ff371c723ac771e2e0b8c5f1",
+        "2a14940ecde93cc9011a726006daa97250976a941c01860f09d8a97a3a88cd40"
       ],
-      "at": "2026-09-25T20:49:03+00:00",
-      "run_id": "run-20260924T220050Z-24d08821",
-      "gap_claimed": true
+      "at": "2026-09-27T20:40:00+00:00",
+      "run_id": "run-20260925T225326Z-b7f75212",
+      "gap_claimed": false
     },
     "tests/repo/test_deep_pass_size.py::test_a_pass_is_as_big_as_what_changed": {
       "fingerprints": [
-        "8e7c6f7b58e059094b165e212cd3a0d6f8ed41bb0de809a5d1fe3c73e4925c4f"
+        "8e7c6f7b58e059094b165e212cd3a0d6f8ed41bb0de809a5d1fe3c73e4925c4f",
+        "65082b50d08e07b36dee0c47b72aa94d00b96019ea81a893f399a2948afc13d2"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
+      "at": "2026-09-27T20:40:00+00:00",
+      "run_id": "run-20260925T225326Z-b7f75212",
       "gap_claimed": false
     },
     "tests/repo/test_deep_pass_size.py::test_the_size_command_reads_the_real_commit_count": {
       "fingerprints": [
         "bcd788e5301496c0e9624f24c1a43d91a55fb6ac80f15701085885cd6212f795",
-        "bfa1dfdec6988d7a9267bf1c47f0ed71e01e85c2aab81a7c4150d022734385d1"
+        "bfa1dfdec6988d7a9267bf1c47f0ed71e01e85c2aab81a7c4150d022734385d1",
+        "b48cfc621267c2983c3287e7024caa743c4c43e47744acc15fa31f5139e4d604"
       ],
-      "at": "2026-09-25T20:49:03+00:00",
-      "run_id": "run-20260924T220050Z-24d08821",
+      "at": "2026-09-27T20:40:00+00:00",
+      "run_id": "run-20260925T225326Z-b7f75212",
       "gap_claimed": false
     },
     "tests/repo/test_deep_pass_size.py::test_the_gaps_a_dead_pass_confirmed_are_carried_not_overwritten": {
@@ -12047,11 +12078,12 @@
     "tests/repo/test_session_start.py::test_the_surface_drift_is_read_from_its_cache_not_computed": {
       "fingerprints": [
         "45a34e8321ffff6244401488c50bb711543aee55ab91daec667c579989580d03",
-        "3b857ec65ca1ef847673e83921f9fea2521fe6bd69a768ffa89fa357bec99922"
+        "3b857ec65ca1ef847673e83921f9fea2521fe6bd69a768ffa89fa357bec99922",
+        "f903aa799fe04f1d447a262c57fbb11a1069db8c457545922714335bc802131c"
       ],
-      "at": "2026-09-25T20:49:03+00:00",
-      "run_id": "run-20260924T220050Z-24d08821",
-      "gap_claimed": true
+      "at": "2026-09-27T20:40:00+00:00",
+      "run_id": "run-20260925T225326Z-b7f75212",
+      "gap_claimed": false
     },
     "tests/repo/test_state_guard.py::test_shell_write_under_state_is_refused[echo x > C:/Users/adamz/Documents/Projects/cymetica-qa-agent/qa-cymetica/state/ledger.json]": {
       "fingerprints": [
@@ -12449,11 +12481,12 @@
     "tests/rest/test_head_to_head_surface_is_undocumented.py::test_the_head_to_head_routes_they_serve_are_named_in_no_document": {
       "fingerprints": [
         "96aaa418782647793b68d3bf3d7320670f551010d6d2c2a6e08a886d2b3da718",
-        "5f75255a2494529787e40a30eaa59cc68552cb8352e63528cd32980f6d3440c3"
+        "5f75255a2494529787e40a30eaa59cc68552cb8352e63528cd32980f6d3440c3",
+        "fbdfc4586936cdbd7509f4c490c45e98a1cac047a92be82fef2283e1d62dfc40"
       ],
-      "at": "2026-09-25T20:49:03+00:00",
-      "run_id": "run-20260924T220050Z-24d08821",
-      "gap_claimed": true
+      "at": "2026-09-27T20:40:00+00:00",
+      "run_id": "run-20260925T225326Z-b7f75212",
+      "gap_claimed": false
     },
     "tests/meta/test_pipeline_checks.py::test_the_spec_check_reads_a_renamed_request_and_a_semicolon_split": {
       "fingerprints": [
@@ -12521,19 +12554,21 @@
     },
     "tests/meta/test_pipeline_lab_loop.py::test_their_news_wakes_a_sweep_within_a_tick_and_no_limit_is_weighed": {
       "fingerprints": [
-        "9502d4bdc2bd48cb007c1263ae223a34c72ebdbfe4f4a74364ad6ad8ffe5f892"
+        "9502d4bdc2bd48cb007c1263ae223a34c72ebdbfe4f4a74364ad6ad8ffe5f892",
+        "13ab7277c6d32ac0a4a2f0864503cc1f085016a2ed035b607e54768e77eb4418"
       ],
-      "at": "2026-09-25T20:49:03+00:00",
-      "run_id": "run-20260925T195840Z-d14ceca2",
-      "gap_claimed": true
+      "at": "2026-09-27T20:40:00+00:00",
+      "run_id": "run-20260927T190820Z-e40accb4",
+      "gap_claimed": false
     },
     "tests/meta/test_pipeline_lab_loop.py::test_the_tick_reads_their_tracker_and_scans_their_surface": {
       "fingerprints": [
-        "fe07723b3c247b440cedc8d3c11ce28a2808e2b7996a4239d7e660cf3932cf16"
+        "fe07723b3c247b440cedc8d3c11ce28a2808e2b7996a4239d7e660cf3932cf16",
+        "6a26024c072480f00cedff002f49c4f17d1e0d691d6b89cf03301cdc6de9b1d3"
       ],
-      "at": "2026-09-25T20:49:03+00:00",
-      "run_id": "run-20260925T195840Z-d14ceca2",
-      "gap_claimed": true
+      "at": "2026-09-27T20:40:00+00:00",
+      "run_id": "run-20260927T190820Z-e40accb4",
+      "gap_claimed": false
     },
     "tests/meta/test_pipeline_lab_page.py::test_the_view_is_four_sector_rooms_in_their_order_with_their_names": {
       "fingerprints": [
@@ -12545,27 +12580,30 @@
     },
     "tests/meta/test_pipeline_lab_page.py::test_a_room_of_ours_says_ours_and_never_ranks_above_his": {
       "fingerprints": [
-        "6a11b49a45c7c59fef21a3d925d09516f5ca9b8401f1bad5d3fb88195cf80373"
+        "6a11b49a45c7c59fef21a3d925d09516f5ca9b8401f1bad5d3fb88195cf80373",
+        "c442235f9efb6b757412669dc4514535a09012580b556f3b7d22bc2db745de91"
       ],
-      "at": "2026-09-25T20:49:03+00:00",
-      "run_id": "run-20260925T195840Z-d14ceca2",
+      "at": "2026-09-27T20:40:00+00:00",
+      "run_id": "run-20260927T190820Z-e40accb4",
       "gap_claimed": false
     },
     "tests/discovery/test_public_page_reads_are_documented.py::test_what_a_public_page_reads_without_a_key_is_documented": {
       "fingerprints": [
-        "9dc1ab907350039e0db8b39e7f78ea1286538308020cb7408edae88653a748a7"
+        "9dc1ab907350039e0db8b39e7f78ea1286538308020cb7408edae88653a748a7",
+        "3ea685656b19e972cf4d2e946861d4df7ef5c839dfc4f5e3027ba0637ff3af5a"
       ],
-      "at": "2026-09-25T20:49:03+00:00",
-      "run_id": "run-20260925T195840Z-d14ceca2",
-      "gap_claimed": true
+      "at": "2026-09-27T20:40:00+00:00",
+      "run_id": "run-20260927T170347Z-41a44743",
+      "gap_claimed": false
     },
     "tests/rest/test_a_card_index_moves_with_its_basket.py::test_a_card_index_moves_no_further_than_its_basket_can": {
       "fingerprints": [
-        "c4628eab69ed74f578e35d182ab5499054909b8087b6a4804949efb45bbe8f26"
+        "c4628eab69ed74f578e35d182ab5499054909b8087b6a4804949efb45bbe8f26",
+        "7cc421db3b5318e7d45b5ce590b490e53ab20a2ee2522a69eded19c3d4e7c53d"
       ],
-      "at": "2026-09-25T20:49:03+00:00",
-      "run_id": "run-20260925T183730Z-4813570f",
-      "gap_claimed": true
+      "at": "2026-09-27T20:40:00+00:00",
+      "run_id": "run-20260925T225326Z-b7f75212",
+      "gap_claimed": false
     },
     "tests/mcp/test_fund_performance_page_matches_the_api.py::test_the_fund_leaderboard_page_matches_list_funds": {
       "fingerprints": [
@@ -12577,10 +12615,51 @@
     },
     "tests/mcp/test_community_funds_are_paper_or_live_not_both.py::test_a_community_fund_is_paper_or_live_not_both": {
       "fingerprints": [
-        "aae759b1dfef849026f092db98c602ff7f95ac17899673a5861387b9e3ddf4c9"
+        "aae759b1dfef849026f092db98c602ff7f95ac17899673a5861387b9e3ddf4c9",
+        "9e1db26f74a71b70e18e6ffdec0f85dbc2dfc5c921537a8af6f8603668c75aa6"
       ],
-      "at": "2026-09-25T20:49:03+00:00",
-      "run_id": "run-20260925T174431Z-76c4f68b",
+      "at": "2026-09-27T20:40:00+00:00",
+      "run_id": "run-20260925T225326Z-b7f75212",
+      "gap_claimed": true
+    },
+    "tests/meta/test_pipeline_morning.py::test_the_deep_pass_is_two_lines_what_we_fixed_and_what_went_to_them": {
+      "fingerprints": [
+        "6155ac696d76fe96ba2a07f3d092b9451e2d1b07108afe63a6bb6e9559deef13"
+      ],
+      "at": "2026-09-27T20:40:00+00:00",
+      "run_id": "run-20260927T190820Z-e40accb4",
+      "gap_claimed": true
+    },
+    "tests/repo/test_reminders.py::test_a_loop_on_opus_is_not_a_reminder_any_more": {
+      "fingerprints": [
+        "f2417807f44122921623e6fc61627e583ab19aee24df6fbdee6c1466dcb7490f"
+      ],
+      "at": "2026-09-27T20:40:00+00:00",
+      "run_id": "run-20260925T225326Z-b7f75212",
+      "gap_claimed": false
+    },
+    "tests/rest/test_async_a2a_investigation.py::test_an_async_message_gets_the_investigation_its_card_promises": {
+      "fingerprints": [
+        "056c45d8a293cf51785745098280a46f4baa9c493f1116ecd7a4d7e8256d4fc8"
+      ],
+      "at": "2026-09-27T20:40:00+00:00",
+      "run_id": "run-20260927T170347Z-41a44743",
+      "gap_claimed": true
+    },
+    "tests/rest/test_gem_screener_refresh_keeps_its_own_cadence.py::test_the_refresh_is_late_and_the_newest_attempt_failed_twice_running": {
+      "fingerprints": [
+        "caa58ab86f9b80366e64eebc61963d1a5e58b6c6f2b7e79b32c4ef3d3bb4a6c6"
+      ],
+      "at": "2026-09-27T20:40:00+00:00",
+      "run_id": "run-20260927T170347Z-41a44743",
+      "gap_claimed": true
+    },
+    "tests/rest/test_prices_status_codes_match_its_own_description.py::test_an_unknown_asset_returns_a_status_the_schema_never_declares": {
+      "fingerprints": [
+        "5f8d39cde540a88afa44b8cd7abfc78a7498eff2f3c0d047d961398516fbf2fd"
+      ],
+      "at": "2026-09-27T20:40:00+00:00",
+      "run_id": "run-20260926T061717Z-cff42283",
       "gap_claimed": true
     }
   }
