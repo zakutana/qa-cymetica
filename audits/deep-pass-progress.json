@@ -36,8 +36,8 @@
         "t2": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "67fe34ed",
       "why": {
         "t1": "FIXED_STATUSES includes paid; #130 went straight to paid, #132 pending->paid, both listed under Opravili while #132's check still fails.",
         "t3": "paid counted as fixed; #130/#132 paid only and reproducing, listed under Opravili.",
@@ -93,8 +93,8 @@
         "t2": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "67fe34ed",
       "why": {
         "t1": "deep_pass: '#133 ověřen' -> 133, 'Nic.' -> 1, rendered as 'Opraveno u nás 133/1'.",
         "t3": "'#133 ověřen' -> 133, 'Nic.' -> 1.",
@@ -112,8 +112,8 @@
         "t2": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "67fe34ed",
       "why": {
         "t1": "Ticks 12:26 and 19:20 carry 'hunt sweep'; the /qa-sweep PRE-0191 writes no tick and counts 0.",
         "t3": "Only tick decides count; /qa-sweep writes no tick and counts 0; that the 19:20 hunt was skipped is not established from records.",
@@ -131,8 +131,8 @@
         "t2": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "67fe34ed",
       "why": {
         "t1": "24/0/13 renders '11 ještě běží'; refuted includes a bot room; stopped-inconclusive rooms are never subtracted.",
         "t3": "24/0/13 renders '11 ještě běží' while 9 card rooms run; one refuted room is a bot; 3 stopped-inconclusive rooms fall into running.",
@@ -150,8 +150,8 @@
         "t2": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "67b7b377",
       "why": {
         "t1": "Ran the fixture: later run uses FP1, row pinned to FP, CHECK_CHANGED, owed [] with or without the verification event; with fingerprint=FP it is PASSING, [46].",
         "t3": "Later run uses FP1 against pinned FP; CHECK_CHANGED; owed [] with no verification event at all.",
@@ -169,8 +169,8 @@
         "t2": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "67b7b377",
       "why": {
         "t1": "serve's only test stubs bounty without fetch_our_reports; a revert raises AttributeError, swallowed by except Exception, stays green.",
         "t3": "Calls bounty.refresh_our_reports directly; a serve.py:444 revert is swallowed in _poll_tracker's except and stays green.",
@@ -188,8 +188,8 @@
         "t2": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "67b7b377",
       "why": {
         "t1": "Low: renamed heading makes his_block empty and the not-in assertion vacuous.",
         "t3": "partition never asserts the heading matched; a reword makes the not-in check vacuous (needs reword plus leak).",
@@ -207,8 +207,8 @@
         "t2": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "67b7b377",
       "why": {
         "t1": "Close acceptance is measured by the sibling test (:2176-2223: 500, 500, 200, close_failed and retry).",
         "t3": "Stub close returns {}, close_failed recorded, the test's closed==['P-1'] passes on a refused close (low consequence: acceptance pinned at :1941/:2211).",
@@ -226,8 +226,8 @@
         "t2": "not real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "5b4d1840",
       "why": {
         "t1": "Latent: _walk never enters qa/; an os.system git commit in qa/lab.py decide() would pass.",
         "t3": "Walk never enters qa/; a git commit in qa/lab.py note_gate would pass; latent.",
@@ -321,8 +321,8 @@
         "t2": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "5b4d1840",
       "why": {
         "t1": "ReadTimeout after acceptance -> outcome unknown, SystemExit; room stopped as nothing at stake; book/_deployed/_room_positions skip it; no reconcile.",
         "t3": "Timeout or 2xx without position id -> unknown (paper.py:527/546); book/_deployed/_room_positions skip it, no reconcile; a landed buy is never counted, sold, judged or held to the ceiling.",
@@ -340,8 +340,8 @@
         "t2": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "5b4d1840",
       "why": {
         "t1": "fund 1000, profit -200 -> in_bots 800, cash 99200, equity 100000; bot P&L never reaches equity.",
         "t3": "fund 1000, profit -200 -> cash 99200, equity 100000; bot P&L cancels out, a loss reads as cash.",
@@ -359,8 +359,8 @@
         "t2": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "5b4d1840",
       "why": {
         "t1": "my-clones row without accepted fund -> capital_in_bots None -> buy exits; lab never releases; money-first check does not read bot capital.",
         "t3": "capital_in_bots None for a my-clones row without accepted fund; lab never releases; every later buy exits. Latent: all 15 clones funded today.",
@@ -378,8 +378,8 @@
         "t2": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "5b4d1840",
       "why": {
         "t1": "_guidance reads nexus.jsonl only; NEX-0034/0044/0053/0094 exist only in nexus_shallow.jsonl; night_promote reads both.",
         "t3": "paper._guidance reads nexus.load() only while the launcher reads load_all(); latent (no room from a shallow answer yet).",
@@ -397,8 +397,8 @@
         "t2": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "5b4d1840",
       "why": {
         "t1": "Medium: bare-string unwrap -> {} -> []; launch_fund records permanent no_series; verdicts go inconclusive; rule 8 broken.",
         "t3": "unwrap bare text -> {} -> [] without raising; permanent no_series; empty series at verdict.",
@@ -416,8 +416,8 @@
         "t2": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "67fe34ed",
       "why": {
         "t1": "36642175 is 'unexplained' at +2.96% and is labelled take-profit +3%.",
         "t3": "Only positive stops get 'take-profit', based on Cymetica's MSG-0060 answer that bots pause on their own SL/TP; deliberate.",
