@@ -17,8 +17,8 @@
         "t2": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "7c949468",
       "why": {
         "t1": "Narrower: deep replies are auto=True kind=deep and never count; A2A-0022's deep reply (2.5 min, paired) will still read missing. A2A-0017/18/19's deep replies carry no reply_to in the journal, so they would go unpaired anyway.",
         "t3": "Narrower: auto is not True drops a paired kind=deep reply (A2A-0022's, 2.5 min); A2A-0017/18/19's deep replies carry parent_message_id and in_reply_to None in the captured inbox, so they fail on pairing regardless; 'the lane now delivers' is not established for #132.",
@@ -55,8 +55,8 @@
         "t2": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "7c949468",
       "why": {
         "t1": "_stuck({age 100000, every 21600}) with no last_attempt returns not stuck and the check passes, against both docstrings.",
         "t3": "No last_attempt -> not stuck, passes, against the docstring.",
@@ -80,7 +80,9 @@
         "t1": "Medium: docstring makes no visible health state part of the defect; nothing reads the page; PASS sent on #133 whose notes say the page line is not done.",
         "t3": "The module docstring (:19-23) deliberately sets the bar at stale >3 cycles AND a failed attempt; reports.yaml told the vendor it passes once a snapshot publishes; the page line matters only while stale, which the check measures.",
         "t2": "Docstring names 'no visible health state'; assertion reads /status only; PASS on #133 while its notes say the page line is not done; weaker assertion, vendor not misled."
-      }
+      },
+      "deferred_to_operator": true,
+      "deferred_why": "The page half of #133 (the page reads LIVE while the refresh is stuck) is measured by nothing, and their own notes on #133 say that line is not done. Measuring it means a new claim to Cymetica -- re-raising #133's second half or a new report -- which is the operator's decision, and the page cannot show a stuck state tonight to anchor a check on."
     },
     {
       "id": "R05",
@@ -283,8 +285,8 @@
         "t2": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "7c949468",
       "why": {
         "t1": "Latent: 'it&rsquo;s LIVE' and 'it’s LIVE' give None, only ASCII it's matches.",
         "t3": "visible_text('it&rsquo;s LIVE') gives U+2019 and offers_live_invest returns None; latent (today's page uses ASCII).",
@@ -302,8 +304,8 @@
         "t2": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null,
+      "fixed": true,
+      "commit": "7c949468",
       "why": {
         "t1": "Medium: {'200','4XX'} or {'default'} gives declared={200}, a validly declared 404 reads undeclared.",
         "t3": "code.isdigit() drops '4XX' and 'default'; latent false claim to the vendor.",
