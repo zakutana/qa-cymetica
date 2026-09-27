@@ -58,14 +58,18 @@ def unanswered(sent: list[dict], replies: list[dict], now: datetime,
                due_after: timedelta = DUE_AFTER, window: int = WINDOW):
     """(the messages judged, those with no non-automatic reply in time).
 
-    `sent`: {"id", "at"}; `replies`: {"reply_to", "at", "auto"}. A reply
+    `sent`: {"id", "at"}; `replies`: {"reply_to", "at", "auto", "kind"}. An
+    investigation is `kind: "deep"` -- which they ALSO mark `auto: true`,
+    since NEXUS writes it (deep pass 2026-09-27, R01, 3/3: every deep reply
+    was read as the first pass) -- or a reply that is not automatic. A reply
     whose `auto` is None was not classified by them and is not counted as
-    automatic."""
+    automatic; `first_pass` and `deep_failed` are not investigations."""
     due = sorted((s for s in sent if now - s["at"] >= due_after),
                  key=lambda s: s["at"])[-window:]
     missing = []
     for s in due:
-        if not any(r["reply_to"] == s["id"] and r["auto"] is not True
+        if not any(r["reply_to"] == s["id"]
+                   and (r.get("kind") == "deep" or r["auto"] is not True)
                    and r["at"] is not None
                    and timedelta(0) <= r["at"] - s["at"] <= due_after
                    for r in replies):
@@ -106,7 +110,8 @@ def test_an_async_message_gets_the_investigation_its_card_promises(rest_trusted)
         parent = m.get("parent_message_id") or meta.get("in_reply_to")
         if parent:
             replies.append({"reply_to": str(parent), "at": _moment(m.get("created_at")),
-                            "auto": meta.get("auto") if "auto" in meta else None})
+                            "auto": meta.get("auto") if "auto" in meta else None,
+                            "kind": meta.get("kind")})
 
     now = datetime.now(timezone.utc)
     judged, missing = unanswered(_our_sends(), replies, now)
@@ -117,9 +122,12 @@ def test_an_async_message_gets_the_investigation_its_card_promises(rest_trusted)
                                    for s in rows)
     if missing:
         verdict = "failed"
+        # "Nothing but the first pass" was false when a deep reply came back
+        # naming no parent: it cannot be paired, and this says only that.
         reason = (f"{len(missing)} of our {len(judged)} newest due async messages "
-                  f"got nothing but the automatic first pass within {DUE_AFTER} "
-                  f"(the card promises 1-10 minutes): {names(missing)}")
+                  f"have no investigation reply paired to them within {DUE_AFTER} "
+                  f"(the card promises 1-10 minutes; a reply that names no parent "
+                  f"message cannot be paired): {names(missing)}")
     else:
         verdict = "passed"
         reason = (f"each of our {len(judged)} newest due async messages got a "

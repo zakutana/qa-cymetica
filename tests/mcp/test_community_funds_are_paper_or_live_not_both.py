@@ -52,7 +52,9 @@ PAUSE_S = 4.0
 
 PAPER_ONLY = re.compile(r"Community funds\W+Paper trading only", re.I)
 SIMULATED = re.compile(r"Buying in is simulated", re.I)
-LIVE_INVEST = re.compile(r"Invest in [^<>]{1,80}? now\W+it'?s LIVE", re.I)
+# Either apostrophe: html.unescape turns &rsquo; into U+2019, and a live offer
+# written with one read as "offer gone" (deep pass 2026-09-27, A03, 3/3).
+LIVE_INVEST = re.compile(r"Invest in [^<>]{1,80}? now\W+it['’]?s LIVE", re.I)
 
 
 def visible_text(page: str) -> str:

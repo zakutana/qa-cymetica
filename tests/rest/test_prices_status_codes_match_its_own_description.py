@@ -41,6 +41,16 @@ TEMPLATE_PATH = "/api/v1/prices/{asset}"
 BOGUS_ASSET = "NOTAREALASSETXYZ"
 
 
+def declares(responses: dict, status: int) -> bool:
+    """Whether an OpenAPI 3 responses object covers `status`: the exact code,
+    its range ("4XX"), or "default". Digits alone read a 404 declared through
+    "4XX" or "default" as undeclared -- a false claim to them if they fix it
+    that way (deep pass 2026-09-27, A04, 3/3)."""
+    keys = {str(code).upper() for code in responses or {}}
+    return (str(status) in keys or f"{status // 100}XX" in keys
+            or "DEFAULT" in keys)
+
+
 @qa(component="rest.markets", tier=SafetyTier.SAFE, surface="rest",
     claim="prices-status-codes-undeclared")
 def test_an_unknown_asset_returns_a_status_the_schema_never_declares(rest_anon):
@@ -56,9 +66,8 @@ def test_an_unknown_asset_returns_a_status_the_schema_never_declares(rest_anon):
             f"to compare")
 
     description = entry.get("description") or ""
-    declared = {
-        int(code) for code in (entry.get("responses") or {}) if code.isdigit()
-    }
+    responses = entry.get("responses") or {}
+    declared = sorted(str(code) for code in responses)
 
     probe = rest_anon.get(f"/api/v1/prices/{BOGUS_ASSET}",
                            headers={"Accept": "application/json"})
@@ -68,7 +77,7 @@ def test_an_unknown_asset_returns_a_status_the_schema_never_declares(rest_anon):
             f"the probe itself answered HTTP {actual}, unrelated to the "
             f"schema question")
 
-    undeclared = actual not in declared
+    undeclared = not declares(responses, actual)
     conclude(Measurement(
         verdict="failed" if undeclared else "passed",
         reason=(

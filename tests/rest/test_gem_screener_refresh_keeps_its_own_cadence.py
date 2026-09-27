@@ -64,7 +64,9 @@ def _stuck(data: dict) -> tuple[bool | None, str]:
         return None, "no readable age_seconds/refresh_every_seconds"
     if age <= STUCK_MULTIPLE * every:
         return False, f"age {age}s is within {STUCK_MULTIPLE}x the {every}s cadence"
-    if attempt.get("ok") is not False:
+    if not isinstance(attempt.get("ok"), bool):
+        return None, "stale, and last_attempt.ok is missing or not a boolean"
+    if attempt["ok"] is not False:
         return False, "stale, but the newest attempt is not a recorded failure"
     return True, (f"age {age}s is {age / every:.1f}x the {every}s cadence, and "
                   f"the newest attempt failed at {attempt.get('stage')!r}")

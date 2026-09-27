@@ -452,6 +452,15 @@ def test_the_is_answer_rule_is_self_calibrating_and_still_bites():
         "a reply hours later is not the lane working")
     fresh = [{"id": "new", "at": now - timedelta(minutes=10)}]
     assert unanswered(fresh, [], now) == ([], []), "not due yet is not judged"
+    # Their deep investigation is marked auto=true too (NEXUS writes it), with
+    # kind "deep": it IS the investigation. Every one was read as the first
+    # pass (deep pass 2026-09-27, R01, 3/3). first_pass and deep_failed are not.
+    marked = lambda kind: [{"reply_to": s["id"], "at": s["at"] + timedelta(minutes=3),
+                            "auto": True, "kind": kind} for s in sent]
+    assert unanswered(sent, marked("deep"), now)[1] == [], "a deep reply in 3 min counts"
+    assert len(unanswered(sent, marked("first_pass"), now)[1]) == 5
+    assert len(unanswered(sent, marked("deep_failed"), now)[1]) == 5, (
+        "an investigation that did not run is not one")
 
     # The Gem Screener refresh rule (2026-09-27), held here for the same
     # ceiling. Stuck means BOTH: stale past 3 cycles AND the newest attempt a
@@ -474,6 +483,29 @@ def test_the_is_answer_rule_is_self_calibrating_and_still_bites():
         "no age_seconds is unreadable, and unreadable must not pass")
     assert _stuck({"age_seconds": 4 * six_h, "refresh_every_seconds": 0,
                    "last_attempt": {"ok": False}})[0] is None
+    # Stale with no readable attempt is unreadable too: it read "not stuck"
+    # and passed (deep pass 2026-09-27, R03, 3/3).
+    for attempt in (None, {}, {"ok": "false"}, {"stage": "audit:x"}):
+        said = {"age_seconds": 4 * six_h, "refresh_every_seconds": six_h}
+        if attempt is not None:
+            said["last_attempt"] = attempt
+        assert _stuck(said)[0] is None, attempt
+    assert _stuck({"age_seconds": 3600, "refresh_every_seconds": six_h})[0] is False, (
+        "fresh data needs no attempt to be read")
+
+    # Two readers of their words, held here for the same ceiling. An OpenAPI 3
+    # range or default declares a code (A04, 3/3); a curly apostrophe is still
+    # the live-invest offer (A03, 3/3).
+    from tests.rest.test_prices_status_codes_match_its_own_description import declares
+    from tests.mcp.test_community_funds_are_paper_or_live_not_both import (
+        offers_live_invest, visible_text)
+
+    assert not declares({"200": {}, "422": {}}, 404)
+    assert declares({"200": {}, "4XX": {}}, 404) and declares({"default": {}}, 404)
+    assert declares({"404": {}}, 404) and not declares({"5XX": {}}, 404)
+    for said in ("Invest in X now &mdash; it&rsquo;s LIVE", "Invest in X now — it’s LIVE",
+                 "Invest in X now - it's LIVE", "Invest in X now: its LIVE"):
+        assert offers_live_invest(visible_text(said)), said
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
