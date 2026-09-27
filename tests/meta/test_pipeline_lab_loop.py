@@ -1700,7 +1700,19 @@ def test_a_room_past_its_stop_is_stopped_early_and_its_position_closed(
          "http_status": 200, "position_id": "P-1"}])
     closed = []
     paper = scripts_lab._sibling("paper")
-    paper.close = lambda position, confirm: closed.append(position) or {}
+
+    def close(position, confirm):
+        """A /sell their side accepted, written as paper.close writes it. The
+        stub returned {} -- a refused close -- and the test passed on the
+        attempt alone (deep pass 2026-09-27, B02, 2/3)."""
+        closed.append(position)
+        with open(tmp_path / "paper.jsonl", "a", encoding="utf-8") as fh:
+            fh.write(json.dumps({"id": "TRD-0100", "type": "intent", "kind": "close",
+                                 "position_id": position, "paper": True}) + "\n")
+            fh.write(json.dumps({"id": "TRD-0100", "type": "outcome", "kind": "close",
+                                 "outcome": "accepted", "http_status": 200}) + "\n")
+        return {"id": "TRD-0100"}
+    paper.close = close
 
     start = datetime.fromisoformat(opened)
     points = lambda values: [{"t": (start + timedelta(hours=h)).isoformat(),
@@ -1726,6 +1738,7 @@ def test_a_room_past_its_stop_is_stopped_early_and_its_position_closed(
     rows = qa_rooms.load()
     assert qa_rooms.status_of(rows, room["id"]) == "stopped"
     assert closed == ["P-1"], "the position the room held was not closed"
+    assert not said[0].get("close_failed"), ("an accepted sale read as refused", said)
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -3671,8 +3684,11 @@ def test_our_rooms_rank_after_his_and_are_put_to_him_as_questions(
     # Under its own heading, and never among his proposals: "question for
     # him" is printed on every brief, so the section could vanish and this
     # stay green while OUR-0001 was listed as his (deep pass 2026-09-25, C05).
-    his, _, rest = said.partition("his proposals, best earner first")
+    his, found, rest = said.partition("his proposals, best earner first")
     his_block = rest.split("\n\n", 1)[0]
+    # The heading has to be THERE: renamed, partition left his_block empty and
+    # the line below held of nothing (deep pass 2026-09-27, B01, 3/3).
+    assert found and "STR-" in his_block, f"no list of his proposals to read: {said}"
     assert "OUR-0001" not in his_block, his_block
     assert "OUR rooms running" in said and "OUR-0001" in said.split(
         "OUR rooms running", 1)[1], said

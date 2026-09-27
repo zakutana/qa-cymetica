@@ -158,6 +158,31 @@ def test_a_refresh_writes_the_section_the_bell_reads(tmp_path, monkeypatch):
     assert [(e["report_id"], e["status"]) for e in statuses] == [(46, "fixed")], \
         "the journal and the snapshot disagree about what changed"
 
+    # The half the docstring promised and never checked: serve.py itself
+    # calls the refresher. A revert to fetch_our_reports raised inside
+    # _poll_tracker's `except Exception` and stayed green (deep pass
+    # 2026-09-27, C02, 3/3) -- so read what it called, not what it raised.
+    called: list[str] = []
+
+    class Bounty:
+        @staticmethod
+        def _last_status_by_report():
+            return {}
+
+        @staticmethod
+        def refresh_our_reports():
+            called.append("refresh_our_reports")
+            return {"klass": "ok"}
+
+        @staticmethod
+        def fetch_our_reports(*_a, **_k):
+            called.append("fetch_our_reports")
+            return {"klass": "ok"}
+
+    _module("scripts/serve.py")._poll_tracker(Bounty)
+    assert called == ["refresh_our_reports"], \
+        f"serve.py's poll called {called}: the bell reads the file only refresh writes"
+
     # What our posted replies earned, read the same way into its own section.
     paid = _client(lambda r: httpx.Response(200, json={
         "summary": {"paid": 7, "pending": 0, "et10": 7000, "etlp": 7000},

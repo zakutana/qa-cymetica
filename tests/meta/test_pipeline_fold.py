@@ -1233,15 +1233,24 @@ def test_the_verification_debt_is_keyed_on_the_fingerprint_not_the_run():
     # identical inputs. An implementation that re-owed the debt whenever the
     # run changed would have passed this assertion unchanged, which is the one
     # thing it exists to rule out.
-    later = run("run-2", [result(CHECK_A, "passed")], collected=[CHECK_A],
+    #
+    # And it has to carry the PINNED definition. result()'s default is FP1, so
+    # the later run folded the row to CHECK_CHANGED and owed nothing with or
+    # without the verification (deep pass 2026-09-27, C01, 3/3).
+    later = run("run-2", [result(CHECK_A, "passed", fingerprint=FP)], collected=[CHECK_A],
                 at="2026-09-06T10:00:00+00:00")
     again = fold(ledger(_verified_row()),
                  events=filed + [_verification()],
                  run=later)
     assert again["findings"]["CYM-a"]["check"]["adjudicated_by"]["run_id"] == "run-2", \
         "the later run was not applied, so this case compares a row with itself"
+    assert again["findings"]["CYM-a"]["check"]["state"] == "PASSING", \
+        "the later run changed the definition, so this case is not 'same definition'"
     assert again["findings"]["CYM-a"]["obligations"]["verification_owed"] == [], \
         "the next sweep asked for the same 27 verifications over again"
+    unpaid = fold(ledger(_verified_row()), events=filed, run=later)
+    assert unpaid["findings"]["CYM-a"]["obligations"]["verification_owed"] == [46], \
+        "the later run owes nothing even unpaid, so the case above proves nothing"
 
     # A changed definition IS new information.
     moved = fold(ledger(row("CYM-a", check_state="PASSING", pinned="a-new-fingerprint")),
