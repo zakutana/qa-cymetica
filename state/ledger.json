@@ -18486,15 +18486,16 @@
         "pinned_fingerprint": "056c45d8a293cf51785745098280a46f4baa9c493f1116ecd7a4d7e8256d4fc8"
       },
       "filing": {
-        "state": "RAISED",
+        "state": "FIX_CLAIMED",
         "adjudicated_by": {
-          "event_id": "3d4c928bdb2157e1e734dc245e53addb811bc0091f7aef3bbf4abdadf43d3abe",
-          "at": "2026-09-26T12:25:24+00:00"
+          "event_id": "4b93d3fc1def3e550f78b0d221d9338b9e2adc8e269180b897366e5d98b12913",
+          "at": "2026-09-26T21:30:13+00:00"
         },
         "reports": [
           {
             "report_id": 132,
-            "status": "pending"
+            "status": "paid",
+            "status_at": "2026-09-26T21:30:13+00:00"
           }
         ],
         "refused": [],
@@ -18518,6 +18519,15 @@
             "event_id": "3d4c928bdb2157e1e734dc245e53addb811bc0091f7aef3bbf4abdadf43d3abe"
           },
           "at": "2026-09-26T12:25:24+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "RAISED",
+          "to": "FIX_CLAIMED",
+          "cause": {
+            "event_id": "4b93d3fc1def3e550f78b0d221d9338b9e2adc8e269180b897366e5d98b12913"
+          },
+          "at": "2026-09-26T21:30:13+00:00"
         }
       ],
       "regressions": [],
@@ -18539,7 +18549,7 @@
         "measured_at": "2026-09-26T12:21:48+00:00"
       },
       "obligations": {
-        "reverify": false,
+        "reverify": true,
         "repair_check": false,
         "reopen": [],
         "retractions": [],
@@ -18555,13 +18565,12 @@
   "counts": {
     "WITHDRAWN": 13,
     "VERIFIED FIXED": 69,
-    "STILL REPRODUCIBLE": 6,
+    "STILL REPRODUCIBLE": 7,
     "OUR CHECK CANNOT TELL": 1,
-    "PASSING, NEVER RAISED": 2,
-    "RAISED": 1
+    "PASSING, NEVER RAISED": 2
   },
   "events_head": {
-    "seq": 2844,
-    "chain": "640b113cac564be2a9eda29b3fb6247117ec387671940d8408cb55df4046c554"
+    "seq": 2905,
+    "chain": "c7afd15276496c6edfb28c91efefe6bac047360079cb5fcf11cfe5481c4b8a4b"
   }
 }
