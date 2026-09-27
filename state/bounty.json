@@ -1,9 +1,9 @@
 {
-  "fetched_at": "2026-09-27T17:25:10+00:00",
+  "fetched_at": "2026-09-27T21:51:24+00:00",
   "total": 100,
   "statuses": {
-    "fixed": 2,
-    "paid": 18
+    "paid": 19,
+    "fixed": 1
   },
   "filing_probe": {
     "endpoint": "POST /api/v1/bounty/reports",
@@ -25,8 +25,8 @@
   "our_reports": {
     "endpoint": "GET /api/v1/bounty/my-reports?wallet_address=<addr>",
     "klass": "ok",
-    "read_at": "2026-09-27T19:25:05+00:00",
-    "evidence_id": "e059578ad36e0cbf5bbb6df7d8f3b64e2789b6b2b0fa8afa34e88471514e163f",
+    "read_at": "2026-09-27T21:51:19+00:00",
+    "evidence_id": "5df876a85d111611c262160e0bf38221bb1679701698d3754412582476a53b81",
     "rows_returned": 89,
     "server_total": 89,
     "total": 89,
@@ -1647,8 +1647,8 @@
     "statuses": {
       "qa_testing": 2,
       "implementing": 2,
-      "completed": 118,
-      "resolved": 26,
+      "completed": 119,
+      "resolved": 25,
       "rejected": 2,
       "pending": 12,
       "wont_fix": 12
@@ -1861,9 +1861,9 @@
     "klass": "ok",
     "rows_returned": 50,
     "new": [],
-    "at": "2026-09-27T17:25:09+00:00"
+    "at": "2026-09-27T21:51:23+00:00"
   },
-  "closed": 2,
+  "closed": 1,
   "closed_without_recorded_evidence": 0,
   "evidence_fields_checked": [
     "validated_at",
@@ -1877,7 +1877,7 @@
     {
       "id": 133,
       "title": "Gem Screener has not refreshed for ~42 hours against its own 6-hour cadence: every rebuild fails at audit_sectors.py, and the page still reads LIVE",
-      "status": "fixed",
+      "status": "paid",
       "hunter_name": "expire76",
       "severity_reported": "medium",
       "severity_confirmed": "medium",
@@ -1885,11 +1885,11 @@
       "fixed_at": "2026-09-27T16:58:49.379924",
       "validated_at": "2026-09-27T16:58:49.379924",
       "triaged_at": "2026-09-27T16:58:49.379924",
-      "status_notes": "[2026-09-27T16:58:49+00:00] Resolved via ticket ET-27867: Fixed + live: audit_sectors.py treated a net-negative 6-month revenue base (Luck Games Mar-Apr 2026) as a share-sign contradiction (@4dba658f2, test_gem_screener_audit_negative_base.py); audit_static.js CSS-var fix @ce15faaab1 by another session. Snapshot 1790528207 published 16:57 UTC, /status shows age 19s + last_attempt ok. Not done: the page 'updated X h ago, last refresh failed' line (UI change, needs before/after screenshots).",
+      "status_notes": "[2026-09-27T16:58:49+00:00] Resolved via ticket ET-27867: Fixed + live: audit_sectors.py treated a net-negative 6-month revenue base (Luck Games Mar-Apr 2026) as a share-sign contradiction (@4dba658f2, test_gem_screener_audit_negative_base.py); audit_static.js CSS-var fix @ce15faaab1 by another session. Snapshot 1790528207 published 16:57 UTC, /status shows age 19s + last_attempt ok. Not done: the page 'updated X h ago, last refresh failed' line (UI change, needs before/after screenshots).\n[reporter-verification PASS 2026-09-27 17:26 UTC by expire76 test_run=run-20260927T170347Z-41a44743]",
       "ticket_url": "https://cymetica.com/admin/centcom/issues/27867",
       "fix_pr_url": null,
       "reward_amount": 1000.0,
-      "paid_at": null,
+      "paid_at": "2026-09-27T17:32:36.705871",
       "is_duplicate": false
     },
     {
@@ -2244,9 +2244,9 @@
       "total_score": 460,
       "valid_reports": 87,
       "total_likes": 0,
-      "total_earned": 82000.0,
+      "total_earned": 83000.0,
       "total_awarded": 83000.0,
-      "total_paid": 82000.0,
+      "total_paid": 83000.0,
       "reward_currency": "ET10"
     },
     {
@@ -2291,7 +2291,7 @@
   ],
   "creator_rewards": {
     "klass": "ok",
-    "read_at": "2026-09-27T17:25:19+00:00",
+    "read_at": "2026-09-27T21:51:26+00:00",
     "stale_from": null,
     "summary": {
       "paid": 10,
@@ -2301,6 +2301,5 @@
       "et10": 10000,
       "etlp": 10000
     }
-  },
-  "our_reports_refreshed_at": "2026-09-27T19:25:05+00:00"
+  }
 }
