@@ -1708,6 +1708,10 @@ def test_a_room_past_its_stop_is_stopped_early_and_its_position_closed(
     path = {"now": points([100, 99, 97])}
     monkeypatch.setattr(scripts_lab, "_history",
                         lambda client, c: path["now"] if c == card else [])
+    # 2026-09-27: without this the verdict asked THEIR server when the card
+    # settles, a live read; on a slow day it timed out, the verdict waited,
+    # and tests/meta went red -- blocking every live run behind it.
+    monkeypatch.setattr(scripts_lab, "_closes_at", lambda client, c: None)
 
     later = start + timedelta(hours=3)
     assert scripts_lab.verdicts(now=later) == []
@@ -2197,6 +2201,8 @@ def test_an_early_close_that_failed_is_tried_again_and_the_benchmark_read_once(
         return [{"t": (start + timedelta(hours=h)).isoformat(), "index": v}
                 for h, v in enumerate(values)]
     monkeypatch.setattr(scripts_lab, "_history", history)
+    # A live read otherwise (see the test above): no network in tests/meta.
+    monkeypatch.setattr(scripts_lab, "_closes_at", lambda client, c: None)
 
     said = scripts_lab.verdicts(now=start + timedelta(hours=3))
     assert len(said) == 1 and said[0]["early"], said
