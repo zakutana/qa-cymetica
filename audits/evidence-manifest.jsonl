@@ -11901,6 +11901,7 @@
 {"archive": "evidence-2026-09", "bytes": 4317, "call": "GET https://cymetica.com/api/v1/cloned-bots/d778102d-cf3f-4d86-ad1e-2d8511b345dc/balance?", "id": "efad5fe26a381aa0dcfec19b6f271a2ed33b8b0d223b9da8f7fb118ca4d90cda", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 5621, "call": "POST https://cymetica.com/mcp/v1/? tools/call:get_fund", "id": "efb385e753766654af2b2d4d580611a74d7a93de1e412540fd110a4b42effae2", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 4202, "call": "GET https://cymetica.com/api/v1/account/me?", "id": "efb7cfc7ab19631ae076e490d5c7bc6fb449a1e597b967b17d1299db678f728c", "why": "row"}
+{"archive": "", "bytes": 6989, "call": "POST https://cymetica.com/api/v1/bounty/a2a/send?", "id": "efbe7a0ea68a76f2d4fabc5b363f81a43048464876fdca8f178c90d303458c08", "why": "their-words"}
 {"archive": "evidence-2026-09", "bytes": 53554, "call": "GET https://cymetica.com/api/v1/clones/fomo-radar/signals?chain,filter,limit", "id": "efc226825d7d1509b39b3b87d56e277e0fd0523dd4b0f620723964c9fef93eab", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 240253, "call": "GET https://cymetica.com/fund-performance/aib-cybersecurity?", "id": "efc5c89665a79cff5eab5a770f219cda4cd49dbca3497f3bf473bed4602dc066", "why": "promised"}
 {"archive": "evidence-2026-09", "bytes": 6362, "call": "POST https://cymetica.com/mcp/v1/? tools/call:get_fund", "id": "efc7f7e8415b772ab64d1deadd70b15aff9f18a6b428c3c7c95d0def7cf9b19b", "why": "row"}
