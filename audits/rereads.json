@@ -1,6 +1,6 @@
 {
   "core": {"at": "2026-09-24", "commit": "76f6c23ee948c7b0aea1e241c61dbe036aa9afcd"},
   "outbound": {"at": "2026-09-24", "commit": "76f6c23ee948c7b0aea1e241c61dbe036aa9afcd"},
-  "lab": {"at": "2026-09-24", "commit": "76f6c23ee948c7b0aea1e241c61dbe036aa9afcd"},
+  "lab": {"at": "2026-09-27", "commit": "df1a3751434244bb4f55d9b75ba5d3a8d3c0f833"},
   "memecoins": {"at": "2026-09-24", "commit": "76f6c23ee948c7b0aea1e241c61dbe036aa9afcd"}
 }
