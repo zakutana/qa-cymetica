@@ -3620,6 +3620,41 @@ reports:
       force the 503 case -- one confirmed, undeclared code already makes the
       point.
 
+  - key: gem-screener-refresh-stuck-past-its-cadence
+    findings: [CYM-gem-screener-refresh-stuck-past-its-cadence]
+    severity: medium
+    category: logic
+    url: https://cymetica.com/api/v1/gem-screener/status
+    title: "Gem Screener has not refreshed for ~42 hours against its own 6-hour cadence: every rebuild fails at audit_sectors.py, and the page still reads LIVE"
+    expected: >
+      GET /api/v1/gem-screener/status publishes refresh_every_seconds 21600
+      (6 hours) and a next_refresh_due_at. A visitor or an agent reading the
+      screener gets data at most one cycle old, or a visible warning when it
+      is not.
+    actual: >
+      The published snapshot is from 2026-09-25 20:49 UTC (generated_at
+      1790369344). On 2026-09-27 at 14:25 UTC /status reports age_seconds
+      150,591 -- 7.0 times the 6-hour cadence -- and next_refresh_due_at a day
+      in the past. last_attempt is ok: false at stage audit:audit_sectors.py,
+      and its finished_at moves forward between reads, so rebuilds keep
+      running and keep failing at the same audit; none publishes. Keeping the
+      last snapshot that passed its audits is the right design. The defect is
+      that the refresh has been stuck for seven cycles, and that nothing on
+      /gem-screener says so: the page shows "LIVE" over Thursday's data.
+    steps:
+      - 'GET https://cymetica.com/api/v1/gem-screener/status -> age_seconds 150591, refresh_every_seconds 21600, last_attempt {"ok": false, "stage": "audit:audit_sectors.py"}'
+      - 'Wait 30 s, GET it again -> same generated_at 1790369344, same failing stage'
+      - 'Open https://cymetica.com/gem-screener -> no age or health shown; the header reads LIVE'
+    body: >
+      Two things, the first being the real one: whatever audit_sectors.py
+      rejects in each new collection has stopped the screener for about 42
+      hours. The second is the page: last_attempt, age_seconds and
+      next_refresh_due_at already exist, so an "updated 42 h ago, last
+      refresh failed" line would have told every visitor. Our check reads
+      /status twice, 30 s apart, and fails only when the snapshot is more
+      than three cycles old AND the newest attempt is a recorded failure on
+      both reads; it passes as soon as a new snapshot publishes. GETs only.
+
   - key: async-a2a-investigation-arrives
     findings: [CYM-async-a2a-investigation-arrives]
     severity: low

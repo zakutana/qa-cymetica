@@ -453,6 +453,28 @@ def test_the_is_answer_rule_is_self_calibrating_and_still_bites():
     fresh = [{"id": "new", "at": now - timedelta(minutes=10)}]
     assert unanswered(fresh, [], now) == ([], []), "not due yet is not judged"
 
+    # The Gem Screener refresh rule (2026-09-27), held here for the same
+    # ceiling. Stuck means BOTH: stale past 3 cycles AND the newest attempt a
+    # recorded failure. A missing field is unreadable (None), never "healthy".
+    from tests.rest.test_gem_screener_refresh_keeps_its_own_cadence import _stuck
+
+    six_h = 21600
+    assert _stuck({"age_seconds": 3600, "refresh_every_seconds": six_h,
+                   "last_attempt": {"ok": False}})[0] is False, (
+        "one failed attempt on fresh data is not a stuck pipeline")
+    assert _stuck({"age_seconds": 4 * six_h, "refresh_every_seconds": six_h,
+                   "last_attempt": {"ok": True}})[0] is False, (
+        "stale but the newest attempt succeeded: publishing, not stuck")
+    assert _stuck({"age_seconds": 4 * six_h, "refresh_every_seconds": six_h,
+                   "last_attempt": {"ok": False, "stage": "audit:x"}})[0] is True
+    assert _stuck({"age_seconds": 3 * six_h, "refresh_every_seconds": six_h,
+                   "last_attempt": {"ok": False}})[0] is False, (
+        "exactly three cycles is the bar, not past it")
+    assert _stuck({"refresh_every_seconds": six_h, "last_attempt": {"ok": False}})[0] is None, (
+        "no age_seconds is unreadable, and unreadable must not pass")
+    assert _stuck({"age_seconds": 4 * six_h, "refresh_every_seconds": 0,
+                   "last_attempt": {"ok": False}})[0] is None
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_withdrawn_promise_is_not_a_fix():

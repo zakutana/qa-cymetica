@@ -207,6 +207,14 @@ components:
     surface: rest
     criticality: medium
     staleness_hours: 24
+  rest.gem_screener:
+    # A Build it Better app (ET-26608, follow-up ET-27671) with its own REST
+    # reads: /api/v1/gem-screener and /api/v1/gem-screener/status. First
+    # check 2026-09-27: its refresh stuck past its own 6-hour cadence.
+    title: Gem Screener (snapshot and its refresh status)
+    surface: rest
+    criticality: medium
+    staleness_hours: 24
   rest.creator:
     # Tracked links, post-kit, reward ledger and the reddit/twitter lead
     # queues behind cymetica.com/<username>. Added to openapi-public.json and
