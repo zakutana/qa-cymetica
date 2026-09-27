@@ -18725,8 +18725,8 @@
         "reports": [
           {
             "report_id": 133,
-            "status": "fixed",
-            "status_at": "2026-09-27T16:59:29+00:00"
+            "status": "paid",
+            "status_at": "2026-09-27T19:25:05+00:00"
           }
         ],
         "refused": [],
@@ -18865,6 +18865,7 @@
   "run_id": "run-20260927T190820Z-e40accb4",
   "run_level": "V",
   "updated_at": "2026-09-27T19:12:46+00:00",
+  "run_carried": true,
   "counts": {
     "WITHDRAWN": 13,
     "VERIFIED FIXED": 70,
@@ -18873,7 +18874,7 @@
     "PASSING, NEVER RAISED": 2
   },
   "events_head": {
-    "seq": 2926,
-    "chain": "fff89ca2517a734fe6ae6103da18ea06a9c0c99d1bf6b2565f5729034b3f1cd8"
+    "seq": 2929,
+    "chain": "7bfc55b7a472d0fb1fe17b7fbeec1f497fc292d149dc6fb1b73e9300b7d32b04"
   }
 }
