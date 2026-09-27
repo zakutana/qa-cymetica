@@ -2,7 +2,7 @@
   "run": "deep-pass-2026-09-27",
   "at": "2026-09-27T20:15:43+00:00",
   "previous_at": "2026-09-25T20:49:03+00:00",
-  "at_finished": null,
+  "at_finished": "2026-09-27T22:48:26+00:00",
   "start_commit": "fc99a920120b3022c2f1133e041b958a3d5a076d",
   "size": "full -- 5 check(s) against their platform moved",
   "gaps": [
@@ -431,19 +431,28 @@
     "done": true,
     "findings": 8
   },
-  "next": null,
+  "next": [],
   "retrospective": {
-    "last": "2026-09-19",
-    "done": false
+    "last": "2026-09-27",
+    "done": true
   },
   "rule_changes": [],
   "meta_tests": {
     "start": 800,
-    "end": null,
+    "end": 800,
     "reason": null
   },
   "reread": [
     "lab: qa/lab.py scripts/lab.py scripts/clone.py scripts/paper.py"
   ],
-  "finished": false
+  "finished": true,
+  "verifying_runs": {
+    "admitted": null,
+    "refused": {
+      "PRE-0193": "run-20260927T210837Z-1b2aa237",
+      "PRE-0194": "run-20260927T215340Z-3c0ff17f",
+      "PRE-0195": "run-20260927T223312Z-db874f09"
+    },
+    "why": "fingerprint_drifted on all three: Cymetica deployed during each (agent-card, openapi-public, llms.txt, mcp.json, ai-plugin.json)"
+  }
 }
