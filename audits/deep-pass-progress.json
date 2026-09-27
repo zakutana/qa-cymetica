@@ -6,34 +6,442 @@
   "start_commit": "fc99a920120b3022c2f1133e041b958a3d5a076d",
   "size": "full -- 5 check(s) against their platform moved",
   "gaps": [
-    {"id": "R01", "source": "review", "nodeid": "tests/rest/test_async_a2a_investigation.py:67 unanswered", "claim": "Deep investigation replies carry metadata.auto=true, kind=deep; the check counts them as the automatic first pass. A2A-0017/0018/0019 got kind=deep replies in 4.5/2/6 min yet PRE-0191 failed them; #132 reads STILL REPRODUCIBLE on a fixed lane.", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "R02", "source": "review", "nodeid": "qa/morning.py:125 FIXED_STATUSES", "claim": "'paid' counted as fixed: #130 and #132 went straight to paid and still reproduce, yet the 7:00 report lists them under 'Opravili'.", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "R03", "source": "review", "nodeid": "tests/rest/test_gem_screener_refresh_keeps_its_own_cadence.py:59 _stuck", "claim": "A status without last_attempt is read as not stuck (pass) while the docstring says a missing field is INCONCLUSIVE; the PASS on #133 rests on this check.", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "R04", "source": "review", "nodeid": "tests/rest/test_gem_screener_refresh_keeps_its_own_cadence.py:79", "claim": "The docstring names 'no visible health state' (page reads LIVE) as part of the defect; the assertion never reads the page, so #133 verified fixed while their own notes say the page line is not done.", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "R05", "source": "review", "nodeid": "qa/morning.py:101 deep_pass", "claim": "Fixed count reads the first number of the first bullet: '#133 ...' -> 133, 'Nic.' -> 1.", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "R06", "source": "review", "nodeid": "qa/morning.py:118 cymetica", "claim": "Sweeps counted from tick decisions containing 'hunt', not from sweeps that ran: a skipped hunt counts, the operator's /qa-sweep does not.", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "R07", "source": "review", "nodeid": "scripts/morning.py:120 _nexus", "claim": "Nexus line subtracts verdicts of all his rooms (bots/funds never pass the card gate) from card gate passes and counts stopped-inconclusive rooms as still running.", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "C01", "source": "audit", "nodeid": "tests/meta/test_pipeline_fold.py::test_the_verification_debt_is_keyed_on_the_fingerprint_not_the_run", "claim": "The 'later run, same definition' case (:1236) folds with result()'s default FP1 while the row is pinned to FP, so it reads CHECK_CHANGED and verification_owed is [] whether or not a verification was sent; the regression it names would stay green.", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "C02", "source": "audit", "nodeid": "tests/meta/test_pipeline_adapters.py::test_a_refresh_writes_the_section_the_bell_reads", "claim": "Docstring (:123) says reverting serve.py to fetch_our_reports would fail here; the test calls bounty.refresh_our_reports directly and serve.py's _poll_tracker swallows exceptions (:437-449), so that revert stays green.", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "B01", "source": "audit", "nodeid": "tests/meta/test_pipeline_lab_loop.py::test_our_rooms_rank_after_his_and_are_put_to_him_as_questions", "claim": "If brief()'s heading 'his proposals, best earner first' is renamed, partition leaves his_block empty (:3674-3676) and 'OUR-0001 not in his_block' passes with nothing checked (C05 shape).", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "B02", "source": "audit", "nodeid": "tests/meta/test_pipeline_lab_loop.py::test_a_room_past_its_stop_is_stopped_early_and_its_position_closed", "claim": "Stub paper.close returns {} (:1703) so the code records close_failed; the test asserts only the attempt (:1728), green while its own fixture says the sale was refused; 'money comes back' is never measured.", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "B03", "source": "audit", "nodeid": "tests/meta/test_pipeline_lab.py::test_the_night_holds_no_hand_that_trades_files_or_commits", "claim": "The walk covers scripts/lab.py and scripts siblings only (:1609-1651), never qa/, which the night calls constantly; a git commit added under qa/ would pass (latent).", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "B05", "source": "audit", "nodeid": "tests/meta/test_pipeline_morning.py::test_the_page_is_one_short_czech_page_in_the_artifact_shape", "claim": "'Short' has no bound (:194-218): the page can grow without limit and stay green (cosmetic). B04, the sweeps-count label, is R06.", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "A02", "source": "audit", "nodeid": "tests/rest/test_async_a2a_investigation.py::test_an_async_message_gets_the_investigation_its_card_promises", "claim": "A reply with no metadata.auto key is recorded auto=None (:109) and counted as an investigation (:68), so first passes without the flag would pass the check (is_answer shape). A01, the gem-screener missing last_attempt/ok, is R03; the auditor confirmed today's #133 PASS read ok:true.", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "A03", "source": "audit", "nodeid": "tests/mcp/test_community_funds_are_paper_or_live_not_both.py::test_a_community_fund_is_paper_or_live_not_both", "claim": "LIVE_INVEST (:55) matches only it's with an ASCII apostrophe; html.unescape (:62) turns &rsquo; into a typographic one that never matches, so a live profile reads as 'offer gone' and the check passes (the 2026-09-07 apostrophe incident).", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "A04", "source": "audit", "nodeid": "tests/rest/test_prices_status_codes_match_its_own_description.py::test_an_unknown_asset_returns_a_status_the_schema_never_declares", "claim": "Only digit response keys are read (:60); a 404 declared by '4XX' or 'default' still reads as undeclared (:71), a false claim to the vendor if they fix it that way.", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "L01", "source": "reread", "nodeid": "scripts/lab.py:2305 + scripts/paper.py:527,546", "claim": "A paper buy whose POST times out (or 2xx without position id) is recorded unknown; the room is stopped as 'nothing at stake', _deployed/book()/_room_positions skip it and paper.jsonl has no reconcile, so a buy that landed rides unsold, unjudged and outside both brakes.", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "L02", "source": "reread", "nodeid": "scripts/paper.py:361 book", "claim": "book() subtracts money moved into bots plus their total_profit_usdc from cash, so a bot's loss reads as spendable cash (fund 1000, profit -200 -> cash 99200 not 99000) and equity never shows bot P&L.", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "L03", "source": "reread", "nodeid": "scripts/paper.py:405 capital_in_bots", "claim": "Any my-clones row without an accepted fund of ours makes capital_in_bots None and every later paper.buy exits (:495); a clone accepted but not funded (lab.py:2411-2418) then blocks every card room, each opened and burned.", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "L04", "source": "reread", "nodeid": "scripts/paper.py:229 _guidance", "claim": "_guidance reads only nexus.jsonl, while rooms.nexus_answers and clone._guidance read both diaries; a card pick from a nexus_shallow answer opens a room, then paper.buy refuses 'not a recorded Nexus answer' and the pick is burned.", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "L05", "source": "reread", "nodeid": "scripts/lab.py:1993 _fund_tool", "claim": "A non-dict get_fund_history answer becomes {} and _fund_points [], so a failed read is an empty history: launch_fund writes no_series, never retries, and the fund room is inconclusive for good (rule 8 shape).", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "R08", "source": "review", "nodeid": "scripts/lab_page.py:1034 _stop_reason", "claim": "A stop bot_stops classifies 'unexplained' with a positive result is labelled 'take-profit' on /lab, a cause our data does not record.", "votes": null, "verdict": null, "fixed": false, "commit": null}
+    {
+      "id": "R01",
+      "source": "review",
+      "nodeid": "tests/rest/test_async_a2a_investigation.py:67 unanswered",
+      "claim": "Deep investigation replies carry metadata.auto=true, kind=deep; the check counts them as the automatic first pass. A2A-0017/0018/0019 got kind=deep replies in 4.5/2/6 min yet PRE-0191 failed them; #132 reads STILL REPRODUCIBLE on a fixed lane.",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null,
+      "why": {
+        "t1": "Narrower: deep replies are auto=True kind=deep and never count; A2A-0022's deep reply (2.5 min, paired) will still read missing. A2A-0017/18/19's deep replies carry no reply_to in the journal, so they would go unpaired anyway.",
+        "t3": "Narrower: auto is not True drops a paired kind=deep reply (A2A-0022's, 2.5 min); A2A-0017/18/19's deep replies carry parent_message_id and in_reply_to None in the captured inbox, so they fail on pairing regardless; 'the lane now delivers' is not established for #132.",
+        "t2": "Verdict wrong but mechanism needs correcting: the three cited deep replies have parent_message_id and in_reply_to null in capture f932c697, dropped at :107 before :68; today's paired deep reply a2a_089c65d9 (auto True) is dropped by :68; 'nothing but the automatic first pass' is false on the evidence."
+      }
+    },
+    {
+      "id": "R02",
+      "source": "review",
+      "nodeid": "qa/morning.py:125 FIXED_STATUSES",
+      "claim": "'paid' counted as fixed: #130 and #132 went straight to paid and still reproduce, yet the 7:00 report lists them under 'Opravili'.",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null,
+      "why": {
+        "t1": "FIXED_STATUSES includes paid; #130 went straight to paid, #132 pending->paid, both listed under Opravili while #132's check still fails.",
+        "t3": "paid counted as fixed; #130/#132 paid only and reproducing, listed under Opravili.",
+        "t2": "#130 paid only, #132 pending->paid, listed under Opravili; qa/fold.py:825 says paid is not a fix claim; test_pipeline_morning.py:102-114 pins the wrong mapping."
+      }
+    },
+    {
+      "id": "R03",
+      "source": "review",
+      "nodeid": "tests/rest/test_gem_screener_refresh_keeps_its_own_cadence.py:59 _stuck",
+      "claim": "A status without last_attempt is read as not stuck (pass) while the docstring says a missing field is INCONCLUSIVE; the PASS on #133 rests on this check.",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null,
+      "why": {
+        "t1": "_stuck({age 100000, every 21600}) with no last_attempt returns not stuck and the check passes, against both docstrings.",
+        "t3": "No last_attempt -> not stuck, passes, against the docstring.",
+        "t2": "Executed: no last_attempt -> not stuck, and ok 'false' as a string -> not stuck; PASS where the docstring says INCONCLUSIVE."
+      }
+    },
+    {
+      "id": "R04",
+      "source": "review",
+      "nodeid": "tests/rest/test_gem_screener_refresh_keeps_its_own_cadence.py:79",
+      "claim": "The docstring names 'no visible health state' (page reads LIVE) as part of the defect; the assertion never reads the page, so #133 verified fixed while their own notes say the page line is not done.",
+      "votes": {
+        "t1": "real",
+        "t3": "not real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null,
+      "why": {
+        "t1": "Medium: docstring makes no visible health state part of the defect; nothing reads the page; PASS sent on #133 whose notes say the page line is not done.",
+        "t3": "The module docstring (:19-23) deliberately sets the bar at stale >3 cycles AND a failed attempt; reports.yaml told the vendor it passes once a snapshot publishes; the page line matters only while stale, which the check measures.",
+        "t2": "Docstring names 'no visible health state'; assertion reads /status only; PASS on #133 while its notes say the page line is not done; weaker assertion, vendor not misled."
+      }
+    },
+    {
+      "id": "R05",
+      "source": "review",
+      "nodeid": "qa/morning.py:101 deep_pass",
+      "claim": "Fixed count reads the first number of the first bullet: '#133 ...' -> 133, 'Nic.' -> 1.",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null,
+      "why": {
+        "t1": "deep_pass: '#133 ověřen' -> 133, 'Nic.' -> 1, rendered as 'Opraveno u nás 133/1'.",
+        "t3": "'#133 ověřen' -> 133, 'Nic.' -> 1.",
+        "t2": "Executed: '#133 ověřen' -> 133, 'Nic.' -> 1."
+      }
+    },
+    {
+      "id": "R06",
+      "source": "review",
+      "nodeid": "qa/morning.py:118 cymetica",
+      "claim": "Sweeps counted from tick decisions containing 'hunt', not from sweeps that ran: a skipped hunt counts, the operator's /qa-sweep does not.",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null,
+      "why": {
+        "t1": "Ticks 12:26 and 19:20 carry 'hunt sweep'; the /qa-sweep PRE-0191 writes no tick and counts 0.",
+        "t3": "Only tick decides count; /qa-sweep writes no tick and counts 0; that the 19:20 hunt was skipped is not established from records.",
+        "t2": "The 19:20:32 tick decided 'hunt sweep' and its entry says 'Hunt sweep skipped' (counts 1); PRE-0191 counts 0."
+      }
+    },
+    {
+      "id": "R07",
+      "source": "review",
+      "nodeid": "scripts/morning.py:120 _nexus",
+      "claim": "Nexus line subtracts verdicts of all his rooms (bots/funds never pass the card gate) from card gate passes and counts stopped-inconclusive rooms as still running.",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null,
+      "why": {
+        "t1": "24/0/13 renders '11 ještě běží'; refuted includes a bot room; stopped-inconclusive rooms are never subtracted.",
+        "t3": "24/0/13 renders '11 ještě běží' while 9 card rooms run; one refuted room is a bot; 3 stopped-inconclusive rooms fall into running.",
+        "t2": "24/0/13 renders '11 ještě běží' while 19 of his rooms run and 3 are stopped inconclusive; refuted includes a bot room."
+      }
+    },
+    {
+      "id": "C01",
+      "source": "audit",
+      "nodeid": "tests/meta/test_pipeline_fold.py::test_the_verification_debt_is_keyed_on_the_fingerprint_not_the_run",
+      "claim": "The 'later run, same definition' case (:1236) folds with result()'s default FP1 while the row is pinned to FP, so it reads CHECK_CHANGED and verification_owed is [] whether or not a verification was sent; the regression it names would stay green.",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null,
+      "why": {
+        "t1": "Ran the fixture: later run uses FP1, row pinned to FP, CHECK_CHANGED, owed [] with or without the verification event; with fingerprint=FP it is PASSING, [46].",
+        "t3": "Later run uses FP1 against pinned FP; CHECK_CHANGED; owed [] with no verification event at all.",
+        "t2": "Executed: later run with FP1 folds CHECK_CHANGED; owed [] with or without the verification; with FP it owes [46]."
+      }
+    },
+    {
+      "id": "C02",
+      "source": "audit",
+      "nodeid": "tests/meta/test_pipeline_adapters.py::test_a_refresh_writes_the_section_the_bell_reads",
+      "claim": "Docstring (:123) says reverting serve.py to fetch_our_reports would fail here; the test calls bounty.refresh_our_reports directly and serve.py's _poll_tracker swallows exceptions (:437-449), so that revert stays green.",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null,
+      "why": {
+        "t1": "serve's only test stubs bounty without fetch_our_reports; a revert raises AttributeError, swallowed by except Exception, stays green.",
+        "t3": "Calls bounty.refresh_our_reports directly; a serve.py:444 revert is swallowed in _poll_tracker's except and stays green.",
+        "t2": "Calls bounty directly; serve.py's only test stubs without fetch_our_reports; a revert is swallowed and stays green."
+      }
+    },
+    {
+      "id": "B01",
+      "source": "audit",
+      "nodeid": "tests/meta/test_pipeline_lab_loop.py::test_our_rooms_rank_after_his_and_are_put_to_him_as_questions",
+      "claim": "If brief()'s heading 'his proposals, best earner first' is renamed, partition leaves his_block empty (:3674-3676) and 'OUR-0001 not in his_block' passes with nothing checked (C05 shape).",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null,
+      "why": {
+        "t1": "Low: renamed heading makes his_block empty and the not-in assertion vacuous.",
+        "t3": "partition never asserts the heading matched; a reword makes the not-in check vacuous (needs reword plus leak).",
+        "t2": "Heading rename makes his_block empty; with the is_ours filter dropped too, OUR-0001 lands in his list and the test stays green; no assert that the heading is present."
+      }
+    },
+    {
+      "id": "B02",
+      "source": "audit",
+      "nodeid": "tests/meta/test_pipeline_lab_loop.py::test_a_room_past_its_stop_is_stopped_early_and_its_position_closed",
+      "claim": "Stub paper.close returns {} (:1703) so the code records close_failed; the test asserts only the attempt (:1728), green while its own fixture says the sale was refused; 'money comes back' is never measured.",
+      "votes": {
+        "t1": "not real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null,
+      "why": {
+        "t1": "Close acceptance is measured by the sibling test (:2176-2223: 500, 500, 200, close_failed and retry).",
+        "t3": "Stub close returns {}, close_failed recorded, the test's closed==['P-1'] passes on a refused close (low consequence: acceptance pinned at :1941/:2211).",
+        "t2": "Stub close returns {}, close_failed recorded, the test asserts only the attempt; narrow: acceptance covered at :2176-2230."
+      }
+    },
+    {
+      "id": "B03",
+      "source": "audit",
+      "nodeid": "tests/meta/test_pipeline_lab.py::test_the_night_holds_no_hand_that_trades_files_or_commits",
+      "claim": "The walk covers scripts/lab.py and scripts siblings only (:1609-1651), never qa/, which the night calls constantly; a git commit added under qa/ would pass (latent).",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "not real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null,
+      "why": {
+        "t1": "Latent: _walk never enters qa/; an os.system git commit in qa/lab.py decide() would pass.",
+        "t3": "Walk never enters qa/; a git commit in qa/lab.py note_gate would pass; latent.",
+        "t2": "No path from the tick reaches a commit or submit under qa/; no violation; the walk checks what it names."
+      }
+    },
+    {
+      "id": "B05",
+      "source": "audit",
+      "nodeid": "tests/meta/test_pipeline_morning.py::test_the_page_is_one_short_czech_page_in_the_artifact_shape",
+      "claim": "'Short' has no bound (:194-218): the page can grow without limit and stay green (cosmetic). B04, the sweeps-count label, is R06.",
+      "votes": {
+        "t1": "not real",
+        "t3": "not real",
+        "t2": "not real"
+      },
+      "verdict": "dropped",
+      "fixed": false,
+      "commit": null,
+      "why": {
+        "t1": "Cosmetic, no wrong result; per-component lengths are bounded in sibling tests.",
+        "t3": "Length caps live in qa/morning.py and are pinned at :89/:149; 'short' is naming.",
+        "t2": "Self-labelled cosmetic; 'short' names no number."
+      }
+    },
+    {
+      "id": "A02",
+      "source": "audit",
+      "nodeid": "tests/rest/test_async_a2a_investigation.py::test_an_async_message_gets_the_investigation_its_card_promises",
+      "claim": "A reply with no metadata.auto key is recorded auto=None (:109) and counted as an investigation (:68), so first passes without the flag would pass the check (is_answer shape). A01, the gem-screener missing last_attempt/ok, is R03; the auditor confirmed today's #133 PASS read ok:true.",
+      "votes": {
+        "t1": "not real",
+        "t3": "not real",
+        "t2": "not real"
+      },
+      "verdict": "dropped",
+      "fixed": false,
+      "commit": null,
+      "why": {
+        "t1": "Documented choice (docstring :61-63); rests on a hypothetical vendor change; every first pass carries auto=True.",
+        "t3": "Documented choice (:61-63); every current first pass carries auto:true.",
+        "t2": "auto=None counted as not automatic is deliberate (:62-63); the 18:35 replies on 26.09 without auto/kind are the human replies it exists for."
+      }
+    },
+    {
+      "id": "A03",
+      "source": "audit",
+      "nodeid": "tests/mcp/test_community_funds_are_paper_or_live_not_both.py::test_a_community_fund_is_paper_or_live_not_both",
+      "claim": "LIVE_INVEST (:55) matches only it's with an ASCII apostrophe; html.unescape (:62) turns &rsquo; into a typographic one that never matches, so a live profile reads as 'offer gone' and the check passes (the 2026-09-07 apostrophe incident).",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null,
+      "why": {
+        "t1": "Latent: 'it&rsquo;s LIVE' and 'it’s LIVE' give None, only ASCII it's matches.",
+        "t3": "visible_text('it&rsquo;s LIVE') gives U+2019 and offers_live_invest returns None; latent (today's page uses ASCII).",
+        "t2": "offers_live_invest(visible_text('it&rsquo;s LIVE')) is None; a curly apostrophe reads as offer gone and passes."
+      }
+    },
+    {
+      "id": "A04",
+      "source": "audit",
+      "nodeid": "tests/rest/test_prices_status_codes_match_its_own_description.py::test_an_unknown_asset_returns_a_status_the_schema_never_declares",
+      "claim": "Only digit response keys are read (:60); a 404 declared by '4XX' or 'default' still reads as undeclared (:71), a false claim to the vendor if they fix it that way.",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null,
+      "why": {
+        "t1": "Medium: {'200','4XX'} or {'default'} gives declared={200}, a validly declared 404 reads undeclared.",
+        "t3": "code.isdigit() drops '4XX' and 'default'; latent false claim to the vendor.",
+        "t2": "{'200','4XX','default'} -> {200}; a 404 declared through 4XX reads undeclared."
+      }
+    },
+    {
+      "id": "L01",
+      "source": "reread",
+      "nodeid": "scripts/lab.py:2305 + scripts/paper.py:527,546",
+      "claim": "A paper buy whose POST times out (or 2xx without position id) is recorded unknown; the room is stopped as 'nothing at stake', _deployed/book()/_room_positions skip it and paper.jsonl has no reconcile, so a buy that landed rides unsold, unjudged and outside both brakes.",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null,
+      "why": {
+        "t1": "ReadTimeout after acceptance -> outcome unknown, SystemExit; room stopped as nothing at stake; book/_deployed/_room_positions skip it; no reconcile.",
+        "t3": "Timeout or 2xx without position id -> unknown (paper.py:527/546); book/_deployed/_room_positions skip it, no reconcile; a landed buy is never counted, sold, judged or held to the ceiling.",
+        "t2": "Timeout or 2xx without position id -> unknown; _deployed/book/_room_positions require accepted; no reconcile; state/paper.jsonl already holds 6 unknown outcomes."
+      }
+    },
+    {
+      "id": "L02",
+      "source": "reread",
+      "nodeid": "scripts/paper.py:361 book",
+      "claim": "book() subtracts money moved into bots plus their total_profit_usdc from cash, so a bot's loss reads as spendable cash (fund 1000, profit -200 -> cash 99200 not 99000) and equity never shows bot P&L.",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null,
+      "why": {
+        "t1": "fund 1000, profit -200 -> in_bots 800, cash 99200, equity 100000; bot P&L never reaches equity.",
+        "t3": "fund 1000, profit -200 -> cash 99200, equity 100000; bot P&L cancels out, a loss reads as cash.",
+        "t2": "book([], [], clone_capital=800): cash 99200, equity 100000; the loss becomes spendable cash."
+      }
+    },
+    {
+      "id": "L03",
+      "source": "reread",
+      "nodeid": "scripts/paper.py:405 capital_in_bots",
+      "claim": "Any my-clones row without an accepted fund of ours makes capital_in_bots None and every later paper.buy exits (:495); a clone accepted but not funded (lab.py:2411-2418) then blocks every card room, each opened and burned.",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null,
+      "why": {
+        "t1": "my-clones row without accepted fund -> capital_in_bots None -> buy exits; lab never releases; money-first check does not read bot capital.",
+        "t3": "capital_in_bots None for a my-clones row without accepted fund; lab never releases; every later buy exits. Latent: all 15 clones funded today.",
+        "t2": "capital_in_bots with an unfunded clone returns None; buy exits; lab.affordable does not read it; rooms open, refused, stopped, card burned; nothing clears the clone."
+      }
+    },
+    {
+      "id": "L04",
+      "source": "reread",
+      "nodeid": "scripts/paper.py:229 _guidance",
+      "claim": "_guidance reads only nexus.jsonl, while rooms.nexus_answers and clone._guidance read both diaries; a card pick from a nexus_shallow answer opens a room, then paper.buy refuses 'not a recorded Nexus answer' and the pick is burned.",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null,
+      "why": {
+        "t1": "_guidance reads nexus.jsonl only; NEX-0034/0044/0053/0094 exist only in nexus_shallow.jsonl; night_promote reads both.",
+        "t3": "paper._guidance reads nexus.load() only while the launcher reads load_all(); latent (no room from a shallow answer yet).",
+        "t2": "Ran paper._guidance('NEX-0094'): exits 'not a recorded Nexus answer'; launch_cards reads load_all, opens then stops the room and burns the card; not yet hit."
+      }
+    },
+    {
+      "id": "L05",
+      "source": "reread",
+      "nodeid": "scripts/lab.py:1993 _fund_tool",
+      "claim": "A non-dict get_fund_history answer becomes {} and _fund_points [], so a failed read is an empty history: launch_fund writes no_series, never retries, and the fund room is inconclusive for good (rule 8 shape).",
+      "votes": {
+        "t1": "real",
+        "t3": "real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null,
+      "why": {
+        "t1": "Medium: bare-string unwrap -> {} -> []; launch_fund records permanent no_series; verdicts go inconclusive; rule 8 broken.",
+        "t3": "unwrap bare text -> {} -> [] without raising; permanent no_series; empty series at verdict.",
+        "t2": "unwrap bare text (e.g. 'Rate limit exceeded') -> {} -> []; launch_fund writes no_series and skips it on every later tick; narrower: no room opens and the fund is never read again."
+      }
+    },
+    {
+      "id": "R08",
+      "source": "review",
+      "nodeid": "scripts/lab_page.py:1034 _stop_reason",
+      "claim": "A stop bot_stops classifies 'unexplained' with a positive result is labelled 'take-profit' on /lab, a cause our data does not record.",
+      "votes": {
+        "t1": "real",
+        "t3": "not real",
+        "t2": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null,
+      "why": {
+        "t1": "36642175 is 'unexplained' at +2.96% and is labelled take-profit +3%.",
+        "t3": "Only positive stops get 'take-profit', based on Cymetica's MSG-0060 answer that bots pause on their own SL/TP; deliberate.",
+        "t2": "Their own answer a2a_42be5226 (25.09) lists trailing-floor deadlock and insufficient balance as self-stops that can fire in profit, so 'take-profit' is inferred, not sourced."
+      }
+    }
   ],
-  "review": {"done": true, "findings": 8},
+  "review": {
+    "done": true,
+    "findings": 8
+  },
   "next": null,
-  "retrospective": {"last": "2026-09-19", "done": false},
+  "retrospective": {
+    "last": "2026-09-19",
+    "done": false
+  },
   "rule_changes": [],
-  "meta_tests": {"start": 800, "end": null, "reason": null},
-  "reread": ["lab: qa/lab.py scripts/lab.py scripts/clone.py scripts/paper.py"],
+  "meta_tests": {
+    "start": 800,
+    "end": null,
+    "reason": null
+  },
+  "reread": [
+    "lab: qa/lab.py scripts/lab.py scripts/clone.py scripts/paper.py"
+  ],
   "finished": false
 }
