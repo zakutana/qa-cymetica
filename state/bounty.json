@@ -25,14 +25,14 @@
   "our_reports": {
     "endpoint": "GET /api/v1/bounty/my-reports?wallet_address=<addr>",
     "klass": "ok",
-    "read_at": "2026-09-27T17:30:34+00:00",
-    "evidence_id": "bf5b59f27bb91a798327639cac4f2008cb3394e12cb52f8e90e29bc7be4dd190",
+    "read_at": "2026-09-27T19:25:05+00:00",
+    "evidence_id": "e059578ad36e0cbf5bbb6df7d8f3b64e2789b6b2b0fa8afa34e88471514e163f",
     "rows_returned": 89,
     "server_total": 89,
     "total": 89,
     "statuses": {
-      "fixed": 6,
-      "paid": 81,
+      "paid": 82,
+      "fixed": 5,
       "invalid": 2
     },
     "fields_sent_but_not_stored": [],
@@ -1624,7 +1624,7 @@
       {
         "id": 133,
         "title": "Gem Screener has not refreshed for ~42 hours against its own 6-hour cadence: every rebuild fails at audit_sectors.py, and the page still reads LIVE",
-        "status": "fixed",
+        "status": "paid",
         "hunter_name": "expire76",
         "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
         "severity_reported": "medium",
@@ -2302,5 +2302,5 @@
       "etlp": 10000
     }
   },
-  "our_reports_refreshed_at": "2026-09-27T17:30:34+00:00"
+  "our_reports_refreshed_at": "2026-09-27T19:25:05+00:00"
 }
